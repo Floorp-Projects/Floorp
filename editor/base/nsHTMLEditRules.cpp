@@ -306,8 +306,8 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
   res = aSelection->GetIsCollapsed(&bCollapsed);
   if (NS_FAILED(res)) return res;
   
-  nsCOMPtr<nsIDOMNode> node;
-  PRInt32 offset;
+  nsCOMPtr<nsIDOMNode> node, selNode;
+  PRInt32 offset, selOffset;
   
   res = mEditor->GetStartNodeAndOffset(aSelection, &node, &offset);
   if (NS_FAILED(res)) return res;
@@ -356,7 +356,10 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
           {
             // join para's, insert break
             *aCancel = PR_TRUE;
-            res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
+            res = mEditor->JoinNodeDeep(leftParent,rightParent,&selNode,&selOffset);
+            if (NS_FAILED(res)) return res;
+            // fix up selection
+            res = aSelection->Collapse(selNode,selOffset);
             if (NS_FAILED(res)) return res;
             res = mEditor->InsertBreak();
             return res;
@@ -365,7 +368,10 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
           {
             // join blocks
             *aCancel = PR_TRUE;
-            res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
+            res = mEditor->JoinNodeDeep(leftParent,rightParent,&selNode,&selOffset);
+            if (NS_FAILED(res)) return res;
+            // fix up selection
+            res = aSelection->Collapse(selNode,selOffset);
             return res;
           }
         }
@@ -409,7 +415,10 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
           {
             // join para's, insert break
             *aCancel = PR_TRUE;
-            res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
+            res = mEditor->JoinNodeDeep(leftParent,rightParent,&selNode,&selOffset);
+            if (NS_FAILED(res)) return res;
+            // fix up selection
+            res = aSelection->Collapse(selNode,selOffset);
             if (NS_FAILED(res)) return res;
             res = mEditor->InsertBreak();
             return res;
@@ -418,7 +427,10 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
           {
             // join blocks
             *aCancel = PR_TRUE;
-            res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
+            res = mEditor->JoinNodeDeep(leftParent,rightParent,&selNode,&selOffset);
+            if (NS_FAILED(res)) return res;
+            // fix up selection
+            res = aSelection->Collapse(selNode,selOffset);
             return res;
           }
         }
@@ -428,7 +440,41 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
         
       }
     }
-    // else do default
+    // else not in text node; we need to find right place to act on
+    else
+    {
+    
+      // XXX add (aAction == nsIEditor::eDeleteNext) case!!
+      
+      nsCOMPtr<nsIDOMNode> nodeToBackspace;
+      
+      res = mEditor->GetPriorNode(node, offset, PR_TRUE, getter_AddRefs(nodeToBackspace));
+      if (NS_FAILED(res)) return res;
+      if (!nodeToBackspace) return NS_ERROR_NULL_POINTER;
+        
+      // if this node is text node, adjust selection
+      if (nsEditor::IsTextNode(nodeToBackspace))
+      {
+        PRUint32 len;
+        nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+        nodeAsText = do_QueryInterface(nodeToBackspace);
+        nodeAsText->GetLength(&len);
+        res = aSelection->Collapse(nodeToBackspace,len);
+        return res;
+      }
+      else
+      {
+        // editable leaf node is not text; delete it.
+        // that's the default behavior
+        res = nsEditor::GetNodeLocation(nodeToBackspace, &node, &offset);
+        if (NS_FAILED(res)) return res;
+        // adjust selection to be right after it, for benefit of 
+        // deletion code
+        res = aSelection->Collapse(node, offset+1);
+        return res;
+      }
+    }
+    
     return NS_OK;
   }
   
@@ -491,10 +537,10 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
         res = mEditor->DeleteSelectionImpl(aAction);
         if (NS_FAILED(res)) return res;
         // then join para's, insert break
-        res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
+        res = mEditor->JoinNodeDeep(leftParent,rightParent,&selNode,&selOffset);
         if (NS_FAILED(res)) return res;
-        //res = mEditor->InsertBreak();
-        // uhh, no, we don't want to have the <br> on a deleted selction across para's
+        // fix up selection
+        res = aSelection->Collapse(selNode,selOffset);
         return res;
       }
       if (IsListItem(leftParent) || IsHeader(leftParent))
@@ -504,7 +550,10 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
         res = mEditor->DeleteSelectionImpl(aAction);
         if (NS_FAILED(res)) return res;
         // join blocks
-        res = mEditor->JoinNodeDeep(leftParent,rightParent,aSelection);
+        res = mEditor->JoinNodeDeep(leftParent,rightParent,&selNode,&selOffset);
+        if (NS_FAILED(res)) return res;
+        // fix up selection
+        res = aSelection->Collapse(selNode,selOffset);
         return res;
       }
     }
