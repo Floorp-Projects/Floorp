@@ -83,6 +83,7 @@ class nsIDocumentEncoder;
 class nsIClipboard;
 class TypeInState;
 class nsIContentFilter;
+class nsIURL;
 
 /**
  * The HTML editor implementation.<br>
@@ -616,6 +617,13 @@ protected:
                                      nsIDOMNode **aTargetNode,       
                                      PRInt32 *aTargetOffset,   
                                      PRBool *aDoContinue);
+  nsresult   RelativizeURIInFragmentList(nsCOMArray<nsIDOMNode> aNodeList,
+                                        const nsAString &aFlavor,
+                                        nsIDOMDocument *aSourceDoc,
+                                        nsIDOMNode *aTargetNode);
+  nsresult   RelativizeURIForNode(nsIDOMNode *aNode, nsIURL *aDestURL);
+  nsresult   GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttrib);
+
   PRBool     IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nsnull);
   nsresult   StripFormattingNodes(nsIDOMNode *aNode, PRBool aOnlyList = PR_FALSE);
   nsresult   CreateDOMFragmentFromPaste(const nsAString & aInputString,

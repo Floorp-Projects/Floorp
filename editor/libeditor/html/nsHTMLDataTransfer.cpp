@@ -106,6 +106,24 @@
 #include "nsIDragService.h"
 #include "nsIDOMNSUIEvent.h"
 
+// for relativization
+#include "nsUnicharUtils.h"
+#include "nsIDOMDocumentTraversal.h"
+#include "nsIDOMTreeWalker.h"
+#include "nsIDOMNodeFilter.h"
+#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMHTMLLinkElement.h"
+#include "nsIDOMHTMLObjectElement.h"
+#include "nsIDOMHTMLFrameElement.h"
+#include "nsIDOMHTMLIFrameElement.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLScriptElement.h"
+#include "nsIDOMHTMLEmbedElement.h"
+#include "nsIDOMHTMLTableCellElement.h"
+#include "nsIDOMHTMLTableRowElement.h"
+#include "nsIDOMHTMLTableElement.h"
+#include "nsIDOMHTMLBodyElement.h"
+
 // Misc
 #include "TextEditorTest.h"
 #include "nsEditorUtils.h"
@@ -353,7 +371,11 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
                                  streamStartParent, streamStartOffset,
                                  streamEndParent, streamEndOffset);
   NS_ENSURE_SUCCESS(res, res);
-  
+
+  // walk list of nodes; perform surgery on nodes (relativize) with _mozattr
+  res = RelativizeURIInFragmentList(nodeList, aFlavor, aSourceDoc, targetNode);
+  // ignore results from this call, try to paste/insert anyways
+ 
   // are there any table elements in the list?  
   // node and offset for insertion
   nsCOMPtr<nsIDOMNode> parentNode;
@@ -399,7 +421,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
       res = DeleteTableCell(1);
       NS_ENSURE_SUCCESS(res, res);
     }
-    // colapse selection to beginning of deleted table content
+    // collapse selection to beginning of deleted table content
     selection->CollapseToStart();
   }
   
@@ -737,6 +759,230 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
   return res;
 }
 
+// returns empty string if nothing to modify on node
+nsresult
+nsHTMLEditor::GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttr)
+{
+  aAttr.Truncate();
+
+  NS_NAMED_LITERAL_STRING(srcStr, "src");
+  nsCOMPtr<nsIDOMHTMLImageElement> nodeAsImage = do_QueryInterface(aNode);
+  if (nodeAsImage)
+  {
+    aAttr = srcStr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMHTMLAnchorElement> nodeAsAnchor = do_QueryInterface(aNode);
+  if (nodeAsAnchor)
+  {
+    aAttr = NS_LITERAL_STRING("href");
+    return NS_OK;
+  }
+
+  NS_NAMED_LITERAL_STRING(bgStr, "background");
+  nsCOMPtr<nsIDOMHTMLBodyElement> nodeAsBody = do_QueryInterface(aNode);
+  if (nodeAsBody)
+  {
+    aAttr = bgStr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMHTMLTableElement> nodeAsTable = do_QueryInterface(aNode);
+  if (nodeAsTable)
+  {
+    aAttr = bgStr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMHTMLTableRowElement> nodeAsTableRow = do_QueryInterface(aNode);
+  if (nodeAsTableRow)
+  {
+    aAttr = bgStr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMHTMLTableCellElement> nodeAsTableCell = do_QueryInterface(aNode);
+  if (nodeAsTableCell)
+  {
+    aAttr = bgStr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMHTMLScriptElement> nodeAsScript = do_QueryInterface(aNode);
+  if (nodeAsScript)
+  {
+    aAttr = srcStr;
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIDOMHTMLEmbedElement> nodeAsEmbed = do_QueryInterface(aNode);
+  if (nodeAsEmbed)
+  {
+    aAttr = srcStr;
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIDOMHTMLObjectElement> nodeAsObject = do_QueryInterface(aNode);
+  if (nodeAsObject)
+  {
+    aAttr = NS_LITERAL_STRING("data");
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIDOMHTMLLinkElement> nodeAsLink = do_QueryInterface(aNode);
+  if (nodeAsLink)
+  {
+    // Test if the link has a rel value indicating it to be a stylesheet
+    nsAutoString linkRel;
+    if (NS_SUCCEEDED(nodeAsLink->GetRel(linkRel)) && !linkRel.IsEmpty())
+    {
+      nsReadingIterator<PRUnichar> start;
+      nsReadingIterator<PRUnichar> end;
+      nsReadingIterator<PRUnichar> current;
+
+      linkRel.BeginReading(start);
+      linkRel.EndReading(end);
+
+      // Walk through space delimited string looking for "stylesheet"
+      for (current = start; current != end; ++current)
+      {
+        // Ignore whitespace
+        if (nsCRT::IsAsciiSpace(*current))
+          continue;
+
+        // Grab the next space delimited word
+        nsReadingIterator<PRUnichar> startWord = current;
+        do {
+          ++current;
+        } while (current != end && !nsCRT::IsAsciiSpace(*current));
+
+        // Store the link for fix up if it says "stylesheet"
+        if (Substring(startWord, current).Equals(NS_LITERAL_STRING("stylesheet"),
+                      nsCaseInsensitiveStringComparator()))
+        {
+          aAttr = NS_LITERAL_STRING("href");
+          return NS_OK;
+        }
+        if (current == end)
+          break;
+      }
+    }
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMHTMLFrameElement> nodeAsFrame = do_QueryInterface(aNode);
+  if (nodeAsFrame)
+  {
+    aAttr = srcStr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMHTMLIFrameElement> nodeAsIFrame = do_QueryInterface(aNode);
+  if (nodeAsIFrame)
+  {
+    aAttr = srcStr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMHTMLInputElement> nodeAsInput = do_QueryInterface(aNode);
+  if (nodeAsInput)
+  {
+    aAttr = srcStr;
+    return NS_OK;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLEditor::RelativizeURIForNode(nsIDOMNode *aNode, nsIURL *aDestURL)
+{
+  nsAutoString attributeToModify;
+  GetAttributeToModifyOnNode(aNode, attributeToModify);
+  if (attributeToModify.IsEmpty())
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
+  nsresult rv = aNode->GetAttributes(getter_AddRefs(attrMap));
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+  if (!attrMap) return NS_OK; // assume errors here shouldn't cancel insertion
+
+  nsCOMPtr<nsIDOMNode> attrNode;
+  rv = attrMap->GetNamedItem(attributeToModify, getter_AddRefs(attrNode));
+  NS_ENSURE_SUCCESS(rv, NS_OK); // assume errors here shouldn't cancel insertion
+
+  if (attrNode)
+  {
+    nsAutoString oldValue;
+    attrNode->GetNodeValue(oldValue);
+    if (!oldValue.IsEmpty())
+    {
+      NS_ConvertUCS2toUTF8 oldCValue(oldValue);
+      nsCOMPtr<nsIURI> currentNodeURI;
+      rv = NS_NewURI(getter_AddRefs(currentNodeURI), oldCValue);
+      if (NS_SUCCEEDED(rv))
+      {
+        nsCAutoString newRelativePath;
+        aDestURL->GetRelativeSpec(currentNodeURI, newRelativePath);
+        if (!newRelativePath.IsEmpty())
+        {
+          NS_ConvertUTF8toUCS2 newCValue(newRelativePath);
+          attrNode->SetNodeValue(newCValue);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLEditor::RelativizeURIInFragmentList(nsCOMArray<nsIDOMNode> aNodeList,
+                                          const nsAString &aFlavor,
+                                          nsIDOMDocument *aSourceDoc,
+                                          nsIDOMNode *aTargetNode)
+{
+  // determine destination URL
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> destDoc = do_QueryInterface(domDoc);
+  if (!destDoc) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIURL> destURL = do_QueryInterface(destDoc->GetDocumentURI());
+  if (!destURL) return NS_ERROR_FAILURE;
+
+  // brade: eventually should look for a base url in the document if present
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMDocumentTraversal> trav = do_QueryInterface(domDoc, &rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  PRInt32 listCount = aNodeList.Count();
+  PRInt32 j;
+  for (j = 0; j < listCount; j++)
+  {
+    nsIDOMNode* somenode = aNodeList[j];
+
+    nsCOMPtr<nsIDOMTreeWalker> walker;
+    rv = trav->CreateTreeWalker(somenode, nsIDOMNodeFilter::SHOW_ELEMENT,
+                                nsnull, PR_TRUE, getter_AddRefs(walker));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMNode> currentNode;
+    walker->GetCurrentNode(getter_AddRefs(currentNode));
+    while (currentNode)
+    {
+      rv = RelativizeURIForNode(currentNode, destURL);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      walker->NextNode(getter_AddRefs(currentNode));
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsHTMLEditor::AddInsertionListener(nsIContentFilter *aListener)
 {
@@ -990,7 +1236,6 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
   const nsAFlatString& cntxtUcs2Str = NS_ConvertUTF8toUCS2(contextUTF8);
   
   // translate platform linebreaks for fragment
-  PRUnichar* newStr = 0;
   PRInt32 oldLengthInChars = fragUcs2Str.Length() + 1;  // +1 to include null terminator
   PRInt32 newLengthInChars = 0;
   *aStuffToPaste = nsLinebreakConverter::ConvertUnicharLineBreaks(fragUcs2Str.get(),
@@ -1003,7 +1248,6 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
   }
   
   // translate platform linebreaks for context
-  newStr = 0;
   oldLengthInChars = cntxtUcs2Str.Length() + 1;  // +1 to include null terminator
   newLengthInChars = 0;
   *aCfcontext = nsLinebreakConverter::ConvertUnicharLineBreaks(cntxtUcs2Str.get(),
