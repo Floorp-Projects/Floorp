@@ -41,6 +41,9 @@
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
+#ifdef INCLUDE_XUL
+#include "nsXULAtoms.h"
+#endif
 
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
@@ -156,6 +159,10 @@ nsXMLDocument::nsXMLDocument()
   
   // XXX The XML world depends on the html atoms
   nsHTMLAtoms::AddrefAtoms();
+#ifdef INCLUDE_XUL
+  // XUL world lives within XML world until it gets a place of its own
+  nsXULAtoms::AddrefAtoms();
+#endif
 }
 
 nsXMLDocument::~nsXMLDocument()
@@ -188,6 +195,9 @@ nsXMLDocument::~nsXMLDocument()
     delete mEpilog;
   }
   NS_IF_RELEASE(mChildNodes);
+#ifdef INCLUDE_XUL
+  nsXULAtoms::ReleaseAtoms();
+#endif
 }
 
 NS_IMETHODIMP 
