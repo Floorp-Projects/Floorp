@@ -24,6 +24,7 @@
 #include "nsRect.h"
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
+#include "nsIFrameImageLoader.h"
 
 #define BORDER_FULL    0        //entire side
 #define BORDER_INSIDE  1        //inside half
@@ -708,14 +709,14 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
 {
   if (0 < aColor.mBackgroundImage.Length()) {
     // Lookup the image
-    PRInt32 loadStatus;
-    nsImageError loadError;
-    nsIImage* image = nsnull;
     nsSize imageSize;
+    nsIImage* image = nsnull;
+    nsIFrameImageLoader* loader = nsnull;
     nsresult rv = aPresContext.LoadImage(aColor.mBackgroundImage,
-                                         aForFrame, loadStatus, loadError,
-                                         imageSize, image);
-    if (nsnull == image) {
+                                         aForFrame, PR_FALSE, loader);
+    if ((NS_OK != rv) || (nsnull == loader) ||
+        (loader->GetImage(image), (nsnull == image))) {
+      NS_IF_RELEASE(loader);
       // Redraw will happen later
       if (0 == (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
         aRenderingContext.SetColor(aColor.mBackgroundColor);
@@ -723,6 +724,8 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       }
       return;
     }
+    loader->GetSize(imageSize);
+    NS_RELEASE(loader);
 
 #if XXX
     // XXX enable this code as soon as nsIImage can support it
