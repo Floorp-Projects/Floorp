@@ -68,15 +68,20 @@ function createShortcuts()
   var restrictedAccess;
   var ikwDefined;
   var folderQuickLaunchExists;
+  var filePalmSyncInstallExe;
+  var scDescPalmSyncInstall;
+  var scDescPalmSyncUninstall;
 
-  winreg               = getWinRegistry();
-  fWindows             = getFolder("Windows");
-  fProgram             = getFolder("Program");
-  fTemp                = fProgram + "$MainExeFile$";
-  fileExe              = getFolder("file:///", fTemp);
-  scExeDesc            = "Mail";
-  scParam              = "-mail";
-  scFolderName         = "$ProductName$";
+  winreg                    = getWinRegistry();
+  fWindows                  = getFolder("Windows");
+  fProgram                  = getFolder("Program");
+  fileExe                   = getFolder("Program", "$MainExeFile$");
+  filePalmSyncInstallExe    = getFolder("Program", "PalmSyncInstall.exe");
+  scDescPalmSyncInstall     = "Address Book Palm Sync Install";
+  scDescPalmSyncUninstall   = "Address Book Palm Sync Uninstall";
+  scExeDesc                 = "Mail";
+  scParam                   = "-mail";
+  scFolderName              = "$ProductName$";
   if(winreg != null) 
   {
     /* This will check to see if the user has restricted access or not.
@@ -181,6 +186,13 @@ function createShortcuts()
 
     /* create the shortcuts */
     File.windowsShortcut(fileExe, fFolderPath, scExeDesc, fProgram, scParam, fileExe, 0);
+
+    // only create these two shortcuts if the files exist
+    if(File.exists(filePalmSyncInstallExe))
+    {
+      File.windowsShortcut(filePalmSyncInstallExe, fFolderPath, scDescPalmSyncInstall, fProgram, "", filePalmSyncInstallExe, 0);
+      File.windowsShortcut(filePalmSyncInstallExe, fFolderPath, scDescPalmSyncUninstall, fProgram, "/u", filePalmSyncInstallExe, 0);
+    }
 
     //
     // Disabled for now because mail does not have a different shortcut icon from Mozilla
@@ -409,6 +421,13 @@ if(verifyDiskSpace(fProgram, srDest))
     {
       err = performInstall(); 
       logComment("performInstall() returned: " + err);
+
+      if(err == SUCCESS)
+      {
+        // Log the uninstall command to run PalmSyncInstall.exe to uninstall itself.
+        // This needs to be logged after all the files have been installed.
+        logComment("Uninstall Command: \"" + fProgram + "PalmSyncInstall.exe\" /us");
+      }
     }
     else
       cancelInstall(err);

@@ -1,1 +1,8 @@
+module.rc
+module.res
+xpinstal.dll
+xpinstal.exp
+xpinstal.ilk
+xpinstal.lib
+xpinstal.pdb
 Makefile

@@ -767,6 +767,22 @@ void RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int iDestSize)
     lpszDest[lstrlen(lpszDest) - 1] = '\0';
 }
 
+/* Function to copy strings safely.
+ *   returns the amount of memory required (including NULL byte) if there's not enough
+ *   else, it returns 0 for success.
+ */
+int MozCopyStr(LPSTR szSrc, LPSTR szDest, DWORD dwDestBufSize)
+{
+  DWORD length = lstrlen(szSrc) + 1;
+  strncpy(szDest, szSrc, dwDestBufSize);
+  if(length > dwDestBufSize)
+  {
+    szDest[dwDestBufSize - 1] = '\0';
+    return(length);
+  }
+  return(0);
+}
+
 /* Function to locate the first non space character in a string,
  * and return a pointer to it. */
 LPSTR GetFirstNonSpace(LPSTR lpszString)

@@ -158,6 +158,7 @@ void              UpdateSiteSelector(void);
 DWORD             GetAdditionalComponentsCount(void);
 DWORD             GetTotalArchivesToDownload();
 void              RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int iDestSize);
+int               MozCopyStr(LPSTR szSrc, LPSTR szDest, DWORD dwDestBufSize);
 LPSTR             GetFirstNonSpace(LPSTR lpszString);
 int               GetArgC(LPSTR lpszCommandLine);
 LPSTR             GetArgV(LPSTR lpszCommandLine,

@@ -1,1 +1,5 @@
+ds32.ilk
+ds32.pdb
+module.rc
+module.res
 Makefile

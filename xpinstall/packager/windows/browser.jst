@@ -507,15 +507,23 @@ if(verifyDiskSpace(fProgram, srDest))
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/xbl-marquee/");
 
     /* Log files that are created after the installer is done, so they can be uninstalled */
+    logComment("Installing: "    + fProgram + ".autoreg");
     logComment("Installing: "    + fProgram + "Xpcs Registry.dat");
     logComment("Installing: "    + fProgram + "xpcom.log");
     logComment("Create Folder: " + fProgram + "components");
     logComment("Installing: "    + fProgram + "components\\xpti.dat");
     logComment("Installing: "    + fProgram + "components\\xptitemp.dat");
+    logComment("Installing: "    + fProgram + "components\\compreg.dat");
     logComment("Create Folder: " + fProgram + "chrome");
     logComment("Installing: "    + fProgram + "chrome\\installed-chrome.txt");
     logComment("Installing: "    + fProgram + "chrome\\chrome.rdf");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\cookie");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\cookie\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\cookie\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\inspector");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\inspector\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\inspector\\content\\overlays.rdf");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator\\content");
     logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\communicator\\content\\overlays.rdf");
