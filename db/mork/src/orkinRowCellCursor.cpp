@@ -253,7 +253,7 @@ orkinRowCellCursor::GetCount(nsIMdbEnv* mev, mdb_count* outCount)
     outErr = ev->AsErr();
   }
   if ( outCount )
-  	*outCount = count;
+    *outCount = count;
   return outErr;
 }
 
@@ -271,7 +271,7 @@ orkinRowCellCursor::GetSeed(nsIMdbEnv* mev, mdb_seed* outSeed)
     outErr = ev->AsErr();
   }
   if ( outSeed )
-  	*outSeed = seed;
+    *outSeed = seed;
   return outErr;
 }
 
@@ -306,7 +306,7 @@ orkinRowCellCursor::GetPos(nsIMdbEnv* mev, mdb_pos* outPos)
     outErr = ev->AsErr();
   }
   if ( outPos )
-  	*outPos = pos;
+    *outPos = pos;
   return outErr;
 }
 
@@ -341,7 +341,7 @@ orkinRowCellCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
     outErr = ev->AsErr();
   }
   if ( outFail )
-  	*outFail = doFail;
+    *outFail = doFail;
   return outErr;
 }
 // } ----- end attribute methods -----
@@ -365,21 +365,21 @@ orkinRowCellCursor::SetRow(nsIMdbEnv* mev, nsIMdbRow* ioRow)
     orkinRow* orow = (orkinRow*) ioRow;
     if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
     {
-    	morkStore* store = row->GetRowSpaceStore(ev);
-    	if ( store )
-    	{
-	      morkRowObject* rowObj = row->AcquireRowObject(ev, store);
-	      if ( rowObj )
-	      {
-		      morkRowObject::SlotStrongRowObject((morkRowObject*) 0, ev,
-		        &cursor->mRowCellCursor_RowObject);
-		        
-		      cursor->mRowCellCursor_RowObject = rowObj; // take this strong ref
-		      cursor->mCursor_Seed = row->mRow_Seed;
-		      
-		      row->GetCell(ev, cursor->mRowCellCursor_Col, &cursor->mCursor_Pos);
-	      }
-    	}
+      morkStore* store = row->GetRowSpaceStore(ev);
+      if ( store )
+      {
+        morkRowObject* rowObj = row->AcquireRowObject(ev, store);
+        if ( rowObj )
+        {
+          morkRowObject::SlotStrongRowObject((morkRowObject*) 0, ev,
+            &cursor->mRowCellCursor_RowObject);
+            
+          cursor->mRowCellCursor_RowObject = rowObj; // take this strong ref
+          cursor->mCursor_Seed = row->mRow_Seed;
+          
+          row->GetCell(ev, cursor->mRowCellCursor_Col, &cursor->mCursor_Pos);
+        }
+      }
     }
     outErr = ev->AsErr();
   }
@@ -399,12 +399,12 @@ orkinRowCellCursor::GetRow(nsIMdbEnv* mev, nsIMdbRow** acqRow)
     morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
     morkRowObject* rowObj = cursor->mRowCellCursor_RowObject;
     if ( rowObj )
-	    outRow = rowObj->AcquireRowHandle(ev);
+      outRow = rowObj->AcquireRowHandle(ev);
 
     outErr = ev->AsErr();
   }
   if ( acqRow )
-  	*acqRow = outRow;
+    *acqRow = outRow;
   return outErr;
 }
 // } ----- end attribute methods -----
@@ -431,18 +431,18 @@ orkinRowCellCursor::MakeCell( // get cell at current pos in the row
     morkCell* cell = row->CellAt(ev, pos);
     if ( cell )
     {
-    	col = cell->GetColumn();
-    	outCell = row->AcquireCellHandle(ev, cell, col, pos);
+      col = cell->GetColumn();
+      outCell = row->AcquireCellHandle(ev, cell, col, pos);
     }
     outErr = ev->AsErr();
   }
   if ( acqCell )
-  	*acqCell = outCell;
- 	if ( outPos )
- 		*outPos = pos;
- 	if ( outColumn )
- 		*outColumn = col;
- 		
+    *acqCell = outCell;
+   if ( outPos )
+     *outPos = pos;
+   if ( outColumn )
+     *outColumn = col;
+     
   return outErr;
 }
 // } ----- end cell creation methods -----
@@ -467,7 +467,7 @@ orkinRowCellCursor::SeekCell( // same as SetRow() followed by MakeCell()
     outErr = ev->AsErr();
   }
   if ( acqCell )
-  	*acqCell = outCell;
+    *acqCell = outCell;
   return outErr;
 }
 // } ----- end cell seeking methods -----
