@@ -183,6 +183,8 @@ nsresult nsXPFCObserverManager::Unregister(nsIXPFCSubject * aSubject, nsIXPFCObs
   /*
    * We need to loop through looking for a match of both and then remove them
    */
+listunregister:
+
   nsIIterator * iterator;
 
   mList->CreateIterator(&iterator);
@@ -198,6 +200,9 @@ nsresult nsXPFCObserverManager::Unregister(nsIXPFCSubject * aSubject, nsIXPFCObs
     if (item->subject == aSubject && item->observer == aObserver)
     {
       mList->Remove((nsComponent)item);
+      delete item;
+      NS_RELEASE(iterator);
+      goto listunregister;
       break;
     }  
 
@@ -209,6 +214,16 @@ nsresult nsXPFCObserverManager::Unregister(nsIXPFCSubject * aSubject, nsIXPFCObs
   PR_ExitMonitor(monitor);
 
   return NS_OK;
+}
+
+nsresult nsXPFCObserverManager::UnregisterSubject(nsIXPFCSubject * aSubject)
+{
+  return (Unregister((nsISupports*)aSubject));
+}
+
+nsresult nsXPFCObserverManager::UnregisterObserver(nsIXPFCObserver * aObserver)
+{
+  return (Unregister((nsISupports*)aObserver));
 }
 
 /*
@@ -225,9 +240,13 @@ nsresult nsXPFCObserverManager::Unregister(nsISupports * aSubjectObserver)
    * See which interfaces the passed in object supports
    */
 
-  nsIXPFCObserver * observer;
-  nsIXPFCSubject * subject;
+//XXX We really want to QueryInterface here ...
 
+  nsIXPFCObserver * observer = (nsIXPFCObserver *)aSubjectObserver;
+  nsIXPFCSubject * subject = (nsIXPFCSubject *)aSubjectObserver;
+
+
+#if 0
   nsresult res = aSubjectObserver->QueryInterface(kCXPFCObserverIID, (void**)observer);
 
   if (NS_OK != res)
@@ -247,10 +266,12 @@ nsresult nsXPFCObserverManager::Unregister(nsISupports * aSubjectObserver)
       NS_IF_RELEASE(observer);
       return NS_OK;
   }
-
+#endif
   /*
    * We need to loop through looking for a match of both and then remove them
    */
+listdelete:
+
   nsIIterator * iterator;
 
   mList->CreateIterator(&iterator);
@@ -266,7 +287,9 @@ nsresult nsXPFCObserverManager::Unregister(nsISupports * aSubjectObserver)
     if (item->subject == subject || item->observer == observer)
     {
       mList->Remove((nsComponent)item);
-      break;
+      delete item;
+      NS_RELEASE(iterator);
+      goto listdelete;
     }  
 
     iterator->Next();
@@ -276,8 +299,10 @@ nsresult nsXPFCObserverManager::Unregister(nsISupports * aSubjectObserver)
 
   PR_ExitMonitor(monitor);
 
+#if 0
   NS_IF_RELEASE(subject);
   NS_IF_RELEASE(observer);
+#endif
 
   return NS_OK;
 }
