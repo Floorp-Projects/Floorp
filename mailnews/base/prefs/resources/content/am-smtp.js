@@ -21,6 +21,12 @@
  * Alec Flett <alecf@netscape.com>
  */
 
+function onLoad()
+{
+    parent.onPanelLoaded('am-smtp.xul');
+    initSmtpSettings(null);
+}
+
 function onAdvanced(event)
 {
     var args = {result: false};

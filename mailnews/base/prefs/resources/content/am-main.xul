@@ -26,7 +26,7 @@
           <rows>
             <row>
               <text class="label" value="&accountName.label;" for="server.prettyName"/>
-              <html:input wsm_persist="true" type="text" size="30" name="server.prettyName" id="server.prettyName" flex="100%"/>
+              <textfield wsm_persist="true" type="text" size="30" id="server.prettyName" flex="100%"/>
             </row>
           </rows>
         </grid>
@@ -42,35 +42,33 @@
     <rows>
       <row>
         <text class="label" value="&name.label;" for="identity.fullName"/>
-        <html:input wsm_persist="true" name="identity.fullName" id="identity.fullName" type="text" size="30"/>
+        <textfield wsm_persist="true" id="identity.fullName" size="30"/>
       </row>
       <row>
         <text class="label" value="&email.label;" for="identity.email"/>
-        <html:input wsm_persist="true" id="identity.email" name="identity.email" type="text" maxwidth="200" size="30"/>
+        <textfield wsm_persist="true" id="identity.email" />
       </row>
       <row>
         <text class="label" value="&replyTo.label;" for="identity.replyTo"/>
-        <html:input wsm_persist="true" id="identity.replyTo" name="identity.replyTo" type="text" maxwidth="200" size="30"/>
+        <textfield wsm_persist="true" id="identity.replyTo"/>
       </row>
       <row>
         <text class="label" value="&organization.label;" for="identity.organization"/>
-        <html:input wsm_persist="true" id="identity.organization" name="identity.organization" type="text" size="30"/>
+        <textfield wsm_persist="true" id="identity.organization"/>
       </row>
     </rows>
     </grid>
 <!-- no vcard in PR1
     <row class="checkboxrow">
       <html:td colspan="2">
-        <html:input wsm_persist="true" name="identity.attachVCard" type="checkbox"/>
-        &attachVCard.label;
+        <checkbox wsm_persist="true" id="identity.attachVCard" type="checkbox" value="&attachVCard.label;"/>
       <button value="&editVCard.label;"/>
       </html:td>
       </row>    
 -->
       <box orient="horizontal">
-        <html:input wsm_persist="true" name="identity.attachSignature" id="identity.attachSignature" type="checkbox"/>
-        <html:label for="identity.attachSignature">&signature.label;</html:label>
-        <html:input wsm_persist="true" type="text" id="identity.signature" datatype="nsIFileSpec" flex="100%" name="identity.signature"/>
+        <checkbox wsm_persist="true" id="identity.attachSignature" value="&signature.label;" flex="1"/>
+        <textfield wsm_persist="true" id="identity.signature" datatype="nsIFileSpec" flex="1" name="identity.signature"/>
         <button class="dialog push" name="browse" type="button" value="&choose.label;" onclick="prefNavSelectFile('identity.signature', 'choosefile', true)"/>
       </box>
 
@@ -84,14 +82,12 @@
 
 -->
 
-    <box>
-        <html:input wsm_persist="true" name="identity.composeHtml" id="identity.composeHtml" type="checkbox"/>
-        <html:label for="identity.composeHtml">&useHtml.label;</html:label>
-    </box>
+    <checkbox wsm_persist="true" id="identity.composeHtml"
+              value="&useHtml.label;"/>
 
     <box orient="horizontal">
       <spring flex="100%"/>
       <button onclick="onAdvanced" value="&advancedButton.label;"/>
-      <html:input wsm_persist="true" type="hidden" name="identity.smtpServerKey"/>
+      <text hidden="true" wsm_persist="true" type="hidden" id="identity.smtpServerKey"/>
     </box>
 </window>

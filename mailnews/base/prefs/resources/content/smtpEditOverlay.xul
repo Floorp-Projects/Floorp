@@ -34,21 +34,21 @@
   <box id="smtpServerEditor" orient="vertical">
     <box orient="horizontal">
       <text value="&serverName.label;"/>
-      <textfield id="smtp.hostname"/>
+      <textfield wsm_persist="true" id="smtp.hostname"/>
     </box>
     <!-- use a grid here when it's implemented -->
     <box orient="vertical">
-      <checkbox id="smtp.alwaysUseUsername" value="&alwaysUseUsername.label;"
+      <checkbox wsm_persist="true" id="smtp.useUsername" value="&alwaysUseUsername.label;"
                 oncommand="updateControls();"/>
       <box orient="vertical" style="margin-left: 2em">
         <box orient="horizontal">
           <text value="&userName.label;"/>
-          <textfield id="smtp.username"/>
+          <textfield wsm_persist="true" id="smtp.username"/>
         </box>
-        <checkbox id="smtp.savePassword" value="&savePassword.label;"/>
+        <checkbox wsm_persist="true" id="smtp.savePassword" value="&savePassword.label;"/>
       </box>
      </box>
-     <checkbox id="smtp.isSecure" value="&isSecure.label;" oncommand="updateControls();"/>
+     <checkbox wsm_persist="true" id="smtp.isSecure" value="&isSecure.label;" oncommand="updateControls();"/>
      <radiogroup id="smtp.trySSL">
        <box orient="horizontal">
          <radio value="&alwaysSecure.label;" id="smtp.alwaysSecure"/>

@@ -57,7 +57,7 @@ function hideShowControls(serverType)
     var len = controls.length;
     for (var i=0; i<len; i++) {
         var control = controls[i];
-        var controlName = control.name;
+        var controlName = control.id;
         if (!controlName) continue;
         var controlNameSplit = controlName.split(".");
         
@@ -65,20 +65,23 @@ function hideShowControls(serverType)
         var controlType = controlNameSplit[0];
 
         // skip generic server/identity things
-        if (controlType == "server" ||
-            controlType == "identity") continue;
+        var hideFor = control.getAttribute("hidefor");
+        if (!hideFor &&
+            (controlType == "server" ||
+             controlType == "identity")) continue;
 
-        // we only deal with controls in <html:div>s
-        var div = getEnclosingDiv(control);
-        
-        if (!div) continue;
+        var box = getEnclosingContainer(control);
+
+        if (!box) continue;
 
         // hide unsupported server type
-        if (control.type.toLowerCase() != "hidden") {
-            if (controlType == serverType)
-                div.removeAttribute("hidden")
-            else
-                div.setAttribute("hidden", "true");
+
+        if (controlType != serverType ||
+            hideFor == serverType) {
+            box.setAttribute("hidden", "true");
+        }
+        else {
+            box.removeAttribute("hidden");
         }
     }
 
@@ -97,7 +100,6 @@ function setDivText(divname, value) {
 
 function openImapAdvanced()
 {
-    dump("openImapAdvanced()\n");
     var imapServer = getImapServer();
     dump("Opening dialog..\n");
     window.openDialog("chrome://messenger/content/am-imap-advanced.xul",
@@ -131,10 +133,6 @@ function getImapServer() {
 
 function saveServerLocally(imapServer)
 {
-    dump("Saving values in " + imapServer + ":\n");
-    for (var i in imapServer) {
-        dump("imapServer." + i + " = " + imapServer[i] + "\n");
-    }
     // boolean prefs, JS does the conversion for us
     document.getElementById("imap.dualUseFolders").value = imapServer.dualUseFolders;
     document.getElementById("imap.usingSubscription").value = imapServer.usingSubscription;
@@ -150,31 +148,26 @@ function saveServerLocally(imapServer)
 
 }
 
-function getEnclosingDiv(startNode) {
+function getEnclosingContainer(startNode) {
 
-    var parent = startNode.parentNode;
-    var div;
+    var parent = startNode;
+    var box;
     
     while (parent && parent != document) {
 
-        if (parent.tagName.toLowerCase() == "div" ||
-            parent.tagName.toLowerCase() == "html" ||
-            parent.tagName.toLowerCase() == "box") {
-            var isContainer =
-                (parent.getAttribute("iscontrolcontainer") == "true");
-            
-            // remember the FIRST div we encounter, or the first
-            // controlcontainer
-            if (!div || isContainer)
-                div=parent;
-            
-            // break out with a controlcontainer
-            if (isContainer)
-                break;
-        }
+        var isContainer =
+            (parent.getAttribute("iscontrolcontainer") == "true");
+          
+        // remember the FIRST container we encounter, or the first
+        // controlcontainer
+        if (!box || isContainer)
+            box=parent;
         
+        // break out with a controlcontainer
+        if (isContainer)
+            break;
         parent = parent.parentNode;
     }
     
-    return div;
+    return box;
 }

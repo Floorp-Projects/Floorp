@@ -2,6 +2,7 @@
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/smtpEditOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-advanced.dtd" >
 
@@ -9,7 +10,7 @@
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	flex="100%"
 	class="dialog"
-    onload="parent.onPanelLoaded('am-smtp.xul');"
+    onload="onLoad();"
 	align="vertical">
 
   <script language="javascript" src="am-smtp.js"/>
@@ -18,41 +19,7 @@
 
 <html>&smtpDesc.label;</html>
 
-  <box>
-     <text class="label" value="&smtpHostname.label;"/>
-     <html:input wsm_persist="true" type="text" size="30" name="smtp.hostname"/>
-  </box>
-  <grid width="100%">
-    <columns>
-      <column/>
-      <column/>
-    </columns>
-  <rows>
-    <row>
-      <html:input wsm_persist="true" type="checkbox" id="smtp.useUsername" name="smtp.useUsername"/>
-      <html:label for="smtp.useUsername">&smtpAlwaysUseName.label;</html:label>
-    </row>
-
-    <row>
-      <text/>
-      <box>
-        <text class="label" value="&smtpUsername.label;"/>
-        <html:input wsm_persist="true" type="text" size="30" name="smtp.username" flex="100%"/>
-      </box>
-  </row>
-  <row>
-    <text/>
-    <box>
-      <html:input wsm_persist="true" type="checkbox" id="smtp.savePassword" name="smtp.savePassword"/>
-      <html:label for="smtp.savePassword">&smtpSavePassword.label;</html:label>
-    </box>
-  </row>
-  <row>
-      <html:input wsm_persist="true" id="smtp.isSecure" name="smtp.isSecure" type="checkbox"/>
-      <html:label for="smtp.isSecure">&smtpUseSecure.label;</html:label>
-  </row>
-  </rows>
-</grid>    
+  <box id="smtpServerEditor"/>
 
   <box align="horizontal">
     <spring flex="100%"/>

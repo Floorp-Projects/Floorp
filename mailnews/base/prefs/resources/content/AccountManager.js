@@ -420,8 +420,8 @@ function savePage(serverId) {
 
   // store the value in the account
   for (var i=0; i<pageElements.length; i++) {
-      if (pageElements[i].name) {
-        var vals = pageElements[i].name.split(".");
+      if (pageElements[i].id) {
+        var vals = pageElements[i].id.split(".");
         var type = vals[0];
         var slot = vals[1];
 
@@ -504,8 +504,8 @@ function restorePage(pageId, serverId) {
   
   // restore the value from the account
   for (var i=0; i<pageElements.length; i++) {
-      if (pageElements[i].name) {
-        var vals = pageElements[i].name.split(".");
+      if (pageElements[i].id) {
+        var vals = pageElements[i].id.split(".");
         var type = vals[0];
         var slot = vals[1];
 
@@ -529,14 +529,19 @@ function restorePage(pageId, serverId) {
 //
 function getFormElementValue(formElement) {
  try {
-  var type = formElement.type.toLowerCase();
-  if (type=="checkbox" || type=="radio") {
+  var type = formElement.tagName;
+  if (type=="checkbox") {
     if (formElement.getAttribute("reversed"))
       return !formElement.checked;
     else
       return formElement.checked;
   }
-  else if (type == "text" &&
+
+  else if (type == "radiogroup" || type=="menulist") {
+    return formElement.selectedItem.data;
+  }
+  
+  else if (type == "textfield" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
     if (formElement.value) {
       var filespec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
@@ -563,8 +568,8 @@ function setFormElementValue(formElement, value) {
   
   //formElement.value = formElement.defaultValue;
   //  formElement.checked = formElement.defaultChecked;
-  var type = formElement.type.toLowerCase();
-  if (type == "checkbox" || type=="radio") {
+  var type = formElement.tagName;
+  if (type == "checkbox") {
     if (value == undefined) {
       formElement.checked = formElement.defaultChecked;
     } else {
@@ -572,11 +577,25 @@ function setFormElementValue(formElement, value) {
         formElement.checked = !value;
       else
         formElement.checked = value;
-    }
+    }     
+  }
+
+  else if (type == "radiogroup" || type =="menulist") {
     
+    var selectedItem;
+    if (value == undefined) {
+      if (type == "radiogroup")
+        selectedItem = formElement.firstChild;
+      else
+        selectedItem = formElement.firstChild.firstChild;
+    }
+    else
+      selectedItem = formElement.getElementsByAttribute("data", value)[0];
+    
+    formElement.selectedItem = selectedItem;
   }
   // handle nsIFileSpec
-  else if (type == "text" &&
+  else if (type == "textfield" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
     if (value) {
       var filespec = value.QueryInterface(Components.interfaces.nsIFileSpec);

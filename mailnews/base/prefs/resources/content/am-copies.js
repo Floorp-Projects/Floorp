@@ -38,7 +38,7 @@ function initFolderDisplay(fieldname, pickerID) {
 
 function initBccSelf() {
     var bccValue = document.getElementById("identity.email").value;
-    setDivText("bccemail",bccValue);
+    setDivText("identity.bccSelf",bccValue);
 }
 
 function setDivText(divid, str) {

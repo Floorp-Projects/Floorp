@@ -16,39 +16,35 @@
 <script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 <script src="chrome://messenger/content/am-copies.js"/>
 
-<html:input wsm_persist="true" type="hidden" name="identity.fccFolder" id="identity.fccFolder"/>
-<html:input wsm_persist="true" type="hidden" name="identity.draftFolder" id="identity.draftFolder"/>
-<html:input wsm_persist="true" type="hidden" name="identity.stationeryFolder" id="identity.stationeryFolder"/>
-<html:input wsm_persist="true" type="hidden" name="identity.email" id="identity.email"/>
+<text hidden="true" wsm_persist="true" id="identity.fccFolder"/>
+<text hidden="true" wsm_persist="true" id="identity.draftFolder"/>
+<text hidden="true" wsm_persist="true" id="identity.stationeryFolder"/>
+<text hidden="true" wsm_persist="true" id="identity.email"/>
 
   <box class="box-smallheader" title="&copyAndFolderTitle.label;"/>
   <text class="label" value="&sendingPrefix.label;"/>
 
   <box>
-    <box flex="1">
-      <html:input wsm_persist="true" name="identity.doFcc" id="identity.doFcc" type="checkbox"/>
-      <html:label for="identity.doFcc" flex="1">&fccMailFolder.label;</html:label>
-    </box>
+    <checkbox wsm_persist="true" id="identity.doFcc"
+      value="&fccMailFolder.label;"/>
 
 	<!-- name="identity.fccFolder" -->
 	<box align="horizontal" flex="2">
 		<menu id="msgFccFolderPicker" flex="1"/>
 	</box>
   </box>
+
+  <checkbox wsm_persist="true" id="identity.bccSelf" before="&bccAccount.label; &lt;" after="&gt;"/>
+
   <box>
-    <html:input wsm_persist="true" name="identity.bccSelf" id="identity.bccSelf" type="checkbox"/>
-    <html:label wsm_persist="true" for="identity.bccSelf"><text before="&bccAccount.label; &lt;" id="bccemail" after="&gt;"/>
-</html:label>
-  </box>
-  <box>
-    <html:input wsm_persist="true" name="identity.bccOthers" id="identity.bccOthers" type="checkbox"/>
-    <html:label for="identity.bccOthers">&bccAddress.label;</html:label>
-    <html:input wsm_persist="true" type="text" name="identity.bccList"/>
+    <checkbox wsm_persist="true" id="identity.bccOthers"
+        value="&bccAddress.label;"/>
+    <textfield wsm_persist="true" id="identity.bccList"/>
   </box>
 
 <spring class="spacer"/>
 <spring class="spacer"/>
-<text value="&specialFolderTitle.label;"/>
+<text class="label" value="&specialFolderTitle.label;"/>
 <grid>
   <columns>
     <column flex="1"/>

@@ -28,7 +28,7 @@ function initSmtpSettings(server) {
     
     if (server) {
         document.getElementById("smtp.hostname").value = server.hostname;
-        document.getElementById("smtp.alwaysUseUsername").checked =
+        document.getElementById("smtp.useUsername").checked =
             server.alwaysUseUsername;
         document.getElementById("smtp.username").value = server.username;
         document.getElementById("smtp.savePassword").checked = server.savePassword;
@@ -54,8 +54,8 @@ function updateControls() {
 
     dump("Update controls..\n");
     var alwaysUseUsername =
-        (document.getElementById("smtp.alwaysUseUsername").checked == "true")
-        
+        document.getElementById("smtp.useUsername").checked;
+
     if (alwaysUseUsername) {
         document.getElementById("smtp.username").removeAttribute("disabled");
         document.getElementById("smtp.savePassword").removeAttribute("disabled");
@@ -68,7 +68,7 @@ function updateControls() {
 
 
     var isSecure =
-        (document.getElementById("smtp.isSecure").checked == "true");
+        document.getElementById("smtp.isSecure").checked;
 
     if (isSecure) {
         document.getElementById("smtp.alwaysSecure").removeAttribute("disabled");
