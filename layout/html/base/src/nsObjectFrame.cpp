@@ -108,7 +108,8 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
 //    delete(initData);
 //  }
   if (NS_OK != result) {
-    return NS_OK;
+    result = NS_OK;       //XXX why OK? MMP
+    goto exit;            //XXX sue me. MMP
   }
 
 #if 0
@@ -127,11 +128,14 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
   viewMan->InsertChild(parView, view, 0);
 
   SetView(view);
+
+exit:
   NS_RELEASE(view);
 	  
   NS_IF_RELEASE(parView);
   NS_IF_RELEASE(viewMan);  
   NS_IF_RELEASE(presShell); 
+
   return result;
 }
 
@@ -208,7 +212,8 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
     static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
     static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 
-    nsISupports               *container, *pluginsup;
+    nsISupports               *container;
+    nsIPluginInstance         *pluginsup;
     nsIPluginHost             *pm;
     nsIContentViewerContainer *cv;
 
@@ -221,9 +226,9 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
         rv = cv->QueryCapability(kIPluginHostIID, (void **)&pm);
 
         if (NS_OK == rv) {
-          nsString  type;
-          char      *buf;
-          PRInt32   buflen;
+          nsAutoString  type;
+          char          *buf;
+          PRInt32       buflen;
 
           mContent->GetAttribute(nsString("type"), type);
 
@@ -238,6 +243,7 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
               rv = pm->InstantiatePlugin(buf, &pluginsup);
 
               if (NS_OK == rv) {
+                pluginsup->Start();
               }
             }
           }
