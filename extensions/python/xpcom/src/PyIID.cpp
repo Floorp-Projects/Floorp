@@ -174,7 +174,8 @@ Py_nsIID::PyTypeMethod_compare(PyObject *self, PyObject *other)
 {
 	Py_nsIID *s_iid = (Py_nsIID *)self;
 	Py_nsIID *o_iid = (Py_nsIID *)other;
-	return memcmp(&s_iid->m_iid, &o_iid->m_iid, sizeof(s_iid->m_iid));
+	int rc = memcmp(&s_iid->m_iid, &o_iid->m_iid, sizeof(s_iid->m_iid)); 
+	return rc == 0 ? 0 : (rc < 0 ? -1 : 1);
 }
 
 /* static */ PyObject *
