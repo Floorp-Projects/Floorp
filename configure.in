@@ -1076,6 +1076,7 @@ intl/uconv/ucvlatin/Makefile
 intl/locale/Makefile
 intl/locale/public/Makefile
 intl/locale/src/Makefile
+intl/locale/src/unix/Makefile
 intl/locale/tests/Makefile
 intl/unicharutil/Makefile
 intl/unicharutil/src/Makefile
