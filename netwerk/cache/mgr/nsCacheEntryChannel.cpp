@@ -129,7 +129,6 @@ class CacheManagerStreamListener: public nsIStreamListener  {
     nsresult Init(nsIStreamListener *aListener, nsILoadGroup *aLoadGroup, 
                   nsIChannel *aChannel, nsISupports *aContext)
     {
-        nsresult rv = NS_OK;
         mListener = aListener;
         mLoadGroup = aLoadGroup;
         mChannel = aChannel;
