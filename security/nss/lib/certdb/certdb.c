@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.11 2001/04/24 21:27:40 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.12 2001/06/06 23:40:51 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1691,6 +1691,22 @@ CERT_IsCACert(CERTCertificate *cert, unsigned int *rettype)
     
     return(ret);
 }
+
+
+PRBool
+CERT_IsCADERCert(SECItem *derCert, unsigned int *type) {
+    CERTCertificate *cert;
+    PRBool isCA;
+
+    cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), derCert, NULL,
+	                                   PR_FALSE, PR_TRUE);
+    if (cert == NULL) return NULL;
+
+    isCA = CERT_IsCACert(cert,type);
+    CERT_DestroyCertificate (cert);
+    return isCA;
+}
+
 
 /*
  * is certa newer than certb?  If one is expired, pick the other one.
