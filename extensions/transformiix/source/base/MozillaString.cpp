@@ -523,7 +523,7 @@ PRInt32 String::indexOf(const String& data, PRInt32 offset) const
 
   nsString nsStrData((PRUnichar *)data.toUnicode());
 
-  return ptrNSString->Find(nsStrData, PR_FALSE, searchIndex);
+  return ptrNSString->Find(nsStrData, searchIndex);
 }
 
 //
@@ -553,7 +553,7 @@ MBool String::isEqualIgnoreCase(const String& data) const
     return MB_FALSE;
   else
   {
-    if (ptrNSString->EqualsIgnoreCase(data.getConstNSString()) == PR_TRUE)
+    if (ptrNSString->Equals(data.getConstNSString(), nsCaseInsensitiveStringComparator()) == PR_TRUE)
       return MB_TRUE;
     else
       return MB_FALSE;
@@ -597,7 +597,7 @@ PRInt32 String::lastIndexOf(const String& data, PRInt32 offset) const
 {
   nsString nsData((PRUnichar *)data.toUnicode(), data.length());
 
-  return ptrNSString->RFind(nsData, PR_FALSE, offset);
+  return ptrNSString->RFind(nsData, offset);
 }
 
 //

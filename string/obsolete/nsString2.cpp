@@ -410,7 +410,7 @@ nsString::ReplaceSubstring(const nsString& aTarget,const nsString& aNewValue){
     }
     else {
       PRInt32 theIndex=0;
-      while(kNotFound!=(theIndex=nsStrPrivate::FindSubstr2in2(*this,aTarget,PR_FALSE,theIndex,mLength))) {
+      while(kNotFound!=(theIndex=nsStrPrivate::FindSubstr2in2(*this,aTarget,theIndex,mLength))) {
         if(aNewValue.mLength<aTarget.mLength) {
           //Since target is longer than newValue, we should delete a few chars first, then overwrite.
           PRInt32 theDelLen=aTarget.mLength-aNewValue.mLength;
@@ -703,7 +703,7 @@ void nsString::AppendWithConversion(const char* aCString,PRInt32 aCount) {
   if(aCString && aCount){  //if astring is null or count==0 there's nothing to do
     nsStr temp;
     nsStrPrivate::Initialize(temp,eOneByte);
-    temp.mStr=(char*)aCString;
+    temp.mStr = NS_CONST_CAST(char*, aCString);
 
     if(0<aCount) {
       temp.mLength=aCount;
@@ -796,7 +796,7 @@ void nsString::InsertWithConversion(const char* aCString,PRUint32 anOffset,PRInt
   if(aCString && aCount){
     nsStr temp;
     nsStrPrivate::Initialize(temp,eOneByte);
-    temp.mStr=(char*)aCString;
+    temp.mStr = NS_CONST_CAST(char*, aCString);
 
     if(0<aCount) {
       temp.mLength=aCount;
@@ -852,7 +852,7 @@ PRInt32 nsString::Find(const char* aCString,PRBool aIgnoreCase,PRInt32 anOffset,
     nsStr temp;
     nsStrPrivate::Initialize(temp,eOneByte);
     temp.mLength=strlen(aCString);
-    temp.mStr=(char*)aCString;
+    temp.mStr = NS_CONST_CAST(char*, aCString);
     result=nsStrPrivate::FindSubstr1in2(*this,temp,aIgnoreCase,anOffset,aCount);
   }
   return result;
@@ -868,16 +868,16 @@ PRInt32 nsString::Find(const char* aCString,PRBool aIgnoreCase,PRInt32 anOffset,
  *  @param   aCount tells us how many iterations to make starting at the given offset
  *  @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 nsString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
+PRInt32 nsString::Find(const PRUnichar* aString,PRInt32 anOffset,PRInt32 aCount) const{
   NS_ASSERTION(0!=aString,kNullPointerError);
 
   PRInt32 result=kNotFound;
   if(aString) {
     nsStr temp;
     nsStrPrivate::Initialize(temp,eTwoByte);
-    temp.mLength=nsCRT::strlen(aString);
-    temp.mUStr=(PRUnichar*)aString;
-    result=nsStrPrivate::FindSubstr2in2(*this,temp,aIgnoreCase,anOffset,aCount);
+    temp.mLength = nsCRT::strlen(aString);
+    temp.mUStr = NS_CONST_CAST(PRUnichar*, aString);
+    result=nsStrPrivate::FindSubstr2in2(*this,temp,anOffset,aCount);
   }
   return result;
 }
@@ -892,8 +892,14 @@ PRInt32 nsString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOff
  *  @param   aCount tells us how many iterations to make starting at the given offset
  *  @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 nsString::Find(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStrPrivate::FindSubstr2in2(*this,aString,aIgnoreCase,anOffset,aCount);
+PRInt32 nsString::Find(const nsAFlatString& aString,PRInt32 anOffset,PRInt32 aCount) const{
+
+  nsStr temp;
+  nsStrPrivate::Initialize(temp, eTwoByte);
+  temp.mLength = aString.Length();
+  temp.mUStr = NS_CONST_CAST(PRUnichar*, aString.get());
+  
+  PRInt32 result=nsStrPrivate::FindSubstr2in2(*this,temp,anOffset,aCount);
   return result;
 }
 
@@ -914,7 +920,7 @@ PRInt32 nsString::FindCharInSet(const char* aCStringSet,PRInt32 anOffset) const{
     nsStr temp;
     nsStrPrivate::Initialize(temp,eOneByte);
     temp.mLength=strlen(aCStringSet);
-    temp.mStr=(char*)aCStringSet;
+    temp.mStr = NS_CONST_CAST(char*, aCStringSet);
     result=nsStrPrivate::FindCharInSet1(*this,temp,PR_FALSE,anOffset);
   }
   return result;
@@ -937,7 +943,7 @@ PRInt32 nsString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) co
     nsStr temp;
     nsStrPrivate::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aStringSet);
-    temp.mStr=(char*)aStringSet;
+    temp.mUStr=NS_CONST_CAST(PRUnichar*, aStringSet);
     result=nsStrPrivate::FindCharInSet2(*this,temp,anOffset);
   }
   return result;
@@ -953,12 +959,17 @@ PRInt32 nsString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) co
  *  @param   aCount tells us how many iterations to make starting at the given offset
  *  @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 nsString::RFind(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStrPrivate::RFindSubstr2in2(*this,aString,aIgnoreCase,anOffset,aCount);
+PRInt32 nsString::RFind(const nsAFlatString& aString,PRInt32 anOffset,PRInt32 aCount) const
+{
+  nsStr temp;
+  nsStrPrivate::Initialize(temp, eTwoByte);
+  temp.mLength = aString.Length();
+  temp.mUStr = NS_CONST_CAST(PRUnichar*, aString.get());
+  PRInt32 result=nsStrPrivate::RFindSubstr2in2(*this,temp,anOffset,aCount);
   return result;
 }
 
-PRInt32 nsString::RFind(const PRUnichar* aString, PRBool aIgnoreCase, PRInt32 anOffset, PRInt32 aCount) const
+PRInt32 nsString::RFind(const PRUnichar* aString, PRInt32 anOffset, PRInt32 aCount) const
 {
   PRInt32 result=kNotFound;
   if (aString) {
@@ -966,7 +977,7 @@ PRInt32 nsString::RFind(const PRUnichar* aString, PRBool aIgnoreCase, PRInt32 an
     nsStrPrivate::Initialize(temp, eTwoByte);
     temp.mLength = nsCRT::strlen(aString);
     temp.mUStr = NS_CONST_CAST(PRUnichar*, aString);
-    result=nsStrPrivate::RFindSubstr2in2(*this,temp,aIgnoreCase,anOffset,aCount);
+    result=nsStrPrivate::RFindSubstr2in2(*this,temp,anOffset,aCount);
   }
   return result;
 }
@@ -989,7 +1000,7 @@ PRInt32 nsString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset,
     nsStr temp;
     nsStrPrivate::Initialize(temp,eOneByte);
     temp.mLength=strlen(aString);
-    temp.mStr=(char*)aString;
+    temp.mStr = NS_CONST_CAST(char*, aString);
     result=nsStrPrivate::RFindSubstr1in2(*this,temp,aIgnoreCase,anOffset,aCount);
   }
   return result;
@@ -1026,8 +1037,8 @@ PRInt32 nsString::RFindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) c
   if(aStringSet) {
     nsStr temp;
     nsStrPrivate::Initialize(temp,eTwoByte);
-    temp.mLength=nsCRT::strlen(aStringSet);
-    temp.mUStr=(PRUnichar*)aStringSet;
+    temp.mLength = nsCRT::strlen(aStringSet);
+    temp.mUStr = NS_CONST_CAST(PRUnichar*, aStringSet);
     result=nsStrPrivate::RFindCharInSet2(*this,temp,anOffset);
   }
   return result;
@@ -1055,37 +1066,11 @@ PRInt32 nsString::CompareWithConversion(const char *aCString,PRBool aIgnoreCase,
 
     temp.mLength= (0<aCount) ? aCount : strlen(aCString);
 
-    temp.mStr=(char*)aCString;
+    temp.mStr = NS_CONST_CAST(char*, aCString);
     return nsStrPrivate::StrCompare2To1(*this,temp,aCount,aIgnoreCase);
   }
 
   return 0;
-}
-
-/**
- * Compares given unistring to this string.
- * @update  gess 01/04/99
- * @param   aString pts to a uni-string
- * @param   aIgnoreCase tells us how to treat case
- * @param   aCount tells us how many chars to test; -1 implies full length
- * @return  -1,0,1
- */
-PRInt32 nsString::CompareWithConversion(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  NS_ASSERTION(0!=aString,kNullPointerError);
-
-  if(aString) {
-    nsStr temp;
-    nsStrPrivate::Initialize(temp,eTwoByte);
-    temp.mLength=nsCRT::strlen(aString);
-    temp.mUStr=(PRUnichar*)aString;
-    return nsStrPrivate::StrCompare2To2(*this,temp,aCount,aIgnoreCase);
-  }
-
-   return 0;
-}
-
-PRBool nsString::EqualsIgnoreCase(const nsString& aString) const {
-  return CompareWithConversion(aString.get(), PR_TRUE) == 0;
 }
 
 PRBool nsString::EqualsIgnoreCase(const char* aString,PRInt32 aLength) const {
@@ -1106,7 +1091,7 @@ PRBool nsString::EqualsWithConversion(const char* aString,PRBool aIgnoreCase,PRI
   return result;
 }
 
-PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
+PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount);
 /**
  * Compare this to given atom; note that we compare full strings here.
  * The optional length argument just lets us know how long the given string is.
@@ -1118,7 +1103,7 @@ PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCoun
  * @param  aLength -- length of given string.
  * @return TRUE if equal
  */
-PRBool nsString::EqualsAtom(/*FIX: const */nsIAtom* aAtom,PRBool aIgnoreCase) const{
+PRBool nsString::EqualsAtom(nsIAtom* aAtom) const{
   NS_ASSERTION(0!=aAtom,kNullPointerError);
   PRBool result=PR_FALSE;
   if(aAtom){
@@ -1126,7 +1111,7 @@ PRBool nsString::EqualsAtom(/*FIX: const */nsIAtom* aAtom,PRBool aIgnoreCase) co
     const PRUnichar* unicode;
     if (aAtom->GetUnicode(&unicode) != NS_OK || unicode == nsnull)
         return PR_FALSE;
-    cmp=Compare2To2(mUStr,unicode, nsCRT::strlen(mUStr), aIgnoreCase);
+    cmp=Compare2To2(mUStr,unicode, nsCRT::strlen(mUStr));
     result=PRBool(0==cmp);
   }
 

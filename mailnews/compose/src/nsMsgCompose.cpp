@@ -2960,10 +2960,13 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
     nsAutoString metaCharset;
     metaCharset.Assign(NS_LITERAL_STRING("charset="));
     metaCharset.AppendWithConversion(sigEncoding.get());
-    PRInt32 metaCharsetOffset = sigData.Find(metaCharset,PR_TRUE,0,-1);
-
-    if (metaCharsetOffset != kNotFound)
-      sigData.Cut(metaCharsetOffset, metaCharset.Length());
+    nsAString::const_iterator realstart, start, end;
+    sigData.BeginReading(start);
+    sigData.EndReading(end);
+    realstart = start;
+    if (FindInReadable(metaCharset, start, end,
+                       nsCaseInsensitiveStringComparator()))
+      sigData.Cut(Distance(realstart, start), Distance(start, end));
   }
 
   PR_FREEIF(readBuf);
@@ -3453,7 +3456,7 @@ nsresult nsMsgCompose::GetMailListAddresses(nsString& name, nsISupportsArray* ma
       rv = enumerator->CurrentItem((nsISupports**)&mailList);
       if (NS_SUCCEEDED(rv) && mailList)
       {
-        if (name.EqualsIgnoreCase(mailList->mFullName))
+        if (name.Equals(mailList->mFullName, nsCaseInsensitiveStringComparator()))
         {
           if (!mailList->mDirectory)
             return NS_ERROR_FAILURE;
@@ -3763,10 +3766,10 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
             if (atPos >= 0)
             {
               recipient->mEmail.Right(domain, recipient->mEmail.Length() - atPos - 1);
-              if (plaintextDomains.Find(domain, PR_TRUE) >= 0)
+              if (FindInReadable(domain, plaintextDomains, nsCaseInsensitiveStringComparator()))
                 recipient->mPreferFormat = nsIAbPreferMailFormat::plaintext;
               else
-                if (htmlDomains.Find(domain, PR_TRUE) >= 0)
+                if (FindInReadable(domain, htmlDomains, nsCaseInsensitiveStringComparator()))
                   recipient->mPreferFormat = nsIAbPreferMailFormat::html;
             }
           }

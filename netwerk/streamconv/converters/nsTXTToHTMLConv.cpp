@@ -173,8 +173,7 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
             }
         }
 
-        PRInt32 end = mBuffer.RFind(TOKEN_DELIMITERS, 
-                                    PR_FALSE, mBuffer.Length());
+        PRInt32 end = mBuffer.RFind(TOKEN_DELIMITERS, mBuffer.Length());
         mBuffer.Left(pushBuffer, PR_MAX(cursor, end));
         mBuffer.Cut(0, PR_MAX(cursor, end));
         cursor = 0;
@@ -242,7 +241,7 @@ nsTXTToHTMLConv::FindToken(PRInt32 cursor, convToken* *_retval) {
     PRInt32 loc = -1, firstToken = mBuffer.Length();
     PRInt8 token = -1;
     for (PRInt8 i=0; i < mTokens.Count(); i++) {
-        loc = mBuffer.Find(((convToken*)mTokens[i])->token, PR_FALSE, cursor);
+        loc = mBuffer.Find(((convToken*)mTokens[i])->token, cursor);
         if (loc != -1)
             if (loc < firstToken) {
                 firstToken = loc;

@@ -99,6 +99,7 @@
 #include "nsIPref.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
+#include "nsUnicharUtils.h"
 
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
@@ -262,7 +263,6 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSe
     nsCOMPtr<nsIDOMDocument>domdoc; 
     result = GetDocument(getter_AddRefs(domdoc)); 
     if (NS_SUCCEEDED(result) && domdoc) { 
-      nsAutoString newMetaString; 
       nsCOMPtr<nsIDOMNodeList>metaList; 
       nsCOMPtr<nsIDOMNode>metaNode; 
       nsCOMPtr<nsIDOMElement>metaElement; 
@@ -280,20 +280,26 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSe
           metaElement = do_QueryInterface(metaNode); 
           if (!metaElement) continue; 
 
-          nsString currentValue; 
+          nsAutoString currentValue; 
           if (NS_FAILED(metaElement->GetAttribute(NS_LITERAL_STRING("http-equiv"), currentValue))) continue; 
 
-          if (kNotFound != currentValue.Find("content-type", PR_TRUE)) { 
+          if (FindInReadable(NS_LITERAL_STRING("content-type"),
+                             currentValue,
+                             nsCaseInsensitiveStringComparator())) { 
             NS_NAMED_LITERAL_STRING(content, "content");
             if (NS_FAILED(metaElement->GetAttribute(content, currentValue))) continue; 
 
-            NS_NAMED_LITERAL_STRING(charset, "charset=");
-            PRInt32 offset = currentValue.Find(charset.get(), PR_TRUE); 
-            if (kNotFound != offset) {
-              currentValue.Left(newMetaString, offset); // copy current value before "charset=" (e.g. text/html) 
-              newMetaString.Append(charset); 
-              newMetaString.Append(characterSet); 
-              result = nsEditor::SetAttribute(metaElement, content, newMetaString); 
+            NS_NAMED_LITERAL_STRING(charsetEquals, "charset=");
+            nsAString::const_iterator originalStart, start, end;
+            currentValue.BeginReading(start);
+            currentValue.EndReading(end);
+            if (FindInReadable(charsetEquals, start, end,
+                               nsCaseInsensitiveStringComparator())) {
+
+              // set attribute to <original prefix> charset=text/html
+              result = nsEditor::SetAttribute(metaElement, content,
+                                              Substring(originalStart, start) +
+                                              charsetEquals + characterSet); 
               if (NS_SUCCEEDED(result)) 
                 newMetaCharset = PR_FALSE; 
               break; 
@@ -322,10 +328,9 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSe
                 // not undoable, undo should undo CreateNode 
                 result = metaElement->SetAttribute(NS_LITERAL_STRING("http-equiv"), NS_LITERAL_STRING("Content-Type")); 
                 if (NS_SUCCEEDED(result)) { 
-                  newMetaString.Assign(NS_LITERAL_STRING("text/html;charset=")); 
-                  newMetaString.Append(characterSet); 
                   // not undoable, undo should undo CreateNode 
-                  result = metaElement->SetAttribute(NS_LITERAL_STRING("content"), newMetaString); 
+                  result = metaElement->SetAttribute(NS_LITERAL_STRING("content"),
+                                                     NS_LITERAL_STRING("text/html;charset=") + characterSet); 
                 } 
               } 
             } 

@@ -309,10 +309,12 @@ public:
    *  @param   aCount tells us how many iterations to make starting at the given offset
    *  @return  offset in string, or -1 (kNotFound)
    */
-  PRInt32 Find(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
   PRInt32 Find(const nsCString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
   PRInt32 Find(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
-  PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
+
+  PRInt32 Find(const nsAFlatString& aString, PRInt32 anOffset=0, PRInt32 aCount=-1) const;
+  
+  PRInt32 Find(const PRUnichar* aString, PRInt32 anOffset=0, PRInt32 aCount=-1) const;
 
   /**
    * This method searches this string for the first character
@@ -336,8 +338,9 @@ public:
    * @return  offset in string, or -1 (kNotFound)
    */
   PRInt32 RFind(const char* aCString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
-  PRInt32 RFind(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
-  PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
+
+  PRInt32 RFind(const nsAFlatString& aString, PRInt32 anOffset=0,PRInt32 aCount=-1) const;
+  PRInt32 RFind(const PRUnichar* aString,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
 
 
   /**
@@ -376,20 +379,11 @@ public:
    */
 
   PRInt32 CompareWithConversion(const char* aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1) const;
-  PRInt32 CompareWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  /* a hack to make sure things that used to compile continue to compile
-     even on compilers that don't have proper |explicit| support */
-  inline PRInt32
-  CompareWithConversion(const nsXPIDLString& aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1) const
-    {
-      return CompareWithConversion(aString.get(), aIgnoreCase, aCount);
-    }
-
+  
   PRBool  EqualsWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
 
-  PRBool  EqualsAtom(/*FIX: const */nsIAtom* anAtom,PRBool aIgnoreCase) const;   
+  PRBool  EqualsAtom(nsIAtom* anAtom) const;
 
-  PRBool  EqualsIgnoreCase(const nsString& aString) const;
   PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
 
   /**

@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  uconv \
 		  intl \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -45,6 +45,7 @@
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirectoryQuerySimpleBooleanExpression, nsIAbBooleanExpression)
@@ -618,28 +619,38 @@ nsresult nsAbDirectoryQuery::matchCardCondition (nsIAbCard* card,
             *matchFound = PR_TRUE;
             break;
         case nsIAbBooleanConditionTypes::Contains:
-            *matchFound = value.Find (matchValue.get(), PR_TRUE) >= 0;
+            *matchFound = FindInReadable(matchValue, value, nsCaseInsensitiveStringComparator());
             break;
         case nsIAbBooleanConditionTypes::DoesNotContain:
-            *matchFound = value.Find (matchValue.get(), PR_TRUE) < 0;
+            *matchFound = !FindInReadable(matchValue, value, nsCaseInsensitiveStringComparator());
             break;
         case nsIAbBooleanConditionTypes::Is:
-            *matchFound = value.CompareWithConversion (matchValue, PR_TRUE) == 0;
+            *matchFound = value.Equals (matchValue, nsCaseInsensitiveStringComparator());
             break;
         case nsIAbBooleanConditionTypes::IsNot:
-            *matchFound = value.CompareWithConversion (matchValue, PR_TRUE) != 0;
+            *matchFound = !value.Equals (matchValue, nsCaseInsensitiveStringComparator());
             break;
         case nsIAbBooleanConditionTypes::BeginsWith:
-            *matchFound = value.Find (matchValue.get(), PR_TRUE) == 0;
+            {
+                if (value.Length() < matchValue.Length()) {
+                    *matchFound = PR_FALSE;
+                    break;
+                }
+                *matchFound =
+                    matchValue.Equals(Substring(value, 0,
+                                                matchValue.Length()),
+                                      nsCaseInsensitiveStringComparator());
+            }
             break;
         case nsIAbBooleanConditionTypes::LessThan:
-            *matchFound = value.CompareWithConversion (matchValue, PR_TRUE) < 0;
+            *matchFound = Compare(value, matchValue, nsCaseInsensitiveStringComparator()) < 0;
             break;
         case nsIAbBooleanConditionTypes::GreaterThan:
-            *matchFound = value.CompareWithConversion (matchValue, PR_TRUE) > 0;
+            *matchFound = Compare(value, matchValue, nsCaseInsensitiveStringComparator()) > 0;
             break;
         case nsIAbBooleanConditionTypes::EndsWith:
         {
+            
             PRInt32 vl = value.Length ();
             PRInt32 mvl = matchValue.Length ();
 
@@ -649,7 +660,8 @@ nsresult nsAbDirectoryQuery::matchCardCondition (nsIAbCard* card,
                 break;
             }
 
-            *matchFound = value.Find (matchValue.get(), PR_TRUE, vl - mvl) == (vl - mvl);
+            *matchFound = matchValue.Equals(Substring(value, vl - mvl, mvl),
+                                            nsCaseInsensitiveStringComparator());
             break;
         }
         case nsIAbBooleanConditionTypes::SoundsLike:

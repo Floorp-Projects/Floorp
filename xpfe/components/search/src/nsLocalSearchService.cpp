@@ -47,6 +47,8 @@
 #include "nsIRDFContainerUtils.h"
 #include "nsEnumeratorUtils.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "xp_core.h"
 #include "plhash.h"
 #include "plstr.h"
@@ -360,38 +362,53 @@ LocalSearchDataSource::doMatch(nsIRDFLiteral *literal,
 	literal->GetValueConst( &str );
 	if (! str)	return(found);
 	nsAutoString	value(str);
-        
+
         if (matchMethod.Equals(NS_LITERAL_STRING("contains")))
 	{
-            if (value.Find(matchText, PR_TRUE) >= 0)
+            if (FindInReadable(matchText, value,
+                               nsCaseInsensitiveStringComparator()))
                 found = PR_TRUE;
 	}
         else if (matchMethod.Equals(NS_LITERAL_STRING("startswith")))
 	{
-            if (value.Find(matchText, PR_TRUE) == 0)
+            nsAString::const_iterator start, realstart, end;
+            value.BeginReading(start);
+            value.EndReading(end);
+            realstart = start;
+            
+            if (FindInReadable(matchText, start, end,
+                               nsCaseInsensitiveStringComparator()) &&
+                start == realstart)
+                
                 found = PR_TRUE;
 	}
         else if (matchMethod.Equals(NS_LITERAL_STRING("endswith")))
 	{
-            PRInt32 pos = value.RFind(matchText, PR_TRUE);
-            if ((pos >= 0) &&
-                (pos == (PRInt32(value.Length()) -
-                         PRInt32(matchText.Length()))))
+            nsAString::const_iterator start, end, realend;
+            value.BeginReading(start);
+            value.EndReading(end);
+            realend = end;
+
+            if (RFindInReadable(matchText, start, end,
+                                nsCaseInsensitiveStringComparator()) &&
+                end == realend)
+                
                 found = PR_TRUE;
 	}
         else if (matchMethod.Equals(NS_LITERAL_STRING("is")))
 	{
-            if (value.EqualsIgnoreCase(matchText))
+            if (value.Equals(matchText, nsCaseInsensitiveStringComparator()))
                 found = PR_TRUE;
 	}
         else if (matchMethod.Equals(NS_LITERAL_STRING("isnot")))
 	{
-            if (!value.EqualsIgnoreCase(matchText))
+            if (!value.Equals(matchText, nsCaseInsensitiveStringComparator()))
                 found = PR_TRUE;
 	}
         else if (matchMethod.Equals(NS_LITERAL_STRING("doesntcontain")))
 	{
-            if (value.Find(matchText, PR_TRUE) < 0)
+            if (!FindInReadable(matchText, value,
+                                nsCaseInsensitiveStringComparator()))
                 found = PR_TRUE;
 	}
         return(found);

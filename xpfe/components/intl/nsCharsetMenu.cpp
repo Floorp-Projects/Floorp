@@ -359,7 +359,7 @@ NS_IMPL_ISUPPORTS1(nsCharsetMenuObserver, nsIObserver);
 NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   NS_TIMELINE_START_TIMER("nsCharsetMenu:Observe");
-  nsresult rv;
+  nsresult rv = NS_OK;
  
   //XUL event handler
   if (!nsCRT::strcmp(aTopic, "charsetmenu-selected")) {
@@ -1755,7 +1755,7 @@ nsresult nsCharsetMenu::GetCollation(nsICollation ** aCollation)
 NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
 {
   NS_TIMELINE_START_TIMER("nsCharsetMenu:SetCurrentCharset");
-  nsresult res;
+  nsresult res = NS_OK;
 
   if (mBrowserMenuInitialized) {
     nsCOMPtr<nsIAtom> atom;
@@ -1785,7 +1785,7 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
 NS_IMETHODIMP nsCharsetMenu::SetCurrentMailCharset(const PRUnichar * aCharset)
 {
   NS_TIMELINE_START_TIMER("nsCharsetMenu:SetCurrentMailCharset");
-  nsresult res;
+  nsresult res = NS_OK;
 
   if (mMailviewMenuInitialized) {
     nsCOMPtr<nsIAtom> atom;
@@ -1810,7 +1810,7 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentMailCharset(const PRUnichar * aCharset)
 NS_IMETHODIMP nsCharsetMenu::SetCurrentComposerCharset(const PRUnichar * aCharset)
 {
   NS_TIMELINE_START_TIMER("nsCharsetMenu:SetCurrentComposerCharset");
-  nsresult res;
+  nsresult res = NS_OK;
 
   if (mComposerMenuInitialized) {
     nsCOMPtr<nsIAtom> atom;

@@ -241,7 +241,9 @@ nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUni
 int
 nsCaseInsensitiveStringComparator::operator()( PRUnichar lhs, PRUnichar rhs ) const
   {
+      // see if they're an exact match first
       if (lhs == rhs) return 0;
+      
       NS_InitCaseConversion();
 
       gCaseConv->ToLower(lhs, &lhs);

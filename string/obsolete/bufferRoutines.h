@@ -693,17 +693,9 @@ PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
-PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
-  PRInt32 result=0;
-#ifndef XPCOM_STANDALONE
-  if(aIgnoreCase && NS_SUCCEEDED(NS_InitCaseConversion()))
-    gCaseConv->CaseInsensitiveCompare(aStr1, aStr2, aCount, &result);
-  else result=nsCRT::strncmp(aStr1,aStr2,aCount);
-#else
-  NS_ERROR("call not supported in XPCOM_STANDALONE");
-#endif
-  return result;
+PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount);
+PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount){
+  return nsCRT::strncmp(aStr1, aStr2, aCount * sizeof(PRUnichar));
 }
 
 

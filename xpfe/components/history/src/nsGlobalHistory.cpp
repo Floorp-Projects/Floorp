@@ -3847,9 +3847,9 @@ nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
   nsCAutoString url;
   mHistory->GetRowValue(aRow, mURLColumn, url);
 
-  nsAutoString url2;
-  url2.AssignWithConversion(url.get());
-  PRBool result = mHistory->AutoCompleteCompare(url2, mSelectValue, mExclude); 
+  NS_ConvertUTF8toUCS2 utf8Url(url);
+
+  PRBool result = mHistory->AutoCompleteCompare(utf8Url, mSelectValue, mExclude); 
   
   return result;
 }

@@ -1482,7 +1482,7 @@ nsXULTemplateBuilder::InitializeRuleNetwork()
     nsAutoString flags;
     mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::flags, flags);
 
-    if (flags.Find(NS_LITERAL_STRING("dont-test-empty").get()) >= 0)
+    if (flags.Find(NS_LITERAL_STRING("dont-test-empty")) >= 0)
         mFlags |= eDontTestEmpty;
 
     // Initialize the rule network

@@ -68,7 +68,6 @@
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "nsIBookmarksService.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsICookieService.h"
@@ -178,7 +177,6 @@ static nsIAtom* sApp_MessengerFolderCache50   = nsnull;
 
 // IID and CIDs of all the services needed
 static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
-static NS_DEFINE_CID(kBookmarksCID, NS_BOOKMARKS_SERVICE_CID);      
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);

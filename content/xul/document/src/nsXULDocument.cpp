@@ -6374,7 +6374,7 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     if ((nameSpaceID == kNameSpaceID_XUL) && (baseTag == nsXULAtoms::outliner)) {
         nsAutoString flags;
         aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::flags, flags);
-        if (flags.Find(NS_LITERAL_STRING("dont-build-content").get()) >= 0) {
+        if (flags.Find(NS_LITERAL_STRING("dont-build-content")) >= 0) {
             nsCOMPtr<nsIXULTemplateBuilder> builder =
                 do_CreateInstance("@mozilla.org/xul/xul-outliner-builder;1");
 

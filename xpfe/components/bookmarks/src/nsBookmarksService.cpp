@@ -2386,7 +2386,9 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			}
 
 			// update icon?
-			if (schedule.Find(NS_LITERAL_STRING("icon").get(), PR_TRUE, 0) >= 0)
+			if (FindInReadable(NS_LITERAL_STRING("icon"),
+                               schedule,
+                               nsCaseInsensitiveStringComparator()))
 			{
 				nsCOMPtr<nsIRDFLiteral>	statusLiteral;
 				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(NS_LITERAL_STRING("new").get(), getter_AddRefs(statusLiteral))))
@@ -2406,7 +2408,9 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			}
 			
 			// play a sound?
-			if (schedule.Find(NS_LITERAL_STRING("sound").get(), PR_TRUE, 0) >= 0)
+			if (FindInReadable(NS_LITERAL_STRING("sound"),
+                               schedule,
+                               nsCaseInsensitiveStringComparator()))
 			{
 				nsCOMPtr<nsISound>	soundInterface;
 				rv = nsComponentManager::CreateInstance(kSoundCID,
@@ -2422,7 +2426,9 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			PRBool		openURLFlag = PR_FALSE;
 
 			// show an alert?
-			if (schedule.Find(NS_LITERAL_STRING("alert").get(), PR_TRUE, 0) >= 0)
+			if (FindInReadable(NS_LITERAL_STRING("alert"),
+                               schedule,
+                               nsCaseInsensitiveStringComparator()))
 			{
 				nsCOMPtr<nsIInterfaceRequestor> interfaces;
 				nsCOMPtr<nsIPrompt> prompter;
@@ -2496,10 +2502,12 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 					}
 				}
 			}
-			
+
 			// open the URL in a new window?
 			if ((openURLFlag == PR_TRUE) ||
-				(schedule.Find(NS_LITERAL_STRING("open").get(), PR_TRUE, 0) >= 0))
+				FindInReadable(NS_LITERAL_STRING("open"),
+                               schedule,
+                               nsCaseInsensitiveStringComparator()))
 			{
 				if (NS_SUCCEEDED(rv))
 				{

@@ -3545,8 +3545,7 @@ PRInt32 nsOCSPResponder::CmpCAName(nsIOCSPResponder *a, nsIOCSPResponder *b)
   a->GetResponseSigner(getter_Copies(aTok));
   b->GetResponseSigner(getter_Copies(bTok));
   if (aTok != nsnull && bTok != nsnull) {
-    nsAutoString aStr(aTok);
-    cmp1 = aStr.CompareWithConversion(bTok);
+    cmp1 = Compare(aTok, bTok);
   } else {
     cmp1 = (aTok == nsnull) ? 1 : -1;
   }

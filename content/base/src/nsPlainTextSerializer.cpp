@@ -748,7 +748,8 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     nsAutoString value;
     nsresult rv = GetAttributeValue(nsHTMLAtoms::type, value);
 
-    if (NS_SUCCEEDED(rv) && value.EqualsIgnoreCase("cite")) {
+    if (NS_SUCCEEDED(rv) &&
+        NS_LossyConvertUCS2toASCII(value).Equals("cite", nsCaseInsensitiveCStringComparator())) {
       mCiteQuoteLevel++;
     }
     else {
@@ -905,7 +906,8 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     nsAutoString value;
     nsresult rv = GetAttributeValue(nsHTMLAtoms::type, value);
 
-    if (NS_SUCCEEDED(rv)  && value.EqualsIgnoreCase("cite")) {
+    if (NS_SUCCEEDED(rv)  &&
+        NS_LossyConvertUCS2toASCII(value).Equals("cite", nsCaseInsensitiveCStringComparator())) {
       mCiteQuoteLevel--;
     }
     else {

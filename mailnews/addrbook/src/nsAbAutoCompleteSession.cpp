@@ -243,8 +243,8 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
         if (type != DEFAULT_MATCH && !bIsMailList)
         {
           nsAutoString emailaddr(pEmailStr);
-          PRInt32 foundIndex = emailaddr.Find(mDefaultDomain, PR_TRUE);
-          if (foundIndex > 0)
+          if (FindInReadable(mDefaultDomain, emailaddr,
+                             nsCaseInsensitiveStringComparator()))
           {
             // okay the match contains the default domain, we want to insert it
             // AFTER any exisiting matches of the same type which also have a domain

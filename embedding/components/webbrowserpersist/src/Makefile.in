@@ -24,7 +24,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= embedcomponents
+MODULE		= webbrowserpersist
 LIBRARY_NAME	= webbrowserpersist_s
 REQUIRES	= xpcom \
 		  string \
@@ -36,8 +36,8 @@ REQUIRES	= xpcom \
 		  exthandler \
 		  uriloader \
 		  mimetype \
-		  webbrowserpersist \
 		  intl \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= nsWebBrowserPersist.cpp \
