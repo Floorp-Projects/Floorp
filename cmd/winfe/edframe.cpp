@@ -129,7 +129,6 @@ static UINT BASED_CODE nIDCharFloatButtonBarArray[] =
     ID_SEPARATOR,
     ID_FORMAT_CHAR_BOLD,
     ID_FORMAT_CHAR_ITALIC,
-    ID_FORMAT_CHAR_UNDERLINE,
     ID_CHECK_SPELLING,
     ID_SEPARATOR,
     ID_FORMAT_UNUM_LIST,
@@ -468,7 +467,7 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, CView *pComma
         if (!pCommandView)
         {
             if (!m_wndCharacterBar.Create(ett & DISPLAY_EDIT_TOOLBAR, GetParent(), IDW_PARA_TOOLBAR, IDS_CHAR_TOOLBAR_CAPTION,
-								       nIDCharacterBarArray, CHARBAR_ID_COUNT,
+								       nIDCharacterBarArray, CHARBAR_ID_COUNT-1,
 								       IDB_NEW_FORMAT_TOOLBAR,
 								       CSize(8, ED_TB_BUTTON_HEIGHT),
 								       CSize(1,ED_TB_BITMAP_HEIGHT) ) )
@@ -480,7 +479,7 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, CView *pComma
         else
         {
             if (!m_wndCharacterBar.CreateFloater(GetParent(), IDW_PARA_TOOLBAR, IDS_CHAR_TOOLBAR_CAPTION,
-								       nIDCharacterBarArray, CHARBAR_ID_COUNT, nIDCharFloatButtonBarArray,CHARBUTTONBARFLOAT_ID_COUNT ,
+								       nIDCharacterBarArray, CHARBAR_ID_COUNT-1, nIDCharFloatButtonBarArray,CHARBUTTONBARFLOAT_ID_COUNT ,
 								       IDB_EDIT_FLOAT_TOOLBAR,
 								       CSize(27, 22),
 								       CSize(20, 16),
@@ -492,12 +491,15 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, CView *pComma
 	    CRect rect;
         rect.SetRectEmpty();  //Don't need size to create it
 
-	    if (!m_ParagraphCombo.Create(CBS_DROPDOWNLIST|WS_VISIBLE|WS_TABSTOP|WS_VSCROLL,
-                                     rect, &m_wndCharacterBar, ID_COMBO_PARA))
-	    {
-		    TRACE0("Failed to create paragraph format combo-box\n");
-		    return FALSE;
-	    }
+	    if (!pCommandView)
+        {
+            if (!m_ParagraphCombo.Create(CBS_DROPDOWNLIST|WS_VISIBLE|WS_TABSTOP|WS_VSCROLL,
+                                         rect, &m_wndCharacterBar, ID_COMBO_PARA))
+	        {
+		        TRACE0("Failed to create paragraph format combo-box\n");
+		        return FALSE;
+	        }
+        }
 
         // Font Face Combo
 	    if (!m_FontFaceCombo.Create(rect, &m_wndCharacterBar, ID_COMBO_FONTFACE))
@@ -512,8 +514,9 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, CView *pComma
 		    return FALSE;
 	    }
 
-        if ( wfe_pFont ){
-		    m_ParagraphCombo.SetFont(wfe_pFont);
+        if (m_ParagraphCombo.m_hWnd)
+            if ( wfe_pFont ){
+		        m_ParagraphCombo.SetFont(wfe_pFont);
             //Other combos are CNSComboBox and have font set in Create or Subclass calls
         }
 
@@ -526,46 +529,52 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, CView *pComma
 	    CString csTemp;
         // Paragraph - Get maximum width while loading strings
         int iMaxParaWidth = 0;
-        CDC *pDC = m_ParagraphCombo.GetDC();
+        CDC *pDC;
         CSize cSize;
-        int wincsid = INTL_CharSetNameToID(INTL_ResourceCharSet());
-	    for ( int i = 0; FEED_nParagraphTags[i] != P_UNKNOWN; i++ ){
-		    if (csTemp.LoadString(CASTUINT(ID_LIST_TEXT_PARAGRAPH_BASE+FEED_nParagraphTags[i]))){
-			    m_ParagraphCombo.AddString((LPCTSTR)csTemp);
-                if ( pDC ){            
-    		        cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());
-	        	    pDC->LPtoDP(&cSize);
-	    	        if ( cSize.cx > iMaxParaWidth ){
-    			        iMaxParaWidth = cSize.cx;
-		            }
-    		    }
+        int wincsid;
+        int iFontSizeWidth;
+        int iMaxSizeWidth;
+        if (!pCommandView)
+        {
+            pDC = m_ParagraphCombo.GetDC();
+            wincsid = INTL_CharSetNameToID(INTL_ResourceCharSet());
+	        for ( int i = 0; FEED_nParagraphTags[i] != P_UNKNOWN; i++ ){
+		        if (csTemp.LoadString(CASTUINT(ID_LIST_TEXT_PARAGRAPH_BASE+FEED_nParagraphTags[i]))){
+			        m_ParagraphCombo.AddString((LPCTSTR)csTemp);
+                    if ( pDC ){            
+    		            cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());
+	        	        pDC->LPtoDP(&cSize);
+	    	            if ( cSize.cx > iMaxParaWidth ){
+    			            iMaxParaWidth = cSize.cx;
+		                }
+    		        }
+	            }
 	        }
-	    }
-        // String used to get width of FontSize combobox
-        csTemp = "55";
-        cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());
-        pDC->LPtoDP(&cSize);
-        // Save the full height of this font
-        wfe_iFontHeight = cSize.cy;
-        
-        // Calculate list item height from font size and store in global variable
-        // Trim 1 pixel off height to fit more items in the list
-        wfe_iListItemHeight = wfe_iFontHeight - 1;
-        int iFontSizeWidth = cSize.cx + sysInfo.m_iScrollWidth + 6;
-
-        // This is longest string when combobox is dropped down:
-        csTemp = "8 pts";
-        cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());
-        pDC->LPtoDP(&cSize);
-        int iMaxSizeWidth = cSize.cx; // + sysInfo.m_iScrollWidth;
-
-        m_ParagraphCombo.ReleaseDC(pDC);
+        }
 
         // Initialize app-global list of TrueType fonts
         //  and fill the toolbar combo with all font strings
         // WARNING: This is a user-draw listbox and pointers to font-name strings
         //          must be STATIC 
         pDC = m_FontFaceCombo.GetDC();
+        // String used to get width of FontSize combobox
+        csTemp = "55";
+        cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());
+        pDC->LPtoDP(&cSize);
+        // Save the full height of this font
+        wfe_iFontHeight = cSize.cy;
+    
+        // Calculate list item height from font size and store in global variable
+        // Trim 1 pixel off height to fit more items in the list
+        wfe_iListItemHeight = wfe_iFontHeight - 1;
+        iFontSizeWidth = cSize.cx + sysInfo.m_iScrollWidth + 6;
+
+        // This is longest string when combobox is dropped down:
+        csTemp = "8 pts";
+        cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());
+        pDC->LPtoDP(&cSize);
+        iMaxSizeWidth = cSize.cx; // + sysInfo.m_iScrollWidth;
+
         wfe_InitTrueTypeArray(pDC);
         int iMaxFontWidth = 0;
         wfe_iFontFaceOtherIndex = wfe_FillFontComboBox(&m_FontFaceCombo, &iMaxFontWidth);
@@ -584,10 +593,11 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, CView *pComma
         // Note that we use Scroll Width to get size of combobox since users
         //  can change that in Win95 and NT4.0 and that size determines width
         //  of combobox dropdown button
-	    if (m_wndCharacterBar)
+	    if (!pCommandView && m_wndCharacterBar)
             m_wndCharacterBar.SetComboBox( ID_COMBO_PARA, &m_ParagraphCombo, 
 								       sysInfo.m_iScrollWidth+61, iMaxParaWidth + 4, 0 );
-        m_ParagraphCombo.SetCurSel(0);
+        if (!pCommandView)
+            m_ParagraphCombo.SetCurSel(0);
 
         int iWidth = sysInfo.m_iScrollWidth;
         // Allow wider closed-combo-size when screen width is > 640
