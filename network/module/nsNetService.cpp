@@ -255,6 +255,7 @@ void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s)
     nsURLLoadType loadType;
     nsURLReloadType reloadType;
     PRUint32 localIP;
+    char* byteRangeHeader=NULL;
 
     NS_VERIFY_THREADSAFE_INTERFACE(loadAttribs);
 
@@ -302,6 +303,16 @@ void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s)
       localIP = 0;
     }
     aURL_s->localIP = localIP;
+
+    rv = loadAttribs->GetByteRangeHeader(&byteRangeHeader);
+    if (NS_FAILED(rv)) 
+    {
+      byteRangeHeader = NULL;
+    }
+    else
+    {
+        aURL_s->range_header = byteRangeHeader;
+    }
 
     NS_RELEASE(loadAttribs);
   }
