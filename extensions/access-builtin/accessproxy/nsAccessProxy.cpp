@@ -39,6 +39,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIPref.h"
 
 #include "nsIRegistry.h"
 #include "nsString.h"
@@ -55,7 +56,7 @@
 // Header for this class
 #include "nsAccessProxy.h"
 
-#define NS_DEBUG_ACCESS_BUILTIN 1
+// #define NS_DEBUG_ACCESS_BUILTIN 1
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -72,6 +73,7 @@ nsAccessProxy::nsAccessProxy()
 
 nsAccessProxy::~nsAccessProxy()
 {
+  printf("%s","\n\n\n\nBYE BYE BYE BYE \n\n\n\n");
 }
 
 nsAccessProxy *nsAccessProxy::GetInstance()
@@ -89,11 +91,10 @@ nsAccessProxy *nsAccessProxy::GetInstance()
 void nsAccessProxy::ReleaseInstance()
 {
   NS_IF_RELEASE(nsAccessProxy::mInstance);
-  //return NS_OK;
 }
 
 
-nsresult nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
+NS_IMETHODIMP nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsresult rv;
 
@@ -126,9 +127,10 @@ nsresult nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
   domNode->GetOwnerDocument(getter_AddRefs(domDoc));
   if (domDoc) {
     doc = do_QueryInterface(domDoc);
-    if (doc && doc->GetNumberOfShells()>0)
+    if (doc && doc->GetNumberOfShells()>0) {
       doc->GetShellAt(0, getter_AddRefs(presShell));
     }
+  }
   //return  NS_OK;
   /*
   if (presShell && eventNameStr.EqualsWithConversion("click")) {
@@ -203,26 +205,37 @@ NS_IMETHODIMP nsAccessProxy::OnStateChange(nsIWebProgress *aWebProgress,
  *
  */
 
-  nsresult rv;
   if ((aStateFlags & (STATE_STOP|STATE_START)) && (aStateFlags & STATE_IS_DOCUMENT)) {
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+    // Test for built in text to speech or braille display usage preference
+    // If so, attach event handlers to window. If not, don't.
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    nsXPIDLCString textToSpeechEngine, brailleDisplayEngine;
+    if (prefs) {
+      prefs->CopyCharPref("accessibility.usetexttospeech", getter_Copies(textToSpeechEngine));
+      prefs->CopyCharPref("accessibility.usebrailledisplay", getter_Copies(brailleDisplayEngine));
+    }
 
-    if (domWindow) {
-      nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(domWindow);
-      nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(domWindow);
-      nsCOMPtr<nsIDOMWindowInternal> opener;
-      if (windowInternal)
-        windowInternal->GetOpener(getter_AddRefs(opener));
-      if (eventTarget && opener) {
-        eventTarget->AddEventListener(NS_LITERAL_STRING("keyup"), this, PR_FALSE);
-        eventTarget->AddEventListener(NS_LITERAL_STRING("keypress"), this, PR_FALSE);
-        eventTarget->AddEventListener(NS_LITERAL_STRING("focus"), this, PR_FALSE);
-        eventTarget->AddEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
-        eventTarget->AddEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE); // for debugging
+    if ((textToSpeechEngine && *textToSpeechEngine) || (brailleDisplayEngine && *brailleDisplayEngine)) {  
+      // Yes, prefs say we will need handlers for this 
+      nsCOMPtr<nsIDOMWindow> domWindow;
+      aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+
+      if (domWindow) {
+        nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(domWindow);
+        nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(domWindow);
+        nsCOMPtr<nsIDOMWindowInternal> opener;
+        if (windowInternal)
+          windowInternal->GetOpener(getter_AddRefs(opener));
+        if (eventTarget && opener) {
+          eventTarget->AddEventListener(NS_LITERAL_STRING("keyup"), this, PR_FALSE);
+          eventTarget->AddEventListener(NS_LITERAL_STRING("keypress"), this, PR_FALSE);
+          eventTarget->AddEventListener(NS_LITERAL_STRING("focus"), this, PR_FALSE);
+          eventTarget->AddEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
+          eventTarget->AddEventListener(NS_LITERAL_STRING("click"), this, PR_FALSE); // for debugging
         }
       }
     }
+  }
 
   return NS_OK;
 }
