@@ -63,32 +63,17 @@ extern nsINameSpaceManager* gTxNameSpaceManager;
 
 class nsIDOMAttr;
 class nsIDOMDocument;
-class nsIDOMDocumentType;
 class nsIDOMElement;
-class nsIDOMEntity;
 class nsIDOMNamedNodeMap;
 class nsIDOMNode;
-class nsIDOMNodeList;
-class nsIDOMNotation;
 class nsIDOMProcessingInstruction;
 
 class Attr;
 class Document;
-class DocumentType;
 class Element;
-class Entity;
 class NamedNodeMap;
 class Node;
-class NodeList;
-class Notation;
 class ProcessingInstruction;
-
-// These don't have specific implementation classes.
-typedef Node CDataSection;
-typedef Node Comment;
-typedef Node DocumentFragment;
-typedef Node EntityReference;
-typedef Node Text;
 
 /**
  * This macro creates a nsCOMPtr to a specific interface for the
@@ -188,7 +173,6 @@ public:
     virtual const String& getNodeValue();
     virtual unsigned short getNodeType() const;
     virtual Node* getParentNode();
-    virtual NodeList* getChildNodes();
     virtual Node* getFirstChild();
     virtual Node* getLastChild();
     virtual Node* getPreviousSibling();
@@ -201,10 +185,10 @@ public:
 
     virtual MBool hasChildNodes() const;
 
-    //Introduced in DOM2
+    // Introduced in DOM2
     virtual String getNamespaceURI();
 
-    //From DOM3 26-Jan-2001 WD
+    // From DOM3 26-Jan-2001 WD
     virtual String getBaseURI();
 
     // txXPathNode functions
@@ -235,20 +219,6 @@ private:
 };
 
 /**
- * Wrapper class for nsIDOMNodeList.
- */
-class NodeList : public MozillaObjectWrapper
-{
-public:
-    NodeList(nsIDOMNodeList* aNodeList, Document* aOwner);
-    ~NodeList();
-
-    Node* item(PRUint32 aIndex);
-    PRUint32 getLength();
-};
-
-
-/**
  * Wrapper class for nsIDOMNamedNodeMap.
  */
 class NamedNodeMap : public MozillaObjectWrapper
@@ -272,7 +242,6 @@ public:
     ~Document();
 
     Element* getDocumentElement();
-    DocumentType* getDoctype();
 
     // Determine what kind of node this is, and create the appropriate
     // wrapper for it.
@@ -284,21 +253,17 @@ public:
     // Note the addition of the factory functions to "wrap"
     // nsIDOM* objects.
     Attr* createAttribute(nsIDOMAttr* aAttr);
-    DocumentType* createDocumentType(nsIDOMDocumentType* aDoctype);
     Element* createElement(nsIDOMElement* aElement);
-    Entity* createEntity(nsIDOMEntity* aEntity);
     NamedNodeMap* createNamedNodeMap(nsIDOMNamedNodeMap* aMap);
     Node* createNode(nsIDOMNode* aNode);
-    NodeList* createNodeList(nsIDOMNodeList* aList);
-    Notation* createNotation(nsIDOMNotation* aNotation);
     ProcessingInstruction* createProcessingInstruction(
                 nsIDOMProcessingInstruction* aPi);
 
-    Comment* createComment(const String& aData);
-    DocumentFragment* createDocumentFragment();
-    ProcessingInstruction* createProcessingInstruction(
-                const String& aTarget, const String& aData);
-    Text* createTextNode(const String& aData);
+    Node* createComment(const String& aData);
+    Node* createDocumentFragment();
+    ProcessingInstruction* createProcessingInstruction(const String& aTarget,
+                                                       const String& aData);
+    Node* createTextNode(const String& aData);
 
     // Introduced in DOM Level 2
     Element* createElementNS(const String& aNamespaceURI,
@@ -403,64 +368,8 @@ public:
                           Document* aOwner);
     ~ProcessingInstruction();
 
-    const String& getTarget();
-    const String& getData();
-
     // txXPathNode functions
     MBool getLocalName(txAtom** aLocalName);
-
-private:
-    String mTarget;
-    String mData;
-};
-
-/**
- * Wrapper class for nsIDOMNotation.
- */
-class Notation : public Node
-{
-public:
-    Notation(nsIDOMNotation* aNotation, Document* aOwner);
-    ~Notation();
-
-    const String& getPublicId();
-    const String& getSystemId();
-
-private:
-    String publicId;
-    String systemId;
-};
-
-/**
- * Wrapper class for nsIDOMEntity.
- */
-class Entity : public Node
-{
-public:
-    Entity(nsIDOMEntity* aEntity, Document* aOwner);
-    ~Entity();
-
-    const String& getPublicId();
-    const String& getSystemId();
-    const String& getNotationName();
-
-private:
-    String publicId;
-    String systemId;
-    String notationName;
-};
-
-/**
- * Wrapper class for nsIDOMDocumentType.
- */
-class DocumentType : public Node
-{
-public:
-    DocumentType(nsIDOMDocumentType* aDocumentType, Document* aOwner);
-    ~DocumentType();
-
-    NamedNodeMap* getEntities();
-    NamedNodeMap* getNotations();
 };
 
 #endif

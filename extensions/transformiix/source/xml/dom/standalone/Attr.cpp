@@ -35,8 +35,6 @@
 Attr::Attr(const String& name, Document* owner):
       NodeDefinition(Node::ATTRIBUTE_NODE, name, NULL_STRING, owner)
 {
-  specified = MB_FALSE;
-
   int idx = nodeName.indexOf(':');
   if (idx == kNotFound) {
     mLocalName = TX_GET_ATOM(nodeName);
@@ -75,7 +73,6 @@ Attr::Attr(const String& aNamespaceURI,
   else
     mNamespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
 
-  specified = MB_TRUE;
   String localPart;
   XMLUtils::getLocalPart(nodeName, localPart);
   mLocalName = TX_GET_ATOM(localPart);
@@ -87,22 +84,6 @@ Attr::Attr(const String& aNamespaceURI,
 Attr::~Attr()
 {
   TX_IF_RELEASE_ATOM(mLocalName);
-}
-
-//
-//Retrieve the name of the attribute from the nodeName data member
-//
-const String& Attr::getName() const
-{
-  return nodeName;
-}
-
-//
-//Retrieve the specified flag
-//
-MBool Attr::getSpecified() const
-{
-  return specified;
 }
 
 //
@@ -136,8 +117,6 @@ void Attr::setValue(const String& newValue)
   NodeDefinition::DeleteChildren();
 
   appendChild(getOwnerDocument()->createTextNode(newValue));
-
-  specified = MB_TRUE;
 }
 
 
@@ -162,30 +141,29 @@ const String& Attr::getNodeValue()
   return getValue();
 }
 
-
 //
 //First check to see if the new node is an allowable child for an Attr.  If it
-//is, call NodeDefinition's implementation of Insert Before.  If not, return
+//is, call NodeDefinition's implementation of AppendChild.  If not, return
 //null as an error.
 //
-Node* Attr::insertBefore(Node* newChild, Node* refChild)
+Node* Attr::appendChild(Node* newChild)
 {
-  Node* returnVal = NULL;
-
   switch (newChild->getNodeType())
     {
       case Node::TEXT_NODE :
-      case Node::ENTITY_REFERENCE_NODE:
-        returnVal = NodeDefinition::insertBefore(newChild, refChild);
+        {
+          // Remove the "newChild" if it is already a child of this node
+          NodeDefinition* pNewChild = (NodeDefinition*)newChild;
+          if (pNewChild->getParentNode() == this)
+            pNewChild = implRemoveChild(pNewChild);
 
-        if (returnVal)
-          specified = MB_TRUE;
-        break;
+          return implAppendChild(pNewChild);
+        }
       default:
-        returnVal = NULL;
+        break;
     }
 
-  return returnVal;
+  return nsnull;
 }
 
 //

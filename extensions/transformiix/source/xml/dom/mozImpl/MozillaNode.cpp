@@ -116,22 +116,6 @@ Node* Node::getParentNode()
 }
 
 /**
- * Call nsIDOMNode::GetChildNodes to get the node's childnodes.
- *
- * @return the node's children
- */
-NodeList* Node::getChildNodes()
-{
-    NSI_FROM_TX(Node);
-    nsCOMPtr<nsIDOMNodeList> tmpNodeList;
-    nsNode->GetChildNodes(getter_AddRefs(tmpNodeList));
-    if (!tmpNodeList) {
-        return nsnull;
-    }
-    return mOwnerDocument->createNodeList(tmpNodeList);
-}
-
-/**
  * Call nsIDOMNode::GetFirstChild to get the node's first child.
  *
  * @return the node's first child

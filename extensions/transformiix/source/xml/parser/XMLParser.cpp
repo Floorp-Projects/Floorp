@@ -217,11 +217,11 @@ int endElement(void *userData, const XML_Char* name)
 void charData(void* userData, const XML_Char* s, int len)
 {
     ParserState* ps = (ParserState*)userData;
-    String data((PRUnichar*)s, len);
     Node* prevSib = ps->currentNode->getLastChild();
     if (prevSib && prevSib->getNodeType()==Node::TEXT_NODE){
-      ((CharacterData*)prevSib)->appendData(data);
+      ((NodeDefinition*)prevSib)->appendData((PRUnichar*)s, len);
     } else {
+      String data((PRUnichar*)s, len);
       ps->currentNode->appendChild(ps->document->createTextNode(data));
     };
 } //-- charData

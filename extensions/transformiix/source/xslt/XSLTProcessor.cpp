@@ -192,7 +192,8 @@ txXSLTProcessor::copyNode(Node* aSourceNode, ProcessorState* aPs)
         {
             ProcessingInstruction* pi = (ProcessingInstruction*)aSourceNode;
             NS_ASSERTION(aPs->mResultHandler, "mResultHandler must not be NULL!");
-            aPs->mResultHandler->processingInstruction(pi->getTarget(), pi->getData());
+            aPs->mResultHandler->processingInstruction(pi->getNodeName(),
+                                                       pi->getNodeValue());
             break;
         }
         case Node::TEXT_NODE:

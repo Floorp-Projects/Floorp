@@ -1162,13 +1162,6 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaNodeList.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>XMLDOMUtils.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -1324,27 +1317,6 @@
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaAttr.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaNotation.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDocumentType.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaEntity.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -1880,21 +1852,6 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDocumentType.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaEntity.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaNodeList.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaNamedNodeMap.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -1906,11 +1863,6 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaNode.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaNotation.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -3118,13 +3070,6 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaNodeList.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>XMLDOMUtils.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -3280,27 +3225,6 @@
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaAttr.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaNotation.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDocumentType.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaEntity.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -3852,21 +3776,6 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDocumentType.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaEntity.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaNodeList.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaNamedNodeMap.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -3878,11 +3787,6 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaNode.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaNotation.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -4189,19 +4093,7 @@
                     <FILEREF>
                         <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
                         <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaDocumentType.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
                         <PATH>MozillaElement.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaEntity.cpp</PATH>
                         <PATHFORMAT>MacOS</PATHFORMAT>
                     </FILEREF>
                     <FILEREF>
@@ -4214,18 +4106,6 @@
                         <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
                         <PATHTYPE>Name</PATHTYPE>
                         <PATH>MozillaNode.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaNodeList.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaNotation.cpp</PATH>
                         <PATHFORMAT>MacOS</PATHFORMAT>
                     </FILEREF>
                     <FILEREF>

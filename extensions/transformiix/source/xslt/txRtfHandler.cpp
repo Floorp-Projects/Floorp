@@ -52,7 +52,7 @@ txRtfHandler::txRtfHandler(Document* aDocument,
     if (!mResultTreeFragment)
         return;
 
-    DocumentFragment* fragment = mDocument->createDocumentFragment();
+    Node* fragment = mDocument->createDocumentFragment();
     NS_ASSERTION(fragment, "Out of memory creating a document fragmen");
     // XXX ErrorReport: Out of memory
     mResultTreeFragment->append(fragment);
@@ -88,7 +88,7 @@ void txRtfHandler::characters(const String& aData)
     if (!mCurrentNode)
         return;
 
-    Text* text = mDocument->createTextNode(aData);
+    Node* text = mDocument->createTextNode(aData);
     mCurrentNode->appendChild(text);
 }
 
@@ -98,7 +98,7 @@ void txRtfHandler::comment(const String& aData)
     if (!mCurrentNode)
         return;
 
-    Comment* comment = mDocument->createComment(aData);
+    Node* comment = mDocument->createComment(aData);
     mCurrentNode->appendChild(comment);
 }
 

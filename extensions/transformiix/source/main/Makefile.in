@@ -55,22 +55,12 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../base/TxString.$(OBJ_SUFFIX) \
   ../base/txURIUtils.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/Attr.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/CDATASection.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/DocumentType.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/EntityReference.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/CharacterData.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/Comment.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/DocumentFragment.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/DOMImplementation.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/NodeListDefinition.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/NodeDefinition.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/Element.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/NamedNodeMap.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/Document.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/Entity.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/Notation.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/ProcessingInstruction.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/Text.$(OBJ_SUFFIX) \
   ../xpath/AdditiveExpr.$(OBJ_SUFFIX) \
   ../xpath/AttributeValueTemplate.$(OBJ_SUFFIX) \
   ../xpath/BooleanExpr.$(OBJ_SUFFIX) \
