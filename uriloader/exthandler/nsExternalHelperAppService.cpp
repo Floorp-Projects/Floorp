@@ -195,7 +195,7 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { TEXT_HTML, "htm" },
   { APPLICATION_XPINSTALL, "xpi" },
   { "application/xhtml+xml", "xhtml" },
-  { "application/xhtml+xml", "xhtm" }
+  { "application/xhtml+xml", "xht" }
 };
 
 // this is a small private struct used to help us initialize some
