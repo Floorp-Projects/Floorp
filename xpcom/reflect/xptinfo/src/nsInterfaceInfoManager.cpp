@@ -340,7 +340,7 @@ nsInterfaceInfoManager::initInterfaceTables()
     
 #ifdef XP_MAC
 	PRBool wasAlias;
-	sysdir.ResolveAlias(wasAlias);
+	sysdir.ResolveSymlink(wasAlias);
 #endif
 
 #ifdef DEBUG
@@ -352,7 +352,7 @@ nsInterfaceInfoManager::initInterfaceTables()
 		nsFileSpec spec = i.Spec();
 		
 #ifdef XP_MAC
-		spec.ResolveAlias(wasAlias);
+		spec.ResolveSymlink(wasAlias);
 #endif
 		
 		if (! spec.IsFile())

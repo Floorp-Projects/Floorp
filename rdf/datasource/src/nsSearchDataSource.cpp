@@ -1095,7 +1095,7 @@ SearchDataSource::GetSearchEngineList()
 				CInfoPBRec	cInfo;
 				OSErr		err;
 				PRBool		wasAliased = PR_FALSE;
-				fileSpec.ResolveAlias(wasAliased);
+				fileSpec.ResolveSymlink(wasAliased);
 				err = fileSpec.GetCatInfo(cInfo);
 				if ((!err) && (cInfo.hFileInfo.ioFlFndrInfo.fdType == 'issp') &&
 					(cInfo.hFileInfo.ioFlFndrInfo.fdCreator == 'fndf'))
@@ -1214,7 +1214,7 @@ SearchDataSource::ReadFileContents(char *baseFilename, nsString& sourceContents)
 #ifdef	XP_MAC
 	// be sure to resolve aliases in case we encounter one
 	PRBool	wasAliased = PR_FALSE;
-	searchEngine.ResolveAlias(wasAliased);
+	searchEngine.ResolveSymlink(wasAliased);
 #endif
 
 	nsInputFileStream		searchFile(searchEngine);
@@ -1238,7 +1238,7 @@ SearchDataSource::ReadFileContents(char *baseFilename, nsString& sourceContents)
 			{
 				// be sure to resolve aliases in case we encounter one
 				PRBool		wasAliased = PR_FALSE;
-				fileSpec.ResolveAlias(wasAliased);
+				fileSpec.ResolveSymlink(wasAliased);
 				nsAutoString	childPath(childURL);
 				PRInt32		separatorOffset = childPath.RFindChar(':');
 				if (separatorOffset > 0)
