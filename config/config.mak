@@ -236,9 +236,6 @@ MOZ_TRACE_MALLOC=1
 
 !endif
 
-# For modular netlib support.
-CFLAGS=$(CFLAGS) -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE
-
 # Defines for cookie management feature...
 CFLAGS=$(CFLAGS) -DCookieManagement
 

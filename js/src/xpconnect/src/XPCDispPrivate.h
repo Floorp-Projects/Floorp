@@ -137,10 +137,6 @@ STDMETHODIMP_(ULONG) _class::Release(void)                                    \
   return mRefCnt;                                                             \
 }
 
-#ifndef NS_MT_SUPPORTED
-#error "We need MT support
-#endif
-
 extern const nsID NSID_IDISPATCH;
 
 /**
