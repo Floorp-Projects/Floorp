@@ -21,57 +21,93 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+PROGRAM = apprunner
+
+MODULE = apprunner
+
+#REQUIRES = raptor xpcom base netlib pref js dom
+
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
 
 TOOLKIT_GFX_LIB     = -lgfx$(MOZ_TOOLKIT)
 TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_TOOLKIT)
 TOOLKIT_BASE_LIB    = -lgmbase$(MOZ_TOOLKIT)
 
-ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
-TOOLKIT_CFLAGS = \
-        -DWIDGET_DLL=\"libwidgetgtk.so\" \
-        -DGFXWIN_DLL=\"libgfxgtk.so\" \
-        $(TK_GTK_CFLAGS)
+TK_LIBS = $(TK_MOTIF_LIBS) $(TK_GTK_LIBS)
 
-TOOLKIT_CPPSRCS = \
-        nsGTKMain.cpp \
-        nsGTKMenu.cpp
+EXPORT_TOOLBAR = \
+	DialogAddrIcon.gif \
+	DialogAddrIcon_mo.gif \
+	DialogCompIcon.gif \
+	DialogCompIcon_mo.gif \
+	DialogMailIcon.gif \
+	DialogMailIcon_mo.gif \
+	DialogNavIcon.gif \
+	DialogNavIcon_mo.gif \
+	StatusBar-insecure.gif \
+	StatusBar-secure.gif \
+	TB_Back.gif \
+	TB_Back_dis.gif \
+	TB_Back_mo.gif \
+	TB_Bookmarks.gif \
+	TB_Bookmarks_mo.gif \
+	TB_Edit.gif \
+	TB_Edit.mo.gif \
+	TB_EditPage.gif \
+	TB_EditPage.mo.gif \
+	TB_Forward.gif \
+	TB_Forward_dis.gif \
+	TB_Forward_mo.gif \
+	TB_HTab.gif \
+	TB_HTab_mo.gif \
+	TB_Home.gif \
+	TB_Home_mo.gif \
+	TB_LoadImages.gif \
+	TB_LoadImages.mo.gif \
+	TB_Location.gif \
+	TB_Location_mo.gif \
+	TB_MiniAddr.gif \
+	TB_MiniComp.gif \
+	TB_MiniMail.gif \
+	TB_MiniNav.gif \
+	TB_MiniTab.gif \
+	TB_MixSecurity.gif \
+	TB_MixSecurity.mo.gif \
+	TB_Netscape.gif \
+	TB_Netscape_mo.gif \
+	TB_PersonalIcon.gif \
+	TB_Places.gif \
+	TB_Places_mo.gif \
+	TB_Print.gif \
+	TB_Print_mo.gif \
+	TB_Reload.gif \
+	TB_Reload_mo.gif \
+	TB_Search.gif \
+	TB_Search_mo.gif \
+	TB_Secure.gif \
+	TB_Secure_mo.gif \
+	TB_Stop.gif \
+	TB_Stop.mo.gif \
+	TB_Stop_dis.gif \
+	TB_Stop_mo.gif \
+	TB_Tab.gif \
+	TB_TabSmall.gif \
+	TB_TabSmall_mo.gif \
+	TB_Tab_mo.gif \
+	TB_Unsecure.gif \
+	TB_Unsecure.mo.gif \
+	TB_WhatsRelated.gif \
+	TB_WhatsRelated_mo.gif \
+	$(NULL)
 
-TOOLKIT_LIBS = $(TK_GTK_LIBS)
-else
-ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
-TOOLKIT_CFLAGS = \
-        -DWIDGET_DLL=\"libwidgetmotif.so\" \
-        -DGFXWIN_DLL=\"libgfxmotif.so\" \
-        $(TK_MOTIF_CFLAGS)
+# Pull these out of xpviewer for now (i.e. This is a hack).
+#
+EXPORT_RESOURCES := \
+	$(addprefix $(topsrcdir)/xpfe/xpviewer/src/resources/toolbar/, \
+		$(EXPORT_TOOLBAR))
 
-TOOLKIT_CPPSRCS = \
-        nsMotifMenu.cpp \
-        nsUnixMain.cpp
-
-TOOLKIT_LIBS = $(TK_MOTIF_LIBS) $(XLDFLAGS) $(XLIBS)
-
-endif
-endif
-
-
-PROGS = $(OBJDIR)/apprunner
-
-MODULE = apprunner
-
-REQUIRES = raptor xpcom base netlib pref js dom
-
-INCLUDES += -I../public -I$(PUBLIC)/raptor	\
-	   -I$(PUBLIC)/xpcom	\
-	   -I$(PUBLIC)/base	\
-	   -I$(PUBLIC)/netlib	\
-	   -I$(PUBLIC)/pref	\
-	   -I$(PUBLIC)/js	\
-	   -I$(PUBLIC)/dom
-
-EX_LIBS = \
+LIBS = \
 	-L$(DIST)/bin	\
 	-lnsappshell	\
 	-lxpcom		\
@@ -113,6 +149,7 @@ EX_LIBS = \
 	$(NSPR_LIBS)	\
 	$(ZLIB_LIBS)	\
 	-lpwcac		\
+	$(TK_LIBS)	\
 	$(NULL)
 
 
@@ -122,26 +159,11 @@ CPPSRCS = \
 	nsUnixStubs.cpp		\
 	$(NULL)
 
-CPP_OBJS =			\
- ./$(OBJDIR)/nsAppRunner.o  	\
- ./$(OBJDIR)/nsSetupRegistry.o	\
- ./$(OBJDIR)/nsUnixStubs.o	\
- $(NULL)
+include $(topsrcdir)/config/config.mk
 
 CFLAGS += $(TOOLKIT_CFLAGS)
 
-TARGETS = $(PROGS)
-
 include $(topsrcdir)/config/rules.mk
 
-$(PROGS) : $(OBJS)
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) $(TOOLKIT_LIBS)
-
-install:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
-
-clobber::
-	rm -rf $(OBJDIR)/*.o
-	rm -rf $(OBJDIR)/$(PROGS)
-
+install::
+	$(INSTALL) $(EXPORT_RESOURCES) $(DIST)/bin/res/toolbar
