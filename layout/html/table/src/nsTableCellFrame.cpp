@@ -87,12 +87,12 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
     NS_ASSERTION(nsnull!=myColor, "bad style color");
     NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
 
+    nsRect  rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, mRect, *myColor);
+                                    aDirtyRect, rect, *myColor);
 
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, nsRect(0, 0, mRect.width, mRect.height),
-                                *mySpacing, 0);
+                                aDirtyRect, rect, *mySpacing, 0);
   }
 
   // for debug...

@@ -155,8 +155,9 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext& aPresContext,
   const nsStyleColor* myColor =
     (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
   if (nsnull != myColor) {
+    nsRect  rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, mRect, *myColor);
+                                    aDirtyRect, rect, *myColor);
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
