@@ -766,7 +766,10 @@ PRBool CopyFontCharSetMapXlib(nsFontMetricsXlibContext *aFmctx)
   if (!s)
     return PR_FALSE;
 
-  copy[0]     = (nsFontCharSetMapXlib *)ALIGN_PTR(s);  s += size1[0];
+  /* Note that the pointer in |copy[0]| is stored in |mCharSetMap| later which
+   * is finally passed to |free()| when the nsFontMetricsXlibContext destructor
+   * is called. */
+  copy[0]     = (nsFontCharSetMapXlib *)s;             s += size1[0];
   copy[1]     = (nsFontCharSetMapXlib *)ALIGN_PTR(s);  s += size1[1];
   copy[2]     = (nsFontCharSetMapXlib *)ALIGN_PTR(s);  s += size1[2];
   langgroup   = (nsFontLangGroupXlib  *)ALIGN_PTR(s);  s += size2[0] + size2[1] + size2[2];
