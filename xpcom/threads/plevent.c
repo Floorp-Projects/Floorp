@@ -501,7 +501,7 @@ PL_ProcessPendingEvents(PLEventQueue* self)
     count = _pl_GetEventCount(self);
 
 #ifdef XP_UNIX
-    // XXX HACK (pav)
+    /* XXX HACK (pav) */
     node = PR_LIST_HEAD(&self->queue);
     if (self->notifyCount > 0 &&
         self->type == EventQueueIsNative &&
