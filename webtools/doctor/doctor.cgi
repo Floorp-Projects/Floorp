@@ -128,7 +128,18 @@ my $at_sign = 0;
 # Determine whether to use the action specified by the user or the default.
 my $action = lc($request->param('action')) || "edit";
 
-if ($action eq "edit")
+# If the user wants to edit a file, but they haven't specified the name
+# of the file, prompt them for it.
+if ($action eq "edit" && !$request->param('file')) { $action = "select" }
+
+if ($action eq "select")
+{
+  print $request->header;
+  $template->process("select.tmpl", $vars)
+    || DisplayError("Template Process Failed", $template->error())
+    && exit;
+}
+elsif ($action eq "edit")
 {
   ValidateFile();
  
