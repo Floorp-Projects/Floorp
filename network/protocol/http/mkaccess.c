@@ -974,6 +974,7 @@ NET_AskForAuthString(MWContext *context,
 PRIVATE XP_List * net_cookie_list=0;
 #if defined(CookieManagement)
 PRIVATE XP_List * net_cookie_permission_list=0;
+PRIVATE XP_List * net_defer_cookie_list=0;
 #endif
 
 typedef struct _net_CookieStruct {
@@ -995,6 +996,13 @@ typedef struct _net_CookiePermissionStruct {
     XP_List * TrustList; /* a list of trust label entries */
 #endif
 } net_CookiePermissionStruct;
+
+typedef struct _net_DeferCookieStruct {
+    MWContext * context;
+    char * cur_url;
+    char * set_cookie_header;
+    time_t timeToExpire;
+} net_DeferCookieStruct;
 
 #ifdef TRUST_LABELS
 void ParseTrustLabelInfo
@@ -1074,6 +1082,57 @@ net_unlock_cookie_list(void)
 }
 
 #if defined(CookieManagement)
+static PRMonitor * defer_cookie_lock_monitor = NULL;
+static PRThread  * defer_cookie_lock_owner = NULL;
+static int defer_cookie_lock_count = 0;
+
+PRIVATE void
+net_lock_defer_cookie_list(void)
+{
+    if(!defer_cookie_lock_monitor)
+	defer_cookie_lock_monitor =
+            PR_NewNamedMonitor("defer_cookie-lock");
+
+    PR_EnterMonitor(defer_cookie_lock_monitor);
+
+    while(TRUE) {
+
+	/* no current owner or owned by this thread */
+	PRThread * t = PR_CurrentThread();
+	if(defer_cookie_lock_owner == NULL || defer_cookie_lock_owner == t) {
+	    defer_cookie_lock_owner = t;
+	    defer_cookie_lock_count++;
+
+	    PR_ExitMonitor(defer_cookie_lock_monitor);
+	    return;
+	}
+
+	/* owned by someone else -- wait till we can get it */
+	PR_Wait(defer_cookie_lock_monitor, PR_INTERVAL_NO_TIMEOUT);
+
+    }
+}
+
+PRIVATE void
+net_unlock_defer_cookie_list(void)
+{
+   PR_EnterMonitor(defer_cookie_lock_monitor);
+
+#ifdef DEBUG
+    /* make sure someone doesn't try to free a lock they don't own */
+    PR_ASSERT(defer_cookie_lock_owner == PR_CurrentThread());
+#endif
+
+    defer_cookie_lock_count--;
+
+    if(defer_cookie_lock_count == 0) {
+	defer_cookie_lock_owner = NULL;
+	PR_Notify(defer_cookie_lock_monitor);
+    }
+    PR_ExitMonitor(defer_cookie_lock_monitor);
+
+}
+
 static PRMonitor * cookie_permission_lock_monitor = NULL;
 static PRThread  * cookie_permission_lock_owner = NULL;
 static int cookie_permission_lock_count = 0;
@@ -1907,6 +1966,60 @@ NET_CookieCount(char * URLName) {
     PR_Free(host);
     return count;
 }
+
+PRBool net_IntSetCookieStringInUse = FALSE;
+
+PRIVATE void
+net_DeferCookie(
+		MWContext * context,
+		char * cur_url,
+		char * set_cookie_header,
+		time_t timeToExpire) {
+	net_DeferCookieStruct * defer_cookie = PR_NEW(net_DeferCookieStruct);
+	defer_cookie->context = context;
+	defer_cookie->cur_url = NULL;
+	StrAllocCopy(defer_cookie->cur_url, cur_url);
+	defer_cookie->set_cookie_header = NULL;
+	StrAllocCopy(defer_cookie->set_cookie_header, set_cookie_header);
+	defer_cookie->timeToExpire = timeToExpire;
+	net_lock_defer_cookie_list();
+	if (!net_defer_cookie_list) {
+		net_defer_cookie_list = XP_ListNew();
+		if (!net_cookie_list) {
+			PR_FREEIF(defer_cookie->cur_url);
+			PR_FREEIF(defer_cookie->set_cookie_header);
+			PR_Free(defer_cookie);
+		}
+	}
+	XP_ListAddObject(net_defer_cookie_list, defer_cookie);
+	net_unlock_defer_cookie_list();
+}
+
+PRIVATE void
+net_IntSetCookieString(MWContext * context,
+					char * cur_url,
+					char * set_cookie_header,
+					time_t timeToExpire );
+
+PRIVATE void
+net_UndeferCookies() {
+	net_DeferCookieStruct * defer_cookie;
+	net_lock_defer_cookie_list();
+	if(XP_ListIsEmpty(net_defer_cookie_list)) {
+		net_unlock_defer_cookie_list();
+		return;
+	}
+	defer_cookie = XP_ListRemoveEndObject(net_defer_cookie_list);
+	net_unlock_defer_cookie_list();
+	net_IntSetCookieString (
+		defer_cookie->context,
+		defer_cookie->cur_url,
+		defer_cookie->set_cookie_header,
+		defer_cookie->timeToExpire);
+	PR_FREEIF(defer_cookie->cur_url);
+	PR_FREEIF(defer_cookie->set_cookie_header);
+	PR_Free(defer_cookie);
+}
 #endif
 
 /* Java script is calling NET_SetCookieString, netlib is calling 
@@ -1955,6 +2068,20 @@ net_IntSetCookieString(MWContext * context,
 		PR_Free(cur_host);
 		return;
 	}
+
+#if defined(CookieManagement)
+	/* Don't enter this routine if it is already in use by another
+	   thread.  Otherwise the "remember this decision" result of the
+	   other cookie (which came first) won't get applied to this cookie.
+	 */
+	if (net_IntSetCookieStringInUse) {
+		PR_Free(cur_path);
+		PR_Free(cur_host);
+		net_DeferCookie(context, cur_url, set_cookie_header, timeToExpire);
+		return;
+	}
+	net_IntSetCookieStringInUse = TRUE;
+#endif
 
 	HG87358
 	/* terminate at any carriage return or linefeed */
@@ -2041,6 +2168,10 @@ net_IntSetCookieString(MWContext * context,
 				PR_Free(cur_path);
 				PR_Free(cur_host);
 				TRACEMSG(("DOMAIN failed two dot test"));
+#if defined(CookieManagement)
+				net_IntSetCookieStringInUse = FALSE;
+				net_UndeferCookies();
+#endif
 				return;
 			  }
 
@@ -2065,6 +2196,10 @@ net_IntSetCookieString(MWContext * context,
 				PR_Free(domain_from_header);
 				PR_Free(cur_path);
 				PR_Free(cur_host);
+#if defined(CookieManagement)
+				net_IntSetCookieStringInUse = FALSE;
+				net_UndeferCookies();
+#endif
 				return;
               }
 
@@ -2152,6 +2287,10 @@ net_IntSetCookieString(MWContext * context,
             PR_FREEIF(cookie_from_header);
             /* FREEIF(cur_path); */
             /* FREEIF(cur_host); */
+#if defined(CookieManagement)
+            net_IntSetCookieStringInUse = FALSE;
+            net_UndeferCookies();
+#endif
             return;
         }
 
@@ -2211,7 +2350,11 @@ net_IntSetCookieString(MWContext * context,
 					PR_Free(cd);
 					/* FREEIF(cur_path); */
 					/* FREEIF(cur_host); */
-				return;
+#if defined(CookieManagement)
+					net_IntSetCookieStringInUse = FALSE;
+					net_UndeferCookies();
+#endif
+					return;
 				case JSCF_accept:
 					accept=TRUE;
 				case JSCF_error:
@@ -2232,6 +2375,8 @@ net_IntSetCookieString(MWContext * context,
 		PR_FREEIF(host_from_header);
 		PR_FREEIF(name_from_header);
 		PR_FREEIF(cookie_from_header);
+		net_IntSetCookieStringInUse = FALSE;
+		net_UndeferCookies();
 		return;
 	    } else {
 		accept = TRUE;
@@ -2349,7 +2494,11 @@ net_IntSetCookieString(MWContext * context,
 
 
 		if (!userHasAccepted) {
-		    return;
+#if defined(CookieManagement)
+			net_IntSetCookieStringInUse = FALSE;
+			net_UndeferCookies();
+#endif
+			return;
 		}
 	    }
 #else
@@ -2407,7 +2556,11 @@ net_IntSetCookieString(MWContext * context,
 			PR_FREEIF(name_from_header);
 			PR_FREEIF(cookie_from_header);
 			net_unlock_cookie_list();
-            return;
+#if defined(CookieManagement)
+			net_IntSetCookieStringInUse = FALSE;
+			net_UndeferCookies();
+#endif
+			return;
           }
     
         /* copy
@@ -2430,6 +2583,10 @@ net_IntSetCookieString(MWContext * context,
 				PR_FREEIF(cookie_from_header);
 				PR_Free(prev_cookie);
 				net_unlock_cookie_list();
+#if defined(CookieManagement)
+				net_IntSetCookieStringInUse = FALSE;
+				net_UndeferCookies();
+#endif
 				return;
 			  }
 		  }		
@@ -2482,6 +2639,10 @@ net_IntSetCookieString(MWContext * context,
             }
         }
     }
+#endif
+#if defined(CookieManagement)
+	net_IntSetCookieStringInUse = FALSE;
+	net_UndeferCookies();
 #endif
 	return;
 }
