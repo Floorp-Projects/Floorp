@@ -400,8 +400,14 @@ else # WINNT
 # UNIX link commands
 #
 ifeq ($(OS_ARCH),OS2)
-LINK_LIB        = $(AR) $(AR_FLAGS) $(OBJS) && $(RANLIB) $@
+LINK_LIB        = -$(RM) $@ && $(AR) $(AR_FLAGS) $(OBJS) && $(RANLIB) $@
+LINK_LIB2       = -$(RM) $@ && $(AR) $@ $(OBJS2) && $(RANLIB) $@
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
 LINK_DLL        = $(LD) $(OS_DLLFLAGS) $(DLLFLAGS) $(OBJS)
+else
+LINK_DLL        = $(LD) $(DSO_LDOPTS) $(ALDFLAGS) $(DLL_LDFLAGS) $(DLL_EXPORT_FLAGS) \
+                        -o $@ $(OBJS)
+endif
 
 else
 

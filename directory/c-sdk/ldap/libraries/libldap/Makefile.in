@@ -200,10 +200,13 @@ EXTRA_LIBS += $(dist_libdir)/$(LBER_LIBNAME).lib
 endif
 endif
 
-ifeq ($(OS_ARCH),OS2)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
 EXTRA_LIBS = $(dist_libdir)/$(LDIF_LIBNAME).lib
 EXTRA_LIBS += $(dist_libdir)/$(LBER_LIBNAME).lib
 EXTRA_LIBS += $(OS_LIBS)
+endif
+ifeq ($(MOZ_OS2_TOOLS),EMX)
+EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME) $(OS_LIBS)
 endif
 
 ifeq ($(OS_ARCH), OSF1)

@@ -164,22 +164,57 @@ struct prldap_errormap_entry {
 #endif /* macintosh */
 
 #ifdef XP_OS2
+#ifdef XP_OS2_EMX
+#define SOCBASEERR      0
+#endif
+#ifndef ENOTSUP
 #define ENOTSUP         -1
+#endif
+#ifndef EOVERFLOW
 #define EOVERFLOW       -1
+#endif
+#ifndef EDEADLOCK
 #define EDEADLOCK       -1
+#endif
+#ifndef EFAULT
 #define EFAULT          SOCEFAULT
+#endif
+#ifndef EPIPE
 #define EPIPE           SOCEPIPE
+#endif
+#ifndef EIO
 #define EIO             (SOCBASEERR+5)
+#endif
+#ifndef EDEADLK
 #define EDEADLK         (SOCBASEERR+11)
+#endif
+#ifndef ENOTBLK
 #define ENOTBLK         (SOCBASEERR+15)
+#endif
+#ifndef EBUSY
 #define EBUSY           (SOCBASEERR+16)
+#endif
+#ifndef ENOTDIR
 #define ENOTDIR         (SOCBASEERR+20)
+#endif
+#ifndef EISDIR
 #define EISDIR          (SOCBASEERR+21)
+#endif
+#ifndef ENFILE
 #define ENFILE          (SOCBASEERR+23)
+#endif
+#ifndef ETXTBSY
 #define ETXTBSY         (SOCBASEERR+26)
+#endif
+#ifndef EFBIG
 #define EFBIG           (SOCBASEERR+27)
+#endif
+#ifndef ESPIPE
 #define ESPIPE          (SOCBASEERR+29)
+#endif
+#ifndef EROFS
 #define EROFS           (SOCBASEERR+30)
+#endif
 #endif
 
 #ifdef BEOS

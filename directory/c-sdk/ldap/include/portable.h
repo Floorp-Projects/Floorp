@@ -436,7 +436,7 @@ int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 
 #elif defined(XP_OS2)
 
-#define strcasecmp strcmpi
+#define strcasecmp stricmp
 #define strncasecmp strnicmp
 #define bzero(a, b) memset( a, 0, b )
 #include <string.h> /*for strcmpi()*/

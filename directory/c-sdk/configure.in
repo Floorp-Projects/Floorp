@@ -354,7 +354,7 @@ if test -n "$MOZ_DEBUG"; then
     beos*)
         DEFINES="$DEFINES -DDEBUG_${USER}"
         ;;
-    msvc*|mks*|cygwin*|mingw*)
+    msvc*|mks*|cygwin*|mingw*|os2*)
         DEFINES="$DEFINES -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
     *) 
@@ -463,7 +463,7 @@ fi
 if test "$GXX" = "yes"; then
     GNU_CXX=1
 fi
-if test "`echo | $AS -V 2>&1 | grep -c GNU`" != "0"; then
+if test "`echo | $AS -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_AS=1
 fi
 rm -f a.out
@@ -1485,6 +1485,93 @@ mips-sony-newsos*)
     MKSHLIB='vmsld $(OPTIMIZER)'
     ;;
 
+*-os2*)
+    AC_DEFINE(XP_OS2)
+    AC_DEFINE(XP_PC)
+    AC_DEFINE(BSD_SELECT)
+    AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
+    PR_MD_ARCH_DIR=os2
+    RESOLVE_LINK_SYMBOLS=1
+    NSINSTALL=nsinstall
+    LIB_PREFIX=
+    LIB_SUFFIX=lib
+    DLL_SUFFIX=dll
+    DLLTOOL=''
+    RC=rc.exe
+    PROG_SUFFIX=.exe
+    MDCPUCFG_H=_os2.cfg
+
+    # EMX/GCC build
+    if test -n "$GNU_CC"; then
+#        AC_DEFINE(USE_OS2_TOOLKIT_HEADERS)
+        AC_DEFINE(XP_OS2_EMX)
+        AC_DEFINE(OS2)
+        AR=emxomfar
+        AR_FLAGS='-p256 r $@'
+        LD='$(CC)'
+        CFLAGS="$CFLAGS -Wall -Zmtd -Zomf"
+        CXXFLAGS="$CFLAGS -Wall -Zmtd -Zomf"
+        MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
+        DSO_CFLAGS=
+        DSO_LDOPTS='-Zomf -Zdll -Zmtd'
+        _OPTIMIZE_FLAGS=-O3
+        _DEBUG_FLAGS="-g -fno-inline"
+        if test -n "$MOZ_OPTIMIZE"; then
+          DSO_LDOPTS="$DSO_LDOPTS -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
+        fi
+        OS_LIBS="-lsocket -lemxio"
+        IMPLIB='emximp -o'
+        FILTER='emxexp -o'
+
+        if test -z "$EMXOMFLD_LINKER"; then
+          # using LINK386.EXE
+          DSO_LDOPTS="$DSO_LDOPTS -Zlinker /NOO"
+        fi
+
+        # GCC for OS/2 currently predefines these, but we don't want them
+        DEFINES="$DEFINES -Uunix -U__unix -U__unix__"
+
+    # Visual Age C++ build
+    elif test "$VACPP" = "yes"; then
+        MOZ_BUILD_ROOT=`pwd -D`
+        AC_DEFINE(XP_OS2_VACPP)
+        AC_DEFINE(OS2,4)
+        AC_DEFINE(TCPV40HDRS)
+        AC_DEFINE(_X86_)
+        OBJ_SUFFIX=obj
+        AS=alp
+        ASFLAGS='-Mb'
+        ASM_SUFFIX=asm
+        AR=ilib
+        AR_FLAGS='/NOL /NOI /O:$(subst /,\\,$@)'
+        CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
+        HOST_CFLAGS="$CFLAGS"
+        OS_CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
+        OS_EXE_CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
+        CXXFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
+        OS_LIBS='so32dll.lib tcp32dll.lib'
+        LD='-ilink'
+        MKSHLIB='$(LD) $(DSO_LDOPTS)'
+        IMPLIB='implib -nologo -noignorecase'
+        FILTER='cppfilt -q -B -P'
+        _OPTIMIZE_FLAGS='/O+ /Gl+ /Gx+ /qtune=pentium /qarch=pentium'
+        _DEBUG_FLAGS='/Ti+ '
+        LDFLAGS='/NOL /M /L'
+        DLLFLAGS='/O:$@ /DLL /INC:_dllentry /MAP:$(@:.dll=.map) /L /NOL'
+        EXEFLAGS='/OUT:$@ /PMTYPE:VIO /MAP:$(@:.exe=.map) /L /NOL'
+        if test -n "$MOZ_DEBUG"; then
+          LDFLAGS="$LDFLAGS /DE"
+          DLLFLAGS="$DLLFLAGS /DE"
+          EXEFLAGS="$EXEFLAGS /DE"
+        fi
+        if test -n "$MOZ_OPTIMIZE"; then
+          LDFLAGS="$LDFLAGS /OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
+          DLLFLAGS="$DLLFLAGS /OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
+          EXEFLAGS="$EXEFLAGS /OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
+        fi
+    fi
+    ;;
+
 *-osf*)
     SHELL_OVERRIDE="SHELL		= /usr/bin/ksh"
     AC_DEFINE(XP_UNIX)
@@ -1719,88 +1806,6 @@ mips-sony-newsos*)
     PR_MD_CSRCS=unixware.c
     DSO_LDOPTS=-G
     CPU_ARCH=x86
-    ;;
-
-*-os2*)
-    AC_DEFINE(XP_OS2)
-    AC_DEFINE(BSD_SELECT)
-    AC_DEFINE(XP_PC)
-    AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
-    OBJ_SUFFIX=obj
-    LIB_SUFFIX=lib
-    LIB_PREFIX=
-    DLL_SUFFIX=dll
-    ASM_SUFFIX=asm
-    RC=rc.exe
-    PR_MD_ARCH_DIR=os2
-    PROG_SUFFIX=.exe
-    NSINSTALL=nsinstall
-    MDCPUCFG_H=_os2.cfg
-    RESOLVE_LINK_SYMBOLS=1
-
-    # EMX/GCC build
-    if test "$GNU_CC"; then
-        AC_DEFINE(XP_OS2_EMX)
-        AC_DEFINE(OS2)
-        AR=emxomfar
-        AR_FLAGS='-p256 r $@'
-        CFLAGS="-Zmtd -Zomf"
-        HOST_CFLAGS="$CFLAGS"
-        CXXFLAGS="-Zmtd -Zomf"
-        OS_LIBS="-lsocket -lemxio"
-        LD='$(CC)'
-        IMPLIB='emximp -o'
-        FILTER='emxexp'
-        OS_DLLFLAGS='$(DSO_LDOPTS) -o $@'
-        _OPTIMIZE_FLAGS="-O2 -s"
-        _DEBUG_FLAGS=-g
-        if test -n "$MOZ_DEBUG"; then
-          DLLFLAGS='-g'
-          EXEFLAGS='-g $(OMF_FLAG) -Zmtd -L$(DIST)/lib -o $@'
-          DSO_LDOPTS='-g -Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO'
-        else
-          DLLFLAGS=
-          EXEFLAGS='-Zmtd -o $@'
-          DSO_LDOPTS='-Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO'
-        fi
-    fi
-    
-    # Visual Age C++ build
-    if test "$VACPP" = "yes"; then
-        AC_DEFINE(XP_OS2_VACPP)
-        AC_DEFINE(OS2,4)
-        AC_DEFINE(TCPV40HDRS)
-        AC_DEFINE(_X86_)
-        AS=alp
-        ASFLAGS='-Mb'
-        AR=-ilib
-        AR_FLAGS='/NOL /NOI /O:$(subst /,\\,$@)'
-        CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
-        HOST_CFLAGS="$CFLAGS"
-        OS_CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
-        OS_EXE_CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
-        CXXFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
-        OS_LIBS='so32dll.lib tcp32dll.lib'
-        LD='-ilink'
-        MKSHLIB='$(LD) $(DSO_LDOPTS)'
-        IMPLIB='implib -nologo -noignorecase'
-        FILTER='cppfilt -q -B -P -o'
-        _OPTIMIZE_FLAGS='/O+ /Gl+ /G5 /qarch=pentium'
-        _DEBUG_FLAGS='/Ti+ '
-        LDFLAGS='/NOL /M /L'
-        DLLFLAGS='/O:$@ /DLL /INC:_dllentry /MAP:$(@:.dll=.map) /L /NOL'
-        EXEFLAGS='/OUT:$@ /PMTYPE:VIO /MAP:$(@:.exe=.map) /L /NOL'
-        if test -n "$MOZ_DEBUG"; then
-          LDFLAGS="$LDFLAGS /DE"
-          DLLFLAGS="$DLLFLAGS /DE"
-          EXEFLAGS="$EXEFLAGS /DE"
-        fi
-        if test -n "$MOZ_OPTIMIZE"; then
-          LDFLAGS="$LDFLAGS /OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
-          DLLFLAGS="$DLLFLAGS /OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
-          EXEFLAGS="$EXEFLAGS /OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
-        fi
-    fi
     ;;
 
 *)

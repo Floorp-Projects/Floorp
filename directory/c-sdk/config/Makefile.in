@@ -92,9 +92,9 @@ ifeq ($(OS_ARCH), HP-UX)
     endif
 endif
 
-ifdef XP_OS2_EMX
+ifeq ($(MOZ_OS2_TOOLS),EMX)
 XCFLAGS = $(OS_EXE_CFLAGS)
-XLDOPTS = -Zlinker /PM:VIO
+XLDOPTS = -Zomf -Zlinker /PM:VIO
 endif
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
