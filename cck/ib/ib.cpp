@@ -101,7 +101,7 @@ int ReplaceXPIFiles()
 int ReplaceINIFile()
 {
 	CString command;
-	CString exeName("NetscapeSetup.exe");
+	CString exeName("N6Setup.exe");
 	char	olddir[1024];
 
 	GetCurrentDirectory(sizeof(olddir), olddir);
@@ -796,7 +796,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 		if (!infout)
 			exit( 3 );
 
-		fprintf(infout,"[autorun]\nopen = NetscapeSetup.exe");
+		fprintf(infout,"[autorun]\nopen = N6Setup.exe");
 	}
 	CString component;
 	CString configiniPath = xpiDstPath +"\\config.ini";
