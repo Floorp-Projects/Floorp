@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+
+<!DOCTYPE window SYSTEM "chrome://content-packs/locale/pref-contentpacks.dtd">
+
+<window id="prefContentPacks"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <text value="&test.label;"/>
+</window>        
+
