@@ -22,6 +22,7 @@
 #include "mimetext.h"
 #include "libi18n.h"
 #include "mimebuf.h"
+#include "mimethtm.h"
 
 #include "prmem.h"
 #include "plstr.h"
@@ -286,14 +287,27 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
     PRBool          input_autodetect = PR_FALSE;
     MimeInlineText  *text = (MimeInlineText *) obj;
 
-    if (obj->options->override_charset && (*obj->options->override_charset))
-      input_charset = obj->options->override_charset;
-    else if ( (text) && (text->charset) && (*(text->charset)) )
-      input_charset = text->charset;
-    else 
+    //
+    // Ok, first, check if this is an Inline HTML display, and if so, 
+    // see if we detected a charset via a META tag.
+    //
+    if (mime_typep(obj, (MimeObjectClass *) &mimeInlineTextHTMLClass))
     {
-      input_charset = obj->options->default_charset;
-      input_autodetect = PR_TRUE;
+      MimeInlineTextHTML  *textHTML = (MimeInlineTextHTML *) obj;
+      input_charset = textHTML->charset;
+    }
+
+    if (!input_charset)
+    {
+      if (obj->options->override_charset && (*obj->options->override_charset))
+        input_charset = obj->options->override_charset;
+      else if ( (text) && (text->charset) && (*(text->charset)) )
+        input_charset = text->charset;
+      else 
+      {
+        input_charset = obj->options->default_charset;
+        input_autodetect = PR_TRUE;
+      }
     }
 
 	  status = obj->options->charset_conversion_fn(input_autodetect, line, length,

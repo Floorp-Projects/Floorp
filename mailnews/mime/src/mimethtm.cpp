@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */
-
+#include "plstr.h"
 #include "mimethtm.h"
 #include "prmem.h"
 #include "plstr.h"
@@ -54,6 +54,10 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
   if (status < 0) return status;
 
   if (!obj->output_p) return 0;
+
+  MimeInlineTextHTML  *textHTML = (MimeInlineTextHTML *) obj;
+
+  textHTML->charset = nsnull;
 
   /* If this HTML part has a Content-Base header, and if we're displaying
 	 to the screen (that is, not writing this part "raw") then translate
@@ -134,12 +138,42 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
 static int
 MimeInlineTextHTML_parse_line (char *line, PRInt32 length, MimeObject *obj)
 {
-  if (!obj->output_p) return 0;
+  MimeInlineTextHTML  *textHTML = (MimeInlineTextHTML *) obj;
 
-  if (obj->options && obj->options->output_fn)
-	return MimeObject_write(obj, line, length, PR_TRUE);
-  else
-	return 0;
+  if (!obj->output_p) 
+    return 0;
+
+  if (!obj->options || !obj->options->output_fn)
+    return 0;
+
+  if (!textHTML->charset)
+  {
+    // First, try to detect a charset via a META tag!
+    if (PL_strncasestr(line, "META", length) && 
+        PL_strncasestr(line, "HTTP-EQUIV", length) && 
+        PL_strncasestr(line, "CONTENT", length) && 
+        PL_strncasestr(line, "CHARSET", length) 
+        ) 
+    { 
+      char *cp1 = PL_strncasestr(line, "CHARSET", length);
+      if (cp1)
+      {
+        char *cp = PL_strncasestr(cp1, "=", (length - (int)(cp1-line)) ) + 1; 
+
+        char seps[]   = " \"\'"; 
+        char *token; 
+        char* newStr; 
+        token = nsCRT::strtok(cp, seps, &newStr); 
+        if (token != NULL) 
+        { 
+          textHTML->charset = nsCRT::strdup(token); 
+        } 
+      }
+    }
+  }
+
+  // Now, just write out the data...
+  return MimeObject_write(obj, line, length, PR_TRUE);
 }
 
 /* This method is the same as that of MimeInlineTextRichtext (and thus
@@ -151,7 +185,10 @@ static int
 MimeInlineTextHTML_parse_eof (MimeObject *obj, PRBool abort_p)
 {
   int status;
+  MimeInlineTextHTML  *textHTML = (MimeInlineTextHTML *) obj;
   if (obj->closed_p) return 0;
+
+  PR_FREEIF(textHTML->charset);
 
   /* Run parent method first, to flush out any buffered data. */
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
