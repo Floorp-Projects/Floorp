@@ -527,9 +527,6 @@ Rights Reserved.
 	</menu>
 	<menu value="&goMenu.label;" accesskey="&goMenu.accesskey;">
 		<menupopup>
-			<menuitem value="&firstUnreadMsgCmd.label;" accesskey="&firstUnreadMsgCmd.accesskey;" disabled="true" oncommand="MsgFirstUnreadMessage();"/>
-			<menuitem value="&firstFlaggedMsgCmd.label;" accesskey="&firstFlaggedMsgCmd.accesskey;" disabled="true" oncommand="MsgFirstFlaggedMessage();"/>
-			<menuseparator/>
 			<menu value="&nextMenu.label;" accesskey="&nextMenu.accesskey;">
 				<menupopup>
 					<menuitem value="&nextMsgCmd.label;" key="key_nextMsg" accesskey="&nextMsgCmd.accesskey;" observes="cmd_nextMsg"/>
@@ -546,9 +543,6 @@ Rights Reserved.
 					<menuitem value="&prevFlaggedMsgCmd.label;" accesskey="&previousFlaggedMsgCmd.accesskey;" observes="cmd_previousFlaggedMsg"/>
 				</menupopup>
 			</menu>
-			<menuseparator/>
-			<menuitem value="&backCmd.label;" accesskey="&backCmd.accesskey;" disabled="true" oncommand="MsgGoBack();"/>
-			<menuitem value="&forwardCmd.label;" accesskey="&forwardCmd.accesskey;" disabled="true" oncommand="MsgGoForward();"/>
 			<menuseparator/>
 			<menuitem value="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" oncommand="HideMessageHeaderPane();loadStartPage();"/>
 		</menupopup>
@@ -687,7 +681,6 @@ Rights Reserved.
 				<menuitem value="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" oncommand="MsgMarkMsgAsRead(true);"/>
 				<menuitem value="&markAsUnreadCmd.label;" accesskey="&markAsUnreadCmd.accesskey;" oncommand="MsgMarkMsgAsRead(false);"/>
 				<menuitem value="&markThreadAsReadCmd.label;" accesskey="&markThreadAsReadCmd.accesskey;" oncommand="MsgMarkThreadAsRead();"/>
-				<menuitem value="&markByDateCmd.label;" accesskey="&markByDateCmd.accesskey;" disabled="true" oncommand="MsgMarkByDate();"/>
 				<menuitem value="&markAllReadCmd.label;" accesskey="&markAllReadCmd.accesskey;" oncommand="MsgMarkAllRead();"/>
 				<menuseparator/>
 				<menuitem value="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" oncommand="MsgMarkAsFlagged(true);"/>
