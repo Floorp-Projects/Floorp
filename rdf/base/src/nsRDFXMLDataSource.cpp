@@ -483,7 +483,7 @@ RDFXMLDataSourceImpl::Init()
     // should've defined the RDF namespace to be _something_, and we
     // should just look at _that_ and use it. Oh well.
     nsIAtom* rdfPrefix = NS_NewAtom("RDF");
-    AddNameSpace(rdfPrefix, NS_ConvertASCIItoUCS2(RDF_NAMESPACE_URI));
+    AddNameSpace(rdfPrefix, NS_LITERAL_STRING(RDF_NAMESPACE_URI));
     NS_IF_RELEASE(rdfPrefix);
 
     if (gRefCnt++ == 0) {
@@ -911,7 +911,7 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
                                             getter_AddRefs(parser));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString charset(NS_ConvertASCIItoUCS2("UTF-8"));
+    nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
     parser->SetDocumentCharset(charset, kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink);
 
@@ -1153,7 +1153,7 @@ RDFXMLDataSourceImpl::MakeQName(nsIRDFResource* resource,
 {
     nsXPIDLCString s;
     resource->GetValue(getter_Copies(s));
-    nsAutoString uri; uri.AssignWithConversion(NS_STATIC_CAST(const char*, s));
+    nsAutoString uri = NS_ConvertUTF8toUCS2(s);
 
     for (NameSpaceMap* entry = mNameSpaces; entry != nsnull; entry = entry->Next) {
         if (uri.Find(entry->URI) == 0) {
@@ -1196,7 +1196,7 @@ RDFXMLDataSourceImpl::MakeQName(nsIRDFResource* resource,
 
     // Just generate a random prefix
     static PRInt32 gPrefixID = 0;
-    nameSpacePrefix.AssignWithConversion("NS");
+    nameSpacePrefix = NS_LITERAL_STRING("NS");
     nameSpacePrefix.AppendInt(++gPrefixID, 10);
     return PR_FALSE;
 }
@@ -1229,12 +1229,12 @@ rdf_EscapeAngleBrackets(nsString& s)
     PRInt32 i;
     while ((i = s.FindChar('<')) != -1) {
         s.SetCharAt('&', i);
-        s.Insert(NS_ConvertASCIItoUCS2("lt;"), i + 1);
+        s.Insert(NS_LITERAL_STRING("lt;"), i + 1);
     }
 
     while ((i = s.FindChar('>')) != -1) {
         s.SetCharAt('&', i);
-        s.Insert(NS_ConvertASCIItoUCS2("gt;"), i + 1);
+        s.Insert(NS_LITERAL_STRING("gt;"), i + 1);
     }
 }
 
@@ -1244,7 +1244,7 @@ rdf_EscapeAmpersands(nsString& s)
     PRInt32 i = 0;
     while ((i = s.FindChar('&', PR_FALSE,i)) != -1) {
         s.SetCharAt('&', i);
-        s.Insert(NS_ConvertASCIItoUCS2("amp;"), i + 1);
+        s.Insert(NS_LITERAL_STRING("amp;"), i + 1);
         i += 4;
     }
 }
@@ -1255,7 +1255,7 @@ rdf_EscapeQuotes(nsString& s)
     PRInt32 i = 0;
     while ((i = s.FindChar('"', PR_FALSE, i)) != -1) {
         s.SetCharAt('&', i);
-        s.Insert(NS_ConvertASCIItoUCS2("quot;"), i + 1);
+        s.Insert(NS_LITERAL_STRING("quot;"), i + 1);
         i += 5;
     }
 }
@@ -1307,9 +1307,8 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
 
         nsXPIDLCString docURI;
 
-        nsAutoString uri;
-        uri.AssignWithConversion(NS_STATIC_CAST(const char*, s));
-        rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
+        nsAutoString uri = NS_ConvertUTF8toUCS2(s);
+        rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mURLSpec), uri);
         rdf_EscapeAttributeValue(uri);
 
 static const char kRDFResource1[] = " resource=\"";
@@ -1398,9 +1397,8 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     rv = aResource->GetValue(getter_Copies(s));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString uri;
-    uri.AssignWithConversion(s);
-    rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
+    nsAutoString uri = NS_ConvertUTF8toUCS2(s);
+    rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mURLSpec), uri);
     rdf_EscapeAttributeValue(uri);
 
     if (uri[0] == PRUnichar('#')) {
@@ -1481,9 +1479,8 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
 static const char kRDFLIResource1[] = "    <RDF:li resource=\"";
 static const char kRDFLIResource2[] = "\"/>\n";
 
-            nsAutoString uri;
-            uri.AssignWithConversion(s);
-            rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
+            nsAutoString uri = NS_ConvertUTF8toUCS2(s);
+            rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mURLSpec), uri);
             rdf_EscapeAttributeValue(uri);
 
             rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
@@ -1520,19 +1517,19 @@ static const char kRDFSeq[] = "RDF:Seq";
 static const char kRDFAlt[] = "RDF:Alt";
 
     nsresult rv;
-    const char* tag;
+    const PRUnichar* tag;
 
     // Decide if it's a sequence, bag, or alternation, and print the
     // appropriate tag-open sequence
 
     if (IsA(mInner, aContainer, kRDF_Bag)) {
-        tag = kRDFBag;
+        tag = NS_LITERAL_STRING(kRDFBag);
     }
     else if (IsA(mInner, aContainer, kRDF_Seq)) {
-        tag = kRDFSeq;
+        tag = NS_LITERAL_STRING(kRDFSeq);
     }
     else if (IsA(mInner, aContainer, kRDF_Alt)) {
-        tag = kRDFAlt;
+        tag = NS_LITERAL_STRING(kRDFAlt);
     }
     else {
         NS_ASSERTION(PR_FALSE, "huh? this is _not_ a container.");
@@ -1540,7 +1537,7 @@ static const char kRDFAlt[] = "RDF:Alt";
     }
 
     rdf_BlockingWrite(aStream, "  <", 3);
-    rdf_BlockingWrite(aStream, NS_ConvertASCIItoUCS2(tag));
+    rdf_BlockingWrite(aStream, tag);
 
 
     // Unfortunately, we always need to print out the identity of the
@@ -1550,9 +1547,8 @@ static const char kRDFAlt[] = "RDF:Alt";
 
     nsXPIDLCString s;
     if (NS_SUCCEEDED(aContainer->GetValue( getter_Copies(s) ))) {
-        nsAutoString uri;
-        uri.AssignWithConversion(s);
-        rdf_MakeRelativeRef(NS_ConvertASCIItoUCS2(mURLSpec), uri);
+        nsAutoString uri = NS_ConvertUTF8toUCS2(s);
+        rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mURLSpec), uri);
 
         rdf_EscapeAttributeValue(uri);
 
@@ -1608,7 +1604,7 @@ static const char kRDFAlt[] = "RDF:Alt";
 
     // close the container tag
     rdf_BlockingWrite(aStream, "  </", 4);
-    rdf_BlockingWrite(aStream, NS_ConvertASCIItoUCS2(tag));
+    rdf_BlockingWrite(aStream, tag);
     rdf_BlockingWrite(aStream, ">\n", 2);
 
 
@@ -1683,7 +1679,7 @@ RDFXMLDataSourceImpl::SerializeEpilogue(nsIOutputStream* aStream)
 {
 static const char kCloseRDF[] = "</RDF:RDF>\n";
 
-    rdf_BlockingWrite(aStream, NS_ConvertASCIItoUCS2(kCloseRDF));
+    rdf_BlockingWrite(aStream, NS_LITERAL_STRING(kCloseRDF));
     return NS_OK;
 }
 
