@@ -487,7 +487,7 @@ nsFileChannel::GetContentType(char * *aContentType)
     if (!*aContentType) {
         return NS_ERROR_OUT_OF_MEMORY;
     } else {
-        rv = NS_OK;
+        return NS_OK;
     }
 }
 
