@@ -2,9 +2,9 @@
 
 <!ENTITY advancedSettings.label "Advanced Settings">
 <!ENTITY smtpServer.label "SMTP Server">
-<!ENTITY smtpDesc.label "Some email accounts require a unique outgoing mail server.">
-<!ENTITY smtpHostname.label "SMTP Server Hostname">
-<!ENTITY smtpUsername.label "SMTP Server Login">
-<!ENTITY mailFolderLoc.label "Mail Folder Location">
-<!ENTITY storeMailHere.label "Store mail in this folder">
-<!ENTITY chooseFolderButton.label "Choose Folder">
+<!ENTITY smtpDesc.label "Only one outgoing (SMTP) server needs to be specified, even if you have several mail accounts. Enter the name of the outgoing server you use the most frequently to access your mail">
+
+<!ENTITY smtpAlwaysUseName.label "Always use name and password">
+<!ENTITY smtpSavePassword.label "Save my password">
+<!ENTITY smtpHostname.label "Server Name:">
+<!ENTITY smtpUsername.label "User Name:">

@@ -8,6 +8,24 @@
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       align="vertical">
 
-<html:div>Advanced page</html:div>
+<html:div>&smtpServer.label;</html:div>
+<html:div>&smtpDesc.label;</html:div>
+
+  <box align="horizontal">
+     <html:div>&smtpHostname.label;</html:div>
+     <html:input type="text" name="smtp.hostname" flex="100%"/>
+  </box>
+  <html:div>
+    <html:input type="checkbox" name="smtp.useUsername"/>
+    &smtpAlwaysUseName.label;
+  </html:div>
+  <box align="horizontal">
+     <html:div>&smtpUsername.label;</html:div>
+     <html:input type="text" name="smtp.username" flex="100%"/>
+  </box>
+  <html:div>
+    <html:input type="checkbox" name="smtp.savePassword"/>
+    &smtpSavePassword.label;
+  </html:div>
 
 </window>
