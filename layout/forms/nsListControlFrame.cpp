@@ -198,6 +198,8 @@ nsIFrame* nsListControlFrame::GetNextSelectableFrame(nsVoidArray *aList, PRInt32
 }
 
 
+
+
 //----------------------------------------------------------------------
 NS_IMETHODIMP
 nsListControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
@@ -214,7 +216,12 @@ nsListControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
   rv = GetFrameForPointUsing(aPoint, nsnull, aFrame);
   if (NS_OK == rv) {
     if (*aFrame != this) {
-      mHitFrame = *aFrame;
+      *aFrame = GetSelectableFrame(*aFrame);
+      if (nsnull == *aFrame) {
+        mHitFrame = this;
+      } else {
+        mHitFrame = *aFrame;
+      }
       *aFrame = this;
     }
     return NS_OK;
@@ -591,6 +598,50 @@ nsListControlFrame::GetFont(nsIPresContext*        aPresContext,
 }
 
 
+PRBool nsListControlFrame::IsOptionElement(nsIContent* aContent)
+{
+  PRBool result = PR_FALSE;
+ 
+  nsIDOMHTMLOptionElement* oe = nsnull;
+  if (NS_SUCCEEDED(aContent->QueryInterface(kIDOMHTMLOptionElementIID, (void**) &oe))) {      
+    if (oe != nsnull) {
+      result = PR_TRUE;
+      NS_RELEASE(oe);
+    }
+  }
+ 
+  return result;
+}
+
+
+PRBool nsListControlFrame::IsOptionElementFrame(nsIFrame *aFrame)
+{
+  nsIContent *content = nsnull;
+  aFrame->GetContent(&content);
+  PRBool result = PR_FALSE;
+  if (nsnull != content) {
+    result = IsOptionElement(content);
+    NS_RELEASE(content);
+  }
+  return(result);
+}
+
+
+// Go up the frame tree looking for the first ancestor that has content
+// which is selectable
+
+nsIFrame *nsListControlFrame::GetSelectableFrame(nsIFrame *aFrame)
+{
+  nsIFrame* selectedFrame = aFrame;
+  
+  while ((nsnull != selectedFrame) && 
+         (PR_FALSE ==IsOptionElementFrame(selectedFrame))) {
+      selectedFrame->GetParent(&selectedFrame);
+  }  
+
+  return(selectedFrame);  
+}
+
 void nsListControlFrame::ForceRedraw(nsIContent* aContent) 
 {
   //XXX: Hack. This should not be needed. The problem is DisplaySelected
@@ -728,6 +779,39 @@ void nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndInde
 
 void nsListControlFrame::SingleSelection()
 {
+//XXX: Experimental code for supporting option groups 
+#if 0 
+    // Donothing if a item was not clicked on
+  if (this == mHitFrame)
+    return;
+
+     // Store previous selection
+  nsIFrame* oldSelectedFrame = mSelectedFrame;
+   // Get Current selection
+  mSelectedFrame = mHitFrame;
+  if (mSelectedFrame != nsnull) {
+    if (oldSelectedFrame != mSelectedFrame) {
+        // Deselect the previous selection if there is one
+      if (oldSelectedFrame != nsnull) {
+        nsIContent* content = nsnull;
+        oldSelectedFrame->GetContent(&content);
+        DisplayDeselected(content);
+        NS_RELEASE(content);
+      }
+        // Display the new selection
+      nsIContent* content = nsnull;
+      mSelectedFrame->GetContent(&content);
+      DisplaySelected(content);
+      NS_RELEASE(content);
+      mSelectedContent = mHitContent;
+    } else {
+      // Selecting the currently selected item so do nothing.
+    }
+  }
+#endif
+//XXX: Endof experimental code
+
+
    // Store previous selection
   PRInt32 oldSelectedIndex = mSelectedIndex;
    // Get Current selection
@@ -738,13 +822,14 @@ void nsListControlFrame::SingleSelection()
       if (oldSelectedIndex != kNothingSelected) {
         SetFrameSelected(oldSelectedIndex, PR_FALSE);
       }
-        // Dipslay the new selection
+        // Display the new selection
       SetFrameSelected(mSelectedIndex, PR_TRUE);
       mSelectedContent = mHitContent;
     } else {
       // Selecting the currently selected item so do nothing.
     }
   }
+
 }
 
 void nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)

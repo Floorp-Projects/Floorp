@@ -95,7 +95,6 @@ public:
   // nsIFormControl
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetType(PRInt32* aType);
-  NS_IMETHOD SetWidget(nsIWidget* aWidget) { return NS_OK; };
   NS_IMETHOD Init() { return NS_OK; }
 
   // nsIFocusableContent

@@ -173,6 +173,9 @@ protected:
 
   // Utility methods
 
+  PRBool IsOptionElement(nsIContent* aContent);
+  PRBool IsOptionElementFrame(nsIFrame *aFrame);
+  nsIFrame *GetSelectableFrame(nsIFrame *aFrame);
   void DisplaySelected(nsIContent* aContent); 
   void DisplayDeselected(nsIContent* aContent); 
   void UpdateItem(nsIContent* aContent, PRBool aSelected);
@@ -220,6 +223,7 @@ protected:
   nsIFrame   * mCurrentHitFrame;
   nsIContent * mCurrentHitContent;
   nsIContent * mSelectedContent;
+  nsIFrame   * mSelectedFrame;
   PRBool       mIsInitializedFromContent;
   nsIFrame *   mContentFrame;
   PRBool       mInDropDownMode;

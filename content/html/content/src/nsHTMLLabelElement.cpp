@@ -80,7 +80,6 @@ public:
 
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType) { return NS_FORM_LABEL; }
-  NS_IMETHOD SetWidget(nsIWidget* aWidget) { return NS_OK; }
   NS_IMETHOD Init() { return NS_OK; }
 
 protected:

@@ -88,7 +88,8 @@ public:
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const = 0;
 
   /**
-   * Set a property on the form control frame
+   * Set a property on the form control frame.
+   *
    * @param aName name of the property to set
    * @param aValue value of the property
    * @returns NS_OK if the property name is valid, otherwise an error code
@@ -98,6 +99,7 @@ public:
   
   /**
    * Get a property from the form control frame
+   *
    * @param aName name of the property to get
    * @param aValue value of the property
    * @returns NS_OK if the property name is valid, otherwise an error code
@@ -105,7 +107,7 @@ public:
 
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue) = 0; 
 
-
+  
 
 };
 

@@ -29,8 +29,6 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsIWidget.h"
-#include "nsITextAreaWidget.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIFormControlFrame.h"
 #include "nsIFocusableContent.h"
@@ -40,7 +38,6 @@ static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
-static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
 static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
@@ -106,7 +103,6 @@ public:
   // nsIFormControl
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetType(PRInt32* aType);
-  NS_IMETHOD SetWidget(nsIWidget* aWidget);
   NS_IMETHOD Init() { return NS_OK; }
 
   // nsIFocusableContent
@@ -115,7 +111,6 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
-  nsIWidget* mWidget; // XXX this needs to go away when FindFrameWithContent is efficient
   nsIForm*   mForm;
 };
 
@@ -138,12 +133,10 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsIAtom* aTag)
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mForm = nsnull;
-  mWidget = nsnull;
 }
 
 nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
 {
-  NS_IF_RELEASE(mWidget);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 
@@ -223,23 +216,27 @@ nsHTMLTextAreaElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Blur() // XXX not tested
 {
-  if (nsnull != mWidget) {
-    nsIWidget *mParentWidget = mWidget->GetParent();
-    if (nsnull != mParentWidget) {
-      mParentWidget->SetFocus();
-      NS_RELEASE(mParentWidget);
-    }
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+     // Ask the frame to Deselect focus (i.e Blur).
+    formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
+    return NS_OK;
   }
-  return NS_OK;
+  return rv;
+
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::Focus() // XXX not tested
+nsHTMLTextAreaElement::Focus() 
 {
-  if (nsnull != mWidget) {
-    mWidget->SetFocus();
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+    return NS_OK;
   }
-  return NS_OK;
+  return rv;
 }
 
 
@@ -266,16 +263,17 @@ nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::Select() // XXX not tested
+nsHTMLTextAreaElement::Select() 
 {
-  if (nsnull != mWidget) {
-    nsITextAreaWidget *textWidget;
-    if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID, (void**)&textWidget)) {
-      textWidget->SelectAll();
-      NS_RELEASE(textWidget);
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull != formControlFrame ) { 
+      formControlFrame->SetProperty(nsHTMLAtoms::select, "");
+      return NS_OK;
     }
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, AccessKey, accesskey)
@@ -300,7 +298,6 @@ nsHTMLTextAreaElement::GetValue(nsString& aValue)
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
       formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
-      NS_RELEASE(formControlFrame);
       return NS_OK;
   }
    //XXX: Should this ASSERT instead of getting the default value here?
@@ -314,7 +311,6 @@ nsHTMLTextAreaElement::SetValue(const nsString& aValue)
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
     formControlFrame->SetProperty(nsHTMLAtoms::value, aValue);
-    NS_RELEASE(formControlFrame);
   }                         
   return NS_OK;
 }
@@ -436,16 +432,6 @@ nsHTMLTextAreaElement::GetType(PRInt32* aType)
   }
 }
 
-NS_IMETHODIMP
-nsHTMLTextAreaElement::SetWidget(nsIWidget* aWidget)
-{
-  if (aWidget != mWidget) {
-	  NS_IF_RELEASE(mWidget);
-    NS_IF_ADDREF(aWidget);
-    mWidget = aWidget;
-  }
-  return NS_OK;
-}
 
 // An important assumption is that if aForm is null, the previous mForm will not be released
 // This allows nsHTMLFormElement to deal with circular references.

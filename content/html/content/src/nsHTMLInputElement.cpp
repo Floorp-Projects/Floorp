@@ -30,13 +30,6 @@
 #include "nsIHTMLAttributes.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
-#include "nsIWidget.h"
-#include "nsITextWidget.h"
-// XXX: All of the header files related to accessing widgets directly
-// should be removed when all widget references are replaced with
-// frame references.
-#include "nsICheckButton.h"
-#include "nsIRadioButton.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
@@ -50,9 +43,6 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
-static NS_DEFINE_IID(kIRadioIID, NS_IRADIOBUTTON_IID);
-static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
 static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
@@ -134,7 +124,6 @@ public:
   // nsIFormControl
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetType(PRInt32* aType);
-  NS_IMETHOD SetWidget(nsIWidget* aWidget);
   NS_IMETHOD Init() { return NS_OK; }
 
   // nsIFocusableContent
@@ -143,7 +132,6 @@ public:
 
 protected:
   nsGenericHTMLLeafElement mInner;
-  nsIWidget*               mWidget; // XXX this needs to go away when FindFrameWithContent is efficient
   nsIForm*                 mForm;
   PRInt32                  mType;
 
@@ -176,14 +164,12 @@ nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
   mInner.Init(this, aTag);
   mType = NS_FORM_INPUT_TEXT; // default value
   mForm = nsnull;
-  mWidget = nsnull;
   //nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
 
 }
 
 nsHTMLInputElement::~nsHTMLInputElement()
 {
-  NS_IF_RELEASE(mWidget);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 
@@ -333,7 +319,6 @@ nsHTMLInputElement::GetValue(nsString& aValue)
     if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
       if (nsnull != formControlFrame) {
         formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
-        NS_RELEASE(formControlFrame);
       }
       return NS_OK;
     }
@@ -353,7 +338,6 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
     if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
       if (nsnull != formControlFrame ) { 
         formControlFrame->SetProperty(nsHTMLAtoms::value, aValue);
-        NS_RELEASE(formControlFrame);
       }
       return NS_OK;
     }
@@ -374,8 +358,6 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
         *aValue = PR_TRUE;
       else
         *aValue = PR_FALSE;
-
-      NS_RELEASE(formControlFrame);
     }
   }
   return NS_OK;      
@@ -393,7 +375,6 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
     else {
       formControlFrame->SetProperty(nsHTMLAtoms::checked, "0");
     }
-    NS_RELEASE(formControlFrame);
   }
   return NS_OK;     
 }
@@ -401,23 +382,27 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
 NS_IMETHODIMP
 nsHTMLInputElement::Blur()
 {
-  if (nsnull != mWidget) {
-    nsIWidget *mParentWidget = mWidget->GetParent();
-    if (nsnull != mParentWidget) {
-      mParentWidget->SetFocus();
-      NS_RELEASE(mParentWidget);
-    }
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+     // Ask the frame to Deselect focus (i.e Blur).
+    formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
+    return NS_OK;
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::Focus()
 {
-  if (nsnull != mWidget) {
-    mWidget->SetFocus();
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+    return NS_OK;
   }
-  return NS_OK;
+  return rv;
+
 }
 
 NS_IMETHODIMP
@@ -447,18 +432,18 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsHTMLInputElement::Select()
 {
-  if ((NS_FORM_INPUT_TEXT == mType) && (nsnull != mWidget)) {
-    nsITextWidget *textWidget;
-    if (NS_OK == mWidget->QueryInterface(kITextWidgetIID, (void**)&textWidget)) {
-      textWidget->SelectAll();
-      NS_RELEASE(textWidget);
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull != formControlFrame ) { 
+      formControlFrame->SetProperty(nsHTMLAtoms::select, "");
+      return NS_OK;
     }
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -706,24 +691,13 @@ nsHTMLInputElement::GetType(PRInt32* aType)
   }
 }
 
-NS_IMETHODIMP
-nsHTMLInputElement::SetWidget(nsIWidget* aWidget)
-{
-  if (aWidget != mWidget) {
-	  NS_IF_RELEASE(mWidget);
-    NS_IF_ADDREF(aWidget);
-    mWidget = aWidget;
-  }
-  return NS_OK;
-}
 
 NS_IMETHODIMP 
 nsHTMLInputElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  *aHint = (nsnull != mWidget ? NS_STYLE_HINT_CONTENT : NS_STYLE_HINT_REFLOW);
-
+  *aHint = NS_STYLE_HINT_CONTENT;
   return NS_OK;
 }
 
