@@ -272,9 +272,15 @@ void nsAppShellService::CreateHiddenWindow()
 #endif
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWebShellWindow> newWindow;
+    #if XP_MAC
     rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
+                        0, nsnull, 0, 0,
+                        getter_AddRefs(newWindow));
+    #else
+    	 rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
                         NS_CHROME_ALL_CHROME, nsnull, 100, 100,
                         getter_AddRefs(newWindow));
+    #endif
     if (NS_SUCCEEDED(rv)) {
       mHiddenWindow = newWindow;
       // RegisterTopLevelWindow(newWindow); -- Mac only
@@ -484,7 +490,7 @@ NS_IMETHODIMP nsAppShellService::Quit()
       }
     }
    }
-   
+  mQuiting = PR_FALSE; 
   return mAppShell->Exit();
 }
 
@@ -760,6 +766,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
  	if( widget )
  	{
  		widget->SetFocus();
+ 	
   		widget->Release();
   	}
   #else
