@@ -177,7 +177,7 @@ SECMOD_LoadPKCS11Module(SECMODModule *mod) {
 	/*
 	 * now we need to get the entry point to find the function pointers
 	 */
-	if (mod->moduleDBOnly) {
+	if (!mod->moduleDBOnly) {
 	    entry = (CK_C_GetFunctionList)
 			PR_FindSymbol(library, "C_GetFunctionList");
 	}
