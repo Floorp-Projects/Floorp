@@ -49,8 +49,10 @@ EXPORTS = \
 
 REQUIRES = xpcom raptor dom netlib js
 
+TARGETS = $(LIBRARY)
+
 include $(DEPTH)/config/config.mk
 
-TARGETS = $(LIBRARY)
+MKSHLIB :=
 
 include $(DEPTH)/config/rules.mk

@@ -39,6 +39,8 @@ LCFLAGS += -D_IMPL_NS_HTML
 INCLUDES += -I../../../html/style/src -I../../../html/base/src \
  -I../../../base/src
 
+MKSHLIB :=
+
 include $(DEPTH)/config/rules.mk
 
 install::

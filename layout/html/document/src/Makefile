@@ -52,6 +52,8 @@ MODULE = raptor
 
 REQUIRES = xpcom raptor dom netlib js
 
+MKSHLIB :=
+
 include $(DEPTH)/config/rules.mk
 
 
