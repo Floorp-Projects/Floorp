@@ -42,7 +42,6 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
-#include "nsIScriptContext.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDocument.h"
