@@ -26,12 +26,10 @@
 #include "nsIOutputStream.h"
 #include "nsIURI.h"
 #include "nsAutoLock.h"
+#include "prtime.h"
 
 #include "nsString2.h"
 #include "nsIEventQueue.h"
-
-
-#include "time.h" // XXX should probably be using PRTime stuff
 
 
 // ftp server types
@@ -173,6 +171,7 @@ private:
     FTP_STATE FindActionState(void);
     FTP_STATE FindGetState(void);
     nsresult MapResultCodeToString(nsresult aResultCode, PRUnichar* *aOutMsg);
+    void SetDirMIMEType(nsString& aString);
 
     // Private members
 
@@ -203,7 +202,7 @@ private:
     nsString2           mPassword;
     nsString2           mFilename;          // url filename (if any)
     PRUint32            mLength;            // length of the file
-    time_t              mLastModified;      // last modified time for file
+    PRTime              mLastModified;      // last modified time for file
 
 // these members should be hung off of a specific transport connection
     PRInt32             mServerType;
