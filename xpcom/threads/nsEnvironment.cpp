@@ -49,7 +49,7 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsEnvironment, nsIEnvironment)
 
-nsresult
+NS_METHOD
 nsEnvironment::Create(nsISupports *aOuter, REFNSIID aIID,
                       void **aResult)
 {
