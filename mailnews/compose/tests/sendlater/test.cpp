@@ -87,40 +87,6 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kIMsgSendLaterIID, NS_IMSGSENDLATER_IID); 
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 
-nsresult OnIdentityCheck()
-{
-	nsresult result = NS_OK;
-	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &result); 
-	if (NS_SUCCEEDED(result) && accountManager)
-	{
-		// mscott: we really don't check an identity, we check
-		// for an outgoing 
-		nsIMsgIncomingServer * incomingServer = nsnull;
-		result = accountManager->GetCurrentServer(&incomingServer);
-		if (NS_SUCCEEDED(result) && incomingServer)
-		{
-			PRUnichar * uniValue = nsnull;
-			char * value = nsnull;
-			incomingServer->GetPrettyName(&uniValue);
-//			nsCString cPrettyname(value);
-			printf("Server pretty name: %s\n", uniValue ? (const char *) nsCAutoString(uniValue) : "");
-			incomingServer->GetUsername(&value);
-			printf("User Name: %s\n", value ? value : "");
-			incomingServer->GetHostName(&value);
-			printf("Pop Server: %s\n", value ? value : "");
-			incomingServer->GetPassword(&value);
-			printf("Pop Password: %s\n", value ? value : "");
-
-			NS_RELEASE(incomingServer);
-		}
-		else
-			printf("Unable to retrieve the outgoing server interface....\n");
-	}
-	else
-		printf("Unable to retrieve the mail session service....\n");
-
-	return result;
-}
 
 /* 
  * This is a test stub for mail composition. This will be enhanced as the
