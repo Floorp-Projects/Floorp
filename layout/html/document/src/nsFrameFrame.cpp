@@ -364,17 +364,11 @@ nsSubDocumentFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   nsSize innerSize(aDesiredSize.width, aDesiredSize.height);
-  nsPoint offset(0,0);
+  nsPoint offset(0, 0);
   nsMargin border = aReflowState.mComputedBorderPadding;
-  if (IsInline()) {
-    offset.x = border.left;
-    offset.y = border.top;
-    // XXX Don't subtract the border!!! The size we are given does not include our
-    // border! -EDV
-    //innerSize.width  -= border.left + border.right;
-    //innerSize.height -= border.top  + border.bottom;
 
-    // we now need to add our border in. -EDV
+  if (IsInline()) {
+    offset = nsPoint(border.left, border.top);
     aDesiredSize.width += border.left + border.right;
     aDesiredSize.height += border.top + border.bottom;
   }
@@ -387,7 +381,16 @@ nsSubDocumentFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
+    // If our width is set by style to some fixed length,
+    // then our actual width is our minimum width
+    nsStyleUnit widthUnit = GetStylePosition()->mWidth.GetUnit();
+    if (widthUnit != eStyleUnit_Percent && widthUnit != eStyleUnit_Auto) {
+      aDesiredSize.mMaxElementWidth = aDesiredSize.width;
+    } else {
+      // if our width is auto or a percentage, then we can shrink until
+      // there's nothing left but our borders
+      aDesiredSize.mMaxElementWidth = border.left + border.right;
+    }
   }
 
   // Determine if we need to repaint our border, background or outline
