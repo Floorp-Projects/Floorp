@@ -26,7 +26,6 @@ DEFINES += -D_IMPL_NS_HTML
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
 	nsCSSKeywords.cpp		\
-	nsCSSLayout.cpp			\
 	nsCSSDeclaration.cpp		\
 	nsCSSParser.cpp			\
 	nsCSSProps.cpp			\
@@ -35,7 +34,7 @@ CPPSRCS =				\
 	nsCSSScanner.cpp		\
 	nsCSSStyleRule.cpp		\
 	nsCSSStyleSheet.cpp		\
-	nsCSSValue.cpp		\
+	nsCSSValue.cpp			\
 	nsDOMCSSDeclaration.cpp         \
 	nsHTMLAttributes.cpp		\
 	nsHTMLStyleSheet.cpp		\

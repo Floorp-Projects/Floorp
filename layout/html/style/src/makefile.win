@@ -23,26 +23,55 @@ REQUIRES=xpcom raptor dom js
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-EXPORTS=nsCSSProps.h nsCSSPropIDs.h nsCSSValue.h nsICSSStyleSheet.h nsICSSStyleRule.h \
-		nsICSSDeclaration.h nsHTMLValue.h nsIHTMLCSSStyleSheet.h \
-	        nsDOMCSSDeclaration.h
+EXPORTS =			\
+	nsCSSProps.h 		\
+	nsCSSPropIDs.h 		\
+	nsCSSValue.h 		\
+	nsICSSStyleSheet.h 	\
+	nsICSSStyleRule.h 	\
+	nsICSSDeclaration.h 	\
+	nsHTMLValue.h 		\
+	nsIHTMLCSSStyleSheet.h 	\
+	nsDOMCSSDeclaration.h 	\
+	$(NULL)
 
-CPPSRCS=nsCSSKeywords.cpp nsCSSLayout.cpp nsCSSDeclaration.cpp \
-    nsCSSParser.cpp nsCSSProps.cpp nsCSSProps2.cpp nsCSSRendering.cpp \
-	nsCSSScanner.cpp nsCSSStyleRule.cpp nsCSSStyleSheet.cpp nsCSSValue.cpp nsHTMLAttributes.cpp \
-    nsHTMLStyleSheet.cpp nsHTMLCSSStyleSheet.cpp nsHTMLValue.cpp \
-	nsStyleUtil.cpp nsDOMCSSDeclaration.cpp
+CPPSRCS=				\
+	nsCSSKeywords.cpp 		\
+	nsCSSDeclaration.cpp 		\
+	nsCSSParser.cpp 		\
+	nsCSSProps.cpp			\
+	nsCSSProps2.cpp 		\
+	nsCSSRendering.cpp 		\
+	nsCSSScanner.cpp 		\
+	nsCSSStyleRule.cpp 		\
+	nsCSSStyleSheet.cpp 		\
+	nsCSSValue.cpp			\
+	nsHTMLAttributes.cpp 		\
+	nsHTMLStyleSheet.cpp 		\
+	nsHTMLCSSStyleSheet.cpp		\
+	nsHTMLValue.cpp 		\
+	nsStyleUtil.cpp 		\
+	nsDOMCSSDeclaration.cpp		\
+	$(NULL)
 
-CPP_OBJS=.\$(OBJDIR)\nsCSSKeywords.obj .\$(OBJDIR)\nsCSSLayout.obj \
-    .\$(OBJDIR)\nsCSSDeclaration.obj .\$(OBJDIR)\nsCSSParser.obj \
-    .\$(OBJDIR)\nsCSSProps.obj .\$(OBJDIR)\nsCSSProps2.obj \
-	.\$(OBJDIR)\nsCSSRendering.obj \
-    .\$(OBJDIR)\nsCSSScanner.obj .\$(OBJDIR)\nsCSSStyleRule.obj \
-    .\$(OBJDIR)\nsCSSStyleSheet.obj .\$(OBJDIR)\nsCSSValue.obj \
-    .\$(OBJDIR)\nsHTMLAttributes.obj \
-    .\$(OBJDIR)\nsHTMLStyleSheet.obj .\$(OBJDIR)\nsHTMLCSSStyleSheet.obj \
-    .\$(OBJDIR)\nsHTMLValue.obj .\$(OBJDIR)\nsStyleUtil.obj \
-    .\$(OBJDIR)\nsDOMCSSDeclaration.obj
+CPP_OBJS =					\
+	.\$(OBJDIR)\nsCSSKeywords.obj 		\
+	.\$(OBJDIR)\nsCSSDeclaration.obj 	\
+	.\$(OBJDIR)\nsCSSParser.obj 		\
+	.\$(OBJDIR)\nsCSSProps.obj 		\
+	.\$(OBJDIR)\nsCSSProps2.obj 		\
+	.\$(OBJDIR)\nsCSSRendering.obj 		\
+	.\$(OBJDIR)\nsCSSScanner.obj 		\
+	.\$(OBJDIR)\nsCSSStyleRule.obj 		\
+	.\$(OBJDIR)\nsCSSStyleSheet.obj 	\
+	.\$(OBJDIR)\nsCSSValue.obj 		\
+	.\$(OBJDIR)\nsHTMLAttributes.obj 	\
+	.\$(OBJDIR)\nsHTMLStyleSheet.obj 	\
+	.\$(OBJDIR)\nsHTMLCSSStyleSheet.obj 	\
+	.\$(OBJDIR)\nsHTMLValue.obj 		\
+	.\$(OBJDIR)\nsStyleUtil.obj 		\
+	.\$(OBJDIR)\nsDOMCSSDeclaration.obj 	\
+	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \
   -I..\..\..\base\src \
