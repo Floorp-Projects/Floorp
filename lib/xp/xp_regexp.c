@@ -35,15 +35,15 @@
 
 
 PRIVATE int 
-_valid_subexp(char *exp, char stop) 
+_valid_subexp(char *expr, char stop) 
 {
     register int x,y,t;
     int nsc,np,tld;
 
     x=0;nsc=0;tld=0;
 
-    while(exp[x] && (exp[x] != stop)) {
-        switch(exp[x]) {
+    while(expr[x] && (expr[x] != stop)) {
+        switch(expr[x]) {
           case '~':
             if(tld) return INVALID_SXP;
             else ++tld;
@@ -55,33 +55,33 @@ _valid_subexp(char *exp, char stop)
             break;
           case '[':
             ++nsc;
-            if((!exp[++x]) || (exp[x] == ']'))
+            if((!expr[++x]) || (expr[x] == ']'))
                 return INVALID_SXP;
-            for(++x;exp[x] && (exp[x] != ']');++x)
-                if(exp[x] == '\\')
-                    if(!exp[++x])
+            for(++x;expr[x] && (expr[x] != ']');++x)
+                if(expr[x] == '\\')
+                    if(!expr[++x])
                         return INVALID_SXP;
-            if(!exp[x])
+            if(!expr[x])
                 return INVALID_SXP;
             break;
           case '(':
             ++nsc;np = 0;
             while(1) {
-                if(exp[++x] == ')')
+                if(expr[++x] == ')')
                     return INVALID_SXP;
-                for(y=x;(exp[y]) && (exp[y] != '|') && (exp[y] != ')');++y)
-                    if(exp[y] == '\\')
-                        if(!exp[++y])
+                for(y=x;(expr[y]) && (expr[y] != '|') && (expr[y] != ')');++y)
+                    if(expr[y] == '\\')
+                        if(!expr[++y])
                             return INVALID_SXP;
-                if(!exp[y])
+                if(!expr[y])
                     return INVALID_SXP;
-                if(exp[y] == '|')
+                if(expr[y] == '|')
                     ++np;
-                t = _valid_subexp(&exp[x],exp[y]);
+                t = _valid_subexp(&expr[x],expr[y]);
                 if(t == INVALID_SXP)
                     return INVALID_SXP;
                 x+=t;
-                if(exp[x] == ')') {
+                if(expr[x] == ')') {
                     if(!np)
                         return INVALID_SXP;
                     break;
@@ -92,7 +92,7 @@ _valid_subexp(char *exp, char stop)
           case ']':
             return INVALID_SXP;
           case '\\':
-            if(!exp[++x])
+            if(!expr[++x])
                 return INVALID_SXP;
           default:
             break;
@@ -101,15 +101,15 @@ _valid_subexp(char *exp, char stop)
     }
     if((!stop) && (!nsc))
         return NON_SXP;
-    return ((exp[x] == stop) ? x : INVALID_SXP);
+    return ((expr[x] == stop) ? x : INVALID_SXP);
 }
 
 PUBLIC int 
-XP_RegExpValid(char *exp) 
+XP_RegExpValid(char *expr) 
 {
     int x;
 
-    x = _valid_subexp(exp, '\0');
+    x = _valid_subexp(expr, '\0');
     return (x < 0 ? x : VALID_SXP);
 }
 
@@ -121,25 +121,25 @@ XP_RegExpValid(char *exp)
 #define NOMATCH 1
 #define ABORTED -1
 
-PRIVATE int _shexp_match(char *str, char *exp, Bool case_insensitive);
+PRIVATE int _shexp_match(char *str, char *expr, PRBool case_insensitive);
 
 PRIVATE int 
-_handle_union(char *str, char *exp, Bool case_insensitive) 
+_handle_union(char *str, char *expr, PRBool case_insensitive) 
 {
-    char *e2 = (char *) PR_Malloc(sizeof(char)*strlen(exp));
+    char *e2 = (char *) PR_Malloc(sizeof(char)*strlen(expr));
     register int t,p2,p1 = 1;
     int cp;
 
     while(1) {
-        for(cp=1;exp[cp] != ')';cp++)
-            if(exp[cp] == '\\')
+        for(cp=1;expr[cp] != ')';cp++)
+            if(expr[cp] == '\\')
                 ++cp;
-        for(p2 = 0;(exp[p1] != '|') && (p1 != cp);p1++,p2++) {
-            if(exp[p1] == '\\')
-                e2[p2++] = exp[p1++];
-            e2[p2] = exp[p1];
+        for(p2 = 0;(expr[p1] != '|') && (p1 != cp);p1++,p2++) {
+            if(expr[p1] == '\\')
+                e2[p2++] = expr[p1++];
+            e2[p2] = expr[p1];
         }
-        for (t=cp+1; ((e2[p2] = exp[t]) != 0); ++t,++p2) {}
+        for (t=cp+1; ((e2[p2] = expr[t]) != 0); ++t,++p2) {}
         if(_shexp_match(str,e2, case_insensitive) == MATCH) {
             PR_Free(e2);
             return MATCH;
@@ -154,17 +154,17 @@ _handle_union(char *str, char *exp, Bool case_insensitive)
 
 
 PRIVATE int 
-_shexp_match(char *str, char *exp, Bool case_insensitive) 
+_shexp_match(char *str, char *expr, PRBool case_insensitive) 
 {
     register int x,y;
     int ret,neg;
 
     ret = 0;
-    for(x=0,y=0;exp[y];++y,++x) {
-        if((!str[x]) && (exp[y] != '(') && (exp[y] != '$') && (exp[y] != '*'))
+    for(x=0,y=0;expr[y];++y,++x) {
+        if((!str[x]) && (expr[y] != '(') && (expr[y] != '$') && (expr[y] != '*'))
             ret = ABORTED;
         else {
-            switch(exp[y]) {
+            switch(expr[y]) {
               case '$':
                 if( (str[x]) )
                     ret = NOMATCH;
@@ -172,11 +172,11 @@ _shexp_match(char *str, char *exp, Bool case_insensitive)
                     --x;             /* we don't want loop to increment x */
                 break;
               case '*':
-                while(exp[++y] == '*'){}
-                if(!exp[y])
+                while(expr[++y] == '*'){}
+                if(!expr[y])
                     return MATCH;
                 while(str[x]) {
-                    switch(_shexp_match(&str[x++],&exp[y], case_insensitive)) {
+                    switch(_shexp_match(&str[x++],&expr[y], case_insensitive)) {
                     case NOMATCH:
                         continue;
                     case ABORTED:
@@ -187,20 +187,20 @@ _shexp_match(char *str, char *exp, Bool case_insensitive)
                     }
                     break;
                 }
-                if((exp[y] == '$') && (exp[y+1] == '\0') && (!str[x]))
+                if((expr[y] == '$') && (expr[y+1] == '\0') && (!str[x]))
                     return MATCH;
                 else
                     ret = ABORTED;
                 break;
               case '[':
-              	neg = ((exp[++y] == '^') && (exp[y+1] != ']'));
+              	neg = ((expr[++y] == '^') && (expr[y+1] != ']'));
                 if (neg)
                     ++y;
                 
-                if ((isalnum(exp[y])) && (exp[y+1] == '-') && 
-                   (isalnum(exp[y+2])) && (exp[y+3] == ']'))
+                if ((isalnum(expr[y])) && (expr[y+1] == '-') && 
+                   (isalnum(expr[y+2])) && (expr[y+3] == ']'))
                     {
-                        int start = exp[y], end = exp[y+2];
+                        int start = expr[y], end = expr[y+2];
                         
                         /* Droolproofing for pinheads not included */
                         if(neg ^ ((str[x] < start) || (str[x] > end))) {
@@ -212,14 +212,14 @@ _shexp_match(char *str, char *exp, Bool case_insensitive)
                 else {
                     int matched;
                     
-                    for (matched=0;exp[y] != ']';y++)
-                        matched |= (str[x] == exp[y]);
+                    for (matched=0;expr[y] != ']';y++)
+                        matched |= (str[x] == expr[y]);
                     if (neg ^ (!matched))
                         ret = NOMATCH;
                 }
                 break;
               case '(':
-                return _handle_union(&str[x],&exp[y], case_insensitive);
+                return _handle_union(&str[x],&expr[y], case_insensitive);
                 break;
               case '?':
                 break;
@@ -228,12 +228,12 @@ _shexp_match(char *str, char *exp, Bool case_insensitive)
               default:
 				if(case_insensitive)
 				  {
-                    if(toupper(str[x]) != toupper(exp[y]))
+                    if(toupper(str[x]) != toupper(expr[y]))
                         ret = NOMATCH;
 				  }
 				else
 				  {
-                    if(str[x] != exp[y])
+                    if(str[x] != expr[y])
                         ret = NOMATCH;
 				  }
                 break;
@@ -246,28 +246,28 @@ _shexp_match(char *str, char *exp, Bool case_insensitive)
 }
 
 PUBLIC int 
-XP_RegExpMatch(char *str, char *xp, Bool case_insensitive) {
+XP_RegExpMatch(char *str, char *xp, PRBool case_insensitive) {
     register int x;
-    char *exp = PL_strdup(xp);
+    char *expr = PL_strdup(xp);
 
-	if(!exp)
+	if(!expr)
 		return 1;
 
-    for(x=strlen(exp)-1;x;--x) {
-        if((exp[x] == '~') && (exp[x-1] != '\\')) {
-            exp[x] = '\0';
-            if(_shexp_match(str,&exp[++x], case_insensitive) == MATCH)
+    for(x=strlen(expr)-1;x;--x) {
+        if((expr[x] == '~') && (expr[x-1] != '\\')) {
+            expr[x] = '\0';
+            if(_shexp_match(str,&expr[++x], case_insensitive) == MATCH)
                 goto punt;
             break;
         }
     }
-    if(_shexp_match(str,exp, FALSE) == MATCH) {
-        PR_Free(exp);
+    if(_shexp_match(str,expr, FALSE) == MATCH) {
+        PR_Free(expr);
         return 0;
     }
 
   punt:
-    PR_Free(exp);
+    PR_Free(expr);
     return 1;
 }
 
@@ -276,30 +276,30 @@ XP_RegExpMatch(char *str, char *xp, Bool case_insensitive) {
 
 #if 0
 PUBLIC int 
-XP_RegExpSearch(char *str, char *exp)
+XP_RegExpSearch(char *str, char *expr)
 {
-    switch(XP_RegExpValid(exp)) 
+    switch(XP_RegExpValid(expr)) 
 	  {
         case INVALID_SXP:
             return -1;
         case NON_SXP:
-            return (strcmp(exp,str) ? 1 : 0);
+            return (strcmp(expr,str) ? 1 : 0);
         default:
-            return XP_RegExpMatch(str, exp, FALSE);
+            return XP_RegExpMatch(str, expr, FALSE);
       }
 }
 
 PUBLIC int
-XP_RegExpCaseSearch(char *str, char *exp)
+XP_RegExpCaseSearch(char *str, char *expr)
 {
-    switch(XP_RegExpValid(exp))
+    switch(XP_RegExpValid(expr))
       {
         case INVALID_SXP:
             return -1;
         case NON_SXP:
-            return (strcmp(exp,str) ? 1 : 0);
+            return (strcmp(expr,str) ? 1 : 0);
         default:
-            return XP_RegExpMatch(str, exp, TRUE);
+            return XP_RegExpMatch(str, expr, TRUE);
       }
 }
 #endif

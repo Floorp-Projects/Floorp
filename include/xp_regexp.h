@@ -79,7 +79,7 @@ XP_BEGIN_PROTOS
 #define INVALID_SXP -2
 #define VALID_SXP 1
 
-extern int XP_RegExpValid(char *exp);
+extern int XP_RegExpValid(char *expr);
 
 
 /* return values for the search routines */
@@ -95,7 +95,7 @@ extern int XP_RegExpValid(char *exp);
  * Returns 0 on match and 1 on non-match.
  */
 
-extern int XP_RegExpMatch(char *str, char *exp, Bool case_insensitive);
+extern int XP_RegExpMatch(char *str, char *expr, PRBool case_insensitive);
 
 /*
  * 
@@ -103,11 +103,11 @@ extern int XP_RegExpMatch(char *str, char *exp, Bool case_insensitive);
  * -1 on invalid exp.
  */
 
-extern int XP_RegExpSearch(char *str, char *exp);
+extern int XP_RegExpSearch(char *str, char *expr);
 
 /* same as above but uses case insensitive search
  */
-extern int XP_RegExpCaseSearch(char *str, char *exp);
+extern int XP_RegExpCaseSearch(char *str, char *expr);
 
 XP_END_PROTOS
 #endif
