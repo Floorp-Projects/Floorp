@@ -310,7 +310,7 @@ NS_IMETHODIMP nsMsgHdr::SetDate(time_t date)
 
 NS_IMETHODIMP nsMsgHdr::GetStatusOffset(PRUint32 *result)
 {
-	PRUint32 offset;
+	PRUint32 offset = 0;
 	nsresult res = GetUInt32Column(m_mdb->m_statusOffsetColumnToken, &offset);
 
 	*result = offset;
