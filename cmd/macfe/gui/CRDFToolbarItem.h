@@ -29,6 +29,9 @@
 
 #pragma once
 
+#include "htrdf.h"
+#include "CImageIconMixin.h"
+
 
 //
 // class CRDFToolbarItem
@@ -36,14 +39,23 @@
 // The base class for things that go on toolbars. This is a virtual class
 // and should never be instantiated by itself.
 //
-class CRDFToolbarItem
+class CRDFToolbarItem : public LView
 {
 public:
 
+protected:
 
+	HT_Resource HTNode ( ) { return mNode; }
+	const HT_Resource HTNode ( ) const { return mNode; }
+
+	virtual void DrawSelf ( ) ;
+	
 private:
+
+	HT_Resource mNode;
+	
 		// don't instantiate one of these
-	CRDFToolbarItem ( ) ;
+	CRDFToolbarItem ( HT_Resource inNode ) ;
 	virtual ~CRDFToolbarItem ( ) ;
 
 		// items cannot be passed by value because they exist in 1-to-1 
@@ -59,15 +71,63 @@ private:
 //
 // It's a button, it's a slicer, it's a mulcher, it's a ....
 //
-class CRDFPushButton : public CRDFToolbarItem
+class CRDFPushButton : public CRDFToolbarItem, public CImageIconMixin
 {
 public:
-	CRDFPushButton ( ) ;
+	CRDFPushButton ( HT_Resource inNode ) ;
 	virtual ~CRDFPushButton ( ) ;
 
+	void SetTrackInside(bool inInside) { mTrackInside = inInside; }
+	bool IsTrackInside() const { return mTrackInside; }
+
+protected:
+
+		// computations for drawing text and icon
+	virtual void PrepareDrawButton ( ) ;
+	virtual void CalcGraphicFrame ( ) ;
+	virtual void CalcTitleFrame ( ) ;
+	virtual void FinalizeDrawButton ( ) ;
+	
+		// handle actual drawing
+	virtual void DrawSelf ( ) ;
+	virtual void DrawButtonContent ( ) ;
+	virtual void DrawButtonTitle ( ) ;
+	virtual void DrawButtonGraphic ( ) ;
+	virtual void DrawSelfDisabled ( ) ;
+	virtual void DrawButtonOutline ( ) ;
+	virtual void DrawButtonHilited ( ) ;
+
+		// handle drawing icon as an image
+	virtual void ImageIsReady ( ) ;
+	virtual void DrawStandby ( const Point & inTopLeft, IconTransformType inTransform ) const ;
+
+		// handle rollover feedback
+	virtual void MouseEnter ( Point inPortPt, const EventRecord &inMacEvent) ;
+	virtual void MouseWithin ( Point inPortPt, const EventRecord &inMacEvent);
+	virtual void MouseLeave(void);
+
+	bool IsMouseInFrame ( ) const { return mMouseInFrame; } ;
+	
 private:
-	// items cannot be passed by value because they exist in 1-to-1 correspondance
-	// with UI elements
+
+	StRegion mButtonMask;
+	Rect mCachedButtonFrame;
+	Rect mCachedTitleFrame;
+	Rect mCachedGraphicFrame;
+	
+	ResIDT mTitleTraitsID;
+	UInt8 mCurrentMode;
+	Int8 mGraphicPadPixels;
+	Int8 mTitlePadPixels;
+	Int8 mTitleAlignment;
+	Int8 mGraphicAlignment;
+	Uint8 mOvalWidth, mOvalHeight;
+
+	bool mMouseInFrame;
+	bool mTrackInside;
+	
+		// items cannot be passed by value because they exist in 1-to-1 
+		// correspondance with UI elements
 	CRDFPushButton( const CRDFPushButton& );				// DON'T IMPLEMENT
 	CRDFPushButton& operator=( const CRDFPushButton& );		// DON'T IMPLEMENT
 	
@@ -82,7 +142,7 @@ private:
 class CRDFSeparator : public CRDFToolbarItem
 {
 public:
-	CRDFSeparator ( ) ;
+	CRDFSeparator ( HT_Resource inNode ) ;
 	virtual ~CRDFSeparator ( ) ;
 
 private:
@@ -102,7 +162,7 @@ private:
 class CRDFURLBar : public CRDFToolbarItem
 {
 public:
-	CRDFURLBar ( ) ;
+	CRDFURLBar ( HT_Resource inNode ) ;
 	virtual ~CRDFURLBar ( ) ;
 
 private:
