@@ -334,7 +334,21 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
   // dont need to do anything if property already set on node
   PRBool bHasProp;
   nsCOMPtr<nsIDOMNode> styleNode;
-  IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, bHasProp, getter_AddRefs(styleNode));
+  PRBool useCSS;
+  GetIsCSSEnabled(&useCSS);
+
+  if (useCSS &&
+      mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty, aAttribute)) {
+    // the HTML styles defined by aProperty/aAttribute has a CSS equivalence
+    // in this implementation for node; let's check if it carries those css styles
+    nsAutoString value;
+    if (aValue) value.Assign(*aValue);
+    mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node, aProperty, aAttribute,
+                                                       bHasProp, value,
+                                                       COMPUTED_STYLE_TYPE);
+  }
+  else
+    IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, bHasProp, getter_AddRefs(styleNode));
   if (bHasProp) return NS_OK;
   
   // do we need to split the text node?
