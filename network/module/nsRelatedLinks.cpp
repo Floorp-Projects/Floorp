@@ -460,7 +460,7 @@ void RL_AddItem (RL_Window win, char* nurl, char* name, uint8 type) {
     RL_Item item = (RL_Item)getMem(sizeof(struct _RL_Item));
     PRBool zerop = (win->count == 0) ? PR_TRUE : PR_FALSE;
     RL_Item existing; 
-	char* url;
+	char* url = NULL;
 	if (nurl) url = strstr(&nurl[7], "http://");
 	if (!url) url = nurl;
     if (item == NULL) return;
