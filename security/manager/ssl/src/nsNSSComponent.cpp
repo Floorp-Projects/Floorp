@@ -1085,7 +1085,10 @@ nsNSSComponent::ShutdownNSS()
     }
 
     SSL_ClearSessionCache();
+#if 0
+    // temporarily disable this call until bug 181230 gets fixed
     ::NSS_Shutdown();
+#endif
   }
 
   return NS_OK;
