@@ -42,7 +42,6 @@
 #include "xptcall.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsString.h"
-#include "nsString.h"
 #include "nsCRT.h"
 #include "prmem.h"
 
@@ -382,16 +381,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
           data = (jstring) env->GetObjectArrayElement((jobjectArray) aParam, 0);
       }
 
-      jboolean isCopy = JNI_FALSE;
-      const PRUnichar* buf = nsnull;
-      if (data) {
-        buf = env->GetStringChars(data, &isCopy);
-      }
-
-      nsString* str = new nsString(buf);
-      if (isCopy) {
-        env->ReleaseStringChars((jstring)data, buf);
-      }
+      nsAString* str = jstring_to_nsAString(env, data);
 
       aVariant.val.p = aVariant.ptr = str;
       aVariant.flags = nsXPTCVariant::PTR_IS_DATA | nsXPTCVariant::VAL_IS_DOMSTR;
@@ -410,16 +400,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
           data = (jstring) env->GetObjectArrayElement((jobjectArray) aParam, 0);
       }
 
-      jboolean isCopy = JNI_FALSE;
-      const char* buf = nsnull;
-      if (data) {
-        buf = env->GetStringUTFChars(data, &isCopy);
-      }
-
-      nsCString* str = new nsCString(buf);
-      if (isCopy) {
-        env->ReleaseStringUTFChars((jstring)aParam, buf);
-      }
+      nsACString* str = jstring_to_nsACString(env, data);
 
       aVariant.val.p = aVariant.ptr = str;
       aVariant.flags = nsXPTCVariant::PTR_IS_DATA;
@@ -685,12 +666,13 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     {
       nsString* str = (nsString*) aVariant.val.p;
 
-      if (str && aParamInfo.IsOut()) {
-        jstring jstr = env->NewString((const jchar*) str->get(), str->Length());
-        env->SetObjectArrayElement((jobjectArray) aParam, 0, jstr);
+      if (str) {
+        if (aParamInfo.IsOut()) {
+          jstring jstr = env->NewString((const jchar*) str->get(), str->Length());
+          env->SetObjectArrayElement((jobjectArray) aParam, 0, jstr);
+        }
+        delete str;
       }
-
-      delete str;
     }
     break;
 
@@ -699,12 +681,13 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
     {
       nsCString* str = (nsCString*) aVariant.val.p;
 
-      if (str && aParamInfo.IsOut()) {
-        jstring jstr = env->NewStringUTF((const char*) str->get());
-        env->SetObjectArrayElement((jobjectArray) aParam, 0, jstr);
+      if (str) {
+        if (aParamInfo.IsOut()) {
+          jstring jstr = env->NewStringUTF((const char*) str->get());
+          env->SetObjectArrayElement((jobjectArray) aParam, 0, jstr);
+        }
+        delete str;
       }
-
-      delete str;
     }
     break;
 
