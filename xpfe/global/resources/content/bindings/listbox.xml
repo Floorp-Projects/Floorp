@@ -488,9 +488,9 @@
     </implementation>
     
     <handlers>
-      <handler event="keypress" keycode="vk_up">
+      <handler event="keypress" keycode="vk_up" phase="target">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length < 1)
+         if (this.selectedItems.length < 1)
            return;
          this._isUpSelection=0;
          this._isDownSelection=0;
@@ -501,11 +501,8 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down">
+      <handler event="keypress" keycode="vk_down" phase="target">
         <![CDATA[
-         if (event.target != this)
-           return;
-
          var n;
          if (this.selectedItems.length == 0) {
            n = this.getItemAtIndex(0);
@@ -522,10 +519,10 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" modifiers="shift" keycode="vk_up">
+      <handler event="keypress" modifiers="shift" keycode="vk_up" phase="target">
         <![CDATA[
          var l=this.selectedItems.length;
-         if (event.target != this || l < 1 || this.selType != "multiple")
+         if (l < 1 || this.selType != "multiple")
            return;
          var n = this.getPreviousItem(this.selectedItems[l-1], 1);
          if (n) {
@@ -543,10 +540,10 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" modifiers="shift" keycode="vk_down">
+      <handler event="keypress" modifiers="shift" keycode="vk_down" phase="target">
         <![CDATA[
          var l=this.selectedItems.length;
-         if (event.target != this || l < 1 || this.selType != "multiple")
+         if (l < 1 || this.selType != "multiple")
            return;
          var n = this.getNextItem(this.selectedItems[l-1], 1);
          if (n) {
@@ -564,10 +561,10 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_up">
+      <handler event="keypress" keycode="vk_page_up" phase="target">
         <![CDATA[
          var l = this.selectedItems.length;
-         if (event.target != this || l < 1)
+         if (l < 1)
            return;
          this._isUpSelection=0;
          this._isDownSelection=0;
@@ -587,10 +584,10 @@
          this.timedSelect(n, 500);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_down">
+      <handler event="keypress" keycode="vk_page_down" phase="target">
         <![CDATA[
          var l = this.selectedItems.length;
-         if (event.target != this || l < 1)
+         if (l < 1)
            return;
          this._isUpSelection=0;
          this._isDownSelection=0;
@@ -612,9 +609,9 @@
          this.timedSelect(n, 500);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_home">
+      <handler event="keypress" keycode="vk_home" phase="target">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length < 1)
+         if (this.selectedItems.length < 1)
            return;
          this._isUpSelection=0;
          this._isDownSelection=0;
@@ -622,9 +619,9 @@
          this.selectItem(this.getItemAtIndex(0));
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_end">
+      <handler event="keypress" keycode="vk_end" phase="target">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length < 1)
+         if (this.selectedItems.length < 1)
            return;
          this._isUpSelection=0;
          this._isDownSelection=0;
@@ -634,7 +631,7 @@
         ]]>
       </handler>
 
-      <handler event="keypress" key=" ">
+      <handler event="keypress" key=" " phase="target">
       <![CDATA[
         if (this.currentItem &&
             this.currentItem.getAttribute("type") == "checkbox" &&
@@ -642,7 +639,7 @@
           this.currentItem.checked = !this.currentItem.checked;
       ]]>
       </handler>
-      <handler event="keypress">
+      <handler event="keypress" phase="target">
       <![CDATA[
          if (!this.disableKeyNavigation && event.charCode > 0 && 
              !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {

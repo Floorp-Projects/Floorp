@@ -996,7 +996,7 @@
     </implementation>
 
     <handlers>
-      <handler event="click" button="0" action="if (event.originalTarget == this) { this.parentNode.parentNode.treeBoxObject.view.cycleHeader(this.id, this); }"/>
+      <handler event="click" button="0" phase="target" action="this.parentNode.parentNode.treeBoxObject.view.cycleHeader(this.id, this);"/>
     </handlers>
   </binding>
 
