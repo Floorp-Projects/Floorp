@@ -121,6 +121,8 @@ protected:
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
 	nsresult GetDatabase();
+	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
+
 
 
 protected:

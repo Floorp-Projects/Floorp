@@ -114,10 +114,14 @@ public:
 
   NS_IMETHOD OnItemRemoved(nsIFolder *parentFolder, nsISupports *item);
 
-  NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property, const char *value);
+  NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property,
+									const char *oldValue, const char *newValue);
 
   // caching frequently used resources
 protected:
+
+	nsresult NotifyPropertyChanged(nsIRDFResource *resource, nsIRDFResource *propertyResource,
+									const char *oldValue, const char *newValue);
 
 	nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
 														nsIRDFNode *object, PRBool assert);
@@ -125,8 +129,11 @@ protected:
 
   nsresult createFolderNameNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderSpecialNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createTotalMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderMessageNode(nsIMsgFolder *folder, nsIRDFNode **target);
+
   nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
                              nsIRDFNode **target);
 
@@ -151,6 +158,8 @@ protected:
   static nsIRDFResource* kNC_Columns;
   static nsIRDFResource* kNC_MSGFolderRoot;
   static nsIRDFResource* kNC_SpecialFolder;
+  static nsIRDFResource* kNC_TotalMessages;
+  static nsIRDFResource* kNC_TotalUnreadMessages;
 
   static nsIRDFResource* kNC_Subject;
   static nsIRDFResource* kNC_Sender;

@@ -84,7 +84,9 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
 
 nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 {
-  NS_IF_RELEASE(mMailDatabase);
+	if(mMailDatabase)
+		//Close releases db;
+		mMailDatabase->Close(PR_TRUE);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
@@ -358,6 +360,11 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 					return rv;
 				else
 					return NS_ERROR_NOT_INITIALIZED;
+			}
+			else
+			{
+				//Otherwise we have a valid database so lets extract necessary info.
+				UpdateSummaryTotals();
 			}
 		}
 	}
@@ -785,7 +792,6 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInf
 		openErr = mailDBFactory->Open(mPath, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
 		mailDBFactory->Release();
 	}
-//    openErr = nsMailDatabase::Open(mPath, FALSE, &mailDB, FALSE);
 
     *db = mailDB;
     if (NS_SUCCEEDED(openErr)&& *db)
@@ -795,13 +801,35 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInf
 
 NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals()
 {
-  //We need to read this info from the database
+	PRUint32 oldUnreadMessages = mNumUnreadMessages;
+	PRUint32 oldTotalMessages = mNumTotalMessages;
+	//We need to read this info from the database
+	ReadDBFolderInfo(PR_TRUE);
 
-  // If we asked, but didn't get any, stop asking
-  if (mNumUnreadMessages == -1)
-    mNumUnreadMessages = -2;
+	// If we asked, but didn't get any, stop asking
+	if (mNumUnreadMessages == -1)
+		mNumUnreadMessages = -2;
 
-  return NS_OK;
+	//Need to notify listeners that total count changed.
+	if(oldTotalMessages != mNumTotalMessages)
+	{
+		char *oldTotalMessages = PR_smprintf("%d", oldTotalMessages);
+		char *totalMessages = PR_smprintf("%d",mNumTotalMessages);
+		//NotifyPropertyChanged("TotalMessages", oldTotalMessages, totalMessages);
+		PR_smprintf_free(totalMessages);
+		PR_smprintf_free(oldTotalMessages);
+	}
+
+	if(oldUnreadMessages != mNumUnreadMessages)
+	{
+		char *oldUnreadMessages = PR_smprintf("%d", oldUnreadMessages);
+		char *totalUnreadMessages = PR_smprintf("%d",mNumUnreadMessages);
+	//	NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessages, totalUnreadMessages);
+		PR_smprintf_free(totalUnreadMessages);
+		PR_smprintf_free(oldUnreadMessages);
+	}
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetExpungedBytesCount(PRUint32 *count)
@@ -1021,6 +1049,24 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message)
 	return NS_OK;
 }
 
+nsresult nsMsgLocalMailFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)
+{
+	nsISupports *supports;
+	if(NS_SUCCEEDED(QueryInterface(kISupportsIID, (void**)&supports)))
+	{
+		PRUint32 i;
+		for(i = 0; i < mListeners->Count(); i++)
+		{
+			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+			listener->OnItemPropertyChanged(supports, property, oldValue, newValue);
+			NS_RELEASE(listener);
+		}
+		NS_RELEASE(supports);
+	}
+
+	return NS_OK;
+
+}
 
 NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
                          nsIDBChangeListener * aInstigator)
@@ -1037,7 +1083,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFl
 	nsISupports *msgSupports;
 	if(NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
 	{
-    PRUint32 i;
+		PRUint32 i;
 		for(i = 0; i < mListeners->Count(); i++)
 		{
 			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
@@ -1045,6 +1091,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFl
 			NS_RELEASE(listener);
 		}
 	}
+	UpdateSummaryTotals();
 	NS_RELEASE(msgSupports);
 
 	return NS_OK;
@@ -1059,7 +1106,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlag
 	nsISupports *msgSupports;
 	if(pMessage && NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
 	{
-    PRUint32 i;
+		PRUint32 i;
 		for(i = 0; i < mListeners->Count(); i++)
 		{
 			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
@@ -1067,6 +1114,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlag
 			NS_RELEASE(listener);
 		}
 	}
+	UpdateSummaryTotals();
 	NS_RELEASE(msgSupports);
 
 	return NS_OK;

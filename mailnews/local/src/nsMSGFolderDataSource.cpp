@@ -71,6 +71,8 @@ nsIRDFResource* nsMSGFolderDataSource::kNC_MessageChild;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Folder;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Name;
 nsIRDFResource* nsMSGFolderDataSource::kNC_SpecialFolder;
+nsIRDFResource* nsMSGFolderDataSource::kNC_TotalMessages;
+nsIRDFResource* nsMSGFolderDataSource::kNC_TotalUnreadMessages;
 
 nsIRDFResource* nsMSGFolderDataSource::kNC_Subject;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Sender;
@@ -90,6 +92,8 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, MessageChild);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, SpecialFolder);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, TotalMessages);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, TotalUnreadMessages);
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Subject);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Sender);
@@ -162,11 +166,19 @@ peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
 
 static void createNode(nsString& str, nsIRDFNode **node)
 {
-  nsIRDFLiteral * value;
-  *node = nsnull;
-  if(NS_SUCCEEDED(gRDFService->GetLiteral((const PRUnichar*)str, &value))) {
-    *node = value;
-  }
+	nsIRDFLiteral * value;
+	*node = nsnull;
+	if(NS_SUCCEEDED(gRDFService->GetLiteral((const PRUnichar*)str, &value))) {
+		*node = value;
+	}
+}
+
+static void createNode(PRUint32 value, nsIRDFNode **node)
+{
+	char *valueStr = PR_smprintf("%d", value);
+	nsString str(valueStr);
+	createNode(str, node);
+	PR_smprintf_free(valueStr);
 }
 
 //Helper function to find the name of a folder from the given pathname.
@@ -240,6 +252,8 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
   NS_RELEASE2(kNC_Folder, refcnt);
   NS_RELEASE2(kNC_Name, refcnt);
   NS_RELEASE2(kNC_SpecialFolder, refcnt);
+  NS_RELEASE2(kNC_TotalMessages, refcnt);
+  NS_RELEASE2(kNC_TotalUnreadMessages, refcnt);
 
   NS_RELEASE2(kNC_Subject, refcnt);
   NS_RELEASE2(kNC_Sender, refcnt);
@@ -302,11 +316,15 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
     gRDFService->GetResource(kURINC_Folder,  &kNC_Folder);
     gRDFService->GetResource(kURINC_Name,    &kNC_Name);
     gRDFService->GetResource(kURINC_SpecialFolder, &kNC_SpecialFolder);
-    gRDFService->GetResource(kURINC_Subject, &kNC_Subject);
-    gRDFService->GetResource(kURINC_Sender, &kNC_Sender);
+    gRDFService->GetResource(kURINC_TotalMessages, &kNC_TotalMessages);
+    gRDFService->GetResource(kURINC_TotalUnreadMessages, &kNC_TotalUnreadMessages);
+    
+	gRDFService->GetResource(kURINC_Subject, &kNC_Subject);
+	gRDFService->GetResource(kURINC_Sender, &kNC_Sender);
     gRDFService->GetResource(kURINC_Date, &kNC_Date);
     gRDFService->GetResource(kURINC_Status, &kNC_Status);
-    gRDFService->GetResource(kURINC_Delete, &kNC_Delete);
+    
+	gRDFService->GetResource(kURINC_Delete, &kNC_Delete);
     gRDFService->GetResource(kURINC_Reply, &kNC_Reply);
     gRDFService->GetResource(kURINC_Forward, &kNC_Forward);
   }
@@ -349,9 +367,14 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
     rv = NS_RDF_NO_VALUE;
     
     if (peq(kNC_Name, property))
-      rv = createFolderNameNode(folder, target);
+		rv = createFolderNameNode(folder, target);
     else if (peq(kNC_SpecialFolder, property))
-      rv = createFolderSpecialNode(folder,target);
+		rv = createFolderSpecialNode(folder,target);
+	else if (peq(kNC_TotalMessages, property))
+		rv = createTotalMessagesNode(folder, target);
+	else if (peq(kNC_TotalUnreadMessages, property))
+		rv = createUnreadMessagesNode(folder, target);
+
 #if 1
     else if (peq(kNC_Child, property))
       rv = createFolderChildNode(folder,target);
@@ -577,6 +600,8 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
   {
     arcs->AppendElement(kNC_Name);
 	arcs->AppendElement(kNC_SpecialFolder);
+	arcs->AppendElement(kNC_TotalMessages);
+	arcs->AppendElement(kNC_TotalUnreadMessages);
 #if 1
     nsIEnumerator* subFolders;
     if (NS_SUCCEEDED(folder->GetSubFolders(&subFolders)))
@@ -739,6 +764,7 @@ nsMSGFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
         rv = nsGetFolderFromMessage(message, &folder);
 				if (NS_SUCCEEDED(rv)) {
 					rv = folder->DeleteMessage(message);
+					NS_IF_RELEASE(folder);
 				}
       }
       else if (peq(aCommand, kNC_Reply)) {
@@ -802,11 +828,37 @@ NS_IMETHODIMP nsMSGFolderDataSource::OnItemRemoved(nsIFolder *parentFolder, nsIS
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMSGFolderDataSource::OnItemPropertyChanged(nsISupports *item, const char *property,const char *value)
+NS_IMETHODIMP nsMSGFolderDataSource::OnItemPropertyChanged(nsISupports *item, const char *property,
+														   const char *oldValue, const char *newValue)
+
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+	nsIRDFResource *resource;
+
+	if(NS_SUCCEEDED(item->QueryInterface(nsIRDFResource::GetIID(), (void**)&resource)))
+	{
+		if(PL_strcmp("TotalMessages", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_TotalMessages, oldValue, newValue);
+		}
+		NS_IF_RELEASE(resource);
+	}
+
+	return NS_OK;
 }
 
+nsresult nsMSGFolderDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
+													  nsIRDFResource *propertyResource,
+													  const char *oldValue, const char *newValue)
+{
+	nsIRDFNode *oldValueNode, *newValueNode;
+	nsString oldValueStr = oldValue;
+	nsString newValueStr = newValue;
+	createNode(oldValueStr, &oldValueNode);
+	createNode(newValueStr, &newValueNode);
+	NotifyObservers(resource, propertyResource, oldValueNode, PR_FALSE);
+	NotifyObservers(resource, propertyResource, newValueNode, PR_TRUE);
+	return NS_OK;
+}
 
 nsresult nsMSGFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
                                                      nsIRDFNode **target)
@@ -841,6 +893,26 @@ nsMSGFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
   
   createNode(specialFolderString, target);
   return NS_OK;
+}
+
+nsresult
+nsMSGFolderDataSource::createTotalMessagesNode(nsIMsgFolder *folder,
+											   nsIRDFNode **target)
+{
+	PRUint32 totalMessages;
+	folder->GetTotalMessages(PR_FALSE, &totalMessages);
+	createNode(totalMessages, target);
+	return NS_OK;
+}
+
+nsresult 
+nsMSGFolderDataSource::createUnreadMessagesNode(nsIMsgFolder *folder,
+												nsIRDFNode **target)
+{
+	PRUint32 totalUnreadMessages;
+	folder->GetNumUnread(PR_FALSE, &totalUnreadMessages);
+	createNode(totalUnreadMessages, target);
+	return NS_OK;
 }
 
 nsresult
