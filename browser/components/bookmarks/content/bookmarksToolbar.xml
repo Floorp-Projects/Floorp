@@ -367,6 +367,7 @@
                 datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                 ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
                 onclick="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
                 ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
                 ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
