@@ -91,7 +91,6 @@ private:
   nsICalendarWidget * mCalendarWidget;
   nsIXPFCCanvas * mRootCanvas;
   nsICalToolkit * mToolkit;
-  nsIViewManager* mViewManager;
 
 };
 

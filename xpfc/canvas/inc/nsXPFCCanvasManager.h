@@ -31,6 +31,7 @@
 #include "nsIView.h"
 #include "nsIViewObserver.h"
 #include "nsIWebViewerContainer.h"
+#include "nsIViewManager.h"
 
 class nsXPFCCanvasManager : public nsIXPFCCanvasManager,
                             public nsIViewObserver
@@ -81,6 +82,9 @@ public:
   NS_IMETHOD_(nsIWebViewerContainer *) GetWebViewerContainer() ;
   NS_IMETHOD SetWebViewerContainer(nsIWebViewerContainer * aWebViewerContainer) ;
 
+  NS_IMETHOD_(nsIViewManager *) GetViewManager() ;
+  NS_IMETHOD SetViewManager(nsIViewManager * aViewManager) ;
+
 protected:
   ~nsXPFCCanvasManager();
 
@@ -97,7 +101,7 @@ private:
   nsIXPFCCanvas * mMouseOverCanvas ;
   nsIXPFCCanvas * mPressedCanvas ;
   nsIWebViewerContainer * mWebViewerContainer;
-
+  nsIViewManager * mViewManager;
 };
 
 #endif /* nsXPFCCanvasManager_h___ */

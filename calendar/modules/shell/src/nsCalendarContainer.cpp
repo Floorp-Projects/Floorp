@@ -77,7 +77,6 @@ nsCalendarContainer::nsCalendarContainer()
   mRootCanvas = nsnull;
   mToolkit = nsnull;
   mToolbarManager = nsnull;
-  mViewManager = nsnull;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsCalendarContainer, kICalContainerIID)
@@ -86,7 +85,6 @@ NS_IMPL_RELEASE(nsCalendarContainer)
 
 nsCalendarContainer::~nsCalendarContainer()
 {
-  NS_IF_RELEASE(mViewManager);
   NS_IF_RELEASE(mMenuManager);
   NS_IF_RELEASE(mCalendarWidget);
   NS_IF_RELEASE(mRootCanvas);
@@ -136,20 +134,23 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
   /*
    * Create the view manager
    */
-#if 0
+
+  nsIViewManager * viewManager;
+
   res = nsRepository::CreateInstance(kViewManagerCID, 
                                      nsnull, 
                                      kIViewManagerIID, 
-                                     (void **)&mViewManager);
+                                     (void **)&viewManager);
 
 
   if (NS_OK != res)
     return res ;
 
-  mViewManager->Init(aParent->GetDeviceContext());
+  viewManager->Init(aParent->GetDeviceContext());
 
-  mViewManager->SetFrameRate(25);
-#endif
+  viewManager->SetFrameRate(25);
+
+  gXPFCToolkit->GetCanvasManager()->SetViewManager(viewManager);
 
   gXPFCToolkit->GetCanvasManager()->SetWebViewerContainer((nsIWebViewerContainer *) this);
 
@@ -174,49 +175,18 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
                                        kCXPFCCanvasCID, 
                                        (void **)&mRootCanvas);
 
-    if (NS_OK == res)
-    {
+    mRootCanvas->Init();
+    gXPFCToolkit->GetCanvasManager()->SetRootCanvas(mRootCanvas);
 
-      mRootCanvas->Init();
-    }
-
-    mRootCanvas->Init(aParent, aBounds,(((nsCalendarShell *)aCalendarShell)->mShellInstance->GetShellEventCallback()));    
-
+    mRootCanvas->Init(aParent, 
+                      aBounds,
+                      (((nsCalendarShell *)aCalendarShell)->mShellInstance->GetShellEventCallback()));    
     widget_parent = mRootCanvas->GetWidget();
 
     mRootCanvas->SetVisibility(PR_FALSE);
     ((nsBoxLayout *)(mRootCanvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_vertical);
-    gXPFCToolkit->GetCanvasManager()->SetRootCanvas(mRootCanvas);
 
 
-#if 0
-    nsIView * view = nsnull ;
-
-    res = nsRepository::CreateInstance(kViewCID, 
-                                       nsnull, 
-                                       kIViewIID, 
-                                       (void **)&(view));
-
-    if (res != NS_OK)
-      return res;
-
-    static NS_DEFINE_IID(kCWidgetCID, NS_CHILD_CID);    
-
-    view->Init(mViewManager, 
-               aBounds, 
-               nsnull,
-               nsnull,//&kCWidgetCID,
-               nsnull,
-               aParent->GetNativeData(NS_NATIVE_WIDGET));
-
-    mViewManager->SetRootView(view);
-
-    mViewManager->SetWindowDimensions(aBounds.width, aBounds.height);
-
-    //view->GetWidget(widget_parent);
-
-    gXPFCToolkit->GetCanvasManager()->Register(mRootCanvas,view);
-#endif
   }
 
 

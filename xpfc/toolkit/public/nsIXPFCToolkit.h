@@ -26,6 +26,7 @@
 
 
 class nsIApplicationShell;
+class nsIViewManager;
 
 //d666a630-32e1-11d2-9248-00805f8a7ab6
 #define NS_IXPFC_TOOLKIT_IID   \
@@ -46,6 +47,7 @@ public:
   NS_IMETHOD_(nsIXPFCCanvasManager *) GetCanvasManager() = 0;
 
   NS_IMETHOD GetRootCanvas(nsIXPFCCanvas ** aCanvas) = 0;
+  NS_IMETHOD_(nsIViewManager *) GetViewManager() = 0;
   NS_IMETHOD_(EVENT_CALLBACK) GetShellEventCallback() = 0;
 
   NS_IMETHOD SetApplicationShell(nsIApplicationShell * aApplicationShell) = 0;
