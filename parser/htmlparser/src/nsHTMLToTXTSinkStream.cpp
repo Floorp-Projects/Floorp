@@ -23,6 +23,8 @@
  *     Daniel Bratell <bratell@lysator.liu.se>
  *     Ben Bucksch <mozilla@bucksch.org>
  *     Pierre Phaneuf <pp@ludusdesign.com>
+ *     Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
+ *
  */
 
 /**
@@ -61,6 +63,8 @@ const  PRInt32 gIndentSizeList = (gTabSize > gOLNumberWidth+3) ? gTabSize: gOLNu
 
 static PRBool IsInline(eHTMLTags aTag);
 static PRBool IsBlockLevel(eHTMLTags aTag);
+static PRInt32 unicharwidth(PRUnichar ucs);
+static PRInt32 unicharwidth(const PRUnichar* pwcs, PRInt32 n);
 
 /**
  *  Inits the encoder instance variable for the sink based on the charset 
@@ -177,8 +181,11 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
   mBufferLength = 0;
   mBuffer = nsnull;
   mUnicodeEncoder = nsnull;
+
+  // Line breaker
   mLineBreaker = nsnull;
   mWrapColumn = 72;     // XXX magic number, we expect someone to reset this
+  mCurrentLineWidth = 0;
 
   // Flow
   mEmptyLines=1; // The start of the document is an "empty line" in itself,
@@ -445,9 +452,6 @@ NS_IMETHODIMP
 nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
 {
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-#ifdef DEBUG_bratell
-  printf("OpenContainer: %d    ", type);
-#endif  
   const nsString&   name = aNode.GetText();
   if (name.EqualsWithConversion("document_info"))
   {
@@ -584,6 +588,25 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     
     mInIndentString.AppendWithConversion(' ');
   }
+  else if (type == eHTMLTag_td)
+  {
+    // We must make sure that the content of two table cells get a
+    // space between them.
+    
+    // Fow now, I will only add a SPACE. Could be a TAB or something
+    // else but I'm not sure everything can handle the TAB so SPACE
+    // seems like a better solution.
+    if(!mInWhitespace) {
+      // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
+      if(mCacheLine) {
+        AddToLine(NS_ConvertToString(" ").GetUnicode(), 1);
+      } else {
+        nsAutoString space(NS_ConvertToString(" "));
+        WriteSimple(space);
+      }
+      mInWhitespace = PR_TRUE;
+    }
+  }
   else if (type == eHTMLTag_blockquote)
   {
     EnsureVerticalSpace(0);
@@ -671,9 +694,6 @@ NS_IMETHODIMP
 nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
 {
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-#ifdef DEBUG_bratell
-  printf("CloseContainer: %d    ", type);
-#endif
   if (mTagStackIndex > 0)
     --mTagStackIndex;
 
@@ -699,28 +719,6 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
       // This is hard. Sometimes 0 is a better number, but
       // how to know?
       EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted) ? 1 : 0);
-    }
-  }
-  else if (type == eHTMLTag_td)
-  {
-    // We are after a table cell an thus maybe between two cells.
-    // Something should be done to avoid the two cells to be written
-    // together. This really need some intelligence about how the
-    // contents in the cell looks.
-    // Fow now, I will only add a SPACE. Could be a TAB or something
-    // else but I'm not sure everything can handle the TAB so SPACE
-    // seems like a better solution.
-    // XXX This unfortunately means that every selection inside a
-    // XXX table cell ends up with an extraneous space after it.
-    if(!mInWhitespace) {
-      // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
-      if(mCacheLine) {
-        AddToLine(NS_ConvertToString(" ").GetUnicode(), 1);
-      } else {
-        nsAutoString space; space.AssignWithConversion(" ");
-        WriteSimple(space);
-      }
-      mInWhitespace = PR_TRUE;
     }
   }
 
@@ -781,10 +779,6 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
 {
-#ifdef DEBUG_bratell
-  printf("Addleaf: %d (%d)   ", (eHTMLTags)aNode.GetNodeType(),mFlags);
-#endif
-  
   // If we don't want any output, just return
   if (!DoOutput())
     return NS_OK;
@@ -792,10 +786,6 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
   
   nsString text = aNode.GetText();
-
-#ifdef DEBUG_bratell
-  printf("        '%s'    ", text.ToNewCString());
-#endif
 
   if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_select)
   {
@@ -948,6 +938,7 @@ nsHTMLToTXTSinkStream::FlushLine()
     WriteSimple(mCurrentLine);
     mColPos += mCurrentLine.Length();
     mCurrentLine.Truncate();
+    mCurrentLineWidth = 0;
   }
 }
 
@@ -1020,27 +1011,65 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
          (!nsCRT::strncmp(aLineFragment, "From ", 5))) {
         // Space stuffing a la RFC 2646 (format=flowed).
         mCurrentLine.AppendWithConversion(' ');
+        if(MayWrap()) {
+          mCurrentLineWidth += unicharwidth(' ');
+#ifdef DEBUG_wrapping
+          NS_ASSERTION(unicharwidth(mCurrentLine.GetUnicode(),
+                                    mCurrentLine.Length()) ==
+                       (PRInt32)mCurrentLineWidth,
+                       "mCurrentLineWidth and reality out of sync!");
+#endif
+        }
       }
     }
     mEmptyLines=-1;
   }
     
   mCurrentLine.Append(aLineFragment, aLineFragmentLength);
+  if(MayWrap()) {
+    mCurrentLineWidth += unicharwidth(aLineFragment, aLineFragmentLength);
+#ifdef DEBUG_wrapping
+    NS_ASSERTION(unicharwidth(mCurrentLine.GetUnicode(),
+                              mCurrentLine.Length()) ==
+                 (PRInt32)mCurrentLineWidth,
+                 "mCurrentLineWidth and reality out of sync!");
+#endif
+  }
+
   
   linelength = mCurrentLine.Length();
 
   //  Wrap?
-  if(mWrapColumn &&
-     ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
-      (mFlags & nsIDocumentEncoder::OutputWrap)))
+  if(MayWrap())
   {
+#ifdef DEBUG_wrapping
+    NS_ASSERTION(unicharwidth(mCurrentLine.GetUnicode(),
+                                  mCurrentLine.Length()) ==
+                 (PRInt32)mCurrentLineWidth,
+                 "mCurrentLineWidth and reality out of sync!");
+#endif
     // Yes, wrap!
-    // The "+4" is to avoid wrap lines that only should be a couple
-    // of letters too long.
-    while(linelength+prefixwidth > mWrapColumn+4) {
+    // The "+4" is to avoid wrap lines that only would be a couple
+    // of letters too long. We give this bonus only if the
+    // wrapcolumn is more than 20.
+    PRUint32 bonuswidth = (mWrapColumn > 20) ? 4 : 0;
+    // XXX: Should calculate prefixwidth with unicharwidth
+    while(mCurrentLineWidth+prefixwidth > mWrapColumn+bonuswidth) {
       // Must wrap. Let's find a good place to do that.
-      PRInt32 goodSpace = mWrapColumn-prefixwidth+1;
       nsresult result = NS_OK;
+      
+      // We go from the end removing one letter at a time until
+      // we have a reasonable width
+      PRInt32 goodSpace = mCurrentLine.Length();
+      PRUint32 width = mCurrentLineWidth;
+      while(goodSpace > 0 && (width+prefixwidth > mWrapColumn))
+      {
+        goodSpace--;
+        width -= unicharwidth(mCurrentLine[goodSpace]);
+      }
+
+      goodSpace++;
+      
       PRBool oNeedMoreText;
       if (nsnull != mLineBreaker) {
         result = mLineBreaker->Prev(mCurrentLine.GetUnicode(), mCurrentLine.Length(), goodSpace,
@@ -1058,7 +1087,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
           goodSpace--;
         }
       }
-    
+      
       nsAutoString restOfLine;
       if(goodSpace<0) {
         // If we don't found a good place to break, accept long line and
@@ -1078,7 +1107,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
           }
         }
       }
-
+      
       if(goodSpace < linelength && goodSpace > 0) {
         // Found a place to break
 
@@ -1088,7 +1117,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
           mCurrentLine.Right(restOfLine, linelength-goodSpace-1);
         else
           mCurrentLine.Right(restOfLine, linelength-goodSpace);
-        mCurrentLine.Cut(goodSpace, linelength-goodSpace);
+        mCurrentLine.Truncate(goodSpace); 
         EndLine(PR_TRUE);
         mCurrentLine.Truncate();
         // Space stuff new line?
@@ -1101,6 +1130,8 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
           }
         }
         mCurrentLine.Append(restOfLine);
+        mCurrentLineWidth = unicharwidth(mCurrentLine.GetUnicode(),
+                                          mCurrentLine.Length());
         linelength = mCurrentLine.Length();
         mEmptyLines = -1;
       } else {
@@ -1133,6 +1164,7 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
     mCurrentLine.AppendWithConversion(NS_LINEBREAK);
     WriteSimple(mCurrentLine);
     mCurrentLine.Truncate();
+    mCurrentLineWidth = 0;
     mColPos=0;
     mEmptyLines=0;
     mInWhitespace=PR_TRUE;
@@ -1151,14 +1183,16 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
     // (see RFC 2646).
     nsAutoString sig_delimiter;
     sig_delimiter.AssignWithConversion("-- ");
-    while((' ' == mCurrentLine[mCurrentLine.Length()-1]) &&
-          ((sig_delimiter != mCurrentLine) ||
-           !(mFlags & nsIDocumentEncoder::OutputFormatFlowed)))
-      mCurrentLine.SetLength(mCurrentLine.Length()-1);
-    
+    PRUint32 currentlinelength = mCurrentLine.Length();
+    while((currentlinelength > 0) &&
+          (' ' == mCurrentLine[currentlinelength-1]) &&
+          (sig_delimiter != mCurrentLine))
+      mCurrentLine.SetLength(--currentlinelength);
+
     mCurrentLine.AppendWithConversion(NS_LINEBREAK);
     WriteSimple(mCurrentLine);
     mCurrentLine.Truncate();
+    mCurrentLineWidth = 0;
     mColPos=0;
     mEmptyLines++;
     mInWhitespace=PR_TRUE;
@@ -1216,15 +1250,6 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
   
   PRInt32 totLen = aString.Length();
   
-  // Don't wrap mail-quoted text
-  // Yes do! /Daniel Bratell
-  //  PRUint32 wrapcol = (mCiteQuote ? 0 : mWrapColumn);
-  //  PRInt32 prefixwidth = (mCiteQuoteLevel>0?mCiteQuoteLevel+1:0)+mIndent;
-  //  PRInt32 linewidth = mWrapColumn-prefixwidth;
-  //  if ((!(mFlags & nsIDocumentEncoder::OutputFormatted)
-  //       && !(mFlags & nsIDocumentEncoder::OutputWrap)) ||
-  //      ((mTagStackIndex > 0) &&
-  //       (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)))
   if (((mTagStackIndex > 0) &&
        (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)) ||
       (mPreFormatted && !mWrapColumn))
@@ -1476,3 +1501,142 @@ PRBool IsBlockLevel(eHTMLTags aTag)
 {
   return !IsInline(aTag);
 }
+
+PRBool nsHTMLToTXTSinkStream::MayWrap()
+{
+  return mWrapColumn &&
+    ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
+     (mFlags & nsIDocumentEncoder::OutputWrap));
+
+}
+
+
+/*
+ * This is an implementation of wcwidth() and wcswidth() as defined in
+ * "The Single UNIX Specification, Version 2, The Open Group, 1997"
+ * <http://www.UNIX-systems.org/online.html>
+ *
+ * Markus Kuhn -- 2000-02-08 -- public domain
+ *
+ * Minor alterations to fit Mozilla's data types by Daniel Bratell
+ */
+
+/* These functions define the column width of an ISO 10646 character
+ * as follows:
+ *
+ *    - The null character (U+0000) has a column width of 0.
+ *
+ *    - Other C0/C1 control characters and DEL will lead to a return
+ *      value of -1.
+ *
+ *    - Non-spacing and enclosing combining characters (general
+ *      category code Mn or Me in the Unicode database) have a
+ *      column width of 0.
+ *
+ *    - Spacing characters in the East Asian Wide (W) or East Asian
+ *      FullWidth (F) category as defined in Unicode Technical
+ *      Report #11 have a column width of 2.
+ *
+ *    - All remaining characters (including all printable
+ *      ISO 8859-1 and WGL4 characters, Unicode control characters,
+ *      etc.) have a column width of 1.
+ *
+ * This implementation assumes that wchar_t characters are encoded
+ * in ISO 10646.
+ */
+
+PRInt32 unicharwidth(PRUnichar ucs)
+{
+  /* sorted list of non-overlapping intervals of non-spacing characters */
+  static const struct interval {
+    PRUint16 first;
+    PRUint16 last;
+  } combining[] = {
+    { 0x0300, 0x034E }, { 0x0360, 0x0362 }, { 0x0483, 0x0486 },
+    { 0x0488, 0x0489 }, { 0x0591, 0x05A1 }, { 0x05A3, 0x05B9 },
+    { 0x05BB, 0x05BD }, { 0x05BF, 0x05BF }, { 0x05C1, 0x05C2 },
+    { 0x05C4, 0x05C4 }, { 0x064B, 0x0655 }, { 0x0670, 0x0670 },
+    { 0x06D6, 0x06E4 }, { 0x06E7, 0x06E8 }, { 0x06EA, 0x06ED },
+    { 0x0711, 0x0711 }, { 0x0730, 0x074A }, { 0x07A6, 0x07B0 },
+    { 0x0901, 0x0902 }, { 0x093C, 0x093C }, { 0x0941, 0x0948 },
+    { 0x094D, 0x094D }, { 0x0951, 0x0954 }, { 0x0962, 0x0963 },
+    { 0x0981, 0x0981 }, { 0x09BC, 0x09BC }, { 0x09C1, 0x09C4 },
+    { 0x09CD, 0x09CD }, { 0x09E2, 0x09E3 }, { 0x0A02, 0x0A02 },
+    { 0x0A3C, 0x0A3C }, { 0x0A41, 0x0A42 }, { 0x0A47, 0x0A48 },
+    { 0x0A4B, 0x0A4D }, { 0x0A70, 0x0A71 }, { 0x0A81, 0x0A82 },
+    { 0x0ABC, 0x0ABC }, { 0x0AC1, 0x0AC5 }, { 0x0AC7, 0x0AC8 },
+    { 0x0ACD, 0x0ACD }, { 0x0B01, 0x0B01 }, { 0x0B3C, 0x0B3C },
+    { 0x0B3F, 0x0B3F }, { 0x0B41, 0x0B43 }, { 0x0B4D, 0x0B4D },
+    { 0x0B56, 0x0B56 }, { 0x0B82, 0x0B82 }, { 0x0BC0, 0x0BC0 },
+    { 0x0BCD, 0x0BCD }, { 0x0C3E, 0x0C40 }, { 0x0C46, 0x0C48 },
+    { 0x0C4A, 0x0C4D }, { 0x0C55, 0x0C56 }, { 0x0CBF, 0x0CBF },
+    { 0x0CC6, 0x0CC6 }, { 0x0CCC, 0x0CCD }, { 0x0D41, 0x0D43 },
+    { 0x0D4D, 0x0D4D }, { 0x0DCA, 0x0DCA }, { 0x0DD2, 0x0DD4 },
+    { 0x0DD6, 0x0DD6 }, { 0x0E31, 0x0E31 }, { 0x0E34, 0x0E3A },
+    { 0x0E47, 0x0E4E }, { 0x0EB1, 0x0EB1 }, { 0x0EB4, 0x0EB9 },
+    { 0x0EBB, 0x0EBC }, { 0x0EC8, 0x0ECD }, { 0x0F18, 0x0F19 },
+    { 0x0F35, 0x0F35 }, { 0x0F37, 0x0F37 }, { 0x0F39, 0x0F39 },
+    { 0x0F71, 0x0F7E }, { 0x0F80, 0x0F84 }, { 0x0F86, 0x0F87 },
+    { 0x0F90, 0x0F97 }, { 0x0F99, 0x0FBC }, { 0x0FC6, 0x0FC6 },
+    { 0x102D, 0x1030 }, { 0x1032, 0x1032 }, { 0x1036, 0x1037 },
+    { 0x1039, 0x1039 }, { 0x1058, 0x1059 }, { 0x17B7, 0x17BD },
+    { 0x17C6, 0x17C6 }, { 0x17C9, 0x17D3 }, { 0x18A9, 0x18A9 },
+    { 0x20D0, 0x20E3 }, { 0x302A, 0x302F }, { 0x3099, 0x309A },
+    { 0xFB1E, 0xFB1E }, { 0xFE20, 0xFE23 }
+  };
+  PRInt32 min = 0;
+  PRInt32 max = sizeof(combining) / sizeof(struct interval) - 1;
+  PRInt32 mid;
+
+  /* test for 8-bit control characters */
+  if (ucs == 0)
+    return 0;
+  if (ucs < 32 || (ucs >= 0x7f && ucs < 0xa0))
+    return -1;
+
+  /* first quick check for Latin-1 etc. characters */
+  if (ucs < combining[0].first)
+    return 1;
+
+  /* binary search in table of non-spacing characters */
+  while (max >= min) {
+    mid = (min + max) / 2;
+    if (combining[mid].last < ucs)
+      min = mid + 1;
+    else if (combining[mid].first > ucs)
+      max = mid - 1;
+    else if (combining[mid].first <= ucs && combining[mid].last >= ucs)
+      return 0;
+  }
+
+  /* if we arrive here, ucs is not a combining or C0/C1 control character */
+
+  /* fast test for majority of non-wide scripts */
+  if (ucs < 0x1100)
+    return 1;
+
+  return 1 +
+    ((ucs >= 0x1100 && ucs <= 0x115f) || /* Hangul Jamo */
+     (ucs >= 0x2e80 && ucs <= 0xa4cf && (ucs & ~0x0011) != 0x300a &&
+      ucs != 0x303f) ||                  /* CJK ... Yi */
+     (ucs >= 0xac00 && ucs <= 0xd7a3) || /* Hangul Syllables */
+     (ucs >= 0xf900 && ucs <= 0xfaff) || /* CJK Compatibility Ideographs */
+     (ucs >= 0xfe30 && ucs <= 0xfe6f) || /* CJK Compatibility Forms */
+     (ucs >= 0xff00 && ucs <= 0xff5f) || /* Fullwidth Forms */
+     (ucs >= 0xffe0 && ucs <= 0xffe6));
+}
+
+
+PRInt32 unicharwidth(const PRUnichar* pwcs, PRInt32 n)
+{
+  PRInt32 w, width = 0;
+
+  for (;*pwcs && n-- > 0; pwcs++)
+    if ((w = unicharwidth(*pwcs)) < 0)
+      return -1;
+    else
+      width += w;
+
+  return width;
+}
+
