@@ -467,8 +467,18 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
         }
         else
         {
+            // move after server name and share name in UNC path
+            if (pathCopy[0] == '/' &&
+                currentEnd == currentStart+kSkipFirst)
+            {
+                *currentEnd = '/';
+                currentStart = strchr(pathCopy+2, kSeparator);
+                currentStart = strchr(currentStart+1, kSeparator);
+                currentEnd = strchr(currentStart+1, kSeparator);
+                if (currentEnd)
+                    *currentEnd = '\0';
+            }
             spec = nsFilePath(pathCopy, PR_FALSE);
-
         }
 #else
         spec = nsFilePath(pathCopy, PR_FALSE);
@@ -728,7 +738,8 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
 #if defined(XP_WIN) || defined(XP_OS2)
-    NS_ASSERTION( mPath[1] == ':', "unexpected canonical path" );
+    NS_ASSERTION( mPath[1] == ':' || (mPath[0] == '\\' && mPath[1] == '\\'),
+                 "unexpected canonical path" );
     nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
 }

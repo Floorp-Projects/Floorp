@@ -153,6 +153,9 @@ void nsFileSpecHelpers::NativeToUnix(nsSimpleCharString& ioPath)
 	if (strstr(cp, ":\\") == cp)
 		*cp = '|';    // absolute path
     else
+      if (cp[0] == '\\')	// unc path
+        cp--;
+        else
         temp[0] = '\0'; // relative path
 	
 	// Convert '\' to '/'
