@@ -41,12 +41,11 @@ const NC_NS = "http://home.netscape.com/NC-rdf#";
 
 var gDownloadView = null;
 var gDownloadViewChildren = null;
+var gDownloadManager = null;
 var gRDFService = null;
 var gNC_File = null;
 // random global variables...
 var keepProgressWindowUpBox;
-
-var webBrowserPersist;                                                          
 
 function NODE_ID(aElement)
 {
@@ -77,18 +76,10 @@ function Startup()
   gDownloadView.controllers.appendController(downloadViewController);
   const dlmgrContractID = "@mozilla.org/download-manager;1";
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
-  const dlmgr = Components.classes[dlmgrContractID].getService(dlmgrIID);
-  const ds = dlmgr.QueryInterface(Components.interfaces.nsIRDFDataSource);
+  gDownloadManager = Components.classes[dlmgrContractID].getService(dlmgrIID);
+  const ds = gDownloadManager.QueryInterface(Components.interfaces.nsIRDFDataSource);
   gDownloadView.database.AddDataSource(ds);
   gDownloadView.builder.rebuild();
-}
-
-function Shutdown()
-{
-  const dlmgrContractID = "@mozilla.org/download-manager;1";
-  const dlmgrIID = Components.interfaces.nsIDownloadManager;
-  const dlmgr = Components.classes[dlmgrContractID].getService(dlmgrIID);
-  dlmgr.uninitializeUI();
 }
 
 var downloadView = {
@@ -169,6 +160,9 @@ var downloadViewController = {
       // a) Prompt user to confirm end of transfers in progress
       // b) End transfers
       // c) Delete entries from datasource
+
+      for (var i = 0; i < selection.length; ++i)
+        gDownloadManager.cancelDownload(selection.id);
       deleteItem(selection);
       break;
     case "cmd_selectAll":

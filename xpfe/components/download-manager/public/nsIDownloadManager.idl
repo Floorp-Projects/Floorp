@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Blake Ross <blakeross@telocity.com> 
+ *   Blake Ross <blaker@netscape.com> 
  *   Ben Goodger <ben@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,21 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
- /* So here's the deal:
-  *
-  * As it stands, nsIDownloadManager does not handle the actual downloading of files.
-  * Rather, it manages them.  When clients use some transfer component to download a
-  * file, they also create an nsIDownloadItem, define its properties (uri, target, etc.),
-  * get the download manager service, and call addItem.  nsIDownloadItem acts as a 
-  * "master listener" for the ongoing transfer.  It implements nsIWebProgressListener,
-  * and clients should set it to be the listener for whatever xfer component they're using.
-  * nsIDownloadItem's listener impl will forward progress notifications onto three possible
-  * listeners: the internal listener (an nsIDownloadProgressListener, used to update
-  * the main download manager UI), the properties listener (used to update the download manager
-  * properties dialog), and an optional listener set by the client via nsIDownloadItem's |listener|
-  * attribute (used to update client UI).
-  */
-
 #include "nsISupports.idl"
 #include "nsIWebProgressListener.idl"
 
@@ -62,32 +47,51 @@ interface nsIDownloadItem;
 interface nsIDownloadManager : nsISupports {
 
   /**
-  * addItem
-  * Adds an item to be managed by the download manager.
+  * addDownload
+  * Adds a download to be managed by the download manager.
   */
   
-  void addItem(in nsIDownloadItem item);
+  void addDownload(in nsIDownloadItem item);
 
   /**
-  * getItem
+  * getDownload
   * Used to retrieve a download managed by the download manager.
   */
 
-  nsIDownloadItem getItem(in string id);
+  nsIDownloadItem getDownload(in string key);
+
+  /**
+  * cancelDownload
+  * If a persist is set on the download item, download manager will call
+  * nsIWebBrowserPersist::CancelSave.  Else, if an observer is set on the item
+  * (it should be), it will be notified with the "oncancel" topic.  Callers
+  * that don't provide a persist object promise to listen for this topic and cancel
+  * the download; the download will be removed from the manager.
+  */
+
+  void cancelDownload(in string key);
 
   /**
   * open
   * Opens the Download Manager front end.
   */
-  void open(in nsIDOMWindowInternal aOwnerDocument);
+
+  void open(in nsIDOMWindowInternal aOwnerWindow);
 
   /**
-  * uninitializeUI
-  * Called by the download manager FE to signify that that the manager
-  * should stop forwarding progress notifications to the ui listener because
-  * the FE is no longer being displayed.
+  * openProgressDialogFor
+  * Opens an individual progress dialog displaying progress for the download.
   */
-  void uninitializeUI();
+
+  void openProgressDialogFor(in string key, in nsIDOMWindowInternal aOwnerWindow);
+
+  /**
+  * onClose
+  * Called when the download manager UI is closed.  Useful for
+  * third party managers to let us know when they've closed.
+  */
+  void onClose();
+
 };
 
 
