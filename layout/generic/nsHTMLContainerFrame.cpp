@@ -234,6 +234,12 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
       aForce = PR_TRUE;
     }
 
+    // See if the frame has a fixed background attachment
+    if (NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
+      aForce = PR_TRUE;
+      fixedBackgroundAttachment = PR_TRUE;
+    }
+    
     // See if the frame is being relatively positioned or absolutely
     // positioned
     if (!aForce) {
@@ -288,14 +294,6 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
       }
     }
 
-    // See if the frame has a fixed background attachment
-    if (!aForce) {
-      if (NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
-        aForce = PR_TRUE;
-        fixedBackgroundAttachment = PR_TRUE;
-      }
-    }
-
     // See if the frame is a scrolled frame
     if (!aForce) {
       nsIAtom*  pseudoTag;
@@ -338,6 +336,12 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         aFrame->GetRect(bounds);
         view->Init(viewManager, bounds, parentView);
 
+        // If the frame has a fixed background attachment, then indicate that the
+        // view's contents should repainted and not bitblt'd
+        PRUint32  viewFlags;
+        view->GetViewFlags(&viewFlags);
+        view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
+        
         // Insert the view into the view hierarchy. If the parent view is a
         // scrolling view we need to do this differently
         nsIScrollableView*  scrollingView;
@@ -346,12 +350,6 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         } else {
           viewManager->InsertChild(parentView, view, zIndex);
         }
-
-        // If the frame has a fixed background attachment, then indicate that the
-        // view's contents should repainted and not bitblt'd
-        PRUint32  viewFlags;
-        view->GetViewFlags(&viewFlags);
-        view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
 
         // If the background color is transparent or the visibility is hidden
         // then mark the view as having transparent content.
