@@ -78,7 +78,7 @@ NS_IMETHODIMP nsMenuFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsMenuFrame cntr
 //
 nsMenuFrame::nsMenuFrame()
-:mMenuOpen(PR_FALSE), mIsMenu(PR_FALSE), mMenuParent(nsnull)
+:mMenuOpen(PR_FALSE), mIsMenu(PR_FALSE), mMenuParent(nsnull), mOpenTimer(nsnull)
 {
 
 } // cntr
@@ -271,8 +271,12 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
   if (aActivateFlag) {
     // XXX Execute the oncreate handler
     // Sync up the view.
+    PRBool onMenuBar = PR_TRUE;
+    if (mMenuParent)
+      mMenuParent->IsMenuBar(onMenuBar);
+
     if (menuPopup)
-      menuPopup->SyncViewWithFrame(PR_TRUE);
+      menuPopup->SyncViewWithFrame(onMenuBar);
       
     // Open the menu.
     mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::open, "true", PR_TRUE);

@@ -33,6 +33,7 @@
 
 nsresult NS_NewMenuFrame(nsIFrame** aResult, PRUint32 aFlags) ;
 
+class nsITimer;
 class nsMenuBarFrame;
 class nsMenuPopupFrame;
 
@@ -101,6 +102,7 @@ protected:
   PRBool mIsMenu; // Whether or not we can even have children or not.
   PRBool mMenuOpen;
   nsIMenuParent* mMenuParent; // Our parent menu.
+  nsITimer* mOpenTimer;
 }; // class nsMenuFrame
 
 #endif
