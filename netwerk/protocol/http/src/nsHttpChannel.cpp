@@ -37,7 +37,7 @@
 #include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsReadableUtils.h"
 #include "plstr.h"
 #include "prprf.h"

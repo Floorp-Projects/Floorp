@@ -64,9 +64,6 @@
 class nsISizeOfHandler;
 
 
-#define nsString2     nsString
-#define nsAutoString2 nsAutoString
-
 class NS_COM nsString :
   public nsAFlatString,
   public nsStr {

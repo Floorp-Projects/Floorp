@@ -33,6 +33,7 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsEscape.h"
 #include "nsSyncDecoderRing.h"
 #include "plstr.h"
@@ -816,7 +817,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
         char *pVal = PR_smprintf("phone%d", phoneCount);
         if (pVal)
         {
-          char      *utfString = nsString2(aName).ToNewUTF8String();
+          char *utfString = ToNewUTF8String(nsDependentString(aName));
 
           // Now, URL Encode the value string....
           char *myTStr = nsEscape(utfString, url_Path);
@@ -846,7 +847,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
       }
       else    // Good ole' normal tag...
       {
-        char      *utfString = nsString2(aName).ToNewUTF8String();
+        char *utfString = ToNewUTF8String(nsDependentString(aName));
 
         // Now, URL Encode the value string....
         char *myTStr = nsEscape(utfString, url_Path);
@@ -887,7 +888,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
       // Just some sanity...
       if (aName)
       {
-        char      *utfString = nsString2(aName).ToNewUTF8String();
+        char *utfString = ToNewUTF8String(nsDependentString(aName));
       
         // Now, URL Encode the value string....
         char *myTStr = nsEscape(utfString, url_Path);
