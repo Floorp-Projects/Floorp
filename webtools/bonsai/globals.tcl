@@ -85,13 +85,31 @@ proc SqlQuote {str} {
 }
 
 
+# proc GetId {table field value} {
+#     global lastidcache
+#     if {[info exists lastidcache($table)]} {
+#         lassign lastidcache($table) cval id
+#         if {[cequal $value $cval]} {
+#             return $id
+#         }
+#     }
+#     set qvalue [SqlQuote $value]
+#     SendSQL "select id from $table where $field = '$qvalue'"
+#     set result [lindex [FetchSQLData] 0]
+#     if {[cequal $result ""]} {
+#         SendSQL "insert into $table ($field) values ('$qvalue')"
+#         SendSQL "select LAST_INSERT_ID()"
+#         set result [lindex [FetchSQLData] 0]
+#     }
+#     set lastidcache($table) [list $value $result]
+#     return $result
+# }
+
 proc GetId {table field value} {
     global lastidcache
-    if {[info exists lastidcache($table)]} {
-        lassign lastidcache($table) cval id
-        if {[cequal $value $cval]} {
-            return $id
-        }
+    if {[info exists lastidcache($table,$field,$value)]} {
+        set id $lastidcache($table,$field,$value)
+        return $id
     }
     set qvalue [SqlQuote $value]
     SendSQL "select id from $table where $field = '$qvalue'"
@@ -101,7 +119,7 @@ proc GetId {table field value} {
         SendSQL "select LAST_INSERT_ID()"
         set result [lindex [FetchSQLData] 0]
     }
-    set lastidcache($table) [list $value $result]
+    set lastidcache($table,$field,$value) $result
     return $result
 }
 
