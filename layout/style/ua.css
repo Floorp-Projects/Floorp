@@ -18,6 +18,7 @@
 HTML {
   background: inherit;
   background-image: none;
+  display: block;
 }
 
 BODY {
