@@ -82,6 +82,16 @@ sub check_urlbase {
 }
 
 
+sub check_registryurl {
+    my ($url) = (@_);
+    if ($url !~ m:/$:) {
+	return "must be a legal URL ending with a slash.";
+    }
+    return "";
+}
+    
+
+
 @::param_list = ();
 
 
@@ -309,6 +319,14 @@ DefParam("phonebookurl",
          '<a href="mailto:%email_name%">%user_name%</a>'
         );
 
+DefParam("registryurl",
+         "A URL relative to urlbase (or an absolute URL) which leads to the
+installed 'registry' package (available from the mozilla.org repository as
+a sibling directory to the 'bonsai' directory.).  This contains pages that 
+generate lists of links about a person or a file.",
+         "t",
+         qq{../registry/},
+	 \&check_registryurl);
 
 
 

@@ -69,6 +69,9 @@ if(!defined($rev)) {
 print "Content-type: text/html\n\n";
 
 
+my $registryurl = Param('registryurl');
+$registryurl =~ s@/$@@;
+
 my $script_str;
 
 &setup_script;
@@ -198,7 +201,7 @@ $split = int(@files/4)+1;
 
 for $_ (@files){
     $_ =~ s/\,v//;
-    print "<a href=../registry/file.cgi?cvsroot=$CVS_ROOT&file=$_&dir=$dir"
+    print qq{<a href="$registryurl/file.cgi?cvsroot=$CVS_ROOT&file=$_&dir=$dir"}
           . " onclick=\"return js_file_menu('$dir','$_','$rev','$CVS_ROOT',event)\">\n";
     print "<dt>$_</a>\n";
     if( $j % $split == 0 ){
@@ -213,7 +216,7 @@ PutsTrailer();
 
 sub setup_script {
 
-$script_str =<<'ENDJS';
+$script_str = qq{
 <script>
 
 var event = new Object;
@@ -224,7 +227,7 @@ function js_who_menu(n,extra,d) {
         return true;
     }
     l = document.layers['popup'];
-    l.src="../registry/who.cgi?email="+n+extra;
+    l.src="$registryurl/who.cgi?email="+n+extra;
 
     if(d.target.y > window.innerHeight + window.pageYOffset - l.clip.height) { 
          l.top = (window.innerHeight + window.pageYOffset - l.clip.height);
@@ -247,7 +250,7 @@ function js_file_menu(dir,file,rev,root,d) {
         return true;
     }
     l = document.layers['popup'];
-    l.src="../registry/file.cgi?file="+file+"&dir="+dir+"&rev="+rev+"&cvsroot="+root+"&linked_text="+d.target.text;
+    l.src="$registryurl/file.cgi?file="+file+"&dir="+dir+"&rev="+rev+"&cvsroot="+root+"&linked_text="+d.target.text;
     
     if(d.target.y > window.innerHeight + window.pageYOffset - l.clip.height) { 
          l.top = (window.innerHeight + window.pageYOffset - l.clip.height);
@@ -271,7 +274,7 @@ function js_file_menu(dir,file,rev,root,d) {
 <layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
 </layer>
 
-ENDJS
+};
 
 }
 

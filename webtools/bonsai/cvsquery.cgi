@@ -61,6 +61,8 @@ LoadTreeConfig();
 require 'cvsquery.pl';
 
 my $userdomain = Param('userdomain');
+my $registryurl = Param('registryurl');
+$registryurl =~ s@/$@@;
 $| = 1;
 
 my $sm_font_tag = "<font face='Arial,Helvetica' size=-2>";
@@ -367,8 +369,8 @@ sub print_ci {
 
     print "<tr>\n";
     print "<TD width=2%>${sm_font_tag}$t</font>";
-    print "<TD width=2%><a href='../registry/who.cgi?email=$ci->[$::CI_WHO]' "
-          . "onClick=\"return js_who_menu('$ci->[$::CI_WHO]','',event);\" >"
+    print "<TD width=2%><a href='$registryurl/who.cgi?email=$ci->[$::CI_WHO]'"
+          . " onClick=\"return js_who_menu('$ci->[$::CI_WHO]','',event);\" >"
           . "$ci->[$::CI_WHO]</a>\n";
     print "<TD width=45%><a href='cvsview2.cgi?subdir=$ci->[$::CI_DIR]&files=$ci->[$::CI_FILE]\&command=DIRECTORY&branch=$::query_branch&root=$::CVS_ROOT'\n"
           . " onclick=\"return js_file_menu('$::CVS_ROOT', '$ci->[$::CI_DIR]','$ci->[$::CI_FILE]','$ci->[$::CI_REV]','$::query_branch',event)\">\n";
@@ -509,7 +511,7 @@ sub parse_date {
 
 sub setup_script {
 
-    my $script_str =<<'ENDJS';
+    my $script_str = qq{
 <script>
 var event = 0;	// Nav3.0 compatibility
 
@@ -519,7 +521,7 @@ function js_who_menu(n,extra,d) {
         return true;
     }
     l = document.layers['popup'];
-    l.src="../registry/who.cgi?email="+n+extra;
+    l.src="$registryurl/who.cgi?email="+n+extra;
 
     if(d.target.y > window.innerHeight + window.pageYOffset - l.clip.height) {
          l.top = (window.innerHeight + window.pageYOffset - l.clip.height);
@@ -545,7 +547,7 @@ function js_file_menu(repos,dir,file,rev,branch,d) {
         }
     }
     l = document.layers['popup'];
-    l.src="../registry/file.cgi?cvsroot="+repos+"&file="+file+"&dir="+dir+"&rev="+rev+"&branch="+branch+"&linked_text="+fileName;
+    l.src="$registryurl/file.cgi?cvsroot="+repos+"&file="+file+"&dir="+dir+"&rev="+rev+"&branch="+branch+"&linked_text="+fileName;
 
     l.top = d.target.y - 6;
     l.left = d.target.x - 6;
@@ -562,7 +564,7 @@ function js_file_menu(repos,dir,file,rev,branch,d) {
 <layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
 </layer>
 
-ENDJS
+};
 
     return $script_str;
 }

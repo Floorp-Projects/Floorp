@@ -49,8 +49,8 @@ work.
 
    First of all you have to get all the tools in mozilla's
 mozilla/webtools CVS repository. This includes lxr,bonsai,registry
-and tinderbox. You're likely will not need neither tinderbox nor
-registry but get them just in case.
+and tinderbox. You're likely will not need neither tinderbox but get
+it just in case.
 
    To get the sources you have to follow instructions on
 http://www.mozilla.org/bonsai.html.
