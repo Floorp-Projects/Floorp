@@ -71,7 +71,7 @@ protected:
 
 protected:
 
-  static PRBool     ClearEnumerator(nsHashKey *aKey, void *aData, void* closure);
+  static PRBool PR_CALLBACK ClearEnumerator(nsHashKey *aKey, void *aData, void* closure);
 
 protected:
 
