@@ -84,15 +84,6 @@ nsXFormsNodeState::Test(eFlag_t aFlag) const
   return (mState & aFlag) ? PR_TRUE : PR_FALSE;
 }
 
-PRBool
-nsXFormsNodeState::IsValid() const
-{
-  // constraints determine the validity of a node
-  ///
-  /// @todo needs Schema support (XXX)
-  return Test(eFlag_CONSTRAINT);
-}
-
 #ifdef DEBUG_XF_NODESTATE
 const char* flagnames[] = {0,
                            "eFlag_READONLY",

@@ -555,6 +555,9 @@ nsXFormsModelElement::Revalidate()
   }
 #endif
 
+  // Revalidate nodes
+  mMDG.Revalidate(&mChangedNodes);
+
   // Iterate over all form controls
   PRInt32 controlCount = mFormControls.Count();
   for (PRInt32 i = 0; i < controlCount; ++i) {

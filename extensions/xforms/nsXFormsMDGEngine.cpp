@@ -385,10 +385,6 @@ nsXFormsMDGEngine::Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (mModel && constraint) {
-        mModel->ValidateNode(g->mContextNode, &constraint);
-      }
-
       if (ns->IsConstraint() != constraint) {
         ns->Set(eFlag_CONSTRAINT, constraint);
         ns->Set(eFlag_DISPATCH_VALID_CHANGED, PR_TRUE);
@@ -465,6 +461,26 @@ nsXFormsMDGEngine::Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes)
 #endif
 
   return res;
+}
+
+nsresult
+nsXFormsMDGEngine::Revalidate(nsCOMArray<nsIDOMNode> *aNodes)
+{
+  NS_ENSURE_ARG(aNodes);
+  NS_ENSURE_STATE(mModel);
+
+  for (PRInt32 i = 0; i < aNodes->Count(); ++i) {
+    nsCOMPtr<nsIDOMNode> node = aNodes->ObjectAt(i);
+    nsXFormsNodeState* ns = GetNCNodeState(node);
+    PRBool constraint;
+    mModel->ValidateNode(node, &constraint);
+    if (constraint != ns->IsConstraintSchema()) {
+      ns->Set(eFlag_CONSTRAINT_SCHEMA, constraint);
+      ns->Set(eFlag_DISPATCH_VALID_CHANGED, PR_TRUE);
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult

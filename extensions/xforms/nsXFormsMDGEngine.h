@@ -373,6 +373,13 @@ public:
   nsresult Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes);
 
   /**
+   * Revalidate nodes
+   * 
+   * @param aNodes           The nodes to revalidate
+   */
+  nsresult Revalidate(nsCOMArray<nsIDOMNode> *aNodes);
+
+  /**
    * Rebuilds the MDG.
    */
   nsresult Rebuild();

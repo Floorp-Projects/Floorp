@@ -51,23 +51,25 @@ enum eFlag_t {
   // The different states
   eFlag_READONLY                    = 1 << 1,
   eFlag_CONSTRAINT                  = 1 << 2,
-  eFlag_RELEVANT                    = 1 << 3,
-  eFlag_REQUIRED                    = 1 << 4,
-  eFlag_SCHEMA_VALID                = 1 << 5,
-  eFlag_INHERITED_RELEVANT          = 1 << 6,
-  eFlag_INHERITED_READONLY          = 1 << 7,
+  eFlag_CONSTRAINT_SCHEMA           = 1 << 3,
+  eFlag_RELEVANT                    = 1 << 4,
+  eFlag_REQUIRED                    = 1 << 5,
+  eFlag_SCHEMA_VALID                = 1 << 6,
+  eFlag_INHERITED_RELEVANT          = 1 << 7,
+  eFlag_INHERITED_READONLY          = 1 << 8,
   // Events to be dispatched
-  eFlag_DISPATCH_VALUE_CHANGED      = 1 << 8,
-  eFlag_DISPATCH_READONLY_CHANGED   = 1 << 9,
-  eFlag_DISPATCH_VALID_CHANGED      = 1 << 10,
-  eFlag_DISPATCH_RELEVANT_CHANGED   = 1 << 11,
-  eFlag_DISPATCH_REQUIRED_CHANGED   = 1 << 12,
-  eFlag_DISPATCH_CONSTRAINT_CHANGED = 1 << 13
+  eFlag_DISPATCH_VALUE_CHANGED      = 1 << 9,
+  eFlag_DISPATCH_READONLY_CHANGED   = 1 << 10,
+  eFlag_DISPATCH_VALID_CHANGED      = 1 << 11,
+  eFlag_DISPATCH_RELEVANT_CHANGED   = 1 << 12,
+  eFlag_DISPATCH_REQUIRED_CHANGED   = 1 << 13,
+  eFlag_DISPATCH_CONSTRAINT_CHANGED = 1 << 14
 };
 
 // Default flags set for new states
 const PRUint16 kFlags_DEFAULT =
   (eFlag_CONSTRAINT         | // The node is valid
+   eFlag_CONSTRAINT_SCHEMA  | // The node is valid (schema)
    eFlag_RELEVANT           | // The node is relevant
    eFlag_INHERITED_RELEVANT); // Children should inherit relevant
 
@@ -162,10 +164,13 @@ public:
   PRBool Test(eFlag_t aFlag) const; 
 
   // Check states
-  PRBool IsValid() const;
-
+  PRBool IsValid() const
+    { return Test(eFlag_CONSTRAINT) &&
+             Test(eFlag_CONSTRAINT_SCHEMA); };
   PRBool IsConstraint() const
     { return Test(eFlag_CONSTRAINT); };
+  PRBool IsConstraintSchema() const
+    { return Test(eFlag_CONSTRAINT_SCHEMA); };
   PRBool IsReadonly() const
     { return Test(eFlag_READONLY) |
              Test(eFlag_INHERITED_READONLY); };
