@@ -44,6 +44,7 @@
 #define NS_HTMLFRAGMENTSINK2_CONTRACTID "@mozilla.org/layout/htmlfragmentsink;2"
 
 class nsIDOMDocumentFragment;
+class nsIDocument;
 
 #define NS_IHTML_FRAGMENT_CONTENT_SINK_IID \
  {0xa6cf9102, 0x15b3, 0x11d2,              \
@@ -58,6 +59,18 @@ public:
    *
    */
   NS_IMETHOD GetFragment(nsIDOMDocumentFragment** aFragment) = 0;
+
+  /**
+   * This method is used to set the target document for this fragment
+   * sink.  This document's nodeinfo manager will be used to create
+   * the content objects.  This MUST be called before the sink is used.
+   *
+   * If aDocument is null or has no nodeinfo manager, the sink will
+   * create a brand-new nodeinfo manager.
+   *
+   * @param aDocument the document the new nodes will belong to
+   */
+  NS_IMETHOD SetTargetDocument(nsIDocument* aDocument) = 0;
 };
 
 #endif

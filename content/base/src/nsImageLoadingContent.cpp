@@ -365,14 +365,12 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   nsresult rv;   // XXXbz Should failures in this method fire onerror?
 
   // First, get a document (needed for security checks, base URI and the like)
-  // Even if we do not have a document, we want to keep going here.  The
-  // reason is that nodes created by the HTMLFragmentContentSink have no
-  // document (not even in the nodeinfo) and are used when cutting and
-  // pasting, as well as for drag&drop.  So if we are to have composer sorta
-  // working....  Once bug 198486 is fixed, we can go back to just bailing on
-  // a null document.
   nsCOMPtr<nsIDocument> doc;
   rv = GetOurDocument(getter_AddRefs(doc));
+  if (!doc) {
+    // No reason to bother, I think...
+    return rv;
+  }
 
   nsCOMPtr<nsIURI> imageURI;
   rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
@@ -390,11 +388,7 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   // not to show the broken image icon.  If the load is blocked by the
   // content policy or security manager, we will want to cancel with
   // the error code from those.
-  nsresult cancelResult = NS_OK;
-  if (doc) {
-    // Can't do security or content policy checks without a document
-    cancelResult = CanLoadImage(imageURI, doc);
-  }
+  nsresult cancelResult = CanLoadImage(imageURI, doc);
   if (NS_SUCCEEDED(cancelResult)) {
     cancelResult = NS_ERROR_IMAGE_SRC_CHANGED;
   }
@@ -409,15 +403,11 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup;
-  if (doc) {
-    doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-    NS_WARN_IF_FALSE(loadGroup, "Could not get loadgroup; onload may fire too early");
-  }
+  doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  NS_WARN_IF_FALSE(loadGroup, "Could not get loadgroup; onload may fire too early");
 
   nsCOMPtr<nsIURI> documentURI;
-  if (doc) {
-    doc->GetDocumentURL(getter_AddRefs(documentURI));
-  }
+  doc->GetDocumentURL(getter_AddRefs(documentURI));
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
@@ -513,18 +503,17 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
                                    nsIDocument* aDocument,
                                    nsIURI** aURI)
 {
-  // XXXbz Commented out precondition pending fix for bug 198486
-  //  NS_PRECONDITION(aDocument, "Must have a document");
+  NS_PRECONDITION(aDocument, "Must have a document");
   NS_PRECONDITION(aURI, "Null out param");
 
-  nsresult rv = NS_OK;
+  nsresult rv;
   
   // (1) Get the base URI
   nsCOMPtr<nsIURI> baseURL;
   nsCOMPtr<nsIHTMLContent> thisContent = do_QueryInterface(this);
   if (thisContent) {
     rv = thisContent->GetBaseURL(*getter_AddRefs(baseURL));
-  } else if (aDocument) {
+  } else {
     rv = aDocument->GetBaseURL(*getter_AddRefs(baseURL));
     if (!baseURL) {
       rv = aDocument->GetDocumentURL(getter_AddRefs(baseURL));
@@ -534,9 +523,7 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
 
   // (2) Get the charset
   nsAutoString charset;
-  if (aDocument) {
-    aDocument->GetDocumentCharacterSet(charset);
-  }
+  aDocument->GetDocumentCharacterSet(charset);
 
   // (3) Construct the silly thing
   return NS_NewURI(aURI,
@@ -549,13 +536,22 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
 /**
  * Struct used to dispatch events
  */
+MOZ_DECL_CTOR_COUNTER(ImageEvent)
+
 struct ImageEvent : PLEvent {
   ImageEvent(nsIPresContext* aPresContext, nsIContent* aContent,
              const nsAString& aMessage)
     : mPresContext(aPresContext),
       mContent(aContent),
       mMessage(aMessage)
-  {}
+  {
+    MOZ_COUNT_CTOR(ImageEvent);
+  }
+  ~ImageEvent()
+  {
+    MOZ_COUNT_DTOR(ImageEvent);
+  }
+  
   nsCOMPtr<nsIPresContext> mPresContext;
   nsCOMPtr<nsIContent> mContent;
   nsString mMessage;
@@ -609,11 +605,6 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
 
   nsCOMPtr<nsIDocument> document;
   rv = GetOurDocument(getter_AddRefs(document));
-
-  if (!document) {
-    // no use to fire events if there is no document....
-    return rv;
-  }
 
   nsCOMPtr<nsIPresShell> shell;
   document->GetShellAt(0, getter_AddRefs(shell));

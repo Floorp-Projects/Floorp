@@ -2133,6 +2133,16 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
   nsCOMPtr<nsIDOMDocumentFragment> docfrag;
   nsCOMPtr<nsIDOMNode> contextAsNode, tmp;  
   nsresult res = NS_OK;
+
+  nsCOMPtr<nsIDOMElement> rootElement;
+  GetRootElement(getter_AddRefs(rootElement));
+
+  nsCOMPtr<nsIDocument> doc;
+  if (rootElement) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    rootElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    doc = do_QueryInterface(domDoc);
+  }
   
   // if we have context info, create a fragment for that
   nsVoidArray tagStack;
@@ -2141,7 +2151,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
   PRInt32 contextDepth = 0;
   if (aContextStr.Length())
   {
-    res = ParseFragment(aContextStr, tagStack, address_of(contextAsNode));
+    res = ParseFragment(aContextStr, tagStack, doc, address_of(contextAsNode));
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(contextAsNode, NS_ERROR_FAILURE);
 
@@ -2168,7 +2178,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
     return res;
   }
   // create fragment for pasted html
-  res = ParseFragment(aInputString, tagStack, outFragNode);
+  res = ParseFragment(aInputString, tagStack, doc, outFragNode);
   FreeTagStackStrings(tagStack);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(*outFragNode, NS_ERROR_FAILURE);
@@ -2207,7 +2217,10 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
 }
 
 
-nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr, nsVoidArray &aTagStack, nsCOMPtr<nsIDOMNode> *outNode)
+nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
+                                     nsVoidArray &aTagStack,
+                                     nsIDocument* aTargetDocument,
+                                     nsCOMPtr<nsIDOMNode> *outNode)
 {
   // figure out if we are parsing full context or not
   PRBool bContext = (aTagStack.Count()==0);
@@ -2230,6 +2243,8 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr, nsVoidArray &aT
   nsCOMPtr<nsIHTMLFragmentContentSink> fragSink(do_QueryInterface(sink));
   NS_ENSURE_TRUE(fragSink, NS_ERROR_FAILURE);
 
+  fragSink->SetTargetDocument(aTargetDocument);
+  
   // parse the fragment
   parser->SetContentSink(sink);
   if (bContext)

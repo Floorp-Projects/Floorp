@@ -85,11 +85,19 @@ private:
    * Struct used to manage the image observers.
    */
   struct ImageObserver {
+    MOZ_DECL_CTOR_COUNTER(ImageObserver)
+    
     ImageObserver(imgIDecoderObserver* aObserver) :
       mObserver(aObserver),
       mNext(nsnull)
-    {}
-    ~ImageObserver() { delete mNext; }
+    {
+      MOZ_COUNT_CTOR(ImageObserver);
+    }
+    ~ImageObserver()
+    {
+      MOZ_COUNT_DTOR(ImageObserver);
+      delete mNext;
+    }
 
     nsCOMPtr<imgIDecoderObserver> mObserver;
     ImageObserver* mNext;
