@@ -41,6 +41,7 @@ XPIDLSRCS =					\
   	.\nsIDOMXULSelectCntrlEl.idl     \
   	.\nsIDOMXULSelectCntrlItemEl.idl     \
   	.\nsIDOMXULMultSelectCntrlEl.idl \
+	.\nsIDOMXULMenuBarElement.idl \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

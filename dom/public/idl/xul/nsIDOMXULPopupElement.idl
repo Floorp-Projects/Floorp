@@ -54,7 +54,8 @@ interface nsIDOMXULPopupElement : nsIDOMXULElement {
   const unsigned short      AFTER_POINTER                  = 11;
 
   attribute DOMString position;
-  
+  attribute nsIDOMElement activeItem;
+
   void showPopup(in unsigned short alignment, 
                  in nsIDOMElement target,
                  in nsIDOMElement anchor);
