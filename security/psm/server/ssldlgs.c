@@ -79,7 +79,8 @@ SSMStatus SSM_SSLMakeBadClientAuthDialog(SSMSSLDataConnection* conn)
     /* fire up the UI */
     rv = SSMControlConnection_SendUIEvent(SSMCONTROLCONNECTION(conn), "get", 
 					  "bad_client_auth", 
-					  SSMRESOURCE(conn), NULL,&SSMRESOURCE(conn)->m_clientContext);
+					  SSMRESOURCE(conn), NULL,
+                      &SSMRESOURCE(conn)->m_clientContext, PR_TRUE);
     if (rv != SSM_SUCCESS) {
 	goto loser;
     }
@@ -294,7 +295,7 @@ SSMStatus SSM_SSLMakeClientAuthDialog(SSMSSLDataConnection* conn)
     /* fire up the UI */
     rv = SSMControlConnection_SendUIEvent(SSMCONTROLCONNECTION(conn), "get", 
 					  "client_auth", SSMRESOURCE(conn), 
-					  NULL, &SSMRESOURCE(conn)->m_clientContext);
+					  NULL, &SSMRESOURCE(conn)->m_clientContext, PR_TRUE);
     if (rv != SSM_SUCCESS) {
 	goto loser;
     }
@@ -666,7 +667,7 @@ SECStatus SSM_SSLMakeCertExpiredDialog(CERTCertificate* cert,
 
     /* fire up the UI */
     if (SSMControlConnection_SendUIEvent(SSMCONTROLCONNECTION(conn), "get", 
-		baseRef, SSMRESOURCE(conn), NULL,&SSMRESOURCE(conn)->m_clientContext) != SSM_SUCCESS) {
+		baseRef, SSMRESOURCE(conn), NULL,&SSMRESOURCE(conn)->m_clientContext, PR_TRUE) != SSM_SUCCESS) {
         rv = SECFailure;
         goto loser;
     }
@@ -1184,7 +1185,9 @@ SECStatus SSM_SSLMakeCertBadDomainDialog(CERTCertificate* cert,
     /* fire up the UI */
     if (SSMControlConnection_SendUIEvent(SSMCONTROLCONNECTION(conn), "get", 
 					 "bad_server_cert_domain", 
-					 SSMRESOURCE(conn), NULL, &SSMRESOURCE(conn)->m_clientContext) != SSM_SUCCESS) {
+					 SSMRESOURCE(conn), NULL, 
+                     &SSMRESOURCE(conn)->m_clientContext, 
+                     PR_TRUE) != SSM_SUCCESS) {
         rv = SECFailure;
         goto loser;
     }
@@ -1436,8 +1439,8 @@ SECStatus SSM_SSLMakeUnknownIssuerDialog(CERTCertificate* cert,
     /* fire up the UI */
     if (SSMControlConnection_SendUIEvent(SSMCONTROLCONNECTION(conn), "get", 
 					 "bad_server_cert_unknown_issuer1", 
-					 SSMRESOURCE(conn), NULL, &SSMRESOURCE(conn)->m_clientContext) != 
-	SSM_SUCCESS) {
+					 SSMRESOURCE(conn), NULL, 
+                     &SSMRESOURCE(conn)->m_clientContext, PR_TRUE) != SSM_SUCCESS) {
 	rv = SECFailure;
 	goto loser;
     }
@@ -1549,7 +1552,7 @@ SSMStatus ssm_http_unknown_issuer_step1_handle_next_button(HTTPRequest* req)
     /* fire up the next dialog */
     rv = SSMControlConnection_SendUIEvent(SSMCONTROLCONNECTION(conn), "get", 
 					  "bad_server_cert_unknown_issuer2", 
-					  SSMRESOURCE(conn), NULL, &SSMRESOURCE(conn)->m_clientContext);
+					  SSMRESOURCE(conn), NULL, &SSMRESOURCE(conn)->m_clientContext, PR_TRUE);
     if (rv != SSM_SUCCESS) {
 	goto loser;
     }

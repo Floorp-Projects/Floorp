@@ -269,7 +269,8 @@ ssmpkcs12context_createpkcs12file(SSMPKCS12Context *cxt,
                                           SSMRESOURCE(cxt), 
                                           (numCerts > 1) ? "multipleCerts=1" :
                                                            NULL, 
-                                          &SSMRESOURCE(cxt)->m_clientContext);
+                                          &SSMRESOURCE(cxt)->m_clientContext,
+                                          PR_TRUE);
     if (rv != SSM_SUCCESS) {
         SSM_UnlockResource(SSMRESOURCE(cxt));
         goto loser;
@@ -600,7 +601,9 @@ SSMPKCS12Context_ChooseSlotForImport(SSMPKCS12Context *cxt,
                                           "get", 
                                           "select_token",
                                           &cxt->super,
-                                          mech, &SSMRESOURCE(cxt)->m_clientContext);
+                                          mech, 
+                                          &SSMRESOURCE(cxt)->m_clientContext,
+                                          PR_TRUE);
     if (rv != SSM_SUCCESS) {
         SSM_UnlockResource(&cxt->super);
         return NULL;
@@ -894,7 +897,8 @@ void SSMPKCS12Context_BackupMultipleCertsThread(void *arg)
     rv = SSMControlConnection_SendUIEvent(connection, 
                                           "get", "backup_new_cert",
                                           &p12Cxt->super, NULL, 
-                                          &p12Cxt->super.m_clientContext);
+                                          &p12Cxt->super.m_clientContext,
+                                          PR_TRUE);
     PR_ASSERT(SSMRESOURCE(p12Cxt)->m_buttonType == SSM_BUTTON_NONE);
     if (rv == SSM_SUCCESS) {
         while (SSMRESOURCE(p12Cxt)->m_buttonType == SSM_BUTTON_NONE) {

@@ -168,7 +168,8 @@ SSMStatus SSMKeyGenContext_GetSlot(SSMKeyGenContext * keyctxt,
 						"select_token",
 						(SSMResource *)keyctxt,
 						mech,
-						&((SSMResource*)keyctxt)->m_clientContext);
+						&((SSMResource*)keyctxt)->m_clientContext,
+						PR_TRUE);
 	  if (rv != SSM_SUCCESS) {
 	    if (keyctxt->super.m_UILock != NULL) {
 	      PR_ExitMonitor(keyctxt->super.m_UILock);

@@ -605,6 +605,13 @@ SSM_GetResourceReference(SSMResource *res)
     SSM_LockResource(res);
     res->m_refCount++;
     SSM_DEBUG("Get ref - rsrcid: %ld ++refcnt: %ld\n", res->m_id, res->m_refCount);
+    switch (res->m_classType) {
+    case SSM_RESTYPE_CONTROL_CONNECTION:
+        SSM_DEBUG("Getting a reference for the control connection\n");
+        break;
+    default:
+        break;
+    }
     SSM_UnlockResource(res);
 
     return PR_SUCCESS;
@@ -624,6 +631,13 @@ SSM_FreeResource(SSMResource *res)
     refcnt = --(res->m_refCount);
     SSM_DEBUG("Free ref - rsrcid: %ld --refcnt: %ld\n", res->m_id, res->m_refCount);
     res->m_refCount = refcnt;
+    switch (res->m_classType) {
+    case SSM_RESTYPE_CONTROL_CONNECTION:
+        SSM_DEBUG("Giving up a reference to the control connection\n");
+        break;
+    default:
+        break;
+    }
     SSM_UnlockResource(res);
 
     /* need to handle race condition on destroy */

@@ -583,8 +583,8 @@ certificate_conflict(SSMControlConnection * cx, SECItem * derCert,
            rv = SECFailure;
            if (sendUIEvent && (SSMControlConnection_SendUIEvent(cx, 
                                                 "get", "cert_already_exists",
-						NULL, NULL, NULL)) == SSM_SUCCESS)
-				rv = SECSuccess;
+						NULL, NULL, NULL, PR_TRUE)) == SSM_SUCCESS)
+	     rv = SECSuccess;
            ret = PR_FALSE;
            goto done;
        } else 
@@ -969,7 +969,8 @@ SSMStatus SSM_CertCAImportCommandHandler1(HTTPRequest *req)
       rv=SSMControlConnection_SendUIEvent(req->ctrlconn, 
 				          "get", "import_ca_cert2", 
 					  req->target, NULL, 
-					  &req->target->m_clientContext);
+					  &req->target->m_clientContext, 
+					  PR_TRUE);
       if (rv != PR_SUCCESS) {
       /* problem! */
         SSM_DEBUG("Cannot fire second dialog for CA cert importation!\n");
@@ -1113,7 +1114,7 @@ static void SSM_ImportCACert(void * arg)
   SSM_LockUIEvent(certObj);
   rv = SSMControlConnection_SendUIEvent(ctrl, "get", "import_ca_cert1", 
 					certObj, params, 
-					&certObj->m_clientContext);
+					&certObj->m_clientContext, PR_TRUE);
   if (rv != PR_SUCCESS)  {
     SSM_DEBUG("Cannot fire up first import CA cert dialog!\n");
     goto done;

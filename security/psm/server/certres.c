@@ -771,7 +771,8 @@ SSMStatus SSM_ProcessCertDeleteButton(HTTPRequest * req)
 		       formName);
   SSM_LockUIEvent(&req->ctrlconn->super.super);
   rv = SSMControlConnection_SendUIEvent(req->ctrlconn, "cert", "delete_cert", 
-					target, params, &target->m_clientContext);
+					target, params, 
+					&target->m_clientContext, PR_TRUE);
   SSM_WaitUIEvent(&req->ctrlconn->super.super, PR_INTERVAL_NO_TIMEOUT);
   /* See if the user canceled, if so send back HTTP_NO_CONTENT
    * so security advisor doesn't redraw the same content.
@@ -2171,7 +2172,8 @@ SSMStatus SSM_ProcessLDAPWindow(HTTPRequest * req)
     SSMControlConnection_SendUIEvent(req->ctrlconn, "get", 
                                      "show_followup", NULL, 
 				     "result=no_ldap_setup", 
-                                     &((SSMResource *)req->ctrlconn)->m_clientContext);
+                                     &((SSMResource *)req->ctrlconn)->m_clientContext,
+				     PR_TRUE);
     goto loser;
   }
     
@@ -2200,7 +2202,8 @@ SSMStatus SSM_ProcessLDAPWindow(HTTPRequest * req)
   SSM_LockUIEvent(target);
   rv = SSMControlConnection_SendUIEvent(req->ctrlconn, "get", 
 					"ldap_request", target, 
-					params, &target->m_clientContext);
+					params, &target->m_clientContext, 
+					PR_TRUE);
   if (rv != SSM_SUCCESS) { 
     SSM_UnlockUIEvent(target);
     goto loser;

@@ -112,7 +112,8 @@ SSMKeyGenContext_Init(SSMKeyGenContext *ct,
                                           "keygen_window",
                                           SSMRESOURCE(ct),
                                           NULL,
-                                          &SSMRESOURCE(ct)->m_clientContext);
+                                          &SSMRESOURCE(ct)->m_clientContext,
+                                          PR_FALSE);
     /*
      * UI isn't crucial for the keygen to work, don't bail if sending UI
      * didn't work.
@@ -945,7 +946,8 @@ SSMKeyGenContext_SendEscrowWarning(SSMKeyGenContext   *ct,
     rv = SSMControlConnection_SendUIEvent(SSMRESOURCE(ct)->m_connection,
                                           "get", "escrow_warning",
                                           SSMRESOURCE(ct), NULL, 
-                                          &SSMRESOURCE(ct)->m_clientContext);
+                                          &SSMRESOURCE(ct)->m_clientContext,
+                                          PR_FALSE);
     if (rv != SSM_SUCCESS) {
         goto loser;
     }
