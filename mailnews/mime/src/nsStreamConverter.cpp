@@ -649,3 +649,4 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, co
 
 	return Init(aUri, aListener, aChannel);
 }
+

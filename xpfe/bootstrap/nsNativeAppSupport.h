@@ -23,3 +23,4 @@ void NS_ShowSplashScreen();
 void NS_HideSplashScreen();
 
 PRBool NS_CanRun();
+
