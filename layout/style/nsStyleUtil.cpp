@@ -173,64 +173,116 @@ static nscoord NewCalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
                                        float aScalingFactor, nsIPresContext* aPresContext,
                                        nsFontSizeType aFontSizeType)
 {
-#define sFontSizeTableMin		9 
-#define sFontSizeTableMax		16 
+#define sFontSizeTableMin  9 
+#define sFontSizeTableMax 16 
 
-		static PRInt32 sFontSizeTable[sFontSizeTableMax - sFontSizeTableMin + 1][8] = {
-											{ 9,    9,     9,     9,    11,    14,    18,    27},
-											{ 9,    9,     9,    10,    12,    15,    20,    30},
-											{ 9,    9,    10,    11,    13,    17,    22,    33},
-                   		{ 9,    9,    10,    12,    14,    18,    24,    36},
-                   		{ 9,   10,    12,    13,    16,    20,    26,    39},
-                  		{ 9,   10,    12,    14,    17,    21,    28,    42},
-                   		{ 9,   10,    13,    15,    18,    23,    30,    45},
-                  		{ 9,   10,    13,    16,    18,    24,    32,    48} };
-// HTML                       1      2      3      4      5      6      7
-// CSS                  xxs   xs     s      m      l     xl     xxl
-//                                          |
-//                                      user pref
+#if 1
+  static PRInt32 sFontSizeTable[sFontSizeTableMax - sFontSizeTableMin + 1][8] =
+  {
+      { 9,    9,     9,     9,    11,    14,    18,    27},
+      { 9,    9,     9,    10,    12,    15,    20,    30},
+      { 9,    9,    10,    11,    13,    17,    22,    33},
+      { 9,    9,    10,    12,    14,    18,    24,    36},
+      { 9,   10,    12,    13,    16,    20,    26,    39},
+      { 9,   10,    12,    14,    17,    21,    28,    42},
+      { 9,   10,    13,    15,    18,    23,    30,    45},
+      { 9,   10,    13,    16,    18,    24,    32,    48}
+  };
+// HTML       1      2      3      4      5      6      7
+// CSS  xxs   xs     s      m      l     xl     xxl
+//                          |
+//                      user pref
+//
+#else
+//
+// This table gives us compatibility with WinNav4 for the default fonts only.
+// In WinNav4, the default fonts were:
+//
+//     Times/12pt ==   Times/16px at 96ppi
+//   Courier/10pt == Courier/13px at 96ppi
+//
+// The 2 lines below marked "anchored" have the exact pixel sizes used by
+// WinNav4 for Times/12pt and Courier/10pt at 96ppi. As you can see, the
+// HTML size 3 (user pref) for those 2 anchored lines is 13px and 16px.
+//
+// All values other than the anchored values were filled in by hand, never
+// going below 9px, and maintaining a "diagonal" relationship. See for
+// example the 13s -- they follow a diagonal line through the table.
+//
+  static PRInt32 sFontSizeTable[sFontSizeTableMax - sFontSizeTableMin + 1][8] =
+  {
+      { 9,    9,     9,     9,    11,    14,    18,    28 },
+      { 9,    9,     9,    10,    12,    15,    20,    31 },
+      { 9,    9,     9,    11,    13,    17,    22,    34 },
+      { 9,    9,    10,    12,    14,    18,    24,    37 },
+      { 9,    9,    10,    13,    16,    20,    26,    40 }, // anchored (13)
+      { 9,    9,    11,    14,    17,    21,    28,    42 },
+      { 9,   10,    12,    15,    17,    23,    30,    45 },
+      { 9,   10,    13,    16,    18,    24,    32,    48 }  // anchored (16)
+  };
+// HTML       1      2      3      4      5      6      7
+// CSS  xxs   xs     s      m      l     xl     xxl
+//                          |
+//                      user pref
+#endif
 
-		static PRInt32 sFontSizeFactors[8] = {
-											60,		75,			89,		100,   120,   150,   200,   300 };
+#if 0
+//
+// These are the exact pixel values used by WinIE5 at 96ppi.
+//
+      { ?,    8,    11,    12,    13,    16,    21,    32 }, // smallest
+      { ?,    9,    12,    13,    16,    21,    27,    40 }, // smaller
+      { ?,   10,    13,    16,    18,    24,    32,    48 }, // medium
+      { ?,   13,    16,    19,    21,    27,    37,    ?? }, // larger
+      { ?,   16,    19,    21,    24,    32,    43,    ?? }  // largest
+//
+// HTML       1      2      3      4      5      6      7
+// CSS  ?     ?      ?      ?      ?      ?      ?      ?
+//
+// (CSS not tested yet.)
+//
+#endif
 
-		static PRInt32 sCSSColumns[7]  = {0, 1, 2, 3, 4, 5, 6};		// xxs...xxl
-		static PRInt32 sHTMLColumns[7] = {1, 2, 3, 4, 5, 6, 7};		// 1...7
+  static PRInt32 sFontSizeFactors[8] = { 60,75,89,100,120,150,200,300 };
 
-	double dFontSize;
+  static PRInt32 sCSSColumns[7]  = {0, 1, 2, 3, 4, 5, 6}; // xxs...xxl
+  static PRInt32 sHTMLColumns[7] = {1, 2, 3, 4, 5, 6, 7}; // 1...7
 
-	if (aFontSizeType == eFontSize_HTML) {
-		aHTMLSize--;    // input as 1-7
-	}
+  double dFontSize;
 
-	if (aHTMLSize < 0)
-		aHTMLSize = 0;
-	else if (aHTMLSize > 6)
-		aHTMLSize = 6;
+  if (aFontSizeType == eFontSize_HTML) {
+    aHTMLSize--;    // input as 1-7
+  }
 
-	PRInt32* column;
-	switch (aFontSizeType)
-	{
-		case eFontSize_HTML: 	column = sHTMLColumns;		break;
-		case eFontSize_CSS:		column = sCSSColumns;			break;
-	}
+  if (aHTMLSize < 0)
+    aHTMLSize = 0;
+  else if (aHTMLSize > 6)
+    aHTMLSize = 6;
 
-	float t2p;
-	aPresContext->GetTwipsToPixels(&t2p);
+  PRInt32* column;
+  switch (aFontSizeType)
+  {
+    case eFontSize_HTML: column = sHTMLColumns; break;
+    case eFontSize_CSS:  column = sCSSColumns;  break;
+  }
+
+  float t2p;
+  aPresContext->GetTwipsToPixels(&t2p);
   PRInt32 fontSize = NSTwipsToIntPixels(aBasePointSize, t2p);
 
-	if ((fontSize >= sFontSizeTableMin) && (fontSize <= sFontSizeTableMax))
-	{
-		float p2t;
-		aPresContext->GetPixelsToTwips(&p2t);
+  if ((fontSize >= sFontSizeTableMin) && (fontSize <= sFontSizeTableMax))
+  {
+    float p2t;
+    aPresContext->GetPixelsToTwips(&p2t);
 
-		PRInt32 row = fontSize - sFontSizeTableMin;
-		dFontSize = NSFloatPixelsToTwips(sFontSizeTable[row][column[aHTMLSize]], p2t);
-	}
-	else
-	{
-		PRInt32 factor = sFontSizeFactors[column[aHTMLSize]];
-		dFontSize = (factor * aBasePointSize) / 100;
-	}
+    PRInt32 row = fontSize - sFontSizeTableMin;
+    dFontSize = NSIntPixelsToTwips(sFontSizeTable[row][column[aHTMLSize]], p2t);
+  }
+  else
+  {
+    PRInt32 factor = sFontSizeFactors[column[aHTMLSize]];
+    dFontSize = (factor * aBasePointSize) / 100;
+  }
 
   dFontSize *= aScalingFactor;
 
