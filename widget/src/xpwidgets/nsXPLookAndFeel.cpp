@@ -246,8 +246,8 @@ static int colorPrefChanged (const char *newpref, void *data)
 #ifdef DEBUG_akkana
           printf("====== Changed color pref %s to 0x%lx\n",
                  np->name, (long)np->colorVar);
-        }
 #endif
+        }
         PL_strfree(colorStr);
       }
     }
