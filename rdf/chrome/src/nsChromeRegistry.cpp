@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -64,6 +64,8 @@
 #include "nsIXULDocument.h"
 #include "nsINameSpaceManager.h"
 
+static char kChromePrefix[] = "chrome://";
+
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
@@ -84,11 +86,6 @@ DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, version);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, author);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, siteURL);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, previewImageURL);
-
-// XXX This nasty function should disappear when we land Necko completely and 
-// change chrome://global/skin/foo to chrome://skin@global/foo
-//
-void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, char** o_remaining);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -417,36 +414,174 @@ nsChromeRegistry::~nsChromeRegistry()
     }
 }
 
-NS_IMPL_ISUPPORTS1(nsChromeRegistry, nsIChromeRegistry)
+NS_IMPL_ISUPPORTS1(nsChromeRegistry, nsIChromeRegistry);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChromeRegistry methods:
-/*
-    The ConvertChromeURL takes a chrome URL and converts it into a resource: or 
-    an HTTP: url type with certain rules. Here are the current portions of a 
-    chrome: url that make up the chrome-
 
-            chrome://global/skin/foo?bar
-            \------/ \----/\---/ \-----/
-                |       |     |     |
-                |       |     |     `-- RemainingPortion
-                |       |     |
-                |       |     `-- Provider 
-                |       |
-                |       `-- Package
-                |
-                '-- Always "chrome://"
+static nsresult
+SplitURL(nsIURI* aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCString& aFile)
+{
+    // Splits a "chrome:" URL into it's package, provider, and file parts.
+    // Here are the current portions of a 
+    // chrome: url that make up the chrome-
+    //
+    //     chrome://global/skin/foo?bar
+    //     \------/ \----/\---/ \-----/
+    //         |       |     |     |
+    //         |       |     |     `-- RemainingPortion
+    //         |       |     |
+    //         |       |     `-- Provider 
+    //         |       |
+    //         |       `-- Package
+    //         |
+    //         `-- Always "chrome://"
+    //
+    //
+    // Sometime in future when Necko lands completely this will change
+    // to the following syntax:
+    //
+    //    chrome://skin@global/foo?bar
+    //
+    // This will make the parsing simpler and quicker (since the URL
+    // parsing already takes this into account)
 
+    nsresult rv;
 
-    Sometime in future when Necko lands completely this will change to the 
-    following syntax-
+#ifdef USE_NECKO_PARSING // #define this somewhere when we're ready to switch.
 
-            chrome://skin@global/foo?bar
+#ifdef NS_DEBUG
+    {
+        //Ensure that we got a chrome url!
+        nsXPIDLCString scheme;
+        rv = aChromeURL->GetScheme(getter_Copies(scheme));
+        if (NS_FAILED(rv)) return rv;
 
-    This will make the parsing simpler and quicker (since the URL parsing already
-    takes this into account)
+        if (0 != PL_strncmp(scheme, "chrome", 6)) {
+            NS_ERROR("Bad scheme URL in chrome URL conversion!");
+            return NS_ERROR_FAILURE;
+        }
+    }
+#endif
 
-*/
+    {
+        nsXPIDLCString package;
+
+        rv = aChromeURL->GetHost(getter_Copies(package));
+        if (NS_FAILED(rv)) return rv;
+
+        aPackage = package;
+    }
+
+    {
+        nsXPIDLCString provider;
+
+        rv = aChromeURL->GetPreHost(getter_Copies(provider));
+        if (NS_FAILED(rv)) return rv;
+
+        // XXX May need to cull out leading slash here.
+
+        aProvider = provider;
+    }
+
+    {
+        nsXPIDLCString file;
+
+        rv = aChromeURL->GetPath(getter_Copies(file));
+        if (NS_FAILED(rv)) return rv;
+
+        // XXX May need to cull out leading slash here; a "relative"
+        // path is expected for the file.
+
+        aFile = file;
+    }
+
+#else
+
+    char* str;
+    rv = aChromeURI->GetSpec(&str);
+    if (NS_FAILED(rv)) return rv;
+
+    if (! str)
+        return NS_ERROR_INVALID_ARG;
+
+    PRInt32 len = PL_strlen(str);
+    nsCAutoString spec = CBufDescriptor(str, PR_FALSE, len + 1, len);
+
+    // We only want to deal with "chrome:" URLs here. We could return
+    // an error code if the URL isn't properly prefixed here...
+    if (PL_strncmp(spec, kChromePrefix, sizeof(kChromePrefix) - 1) != 0)
+        return NS_ERROR_INVALID_ARG;
+
+    // Cull out the "package" string; e.g., "navigator"
+    spec.Right(aPackage, spec.Length() - (sizeof(kChromePrefix) - 1));
+
+    PRInt32 idx;
+    idx = aPackage.FindChar('/');
+    if (idx < 0)
+        return NS_OK;
+
+    // Cull out the "provider" string; e.g., "content"
+    aPackage.Right(aProvider, aPackage.Length() - (idx + 1));
+    aPackage.Truncate(idx);
+
+    idx = aProvider.FindChar('/');
+    if (idx < 0) {
+        // Force the provider to end with a '/'
+        idx = aProvider.Length();
+        aProvider.Append('/');
+    }
+
+    // Cull out the "file"; e.g., "navigator.xul"
+    aProvider.Right(aFile, aProvider.Length() - (idx + 1));
+    aProvider.Truncate(idx);
+
+#endif // USE_NECKO_PARSING
+
+    if (aFile.Length() == 0) {
+        // If there is no file, then construct the default file
+        aFile = aPackage;
+
+        if (aProvider.Equals("content")) {
+            aFile += ".xul";
+        }
+        else if (aProvider.Equals("skin")) {
+            aFile += ".css";
+        }
+        else if (aProvider.Equals("locale")) {
+            aFile += ".dtd";
+        }
+        else {
+            NS_ERROR("unknown provider");
+        }
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::Canonify(nsIURI* aChromeURI)
+{
+    // Canonicalize 'chrome:' URLs. We'll take any 'chrome:' URL
+    // without a filename, and change it to a URL -with- a filename;
+    // e.g., "chrome://navigator/content" to
+    // "chrome://navigator/content/navigator.xul".
+    if (! aChromeURI)
+        return NS_ERROR_NULL_POINTER;
+
+    nsCAutoString package, provider, file;
+    SplitURL(aChromeURI, package, provider, file);
+
+    nsCAutoString canonical = kChromePrefix;
+    canonical += package;
+    canonical += "/";
+    canonical += provider;
+    canonical += "/";
+    canonical += file;
+
+    return aChromeURI->SetSpec(canonical);
+}
+
 NS_IMETHODIMP
 nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 {
@@ -455,134 +590,78 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     if (!aChromeURL)
         return NS_ERROR_NULL_POINTER;
 
-#ifdef NS_DEBUG
-    //Ensure that we got a chrome url!
-    nsXPIDLCString scheme;
-    rv = aChromeURL->GetScheme(getter_Copies(scheme));
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION((0 == PL_strncmp(scheme, "chrome", 6)), 
-        "Bad scheme URL in chrome URL conversion!");
-    if (0 != PL_strncmp(scheme, "chrome", 6))
-        return NS_ERROR_FAILURE;
-#endif
-
     // Obtain the package, provider and remaining from the URL
-    nsXPIDLCString package, provider, remaining;
+    nsCAutoString package, provider, remaining;
 
-#if 0 // This change happens when we switch to using chrome://skin@global/foo..
-    rv = aChromeURL->GetHost(getter_Copies(package));
+    rv = SplitURL(aChromeURL, package, provider, remaining);
     if (NS_FAILED(rv)) return rv;
-    rv = aChromeURL->GetPreHost(getter_Copies(provider));
-    if (NS_FAILED(rv)) return rv;
-    rv = aChromeURL->GetPath(getter_Copies(remaining));
-    if (NS_FAILED(rv)) return rv;
-#else // For now however...
-
-    rv = aChromeURL->GetHost(getter_Copies(package));
-    if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString tempPath;
-    rv = aChromeURL->GetPath(getter_Copies(tempPath));
-    if (NS_FAILED(rv)) return rv;
-
-    BreakProviderAndRemainingFromPath(
-        (const char*)tempPath, 
-        getter_Copies(provider), 
-        getter_Copies(remaining));
-
-#endif
 
     // Construct the lookup string-
     // which is basically chrome:// + package + provider
     
-    nsAutoString lookup("chrome://");
-
+    nsCAutoString lookup = kChromePrefix;
     lookup += package; // no trailing slash here
+    lookup += '/';
+    lookup += provider;
+    lookup += '/';
     
-    NS_ASSERTION(*provider == '/', "No leading slash here!");
-    
-    //definitely have a leading slash...
-    if (*provider != '/')
-        lookup += '/';
-    lookup += provider; 
-    
-    // end it on a slash if none is present
-    if (lookup.CharAt(lookup.Length()-1) != '/')
-        lookup += '/';
-
     // Get the chromeResource from this lookup string
     nsCOMPtr<nsIRDFResource> chromeResource;
-    if (NS_FAILED(rv = GetPackageTypeResource(lookup, getter_AddRefs(chromeResource)))) {
-        NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
-        return rv;
-    }
+    rv = gRDFService->GetResource(lookup, getter_AddRefs(chromeResource));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to retrieve the resource corresponding to the chrome skin or content.");
+    if (NS_FAILED(rv)) return rv;
     
     // Using this chrome resource get the three basic things of a chrome entry-
     // base, name, main. and don't bail if they don't exist.
 
-    nsAutoString base, name, main;
-
-
     nsCOMPtr<nsIRDFDataSource> dataSource;
-    nsString packageStr(package), providerStr(provider);
-    InitializeDataSource(packageStr, providerStr, getter_AddRefs(dataSource));
+    InitializeDataSource(package, provider, getter_AddRefs(dataSource));
 
+    nsAutoString name;
     rv = GetChromeResource(dataSource, name, chromeResource, kCHROME_name);
     if (NS_FAILED (rv)) {
-        if (PL_strcmp(provider,"/locale") == 0)
-          name = "en-US";
+        if (provider.Equals("locale"))
+            name = "en-US";
         else
-          name = "default";
+            name = "default";
     }
 
+    nsAutoString base;
     rv = GetChromeResource(dataSource, base, chromeResource, kCHROME_base);
-    if (NS_FAILED(rv))
-    {
+
+    nsCAutoString result;
+
+    if (NS_SUCCEEDED(rv)) {
+        result.Assign(base);
+    }
+    else {
         // No base entry was found, default it to our cache.
-        base = "resource:/chrome/";
-        base += package;
-        if ((base.CharAt(base.Length()-1) != '/') && *provider != '/')
-            base += '/';
-        base += provider;
-        if (base.CharAt(base.Length()-1) != '/') 
-            base += '/';
+        result = "resource:/chrome/";
+        result += package;
+
+        if (result.Last() != '/')
+            result += '/';
+
+        result += provider;
+
+        if (result.Last() != '/')
+            result += '/';
+
         if (name.Length())
-            base += name;
-        if (base.CharAt(base.Length()-1) != '/')
-            base += '/';
+            result += name;
+
+        if (result.Last() != '/')
+            result += '/';
     }
 
-    NS_ASSERTION(base.CharAt(base.Length()-1) == '/', "Base doesn't end in a slash!");
-    if ('/' != base.CharAt(base.Length()-1))
-        base += '/';
+    NS_ASSERTION(result.Last() == '/', "Base doesn't end in a slash!");
+    if ('/' != result.Last())
+        result += '/';
   
     // Now we construct our finalString
-    nsAutoString finalString(base);
+    result += remaining;
 
-    if (!remaining || (0 == PL_strlen(remaining)))
-    {
-        rv = GetChromeResource(dataSource, main, chromeResource, kCHROME_main);
-        if (NS_FAILED(rv))
-        {
-            //we'd definitely need main for an empty remaining
-            //NS_ERROR("Unable to retrieve the main file registry entry for a chrome URL.");
-            //return rv;
-            main = package;
-            if (PL_strcmp(provider, "/skin") == 0)
-              main += ".css";
-            else if (PL_strcmp(provider, "/content") == 0)
-              main += ".xul";
-            else if (PL_strcmp(provider, "/locale") == 0)
-              main += ".dtd";
-        }
-        finalString += main;
-    }
-    else
-        finalString += remaining;
-
-    char* finalURI = finalString.ToNewCString();
-    aChromeURL->SetSpec(finalURI);
-
-    nsCRT::free(finalURI);
+    aChromeURL->SetSpec(result);
     return NS_OK;
 }
 
@@ -596,36 +675,18 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFD
     return NS_OK;
 
   // Obtain the package, provider and remaining from the URL
-  nsXPIDLCString package, provider, remaining;
+  nsCAutoString package, provider, remaining;
 
-#if 0 // This change happens when we switch to using chrome://skin@global/foo..
-  rv = aChromeURL->GetHost(getter_Copies(package));
+  rv = SplitURL(aChromeURL, package, provider, remaining);
   if (NS_FAILED(rv)) return rv;
-  rv = aChromeURL->GetPreHost(getter_Copies(provider));
-  if (NS_FAILED(rv)) return rv;
-  rv = aChromeURL->GetPath(getter_Copies(remaining));
-  if (NS_FAILED(rv)) return rv;
-#else // For now however...
-
-  rv = aChromeURL->GetHost(getter_Copies(package));
-  if (NS_FAILED(rv)) return rv;
-  nsXPIDLCString tempPath;
-  rv = aChromeURL->GetPath(getter_Copies(tempPath));
-  if (NS_FAILED(rv)) return rv;
-
-  BreakProviderAndRemainingFromPath(
-      (const char*)tempPath, 
-      getter_Copies(provider), 
-      getter_Copies(remaining));
-
-#endif
 
   nsCAutoString overlayFile;
 
   // Retrieve the mInner data source.
   overlayFile = "resource:/chrome/";
   overlayFile += package;
-  overlayFile += provider; // provider already has a / in the front of it
+  overlayFile += "/";
+  overlayFile += provider;
   overlayFile += "/";
   overlayFile += "overlays.rdf";
 
@@ -730,8 +791,8 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCAutoString &aFileName, n
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::InitializeDataSource(nsString &aPackage,
-                                       nsString &aProvider,
+nsChromeRegistry::InitializeDataSource(const nsString &aPackage,
+                                       const nsString &aProvider,
                                        nsIRDFDataSource **aResult,
                                        PRBool aUseProfileOnly)
 {
@@ -740,7 +801,8 @@ nsChromeRegistry::InitializeDataSource(nsString &aPackage,
     // Retrieve the mInner data source.
     chromeFile = "chrome/";
     chromeFile += aPackage;
-    chromeFile += aProvider; // provider already has a / in the front of it
+    chromeFile += "/";
+    chromeFile += aProvider;
     chromeFile += "/";
     overlayFile = chromeFile;
     chromeFile += "chrome.rdf";
@@ -850,34 +912,6 @@ nsChromeRegistry::GetChromeResource(nsIRDFDataSource *aDataSource,
 }
 
 ////////////////////////////////////////////////////////////////////////
-
-//
-// Path = provider/remaining
-// 
-void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, char** o_remaining)
-{
-    if (!i_path || !o_provider || !o_remaining)
-        return;
-    int len = PL_strlen(i_path);
-    NS_ASSERTION(len>1, "path is messed up!");
-    char* slash = PL_strchr(i_path+1, '/'); // +1 to skip the leading slash if any
-    if (slash)
-    {
-        *o_provider = PL_strndup(i_path, (slash - i_path)); // dont include the trailing slash
-        if (slash != (i_path + len-1)) // if that was not the last trailing slash...
-        {
-            // don't include the leading slash here as well...
-            *o_remaining = PL_strndup(slash+1, len - (slash-i_path + 1)); 
-        }
-        else
-            *o_remaining = nsnull;
-    }
-    else // everything is just the provider
-        *o_provider = PL_strndup(i_path, len);
-}
-
-
-
 
 // theme stuff
 

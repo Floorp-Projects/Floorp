@@ -384,7 +384,16 @@ nsChromeProtocolHandler::NewChannel(const char* aVerb, nsIURI* aURI,
     nsresult rv;
     nsCOMPtr<nsIChannel> result;
 
-    // First check the prototype cache to see if we've already got the
+    // Canonify the "chrome:" URL; e.g., so that we collapse
+    // "chrome://navigator/content/" and "chrome://navigator/content"
+    // and "chrome://navigator/content/navigator.xul".
+    NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = reg->Canonify(aURI);
+    if (NS_FAILED(rv)) return rv;
+
+    // Check the prototype cache to see if we've already got the
     // document in the cache.
     NS_WITH_SERVICE(nsIXULPrototypeCache, cache, kXULPrototypeCacheCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -402,9 +411,6 @@ nsChromeProtocolHandler::NewChannel(const char* aVerb, nsIURI* aURI,
     else {
         // Miss. Resolve the chrome URL using the registry and do a
         // normal necko load.
-        NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
         nsCOMPtr<nsIURI> chromeURI;
         rv = aURI->Clone(getter_AddRefs(chromeURI));        // don't mangle the original
         if (NS_FAILED(rv)) return rv;

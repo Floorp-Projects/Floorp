@@ -72,8 +72,8 @@ protected:
                                         const PRUnichar *aProviderName);
 
     NS_IMETHOD GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFDataSource **aResult);
-    NS_IMETHOD InitializeDataSource(nsString &aPackage,
-                                    nsString &aProvider,
+    NS_IMETHOD InitializeDataSource(const nsString &aPackage,
+                                    const nsString &aProvider,
                                     nsIRDFDataSource **aResult,
                                     PRBool aUseProfileDirOnly = PR_FALSE);
 
