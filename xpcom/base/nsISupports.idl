@@ -41,7 +41,7 @@
  */
 
 /* In order to get both the right typelib and the right header we force
-*  the 'real' output from xpidl to be commentout out in the generated header
+*  the 'real' output from xpidl to be commented out out in the generated header
 *  and includes a copy of the original nsISupports.h. This is all just to deal 
 *  with the Mac specific ": public __comobject" thing.
 */
