@@ -312,11 +312,18 @@ WSPCallContext::CallCompletionListener()
       partBinding->GetLocation(&location);
 
       nsCOMPtr<nsISOAPBlock> block;
-      if (location == nsISOAPPartBinding::LOCATION_HEADER) {
+      if (location == nsISOAPPartBinding::LOCATION_HEADER && 
+          headerEntry < headerCount) {
         block = do_QueryInterface(headerBlocks[headerEntry++]);
       }
-      else if (location == nsISOAPPartBinding::LOCATION_BODY) {
+      else if (location == nsISOAPPartBinding::LOCATION_BODY &&
+               bodyEntry < bodyCount) {
         block = do_QueryInterface(bodyBlocks[bodyEntry++]);
+      }
+
+      if (!block) {
+        rv = NS_ERROR_UNEXPECTED;
+        goto call_completion_end;
       }
 
       nsCOMPtr<nsISchemaComponent> schemaComponent;
