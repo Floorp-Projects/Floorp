@@ -54,9 +54,7 @@ endif
 
 ifdef MOZ_ENABLE_GTK2
 LIBS		+= \
-		-lgtkembedmoz \
-		$(XLIBS) \
-		$(NULL)
+		-lgtkembedmoz
 endif
 
 include $(topsrcdir)/config/config.mk
