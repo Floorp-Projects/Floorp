@@ -44,6 +44,7 @@ nsIAtom* nsHTMLAtoms::codebase;
 nsIAtom* nsHTMLAtoms::color;
 nsIAtom* nsHTMLAtoms::cols;
 nsIAtom* nsHTMLAtoms::colspan;
+nsIAtom* nsHTMLAtoms::columnPseudo;
 nsIAtom* nsHTMLAtoms::compact;
 nsIAtom* nsHTMLAtoms::coords;
 nsIAtom* nsHTMLAtoms::data;
@@ -103,6 +104,7 @@ nsIAtom* nsHTMLAtoms::prompt;
 nsIAtom* nsHTMLAtoms::readonly;
 nsIAtom* nsHTMLAtoms::rel;
 nsIAtom* nsHTMLAtoms::rightpadding;
+nsIAtom* nsHTMLAtoms::rootContentPseudo;
 nsIAtom* nsHTMLAtoms::rows;
 nsIAtom* nsHTMLAtoms::rowspan;
 nsIAtom* nsHTMLAtoms::scrolling;
@@ -165,6 +167,7 @@ void nsHTMLAtoms::AddrefAtoms()
     color = NS_NewAtom("COLOR");
     cols = NS_NewAtom("COLS");
     colspan = NS_NewAtom("COLSPAN");
+    columnPseudo = NS_NewAtom(":BODY-COLUMN");
     compact = NS_NewAtom("COMPACT");
     coords = NS_NewAtom("COORDS");
     dir = NS_NewAtom("DIR");
@@ -224,6 +227,7 @@ void nsHTMLAtoms::AddrefAtoms()
     readonly = NS_NewAtom("READONLY");
     rel = NS_NewAtom("REL");
     rightpadding = NS_NewAtom("RIGHTPADDING");
+    rootContentPseudo = NS_NewAtom(":ROOT-CONTENT");
     rows = NS_NewAtom("ROWS");
     rowspan = NS_NewAtom("ROWSPAN");
     scrolling = NS_NewAtom("SCROLLING");
@@ -287,6 +291,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(color);
     NS_RELEASE(cols);
     NS_RELEASE(colspan);
+    NS_RELEASE(columnPseudo);
     NS_RELEASE(compact);
     NS_RELEASE(coords);
     NS_RELEASE(dir);
@@ -346,6 +351,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(readonly);
     NS_RELEASE(rel);
     NS_RELEASE(rightpadding);
+    NS_RELEASE(rootContentPseudo);
     NS_RELEASE(rows);
     NS_RELEASE(rowspan);
     NS_RELEASE(scrolling);

@@ -34,6 +34,7 @@
 #include "nsGUIEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIViewManager.h"
+#include "nsHTMLAtoms.h"
 
 class RootFrame : public nsContainerFrame {
 public:
@@ -104,7 +105,7 @@ NS_METHOD RootFrame::ResizeReflow(nsIPresContext* aPresContext,
     // No. Create a pseudo frame
     mFirstChild = new RootContentFrame(mContent, this);
     mChildCount = 1;
-    nsIStyleContext* style = aPresContext->ResolveStyleContextFor(mContent, this);
+    nsIStyleContext* style = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::rootContentPseudo, this);
     mFirstChild->SetStyleContext(aPresContext,style);
     NS_RELEASE(style);
   }

@@ -128,6 +128,36 @@ nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
   return result;
 }
 
+nsIStyleContext*
+nsPresContext::ResolvePseudoStyleContextFor(nsIAtom* aPseudoTag,
+                                            nsIFrame* aParentFrame)
+{
+  nsIStyleContext* result = nsnull;
+
+  nsIStyleSet* set = mShell->GetStyleSet();
+  if (nsnull != set) {
+    result = set->ResolvePseudoStyleFor(this, aPseudoTag, aParentFrame);
+    NS_RELEASE(set);
+  }
+
+  return result;
+}
+
+nsIStyleContext*
+nsPresContext::ProbePseudoStyleContextFor(nsIAtom* aPseudoTag,
+                                          nsIFrame* aParentFrame)
+{
+  nsIStyleContext* result = nsnull;
+
+  nsIStyleSet* set = mShell->GetStyleSet();
+  if (nsnull != set) {
+    result = set->ProbePseudoStyleFor(this, aPseudoTag, aParentFrame);
+    NS_RELEASE(set);
+  }
+
+  return result;
+}
+
 nsIFontMetrics*
 nsPresContext::GetMetricsFor(const nsFont& aFont)
 {

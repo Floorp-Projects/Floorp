@@ -35,6 +35,10 @@ public:
   virtual nsIPresShell* GetShell();
   virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
                                                   nsIFrame* aParentFrame);
+  virtual nsIStyleContext* ResolvePseudoStyleContextFor(nsIAtom* aPseudoTag,
+                                                        nsIFrame* aParentFrame);
+  virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIAtom* aPseudoTag,
+                                                      nsIFrame* aParentFrame);
   virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
   virtual const nsFont& GetDefaultFont(void);
   NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult);
