@@ -387,8 +387,15 @@ PyG_Base::Release(void)
 NS_IMETHODIMP
 PyG_Base::GetWeakReference(nsIWeakReference **ret)
 {
+	// always delegate back to the "base" gateway for the object, as this tear-off
+	// interface may not live as long as the base.  So we recurse back to the base.
+	if (m_pBaseObject) {
+		NS_PRECONDITION(m_pWeakRef == nsnull, "Not a base object, but do have a weak-ref!");
+		return m_pBaseObject->GetWeakReference(ret);
+	}
 	NS_PRECONDITION(ret, "null pointer");
 	if (ret==nsnull) return NS_ERROR_INVALID_POINTER;
+	// explicit QI back to nsISupports
 	if (!m_pWeakRef) {
 		// First query for a weak reference - create it.
 		m_pWeakRef = new PyXPCOM_GatewayWeakReference(this);
