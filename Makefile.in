@@ -57,6 +57,10 @@ ifdef MOZ_OJI
 DIRS		+= js/src/liveconnect
 endif
 
+ifdef MOZ_JSDEBUGGER
+DIRS		+= js/jsd
+endif
+
 ifndef MOZ_NATIVE_ZLIB
 DIRS		+= modules/zlib
 endif
