@@ -78,7 +78,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
       if ($trusted !=="TRUE") {$trusted="FALSE"; }
 
       if (checkFormKey()) {
-        $sql = "UPDATE `userprofiles` SET `UserMode`= '$mode', `UserTrusted`= '$trusted' WHERE `UserID`='$i'";
+        $sql = "UPDATE `userprofiles` SET `UserMode`= '$mode', `UserTrusted`= '$trusted' WHERE `UserID`='$selected'";
         $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
       }
 
