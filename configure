@@ -970,7 +970,7 @@ MAKE_VERSION=3.78
 WINDRES_VERSION=2.14.90
 W32API_VERSION=2.4
 GNOMEVFS_VERSION=2.0
-GNOMEUI_VERSION=2.0
+GNOMEUI_VERSION=2.1.0
 
 MISSING_X=
 
@@ -12177,7 +12177,7 @@ echo "configure:12157: checking MOZ_GNOMEUI_LIBS" >&5
      MOZ_ENABLE_GNOMEUI=1
   else
      
-            if test "$MOZ_ENABLE_GNOMEUI" == "force"
+            if test "$MOZ_ENABLE_GNOMEUI" = "force"
             then
                 { echo "configure: error: * * * Could not find libgnomeui-2.0 >= $GNOMEUI_VERSION" 1>&2; exit 1; }
             fi
