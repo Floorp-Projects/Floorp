@@ -53,7 +53,7 @@ interface WindowInternal : Window {
                  attribute  long screenY;
                  attribute  long pageXOffset;
                  attribute  long pageYOffset;
-		readonly attribute  unsigned long length;
+        readonly replaceable attribute  unsigned long length;
 
         void  dump(in wstring str);
         void  alert(/* ... */);
@@ -76,7 +76,7 @@ interface WindowInternal : Window {
         void  resizeBy(in long widthDif, in long heightDif);
         void  sizeToContent();
         void  GetAttention();
-				void  scroll(in long xScroll, in long yScroll);
+        void  scroll(in long xScroll, in long yScroll);
 
         void clearTimeout(in long timerID);
         void clearInterval(in long timerID);
@@ -95,9 +95,9 @@ interface WindowInternal : Window {
         noscript void  close();
         void  close(/* ... */);
 
-		void updateCommands(in DOMString action);
+        void updateCommands(in DOMString action);
 
-		DOMString escape(in DOMString str);
+        DOMString escape(in DOMString str);
         DOMString unescape(in DOMString str);
 
 };
