@@ -96,7 +96,6 @@ nsButtonPrefListener.prototype =
   domain: "editor.use_css",
   observe: function(subject, topic, prefName)
   {
-    dump("FOOOOO\n");
     // verify that we're changing a button pref
     if (topic != "nsPref:changed") return;
     if (prefName.substr(0, this.domain.length) != this.domain) return;
@@ -106,16 +105,19 @@ nsButtonPrefListener.prototype =
     if (button) {
       var prefs = GetPrefs();
       var useCSS = prefs.getBoolPref(prefName);
-      if (useCSS) {
+      var htmlEditor = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor);
+      if (useCSS && htmlEditor) {
         button.removeAttribute("disabled");
-        var state = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor).GetHighlightColor(mixedObj);
+        var state = htmlEditor.GetHighlightColor(mixedObj);
         button.setAttribute("state", state);
       }      
       else {
         button.setAttribute("disabled", "true");
         button.setAttribute("state", "transparent");
       }
-      editorShell.CSSPrefChangedCallback(useCSS);
+      if (htmlEditor) {
+        htmlEditor.SetCSSEnabled(useCSS);
+      }
     }
   }
 }
