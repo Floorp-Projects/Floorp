@@ -123,6 +123,8 @@ bin\components\related.dll
 bin\components\related.xpt
 bin\components\search.dll
 bin\components\search.xpt
+bin\components\shistory.dll
+bin\components\shistory.xpt
 bin\components\sidebar.xpt
 bin\components\signonviewer.xpt
 bin\components\streamconv.xpt
