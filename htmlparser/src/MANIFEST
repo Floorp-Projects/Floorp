@@ -23,3 +23,4 @@ nsHTMLEntities.h
 nsWellFormedDTD.h
 nsExpatDTD.h
 nsIExpatTokenizer.h
+nsParserError.h
