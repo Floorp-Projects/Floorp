@@ -36,6 +36,7 @@
 #include "nsIRefreshUrl.h"
 #include "nsITimer.h"
 #include "nsIDocumentLoaderObserver.h"
+#include "nsIDocumentLoadInfo.h"
 #include "nsVoidArray.h"
 #include "nsIHttpUrl.h"
 
@@ -65,6 +66,7 @@ NS_DEFINE_IID(kIDocumentLoaderIID,        NS_IDOCUMENTLOADER_IID);
 NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 NS_DEFINE_IID(kDocLoaderImplIID,          NS_DOCLOADERIMPL_IID);
 NS_DEFINE_IID(kDocumentBindInfoIID,       NS_DOCUMENTBINDINFO_IID);
+NS_DEFINE_IID(kIDocumentLoadInfoIID,      NS_IDOCUMENTLOADINFO_IID);
 NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
 NS_DEFINE_IID(kHTTPURLIID,          NS_IHTTPURL_IID);
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -81,7 +83,8 @@ NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
  */
 class nsDocumentBindInfo : public nsIStreamListener, 
                            public nsINetSupport,
-                           public nsIRefreshUrl
+                           public nsIRefreshUrl,
+                           public nsIDocumentLoadInfo
 {
 public:
     nsDocumentBindInfo(nsDocLoaderImpl* aDocLoader,
@@ -119,11 +122,17 @@ public:
     NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
                                        nsString &aPassword);
 
+    nsresult GetStatus(void) { return mStatus; }
+
+    /* nsIDocumentLoadInfo interface methods */
+    NS_IMETHOD GetCommand(nsString &aCommand);
+    NS_IMETHOD GetURL(nsIURL **aURL);
+    NS_IMETHOD GetContainer(nsIContentViewerContainer **aContainer);
+    NS_IMETHOD GetExtraInfo(nsISupports **aExtraInfo);
+
     /* nsIRefreshURL interface methods... */
     NS_IMETHOD RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat);
     NS_IMETHOD CancelRefreshURLTimers(void);
-
-    nsresult GetStatus(void) { return mStatus; }
 
 protected:
     virtual ~nsDocumentBindInfo();
@@ -758,6 +767,11 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
     AddRef();
     return NS_OK;
   }
+  if (aIID.Equals(kIDocumentLoadInfoIID)) {
+    *aInstancePtrResult = (void*) ((nsIDocumentLoadInfo*)this);
+    AddRef();
+    return NS_OK;
+  }
   if (aIID.Equals(kDocumentBindInfoIID)) {
     *aInstancePtrResult = (void*) this;
     AddRef();
@@ -1060,6 +1074,40 @@ nsDocumentBindInfo::PromptPassword(const nsString &aText,
         return m_NetSupport->PromptPassword(aText, aPassword);
     }
     return PR_FALSE;
+}
+
+NS_IMETHODIMP 
+nsDocumentBindInfo::GetCommand(nsString &aCommand)
+{
+    aCommand.SetString(m_Command);
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocumentBindInfo::GetURL(nsIURL **aURL)
+{
+    *aURL = m_Url;
+    NS_IF_ADDREF(m_Url);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocumentBindInfo::GetContainer(nsIContentViewerContainer **aContainer)
+{
+    *aContainer = m_Container;
+    NS_IF_ADDREF(m_Container);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocumentBindInfo::GetExtraInfo(nsISupports **aExtraInfo)
+{
+    *aExtraInfo = m_ExtraInfo;
+    NS_IF_ADDREF(m_ExtraInfo);
+
+    return NS_OK;
 }
 
 NS_METHOD

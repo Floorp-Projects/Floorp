@@ -42,6 +42,7 @@
 #include "nsIPref.h"
 #include "nsIRefreshUrl.h"
 #include "nsITimer.h"
+#include "jsurl.h"
 
 #include "prlog.h"
 
@@ -1714,11 +1715,29 @@ public:
   NS_IMETHOD LockFactory(PRBool aLock);
 
 private:
+  // XXX TEMPORARY placeholder for starting up some
+  // services in lieu of a service manager.
+  static void StartServices();
+
+  static PRBool mStartedServices;
   nsrefcnt  mRefCnt;
 };
 
+PRBool nsWebShellFactory::mStartedServices = PR_FALSE;
+
+void
+nsWebShellFactory::StartServices()
+{
+  // XXX TEMPORARY Till we have real pluggable protocol handlers
+  NET_InitJavaScriptProtocol();
+  mStartedServices = PR_TRUE;
+}
+
 nsWebShellFactory::nsWebShellFactory()
 {
+  if (!mStartedServices) {
+    StartServices();
+  }
   mRefCnt = 0;
 }
 
