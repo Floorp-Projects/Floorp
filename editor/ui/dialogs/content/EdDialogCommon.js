@@ -278,6 +278,29 @@ function SetPixelOrPercentByID(elementID, percentString)
   }
 }
 
+// force integer by petejc (pete@postpagan.com)
+function forceInteger(id)
+{
+var isInteger = true;
+
+  with (document)
+  {
+    var stringIn = getElementById(id).value;
+    var pat = /\D/g;
+    var check = stringIn.match(pat);
+    if (check)
+    {
+      isInteger = false;
+    }
+    else
+    {
+      isInteger = true;
+    }
+  }
+  dump("integer = "+isInteger+"\n\n");
+
+return isInteger;
+}
 
 // All dialogs share this simple method
 function onCancel()
