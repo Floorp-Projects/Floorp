@@ -967,5 +967,5 @@ error1:
 error2:
    *aSrcLen = src - (const unsigned char*)aSrc;
    *aDestLen = dest-aDest;
-   return NS_ERROR_UENC_NOMAPPING;
+   return NS_ERROR_UNEXPECTED;
 }
