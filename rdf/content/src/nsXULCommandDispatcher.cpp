@@ -507,7 +507,7 @@ nsXULCommandDispatcher::Matches(const nsString& aList,
     if (aList.Equals(NS_LITERAL_STRING("*")))
         return PR_TRUE; // match _everything_!
 
-    PRInt32 indx = aList.Find((const PRUnichar *)nsPromiseFlatString(aElement));
+    PRInt32 indx = aList.Find((const PRUnichar *)nsPromiseFlatString(aElement).get());
     if (indx == -1)
         return PR_FALSE; // not in the list at all
 
@@ -548,7 +548,8 @@ nsXULCommandDispatcher::GetParentWindowFromDocument(nsIDOMDocument* aDocument, n
 NS_IMETHODIMP
 nsXULCommandDispatcher::GetControllerForCommand(const nsAReadableString& aCommand, nsIController** _retval)
 {
-    const PRUnichar *command = nsPromiseFlatString(aCommand);
+    nsPromiseFlatString flatCommand(aCommand);
+    const PRUnichar *command = flatCommand.get();
     *_retval = nsnull;
 
     nsCOMPtr<nsIControllers> controllers;
