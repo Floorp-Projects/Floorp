@@ -53,6 +53,7 @@ dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
 MOZPNG=95
+NSPR_VERSION=3
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
@@ -881,8 +882,8 @@ else
    LDFLAGS="$LDFLAGS -L${NSPR_LIBDIR} $NSPR_LIBS"
 fi
 
-AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr3")
-LIBS="-lnspr3 $NSPR_LIBS $LIBS"
+AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr$NSPR_VERSION")
+LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS $LIBS"
 AC_TRY_RUN(
 	#include <stdio.h>
 	#include <nspr.h>
@@ -890,7 +891,7 @@ AC_TRY_RUN(
 	    PRThread *dummy = PR_GetCurrentThread();
 	    exit(0);
 	}
-	, [NSPR_LIBS="-lnspr3 $NSPR_LIBS" result="yes"],
+	, [NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS" result="yes"],
 	[_NSPR_NEEDS_THREAD_LIB=1 result="no"], 
 	[_NSPR_NEEDS_THREAD_LIB=1 result="no"] )
 rm -f core
@@ -900,8 +901,8 @@ dnl XXX - Is this really the best way to do this check? - cls
 if test "$_NSPR_NEEDS_THREAD_LIB" = 1; then
 
 LIBS=$_SAVE_LIBS
-AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr3 with thread lib")
-    LIBS="-lnspr3 $NSPR_LIBS $LIBS"
+AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr$NSPR_VERSION with thread lib")
+    LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS $LIBS"
     AC_TRY_RUN(
 	#include <stdio.h>
 	#include <nspr.h>
@@ -909,20 +910,20 @@ AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr3 with thread lib")
 	    PRThread *dummy = PR_GetCurrentThread();
 	    exit(0);
 	}
-	, [NSPR_LIBS="-lnspr3 $NSPR_LIBS" result="yes"],
-	[MISSING_NSPR="$MISSING_NSPR -lnspr3" result="no"], 
-	[MISSING_NSPR="$MISSING_NSPR -lnspr3" result="no"] )
+	, [NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS" result="yes"],
+	[MISSING_NSPR="$MISSING_NSPR -lnspr$NSPR_VERSION" result="no"], 
+	[MISSING_NSPR="$MISSING_NSPR -lnspr$NSPR_VERSION" result="no"] )
     rm -f core
 AC_MSG_RESULT("$result")
 fi
 
-dnl AC_CHECK_LIB(nspr3, PR_GetUniqueIdentity, NSPR_LIBS="-lnspr3 $NSPR_LIBS",
-dnl	[MISSING_NSPR="$MISSING_NSPR -lnspr3"], $NSPR_LIBS)
+dnl AC_CHECK_LIB(nspr$NSPR_VERSION, PR_GetUniqueIdentity, NSPR_LIBS="-lnspr$NSPR_VERSION $NSPR_LIBS",
+dnl	[MISSING_NSPR="$MISSING_NSPR -lnspr$NSPR_VERSION"], $NSPR_LIBS)
 
-AC_CHECK_LIB(plc3, PL_CreateOptState, NSPR_LIBS="-lplc3 $NSPR_LIBS",
-	[MISSING_NSPR="$MISSING_NSPR -lplc3"], $NSPR_LIBS)
-AC_CHECK_LIB(plds3, PL_GetEvent, NSPR_LIBS="-lplds3 $NSPR_LIBS",
-	[MISSING_NSPR="$MISSING_NSPR -lplds3"], $NSPR_LIBS)
+AC_CHECK_LIB(plc$NSPR_VERSION, PL_CreateOptState, NSPR_LIBS="-lplc$NSPR_VERSION $NSPR_LIBS",
+	[MISSING_NSPR="$MISSING_NSPR -lplc$NSPR_VERSION"], $NSPR_LIBS)
+AC_CHECK_LIB(plds3, PL_GetEvent, NSPR_LIBS="-lplds$NSPR_VERSION $NSPR_LIBS",
+	[MISSING_NSPR="$MISSING_NSPR -lplds$NSPR_VERSION"], $NSPR_LIBS)
 
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
@@ -954,7 +955,7 @@ if test ! -z "$MISSING_NSPR"; then
 
    NSPR_INCLUDE_DIR=
    NSPR_CFLAGS=
-   NSPR_LIBS="-lplds3 -lplc3 -lnspr3 $PTHREAD_LDFLAGS"
+   NSPR_LIBS="-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION $PTHREAD_LDFLAGS"
 dnl
 dnl Otherwise, we are using an NSPR installed in the system.
 dnl
