@@ -46,6 +46,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsXULAtoms.h"
+#include "nsIScrollableFrame.h"
 
 class nsListBoxObject : public nsIListBoxObject, public nsBoxObject
 {
@@ -227,14 +228,13 @@ nsListBoxObject::GetListBoxBody()
   mPresShell->GetPrimaryFrameFor(content, &frame);
   if (!frame)
      return nsnull;
-
-  // this frame will be a nsScrollBoxFrame
-  nsIFrame* scrollPort = frame->GetFirstChild(nsnull);
-  if (!scrollPort)
-     return nsnull;
+  nsIScrollableFrame* scrollFrame;
+  CallQueryInterface(frame, &scrollFrame);
+  if (!scrollFrame)
+    return nsnull;
 
   // this frame will be the one we want
-  nsIFrame* yeahBaby = scrollPort->GetFirstChild(nsnull);
+  nsIFrame* yeahBaby = scrollFrame->GetScrolledFrame();
   if (!yeahBaby)
      return nsnull;
 
