@@ -20,17 +20,15 @@
 #
 ################################################################################
 #
-# We now use a 3-pass build system.  This needs to be re-thought....
+# We now use a 2-pass build system.  This needs to be re-thought....
 #
 # Pass 1. export  - Create generated headers and stubs.  Publish public headers
 #                   to dist/include.
 #
-# Pass 2. libs    - Create libraries.  Publish libraries to dist/lib.
+# Pass 2. install - Create libraries & programs.  Publish them to dist/bin.
 #
-# Pass 3. install - Create programs.  Publish them to dist/bin.
-#
-# 'gmake' will build each of these properly, but 'gmake -jN' will break (need
-# to do each pass explicitly when using -j).
+# `gmake` will build each of these properly, but `gmake -jN` may break
+# use `gmake MAKE='gmake -jN'` instead
 #
 # Parameters to this makefile (set these before including):
 #
@@ -133,7 +131,7 @@ ifdef MKSHLIB
 
 ifeq ($(OS_ARCH),OS2)
 DEF_OBJS		= $(OBJS)
-ifeq ($(EXPORT_OBJS),1)
+ifneq ($(EXPORT_OBJS),1)
 DEF_OBJS		+= $(SHARED_LIBRARY_LIBS)
 endif
 SHARED_LIBRARY		:= $(LIBRARY_NAME).$(DLL_SUFFIX)
