@@ -979,29 +979,21 @@
             var strings = new Array;
             var ids = this.valueIds;
             var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-            var hdrs;
+            var hdrsArray = null;
             try
             {
-              hdrs = pref.getCharPref("mailnews.customHeaders");
+              var hdrs = pref.getCharPref("mailnews.customHeaders");
+              hdrs = hdrs.replace(/\s+/g,'');  //remove white spaces before splitting 
+              hdrsArray = hdrs.match(/[^:]+/g);
             }
             catch(ex)
             {
-              hdrs=null;
-            }
-            var hdrsArray = new Array;
-            if (hdrs)
-            {
-              hdrs = hdrs.replace(/\s+/g,'');  //remove white spaces before splitting 
-              hdrsArray = hdrs.split(":");
-              for (var i = 0; i< hdrsArray.length; i++) 
-                if (!hdrsArray[i])
-                   hdrsArray.splice(i,1);  //remove any null elements
             }
             var bundle = this.stringBundle;
             var j=0;
             for (var i=0; i<ids.length; i++)
             {
-              if(ids[i] > Components.interfaces.nsMsgSearchAttrib.OtherHeader && hdrs)
+              if(ids[i] > Components.interfaces.nsMsgSearchAttrib.OtherHeader && hdrsArray)
                 strings[i] = hdrsArray[j++];
               else
                 strings[i] = this.stringBundle.GetStringFromID(ids[i]);
