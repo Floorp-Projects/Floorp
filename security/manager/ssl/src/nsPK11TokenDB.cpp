@@ -22,6 +22,8 @@
  */
 #include "nsISupports.h"
 #include "nsIPK11TokenDB.h"
+#include "prerror.h"
+#include "secerr.h"
 
 #include "nsPK11TokenDB.h"
 
@@ -180,7 +182,21 @@ NS_IMETHODIMP nsPK11Token::GetNeedsUserInit(PRBool *aNeedsUserInit)
 /* boolean checkPassword (in wstring password); */
 NS_IMETHODIMP nsPK11Token::CheckPassword(const PRUnichar *password, PRBool *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  SECStatus srv;
+  PRInt32 prerr;
+  srv = PK11_CheckUserPassword(mSlot, 
+                  NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(password).get()));
+  if (srv != SECSuccess) {
+    *_retval =  PR_FALSE;
+    prerr = PR_GetError();
+    if (prerr != SEC_ERROR_BAD_PASSWORD) {
+      /* something really bad happened - throw an exception */
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    *_retval =  PR_TRUE;
+  }
+  return NS_OK;
 }
 
 /* void initPassword (in wstring initialPassword); */

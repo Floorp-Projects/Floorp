@@ -87,11 +87,17 @@ function setPassword()
 
   var oldpwbox = document.getElementById("oldpw");
   var initpw = oldpwbox.getAttribute("inited");
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   if (initpw == "false") {
     try {
-      token.changePassword(oldpwbox.value, pw1.value);
+      var passok = token.checkPassword(oldpwbox.value);
+      if (passok) {
+        token.changePassword(oldpwbox.value, pw1.value);
+        alert(bundle.GetStringFromName("pw_change_ok")); 
+      } else {
+        alert(bundle.GetStringFromName("incorrect_pw")); 
+      }
     } catch (e) {
-      var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
       alert(bundle.GetStringFromName("failed_pw_change")); 
     }
   } else {
