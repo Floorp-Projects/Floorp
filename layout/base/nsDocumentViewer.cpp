@@ -113,6 +113,7 @@
 // Timer Includes
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "nsITimelineService.h"
 
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
@@ -1171,6 +1172,24 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     event.message = NS_PAGE_LOAD;
     rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &status);
+#ifdef MOZ_TIMELINE
+    // if navigator.xul's load is complete, the main nav window is visible
+    // mark that point.
+    if (mDocument) {
+      //printf("DEBUG: getting uri from document (%p)\n", mDocument.get());
+      nsCOMPtr<nsIURI> uri;
+      mDocument->GetDocumentURL(getter_AddRefs(uri));
+      if (uri.get() != nsnull) {
+        //printf("DEBUG: getting spec fro uri (%p)\n", uri.get());
+        char *spec = nsnull;
+        uri->GetSpec(&spec);
+        if (spec && !strcmp(spec, "chrome://navigator/content/navigator.xul")) {
+          NS_TIMELINE_MARK("Navigator Window visible now");
+        }
+        CRTFREEIF(spec);
+      }
+    }
+#endif /* MOZ_TIMELINE */
   } else {
     // XXX: Should fire error event to the document...
   }
