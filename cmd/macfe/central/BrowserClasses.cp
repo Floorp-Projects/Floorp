@@ -291,10 +291,11 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CMiniSecurityButton);
 	
 	RegisterClass_(CHyperTreeFlexTable);
+	RegisterClass_(CPopdownFlexTable);
 	RegisterClass_(CDockedRDFCoordinator);
 	RegisterClass_(CShackRDFCoordinator);
 	RegisterClass_(CWindowRDFCoordinator);
-	RegisterClass_(CPopupRDFCoordinator);
+	RegisterClass_(CPopdownRDFCoordinator);
 	RegisterClass_(CHyperTreeHeader);
 	RegisterClass_(CInlineEditField);
 
