@@ -5,6 +5,8 @@ use LWP::Simple;
 use Template;
 use strict;
 
+my $VERBOSE = 1;
+
 # Establish a database connection.
 my $dsn = "DBI:mysql:host=mecha.mozilla.org;database=downloadstats;port=3306";
 my $dbh = DBI->connect($dsn,
@@ -92,17 +94,17 @@ my $done_in_segments =
 foreach my $stat (@stats) {
     next if !$stat->{isactive};
 
-    print STDERR "$stat->{name} $stat->{version}...\n";
+    print STDERR "$stat->{name} $stat->{version}...\n" if $VERBOSE;
 
     my $platforms = $stat->{platforms};
 
     foreach my $platform (keys %$platforms) {
-	print STDERR "  $platform\n";
+	print STDERR "  $platform\n" if $VERBOSE;
 
         my $files = $platforms->{$platform};
 
 	foreach my $type (keys %$files) {
-	    print STDERR "    $type: ";
+	    print STDERR "    $type: " if $VERBOSE;
 
 	    my $file = $files->{$type};
 
@@ -135,7 +137,7 @@ foreach my $stat (@stats) {
               partial        => $may_be_done_count, 
             };
 
-	    print STDERR "$done_count / $not_done_count / $may_be_done_count / $done_in_segments_count / $total_done\n";
+	    print STDERR "$done_count / $not_done_count / $may_be_done_count / $done_in_segments_count / $total_done\n" if $VERBOSE;
 	}
     }
 }
