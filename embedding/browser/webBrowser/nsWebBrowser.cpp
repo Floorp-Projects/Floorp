@@ -1589,7 +1589,9 @@ NS_IMETHODIMP nsWebBrowser::Print(nsIDOMWindow *aDOMWindow,
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMWindow> thisDOMWin;
   PRBool silent = PR_FALSE;
-  aThePrintOptions->GetPrintSilent (&silent);
+  if( aThePrintOptions != nsnull){
+    aThePrintOptions->GetPrintSilent (&silent);
+  }
   
 
   // XXX this next line may need to be changed
