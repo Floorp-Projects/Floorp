@@ -45,7 +45,7 @@ class nsIFormControl;
 class nsIDOMHTMLInputElement;
 class nsIRadioVisitor;
 class nsISimpleEnumerator;
-
+class nsIURI;
 
 #define NS_FORM_METHOD_GET  0
 #define NS_FORM_METHOD_POST 1
@@ -177,6 +177,14 @@ public:
    * element
    */
   NS_IMETHOD ForgetPendingSubmission() = 0;
+
+  /**
+   * Get the full URL to submit to.  Do not submit if the returned URL is null.
+   *
+   * @param aActionURL the full, unadulterated URL you'll be submitting to [OUT]
+   */
+  NS_IMETHOD GetActionURL(nsIURI** aActionURL) = 0;
+
 };
 
 #endif /* nsIForm_h___ */
