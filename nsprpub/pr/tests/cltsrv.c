@@ -762,8 +762,14 @@ static void PR_CALLBACK Server(void *arg)
     PRNetAddr serverAddress;
     PRThread *me = PR_CurrentThread();
     CSServer_t *server = (CSServer_t*)arg;
+    PRSocketOptionData sockOpt;
 
     server->listener = PR_Socket(domain, SOCK_STREAM, protocol);
+
+    sockOpt.option = PR_SockOpt_Reuseaddr;
+    sockOpt.value.reuse_addr = PR_TRUE;
+    rv = PR_SetSocketOption(server->listener, &sockOpt);
+    TEST_ASSERT(PR_SUCCESS == rv);
 
     memset(&serverAddress, 0, sizeof(serverAddress));
     rv = PR_InitializeNetAddr(PR_IpAddrAny, DEFAULT_PORT, &serverAddress);
