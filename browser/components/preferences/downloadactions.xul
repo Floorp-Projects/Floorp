@@ -70,7 +70,7 @@
       <label accesskey="&filter.accesskey;" control="filter">&filter.label;</label>
       <textbox id="filter" flex="1" oninput="gDownloadActionsWindow.onFilterInput();" 
               onkeypress="gDownloadActionsWindow.onFilterKeyPress(event);"/>
-      <button id="clearFilter" label="&clear.label;" accesskey="&clear.accesskey;" 
+      <button id="clearFilter" icon="clear" label="&clear.label;" accesskey="&clear.accesskey;" 
               oncommand="gDownloadActionsWindow.clearFilter();" disabled="true"/>
     </hbox>
     <separator class="thin"/>
@@ -106,7 +106,7 @@
   <separator class="thin"/>
   <hbox>
     <hbox flex="1" class="actionButtons">
-      <button id="removeFileHandler"
+      <button id="removeFileHandler" icon="remove"
               label="&remove.label;" accesskey="&remove.accesskey;"
               oncommand="gDownloadActionsWindow.removeFileHandler();"/>
       <button id="editFileHandler"
@@ -114,7 +114,7 @@
               oncommand="gDownloadActionsWindow.editFileHandler();"/>
       <spacer flex="1"/>
 #ifndef XP_MACOSX
-      <button oncommand="close();"
+      <button oncommand="close();" icon="close"
               label="&button.close.label;" accesskey="&button.close.accesskey;"/>
 #endif
     </hbox>

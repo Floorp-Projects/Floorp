@@ -80,7 +80,7 @@
       <caption label="&connectionsInfo.caption;"/>
       <hbox align="center">
         <description flex="1">&proxiesInfo.label;</description>
-        <button id="catProxiesButton" label="&showConnections.label;" 
+        <button id="catProxiesButton" icon="network" label="&showConnections.label;" 
                 accesskey="&showConnections.accesskey;" 
                 oncommand="gGeneralPane.showConnections();"/>
       </hbox>

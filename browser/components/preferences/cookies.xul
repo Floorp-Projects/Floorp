@@ -66,7 +66,8 @@
       <label accesskey="&filter.accesskey;" control="filter">&filter.label;</label>
       <textbox id="filter" flex="1" oninput="gCookiesWindow.onFilterInput();" 
                onkeypress="gCookiesWindow.onFilterKeyPress(event);"/>
-      <button id="clearFilter" label="&clear.label;" accesskey="&clear.accesskey;" 
+      <button id="clearFilter" icon="clear" label="&clear.label;"
+              accesskey="&clear.accesskey;" 
               oncommand="gCookiesWindow.clearFilter();" disabled="true"/>
     </hbox>
     <separator class="thin"/>
@@ -126,15 +127,15 @@
   </vbox>
   <hbox align="end">
     <hbox class="actionButtons" flex="1">
-      <button id="removeCookie" disabled="true" 
+      <button id="removeCookie" disabled="true" icon="remove" 
               label="&button.removecookie.label;" accesskey="&button.removecookie.accesskey;"
               oncommand="gCookiesWindow.deleteCookie();"/>
-      <button id="removeAllCookies" disabled="true" 
+      <button id="removeAllCookies" disabled="true" icon="clear"
               label="&button.removeallcookies.label;" accesskey="&button.removeallcookies.accesskey;"
               oncommand="gCookiesWindow.deleteAllCookies();"/>
       <spacer flex="1"/>
 #ifndef XP_MACOSX
-      <button oncommand="close();"
+      <button oncommand="close();" icon="close"
               label="&button.close.label;" accesskey="&button.close.accesskey;"/>
 #endif
     </hbox>
