@@ -206,10 +206,6 @@ nsRenderingContextMac :: ~nsRenderingContextMac()
     delete mStateCache;
     mStateCache = nsnull;
   	}
-
-  NS_IF_RELEASE(mFontMetrics);
-  NS_IF_RELEASE(mContext);
-
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextMac, kRenderingContextIID);
