@@ -54,8 +54,6 @@
 #include "winbase.h"
 #endif
 
-#undef	XP_BEOS
-
 #ifdef	XP_BEOS
 #include <File.h>
 #include <NodeInfo.h>
@@ -203,6 +201,13 @@ nsIRDFResource		*FileSystemDataSource::kRDF_type;
 nsIRDFResource		*FileSystemDataSource::kNC_IEFavoriteObject;
 char			*FileSystemDataSource::ieFavoritesDir;
 #endif
+
+#ifdef	XP_BEOS
+nsIRDFResource		*FileSystemDataSource::kNC_NetPositiveObject;
+char			*FileSystemDataSource::netPositiveDir;
+#endif
+
+
 
 static const char	kFileProtocol[] = "file://";
 
@@ -1083,6 +1088,35 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 	}
 #endif
 
+#ifdef	XP_BEOS
+	// under BEOS, try and get the "META:title" attribute (if its a file)
+	nsAutoString		theURI(uri);
+	if (theURI.Find(netPositiveDir) == 0)
+	{
+		nsFileSpec		spec(url);
+		if (spec.IsFile() && (!spec.IsHidden()))
+		{
+			const char	*nativeURI = spec.GetNativePathCString();
+			if (nativeURI)
+			{
+				BFile	bf(nativeURI, B_READ_ONLY);
+				if (bf.InitCheck() == B_OK)
+				{
+					char		beNameAttr[4096];
+					ssize_t		len;
+
+					if ((len = bf.ReadAttr("META:title", B_STRING_TYPE,
+						0, beNameAttr, sizeof(beNameAttr-1))) > 0)
+					{
+						beNameAttr[len] = '\0';
+						name = beNameAttr;
+					}
+				}
+			}
+		}
+	}
+#endif
+
 	nsIRDFLiteral *literal;
 	gRDFService->GetLiteral(name.GetUnicode(), &literal);
 	*aResult = literal;
@@ -1188,7 +1222,7 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 #endif
 
 #ifdef	XP_BEOS
-	// under BEOS, try and get the "be:url" attribute
+	// under BEOS, try and get the "META:url" attribute
 	if (netPositiveDir)
 	{
 		if (url.Find(netPositiveDir) == 0)
@@ -1232,9 +1266,7 @@ FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileUR
 				char		beURLattr[4096];
 				ssize_t		len;
 
-				// XXX Is "be:url" the correct NetPositive attribute for URLs?
-
-				if ((len = bf.ReadAttr("be:url", B_STRING_TYPE,
+				if ((len = bf.ReadAttr("META:url", B_STRING_TYPE,
 					0, beURLattr, sizeof(beURLattr-1))) > 0)
 				{
 					beURLattr[len] = '\0';
