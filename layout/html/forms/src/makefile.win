@@ -35,7 +35,11 @@ CPPSRCS= \
   nsFormFrame.cpp \
   nsFormControlFrame.cpp \
   nsFileControlFrame.cpp \
+!if "$(MOZ_ENDER_LITE)"=="1"
+  nsGfxTextControlFrame2.cpp \
+!else
   nsGfxTextControlFrame.cpp \
+!endif
   nsFieldSetFrame.cpp \
   nsLegendFrame.cpp \
   nsHTMLButtonControlFrame.cpp \
@@ -55,7 +59,11 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsFormFrame.obj \
   .\$(OBJDIR)\nsFormControlFrame.obj \
   .\$(OBJDIR)\nsFileControlFrame.obj \
+!if "$(MOZ_ENDER_LITE)"=="1"
+  .\$(OBJDIR)\nsGfxTextControlFrame2.obj \
+!else
   .\$(OBJDIR)\nsGfxTextControlFrame.obj \
+!endif
   .\$(OBJDIR)\nsFieldSetFrame.obj \
   .\$(OBJDIR)\nsLegendFrame.obj \
   .\$(OBJDIR)\nsHTMLButtonControlFrame.obj \
@@ -86,6 +94,9 @@ LINCS= -I$(PUBLIC)\xpcom  \
 
 
 LCFLAGS = \
+!if "$(MOZ_ENDER_LITE)"=="1"
+        -DENDER_LITE \
+!endif
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
