@@ -61,30 +61,30 @@ public:
   ~nsGrid();
 
   virtual void NeedsRebuild(nsBoxLayoutState& aBoxLayoutState);
-  virtual nsGridRow* GetColumnAt(PRInt32 aIndex, PRBool aIsRow);
-  virtual nsGridRow* GetRowAt(PRInt32 aIndex, PRBool aIsRow);
+  virtual nsGridRow* GetColumnAt(PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
+  virtual nsGridRow* GetRowAt(PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
   virtual nsGridCell* GetCellAt(PRInt32 aX, PRInt32 aY);
   virtual void RebuildIfNeeded();
 
-  virtual nsresult GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow);
-  virtual nsresult GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow);
-  virtual nsresult GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow);
-  virtual nsresult GetRowFlex(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aSize, PRBool aIsRow);
+  virtual nsresult GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
+  virtual nsresult GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
+  virtual nsresult GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nsSize& aSize, PRBool aIsRow = PR_TRUE);
+  virtual nsresult GetRowFlex(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aSize, PRBool aIsRow = PR_TRUE);
 
-  virtual nsresult GetPrefRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow);
-  virtual nsresult GetMinRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow);
-  virtual nsresult GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow);
+  virtual nsresult GetPrefRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
+  virtual nsresult GetMinRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
+  virtual nsresult GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, nscoord& aHeight, PRBool aIsRow = PR_TRUE);
 
-  virtual void RowChildIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRInt32 aColumnIndex, PRBool aIsRow);
-  virtual void RowIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow);
-  virtual void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow);
-  virtual void CellAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow);
+  virtual void RowChildIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRInt32 aColumnIndex, PRBool aIsRow = PR_TRUE);
+  virtual void RowIsDirty(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
+  virtual void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
+  virtual void CellAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, PRInt32 aIndex, PRBool aIsRow = PR_TRUE);
   virtual void DirtyRows(nsIBox* aRowBox, nsBoxLayoutState& aState);
 #ifdef DEBUG_grid
   virtual void PrintCellMap();
 #endif
-  virtual PRInt32 GetExtraColumnCount(PRBool aIsRow);
-  virtual PRInt32 GetExtraRowCount(PRBool aIsRow);
+  virtual PRInt32 GetExtraColumnCount(PRBool aIsRow = PR_TRUE);
+  virtual PRInt32 GetExtraRowCount(PRBool aIsRow = PR_TRUE);
 
 // accessors
   virtual void SetBox(nsIBox* aBox) { mBox = aBox; }
@@ -97,12 +97,12 @@ public:
 protected:
   virtual void FreeMap();
   virtual void FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns);
-  virtual void BuildRows(nsIBox* aBox, PRBool aSize, nsGridRow** aColumnsRows, PRBool aIsRow);
+  virtual void BuildRows(nsIBox* aBox, PRBool aSize, nsGridRow** aColumnsRows, PRBool aIsRow = PR_TRUE);
   virtual void BuildCellMap(PRInt32 aRows, PRInt32 aColumns, nsGridCell** aCells);
-  virtual void PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount, PRInt32 aColumnCount, PRBool aIsRow);
+  virtual void PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount, PRInt32 aColumnCount, PRBool aIsRow = PR_TRUE);
   virtual void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount);
-  virtual void SetLargestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow);
-  virtual void SetSmallestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow);
+  virtual void SetLargestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow = PR_TRUE);
+  virtual void SetSmallestSize(nsSize& aSize, nscoord aHeight, PRBool aIsRow = PR_TRUE);
 
 private:
 
