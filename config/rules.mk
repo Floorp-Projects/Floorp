@@ -789,6 +789,8 @@ ifneq (,$(filter WINNT,$(OS_ARCH)))
 	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
 else
 ifeq ($(MOZ_OS2_TOOLS), VACPP)
+	$(ELOG) $(CC) -Fo$@ -c $(CFLAGS) $<
+else
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 endif
 endif
