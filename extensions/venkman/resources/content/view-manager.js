@@ -611,6 +611,9 @@ function vmgr_move (parsedLocation, viewId, height, width)
                 if ("onHide" in view)
                     view.onHide();
 
+                if ("onViewRemoved" in view.currentContent.ownerWindow)
+                    view.currentContent.ownerWindow.onViewRemoved(view);
+
                 moveContent (view.currentContent, null);
                 delete view.currentContent;
             }
@@ -672,12 +675,16 @@ function vmgr_move (parsedLocation, viewId, height, width)
             
             if ("onHide" in view)
                 view.onHide();
+
+            if ("onViewRemoved" in currentContent.ownerWindow)
+                currentContent.ownerWindow.onViewRemoved(view);
+
             if (currentContent != content)
             {
                 //dd ("returning content to home");
                 moveContent (currentContent, null);
             }
-        }
+        }        
         
         moveContent (content, container, beforeNode);
         view.currentContent = content;
@@ -688,6 +695,9 @@ function vmgr_move (parsedLocation, viewId, height, width)
         
         if ("onShow" in view)
             view.onShow();
+
+        if ("onViewAdded" in window)
+            window.onViewAdded(view);
     };
 
     var view = this.views[viewId];
@@ -697,7 +707,6 @@ function vmgr_move (parsedLocation, viewId, height, width)
         view.previousLocation = this.computeLocation(currentContent);
 
     this.ensureLocation (parsedLocation, onLocationFound);
-    
 }
 
 ViewManager.prototype.groutContainer =

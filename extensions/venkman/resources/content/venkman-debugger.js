@@ -619,11 +619,14 @@ function si_seal ()
     if (isURLFiltered(this.url))
     {
         var nada = SCRIPT_NODEBUG | SCRIPT_NOPROFILE;
-        if (this.topLevel)
+        if (this.topLevel && this.topLevel.isValid)
             this.topLevel.jsdScript.flags |= nada;
 
         for (var f in this.functions)
-            this.functions[f].jsdScript.flags |= nada;
+        {
+            if (this.functions[f].jsdScript.isValid)
+                this.functions[f].jsdScript.flags |= nada;
+        }
     }
 
     dispatch ("hook-script-instance-sealed", { scriptInstance: this });

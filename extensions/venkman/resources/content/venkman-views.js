@@ -335,6 +335,8 @@ function bv_init ()
 
     this.atomBreak = console.atomService.getAtom("item-breakpoint");
     this.atomFBreak = console.atomService.getAtom("future-breakpoint");
+
+    this.caption = MSG_VIEW_BREAKS;
 }
 
 console.views.breaks.onShow =
@@ -477,6 +479,8 @@ function lv_init ()
                   checkedif: "ValueRecord.prototype.showECMAProps"}]
         ]
     };
+
+    this.caption = MSG_VIEW_LOCALS;
 
     this.jsdFrame = null;
     this.savedStates = new Object();
@@ -790,6 +794,8 @@ function scv_init ()
          ["profile-script", {type: "checkbox", checkedif: profileIf}],
         ]
     };
+
+    this.caption = MSG_VIEW_SCRIPTS;
 
     this.childData.setSortColumn("baseLineNumber");
     this.groupFiles = console.prefs["scriptsView.groupFiles"];
@@ -1204,6 +1210,8 @@ function ss_init ()
          ["session-css-dark",     "session-css dark",        0],
          ["session-css-light",    "session-css light",       0]
         ];
+
+    this.caption = MSG_VIEW_SESSION;
 
     /* input history (up/down arrow) related vars */
     this.inputHistory = new Array();
@@ -1638,9 +1646,11 @@ function ss_tabcomplete (e)
         var partialCommand = v.substring(startPos, firstSpace).toLowerCase();
         var cmds = console.commandManager.listNames(partialCommand, CMD_CONSOLE);
 
-        if (!cmds)
+        if (cmds.length == 0)
+        {
             /* partial didn't match a thing */
             display (getMsg(MSN_NO_CMDMATCH, partialCommand), MT_ERROR);
+        }
         else if (cmds.length == 1)
         {
             /* partial matched exactly one command */
@@ -1713,6 +1723,9 @@ function skv_init()
          ["profile-script", {type: "checkbox", checkedif: profileIf}],
         ]
     };
+
+    this.caption = MSG_VIEW_STACK;
+
 }
 
 function cmdCopyFrames (e)
@@ -1954,6 +1967,8 @@ function ss_init ()
          ["break-props"]
         ]
     };
+
+    this.caption = MSG_VIEW_SOURCE2;
 
     this.deck  = null;
     this.tabs  = null;
@@ -3106,6 +3121,8 @@ function sv_init()
         ]
     };
     
+    this.caption = MSG_VIEW_SOURCE;
+
     var atomsvc = console.atomService;
 
     this.atomCurrent        = atomsvc.getAtom("current-line");
@@ -3666,6 +3683,9 @@ function wv_init()
           
         ]
     };
+
+    this.caption = MSG_VIEW_WATCHES;
+
 }
 
 console.views.watches.destroy =
@@ -3901,6 +3921,9 @@ function winv_init ()
                                        "cx.jsdValue.jsType == TYPE_OBJECT"}]
         ]
     };
+
+    this.caption = MSG_VIEW_WINDOWS;
+
 }
 
 console.views.windows.hooks = new Object();

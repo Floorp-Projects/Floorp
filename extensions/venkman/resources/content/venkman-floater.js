@@ -35,8 +35,10 @@
 
 var dd       = opener.dd;
 var console  = opener.console;
+var getMsg   = opener.getMsg;
 var dispatch = console.dispatch;
 var windowId;
+var containedViews = new Object();
 
 function onLoad()
 {
@@ -55,7 +57,7 @@ function onLoad()
     if ("arguments" in window && 0 in window.arguments &&
         typeof window.arguments[0] == "function")
     {
-        window.arguments[0](window);
+        setTimeout(window.arguments[0], 500, window);
     }
 }
 
@@ -69,3 +71,28 @@ function onUnload()
 {
     console.viewManager.destroyWindow (windowId);
 }
+
+function onViewRemoved(view)
+{
+    delete containedViews[view.viewId];
+    updateTitle();
+}
+
+function onViewAdded(view)
+{
+    containedViews[view.viewId] = view;
+    updateTitle();
+}
+
+function updateTitle()
+{
+    var ary = new Array();
+    
+    for (v in containedViews)
+        ary.push(containedViews[v].caption);
+
+    document.title = getMsg(opener.MSN_FLOATER_TITLE,
+                            ary.join(opener.MSG_COMMASP));
+}
+
+
