@@ -88,6 +88,9 @@ public:
         /* [in] */ VARIANT varChild,
         /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
 
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accFocus( 
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarChild);
+
     // Override get_accParent so that native accessible for window is 
     // returned as parent, otherwise WindowFromAccessibleObject() doesn't work.
     // Also necessary for MSAA SDK's accexplore.exe testing tool to work.

@@ -493,9 +493,6 @@ NS_IMETHODIMP nsAccessibleHyperText::GetSelectedLinkIndex(PRInt32 *aSelectedLink
 
   nsCOMPtr<nsIDOMNode> curNode(do_QueryInterface(mTextChildren->ElementAt(0)));
 
-  nsCOMPtr<nsIDOMNode> focusedNode;
-  nsAccessible::GetFocusedNode(curNode, getter_AddRefs(focusedNode));
-
   PRUint32 index, linkCount = 0;
   for (index = 0; index < count; index++) {
     nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextChildren->ElementAt(index)));
@@ -509,7 +506,7 @@ NS_IMETHODIMP nsAccessibleHyperText::GetSelectedLinkIndex(PRInt32 *aSelectedLink
     } while (domNode && link == nsnull);
 
     if (link) {
-      if (parentNode == focusedNode) {
+      if (parentNode == nsAccessNode::gLastFocusedNode) {
         *aSelectedLinkIndex = linkCount;
         return NS_OK;
       }

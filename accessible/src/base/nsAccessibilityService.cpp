@@ -62,6 +62,7 @@
 #include "nsIDocShell.h"
 #include "nsIFrame.h"
 #include "nsILink.h"
+#include "nsINamespaceManager.h"
 #include "nsIObserverService.h"
 #include "nsIPluginInstance.h"
 #include "nsIPresContext.h"
