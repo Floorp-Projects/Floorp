@@ -5149,7 +5149,8 @@ CSSParserImpl::DoParseRect(nsCSSRect& aRect, nsresult& aErrorCode)
 PRBool CSSParserImpl::ParseContent(nsresult& aErrorCode)
 {
   nsCSSValue  value;
-  if (ParseVariant(aErrorCode, value, VARIANT_CONTENT | VARIANT_INHERIT, 
+  if (ParseVariant(aErrorCode, value,
+                   VARIANT_CONTENT | VARIANT_INHERIT | VARIANT_NORMAL, 
                    nsCSSProps::kContentKTable)) {
     nsCSSValueList* listHead = new nsCSSValueList();
     nsCSSValueList* list = listHead;
@@ -5167,7 +5168,8 @@ PRBool CSSParserImpl::ParseContent(nsresult& aErrorCode)
         return PR_TRUE;
       }
       if (eCSSUnit_Inherit == value.GetUnit() ||
-          eCSSUnit_Initial == value.GetUnit()) {
+          eCSSUnit_Initial == value.GetUnit() ||
+          eCSSUnit_Normal == value.GetUnit()) {
         // This only matters the first time through the loop.
         return PR_FALSE;
       }
