@@ -802,7 +802,9 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
 
   float textzoom;
   mv->GetTextZoom(&textzoom);
-  mv->SetTextZoom(textzoom + 0.1*change);
+  textzoom += 0.1*change;
+  if (textzoom > 0 && textzoom <= 20)
+    mv->SetTextZoom(textzoom);
 
   return NS_OK;
 }
