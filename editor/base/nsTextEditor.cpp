@@ -92,6 +92,10 @@ static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
 
+#ifdef ENABLE_JS_EDITOR_LOG
+#include "nsJSEditorLog.h"
+#endif // ENABLE_JS_EDITOR_LOG
+
 static NS_DEFINE_CID(kEditorCID,        NS_EDITOR_CID);
 static NS_DEFINE_CID(kTextEditorCID,    NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
@@ -378,6 +382,13 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
                                             const nsString *aAttribute, 
                                             const nsString *aValue)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->SetTextProperty(aProperty, aAttribute, aValue);
+#endif // ENABLE_JS_EDITOR_LOG
+
   if (!aProperty) { return NS_ERROR_NULL_POINTER; }
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -698,6 +709,13 @@ void nsTextEditor::IsTextPropertySetByContent(nsIDOMNode     *aNode,
 
 NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->RemoveTextProperty(aProperty, aAttribute);
+#endif // ENABLE_JS_EDITOR_LOG
+
   if (!aProperty) { return NS_ERROR_NULL_POINTER; }
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -945,6 +963,13 @@ void nsTextEditor::ResetTextSelectionForRange(nsIDOMNode *aParent,
 
 NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->DeleteSelection(aAction);
+#endif // ENABLE_JS_EDITOR_LOG
+
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
@@ -973,6 +998,13 @@ NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction
 
 NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertText(aStringToInsert);
+#endif // ENABLE_JS_EDITOR_LOG
+
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
@@ -1010,6 +1042,13 @@ NS_IMETHODIMP nsTextEditor::SetMaxTextLength(PRInt32 aMaxTextLength)
 
 NS_IMETHODIMP nsTextEditor::InsertBreak()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertBreak();
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool cancel= PR_FALSE;
 
@@ -1037,6 +1076,13 @@ NS_IMETHODIMP nsTextEditor::EnableUndo(PRBool aEnable)
 
 NS_IMETHODIMP nsTextEditor::Undo(PRUint32 aCount)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->Undo(aCount);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool cancel= PR_FALSE;
 
@@ -1060,6 +1106,13 @@ NS_IMETHODIMP nsTextEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 
 NS_IMETHODIMP nsTextEditor::Redo(PRUint32 aCount)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->Redo(aCount);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool cancel= PR_FALSE;
 
@@ -1201,11 +1254,25 @@ NS_IMETHODIMP nsTextEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
 
 NS_IMETHODIMP nsTextEditor::Save()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->Save();
+#endif // ENABLE_JS_EDITOR_LOG
+
   return SaveDocument(PR_FALSE, PR_FALSE);
 }
 
 NS_IMETHODIMP nsTextEditor::SaveAs(PRBool aSavingCopy)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->SaveAs(aSavingCopy);
+#endif // ENABLE_JS_EDITOR_LOG
+
   return SaveDocument(PR_TRUE, aSavingCopy);
 }
 
@@ -1229,6 +1296,13 @@ NS_IMETHODIMP nsTextEditor::Paste()
 //
 NS_IMETHODIMP nsTextEditor::PasteAsQuotation()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->PasteAsQuotation();
+#endif // ENABLE_JS_EDITOR_LOG
+
 #ifdef DEBUG_akkana
   printf("nsTextEditor::PasteAsQuotation\n");
 #endif
@@ -1281,6 +1355,13 @@ NS_IMETHODIMP nsTextEditor::PasteAsQuotation()
 
 NS_IMETHODIMP nsTextEditor::InsertAsQuotation(const nsString& aQuotedText)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertAsQuotation(aQuotedText);
+#endif // ENABLE_JS_EDITOR_LOG
+
   // Now we have the text.  Cite it appropriately:
   nsCOMPtr<nsICiter> citer;
   nsCOMPtr<nsIPref> prefs;

@@ -47,6 +47,10 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIPresShell.h"
 
+#ifdef ENABLE_JS_EDITOR_LOG
+#include "nsJSEditorLog.h"
+#endif // ENABLE_JS_EDITOR_LOG
+
 static NS_DEFINE_IID(kInsertHTMLTxnIID, NS_INSERT_HTML_TXN_IID);
 
 static NS_DEFINE_CID(kEditorCID,      NS_EDITOR_CID);
@@ -158,6 +162,13 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 
 NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->SetBackgroundColor(aColor);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult res;
   NS_ASSERTION(mDoc, "Missing Editor DOM Document");
   
@@ -177,6 +188,13 @@ NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
 
 NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const nsString& aValue)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->SetBodyAttribute(aAttribute, aValue);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult res;
   // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
 
@@ -196,6 +214,13 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const n
 
 NS_IMETHODIMP nsHTMLEditor::InsertBreak()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertBreak();
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -278,6 +303,13 @@ NS_IMETHODIMP nsHTMLEditor::GetParagraphFormat(nsString& aParagraphFormat)
 
 NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->SetParagraphFormat(aParagraphFormat);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult res = NS_ERROR_NOT_INITIALIZED;
   //Kinda sad to waste memory just to force lower case
   nsAutoString tag = aParagraphFormat;
@@ -408,12 +440,26 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
 //
 NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->PasteAsQuotation();
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsAutoString citation("");
   return PasteAsCitedQuotation(citation);
 }
 
 NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->PasteAsCitedQuotation(aCitation);
+#endif // ENABLE_JS_EDITOR_LOG
+
   printf("nsHTMLEditor::PasteAsQuotation\n");
 
   nsAutoEditBatch beginBatching(this);
@@ -456,6 +502,13 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
 
 NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertAsQuotation(aQuotedText);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsAutoString citation ("");
   return InsertAsCitedQuotation(aQuotedText, citation);
 }
@@ -463,6 +516,13 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText)
 NS_IMETHODIMP nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
                                                    const nsString& aCitation)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertAsCitedQuotation(aQuotedText, aCitation);
+#endif // ENABLE_JS_EDITOR_LOG
+
   printf("nsHTMLEditor::InsertAsQuotation\n");
 
   nsAutoEditBatch beginBatching(this);
@@ -490,6 +550,13 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
 
 NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertHTML(aInputString);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult res;
   nsAutoEditBatch beginBatching(this);
 
@@ -720,6 +787,13 @@ nsHTMLEditor::GetParagraphStyle(nsStringArray *aTagList)
 NS_IMETHODIMP 
 nsHTMLEditor::AddBlockParent(nsString& aParentTag)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->AddBlockParent(aParentTag);
+#endif // ENABLE_JS_EDITOR_LOG
+
   if (gNoisy) 
   { 
     char *tag = aParentTag.ToNewCString();
@@ -764,6 +838,12 @@ nsHTMLEditor::AddBlockParent(nsString& aParentTag)
 NS_IMETHODIMP 
 nsHTMLEditor::ReplaceBlockParent(nsString& aParentTag)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->ReplaceBlockParent(aParentTag);
+#endif // ENABLE_JS_EDITOR_LOG
 
   if (gNoisy) 
   { 
@@ -1153,6 +1233,13 @@ nsHTMLEditor::ReParentContentOfRange(nsIDOMRange *aRange,
 NS_IMETHODIMP 
 nsHTMLEditor::RemoveParagraphStyle()
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->RemoveParagraphStyle();
+#endif // ENABLE_JS_EDITOR_LOG
+
   if (gNoisy) { 
     printf("---------- nsHTMLEditor::RemoveParagraphStyle ----------\n"); 
   }
@@ -1266,6 +1353,13 @@ nsHTMLEditor::RemoveParagraphStyleFromBlockContent(nsIDOMRange *aRange)
 NS_IMETHODIMP 
 nsHTMLEditor::RemoveParent(const nsString &aParentTag)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->RemoveParent(aParentTag);
+#endif // ENABLE_JS_EDITOR_LOG
+
   if (gNoisy) { 
     printf("---------- nsHTMLEditor::RemoveParent ----------\n"); 
   }
@@ -1386,6 +1480,13 @@ nsHTMLEditor::RemoveParentFromBlockContent(const nsString &aParentTag, nsIDOMRan
 NS_IMETHODIMP
 nsHTMLEditor::Indent(const nsString& aIndent)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->Indent(aIndent);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;
@@ -1461,6 +1562,13 @@ nsHTMLEditor::Indent(const nsString& aIndent)
 NS_IMETHODIMP
 nsHTMLEditor::Align(const nsString& aAlignType)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->Align(aAlignType);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;
@@ -1497,6 +1605,13 @@ nsHTMLEditor::Align(const nsString& aAlignType)
 NS_IMETHODIMP
 nsHTMLEditor::InsertList(const nsString& aListType)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertList(aListType);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -1581,6 +1696,13 @@ nsHTMLEditor::InsertList(const nsString& aListType)
 NS_IMETHODIMP
 nsHTMLEditor::InsertLink(nsString& aURL)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertLink(aURL);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsAutoEditBatch beginBatching(this);
 
   // Find out if the selection is collapsed:
@@ -1673,6 +1795,13 @@ nsHTMLEditor::InsertImage(nsString& aURL,
                           nsString& aAlt,
                           nsString& aAlignment)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertImage(aURL, aWidth, aHeight, aHspace, aVspace, aBorder, aAlt, aAlignment);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult res;
   nsCOMPtr<nsIDOMNode> newNode;
 
@@ -1935,6 +2064,13 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
 NS_IMETHODIMP
 nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertElement(aElement, aDeleteSelection, aReturn);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult res=NS_ERROR_NOT_INITIALIZED;
   if (aReturn)
     *aReturn = nsnull;
@@ -1974,6 +2110,13 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
 NS_IMETHODIMP
 nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertLinkAroundSelection(aAnchorElement);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult res=NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMSelection> selection;
 
@@ -2053,6 +2196,13 @@ PRBool nsHTMLEditor::IsElementInBody(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->SelectElement(aElement);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult res = NS_ERROR_NULL_POINTER;
 
   // Must be sure that element is contained in the document body
@@ -2085,6 +2235,13 @@ nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 {
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->SetCaretAfterElement(aElement);
+#endif // ENABLE_JS_EDITOR_LOG
+
   nsresult res = NS_ERROR_NULL_POINTER;
 
   // Must be sure that element is contained in the document body
