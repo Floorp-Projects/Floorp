@@ -188,12 +188,14 @@ protected:
 	virtual Boolean 	HitCellHotSpot( const STableCell &inCell, 
 											const Rect &inTotalSelectionRect ) ;
 
+	virtual Uint16		ClickCountToOpen ( ) const { return mClickCountToOpen; }
+
 	// the the cell rect in local coords even if scrolled out the the view
 	virtual void		GetLocalCellRectAnywhere( const STableCell	&inCell, Rect &outCellRect) const;
 
 	virtual void		UnselectCellsNotInSelectionOutline( const Rect & selectionRect ) ;
 		// override to turn off selection outline tracking
-	virtual Boolean		TableDesiresSelectionTracking( ) { return true; }
+	virtual Boolean		TableDesiresSelectionTracking( ) const { return true; }
 								
 	virtual const TableIndexT*	GetUpdatedSelectionList(TableIndexT& outSelectionSize);
 							// Returns a ONE-BASED list of TableIndexT, as it should.
@@ -230,7 +232,7 @@ protected:
 	virtual void		InlineEditorTextChanged( ) { }
 	virtual void		InlineEditorDone( ) { }
 	virtual void		DoInlineEditing( const STableCell &inCell, Rect & inTextRect );
-	virtual Boolean		CanDoInlineEditing( ) { return true; }
+	virtual Boolean		CanDoInlineEditing( ) const { return true; }
 	
 	virtual void		DrawCell(
 							const STableCell		&inCell,

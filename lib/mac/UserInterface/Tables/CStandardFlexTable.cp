@@ -886,16 +886,14 @@ Boolean	CStandardFlexTable::ClickSelect(
 				// user to double-click anywhere on the item to open it, like in the Finder.
 				// Doing a double-click to edit an item doesn't make sense and the user
 				// would get confused.
-				// ¥¥¥Double click check doesn't work right now.....will fix later....¥¥¥
-				// open selection if we've got the right click count
 				if (clickIsInTitle
 					&& mNameEditor
 					&& !(inMouseDown.macEvent.modifiers & shiftKey)
 					&& GetClickCount() != 2)
-						CDeferredTaskManager::Post1(
+						CDeferredTaskManager::Post(
 							new CDeferredInlineEditTask(this, inCell, textRect),
-							this);
-				if (GetClickCount() == mClickCountToOpen)
+							this, true);
+				if (GetClickCount() == ClickCountToOpen())
 				{
 					// Cancel inline editing.  Probably redundant.
 					if (mNameEditor)
@@ -942,7 +940,7 @@ Boolean	CStandardFlexTable::ClickSelect(
 					else
 					{				
 						// open selection if we've got the right click count
-						if (GetClickCount() == mClickCountToOpen)
+						if (GetClickCount() == ClickCountToOpen())
 							OpenSelection();
 					}
 				}
