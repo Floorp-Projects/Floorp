@@ -76,8 +76,18 @@ sub WriteDefaultPrefsFile($)
 %    pull        runtime         1       % just pull runtime
 %    options     mng             1       % turn mng on
 %    build       jars            0       % don't build jar files
-%
+%   
+%   Line containing the special 'buildfrom' flag, which specifies
+%   where to start the build. Example:
+%   
 %    buildfrom   nglayout                % where to start the build
+%
+%   Lines which modify the build settings like %main::DEBUG.
+%   Any lines which do not match either of the above are assumed
+%   to set variables on $main::. Examples:
+%   
+%    CARBON              1
+%    MOZILLA_OFFICIAL    1
 %
 EOS
 
@@ -187,6 +197,19 @@ sub ReadPrefsFile($$$$)
         my($build_start) = $1;
         HandleBuildFromPref($build_flags, $build_start);
       }
+      elsif ($line =~ /^\s*(\w+)\s+(\w+)/)
+      {
+        my($build_var) = $1;
+        my($var_setting) = $2;
+        
+        print "Setting \$main::$build_var to $var_setting\n";
+        
+        if ($var_setting =~ /\d+/) {
+          $var_setting += 0;  # convert to numeric
+        }
+        
+        eval "\$main::$build_var = $var_setting";
+      }
       else
       {
         print "Unknown pref option at $line\n";
@@ -217,6 +240,8 @@ sub ReadPrefsFile($$$$)
 sub ReadMozUserPrefs($$$$)
 {
   my($prefs_file_name, $pull_flags, $build_flags, $options_flags) = @_;
+  
+  if ($prefs_file_name eq "") { return; }
   
   my($prefs_path) = GetPrefsFolder();
   $prefs_path .= ":$prefs_file_name";
