@@ -121,9 +121,8 @@
     <rdf:Description about="#customize">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="customize:tabbed-browsing" nc:name="Tabbed Browsing" nc:link="tabbed_browsing.xhtml#customizing"/></rdf:li>
-                <rdf:li><rdf:Description ID="customize:themes" nc:name="Themes" nc:link="customization.xhtml#themes"/></rdf:li>
                 <rdf:li><rdf:Description ID="customize:toolbars" nc:name="Toolbars" nc:link="customization.xhtml#can_i_customize_my_toolbars"/></rdf:li>
+                <rdf:li><rdf:Description ID="customize:themes" nc:name="Themes" nc:link="customization.xhtml#themes"/></rdf:li>
                 <rdf:li><rdf:Description ID="customize:extensions" nc:name="Extensions" nc:link="customization.xhtml#extensions"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
@@ -456,16 +455,6 @@
         </nc:subheadings>
     </rdf:Description>
 
-  <rdf:Description about="#tabbed-browsing">
-      <nc:subheadings>
-          <rdf:Seq>
-              <rdf:li><rdf:Description ID="tabbed-browsing-using-tabbed-browsing" nc:name="Using Tabbed Browsing" nc:link="tabbed_browsing.xhtml#using_tabbed_browsing"/></rdf:li>
-              <rdf:li><rdf:Description ID="tabbed-browsing-creating-loading-tabs" nc:name="Creating and Loading Tabs" nc:link="tabbed_browsing.xhtml#creating_loading_tabs"/></rdf:li>
-              <rdf:li><rdf:Description ID="tabbed-browsing-customizing" nc:name="Customizing" nc:link="tabbed_browsing.xhtml#customizing"/></rdf:li>
-            </rdf:Seq>
-      </nc:subheadings>
-  </rdf:Description>
-
   <rdf:Description about="#themes">
   		<nc:subheadings>
         	<rdf:Seq>
@@ -491,7 +480,7 @@
   		<nc:subheadings>
         	<rdf:Seq>
             	<rdf:li> <rdf:Description ID="using:sidebar" nc:name="Sidebar" nc:link="using_firebird.xhtml#using_the_sidebar"/> </rdf:li>
-            	<rdf:li> <rdf:Description ID="using:tabbed-browsing" nc:name="Tabbed Browsing" nc:link="using_firebird.xhtml#tabbed_browsing"/> </rdf:li>
+            	<rdf:li> <rdf:Description ID="using:tabbed-browsing" nc:name="Tabbed Browsing" nc:link="tabbed_browsing.xhtml"/> </rdf:li>
             	<rdf:li> <rdf:Description ID="using:print-preview" nc:name="Print Preview" nc:link="using_firebird.xhtml#using_print_preview"/> </rdf:li>
               <rdf:li> <rdf:Description ID="using:page-setup" nc:name="Page Setup" nc:link="using_firebird.xhtml#using_page_setup"/> </rdf:li>
         	</rdf:Seq>
