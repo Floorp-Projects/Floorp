@@ -231,8 +231,11 @@ public:
   NS_IMETHOD Redo(PRUint32 aCount);
 
   NS_IMETHOD Cut();
+  NS_IMETHOD CanCut(PRBool &aCanCut);
   NS_IMETHOD Copy();
+  NS_IMETHOD CanCopy(PRBool &aCanCopy);
   NS_IMETHOD Paste();
+  NS_IMETHOD CanPaste(PRBool &aCanPaste);
 
   NS_IMETHOD OutputToString(nsString& aOutputString,
                             const nsString& aFormatType,
@@ -520,6 +523,9 @@ protected:
   /** simple utility to handle any error with event listener allocation or registration */
   void HandleEventListenerError();
 
+  /* small utility routine to test the eEditorReadonly bit */
+  PRBool IsModifiable();
+  
 // Data members
 protected:
 

@@ -25,6 +25,7 @@
 
 #include "nsIDOMSelectionListener.h"
 #include "nsIEditProperty.h"
+#include "nsString.h"
 
 class TypeInState : public nsIDOMSelectionListener
 {

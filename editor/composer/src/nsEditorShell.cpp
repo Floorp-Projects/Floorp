@@ -317,10 +317,27 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   if (NS_FAILED(rv)) return rv;
   
   // make the UI state maintainer
-  mStateMaintainer = new nsInterfaceState;
+  NS_NEWXPCOM(mStateMaintainer, nsInterfaceState);
   if (!mStateMaintainer) return NS_ERROR_OUT_OF_MEMORY;
   mStateMaintainer->AddRef();      // the owning reference
-  rv = mStateMaintainer->Init(mEditor, mWebShell);
+
+  // get the XULDoc from the webshell
+  nsCOMPtr<nsIContentViewer> cv;
+  rv = mWebShell->GetContentViewer(getter_AddRefs(cv));
+  if (NS_FAILED(rv)) return rv;
+    
+  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDocument> chromeDoc;
+  rv = docViewer->GetDocument(*getter_AddRefs(chromeDoc));
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(chromeDoc, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // now init the state maintainer
+  rv = mStateMaintainer->Init(mEditor, xulDoc);
   if (NS_FAILED(rv)) return rv;
   
   // set it up as a selection listener
@@ -337,7 +354,6 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   rv = editor->AddDocumentStateListener(mStateMaintainer);
   if (NS_FAILED(rv)) return rv;
   
-
   if (NS_SUCCEEDED(rv) && mContentWindow)
   {
     nsCOMPtr<nsIController> controller;

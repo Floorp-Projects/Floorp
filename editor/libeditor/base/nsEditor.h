@@ -156,8 +156,11 @@ public:
 
   // these are pure virtual in this base class
   NS_IMETHOD Cut() = 0;
+  NS_IMETHOD CanCut(PRBool &aCanCut)=0;
   NS_IMETHOD Copy() = 0;
+  NS_IMETHOD CanCopy(PRBool &aCanCopy)=0;
   NS_IMETHOD Paste() = 0;
+  NS_IMETHOD CanPaste(PRBool &aCanPaste)=0;
 
   NS_IMETHOD SelectAll();
 
