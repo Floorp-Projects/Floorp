@@ -27,26 +27,10 @@
   1) Get a real namespace for XUL. This should go in a 
      header file somewhere.
 
-  2) We have a serious problem if all the columns aren't created by
-     the time that we start inserting rows into the table. Need to fix
-     this so that columns can be dynamically added and removed (we
-     need to do this anyway to handle column re-ordering or
-     manipulation via DOM calls).
-
-  3) There's lots of stuff screwed up with the ordering of walking the
-     tree, creating children, getting assertions, etc. A lot of this
-     has to do with the "are children already generated" state
-     variable that lives in the RDFResourceElementImpl. I need to sit
-     down and really figure out what the heck this needs to do.
-
-  4) Can we do sorting as an insertion sort? This is especially
+  2) Can we do sorting as an insertion sort? This is especially
      important in the case where content streams in; e.g., gets added
      in the OnAssert() method as opposed to the CreateContents()
      method.
-
-  5) There is a fair amount of shared code (~5%) between
-     nsRDFTreeBuilder and nsRDFXULBuilder. It might make sense to make
-     a base class nsGenericBuilder that holds common routines.
 
  */
 
@@ -824,11 +808,12 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
 
     // Now do the work to change the attribute. There are a couple of
     // special cases that we need to check for here...
-    if ((elementNameSpaceID    == kNameSpaceID_XUL) &&
-        IsWidgetElement(element) &&
-        (attrNameSpaceID       == kNameSpaceID_None) &&
-        (attrNameAtom.get()    == kOpenAtom)) {
-        // We are possibly changing the value of the "open"
+    if ((elementNameSpaceID == kNameSpaceID_XUL) &&
+        IsItemOrFolder(element) && // XXX IsItemOrFolder(): is this what we really mean?
+        (attrNameSpaceID    == kNameSpaceID_None) &&
+        (attrNameAtom.get() == kOpenAtom)) {
+
+        // We are (possibly) changing the value of the "open"
         // attribute. This may require us to generate or destroy
         // content in the widget. See what the old value was...
         nsAutoString attrValue;
@@ -858,43 +843,129 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
             }
 
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to open/close tree item");
+            return rv;
         }
     }
-    else {
-        // It's a "vanilla" property: push its value into the graph.
-        nsCOMPtr<nsIRDFResource> property;
-        if (NS_FAILED(rv = GetResource(attrNameSpaceID, attrNameAtom, getter_AddRefs(property)))) {
-            NS_ERROR("unable to construct resource");
+    else if ((elementNameSpaceID == kNameSpaceID_XUL) &&
+             (IsItemOrFolder(element) || // XXX IsItemOrFolder(): is this what we really mean?
+              IsWidgetInsertionRootElement(element)) &&
+             (attrNameSpaceID    == kNameSpaceID_None) &&
+             (attrNameAtom.get() == kIdAtom)) {
+
+        // We are (possibly) changing the actual identity of the
+        // element; e.g., re-rooting an item in the tree.
+
+        nsCOMPtr<nsIRDFResource> newResource;
+        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(aValue, getter_AddRefs(newResource)))) {
+            NS_ERROR("unable to get new resource");
             return rv;
         }
 
-        // Unassert the old value, if there was one.
-        nsAutoString oldValue;
-        if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValue)) {
-            nsCOMPtr<nsIRDFLiteral> value;
-            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
-                NS_ERROR("unable to construct literal");
-                return rv;
-            }
+#if 0 // XXX we're fighting with the XUL builder, so just _always_ let this through.
+        // Didn't change. So bail!
+        if (resource == newResource)
+            return NS_OK;
+#endif
 
-            rv = mDB->Unassert(resource, property, value);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
+        // Allright, it really is changing. So blow away the old
+        // content node and insert a new one with the new ID in
+        // its place.
+        nsCOMPtr<nsIContent> parent;
+        if (NS_FAILED(rv = element->GetParent(*getter_AddRefs(parent)))) {
+            NS_ERROR("unable to get element's parent");
+            return rv;
         }
 
-        // Assert the new value
-        {
-            nsCOMPtr<nsIRDFLiteral> value;
-            if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
-                NS_ERROR("unable to construct literal");
-                return rv;
-            }
+        PRInt32 index;
+        if (NS_FAILED(rv = parent->IndexOf(element, index))) {
+            NS_ERROR("unable to get element's index within parent");
+            return rv;
+        }
 
-            if (NS_FAILED(rv = mDB->Assert(resource, property, value, PR_TRUE))) {
-                NS_ERROR("unable to assert new property value");
+        if (NS_FAILED(rv = parent->RemoveChildAt(index, PR_TRUE))) {
+            NS_ERROR("unable to remove element");
+            return rv;
+        }
+
+        nsCOMPtr<nsIContent> newElement;
+        if (NS_FAILED(rv = CreateResourceElement(elementNameSpaceID,
+                                                 elementNameAtom,
+                                                 newResource,
+                                                 getter_AddRefs(newElement)))) {
+            NS_ERROR("unable to create new element");
+            return rv;
+        }
+
+        // Attach transient properties to the new element.
+        //
+        // XXX all I really care about right this minute is the
+        // "open" state. We could put this stuff in a table and
+        // drive it that way.
+        nsAutoString attrValue;
+        if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None, kOpenAtom, attrValue))) {
+            NS_ERROR("unable to get open state of old element");
+            return rv;
+        }
+
+        if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+            if (NS_FAILED(rv = newElement->SetAttribute(kNameSpaceID_None, kOpenAtom, attrValue, PR_FALSE))) {
+                NS_ERROR("unable to set open state of new element");
                 return rv;
             }
         }
-    }    
+
+        // Mark as a container so the contents get regenerated
+        if (NS_FAILED(rv = newElement->SetAttribute(kNameSpaceID_RDF,
+                                                    kContainerAtom,
+                                                    "true",
+                                                    PR_FALSE))) {
+            NS_ERROR("unable to mark as a container");
+            return rv;
+        }
+
+        // Now insert the new element into the parent. This should
+        // trigger a reflow and cause the contents to be regenerated.
+        if (NS_FAILED(rv = parent->InsertChildAt(newElement, index, PR_TRUE))) {
+            NS_ERROR("unable to add new element to the parent");
+            return rv;
+        }
+
+        return NS_OK;
+    }
+
+    // If we get here, it's a "vanilla" property: push its value into the graph.
+    nsCOMPtr<nsIRDFResource> property;
+    if (NS_FAILED(rv = GetResource(attrNameSpaceID, attrNameAtom, getter_AddRefs(property)))) {
+        NS_ERROR("unable to construct resource");
+        return rv;
+    }
+
+    // Unassert the old value, if there was one.
+    nsAutoString oldValue;
+    if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValue)) {
+        nsCOMPtr<nsIRDFLiteral> value;
+        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
+            NS_ERROR("unable to construct literal");
+            return rv;
+        }
+
+        rv = mDB->Unassert(resource, property, value);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
+    }
+
+    // Assert the new value
+    {
+        nsCOMPtr<nsIRDFLiteral> value;
+        if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
+            NS_ERROR("unable to construct literal");
+            return rv;
+        }
+
+        if (NS_FAILED(rv = mDB->Assert(resource, property, value, PR_TRUE))) {
+            NS_ERROR("unable to assert new property value");
+            return rv;
+        }
+    }
 
     return NS_OK;
 }
@@ -946,7 +1017,7 @@ RDFGenericBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString
     }
 
     if ((elementNameSpaceID    == kNameSpaceID_XUL) &&
-        IsWidgetElement(element) &&
+        IsItemOrFolder(element) && // XXX Is this what we really mean?
         (attrNameSpaceID       == kNameSpaceID_None) &&
         (attrNameAtom.get()    == kOpenAtom)) {
         // We are removing the value of the "open" attribute. This may
@@ -1172,13 +1243,20 @@ RDFGenericBuilderImpl::FindWidgetRootElement(nsIContent* aElement,
 
 
 PRBool
-RDFGenericBuilderImpl::IsWidgetElement(nsIContent* aElement)
+RDFGenericBuilderImpl::IsItemOrFolder(nsIContent* aElement)
 {
-    // Returns PR_TRUE if the element is an item in the widget.
+    // XXX It seems like this should be a pure virtual method that
+    // subclasses implement?
+
+    // XXX All of the callers of this method actually only seem to
+    // care if the element is a "folder".
+
+    // Returns PR_TRUE if the element is an "item" or a "folder" in
+    // the widget.
     nsresult rv;
 
-    nsCOMPtr<nsIAtom>       itemAtom;
-    nsCOMPtr<nsIAtom>       folderAtom;
+    nsCOMPtr<nsIAtom> itemAtom;
+    nsCOMPtr<nsIAtom> folderAtom;
     if (NS_FAILED(rv = GetWidgetItemAtom(getter_AddRefs(itemAtom))) ||
         NS_FAILED(rv = GetWidgetFolderAtom(getter_AddRefs(folderAtom)))) {
         return rv;

@@ -24,29 +24,11 @@
 
   TO DO
 
-  1) Get a real namespace for XUL. This should go in a 
-     header file somewhere.
-
-  2) We have a serious problem if all the columns aren't created by
+  1) We have a serious problem if all the columns aren't created by
      the time that we start inserting rows into the table. Need to fix
      this so that columns can be dynamically added and removed (we
      need to do this anyway to handle column re-ordering or
      manipulation via DOM calls).
-
-  3) There's lots of stuff screwed up with the ordering of walking the
-     tree, creating children, getting assertions, etc. A lot of this
-     has to do with the "are children already generated" state
-     variable that lives in the RDFResourceElementImpl. I need to sit
-     down and really figure out what the heck this needs to do.
-
-  4) Can we do sorting as an insertion sort? This is especially
-     important in the case where content streams in; e.g., gets added
-     in the OnAssert() method as opposed to the CreateContents()
-     method.
-
-  5) There is a fair amount of shared code (~5%) between
-     nsRDFTreeBuilder and nsRDFXULBuilder. It might make sense to make
-     a base class nsGenericBuilder that holds common routines.
 
  */
 
@@ -518,7 +500,7 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
     nsresult rv;
 
     nsCOMPtr<nsIContent> treeChildren;
-    if (IsWidgetElement(aElement)) {
+    if (IsItemOrFolder(aElement)) {
         // Ensure that the <xul:treechildren> element exists on the parent.
         if (NS_FAILED(rv = EnsureElementHasGenericChild(aElement,
                                                         kNameSpaceID_XUL,

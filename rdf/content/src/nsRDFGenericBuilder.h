@@ -112,7 +112,7 @@ public:
     IsElementInWidget(nsIContent* aElement);
    
     PRBool
-    IsWidgetElement(nsIContent* aElement);
+    IsItemOrFolder(nsIContent* aElement);
  
     PRBool
     IsWidgetInsertionRootElement(nsIContent* aElement);
