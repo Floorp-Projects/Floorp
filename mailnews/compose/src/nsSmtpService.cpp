@@ -301,32 +301,31 @@ NS_IMETHODIMP nsMailtoChannel::GetOriginalURI(nsIURI* *aURI)
  
 NS_IMETHODIMP nsMailtoChannel::SetOriginalURI(nsIURI* aURI)
 {
-    NS_NOTREACHED("SetOriginalURI");
-    return NS_ERROR_NOT_IMPLEMENTED; 
+  return NS_OK;
 }
  
 NS_IMETHODIMP nsMailtoChannel::GetURI(nsIURI* *aURI)
 {
-    *aURI = m_url;
-    NS_IF_ADDREF(*aURI);
-    return NS_OK; 
+  *aURI = m_url;
+  NS_IF_ADDREF(*aURI);
+  return NS_OK; 
 }
  
 NS_IMETHODIMP nsMailtoChannel::SetURI(nsIURI* aURI)
 {
-    m_url = aURI;
-    return NS_OK; 
+  m_url = aURI;
+  return NS_OK; 
 }
  
 NS_IMETHODIMP nsMailtoChannel::OpenInputStream(nsIInputStream **_retval)
 {
-    NS_NOTREACHED("OpenInputStream");
+  NS_NOTREACHED("OpenInputStream");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMailtoChannel::OpenOutputStream(nsIOutputStream **_retval)
 {
-    NS_NOTREACHED("OpenOutputStream");
+  NS_NOTREACHED("OpenOutputStream");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -350,13 +349,11 @@ NS_IMETHODIMP nsMailtoChannel::AsyncWrite(nsIInputStream *fromStream, nsIStreamO
 
 NS_IMETHODIMP nsMailtoChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-    NS_NOTREACHED("GetLoadAttributes");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMailtoChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-    NS_NOTREACHED("SetLoadAttributes");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
