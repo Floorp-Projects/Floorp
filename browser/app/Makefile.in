@@ -144,6 +144,8 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
+
 ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
 endif
@@ -198,6 +200,7 @@ endif
 endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+
 firefox:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
                 -e "s|%MOZ_USER_DIR%|.firefox|" \
@@ -217,9 +220,10 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, firefox.js)
 endif
 
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+
 ICON_FILES	= \
-		mozicon50.xpm \
-		mozicon16.xpm \
+		$(DIST)/branding/mozicon50.xpm \
+		$(DIST)/branding/mozicon16.xpm \
 		$(NULL)
 
 libs:: $(ICON_FILES)
@@ -230,15 +234,35 @@ install::
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-libs:: default.xpm
-	$(INSTALL) $^ $(DIST)/bin/chrome/icons/default
+libs::
+	$(INSTALL) $(DIST)/branding/default.xpm $(DIST)/bin/chrome/icons/default
 
-install:: default.xpm
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/icons
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(DIST)/branding/default.xpm $(DESTDIR)$(mozappdir)/icons
 endif
 
 export:: brand.dtd.in
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > brand.dtd
+
+export::
+ifndef MOZ_USE_OFFICIAL_BRANDING
+	$(NSINSTALL) -D $(DIST)/branding
+ifeq ($(OS_ARCH),WINNT)
+	cp $(srcdir)/firefox.ico   $(DIST)/branding/firefox.ico
+	cp $(srcdir)/firefox.ico   $(DIST)/branding/app.ico
+	cp $(srcdir)/document.ico  $(DIST)/branding/document.ico
+endif
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	cp $(srcdir)/macbuild/firefox.icns  $(DIST)/branding/firefox.icns
+endif
+ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+	cp $(srcdir)/mozicon16.xpm $(DIST)/branding/mozicon16.xpm
+	cp $(srcdir)/mozicon50.xpm $(DIST)/branding/mozicon50.xpm
+endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+	cp $(srcdir)/default.xpm   $(DIST)/branding/default.xpm	
+endif
+endif
 
 libs::
 	touch $(DIST)/bin/.autoreg
@@ -254,7 +278,7 @@ libs:: $(PROGRAM)
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
-	cp -RL $(srcdir)/macbuild/firefox.icns $(DIST)/$(APP_NAME).app/Contents/Resources/firefox.icns
+	cp -RL $(DIST)/branding/firefox.icns $(DIST)/$(APP_NAME).app/Contents/Resources/firefox.icns
 	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 #       remove CVS dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
