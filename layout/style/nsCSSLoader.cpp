@@ -155,10 +155,8 @@ public:
 
 class SheetLoadData : public nsIUnicharStreamLoaderObserver
 {
-protected:
-  ~SheetLoadData(void);
-
 public:
+  virtual ~SheetLoadData(void);
   SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
                 const nsString& aTitle, const nsString& aMedia, 
                 PRInt32 aDefaultNameSpaceID,
