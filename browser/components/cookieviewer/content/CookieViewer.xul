@@ -24,7 +24,8 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/cookieviewer/CookieViewer.dtd" >
 
-<dialog buttons="accept,cancel"
+<dialog id="CookieManager"
+        buttons="accept,cancel"
         title="&window.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em;"
