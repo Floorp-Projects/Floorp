@@ -98,22 +98,13 @@ void nsTableCellReflowState::FixUp(const nsSize& aAvailSpace)
 }
 
 // 'old' is old cached cell's desired size
-// 'raw' is new cell's size without including style constraints from CalculateCellActualSize()
 // 'new' is new cell's size including style constraints
 static PRBool
 TallestCellGotShorter(nscoord aOld,
-                      nscoord aRaw,
                       nscoord aNew,
                       nscoord aTallest)
 {
-  // see if the cell got shorter and it may have been the tallest
-  PRBool tallestCellGotShorter = PR_FALSE;
-  if (aRaw < aOld) {
-    if ((aRaw == aTallest) && (aNew < aTallest)) {
-      tallestCellGotShorter = PR_TRUE;
-    }
-  }
-  return tallestCellGotShorter;
+  return ((aNew < aOld) && (aOld == aTallest));
 }
 
 /* ----------- nsTableRowpFrame ---------- */
@@ -1389,21 +1380,18 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     if (!hasVerticalAlignBaseline) { 
       // only the height matters
       tallestCellGotShorter = 
-        TallestCellGotShorter(oldCellDesSize.height, initCellDesSize.height, 
-          cellMet.height, mTallestCell);
+        TallestCellGotShorter(oldCellDesSize.height, cellMet.height, mTallestCell);
     }
     else {
       // the ascent matters
       tallestCellGotShorter = 
-        TallestCellGotShorter(oldCellDesAscent, initCellDesAscent, 
-          cellMet.ascent, mMaxCellAscent);
+        TallestCellGotShorter(oldCellDesAscent, cellMet.ascent, mMaxCellAscent);
       // the descent of cells without rowspan also matters
       if (!tallestCellGotShorter) {
         PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame&)*aNextFrame);
         if (rowSpan == 1) {
          tallestCellGotShorter = 
-           TallestCellGotShorter(oldCellDesAscent, initCellDesDescent, 
-             cellMet.descent, mMaxCellDescent);
+           TallestCellGotShorter(oldCellDesAscent, cellMet.descent, mMaxCellDescent);
         }
       }
     }
