@@ -722,14 +722,14 @@ nsStandardURL::ReplaceSegment(PRUint32 pos, PRUint32 len, const nsACString &val)
 }
 
 nsresult
-nsStandardURL::ParseURL(const char *spec)
+nsStandardURL::ParseURL(const char *spec, PRInt32 specLen)
 {
     nsresult rv;
 
     //
     // parse given URL string
     //
-    rv = mParser->ParseURL(spec, -1,
+    rv = mParser->ParseURL(spec, specLen,
                            &mScheme.mPos, &mScheme.mLen,
                            &mAuthority.mPos, &mAuthority.mLen,
                            &mPath.mPos, &mPath.mLen);
@@ -1025,6 +1025,7 @@ nsStandardURL::SetSpec(const nsACString &input)
 
     const nsPromiseFlatCString &flat = PromiseFlatCString(input);
     const char *spec = flat.get();
+    PRInt32 specLength = flat.Length();
 
     LOG(("nsStandardURL::SetSpec [spec=%s]\n", spec));
 
@@ -1035,11 +1036,13 @@ nsStandardURL::SetSpec(const nsACString &input)
 
     // filter out unexpected chars "\r\n\t" if necessary
     nsCAutoString buf1;
-    if (net_FilterURIString(spec, buf1))
+    if (net_FilterURIString(spec, buf1)) {
         spec = buf1.get();
+        specLength = buf1.Length();
+    }
 
     // parse the given URL...
-    nsresult rv = ParseURL(spec);
+    nsresult rv = ParseURL(spec, specLength);
     if (NS_FAILED(rv)) return rv;
 
     // finally, use the URLSegment member variables to build a normalized

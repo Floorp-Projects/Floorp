@@ -164,7 +164,7 @@ private:
     PRInt32  ReplaceSegment(PRUint32 pos, PRUint32 len, const char *val, PRUint32 valLen);
     PRInt32  ReplaceSegment(PRUint32 pos, PRUint32 len, const nsACString &val);
 
-    nsresult ParseURL(const char *spec);
+    nsresult ParseURL(const char *spec, PRInt32 specLen);
     nsresult ParsePath(const char *spec, PRUint32 pathPos, PRInt32 pathLen = -1);
 
     char    *AppendToSubstring(PRUint32 pos, PRInt32 len, const char *tail, PRInt32 tailLen = -1);
