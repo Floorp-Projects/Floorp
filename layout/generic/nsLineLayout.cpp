@@ -86,9 +86,6 @@ nsTextRun::List(FILE* out, PRInt32 aIndent)
 #define PLACED_LEFT  0x1
 #define PLACED_RIGHT 0x2
 
-#define NUM_SPAN_DATA (sizeof(mSpanDataBuf) / sizeof(mSpanDataBuf[0]))
-#define NUM_FRAME_DATA (sizeof(mFrameDataBuf) / sizeof(mFrameDataBuf[0]))
-
 nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
                            nsISpaceManager* aSpaceManager,
                            const nsHTMLReflowState* aOuterReflowState,
@@ -119,37 +116,15 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
   mReflowTextRuns = nsnull;
   mTextRun = nsnull;
 
-  // XXX Do this on demand to avoid extra setup time
-  // Place the baked-in per-frame-data on the frame free list
-  PerFrameData** pfdp = &mFrameFreeList;
-  PerFrameData* pfd = mFrameDataBuf;
-  PerFrameData* endpfd = pfd + NUM_FRAME_DATA;
-  while (pfd < endpfd) {
-#ifdef DEBUG
-    nsCRT::memset(pfd, 0xEE, sizeof(*pfd));
-#endif
-    *pfdp = pfd;
-    pfdp = &pfd->mNext;
-    pfd++;
-  }
-  *pfdp = nsnull;
+  // Instead of always pre-initializing the free-lists for frames and
+  // spans, we do it on demand so that situations that only use a few
+  // frames and spans won't waste alot of time in unneeded
+  // initialization.
+  mInitialFramesFreed = mInitialSpansFreed = 0;
+  mFrameFreeList = nsnull;
+  mSpanFreeList = nsnull;
 
-  // XXX Do this on demand to avoid extra setup time
-  // Place the baked-in per-span-data on the span free list
-  PerSpanData** psdp = &mSpanFreeList;
-  PerSpanData* psd = mSpanDataBuf;
-  PerSpanData* endpsd = psd + NUM_SPAN_DATA;
-  while (psd < endpsd) {
-#ifdef DEBUG
-    nsCRT::memset(psd, 0xEE, sizeof(*psd));
-#endif
-    *psdp = psd;
-    psdp = &psd->mNext;
-    psd++;
-  }
-  *psdp = nsnull;
-
-  mCurrentSpan = mRootSpan = mLastSpan = nsnull;
+  mCurrentSpan = mRootSpan = nsnull;
   mSpanDepth = 0;
 
   mTextRuns = nsnull;
@@ -176,8 +151,9 @@ nsLineLayout::~nsLineLayout()
   // Free up all of the per-span-data items that were allocated on the heap
   PerSpanData* psd = mSpanFreeList;
   while (nsnull != psd) {
-    PerSpanData* nextSpan = psd->mNext;
-    if ((psd < &mSpanDataBuf[0]) || (psd >= &mSpanDataBuf[NUM_SPAN_DATA])) {
+    PerSpanData* nextSpan = psd->mNextFreeSpan;
+    if ((psd < &mSpanDataBuf[0]) ||
+        (psd >= &mSpanDataBuf[NS_LINELAYOUT_NUM_SPANS])) {
       delete psd;
     }
     psd = nextSpan;
@@ -187,7 +163,8 @@ nsLineLayout::~nsLineLayout()
   PerFrameData* pfd = mFrameFreeList;
   while (nsnull != pfd) {
     PerFrameData* nextFrame = pfd->mNext;
-    if ((pfd < &mFrameDataBuf[0]) || (pfd >= &mFrameDataBuf[NUM_FRAME_DATA])) {
+    if ((pfd < &mFrameDataBuf[0]) ||
+        (pfd >= &mFrameDataBuf[NS_LINELAYOUT_NUM_FRAMES])) {
       delete pfd;
     }
     pfd = nextFrame;
@@ -220,6 +197,9 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   printf(": BeginLineReflow: %d,%d,%d,%d %s\n",
          aX, aY, aWidth, aHeight,
          aIsTopOfPage ? "top-of-page" : "");
+#endif
+#ifdef DEBUG
+  mSpansAllocated = mSpansFreed = mFramesAllocated = mFramesFreed = 0;
 #endif
 
   mBRFrame = nsnull;
@@ -279,24 +259,24 @@ nsLineLayout::EndLineReflow()
   printf(": EndLineReflow: width=%d\n", mRootSpan->mX - mRootSpan->mLeftEdge);
 #endif
 
-  PerSpanData* psd = mRootSpan;
-  while (nsnull != psd) {
-    // Put frames on free list
-    PerFrameData* pfd = psd->mFirstFrame;
-    while (nsnull != pfd) {
-      PerFrameData* nextFrame = pfd->mNext;
-      pfd->mNext = mFrameFreeList;
-      mFrameFreeList = pfd;
-      pfd = nextFrame;
-    }
+  FreeSpan(mRootSpan);
+  mCurrentSpan = mRootSpan = nsnull;
 
-    // Put span on free list
-    PerSpanData* nextSpan = psd->mNext;
-    psd->mNext = mSpanFreeList;
-    mSpanFreeList = psd;
-    psd = nextSpan;
+  NS_ASSERTION(mSpansAllocated == mSpansFreed, "leak");
+  NS_ASSERTION(mFramesAllocated == mFramesFreed, "leak");
+
+#ifdef DEBUG_kipp
+  static PRInt32 maxSpansAllocated = NS_LINELAYOUT_NUM_SPANS;
+  static PRInt32 maxFramesAllocated = NS_LINELAYOUT_NUM_FRAMES;
+  if (mSpansAllocated > maxSpansAllocated) {
+    printf("XXX: saw a line with %d spans\n", mSpansAllocated);
+    maxSpansAllocated = mSpansAllocated;
   }
-  mCurrentSpan = mRootSpan = mLastSpan = nsnull;
+  if (mFramesAllocated > maxFramesAllocated) {
+    printf("XXX: saw a line with %d frames\n", mFramesAllocated);
+    maxFramesAllocated = mFramesAllocated;
+  }
+#endif
 }
 
 // XXX swtich to a single mAvailLineWidth that we adjust as each frame
@@ -413,30 +393,28 @@ nsLineLayout::NewPerSpanData(PerSpanData** aResult)
 {
   PerSpanData* psd = mSpanFreeList;
   if (nsnull == psd) {
-    psd = new PerSpanData;
-    if (nsnull == psd) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (mInitialSpansFreed < NS_LINELAYOUT_NUM_SPANS) {
+      // use one of the ones defined in our struct...
+      psd = &mSpanDataBuf[mInitialSpansFreed++];
+    }
+    else {
+      psd = new PerSpanData;
+      if (nsnull == psd) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
   }
   else {
-    mSpanFreeList = psd->mNext;
+    mSpanFreeList = psd->mNextFreeSpan;
   }
   psd->mParent = nsnull;
   psd->mFrame = nsnull;
   psd->mFirstFrame = nsnull;
   psd->mLastFrame = nsnull;
-  psd->mNext = nsnull;
 
-  // Link new span to the end of the span list
-  if (nsnull == mLastSpan) {
-    psd->mPrev = nsnull;
-  }
-  else {
-    mLastSpan->mNext = psd;
-    psd->mPrev = mLastSpan;
-  }
-  mLastSpan = psd;
-
+#ifdef DEBUG
+  mSpansAllocated++;
+#endif
   *aResult = psd;
   return NS_OK;
 }
@@ -578,6 +556,9 @@ nsLineLayout::SplitLineTo(PRInt32 aNewCount)
         next = pfd->mNext;
         pfd->mNext = mFrameFreeList;
         mFrameFreeList = pfd;
+#ifdef DEBUG
+        mFramesFreed++;
+#endif
         if (nsnull != pfd->mSpan) {
           FreeSpan(pfd->mSpan);
         }
@@ -622,6 +603,9 @@ nsLineLayout::PushFrame(nsIFrame* aFrame)
   // Now free it, and if it has a span, free that too
   pfd->mNext = mFrameFreeList;
   mFrameFreeList = pfd;
+#ifdef DEBUG
+  mFramesFreed++;
+#endif
   if (nsnull != pfd->mSpan) {
     FreeSpan(pfd->mSpan);
   }
@@ -635,10 +619,6 @@ nsLineLayout::PushFrame(nsIFrame* aFrame)
 void
 nsLineLayout::FreeSpan(PerSpanData* psd)
 {
-  // Take span out of the list
-  if (nsnull != psd->mNext) psd->mNext->mPrev = psd->mPrev;
-  if (nsnull != psd->mPrev) psd->mPrev->mNext = psd->mNext;
-
   // Free its frames
   PerFrameData* pfd = psd->mFirstFrame;
   while (nsnull != pfd) {
@@ -648,8 +628,18 @@ nsLineLayout::FreeSpan(PerSpanData* psd)
     PerFrameData* next = pfd->mNext;
     pfd->mNext = mFrameFreeList;
     mFrameFreeList = pfd;
+#ifdef DEBUG
+    mFramesFreed++;
+#endif
     pfd = next;
   }
+
+  // Now put the span on the free list since its free too
+  psd->mNextFreeSpan = mSpanFreeList;
+  mSpanFreeList = psd;
+#ifdef DEBUG
+  mSpansFreed++;
+#endif
 }
 
 PRBool
@@ -671,9 +661,15 @@ nsLineLayout::NewPerFrameData(PerFrameData** aResult)
 {
   PerFrameData* pfd = mFrameFreeList;
   if (nsnull == pfd) {
-    pfd = new PerFrameData;
-    if (nsnull == pfd) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (mInitialFramesFreed < NS_LINELAYOUT_NUM_FRAMES) {
+      // use one of the ones defined in our struct...
+      pfd = &mFrameDataBuf[mInitialFramesFreed++];
+    }
+    else {
+      pfd = new PerFrameData;
+      if (nsnull == pfd) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
   }
   else {
@@ -684,6 +680,7 @@ nsLineLayout::NewPerFrameData(PerFrameData** aResult)
 #ifdef DEBUG
   pfd->mVerticalAlign = 0xFF;
   pfd->mRelativePos = PRBool(0xFF);
+  mFramesAllocated++;
 #endif
   *aResult = pfd;
   return NS_OK;
@@ -1224,8 +1221,8 @@ void
 nsLineLayout::DumpPerSpanData(PerSpanData* psd, PRInt32 aIndent)
 {
   nsFrame::IndentBy(stdout, aIndent);
-  printf("%p: left=%d x=%d right=%d prev/next=%p/%p\n", psd, psd->mLeftEdge,
-         psd->mX, psd->mRightEdge, psd->mPrev, psd->mNext);
+  printf("%p: left=%d x=%d right=%d\n", psd, psd->mLeftEdge,
+         psd->mX, psd->mRightEdge);
   PerFrameData* pfd = psd->mFirstFrame;
   while (nsnull != pfd) {
     nsFrame::IndentBy(stdout, aIndent+1);

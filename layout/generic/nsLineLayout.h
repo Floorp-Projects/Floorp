@@ -28,6 +28,17 @@ class nsBlockReflowState;
 class nsPlaceholderFrame;
 struct nsStyleText;
 
+// If your machine has a limited size stack, you'll want to adjust
+// these numbers. Note that it will force the line layout code to use
+// the heap more so layout will be slower!
+#if defined(XP_MAC)
+#define NS_LINELAYOUT_NUM_FRAMES        15
+#define NS_LINELAYOUT_NUM_SPANS         5
+#else
+#define NS_LINELAYOUT_NUM_FRAMES        50
+#define NS_LINELAYOUT_NUM_SPANS         20
+#endif
+
 class nsLineLayout {
 public:
   nsLineLayout(nsIPresContext& aPresContext,
@@ -84,10 +95,6 @@ public:
   nsresult ReflowFrame(nsIFrame* aFrame,
                        nsIFrame** aNextRCFrame,
                        nsReflowStatus& aReflowStatus);
-
-//XXX  nscoord GetCarriedOutTopMargin() const {
-//XXX    return mCarriedOutTopMargin;
-//XXX  }
 
   nscoord GetCarriedOutBottomMargin() const {
     return mCarriedOutBottomMargin;
@@ -243,7 +250,6 @@ protected:
   nscoord mBottomEdge;
   nscoord mMaxTopBoxHeight;
   nscoord mMaxBottomBoxHeight;
-//XXX  nscoord mCarriedOutTopMargin;
   nscoord mCarriedOutBottomMargin;
 
   nsTextRun* mReflowTextRuns;
@@ -281,13 +287,15 @@ protected:
     // Other state we use
     PRUint8 mVerticalAlign;
   };
-  PerFrameData mFrameDataBuf[10];
+  PerFrameData mFrameDataBuf[NS_LINELAYOUT_NUM_FRAMES];
   PerFrameData* mFrameFreeList;
+  PRInt32 mInitialFramesFreed;
 
   struct PerSpanData {
-    PerSpanData* mNext;
-    PerSpanData* mPrev;
-    PerSpanData* mParent;
+    union {
+      PerSpanData* mParent;
+      PerSpanData* mNextFreeSpan;
+    };
     PerFrameData* mFrame;
     PerFrameData* mFirstFrame;
     PerFrameData* mLastFrame;
@@ -315,12 +323,16 @@ protected:
       mLastFrame = pfd;
     }
   };
-  PerSpanData mSpanDataBuf[4];
+  PerSpanData mSpanDataBuf[NS_LINELAYOUT_NUM_SPANS];
   PerSpanData* mSpanFreeList;
+  PRInt32 mInitialSpansFreed;
   PerSpanData* mRootSpan;
-  PerSpanData* mLastSpan;
   PerSpanData* mCurrentSpan;
   PRInt32 mSpanDepth;
+#ifdef DEBUG
+  PRInt32 mSpansAllocated, mSpansFreed;
+  PRInt32 mFramesAllocated, mFramesFreed;
+#endif
 
   // XXX These slots are used ONLY during FindTextRuns
   nsTextRun* mTextRuns;
