@@ -21,16 +21,28 @@
         width: auto;
         height: auto;
         right: 0;
-        bottom: 34px;
+        bottom: 40px;
         left: 0;
         overflow: auto;
         padding: 2px .5em;
         border: solid 0px black;
       }
+      
+      #footer_bar {
+        position: fixed;
+        width: 100%;
+        height: 20px;
+        top: auto;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        margin-top: auto;
+      }
+      
       #footer {
         position: fixed;
         width: 100%;
-        height: 34px;
+        height: 20px;
         top: auto;
         right: 0;
         bottom: 0;
@@ -78,7 +90,6 @@
     dump("Browser enabling buttons\n");
   }
 
-
   function RefreshUrlbar()
   {
    //Refresh the urlbar bar
@@ -103,7 +114,7 @@
     if (appCore != null) {
 	    dump("Going Forward\n");
       appCore.forward();
-      RefreshUrlbar();
+	  RefreshUrlbar();
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
@@ -119,7 +130,7 @@
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
-      dump("Opening New Window\n");
+	    dump("Opening New Window\n");
       appCore.newWindow();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -181,21 +192,6 @@
     }
   }
 
-  function OpenMessenger()
-  {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("resource:/res/samples/mailshell.xul",
-                             window);
-    }
-  }    
-
 
   </html:script>
 
@@ -206,52 +202,169 @@
   <broadcaster id="canPrint"/>
   
   <menubar>
-    <menu name="File">
-      <menuitem name="New Window" onclick="BrowserNewWindow();"/>
+      <menu name="File">
+      <menuitem name="New Browser Window" onClick="BrowserNewWindow();"/>
+      	<menu name="New">
+      		<menuitem name="Mail Message" onClick="MsgNewMessage();"/>
+		      <menuitem name="Chat Window" onClick="BrowserPrintPreview();"/>
+		      <separator />
+		      <menuitem name="Blank Page" onClick="BrowserNewWindow();"/>
+		      <menuitem name="Page Using Template..." onClick="BrowserNewWindow();"/>
+		      <menuitem name="Page Using Draft..." onClick="BrowserNewWindow();""/>
+    		</menu>
+      <menuitem name="Open" onClick="BrowserNewWindow();"/>
       <separator />
-      <menuitem name="Print Setup" onclick=""/>
-      <menuitem name="Print Preview" onclick=""/>
-      <menuitem name="Print" onclick=""/>
+      <menuitem name="Send Page" onClick="BrowserReload();"/>
+	   <menuitem name="Edit Page" onClick="BrowserReload();" />
+	   <separator />
+      <menu name="Offline">
+	      <menuitem name="Go Offline" onClick="BrowserReload();"/>
+	      <separator />
+	      <menuitem name="Synchronize..." onClick="BrowserReload();"/>
+      </menu>
       <separator />
-      <menuitem name="Close" onclick=""/>
-      <menuitem name="Exit" onclick="BrowserExit();"/>
+      <menuitem name="Print Setup" onClick=""/>
+      <menuitem name="Print Preview" onClick="BrowserPrintPreview();"/>
+      <menuitem name="Print" onClick=""/>
+      <separator />
+      <menuitem name="Close" onClick="BrowserClose();"/>
+      <menuitem name="Quit" onClick="BrowserExit();"/>
     </menu>
     <menu name="Edit">
-      <menuitem name="Cut" onclick=""/>
-      <menuitem name="Copy" onclick=""/>
-      <menuitem name="Paste" onclick=""/>
+      <menuitem name="Undo" onClick="BrowserReload();"/>
+      <menuitem name="Redo" onClick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Cut" onClick="BrowserReload();"/>
+      <menuitem name="Copy" onClick="BrowserReload();"/>
+      <menuitem name="Paste" onClick="BrowserReload();"/>
+      <menuitem name="Delete" onClick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Select All" onClick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Preferences..." onClick="BrowserReload();"/>
     </menu>
     <menu name="View">
-      <menuitem name="Reload" onclick="BrowserReload();"/>
+      <menuitem name="Toolbars" onClick="BrowserReload();"/>
+      <menuitem name="Sidebar" onClick="BrowserReload();"/>
       <separator />
-      <menuitem name="Latin1" onclick="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
-      <menuitem name="ISO-2022-JP" onclick="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
-      <menuitem name="Shift_JIS" onclick="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
-      <menuitem name="EUC-JP" onclick="BrowserSetDocumentCharacterSet('EUC-JP');"/>
+      <menuitem name="Enlarge Text Size" onClick="BrowserReload();"/>
+      <menuitem name="Reduce Text Size" onClick="BrowserReload();"/>
+      <separator />
+      <menu name="Use Stylesheet" onClick="BrowserReload();">
+	      <menuitem name="Default" onClick="BrowserReload();"/>
+	      <separator />
+	      <menuitem name="Easy Reading" onClick="BrowserReload();"/>
+	      <menuitem name="Maximum Information" onClick="BrowserReload();"/>
+	      <menuitem name="Bizarre" onClick="BrowserReload();"/>
+      </menu>
+      <separator />
+      <menuitem name="Reload" onClick="BrowserReload();"/>
+      <menuitem name="Show Images" onClick="BrowserReload();"/>
+      <menuitem name="Stop" onClick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Page Source" onClick="BrowserReload();"/>
+      <menuitem name="Page Info" onClick="BrowserReload();"/>
+      <separator />
+      <menu name="Translate">
+	      <menuitem name="French To English" onClick="BrowserReload();"/>
+	      <menuitem name="German To English" onClick="BrowserReload();"/>
+	      <menuitem name="Spanish To English" onClick="BrowserReload();"/>
+	      <separator />
+	      <menuitem name="English To French" onClick="BrowserReload();"/>
+	      <menuitem name="German To French" onClick="BrowserReload();"/>
+	      <menuitem name="Spanish To French" onClick="BrowserReload();"/>
+	      <separator />
+	      <menuitem name="English To German" onClick="BrowserReload();"/>
+	      <menuitem name="French To German" onClick="BrowserReload();"/>
+	      <menuitem name="Spanish To German" onClick="BrowserReload();"/>
+	      <separator />
+	      <menuitem name="English To Spanish" onClick="BrowserReload();"/>
+	      <menuitem name="French To Spanish" onClick="BrowserReload();"/>
+	      <menuitem name="German To Spanish" onClick="BrowserReload();"/>
+    </menu>
+      <menu name="Character Set">
+	      <menuitem name="Latin1" onclick="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
+	      <menuitem name="ISO-2022-JP" onclick="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
+	      <menuitem name="Shift_JIS" onclick="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
+	      <menuitem name="EUC-JP" onclick="BrowserSetDocumentCharacterSet('EUC-JP');"/>
+	   </menu>
+    </menu>
+    <menu name="Search">
+      <menuitem name="Find On This page..." onClick="BrowserReload();"/>
+      <menuitem name="Find Again" onClick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Search Parent Item..." onClick="BrowserReload();"/>
+      <menuitem name="Search Parent2 Item..." onClick="BrowserReload();"/>
+      <menuitem name="App Specific" onClick="BrowserReload();"/>
+      <menuitem name="App Specific" onClick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Search The Internet..." onClick="BrowserReload();"/>
+      <menuitem name="Search All Mail..." onClick="BrowserReload();"/>
+      <menuitem name="Search Bookmarks" onClick="BrowserReload();"/>
+      <menuitem name="Search People" onClick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Search On This Computer..." onClick="BrowserReload();"/>
     </menu>
     <menu name="Go">
-      <menuitem name="Back" onclick="BrowserBack();"/>
-      <menuitem name="Forward" onclick="BrowserForward();" />
-      <menuitem name="Home" onclick="BrowserHome();"/>
+      <menuitem name="Back" onClick="BrowserBack();"/>
+      <menuitem name="Forward" onClick="BrowserForward();" />
+      <menuitem name="Home" onClick="BrowserHome();"/>
+      <separator />
+      <menuitem name="Previous Site 1" onClick="BrowserBack();"/>
+      <menuitem name="Previous Site 2" onClick="BrowserBack();"/>
+      <menuitem name="Previous Site n" onClick="BrowserBack();"/>
     </menu>
     <menu name="Bookmarks" datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
-      <menuitem name="Add Bookmark"/>
-      <menuitem name="Edit Bookmarks..." onclick="BrowserEditBookmarks();"/>
+		<menuitem name="Add Current Page"/>
+		<menuitem name="Add To Personal Toolbar"/>
+		<menuitem name="Manage Bookmarks..." onclick="BrowserEditBookmarks();"/>
+		<separator/>
+	</menu>
+	 <menu name="Tasks">
+      <menuitem name="Navigator" onClick="BrowserReload();"/>
+      <menuitem name="Messenger" onClick="BrowserReload();" />
+      <menuitem name="Chat" onClick="BrowserReload();"/>
+      <menuitem name="Shopping Cart" onClick="BrowserReload();"/>
+      <separator />
+      <menuitem name="Services A" onClick="BrowserReload();"/>
+      <menuitem name="Services B" onClick="BrowserReload();" />
+      <menuitem name="Services C" onClick="BrowserReload();"/>
+      <menuitem name="Services D" onClick="BrowserReload();"/>
+      <separator />
+      <menu name="Tools">
+	      <menuitem name="Plugins Info" onClick="BrowserReload();"/>
+	      <menuitem name="Server Tools" onClick="BrowserReload();" />
+	      <menuitem name="Java/JS Console" onClick="BrowserReload();"/>
+	      <menuitem name="JavaScript Debugger" onClick="BrowserReload();"/>
+      </menu>
+      <separator />
+      <menuitem name="Security Info" onClick="BrowserReload();"/>
       <separator/>
+      <menuitem name="Window 1" onClick="BrowserReload();" key="1"/>
+      <menuitem name="Window 2" onClick="BrowserReload();" />
+      <menuitem name="Window 3" onClick="BrowserReload();" />
     </menu>
-    <menu name="Apps">
-      <menuitem name="Messenger" onclick="OpenMessenger();"/>
-      <menuitem name="Calendar"/>
-      <menuitem name="AIM"/>
+     <menu name="Help">
+      <menuitem name="Help Contents" onClick="BrowserReload();"/>
+      <separator />
+      <menuitem name="How To Tutorial" onClick="BrowserReload();"/>
+      <menuitem name="Help Channel" onClick="BrowserReload();" />
+      <separator />
+      <menuitem name="Software Updates" onClick="BrowserReload();"/>
+      <menuitem name="Technical Support" onClick="BrowserReload();"/>
+      <menuitem name="Release Notes" onClick="BrowserReload();"/>
+      <separator />
+      <menuitem name="About Communicator Prototype" onClick="BrowserReload();" />
     </menu>
   </menubar>
   
   <html:div id="header">
   <toolbox>
-    <toolbar>
+  	   	 
+    <toolbar id="mainbar">
  	  <html:table width="100%" cellpadding=0 cellspacing=0><html:tr>
 
-      <html:td width="340px">
+      <html:td width="160px">
 
 		  <titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled"/>			
@@ -271,39 +384,72 @@
 				onclick="window.frames[0].stop()">
 	        <observes element="canStop" attribute="disabled"/>
 	      </titledbutton>
-
-	      <titledbutton src="resource:/res/toolbar/TB_Home.gif" align="bottom" value="Home" 
-				onclick="BrowserHome()"/>
-
-	      <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
-				onclick="window.frames[0].print()">
-	        <observes element="canPrint" attribute="disabled"/>
-	      </titledbutton>
 	  </html:td>
 	  
 	  <html:td style="vertical-align:center">
 		  <html:input id="urlbar" html:style="vertical-align: center; width: 100%" html:type="text" 
-			  html:onkeyup="if (event.which == 13) {window.frames[0].location.href=document.getElementById('urlbar').value; }"/>   
+			  html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementById('urlbar').value; }"/>   
 	  </html:td>
 	  
-	  <html:td width="65px">	  
-	      <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="BrowserHome()"/>        
+	  <html:td width="80px">
+	  <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
+				onclick="window.frames[0].print()">
+	        <observes element="canPrint" attribute="disabled"/>
+	      </titledbutton>
+	      	  
+	      <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="window.frames[0].home()"/>        
       </html:td>
  
       </html:tr></html:table>
      
     </toolbar>
 
-	<toolbar datasources="rdf:bookmarks" id="NC:PersonalToolbarFolder"/>
+	<toolbar  id="persbar" datasources="rdf:bookmarks" id="NC:PersonalToolbarFolder">
+	<titledbutton src="resource:/res/toolbar/TB_Home.gif" align="right" value="Homer" 
+				onclick="BrowserHome()"/>
+	<titledbutton src="resource:/res/toolbar/TB_Netscape.gif" align="right" value="Netscape" 
+				onclick="window.frames[0].location.href='http://my.netscape.com'"/>
+	</toolbar>
     
   </toolbox>
   </html:div>
 
   <html:div id="main">
-     <html:iframe html:name="content" html:src="BrowserInitPage.html" html:width="100%" html:height="450"></html:iframe>
+     <html:iframe html:name="content" html:src="BrowserInitPage.html" html:width="100%" html:height="440px"></html:iframe>
   </html:div>
 
-  <html:div id="footer">
+  <html:div id="footer_bar">
+  	<toolbox>
+  	<toolbar id="taskbar">
+  	 <html:table class="statusbar" style="table-spacing:0;table-padding:0;width:99%;border:1px;">
+        <html:tr>
+        <html:td>
+  	 	<titledbutton align="left" src="resource:/res/toolbar/TB_popup.gif" value="Web" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Mail" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Chat" />
+  	 	</html:td>
+  	 	<html:td>
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="DayPlanner" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Shopping" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="My Desk" />
+  	 	</html:td>
+  	 	<html:td>
+  	 	</html:td>
+  	 	<html:td align="right">
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Open Windows" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniNav.gif" value="" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniMail.gif" value="" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniAddr.gif" value="" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniComp.gif" value="" />
+  	 	</html:td>
+  		</html:tr>
+	</html:table>
+ </toolbar>
+  	</toolbox>
+  	
+  </html:div>
+  
+<html:div id="footer">
     <html:script>
         var bindCount = 0;
         function onStatus() {
@@ -419,20 +565,23 @@
     <broadcaster id="Browser:Security" secure="false"/>
     
     <html:center>
+    
+    
     <html:table class="statusbar" style="table-spacing:0;table-padding:0;width:99%;border:1px;">
+        
+        
         <html:tr>
-        	<html:td class="notification" style="width:200px;font-family:sans-serif;font-size:8pt;">
+        	
+        	
+        	<html:td class="notification" style="width:200px;font-family:sans-serif;font-size:2.5mm;">
         		<html:div onclick="doTests()">
-        			[Notification Component] Click to test...
+        			[Notification Component]
         		</html:div>
         	</html:td>
-            <html:td id="statusbar-indicator" class="statusbar-indicator" style="display:none;background-color:yellow;font-family:sans-serif;font-size:8pt;border-top:2px solid yellow;">
-                <html:div onclick="securityOff();">
-                    <html:img src="resource:/res/toolbar/StatusBar-secure.gif" style="vertical-align:middle"/>Secure Conn.
-                </html:div>
-            </html:td>
-            <html:td id="statusbar-meter" class="statusbar-meter" onclick="dumpProgress()" style="width:100px;border-top:2px solid;">
-                <progressmeter id="meter" mode="normal" value="0" style="width:100px;">
+            
+         
+         <html:td id="statusbar-meter" class="statusbar-meter" onclick="dumpProgress()" style="width:100px;border-top:2px solid;">
+                <progressmeter id="meter" mode="normal" value="0" style="width:100px; height: 16px;">
                     <!-- <observes element="Browser:LoadingProgress" attribute="value"/> -->
                     <observes element="Browser:LoadingProgress" attribute="mode"/>
                     <!-- This <observes> element really belongs under the html:div below  -->
@@ -442,15 +591,30 @@
                     <observes element="Browser:OnStartBinding" attribute="url" onchange="onStartBinding()"/>			
                     <observes element="Browser:OnStopBinding" attribute="url" onchange="onStopBinding()"/>			
                 </progressmeter>
-            </html:td>
-            <html:td id="statusbar-text" class="statusbar-text" style="width:*;font-family:sans-serif;font-size:8pt;border-top:2px solid;">
+          </html:td>
+          
+          
+          <html:td id="statusbar-text" class="statusbar-text" style="width:*;font-family:sans-serif;font-size:2.5mm;border-top:2px solid;">
                 <html:div id="statusText">
                     Document: Done
                 </html:div>
-            </html:td>
+          </html:td>
+          
+          <html:td id="statusbar-indicator" class="statusbar-indicator" style="display:none;background-color:yellow;font-family:sans-serif;font-size:8pt;border-top:2px solid yellow;">
+                <html:div onclick="securityOff();">
+                    <html:img src="resource:/res/toolbar/StatusBar-secure.gif" style="vertical-align:middle"/>Secure Conn.
+                </html:div>
+         </html:td>
+         
+         
         </html:tr>
+        
+        
     </html:table>
+    
+    
     </html:center>
   </html:div>
+
 
 </window>
