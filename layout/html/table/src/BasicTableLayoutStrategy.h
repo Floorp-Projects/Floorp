@@ -33,19 +33,26 @@ struct SpanInfo
 {
   PRInt32 span;
   const PRInt32 initialColSpan;
+  const PRInt32 initialColIndex;
   nscoord cellMinWidth;
   nscoord cellDesiredWidth;
+  nscoord effectiveMinWidthOfSpannedCols;
+  nscoord effectiveMaxWidthOfSpannedCols;
 
-  SpanInfo(PRInt32 aSpan, nscoord aMinWidth, nscoord aDesiredWidth);
+  SpanInfo(PRInt32 aColIndex, PRInt32 aSpan, nscoord aMinWidth, nscoord aDesiredWidth);
   ~SpanInfo() {};
 };
 
-inline SpanInfo::SpanInfo(PRInt32 aSpan, nscoord aMinWidth, nscoord aDesiredWidth)
-  : initialColSpan(aSpan)
+inline SpanInfo::SpanInfo(PRInt32 aColIndex, PRInt32 aSpan, 
+                          nscoord aMinWidth, nscoord aDesiredWidth)
+  : initialColIndex(aColIndex),
+    initialColSpan(aSpan)
 {
   span = aSpan;
   cellMinWidth = aMinWidth;
   cellDesiredWidth = aDesiredWidth;
+  effectiveMinWidthOfSpannedCols=0;
+  effectiveMaxWidthOfSpannedCols=0;
 }
 
 
@@ -189,7 +196,7 @@ public:
   /** force all cells to be at least their minimum width, removing any excess space
     * created in the process from fat cells that can afford to lose a little tonnage.
     */
-  virtual void EnsureCellMinWidths();
+  virtual void EnsureCellMinWidths(PRBool aShrinkFixedWidthCells);
 
   virtual void AdjustTableThatIsTooWide(nscoord  aComputedWidth, 
                                         nscoord  aTableWidth);

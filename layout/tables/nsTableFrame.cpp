@@ -364,6 +364,26 @@ PRInt32 nsTableFrame::GetRowCount ()
   return rowCount;
 }
 
+PRInt32 nsTableFrame::GetColCount ()
+{
+  PRInt32 colCount = 0;
+
+  if (nsnull != mCellMap)
+    return mCellMap->GetColCount();
+
+  nsIFrame *child=mFirstChild;
+  while (nsnull!=child)
+  {
+    const nsStyleDisplay *childDisplay;
+    child->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
+      colCount += ((nsTableColGroupFrame *)child)->GetColumnCount ();
+    child->GetNextSibling(child);
+  }
+  return colCount;
+}
+
+
 nsTableColFrame * nsTableFrame::GetColFrame(PRInt32 aColIndex)
 {
   nsTableColFrame *result = nsnull;
@@ -405,8 +425,8 @@ PRInt32 nsTableFrame::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCellFrame *
   NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
   NS_PRECONDITION (0<=aRowIndex && aRowIndex<GetRowCount(), "bad row index arg");
 
-  int rowSpan = aCell->GetRowSpan();
-  int rowCount = GetRowCount();
+  PRInt32 rowSpan = aCell->GetRowSpan();
+  PRInt32 rowCount = GetRowCount();
   if (rowCount < (aRowIndex + rowSpan))
     return (rowCount - aRowIndex);
   return rowSpan;
@@ -423,12 +443,32 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
   NS_PRECONDITION (nsnull!=mCellMap, "bad call, mCellMap not yet allocated.");
   NS_PRECONDITION (0<=aColIndex && aColIndex<mCellMap->GetColCount(), "bad col index arg");
 
-  int colSpan = aCell->GetColSpan();
-  int colCount = mCellMap->GetColCount();
+  if (mCellMap->GetRowCount()==1)
+    return 1;
+  PRInt32 colSpan = aCell->GetColSpan();
+  PRInt32 colCount = mCellMap->GetColCount();
   if (colCount < (aColIndex + colSpan))
     return (colCount - aColIndex);
   return colSpan;
 }
+
+PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
+{
+  NS_PRECONDITION (nsnull!=mCellMap, "bad call, mCellMap not yet allocated.");
+  PRInt32 result;
+  nsIFrame *tableFrame = this;
+// begin REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!   XXX
+  tableFrame->GetGeometricParent(tableFrame);
+// end REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!     XXX
+  nsStyleTable *tableStyle;
+  tableFrame->GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  result = tableStyle->mCols;
+  PRInt32 numCols = GetColCount();
+  if (result>numCols)
+    result = numCols;
+  return result;
+}
+
 
 /* call when the cell structure has changed.  mCellMap will be rebuilt on demand. */
 void nsTableFrame::ResetCellMap ()
@@ -2385,20 +2425,20 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext  * aPresContext,
   // also acts as the width attribute for the entire column
   if ((nsnull!=aPresContext) && (nsnull!=aCellFrame) && (nsnull!=aRowFrame))
   {
-    if (0==aRowFrame->GetRowIndex())
-    {
-      // get the cell style info
-      const nsStylePosition* cellPosition;
-      aCellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
-      if ((eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) ||
-           (eStyleUnit_Percent==cellPosition->mWidth.GetUnit())) {
-        // compute the width per column spanned
-        PRInt32 colSpan = aCellFrame->GetColSpan();
-        for (PRInt32 i=0; i<colSpan; i++)
+    // get the cell style info
+    const nsStylePosition* cellPosition;
+    aCellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
+    if ((eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) ||
+         (eStyleUnit_Percent==cellPosition->mWidth.GetUnit())) {
+      // compute the width per column spanned
+      PRInt32 colSpan = aCellFrame->GetColSpan();
+      for (PRInt32 i=0; i<colSpan; i++)
+      {
+        // get the appropriate column frame
+        nsTableColFrame *colFrame;
+        GetColumnFrame(i+aCellFrame->GetColIndex(), colFrame);
+        if (nsTableColFrame::eWIDTH_SOURCE_CELL != colFrame->GetWidthSource())
         {
-          // get the appropriate column frame
-          nsTableColFrame *colFrame;
-          GetColumnFrame(i+aCellFrame->GetColIndex(), colFrame);
           // get the column style and set the width attribute
           nsIStyleContext* colSC;
           colFrame->GetStyleContext(aPresContext, colSC);
@@ -2414,6 +2454,11 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext  * aPresContext,
             float width = cellPosition->mWidth.GetPercentValue();
             colPosition->mWidth.SetPercentValue(width/colSpan);
           }
+          // set the column width-set-type
+          if (1==colSpan)
+            colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL);
+          else
+            colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN);
         }
       }
     }
@@ -2505,7 +2550,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
       { // if it's a row group, get the cells and set the column style if appropriate
         nsIFrame *rowFrame;
         childFrame->FirstChild(rowFrame);
-        if (nsnull!=rowFrame)
+        while (nsnull!=rowFrame)
         {
           nsIFrame *cellFrame;
           rowFrame->FirstChild(cellFrame);
@@ -2518,6 +2563,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
             SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
             cellFrame->GetNextSibling(cellFrame);
           }
+          rowFrame->GetNextSibling(rowFrame);
         }
       }
       childFrame->GetNextSibling(childFrame);
