@@ -95,7 +95,7 @@ void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
   
   nscoord topInset = spacing->mBorderPadding.top;
   nscoord bottomInset = spacing->mBorderPadding.bottom;
-  PRUint8 verticalAlign = textStyle->mVerticalAlign;
+  PRUint8 verticalAlignFlags = textStyle->mVerticalAlignFlags;
   nscoord       height = mRect.height;
 
   nsRect        kidRect;  
@@ -105,7 +105,7 @@ void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
 
   // Vertically align the child
   nscoord kidYTop = 0;
-  switch (verticalAlign) 
+  switch (verticalAlignFlags) 
   {
     case NS_STYLE_VERTICAL_ALIGN_BASELINE:
     // Align the child's baseline at the max baseline

@@ -1519,7 +1519,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   case NS_STYLE_POSITION_VALUE_LENGTH:
     maxWidth = position->mWidth;
     break;
-  case NS_STYLE_POSITION_VALUE_PCT:
+  case NS_STYLE_POSITION_VALUE_PERCENT:
   case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
     // XXX for now these fall through
 
@@ -1705,7 +1705,7 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext,
           cellWidth = cellPosition->mWidth;
           break;
 
-        case NS_STYLE_POSITION_VALUE_PCT:
+        case NS_STYLE_POSITION_VALUE_PERCENT:
         case NS_STYLE_POSITION_VALUE_PROPORTIONAL:
           // XXX write me when pct/proportional are supported
           // XXX haveCellWidth = PR_TRUE;
@@ -2429,7 +2429,7 @@ PRBool nsTableFrame::IsProportionalWidth(nsStylePosition* aStylePosition)
   else {
     switch (aStylePosition->mWidthFlags) {
     case NS_STYLE_POSITION_VALUE_LENGTH:
-    case NS_STYLE_POSITION_VALUE_PCT:
+    case NS_STYLE_POSITION_VALUE_PERCENT:
       break;
 
     default:

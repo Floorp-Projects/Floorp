@@ -1051,7 +1051,7 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
       aContext->GetData(kStylePositionSID);
     switch (value.GetUnit()) {
     case eHTMLUnit_Percent:
-      position->mWidthFlags = NS_STYLE_POSITION_VALUE_PCT;
+      position->mWidthFlags = NS_STYLE_POSITION_VALUE_PERCENT;
       position->mWidth = 0;/* XXX need a float to store into */
       break;
 

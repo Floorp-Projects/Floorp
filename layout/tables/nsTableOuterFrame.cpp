@@ -891,7 +891,7 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
     nsStyleText* captionStyle =
       (nsStyleText*)captionStyleContext->GetData(kStyleTextSID);
     NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");
-    if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlign)
+    if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlignFlags)
     {
       if (PR_TRUE==gsDebug) printf("reflowChild called with a bottom caption\n");
       status = ResizeReflowBottomCaptionsPass2(aPresContext, aDesiredSize,
@@ -975,7 +975,7 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
       captionFrame->SetStyleContext(captionStyleContext);
       mChildCount++;
       // Link child frame into the list of children
-      if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlign)
+      if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlignFlags)
       { // bottom captions get added to the end of the outer frame child list
         prevKidFrame->SetNextSibling(captionFrame);
         prevKidFrame = captionFrame;
@@ -1060,7 +1060,7 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
         (nsStyleText*)captionStyleContext->GetData(kStyleTextSID);
       NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");
 
-      if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlign)
+      if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlignFlags)
       { 
       }
       else
