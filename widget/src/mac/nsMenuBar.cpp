@@ -112,6 +112,7 @@ nsMenuBar::nsMenuBar()
 
   mOriginalMacMBarHandle = nsnull;
   mMacMBarHandle = nsnull;
+  mDocument = nsnull;
   
   mOriginalMacMBarHandle = ::GetMenuBar();
   Handle tmp = ::GetMenuBar();
@@ -144,12 +145,9 @@ nsMenuBar::~nsMenuBar()
   NS_ASSERTION(err==noErr,"nsMenu::~nsMenu: DisposeUnicodeToTextRunInfo failed.");	 
 
   // make sure we unregister ourselves as a document observer
-  nsCOMPtr<nsIWebShell> webShell ( do_QueryReferent(mWebShellWeakRef) );
-  nsCOMPtr<nsIDocument> doc;
-  GetDocument(webShell, getter_AddRefs(doc));
-  if ( doc ) {
+  if ( mDocument ) {
     nsCOMPtr<nsIDocumentObserver> observer ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
-    doc->RemoveObserver(observer);
+    mDocument->RemoveObserver(observer);
   }
 
   --gMenuBarCounter;
@@ -283,6 +281,9 @@ nsMenuBar :: RegisterAsDocumentObserver ( nsIWebShell* inWebShell )
   // register ourselves
   nsCOMPtr<nsIDocumentObserver> observer ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
   doc->AddObserver(observer);
+  // also get pointer to doc, just in case webshell goes away
+  // we can still remove ourself as doc observer directly from doc
+  mDocument = doc;
 
 } // RegisterAsDocumentObesrver
 
@@ -775,6 +776,7 @@ nsMenuBar::StyleRuleRemoved(nsIDocument * aDocument, nsIStyleSheet * aStyleSheet
 NS_IMETHODIMP
 nsMenuBar::DocumentWillBeDestroyed( nsIDocument * aDocument )
 {
+  mDocument = nsnull; // just for yucks
   return NS_OK;
 }
 
