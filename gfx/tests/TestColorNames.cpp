@@ -17,6 +17,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include "nsColorNames.h"
 #include "prprf.h"
 
