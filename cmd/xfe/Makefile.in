@@ -322,6 +322,14 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libreg.a \
 		  $(NULL)
 
+BASIC_LIBS_2	= \
+		  $(DIST)/lib/lib$(LITE_PREFIX)xp.a \
+		  $(DIST)/lib/libdbm.a \
+		  $(DIST)/lib/libcaps.a \
+		  $(DIST)/lib/libxpcom.a \
+		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
+		  $(NULL)
+
 ifdef MOZ_NATIVE_JPEG
 BASIC_LIBS	+= -ljpeg
 else
@@ -333,15 +341,6 @@ BASIC_LIBS	+= -lpng
 else
 BASIC_LIBS	+= $(DIST)/lib/libpng.a
 endif
-
-BASIC_LIBS_2	= \
-		  $(DIST)/lib/lib$(LITE_PREFIX)xp.a \
-		  $(DIST)/lib/libdbm.a \
-		  $(DIST)/lib/libcaps.a \
-		  $(DIST)/lib/libxpcom.a \
-		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
-		  $(NULL)
-
 
 # jwz: link in libmime all the time.
 # but it needs to be before libnetutil, and I don't know how to do that,
@@ -524,12 +523,12 @@ endif
 BASIC_LIBS	+= $(DIST)/lib/libmocha.a
 ifdef DOM
 # the DOM code calls back into layout.
-BASIC_LIBS	+= $(DIST)/lib/liblay.a
+BASIC_LIBS      += $(DIST)/lib/liblay.a
 endif
 endif
 
 ifdef DOM
-BASIC_LIBS     += $(DIST)/lib/libdom.a
+BASIC_LIBS	+= $(DIST)/lib/libdom.a
 endif
 
 # Post-Java libs
@@ -717,6 +716,34 @@ endif
 # NetBSD
 ifeq ($(OS_ARCH),NetBSD)
 OTHER_LIBS	= /usr/X11R6/lib/libXm.a -L/usr/X11R6/lib -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
+endif
+
+########################################
+# NetBSD
+# Work around linker semantics that will never find our own libutil on 1.3.x
+ifeq ($(OS_ARCH),NetBSD)
+ifeq ($(OS_MINOR),3)
+FOOL_GMAKE	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
+DSO_EX_LIBS	= $(FOOL_GMAKE:-lutil=$(DIST)/lib/libutil.a)
+endif
+ifdef LIBRUNPATH
+OS_LIBS		+= -R$(LIBRUNPATH)
+endif
+OTHER_LIBS	= -L/usr/X11R6/lib -lXm -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
+endif
+
+########################################
+# OpenBSD
+# Copied from NetBSD...
+ifeq ($(OS_ARCH),OpenBSD)
+#ifeq ($(OS_MINOR),3)
+#FOOL_GMAKE	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
+#DSO_EX_LIBS	= $(FOOL_GMAKE:-lutil=$(DIST)/lib/libutil.a)
+#endif
+ifdef LIBRUNPATH
+OS_LIBS		+= -R$(LIBRUNPATH)
+endif
+OTHER_LIBS	= -L/usr/X11R6/lib -lXm -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
 endif
 
 ########################################
@@ -1060,7 +1087,7 @@ endif
 # Rules to build config*.o files
 
 $(OBJDIR)/$(LITE_PREFIX)config-export.o: config.c versionn.h Makefile $(OBJS) $(EXPORT_DEPLIBS)
-	@echo Generating $@ from $(srcdir)/config.c...;				      \
+	@echo Generating $@ from $(srcdir)/config.c...;			      \
 	X=' ';								      \
 	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' $(srcdir)/versionn.h` ; \
 	$(CC) -c $(CFLAGS) -o $@ $(srcdir)/config.c			      \
@@ -1070,7 +1097,7 @@ $(OBJDIR)/$(LITE_PREFIX)config-export.o: config.c versionn.h Makefile $(OBJS) $(
 		-UHAVE_NIS -UFRANCE_VERSION -DEXPORT_VERSION -UUS_VERSION -UVENDOR_ANIM
 
 $(OBJDIR)/$(LITE_PREFIX)config-nis-export.o: config.c versionn.h Makefile $(OBJS) $(NIS_OBJS) $(EXPORT_DEPLIBS)
-	@echo Generating $@ from $(srcdir)/config.c...;				      \
+	@echo Generating $@ from $(srcdir)/config.c...;			      \
 	X=' ';								      \
 	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' $(srcdir)/versionn.h` ; \
 	$(CC) -c $(CFLAGS) -o $@ $(srcdir)/config.c			      \
@@ -1113,7 +1140,21 @@ $(OBJDIR)/Netscape-nis-export.ad $(OBJDIR)/Netscape-export.ad: Makefile resource
 $(OBJDIR)/$(DSO_PROGNAME)-export: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
+ifdef NETSCAPE_OFFICIAL
+	rm -rf $(OBJDIR)/objs.txt
+	@echo Creating a list of all object files ... objs.txt
+	@echo $(OBJS) > $(OBJDIR)/objs.txt
+	@echo $(EXPORT_OBJS) >> $(OBJDIR)/objs.txt
+	@echo $(DSO_EX_LIBS) >> $(OBJDIR)/objs.txt
+	@echo Creating a list of all symbols ... symbols.txt
+	$(PERL) listsymb.pl objs.txt symbols.txt
+	@echo Generating dispatch table ... dispunix.h dispunix.c cmoffset.h
+	$(PERL) gendisp.pl symbols.txt dispunix.h dispunix.c cmoffset.h
+	$(CC) -c -o $(OBJDIR)/dispunix.o -I$(DIST)/include dispunix.c
+	$(CCLD) -o $@ $(LDFLAGS) $(OBJDIR)/dispunix.o $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
+else
 	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
+endif
 	@$(EXTRA_POST_LINK_CMD) $@
 
 $(OBJDIR)/$(DSO_PROGNAME)-export.mcv: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
