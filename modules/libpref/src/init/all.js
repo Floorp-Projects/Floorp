@@ -201,6 +201,11 @@ pref("browser.related.provider", "http://www-rl.netscape.com/wtgn?");
 pref("browser.related.disabledForDomains", "");
 pref("browser.goBrowsing.enabled", true);
 
+// URI fixup prefs
+pref("browser.fixup.alternate.enabled", true);
+pref("browser.fixup.alternate.prefix", "www.");
+pref("browser.fixup.alternate.suffix", ".com");
+
 //Internet Search
 pref("browser.search.defaultenginename", "chrome://communicator-region/locale/region.properties");
 
