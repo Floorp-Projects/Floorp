@@ -102,16 +102,16 @@
 <!ENTITY calendar.flat.topbar.weekview         "Week View" >
 <!ENTITY calendar.flat.topbar.monthview        "Month View" >
 
-<!ENTITY calendar.newevent.button.tooltip         "Create New Calendar Event" >
-<!ENTITY calendar.delete.button.tooltip           "Delete Event" >
-<!ENTITY calendar.edit.button.tooltip             "Edit Event" >
+<!ENTITY calendar.newevent.button.tooltip         "Create a new Calendar event" >
+<!ENTITY calendar.delete.button.tooltip           "Delete selected event" >
+<!ENTITY calendar.edit.button.tooltip             "Edit selected event" >
 
-<!ENTITY calendar.gototoday.button.tooltip        "Go To Today" >
-<!ENTITY calendar.choosedate.button.tooltip       "Pick Date To Go To" >
+<!ENTITY calendar.gototoday.button.tooltip        "Go to today" >
+<!ENTITY calendar.choosedate.button.tooltip       "Choose date to go to" >
 
-<!ENTITY calendar.dayview.button.tooltip          "Switch To Day View" >
-<!ENTITY calendar.weekview.button.tooltip         "Switch To Week View" >
-<!ENTITY calendar.monthview.button.tooltip        "Switch To Month View" >
+<!ENTITY calendar.dayview.button.tooltip          "Switch to day view" >
+<!ENTITY calendar.weekview.button.tooltip         "Switch to week view" >
+<!ENTITY calendar.monthview.button.tooltip        "Switch to month view" >
 
 <!ENTITY calendar.newevent.button.label         "New Event" >
 <!ENTITY calendar.delete.button.label           "Delete" >
