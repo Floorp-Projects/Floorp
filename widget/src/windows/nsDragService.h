@@ -41,11 +41,17 @@ public:
   
   
   // nsIDragService
-  NS_IMETHOD StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType);
+  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType);
+  NS_IMETHOD InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType);
+  NS_IMETHOD GetCurrentSession (nsIDragSession ** aSession);
+
+  // nsIDragSession
   NS_IMETHOD GetData (nsITransferable * aTransferable);
+  NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor);
 
   // native impl.
   NS_IMETHOD SetIDataObject (IDataObject * aDataObj);
+  NS_IMETHOD StartInvokingDragSession(IDataObject * aDataObj, PRUint32 aActionType);
 
 protected:
   IDropSource        * mNativeDragSrc;
