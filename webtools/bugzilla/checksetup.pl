@@ -1806,7 +1806,10 @@ AddFDef("alias", "Alias", 0);
 AddFDef("everconfirmed", "Ever Confirmed", 0);
 AddFDef("groupset", "Groupset", 0);
 AddFDef("reporter_accessible", "Reporter Accessible", 0);
-AddFDef("cc_accessible", "CC Accessible", 0);
+AddFDef("cclist_accessible", "CC Accessible", 0);
+
+# Oops. Bug 163299
+$dbh->do("DELETE FROM fielddefs WHERE name='cc_accessible'");
 
 ###########################################################################
 # Detect changed local settings
