@@ -321,11 +321,11 @@ endif
 # Need to define these before include the $ARCH.mk makefile
 #
 ifneq (,$(filter Linux,$(OS_ARCH)))
-MOZILLA_DETECT		= 1
-MOZILLA_HOSTNAME	= $(shell hostname -s)
-MOZILLA_DETECT_DIR	= $(DEPTH)/config/mkdetect
-MOZILLA_DETECT_NAME	= detect_$(MOZILLA_HOSTNAME)_gen.mk
-MOZILLA_DETECT_GEN	= $(MOZILLA_DETECT_DIR)/$(MOZILLA_DETECT_NAME)
+MOZILLA_DETECT			= 1
+MOZILLA_DETECT_DIR		= $(DEPTH)/config/mkdetect
+MOZILLA_DETECT_IDENT	= $(shell $(MOZILLA_DETECT_DIR)/detect_hostident.sh)
+MOZILLA_DETECT_NAME		= detect_$(MOZILLA_DETECT_IDENT)_gen.mk
+MOZILLA_DETECT_GEN		= $(MOZILLA_DETECT_DIR)/$(MOZILLA_DETECT_NAME)
 endif
 
 #
