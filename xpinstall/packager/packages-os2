@@ -135,8 +135,7 @@ bin/components/content_html.xpt
 bin/components/content_xslt.xpt
 bin/components/xuldoc.xpt
 bin/components/xultmpl.xpt
-;bin/components/gklayout.dll
-bin/components/gkhtml.dll
+bin/components/gklayout.dll
 bin/components/gkparser.dll
 bin/components/gkplugin.dll
 bin/components/gkview.dll
