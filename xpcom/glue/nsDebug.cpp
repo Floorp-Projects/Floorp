@@ -239,7 +239,7 @@ NS_COM PRBool nsDebug::WarnIfFalse(const char* aStr, const char* aExpr,
                                    const char* aFile, PRIntn aLine)
 {
    Assertion(aStr, aExpr, aFile, aLine);
-   return TRUE;
+   return PR_TRUE;
 }
 
 NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
