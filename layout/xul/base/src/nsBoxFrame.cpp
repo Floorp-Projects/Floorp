@@ -715,12 +715,15 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
 
           // set the rect
         childFrame->SetRect(nsRect(0,0,desiredSize.width, desiredSize.height));
+
+        // clear out the incremental child, so that we don't flow it incrementally again
+        if (reason == eReflowReason_Incremental && incrementalChild == childFrame)
+          incrementalChild = nsnull;
+      
       }
       // add the margin back in. The child should add its border automatically
       desiredSize.height += (margin.top + margin.bottom);
       desiredSize.width += (margin.left + margin.right);
-
-   
 
       mSprings[spring].needsReflow = PR_FALSE;
 
