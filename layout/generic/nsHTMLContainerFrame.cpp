@@ -327,6 +327,11 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
           ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p relatively positioned",
            aFrame));
         aForce = PR_TRUE;
+        
+        // Get the z-index to use
+        if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
+          zIndex = position->mZIndex.GetIntValue();
+        }
       
       } else if (position->IsAbsolutelyPositioned()) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
@@ -334,7 +339,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
            aFrame));
         aForce = PR_TRUE;
 
-        // Get the z-index to use. This only applies to positioned elements
+        // Get the z-index to use
         if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
           zIndex = position->mZIndex.GetIntValue();
         }
