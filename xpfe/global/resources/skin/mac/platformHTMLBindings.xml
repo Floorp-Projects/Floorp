@@ -23,6 +23,14 @@
       <handler type="keypress" id="key_down_meta" keycode="VK_DOWN" meta="true" alt="false" shift="false" control="false"
         command="cmd_scrollPageDown"/>
 
+      <handler type="keypress" id="key_home" keycode="VK_HOME" alt="false" shift="false" control="false" meta="false"
+        command="cmd_beginLine"/>
+      <handler type="keypress" id="key_end" keycode="VK_END" alt="false" shift="false" control="false" meta="false"
+        command="cmd_endLine"/>
+      <handler type="keypress" id="key_homeshift" keycode="VK_HOME" shift="true" alt="false" control="false" meta="false"
+        command="cmd_selectBeginLine"/>
+      <handler type="keypress" id="key_endshift" keycode="VK_END" shift="true" alt="false" control="false" meta="false"
+        command="cmd_selectEndLine"/>
       <handler type="keypress" id="key_leftalt" keycode="VK_LEFT" alt="true" shift="false" control="false" 
         command="cmd_wordPrevious"/>
       <handler type="keypress" id="key_rightalt" keycode="VK_RIGHT" alt="true" shift="false" control="false" 
