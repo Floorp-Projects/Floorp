@@ -44,6 +44,8 @@
 
 #include "nsScrollbarFrame.h"
 #include "nsScrollbarButtonFrame.h"
+#include "nsXULAtoms.h"
+#include "nsIScrollableFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 
@@ -120,20 +122,23 @@ nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
                                               aNameSpaceID, aAttribute, aModType, aHint);
-  /*// if the current position changes
-  if (       aAttribute == nsXULAtoms::curpos || 
-             aAttribute == nsXULAtoms::maxpos || 
-             aAttribute == nsXULAtoms::pageincrement ||
-             aAttribute == nsXULAtoms::increment) {
-     // tell the slider its attribute changed so it can 
-     // update itself
-     nsIFrame* slider;
-     nsScrollbarButtonFrame::GetChildWithTag(aPresContext, nsXULAtoms::slider, this, slider);
-     if (slider)
-        slider->AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
-  }
-*/
 
+  // if the current position changes, notify any nsGfxScrollFrame
+  // parent we may have
+  if (aAttribute != nsXULAtoms::curpos)
+    return rv;
+
+  nsIFrame* parent;
+  GetParent(&parent);
+  if (!parent)
+    return rv;
+
+  nsIScrollableFrame* scrollable = nsnull;
+  parent->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollable);
+  if (!scrollable)
+    return rv;
+
+  scrollable->CurPosAttributeChanged(aPresContext, aChild, aModType);
   return rv;
 }
 

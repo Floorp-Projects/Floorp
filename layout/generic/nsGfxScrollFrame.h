@@ -155,6 +155,10 @@ public:
 
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult);
 
+  NS_IMETHOD CurPosAttributeChanged(nsIPresContext* aPresContext,
+                                    nsIContent* aChild,
+                                    PRInt32 aModType);
+
   NS_IMETHOD GetClipSize(nsIPresContext* aPresContext, 
                          nscoord *aWidth, 
                          nscoord *aHeight) const;

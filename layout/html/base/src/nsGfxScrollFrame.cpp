@@ -73,8 +73,7 @@
 #include "nsGUIEvent.h"
 //----------------------------------------------------------------------
 
-class nsGfxScrollFrameInner : public nsIDocumentObserver, 
-                              public nsIScrollPositionListener {
+class nsGfxScrollFrameInner : public nsIScrollPositionListener {
 
   NS_DECL_ISUPPORTS
 
@@ -88,63 +87,10 @@ public:
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
   NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
 
- // nsIDocumentObserver
-  NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
-  NS_IMETHOD EndUpdate(nsIDocument *aDocument) { return NS_OK; }
-  NS_IMETHOD BeginLoad(nsIDocument *aDocument) { return NS_OK; }
-  NS_IMETHOD EndLoad(nsIDocument *aDocument) { return NS_OK; }
-  NS_IMETHOD BeginReflow(nsIDocument *aDocument,
-			                   nsIPresShell* aShell) { return NS_OK; }
-  NS_IMETHOD EndReflow(nsIDocument *aDocument,
-		                   nsIPresShell* aShell) { return NS_OK; } 
-  NS_IMETHOD ContentChanged(nsIDocument* aDoc, 
-                            nsIContent* aContent,
-                            nsISupports* aSubContent) { return NS_OK; }
-  NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
-                                  nsIContent* aContent1,
-                                  nsIContent* aContent2,
-                                  PRInt32 aStateMask) { return NS_OK; }
-  NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
-                              nsIContent*  aContent,
-                              PRInt32      aNameSpaceID,
-                              nsIAtom*     aAttribute,
-                              PRInt32      aModType,
-                              nsChangeHint aHint);
-  NS_IMETHOD ContentAppended(nsIDocument *aDocument,
-			                       nsIContent* aContainer,
-                             PRInt32     aNewIndexInContainer) { return NS_OK; } 
-  NS_IMETHOD ContentInserted(nsIDocument *aDocument,
-			                       nsIContent* aContainer,
-                             nsIContent* aChild,
-                             PRInt32 aIndexInContainer) { return NS_OK; } 
-  NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
-			                       nsIContent* aContainer,
-                             nsIContent* aOldChild,
-                             nsIContent* aNewChild,
-                             PRInt32 aIndexInContainer) { return NS_OK; }
-  NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aChild,
-                            PRInt32 aIndexInContainer) { return NS_OK; }
-  NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
-                             nsIStyleSheet* aStyleSheet) { return NS_OK; }
-  NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
-                               nsIStyleSheet* aStyleSheet) { return NS_OK; }
-  NS_IMETHOD StyleSheetApplicableStateChanged(nsIDocument *aDocument,
-                                              nsIStyleSheet* aStyleSheet,
-                                              PRBool aApplicable) { return NS_OK; }
-  NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule,
-                              nsChangeHint aHint) { return NS_OK; }
-  NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
-                            nsIStyleSheet* aStyleSheet,
-                            nsIStyleRule* aStyleRule) { return NS_OK; }
-  NS_IMETHOD StyleRuleRemoved(nsIDocument *aDocument,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule) { return NS_OK; }
-  NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument) { mDocument = nsnull; return NS_OK; }
-
+  // This gets called when the 'curpos' attribute on one of the scrollbars changes
+  nsresult CurPosAttributeChanged(nsIPresContext* aPresContext,
+                                  nsIContent* aChild,
+                                  PRInt32 aModType);
 
   PRBool SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow=PR_TRUE);
   PRInt32 GetIntegerAttribute(nsIBox* aFrame, nsIAtom* atom, PRInt32 defaultValue);
@@ -190,7 +136,6 @@ public:
   nsIBox* mVScrollbarBox;
   nsIBox* mScrollAreaBox;
   nscoord mOnePixel;
-  nsCOMPtr<nsIDocument> mDocument;
   nsGfxScrollFrame* mOuter;
   nsIScrollableView* mScrollableView;
   nscoord mMaxElementWidth;
@@ -207,7 +152,7 @@ public:
   PRPackedBool mFrameInitiatedScroll;
 };
 
-NS_IMPL_ISUPPORTS2(nsGfxScrollFrameInner, nsIDocumentObserver, nsIScrollPositionListener)
+NS_IMPL_ISUPPORTS1(nsGfxScrollFrameInner, nsIScrollPositionListener)
 
 nsresult
 NS_NewGfxScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIDocument* aDocument, PRBool aIsRoot)
@@ -228,7 +173,6 @@ nsGfxScrollFrame::nsGfxScrollFrame(nsIPresShell* aShell, nsIDocument* aDocument,
 {
     mInner = new nsGfxScrollFrameInner(this);
     mInner->AddRef();
-    mInner->mDocument = aDocument;
     mPresContext = nsnull;
     mInner->mIsRoot = PR_FALSE;
     mInner->mNeverReflowed = PR_TRUE;
@@ -406,6 +350,12 @@ NS_IMETHODIMP
 nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                          nsISupportsArray& aAnonymousChildren)
 {
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIDocument> document;
+  if (shell)
+    shell->GetDocument(getter_AddRefs(document));
+
   // The anonymous <div> used by <inputs> never gets scrollbars.
   nsCOMPtr<nsITextControlFrame> textFrame(do_QueryInterface(mParent));
   if (textFrame) {
@@ -432,7 +382,8 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-  mInner->mDocument->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+  if (document)
+    document->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -498,7 +449,6 @@ nsGfxScrollFrame::Init(nsIPresContext*  aPresContext,
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent,
                                             aParent, aStyleContext,
                                             aPrevInFlow);
-  mInner->mDocument->AddObserver(mInner);
   return rv;
 }
 
@@ -986,12 +936,17 @@ nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, n
 }
 
 NS_IMETHODIMP
-nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
-                              nsIContent*     aContent,
-                              PRInt32         aNameSpaceID,
-                              nsIAtom*        aAttribute,
-                              PRInt32         aModType,
-                              nsChangeHint    aHint) 
+nsGfxScrollFrame::CurPosAttributeChanged(nsIPresContext* aPresContext,
+                                         nsIContent* aChild,
+                                         PRInt32 aModType)
+{
+  return mInner->CurPosAttributeChanged(aPresContext, aChild, aModType);
+}
+
+nsresult
+nsGfxScrollFrameInner::CurPosAttributeChanged(nsIPresContext* aPresContext,
+                                              nsIContent*     aContent,
+                                              PRInt32         aModType)
 {
   // Attribute changes on the scrollbars happen in one of three ways:
   // 1) The scrollbar changed the attribute in response to some user event
@@ -1661,10 +1616,6 @@ nsGfxScrollFrameInner::ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX
 
 nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
 {
-    if (mDocument) {
-        mDocument->RemoveObserver(this);
-        mDocument = nsnull;
-    }
 }
 
 /**

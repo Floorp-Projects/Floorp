@@ -135,6 +135,10 @@ public:
                                     PRBool aHorizontalVisible) = 0;
 
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult) = 0;
+
+  NS_IMETHOD CurPosAttributeChanged(nsIPresContext* aPresContext,
+                                    nsIContent* aChild,
+                                    PRInt32 aModType) = 0;
 };
 
 #endif
