@@ -39,6 +39,7 @@ CPPSRCS=                     \
 	nsJSMsgAppCore.cpp		\
 	nsMsgAppCore.cpp		\
 	nsCopyMessageStreamListener.cpp \
+	nsMessageViewDataSource.cpp \
 	$(NULL)
 
 
@@ -56,6 +57,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgAppCore.obj		\
 	.\$(OBJDIR)\nsJSMsgAppCore.obj		\
 	.\$(OBJDIR)\nsCopyMessageStreamListener.obj	\
+	.\$(OBJDIR)\nsMessageViewDataSource.obj \
 	$(NULL)
 
 
@@ -67,6 +69,7 @@ EXPORTS=                \
 	nsMsgMailSession.h  \
 	nsMsgIdentity.h		\
 	nsMsgAppCore.h		\
+	nsMessageViewDataSource.h \
 	$(NULL)
 
 LINCS=                       \
