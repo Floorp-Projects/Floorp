@@ -469,13 +469,24 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
   NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
   NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
 
+  PRInt32 result;
   if (cellMap->GetRowCount()==1)
     return 1;
   PRInt32 colSpan = aCell->GetColSpan();
   PRInt32 colCount = GetColCount();
   if (colCount < (aColIndex + colSpan))
-    return (colCount - aColIndex);
-  return colSpan;
+    result =  colCount - aColIndex;
+  else
+  {
+    result = colSpan;
+    // check for case where all cells in a column have a colspan
+    PRInt32 initialColIndex = aCell->GetColIndex();
+    PRInt32 minColSpanForCol = cellMap->GetMinColSpan(initialColIndex);
+    result -= (minColSpanForCol - 1); // minColSpanForCol is always at least 1
+                                      // and we want to treat default as 0 (no effect)
+  }
+
+  return result;
 }
 
 PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
@@ -691,8 +702,6 @@ void nsTableFrame::BuildCellMap ()
       PRInt32 colIndex = 0;
       nsIFrame* cellFrame;
       rowFrame->FirstChild(cellFrame);
-      if (gsDebug==PR_TRUE) 
-        DumpCellMap();
 
       while ((nsnull != cellFrame) && (colIndex < mColCount))
       {
@@ -745,6 +754,26 @@ void nsTableFrame::BuildCellMap ()
   }
   if (gsDebug==PR_TRUE)
     DumpCellMap ();
+  // iterate through the columns setting the min col span if necessary
+  // it would be more efficient if we could do this in the above loop
+  for (PRInt32 colIndex=0; colIndex<mColCount; colIndex++)
+  {
+    PRInt32 minColSpan;
+    for (PRInt32 rowIndex=0; rowIndex<rowCount; rowIndex++)
+    {
+      nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(rowIndex, colIndex);
+      if (nsnull!=cellFrame)
+      {
+        PRInt32 colSpan = cellFrame->GetColSpan();
+        if (0==rowIndex)
+          minColSpan = colSpan;
+        else
+          minColSpan = PR_MIN(minColSpan, colSpan);
+      }
+    }
+    if (1!=minColSpan)
+      mCellMap->SetMinColSpan(colIndex, minColSpan);
+  }
 }
 
 /**
@@ -2529,27 +2558,31 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext  * aPresContext,
         GetColumnFrame(i+aCellFrame->GetColIndex(), colFrame);
         if (nsTableColFrame::eWIDTH_SOURCE_CELL != colFrame->GetWidthSource()) 
         {
-          // get the column style and set the width attribute
-          nsIStyleContext *colSC;
-          colFrame->GetStyleContext(aPresContext, colSC);
-          nsStylePosition* colPosition = (nsStylePosition*) colSC->GetMutableStyleData(eStyleStruct_Position);
-          NS_RELEASE(colSC);
-          // set the column width attribute
-          if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
+          if ((1==colSpan) ||
+              (nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN != colFrame->GetWidthSource()))
           {
-            nscoord width = cellPosition->mWidth.GetCoordValue();
-            colPosition->mWidth.SetCoordValue(width/colSpan);
+            // get the column style and set the width attribute
+            nsIStyleContext *colSC;
+            colFrame->GetStyleContext(aPresContext, colSC);
+            nsStylePosition* colPosition = (nsStylePosition*) colSC->GetMutableStyleData(eStyleStruct_Position);
+            NS_RELEASE(colSC);
+            // set the column width attribute
+            if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
+            {
+              nscoord width = cellPosition->mWidth.GetCoordValue();
+              colPosition->mWidth.SetCoordValue(width/colSpan);
+            }
+            else
+            {
+              float width = cellPosition->mWidth.GetPercentValue();
+              colPosition->mWidth.SetPercentValue(width/colSpan);
+            }
+            // set the column width-set-type
+            if (1==colSpan)
+              colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL);
+            else
+              colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN);
           }
-          else
-          {
-            float width = cellPosition->mWidth.GetPercentValue();
-            colPosition->mWidth.SetPercentValue(width/colSpan);
-          }
-          // set the column width-set-type
-          if (1==colSpan)
-            colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL);
-          else
-            colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN);
         }
       }
     }

@@ -35,6 +35,7 @@ nsCellMap::nsCellMap(int aRows, int aColumns)
 {
   mCells = nsnull;
   mColFrames = nsnull;
+  mMinColSpans = nsnull;
   Reset(aRows, aColumns);
 }
 
@@ -57,10 +58,13 @@ nsCellMap::~nsCellMap()
     }
     delete [] mCells;
   }
-  if (nsnull!= mColFrames)
+  if (nsnull != mColFrames)
     delete mColFrames;
+  if (nsnull != mMinColSpans)
+    delete [] mMinColSpans;
   mCells = nsnull;
   mColFrames = nsnull;
+  mMinColSpans = nsnull;
 };
 
 
@@ -128,6 +132,33 @@ void nsCellMap::SetCellAt(CellData *aCell, int aRow, int aColumn)
 nsTableColFrame* nsCellMap::GetColumnFrame(PRInt32 aColIndex)
 {
   return (nsTableColFrame *)(mColFrames->ElementAt(aColIndex));
+}
+
+
+void nsCellMap::SetMinColSpan(PRInt32 aColIndex, PRBool aColSpan)
+{
+  NS_ASSERTION(aColIndex<mColCount, "bad aColIndex");
+  NS_ASSERTION(aColSpan>=0, "bad aColSpan");
+
+  // initialize the data structure if not already done
+  if (nsnull==mMinColSpans)
+  {
+    mMinColSpans = new PRInt32[mColCount];
+    for (PRInt32 i=0; i<mColCount; i++)
+      mMinColSpans[i]=1;
+  }
+
+  mMinColSpans[aColIndex] = aColSpan;
+}
+
+PRInt32 nsCellMap::GetMinColSpan(PRInt32 aColIndex)
+{
+  NS_ASSERTION(aColIndex<mColCount, "bad aColIndex");
+
+  PRInt32 result = 1; // default is 1, mMinColSpans need not be allocated for tables with no spans
+  if (nsnull!=mMinColSpans)
+    result = mMinColSpans[aColIndex];
+  return result;
 }
 
 

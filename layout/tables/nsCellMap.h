@@ -43,6 +43,9 @@ protected:
   /** storage for CellData pointers */
   PRInt32 *mCells;       ///XXX CellData *?
 
+  /** storage for CellData pointers */
+  PRInt32 *mMinColSpans;
+
   /** a cache of the column frames, by col index */
   nsVoidArray * mColFrames;
 
@@ -80,6 +83,9 @@ public:
   PRInt32 GetRowCount() const;
 
   nsTableColFrame * GetColumnFrame(PRInt32 aColIndex);
+
+  void    SetMinColSpan(PRInt32 aColIndex, PRBool  aColSpan);
+  PRInt32 GetMinColSpan(PRInt32 aColIndex);
 
   void AppendColumnFrame(nsTableColFrame *aColFrame);
 
