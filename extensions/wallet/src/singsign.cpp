@@ -56,18 +56,6 @@ static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 #define InSingleSignon 1
 #include "htmldlgs.h"
 
-extern int MK_SIGNON_PASSWORDS_GENERATE;
-extern int MK_SIGNON_PASSWORDS_REMEMBER;
-extern int MK_SIGNON_PASSWORDS_FETCH;
-extern int MK_SIGNON_YOUR_SIGNONS;
-extern int MK_SIGNON_YOUR_SIGNON_REJECTS;
-extern int MK_SIGNON_NOTIFICATION;
-extern int MK_SIGNON_NOTIFICATION_1;
-extern int MK_SIGNON_NAG;
-extern int MK_SIGNON_REMEMBER;
-extern int MK_SIGNON_SELECTUSER;
-extern int MK_SIGNON_CHANGE;
-
 /* locks for signon cache */
 
 static PRMonitor * signon_lock_monitor = NULL;
@@ -109,17 +97,36 @@ PRIVATE PRBool si_useDialogs = PR_FALSE;
 static PRBool si_PartiallyLoaded = FALSE;
 static PRBool si_FullyLoaded = FALSE;
 
-PRIVATE void
-si_SetSignonNotificationPref(PRBool x) {
+PUBLIC void
+SI_SetBoolPref(char * prefname, PRBool prefvalue) {
   nsresult ret;
   nsIPref* pPrefService = nsnull;
   ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
     (nsISupports**) &pPrefService);
   if (!NS_FAILED(ret)) {
-    ret = pPrefService->SetBoolPref("signon.Notified", x);
-//    ret = pPrefService->SaveLIPrefFile(NULL);
+    ret = pPrefService->SetBoolPref(prefname, prefvalue);
+    if (!NS_FAILED(ret)) {
+      ret = pPrefService->SavePrefFile(); 
+    }
     nsServiceManager::ReleaseService(kPrefServiceCID, pPrefService);
   }
+}
+
+PUBLIC PRBool
+SI_GetBoolPref(char * prefname, PRBool defaultvalue) {
+  nsresult ret;
+  PRBool prefvalue = defaultvalue;
+  nsIPref* pPrefService = nsnull;
+  ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
+    (nsISupports**) &pPrefService);
+  if (!NS_FAILED(ret)) {
+    ret = pPrefService->GetBoolPref(prefname, &prefvalue);
+    if (!NS_FAILED(ret)) {
+      ret = pPrefService->SavePrefFile(); 
+    }
+    nsServiceManager::ReleaseService(kPrefServiceCID, pPrefService);
+  }
+  return prefvalue;
 }
 
 PRIVATE void
@@ -513,7 +520,6 @@ PRIVATE XP_List * si_signon_list=0;
 PRIVATE XP_List * si_reject_list=0;
 
 PRIVATE PRBool si_signon_list_changed = PR_FALSE;
-PRIVATE PRBool si_NoticeGiven = PR_FALSE;
 
 
 /* Remove misleading portions from URL name */
@@ -1102,18 +1108,15 @@ si_OkToSave(char *URLName, char *userName) {
         return PR_TRUE;
     }
 
-    if (!si_NoticeGiven) {
+    if (!SI_GetBoolPref("signon.Notified", PR_FALSE)) {
         char* notification = 0;
-        si_NoticeGiven = PR_TRUE;
-        si_signon_list_changed = PR_TRUE;
-        si_SaveSignonData();
         char * message = Wallet_Localize("PasswordNotification1");
         StrAllocCopy(notification, message);
         PR_FREEIF(message);
         message = Wallet_Localize("PasswordNotification2");
         StrAllocCat(notification, message);
         PR_FREEIF(message);
-        si_SetSignonNotificationPref(PR_TRUE);
+        SI_SetBoolPref("signon.Notified", PR_TRUE);
         if (!MyFE_Confirm(notification)) {
             XP_FREE (notification);
             PREF_SetBoolPref(pref_rememberSignons, PR_FALSE);
@@ -1481,9 +1484,9 @@ si_LoadSignonDataFromKeychain() {
 
     if (status == noErr) {
         /* if we found a Netscape item, let's assume notice has been given */
-        si_NoticeGiven = PR_TRUE;
+        SI_SetBoolPref("signon.Notified", PR_TRUE);
     } else {
-        si_NoticeGiven = PR_FALSE;
+        SI_SetBoolPref("signon.Notified", PR_FALSE);
     }
 
     si_lock_signon_list();
@@ -1758,12 +1761,6 @@ si_LoadSignonData(PRBool fullLoad) {
           }
       }
     }
-
-    /* first line indicates if notice was given */
-    if (NS_FAILED(si_ReadLine(strm, strmx, buffer, FALSE))) {
-        return -1;
-    }
-    si_NoticeGiven = (buffer[0] == 'T');
 
     /* read the reject list */
     si_lock_signon_list();
@@ -2099,7 +2096,6 @@ si_SaveSignonDataLocked() {
     si_RestartKey();
 
     /* format for head of file shall be:
-     * TRUE -- indicates if notification has already been given to user
      * URLName -- first url/username on reject list
      * userName
      * URLName -- second url/username on reject list
@@ -2107,13 +2103,6 @@ si_SaveSignonDataLocked() {
      * ...     -- etc.
      * .       -- end of list
      */
-
-    /* write out si_NoticeGiven */
-    if (si_NoticeGiven) {
-        si_WriteLine(strm, strmx, "TRUE", FALSE);
-    } else {
-        si_WriteLine(strm, strmx, "FALSE", FALSE);
-    }
 
     /* write out reject list */
     if (si_reject_list) {
@@ -3309,7 +3298,7 @@ SINGSIGN_DisplaySignonInfoAsHTML()
     }
     dlg->parent_window = (void *)NULL;
     dlg->dialogUp = PR_TRUE;
-    dlg->state =XP_MakeHTMLDialog(NULL, &dialogInfo, MK_SIGNON_YOUR_SIGNONS,
+    dlg->state =XP_MakeHTMLDialog(NULL, &dialogInfo, 0,
                 strings, (void *)dlg, PR_FALSE);
 
     return;
