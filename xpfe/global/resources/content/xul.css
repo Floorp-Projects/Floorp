@@ -383,6 +383,7 @@ listitem[type="checkbox"] {
 
 listheader {
   -moz-binding: url("chrome://global/content/bindings/listbox.xml#listheader");
+  -moz-box-ordinal-group: 2147483646;
 }
 
 listcell {
@@ -704,6 +705,7 @@ grippy {
 .tree-splitter {
   width: 0px;
   max-width: 0px;
+  -moz-box-ordinal-group: 2147483646;
 }
 
 /********** scrollbar **********/
