@@ -173,6 +173,13 @@ EXTRA_DEPS		= \
 
 include $(topsrcdir)/config/config.mk
 
+# Force applications to be built non-statically
+# when building the mozcomps meta component
+ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
+BUILD_STATIC_LIBS=
+BUILD_SHARED_LIBS=1
+endif
+
 # Force a build thru DIRS so that dependencies are updated properly
 libs::
 	+$(LOOP_OVER_DIRS)
