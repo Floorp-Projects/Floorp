@@ -155,6 +155,8 @@ nsWindow::~nsWindow()
   //NS_IF_RELEASE(mDragSource); 
 #endif
 
+  delete mHitSubMenus;
+  
   //XXX Temporary: Should not be caching the font
   delete mFont;
 }
