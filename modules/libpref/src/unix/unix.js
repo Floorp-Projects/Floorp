@@ -50,6 +50,9 @@ pref("middlemouse.scrollbarPosition", true);
 // Clipboard behavior
 pref("clipboard.autocopy", true);
 
+// keyboard Mode_switch workaround
+pref("keyboard.mode_switch.enable_workaround", true);
+
 // Most Unix people think modal pref windows are stupid:
 pref("browser.prefWindowModal", false);
 
