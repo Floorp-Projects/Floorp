@@ -112,6 +112,9 @@ public:
     void SetIsActive(PRBool aActive);
 protected:
 
+  void InstallBorderlessDefProc ( WindowPtr inWindow ) ;
+  void RemoveBorderlessDefProc ( WindowPtr inWindow ) ;
+
 	pascal static OSErr DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
 										void *handlerRefCon, DragReference theDrag );
 	pascal static OSErr DragReceiveHandler (WindowPtr theWindow,

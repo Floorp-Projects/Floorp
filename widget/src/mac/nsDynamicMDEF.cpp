@@ -29,16 +29,17 @@
 #include "nsIDOMNode.h"
 #include "nsMenuBar.h"
 #include "nsIMenuBar.h"
+#include "DefProcFakery.h"
 
 #include <Resources.h>
 #include <MixedMode.h>
   
 extern nsWeakPtr    gMacMenubar;
-extern Handle       gSystemMDEFHandle;  
 
+
+// needed for CallMenuDefProc() to work correctly
 #pragma options align=mac68k
-RoutineDescriptorPtr gOriginaldesc;
-RoutineDescriptorPtr gmdefUPP;
+
 
 // Caching the Mac menu
 nsVoidArray     gPreviousMenuHandleStack; // hold MenuHandles
@@ -259,11 +260,8 @@ pascal void nsDynamicMDEFMain(
   // Force a size message next time we draw this menu
   if(message == kMenuDrawMsg) {
 #if !TARGET_CARBON
-    SInt8 state = ::HGetState((Handle)theMenu);
-    HLock((Handle)theMenu);
     (**theMenu).menuWidth = -1;
     (**theMenu).menuHeight = -1;
-    HSetState((Handle)theMenu, state);  
 #endif
   }
 }  
@@ -464,23 +462,17 @@ void nsCallSystemMDEF(
   Point hitPt, 
   short * whichItem) 
 {
-#if !TARGET_CARBON
-  SInt8 state = ::HGetState(gSystemMDEFHandle);
-  ::HLock(gSystemMDEFHandle);
+  // extract the real system mdef out of the fake one we've stored in the menu
+  Handle fakedMDEF = (**theMenu).menuProc;
+  Handle systemDefProc = DefProcFakery::GetSystemDefProc ( fakedMDEF );
 
-  gmdefUPP = ::NewRoutineDescriptor( (ProcPtr)*gSystemMDEFHandle, uppMenuDefProcInfo, kM68kISA);
+  SInt8 state = ::HGetState(systemDefProc);
+  ::HLock(systemDefProc);
 
-  CallMenuDefProc(
-    gmdefUPP, 
-    message, 
-    theMenu, 
-    menuRect, 
-    hitPt, 
-    whichItem);
-
-  ::DisposeRoutineDescriptor(gmdefUPP);
-  ::HSetState(gSystemMDEFHandle, state);
-#endif
+  // can't use NewMenuDefProc() here because the routine descriptor has to use kM68kISA
+  CallMenuDefProc((RoutineDescriptorPtr)*systemDefProc, message, theMenu, menuRect, hitPt, whichItem);
+  
+  ::HSetState(systemDefProc, state);
   return;
 }
 
