@@ -280,34 +280,41 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
   nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   nsIFrame* frame = mPopupFrames.FirstChild();
     
-  if (rv == NS_OK && frame) {
-    // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
-    nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame,
-                                     availSize);
-    kidReflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
-    kidReflowState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
-      
-     // Reflow child
-    nscoord w = aDesiredSize.width;
-    nscoord h = aDesiredSize.height;
-    nscoord maxWidth = aDesiredSize.maxElementSize->width;
-    nscoord maxHeight = aDesiredSize.maxElementSize->height;
+  if (!frame || (rv != NS_OK))
+    return rv;
 
-    nsresult rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
+  static int k = 0;
+
+  printf("Reflow #%d\n", k);
+  k++;
+
+  // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
+  nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame,
+                                   availSize);
+  kidReflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
+  kidReflowState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
+    
+   // Reflow child
+  nscoord w = aDesiredSize.width;
+  nscoord h = aDesiredSize.height;
+  nscoord maxWidth = aDesiredSize.maxElementSize->width;
+  nscoord maxHeight = aDesiredSize.maxElementSize->height;
+
+  rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
+
+   // Set the child's width and height to its desired size
+  nsRect rect;
+  frame->GetRect(rect);
+  rect.width = aDesiredSize.width;
+  rect.height = aDesiredSize.height;
+  frame->SetRect(rect);
+
+  // Don't let it affect our size.
+  aDesiredSize.width = w;
+  aDesiredSize.height = h;
+  aDesiredSize.maxElementSize->width = maxWidth;
+  aDesiredSize.maxElementSize->height = maxHeight;
  
-     // Set the child's width and height to its desired size
-    nsRect rect;
-    frame->GetRect(rect);
-    rect.width = aDesiredSize.width;
-    rect.height = aDesiredSize.height;
-    frame->SetRect(rect);
-
-    // Don't let it affect our size.
-    aDesiredSize.width = w;
-    aDesiredSize.height = h;
-    aDesiredSize.maxElementSize->width = maxWidth;
-    aDesiredSize.maxElementSize->height = maxHeight;
-  }
   return rv;
 }
