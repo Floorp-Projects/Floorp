@@ -254,7 +254,7 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
     mLastContentOffset = mFirstContentOffset;
 
   } else {
-    // Create a frame for the body child
+    // Create a frame for the body/frameset child
     PRInt32 i, n;
     n = mContent->ChildCount();
     for (i = 0; i < n; i++) {
@@ -262,7 +262,7 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
       if (nsnull != child) {
         nsIAtom* tag;
         tag = child->GetTag();
-        if (nsHTMLAtoms::body == tag) {
+        if ((nsHTMLAtoms::body == tag) || (nsHTMLAtoms::frameset == tag)) {
           // Create a frame
           nsIContentDelegate* cd = child->GetDelegate(aPresContext);
           if (nsnull != cd) {
