@@ -231,11 +231,11 @@ BASIC_LIBS	= \
 		  $(XFE_WIDGETS_BM_LIB) \
 		  $(XFE_WIDGETS_LIB) \
 		  $(DIST)/lib/libxlate.a \
-		  $(DIST)/lib/libnetutil.a \
 		  $(DIST)/lib/libmimetype.a \
 		  $(DIST)/lib/libnetcache.a	\
 		  $(DIST)/lib/libnetcnvts.a	\
 		  $(DIST)/lib/libnetwork.a	\
+		  $(DIST)/lib/libnetutil.a      \
 		  $(DIST)/lib/libnetcnvts.a	\
 		  $(DIST)/lib/libcnetinit.a	\
 		  $(DIST)/lib/libabouturl.a	\
