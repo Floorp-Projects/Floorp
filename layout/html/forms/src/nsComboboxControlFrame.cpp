@@ -39,6 +39,8 @@
 #include "nsIView.h"
 #include "nsIScrollableView.h"
 
+#include "nsIEventStateManager.h"
+
 static NS_DEFINE_IID(kIFormControlFrameIID,      NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIComboboxControlFrameIID,  NS_ICOMBOBOXCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIListControlFrameIID,      NS_ILISTCONTROLFRAME_IID);
@@ -91,6 +93,7 @@ nsComboboxControlFrame::nsComboboxControlFrame()
   mDisplayFrame                = nsnull;
   mButtonFrame                 = nsnull;
   mDropdownFrame               = nsnull;
+  mIgnoreFocus                 = PR_FALSE;
 
    //Shrink the area around it's contents
   SetFlags(NS_BLOCK_SHRINK_WRAP);
@@ -113,17 +116,21 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
+
   if (aIID.Equals(kIComboboxControlFrameIID)) {
     *aInstancePtr = (void*) ((nsIComboboxControlFrame*) this);
     return NS_OK;
-  }
-  if (aIID.Equals(kIFormControlFrameIID)) {
+  } else if (aIID.Equals(kIFormControlFrameIID)) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
-  } else  if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
+  } else if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
     *aInstancePtr = (void*)(nsIDOMMouseListener*) this;                                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
+  } else if (aIID.Equals(nsCOMTypeInfo<nsIDOMFocusListener>::GetIID())) {
+    *aInstancePtr = (void*)(nsIDOMFocusListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
   } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
     NS_ADDREF_THIS();                                                    
@@ -693,11 +700,28 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
      // Reflow the dropdown shrink-wrapped.
     nsHTMLReflowMetrics  dropdownDesiredSize(aDesiredSize);
     ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);  
-    dropdownFrame->GetRect(dropdownRect);
-       // Get maximum size and height of a option in the dropdown
-
     nsSize size;
-    mListControlFrame->GetMaximumSize(size);
+    PRInt32 length = 0;
+    mListControlFrame->GetNumberOfOptions(&length);
+    /*if (0 == length) {
+      nsCOMPtr<nsIPresShell> presShell;
+      rv = mPresContext->GetShell(getter_AddRefs(presShell));
+      if (NS_SUCCEEDED(rv) && presShell) {
+        nsCOMPtr<nsIRenderingContext> renderContext;
+        rv = presShell->CreateRenderingContext(this, getter_AddRefs(renderContext));
+        if (NS_SUCCEEDED(rv) && renderContext) {
+          rv = presShell->CreateRenderingContext(this, getter_AddRefs(renderContext));
+          nsFormControlHelper::GetTextSize(*mPresContext, this, nsAutoString("XX"), size, renderContext);
+          dropdownRect.width  = size.width + dropdownDesiredSize.width;
+          dropdownRect.height = size.height + dropdownDesiredSize.height;
+        }
+      }
+
+    } else {*/
+      dropdownFrame->GetRect(dropdownRect);
+      // Get maximum size and height of a option in the dropdown
+      mListControlFrame->GetMaximumSize(size);
+    //}
 
      // Set width of display to match width of the drop down 
     SetChildFrameSize(displayFrame, dropdownRect.width, size.height);
@@ -712,6 +736,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
     // Reflow the dropdown list to match the width of the display + button
     ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, aDesiredSize.width, NS_UNCONSTRAINEDSIZE);
     dropdownFrame->GetRect(dropdownRect);  
+    
 
   } else {
     // A width has been specified for the select.
@@ -850,9 +875,15 @@ nsComboboxControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
    return rv;
 }
 
+//----------------------------------------------------------------------
+// nsIDOMMouseListener
+//----------------------------------------------------------------------
 nsresult
 nsComboboxControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
+  if (nsFormFrame::GetDisabled(this)) {
+    return NS_OK;
+  }
   nsRect absoluteTwips;
   nsRect absolutePixels;
   nsIFrame * displayFrame = GetDisplayFrame(*mPresContext);
@@ -1004,6 +1035,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   // isn't possible to set the display type in CSS2 to create a button frame.
 
     // create content used for display
+  //nsIAtom* tag = NS_NewAtom("mozcombodisplay");
   nsIAtom* tag = NS_NewAtom("input");
   NS_NewHTMLInputElement(&mDisplayContent, tag);
   NS_ADDREF(mDisplayContent);
@@ -1011,6 +1043,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
     //XXX: Do not use nsHTMLAtoms::id use nsHTMLAtoms::kClass instead. There will end up being multiple
     //ids set to the same value which is illegal.
   mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, nsAutoString("-moz-display"), PR_FALSE);
+  //mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("X"), PR_TRUE);
   aChildList.AppendElement(mDisplayContent);
 
   // create button which drops the list down
@@ -1026,7 +1059,8 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   // we shouldn't have to unregister this listener because when
   // our frame goes away all these content node go away as well
   // because our frame is the only one who references them.
-  reciever->AddEventListenerByIID(this, kIDOMMouseListenerIID);
+  reciever->AddEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
+  //reciever->AddEventListenerByIID((nsIDOMFocusListener *)this, nsCOMTypeInfo<nsIDOMFocusListener>::GetIID());
 
   // get the reciever interface from the browser button's content node
   nsCOMPtr<nsIDOMEventReceiver> displayReciever(do_QueryInterface(mDisplayContent));
@@ -1034,7 +1068,16 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   // we shouldn't have to unregister this listener because when
   // our frame goes away all these content node go away as well
   // because our frame is the only one who references them.
-  displayReciever->AddEventListenerByIID(this, kIDOMMouseListenerIID);
+  displayReciever->AddEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
+  //displayReciever->AddEventListenerByIID((nsIDOMFocusListener *)this, nsCOMTypeInfo<nsIDOMFocusListener>::GetIID());
+
+  // get the reciever interface from the select's content
+  nsCOMPtr<nsIDOMEventReceiver> selectReciever(do_QueryInterface(mContent));
+
+  // we shouldn't have to unregister this listener because when
+  // our frame goes away all these content node go away as well
+  // because our frame is the only one who references them.
+  //selectReciever->AddEventListenerByIID((nsIDOMFocusListener *)this, nsCOMTypeInfo<nsIDOMFocusListener>::GetIID());
 
   return NS_OK;
 }
@@ -1111,6 +1154,67 @@ nsComboboxControlFrame::GetSkipSides() const
   return 0;
 }
 
+
+//----------------------------------------------------------------------
+// nsIDOMFocusListener
+//----------------------------------------------------------------------
+nsresult
+nsComboboxControlFrame::Focus(nsIDOMEvent* aEvent)
+{
+  printf("nsComboboxControlFrame::Focus ");
+
+  nsCOMPtr<nsIDOMNode> node;
+  aEvent->GetTarget(getter_AddRefs(node));
+  nsCOMPtr<nsIDOMNode> curNode;
+  aEvent->GetCurrentNode(getter_AddRefs(curNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+
+  if (content == mContent) {
+    printf("Combobox\n");
+  } else if (content == mDisplayContent) {
+    printf("Display\n");
+    return NS_OK;
+  } else if (content == mButtonContent) {
+    printf("Button\n");
+  }
+
+  if (mIgnoreFocus) {
+    printf(" mIgnoreFocus is TRUE\n");
+    return NS_OK;
+  }
+
+  nsIEventStateManager *stateManager;
+  if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
+    printf("Before ------------------------\n");
+    mIgnoreFocus = PR_TRUE;
+    //stateManager->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+    stateManager->SetContentState(mDisplayContent, NS_EVENT_STATE_FOCUS);
+    //stateManager->SetContentState(mDisplayContent, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+    mIgnoreFocus = PR_FALSE;
+    printf("After ------------------------\n");
+    NS_RELEASE(stateManager);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsComboboxControlFrame::Blur(nsIDOMEvent* aEvent)
+{
+  printf("nsComboboxControlFrame::Blur ");
+  nsCOMPtr<nsIDOMNode> node;
+  aEvent->GetTarget(getter_AddRefs(node));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+
+  if (content == mContent) {
+    printf("Combobox\n");
+  } else if (content == mDisplayContent) {
+    printf("Display\n");
+  } else if (content == mButtonContent) {
+    printf("Button\n");
+  }
+  return NS_OK;
+}
 
 
 
