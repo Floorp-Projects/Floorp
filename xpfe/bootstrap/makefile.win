@@ -30,12 +30,14 @@ MODULE=raptor
 CPPSRCS=                                \
  nsAppRunner.cpp                        \
  nsSetupRegistry.cpp                    \
+ nsNativeAppSupportBase.cpp             \
  nsNativeAppSupportWin.cpp              \
  $(NULL)
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsAppRunner.obj            \
  .\$(OBJDIR)\nsSetupRegistry.obj        \
+ .\$(OBJDIR)\nsNativeAppSupportBase.obj \
  .\$(OBJDIR)\nsNativeAppSupportWin.obj  \
  $(NULL)
 
@@ -56,7 +58,7 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\uconv                 \
       -I$(PUBLIC)\strres                \
       -I$(PUBLIC)\locale                \
-      -I$(PUBLIC)\lwbrk                \
+      -I$(PUBLIC)\lwbrk                 \
       -I$(PUBLIC)\unicharutil           \
       -I$(PUBLIC)\intl                  \
       -I$(PUBLIC)\xpfe\components       \

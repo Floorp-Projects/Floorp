@@ -81,6 +81,7 @@ nsAppShellService::nsAppShellService() :
   mHiddenWindow( nsnull ),
   mDeleteCalled( PR_FALSE ),
   mSplashScreen( nsnull ),
+  mNativeAppSupport( nsnull ),
   mShuttingDown( PR_FALSE )
 {
   NS_INIT_REFCNT();
@@ -116,15 +117,20 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 NS_IMETHODIMP
 nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
-                               nsISplashScreen *aSplashScreen )
+                               nsISupports *aNativeAppSupportOrSplashScreen )
 {
   nsresult rv;
   
   // Remember cmd line service.
   mCmdLineService = aCmdLineService;
 
-  // Remember the splash screen.
-  mSplashScreen = aSplashScreen;
+  // Remember where the native app support lives.
+  mNativeAppSupport = do_QueryInterface( aNativeAppSupportOrSplashScreen );
+
+  // Or, remember the splash screen (for backward compatibility).
+  if ( !mNativeAppSupport ) {
+      mSplashScreen = do_QueryInterface( aNativeAppSupportOrSplashScreen );
+  }
 
   // Create the Event Queue for the UI thread...
   NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID,
@@ -443,7 +449,7 @@ nsAppShellService::Quit()
   return rv;
 }
 
-void*
+void* PR_CALLBACK
 nsAppShellService::HandleExitEvent(PLEvent* aEvent)
 {
   ExitEvent* event = NS_REINTERPRET_CAST(ExitEvent*, aEvent);
@@ -457,7 +463,7 @@ nsAppShellService::HandleExitEvent(PLEvent* aEvent)
   return nsnull;
 }
 
-void
+void PR_CALLBACK
 nsAppShellService::DestroyExitEvent(PLEvent* aEvent)
 {
   ExitEvent* event = NS_REINTERPRET_CAST(ExitEvent*, aEvent);
@@ -782,9 +788,19 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
 
 NS_IMETHODIMP
 nsAppShellService::HideSplashScreen() {
-    // Hide the splash screen (and release it) if there is one.
-    if ( mSplashScreen ) {
+    // Hide the splash screen.
+    if ( mNativeAppSupport ) {
+        mNativeAppSupport->HideSplashScreen();
+    } else if ( mSplashScreen ) {
         mSplashScreen->Hide();
     }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppShellService::GetNativeAppSupport( nsINativeAppSupport **aResult ) {
+    NS_ENSURE_ARG( aResult );
+    *aResult = mNativeAppSupport;
+    NS_IF_ADDREF( *aResult );
     return NS_OK;
 }

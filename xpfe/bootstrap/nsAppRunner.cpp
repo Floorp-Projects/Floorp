@@ -166,6 +166,36 @@ PRBool NS_CanRun()
 }
 #endif 
 
+/*********************************************/
+// Default implementation for new and improved
+// native app support.  If your platform
+// implements nsINativeAppSupport then implement
+// this function and if def out this code.
+//
+// Note: For now, the default imiplementation returns 0 and
+//       the code that calls this will defalt to use the old
+//       nsISplashScreen interface directly.  At some point
+//       this function will return an instance of
+//       nsNativeAppSupportBase which will use the older
+//       "splash screen" interface.  The code below will
+//       then rely on nsINativeAppSupport and its use of
+//       nsISplashScreen will be removed.
+// 
+#if !defined( NS_WIN32 )
+
+nsresult NS_CreateNativeAppSupport( nsINativeAppSupport **aResult )
+{
+    nsresult rv = NS_OK;
+    if ( aResult ) {
+        *aResult = 0;
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+#endif
+
 /*
  * This routine translates the nsresult into a platform specific return
  * code for the application...
@@ -619,10 +649,10 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 #include <floatingpoint.h>
 #endif
 
-// Note: splashScreen is an owning reference that this function has responsibility
+// Note: nativeApp is an owning reference that this function has responsibility
 //       to release.  This responsibility is delegated to the app shell service
 //       (see nsAppShellService::Initialize call, below).
-static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
+static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 {
   nsresult rv;
 
@@ -696,13 +726,27 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
   NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get the appshell service");
   if (NS_FAILED(rv)) {
-    splashScreen->Hide();
+    // See if platform supports nsINativeAppSupport.
+    nsCOMPtr<nsINativeAppSupport> nativeAppSupport = do_QueryInterface( nativeApp );
+    if ( nativeAppSupport ) {
+        // Use that interface to remove splash screen.
+        nativeAppSupport->HideSplashScreen();
+    } else {
+        // See if platform supports nsISplashScreen, instead.
+        nsCOMPtr<nsISplashScreen> splashScreen = do_QueryInterface( nativeApp );
+        if ( splashScreen ) {
+            splashScreen->Hide();
+        }
+    }
+    // Release argument object.
+    NS_IF_RELEASE( nativeApp );
     return rv;
   }
 
-  rv = appShell->Initialize( cmdLineArgs, splashScreen );
-  // We are done with the splash screen here; the app shell owns it now.
-  NS_IF_RELEASE( splashScreen );
+  rv = appShell->Initialize( cmdLineArgs, nativeApp );
+  // We are done with the native app (or splash screen) object here;
+  // the app shell owns it now.
+  NS_IF_RELEASE( nativeApp );
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appshell");
   if ( NS_FAILED(rv) ) return rv; 
 
@@ -957,8 +1001,25 @@ int main(int argc, char* argv[])
   setupProfilingStuff();
 #endif
 
-  if( !NS_CanRun() )
-    return 1; 
+  // Try to allocate "native app support."
+  // Note: this object is not released here.  It is passed to main1 which
+  //       has responsibility to release it.
+  nsINativeAppSupport *nativeApp = 0;
+  rv = NS_CreateNativeAppSupport( &nativeApp );
+
+  // See if we can run.
+  if ( nativeApp ) {
+    PRBool canRun = PR_FALSE;
+    rv = nativeApp->Start( &canRun );
+    if ( !canRun ) {
+        return 1;
+    }
+  } else {
+    // If platform doesn't implement nsINativeAppSupport, fall
+    // back to old method.
+    if( !NS_CanRun() )
+      return 1; 
+  }
   // Note: this object is not released here.  It is passed to main1 which
   //       has responsibility to release it.
   nsISplashScreen *splash = 0;
@@ -983,19 +1044,23 @@ int main(int argc, char* argv[])
       dosplash = PR_FALSE;
 	}
 #endif
-  if (dosplash) {
+  if (dosplash && !nativeApp) {
+      // If showing splash screen and platform doesn't implement
+      // nsINativeAppSupport, then use older nsISplashScreen interface.
       rv = NS_CreateSplashScreen( &splash );
       NS_ASSERTION( NS_SUCCEEDED(rv), "NS_CreateSplashScreen failed" );
   }
   // If the platform has a splash screen, show it ASAP.
-  if ( splash ) {
+  if ( dosplash && nativeApp ) {
+      nativeApp->ShowSplashScreen();
+  } else if ( splash ) {
       splash->Show();
   }
   rv = NS_InitXPCOM(NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
 
-  nsresult result = main1( argc, argv, splash );
+  nsresult result = main1( argc, argv, nativeApp ? (nsISupports*)nativeApp : (nsISupports*)splash );
 
 
   {
