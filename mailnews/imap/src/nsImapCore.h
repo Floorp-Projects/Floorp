@@ -20,6 +20,7 @@
 #define _nsImapCore_H_
 
 #include "MailNewsTypes.h"
+#include "nsString2.h"
 
 class nsIMAPNamespace;
 class nsImapProtocol;
@@ -114,15 +115,17 @@ typedef enum {
 class nsIMAPMailboxInfo
 {
 public:
-	nsIMAPMailboxInfo(const char *name);
+	nsIMAPMailboxInfo(const char *name, char delimiter);
 	virtual ~nsIMAPMailboxInfo();
 	void SetChildrenListed(PRBool childrenListed) { m_childrenListed = childrenListed; }
 	PRBool GetChildrenListed() { return m_childrenListed; }
-	const char *GetMailboxName() { return m_mailboxName; }
+	const char *GetMailboxName() { return m_mailboxName.GetBuffer(); }
+	char	GetDelimiter() { return m_delimiter; }
 
 protected:
 	PRBool m_childrenListed;
-	char *m_mailboxName;
+	nsString2 m_mailboxName;
+	char m_delimiter;
 };
 
 
