@@ -3838,20 +3838,6 @@ MOZ_ARG_ENABLE_STRING(debugger-info-modules,
     done ])
 
 dnl ========================================================
-dnl = Disable some DTD debugging code in the parser that 
-dnl = breaks on some compilers because of evil and broken 
-dnl = streams code in htmlparser/src/prstrm.cpp
-dnl ========================================================
-MOZ_DISABLE_DTD_DEBUG=
-MOZ_ARG_DISABLE_BOOL(dtd-debug,
-[  --disable-dtd-debug     Disable DTD debugging code in the parser],
-    MOZ_DISABLE_DTD_DEBUG=1,
-    MOZ_DISABLE_DTD_DEBUG= )
-if test -n "$MOZ_DISABLE_DTD_DEBUG"; then
-    AC_DEFINE(MOZ_DISABLE_DTD_DEBUG)
-fi
-
-dnl ========================================================
 dnl Enable garbage collector
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(boehm,
@@ -5004,7 +4990,6 @@ AC_SUBST(OS_ARCH)
 AC_SUBST(OS_RELEASE)
 AC_SUBST(OS_TEST)
 
-AC_SUBST(MOZ_DISABLE_DTD_DEBUG)
 AC_SUBST(MOZ_DISABLE_JAR_PACKAGING)
 AC_SUBST(MOZ_CHROME_FILE_FORMAT)
 
