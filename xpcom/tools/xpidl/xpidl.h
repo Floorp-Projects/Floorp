@@ -38,6 +38,7 @@
 extern gboolean enable_debug;
 extern gboolean enable_warnings;
 extern gboolean verbose_mode;
+extern gboolean emit_js_stub_decls;
 
 typedef struct TreeState TreeState;
 
