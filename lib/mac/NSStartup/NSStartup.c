@@ -26,6 +26,7 @@
 
 #include <CodeFragments.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "gc_fragments.h"
 
@@ -73,4 +74,14 @@ void GC_generic_init_threads() {}
 void GC_gcollect() {}
 FILE* GC_stdout = NULL;
 FILE* GC_stderr = NULL;
+
+int GC_address_to_source(char* codeAddr, char fileName[256], UInt32* fileOffset)
+{
+	return 0;
+}
+
+void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersize)
+{
+	::strncpy(unmangled_name, mangled_name, buffersize);
+}
 #endif
