@@ -60,7 +60,7 @@ insert into components (value, program, initialowner) values ("Java Stubs", "Moz
 insert into components (value, program, initialowner) values ("JavaScript", "Mozilla", "mccabe@netscape.com");
 insert into components (value, program, initialowner) values ("JavaScript Debugger", "Mozilla", "jband@netscape.com");
 insert into components (value, program, initialowner) values ("JavaScript/Java Reflection", "Mozilla", "fur@netscape.com");
-insert into components (value, program, initialowner) values ("Layout", "Mozilla", "djw@netscape.com");
+insert into components (value, program, initialowner) values ("Layout", "Mozilla", "toshok@netscape.com");
 insert into components (value, program, initialowner) values ("LibMocha", "Mozilla", "chouck@netscape.com");
 insert into components (value, program, initialowner) values ("MIMELib", "Mozilla", "terry@mozilla.org");
 insert into components (value, program, initialowner) values ("NetLib", "Mozilla", "gagan@netscape.com");
