@@ -365,7 +365,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
       amountRead -= writeCount;
       mPosition += writeCount;
       if (amountRead > 0)
-        strncpy(mStreamBuffer,mStreamBuffer+writeCount,amountRead); 
+        memmove(mStreamBuffer,mStreamBuffer+writeCount,amountRead); 
     }
   }
 
