@@ -159,8 +159,10 @@ function Startup()
   var showFolder = document.getElementById("showFolder");
   showFolder.parentNode.insertBefore(downloadFolderList, showFolder);
   downloadFolderList.hidden = false;
-  
+
+#ifdef MOZ_PHOENIX  
   toggleDMPrefUI(document.getElementById("showWhenStarting"));
+#endif
   
   setTimeout("postStart()", 0);
 }
