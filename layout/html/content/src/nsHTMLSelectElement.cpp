@@ -35,11 +35,18 @@
 #include "nsIHTMLAttributes.h"
 #include "nsIDOMHTMLOptionElement.h"
 
+// Notify/query select frame for selectedIndex
+#include "nsIFormControlFrame.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIFrame.h"
+
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
+static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
 
 class nsHTMLSelectElement;
 
@@ -137,6 +144,9 @@ protected:
   nsIWidget*    mWidget; // XXX this needs to go away when FindFrameWithContent is efficient
   nsIForm*      mForm;
   nsOptionList* mOptions;
+
+  // Return the primary frame associated with this content
+  nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame);   
 };
 
 
@@ -304,7 +314,42 @@ nsHTMLSelectElement::GetLength(PRUint32* aLength)
   }
 }
 
-NS_IMPL_INT_ATTR(nsHTMLSelectElement, SelectedIndex, selectedindex)
+//NS_IMPL_INT_ATTR(nsHTMLSelectElement, SelectedIndex, selectedindex)
+NS_IMETHODIMP
+nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
+{
+  nsIFormControlFrame* formControlFrame = nsnull;
+  if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+    nsString value;
+    formControlFrame->GetProperty(nsHTMLAtoms::selectedindex, value);
+    NS_RELEASE(formControlFrame);
+    if (value.Length() > 0) {
+      PRInt32 retval = 0;
+      PRInt32 error = 0;
+      retval = value.ToInteger(&error, 10); // Convert to integer, base 10
+      if (!error) {
+        *aValue = retval;
+        return NS_OK;
+      }
+    }
+  }
+  *aValue = -1; // If no selectedIndex was to be had, make it -1 (none selected)
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLSelectElement::SetSelectedIndex(PRInt32 aValue)
+{
+  nsIFormControlFrame* formControlFrame = nsnull;
+  if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+    nsString value;
+    value.Append(aValue, 10);
+    formControlFrame->SetProperty(nsHTMLAtoms::selectedindex, value);
+    NS_RELEASE(formControlFrame);
+  }
+  return NS_OK;
+}
+
 NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Value, value)
 NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Disabled, disabled)
 NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Multiple, multiple)
@@ -658,4 +703,27 @@ nsHTMLSelectElement::GetStyleHintForAttributeChange(
 {
   nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
+}
+
+nsresult
+nsHTMLSelectElement::GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame)
+{
+  nsIDocument* doc = nsnull;
+  nsresult res = NS_NOINTERFACE;
+  // Get the document
+  if (NS_OK == GetDocument(doc)) {
+    // Get presentation shell 0
+    nsIPresShell* presShell = doc->GetShellAt(0);
+    if (nsnull != presShell) {
+      nsIFrame *frame = nsnull;
+      presShell->GetPrimaryFrameFor(this, frame);
+      if (nsnull != frame) {
+        res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aFormControlFrame);
+      }
+      NS_RELEASE(presShell);
+    }
+  NS_RELEASE(doc);
+  }
+
+  return res;
 }
