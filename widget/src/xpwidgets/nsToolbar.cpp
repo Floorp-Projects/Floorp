@@ -763,38 +763,57 @@ NS_METHOD nsToolbar::GetBounds(nsRect & aRect)
 }
 
 //-----------------------------------------------------------------------------
+nsEventStatus nsToolbar::OnPaint(nsIRenderingContext& aRenderingContext,
+                                 const nsRect& aDirtyRect)
+{
+  nsresult res = NS_OK;
+  nsIWidget * widget = nsnull;
+  nsRect r = aDirtyRect;
+
+  res = QueryInterface(kIWidgetIID,(void**)&widget);
+
+  if (NS_OK != res)
+    return nsEventStatus_eIgnore;
+
+  aRenderingContext.SetColor(widget->GetBackgroundColor());
+  aRenderingContext.FillRect(r);
+  r.width--;
+
+  if (mBorderType != eToolbarBorderType_none) 
+  {
+    nsRect rect(r);
+    // draw top & left
+    aRenderingContext.SetColor(NS_RGB(255,255,255));
+    aRenderingContext.DrawLine(0,0,rect.width,0);
+    if (mBorderType == eToolbarBorderType_full) {
+      aRenderingContext.DrawLine(0,0,0,rect.height);
+    }
+
+    // draw bottom & right
+    aRenderingContext.SetColor(NS_RGB(128,128,128));
+    aRenderingContext.DrawLine(0,rect.height-1,rect.width,rect.height-1);
+    if (mBorderType == eToolbarBorderType_full) {
+      aRenderingContext.DrawLine(rect.width,0,rect.width,rect.height);
+    }
+  }
+
+  return nsEventStatus_eIgnore;
+}
+
+//-----------------------------------------------------------------------------
 nsEventStatus nsToolbar::HandleEvent(nsGUIEvent *aEvent) 
 {
 
-  if (aEvent->message == NS_PAINT) {
+  if (aEvent->message == NS_PAINT) 
+  {
     nsRect r;
     aEvent->widget->GetBounds(r);
     r.x = 0;
     r.y = 0;
     nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
-    drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
-    drawCtx->FillRect(r);
-    r.width--;
 
-    if (mBorderType != eToolbarBorderType_none) {
-      nsRect rect(r);
-      // draw top & left
-      drawCtx->SetColor(NS_RGB(255,255,255));
-      drawCtx->DrawLine(0,0,rect.width,0);
-      if (mBorderType == eToolbarBorderType_full) {
-        drawCtx->DrawLine(0,0,0,rect.height);
-      }
-
-      // draw bottom & right
-      drawCtx->SetColor(NS_RGB(128,128,128));
-      drawCtx->DrawLine(0,rect.height-1,rect.width,rect.height-1);
-      if (mBorderType == eToolbarBorderType_full) {
-        drawCtx->DrawLine(rect.width,0,rect.width,rect.height);
-      }
-    }
+    return (OnPaint(*drawCtx,r));
   }
-
-
 
   return nsEventStatus_eIgnore;
   

@@ -199,7 +199,14 @@ public:
   * HandleGUI Events
   *
   */
-  virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent) = 0;
+  NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent) = 0;
+
+ /**
+  * Handle OnPaint
+  *
+  */
+  NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
+                                     const nsRect& aDirtyRect) = 0;
 
  /**
   * Gets the PopUp on the Image Button
