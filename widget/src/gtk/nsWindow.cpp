@@ -244,27 +244,27 @@ static GtkTargetEntry target_table[] = {
 static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
 
 
-GdkWMDecoration nsWindow::ConvertBorderStyles(nsBorderStyle bs)
+gint nsWindow::ConvertBorderStyles(nsBorderStyle bs)
 {
-  GdkWMDecoration w = NS_STATIC_CAST(enum GdkWMDecoration, 0);
+  gint w = 0;
 
   if (bs == eBorderStyle_default)
-    return NS_STATIC_CAST(enum GdkWMDecoration, -1);
+    return -1;
 
   if (bs & eBorderStyle_all)
-    w = NS_STATIC_CAST(enum GdkWMDecoration, w | GDK_DECOR_ALL);
+    w |= GDK_DECOR_ALL;
   if (bs & eBorderStyle_border)
-    w = NS_STATIC_CAST(enum GdkWMDecoration, w | GDK_DECOR_BORDER);
+    w |= GDK_DECOR_BORDER;
   if (bs & eBorderStyle_resizeh)
-    w = NS_STATIC_CAST(enum GdkWMDecoration, w | GDK_DECOR_RESIZEH);
+    w |= GDK_DECOR_RESIZEH;
   if (bs & eBorderStyle_title)
-    w = NS_STATIC_CAST(enum GdkWMDecoration, w | GDK_DECOR_TITLE);
+    w |= GDK_DECOR_TITLE;
   if (bs & eBorderStyle_menu)
-    w = NS_STATIC_CAST(enum GdkWMDecoration, w | GDK_DECOR_MENU);
+    w |= GDK_DECOR_MENU;
   if (bs & eBorderStyle_minimize)
-    w = NS_STATIC_CAST(enum GdkWMDecoration, w | GDK_DECOR_MINIMIZE);
+    w |= GDK_DECOR_MINIMIZE;
   if (bs & eBorderStyle_maximize)
-    w = NS_STATIC_CAST(enum GdkWMDecoration, w | GDK_DECOR_MAXIMIZE);
+    w |= GDK_DECOR_MAXIMIZE;
   if (bs & eBorderStyle_close)
     printf("we don't handle eBorderStyle_close yet... please fix me\n");
 
@@ -863,9 +863,9 @@ nsWindow::OnRealize()
   // we were just realized, so we better have a window, but we will make sure...
   if (mShell->window)
   {
-    GdkWMDecoration wmd = ConvertBorderStyles(mBorderStyle);
+    gint wmd = ConvertBorderStyles(mBorderStyle);
     if (wmd != -1)
-      gdk_window_set_decorations(mShell->window, ConvertBorderStyles(mBorderStyle));
+      gdk_window_set_decorations(mShell->window, (GdkWMDecoration)wmd);
   }
 
 }
