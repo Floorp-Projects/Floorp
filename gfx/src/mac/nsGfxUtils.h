@@ -43,6 +43,10 @@
 #include "nsCarbonHelpers.h"
 #endif // CarbonHelpers_h__
 
+#if DEBUG && !defined(XP_MACOSX)
+#include "macstdlibextras.h"
+#endif
+
 #include <LowMem.h>
 
 
@@ -75,16 +79,17 @@ inline PRBool ValidateDrawingState()
   
   GetGWorld(&curPort, &curDevice);
   
-  if (CurrentPortIsWMPort())
+  // if we have a window, but we're set to the WM port, things are bad
+  if (CurrentPortIsWMPort() && (FrontWindow() != nil))
     return false;
 
 #if TARGET_CARBON
-  if (! IsValidPort(curPort))
-    return false;
+  //if (! IsValidPort(curPort))   // rather slow
+  //  return false;
 #else
   // all our ports should be onscreen or offscreen color graphics ports
   // Onscreen ports have portVersion 0xC000, GWorlds have 0xC001.
-  if (((UInt16)curPort->portVersion & 0xC000) != 0xC000)
+  if ((((UInt16)curPort->portVersion & 0xC000) != 0xC000) && !IsSIOUXWindow((GrafPtr)curPort))
     return false;
 #endif
 
