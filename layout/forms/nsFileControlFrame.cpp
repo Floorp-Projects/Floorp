@@ -100,6 +100,7 @@ nsFileControlFrame::GetType(PRInt32* aType) const
 }
 
 // XXX this should be removed when nsView exposes it
+nsIWidget* GetWindowTemp(nsIView *aView);
 nsIWidget*
 GetWindowTemp(nsIView *aView)
 {

@@ -98,6 +98,7 @@ protected:
   PRBool mMouseDownOnCheckbox;
 };
 
+nsresult NS_NewCheckboxControlFrame(nsIFrame*& aResult);
 nsresult
 NS_NewCheckboxControlFrame(nsIFrame*& aResult)
 {
