@@ -1672,8 +1672,13 @@ NS_IMETHODIMP nsWindow::RemoveTooltips()
 void  nsWindow::ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY)
 {
 nsRect	rect;
+PRInt32	offx,offy;
         
+  this->CalcOffset(offx,offy);
 	this->GetBounds(rect);
+	rect.x+=offx;
+	rect.y+=offy;
+	
   aX +=rect.x;
   aY +=rect.y;
 }
