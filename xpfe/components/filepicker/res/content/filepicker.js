@@ -519,7 +519,17 @@ function gotoDirectory(directory) {
   addToHistory(directory.unicodePath);
 
   window.setCursor("wait");
-  outlinerView.setDirectory(directory);
+  try {
+    outlinerView.setDirectory(directory);
+  } catch(ex) {
+    var errorTitle = gFilePickerBundle.getString("noPermissionTitle");
+    var errorMsg = gFilePickerBundle.getString("noPermissionError");
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                              .getService(Components.interfaces.nsIPromptService);
+    promptService.alert(window, errorTitle, errorMsg);
+    return;
+  }
+
   window.setCursor("auto");
 
   outlinerView.QueryInterface(nsIOutlinerView).selection.clearSelection();

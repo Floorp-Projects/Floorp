@@ -239,12 +239,19 @@ nsFileView::Sort(PRInt16 aSortType, PRBool aReverseSort)
 NS_IMETHODIMP
 nsFileView::SetDirectory(nsIFile* aDirectory)
 {
+  nsCOMPtr<nsISimpleEnumerator> dirEntries;
+  aDirectory->GetDirectoryEntries(getter_AddRefs(dirEntries));
+
+  if (!dirEntries) {
+    // Couldn't read in the directory, this can happen if the user does not
+    // have permission to list it.
+    return NS_ERROR_FAILURE;
+  }
+
   mDirectoryPath = aDirectory;
   mFileList->Clear();
   mDirList->Clear();
 
-  nsCOMPtr<nsISimpleEnumerator> dirEntries;
-  mDirectoryPath->GetDirectoryEntries(getter_AddRefs(dirEntries));
   PRBool hasMore = PR_FALSE;
   PRInt32 dirCount = 0, fileCount = 0;
 
