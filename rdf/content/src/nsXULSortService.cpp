@@ -84,6 +84,8 @@
 #include "nsIDOMXULTreeElement.h"
 #include "nsIDOMXULElement.h"
 
+#define	XUL_BINARY_INSERTION_SORT	1
+
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -1052,7 +1054,9 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			                        kTreeContentsGeneratedAtom,
 			                        PR_FALSE)))
 			{
+#ifdef	DEBUG
 				printf("unable to clear contents-generated attribute\n");
+#endif
 			}
 			
 			// insert sorted children			
@@ -1218,7 +1222,64 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 			else
 				sortInfo.descendingSort = PR_FALSE;
 
+#ifdef	XUL_BINARY_INSERTION_SORT
 			// figure out where to insert the node when a sort order is being imposed
+			// using a smart binary comparison
+			PRInt32			numChildren = 0;
+			if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
+			if (numChildren > 0)
+			{
+			        nsCOMPtr<nsIContent>	child;
+				PRInt32			last = -1, current, direction = 0, delta = numChildren;
+				while(PR_TRUE)
+				{
+					delta = delta / 2;
+					if (delta == 0)	delta = 1;
+
+					if (last == -1)
+					{
+						current = delta;
+					}
+					else if (direction > 0)
+					{
+						current = last + delta;
+					}
+					else
+					{
+						current = last - delta;
+					}
+
+					if (current != last)
+					{
+						container->ChildAt(current, *getter_AddRefs(child));
+						nsIContent	*theChild = child.get();
+						direction = inplaceSortCallback(&node, &theChild, &sortInfo);
+					}
+					if ( (direction == 0) ||
+						((current == last + 1) && (direction < 0)) ||
+						((current == last - 1) && (direction > 0)) ||
+						((current == 0) && (direction < 0)) ||
+						((current >= numChildren - 1) && (direction > 0)) )
+					{
+						if (current >= numChildren)
+						{
+							container->AppendChildTo(node, PR_TRUE);
+						}
+						else
+						{
+							container->InsertChildAt(node,
+								((direction > 0) ? current + 1: (current > 0) ? current-1 : 0),
+								PR_TRUE);
+						}
+						childAdded = PR_TRUE;
+						break;
+					}
+					last = current;
+				}
+			}
+#else
+			// figure out where to insert the node when a sort order is being imposed
+			// using a simple linear brute-force comparison
 			PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
 		        nsCOMPtr<nsIContent>	child;
 
@@ -1239,6 +1300,8 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 					}
 				}
 			}
+#endif
+
 		}
 	}
 	if (childAdded == PR_FALSE)
