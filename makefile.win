@@ -92,6 +92,7 @@ DIRS =                         \
   xpfe                         \
   xpinstall                    \
   extensions                   \
+  themes \
 !if !defined(DISABLE_MAILNEWS)
   mailnews                     \
 !endif
