@@ -10,6 +10,7 @@ const dlObserver = {
   observe: function(subject, topic, state) {
     var dl = subject.QueryInterface(Components.interfaces.nsIDownload);
     var elt = document.getElementById(dl.target.path);
+
     switch (topic) {
       case "dl-progress":
         if (dl.percentComplete == -1) {
@@ -219,11 +220,7 @@ var downloadViewController = {
 
 function getFileForItem(aElement)
 {
-  var itemResource = gRDFService.GetResource(aElement.id);
-  var NC_File = gRDFService.GetResource(NC_NS + "File");
-  var fileResource = gDownloadHistoryView.database.GetTarget(itemResource, NC_File, true);
-  fileResource = fileResource.QueryInterface(Components.interfaces.nsIRDFResource);
-  return createLocalFile(fileResource.Value);
+  return createLocalFile(aElement.id);
 }
 
 function createLocalFile(aFilePath) 
