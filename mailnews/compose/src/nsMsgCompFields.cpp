@@ -605,7 +605,7 @@ nsresult nsMsgCompFields::DecodeHeader(MSG_HEADER_SET header)
 		break;
     }
 
-    NS_ASSERTION(result < sizeof(m_headers) / sizeof(char*), "wrong result, review the code!");
+    NS_ASSERTION(result < (int)(sizeof(m_headers) / sizeof(char*)), "wrong result, review the code!");
     return result;
 }
 
