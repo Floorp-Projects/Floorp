@@ -460,11 +460,6 @@ function EditorFindNext()
 
 function EditorViewSource()
 {
-// TESTING EditConflict dialog:
-    window.openDialog("chrome://editor/content/EditConflict.xul", "_blank", "chrome,close,titlebar,modal", "");
-
-return;
-
   // Temporary hack: save to a file and call up the source view window
   // using the local file url.
   if (!editorShell.CheckAndSaveDocument(GetString("BeforeViewSource")))
