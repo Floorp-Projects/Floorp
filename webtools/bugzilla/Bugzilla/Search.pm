@@ -192,10 +192,10 @@ sub init {
                 push(@supptables, "LEFT JOIN longdescs $table ON bugs.bug_id = $table.bug_id AND $table.who IN($list)");
                 push(@clist, "$table.who",'isnotnull');
             } else {
-                my $table = "longdescs_";
+                my $table = "longdescs_email_$id";
                 push(@supptables, "longdescs $table");
                 push(@wherepart, "$table.bug_id = bugs.bug_id");
-                my $ptable = "longdescnames_";
+                my $ptable = "longdescnames_email_$id";
                 push(@supptables, "profiles $ptable");
                 push(@wherepart, "$table.who = $ptable.userid");
                 push(@clist, "$ptable.login_name", $type, $email);
