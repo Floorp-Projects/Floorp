@@ -29,6 +29,7 @@
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIFrame.h"
+#include "nsIFrameDebug.h"
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
 #include "nsITimer.h"
@@ -289,7 +290,10 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
           nsAutoString regressionFileName;
           FILE *fp = GetOutputFile(aURL, regressionFileName);
           if (fp) {
-            root->DumpRegressionData(presContext, fp, 0);
+            nsIFrameDebug* fdbg;
+            if (NS_SUCCEEDED(root->QueryInterface(nsIFrameDebug::GetIID(), (void**) &fdbg))) {
+              fdbg->DumpRegressionData(presContext, fp, 0);
+            }
             fclose(fp);
             if (mRegressing) {
               PerformRegressionTest(regressionFileName);
@@ -306,8 +310,12 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
             nsCRT::free(file);
           }
         }
-        else
-          root->DumpRegressionData(presContext, stdout, 0);
+        else {
+          nsIFrameDebug* fdbg;
+          if (NS_SUCCEEDED(root->QueryInterface(nsIFrameDebug::GetIID(), (void**) &fdbg))) {
+            fdbg->DumpRegressionData(presContext, stdout, 0);
+          }
+        }
       }
     }
 #endif
