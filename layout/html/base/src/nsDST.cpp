@@ -305,6 +305,24 @@ nsDST::~nsDST()
   mArena->Release();
 }
 
+// Called by Remove() to destroy a node. Explicitly calls the destructor
+// and then asks the memory arena to free the memory
+inline void
+nsDST::DestroyNode(LeafNode* aLeafNode)
+{
+  aLeafNode->~LeafNode();      // call destructor
+  mArena->FreeNode(aLeafNode); // free memory
+}
+
+// Called by Remove() to destroy a node. Explicitly calls the destructor
+// and then asks the memory arena to free the memory
+inline void
+nsDST::DestroyNode(TwoNode* aTwoNode)
+{
+  aTwoNode->~TwoNode();       // call destructor
+  mArena->FreeNode(aTwoNode); // free memory
+}
+
 void
 nsDST::FreeTree(LeafNode* aNode)
 {
@@ -358,24 +376,6 @@ keepLooping:
     aNode = ((TwoNode*)aNode)->mRight;
     goto keepLooping;    
   }
-}
-
-// Called by Remove() to destroy a node. Explicitly calls the destructor
-// and then asks the memory arena to free the memory
-inline void
-nsDST::DestroyNode(LeafNode* aLeafNode)
-{
-  aLeafNode->~LeafNode();     // call destructor
-  mArena->FreeNode(aLeafNode); // free memory
-}
-
-// Called by Remove() to destroy a node. Explicitly calls the destructor
-// and then asks the memory arena to free the memory
-inline void
-nsDST::DestroyNode(TwoNode* aTwoNode)
-{
-  aTwoNode->~TwoNode();      // call destructor
-  mArena->FreeNode(aTwoNode); // free memory
 }
 
 nsDST::LeafNode*
