@@ -57,7 +57,7 @@ extern void *mozilla_event_queue;
 
 
 /* Special macros facilitate running on Win 16 */
-#if defined(XP_PC) && !defined(_WIN32)   /* then we are win 16 */ 
+#if defined(XP_WIN16)
 
   /* 
    * Allocate the data passed to the callback functions from the heap...
