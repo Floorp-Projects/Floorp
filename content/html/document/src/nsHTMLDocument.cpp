@@ -1113,7 +1113,7 @@ nsHTMLDocument::GetImageMap(const nsString& aMapName,
     nsCOMPtr<nsIDOMHTMLMapElement> map;
     mImageMaps->QueryElementAt(i, NS_GET_IID(nsIDOMHTMLMapElement), getter_AddRefs(map));
     if (map && NS_SUCCEEDED(map->GetName(name))) {
-      if (name.EqualsIgnoreCase(aMapName)) {
+      if (name.Equals(aMapName, nsCaseInsensitiveStringComparator())) {
         *aResult = map;
         NS_ADDREF(*aResult);
         return NS_OK;
@@ -1894,7 +1894,7 @@ nsHTMLDocument::SetDomain(const nsAReadableString& aDomain)
     nsAutoString suffix;
     current.Right(suffix, aDomain.Length());
     PRUnichar c = current.CharAt(current.Length() - aDomain.Length() - 1);
-    if (suffix.EqualsIgnoreCase(nsString(aDomain)) &&
+    if (suffix.Equals(aDomain, nsCaseInsensitiveStringComparator()) &&
         (c == '.' || c == '/'))
       ok = PR_TRUE;
   }
@@ -2017,9 +2017,7 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  nsAutoString bodyStr;
-  bodyStr.Assign(NS_LITERAL_STRING("BODY"));
-
+  NS_NAMED_LITERAL_STRING(bodyStr, "BODY");
   nsCOMPtr<nsIDOMNode> child;
   root->GetFirstChild(getter_AddRefs(child));
 
@@ -2031,7 +2029,8 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
 
       domElement->GetTagName(tagName);
 
-      if (bodyStr.EqualsIgnoreCase(tagName)) {
+      ToUpperCase(tagName);
+      if (bodyStr.Equals(tagName)) {
         nsCOMPtr<nsIDOMNode> ret;
 
         nsresult rv = root->ReplaceChild(aBody, child, getter_AddRefs(ret));
@@ -3757,7 +3756,7 @@ nsHTMLDocument::GetBodyContent()
     return PR_FALSE;
   }
 
-  nsAutoString bodyStr(NS_LITERAL_STRING("BODY"));
+  NS_NAMED_LITERAL_STRING(bodyStr, "BODY");
   nsCOMPtr<nsIDOMNode> child;
   root->GetFirstChild(getter_AddRefs(child));
 
@@ -3768,7 +3767,8 @@ nsHTMLDocument::GetBodyContent()
       nsAutoString tagName;
       domElement->GetTagName(tagName);
 
-      if (bodyStr.EqualsIgnoreCase(tagName)) {
+      ToUpperCase(tagName);
+      if (bodyStr.Equals(tagName)) {
         mBodyContent = child;
 
         return PR_TRUE;

@@ -147,6 +147,8 @@
 #include "nsInt64.h"
 #include "nsPluginError.h"
 
+#include "nsUnicharUtils.h"
+
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
@@ -4583,7 +4585,7 @@ static int PR_CALLBACK ComparePluginFileInDirectory (const void *v1, const void 
 
   PRInt32 result = 0;
   if (LL_EQ(pfd1->mModTime, pfd2->mModTime))
-    result = pfd1->mFilename.CompareWithConversion(pfd2->mFilename.get(), PR_TRUE);
+    result = Compare(pfd1->mFilename, pfd2->mFilename, nsCaseInsensitiveStringComparator());
   else if (LL_CMP(pfd1->mModTime, >, pfd2->mModTime))
     result = -1;
   else 

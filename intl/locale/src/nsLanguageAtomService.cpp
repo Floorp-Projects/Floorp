@@ -107,7 +107,7 @@ nsLanguageAtom::LanguageIs(const PRUnichar* aLanguage, PRBool* aResult)
   NS_ENSURE_ARG_POINTER(aLanguage);
   NS_ENSURE_ARG_POINTER(aResult);
 
-  *aResult = mLang.EqualsWithConversion(aLanguage);
+  *aResult = mLang.Equals(nsDependentString(aLanguage));
 
   return NS_OK;
 }

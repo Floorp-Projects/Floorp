@@ -378,7 +378,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
                                               kActuateAtom,
                                               value);
       if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
-          value.EqualsAtom(kOnLoadAtom,PR_FALSE)) {
+          value.EqualsAtom(kOnLoadAtom, PR_FALSE)) {
 
         // show= ?
         nsLinkVerb verb = eLinkVerb_Undefined;

@@ -1117,8 +1117,8 @@ nsOutlinerBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID,
     nsCOMPtr<nsIStyleContext> cellContext;
     GetPseudoStyleContext(nsXULAtoms::mozoutlinercell, getter_AddRefs(cellContext));
 
-    nsAutoString cell(NS_LITERAL_STRING("cell"));
-    if (currCol->IsCycler() || cell.EqualsWithConversion(aCellItem)) {
+    NS_NAMED_LITERAL_STRING(cell, "cell");
+    if (currCol->IsCycler() || cell.Equals(aCellItem)) {
       // If the current Column is a Cycler, then the Rect is just the cell - the margins. 
       // Similarly, if we're just being asked for the cell rect, provide it. 
 

@@ -2795,10 +2795,10 @@ EarlyExit:
 }
 
 PRInt32 
-nsAbSync::GetTypeOfPhoneNumber(nsString tagName)
-{  
-  nsString compValue = tagName;
-  compValue.Append(NS_LITERAL_STRING("_type"));
+nsAbSync::GetTypeOfPhoneNumber(const nsAString& tagName)
+{
+  NS_NAMED_LITERAL_STRING(typePostfix, "_type");
+  const nsAString& compValue = tagName + typePostfix;
 
   for (PRInt32 i=0; i<mPhoneTypes->Count(); i++)
   {
@@ -2806,7 +2806,8 @@ nsAbSync::GetTypeOfPhoneNumber(nsString tagName)
     if ( (!val) || val->IsEmpty() )
       continue;
 
-    if (!compValue.CompareWithConversion(*val, PR_TRUE, compValue.Length()))
+    const nsAString& valPrefix = Substring(*val, 0, compValue.Length());
+    if (compValue.Equals(valPrefix, nsCaseInsensitiveStringComparator()))
     {
       nsString phoneType;
 

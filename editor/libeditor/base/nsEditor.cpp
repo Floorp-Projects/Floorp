@@ -3457,7 +3457,7 @@ nsEditor::NodeIsType(nsIDOMNode *aNode, const nsAReadableString &aTagStr)
   {
     nsAutoString tag, tagStr(aTagStr);
     element->GetTagName(tag);
-    if (tag.EqualsIgnoreCase(tagStr))
+    if (tag.Equals(tagStr, nsCaseInsensitiveStringComparator()))
       return PR_TRUE;
   }
   return PR_FALSE;

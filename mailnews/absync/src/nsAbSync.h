@@ -248,7 +248,7 @@ private:
   nsresult        ProcessDeletedRecords();
   nsresult        ProcessLastChange();
   nsresult        ProcessPhoneNumbersTheyAreSpecial(nsIAbCard *aCard);
-  PRInt32         GetTypeOfPhoneNumber(nsString tagName);
+  PRInt32         GetTypeOfPhoneNumber(const nsAString& tagName);
 
   // For updating...
   PRInt32         HuntForExistingABEntryInServerRecord(PRInt32          aPersonIndex, 

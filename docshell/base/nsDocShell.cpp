@@ -109,7 +109,7 @@
 #include "prlog.h"
 
 // this is going away - see
-// http://bugzilla.mozilla.org/show_bug.cgi?id=71482
+//
 #include "nsIBrowserHistory.h"
 
 #ifdef DEBUG_DOCSHELL_FOCUS
@@ -1362,10 +1362,10 @@ nsDocShell::GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimp
 
     rv = docShellEnum->First();
     if (NS_FAILED(rv)) return rv;
-    
-    docShellEnum->AddRef();     // ensure we don't lose the last ref inside the QueryInterface
+
+    NS_ADDREF(docShellEnum);    // ensure we don't lose the last ref inside the QueryInterface
     rv = docShellEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)outEnum);
-    docShellEnum->Release();
+    NS_RELEASE(docShellEnum);
     return rv;
 }
 
@@ -1633,7 +1633,7 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
         reqAsTreeItem(do_QueryInterface(aRequestor));
 
     // First we check our name.
-    if (mName.EqualsWithConversion(aName)) {
+    if (mName.Equals(aName)) {
         *_retval = NS_STATIC_CAST(nsIDocShellTreeItem *, this);
         NS_ADDREF(*_retval);
         return NS_OK;
@@ -2271,7 +2271,8 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
 
     nsresult rv = CreateFixupURI(aURI, getter_AddRefs(uri));
 
-    if (NS_ERROR_UNKNOWN_PROTOCOL == rv) {
+    if (NS_ERROR_UNKNOWN_PROTOCOL == rv ||
+        NS_ERROR_MALFORMED_URI == rv) {
         // we weren't able to find a protocol handler
         nsCOMPtr<nsIPrompt> prompter;
         nsCOMPtr<nsIStringBundle> stringBundle;
@@ -2281,44 +2282,34 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
         NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
 
         nsXPIDLString messageStr;
-        NS_ENSURE_SUCCESS(stringBundle->
-                          GetStringFromName(
-                              NS_LITERAL_STRING("protocolNotFound").get(),
-                              getter_Copies(messageStr)),
-                          NS_ERROR_FAILURE);
+        nsresult strerror;
+        
+        if (NS_ERROR_UNKNOWN_PROTOCOL == rv) {
+            const nsAutoString uriString(aURI);
+            PRInt32 colon = uriString.FindChar(':');
+            // extract the scheme
+            nsAutoString scheme;
+            uriString.Left(scheme, colon);
+            
+            const PRUnichar* formatStrs[] = { scheme.get() };
+        
+            strerror =
+                stringBundle->FormatStringFromName(NS_LITERAL_STRING("protocolNotFound").get(),
+                                                   formatStrs,
+                                                   1,
+                                                   getter_Copies(messageStr));
+        }
+        else {
+            // NS_ERROR_MALFORMED_URI
+            strerror =
+                stringBundle->GetStringFromName(NS_LITERAL_STRING("malformedURI").get(),
+                                                getter_Copies(messageStr));
+        }
 
-        nsAutoString uriString(aURI);
-        PRInt32 colon = uriString.FindChar(':');
-        // extract the scheme
-        nsAutoString scheme;
-        uriString.Left(scheme, colon);
-        nsCAutoString cScheme;
-        cScheme.AssignWithConversion(scheme);
-
-        PRUnichar *msg = nsTextFormatter::smprintf(messageStr, cScheme.get());
-        if (!msg)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        prompter->Alert(nsnull, msg);
-        nsTextFormatter::smprintf_free(msg);
+        // now we have the string
+        NS_ENSURE_SUCCESS(strerror, NS_ERROR_FAILURE);
+        prompter->Alert(nsnull, messageStr);
     }                           // end unknown protocol
-    else if (NS_ERROR_MALFORMED_URI == rv) {
-        // malformed URI
-        nsCOMPtr<nsIPrompt> prompter;
-        nsCOMPtr<nsIStringBundle> stringBundle;
-        GetPromptAndStringBundle(getter_AddRefs(prompter),
-                                 getter_AddRefs(stringBundle));
-
-        NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
-
-        nsXPIDLString messageStr;
-        NS_ENSURE_SUCCESS(stringBundle->
-                          GetStringFromName(
-                              NS_LITERAL_STRING("malformedURI").get(),
-                              getter_Copies(messageStr)),
-                          NS_ERROR_FAILURE);
-        prompter->Alert(nsnull, messageStr.get());
-    }
 
     if (NS_FAILED(rv) || !uri)
         return NS_ERROR_FAILURE;
@@ -3673,7 +3664,6 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                         AddToGlobalHistory(uri);
                         // this is a redirect, so hide the page from
                         // being enumerated in history
-                        // this is temporary until bug 71482 is fixed
                         if (mGlobalHistory) {
                             nsCOMPtr<nsIBrowserHistory> browserHistory =
                                 do_QueryInterface(mGlobalHistory);
@@ -3930,18 +3920,18 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
                                 nsIContentViewer ** aViewer)
 {
     //XXX This should probably be some category thing....
-    char id[256];
-    PR_snprintf(id, sizeof(id),
-                NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "%s;1?type=%s",
-                (const char *) "view", aContentType);
+    nsCAutoString contractId(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX
+                             "view"
+                             ";1?type=");
+    contractId += aContentType;
 
-    // Note that we're always passing in "view" for the component id above
+    // Note that we're always passing in "view" for the contractid above
     // and to the docLoaderFactory->CreateInstance() at the end of this method. 
     // nsLayoutDLF makes the determination if it should be a "view-source"
 
     // Create an instance of the document-loader-factory
     nsCOMPtr<nsIDocumentLoaderFactory>
-        docLoaderFactory(do_CreateInstance(id));
+        docLoaderFactory(do_CreateInstance(contractId.get()));
     if (!docLoaderFactory) {
         // try again after loading plugins
         nsresult err;
@@ -3953,7 +3943,7 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
 
         pluginHost->LoadPlugins();
 
-        docLoaderFactory = do_CreateInstance(id);
+        docLoaderFactory = do_CreateInstance(contractId.get());
 
         if (!docLoaderFactory)
             return NS_ERROR_FAILURE;
@@ -4101,6 +4091,9 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                 isSubWindow = PR_TRUE;
                 break;
               }
+
+              // don't use nsCOMPtr here to avoid extra addref
+              // when assigning to curwin
               nsIDOMWindow* temp;
               curwin->GetParent(&temp);
               if (curwin == temp) {
@@ -4728,7 +4721,7 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
     nsresult rv = NS_ERROR_FAILURE;
     PRUint32 available = 0;
     PRUint32 bytesRead;
-    char *headersBuf = nsnull;
+    nsXPIDLCString headersBuf;
 
     // used during the manipulation of the String from the InputStream
     nsCAutoString headersString;
@@ -4743,23 +4736,25 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
     //
 
     rv = aHeadersData->Available(&available);
-    if (NS_FAILED(rv) || available < 1) {
-        goto AHTC_CLEANUP;
-    }
+    if (NS_FAILED(rv) || available < 1)
+        return rv;
 
     do {
-        aHeadersData->ReadSegments(AHTC_WriteFunc, &headersBuf, available,
+        aHeadersData->ReadSegments(AHTC_WriteFunc,
+                                   getter_Copies(headersBuf),
+                                   available,
                                    &bytesRead);
         rv = aHeadersData->Available(&available);
-        if (NS_FAILED(rv)) {
-            goto AHTC_CLEANUP;
-        }
+        if (NS_FAILED(rv))
+            return rv;
+
     } while (0 < available);
 
     //
-    // Turn the char * buffer into an nsString.
+    // Turn nsXPIDLCString into an nsString.
+    // (need to find the new string APIs so we don't do this
     //
-    headersString = (const char *) headersBuf;
+    headersString = headersBuf.get();
 
     //
     // Iterate over the nsString: for each "\r\n" delimeted chunk,
@@ -4769,16 +4764,14 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
     while (PR_TRUE) {
         crlf = headersString.Find("\r\n", PR_TRUE);
         if (-1 == crlf) {
-            rv = NS_OK;
-            goto AHTC_CLEANUP;
+            return NS_OK;
         }
         headersString.Mid(oneHeader, 0, crlf);
         headersString.Cut(0, crlf + 2);
         oneHeader.StripWhitespace();
         colon = oneHeader.Find(":");
         if (-1 == colon) {
-            rv = NS_ERROR_NULL_POINTER;
-            goto AHTC_CLEANUP;
+            return NS_ERROR_NULL_POINTER;
         }
         oneHeader.Left(headerName, colon);
         colon++;
@@ -4790,15 +4783,10 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
 
         rv = aChannel->SetRequestHeader(headerName.get(), headerValue.get());
         if (NS_FAILED(rv)) {
-            rv = NS_ERROR_NULL_POINTER;
-            goto AHTC_CLEANUP;
+            return NS_ERROR_NULL_POINTER;
         }
     }
-
-  AHTC_CLEANUP:
-    nsMemory::Free((void *) headersBuf);
-    headersBuf = nsnull;
-    return rv;
+    return NS_ERROR_FAILURE;
 }
 
 nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
@@ -4922,35 +4910,45 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor)
     const char kHash = '#';
 
     // Split the new URI into a left and right part
-    nsAutoString sNew;
-    sNew.AssignWithConversion(newSpec);
-    nsAutoString sNewLeft;
-    nsAutoString sNewRef;
-    PRInt32 hashNew = sNew.FindChar(kHash);
+    // (assume we're parsing it out right
+    nsACString::const_iterator urlStart, urlEnd, refStart, refEnd;
+    newSpec.BeginReading(urlStart);
+    newSpec.EndReading(refEnd);
+    
+    PRInt32 hashNew = newSpec.FindChar(kHash);
     if (hashNew == 0) {
-        return NS_OK;           // Strange URI 
+        return NS_OK;           // Strange URI
     }
     else if (hashNew > 0) {
-        sNew.Left(sNewLeft, hashNew);
-        sNew.Right(sNewRef, sNew.Length() - hashNew - 1);
+        // found it
+        urlEnd = urlStart;
+        urlEnd.advance(hashNew);
+        
+        refStart = urlEnd;
+        ++refStart;             // advanced past '#'
+        
     }
     else {
-        sNewLeft = sNew;
+        // no hash at all
+        urlEnd = refStart = refEnd;
     }
-
+    const nsACString& sNewLeft = Substring(urlStart, urlEnd);
+    const nsACString& sNewRef =  Substring(refStart, refEnd);
+                                          
     // Split the current URI in a left and right part
-    nsAutoString sCurrent;
-    sCurrent.AssignWithConversion(currentSpec);
-    nsAutoString sCurrentLeft;
-    PRInt32 hashCurrent = sCurrent.FindChar(kHash);
+    nsACString::const_iterator currentLeftStart, currentLeftEnd;
+    currentSpec.BeginReading(currentLeftStart);
+
+    PRInt32 hashCurrent = currentSpec.FindChar(kHash);
     if (hashCurrent == 0) {
         return NS_OK;           // Strange URI 
     }
     else if (hashCurrent > 0) {
-        sCurrent.Left(sCurrentLeft, hashCurrent);
+        currentLeftEnd = currentLeftStart;
+        currentLeftEnd.advance(hashCurrent);
     }
     else {
-        sCurrentLeft = sCurrent;
+        currentSpec.EndReading(currentLeftEnd);
     }
 
     // Exit when there are no anchors
@@ -4967,7 +4965,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor)
     // This means that comparing "http://www.ABC.com/" to "http://www.abc.com/"
     // will fail this test.
 
-    if (sCurrentLeft.CompareWithConversion(sNewLeft, PR_FALSE, -1) != 0) {
+    if (Substring(currentLeftStart, currentLeftEnd).Equals(sNewLeft)) {
         return NS_OK;           // URIs not the same
     }
 
@@ -4987,17 +4985,16 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor)
 
             // We assume that the bytes are in UTF-8, as it says in the spec:
             // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
-            nsAutoString savedNewRef(sNewRef);
-            sNewRef = NS_ConvertUTF8toUCS2(str);
 
+            // We try the UTF-8 string first, and then try the
+            // document's charset (see below).
+            rv = shell->GoToAnchor(NS_ConvertUTF8toUCS2(str));
             nsMemory::Free(str);
-
-            // We try the UTF-8 string first, and then try the document's charset (see below).
-            rv = shell->GoToAnchor(sNewRef);
 
             // Above will fail if the anchor name is not UTF-8.
             // Need to convert from document charset to unicode.
             if (NS_FAILED(rv)) {
+                
                 // Get a document charset
                 NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
                 nsCOMPtr<nsIDocumentViewer>
@@ -5009,36 +5006,22 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor)
                 nsAutoString aCharset;
                 rv = doc->GetDocumentCharacterSet(aCharset);
                 NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-                char *charsetStr = ToNewCString(aCharset);
-                NS_ENSURE_TRUE(charsetStr, NS_ERROR_OUT_OF_MEMORY);
-
-                // Use the saved string
-                char *uriStr = ToNewCString(savedNewRef);
-                if (!uriStr) {
-                    nsMemory::Free(charsetStr);
-                    return NS_ERROR_OUT_OF_MEMORY;
-                }
 
                 nsCOMPtr<nsITextToSubURI> textToSubURI =
                     do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-                if (NS_FAILED(rv)) {
-                    nsMemory::Free(uriStr);
-                    nsMemory::Free(charsetStr);
+                if (NS_FAILED(rv))
                     return NS_ERROR_FAILURE;
-                }
 
                 // Unescape and convert to unicode
-                PRUnichar *uStr;
-                rv = textToSubURI->UnEscapeAndConvert(charsetStr, uriStr,
-                                                      &uStr);
-                nsMemory::Free(uriStr);
-                nsMemory::Free(charsetStr);
+                nsXPIDLString uStr;
+                NS_LossyConvertUCS2toASCII charset(aCharset);
+
+                rv = textToSubURI->UnEscapeAndConvert(charset.get(),
+                                                      PromiseFlatCString(sNewRef).get(),
+                                                      getter_Copies(uStr));
                 NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-                sNewRef.Assign(uStr);
-                nsMemory::Free(uStr);
-
-                rv = shell->GoToAnchor(sNewRef);
+                rv = shell->GoToAnchor(uStr);
             }
         }
     }

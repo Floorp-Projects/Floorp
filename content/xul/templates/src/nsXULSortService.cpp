@@ -539,7 +539,7 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString &sortRes
 						}
 					}
 					if (NS_SUCCEEDED(rv = child->GetAttr(kNameSpaceID_None, kSortSeparatorsAtom, value))
-						&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.EqualsIgnoreCase(*trueStr)))
+						&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.EqualsIgnoreCase("true")))
 					{
 						inbetweenSeparatorSort = PR_TRUE;
 					}
@@ -614,7 +614,7 @@ XULSortServiceImpl::NodeHasSortInfo(nsIContent *child, nsString &sortResource, n
 	if (NS_SUCCEEDED(rv = child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, value))
 		&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 	{
-		if (value.EqualsIgnoreCase(*trueStr))
+		if (value.EqualsIgnoreCase("true"))
 		{
 			if (NS_SUCCEEDED(rv = child->GetAttr(kNameSpaceID_None, kResourceAtom,
 				sortResource)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
@@ -628,7 +628,7 @@ XULSortServiceImpl::NodeHasSortInfo(nsIContent *child, nsString &sortResource, n
 					if (NS_SUCCEEDED(rv = child->GetAttr(kNameSpaceID_None, kSortSeparatorsAtom,
 						value)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 					{
-						if (value.EqualsIgnoreCase(*trueStr))
+						if (value.EqualsIgnoreCase("true"))
 						{
 							inbetweenSeparatorSort = PR_TRUE;
 						}
@@ -1694,7 +1694,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo, PR
 
 			// if its a container, find its treechildren node, and sort those
 			if (NS_FAILED(rv = parentNode->GetAttr(kNameSpaceID_None, nsXULAtoms::container, value)) ||
-				(rv != NS_CONTENT_ATTR_HAS_VALUE) || (!value.EqualsIgnoreCase(*trueStr)))
+				(rv != NS_CONTENT_ATTR_HAS_VALUE) || (!value.EqualsIgnoreCase("true")))
 				continue;
 			if (NS_FAILED(rv = parentNode->ChildCount(numChildren)))	continue;
 
@@ -1981,7 +1981,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 				}
 			}
 			if (NS_SUCCEEDED(rv = root->GetAttr(kNameSpaceID_None, kStaticsSortLastHintAtom, valueStr))
-				&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (valueStr.EqualsIgnoreCase(*trueStr)))
+				&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (valueStr.EqualsIgnoreCase("true")))
 			{
 				// indicate that static XUL comes after RDF-generated content by making negative
 				staticCount = -staticCount;
@@ -2132,10 +2132,10 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
     PRBool          invertTreeFlag = PR_FALSE;
 	nsAutoString	value;
 	if (NS_SUCCEEDED(rv = treeNode->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, value))
-		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.EqualsIgnoreCase(*trueStr)))
+	    && (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.EqualsIgnoreCase("true")))
 	{
 		if (NS_SUCCEEDED(rv = treeNode->GetAttr(kNameSpaceID_None, kResourceAtom,
-			value)) && (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.EqualsIgnoreCase(sortResource)))
+			value)) && (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.Equals(sortResource, nsCaseInsensitiveStringComparator())))
 		{
 			if (NS_SUCCEEDED(rv = treeNode->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection,
 				value)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))

@@ -42,6 +42,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsICharsetAlias.h"
+#include "nsUnicharUtils.h"
 #include "nsHashtable.h"
 #include "nsIURL.h"
 #include "nsIURL.h"
@@ -1137,7 +1138,7 @@ PRBool
 CSSLoaderImpl::IsAlternate(const nsString& aTitle)
 {
   if (!aTitle.IsEmpty()) {
-    return PRBool(! aTitle.EqualsIgnoreCase(mPreferredSheet));
+    return PRBool(! aTitle.Equals(mPreferredSheet, nsCaseInsensitiveStringComparator()));
   }
   return PR_FALSE;
 }

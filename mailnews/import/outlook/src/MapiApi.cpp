@@ -41,6 +41,7 @@
 #include "nsCRT.h"
 #include "prprf.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 
 int			CMapiApi::m_clients = 0;
@@ -1530,11 +1531,11 @@ void CMapiFolderList::EnsureUniqueName( CMapiFolder *pFolder)
 		done = TRUE;
 		i = m_array.Count() - 1;
 		while (i >= 0) {
-			pCurrent = (CMapiFolder *)GetAt( i);
+			pCurrent = (CMapiFolder *)GetAt(i);
 			if (pCurrent->GetDepth() == pFolder->GetDepth()) {
-				pCurrent->GetDisplayName( cName);
-				if (!cName.CompareWithConversion( name, PR_TRUE)) {
-					ChangeName( name);
+				pCurrent->GetDisplayName(cName);
+				if (cName.Equals(name, nsCaseInsensitiveStringComparator())) {
+					ChangeName(name);
 					pFolder->SetDisplayName(name.get());
 					done = FALSE;
 					break;

@@ -38,17 +38,14 @@ REQUIRES	= xpcom \
 		  shistory \
 		  widget \
 		  gfx \
-		  layout \
 		  content \
 		  docshell \
 		  appshell \
 		  dom \
 		  uriloader \
 		  pref \
-		  editor \
 		  appcomps \
 		  webbrwsr \
-		  uconv \
 		  chardet \
 		  windowwatcher \
 		  $(NULL)
@@ -58,7 +55,7 @@ CPPSRCS		= nsBrowserInstance.cpp
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_JS_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

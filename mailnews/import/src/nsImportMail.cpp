@@ -51,6 +51,7 @@
 #include "nsIImportMailboxDescriptor.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 #include "nsIProxyObjectManager.h"
 #include "nsXPIDLString.h"
 
@@ -1148,7 +1149,7 @@ void nsImportGenericMail::GetUniquePrettyName( nsIMsgAccountManager *pMgr, nsStr
 					nsXPIDLString	prettyName;
 					rv = server->GetPrettyName( getter_Copies( prettyName));
 					if (NS_SUCCEEDED( rv)) {
-						if (!newName.CompareWithConversion( nsAutoString(prettyName), PR_TRUE))
+						if (newName.Equals( prettyName, nsCaseInsensitiveStringComparator()))
 							found = PR_TRUE;
 					}	
 				}

@@ -284,11 +284,11 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
              newCharset = charsetValue;
          } 
        
-             
+         nsDependentString charsetString(charset);
+         
          if (!newCharset.IsEmpty())
          {    
-             nsAutoString charsetString(charset);
-             if(! newCharset.EqualsIgnoreCase(charsetString)) 
+             if(! newCharset.Equals(charsetString, nsCaseInsensitiveStringComparator()))
              {
                  PRBool same = PR_FALSE;
                  nsresult res2 = mAlias->Equals( newCharset, charsetString , &same);

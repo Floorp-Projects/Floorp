@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  intl \
 		  editor \
-		  cookie \
 		  xpconnect \
 		  gfx \
 		  content \

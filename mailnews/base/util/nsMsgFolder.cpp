@@ -903,7 +903,7 @@ NS_IMETHODIMP nsMsgFolder::GetName(PRUnichar **name)
 NS_IMETHODIMP nsMsgFolder::SetName(const PRUnichar * name)
 {
   // override the URI-generated name
-	if (!mName.EqualsWithConversion(name))
+	if (!mName.Equals(name))
 	{
 	  mName = name;
   
@@ -2285,7 +2285,7 @@ NS_IMETHODIMP nsMsgFolder::MatchName(nsString *name, PRBool *matches)
 {
 	if (!matches)
 		return NS_ERROR_NULL_POINTER;
-	*matches = mName.EqualsIgnoreCase(*name);
+	*matches = mName.Equals(*name, nsCaseInsensitiveStringComparator());
 	return NS_OK;
 }
 

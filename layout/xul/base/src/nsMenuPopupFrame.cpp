@@ -1490,9 +1490,8 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
         char tempChar[2];
         tempChar[0] = aLetter;
         tempChar[1] = 0;
-        nsAutoString tempChar2; tempChar2.AssignWithConversion(tempChar);
   
-        if (shortcutKey.EqualsIgnoreCase(tempChar2)) {
+        if (shortcutKey.EqualsIgnoreCase(tempChar)) {
           // We match!
           nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
           if (menuFrame)

@@ -78,6 +78,7 @@
 #include "nsIWebBrowserSetup.h"
 
 #include "nsCWebBrowser.h"
+#include "nsUnicharUtils.h"
 
 #include "nsIParser.h"
 #include "nsEditorMode.h"
@@ -3310,8 +3311,8 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
           titles.StringAt(index, title);
           fputs(NS_LossyConvertUCS2toASCII(title).get(), stdout);
           fprintf(stdout, "\" %s%s\n", 
-                  ((title.EqualsIgnoreCase(current)) ? "<< current " : ""), 
-                  ((title.EqualsIgnoreCase(defaultStyle)) ? "** default" : ""));
+                  ((title.Equals(current, nsCaseInsensitiveStringComparator())) ? "<< current " : ""), 
+                  ((title.Equals(defaultStyle, nsCaseInsensitiveStringComparator())) ? "** default" : ""));
         }
         NS_RELEASE(shell);
       }

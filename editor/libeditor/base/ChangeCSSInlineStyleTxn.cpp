@@ -225,7 +225,7 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
     // do nothing.
     nsAutoString itemPropertyNameString;
     cssDecl->Item(0, itemPropertyNameString);
-    PRBool thisOne = propertyNameString.EqualsIgnoreCase(itemPropertyNameString);
+    PRBool thisOne = propertyNameString.Equals(itemPropertyNameString, nsCaseInsensitiveStringComparator());
     if (thisOne) {
       mPropertyWasSet = PR_TRUE;
       if (multiple) {
@@ -252,7 +252,7 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
     nsAutoString itemPropertyNameString;
     for (index = 0 ; index < length; index++) {
       cssDecl->Item(index, itemPropertyNameString);
-      PRBool thisOne = propertyNameString.EqualsIgnoreCase(itemPropertyNameString);
+      PRBool thisOne = propertyNameString.Equals(itemPropertyNameString, nsCaseInsensitiveStringComparator());
       if (thisOne) {
         // we have found the property we are looking for...
         // if we have to remove it, do nothing or remove only the corresponding value

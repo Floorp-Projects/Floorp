@@ -6307,7 +6307,11 @@ NS_IMETHODIMP nsImapMailFolder::MatchName(nsString *name, PRBool *matches)
   if (!matches)
     return NS_ERROR_NULL_POINTER;
     PRBool isInbox = mName.EqualsIgnoreCase("inbox");
-  *matches = mName.EqualsWithConversion(*name, isInbox);
+    if (isInbox)
+        *matches = mName.Equals(*name, nsCaseInsensitiveStringComparator());
+    else
+        *matches = mName.Equals(*name);
+        
   return NS_OK;
 }
 

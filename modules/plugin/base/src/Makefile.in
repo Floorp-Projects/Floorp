@@ -43,6 +43,7 @@ REQUIRES	= xpcom \
 		  caps \
 		  intl \
 		  uconv \
+		  unicharutil \
 		  dom \
 		  gfx \
 		  layout \
@@ -98,6 +99,7 @@ EXTRA_DSO_LDOPTS = \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
