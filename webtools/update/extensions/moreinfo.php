@@ -195,6 +195,9 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 
     //Turn Authors Array into readable string...
     $authorcount = count($authors);
+    if (!$authors) {
+        $authors = array();
+    }
     foreach ($authors as $author) {
         $userid = $authorids[$author];
         $n++;
