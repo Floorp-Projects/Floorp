@@ -172,22 +172,27 @@ nsEventHandler::HandleKeyDown()
 OSErr 
 nsEventHandler::HandleUpdateEvt() 
 { 
+	return noErr;
 }
 
 OSErr 
 nsEventHandler::HandleActivateEvt() 
 { 
+	return noErr;
 }
 
 OSErr 
 nsEventHandler::HandleOSEvt() 
 { 
 	::HiliteMenu(0);
+	
+	return noErr;
 }
 
 OSErr 
 nsEventHandler::HandleInContent() 
 { 
+	return noErr;
 }
 
 OSErr

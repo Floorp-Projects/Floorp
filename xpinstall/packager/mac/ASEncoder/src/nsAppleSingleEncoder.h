@@ -63,6 +63,17 @@ private:
 	OSErr				WriteDataFork();
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+pascal void
+EncodeDirIterateFilter(const CInfoPBRec * const cpbPtr, Boolean *quitFlag, void *yourDataPtr);
+
+#ifdef __cplusplus
+}
+#endif
+
 #define kTransientName			"\pzz__ASEncoder_TMP__zz"
 #define kAppleSingleMagicNum 	0x00051600
 #define kAppleSingleVerNum		0x00020000

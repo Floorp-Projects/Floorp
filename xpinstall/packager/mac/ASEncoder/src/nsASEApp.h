@@ -54,6 +54,21 @@ private:
 	AEEventHandlerUPP		mQuitUPP;
 };
 
+/*---------------------------------------------------------------*
+ *   Callbacks
+ *---------------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+pascal OSErr EncodeEvent(AppleEvent *appEvent, AppleEvent *reply, SInt32 handlerRefCon);
+pascal OSErr DecodeEvent(AppleEvent *appEvent, AppleEvent *reply, SInt32 handlerRefCon);
+pascal OSErr QuitEvent(AppleEvent *appEvent, AppleEvent *reply, SInt32 handlerRefCon);
+
+#ifdef __cplusplus
+}
+#endif
+
 extern Boolean gDone;
 
 
