@@ -284,6 +284,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 	i++;
     }
     argsObj = JS_NewArrayObject(cx, length, vector);
+    JS_free(cx, vector);
     if (argsObj == NULL)
 	return 1;
 
