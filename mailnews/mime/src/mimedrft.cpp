@@ -1951,6 +1951,7 @@ mime_decompose_file_close_fn ( void *stream_closure )
     mdd->tmpFileStream->close();
   delete mdd->tmpFileStream;
   delete mdd->tmpFileSpec;
+  mdd->identity = nsnull;
   mdd->tmpFileSpec = nsnull;
   
   return 0;
