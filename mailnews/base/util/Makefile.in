@@ -32,6 +32,7 @@ EXPORTS = \
 	nsNewsSet.h	\
 	nsMsgFolder.h	\
 	nsLocalFolderSummarySpec.h	\
+	nsNewsSummarySpec.h	\
 	nsMsgIdentity.h	\
 	nsMsgIncomingServer.h	\
 	$(NULL)
@@ -43,6 +44,7 @@ CPPSRCS = \
 	nsUInt32Array.cpp	\
 	nsNewsSet.cpp	\
 	nsLocalFolderSummarySpec.cpp	\
+	nsNewsSummarySpec.cpp	\
 	nsMsgIdentity.cpp	\
 	nsMsgIncomingServer.cpp	\
 	$(NULL)
