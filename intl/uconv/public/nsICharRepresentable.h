@@ -39,6 +39,9 @@
 #define SET_REPRESENTABLE(info, c)  (info)[(c) >> 5] |= (1L << ((c) & 0x1f))
 #define CLEAR_REPRESENTABLE(info, c)  (info)[(c) >> 5] &= (~(1L << ((c) & 0x1f)))
 
+// number of PRUint32 in the 64Kbit char map
+#define UCS2_MAP_LEN 2048
+
 /**
  */
 class nsICharRepresentable : public nsISupports
