@@ -726,6 +726,8 @@
           var col = document.outlinercolDragging;
           if (!col) return;
 
+          // determine if we have moved the mouse far enough
+          // to initiate a drag
           if (col.mDragGesturing) {
             if (Math.abs(aEvent.clientX - col.mStartDragX) < 5 &&
                 Math.abs(aEvent.clientY - col.mStartDragY) < 5) {
@@ -733,21 +735,23 @@
             } else {
               col.mDragGesturing = false;
               col.setAttribute("dragging", "true");
+              window.addEventListener("click", col.onDragMouseClick, true);
             }
           }
                     
           var pos = {};
           var targetCol = col.parentNode._getColumnAtX(aEvent.clientX, 0.5, pos);
           
+          // bail if we haven't mousemoved to a different column
           if (col.mTargetCol == targetCol && col.mTargetDir == pos.value)
             return;
             
+          var sib;
           if (col.mTargetCol) {
             // remove previous insertbefore/after attributes
             col.mTargetCol.removeAttribute("insertbefore");
             col.mTargetCol.removeAttribute("insertafter");
-            var sib = col.mTargetCol.boxObject.previousSibling;
-            var sib = col.mTargetCol._previousVisibleColumn;
+            sib = col.mTargetCol._previousVisibleColumn;
             if (sib)
               sib.removeAttribute("insertafter");
             col.mTargetCol = null;
@@ -760,7 +764,7 @@
               targetCol.setAttribute("insertafter", "true");
             } else {
               targetCol.setAttribute("insertbefore", "true");
-              var sib = targetCol._previousVisibleColumn;
+              sib = targetCol._previousVisibleColumn;
               if (sib)
                 sib.setAttribute("insertafter", "true");
             }
@@ -770,8 +774,7 @@
           
           // XXX should really just invalidate columns
           // XXX need to implement nsIOutlinerBoxObject::invalidateColumn(in long column)
-          var bx = col.parentNode.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
-          bx.invalidate();
+          col.parentNode.outlinerBoxObject.invalidate();
         ]]></body>        
       </method>
 
@@ -780,34 +783,52 @@
         <body><![CDATA[
           var col = document.outlinercolDragging;
           if (!col) return;
-          col.removeAttribute("dragging", "true");
           
-          if (col.mTargetCol) {
-            // remove insertbefore/after attributes
-            var before = col.mTargetCol.hasAttribute("insertbefore");
-            col.mTargetCol.removeAttribute(before ? "insertbefore" : "insertafter");
-            if (before) {
-              var sib = col.mTargetCol.boxObject.previousSibling;
-              var sib = col.mTargetCol._previousVisibleColumn;
-              if (sib)
-                sib.removeAttribute("insertafter");
+          if (!col.mDragGesturing) {
+            if (col.mTargetCol) {
+              // remove insertbefore/after attributes
+              var before = col.mTargetCol.hasAttribute("insertbefore");
+              col.mTargetCol.removeAttribute(before ? "insertbefore" : "insertafter");
+              if (before) {
+                var sib = col.mTargetCol._previousVisibleColumn;
+                if (sib)
+                  sib.removeAttribute("insertafter");
+              }
+                          
+              // move the column
+              if (col != col.mTargetCol)
+                col.parentNode._reorderColumn(col, col.mTargetCol, before);
+            
+              // repaint to remove lines
+              col.parentNode.outlinerBoxObject.invalidate();
+  
+              col.mTargetCol = null;
             }
-                        
-            // move the column
-            if (col != col.mTargetCol)
-              col.parentNode._reorderColumn(col, col.mTargetCol, before);
-          
-            // repaint to remove lines
-            var bx = col.parentNode.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
-            bx.invalidate();
-
-            col.mTargetCol = null;
-          }
-          
+          } else
+            col.mDragGesturing = false;
+                    
           document.outlinercolDragging = null;
+          col.removeAttribute("dragging");
+          
+          window.removeEventListener("mousemove", col.onDragMouseMove, true);
+          window.removeEventListener("mouseup", col.onDragMouseUp, true);
+          // we have to wait for the click event to fire before removing
+          // cancelling handler
+          var clickHandler = function(handler) { 
+            window.removeEventListener("click", handler, true);
+          };
+          window.setTimeout(clickHandler, 0, col.onDragMouseClick);
         ]]></body>        
       </method>
 
+      <method name="onDragMouseClick">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          // prevent click event from firing after column drag and drop
+          aEvent.preventBubble();
+          aEvent.preventDefault();
+        ]]></body>        
+      </method>
     </implementation>
     
     <handlers>
