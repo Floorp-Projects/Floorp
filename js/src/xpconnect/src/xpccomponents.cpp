@@ -65,8 +65,7 @@ JSValIsInterfaceOfType(JSContext *cx, jsval v, REFNSIID iid)
        nsnull != (xpc = nsXPConnect::GetXPConnect()) &&
        NS_SUCCEEDED(xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(v),
                             getter_AddRefs(wn))) && wn &&
-       NS_SUCCEEDED(wn->GetNative(getter_AddRefs(sup))) && sup &&
-       NS_SUCCEEDED(sup->QueryInterface(iid, (void**)&iface)) && iface)
+       NS_SUCCEEDED(wn->Native()->QueryInterface(iid, (void**)&iface)) && iface)
     {
         NS_RELEASE(iface);
         return JS_TRUE;
@@ -1656,11 +1655,9 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         }
 
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
-        nsCOMPtr<nsISupports> sup;
         if(NS_FAILED(xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(val),
                                 getter_AddRefs(wn))) || !wn ||
-           NS_FAILED(wn->GetNative(getter_AddRefs(sup))) || !sup ||
-           !(cInterfaceID = do_QueryInterface(sup)))
+           !(cInterfaceID = do_QueryWrappedNative(wn)))
         {
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
         }
@@ -1714,11 +1711,9 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
         }
 
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
-        nsCOMPtr<nsISupports> sup;
         if(NS_FAILED(xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(val),
                                 getter_AddRefs(wn))) || !wn ||
-           NS_FAILED(wn->GetNative(getter_AddRefs(sup))) || !sup ||
-           !(cClassID = do_QueryInterface(sup)))
+           !(cClassID = do_QueryWrappedNative(wn)))
         {
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
         }

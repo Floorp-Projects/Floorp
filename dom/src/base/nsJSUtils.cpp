@@ -180,10 +180,7 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(supports));
   NS_ENSURE_TRUE(wrapper, nsnull);
 
-  nsCOMPtr<nsISupports> native;
-  wrapper->GetNative(getter_AddRefs(native));
-
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
 
   // We're returning a pointer to something that's about to be
   // released, but that's ok here.

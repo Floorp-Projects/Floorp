@@ -322,7 +322,7 @@ cryptojs_GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
     if (jsClass && (jsClass->flags & (privateNsISupports)) == 
                     privateNsISupports)
     {
-      nsCOMPtr<nsISupports> supports = (nsISupports *) JS_GetPrivate(aCx, parent);
+      nsISupports *supports = (nsISupports *) JS_GetPrivate(aCx, parent);
       nsCOMPtr<nsIScriptObjectPrincipal> objPrin = do_QueryInterface(supports);
               
       if (!objPrin)
@@ -335,8 +335,7 @@ cryptojs_GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
                                             do_QueryInterface(supports);
 
         if (xpcNative) {
-          xpcNative->GetNative(getter_AddRefs(supports));
-          objPrin = do_QueryInterface(supports);
+          objPrin = do_QueryWrappedNative(xpcNative);
         }
       }
 
