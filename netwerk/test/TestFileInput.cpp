@@ -36,7 +36,6 @@
 #include "nsIChannel.h"
 #include <stdio.h>
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -175,7 +174,7 @@ nsReader::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
         return NS_ERROR_NULL_POINTER; 
     } 
     if (aIID.Equals(nsIRunnable::GetIID()) ||
-        aIID.Equals(kISupportsIID)) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIRunnable*, this); 
         NS_ADDREF_THIS(); 
         return NS_OK; 

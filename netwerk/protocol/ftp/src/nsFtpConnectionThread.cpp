@@ -30,7 +30,6 @@
 #include "netCore.h"
 #include "ftpCore.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 
@@ -41,7 +40,7 @@ NS_IMETHODIMP
 nsFtpConnectionThread::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
     if (aIID.Equals(nsIRunnable::GetIID()) ||
-        aIID.Equals(kISupportsIID) ) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ) {
         *aInstancePtr = NS_STATIC_CAST(nsFtpConnectionThread*, this);
         NS_ADDREF_THIS();
         return NS_OK;

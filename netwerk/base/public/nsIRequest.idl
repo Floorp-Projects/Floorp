@@ -18,6 +18,7 @@
 
 #include "nsISupports.idl"
 
+[scriptable, uuid(F2CAABA0-2F25-11d3-A164-0050041CAF44)]
 interface nsIRequest : nsISupports
 {
     /**

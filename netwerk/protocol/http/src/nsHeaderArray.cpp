@@ -45,7 +45,7 @@ nsHeaderArray::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(nsISupports::GetIID())) {
+    if (iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *result = NS_STATIC_CAST(nsISupports*, this);
         NS_ADDREF_THIS();
         return NS_OK;

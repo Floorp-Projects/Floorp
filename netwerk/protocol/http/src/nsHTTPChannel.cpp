@@ -74,11 +74,9 @@ nsHTTPChannel::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = NULL;
     
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
     if (aIID.Equals(nsIHTTPChannel::GetIID()) ||
         aIID.Equals(nsIChannel::GetIID()) ||
-        aIID.Equals(kISupportsIID)) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIHTTPChannel*, this);
         NS_ADDREF_THIS();
         return NS_OK;

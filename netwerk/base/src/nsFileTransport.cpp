@@ -28,7 +28,6 @@
 #include "nsIEventQueueService.h"
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileTransport methods:
@@ -106,7 +105,7 @@ nsFileTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
         return NS_ERROR_NULL_POINTER; 
     } 
     if (aIID.Equals(nsIChannel::GetIID()) ||
-        aIID.Equals(kISupportsIID)) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIChannel*, this); 
         NS_ADDREF_THIS(); 
         return NS_OK; 

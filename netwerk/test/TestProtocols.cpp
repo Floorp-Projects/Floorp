@@ -45,7 +45,7 @@
 #include "nsIHttpEventSink.h" 
 #include "nsIEventSinkGetter.h" 
 
-#if 0
+#if 1
 // this test app handles cookies.
 #include "nsICookieService.h"
 static NS_DEFINE_CID(nsCookieServiceCID, NS_COOKIESERVICE_CID);
@@ -89,7 +89,7 @@ URLLoadInfo::~URLLoadInfo()
 }
 
 
-NS_IMPL_ISUPPORTS(URLLoadInfo,nsISupports::GetIID());
+NS_IMPL_ISUPPORTS(URLLoadInfo,nsCOMTypeInfo<nsISupports>::GetIID());
 
 
 class TestHTTPEventSink : public nsIHTTPEventSink
@@ -510,7 +510,7 @@ main(int argc, char* argv[])
 
     eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
 
-#if 0
+#if 1
     // fire up an instance of the cookie manager.
     // I'm doing this using the serviceManager for convenience's sake.
     // Presumably an application will init it's own cookie service a 

@@ -27,8 +27,6 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kThisStandardUrlImplementationCID,
                      NS_THIS_STANDARDURL_IMPLEMENTATION_CID);
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsStandardURL methods:
 
@@ -64,7 +62,7 @@ nsStandardURL::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
     if (aIID.Equals(kThisStandardUrlImplementationCID) ||        // used by Equals
         aIID.Equals(nsIURL::GetIID()) ||
         aIID.Equals(nsIURI::GetIID()) ||
-        aIID.Equals(kISupportsIID)) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIURI*, this);
         NS_ADDREF_THIS();
         return NS_OK;

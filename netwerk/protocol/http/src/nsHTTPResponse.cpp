@@ -71,8 +71,6 @@ nsHTTPResponse::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = NULL;
     
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
     if (aIID.Equals(nsIHTTPResponse::GetIID())) {
         *aInstancePtr = (void*) ((nsIHTTPResponse*)this);
         NS_ADDREF_THIS();
