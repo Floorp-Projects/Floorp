@@ -17,6 +17,8 @@
 
 
 DEPTH=..\..\..
+include <$(DEPTH)/config/config.mak>
+
 IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE = DLL

@@ -17,6 +17,7 @@
 
 DEPTH=..\..\..\..
 MODULE=related
+include <$(DEPTH)/config/config.mak>
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsRelatedLinksHandler.obj  \

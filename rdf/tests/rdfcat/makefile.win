@@ -17,6 +17,7 @@
 
 
 DEPTH	= ..\..\..
+include <$(DEPTH)/config/config.mak>
 MODULE=rdfcat
 
 MAKE_OBJ_TYPE=EXE
