@@ -85,7 +85,7 @@
         
         [% col_idx = 1 - col_idx %]
         <td class="[% classes.$row_idx.$col_idx %]">
-          [% col FILTER html %]
+          [% col FILTER html FILTER replace('^ $','&nbsp;') %]
         </td>
       [% END %]
       <td class="ttotal">
@@ -100,7 +100,7 @@
     [% row_idx = 1 - row_idx %]
     <tr>
       <td class="[% classes.$row_idx.$col_idx %]" align="right">
-        [% row FILTER html %]
+        [% row FILTER html FILTER replace('^ $','&nbsp;') %]
       </td>
       [% FOREACH col = col_names %]
         [% row_total = row_total + data.$tbl.$col.$row %]

@@ -170,6 +170,12 @@ my $tbl_isnumeric = 1;
 
 while (MoreSQLData()) {
     my ($row, $col, $tbl) = FetchSQLData();
+
+    # handle empty dimension member names
+    $row = ' ' if ($row eq '');
+    $col = ' ' if ($col eq '');
+    $tbl = ' ' if ($tbl eq '');
+
     $row = "" if ($row eq $columns{''});
     $col = "" if ($col eq $columns{''});
     $tbl = "" if ($tbl eq $columns{''});
@@ -330,7 +336,7 @@ sub get_names {
                   'rep_platform' => \@::legal_platform,
                   'op_sys'       => \@::legal_opsys,
                   'bug_status'   => \@::legal_bug_status,
-                  'resolution'   => \@::legal_resolution);
+                  'resolution'   => [' ', @::legal_resolution]);
     
     my $field_list = $fields{$field};
     my @sorted;
