@@ -3360,6 +3360,21 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
         rv = sigFile->GetNativePath(sigNativePath);
         if (NS_SUCCEEDED(rv) && !sigNativePath.IsEmpty())
           useSigFile = PR_TRUE; // ok, there's a signature file
+
+        // Now, most importantly, we need to figure out what the content type is for
+        // this signature...if we can't, we assume text
+        nsXPIDLCString sigContentType;
+        nsresult rv2; // don't want to clobber the other rv
+        nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv2));
+        if (NS_SUCCEEDED(rv2)) {
+          rv2 = mimeFinder->GetTypeFromFile(sigFile, getter_Copies(sigContentType));
+          if (NS_SUCCEEDED(rv2)) {
+            if (StringBeginsWith(sigContentType, NS_LITERAL_CSTRING("image/"), nsCaseInsensitiveCStringComparator()))
+              imageSig = PR_TRUE;
+            else if (sigContentType.Equals(TEXT_HTML, nsCaseInsensitiveCStringComparator()))
+              htmlSig = PR_TRUE;
+          }
+        }
       }
     }
   }
@@ -3375,36 +3390,6 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
   // If this file doesn't really exist, just bail!
   if (!testSpec.Exists())
     return NS_OK;
-
-  // Once we get here, we need to figure out if we have the correct file
-  // type for the editor.
-  //
-  nsCOMPtr<nsIURL> fileUrl(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
-  if (fileUrl)
-  {
-    fileUrl->SetFilePath(sigNativePath);
-    nsCAutoString fileExt;
-    rv = fileUrl->GetFileExtension(fileExt);
-    if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty())
-  {
-    // Now, most importantly, we need to figure out what the content type is for
-    // this signature...if we can't, we assume text
-    rv = NS_OK;
-      nsXPIDLCString sigContentType;
-    nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
-      if (NS_SUCCEEDED(rv) && mimeFinder) 
-        mimeFinder->GetTypeFromExtension(fileExt.get(), getter_Copies(sigContentType));
-  
-      if (!sigContentType.IsEmpty())
-    {
-        imageSig = (!PL_strncasecmp(sigContentType.get(), "image/", 6));
-      if (!imageSig)
-          htmlSig = (!PL_strcasecmp(sigContentType.get(), TEXT_HTML));
-    }
-    else
-        htmlSig = ( (!PL_strcasecmp(fileExt.get(), "HTM")) || (!PL_strcasecmp(fileExt.get(), "HTML")) );
-    }
-  }
 
   static const char      htmlBreak[] = "<BR>";
   static const char      dashes[] = "-- ";
