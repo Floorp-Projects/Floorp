@@ -781,8 +781,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 
             // convert the profile name to Unicode
             nsAutoString currProfileName; 
-            nsCAutoString profileName(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
-            rv = ConvertStringToUnicode(charSet, profileName.get(), currProfileName);
+            rv = ConvertStringToUnicode(charSet, cmdResult, currProfileName);
             NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
 
 #ifdef DEBUG_profile
