@@ -31,14 +31,14 @@ CPU_ARCH		:= $(OS_TEST)
 endif
 GFX_ARCH		:= x
 
-OS_INCLUDES		=
+OS_INCLUDES		= -I/usr/X11R6/include
 G++INCLUDES		= -I/usr/include/g++
 LOC_LIB_DIR		= /usr/lib/X11
 MOTIF			=
 MOTIFLIB		=
-OS_LIBS			=
+OS_LIBS			= -L/lib -ldl -lc
 
-PLATFORM_FLAGS		= -ansi -Wall -pipe -DLINUX -Dlinux -DLINUX1_2
+PLATFORM_FLAGS		= -ansi -Wall -pipe $(DSO_CFLAGS) -DLINUX -Dlinux -DLINUX1_2
 MOVEMAIL_FLAGS		= -DHAVE_STRERROR
 PORT_FLAGS		= -D_POSIX_SOURCE -D_BSD_SOURCE -DSW_THREADS -DNEED_ENDIAN_H -DNEED_GETOPT_H -DNEED_IOCTL_H -DUSE_NODL_TABS -DHAVE_SIGNED_CHAR -DNEED_SYS_TIME_H -DHAVE_SYS_BITYPES_H -DNEED_UINT_T
 PDJAVA_FLAGS		= -mx128m
@@ -63,34 +63,24 @@ I2_LOCALE		= i2
 ifeq ($(CPU_ARCH),alpha)
 PLATFORM_FLAGS		+= -D__$(CPU_ARCH) -D_ALPHA_ 
 PORT_FLAGS		+= -DNEED_TIME_R -DMITSHM -D_XOPEN_SOURCE
-OS_INCLUDES		+= -I/usr/X11R6/include
-OS_LIBS			+= -L/lib -ldl -lc
 endif
 ifeq ($(CPU_ARCH),m68k)
 PLATFORM_FLAGS		+= -m68020-40 -D$(CPU_ARCH)
 PORT_FLAGS		+= -DNEED_TIME_R -DMITSHM -D_XOPEN_SOURCE
-OS_INCLUDES		+= -I/usr/X11R6/include
-OS_LIBS			+= -L/lib -ldl -lc
 endif
 ifeq ($(CPU_ARCH),ppc)
 PLATFORM_FLAGS		+= -DMKLINUX -D$(CPU_ARCH)
-OS_INCLUDES		+= -I/usr/local/include -I/usr/X11R6/include
 endif
 ifeq ($(CPU_ARCH),sparc)
 PLATFORM_FLAGS		+= -D$(CPU_ARCH)
-OS_INCLUDES		+= -I/usr/X11R6/include
-OS_LIBS			+= -L/lib -ldl -lc
 endif
 ifeq ($(CPU_ARCH),x86)
 PLATFORM_FLAGS		+= -mno-486 -Di386
 PORT_FLAGS		+= -DNEED_TIME_R -DMITSHM -D_XOPEN_SOURCE
-OS_INCLUDES		+= -I/usr/X11R6/include
-OS_LIBS			+= -L/lib -ldl -lc
-
 
 ifdef MOZ_FULLCIRCLE
-FC_PLATFORM     = LinuxIntel
-FC_PLATFORM_DIR = Linux2_x86
+FC_PLATFORM		= LinuxIntel
+FC_PLATFORM_DIR		= Linux2_x86
 endif
 
 endif # x86
@@ -140,7 +130,7 @@ endif
 
 NEED_XMOS		= 1
 
-DSO_CFLAGS		= -fpic
+DSO_CFLAGS		= -fPIC
 DSO_LDOPTS		= -shared
 DSO_LDFLAGS		=
 
