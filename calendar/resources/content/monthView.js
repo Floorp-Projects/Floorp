@@ -513,6 +513,7 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
          else
             dayBoxItem.removeAttribute( "weekend" ); 
 
+         dayBoxItem.date = thisDate; //leave this so that double clicking will open new event for this date.
          dayBoxItem.dayNumber = dayNumber;
          
          this.dayBoxItemByDateArray[ dayNumber ] = dayBoxItem; 
@@ -761,9 +762,7 @@ MonthView.prototype.clickDay = function monthView_clickDay( event )
 */
 MonthView.prototype.contextClickDay = function monthView_contextClickDay( event )
 {
-   var dayBoxItem = event.currentTarget;
-   
-   if( dayBoxItem.dayNumber != null )
+   if( event.currentTarget.dayNumber != null )
    {
       // turn off showingLastDay - see notes in MonthView class
       
@@ -773,7 +772,7 @@ MonthView.prototype.contextClickDay = function monthView_contextClickDay( event 
       
       gNewDateVariable = gCalendarWindow.getSelectedDate();
 
-      gNewDateVariable.setDate( dayBoxItem.dayNumber );
+      gNewDateVariable.setDate( event.currentTarget.dayNumber );
    }
 }
 
@@ -790,14 +789,12 @@ MonthView.prototype.doubleClickDay = function monthView_doubleClickDay( event )
    {
       // change the selected date and redraw it
 
-      var startDate = this.getNewEventDate();
-      
-      newEvent( startDate, false );
+      newEvent( this.getNewEventDate(), false );
 
    }
    else
    {
-      newEvent( dayBoxItem.date, false );
+      newEvent( event.currentTarget.date, false );
    }
 }
 
