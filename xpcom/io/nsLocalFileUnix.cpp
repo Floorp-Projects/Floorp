@@ -55,6 +55,7 @@
 #include "nsILocalFile.h"
 #include "nsEscape.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsLocalFileUnix.h"
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
@@ -431,33 +432,19 @@ nsLocalFile::AppendRelativePath(const char *fragment)
     CHECK_mPath();
     NS_ENSURE_ARG(fragment);
 
-    // No leading '/' and no ".." component is allowed in the fragment.
+    if (*fragment == '\0')
+        return NS_OK;
+
+    // No leading '/' 
     if (*fragment == '/')
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    const char *dots = strstr(fragment, "..");
-    if (dots &&
-        (dots == fragment || dots[-1] == '/') &&
-        (dots[2] == '\0' || dots[2] == '/')) {
-        // XXXbe what's the difference between UNRECOGNIZED and INVALID?
-        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-    }
+    mPath.Adopt(ToNewCString(mPath + NS_LITERAL_CSTRING("/") +
+                             nsDependentCString(fragment)));
 
-    char *newPath = (char *)nsMemory::Alloc(strlen(mPath) +
-                                            strlen(fragment) +
-                                            2);
-    if (!newPath)
+    if (!mPath.get())
         return NS_ERROR_OUT_OF_MEMORY;
-    strcpy(newPath, mPath);
-    strcat(newPath, "/");
-    strcat(newPath, fragment);
 
-    // strip trailing slashes that came from fragment
-    ssize_t len = strlen(newPath);
-    while (newPath[len-1] == '/' && len > 1)
-        newPath[--len] = '\0';
-
-    mPath.Adopt(newPath);
     InvalidateCache();
     return NS_OK;
 }
