@@ -342,6 +342,10 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
         rv = mProfileDir->Clone(getter_AddRefs(file));
         rv |= file->AppendNative(NS_LITERAL_CSTRING("panacea.dat"));
       }
+      else if (!strcmp(aProperty, NS_APP_STORAGE_50_FILE)) {
+        rv = mProfileDir->Clone(getter_AddRefs(file));
+        rv |= file->AppendNative(NS_LITERAL_CSTRING("storage.sdb"));
+      }
     }
   }
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
