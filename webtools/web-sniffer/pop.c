@@ -1,39 +1,35 @@
-/*
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- * 
- * The Original Code is Web Sniffer.
- * 
- * The Initial Developer of the Original Code is Erik van der Poel.
- * Portions created by Erik van der Poel are
- * Copyright (C) 1998,1999,2000 Erik van der Poel.
- * All Rights Reserved.
- * 
- * Contributor(s): 
- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SniffURI.
+ *
+ * The Initial Developer of the Original Code is
+ * Erik van der Poel <erik@vanderpoel.org>.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-
-#include "main.h"
-#include "net.h"
-
-mutex_t mainMutex;
+#include "all.h"
 
 static int
 readReply(int fd, unsigned char *buf, int size)
 {
 	int	bytesRead;
 
-	bytesRead = read(fd, buf, size - 1);
+	bytesRead = recv(fd, buf, size - 1, 0);
 	if (bytesRead < 0)
 	{
 		buf[0] = 0;
@@ -47,7 +43,7 @@ readReply(int fd, unsigned char *buf, int size)
 		fprintf(stderr, "bytesRead %d at line %d\n", bytesRead,
 			__LINE__);
 	}
-	if (strncmp(buf, "+OK", 3))
+	if (strncmp((char *) buf, "+OK", 3))
 	{
 		return 1;
 	}
@@ -69,7 +65,7 @@ writeRequest(int fd, char *command, char *argument)
 	}
 	strcat(buf, "\r\n");
 	len = strlen(buf);
-	bytesWritten = write(fd, buf, len);
+	bytesWritten = send(fd, buf, len, 0);
 	if (bytesWritten != len)
 	{
 		fprintf(stderr, "bytesWritten at line %d\n", __LINE__);
@@ -85,7 +81,7 @@ pop(char *host, char *user, char *password)
 	unsigned char	buf[4096];
 	int		fd;
 
-	fd = netConnect(NULL, host, 110);
+	fd = netConnect(NULL, (unsigned char *) host, 110);
 	if (fd < 0)
 	{
 		fprintf(stderr, "netConnect failed\n");
@@ -110,9 +106,18 @@ pop(char *host, char *user, char *password)
 }
 
 int
-main(int argc, char *argv)
+main(int argc, char *argv[])
 {
-	unsigned char	*password;
+	char	*password;
+
+	if (!netInit())
+	{
+		return 1;
+	}
+	if (!threadInit())
+	{
+		return 1;
+	}
 
 	password = NULL;
 	pop("nsmail-2", "erik", password);
@@ -171,6 +176,16 @@ reportHTTPHeaderName(void *a, Input *input)
 }
 
 void
-reportHTTPHeaderValue(void *a, Input *input)
+reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
+{
+}
+
+void
+reportStatus(void *a, char *message, char *file, int line)
+{
+}
+
+void
+reportTime(int task, struct timeval *theTime)
 {
 }

@@ -1,47 +1,29 @@
-/*
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- * 
- * The Original Code is Web Sniffer.
- * 
- * The Initial Developer of the Original Code is Erik van der Poel.
- * Portions created by Erik van der Poel are
- * Copyright (C) 1998,1999,2000 Erik van der Poel.
- * All Rights Reserved.
- * 
- * Contributor(s): Bruce Robson
- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SniffURI.
+ *
+ * The Initial Developer of the Original Code is
+ * Erik van der Poel <erik@vanderpoel.org>.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Bruce Robson <bns_robson@hotmail.com>
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#include "plat.h"
-
-#include <errno.h>
-#include <memory.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#ifdef PLAT_UNIX
-#include <thread.h>
-#include <sys/systeminfo.h>
-#endif
-#include <signal.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-
-#include "main.h"
-#include "mutex.h"
-#include "net.h"
-#include "view.h"
+#include "all.h"
 
 static int connectCount = 0;
 static int dnsCount = 0;
@@ -51,9 +33,6 @@ getHostName(void)
 {
 	size_t	alloc;
 	char	*hostName;
-#ifdef PLAT_UNIX
-	long	size;
-#endif
 
 	alloc = 512;
 	hostName = calloc(alloc, 1);
@@ -62,9 +41,19 @@ getHostName(void)
 		return NULL;
 	}
 
-#ifdef PLAT_UNIX
+#if HAVE_GETHOSTNAME
+        if (gethostname(hostName, alloc) != 0)
+        {
+                fprintf(stderr, "gethostname failed\n");
+                free(hostName);
+                return NULL;
+        }
+#else
+#if HAVE_SYSINFO
 	while (1)
 	{
+		long	size;
+
 		size = sysinfo(SI_HOSTNAME, hostName, alloc);
 		if (size < 0)
 		{
@@ -85,13 +74,7 @@ getHostName(void)
 			break;
 		}
 	}
-#else /* Windows */
-        if (gethostname(hostName, alloc) != 0)
-        {
-                fprintf(stderr, "gethostname failed\n");
-                free(hostName);
-                return NULL;
-        }
+#endif
 #endif
 
 	return hostName;
@@ -101,17 +84,25 @@ static int
 getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 	struct sockaddr_in *addr)
 {
-#ifdef PLAT_UNIX
+#if HAVE_GETHOSTBYNAME_R
 	char			buf[512];
 	int			err;
 #endif
 	struct hostent		host;
+	struct protoent		*proto;
 	struct hostent		*ret;
 	unsigned short		shortPort;
 	int			sock;
 	struct timeval		theTime;
 
-	sock = socket(PF_INET, SOCK_STREAM, 0);
+	proto = getprotobyname("tcp");
+	if (!proto)
+	{
+		perror("getprotobyname failed");
+		return -1;
+	}
+
+	sock = socket(PF_INET, SOCK_STREAM, proto->p_proto);
 	if (sock < 0)
 	{
 		perror("socket failed");
@@ -127,10 +118,18 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 
 	/* XXX implement my own DNS lookup to do timeouts? */
 	/* XXX implement my own DNS lookup to try again? */
-#ifdef PLAT_UNIX
+
+#if HAVE_GETHOSTBYNAME_R
+#if HAVE_GETHOSTBYNAME_R_SOLARIS
 	ret = gethostbyname_r((char *) hostName, &host, buf, sizeof(buf), &err);
 	if (!ret)
-#else /* Windows */
+#else
+	gethostbyname_r((const char *) hostName, &host, buf, sizeof(buf), &ret,
+		&err);
+	if (!ret)
+#endif
+#else
+	threadMutexLock();
         ret = gethostbyname((char *) hostName);
         if (ret != NULL)
         {
@@ -143,6 +142,9 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 		reportStatus(a, "gethostbyname_r failed", __FILE__, __LINE__);
 		fprintf(stdout, "failed<br><hr><br>");
 		close(sock);
+#if !defined(HAVE_GETHOSTBYNAME_R)
+		threadMutexUnlock();
+#endif
 		return -1;
 	}
 
@@ -152,24 +154,27 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 
 	fprintf(stdout, "succeeded<br><hr><br>");
 
-	MUTEX_LOCK();
-	dnsCount++;
-	MUTEX_UNLOCK();
 	memset(addr, 0, sizeof(*addr));
 	addr->sin_family = host.h_addrtype /* PF_INET */;
 	shortPort = port;
 	addr->sin_port = htons(shortPort);
 	memcpy(&addr->sin_addr, host.h_addr, host.h_length /* 4 */);
 
+#if HAVE_GETHOSTBYNAME_R
+	threadMutexLock();
+#endif
+	dnsCount++;
+	threadMutexUnlock();
+
 	return sock;
 }
 
 int
-netListen(void *a, unsigned char **host, u_short *port)
+netListen(void *a, unsigned char **host, unsigned short *port)
 {
 	unsigned char		*hostName;
 	struct sockaddr_in	name;
-	int			namelen = sizeof(name);
+	socklen_t		namelen = sizeof(name);
 	int			fd;
 
 	hostName = (unsigned char *) getHostName();
@@ -220,7 +225,7 @@ int
 netAccept(int fd)
 {
 	int		newFD;
-	int		addrlen = sizeof(struct sockaddr);
+	socklen_t	addrlen = sizeof(struct sockaddr);
 	struct sockaddr	addr;
 
 	while ((newFD = accept(fd, &addr, &addrlen)) < 0)
@@ -283,9 +288,9 @@ netConnect(void *a, unsigned char *hostName, int port)
 
 	fprintf(stdout, "succeeded<br><hr><br>");
 
-	MUTEX_LOCK();
+	threadMutexLock();
 	connectCount++;
-	MUTEX_UNLOCK();
+	threadMutexUnlock();
 
 	return sock;
 }
@@ -300,4 +305,22 @@ int
 netGetDNSCount(void)
 {
 	return dnsCount;
+}
+
+int
+netInit(void)
+{
+#if WINDOWS
+	int	ret;
+	WSADATA	wsaData;
+
+	ret = WSAStartup(0x0001, &wsaData);
+	if (ret)
+	{
+		fprintf(stderr, "WSAStartup failed\n");
+		return 0;
+	}
+#endif
+
+	return 1;
 }

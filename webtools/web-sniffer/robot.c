@@ -1,55 +1,30 @@
-/*
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- * 
- * The Original Code is Web Sniffer.
- * 
- * The Initial Developer of the Original Code is Erik van der Poel.
- * Portions created by Erik van der Poel are
- * Copyright (C) 1998,1999,2000 Erik van der Poel.
- * All Rights Reserved.
- * 
- * Contributor(s): 
- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SniffURI.
+ *
+ * The Initial Developer of the Original Code is
+ * Erik van der Poel <erik@vanderpoel.org>.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#include <errno.h>
-#include <limits.h>
-#include <malloc.h>
-#include <memory.h>
-#include <netdb.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <thread.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/stropts.h>
+#include "all.h"
 
-#include "addurl.h"
-#include "hash.h"
-#include "html.h"
-#include "http.h"
-#include "io.h"
-#include "main.h"
-#include "mime.h"
-#include "mutex.h"
-#include "net.h"
-#include "url.h"
-#include "utils.h"
-#include "view.h"
-
-#define OUTPUT_DIRECTORY "/some/output/directory/"
+#define OUTPUT_DIRECTORY "test/robot/"
 
 typedef struct Entry
 {
@@ -94,16 +69,14 @@ typedef struct FD
 	FILE	*file;
 } FD;
 
-mutex_t mainMutex;
-
 #define numberOfSlots 64
-static thread_t slots[numberOfSlots];
+static Thread slots[numberOfSlots];
 
-static thread_t statusThread;
+static Thread statusThread;
 static StatusEntry statusEntries[numberOfSlots];
 static int sortedStatusEntries[numberOfSlots];
 
-static u_short mainPort = 40404;
+static unsigned short mainPort = 40404;
 static int maxFD = -1;
 static FD **table = NULL;
 static fd_set fdSet;
@@ -129,11 +102,20 @@ static unsigned char *limitURLs[] =
 };
 #endif
 
+static char *outFile = OUTPUT_DIRECTORY "index.html";
+
 static char *limitDomains[16];
 static int limitDomainsIndex = 0;
 
+static int count = 0;
+#define LIMIT 50
+#define INTERVAL ((LIMIT / 100) ? (LIMIT / 100) : 5)
+
+static URL *currURL = NULL;
 static URL *lastURL = NULL;
 static URL *urls = NULL;
+
+static char *waiting = "waiting";
 
 #ifdef ROBOT_LOG_ATTRIBUTES
 static HashTable *attributeTable = NULL;
@@ -187,7 +169,7 @@ reportTime(int task, struct timeval *before)
 
 	gettimeofday(&after, NULL);
 
-	MUTEX_LOCK();
+	threadMutexLock();
 	span = (((after.tv_sec - before->tv_sec) * 1000000.0) +
 		after.tv_usec - before->tv_usec);
 	times[task].total += span;
@@ -200,7 +182,7 @@ reportTime(int task, struct timeval *before)
 		times[task].max = span;
 	}
 	times[task].count++;
-	MUTEX_UNLOCK();
+	threadMutexUnlock();
 }
 
 static void
@@ -268,8 +250,15 @@ addURLFunc(void *a, URL *url)
 	}
 	else
 	{
+		threadMutexLock();
 		lastURL->next = url;
 		lastURL = url;
+		if (!currURL)
+		{
+			currURL = url;
+		}
+		threadCondSignal();
+		threadMutexUnlock();
 	}
 }
 
@@ -304,7 +293,7 @@ reportHTTPHeaderName(void *a, Input *input)
 }
 
 void
-reportHTTPHeaderValue(void *a, Input *input)
+reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
 {
 	Arg	*arg;
 
@@ -566,16 +555,15 @@ printTimes(FILE *file)
 }
 
 static void
-printStats(char *file, int count)
+printStats(void)
 {
 	char	backup[1024];
 	char	**limit;
 	time_t	theTime;
 
-	MUTEX_LOCK();
-	sprintf(backup, "%s.bak", file);
-	rename(file, backup);
-	statsOut = fopen(file, "w");
+	sprintf(backup, "%s.bak", outFile);
+	rename(outFile, backup);
+	statsOut = fopen(outFile, "w");
 	fprintf(statsOut, "<html><head><title>Stats</title></head><body>\n");
 	fprintf(statsOut, "<table bgcolor=#cccccc>\n");
 	fprintf(statsOut,
@@ -628,17 +616,16 @@ printStats(char *file, int count)
 #endif
 	fprintf(statsOut, "</body></html>\n");
 	fclose(statsOut);
-	MUTEX_UNLOCK();
 }
 
 static void
 openViewFile(Arg *arg)
 {
-	sprintf(arg->viewURL, "view/%010d.html", arg->count);
-	/*
+	sprintf(arg->viewURL, "%010d.html", arg->count);
 	sprintf(arg->viewFile, "%s%s", OUTPUT_DIRECTORY, arg->viewURL);
-	*/
+	/*
 	sprintf(arg->viewFile, "/dev/null");
+	*/
 	arg->viewFileAdded = 0;
 	arg->view = viewAlloc();
 	arg->view->out = fopen(arg->viewFile, "w");
@@ -664,130 +651,72 @@ closeViewFile(Arg *arg)
 	FREE(arg->view);
 }
 
-static void *
-startHere(void *a)
+static void
+processURL(Arg *arg)
 {
-	Arg		*arg;
 	struct timeval	theTime;
 
 	gettimeofday(&theTime, NULL);
 
-	reportStatus(a, "startHere", __FILE__, __LINE__);
-
-	arg = a;
+	reportStatus(arg, "processURL", __FILE__, __LINE__);
 
 	openViewFile(arg);
-	httpFree(httpProcess(a, arg->url, NULL));
+	httpFree(httpProcess(arg, arg->url, NULL));
 	closeViewFile(arg);
 
-	reportStatus(a, "startHere done", __FILE__, __LINE__);
-
-	free(a);
+	reportStatus(arg, "processURL done", __FILE__, __LINE__);
 
 	reportTime(REPORT_TIME_TOTAL, &theTime);
+}
+
+static void *
+startHere(void *a)
+{
+	Arg	arg;
+
+	arg.slot = (int) a;
+	while (1)
+	{
+		threadMutexLock();
+		while ((!currURL) && (count < LIMIT))
+		{
+			reportStatus(&arg, waiting, __FILE__, __LINE__);
+			threadCondWait();
+		}
+		if (count >= LIMIT)
+		{
+			threadMutexUnlock();
+			break;
+		}
+		count++;
+		if (!(count % INTERVAL))
+		{
+			printStats();
+		}
+		arg.count = count;
+		arg.url = currURL;
+		currURL = currURL->next;
+		threadMutexUnlock();
+		processURL(&arg);
+	}
 
 	return NULL;
 }
 
-static void
-spinThread(int count, URL *url)
+static int
+allThreadsAreWaiting(void)
 {
-	Arg		*arg;
-	thread_t	departed;
-	int		i;
-	int		ret;
-
-	if (numberOfSlots < 2)
-	{
-		arg = calloc(sizeof(Arg), 1);
-		if (!arg)
-		{
-			fprintf(stderr, "cannot calloc Arg\n");
-			exit(0);
-		}
-		arg->slot = 0;
-		arg->count = count;
-		arg->url = url;
-		startHere(arg);
-		return;
-	}
+	int	i;
 
 	for (i = 0; i < numberOfSlots; i++)
 	{
-		if (!slots[i])
+		if (statusEntries[i].message != waiting)
 		{
 			break;
 		}
 	}
-	if (i < numberOfSlots)
-	{
-		arg = calloc(sizeof(Arg), 1);
-		if (!arg)
-		{
-			fprintf(stderr, "cannot calloc Arg\n");
-			exit(0);
-		}
-		arg->slot = i;
-		arg->count = count;
-		arg->url = url;
-		ret = thr_create(NULL, 0, startHere, arg, 0, &slots[i]);
-		if (ret)
-		{
-			fprintf(stderr, "thr_create: ret %d\n", ret);
-			exit(0);
-		}
-	}
-	else
-	{
-		ret = thr_join(0, &departed, NULL);
-		if (ret)
-		{
-			fprintf(stderr, "thr_join failed\n");
-			exit(0);
-		}
-		for (i = 0; i < numberOfSlots; i++)
-		{
-			if (slots[i] == departed)
-			{
-				slots[i] = 0;
-				spinThread(count, url);
-				break;
-			}
-		}
-		if (i >= numberOfSlots)
-		{
-			fprintf(stderr, "cannot find departed thread\n");
-			exit(0);
-		}
-	}
-}
 
-static void
-waitForAllThreads(void)
-{
-	if (numberOfSlots < 2)
-	{
-		return;
-	}
-
-	while (1)
-	{
-		if (thr_join(0, NULL, NULL))
-		{
-			break;
-		}
-	}
-}
-
-static int
-waitForOneThread(void)
-{
-	if (numberOfSlots < 2)
-	{
-		return 1;
-	}
-
-	return thr_join(0, NULL, NULL);
+	return i == numberOfSlots;
 }
 
 static void
@@ -891,12 +820,12 @@ readClientRequest(int fd)
 	FILE		*file;
 	int		i;
 
-	bytesRead = read(fd, buf, sizeof(buf) - 1);
+	bytesRead = recv(fd, buf, sizeof(buf) - 1, 0);
 	if (bytesRead < 0)
 	{
 		if (errno != ECONNRESET)
 		{
-			perror("read");
+			perror("recv");
 		}
 		removeFD(fd);
 		return;
@@ -912,7 +841,7 @@ readClientRequest(int fd)
 	if (!file)
 	{
 		char *err = "fdopen failed\n";
-		write(fd, err, strlen(err));
+		send(fd, err, strlen(err), 0);
 		removeFD(fd);
 		return;
 	}
@@ -1059,10 +988,9 @@ startStatusThread(void)
 {
 	int	ret;
 
-	ret = thr_create(NULL, 0, startStatusFunc, NULL, 0, &statusThread);
+	ret = threadCreate(&statusThread, startStatusFunc, NULL);
 	if (ret)
 	{
-		fprintf(stderr, "thr_create: ret %d\n", ret);
 		exit(0);
 	}
 }
@@ -1070,21 +998,19 @@ startStatusThread(void)
 int
 main(int argc, char *argv[])
 {
-	int		count;
 	int		i;
-	int		interval;
-	int		limit;
-	char		*outFile;
 	time_t		theTime;
 	URL		*url;
+	int		ret;
 
+#if !defined(WINDOWS)
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
 	{
 		fprintf(stderr, "signal failed\n");
 		exit(0);
 	}
+#endif
 
-	outFile = NULL;
 	for (i = 1; i < argc; i++)
 	{
 		if (!strcmp(argv[i], "-d"))
@@ -1105,7 +1031,14 @@ main(int argc, char *argv[])
 		}
 	}
 
-	MUTEX_INIT();
+	if (!netInit())
+	{
+		return 1;
+	}
+	if (!threadInit())
+	{
+		return 1;
+	}
 
 	time(&theTime);
 	startTime = copyString((unsigned char *) ctime(&theTime));
@@ -1132,57 +1065,51 @@ main(int argc, char *argv[])
 
 	startStatusThread();
 
+	for (i = 0; i < numberOfSlots; i++)
+	{
+		ret = threadCreate(&slots[i], startHere, (void *) i);
+		if (ret)
+		{
+			exit(0);
+		}
+	}
+	threadYield();
+
 	if (!firstURL)
 	{
-		firstURL = "http://somehost/somedir/";
+		firstURL = "http://mozilla.org/";
 	}
-	if (!outFile)
-	{
-		outFile = OUTPUT_DIRECTORY "zzz.html";
-	}
+
 	url = urlParse((unsigned char *) firstURL);
 	hashAdd(urlTable, (unsigned char *) firstURL, 0);
 	urls = url;
 	lastURL = url;
-	limit = 50000;
-	interval = (limit / 100);
-	if (!interval)
-	{
-		interval = 5;
-	}
-	count = 0;
+	currURL = url;
+	threadCondSignal();
+	threadYield();
 	while (1)
 	{
-		count++;
-		spinThread(count, url);
-		if (!(count % interval))
+		if (allThreadsAreWaiting())
 		{
-			printStats(outFile, count);
-		}
-		if (count >= limit)
-		{
-			thr_kill(statusThread, SIGKILL);
-			waitForAllThreads();
+			for (i = 0; i < numberOfSlots; i++)
+			{
+				threadCancel(slots[i]);
+			}
 			break;
 		}
-		else if (!url->next)
+		if (count >= LIMIT)
 		{
-			while (!url->next)
+			threadCondBroadcast();
+			for (i = 0; i < numberOfSlots; i++)
 			{
-				if (waitForOneThread())
-				{
-					break;
-				}
+				threadJoin(slots[i]);
 			}
-			if (!url->next)
-			{
-				break;
-			}
+			threadCancel(statusThread);
+			break;
 		}
-		url = url->next;
 	}
 
-	printStats(outFile, count);
+	printStats();
 
 #ifdef ROBOT_LOG_ATTRIBUTES
 	hashFree(attributeTable);

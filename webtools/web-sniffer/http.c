@@ -1,39 +1,29 @@
-/*
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- * 
- * The Original Code is Web Sniffer.
- * 
- * The Initial Developer of the Original Code is Erik van der Poel.
- * Portions created by Erik van der Poel are
- * Copyright (C) 1998,1999,2000 Erik van der Poel.
- * All Rights Reserved.
- * 
- * Contributor(s): Bruce Robson
- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SniffURI.
+ *
+ * The Initial Developer of the Original Code is
+ * Erik van der Poel <erik@vanderpoel.org>.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Bruce Robson <bns_robson@hotmail.com>
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#include <malloc.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/time.h>
-
-#include "addurl.h"
-#include "html.h"
-#include "http.h"
-#include "io.h"
-#include "main.h"
-#include "mime.h"
-#include "net.h"
-#include "url.h"
-#include "utils.h"
+#include "all.h"
 
 static unsigned char *emptyHTTPResponse = (unsigned char *) "";
 static unsigned char *http09Response = (unsigned char *) "";
@@ -221,7 +211,7 @@ httpReadHeaders(HTTP *http, void *a, Input *input, unsigned char *url)
 }
 
 void
-httpParseRequest(HTTP *http, void *a, unsigned char *url)
+httpParseRequest(HTTP *http, void *a, char *url)
 {
 	unsigned short	c;
 
@@ -301,31 +291,31 @@ httpGetObject(HTTP *http, void *a, int sock, URL *url, unsigned char **headers)
 	get = "GET ";
 	httpStr = " HTTP/1.0\n";
 
-	write(sock, get, strlen(get));
+	send(sock, get, strlen(get), 0);
 	if (url->path)
 	{
-		write(sock, url->path, strlen((char *) url->path));
+		send(sock, url->path, strlen((char *) url->path), 0);
 	}
 	if (url->params)
 	{
-		write(sock, url->params, strlen((char *) url->params));
+		send(sock, url->params, strlen((char *) url->params), 0);
 	}
 	if (url->query)
 	{
-		write(sock, url->query, strlen((char *) url->query));
+		send(sock, url->query, strlen((char *) url->query), 0);
 	}
-	write(sock, httpStr, strlen(httpStr));
+	send(sock, httpStr, strlen(httpStr), 0);
 	h = headers;
 	if (h)
 	{
 		while (*h)
 		{
-			write(sock, *h, strlen((char *) *h));
-			write(sock, "\n", 1);
+			send(sock, *h, strlen((char *) *h), 0);
+			send(sock, "\n", 1, 0);
 			h++;
 		}
 	}
-	write(sock, "\n", 1);
+	send(sock, "\n", 1, 0);
 
 	httpRead(http, a, sock, url->url);
 }

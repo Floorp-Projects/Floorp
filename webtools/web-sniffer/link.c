@@ -1,46 +1,37 @@
-/*
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- * 
- * The Original Code is Web Sniffer.
- * 
- * The Initial Developer of the Original Code is Erik van der Poel.
- * Portions created by Erik van der Poel are
- * Copyright (C) 1998,1999,2000 Erik van der Poel.
- * All Rights Reserved.
- * 
- * Contributor(s): 
- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SniffURI.
+ *
+ * The Initial Developer of the Original Code is
+ * Erik van der Poel <erik@vanderpoel.org>.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#include <malloc.h>
-#include <string.h>
-
-#include "addurl.h"
-#include "hash.h"
-#include "html.h"
-#include "http.h"
-#include "main.h"
-#include "mutex.h"
-#include "url.h"
-#include "utils.h"
+#include "all.h"
 
 typedef struct Arg
 {
 	URL	*url;
 } Arg;
 
-mutex_t mainMutex;
-
-static unsigned char *limitURLs[] =
+static char *limitURLs[] =
 {
-	"http://lemming/people/erik/",
+	"http://sniffuri.org/test/",
 	NULL
 };
 
@@ -58,7 +49,7 @@ reportHTML(void *a, Input *input)
 }
 
 void
-reportHTMLAttributeName(void *a, Input *input)
+reportHTMLAttributeName(void *a, HTML *html, Input *input)
 {
 }
 
@@ -68,7 +59,7 @@ reportHTMLAttributeValue(void *a, HTML *html, Input *input)
 }
 
 void
-reportHTMLTag(void *a, Input *input)
+reportHTMLTag(void *a, HTML *html, Input *input)
 {
 }
 
@@ -98,7 +89,17 @@ reportHTTPHeaderName(void *a, Input *input)
 }
 
 void
-reportHTTPHeaderValue(void *a, Input *input)
+reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
+{
+}
+
+void
+reportStatus(void *a, char *message, char *file, int line)
+{
+}
+
+void
+reportTime(int task, struct timeval *theTime)
 {
 }
 
@@ -116,7 +117,14 @@ main(int argc, char *argv[])
 	HTTP	*http;
 	URL	*url;
 
-	MUTEX_INIT();
+	if (!netInit())
+	{
+		return 1;
+	}
+	if (!threadInit())
+	{
+		return 1;
+	}
 
 	if (argc > 1)
 	{
@@ -125,7 +133,7 @@ main(int argc, char *argv[])
 
 	addURLInit(addURLFunc, limitURLs, NULL);
 
-	url = urlParse(limitURLs[0]);
+	url = urlParse((unsigned char *) limitURLs[0]);
 	urls = url;
 	lastURL = url;
 	while (url)
@@ -137,7 +145,7 @@ main(int argc, char *argv[])
 			switch (http->status)
 			{
 			case 200:
-				printf("%s\n", url->url);
+				printf("%s\n", (char *) url->url);
 				break;
 			case 302:
 				break;

@@ -22,14 +22,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _ADDURL_H_
-#define _ADDURL_H_
+#if HAVE_LIBPTHREAD
+typedef pthread_t Thread;
+#endif
 
-#include "url.h"
+#if HAVE_LIBTHREAD
+typedef thread_t Thread;
+#endif
 
-typedef void (*AddURLFunc)(void *a, URL *url);
+#if WINDOWS
+typedef HANDLE Thread;
+#endif
 
-void addURL(void *a, unsigned char *str);
-void addURLInit(AddURLFunc addURLFunc, char **limitURLs, char **limitDomains);
-
-#endif /* _ADDURL_H_ */
+void threadCancel(Thread thr);
+void threadCondBroadcast(void);
+void threadCondSignal(void);
+void threadCondWait(void);
+int threadCreate(Thread *thr, void *(*start)(void *), void *arg);
+int threadInit(void);
+void threadJoin(Thread thr);
+void threadMutexLock(void);
+void threadMutexUnlock(void);
+void threadYield(void);

@@ -1,41 +1,31 @@
-/*
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- * 
- * The Original Code is Web Sniffer.
- * 
- * The Initial Developer of the Original Code is Erik van der Poel.
- * Portions created by Erik van der Poel are
- * Copyright (C) 1998,1999,2000 Erik van der Poel.
- * All Rights Reserved.
- * 
- * Contributor(s): Bruce Robson
- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SniffURI.
+ *
+ * The Initial Developer of the Original Code is
+ * Erik van der Poel <erik@vanderpoel.org>.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Bruce Robson <bns_robson@hotmail.com>
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#include "plat.h"
+#include "all.h"
 
-#include <errno.h>
-#include <malloc.h>
-#include <memory.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifdef PLAT_UNIX
-#include <sys/stropts.h>
-#else
-#include <sys/socket.h>
-#endif
-
-#include "io.h"
-#include "utils.h"
+#define GULP 2048
 
 struct Input
 {
@@ -83,13 +73,11 @@ readInit(void)
 Input *
 readStream(int fd, unsigned char *url)
 {
-	size_t		bytesAvailable;
 	int		bytesRead;
 	fd_set		fdset;
 	Input		*input;
 	int		offset;
 	int		ret;
-	struct stat	statBuf;
 	unsigned long	streamSize;
 	struct timeval	timeout;
 
@@ -119,39 +107,9 @@ readStream(int fd, unsigned char *url)
 			streamSize = 0;
 			break;
 		}
-#ifdef PLAT_UNIX
-		if (ioctl(fd, I_NREAD, &bytesAvailable) == -1)
-#else
-		if (ioctl(fd, FIONREAD, &bytesAvailable) == -1)
-#endif
+		if (offset + GULP > input->readAlloc)
 		{
-			/* if fd is file, we get this error */
-			if (errno == ENOTTY)
-			{
-				if (fstat(fd, &statBuf))
-				{
-					perror("fstat");
-					streamSize = 0;
-					break;
-				}
-				else
-				{
-					bytesAvailable = statBuf.st_size;
-				}
-			}
-			else
-			{
-				if (errno != ECONNRESET)
-				{
-					perror("ioctl");
-				}
-				streamSize = 0;
-				break;
-			}
-		}
-		if (offset + bytesAvailable > input->readAlloc)
-		{
-			input->readAlloc = offset + bytesAvailable;
+			input->readAlloc = offset + GULP;
 			input->readBuf = realloc((void *) input->readBuf,
 				input->readAlloc + 1);
 			if (!input->readBuf)
@@ -162,13 +120,13 @@ readStream(int fd, unsigned char *url)
 				break;
 			}
 		}
-		bytesRead = read(fd, (void *) (input->readBuf + offset),
-			bytesAvailable);
+		bytesRead = recv(fd, (void *) (input->readBuf + offset), GULP,
+			0);
 		if (bytesRead <= 0)
 		{
 			break;
 		}
-		else if (bytesRead > bytesAvailable)
+		else if (bytesRead > GULP)
 		{
 			/* should not happen */
 			streamSize = 0;
@@ -208,10 +166,10 @@ readAvailableBytes(int fd)
 	input->readBufPtr = input->readBuf;
 	input->readBufEnd = input->readBuf;
 	input->readBufMarkEnd = input->readBuf;
-	bytesRead = read(fd, (void *) input->readBuf, input->readAlloc);
+	bytesRead = recv(fd, (void *) input->readBuf, input->readAlloc, 0);
 	if (bytesRead < 0)
 	{
-		perror("read");
+		perror("recv");
 		return input;
 	}
 	else if (bytesRead == input->readAlloc)

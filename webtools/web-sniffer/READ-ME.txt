@@ -1,11 +1,13 @@
 
 
 
-                                  Web Sniffer
+                                   SniffURI
 
-                      by Erik van der Poel <erik@netscape.com>
+                     by Erik van der Poel <erik@vanderpoel.org>
 
 		           originally created in 1998
+
+                              http://sniffuri.org/
 
 
 
@@ -24,7 +26,7 @@ Description of Tools
     documents are parsed and colored, and non-ASCII characters are shown in
     hex. Links are turned into live links, that can be clicked to see the
     source of that URL, allowing the user to "browse" source.
-    
+
   robot
 
     Originally written to see how many documents actually include the HTTP
@@ -32,20 +34,20 @@ Description of Tools
     that collects various statistics, including HTML tag statistics, DNS
     lookup timing, etc. This robot does not adhere to the standard robot
     rules, so please exercise caution if you use this.
-    
+
   proxy
 
     This is an HTTP proxy that sits between the user's browser and another
     HTTP proxy. It captures all of the HTTP traffic between the browser and
     the Internet, and presents it to the user in the same colorful way as
     the above-mentioned view.cgi.
-    
+
   grab
 
     Allows the user to "grab" a whole Web site, or everything under a
     particular directory. This is useful if you want to grab a bunch of
     related HTML files, e.g. the whole CSS2 spec.
-    
+
   link
 
     Allows the user to recursively check for bad links in a Web site or
@@ -55,28 +57,34 @@ Description of Tools
 Description of Files
 
   addurl.c, addurl.h: adds URLs to a list
-  cgiview.c, cgiview.html: the view.cgi tool
+  all.h: header that includes all the required headers
+  cgiview.c: the view.cgi tool
+  config*: autoconf-related files
   dns.c: experimental DNS toy
   doRun: used with robot
   file.c, file.h: the file: URL
   ftp.c: experimental FTP toy
   grab.c: the "grab" tool
   hash.c, hash.h: incomplete hash table routines
+  HISTORY: brief history of this project
   html.c, html.h: HTML parser
   http.c, http.h: simple HTTP implementation
+  index.html: used with view.cgi tool
+  INSTALL: see this file for build instructions
   io.c, io.h: I/O routines
   link.c: the "link" tool
   main.h: very simple callbacks, could be more object-oriented
-  Makefile: the Solaris Makefile
+  Makefile, Makefile.in: to build everything
   mime.c, mime.h: MIME Content-Type parser
-  mutex.h: for threading in the robot
   net.c, net.h: low-level Internet APIs
   pop.c: experimental POP toy
   proxy.c: the "proxy" tool
   robot.c: the "robot" tool
   run: used with robot
+  test: directory used in testing
+  thread.c, thread.h: for threading in the robot and locks elsewhere
   TODO: notes to myself
-  url.c, url.h: implementation of absolute and relative URLs
+  url.c, url.h, urltest.c: implementation of absolute and relative URLs
   utils.c, utils.h: some little utility routines
   view.c, view.h: presents stuff to the user
 

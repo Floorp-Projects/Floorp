@@ -1,55 +1,33 @@
-/*
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- * 
- * The Original Code is Web Sniffer.
- * 
- * The Initial Developer of the Original Code is Erik van der Poel.
- * Portions created by Erik van der Poel are
- * Copyright (C) 1998,1999,2000 Erik van der Poel.
- * All Rights Reserved.
- * 
- * Contributor(s): Bruce Robson
- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SniffURI.
+ *
+ * The Initial Developer of the Original Code is
+ * Erik van der Poel <erik@vanderpoel.org>.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Bruce Robson <bns_robson@hotmail.com>
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /* host and port of proxy that this proxy connects to */
-#define PROXY_HOST "w3proxy.netscape.com"
-#define PROXY_PORT 8080
-/*
 #define PROXY_HOST "127.0.0.1"
 #define PROXY_PORT 4444
-*/
 
-#include "plat.h"
-
-#include <errno.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
-#ifdef PLAT_WINDOWS
-#include <windows.h>
-#endif
-
-#include "html.h"
-#include "http.h"
-#include "mutex.h"
-#include "net.h"
-#include "utils.h"
-#include "view.h"
+#include "all.h"
 
 typedef int (*Handler)(int fd);
 
@@ -68,63 +46,66 @@ typedef struct Arg
 	View	*view;
 } Arg;
 
-DECLARE_MUTEX;
-
 static fd_set fdSet;
 static int id = 0;
-static u_short mainPort = 40404;
+static unsigned short mainPort = 40404;
 static int maxFD = -1;
 static FD **table = NULL;
 
-static unsigned char suspendStr[1024];
+static char suspendStr[1024];
 
-static char *welcome =
-"HTTP/1.0 200 OK
-Content-Type: text/html
+static char *welcome1 =
+"HTTP/1.0 200 OK\n"
+"Content-Type: text/html\n"
+"\n"
+"<title>Interceptor</title>\n"
+"<h3>HTTP Interceptor Persistent Window</h3>\n"
+"<p>\n"
+"Keep this window alive as long as you want to continue the session.\n"
+"It is recommended that you Minimize (Iconify) this window.\n"
+"Do not click the Back button in this window.\n"
+"Do not load another document in this window.\n"
+"</p>\n"
+"<script>\n";
 
-<title>Interceptor</title>
-<h3>HTTP Interceptor Persistent Window</h3>
-<p>
-Keep this window alive as long as you want to continue the session.
-It is recommended that you Minimize (Iconify) this window.
-Do not click the Back button in this window.
-Do not load another document in this window.
-</p>
-<script>
-interceptorSuspendResumeWindow =
-	window.open
-	(
-		\"\",
-		\"interceptorSuspendResumeWindow\",
-		\"menubar,toolbar,location,directories,scrollbars,status\"
-	);
-interceptorSuspendResumeWindow.document.write(
-\"<title>Welcome to the HTTP Interceptor</title>\" +
-\"<h3>Welcome to the HTTP Interceptor</h3>\" +
-\"<p>\" +
-\"A new HTTP Interceptor session has been started for you. \" +
-\"To start using this session, set your HTTP Proxy preference to the \" +
-\"following. (Edit | Preferences | Advanced | Proxies | \" +
-\"Manual proxy configuration | View | HTTP)\" +
-\"</p>\" +
-\"<pre>\" +
-\"\\n\" +
-\"\\tHTTP Proxy Server Address %s; Port %d\" +
-\"\\n\" +
-\"</pre>\" +
-\"<h3>How to Suspend and Resume Logging</h3>\" +
-\"<p>\" +
-\"You can temporarily suspend and resume the HTTP Interceptor logging \" +
-\"feature by clicking the links below.\" +
-\"</p>\" +
-\"<a href=http://%s:%d/suspend/%d>Suspend Logging</a><br>\" +
-\"<a href=http://%s:%d/resume/%d>Resume Logging</a>\" +
-\"<p>\" +
-\"You may find it useful to drag these links to your Personal Toolbar.\" +
-\"</p>\"
-);
-</script>
-";
+static char *welcome2 =
+"interceptorSuspendResumeWindow =\n"
+"	window.open\n"
+"	(\n"
+"		\"\",\n"
+"		\"interceptorSuspendResumeWindow\",\n"
+"		\"menubar,toolbar,location,directories,scrollbars,status\"\n"
+"	);\n"
+"interceptorSuspendResumeWindow.document.write(\n"
+"\"<title>Welcome to the HTTP Interceptor</title>\" +\n"
+"\"<h3>Welcome to the HTTP Interceptor</h3>\" +\n"
+"\"<p>\" +\n"
+"\"A new HTTP Interceptor session has been started for you. \" +\n";
+
+static char *welcome3 =
+"\"To start using this session, set your HTTP Proxy preference to the \" +\n"
+"\"following. (Edit | Preferences | Advanced | Proxies | \" +\n"
+"\"Manual proxy configuration | View | HTTP)\" +\n"
+"\"</p>\" +\n"
+"\"<pre>\" +\n"
+"\"\\n\" +\n"
+"\"\\tHTTP Proxy Server Address %s; Port %d\" +\n"
+"\"\\n\" +\n"
+"\"</pre>\" +\n"
+"\"<h3>How to Suspend and Resume Logging</h3>\" +\n"
+"\"<p>\" +\n"
+"\"You can temporarily suspend and resume the HTTP Interceptor logging \" +\n"
+"\"feature by clicking the links below.\" +\n";
+
+static char *welcome4 =
+"\"</p>\" +\n"
+"\"<a href=http://%s:%d/suspend/%d>Suspend Logging</a><br>\" +\n"
+"\"<a href=http://%s:%d/resume/%d>Resume Logging</a>\" +\n"
+"\"<p>\" +\n"
+"\"You may find it useful to drag these links to your Personal Toolbar.\" +\n"
+"\"</p>\"\n"
+");\n"
+"</script>\n";
 
 static FD *
 addFD(int fd, Handler func)
@@ -200,7 +181,7 @@ logRequest(FD *f, Input *input)
 	if
 	(
 		(table[fileno(f->logFile)]->suspend) ||
-		(strstr(current(input), suspendStr))
+		(strstr((char *) current(input), suspendStr))
 	)
 	{
 		table[f->writeFD]->suspend = 1;
@@ -241,7 +222,7 @@ readClientRequest(int fd)
 
 	f = table[fd];
 	input = readAvailableBytes(fd);
-	write(f->writeFD, current(input), inputLength(input));
+	send(f->writeFD, current(input), inputLength(input), 0);
 	if (!logRequest(f, input))
 	{
 		inputFree(input);
@@ -274,7 +255,7 @@ logResponse(FD *f, Input *input)
 	arg.view = viewAlloc();
 	arg.view->backslash = 1;
 	arg.view->out = f->logFile;
-	httpParseStream(http, &arg, "readProxyResponse");
+	httpParseStream(http, &arg, (unsigned char *) "readProxyResponse");
 	free(arg.view);
 	httpFree(http);
 	fprintf(f->logFile, "</b></pre>\");\n</script>\n");
@@ -290,8 +271,8 @@ readProxyResponse(int fd)
 	Input	*input;
 
 	f = table[fd];
-	input = readStream(fd, "readProxyResponse");
-	write(f->writeFD, current(input), inputLength(input));
+	input = readStream(fd, (unsigned char *) "readProxyResponse");
+	send(f->writeFD, current(input), inputLength(input), 0);
 	if (!logResponse(f, input))
 	{
 		inputFree(input);
@@ -325,7 +306,7 @@ acceptNewClient(int fd)
 		return 0;
 	}
 
-	proxyFD = netConnect(NULL, PROXY_HOST, PROXY_PORT);
+	proxyFD = netConnect(NULL, (unsigned char *) PROXY_HOST, PROXY_PORT);
 	if (proxyFD < 0)
 	{
 		fprintf(stderr, "netConnect to proxy %s:%d failed\n",
@@ -357,27 +338,27 @@ acceptNewClient(int fd)
 static int
 readLoggerRequest(int fd)
 {
-	unsigned char	buf[10240];
+	char		buf[10240];
 	int		bytesRead;
 	int		doSuspend;
 	FD		*f;
 	FILE		*file;
 	unsigned char	*host;
 	int		i;
-	unsigned char	*p;
-	u_short		port;
+	char		*p;
+	unsigned short	port;
 	int		proxyListenFD;
-	unsigned char	*resume;
-	unsigned char	*str;
-	unsigned char	*suspend;
+	char		*resume;
+	char		*str;
+	char		*suspend;
 	int		suspendPort;
 
-	bytesRead = read(fd, buf, sizeof(buf) - 1);
+	bytesRead = recv(fd, buf, sizeof(buf) - 1, 0);
 	if (bytesRead < 0)
 	{
 		if (errno != ECONNRESET)
 		{
-			perror("read");
+			perror("recv");
 		}
 		removeFD(fd);
 		return 0;
@@ -399,7 +380,7 @@ readLoggerRequest(int fd)
 			"\n"
 			"Bye!"
 		;
-		write(fd, goodbye, strlen(goodbye));
+		send(fd, goodbye, strlen(goodbye), 0);
 		removeFD(fd);
 		return 1;
 	}
@@ -425,7 +406,7 @@ readLoggerRequest(int fd)
 				"\n"
 				"No backslash after command!"
 			;
-			write(fd, notOK, strlen(notOK));
+			send(fd, notOK, strlen(notOK), 0);
 			removeFD(fd);
 			return 0;
 		}
@@ -446,7 +427,7 @@ readLoggerRequest(int fd)
 				"\n"
 				"OK!"
 			;
-			write(fd, ok, strlen(ok));
+			send(fd, ok, strlen(ok), 0);
 		}
 		else
 		{
@@ -456,19 +437,19 @@ readLoggerRequest(int fd)
 				"\n"
 				"Cannot find port number in table!"
 			;
-			write(fd, notOK, strlen(notOK));
+			send(fd, notOK, strlen(notOK), 0);
 		}
 		removeFD(fd);
 		return 0;
 	}
 
-	/* XXX write(1, buf, bytesRead); */
+	/* XXX send(1, buf, bytesRead, 0); */
 
 	file = fdopen(fd, "w");
 	if (!file)
 	{
 		char *err = "fdopen failed\n";
-		write(fd, err, strlen(err));
+		send(fd, err, strlen(err), 0);
 		removeFD(fd);
 		return 0;
 	}
@@ -492,19 +473,10 @@ readLoggerRequest(int fd)
 		return 0;
 	}
 
-	fprintf
-	(
-		file,
-		welcome,
-		host,
-		port,
-		host,
-		mainPort,
-		port,
-		host,
-		mainPort,
-		port
-	);
+	fprintf(file, welcome1);
+	fprintf(file, welcome2);
+	fprintf(file, welcome3, host, port);
+	fprintf(file, welcome4, host, mainPort, port, host, mainPort, port);
 	sprintf(suspendStr, "http://%s:%d/suspend/%d", host, mainPort, port);
 	free(host);
 	fflush(file);
@@ -646,7 +618,14 @@ main(int argc, char *argv[])
 	fd_set	localFDSet;
 	int	ret;
 
-	MUTEX_INIT();
+	if (!netInit())
+	{
+		return 1;
+	}
+	if (!threadInit())
+	{
+		return 1;
+	}
 
 	fd = netListen(NULL, NULL, &mainPort);
 	if (fd < 0)

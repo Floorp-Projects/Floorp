@@ -31,11 +31,11 @@ OBJ = o
 RM = rm -f
 
 # Windows without Cygwin (type "nmake")
-CFLAGS = /nologo /DWINDOWS=1 /D_WIN32_WINNT=0x0400
-EXE = .exe
-LIBS = wsock32.lib
-OBJ = obj
-RM = del
+#Windows#CFLAGS = /nologo /DWINDOWS=1 /D_WIN32_WINNT=0x0400
+#Windows#EXE = .exe
+#Windows#LIBS = wsock32.lib
+#Windows#OBJ = obj
+#Windows#RM = del
 
 #O_or_g = -g
 O_or_g = -O

@@ -1,31 +1,30 @@
-/*
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- * 
- * The Original Code is Web Sniffer.
- * 
- * The Initial Developer of the Original Code is Erik van der Poel.
- * Portions created by Erik van der Poel are
- * Copyright (C) 1998,1999,2000 Erik van der Poel.
- * All Rights Reserved.
- * 
- * Contributor(s): 
- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SniffURI.
+ *
+ * The Initial Developer of the Original Code is
+ * Erik van der Poel <erik@vanderpoel.org>.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#include <stdio.h>
-#include <unistd.h>
+#include "all.h"
 
-#include "main.h"
-#include "net.h"
-
-#define server "host.domain.com"
+#define server (unsigned char *) "host.domain.com"
 
 #define QR	0		/* query */
 #define OPCODE	0		/* standard query */
@@ -39,10 +38,8 @@
 
 static unsigned short ID = 0xbeef;
 
-mutex_t mainMutex;
-
 void
-reportContentType(void *a, char *contentType)
+reportContentType(void *a, unsigned char *contentType)
 {
 }
 
@@ -82,7 +79,7 @@ reportHTTPBody(void *a, Input *input)
 }
 
 void
-reportHTTPCharSet(void *a, char *charset)
+reportHTTPCharSet(void *a, unsigned char *charset)
 {
 }
 
@@ -92,12 +89,22 @@ reportHTTPHeaderName(void *a, Input *input)
 }
 
 void
-reportHTTPHeaderValue(void *a, Input *input)
+reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
 {
 }
 
-static char *
-putDomainName(char *p, char *name)
+void
+reportStatus(void *a, char *message, char *file, int line)
+{
+}
+
+void
+reportTime(int task, struct timeval *theTime)
+{
+}
+
+static unsigned char *
+putDomainName(unsigned char *p, char *name)
 {
 	char	*begin;
 	char	*q;
@@ -140,6 +147,15 @@ main(int argc, char *argv[])
 	int		len;
 	unsigned char	*p;
 
+	if (!netInit())
+	{
+		return 1;
+	}
+	if (!threadInit())
+	{
+		return 1;
+	}
+
 	fd = netConnect(NULL, server, 53);
 	if (fd < 0)
 	{
@@ -175,14 +191,14 @@ main(int argc, char *argv[])
 	buf[0] = 0;
 	buf[1] = len - 2;
 
-	bytesTransferred = write(fd, buf, len);
+	bytesTransferred = send(fd, buf, len, 0);
 	if (bytesTransferred != len)
 	{
 		fprintf(stderr, "wrong number of bytes written\n");
 		return 1;
 	}
 
-	bytesTransferred = read(fd, buf, sizeof(buf));
+	bytesTransferred = recv(fd, buf, sizeof(buf), 0);
 
 	for (i = 0; i < bytesTransferred; i++)
 	{

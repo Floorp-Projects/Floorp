@@ -1,38 +1,28 @@
-/*
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- * 
- * The Original Code is Web Sniffer.
- * 
- * The Initial Developer of the Original Code is Erik van der Poel.
- * Portions created by Erik van der Poel are
- * Copyright (C) 1998,1999,2000 Erik van der Poel.
- * All Rights Reserved.
- * 
- * Contributor(s): 
- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SniffURI.
+ *
+ * The Initial Developer of the Original Code is
+ * Erik van der Poel <erik@vanderpoel.org>.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "html.h"
-#include "http.h"
-#include "io.h"
-#include "main.h"
-#include "mutex.h"
-#include "url.h"
-#include "utils.h"
-#include "view.h"
-
-mutex_t mainMutex;
+#include "all.h"
 
 static char *me = NULL;
 
@@ -78,16 +68,16 @@ reportHTMLAttributeName(void *a, HTML *html, Input *input)
 void
 reportHTMLAttributeValue(void *a, HTML *html, Input *input)
 {
-	URL	*url;
-	View	*view;
-	char	*urlstring;
+	URL		*url;
+	View		*view;
+	unsigned char	*urlstring;
 
 	view = a;
 
 	if (html->currentAttributeIsURL)
 	{
 		url = urlRelative(html->base, html->currentAttribute->value);
-		urlstring = escapeHTML(url ? (char*) url->url : "");
+		urlstring = escapeHTML(url ? url->url : (unsigned char *) "");
 		fprintf(view->out, "<a href=\"%s%s\">", me, urlstring);
 		free(urlstring);
 		urlFree(url);
@@ -152,8 +142,8 @@ reportHTTPHeaderName(void *a, Input *input)
 void
 reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
 {
-	View	*view;
-	char	*urlstring;
+	View		*view;
+	unsigned char	*urlstring;
 
 	view = a;
 
@@ -302,7 +292,14 @@ main(int argc, char *argv[])
 	char		*verbose;
 	View		*view;
 
-	MUTEX_INIT();
+	if (!netInit())
+	{
+		return 1;
+	}
+	if (!threadInit())
+	{
+		return 1;
+	}
 
 	url = NULL;
 
