@@ -97,3 +97,5 @@ EditorPublish.xul
 EditorPublishSettings.js
 EditorPublishSettings.xul
 EditorPublishOverlay.xul
+EditorPublishProgress.js
+EditorPublishProgress.xul

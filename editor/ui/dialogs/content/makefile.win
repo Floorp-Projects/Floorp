@@ -100,6 +100,8 @@ CHROME_CONTENT = \
 	.\EditorPublishSettings.xul \
 	.\EditorPublishSettings.js \
 	.\EditorPublishOverlay.xul \
+	.\EditorPublishProgress.xul \
+	.\EditorPublishProgress.js \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
