@@ -700,6 +700,7 @@ kgtop_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=titlestyle">
 {disable_right_click_js}</head>
 <body CLASS=standard alink="#FFFFFF" fgcolor=#FFFFFF bgcolor=#9999CC>
@@ -715,6 +716,7 @@ kgmain_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}</head>
 <script>
@@ -809,6 +811,7 @@ topframework:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvtopstyle">
 {disable_right_click_js}</head>
 <script language=javascript>
@@ -857,6 +860,7 @@ loadpanes();
 leftframework:
 <html><head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvleftstyle">
 {disable_right_click_js}</head>
 <body bgcolor="#CCCCCC" alink="#CCCCFF">
@@ -988,6 +992,7 @@ foot_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvfootstyle">
 <title>{untitle_doc}</title>
 {disable_right_click_js}</head>
@@ -1332,6 +1337,7 @@ info_about_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -1357,6 +1363,7 @@ apps_navigator_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -1417,6 +1424,7 @@ apps_messenger_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -1480,6 +1488,7 @@ apps_javajs_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -1551,6 +1560,7 @@ remove_privileges_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
@@ -1566,6 +1576,7 @@ remove_privileges_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
@@ -1601,6 +1612,7 @@ adv_options_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -1649,6 +1661,7 @@ sa_noinfo:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -1663,6 +1676,7 @@ sa_navigator_no_sec:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -1704,8 +1718,7 @@ sa_navigator_ssl:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<SCRIPT LANGUAGE="JavaScript">
-</SCRIPT>
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -1755,6 +1768,7 @@ sa_navigator_ssl_bad_issuer:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 <SCRIPT LANGUAGE="JavaScript">
@@ -1827,6 +1841,7 @@ sa_navigator_ssl_unknown_issuer:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -1876,6 +1891,7 @@ sa_navigator_ssl_bad_cert_domain:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -1918,6 +1934,7 @@ sa_navigator_ssl_unknown_error:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -1970,6 +1987,7 @@ sa_message_not_signed:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2018,6 +2036,7 @@ sa_message_signed:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2094,6 +2113,7 @@ sa_message_signed_bad_signature:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2131,6 +2151,7 @@ sa_message_signed_expired_signing_cert:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2164,6 +2185,7 @@ sa_message_signed_revoked_signing_cert:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2197,6 +2219,7 @@ sa_message_signed_unknown_issuer:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2241,6 +2264,7 @@ sa_message_signed_untrusted_issuer:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2296,6 +2320,7 @@ sa_message_signed_expired_issuer_cert:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2328,6 +2353,7 @@ sa_message_signed_ocsp_error:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2360,6 +2386,7 @@ sa_message_signed_unknown_error:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2390,6 +2417,7 @@ sa_message_signed_addr_mismatch:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2505,6 +2533,7 @@ sa_compose_not_to_be_signed:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
@@ -2545,7 +2574,7 @@ parent.sa_compose_encrypt_status = 0;
 
 sa_compose_can_be_signed:
 <html>
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
 {disable_right_click_js}
@@ -2616,7 +2645,7 @@ sa_compose_sign_no_cert:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
 <body onLoad="parent.SetComposeHelp()">
@@ -2655,7 +2684,7 @@ sa_compose_sign_expired_cert:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
 <body onLoad="parent.SetComposeHelp()">
@@ -2689,7 +2718,7 @@ sa_compose_sign_revoked_cert:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
 <body>
@@ -2722,7 +2751,7 @@ sa_compose_sign_invalid_cert:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
 <body onLoad="parent.SetComposeHelp()">
@@ -2753,7 +2782,7 @@ sa_compose_sign_unknown_error:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </head>
 <body onLoad="parent.SetComposeHelp()">
@@ -3480,7 +3509,7 @@ cert_authorities_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {certificate_pane_javascript}
 {disable_right_click_js}
 </head>
@@ -3546,7 +3575,7 @@ cert_websites_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {certificate_pane_javascript}
 {disable_right_click_js}
 </head>
@@ -3623,7 +3652,7 @@ cert_others_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {certificate_pane_javascript}
 {disable_right_click_js}
 </head>
@@ -3694,7 +3723,7 @@ cert_mine_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {certificate_pane_javascript}
 {disable_right_click_js}
 </head>
@@ -3881,7 +3910,7 @@ choose_cert_usage_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 {formsubmit document.forms[0]}
@@ -3941,7 +3970,7 @@ choose_cert_usage_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399" 
@@ -3982,7 +4011,7 @@ ldap_request_dialog_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
 {disable_right_click_js}
 </head>
 <body class=content alink="#333399">
@@ -4052,7 +4081,7 @@ ldap_request_dialog_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399" 
@@ -4155,7 +4184,7 @@ cert_edit_trust_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body bgcolor=white>
@@ -4175,7 +4204,7 @@ cert_edit_trust_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399" >
@@ -4420,7 +4449,7 @@ cert_view_detail_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 {showIssuerAndContents}
 </head>
@@ -4459,7 +4488,7 @@ cert_view_detail_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body bgcolor="#CCCCCC" link="#6666CC" vlink="#6666CC" alink="#333399">
@@ -4507,7 +4536,7 @@ delete_cert_perm_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 {showIssuerAndContents}
 </head>
@@ -4537,7 +4566,7 @@ delete_cert_perm_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399">
@@ -4573,7 +4602,7 @@ set_token_password_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
 {disable_right_click_js}
 </head>
 <body class=content alink="#333399">
@@ -4708,7 +4737,7 @@ set_token_password_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399" 
@@ -4749,7 +4778,7 @@ show_followup_content:
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-    <LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+    <SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
   </head>
   <body>
@@ -4799,7 +4828,7 @@ escrow_top_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body CLASS=TOP alink="#333399">
@@ -4820,7 +4849,7 @@ escrow_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body class=content>
@@ -4891,7 +4920,7 @@ escrow_bottom_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body bgcolor="#CCCCCC"alink="#333399" 
@@ -4932,7 +4961,7 @@ kgtoken_main_content:
 {formsubmit document.forms[0]}
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body class=CONTENT>
@@ -4977,7 +5006,7 @@ kgtoken_popup_wrapper=<!---- unused %1$d -----><option value='%3$d+%2$d'>%4$s
 ;<html>
 ;<head>
 ;<meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-;<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+;<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 ;</head>
 ;{formsubmit document.forms[0]}
 ;<body class=top alink="#333399">
@@ -4997,7 +5026,7 @@ kgtoken_popup_wrapper=<!---- unused %1$d -----><option value='%3$d+%2$d'>%4$s
 ;<html>
 ;<head>
 ;<meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-;<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+;<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 ;</head>
 ;<body class=CONTENT>
 ;<form method=get action=tokenSelect name="tokenSelectForm">
@@ -5022,7 +5051,7 @@ kgtoken_popup_wrapper=<!---- unused %1$d -----><option value='%3$d+%2$d'>%4$s
 ;<html>
 ;<head>
 ;<meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-;<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+;<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 ;</head>
 ;<body onLoad="">
 ;<!-- hook up selectToken_help target -->
@@ -5063,7 +5092,7 @@ cert_exists_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body class=content alink="#FF0000">
@@ -5118,7 +5147,7 @@ import_ca_cert_oldstyle1_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body class=content>
@@ -5174,7 +5203,7 @@ import_ca_cert_oldstyle1_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399" 
@@ -5220,7 +5249,7 @@ import_ca_cert_oldstyle2_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 {formsubmit document.forms[0]}
@@ -5278,7 +5307,7 @@ import_ca_cert_oldstyle2_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399"
@@ -5315,7 +5344,7 @@ ca_policy_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body>
@@ -5336,7 +5365,7 @@ ca_policy_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body bgcolor="#CCCCCC" link="#6666CC" vlink="#6666CC" alink="#333399">
@@ -5385,7 +5414,7 @@ view_ca_cert_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body class=CONTENT>
@@ -5414,7 +5443,7 @@ view_ca_cert_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body bgcolor="#CCCCCC" link="#6666CC" vlink="#6666CC" alink="#333399">
@@ -5477,7 +5506,7 @@ bca_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body class=content alink="#FF0000">
@@ -5579,7 +5608,7 @@ client_auth_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 {formsubmit document.forms[0]}
@@ -5863,7 +5892,7 @@ pk11_addmodule_main_content:
 <HTML>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
 {disable_right_click_js}
 </head>
 {formsubmit document.forms[0]}
@@ -6020,7 +6049,7 @@ formsubmit_buttons_close_on_cancel_frame:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399" onLoad="parent.SetHelpURL('{$2}')">
@@ -6332,7 +6361,7 @@ function checkForPasswordReset()
 </script>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
 {disable_right_click_js}
 </head>
 <body CLASS=CONTENT alink="#333399">
@@ -6437,7 +6466,7 @@ cert_backup_bottom_template:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 {{$1}}
@@ -6562,7 +6591,7 @@ bad_server_cert_time:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 {formsubmit document.forms[0]}
@@ -6644,7 +6673,7 @@ bad_server_cert_domain_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 {formsubmit document.forms[0]}
@@ -6672,7 +6701,7 @@ bad_server_cert_domain_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body alink="#333399" onLoad="parent.SetHelpURL('help.htm#1036471')">
@@ -6731,7 +6760,7 @@ bad_server_cert_unknown_issuer1_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body class=content>
@@ -6763,7 +6792,7 @@ bad_server_cert_unknown_issuer1_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body alink="#333399" onLoad="parent.SetHelpURL('help.htm#1036414')">
@@ -6824,7 +6853,7 @@ bad_server_cert_unknown_issuer2_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 {formsubmit document.forms[0]}
@@ -6882,7 +6911,7 @@ bad_server_cert_unknown_issuer2_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body alink="#333399" onLoad="parent.SetHelpURL('help.htm#1036414')">
@@ -6956,7 +6985,7 @@ server_cert_view_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 </head>
 <body bgcolor="#CCCCCC" link="#6666CC" vlink="#6666CC" alink="#333399"
       onLoad="parent.SetHelpURL('help.htm#1049021')">
@@ -6991,7 +7020,7 @@ server_cert_view_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body class=CONTENT>
@@ -7351,7 +7380,7 @@ top_frame:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body CLASS=TOP alink="#333399">
@@ -7370,7 +7399,7 @@ top_frame_no_image:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body CLASS=TOP alink="#333399">
@@ -7397,7 +7426,7 @@ formsubmit_buttons_frame:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399" onLoad="parent.SetHelpURL('{$2}')">
@@ -7417,7 +7446,7 @@ windowclose_buttons_frame:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399" onLoad="parent.SetHelpURL('{$2}')">
@@ -7490,7 +7519,7 @@ signtext_top_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body CLASS=TOP alink="#333399">
@@ -7523,7 +7552,7 @@ signtext_cert_auto_content:
 {formsubmit document.forms[0]}
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399">
@@ -7549,7 +7578,7 @@ signtext_cert_ask_content:
 {formsubmit document.forms[0]}
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399">
@@ -7584,7 +7613,7 @@ signtext_bottom_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399" onLoad="">
@@ -7614,7 +7643,7 @@ cert_issue_backup_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body class=content>
@@ -7641,7 +7670,7 @@ cert_issue_backup_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body class=foot alink="#333399" onLoad="parent.SetHelpURL('help.htm#1036319')">
@@ -7730,7 +7759,7 @@ verification_config_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 <script language=javascript>
 <!---
@@ -7783,7 +7812,7 @@ verification_config_buttons_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalonefoot">
 {disable_right_click_js}
 </head>
 <body bgcolor="#CCCCCC"alink="#333399"  
@@ -7827,7 +7856,7 @@ certPrettyPrefix:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body class=content alink="#FF0000">
@@ -7881,7 +7910,7 @@ no_issuer_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 <body class=content alink="#FF0000">
@@ -7923,7 +7952,7 @@ cert_renewal_main_content:
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
 {disable_right_click_js}
 </head>
 {formsubmit document.forms[0]}
