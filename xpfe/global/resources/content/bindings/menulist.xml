@@ -165,7 +165,7 @@
     <content>
       <xul:hbox flex="1" class="menulist-editable-box" align="center">
         <xul:image class="menu-icon" inherits="src"/>
-        <html:input type="text" flex="1" class="menulist-editable-text" allowevents="true"
+        <html:input flex="1" class="menulist-editable-text" allowevents="true"
                     inherits="value=label,disabled"/>
         <xul:image class="menu-dropmarker"/>
       </xul:hbox>
