@@ -126,9 +126,10 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
       ) {
     PRBool keyProcessed;
     ProcessShortCutKeys(aKeyEvent, keyProcessed);
-    if (PR_FALSE==keyProcessed)
-    {
-      switch(keyCode) {
+	if (PR_TRUE==keyProcessed)
+		return NS_OK;
+
+    switch(keyCode) {
 //      case nsIDOMUIEvent::VK_BACK:
 //        mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
 //        break;
@@ -169,10 +170,8 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
       	break;
       default:
         return NS_OK; // this indicates that we have not handled the keyDown event in any way.
-      }
-    }
-  }
-  
+   }
+  }  
   return NS_ERROR_BASE;
 }
 #else
@@ -481,7 +480,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
       // XXX: hard-coded undo
       case nsIDOMUIEvent::VK_Z:
-        if (PR_TRUE==ctrlKey)
+       if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
           if (mEditor)
