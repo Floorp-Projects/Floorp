@@ -64,6 +64,10 @@ PRUint16 g_uf0208Mapping[] = {
 #include "jis0208.uf"
 };
 
+PRUint16 g_uf0208extMapping[] = {
+#include "jis0208ext.uf"
+};
+
 PRUint16 g_uf0212Mapping[] = {
 #include "jis0212.uf"
 };
