@@ -2691,7 +2691,7 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
     if (nameSpaceID != kNameSpaceID_XUL)
         return PR_FALSE;
 
-    if (aElement == mRoot)
+    if (aElement == mRoot.get())
       return PR_TRUE;
 
     nsAutoString value;
@@ -2717,7 +2717,7 @@ RDFGenericBuilderImpl::IsElementInWidget(nsIContent* aElement)
 
     // Walk up the parent chain from us to the root and
     // see what we find.
-    if (aElement == mRoot)
+    if (aElement == mRoot.get())
       return PR_TRUE;
 
     // walk up the tree until you find rootAtom
@@ -2728,7 +2728,7 @@ RDFGenericBuilderImpl::IsElementInWidget(nsIContent* aElement)
     
     while (element) {
         
-        if (element.get() == mRoot)
+        if (element.get() == mRoot.get())
           return PR_TRUE;
 
         // up to the parent...
