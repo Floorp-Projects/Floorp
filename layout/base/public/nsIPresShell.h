@@ -230,7 +230,7 @@ public:
    */
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType) = 0;
-  NS_IMETHOD ProcessReflowCommands(PRBool aInterruptible) = 0;
+  NS_IMETHOD ProcessReflowCommands(PRBool aInterruptible) = 0;  
 
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
 
@@ -371,10 +371,17 @@ public:
   NS_IMETHOD SetReflowEventStatus(PRBool aPending) = 0;
 
   /**
+   * Reflow batching
+   */   
+  NS_IMETHOD BeginBatchingReflows() = 0;
+  NS_IMETHOD EndBatchingReflows(PRBool aFlushPendingReflows) = 0;
+  NS_IMETHOD GetReflowBatchingStatus(PRBool* aIsBatching) = 0;
+
+  /**
    * Flush all pending notifications such that the presentation is
    * in sync with the content.
    */
-  NS_IMETHOD FlushPendingNotifications() = 0;
+  NS_IMETHOD FlushPendingNotifications() = 0;  
 
   /**
    * See if reflow verification is enabled. To enable reflow verification add
