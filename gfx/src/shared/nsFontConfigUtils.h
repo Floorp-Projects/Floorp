@@ -50,6 +50,5 @@ extern void    NS_AddLangGroup     (FcPattern *aPattern, nsIAtom *aLangGroup);
 extern void    NS_AddFFRE          (FcPattern *aPattern, nsCString *aFamily,
                                     PRBool aWeak);
 extern int     NS_FFRECountHyphens (nsACString &aFFREName);
-extern PRBool  NS_IsASCIIFontName  (const nsString& aName);
 #endif
 

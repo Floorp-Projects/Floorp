@@ -1685,10 +1685,8 @@ nsresult
 nsFontMetricsXft::FamilyExists(nsIDeviceContext *aDevice,
                                const nsString &aName)
 {
-    if (!NS_IsASCIIFontName(aName))
-        return NS_ERROR_FAILURE;
-
-    NS_ConvertUCS2toUTF8 name(aName);
+    // fontconfig family name is always in UTF-8
+    NS_ConvertUTF16toUTF8 name(aName);
 
     FcFontSet *set = nsnull;
     FcObjectSet *os = nsnull;
@@ -1741,13 +1739,12 @@ PRBool
 nsFontMetricsXft::EnumFontCallback(const nsString &aFamily, PRBool aIsGeneric,
                                    void *aData)
 {
-    // make sure it's an ascii name, if not then return and continue
-    // enumerating
-    if (!NS_IsASCIIFontName(aFamily))
-        return PR_TRUE;
+    NS_ConvertUTF16toUTF8 name(aFamily);
 
-    nsCAutoString name;
-    name.AssignWithConversion(aFamily.get());
+    // The newest fontconfig does the full Unicode case folding so that 
+    // we're being lazy here by calling |ToLowerCase| after converting
+    // to UTF-8  assuming that in virtually all cases, we just have to
+    // fold [A-Z].  (bug 223653). 
     ToLowerCase(name);
     nsFontMetricsXft *metrics = (nsFontMetricsXft *)aData;
     metrics->mFontList.AppendCString(name);
@@ -2308,7 +2305,6 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
 
     for (int i=0; i < fs->nfont; ++i) {
         char *family;
-        PRUnichar *name;
 
         // if there's no family, just move to the next iteration
         if (FcPatternGetString (fs->fonts[i], FC_FAMILY, 0,
@@ -2316,17 +2312,11 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
             continue;
         }
 
-        name = NS_STATIC_CAST(PRUnichar *,
-                              nsMemory::Alloc ((strlen (family) + 1)
-                                               * sizeof (PRUnichar)));
+        // fontconfig always returns family names in UTF-8
+        PRUnichar* name =  UTF8ToNewUnicode(nsDependentCString(family));
 
         if (!name)
             goto end;
-
-        PRUnichar *r = name;
-        for (char *f = family; *f; ++f)
-            *r++ = *f;
-        *r = '\0';
 
         array[narray++] = name;
     }
