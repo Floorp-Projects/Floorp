@@ -497,7 +497,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     NS_ConvertUCS2toUTF8 utf8UnEscapeSpec(unEscapeSpec);
 
     NS_EscapeURL(utf8UnEscapeSpec.get(), utf8UnEscapeSpec.Length(),
-                 esc_Forced|esc_FileBaseName|esc_OnlyASCII|esc_AlwaysCopy, 
+                 esc_Colon|esc_Forced|esc_FileBaseName|esc_OnlyASCII|esc_AlwaysCopy, 
                  escapeBuf);
   
     pushBuffer.Append(NS_ConvertUTF8toUCS2(escapeBuf));
