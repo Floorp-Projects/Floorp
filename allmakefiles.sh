@@ -428,6 +428,7 @@ widget/src/Makefile
 widget/src/beos/Makefile
 widget/src/build/Makefile
 widget/src/gtk/Makefile
+widget/src/gtksuperwin/Makefile
 widget/src/motif/Makefile
 widget/src/motif/app_context/Makefile
 widget/src/photon/Makefile
