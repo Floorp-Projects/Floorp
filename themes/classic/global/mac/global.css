@@ -182,6 +182,8 @@
     {
       border              : 1px solid #000000;
       max-height		  : 12px;
+      height              : 10px;
+
     }
     
   .progressmeter-statusbar 
