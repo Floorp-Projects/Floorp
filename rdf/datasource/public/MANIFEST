@@ -1,4 +1,4 @@
-nsIRDFHistory.h
+nsIHistoryDataSource.h
 nsIRDFFileSystem.h
 nsIRDFFind.h
 nsIXULContentSink.h

@@ -49,9 +49,6 @@ nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
 // in nsStreamDataSource.cpp
 nsresult NS_NewRDFStreamDataSource(nsIRDFDataSource** result);
 
-// in nsHistoryDataSource.cpp
-nsresult NS_NewRDFHistoryDataSource(nsIRDFDataSource** result);
-
 #endif // nsBuiltinDataSources_h__
 
 
