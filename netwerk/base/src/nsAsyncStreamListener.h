@@ -52,7 +52,7 @@ public:
 
     nsISupports* GetReceiver()      { return mReceiver.get(); }
     nsresult GetStatus()            { return mStatus; }
-    void SetStatus(nsresult value)  { mStatus = value; }
+    void SetStatus(nsresult value)  { if (NS_SUCCEEDED(mStatus)) mStatus = value; }
 
 protected:
     nsCOMPtr<nsIEventQueue>     mEventQueue;
