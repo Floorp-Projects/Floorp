@@ -76,7 +76,8 @@ while (<>)
     {
         # this is from the output of registry. Try to update progid_map
         $cid = GetCID();
-        $_ = <STDIN>;
+        # Get the next progid or classname line until a empty new line
+        $_ = <STDIN> until (/ProgID|ClassName/ || length == 1);
         chomp;
         $progid = $_;
         $progid =~ s/^.*= //;
