@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.15 $ $Date: 2002/02/01 17:25:10 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.16 $ $Date: 2002/02/05 22:32:38 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -258,6 +258,7 @@ traverse_objects_by_template
 	    }
 	}
 	nssListIterator_Finish(objects);
+	nssListIterator_Destroy(objects);
 	count = OBJECT_STACK_SIZE;
     }
     for (i=0; i<count; i++) {
