@@ -20,7 +20,7 @@
  * Contributor(s): 
  */
 
-#include "nsIRegistry.h"
+#include "nsRegistry.h"
 #include "nsIEnumerator.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
@@ -71,7 +71,8 @@ PRUnichar widestrFormat[] = { PRUnichar('%'),PRUnichar('s'),PRUnichar(0)};
 
 
 
-
+#include "nsRegistry.h"
+/*
 struct nsRegistry : public nsIRegistry {
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
@@ -93,7 +94,7 @@ protected:
 
     NS_IMETHOD Close();
 }; // nsRegistry
-
+*/
 
 #include "nsIFactory.h"
 /*----------------------------- nsRegistryFactory ------------------------------
@@ -1537,6 +1538,21 @@ NS_IMETHODIMP nsRegistry::UnescapeKey(PRUint8* escaped, PRUint32 termination, PR
     }
     return rv;
 }
+
+
+/*-------------- nsRegistry::SetBufferSize-------------------------------------
+| Sets the size of the file used for the registry's buffer size.               |
+------------------------------------------------------------------------------*/
+int nsRegistry::SetBufferSize( int bufsize )
+{
+    int newSize;
+    // set the file buffer size
+    PR_Lock(mregLock);
+    newSize = NR_RegSetBufferSize( mReg, bufsize );
+    PR_Unlock(mregLock);
+    return newSize;
+}
+
 
 /*-------------- nsRegSubtreeEnumerator::nsRegSubtreeEnumerator ----------------
 | The ctor simply stashes all the information that will be needed to enumerate |

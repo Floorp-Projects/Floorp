@@ -79,6 +79,8 @@
 #include <Path.h>
 #endif
 
+#include "nsRegistry.h"
+
 // Logging of debug output
 #define FORCE_PR_LOG /* Allow logging in the release build */
 #include "prlog.h"
@@ -803,6 +805,9 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
 
     if (mPrePopulationDone)
         return NS_OK;
+
+    (void)mRegistry->SetBufferSize( 500*1024 );
+
     // Read in all CID entries and populate the mFactories
     nsCOMPtr<nsIEnumerator> cidEnum;
     rv = mRegistry->EnumerateSubtrees( mCLSIDKey, getter_AddRefs(cidEnum));
@@ -899,6 +904,8 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         //  printf("Populating [ %s, %s ]\n", cidString, progidString);
     }
 
+    (void)mRegistry->SetBufferSize( 10*1024 );
+  
     mPrePopulationDone = PR_TRUE;
     return NS_OK;
 }
@@ -1937,6 +1944,14 @@ RegisterDeferred_enumerate(nsHashKey *key, void *aData, void *aClosure)
 nsresult
 nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
 {
+    mRegistry->SetBufferSize( 500*1024 );
+    AutoRegisterImpl(when, inDirSpec);
+    mRegistry->SetBufferSize( 10*1024 );
+}
+
+nsresult
+nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
+{
     nsCOMPtr<nsIFile> dir;
     nsresult rv;
 
@@ -2056,7 +2071,7 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
           NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
           NS_ConvertASCIItoUCS2("Component registration finished").GetUnicode());
   	}
-  
+
     return rv;
 }
 

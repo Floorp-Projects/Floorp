@@ -27,7 +27,7 @@
 #include "nsNativeComponentLoader.h"
 #include "nsIComponentManager.h"
 #include "nsIFactory.h"
-#include "nsIRegistry.h"
+#include "nsRegistry.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsHashtable.h"
 #include "prtime.h"
@@ -104,12 +104,15 @@ protected:
     nsresult PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass);
     nsresult PlatformCLSIDToProgID(const nsCID *aClass, char* *aClassName, char* *aProgID);
 
+private:
+    nsresult AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec);
+
 protected:
     nsObjectHashtable*  mFactories;
     nsObjectHashtable*  mProgIDs;
     nsSupportsHashtable*  mLoaders;
     PRMonitor*          mMon;
-    nsIRegistry*        mRegistry;
+    nsRegistry*         mRegistry;
     nsRegistryKey       mXPCOMKey;
     nsRegistryKey       mClassesKey;
     nsRegistryKey       mCLSIDKey;
