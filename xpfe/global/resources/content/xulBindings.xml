@@ -239,7 +239,7 @@
         <html:input class="textfield-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
       </xul:box>
       <xul:popupset>
-        <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this);">
+        <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
           <xul:menuitem value="&undoCmd.label;" accesskey="&undoCmd.accesskey;" command="cmd_undo" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
             controller.doCommand('cmd_undo');"/>
@@ -375,7 +375,7 @@
         <html:textarea class="textfield-textarea" flex="1" inherits="onfocus,onblur,value,disabled,rows,cols,readonly"/>
       </xul:box>
       <xul:popupset>
-        <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this);">
+        <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
           <xul:menuitem value="&undoCmd.label;" accesskey="&undoCmd.accesskey;" command="cmd_undo" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
             controller.doCommand('cmd_undo');"/>
@@ -416,25 +416,6 @@
         input;
       ]]>
       </property>
-      <method name="doPopupItemEnabling">
-        <parameter name="popupNode"/> 
-        <body>
-          <![CDATA[
-            var children = popupNode.childNodes;
-            for (var i = 0; i < children.length; i++) {              
-              var command = children[i].getAttribute("command");
-              if (command) {
-                var controller = document.commandDispatcher.getControllerForCommand(command);
-                var enabled = controller.isCommandEnabled(command);
-                if (enabled)
-                  children[i].removeAttribute('disabled');
-                else
-                  children[i].setAttribute('disabled','true');               
-              }
-            }
-          ]]>
-        </body>
-      </method>
     </implementation>
   </binding>
 
