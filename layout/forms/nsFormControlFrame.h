@@ -92,7 +92,8 @@ public:
   static nscoord CalculateSize (nsIPresContext* aPresContext, nsFormControlFrame* aFrame,
                                 const nsSize& aCSSSize, nsInputDimensionSpec& aDimensionSpec, 
                                 nsSize& aBounds, PRBool& aWidthExplicit, 
-                                PRBool& aHeightExplicit, nscoord& aRowSize);
+                                PRBool& aHeightExplicit, nscoord& aRowSize,
+                                nsIRenderingContext *aRendContext);
 
   /** 
     * Respond to a gui event
@@ -179,9 +180,11 @@ public:
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);  
 
   static nscoord GetTextSize(nsIPresContext& aContext, nsFormControlFrame* aFrame,
-                             const nsString& aString, nsSize& aSize);
+                             const nsString& aString, nsSize& aSize,
+                             nsIRenderingContext *aRendContext);
   static nscoord GetTextSize(nsIPresContext& aContext, nsFormControlFrame* aFrame,
-                             PRInt32 aNumChars, nsSize& aSize);
+                             PRInt32 aNumChars, nsSize& aSize,
+                             nsIRenderingContext *aRendContext);
 
   void GetWidgetSize(nsSize& aSize) const { aSize.width  = mWidgetSize.width; 
                                             aSize.height = mWidgetSize.height; }

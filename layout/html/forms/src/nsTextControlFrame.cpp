@@ -197,12 +197,14 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
                                   nsnull, width, PR_FALSE, nsnull, 1);
     CalculateSize(aPresContext, this, styleSize, textSpec, size, 
-                  widthExplicit, heightExplicit, ignore);
+                  widthExplicit, heightExplicit, ignore,
+                  aReflowState.rendContext);
   } else {
     nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, nsnull, 20, 
                                   PR_FALSE, nsHTMLAtoms::rows, 1);
     CalculateSize(aPresContext, this, styleSize, areaSpec, size, 
-                  widthExplicit, heightExplicit, ignore);
+                  widthExplicit, heightExplicit, ignore,
+                  aReflowState.rendContext);
   }
 
   if (NS_FORM_TEXTAREA == type) {

@@ -204,9 +204,13 @@ NS_METHOD nsLabel::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
   nsString text;
   GetLabel(text);
 
+  nsIRenderingContext *cx;
+  mContext->CreateRenderingContext(this, cx);
+  cx->SetFont(metrics);
   nscoord string_height, string_width;
   metrics->GetHeight(string_height);
-  metrics->GetWidth(text, string_width);
+  cx->GetWidth(text, string_width);
+  NS_RELEASE(cx);
   NS_RELEASE(metrics);
 
   if (mPreferredWidth != 0) {

@@ -562,8 +562,8 @@ BulletFrame::Paint(nsIPresContext&      aCX,
     case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
       fm = aCX.GetMetricsFor(myFont->mFont);
       GetListItemText(aCX, *myList, text);
-      aRenderingContext.SetFont(myFont->mFont);
-      fm->GetWidth(text, width);
+      aRenderingContext.SetFont(fm);
+      aRenderingContext.GetWidth(text, width);
       aRenderingContext.DrawString(text, mPadding.left, mPadding.top, width);
       NS_RELEASE(fm);
       break;
@@ -819,8 +819,9 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
       // between the list item and the content that follows.
       mPadding.right = aMetrics.height / 2;          // From old layout engine
     }
-    
-    fm->GetWidth(text, aMetrics.width);
+
+    aReflowState.rendContext->SetFont(fm);
+    aReflowState.rendContext->GetWidth(text, aMetrics.width);
     aMetrics.width += mPadding.right;
     fm->GetMaxAscent(aMetrics.ascent);
     fm->GetMaxDescent(aMetrics.descent);

@@ -202,10 +202,12 @@ public:
                    nsGUIEvent *    aEvent,
                    nsEventStatus&  aEventStatus);
 
-  virtual PRInt32 GetPosition(nsIPresContext& aPresContext,
-                              nsGUIEvent*     aEvent,
-                              nsIFrame *      aNewFrame,
-                              PRUint32&       aAcutalContentOffset);
+  NS_IMETHOD GetPosition(nsIPresContext&       aPresContext,
+                         nsIRenderingContext * aRendContext,
+                         nsGUIEvent*           aEvent,
+                         nsIFrame *            aNewFrame,
+                         PRUint32&             aAcutalContentOffset,
+                         PRInt32&              aOffset);
 
   //--------------------------------------------------
   // Additional methods
@@ -229,22 +231,26 @@ public:
 
 protected:
   virtual void NewContentIsBefore(nsIPresContext& aPresContext,
+                          nsIRenderingContext * aRendContext,
                           nsGUIEvent * aEvent,
                           nsIContent * aNewContent,
                           nsIContent * aCurrentContent,
                           nsIFrame   * aNewFrame);
 
   virtual void NewContentIsAfter(nsIPresContext& aPresContext,
+                         nsIRenderingContext * aRendContext,
                          nsGUIEvent * aEvent,
                          nsIContent * aNewContent,
                          nsIContent * aCurrentContent,
                          nsIFrame   * aNewFrame);
 
   virtual void AdjustPointsInNewContent(nsIPresContext& aPresContext,
+                                nsIRenderingContext * aRendContext,
                                 nsGUIEvent    * aEvent,
                                 nsIFrame       * aNewFrame);
 
   virtual void AdjustPointsInSameContent(nsIPresContext& aPresContext,
+                                 nsIRenderingContext * aRendContext,
                                  nsGUIEvent    * aEvent);
 
   PRBool DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn = PR_FALSE);

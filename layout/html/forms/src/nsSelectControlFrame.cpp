@@ -223,7 +223,7 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
       }
       nsSize textSize;
       // use the style for the select rather that the option, since widgets don't support it
-      nsFormControlFrame::GetTextSize(*aPresContext, this, text, textSize); 
+      nsFormControlFrame::GetTextSize(*aPresContext, this, text, textSize, aReflowState.rendContext); 
       if (textSize.width > maxWidth) {
         maxWidth = textSize.width;
       }
@@ -238,7 +238,8 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                 maxWidth, PR_TRUE, nsHTMLAtoms::size, 1);
   // XXX fix CalculateSize to return PRUint32
   PRUint32 numRows = (PRUint32)CalculateSize(aPresContext, this, styleSize, textSpec, 
-                                             calcSize, widthExplicit, heightExplicit, rowHeight);
+                                             calcSize, widthExplicit, heightExplicit, rowHeight,
+                                             aReflowState.rendContext);
 
   // here it is determined whether we are a combo box
   PRInt32 sizeAttr;

@@ -580,7 +580,8 @@ GetRepChars(nsIPresContext& aPresContext, char& char1, char& char2)
 
 nscoord 
 nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame* aFrame,
-                                const nsString& aString, nsSize& aSize)
+                                const nsString& aString, nsSize& aSize,
+                                nsIRenderingContext *aRendContext)
 {
   nsFont font(aPresContext.GetDefaultFixedFont());
   aFrame->GetFont(&aPresContext, font);
@@ -589,14 +590,15 @@ nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame
 
   nsIFontMetrics* fontMet;
   deviceContext->GetMetricsFor(font, fontMet);
-  fontMet->GetWidth(aString, aSize.width);
+  aRendContext->SetFont(fontMet);
+  aRendContext->GetWidth(aString, aSize.width);
   fontMet->GetHeight(aSize.height);
 
   char char1, char2;
   GetRepChars(aPresContext, char1, char2);
   nscoord char1Width, char2Width;
-  fontMet->GetWidth(char1, char1Width);
-  fontMet->GetWidth(char2, char2Width);
+  aRendContext->GetWidth(char1, char1Width);
+  aRendContext->GetWidth(char2, char2Width);
 
   NS_RELEASE(fontMet);
   NS_RELEASE(deviceContext);
@@ -606,7 +608,8 @@ nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame
   
 nscoord
 nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame* aFrame,
-                                PRInt32 aNumChars, nsSize& aSize)
+                                PRInt32 aNumChars, nsSize& aSize,
+                                nsIRenderingContext *aRendContext)
 {
   nsAutoString val;
   char char1, char2;
@@ -618,14 +621,15 @@ nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame
   for (i = 1; i < aNumChars; i+=2) {
     val += char2;  
   }
-  return GetTextSize(aPresContext, aFrame, val, aSize);
+  return GetTextSize(aPresContext, aFrame, val, aSize, aRendContext);
 }
   
 PRInt32
 nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFrame* aFrame,
                              const nsSize& aCSSSize, nsInputDimensionSpec& aSpec, 
                              nsSize& aBounds, PRBool& aWidthExplicit, 
-                             PRBool& aHeightExplicit, nscoord& aRowHeight) 
+                             PRBool& aHeightExplicit, nscoord& aRowHeight,
+                             nsIRenderingContext *aRendContext) 
 {
   nscoord charWidth   = 0;
   PRInt32 numRows     = ATTR_NOTSET;
@@ -669,7 +673,7 @@ nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFr
     }
     else {
       col = (col <= 0) ? 1 : col;
-      charWidth = GetTextSize(*aPresContext, aFrame, col, aBounds);
+      charWidth = GetTextSize(*aPresContext, aFrame, col, aBounds, aRendContext);
       aRowHeight = aBounds.height;  // XXX aBounds.height has CSS_NOTSET
     }
 	  if (aSpec.mColSizeAttrInPixels) {
@@ -683,17 +687,17 @@ nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFr
     } 
     else {                       
       if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) { // use width of initial value 
-        charWidth = GetTextSize(*aPresContext, aFrame, valAttr, aBounds);
+        charWidth = GetTextSize(*aPresContext, aFrame, valAttr, aBounds, aRendContext);
       }
       else if (aSpec.mColDefaultValue) { // use default value
-        charWidth = GetTextSize(*aPresContext, aFrame, *aSpec.mColDefaultValue, aBounds);
+        charWidth = GetTextSize(*aPresContext, aFrame, *aSpec.mColDefaultValue, aBounds, aRendContext);
       }
       else if (aSpec.mColDefaultSizeInPixels) {    // use default width in pixels
-        charWidth = GetTextSize(*aPresContext, aFrame, 1, aBounds);
+        charWidth = GetTextSize(*aPresContext, aFrame, 1, aBounds, aRendContext);
         aBounds.width = aSpec.mColDefaultSize;
       }
       else  {                                    // use default width in num characters
-        charWidth = GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aBounds); 
+        charWidth = GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aBounds, aRendContext); 
       }
       aRowHeight = aBounds.height; // XXX aBounds.height has CSS_NOTSET
     }
@@ -709,7 +713,7 @@ nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFr
     PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
     adjSize = (rowAttrInt > 0) ? rowAttrInt : 1;
     if (0 == charWidth) {
-      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize);
+      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
       aBounds.height = textSize.height * adjSize;
       aRowHeight = textSize.height;
       numRows = adjSize;
@@ -724,7 +728,7 @@ nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFr
   } 
   else {         // use default height in num lines
     if (0 == charWidth) {  
-      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize);
+      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
       aBounds.height = textSize.height * aSpec.mRowDefaultSize;
       aRowHeight = textSize.height;
     } 
@@ -734,7 +738,7 @@ nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFr
   }
 
   if ((0 == charWidth) || (0 == textSize.width)) {
-    charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize);
+    charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
     aRowHeight = textSize.height;
   }
 

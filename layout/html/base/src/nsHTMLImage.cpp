@@ -17,6 +17,7 @@
  */
 #include "nsHTMLParts.h"
 #include "nsHTMLImage.h"
+#include "nsHTMLTagContent.h"
 #include "nsString.h"
 #include "nsLeafFrame.h"
 #include "nsIPresContext.h"
@@ -38,20 +39,60 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsCSSLayout.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsHTMLBase.h"
 #include "prprf.h"
 #include "nsISizeOfHandler.h"
 #include "nsIFontMetrics.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLImageElement.h"
-#include "nsIDeviceContext.h"
 
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
 
 #define XP_IS_SPACE(_ch) \
   (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
 
+// XXX image frame layout can be 100% decoupled from the content
+// object; all it needs are attributes to work properly
+
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
+
+#if 0
+#define nsHTMLImageSuper nsHTMLTagContent
+class nsHTMLImage : public nsHTMLImageSuper, public nsIDOMHTMLImageElement {
+public:
+  nsHTMLImage(nsIAtom* aTag);
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
+
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const;
+
+  NS_FORWARD_IDOMNODE(nsHTMLImageSuper::)
+  NS_FORWARD_IDOMELEMENT(nsHTMLImageSuper::)
+  NS_FORWARD_IDOMHTMLELEMENT(nsHTMLImageSuper::)
+
+  NS_DECL_IDOMHTMLIMAGEELEMENT
+
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+
+protected:
+  virtual ~nsHTMLImage();
+  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
+
+  void TriggerReflow();
+};
+#endif
 
 #define ImageFrameSuper nsLeafFrame
 class ImageFrame : public ImageFrameSuper {
@@ -71,10 +112,10 @@ public:
                          nsIFrame** aFrame,
                          nsIContent** aContent,
                          PRInt32& aCursor);
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
-                              nsIContent* aChild,
-                              nsIAtom* aAttribute,
-                              PRInt32 aHint);
+  NS_IMETHOD ContentChanged(nsIPresShell*   aShell,
+                            nsIPresContext* aPresContext,
+                            nsIContent*     aChild,
+                            nsISupports*    aSubContent);
 
 protected:
   virtual ~ImageFrame();
@@ -82,7 +123,7 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
+                              nsReflowMetrics& aDesiredSize);
 
   nsIImageMap* GetImageMap();
 
@@ -98,20 +139,16 @@ protected:
   PRBool IsServerImageMap();
   PRIntn GetSuppress();
 
-  nscoord MeasureString(const PRUnichar*     aString,
-                        PRInt32              aLength,
-                        nscoord              aMaxWidth,
-                        PRUint32&            aMaxFit,
-                        nsIRenderingContext& aContext);
+  nscoord MeasureString(nsIFontMetrics*  aFontMetrics,
+                        const PRUnichar* aString,
+                        PRInt32          aLength,
+                        nscoord          aMaxWidth,
+                        PRUint32&        aMaxFit);
 
   void DisplayAltText(nsIPresContext&      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsString&      aAltText,
                       const nsRect&        aRect);
-
-  void DisplayAltFeedback(nsIPresContext&      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          PRInt32              aIconId);
 };
 
 // Value's for mSuppress
@@ -196,7 +233,6 @@ nsHTMLImageLoader::SetBaseHREF(const nsString& aBaseHREF)
 nsresult
 nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
                                   nsIFrame* aForFrame,
-                                  nsFrameImageLoaderCB aCallBack,
                                   PRBool aNeedSizeUpdate,
                                   PRIntn& aLoadStatus)
 {
@@ -234,8 +270,8 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
   if (nsnull == mImageLoader) {
     // Start image loading. Note that we don't specify a background color
     // so transparent images are always rendered using a transparency mask
-    rv = aPresContext->StartLoadImage(src, nsnull, aForFrame, aCallBack,
-                                      aNeedSizeUpdate, mImageLoader);
+    rv = aPresContext->StartLoadImage(src, nsnull, aForFrame, aNeedSizeUpdate,
+                                      mImageLoader);
     if (NS_OK != rv) {
       return rv;
     }
@@ -250,15 +286,9 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
       mLoadBrokenImageFailed = PR_TRUE;
     }
     else {
-#ifdef _WIN32
-      // Display broken icon along with alt-text
-      mLoadImageFailed = PR_TRUE;
-#else
       // Try again, this time using the broke-image url
       mLoadImageFailed = PR_TRUE;
-      return StartLoadImage(aPresContext, aForFrame, nsnull,
-                            aNeedSizeUpdate, aLoadStatus);
-#endif
+      return StartLoadImage(aPresContext, aForFrame, aNeedSizeUpdate, aLoadStatus);
     }
   }
   return NS_OK;
@@ -267,24 +297,20 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
 void
 nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
                                   const nsReflowState& aReflowState,
-                                  nsIFrame* aTargetFrame,
-                                  nsFrameImageLoaderCB aCallBack,
-                                  nsHTMLReflowMetrics& aDesiredSize)
+                                  nsReflowMetrics& aDesiredSize)
 {
   nsSize styleSize;
   PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, styleSize);
   PRIntn loadStatus;
   if (0 != ss) {
     if (NS_SIZE_HAS_BOTH == ss) {
-      StartLoadImage(aPresContext, aTargetFrame, aCallBack,
-                     PR_FALSE, loadStatus);
+      StartLoadImage(aPresContext, aReflowState.frame, PR_FALSE, loadStatus);
       aDesiredSize.width = styleSize.width;
       aDesiredSize.height = styleSize.height;
     }
     else {
       // Preserve aspect ratio of image with unbound dimension.
-      StartLoadImage(aPresContext, aTargetFrame, aCallBack,
-                     PR_TRUE, loadStatus);
+      StartLoadImage(aPresContext, aReflowState.frame, PR_TRUE, loadStatus);
       if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
           (nsnull == mImageLoader)) {
         // Provide a dummy size for now; later on when the image size
@@ -323,7 +349,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     }
   }
   else {
-    StartLoadImage(aPresContext, aTargetFrame, aCallBack, PR_TRUE, loadStatus);
+    StartLoadImage(aPresContext, aReflowState.frame, PR_TRUE, loadStatus);
     if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
         (nsnull == mImageLoader)) {
       // Provide a dummy size for now; later on when the image size
@@ -395,31 +421,10 @@ ImageFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
   }
 }
 
-static nsresult
-UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
-                 PRIntn aStatus)
-{
-  if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
-    // Now that the size is available, trigger a content-changed reflow
-    nsIContent* content = nsnull;
-    aFrame->GetContent(content);
-    if (nsnull != content) {
-      nsIDocument* document = nsnull;
-      content->GetDocument(document);
-      if (nsnull != document) {
-        document->ContentChanged(content, nsnull);
-        NS_RELEASE(document);
-      }
-      NS_RELEASE(content);
-    }
-  }
-  return NS_OK;
-}
-
 void
 ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsReflowState& aReflowState,
-                           nsHTMLReflowMetrics& aDesiredSize)
+                           nsReflowMetrics& aDesiredSize)
 {
   if (mSizeFrozen) {
     aDesiredSize.width = mRect.width;
@@ -437,9 +442,9 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     //
     // We can't use that approach yet, because currently the compositor doesn't
     // support transparent views...
-#if 0
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, this, mStyleContext, PR_TRUE);
-#endif
+//#if 0
+    nsHTMLBase::CreateViewForFrame(aPresContext, this, mStyleContext, PR_TRUE);
+//#endif
 
     // Setup url before starting the image load
     nsAutoString src, base;
@@ -450,27 +455,24 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
         mImageLoader.SetBaseHREF(base);
       }
     }
-    mImageLoader.GetDesiredSize(aPresContext, aReflowState,
-                                this, UpdateImageFrame,
-                                aDesiredSize);
+    mImageLoader.GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
   }
 }
 
 // Computes the width of the specified string. aMaxWidth specifies the maximum
 // width available. Once this limit is reached no more characters are measured.
 // The number of characters that fit within the maximum width are returned in
-// aMaxFit. NOTE: it is assumed that the fontmetrics have already been selected
-// into the rendering context before this is called (for performance). MMP
+// aMaxFit
 nscoord
-ImageFrame::MeasureString(const PRUnichar*     aString,
-                          PRInt32              aLength,
-                          nscoord              aMaxWidth,
-                          PRUint32&            aMaxFit,
-                          nsIRenderingContext& aContext)
+ImageFrame::MeasureString(nsIFontMetrics*  aFontMetrics,
+                          const PRUnichar* aString,
+                          PRInt32          aLength,
+                          nscoord          aMaxWidth,
+                          PRUint32&        aMaxFit)
 {
   nscoord totalWidth = 0;
   nscoord spaceWidth;
-  aContext.GetWidth(' ', spaceWidth);
+  aFontMetrics->GetWidth(' ', spaceWidth);
 
   aMaxFit = 0;
   while (aLength > 0) {
@@ -487,7 +489,7 @@ ImageFrame::MeasureString(const PRUnichar*     aString,
   
     // Measure this chunk of text, and see if it fits
     nscoord width;
-    aContext.GetWidth(aString, len, width);
+    aFontMetrics->GetWidth(aString, len, width);
     PRBool  fits = (totalWidth + width) <= aMaxWidth;
 
     // If it fits on the line, or it's the first word we've processed then
@@ -530,6 +532,10 @@ ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
                            const nsString&      aAltText,
                            const nsRect&        aRect)
 {
+  // Clip so we don't render outside of the rect.
+  aRenderingContext.PushState();
+  aRenderingContext.SetClipRect(aRect, nsClipCombine_kIntersect);
+
   const nsStyleColor* color =
     (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
   const nsStyleFont* font =
@@ -555,7 +561,7 @@ ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
   while ((strLen > 0) && ((y + maxDescent) < aRect.YMost())) {
     // Determine how much of the text to display on this line
     PRUint32  maxFit;  // number of characters that fit
-    nscoord   width = MeasureString(str, strLen, aRect.width, maxFit, aRenderingContext);
+    nscoord   width = MeasureString(fm, str, strLen, aRect.width, maxFit);
     
     // Display the text
     aRenderingContext.DrawString(str, maxFit, aRect.x, y, 0);
@@ -567,6 +573,7 @@ ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
   }
 
   NS_RELEASE(fm);
+  aRenderingContext.PopState();
 }
 
 struct nsRecessedBorder : public nsStyleSpacing {
@@ -591,62 +598,6 @@ struct nsRecessedBorder : public nsStyleSpacing {
   }
 };
 
-void
-ImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
-                               nsIRenderingContext& aRenderingContext,
-                               PRInt32              aIconId)
-{
-  // Display a recessed one pixel border in the inner area
-  nsRect  inner;
-  GetInnerArea(&aPresContext, inner);
-
-  float p2t = aPresContext.GetPixelsToTwips();
-  nsRecessedBorder recessedBorder(NSIntPixelsToTwips(1, p2t));
-  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this, inner,
-                              inner, recessedBorder, 0);
-
-  // Adjust the inner rect to account for the one pixel recessed border,
-  // and a six pixel padding on each edge
-  inner.Deflate(NSIntPixelsToTwips(7, p2t), NSIntPixelsToTwips(7, p2t));
-  if (inner.IsEmpty()) {
-    return;
-  }
-
-  // Clip so we don't render outside the inner rect
-  aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(inner, nsClipCombine_kIntersect);
-
-#ifdef _WIN32
-  // Display the icon
-  nsIDeviceContext* dc = aRenderingContext.GetDeviceContext();
-  nsIImage*         icon;
-
-  if (NS_SUCCEEDED(dc->LoadIconImage(aIconId, icon))) {
-    aRenderingContext.DrawImage(icon, inner.x, inner.y);
-
-    // Reduce the inner rect by the width of the icon, and leave an
-    // additional six pixels padding
-    PRInt32 iconWidth = NSIntPixelsToTwips(icon->GetWidth() + 6, p2t);
-    inner.x += iconWidth;
-    inner.width -= iconWidth;
-
-    NS_RELEASE(icon);
-  }
-
-  NS_RELEASE(dc);
-#endif
-
-  // If there's still room, display the alt-text
-  if (!inner.IsEmpty()) {
-    nsAutoString altText;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("ALT", altText)) {
-      DisplayAltText(aPresContext, aRenderingContext, altText, inner);
-    }
-  }
-
-  aRenderingContext.PopState();
-}
-
 NS_METHOD
 ImageFrame::Paint(nsIPresContext& aPresContext,
                   nsIRenderingContext& aRenderingContext,
@@ -668,11 +619,28 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
 
     nsIImage* image = mImageLoader.GetImage();
     if (nsnull == image) {
-      // No image yet, or image load failed. Draw the alt-text and an icon
-      // indicating the status
-      DisplayAltFeedback(aPresContext, aRenderingContext,
-                         mImageLoader.GetLoadImageFailed() ? NS_ICON_BROKEN_IMAGE :
-                                                             NS_ICON_LOADING_IMAGE);
+      // No image yet. Draw the icon that indicates we're loading, and display
+      // the alt-text
+      nsAutoString altText;
+      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("ALT", altText)) {
+        // Display a recessed one-pixel border in the inner area
+        nsRect  inner;
+        GetInnerArea(&aPresContext, inner);
+
+        float p2t = aPresContext.GetPixelsToTwips();
+        nsRecessedBorder recessedBorder(NSIntPixelsToTwips(1, p2t));
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this, inner,
+                                    inner, recessedBorder, 0);
+        inner.Deflate(NSIntPixelsToTwips(1, p2t), NSIntPixelsToTwips(1, p2t));
+
+        // Leave a 8 pixel left/right padding, and a 5 pixel top/bottom padding
+        inner.Deflate(NSIntPixelsToTwips(8, p2t), NSIntPixelsToTwips(5, p2t));
+
+        // If there's room, then display the alt-text
+        if (!inner.IsEmpty()) {
+          DisplayAltText(aPresContext, aRenderingContext, altText, inner);
+        }
+      }
       return NS_OK;
     }
 
@@ -693,8 +661,8 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
         aRenderingContext.SetColor(NS_RGB(0, 0, 0));
         aRenderingContext.PushState();
         aRenderingContext.Translate(inner.x, inner.y);
-          map->Draw(aPresContext, aRenderingContext);
-          aRenderingContext.PopState();
+        map->Draw(aPresContext, aRenderingContext);
+        aRenderingContext.PopState();
       }
     }
   }
@@ -895,31 +863,29 @@ ImageFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-ImageFrame::AttributeChanged(nsIPresContext* aPresContext,
-                             nsIContent* aChild,
-                             nsIAtom* aAttribute,
-                             PRInt32 aHint)
+ImageFrame::ContentChanged(nsIPresShell*   aShell,
+                           nsIPresContext* aPresContext,
+                           nsIContent*     aChild,
+                           nsISupports*    aSubContent)
 {
-  nsresult rv = nsLeafFrame::AttributeChanged(aPresContext, aChild,
-                                              aAttribute, aHint);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  if (nsHTMLAtoms::src == aAttribute) {
-    nsAutoString oldSRC;
-    mImageLoader.GetURL(oldSRC);
-    nsAutoString newSRC;
+  // See if the src attribute changed; if it did then trigger a redraw
+  // by firing up a new image load request. Otherwise let our base
+  // class handle the content-changed request.
+  nsAutoString oldSRC;
+  mImageLoader.GetURL(oldSRC);
 
-    aChild->GetAttribute("src", newSRC);
+  // Get src attribute's value and construct a new absolute url from it
+  nsAutoString newSRC;
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", newSRC)) {
     if (!oldSRC.Equals(newSRC)) {
       mSizeFrozen = PR_TRUE;
-      
+
 #ifdef NS_DEBUG
       char oldcbuf[100], newcbuf[100];
       oldSRC.ToCString(oldcbuf, sizeof(oldcbuf));
       newSRC.ToCString(newcbuf, sizeof(newcbuf));
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-         ("ImageFrame::AttributeChanged: new image source; old='%s' new='%s'",
+         ("ImageFrame::ContentChanged: new image source; old='%s' new='%s'",
           oldcbuf, newcbuf));
 #endif
 
@@ -929,32 +895,41 @@ ImageFrame::AttributeChanged(nsIPresContext* aPresContext,
       // Fire up a new image load request
       PRIntn loadStatus;
       mImageLoader.SetURL(newSRC);
-      mImageLoader.StartLoadImage(aPresContext, this, nsnull,
-                                  PR_FALSE, loadStatus);
+      mImageLoader.StartLoadImage(aPresContext, this, PR_FALSE, loadStatus);
 
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                     ("ImageFrame::AttributeChanged: loadImage status=%x",
-                      loadStatus));
+         ("ImageFrame::ContentChanged: loadImage status=%x",
+          loadStatus));
 
       // If the image is already ready then we need to trigger a
       // redraw because the image loader won't.
       if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
         // XXX Stuff this into a method on nsIPresShell/Context
-        nsRect bounds;
-        nsPoint offset;
-        nsIView* view;
-        GetOffsetFromView(offset, view);
         nsIViewManager* vm;
-        view->GetViewManager(vm);
-        bounds.x = offset.x;
-        bounds.y = offset.y;
-        bounds.width = mRect.width;
-        bounds.height = mRect.height;
-        vm->UpdateView(view, bounds, 0);
+        nsIView* view;
+        GetView(view);
+        if (nsnull != view) {
+          view->GetViewManager(vm);
+          vm->UpdateView(view, nsnull, 0);
+        }
+        else {
+          nsRect bounds;
+          nsPoint offset;
+          GetOffsetFromView(offset, view);
+          bounds.x = offset.x;
+          bounds.y = offset.y;
+          bounds.width = mRect.width;
+          bounds.height = mRect.height;
+          view->GetViewManager(vm);
+          vm->UpdateView(view, bounds, 0);
+        }
         NS_RELEASE(vm);
       }
+
+      return NS_OK;
     }
   }
 
-  return NS_OK;
+  return ImageFrameSuper::ContentChanged(aShell, aPresContext, aChild,
+                                         aSubContent);
 }

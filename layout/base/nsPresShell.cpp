@@ -33,6 +33,7 @@
 #include "nsIViewObserver.h"
 #include "nsContainerFrame.h"
 #include "nsHTMLIIDs.h"
+#include "nsIDeviceContext.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -207,8 +208,7 @@ public:
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent);
   virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   virtual void ProcessReflowCommands();
-
-  //nsIViewObserver
+  NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aContext);
 
   //nsIViewObserver interface
 
@@ -496,13 +496,17 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       mRootFrame->VerifyTree();
     }
 #endif
-    nsRect              bounds;
+    nsRect                bounds;
     mPresContext->GetVisibleArea(bounds);
-    nsSize              maxSize(bounds.width, bounds.height);
-    nsHTMLReflowMetrics desiredSize(nsnull);
-    nsReflowStatus      status;
-    nsReflowState       reflowState(mRootFrame, eReflowReason_Initial, maxSize);
-    nsIHTMLReflow*      htmlReflow;
+    nsSize                maxSize(bounds.width, bounds.height);
+    nsHTMLReflowMetrics   desiredSize(nsnull);
+    nsReflowStatus        status;
+    nsIHTMLReflow*        htmlReflow;
+    nsIRenderingContext*  rcx = nsnull;
+
+    CreateRenderingContext(mRootFrame, rcx);
+
+    nsReflowState       reflowState(mRootFrame, eReflowReason_Initial, maxSize, rcx);
 
     if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
@@ -513,6 +517,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       }
 #endif
     }
+    NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::InitialReflow"));
   }
 
@@ -542,13 +547,17 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
       mRootFrame->VerifyTree();
     }
 #endif
-    nsRect              bounds;
+    nsRect                bounds;
     mPresContext->GetVisibleArea(bounds);
-    nsSize              maxSize(bounds.width, bounds.height);
-    nsHTMLReflowMetrics desiredSize(nsnull);
-    nsReflowStatus      status;
-    nsReflowState       reflowState(mRootFrame, eReflowReason_Resize, maxSize);
-    nsIHTMLReflow*      htmlReflow;
+    nsSize                maxSize(bounds.width, bounds.height);
+    nsHTMLReflowMetrics   desiredSize(nsnull);
+    nsReflowStatus        status;
+    nsIHTMLReflow*        htmlReflow;
+    nsIRenderingContext*  rcx = nsnull;
+
+    CreateRenderingContext(mRootFrame, rcx);
+
+    nsReflowState       reflowState(mRootFrame, eReflowReason_Resize, maxSize, rcx);
 
     if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
@@ -559,6 +568,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
       }
 #endif
     }
+    NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::ResizeReflow"));
 
     // XXX if debugging then we should assert that the cache is empty
@@ -631,7 +641,10 @@ void
 PresShell::ProcessReflowCommands()
 {
   if (0 != mReflowCommands.Count()) {
-    nsHTMLReflowMetrics desiredSize(nsnull);
+    nsHTMLReflowMetrics   desiredSize(nsnull);
+    nsIRenderingContext*  rcx;
+
+    CreateRenderingContext(mRootFrame, rcx);
 
     while (0 != mReflowCommands.Count()) {
       nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(0);
@@ -647,7 +660,7 @@ PresShell::ProcessReflowCommands()
          ("PresShell::ProcessReflowCommands: begin reflow command type=%d",
           type));
 #endif
-      rc->Dispatch(*mPresContext, desiredSize, maxSize);
+      rc->Dispatch(*mPresContext, desiredSize, maxSize, *rcx);
       NS_RELEASE(rc);
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
          ("PresShell::ProcessReflowCommands: end reflow command"));
@@ -663,7 +676,51 @@ PresShell::ProcessReflowCommands()
       VerifyIncrementalReflow();
     }
 #endif
+    NS_IF_RELEASE(rcx);
   }
+}
+
+NS_IMETHODIMP PresShell :: CreateRenderingContext(nsIFrame *aFrame,
+                                                  nsIRenderingContext *&aContext)
+{
+  nsIWidget *widget = nsnull;
+  nsIView   *view = nsnull;
+  nsPoint   pt;
+  nsresult  rv;
+
+  aFrame->GetView(view);
+
+  if (nsnull == view)
+    aFrame->GetOffsetFromView(pt, view);
+
+  while (nsnull != view)
+  {
+    view->GetWidget(widget);
+
+    if (nsnull != widget)
+    {
+      NS_RELEASE(widget);
+      break;
+    }
+
+    view->GetParent(view);
+  }
+
+  if (nsnull != view)
+  {
+    nsIDeviceContext  *dx;
+
+    dx = mPresContext->GetDeviceContext();
+    rv = dx->CreateRenderingContext(view, aContext);
+    NS_RELEASE(dx);
+  }
+  else
+  {
+    rv = NS_ERROR_FAILURE;
+    aContext = nsnull;
+  }
+
+  return rv;
 }
 
 #ifdef NS_DEBUG

@@ -895,9 +895,12 @@ void nsImageButton::PerformAlignment(const nsRect & aRect,
   if (mShowText) { 
     nsIFontMetrics* metrics; 
     mContext->GetMetricsFor(mFont, metrics); 
-
+    nsIRenderingContext *cx;
+    mContext->CreateRenderingContext(this, cx);
+    cx->SetFont(metrics);
     metrics->GetHeight(string_height); 
-    metrics->GetWidth(aText, string_width); 
+    cx->GetWidth(aText, string_width); 
+    NS_RELEASE(cx);
     NS_RELEASE(metrics); 
 
 

@@ -22,6 +22,7 @@
 
 class  nsIFrame;
 class  nsIPresContext;
+class  nsIRenderingContext;
 struct nsHTMLReflowMetrics;
 struct nsSize;
 
@@ -93,7 +94,8 @@ public:
    */
   NS_IMETHOD Dispatch(nsIPresContext&      aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
-                      const nsSize&        aMaxSize) = 0;
+                      const nsSize&        aMaxSize,
+                      nsIRenderingContext& aRendContext) = 0;
 
   /**
    * Get the next frame in the command processing path. Note that this removes

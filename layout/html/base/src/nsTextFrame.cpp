@@ -78,7 +78,7 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 #define XP_IS_SPACE(_ch) \
   (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
 
-// XXX need more of this in nsIFontMetrics.GetWidth
+// XXX need more of this in nsIRenderingContext.GetWidth
 #define CH_NBSP 160
 
 // XXX use a PreTextFrame for pre-formatted text?
@@ -141,10 +141,12 @@ public:
 
   NS_IMETHOD ListTag(FILE* out) const;
 
-  virtual PRInt32 GetPosition(nsIPresContext& aCX,
-                              nsGUIEvent*     aEvent,
-                              nsIFrame *      aNewFrame,
-                              PRUint32&       aAcutalContentOffset);
+  NS_IMETHOD GetPosition(nsIPresContext& aCX,
+                         nsIRenderingContext * aRendContext,
+                         nsGUIEvent*     aEvent,
+                         nsIFrame *      aNewFrame,
+                         PRUint32&       aAcutalContentOffset,
+                         PRInt32&        aOffset);
 
   // nsIInlineReflow
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
@@ -1009,7 +1011,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
       if (si.mEmptySelection) {
         aRenderingContext.DrawString(text, textLength, dx, dy, mRect.width);
         PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, mRect.width);
-        fm->GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
                               CURSOR_COLOR);
@@ -1019,7 +1021,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
 
         if (0 != si.mStartOffset) {
           // Render first (unselected) section
-          fm->GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+          aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
           aRenderingContext.DrawString(text, si.mStartOffset,
                                        x, dy, textWidth);
           PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
@@ -1028,7 +1030,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
         PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
         if (0 != secondLen) {
           // Get the width of the second (selected) section
-          fm->GetWidth(text + si.mStartOffset, PRUint32(secondLen), textWidth);
+          aRenderingContext.GetWidth(text + si.mStartOffset, PRUint32(secondLen), textWidth);
 
           // Render second (selected) section
           aRenderingContext.SetColor(aSelectionBGColor);
@@ -1044,7 +1046,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
           PRInt32 thirdLen = textLength - si.mEndOffset;
 
           // Render third (unselected) section
-          fm->GetWidth(text + si.mEndOffset, PRUint32(thirdLen), textWidth);
+          aRenderingContext.GetWidth(text + si.mEndOffset, PRUint32(thirdLen), textWidth);
           aRenderingContext.DrawString(text + si.mEndOffset,
                                        thirdLen, x, dy, textWidth);
           PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
@@ -1104,7 +1106,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
       if (si.mEmptySelection) {
         aRenderingContext.DrawString(text, textLength, dx, dy, mRect.width);
         PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, mRect.width);
-        fm->GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
                               CURSOR_COLOR);
@@ -1114,7 +1116,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
 
         if (0 != si.mStartOffset) {
           // Render first (unselected) section
-          fm->GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+          aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
           aRenderingContext.DrawString(text, si.mStartOffset,
                                        x, dy, textWidth);
           PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
@@ -1123,7 +1125,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
         PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
         if (0 != secondLen) {
           // Get the width of the second (selected) section
-          fm->GetWidth(text + si.mStartOffset, PRUint32(secondLen), textWidth);
+          aRenderingContext.GetWidth(text + si.mStartOffset, PRUint32(secondLen), textWidth);
 
           // Render second (selected) section
           aRenderingContext.SetColor(aSelectionBGColor);
@@ -1139,7 +1141,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
           PRInt32 thirdLen = textLength - si.mEndOffset;
 
           // Render third (unselected) section
-          fm->GetWidth(text + si.mEndOffset, PRUint32(thirdLen), textWidth);
+          aRenderingContext.GetWidth(text + si.mEndOffset, PRUint32(thirdLen), textWidth);
           aRenderingContext.DrawString(text + si.mEndOffset,
                                        thirdLen, x, dy, textWidth);
           PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
@@ -1182,7 +1184,7 @@ TextFrame::FindTextRuns(nsLineLayout&  aLineLayout,
 // aTextWidth returns the (in twips) the length of the text that falls before the cursor
 // aIndex contains the index of the text where the cursor falls
 static PRBool
-BinarySearchForPosition(nsIFontMetrics* aFM, 
+BinarySearchForPosition(nsIRenderingContext* acx, 
                         PRUnichar* aText,
                         PRInt32    aBaseWidth,
                         PRInt32    aBaseInx,
@@ -1200,7 +1202,7 @@ BinarySearchForPosition(nsIFontMetrics* aFM,
   PRInt32 inx = aStartInx + (range / 2);
 
   PRInt32 textWidth;
-  aFM->GetWidth(aText, inx, textWidth);
+  acx->GetWidth(aText, inx, textWidth);
 
   PRInt32 fullWidth = aBaseWidth + textWidth;
   if (fullWidth == aCursorPos) {
@@ -1208,13 +1210,13 @@ BinarySearchForPosition(nsIFontMetrics* aFM,
     return PR_TRUE;
   } else if (aCursorPos < fullWidth) {
     aTextWidth = aBaseWidth;
-    if (BinarySearchForPosition(aFM, aText, aBaseWidth, aBaseInx, aStartInx, inx, aCursorPos, aIndex, aTextWidth)) {
+    if (BinarySearchForPosition(acx, aText, aBaseWidth, aBaseInx, aStartInx, inx, aCursorPos, aIndex, aTextWidth)) {
       return PR_TRUE;
     }
   } else {
     aTextWidth = fullWidth;
     PRInt32 end = aEndInx - inx;
-    if (BinarySearchForPosition(aFM, aText+inx, fullWidth, aBaseInx+inx, 0, end, aCursorPos, aIndex, aTextWidth)) {
+    if (BinarySearchForPosition(acx, aText+inx, fullWidth, aBaseInx+inx, 0, end, aCursorPos, aIndex, aTextWidth)) {
       return PR_TRUE;
     }
   }
@@ -1227,11 +1229,13 @@ BinarySearchForPosition(nsIFontMetrics* aFM,
 // un-compressed text, selection is based on the un-compressed text, the visual 
 // display of selection is based on the compressed text.
 //---------------------------------------------------------------------------
-PRInt32
+NS_IMETHODIMP
 TextFrame::GetPosition(nsIPresContext& aCX,
+                       nsIRenderingContext * aRendContext,
                        nsGUIEvent*     aEvent,
                        nsIFrame*       aNewFrame,
-                       PRUint32&       aAcutalContentOffset)
+                       PRUint32&       aAcutalContentOffset,
+                       PRInt32&        aOffset)
 {
   const PRInt16 kNumIndices = 512;
 
@@ -1259,10 +1263,12 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   PRInt32 index;
   PRInt32 textWidth;
 
-  PRBool found = BinarySearchForPosition(fm, text, 0, 0, 0, PRInt32(textLength), PRInt32(aEvent->point.x), index, textWidth);
+  aRendContext->SetFont(fm);
+
+  PRBool found = BinarySearchForPosition(aRendContext, text, 0, 0, 0, PRInt32(textLength), PRInt32(aEvent->point.x), index, textWidth);
   if (found) {
     PRInt32 charWidth;
-    fm->GetWidth(text[index], charWidth);
+    aRendContext->GetWidth(text[index], charWidth);
     charWidth /= 2;
 
     if (PRInt32(aEvent->point.x) > textWidth+charWidth) {
@@ -1290,7 +1296,9 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   }
 
   aAcutalContentOffset = ((TextFrame *)aNewFrame)->mContentOffset;
-  return offset;
+  aOffset = offset;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1363,7 +1371,8 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
 
   nsIFontMetrics* fm = aLineLayout.mPresContext.GetMetricsFor(aFont.mFont);
   PRInt32 spaceWidth;
-  fm->GetWidth(' ', spaceWidth);
+  aReflowState.rendContext->SetFont(fm);
+  aReflowState.rendContext->GetWidth(' ', spaceWidth);
   PRBool wrapping = PR_TRUE;
   if (NS_STYLE_WHITESPACE_NORMAL != aTextStyle.mWhiteSpace) {
     wrapping = PR_FALSE;
@@ -1435,7 +1444,7 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
         }
         break;
       }
-      fm->GetWidth(wordStart, PRUint32(cp - wordStart), width);
+      aReflowState.rendContext->GetWidth(wordStart, PRUint32(cp - wordStart), width);
       skipWhitespace = PR_FALSE;
       isWhitespace = PR_FALSE;
     }
@@ -1543,7 +1552,8 @@ TextFrame::ReflowPre(nsLineLayout& aLineLayout,
   PRUint16 col = aLineLayout.GetColumn();
   mColumn = col;
   nscoord spaceWidth;
-  fm->GetWidth(' ', spaceWidth);
+  aReflowState.rendContext->SetFont(fm);
+  aReflowState.rendContext->GetWidth(' ', spaceWidth);
 
 // XXX change this to measure a line at a time
   while (cp < end) {
@@ -1569,11 +1579,11 @@ TextFrame::ReflowPre(nsLineLayout& aLineLayout,
     }
     if (ch < 256) {
       nscoord charWidth;
-      fm->GetWidth(ch, charWidth);
+      aReflowState.rendContext->GetWidth(ch, charWidth);
       width += charWidth;
     } else {
       nscoord charWidth;
-      fm->GetWidth(ch, charWidth);
+      aReflowState.rendContext->GetWidth(ch, charWidth);
       width += charWidth;
       hasMultibyte = PR_TRUE;
     }

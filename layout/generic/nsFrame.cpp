@@ -642,15 +642,17 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  nsFrame          * currentFrame   = this;
-  nsIPresShell     * shell          = aPresContext.GetShell();
-  nsMouseEvent     * mouseEvent     = (nsMouseEvent *)aEvent;
+  nsFrame             * currentFrame   = this;
+  nsIPresShell        * shell          = aPresContext.GetShell();
+  nsMouseEvent        * mouseEvent     = (nsMouseEvent *)aEvent;
+  nsIRenderingContext * acx;      
   
   gDoc = shell->GetDocument();
 
   nsISelection     * selection;
   gDoc->GetSelection(selection);
 
+  shell->CreateRenderingContext(this, acx);
 
   mSelectionRange = selection->GetRange();
 
@@ -660,7 +662,7 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
   mDidDrag        = PR_FALSE;
   mCurrentFrame   = currentFrame;
 
-  mStartPos = GetPosition(aPresContext, aEvent, currentFrame, actualOffset);
+  GetPosition(aPresContext, acx, aEvent, currentFrame, actualOffset, mStartPos);
 
   // Click count is 1
   nsIContent * newContent;
@@ -803,6 +805,8 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
 
   if (SELECTION_DEBUG) printf("HandleEvent::mSelectionRange %s\n", mSelectionRange->ToString());
 
+  NS_IF_RELEASE(acx);
+
   // Force Update
   ForceDrawFrame(this);
 
@@ -830,6 +834,12 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
 
   mDidDrag = PR_TRUE;
 
+  nsIPresShell        *ps = aPresContext.GetShell();
+  nsIRenderingContext *acx;
+  
+  ps->CreateRenderingContext(this, acx);
+  NS_RELEASE(ps);
+
   //if (aFrame != nsnull) {
     //printf("nsFrame::HandleDrag\n");
 
@@ -850,20 +860,20 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
       if (currentContent == newContent) {
         if (SELECTION_DEBUG) printf("HandleDrag::New Frame, same content.\n");
 
-        AdjustPointsInSameContent(aPresContext, aEvent);
+        AdjustPointsInSameContent(aPresContext, acx, aEvent);
         addRangeToSelectionTrackers(currentContent, currentContent, kInsertInAddList);
 
       } else if (gDoc->IsBefore(newContent, currentContent)) {
         if (SELECTION_DEBUG) printf("HandleDrag::New Frame, is Before.\n");
 
         resetContentTrackers();
-        NewContentIsBefore(aPresContext, aEvent, newContent, currentContent, this);
+        NewContentIsBefore(aPresContext, acx, aEvent, newContent, currentContent, this);
 
       } else { // Content is AFTER
         if (SELECTION_DEBUG) printf("HandleDrag::New Frame, is After.\n");
 
         resetContentTrackers();
-        NewContentIsAfter(aPresContext, aEvent, newContent, currentContent, this);
+        NewContentIsAfter(aPresContext, acx, aEvent, newContent, currentContent, this);
       }
       mCurrentFrame = this;
 
@@ -882,7 +892,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
 
       if (selStartContent == selEndContent) {
         if (SELECTION_DEBUG) printf("Start & End Frame are the same: \n");
-        AdjustPointsInSameContent(aPresContext, aEvent);
+        AdjustPointsInSameContent(aPresContext, acx, aEvent);
       } else {
         if (SELECTION_DEBUG) printf("Start & End Frame are different: \n");
 
@@ -892,7 +902,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
         PRInt32  newPos       = -1;
         PRUint32 actualOffset = 0;
 
-        newPos = GetPosition(aPresContext, aEvent, this, actualOffset);
+        GetPosition(aPresContext, acx, aEvent, this, actualOffset, newPos);
 
         if (newContent == selStartContent) {
           if (SELECTION_DEBUG) printf("New Content equals Start Content\n");
@@ -921,6 +931,8 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
   NS_IF_RELEASE(startContent);
   NS_IF_RELEASE(endContent);
 
+  NS_IF_RELEASE(acx);
+
   // Force Update
   ForceDrawFrame(this);
   //RefreshContentFrames(aPresContext, startContent, endContent);
@@ -943,10 +955,13 @@ NS_METHOD nsFrame::HandleRelease(nsIPresContext& aPresContext,
 //--------------------------------------------------------------------------
 //-- GetPosition
 //--------------------------------------------------------------------------
-PRInt32 nsFrame::GetPosition(nsIPresContext& aPresContext,
-                             nsGUIEvent *    aEvent,
-                             nsIFrame *      aNewFrame,
-                             PRUint32&       aAcutalContentOffset) {
+NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext&        aPresContext,
+                                   nsIRenderingContext *  aRendContext,
+                                   nsGUIEvent *           aEvent,
+                                   nsIFrame *             aNewFrame,
+                                   PRUint32&              aAcutalContentOffset,
+                                   PRInt32&               aOffset)
+{
 
   //PRInt32 offset; 
   //PRInt32 width;
@@ -955,19 +970,24 @@ PRInt32 nsFrame::GetPosition(nsIPresContext& aPresContext,
 
   //return offset;
   aAcutalContentOffset = 0;
-  return -1;
+  aOffset = -1;
+
+  return NS_OK;
 }
 
 /********************************************************
 * Adjusts the Starting and Ending TextPoint for a Range
 *********************************************************/
 void nsFrame::AdjustPointsInNewContent(nsIPresContext& aPresContext,
+                                       nsIRenderingContext * aRendContext,
                                        nsGUIEvent * aEvent,
                                        nsIFrame  * aNewFrame) {
   PRUint32 actualOffset = 0;
 
   // Get new Cursor Poition in the new content
-  PRInt32 newPos = GetPosition(aPresContext, aEvent, aNewFrame, actualOffset);
+  PRInt32 newPos;
+
+  GetPosition(aPresContext, aRendContext, aEvent, aNewFrame, actualOffset, newPos);
 
   if (mStartSelectionPoint->IsAnchor()) {
     if (newPos == mStartSelectionPoint->GetOffset()) {
@@ -1012,11 +1032,13 @@ void nsFrame::AdjustPointsInNewContent(nsIPresContext& aPresContext,
 * Adjusts the Starting and Ending TextPoint for a Range
 *********************************************************/
 void nsFrame::AdjustPointsInSameContent(nsIPresContext& aPresContext,
+                                        nsIRenderingContext * aRendContext,
                                         nsGUIEvent    * aEvent) {
   PRUint32 actualOffset = 0;
 
   // Get new Cursor Poition in the same content
-  PRInt32 newPos = GetPosition(aPresContext, aEvent, mCurrentFrame, actualOffset);
+  PRInt32 newPos;
+  GetPosition(aPresContext, aRendContext, aEvent, mCurrentFrame, actualOffset, newPos);
   //newPos += actualOffset;
   if (SELECTION_DEBUG) printf("AdjustTextPointsInSameContent newPos: %d\n", newPos);
 
@@ -1469,6 +1491,7 @@ NS_METHOD nsFrame::VerifyTree() const
 * the content that the cursor is currently in
 *********************************************************/
 void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
+                                 nsIRenderingContext * aRendContext,
                                  nsGUIEvent * aEvent,
                                  nsIContent * aNewContent,
                                  nsIContent * aCurrentContent,
@@ -1509,11 +1532,12 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
       // Returns the new End Point, if Start and End are on the
       // same content then End Point's Cursor is set to Start's
       mEndSelectionPoint->SetContent(selStartContent);
-      AdjustPointsInNewContent(aPresContext, aEvent, aNewFrame);
+      AdjustPointsInNewContent(aPresContext, aRendContext, aEvent, aNewFrame);
 
     } else {
       PRUint32 actualOffset = 0;
-      PRInt32  newPos       = GetPosition(aPresContext, aEvent, aNewFrame, actualOffset);
+      PRInt32  newPos;
+      GetPosition(aPresContext, aRendContext, aEvent, aNewFrame, actualOffset, newPos);
       mEndSelectionPoint->SetPoint(aNewContent, newPos, PR_FALSE);
       mSelectionRange->SetEndPoint(mEndSelectionPoint);
     }
@@ -1525,7 +1549,9 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
     if (SELECTION_DEBUG) printf("Case #2 - (Before) New Content is NOT in selected Range. Moving Start Backward.\n");
 
     PRUint32 actualOffset = 0;
-    PRInt32  newPos       = GetPosition(aPresContext, aEvent, aNewFrame, actualOffset);
+    PRInt32  newPos;
+
+    GetPosition(aPresContext, aRendContext, aEvent, aNewFrame, actualOffset, newPos);
 
     // Create new TextPoint and move Start Point backward
     mStartSelectionPoint->SetPoint(aNewContent, newPos, PR_FALSE); // position is set correctly in adjustTextPoints
@@ -1601,6 +1627,7 @@ void RefreshContentFrames(nsIPresContext& aPresContext,
 * the content that the cursor is currently in
 *********************************************************/
 void nsFrame::NewContentIsAfter(nsIPresContext& aPresContext,
+                                nsIRenderingContext * aRendContext,
                                 nsGUIEvent * aEvent,
                                 nsIContent * aNewContent,
                                 nsIContent * aCurrentContent,
@@ -1638,14 +1665,15 @@ void nsFrame::NewContentIsAfter(nsIPresContext& aPresContext,
 
     PRUint32 actualOffset = 0;
     // [TODO] Always get nearest Text content
-    PRInt32 newPos = GetPosition(aPresContext, aEvent, aNewFrame, actualOffset);
+    PRInt32 newPos;
+    GetPosition(aPresContext, aRendContext, aEvent, aNewFrame, actualOffset, newPos);
 
     // Check to see if the new Content is the same as the End Point's
     if (aNewContent == selEndContent) {
       if (SELECTION_DEBUG) printf("New Content matches End Point\n");
 
       mStartSelectionPoint->SetContent(aNewContent);
-      AdjustPointsInNewContent(aPresContext, aEvent, aNewFrame);
+      AdjustPointsInNewContent(aPresContext, aRendContext, aEvent, aNewFrame);
 
     } else {
       if (SELECTION_DEBUG) printf("New Content does NOT matches End Point\n");
@@ -1660,7 +1688,8 @@ void nsFrame::NewContentIsAfter(nsIPresContext& aPresContext,
     // Case #2 - Adding Content (at End)
     PRUint32 actualOffset = 0;
     // The new content is not in the selection
-    PRInt32 newPos = GetPosition(aPresContext, aEvent, aNewFrame, actualOffset);
+    PRInt32 newPos;
+    GetPosition(aPresContext, aRendContext, aEvent, aNewFrame, actualOffset, newPos);
 
     // Check to see if we need to create a new SelectionPoint and add it
     // or do we simply move the existing start or end point
