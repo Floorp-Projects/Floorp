@@ -709,48 +709,6 @@ function updateCharsetPopupMenu(menuPopup)
 
 // --------------------------- Text style ---------------------------
 
-var gAtomService;
-function GetAtomService()
-{
-    gAtomService = Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
-}
-
-function EditorGetTextProperty(property, attribute, value, firstHas, anyHas, allHas)
-{
-  if (!gIsHTMLEditor) return;
-  try {
-    if (!gAtomService) GetAtomService();
-    var propAtom = gAtomService.getAtom(property);
-    gEditor.getInlineProperty(propAtom, attribute, value,
-                             firstHas, anyHas, allHas);
-  }
-  catch(e) {}
-}
-
-function EditorSetTextProperty(property, attribute, value)
-{
-  if (!gIsHTMLEditor) return;
-  try {
-    if (!gAtomService) GetAtomService();
-    var propAtom = gAtomService.getAtom(property);
-    gEditor.setInlineProperty(propAtom, attribute, value);
-    gContentWindow.focus();
-  }
-  catch(e) {}
-}
-
-function EditorRemoveTextProperty(property, attribute)
-{
-  if (!gIsHTMLEditor) return;
-  try {
-    if (!gAtomService) GetAtomService();
-    var propAtom = gAtomService.getAtom(property);
-    gEditor.removeInlineProperty(propAtom, attribute);
-    gContentWindow.focus();
-  }
-  catch(e) {}
-}
-
 function onParagraphFormatChange(paraMenuList, commandID)
 {
   if (!paraMenuList)
@@ -2475,7 +2433,8 @@ function IsSpellCheckerInstalled()
 //-----------------------------------------------------------------------------------
 function IsFindInstalled()
 {
-  return "@mozilla.org/appshell/component/find;1" in Components.classes;
+  return "@mozilla.org/embedcomp/rangefind;1" in Components.classes
+          && "@mozilla.org/find/find_service;1" in Components.classes;
 }
 
 //-----------------------------------------------------------------------------------
