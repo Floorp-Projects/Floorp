@@ -270,6 +270,7 @@ network/util/Makefile
 profile/Makefile
 profile/src/Makefile
 profile/public/Makefile
+profile/resources/Makefile
 rdf/Makefile
 rdf/base/Makefile
 rdf/base/idl/Makefile
