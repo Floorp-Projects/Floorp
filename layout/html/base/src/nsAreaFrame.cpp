@@ -32,6 +32,7 @@
 
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_SPACEMANAGER
+#undef NOISY_FINAL_SIZE
 
 nsresult
 NS_NewAreaFrame(nsIFrame** aNewFrame, PRUint32 aFlags)
@@ -416,10 +417,20 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     if (NS_FRAME_OUTSIDE_CHILDREN & mState) {
       nscoord xMost = aDesiredSize.mCombinedArea.XMost();
       if (xMost > aDesiredSize.width) {
+#ifdef NOISY_FINAL_SIZE
+        ListTag(stdout);
+        printf(": changing desired width from %d to %d\n",
+               aDesiredSize.width, xMost);
+#endif
         aDesiredSize.width = xMost;
       }
       nscoord yMost = aDesiredSize.mCombinedArea.YMost();
       if (yMost > aDesiredSize.height) {
+#ifdef NOISY_FINAL_SIZE
+        ListTag(stdout);
+        printf(": changing desired height from %d to %d\n",
+               aDesiredSize.height, yMost);
+#endif
         aDesiredSize.height = yMost;
       }
     }
