@@ -1345,10 +1345,10 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
      }
      else
      {
-         if (mDocShellAsWin)
-           mDocShellAsWin->Destroy();
          if (mDocShellTreeOwner)
            mDocShellTreeOwner->RemoveFromWatcher(); // evil twin of Add in Create()
+         if (mDocShellAsWin)
+           mDocShellAsWin->Destroy();
 
          mDocShell = nsnull;
          mDocShellAsReq = nsnull;
