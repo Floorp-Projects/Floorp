@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.41 2002/03/03 02:29:31 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.42 2002/03/15 23:05:58 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -288,11 +288,10 @@ nss_FindExternalRoot(const char *dbpath)
 
 	/* back up to the top of the directory */
 	PORT_Memcpy(path,dbpath,path_len);
-	if (path[path_len] != FILE_SEP) {
+	if (path[path_len-1] != FILE_SEP) {
 	    path[path_len++] = FILE_SEP;
 	}
-	PORT_Memcpy(&path[path_len],dllname,PORT_Strlen(dllname));
-        path[len-1] = '\0';
+	PORT_Strcpy(&path[path_len],dllname);
 	(void) SECMOD_AddNewModule("Root Certs",path, 0, 0);
 	PORT_Free(path);
 	return;
