@@ -119,7 +119,6 @@ INCS=$(INCS) -I$(DEPTH)\lib\liblayer\include
 LCFLAGS=$(LCFLAGS) -DSTAND_ALONE_JAVA
 !endif
 
-
 !if defined(MOZ_JAVA)
 MOZ_JAVA_FLAG=-DJAVA
 !endif
@@ -149,6 +148,10 @@ CFLAGS=$(CFLAGS) -DSTANDALONE_IMAGE_LIB
 
 !ifdef MODULAR_NETLIB
 CFLAGS=$(CFLAGS) -DMODULAR_NETLIB
+!else
+# Defines for new cookie management...
+CFLAGS=$(CFLAGS) -DCookieManagement -DSingleSignon
+
 !endif
 
 # always need these:
