@@ -474,7 +474,7 @@ void leaky::analyze()
     // backwards we know who called the function when we get there.
     u_int n = (lep->numpcs < stackDepth) ? lep->numpcs : stackDepth;
     char** pcp = &lep->pcs[n-1];
-    int idx, parrentIdx = -1;
+    int idx=-1, parrentIdx=-1;  // Init idx incase n==0
     for(int i=n-1; i>=0; --i, --pcp, parrentIdx=idx) {
       idx = findSymbolIndex(reinterpret_cast<u_long>(*pcp));
       if(idx>=0) {
