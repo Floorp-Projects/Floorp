@@ -3824,7 +3824,6 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
    }
    else if( flags & KC_VIRTUALKEY)
    {
-      printf("OR HERE\n");
       USHORT vk = SHORT2FROMMP(mp2);
       USHORT sc = CHAR4FROMMP(mp1);
       USHORT rc2 = SHORT1FROMMP(mp2);
