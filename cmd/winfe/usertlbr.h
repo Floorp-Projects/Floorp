@@ -367,14 +367,26 @@ class CRDFToolbarHolder : public CCustToolbar
 protected:
 	HT_Pane m_ToolbarPane;
 	CFrameWnd* m_pCachedParentWindow;
-	CRDFToolbarButton* m_pCurrentButton;
+	CRDFToolbarButton* m_pCurrentDockedButton;
+	CRDFToolbarButton* m_pCurrentPopupButton;
 
 public:
 	CRDFToolbarHolder(int maxToolbars, CFrameWnd* pParent);
 	virtual ~CRDFToolbarHolder();
 
-	CRDFToolbarButton* GetCurrentButton() { return m_pCurrentButton; }
-	void SetCurrentButton(CRDFToolbarButton* button) { m_pCurrentButton = button; }
+	CRDFToolbarButton* GetCurrentButton(int state) 
+	{ 
+		if (state == HT_POPUP_WINDOW)
+			return m_pCurrentPopupButton;
+		else return m_pCurrentDockedButton;
+	}
+
+	void SetCurrentButton(CRDFToolbarButton* button, int state) 
+	{ 
+		if (state == HT_POPUP_WINDOW)
+			m_pCurrentPopupButton = button;
+		else m_pCurrentDockedButton = button;
+	}
 
 	HT_Pane GetHTPane() { return m_ToolbarPane; }
 	void SetHTPane(HT_Pane p) { m_ToolbarPane = p; }

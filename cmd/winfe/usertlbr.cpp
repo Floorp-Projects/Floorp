@@ -900,12 +900,15 @@ void CRDFToolbarButton::FillInMenu(HT_Resource theNode)
 */
 
 	CRDFToolbarHolder* pHolder = (CRDFToolbarHolder*)(GetParent()->GetParent()->GetParent());
-	CRDFToolbarButton* pOldButton = pHolder->GetCurrentButton();
+	int state = HT_GetTreeStateForButton(theNode);
+	CRDFToolbarButton* pOldButton = pHolder->GetCurrentButton(state);
+
 	if (pOldButton != NULL)
 	{
 		pOldButton->GetTreeView()->DeleteNavCenter();
 	}
-	pHolder->SetCurrentButton(NULL);
+	
+	pHolder->SetCurrentButton(NULL, state);
 	
 	if (!m_bDepressed && pOldButton != this)
 	{
@@ -916,7 +919,7 @@ void CRDFToolbarButton::FillInMenu(HT_Resource theNode)
 		{
 			SetDepressed(TRUE);
 			m_pTreeView->SetRDFButton(this);
-			pHolder->SetCurrentButton(this);
+			pHolder->SetCurrentButton(this, state);
 		}
 		else
 		{
@@ -2637,7 +2640,8 @@ CRDFToolbarHolder::CRDFToolbarHolder(int maxToolbars, CFrameWnd* pParentWindow)
 :CCustToolbar(maxToolbars)
 {
 	m_pCachedParentWindow = pParentWindow;
-	m_pCurrentButton = NULL;
+	m_pCurrentPopupButton = NULL;
+	m_pCurrentDockedButton = NULL;
 }
 
 CRDFToolbarHolder::~CRDFToolbarHolder()

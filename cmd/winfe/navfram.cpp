@@ -206,8 +206,25 @@ void CNSNavFrame::UnhookFromButton()
 		m_pButton->SetDepressed(FALSE);
 		m_pButton->Invalidate();
 		CRDFToolbarHolder* pHolder = (CRDFToolbarHolder*)(m_pButton->GetParent()->GetParent()->GetParent());
-		pHolder->SetCurrentButton(NULL);
+		if (pHolder->GetCurrentButton(HT_POPUP_WINDOW) == m_pButton)
+			pHolder->SetCurrentButton(NULL, HT_POPUP_WINDOW);
+		else if (pHolder->GetCurrentButton(HT_DOCKED_WINDOW) == m_pButton)
+			pHolder->SetCurrentButton(NULL, HT_DOCKED_WINDOW);
+
 		m_pButton = NULL;
+	}
+}
+
+void CNSNavFrame::MovePopupToDocked()
+{
+	if (m_pButton)
+	{
+		CRDFToolbarHolder* pHolder = (CRDFToolbarHolder*)(m_pButton->GetParent()->GetParent()->GetParent());
+		if (pHolder->GetCurrentButton(HT_POPUP_WINDOW) == m_pButton)
+		{
+			pHolder->SetCurrentButton(NULL, HT_POPUP_WINDOW);
+			pHolder->SetCurrentButton(m_pButton, HT_DOCKED_WINDOW);
+		}
 	}
 }
 
@@ -550,6 +567,7 @@ void CNSNavFrame::DockFrame(CNSGenFrame* pParent, short dockStyle)
 			if (pFrame)	
 			{ // if the parent frame has a docked frame, then destroy it.
 				pFrame->DeleteNavCenter();
+				pFrame->UnhookFromButton();
 			}
 			nsModifyStyle( GetSafeHwnd(), GWL_STYLE, WS_OVERLAPPEDWINDOW, WS_CHILD);
 			nsModifyStyle( GetSafeHwnd(), GWL_EXSTYLE, WS_EX_CLIENTEDGE, 0);
@@ -569,6 +587,9 @@ void CNSNavFrame::DockFrame(CNSGenFrame* pParent, short dockStyle)
 		// Notify HT of our new state.
 		HT_SetTreeStateForButton(HT_TopNode(HT_GetSelectedView(GetHTPane())), HT_DOCKED_WINDOW);
 		HT_SetWindowType(GetHTPane(), HT_DOCKED_WINDOW);
+		
+		// If are the popup button, then do the adjustment.
+		MovePopupToDocked();
 
 		CRect rect = m_dockingDragRect;
 

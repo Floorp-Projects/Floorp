@@ -123,6 +123,7 @@ public:
 	CRDFToolbarButton* GetRDFButton() { return m_pButton; }
 
 	void UnhookFromButton();
+	void MovePopupToDocked();
 
 protected:  // control bar embedded members
 	BOOL		m_bDragging;		// TRUE if we are dragging this FRAME
