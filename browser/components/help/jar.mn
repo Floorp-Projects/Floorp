@@ -14,3 +14,4 @@ help.jar:
    locale/en-US/help/firefox_welcome.xhtml         (locale/en-US/firefox_welcome.xhtml)
    locale/en-US/help/download_manager.xhtml        (locale/en-US/download_manager.xhtml)
    locale/en-US/help/platformStrings.dtd           (locale/en-US/platformStrings.dtd)
+   locale/en-US/help/tabbed_browsing.xhtml         (locale/en-US/tabbed_browsing.xhtml)
