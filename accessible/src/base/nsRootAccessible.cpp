@@ -68,7 +68,7 @@
 #include "nsXPIDLString.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
-#include "nsHTMLSelectListAccessible.h"
+#include "nsHTMLSelectAccessible.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"

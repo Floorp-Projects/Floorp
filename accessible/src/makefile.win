@@ -44,31 +44,31 @@ REQUIRES	= xpcom \
 		  timer \
 		  $(NULL)
 
-CPP_OBJS=\
-        .\$(OBJDIR)\nsAccessible.obj    \
-        .\$(OBJDIR)\nsRootAccessible.obj    \
-        .\$(OBJDIR)\nsHTMLIFrameRootAccessible.obj    \
-        .\$(OBJDIR)\nsAccessibilityService.obj    \
-        .\$(OBJDIR)\nsHTMLSelectListAccessible.obj    \
-        .\$(OBJDIR)\nsGenericAccessible.obj    \
-        .\$(OBJDIR)\nsHTMLFormControlAccessible.obj    \
-        .\$(OBJDIR)\nsHTMLTextAccessible.obj    \
-        .\$(OBJDIR)\nsHTMLImageAccessible.obj    \
-        .\$(OBJDIR)\nsHTMLAreaAccessible.obj    \
-        .\$(OBJDIR)\nsHTMLTableAccessible.obj    \
-        .\$(OBJDIR)\nsHTMLLinkAccessible.obj    \
-        .\$(OBJDIR)\nsHTMLComboboxAccessible.obj    \
-        .\$(OBJDIR)\nsHTMLListboxAccessible.obj    \
-        .\$(OBJDIR)\nsXULFormControlAccessible.obj    \
-        .\$(OBJDIR)\nsXULTextAccessible.obj           \
-        .\$(OBJDIR)\nsBaseWidgetAccessible.obj        \
+CPP_OBJS= \
+        .\$(OBJDIR)\nsAccessible.obj \
+        .\$(OBJDIR)\nsAccessibilityService.obj \
+        .\$(OBJDIR)\nsBaseWidgetAccessible.obj \
+        .\$(OBJDIR)\nsFormControlAccessible.obj \
+        .\$(OBJDIR)\nsGenericAccessible.obj \
+        .\$(OBJDIR)\nsHTMLAreaAccessible.obj \
+        .\$(OBJDIR)\nsHTMLFormControlAccessible.obj \
+        .\$(OBJDIR)\nsHTMLIFrameRootAccessible.obj \
+        .\$(OBJDIR)\nsHTMLImageAccessible.obj \
+        .\$(OBJDIR)\nsHTMLLinkAccessible.obj \
+        .\$(OBJDIR)\nsHTMLSelectAccessible.obj \
+        .\$(OBJDIR)\nsHTMLTableAccessible.obj \
+        .\$(OBJDIR)\nsHTMLTextAccessible.obj \
+        .\$(OBJDIR)\nsRootAccessible.obj \
+        .\$(OBJDIR)\nsSelectAccessible.obj \
+        .\$(OBJDIR)\nsXULFormControlAccessible.obj \
+        .\$(OBJDIR)\nsXULTextAccessible.obj \
   $(NULL)
 
 EXPORTS = \
   .\nsRootAccessible.h \
   $(NULL)
 
-LINCS=                                  \
+LINCS= \
   -I..\..\layout\html\forms\public \
   -I..\..\layout\html\forms\src \
   -I..\..\layout\html\base\src \

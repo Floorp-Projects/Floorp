@@ -96,7 +96,6 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD GetAccState(PRUint32 *aAccState);
 
     // ----- nsIAccessibleEventReceiver -------------------
-
     NS_IMETHOD AddAccessibleEventListener(nsIAccessibleEventListener *aListener);
     NS_IMETHOD RemoveAccessibleEventListener();
 

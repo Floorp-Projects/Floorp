@@ -57,9 +57,7 @@
 #include "nsHTMLImageAccessible.h"
 #include "nsHTMLAreaAccessible.h"
 #include "nsHTMLLinkAccessible.h"
-#include "nsHTMLSelectListAccessible.h"
-#include "nsHTMLComboboxAccessible.h"
-#include "nsHTMLListboxAccessible.h"
+#include "nsHTMLSelectAccessible.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsHTMLFormControlAccessible.h"
 #include "nsIAccessibleProvider.h"
@@ -76,7 +74,9 @@
 #include "nsIDocShell.h"
 #include "nsHTMLIFrameRootAccessible.h"
 
-//--------------------
+/**
+  * nsAccessibility Service
+  */
 
 nsAccessibilityService::nsAccessibilityService()
 {
@@ -88,9 +88,6 @@ nsAccessibilityService::~nsAccessibilityService()
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAccessibilityService, nsIAccessibilityService);
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibilityService methods:
@@ -322,7 +319,7 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTextAccessible(nsIDOMNode *aNode,
 
   // reusing the HTML accessible widget and enhancing for XUL
   *_retval = new nsXULTextAccessible(aNode, weakShell);
-  if (! *_retval) 
+  if (! *_retval)
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
@@ -595,7 +592,6 @@ nsAccessibilityService::CreateHTMLIFrameAccessible(nsIDOMNode* aDOMNode, nsISupp
   return NS_ERROR_FAILURE;
 }
 
-
 void nsAccessibilityService::GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent)
 {
   nsCOMPtr<nsIPresContext> presContext;
@@ -646,10 +642,9 @@ void nsAccessibilityService::GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell 
   }
 }
 
-/* -------------------------------------------------------
- * GetAccessibleFor - get an nsIAccessible from a DOM node
- * ------------------------------------------------------- */
-
+/**
+  * GetAccessibleFor - get an nsIAccessible from a DOM node
+  */
 NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode, 
                                                        nsIAccessible **_retval) 
 {

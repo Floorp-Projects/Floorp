@@ -41,40 +41,22 @@
 #define _nsXULFormControlAccessible_H_
 
 // NOTE: alphabetically ordered
-#include "nsAccessible.h"
 #include "nsBaseWidgetAccessible.h"
+#include "nsFormControlAccessible.h"
 #include "nsHTMLFormControlAccessible.h"
-#include "nsIDOMXULLabelElement.h"
 
-/* Accessible for supporting for controls
- * supports:
- * - walking up to get name from label
- * - support basic state
- */
-class nsXULFormControlAccessible : public nsLeafAccessible
-{
-public:
-  nsXULFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-
-protected:
-  NS_IMETHODIMP AppendLabelText(nsIDOMNode *aLabelNode, nsAWritableString& _retval);
-};
-
-class nsXULButtonAccessible : public nsBlockAccessible
+class nsXULButtonAccessible : public nsFormControlAccessible
 {
 public:
   nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval);
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
   NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
 };
 
-class nsXULCheckboxAccessible : public nsXULFormControlAccessible
+class nsXULCheckboxAccessible : public nsFormControlAccessible
 {
 public:
   nsXULCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
@@ -86,3 +68,4 @@ public:
 };
 
 #endif  
+

@@ -42,175 +42,51 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULCheckboxElement.h"
+#include "nsIDOMXULDescriptionElement.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIDOMXULLabelElement.h"
+#include "nsIDOMXULSelectCntrlEl.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsXULFormControlAccessible.h"
 
-// ----- XUL Form Control accessible --------
-
-nsXULFormControlAccessible::nsXULFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsLeafAccessible(aNode, aShell)
-{ 
-}
-
 /**
-  * Checks the label's value first then makes a call to get the 
-  *  text from the children if the value is not set.
+  * XUL Button: can contain arbitrary HTML content
   */
-NS_IMETHODIMP nsXULFormControlAccessible::AppendLabelText(nsIDOMNode *aLabelNode, nsAWritableString& _retval)
-{
-  NS_ASSERTION(aLabelNode, "Label Node passed in is null");
-  nsCOMPtr<nsIDOMXULLabelElement> labelNode(do_QueryInterface(aLabelNode));
-  // label's value="foo" is set
-  if ( labelNode && NS_SUCCEEDED(labelNode->GetValue(_retval))) {
-    if (_retval.IsEmpty()) {
-      // label contains children who define it's text -- possibly HTML
-      nsCOMPtr<nsIContent> content(do_QueryInterface(labelNode));
-      if (content)
-        return AppendFlatStringFromSubtree(content, &_retval);
-    }
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
 
 /**
-  * 3 main cases for Xul Controls to be labeled
-  *   1 - control contains label="foo"
-  *   2 - control has, as a child, a label element
-  *        - label has either value="foo" or children
-  *   3 - non-child label contains control="controlID"
-  *        - label has either value="foo" or children
-  * Once a label is found, the search is discontinued, so a control
-  *  that has a label child as well as having a label external to
-  *  the control that uses the control="controlID" syntax will use
-  *  the child label for its Name.
+  * Default Constructor
   */
-/* wstring getAccName (); */
-NS_IMETHODIMP nsXULFormControlAccessible::GetAccName(nsAWritableString& _retval)
-{
-  nsresult rv;
-  nsAutoString label;
-
-  // CASE #1 -- great majority of the cases
-  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(domElement, "No domElement for accessible DOM node!");
-  rv = domElement->GetAttribute(NS_LITERAL_STRING("label"), label) ;
-
-  if (NS_FAILED(rv) || label.IsEmpty() ) {
-
-    // CASE #2 ------ label as a child
-    nsCOMPtr<nsIDOMNodeList>labelChildren;
-    NS_ASSERTION(domElement, "No domElement for accessible DOM node!");
-    if (NS_SUCCEEDED(rv = domElement->GetElementsByTagName(NS_LITERAL_STRING("label"), getter_AddRefs(labelChildren)))) {
-      PRUint32 length = 0;
-      if (NS_SUCCEEDED(rv = labelChildren->GetLength(&length)) && length > 0) {
-        for (PRUint32 i = 0; i < length; ++i) {
-          nsCOMPtr<nsIDOMNode> child;
-          if (NS_SUCCEEDED(rv = labelChildren->Item(i, getter_AddRefs(child) ))) {
-            rv = AppendLabelText(child, label);
-          }
-        }
-      }
-    }
-    
-    if (NS_FAILED(rv) || label.IsEmpty()) {
-
-      // CASE #3 ----- non-child label pointing to control
-      //  XXX jgaunt
-      //   decided to search the parent's children for labels linked to
-      //   this control via the control="controlID" syntax, instead of searching
-      //   the entire document with:
-      //
-      //      nsCOMPtr<nsIDocument> doc;
-      //      nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-      //      content->GetDocument(*getter_AddRefs(doc));
-      //      nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
-      //      if (xulDoc) {
-      //        nsCOMPtr<nsIDOMNodeList>labelList;
-      //        if (NS_SUCCEEDED(rv = xulDoc->GetElementsByAttribute(NS_LITERAL_STRING("control"), controlID, getter_AddRefs(labelList))))
-      //
-      //   This should keep search times down and still get the relevant
-      //   labels.
-      nsCOMPtr<nsIDOMNode> parent;
-      if (NS_SUCCEEDED(rv = mDOMNode->GetParentNode(getter_AddRefs(parent)))) {
-        nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(parent));
-        NS_ASSERTION(xulElement, "No xulElement for parent DOM Node!");
-        if (xulElement) {
-          nsAutoString controlID;
-          nsCOMPtr<nsIDOMNodeList>labelList;
-          if (NS_SUCCEEDED(rv = xulElement->GetElementsByAttribute(NS_LITERAL_STRING("control"), controlID, getter_AddRefs(labelList))))
-          {
-            PRUint32 length = 0;
-            if (NS_SUCCEEDED(rv = labelList->GetLength(&length)) && length > 0) {
-              for (PRUint32 i = 0; i < length; ++i) {
-                nsCOMPtr<nsIDOMNode> child;
-                if (NS_SUCCEEDED(rv = labelList->Item(i, getter_AddRefs(child) ))) {
-                  rv = AppendLabelText(child, label);
-                }
-              }
-            }
-          }
-        }
-      }  // End of CASE #3
-    }  // END of CASE #2
-  }  // END of CASE #1
-
-  label.CompressWhitespace();
-  if (label.IsEmpty())
-    return nsAccessible::GetAccName(_retval);
-  
-  _retval.Assign(label);
-  return NS_OK;
-}
-
-/**
- * XUL Form controls can be focusable, focused, unavailable, ?protected?
- **/
-NS_IMETHODIMP nsXULFormControlAccessible::GetAccState(PRUint32 *_retval)
-{
-  // Get the focused state from the nsAccessible
-  nsAccessible::GetAccState(_retval);
-
-  PRBool disabled = PR_FALSE;
-  nsCOMPtr<nsIDOMXULControlElement> xulFormElement(do_QueryInterface(mDOMNode));
-  if (xulFormElement)
-    xulFormElement->GetDisabled(&disabled);
-
-  if (disabled)
-    *_retval |= STATE_UNAVAILABLE;
-  else 
-    *_retval |= STATE_FOCUSABLE;
-
-  return NS_OK;
-}
-
-// ----- XUL Button: can contain arbitrary HTML content -----
-
 nsXULButtonAccessible::nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsBlockAccessible(aNode, aShell)
+nsFormControlAccessible(aNode, aShell)
 { 
 }
 
-/* PRUint8 getAccNumActions (); */
+/**
+  * Only one actions available
+  */
 NS_IMETHODIMP nsXULButtonAccessible::GetAccNumActions(PRUint8 *_retval)
 {
-  *_retval = 1;
+  *_retval = eSingle_Action;
   return NS_OK;;
 }
 
-/* wstring getAccActionName (in PRUint8 index); */
+/**
+  * Return the name of our only action
+  */
 NS_IMETHODIMP nsXULButtonAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
 {
-  if (index == 0) {
+  if (index == eAction_Click) {
     _retval = NS_LITERAL_STRING("press");
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
 }
 
-/* void accDoAction (in PRUint8 index); */
+/**
+  * Tell the button to do it's action
+  */
 NS_IMETHODIMP nsXULButtonAccessible::AccDoAction(PRUint8 index)
 {
   if (index == 0) {
@@ -225,57 +101,62 @@ NS_IMETHODIMP nsXULButtonAccessible::AccDoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-/* unsigned long getAccRole (); */
+/**
+  * We are a pushbutton
+  */
 NS_IMETHODIMP nsXULButtonAccessible::GetAccRole(PRUint32 *_retval)
 {
   *_retval = ROLE_PUSHBUTTON;
   return NS_OK;
 }
 
-/* long getAccState (); */
+/**
+  * Possible states: focused, focusable, unavailable(disabled)
+  */
 NS_IMETHODIMP nsXULButtonAccessible::GetAccState(PRUint32 *_retval)
 {
-  nsAccessible::GetAccState(_retval);
+  // get focus and disable status from base class
+  nsFormControlAccessible::GetAccState(_retval);
   *_retval |= STATE_FOCUSABLE;
   return NS_OK;
 }
 
+/**
+  * XUL checkbox
+  */
 
-/* wstring getAccName (); */
-NS_IMETHODIMP nsXULButtonAccessible::GetAccName(nsAWritableString& _retval)
-{
-  nsCOMPtr<nsIDOMXULButtonElement> buttonElement(do_QueryInterface(mDOMNode));
-  if ( buttonElement ) {
-    return buttonElement->GetLabel(_retval);
-  }
-  return NS_ERROR_FAILURE;
-}
-
-// --- XUL checkbox -----
-
+/**
+  * Default Constructor
+  */
 nsXULCheckboxAccessible::nsXULCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsXULFormControlAccessible(aNode, aShell)
+nsFormControlAccessible(aNode, aShell)
 { 
 }
 
-/* unsigned long getAccRole (); */
+/**
+  * We are a CheckButton
+  */
 NS_IMETHODIMP nsXULCheckboxAccessible::GetAccRole(PRUint32 *_retval)
 {
   *_retval = ROLE_CHECKBUTTON;
   return NS_OK;
 }
 
-/* PRUint8 getAccNumActions (); */
+/**
+  * Only one action available
+  */
 NS_IMETHODIMP nsXULCheckboxAccessible::GetAccNumActions(PRUint8 *_retval)
 {
-  *_retval = 1;
+  *_retval = eSingle_Action;
   return NS_OK;
 }
 
-/* wstring getAccActionName (in PRUint8 index); */
+/**
+  * Return the name of our only action
+  */
 NS_IMETHODIMP nsXULCheckboxAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
 {
-  if (index == 0) {    // 0 is the magic value for default action
+  if (index == eAction_Click) {
     // check or uncheck
     PRUint32 state;
     GetAccState(&state);
@@ -290,10 +171,12 @@ NS_IMETHODIMP nsXULCheckboxAccessible::GetAccActionName(PRUint8 index, nsAWritab
   return NS_ERROR_INVALID_ARG;
 }
 
-/* void accDoAction (in PRUint8 index); */
+/**
+  * Tell the checkbox to do its only action -- check( or uncheck) itself
+  */
 NS_IMETHODIMP nsXULCheckboxAccessible::AccDoAction(PRUint8 index)
 {
-  if (index == 0) {   // 0 is the magic value for default action
+  if (index == eAction_Click) {
     PRBool checked = PR_FALSE;
     nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement(do_QueryInterface(mDOMNode));
     if (xulCheckboxElement) {
@@ -306,10 +189,13 @@ NS_IMETHODIMP nsXULCheckboxAccessible::AccDoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
+/**
+  * Possible states: focused, focusable, unavailable(disabled), checked
+  */
 NS_IMETHODIMP nsXULCheckboxAccessible::GetAccState(PRUint32 *_retval)
 {
-  // Get focus state from parent
-  nsXULFormControlAccessible::GetAccState(_retval);
+  // Get focus and disable status from base class
+  nsFormControlAccessible::GetAccState(_retval);
 
   // Determine Checked state
   PRBool checked = PR_FALSE;

@@ -40,29 +40,12 @@
 #ifndef _nsHTMLFormControlAccessible_H_
 #define _nsHTMLFormControlAccessible_H_
 
-#include "nsAccessible.h"
 #include "nsBaseWidgetAccessible.h"
+#include "nsFormControlAccessible.h"
 
 class nsICheckboxControlFrame;
 
-/* Accessible for supporting for controls
- * supports:
- * - walking up to get name from label
- * - support basic state
- */
-class nsHTMLFormControlAccessible : public nsLeafAccessible
-{
-
-public:
-  nsHTMLFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-
-protected:
-  NS_IMETHODIMP AppendLabelFor(nsIContent *aLookNode, nsAReadableString *aId, nsAWritableString *aLabel);
-};
-
-class nsHTMLCheckboxAccessible : public nsHTMLFormControlAccessible
+class nsHTMLCheckboxAccessible : public nsFormControlAccessible
 {
 
 public:
@@ -74,19 +57,16 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
 
-class nsHTMLRadioButtonAccessible : public nsHTMLFormControlAccessible
+class nsHTMLRadioButtonAccessible : public nsRadioButtonAccessible
 {
 
 public:
   nsHTMLRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
 
-class nsHTMLButtonAccessible : public nsHTMLFormControlAccessible
+class nsHTMLButtonAccessible : public nsFormControlAccessible
 {
 
 public:
@@ -111,8 +91,7 @@ public:
   NS_IMETHOD AccDoAction(PRUint8 index);
 };
 
-
-class nsHTMLTextFieldAccessible : public nsHTMLFormControlAccessible
+class nsHTMLTextFieldAccessible : public nsFormControlAccessible
 {
 public:
   nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
