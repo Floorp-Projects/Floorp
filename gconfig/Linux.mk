@@ -47,12 +47,10 @@ else
 endif
 endif
 
-ifeq ($(OS_RELEASE),2.0)
-	OS_REL_CFLAGS	+= -DLINUX2_0
-	MKSHLIB		= $(CC) -shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
-	ifdef BUILD_OPT
-		OPTIMIZER	= -O2
-	endif
+OS_REL_CFLAGS	+= -DLINUX2_0
+MKSHLIB		= $(CC) -shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
+ifdef BUILD_OPT
+	OPTIMIZER	= -O2
 endif
 
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR
