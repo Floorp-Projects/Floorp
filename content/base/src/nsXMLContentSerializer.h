@@ -83,6 +83,9 @@ class nsXMLContentSerializer : public nsIContentSerializer {
 
   NS_IMETHOD Flush(nsAString& aStr) { return NS_OK; }
 
+  NS_IMETHOD AppendDocumentStart(nsIDOMDocument *aDocument,
+                                 nsAString& aStr);
+
  protected:
   virtual void AppendToString(const PRUnichar* aStr,
                               PRInt32 aLength,

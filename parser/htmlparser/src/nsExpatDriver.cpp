@@ -300,8 +300,9 @@ NS_NewExpatDriver(nsIDTD** aResult) {
 
 nsExpatDriver::nsExpatDriver()
   :mExpatParser(0), 
-   mInCData(0),
-   mInDoctype(0),
+   mInCData(PR_FALSE),
+   mInDoctype(PR_FALSE),
+   mHandledXMLDeclaration(PR_FALSE),
    mBytePosition(0),
    mInternalState(NS_OK),
    mBytesParsed(0),
@@ -400,6 +401,30 @@ nsExpatDriver::HandleProcessingInstruction(const PRUnichar *aTarget,
 }
 
 nsresult 
+nsExpatDriver::HandleXMLDeclaration(const PRUnichar *aValue, 
+                                    const PRUint32 aLength)
+{
+  mHandledXMLDeclaration = PR_TRUE;
+
+  // <?xml version='a'?>
+  // 0123456789012345678
+  PRUint32 i = 17; // ?> can start at position 17 at the earliest
+  for (; i < aLength; i++) {
+    if (aValue[i] == '?')
+      break;
+  }
+
+  // +1 because index starts from 0
+  // +1 because '>' follows '?'
+  i += 2;
+
+  if (i > aLength)
+    return NS_OK; // Bad declaration
+
+  return mSink->HandleXMLDeclaration(aValue, i);
+}
+
+nsresult 
 nsExpatDriver::HandleDefault(const PRUnichar *aValue, 
                              const PRUint32 aLength) 
 {
@@ -409,6 +434,15 @@ nsExpatDriver::HandleDefault(const PRUnichar *aValue,
     mDoctypeText.Append(aValue, aLength);
   }
   else if (mSink) {
+    if (!mHandledXMLDeclaration && !mBytesParsed) {
+      static const PRUnichar xmlDecl[] = {'<', '?', 'x', 'm', 'l', ' ', '\0'};
+      // strlen("<?xml version='a'?>") == 19, shortest decl
+      if ((aLength >= 19) &&
+          (nsCRT::strncmp(aValue, xmlDecl, 6) == 0)) {
+        HandleXMLDeclaration(aValue, aLength);  
+      }
+    }
+
     static const PRUnichar newline[] = {'\n','\0'};
     for (PRUint32 i = 0; i < aLength && NS_SUCCEEDED(mInternalState); i++) {
       if (aValue[i] == '\n' || aValue[i] == '\r') {

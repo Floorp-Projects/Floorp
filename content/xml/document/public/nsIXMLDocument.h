@@ -57,6 +57,17 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXMLDOCUMENT_IID)
 
   NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl)=0;
+
+  /**
+   * Set and get XML declaration. Notice that if version is empty,
+   * there can be no XML declaration (it is a required part).
+   */
+  NS_IMETHOD SetXMLDeclaration(const nsAString& aVersion,
+                               const nsAString& aEncoding,
+                               const nsAString& Standalone)=0;
+  NS_IMETHOD GetXMLDeclaration(nsAString& aVersion,
+                               nsAString& aEncoding,
+                               nsAString& Standalone)=0;
 };
 
 #endif // nsIXMLDocument_h___

@@ -2670,6 +2670,27 @@ nsXULDocument::SetTitle(const PRUnichar *aTitle)
     return SetTitle(nsDependentString(aTitle));
 }
 
+NS_IMETHODIMP
+nsXULDocument::SetXMLDeclaration(const nsAString& aVersion,
+                                 const nsAString& aEncoding,
+                                 const nsAString& aStandalone)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::GetXMLDeclaration(nsAString& aVersion,
+                                 nsAString& aEncoding,
+                                 nsAString& aStandalone)
+{
+  aVersion.Truncate();
+  aEncoding.Truncate();
+  aStandalone.Truncate();
+  return NS_OK;
+}
+
+
+
 //----------------------------------------------------------------------
 //
 // nsIXULDocument interface

@@ -157,6 +157,13 @@ mozSanitizingHTMLSerializer::Flush(nsAString& aStr)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+mozSanitizingHTMLSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
+                                                 nsAString& aStr)
+{
+  return NS_OK;
+}
+
 void
 mozSanitizingHTMLSerializer::Write(const nsAString& aString)
 {

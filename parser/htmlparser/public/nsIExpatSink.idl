@@ -66,6 +66,16 @@ interface nsIExpatSink : nsISupports
   void HandleProcessingInstruction(in wstring aTarget, 
                                    in wstring aData);
 
+  /**
+   * Handle the XML Declaration.
+   *
+   * @param aData    The string.
+   * @param aLength  The length of the declaration from
+   *                 opening '<' to closing '>'.
+   **/
+  void HandleXMLDeclaration(in wstring aData, 
+                            in unsigned long aLength);
+
   void ReportError(in wstring aErrorText,
                    in wstring aSourceText);
 }; 
