@@ -65,7 +65,7 @@ NS_METHOD nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
     nsCID cid = NS_COOKIEHTTPNOTIFY_CID;
     char *cidString = cid.ToString();
     nsXPIDLCString prevEntry;
-    rv = catman->AddCategoryEntry(NS_HTTP_STARTUP_CATEGORY, cidString, "Http Cookie Notify",
+    rv = catman->AddCategoryEntry(NS_HTTP_STARTUP_CATEGORY, "Http Cookie Notify", cidString,
                                   PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
     nsAllocator::Free(cidString);
 

@@ -64,8 +64,8 @@ var jsConsoleHandlerModule = {
             location, true, true, type);
         var catman = Components.classes["mozilla.categorymanager.1"]
             .getService(Components.interfaces.nsICategoryManager);
-        catman.addCategoryEntry("command-line-argument-handlers",
-            JSCONSOLEHANDLER_PROGID, "jsconsole command line handler",
+        catman.addCategoryEntry("command-line-argument-handlers", "jsconsole command line handler",
+            JSCONSOLEHANDLER_PROGID,
             true, true);
     },
 

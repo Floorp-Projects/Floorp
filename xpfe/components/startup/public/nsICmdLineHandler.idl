@@ -93,7 +93,7 @@ NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPat
     nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv); \
     if (NS_FAILED(rv)) return rv; \
     nsXPIDLCString prevEntry; \
-    rv = catman->AddCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_progid, macro_pretty_name, PR_TRUE, PR_TRUE, getter_Copies(prevEntry)); \
+    rv = catman->AddCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_pretty_name, macro_progid, PR_TRUE, PR_TRUE, getter_Copies(prevEntry)); \
 	return NS_OK; \
 } \
 NS_METHOD macro_class::UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation) \

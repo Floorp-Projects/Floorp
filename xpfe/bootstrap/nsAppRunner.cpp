@@ -289,12 +289,17 @@ static void DumpArbitraryHelp()
     rv = catman->EnumerateCategory(COMMAND_LINE_ARGUMENT_HANDLERS, getter_AddRefs(e));
     if(NS_SUCCEEDED(rv) && e) {
       while (PR_TRUE) {
-        nsCOMPtr<nsISupportsString> progid;
-        rv = e->GetNext(getter_AddRefs(progid));
-        if (NS_FAILED(rv) || !progid) break;
+        nsCOMPtr<nsISupportsString> catEntry;
+        rv = e->GetNext(getter_AddRefs(catEntry));
+        if (NS_FAILED(rv) || !catEntry) break;
 
-        nsXPIDLCString progidString;
-        progid->ToString (getter_Copies(progidString));
+        nsXPIDLCString entryString;
+        rv = catEntry->GetData(getter_Copies(entryString));
+        if (NS_FAILED(rv) || !((const char *)entryString)) break;
+
+		nsXPIDLCString progidString;
+		rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,(const char *)entryString, getter_Copies(progidString));
+        if (NS_FAILED(rv) || !((const char *)progidString)) break;
 
 #ifdef DEBUG_CMD_LINE
         printf("cmd line handler progid = %s\n", (const char *)progidString);
