@@ -24,7 +24,7 @@ sub PrintUsage {
 END_USAGE
 }
 
-my $root_modules;  # modules we want to build.
+my $root_modules = 0;  # modules we want to build.
 
 sub parse_args() {
   PrintUsage() if $#ARGV < 0;
@@ -32,8 +32,33 @@ sub parse_args() {
   # Stuff arguments into variables.
   # Print usage if we get an unknown argument.
   PrintUsage() if !GetOptions('modules=s' => \$root_modules);
+  if ($root_modules) {
+    print "root_modules = $root_modules\n";
 
-  print "root_modules = $root_modules\n";
+    # Test for last tree, or remember what tree we're doing.
+    if (-e "last_module.txt") {
+      open LAST_MODULE, "last_module.txt";
+
+      while(<LAST_MODULE>) {
+        # Assume module name is first line
+        unless($_ eq $root_modules) {
+          print "Error: Last module pulled ($_) doesn't match \"$root_modules\", remove last_module.txt and mozilla tree, then try again.\n";
+          exit 1;
+        } else {
+          print "Checking out same module...\n";
+        }
+      }
+      close LAST_MODULE;
+
+    } else {
+      # Save off file to remember which tree we're using    
+      open LAST_MODULE, ">last_module.txt";
+      print LAST_MODULE $root_modules;
+      close LAST_MODULE;
+    }
+  }
+  
+  
 }
 
 sub get_system_cwd {
