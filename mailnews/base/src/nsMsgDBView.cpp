@@ -232,17 +232,47 @@ nsresult nsMsgDBView::FetchDate(nsIMsgHdr * aHdr, PRUnichar ** aDateString)
     mDateFormater = do_CreateInstance(kDateTimeFormatCID);
 
   NS_ENSURE_TRUE(mDateFormater, NS_ERROR_FAILURE);
-
   nsresult rv = aHdr->GetDate(&dateOfMsg);
-  // for now, the outline widget doesn't crop yet so don't add
-  // the time to the string, it makes the date column take up 
-  // too much space. I'm taking the time out just until we can 
-  // crop.
-  if (NS_SUCCEEDED(rv))
+
+  PRTime currentTime = PR_Now();
+	PRExplodedTime explodedCurrentTime;
+  PR_ExplodeTime(currentTime, PR_LocalTimeParameters, &explodedCurrentTime);
+  PRExplodedTime explodedMsgTime;
+  PR_ExplodeTime(dateOfMsg, PR_LocalTimeParameters, &explodedMsgTime);
+
+  // if the message is from today, don't show the date, only the time. (i.e. 3:15 pm)
+  // if the message is from the last week, show the day of the week.   (i.e. Mon 3:15 pm)
+  // in all other cases, show the full date (03/19/01 3:15 pm)
+  nsDateFormatSelector dateFormat = kDateFormatShort;
+  if (explodedCurrentTime.tm_year == explodedMsgTime.tm_year &&
+      explodedCurrentTime.tm_month == explodedMsgTime.tm_month &&
+      explodedCurrentTime.tm_mday == explodedMsgTime.tm_mday)
+  {
+    // same day...
+    dateFormat = kDateFormatNone;
+  } 
+  // the following chunk of code causes us to show a day instead of a number if the message was received
+  // within the last 7 days. i.e. Mon 5:10pm. We need to add a preference so folks to can enable this behavior
+  // if they want it. 
+/*
+  else if (LL_CMP(currentTime, >, dateOfMsg))
+  {
+    PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInDays;
+	  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+    LL_UI2L(secondsInDays, 60 * 60 * 24 * 7); // how many seconds in 7 days.....
+	  LL_MUL(microSecondsInDays, secondsInDays, microSecondsPerSecond); // turn that into microseconds
+
+    PRInt64 diff;
+    LL_SUB(diff, currentTime, dateOfMsg);
+    if (LL_CMP(diff, <=, microSecondsInDays)) // within the same week 
+      dateFormat = kDateFormatWeekday;
+  }
+*/
+  if (NS_SUCCEEDED(rv)) 
     rv = mDateFormater->FormatPRTime(nsnull /* nsILocale* locale */,
-                                      kDateFormatShort,
-                                      kTimeFormatSeconds,
-                                      PRTime(dateOfMsg),
+                                      dateFormat,
+                                      kTimeFormatNoSeconds,
+                                      dateOfMsg,
                                       formattedDateString);
 
   if (NS_SUCCEEDED(rv))
