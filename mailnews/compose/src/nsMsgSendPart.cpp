@@ -20,7 +20,6 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-#include "rosetta_mailnews.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgSend.h"
 #include "nsMsgSendPart.h"
@@ -547,13 +546,6 @@ nsMsgSendPart::Write()
       message_headers = 0;
     }
     
-    /* Now allow the crypto library to (potentially) insert some text
-    (it may want to wrap the body in an envelope.)
-    */
-    if (!m_parent) {
-      HJ67078
-    }
-		  
     /* Now make sure there's a Content-Type header.
     */
     if (!content_type_header) 

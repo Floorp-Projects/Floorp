@@ -22,7 +22,6 @@
 DEPTH=..\..
 
 EXPORTS = MailNewsTypes.h \
-		rosetta_mailnews.h\
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

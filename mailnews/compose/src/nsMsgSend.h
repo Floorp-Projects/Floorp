@@ -126,7 +126,6 @@
 //
 #include "msgCore.h"
 #include "prprf.h" 
-#include "rosetta_mailnews.h"
 #include "nsFileStream.h"
 #include "nsMsgMessageFlags.h"
 #include "nsIMsgSend.h"

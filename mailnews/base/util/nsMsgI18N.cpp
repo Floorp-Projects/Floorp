@@ -34,7 +34,6 @@
 #include "nsIPref.h"
 #include "nsIMimeConverter.h"
 #include "msgCore.h"
-#include "rosetta_mailnews.h"
 #include "nsMsgI18N.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"

@@ -30,7 +30,6 @@
 #include "nsMsgZapIt.h"
 #include "xp_core.h"
 #include "msgcom.h"
-#include "rosetta_mailnews.h"
 
 /* Note that all the "Get" methods never return NULL (except in case of serious
    error, like an illegal parameter); rather, they return "" if things were set
@@ -236,9 +235,6 @@ public:
 
 protected:
 	nsresult DecodeHeader(MSG_HEADER_SET header);
-
-	// These methods allow news URLs in the newsgroups header
-	HJ30181
 
 	#define MAX_HEADERS		32
 	char*		m_headers[MAX_HEADERS];

@@ -22,7 +22,6 @@
  */
 #include "msgCore.h"
 #include "nsCRT.h"
-#include "rosetta_mailnews.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgSendPart.h"
 #include "nsMsgSendFact.h"
@@ -294,8 +293,6 @@ nsMsgComposeAndSend::Clear()
     }
 	}
 
-	HJ82388
-
 	if (m_attachments)
 	{
 		PRUint32 i;
@@ -479,7 +476,6 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 				attachments[i].ctl_count = ma->m_ctl_count;
 				attachments[i].null_count = ma->m_null_count;
 				attachments[i].max_line_length = ma->m_max_column;
-				HJ08239
 
 				/* Doesn't really matter, but let's not lie about encoding
 				   in case it does someday. */
@@ -1153,8 +1149,6 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
 		  PL_strcat(recipients, X); \
 	  }
 
-HJ91531
-
 #if defined(XP_MAC) && defined(DEBUG)
 #pragma global_optimizer reset
 #endif // XP_MAC && DEBUG
@@ -1163,8 +1157,6 @@ HJ91531
 int
 mime_write_message_body(nsMsgComposeAndSend *state, char *buf, PRInt32 size)
 {
-  HJ62011
-
   if (PRInt32(state->mOutputFile->write(buf, size)) < size) 
   {
     return NS_MSG_ERROR_WRITING_FILE;
@@ -2304,9 +2296,9 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 	}
 
 	pStr = fields->GetNewspostUrl();
-	if (!pStr || !*pStr) 
+	if (pStr && *pStr) 
   {
-		HJ41792
+		mCompFields->SetNewspostUrl((char *)pStr);
 	}
 
   // Now, we will look for a URI defined as the default FCC pref. If this is set,
@@ -2622,8 +2614,6 @@ NewsDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 
   return aExitCode;
 }
-
-HJ70669
 
 nsresult
 nsMsgComposeAndSend::DeliverMessage()

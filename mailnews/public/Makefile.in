@@ -30,7 +30,6 @@ MODULE		= mailnews
 
 EXPORTS		= \
 		MailNewsTypes.h \
-		rosetta_mailnews.h \
 		$(NULL)
 
 XPIDLSRCS	= MailNewsTypes2.idl

@@ -39,7 +39,6 @@
 
 %{C++
 #include "nsIURL.h"
-#include "rosetta_mailnews.h"
 %}
 
 interface	nsIURI;

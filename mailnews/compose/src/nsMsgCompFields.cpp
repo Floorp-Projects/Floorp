@@ -21,7 +21,6 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#include "rosetta_mailnews.h"
 #include "nsCRT.h"
 #include "nsMsgCompFields.h"
 #include "nsMsgCompFieldsFact.h"
@@ -532,29 +531,6 @@ nsMsgCompFields::GetUseMultipartAlternativeFlag(PRBool *_retval)
   return NS_OK;
 }
 
-
-HJ36954
-{
-	/* Here's where we allow URLs in the newsgroups: header */
-
-	int status = -1; 
-	if (hostPort && group) { /* must have a group */
-		char *newsPostUrl = HJ57077
-		if (newsPostUrl) {
-			const char *existingHeader = GetHeader(MSG_NEWSPOSTURL_HEADER_MASK);
-			if (existingHeader && *existingHeader && nsCRT::strcasecmp(newsPostUrl, existingHeader))
-				status = NS_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS; /* can only send to one news host at a time */
-			else {
-				SetAsciiHeader (MSG_NEWSPOSTURL_HEADER_MASK, newsPostUrl);
-				status = 0; /* we succeeded, no need to keep looking at this header */
-			}
-			PR_Free(newsPostUrl);
-		} else
-			status = NS_ERROR_OUT_OF_MEMORY;
-	}
-
-	return status;
-}
 
 nsresult nsMsgCompFields::SetBody(const PRUnichar *value)
 {

@@ -509,7 +509,7 @@ mime_generate_headers (nsMsgCompFields *fields,
     // HEADER_X_MOZILLA_NEWSHOST which can contain the "news:" URL's.
     //
     // Since n2 can contain data in the form of:
-    // "news://news.mozilla.org./netscape.test,news://news.mozilla.org./netscape.junk"
+    // "news://news.mozilla.org/netscape.test,news://news.mozilla.org/netscape.junk"
     // we need to turn that into: "netscape.test,netscape.junk"
     //
     NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv); 
@@ -518,7 +518,7 @@ mime_generate_headers (nsMsgCompFields *fields,
     if (NS_SUCCEEDED(rv) && nntpService) 
     {
       // caller frees the memory in newHeader
-      // ConvertNewsgroupsString takes "news://news.mozilla.org./netscape.test,news://news.mozilla.org./netscape.junk"
+      // ConvertNewsgroupsString takes "news://news.mozilla.org/netscape.test,news://news.mozilla.org/netscape.junk"
       // and turns it into "netscape.test,netscape.junk"
       rv = nntpService->ConvertNewsgroupsString(n2, &newHeader);
       if (NS_FAILED(rv)) {
