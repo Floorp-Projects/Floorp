@@ -43,6 +43,11 @@
 
 #include "nsIComponentRegistrar.h"
 
+// we want to explore making the document own the load group
+// so we can associate the document URI with the load group.
+// until this point, we have an evil hack:
+#include "nsIHttpChannelInternal.h"  
+
 #ifdef DEBUG_pavlov
 #include "nsIEnumerator.h"
 #include "nsXPCOM.h"
@@ -194,7 +199,10 @@ static nsresult NewImageChannel(nsIChannel **aResult,
                                      NS_LITERAL_CSTRING(""));
     newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                      NS_LITERAL_CSTRING("video/x-mng,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1"));
-    newHttpChannel->SetDocumentURI(aInitialDocumentURI);
+
+    nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal = do_QueryInterface(newHttpChannel);
+    NS_ENSURE_TRUE(httpChannelInternal, NS_ERROR_UNEXPECTED);
+    httpChannelInternal->SetDocumentURI(aInitialDocumentURI);
     newHttpChannel->SetReferrer(aReferringURI);
   }
 

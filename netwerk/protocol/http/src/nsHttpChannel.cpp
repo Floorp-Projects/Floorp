@@ -1536,14 +1536,17 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
     if (httpChannel) {
+        nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
+        NS_ENSURE_TRUE(httpInternal, NS_ERROR_UNEXPECTED);
+
         // update the DocumentURI indicator since we are being redirected.
         // if this was a top-level document channel, then the new channel
         // should have its mDocumentURI point to newURI; otherwise, we
         // just need to pass along our mDocumentURI to the new channel.
         if (newURI && (mURI == mDocumentURI))
-            httpChannel->SetDocumentURI(newURI);
+            httpInternal->SetDocumentURI(newURI);
         else
-            httpChannel->SetDocumentURI(mDocumentURI);
+            httpInternal->SetDocumentURI(mDocumentURI);
         // convey the referrer if one was used for this channel to the next one
         if (mReferrer)
             httpChannel->SetReferrer(mReferrer);
@@ -2075,18 +2078,24 @@ nsHttpChannel::GetCurrentPath(nsACString &path)
 // nsHttpChannel::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS11(nsHttpChannel,
-                               nsIRequest,
-                               nsIChannel,
-                               nsIRequestObserver,
-                               nsIStreamListener,
-                               nsIHttpChannel,
-                               nsIInterfaceRequestor,
-                               nsIProgressEventSink,
-                               nsICachingChannel,
-                               nsIUploadChannel,
-                               nsICacheListener,
-                               nsIEncodedChannel)
+NS_IMPL_THREADSAFE_ADDREF(nsHttpChannel)
+NS_IMPL_THREADSAFE_RELEASE(nsHttpChannel)
+
+NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIRequest)
+    NS_INTERFACE_MAP_ENTRY(nsIChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
+    NS_INTERFACE_MAP_ENTRY(nsICachingChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
+    NS_INTERFACE_MAP_ENTRY(nsICacheListener)
+    NS_INTERFACE_MAP_ENTRY(nsIEncodedChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
+NS_INTERFACE_MAP_END
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIRequest

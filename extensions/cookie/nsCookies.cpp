@@ -56,6 +56,11 @@
 #include "nsComObsolete.h"
 #include <time.h>
 
+// we want to explore making the document own the load group
+// so we can associate the document URI with the load group.
+// until this point, we have an evil hack:
+#include "nsIHttpChannelInternal.h"  
+
 #define MAX_NUMBER_OF_COOKIES 300
 #define MAX_COOKIES_PER_SERVER 20
 #define MAX_BYTES_PER_COOKIE 4096  /* must be at least 1 */
@@ -1459,7 +1464,10 @@ COOKIE_SetCookieString(nsIURI * aURL, nsIPrompt *aPrompter, const char * setCook
   nsresult rv;
 
   if (aHttpChannel) {
-    rv = aHttpChannel->GetDocumentURI(getter_AddRefs(pFirstURL));
+    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aHttpChannel);
+    if (!httpInternal) return;
+    
+    rv = httpInternal->GetDocumentURI(getter_AddRefs(pFirstURL));
     if (NS_FAILED(rv)) return;
   }
   COOKIE_SetCookieStringFromHttp(aURL, pFirstURL, aPrompter, setCookieHeader, 0, aHttpChannel);

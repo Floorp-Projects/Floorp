@@ -49,6 +49,8 @@
 #include "nsXPIDLString.h"
 #include "nsHttpConnection.h"
 
+#include "nsIHttpChannelInternal.h"
+
 class nsHttpTransaction;
 class nsHttpResponseHead;
 class nsHttpAuthCache;
@@ -67,6 +69,7 @@ class nsHttpChannel : public nsIHttpChannel
                     , public nsIUploadChannel
                     , public nsICacheListener
                     , public nsIEncodedChannel
+                    , public nsIHttpChannelInternal
 {
 public:
     NS_DECL_ISUPPORTS
@@ -81,6 +84,7 @@ public:
     NS_DECL_NSIUPLOADCHANNEL
     NS_DECL_NSICACHELISTENER
     NS_DECL_NSIENCODEDCHANNEL
+    NS_DECL_NSIHTTPCHANNELINTERNAL
 
     nsHttpChannel();
     virtual ~nsHttpChannel();
