@@ -38,12 +38,15 @@ nsFileProtocolHandler::nsFileProtocolHandler()
     NS_INIT_REFCNT();
 }
 
+#define NS_FILE_TRANSPORT_WORKER_STACK_SIZE     (8*1024)
+
 nsresult
 nsFileProtocolHandler::Init()
 {
     nsresult rv;
     rv = NS_NewThreadPool(&mPool, NS_FILE_TRANSPORT_WORKER_COUNT,
-                          NS_FILE_TRANSPORT_WORKER_COUNT, 8*1024);
+                          NS_FILE_TRANSPORT_WORKER_COUNT,
+                          NS_FILE_TRANSPORT_WORKER_STACK_SIZE);
     return rv;
 }
 
@@ -80,7 +83,7 @@ nsFileProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult
 NS_IMETHODIMP
 nsFileProtocolHandler::GetScheme(char* *result)
 {
-    *result = nsCRT::strdup("ftp");
+    *result = nsCRT::strdup("file");
     if (*result == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -116,7 +119,7 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 {
     nsresult rv;
 
-    // Ftp URLs (currently) have no additional structure beyond that provided by standard
+    // file: URLs (currently) have no additional structure beyond that provided by standard
     // URLs, so there is no "outer" given to CreateInstance 
 
     nsIURI* url;
@@ -131,14 +134,6 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     if (NS_FAILED(rv)) return rv;
 
     rv = url->SetSpec((char*)aSpec);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(url);
-        return rv;
-    }
-
-    // XXX this is the default port for ftp. we need to strip out the actual
-    // XXX requested port.
-    rv = url->SetPort(21);
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         return rv;
@@ -160,7 +155,7 @@ nsFileProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     rv = nsFileChannel::Create(nsnull, nsIFileChannel::GetIID(), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(verb, url, eventSinkGetter, eventQueue);
+    rv = channel->Init(this, verb, url, eventSinkGetter, eventQueue);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

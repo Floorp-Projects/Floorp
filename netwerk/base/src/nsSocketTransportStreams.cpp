@@ -105,7 +105,7 @@ nsresult nsSocketTransportStream::Init(nsSocketTransport* aTransport,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = NS_NewBuffer(&mBuffer, MAX_IO_BUFFER_SIZE/2, 2*MAX_IO_BUFFER_SIZE);
+    rv = NS_NewBuffer(&mBuffer, MAX_IO_BUFFER_SIZE/2, 2*MAX_IO_BUFFER_SIZE, nsnull);
   }
   if (NS_SUCCEEDED(rv)) {
     rv = NS_NewBufferInputStream(&mStream, mBuffer);

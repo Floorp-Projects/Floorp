@@ -304,4 +304,7 @@ protected:
     nsHTTPChannel*              m_pConnection;
 };
 
+#define NS_HTTP_REQUEST_SEGMENT_SIZE     (4*1024)
+#define NS_HTTP_REQUEST_BUFFER_SIZE      (16*1024)
+
 #endif /* _nsHTTPRequest_h_ */

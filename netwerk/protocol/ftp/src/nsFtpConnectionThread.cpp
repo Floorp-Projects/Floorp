@@ -828,7 +828,8 @@ nsFtpConnectionThread::Run() {
                     nsIBufferInputStream* in;
 
                     nsIBuffer* buf;
-                    rv = NS_NewBuffer(&buf, 4 * 1024, 16 * 1024);
+                    rv = NS_NewBuffer(&buf, NS_FTP_THREAD_SEGMENT_SIZE,
+                                      NS_FTP_THREAD_BUFFER_SIZE, nsnull);
                     rv = NS_NewBufferInputStream(&in, buf);
                     if (NS_FAILED(rv)) {
                         mState = FTP_ERROR;
@@ -943,7 +944,8 @@ nsFtpConnectionThread::Run() {
                     nsIBufferInputStream* in;
 
                     nsIBuffer* buf;
-                    rv = NS_NewBuffer(&buf, 4 * 1024, 16 * 1024);
+                    rv = NS_NewBuffer(&buf, NS_FTP_THREAD_SEGMENT_SIZE, 
+                                      NS_FTP_THREAD_BUFFER_SIZE, nsnull);
                     rv = NS_NewBufferInputStream(&in, buf);
                     if (NS_FAILED(rv)) {
                         mState = FTP_ERROR;

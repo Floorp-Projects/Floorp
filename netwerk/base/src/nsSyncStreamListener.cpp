@@ -54,11 +54,16 @@ public:
 
     nsresult Init(nsIBufferInputStream* *result);
 
+    nsIBufferOutputStream* GetOutputStream() { return mOutputStream; }
+
 protected:
     nsIBufferOutputStream*      mOutputStream;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#define NS_SYNC_STREAM_LISTENER_SEGMENT_SIZE    (4 * 1024)
+#define NS_SYNC_STREAM_LISTENER_BUFFER_SIZE     (32 * 1024)
 
 nsresult 
 nsSyncStreamListener::Init(nsIBufferInputStream* *result)
@@ -66,7 +71,8 @@ nsSyncStreamListener::Init(nsIBufferInputStream* *result)
     nsresult rv;
     nsIBufferInputStream* in;
 
-    rv = NS_NewPipe2(&in, &mOutputStream, 4 * 1024, 16 * 1024);
+    rv = NS_NewPipe(&in, &mOutputStream, NS_SYNC_STREAM_LISTENER_SEGMENT_SIZE,
+                    NS_SYNC_STREAM_LISTENER_BUFFER_SIZE, PR_TRUE, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     *result = in;
@@ -145,8 +151,9 @@ nsSyncStreamListener::OnDataAvailable(nsISupports* context,
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_NET nsresult
-NS_NewSyncStreamListener(nsIStreamListener* *listener,
-                         nsIBufferInputStream* *inStream)
+NS_NewSyncStreamListener(nsIBufferInputStream **inStream,
+                         nsIBufferOutputStream **outStream,
+                         nsIStreamListener **listener)
 {
     nsSyncStreamListener* l = new nsSyncStreamListener();
     if (l == nsnull)
@@ -160,6 +167,7 @@ NS_NewSyncStreamListener(nsIStreamListener* *listener,
 
     NS_ADDREF(l);
     *listener = l;
+    *outStream = l->GetOutputStream();
     return NS_OK;
 }
 

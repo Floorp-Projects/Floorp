@@ -173,3 +173,6 @@ private:
     nsIStreamListener*  mListener;          // the listener we want to call
                                             // during our event firing.
 };
+
+#define NS_FTP_THREAD_SEGMENT_SIZE      (4*1024)
+#define NS_FTP_THREAD_BUFFER_SIZE       (16*1024)

@@ -31,8 +31,6 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsAsyncStreamListener.obj      \
         .\$(OBJDIR)\nsSyncStreamListener.obj       \
         .\$(OBJDIR)\nsIOService.obj                \
-        .\$(OBJDIR)\nsFileTransport.obj            \
-        .\$(OBJDIR)\nsFileTransportService.obj     \
         .\$(OBJDIR)\nsSocketTransport.obj          \
         .\$(OBJDIR)\nsSocketTransportStreams.obj   \
         .\$(OBJDIR)\nsSocketTransportService.obj   \

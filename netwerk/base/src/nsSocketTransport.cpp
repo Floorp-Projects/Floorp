@@ -1131,8 +1131,8 @@ nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *re
 
     // XXX not sure if this should be blocking (PR_TRUE) or non-blocking.
     nsIBufferOutputStream* out = nsnull;
-    rv = NS_NewPipe2(&mWriteStream, &out,
-                     MAX_IO_BUFFER_SIZE, MAX_IO_BUFFER_SIZE);
+    rv = NS_NewPipe(&mWriteStream, &out,
+                    MAX_IO_BUFFER_SIZE, MAX_IO_BUFFER_SIZE, PR_TRUE, nsnull);
     *result = out;
   }
 

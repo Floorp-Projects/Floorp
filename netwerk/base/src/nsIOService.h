@@ -50,7 +50,7 @@ public:
     NS_IMETHOD GetUserAgent(PRUnichar* *aUserAgent);
     NS_IMETHOD NewAsyncStreamObserver(nsIStreamObserver *receiver, nsIEventQueue *eventQueue, nsIStreamObserver **_retval);
     NS_IMETHOD NewAsyncStreamListener(nsIStreamListener *receiver, nsIEventQueue *eventQueue, nsIStreamListener **_retval);
-    NS_IMETHOD NewSyncStreamListener(nsIBufferInputStream **inStream, nsIStreamListener **_retval);
+    NS_IMETHOD NewSyncStreamListener(nsIBufferInputStream **inStream, nsIBufferOutputStream **outStream, nsIStreamListener **_retval);
 
     // nsIOService methods:
     nsIOService();

@@ -239,7 +239,7 @@ main(int argc, char* argv[])
   PRUint32 bytesWritten;
 
   nsIBuffer* buf;
-  rv = NS_NewBuffer(&buf, 1024, 4096);
+  rv = NS_NewBuffer(&buf, 1024, 4096, nsnull);
   rv = NS_NewBufferInputStream(&stream, buf);
   if (NS_FAILED(rv)) return rv;
 

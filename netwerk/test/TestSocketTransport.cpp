@@ -342,7 +342,7 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsy
       // Create a stream for the data being written to the server...
       if (NS_SUCCEEDED(rv)) {
         nsIBuffer* buf;
-        rv = NS_NewBuffer(&buf, 1024, 4096);
+        rv = NS_NewBuffer(&buf, 1024, 4096, nsnull);
         rv = NS_NewBufferInputStream(&mStream, buf);
       }
     } 
