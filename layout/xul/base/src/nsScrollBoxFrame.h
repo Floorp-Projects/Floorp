@@ -120,7 +120,6 @@ public:
 
 protected:
   nsScrollBoxFrame(nsIPresShell* aShell);
-  virtual PRIntn GetSkipSides() const;
 
    // Creation of the widget for the scrolling view is factored into a virtual method so
    // that sub-classes may control widget creation.

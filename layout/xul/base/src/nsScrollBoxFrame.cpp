@@ -634,12 +634,6 @@ nsScrollBoxFrame::Paint(nsIPresContext*      aPresContext,
   return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
-PRIntn
-nsScrollBoxFrame::GetSkipSides() const
-{
-  return 0;
-}
-
 nsresult 
 nsScrollBoxFrame::GetContentOf(nsIContent** aContent)
 {

@@ -58,6 +58,7 @@
 #include <stdarg.h>
 #include "nsISizeOfHandler.h"
 #include "nsIFrameManager.h"
+#include "nsCSSRendering.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
@@ -943,6 +944,44 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     delete details;
   }
   return NS_OK;
+}
+
+void
+nsFrame::PaintSelf(nsIPresContext*      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect,
+                   PRIntn               aSkipSides)
+{
+  // The visibility check belongs here since child elements have the
+  // opportunity to override the visibility property and display even if
+  // their parent is hidden.
+
+  PRBool isVisible;
+  if (mRect.height == 0 || mRect.width == 0 ||
+      NS_FAILED(IsVisibleForPainting(aPresContext, aRenderingContext,
+                                     PR_TRUE, &isVisible)) ||
+      !isVisible) {
+    return;
+  }
+
+  // Paint our background and border
+  const nsStyleBorder* border;
+  ::GetStyleData(mStyleContext, &border);
+  const nsStylePadding* padding;
+  ::GetStyleData(mStyleContext, &padding);
+  const nsStyleOutline* outline;
+  ::GetStyleData(mStyleContext, &outline);
+
+  nsRect rect(0, 0, mRect.width, mRect.height);
+  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *border, *padding,
+                                  0, 0);
+  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                              aDirtyRect, rect, *border, mStyleContext,
+                              aSkipSides);
+  nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                               aDirtyRect, rect, *border, *outline,
+                               mStyleContext, 0);
 }
 
 /**

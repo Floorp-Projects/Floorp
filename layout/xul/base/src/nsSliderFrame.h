@@ -228,10 +228,6 @@ public:
   NS_IMETHOD_(void) Notify(nsITimer *timer);
   //friend nsSliderMediator;
 
-protected:
-
-  virtual PRIntn GetSkipSides() const { return 0; }
-
  
 private:
 

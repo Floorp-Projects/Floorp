@@ -49,7 +49,6 @@
 #include "nsLineLayout.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleConsts.h"
-#include "nsCSSRendering.h"
 #include "nsIFrameManager.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -5652,7 +5651,7 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
 #endif  
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect, aFlags);
+    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
   }
 
   PRBool paintingSuppressed = PR_FALSE;  

@@ -232,9 +232,6 @@ protected:
                                nsFramePaintLayer    aWhichLayer,
                                PRUint32             aFlags = 0);
 
-    virtual PRIntn GetSkipSides() const { return 0; }
-
-
     virtual PRBool GetInitialEqualSize(PRBool& aEqualSize); 
     virtual void GetInitialOrientation(PRBool& aIsHorizontal);
     virtual void GetInitialDirection(PRBool& aIsNormal);

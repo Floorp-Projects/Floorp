@@ -123,15 +123,12 @@ public:
 protected:
   virtual PRIntn GetSkipSides() const = 0;
 
-  /**
-   * To be called by |Paint| of this class or derived classes to paint
-   * the background, border, and outline, when in the correct layer to
-   * do so.
-   */
   void PaintSelf(nsIPresContext*      aPresContext,
                  nsIRenderingContext& aRenderingContext,
-                 const nsRect&        aDirtyRect,
-                 PRUint32             aFlags);
+                 const nsRect&        aDirtyRect) {
+    nsContainerFrame::PaintSelf(aPresContext, aRenderingContext,
+                                aDirtyRect, GetSkipSides());
+  }
 
   /**
    * To be called *instead* of |PaintChildren| by frames that paint text

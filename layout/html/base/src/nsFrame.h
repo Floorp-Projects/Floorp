@@ -469,6 +469,16 @@ protected:
   nsFrame();
   virtual ~nsFrame();
 
+  /**
+   * To be called by |Paint| of this class or derived classes to paint
+   * the background, border, and outline, when in the correct layer to
+   * do so.
+   */
+  void PaintSelf(nsIPresContext*      aPresContext,
+                 nsIRenderingContext& aRenderingContext,
+                 const nsRect&        aDirtyRect,
+                 PRIntn               aSkipSides = 0);
+
   PRInt16 DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
   
   //this will modify aPos and return the next frame ect.

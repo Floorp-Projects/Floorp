@@ -1302,21 +1302,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
                                             ? NS_FRAME_PAINT_LAYER_BACKGROUND
                                             : NS_FRAME_PAINT_LAYER_FOREGROUND;
     if (aWhichLayer == backgroundLayer) {
-      const nsStyleVisibility* vis = 
-        (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-      if (vis->IsVisibleOrCollapsed()) {
-        const nsStyleBorder* myBorder = (const nsStyleBorder*)
-          mStyleContext->GetStyleData(eStyleStruct_Border);
-        const nsStylePadding* myPadding = (const nsStylePadding*)
-          mStyleContext->GetStyleData(eStyleStruct_Padding);
-        nsRect rect(0, 0, mRect.width, mRect.height);
-        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *myBorder, *myPadding,
-                                        0, 0);
-        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *myBorder,
-                                    mStyleContext, 0);
-      }
+      PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
     }
 
     nsCOMPtr<imgIContainer> imgCon;

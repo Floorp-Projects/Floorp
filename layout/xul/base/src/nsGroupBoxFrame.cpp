@@ -126,7 +126,7 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
 
     if (vis->IsVisible() && mRect.width && mRect.height) {
-      PRIntn skipSides = GetSkipSides();
+      PRIntn skipSides = 0;
       const nsStyleBorder* borderStyleData =
         (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
       const nsStylePadding* paddingStyleData =
