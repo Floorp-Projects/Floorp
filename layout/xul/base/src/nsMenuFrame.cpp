@@ -1500,33 +1500,37 @@ nsMenuFrame::OnCreate()
           nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
 
           if ( commandContent ) {
-            nsAutoString commandDisabled, menuDisabled;
-            commandContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, commandDisabled);
-            grandChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, menuDisabled);
-            if (!commandDisabled.Equals(menuDisabled)) {
+            nsAutoString commandAttr, menuAttr;
+            commandContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, commandAttr);
+            grandChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, menuAttr);
+            if (!commandAttr.Equals(menuAttr)) {
               // The menu's disabled state needs to be updated to match the command.
-              if (commandDisabled.IsEmpty()) 
+              if (commandAttr.IsEmpty()) 
                 grandChild->UnsetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
-              else grandChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, commandDisabled, PR_TRUE);
+              else grandChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, commandAttr, PR_TRUE);
             }
 
-            // The menu's value and checked states need to be updated to match the command.
-            // Note that (unlike the disabled state) if the command has *no* value for either, we
+            commandAttr.AssignWithConversion("");
+            menuAttr.AssignWithConversion("");
+
+            // The menu's label and checked states need to be updated to match the command.
+            // Note that (unlike the disabled state) if the command has *no* label for either, we
             // assume the menu is supplying its own.
-            nsAutoString commandChecked, menuChecked;
-            commandContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, commandChecked);
-            grandChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, menuChecked);
-            if (!commandChecked.Equals(menuChecked)) {
-              if (!commandChecked.IsEmpty()) 
-                grandChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, commandChecked, PR_TRUE);
+            commandContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, commandAttr);
+            grandChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, menuAttr);
+            if (!commandAttr.Equals(menuAttr)) {
+              if (!commandAttr.IsEmpty()) 
+                grandChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, commandAttr, PR_TRUE);
             }
             
-            nsAutoString commandValue, menuValue;
-            commandContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::value, commandValue);
-            grandChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::value, menuValue);
-            if (!commandValue.Equals(menuValue)) {
-              if (!commandValue.IsEmpty()) 
-                grandChild->SetAttribute(kNameSpaceID_None, nsXULAtoms::value, commandValue, PR_TRUE);
+            commandAttr.AssignWithConversion("");
+            menuAttr.AssignWithConversion("");
+
+            commandContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::label, commandAttr);
+            grandChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::label, menuAttr);
+            if (!commandAttr.Equals(menuAttr)) {
+              if (!commandAttr.IsEmpty()) 
+                grandChild->SetAttribute(kNameSpaceID_None, nsXULAtoms::label, commandAttr, PR_TRUE);
             }
           }
         }
