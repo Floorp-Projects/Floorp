@@ -51,19 +51,30 @@ private:
   PRUint32 mLength;
   PRUint32 mIndex;
   nsString mNamespace;
+  const char** mNamespaceArray;
+  PRUint32 mNumNamespaces;
 
 public:
   nsChildElementIterator(nsIDOMElement* aParent) :
-    mIndex(0), mLength(0) 
+    mIndex(0), mLength(0), mNumNamespaces(0)
   {
     SetElement(aParent);
   }    
   
   nsChildElementIterator(nsIDOMElement* aParent,
                          const nsAReadableString& aNamespace) :
-    mIndex(0), mLength(0), mNamespace(aNamespace)
+    mIndex(0), mLength(0), mNamespace(aNamespace), mNumNamespaces(0)
   {
     SetElement(aParent);
+  }
+
+  nsChildElementIterator(nsIDOMElement* aParent,
+                         const char** aNamespaceArray,
+                         PRUint32 aNumNamespaces) :
+    mIndex(0), mLength(0), mNamespaceArray(aNamespaceArray), 
+    mNumNamespaces(aNumNamespaces)
+  {
+    SetElement(aParent);    
   }
 
   ~nsChildElementIterator() {}
@@ -100,11 +111,19 @@ public:
       }
       
       // Confirm that the element is an element of the specified namespace
+      nsAutoString namespaceURI;           
+      childElement->GetNamespaceURI(namespaceURI);  
       if (!mNamespace.IsEmpty()) {
-        nsAutoString namespaceURI;           
-        childElement->GetNamespaceURI(namespaceURI);  
         if (!namespaceURI.Equals(mNamespace)) {
           continue;
+        }
+      }
+      else if (mNumNamespaces) {
+        PRUint32 i;
+        for (i = 0; i < mNumNamespaces; i++) {
+          if (!namespaceURI.Equals(NS_ConvertASCIItoUCS2(mNamespaceArray[i]))) {
+            continue;
+          }
         }
       }
       
