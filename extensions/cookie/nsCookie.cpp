@@ -515,11 +515,10 @@ cookie_RemoveAllPermissions() {
     return;
   }
   PRInt32 count = cookie_permissionList->Count();
-  for (PRInt32 i = 0; i < count; ++i) {
+  for (PRInt32 i = count-1; i >=0; i--) {
     victim = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
     if (victim) {
       cookie_FreePermission(victim, PR_FALSE);
-	  i = -1;
     }
   }
   delete cookie_permissionList;
@@ -527,9 +526,7 @@ cookie_RemoveAllPermissions() {
   cookie_UnlockPermissionListst();
 }
 
-/* This should only get called while holding the cookie-lock
-**
-*/
+/* This should only get called while holding the cookie-lock */
 PRIVATE void
 cookie_FreeCookie(cookie_CookieStruct * cookie) {
   if(!cookie) {
@@ -561,11 +558,10 @@ cookie_RemoveAllCookies() {
     return;
   }
   PRInt32 count = cookie_cookieList->Count();
-  for (PRInt32 i = 0; i < count; ++i) {
+  for (PRInt32 i = count-1; i >=0; i--) {
     victim = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
     if (victim) {
       cookie_FreeCookie(victim);
-	  i = -1;
     }
   }
   delete cookie_cookieList;
@@ -576,9 +572,8 @@ cookie_RemoveAllCookies() {
 PUBLIC void
 COOKIE_RemoveAllCookies()
 {
-
-	cookie_RemoveAllPermissions();
-	cookie_RemoveAllCookies();
+  cookie_RemoveAllPermissions();
+  cookie_RemoveAllCookies();
 }
 
 PRIVATE void
@@ -845,10 +840,10 @@ COOKIE_GetCookie(char * address) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
     if (cookie_s == nsnull) {
       continue;
-	}
+    }
     if(!cookie_s->host) {
-		continue;
-	}
+      continue;
+    }
 
     /* check the host or domain first */
     if(cookie_s->isDomain) {
@@ -913,7 +908,7 @@ COOKIE_GetCookie(char * address) {
         StrAllocCat(rv, name);
         StrAllocCat(rv, cookie_s->cookie);
 #endif /* PREVENT_DUPLICATE_NAMES */
-      }	else {
+      } else {
         StrAllocCat(rv, cookie_s->cookie);
       }
     }
@@ -1108,7 +1103,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     PR_Free(cur_host);
     return;
   }
-*/	
+*/
   if(cookie_GetBehaviorPref() == COOKIE_DontUse) {
     PR_Free(cur_path);
     PR_Free(cur_host);
@@ -1485,7 +1480,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
         cookie_Undefer();
         return;
       }
-    }		
+    }
 
     /* add it to the list so that it is before any strings of smaller length */
     bCookieAdded = PR_FALSE;
@@ -1612,11 +1607,11 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * setCookieHeader, char * ser
       }
       /* if it's foreign, get out of here after a little clean up */
       if(!cookie_SameDomain(curHost, curSessionHistHost)) {
-        PR_FREEIF(curHost);	
+        PR_FREEIF(curHost);
         PR_FREEIF(curSessionHistHost);
         return;
       }
-      PR_FREEIF(curHost);	
+      PR_FREEIF(curHost);
       PR_FREEIF(curSessionHistHost);
     }
   }
@@ -1834,7 +1829,7 @@ cookie_SaveCookies() {
    * host \t isDomain \t path \t xxx \t expires \t name \t cookie
    *
    * isDomain is PR_TRUE or PR_FALSE
-   * xxx is PR_TRUE or PR_FALSE  
+   * xxx is PR_TRUE or PR_FALSE
    * expires is a time_t integer
    * cookie can have tabs
    */
@@ -1902,7 +1897,7 @@ cookie_LoadCookies() {
    * host \t isDomain \t path \t xxx \t expires \t name \t cookie
    *
    * if this format isn't respected we move onto the next line in the file.
-   * isDomain is PR_TRUE or PR_FALSE	-- defaulting to PR_FALSE
+   * isDomain is PR_TRUE or PR_FALSE -- defaulting to PR_FALSE
    * xxx is PR_TRUE or PR_FALSE   -- should default to PR_TRUE
    * expires is a time_t integer
    * cookie can have tabs
@@ -1986,7 +1981,7 @@ cookie_LoadCookies() {
       }
     }
 
-    /* no shorter strings found in list so add new cookie at end */	
+    /* no shorter strings found in list so add new cookie at end */
     if (!added_to_list) {
       cookie_cookieList->AppendElement(new_cookie);
     }
@@ -2145,7 +2140,6 @@ cookie_FindValueInArgs(nsAutoString results, char* name) {
   nsAutoString value;
   PRInt32 start, length;
   start = results.Find(name);
-//  XP_ASSERT(start >= 0);
   NS_ASSERTION(start >= 0, "bad data");
   if (start < 0) {
     return nsAutoString("").ToNewCString();
@@ -2159,67 +2153,40 @@ cookie_FindValueInArgs(nsAutoString results, char* name) {
 PUBLIC void
 COOKIE_CookieViewerReturn(nsAutoString results) {
   cookie_CookieStruct * cookie;
-  cookie_CookieStruct * cookieToDelete = 0;
   cookie_PermissionStruct * permission;
-  cookie_PermissionStruct * permissionToDelete = 0;
-  int cookieNumber;
-  int permissionNumber;
   PRInt32 count = 0;
 
-  /* step through all cookies and delete those that are in the sequence
-   * Note: we can't delete cookie while "cookie_ptr" is pointing to it because
-   * that would destroy "cookie_ptr". So we do a lazy deletion
-   */
+  /* step through all cookies and delete those that are in the sequence */
   char * gone = cookie_FindValueInArgs(results, "|goneC|");
-  cookieNumber = 0;
   cookie_LockCookieList();
   if (cookie_cookieList) {
     count = cookie_cookieList->Count();
-    for (PRInt32 i = 0; i < count; ++i) {
-      cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
-      if (cookie) {
-        if (cookie_InSequence(gone, cookieNumber)) {
-          if (cookieToDelete) {
-            cookie_FreeCookie(cookieToDelete);
-          }
-          cookieToDelete = cookie;
-        }
-        cookieNumber++;
+    while (count>0) {
+      count--;
+      cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(count));
+      if (cookie && cookie_InSequence(gone, count)) {
+        cookie_FreeCookie(cookie);
       }
-    }
-    if (cookieToDelete) {
-      cookie_FreeCookie(cookieToDelete);
-      cookie_SaveCookies();
     }
   }
   cookie_UnlockCookieList();
   delete[] gone;
 
-  /* step through all permissions and delete those that are in the sequence
-   * Note: we can't delete permission while "permission_ptr" is pointing to it because
-   * that would destroy "permission_ptr". So we do a lazy deletion
-   */
+  /* step through all permissions and delete those that are in the sequence */
   gone = cookie_FindValueInArgs(results, "|goneP|");
-  permissionNumber = 0;
   cookie_LockPermissionList();
   if (cookie_permissionList) {
     count = cookie_permissionList->Count();
-    for (PRInt32 i = 0; i < count; ++i) {
-      permission = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
-      if (permission) {
-        if (cookie_InSequence(gone, permissionNumber)) {
-          if (permissionToDelete) {
-            cookie_FreePermission(permissionToDelete, PR_FALSE);
-          }
-          permissionToDelete = permission;
-        }
-        permissionNumber++;
+    while (count>0) {
+      count--;
+      permission = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(count));
+      if (permission && cookie_InSequence(gone, count)) {
+        cookie_FreePermission(permission, PR_FALSE);
+        cookie_permissionsChanged = PR_TRUE;
       }
     }
-    if (permissionToDelete) {
-      cookie_FreePermission(permissionToDelete, PR_TRUE);
-    }
   }
+  cookie_SavePermissions();
   cookie_UnlockPermissionListst();
   delete[] gone;
 }
@@ -2353,7 +2320,7 @@ SHIST_GetCurrent(History * hist) {
 }
 #endif
 
-/*	Very similar to strdup except it free's too
+/* Very similar to strdup except it free's too
  */
 PUBLIC char * 
 NET_SACopy (char **destination, const char *source) {
@@ -2407,7 +2374,6 @@ cookie_ParseDate(char *date_string) {
   // TRACEMSG(("Parsing date string: %s\n",date_string));
 
   /* try using PR_ParseTimeString instead */
-	
   if(PR_ParseTimeString(date_string, PR_TRUE, &prdate) == PR_SUCCESS) {
     PRInt64 r, u;
     LL_I2L(u, PR_USEC_PER_SEC);
@@ -2617,14 +2583,14 @@ cookie_ParseURL (const char *url, int parts_requested) {
       }
     }
   }
-	
+
   /* Get the path part */
   if (parts_requested & GET_PATH_PART) {
     if(colon) {
       if(*(colon+1) == '/' && *(colon+2) == '/') {
         /* skip host part */
         slash = PL_strchr(colon+3, '/');
-      }	else {
+      } else {
         /* path is right after the colon */
         slash = colon+1;
       }
@@ -2647,7 +2613,7 @@ cookie_ParseURL (const char *url, int parts_requested) {
       }
     }
   }
-		
+
   if(parts_requested & GET_HASH_PART) {
     hash_mark = PL_strchr(url, '#'); /* returns a const char * */
     if(hash_mark) {
