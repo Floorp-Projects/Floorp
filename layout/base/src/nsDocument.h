@@ -22,7 +22,7 @@
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIScriptContext.h"
+#include "nsIScriptContextOwner.h"
 #include "nsIDOMEventCapturer.h"
 
 class nsISelection;
@@ -98,6 +98,14 @@ public:
   virtual PRInt32 GetNumberOfStyleSheets();
   virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex);
   virtual void AddStyleSheet(nsIStyleSheet* aSheet);
+
+  /**
+   * Set the object from which a document can get a script context.
+   * This is the context within which all scripts (during document 
+   * creation and during event handling) will run.
+   */
+  virtual nsIScriptContextOwner *GetScriptContextOwner();
+  virtual void SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner);
 
   /**
    * Add a new observer of document change notifications. Whenever
@@ -231,6 +239,7 @@ protected:
   nsVoidArray mStyleSheets;
   nsVoidArray mObservers;
   void* mScriptObject;
+  nsIScriptContextOwner *mScriptContextOwner;
   nsIEventListenerManager* mListenerManager;
 };
 

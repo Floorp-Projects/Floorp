@@ -22,6 +22,7 @@
 #include "nsISupports.h"
 #include "nsIUnicharInputStream.h"
 #include "nsGUIEvent.h"
+
 class nsIArena;
 class nsIContent;
 class nsIDocumentContainer;
@@ -35,6 +36,7 @@ class nsIStyleSheet;
 class nsIURL;
 class nsIViewManager;
 class nsString;
+class nsIScriptContextOwner;
 class nsIWebWidget;
 class nsIDOMEvent;
 class nsIDeviceContext;
@@ -118,6 +120,14 @@ public:
   virtual PRInt32 GetNumberOfStyleSheets() = 0;
   virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex) = 0;
   virtual void AddStyleSheet(nsIStyleSheet* aSheet) = 0;
+
+  /**
+   * Set the object from which a document can get a script context.
+   * This is the context within which all scripts (during document 
+   * creation and during event handling) will run.
+   */
+  virtual nsIScriptContextOwner *GetScriptContextOwner() = 0;
+  virtual void SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner) = 0;
 
   //----------------------------------------------------------------------
 

@@ -151,6 +151,7 @@ protected:
   nsresult ProcessAREATag(const nsIParserNode& aNode);
   nsresult ProcessBASETag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
+  nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
 
   nsresult ProcessBRTag(nsIHTMLContent** aInstancePtrResult,
                         const nsIParserNode& aNode);
@@ -741,6 +742,11 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     return 0;
 
   case eHTMLTag_script:
+    // XXX SCRIPT tag evaluation is currently turned off till we
+    // get more scripts working.
+#if 0
+    ProcessSCRIPTTag(aNode);
+#endif
     return 0;
 
   case eHTMLTag_area:
@@ -1026,6 +1032,102 @@ nsresult HTMLContentSink::ProcessSPACERTag(nsIHTMLContent** aInstancePtrResult,
     rv = AddAttributes(aNode, *aInstancePtrResult);
   }
   NS_RELEASE(atom);
+  return rv;
+}
+
+#define SCRIPT_BUF_SIZE 1024
+
+nsresult HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
+{
+  nsresult rv = NS_OK;
+  PRInt32 i, ac = aNode.GetAttributeCount();
+
+  // Look for SRC attribute
+  nsString* src = nsnull;
+  for (i = 0; i < ac; i++) {
+    const nsString& key = aNode.GetKeyAt(i);
+    if (key.EqualsIgnoreCase("src")) {
+      src = new nsString(aNode.GetValueAt(i));
+    }
+  }
+
+  char *script = nsnull;
+  PRInt32 len = 0;
+
+  // If there is a SRC attribute, (for now) read from the
+  // stream synchronously and hold the data in a string.
+  if (nsnull != src) {
+    // Use the SRC attribute value to open a blocking stream
+    nsIURL* url = nsnull;
+    char* spec = src->ToNewCString();
+    rv = NS_NewURL(&url, nsnull, spec);
+    delete spec;
+    delete src;
+    if (NS_OK != rv) {
+      return rv;
+    }
+    PRInt32 ec;
+    nsIInputStream* iin = url->Open(&ec);
+    if (nsnull == iin) {
+      NS_RELEASE(url);
+      return (nsresult) ec;/* XXX fix url->Open */
+    }
+
+    // Drain the stream by reading from it a chunk at a time
+    nsString data;
+    PRInt32 err, nb;
+    do {
+      char buf[SCRIPT_BUF_SIZE];
+      
+      nb = iin->Read(&err, buf, 0, SCRIPT_BUF_SIZE);
+      if (0 == err) {
+        data.Append((const char *)buf, nb);
+      }
+    } while (err == 0);
+
+    if (NS_INPUTSTREAM_EOF == err) {
+      script = data.ToNewCString();
+      len = data.Length();
+    }
+    else {
+      rv = NS_ERROR_FAILURE;
+    }
+
+    NS_RELEASE(iin);
+    NS_RELEASE(url);
+  }
+  else {
+    // Otherwise, get the text content of the script tag
+    const nsString& content = aNode.GetSkippedContent();
+    script = content.ToNewCString();
+    len = content.Length();
+  }
+
+  if (nsnull != script) {
+    nsIScriptContextOwner *owner;
+    nsIScriptContext *context;
+    owner = mDocument->GetScriptContextOwner();
+    if (nsnull != owner) {
+    
+      rv = owner->GetScriptContext(&context);
+      if (rv != NS_OK) {
+        NS_RELEASE(owner);
+        return rv;
+      }
+      
+      jsval val;
+      PRBool result = context->EvaluateString(script, len, &val);
+      
+      if (PR_FALSE == result) {
+        rv = NS_ERROR_FAILURE;
+      }
+
+      NS_RELEASE(context);
+      NS_RELEASE(owner);
+    }
+    delete script;
+  }
+
   return rv;
 }
 

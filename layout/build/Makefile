@@ -25,7 +25,7 @@ LIBRARY_NAME = raptorhtml
 
 MODULE=raptor 
 
-REQUIRES=xpcom raptor 
+REQUIRES=xpcom raptor
 
 CPPSRCS=dlldeps.cpp 
 
