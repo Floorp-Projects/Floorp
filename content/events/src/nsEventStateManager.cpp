@@ -111,6 +111,7 @@
 #include "nsWidgetsCID.h"
 
 #include "nsIFrameTraversal.h"
+#include "nsLayoutAtoms.h"
 #include "nsLayoutCID.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsUnicharUtils.h"
@@ -3394,6 +3395,34 @@ nsEventStateManager::TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex)
   }
 }
 
+PRBool
+nsEventStateManager::HasFocusableAncestor(nsIFrame *aFrame)
+{
+  // This method helps prevent a situation where a link or other element
+  // with -moz-user-focus is focused twice, because the parent link
+  // would get focused, and all of the children also get focus.
+
+  nsIFrame *ancestorFrame = aFrame;
+  while ((ancestorFrame = ancestorFrame->GetParent()) != nsnull) {
+    nsIContent *ancestorContent = ancestorFrame->GetContent();
+    if (!ancestorContent) {
+      break;
+    }
+    nsIAtom *ancestorTag = ancestorContent->Tag();
+    if (ancestorTag == nsHTMLAtoms::frame || ancestorTag == nsHTMLAtoms::iframe) {
+      break; // The only focusable containers that can also have focusable children
+    }
+    // Any other parent that's focusable can't have focusable children
+    const nsStyleUserInterface *ui = ancestorFrame->GetStyleUserInterface();
+    if (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE &&
+        ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {
+      // Inside a focusable parent -- let parent get focus
+      // instead of child (to avoid links within links etc.)
+      return PR_TRUE;   
+    }
+  }
+  return PR_FALSE;
+}
 
 nsresult
 nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
@@ -3618,22 +3647,12 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             }
           }
 
-          // Might be using -moz-user-focus and imitating a control
-          // Check to see if linked
-          nsIContent* findAnchorAncestor;
-          for (findAnchorAncestor = child; findAnchorAncestor; 
-               findAnchorAncestor = findAnchorAncestor->GetParent()) {
-            nsCOMPtr<nsIDOMHTMLAnchorElement> anchor  = 
-              do_QueryInterface(findAnchorAncestor);
-            if (anchor) {
-              break; // Found an anchor
-            }
-          }
-          if (!findAnchorAncestor && !hasImageMap) {
-            // Focusable, but no anchor or image map.
-            // Therefore, this image is imitating a form control
-            disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
-          }
+          // Might be using -moz-user-focus and imitating a control.
+          // If already inside link, -moz-user-focus'd element, or already has 
+          // image map with tab stops, then don't use the
+          // image frame itself as a tab stop.
+          disabled = HasFocusableAncestor(currentFrame) || hasImageMap ||
+                     !(sTabFocusModel & eTabFocus_formElementsMask);
         }
         else if (tag == nsHTMLAtoms::object) {
           // OBJECT is treated as a form element.
@@ -3676,7 +3695,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
           // Let any HTML element with -moz-user-focus: normal be tabbable
           // Without this rule, DHTML form controls made from div or span
           // cannot be put in the tab order.
-          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
+          disabled = !(sTabFocusModel & eTabFocus_formElementsMask) ||
+            HasFocusableAncestor(currentFrame);
         }
       }
       else {
