@@ -123,7 +123,7 @@ RTL_FLAGS=-MDd         # Dynamically linked, multithreaded MSVC4.0 debug RTL
 #//
 #//------------------------------------------------------------------------
 OS_CFLAGS=$(OPTIMIZER) $(RTL_FLAGS) -W3 -nologo -D_X86_ -D_WINDOWS  -DWIN32 \
-            -DXP_PC -DXP_WIN -DXP_WIN32 -DHW_THREADS -DWINVER=0x400
+            -DXP_PC -DXP_WIN -DXP_WIN32 -DHW_THREADS -DWINVER=0x400 -Gy
 
 OS_CFLAGS=$(OS_CFLAGS) -DMSVC4 
 
@@ -157,6 +157,10 @@ EXE_LFLAGS=
 !endif
 EXE_LIBS=
 
+!if defined(MOZ_COVERAGE) && !defined(MOZ_NO_COVERAGE)
+EXE_LIBS=$(EXE_LIBS) $(DIST)/lib/trace.lib
+!endif
+
 #//------------------------------------------------------------------------
 #//
 #// Specify the special flags for creating DLLs
@@ -166,6 +170,10 @@ DLL_CFLAGS=
 DLL_LFLAGS=/SUBSYSTEM:WINDOWS
 DLL_LIBS=
 
+!if defined(MOZ_COVERAGE) && !defined(MOZ_NO_COVERAGE)
+DLL_LIBS=$(DLL_LIBS) $(DIST)/lib/trace.lib
+!endif
+ 
 #//------------------------------------------------------------------------
 #// 
 #// rebase setting, msvc systems better have this

@@ -11,3 +11,6 @@ build_number
 master.pl
 master.ini
 nsBuildID.h
+trace.dll
+trace.exp
+trace.lib

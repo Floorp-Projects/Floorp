@@ -317,8 +317,8 @@ include <$(DEPTH)/config/WIN$(MOZ_BITS)>
 !ifdef USERNAME
 CFLAGS = $(CFLAGS) -DDEBUG_$(USERNAME)
 !endif
-!if defined(GLOWCODE) && defined(GLOWPROF) && "$(MOZ_BITS)"=="32"
-CFLAGS = $(CFLAGS) -Gh
+!if (defined(MOZ_COVERAGE) && !defined(MOZ_NO_COVERAGE)) || (defined(GLOWCODE) && defined(GLOWPROF) && "$(MOZ_BITS)"=="32")
+CFLAGS = $(CFLAGS) /Gh
 !endif
 !endif
 
