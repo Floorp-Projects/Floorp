@@ -63,7 +63,6 @@ nsGenericDOMDataNode::nsGenericDOMDataNode()
 {
   mDocument = nsnull;
   mParent = nsnull;
-  mContent = nsnull;
   mScriptObject = nsnull;
   mListenerManager = nsnull;
   mRangeList = nsnull;
@@ -76,14 +75,6 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
   delete mRangeList;
 }
 
-void
-nsGenericDOMDataNode::Init(nsIContent* aOuterContentObject)
-{
-  NS_ASSERTION((nsnull == mContent) && (nsnull != aOuterContentObject),
-               "null ptr");
-  mContent = aOuterContentObject;
-}
-
 nsresult
 nsGenericDOMDataNode::GetNodeValue(nsString& aNodeValue)
 {
@@ -91,9 +82,10 @@ nsGenericDOMDataNode::GetNodeValue(nsString& aNodeValue)
 }
 
 nsresult
-nsGenericDOMDataNode::SetNodeValue(const nsString& aNodeValue)
+nsGenericDOMDataNode::SetNodeValue(nsIContent *aOuterContent,
+                                   const nsString& aNodeValue)
 {
-  return SetData(aNodeValue);
+  return SetData(aOuterContent, aNodeValue);
 }
 
 nsresult
@@ -119,14 +111,15 @@ nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
 }
 
 nsresult
-nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
+nsGenericDOMDataNode::GetPreviousSibling(nsIContent *aOuterContent,
+                                         nsIDOMNode** aPrevSibling)
 {
   nsIContent* sibling = nsnull;
   nsresult result = NS_OK;
 
   if (nsnull != mParent) {
     PRInt32 pos;
-    mParent->IndexOf(mContent, pos);
+    mParent->IndexOf(aOuterContent, pos);
     if (pos > -1 ) {
       mParent->ChildAt(--pos, sibling);
     }
@@ -135,7 +128,7 @@ nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
     // Nodes that are just below the document (their parent is the
     // document) need to go to the document to find their next sibling.
     PRInt32 pos;
-    mDocument->IndexOf(mContent, pos);
+    mDocument->IndexOf(aOuterContent, pos);
     if (pos > -1 ) {
       mDocument->ChildAt(--pos, sibling);
     }    
@@ -154,14 +147,15 @@ nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 }
 
 nsresult
-nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
+nsGenericDOMDataNode::GetNextSibling(nsIContent *aOuterContent,
+                                     nsIDOMNode** aNextSibling)
 {
   nsIContent* sibling = nsnull;
   nsresult result = NS_OK;
 
   if (nsnull != mParent) {
     PRInt32 pos;
-    mParent->IndexOf(mContent, pos);
+    mParent->IndexOf(aOuterContent, pos);
     if (pos > -1 ) {
       mParent->ChildAt(++pos, sibling);
     }
@@ -170,7 +164,7 @@ nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
     // Nodes that are just below the document (their parent is the
     // document) need to go to the document to find their next sibling.
     PRInt32 pos;
-    mDocument->IndexOf(mContent, pos);
+    mDocument->IndexOf(aOuterContent, pos);
     if (pos > -1 ) {
       mDocument->ChildAt(++pos, sibling);
     }    
@@ -249,15 +243,17 @@ nsGenericDOMDataNode::GetData(nsString& aData)
 }
 
 nsresult    
-nsGenericDOMDataNode::SetData(const nsString& aData)
+nsGenericDOMDataNode::SetData(nsIContent *aOuterContent, const nsString& aData)
 {
   // inform any enclosed ranges of change
   // we can lie and say we are deleting all the text, since in a total
   // text replacement we should just collapse all the ranges.
-  if (mRangeList) nsRange::TextOwnerChanged(mContent, 0, mText.GetLength(), 0);
+  if (mRangeList) nsRange::TextOwnerChanged(aOuterContent, 0,
+                                            mText.GetLength(), 0);
 
   nsresult result;
-  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(mContent, &result);
+  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aOuterContent,
+                                                           &result);
 
   // If possible, let the container content object have a go at it.
   if (NS_SUCCEEDED(result)) {
@@ -266,7 +262,8 @@ nsGenericDOMDataNode::SetData(const nsString& aData)
                                   PR_TRUE); 
   }
   else {
-    result = SetText(aData.GetUnicode(), aData.Length(), PR_TRUE); 
+    result = SetText(aOuterContent, aData.GetUnicode(), aData.Length(),
+                     PR_TRUE); 
   }
 
   return result;
@@ -309,7 +306,8 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
 //----------------------------------------------------------------------
 
 nsresult    
-nsGenericDOMDataNode::AppendData(const nsString& aData)
+nsGenericDOMDataNode::AppendData(nsIContent *aOuterContent,
+                                 const nsString& aData)
 {
 #if 1
   // Allocate new buffer
@@ -334,7 +332,8 @@ nsGenericDOMDataNode::AppendData(const nsString& aData)
   // Null terminate the new buffer...
   to[newSize] = (PRUnichar)0;
 
-  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(mContent, &result);
+  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aOuterContent,
+                                                         &result));
 
   // Switch to new buffer
   // Dont do notification in SetText, since we will do it later
@@ -342,7 +341,7 @@ nsGenericDOMDataNode::AppendData(const nsString& aData)
     result = textContent->SetText(to, newSize, PR_FALSE);
   }
   else {
-    result = SetText(to, newSize, PR_FALSE);
+    result = SetText(aOuterContent, to, newSize, PR_FALSE);
   }
 
   delete [] to;
@@ -353,11 +352,11 @@ nsGenericDOMDataNode::AppendData(const nsString& aData)
     result = NS_NewTextContentChangeData(&tccd);
     if (NS_SUCCEEDED(result)) {
       tccd->SetData(nsITextContentChangeData::Append, textLength, dataLength);
-      result = mDocument->ContentChanged(mContent, tccd);
+      result = mDocument->ContentChanged(aOuterContent, tccd);
       NS_RELEASE(tccd);
     }
     else {
-      result = mDocument->ContentChanged(mContent, nsnull);
+      result = mDocument->ContentChanged(aOuterContent, nsnull);
     }
   }
 
@@ -368,21 +367,23 @@ nsGenericDOMDataNode::AppendData(const nsString& aData)
 }
 
 nsresult    
-nsGenericDOMDataNode::InsertData(PRUint32 aOffset, const nsString& aData)
+nsGenericDOMDataNode::InsertData(nsIContent *aOuterContent, PRUint32 aOffset,
+                                 const nsString& aData)
 {
-  return ReplaceData(aOffset, 0, aData);
+  return ReplaceData(aOuterContent, aOffset, 0, aData);
 }
 
 nsresult    
-nsGenericDOMDataNode::DeleteData(PRUint32 aOffset, PRUint32 aCount)
+nsGenericDOMDataNode::DeleteData(nsIContent *aOuterContent, PRUint32 aOffset,
+                                 PRUint32 aCount)
 {
   nsAutoString empty;
-  return ReplaceData(aOffset, aCount, empty);
+  return ReplaceData(aOuterContent, aOffset, aCount, empty);
 }
 
 nsresult    
-nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
-                                  const nsString& aData)
+nsGenericDOMDataNode::ReplaceData(nsIContent *aOuterContent, PRUint32 aOffset,
+                                  PRUint32 aCount, const nsString& aData)
 {
   nsresult result = NS_OK;
 
@@ -406,7 +407,8 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
   }
 
   // inform any enclosed ranges of change
-  if (mRangeList) nsRange::TextOwnerChanged(mContent, aOffset, endOffset, dataLength);
+  if (mRangeList) nsRange::TextOwnerChanged(aOuterContent, aOffset,
+                                            endOffset, dataLength);
   
   // Copy over appropriate data
   if (0 != aOffset) {
@@ -424,14 +426,15 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
   to[newLength] = (PRUnichar)0;
 
   // Switch to new buffer
-  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(mContent, &result);
+  nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aOuterContent,
+                                                         &result));
 
   // If possible, let the container content object have a go at it.
   if (NS_SUCCEEDED(result)) {
     result = textContent->SetText(to, newLength, PR_TRUE);
   }
   else {
-    result = SetText(to, newLength, PR_TRUE);
+    result = SetText(aOuterContent, to, newLength, PR_TRUE);
   }
   delete [] to;
 
@@ -443,7 +446,8 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
 // nsIScriptObjectOwner implementation
 
 nsresult
-nsGenericDOMDataNode::GetScriptObject(nsIScriptContext* aContext,
+nsGenericDOMDataNode::GetScriptObject(nsIContent *aOuterContent,
+                                      nsIScriptContext* aContext,
                                       void** aScriptObject)
 {
   nsresult res = NS_OK;
@@ -458,14 +462,14 @@ nsGenericDOMDataNode::GetScriptObject(nsIScriptContext* aContext,
     nsIDOMNode* node;
     PRUint16 nodeType;
 
-    res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
+    res = aOuterContent->QueryInterface(kIDOMNodeIID, (void**)&node);
     if (NS_OK != res) {
       return res;
     }
 
     node->GetNodeType(&nodeType);
     res = factory->NewScriptCharacterData(nodeType,
-                                          aContext, mContent,
+                                          aContext, aOuterContent,
                                           mParent, (void**)&mScriptObject);
     if (nsnull != mDocument) {
       nsAutoString nodeName;
@@ -533,9 +537,10 @@ nsGenericDOMDataNode::FinishConvertToXIF(nsXIFConverter& aConverter) const
  * will then be parsed into any number of formats including HTML, TXT, etc.
  */
 nsresult
-nsGenericDOMDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
+nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
+                                          nsXIFConverter& aConverter) const
 {
-  const nsIContent* content = mContent;
+  const nsIContent* content = aOuterContent;
   nsIDOMSelection* sel = aConverter.GetSelection();
 
   if (sel != nsnull && mDocument->IsInSelection(sel,content))
@@ -835,7 +840,8 @@ nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
 // Implementation of the nsIDOMText interface
 
 nsresult
-nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
+nsGenericDOMDataNode::SplitText(nsIContent *aOuterContent, PRUint32 aOffset,
+                                nsIDOMText** aReturn)
 {
   nsresult rv = NS_OK;
   nsAutoString cutText;
@@ -851,7 +857,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
     return rv;
   }
 
-  rv = DeleteData(aOffset, length-aOffset);
+  rv = DeleteData(aOuterContent, aOffset, length-aOffset);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -861,7 +867,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
    * same class as this node!
    */
 
-  nsCOMPtr<nsITextContent> tmpContent(do_QueryInterface(mContent, &rv));
+  nsCOMPtr<nsITextContent> tmpContent(do_QueryInterface(aOuterContent, &rv));
   nsCOMPtr<nsITextContent> newContent;
   if (NS_FAILED(rv)) {
     return rv;
@@ -889,7 +895,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
   if (parentNode) {
     PRInt32 index;
     
-    rv = parentNode->IndexOf(mContent, index);
+    rv = parentNode->IndexOf(aOuterContent, index);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIContent> content(do_QueryInterface(newNode));
       
@@ -934,31 +940,8 @@ nsGenericDOMDataNode::CopyText(nsString& aResult)
 }
 
 nsresult
-nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer, PRInt32 aLength,
-                              PRBool aNotify)
-{
-  NS_PRECONDITION((aLength >= 0) && (nsnull != aBuffer), "bad args");
-  if (aLength < 0) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  if (nsnull == aBuffer) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aNotify && (nsnull != mDocument)) {
-    mDocument->BeginUpdate();
-  }
-  mText.SetTo(aBuffer, aLength);
-
-  // Trigger a reflow
-  if (aNotify && (nsnull != mDocument)) {
-    mDocument->ContentChanged(mContent, nsnull);
-    mDocument->EndUpdate();
-  }
-  return NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::SetText(const char* aBuffer, 
+nsGenericDOMDataNode::SetText(nsIContent *aOuterContent,
+                              const PRUnichar* aBuffer,
                               PRInt32 aLength,
                               PRBool aNotify)
 {
@@ -976,7 +959,31 @@ nsGenericDOMDataNode::SetText(const char* aBuffer,
 
   // Trigger a reflow
   if (aNotify && (nsnull != mDocument)) {
-    mDocument->ContentChanged(mContent, nsnull);
+    mDocument->ContentChanged(aOuterContent, nsnull);
+    mDocument->EndUpdate();
+  }
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::SetText(nsIContent *aOuterContent, const char* aBuffer, 
+                              PRInt32 aLength, PRBool aNotify)
+{
+  NS_PRECONDITION((aLength >= 0) && (nsnull != aBuffer), "bad args");
+  if (aLength < 0) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  if (nsnull == aBuffer) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->BeginUpdate();
+  }
+  mText.SetTo(aBuffer, aLength);
+
+  // Trigger a reflow
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->ContentChanged(aOuterContent, nsnull);
     mDocument->EndUpdate();
   }
   return NS_OK;

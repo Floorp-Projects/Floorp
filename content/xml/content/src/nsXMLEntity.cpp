@@ -102,7 +102,6 @@ nsXMLEntity::nsXMLEntity(const nsString& aName,
   mName(aName), mPublicId(aPublicId), mSystemId(aSystemId), mNotationName(aNotationName)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this);
   mScriptObject = nsnull;
 }
 

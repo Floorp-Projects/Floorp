@@ -101,7 +101,6 @@ nsXMLDocumentType::nsXMLDocumentType(const nsString& aName,
   mName(aName)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this);
   mScriptObject = nsnull;
 
   mEntities = aEntities;

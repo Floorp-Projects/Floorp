@@ -55,18 +55,19 @@ struct nsGenericDOMDataNode {
   nsGenericDOMDataNode();
   virtual ~nsGenericDOMDataNode();
 
-  void Init(nsIContent* aOuterContentObject);
-
   // Implementation for nsIDOMNode
   nsresult    GetNodeValue(nsString& aNodeValue);
-  nsresult    SetNodeValue(const nsString& aNodeValue);
+  nsresult    SetNodeValue(nsIContent *aOuterContent,
+                           const nsString& aNodeValue);
   nsresult    GetParentNode(nsIDOMNode** aParentNode);
   nsresult    GetAttributes(nsIDOMNamedNodeMap** aAttributes) {
     *aAttributes = nsnull;
     return NS_OK;
   }
-  nsresult    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
-  nsresult    GetNextSibling(nsIDOMNode** aNextSibling);
+  nsresult    GetPreviousSibling(nsIContent *aOuterContent,
+                                 nsIDOMNode** aPreviousSibling);
+  nsresult    GetNextSibling(nsIContent *aOuterContent,
+                             nsIDOMNode** aNextSibling);
   nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);
   nsresult    HasChildNodes(PRBool* aHasChildNodes) {
     *aHasChildNodes = PR_FALSE;
@@ -98,17 +99,21 @@ struct nsGenericDOMDataNode {
 
   // Implementation for nsIDOMCharacterData
   nsresult    GetData(nsString& aData);
-  nsresult    SetData(const nsString& aData);
+  nsresult    SetData(nsIContent *aOuterContent, const nsString& aData);
   nsresult    GetLength(PRUint32* aLength);
   nsresult    SubstringData(PRUint32 aOffset, PRUint32 aCount, nsString& aReturn);
-  nsresult    AppendData(const nsString& aArg);
-  nsresult    InsertData(PRUint32 aOffset, const nsString& aArg);
-  nsresult    DeleteData(PRUint32 aOffset, PRUint32 aCount);
-  nsresult    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsString& aArg);
+  nsresult    AppendData(nsIContent *aOuterContent, const nsString& aArg);
+  nsresult    InsertData(nsIContent *aOuterContent, PRUint32 aOffset,
+                         const nsString& aArg);
+  nsresult    DeleteData(nsIContent *aOuterContent, PRUint32 aOffset,
+                         PRUint32 aCount);
+  nsresult    ReplaceData(nsIContent *aOuterContent, PRUint32 aOffset,
+                          PRUint32 aCount, const nsString& aArg);
 
 
   // nsIScriptObjectOwner interface
-  nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
+  nsresult GetScriptObject(nsIContent *aOuterContent,
+                           nsIScriptContext* aContext, void** aScriptObject);
   nsresult SetScriptObject(void *aScriptObject);
 
   // Implementation for nsIContent
@@ -169,7 +174,8 @@ struct nsGenericDOMDataNode {
 
   // Implementation for nsIContent
   nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
+  nsresult ConvertContentToXIF(const nsIContent *aOuterContent,
+                               nsXIFConverter& aConverter) const;
   nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
   nsresult CanContainChildren(PRBool& aResult) const {
     aResult = PR_FALSE;
@@ -200,15 +206,18 @@ struct nsGenericDOMDataNode {
     return NS_OK;
   }
 
-  nsresult SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
+  nsresult SplitText(nsIContent *aOuterContent, PRUint32 aOffset,
+                     nsIDOMText** aReturn);
 
   nsresult GetText(const nsTextFragment** aFragmentsResult);
   nsresult GetTextLength(PRInt32* aLengthResult);
   nsresult CopyText(nsString& aResult);
-  nsresult SetText(const PRUnichar* aBuffer,
+  nsresult SetText(nsIContent *aOuterContent,
+                   const PRUnichar* aBuffer,
                    PRInt32 aLength,
                    PRBool aNotify);
-  nsresult SetText(const char* aBuffer,
+  nsresult SetText(nsIContent *aOuterContent,
+                   const char* aBuffer,
                    PRInt32 aLength,
                    PRBool aNotify);
   nsresult IsOnlyWhitespace(PRBool* aResult);
@@ -218,12 +227,6 @@ struct nsGenericDOMDataNode {
   nsresult GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
 
   void ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
-
-  // Up pointer to the real content object that we are
-  // supporting. Sometimes there is work that we just can't do
-  // ourselves, so this is needed to ask the real object to do the
-  // work.
-  nsIContent* mContent;
 
   nsIDocument* mDocument;
   nsIContent* mParent;
@@ -252,7 +255,7 @@ struct nsGenericDOMDataNode {
     return _g.GetNodeValue(aNodeValue);                                 \
   }                                                                     \
   NS_IMETHOD SetNodeValue(const nsString& aNodeValue) {                 \
-    return _g.SetNodeValue(aNodeValue);                                 \
+    return _g.SetNodeValue(this, aNodeValue);                           \
   }                                                                     \
   NS_IMETHOD GetNodeType(PRUint16* aNodeType);                          \
   NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode) {                  \
@@ -271,10 +274,10 @@ struct nsGenericDOMDataNode {
     return _g.GetLastChild(aLastChild);                                 \
   }                                                                     \
   NS_IMETHOD GetPreviousSibling(nsIDOMNode** aPreviousSibling) {        \
-    return _g.GetPreviousSibling(aPreviousSibling);                     \
+    return _g.GetPreviousSibling(this, aPreviousSibling);               \
   }                                                                     \
   NS_IMETHOD GetNextSibling(nsIDOMNode** aNextSibling) {                \
-    return _g.GetNextSibling(aNextSibling);                             \
+    return _g.GetNextSibling(this, aNextSibling);                       \
   }                                                                     \
   NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes) {          \
     return _g.GetAttributes(aAttributes);                               \
@@ -303,7 +306,7 @@ struct nsGenericDOMDataNode {
     return _g.GetData(aData);                                               \
   }                                                                         \
   NS_IMETHOD SetData(const nsString& aData) {                               \
-    return _g.SetData(aData);                                               \
+    return _g.SetData(this, aData);                                         \
   }                                                                         \
   NS_IMETHOD GetLength(PRUint32* aLength) {                                 \
     return _g.GetLength(aLength);                                           \
@@ -312,17 +315,17 @@ struct nsGenericDOMDataNode {
     return _g.SubstringData(aStart, aEnd, aReturn);                         \
   }                                                                         \
   NS_IMETHOD AppendData(const nsString& aData) {                            \
-    return _g.AppendData(aData);                                            \
+    return _g.AppendData(this, aData);                                      \
   }                                                                         \
   NS_IMETHOD InsertData(PRUint32 aOffset, const nsString& aData) {          \
-    return _g.InsertData(aOffset, aData);                                   \
+    return _g.InsertData(this, aOffset, aData);                             \
   }                                                                         \
   NS_IMETHOD DeleteData(PRUint32 aOffset, PRUint32 aCount) {                \
-    return _g.DeleteData(aOffset, aCount);                                  \
+    return _g.DeleteData(this, aOffset, aCount);                            \
   }                                                                         \
   NS_IMETHOD ReplaceData(PRUint32 aOffset, PRUint32 aCount,                 \
                      const nsString& aData) {                               \
-    return _g.ReplaceData(aOffset, aCount, aData);                          \
+    return _g.ReplaceData(this, aOffset, aCount, aData);                    \
   }
 
 
@@ -368,7 +371,7 @@ struct nsGenericDOMDataNode {
 #define NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC_DOM_DATA(_g) \
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext,      \
                              void** aScriptObject) {          \
-    return _g.GetScriptObject(aContext, aScriptObject);       \
+    return _g.GetScriptObject(this, aContext, aScriptObject); \
   }                                                           \
   NS_IMETHOD SetScriptObject(void *aScriptObject) {           \
     return _g.SetScriptObject(aScriptObject);                 \
@@ -454,7 +457,7 @@ struct nsGenericDOMDataNode {
     return _g.BeginConvertToXIF(aConverter);                               \
   }                                                                        \
   NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {       \
-    return _g.ConvertContentToXIF(aConverter);                             \
+    return _g.ConvertContentToXIF(this, aConverter);                       \
   }                                                                        \
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
@@ -482,7 +485,7 @@ struct nsGenericDOMDataNode {
  */
 #define NS_IMPL_IDOMTEXT_USING_GENERIC_DOM_DATA(_g) \
   NS_IMETHOD SplitText(PRUint32 aOffset, nsIDOMText** aReturn){            \
-    return _g.SplitText(aOffset, aReturn);                                 \
+    return _g.SplitText(this, aOffset, aReturn);                           \
   }
 
 /**
@@ -502,12 +505,12 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD SetText(const PRUnichar* aBuffer,                    \
                      PRInt32 aLength,                             \
                      PRBool aNotify){                             \
-    return mInner.SetText(aBuffer, aLength, aNotify);             \
+    return mInner.SetText(this, aBuffer, aLength, aNotify);       \
   }                                                               \
   NS_IMETHOD SetText(const char* aBuffer,                         \
                      PRInt32 aLength,                             \
                      PRBool aNotify){                             \
-    return mInner.SetText(aBuffer, aLength, aNotify);             \
+    return mInner.SetText(this, aBuffer, aLength, aNotify);       \
   }                                                               \
   NS_IMETHOD IsOnlyWhitespace(PRBool* aResult){                   \
     return mInner.IsOnlyWhitespace(aResult);                      \

@@ -90,7 +90,6 @@ NS_NewTextNode(nsIContent** aInstancePtrResult)
 nsTextNode::nsTextNode()
 {
   NS_INIT_REFCNT();
-  mInner.Init(this);
   mContentID = 0;
 }
 

@@ -220,7 +220,6 @@ NS_NewCommentNode(nsIContent** aInstancePtrResult)
 nsCommentNode::nsCommentNode()
 {
   NS_INIT_REFCNT();
-  mInner.Init(this);
   mContentID = 0;
 }
 
@@ -513,7 +512,7 @@ nsCommentNode::SetText(const PRUnichar* aBuffer,
   nsAutoString str(aBuffer);
 
   StripCommentDelimiters(str);
-  return mInner.SetText(str.GetUnicode(), str.Length(), aNotify);
+  return mInner.SetText(this, str.GetUnicode(), str.Length(), aNotify);
 }
 
 NS_IMETHODIMP
@@ -524,5 +523,5 @@ nsCommentNode::SetText(const char* aBuffer,
   nsAutoString str(aBuffer);
 
   StripCommentDelimiters(str);
-  return mInner.SetText(str.GetUnicode(), str.Length(), aNotify);
+  return mInner.SetText(this, str.GetUnicode(), str.Length(), aNotify);
 }
