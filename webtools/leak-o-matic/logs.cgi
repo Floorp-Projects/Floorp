@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 #
-# $Id: logs.cgi,v 1.2 1999/11/16 22:15:26 waterson%netscape.com Exp $
+# $Id: logs.cgi,v 1.3 1999/11/16 22:19:23 waterson%netscape.com Exp $
 #
 
 #
@@ -33,7 +33,8 @@ use CGI;
 use POSIX;
 
 $::query = new CGI();
-$::logdir = $::query->param('logdir' => 'data');
+$::logdir = $::query->param('logdir');
+$::logdir = 'data' unless $::logdir; # default is 'data' subdir
 
 print $::query->header;
 print $::query->start_html("Leak-o-Matic");
@@ -92,6 +93,6 @@ For more information on how to use the Leak-o-Matic, see the
 
 };
 
-print '<small>$Id: logs.cgi,v 1.2 1999/11/16 22:15:26 waterson%netscape.com Exp $</small>';
+print '<small>$Id: logs.cgi,v 1.3 1999/11/16 22:19:23 waterson%netscape.com Exp $</small>';
 print $::query->end_html;
 
