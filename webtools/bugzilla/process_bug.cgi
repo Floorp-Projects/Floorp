@@ -158,8 +158,8 @@ sub CheckCanChangeField {
     if ($f =~ /^longdesc/) {
         return 1;
     }
-    if ($f = "resolution") { # always OK this.  if they really can't,
-        return 1;            # it'll flag it when "status" is checked.
+    if ($f eq "resolution") { # always OK this.  if they really can't,
+        return 1;             # it'll flag it when "status" is checked.
     }
     if ($UserInEditGroupSet < 0) {
         $UserInEditGroupSet = UserInGroup("editbugs");
