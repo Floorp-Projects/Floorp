@@ -38,7 +38,7 @@
 #define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
 #define BRAND_BUNDLE_URL "chrome://global/locale/brand.properties"
 
-#define NS_PROMPTSERVICE_CID "@mozilla.org/embedcomp/prompt-service;1"
+#define NS_PROMPTSERVICE_CONTRACTID "@mozilla.org/embedcomp/prompt-service;1"
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
@@ -105,7 +105,7 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
                                                            getter_Copies(errorStr));
               if (rv == NS_OK)
               {
-                nsCOMPtr<nsIPromptService> prompt (do_GetService(NS_PROMPTSERVICE_CID));
+                nsCOMPtr<nsIPromptService> prompt (do_GetService(NS_PROMPTSERVICE_CONTRACTID));
                 if (prompt)
                   prompt->Alert(nsnull, NS_LITERAL_STRING("Alert").get(), errorStr.get());
               }
