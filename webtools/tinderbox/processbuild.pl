@@ -44,6 +44,7 @@ while ($DONE == 0) {
 	$building++ if ($tbx{'status'} =~ m/building/);
         &lock;
         &write_build_data;
+	&build_html_from_log;
         &unlock;
     }
 }
@@ -229,6 +230,14 @@ sub compress_log_file {
     }
 }
         
+
+# Some tinderbox html pages can be build preprocessed and cached
+sub build_html_from_log {
+  if ($tbx{status} eq 'busted') {
+    my $buildname = url_encode($tbx{build});
+    system("QUERY_STRING='tree=$tbx{tree}&errorparser=$tbx{errorparser}&buildname=$buildname&buildtime=$builddate&logfile=$logfile&cache=1' showlog.cgi");
+  }
+}
 
 sub unlink_log_file {
     unlink( $ARGV[0] );
