@@ -36,8 +36,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsMsgCompCID.h"
-#include "nsIMessenger.h"	//temporary!
-#include "nsIMessage.h"		//temporary!
 #include "nsMsgQuote.h"
 #include "nsIPref.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
@@ -74,7 +72,9 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsIPrompt.h"
+
 #include "nsMsgComposeService.h"
+#include "nsMsgUtils.h"
 
 // Defines....
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -102,7 +102,6 @@ static nsresult RemoveDuplicateAddresses(const char * addresses, const char * an
 
 	return rv;
 }
-
 
 nsMsgCompose::nsMsgCompose()
 {
@@ -245,6 +244,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
   //
 
   // Now, insert it into the editor...
+  aEditorShell->BeginBatchChanges();
   if ( (aQuoted) )
   {
     if (!aPrefix.IsEmpty())
@@ -294,6 +294,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
         aEditorShell->InsertText(aSignature.GetUnicode());
     }
   }
+  aEditorShell->EndBatchChanges();
   
   if (editor)
   {
@@ -363,14 +364,13 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
       selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_ANCHOR_REGION);
   }
 
-  NotifyStateListeners(nsMsgCompose::eComposeFieldsReady);
   if (editor)
     editor->EnableUndo(PR_TRUE);
   SetBodyModified(PR_FALSE);
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
   nsCOMPtr<nsIMsgComposeService> composeService (do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID));
-  composeService->TimeStamp("Finished inserting data into the editor. The window is almost ready!", PR_FALSE);
+  composeService->TimeStamp("Finished inserting data into the editor. The window is finally ready!", PR_FALSE);
 #endif
   return NS_OK;
 }
@@ -420,7 +420,7 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow,
   MSG_ComposeType type;
   params->GetType(&type);
 
-  nsXPIDLString originalMsgURI;
+  nsXPIDLCString originalMsgURI;
   params->GetOriginalMsgURI(getter_Copies(originalMsgURI));
   
   nsCOMPtr<nsIMsgCompFields> composeFields;
@@ -446,12 +446,10 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow,
   return CreateMessage(originalMsgURI, type, format, composeFields);
 }
 
-nsresult nsMsgCompose::SetDocumentCharset(const PRUnichar *charset) 
+nsresult nsMsgCompose::SetDocumentCharset(const char *charset) 
 {
 	// Set charset, this will be used for the MIME charset labeling.
-	nsCAutoString charsetStr;
-	charsetStr.AssignWithConversion(charset);
-	m_compFields->SetCharacterSet(charsetStr);
+	m_compFields->SetCharacterSet(charset);
 	
 	return NS_OK;
 }
@@ -607,18 +605,18 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
                     tEditor,
                     identity,
                     m_compFields, 
-                    PR_FALSE,         					// PRBool                            digest_p,
-                    PR_FALSE,         					// PRBool                            dont_deliver_p,
+                    PR_FALSE,         					        // PRBool                            digest_p,
+                    PR_FALSE,         					        // PRBool                            dont_deliver_p,
                     (nsMsgDeliverMode)deliverMode,   		// nsMsgDeliverMode                  mode,
-                    nsnull,                     			// nsIMessage *msgToReplace, 
-                    m_composeHTML?TEXT_HTML:TEXT_PLAIN,	// const char                        *attachment1_type,
-                    bodyString,               			// const char                        *attachment1_body,
-                    bodyLength,               			// PRUint32                          attachment1_body_length,
-                    nsnull,             					// const struct nsMsgAttachmentData  *attachments,
-                    nsnull,             					// const struct nsMsgAttachedFile    *preloaded_attachments,
-                    nsnull,             					// nsMsgSendPart                     *relatedPart,
-                    tArray, listeners);           // listener array
-
+                    nsnull,                     			  // nsIMsgDBHdr *msgToReplace, 
+                    m_composeHTML?TEXT_HTML:TEXT_PLAIN, // const char                        *attachment1_type,
+                    bodyString,               			    // const char                        *attachment1_body,
+                    bodyLength,               			    // PRUint32                          attachment1_body_length,
+                    nsnull,             					      // const struct nsMsgAttachmentData  *attachments,
+                    nsnull,             					      // const struct nsMsgAttachedFile    *preloaded_attachments,
+                    nsnull,             					      // nsMsgSendPart                     *relatedPart,
+                    tArray, listeners);                 // listener array
+      
       // Cleanup converted body...
       if (newBody)
         PR_FREEIF(bodyString);
@@ -769,11 +767,9 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
     m_editor->RegisterDocumentStateListener(mDocumentListener);
 
     // Set the charset
-    nsXPIDLString msgCharSet;
-    m_compFields->GetCharacterSet(getter_Copies(msgCharSet));
-    if (msgCharSet) {
-        m_editor->SetDocumentCharacterSet(msgCharSet);
-    }
+    nsAutoString msgCharSet;
+    msgCharSet.AssignWithConversion(m_compFields->GetCharacterSet());
+    m_editor->SetDocumentCharacterSet(msgCharSet.GetUnicode());
 
     // Now, lets init the editor here!
     // Just get a blank editor started...
@@ -871,7 +867,7 @@ nsresult nsMsgCompose::GetWrapLength(PRInt32 *aWrapLength)
   return prefs->GetIntPref("mailnews.wraplength", aWrapLength);
 }
 
-nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
+nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
                                      MSG_ComposeType type,
                                      MSG_ComposeFormat format,
                                      nsIMsgCompFields * compFields)
@@ -935,7 +931,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
   
     /* In case of forwarding multiple messages, originalMsgURI will contains several URI separated by a comma. */
     /* we need to extract only the first URI*/
-    nsAutoString  firstURI(originalMsgURI);
+    nsCAutoString  firstURI(originalMsgURI);
     PRInt32 offset = firstURI.FindChar(',');
     if (offset >= 0)
     	firstURI.Truncate(offset);
@@ -944,9 +940,11 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
     // mark any disposition flags like replied or forwarded on the message.
 
     mOriginalMsgURI = firstURI;
-    
-    nsCOMPtr<nsIMessage> message = getter_AddRefs(GetIMessageFromURI(firstURI.GetUnicode()));
-    if ((NS_SUCCEEDED(rv)) && message)
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
+    rv = GetMsgDBHdrFromURI(firstURI, getter_AddRefs(msgHdr));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (msgHdr)
     {
       nsXPIDLCString subject;
       nsAutoString subjectStr;
@@ -957,12 +955,12 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
 
       char *aCString = nsnull;
     
-      rv = message->GetCharset(getter_Copies(charset));
+      rv = msgHdr->GetCharset(getter_Copies(charset));
 
       aCharset.AssignWithConversion(charset);
 
       if (NS_FAILED(rv)) return rv;
-      rv = message->GetSubject(getter_Copies(subject));
+      rv = msgHdr->GetSubject(getter_Copies(subject));
       if (NS_FAILED(rv)) return rv;
       
       switch (type)
@@ -996,7 +994,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           // get an original charset, used for a label, UTF-8 is used for the internal processing
           if (!aCharset.IsEmpty())
           {
-            m_compFields->SetCharacterSet(aCharset.GetUnicode());
+            nsCAutoString aCharsetCStr; aCharsetCStr.AssignWithConversion(aCharset);
+            m_compFields->SetCharacterSet(aCharsetCStr);
             // set an original charset so MIME decoder can use it in case the header has no label
             encodedCharset = aCharset;
            }
@@ -1009,7 +1008,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
             m_compFields->SetSubject(subjectStr.GetUnicode());
 
           nsXPIDLCString author;
-          rv = message->GetAuthor(getter_Copies(author));		
+          rv = msgHdr->GetAuthor(getter_Copies(author));		
           if (NS_FAILED(rv)) return rv;
           m_compFields->SetTo(author);
 
@@ -1059,27 +1058,26 @@ QuotingOutputStreamListener::~QuotingOutputStreamListener()
 {
 }
 
-QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * originalMsgURI,
+QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMsgURI,
                                                          PRBool quoteHeaders,
                                                          PRBool headersOnly,
                                                          nsIMsgIdentity *identity) 
 { 
+  nsresult rv;
   mQuoteHeaders = quoteHeaders;
   mHeadersOnly = headersOnly;
   mIdentity = identity;
 
   if (! mHeadersOnly)
   {
-    // For the built message body...
-
-    nsCOMPtr<nsIMessage> originalMsg = getter_AddRefs(GetIMessageFromURI(originalMsgURI));
-    if (originalMsg && !quoteHeaders)
+   // For the built message body...
+   nsCOMPtr <nsIMsgDBHdr> originalMsgHdr;
+   rv = GetMsgDBHdrFromURI(originalMsgURI, getter_AddRefs(originalMsgHdr));
+   if (NS_SUCCEEDED(rv) && originalMsgHdr && !quoteHeaders)
     {
-      nsresult rv;
-
       // Setup the cite information....
       nsXPIDLCString myGetter;
-      if (NS_SUCCEEDED(originalMsg->GetMessageId(getter_Copies(myGetter))))
+      if (NS_SUCCEEDED(originalMsgHdr->GetMessageId(getter_Copies(myGetter))))
       {
         nsCString unencodedURL(myGetter);
              // would be nice, if nsXPIDL*String were ns*String
@@ -1102,7 +1100,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
         mCitePrefix += NS_LITERAL_STRING("<br><br>");
 
       nsXPIDLString author;
-      rv = originalMsg->GetMime2DecodedAuthor(getter_Copies(author));
+      rv = originalMsgHdr->GetMime2DecodedAuthor(getter_Copies(author));
       if (NS_SUCCEEDED(rv))
       {
         char * authorName = nsnull;
@@ -1181,7 +1179,8 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
   
   if (mComposeObj) 
   {
-    MSG_ComposeType type = mComposeObj->GetMessageType();
+    MSG_ComposeType type;
+    mComposeObj->GetType(&type);
     
     // Assign cite information if available...
     if (!mCiteReference.IsEmpty())
@@ -1290,7 +1289,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         if (! newgroups.IsEmpty())
         {
           if ((type != nsIMsgCompType::Reply) && (type != nsIMsgCompType::ReplyToSender))
-            compFields->SetNewsgroups(newgroups.GetUnicode());
+            compFields->SetNewsgroups(nsAutoCString(newgroups));
           if (type == nsIMsgCompType::ReplyToGroup)
             compFields->SetTo(&emptyUnichar);
         }
@@ -1298,7 +1297,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         if (! followUpTo.IsEmpty())
         {
 		       if (type != nsIMsgCompType::ReplyToSender)
-			      compFields->SetNewsgroups(followUpTo.GetUnicode());
+			      compFields->SetNewsgroups(nsAutoCString(followUpTo));
            if (type == nsIMsgCompType::Reply)
             compFields->SetTo(&emptyUnichar);
         }
@@ -1306,7 +1305,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         if (! references.IsEmpty())
           references.AppendWithConversion(' ');
         references += messageId;
-        compFields->SetReferences(references.GetUnicode());
+        compFields->SetReferences(nsAutoCString(references));
         
         if (needToRemoveDup)
         {
@@ -1339,8 +1338,15 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     
 #ifdef MSGCOMP_TRACE_PERFORMANCE
     nsCOMPtr<nsIMsgComposeService> composeService (do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID));
-    composeService->TimeStamp("done with mime. Time to insert the body", PR_FALSE);
+    composeService->TimeStamp("done with mime. Lets update some UI element", PR_FALSE);
 #endif
+
+    mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeFieldsReady);
+
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+    composeService->TimeStamp("addressing widget, windows title and focus are now set, time to insert the body", PR_FALSE);
+#endif
+
     if (! mHeadersOnly)
       mMsgBody.AppendWithConversion("</html>");
     
@@ -1433,13 +1439,17 @@ NS_IMPL_ISUPPORTS1(QuotingOutputStreamListener, nsIStreamListener)
 // END OF QUOTING LISTENER
 ////////////////////////////////////////////////////////////////////////////////////
 
-MSG_ComposeType nsMsgCompose::GetMessageType()
+/* readonly attribute MSG_ComposeType type; */
+NS_IMETHODIMP nsMsgCompose::GetType(MSG_ComposeType *aType)
 {
-	return mType;
+  NS_ENSURE_ARG_POINTER(aType);
+
+  *aType = mType;
+  return NS_OK;
 }
 
 nsresult
-nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what) // New template
+nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // New template
 {
   nsresult    rv;
 
@@ -1471,10 +1481,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   NS_ADDREF(this);
   mQuoteStreamListener->SetComposeObj(this);
 
-  nsXPIDLString msgCharSet;
-  m_compFields->GetCharacterSet(getter_Copies(msgCharSet));
-
-  rv = mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener, msgCharSet);
+  rv = mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener, m_compFields->GetCharacterSet());
   return rv;
 }
 
@@ -1528,6 +1535,7 @@ void nsMsgCompose::CleanUpRecipients(nsString& recipients)
 
 nsresult nsMsgCompose::ProcessReplyFlags()
 {
+  nsresult rv;
   // check to see if we were doing a reply or a forward, if we were, set the answered field flag on the message folder
   // for this URI.
   if (mType == nsIMsgCompType::Reply || 
@@ -1538,17 +1546,16 @@ nsresult nsMsgCompose::ProcessReplyFlags()
       mType == nsIMsgCompType::ForwardAsAttachment ||              
   	  mType == nsIMsgCompType::ForwardInline)
   {
-    nsCOMPtr<nsIRDFService> rdfService (do_GetService(kRDFServiceCID));
-    if (rdfService && !mOriginalMsgURI.IsEmpty())
+    if (!mOriginalMsgURI.IsEmpty())
     {
-      nsCOMPtr<nsIRDFResource> resource;
-      rdfService->GetResource(NS_ConvertUCS2toUTF8(mOriginalMsgURI).get(), getter_AddRefs(resource));
-      nsCOMPtr<nsIMessage> messageResource (do_QueryInterface(resource));
-      if (messageResource)
+      nsCOMPtr <nsIMsgDBHdr> msgHdr;
+      rv = GetMsgDBHdrFromURI(mOriginalMsgURI, getter_AddRefs(msgHdr));
+      NS_ENSURE_SUCCESS(rv,rv);
+      if (msgHdr)
       {
         // get the folder for the message resource
         nsCOMPtr<nsIMsgFolder> msgFolder;
-        messageResource->GetMsgFolder(getter_AddRefs(msgFolder));
+        msgHdr->GetFolder(getter_AddRefs(msgFolder));
         if (msgFolder)
         {
           nsMsgDispositionState dispositionSetting = nsIMsgFolder::nsMsgDispositionState_Replied;
@@ -1556,7 +1563,7 @@ nsresult nsMsgCompose::ProcessReplyFlags()
   	          mType == nsIMsgCompType::ForwardInline)
               dispositionSetting = nsIMsgFolder::nsMsgDispositionState_Forwarded;
 
-          msgFolder->AddMessageDispositionState(messageResource, dispositionSetting);
+          msgFolder->AddMessageDispositionState(msgHdr, dispositionSetting);
         }
       }
       
@@ -1801,7 +1808,7 @@ nsMsgDocumentStateListener::SetComposeObj(nsMsgCompose *obj)
 nsresult
 nsMsgDocumentStateListener::NotifyDocumentCreated(void)
 {
-  // Ok, now the document has been loaded, so we are ready to setup
+  // Ok, now the document has been loaded, so we are ready to setup  
   // the compose window and let the user run hog wild!
 
   // Now, do the appropriate startup operation...signature only
@@ -1815,7 +1822,10 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
   if ( mComposeObj->QuotingToFollow() )
     return mComposeObj->BuildQuotedMessageAndSignature();
   else
+  {
+    mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeFieldsReady);
     return mComposeObj->BuildBodyMessageAndSignature();
+  }
 }
 
 nsresult
@@ -1921,7 +1931,7 @@ nsMsgCompose::BuildQuotedMessageAndSignature(void)
 
   // We will fire off the quote operation and wait for it to
   // finish before we actually do anything with Ender...
-  return QuoteOriginalMessage(mQuoteURI.GetUnicode(), mWhatHolder);
+  return QuoteOriginalMessage(mQuoteURI, mWhatHolder);
 }
 
 //
@@ -2199,20 +2209,22 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
   return NS_OK;
 }
 
-nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _retval)
+nsresult nsMsgCompose::AttachmentPrettyName(const char* url, PRUnichar** _retval)
 {
-	nsCAutoString unescapeURL; unescapeURL.AssignWithConversion(url);
+	nsCAutoString unescapeURL(url);
 	nsUnescape(unescapeURL);
 	if (unescapeURL.IsEmpty())
 	{
-		*_retval = nsCRT::strdup(url);
+	  nsAutoString unicodeUrl;
+	  unicodeUrl.AssignWithConversion(url);
+
+		*_retval = unicodeUrl.ToNewUnicode();
 		return NS_OK;
 	}
 	
 	if (PL_strncasestr(unescapeURL, "file:", 5))
 	{
-	  nsAutoString urlString(url);
-		nsFileURL fileUrl(urlString);
+		nsFileURL fileUrl(url);
 		nsFileSpec fileSpec(fileUrl);
 		char * leafName = fileSpec.GetLeafName();
 		if (leafName && *leafName)
@@ -2760,7 +2772,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
 	return rv;
 }
 
-nsresult nsMsgCompose::GetNoHtmlNewsgroups(const PRUnichar *newsgroups, PRUnichar **_retval)
+nsresult nsMsgCompose::GetNoHtmlNewsgroups(const char *newsgroups, char **_retval)
 {
     //FIX ME: write me
     nsresult rv = NS_ERROR_NOT_IMPLEMENTED;

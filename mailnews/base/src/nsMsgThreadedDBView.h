@@ -34,23 +34,32 @@ public:
   nsMsgThreadedDBView();
   virtual ~nsMsgThreadedDBView();
 
-  NS_IMETHOD Open(nsIMsgDatabase *msgDB, nsMsgViewSortTypeValue viewType, PRInt32 *count);
+  NS_IMETHOD Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount);
   NS_IMETHOD Close();
-  NS_IMETHOD Init(PRInt32 *pCount);
-  NS_IMETHOD AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortTypeValue sortType, PRInt32 numKeysToAdd);
+  virtual nsresult AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortTypeValue sortType, PRInt32 numKeysToAdd);
   NS_IMETHOD Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
+  NS_IMETHOD GetViewType(nsMsgViewTypeValue *aViewType);
 
 protected:
+  virtual const char * GetViewName(void) {return "ThreadedDBView"; }
+  nsresult InitThreadedView(PRInt32 *pCount);
+  virtual nsresult OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool ensureListed);
+  virtual nsresult AddMsgToThreadNotInView(nsIMsgThread *threadHdr, nsIMsgDBHdr *msgHdr, PRBool ensureListed);
   nsresult ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnly, nsMsgKey *pOutput, PRInt32 *pFlags, char *pLevels, 
 									 PRInt32 numToList, PRInt32 *pNumListed, PRInt32 *pTotalHeaders);
   nsresult InitSort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
   nsresult ExpandAll();
+  virtual void	    OnExtraFlagChanged(nsMsgViewIndex index, PRUint32 extraFlag);
+  virtual void OnHeaderAddedOrDeleted();
+	void			ClearPrevIdArray();
+  virtual nsresult RemoveByIndex(nsMsgViewIndex index);
+
   // these are used to save off the previous view so that bopping back and forth
   // between two views is quick (e.g., threaded and flat sorted by date).
 	PRBool		m_havePrevView;
-	nsMsgKeyArray		m_prevIdArray;
+	nsMsgKeyArray		m_prevKeys;
 	nsUInt32Array m_prevFlags;
-	nsByteArray m_prevLevels;
+	nsUint8Array m_prevLevels;
   nsCOMPtr <nsISimpleEnumerator> m_threadEnumerator;
 };
 

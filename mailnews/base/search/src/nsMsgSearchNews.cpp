@@ -27,7 +27,6 @@
 #include "nsMsgSearchTerm.h"
 #include "nsIMsgHdr.h"
 #include "nsMsgSearchNews.h"
-#include "nsINNTPHost.h"
 #include "nsIDBFolderInfo.h"
 
 // Implementation of search for IMAP mail folders
@@ -708,7 +707,7 @@ nsresult nsMsgSearchValidityManager::InitNewsTable ()
 }
 
 
-nsresult nsMsgSearchValidityManager::InitNewsExTable (nsINNTPHost *newsHost)
+nsresult nsMsgSearchValidityManager::InitNewsExTable (nsINntpIncomingServer *newsHost)
 {
 	nsresult err = NS_OK;
 
@@ -793,7 +792,7 @@ nsresult nsMsgSearchValidityManager::InitNewsExTable (nsINNTPHost *newsHost)
 }
 
 
-nsresult nsMsgSearchValidityManager::PostProcessValidityTable (nsINNTPHost *host)
+nsresult nsMsgSearchValidityManager::PostProcessValidityTable (nsINntpIncomingServer *host)
 {
 	return InitNewsExTable (host);
 }

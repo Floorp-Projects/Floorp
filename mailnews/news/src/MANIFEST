@@ -23,12 +23,9 @@
 nsNNTPProtocol.h
 nsNntpUrl.h
 nsNNTPNewsgroupList.h
-nsNNTPNewsgroup.h
 nntpCore.h
 nsNNTPNewsgroupPost.h
 nsNewsFolder.h
 nsNntpIncomingServer.h
 nsNewsUtils.h
 nsNNTPArticleList.h
-nsNNTPHost.h
-nsNNTPCategoryContainer.h

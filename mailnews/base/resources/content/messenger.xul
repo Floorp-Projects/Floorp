@@ -72,25 +72,24 @@ Rights Reserved.
 <script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
 <script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
+
 <commands id="commands">
 
-	<commandset id="CommandUpdate_Mail"
-				commandupdater="true"
-				events="focus,folderTree-select,threadTree-select"
-				oncommandupdate="CommandUpdate_Mail()"/>
-	<commandset id="ThreadTreeUpdate_Mail"
-				commandupdater="true"
-				events="threadTree-select"
-				oncommandupdate="ThreadTreeUpdate_Mail()"/>
+  <commandset id="mailFileMenuItems"/>
+  <commandset id="mailViewMenuItems"/>
+  <commandset id="mailEditMenuItems"/>
+  <commandset id="mailSearchMenuItems"/>
+  <commandset id="mailGoMenuItems"/>
+  <commandset id="mailMessageMenuItems"/>
+  <commandset id="mailToolbarItems"/>
+
+  <commandset id="globalEditMenuItems"/>
+	<commandset id="selectEditMenuItems"/>
+	<commandset id="clipboardEditMenuItems"/>
 	<commandset id="FocusRingUpdate_Mail"
 				commandupdater="true"
 				events="focus"
-				oncommandupdate="FocusRingUpdate_Mail()"/>				
-	<commandset id="globalEditMenuItems"/>
-	<commandset id="selectEditMenuItems"/>
-	<commandset id="undoEditMenuItems"/>
-	<commandset id="clipboardEditMenuItems"/>
-
+				oncommandupdate="FocusRingUpdate_Mail()"/>
 </commands>
 
 <broadcasterset id="broadcasterset"/>
@@ -144,7 +143,7 @@ Rights Reserved.
 
 		  <box id="messagesBox" orient="vertical" flex="1">
      
-			<tree id="threadTree" flex="2" persist="height" style="height:0px" context="threadPaneContext"  focusring="false"/>
+      <outliner id="threadOutliner" flex="2" persist="height" style="height:0px" context="threadPaneContext"/>
 
 			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
 			<splitter collapse="after" persist="state" onclick="OnClickThreadAndMessagePaneSplitter()"

@@ -31,6 +31,11 @@ interface nsIMsgNewsFolder : nsISupports {
   attribute string groupUsername;
   attribute string groupPassword;
 
+  /** the ascii name for the newsgroup.  
+   *  newsgroup names are always ascii, and this can help simply
+   *  the code, to prevent use from having to get the name (as a wstring)
+   *  and then converting it back to ascii.
+   */
   readonly attribute string asciiName;
   readonly attribute nsINntpIncomingServer nntpServer;
   attribute boolean saveArticleOffline;
@@ -54,6 +59,9 @@ interface nsIMsgNewsFolder : nsISupports {
   void removeMessage(in nsMsgKey key); 
   void cancelComplete();
   void cancelFailed();
+
+  string getMessageIdForKey(in nsMsgKey key);
+
   void getNextNMessages(in nsIMsgWindow aMsgWindow);
   void notifyDownloadedLine(in string line, in nsMsgKey key);
 };

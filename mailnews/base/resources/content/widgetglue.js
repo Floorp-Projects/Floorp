@@ -143,11 +143,10 @@ function MsgEmptyTrash()
                         dump ('found trash folder\n');
                         trashElement.setAttribute('open','');
                     }
-                    var trashSelected = IsSpecialFolderSelected('Trash');
+                    var trashSelected = IsSpecialFolderSelected(MSG_FOLDER_FLAG_TRASH);
                     if(trashSelected)
                     {
                         tree.clearItemSelection();
-                        //RefreshThreadTreeView(); un-neccessary
                     }
                     try {
                           messenger.EmptyTrash(tree.database, folder.resource);
@@ -257,7 +256,7 @@ function MsgToggleMessagePane()
 {
 	//OnClickThreadAndMessagePaneSplitter is based on the value before the splitter is toggled.
 	OnClickThreadAndMessagePaneSplitter();
-    MsgToggleSplitter("threadpane-splitter");
+  MsgToggleSplitter("threadpane-splitter");
 }
 
 function MsgToggleFolderPane()

@@ -22,8 +22,8 @@
 #include "nsISupports.idl"
 #include "nsIOutputStream.idl"
 #include "nsIMsgIdentity.idl"
+#include "nsIMsgHdr.idl"
 
-interface nsIMessage;
 
 [scriptable, uuid(A6237474-453B-11d3-8F0F-00A024A7D144)]
 
@@ -33,10 +33,10 @@ interface nsIMsgDraft : nsISupports
 	 * This is the primary interface for drafts and templates, loaded by
 	 * a URI
 	 */
-	void		OpenDraftMsg(in wstring msgURI, out nsIMessage aMsgToReplace,
+	void		OpenDraftMsg(in string msgURI, out nsIMsgDBHdr aMsgToReplace,
                              in nsIMsgIdentity identity, in PRBool addInlineHeaders);
 
-	void		OpenEditorTemplate(in wstring msgURI, out nsIMessage aMsgReplace,
+	void		OpenEditorTemplate(in string msgURI, out nsIMsgDBHdr aMsgReplace,
                                    in nsIMsgIdentity identity);  
 };
 

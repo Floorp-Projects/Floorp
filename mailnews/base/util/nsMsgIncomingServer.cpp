@@ -1181,8 +1181,23 @@ NS_IMETHODIMP nsMsgIncomingServer::GetRetentionSettings(nsIMsgRetentionSettings 
 
 NS_IMETHODIMP nsMsgIncomingServer::SetRetentionSettings(nsIMsgRetentionSettings *settings)
 {
+  nsMsgRetainByPreference retainByPreference;
+  PRUint32 daysToKeepHdrs = 0;
+  PRUint32 numHeadersToKeep = 0;
+  PRBool keepUnreadMessagesOnly = PR_FALSE;
+  PRUint32 daysToKeepBodies = 0;
   m_retentionSettings = settings;
-  return NS_OK;
+  m_retentionSettings->GetRetainByPreference(&retainByPreference);
+  m_retentionSettings->GetNumHeadersToKeep(&numHeadersToKeep);
+  m_retentionSettings->GetKeepUnreadMessagesOnly(&keepUnreadMessagesOnly);
+  m_retentionSettings->GetDaysToKeepBodies(&daysToKeepBodies);
+  m_retentionSettings->GetDaysToKeepHdrs(&daysToKeepHdrs);
+  nsresult rv = SetBoolValue("keepUnreadOnly", keepUnreadMessagesOnly);
+  rv = SetIntValue("retainBy", retainByPreference);
+  rv = SetIntValue("numHdrsToKeep", numHeadersToKeep);
+  rv = SetIntValue("daysToKeepHdrs", daysToKeepHdrs);
+  rv = SetIntValue("daysToKeepBodies", daysToKeepBodies);
+  return rv;
 }
  
 NS_IMETHODIMP
@@ -1198,6 +1213,51 @@ nsMsgIncomingServer::SetDisplayStartupPage(PRBool displayStartupPage)
 {
     m_displayStartupPage = displayStartupPage;
     return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMsgIncomingServer::GetDownloadSettings(nsIMsgDownloadSettings **settings)
+{
+  NS_ENSURE_ARG_POINTER(settings);
+  PRBool downloadUnreadOnly = PR_FALSE;
+  PRBool downloadByDate = PR_FALSE;
+  PRUint32 ageLimitOfMsgsToDownload = 0;
+  nsresult rv = NS_OK;
+  if (!m_downloadSettings)
+  {
+    m_downloadSettings = do_CreateInstance(NS_MSG_DOWNLOADSETTINGS_CONTRACTID);
+    if (m_downloadSettings)
+    {
+      rv = GetBoolValue("downloadUnreadOnly", &downloadUnreadOnly);
+      rv = GetBoolValue("downloadByDate", &downloadByDate);
+      rv = GetIntValue("ageLimit", (PRInt32 *) &ageLimitOfMsgsToDownload);
+      m_downloadSettings->SetDownloadUnreadOnly(downloadUnreadOnly);
+      m_downloadSettings->SetDownloadByDate(downloadByDate);
+      m_downloadSettings->SetAgeLimitOfMsgsToDownload(ageLimitOfMsgsToDownload);
+    }
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    // Create an empty download settings object, 
+    // get the settings from the server prefs, and init the object from the prefs.
+  }
+  *settings = m_downloadSettings;
+  NS_IF_ADDREF(*settings);  return rv;
+}
+
+NS_IMETHODIMP nsMsgIncomingServer::SetDownloadSettings(nsIMsgDownloadSettings *settings)
+{
+  m_downloadSettings = settings;
+  PRBool downloadUnreadOnly = PR_FALSE;
+  PRBool downloadByDate = PR_FALSE;
+  PRUint32 ageLimitOfMsgsToDownload = 0;
+  m_downloadSettings->GetDownloadUnreadOnly(&downloadUnreadOnly);
+  m_downloadSettings->GetDownloadByDate(&downloadByDate);
+  m_downloadSettings->GetAgeLimitOfMsgsToDownload(&ageLimitOfMsgsToDownload);
+  nsresult rv = SetBoolValue("downloadUnreadOnly", downloadUnreadOnly);
+  rv = SetBoolValue("downloadByDate", downloadByDate);
+  rv = SetIntValue("ageLimit", ageLimitOfMsgsToDownload);
+
+  return rv;
 }
 
 #define BASE_MSGS_URL       "chrome://messenger/locale/messenger.properties"

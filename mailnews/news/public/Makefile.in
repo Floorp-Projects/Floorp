@@ -31,10 +31,6 @@ MODULE		= msgnews
 XPIDLSRCS	= \
 		nsIMsgOfflineNewsState.idl \
 		nsINNTPArticleList.idl \
-		nsINNTPCategory.idl \
-		nsINNTPCategoryContainer.idl \
-		nsINNTPHost.idl \
-		nsINNTPNewsgroup.idl \
 		nsINNTPNewsgroupList.idl \
 		nsINNTPProtocol.idl \
 		nsINntpIncomingServer.idl \

@@ -279,26 +279,26 @@ NS_IMETHODIMP nsMessage::GetMime2DecodedRecipients(PRUnichar* *resultRecipients)
 }
 
 
-NS_IMETHODIMP nsMessage::GetAuthorCollationKey(PRUnichar* *resultAuthor)
+NS_IMETHODIMP nsMessage::GetAuthorCollationKey(PRUint8 **resultAuthor, PRUint32 *len)
 {
 	if(mMsgHdr)
-		return mMsgHdr->GetAuthorCollationKey(resultAuthor);
+		return mMsgHdr->GetAuthorCollationKey(resultAuthor, len);
 	else
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetSubjectCollationKey(PRUnichar* *resultSubject)
+NS_IMETHODIMP nsMessage::GetSubjectCollationKey(PRUint8 **resultSubject, PRUint32 *len)
 {
 	if(mMsgHdr)
-		return mMsgHdr->GetSubjectCollationKey(resultSubject);
+		return mMsgHdr->GetSubjectCollationKey(resultSubject, len);
 	else
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetRecipientsCollationKey(PRUnichar* *resultRecipients)
+NS_IMETHODIMP nsMessage::GetRecipientsCollationKey(PRUint8 **resultRecipients, PRUint32 *len)
 {
 	if(mMsgHdr)
-		return mMsgHdr->GetRecipientsCollationKey(resultRecipients);
+		return mMsgHdr->GetRecipientsCollationKey(resultRecipients, len);
 	else
 		return NS_ERROR_FAILURE;
 }
@@ -628,3 +628,24 @@ NS_IMETHODIMP nsMessage::SetMessageType(PRUint32 aMessageType)
   mMessageType = aMessageType;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMessage::GetFolder(nsIMsgFolder **folder)
+{
+	if(mMsgHdr)
+		return mMsgHdr->GetFolder(folder);
+	else
+		return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMessage::GetIsRead(PRBool *isRead)
+{
+    // stubbed, since nsMessage is going away
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMessage::GetIsFlagged(PRBool *isFlagged)
+{
+    // stubbed, since nsMessage is going away
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+

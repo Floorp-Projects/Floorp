@@ -47,10 +47,10 @@
 #include "nsIRDFService.h"
 #include "rdf.h"
 #include "nsIMsgFolder.h"
-#include "nsIMessage.h"
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestor.h"
-
+#include "nsMsgUtils.h"
+#include "nsIMsgHdr.h"
 
 static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -1411,14 +1411,11 @@ nsresult nsImapUrl::GetMsgFolder(nsIMsgFolder **msgFolder)
   nsXPIDLCString uri;
   GetUri(getter_Copies(uri));
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDF_CONTRACTID "/rdf-service;1"); 
-  nsCOMPtr<nsIRDFResource> resource;
-  rdfService->GetResource(uri, getter_AddRefs(resource));
 
-  NS_ENSURE_TRUE(resource, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIMessage> msg (do_QueryInterface(resource));
+  nsCOMPtr<nsIMsgDBHdr> msg; 
+  GetMsgDBHdrFromURI(uri, getter_AddRefs(msg));
   NS_ENSURE_TRUE(msg, NS_ERROR_FAILURE);
-  nsresult rv = msg->GetMsgFolder(msgFolder);
+  nsresult rv = msg->GetFolder(msgFolder);
   NS_ENSURE_SUCCESS(rv,rv);
   NS_ENSURE_TRUE(msgFolder, NS_ERROR_FAILURE);
 

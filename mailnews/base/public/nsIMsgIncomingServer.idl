@@ -28,6 +28,7 @@ interface nsIMsgFolderCache;
 interface nsIMsgWindow;
 interface nsIMsgFilterList;
 interface nsIMsgRetentionSettings;
+interface nsIMsgDownloadSettings;
 
 /*
  * Interface for incoming mail/news host
@@ -213,6 +214,7 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* display startup page once per account per session */
   attribute boolean displayStartupPage;
+  attribute nsIMsgDownloadSettings downloadSettings;
 };
 
 %{C++

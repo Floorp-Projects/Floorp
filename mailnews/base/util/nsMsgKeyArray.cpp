@@ -27,9 +27,9 @@
 #include "nsMsgKeyArray.h"
 
 
-nsMsgViewIndex nsMsgKeyArray::FindIndex(nsMsgKey key)
+nsMsgViewIndex nsMsgKeyArray::FindIndex(nsMsgKey key, PRUint32 startIndex)
 {
-	for (PRUint32 i = 0; i < GetSize(); i++)
+	for (PRUint32 i = startIndex; i < GetSize(); i++)
 	{
 		if ((nsMsgKey)(m_pData[i]) == key)
 		{

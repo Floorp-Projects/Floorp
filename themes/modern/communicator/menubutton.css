@@ -81,11 +81,11 @@ menubutton.button-toolbar {
 /* ::::: single toolbar menubuttons ::::: */
 
 menubutton.button-toolbar-2.top {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#button-toolar-2");
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#button-doubletext");
 }
 
 menubutton.button-toolbar-2.bottom {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#button-toolar-2");
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#button-doubletext");
 }
 
 /* ::::: dual toolbar menubuttons ::::: */

@@ -24,7 +24,6 @@
 #include "nsCRT.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgSendPart.h"
-#include "nsMsgSendFact.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgNewsCID.h"
 #include "nsIMsgHeaderParser.h"
@@ -135,25 +134,6 @@ UseQuotedPrintable(void)
   return mime_use_quoted_printable_p;
 }
 
-// 
-// This function will be used by the factory to generate the 
-// nsMsgComposeAndSend Object....
-//
-nsresult NS_NewMsgSend(const nsIID &aIID, void ** aInstancePtrResult)
-{
-	/* note this new macro for assertions...they can take a string describing the assertion */
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (nsnull != aInstancePtrResult)
-	{
-		nsMsgComposeAndSend *pSend = new nsMsgComposeAndSend();
-		if (pSend)
-			return pSend->QueryInterface(NS_GET_IID(nsIMsgSend), aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was nsnull....*/
-}
 
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS1(nsMsgComposeAndSend, nsIMsgSend)
@@ -2316,20 +2296,37 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 	return 0;
 }
 
-int nsMsgComposeAndSend::SetMimeHeader(MSG_HEADER_SET header, const char *value)
+int nsMsgComposeAndSend::SetMimeHeader(nsMsgCompFields::MsgHeaderID header, const char *value)
 {
 	char * dupHeader = nsnull;
 	PRInt32	ret = NS_ERROR_OUT_OF_MEMORY;
 
-	if (header & (MSG_FROM_HEADER_MASK | MSG_TO_HEADER_MASK | MSG_REPLY_TO_HEADER_MASK | MSG_CC_HEADER_MASK | MSG_BCC_HEADER_MASK))
-		dupHeader = mime_fix_addr_header(value);
-	else if (header &  (MSG_NEWSGROUPS_HEADER_MASK| MSG_FOLLOWUP_TO_HEADER_MASK))
-		dupHeader = mime_fix_news_header(value);
-	else  if (header & (MSG_FCC_HEADER_MASK | MSG_ORGANIZATION_HEADER_MASK |  MSG_SUBJECT_HEADER_MASK | 
-                      MSG_REFERENCES_HEADER_MASK | MSG_X_TEMPLATE_HEADER_MASK | MSG_ATTACHMENTS_HEADER_MASK))
-		dupHeader = mime_fix_header(value);
-	else
-		NS_ASSERTION(PR_FALSE, "invalid header");	// unhandled header mask - bad boy.
+  switch (header)
+  {
+    case nsMsgCompFields::MSG_FROM_HEADER_ID :
+    case nsMsgCompFields::MSG_TO_HEADER_ID :
+    case nsMsgCompFields::MSG_REPLY_TO_HEADER_ID :
+    case nsMsgCompFields::MSG_CC_HEADER_ID :
+    case nsMsgCompFields::MSG_BCC_HEADER_ID :
+		  dupHeader = mime_fix_addr_header(value);
+      break;
+    
+    case nsMsgCompFields::MSG_NEWSGROUPS_HEADER_ID :
+    case nsMsgCompFields::MSG_FOLLOWUP_TO_HEADER_ID :
+		  dupHeader = mime_fix_news_header(value);
+		  break;
+    
+    case nsMsgCompFields::MSG_FCC_HEADER_ID :
+    case nsMsgCompFields::MSG_ORGANIZATION_HEADER_ID :
+    case nsMsgCompFields::MSG_SUBJECT_HEADER_ID :
+    case nsMsgCompFields::MSG_REFERENCES_HEADER_ID :
+    case nsMsgCompFields::MSG_X_TEMPLATE_HEADER_ID :
+    case nsMsgCompFields::MSG_ATTACHMENTS_HEADER_ID :
+		  dupHeader = mime_fix_header(value);
+		  break;
+		
+		default : NS_ASSERTION(PR_FALSE, "invalid header");	// unhandled header - bad boy.
+  }
 
 	if (dupHeader) 
   {
@@ -2405,7 +2402,7 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
       if (PL_strcasecmp(fieldsFCC, "nocopy://") == 0)
         mCompFields->SetFcc("");
       else
-        SetMimeHeader(MSG_FCC_HEADER_MASK, fieldsFCC); 
+        SetMimeHeader(nsMsgCompFields::MSG_FCC_HEADER_ID, fieldsFCC); 
     }
     else
     {
@@ -2442,23 +2439,22 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   }
 
 	mCompFields->SetNewspostUrl((char *) fields->GetNewspostUrl());
-	mCompFields->SetDefaultBody((char *) fields->GetDefaultBody());
 
 	/* strip whitespace from and duplicate header fields. */
-	SetMimeHeader(MSG_FROM_HEADER_MASK, fields->GetFrom());
-	SetMimeHeader(MSG_REPLY_TO_HEADER_MASK, fields->GetReplyTo());
-	SetMimeHeader(MSG_TO_HEADER_MASK, fields->GetTo());
-	SetMimeHeader(MSG_CC_HEADER_MASK, fields->GetCc());
-	SetMimeHeader(MSG_BCC_HEADER_MASK, fields->GetBcc());
-	SetMimeHeader(MSG_NEWSGROUPS_HEADER_MASK, fields->GetNewsgroups());
-	SetMimeHeader(MSG_FOLLOWUP_TO_HEADER_MASK, fields->GetFollowupTo());
-	SetMimeHeader(MSG_ORGANIZATION_HEADER_MASK, fields->GetOrganization());
-	SetMimeHeader(MSG_SUBJECT_HEADER_MASK, fields->GetSubject());
-	SetMimeHeader(MSG_REFERENCES_HEADER_MASK, fields->GetReferences());
-	SetMimeHeader(MSG_X_TEMPLATE_HEADER_MASK, fields->GetTemplateName());
+	SetMimeHeader(nsMsgCompFields::MSG_FROM_HEADER_ID, fields->GetFrom());
+	SetMimeHeader(nsMsgCompFields::MSG_REPLY_TO_HEADER_ID, fields->GetReplyTo());
+	SetMimeHeader(nsMsgCompFields::MSG_TO_HEADER_ID, fields->GetTo());
+	SetMimeHeader(nsMsgCompFields::MSG_CC_HEADER_ID, fields->GetCc());
+	SetMimeHeader(nsMsgCompFields::MSG_BCC_HEADER_ID, fields->GetBcc());
+	SetMimeHeader(nsMsgCompFields::MSG_NEWSGROUPS_HEADER_ID, fields->GetNewsgroups());
+	SetMimeHeader(nsMsgCompFields::MSG_FOLLOWUP_TO_HEADER_ID, fields->GetFollowupTo());
+	SetMimeHeader(nsMsgCompFields::MSG_ORGANIZATION_HEADER_ID, fields->GetOrganization());
+	SetMimeHeader(nsMsgCompFields::MSG_SUBJECT_HEADER_ID, fields->GetSubject());
+	SetMimeHeader(nsMsgCompFields::MSG_REFERENCES_HEADER_ID, fields->GetReferences());
+	SetMimeHeader(nsMsgCompFields::MSG_X_TEMPLATE_HEADER_ID, fields->GetTemplateName());
 
   // For the new way to deal with attachments from the FE...
-  SetMimeHeader(MSG_ATTACHMENTS_HEADER_MASK, fields->GetAttachments());
+  SetMimeHeader(nsMsgCompFields::MSG_ATTACHMENTS_HEADER_ID, fields->GetAttachments());
 
 	pStr = fields->GetOtherRandomHeaders();
 	if (pStr)
@@ -2468,14 +2464,11 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 	if (pStr)
 		mCompFields->SetPriority((char *) pStr);
 
-	int i, j = (int) MSG_LAST_BOOL_HEADER_MASK;
-	for (i = 0; i < j; i++) 
-  {
-		mCompFields->SetBoolHeader((MSG_BOOL_HEADER_SET) i, fields->GetBoolHeader((MSG_BOOL_HEADER_SET) i));
-	}
-
+	mCompFields->SetAttachVCard(fields->GetAttachVCard());
 	mCompFields->SetForcePlainText(fields->GetForcePlainText());
 	mCompFields->SetUseMultipartAlternative(fields->GetUseMultipartAlternative());
+	mCompFields->SetReturnReceipt(fields->GetReturnReceipt());
+	mCompFields->SetUuEncodeAttachments(fields->GetUuEncodeAttachments());
 
 	//
   // Check the fields for legitimacy...
@@ -2540,7 +2533,7 @@ nsMsgComposeAndSend::Init(
 						  PRBool digest_p,
 						  PRBool dont_deliver_p,
 						  nsMsgDeliverMode mode,
-              nsIMessage      *msgToReplace,
+              nsIMsgDBHdr *msgToReplace,
 						  const char *attachment1_type,
 						  const char *attachment1_body,
 						  PRUint32 attachment1_body_length,
@@ -3487,7 +3480,7 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 						  PRBool                            digest_p,
 						  PRBool                            dont_deliver_p,
 						  nsMsgDeliverMode                  mode,
-              nsIMessage                        *msgToReplace,
+              nsIMsgDBHdr                       *msgToReplace,
 						  const char                        *attachment1_type,
 						  const char                        *attachment1_body,
 						  PRUint32                          attachment1_body_length,
@@ -3531,7 +3524,7 @@ nsMsgComposeAndSend::SendMessageFile(
               PRBool                            deleteSendFileOnCompletion,
 						  PRBool                            digest_p,
 						  nsMsgDeliverMode                  mode,
-              nsIMessage                        *msgToReplace,
+              nsIMsgDBHdr                       *msgToReplace,
               nsIMsgSendListener                **aListenerArray,
               PRUint32 aListeners)
 {
@@ -3619,57 +3612,6 @@ BuildURLAttachmentData(nsIURI *url)
 
   NS_IF_ADDREF(url);
   return attachments;
-}
-
-nsresult
-nsMsgComposeAndSend::SendWebPage(nsIMsgIdentity               *aUserIndentity,
-                                 nsIMsgCompFields             *fields,
-                                 nsIURI                       *url,
-                                 nsMsgDeliverMode              mode,
-                                 nsIMsgSendListener           **aListenerArray,
-                                 PRUint32 aListeners)
-{
-  nsresult            rv;
-  nsMsgAttachmentData *tmpPageData = nsnull;
-  
-  //
-  // First check to see if the fields are valid...
-  //
-  if ((!fields) || (!url) )
-    return NS_ERROR_INVALID_ARG;
-
-  tmpPageData = BuildURLAttachmentData(url);
-
-  // Setup the listeners...
-  SetListenerArray(aListenerArray, aListeners);
-
-  /* string GetBody(); */
-  PRInt32       bodyLen;
-  const char    *msgBody = ((nsMsgCompFields*)fields)->GetBody();
-  nsXPIDLCString body;
-  if (!msgBody)
-  {
-    url->GetSpec(getter_Copies(body));
-    msgBody = (const char *)body;
-  }
-
-  bodyLen = PL_strlen(msgBody);
-  rv = CreateAndSendMessage(
-              nsnull,    // no MHTML in this case...
-              aUserIndentity,
- 						  fields, //nsIMsgCompFields                  *fields,
-						  PR_FALSE, //PRBool                            digest_p,
-						  PR_FALSE, //PRBool                            dont_deliver_p,
-						  mode,   //nsMsgDeliverMode                  mode,
-              nsnull, //  nsIMessage      *msgToReplace,
-						  TEXT_PLAIN, //const char                        *attachment1_type,
-              msgBody, //const char                        *attachment1_body,
-						  bodyLen, // PRUint32                          attachment1_body_length,
-						  tmpPageData, // const nsMsgAttachmentData  *attachments,
-						  nsnull,  // const nsMsgAttachedFile    *preloaded_attachments,
-						  nsnull, // void                              *relatedPart,
-              aListenerArray, aListeners);  
-  return rv;
 }
 
 //

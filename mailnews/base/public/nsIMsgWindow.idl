@@ -23,7 +23,6 @@
 #include "nsISupports.idl"
 #include "nsIMsgStatusFeedback.idl"
 #include "nsIMsgFolder.idl"
-#include "nsIMessageView.idl"
 
 interface nsITransactionManager;
 interface nsIDocShell;
@@ -41,7 +40,6 @@ interface nsIMsgWindow : nsISupports {
 	attribute nsIMsgStatusFeedback statusFeedback;
 	attribute nsIMsgHeaderSink msgHeaderSink;
     attribute nsITransactionManager transactionManager;
-	attribute nsIMessageView messageView;
 	attribute nsIMsgFolder openFolder;
 	attribute nsIDocShell rootDocShell;
     void displayHTMLInMessagePane(in wstring title, in wstring body);

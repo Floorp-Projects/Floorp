@@ -27,7 +27,7 @@
 #include "nsIMsgCopyService.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgFolder.h"
-#include "nsIMessage.h"
+#include "nsIMsgHdr.h"
 #include "nsIMsgWindow.h"
 
 typedef enum _nsCopyRequestType
@@ -45,7 +45,7 @@ public:
     nsCopySource();
     nsCopySource(nsIMsgFolder* srcFolder);
     ~nsCopySource();
-    void AddMessage(nsIMessage* aMsg);
+    void AddMessage(nsIMsgDBHdr* aMsg);
 
     nsCOMPtr<nsIMsgFolder> m_msgFolder;
     nsCOMPtr<nsISupportsArray> m_messageArray;

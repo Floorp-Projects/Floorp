@@ -81,7 +81,6 @@ public:
 								char **ret_name);
 
 	static PRBool	IsEnvelopeLine(const char *buf, PRInt32 buf_size);
-	static PRBool	msg_StripRE(const char **stringP, PRUint32 *lengthP);
 	static int		msg_UnHex(char C); 
 
 	nsCOMPtr<nsIMsgHeaderParser> m_HeaderAddressParser;

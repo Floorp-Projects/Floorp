@@ -85,7 +85,6 @@ public:
 
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
                             nsIMsgWindow *msgWindow, PRBool deleteStorage, PRBool isMove);
-	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
   NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
 	NS_IMETHOD GetCanSubscribe(PRBool *aResult);
@@ -95,6 +94,7 @@ public:
     NS_IMETHOD GetCanCompact(PRBool *aResult);
     NS_IMETHOD OnReadChanged(nsIDBChangeListener * aInstigator);
 
+  NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *window);
   NS_IMETHOD Compact(nsIUrlListener *aListener);
 	// for nsMsgLineBuffer
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
@@ -134,6 +134,9 @@ protected:
 	// used for auth news
  	char 		*mGroupUsername;
 	char		*mGroupPassword;
+
+  // the name of the newsgroup.
+  char    *mAsciiName;
 
 private:
     nsresult CreateNewsgroupUsernameUrlForSignon(const char *inUriStr, char **result);

@@ -22,10 +22,10 @@
 
 
 var showPerformance = false;
-var msgNavigationService;
 
 var gFolderTree; 
 var gThreadTree;
+var gThreadOutliner;
 var gMessagePane;
 var gMessagePaneFrame;
 
@@ -35,14 +35,15 @@ var gTotalCount = null;
 
 var gCurrentLoadingFolderURI;
 var gCurrentFolderToReroot;
-var gCurrentLoadingFolderIsThreaded = false;
-var gCurrentLoadingFolderSortID ="";
-var gCurrentLoadingFolderSortDirection = null;
-var gCurrentLoadingFolderViewType = "";
+var gCurrentLoadingFolderSortType = 0;
+var gCurrentLoadingFolderSortOrder = 0;
+var gCurrentLoadingFolderViewType = 0;
+var gCurrentLoadingFolderViewFlags = 0;
 
 var gCurrentDisplayedMessage = null;
 var gNextMessageAfterDelete = null;
 var gNextMessageAfterLoad = false;
+var gNextMessageViewIndexAfterDelete = -1;
 
 var gActiveThreadPaneSortColumn = "";
 
@@ -55,7 +56,6 @@ var gBatching = false;
 var gDisplayStartupPage = false;
 
 
-
 // the folderListener object
 var folderListener = {
     OnItemAdded: function(parentItem, item, view) {},
@@ -66,8 +66,11 @@ var folderListener = {
 
 	OnItemIntPropertyChanged: function(item, property, oldValue, newValue)
 	{
-		var currentLoadedFolder = GetThreadTreeFolder();
-		var currentURI = currentLoadedFolder.getAttribute('ref');
+  // fix me!!!
+
+  /*
+		var currentLoadedFolder = GetThreadPaneFolder();
+		var currentURI = currentLoadedFolder.URI;
 
 		//if we don't have a folder loaded, don't bother.
 		if(currentURI)
@@ -87,8 +90,9 @@ var folderListener = {
 						}
 					}
 				}
-			}
+			}      
 		}
+    */
 	},
 
 	OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
@@ -100,7 +104,6 @@ var folderListener = {
         var eventType = event.GetUnicode();
 
         if (eventType == "FolderLoaded") {
-            
 		if(folder)
 		{
 			var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -116,35 +119,32 @@ var folderListener = {
 					if(msgFolder)
 					{
 						msgFolder.endFolderLoading();
-						RerootFolder(uri, msgFolder, gCurrentLoadingFolderIsThreaded, gCurrentLoadingFolderSortID, gCurrentLoadingFolderSortDirection, gCurrentLoadingFolderViewType);
+						RerootFolder(uri, msgFolder, gCurrentLoadingFolderViewType, gCurrentLoadingFolderViewFlags, gCurrentLoadingFolderSortType, gCurrentLoadingFolderSortOrder);
 						gIsEditableMsgFolder = IsSpecialFolder(msgFolder, [ "Drafts" ]);
 
-						gCurrentLoadingFolderIsThreaded = false;
-						gCurrentLoadingFolderSortID = "";
-						gCurrentLoadingFolderSortDirection = null;
-                        gCurrentLoadingFolderViewType = "";
+						gCurrentLoadingFolderSortType = 0;
+						gCurrentLoadingFolderSortOrder = 0;
+            gCurrentLoadingFolderViewType = 0;
+            gCurrentLoadingFolderViewFlags = 0;
 
-                        SetFocusThreadPane();
-                        if (gNextMessageAfterLoad) {
-                            gNextMessageAfterLoad = false;
+            SetFocusThreadPane();
+            if (gNextMessageAfterLoad) 
+            {
+              gNextMessageAfterLoad = false;
 
-                            GoNextMessage(navigateUnread, true); 
-
-				            msgNavigationService.EnsureDocumentIsLoaded(document);
-                            PositionThreadPane();
-                        }
+              // should scroll to new here.
+              PositionThreadPane();
+            }
 					}
 				}
 				if(uri == gCurrentLoadingFolderURI)
 				{
 				  gCurrentLoadingFolderURI = "";
 				  //Now let's select the first new message if there is one
-                  var beforeScrollToNew;
+          var beforeScrollToNew;
 				  if(showPerformance) {
 				    beforeScrollToNew = new Date();
                   }
-				  msgNavigationService.EnsureDocumentIsLoaded(document);
-
 				  ScrollToFirstNewMessage();
 
 				  if(showPerformance) {
@@ -176,53 +176,77 @@ function HandleDeleteOrMoveMsgFailed(folder)
   if(IsCurrentLoadedFolder(folder)) {
     if(gNextMessageAfterDelete) {
       gNextMessageAfterDelete = null;
+      gNextMessageViewIndexAfterDelete = -1;
     }
   }
 
   if (gBatching) {
     gBatching = false;
-    var threadTree = GetThreadTree();
     //threadTree.treeBoxObject.endBatch();
     //dump("XXX end tree batch (delete or move failed)\n");
   }
-
-  ThreadPaneSelectionChange(true);
+  // fix me???
+//  ThreadPaneSelectionChange(true);
 }
 
 
 function HandleDeleteOrMoveMsgCompleted(folder)
 {
 	var threadTree = GetThreadTree();
-
-	if(IsCurrentLoadedFolder(folder))
-	{
-		msgNavigationService.EnsureDocumentIsLoaded(document);
-		if(gNextMessageAfterDelete)
+//	if(IsCurrentLoadedFolder(folder)) ### rewrite/implement this
+//	{
+		if(gNextMessageViewIndexAfterDelete != -1)
 		{
-            var nextMessage = document.getElementById(gNextMessageAfterDelete);
-			gNextMessageAfterDelete = null;
-			SelectNextMessage(nextMessage);
-			if(threadTree)
-				threadTree.ensureElementIsVisible(nextMessage);
+      var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
+      var outlinerSelection = outlinerView.selection;
+      viewSize = outlinerView.rowCount;
+      dump("view size = " + viewSize + "\n");
+      if (gNextMessageViewIndexAfterDelete >= viewSize)
+      {
+        if (viewSize > 0)
+          gNextMessageViewIndexAfterDelete = viewSize - 1;
+        else
+          gNextMessageViewIndexAfterDelete = -1;
+      }
+      
+      // if we are about to set the selection with a new element then DON'T clear
+      // the selection then add the next message to select. This just generates
+      // an extra round of command updating notifications that we are trying to
+      // optimize away.
+      if (gNextMessageViewIndexAfterDelete != -1) {
+        outlinerSelection.select(gNextMessageViewIndexAfterDelete);
+        // since gNextMessageViewIndexAfterDelete probably has the same value
+        // as the last index we had selected, the outliner isn't generating a new
+        // selectionChanged notification for the outliner view. So we aren't loading the 
+        // next message. to fix this, force the selection changed update.
+        var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
+        if (outlinerView)
+          outlinerView.selectionChanged();
+        EnsureRowInThreadOutlinerIsVisible(gNextMessageViewIndexAfterDelete); 
+      }
+      else
+        outlinerSelection.clearSelection(); /* clear selection in either case  */
+
+			gNextMessageViewIndexAfterDelete = -1;
 		}
+/*
 		//if there's nothing to select then see if the tree has any messages.
 		//if not, then clear the message pane.
 		else
 		{
 			var tree = GetThreadTree();
-			var topmost = msgNavigationService.FindFirstMessage(tree);
+//			var topmost = msgNavigationService.FindFirstMessage(tree);
 			if(!topmost)
 				ClearMessagePane()
 		}
-	}
+//	}
 
     if (gBatching) {
       gBatching = false;
       //threadTree.treeBoxObject.endBatch();
       //dump("XXX end tree batch (delete or move succeeded)\n");
     }
-
-    ThreadPaneSelectionChange(true);
+*/
 }
 
 
@@ -235,8 +259,8 @@ function IsCurrentLoadedFolder(folder)
 		if(folderResource)
 		{
 			var folderURI = folderResource.Value;
-			var currentLoadedFolder = GetThreadTreeFolder();
-			var currentURI = currentLoadedFolder.getAttribute('ref');
+			var currentLoadedFolder = GetThreadPaneFolder();
+			var currentURI = currentLoadedFolder.URI;
 			return(currentURI == folderURI);
 		}
 	}
@@ -343,8 +367,6 @@ function OnUnloadMessenger()
 
 function Create3PaneGlobals()
 {
-	msgNavigationService = Components.classes['@mozilla.org/messenger/msgviewnavigationservice;1'].getService();
-	msgNavigationService= msgNavigationService.QueryInterface(Components.interfaces.nsIMsgViewNavigationService);
 }
 
 
@@ -436,7 +458,6 @@ function loadStartFolder(initialUri)
                 startFolderUri = resource.Value;
             }
         }
-        msgNavigationService.EnsureDocumentIsLoaded(document);
 
         var startFolder = document.getElementById(startFolderUri);
 
@@ -534,9 +555,9 @@ function AddToSession()
 
 function InitPanes()
 {
-	var threadTree = GetThreadTree();
-	if(threadTree);
-		OnLoadThreadPane(threadTree);
+//	var threadTree = GetThreadTree();
+//	if(threadTree);
+//  	OnLoadThreadPane(threadTree);
 
 	var folderTree = GetFolderTree();
 	if(folderTree)
@@ -582,15 +603,6 @@ function GetFolderDatasource()
 
 function OnLoadThreadPane(threadTree)
 {
-    gThreadTree = threadTree;
-	//Sort by date by default
-
-	//Add message data source
-	messageDataSource = messageDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	threadTree.database.AddDataSource(messageDataSource);
-
-    //FIX ME: Tempory patch for bug 24182
-    //ShowThreads(false);
 	setTimeout("ShowThreads(false);", 0);
 }
 
@@ -673,36 +685,16 @@ function FindMessenger()
   return messenger;
 }
 
-function RefreshThreadTreeView()
-{
-	SetBusyCursor(window, true);
-
-	var selection = SaveThreadPaneSelection();
-
-	var currentFolder = GetThreadTreeFolder();  
-	var currentFolderID = currentFolder.getAttribute('ref');
-	ClearThreadTreeSelection();
-	currentFolder.setAttribute('ref', currentFolderID);
-
-	RestoreThreadPaneSelection(selection);
-	SetBusyCursor(window, false);
-
-}
-
 function ClearThreadTreeSelection()
 {
-	var tree = GetThreadTree();
-	if(tree)
-	{
-		tree.clearItemSelection();
-	}
-
+  // mscott --> implement me
 }
 
 function ClearMessagePane()
 {
 	if(gHaveLoadedMessage)
 	{	
+    gHaveLoadedMessage = false;
 		gCurrentDisplayedMessage = null;
 		if (window.frames["messagepane"].location != "about:blank")
 			window.frames["messagepane"].location = "about:blank";
@@ -760,7 +752,7 @@ function FolderPaneOnClick(event)
 						if (folder) {
 							var imapFolder = folder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
 							if (imapFolder) {
-								imapFolder.PerformExpand(msgWindow);
+								imapFolder.performExpand(msgWindow);
 							}
 						}
 					}
@@ -859,87 +851,58 @@ function GetSelectedMsgFolders()
 	return folderArray;
 }
 
-function GetSelectedMessage(index)
+function GetFirstSelectedMessage()
 {
-	var threadTree = GetThreadTree();
-	var selectedMessages = threadTree.selectedItems;
-	var numMessages = selectedMessages.length;
-	if(index <0 || index > (numMessages - 1))
-		return null;
-
-	var messageNode = selectedMessages[index];
-	var messageUri = messageNode.getAttribute("id");
-	var messageResource = RDF.GetResource(messageUri);
-	var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
-	return message;
-
+    try {
+        return gDBView.URIForFirstSelectedMessage;
+    }
+    catch (ex) {
+        return null;
+    }
 }
 
-function GetNumSelectedMessages()
+function GetSelectedIndices(dbView)
 {
-	var threadTree = GetThreadTree();
-	var selectedMessages = threadTree.selectedItems;
-	var numMessages = selectedMessages.length;
-	return numMessages;
+  try {
+    var indicesArray = {}; 
+    var length = {};
+    dbView.getIndicesForSelection(indicesArray,length);
+    return indicesArray.value;
+  }
+  catch (ex) {
+    dump("ex = " + ex + "\n");
+    return null;
+  }
 }
 
 function GetSelectedMessages()
 {
-	var threadTree = GetThreadTree();
-	var selectedMessages = threadTree.selectedItems;
-	var numMessages = selectedMessages.length;
-
-	var messageArray = new Array(numMessages);
-
-	for(var i = 0; i < numMessages; i++)
-	{
-		var messageNode = selectedMessages[i];
-		var messageUri = messageNode.getAttribute("id");
-		var messageResource = RDF.GetResource(messageUri);
-		var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
-		if(message)
-		{
-			messageArray[i] = message;	
-		}
-	}
-	return messageArray;
+  try {
+    var messageArray = {}; 
+    var length = {};
+    gDBView.getURIsForSelection(messageArray,length);
+    return messageArray.value;
+  }
+  catch (ex) {
+    dump("ex = " + ex + "\n");
+    return null;
+  }
 }
 
 function GetLoadedMsgFolder()
 {
-	var loadedFolder = GetThreadTreeFolder();
-	var folderUri = loadedFolder.getAttribute("ref");
-	if(folderUri && folderUri != "" && folderUri !="null")
-	{
-		var folderResource = RDF.GetResource(folderUri);
-		if(folderResource)
-		{
-			try {
-				var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-				return msgFolder;
-			}
-			catch (ex) {
-				dump(ex + "\n");
-				dump("we know about this.  see bug #35591\n");
-			}
-		}
-	}
-	return null;
+    if (!gDBView) return null;
+    return gDBView.msgFolder;
 }
 
 function GetLoadedMessage()
 {
-	if(gCurrentDisplayedMessage)
-	{
-		var messageResource = RDF.GetResource(gCurrentDisplayedMessage);
-		if(messageResource)
-		{
-			var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
-			return message;
-		}
-	}
-	return null;
-
+    try {
+        return gDBView.URIForFirstSelectedMessage;
+    }
+    catch (ex) {
+        return null;
+    }
 }
 
 //Clear everything related to the current message. called after load start page.
@@ -950,18 +913,9 @@ function ClearMessageSelection()
 
 function GetCompositeDataSource(command)
 {
-	if(command == "GetNewMessages" || command == "DeleteMessages" || command == "Copy"  || 
-	   command == "Move" ||  command == "NewFolder" ||  command == "MarkAllMessagesRead" || 
-     command == "DownloadFlagged")
+	if (command == "GetNewMessages" || command == "NewFolder" || command == "MarkAllMessagesRead")
 	{
         return GetFolderDatasource();
-	}
-	else if(command == "MarkMessageRead" || 
-			command == "MarkMessageFlagged" || command == "MarkThreadAsRead" ||
-			command == "DownloadSelected" || command == "MessageProperty")
-	{
-		var threadTree = GetThreadTree();
-		return threadTree.database;
 	}
 
 	return null;
@@ -970,20 +924,8 @@ function GetCompositeDataSource(command)
 
 function SetNextMessageAfterDelete()
 {
-	var tree = GetThreadTree();
-
-	var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
-	if(nextMessage)
-        gNextMessageAfterDelete = nextMessage.getAttribute('id');
-	else
-		gNextMessageAfterDelete = null;
-
-   // use the magic number of 3 to determine if we want to batch or not.
-   if (!gBatching && (GetNumSelectedMessages() > 3)) {
-     gBatching = true;
-     //tree.treeBoxObject.beginBatch();
-     //dump("XXX begin tree batch\n");
-   }
+    dump("setting next msg view index after delete to " + gDBView.firstSelected + "\n");
+    gNextMessageViewIndexAfterDelete = gDBView.firstSelected;
 }
 
 function SelectFolder(folderUri)
@@ -996,21 +938,14 @@ function SelectFolder(folderUri)
 
 function SelectMessage(messageUri)
 {
-	var tree = GetThreadTree();
-	var treeitem = document.getElementById(messageUri);
-	if(tree && treeitem)
-		ChangeSelection(tree, treeitem);
-
+  dump("fix this or remove this\n");
+  // this isn't going to work anymore
 }
 
 function ReloadMessage()
 {
-	var msgToLoad = gCurrentDisplayedMessage;
-	//null it out so it will work.
-	gCurrentDisplayedMessage = null;
-	LoadMessageByUri(msgToLoad);
+  gDBView.reloadMessage();
 }
-
 
 function SetBusyCursor(window, enable)
 {
@@ -1024,4 +959,9 @@ function SetBusyCursor(window, enable)
 	{
 		SetBusyCursor(window.frames[i], enable);
 	}
+}
+
+function GetDBView()
+{
+    return gDBView;
 }

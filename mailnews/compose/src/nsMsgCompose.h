@@ -55,20 +55,19 @@ class nsMsgCompose : public nsIMsgCompose
 	/*** nsIMsgCompose pure virtual functions */
 	NS_DECL_NSIMSGCOMPOSE
 
-  MSG_ComposeType				        GetMessageType();
   nsresult                      ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString& aPrefix, nsString& aBuf, 
                                                             nsString& aSignature, PRBool aQuoted, PRBool aHTMLEditor);
 
  // Deal with quoting issues...
-	nsresult                      QuoteOriginalMessage(const PRUnichar * originalMsgURI, PRInt32 what); // New template
+	nsresult                      QuoteOriginalMessage(const char * originalMsgURI, PRInt32 what); // New template
   PRBool                        QuotingToFollow(void);
   nsresult                      SetQuotingToFollow(PRBool aVal);
   nsresult                      ConvertHTMLToText(nsFileSpec& aSigFile, nsString &aSigData);
   nsresult                      ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData);
   nsresult                      BuildBodyMessageAndSignature();
 
-  nsString                      mQuoteURI;
-  nsString                      mOriginalMsgURI; // used so we can mark message disposition flags after we send the message
+  nsCString                     mQuoteURI;
+  nsCString                     mOriginalMsgURI; // used so we can mark message disposition flags after we send the message
 
   PRInt32                       mWhatHolder;
 
@@ -98,7 +97,7 @@ class nsMsgCompose : public nsIMsgCompose
 
  private:
 	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, PRBool entityConversionDone);
-	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields* compFields);
+	nsresult CreateMessage(const char * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields* compFields);
 	void CleanUpRecipients(nsString& recipients);
   nsresult GetABDirectories(const char * dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory);
   nsresult BuildMailListArray(nsIAddrDatabase* database, nsIAbDirectory* parentDir, nsISupportsArray* array);
@@ -148,7 +147,7 @@ class nsMsgCompose : public nsIMsgCompose
 class QuotingOutputStreamListener : public nsIStreamListener
 {
 public:
-    QuotingOutputStreamListener(const PRUnichar *originalMsgURI,
+    QuotingOutputStreamListener(const char *originalMsgURI,
                                 PRBool quoteHeaders,
                                 PRBool headersOnly,
                                 nsIMsgIdentity *identity);

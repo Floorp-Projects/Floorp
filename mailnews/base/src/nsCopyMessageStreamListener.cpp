@@ -25,11 +25,13 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIMailboxUrl.h"
 #include "nsIMsgHdr.h"
-#include "nsIMessage.h"
 #include "nsIRDFService.h"
 #include "nsIRDFNode.h"
 #include "nsRDFCID.h"
 #include "nsIMsgImapMailFolder.h"
+#include "nsXPIDLString.h"
+#include "nsIMsgMessageService.h"
+#include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -44,10 +46,10 @@ NS_INTERFACE_MAP_BEGIN(nsCopyMessageStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsICopyMessageStreamListener)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
+static nsresult GetMessage(nsIURI *aURL, nsIMsgDBHdr **message)
 {
 	nsCOMPtr<nsIMsgMessageUrl> uriURL;
-	char* uri;
+	nsXPIDLCString uri;
 	nsresult rv;
 
 	if(!message)
@@ -58,28 +60,22 @@ static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
 	if(NS_FAILED(rv))
 		return rv;
 
-	rv = uriURL->GetUri(&uri);
+	rv = uriURL->GetUri(getter_Copies(uri));
 	if(NS_FAILED(rv))
 		return rv;
 
-	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIRDFResource> messageResource;
-		if(NS_SUCCEEDED(rdfService->GetResource(uri, getter_AddRefs(messageResource))))
-		{
-			messageResource->QueryInterface(NS_GET_IID(nsIMessage), (void**)message);
-		}
-	}
-	nsMemory::Free(uri);
+  nsCOMPtr <nsIMsgMessageService> msgMessageService;
+  rv = GetMessageServiceFromURI(uri, getter_AddRefs(msgMessageService));
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (!msgMessageService) return NS_ERROR_FAILURE;
 
-	return rv;
+  return msgMessageService->MessageURIToMsgHdr(uri, message);
 }
 
 
 static nsresult DeleteMessage(nsIURI *aURL, nsIMsgFolder *srcFolder)
 {
-	nsCOMPtr<nsIMessage> message;
+	nsCOMPtr<nsIMsgDBHdr> message;
 	nsresult rv;
 
 	rv = GetMessage(aURL, getter_AddRefs(message));
@@ -140,7 +136,7 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnDataAvailable(nsIRequest * /* reque
 
 NS_IMETHODIMP nsCopyMessageStreamListener::OnStartRequest(nsIRequest * request, nsISupports *ctxt)
 {
-	nsCOMPtr<nsIMessage> message;
+	nsCOMPtr<nsIMsgDBHdr> message;
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIURI> uri = do_QueryInterface(ctxt, &rv);
 

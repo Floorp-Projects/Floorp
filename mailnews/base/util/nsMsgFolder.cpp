@@ -35,7 +35,6 @@
 
 #include "nsMsgFolder.h"
 #include "nsMsgFolderFlags.h"
-#include "nsIMessage.h"
 #include "nsMsgKeyArray.h"
 #include "nsMsgDatabase.h"
 #include "nsIDBFolderInfo.h"
@@ -436,12 +435,6 @@ NS_IMETHODIMP nsMsgFolder::GetParent(nsIFolder **aParent)
 }
 
 NS_IMETHODIMP
-nsMsgFolder::HasMessagesOfType(nsIMsgWindow *aMsgWindow, PRUint32 type, PRBool *hasMessages)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsMsgFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
   // XXX should this return an empty enumeration?
@@ -462,31 +455,6 @@ NS_IMETHODIMP
 nsMsgFolder::UpdateFolder(nsIMsgWindow *)
 {
   return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsMsgFolder::HasThreads(nsIMsgWindow *aMsgWindow, PRBool *hasThreads)
-{
-	return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsMsgFolder::GetThreadsOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, nsISimpleEnumerator ** threadEnumerator)
-{
-  // XXX should this return an empty enumeration?
-	return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsMsgFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
-{
-	return NS_ERROR_FAILURE;	
-}
-
-NS_IMETHODIMP
-nsMsgFolder::HasMessage(nsIMessage *message, PRBool *hasMessage)
-{
-	return NS_ERROR_FAILURE;	
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1414,7 +1382,7 @@ NS_IMETHODIMP nsMsgFolder::SetHasNewMessages(PRBool hasNewMessages)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetFirstNewMessage(nsIMessage **firstNewMessage)
+NS_IMETHODIMP nsMsgFolder::GetFirstNewMessage(nsIMsgDBHdr **firstNewMessage)
 {
 	//we don't support this
 	return NS_OK;
@@ -2110,7 +2078,7 @@ nsMsgFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
 	for(PRUint32 i = 0; i < count; i++)
 	{
 		nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));
-		nsCOMPtr<nsIMessage> message = do_QueryInterface(msgSupports);
+		nsCOMPtr<nsIMsgDBHdr> message = do_QueryInterface(msgSupports);
 
 		if(message)
 			rv = message->MarkRead(markRead);
@@ -2135,7 +2103,7 @@ nsMsgFolder::MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged)
 	for(PRUint32 i = 0; i < count; i++)
 	{
 		nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));
-		nsCOMPtr<nsIMessage> message = do_QueryInterface(msgSupports);
+		nsCOMPtr<nsIMsgDBHdr> message = do_QueryInterface(msgSupports);
 
 		if(message)
 			rv = message->MarkFlagged(markFlagged);
@@ -2148,7 +2116,7 @@ nsMsgFolder::MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged)
 }
 
 NS_IMETHODIMP
-nsMsgFolder::AddMessageDispositionState(nsIMessage *aMessage, nsMsgDispositionState aDispositionFlag)
+nsMsgFolder::AddMessageDispositionState(nsIMsgDBHdr *aMessage, nsMsgDispositionState aDispositionFlag)
 {
   // most folders don't do anything for this...
   return NS_OK;
@@ -2190,7 +2158,7 @@ nsMsgFolder::CopyFolder(nsIMsgFolder* srcFolder,
 
 NS_IMETHODIMP
 nsMsgFolder::CopyFileMessage(nsIFileSpec* fileSpec,
-                             nsIMessage* messageToReplace,
+                             nsIMsgDBHdr* messageToReplace,
                              PRBool isDraftOrTemplate,
                              nsIMsgWindow *window,
                              nsIMsgCopyServiceListener* listener)
@@ -2474,7 +2442,7 @@ NS_IMETHODIMP nsMsgFolder::EnableNotifications(PRInt32 notificationType, PRBool 
     nsCOMPtr <nsIMsgDatabase> database;
 
 
-    nsresult rv = GetMsgDatabase(nsnull, getter_AddRefs(database));
+    GetMsgDatabase(nsnull, getter_AddRefs(database));
 		if(enable)
     {
       if (database)
@@ -2511,24 +2479,24 @@ NS_IMETHODIMP nsMsgFolder::GetMessageHeader(nsMsgKey msgKey, nsIMsgDBHdr **aMsgH
 NS_IMETHODIMP nsMsgFolder::ListDescendents(nsISupportsArray *descendents)
 {
   NS_ENSURE_ARG(descendents);
-  PRUint32 cnt;
+	PRUint32 cnt;
   nsresult rv = mSubFolders->Count(&cnt);
-  NS_ENSURE_SUCCESS(rv,rv);
+  if (NS_FAILED(rv)) return rv;
   for (PRUint32 index = 0; index < cnt; index++)
-  {
+	{
     nsresult rv;
-	nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(index));
-	nsCOMPtr<nsIMsgFolder> child(do_QueryInterface(supports, &rv));
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(index));
+		nsCOMPtr<nsIMsgFolder> child(do_QueryInterface(supports, &rv));
 
     if (NS_SUCCEEDED(rv))
     {
       rv = descendents->AppendElement(supports);
-	  if(NS_SUCCEEDED(rv))
-	  {
-		  rv = child->ListDescendents(descendents);  // recurse
-	  }
+		  if(NS_SUCCEEDED(rv))
+		  {
+			  rv = child->ListDescendents(descendents);  // recurse
+		  }
     }
-  }
+	}
   return rv;
 } 
 
@@ -2545,3 +2513,19 @@ NS_IMETHODIMP nsMsgFolder::GetBaseMessageURI(char **baseMessageURI)
       return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsMsgFolder::GetUriForMsg(nsIMsgDBHdr *msgHdr, char **aURI)
+{
+  NS_ENSURE_ARG(msgHdr);
+  NS_ENSURE_ARG(aURI);
+  nsMsgKey msgKey;
+  msgHdr->GetMessageKey(&msgKey);
+  nsCAutoString uri;
+  uri.Assign(mBaseMessageURI);
+
+  // append a "#" followed by the message key.
+  uri.Append('#');
+  uri.AppendInt(msgKey);
+
+  *aURI = uri.ToNewCString();
+  return NS_OK;
+}

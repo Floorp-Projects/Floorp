@@ -23,6 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgFolder.h"	 
+#include "nsIMsgHdr.h"
 #include "nsIFileSpec.h"
 #include "nsIStreamListener.h"
 #include "nsIMsgMessageService.h"
@@ -32,7 +33,6 @@
 #include "nsMsgUtils.h"
 #include "nsIRDFService.h"
 #include "nsIDBFolderInfo.h"
-#include "nsIMessage.h"
 #include "nsRDFCID.h"
 #include "nsMsgFolderCompactor.h"
 
@@ -336,22 +336,9 @@ nsFolderCompactState::FinishCompact()
 }
 
 nsresult
-nsFolderCompactState::GetMessage(nsIMessage **message)
+nsFolderCompactState::GetMessage(nsIMsgDBHdr **message)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
-
-  if (!message) return rv;
-
-	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIRDFResource> msgResource;
-		if(NS_SUCCEEDED(rdfService->GetResource(m_messageUri,
-                                            getter_AddRefs(msgResource))))
-			rv = msgResource->QueryInterface(NS_GET_IID(nsIMessage),
-                                       (void**)message);
-	}
-  return rv;
+  return GetMsgDBHdrFromURI(m_messageUri, message);
 }
 
 
@@ -376,8 +363,6 @@ nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                                     const PRUnichar *errorMsg)
 {
   nsresult rv = status;
-  nsCOMPtr<nsIMessage> message;
-  nsCOMPtr<nsIDBMessage> dbMessage;
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIMsgDBHdr> msgHdr;
   nsCOMPtr<nsIMsgDBHdr> newMsgHdr;
@@ -385,13 +370,8 @@ nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   if (NS_FAILED(rv)) goto done;
   uri = do_QueryInterface(ctxt, &rv);
   if (NS_FAILED(rv)) goto done;
-  rv = GetMessage(getter_AddRefs(message));
+  rv = GetMessage(getter_AddRefs(msgHdr));
   if (NS_FAILED(rv)) goto done;
-  dbMessage = do_QueryInterface(message, &rv);
-  if (NS_FAILED(rv)) goto done;
-  rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgHdr));
-  if (NS_FAILED(rv)) goto done;
-
     // okay done with the current message; copying the existing message header
     // to the new database
   m_db->CopyHdrFromExistingHdr(m_startOfNewMsg, msgHdr, PR_TRUE,
@@ -477,8 +457,6 @@ nsOfflineStoreCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt
                                     const PRUnichar *errorMsg)
 {
   nsresult rv = status;
-  nsCOMPtr<nsIMessage> message;
-  nsCOMPtr<nsIDBMessage> dbMessage;
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIMsgDBHdr> msgHdr;
   nsCOMPtr<nsIMsgDBHdr> newMsgHdr;
@@ -486,11 +464,7 @@ nsOfflineStoreCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt
   if (NS_FAILED(rv)) goto done;
   uri = do_QueryInterface(ctxt, &rv);
   if (NS_FAILED(rv)) goto done;
-  rv = GetMessage(getter_AddRefs(message));
-  if (NS_FAILED(rv)) goto done;
-  dbMessage = do_QueryInterface(message, &rv);
-  if (NS_FAILED(rv)) goto done;
-  rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgHdr));
+  rv = GetMessage(getter_AddRefs(msgHdr));
   if (NS_FAILED(rv)) goto done;
 
   msgHdr->SetMessageOffset(m_startOfNewMsg);

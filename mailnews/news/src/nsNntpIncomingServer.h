@@ -68,7 +68,6 @@ public:
 	NS_IMETHOD PerformBiff();
     NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
     NS_IMETHOD GetFilterList(nsIMsgFilterList **aResult);
-    NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
 
 	// for nsMsgLineBuffer
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
@@ -103,7 +102,9 @@ private:
 	PRTime mFirstNewDate;
 	PRInt32 mUniqueId;	
 	PRBool mPushAuth;
+    PRUint32 mLastUpdatedTime;
 	PRInt32 mVersion;
+    PRBool mPostingAllowed;
 
     nsCOMPtr<nsITimer> mNewsrcSaveTimer;
 	nsCOMPtr <nsIMsgWindow> mMsgWindow;

@@ -19,6 +19,7 @@ classic.jar:
     skin/classic/global/textfield.css
     skin/classic/global/toolbar.css
     skin/classic/global/tree.css
+    skin/classic/global/outliner.css
     skin/classic/global/wizardOverlay.css
     skin/classic/global/buttonBindings.xml
     skin/classic/global/classicBindings.xml

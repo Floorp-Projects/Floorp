@@ -35,7 +35,7 @@
 #include "nsMsgKeyArray.h"
 %}
 
-interface nsIMessage;
+interface nsIMsgDBHdr;
 interface nsIMsgWindow;
 interface nsIMsgDatabase;
 interface nsIDBFolderInfo;
@@ -68,18 +68,12 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   void ReplaceElement(in nsISupports element, in nsISupports newElement);
   
   nsISimpleEnumerator getMessages(in nsIMsgWindow aMsgWindow);
-  nsISimpleEnumerator getThreadsOfType(in nsIMsgWindow aMsgWindow, in unsigned long viewType);
-  boolean hasThreads(in nsIMsgWindow aMsgWindow);
-  boolean hasMessagesOfType(in nsIMsgWindow aMsgWindow, in unsigned long viewType);
   
   void startFolderLoading();
   void endFolderLoading();
   
 	/* get new headers for db */
 	void updateFolder(in nsIMsgWindow aWindow);
-  
-	nsIMsgThread getThreadForMessage(in nsIMessage message);
-	boolean hasMessage(in nsIMessage message);
   
   nsIEnumerator getVisibleSubFolders();
 	readonly attribute wstring prettiestName;
@@ -204,7 +198,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * return the first new message in the folder
    *
    */
-    readonly attribute nsIMessage firstNewMessage;
+    readonly attribute nsIMsgDBHdr firstNewMessage;
 
   /**
    * clear new status flag of all of the new messages
@@ -281,6 +275,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
 	void getExpansionArray(in nsISupportsArray expansionArray);
 
+  string getUriForMsg(in nsIMsgDBHdr msgHdr);
+
 	void deleteMessages(in nsISupportsArray message,
                       in nsIMsgWindow msgWindow,
                       in boolean deleteStorage, in boolean isMove);
@@ -292,7 +288,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   void copyFolder(in nsIMsgFolder srcFolder, in boolean isMoveFolder,
                   in nsIMsgWindow msgWindow, in nsIMsgCopyServiceListener listener );
 
-  void copyFileMessage(in nsIFileSpec fileSpec, in nsIMessage msgToReplace,
+  void copyFileMessage(in nsIFileSpec fileSpec, in nsIMsgDBHdr msgToReplace,
                        in boolean isDraft, in nsIMsgWindow msgWindow,
                        in nsIMsgCopyServiceListener listener);
 
@@ -301,7 +297,6 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   boolean testSemaphore (in nsISupports semHolder);
   readonly attribute boolean locked;
 
-	nsIMessage createMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
 	void getNewMessages(in nsIMsgWindow aWindow);
 
   /**
@@ -338,29 +333,29 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
 	const nsMsgDispositionState nsMsgDispositionState_Replied = 0;
 	const nsMsgDispositionState nsMsgDispositionState_Forwarded = 1;	
-	void addMessageDispositionState(in nsIMessage aMessage, in nsMsgDispositionState aDispositionFlag);
+	void addMessageDispositionState(in nsIMsgDBHdr aMessage, in nsMsgDispositionState aDispositionFlag);
 
 	void markMessagesRead(in nsISupportsArray messages, in boolean markRead);
 	void markAllMessagesRead();
 	void markMessagesFlagged(in nsISupportsArray messages, in boolean markFlagged);
 	void markThreadRead(in nsIMsgThread thread);
-    nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
-    nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
-  nsIMsgDBHdr GetMessageHeader(in nsMsgKey msgKey);
+	nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
+	nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
+	nsIMsgDBHdr GetMessageHeader(in nsMsgKey msgKey);
   boolean shouldStoreMsgOffline(in nsMsgKey msgKey);
   boolean hasMsgOffline(in nsMsgKey msgKey);
-  nsITransport getOfflineFileTransport(in nsMsgKey msgKey, out PRUint32 offset, out PRUint32 size);
-  void DownloadMessagesForOffline(in nsISupportsArray messages);        
-	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
-  void downloadAllForOffline(in nsIUrlListener listener, in nsIMsgWindow window);
-	/**
-	 *	Turn notifications on/off for various notification types. Currently only supporting
-	 *  allMessageCountNotifications which refers to both total and unread message counts.
-	 */
-	const unsigned long allMessageCountNotifications    = 0;
 
-	void enableNotifications(in long notificationType, in boolean enable);
+  nsITransport getOfflineFileTransport(in nsMsgKey msgKey, out PRUint32 offset, out PRUint32 size);
+  void DownloadMessagesForOffline(in nsISupportsArray messages, in nsIMsgWindow window);        
+  nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
+  void downloadAllForOffline(in nsIUrlListener listener, in nsIMsgWindow window);
+  /**
+   *	Turn notifications on/off for various notification types. Currently only supporting
+   *  allMessageCountNotifications which refers to both total and unread message counts.
+   */
+  const unsigned long allMessageCountNotifications    = 0;
+  void enableNotifications(in long notificationType, in boolean enable);
 
   attribute nsIMsgRetentionSettings retentionSettings;
-
+  attribute nsIMsgDownloadSettings downloadSettings;
 };

@@ -39,6 +39,7 @@ interface nsIMsgThread : nsISupports {
 
   void AddChild(in nsIMsgDBHdr child, in nsIMsgDBHdr inReplyTo, in boolean threadInThread, in nsIDBChangeAnnouncer announcer);
   nsIMsgDBHdr GetChildAt(in long index);
+  nsMsgKey GetChildKeyAt(in long index);
   nsIMsgDBHdr GetChild(in nsMsgKey msgKey);
   nsIMsgDBHdr GetChildHdrAt(in long index);
   nsIMsgDBHdr GetRootHdr(out long index);
@@ -47,8 +48,9 @@ interface nsIMsgThread : nsISupports {
 
   void MarkChildRead(in boolean bRead);
 
+  nsIMsgDBHdr GetFirstUnreadChild();
+
   nsISimpleEnumerator EnumerateMessages(in nsMsgKey parent);
   nsISimpleEnumerator EnumerateUnreadMessages(in nsMsgKey parent);
 
-  boolean hasMessagesOfType(in nsMsgKey parent, in unsigned long viewType);
 };

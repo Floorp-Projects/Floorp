@@ -42,6 +42,7 @@
 @import url("chrome://global/skin/tabcontrol.css");
 @import url("chrome://global/skin/toolbar.css");
 @import url("chrome://global/skin/tree.css");
+@import url("chrome://global/skin/outliner.css");
 @import url("chrome://global/skin/colorpicker.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");

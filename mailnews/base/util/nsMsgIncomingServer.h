@@ -69,6 +69,7 @@ protected:
   
   nsCOMPtr <nsIFolder> m_rootFolder;
   nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
+  nsCOMPtr <nsIMsgDownloadSettings> m_downloadSettings;
   nsresult getDefaultCharPref(const char *pref, char **);
   nsresult getDefaultUnicharPref(const char *pref, PRUnichar **);
   nsresult getDefaultBoolPref(const char *pref, PRBool *);

@@ -52,7 +52,7 @@ nsCopySource::~nsCopySource()
 	MOZ_COUNT_DTOR(nsCopySource);
 }
 
-void nsCopySource::AddMessage(nsIMessage* aMsg)
+void nsCopySource::AddMessage(nsIMsgDBHdr* aMsg)
 {
 	nsCOMPtr<nsISupports> supports(do_QueryInterface(aMsg));
 	if(supports)
@@ -237,7 +237,7 @@ nsMsgCopyService::DoNextCopy()
                 // ** in case of saving draft/template; the very first
                 // time we may not have the original message to replace
                 // with; if we do we shall have an instance of copySource
-                nsCOMPtr<nsIMessage> aMessage;
+                nsCOMPtr<nsIMsgDBHdr> aMessage;
                 if (copySource)
                 {
                     nsCOMPtr<nsISupports> aSupport;
@@ -297,7 +297,7 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
     nsresult rv = NS_ERROR_NULL_POINTER;
     nsCOMPtr<nsISupportsArray> msgArray;
     PRUint32 i, cnt;
-    nsCOMPtr<nsIMessage> msg;
+    nsCOMPtr<nsIMsgDBHdr> msg;
     nsCOMPtr<nsIMsgFolder> curFolder;
     nsCOMPtr<nsISupports> aSupport;
 
@@ -333,7 +333,7 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
         msg = do_QueryInterface(aSupport, &rv);
         if (NS_FAILED(rv)) goto done;
 
-        rv = msg->GetMsgFolder(getter_AddRefs(curFolder));
+        rv = msg->GetFolder(getter_AddRefs(curFolder));
         if (NS_FAILED(rv)) goto done;
         if (!copySource)
         {
@@ -431,7 +431,7 @@ nsMsgCopyService::CopyFolders( nsISupportsArray* folders,
 NS_IMETHODIMP
 nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
                                   nsIMsgFolder* dstFolder,
-                                  nsIMessage* msgToReplace,
+                                  nsIMsgDBHdr* msgToReplace,
                                   PRBool isDraft,
                                   nsIMsgCopyServiceListener* listener,
 	                               nsIMsgWindow* window)

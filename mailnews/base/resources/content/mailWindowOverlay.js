@@ -23,6 +23,20 @@
 
 var gMessengerBundle;
 
+function goUpdateMailMenuItems(commandset)
+{
+//  dump("Updating commands for " + commandset.id + "\n");
+    
+  for (var i = 0; i < commandset.childNodes.length; i++)
+  {
+    var commandID = commandset.childNodes[i].getAttribute("id");
+    if (commandID)
+    {
+      goUpdateCommand(commandID);
+    }
+  }
+}
+
 function file_init()
 {
     if (!gMessengerBundle)
@@ -32,6 +46,8 @@ function file_init()
    but if you return false to oncreate then
    the popup menu will not display which is not a good thing.
  */
+
+  document.commandDispatcher.updateCommands('create-menu-file');
 }
 
 function file_attachments()
@@ -55,86 +71,126 @@ function file_attachments()
     return true;
 }
 
+function InitEditMessagesMenu()
+{
+  document.commandDispatcher.updateCommands('create-menu-edit');
+}
+
+function InitSearchMessagesMenu()
+{
+  document.commandDispatcher.updateCommands('create-menu-search');
+}
+
+function InitGoMessagesMenu()
+{
+  document.commandDispatcher.updateCommands('create-menu-go');
+}
+
 function view_init()
 {
-    if (!gMessengerBundle)
-        gMessengerBundle = document.getElementById("bundle_messenger");
-    var message_menuitem=document.getElementById('menu_showMessage');
+  if (!gMessengerBundle)
+      gMessengerBundle = document.getElementById("bundle_messenger");
+  var message_menuitem=document.getElementById('menu_showMessage');
 
-    if (message_menuitem)
-    {
-        var message_menuitem_hidden = message_menuitem.getAttribute("hidden");
-        if(message_menuitem_hidden != "true"){
-            message_menuitem.setAttribute('checked',!IsThreadAndMessagePaneSplitterCollapsed());
-        }
-    }
-    var threadColumn = document.getElementById('ThreadColumnHeader');
-    var thread_menuitem=document.getElementById('menu_showThreads');
-    if (threadColumn && thread_menuitem){
-        thread_menuitem.setAttribute('checked',threadColumn.getAttribute('currentView')=='threaded');
-    }
+  if (message_menuitem)
+  {
+      var message_menuitem_hidden = message_menuitem.getAttribute("hidden");
+      if(message_menuitem_hidden != "true"){
+          message_menuitem.setAttribute('checked',!IsThreadAndMessagePaneSplitterCollapsed());
+      }
+  }
+  var threadColumn = document.getElementById('ThreadColumnHeader');
+  var thread_menuitem=document.getElementById('menu_showThreads');
+  if (threadColumn && thread_menuitem){
+      thread_menuitem.setAttribute('checked',threadColumn.getAttribute('currentView')=='threaded');
+  }
+
+  document.commandDispatcher.updateCommands('create-menu-view');
 }
 
 function InitViewMessagesMenu()
 {
-    var allMenuItem = document.getElementById("viewAllMessagesMenuItem");
-    var hidden = allMenuItem.getAttribute("hidden") == "true";
-    if(allMenuItem && !hidden)
-        allMenuItem.setAttribute("checked", messageView.viewType == nsMsgViewType.eShowAll);
+  dump("init view messages\n");
 
-    var unreadMenuItem = document.getElementById("viewUnreadMessagesMenuItem");
-    hidden = unreadMenuItem.getAttribute("hidden") == "true";
-    if(unreadMenuItem && !hidden)
-        unreadMenuItem.setAttribute("checked", messageView.viewType == nsMsgViewType.eShowUnread);
+  var allMenuItem = document.getElementById("viewAllMessagesMenuItem");
+  var viewFlags = gDBView.viewFlags;
+  var viewType = gDBView.viewType;
 
+  if(allMenuItem)
+      allMenuItem.setAttribute("checked",  (viewFlags & nsMsgViewFlagsType.kUnreadOnly) == 0 && (viewType == nsMsgViewType.eShowAllThreads));
+
+  var unreadMenuItem = document.getElementById("viewUnreadMessagesMenuItem");
+  if(unreadMenuItem)
+      unreadMenuItem.setAttribute("checked", (viewFlags & nsMsgViewFlagsType.kUnreadOnly) != 0);
+
+  var theadedMenuItem = document.getElementById("menu_showThreads");
+  if (theadedMenuItem)
+    theadedMenuItem.setAttribute("checked", (viewFlags & nsMsgViewFlagsType.kThreadedDisplay) != 0);
+  document.commandDispatcher.updateCommands('create-menu-view');
+
+  var theadsWithUnreadMenuItem = document.getElementById("viewThreadsWithUnreadMenuItem");
+  if(theadsWithUnreadMenuItem)
+      theadsWithUnreadMenuItem.setAttribute("checked", viewType == nsMsgViewType.eShowThreadsWithUnread);
+
+  var watchedTheadsWithUnreadMenuItem = document.getElementById("viewWatchedThreadsWithUnreadMenuItem");
+  if(watchedTheadsWithUnreadMenuItem)
+      watchedTheadsWithUnreadMenuItem.setAttribute("checked", viewType == nsMsgViewType.eShowWatchedThreadsWithUnread);
 }
 
 function InitMessageMenu()
 {
-    var aMessage = GetSelectedMessage(0);
-    var isNews = false;
-    if(aMessage)
-    {
-        isNews = GetMessageType(aMessage) == "news";
-    }
+  var aMessage = GetFirstSelectedMessage();
+  var isNews = false;
+  if(aMessage) {
+      isNews = IsNewsMessage(aMessage);
+  }
 
-    //We show reply to Newsgroups only for news messages.
-    var replyNewsgroupMenuItem = document.getElementById("replyNewsgroupMainMenu");
-    if(replyNewsgroupMenuItem)
-    {
-        replyNewsgroupMenuItem.setAttribute("hidden", isNews ? "" : "true");
-    }
+  //We show reply to Newsgroups only for news messages.
+  var replyNewsgroupMenuItem = document.getElementById("replyNewsgroupMainMenu");
+  if(replyNewsgroupMenuItem)
+  {
+      replyNewsgroupMenuItem.setAttribute("hidden", isNews ? "" : "true");
+  }
 
-    //For mail messages we say reply. For news we say ReplyToSender.
-    var replyMenuItem = document.getElementById("replyMainMenu");
-    if(replyMenuItem)
-    {
-        replyMenuItem.setAttribute("hidden", !isNews ? "" : "true");
-    }
+  //For mail messages we say reply. For news we say ReplyToSender.
+  var replyMenuItem = document.getElementById("replyMainMenu");
+  if(replyMenuItem)
+  {
+      replyMenuItem.setAttribute("hidden", !isNews ? "" : "true");
+  }
 
-    var replySenderMenuItem = document.getElementById("replySenderMainMenu");
-    if(replySenderMenuItem)
-    {
-        replySenderMenuItem.setAttribute("hidden", isNews ? "" : "true");
-    }
+  var replySenderMenuItem = document.getElementById("replySenderMainMenu");
+  if(replySenderMenuItem)
+  {
+      replySenderMenuItem.setAttribute("hidden", isNews ? "" : "true");
+  }
 
-    //disable the move and copy menus only if there are no messages selected.
-    var moveMenu = document.getElementById("moveMenu");
-    if(moveMenu)
-        moveMenu.setAttribute("disabled", !aMessage);
+  // we only kill and watch threads for news
+  var killThreadMenuItem = document.getElementById("killThread");
+  if (killThreadMenuItem) {
+      killThreadMenuItem.setAttribute("hidden", isNews ? "" : "true");
+  }
+  var watchThreadMenuItem = document.getElementById("watchThread");
+  if (watchThreadMenuItem) {
+      watchThreadMenuItem.setAttribute("hidden", isNews ? "" : "true");
+  }
 
-    var copyMenu = document.getElementById("copyMenu");
-    if(copyMenu)
-        copyMenu.setAttribute("disabled", !aMessage);
+  //disable the move and copy menus only if there are no messages selected.
+  var moveMenu = document.getElementById("moveMenu");
+  if(moveMenu)
+      moveMenu.setAttribute("disabled", !aMessage);
+
+  var copyMenu = document.getElementById("copyMenu");
+  if(copyMenu)
+      copyMenu.setAttribute("disabled", !aMessage);
+
+  document.commandDispatcher.updateCommands('create-menu-message');
 }
 
-function GetMessageType(message)
+function IsNewsMessage(messageUri)
 {
-    var compositeDS = GetCompositeDataSource("MessageProperty");
-    var property = RDF.GetResource('http://home.netscape.com/NC-rdf#MessageType');
-    var result = compositeDS.GetTarget(message, property, true);
-    result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    return result.Value;
+    if (!messageUri) return false;
+    return (messageUri.substring(0,14) == "news_message:/")
 }
 
 function InitMessageMark()
@@ -163,43 +219,26 @@ function InitMarkFlaggedItem(id)
 
 function SelectedMessagesAreRead()
 {
-    var aMessage = GetSelectedMessage(0);
-
-    var compositeDS = GetCompositeDataSource("MarkMessageRead");
-    var property = RDF.GetResource('http://home.netscape.com/NC-rdf#IsUnread');
-
-    var areMessagesRead =false;
-
-    if(!aMessage)
-        areMessagesRead = false;
-    else
-    {
-        var result = compositeDS.GetTarget(aMessage, property, true);
-        result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
-        areMessagesRead = result.Value != "true"
+    var isRead;
+    try {
+        isRead = gDBView.hdrForFirstSelectedMessage.isRead;
     }
-
-    return areMessagesRead;
+    catch (ex) {
+        isRead = false;
+    }
+    return isRead;
 }
 
 function SelectedMessagesAreFlagged()
 {
-    var aMessage = GetSelectedMessage(0);
-
-    var compositeDS = GetCompositeDataSource("MarkMessageFlagged");
-    var property = RDF.GetResource('http://home.netscape.com/NC-rdf#Flagged');
-
-    var areMessagesFlagged = false;
-
-    if(!aMessage)
-        areMessagesFlagged = false;
-    else
-    {
-        var result = compositeDS.GetTarget(aMessage, property, true);
-        result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
-        areMessagesFlagged = (result.Value == "flagged");
+    var isFlagged;
+    try {
+        isFlagged = gDBView.hdrForFirstSelectedMessage.isFlagged;
     }
-    return areMessagesFlagged;
+    catch (ex) {
+        isFlagged = false;
+    }
+    return isFlagged;
 }
 
 function GetFirstSelectedMsgFolder()
@@ -335,9 +374,6 @@ function MsgGetNextNMessages()
 
 function MsgDeleteMessage(reallyDelete, fromToolbar)
 {
-
-    if(reallyDelete)
-        dump("reallyDelete\n");
     var srcFolder = GetLoadedMsgFolder();
     // if from the toolbar, return right away if this is a news message
     // only allow cancel from the menu:  "Edit | Cancel / Delete Message"
@@ -345,64 +381,58 @@ function MsgDeleteMessage(reallyDelete, fromToolbar)
     {
         var folderResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
         var uri = folderResource.Value;
-        if (isNewsURI(uri))
-        {
-            //dump("delete ignored!\n");
+        if (isNewsURI(uri)) {
+            // if news, don't delete
             return;
         }
     }
-    //dump("tree is valid\n");
-    //get the selected elements
 
     var compositeDataSource = GetCompositeDataSource("DeleteMessages");
     var messages = GetSelectedMessages();
 
     SetNextMessageAfterDelete();
-    DeleteMessages(compositeDataSource, srcFolder, messages, reallyDelete);
+    if (reallyDelete) {
+        gDBView.doCommand(nsMsgViewCommandType.deleteNoTrash);
+    }
+    else {
+        gDBView.doCommand(nsMsgViewCommandType.deleteMsg);
+    }
 }
 
 function MsgCopyMessage(destFolder)
 {
-    // Get the id for the folder we're copying into
-    var destUri = destFolder.getAttribute('id');
-    var destResource = RDF.GetResource(destUri);
-    var destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-
-    var srcFolder = GetLoadedMsgFolder();
-    if(srcFolder)
-    {
-        var compositeDataSource = GetCompositeDataSource("Copy");
-        var messages = GetSelectedMessages();
-
-        CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, false);
-    }    
+  try {
+    // get the msg folder we're copying messages into
+    destUri = destFolder.getAttribute('id');
+    destResource = RDF.GetResource(destUri);
+    destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    gDBView.doCommandWithFolder(nsMsgViewCommandType.copyMessages, destMsgFolder);
+  }
+  catch (ex) {
+    dump("MsgCopyMessage failed: " + ex + "\n");
+  }
 }
 
 function MsgMoveMessage(destFolder)
 {
-    // Get the id for the folder we're copying into
-    var destUri = destFolder.getAttribute('id');
-    var destResource = RDF.GetResource(destUri);
-    var destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+  try {
+    // get the msg folder we're moving messages into
+    destUri = destFolder.getAttribute('id');
+    destResource = RDF.GetResource(destUri);
+    destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
     
-    var srcFolder = GetLoadedMsgFolder();
-    if(srcFolder)
-    {
-        var compositeDataSource = GetCompositeDataSource("Move");
-        var messages = GetSelectedMessages();
-
-        var srcResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-        var srcUri = srcResource.Value;
-        if (isNewsURI(srcUri))
-        {
-            CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, false);
-        }
-        else
-        {
-            SetNextMessageAfterDelete();
-            CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, true);
-        }
-    }    
+    // we don't move news messages, we copy them
+    if (isNewsURI(gDBView.msgFolder.URI)) {
+      gDBView.doCommandWithFolder(nsMsgViewCommandType.copyMessages, destMsgFolder);
+    }
+    else {
+      SetNextMessageAfterDelete();
+      gDBView.doCommandWithFolder(nsMsgViewCommandType.moveMessages, destMsgFolder);
+    } 
+  }
+  catch (ex) {
+    dump("MsgMoveMessage failed: " + ex + "\n");
+  }   
 }
 
 function MsgNewMessage(event)
@@ -419,14 +449,12 @@ function MsgNewMessage(event)
 function MsgReplyMessage(event)
 {
   var loadedFolder = GetLoadedMsgFolder();
-
   var server = loadedFolder.server;
 
   if(server && server.type == "nntp")
     MsgReplyGroup(event);
   else 
     MsgReplySender(event);
-
 }
 
 function MsgReplySender(event)
@@ -438,7 +466,6 @@ function MsgReplySender(event)
     ComposeMessage(msgComposeType.ReplyToSender, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
   else
     ComposeMessage(msgComposeType.ReplyToSender, msgComposeFormat.Default, loadedFolder, messageArray);
-
 }
 
 function MsgReplyGroup(event)
@@ -457,7 +484,6 @@ function MsgReplyToAllMessage(event)
   var loadedFolder = GetLoadedMsgFolder();
   var messageArray = GetSelectedMessages();
 
-  dump("\nMsgReplyToAllMessage from XUL\n");
   if (event && event.shiftKey)
     ComposeMessage(msgComposeType.ReplyAll, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
   else
@@ -466,8 +492,6 @@ function MsgReplyToAllMessage(event)
 
 function MsgForwardMessage(event)
 {
-
-  dump("\nMsgForwardMessage from XUL\n");
   var forwardType = 0;
   try {
       forwardType = pref.GetIntPref("mail.forward_message_mode");
@@ -484,7 +508,7 @@ function MsgForwardAsAttachment(event)
   var loadedFolder = GetLoadedMsgFolder();
   var messageArray = GetSelectedMessages();
 
-  dump("\nMsgForwardAsAttachment from XUL\n");
+  //dump("\nMsgForwardAsAttachment from XUL\n");
   if (event && event.shiftKey)
     ComposeMessage(msgComposeType.ForwardAsAttachment,
                    msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
@@ -497,7 +521,7 @@ function MsgForwardAsInline(event)
   var loadedFolder = GetLoadedMsgFolder();
   var messageArray = GetSelectedMessages();
 
- dump("\nMsgForwardAsInline from XUL\n");
+  //dump("\nMsgForwardAsInline from XUL\n");
   if (event && event.shiftKey)
     ComposeMessage(msgComposeType.ForwardInline,
                    msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
@@ -599,9 +623,10 @@ function MsgSubscribe()
 
 function ConfirmUnsubscribe(folder)
 {
-    var titleMsg = gMessengerBundle.getString("confirmUnsubscribeTitle");
+    var sBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties"); 
+    var titleMsg = gMessengerBundle.GetStringFromName("confirmUnsubscribeTitle");
     var dialogMsg = gMessengerBundle.getFormattedString("confirmUnsubscribeText",
-                                                        [ folder.name]);
+                                        [folder.name], 1);
 
     var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                                                     "nsICommonDialogs");
@@ -618,23 +643,17 @@ function MsgUnsubscribe()
 
 function MsgSaveAsFile() 
 {
-    dump("\MsgSaveAsFile from XUL\n");
-    var messages = GetSelectedMessages();
-    if (messages && messages.length == 1)
-    {
-        SaveAsFile(messages[0]);
+    if (gDBView.numSelected == 1) {
+        SaveAsFile(gDBView.URIForFirstSelectedMessage);
     }
 }
 
 
 function MsgSaveAsTemplate() 
 {
-    dump("\MsgSaveAsTemplate from XUL\n");
     var folder = GetLoadedMsgFolder();
-    var messages = GetSelectedMessages();
-    if (messages && messages.length == 1)
-    {
-        SaveAsTemplate(messages[0], folder);
+    if (gDBView.numSelected == 1) {
+        SaveAsTemplate(gDBView.URIForFirstSelectedMessage, folder);
     }
 }
 
@@ -656,81 +675,66 @@ function MsgOpenNewWindowForFolder(folderUri)
         else
             window.openDialog("chrome://messenger/content/mail3PaneWindowVertLayout.xul", "_blank", "chrome,all,dialog=no", folderUri );
     }
-
 }
 
+// passing in the view, so this will work for search and the thread pane
 function MsgOpenSelectedMessages()
 {
-  var threadTree = GetThreadTree();
-  var selectedMessages = threadTree.selectedItems;
-  var numMessages = selectedMessages.length;
+  var dbView = GetDBView();
 
-  for(var i = 0; i < numMessages; i++) {
-    var messageNode = selectedMessages[i];
-    messageUri = messageNode.getAttribute("id");
-    if(messageUri) {
-      MsgOpenNewWindowForMessage(messageUri, null);
-    }
+  dump("XXX dbView " + dbView + "\n");
+  var indices = GetSelectedIndices(dbView);
+  var numMessages = indices.length;
+
+  for (var i = 0; i < numMessages; i++) {
+    MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[i]),dbView.getFolderForViewIndex(indices[i]).URI);
   }
 }
 
 function MsgOpenNewWindowForMessage(messageUri, folderUri)
 {
-    var message;
+    var currentIndex;
 
-    if(!messageUri)
-    {
-        message = GetSelectedMessage(0);
-        var messageResource = message.QueryInterface(Components.interfaces.nsIRDFResource);
-        messageUri = messageResource.Value;
+    if (!messageUri || !folderUri) {
+        var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
+        var outlinerSelection = outlinerView.selection;
+        currentIndex = outlinerSelection.currentIndex;
     }
 
-    if(!folderUri)
-    {
-        message = RDF.GetResource(messageUri);
-        message = message.QueryInterface(Components.interfaces.nsIMessage);
-        var folder = message.msgFolder;
-        var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-        folderUri = folderResource.Value;
+    if (!messageUri) {
+        messageUri = gDBView.getURIForViewIndex(currentIndex);
     }
 
-    if(messageUri && folderUri)
-    {
-        window.openDialog( "chrome://messenger/content/messageWindow.xul", "_blank", "chrome,all,dialog=no", messageUri, folderUri );
+    if (!folderUri) {
+        folderUri = gDBView.getFolderForViewIndex(currentIndex).URI;
     }
 
-
+    // be sure to pass in the current view....
+    if (messageUri && folderUri) {
+        window.openDialog( "chrome://messenger/content/messageWindow.xul", "_blank", "chrome,all,dialog=no", messageUri, folderUri, gDBView );
+    }
 }
 
 function CloseMailWindow() 
 {
-    dump("\nClose from XUL\nDo something...\n");
+    //dump("\nClose from XUL\nDo something...\n");
     window.close();
 }
 
 function MsgMarkMsgAsRead(markRead)
 {
-    if(markRead == null)
-    {
-        markRead= !SelectedMessagesAreRead();
+    if (!markRead) {
+        markRead = !SelectedMessagesAreRead();
     }
-    var selectedMessages = GetSelectedMessages();
-    var compositeDataSource = GetCompositeDataSource("MarkMessageRead");
-
-    MarkMessagesRead(compositeDataSource, selectedMessages, markRead);
+    MarkSelectedMessagesRead(markRead);
 }
 
 function MsgMarkAsFlagged(markFlagged)
 {
-    if(markFlagged == null)
-    {
-        markFlagged= !SelectedMessagesAreFlagged();
+    if (!markFlagged) {
+        markFlagged = !SelectedMessagesAreFlagged();
     }
-
-    var selectedMessages = GetSelectedMessages();
-    var compositeDataSource = GetCompositeDataSource("MarkMessageFlagged");
-
-    MarkMessagesFlagged(compositeDataSource, selectedMessages, markFlagged);
+    MarkSelectedMessagesFlagged(markFlagged);
 }
 
 function MsgMarkAllRead()
@@ -744,23 +748,17 @@ function MsgMarkAllRead()
 
 function MsgDownloadFlagged()
 {
-    var compositeDataSource = GetCompositeDataSource("DownloadFlagged");
-    var folder = GetLoadedMsgFolder();
-
-    if(folder)
-        DownloadFlaggedMessages(compositeDataSource, folder);
+	gDBView.doCommand(nsMsgViewCommandType.downloadFlaggedForOffline);
 }
 
 function MsgDownloadSelected()
 {
-    var selectedMessages = GetSelectedMessages();
-    var compositeDataSource = GetCompositeDataSource("DownloadSelected");
-
-    DownloadSelectedMessages(compositeDataSource, selectedMessages);
+	gDBView.doCommand(nsMsgViewCommandType.downloadSelectedForOffline);
 }
 
 function MsgMarkThreadAsRead()
 {
+    dump("XXX fix MsgMarkThreadAsRead(), this won't work anymore\n");
     var messageList = GetSelectedMessages();
     if(messageList.length == 1)
     {
@@ -773,7 +771,6 @@ function MsgMarkThreadAsRead()
 
 function MsgViewPageSource() 
 {
-    //dump("MsgViewPageSource(); \n ");
     var messages = GetSelectedMessages();
     ViewPageSource(messages);
 }
@@ -834,8 +831,7 @@ function MsgStop()
 function MsgSendUnsentMsg() 
 {
     var folder = GetFirstSelectedMsgFolder();
-    if(folder)
-    {
+    if(folder) {
         SendUnsentMessages(folder);
     }
 }
@@ -845,25 +841,15 @@ function PrintEnginePrint()
     var messageList = GetSelectedMessages();
     numMessages = messageList.length;
 
-
-    if (numMessages == 0)
-    {
+    if (numMessages == 0) {
         dump("PrintEnginePrint(): No messages selected.\n");
         return false;
     }  
 
-    var selectionArray = new Array(numMessages);
-
-    for(var i = 0; i < numMessages; i++)
-    {
-        var messageResource = messageList[i].QueryInterface(Components.interfaces.nsIRDFResource);
-        selectionArray[i] = messageResource.Value;
-    }
-
     printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
                                                         "",
                                                         "chrome,dialog=no,all",
-                                                        numMessages, selectionArray, statusFeedback);
+                                                        numMessages, messageList, statusFeedback);
     return true;
 }
 
@@ -1033,5 +1019,3 @@ function MsgGoBack() {}
 function MsgGoForward() {}
 function MsgAddSenderToAddressBook() {}
 function MsgAddAllToAddressBook() {}
-function MsgIgnoreThread() {}
-function MsgWatchThread() {}

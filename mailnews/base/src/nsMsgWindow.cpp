@@ -214,22 +214,6 @@ NS_IMETHODIMP nsMsgWindow::SetTransactionManager(nsITransactionManager * aTransa
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgWindow::GetMessageView(nsIMessageView * *aMessageView)
-{
-	if(!aMessageView)
-		return NS_ERROR_NULL_POINTER;
-
-	*aMessageView = mMessageView;
-	NS_IF_ADDREF(*aMessageView);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgWindow::SetMessageView(nsIMessageView * aMessageView)
-{
-	mMessageView = aMessageView;
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgWindow::GetOpenFolder(nsIMsgFolder * *aOpenFolder)
 {
 	if(!aOpenFolder)

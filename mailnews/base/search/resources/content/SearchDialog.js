@@ -22,7 +22,7 @@ var rdfDatasourcePrefix = "@mozilla.org/rdf/datasource;1?name=";
 var rdfServiceContractID    = "@mozilla.org/rdf/rdf-service;1";
 var searchSessionContractID = "@mozilla.org/messenger/searchSession;1";
 var folderDSContractID         = rdfDatasourcePrefix + "mailnewsfolders";
-var gSearchDatasource;
+var gSearchView;
 var gSearchSession;
 var gCurrentFolder;
 
@@ -43,6 +43,8 @@ var gSearchBundle;
 // Datasource search listener -- made global as it has to be registered
 // and unregistered in different functions.
 var gDataSourceSearchListener;
+var gViewSearchListener;
+var gIsSearchHit = false;
 
 var gButton;
 
@@ -65,8 +67,8 @@ var nsSearchResultsController =
     isCommandEnabled: function(command)
     {
         var enabled = true;
-        if (gThreadTree.selectedItems.length <= 0)
-            enabled = false;
+        if (GetNumSelectedMessages() <= 0)
+          enabled = false;
 
         return enabled;
     },
@@ -75,7 +77,7 @@ var nsSearchResultsController =
     {
         switch(command) {
         case "cmd_open":
-            MsgOpenSelectedMessages();
+            MsgOpenSelectedMessages(gSearchView);
             return true;
 
         default:
@@ -103,16 +105,13 @@ var gSearchNotificationListener =
 
         var statusMsg;
         // if there are no hits, it means no matches were found in the search.
-        if (gNumOfSearchHits == 0) {
-            statusMsg = gSearchBundle.getString("searchFailureMessage");
+        if (!gIsSearchHit) {
+            gStatusFeedback.showStatusString(gSearchBundle.getString("searchFailureMessage"));
         }
-        else if (gNumOfSearchHits == 1) {
-            statusMsg = gSearchBundle.getString("searchSuccessMessage");
-        }         
         else
         {
-            statusMsg = gSearchBundle.getFormattedString("searchSuccessMessages", [gNumOfSearchHits]);
-            gNumOfSearchHits = 0;
+            gStatusFeedback.showStatusString(gSearchBundle.getString("searchSuccessMessage"));
+            gIsSearchHit = false;
         }
 
         gStatusFeedback.showProgress(100);
@@ -122,39 +121,39 @@ var gSearchNotificationListener =
 	
     onNewSearch: function() 
     {
-        gButton.setAttribute("value", gSearchBundle.getString("labelForStopButton"));
-        if (gThreadTree)
-            gThreadTree.clearItemSelection();
-        ThreadTreeUpdate_Search();
+      gButton.setAttribute("value", gSearchBundle.getString("labelForStopButton"));
+//        if (gThreadTree)
+//            gThreadTree.clearItemSelection();
 
-        gStatusFeedback.showProgress(0);
-        gStatusFeedback.showStatusString(gSearchBundle.getString("searchingMessage"));
-        gStatusBar.setAttribute("mode","undetermined");
+      document.commandDispatcher.updateCommands('mail-search');
+      gStatusFeedback.showProgress(0);
+      gStatusFeedback.showStatusString(gSearchBundle.getString("searchingMessage"));
+      gStatusBar.setAttribute("mode","undetermined");
     }
 }
 
 function searchOnLoad()
 {
-    initializeSearchWidgets();
-    initializeSearchWindowWidgets();
+  initializeSearchWidgets();
+  initializeSearchWindowWidgets();
 
-    gSearchBundle = document.getElementById("bundle_search");
-    setupDatasource();
-    setupSearchListener();
+  gSearchBundle = document.getElementById("bundle_search");
+  setupDatasource();
+  setupSearchListener();
 
-    if (window.arguments && window.arguments[0])
-        selectFolder(window.arguments[0].folder);
-    
-    onMore(null);
-    moveToAlertPosition();
-
+  if (window.arguments && window.arguments[0])
+      selectFolder(window.arguments[0].folder);
+  
+  onMore(null);
+  document.commandDispatcher.updateCommands('mail-search');
+	moveToAlertPosition();
 }
 
 
 function searchOnUnload()
 {
     // unregister listeners
-    gSearchSession.unregisterListener(gDataSourceSearchListener);
+    gSearchSession.unregisterListener(gViewSearchListener);
     gSearchSession.unregisterListener(gSearchNotificationListener);
 
     // release this early because msgWindow holds a weak reference
@@ -164,7 +163,7 @@ function searchOnUnload()
 function initializeSearchWindowWidgets()
 {
     gFolderPicker = document.getElementById("searchableFolders");
-    gThreadTree = document.getElementById("threadTree");
+//    gThreadTree = document.getElementById("threadTree");
     gButton = document.getElementById("search-button");
     gStatusBar = document.getElementById('statusbar-icon');
 
@@ -174,9 +173,8 @@ function initializeSearchWindowWidgets()
 
     // functionality to enable/disable buttons using nsSearchResultsController
     // depending of whether items are selected in the search results thread pane.
-    gThreadTree.controllers.appendController(nsSearchResultsController);
+//    gThreadTree.controllers.appendController(nsSearchResultsController);
     top.controllers.insertControllerAt(0, nsSearchResultsController);
-    ThreadTreeUpdate_Search();
 }
 
 
@@ -263,7 +261,8 @@ function onSearch(event)
     gSearchSession.search(msgWindow);
     // refresh the tree after the search starts, because initiating the
     // search will cause the datasource to clear itself
-    gThreadTree.setAttribute("ref", gThreadTree.getAttribute("ref"));
+//    gThreadTree.setAttribute("ref", gThreadTree.getAttribute("ref"));
+//    dump("Kicking it off with " + gThreadTree.getAttribute("ref") + "\n");
 }
 
 function AddSubFolders(folder) {
@@ -301,31 +300,72 @@ function GetScopeForFolder(folder) {
     else
         return nsMsgSearchScope.MailFolder;
 }
+
+var nsMsgViewSortType = Components.interfaces.nsMsgViewSortType;
+var nsMsgViewSortOrder = Components.interfaces.nsMsgViewSortOrder;
+var nsMsgViewFlagsType = Components.interfaces.nsMsgViewFlagsType;
+var nsMsgViewCommandType = Components.interfaces.nsMsgViewCommandType;
+
+function goUpdateSearchItems(commandset)
+{   
+  for (var i = 0; i < commandset.childNodes.length; i++)
+  {
+    var commandID = commandset.childNodes[i].getAttribute("id");
+    if (commandID)
+    {
+      goUpdateCommand(commandID);
+    }
+  }
+}
+
+function nsMsgSearchCommandUpdater()
+{}
+
+nsMsgSearchCommandUpdater.prototype = 
+{
+  updateCommandStatus : function()
+    {
+      // the back end is smart and is only telling us to update command status
+      // when the # of items in the selection has actually changed.
+		  document.commandDispatcher.updateCommands('mail-search');
+    },
+
+  QueryInterface : function(iid)
+   {
+     if(iid.equals(Components.interfaces.nsIMsgDBViewCommandUpdater))
+	    return this;
+	  
+     throw Components.results.NS_NOINTERFACE;
+     return null;
+   }
+}
     
 function setupDatasource() {
 
     RDF = Components.classes[rdfServiceContractID].getService(Components.interfaces.nsIRDFService);
+    gSearchView = Components.classes["@mozilla.org/messenger/msgdbview;1?type=search"].createInstance(Components.interfaces.nsIMsgDBView);
+    var count = new Object;
+    var cmdupdator = new nsMsgSearchCommandUpdater();
     
-    gSearchDatasource = Components.classes[rdfDatasourcePrefix + "msgsearch"].createInstance(Components.interfaces.nsIRDFDataSource);
+    gSearchView.init(messenger, msgWindow, cmdupdator);
+    gSearchView.open(null, nsMsgViewSortType.byId, nsMsgViewSortOrder.ascending, nsMsgViewFlagsType.kNone, count);
 
-    gThreadTree.setAttribute("ref", gSearchDatasource.URI);
-    
+    var outlinerView = gSearchView.QueryInterface(Components.interfaces.nsIOutlinerView);
+    if (outlinerView)
+    {     
+      var outliner = GetThreadOutliner();
+      outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView; 
+    }
+
     // the thread pane needs to use the search datasource (to get the
     // actual list of messages) and the message datasource (to get any
     // attributes about each message)
     gSearchSession = Components.classes[searchSessionContractID].createInstance(Components.interfaces.nsIMsgSearchSession);
     
-    setMsgDatasourceWindow(gSearchDatasource, msgWindow);
-    gThreadTree.database.AddDataSource(gSearchDatasource);
-
-    var messageDatasource = Components.classes[rdfDatasourcePrefix + "mailnewsmessages"].createInstance(Components.interfaces.nsIRDFDataSource);
-    setMsgDatasourceWindow(messageDatasource, msgWindow);
-    
-    gThreadTree.database.AddDataSource(messageDatasource);
     
     // the datasource is a listener on the search results
-    gDataSourceSearchListener = gSearchDatasource.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
-    gSearchSession.registerListener(gDataSourceSearchListener);
+    gViewSearchListener = gSearchView.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
+    gSearchSession.registerListener(gViewSearchListener);
 }
 
 
@@ -395,7 +435,18 @@ function onSearchButton(event)
         onSearchStop(event);
 }
 
-function ThreadTreeUpdate_Search()
+// threadPane.js will be needing this, too
+function GetNumSelectedMessages()
 {
-    goUpdateCommand("cmd_open");
+   try {
+       return gSearchView.numSelected;
+   }
+   catch (ex) {
+       return 0;
+   }
+}
+
+function GetDBView()
+{
+    return gSearchView;
 }

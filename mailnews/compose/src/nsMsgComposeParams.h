@@ -35,7 +35,7 @@ public:
   
   MSG_ComposeType               mType;
   MSG_ComposeFormat             mFormat;
-  nsString                      mOriginalMsgUri;
+  nsCString                     mOriginalMsgUri;
   nsCOMPtr<nsIMsgIdentity>      mIdentity;
   nsCOMPtr<nsIMsgCompFields>    mComposeFields;
   PRBool                        mBodyIsLink;

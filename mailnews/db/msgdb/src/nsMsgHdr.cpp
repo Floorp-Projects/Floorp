@@ -612,64 +612,19 @@ NS_IMETHODIMP nsMsgHdr::GetMime2DecodedRecipients(PRUnichar* *resultRecipients)
 }
 
 
-NS_IMETHODIMP nsMsgHdr::GetAuthorCollationKey(PRUnichar* *resultAuthor)
+NS_IMETHODIMP nsMsgHdr::GetAuthorCollationKey(PRUint8 **resultAuthor, PRUint32 *len)
 {
-	nsCAutoString cSender;
-	char *name = nsnull;
-
-	nsresult ret = m_mdb->RowCellColumnTonsCString(GetMDBRow(), m_mdb->m_senderColumnToken, cSender);
-	if (NS_SUCCEEDED(ret))
-	{
-		nsIMsgHeaderParser *headerParser = m_mdb->GetHeaderParser();
-		if (headerParser)
-		{
-			// apply mime decode
-			nsIMimeConverter *converter;
-			ret = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-												NS_GET_IID(nsIMimeConverter), (void **)&converter);
-
-			if (NS_SUCCEEDED(ret) && nsnull != converter) 
-			{
-				char *resultStr = nsnull;
-				char *charset = nsnull;
-				m_mdb->m_dbFolderInfo->GetCharPtrCharacterSet(&charset);
-				char charsetName[128];
-				PL_strncpy(charsetName, charset, sizeof(charsetName));
-
-				ret = converter->DecodeMimePartIIStr(cSender.get(), charsetName, &resultStr);
-				if (NS_SUCCEEDED(ret))
-				{
-					ret = headerParser->ExtractHeaderAddressName (charsetName, resultStr, &name);
-				}
-				NS_RELEASE(converter);
-				PR_FREEIF(resultStr);
-				PR_FREEIF(charset);
-			}
-
-		}
-	}
-	if (NS_SUCCEEDED(ret))
-	{
-		nsAutoString autoString; autoString.AssignWithConversion(name);
-        PRUnichar *uniName = autoString.ToNewUnicode();
-		ret = m_mdb->CreateCollationKey(uniName, resultAuthor);
-        Recycle(uniName);
-	}
-
-	if(name)
-		PL_strfree(name);
-
-	return ret;
+  return m_mdb->RowCellColumnToAddressCollationKey(GetMDBRow(), m_mdb->m_senderColumnToken, resultAuthor, len);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetSubjectCollationKey(PRUnichar* *resultSubject)
+NS_IMETHODIMP nsMsgHdr::GetSubjectCollationKey(PRUint8 **resultSubject, PRUint32 *len)
 {
-	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_subjectColumnToken, resultSubject);
+	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_subjectColumnToken, resultSubject, len);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetRecipientsCollationKey(PRUnichar* *resultRecipients)
+NS_IMETHODIMP nsMsgHdr::GetRecipientsCollationKey(PRUint8 **resultRecipients, PRUint32 *len)
 {
-	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_recipientsColumnToken, resultRecipients);
+	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_recipientsColumnToken, resultRecipients, len);
 }
 
 NS_IMETHODIMP nsMsgHdr::GetCharset(char **aCharset)
@@ -701,6 +656,20 @@ NS_IMETHODIMP nsMsgHdr::GetThreadParent(nsMsgKey *result)
 	}
     *result = m_threadParent;
     return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgHdr::GetFolder(nsIMsgFolder **result)
+{
+  NS_ENSURE_ARG(result);
+
+  if (m_mdb && m_mdb->m_folder)
+  {
+    *result = m_mdb->m_folder;
+    NS_ADDREF(*result);
+  }
+  else
+    *result = nsnull;
+  return NS_OK;
 }
 
 nsresult nsMsgHdr::SetStringColumn(const char *str, mdb_token token)
@@ -767,3 +736,20 @@ PRBool nsMsgHdr::IsParentOf(nsIMsgDBHdr *possibleChild)
 	return (reference.Equals(messageId));
 }
 
+NS_IMETHODIMP nsMsgHdr::GetIsRead(PRBool *isRead)
+{
+    NS_ENSURE_ARG_POINTER(isRead);
+    if (!(m_initedValues & FLAGS_INITED))
+      InitFlags();
+    *isRead = m_flags & MSG_FLAG_READ;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgHdr::GetIsFlagged(PRBool *isFlagged)
+{
+    NS_ENSURE_ARG_POINTER(isFlagged);
+    if (!(m_initedValues & FLAGS_INITED))
+      InitFlags();
+    *isFlagged = m_flags & MSG_FLAG_MARKED;
+    return NS_OK;
+}

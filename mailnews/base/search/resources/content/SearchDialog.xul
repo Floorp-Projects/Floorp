@@ -55,16 +55,13 @@ Rights Reserved.
   <script src="chrome://messenger/content/SearchDialog.js"/>
 
   <commands id="commands">
-    <commandset id="ThreadTreeUpdate_Search"
+    <commandset id="mailSearchItems"
                 commandupdater="true"
-                events="threadTree-select"
-                oncommandupdate="ThreadTreeUpdate_Search()"/>
+                events="mail-search"
+                oncommandupdate="goUpdateSearchItems(this)">
+      <command id="cmd_open" oncommand="goDoCommand('cmd_open')" disabled="true"/>
+    </commandset>
   </commands>
- 
-
-  <broadcasterset id="broadcasterset">
-    <broadcaster id="cmd_open" oncommand="goDoCommand('cmd_open')"/>
-  </broadcasterset>
 
   <dummy class="usesMailWidgets"/>
   <box flex="1" orient="vertical">
@@ -97,7 +94,7 @@ Rights Reserved.
     
     <titledbox value="&results.label;" orient="vertical" class="dialog box-padded" flex="1">
        <box id="searchTermListBox" orient="vertical" flex="1">
-            <tree id="threadTree" flex="1" context="threadPaneContext"/>
+            <outliner id="threadOutliner" flex="1" context="threadPaneContext"/>
        </box>
     </titledbox>
     

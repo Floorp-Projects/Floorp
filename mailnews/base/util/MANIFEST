@@ -24,6 +24,7 @@ nsMsgLineBuffer.h
 nsMsgGroupRecord.h
 nsUInt32Array.h
 nsMsgKeySet.h
+nsMsgKeyArray.h
 nsMsgFolder.h
 nsMsgDBFolder.h
 nsLocalFolderSummarySpec.h

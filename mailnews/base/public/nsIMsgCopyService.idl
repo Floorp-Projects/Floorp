@@ -27,7 +27,7 @@
 #include "nsIMsgCopyServiceListener.idl"
 #include "nsISupportsArray.idl"
 
-interface nsIMessage;
+interface nsIMsgDBHdr;
 %{C++
 #include "nsITransactionManager.h"
 %}
@@ -59,7 +59,7 @@ interface nsIMsgCopyService : nsISupports {
 
     void CopyFileMessage(in nsIFileSpec fileSpec,
                          in nsIMsgFolder dstFolder,
-                         in nsIMessage msgToReplace,
+                         in nsIMsgDBHdr msgToReplace,
                          in boolean isDraftOrTemplate,
                          in nsIMsgCopyServiceListener listener,
                          in nsIMsgWindow msgWindow);

@@ -180,7 +180,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
                               nsMsgDeliverMode     aMode,
                               nsMsgComposeAndSend  *aMsgSendObj,
                               const char           *aSavePref,
-                              nsIMessage           *aMsgToReplace)
+                              nsIMsgDBHdr            *aMsgToReplace)
 {
   nsCOMPtr<nsIMsgFolder>  dstFolder;
   PRBool                  isDraft = PR_FALSE;
@@ -249,7 +249,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
 
 nsresult 
 nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
-                  nsIMessage *aMsgToReplace, PRBool aIsDraft,
+                  nsIMsgDBHdr *aMsgToReplace, PRBool aIsDraft,
                   nsIMsgWindow *msgWindow,
                   nsMsgComposeAndSend   *aMsgSendObj)
 {

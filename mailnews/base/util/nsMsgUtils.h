@@ -37,29 +37,12 @@
 NS_MSG_BASE nsresult GetMessageServiceContractIDForURI(const char *uri, nsString &contractID);
 //Use ReleaseMessageServiceFromURI to release the service.
 NS_MSG_BASE nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messageService);
+
+NS_MSG_BASE nsresult GetMsgDBHdrFromURI(const char *uri, nsIMsgDBHdr **msgHdr);
+
 NS_MSG_BASE nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *messageService);
 
 NS_MSG_BASE nsresult CreateStartupUrl(char *uri, nsIURI** aUrl);
-
-//An enumerator for converting nsIMsgHdrs to nsIMessages.
-class NS_MSG_BASE nsMessageFromMsgHdrEnumerator: public nsISimpleEnumerator
-{
-protected:
-	nsCOMPtr<nsISimpleEnumerator> mSrcEnumerator;
-	nsCOMPtr<nsIMsgFolder> mFolder;
-
-public:
-	NS_DECL_ISUPPORTS
-	nsMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcEnumerator, nsIMsgFolder *folder);
-	nsMessageFromMsgHdrEnumerator(){} //Default constructor that does nothing so nsComPtr will work.
-	virtual ~nsMessageFromMsgHdrEnumerator();
-
-  NS_DECL_NSISIMPLEENUMERATOR
-};
-
-NS_MSG_BASE nsresult NS_NewMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcEnumerator,
-										   nsIMsgFolder *folder,	
-										   nsMessageFromMsgHdrEnumerator **messageEnumerator);
 
 NS_MSG_BASE nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriorityValue *outPriority);
 
@@ -68,6 +51,8 @@ NS_MSG_BASE nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriorityValue p, ns
 NS_MSG_BASE nsresult NS_MsgHashIfNecessary(nsCAutoString &name);
 
 NS_MSG_BASE nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& pathString);
+
+NS_MSG_BASE PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP);
 
 #endif
 

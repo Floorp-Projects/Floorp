@@ -47,7 +47,7 @@ public:
   virtual nsresult InitDB(nsIMsgDatabase *db);
   nsresult CompactHelper(nsIMsgFolder *folder);
 
-  nsresult GetMessage(nsIMessage **message);
+  nsresult GetMessage(nsIMsgDBHdr **message);
   nsresult BuildMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);  
   char *m_baseMessageUri; // base message uri
   nsCString m_messageUri; // current message uri being copy

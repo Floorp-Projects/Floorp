@@ -27,13 +27,12 @@
 #include "prprf.h" /* should be defined into msgCore.h? */
 #include "xp_core.h"
 #include "xp_file.h"
-#include "nsMsgZapIt.h"
 #include "nsMsgSend.h"
 
 typedef int (*MSG_SendPartWriteFunc)(const char* line, PRInt32 size,
 									                   PRBool isheader, void* closure);
 
-class nsMsgSendPart : public nsMsgZapIt {
+class nsMsgSendPart {
 public:
     nsMsgSendPart(nsMsgComposeAndSend* state, const char *part_charset = NULL);
     virtual ~nsMsgSendPart();	  // Note that the destructor also destroys

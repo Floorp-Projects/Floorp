@@ -33,7 +33,6 @@ REQUIRES	= xpcom string necko dom js appshell appcomps uconv intl htmlparser wid
 CPPSRCS		= \
 		nsMessenger.cpp \
 		nsMessengerBootstrap.cpp \
-		nsMsgKeyArray.cpp \
 		nsUrlListenerManager.cpp \
 		nsMsgMailSession.cpp \
 		nsMsgMD5.cpp \
@@ -42,7 +41,6 @@ CPPSRCS		= \
 		nsCopyMessageStreamListener.cpp \
 		nsMsgRDFDataSource.cpp \
 		nsMsgFolderDataSource.cpp \
-		nsMsgMessageDataSource.cpp \
 		nsMsgAccountManagerDS.cpp \
 		nsMsgRDFUtils.cpp \
 		nsMsgBiffManager.cpp \
@@ -52,28 +50,29 @@ CPPSRCS		= \
 		nsMsgFolderCacheElement.cpp \
 		nsMsgFolderCompactor.cpp \
 		nsMsgStatusFeedback.cpp \
-		nsMessageView.cpp \
 		nsMsgWindow.cpp \
 		nsMessengerMigrator.cpp \
-		nsMsgViewNavigationService.cpp \
 		nsMsgServiceProvider.cpp	\
 		nsSubscribeDataSource.cpp	\
 		nsSubscribableServer.cpp \
 		nsMsgPrintEngine.cpp	\
 		nsStatusBarBiffManager.cpp \
+		nsMsgDBView.cpp \
+		nsMsgThreadedDBView.cpp \
+		nsMsgSpecialViews.cpp \
+		nsMsgSearchDBView.cpp \
+    nsMsgOfflineManager.cpp \
 		$(NULL)
 
 EXPORTS		= \
 		nsMessenger.h \
 		nsMessengerBootstrap.h \
-		nsMsgKeyArray.h \
 		nsUrlListenerManager.h \
 		nsMsgMailSession.h \
 		nsMsgAccountManager.h \
 		nsMsgAccount.h \
 		nsMsgFolderDataSource.h \
 		nsMsgFolderCache.h \
-		nsMsgMessageDataSource.h \
 		nsMsgAccountManagerDS.h \
 		nsMsgRDFDataSource.h \
 		nsMsgRDFUtils.h \
@@ -82,10 +81,8 @@ EXPORTS		= \
 		nsCopyMessageStreamListener.h \
 		nsMsgCopyService.h \
 		nsMsgStatusFeedback.h \
-		nsMessageView.h \
 		nsMsgWindow.h \
 		nsMessengerMigrator.h \
-		nsMsgViewNavigationService.h \
 		nsMsgServiceProvider.h \
 		nsSubscribeDataSource.h \
 		nsSubscribableServer.h \

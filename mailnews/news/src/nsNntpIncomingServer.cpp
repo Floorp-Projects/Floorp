@@ -61,7 +61,6 @@
 #define HOSTINFO_FILE_BUFFER_SIZE 1024
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);                            
-static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kSubscribableServerCID, NS_SUBSCRIBABLESERVER_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsNntpIncomingServer, nsMsgIncomingServer)
@@ -92,6 +91,9 @@ nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
   mUniqueId = 0;
   mPushAuth = PR_FALSE;
   mHasSeenBeginGroups = PR_FALSE;
+  mPostingAllowed = PR_FALSE;
+  mLastUpdatedTime = 0;
+
   SetupNewsrcSaveTimer();
 }
 
@@ -401,12 +403,12 @@ nsNntpIncomingServer::GetNewsrcHasChanged(PRBool *aNewsrcHasChanged)
 NS_IMETHODIMP
 nsNntpIncomingServer::CloseCachedConnections()
 {
-	nsresult rv;
-	// iterate through the connection cache for a connection that can handle this url.
-	PRUint32 cnt;
+  nsresult rv;
+  PRUint32 cnt;
   nsCOMPtr<nsISupports> aSupport;
   nsCOMPtr<nsINNTPProtocol> connection;
 
+  // iterate through the connection cache and close the connections.
   if (m_connectionCache)
   {
     rv = m_connectionCache->Count(&cnt);
@@ -476,9 +478,7 @@ nsNntpIncomingServer::CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection,
 	nsNNTPProtocol * protocolInstance = new nsNNTPProtocol(url, aMsgWindow);
   if (!protocolInstance)
     return NS_ERROR_OUT_OF_MEMORY;
-//	nsresult rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
-//                                            NS_GET_IID(nsINntpProtocol),
-//                                            (void **) &protocolInstance);
+
   nsresult rv = protocolInstance->QueryInterface(NS_GET_IID(nsINNTPProtocol), (void **) aNntpConnection);
 	// take the protocol instance and add it to the connectionCache
 	if (NS_SUCCEEDED(rv) && *aNntpConnection)
@@ -486,6 +486,8 @@ nsNntpIncomingServer::CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection,
 	return rv;
 }
 
+/* By default, allow the user to open at most this many connections to one news host */
+#define kMaxConnectionsPerHost 2
 
 NS_IMETHODIMP
 nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
@@ -497,11 +499,11 @@ nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
   PRBool isBusy = PR_TRUE;
 
 
-  PRInt32 maxConnections = 2; // default to be 2
+  PRInt32 maxConnections = kMaxConnectionsPerHost; 
   rv = GetMaximumConnectionsNumber(&maxConnections);
   if (NS_FAILED(rv) || maxConnections == 0)
   {
-    maxConnections = 2;
+    maxConnections = kMaxConnectionsPerHost;
     rv = SetMaximumConnectionsNumber(maxConnections);
   }
   else if (maxConnections < 1)
@@ -528,7 +530,7 @@ nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
     	rv = connection->IsBusy(&isBusy);
     if (NS_FAILED(rv)) 
     {
-        connection = null_nsCOMPtr();
+        connection = nsnull;
         continue;
     }
     if (!freeConnection && !isBusy && connection)
@@ -538,7 +540,7 @@ nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
 	}
     
   if (ConnectionTimeOut(freeConnection))
-      freeConnection = null_nsCOMPtr();
+      freeConnection = nsnull;
 
 	// if we got here and we have a connection, then we should return it!
 	if (!isBusy && freeConnection)
@@ -569,16 +571,12 @@ NS_IMETHODIMP
 nsNntpIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv;
-#ifdef DEBUG_NEWS
-	printf("PerformExpand for nntp\n");
-#endif
 
-	nsCOMPtr<nsINntpService> nntpService = do_GetService(kNntpServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-	if (!nntpService) return NS_ERROR_FAILURE;
+	nsCOMPtr<nsINntpService> nntpService = do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
 	rv = nntpService->UpdateCounts(this, aMsgWindow);
-    if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
 	return NS_OK;
 }
 
@@ -972,9 +970,8 @@ nsNntpIncomingServer::StartPopulating(nsIMsgWindow *aMsgWindow, PRBool aForceToS
   rv = SetShowFullName(PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsINntpService> nntpService = do_GetService(kNntpServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  if (!nntpService) return NS_ERROR_FAILURE; 
+	nsCOMPtr<nsINntpService> nntpService = do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
   mHostInfoLoaded = PR_FALSE;
   mVersion = INVALID_VERSION;
@@ -1395,10 +1392,174 @@ nsNntpIncomingServer::ForgetPassword()
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
+nsNntpIncomingServer::GetSupportsExtensions(PRBool *aSupportsExtensions)
 {
-    NS_ENSURE_ARG_POINTER(canSearchMessages);
-    *canSearchMessages = PR_TRUE;
-    return NS_OK;
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetSupportsExtensions(PRBool aSupportsExtensions)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::AddExtension(const char *extension)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+   
+NS_IMETHODIMP
+nsNntpIncomingServer::QueryExtension(const char *extension, PRBool *result)
+{
+#ifdef DEBUG_seth
+  printf("no extension support yet\n");
+#endif
+  *result = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetPostingAllowed(PRBool *aPostingAllowed)
+{
+  *aPostingAllowed = mPostingAllowed;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetPostingAllowed(PRBool aPostingAllowed)
+{
+  mPostingAllowed = aPostingAllowed;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetPushAuth(PRBool *aPushAuth)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetPushAuth(PRBool aPushAuth)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetLastUpdatedTime(PRUint32 *aLastUpdatedTime)
+{
+  *aLastUpdatedTime = mLastUpdatedTime;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetLastUpdatedTime(PRUint32 aLastUpdatedTime)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::AddPropertyForGet(const char *name, const char *value)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::QueryPropertyForGet(const char *name, char **value)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+  
+NS_IMETHODIMP
+nsNntpIncomingServer::AddSearchableGroup(const char *name)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::QuerySearchableGroup(const char *name, PRBool *result)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::AddSearchableHeader(const char *name)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::QuerySearchableHeader(const char *name, PRBool *result)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+  
+NS_IMETHODIMP
+nsNntpIncomingServer::FindGroup(const char *name, nsIMsgNewsFolder **result)
+{
+  NS_ENSURE_ARG_POINTER(name);
+  NS_ENSURE_ARG_POINTER(result);
+
+  nsresult rv;
+  nsCOMPtr<nsIFolder> rootFolder;
+  rv = GetRootFolder(getter_AddRefs(rootFolder));
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (!rootFolder) return NS_ERROR_FAILURE;
+
+  nsCOMPtr <nsIMsgFolder> serverFolder = do_QueryInterface(rootFolder, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (!serverFolder) return NS_ERROR_FAILURE;
+
+  nsCOMPtr <nsIFolder> subFolder;
+  rv = serverFolder->FindSubFolder(name, getter_AddRefs(subFolder));
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (!subFolder) return NS_ERROR_FAILURE;
+
+  rv = subFolder->QueryInterface(NS_GET_IID(nsIMsgNewsFolder), (void**)result);
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (!*result) return NS_ERROR_FAILURE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetFirstGroupNeedingExtraInfo(char **result)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetGroupNeedsExtraInfo(const char *name, PRBool needsExtraInfo)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GroupNotFound(const char *name, PRBool opening)
+{
+  NS_ENSURE_ARG_POINTER(name);
+  printf("alert, asking if the user wants to auto unsubscribe from %s\n", name);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetPrettyNameForGroup(const char *name, const char *prettyName)
+{
+  NS_ASSERTION(0,"not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 

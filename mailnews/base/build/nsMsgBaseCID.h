@@ -42,20 +42,6 @@
 }
 
 //
-// nsMsgMessageDataSource
-//
-#define NS_MAILNEWSMESSAGEDATASOURCE_CONTRACTID \
-  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "mailnewsmessages"
-
-#define NS_MAILNEWSMESSAGEDATASOURCE_CID                    \
-{ /* 2B8ED4A5-F684-11d2-8A5D-0060B0FC04D2 */         \
-    0x2b8ed4a5,                                      \
-    0xf684,                                          \
-    0x11d2,                                          \
-    {0x8a, 0x5d, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2} \
-}
-
-//
 // nsMsgAccountManager
 // 
 #define NS_MSGACCOUNTMANAGER_CONTRACTID \
@@ -266,17 +252,6 @@
   {0x8a, 0xc5, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2} }
 
 //
-//nsMessageView
-//
-#define NS_MESSAGEVIEW_CONTRACTID \
-	"@mozilla.org/messenger/messageview;1"
-
-/* 4E03B3A6-624A-11d3-8AD4-0060B0FC04D2*/
-#define NS_MESSAGEVIEW_CID \
-{ 0x4e03b3a6, 0x624a, 0x11d3, \
-  { 0x8a, 0xd4, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2}}
-
-//
 //nsMsgWindow
 //
 #define NS_MSGWINDOW_CONTRACTID \
@@ -286,38 +261,6 @@
 #define NS_MSGWINDOW_CID \
 { 0xbb460dff, 0x8bf0, 0x11d3, \
   { 0x8a, 0xfe, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2}}
-
-//
-// nsMessage
-//
-
-/* {44C0D336-796D-42ee-B8B7-6FA3DE372E7E} */
-#define NS_MESSAGE_CID \
-  { 0x44c0d336, 0x796d, 0x42ee, \
-   { 0xb8, 0xb7, 0x6f, 0xa3, 0xde, 0x37, 0x2e, 0x7e } }
-
-
-#define NS_MESSAGE_MAILBOX_CONTRACTID \
-  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "mailbox_message"
-
-#define NS_MESSAGE_NEWS_CONTRACTID \
-  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "news_message"
-
-#define NS_MESSAGE_IMAP_CONTRACTID \
-  NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX "imap_message"
-
-
-
-//
-//nsMsgViewNavigationService
-//
-#define NS_MSGVIEWNAVIGATIONSERVICE_CONTRACTID \
-	"@mozilla.org/messenger/msgviewnavigationservice;1"
-
-/* 60D34FB4-D031-11d3-8B2E-0060B0FC04D2*/
-#define NS_MSGVIEWNAVIGATIONSERVICE_CID \
-{ 0x60d34fb4, 0xd031, 0x11d3, \
-  { 0x8b, 0x2e, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2}}
 
 //
 // Print Engine...
@@ -396,18 +339,6 @@
 
 
 //
-// nsMsgSearchDataSource
-//
-#define NS_MSGSEARCHDATASOURCE_CONTRACTID \
-  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "msgsearch"
-
-/* f713896e-3a48-44a8-a7e0-8dde5b4b6461 */
-#define NS_MSGSEARCHDATASOURCE_CID \
-  { 0xf713896e, 0x3a48, 0x44a8, \
-    {0xa7, 0xe0, 0x8d, 0xde, 0x5b, 0x4b, 0x64, 0x61}}
-
-
-//
 // nsMsgFilterDataSource
 //
 #define NS_MSGFILTERDATASOURCE_CONTRACTID \
@@ -433,5 +364,55 @@
 #define NS_MSG_OFFLINESTORECOMPACTOR_CID \
   {0x2db43d16, 0xe5c8, 0x11d4, \
     {0xa5, 0xb7, 0x00,0x60, 0xb0, 0xfc, 0x04, 0xb7 }}
+
+//
+// nsMsgDBView
+//
+#define NS_MSGDBVIEW_CONTRACTID_PREFIX \
+  "@mozilla.org/messenger/msgdbview;1?type="
+
+#define NS_MSGTHREADEDDBVIEW_CONTRACTID \
+  NS_MSGDBVIEW_CONTRACTID_PREFIX "threaded"
+
+#define NS_MSGTHREADSWITHUNREADDBVIEW_CONTRACTID \
+  NS_MSGDBVIEW_CONTRACTID_PREFIX "threadswithunread"
+
+#define NS_MSGWATCHEDTHREADSWITHUNREADDBVIEW_CONTRACTID \
+  NS_MSGDBVIEW_CONTRACTID_PREFIX "watchedthreadswithunread"
+
+#define NS_MSGSEARCHDBVIEW_CONTRACTID \
+  NS_MSGDBVIEW_CONTRACTID_PREFIX "search"
+
+/* 52f860e0-1dd2-11b2-aa72-bb751981bd00 */
+#define NS_MSGTHREADEDDBVIEW_CID \
+  {0x52f860e0, 0x1dd2, 0x11b2, \
+    {0xaa, 0x72, 0xbb, 0x75, 0x19, 0x81, 0xbd, 0x00 }}
+
+/* ca79a00e-010d-11d5-a5be-0060b0fc04b7 */
+#define NS_MSGTHREADSWITHUNREADDBVIEW_CID \
+  {0xca79a00e, 0x010d, 0x11d5, \
+    {0xa5, 0xbe, 0x00, 0x60, 0xb0, 0xfc, 0x04, 0xb7 }}
+
+/* 597e1ffe-0123-11d5-a5be-0060b0fc04b7 */
+#define NS_MSGWATCHEDTHREADSWITHUNREADDBVIEW_CID \
+  {0x597e1ffe, 0x0123, 0x11d5, \
+    {0xa5, 0xbe, 0x00, 0x60, 0xb0, 0xfc, 0x04, 0xb7 }}
+
+/* aeac118c-0823-11d5-a5bf-0060b0fc04b7 */
+#define NS_MSGSEARCHDBVIEW_CID \
+  {0xaeac118c, 0x0823, 0x11d5, \
+    {0xa5, 0xbf, 0x00, 0x60, 0xb0, 0xfc, 0x04, 0xb7}}
+
+//
+// nsMsgAccountManager
+// 
+#define NS_MSGOFFLINEMANAGER_CONTRACTID \
+  "@mozilla.org/messenger/offline-manager;1"
+
+#define NS_MSGOFFLINEMANAGER_CID									\
+{ /* ac6c518a-09b2-11d5-a5bf-0060b0fc04b7 */			\
+ 0xac6c518a, 0x09b2, 0x11d5,											\
+ {0xa5, 0xbf, 0x0, 0x60, 0xb0, 0xfc, 0x04, 0xb7 }}
+
 
 #endif // nsMessageBaseCID_h__

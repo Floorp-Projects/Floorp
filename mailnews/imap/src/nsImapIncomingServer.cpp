@@ -333,6 +333,12 @@ NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, MaximumConnectionsNumber,
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, EmptyTrashThreshhold,
                        "empty_trash_threshhold");
 
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, StoreReadMailInPFC,
+                        "store_read_mail_in_pfc");
+			
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, StoreSentMailInPFC,
+                        "store_sent_mail_in_pfc");
+
 //NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, DeleteModel,
 //                       "delete_model");
 
@@ -895,6 +901,35 @@ nsImapIncomingServer::CloseCachedConnections()
     
     PR_CExitMonitor(this);
 	return rv;
+}
+
+#define PFC_NAME "Personal Filing Cabinet"
+
+NS_IMETHODIMP nsImapIncomingServer::GetReadMailPFC(PRBool createIfMissing, nsIMsgFolder **aFolder)
+{
+  NS_ENSURE_ARG_POINTER(aFolder);
+  nsCOMPtr<nsIFolder> rootFolder;
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if (NS_SUCCEEDED(rv) && rootFolder)
+  {
+    nsCOMPtr <nsIFolder> pfcParent;
+    rootFolder->FindSubFolder(PFC_NAME, getter_AddRefs(pfcParent));
+    if (!pfcParent && createIfMissing)
+    {
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::GetSentMailPFC(PRBool createIfMissing, nsIMsgFolder **aFolder)
+{
+  NS_ENSURE_ARG_POINTER(aFolder);
+  nsCOMPtr<nsIFolder> rootFolder;
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+
 }
 
 // nsIImapServerSink impl

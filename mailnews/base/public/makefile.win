@@ -28,8 +28,6 @@ XPIDLSRCS =								\
 		.\nsICopyMessageListener.idl	\
 		.\nsIFolder.idl					\
 		.\nsIFolderListener.idl			\
-		.\nsIMessage.idl				\
-		.\nsIMessageView.idl			\
 		.\nsIMsgAccount.idl				\
 		.\nsIMsgAccountManager.idl		\
 		.\nsIMessengerMigrator.idl		\
@@ -60,9 +58,10 @@ XPIDLSRCS =								\
 		.\nsIIncomingServerListener.idl \
 		.\nsIMsgHdr.idl \
     .\nsIMsgStringService.idl \
-		.\nsIMsgViewNavigationService.idl \
 		.\nsIMsgPrintEngine.idl \
 		.\nsISubscribableServer.idl \
+    .\nsIMsgDBView.idl \
+    .\nsIMsgOfflineManager.idl \
 		$(NULL)
 
 ################################################################################

@@ -44,38 +44,24 @@ function GetResourceFromUri(uri)
 
 function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 {
-
 	var commandResource = RDF.GetResource(command);
-	if(commandResource)
-                try {
+	if(commandResource) {
+      try {
 		dataSource.DoCommand(srcArray, commandResource, argumentArray);
-                }
-                catch(e)
-                { 
-				   if ( command == "http://home.netscape.com/NC-rdf#ReallyDelete" || command == "http://home.netscape.com/NC-rdf#Delete" || command == "http://home.netscape.com/NC-rdf#Move" ) {
-				      gNextMessageAfterDelete =null;
-					  }
-                                   if (command == "http://home.netscape.com/NC-rdf#NewFolder") 
-                                     throw(e); //so that the dialog does not automatically close.
-                      dump (" Exception : In mail commands\n");
-                }
+      }
+      catch(e) { 
+        if (command == "http://home.netscape.com/NC-rdf#NewFolder") {
+          throw(e); // so that the dialog does not automatically close.
+        }
+        dump("Exception : In mail commands\n");
+      }
+    }
 }
 
-//Converts an array of messages into an nsISupportsArray of resources. 
-//messages:  array of messages that needs to be converted
-//resourceArray: nsISupportsArray in which the resources should be put.  If it's null a new one will be created.
-//returns the resource array
 function ConvertMessagesToResourceArray(messages,  resourceArray)
 {
-	if(!resourceArray)
-	    resourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-
-    for (var i=0; i<messages.length; i++) {
-		var messageResource = messages[i].QueryInterface(Components.interfaces.nsIRDFResource);
-        resourceArray.AppendElement(messageResource);
-    }
-
-    return resourceArray;
+    dump("fix or remove this\n");
+    // going away...
 }
 
 function GetNewMessages(selectedFolders, compositeDataSource)
@@ -111,47 +97,14 @@ function GetNewMessages(selectedFolders, compositeDataSource)
 
 function DeleteMessages(compositeDataSource, srcFolder, messages, reallyDelete)
 {
-
-	var srcFolderResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-	var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-	folderArray.AppendElement(srcFolderResource);
-
-	var argumentArray = ConvertMessagesToResourceArray(messages, null);
-
-	var command;
-
-	if(reallyDelete)
-		command = "http://home.netscape.com/NC-rdf#ReallyDelete"
-	else
-		command = "http://home.netscape.com/NC-rdf#Delete"
-
-	DoRDFCommand(compositeDataSource, command, folderArray, argumentArray);
-
+    dump("fix or remove this\n");
+    // going away...
 }
 
 function CopyMessages(compositeDataSource, srcFolder, destFolder, messages, isMove)
 {
-
-	if(compositeDataSource)
-	{
-		var destFolderResource = destFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-		var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-		folderArray.AppendElement(destFolderResource);
-
-		var argumentArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-		var srcFolderResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-		argumentArray.AppendElement(srcFolderResource);
-		ConvertMessagesToResourceArray(messages, argumentArray);
-		
-		var command;
-		if(isMove)
-			command = "http://home.netscape.com/NC-rdf#Move"
-		else
-			command = "http://home.netscape.com/NC-rdf#Copy";
-
-		DoRDFCommand(compositeDataSource, command, folderArray, argumentArray);
-
-	}
+    dump("fix or remove this\n");
+    // going away...
 }
 
 function getIdentityForServer(server)
@@ -172,12 +125,10 @@ function getIdentityForServer(server)
 
 function SendUnsentMessages(folder)
 {
-	if(folder)
-	{	
+	if(folder) {	
 		var identity = getIdentityForServer(folder.server);
 		messenger.SendUnsentMessages(identity);
 	}
-
 }
 
 function GetNextNMessages(folder)
@@ -190,14 +141,15 @@ function GetNextNMessages(folder)
 	}
 }
 
- function ComposeMessage(type, format, folder, messageArray) //type is a nsIMsgCompType and format is a nsIMsgCompFormat
+// type is a nsIMsgCompType and format is a nsIMsgCompFormat
+function ComposeMessage(type, format, folder, messageArray) 
 {
 	var msgComposeType = Components.interfaces.nsIMsgCompType;
 	var identity = null;
 	var newsgroup = null;
 	var server;
 
-	dump("ComposeMessage folder="+folder+"\n");
+	//dump("ComposeMessage folder="+folder+"\n");
 	try 
 	{
 		if(folder)
@@ -220,17 +172,14 @@ function GetNextNMessages(folder)
 			}
 	        identity = getIdentityForServer(server);
 		    // dump("identity = " + identity + "\n");
-
 		}
-        
-
 	}
 	catch (ex) 
 	{
         	dump("failed to get an identity to pre-select: " + ex + "\n");
 	}
 
-	dump("\nComposeMessage from XUL: " + identity + "\n");
+	//dump("\nComposeMessage from XUL: " + identity + "\n");
 	var uri = null;
 
 	if (! msgComposeService)
@@ -245,9 +194,9 @@ function GetNextNMessages(folder)
 		msgComposeService.OpenComposeWindow(null, null, type, format, identity);
 		return;
 	}
-        else if (type == msgComposeType.NewsPost) 
+    else if (type == msgComposeType.NewsPost) 
 	{
-		dump("OpenComposeWindow with " + identity + " and " + newsgroup + "\n");
+		//dump("OpenComposeWindow with " + identity + " and " + newsgroup + "\n");
 		msgComposeService.OpenComposeWindow(null, newsgroup, type, format, identity);
 		return;
 	}
@@ -261,11 +210,10 @@ function GetNextNMessages(folder)
 		uri = "";
 		for (var i = 0; i < messageArray.length && i < 8; i ++)
 		{	
-			var messageResource = messageArray[i].QueryInterface(Components.interfaces.nsIRDFResource);
-			var messageUri = messageResource.Value;
-
-			dump('i = '+ i);
-			dump('\n');				
+			var messageUri = messageArray[i];
+      //dump("XXX messageUri in ComposeMessage = " + messageUri + "\n");
+			//dump('i = '+ i);
+			//dump('\n');				
 			if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
 				type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSender || 
 				type == msgComposeType.ReplyToSenderAndGroup ||
@@ -397,110 +345,58 @@ function SubscribeOKCallback(changeTable)
     }
 }
 
-function SaveAsFile(message)
+function SaveAsFile(uri)
 {
-	var messageResource = message.QueryInterface(Components.interfaces.nsIRDFResource);
-	var uri = messageResource.Value;
-	//dump (uri);
-	if (uri)
-		messenger.saveAs(uri, true, null, msgWindow);
+	if (uri) messenger.saveAs(uri, true, null, msgWindow);
 }
 
-function SaveAsTemplate(message, folder)
+function SaveAsTemplate(uri, folder)
 {
-	var messageResource = message.QueryInterface(Components.interfaces.nsIRDFResource);
-	var uri = messageResource.Value;
-	// dump (uri);
-	if (uri)
-    {
+	if (uri) {
 		var identity = getIdentityForServer(folder.server);
 		messenger.saveAs(uri, false, identity, msgWindow);
 	}
 }
 
-function MarkMessagesRead(compositeDataSource, messages, markRead)
+function MarkSelectedMessagesRead(markRead)
 {
-
-	var messageResourceArray = ConvertMessagesToResourceArray(messages, null);
-	var command;
-
-	if(markRead)
-		command = "http://home.netscape.com/NC-rdf#MarkRead";
-	else
-		command = "http://home.netscape.com/NC-rdf#MarkUnread";
-
-	DoRDFCommand(compositeDataSource, command, messageResourceArray, null);
-
+    if (markRead) {
+        gDBView.doCommand(nsMsgViewCommandType.markMessagesRead);
+    }
+    else {
+        gDBView.doCommand(nsMsgViewCommandType.markMessagesUnread);
+    }
 }
 
-function MarkMessagesFlagged(compositeDataSource, messages, markFlagged)
+function MarkSelectedMessagesFlagged(markFlagged)
 {
-
-	var messageResourceArray = ConvertMessagesToResourceArray(messages, null);
-	var command;
-
-	if(markFlagged)
-		command = "http://home.netscape.com/NC-rdf#MarkFlagged";
-	else
-		command = "http://home.netscape.com/NC-rdf#MarkUnflagged";
-
-	DoRDFCommand(compositeDataSource, command, messageResourceArray, null);
-
+    if (markFlagged) {
+        gDBView.doCommand(nsMsgViewCommandType.flagMessages);
+    }
+    else {
+        gDBView.doCommand(nsMsgViewCommandType.unflagMessages);
+    }
 }
 
 function MarkAllMessagesRead(compositeDataSource, folder)
 {
-
-	var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-	var folderResourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-	folderResourceArray.AppendElement(folderResource);
-
-	DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#MarkAllMessagesRead", folderResourceArray, null);
+    dump("fix MarkAllMessagesRead()\n");
 }
 
 function DownloadFlaggedMessages(compositeDataSource, folder)
 {
-
-	var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-	var folderResourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-	folderResourceArray.AppendElement(folderResource);
-
-	DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#DownloadFlaggedMessages", folderResourceArray, null);
+    dump("fix DownloadFlaggedMessages()\n");
 }
 
 function DownloadSelectedMessages(compositeDataSource, messages, markFlagged)
 {
-
-	var messageResourceArray = ConvertMessagesToResourceArray(messages, null);
-	var command = "http://home.netscape.com/NC-rdf#DownloadSelectedMessages";
-
-	DoRDFCommand(compositeDataSource, command, messageResourceArray, null);
+    dump("fix DownloadSelectedMessages()\n");
 }
 
 function MarkThreadAsRead(compositeDataSource, message)
 {
-
-	if(message)
-	{
-		var folder = message.msgFolder
-		if(folder)
-		{
-			var thread = folder.getThreadForMessage(message);
-			if(thread)
-			{
-				var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-				var folderResourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-				folderResourceArray.AppendElement(folderResource);
-
-				var argumentArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-				argumentArray.AppendElement(thread);
-
-				DoRDFCommand(compositeDataSource, "http://home.netscape.com/NC-rdf#MarkThreadRead", folderResourceArray, argumentArray);
-			}
-		}
-	}
+  gDBView.doCommand(nsMsgViewCommandType.markThreadRead);
 }
-
 
 function ViewPageSource(messages)
 {
@@ -527,14 +423,16 @@ function ViewPageSource(messages)
 
 	for(var i = 0; i < numMessages; i++)
 	{
-		var messageResource = messages[i].QueryInterface(Components.interfaces.nsIRDFResource);
-		uri = messageResource.Value;
+		uri = messages[i];
   
 		// Now, we need to get a URL from a URI
 		url = mailSession.ConvertMsgURIToMsgURL(uri, msgWindow);
-		if (url)
+		if (url) {
+            // XXX what if there already is a "?", like "?part=0"
+            // XXX shouldn't this be "&header=src" in that case?
 			url += "?header=src";
-
+        }
+    
 		// Use a browser window to view source
 		window.openDialog( getBrowserURL(),
 						   "_blank",

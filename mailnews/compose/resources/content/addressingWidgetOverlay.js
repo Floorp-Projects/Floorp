@@ -104,13 +104,13 @@ function Recipients2CompFields(msgCompFields)
 	    	i ++;
 	    }
       
-    	msgCompFields.SetTo(addrTo);
-    	msgCompFields.SetCc(addrCc);
-    	msgCompFields.SetBcc(addrBcc);
-    	msgCompFields.SetReplyTo(addrReply);
-    	msgCompFields.SetNewsgroups(addrNg);
-    	msgCompFields.SetFollowupTo(addrFollow);
-        msgCompFields.SetOtherRandomHeaders(addrOther);
+    	msgCompFields.to = addrTo;
+    	msgCompFields.cc = addrCc;
+    	msgCompFields.bcc = addrBcc;
+    	msgCompFields.replyTo = addrReply;
+    	msgCompFields.newsgroups = addrNg;
+    	msgCompFields.followupTo = addrFollow;
+      msgCompFields.otherRandomHeaders = addrOther;
 	}
 	else
 		dump("Message Compose Error: msgCompFields is null (ExtractRecipients)");
@@ -126,13 +126,13 @@ function CompFields2Recipients(msgCompFields, msgType)
 		
 		top.MAX_RECIPIENTS = 0;
 
-		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetReplyTo(), false), "addr_reply", newTreeChildrenNode, templateNode);
-		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetTo(), false), "addr_to", newTreeChildrenNode, templateNode);
-		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetCc(), false), "addr_cc", newTreeChildrenNode, templateNode);
-		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetBcc(), false), "addr_bcc", newTreeChildrenNode, templateNode);
-		awSetInputAndPopup(msgCompFields.GetOtherRandomHeaders(), "addr_other", newTreeChildrenNode, templateNode);
-		awSetInputAndPopup(msgCompFields.GetNewsgroups(), "addr_newsgroups", newTreeChildrenNode, templateNode);
-		awSetInputAndPopup(msgCompFields.GetFollowupTo(), "addr_followup", newTreeChildrenNode, templateNode);
+		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.replyTo, false), "addr_reply", newTreeChildrenNode, templateNode);
+		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.to, false), "addr_to", newTreeChildrenNode, templateNode);
+		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.cc, false), "addr_cc", newTreeChildrenNode, templateNode);
+		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.bcc, false), "addr_bcc", newTreeChildrenNode, templateNode);
+		awSetInputAndPopup(msgCompFields.otherRandomHeaders, "addr_other", newTreeChildrenNode, templateNode);
+		awSetInputAndPopup(msgCompFields.newsgroups, "addr_newsgroups", newTreeChildrenNode, templateNode);
+		awSetInputAndPopup(msgCompFields.followupTo, "addr_followup", newTreeChildrenNode, templateNode);
 		
 		//If it's a new message, we need to add an extrat empty recipient.
 		var msgComposeType = Components.interfaces.nsIMsgCompType;

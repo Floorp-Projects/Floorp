@@ -29,6 +29,7 @@ interface nsIMsgWindow;
 interface nsIFileSpec;
 interface nsIMsgFolder;
 interface nsIMsgSearchSession;
+interface nsIMsgDBHdr;
 
 %{C++
 #include "nsMsgKeyArray.h"
@@ -135,6 +136,12 @@ interface nsIMsgMessageService : nsISupports {
 						out nsIURI aURL);
 
 	void Search(in nsIMsgSearchSession aSearchSession, in nsIMsgWindow aMsgWindow, in nsIMsgFolder aMsgFolder, in string aSearchUri);
+
+    /**
+     * now the the message datasource is going away
+     * we need away to go from message uri to go nsIMsgDBHdr
+     */
+    nsIMsgDBHdr messageURIToMsgHdr(in string uri);
 };
 
 // Some mail protocols (like imap) allow you to fetch individual mime parts. We use this interface

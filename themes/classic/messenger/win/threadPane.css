@@ -16,124 +16,69 @@
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
+ * 
+ * Contributors:
+ *    mscott@netscape.com
  */
 
-.tree-thread-row.unread-true
-  {
-	  font-weight           : bold;
-  }
-
-.prioritycol-highest
-  {
-	  color                 : red;
-  }
-
-.prioritycol-high
-  {
-	  color                 : rgb(128, 0, 0);
-  }
-
-.prioritycol-lowest
-  {
-	  color                 : rgb(170, 170, 170);
-  }
-
-.prioritycol-low
-  {
-	  color                 : rgb(85, 85, 85);
-  }
-
-.tree-cell-threadpane-icon 
-  {
-    list-style-image      : url("chrome://messenger/skin/message-mail.gif");
-    min-height            : 14px;
-  }
-
-.tree-cell-threadpane-icon.status-new
-  {
-    list-style-image      : url("chrome://messenger/skin/message-mail-new.gif");
-  }
-
-.tree-cell-threadpane-icon.message-type-news
-  {
-    list-style-image      : url("chrome://messenger/skin/message-news.gif");
-  }
-
-.tree-cell-threadpane-icon.message-type-news.status-new
-  {
-    list-style-image      : url("chrome://messenger/skin/message-news-new.gif");
-  }
-
-.tree-cell-threadpane-icon.message-type-mail.has-attachment-true
-  {
-    list-style-image      : url("chrome://messenger/skin/message-mail-attach.gif");
-  }
-
-.tree-cell-threadpane-icon.is-imap-deleted-true
-  {
-    list-style-image      : url("chrome://messenger/skin/message-mail-imapdelete.gif");
-  }
-
-.unreadcol-false
-  {
-    list-style-image      : url("chrome://messenger/skin/readmail.gif");
-    min-height            : 14px;
-  }
-
-.unreadcol-true
-  {
-    list-style-image      : url("chrome://messenger/skin/unreadmail.gif");  
-  }
-
-.flagcol-unflagged
-  {
-    list-style-image      : url("chrome://messenger/skin/readmail.gif");
-    min-height            : 14px;
-  }
-
-.flagcol-flagged
-  {
-    list-style-image      : url("chrome://messenger/skin/flaggedmail.gif");
-  }
-
-treeitem > treerow > .threadcol-thread{
-  list-style-image: url("chrome://messenger/skin/thread-closed.gif");
+outliner:focus > outliner-bodybox
+{
+  border: 1px solid black;
 }
 
-treeitem[open="true"] > treerow > .threadcol-thread{
-  list-style-image: url("chrome://messenger/skin/thread-open.gif");
+outliner > outliner-bodybox
+{
+  border: 1px solid transparent;
 }
 
-treeitem > treerow > .threadcol-threadWithUnread{
-  list-style-image: url("chrome://messenger/skin/thread-new-closed.gif");
+outlinercol.threadColumnHeader {
+  list-style-image: url("chrome://messenger/skin/unthreadcol.gif");
 }
 
-treeitem[open="true"] > treerow > .threadcol-threadWithUnread{
-  list-style-image: url("chrome://messenger/skin/thread-new-open.gif");
+outlinercol.threadColumnHeader[sortDirection="ascending"]  {
+  list-style-image: url("chrome://messenger/skin/threadcol.gif");
 }
 
-.threadColumnHeader[currentView="threaded"]
-  {
-    list-style-image      : url("chrome://messenger/skin/threadcol.gif");
-  }
+outlinercol.threadColumnHeader[sortDirection="descending"] {
+  list-style-image: url("chrome://messenger/skin/threadcol.gif");
+}
 
-.threadColumnHeader[currentView="unthreaded"]
-  {
-    list-style-image      : url("chrome://messenger/skin/unthreadcol.gif");
-  }
+outlinercol.readColumnHeader {
+  list-style-image: url("chrome://messenger/skin/unreadmail.gif");
+}
 
-.readColumnHeader
-  {
-    list-style-image      : url("chrome://messenger/skin/unreadmail.gif");
-  }
+outlinercol.flagColumnHeader {
+  list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
+}
 
-.flagColumnHeader
-  {
-    list-style-image      : url("chrome://messenger/skin/flaggedmail.gif");
-  }
+outlinerbody:-moz-outliner-cell-text(unread)
+{
+  font-weight: bold;
+}
 
-treeitem[empty="true"] > treerow > .tree-cell-threadpane-icon > .tree-cell-twisty 
-  {
-    visibility            : hidden;
-  }    
+outlinerbody:-moz-outliner-cell-text(offline)
+{
+  font-style: italic;
+}
+
+outlinerbody:-moz-outliner-cell-text(priority-highest)
+{
+  color:red;
+}
+
+outlinerbody:-moz-outliner-cell-text(priority-high)
+{
+  color: rgb(128, 0, 0);
+}
+
+outlinerbody:-moz-outliner-cell-text(priority-lowest)
+{
+  color: rgb(170, 170, 170);
+}
+
+outlinerbody:-moz-outliner-cell-text(priority-low)
+{
+  color: rgb(85, 85, 85);
+}
+
 

@@ -62,16 +62,6 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 #define DEBUG_MSGKEYSET 1
 #endif
 
-
-#if defined(XP_UNIX) || defined(XP_PC)
-#define ENABLE_TESTING_HACK 1
-#endif
-
-#ifdef ENABLE_TESTING_HACK
-/* for getenv() */
-#include <stdlib.h>
-#endif /* ENABLE_TESTING_HACK */
-
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
@@ -152,17 +142,21 @@ nsresult nsMsgDatabase::ClearHdrCache(PRBool reInit)
 {
 	if (m_cachedHeaders)
 	{
-    PL_DHashTableEnumerate(m_cachedHeaders, HeaderEnumerator, nsnull);
+    // save this away in case we renter this code.
+    PLDHashTable  *saveCachedHeaders = m_cachedHeaders;
+    m_cachedHeaders = nsnull;
+    PL_DHashTableEnumerate(saveCachedHeaders, HeaderEnumerator, nsnull);
 
     if (reInit)
     {
-      PL_DHashTableFinish(m_cachedHeaders);
-      PL_DHashTableInit(m_cachedHeaders, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache);
+      PL_DHashTableFinish(saveCachedHeaders);
+      PL_DHashTableInit(saveCachedHeaders, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache);
+      m_cachedHeaders = saveCachedHeaders;
+
     }
     else
     {
-      PL_DHashTableDestroy(m_cachedHeaders);
-      m_cachedHeaders = nsnull;
+      PL_DHashTableDestroy(saveCachedHeaders);
     }
 	}
 	return NS_OK;
@@ -511,7 +505,10 @@ nsMsgDatabase::CleanupCache()
 			nsMsgDatabase* pMessageDB = NS_STATIC_CAST(nsMsgDatabase*, GetDBCache()->ElementAt(i));
 			if (pMessageDB)
 			{
+        // hold onto the db until we're finished closing it.
+        nsCOMPtr <nsIMsgDatabase> kungFuGrip = pMessageDB;
 				pMessageDB->ForceClosed();
+        kungFuGrip = nsnull;
         // look for db in cache before deleting, 
         // in case ForceClosed caused the db to go away
         if (FindInCache(pMessageDB) != -1)
@@ -810,6 +807,16 @@ void nsMsgDatabase::UnixToNative(char*& ioPath)
 }
 
 #endif /* XP_MAC */
+
+NS_IMETHODIMP nsMsgDatabase::OpenFolderDB(nsIMsgFolder *folder, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
+{
+  NS_ENSURE_ARG(folder);
+  m_folder = folder;
+  nsCOMPtr <nsIFileSpec> folderPath;
+  nsresult rv = folder->GetPath(getter_AddRefs(folderPath));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return Open(folderPath, create, upgrading, pMessageDB);
+}
 
 NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *folderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
 {
@@ -1275,6 +1282,9 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **pmsgHdr
 	mdb_bool	hasOid;
 	mdbOid		rowObjectId;
 
+#ifdef DEBUG_bienvenu
+  NS_ASSERTION(m_folder, "folder should be set");
+#endif
 
 	if (!pmsgHdr || !m_mdbAllMsgHeadersTable)
 		return NS_ERROR_NULL_POINTER;
@@ -1664,14 +1674,40 @@ NS_IMETHODIMP
 nsMsgDatabase::MarkThreadIgnored(nsIMsgThread *thread, nsMsgKey threadKey, PRBool bIgnored,
                                  nsIDBChangeListener *instigator)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG(thread);
+  PRUint32 threadFlags;
+  thread->GetFlags(&threadFlags);
+  PRUint32 oldThreadFlags = threadFlags; // not quite right, since we probably want msg hdr flags.
+	if (bIgnored)
+	{
+    threadFlags |= MSG_FLAG_IGNORED;
+		threadFlags &= ~MSG_FLAG_WATCHED;	// ignore is implicit un-watch
+	}
+	else
+		threadFlags &= ~MSG_FLAG_IGNORED;
+  thread->SetFlags(threadFlags);
+	NotifyKeyChangeAll(threadKey, oldThreadFlags, threadFlags, instigator);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgDatabase::MarkThreadWatched(nsIMsgThread *thread, nsMsgKey threadKey, PRBool bWatched,
                                  nsIDBChangeListener *instigator)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG(thread);
+  PRUint32 threadFlags;
+  thread->GetFlags(&threadFlags);
+  PRUint32 oldThreadFlags = threadFlags; // not quite right, since we probably want msg hdr flags.
+	if (bWatched)
+	{
+		threadFlags |= MSG_FLAG_WATCHED;
+		threadFlags &= ~MSG_FLAG_IGNORED;	// watch is implicit un-ignore
+	}
+	else
+		threadFlags &= ~MSG_FLAG_WATCHED;
+	NotifyKeyChangeAll(threadKey, oldThreadFlags, threadFlags, instigator);
+  thread->SetFlags(threadFlags);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDatabase::MarkMarked(nsMsgKey key, PRBool mark,
@@ -2087,10 +2123,6 @@ protected:
 	PRBool						mNextPrefetched;
     nsMsgDBEnumeratorFilter     mFilter;
     void*                       mClosure;
-#ifdef ENABLE_TESTING_HACK
-    PRInt32                     mRandomAccessEnumeratorHackCurrent;
-    PRInt32                     mRandomAccessEnumeratorHackLimit;
-#endif /* ENABLE_TESTING_HACK */
 };
 
 nsMsgDBEnumerator::nsMsgDBEnumerator(nsMsgDatabase* db,
@@ -2101,17 +2133,6 @@ nsMsgDBEnumerator::nsMsgDBEnumerator(nsMsgDatabase* db,
     NS_INIT_REFCNT();
     NS_ADDREF(mDB);
 	mNextPrefetched = PR_FALSE;
-#ifdef ENABLE_TESTING_HACK
-    mRandomAccessEnumeratorHackCurrent = 0;
-    const char *str = getenv("RANDOM_ACCESS_ENUMERATOR_HACK_LIMIT");
-    if (str) {
-        mRandomAccessEnumeratorHackLimit = atoi(str);
-    }
-    else {
-        mRandomAccessEnumeratorHackLimit = -1;
-    }
-    printf("mRandomAccessEnumeratorHackLimit=%d\n",mRandomAccessEnumeratorHackLimit);
-#endif /* ENABLE_TESTING_HACK */
 }
 
 nsMsgDBEnumerator::~nsMsgDBEnumerator()
@@ -2161,15 +2182,6 @@ nsresult nsMsgDBEnumerator::PrefetchNext()
 	nsIMdbRow* hdrRow;
 	mdb_pos rowPos;
 	PRUint32 flags;
-
-#ifdef ENABLE_TESTING_HACK
-    if (mRandomAccessEnumeratorHackCurrent == mRandomAccessEnumeratorHackLimit) {
-        printf("bailing out early\n");
-        mDone = PR_TRUE;
-        return NS_ERROR_FAILURE;
-    }
-    mRandomAccessEnumeratorHackCurrent++;
-#endif /* ENABLE_TESTING_HACK */
 
 	if (!mRowCursor)
 	{
@@ -2424,32 +2436,14 @@ NS_IMETHODIMP nsMsgDBThreadEnumerator::HasMoreElements(PRBool *aResult)
 }
 
 NS_IMETHODIMP 
-nsMsgDatabase::EnumerateThreads(PRUint32 viewType, nsISimpleEnumerator* *result)
+nsMsgDatabase::EnumerateThreads(nsISimpleEnumerator* *result)
 {
-    nsresult rv = NS_OK;
-    nsMsgDBThreadEnumerator* e = nsnull;
-    switch (viewType) {
-        case nsMsgViewType::eShowAll:
-            e = new nsMsgDBThreadEnumerator(this, nsnull);
-            NS_ENSURE_SUCCESS(rv,rv);
-            break;
-        case nsMsgViewType::eShowUnread:
-            e = new nsMsgDBThreadEnumerator(this, nsMsgDBThreadUnreadFilter);
-            NS_ENSURE_SUCCESS(rv,rv);
-            break;
-        case nsMsgViewType::eShowRead:
-        case nsMsgViewType::eShowWatched:
-        default:
-            NS_ENSURE_SUCCESS(NS_ERROR_UNEXPECTED,NS_ERROR_UNEXPECTED);
-            break;
-    }
-
-
-    if (e == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(e);
-    *result = e;
-    return NS_OK;
+  nsMsgDBThreadEnumerator* e = new nsMsgDBThreadEnumerator(this, nsnull);
+  if (e == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(e);
+  *result = e;
+  return NS_OK;
 }
 
 // only return headers with a particular flag set
@@ -2640,6 +2634,17 @@ nsresult nsMsgDatabase::RowCellColumnTonsCString(nsIMdbRow *hdrRow, mdb_token co
 	return err;
 }
 
+nsIMimeConverter *nsMsgDatabase::GetMimeConverter()
+{
+	if (!m_mimeConverter)
+	{
+		// apply mime decode
+		nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                          NS_GET_IID(nsIMimeConverter), getter_AddRefs(m_mimeConverter));
+	}
+  return m_mimeConverter;
+}
+
 nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, PRUnichar* *resultStr)
 {
 	nsresult err = NS_OK;
@@ -2647,13 +2652,8 @@ nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_to
 	err = RowCellColumnTonsString(row, columnToken, nakedString);
 	if (NS_SUCCEEDED(err) && nakedString.Length() > 0)
 	{
-		if (!m_mimeConverter)
-		{
-			// apply mime decode
-			err = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                            NS_GET_IID(nsIMimeConverter), getter_AddRefs(m_mimeConverter));
-		}
-		if (NS_SUCCEEDED(err) && m_mimeConverter) 
+    GetMimeConverter();
+		if (m_mimeConverter) 
 		{
 			nsAutoString charset;
 			nsAutoString decodedStr;
@@ -2688,6 +2688,49 @@ nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_to
 		}
 	}
 	return err;
+}
+
+nsresult nsMsgDatabase::RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_token colToken, PRUint8 **result, PRUint32 *len)
+{
+	nsCAutoString cSender;
+	nsXPIDLCString name;
+
+	nsresult ret = RowCellColumnTonsCString(row, colToken, cSender);
+	if (NS_SUCCEEDED(ret))
+	{
+		nsIMsgHeaderParser *headerParser = GetHeaderParser();
+		if (headerParser)
+		{
+			// apply mime decode
+			nsIMimeConverter *converter = GetMimeConverter();
+
+			if (NS_SUCCEEDED(ret) && nsnull != converter) 
+			{
+				char *resultStr = nsnull;
+				char *charset = nsnull;
+				m_dbFolderInfo->GetCharPtrCharacterSet(&charset);
+				char charsetName[128];
+				PL_strncpy(charsetName, charset, sizeof(charsetName));
+
+				ret = converter->DecodeMimePartIIStr(cSender.get(), charsetName, &resultStr);
+				if (NS_SUCCEEDED(ret))
+				{
+					ret = headerParser->ExtractHeaderAddressName (charsetName, resultStr, getter_Copies(name));
+				}
+				PR_FREEIF(resultStr);
+				PR_FREEIF(charset);
+			}
+
+		}
+	}
+	if (NS_SUCCEEDED(ret))
+	{
+		nsAutoString nameStr;
+    nameStr.AssignWithConversion(name);
+		ret = CreateCollationKey(nameStr.GetUnicode(), result, len);
+	}
+
+	return ret;
 }
 
 nsresult nsMsgDatabase::GetCollationKeyGenerator()
@@ -2726,54 +2769,48 @@ nsresult nsMsgDatabase::GetCollationKeyGenerator()
 	return err;
 }
 
-nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, PRUnichar* *resultStr)
+nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, PRUint8 **result, PRUint32 *len)
 {
-    nsXPIDLString nakedString;
+  nsXPIDLString nakedString;
 	nsresult err;
 
 	err = RowCellColumnToMime2DecodedString(row, columnToken, getter_Copies(nakedString));
 	if (NS_SUCCEEDED(err))
-		err = CreateCollationKey(nakedString, resultStr);
+		err = CreateCollationKey((const PRUnichar *)nakedString, result, len);
 
 	return err;
 }
 
-  nsresult nsMsgDatabase::CreateCollationKey(const PRUnichar *sourceString, PRUnichar **resultString)
-  {
-        nsresult err = GetCollationKeyGenerator();
-       if (NS_SUCCEEDED(err) && m_collationKeyGenerator) 
-       {
-               PRUint32 aLength;
-               PRUint8 *aKey;
-               nsAutoString sourceStr(sourceString);
-               err = m_collationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceStr, &aLength);
-               if (NS_SUCCEEDED(err)) 
-               {
-                       aKey = (PRUint8 *) PR_Malloc(aLength + 3);    // plus three for null termination
-                       if (aKey) 
-                       {
-                               err = m_collationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceStr, aKey, &aLength);
-                               if (NS_SUCCEEDED(err)) 
-                               {
-                                       // Generate a null terminated unicode string.
-                                       // Note using PRUnichar* to store collation key is not recommented since the key may contains 0x0000.
-                                       aKey[aLength] = 0;
-                                       aKey[aLength+1] = 0;
-                                       aKey[aLength+2] = 0;
-                                       *resultString = (PRUnichar *) aKey;
-                               }
-                               else
-                                       PR_Free(aKey);
-                       }
-               }
-       }
-       else 
-       {
-               nsAutoString resultStr;
-               *resultString = resultStr.ToNewUnicode();
-       }
-        return err;
-  }
+NS_IMETHODIMP 
+nsMsgDatabase::CompareCollationKeys(PRUint8 *key1, PRUint32 len1, PRUint8 *key2, PRUint32 len2, PRInt32 *result)
+{
+  nsresult rv = GetCollationKeyGenerator();
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (!m_collationKeyGenerator) return NS_ERROR_FAILURE;
+
+  rv = m_collationKeyGenerator->CompareRawSortKey(key1,len1,key2,len2,result);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
+
+NS_IMETHODIMP 
+nsMsgDatabase::CreateCollationKey(const PRUnichar *sourceString, PRUint8 **result, PRUint32 *len)
+{
+  nsresult err = GetCollationKeyGenerator();
+  NS_ENSURE_SUCCESS(err,err);
+  if (!m_collationKeyGenerator) return NS_ERROR_FAILURE;
+
+  nsAutoString sourceStr(sourceString);
+  err = m_collationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceStr, len);
+  NS_ENSURE_SUCCESS(err,err);
+
+  *result = (PRUint8 *) PR_Malloc(*len);
+  if (!result) return NS_ERROR_OUT_OF_MEMORY;
+
+  err = m_collationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceStr, *result, len);
+  NS_ENSURE_SUCCESS(err,err);
+  return err;
+}
 
 nsIMsgHeaderParser *nsMsgDatabase::GetHeaderParser()
 {
@@ -3416,7 +3453,7 @@ nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
 	nsMsgThread		*pThread;
 
     nsCOMPtr <nsISimpleEnumerator> threads;
-    rv = EnumerateThreads(nsMsgViewType::eShowAll, getter_AddRefs(threads));
+    rv = EnumerateThreads(getter_AddRefs(threads));
     if (NS_FAILED(rv)) return rv;
 	PRBool hasMore = PR_FALSE;
 
@@ -3527,40 +3564,12 @@ NS_IMETHODIMP nsMsgDatabase::SetNextPseudoMsgKey(nsMsgKey nextPseudoMsgKey)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDatabase::HasMessagesOfType(PRUint32 viewType, PRBool *hasMessages)
-{
-    nsresult rv;
-    PRInt32 numMessages = 0;
-    
-    NS_ASSERTION(m_dbFolderInfo, "no m_dbFolderInfo");
-    if (!m_dbFolderInfo) return NS_ERROR_FAILURE;
-
-    switch (viewType) {
-        case nsMsgViewType::eShowAll:
-            rv = m_dbFolderInfo->GetNumMessages(&numMessages);
-            NS_ENSURE_SUCCESS(rv,rv);
-            break;
-        case nsMsgViewType::eShowUnread:
-            rv = m_dbFolderInfo->GetNumNewMessages(&numMessages);
-            NS_ENSURE_SUCCESS(rv,rv);
-            break;
-        case nsMsgViewType::eShowRead:
-        case nsMsgViewType::eShowWatched:
-        default:
-            NS_ENSURE_SUCCESS(NS_ERROR_UNEXPECTED,NS_ERROR_UNEXPECTED);
-            break;
-    }
-
-    *hasMessages = (numMessages > 0);
-    return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgDatabase::HasThreads(PRBool *hasThreads)
 {
     nsresult rv;
 
     nsCOMPtr <nsISimpleEnumerator> threads;
-    rv = EnumerateThreads(nsMsgViewType::eShowAll, getter_AddRefs(threads));
+    rv = EnumerateThreads(getter_AddRefs(threads));
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = threads->HasMoreElements(hasThreads);
@@ -3696,23 +3705,85 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgRetentionSettings(nsIMsgRetentionSettings **r
       PRUint32 numHeadersToKeep = 0;
       PRUint32 keepUnreadMessagesProp = 0;
       PRBool keepUnreadMessagesOnly = PR_FALSE;
+      PRBool useServerDefaults;
       PRUint32 daysToKeepBodies = 0;
 
-      rv = m_dbFolderInfo->GetUint32Property("retainBy", &retainByPreference, nsIMsgRetentionSettings::nsMsgRetainByServerDefaults);
+      rv = m_dbFolderInfo->GetUint32Property("retainBy", &retainByPreference, nsIMsgRetentionSettings::nsMsgRetainAll);
       m_dbFolderInfo->GetUint32Property("daysToKeepHdrs", &daysToKeepHdrs, 0);
       m_dbFolderInfo->GetUint32Property("numHdrsToKeep", &numHeadersToKeep, 0);
       m_dbFolderInfo->GetUint32Property("daysToKeepBodies", &daysToKeepBodies, 0);
       m_dbFolderInfo->GetUint32Property("keepUnreadOnly", &keepUnreadMessagesProp, 0);
+      m_dbFolderInfo->GetBooleanProperty("useServerDefaults", &useServerDefaults, PR_TRUE);
       keepUnreadMessagesOnly = (keepUnreadMessagesProp == 1);
       m_retentionSettings->SetRetainByPreference(retainByPreference);
       m_retentionSettings->SetDaysToKeepHdrs(daysToKeepHdrs);
       m_retentionSettings->SetNumHeadersToKeep(numHeadersToKeep);
       m_retentionSettings->SetKeepUnreadMessagesOnly(keepUnreadMessagesOnly);
       m_retentionSettings->SetDaysToKeepBodies(daysToKeepBodies);
+      m_retentionSettings->SetUseServerDefaults(useServerDefaults);
     }
   }
   *retentionSettings = m_retentionSettings;
   NS_IF_ADDREF(*retentionSettings);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDatabase::SetMsgDownloadSettings(nsIMsgDownloadSettings *downloadSettings)
+{
+  m_downloadSettings = downloadSettings;
+  if (downloadSettings && m_dbFolderInfo)
+  {
+    nsresult rv;
+
+    PRBool useServerDefaults;
+    PRBool downloadByDate;
+    PRUint32 ageLimitOfMsgsToDownload;
+    PRBool downloadUnreadOnly;
+
+    rv = downloadSettings->GetUseServerDefaults(&useServerDefaults);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = downloadSettings->GetDownloadByDate(&downloadByDate);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = downloadSettings->GetDownloadUnreadOnly(&downloadUnreadOnly);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = downloadSettings->GetAgeLimitOfMsgsToDownload(&ageLimitOfMsgsToDownload);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // need to write this to the db. We'll just use the dbfolderinfo to write properties.
+    m_dbFolderInfo->SetBooleanProperty("useServerDefaults", useServerDefaults);
+    m_dbFolderInfo->SetBooleanProperty("downloadByDate", downloadByDate);
+    m_dbFolderInfo->SetBooleanProperty("downloadUnreadOnly", downloadUnreadOnly);
+    m_dbFolderInfo->SetUint32Property("ageLimit", ageLimitOfMsgsToDownload);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDatabase::GetMsgDownloadSettings(nsIMsgDownloadSettings **downloadSettings)
+{
+  NS_ENSURE_ARG_POINTER(downloadSettings);
+  if (!m_downloadSettings)
+  {
+    // create a new one, and initialize it from the db.
+    m_downloadSettings = new nsMsgDownloadSettings;
+    if (m_downloadSettings && m_dbFolderInfo)
+    {
+      PRBool useServerDefaults;
+      PRBool downloadByDate;
+      PRUint32 ageLimitOfMsgsToDownload;
+      PRBool downloadUnreadOnly;
+
+      m_dbFolderInfo->GetBooleanProperty("useServerDefaults", &useServerDefaults, PR_TRUE);
+      m_dbFolderInfo->GetBooleanProperty("downloadByDate", &downloadByDate, PR_FALSE);
+      m_dbFolderInfo->GetBooleanProperty("downloadUnreadOnly", &downloadUnreadOnly, PR_FALSE);
+      m_dbFolderInfo->GetUint32Property("ageLimit", &ageLimitOfMsgsToDownload, 0);
+
+      m_downloadSettings->SetUseServerDefaults(useServerDefaults);
+      m_downloadSettings->SetDownloadByDate(downloadByDate);
+      m_downloadSettings->SetDownloadUnreadOnly(downloadUnreadOnly);
+      m_downloadSettings->SetAgeLimitOfMsgsToDownload(ageLimitOfMsgsToDownload);
+    }
+  }
+  *downloadSettings = m_downloadSettings;
+  NS_IF_ADDREF(*downloadSettings);
   return NS_OK;
 }
 
@@ -3732,8 +3803,6 @@ NS_IMETHODIMP nsMsgDatabase::ApplyRetentionSettings(nsIMsgRetentionSettings *msg
 
   switch (retainByPreference)
   {
-  case nsIMsgRetentionSettings::nsMsgRetainByServerDefaults:
-    NS_ASSERTION(PR_FALSE, "shouldn't be passing this in here"); // fall through and ignore
   case nsIMsgRetentionSettings::nsMsgRetainAll:
     break;
   case nsIMsgRetentionSettings::nsMsgRetainByAge:
@@ -3914,6 +3983,18 @@ NS_IMETHODIMP nsMsgRetentionSettings::SetNumHeadersToKeep(PRUint32 aNumHeadersTo
   m_numHeadersToKeep = aNumHeadersToKeep;
   return NS_OK;
 }
+/* attribute boolean useServerDefaults; */
+NS_IMETHODIMP nsMsgRetentionSettings::GetUseServerDefaults(PRBool *aUseServerDefaults)
+{
+  NS_ENSURE_ARG_POINTER(aUseServerDefaults);
+  *aUseServerDefaults = m_useServerDefaults;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgRetentionSettings::SetUseServerDefaults(PRBool aUseServerDefaults)
+{
+  m_useServerDefaults = aUseServerDefaults;
+  return NS_OK;
+}
 
 /* attribute boolean keepUnreadMessagesOnly; */
 NS_IMETHODIMP nsMsgRetentionSettings::GetKeepUnreadMessagesOnly(PRBool *aKeepUnreadMessagesOnly)
@@ -3941,4 +4022,73 @@ NS_IMETHODIMP nsMsgRetentionSettings::SetDaysToKeepBodies(PRUint32 aDaysToKeepBo
   return NS_OK;
 }
 
+NS_IMPL_ISUPPORTS1(nsMsgDownloadSettings, nsIMsgDownloadSettings)
+
+nsMsgDownloadSettings::nsMsgDownloadSettings()
+{
+  NS_INIT_ISUPPORTS();
+  m_useServerDefaults = PR_FALSE;
+	m_downloadUnreadOnly = PR_FALSE;
+	m_downloadByDate = PR_FALSE;
+	m_ageLimitOfMsgsToDownload = 0;
+}
+
+nsMsgDownloadSettings::~nsMsgDownloadSettings()
+{
+}
+
+/* attribute boolean useServerDefaults; */
+NS_IMETHODIMP nsMsgDownloadSettings::GetUseServerDefaults(PRBool *aUseServerDefaults)
+{
+  NS_ENSURE_ARG_POINTER(aUseServerDefaults);
+  *aUseServerDefaults = m_useServerDefaults;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgDownloadSettings::SetUseServerDefaults(PRBool aUseServerDefaults)
+{
+  m_useServerDefaults = aUseServerDefaults;
+  return NS_OK;
+}
+
+
+/* attribute boolean keepUnreadMessagesOnly; */
+NS_IMETHODIMP nsMsgDownloadSettings::GetDownloadUnreadOnly(PRBool *aDownloadUnreadOnly)
+{
+  NS_ENSURE_ARG_POINTER(aDownloadUnreadOnly);
+  *aDownloadUnreadOnly = m_downloadUnreadOnly;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgDownloadSettings::SetDownloadUnreadOnly(PRBool aDownloadUnreadOnly)
+{
+  m_downloadUnreadOnly = aDownloadUnreadOnly;
+  return NS_OK;
+}
+
+/* attribute boolean keepUnreadMessagesOnly; */
+NS_IMETHODIMP nsMsgDownloadSettings::GetDownloadByDate(PRBool *aDownloadByDate)
+{
+  NS_ENSURE_ARG_POINTER(aDownloadByDate);
+  *aDownloadByDate = m_downloadByDate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDownloadSettings::SetDownloadByDate(PRBool aDownloadByDate)
+{
+  m_downloadByDate = aDownloadByDate;
+  return NS_OK;
+}
+
+
+/* attribute long ageLimitOfMsgsToDownload; */
+NS_IMETHODIMP nsMsgDownloadSettings::GetAgeLimitOfMsgsToDownload(PRUint32 *ageLimitOfMsgsToDownload)
+{
+  NS_ENSURE_ARG_POINTER(ageLimitOfMsgsToDownload);
+  *ageLimitOfMsgsToDownload = m_ageLimitOfMsgsToDownload;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgDownloadSettings::SetAgeLimitOfMsgsToDownload(PRUint32 ageLimitOfMsgsToDownload)
+{
+  m_ageLimitOfMsgsToDownload = ageLimitOfMsgsToDownload;
+  return NS_OK;
+}
 

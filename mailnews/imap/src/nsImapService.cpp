@@ -51,13 +51,14 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsISubscribableServer.h"
-#include "nsIMessage.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWebNavigation.h"
 #include "nsImapStringBundle.h"
 #include "plbase64.h"
-
+#include "nsImapOfflineSync.h"
+#include "nsIMsgHdr.h"
+#include "nsMsgUtils.h"
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -535,25 +536,13 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
               rv = NS_NewISupportsArray(getter_AddRefs(messages));
               if (NS_FAILED(rv)) 
                 return rv;
-              NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
-              if (NS_FAILED(rv)) return rv;
-              nsCOMPtr<nsIRDFResource> msgResource;
-              nsCOMPtr<nsIMessage> message;
-              rv = rdfService->GetResource(aMessageURI,
-                                           getter_AddRefs(msgResource));
-              if(NS_SUCCEEDED(rv))
+              nsCOMPtr<nsIMsgDBHdr> message;
+              GetMsgDBHdrFromURI(aMessageURI, getter_AddRefs(message));
+              nsCOMPtr<nsISupports> msgSupport(do_QueryInterface(message, &rv));
+              if (msgSupport)
               {
-                rv = msgResource->QueryInterface(NS_GET_IID(nsIMessage),
-                                                 getter_AddRefs(message));
-                if (NS_SUCCEEDED(rv) && message)
-                {
-                  nsCOMPtr<nsISupports> msgSupport(do_QueryInterface(message, &rv));
-                  if (msgSupport)
-                  {
-                    messages->AppendElement(msgSupport);
-                    folder->MarkMessagesRead(messages, PR_TRUE);
-                  }
-                }
+                messages->AppendElement(msgSupport);
+                folder->MarkMessagesRead(messages, PR_TRUE);
               }
             }
           }
@@ -853,28 +842,42 @@ NS_IMETHODIMP nsImapService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
 }
 
 // just a helper method to break down imap message URIs....
+nsresult nsImapService::DecomposeImapURI(const char * aMessageURI, nsIMsgFolder ** aFolder, nsMsgKey *aMsgKey)
+{
+    NS_ENSURE_ARG_POINTER(aMessageURI);
+    NS_ENSURE_ARG_POINTER(aFolder);
+    NS_ENSURE_ARG_POINTER(aMsgKey);
+
+    nsresult rv = NS_OK;
+    nsCAutoString folderURI;
+    rv = nsParseImapMessageURI(aMessageURI, folderURI, aMsgKey, nsnull);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr <nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIRDFResource> res;
+    rv = rdf->GetResource(folderURI, getter_AddRefs(res));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = res->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    return NS_OK;
+}
+
+// just a helper method to break down imap message URIs....
 nsresult nsImapService::DecomposeImapURI(const char * aMessageURI, nsIMsgFolder ** aFolder, char ** aMsgKey)
 {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-    if (NS_FAILED(rv)) return rv;
-
-	nsCAutoString	folderURI;
     nsMsgKey msgKey;
-	rv = nsParseImapMessageURI(aMessageURI, folderURI, &msgKey, nsnull);
-	if (NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIRDFResource> res;
-		rv = rdf->GetResource(folderURI, getter_AddRefs(res));
-		if (NS_FAILED(rv))	return rv;
-        rv = res->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
-        // convert the message key into a string
-        if (msgKey)
-        {
-            nsCAutoString messageIdString;
-            messageIdString.AppendInt(msgKey, 10 /* base 10 */);
-            *aMsgKey = messageIdString.ToNewCString();
-        }
+    nsresult rv;
+    rv = DecomposeImapURI(aMessageURI, aFolder, &msgKey);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (msgKey) {
+      nsCAutoString messageIdString;
+      messageIdString.AppendInt(msgKey, 10 /* base 10 */);
+      *aMsgKey = messageIdString.ToNewCString();
     }
 
     return rv;
@@ -959,6 +962,11 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
     }
   }
 
+  if (aURL)
+  {
+    *aURL = url;
+    NS_IF_ADDREF(*aURL);
+  }
   nsCAutoString urlSpec;
   rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
 
@@ -3247,6 +3255,7 @@ nsImapService::DownloadMessagesForOffline(const char *messageIds, nsIMsgFolder *
         // need to pass in stream listener in order to get the channel created correctly
         nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(aFolder, &rv));
         nsCOMPtr<nsIStreamListener> folderStreamListener(do_QueryInterface(aFolder, &rv));
+        // ### need to use peek to fetch messages, because FetchMessage is marking them read.
         rv = FetchMessage(imapUrl, nsImapUrl::nsImapMsgFetch,aFolder, imapMessageSink, 
                             aMsgWindow, getter_AddRefs(runningURI), folderStreamListener, messageIds, PR_TRUE);
         if (runningURI && aUrlListener)
@@ -3260,3 +3269,44 @@ nsImapService::DownloadMessagesForOffline(const char *messageIds, nsIMsgFolder *
   }
   return rv;
 }
+
+NS_IMETHODIMP
+nsImapService::MessageURIToMsgHdr(const char *uri, nsIMsgDBHdr **_retval)
+{
+  NS_ENSURE_ARG_POINTER(uri);
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsMsgKey msgKey;
+
+  rv = DecomposeImapURI(uri, getter_AddRefs(folder), &msgKey);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = folder->GetMessageHeader(msgKey, _retval);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapService::PlaybackAllOfflineOperations(nsIMsgWindow *aMsgWindow, nsIUrlListener *aListener)
+{
+  nsImapOfflineSync *goOnline = new nsImapOfflineSync(aMsgWindow, aListener, nsnull);
+  if (goOnline)
+  {
+    return goOnline->ProcessNextOperation();
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsImapService::DownloadAllOffineImapFolders(nsIMsgWindow *aMsgWindow, nsIUrlListener *aListener)
+{
+  nsImapOfflineDownloader *downloadForOffline = new nsImapOfflineDownloader(aMsgWindow, aListener);
+  if (downloadForOffline)
+    return downloadForOffline->ProcessNextOperation();
+
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+

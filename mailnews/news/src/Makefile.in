@@ -32,18 +32,16 @@ REQUIRES	= xpcom string mailnews msgbase msgbaseutil necko msgdb locale mork dom
 
 CPPSRCS		= \
 		nsNNTPArticleList.cpp \
-		nsNNTPNewsgroup.cpp \
 		nsNNTPNewsgroupList.cpp \
 		nsNNTPNewsgroupPost.cpp \
 		nsNNTPProtocol.cpp \
 		nsNntpUrl.cpp \
-		nsNNTPHost.cpp \
 		nsNntpService.cpp \
 		nsNewsFolder.cpp \
 		nsNntpIncomingServer.cpp \
-		nsNewsMessage.cpp \
 		nsNewsUtils.cpp \
         nsNewsDownloadDialogArgs.cpp \
+        nsNewsDownloader.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -51,16 +49,12 @@ EXPORTS		= \
 		nsNntpUrl.h \
 		nsNNTPArticleList.h \
 		nsNNTPNewsgroupList.h \
-		nsNNTPNewsgroup.h \
 		nsNNTPNewsgroupPost.h \
 		nntpCore.h \
 		nsNntpService.h \
 		nsNewsFolder.h \
 		nsNntpIncomingServer.h \
-		nsNewsMessage.h \
 		nsNewsUtils.h \
-		nsNNTPHost.h \
-		nsNNTPCategoryContainer.h \
         nsNewsDownloadDialogArgs.h \
 		$(NULL)
 

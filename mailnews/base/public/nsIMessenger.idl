@@ -35,6 +35,7 @@
 %}
 
 interface nsITransactionManager;
+interface nsIMsgMessageService;
 
 [scriptable, uuid(4f7966d0-c14f-11d2-b7f2-00805f05ffa5)]
 interface nsIMessenger : nsISupports {
@@ -56,10 +57,9 @@ interface nsIMessenger : nsISupports {
     void DeleteFolders(in nsIRDFCompositeDataSource db,
                        in nsIRDFResource parentFolder,
                        in nsIRDFResource folder);
-	void CopyMessages(in nsIRDFCompositeDataSource database,
-                      in nsIRDFResource srcFolder,
-					  in nsIRDFResource dstFolder,
-                      in nsISupportsArray messages,
+	void CopyMessages(in nsIMsgFolder srcFolder,
+                      in nsIMsgFolder destFolder,
+                      in nsISupportsArray messageArray,
 					  in boolean isMove);
 	void CopyFolders(in nsIRDFCompositeDataSource database,
                       in nsIRDFResource dstFolder,
@@ -89,5 +89,7 @@ interface nsIMessenger : nsISupports {
     void saveAllAttachments(in unsigned long count, [array, size_is(count)] in string urlArray, [array, size_is(count)] in string displayNameArray, [array, size_is(count)] in string messageUriArray);
     void find();
     void findAgain();
+
+    nsIMsgMessageService messageServiceFromURI(in string uri);
 };
 

@@ -133,13 +133,13 @@ PRBool nsUInt32Array::SetSize(PRUint32 nSize,
 
 PRUint32 &nsUInt32Array::ElementAt(PRUint32 nIndex)
 {
-	PR_ASSERT(nIndex < m_nSize);
+	NS_ASSERTION(nIndex < m_nSize, "array index out of bounds");
 	return m_pData[nIndex];
 }
 
 PRUint32 nsUInt32Array::GetAt(PRUint32 nIndex) const
 {
-	PR_ASSERT(nIndex < m_nSize);
+	NS_ASSERTION(nIndex < m_nSize, "array index out of bounds");
 	return m_pData[nIndex];
 }
 
@@ -150,7 +150,7 @@ PRUint32 *nsUInt32Array::GetData()
 
 void nsUInt32Array::SetAt(PRUint32 nIndex, PRUint32 newElement)
 {
-	PR_ASSERT(nIndex < m_nSize);
+	NS_ASSERTION(nIndex < m_nSize, "array index out of bounds");
 	m_pData[nIndex] = newElement;
 }
 
@@ -188,7 +188,7 @@ PRUint32 *nsUInt32Array::CloneData()
 
 void nsUInt32Array::InsertAt(PRUint32 nIndex, PRUint32 newElement, PRUint32 nCount)
 {
-	PR_ASSERT(nCount > 0);
+	NS_ASSERTION(nCount > 0, "can't insert 0 elements");
 
 	if (nIndex >= m_nSize)
 	{
@@ -207,21 +207,24 @@ void nsUInt32Array::InsertAt(PRUint32 nIndex, PRUint32 newElement, PRUint32 nCou
 	}
 
 	// Insert the new elements
-	PR_ASSERT(nIndex + nCount <= m_nSize);
+	NS_ASSERTION(nIndex + nCount <= m_nSize, "setting size failed");
 	while (nCount--)
 		m_pData[nIndex++] = newElement;
 }
 
 void nsUInt32Array::InsertAt(PRUint32 nStartIndex, const nsUInt32Array *pNewArray)
 {
-	PR_ASSERT(pNewArray != NULL);
+  NS_ASSERTION(pNewArray, "inserting null array");
 
-	if (pNewArray->GetSize() > 0)
-	{
-		InsertAt(nStartIndex, pNewArray->GetAt(0), pNewArray->GetSize());
-		for (PRUint32 i = 1; i < pNewArray->GetSize(); i++)
-			m_pData[nStartIndex + i] = pNewArray->GetAt(i);
-	}
+  if (pNewArray)
+  {
+	  if (pNewArray->GetSize() > 0)
+	  {
+		  InsertAt(nStartIndex, pNewArray->GetAt(0), pNewArray->GetSize());
+		  for (PRUint32 i = 1; i < pNewArray->GetSize(); i++)
+			  m_pData[nStartIndex + i] = pNewArray->GetAt(i);
+	  }
+  }
 }
 
 void nsUInt32Array::RemoveAll()
@@ -231,7 +234,7 @@ void nsUInt32Array::RemoveAll()
 
 void nsUInt32Array::RemoveAt(PRUint32 nIndex, PRUint32 nCount)
 {
-	PR_ASSERT(nIndex + nCount <= m_nSize);
+	NS_ASSERTION(nIndex + nCount <= m_nSize, "removing past end of array");
 
 	if (nCount > 0)
 	{

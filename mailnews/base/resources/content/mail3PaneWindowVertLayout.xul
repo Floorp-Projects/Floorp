@@ -73,23 +73,21 @@ Rights Reserved.
 
 <commands id="commands">
 
-	<commandset id="CommandUpdate_Mail"
-				commandupdater="true"
-				events="focus,folderTree-select,threadTree-select"
-				oncommandupdate="CommandUpdate_Mail()"/>
-	<commandset id="ThreadTreeUpdate_Mail"
-				commandupdater="true"
-				events="threadTree-select"
-				oncommandupdate="ThreadTreeUpdate_Mail()"/>
+  <commandset id="mailFileMenuItems"/>
+  <commandset id="mailViewMenuItems"/>
+  <commandset id="mailEditMenuItems"/>
+  <commandset id="mailSearchMenuItems"/>
+  <commandset id="mailGoMenuItems"/>
+  <commandset id="mailMessageMenuItems"/>
+  <commandset id="mailToolbarItems"/>
+
+  <commandset id="globalEditMenuItems"/>
+	<commandset id="selectEditMenuItems"/>
+	<commandset id="clipboardEditMenuItems"/>
 	<commandset id="FocusRingUpdate_Mail"
 				commandupdater="true"
 				events="focus"
-				oncommandupdate="FocusRingUpdate_Mail()"/>				
-	<commandset id="globalEditMenuItems"/>
-	<commandset id="selectEditMenuItems"/>
-	<commandset id="undoEditMenuItems"/>
-	<commandset id="clipboardEditMenuItems"/>
-
+				oncommandupdate="FocusRingUpdate_Mail()"/>
 </commands>
 
 <broadcasterset id="broadcasterset"/>
@@ -134,35 +132,21 @@ Rights Reserved.
           
 		<box orient="vertical" flex="1">
 			<box align ="horizontal" persist="height" flex="1">
-                            <box flex="1">
-                                <tree id="folderTree" 
-                                      style="width:0px;" 
-                                      context="folderPaneContext" 
-                                      persist="collapsed width"/>
-
-                                <splitter id="gray_vertical_splitter" collapse="before"  persist="state"/>
-
-                                <box id="threadpaneBox" flex="2">
-                                <tree id="threadTree" 
-                                      flex="1" 
-                                      persist="width" 
-                                      style="width:0px" 
-                                      context="threadPaneContext" 
-                                      class="window-focusborder" 
-                                      focusring="false"/>
-                                </box>
-                                <box id="accountCentralBox" flex="2">
-                                    <iframe name="accountCentralPane"  
-                                            style="width:0px;" 
-                                            flex="1" 
-                                            src="about:blank"/>
-                                </box>
-                            </box>
-			</box>
+        <box flex="1">
+				 <tree id="folderTree" flex="1" style="width:0px;" context="folderPaneContext" persist="collapsed width" />
+				 <splitter id="gray_vertical_splitter" collapse="before"  persist="state"/>
+         <box id="threadpaneBox" flex="2">
+          <outliner id="threadOutliner" flex="2" persist="width" style="width:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
+         </box>
+         <box id="accountCentralBox" flex="2"> 
+           <iframe name="accountCentralPane" style="width:0px;" flex="1" src="about:blank"/>
+          </box>
+			  </box>
+      </box>
 			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
 			<splitter id="threadpane-splitter" collapse="after" persist="state"
-			 onclick="OnClickThreadAndMessagePaneSplitter()" orient="vertical" autostretch="never">
-			<grippy/>
+			   onclick="OnClickThreadAndMessagePaneSplitter()" orient="vertical" autostretch="never">
+			  <grippy/>
 			</splitter>
 			<!-- msg header view -->
 			<box id="messagepanebox" orient="vertical" flex="4" persist="collapsed height" class="window-focusborder" focusring="false">

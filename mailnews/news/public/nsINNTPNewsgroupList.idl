@@ -26,28 +26,23 @@
  * to destroy the DBView)
  */
 #include "nsISupports.idl"
-#include "nsINNTPHost.idl"
-#include "nsINNTPNewsgroup.idl"
 
-interface nsINNTPHost;
-interface nsINNTPNewsgroup;
+interface nsIMsgNewsFolder;
 interface nsINntpUrl;
 interface nsIMsgWindow;
 
 [scriptable, uuid(E628ED19-9452-11d2-B7EA-00805F05FFA5)]
 interface nsINNTPNewsgroupList : nsISupports {
-
-  /* These calls are used by libnet to determine which articles it ought to
-     get in a big newsgroup. */
-
-
-  long GetRangeOfArtsToDownload(in nsIMsgWindow aMsgWindow, in long first_message,
+  
+  void initialize(in nsINntpUrl runningURL, in nsIMsgNewsFolder newsFolder);
+  
+  long getRangeOfArtsToDownload(in nsIMsgWindow aMsgWindow, in long first_message,
                                 in long last_message,
                                 in long maxextra,
                                 out long real_first_message,
                                 out long real_last_message);
   
-  void AddToKnownArticles(in long first_message, in long last_message);
+  void addToKnownArticles(in long first_message, in long last_message);
 
 
   /* The NNTP module of netlib calls these to feed XOVER data to the message
@@ -61,15 +56,12 @@ interface nsINNTPNewsgroupList : nsISupports {
      line to, followed by a "\n".  This is used by the XOVER-caching code.
   */
   /* the XOVER Sink should maintain the ListNewsGroupState */
-  void InitXOVER(in long first_message, in long last_message);  
-  void ProcessXOVERLINE(in string line, out unsigned long status);
-  void ProcessNonXOVER(in string line);
-  void ResetXOVER();
-  void FinishXOVERLINE(in long status, out long newstatus);
-  void ClearXOVERState();
-  string GetGroupName();
-
-  void Initialize(in nsINNTPHost host, in nsINntpUrl runningURL, in nsINNTPNewsgroup newsgroup, in string username, in string hostname, in string groupname);
+  void initXOVER(in long first_message, in long last_message);  
+  void processXOVERLINE(in string line, out unsigned long status);
+  void processNonXOVER(in string line);
+  void resetXOVER();
+  void finishXOVERLINE(in long status, out long newstatus);
+  void clearXOVERState();
 
   attribute boolean getOldMessages;
 };

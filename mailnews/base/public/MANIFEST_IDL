@@ -8,7 +8,6 @@ nsICopyMsgStreamListener.idl
 nsIFolder.idl
 nsIFolderListener.idl
 nsIMessage.idl
-nsIMessageView.idl
 nsIMsgAccount.idl
 nsIMsgAccountManager.idl
 nsIMsgFolder.idl
@@ -37,6 +36,4 @@ nsIMsgRDFDataSource.idl
 nsIIncomingServerListener.idl
 nsIMsgHdr.idl
 nsIMsgStringService.idl
-nsIMsgViewNavigationService.idl
 nsIMsgPrintEngine.idl
-

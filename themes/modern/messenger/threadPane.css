@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ *   Scott MacGregor (mscott@netscape.com)
  *   Joe Hewitt (hewitt@netscape.com)
  */
 
@@ -27,120 +28,88 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: tree rows ::::: */
+/* ::::: outliner rows ::::: */
 
-.tree-thread-row.unread-true {
+outliner:focus > outliner-bodybox
+{
+  border: 1px solid black;
+}
+
+outliner > outliner-bodybox
+{
+  border: 1px solid transparent;
+}
+
+outlinerbody:-moz-outliner-cell-text(unread)
+{
   font-weight: bold;
 }
 
-.tree-thread-row {
-  min-height: 14px;
+outlinerbody:-moz-outliner-cell-text(offline)
+{
+  font-style: italic;
 }
+
 
 /* ::::: priority colors ::::: */
 
-.prioritycol-highest {
-  color: red;
+outlinerbody:-moz-outliner-cell-text(priority-highest)
+{
+  color:red;
 }
 
-.prioritycol-high {
+outlinerbody:-moz-outliner-cell-text(priority-high)
+{
   color: rgb(128, 0, 0);
 }
 
-.prioritycol-lowest {
+outlinerbody:-moz-outliner-cell-text(priority-lowest)
+{
   color: rgb(170, 170, 170);
 }
 
-.prioritycol-low {
+outlinerbody:-moz-outliner-cell-text(priority-low)
+{
   color: rgb(85, 85, 85);
 }
 
 /* ::::: message icons ::::: */
 
-.tree-cell-threadpane-icon {
-  min-height: 14px;
-  list-style-image: url("chrome://messenger/skin/icons/message-mail.gif");
-}
-
-.tree-cell-threadpane-icon.status-new {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-new.gif");
-}
-
-.tree-cell-threadpane-icon.message-type-news {
-  list-style-image: url("chrome://messenger/skin/icons/message-news.gif");
-}
-
-.tree-cell-threadpane-icon.message-type-news.status-new {
-  list-style-image: url("chrome://messenger/skin/icons/message-news-new.gif");
-}
-
-.tree-cell-threadpane-icon.message-type-mail.has-attachment-true {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.gif");
-}
-
-.tree-cell-threadpane-icon.is-imap-deleted-true {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.gif");
-}
-
 /* ::::: message column icons ::::: */
 
 /* ..... thread column ..... */
 
-.threadColumnHeader[currentView="threaded"] {
-  list-style-image: url("chrome://messenger/skin/icons/threadcol-threaded.gif");
-}
-
-.threadColumnHeader[currentView="unthreaded"] {
+outlinercol.threadColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/threadcol-unthreaded.gif");
 }
 
+outlinercol.threadColumnHeader[sortDirection="ascending"]  {
+  list-style-image: url("chrome://messenger/skin/icons/threadcol-threaded.gif");
+}
+
+outlinercol.threadColumnHeader[sortDirection="descending"] {
+  list-style-image: url("chrome://messenger/skin/icons/threadcol-threaded.gif");
+}
+
+
 /* message row icons */
 
-.threadcol-thread {
-  list-style-image: url("chrome://messenger/skin/icons/thread-closed.gif");
-}
-
-.threadcol-threadWithUnread {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-closed.gif");
-}
-
-treeitem[open="true"] > treerow > .threadcol-thread {
-  list-style-image: url("chrome://messenger/skin/icons/thread-open.gif");
-}
-
-treeitem[open="true"] > treerow > .threadcol-threadWithUnread {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-open.gif");
-}
 
 /* ..... read column ..... */
 
-.readColumnHeader {
+outlinercol.readColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/readcol-unread.gif");
 }
+
 
 /* message row icons */
 
-.unreadcol-false {
-  list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
-}
 
-.unreadcol-true {
-  list-style-image: url("chrome://messenger/skin/icons/readcol-unread.gif");
-}
 
 /* ..... flag column ..... */
 
-.flagColumnHeader {
+outlinercol.flagColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/flagcol-flagged.gif");
 }
 
 /* message row icons */
-
-.flagcol-unflagged {
-  list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
-}
-
-.flagcol-flagged {
-  list-style-image: url("chrome://messenger/skin/icons/flagcol-flagged.gif");
-}
-

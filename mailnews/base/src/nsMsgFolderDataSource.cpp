@@ -28,7 +28,6 @@
 #include "nsMsgFolderFlags.h"
 
 #include "nsMsgRDFUtils.h"
-#include "nsIMessage.h"
 
 #include "rdf.h"
 #include "nsIRDFService.h"
@@ -44,7 +43,7 @@
 #include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIInputStream.h"
-
+#include "nsIMsgHdr.h"
 #include "nsTraceRefcnt.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
@@ -1573,7 +1572,7 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 	{
 
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(arguments->ElementAt(i));
-		nsCOMPtr<nsIMessage> message(do_QueryInterface(supports));
+		nsCOMPtr<nsIMsgDBHdr> message(do_QueryInterface(supports));
 		if (message)
 		{
 			messageArray->AppendElement(supports);
@@ -1654,7 +1653,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
 	for(PRUint32 item = 0; item < itemCount; item++)
 	{
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(arguments->ElementAt(item));
-		nsCOMPtr<nsIMessage> deletedMessage(do_QueryInterface(supports));
+		nsCOMPtr<nsIMsgDBHdr> deletedMessage(do_QueryInterface(supports));
 		nsCOMPtr<nsIMsgFolder> deletedFolder(do_QueryInterface(supports));
 		if (deletedMessage)
 		{

@@ -33,14 +33,7 @@
 #include "pratom.h"
 #include "nsMsgCompCID.h"
 
-
-
 /* Include all of the interfaces our factory can generate components for */
-#include "nsMsgSendFact.h"
-#include "nsMsgCompFieldsFact.h"
-#include "nsMsgSendLaterFact.h"
-
-#include "nsMsgComposeFact.h"
 #include "nsMsgSendLater.h"
 #include "nsSmtpUrl.h"
 #include "nsISmtpService.h"

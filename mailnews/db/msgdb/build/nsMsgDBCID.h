@@ -48,4 +48,13 @@
 
 #define NS_MSG_RETENTIONSETTINGS_CONTRACTID \
   "@mozilla.org/msgDatabase/retentionSettings;1"
+
+// 4e3dae5a-157a-11d5-a5c0-0060b0fc04b7
+#define NS_MSG_DOWNLOADSETTINGS_CID \
+{ 0x4e3dae5a, 0x157a, 0x11d5,       \
+  {0xa5, 0xc0, 0x00, 0x60, 0xb0, 0xfc, 0x04, 0xb7} }
+
+#define NS_MSG_DOWNLOADSETTINGS_CONTRACTID \
+  "@mozilla.org/msgDatabase/downloadSettings;1"
+
 #endif

@@ -24,11 +24,7 @@
 #include "MailNewsTypes2.idl"
 
 %{ C++
-#include "nsINNTPHost.h"
-#include "nsINNTPArticleList.h"
-#include "nsINNTPNewsgroup.h"
 #include "nsIMsgOfflineNewsState.h"
-#include "nsINNTPNewsgroupList.h"  
 #include "nsINNTPNewsgroupPost.h"
 #include "nsIMsgMailNewsUrl.h"
 
@@ -37,34 +33,25 @@
 %}
 
 interface nsIMsgDBHdr;
-interface nsINNTPHost;
-interface nsINNTPArticleList;
-interface nsINNTPNewsgroup;
 interface nsIMsgOfflineNewsState;
-interface nsINNTPNewsgroupList;
 interface nsINNTPNewsgroupPost;
 
 typedef long nsNewsAction;
 
 [scriptable, uuid(BDD12930-A682-11d2-804C-006008128C4E)]
 interface nsINntpUrl : nsISupports {
-  attribute nsINNTPHost nntpHost;
-  attribute nsINNTPArticleList nntpArticleList;
-  attribute nsINNTPNewsgroup newsgroup;
   attribute nsIMsgOfflineNewsState offlineNewsState;
-  attribute nsINNTPNewsgroupList newsgroupList;
   attribute nsINNTPNewsgroupPost messageToPost;
   readonly attribute nsIMsgDBHdr messageHeader;
-  attribute nsMsgKey messageKey;
-  attribute string newsgroupName;
   attribute nsNewsAction newsAction;
   attribute boolean getOldMessages;
 
-  /* these are nsMailboxActions */
-  const long ActionGetNewNews = 0;
-  const long ActionDisplayArticle = 1;
-  const long ActionSaveMessageToDisk = 2;
-  const long ActionCancelArticle = 3;
-  const long ActionPostArticle = 4;
-  const long ActionSearch = 5;
+  const nsNewsAction ActionGetNewNews = 0;
+  const nsNewsAction ActionDisplayArticle = 1;
+  const nsNewsAction ActionSaveMessageToDisk = 2;
+  const nsNewsAction ActionCancelArticle = 3;
+  const nsNewsAction ActionPostArticle = 4;
+  const nsNewsAction ActionSearch = 5;
+  const nsNewsAction ActionUpdateCounts = 6;
+  const nsNewsAction ActionListGroups = 7;
 };

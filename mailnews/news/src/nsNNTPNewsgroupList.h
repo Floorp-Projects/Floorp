@@ -29,9 +29,8 @@
 #ifndef nsNNTPNewsgroupListState_h___
 #define nsNNTPNewsgroupListState_h___
 
-#include "nsINNTPHost.h"
 #include "nsINNTPNewsgroupList.h"
-#include "nsINNTPNewsgroup.h"
+#include "nsIMsgNewsFolder.h"
 #include "nsIMsgDatabase.h"
 #include "nsMsgKeySet.h"
 #include "nsINntpUrl.h"
@@ -41,8 +40,6 @@
    articles we've already seen in the current newsgroup. */
 
 typedef struct MSG_NewsKnown {
-	nsINNTPHost* host;
-	char* group_name;
 	nsMsgKeySet* set; /* Set of articles we've already gotten
 								  from the newsserver (if it's marked
 								  "read", then we've already gotten it).
@@ -77,30 +74,24 @@ private:
   NS_METHOD CleanUp();
      
   PRBool          m_finishingXover;
-  nsINNTPHost*	GetHost() {return m_host;}
-  const char *	GetURI() {return m_uri;}
-  
+
 #ifdef HAVE_CHANGELISTENER
   virtual void	OnAnnouncerGoingAway (ChangeAnnouncer *instigator);
 #endif
   nsresult			ParseLine(char *line, PRUint32 *message_number);
-  PRBool			msg_StripRE(const char **stringP, PRUint32 *lengthP);
   nsresult			GetDatabase(const char *uri, nsIMsgDatabase **db);
   void				SetProgressBarPercent(PRInt32 percent);
   void				SetProgressStatus(const PRUnichar *message);
 
 protected:
-  nsIMsgDatabase	*m_newsDB;
   PRBool			m_getOldMessages;
   PRBool			m_promptedAlready;
   PRBool			m_downloadAll;
   PRInt32			m_maxArticles;
-  char			*m_groupName;
-  nsINNTPHost	*m_host;
-  nsINNTPNewsgroup *m_newsgroup;
-  char 			*m_username;			
-  char 			*m_hostname;
-  char			*m_uri;
+
+  nsCOMPtr <nsIMsgNewsFolder> m_newsFolder;
+  nsCOMPtr <nsIMsgDatabase> m_newsDB;
+  nsCOMPtr <nsINntpUrl> m_runningURL;
   
   nsMsgKey		m_lastProcessedNumber;
   nsMsgKey		m_firstMsgNumber;
@@ -110,7 +101,6 @@ protected:
   
   struct MSG_NewsKnown	m_knownArts;
   nsMsgKeySet		*m_set;
-  nsINntpUrl		*m_runningURL;
 };
     
 #endif /* nsNNTPNewsgroupListState_h___ */

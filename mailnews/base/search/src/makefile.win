@@ -40,7 +40,6 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			.\$(OBJDIR)\nsMsgSearchSession.obj\
 			.\$(OBJDIR)\nsMsgSearchAdapter.obj\
 			.\$(OBJDIR)\nsMsgSearchValue.obj \
-			.\$(OBJDIR)\nsMsgSearchDataSource.obj \
 			.\$(OBJDIR)\nsMsgFilterDataSource.obj \
 			.\$(OBJDIR)\nsMsgFilterDelegateFactory.obj \
 			$(NULL)
@@ -50,7 +49,6 @@ EXPORTS=	nsMsgFilterService.h \
 			nsMsgSearchSession.h \
 			nsMsgFilterDataSource.h \
 			nsMsgFilterDelegateFactory.h \
-			nsMsgSearchDataSource.h \
 			$(NULL)
 
 

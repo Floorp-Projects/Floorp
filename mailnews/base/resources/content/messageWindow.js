@@ -27,12 +27,12 @@ var compositeDataSourceContractID        = datasourceContractIDPrefix + "composi
 var gCompositeDataSource;
 var gCurrentMessageUri;
 var gCurrentFolderUri;
-
+var gThreadPaneCommandUpdater = null;
 var gCurrentMessageIsDeleted = false;
 
 // the folderListener object
 var folderListener = {
-    OnItemAdded: function(parentItem, item, view) {},
+  OnItemAdded: function(parentItem, item, view) {},
 
 	OnItemRemoved: function(parentItem, item, view)
 	{
@@ -44,15 +44,9 @@ var folderListener = {
 		if(parentURI != gCurrentFolderUri)
 			return;
 
-		var deletedMessageResource = item.QueryInterface(Components.interfaces.nsIRDFResource);
-		var deletedUri = deletedMessageResource.Value;
-
-		//If the deleted message is our message then we know we're about to be deleted.
-		if(deletedUri == gCurrentMessageUri)
-		{
+		var deletedMessageHdr = item.QueryInterface(Components.interfaces.nsIMsgDBHdr);
+    if (extractMsgKeyFromURI() == deletedMessageHdr.messageKey)
 			gCurrentMessageIsDeleted = true;
-		}
-
 	},
 
 	OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
@@ -63,17 +57,45 @@ var folderListener = {
 
 	OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
 
-    OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
+  OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
 	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
-    OnItemEvent: function(folder, event) {
-		if (event.GetUnicode() == "DeleteOrMoveMsgCompleted") {
-			HandleDeleteOrMoveMsgCompleted(folder);
-		}     
-                else if (event.GetUnicode() == "DeleteOrMoveMsgFailed") {
-                        HandleDeleteOrMoveMsgFailed(folder);
-                }
+  OnItemEvent: function(folder, event) {
+		  if (event.GetUnicode() == "DeleteOrMoveMsgCompleted") {
+			  HandleDeleteOrMoveMsgCompleted(folder);
+		  }     
+      else if (event.GetUnicode() == "DeleteOrMoveMsgFailed") {
+            HandleDeleteOrMoveMsgFailed(folder);
+      }
     }
+}
+
+function nsMsgDBViewCommandUpdater()
+{}
+
+nsMsgDBViewCommandUpdater.prototype = 
+{
+  updateCommandStatus : function()
+    {
+      // the back end is smart and is only telling us to update command status
+      // when the # of items in the selection has actually changed.
+		  document.commandDispatcher.updateCommands('mail-toolbar');
+    },
+
+  displayMessageChanged : function(aFolder, aSubject)
+  {
+    setTitleFromFolder(aFolder, aSubject);
+    gCurrentMessageUri = gDBView.URIForFirstSelectedMessage;
+  },
+
+  QueryInterface : function(iid)
+  {
+    if(iid.equals(Components.interfaces.nsIMsgDBViewCommandUpdater))
+	    return this;
+	  
+    throw Components.results.NS_NOINTERFACE;
+    return null;
+  }
 }
 
 function HandleDeleteOrMoveMsgCompleted(folder)
@@ -86,32 +108,37 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 	var folderUri = folderResource.Value;
 	if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
 	{
-		//If we knew we were going to be deleted and the deletion has finished, close the window.
-		gCurrentMessageIsDeleted = false;
-		//Use timeout to make sure all folder listeners get event before removing them.  Messes up
-		//folder listener iterator if we don't do this.
-		setTimeout("window.close();",0);
+    gCurrentMessageIsDeleted = false;
+    if (gNextMessageViewIndexAfterDelete != -1) 
+    {
+      var nextMstKey = gDBView.getKeyAt(gNextMessageViewIndexAfterDelete);
+      gDBView.loadMessageByMsgKey(nextMstKey);
 
+    }
+    else
+    {
+      // close the stand alone window because there are no more messages in the folder
+      window.close();
+    }
 	}
 }
 
 function HandleDeleteOrMoveMsgFailed(folder)
 {
-        var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-        if(!folderResource)
-                return;
+  var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+  if(!folderResource)
+     return;
 
-        var folderUri = folderResource.Value;
-        if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
-        {
-                gCurrentMessageIsDeleted = false;
-        }	
+  var folderUri = folderResource.Value;
+  if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
+  {
+    gCurrentMessageIsDeleted = false;
+  }	
 }
 
 function OnLoadMessageWindow()
 {
 	HideMenus();
-	HideToolbarButtons();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
 	verifyAccounts();
@@ -123,13 +150,15 @@ function OnLoadMessageWindow()
 	// FIX ME - later we will be able to use onload from the overlay
 	OnLoadMsgHeaderPane();
 
-    try {
-        mailSession.AddFolderListener(folderListener);
+  try {
+    mailSession.AddFolderListener(folderListener);
 	} catch (ex) {
-        dump("Error adding to session\n");
-    }
+    dump("Error adding to session\n");
+  }
 
-	if(window.arguments && window.arguments.length == 2)
+  var originalView = null;
+
+	if(window.arguments)
 	{
 		if(window.arguments[0])
 		{
@@ -148,7 +177,27 @@ function OnLoadMessageWindow()
 		{
 			gCurrentFolderUri = null;
 		}
+
+    if (window.arguments[2])
+      originalView = window.arguments[2];      
 	}	
+
+  // extract the sort type, the sort order, 
+  var sortType;
+  var sortOrder;
+  var viewFlags;
+  var viewType;
+
+  if (originalView)
+  {
+    viewType = originalView.viewType;
+    viewFlags = originalView.viewFlags;
+    sortType = originalView.sortType;
+    sortOrder = originalView.sortOrder;
+  }
+  
+  var msgFolder = GetLoadedMsgFolder();
+  CreateBareDBView(msgFolder,viewType, viewFlags, sortType, sortOrder); // create a db view for 
 
   if (gCurrentMessageUri) {
     SetUpToolbarButtons(gCurrentMessageUri);
@@ -157,9 +206,23 @@ function OnLoadMessageWindow()
     SetUpToolbarButtons(gCurrentFolderUri);
   }
     
-  setTimeout("OpenURL(gCurrentMessageUri);", 0);
+  setTimeout("var msgKey = extractMsgKeyFromURI(gCurrentMessageUri); gDBView.loadMessageByMsgKey(msgKey); gNextMessageViewIndexAfterDelete = gDBView.firstSelected;", 0);
   SetupCommandUpdateHandlers();
 
+}
+
+function extractMsgKeyFromURI()
+{
+  var msgKey = -1;
+  var msgService = messenger.messageServiceFromURI(gCurrentMessageUri);
+  if (msgService)
+  {
+    var msgHdr = msgService.messageURIToMsgHdr(gCurrentMessageUri);
+    if (msgHdr)
+      msgKey = msgHdr.messageKey;
+  }
+
+  return msgKey;
 }
 
 function HideMenus()
@@ -192,18 +255,6 @@ function HideMenus()
 	if(viewThreadedMenu)
 		viewThreadedMenu.setAttribute("hidden", "true");
 
-	var goNextMenu = document.getElementById('goNextMenu');
-	if(goNextMenu)
-		goNextMenu.setAttribute("hidden", "true");
-
-	var goPreviousMenu = document.getElementById('goPreviousMenu');
-	if(goPreviousMenu)
-		goPreviousMenu.setAttribute("hidden", "true");
-
-	var goNextSeparator = document.getElementById('goNextSeparator');
-	if(goNextSeparator)
-		goNextSeparator.setAttribute("hidden", "true");
-
 	var emptryTrashMenu = document.getElementById('menu_emptyTrash');
 	if(emptryTrashMenu)
 		emptryTrashMenu.setAttribute("hidden", "true");
@@ -218,14 +269,6 @@ function HideMenus()
 
 }
 
-function HideToolbarButtons()
-{
-	var nextButton = document.getElementById('button-next');
-	if(nextButton)
-		nextButton.setAttribute("hidden", "true");
-
-}
-
 function OnUnloadMessageWindow()
 {
 	OnMailWindowUnload();
@@ -235,16 +278,14 @@ function CreateMessageWindowGlobals()
 {
 	gCompositeDataSource = Components.classes[compositeDataSourceContractID].createInstance();
 	gCompositeDataSource = gCompositeDataSource.QueryInterface(Components.interfaces.nsIRDFCompositeDataSource);
-
 }
 
 function InitializeDataSources()
 {
-	AddDataSources();
-	//Now add datasources to composite datasource
-	gCompositeDataSource.AddDataSource(accountManagerDataSource);
-    gCompositeDataSource.AddDataSource(folderDataSource);
-	gCompositeDataSource.AddDataSource(messageDataSource);
+  AddDataSources();
+  //Now add datasources to composite datasource
+  gCompositeDataSource.AddDataSource(accountManagerDataSource);
+  gCompositeDataSource.AddDataSource(folderDataSource);
 }
 
 function GetSelectedMsgFolders()
@@ -258,7 +299,7 @@ function GetSelectedMsgFolders()
 	return folderArray;
 }
 
-function GetSelectedMessage(index)
+function GetFirstSelectedMessage()
 {
 	return GetLoadedMessage();
 }
@@ -275,8 +316,7 @@ function GetSelectedMessages()
 {
 	var messageArray = new Array(1);
 	var message = GetLoadedMessage();
-	if(message)
-	{
+	if(message) {
 		messageArray[0] = message;	
 	}
 	return messageArray;
@@ -298,17 +338,7 @@ function GetLoadedMsgFolder()
 
 function GetLoadedMessage()
 {
-	if(gCurrentMessageUri)
-	{
-		var messageResource = RDF.GetResource(gCurrentMessageUri);
-		if(messageResource)
-		{
-			var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
-			return message;
-		}
-	}
-	return null;
-
+  return gCurrentMessageUri;
 }
 
 //Clear everything related to the current message. called after load start page.
@@ -316,7 +346,7 @@ function ClearMessageSelection()
 {
 	gCurrentMessageUri = null;
 	gCurrentFolderUri = null;
-	CommandUpdate_Mail();
+  document.commandDispatcher.updateCommands('mail-toolbar');	
 }
 
 function GetCompositeDataSource(command)
@@ -326,7 +356,7 @@ function GetCompositeDataSource(command)
 
 function SetNextMessageAfterDelete()
 {
-	gCurrentMessageIsDeleted = true;
+  gNextMessageViewIndexAfterDelete = gDBView.firstSelected;
 }
 
 function SelectFolder(folderUri)
@@ -334,15 +364,31 @@ function SelectFolder(folderUri)
 	gCurrentFolderUri = folderUri;
 }
 
-function SelectMessage(messageUri)
-{
-	gCurrentMessageUri = messageUri;
-	OpenURL(gCurrentMessageUri);
-}
-
 function ReloadMessage()
 {
-	OpenURL(gCurrentMessageUri);
+  gDBView.reloadMessage();
+}
+
+function MsgDeleteMessageFromMessageWindow(reallyDelete, fromToolbar)
+{
+  // if from the toolbar, return right away if this is a news message
+  // only allow cancel from the menu:  "Edit | Cancel / Delete Message"
+  if (fromToolbar)
+  {
+    if (isNewsURI(gCurrentFolderUri)) 
+    {
+        // if news, don't delete
+        return;
+    }
+  }
+  
+  // before we delete 
+  SetNextMessageAfterDelete();
+
+  if (reallyDelete)
+      gDBView.doCommand(nsMsgViewCommandType.deleteNoTrash);
+  else
+      gDBView.doCommand(nsMsgViewCommandType.deleteMsg);
 }
 
 // MessageWindowController object (handles commands when one of the trees does not have focus)
@@ -365,24 +411,39 @@ var MessageWindowController =
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
 			case "cmd_delete":
+      case "cmd_killThread":
+      case "cmd_watchThread":
 			case "button_delete":
 			case "cmd_shiftDelete":
+      case "button_print":
 			case "cmd_print":
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
 			case "cmd_viewPageSource":
 			case "cmd_reload":
 			case "cmd_getNewMessages":
-                        case "cmd_getMsgsForAuthAccounts":
+      case "button_getNewMessages":
+      case "cmd_getMsgsForAuthAccounts":
 			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
+      case "button_mark":
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
 			case "cmd_markAsFlagged":
+      case "button_file":
 			case "cmd_file":
       case "cmd_downloadFlagged":
+      case "cmd_toggleWorkOffline":
+			case "cmd_nextMsg":
+      case "button_next":
+			case "cmd_nextUnreadMsg":
+			case "cmd_nextFlaggedMsg":
+			case "cmd_nextUnreadThread":
+			case "cmd_previousMsg":
+			case "cmd_previousUnreadMsg":
+			case "cmd_previousFlaggedMsg":
 				return true;
 			default:
 				return false;
@@ -391,8 +452,16 @@ var MessageWindowController =
 
 	isCommandEnabled: function(command)
 	{
+    var enabled = new Object();
+    var checkStatus = new Object();
 		switch ( command )
 		{
+			case "cmd_delete":
+      if (gDBView)
+      {
+         gDBView.getCommandStatus(nsMsgViewCommandType.deleteMsg, enabled, checkStatus);
+         return enabled.value;
+      }
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":
@@ -404,36 +473,48 @@ var MessageWindowController =
 			case "cmd_forwardInline":
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
-			case "cmd_delete":
+
 			case "button_delete":
 			case "cmd_shiftDelete":
 			case "cmd_print":
+      case "button_print":
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
 			case "cmd_viewPageSource":
 			case "cmd_reload":
 			case "cmd_find":
 			case "cmd_findAgain":
+      case "button_mark":
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
 			case "cmd_markAsFlagged":
+      case "button_file":
 			case "cmd_file":
 				if ( command == "cmd_delete")
 				{
-                    if (isNewsURI(gCurrentMessageUri)) {
-					    goSetMenuValue(command, 'valueNewsMessage');
-                    }
-                    else {
-					    goSetMenuValue(command, 'valueMessage');
-                    }
+          if (isNewsURI(gCurrentMessageUri))
+					   goSetMenuValue(command, 'valueNewsMessage');
+          else
+					   goSetMenuValue(command, 'valueMessage');
 				}
 				return ( gCurrentMessageUri != null);
 			case "cmd_getNewMessages":
-                        case "cmd_getMsgsForAuthAccounts":
+      case "button_getNewMessages":
+      case "cmd_getMsgsForAuthAccounts":
 				return IsGetNewMessagesEnabled();
 			case "cmd_getNextNMessages":
 				return IsGetNextNMessagesEnabled();
+      case "cmd_toggleWorkOffline":
+        return true;
+
+			case "cmd_nextMsg":
+      case "button_next":
+			case "cmd_nextUnreadMsg":
+			case "cmd_nextUnreadThread":
+			case "cmd_previousMsg":
+			case "cmd_previousUnreadMsg":
+				return true;
 			default:
 				return false;
 		}
@@ -441,16 +522,20 @@ var MessageWindowController =
 
 	doCommand: function(command)
 	{
-   		//dump("MessageWindowController.doCommand(" + command + ")\n");
+    // if the user invoked a key short cut then it is possible that we got here for a command which is
+    // really disabled. kick out if the command should be disabled.
+    if (!this.isCommandEnabled(command)) return;
+
+    var navigationType = nsMsgNavigationType.nextUnreadMessage;
 
 		switch ( command )
 		{
 			case "cmd_getNewMessages":
 				MsgGetMessage();
 				break;
-                        case "cmd_getMsgsForAuthAccounts":
-                                MsgGetMessagesForAllAuthenticatedAccounts();
-                                break;
+      case "cmd_getMsgsForAuthAccounts":
+        MsgGetMessagesForAllAuthenticatedAccounts();
+        break;
 			case "cmd_getNextNMessages":
 				MsgGetNextNMessages();
 				break;
@@ -479,13 +564,13 @@ var MessageWindowController =
 				MsgEditMessageAsNew();
 				break;
 			case "cmd_delete":
-				MsgDeleteMessage(false, false);
+				MsgDeleteMessageFromMessageWindow(false, false);
 				break;
 			case "cmd_shiftDelete":
-				MsgDeleteMessage(true, false);
+				MsgDeleteMessageFromMessageWindow(true, false);
 				break;
 			case "button_delete":
-				MsgDeleteMessage(false, true);
+				MsgDeleteMessageFromMessageWindow(false, true);
 				break;
 			case "cmd_print":
 				PrintEnginePrint();
@@ -508,6 +593,7 @@ var MessageWindowController =
 			case "cmd_findAgain":
 				MsgFindAgain();
 				break;
+      case "button_mark":
 			case "cmd_markAsRead":
 				MsgMarkMsgAsRead(null);
 				return;
@@ -526,6 +612,31 @@ var MessageWindowController =
       case "cmd_downloadSelected":
         MsgDownloadSelected();
         return;
+      case "cmd_toggleWorkOffline":
+        MsgToggleWorkOffline();
+        return;
+
+			case "cmd_nextUnreadMsg":
+        performNavigation(nsMsgNavigationType.nextUnreadMessage);
+				break;
+			case "cmd_nextUnreadThread":      
+        performNavigation(nsMsgNavigationType.nextUnreadThread);
+				break;
+			case "cmd_nextMsg":
+        performNavigation(nsMsgNavigationType.nextMessage);
+				break;
+			case "cmd_nextFlaggedMsg":
+        performNavigation(nsMsgNavigationType.nextFlagged);
+				break;
+			case "cmd_previousMsg":
+        performNavigation(nsMsgNavigationType.previousMessage);
+				break;
+			case "cmd_previousUnreadMsg":
+        performNavigation(nsMsgNavigationType.previousUnreadMessage);
+				break;
+			case "cmd_previousFlaggedMsg":
+        performNavigation(nsMsgNavigationType.previousFlagged);
+				break;
 		}
 	},
 	
@@ -534,41 +645,24 @@ var MessageWindowController =
 	}
 };
 
-
-function CommandUpdate_Mail()
+function performNavigation(type)
 {
-	goUpdateCommand('cmd_reply');
-	goUpdateCommand('cmd_replySender');
-	goUpdateCommand('cmd_replyGroup');
-	goUpdateCommand('cmd_replyall');
-	goUpdateCommand('cmd_forward');
-	goUpdateCommand('cmd_forwardInline');
-	goUpdateCommand('cmd_forwardAttachment');
-	goUpdateCommand('button_reply');
-	goUpdateCommand('button_replyall');
-	goUpdateCommand('button_forward');
-	goUpdateCommand('cmd_editAsNew');
-	goUpdateCommand('cmd_delete');
-	goUpdateCommand('button_delete');
-	goUpdateCommand('cmd_shiftDelete');
-	goUpdateCommand('cmd_print');
-	goUpdateCommand('cmd_saveAsFile');
-	goUpdateCommand('cmd_saveAsTemplate');
-	goUpdateCommand('cmd_viewPageSource');
-	goUpdateCommand('cmd_reload');
-	goUpdateCommand('cmd_getNewMessages');
-        goUpdateCommand('cmd_getMsgsForAuthAccounts');
-	goUpdateCommand('cmd_getNextNMessages');
-	goUpdateCommand('cmd_find');
-	goUpdateCommand('cmd_findAgain');
-	goUpdateCommand('cmd_markAsRead');
-	goUpdateCommand('cmd_markThreadAsRead');
-	goUpdateCommand('cmd_markAllRead');
-	goUpdateCommand('cmd_markAsFlagged');
-  goUpdateCommand('cmd_downloadFlagged');
-  goUpdateCommand('cmd_downloadSelected');
-	goUpdateCommand('cmd_file');
+  var resultId = new Object;
+  var resultIndex = new Object;
+  var threadIndex = new Object;
 
+  gDBView.viewNavigate(type, resultId, resultIndex, threadIndex, true /* wrap */);
+  
+  // if we found something....display it.
+  if ((resultId.value != -1) && (resultIndex.value != -1)) 
+  {
+    // load the message key
+    gDBView.loadMessageByMsgKey(resultId.value);
+    return;
+  }
+   
+  // we need to span another folder 
+  CrossFolderNavigation(type, false);
 }
 
 function SetupCommandUpdateHandlers()

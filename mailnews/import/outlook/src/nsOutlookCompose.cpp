@@ -270,7 +270,7 @@ nsresult nsOutlookCompose::CreateComponents( void)
 	    rv = nsComponentManager::CreateInstance( kMsgCompFieldsCID, nsnull, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), (void **) &m_pMsgFields); 
 		if (NS_SUCCEEDED(rv) && m_pMsgFields) {
 			// IMPORT_LOG0( "nsOutlookCompose - CreateComponents succeeded\n");
-			m_pMsgFields->SetTheForcePlainText( PR_FALSE);
+			m_pMsgFields->SetForcePlainText( PR_FALSE);
 			return( NS_OK);
 		}
 	}
@@ -585,6 +585,8 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg)
 	nsString	bodyType;
 	nsString	charSet;
 	nsString	headerVal;
+    nsCAutoString asciiHeaderVal;
+
 	GetHeaderValue( m_pHeaders, m_headerLen, "From:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetFrom( headerVal.GetUnicode());
@@ -599,14 +601,18 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg)
 	ExtractType( bodyType);
 	ExtractCharset( headerVal);
 	charSet = headerVal;
-	if (headerVal.Length())
-		m_pMsgFields->SetCharacterSet( headerVal.GetUnicode());
+	if (headerVal.Length()) {
+        asciiHeaderVal.AssignWithConversion(headerVal);
+		m_pMsgFields->SetCharacterSet(asciiHeaderVal.get());
+    }
 	GetHeaderValue( m_pHeaders, m_headerLen, "CC:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetCc( headerVal.GetUnicode());
 	GetHeaderValue( m_pHeaders, m_headerLen, "Message-ID:", headerVal);
-	if (headerVal.Length())
-		m_pMsgFields->SetMessageId( headerVal.GetUnicode());
+	if (headerVal.Length()) {
+        asciiHeaderVal.AssignWithConversion(headerVal);
+		m_pMsgFields->SetMessageId(asciiHeaderVal.get());
+    }
 	GetHeaderValue( m_pHeaders, m_headerLen, "Reply-To:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetReplyTo( headerVal.GetUnicode());

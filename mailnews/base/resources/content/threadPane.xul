@@ -31,99 +31,31 @@ Rights Reserved.
 <script src="chrome://global/content/treePopups.js"/>
 <script src="chrome://messenger/content/threadPane.js"/>
 
-<tree datasources="rdf:null" id="threadTree"
-	          class="window-focusborder"
-              onclick="ThreadPaneOnClick(event);"
-              ondraggesture="return BeginDragThreadTree(event);"
-              ondragdrop="return DropOnThreadTree(event);" 
-	  		  onselect="top.ThreadPaneSelectionChange(false);"
-			  onkeypress="ThreadPaneKeyPress(event);"
-              onblur="goOnEvent(this,'blur')"
-              containment="http://home.netscape.com/NC-rdf#MessageChild"
-			  allownegativeassertions="false"
-              coalesceduplicatearcs="false"
-			  multiple="true">
-       
-  <template>
-  	<rule>
-    <treechildren flex="1">
-        <treeitem uri="..." id="threadTreeTemplateTreeItem">
+<outliner id="threadOutliner" flex="1" 
+    ondraggesture="return BeginDragThreadPane(event);"
+    ondragdrop="return DropOnThreadPane(event);" 
+    onclick="ThreadPaneOnClick(event);">
+  <outlinercol id="threadCol" display="&threadColumn.label;" class="outlinercol-header outlinercol-image outlinercol-inset-header threadColumnHeader" currentView="unthreaded" cycler="true" />
+  <outlinercol id="subjectCol" class="outlinercol-header outlinercell-inset-header sortDirectionIndicator" persist="hidden width" flex="7" value="&subjectColumn.label;" primary="true"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="senderCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width"  flex="4" value="&senderColumn.label;"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="unreadButtonColHeader" fixed="true" class="outlinercol-header outlinercol-image outlinercol-inset-header readColumnHeader" display="&readColumn.label;" cycler="true"/> 
+  <splitter class="tree-splitter"/>
+  <outlinercol id="dateCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width"  flex="2" value="&dateColumn.label;"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="statusCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width" flex="1" value="&statusColumn.label;"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="sizeCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width" flex="1"  value="&sizeColumn.label;"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="flaggedCol" fixed="true" class="outlinercol-header outlinercol-image outlinercol-inset-header flagColumnHeader" display="&flagColumn.label;" cycler="true"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="priorityCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden witdth" flex="1" value="&priorityColumn.label;"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="unreadCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden witdth" flex="1" value="&unreadColumn.label;"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="totalCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden witdth" flex="1" value="&totalColumn.label;"/>
+  <outlinerbody flex="1" onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();"/>
+</outliner>
 
-              <treerow class="tree-thread-row unread-rdf:http://home.netscape.com/NC-rdf#IsUnread" >
-                <treecell class="treecell-image threadcol-rdf:http://home.netscape.com/NC-rdf#ThreadState"/>
-                <treecell class="treecell-indent tree-cell-threadpane-icon status-rdf:http://home.netscape.com/NC-rdf#Status message-type-rdf:http://home.netscape.com/NC-rdf#MessageType has-attachment-rdf:http://home.netscape.com/NC-rdf#HasAttachment is-imap-deleted-rdf:http://home.netscape.com/NC-rdf#IsImapDeleted"
-                  value="rdf:http://home.netscape.com/NC-rdf#Subject" />
-            	<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#Sender" id ="SenderColumnTemplate"/>
-				<treecell class="treecell-image unreadcol-rdf:http://home.netscape.com/NC-rdf#IsUnread" 
-                  allowevents="true" />
-				<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#Date"/>
-				<treecell class="tree-cell-image prioritycol-rdf:http://home.netscape.com/NC-rdf#Priority"
-                  value="rdf:http://home.netscape.com/NC-rdf#PriorityString"/>
-				<treecell class="treecell-image flagcol-rdf:http://home.netscape.com/NC-rdf#Flagged" 
-                  allowevents="true" />
-
-				<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#StatusString"/>
-				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#Size" id ="SizeColumnTemplate"/>
-				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
-				<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#OrderReceived"/>
-				<treecell/>
-	  		</treerow>
-		</treeitem>
-          </treechildren>
-	</rule>
-  </template>
-
-  <treecolgroup id="theThreadColumns">
-	  <treecol persist="hidden" id="ThreadColumn" resource="http://home.netscape.com/NC-rdf#Thread"/>
-    <treecol persist="hidden width" width="0" flex="7" id="SubjectColumn" resource="http://home.netscape.com/NC-rdf#Subject"/>
-    <splitter class="tree-splitter"/>
-    <treecol persist="hidden width" width="0" flex="4" id="AuthorColumn" resource="http://home.netscape.com/NC-rdf#Sender"/>
-	  <splitter class="tree-splitter"/>
-	  <treecol persist="hidden" fixed="true" id="UnreadButtonColumn" resource="http://home.netscape.com/NC-rdf#IsUnread"/>
-	  <splitter class="tree-splitter"/>
-    <treecol persist="hidden width" width="0" flex="2" id="DateColumn" resource="http://home.netscape.com/NC-rdf#Date"/>
-	  <splitter class="tree-splitter"/>
-    <treecol persist="hidden width" width="0" flex="1" id="PriorityColumn" resource="http://home.netscape.com/NC-rdf#Priority"/>
-	  <splitter class="tree-splitter"/>
-    <treecol persist="hidden" fixed="true" id="FlaggedButtonColumn" resource="http://home.netscape.com/NC-rdf#Flagged"/>
-    <splitter class="tree-splitter"/>
-    <treecol persist="hidden width" width="0" flex="1" id="StatusColumn" resource="http://home.netscape.com/NC-rdf#Status"/>
-	  <splitter class="tree-splitter"/>
-    <treecol persist="hidden width" width="0" flex="1" id="MemoryColumn" resource="http://home.netscape.com/NC-rdf#Size"/>
-	  <splitter class="tree-splitter"/>
-    <treecol persist="hidden width" width="0" flex="1" id="UnreadColumn" resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-	  <splitter class="tree-splitter"/>
-    <treecol persist="hidden width" width="0" flex="1" id="TotalColumn" resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
-	  <splitter class="tree-splitter"/>
-	  <treecol persist="hidden width" width="0" flex="1" id="OrderReceivedColumn" resource="http://home.netscape.com/NC-rdf#OrderReceived"/>
-	  <treecol id="PopupColumn"/>
-  </treecolgroup>
-
-  <treehead>
-    <treerow id="headRow">
-		<treecell display="&threadColumn.label;" onclick="return top.ChangeThreadView();" class="treecell-header treecell-inset-header treecell-header-image threadColumnHeader" tooltip="aTooltip" tooltiptext="&threadColumnHeader.tooltip;" id="ThreadColumnHeader"/> 
-		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&subjectColumn.label;" onclick="return top.MsgSortBySubject();" id="SubjectColumnHeader"/>
-		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" onclick="return top.MsgSortBySender();" value="&senderColumn.label;" id="SenderColumnHeader"/>
-		<treecell class="treecell-header treecell-header-image treecell-inset-header readColumnHeader" display="&readColumn.label;" onclick="return top.MsgSortByRead();" id="UnreadButtonColumnHeader"/> 
-		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&dateColumn.label;" onclick="return top.MsgSortByDate();" id="DateColumnHeader"/> 
-		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&priorityColumn.label;" onclick="return top.MsgSortByPriority();" id="PriorityColumnHeader"/>
-		<treecell class="treecell-header treecell-header-image treecell-inset-header flagColumnHeader" display="&flagColumn.label;" onclick="return top.MsgSortByFlagged();" id="FlaggedButtonColumnHeader"/>
-		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&statusColumn.label;" onclick="return top.MsgSortByStatus();" id="StatusColumnHeader"/>
-		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&sizeColumn.label;" onclick="return top.MsgSortBySize();" id="SizeColumnHeader"/>
-		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&unreadColumn.label;" onclick="return top.MsgSortByUnread();" id="UnreadColumnHeader"/>
-		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&totalColumn.label;" onclick="return top.MsgSortByTotal();" id="TotalColumnHeader"/>
-		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&orderReceivedColumn.label;" onclick="return top.MsgSortByOrderReceived();" id="OrderReceivedColumnHeader"/>
-		<treecell class="treecell-header treecell-header-image treecell-inset-header" allowevents="true" id="popupCell" tooltip="aTooltip" tooltiptext="&columnChooser.tooltip;" autostretch="never">
-		  <menu>
-            <image class="treecell-popup-icon"/>
-			<menupopup popupanchor="bottomright"
-			           popupalign="topright"
-					   oncreate="BuildTreePopup(document.getElementById('theThreadColumns'), document.getElementById('headRow'), this,
-			                                    document.getElementById('popupCell'))"/>
-		  </menu>
-		</treecell>
-	</treerow>
-  </treehead>
-</tree>
 </overlay>

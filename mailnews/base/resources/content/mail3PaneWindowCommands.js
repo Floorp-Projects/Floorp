@@ -88,6 +88,10 @@ var FolderPaneController =
 
 	doCommand: function(command)
 	{
+    // if the user invoked a key short cut then it is possible that we got here for a command which is
+    // really disabled. kick out if the command should be disabled.
+    if (!this.isCommandEnabled(command)) return;
+
 		switch ( command )
 		{
 			case "cmd_delete":
@@ -145,20 +149,23 @@ var ThreadPaneController =
 
 	doCommand: function(command)
 	{
+    // if the user invoked a key short cut then it is possible that we got here for a command which is
+    // really disabled. kick out if the command should be disabled.
+    if (!this.isCommandEnabled(command)) return;
+
 		switch ( command )
 		{
 			case "cmd_selectAll":
-				var threadTree = GetThreadTree();
-				if ( threadTree )
-				{
-					//if we're threaded we need to expand everything before selecting all
-					if(messageView.showThreads)
-						ExpandOrCollapseThreads(true);
-					threadTree.selectAll();
-					if ( threadTree.selectedItems && threadTree.selectedItems.length != 1 )
-						ClearMessagePane();
-				}
-				break;
+      if (gDBView) 
+      {
+        // if in threaded mode, the view will expand all before selecting all
+        gDBView.doCommand(nsMsgViewCommandType.selectAll)
+        if (gDBView.numSelected != 1) 
+        {
+          ClearMessagePane();
+        }
+      }			
+      break;
 		}
 	},
 	
@@ -191,6 +198,7 @@ var DefaultController =
 			case "cmd_shiftDelete":
 			case "cmd_editDraft":
 			case "cmd_nextMsg":
+      case "button_next":
 			case "cmd_nextUnreadMsg":
 			case "cmd_nextFlaggedMsg":
 			case "cmd_nextUnreadThread":
@@ -199,33 +207,43 @@ var DefaultController =
 			case "cmd_previousFlaggedMsg":
 			case "cmd_viewAllMsgs":
 			case "cmd_viewUnreadMsgs":
-            case "cmd_undo":
-            case "cmd_redo":
+      case "cmd_viewThreadsWithUnread":
+      case "cmd_viewWatchedThreadsWithUnread":
+      case "cmd_undo":
+      case "cmd_redo":
 			case "cmd_expandAllThreads":
 			case "cmd_collapseAllThreads":
 			case "cmd_renameFolder":
 			case "cmd_openMessage":
+      case "button_print":
 			case "cmd_print":
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
 			case "cmd_viewPageSource":
 			case "cmd_setFolderCharset":
 			case "cmd_reload":
+      case "button_getNewMessages":
 			case "cmd_getNewMessages":
-                        case "cmd_getMsgsForAuthAccounts":
+      case "cmd_getMsgsForAuthAccounts":
 			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
+      case "button_mark":
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
 			case "cmd_markAsFlagged":
+      case "button_file":
 			case "cmd_file":
 			case "cmd_emptyTrash":
 			case "cmd_compactFolder":
 			case "cmd_sortByThread":
       case "cmd_downloadFlagged":
       case "cmd_downloadSelected":
+      case "cmd_watchThread":
+      case "cmd_killThread":
+      case "cmd_toggleWorkOffline":
+      case "cmd_close":
 				return true;
 			default:
 				return false;
@@ -234,8 +252,42 @@ var DefaultController =
 
 	isCommandEnabled: function(command)
 	{
+    var enabled = new Object();
+    enabled.value = false;
+    var checkStatus = new Object();
+//    dump('entering is command enabled for: ' + command + '\n');
 		switch ( command )
 		{
+			case "button_delete":
+			case "cmd_delete":
+        var uri = GetFirstSelectedMessage();
+        if ( GetNumSelectedMessages() < 2 ) 
+        {
+          if (IsNewsMessage(uri))
+            goSetMenuValue(command, 'valueNewsMessage');
+          else
+            goSetMenuValue(command, 'valueMessage');
+        }
+        else 
+        {
+          if (IsNewsMessage(uri)) 
+            goSetMenuValue(command, 'valueNewsMessage');
+          else 
+            goSetMenuValue(command, 'valueMessages');
+        }
+        if (gDBView)
+          gDBView.getCommandStatus(nsMsgViewCommandType.deleteMsg, enabled, checkStatus);
+        return enabled.value;
+ 			case "cmd_shiftDelete":
+        if (gDBView)
+         gDBView.getCommandStatus(nsMsgViewCommandType.deleteNoTrash, enabled, checkStatus);
+       return enabled.value;
+			case "cmd_killThread":
+				return MailAreaHasFocus() && IsViewNavigationItemEnabled();
+			case "cmd_watchThread":
+        if (gDBView)
+          gDBView.getCommandStatus(nsMsgViewCommandType.toggleThreadWatched, enabled, checkStatus);
+        return enabled.value;
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":
@@ -247,10 +299,8 @@ var DefaultController =
 			case "cmd_forwardInline":
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
-			case "cmd_delete":
-			case "button_delete":
-			case "cmd_shiftDelete":
 			case "cmd_openMessage":
+      case "button_print":
 			case "cmd_print":
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
@@ -258,44 +308,20 @@ var DefaultController =
 			case "cmd_reload":
 			case "cmd_markThreadAsRead":
 			case "cmd_markAsFlagged":
+      case "button_file":
 			case "cmd_file":
+				return ( GetNumSelectedMessages() > 0 );
 			case "cmd_editDraft":
-				var numSelected = GetNumSelectedMessages();
-
-				if ( command == "cmd_delete")
-				{
-                    var uri = GetUriForFirstSelectedMessage();
-
-					if ( numSelected < 2 ) {
-                        if (isNewsURI(uri)) {
-						    goSetMenuValue(command, 'valueNewsMessage');    
-                        }
-                        else {
-						    goSetMenuValue(command, 'valueMessage');
-                        }
-                    }
-					else {
-                        if (isNewsURI(uri)) {
-						    goSetMenuValue(command, 'valueNewsMessage');    
-                            return false;
-                        }
-                        else {
-						    goSetMenuValue(command, 'valueMessages');
-                        }
-                    }
-				}
-				else if (command == "cmd_editDraft")
-        {
-          return (gIsEditableMsgFolder && numSelected > 0);
-        }
-				return ( numSelected > 0 );
+                return (gIsEditableMsgFolder && (GetNumSelectedMessages() > 0));
 			case "cmd_nextMsg":
+      case "button_next":
 			case "cmd_nextUnreadMsg":
 			case "cmd_nextUnreadThread":
 			case "cmd_previousMsg":
 			case "cmd_previousUnreadMsg":
 				return MailAreaHasFocus() && IsViewNavigationItemEnabled();
       case "cmd_downloadSelected":
+      case "button_mark":
 			case "cmd_markAsRead":
 				if(!MailAreaHasFocus())
 					return false;
@@ -309,25 +335,33 @@ var DefaultController =
 				return IsFindEnabled();
 				break;
 			case "cmd_expandAllThreads":
+                if (gDBView)
+                    gDBView.getCommandStatus(nsMsgViewCommandType.expandAll, enabled, checkStatus);
+                return enabled.value;
+				break;
 			case "cmd_collapseAllThreads":
-				return messageView.showThreads;
+                if (gDBView)
+                    gDBView.getCommandStatus(nsMsgViewCommandType.collapseAll, enabled, checkStatus);
+                return enabled.value;
 				break;
 			case "cmd_nextFlaggedMsg":
 			case "cmd_previousFlaggedMsg":
 				return IsViewNavigationItemEnabled();
 			case "cmd_viewAllMsgs":
 			case "cmd_sortByThread":
-  			case "cmd_viewUnreadMsgs":
-                return true;
-  				break;
-            case "cmd_undo":
-            case "cmd_redo":
-                return SetupUndoRedoCommand(command);
+  		case "cmd_viewUnreadMsgs":
+      case "cmd_viewThreadsWithUnread":
+      case "cmd_viewWatchedThreadsWithUnread":
+        return true;
+      case "cmd_undo":
+      case "cmd_redo":
+          return SetupUndoRedoCommand(command);
 			case "cmd_renameFolder":
 				return IsRenameFolderEnabled();
+      case "button_getNewMessages":
 			case "cmd_getNewMessages":
-                        case "cmd_getMsgsForAuthAccounts":
-                                return IsGetNewMessagesEnabled();
+      case "cmd_getMsgsForAuthAccounts":
+        return IsGetNewMessagesEnabled();
 			case "cmd_getNextNMessages":
 				return IsGetNextNMessagesEnabled();
 			case "cmd_emptyTrash":
@@ -336,6 +370,9 @@ var DefaultController =
 				return IsCompactFolderEnabled();
 			case "cmd_setFolderCharset":
 				return IsFolderCharsetEnabled();
+      case "cmd_close":
+      case "cmd_toggleWorkOffline":
+        return true;
 			default:
 				return false;
 		}
@@ -344,17 +381,20 @@ var DefaultController =
 
 	doCommand: function(command)
 	{
-   		//dump("ThreadPaneController.doCommand(" + command + ")\n");
+    // if the user invoked a key short cut then it is possible that we got here for a command which is
+    // really disabled. kick out if the command should be disabled.
+    if (!this.isCommandEnabled(command)) return;
 
 		switch ( command )
 		{
+      case "button_getNewMessages":
 			case "cmd_getNewMessages":
 				MsgGetMessage();
 				break;
-                        case "cmd_getMsgsForAuthAccounts":
-                                MsgGetMessage();
-                                MsgGetMessagesForAllAuthenticatedAccounts();
-                                break;
+      case "cmd_getMsgsForAuthAccounts":
+        MsgGetMessage();
+        MsgGetMessagesForAllAuthenticatedAccounts();
+        break;
 			case "cmd_getNextNMessages":
 				MsgGetNextNMessages();
 				break;
@@ -382,19 +422,25 @@ var DefaultController =
 			case "cmd_editAsNew":
 				MsgEditMessageAsNew();
 				break;
+			case "button_delete":
 			case "cmd_delete":
-				MsgDeleteMessage(false, false);
+        SetNextMessageAfterDelete();
+        gDBView.doCommand(nsMsgViewCommandType.deleteMsg);
 				break;
 			case "cmd_shiftDelete":
-				MsgDeleteMessage(true, false);
+        SetNextMessageAfterDelete();
+        gDBView.doCommand(nsMsgViewCommandType.deleteNoTrash);
 				break;
-			case "button_delete":
-				MsgDeleteMessage(false, true);
-				break;
+      case "cmd_killThread":
+        /* kill thread kills the thread and then does a next unread */
+      	GoNextMessage(nsMsgNavigationType.toggleThreadKilled, true);
+        break;
+      case "cmd_watchThread":
+        gDBView.doCommand(nsMsgViewCommandType.toggleThreadWatched);
+        break;
 			case "cmd_editDraft":
-				var threadTree = GetThreadTree();
-				if (threadTree && threadTree.selectedItems)
-					MsgComposeDraftMessage();
+                if (gDBView.numSelected >= 0)
+                    MsgComposeDraftMessage();
 				break;
 			case "cmd_nextUnreadMsg":
 				MsgNextUnreadMessage();
@@ -421,10 +467,10 @@ var DefaultController =
 				MsgSortByThread();
 				break;
 			case "cmd_viewAllMsgs":
-				MsgViewAllMsgs();
-				break;
+      case "cmd_viewThreadsWithUnread":
+      case "cmd_viewWatchedThreadsWithUnread":
 			case "cmd_viewUnreadMsgs":
-				MsgViewUnreadMsg();
+				SwitchView(command);
 				break;
 			case "cmd_undo":
 				messenger.Undo(msgWindow);
@@ -433,10 +479,10 @@ var DefaultController =
 				messenger.Redo(msgWindow);
 				break;
 			case "cmd_expandAllThreads":
-				ExpandOrCollapseThreads(true);
+                gDBView.doCommand(nsMsgViewCommandType.expandAll);
 				break;
 			case "cmd_collapseAllThreads":
-				ExpandOrCollapseThreads(false);
+                gDBView.doCommand(nsMsgViewCommandType.collapseAll);
 				break;
 			case "cmd_renameFolder":
 				MsgRenameFolder();
@@ -468,6 +514,7 @@ var DefaultController =
 			case "cmd_findAgain":
 				MsgFindAgain();
 				return;
+      case "button_mark":
 			case "cmd_markAsRead":
 				MsgMarkMsgAsRead(null);
 				return;
@@ -475,7 +522,7 @@ var DefaultController =
 				MsgMarkThreadAsRead();
 				return;
 			case "cmd_markAllRead":
-				MsgMarkAllRead();
+        gDBView.doCommand(nsMsgViewCommandType.markAllRead);
 				return;
 			case "cmd_markAsFlagged":
 				MsgMarkAsFlagged(null);
@@ -492,6 +539,9 @@ var DefaultController =
 			case "cmd_compactFolder":
 				MsgCompactFolder(true);
 				return;
+      case "cmd_toggleWorkOffline":
+        MsgToggleWorkOffline();
+        return;
 		}
 	},
 	
@@ -522,114 +572,58 @@ function MailAreaHasFocus()
 	return true;
 }
 
-function GetUriForFirstSelectedMessage()
-{
-    try {
-	    var threadTree = GetThreadTree();
-        return threadTree.selectedItems[0].getAttribute('id');
-    }
-    catch (ex) {
-        return null;
-    }
-}
-
 function GetNumSelectedMessages()
 {
-	var threadTree = GetThreadTree();
-	var numSelected = 0;
-	if ( threadTree && threadTree.selectedItems )
-		numSelected = threadTree.selectedItems.length;
-	return numSelected;
+    try {
+        return gDBView.numSelected;
+    }
+    catch (ex) {
+        return 0;
+    }
 }
-
-function CommandUpdate_Mail()
-{
-	goUpdateCommand('button_delete');
-	goUpdateCommand('cmd_delete');
-	goUpdateCommand('cmd_editDraft');
-	goUpdateCommand('cmd_nextMsg');
-	goUpdateCommand('cmd_nextUnreadMsg');
-	goUpdateCommand('cmd_nextUnreadThread');
-	goUpdateCommand('cmd_nextFlaggedMsg');
-	goUpdateCommand('cmd_previousMsg');
-	goUpdateCommand('cmd_previousUnreadMsg');
-	goUpdateCommand('cmd_previousFlaggedMsg');
-	goUpdateCommand('cmd_sortByThread');
-	goUpdateCommand('cmd_viewAllMsgs');
-	goUpdateCommand('cmd_viewUnreadMsgs');
-	goUpdateCommand('cmd_expandAllThreads');
-	goUpdateCommand('cmd_collapseAllThreads');
-	goUpdateCommand('cmd_renameFolder');
-	goUpdateCommand('cmd_setFolderCharset');
-	goUpdateCommand('cmd_getNewMessages');
-        goUpdateCommand('cmd_getMsgsForAuthAccounts');
-	goUpdateCommand('cmd_getNextNMessages');
-	goUpdateCommand('cmd_find');
-	goUpdateCommand('cmd_findAgain');
-	goUpdateCommand('cmd_markAllRead');
-	goUpdateCommand('cmd_emptyTrash');
-	goUpdateCommand('cmd_compactFolder');
-}
-
 
 var lastFocusedElement=null;
 
-function FocusRingUpdate_Mail(){
-
-    var currentFocusedElement = WhichPaneHasFocus();
-    if (!currentFocusedElement)
-        currentFocusedElement = GetMessagePane();
+function FocusRingUpdate_Mail()
+{
+  //dump ('entering focus ring update\n');
+  var currentFocusedElement = WhichPaneHasFocus();
+  if (!currentFocusedElement)
+  {
+     // dump ('setting default focus to message pane');
+     currentFocusedElement = GetMessagePane();
+  }
     
 	if(currentFocusedElement != lastFocusedElement) {
-        if( currentFocusedElement == GetThreadTree()) {
-            GetThreadTree().setAttribute("focusring","true");
+        if( currentFocusedElement == GetThreadOutliner()) {
+            // XXX fix me
+            GetThreadOutliner().setAttribute("focusring","true");
             GetMessagePane().setAttribute("focusring","false");
         }
 
         else if(currentFocusedElement==GetFolderTree()) {
-            GetThreadTree().setAttribute("focusring","false");
+            // XXX fix me
+            GetThreadOutliner().setAttribute("focusring","false");
             GetMessagePane().setAttribute("focusring","false");
         }
         else if(currentFocusedElement==GetMessagePane()){
-            GetThreadTree().setAttribute("focusring","false");
+            // mscott --> fix me!!
+            GetThreadOutliner().setAttribute("focusring","false");
             GetMessagePane().setAttribute("focusring","true");
         }
         else {
-            GetThreadTree().setAttribute("focusring","false");
+            // XXX fix me
+            GetThreadOutliner().setAttribute("focusring","false");
             GetMessagePane().setAttribute("focusring","false");
         }
         
         lastFocusedElement=currentFocusedElement;
-    }
-}
-	
 
-function ThreadTreeUpdate_Mail(command)
-{
-	goUpdateCommand('button_reply');
-	goUpdateCommand('button_replyall');
-	goUpdateCommand('button_forward');
-	goUpdateCommand('cmd_shiftDelete');
-	goUpdateCommand('cmd_reply');
-	goUpdateCommand('cmd_replySender');
-	goUpdateCommand('cmd_replyGroup');
-	goUpdateCommand('cmd_replyall');
-	goUpdateCommand('cmd_forward');
-	goUpdateCommand('cmd_forwardInline');
-	goUpdateCommand('cmd_forwardAttachment');
-	goUpdateCommand('cmd_editAsNew');
-	goUpdateCommand('cmd_openMessage');
-	goUpdateCommand('cmd_print');
-	goUpdateCommand('cmd_saveAsFile');
-	goUpdateCommand('cmd_saveAsTemplate');
-	goUpdateCommand('cmd_viewPageSource');
-	goUpdateCommand('cmd_reload');
-	goUpdateCommand('cmd_markAsRead');
-	goUpdateCommand('cmd_markThreadAsRead');
-	goUpdateCommand('cmd_markAsFlagged');
-  goUpdateCommand('cmd_downloadSelected');
-  goUpdateCommand('cmd_downloadFlagged');
-	goUpdateCommand('cmd_file');
+        // since we just changed the pane with focus we need to update the toolbar to reflect this
+        document.commandDispatcher.updateCommands('mail-toolbar');
+    }
+//    else
+//      dump('current focused element matched last focused element\n');
 }
 
 function SetupUndoRedoCommand(command)
@@ -688,14 +682,22 @@ function CommandUpdate_UndoRedo()
 function MessagePaneHasFocus()
 
 {
+  // message pane has focus if the iframe has focus OR if the message pane box
+  // has focus....
+  // first, check to see if the message pane box has focus...if it does, return true
+  var messagePane = GetMessagePane();
+  if (WhichPaneHasFocus() == messagePane)
+    return true;
+
+  // second, check to see if the iframe has focus...if it does, return true....
+
+  // check to see if the iframe has focus...
 	var focusedWindow = top.document.commandDispatcher.focusedWindow;
 	var messagePaneWindow = top.frames['messagepane'];
 	
 	if ( focusedWindow && messagePaneWindow && (focusedWindow != top) )
-	{
-        
+	{        
 		var hasFocus = IsSubWindowOf(focusedWindow, messagePaneWindow);
-
 		return hasFocus;
 	}
 	
@@ -721,9 +723,9 @@ function WhichPaneHasFocus(){
 	var whichPane= null;
 	var currentNode = top.document.commandDispatcher.focusedElement;	
 
-    var threadTree = GetThreadTree();
-    var folderTree = GetFolderTree();
-    var messagePane = GetMessagePane();
+  var threadTree = GetThreadOutliner();
+  var folderTree = GetFolderTree();
+  var messagePane = GetMessagePane();
     
 	while (currentNode) {
         if (currentNode === threadTree ||
@@ -737,10 +739,6 @@ function WhichPaneHasFocus(){
 	return null;
 }
 
-
-
-
-
 function SetupCommandUpdateHandlers()
 {
 	//dump("SetupCommandUpdateHandlers\n");
@@ -753,9 +751,9 @@ function SetupCommandUpdateHandlers()
 		widget.controllers.appendController(FolderPaneController);
 	
 	// thread pane
-	widget = GetThreadTree();
+	widget = GetThreadOutliner();
 	if ( widget )
-		widget.controllers.appendController(ThreadPaneController);
+        widget.controllers.appendController(ThreadPaneController);
 		
 	top.controllers.insertControllerAt(0, DefaultController);
 }
@@ -801,8 +799,7 @@ function IsFolderSelected()
 
 function IsFindEnabled()
 {
-	return (!IsThreadAndMessagePaneSplitterCollapsed() && (gCurrentDisplayedMessage != null));
-
+	return (!IsThreadAndMessagePaneSplitterCollapsed() && (GetNumSelectedMessages() > 0));
 }
 
 function MsgDeleteFolder()
@@ -839,77 +836,55 @@ function MsgDeleteFolder()
 
 }
 
- //3pane related commands.  Need to go in own file.  Putting here for the moment.
-
+// 3pane related commands.  Need to go in own file.  Putting here for the moment.
 function MsgNextMessage()
 {
-	GoNextMessage(navigateAny, false );
+	GoNextMessage(nsMsgNavigationType.nextMessage, false );
 }
 
 function MsgNextUnreadMessage()
 {
-	GoNextMessage(navigateUnread, true);
+	GoNextMessage(nsMsgNavigationType.nextUnreadMessage, true);
 }
 function MsgNextFlaggedMessage()
 {
-	GoNextMessage(navigateFlagged, true);
+	GoNextMessage(nsMsgNavigationType.nextFlagged, true);
 }
 
 function MsgNextUnreadThread()
 {
 	//First mark the current thread as read.  Then go to the next one.
 	MsgMarkThreadAsRead();
-	GoNextThread(navigateUnread, true, true);
+	GoNextMessage(nsMsgNavigationType.nextUnreadThread, true);
 }
 
 function MsgPreviousMessage()
 {
-	GoPreviousMessage(navigateAny, false);
+    GoNextMessage(nsMsgNavigationType.previousMessage, false);
 }
 
 function MsgPreviousUnreadMessage()
 {
-	GoPreviousMessage(navigateUnread, true);
+	GoNextMessage(nsMsgNavigationType.previousUnreadMessage, true);
 }
 
 function MsgPreviousFlaggedMessage()
 {
-	GoPreviousMessage(navigateFlagged, true);
+	GoNextMessage(nsMsgNavigationType.previousFlagged, true);
 }
-
-var nsMsgViewType = Components.interfaces.nsMsgViewType;
 
 function MsgViewAllMsgs() 
 {
 	//dump("MsgViewAllMsgs\n");
-
-	if(messageView)
+	if(gDBView)
 	{
-		messageView.viewType = nsMsgViewType.eShowAll;
+		gDBView.viewType = nsMsgViewType.eShowAllThreads;
 
         var folder = GetSelectedFolder();
         if(folder) {
-            folder.setAttribute("viewType", messageView.viewType);
+            folder.setAttribute("viewType", nsMsgViewType.eShowAllThreads);
         }
 	}
-	RefreshThreadTreeView();
-}
-
-function MsgViewUnreadMsg()
-{
-	//dump("MsgViewUnreadMsgs\n");
-
-	if(messageView)
-	{
-		messageView.viewType = nsMsgViewType.eShowUnread;
-
-        var folder = GetSelectedFolder();
-        if(folder) {
-            folder.setAttribute("viewType", messageView.viewType);
-        }
-	}
-
-	RefreshThreadTreeView();
 }
 
 
@@ -961,34 +936,13 @@ function GetFolderNameFromUri(uri, tree)
 	return nameResult.Value;
 }
 
-
-//Sets the thread tree's template's treeitem to be open so that all threads are expanded.
-function ExpandOrCollapseThreads(expand)
-{
-	SetTemplateTreeItemOpen(expand);
-	RefreshThreadTreeView();
-}
-
-function SetTemplateTreeItemOpen(open)
-{
-	var templateTreeItem = document.getElementById("threadTreeTemplateTreeItem");
-	if(templateTreeItem)
-	{
-		if(open)
-			templateTreeItem.setAttribute("open", "true");
-		else
-			templateTreeItem.removeAttribute("open");
-	}
-}
-
 function SwitchPaneFocus(direction)
 {
-        var gray_vertical_splitter = document.getElementById("gray_vertical_splitter"); 
-        var focusedElement = document.commandDispatcher.focusedElement;
-        var focusedElementId;
-        if (direction == "counter-clockwise")
+  var gray_vertical_splitter = document.getElementById("gray_vertical_splitter"); 
+  var focusedElement = document.commandDispatcher.focusedElement;
+  var focusedElementId;
+  if (direction == "counter-clockwise")
 	{
-
 		if ( MessagePaneHasFocus() )
 			SetFocusThreadPane();
 		else 
@@ -996,21 +950,21 @@ function SwitchPaneFocus(direction)
 			try 
 			{ 
 				focusedElementId = focusedElement.getAttribute('id');
-				if(focusedElementId == "threadTree")
+				if(focusedElementId == "threadOutliner")
 				{
 					if (gray_vertical_splitter)
 					{
 						if (!(is_collapsed(gray_vertical_splitter)))
-						SetFocusFolderPane();
+						  SetFocusFolderPane();
 						else if(!(IsThreadAndMessagePaneSplitterCollapsed()))
-						SetFocusMessagePane();
+						  SetFocusMessagePane();
 					}
 					else 
 					{
 						if (!(sidebar_is_collapsed()))
-						SetFocusFolderPane();
+						  SetFocusFolderPane();
 						else if(!(IsThreadAndMessagePaneSplitterCollapsed()))
-						SetFocusMessagePane();
+						  SetFocusMessagePane();
 					}
 				}
 				else if(focusedElementId == "folderTree")
@@ -1042,9 +996,9 @@ function SwitchPaneFocus(direction)
 			else 
 			{
 				if (!(sidebar_is_collapsed()))
-				SetFocusFolderPane();
+				  SetFocusFolderPane();
 				else
-				SetFocusThreadPane();
+				  SetFocusThreadPane();
 			}
 		}
 		else 
@@ -1052,7 +1006,7 @@ function SwitchPaneFocus(direction)
 			try 
 			{ 
 				focusedElementId = focusedElement.getAttribute('id');
-				if(focusedElementId == "threadTree")
+				if(focusedElementId == "threadOutliner")
 				{
 					if (!(IsThreadAndMessagePaneSplitterCollapsed()))
 						SetFocusMessagePane();
@@ -1079,27 +1033,27 @@ function SwitchPaneFocus(direction)
 
 function SetFocusFolderPane()
 {
-    var folderTree = GetFolderTree();
-    folderTree.focus();
+  var folderTree = GetFolderTree();
+  folderTree.focus();
 	return;
 }
 
 function SetFocusThreadPane()
 {
-    var threadTree = GetThreadTree();
-    threadTree.focus();
+  var threadTree = GetThreadOutliner();
+  threadTree.focus();
 	return;
 }
 
 function SetFocusMessagePane()
 {
-	var messagePaneFrame = GetMessagePaneFrame();
-    messagePaneFrame.focus();
+	var messagePaneFrame = GetMessagePane();
+  messagePaneFrame.focus();
 	return;
 }
 
 function is_collapsed(element) 
 {
-    return (element.getAttribute('state') == 'collapsed');
+  return (element.getAttribute('state') == 'collapsed');
 }
 

@@ -24,7 +24,6 @@
 
 #include "nsImapCore.h"
 #include "nsMsgDBFolder.h"
-#include "nsIMessage.h"
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapMessageSink.h"
 #include "nsIImapExtensionSink.h"
@@ -74,7 +73,7 @@ public:
     nsCOMPtr<nsISupports> m_srcSupport; // source file spec or folder
     nsCOMPtr<nsISupportsArray> m_messages; // array of source messages
     nsCOMPtr<nsMsgTxn> m_undoMsgTxn; // undo object with this copy operation
-    nsCOMPtr<nsIMessage> m_message; // current message to be copied
+    nsCOMPtr<nsIMsgDBHdr> m_message; // current message to be copied
     nsCOMPtr<nsIMsgCopyServiceListener> m_listener; // listener of this copy
                                                     // operation 
     nsCOMPtr<nsIFileSpec> m_tmpFileSpec; // temp file spec for copy operation
@@ -151,7 +150,7 @@ public:
 	NS_IMETHOD RememberPassword(const char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
 
-  NS_IMETHOD AddMessageDispositionState(nsIMessage *aMessage, nsMsgDispositionState aDispositionFlag);
+  NS_IMETHOD AddMessageDispositionState(nsIMsgDBHdr *aMessage, nsMsgDispositionState aDispositionFlag);
 	NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 	NS_IMETHOD MarkAllMessagesRead(void);
 	NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
@@ -173,12 +172,10 @@ public:
   NS_IMETHOD CopyFolder(nsIMsgFolder *srcFolder, PRBool isMove, nsIMsgWindow *msgWindow,
                             nsIMsgCopyServiceListener* listener);
   NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, 
-                               nsIMessage* msgToReplace,
+                               nsIMsgDBHdr* msgToReplace,
                                PRBool isDraftOrTemplate,
                                nsIMsgWindow *msgWindow,
                                nsIMsgCopyServiceListener* listener);
-	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage
-                                         **message);
   NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
   NS_IMETHOD GetPath(nsIFileSpec** aPathName);
@@ -186,7 +183,7 @@ public:
 
   NS_IMETHOD Shutdown(PRBool shutdownChildren);
 
-  NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages);
+  NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *msgWindow);
 
   NS_IMETHOD DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow);
     // nsIMsgImapMailFolder methods
@@ -270,8 +267,7 @@ public:
 									   nsIMsgDatabase *sourceDB, 
                                      const char *destFolder,
 									   nsIMsgFilter *filter);
-	nsresult StoreImapFlags(imapMessageFlagsType flags, PRBool addFlags, nsMsgKeyArray &msgKeys);
-	static nsresult AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCString &msgIds);
+  static nsresult  AllocateUidStringFromKeys(nsMsgKey *keys, PRInt32 numKeys, nsCString &msgIds);
 protected:
     // Helper methods
 
@@ -318,7 +314,7 @@ protected:
                          PRBool isCrossServerOp,
                          nsIMsgWindow *msgWindow,
                          nsIMsgCopyServiceListener* listener);
-  nsresult CopyStreamMessage(nsIMessage* message, nsIMsgFolder* dstFolder,
+  nsresult CopyStreamMessage(nsIMsgDBHdr* message, nsIMsgFolder* dstFolder,
                              nsIMsgWindow *msgWindow, PRBool isMove);
   nsresult InitCopyState(nsISupports* srcSupport, 
                          nsISupportsArray* messages,

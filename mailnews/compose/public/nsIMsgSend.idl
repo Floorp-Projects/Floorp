@@ -42,7 +42,7 @@
 %}
 
 interface	nsIURI;
-interface nsIMessage;
+interface nsIMsgDBHdr;
 interface nsIMsgHdr;
 interface nsIDocShell;
 
@@ -160,7 +160,7 @@ interface nsIMsgSend : nsISupports
                               in PRBool                       digest_p,
                               in PRBool                       dont_deliver_p,
                               in nsMsgDeliverMode             mode, 
-                              in nsIMessage                   msgToReplace,
+                              in nsIMsgDBHdr                  msgToReplace,
                               in string               attachment1_type,
                               in string               attachment1_body,
                               in PRUint32                     attachment1_body_length,
@@ -178,19 +178,11 @@ interface nsIMsgSend : nsISupports
                          in PRBool               deleteSendFileOnCompletion,
                          in PRBool               digest_p,
                          in nsMsgDeliverMode     mode,
-                         in nsIMessage           msgToReplace,
+                         in nsIMsgDBHdr          msgToReplace,
                          [array, size_is(listeners)]
                          in nsIMsgSendListener   aListenerArray,
                          in unsigned long listeners); 
 
-    void SendWebPage(in nsIMsgIdentity         aUserIdentity,
-                     in nsIMsgCompFields       fields,
-                     in nsIURI                 url,
-                     in nsMsgDeliverMode       mode,
-                     [array, size_is(listeners)]
-                     in nsIMsgSendListener     aListenerArray,
-                     in unsigned long          listeners);
-    
     void AddListener(in nsIMsgSendListener aListener);
     void RemoveListener(in nsIMsgSendListener aListener);
     void SetGUINotificationState(in PRBool aEnableFlag);

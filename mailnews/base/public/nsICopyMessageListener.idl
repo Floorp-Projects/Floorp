@@ -23,7 +23,7 @@
 #include "nsISupports.idl"
 #include "MailNewsTypes2.idl"
 
-interface nsIMessage;
+interface nsIMsgDBHdr;
 interface nsIInputStream;
 
 %{C++
@@ -36,7 +36,7 @@ interface nsIInputStream;
 
 interface nsICopyMessageListener :  nsISupports
 {
-	void BeginCopy(in nsIMessage message);
+	void BeginCopy(in nsIMsgDBHdr message);
 	void StartMessage();
 	void CopyData(in nsIInputStream aIStream, in long aLength);
 	void EndMessage(in nsMsgKey key);

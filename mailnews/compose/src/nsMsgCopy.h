@@ -97,10 +97,10 @@ public:
                                            nsMsgDeliverMode     aMode,
                                            nsMsgComposeAndSend  *aMsgSendObj,
                                            const char           *aSavePref,
-                                           nsIMessage           *aMsgToReplace);
+                                           nsIMsgDBHdr          *aMsgToReplace);
 
   nsresult              DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
-                               nsIMessage *aMsgToReplace, PRBool aIsDraft,
+                               nsIMsgDBHdr *aMsgToReplace, PRBool aIsDraft,
                                nsIMsgWindow *msgWindow,
                                nsMsgComposeAndSend   *aMsgSendObj);
 
@@ -118,7 +118,7 @@ public:
   nsMsgDeliverMode                mMode;
   nsCOMPtr<CopyListener>          mCopyListener;
   nsCOMPtr<nsIMsgFolder>          mDstFolder;
-  nsCOMPtr<nsIMessage>            mMsgToReplace;
+  nsCOMPtr<nsIMsgDBHdr>           mMsgToReplace;
   PRBool                          mIsDraft;
   nsMsgComposeAndSend             *mMsgSendObj;
   char                            *mSavePref;

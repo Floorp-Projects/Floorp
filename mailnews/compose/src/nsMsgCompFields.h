@@ -24,252 +24,144 @@
 #define _MsgCompFields_H_
 
 #include "msgCore.h"
-#include "prprf.h" /* should be defined into msgCore.h? */
-#include "nsMsgHeaderMasks.h"
 #include "nsIMsgCompFields.h"
-#include "nsMsgZapIt.h"
-#include "xp_core.h"
-
-typedef uint32 MSG_HEADER_SET;
-typedef enum {
-        MSG_RETURN_RECEIPT_BOOL_HEADER_MASK = 0,
-        MSG_ENCRYPTED_BOOL_HEADER_MASK,
-        MSG_SIGNED_BOOL_HEADER_MASK,
-        MSG_UUENCODE_BINARY_BOOL_HEADER_MASK,
-        MSG_ATTACH_VCARD_BOOL_HEADER_MASK,
-        MSG_LAST_BOOL_HEADER_MASK            /* last boolean header mask; must be the last one
-                                              * DON'T remove.
-                                              */
-} MSG_BOOL_HEADER_SET;
 
 
 /* Note that all the "Get" methods never return NULL (except in case of serious
    error, like an illegal parameter); rather, they return "" if things were set
    to NULL.  This makes it real handy for the callers. */
 
-class nsMsgCompFields : public nsIMsgCompFields, public nsMsgZapIt {
+class nsMsgCompFields : public nsIMsgCompFields {
 public:
 	nsMsgCompFields();
 	virtual ~nsMsgCompFields();
 
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
+	NS_DECL_NSIMSGCOMPFIELDS
 
-	NS_IMETHOD Copy(nsIMsgCompFields* pMsgCompFields);
+  typedef enum MsgHeaderID
+  {
+    MSG_FROM_HEADER_ID        = 0,
+    MSG_REPLY_TO_HEADER_ID,
+    MSG_TO_HEADER_ID,
+    MSG_CC_HEADER_ID,
+    MSG_BCC_HEADER_ID,
+    MSG_FCC_HEADER_ID,
+    MSG_FCC2_HEADER_ID,
+    MSG_NEWSGROUPS_HEADER_ID,
+    MSG_FOLLOWUP_TO_HEADER_ID,
+    MSG_SUBJECT_HEADER_ID,
+    MSG_ATTACHMENTS_HEADER_ID,
+    MSG_ORGANIZATION_HEADER_ID,
+    MSG_REFERENCES_HEADER_ID,
+    MSG_OTHERRANDOMHEADERS_HEADER_ID,
+    MSG_NEWSPOSTURL_HEADER_ID,
+    MSG_PRIORITY_HEADER_ID,
+    MSG_CHARACTER_SET_HEADER_ID,
+    MSG_MESSAGE_ID_HEADER_ID,
+    MSG_X_TEMPLATE_HEADER_ID,
+    MSG_DRAFT_ID_HEADER_ID,
+    
+    MSG_MAX_HEADERS   //Must be the last one.
+  } MsgHeaderID;
 
-	NS_IMETHOD SetAsciiHeader(PRInt32 header, const char *value);
-	const char* GetHeader(PRInt32 header); //just return the address of the internal header variable, don't dispose it
+	nsresult Copy(nsIMsgCompFields* pMsgCompFields);
 
-	NS_IMETHOD SetHeader(PRInt32 header, const PRUnichar *value);
-	NS_IMETHOD GetHeader(PRInt32 header, PRUnichar **_retval); //Will return a copy of the header, must be free using PR_Free() 
+	nsresult SetAsciiHeader(MsgHeaderID header, const char *value);
+	const char* GetAsciiHeader(MsgHeaderID header); //just return the address of the internal header variable, don't dispose it
 
-	NS_IMETHOD SetBoolHeader(PRInt32 header, PRBool bValue);
-	NS_IMETHOD GetBoolHeader(PRInt32 header, PRBool *_retval);
-	PRBool GetBoolHeader(PRInt32 header);
+	nsresult SetUnicodeHeader(MsgHeaderID header, const PRUnichar *value);
+	nsresult GetUnicodeHeader(MsgHeaderID header, PRUnichar **_retval); //Will return a copy of the header, must be free using PR_Free() 
 
 	/* Convenience routines to get and set header's value...
 	
 		IMPORTANT:
-		all routines NS_IMETHOD GetXxx(char **_retval) will allocate a string that must be free later using free()
 		all routines const char* GetXxx(void) will return a pointer to the header, please don't free it.
-		
-		accessor and mutator that are scriptable use Unicode only.
 	*/
 
-	NS_IMETHOD SetFrom(const PRUnichar *value);
-	NS_IMETHOD GetFrom(PRUnichar **_retval);
-	NS_IMETHOD SetFrom(const char *value) {return SetAsciiHeader(MSG_FROM_HEADER_MASK, value);}
-	const char* GetFrom(void) {return GetHeader(MSG_FROM_HEADER_MASK);}
+	nsresult SetFrom(const char *value) {return SetAsciiHeader(MSG_FROM_HEADER_ID, value);}
+	const char* GetFrom(void) {return GetAsciiHeader(MSG_FROM_HEADER_ID);}
 
-	NS_IMETHOD SetReplyTo(const PRUnichar *value);
-	NS_IMETHOD GetReplyTo(PRUnichar **_retval);
-	NS_IMETHOD SetReplyTo(const char *value) {return SetAsciiHeader(MSG_REPLY_TO_HEADER_MASK, value);}
-	const char* GetReplyTo() {return GetHeader(MSG_REPLY_TO_HEADER_MASK);}
+	nsresult SetReplyTo(const char *value) {return SetAsciiHeader(MSG_REPLY_TO_HEADER_ID, value);}
+	const char* GetReplyTo() {return GetAsciiHeader(MSG_REPLY_TO_HEADER_ID);}
 
-	NS_IMETHOD SetTo(const PRUnichar *value);
-	NS_IMETHOD GetTo(PRUnichar **_retval);
-	NS_IMETHOD SetTo(const char *value) {return SetAsciiHeader(MSG_TO_HEADER_MASK, value);}
-	const char* GetTo() {return GetHeader(MSG_TO_HEADER_MASK);}
+	nsresult SetTo(const char *value) {return SetAsciiHeader(MSG_TO_HEADER_ID, value);}
+	const char* GetTo() {return GetAsciiHeader(MSG_TO_HEADER_ID);}
 
-	NS_IMETHOD SetCc(const PRUnichar *value);
-	NS_IMETHOD GetCc(PRUnichar **_retval);
-	NS_IMETHOD SetCc(const char *value) {return SetAsciiHeader(MSG_CC_HEADER_MASK, value);}
-	const char* GetCc() {return GetHeader(MSG_CC_HEADER_MASK);}
+	nsresult SetCc(const char *value) {return SetAsciiHeader(MSG_CC_HEADER_ID, value);}
+	const char* GetCc() {return GetAsciiHeader(MSG_CC_HEADER_ID);}
 
-	NS_IMETHOD SetBcc(const PRUnichar *value);
-	NS_IMETHOD GetBcc(PRUnichar **_retval);
-	NS_IMETHOD SetBcc(const char *value) {return SetAsciiHeader(MSG_BCC_HEADER_MASK, value);}
-	const char* GetBcc() {return GetHeader(MSG_BCC_HEADER_MASK);}
+	nsresult SetBcc(const char *value) {return SetAsciiHeader(MSG_BCC_HEADER_ID, value);}
+	const char* GetBcc() {return GetAsciiHeader(MSG_BCC_HEADER_ID);}
 
-	NS_IMETHOD SetFcc(const PRUnichar *value);
-	NS_IMETHOD GetFcc(PRUnichar **_retval);
-	NS_IMETHOD SetFcc(const char *value) {return SetAsciiHeader(MSG_FCC_HEADER_MASK, value);}
-	const char* GetFcc() {return GetHeader(MSG_FCC_HEADER_MASK);}
+	nsresult SetFcc(const char *value) {return SetAsciiHeader(MSG_FCC_HEADER_ID, value);}
+	const char* GetFcc() {return GetAsciiHeader(MSG_FCC_HEADER_ID);}
 
-  NS_IMETHOD SetFcc2(const PRUnichar *value);
-	NS_IMETHOD GetFcc2(PRUnichar **_retval);
-	NS_IMETHOD SetFcc2(const char *value) {return SetAsciiHeader(MSG_FCC2_HEADER_MASK, value);}
-	const char* GetFcc2() {return GetHeader(MSG_FCC2_HEADER_MASK);}
+	nsresult SetFcc2(const char *value) {return SetAsciiHeader(MSG_FCC2_HEADER_ID, value);}
+	const char* GetFcc2() {return GetAsciiHeader(MSG_FCC2_HEADER_ID);}
 
-	NS_IMETHOD SetNewsFcc(const PRUnichar *value);
-	NS_IMETHOD GetNewsFcc(PRUnichar **_retval);
-	NS_IMETHOD SetNewsFcc(const char *value) {return SetAsciiHeader(MSG_NEWS_FCC_HEADER_MASK, value);}
-	const char* GetNewsFcc() {return GetHeader(MSG_NEWS_FCC_HEADER_MASK);}
+	const char* GetNewsgroups() {return GetAsciiHeader(MSG_NEWSGROUPS_HEADER_ID);}
 
-	NS_IMETHOD SetNewsBcc(const PRUnichar *value);
-	NS_IMETHOD GetNewsBcc(PRUnichar **_retval);
-	NS_IMETHOD SetNewsBcc(const char *value) {return SetAsciiHeader(MSG_NEWS_BCC_HEADER_MASK, value);}
-	const char* GetNewsBcc() {return GetHeader(MSG_NEWS_BCC_HEADER_MASK);}
+	const char* GetNewshost() {return GetAsciiHeader(MSG_NEWSPOSTURL_HEADER_ID);}
 
-	NS_IMETHOD SetNewsgroups(const PRUnichar *value);
-	NS_IMETHOD GetNewsgroups(PRUnichar **_retval);
-	NS_IMETHOD SetNewsgroups(const char *value) {return SetAsciiHeader(MSG_NEWSGROUPS_HEADER_MASK, value);}
-	const char* GetNewsgroups() {return GetHeader(MSG_NEWSGROUPS_HEADER_MASK);}
+	const char* GetFollowupTo() {return GetAsciiHeader(MSG_FOLLOWUP_TO_HEADER_ID);}
 
-  NS_IMETHOD SetNewshost(const PRUnichar *value);
-  NS_IMETHOD GetNewshost(PRUnichar **_retval);
-	const char* GetNewshost() {return GetHeader(MSG_NEWSPOSTURL_HEADER_MASK);}
+	nsresult SetSubject(const char *value) {return SetAsciiHeader(MSG_SUBJECT_HEADER_ID, value);}
+	const char* GetSubject() {return GetAsciiHeader(MSG_SUBJECT_HEADER_ID);}
 
-	NS_IMETHOD SetFollowupTo(const PRUnichar *value);
-	NS_IMETHOD GetFollowupTo(PRUnichar **_retval);
-	NS_IMETHOD SetFollowupTo(const char *value) {return SetAsciiHeader(MSG_FOLLOWUP_TO_HEADER_MASK, value);}
-	const char* GetFollowupTo() {return GetHeader(MSG_FOLLOWUP_TO_HEADER_MASK);}
+	const char* GetAttachments() {return GetAsciiHeader(MSG_ATTACHMENTS_HEADER_ID);}
 
-	NS_IMETHOD SetSubject(const PRUnichar *value);
-	NS_IMETHOD GetSubject(PRUnichar **_retval);
-	NS_IMETHOD SetSubject(const char *value) {return SetAsciiHeader(MSG_SUBJECT_HEADER_MASK, value);}
-	const char* GetSubject() {return GetHeader(MSG_SUBJECT_HEADER_MASK);}
+	nsresult SetOrganization(const char *value) {return SetAsciiHeader(MSG_ORGANIZATION_HEADER_ID, value);}
+	const char* GetOrganization() {return GetAsciiHeader(MSG_ORGANIZATION_HEADER_ID);}
 
-	NS_IMETHOD SetAttachments(const PRUnichar *value);
-	NS_IMETHOD GetAttachments(PRUnichar **_retval);
-	NS_IMETHOD SetAttachments(const char *value) {return SetAsciiHeader(MSG_ATTACHMENTS_HEADER_MASK, value);}
-	const char* GetAttachments() {return GetHeader(MSG_ATTACHMENTS_HEADER_MASK);}
+	const char* GetReferences() {return GetAsciiHeader(MSG_REFERENCES_HEADER_ID);}
 
-	NS_IMETHOD SetOrganization(const PRUnichar *value);
-	NS_IMETHOD GetOrganization(PRUnichar **_retval);
-	NS_IMETHOD SetOrganization(const char *value) {return SetAsciiHeader(MSG_ORGANIZATION_HEADER_MASK, value);}
-	const char* GetOrganization() {return GetHeader(MSG_ORGANIZATION_HEADER_MASK);}
+	nsresult SetOtherRandomHeaders(const char *value) {return SetAsciiHeader(MSG_OTHERRANDOMHEADERS_HEADER_ID, value);}
+	const char* GetOtherRandomHeaders() {return GetAsciiHeader(MSG_OTHERRANDOMHEADERS_HEADER_ID);}
 
-	NS_IMETHOD SetReferences(const PRUnichar *value);
-	NS_IMETHOD GetReferences(PRUnichar **_retval);
-	NS_IMETHOD SetReferences(const char *value) {return SetAsciiHeader(MSG_REFERENCES_HEADER_MASK, value);}
-	const char* GetReferences() {return GetHeader(MSG_REFERENCES_HEADER_MASK);}
+	const char* GetNewspostUrl() {return GetAsciiHeader(MSG_NEWSPOSTURL_HEADER_ID);}
 
-	NS_IMETHOD SetOtherRandomHeaders(const PRUnichar *value);
-	NS_IMETHOD GetOtherRandomHeaders(PRUnichar **_retval);
-	NS_IMETHOD SetOtherRandomHeaders(const char *value) {return SetAsciiHeader(MSG_OTHERRANDOMHEADERS_HEADER_MASK, value);}
-	const char* GetOtherRandomHeaders() {return GetHeader(MSG_OTHERRANDOMHEADERS_HEADER_MASK);}
+	const char* GetPriority() {return GetAsciiHeader(MSG_PRIORITY_HEADER_ID);}
 
-	NS_IMETHOD SetNewspostUrl(const PRUnichar *value);
-	NS_IMETHOD GetNewspostUrl(PRUnichar **_retval);
-	NS_IMETHOD SetNewspostUrl(const char *value) {return SetAsciiHeader(MSG_NEWSPOSTURL_HEADER_MASK, value);}
-	const char* GetNewspostUrl() {return GetHeader(MSG_NEWSPOSTURL_HEADER_MASK);}
+	const char* GetCharacterSet() {return GetAsciiHeader(MSG_CHARACTER_SET_HEADER_ID);}
 
-	NS_IMETHOD SetDefaultBody(const PRUnichar *value);
-	NS_IMETHOD GetDefaultBody(PRUnichar **_retval);
-	NS_IMETHOD SetDefaultBody(const char *value) {return SetAsciiHeader(MSG_DEFAULTBODY_HEADER_MASK, value);}
-	const char* GetDefaultBody() {return GetHeader(MSG_DEFAULTBODY_HEADER_MASK);}
+	const char* GetMessageId() {return GetAsciiHeader(MSG_MESSAGE_ID_HEADER_ID);}
 
-	NS_IMETHOD SetPriority(const PRUnichar *value);
-	NS_IMETHOD GetPriority(PRUnichar **_retval);
-	NS_IMETHOD SetPriority(const char *value) {return SetAsciiHeader(MSG_PRIORITY_HEADER_MASK, value);}
-	const char* GetPriority() {return GetHeader(MSG_PRIORITY_HEADER_MASK);}
+	nsresult SetTemplateName(const char *value) {return SetAsciiHeader(MSG_X_TEMPLATE_HEADER_ID, value);}
+	const char* GetTemplateName() {return GetAsciiHeader(MSG_X_TEMPLATE_HEADER_ID);}
 
-	NS_IMETHOD SetMessageEncoding(const PRUnichar *value);
-	NS_IMETHOD GetMessageEncoding(PRUnichar **_retval);
-	NS_IMETHOD SetMessageEncoding(const char *value) {return SetAsciiHeader(MSG_MESSAGE_ENCODING_HEADER_MASK, (const char *)value);}
-	const char* GetMessageEncoding() {return GetHeader(MSG_MESSAGE_ENCODING_HEADER_MASK);}
+	const char* GetDraftId() {return GetAsciiHeader(MSG_DRAFT_ID_HEADER_ID);}
 
-	NS_IMETHOD SetCharacterSet(const PRUnichar *value);
-	NS_IMETHOD GetCharacterSet(PRUnichar **_retval);
-	NS_IMETHOD SetCharacterSet(const char *value) {return SetAsciiHeader(MSG_CHARACTER_SET_HEADER_MASK, (const char *)value);}
-	const char* GetCharacterSet() {return GetHeader(MSG_CHARACTER_SET_HEADER_MASK);}
+	PRBool GetReturnReceipt() {return m_returnReceipt;}
+	PRBool GetAttachVCard() {return m_attachVCard;}
+	PRBool GetForcePlainText() {return m_forcePlainText;}
+	PRBool GetUseMultipartAlternative() {return m_useMultipartAlternative;}
+	PRBool GetUuEncodeAttachments() {return m_uuEncodeAttachments;}
 
-	NS_IMETHOD SetMessageId(const PRUnichar *value);
-	NS_IMETHOD GetMessageId(PRUnichar **_retval);
-	NS_IMETHOD SetMessageId(const char *value) {return SetAsciiHeader(MSG_MESSAGE_ID_HEADER_MASK, value);}
-	const char* GetMessageId() {return GetHeader(MSG_MESSAGE_ID_HEADER_MASK);}
-
-	NS_IMETHOD SetHTMLPart(const PRUnichar *value);
-	NS_IMETHOD GetHTMLPart(PRUnichar **_retval);
-	NS_IMETHOD SetHTMLPart(const char *value) {return SetAsciiHeader(MSG_HTML_PART_HEADER_MASK, value);}
-	const char* GetHTMLPart() {return GetHeader(MSG_HTML_PART_HEADER_MASK);}
-
-	NS_IMETHOD SetTemplateName(const PRUnichar *value);
-	NS_IMETHOD GetTemplateName(PRUnichar **_retval);
-	NS_IMETHOD SetTemplateName(const char *value) {return SetAsciiHeader(MSG_X_TEMPLATE_HEADER_MASK, value);}
-	const char* GetTemplateName() {return GetHeader(MSG_X_TEMPLATE_HEADER_MASK);}
-
-	NS_IMETHOD SetDraftId(const PRUnichar *value);
-	NS_IMETHOD GetDraftId(PRUnichar **_retval);
-
-	NS_IMETHOD SetReturnReceipt(PRBool value);
-	NS_IMETHOD GetReturnReceipt(PRBool *_retval);
-	PRBool GetReturnReceipt() {return GetBoolHeader(MSG_RETURN_RECEIPT_BOOL_HEADER_MASK);}
-
-	NS_IMETHOD SetAttachVCard(PRBool value);
-	NS_IMETHOD GetAttachVCard(PRBool *_retval);
-	PRBool GetAttachVCard() {return GetBoolHeader(MSG_RETURN_RECEIPT_BOOL_HEADER_MASK);}
-
-	NS_IMETHOD SetUUEncodeAttachments(PRBool value);
-	NS_IMETHOD GetUUEncodeAttachments(PRBool *_retval);
-	PRBool GetUUEncodeAttachments() {return GetBoolHeader(MSG_UUENCODE_BINARY_BOOL_HEADER_MASK);}
-
-
-	NS_IMETHOD SetBody(const PRUnichar *value);
-	NS_IMETHOD GetBody(PRUnichar **_retval);
-	NS_IMETHOD SetBody(const char *value);
+	nsresult SetBody(const char *value);
 	const char* GetBody();
 
-	nsresult AppendBody(char*);
-	
-	NS_IMETHOD SplitRecipients(const PRUnichar *recipients, PRBool emailAddressOnly, nsIMsgRecipientArray **_retval); 
-	NS_IMETHOD SplitRecipientsEx(const PRUnichar *recipients, nsIMsgRecipientArray ** fullAddrsArray, nsIMsgRecipientArray ** emailsArray); 
-	NS_IMETHOD ConvertBodyToPlainText(void); 
-
-
-	// When forwarding a bunch of messages, we can have a bunch of
-	// "forward url's" instead of an attachment.
-
-	nsresult AddForwardURL(const char*);
-
-	PRInt32 GetNumForwardURL();
-	const char* GetForwardURL(PRInt32 which);
+	nsresult SplitRecipientsEx(const PRUnichar *recipients, nsIMsgRecipientArray ** fullAddrsArray, nsIMsgRecipientArray ** emailsArray); 
 
 	PRInt32 GetReturnReceiptType() { return m_receiptType; };
 	void SetReturnReceiptType(PRInt32 type) {m_receiptType = type;};
 
-	NS_IMETHOD  SetTheForcePlainText(PRBool value);
-	NS_IMETHOD  GetTheForcePlainText(PRBool *_retval);
-	void        SetForcePlainText(PRBool value) {m_force_plain_text = value;}
-	PRBool      GetForcePlainText() {return m_force_plain_text;}
-
-	NS_IMETHOD  SetUseMultipartAlternativeFlag(PRBool value);
-	NS_IMETHOD  GetUseMultipartAlternativeFlag(PRBool *_retval);
-
-	void SetUseMultipartAlternative(PRBool value) {m_multipart_alt = value;}
-	PRBool GetUseMultipartAlternative() {return m_multipart_alt;}
-
 protected:
-	nsresult DecodeHeader(MSG_HEADER_SET header);
-
-	#define MAX_HEADERS		32
-	char*		m_headers[MAX_HEADERS];
-	char*		m_body;
-	char**		m_forwardurl;
-	PRInt32		m_numforward;
-	PRInt32		m_maxforward;
-	PRBool		m_boolHeaders[MSG_LAST_BOOL_HEADER_MASK];
-	PRBool		m_force_plain_text;
-	PRBool		m_multipart_alt;
-	PRInt32		m_receiptType; /* 0:None 1:DSN 2:MDN 3:BOTH */
-	nsString	m_internalCharSet;
-    nsString    m_draftID;
+	char*       m_headers[MSG_MAX_HEADERS];
+	char*       m_body;
+  PRBool      m_attachVCard;
+  PRBool      m_forcePlainText;
+  PRBool      m_useMultipartAlternative;
+  PRBool      m_uuEncodeAttachments;
+  PRBool      m_returnReceipt;
+	PRInt32     m_receiptType;        /* 0:None 1:DSN 2:MDN 3:BOTH */
+	nsString    m_internalCharSet;
     
-    /* WARNING:
-        If you add any new member variable, you must update the function
-        nsMsgCompFields::Copy as well else they will not be copied automatically!
-    */
+  /* WARNING:
+      If you add any new member variable, you must update the function
+      nsMsgCompFields::Copy as well else they will not be copied automatically!
+  */
 };
 
 

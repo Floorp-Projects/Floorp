@@ -96,7 +96,7 @@ interface nsIMsgCompose : nsISupports {
 	void Initialize(in nsIDOMWindowInternal aWindow, in nsIMsgComposeParams params); 
 
 	/* ... */
-	void SetDocumentCharset(in wstring charset);
+	void SetDocumentCharset(in string charset);
 	
 	/* ... */
 	void RegisterStateListener(in nsIMsgComposeStateListener stateListener);
@@ -105,8 +105,7 @@ interface nsIMsgCompose : nsISupports {
 	void UnregisterStateListener(in nsIMsgComposeStateListener stateListener);
 
 	/* ... */
-	void SendMsg(in MSG_DeliverMode deliverMode,
-                 in nsIMsgIdentity identity);
+	void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity);
 
 	/* ... */
   void CloseWindow();
@@ -116,7 +115,7 @@ interface nsIMsgCompose : nsISupports {
     It will also convert the filename to the right character set.
     This UI utility function should probably go into it's own class
   */
-  wstring AttachmentPrettyName(in wstring url);
+  wstring AttachmentPrettyName(in string url);
     
 	/*
 		CheckAndPopulateRecipients will perform several task:
@@ -129,7 +128,7 @@ interface nsIMsgCompose : nsISupports {
   /* GetNoHtmlNewsgroups: if null is passed as recipient, the function will automatically
       looks for newsgroups stored in compose fields 
   */
-  wstring GetNoHtmlNewsgroups(in wstring newsgroups);
+  string GetNoHtmlNewsgroups(in string newsgroups);
   
   /* bodyConvertible: The level of "convertibility" to plaintext
    * @return a value from nsIMsgCompConvertible.
@@ -145,7 +144,7 @@ interface nsIMsgCompose : nsISupports {
   void ResetNodeEventHandlers(in nsIDOMNode node);
 
 	/* ... */
-	attribute nsIEditorShell editor;
+	  attribute nsIEditorShell editor;
 
 	/* ... */
     readonly attribute nsIDOMWindowInternal domWindow;
@@ -155,6 +154,9 @@ interface nsIMsgCompose : nsISupports {
     
 	/* ... */
     readonly attribute boolean composeHTML;
+
+	/* ... */
+    readonly attribute MSG_ComposeType type;
 
 	/* ... */
     readonly attribute long wrapLength;

@@ -112,7 +112,7 @@ PRBool      nsMsgMIMEGetConformToStandard (void);
 //
 nsresult    nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec);
 PRBool      nsMsgIsLocalFile(const char *url);
-char        *nsMsgGetLocalFileFromURL(char *url);
+char        *nsMsgGetLocalFileFromURL(const char *url);
 char        *nsMsgPlatformFileToURL (nsFileSpec aFileSpec);
 
 char        *nsMsgParseURLHost(const char *url);

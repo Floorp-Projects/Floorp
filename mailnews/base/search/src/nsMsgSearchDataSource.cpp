@@ -25,7 +25,6 @@
 #include "nsIRDFService.h"
 #include "nsMsgRDFUtils.h"
 
-#include "nsIMessage.h"
 #include "nsIMsgHdr.h"
 #include "nsIMsgSearchSession.h"
 #include "nsEnumeratorUtils.h"
@@ -87,7 +86,7 @@ nsMsgSearchDataSource::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
 #ifdef DEBUG
     printf("nsMsgSearchDataSource::OnSearchHit!!\n");
 #endif
-    
+#if 0    
     nsCOMPtr<nsIMessage> message;
     folder->CreateMessageFromMsgDBHdr(aMsgHdr, getter_AddRefs(message));
     
@@ -102,6 +101,7 @@ nsMsgSearchDataSource::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
     // should probably try to cache this with an in-memory datasource
     // or something
     NotifyObservers(mSearchRoot, kNC_MessageChild, messageResource, PR_TRUE, PR_FALSE);
+#endif
     return NS_OK;
 }
 

@@ -65,26 +65,26 @@ public:
 
 protected:
   PRBool WeAreOffline();
-  nsresult ConvertNewsMessageURI2NewsURI(const char *messageURI,
-                                         nsCString &newsURI,
-                                         nsCString &newsgroupName,
-                                         nsMsgKey *aKey);
-  
+
   nsresult SetUpNntpUrlForPosting(nsINntpUrl * nntpUrl, const char *newsgroupNames, const char *newshost, char **newsUrlSpec);
   nsresult FindHostFromGroup(nsCString &host, nsCString &groupName);
-  void FindServerWithNewsgroup(nsCString &host, nsCString &groupName);
+  nsresult FindServerWithNewsgroup(nsCString &host, nsCString &groupName);
   
-  // a convience routine used to put together news urls.
-  nsresult ConstructNntpUrl(const char * urlString, const char * newsgroupName, nsMsgKey key, nsIUrlListener *aUrlListener,  nsIMsgWindow * aMsgWindow, nsIURI ** aUrl);
+  nsresult CreateMessageIDURL(nsIMsgFolder *folder, nsMsgKey key, char **url);
+  // a convience routine used to put together news urls
+  nsresult ConstructNntpUrl(const char * urlString, nsIUrlListener *aUrlListener,  nsIMsgWindow * aMsgWindow, const char *originalMessageUri, PRInt32 action, nsIURI ** aUrl);
   nsresult CreateNewsAccount(const char *username, const char *hostname, PRBool isSecure, PRInt32 port, nsIMsgIncomingServer **server);
   nsresult GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTPProtocol **aProtocol);
   // a convience routine to run news urls
   nsresult RunNewsUrl (nsIURI * aUrl, nsIMsgWindow *aMsgWindow, nsISupports * aConsumer);
+  // a convience routine to go from folder uri to msg folder
+  nsresult GetFolderFromUri(const char *uri, nsIMsgFolder **folder);
   static PRBool findNewsServerWithGroup(nsISupports *aElement, void *data);
- 
+  nsresult DecomposeNewsMessageURI(const char * aMessageURI, nsIMsgFolder ** aFolder, nsMsgKey *aMsgKey);
 
   PRBool            mPrintingOperation; // Flag for printing operations
   PRBool			mOpenAttachmentOperation; // Flag for opening attachments
+  PRBool            mCopyingOperation;
 };
 
 #endif /* nsNntpService_h___ */

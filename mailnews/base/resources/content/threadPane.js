@@ -19,59 +19,100 @@
  */
 
 var gLastMessageUriToLoad = null;
+var gThreadPaneCommandUpdater = null;
 
 function ThreadPaneOnClick(event)
 {
+    // we are already handling marking as read and flagging
+    // in nsMsgDBView.cpp
+    // so all we need to worry about here is double clicks
+    // and column header.
+    //
+    // we get in here for clicks on the "outlinercol" (headers)
+    // and the "scrollbarbutton" (scrollbar buttons)
+    // we don't want those events to cause a "double click"
+
     var t = event.originalTarget;
 
-    if (t.localName != "treecell" &&
-        t.localName != "treeitem" &&
-        t.localName != "image")
-        return;
-
-    // fix for #48424.  bail out of here when the user is 
-    // clicking on the column headers
-    if (t.localName == "treecell") {
-        if (t.parentNode && (t.parentNode.getAttribute("id") == "headRow")) {
-            return;
-        }
+    if (t.localName == "outlinercol") {
+       HandleColumnClick(t.id);
     }
-   
-    var targetclass = "";
-
-    if (t.localName == "image" && (t.getAttribute('twisty') != 'true'))
-      targetclass = t.parentNode.getAttribute('class');
-
-    //dump('targetclass = ' + targetclass + '\n');
-
-	if(targetclass.indexOf('unreadcol') != -1)
-	{
-		ToggleMessageRead(t.parentNode.parentNode.parentNode);
-	}
-	if(targetclass.indexOf('flagcol') != -1)
-	{
-		ToggleMessageFlagged(t.parentNode.parentNode.parentNode);
-	}
-    else if (t.getAttribute('twisty') == 'true') {
-        // The twisty is nested three below the treeitem:
-        // <treeitem>
-        //   <treerow>
-        //     <treecell>
-        //         <button class="tree-cell-twisty"> <!-- anonymous -->
-        var treeitem = t.parentNode.parentNode.parentNode;
-		var open = treeitem.getAttribute('open');
-		if(open == "true")
-		{
-			//open all of the children of the treeitem
-			msgNavigationService.OpenTreeitemAndDescendants(treeitem);
-		}
+    else if (event.detail == 2 && t.localName == "outlinerbody") {
+       ThreadPaneDoubleClick();
     }
-	else if(event.detail == 2)
-	{
-		ThreadPaneDoubleClick();
-	}
 }
 
+function SetHiddenAttributeOnThreadOnlyColumns(value)
+{
+  // todo, cache these?
+
+  var totalCol = document.getElementById("totalCol");
+  var unreadCol = document.getElementById("unreadCol");
+
+  totalCol.setAttribute("hidden",value);
+  unreadCol.setAttribute("hidden",value);
+}
+
+
+function nsMsgDBViewCommandUpdater()
+{}
+
+nsMsgDBViewCommandUpdater.prototype = 
+{
+  updateCommandStatus : function()
+    {
+      // the back end is smart and is only telling us to update command status
+      // when the # of items in the selection has actually changed.
+		  document.commandDispatcher.updateCommands('mail-toolbar');
+    },
+
+  displayMessageChanged : function(aFolder, aSubject)
+  {
+    setTitleFromFolder(aFolder, aSubject);
+    gHaveLoadedMessage = true;
+  },
+
+  QueryInterface : function(iid)
+   {
+     if(iid.equals(Components.interfaces.nsIMsgDBViewCommandUpdater))
+	    return this;
+	  
+     throw Components.results.NS_NOINTERFACE;
+     return null;
+    }
+}
+
+function HandleColumnClick(columnID)
+{
+  dump("XXX HandleColumnClick()\n");
+
+  // if they click on the "threadCol", we need to show the threaded-only columns
+  if ((columnID[0] == 't') && (columnID[1] == 'h')) {  
+    SetHiddenAttributeOnThreadOnlyColumns(""); // this will show them
+  }
+  else {
+    SetHiddenAttributeOnThreadOnlyColumns("true");  // this will hide them
+  }
+  
+  dump("fix UpdateSortMenu()\n");
+  //UpdateSortMenu(columnID);
+
+  ShowAppropriateColumns();
+  PersistViewAttributesOnFolder();
+}
+
+function PersistViewAttributesOnFolder()
+{
+  var folder = GetSelectedFolder();
+
+  if (folder) {
+    dump("XXX persist: " + gDBView.viewType + "," + gDBView.viewFlags  + "," + gDBView.sortType + "," + gDBView.sortOrder + "\n");
+    folder.setAttribute("viewType", gDBView.viewType);
+    folder.setAttribute("viewFlags", gDBView.viewFlags);
+    folder.setAttribute("sortType", gDBView.sortType);
+    folder.setAttribute("sortOrder", gDBView.sortOrder);
+  }
+}
 
 function MsgComposeDraftMessage()
 {
@@ -81,213 +122,153 @@ function MsgComposeDraftMessage()
     ComposeMessage(msgComposeType.Draft, msgComposeFormat.Default, loadedFolder, messageArray);
 }
 
+/* keep in sync with nsMsgFolderFlags.h */
+var MSG_FOLDER_FLAG_TRASH = 0x0100;
+var MSG_FOLDER_FLAG_DRAFTS = 0x0400;
+var MSG_FOLDER_FLAG_TEMPLATES = 0x400000;
+
 function ThreadPaneDoubleClick()
 {
 	var loadedFolder;
 	var messageArray;
 	var messageUri;
 
-	if(IsSpecialFolderSelected("Drafts"))
-	{
+	if (IsSpecialFolderSelected(MSG_FOLDER_FLAG_DRAFTS)) {
 		MsgComposeDraftMessage();
 	}
-	else if(IsSpecialFolderSelected("Templates"))
-	{
+	else if(IsSpecialFolderSelected(MSG_FOLDER_FLAG_TEMPLATES)) {
 		loadedFolder = GetLoadedMsgFolder();
 		messageArray = GetSelectedMessages();
 		ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
 	}
-	else
-	{
+	else {
         MsgOpenSelectedMessages();
 	}
 }
 
 function ThreadPaneKeyPress(event)
 {
-  if (event.keyCode == 13)
-	ThreadPaneDoubleClick();
   return;
 }
 
 function MsgSortByDate()
 {
-	SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date', null, true, null, true);
+    MsgSortThreadPane(nsMsgViewSortType.byDate);
 }
 
 function MsgSortBySender()
 {
-	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
+    MsgSortThreadPane(nsMsgViewSortType.byAuthor);
 }
 
 function MsgSortByRecipient()
 {
-	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Recipient', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
+    MsgSortThreadPane(nsMsgViewSortType.byRecipient);
 }
 
 function MsgSortByStatus()
 {
-	SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
+    MsgSortThreadPane(nsMsgViewSortType.byStatus);
 }
 
 function MsgSortBySubject()
 {
-	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
+    MsgSortThreadPane(nsMsgViewSortType.bySubject);
 }
 
 function MsgSortByFlagged() 
 {
-	SortThreadPane('FlaggedButtonColumn', 'http://home.netscape.com/NC-rdf#Flagged', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
+    MsgSortThreadPane(nsMsgViewSortType.byFlagged);
 }
 
 function MsgSortByPriority()
 {
-	SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority', 'http://home.netscape.com/NC-rdf#Date',true, null, true);
+    MsgSortThreadPane(nsMsgViewSortType.byPriority);
 }
 
 function MsgSortBySize() 
 {
-	SortThreadPane('MemoryColumn', 'http://home.netscape.com/NC-rdf#Size', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
+    MsgSortThreadPane(nsMsgViewSortType.bySize);
 }
 
 function MsgSortByLines() 
 {
-	SortThreadPane('MemoryColumn', 'http://home.netscape.com/NC-rdf#Lines', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
+    dump("XXX fix this\n");
+    //MsgSortThreadPane(nsMsgViewSortType.byLines);
 }
-
 
 function MsgSortByUnread()
 {
-	SortThreadPane('UnreadColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages','http://home.netscape.com/NC-rdf#Date', true, null, true);
+    MsgSortThreadPane(nsMsgViewSortType.byUnread);
 }
 
 function MsgSortByOrderReceived()
 {
-	SortThreadPane('OrderReceivedColumn', 'http://home.netscape.com/NC-rdf#OrderReceived','http://home.netscape.com/NC-rdf#Date', true, null, true);
-}
-
-function MsgSortByRead()
-{
-	SortThreadPane('UnreadButtonColumn', 'http://home.netscape.com/NC-rdf#IsUnread','http://home.netscape.com/NC-rdf#Date', true, null,true);
+    MsgSortThreadPane(nsMsgViewSortType.byId);
 }
 
 function MsgSortByTotal()
 {
-	SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
+    dump("XXX fix this\n");
+    //MsgSortThreadPane(nsMsgViewSortType.byTotal);
 }
 
 function MsgSortByThread()
 {
-	ChangeThreadView()
+    MsgSortThreadPane(nsMsgViewSortType.byThread);
 }
 
-function ChangeThreadView()
+function MsgSortThreadPane(sortType)
 {
-   var folder = GetSelectedFolder();
+    gDBView.sort(sortType, nsMsgViewSortOrder.ascending);
 
-	var threadColumn = document.getElementById('ThreadColumnHeader');
-	if(threadColumn)
-	{
-		var currentView = threadColumn.getAttribute('currentView');
-		if(currentView== 'threaded')
-		{
-			ShowThreads(false);
-			if(folder)
-				folder.setAttribute('threaded', "false");
-			SetTemplateTreeItemOpen(false);
-		}
-		else if(currentView == 'unthreaded')
-		{
-			ShowThreads(true);
-			if(folder)
-				folder.setAttribute('threaded', "true");
-		}
-		RefreshThreadTreeView();
-	}
+    ShowAppropriateColumns();
+    PersistViewAttributesOnFolder();
 }
 
-function IsSpecialFolderSelected(folderName)
+function IsSpecialFolderSelected(flags)
 {
-	var selectedFolder = GetThreadTreeFolder();
-	var id = selectedFolder.getAttribute('ref');
-	var folderResource = RDF.GetResource(id);
-	if(!folderResource)
-		return false;
+	var selectedFolder = GetThreadPaneFolder();
+    if (!selectedFolder) return false;
 
-    var db = GetFolderDatasource();
-
-	var property =
-        RDF.GetResource('http://home.netscape.com/NC-rdf#SpecialFolder');
-    if (!property) return false;
-	var result = db.GetTarget(folderResource, property , true);
-    if (!result) return false;
-	result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    if (!result) return false;
-	if(result.Value == folderName)
-		return true;
-
-	return false;
-}
-
-//Called when selection changes in the thread pane.
-function ThreadPaneSelectionChange(fromDeleteOrMoveHandler)
-{
-    // we are batching.  bail out, we'll be back when the batch is over
-    if (gBatching) return;
-
-	var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
-
-    var tree = GetThreadTree();
-	var selectedMessages = tree.selectedItems;
-	var numSelected = selectedMessages.length;
-    var messageUriToLoad = null;
-
-    if (!gNextMessageAfterDelete && selectedMessages && (numSelected == 1) ) {
-        messageUriToLoad = selectedMessages[0].getAttribute('id');
+    if ((selectedFolder.flags & flags) == 0) {
+        return false;
     }
+    else {
+        return true;
+    }
+}
 
-    // if the message pane isn't collapsed, and we have a message to load
-    // go ahead and load the message
-	if (!collapsed && messageUriToLoad) {
-        LoadMessageByUri(messageUriToLoad);
-	}
+function GetThreadOutliner()
+{
+  if (gThreadOutliner) return gThreadOutliner;
+	gThreadOutliner = document.getElementById('threadOutliner');
+	return gThreadOutliner;
+}
 
-    // if gNextMessageAfterDelete is true, we can skip updating the commands because
-    // we'll be coming back to load that message, and we'll update the commands then
-    //
-    // if fromDeleteOrMoveHandler is true, we are calling ThreadPaneSelectionChange after handling
-    // a message delete or message move, so we might need to update the commands.  (see below)
-    //
-    // if gCurrentLoadingFolderURI is non null, we are loading a folder, so we need to update the commands
-    //
-    // if messageUriToLoad is non null, we are loading a message, so we might need to update commmands.  (see below)
-	if (!gNextMessageAfterDelete && (gCurrentLoadingFolderURI || fromDeleteOrMoveHandler || messageUriToLoad)) {
-        // if we are moving or deleting, we'll come in here twice.  once to load the message and once when
-        // we are done moving or deleting.  when we loaded the message the first time, we called updateCommands().
-        // there is no need to do it again.
-        if (fromDeleteOrMoveHandler && messageUriToLoad && (messageUriToLoad == gLastMessageUriToLoad)) {
-            // skip the call to updateCommands()
-        }
-        else {
-		    document.commandDispatcher.updateCommands('threadTree-select');
-        }
-	}
+function GetThreadPaneFolder()
+{
+  try {
+    return gDBView.msgFolder;
+  }
+  catch (ex) {
+    return null;
+  }
+}
 
-	//remember the last message we loaded
-    gLastMessageUriToLoad = messageUriToLoad;
+function EnsureRowInThreadOutlinerIsVisible(index)
+{
+  var outliner = GetThreadOutliner();
+  outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).ensureRowIsVisible(index); 
 }
 
 function GetThreadTree()
 {
-    if (gThreadTree) return gThreadTree;
-	var threadTree = document.getElementById('threadTree');
-    gThreadTree = threadTree;
-	return threadTree;
+    dump("GetThreadTree, fix (or remove?) this\n");
 }
 
-function GetThreadTreeFolder()
+function GetThreadTreeFolder() 
 {
-  var tree = GetThreadTree();
-  return tree;
+    dump("GetThreadTreeFolder, fix (or remove?) this\n");
 }
 

@@ -35,6 +35,7 @@
 #include "nsFileSpec.h"
 #include "nsIFileSpec.h"
 #include "nsIProtocolHandler.h"
+#include "nsIRDFService.h"
 
 class nsMailboxService : public nsIMailboxService, public nsIMsgMessageService, public nsIProtocolHandler
 {
@@ -66,6 +67,8 @@ protected:
                         nsMailboxAction mailboxAction,
                         const PRUnichar * aCharsetOverride,
                         nsIURI ** aURL);
+
+  nsresult DecomposeMailboxURI(const char * aMessageURI, nsIMsgFolder ** aFolder, nsMsgKey *aMsgKey);
 };
 
 #endif /* nsMailboxService_h___ */

@@ -27,113 +27,43 @@
 [scriptable, uuid(3E89CAE3-BD2D-11d2-8293-000000000000)]
 interface nsIMsgCompFields : nsISupports {
 
-	void Copy(in nsIMsgCompFields pMsgCompFields);
+	attribute wstring from;
+	attribute wstring replyTo;
+	attribute wstring to;
+	attribute wstring cc;
+	attribute wstring bcc;
+	
+	attribute wstring fcc;
+	attribute wstring fcc2;
+	
+	attribute string  newsgroups;
+	attribute string  newshost;
+	attribute string  newspostUrl;
+	attribute string  followupTo;
 
-	void SetHeader(in long header, in wstring value);
-	wstring GetHeader(in long header);
+	attribute wstring subject;
+	attribute string  attachments;
+	attribute wstring organization;
+	attribute string  references;
+  attribute string  priority;
+	attribute string  messageId;
+	attribute string  characterSet;
 
-	void SetBoolHeader(in long header, in boolean bValue);
-	boolean GetBoolHeader(in long header);
+	attribute wstring templateName;
+	attribute string  draftId;
 
-	/* Convenience routines to get and set header's value... */
-	void SetFrom(in wstring value);
-	wstring GetFrom();
+	attribute boolean returnReceipt;
+	attribute boolean attachVCard;
+  attribute boolean forcePlainText;
+  attribute boolean useMultipartAlternative;
+  attribute boolean uuEncodeAttachments;
 
-	void SetReplyTo(in wstring value);
-	wstring GetReplyTo();
+  attribute wstring otherRandomHeaders;
 
-	void SetTo(in wstring value);
-	wstring GetTo();
-
-	void SetCc(in wstring value);
-	wstring GetCc();
-
-	void SetBcc(in wstring value);
-	wstring GetBcc();
-
-	void SetFcc(in wstring value);
-	wstring GetFcc();
-
-	void SetFcc2(in wstring value);
-	wstring GetFcc2();
-
-	void SetNewsFcc(in wstring value);
-	wstring GetNewsFcc();
-
-	void SetNewsBcc(in wstring value);
-	wstring GetNewsBcc();
-
-	void SetNewsgroups(in wstring value);
-	wstring GetNewsgroups();
-
-	void SetNewshost(in wstring value);
-	wstring GetNewshost();
-
-	void SetFollowupTo(in wstring value);
-	wstring GetFollowupTo();
-
-	void SetSubject(in wstring value);
-	wstring GetSubject();
-
-	void SetAttachments(in wstring value);
-	wstring GetAttachments();
-
-	void SetOrganization(in wstring value);
-	wstring GetOrganization();
-
-	void SetReferences(in wstring value);
-	wstring GetReferences();
-
-	void SetOtherRandomHeaders(in wstring value);
-	wstring GetOtherRandomHeaders();
-
-	void SetNewspostUrl(in wstring value);
-	wstring GetNewspostUrl();
-
-	void SetDefaultBody(in wstring value);
-	wstring GetDefaultBody();
-
-    void SetPriority(in wstring value);
-    wstring GetPriority();
-
-	void SetMessageEncoding(in wstring value);
-	wstring GetMessageEncoding();
-
-	void SetCharacterSet(in wstring value);
-	wstring GetCharacterSet();
-
-	void SetMessageId(in wstring value);
-	wstring GetMessageId();
-
-	void SetHTMLPart(in wstring value);
-	wstring GetHTMLPart();
-
-	void SetTemplateName(in wstring value);
-	wstring GetTemplateName();
-
-	void SetDraftId(in wstring value);
-	wstring GetDraftId();
-
-	void SetReturnReceipt(in boolean value);
-	boolean GetReturnReceipt();
-
-	void SetAttachVCard(in boolean value);
-	boolean GetAttachVCard();
-
-	void SetBody(in wstring value);
-	wstring GetBody();
-
-	void SetUUEncodeAttachments(in boolean value);
-	boolean GetUUEncodeAttachments();
-
-	void SetUseMultipartAlternativeFlag(in boolean value);
-	boolean GetUseMultipartAlternativeFlag();
-
-	void SetTheForcePlainText(in boolean value);
-	boolean GetTheForcePlainText();
+	attribute wstring body;
 	
 	/* some utility functions */
-    nsIMsgRecipientArray SplitRecipients(in wstring recipients, in boolean emailAddressOnly);    
-    void ConvertBodyToPlainText();
+  nsIMsgRecipientArray SplitRecipients(in wstring recipients, in boolean emailAddressOnly);    
+  void ConvertBodyToPlainText();
 };
 

@@ -49,7 +49,7 @@ static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 #define AD_WORKING_BUFF_SIZE	                8192
 
 
-extern PRBool       nsMsgIsMacFile(char       *aUrlString);
+extern PRBool       nsMsgIsMacFile(const char *aUrlString);
 extern void         MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding);
 
 #endif /* XP_MAC */
@@ -554,7 +554,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 	{
 	  // convert the apple file to AppleDouble first, and then patch the
 		// address in the url.
-	  const char  *src_filename = nsMsgGetLocalFileFromURL (url_string);
+	  char *src_filename = nsMsgGetLocalFileFromURL (url_string);
     if (!src_filename)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -654,7 +654,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 	    //
 	    ap_encode_init(&(obj->ap_encode_obj), src_filename,	separator);
 
-      PRInt32   size, count;
+      PRInt32 count;
 
       status = noErr;
       m_size = 0;
@@ -1021,7 +1021,7 @@ PRBool
 nsMsgAttachmentHandler::UseUUEncode_p(void)
 {
   if (mCompFields)
-    return mCompFields->GetUUEncodeAttachments();
+    return mCompFields->GetUuEncodeAttachments();
   else
     return PR_FALSE;
 }

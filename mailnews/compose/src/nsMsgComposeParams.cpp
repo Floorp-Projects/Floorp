@@ -67,14 +67,14 @@ NS_IMETHODIMP nsMsgComposeParams::SetFormat(MSG_ComposeFormat aFormat)
 }
 
 /* attribute wstring originalMsgURI; */
-NS_IMETHODIMP nsMsgComposeParams::GetOriginalMsgURI(PRUnichar * *aOriginalMsgURI)
+NS_IMETHODIMP nsMsgComposeParams::GetOriginalMsgURI(char * *aOriginalMsgURI)
 {
   NS_ENSURE_ARG_POINTER(aOriginalMsgURI);
   
-  *aOriginalMsgURI = mOriginalMsgUri.ToNewUnicode();
+  *aOriginalMsgURI = mOriginalMsgUri.ToNewCString();
   return NS_OK;
 }
-NS_IMETHODIMP nsMsgComposeParams::SetOriginalMsgURI(const PRUnichar * aOriginalMsgURI)
+NS_IMETHODIMP nsMsgComposeParams::SetOriginalMsgURI(const char * aOriginalMsgURI)
 {
   mOriginalMsgUri = aOriginalMsgURI;
   return NS_OK;

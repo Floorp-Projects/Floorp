@@ -273,7 +273,7 @@ nsresult nsEudoraCompose::CreateComponents( void)
 	    rv = nsComponentManager::CreateInstance( kMsgCompFieldsCID, nsnull, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), (void **) &m_pMsgFields); 
 		if (NS_SUCCEEDED(rv) && m_pMsgFields) {
 			// IMPORT_LOG0( "nsOutlookCompose - CreateComponents succeeded\n");
-			m_pMsgFields->SetTheForcePlainText( PR_FALSE);
+			m_pMsgFields->SetForcePlainText( PR_FALSE);
 			return( NS_OK);
 		}
 	}
@@ -615,13 +615,13 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 	ExtractCharset( headerVal);
 	charSet = headerVal;
 	if (headerVal.Length())
-		m_pMsgFields->SetCharacterSet( headerVal.GetUnicode());
+		m_pMsgFields->SetCharacterSet( nsAutoCString(headerVal) );
 	GetHeaderValue( m_pHeaders, m_headerLen, "CC:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetCc( headerVal.GetUnicode());
 	GetHeaderValue( m_pHeaders, m_headerLen, "Message-ID:", headerVal);
 	if (headerVal.Length())
-		m_pMsgFields->SetMessageId( headerVal.GetUnicode());
+		m_pMsgFields->SetMessageId( nsAutoCString(headerVal) );
 	GetHeaderValue( m_pHeaders, m_headerLen, "Reply-To:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetReplyTo( headerVal.GetUnicode());

@@ -29,10 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msgcompose
 
 EXPORTS		= \
-		nsMsgComposeFact.h \
-		nsMsgCompFieldsFact.h \
-		nsMsgSendFact.h \
-		nsMsgSendLaterFact.h \
 		$(NULL)
 
 XPIDLSRCS	= \

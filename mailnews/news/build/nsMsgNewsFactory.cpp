@@ -39,11 +39,9 @@
 #include "nsNntpUrl.h"
 #include "nsNntpService.h"
 #include "nsNntpIncomingServer.h"
-#include "nsNNTPNewsgroup.h"
 #include "nsNNTPNewsgroupPost.h"
 #include "nsNNTPNewsgroupList.h"
 #include "nsNNTPArticleList.h"
-#include "nsNNTPHost.h"
 #include "nsNewsDownloadDialogArgs.h"
 #include "nsIContentHandler.h"
 #include "nsCURILoader.h"
@@ -52,8 +50,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNntpUrl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNntpService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNntpIncomingServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPArticleList)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPHost)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPNewsgroup)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPNewsgroupPost)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPNewsgroupList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgNewsFolder)
@@ -91,6 +87,10 @@ static nsModuleComponentInfo components[] =
     NS_NNTPSERVICE_CID,
     NS_NEWSPROTOCOLHANDLER_CONTRACTID,
     nsNntpServiceConstructor },
+  { "News Message Protocol Handler",
+    NS_NNTPSERVICE_CID,
+    NS_NEWSMESSAGEPROTOCOLHANDLER_CONTRACTID,
+    nsNntpServiceConstructor },
   { "Secure News Protocol Handler",
     NS_NNTPSERVICE_CID,
     NS_SNEWSPROTOCOLHANDLER_CONTRACTID,
@@ -107,13 +107,9 @@ static nsModuleComponentInfo components[] =
     NS_NNTPINCOMINGSERVER_CID,
     NS_NNTPINCOMINGSERVER_CONTRACTID,
     nsNntpIncomingServerConstructor },
-  { "NNTP Newsgroup",
-    NS_NNTPNEWSGROUP_CID,
-    NS_NNTPNEWSGROUP_CONTRACTID,
-    nsNNTPNewsgroupConstructor },
   { "NNTP Newsgroup Post",
     NS_NNTPNEWSGROUPPOST_CID,
-    NS_NNTPNEWSGROUP_CONTRACTID,
+    NS_NNTPNEWSGROUPPOST_CONTRACTID,
     nsNNTPNewsgroupPostConstructor },
   { "NNTP Newsgroup List",
     NS_NNTPNEWSGROUPLIST_CID,
@@ -123,10 +119,6 @@ static nsModuleComponentInfo components[] =
     NS_NNTPARTICLELIST_CID,
     NS_NNTPARTICLELIST_CONTRACTID,
     nsNNTPArticleListConstructor },
-  { "NNTP Host",
-    NS_NNTPHOST_CID,
-    NS_NNTPHOST_CONTRACTID,
-    nsNNTPHostConstructor },
   { "News download dialog args",
     NS_NEWSDOWNLOADDIALOGARGS_CID,
     NS_NEWSDOWNLOADDIALOGARGS_CONTRACTID,

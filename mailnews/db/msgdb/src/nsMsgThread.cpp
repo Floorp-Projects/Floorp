@@ -87,7 +87,13 @@ nsresult nsMsgThread::InitCachedValues()
 		err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadIdColumnToken, &m_threadKey);
 	    err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, &m_numUnreadChildren);
 		err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadRootKeyColumnToken, &m_threadRootKey, nsMsgKey_None);
-		
+    // fix num children if it's wrong. this doesn't work - some DB's have a bogus thread table
+    // that is full of bogus headers - don't know why.
+    PRUint32 rowCount = 0;
+    m_mdbTable->GetCount(m_mdbDB->GetEnv(), &rowCount);
+//    NS_ASSERTION(m_numChildren <= rowCount, "num children wrong - fixing");
+    if (m_numChildren > rowCount)
+      ChangeChildCount((PRInt32) rowCount - (PRInt32) m_numChildren);
 		if (NS_SUCCEEDED(err))
 			m_cachedValuesInitialized = PR_TRUE;
 	}
@@ -184,10 +190,12 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 	nsMsgKey newHdrKey = 0;
 	PRBool parentKeyNeedsSetting = PR_TRUE;
 	
+  if (m_flags & MSG_FLAG_IGNORED && m_mdbDB)
+    m_mdbDB->MarkHdrRead(child, PR_TRUE, nsnull);
+
 	nsIMdbRow *hdrRow = hdr->GetMDBRow();
 	hdr->GetFlags(&newHdrFlags);
 	hdr->GetMessageKey(&newHdrKey);
-
 
 	PRUint32 numChildren;
 	PRUint32 childIndex = 0;
@@ -226,6 +234,9 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 			if (hdr->IsParentOf(curHdr))
 			{
 				nsMsgKey oldThreadParent;
+				mdb_pos outPos;
+        // move this hdr before the current header.
+				m_mdbTable->MoveRow(m_mdbDB->GetEnv(), hdrRow, -1, childIndex, &outPos);
 				curHdr->GetThreadParent(&oldThreadParent);
 				curHdr->GetMessageKey(&msgKey);
 				curHdr->SetThreadParent(newHdrKey);
@@ -245,6 +256,7 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 					SetThreadRootKey(newHdrKey);
 					parentKeyNeedsSetting = PR_FALSE;
 				}
+        break;
 			}
 		}
 	}
@@ -321,6 +333,19 @@ nsresult	nsMsgThread::ReparentNonReferenceChildrenOf(nsIMsgDBHdr *topLevelHdr, n
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgThread::GetChildKeyAt(PRInt32 aIndex, nsMsgKey *result)
+{
+	nsresult ret = NS_OK;
+	mdbOid oid;
+	nsIMdbRow *hdrRow = nsnull;
+
+	ret = m_mdbTable->PosToOid( m_mdbDB->GetEnv(), aIndex, &oid);
+	if (ret == 0)
+    *result = oid.mOid_Id;
+
+	return ret;
+}
+
 NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 {
 	nsresult ret = NS_OK;
@@ -328,7 +353,7 @@ NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 	nsIMdbRow *hdrRow = nsnull;
 
 	ret = m_mdbTable->PosToOid( m_mdbDB->GetEnv(), aIndex, &oid);
-	if (NS_SUCCEEDED(ret))
+	if (ret == NS_OK)
 	{
 		//do I have to release hdrRow?
 		ret = m_mdbTable->PosToRow(m_mdbDB->GetEnv(), aIndex, &hdrRow); 
@@ -338,7 +363,7 @@ NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 		}
 	}
 
-	return ret;
+  return (ret == NS_OK) ? NS_OK : NS_MSG_MESSAGE_NOT_FOUND;
 }
 
 
@@ -827,65 +852,6 @@ NS_IMETHODIMP nsMsgThreadEnumerator::HasMoreElements(PRBool *aResult)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgThread::HasMessagesOfType(nsMsgKey parentKey, PRUint32 viewType, PRBool *hasMessages)
-{
-    nsresult rv;
-    PRUint32 numChildren = 0;
-    PRUint32 numUnreadChildren = 0;
-
-    nsMsgKey topHdrMsgKey = m_threadRootKey;
-
-    // if we don't know the key for the top of the thread, go get it.
-    if (topHdrMsgKey == nsMsgKey_None) {
-        nsCOMPtr <nsIMsgDBHdr> topHdr;
-
-        rv = GetRootHdr(nsnull, getter_AddRefs(topHdr));
-        NS_ENSURE_SUCCESS(rv,rv);
-
-        rv = topHdr->GetMessageKey(&topHdrMsgKey);
-        NS_ENSURE_SUCCESS(rv,rv);
-
-        NS_ASSERTION(topHdrMsgKey == nsMsgKey_None,"this is bad");
-        if (topHdrMsgKey == nsMsgKey_None) {
-            *hasMessages = PR_FALSE;
-            return NS_OK;
-        }
-    }
-
-    // if not top of thread, return false;
-    if (topHdrMsgKey != parentKey) {
-        *hasMessages = PR_FALSE;
-        return NS_OK;
-    }
-
-    rv = GetNumChildren(&numChildren);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    switch (viewType) {
-        case nsMsgViewType::eShowAll:
-            // don't return true on threads without children
-            *hasMessages = (numChildren > 1);
-            break;
-        case nsMsgViewType::eShowUnread:
-            rv = GetNumUnreadChildren(&numUnreadChildren);
-            NS_ENSURE_SUCCESS(rv,rv);
-
-            // don't return true on threads without children
-            // and at least 1 unread child.  for now, this is
-            // "Threads with Unread Messages"
-            *hasMessages = ((numChildren > 1) && (numUnreadChildren > 0));
-            break;
-        case nsMsgViewType::eShowRead:
-        case nsMsgViewType::eShowWatched:
-        default:
-            NS_ENSURE_SUCCESS(NS_ERROR_UNEXPECTED,NS_ERROR_UNEXPECTED);
-            break;
-    }
-
-    NS_ENSURE_SUCCESS(rv,rv);
-    return NS_OK;
-}
-
 static nsresult
 nsMsgThreadUnreadFilter(nsIMsgDBHdr* msg, void* closure)
 {
@@ -1077,6 +1043,40 @@ nsresult nsMsgThread::GetChildHdrForKey(nsMsgKey desiredKey, nsIMsgDBHdr **resul
 	}
 	if (resultIndex)
 		*resultIndex = childIndex;
+
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgThread::GetFirstUnreadChild(nsIMsgDBHdr **result)
+{
+  NS_ENSURE_ARG(result);
+  PRUint32 numChildren;
+  nsresult rv;
+
+	GetNumChildren(&numChildren);
+
+	if ((PRInt32) numChildren < 0)
+		numChildren = 0;
+
+	for (PRUint32 childIndex = 0; childIndex < numChildren; childIndex++)
+	{
+    nsCOMPtr <nsIMsgDBHdr> child;
+		rv = GetChildHdrAt(childIndex, getter_AddRefs(child));
+		if (NS_SUCCEEDED(rv) && child)
+		{
+			nsMsgKey msgKey;
+			child->GetMessageKey(&msgKey);
+
+      PRBool isRead;
+      rv = m_mdbDB->IsRead(msgKey, &isRead);
+			if (NS_SUCCEEDED(rv) && !isRead)
+      {
+        *result = child;
+        NS_ADDREF(*result);
+				break;
+      }
+		}
+	}
 
 	return rv;
 }

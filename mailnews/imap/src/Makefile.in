@@ -31,7 +31,6 @@ LIBRARY_NAME	= msgimap_s
 REQUIRES	= xpcom string mailnews rdf msgbase msgbaseutil rdfutil necko msgdb uconv mime pref js intl appshell nkcache timer locale txmgr dom docshell msglocal widget layout uriloader xuldoc
 
 EXPORTS		= \
-		nsImapMessage.h \
 		nsIMAPBodyShell.h \
 		nsIMAPGenericParser.h \
 		nsIMAPHostSessionList.h \
@@ -50,7 +49,6 @@ EXPORTS		= \
 		$(NULL)
 
 CPPSRCS		= \
-		nsImapMessage.cpp \
 		nsImapUtils.cpp \
 		nsIMAPBodyShell.cpp \
 		nsIMAPGenericParser.cpp \

@@ -32,7 +32,6 @@
 #include "nsIMsgDatabase.h"
 #include "nsIMsgHdr.h"
 #include "nsMsgLineBuffer.h"
-#include "nsIMessage.h"
 #include "nsMsgDBCID.h"
 #include "nsIMsgMailNewsUrl.h"
 

@@ -22,12 +22,6 @@
 
 //NOTE: gMessengerBundle must be defined and set or this Overlay won't work
 
-// These are the types of navigation you can do
-var navigateAny=0;
-var navigateUnread = 1;
-var navigateFlagged = 2;
-var navigateNew = 3;
-
 var commonDialogs = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
 commonDialogs = commonDialogs.QueryInterface(Components.interfaces.nsICommonDialogs);
 var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
@@ -80,216 +74,10 @@ function FindNextFolder(originalFolderURI)
     return null;
 }
 
-/*GoNextMessage finds the message that matches criteria and selects it.  
-  nextFunction is the function that will be used to detertime if a message matches criteria.
-  It must take a node and return a boolean.
-  nextResourceFunction is the function that will be used to determine if a message in the form of a resource
-  matches criteria.  Takes a resource and returns a boolean
-  nextThreadFunction is an optional function that can be used to optimize whether or not a thread will have a
-  message that matches the criteria.  Takes the top level message in the form of a node and returns a boolean.
-  startFromBeginning is a boolean that states whether or not we should start looking at the beginning
-  if we reach the end 
-*/
-function GoNextMessage(type, startFromBeginning )
-{
-	var beforeGoNextMessage;
-    if (showPerformance) {
-	    beforeGoNextMessage = new Date();
-    }
-
-	var tree = GetThreadTree();
-	
-	var selArray = tree.selectedItems;
-	var length = selArray.length;
-
-	if ( selArray && ((length == 0) || (length == 1)) )
-	{
-		var currentMessage;
-
-		if(length == 0)
-			currentMessage = null;
-		else
-			currentMessage = selArray[0];
-
-		var nextMessage = msgNavigationService.FindNextMessage(type, tree, currentMessage, RDF, document, startFromBeginning, messageView.showThreads);
-		//Only change the selection if there's a valid nextMessage
-		if(nextMessage && (nextMessage != currentMessage)) {
-			ChangeSelection(tree, nextMessage);
-        }
-        else if (type == navigateUnread) {
-	        var treeFolder = GetThreadTreeFolder();
-	        var originalFolderURI = treeFolder.getAttribute('ref');
-            var nextFolderURI = null;
-            var done = false;
-            var startAtURI = originalFolderURI;
-            var i = 0;
-            var allServers = accountManager.allServers;
-            var numServers = allServers.Count();
-
-            var nextMode = pref.GetIntPref("mailnews.nav_crosses_folders");
-            // 0: "next" goes to the next folder, without prompting
-            // 1: "next" goes to the next folder, and prompts (the default)
-            // 2: "next" does nothing when there are no unread messages
-
-            // not crossing folders, don't find next
-            if (nextMode == 2)
-                done=true;
-            
-            // todo:  
-            // this will search the originalFolderURI server twice
-            // prevent that.
-            while (!done) {
-                dump("start looking at " + startAtURI + "\n");
-                nextFolderURI = FindNextFolder(startAtURI);
-                if (!nextFolderURI) {
-                    if (i == numServers) {
-                        // no more servers, we're done
-                        done = true;
-                    }
-                    else {
-                        // get the uri for the next server and start there
-                        startAtURI = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer).serverURI;
-                        i++;
-                    }
-                }
-                else {
-                    // got a folder with unread messages, start with it
-                    done = true;    
-                }
-            }
-            if (nextFolderURI && (originalFolderURI != nextFolderURI)) {
-                var nextFolderResource = RDF.GetResource(nextFolderURI);
-                var nextFolder = nextFolderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-
-                switch (nextMode) {
-
-                case 0:
-                    // do this unconditionally
-                    gNextMessageAfterLoad = true;
-                    SelectFolder(nextFolderURI);
-                    break;
-                    
-                case 1:
-                    var promptText = gMessengerBundle.getFormattedString("advanceNextPrompt",
-                                                                         [ nextFolder.name ]); 
-                    if (commonDialogs.Confirm(window, promptText, promptText)) {
-                        gNextMessageAfterLoad = true;
-                        SelectFolder(nextFolderURI);
-                    }
-                    break;
-                default:
-                    dump("huh?");
-                }
-            }
-        }
-	}
-
-    if (showPerformance) {
-	  var afterGoNextMessage = new Date();
-	  var timeToGetNext = (afterGoNextMessage.getTime() - beforeGoNextMessage.getTime())/1000;
-	  dump("time to GoNextMessage is " + timeToGetNext + "seconds\n");
-    }
-}
-
-
-/*GoPreviousMessage finds the message that matches criteria and selects it.  
-  previousFunction is the function that will be used to detertime if a message matches criteria.
-  It must take a node and return a boolean.
-  startFromEnd is a boolean that states whether or not we should start looking at the end
-  if we reach the beginning 
-*/
-function GoPreviousMessage(type, startFromEnd)
-{
-	var tree = GetThreadTree();
-	
-	var selArray = tree.selectedItems;
-	if ( selArray && (selArray.length == 1) )
-	{
-		var currentMessage = selArray[0];
-		var previousMessage = msgNavigationService.FindPreviousMessage(type, tree, currentMessage, RDF, document, startFromEnd, messageView.showThreads);
-		//Only change selection if there's a valid previous message.
-		if(previousMessage && (previousMessage != currentMessage))
-			ChangeSelection(tree, previousMessage);
-	}
-}
-
-
-
-
-
-// type is the the type of the next thread we are looking for.
-// startFromBeginning is true if we should start looking from the beginning after we get to the end of the thread pane.
-// gotoNextInThread is true if once we find an unrad thread we should select the first message in that thread that fits criteria
-function GoNextThread(type, startFromBeginning, gotoNextInThread)
-{
-	if(messageView.showThreads)
-	{
-		var tree = GetThreadTree();
-		
-		var selArray = tree.selectedItems;
-		var length = selArray.length;
-
-		if ( selArray && ((length == 0) || (length == 1)) )
-		{
-			var currentMessage;
-
-			if(length == 0)
-				currentMessage = null;
-			else
-				currentMessage = selArray[0];
-
-			var nextMessage;
-			var currentTopMessage;
-			var checkCurrentTopMessage;
-			//Need to get the parent message for the current selection to begin to find thread
-			if(currentMessage)
-			{
-				//need to find its top level message and we don't want it to be checked for criteria
-				currentTopMessage = FindTopLevelMessage(currentMessage);
-				checkCurrentTopMessage = false;
-			}
-			else
-			{
-				//currentTopmessage is the first one in the tree and we want it to be checked for criteria.
-				currentTopMessage = msgNavigationService.FindFirstMessage(tree);
-				checkCurrentTopMessage = true;
-			}
-
-			var nextTopMessage = msgNavigationService.FindNextThread(type, tree, currentTopMessage, RDF, document, startFromBeginning, checkCurrentTopMessage);
-
-			var changeSelection = (nextTopMessage != null && ((currentTopMessage != nextTopMessage) || checkCurrentTopMessage));
-			if(changeSelection)
-			{
-				if(gotoNextInThread)
-				{
-					nextMessage = msgNavigationService.FindNextInThread(type, tree, nextTopMessage, RDF, document);
-					ChangeSelection(tree, nextMessage);
-				}
-				else
-					ChangeSelection(tree, nextTopMessage);	
-			}
-		}
-	}
-
-}
-
-function FindTopLevelMessage(startMessage)
-{
-	var currentTop = startMessage;
-	var parent = startMessage.parentNode.parentNode;
-
-	while(parent.localName == 'treeitem')
-	{
-		currentTop = parent;
-		parent = parent.parentNode.parentNode;
-	}
-
-	return currentTop;
-}
-
-
 function ScrollToFirstNewMessage()
 {
+  dump("XXX ScrollToFirstNewMessage needs to be rewritten.\n");
+/*
 	var tree = GetThreadTree();
 	var treeFolder = GetThreadTreeFolder();
 
@@ -310,7 +98,7 @@ function ScrollToFirstNewMessage()
 			var topElement = document.getElementById(topLevelURI);
 			if(topElement)
 			{
-				msgNavigationService.OpenTreeitemAndDescendants(topElement);
+//				msgNavigationService.OpenTreeitemAndDescendants(topElement);
 			}
 
 		}
@@ -324,6 +112,7 @@ function ScrollToFirstNewMessage()
 			tree.ensureElementIsVisible(messageElement); 
 		}
 	}
+  */
 }
 
 function GetTopLevelMessageForMessage(message, folder)
@@ -342,3 +131,123 @@ function GetTopLevelMessageForMessage(message, folder)
 }
 
 
+function CrossFolderNavigation (type, supportsFolderPane )
+{
+  if (type != nsMsgNavigationType.nextUnreadMessage) 
+  {
+      // only do cross folder navigation for "next unread message"
+      return nsnull;
+  }
+
+  var nextMode = pref.GetIntPref("mailnews.nav_crosses_folders");
+  // 0: "next" goes to the next folder, without prompting
+  // 1: "next" goes to the next folder, and prompts (the default)
+  // 2: "next" does nothing when there are no unread messages
+
+  // not crossing folders, don't find next
+  if (nextMode == 2) return;
+
+  var originalFolderURI = gDBView.msgFolder.URI;
+  var nextFolderURI = null;
+  var done = false;
+  var startAtURI = originalFolderURI;
+  var i = 0;
+  var allServers = accountManager.allServers;
+  var numServers = allServers.Count();
+
+  // XXX fix this
+  // this will search the originalFolderURI server twice
+  while (!done) 
+  {
+     dump("start looking at " + startAtURI + "\n");
+     nextFolderURI = FindNextFolder(startAtURI);
+     if (!nextFolderURI) 
+     {
+       if (i == numServers) 
+       {
+          // no more servers, we're done
+          done = true;
+       }
+       else 
+       {
+         // get the uri for the next server and start there
+         startAtURI = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer).serverURI;
+         i++;
+        }
+      }
+      else 
+      {
+         // got a folder with unread messages, start with it
+         done = true;    
+      }
+    }
+
+    if (nextFolderURI && (originalFolderURI != nextFolderURI)) 
+    {
+      var nextFolderResource = RDF.GetResource(nextFolderURI);
+      var nextFolder = nextFolderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+      switch (nextMode) 
+      {
+        case 0:
+            // do this unconditionally
+            gNextMessageAfterLoad = true;
+            if (supportsFolderPane)
+              SelectFolder(nextFolderURI);
+            dump("XXX we need code to select the correct type of message, after we load the folder\n");
+            break;
+        case 1:
+            var promptText = gMessengerBundle.formatStringFromName("advanceNextPrompt", [ nextFolder.name ], 1); 
+            if (commonDialogs.Confirm(window, promptText, promptText)) {
+                gNextMessageAfterLoad = true;
+                if (supportsFolderPane)
+                  SelectFolder(nextFolderURI);
+                dump("XXX we need code to select the correct type of message, after we load the folder\n");
+            }
+            break;
+        default:
+            dump("huh?");
+            break;
+        }
+    }
+
+    return nextFolderURI;
+}
+
+function GoNextMessage(type, startFromBeginning)
+{
+  try {
+    dump("XXX GoNextMessage(" + type + "," + startFromBeginning + ")\n");
+
+    var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
+    var outlinerSelection = outlinerView.selection;
+    var currentIndex = outlinerSelection.currentIndex;
+
+    dump("XXX outliner selection = " + outlinerSelection + "\n");
+    dump("XXX current Index = " + currentIndex + "\n");
+
+    var status = gDBView.navigateStatus(type);
+
+    dump("XXX status = " + status + "\n");
+
+    var resultId = new Object;
+    var resultIndex = new Object;
+    var threadIndex = new Object;
+
+    gDBView.viewNavigate(type, resultId, resultIndex, threadIndex, true /* wrap */);
+
+    dump("XXX resultId = " + resultId.value + "\n");
+    dump("XXX resultIndex = " + resultIndex.value + "\n");
+
+    // only scroll and select if we found something
+    if ((resultId.value != -1) && (resultIndex.value != -1)) {
+        outlinerSelection.select(resultIndex.value);
+        EnsureRowInThreadOutlinerIsVisible(resultIndex.value); 
+        return;
+    }
+    
+    CrossFolderNavigation(type, true);
+  }
+  catch (ex) {
+    dump("XXX ex = " + ex + "\n");
+  }
+}

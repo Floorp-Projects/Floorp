@@ -35,6 +35,9 @@ interface nsISimpleEnumerator;
 interface nsIMsgThread;
 interface nsIDBFolderInfo;
 interface nsIMsgOfflineImapOperation;
+interface nsIMsgFolder;
+
+[ptr] native octetPtr(PRUint8);
 
 typedef unsigned long nsMsgRetainByPreference;
 
@@ -42,11 +45,11 @@ typedef unsigned long nsMsgRetainByPreference;
 
 interface nsIMsgRetentionSettings : nsISupports
 {
-	const unsigned long nsMsgRetainAll = 0;
-  const unsigned long nsMsgRetainByServerDefaults = 1;
+	const unsigned long nsMsgRetainAll = 1;
 	const unsigned long nsMsgRetainByAge = 2;
 	const unsigned long nsMsgRetainByNumHeaders = 3;
 
+  attribute boolean useServerDefaults;
   attribute nsMsgRetainByPreference retainByPreference;
   attribute unsigned long daysToKeepHdrs;
   attribute unsigned long numHeadersToKeep; 
@@ -59,6 +62,14 @@ interface nsIMsgRetentionSettings : nsISupports
   attribute unsigned long daysToKeepBodies;
 }; 
 
+[scriptable, uuid(86a9da90-14f1-11d5-a5c0-0060b0fc04b7)]
+interface nsIMsgDownloadSettings : nsISupports
+{
+  attribute boolean useServerDefaults;
+  attribute boolean downloadByDate;
+	attribute boolean downloadUnreadOnly;
+	attribute unsigned long ageLimitOfMsgsToDownload;
+};
 
 typedef long nsMsgDBCommit;
 
@@ -80,6 +91,7 @@ interface nsMsgDBCommitType
 
 interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   nsIMsgDatabase Open(in nsIFileSpec folderName, in boolean create, in boolean upgrading);
+  nsIMsgDatabase OpenFolderDB(in nsIMsgFolder folder, in boolean create, in boolean upgrading);
   void Close(in boolean forceCommit);
 
   void Commit(in nsMsgDBCommit commitType);
@@ -107,8 +119,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   [noscript] void ListAllKeys(in nsMsgKeyArrayRef outputKeys);
 
   nsISimpleEnumerator EnumerateMessages();
-  boolean hasMessagesOfType(in unsigned long viewType);
-  nsISimpleEnumerator EnumerateThreads(in unsigned long viewType);
+  nsISimpleEnumerator EnumerateThreads();
   boolean hasThreads();
 
   nsIMsgThread GetThreadContainingMsgHdr(in nsIMsgDBHdr msgHdr) ;
@@ -196,6 +207,8 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   // purge unwanted message headers and/or bodies
   void ApplyRetentionSettings(in nsIMsgRetentionSettings msgRetentionSettings);
 
+  attribute nsIMsgDownloadSettings msgDownloadSettings;
+
   boolean HasNew();  
   void ClearNewList(in boolean notify);
   void AddToNewList(in nsMsgKey key);
@@ -222,5 +235,8 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   readonly attribute nsMsgKey HighWaterArticleNum;
   attribute nsMsgKey NextPseudoMsgKey;   //for undo-redo of move pop->imap
 
+  // for sorting
+  [noscript] void createCollationKey(in wstring sourceString, out octetPtr key, out unsigned long len);
+  [noscript] long compareCollationKeys(out octet key1, in unsigned long len1, out octet key2, in unsigned long len2);
 };
 

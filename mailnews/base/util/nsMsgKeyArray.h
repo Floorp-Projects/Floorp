@@ -31,7 +31,7 @@
 #include "nsUInt32Array.h"
 #include "MailNewsTypes.h"
 
-class nsMsgKeyArray : public nsUInt32Array
+class NS_MSG_BASE nsMsgKeyArray : public nsUInt32Array
 {
 // constructors
 public:
@@ -70,7 +70,7 @@ public:
 	void CopyArray(nsMsgKeyArray &oldA) { nsUInt32Array::CopyArray(oldA); }
 // new operations
 public:
-	nsMsgViewIndex					FindIndex(nsMsgKey key); // returns -1 if not found
+	nsMsgViewIndex					FindIndex(nsMsgKey key, PRUint32 startIndex = 0); // returns -1 if not found
 	
 	// use these next two carefully
 	nsMsgKey*				GetArray(void) {

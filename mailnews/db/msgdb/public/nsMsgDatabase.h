@@ -31,6 +31,7 @@
 #include "nsIDBChangeListener.h"
 #include "nsIDBChangeAnnouncer.h"
 #include "nsMsgMessageFlags.h"
+#include "nsIMsgFolder.h"
 #include "nsISupportsArray.h"
 #include "nsDBFolderInfo.h"
 #include "nsICollation.h"
@@ -76,7 +77,8 @@ public:
 	nsIMdbStore				*GetStore() {return m_mdbStore;}
 	virtual PRUint32		GetCurVersion();
 	nsIMsgHeaderParser		*GetHeaderParser();
-	nsresult				GetCollationKeyGenerator();
+	nsresult				    GetCollationKeyGenerator();
+  nsIMimeConverter *  GetMimeConverter();
 
 	static nsMsgDatabase* FindInCache(nsFileSpec &dbName);
 
@@ -86,7 +88,8 @@ public:
 	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 *uint32Result, PRUint32 defaultValue = 0);
 	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 &uint32Result, PRUint32 defaultValue = 0);
 	nsresult				RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, PRUnichar **);
-	nsresult				RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, PRUnichar**);
+	nsresult				RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, PRUint8 **result, PRUint32 *len);
+  nsresult        RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_token colToken, PRUint8 **result, PRUint32 *len);
 
   // these methods take the property name as a string, not a token.
   // they should be used when the properties aren't accessed a lot
@@ -104,7 +107,6 @@ public:
 	nsresult				CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, const char *charPtr);
 	nsresult				RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result);
 
-	nsresult				CreateCollationKey(const PRUnichar* sourceString, PRUnichar **resultString);
 
 	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
 	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
@@ -181,6 +183,7 @@ protected:
 	nsCOMPtr <nsICollation> m_collationKeyGenerator;
 	nsCOMPtr <nsIMimeConverter> m_mimeConverter;
   nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
+  nsCOMPtr <nsIMsgDownloadSettings> m_downloadSettings;
 
   nsresult PurgeMessagesOlderThan(PRUint32 daysToKeepHdrs, PRBool keepUnreadMessagesOnly);
   nsresult PurgeExcessMessages(PRUint32 numHeadersToKeep, PRBool keepUnreadMessagesOnly);
@@ -190,6 +193,7 @@ protected:
 	virtual nsresult			InitNewDB();
 	virtual nsresult			InitMDBInfo();
 
+  nsCOMPtr <nsIMsgFolder> m_folder;
 	nsDBFolderInfo      *m_dbFolderInfo;
 	nsMsgKey            m_nextPseudoMsgKey;
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
@@ -276,7 +280,23 @@ protected:
   PRUint32                m_numHeadersToKeep;
   PRUint32                m_keepUnreadMessagesProp;
   PRBool                  m_keepUnreadMessagesOnly;
+  PRBool                  m_useServerDefaults;
   PRUint32                m_daysToKeepBodies;
+};
+
+class nsMsgDownloadSettings : public nsIMsgDownloadSettings
+{
+public:
+  nsMsgDownloadSettings();
+  virtual ~nsMsgDownloadSettings();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGDOWNLOADSETTINGS
+protected:
+  PRBool m_useServerDefaults;
+	PRBool m_downloadUnreadOnly;
+	PRBool m_downloadByDate;
+	PRInt32 m_ageLimitOfMsgsToDownload;
 };
 
 #endif

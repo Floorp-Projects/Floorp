@@ -106,19 +106,12 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_COPYFOLDER			NC_NAMESPACE_URI "CopyFolder"
 #define NC_RDF_MOVEFOLDER			NC_NAMESPACE_URI "MoveFolder"
 #define NC_RDF_MARKALLMESSAGESREAD  NC_NAMESPACE_URI "MarkAllMessagesRead"
-#define NC_RDF_MARKTHREADREAD		NC_NAMESPACE_URI "MarkThreadRead"
 #define NC_RDF_COMPACT				NC_NAMESPACE_URI "Compact"
 #define NC_RDF_COMPACTALL			NC_NAMESPACE_URI "CompactAll"
 #define NC_RDF_RENAME				NC_NAMESPACE_URI "Rename"
 #define NC_RDF_EMPTYTRASH   NC_NAMESPACE_URI "EmptyTrash"
 #define NC_RDF_DOWNLOADFLAGGED NC_NAMESPACE_URI "DownloadFlaggedMessages"
 #define NC_RDF_DOWNLOADSELECTED NC_NAMESPACE_URI "DownloadSelectedMessages"
-//Message Commands
-#define NC_RDF_MARKREAD				NC_NAMESPACE_URI "MarkRead"
-#define NC_RDF_MARKUNREAD			NC_NAMESPACE_URI "MarkUnread"
-#define NC_RDF_TOGGLEREAD			NC_NAMESPACE_URI "ToggleRead"
-#define NC_RDF_MARKFLAGGED			NC_NAMESPACE_URI "MarkFlagged"
-#define NC_RDF_MARKUNFLAGGED		NC_NAMESPACE_URI "MarkUnflagged"
 
 
 //Returns PR_TRUE if r1 is equal to r2 and r2 is the sort property.

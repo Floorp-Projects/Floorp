@@ -52,7 +52,6 @@
 #include "nsMsgIdentity.h"
 #include "nsMsgIncomingServer.h"
 #include "nsMsgFolderDataSource.h"
-#include "nsMsgMessageDataSource.h"
 
 #include "nsMsgAccountManagerDS.h"
 
@@ -70,10 +69,7 @@
 #include "nsMsgFilterService.h"
 #include "nsMsgFilterDataSource.h"
 #include "nsMsgFilterDelegateFactory.h"
-#include "nsMessageView.h"
 #include "nsMsgWindow.h"
-#include "nsMessage.h"
-#include "nsMsgViewNavigationService.h"
 
 #include "nsMsgServiceProvider.h"
 #include "nsSubscribeDataSource.h"
@@ -82,9 +78,12 @@
 #include "nsMsgPrintEngine.h"
 #include "nsMsgSearchSession.h"
 #include "nsMsgSearchAdapter.h"
-#include "nsMsgSearchDataSource.h"
 #include "nsMsgFolderCompactor.h"
+#include "nsMsgThreadedDBView.h"
+#include "nsMsgSpecialViews.h"
+#include "nsMsgSearchDBView.h"
 
+#include "nsMsgOfflineManager.h"
 // private factory declarations for each component we know how to produce
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerBootstrap)
@@ -96,11 +95,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerMigrator, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAccount)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgIdentity)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgFolderDataSource, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgMessageDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgAccountManagerDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchValidityManager)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgSearchDataSource,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterDataSource)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterDelegateFactory)
@@ -111,16 +108,18 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCopyMessageStreamListener)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCopyService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFolderCache)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgStatusFeedback)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessageView,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgWindow,Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessage)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgViewNavigationService,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgServiceProviderService, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribeDataSource, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribableServer, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgPrintEngine, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFolderCompactState)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOfflineStoreCompactState)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgThreadedDBView);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgThreadsWithUnreadDBView);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgWatchedThreadsWithUnreadDBView);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchDBView);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager);
 
 // The list of components we register
 static nsModuleComponentInfo gComponents[] = {
@@ -170,10 +169,6 @@ static nsModuleComponentInfo gComponents[] = {
       NS_MAILNEWSFOLDERDATASOURCE_CONTRACTID,
       nsMsgFolderDataSourceConstructor,
     },
-    { "Mail/News Message Data Source", NS_MAILNEWSMESSAGEDATASOURCE_CID,
-      NS_MAILNEWSMESSAGEDATASOURCE_CONTRACTID,
-      nsMsgMessageDataSourceConstructor,
-    },
     { "Mail/News Account Manager Data Source", NS_MSGACCOUNTMANAGERDATASOURCE_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX "msgaccountmanager",
       nsMsgAccountManagerDataSourceConstructor,
@@ -189,10 +184,6 @@ static nsModuleComponentInfo gComponents[] = {
     { "Message Search Validity Manager", NS_MSGSEARCHVALIDITYMANAGER_CID,
         NS_MSGSEARCHVALIDITYMANAGER_CONTRACTID,
         nsMsgSearchValidityManagerConstructor,
-    },
-    { "Search Datasource", NS_MSGSEARCHDATASOURCE_CID,
-      NS_MSGSEARCHDATASOURCE_CONTRACTID,
-      nsMsgSearchDataSourceConstructor,
     },
     { "Message Filter Service", NS_MSGFILTERSERVICE_CID,
       NS_MSGFILTERSERVICE_CONTRACTID,
@@ -245,29 +236,9 @@ static nsModuleComponentInfo gComponents[] = {
       NS_MSGSTATUSFEEDBACK_CONTRACTID,
       nsMsgStatusFeedbackConstructor,
     },
-    { "Mail/News MessageView", NS_MESSAGEVIEW_CID,
-      NS_MESSAGEVIEW_CONTRACTID,
-      nsMessageViewConstructor,
-    },
     { "Mail/News MsgWindow", NS_MSGWINDOW_CID,
       NS_MSGWINDOW_CONTRACTID,
       nsMsgWindowConstructor,
-    },
-    { "Message Resource", NS_MESSAGE_CID,
-      NS_MESSAGE_MAILBOX_CONTRACTID,
-      nsMessageConstructor,
-    },
-    { "Message Resource", NS_MESSAGE_CID,
-      NS_MESSAGE_IMAP_CONTRACTID,
-      nsMessageConstructor,
-    },
-    { "Message Resource", NS_MESSAGE_CID,
-      NS_MESSAGE_NEWS_CONTRACTID,
-      nsMessageConstructor,
-    },
-    { "Mail/News Message Navigation Service", NS_MSGVIEWNAVIGATIONSERVICE_CID,
-      NS_MSGVIEWNAVIGATIONSERVICE_CONTRACTID,
-      nsMsgViewNavigationServiceConstructor,
     },
     { "Mail/News Print Engine", NS_MSG_PRINTENGINE_CID,
       NS_MSGPRINTENGINE_CONTRACTID,
@@ -292,7 +263,28 @@ static nsModuleComponentInfo gComponents[] = {
     { "offline store compactor", NS_MSG_OFFLINESTORECOMPACTOR_CID,
       NS_MSGOFFLINESTORECOMPACTOR_CONTRACTID,
       nsOfflineStoreCompactStateConstructor,
-    }
+    },
+    { "threaded db view", NS_MSGTHREADEDDBVIEW_CID,
+      NS_MSGTHREADEDDBVIEW_CONTRACTID,
+      nsMsgThreadedDBViewConstructor,
+    },
+    { "threads with unread db view", NS_MSGTHREADSWITHUNREADDBVIEW_CID,
+      NS_MSGTHREADSWITHUNREADDBVIEW_CONTRACTID,
+      nsMsgThreadsWithUnreadDBViewConstructor,
+    },
+    { "watched threads with unread db view", NS_MSGWATCHEDTHREADSWITHUNREADDBVIEW_CID,
+      NS_MSGWATCHEDTHREADSWITHUNREADDBVIEW_CONTRACTID,
+      nsMsgWatchedThreadsWithUnreadDBViewConstructor,
+    },
+    { "search db view", NS_MSGSEARCHDBVIEW_CID,
+      NS_MSGSEARCHDBVIEW_CONTRACTID,
+      nsMsgSearchDBViewConstructor,
+    },
+    { "Messenger Offline Manager", NS_MSGOFFLINEMANAGER_CID,
+      NS_MSGOFFLINEMANAGER_CONTRACTID,
+      nsMsgOfflineManagerConstructor,
+    },
+
 };
 
 NS_IMPL_NSGETMODULE("nsMsgBaseModule", gComponents)

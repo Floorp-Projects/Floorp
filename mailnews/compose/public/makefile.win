@@ -43,10 +43,6 @@ XPIDLSRCS =										\
 ## exports
 
 EXPORTS =										\
-				nsMsgComposeFact.h				\
-				nsMsgCompFieldsFact.h			\
-				nsMsgSendFact.h					\
-				nsMsgSendLaterFact.h			\
 				$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

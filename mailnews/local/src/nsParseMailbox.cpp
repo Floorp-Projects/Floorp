@@ -51,6 +51,7 @@
 #include "nsMsgI18N.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIMsgLocalMailFolder.h"
+#include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -993,7 +994,7 @@ int nsParseMailMessageState::InternSubject (struct message_header *header)
 	 we just parsed the subject header anyway, we expect that parsing
 	 to be smartest.  (After all, what if someone just went in and
 	 edited the subject line by hand?) */
-	if (msg_StripRE((const char **) &key, &L))
+	if (NS_MsgStripRE((const char **) &key, &L))
     flags |= MSG_FLAG_HAS_RE;
 	else
     flags &= ~MSG_FLAG_HAS_RE;
@@ -1328,76 +1329,6 @@ int nsParseMailMessageState::FinalizeHeaders()
 
 	return status;
 }
-
-
-/* Given a string and a length, removes any "Re:" strings from the front.
-   It also deals with that dumbass "Re[2]:" thing that some losing mailers do.
-
-   Returns PR_TRUE if it made a change, PR_FALSE otherwise.
-
-   The string is not altered: the pointer to its head is merely advanced,
-   and the length correspondingly decreased.
- */
-/* static */PRBool nsParseMailMessageState::msg_StripRE(const char **stringP, PRUint32 *lengthP)
-{
-  const char *s, *s_end;
-  const char *last;
-  uint32 L;
-  PRBool result = PR_FALSE;
-  NS_ASSERTION(stringP, "bad null param");
-  if (!stringP) return PR_FALSE;
-  s = *stringP;
-  L = lengthP ? *lengthP : nsCRT::strlen(s);
-
-  s_end = s + L;
-  last = s;
-
- AGAIN:
-
-  while (s < s_end && XP_IS_SPACE(*s))
-	s++;
-
-  if (s < (s_end-2) &&
-	  (s[0] == 'r' || s[0] == 'R') &&
-	  (s[1] == 'e' || s[1] == 'E'))
-	{
-	  if (s[2] == ':')
-		{
-		  s = s+3;			/* Skip over "Re:" */
-		  result = PR_TRUE;	/* Yes, we stripped it. */
-		  goto AGAIN;		/* Skip whitespace and try again. */
-		}
-	  else if (s[2] == '[' || s[2] == '(')
-		{
-		  const char *s2 = s+3;		/* Skip over "Re[" */
-
-		  /* Skip forward over digits after the "[". */
-		  while (s2 < (s_end-2) && XP_IS_DIGIT(*s2))
-			s2++;
-
-		  /* Now ensure that the following thing is "]:"
-			 Only if it is do we alter `s'.
-		   */
-		  if ((s2[0] == ']' || s2[0] == ')') && s2[1] == ':')
-			{
-			  s = s2+2;			/* Skip over "]:" */
-			  result = PR_TRUE;	/* Yes, we stripped it. */
-			  goto AGAIN;		/* Skip whitespace and try again. */
-			}
-		}
-	}
-
-  /* Decrease length by difference between current ptr and original ptr.
-	 Then store the current ptr back into the caller. */
-  if (lengthP) 
-	  *lengthP -= (s - (*stringP));
-  *stringP = s;
-
-  return result;
-}
-
-
-
 
 nsParseNewMailState::nsParseNewMailState()
     : m_tmpdbName(nsnull), m_usingTempDB(PR_FALSE), m_disableFilters(PR_FALSE)

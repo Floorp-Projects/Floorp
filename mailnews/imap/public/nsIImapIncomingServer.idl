@@ -63,6 +63,8 @@ interface nsIImapIncomingServer : nsISupports {
   attribute boolean mimePartsOnDemand;
   attribute boolean isAOLServer;       
   attribute boolean aOLMailboxView;
+  attribute boolean storeReadMailInPFC;
+  attribute boolean storeSentMailInPFC;
   void GetImapConnectionAndLoadUrl(in nsIEventQueue aClientEventQueue,
                                            in nsIImapUrl aImapUrl,
                                            in nsISupports aConsumer);
@@ -74,5 +76,7 @@ interface nsIImapIncomingServer : nsISupports {
   void CloseConnectionForFolder(in nsIMsgFolder aMsgFolder);
   void CreatePRUnicharStringFromUTF7(in string aSourceString, out wstring aUnicodeStr);
   void reDiscoverAllFolders();
+  nsIMsgFolder GetReadMailPFC(in boolean createIfMissing);
+  nsIMsgFolder GetSentMailPFC(in boolean createIfMissing);
   attribute boolean doingLsub;
 };

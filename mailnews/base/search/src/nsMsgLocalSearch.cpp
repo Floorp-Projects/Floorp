@@ -313,8 +313,8 @@ nsMsgSearchOfflineMail::~nsMsgSearchOfflineMail ()
 nsresult nsMsgSearchOfflineMail::ValidateTerms ()
 {
     nsresult err = NS_OK;
-#ifdef HAVE_SEARCH_PORT
 	err = nsMsgSearchAdapter::ValidateTerms ();
+#ifdef HAVE_SEARCH_PORT
     if (NS_OK == err)
     {
         // Mail folder must exist. Don't worry about the summary file now since we may
@@ -775,4 +775,103 @@ NS_IMETHODIMP nsMsgSearchOfflineMail::OnStopRunningUrl(nsIURI *url, nsresult aEx
 
   return NS_OK;
 }
+
+nsMsgSearchOfflineNews::nsMsgSearchOfflineNews (nsIMsgSearchScopeTerm *scope, nsISupportsArray *termList) : nsMsgSearchOfflineMail (scope, termList)
+{
+}
+
+
+nsMsgSearchOfflineNews::~nsMsgSearchOfflineNews ()
+{
+}
+
+
+nsresult nsMsgSearchOfflineNews::OpenSummaryFile ()
+{
+	nsresult err = NS_OK;
+  nsCOMPtr <nsIDBFolderInfo>  folderInfo;
+  nsCOMPtr <nsIMsgFolder> scopeFolder;
+  err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
+  if (NS_SUCCEEDED(err) && scopeFolder)
+    err = scopeFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), &m_db);
+	return err;
+}
+
+nsresult nsMsgSearchOfflineNews::ValidateTerms ()
+{
+  return nsMsgSearchOfflineMail::ValidateTerms ();
+}
+
+
+//-----------------------------------------------------------------------------
+nsresult nsMsgSearchValidityManager::InitLocalNewsTable()
+{
+	NS_ASSERTION (nsnull == m_localNewsTable, "already have local news validty table");
+	nsresult err = NewTable (getter_AddRefs(m_localNewsTable));
+
+	if (NS_SUCCEEDED(err))
+	{
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Contains, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Contains, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::BeginsWith, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::BeginsWith, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
+
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::BeginsWith, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::BeginsWith, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::EndsWith, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::EndsWith, 1);
+
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Body, nsMsgSearchOp::Contains, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Body, nsMsgSearchOp::Contains, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Body, nsMsgSearchOp::DoesntContain, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Body, nsMsgSearchOp::DoesntContain, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Body, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Body, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Body, nsMsgSearchOp::Isnt, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Body, nsMsgSearchOp::Isnt, 1);
+
+
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsBefore, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsAfter, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsAfter, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::Isnt, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::Isnt, 1);
+
+#ifdef DOING_ARBITRARY_HEADERS
+		m_localNewsTable->SetAvailable (attribOtherHeader, nsMsgSearchOp::Contains, 1);   // added for arbitrary headers
+		m_localNewsTable->SetEnabled   (attribOtherHeader, nsMsgSearchOp::Contains, 1);
+		m_localNewsTable->SetAvailable (attribOtherHeader, nsMsgSearchOp::DoesntContain, 1);
+		m_localNewsTable->SetEnabled   (attribOtherHeader, nsMsgSearchOp::DoesntContain, 1);
+		m_localNewsTable->SetAvailable (attribOtherHeader, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetEnabled   (attribOtherHeader, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetAvailable (attribOtherHeader, nsMsgSearchOp::Isnt, 1);
+		m_localNewsTable->SetEnabled   (attribOtherHeader, nsMsgSearchOp::Isnt, 1);
+#endif
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan,  1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is,  1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, 1);
+
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Is, 1);
+		m_localNewsTable->SetAvailable (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
+		m_localNewsTable->SetEnabled   (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
+
+	}
+
+	return err;
+}
+
 

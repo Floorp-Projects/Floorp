@@ -64,9 +64,9 @@ interface nsINntpIncomingServer : nsISupports {
 	void displaySubscribedGroup(in nsIMsgNewsFolder msgFolder, in long firstMessage, in long lastMessage, in long totalMessages);
 
 
-	void GetNntpConnection(in nsIURI url, in nsIMsgWindow window,
+	void getNntpConnection(in nsIURI url, in nsIMsgWindow window,
                                            out nsINNTPProtocol aNntpConnection);
-	void RemoveConnection(in nsINNTPProtocol aNntpConnection);
+	void removeConnection(in nsINNTPProtocol aNntpConnection);
 
 	/* used for auto subscribing */
 	boolean containsNewsgroup(in string name);
@@ -75,4 +75,29 @@ interface nsINntpIncomingServer : nsISupports {
 	/* used for the subscribe dialog */
 	void addNewsgroupToList(in string name);
 
+    attribute boolean supportsExtensions;
+    void addExtension(in string extension);
+    boolean queryExtension(in string extension);
+
+    attribute boolean postingAllowed;
+    attribute boolean pushAuth;
+    attribute unsigned long lastUpdatedTime;
+	
+	void addPropertyForGet(in string name, in string value);
+    string queryPropertyForGet(in string name);
+    
+    void addSearchableGroup(in string name);
+    boolean querySearchableGroup(in string name);
+    
+    void addSearchableHeader(in string headerName);
+    boolean querySearchableHeader(in string headerName);
+
+	nsIMsgNewsFolder findGroup(in string name);
+
+	readonly attribute string firstGroupNeedingExtraInfo;
+    void setGroupNeedsExtraInfo(in string name, in boolean needsExtraInfo);
+
+	void groupNotFound(in string group, in boolean opening);
+
+	void setPrettyNameForGroup(in string name, in string prettyName);
 };

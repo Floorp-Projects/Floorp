@@ -806,8 +806,24 @@ NS_IMETHODIMP nsAddrDatabase::ForceClosed()
 NS_IMETHODIMP nsAddrDatabase::Commit(PRUint32 commitType)
 {
 	nsresult	err = NS_OK;
-	nsIMdbThumb	*commitThumb = NULL;
+	nsIMdbThumb	*commitThumb = nsnull;
 
+  if (commitType == kLargeCommit || commitType == kSessionCommit)
+  {
+    mdb_percent outActualWaste = 0;
+    mdb_bool outShould;
+    if (m_mdbStore) 
+    {
+      // check how much space would be saved by doing a compress commit.
+      // If it's more than 30%, go for it.
+      // N.B. - I'm not sure this calls works in Mork for all cases.
+      err = m_mdbStore->ShouldCompress(GetEnv(), 30, &outActualWaste, &outShould);
+      if (NS_SUCCEEDED(err) && outShould)
+      {
+          commitType = kCompressCommit;
+      }
+    }
+  }
 	if (m_mdbStore)
 	{
 		switch (commitType)

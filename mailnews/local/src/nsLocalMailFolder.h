@@ -31,7 +31,6 @@
 
 #include "nsMsgDBFolder.h" /* include the interface we are going to support */
 #include "nsFileSpec.h"
-#include "nsIMessage.h"
 #include "nsICopyMessageListener.h"
 #include "nsFileStream.h"
 #include "nsIPop3IncomingServer.h"  // need this for an interface ID
@@ -53,7 +52,7 @@ struct nsLocalMailCopyState
   nsCOMPtr<nsISupports> m_srcSupport;
   nsCOMPtr<nsISupportsArray> m_messages;
   nsCOMPtr<nsMsgTxn> m_undoMsgTxn;
-  nsCOMPtr<nsIMessage> m_message; // current copy message
+  nsCOMPtr<nsIMsgDBHdr> m_message; // current copy message
   nsCOMPtr<nsIMsgParseMailMsgState> m_parseMsgState;
   nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
   
@@ -139,11 +138,10 @@ public:
                           nsIMsgCopyServiceListener* listener, PRBool isFolder );
   NS_IMETHOD CopyFolder(nsIMsgFolder *srcFolder, PRBool isMoveFolder, nsIMsgWindow *msgWindow,
                           nsIMsgCopyServiceListener* listener);
-  NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage* msgToReplace,
+  NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr* msgToReplace,
                              PRBool isDraftOrTemplate, 
                              nsIMsgWindow *msgWindow,
                              nsIMsgCopyServiceListener* listener);
-	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
 	NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
 
@@ -172,11 +170,11 @@ protected:
 	*/
 	nsresult CreateDirectoryForFolder(nsFileSpec &path);
 
-	nsresult DeleteMessage(nsIMessage *message, nsIMsgWindow *msgWindow,
+	nsresult DeleteMessage(nsISupports *message, nsIMsgWindow *msgWindow,
                          PRBool deleteStorage);
 
 	// copy message helper
-	nsresult CopyMessageTo(nsIMessage *message, nsIMsgFolder *dstFolder,
+	nsresult CopyMessageTo(nsISupports *message, nsIMsgFolder *dstFolder,
                          nsIMsgWindow *msgWindow, PRBool isMove);
 
 	// copy multiple messages at a time from this folder

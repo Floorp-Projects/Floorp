@@ -23,12 +23,21 @@
 #include "nsISupports.idl"
 #include "MailNewsTypes2.idl"
 
-interface nsIMsgDatabase;
+interface nsIMsgFolder;
+interface nsIMsgWindow;
+interface nsIDOMElement;
+interface nsIMessenger;
+interface nsIMsgDBHdr;
+interface nsIMsgDBViewCommandUpdater;
 
 typedef long nsMsgViewSortOrderValue;
 typedef long nsMsgViewSortTypeValue;
-typedef long nsMsgDBViewTypeValue;
+typedef long nsMsgViewTypeValue;
 typedef long nsMsgViewNotificationCodeValue;
+typedef long nsMsgViewCommandCheckStateValue;
+typedef long nsMsgViewCommandTypeValue;
+typedef long nsMsgViewFlagsTypeValue;
+typedef long nsMsgNavigationTypeValue;
 
 [scriptable, uuid(682a18be-fd18-11d4-a5be-0060b0fc04b7)]
 interface nsMsgViewSortOrder
@@ -36,6 +45,25 @@ interface nsMsgViewSortOrder
 	const nsMsgViewSortOrderValue none = 0;
 	const nsMsgViewSortOrderValue ascending = 1;
 	const nsMsgViewSortOrderValue descending = 2;
+};
+
+[scriptable, uuid(dac950b0-1dd1-11b2-be06-d4c2003a6927)]
+interface nsMsgViewType {
+    const nsMsgViewTypeValue eShowAllThreads = 0;
+    const nsMsgViewTypeValue eShowThreadsWithUnread = 2;
+    const nsMsgViewTypeValue eShowWatchedThreadsWithUnread = 3;
+};
+
+[scriptable, uuid(64852276-1dd2-11b2-8103-afe12002c053)]
+interface nsMsgViewFlagsType
+{
+    /**
+     * flags for GetViewFlags
+     */
+    const nsMsgViewFlagsTypeValue kNone = 0x0;
+    const nsMsgViewFlagsTypeValue kThreadedDisplay = 0x1;
+    const nsMsgViewFlagsTypeValue kShowIgnored = 0x8;
+    const nsMsgViewFlagsTypeValue kUnreadOnly = 0x10;
 };
 
 [scriptable, uuid(b2f31bca-fd18-11d4-a5be-0060b0fc04b7)]
@@ -108,46 +136,148 @@ interface nsMsgViewNotificationCode
 
 };
 
-[scriptable, uuid(4063bcf8-fd19-11d4-a5be-0060b0fc04b7)]
-interface nsMsgDBViewType
+[scriptable, uuid(4ec9248e-0108-11d5-a5be-0060b0fc04b7)]
+interface nsMsgViewCommandCheckState
 {
-    /** 
-     * this view type matches any other view type, 
-	 * for the purpose of matching cached views.
-	 * Else, it's equivalent to allThreads
-     */
-	const nsMsgDBViewTypeValue anyView = 0; 
+  const nsMsgViewCommandCheckStateValue notUsed = 0;
+  const nsMsgViewCommandCheckStateValue checked = 1;
+  const nsMsgViewCommandCheckStateValue unchecked = 2;
+};
 
-    /** 
-     * default view, no killed threads
-     */
-	const nsMsgDBViewTypeValue allThreads = 1;			
+[scriptable, uuid(ad36e6cc-0109-11d5-a5be-0060b0fc04b7)]
+interface nsMsgViewCommandType
+{
+  const nsMsgViewCommandTypeValue markMessagesRead = 0;
+  const nsMsgViewCommandTypeValue markMessagesUnread = 1;
+  const nsMsgViewCommandTypeValue toggleMessageRead = 2;
+								   
+  const nsMsgViewCommandTypeValue flagMessages = 3;
+  const nsMsgViewCommandTypeValue unflagMessages = 4;
 
-	const nsMsgDBViewTypeValue onlyThreadsWithUnread = 2;
-	const nsMsgDBViewTypeValue onlyUnreadHeaders = 3;		
-	const nsMsgDBViewTypeValue watchedThreadsWithNew = 4;
+  const nsMsgViewCommandTypeValue toggleThreadWatched = 6;
 
-    /** 
-     * view built up on demand
-     */
-	const nsMsgDBViewTypeValue cacheless = 5;	
+  const nsMsgViewCommandTypeValue deleteMsg = 7;
+  const nsMsgViewCommandTypeValue deleteNoTrash = 8;
+  const nsMsgViewCommandTypeValue markThreadRead = 9;
+  const nsMsgViewCommandTypeValue markAllRead = 10;
+  const nsMsgViewCommandTypeValue expandAll = 11;
+  const nsMsgViewCommandTypeValue collapseAll = 12;
+  
+  const nsMsgViewCommandTypeValue copyMessages = 13;
+  const nsMsgViewCommandTypeValue moveMessages = 14;
+
+  const nsMsgViewCommandTypeValue selectAll = 15;
+  const nsMsgViewCommandTypeValue downloadSelectedForOffline = 16;
+  const nsMsgViewCommandTypeValue downloadFlaggedForOffline = 17;
+};
+
+[scriptable, uuid(65903eb2-1dd2-11b2-ac45-c5b69c1618d7)]
+interface nsMsgNavigationType
+{
+  const nsMsgNavigationTypeValue firstMessage = 1;
+  const nsMsgNavigationTypeValue nextMessage = 2;
+  const nsMsgNavigationTypeValue previousMessage = 3;
+  const nsMsgNavigationTypeValue lastMessage = 4;
+  /**
+   * must match nsMsgViewCommandTypeValue toggleThreadKilled
+   */
+  const nsMsgNavigationTypeValue toggleThreadKilled = 5;
+  const nsMsgNavigationTypeValue firstUnreadMessage = 6;
+  const nsMsgNavigationTypeValue nextUnreadMessage = 7;
+  const nsMsgNavigationTypeValue previousUnreadMessage = 8;
+  const nsMsgNavigationTypeValue lastUnreadMessage = 9;
+  const nsMsgNavigationTypeValue nextUnreadThread = 10;
+  const nsMsgNavigationTypeValue nextUnreadFolder = 11;
+  const nsMsgNavigationTypeValue nextFolder = 12;
+  const nsMsgNavigationTypeValue readMore = 13;
+  const nsMsgNavigationTypeValue laterMessage = 14;
+  /**
+   * Go back to the previous visited message
+   */
+  const nsMsgNavigationTypeValue back = 15;
+  /**
+   * Go forward to the previous visited message 
+   */
+  const nsMsgNavigationTypeValue forward = 16;
+  const nsMsgNavigationTypeValue firstFlagged = 17;
+  const nsMsgNavigationTypeValue nextFlagged = 18;
+  const nsMsgNavigationTypeValue previousFlagged = 19;
+  const nsMsgNavigationTypeValue firstNew = 20;
+  const nsMsgNavigationTypeValue editUndo = 21;
+  const nsMsgNavigationTypeValue editRedo = 22;
 };
 
 
 [scriptable, uuid(704c7d28-fd1a-11d4-a5be-0060b0fc04b7)]
 interface nsIMsgDBView : nsISupports
 {
-    void open(in nsIMsgDatabase msgDB, in nsMsgViewSortTypeValue viewType, out long count);
+    void open(in nsIMsgFolder folder, in nsMsgViewSortTypeValue sortType, in nsMsgViewSortOrderValue sortOrder, in nsMsgViewFlagsTypeValue viewFlags, out long count);
     void close();
 
-    void init(out long pCount);
-    void addKeys(out nsMsgKey pKeys, out long pFlags, in string pLevels, in nsMsgViewSortTypeValue sortType, in long numKeysToAdd);
+    void init(in nsIMessenger aMessengerInstance, in nsIMsgWindow aMsgWindow, in nsIMsgDBViewCommandUpdater aCommandUpdater);
 
     void sort(in nsMsgViewSortTypeValue sortType, in nsMsgViewSortOrderValue sortOrder);
 
+    void doCommand(in nsMsgViewCommandTypeValue command);
+    void doCommandWithFolder(in nsMsgViewCommandTypeValue command, in nsIMsgFolder destFolder);
+    void getCommandStatus(in nsMsgViewCommandTypeValue command,
+						 out boolean selectable_p, out nsMsgViewCommandCheckStateValue selected_p);
+
+    readonly attribute nsMsgViewTypeValue viewType;
+    attribute nsMsgViewFlagsTypeValue viewFlags;
+    readonly attribute nsMsgViewSortTypeValue sortType;
+    readonly attribute nsMsgViewSortOrderValue sortOrder;
+
     /**
-     * temporary, so I can test from my js
+     * this method will automatically expand the destination thread, 
+     * if needs be. 
      */
-    void populateView();
-    void dumpView();
+    void viewNavigate(in nsMsgNavigationTypeValue motion, out nsMsgKey resultId, out nsMsgViewIndex resultIndex, out nsMsgViewIndex threadIndex, in boolean wrap);
+
+    /**
+     * Indicates if navigation of the passed motion type is valid. 
+     */
+    boolean navigateStatus(in nsMsgNavigationTypeValue motion);
+
+	attribute nsIDOMElement sortedColumn;
+   
+    readonly attribute nsIMsgFolder msgFolder;
+
+    nsMsgKey getKeyAt(in nsMsgViewIndex index);
+    nsIMsgFolder getFolderForViewIndex(in nsMsgViewIndex index); // mainly for search
+    string getURIForViewIndex(in nsMsgViewIndex index);
+
+    void getURIsForSelection([array, size_is(count)] out string uris, out unsigned long count);
+    void getIndicesForSelection([array, size_is(count)] out nsMsgViewIndex indices, out unsigned long count);
+
+    readonly attribute string URIForFirstSelectedMessage;
+    readonly attribute nsIMsgDBHdr hdrForFirstSelectedMessage;
+	void loadMessageByMsgKey (in nsMsgKey aMsgKey);
+	void reloadMessage();
+
+    readonly attribute unsigned long numSelected;
+    readonly attribute nsMsgViewIndex firstSelected; // the lowest view index selected.
+
+	// we'll suppress displaying messages if the message pane is collapsed
+	attribute boolean supressMsgDisplay;
+};
+
+/* this interface is rapidly morphing from a command updater interface into a more generic
+   FE updater interface to handle changes in the view 
+*/
+
+[scriptable, uuid(65FC9AD5-0912-11d5-9901-001083010E9B)]
+interface nsIMsgDBViewCommandUpdater : nsISupports
+{
+	/* Eventually we'll flush this out into some kind of rich interface
+	   which may take specifc selection changed type notifications like
+	   no selections, single selection, multi-selection, etc. For starters,
+	   we are going to keep it generic. The back end will only push an update
+	   command status when the # of selected items changes.
+	*/
+
+	void updateCommandStatus();
+
+	/* displayed message has changed */
+	void displayMessageChanged(in nsIMsgFolder aFolder, in wstring aSubject);
 };

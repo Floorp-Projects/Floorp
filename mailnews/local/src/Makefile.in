@@ -41,7 +41,6 @@ CPPSRCS		= \
 		nsMailboxService.cpp \
 		nsPop3Service.cpp \
 		nsPop3IncomingServer.cpp \
-		nsLocalMessage.cpp \
 		nsLocalUtils.cpp \
 		nsLocalUndoTxn.cpp \
 		nsLocalStringBundle.cpp \
@@ -60,7 +59,6 @@ EXPORTS		= \
 		nsPop3Service.h \
 		nsLocalMailFolder.h \
 		nsPop3IncomingServer.h \
-		nsLocalMessage.h \
 		nsLocalStringBundle.h \
 		nsNoneService.h	\
 		nsNoIncomingServer.h \

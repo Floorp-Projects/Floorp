@@ -55,7 +55,7 @@
 // it, but otherwise, we are going to do the fancy encoding!
 //
 PRBool	
-nsMsgIsMacFile(char *aUrlString)
+nsMsgIsMacFile(const char *aUrlString)
 {
   nsAutoString urlStr; urlStr.AssignWithConversion(aUrlString);
   char  *ext = nsMsgGetExtensionFromFileURL(urlStr);

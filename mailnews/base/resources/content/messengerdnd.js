@@ -22,6 +22,10 @@
  * jarrod.k.gray@rose-hulman.edu
  */
 
+// cache these services
+var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService().QueryInterface(Components.interfaces.nsIRDFService);
+var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);
+
 var ctrlKeydown = false;
 var gSrcCanRename;
 
@@ -29,24 +33,6 @@ function debugDump(msg)
 {
   // uncomment for noise
   // dump(msg+"\n");
-}
-
-function GetDragService()
-{
-	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
-	if (dragService) 
-		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
-
-	return dragService;
-}
-
-function GetRDFService()
-{
-	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-	if (rdf)   
-		rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-
-	return rdf;
 }
 
 function DragOverTree(event)
@@ -60,9 +46,6 @@ function DragOverTree(event)
     var dragSession = null;
     var dragFolder = false;
     var flavor =false;
-
-    var dragService = GetDragService();
-    if ( !dragService )	return(false);
 
     dragSession = dragService.getCurrentSession();
     if ( !dragSession )	return(false);
@@ -78,8 +61,8 @@ function DragOverTree(event)
     var targetID = treeItem.getAttribute("id");
     var targetNode = RDF.GetResource(targetID, true);
     if (!targetNode)	return(false);
-    var targetfolder = targetNode.QueryInterface(Components.interfaces.nsIMsgFolder);
-    var targetServer = targetfolder.server;
+    var targetFolder = targetNode.QueryInterface(Components.interfaces.nsIMsgFolder);
+    var targetServer = targetFolder.server;
 
     trans.addDataFlavor("text/nsmessageOrfolder");
    
@@ -131,15 +114,16 @@ function DragOverTree(event)
             debugDump("***NoSelect == true\n");
             return(false);
           } 
-          var message = sourceNode.QueryInterface(Components.interfaces.nsIMessage);
-          var sourceFolder = message.msgFolder;
-          if (sourceFolder == targetfolder)
+          var hdr = messenger.messageServiceFromURI(sourceID).messageURIToMsgHdr(sourceID);
+          if (hdr.folder == targetFolder)
              return (false);
           break;
        }
+
+       // we should only get here if we are dragging and dropping folders
        var sourceResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-  	   var sourcefolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-       var sourceServer = sourcefolder.server;
+  	   var sourceFolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+       var sourceServer = sourceFolder.server;
 
        if (sourceNode == targetNode)	
           return (false);
@@ -147,14 +131,14 @@ function DragOverTree(event)
       if (sourceServer != targetServer && targetServer.type == "imap") //don't allow drop on different imap servers.
           return (false);
 			    
-      if (targetfolder.URI == sourcefolder.parent.URI)   //don't allow immediate child to be dropped to it's parent
+      if (targetFolder.URI == sourceFolder.parent.URI)   //don't allow immediate child to be dropped to it's parent
       {
-          debugDump(targetfolder.URI + "\n");
-          debugDump(sourcefolder.parent.URI + "\n");     
+          debugDump(targetFolder.URI + "\n");
+          debugDump(sourceFolder.parent.URI + "\n");     
           return (false);
 	  }
 			
-       var isAncestor = sourcefolder.isAncestorOf(targetfolder);
+       var isAncestor = sourceFolder.isAncestorOf(targetFolder);
        if (isAncestor)  // don't allow parent to be dropped on its ancestors
           return (false);
 	
@@ -210,13 +194,9 @@ function BeginDragTree(event, tree, flavor)
        return(false);
 
     var database = childWithDatabase.database;
-    var rdf = GetRDFService();
-    if ((!rdf) || (!database))	{ debugDump("CAN'T GET DATABASE\n"); return(false); }
+    if ((!RDF) || (!database))	{ debugDump("CAN'T GET DATABASE\n"); return(false); }
 	
     var dragStarted = false;
-
-    var dragService = GetDragService();
-    if ( !dragService )	return(false);
 
     var transArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
     if ( !transArray ) return(false); 
@@ -281,29 +261,9 @@ function BeginDragFolderTree(event)
 
 }
 
-
-function BeginDragThreadTree(event)
-{
-	debugDump("BeginDragThreadTree\n");
-        if (event.target.localName != "treecell" &&
-            event.target.localName != "treeitem")
-             return false;
-
-	//XXX we rely on a capturer to already have determined which item the mouse was over
-	//XXX and have set an attribute.
-    
-	// if the click is on the tree proper, ignore it. We only care about clicks on items.
-
-    var tree = GetThreadTree();
-
-    return BeginDragTree(event, tree, "text/nsmessageOrfolder");
-}
-
 function DropOnFolderTree(event)
 {
     debugDump("DropOnTree\n");
-    var RDF = GetRDFService();
-    if (!RDF) return(false);
 
     var treeRoot = GetFolderTree();
     if (!treeRoot)	return(false);
@@ -335,10 +295,6 @@ function DropOnFolderTree(event)
     debugDump("***targetID = " + targetID + "\n");
 
     //make sure target is a folder
-
-    var dragService = GetDragService();
-    if ( !dragService )	return(false);
-	
     var dragSession = dragService.getCurrentSession();
     if ( !dragSession )	return(false);
 
@@ -347,12 +303,13 @@ function DropOnFolderTree(event)
 
     var list = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 
-    var dropMessage = false;   	
-    var dropFolder = false;
-    
+    var dropMessage = true;   	
+    var sourceNode;
+    var sourceFolder;
+    var sourceServer;
+
     trans.addDataFlavor("text/nsmessageOrfolder");
 	
-    var listCount =0;
     for ( var i = 0; i < dragSession.numDropItems; ++i )
     {
         dragSession.getData ( trans, i );
@@ -367,32 +324,46 @@ function DropOnFolderTree(event)
         var sourceID = dataObj.data.substring(0, len.value);
         if (!sourceID)	continue;
 
-        debugDump("    Node #" + i + ": drop '" + sourceID + "' " + dropAction + " '" + targetID + "'");
-        debugDump("\n");
+        debugDump("    Node #" + i + ": drop '" + sourceID + "' " + dropAction + " '" + targetID + "'\n");
 
-        var sourceNode = RDF.GetResource(sourceID, true);
-        if (!sourceNode)
-             continue;
-        try
-        {
-	      var folder = sourceNode.QueryInterface(Components.interfaces.nsIFolder);
-          if (folder)
-            dropFolder = true;
+        sourceNode = RDF.GetResource(sourceID, true);
+        // only do this for the first object, either they are all messages or they are all folders
+        if (i == 0) {
+            try {
+                sourceFolder = sourceNode.QueryInterface(Components.interfaces.nsIMsgFolder);
+                if (sourceFolder) {
+                    // we are dropping a folder
+                    dropMessage = false;
+                }
+                else {
+                    dropMessage = true;
+                }
+            }
+            catch (ex) {
+                dropMessage = true;
+            }
         }
-        catch (ex)
-        {
-          dropMessage = true;
+        else {
+            if (!dropMessage) {
+                dump("drag and drop of multiple folders isn't supported\n");
+            }
         }
-		// Prevent dropping of a node before, after, or on itself
-        if (sourceNode == targetNode)	
+
+        if (dropMessage) {
+          // from the message uri, get the appropriate messenger service
+          // and then from that service, get the msgDbHdr
+          list.AppendElement(messenger.messageServiceFromURI(sourceID).messageURIToMsgHdr(sourceID));
+        }
+        else {
+		  // Prevent dropping of a node before, after, or on itself
+          if (sourceNode == targetNode)	
             continue;
-        else
-            listCount ++;
 
-        list.AppendElement(sourceNode);
+          list.AppendElement(sourceNode);
+        }
     }
 
-    if (listCount < 1)
+    if (list.Count() < 1)
         return false;
 
     var isSourceNews = false;
@@ -400,90 +371,108 @@ function DropOnFolderTree(event)
     
     var targetNode = RDF.GetResource(targetID, true);
     if (!targetNode)	return(false);
-    var targetfolder = targetNode.QueryInterface(Components.interfaces.nsIMsgFolder);
-    var targetServer = targetfolder.server;
+    var targetFolder = targetNode.QueryInterface(Components.interfaces.nsIMsgFolder);
+    var targetServer = targetFolder.server;
 
-    if (dropMessage)
-    {
-        var message = sourceNode.QueryInterface(Components.interfaces.nsIMessage);
-        var folder = message.msgFolder;
-        var sourceResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-  	    var sourcefolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        var sourceServer = sourcefolder.server;
-        var nextMessage;
-        var messageTree;
+    if (dropMessage) {
+        // fix this, to get the folder from the sourceID.  this won't work with multiple 3 panes
+        sourceFolder = GetThreadPaneFolder();
+        sourceServer = sourceFolder.server;
 
-        if (isSourceNews) //news to pop or imap is always a copy
-        {
-           try
-           {
-              messenger.CopyMessages(treeDatabase,
-                                     sourceResource,
-                                     targetNode, list, false);
-           }
-           catch(e)
-           {
-              dump ( "Exception : CopyMessages \n");
-           }
+        try {
+          if (isSourceNews) {
+            // news to pop or imap is always a copy
+            messenger.CopyMessages(sourceFolder, targetFolder, list, false);
+          }
+          else {
+            // fix this, will not work for multiple 3 panes
+            if (!ctrlKeydown) {
+              SetNextMessageAfterDelete();
+            }
+            messenger.CopyMessages(sourceFolder, targetFolder, list, !ctrlKeydown);
+          }
         }
-        else
-        {
-           //temperary for single mail window, not working when supporting multiple mail windows
-           if (!ctrlKeydown)
-           {
-               messageTree = GetThreadTree();
-               nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
-               if(nextMessage)
-                   gNextMessageAfterDelete = nextMessage.getAttribute('id');
-               else
-                   gNextMessageAfterDelete = null;
-		   }
-           try
-           {
-             messenger.CopyMessages(treeDatabase,
-                                    sourceResource,
-                                    targetNode, list, !ctrlKeydown);
-           }
-           catch(e)
-           {
-             gNextMessageAfterDelete = null;
-             dump ( "Exception : CopyMessages \n");
-           }
+        catch (ex) {
+          dump("failed to copy messages: " + ex + "\n");
         }
     }
-    else if (dropFolder)
-    {
-
-        sourceNode = RDF.GetResource(sourceID, true);
-        folder = sourceNode.QueryInterface(Components.interfaces.nsIFolder);
-        sourceResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-        sourcefolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        sourceServer = sourcefolder.server;
-        var moveFolder = false;
-
-        if (sourceServer == targetServer)
-            moveFolder = true;
-		
+    else {
+        sourceServer = sourceFolder.server;
         try 
         {
-           messenger.CopyFolders(treeDatabase,targetNode,list,moveFolder);
+           messenger.CopyFolders(treeDatabase,targetNode,list,(sourceServer == targetServer));
         }
-        catch(e)
+        catch(ex)
         {
-           dump ("Exception : CopyFolder \n");
+           dump ("Exception : CopyFolder " + ex + "\n");
         }
     }
 
     return(false);
 }
 
-function DropOnThreadTree(event)
+function DropOnThreadPane(event)
 {
 	debugDump("DropOnThreadTree\n");
-    if (event.target.localName != "treecell" &&
-        event.target.localName != "treeitem")
-        return false;
-    
+    /* you can't drop on the thread pane */
 	return false;
 }
 
+function BeginDragThreadPane(event)
+{
+	debugDump("BeginDragThreadPane\n");
+    debugDump("event.target.localName = " + event.target.localName + "\n");
+    if (event.target.localName != "outlinerbody") return false;
+
+    var outliner = GetThreadOutliner();
+
+	return BeginDragOutliner(event, outliner, "text/nsmessageOrfolder");
+}
+
+function BeginDragOutliner(event, outliner, flavor)
+{
+    if (event.target == outliner) {
+		return(true); // continue propagating the event
+    }
+
+    if (!outliner) {
+        return(false);
+    }
+
+    var dragStarted = false;
+
+    var transArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+    if ( !transArray ) return(false);
+
+    var selArray = GetSelectedMessages();
+    var count = selArray.length;
+    debugDump("selArray.length = " + count + "\n");
+    for ( var i = 0; i < count; ++i ) {
+        var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+        if (!trans) return(false);
+
+        var genTextData = Components.classes["@mozilla.org/supports-wstring;1"].createInstance(Components.interfaces.nsISupportsWString);
+        if (!genTextData) return(false);
+
+        trans.addDataFlavor(flavor);
+
+        // get id (url)
+        var id = selArray[i];
+        genTextData.data = id;
+        debugDump("    ID #" + i + " = " + id + "\n");
+
+        trans.setTransferData ( flavor, genTextData, id.length * 2 );  // doublebyte byte data
+
+        // put it into the transferable as an |nsISupports|
+        var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
+        transArray.AppendElement(genTrans);
+    }
+
+    var nsIDragService = Components.interfaces.nsIDragService;
+    dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY +
+    nsIDragService.DRAGDROP_ACTION_MOVE );
+
+    dragStarted = true;
+
+    return(!dragStarted);  // don't propagate the event if a drag has begun
+}

@@ -104,6 +104,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
   }
 
   newsDB = new nsNewsDatabase();
+  newsDB->m_folder = m_folder;
   
   if (!newsDB) {
 #ifdef DEBUG_NEWS_DATABASE

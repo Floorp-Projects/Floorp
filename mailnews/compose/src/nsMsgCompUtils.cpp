@@ -425,7 +425,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 		else
 			PUSH_STRING("receipt=0");
 		PUSH_STRING("; ");
-		if (fields->GetBoolHeader(MSG_UUENCODE_BINARY_BOOL_HEADER_MASK))
+		if (fields->GetUuEncodeAttachments())
 		  PUSH_STRING("uuencode=1");
 		else
 		  PUSH_STRING("uuencode=0");
@@ -1676,11 +1676,11 @@ nsMsgIsLocalFile(const char *url)
 }
 
 char
-*nsMsgGetLocalFileFromURL(char *url)
+*nsMsgGetLocalFileFromURL(const char *url)
 {
 #ifdef XP_MAC
   nsFileURL fileURL(url);
-  char * nativePath = fileURL.GetFileSpec().GetNativePathCString();
+  const char * nativePath = fileURL.GetFileSpec().GetNativePathCString();
   return nsCRT::strdup (nativePath);
 #else
   char * finalPath;

@@ -36,8 +36,6 @@
 
 #include "nsINNTPNewsgroupList.h"
 #include "nsINNTPArticleList.h"
-#include "nsINNTPHost.h"
-#include "nsINNTPNewsgroup.h"
 #include "nsIMsgOfflineNewsState.h"
 #include "nsIMsgNewsFolder.h"
 #include "nsIMsgWindow.h"
@@ -192,8 +190,6 @@ private:
 	// News Event Sinks
   nsCOMPtr <nsINNTPNewsgroupList> m_newsgroupList;
   nsCOMPtr <nsINNTPArticleList> m_articleList;
-	nsCOMPtr <nsINNTPHost>	 m_newsHost;
-	nsCOMPtr <nsINNTPNewsgroup>	m_newsgroup;
 	nsCOMPtr <nsIMsgOfflineNewsState> m_offlineNewsState;
 
   nsCOMPtr <nsIMsgNewsFolder> m_newsFolder;
@@ -217,8 +213,6 @@ private:
   PRInt32     m_responseCode;    /* code returned from NNTP server */
 	PRInt32 	m_previousResponseCode; 
   char       *m_responseText;   /* text returned from NNTP server */
-	nsXPIDLCString m_hostName;
-  nsXPIDLCString m_userName;
     
   char		*m_dataBuf;
   PRUint32	 m_dataBufSize;
@@ -234,6 +228,7 @@ private:
 
 	PRInt32	  m_numArticlesLoaded;	/* How many articles we got XOVER lines for. */
 	PRInt32	  m_numArticlesWanted; /* How many articles we wanted to get XOVER lines for. */
+    PRInt32   m_maxArticles;        /* max articles to get during an XOVER */
 
 	// Cancelation specific state. In particular, the headers that should be 
 	// used for the cancelation message. 
@@ -379,8 +374,9 @@ private:
 	PRInt32 ListXActive();
 	PRInt32 ListXActiveResponse(nsIInputStream * inputStream, PRUint32 length);
 
-	PRInt32 ListGroup();
-	PRInt32 ListGroupResponse(nsIInputStream * inputStream, PRUint32 length);
+    // for "?list-ids"
+	PRInt32 SendListGroup();
+	PRInt32 SendListGroupResponse(nsIInputStream * inputStream, PRUint32 length);
 
 	// Searching Protocol....
 	PRInt32 Search();
@@ -391,14 +387,12 @@ private:
 	// End of Protocol Methods
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	nsresult ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
+	nsresult ParseURL(nsIURI * aURL, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
 
 	void SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgressMax);
 	nsresult SetProgressStatus(const PRUnichar *aMessage);
     nsresult SetCheckingForNewNewsStatus(PRInt32 current, PRInt32 total);
-  nsresult MarkCurrentMsgRead(); // marks the message corresponding to the currently running url read.
-	nsresult SetNewsFolder();		/* sets m_newsFolder, if not already set */
-	nsresult CreateNewsFolderURI (const char *username, const char *hostname, const char *newsgroupname, char **uri);
+    nsresult MarkCurrentMsgRead(); // marks the message corresponding to the currently running url read.
 	nsresult InitializeNewsFolderFromUri(const char *uri);
 	void TimerCallback();
 	nsCOMPtr <nsIInputStream> mInputStream;
@@ -408,6 +402,10 @@ private:
     PRInt32 mBytesReceivedSinceLastStatusUpdate;
     PRTime m_startTime;
     PRInt32 mNumGroupsListed;
+    nsMsgKey m_key;
+
+    nsresult SetCurrentGroup(); /* sets m_currentGroup.  should be called after doing a successful GROUP command */
+    nsresult CleanupNewsgroupList(); /* cleans up m_newsgroupList, and set it to null */
 };
 
 NS_BEGIN_EXTERN_C

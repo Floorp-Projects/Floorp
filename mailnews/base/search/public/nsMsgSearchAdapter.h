@@ -30,8 +30,9 @@
 #include "nsIMsgSearchValidityManager.h"
 #include "nsIMsgSearchTerm.h"
 #include "nsMsgSearchArray.h"
+#include "nsINntpIncomingServer.h"
+
 class nsIMsgSearchScopeTerm;
-class nsINNTPHost;
 
 //-----------------------------------------------------------------------------
 // These Adapter classes contain the smarts to convert search criteria from 
@@ -175,7 +176,7 @@ public:
   
 	nsresult GetTable (int, nsMsgSearchValidityTable**);
   
-	nsresult PostProcessValidityTable (nsINNTPHost*);
+	nsresult PostProcessValidityTable (nsINntpIncomingServer *);
 
 protected:
 
@@ -197,7 +198,7 @@ protected:
 	nsresult InitOnlineMailFilterTable ();
 	nsresult InitNewsTable ();
 	nsresult InitLocalNewsTable(); 
-	nsresult InitNewsExTable (nsINNTPHost *host = nsnull);
+	nsresult InitNewsExTable (nsINntpIncomingServer *host = nsnull);
 
 	void EnableLdapAttribute (nsMsgSearchAttribValue, PRBool enabled = PR_TRUE);
 };

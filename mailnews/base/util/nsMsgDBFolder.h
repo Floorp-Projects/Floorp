@@ -27,7 +27,6 @@
 #include "nsMsgFolder.h" 
 #include "nsIDBFolderInfo.h"
 #include "nsIMsgDatabase.h"
-#include "nsIMessage.h"
 #include "nsCOMPtr.h"
 #include "nsIDBChangeListener.h"
 #include "nsIUrlListener.h"
@@ -52,17 +51,11 @@ public:
   
 	NS_IMETHOD StartFolderLoading(void);
 	NS_IMETHOD EndFolderLoading(void);
-	NS_IMETHOD GetThreadsOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, nsISimpleEnumerator** threadEnumerator);
-	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
-	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
-    NS_IMETHOD HasThreads(nsIMsgWindow *aMsgWindow, PRBool *hasThreads);
-    NS_IMETHOD HasMessagesOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, PRBool *hasMessages);
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset);
 	NS_IMETHOD SetCharset(const PRUnichar * aCharset);
 	NS_IMETHOD GetCharsetOverride(PRBool *aCharsetOverride);
 	NS_IMETHOD SetCharsetOverride(PRBool aCharsetOverride);
-	//NS_IMETHOD HasNewMessages(PRBool *hasNewMessages);
-	NS_IMETHOD GetFirstNewMessage(nsIMessage **firstNewMessage);
+	NS_IMETHOD GetFirstNewMessage(nsIMsgDBHdr **firstNewMessage);
 	NS_IMETHOD ClearNewMessages();
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD GetExpungedBytes(PRUint32 *count);
@@ -79,7 +72,7 @@ public:
 	NS_IMETHOD ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element);
 	NS_IMETHOD ManyHeadersToDownload(PRBool *_retval);
 
-  NS_IMETHOD AddMessageDispositionState(nsIMessage *aMessage, nsMsgDispositionState aDispositionFlag);
+  NS_IMETHOD AddMessageDispositionState(nsIMsgDBHdr *aMessage, nsMsgDispositionState aDispositionFlag);
 	NS_IMETHOD MarkAllMessagesRead(void);
   NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
   NS_IMETHOD SetFlag(PRUint32 flag);
@@ -95,10 +88,12 @@ public:
   NS_IMETHOD ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result);
   NS_IMETHOD GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *offset, PRUint32 *size, nsITransport **_retval);
   NS_IMETHOD HasMsgOffline(nsMsgKey msgKey, PRBool *result);
-  NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages);
+  NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *msgWindow);
   NS_IMETHOD DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow);
   NS_IMETHOD GetRetentionSettings(nsIMsgRetentionSettings **settings);
   NS_IMETHOD SetRetentionSettings(nsIMsgRetentionSettings *settings);
+  NS_IMETHOD GetDownloadSettings(nsIMsgDownloadSettings **settings);
+  NS_IMETHOD SetDownloadSettings(nsIMsgDownloadSettings *settings);
 
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);
@@ -135,6 +130,7 @@ protected:
 	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
 
   nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
+  nsCOMPtr <nsIMsgDownloadSettings> m_downloadSettings;
   static nsIAtom* mFolderLoadedAtom;
   static nsIAtom* mDeleteOrMoveMsgCompletedAtom;
   static nsIAtom* mDeleteOrMoveMsgFailedAtom;

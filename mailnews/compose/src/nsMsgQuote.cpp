@@ -145,25 +145,24 @@ NS_IMETHODIMP nsMsgQuote::GetStreamListener(nsIStreamListener ** aStreamListener
 }
 
 nsresult
-nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStreamListener * aQuoteMsgStreamListener,
-                         const PRUnichar * aMsgCharSet)
+nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListener * aQuoteMsgStreamListener,
+                         const char * aMsgCharSet)
 {
   nsresult  rv;
 
   if (!msgURI)
     return NS_ERROR_INVALID_ARG;
-  nsCAutoString aMsgUri; aMsgUri.AssignWithConversion(msgURI);
 
   mQuoteHeaders = quoteHeaders;
   mStreamListener = aQuoteMsgStreamListener;
 
   // first, convert the rdf msg uri into a url that represents the message...
   nsIMsgMessageService * msgService = nsnull;
-  rv = GetMessageServiceFromURI(aMsgUri, &msgService);
+  rv = GetMessageServiceFromURI(msgURI, &msgService);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIURI> aURL;
-  rv = msgService->GetUrlForUri(aMsgUri, getter_AddRefs(aURL), nsnull);
+  rv = msgService->GetUrlForUri(msgURI, getter_AddRefs(aURL), nsnull);
   if (NS_FAILED(rv)) return rv;
 
   // now we want to append some quote specific information to the 
@@ -189,9 +188,11 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   // if we were given a non empty charset, then use it
   if (aMsgCharSet && *aMsgCharSet)
   {
+    //Fix this, SetCharsetOverRide should take a char*
+    nsAutoString tempStr; tempStr.AssignWithConversion(aMsgCharSet);
     nsCOMPtr<nsIMsgI18NUrl> i18nUrl (do_QueryInterface(aURL));
     if (i18nUrl)
-      i18nUrl->SetCharsetOverRide(aMsgCharSet);
+      i18nUrl->SetCharsetOverRide(tempStr.GetUnicode());
   }
 
   rv = nsComponentManager::CreateInstance(kMsgQuoteListenerCID, nsnull, NS_GET_IID(nsIMsgQuoteListener), getter_AddRefs(mQuoteListener));
@@ -222,7 +223,7 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   //  now try to open the channel passing in our display consumer as the listener 
   rv = mQuoteChannel->AsyncOpen(convertedListener, ctxt);
 
-  ReleaseMessageServiceFromURI(aMsgUri, msgService);
+  ReleaseMessageServiceFromURI(msgURI, msgService);
   return rv;
 }
 

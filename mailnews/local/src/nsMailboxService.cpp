@@ -309,7 +309,8 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 		nsMsgKey msgKey;
         const char *part = PL_strstr(aSrcMsgMailboxURI, "part=");
 		rv = nsParseLocalMessageURI(aSrcMsgMailboxURI, folderURI, &msgKey);
-		rv = nsLocalURI2Path(kMailboxMessageRootURI, folderURI, folderPath);
+        NS_ENSURE_SUCCESS(rv,rv);
+		rv = nsLocalURI2Path(kMailboxRootURI, folderURI, folderPath);
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -433,3 +434,46 @@ NS_IMETHODIMP nsMailboxService::Search(nsIMsgSearchSession *aSearchSession, nsIM
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult 
+nsMailboxService::DecomposeMailboxURI(const char * aMessageURI, nsIMsgFolder ** aFolder, nsMsgKey *aMsgKey)
+{
+    NS_ENSURE_ARG_POINTER(aMessageURI);
+    NS_ENSURE_ARG_POINTER(aFolder);
+    NS_ENSURE_ARG_POINTER(aMsgKey);
+    
+    nsresult rv = NS_OK;
+    nsCAutoString folderURI;
+    rv = nsParseLocalMessageURI(aMessageURI, folderURI, aMsgKey);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr <nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIRDFResource> res;
+    rv = rdf->GetResource(folderURI, getter_AddRefs(res));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = res->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMailboxService::MessageURIToMsgHdr(const char *uri, nsIMsgDBHdr **_retval)
+{
+  NS_ENSURE_ARG_POINTER(uri);
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsMsgKey msgKey;
+
+  rv = DecomposeMailboxURI(uri, getter_AddRefs(folder), &msgKey);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = folder->GetMessageHeader(msgKey, _retval);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}

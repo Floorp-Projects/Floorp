@@ -42,7 +42,7 @@
 
 #include "nsTime.h"
 
-class nsIMessage;
+class nsIMsgDBHdr;
 class nsIMsgFolder;
 
 // include common interfaces such as the service manager and the repository....
@@ -136,6 +136,8 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #define NS_MSG_INVALID_OR_MISSING_SERVER NS_MSG_GENERATE_FAILURE(22)
 
 #define NS_MSG_SERVER_USERNAME_MISSING NS_MSG_GENERATE_FAILURE(23)
+
+#define NS_MSG_INVALID_DBVIEW_INDEX NS_MSG_GENERATE_FAILURE(24)
 
 /* ducarroz: error codes for message compose are defined into compose\src\nsMsgComposeStringBundle.h.
              Message compose use the same error code space than other mailnews modules. To avoid any

@@ -31,7 +31,9 @@ EXPORTS=                \
 	nsMsgLineBuffer.h	\
 	nsMsgGroupRecord.h  \
 	nsUInt32Array.h	\
+  nsUint8Array.h \
 	nsMsgKeySet.h			\
+	nsMsgKeyArray.h			\
 	nsMsgFolder.h			\
 	nsMsgDBFolder.h			\
 	nsLocalFolderSummarySpec.h	\
@@ -62,8 +64,10 @@ LCFLAGS =		   \
 CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgGroupRecord.obj    \
 	.\$(OBJDIR)\nsMsgLineBuffer.obj     \
+  .\$(OBJDIR)\nsUint8Array.obj \
 	.\$(OBJDIR)\nsUInt32Array.obj		\
 	.\$(OBJDIR)\nsMsgKeySet.obj			\
+	.\$(OBJDIR)\nsMsgKeyArray.obj		\
 	.\$(OBJDIR)\nsMsgFolder.obj			\
 	.\$(OBJDIR)\nsMsgDBFolder.obj		\
 	.\$(OBJDIR)\nsLocalFolderSummarySpec.obj	\
@@ -71,7 +75,6 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgIncomingServer.obj	\
 	.\$(OBJDIR)\nsNewsSummarySpec.obj	\
 	.\$(OBJDIR)\nsMsgUtils.obj			\
-	.\$(OBJDIR)\nsMessage.obj			\
 	.\$(OBJDIR)\nsMsgProtocol.obj		\
 	.\$(OBJDIR)\nsMsgMailNewsUrl.obj	\
 	.\$(OBJDIR)\nsMsgTxn.obj			\

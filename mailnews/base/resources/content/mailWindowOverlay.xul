@@ -36,7 +36,7 @@ Rights Reserved.
 <!-- Context menu -->
 <script language="javascript">
   // Global variable that holds the nsContextMenu instance.
-  var contextMenu = null;
+  var gMessagePaneContextMenu = null;
 </script>
 
 <script src="chrome://messenger/content/mailCommands.js"/>
@@ -45,91 +45,150 @@ Rights Reserved.
 
 <stringbundleset id="stringbundleset"/>
 
+<commandset id="mailFileMenuItems"
+     				commandupdater="true"
+		  			events="create-menu-file"
+			    	oncommandupdate="goUpdateMailMenuItems(this)">
+
+    <command id="cmd_getNewMessages" oncommand="goDoCommand('cmd_getNewMessages')" disabled="true"/>
+    <command id="cmd_close" oncommand="CloseMailWindow()"/>
+    <command id="cmd_open" oncommand="goDoCommand('cmd_open')"/>
+	  
+    <command id="cmd_file" disabled="true"/>
+
+	  <command id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
+	  <command id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
+	  <command id="cmd_toggleWorkOffline" oncommand="goDoCommand('cmd_toggleWorkOffline')" />
+	  <command id="cmd_synchronizeOffline" oncommand="goDoCommand('cmd_synchronizeOffline')" disabled="true"/>
+	  <command id="cmd_downloadFlagged" oncommand="goDoCommand('cmd_downloadFlagged')" disabled="true"/>
+	  <command id="cmd_downloadSelected" oncommand="goDoCommand('cmd_downloadSelected')" disabled="true"/>
+    <command id="cmd_getMsgsForAuthAccounts" 
+             oncommand="goDoCommand('cmd_getMsgsForAuthAccounts'); event.preventBubble()" 
+             disabled="true"/>
+	  
+    <command id="cmd_openMessage" oncommand="goDoCommand('cmd_openMessage')" disabled="true"/>
+	  <command id="cmd_print" oncommand="goDoCommand('cmd_print')" disabled="true"/>
+	  <command id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')" disabled="true"/>
+	  <command id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')" disabled="true"/>	  
+	  <command id="cmd_getNextNMessages" oncommand="goDoCommand('cmd_getNextNMessages')" disabled="true"/>
+    <command id="cmd_renameFolder" oncommand="goDoCommand('cmd_renameFolder')" />
+</commandset>
+
+<commandset id="mailViewMenuItems"
+     				commandupdater="true"
+		  			events="create-menu-view"
+			    	oncommandupdate="goUpdateMailMenuItems(this)">
+
+   <command id="cmd_viewPageSource" oncommand="goDoCommand('cmd_viewPageSource')" disabled="true"/>
+   <command id="cmd_setFolderCharset" oncommand="goDoCommand('cmd_setFolderCharset')" />
+   <command id="cmd_reload" oncommand="goDoCommand('cmd_reload')" disabled="true"/>
+
+   <command id="cmd_expandAllThreads" oncommand="goDoCommand('cmd_expandAllThreads')" disabled="true"/>
+   <command id="cmd_collapseAllThreads" oncommand="goDoCommand('cmd_collapseAllThreads')" disabled="true"/>
+	 <command id="cmd_viewAllMsgs" oncommand="goDoCommand('cmd_viewAllMsgs')" disabled="true"/>
+	 <command id="cmd_viewUnreadMsgs" oncommand="goDoCommand('cmd_viewUnreadMsgs')" disabled="true"/>
+	 <command id="cmd_viewThreadsWithUnread" oncommand="goDoCommand('cmd_viewThreadsWithUnread')" disabled="true"/>
+	 <command id="cmd_viewWatchedThreadsWithUnread" oncommand="goDoCommand('cmd_viewWatchedThreadsWithUnread')" disabled="true"/>
+	 <command id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
+
+</commandset>
+
+<commandset id="mailEditMenuItems"
+     				commandupdater="true"
+		  			events="create-menu-edit"
+			    	oncommandupdate="goUpdateMailMenuItems(this)">
+
+	<command id="cmd_undo"
+	       valueDeleteMsg="&undoDeleteMsgCmd.label;"
+				 valueMoveMsg="&undoMoveMsgCmd.label;"
+				 valueCopyMsg="&undoCopyMsgCmd.label;"
+				 valueDefault="&undoDefaultCmd.label;"/>
+	<command id="cmd_redo"
+	       valueDeleteMsg="&redoDeleteMsgCmd.label;"
+				 valueMoveMsg="&redoMoveMsgCmd.label;"
+				 valueCopyMsg="&redoCopyMsgCmd.label;"
+				 valueDefault="&redoDefaultCmd.label;"/>
+	<command id="cmd_cut"/>
+	<command id="cmd_copy"/>
+	<command id="cmd_paste"/>
+	<command id="cmd_delete"
+         valueFolder="&deleteFolderCmd.label;"
+         valueNewsgroup="&unsubscribeNewsgroupCmd.label;"
+         valueMessage="&deleteMsgCmd.label;"
+         valueNewsMessage="&cancelNewsMsgCmd.label;"
+         valueMessages="&deleteMsgsCmd.label;"/>
+	<command id="cmd_editDraft" oncommand="goDoCommand('cmd_editDraft')" disabled="true"/>
+	<command id="cmd_selectAll"/>
+</commandset>
+
+<commandset id="mailSearchMenuItems"
+     				commandupdater="true"
+		  			events="create-menu-search"
+			    	oncommandupdate="goUpdateMailMenuItems(this)">
+	<command id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
+	<command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
+</commandset>
+
+<commandset id="mailGoMenuItems"
+     				commandupdater="true"
+		  			events="create-menu-go"
+			    	oncommandupdate="goUpdateMailMenuItems(this)">
+
+	<command id="cmd_nextMsg" oncommand="goDoCommand('cmd_nextMsg')" disabled="true"/>
+	<command id="cmd_nextUnreadMsg" oncommand="goDoCommand('cmd_nextUnreadMsg')" disabled="true"/>
+	<command id="cmd_nextFlaggedMsg" oncommand="goDoCommand('cmd_nextFlaggedMsg')" disabled="true"/>
+	<command id="cmd_nextUnreadThread" oncommand="goDoCommand('cmd_nextUnreadThread')" disabled="true"/>
+	<command id="cmd_previousMsg" oncommand="goDoCommand('cmd_previousMsg')" disabled="true"/>
+	<command id="cmd_previousUnreadMsg" oncommand="goDoCommand('cmd_previousUnreadMsg')" disabled="true"/>
+	<command id="cmd_previousFlaggedMsg" oncommand="goDoCommand('cmd_previousFlaggedMsg')" disabled="true"/>
+</commandset>
+
+<commandset id="mailMessageMenuItems"
+     				commandupdater="true"
+		  			events="create-menu-message"
+			    	oncommandupdate="goUpdateMailMenuItems(this)">
+	<command id="cmd_reply" oncommand="goDoCommand('cmd_reply')"/>
+	<command id="cmd_replySender" oncommand="goDoCommand('cmd_replySender')"/>
+	<command id="cmd_replyGroup" oncommand="goDoCommand('cmd_replyGroup')"/>
+	<command id="cmd_replyall" oncommand="goDoCommand('cmd_replyall')"/>
+	<command id="cmd_forward" oncommand="goDoCommand('cmd_forward')"/>
+	<command id="cmd_forwardInline" oncommand="goDoCommand('cmd_forwardInline')"/>
+	<command id="cmd_forwardAttachment" oncommand="goDoCommand('cmd_forwardAttachment')"/>
+	<command id="cmd_editAsNew" oncommand="goDoCommand('cmd_editAsNew')"/>
+  
+	<command id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead'); event.preventBubble()" disabled="true"/>
+	<command id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead'); event.preventBubble()" disabled="true"/>
+	<command id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead'); event.preventBubble()" disabled="true"/>
+	<command id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
+	<command id="cmd_killThread" oncommand="goDoCommand('cmd_killThread')"/>
+	<command id="cmd_watchThread" oncommand="goDoCommand('cmd_watchThread')"/>
+
+</commandset>
+
+<commandset id="mailToolbarItems"
+     				commandupdater="true"
+		  			events="mail-toolbar"
+			    	oncommandupdate="goUpdateMailMenuItems(this)">
+  
+  <command id="button_reply"/>
+  <command id="button_replyall"/>
+  <command id="button_forward"/>
+  <command id="button_delete"/>
+  <command id="button_mark"/>
+  <command id="button_getNewMessages"/>
+  <command id="button_print"/>
+  <command id="button_next"/>
+  <command id="button_file"/>
+</commandset>
+
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
 	<broadcaster id="cmd_newNavigator"/>
 	<broadcaster id="cmd_newEditor"/>
-	<broadcaster id="cmd_close" oncommand="CloseMailWindow()"/>
  	<broadcaster id="cmd_quit"/>
   <broadcaster id="cmd_pageSetup"/>
+
 	<!-- Edit Menu -->
-	<broadcaster id="cmd_undo"
-	             valueDeleteMsg="&undoDeleteMsgCmd.label;"
-				 valueMoveMsg="&undoMoveMsgCmd.label;"
-				 valueCopyMsg="&undoCopyMsgCmd.label;"
-				 valueDefault="&undoDefaultCmd.label;"/>
-	<broadcaster id="cmd_redo"
-	             valueDeleteMsg="&redoDeleteMsgCmd.label;"
-				 valueMoveMsg="&redoMoveMsgCmd.label;"
-				 valueCopyMsg="&redoCopyMsgCmd.label;"
-				 valueDefault="&redoDefaultCmd.label;"/>
-	<broadcaster id="cmd_cut"/>
-	<broadcaster id="cmd_copy"/>
-	<broadcaster id="cmd_paste"/>
-	<broadcaster id="cmd_delete"
-				 valueFolder="&deleteFolderCmd.label;"
-                 valueNewsgroup="&unsubscribeNewsgroupCmd.label;"
-				 valueMessage="&deleteMsgCmd.label;"
-                 valueNewsMessage="&cancelNewsMsgCmd.label;"
-				 valueMessages="&deleteMsgsCmd.label;"/>
-	<broadcaster id="button_delete"/>
-	<broadcaster id="cmd_editDraft" oncommand="goDoCommand('cmd_editDraft')" disabled="true"/>
-	<broadcaster id="cmd_selectAll"/>
-	<broadcaster id="cmd_preferences"/>
-	
-	<broadcaster id="cmd_nextMsg" oncommand="goDoCommand('cmd_nextMsg')" disabled="true"/>
-	<broadcaster id="cmd_nextUnreadMsg" oncommand="goDoCommand('cmd_nextUnreadMsg')" disabled="true"/>
-	<broadcaster id="cmd_nextFlaggedMsg" oncommand="goDoCommand('cmd_nextFlaggedMsg')" disabled="true"/>
-	<broadcaster id="cmd_nextUnreadThread" oncommand="goDoCommand('cmd_nextUnreadThread')" disabled="true"/>
-	<broadcaster id="cmd_previousMsg" oncommand="goDoCommand('cmd_previousMsg')" disabled="true"/>
-	<broadcaster id="cmd_previousUnreadMsg" oncommand="goDoCommand('cmd_previousUnreadMsg')" disabled="true"/>
-	<broadcaster id="cmd_previousFlaggedMsg" oncommand="goDoCommand('cmd_previousFlaggedMsg')" disabled="true"/>
-
-
-	<broadcaster id="cmd_viewAllMsgs" oncommand="goDoCommand('cmd_viewAllMsgs')" disabled="true"/>
-	<broadcaster id="cmd_viewUnreadMsgs" oncommand="goDoCommand('cmd_viewUnreadMsgs')" disabled="true"/>
-	<broadcaster id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
-	<broadcaster id="cmd_reply" oncommand="goDoCommand('cmd_reply')"/>
-	<broadcaster id="cmd_replySender" oncommand="goDoCommand('cmd_replySender')"/>
-	<broadcaster id="cmd_replyGroup" oncommand="goDoCommand('cmd_replyGroup')"/>
-	<broadcaster id="cmd_replyall" oncommand="goDoCommand('cmd_replyall')"/>
-	<broadcaster id="cmd_forward" oncommand="goDoCommand('cmd_forward')"/>
-	<broadcaster id="cmd_forwardInline" oncommand="goDoCommand('cmd_forwardInline')"/>
-	<broadcaster id="cmd_forwardAttachment" oncommand="goDoCommand('cmd_forwardAttachment')"/>
-	<broadcaster id="cmd_editAsNew" oncommand="goDoCommand('cmd_editAsNew')"/>
-	<broadcaster id="button_reply"/>
-	<broadcaster id="button_replyall"/>
-	<broadcaster id="button_forward"/>
-	<broadcaster id="cmd_renameFolder" oncommand="goDoCommand('cmd_renameFolder')" />
-
-	<broadcaster id="cmd_expandAllThreads" oncommand="goDoCommand('cmd_expandAllThreads')" disabled="true"/>
-	<broadcaster id="cmd_collapseAllThreads" oncommand="goDoCommand('cmd_collapseAllThreads')" disabled="true"/>
-
-	<broadcaster id="cmd_openMessage" oncommand="goDoCommand('cmd_openMessage')" disabled="true"/>
-	<broadcaster id="cmd_print" oncommand="goDoCommand('cmd_print')" disabled="true"/>
-	<broadcaster id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')" disabled="true"/>
-	<broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')" disabled="true"/>
-	<broadcaster id="cmd_viewPageSource" oncommand="goDoCommand('cmd_viewPageSource')" disabled="true"/>
-	<broadcaster id="cmd_setFolderCharset" oncommand="goDoCommand('cmd_setFolderCharset')" />
-	<broadcaster id="cmd_reload" oncommand="goDoCommand('cmd_reload')" disabled="true"/>
-	<broadcaster id="cmd_getNewMessages" oncommand="goDoCommand('cmd_getNewMessages')" disabled="true"/>
-	<broadcaster id="cmd_getNextNMessages" oncommand="goDoCommand('cmd_getNextNMessages')" disabled="true"/>
-	<broadcaster id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
-	<broadcaster id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
-	<broadcaster id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead'); event.preventBubble()" disabled="true"/>
-	<broadcaster id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead'); event.preventBubble()" disabled="true"/>
-	<broadcaster id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead'); event.preventBubble()" disabled="true"/>
-	<broadcaster id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
-	<broadcaster id="cmd_file" disabled="true"/>
-	<broadcaster id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
-    <broadcaster id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
-	<broadcaster id="cmd_workOffline" oncommand="goDoCommand('cmd_workOffline')" disabled="true"/>
-	<broadcaster id="cmd_synchronizeOffline" oncommand="goDoCommand('cmd_synchronizeOffline')" disabled="true"/>
-	<broadcaster id="cmd_downloadFlagged" oncommand="goDoCommand('cmd_downloadFlagged')" disabled="true"/>
-	<broadcaster id="cmd_downloadSelected" oncommand="goDoCommand('cmd_downloadSelected')" disabled="true"/>
-        <broadcaster id="cmd_getMsgsForAuthAccounts" 
-                     oncommand="goDoCommand('cmd_getMsgsForAuthAccounts'); event.preventBubble()" 
-                     disabled="true"/>
 </broadcasterset>
 
 <keyset id="keyset">
@@ -143,32 +202,34 @@ Rights Reserved.
 	<key id="key_cut"/>
 	<key id="key_copy"/>
 	<key id="key_paste"/>
-	<key id="key_delete" shift="false"/>
+	<key id="key_delete" oncommand="goDoCommand('cmd_delete');" shift="false"/>
 	<key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete')"/>
 	<key id="key_selectAll"/>
 	
-	<key id="key_toggleRead" key="&markAsReadCmd.key;"     observes="cmd_markAsRead"/>
-	<key id="key_markAllRead" key="&markAllReadCmd.key;"     observes="cmd_markAllRead" modifiers="accel, shift"/>
-	<key id="key_nextMsg" key="&nextMsgCmd.key;"     observes="cmd_nextMsg"/>
-	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;"     observes="cmd_nextUnreadMsg"/>
-	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;"     observes="cmd_nextUnreadThread"/>
-	<key id="key_previousMsg" key="&previousMsgCmd.key;"     observes="cmd_previousMsg"/>
-	<key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;"    observes="cmd_previousUnreadMsg"/>
-	<key id="key_reply" key="&replyMsgCmd.key;"   observes="cmd_reply" modifiers="accel"/>
-	<key id="key_replyall" key="&replyToAllMsgCmd.key;"   observes="cmd_replyall" modifiers="accel, shift"/>
-	<key id="key_forward" key="&forwardMsgCmd.key;"   observes="cmd_forward" modifiers="accel"/>
-    <key id="key_editAsNew" key="&editMsgAsNewCmd.key;"   observes="cmd_editAsNew" modifiers="accel"/>
-	<key id="key_openMessage" key="&openMessageWindowCmd.key;"   observes="cmd_openMessage" modifiers="accel"/>
-	<key id="key_print" key="&printCmd.key;"   observes="cmd_print" modifiers="accel"/>
-	<key id="key_saveAsFile" key="&saveAsFileCmd.key;"   observes="cmd_saveAsFile" modifiers="accel"/>
-	<key id="key_viewPageSource" key="&pageSourceCmd.key;"   observes="cmd_viewPageSource" modifiers="accel"/>
-	<key id="key_getNewMessages" key="&getNewMsgCmd.key;"   observes="cmd_getNewMessages" modifiers="accel"/>
+	<key id="key_toggleRead" key="&markAsReadCmd.key;"               oncommand="goDoCommand('cmd_markAsRead');"/>
+	<key id="key_markAllRead" key="&markAllReadCmd.key;"             oncommand="goDoCommand('cmd_markAllRead');" modifiers="accel, shift"/>
+	<key id="key_nextMsg" key="&nextMsgCmd.key;"                     oncommand="goDoCommand('cmd_nextMsg')"/>
+	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;"         oncommand="goDoCommand('cmd_nextUnreadMsg')"/>
+	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;"   oncommand="goDoCommand('cmd_nextUnreadThread')"/>
+	<key id="key_previousMsg" key="&previousMsgCmd.key;"             oncommand="goDoCommand('cmd_previousMsg')"/>
+	<key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;" oncommand="goDoCommand('cmd_previousUnreadMsg')"/>
+	<key id="key_reply" key="&replyMsgCmd.key;"                      oncommand="goDoCommand('cmd_reply')" modifiers="accel"/>
+	<key id="key_replyall" key="&replyToAllMsgCmd.key;"              oncommand="goDoCommand('cmd_replyall')" modifiers="accel, shift"/>
+	<key id="key_forward" key="&forwardMsgCmd.key;"                  oncommand="goDoCommand('cmd_forward')" modifiers="accel"/>
+  <key id="key_editAsNew" key="&editMsgAsNewCmd.key;"              oncommand="goDoCommand('cmd_editAsNew')" modifiers="accel"/>
+  <key id="key_watchThread" key="&watchThreadMenu.key;"            oncommand="goDoCommand('cmd_watchThread')" modifiers="accel"/>
+  <key id="key_killThread" key="&killThreadMenu.key;"              oncommand="goDoCommand('cmd_killThread')" />
+	<key id="key_openMessage" key="&openMessageWindowCmd.key;"       oncommand="goDoCommand('cmd_openMessage')" modifiers="accel"/>
+	<key id="key_print" key="&printCmd.key;"                         oncommand="goDoCommand('cmd_print')" modifiers="accel"/>
+	<key id="key_saveAsFile" key="&saveAsFileCmd.key;"               oncommand="goDoCommand('cmd_saveAsFile')" modifiers="accel"/>
+	<key id="key_viewPageSource" key="&pageSourceCmd.key;"           oncommand="goDoCommand('cmd_viewPageSource')" modifiers="accel"/>
+	<key id="key_getNewMessages" key="&getNewMsgCmd.key;"            oncommand="goDoCommand('cmd_getNewMessages')" modifiers="accel"/>
         <key id="key_getAllNewMessages" 
              key="&getAllNewMsgCmd.key;"  
-             observes="cmd_getMsgsForAuthAccounts" 
+             oncommand="goDoCommand('cmd_getMsgsForAuthAccounts');"
              modifiers="accel, shift"/>
-	<key id="key_find" key="&findCmd.key;"   observes="cmd_find" modifiers="accel"/>
-	<key id="key_findAgain" key="&findAgainCmd.key;"   observes="cmd_findAgain" modifiers="accel"/>
+	<key id="key_find" key="&findCmd.key;"  oncommand="goDoCommand('cmd_find')" modifiers="accel"/>
+	<key id="key_findAgain" key="&findAgainCmd.key;"   oncommand="goDoCommand('cmd_findAgain')" modifiers="accel"/>
 
 	<!-- Tab Keys -->
         <key id="tabpaneCounterClockwise" keycode="VK_TAB" oncommand="SwitchPaneFocus('counter-clockwise');"
@@ -415,16 +476,16 @@ Rights Reserved.
 	</popup>
 
 	<popup id="messagePaneContext"   
-	 oncreate="contextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu(contextMenu);" 
-	 ondestroy="contextMenu.onDestroy(); contextMenu = null;">
+	 oncreate="gMessagePaneContextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu(gMessagePaneContextMenu);"
+     ondestroy="contextMenu.onDestroy(); contextMenu = null;">
         <menuitem id="context-openlink"
                   value="&openLinkCmd.label;"
                   accesskey="&openLinkCmd.accesskey;"
-                  oncommand="contextMenu.openLink();"/>
+                  oncommand="gMessagePaneContextMenu.openLink();"/>
         <menuitem id="context-editlink"
                   value="&editLinkCmd.label;"
                   accesskey="&editLinkCmd.accesskey;"
-                  oncommand="contextMenu.editLink();"/>
+                  oncommand="gMessagePaneContextMenu.editLink();"/>
         <menuseparator id="messagePaneContext-sep-link"/>
         <menuitem id="context-selectall"
                   value="&selectAllCmd.label;"
@@ -605,35 +666,35 @@ Rights Reserved.
         <menuitem id="context-viewimage"
                   value="&viewImageCmd.label;"
                   accesskey="&viewImageCmd.accesskey;"
-                  oncommand="contextMenu.viewImage();"/>
+                  oncommand="gMessagePaneContextMenu.viewImage();"/>
         <menuseparator id="messagePaneContext-sep-image"/>
         <menuitem id="context-copylink"
                   value="&copyLinkCmd.label;"
                   accesskey="&copyLinkCmd.accesskey;"
-                  oncommand="contextMenu.copyLink();"/>
+                  oncommand="gMessagePaneContextMenu.copyLink();"/>
         <menuitem id="context-copyimage"
                   value="&copyImageCmd.label;"
                   accesskey="&copyImageCmd.accesskey;"
-                  oncommand="contextMenu.copyImage();"/>
+                  oncommand="gMessagePaneContextMenu.copyImage();"/>
         <menuseparator id="messagePaneContext-sep-copy"/>
         <menuitem id="context-savelink"
                   value="&saveLinkCmd.label;"
                   accesskey="&saveLinkCmd.accesskey;"
-                  oncommand="contextMenu.saveLink();"/>
+                  oncommand="gMessagePaneContextMenu.saveLink();"/>
         <menuitem id="context-saveimage"
                   accesskey="&saveImageCmd.accesskey;"
-                  oncommand="contextMenu.saveImage();"/>
+                  oncommand="gMessagePaneContextMenu.saveImage();"/>
         <menuitem id="context-bookmarklink"
                   value="&bookmarkLinkCmd.label;"
                   accesskey="&bookmarkLinkCmd.accesskey;"
-                  oncommand="addBookmark(contextMenu.linkURL(),
-                                         contextMenu.linkText());"/>
+                  oncommand="addBookmark(gMessagePaneContextMenu.linkURL(),
+                                         gMessagePaneContextMenu.linkText());"/>
 
 </popup>
 
 <menubar id="mailMenubar">
-	<menu id="menu_File">
-        <menupopup id="menu_FilePopup" oncreate="file_init();">
+	<menu id="menu_File" >
+		<menupopup id="menu_FilePopup" oncreate="file_init();">
 			<menuitem value="&newMsgCmd.label;"
 			accesskey="&newMsgCmd.accesskey;"
 			key="key_newMessage"
@@ -721,7 +782,7 @@ Rights Reserved.
 				<menupopup>
           <menuitem value="&workOfflineCmd.label;"
            accesskey="&workOfflineCmd.accesskey;"
-           observes="cmd_workOffline"/>
+           observes="cmd_toggleWorkOffline"/>
           <menuitem value="&synchronizeOfflineCmd.label;" 
            accesskey="&synchronizeOfflineCmd.accesskey;"
            observes="cmd_synchronizeOffline"/>
@@ -740,9 +801,9 @@ Rights Reserved.
 	</menu>
 
 	<menu id="menu_Edit" oncommand="CommandUpdate_UndoRedo();">
-		<menupopup>
-			<menuitem id="menu_undo" value="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" oncommand="Undo()"/>
-			<menuitem id="menu_redo" value="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" oncommand="Redo()"/>
+		<menupopup oncreate="InitEditMessagesMenu()">
+			<menuitem id="menu_undo" value="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" observes="cmd_undo" oncommand="Undo()"/>
+			<menuitem id="menu_redo" value="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" observes="cmd_redo" oncommand="Redo()"/>
 			<menuseparator/>
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>
@@ -795,13 +856,15 @@ Rights Reserved.
 					<menuitem id="sortBySizeMenuitem" type="checkbox" value="&sortBySizeCmd.label;" accesskey="&sortBySizeCmd.accesskey;" oncommand="MsgSortBySize()"/>
 					<menuitem id="sortByStatusMenuitem" type="checkbox" value="&sortByStatusCmd.label;" accesskey="&sortByStatusCmd.accesskey;" oncommand="MsgSortByStatus()"/>
 					<menuitem id="sortBySubjectMenuitem" type="checkbox" value="&sortBySubjectCmd.label;" accesskey="&sortBySubjectCmd.accesskey;" oncommand="MsgSortBySubject()"/>
-					<menuitem id="sortByUnreadMenuitem" type="checkbox" value="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" oncommand="MsgSortByRead()"/>
+					<menuitem id="sortByUnreadMenuitem" type="checkbox" value="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" oncommand="MsgSortByUnread()"/>
 				</menupopup>
 			</menu>
-			<menu value="&msgsMenu.label;" id="viewMessagesMenu" accesskey="&msgsMenu.accesskey;" oncreate="InitViewMessagesMenu();">
-				<menupopup>
+			<menu value="&msgsMenu.label;" id="viewMessagesMenu" accesskey="&msgsMenu.accesskey;">
+				<menupopup oncreate="InitViewMessagesMenu()">
 					<menuitem id="viewAllMessagesMenuItem" type="checkbox" value="&allMsgsCmd.label;" accesskey="&allMsgsCmd.accesskey;" disabled="true" observes="cmd_viewAllMsgs"/>
 					<menuitem id="viewUnreadMessagesMenuItem" type="checkbox" value="&unreadMsgsCmd.label;" accesskey="&unreadMsgsCmd.accesskey;" disabled="true" observes="cmd_viewUnreadMsgs"/>
+					<menuitem id="viewThreadsWithUnreadMenuItem" type="checkbox" value="&threadsWithUnreadCmd.label;" accesskey="&threadsWithUnreadCmd.accesskey;" disabled="true" observes="cmd_viewThreadsWithUnread"/>
+					<menuitem id="viewWatchedThreadsWithUnreadMenuItem" type="checkbox" value="&watchedThreadsWithUnreadCmd.label;" accesskey="&watchedThreadsWithUnreadCmd.accesskey;" disabled="true" observes="cmd_viewWatchedThreadsWithUnread"/>
 					<menuseparator/>
 					<menuitem id="menu_showThreads"
 					 type="checkbox"
@@ -844,7 +907,7 @@ Rights Reserved.
 		</menupopup>
 	</menu>
 	<menu value="&searchMenu.label;" accesskey="&searchMenu.accesskey;">
-		<menupopup>
+		<menupopup  oncreate="InitSearchMessagesMenu();">
 			<menuitem value="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
 			<menuitem value="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
 			<menuseparator/>
@@ -855,7 +918,7 @@ Rights Reserved.
 		</menupopup>
 	</menu>
 	<menu value="&goMenu.label;" accesskey="&goMenu.accesskey;">
-		<menupopup>
+		<menupopup  oncreate="InitGoMessagesMenu();">
 			<menu id="goNextMenu" value="&nextMenu.label;" accesskey="&nextMenu.accesskey;">
 				<menupopup>
 					<menuitem value="&nextMsgCmd.label;" key="key_nextMsg" accesskey="&nextMsgCmd.accesskey;" observes="cmd_nextMsg"/>
@@ -876,8 +939,9 @@ Rights Reserved.
 			<menuitem value="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" oncommand="HideMessageHeaderPane();loadStartPage();"/>
 		</menupopup>
 	</menu>
-<menu value="&msgMenu.label;" accesskey="&msgMenu.accesskey;" oncreate="InitMessageMenu()">
-	<menupopup>
+  
+  <menu value="&msgMenu.label;" accesskey="&msgMenu.accesskey;" >
+	<menupopup oncreate="InitMessageMenu();">
 		<menuitem value="&newMsgCmd.label;"
 		accesskey="&newMsgCmd.accesskey;"
 		key="key_newMessage"
@@ -1051,6 +1115,16 @@ Rights Reserved.
 				<menuitem type="checkbox" id="markFlaggedMenuItem" value="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
 			</menupopup>
 		</menu>
+    <menuitem value="&killThreadMenu.label;"
+        accesskey="&killThreadMenu.accesskey;"
+        key="key_killThread"
+        id="killThread"
+        observes="cmd_killThread"/>
+    <menuitem value="&watchThreadMenu.label;"
+        accesskey="&watchThreadMenu.accesskey;"
+        key="key_watchThread"
+        id="watchThread"
+        observes="cmd_watchThread"/>
 	</menupopup>
 </menu>
 
@@ -1065,7 +1139,8 @@ Rights Reserved.
                         <menubutton class="menubutton-dual toolbar top" id="button-getmsg" 
                                     value="&getMsgButton.label;" crop="right" tooltip="aTooltip" 
                                     tooltiptext="&getMsgButton.tooltip;" 
-                                    observes="cmd_getNewMessages" datasources="rdf:msgaccountmanager" 
+                                    observes="button_getNewMessages" datasources="rdf:msgaccountmanager" 
+                                    oncommand="goDoCommand('cmd_getNewMessages')"
                                     containment="http://home.netscape.com/NC-rdf#child" 
                                     ref="msgaccounts:/">
                             <menupopup>
@@ -1091,7 +1166,7 @@ Rights Reserved.
 			<button class="button-toolbar-2 top" id="button-replyall" value="&replyAllButton.label;" tooltip="aTooltip" tooltiptext="&replyAllButton.tooltip;" observes="button_replyall" oncommand="MsgReplyToAllMessage(event)"/>
 			<button class="button-toolbar-2 top" id="button-forward" value="&forwardButton.label;" tooltip="aTooltip"  tooltiptext="&forwardButton.tooltip;" observes="button_forward" oncommand="MsgForwardMessage(event)"/>
 			<toolbarseparator class="toolbarseparator-primary"/>
-			<menubutton class="button-toolbar-2 top" id="button-file" observes="cmd_file" datasources="rdf:null" ignore="http://home.netscape.com/NC-rdf#MessageChild" value="&fileButton.label;" tooltip="aTooltip" tooltiptext="&fileButton.tooltip;">
+			<menubutton class="button-toolbar-2 top" id="button-file" observes="button_file" datasources="rdf:null" ignore="http://home.netscape.com/NC-rdf#MessageChild" value="&fileButton.label;" tooltip="aTooltip" tooltiptext="&fileButton.tooltip;">
 				<template> 
 				<rule nc:NoSelect="true" iscontainer="true" isempty="false">
 					<menupopup>
@@ -1154,10 +1229,10 @@ Rights Reserved.
 				</template>
 				<menupopup/>
 			</menubutton>
-			<button class="button-toolbar-2 top" id="button-next" value="&nextButton.label;"  tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" observes="cmd_nextUnreadMsg"/>
+			<button class="button-toolbar-2 top" id="button-next" value="&nextButton.label;"  oncommand="goDoCommand('cmd_nextUnreadMsg')" tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
 			<button class="button-toolbar-2 top" id="button-delete" value="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
-      <menubutton class="menubutton-dual toolbar top" id="button-mark" value="&markButton.label;" hidden="true"
-                  crop="right" observes="cmd_markAsRead" tooltip="aTooltip" tooltiptext="&markButton.tooltip;">  
+      <menubutton class="menubutton-dual toolbar top" id="button-mark" value="&markButton.label;" hidden="true" oncommand="goDoCommand('button_mark')"
+                  crop="right" observes="button_mark" tooltip="aTooltip" tooltiptext="&markButton.tooltip;">  
             <menupopup oncreate="InitMessageMark()">
                 <menuitem type="checkbox" key="key_toggleRead" id="markReadToolbarItem" value="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead" default="true" />
                 <menuitem value="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
@@ -1167,10 +1242,10 @@ Rights Reserved.
             </menupopup>
   	  </menubutton>
       <menubutton class="menubutton-dual toolbar top" id="button-print" value="&printButton.label;" 
-                  crop="right" observes="cmd_print" tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
+                  crop="right" observes="button_print" oncommand="goDoCommand('cmd_print')" tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
      	  <menupopup id="printMenu">
     			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
-        </menupopup>
+          </menupopup>
   	  </menubutton>
 			<button class="button-toolbar-2 top" id="button-stop" value="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" oncommand="MsgStop();"/>
 			<spring flex="1"/>

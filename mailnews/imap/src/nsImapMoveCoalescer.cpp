@@ -106,7 +106,7 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 			{
 				nsCString messageIds;
 
-				nsImapMailFolder::AllocateUidStringFromKeyArray(*keysToAdd, messageIds);
+				m_sourceFolder->AllocateUidStringFromKeys(keysToAdd->GetArray(), keysToAdd->GetSize(), messageIds);
 
 				destFolder->SetNumNewMessages(keysToAdd->GetSize());
 				//destFolder->SetBiffState(nsIMsgFolder::nsMsgBiffState_NewMail);
@@ -119,14 +119,12 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 				NS_NewISupportsArray(getter_AddRefs(messages));
 				for (PRUint32 keyIndex = 0; keyIndex < keysToAdd->GetSize(); keyIndex++)
 				{
-					nsCOMPtr<nsIMessage> message;
 					nsCOMPtr<nsIMsgDBHdr> mailHdr = nsnull;
 					rv = m_sourceFolder->GetMessageHeader(keysToAdd->ElementAt(keyIndex), getter_AddRefs(mailHdr));
 					if (NS_SUCCEEDED(rv) && mailHdr)
 					{
 						nsCOMPtr<nsISupports> iSupports;
-	  					m_sourceFolder->CreateMessageFromMsgDBHdr(mailHdr, getter_AddRefs(message)) ;
-						iSupports = do_QueryInterface(message);
+						iSupports = do_QueryInterface(mailHdr);
 						messages->AppendElement(iSupports);
 					}
 				}

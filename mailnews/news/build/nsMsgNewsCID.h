@@ -53,12 +53,17 @@
 //
 // nsNntpService
 //
+
+// not needed?  who does nntp:/ ?
 #define NS_NNTPPROTOCOLINFO_CONTRACTID		\
   NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX "nntp"
+
 #define NS_NEWSPROTOCOLHANDLER_CONTRACTID \
   NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "news"
 #define NS_SNEWSPROTOCOLHANDLER_CONTRACTID \
   NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "snews"
+#define NS_NEWSMESSAGEPROTOCOLHANDLER_CONTRACTID \
+  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "news_message"
 #define NS_NEWSMESSAGESERVICE_CONTRACTID \
   "@mozilla.org/messenger/messageservice;1?type=news_message"
 #define NS_NNTPMESSAGESERVICE_CONTRACTID \
@@ -73,17 +78,6 @@
  0x4c9f90e1, 0xe19b, 0x11d2,                            \
  {0x80, 0x6e, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e} 	\
 }              
-
-//
-// nsNNTPNewsgroup
-//
-#define NS_NNTPNEWSGROUP_CONTRACTID \
-  "@mozilla.org/messenger/nntpnewsgroup;1"
-#define NS_NNTPNEWSGROUP_CID  \
-{ /* 2c070e8a-187e-11d3-8e02-004005263078 */ \
- 0x2c070e8a, 0x187e, 0x11d3, \
- {0x8e, 0x02, 0x00, 0x40, 0x05, 0x26, 0x30, 0x78} \
-}
 
 //
 // nsNNTPNewsgroupPost
@@ -116,17 +110,6 @@
 { /* 9f12bdf0-189f-11d3-973e-00805f916fd3 */ \
  0x9f12bdf0, 0x189f, 0x11d3, \
  {0x97, 0x3e, 0x00, 0x80, 0x5f, 0x91, 0x6f, 0xd3} \
-}
-
-//
-// nsNNTPHost
-//
-#define NS_NNTPHOST_CONTRACTID \
-  "@mozilla.org/messenger/nntphost;1"
-#define NS_NNTPHOST_CID \
-{ /* 339e5576-196a-11d3-929a-004005263078 */ \
- 0x339e5576, 0x196a, 0x11d3, \
- {0x92, 0x9a, 0x00, 0x40, 0x05, 0x26, 0x30, 0x78} \
 }
 
 //

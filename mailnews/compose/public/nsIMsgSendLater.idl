@@ -30,14 +30,15 @@
 #include "nsIMsgSendLaterListener.idl"
 #include "nsIStreamListener.idl"
 
-[ptr] native sendListenerPtr(nsIMsgSendLaterListener *);
+interface nsIMsgWindow;
+interface nsIMsgFolder;
 
 [scriptable, uuid(E15C83E8-1CF4-11d3-8EF0-00A024A7D144)]
 interface nsIMsgSendLater : nsIStreamListener 
 {
-  [noscript]
-  void      SendUnsentMessages(in nsIMsgIdentity          identity, 
-                               in sendListenerPtr         listenerArray);
+  void      SendUnsentMessages(in nsIMsgIdentity identity);
+  attribute nsIMsgWindow msgWindow;
   void      RemoveListener(in nsIMsgSendLaterListener aListener); 
   void      AddListener(in  nsIMsgSendLaterListener aListener); 
+  void      GetUnsentMessagesFolder(in nsIMsgIdentity userIdentity, out nsIMsgFolder folder);
 };

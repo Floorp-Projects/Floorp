@@ -43,14 +43,12 @@ CPPSRCS		= \
 		nsMsgSearchSession.cpp \
 		nsMsgImapSearch.cpp \
 		nsMsgSearchNews.cpp \
-        nsMsgSearchDataSource.cpp \
 		nsMsgFilterDataSource.cpp \
 		nsMsgFilterDelegateFactory.cpp \
 		$(NULL)
 
 EXPORTS		= nsMsgFilterService.h \
 			nsMsgSearchSession.h \
-                nsMsgSearchDataSource.h \
 				nsMsgFilterDataSource.h \
 				nsMsgFilterDelegateFactory.h \
 				$(NULL)

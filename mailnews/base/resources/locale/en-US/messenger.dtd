@@ -158,6 +158,10 @@ Rights Reserved.
 <!ENTITY collapseAllThreadsCmd.accesskey "c">  
 <!ENTITY unreadMsgsCmd.label "Unread">  
 <!ENTITY unreadMsgsCmd.accesskey "u">  
+<!ENTITY threadsWithUnreadCmd.label "Threads With Unread">  
+<!ENTITY threadsWithUnreadCmd.accesskey "t">  
+<!ENTITY watchedThreadsWithUnreadCmd.label "Watched Threads With Unread">  
+<!ENTITY watchedThreadsWithUnreadCmd.accesskey "w">  
 <!ENTITY headersMenu.label "Headers"> 
 <!ENTITY headersMenu.accesskey "h"> 
 <!ENTITY headersAllCmd.label "All">  
@@ -329,6 +333,12 @@ Rights Reserved.
 <!ENTITY moveMsgMenu.accesskey "m">  
 <!ENTITY copyMsgMenu.label "Copy Message">  
 <!ENTITY copyMsgMenu.accesskey "c">  
+<!ENTITY killThreadMenu.label "Kill Thread">
+<!ENTITY killThreadMenu.accesskey "k">
+<!ENTITY killThreadMenu.key "k">
+<!ENTITY watchThreadMenu.label "Watch Thread">
+<!ENTITY watchThreadMenu.accesskey "w">
+<!ENTITY watchThreadMenu.key "w">
 <!ENTITY fileHereMenu.label "File Here">
 <!ENTITY fileHereMenu.accesskey "File Here">
 <!ENTITY addSenderToAddressBookCmd.label ".Add Sender to Address Book">  

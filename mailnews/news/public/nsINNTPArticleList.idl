@@ -21,15 +21,13 @@
  */
 
 #include "nsISupports.idl"
-#include "nsINNTPNewsgroup.idl"
-#include "nsINNTPHost.idl"
+
+interface nsIMsgNewsFolder;
 
 [scriptable, uuid(921AC214-96B5-11d2-B7EB-00805F05FFA5)]
 interface nsINNTPArticleList : nsISupports {
-
-    void Initialize(in nsINNTPHost newsHost, in nsINNTPNewsgroup newsgroup); 
-    void AddArticleKey(in long key);
-    void FinishAddingArticleKeys();
-    
+    void initialize(in nsIMsgNewsFolder newsFolder); 
+    void addArticleKey(in long key);
+    void finishAddingArticleKeys();
 };
 

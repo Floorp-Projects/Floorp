@@ -22,7 +22,6 @@
  */
 
 #include "msgCore.h"
-#include "nsIMessage.h"
 #include "nsMsgDBFolder.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIPref.h"
@@ -172,58 +171,6 @@ NS_IMETHODIMP nsMsgDBFolder::EndFolderLoading(void)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::HasThreads(nsIMsgWindow *aMsgWindow, PRBool *hasThreads)
-{
-	nsresult rv = GetDatabase(aMsgWindow);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = mDatabase->HasThreads(hasThreads);
-    NS_ENSURE_SUCCESS(rv,rv);
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgDBFolder::HasMessagesOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, PRBool *hasMessages)
-{
-  nsresult rv = NS_OK;
-  rv = GetDatabase(aMsgWindow);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = mDatabase->HasMessagesOfType(viewType, hasMessages);
-  NS_ENSURE_SUCCESS(rv,rv);
- 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgDBFolder::GetThreadsOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, nsISimpleEnumerator** threadEnumerator)
-{
-	nsresult rv = GetDatabase(aMsgWindow);
-	
-	if(NS_SUCCEEDED(rv))
-		return mDatabase->EnumerateThreads(viewType, threadEnumerator);
-	else
-		return rv;
-}
-
-NS_IMETHODIMP
-nsMsgDBFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
-{
-	nsresult rv = GetDatabase(nsnull);
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
-		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
-		if(NS_SUCCEEDED(rv))
-			rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
-		if(NS_SUCCEEDED(rv))
-		{
-			rv = mDatabase->GetThreadContainingMsgHdr(msgDBHdr, thread);
-		}
-	}
-	return rv;
-
-}
-
-
 NS_IMETHODIMP
 nsMsgDBFolder::GetExpungedBytes(PRUint32 *count)
 {
@@ -249,31 +196,6 @@ nsMsgDBFolder::GetExpungedBytes(PRUint32 *count)
 	return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsMsgDBFolder::HasMessage(nsIMessage *message, PRBool *hasMessage)
-{
-	if(!hasMessage)
-		return NS_ERROR_NULL_POINTER;
-
-	nsresult rv = GetDatabase(nsnull);
-
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIMsgDBHdr> msgDBHdr, msgDBHdrForKey;
-		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
-		nsMsgKey key;
-		if(NS_SUCCEEDED(rv))
-			rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
-		if(NS_SUCCEEDED(rv))
-			rv = msgDBHdr->GetMessageKey(&key);
-		if(NS_SUCCEEDED(rv))
-			rv = mDatabase->ContainsKey(key, hasMessage);
-		
-	}
-	return rv;
-
-}
 
 NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
 {
@@ -392,7 +314,7 @@ NS_IMETHODIMP nsMsgDBFolder::SetGettingNewMessages(PRBool gettingNewMessages)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::GetFirstNewMessage(nsIMessage **firstNewMessage)
+NS_IMETHODIMP nsMsgDBFolder::GetFirstNewMessage(nsIMsgDBHdr **firstNewMessage)
 {
 	//If there's not a db then there can't be new messages.  Return failure since you
 	//should use HasNewMessages first.
@@ -410,16 +332,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetFirstNewMessage(nsIMessage **firstNewMessage)
 	if(NS_FAILED(rv))
 		return rv;
 
-  if (!hdr)
-  {
-    *firstNewMessage = nsnull;
-    return NS_ERROR_FAILURE;
-  }
-	rv = CreateMessageFromMsgDBHdr(hdr, firstNewMessage);
-	if(NS_FAILED(rv))
-		return rv;
-
-	return rv;
+	return  mDatabase->GetMsgHdrForKey(key, firstNewMessage);
 }
 
 NS_IMETHODIMP nsMsgDBFolder::ClearNewMessages()
@@ -563,7 +476,7 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
 		return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder:: DownloadMessagesForOffline(nsISupportsArray *messages)
+NS_IMETHODIMP nsMsgDBFolder:: DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *)
 {
   NS_ASSERTION(PR_FALSE, "imap and news need to override this");
   return NS_OK;
@@ -763,17 +676,10 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlag
 	nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
 	if(NS_SUCCEEDED(rv) && pMsgDBHdr)
 	{
-		nsCOMPtr<nsIMessage> message;
-		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, getter_AddRefs(message));
+		nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(pMsgDBHdr, &rv));
 		if(NS_SUCCEEDED(rv))
-		{
-			nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(message, &rv));
-			if(NS_SUCCEEDED(rv))
-			{
-				SendFlagNotifications(msgSupports, aOldFlags, aNewFlags);
-			}
-		  UpdateSummaryTotals(PR_TRUE);
-		}
+			SendFlagNotifications(msgSupports, aOldFlags, aNewFlags);
+		UpdateSummaryTotals(PR_TRUE);
 	}
 
 	// The old state was new message state
@@ -853,12 +759,7 @@ nsresult nsMsgDBFolder::OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aPar
 
 	if(msgDBHdr)
 	{
-		nsCOMPtr<nsIMessage> message;
-		rv = CreateMessageFromMsgDBHdr(msgDBHdr, getter_AddRefs(message));
-		if(NS_FAILED(rv))
-			return rv;
-
-		nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(message));
+		nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(msgDBHdr));
 		nsCOMPtr<nsISupports> folderSupports;
 		rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
 		if(msgSupports && NS_SUCCEEDED(rv) && doFlat)
@@ -868,36 +769,12 @@ nsresult nsMsgDBFolder::OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aPar
 			else
 				NotifyItemDeleted(folderSupports, msgSupports, "flatMessageView");
 		}
-		if(doThread)
+		if(msgSupports && folderSupports)
 		{
-			if(parentDBHdr)
-			{
-				nsCOMPtr<nsIMessage> parentMessage;
-				rv = CreateMessageFromMsgDBHdr(parentDBHdr, getter_AddRefs(parentMessage));
-				if(NS_FAILED(rv))
-					return rv;
-
-				nsCOMPtr<nsISupports> parentSupports(do_QueryInterface(parentMessage));
-				if(msgSupports && NS_SUCCEEDED(rv))
-				{
-					if(added)
-						NotifyItemAdded(parentSupports, msgSupports, "threadMessageView");
-					else
-						NotifyItemDeleted(parentSupports, msgSupports, "threadMessageView");
-
-				}
-			}
-			//if there's not a header then in threaded view the folder is the parent.
+			if(added)
+				NotifyItemAdded(folderSupports, msgSupports, "threadMessageView");
 			else
-			{
-				if(msgSupports && folderSupports)
-				{
-					if(added)
-						NotifyItemAdded(folderSupports, msgSupports, "threadMessageView");
-					else
-						NotifyItemDeleted(folderSupports, msgSupports, "threadMessageView");
-				}
-			}
+				NotifyItemDeleted(folderSupports, msgSupports, "threadMessageView");
 		}
 		UpdateSummaryTotals(PR_TRUE);
 	}
@@ -1205,7 +1082,7 @@ nsMsgDBFolder::SetFlag(PRUint32 flag)
 }
 
 NS_IMETHODIMP
-nsMsgDBFolder::AddMessageDispositionState(nsIMessage *aMessage, nsMsgDispositionState aDispositionFlag)
+nsMsgDBFolder::AddMessageDispositionState(nsIMsgDBHdr *aMessage, nsMsgDispositionState aDispositionFlag)
 {
   NS_ENSURE_ARG_POINTER(aMessage);
 
@@ -1213,7 +1090,7 @@ nsMsgDBFolder::AddMessageDispositionState(nsIMessage *aMessage, nsMsgDisposition
   NS_ENSURE_SUCCESS(rv, NS_OK);
   
   nsMsgKey msgKey;
-  aMessage->GetMsgKey(&msgKey);
+  aMessage->GetMessageKey(&msgKey);
   
   if (aDispositionFlag == nsIMsgFolder::nsMsgDispositionState_Replied)
     mDatabase->MarkReplied(msgKey, PR_TRUE, nsnull);
@@ -1298,9 +1175,10 @@ NS_IMETHODIMP nsMsgDBFolder::GetRetentionSettings(nsIMsgRetentionSettings **sett
       rv = mDatabase->GetMsgRetentionSettings(getter_AddRefs(m_retentionSettings));
       if (NS_SUCCEEDED(rv) && m_retentionSettings)
       {
-        nsMsgRetainByPreference retainBy;
-        m_retentionSettings->GetRetainByPreference(&retainBy);
-        if (retainBy == nsIMsgRetentionSettings::nsMsgRetainByServerDefaults)
+        PRBool useServerDefaults;
+        m_retentionSettings->GetUseServerDefaults(&useServerDefaults);
+
+        if (useServerDefaults)
         {
           nsCOMPtr <nsIMsgIncomingServer> incomingServer;
           rv = GetServer(getter_AddRefs(incomingServer));
@@ -1322,29 +1200,50 @@ NS_IMETHODIMP nsMsgDBFolder::SetRetentionSettings(nsIMsgRetentionSettings *setti
   return NS_OK;
 }
 
-nsresult nsMsgDBFolder::NotifyStoreClosedAllHeaders()
+NS_IMETHODIMP nsMsgDBFolder::GetDownloadSettings(nsIMsgDownloadSettings **settings)
 {
-  nsCOMPtr <nsISimpleEnumerator> enumerator;
-
-  GetMessages(nsnull, getter_AddRefs(enumerator));
-	nsCOMPtr<nsISupports> folderSupports;
-	nsresult rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
-  if (enumerator)
+  NS_ENSURE_ARG_POINTER(settings);
+  nsresult rv = NS_OK;
+  if (!m_downloadSettings)
   {
-		PRBool hasMoreElements;
-		while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements)) && hasMoreElements)
-		{
-			nsCOMPtr<nsISupports> childSupports;
-			rv = enumerator->GetNext(getter_AddRefs(childSupports));
-			if(NS_FAILED(rv))
-				return rv;
+    GetDatabase(nsnull);
+    if (mDatabase)
+    {
+      // get the settings from the db - if the settings from the db say the folder
+      // is not overriding the incoming server settings, get the settings from the
+      // server.
+      rv = mDatabase->GetMsgDownloadSettings(getter_AddRefs(m_downloadSettings));
+      if (NS_SUCCEEDED(rv) && m_downloadSettings)
+      {
+        PRBool useServerDefaults;
+        m_downloadSettings->GetUseServerDefaults(&useServerDefaults);
 
-      // clear out db hdr, because it won't be valid when we get rid of the .msf file
-		  nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(childSupports, &rv));
-		  if(NS_SUCCEEDED(rv) && dbMessage)
-			  dbMessage->SetMsgDBHdr(nsnull);
+        if (useServerDefaults)
+        {
+          nsCOMPtr <nsIMsgIncomingServer> incomingServer;
+          rv = GetServer(getter_AddRefs(incomingServer));
+          if (NS_SUCCEEDED(rv) && incomingServer)
+            incomingServer->GetDownloadSettings(getter_AddRefs(m_downloadSettings));
+        }
+
+      }
     }
   }
+  *settings = m_downloadSettings;
+  NS_IF_ADDREF(*settings);
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::SetDownloadSettings(nsIMsgDownloadSettings *settings)
+{
+  m_downloadSettings = settings;
+  return NS_OK;
+}
+
+
+nsresult nsMsgDBFolder::NotifyStoreClosedAllHeaders()
+{
+  // don't need this anymore.
   return NS_OK;
 }
 

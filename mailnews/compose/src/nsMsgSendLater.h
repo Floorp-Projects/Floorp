@@ -27,14 +27,14 @@
 #include "nsIMsgSendLater.h"
 #include "nsIEnumerator.h"
 #include "nsIMsgFolder.h"
-#include "nsIMessage.h"
+//#include "nsIMessage.h"
 #include "nsIFileSpec.h"
 #include "nsFileStream.h"
 #include "nsIMsgSendListener.h"
 #include "nsIMsgSendLaterListener.h"
 #include "nsMsgDeliveryListener.h"
 #include "nsIMsgSendLater.h"
-
+#include "nsIMsgWindow.h"
 ////////////////////////////////////////////////////////////////////////////////////
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
@@ -80,10 +80,7 @@ public:
 
 	NS_DECL_ISUPPORTS
 
-  // nsIMsgSendLater support
-  NS_IMETHOD                SendUnsentMessages(nsIMsgIdentity *identity,
-                                               nsIMsgSendLaterListener          **listenerArray);
-
+  NS_DECL_NSIMSGSENDLATER
   // For nsIStreamListener interface...
   NS_DECL_NSISTREAMLISTENER
 
@@ -91,7 +88,6 @@ public:
   NS_DECL_NSISTREAMOBSERVER
 
   // Methods needed for implementing interface...
-  nsresult		    GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder);
   nsresult                  StartNextMailFileSend();
   nsresult                  CompleteMailFileSend();
 
@@ -104,22 +100,20 @@ public:
   nsresult                  BuildNewBuffer(const char* aBuf, PRUint32 aCount, PRUint32 *totalBufSize);
 
   // methods for listener array processing...
-  NS_IMETHOD  SetListenerArray(nsIMsgSendLaterListener **aListener);
-  NS_IMETHOD  AddListener(nsIMsgSendLaterListener *aListener);
-  NS_IMETHOD  RemoveListener(nsIMsgSendLaterListener *aListener);
-  NS_IMETHOD  DeleteListeners();
-  NS_IMETHOD  NotifyListenersOnStartSending(PRUint32 aTotalMessageCount);
-  NS_IMETHOD  NotifyListenersOnProgress(PRUint32 aCurrentMessage, PRUint32 aTotalMessage);
-  NS_IMETHOD  NotifyListenersOnStatus(const PRUnichar *aMsg);
-  NS_IMETHOD  NotifyListenersOnStopSending(nsresult aStatus, const PRUnichar *aMsg, 
+  nsresult  DeleteListeners();
+  nsresult  NotifyListenersOnStartSending(PRUint32 aTotalMessageCount);
+  nsresult  NotifyListenersOnProgress(PRUint32 aCurrentMessage, PRUint32 aTotalMessage);
+  nsresult  NotifyListenersOnStatus(const PRUnichar *aMsg);
+  nsresult  NotifyListenersOnStopSending(nsresult aStatus, const PRUnichar *aMsg, 
                                            PRUint32 aTotalTried, PRUint32 aSuccessful);
 
   // counters and things for enumeration 
   PRUint32                  mTotalSentSuccessfully;
   PRUint32                  mTotalSendCount;
-  nsISimpleEnumerator             *mEnumerator;
+  nsISimpleEnumerator       *mEnumerator;
   nsIMsgIdentity            *mIdentity;
   nsCOMPtr<nsIMsgFolder>    mMessageFolder;
+  nsCOMPtr<nsIMsgWindow>    m_window;
  
   // Private Information
 private:
@@ -132,7 +126,7 @@ private:
   nsMsgSendUnsentMessagesCallback  mCompleteCallback;
   SendOperationListener     *mSendListener;
 
-  nsCOMPtr<nsIMessage>      mMessage;
+  nsCOMPtr<nsIMsgDBHdr>      mMessage;
 
   //
   // File output stuff...

@@ -106,6 +106,7 @@ protected:
     // just a little helper method...maybe it should be a macro? which helps break down a imap message uri
     // into the folder and message key equivalents
     nsresult DecomposeImapURI(const char * aMessageURI, nsIMsgFolder ** aFolder,  char ** msgKey);
+    nsresult DecomposeImapURI(const char * aMessageURI, nsIMsgFolder ** aFolder,  nsMsgKey *msgKey);
 
     PRBool                mPrintingOperation;  // Flag for printing operations
 

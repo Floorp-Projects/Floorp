@@ -24,12 +24,14 @@
 #include "nsISupports.idl"
 #include "nsIUrlListener.idl"
 #include "nsINntpIncomingServer.idl"
+#include "MailNewsTypes2.idl"
 
 interface nsIURI;
 interface nsIStreamListener;  
 interface nsISupportsArray;
 interface nsIFileSpec;
 interface nsIMsgWindow;
+interface nsIMsgFolder;
 
 [scriptable, uuid(4C9F90E0-E19B-11d2-806E-006008128C4E)]
 interface nsINntpService : nsISupports {
@@ -40,10 +42,18 @@ interface nsINntpService : nsISupports {
 
   nsIURI getNewNews (in nsINntpIncomingServer nntpServer, in string uri, in boolean getOld, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 
-  nsIURI cancelMessages (in string hostname, in string newsgroupname, in nsISupportsArray messages, in nsISupports aConsumer, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
+  nsIURI cancelMessage(in string cancelURL, in string messageURI, in nsISupports aConsumer, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
  
   void getListOfGroupsOnServer(in nsINntpIncomingServer nntpServer, in nsIMsgWindow aMsgWindow);
 
   void updateCounts(in nsINntpIncomingServer nntpServer, in nsIMsgWindow aMsgWindow);
+
+  nsIURI fetchMessage(in nsIMsgFolder newsFolder, in nsMsgKey key, in nsIMsgWindow aMsgWindow, in nsISupports aConsumer, in nsIUrlListener aUrlListener);
+
+  void downloadNewsgroupsForOffline(in nsIMsgWindow aMsgWindow, in nsIUrlListener aListener);
+  /** 
+   * can handle news_message:// and news:// 
+   */
+  void decomposeNewsURI(in string uri, out nsIMsgFolder folder, out nsMsgKey key);
 };
 

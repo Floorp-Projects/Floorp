@@ -40,6 +40,9 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 	PRBool			summaryFileExists;
 	struct stat		st;
 	PRBool			newFile = PR_FALSE;
+#ifdef DEBUG_bienvenu
+  NS_ASSERTION(m_folder, "folder should be set");
+#endif
 	if (!aFolderName)
 		return NS_ERROR_NULL_POINTER;
 
@@ -75,6 +78,7 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 	if (!mailDB)
 		return NS_ERROR_OUT_OF_MEMORY;
 	mailDB->m_folderSpec = new nsFileSpec(folderName);
+  mailDB->m_folder = m_folder;
 	mailDB->AddRef();
 	// stat file before we open the db, because if we've latered
 	// any messages, handling latered will change time stamp on

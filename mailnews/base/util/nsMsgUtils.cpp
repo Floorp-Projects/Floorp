@@ -22,7 +22,6 @@
  */
 
 #include "msgCore.h"
-#include "nsIMessage.h"
 #include "nsIMsgHdr.h"
 #include "nsMsgUtils.h"
 #include "nsString.h"
@@ -37,6 +36,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgImapCID.h"
 #include "nsMsgI18N.h"
+#include "xp_str.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -100,6 +100,15 @@ nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *mes
 	return rv;
 }
 
+nsresult GetMsgDBHdrFromURI(const char *uri, nsIMsgDBHdr **msgHdr)
+{
+  nsCOMPtr <nsIMsgMessageService> msgMessageService;
+  nsresult rv = GetMessageServiceFromURI(uri, getter_AddRefs(msgMessageService));
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (!msgMessageService) return NS_ERROR_FAILURE;
+
+  return msgMessageService->MessageURIToMsgHdr(uri, msgHdr);
+}
 
 nsresult CreateStartupUrl(char *uri, nsIURI** aUrl)
 {
@@ -141,75 +150,6 @@ nsresult CreateStartupUrl(char *uri, nsIURI** aUrl)
     return rv;
 }
 
-
-NS_IMPL_ISUPPORTS1(nsMessageFromMsgHdrEnumerator, nsISimpleEnumerator)
-
-nsMessageFromMsgHdrEnumerator::nsMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcEnumerator,
-															 nsIMsgFolder *folder)
-{
-    NS_INIT_REFCNT();
-
-	mSrcEnumerator = dont_QueryInterface(srcEnumerator);
-	mFolder = dont_QueryInterface(folder);
-
-}
-
-nsMessageFromMsgHdrEnumerator::~nsMessageFromMsgHdrEnumerator()
-{
-	//member variables are nsCOMPtr's
-}
-
-
-NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::GetNext(nsISupports **aItem)
-{
-	nsCOMPtr<nsISupports> currentItem;
-	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
-	nsCOMPtr<nsIMessage> message;
-	nsresult rv;
-
-	rv = mSrcEnumerator->GetNext(getter_AddRefs(currentItem));
-	if(NS_SUCCEEDED(rv))
-	{
-		msgDBHdr = do_QueryInterface(currentItem, &rv);
-	}
-
-	if(NS_SUCCEEDED(rv))
-	{
-		rv = mFolder->CreateMessageFromMsgDBHdr(msgDBHdr, getter_AddRefs(message));
-	}
-
-	if(NS_SUCCEEDED(rv))
-	{
-		currentItem = do_QueryInterface(message, &rv);
-		*aItem = currentItem;
-		NS_IF_ADDREF(*aItem);
-	}
-
-	NS_ASSERTION(NS_SUCCEEDED(rv),"getnext shouldn't fail");
-	return rv;
-}
-
-NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::HasMoreElements(PRBool *aResult)
-{
-	return mSrcEnumerator->HasMoreElements(aResult);
-}
-
-nsresult NS_NewMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcEnumerator,
-										   nsIMsgFolder *folder,	
-										   nsMessageFromMsgHdrEnumerator **messageEnumerator)
-{
-	if(!messageEnumerator)
-		return NS_ERROR_NULL_POINTER;
-
-	*messageEnumerator =	new nsMessageFromMsgHdrEnumerator(srcEnumerator, folder);
-
-	if(!messageEnumerator)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	NS_ADDREF(*messageEnumerator);
-	return NS_OK;
-
-}
 
 // Where should this live? It's a utility used to convert a string priority, e.g., "High, Low, Normal" to an enum.
 // Perhaps we should have an interface that groups together all these utilities...
@@ -383,4 +323,70 @@ nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& p
     }
 
 	return NS_OK;
+}
+
+/* Given a string and a length, removes any "Re:" strings from the front.
+   It also deals with that dumbass "Re[2]:" thing that some losing mailers do.
+
+   Returns PR_TRUE if it made a change, PR_FALSE otherwise.
+
+   The string is not altered: the pointer to its head is merely advanced,
+   and the length correspondingly decreased.
+ */
+PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP)
+{
+  const char *s, *s_end;
+  const char *last;
+  PRUint32 L;
+  PRBool result = PR_FALSE;
+  NS_ASSERTION(stringP, "bad null param");
+  if (!stringP) return PR_FALSE;
+  s = *stringP;
+  L = lengthP ? *lengthP : nsCRT::strlen(s);
+
+  s_end = s + L;
+  last = s;
+
+ AGAIN:
+
+  while (s < s_end && XP_IS_SPACE(*s))
+	s++;
+
+  if (s < (s_end-2) &&
+	  (s[0] == 'r' || s[0] == 'R') &&
+	  (s[1] == 'e' || s[1] == 'E'))
+	{
+	  if (s[2] == ':')
+		{
+		  s = s+3;			/* Skip over "Re:" */
+		  result = PR_TRUE;	/* Yes, we stripped it. */
+		  goto AGAIN;		/* Skip whitespace and try again. */
+		}
+	  else if (s[2] == '[' || s[2] == '(')
+		{
+		  const char *s2 = s+3;		/* Skip over "Re[" */
+
+		  /* Skip forward over digits after the "[". */
+		  while (s2 < (s_end-2) && XP_IS_DIGIT(*s2))
+			s2++;
+
+		  /* Now ensure that the following thing is "]:"
+			 Only if it is do we alter `s'.
+		   */
+		  if ((s2[0] == ']' || s2[0] == ')') && s2[1] == ':')
+			{
+			  s = s2+2;			/* Skip over "]:" */
+			  result = PR_TRUE;	/* Yes, we stripped it. */
+			  goto AGAIN;		/* Skip whitespace and try again. */
+			}
+		}
+	}
+
+  /* Decrease length by difference between current ptr and original ptr.
+	 Then store the current ptr back into the caller. */
+  if (lengthP) 
+	  *lengthP -= (s - (*stringP));
+  *stringP = s;
+
+  return result;
 }

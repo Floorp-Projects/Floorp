@@ -88,6 +88,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
 	if (!mailDB)
 		return NS_ERROR_OUT_OF_MEMORY;
 	mailDB->m_folderSpec = new nsFileSpec(folderName);
+  mailDB->m_folder = m_folder;
 	mailDB->AddRef();
 	// stat file before we open the db, because if we've latered
 	// any messages, handling latered will change time stamp on

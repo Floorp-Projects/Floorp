@@ -34,8 +34,8 @@ interface nsIMsgQuote : nsISupports {
     /* aCharset is an option parameter which can be used to force the message to be 
 	   quoted using a particular charset. 
 	*/
-	void QuoteMessage(in wstring msgURI, in boolean quoteHeaders, in
-                             nsIStreamListener aStreamListener, in wstring aCharset);
+	void QuoteMessage(in string msgURI, in boolean quoteHeaders, in
+                             nsIStreamListener aStreamListener, in string aCharset);
     readonly attribute nsIMimeStreamConverterListener quoteListener;
     readonly attribute nsIChannel quoteChannel;
 	readonly attribute nsIStreamListener streamListener;

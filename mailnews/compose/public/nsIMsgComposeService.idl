@@ -37,7 +37,7 @@ interface nsIURI;
 interface nsIMsgComposeService : nsISupports {
 
 	/* ... */
-	void OpenComposeWindow(in wstring msgComposeWindowURL, in wstring originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format,
+	void OpenComposeWindow(in string msgComposeWindowURL, in string originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format,
 						   in nsIMsgIdentity identity);
 
     /* use this method to invoke a compose window given a mailto url.
@@ -45,20 +45,19 @@ interface nsIMsgComposeService : nsISupports {
 	   url you want to use in brining up a compose window, pass it in here. 
 	   aURI --> the mailto url you want to use as the foundation for the data inside
 	   the compose window  */
-	void OpenComposeWindowWithURI(in wstring msgComposeWindowURL, in nsIURI aURI);
+	void OpenComposeWindowWithURI(in string msgComposeWindowURL, in nsIURI aURI);
 
 	/* ... */
-	void OpenComposeWindowWithValues(in wstring msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
-							in wstring to, in wstring cc, in wstring bcc, in wstring newsgroups,
-							in wstring subject, in wstring body, in wstring attachment, in nsIMsgIdentity identity);
+	void OpenComposeWindowWithValues(in string msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
+							in wstring to, in wstring cc, in wstring bcc, in string newsgroups,
+							in wstring subject, in wstring body, in string attachment, in nsIMsgIdentity identity);
 
 	/* ... */
-	void OpenComposeWindowWithCompFields(in wstring msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
+	void OpenComposeWindowWithCompFields(in string msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
 										in nsIMsgCompFields compFields, in nsIMsgIdentity identity);
 
 	/* ... */
-	nsIMsgCompose InitCompose(in nsIDOMWindowInternal aWindow,
-                              in nsIMsgComposeParams params);
+	nsIMsgCompose InitCompose(in nsIDOMWindowInternal aWindow, in nsIMsgComposeParams params);
 
 	/* ... */
  	void DisposeCompose(in nsIMsgCompose compose);

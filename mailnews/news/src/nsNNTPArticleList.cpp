@@ -22,11 +22,9 @@
 
 #include "msgCore.h"    // precompiled header...
 
-#include "nsNNTPNewsgroupList.h"
-#include "nsINNTPHost.h"
-#include "nsINNTPArticleList.h"
-#include "nsMsgKeySet.h"
+#include "nsCOMPtr.h"
 #include "nsNNTPArticleList.h"
+#include "nsIMsgFolder.h"
 
 NS_IMPL_ISUPPORTS1(nsNNTPArticleList, nsINNTPArticleList)
 
@@ -36,57 +34,46 @@ nsNNTPArticleList::nsNNTPArticleList()
 }
 
 nsresult
-nsNNTPArticleList::Initialize(nsINNTPHost * newsHost,
-                              nsINNTPNewsgroup* newsgroup)
+nsNNTPArticleList::Initialize(nsIMsgNewsFolder *newsFolder)
 {
-	m_host = newsHost;
-    m_newsgroup = newsgroup;
-#ifdef HAVE_PANES
-	m_pane = pane;
-#endif
-#ifdef HAVE_NEWSDB
-	m_newsDB = NULL;
-#endif
-	m_idsOnServer.set = nsMsgKeySet::Create();
-#ifdef HAVE_PANES
-	nsINNTPNewsgroup *newsFolder = m_pane->GetMaster()->FindNewsFolder(host, groupName, PR_FALSE);
-	if (newsFolder)
-	{
-		char *url = newsFolder->BuildUrl(NULL, nsMsgKey_None);
-#ifdef HAVE_NEWSDB
-		if (url)
-			NewsGroupDB::Open(url, m_pane->GetMaster(), &m_newsDB);
-		if (m_newsDB)
-			m_newsDB->ListAllIds(m_idsInDB);
-#endif
-		m_dbIndex = 0;
+    nsresult rv;
+    NS_ENSURE_ARG_POINTER(newsFolder);
+    
+    m_dbIndex = 0;
 
-		PR_FREEIF(url);
-	}
-#endif
-    return NS_MSG_SUCCESS;
+    m_newsFolder = newsFolder;
+
+    nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(m_newsFolder, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = folder->GetMsgDatabase(nsnull /* msgWindow */, getter_AddRefs(m_newsDB));
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (!m_newsDB) return NS_ERROR_UNEXPECTED;
+
+    rv = m_newsDB->ListAllKeys(m_idsInDB);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    return NS_OK;
 }
 
 nsNNTPArticleList::~nsNNTPArticleList()
 {
-#ifdef HAVE_NEWSDB
-	if (m_newsDB)
-		m_newsDB->Close();
-#endif
+  if (m_newsDB) {
+		m_newsDB->Commit(nsMsgDBCommitType::kSessionCommit);
+        m_newsDB->Close(PR_TRUE);
+        m_newsDB = nsnull;
+  }
+
+  m_newsFolder = nsnull;
 }
 
 nsresult
 nsNNTPArticleList::AddArticleKey(PRInt32 key)
 {
-#ifdef DEBUG_NEWS
-	char * groupname = nsnull;
-	if (m_newsgroup)
-		m_newsgroup->GetName(&groupname);
-	printf("Adding article key %d for group %s.\n", key, groupname ? groupname : "unspecified");
-	PR_FREEIF(groupname);
+#ifdef DEBUG_seth
+	m_idsOnServer.Add(key);
 #endif
-	m_idsOnServer.set->Add(key);
-#ifdef HAVE_IDARRAY
+
 	if (m_dbIndex < m_idsInDB.GetSize())
 	{
 		PRInt32 idInDBToCheck = m_idsInDB.GetAt(m_dbIndex);
@@ -95,11 +82,9 @@ nsNNTPArticleList::AddArticleKey(PRInt32 key)
 		// we have a copy of the article offline.
 		while (idInDBToCheck < key)
 		{
-#ifdef HAVE_NEWSDB
-			m_newsDB->DeleteMessage(idInDBToCheck, NULL, PR_FALSE);
-#ifdef DEBUG_bienvenu
+            m_newsFolder->RemoveMessage(idInDBToCheck);
+#ifdef DEBUG_seth
 			m_idsDeleted.Add(idInDBToCheck);
-#endif
 #endif
 			if (m_dbIndex >= m_idsInDB.GetSize())
 				break;
@@ -108,17 +93,17 @@ nsNNTPArticleList::AddArticleKey(PRInt32 key)
 		if (idInDBToCheck == key)
 			m_dbIndex++;
 	}
-#endif
 	return 0;
 }
 
 nsresult
 nsNNTPArticleList::FinishAddingArticleKeys()
 {
+#ifdef DEBUG_seth
 	// make sure none of the deleted turned up on the idsOnServer list
-#ifdef HAVE_NEWSDB
-	for (PRInt32 i = 0; i < m_idsDeleted.GetSize(); i++)
-		NS_ASSERTION((!m_idsOnServer.set->IsMember(m_idsDeleted.GetAt(i)), "a deleted turned up on the idsOnServer list");
+	for (PRUint32 i = 0; i < m_idsDeleted.GetSize(); i++) {
+		NS_ASSERTION(m_idsOnServer.FindIndex((nsMsgKey)(m_idsDeleted.GetAt(i)), 0) == nsMsgViewIndex_None, "a deleted turned up on the idsOnServer list");
+    }
 #endif
-	return 0;
+	return NS_OK;
 }

@@ -781,6 +781,20 @@ NS_IMETHODIMP nsDBFolderInfo::GetUint32Property(const char *propertyName, PRUint
   return m_mdb->GetUint32Property(m_mdbRow, propertyName, propertyValue, defaultValue);
 }
 
+NS_IMETHODIMP nsDBFolderInfo::GetBooleanProperty(const char *propertyName, PRBool *propertyValue, PRBool defaultValue)
+{
+  PRUint32 defaultUint32Value = (defaultValue) ? 1 : 0;
+  PRUint32 returnValue;
+  nsresult rv = m_mdb->GetUint32Property(m_mdbRow, propertyName, &returnValue, defaultUint32Value);
+  *propertyValue = (returnValue != 0);
+  return rv;
+}
+NS_IMETHODIMP	nsDBFolderInfo::SetBooleanProperty(const char *propertyName, PRBool propertyValue)
+{
+  return m_mdb->SetUint32Property(m_mdbRow, propertyName, propertyValue ? 1 : 0);
+}
+
+
 class nsTransferDBFolderInfo : public nsDBFolderInfo
 {
 public:

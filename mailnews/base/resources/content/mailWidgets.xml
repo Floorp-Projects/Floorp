@@ -280,8 +280,8 @@
       </xul:menulist>
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup class="search-value-popup">
-          <xul:menuitem data="1" stringTag="replied" class="search-value-menuitem"/>
-          <xul:menuitem data ="2" stringTag="read" class="search-value-menuitem"/>
+          <xul:menuitem data="2" stringTag="replied" class="search-value-menuitem"/>
+          <xul:menuitem data ="1" stringTag="read" class="search-value-menuitem"/>
           <xul:menuitem data ="1048576" stringTag="new" class="search-value-menuitem"/>
           <xul:menuitem data ="65536" stringTag="forwarded" class="search-value-menuitem"/>
         </xul:menupopup>

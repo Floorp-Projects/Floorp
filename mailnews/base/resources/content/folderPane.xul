@@ -34,7 +34,7 @@
 
 	<tree datasources="rdf:null"
 	      id="folderTree" class="mail-folders"
-		  onselect="top.FolderPaneSelectionChange(); document.commandDispatcher.updateCommands('folderTree-select');"
+		  onselect="top.FolderPaneSelectionChange();"
 		  onblur="goOnEvent(this,'blur')" dd-nodropbetweenrows="true"
 		ondragover="return DragOverTree(event);"
 		ondraggesture="return BeginDragFolderTree(event);"
@@ -59,7 +59,7 @@
 			  CanSubscribe="rdf:http://home.netscape.com/NC-rdf#CanSubscribe"
 			  CanFileMessages="rdf:http://home.netscape.com/NC-rdf#CanFileMessages"
 			  NoSelect="rdf:http://home.netscape.com/NC-rdf#NoSelect"
-			  persist="threaded open sortResource sortDirection viewType">
+			  persist="open viewType viewFlags sortOrder sortType">
 		  	  <treerow class="tree-folder-row" 
                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
 			             HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"

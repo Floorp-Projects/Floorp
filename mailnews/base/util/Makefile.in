@@ -36,14 +36,15 @@ CPPSRCS		= \
 		nsMsgLineBuffer.cpp \
 		nsMsgFolder.cpp \
 		nsMsgDBFolder.cpp \
+		nsUint8Array.cpp \
 		nsUInt32Array.cpp \
 		nsMsgKeySet.cpp \
+		nsMsgKeyArray.cpp \
 		nsLocalFolderSummarySpec.cpp \
 		nsNewsSummarySpec.cpp \
 		nsMsgIdentity.cpp \
 		nsMsgIncomingServer.cpp \
 		nsMsgUtils.cpp \
-		nsMessage.cpp \
 		nsMsgProtocol.cpp \
 		nsMsgMailNewsUrl.cpp \
 		nsMsgTxn.cpp \
@@ -53,8 +54,10 @@ CPPSRCS		= \
 EXPORTS		= \
 		nsMsgGroupRecord.h \
 		nsMsgLineBuffer.h \
+		nsUint8Array.h \
 		nsUInt32Array.h \
 		nsMsgKeySet.h \
+		nsMsgKeyArray.h \
 		nsMsgFolder.h \
 		nsMsgDBFolder.h \
 		nsLocalFolderSummarySpec.h \

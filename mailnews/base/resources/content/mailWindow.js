@@ -21,7 +21,6 @@
  //This file stores variables common to mail windows
 var messengerContractID        = "@mozilla.org/messenger;1";
 var statusFeedbackContractID   = "@mozilla.org/messenger/statusfeedback;1";
-var messageViewContractID      = "@mozilla.org/messenger/messageview;1";
 var mailSessionContractID      = "@mozilla.org/messenger/services/session;1";
 var secureUIContractID         = "@mozilla.org/secure_browser_ui;1";
 
@@ -32,7 +31,6 @@ var msgWindowContractID		   = "@mozilla.org/messenger/msgwindow;1";
 var messenger;
 var pref;
 var statusFeedback;
-var messageView;
 var msgWindow;
 
 var msgComposeService;
@@ -53,7 +51,6 @@ var messageDSContractID        = datasourceContractIDPrefix + "mailnewsmessages"
 
 var accountManagerDataSource;
 var folderDataSource;
-var messageDataSource;
  
 var messagesBox = null;
 var accountCentralBox = null;
@@ -83,14 +80,11 @@ function OnMailWindowUnload()
 	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
 	msgDS.window = null;
 
-	msgDS = messageDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = null;
-
 	msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
 	msgDS.window = null;
 
 
-  	msgWindow.closeWindow();
+	msgWindow.closeWindow();
 
 }
 
@@ -131,9 +125,6 @@ function CreateMailWindowGlobals()
   }
 
 	window.MsgWindowCommands = new nsMsgWindowCommands();
-	//Create message view object
-	messageView = Components.classes[messageViewContractID].createInstance();
-	messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
 
 	//Create message window object
 	msgWindow = Components.classes[msgWindowContractID].createInstance();
@@ -158,17 +149,15 @@ function CreateMailWindowGlobals()
 	//Create datasources
 	accountManagerDataSource = Components.classes[accountManagerDSContractID].createInstance();
 	folderDataSource         = Components.classes[folderDSContractID].createInstance();
-	messageDataSource        = Components.classes[messageDSContractID].createInstance();
 
-        messagesBox       = document.getElementById("messagesBox");
-        accountCentralBox = document.getElementById("accountCentralBox");
-        gPaneConfig = pref.GetIntPref("mail.pane_config");
+  messagesBox       = document.getElementById("messagesBox");
+  accountCentralBox = document.getElementById("accountCentralBox");
+  gPaneConfig = pref.GetIntPref("mail.pane_config");
 }
 
 function InitMsgWindow()
 {
 	msgWindow.statusFeedback = statusFeedback;
-	msgWindow.messageView = messageView;
 	msgWindow.msgHeaderSink = messageHeaderSink;
 	msgWindow.SetDOMWindow(window);
 	mailSession.AddMsgWindow(msgWindow);
@@ -196,9 +185,6 @@ function AddDataSources()
 	//Add statusFeedback
 
 	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = msgWindow;
-
-	msgDS = messageDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
 	msgDS.window = msgWindow;
 
 	msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
@@ -250,8 +236,8 @@ nsMsgStatusFeedback.prototype =
       if (!this.statusTextFld ) this.statusTextFld = document.getElementById("statusText");
       if (!this.statusBar) this.statusBar = document.getElementById("statusbar-icon");
       if(!this.throbber)   this.throbber = document.getElementById("navigator-throbber");
-	  if(!this.stopButton) this.stopButton = document.getElementById("button-stop");
-	  if(!this.stopMenu)   this.stopMenu = document.getElementById("stopMenuitem");
+	    if(!this.stopButton) this.stopButton = document.getElementById("button-stop");
+	    if(!this.stopMenu)   this.stopMenu = document.getElementById("stopMenuitem");
     },
 
   // nsIXULBrowserWindow implementation
@@ -453,20 +439,20 @@ function ShowAccountCentral()
         switch (gPaneConfig)
         {    
             case 0:
-                messagesBox.setAttribute("hidden", "true");
-                accountCentralBox.removeAttribute("hidden");
+                messagesBox.setAttribute("collapsed", "true");
+                accountCentralBox.removeAttribute("collapsed");
                 window.frames["accountCentralPane"].location = acctCentralPage;
                 gAccountCentralLoaded = true;
                 break;
 
             case 1:
                 var messagePaneBox = document.getElementById("messagepanebox");
-                messagePaneBox.setAttribute("hidden", "true");
+                messagePaneBox.setAttribute("collapsed", "true");
                 var threadPaneBox = document.getElementById("threadpaneBox");
-                threadPaneBox.setAttribute("hidden", "true");
+                threadPaneBox.setAttribute("collapsed", "true");
                 var threadPaneSplitter = document.getElementById("threadpane-splitter");
-                threadPaneSplitter.setAttribute("hidden", "true");
-                accountCentralBox.removeAttribute("hidden");
+                threadPaneSplitter.setAttribute("collapsed", "true");
+                accountCentralBox.removeAttribute("collapsed");
                 window.frames["accountCentralPane"].location = acctCentralPage;
                 gAccountCentralLoaded = true;
                 break;
@@ -489,19 +475,19 @@ function HideAccountCentral()
         switch (gPaneConfig)
         {    
             case 0:
-                accountCentralBox.setAttribute("hidden", "true");
-                messagesBox.removeAttribute("hidden");
+                accountCentralBox.setAttribute("collapsed", "true");
+                messagesBox.removeAttribute("collapsed");
                 gAccountCentralLoaded = false;
                 break;
 
             case 1:
-                accountCentralBox.setAttribute("hidden", "true");
+                accountCentralBox.setAttribute("collapsed", "true");
                 var messagePaneBox = document.getElementById("messagepanebox");
-                messagePaneBox.removeAttribute("hidden");
+                messagePaneBox.removeAttribute("collapsed");
                 var threadPaneBox = document.getElementById("threadpaneBox");
-                threadPaneBox.removeAttribute("hidden");
+                threadPaneBox.removeAttribute("collapsed");
                 var threadPaneSplitter = document.getElementById("threadpane-splitter");
-                threadPaneSplitter.removeAttribute("hidden");
+                threadPaneSplitter.removeAttribute("collapsed");
                 gAccountCentralLoaded = false;
                 break;
         }

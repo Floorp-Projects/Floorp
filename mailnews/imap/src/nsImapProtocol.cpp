@@ -57,7 +57,7 @@
 #include "nsTextFormatter.h"
 #include "nsAutoLock.h"
 #include "nsIDNSService.h"
-
+#include "nsIMsgHdr.h"
 // for the memory cache...
 #include "nsICachedNetData.h"
 
@@ -443,7 +443,7 @@ void
 nsImapProtocol::SetupSinkProxy()
 {
   nsresult res = NS_ERROR_FAILURE;
-  NS_ASSERTION(!m_imapMiscellaneousSink, "shouldn't be non-null here");
+//  NS_ASSERTION(!m_imapMiscellaneousSink, "shouldn't be non-null here");
 
   if (m_runningUrl)
   {
@@ -1798,8 +1798,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
             else
             {
               // downloading a single message: try to do it by bodystructure, and/or do it by chunks
-              PRUint32 messageSize = GetMessageSize(messageIdString,
-                bMessageIdsAreUids);
+              PRUint32 messageSize = GetMessageSize(messageIdString, bMessageIdsAreUids);
               // We need to check the format_out bits to see if we are allowed to leave out parts,
               // or if we are required to get the whole thing.  Some instances where we are allowed
               // to do it by parts:  when viewing a message, or its source
@@ -3424,7 +3423,7 @@ PRUint32 nsImapProtocol::GetMessageSize(const char * messageId,
                                         PRBool idsAreUids)
 {
   const char *folderFromParser = GetServerStateParser().GetSelectedMailboxName(); 
-  if (folderFromParser)
+  if (folderFromParser && messageId)
   {
     char *id = (char *)PR_CALLOC(nsCRT::strlen(messageId) + 1);
     char *folderName;
@@ -4655,7 +4654,7 @@ void nsImapProtocol::OnAppendMsgFromFile()
             nsCOMPtr<nsImapMailCopyState> mailCopyState = do_QueryInterface(copyState, &rv);
             if (mailCopyState)
             {
-              nsCOMPtr <nsIMessage> curMsg = mailCopyState->m_message;
+              nsCOMPtr <nsIMsgDBHdr> curMsg = mailCopyState->m_message;
               PRUint32 flags;
 
               if (curMsg)

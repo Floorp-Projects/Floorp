@@ -53,8 +53,6 @@ CHROME_CONTENT = \
 	.\subscribe.xul \
 	.\subscribe.js \
 	.\sidebar-messenger.rdf \
-	.\newFolderNameDialog.xul \
-	.\newFolderNameDialog.js \
 	.\msgViewNavigation.js \
 	.\msgMail3PaneWindow.js \
 	.\mail3PaneWindowCommands.js \

@@ -51,7 +51,7 @@ public:
 
     
 	void StripQuotedPrintable (unsigned char*);
-	PRInt32 GetNextIMAPOfflineMsgLine (char * buf, int bufferSize, int msgOffset, nsIMessage * msg, nsIMsgDatabase * db);
+	PRInt32 GetNextIMAPOfflineMsgLine (char * buf, int bufferSize, int msgOffset, nsIMsgDBHdr * msg, nsIMsgDatabase * db);
 
 
     //	nsresult MatchBody (nsIMsgSearchScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, 

@@ -31,15 +31,12 @@ EXPORTS=	nsNNTPProtocol.h				\
 			nsNntpUrl.h						\
 			nsNNTPNewsgroupList.h			\
 			nsNNTPArticleList.h				\
-			nsNNTPNewsgroup.h				\
 			nntpCore.h						\
 			nsNNTPNewsgroupPost.h			\
 			nsNntpService.h					\
 			nsNewsFolder.h					\
 			nsNntpIncomingServer.h 			\
 			nsNewsUtils.h					\
-			nsNNTPHost.h					\
-			nsNNTPCategoryContainer.h		\
             nsNewsDownloadDialogArgs.h      \
             $(NULL)
 
@@ -53,14 +50,12 @@ CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
 			.\$(OBJDIR)\nsNNTPArticleList.obj			\
 			.\$(OBJDIR)\nsNNTPNewsgroupList.obj			\
 			.\$(OBJDIR)\nsNNTPNewsgroupPost.obj			\
-			.\$(OBJDIR)\nsNNTPHost.obj					\
-			.\$(OBJDIR)\nsNNTPNewsgroup.obj	\
-			.\$(OBJDIR)\nsNNTPCategoryContainer.obj \
 			.\$(OBJDIR)\nsNntpService.obj				\
 			.\$(OBJDIR)\nsNewsFolder.obj				\
 			.\$(OBJDIR)\nsNntpIncomingServer.obj			\
 			.\$(OBJDIR)\nsNewsUtils.obj					\
             .\$(OBJDIR)\nsNewsDownloadDialogArgs.obj    \
+      .\$(OBJDIR)\nsNewsDownloader.obj    \
 			$(NULL)
 
 

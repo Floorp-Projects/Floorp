@@ -332,47 +332,6 @@ NS_IMETHODIMP nsMsgRDFDataSource::SetWindow(nsIMsgWindow * aWindow)
 	return NS_OK;
 }
 
-nsresult
-nsMsgRDFDataSource::GetIsThreaded(PRBool *threaded)
-{
-	nsresult rv;
-	nsCOMPtr<nsIMessageView> messageView;
-
-	rv = GetMessageView(getter_AddRefs(messageView));
-	if (NS_FAILED(rv)) return rv;
-
-    if (messageView)
-	return messageView->GetShowThreads(threaded);
-    else
-        *threaded = PR_FALSE;
-    
-    return NS_OK;
-}
-
-nsresult
-nsMsgRDFDataSource::GetViewType(PRUint32 *viewType)
-{
-	nsresult rv;
-	nsCOMPtr<nsIMessageView> messageView;
-
-	rv = GetMessageView(getter_AddRefs(messageView));
-	if(NS_FAILED(rv)) return rv;
-
-	rv = messageView->GetViewType(viewType);
-	return rv;
-
-}
-
-nsresult 
-nsMsgRDFDataSource::GetMessageView(nsIMessageView **messageView)
-{
-
-	if(!mWindow)
-		return NS_ERROR_NULL_POINTER;
-
-	return mWindow->GetMessageView(messageView);
-
-}
 
 nsIRDFService *
 nsMsgRDFDataSource::getRDFService()
