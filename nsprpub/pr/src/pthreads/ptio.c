@@ -372,15 +372,13 @@ struct pt_Continuation
 
 PTDebug pt_debug;  /* this is shared between several modules */
 
-PR_IMPLEMENT(void) PT_GetStats(PTDebug* here) { *here = pt_debug; }
-
 PR_IMPLEMENT(void) PT_FPrintStats(PRFileDesc *debug_out, const char *msg)
 {
     PTDebug stats;
     char buffer[100];
     PRExplodedTime tod;
     PRInt64 elapsed, aMil;
-    PT_GetStats(&stats);  /* a copy */
+    stats = pt_debug;  /* a copy */
     PR_ExplodeTime(stats.timeStarted, PR_LocalTimeParameters, &tod);
     (void)PR_FormatTime(buffer, sizeof(buffer), "%T", &tod);
 
@@ -403,6 +401,13 @@ PR_IMPLEMENT(void) PT_FPrintStats(PRFileDesc *debug_out, const char *msg)
     PR_fprintf(
         debug_out, "\tcvars [notified: %u, delayed_delete: %u]\n",
         stats.cvars_notified, stats.delayed_cv_deletes);
+}  /* PT_FPrintStats */
+
+#else
+
+PR_IMPLEMENT(void) PT_FPrintStats(PRFileDesc *debug_out, const char *msg)
+{
+    /* do nothing */
 }  /* PT_FPrintStats */
 
 #endif  /* DEBUG */
