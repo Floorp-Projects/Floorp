@@ -60,7 +60,7 @@ var expectedmatches = new Array();
 /*
  * Waldemar: "ECMA-262 15.10.2.5, third algorithm, step 2.1 states that
  * once the minimum repeat count (which is 0 for *, 1 for +, etc.) has
- * been satisfied, an atom being repeated must not match the empty string.
+ * been satisfied, an atom being repeated must not match the empty string."
  *
  * In this example, the minimum repeat count is 0, so the last thing the
  * capturing parens is permitted to contain is the 'a'. It may NOT go on
@@ -79,7 +79,7 @@ addThis();
 /*
  * In this example, the minimum repeat count is 5, so the capturing parens
  * captures the 'a', then goes on to capture the '' at the $ position of 'a'
- * four times. Therefore the last thing it contains is ''.
+ * 4 times before it has to stop. Therefore the last thing it contains is ''.
  */
 status = inSection(2);
 string = 'a';
