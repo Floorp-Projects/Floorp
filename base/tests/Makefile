@@ -17,7 +17,7 @@
 
 DEPTH=../..
 
-REQUIRES xpcom netlib
+REQUIRES=xpcom netlib
 
 include $(DEPTH)/config/config.mk
 
