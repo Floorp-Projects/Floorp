@@ -127,8 +127,8 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
 
 protected:
-    PushAsyncStream(nsIStreamListener* aListener);
-    PushSyncStream(nsIStreamListener* aListener);
+    nsresult PushAsyncStream(nsIStreamListener* aListener);
+    nsresult PushSyncStream(nsIStreamListener* aListener);
 
     nsCOMPtr<nsIChannel> mChannel;
     PRPackedBool mLoading;
@@ -349,6 +349,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     return CallQueryInterface(document, aResult);
 }
 
+nsresult
 nsSyncLoader::PushAsyncStream(nsIStreamListener* aListener)
 {
     nsresult rv = NS_OK;
@@ -388,6 +389,7 @@ nsSyncLoader::PushAsyncStream(nsIStreamListener* aListener)
     return rv;
 }
 
+nsresult
 nsSyncLoader::PushSyncStream(nsIStreamListener* aListener)
 {
     nsCOMPtr<nsIInputStream> in;
