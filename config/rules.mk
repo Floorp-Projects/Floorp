@@ -177,7 +177,7 @@ ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) a.out \
 			  $(JRI_HEADER_CFILES) $(JRI_STUB_CFILES) $(JMC_STUBS) \
 			  $(JMC_HEADERS) $(JMC_EXPORT_FILES) so_locations \
 			  _gen _jmc _jri _stubs $(MDDEPDIR) \
-                          $(wildcard gts_tmp_*) $(PROGOBJS)
+                          $(wildcard gts_tmp_*) $(PROGOBJS) \
 			  $(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)
 else
 ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) a.out \
