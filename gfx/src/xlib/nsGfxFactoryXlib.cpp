@@ -64,7 +64,7 @@ static nsresult nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID
 {
   nsresult rv;
 
-  nsIScriptableRegion *inst;
+  nsIScriptableRegion *inst = nsnull;
 
   if ( NULL == aResult )
   {
@@ -190,5 +190,10 @@ static nsModuleComponentInfo components[] =
     nsScreenManagerXlibConstructor }
 };
 
-NS_IMPL_NSGETMODULE(nsGfxXlibModule, components)
+PR_STATIC_CALLBACK(void)
+nsGfxXlibModuleDtor(nsIModule *self)
+{
+     nsRenderingContextXlib::Shutdown();
+}
 
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsGfxXlibModule", components, nsGfxXlibModuleDtor)

@@ -36,6 +36,7 @@
 #include "nsFontMetricsXlib.h"
 
 #include "xlibrgb.h"
+#include "X11/Xatom.h"
 
 #include "nsDeviceContextSpecXlib.h"
 
@@ -49,7 +50,13 @@
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
+#define XLIB_DEFAULT_FONT1 "-*-helvetica-medium-r-*-*-*-140-*-*-*-*-iso8859-1"
+#define XLIB_DEFAULT_FONT2 "-*-fixed-medium-r-*-*-*-120-*-*-*-*-*-*"
+
 static PRLogModuleInfo *DeviceContextXlibLM = PR_NewLogModule("DeviceContextXlib");
+
+/* global default font handle */
+static XFontStruct *mDefaultFont = nsnull;
 
 nsDeviceContextXlib::nsDeviceContextXlib()
   : DeviceContextImpl()
@@ -93,6 +100,11 @@ NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
   mVisual = xlib_rgb_get_visual();
   mDepth = xlib_rgb_get_depth();
 
+  if (!mDefaultFont)
+    mDefaultFont = XLoadQueryFont(mDisplay, XLIB_DEFAULT_FONT1);
+
+  if (!mDefaultFont)
+    mDefaultFont = XLoadQueryFont(mDisplay, XLIB_DEFAULT_FONT2);
 
 #ifdef DEBUG
   static PRBool once = PR_TRUE;
@@ -171,12 +183,7 @@ NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&
     NS_ADDREF(context);
     surface = new nsDrawingSurfaceXlib();
     if (nsnull != surface) {
-
-      GC gc = XCreateGC(mDisplay, 
-                        (Drawable) mWidget, 
-                        0, 
-                        NULL);
-
+      xGC *gc = new xGC(mDisplay,(Drawable) mWidget, 0, NULL);
       rv = surface->Init(mDisplay, 
                          mScreen, 
                          mVisual, 
@@ -292,15 +299,65 @@ NS_IMETHODIMP nsDeviceContextXlib::GetSystemAttribute(nsSystemAttrID anID, Syste
     //---------
     // Fonts
     //---------
-    case eSystemAttr_Font_Caption:
+    case eSystemAttr_Font_Caption:              // css2
     case eSystemAttr_Font_Icon:
     case eSystemAttr_Font_Menu:
     case eSystemAttr_Font_MessageBox:
     case eSystemAttr_Font_SmallCaption:
     case eSystemAttr_Font_StatusBar:
-    case eSystemAttr_Font_Tooltips:
+    case eSystemAttr_Font_Window:                       // css3
+    case eSystemAttr_Font_Document:
+    case eSystemAttr_Font_Workspace:
+    case eSystemAttr_Font_Desktop:
+    case eSystemAttr_Font_Info:
+    case eSystemAttr_Font_Dialog:
+    case eSystemAttr_Font_Button:
+    case eSystemAttr_Font_PullDownMenu:
+    case eSystemAttr_Font_List:
+    case eSystemAttr_Font_Field:
+    case eSystemAttr_Font_Tooltips:             // moz
     case eSystemAttr_Font_Widget:
-      status = NS_ERROR_FAILURE;
+      aInfo->mFont->style       = NS_FONT_STYLE_NORMAL;
+      aInfo->mFont->weight      = NS_FONT_WEIGHT_NORMAL;
+      aInfo->mFont->decorations = NS_FONT_DECORATION_NONE;
+
+
+      if (!mDefaultFont)
+        return NS_ERROR_FAILURE;
+      else
+      {
+        char *fontName = (char *)NULL;
+        unsigned long pr = 0;
+
+        ::XGetFontProperty(mDefaultFont, XA_FULL_NAME, &pr);
+        if(pr)
+          {
+            fontName = XGetAtomName(mDisplay, pr);
+            aInfo->mFont->name.AssignWithConversion(fontName);
+            ::XFree(fontName);
+          }
+  
+        pr = 0;
+        ::XGetFontProperty(mDefaultFont, XA_WEIGHT, &pr);
+        if ( pr > 10 )
+          aInfo->mFont->weight = NS_FONT_WEIGHT_BOLD;
+    
+        pr = 0;
+        Atom pixelSizeAtom = ::XInternAtom(mDisplay, "PIXEL_SIZE", 0);
+        ::XGetFontProperty(mDefaultFont, pixelSizeAtom, &pr);
+        if( pr )
+          aInfo->mFont->size = NSIntPixelsToTwips(pr, mPixelsToTwips);
+
+        pr = 0;
+        ::XGetFontProperty(mDefaultFont, XA_ITALIC_ANGLE, &pr );
+        if( pr )
+          aInfo->mFont->style = NS_FONT_STYLE_ITALIC;
+    
+        pr = 0;
+        ::XGetFontProperty(mDefaultFont, XA_UNDERLINE_THICKNESS, &pr);
+        if( pr )
+          aInfo->mFont->decorations = NS_FONT_DECORATION_UNDERLINE;
+      }
       break;
   } // switch
 

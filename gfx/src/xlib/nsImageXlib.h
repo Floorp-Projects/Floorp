@@ -25,11 +25,12 @@
 #define nsImageXlib_h__
 
 #include "nsIImage.h"
+#include "nsGCCache.h"
 
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 #include "X11/Xos.h"
-class nsDrawingSurfaceXlib;
+// class nsDrawingSurfaceXlib;
 
 class nsImageXlib : public nsIImage {
 public:
@@ -122,6 +123,10 @@ private:
   void ComputePaletteSize(PRIntn nBitCount);
 
 private:
+  NS_IMETHODIMP DrawScaled(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                           PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                           PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+
   static unsigned scaled6[1<<6];
   static unsigned scaled5[1<<5];
 
@@ -143,18 +148,16 @@ private:
                              XImage *ximage, unsigned char *readData);
   inline void DrawComposited(nsIRenderingContext &aContext,
                              nsDrawingSurface aSurface,
-                             PRInt32 aX, PRInt32 aY,
+                             PRInt32 aSX, PRInt32 aSY,
+			     PRInt32 aDX, PRInt32 aDY,
                              PRInt32 aWidth, PRInt32 aHeight);
 
   inline void TilePixmap(Pixmap src, Pixmap dest, PRInt32 aSXOffset, PRInt32 aSYOffset,
                          const nsRect &destRect, const nsRect &clipRect, PRBool useClip);
-  inline void CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight,
-                                nsDrawingSurface aSurface);
-  inline void CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight,
-                                    nsDrawingSurface aSurface);
-  inline void DrawImageOffscreen(PRInt32 validX, PRInt32 validY,
-                                 PRInt32 validWidth, PRInt32 validHeight,
-                                 nsDrawingSurface aSurface);
+  inline void CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight);
+  inline void CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight);
+  inline void DrawImageOffscreen(PRInt32 aSX, PRInt32 aSY,
+                                 PRInt32 aWidth, PRInt32 aHeight);
   inline void SetupGCForAlpha(GC aGC, PRInt32 aX, PRInt32 aY);
 
   PRInt32    mWidth;
@@ -162,7 +165,9 @@ private:
   PRInt32    mDepth;       // bits per pixel
   PRInt32    mRowBytes;
   PRUint8    *mImageBits;
-  PRUint8    *mConvertedBits;
+  GC         mGC;
+
+  //PRUint8    *mConvertedBits;
   PRInt32    mSizeImage;
   PRBool     mIsTopToBottom;
 
@@ -183,7 +188,7 @@ private:
   PRInt16    mAlphaRowBytes;     // alpha bytes per row
   PRInt16    mAlphaWidth;        // alpha layer width
   PRInt16    mAlphaHeight;       // alpha layer height
-  nsPoint    mLocation;          // alpha mask location
+  PRPackedBool  mAlphaValid;
   Pixmap     mImagePixmap;
   Display   *mDisplay;
 

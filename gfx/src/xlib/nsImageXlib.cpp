@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:sw=2:et
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -23,12 +24,24 @@
 
 #include "nsImageXlib.h"
 #include "nsDrawingSurfaceXlib.h"
+#include "nsDeviceContextXlib.h"
+#include "nsRenderingContextXlib.h"
 #include "xlibrgb.h"
 #include "prlog.h"
+#include "drawers.h"
 
 #define IsFlagSet(a,b) ((a) & (b))
 
 static PRLogModuleInfo *ImageXlibLM = PR_NewLogModule("ImageXlib");
+
+/* XXX we are simply creating a GC and setting its function to Copy.
+   we shouldn't be doing this every time this method is called.  this creates
+   way more trips to the server than we should be doing so we are creating a
+   static one.
+*/
+static GC s1bitGC = 0;
+static GC sXbitGC = 0;
+
 
 nsImageXlib::nsImageXlib()
 {
@@ -48,10 +61,9 @@ nsImageXlib::nsImageXlib()
   mAlphaRowBytes = 0;
   mAlphaWidth = 0;
   mAlphaHeight = 0;
-  mLocation.x = 0;
-  mLocation.y = 0;
+  mAlphaValid = PR_FALSE;
   mDisplay = nsnull;
-  mConvertedBits = nsnull;
+  mGC = nsnull;
   mNaturalWidth = 0;
   mNaturalHeight = 0;
 
@@ -94,17 +106,38 @@ nsImageXlib::~nsImageXlib()
 
     XFreePixmap(mDisplay, mImagePixmap);
   }
+
+  if(mGC)
+  {
+    XFreeGC(mDisplay, mGC);
+    mGC=nsnull;
+  }
+  if(sXbitGC && mDisplay) // Sometimes mDisplay is null, let orhers free
+  {
+    XFreeGC(mDisplay, sXbitGC);
+    sXbitGC=nsnull;
+  }
+  if(s1bitGC && mDisplay) // Sometimes mDisplay is null, let orhers free
+  {
+    XFreeGC(mDisplay, s1bitGC);
+    s1bitGC=nsnull;
+  }
+  
 }
 
-NS_IMPL_ISUPPORTS1(nsImageXlib, nsIImage)
+NS_IMPL_ISUPPORTS1(nsImageXlib, nsIImage);
 
 nsresult nsImageXlib::Init(PRInt32 aWidth, PRInt32 aHeight,
                            PRInt32 aDepth, nsMaskRequirements aMaskRequirements)
 {
+  if ((aWidth == 0) || (aHeight == 0))
+    return NS_ERROR_FAILURE;
+
   if (nsnull != mImageBits) {
     delete[] mImageBits;
     mImageBits = nsnull;
   }
+  
   if (nsnull != mAlphaBits) {
     delete[] mAlphaBits;
     mAlphaBits = nsnull;;
@@ -123,8 +156,7 @@ nsresult nsImageXlib::Init(PRInt32 aWidth, PRInt32 aHeight,
     mImagePixmap = nsnull;
   }
 
-  if (24 == aDepth)
-  {
+  if (24 == aDepth) {
     mNumBytesPixel = 3;
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected image depth");
@@ -141,8 +173,7 @@ nsresult nsImageXlib::Init(PRInt32 aWidth, PRInt32 aHeight,
 
   mImageBits = (PRUint8*)new PRUint8[mSizeImage];
 
-  switch(aMaskRequirements)
-  {
+  switch(aMaskRequirements) {
     case nsMaskRequirements_kNoMask:
       mAlphaBits = nsnull;
       mAlphaWidth = 0;
@@ -257,17 +288,137 @@ void nsImageXlib::ImageUpdated(nsIDeviceContext *aContext,
                                PRUint8 aFlags,
                                nsRect *aUpdateRect)
 {
-  if (nsImageUpdateFlags_kBitsChanged & aFlags) {
-    if (mAlphaPixmap != nsnull) {
-      XFreePixmap(mDisplay, mAlphaPixmap);
-      mAlphaPixmap = nsnull;
+  /* this does not do what I think it should do, so comment out for now */
+  
+  // check if the image has an all-opaque 8-bit alpha mask
+  if ((mAlphaDepth==8) && !mAlphaValid) {
+    unsigned bottom, left, right;
+    bottom = aUpdateRect->y + aUpdateRect->height;
+    left   = aUpdateRect->x;
+    right  = left + aUpdateRect->width;
+    for (unsigned y=aUpdateRect->y; (y<bottom) && !mAlphaValid; y++) {
+      unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + left;
+      for (unsigned x=left; x<right; x++) {
+        if (*(alpha++)!=255) {
+          mAlphaValid=PR_TRUE;
+          break;
     }
-    if (mImagePixmap != nsnull) {
-      XFreePixmap(mDisplay, mImagePixmap);
-      mImagePixmap = nsnull;
+      }
     }
   }
-  mFlags = aFlags;
+
+  if (mAlphaValid && mImagePixmap) {
+      XFreePixmap(mDisplay, mImagePixmap);
+    mImagePixmap = 0;
+  }
+  
+  if (!mAlphaValid) {
+    CreateOffscreenPixmap(mWidth, mHeight);
+
+    if (!sXbitGC) {
+      XGCValues gcv;
+      memset(&gcv, 0, sizeof(XGCValues));
+      gcv.function = GXcopy;
+      sXbitGC  = XCreateGC(mDisplay, mImagePixmap, GCFunction, &gcv);
+    }
+    xlib_draw_rgb_image_dithalign(mImagePixmap, sXbitGC,
+                     aUpdateRect->x, aUpdateRect->y,
+                     aUpdateRect->width, aUpdateRect->height,
+                     XLIB_RGB_DITHER_MAX,
+                     mImageBits + mRowBytes * aUpdateRect->y + 3 * aUpdateRect->x,
+                     mRowBytes,
+                     aUpdateRect->x, aUpdateRect->y);
+  }
+  mFlags = aFlags; // this should be 0'd out by Draw()
+}
+
+NS_IMETHODIMP
+nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
+                        nsDrawingSurface aSurface,
+                        PRInt32 aSX, PRInt32 aSY,
+                        PRInt32 aSWidth, PRInt32 aSHeight,
+                        PRInt32 aDX, PRInt32 aDY,
+                        PRInt32 aDWidth, PRInt32 aDHeight)
+{
+
+  PRInt32 origSHeight = aSHeight, origDHeight = aDHeight;
+  PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
+
+  if (aSWidth < 0 || aDWidth < 0 || aSHeight < 0 || aDHeight < 0)
+    return NS_ERROR_FAILURE;
+
+  if (0 == aSWidth || 0 == aDWidth || 0 == aSHeight || 0 == aDHeight)
+    return NS_OK;
+
+  // limit the size of the blit to the amount of the image read in
+  if (aSX + aSWidth > mDecodedX2) {
+    aDWidth -= ((aSX + aSWidth - mDecodedX2)*origDWidth)/origSWidth;
+    aSWidth -= (aSX + aSWidth) - mDecodedX2;
+  }
+  if (aSX < mDecodedX1) {
+    aDX += ((mDecodedX1 - aSX)*origDWidth)/origSWidth;
+    aSX = mDecodedX1;
+  }
+
+  if (aSY + aSHeight > mDecodedY2) {
+    aDHeight -= ((aSY + aSHeight - mDecodedY2)*origDHeight)/origSHeight;
+    aSHeight -= (aSY + aSHeight) - mDecodedY2;
+    }
+  if (aSY < mDecodedY1) {
+    aDY += ((mDecodedY1 - aSY)*origDHeight)/origSHeight;
+    aSY = mDecodedY1;
+  }
+
+  if ((aDWidth <= 0 || aDHeight <= 0) || (aSWidth <= 0 || aSHeight <= 0))
+    return NS_OK;
+
+  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
+  xGC *gc = ((nsRenderingContextXlib&)aContext).GetGC();
+
+  if (mAlphaDepth == 1)
+    CreateAlphaBitmap(mWidth, mHeight);
+
+  if ((mAlphaDepth == 8) && mAlphaValid) {
+    NS_WARNING("can't do 8bit alpha stretched images currently\n");
+    /* TODO: stretch alpha, stretch source, composite */
+    /* DrawComposited(aContext, aSurface, aSX, aSY, aDX, aDY, aSWidth, aSHeight); */
+    gc->Release();
+    return NS_OK;
+  }
+
+  PRBool succeeded = PR_FALSE;
+
+#ifdef HAVE_XIE
+  /* Draw with XIE */
+  succeeded = DrawScaledImageXIE(mDisplay, drawing->GetDrawable(),
+                                 *gc,
+                                 mImagePixmap,
+                                 mAlphaPixmap,
+                                 mWidth, mHeight,
+                                 aSX, aSY,
+                                 aSWidth, aSHeight,
+                                 aDX, aDY,
+                                 aDWidth, aDHeight);
+#endif
+
+  if (!succeeded) {
+    /* the last resort */
+    succeeded = DrawScaledImageNN(mDisplay,
+                                  drawing->GetDrawable(),
+                                  *gc,
+                                  mImagePixmap,
+                                  mAlphaPixmap,
+                                  mWidth, mHeight,
+                                  aSX, aSY,
+                                  aSWidth, aSHeight,
+                                  aDX, aDY,
+                                  aDWidth, aDHeight);
+  }
+
+  gc->Release();
+
+  mFlags = 0;
+  return NS_OK;
 }
 
 // Draw the bitmap, this method has a source and destination coordinates
@@ -279,18 +430,86 @@ nsImageXlib::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   if (aSurface == nsnull)
     return NS_ERROR_FAILURE;
 
-  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
+  if (aSWidth != aDWidth || aSHeight != aDHeight) {
+    return DrawScaled(aContext, aSurface, aSX, aSY, aSWidth, aSHeight,
+                      aDX, aDY, aDWidth, aDHeight);
+  }
 
+  if (aSWidth <= 0 || aDWidth <= 0 || aSHeight <= 0 || aDHeight <= 0) {
+    NS_ASSERTION(aSWidth > 0 && aDWidth > 0 && aSHeight > 0 && aDHeight > 0,
+                 "You can't draw an image with a 0 width or height!");
+    return NS_OK;
+  }
+
+  // limit the size of the blit to the amount of the image read in
+  PRInt32 j = aSX + aSWidth;
+  PRInt32 z;
+  if (j > mDecodedX2) {
+    z = j - mDecodedX2;
+    aDWidth -= z;
+    aSWidth -= z;
+  }
+  if (aSX < mDecodedX1) {
+    aDX += mDecodedX1 - aSX;
+    aSX = mDecodedX1;
+  }
+
+  j = aSY + aSHeight;
+  if (j > mDecodedY2) {
+    z = j - mDecodedY2;
+    aDHeight -= z;
+    aSHeight -= z;
+  }
+  if (aSY < mDecodedY1) {
+    aDY += mDecodedY1 - aSY;
+    aSY = mDecodedY1;
+  }
+
+  if (aDWidth <= 0 || aDHeight <= 0 || aSWidth <= 0 || aSHeight <= 0)
+    return NS_OK;
+
+  if ((mAlphaDepth == 8) && mAlphaValid) {
+    DrawComposited(aContext, aSurface, aSX, aSY, aDX, aDY, aSWidth, aSHeight);
+    return NS_OK;
+  }
+
+  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
   if (mDisplay == nsnull)
     mDisplay = drawing->GetDisplay();
 
-  xlib_draw_rgb_image(drawing->GetDrawable(),
-                      drawing->GetGC(),
-                      aDX, aDY, aDWidth, aDHeight,
-                      XLIB_RGB_DITHER_MAX,
-                      mImageBits + mRowBytes * aSY + 3 * aDX,
-                      mRowBytes);
 
+  if (mAlphaDepth == 1)
+    CreateAlphaBitmap(mWidth, mHeight);
+
+  GC copyGC;
+  xGC *gc = ((nsRenderingContextXlib&)aContext).GetGC();
+
+  if (mAlphaPixmap) {
+    if (mGC) {                /* reuse GC */
+      copyGC = mGC;
+      SetupGCForAlpha(copyGC, aDX - aSX, aDY - aSY);
+    } else {                  /* make a new one */
+      /* this repeats things done in SetupGCForAlpha */
+      XGCValues xvalues;
+      memset(&xvalues, 0, sizeof(XGCValues));
+      unsigned long xvalues_mask = 0;
+      xvalues.clip_x_origin = aDX - aSX;
+      xvalues.clip_y_origin = aDY - aSY;
+      if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
+        xvalues_mask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
+        xvalues.clip_mask = mAlphaPixmap;
+      }
+      mGC = XCreateGC(mDisplay, drawing->GetDrawable(), xvalues_mask , &xvalues);
+      copyGC = mGC;
+    }
+  } else {  /* !mAlphaPixmap */
+    copyGC = *gc;
+  }
+
+  XCopyArea(mDisplay, mImagePixmap, drawing->GetDrawable(),
+        copyGC, aSX, aSY, aSWidth, aDWidth, aDX, aDY);
+
+  gc->Release();
   return NS_OK;
 }
 
@@ -470,7 +689,6 @@ nsImageXlib::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
                                   XImage *ximage, unsigned char *readData)
 {
   Visual *visual     = xlib_rgb_get_visual();
-  Colormap colormap = xlib_rgb_get_cmap();
 
   unsigned char *target = readData;
 
@@ -533,7 +751,7 @@ nsImageXlib::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
     unsigned char *ptr =
       (unsigned char *)ximage->data + row*ximage->bytes_per_line;
     for (int col=0; col<ximage->width; col++) {
-      unsigned pix;
+      unsigned pix = 0;
       switch (ximage->bits_per_pixel) {
       case 1:
         pix = (*ptr>>(col%8))&1;
@@ -591,14 +809,12 @@ nsImageXlib::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
 void
 nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
                             nsDrawingSurface aSurface,
-                            PRInt32 aX, PRInt32 aY,
+                            PRInt32 aSX, PRInt32 aSY,
+                            PRInt32 aDX, PRInt32 aDY,
                             PRInt32 aWidth, PRInt32 aHeight)
 {
-  if ((aWidth != mWidth) || (aHeight != mHeight))
-  {
-    aWidth = mWidth;
-    aHeight = mHeight;
-  }
+  if ((aWidth==0) || (aHeight==0))
+    return;
 
   nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
   Visual *visual = xlib_rgb_get_visual();
@@ -606,35 +822,30 @@ nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
   Display *dpy = drawing->GetDisplay();
   Drawable drawable = drawing->GetDrawable();
 
-  // I hate clipping too :)
+  // I hate clipping... too!
   PRUint32 surfaceWidth, surfaceHeight;
   drawing->GetDimensions(&surfaceWidth, &surfaceHeight);
 
   int readX, readY;
   unsigned readWidth, readHeight, destX, destY;
 
-  readX = aX; readY = aY;
-  destX = 0; destY = 0;
-  if ((aY>=(int)surfaceHeight) || (aX>=(int)surfaceWidth) ||
-      (aY+aHeight<=0) || (aX+aWidth<=0))
-  {
-    // this should never happen if the layout engine is sane,
-    // as it means we are trying to draw an image which is outside
-    // the drawing surface.
-
+  if ((aDY >= (int)surfaceHeight) || (aDX >= (int)surfaceWidth) ||
+      (aDY + aHeight <= 0) || (aDX + aWidth <= 0)) {
+    // This should never happen if the layout engine is sane,
+    // as it means we're trying to draw an image which is outside
+    // the drawing surface.  Bulletproof gfx for now...
     return;
   }
 
-  if (aX<0) {
-    readX = 0;   readWidth = aWidth+aX;    destX = -aX;
+  if (aDX < 0) {
+    readX = 0;   readWidth = aWidth + aDX;    destX = aSX - aDX;
   } else {
-    readX = aX;  readWidth = aWidth;       destX = 0;
+    readX = aDX;  readWidth = aWidth;       destX = aSX;
   }
-
-  if (aY<0) {
-    readY = 0;   readHeight = aHeight+aY;  destY = -aY; 
+  if (aDY < 0) {
+    readY = 0;   readHeight = aHeight + aDY;  destY = aSY - aDY;
   } else { 
-    readY = aY;  readHeight = aHeight;     destY = 0;
+    readY = aDY;  readHeight = aHeight;     destY = aSY;
   }
 
   if (readX+readWidth > surfaceWidth)
@@ -642,13 +853,26 @@ nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
   if (readY+readHeight > surfaceHeight)
     readHeight = surfaceHeight-readY;
 
+  if ((readHeight <= 0) || (readWidth <= 0))
+    return;
+
+  //  fprintf(stderr, "aX=%d aY=%d, aWidth=%u aHeight=%u\n", aX, aY, aWidth, aHeight);
+  //  fprintf(stderr, "surfaceWidth=%u surfaceHeight=%u\n", surfaceWidth, surfaceHeight);
+  //  fprintf(stderr, "readX=%u readY=%u readWidth=%u readHeight=%u destX=%u destY=%u\n\n",
+  //          readX, readY, readWidth, readHeight, destX, destY);
+
   XImage *ximage = XGetImage(dpy, drawable,
                              readX, readY, readWidth, readHeight,
                              AllPlanes, ZPixmap);
+
+  NS_ASSERTION((ximage != NULL), "XGetImage() failed");
+  if (!ximage)
+    return;
+
   unsigned char *readData = new unsigned char[3*readWidth*readHeight];
 
   PRBool isLSB;
-  unsigned test = 1;
+  unsigned int test = 1;
   isLSB = (((char *)&test)[0]) ? 1 : 0;
 
   PRBool flipBytes =
@@ -668,106 +892,116 @@ nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
     DrawComposited24(isLSB, flipBytes, destX, destY, readWidth, readHeight,
                      ximage, readData);
   else if ((ximage->bits_per_pixel==16) &&
-      (xlib_get_prec_from_mask(visual->red_mask) == 6) &&
-      (xlib_get_prec_from_mask(visual->green_mask) == 6) &&
-      (xlib_get_prec_from_mask(visual->blue_mask) == 6))
+           ((xlib_get_prec_from_mask(visual->red_mask) == 5)   || (xlib_get_prec_from_mask(visual->red_mask) == 6)) &&
+           ((xlib_get_prec_from_mask(visual->green_mask) == 5) || (xlib_get_prec_from_mask(visual->green_mask) == 6)) &&
+           ((xlib_get_prec_from_mask(visual->blue_mask) == 5)  || (xlib_get_prec_from_mask(visual->blue_mask) == 6)))
     DrawComposited16(isLSB, flipBytes, destX, destY, readWidth, readHeight,
                      ximage, readData);
   else
     DrawCompositedGeneral(isLSB, flipBytes, destX, destY, readWidth, readHeight,
                           ximage, readData);
 
-  GC imageGC;
-  imageGC = XCreateGC(dpy, drawing->GetDrawable(), 0, NULL);
-  xlib_draw_rgb_image(drawing->GetDrawable(),
-                      imageGC,
+  xGC *imageGC = ((nsRenderingContextXlib&)aContext).GetGC();
+  xlib_draw_rgb_image(drawing->GetDrawable(), *imageGC,
                       readX, readY, readWidth, readHeight,
                       XLIB_RGB_DITHER_MAX,
                       readData, 3*readWidth);
-  XFreeGC(dpy, imageGC);
+  XDestroyImage(ximage);
+  imageGC->Release();
   delete[] readData;
+  mFlags = 0;
 }
 
-void nsImageXlib::CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight,
-                                    nsDrawingSurface aSurface)
+void nsImageXlib::CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight)
 {
   XImage *x_image = nsnull;
-  Display *dpy = nsnull;
-  Visual *visual = nsnull;
-  GC gc;
   XGCValues gcv;
 
-  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
-
   if (mDisplay == nsnull)
-    mDisplay = drawing->GetDisplay();
+    mDisplay = xlib_rgb_get_display();
 
-  // Create gc clip-mask on demand
-  if (mAlphaBits != nsnull)
-  {
-    if (mAlphaPixmap == nsnull)
-    {
-      mAlphaPixmap = XCreatePixmap(mDisplay,
-                               RootWindow(mDisplay, drawing->GetScreenNumber()),
-                               aWidth, aHeight, 1);
-    }
+  /* Create gc clip-mask on demand */
+  if (mAlphaBits && IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
 
-    dpy = mDisplay;
-    visual = drawing->GetVisual();
+    if (!mAlphaPixmap)
+      mAlphaPixmap = XCreatePixmap(mDisplay, DefaultRootWindow(mDisplay),
+                                   aWidth, aHeight, 1);
 
-    x_image = XCreateImage(dpy, visual, 1, XYPixmap, 0, (char *)mAlphaBits,
-                         aWidth, aHeight, 32, mAlphaRowBytes);
+    // Make an image out of the alpha-bits created by the image library
+    x_image = XCreateImage(mDisplay, xlib_rgb_get_visual(),
+                           1, /* visual depth...1 for bitmaps */
+                           XYPixmap,
+                           0, /* x offset, XXX fix this */
+                           (char *)mAlphaBits,  /* cast away our sign. */
+                           aWidth,
+                           aHeight,
+                           32, /* bitmap pad */
+                           mAlphaRowBytes); /* bytes per line */
 
     x_image->bits_per_pixel=1;
-    x_image->bitmap_bit_order = MSBFirst;
-    x_image->byte_order = MSBFirst;
 
+    /* Image library always places pixels left-to-right MSB to LSB */
+    x_image->bitmap_bit_order = MSBFirst;
+
+    /* This definition doesn't depend on client byte ordering
+       because the image library ensures that the bytes in
+       bitmask data are arranged left to right on the screen,
+       low to high address in memory. */
+    x_image->byte_order = MSBFirst;
+#if defined(IS_LITTLE_ENDIAN)
+    // no, it's still MSB XXX check on this!!
+    //      x_image->byte_order = LSBFirst;
+#elif defined (IS_BIG_ENDIAN)
+    x_image->byte_order = MSBFirst;
+#else
+#error ERROR! Endianness is unknown;
+#endif
+
+    /* Copy the XImage to mAlphaPixmap */
+    if (!s1bitGC) {
     memset(&gcv, 0, sizeof(XGCValues));
     gcv.function = GXcopy;
-    gc = XCreateGC(dpy, mAlphaPixmap, GCFunction, &gcv);
-    XPutImage(dpy, mAlphaPixmap,
-              gc,
-              x_image, 
-              0,0,0,0,
-              aWidth, aHeight);
-    XFreeGC(dpy, gc);
+      s1bitGC = XCreateGC(mDisplay, mAlphaPixmap, GCFunction, &gcv);
+    }
 
-    // done with the temp image
-    x_image->data = 0; //Don't free the IL_Pixmap's bits
+    XPutImage(mDisplay, mAlphaPixmap, s1bitGC, x_image, 0, 0, 0, 0,
+              aWidth, aHeight);
+
+    /* Now we are done with the temporary image */
+    x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
     XDestroyImage(x_image);
   }
 }
 
-void nsImageXlib::CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight,
-                                        nsDrawingSurface aDrawing)
+void nsImageXlib::CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight)
 {
-  if (mImagePixmap == nsnull)
-  {
-    nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aDrawing;
+  if (mImagePixmap == nsnull) {
     if (mDisplay == nsnull)
-      mDisplay = drawing->GetDisplay();
+      mDisplay = xlib_rgb_get_display();
 
-    mImagePixmap = XCreatePixmap(mDisplay,
-                               RootWindow(mDisplay, drawing->GetScreenNumber()),
-                               aWidth,
-                               aHeight,
-                               drawing->GetDepth());
-    XSetClipOrigin(mDisplay, drawing->GetGC(), 0, 0);
-    XSetClipMask(mDisplay, drawing->GetGC(), None);
+    mImagePixmap = XCreatePixmap(mDisplay, DefaultRootWindow(mDisplay),
+                                 aWidth, aHeight,
+                                 xlib_rgb_get_depth());
   }
 }
 
-void nsImageXlib::DrawImageOffscreen(PRInt32 validX, PRInt32 validY,
-                                     PRInt32 validWidth, PRInt32 validHeight,
-                                     nsDrawingSurface aDrawing)
+void nsImageXlib::DrawImageOffscreen(PRInt32 aSX, PRInt32 aSY,
+                                     PRInt32 aWidth, PRInt32 aHeight)
 {
-  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aDrawing;
-
-  xlib_draw_rgb_image(mImagePixmap,
-                      drawing->GetGC(),
-                      validX, validY, validWidth, validHeight,
+  if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
+    printf("draw_image_off_screen: %p\n", this);
+    if (!sXbitGC) {
+      printf("no sXbit gc\n");
+      XGCValues gcv;
+      gcv.function = GXcopy;
+      sXbitGC = XCreateGC(mDisplay, DefaultRootWindow(mDisplay),
+          GCFunction, &gcv);
+    }
+    xlib_draw_rgb_image(mImagePixmap, sXbitGC,
+                        aSX, aSY, aWidth, aHeight,
                       XLIB_RGB_DITHER_MAX,
                       mImageBits, mRowBytes);
+}
 }
 
 void nsImageXlib::SetupGCForAlpha(GC aGC, PRInt32 aX, PRInt32 aY)
@@ -779,9 +1013,13 @@ void nsImageXlib::SetupGCForAlpha(GC aGC, PRInt32 aX, PRInt32 aY)
     unsigned long xvalues_mask = 0;
     xvalues.clip_x_origin = aX;
     xvalues.clip_y_origin = aY;
-    xvalues.clip_mask = mAlphaPixmap;
-    xvalues_mask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
+    xvalues_mask = GCClipXOrigin | GCClipYOrigin;
+    xvalues.function = GXcopy;
 
+    if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
+      xvalues.clip_mask = mAlphaPixmap;
+      xvalues_mask |= GCClipMask;
+    }
     XChangeGC(mDisplay, aGC, xvalues_mask, &xvalues);
   }
 }
@@ -796,14 +1034,13 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
   if (aSurface == nsnull)
     return NS_ERROR_FAILURE;
 
-  if (mAlphaDepth == 8)
-  {
-    DrawComposited(aContext, aSurface, aX, aY, aWidth, aHeight);
+  if ((mAlphaDepth == 8) && mAlphaValid) {
+    DrawComposited(aContext, aSurface, 0, 0, aX, aY, aWidth, aHeight);
     return NS_OK;
   }
 
-  if ((aWidth != mWidth) || (aHeight != mHeight))
-  {
+  // XXX it is said that this is temporary code
+  if ((aWidth != mWidth) || (aHeight != mHeight)) {
     aWidth = mWidth;
     aHeight = mHeight;
   }
@@ -834,29 +1071,40 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
     validX = mDecodedX1;
   }
 
-  CreateAlphaBitmap(validWidth, validHeight, aSurface);
-
-  CreateOffscreenPixmap(validWidth, validHeight, aSurface);
-  DrawImageOffscreen(validX, validY, validWidth, validHeight, aSurface);
+  CreateAlphaBitmap(aWidth, aHeight);
 
   GC copyGC;
-  if (mAlphaPixmap)
-  {
-    copyGC = XCreateGC(mDisplay, drawing->GetDrawable(), 0, NULL);
-    XCopyGC(mDisplay, drawing->GetGC(), 0xffffffff, copyGC);
+  xGC *gc = ((nsRenderingContextXlib&)aContext).GetGC();
+
+  if (mAlphaPixmap) {
+    if (mGC) {                /* reuse GC */
+      copyGC = mGC;
     SetupGCForAlpha(copyGC, aX, aY);
-  } else 
-  {
-    copyGC = drawing->GetGC();
+    } else {                  /* make a new one */
+      /* this repeats things done in SetupGCForAlpha */
+      XGCValues xvalues;
+      memset(&xvalues, 0, sizeof(XGCValues));
+      unsigned long xvalues_mask = 0;
+      xvalues.clip_x_origin = aX;
+      xvalues.clip_y_origin = aY;
+      if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
+        xvalues_mask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
+        xvalues.clip_mask = mAlphaPixmap;
+      }
+      mGC = XCreateGC(mDisplay, drawing->GetDrawable(), xvalues_mask , &xvalues);
+      copyGC = mGC;
+  }
+  } else {  /* !mAlphaPixmap */
+    copyGC = *gc;
   }
 
   XCopyArea(mDisplay, mImagePixmap, drawing->GetDrawable(),
             copyGC, validX, validY,
             validWidth, validHeight,
-            aX, aY);
+            validX + aX, validY + aY);
 
-  if (mAlphaPixmap)
-    XFreeGC(mDisplay, copyGC);
+  gc->Release();
+
   mFlags = 0;
   return NS_OK;
 }
@@ -876,9 +1124,13 @@ void nsImageXlib::TilePixmap(Pixmap src, Pixmap dest, PRInt32 aSXOffset,
   valuesMask = GCTile | GCTileStipXOrigin | GCTileStipYOrigin | GCFillStyle;
   gc = XCreateGC(mDisplay, src, valuesMask, &values);
 
-  if (useClip)
-  {
-    // FIXME: set the clipping area here
+  if (useClip) {
+    XRectangle xrectangle;
+    xrectangle.x = clipRect.x;
+    xrectangle.y = clipRect.y;
+    xrectangle.width = clipRect.width;
+    xrectangle.height = clipRect.height;
+    XSetClipRectangles(mDisplay, gc, 0, 0, &xrectangle, 1, Unsorted);
   }
 
   XFillRectangle(mDisplay, dest, gc, destRect.x, destRect.y,
@@ -892,15 +1144,109 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
                                     nsRect &aSrcRect,
                                     nsRect &aTileRect)
 {
+  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
+  PRBool partial = PR_FALSE;
+  
   PRInt32
-    aY0 = aTileRect.y,
+    validX = 0,
+    validY = 0,
+    validWidth  = mWidth,
+    validHeight = mHeight;
+  
+  // limit the image rectangle to the size of the image data which
+  // has been validated.
+  if (mDecodedY2 < mHeight) {
+    validHeight = mDecodedY2 - mDecodedY1;
+    partial = PR_TRUE;
+  }
+  if (mDecodedX2 < mWidth) {
+    validWidth = mDecodedX2 - mDecodedX1;
+    partial = PR_TRUE;
+  }
+  if (mDecodedY1 > 0) {   
+    validHeight -= mDecodedY1;
+    validY = mDecodedY1;
+    partial = PR_TRUE;
+  }
+  if (mDecodedX1 > 0) {
+    validWidth -= mDecodedX1;
+    validX = mDecodedX1; 
+    partial = PR_TRUE;
+  }
+
+  if (partial || 
+      (drawing->GetDepth() == 8) ||
+      ((mAlphaDepth == 8) && mAlphaValid)) {
+#ifdef DEBUG_TILING
+    printf("Warning: using slow tiling\n");
+#endif
+    PRInt32 aY0 = aTileRect.y,
     aX0 = aTileRect.x,
     aY1 = aTileRect.y + aTileRect.height,
     aX1 = aTileRect.x + aTileRect.width;
 
   for (PRInt32 y = aY0; y < aY1; y+=aSrcRect.height)
     for (PRInt32 x = aX0; x < aX1; x+=aSrcRect.width)
-      Draw(aContext, aSurface, x, y, aSrcRect.width, aSrcRect.height);
+                Draw(aContext,aSurface,x,y,
+                     PR_MIN(aSrcRect.width, aX1-x),
+                     PR_MIN(aSrcRect.height, aY1-y));
+   
+    return NS_OK;
+  }
+
+  /* draw the tile offscreen */
+  CreateOffscreenPixmap(mWidth, mHeight);
+  /* XXX Why? DrawImageOffscreen(0, 0, validWidth, validHeight); */
+                
+  if (mAlphaDepth == 1) {
+    Pixmap tileImg;
+    Pixmap tileMask;
+
+    CreateAlphaBitmap(validWidth, validHeight);
+
+    nsRect tmpRect(0,0,aTileRect.width, aTileRect.height);
+
+    tileImg = XCreatePixmap(mDisplay, mImagePixmap,
+                            aTileRect.width, aTileRect.height,
+                            mDepth);
+
+    TilePixmap(mImagePixmap, tileImg, 0, 0, tmpRect, tmpRect, PR_FALSE);
+
+    // tile alpha mask
+    tileMask = XCreatePixmap(mDisplay, mAlphaPixmap,
+                             aTileRect.width, aTileRect.height, mAlphaDepth);
+
+    TilePixmap(mAlphaPixmap, tileMask, 0, 0, tmpRect, tmpRect, PR_FALSE);
+
+    GC fgc;
+    XGCValues values;
+    unsigned long valuesMask;
+   
+    memset(&values, 0, sizeof(XGCValues));
+    values.clip_mask = tileMask;
+    values.clip_x_origin = aTileRect.x;
+    values.clip_y_origin = aTileRect.y;
+    valuesMask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
+    fgc = XCreateGC(mDisplay, drawing->GetDrawable(), valuesMask, &values);
+
+    // and copy it back
+    XCopyArea(mDisplay, tileImg, drawing->GetDrawable(),
+              fgc, 0,0,
+              aTileRect.width, aTileRect.height,
+              aTileRect.x, aTileRect.y);
+
+    XFreePixmap(mDisplay, tileImg);
+    XFreePixmap(mDisplay, tileMask);
+    XFreeGC(mDisplay, fgc);
+
+  } else {
+    // In the non-alpha case, ??? can tile for us
+
+    nsRect clipRect;
+    PRBool isValid;
+    aContext.GetClipRect(clipRect, isValid);
+    TilePixmap(mImagePixmap, drawing->GetDrawable(), aTileRect.x, aTileRect.y, aTileRect, clipRect, PR_TRUE);
+  }
   return NS_OK;
 }
 
@@ -910,9 +1256,10 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
                                     const nsRect &aTileRect)
 {
   nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
-
   if (mDisplay == nsnull)
     mDisplay = drawing->GetDisplay();
+
+  PRBool partial = PR_FALSE;
 
   PRInt32
     validX = 0,
@@ -921,23 +1268,26 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     validHeight = mHeight;
 
   // limit the image rectangle to the size of the image data which
-  // has been validated.
-  if ((mDecodedY2 < mHeight)) {
+  if (mDecodedY2 < mHeight) {
     validHeight = mDecodedY2 - mDecodedY1;
+    partial = PR_TRUE;
   }
-  if ((mDecodedX2 < mWidth)) {
+  if (mDecodedX2 < mWidth) {
     validWidth = mDecodedX2 - mDecodedX1;
+    partial = PR_TRUE;
   }
-  if ((mDecodedY1 > 0)) { 
+  if (mDecodedY1 > 0) {   
     validHeight -= mDecodedY1;
     validY = mDecodedY1;
+    partial = PR_TRUE;
   }
-  if ((mDecodedX1 > 0)) {
+  if (mDecodedX1 > 0) {
     validWidth -= mDecodedX1;
     validX = mDecodedX1;
+    partial = PR_TRUE;
   }
 
-  if (mAlphaDepth == 8) {
+  if (partial || ((mAlphaDepth == 8) && mAlphaValid)) {
     PRInt32 aY0 = aTileRect.y - aSYOffset,
             aX0 = aTileRect.x - aSXOffset,
             aY1 = aTileRect.y + aTileRect.height,
@@ -958,15 +1308,15 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     return NS_OK;
   }
 
-  CreateOffscreenPixmap(validWidth, validHeight, aSurface);
-  DrawImageOffscreen(validX, validY, validWidth, validHeight, aSurface);
+  CreateOffscreenPixmap(mWidth, mHeight);
+  /* XXX Why? DrawImageOffscreen(validX, validY, validWidth, validHeight); */
 
   if (mAlphaDepth == 1)
   {
     Pixmap tileImg;
     Pixmap tileMask;
 
-    CreateAlphaBitmap(validWidth, validHeight, aSurface);
+    CreateAlphaBitmap(validWidth, validHeight);
 
     nsRect tmpRect(0,0,aTileRect.width, aTileRect.height);
 
@@ -1001,8 +1351,9 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     XFreePixmap(mDisplay, tileImg);
     XFreePixmap(mDisplay, tileMask);
     XFreeGC(mDisplay, fgc);
-  } else
-  {
+
+  } else {
+
     nsRect clipRect;
     PRBool isValid;
 
@@ -1048,6 +1399,17 @@ nsImageXlib::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2)
   mDecodedY1 = y1;
   mDecodedX2 = x2;
   mDecodedY2 = y2;
+
+  // check if the image has an all-opaque 8-bit alpha mask
+  if ((mAlphaDepth==8) && !mAlphaValid) {
+    for (int y=mDecodedY1; y<mDecodedY2; y++) {
+      unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + mDecodedX1;
+      for (int x=mDecodedX1; x<mDecodedX2; x++)
+        if (*(alpha++)!=255) {
+          mAlphaValid=PR_TRUE;
+        }
+    }
+  }
   return NS_OK;
 }
 
@@ -1056,32 +1418,26 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
                                        nscoord aDX, nscoord aDY,
                                        nscoord aDWidth, nscoord aDHeight)
 {
-#if 0
-    // XXX This is a copy of the GTK version, partially converted for
-    // the xlib port.  I can't figure out how to finish it.
   nsImageXlib *dest = NS_STATIC_CAST(nsImageXlib *, aDstImage);
   if (!dest)
     return NS_ERROR_FAILURE;
 
-  nsDrawingSurfaceXlib *drawing = /* XXX What should this be!?!?! */ nsnull;
-  NS_ENSURE_TRUE(drawing, NS_ERROR_FAILURE);
-  
   if (!dest->mImagePixmap)
-    dest->CreateOffscreenPixmap(dest->mWidth, dest->mHeight, drawing);
+    dest->CreateOffscreenPixmap(dest->mWidth, dest->mHeight);
   
   if (!dest->mImagePixmap || !mImagePixmap)
     return NS_ERROR_FAILURE;
 
   if (!mDisplay)
-    mDisplay = drawing->GetDisplay();
+    mDisplay = xlib_rgb_get_display();
+
   GC gc = XCreateGC(mDisplay, dest->mImagePixmap, 0, NULL);
 
   if (mAlphaDepth == 1)
-    CreateAlphaBitmap(mWidth, mHeight, drawing);
+    CreateAlphaBitmap(mWidth, mHeight);
   
-  if (mAlphaPixmap) {
+  if (mAlphaPixmap)
     SetupGCForAlpha(gc, 0, 0);
-  }
 
   XCopyArea(dest->mDisplay, mImagePixmap, dest->mImagePixmap, gc,
             0, 0, mWidth, mHeight, aDX, aDY);
@@ -1089,9 +1445,5 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
   XFreeGC(mDisplay, gc);
 
   return NS_OK;
-#else
-  NS_NOTREACHED("nsImageXlib::DrawToImage not yet implemented");
-  return NS_ERROR_FAILURE;
-#endif
 }
 #endif // USE_IMG2

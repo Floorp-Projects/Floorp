@@ -23,6 +23,7 @@
 #include "nsToolkit.h"
 #include "nsGUIEvent.h"
 #include "plevent.h"
+#include "nsGCCache.h"
 
 // Static Thread Local Storage index of the toolkit object associated with
 // a given thread...
@@ -32,14 +33,33 @@ static PRUintn gToolkitTLSIndex = 0;
 nsToolkit::nsToolkit()
 {
   NS_INIT_REFCNT();
+  mGC = NULL;
 }
 
 nsToolkit::~nsToolkit()
 {
+  if(mGC)
+    mGC->Release();
 }
 
 NS_DEFINE_IID(kIToolkitIID, NS_ITOOLKIT_IID);
 NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
+
+void nsToolkit::CreateSharedGC(Display *display, Drawable d)
+{
+  if (mGC)
+    return;
+  mGC = new xGC(display, d, 0, NULL); 
+  mGC->AddRef(); // this is for us
+}
+
+xGC *nsToolkit::GetSharedGC(Display *display, Drawable d)
+{
+  if(!mGC)
+    CreateSharedGC(display, d); 
+
+  return mGC;
+}
 
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
@@ -66,14 +86,27 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   {
     toolkit = (nsIToolkit*)PR_GetThreadPrivate(gToolkitTLSIndex);
 
-    // Create a new toolkit for this thread
-    if (!toolkit)
-    {
-      fprintf(stderr, "Creating a new nsIToolkit!\n");
+    //
+    // Create a new toolkit for this thread...
+    //
+    if (!toolkit) {
+      toolkit = new nsToolkit();
+      
+      if (!toolkit) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        NS_ADDREF(toolkit);
+        toolkit->Init(PR_GetCurrentThread());
+        //
+        // The reference stored in the TLS is weak.  It is removed in the
+        // nsToolkit destructor...
+        //
+        PR_SetThreadPrivate(gToolkitTLSIndex, (void*)toolkit);
     }
-    else
-      fprintf(stderr, "No need to create a new nsIToolkit!\n");
+    } else {
+      NS_ADDREF(toolkit);
   }
-
+    *aResult = toolkit;
+  }
   return NS_OK;
 }
