@@ -2,9 +2,8 @@
 // Microsoft Developer Studio generated include file.
 // Used by setuprsc.rc
 //
-//#include "winres.h"
+
 #include "winresrc.h"
-//#include "winuser.rh"
 
 #ifdef IDC_STATIC
 #undef IDC_STATIC
@@ -65,6 +64,7 @@
 #define IDC_CHECK2                      1023
 #define IDC_LIST2                       1023
 #define IDC_LIST                        1023
+#define WINVER                          0x400
 #define IDC_CHECK3                      1024
 #define IDC_EDIT_LICENSE                1024
 #define IDC_CHECK0                      1025
@@ -72,6 +72,7 @@
 #define IDC_LIST_COMPONENTS             1027
 #define IDC_LIST_SUBCOMPONENTS          1029
 #define IDC_STATIC_DRIVE_SPACE_REQUIRED 1030
+#define IDC_SPACE_AVAILABLE             1030
 #define IDC_STATIC_DRIVE_SPACE_AVAILABLE 1031
 #define IDC_STATIC_DESTINATION          1032
 #define IDC_STATIC0                     1033
@@ -89,6 +90,7 @@
 #define IDC_LIST1                       1053
 #define IDC_BUTTON1                     1055
 #define IDC_README                      1055
+#define IDC_DOWNLOAD_SIZE               1058
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
@@ -113,6 +115,9 @@
 #define IDC_RADIO_NO                    11012
 #define IDWIZBACK                       11013
 #define IDWIZNEXT                       11014
+#define IDS_MSG_CREATE_DIRECTORY        11015
+#define IDS_STR_CREATE_DIRECTORY        11016
+#define IDS_ERROR_PROGRAM_FOLDER_NAME   11017
 
 // Next default values for new objects
 // 
@@ -121,7 +126,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1058
+#define _APS_NEXT_CONTROL_VALUE         1059
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -92,7 +92,7 @@ Verify Existance=
 [Legacy Check0]
 Filename=[SETUP PATH]\mozilla.exe
 Version=6.0.0.0
-Message=Setup has detected an old version of Mozilla in the chosen destination path that may pose compatibility issues.  It is highly recommended that a different destination path be used.  Would you like to choose a different path?
+Message=Setup has detected an old version of Mozilla in the chosen destination directory that may pose compatibility issues.  It is highly recommended that a different destination directory be used.  Would you like to choose a different directory?
 
 [Dialog Welcome]
 Show Dialog=TRUE
@@ -166,7 +166,7 @@ C2=Component2
 [Dialog Select Components]
 Show Dialog=TRUE
 Title=Select Components
-Message0=
+Message0=The browser is always installed.  Select or clear the additional components you want to install.
 
 [Dialog Windows Integration]
 Show Dialog=FALSE
@@ -194,7 +194,7 @@ Archive=
 [Dialog Program Folder]
 Show Dialog=TRUE
 Title=Select Program Folder
-Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folder list.  Click Next to continue.
+Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folder list.  Click Install to begin installation.
 
 [Dialog Start Install]
 Show Dialog=FALSE
@@ -248,6 +248,8 @@ Archive=core.xpi
 $InstallSize$:core
 $InstallSizeSystem$
 $InstallSizeArchive$:core.xpi
+;Dependency0=
+Dependee0=Mozilla Seamonkey
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
@@ -265,7 +267,7 @@ Archive=browser.xpi
 $InstallSize$:browser
 $InstallSizeSystem$
 $InstallSizeArchive$:browser.xpi
-Dependency0=Mozilla Xpinstall Engine
+;Dependency0=
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
@@ -283,7 +285,7 @@ Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
 $InstallSizeArchive$:mail.xpi
-Dependency0=Mozilla Xpinstall Engine
+;Dependency0=
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.

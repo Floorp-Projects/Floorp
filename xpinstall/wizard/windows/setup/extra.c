@@ -1370,6 +1370,7 @@ siC *CreateSiCNode()
   if((siCNode->szParameter = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
   siCNode->siCDDependencies = NULL;
+  siCNode->siCDDependees    = NULL;
   siCNode->Next             = NULL;
   siCNode->Prev             = NULL;
 
@@ -1398,6 +1399,7 @@ void SiCNodeDelete(siC *siCTemp)
   if(siCTemp != NULL)
   {
     DeInitSiCDependencies(siCTemp->siCDDependencies);
+    DeInitSiCDependencies(siCTemp->siCDDependees);
 
     siCTemp->Next->Prev = siCTemp->Prev;
     siCTemp->Prev->Next = siCTemp->Next;
@@ -1589,6 +1591,38 @@ void SiCNodeSetItemsSelected(DWORD dwItems, DWORD *dwItemsSelected)
       siCTemp = siCTemp->Next;
     }
   }
+}
+
+char *SiCNodeGetDescriptionShort(DWORD dwIndex, BOOL bIncludeInvisible)
+{
+  DWORD dwCount = 0;
+  siC   *siCTemp = siComponents;
+
+  if(siCTemp != NULL)
+  {
+    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    {
+      if(dwIndex == 0)
+        return(siCTemp->szDescriptionShort);
+
+      ++dwCount;
+    }
+
+    siCTemp = siCTemp->Next;
+    while((siCTemp != NULL) && (siCTemp != siComponents))
+    {
+      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      {
+        if(dwIndex == dwCount)
+          return(siCTemp->szDescriptionShort);
+      
+        ++dwCount;
+      }
+
+      siCTemp = siCTemp->Next;
+    }
+  }
+  return(NULL);
 }
 
 char *SiCNodeGetDescriptionLong(DWORD dwIndex, BOOL bIncludeInvisible)
@@ -2303,9 +2337,11 @@ void InitSiComponents(char *szFileIni)
   char  szBuf[MAX_BUF];
   char  szComponentItem[MAX_BUF];
   char  szDependency[MAX_BUF];
+  char  szDependee[MAX_BUF];
   char  szDPSection[MAX_BUF];
   siC   *siCTemp;
   siCD  *siCDepTemp;
+  siCD  *siCDDependeeTemp;
 
   dwIndex0 = 0;
   itoa(dwIndex0, szIndex0, 10);
@@ -2389,6 +2425,30 @@ void InitSiComponents(char *szFileIni)
       lstrcpy(szDependency, "Dependency");
       lstrcat(szDependency, szIndex1);
       GetPrivateProfileString(szComponentItem, szDependency, "", szBuf, MAX_BUF, szFileIni);
+    }
+
+    /* get all dependees for this component */
+    dwIndex1 = 0;
+    itoa(dwIndex1, szIndex1, 10);
+    lstrcpy(szDependee, "Dependee");
+    lstrcat(szDependee, szIndex1);
+    GetPrivateProfileString(szComponentItem, szDependee, "", szBuf, MAX_BUF, szFileIni);
+    while(*szBuf != '\0')
+    {
+      /* create and initialize empty node */
+      siCDDependeeTemp = CreateSiCDepNode();
+
+      /* store name of archive for component */
+      lstrcpy(siCDDependeeTemp->szDescriptionShort, szBuf);
+
+      /* inserts the newly created component into the global component queue */
+      SiCDepNodeInsert(&(siCTemp->siCDDependees), siCDDependeeTemp);
+
+      ++dwIndex1;
+      itoa(dwIndex1, szIndex1, 10);
+      lstrcpy(szDependee, "Dependee");
+      lstrcat(szDependee, szIndex1);
+      GetPrivateProfileString(szComponentItem, szDependee, "", szBuf, MAX_BUF, szFileIni);
     }
 
     // locate previous path if necessary
@@ -2623,6 +2683,86 @@ BOOL ResolveDependencies(DWORD dwIndex)
     }
   }
   return(bMoreToResolve);
+}
+
+BOOL ResolveComponentDependee(siCD *siCDInDependee)
+{
+  int     dwIndex;
+  siCD    *siCDDependeeTemp   = siCDInDependee;
+  BOOL    bAtLeastOneSelected = FALSE;
+
+  if(siCDDependeeTemp != NULL)
+  {
+    if((dwIndex = SiCNodeGetIndexDS(siCDDependeeTemp->szDescriptionShort)) != -1)
+    {
+      if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == TRUE)
+      {
+        bAtLeastOneSelected = TRUE;
+      }
+    }
+
+    siCDDependeeTemp = siCDDependeeTemp->Next;
+    while((siCDDependeeTemp != NULL) && (siCDDependeeTemp != siCDInDependee))
+    {
+      if((dwIndex = SiCNodeGetIndexDS(siCDDependeeTemp->szDescriptionShort)) != -1)
+      {
+        if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == TRUE)
+        {
+          bAtLeastOneSelected = TRUE;
+        }
+      }
+
+      siCDDependeeTemp = siCDDependeeTemp->Next;
+    }
+  }
+  return(bAtLeastOneSelected);
+}
+
+void ResolveDependees(LPSTR szToggledDescriptionShort)
+{
+  BOOL  bAtLeastOneSelected;
+  BOOL  bMoreToResolve  = FALSE;
+  siC   *siCTemp        = siComponents;
+  DWORD dwIndex;
+
+  do
+  {
+    if(siCTemp == NULL)
+      break;
+
+    if((siCTemp->siCDDependees != NULL) &&
+       (lstrcmpi(siCTemp->szDescriptionShort, szToggledDescriptionShort) != 0))
+    {
+      bAtLeastOneSelected = ResolveComponentDependee(siCTemp->siCDDependees);
+      if(bAtLeastOneSelected == FALSE)
+      {
+        if((dwIndex = SiCNodeGetIndexDS(siCTemp->szDescriptionShort)) != -1)
+        {
+          if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == TRUE)
+          {
+            SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, TRUE);
+            bMoreToResolve = TRUE;
+          }
+        }
+      }
+      else
+      {
+        if((dwIndex = SiCNodeGetIndexDS(siCTemp->szDescriptionShort)) != -1)
+        {
+          if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == FALSE)
+          {
+            SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE);
+            bMoreToResolve = TRUE;
+          }
+        }
+      }
+    }
+
+    siCTemp = siCTemp->Next;
+  } while((siCTemp != NULL) && (siCTemp != siComponents));
+
+  if(bMoreToResolve == TRUE)
+    ResolveDependees(szToggledDescriptionShort);
 }
 
 void GetAlternateArchiveSearchPath(LPSTR lpszCmdLine)

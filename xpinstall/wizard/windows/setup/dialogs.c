@@ -382,9 +382,11 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   HWND          hStaticSt2;
   HWND          hRadioSt3;
   HWND          hStaticSt3;
+  HWND          hReadme;
   RECT          rDlg;
   char          szBuf[MAX_BUF];
   char          szBufTemp[MAX_BUF];
+  char          szBufTemp2[MAX_BUF];
 
   hRadioSt0   = GetDlgItem(hDlg, IDC_RADIO_ST0);
   hStaticSt0  = GetDlgItem(hDlg, IDC_STATIC_ST0_DESCRIPTION);
@@ -394,12 +396,13 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   hStaticSt2  = GetDlgItem(hDlg, IDC_STATIC_ST2_DESCRIPTION);
   hRadioSt3   = GetDlgItem(hDlg, IDC_RADIO_ST3);
   hStaticSt3  = GetDlgItem(hDlg, IDC_STATIC_ST3_DESCRIPTION);
+  hReadme     = GetDlgItem(hDlg, IDC_README);
 
   switch(msg)
   {
     case WM_INITDIALOG:
-      if(bCreateDestinationDir)
-        DirectoryRemove(sgProduct.szPath, FALSE);
+//      if(bCreateDestinationDir)
+//        DirectoryRemove(sgProduct.szPath, FALSE);
 
       SetWindowText(hDlg, diSetupType.szTitle);
 
@@ -485,6 +488,11 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
 
+      if((*diSetupType.szReadmeFilename == '\0') || (FileExists(diSetupType.szReadmeFilename) == FALSE))
+        ShowWindow(hReadme, SW_HIDE);
+      else
+        ShowWindow(hReadme, SW_SHOW);
+
       break;
 
     case WM_COMMAND:
@@ -556,25 +564,42 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
 
           if(FileExists(szBuf) == FALSE)
           {
-            if(CreateDirectoriesAll(szBuf) == FALSE)
+            char szMsgCreateDirectory[MAX_BUF];
+            char szStrCreateDirectory[MAX_BUF];
+
+            NS_LoadString(hSetupRscInst, IDS_STR_CREATE_DIRECTORY, szStrCreateDirectory, MAX_BUF);
+            if(NS_LoadString(hSetupRscInst, IDS_MSG_CREATE_DIRECTORY, szMsgCreateDirectory, MAX_BUF) == WIZ_OK)
             {
-              char szECreateDirectory[MAX_BUF];
-
               lstrcpy(szBufTemp, "\n\n    ");
-              lstrcat(szBufTemp, sgProduct.szPath);
+              lstrcat(szBufTemp, szBuf);
+              RemoveBackSlash(szBufTemp);
               lstrcat(szBufTemp, "\n\n");
+              wsprintf(szBufTemp2, szMsgCreateDirectory, szBufTemp);
+            }
 
-              if(NS_LoadString(hSetupRscInst, IDS_ERROR_CREATE_DIRECTORY, szECreateDirectory, MAX_BUF) == WIZ_OK)
-                wsprintf(szBuf, szECreateDirectory, szBufTemp);
+            if(MessageBox(hDlg, szBufTemp2, szStrCreateDirectory, MB_YESNO | MB_ICONQUESTION) == IDYES)
+            {
+              if(CreateDirectoriesAll(szBuf) == FALSE)
+              {
+                char szECreateDirectory[MAX_BUF];
 
-              MessageBox(hDlg, szBuf, "", MB_OK | MB_ICONERROR);
+                lstrcpy(szBufTemp, "\n\n    ");
+                lstrcat(szBufTemp, sgProduct.szPath);
+                RemoveBackSlash(szBufTemp);
+                lstrcat(szBufTemp, "\n\n");
+
+                if(NS_LoadString(hSetupRscInst, IDS_ERROR_CREATE_DIRECTORY, szECreateDirectory, MAX_BUF) == WIZ_OK)
+                  wsprintf(szBuf, szECreateDirectory, szBufTemp);
+
+                MessageBox(hDlg, szBuf, "", MB_OK | MB_ICONERROR);
+                break;
+              }
+              bCreateDestinationDir = TRUE;
+            }
+            else
+            {
               break;
             }
-            bCreateDestinationDir = TRUE;
-          }
-          else
-          {
-            bCreateDestinationDir = FALSE;
           }
 
           /* retrieve and save the state of the selected radio button */
@@ -716,13 +741,16 @@ void SunJavaDependencyHack(DWORD dwIndex, BOOL bSelected)
 
 void ToggleCheck(HWND hwndListBox, DWORD dwIndex)
 {
-  BOOL bMoreToResolve;
+  BOOL  bMoreToResolve;
+  LPSTR szToggledDescriptionShort = NULL;
 
   // Checks to see if the checkbox is checked or not checked, and
   // toggles the node attributes appropriately.
     if(SiCNodeGetAttributes(dwIndex, FALSE) & SIC_SELECTED)
     {
       SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, FALSE);
+      szToggledDescriptionShort = SiCNodeGetDescriptionShort(dwIndex, FALSE);
+      ResolveDependees(szToggledDescriptionShort);
       SunJavaDependencyHack(dwIndex, FALSE);
     }
     else
@@ -733,6 +761,8 @@ void ToggleCheck(HWND hwndListBox, DWORD dwIndex)
       while(bMoreToResolve)
         bMoreToResolve = ResolveDependencies(-1);
 
+      szToggledDescriptionShort = SiCNodeGetDescriptionShort(dwIndex, FALSE);
+      ResolveDependees(szToggledDescriptionShort);
       SunJavaDependencyHack(dwIndex, TRUE);
     }
 
@@ -829,6 +859,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   {
     case WM_INITDIALOG:
       SetWindowText(hDlg, diSelectComponents.szTitle);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, diSelectComponents.szMessage0);
 
       siCTemp = siComponents;
       if(siCTemp != NULL)
@@ -852,7 +883,6 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
 
-#ifdef XXX_SSU
       /* update the disk space available info in the dialog.  GetDiskSpaceAvailable()
          returns value in kbytes */
       ullDSBuf = GetDiskSpaceAvailable(sgProduct.szPath);
@@ -862,8 +892,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       lstrcat(szBuf, " - ");
       lstrcat(szBuf, tchBuffer);
       lstrcat(szBuf, " K");
-      SetDlgItemText(hDlg, IDC_STATIC_DRIVE_SPACE_AVAILABLE, szBuf);
-#endif
+      SetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
 
       OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
       break;
@@ -975,7 +1004,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       lstrcpy(szBuf, tchBuffer);
       lstrcat(szBuf, " K");
       
-      SetDlgItemText(hDlg, IDC_STATIC_DRIVE_SPACE_REQUIRED, szBuf);
+      SetDlgItemText(hDlg, IDC_DOWNLOAD_SIZE, szBuf);
       break;
 
     case WM_COMMAND:
@@ -1051,6 +1080,7 @@ LRESULT CALLBACK DlgProcSelectAdditions(HWND hDlg, UINT msg, WPARAM wParam, LONG
   {
     case WM_INITDIALOG:
       SetWindowText(hDlg, diSelectComponents.szTitle);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, diSelectComponents.szMessage0);
 
       siCTemp = siComponents;
       if(siCTemp != NULL)
@@ -1409,7 +1439,16 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          GetDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, sgProduct.szProgramFolderName, MAX_BUF);
+          GetDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, szBuf, MAX_BUF);
+          if(*szBuf == '\0')
+          {
+            char szEProgramFolderName[MAX_BUF];
+
+            NS_LoadString(hSetupRscInst, IDS_ERROR_PROGRAM_FOLDER_NAME, szEProgramFolderName, MAX_BUF);
+            MessageBox(hDlg, szEProgramFolderName, NULL, MB_OK | MB_ICONEXCLAMATION);
+            break;
+          }
+          lstrcpy(sgProduct.szProgramFolderName, szBuf);
 
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
