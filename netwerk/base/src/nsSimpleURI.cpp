@@ -260,13 +260,6 @@ nsSimpleURI::Clone(nsIURI* *result)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetRelativePath(const char *i_RelativePath)
-{ 
-    NS_ASSERTION(PR_FALSE, "This is meaningless in hack context!"); 
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsSimpleURI::Resolve(const char *relativePath, char **result) 
 {
     return DupString(result,(char*)relativePath);

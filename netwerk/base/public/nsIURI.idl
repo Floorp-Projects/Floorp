@@ -132,15 +132,6 @@ interface nsIURI : nsISupports
     nsIURI clone();
 
     /**
-     * Sets the given string to be a relative path for this URI, and 
-     * changes this to read relative. Thus for example- if this = 
-     * http://foo.com/bar/index.html, then calling SetRelativePath("/baz") will 
-     * change this to http://foo.com/baz and calling it with "baz" will
-     * change this to http://foo.com/bar/baz. 
-     */
-    void setRelativePath(in string relativePath);
-
-    /**
      * This method resolves a relative string into an absolute URI string,
      * using the URI as the base. 
      *
