@@ -33,6 +33,13 @@
 #define NS_COOKIE NS_IMPORT
 #endif
 
+
+typedef enum {
+  COOKIE_Accept,
+  COOKIE_DontAcceptForeign,
+  COOKIE_DontUse
+} COOKIE_BehaviorEnum;
+
 extern char * COOKIE_GetCookie(char * address);
 extern char * COOKIE_GetCookieFromHttp(char * address, char * firstAddress);
 extern void COOKIE_SetCookieString(char * cur_url, char * set_cookie_header);
@@ -43,5 +50,6 @@ extern void COOKIE_SetCookieStringFromHttp(char * cur_url, char * first_url, cha
 extern void COOKIE_GetCookieListForViewer (nsString& aCookieList);
 extern void COOKIE_GetPermissionListForViewer (nsString& aPermissionList);
 extern void COOKIE_CookieViewerReturn(nsAutoString results);
+extern COOKIE_BehaviorEnum COOKIE_GetBehaviorPref();
 
 #endif /* COOKIES_H */

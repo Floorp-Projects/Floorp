@@ -52,6 +52,7 @@ public:
   NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results);
   NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList);
   NS_IMETHOD Cookie_GetPermissionListForViewer(nsString& aPermissionList);
+  NS_IMETHOD CookieEnabled(PRBool* aEnabled);
 
   nsCookieService();
   virtual ~nsCookieService(void);
@@ -183,6 +184,12 @@ NS_IMETHODIMP nsCookieService::Cookie_GetCookieListForViewer(nsString& aCookieLi
 
 NS_IMETHODIMP nsCookieService::Cookie_GetPermissionListForViewer(nsString& aPermissionList) {
   ::COOKIE_GetPermissionListForViewer(aPermissionList);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCookieService::CookieEnabled(PRBool* aEnabled)
+{
+  *aEnabled = (COOKIE_GetBehaviorPref() != COOKIE_DontUse);
   return NS_OK;
 }
 
