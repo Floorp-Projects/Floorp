@@ -69,6 +69,17 @@
 #include <fullsoft.h>
 #endif
 
+/*********************************************
+ SilentDownload
+*********************************************/
+#include "nsSilentDownload.h"
+#include "nsIDOMSilentDownload.h"
+
+static nsIDOMSilentDownload *silentDownload = NULL;
+static NS_DEFINE_IID(kISilentDownloadIID, NS_IDOMSILENTDOWNLOAD_IID);
+static NS_DEFINE_IID(kSilentDownloadCID,  NS_SilentDownload_CID);
+/*********************************************/
+
 extern nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
 extern nsresult NS_NewXPBaseWindowFactory(nsIFactory** aFactory);
 extern "C" void NS_SetupRegistry();
@@ -270,6 +281,19 @@ nsViewerApp::Initialize(int argc, char** argv)
   }
 #endif
 
+    rv = nsRepository::CreateInstance(kSilentDownloadCID, 
+                                      nsnull,
+                                      kISilentDownloadIID,
+                                      (void**) &silentDownload);
+    if (rv == NS_OK)
+    {
+        if (silentDownload->Startup() != NS_OK)
+        {
+            silentDownload->Shutdown();
+            NS_RELEASE(silentDownload);
+        }
+    }
+
   // Finally process our arguments
   rv = ProcessArguments(argc, argv);
 
@@ -280,6 +304,12 @@ nsViewerApp::Initialize(int argc, char** argv)
 nsresult
 nsViewerApp::Exit()
 {
+  if (silentDownload != NULL)
+  {
+      silentDownload->Shutdown();
+      NS_RELEASE(silentDownload);
+  }
+
   Destroy();
   mAppShell->Exit();
   NS_RELEASE(mAppShell);
