@@ -109,7 +109,6 @@
 #include "nsIPrincipal.h"
 #include "nsIHistoryEntry.h"
 #include "nsISHistoryListener.h"
-#include "nsIDirectoryListing.h"
 
 // Pull in various NS_ERROR_* definitions
 #include "nsIDNSService.h"
@@ -5645,11 +5644,6 @@ nsDocShell::DoURILoad(nsIURI * aURI,
         // Set the referrer explicitly
         if (aReferrerURI)       // Referrer is currenly only set for link clicks here.
             httpChannel->SetReferrer(aReferrerURI);
-    }
-    // We want to use the pref for directory listings
-    nsCOMPtr<nsIDirectoryListing> dirList = do_QueryInterface(channel);
-    if (dirList) {
-        (void)dirList->SetListFormat(nsIDirectoryListing::FORMAT_PREF);
     }
     //
     // Set the owner of the channel - only for javascript and data channels.

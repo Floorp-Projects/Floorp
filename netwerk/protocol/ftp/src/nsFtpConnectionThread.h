@@ -231,7 +231,6 @@ private:
     nsCOMPtr<nsIPrompt>    mPrompter;
     nsCOMPtr<nsIFTPEventSink>       mFTPEventSink;
     nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
-    PRUint32               mListFormat;
     
     static PRUint32         mSessionStartTime;
 

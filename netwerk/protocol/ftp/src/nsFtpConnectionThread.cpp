@@ -1395,28 +1395,7 @@ nsFtpState::R_mdtm() {
 nsresult 
 nsFtpState::SetContentType()
 {
-    nsCOMPtr<nsIDirectoryListing> list = do_QueryInterface(mChannel);
-    NS_ASSERTION(list, "ftp channel isn't listable!");
-    (void)list->GetListFormat(&mListFormat);
-    nsCAutoString contentType;
-    switch (mListFormat) {
-    case nsIDirectoryListing::FORMAT_RAW:
-        {
-            contentType.AssignLiteral("text/ftp-dir-");
-        }
-        break;
-    default:
-        NS_WARNING("Unknown directory type");
-        // fall through
-    case nsIDirectoryListing::FORMAT_HTML:
-        contentType.AssignLiteral(TEXT_HTML);
-        break;
-    case nsIDirectoryListing::FORMAT_HTTP_INDEX:
-        contentType.AssignLiteral(APPLICATION_HTTP_INDEX_FORMAT);
-        break;
-    }
-
-    return mChannel->SetContentType(contentType);
+    return mChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT));
 }
 
 nsresult
@@ -2429,42 +2408,11 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
     if (NS_FAILED(rv)) 
         return rv;
 
-    nsAutoString fromStr(NS_LITERAL_STRING("text/ftp-dir"));
-    
-    switch (mListFormat) {
-    case nsIDirectoryListing::FORMAT_RAW:
-        converterListener = listener;
-        break;
-    default:
-        // fall through
-    case nsIDirectoryListing::FORMAT_HTML:
-        // XXX - work arround bug 126417. We have to do the chaining
-        // manually so that we don't crash
-        {
-            nsCOMPtr<nsIStreamListener> tmpListener;
-            rv = scs->AsyncConvertData(NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
-                                       NS_LITERAL_STRING(TEXT_HTML).get(),
-                                       listener, 
-                                       mURL, 
-                                       getter_AddRefs(tmpListener));
-            if (NS_FAILED(rv)) break;
-            rv = scs->AsyncConvertData(fromStr.get(),
-                                       NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
-                                       tmpListener,
-                                       mURL,
-                                       getter_AddRefs(converterListener));
-                                       
-        }
-        break;
-    case nsIDirectoryListing::FORMAT_HTTP_INDEX:
-        rv = scs->AsyncConvertData(fromStr.get(), 
-                                   NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
-                                   listener, 
-                                   mURL, 
-                                   getter_AddRefs(converterListener));
-        break;
-    }
-
+    rv = scs->AsyncConvertData(NS_LITERAL_STRING("text/ftp-dir").get(),
+                               NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
+                               listener, 
+                               mURL, 
+                               getter_AddRefs(converterListener));
     if (NS_FAILED(rv)) {
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) scs->AsyncConvertData failed (rv=%x)\n", this, rv));
         return rv;

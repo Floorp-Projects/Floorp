@@ -60,7 +60,6 @@ nsFileChannel::nsFileChannel()
     , mUploadLength(-1)
     , mLoadFlags(LOAD_NORMAL)
     , mStatus(NS_OK)
-    , mListFormat(FORMAT_HTML)
     , mIsDir(PR_FALSE)
     , mUploading(PR_FALSE)
 {
@@ -126,15 +125,14 @@ nsFileChannel::EnsureStream()
 //-----------------------------------------------------------------------------
 
 // XXX this only needs to be threadsafe because of bug 101252
-NS_IMPL_THREADSAFE_ISUPPORTS8(nsFileChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsFileChannel,
                               nsIRequest,
                               nsIChannel,
                               nsIStreamListener,
                               nsIRequestObserver,
                               nsIUploadChannel,
                               nsIFileChannel,
-                              nsITransportEventSink,
-                              nsIDirectoryListing)
+                              nsITransportEventSink)
 
 //-----------------------------------------------------------------------------
 // nsIRequest
@@ -285,10 +283,7 @@ nsFileChannel::GetContentType(nsACString &aContentType)
     
     if (mContentType.IsEmpty()) {
         if (mIsDir) {
-            if (mListFormat == FORMAT_HTML)
-                mContentType.AssignLiteral(TEXT_HTML);
-            else
-                mContentType.AssignLiteral(APPLICATION_HTTP_INDEX_FORMAT);
+            mContentType.AssignLiteral(APPLICATION_HTTP_INDEX_FORMAT);
         } else {
             // Get content type from file extension
             nsCOMPtr<nsIFile> file;
@@ -361,23 +356,7 @@ nsFileChannel::Open(nsIInputStream **result)
     rv = EnsureStream();
     if (NS_FAILED(rv)) return rv;
 
-    if (mIsDir && mListFormat == FORMAT_HTML) {
-        nsCOMPtr<nsIStreamConverterService> scs =
-            do_GetService(kStreamConverterServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIInputStream> temp;
-
-        rv = scs->Convert(mStream,
-                          NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
-                          NS_LITERAL_STRING(TEXT_HTML).get(),
-                          nsnull, getter_AddRefs(temp));
-        if (NS_FAILED(rv)) return rv;
-
-        NS_ADDREF(*result = temp);
-    }
-    else
-        NS_ADDREF(*result = mStream);
+    NS_ADDREF(*result = mStream);
 
     return NS_OK;
 }
@@ -453,23 +432,6 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
         //
         rv = EnsureStream();
         if (NS_FAILED(rv)) return rv;
-
-        //
-        // push stream converter if opening a directory.
-        //
-        if (mIsDir && mListFormat == FORMAT_HTML) {
-            nsCOMPtr<nsIStreamConverterService> scs =
-                do_GetService(kStreamConverterServiceCID, &rv);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = scs->AsyncConvertData(NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
-                                       NS_LITERAL_STRING(TEXT_HTML).get(),
-                                       listener, nsnull,
-                                       getter_AddRefs(grip));
-            if (NS_FAILED(rv)) return rv;
-
-            listener = grip;
-        }
 
         //
         // create asynchronous input stream wrapping file input stream.
@@ -612,33 +574,4 @@ nsFileChannel::OnTransportStatus(nsITransport *trans, nsresult status,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFileChannel::SetListFormat(PRUint32 format)
-{
-    // Convert the pref value
-    if (format == FORMAT_PREF) {
-        format = FORMAT_HTML; // default
-        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (prefs) {
-            PRInt32 sFormat;
-            if (NS_SUCCEEDED(prefs->GetIntPref("network.dir.format", &sFormat)))
-                format = sFormat;
-        }
-    }
-    if (format != FORMAT_RAW &&
-        format != FORMAT_HTML &&
-        format != FORMAT_HTTP_INDEX) {
-        NS_WARNING("invalid directory format");
-        return NS_ERROR_FAILURE;
-    }
-    mListFormat = format;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::GetListFormat(PRUint32 *format)
-{
-    *format = mListFormat;
-    return NS_OK;
-}
 

@@ -63,7 +63,6 @@ XPIDLSRCS	= \
 		nsIAuthPrompt.idl \
 		nsIAsyncStreamCopier.idl \
 		nsIBufferedStreams.idl \
-		nsIDirectoryListing.idl \
 		nsIDownloader.idl \
 		nsIEncodedChannel.idl \
 		nsIFileStreams.idl \

@@ -43,7 +43,6 @@
 #include "nsNetCID.h"
 
 #include "nsIServiceManager.h"
-#include "nsIDirectoryListing.h"
 
 //-----------------------------------------------------------------------------
 
