@@ -129,7 +129,7 @@ NS_IMETHODIMP nsMsgFilter::AppendTerm(nsIMsgSearchTerm * aTerm)
 {
     NS_ENSURE_TRUE(aTerm, NS_ERROR_NULL_POINTER);
     
-    return m_termList->AppendElement(aTerm);
+    return m_termList->AppendElement(NS_STATIC_CAST(nsISupports*,aTerm));
 }
 
 NS_IMETHODIMP
