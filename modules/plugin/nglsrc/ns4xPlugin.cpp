@@ -108,6 +108,7 @@ static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr)
 {
   NS_INIT_REFCNT();
+  memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
   gServiceMgr = serviceMgr;
   fLibrary = nsnull;
 
@@ -123,9 +124,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
     NS_ASSERTION(pfnGetEntryPoints, "failed to get entry points");
     return;
   }
-
-  memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
-  
+ 
   fCallbacks.size = sizeof(fCallbacks);
   
   nsresult result = pfnGetEntryPoints(&fCallbacks);
@@ -141,7 +140,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
   NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "main");
 #else
   NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "mainRD");
-
+#endif // !TARGET_CARBON
 
   if(pfnMain == NULL)
   {
@@ -153,14 +152,13 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
   NPError error;
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_MainEntryProc(pfnMain, 
                                                        &(ns4xPlugin::CALLBACKS), 
-                                                       (void**)&fCallbacks, 
-                                                       (void**)&fShutdownEntry), aLibrary);
+                                                       &fCallbacks, 
+                                                       &fShutdownEntry), aLibrary);
 
   if(error != NPERR_NO_ERROR 	|| ((fCallbacks.version >> 8) < NP_VERSION_MAJOR))
   {
     return;
   }
-#endif // !TARGET_CARBON      // XXX temporaryly disable plugins so it'll compile
 #else // for everyone else
   memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
   fShutdownEntry = aShutdown;
