@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+
+<bindings id="stringBundleBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="stringbundleset" extends="xul:box"/>
+
+  <binding id="stringbundle" extends="xul:spacer">
+    <implementation name="XStringBundle">
+
+      <method name="getString">
+        <parameter name="aStringKey"/>
+        <body>
+          <![CDATA[
+            return this.stringBundle.GetStringFromName(aStringKey);
+          ]]>
+        </body>
+      </method>
+
+      <method name="getFormattedString">
+        <parameter name="aStringKey"/>
+        <parameter name="aStringsArray"/>
+        <body>
+          <![CDATA[
+            return this.stringBundle.formatStringFromName(aStringKey, aStringsArray, aStringsArray.length);
+          ]]>
+        </body>
+      </method>
+
+      <property name="stringBundle" readonly="true">
+        <getter>
+          <![CDATA[
+            if (!this._bundle) {
+              try {
+                var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                                    .getService(Components.interfaces.nsIStringBundleService);
+                this._bundle = stringBundleService.createBundle(this.src, this.appLocale);
+              }
+              catch (e) {
+                dump("Failed to get stringbundle:\n");
+                dump(e + "\n");
+              }
+            }
+            return this._bundle;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="src">
+        <getter>
+          <![CDATA[
+            return this.getAttribute("src");
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this._bundle = null;
+            this.setAttribute("src", val);
+            return val;
+          ]]>
+        </setter>
+      </property>
+
+      <property name="appLocale">
+        <getter>
+          <![CDATA[
+            try {
+              var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                            .getService(Components.interfaces.nsILocaleService);
+              return localeService.GetApplicationLocale();
+            }
+            catch (ex) {
+              return null;
+            }
+          ]]>
+        </getter>
+      </property>
+
+      <field name="_bundle">null</field>
+
+    </implementation>
+  </binding>
+
+</bindings>

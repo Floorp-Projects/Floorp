@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+
+<bindings id="scrollbarBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+  
+  <binding id="thumb" extends="xul:button">
+    <content>
+      <xul:gripper/>
+    </content>
+  </binding>
+  
+  <binding id="scrollbar">
+    <content>
+      <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" xbl:inherits="sborient=orient"/>
+      <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" hidden="true" xbl:inherits="sborient=orient"/>
+      <xul:slider flex="1" xbl:inherits="curpos,maxpos,pageincrement,increment,orient,sborient=orient">
+        <xul:thumb sbattr="scrollbar-thumb" xbl:inherits="orient,sborient=orient" 
+                   align="center" pack="center" flex="1"/>
+      </xul:slider>
+      <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" hidden="true" xbl:inherits="sborient=orient"/>
+      <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" xbl:inherits="sborient=orient"/>
+    </content>
+    
+    <implementation>
+      <constructor>
+        if (navigator.platform.indexOf("Mac") != -1)
+          this.initScrollbar();
+      </constructor>
+
+      <method name="initScrollbar">
+        <body>
+          <![CDATA[
+            try {
+              var scrollbarStyle = this.boxObject.getLookAndFeelMetric("scrollbarStyle");
+              var thumbStyle = this.boxObject.getLookAndFeelMetric("thumbStyle");
+              var downTop;
+              var upBottom;
+              if ( scrollbarStyle == "double" ) {
+                downTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-top");
+                upBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-bottom");
+                downTop.removeAttribute("hidden");
+                upBottom.removeAttribute("hidden");
+              }
+              else if ( scrollbarStyle == "doubletop" ) {
+                downTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-top");
+                var downBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-bottom");
+                downTop.removeAttribute("hidden");
+                downBottom.setAttribute("hidden","true");
+              }
+              else if ( scrollbarStyle == "doublebottom" ) {
+                var upTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-top");
+                upBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-bottom");
+                upTop.setAttribute("hidden","true");
+                upBottom.removeAttribute("hidden");
+              }
+              if ( thumbStyle == "fixed" ) {
+                var thumb = document.getAnonymousElementByAttribute(this, "sbattr","scrollbar-thumb");
+                if ( thumb )
+                  thumb.removeAttribute("flex");
+              }
+            }
+            catch ( x ) {
+              //throw "Scrollbars in this skin are not properly supporting mac smart-scrolling prefs!";
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+     <handler event="contextmenu" preventdefault="true"/>
+    </handlers>
+  </binding>
+</bindings>
+

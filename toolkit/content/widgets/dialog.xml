@@ -1,0 +1,325 @@
+<?xml version="1.0"?>
+
+<bindings id="dialogBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="dialog-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/dialog.css"/>
+    </resources>
+  </binding>
+  
+  <binding id="dialog" extends="chrome://global/content/bindings/dialog.xml#dialog-base">
+    <content>
+      <xul:vbox class="box-inherit dialog-content-box" flex="1">
+        <children/>
+      </xul:vbox>
+          
+      <xul:hbox class="dialog-button-box" pack="end"
+                xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
+        <xul:button dlgtype="accept" class="dialog-button"/>
+        <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label=""/>
+        <xul:button dlgtype="extra2" class="dialog-button" hidden="true" label=""/>
+        <xul:button dlgtype="cancel" class="dialog-button"/>
+        <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <field name="_mStrBundle">null</field>
+      <field name="_closeHandler">(function(event) {
+        if (!document.documentElement.cancelDialog())
+          event.preventDefault();
+      })</field>
+      <field name="enterDefaultAlways">false</field>
+
+      <property name="buttons"
+                onget="return this.getAttribute('buttons');"
+                onset="this._configureButtons(val); return val;"/>
+
+      <method name="acceptDialog">
+        <body>
+        <![CDATA[
+          return this._doButtonCommand("accept");
+        ]]>
+        </body>
+      </method>
+      
+      <method name="cancelDialog">
+        <body>
+        <![CDATA[
+          return this._doButtonCommand("cancel");
+        ]]>
+        </body>
+      </method>
+      
+      <method name="getButton">
+        <parameter name="aDlgType"/>
+        <body>
+        <![CDATA[
+          return this._buttons[aDlgType];
+        ]]>
+        </body>
+      </method>
+
+      <method name="moveToAlertPosition">
+        <body>
+        <![CDATA[
+          // hack. we need this so the window has something like its final size
+          if (window.outerWidth == 1) {
+            dump("Trying to position a sizeless window; caller should have called sizeToContent() or sizeTo(). See bug 75649.\n");
+            sizeToContent();
+          }
+
+          var xOffset = (opener.outerWidth - window.outerWidth) / 2;
+          var yOffset = opener.outerHeight / 5;
+
+          var newX = opener.screenX + xOffset;
+          var newY = opener.screenY + yOffset;
+
+          // ensure the window is fully onscreen (if smaller than the screen)
+          if (newX < screen.availLeft)
+            newX = screen.availLeft + 20;
+          if ((newX + window.outerWidth) > (screen.availLeft + screen.availWidth))
+            newX = (screen.availLeft + screen.availWidth) - window.outerWidth - 20;
+
+          if (newY < screen.availTop)
+            newY = screen.availTop + 20;
+          if ((newY + window.outerHeight) > (screen.availTop + screen.availHeight))
+            newY = (screen.availTop + screen.availHeight) - window.outerHeight - 60;
+
+          window.moveTo( newX, newY );
+        ]]>
+        </body>
+      </method>
+
+      <method name="centerWindowOnScreen">
+        <body>
+        <![CDATA[
+          var xOffset = screen.availWidth/2 - window.outerWidth/2;
+          var yOffset = screen.availHeight/2 - window.outerHeight/2; //(opener.outerHeight *2)/10;
+  
+          xOffset = xOffset > 0 ? xOffset : 0;
+          yOffset = yOffset > 0 ? yOffset : 0;
+          window.moveTo(xOffset, yOffset);
+        ]]>
+        </body>
+      </method>
+
+      <constructor>
+      <![CDATA[
+        this._configureButtons(this.getAttribute("buttons"));
+
+        // listen for when window is closed via native close buttons
+        window.addEventListener("close", this._closeHandler, false);
+
+        // for things that we need to initialize after onload fires
+        window.addEventListener("load", this.postLoadInit, false);
+
+        window.moveToAlertPosition = this.moveToAlertPosition;
+        window.centerWindowOnScreen = this.centerWindowOnScreen;
+      ]]>
+      </constructor>
+
+      <method name="postLoadInit">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var focusInit = 
+            function() {
+              // give focus to the first focusable element in the dialog
+              if (!document.commandDispatcher.focusedElement)
+                document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
+            };
+
+          // Give focus after onload completes, see bug 103197.
+          setTimeout(focusInit, 0);
+        ]]>
+        </body>
+      </method>                
+
+      <property name="mStrBundle">
+        <getter>
+        <![CDATA[
+          if (!this._mStrBundle) {
+            // need to create string bundle manually instead of using <xul:stringbundle/>
+            // see bug 63370 for details
+            var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                  .getService(Components.interfaces.nsILocaleService);
+            var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                  .getService(Components.interfaces.nsIStringBundleService);
+            var bundleURL = "chrome://global/locale/dialog.properties";
+            this._mStrBundle = stringBundleService.createBundle(bundleURL, localeService.GetApplicationLocale());
+          }
+          return this._mStrBundle;
+        ]]></getter>
+      </property>
+      
+      <method name="_configureButtons">
+        <parameter name="aButtons"/>
+        <body>
+        <![CDATA[
+          // by default, get all the anonymous button elements
+          var buttons = {};
+          this._buttons = buttons;
+          buttons.accept = document.getAnonymousElementByAttribute(this, "dlgtype", "accept");
+          buttons.cancel = document.getAnonymousElementByAttribute(this, "dlgtype", "cancel");
+          buttons.extra1 = document.getAnonymousElementByAttribute(this, "dlgtype", "extra1");
+          buttons.extra2 = document.getAnonymousElementByAttribute(this, "dlgtype", "extra2");
+          buttons.help = document.getAnonymousElementByAttribute(this, "dlgtype", "help");
+          buttons.disclosure = document.getAnonymousElementByAttribute(this, "dlgtype", "disclosure");
+
+          // look for any overriding explicit button elements
+          var exBtns = this.getElementsByAttribute("dlgtype", "*");
+          var dlgtype;
+          var i;
+          for (i = 0; i < exBtns.length; ++i) {
+            dlgtype = exBtns[i].getAttribute("dlgtype");
+            buttons[dlgtype].hidden = true; // hide the anonymous button
+            buttons[dlgtype] = exBtns[i];
+          }
+
+          // add the label and oncommand handler to each button
+          for (dlgtype in buttons) {
+            var button = buttons[dlgtype];
+            buttons[dlgtype].addEventListener("command", this._handleButtonCommand, true);
+            // don't override custom labels with pre-defined labels on explicit buttons
+            if (!button.hasAttribute("label"))
+              button.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+dlgtype));
+          }
+          
+          // ensure that hitting enter triggers ondialogaccept
+          buttons["accept"].setAttribute("default", "true");
+          
+          // if there is a special button configuration, use it
+          if (aButtons) {
+            // expect a comma delimitd list of dlgtype values
+            var list = aButtons.split(",");
+  
+            // mark shown dlgtypes as true
+            var shown = { accept: false, cancel: false, help: false,
+                          disclosure: false, extra1: false, extra2: false };
+            for (i = 0; i < list.length; ++i)
+              shown[list[i].replace(/ /g, "")] = true;
+            
+            // hide/show the buttons we want
+            for (dlgtype in shown) {
+              if (shown[dlgtype])
+                buttons[dlgtype].hidden = false;
+              else
+                buttons[dlgtype].hidden = true;
+            }
+          }
+        ]]>
+        </body>
+      </method>
+      
+      <method name="_handleButtonCommand">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          return document.documentElement._doButtonCommand(
+                                        aEvent.target.getAttribute("dlgtype"));
+        ]]>
+        </body>
+      </method>
+      
+      <method name="_doButtonCommand">
+        <parameter name="aDlgType"/>
+        <body>
+        <![CDATA[
+          // calling window.close() while an oncommand event
+          // call is on the stack fails to close the window, 
+          // so we need to do this ugly setTimeout hack
+          window.setTimeout(
+            function(aDlgType) {
+              document.documentElement._reallyDoButtonCommand(aDlgType);
+            },
+            0, aDlgType);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="_reallyDoButtonCommand">
+        <parameter name="aDlgType"/>
+        <body>
+        <![CDATA[
+          var button = this.getButton(aDlgType);
+          if (!button.disabled) {
+            var noCancel = this._fireButtonEvent(aDlgType);
+            if (noCancel) {
+              if (aDlgType == "accept" || aDlgType == "cancel")
+                window.close();
+            }
+            return noCancel;
+          }
+          return true;
+        ]]>
+        </body>
+      </method>
+      
+      <method name="_fireButtonEvent">
+        <parameter name="aDlgType"/>
+        <body>
+        <![CDATA[
+          var event = document.createEvent("Events");
+          event.initEvent("dialog"+aDlgType, false, true);
+          
+          // handle dom event handlers
+          var noCancel = this.dispatchEvent(event);
+          
+          // handle any xml attribute event handlers
+          var handler = this.getAttribute("ondialog"+aDlgType);
+          if (handler != "") {
+            var fn = new Function("event", handler);
+            var returned = fn(event);
+            if (returned == false)
+              noCancel = false;
+          }
+          
+          return noCancel;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_hitEnter">
+        <body>
+        <![CDATA[
+          // if a button is focused, do nothing, so that activating the button 
+          // doesn't cause the dialog to exit
+          if (!this.enterDefaultAlways) {
+            var focused = document.commandDispatcher.focusedElement;
+            if (focused && focused.localName == "button")
+              return;
+          }
+
+          // only accept dialog if accept button is the default
+          var btn = this.getButton("accept");
+          if (btn && btn.hasAttribute("default"))
+            this.acceptDialog();
+        ]]>
+        </body>
+      </method>
+
+    </implementation>
+    
+    <handlers>
+      <handler event="keypress" keycode="VK_ENTER" action="this._hitEnter();"/>
+      <handler event="keypress" keycode="VK_RETURN" action="this._hitEnter();"/>
+      <handler event="keypress" keycode="VK_ESCAPE" action="this.cancelDialog();"/>
+    </handlers>
+
+  </binding>
+
+  <binding id="dialogheader" extends="chrome://global/content/bindings/dialog.xml#dialog-base">
+    <content>
+      <xul:label class="dialogheader-title" xbl:inherits="value=title"/>
+      <xul:spacer flex="1"/>
+      <xul:label class="dialogheader-description" xbl:inherits="value=description"/>
+    </content>
+  </binding>
+
+</bindings>
