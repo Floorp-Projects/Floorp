@@ -114,7 +114,6 @@ public:
   }
 
   void GetDebugInset(nsMargin& inset);
-  void CollapseChild(nsIFrame* frame);
   void AdjustChildren(nsIPresContext& aPresContext, nsBoxFrame* aBox);
   void UpdatePseudoElements(nsIPresContext& aPresContext);
 
@@ -513,7 +512,7 @@ printf("\n");
   //-----------------------------------------------------------------------------------
    // set the x,y locations of each of our children. Taking into acount their margins, our border,
   // and insets.
-  PlaceChildren(rect);
+  PlaceChildren(aPresContext,rect);
 
   //-----------------------------------------------------------------------------------
   //------------------------- Add our border and insets in ----------------------------
@@ -810,7 +809,7 @@ nsBoxFrame::ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCal
 
 
 void 
-nsBoxFrameInner::CollapseChild(nsIFrame* frame)
+nsBoxFrame::CollapseChild(nsIFrame* frame)
 {
     nsRect rect(0,0,0,0);
     frame->GetRect(rect);
@@ -848,7 +847,7 @@ nsBoxFrameInner::CollapseChild(nsIFrame* frame)
  * their margins
  */
 nsresult
-nsBoxFrame::PlaceChildren(nsRect& boxRect)
+nsBoxFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
 {
   // ------- set the childs positions ---------
   nscoord x = boxRect.x;
@@ -862,7 +861,7 @@ nsBoxFrame::PlaceChildren(nsRect& boxRect)
 
     // make collapsed children not show up
     if (mSprings[count].collapsed) {
-      mInner->CollapseChild(childFrame);
+      CollapseChild(childFrame);
     } else {
       const nsStyleSpacing* spacing;
       rv = childFrame->GetStyleData(eStyleStruct_Spacing,
@@ -1461,13 +1460,6 @@ nsBoxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aR
     // just use the size we already have.
     if (mSprings[count].needsRecalc)
     {
-      // get the size of the child. This is the min, max, preferred, and spring constant
-      // it does not include its border.
-      rv = GetChildBoxInfo(aPresContext, aReflowState, childFrame, mSprings[count]);
-      NS_ASSERTION(rv == NS_OK,"failed to child box info");
-      if (NS_FAILED(rv))
-         return rv;
-
       // see if the child is collapsed
       const nsStyleDisplay* disp;
       childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
@@ -1476,6 +1468,13 @@ nsBoxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aR
       if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
          mSprings[count].collapsed = PR_TRUE;
       else {
+        // get the size of the child. This is the min, max, preferred, and spring constant
+        // it does not include its border.
+        rv = GetChildBoxInfo(aPresContext, aReflowState, childFrame, mSprings[count]);
+        NS_ASSERTION(rv == NS_OK,"failed to child box info");
+        if (NS_FAILED(rv))
+         return rv;
+
         // add in the child's margin and border/padding if there is one.
         const nsStyleSpacing* spacing;
         nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,

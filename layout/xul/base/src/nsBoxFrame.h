@@ -152,7 +152,7 @@ protected:
                      PRBool& needsRedraw,
                      nsString& aReason);
 
-    virtual nsresult PlaceChildren(nsRect& boxRect);
+    virtual nsresult PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect);
     virtual void ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
     virtual void LayoutChildrenInRect(nsRect& size);
     virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);
@@ -163,6 +163,7 @@ protected:
     virtual PRIntn GetSkipSides() const { return 0; }
 
     virtual void GetInset(nsMargin& margin); 
+    virtual void CollapseChild(nsIFrame* frame);
 
     nsresult GenerateDirtyReflowCommand(nsIPresContext& aPresContext,
                                         nsIPresShell&   aPresShell);

@@ -38,12 +38,6 @@ public:
 
  
 
-  NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
-                                      nsIStyleContext* aParentContext,
-                                      PRInt32 aParentChange,
-                                      nsStyleChangeList* aChangeList,
-                                      PRInt32* aLocalChange) ;
-
   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
@@ -75,7 +69,7 @@ public:
 protected:
 
   virtual nsIFrame* GetSelectedFrame();
-    virtual nsresult PlaceChildren(nsRect& boxRect);
+    virtual nsresult PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect);
     virtual void ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
     virtual void LayoutChildrenInRect(nsRect& size);
     virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);

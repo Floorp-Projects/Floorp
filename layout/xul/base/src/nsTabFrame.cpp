@@ -100,7 +100,7 @@ nsTabFrame::MouseClicked(nsIPresContext* aPresContext)
    char value[100];
    sprintf(value, "%d", index);
 
-   tabpanel->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_TRUE);
+   tabpanel->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::index, value, PR_TRUE);
    
 }
 
