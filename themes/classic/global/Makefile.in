@@ -139,6 +139,11 @@ EXPORT_RESOURCE_SAMPLES = \
 	toolbargrippy-texture.gif \
 	loading.gif \
 	splitter-drag-bg.gif \
+	dropmarker-down-on-active.gif \
+	dropmarker-down-on-hover.gif \
+	dropmarker-down-disabled.gif \
+	dropmarker-down-on.gif \
+	dropmarker-up-on.gif \
 	menubuttonBindings.xml \
 	$(NULL)
 

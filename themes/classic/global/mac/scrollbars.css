@@ -8,10 +8,12 @@ scrollbar {
 }
 
 slider {
+   behavior: url("chrome://global/skin/classicBindings.xml#scrollbar");
    user-focus: ignore;
    user-select: none;
    background-color: #AAAAAA;
 }
+
 
 scrollbarbutton {
   display: inline;
@@ -42,7 +44,7 @@ thumb {
   border-left: 1px solid rgb(80%,80%,100%);         /* #CCCCFF */
 }
 
-.thumb-border:active {
+thumb:active > .thumb-border {
   border-right: 1px solid #333399;
   border-bottom: 1px solid #333399;
   border-top: 1px solid #9999FF;

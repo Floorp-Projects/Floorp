@@ -8,7 +8,7 @@
       behavior            : url("chrome://global/content/xulBindings.xml#buttontop");
       min-width           : 0px;
       margin              : 0px 1px 0px 1px;
-      border              : 1px solid #DDDDDD;
+      border              : 1px solid #DDDDDD; /* Should this be transparent ? */
     }
 
   .button-toolbar,.button-toolbar-4
@@ -16,10 +16,13 @@
       behavior            : url("chrome://global/content/xulBindings.xml#buttonleft");
       min-width           : 0px;
       margin              : 1px;
-      border              : 1px solid #DDDDDD;
+      border              : 1px solid #DDDDDD; /* Should this be transparent ? */
     }
     
-  .button-toolbar-1:hover, .button-toolbar:hover, .button-toolbar-2:hover, .button-toolbar-4:hover
+  .button-toolbar-1:hover, .button-toolbar-1:hover:active, 
+  .button-toolbar:hover, .button-toolbar:hover:active, 
+  .button-toolbar-2:hover,  .button-toolbar-2:hover:active,
+   .button-toolbar-4:hover,    .button-toolbar-4:hover:active,
     {
       border              : 1px solid black;
       color               : #0000FF;
@@ -33,7 +36,7 @@
       text-align          : center;
       border              : 1px solid #DDDDDD;
     }    
-    
+  
   .button-toolbar > .button-internal-box > .button-text-container
     {
       padding-left        : 4px;
@@ -53,7 +56,7 @@
   .button-toolbar-1[disabled="true"]:hover:active,
   .button-toolbar[disabled="true"],
   .button-toolbar[disabled="true"]:hover,
-  .button-toolbar[disabled="true"]:hover:active    
+  .button-toolbar[disabled="true"]:hover:active,    
   .button-toolbar-2[disabled="true"],
   .button-toolbar-2[disabled="true"]:hover,
   .button-toolbar-2[disabled="true"]:hover:active,
@@ -62,7 +65,7 @@
   .button-toolbar-4[disabled="true"]:hover:active
     {
       border              : 1px solid #DDDDDD;
-      color               : #999999;
+      color               : #777777;
     }
     
 /* internal frame */
@@ -125,25 +128,37 @@
 
 /** "Green" buttons, e.g. "Search"
  *  class="button-toolbar-3"
+ **
+ * The commented out areas make it revert to old classic look from mac button look
  **/  
   .button-toolbar-3 
     {
-      margin                : 0px 0px 0px 3px;
+/*      behavior				: url(chrome://global/content/xulBindings.xml#buttonleft);
+      border-left           : 1px solid #DDDDDD !important;
+      border-top            : 1px solid #DDDDDD !important;
+      border-right          : 1px solid black !important;
+      border-bottom         : 1px solid black !important;
+*/      margin                : 0px 0px 0px 3px;
       font-weight           : bold;
       background-color      : #99CCCC;
-    }  
+      user-focus:			: ignore;
+/*      background-image		: none;
+      min-width				: 8em;
+            -moz-border-radius  : 3px 2px 2px 3px;
+*/    }  
     
   .button-toolbar-3 > .button-internal-box
     {
       border                : 1px outset #99CCCC;
       padding               : 1px;
-    }
+/*      text-align			: center;
+*/    }
     
   .button-toolbar-3:hover:active > .button-internal-box 
     {
       border                : 1px inset #99CCCC;
       padding               : 2px 0px 0px 2px;
-    } 
+    }
 
 /** Expanding Region Button **/
 

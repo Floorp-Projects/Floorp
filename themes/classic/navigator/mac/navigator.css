@@ -54,17 +54,21 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #back-button[disabled="true"],
 #back-button[disabled="true"]:hover,
-#back-button[disabled="true"]:hover:active
+#back-button[disabled="true"]:hover:active,
+#back-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover,
+#back-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/back-disabled.gif");
   }
 
-#back-button:hover
+#back-button:hover,
+#back-button > .classic-simplebutton-box > .classic-simplebutton:hover
   {
     list-style-image      : url("chrome://navigator/skin/back-hover.gif");
   }
 
-#back-button:hover:active
+#back-button:hover:active,
+#back-button > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/back-hover-active.gif");
   }
@@ -77,17 +81,21 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #forward-button[disabled="true"],
 #forward-button[disabled="true"]:hover,
-#forward-button[disabled="true"]:hover:active
+#forward-button[disabled="true"]:hover:active,
+#forward-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover,
+#forward-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/forward-disabled.gif");
   }
 
-#forward-button:hover
+#forward-button:hover,
+#forward-button > .classic-simplebutton-box > .classic-simplebutton:hover
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
   }
 
-#forward-button:hover:active
+#forward-button:hover:active,
+#forward-button > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover-active.gif");
   }
@@ -149,7 +157,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
 	  margin                : 0px 4px 0px 0px;
 	  width                 : 10px; 
-	  list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif"); 
+	  list-style-image      : url("chrome://global/skin/ubhist-arrow.gif"); 
   } 
 
 #action-popup 

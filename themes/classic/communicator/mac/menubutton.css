@@ -2,6 +2,9 @@
 /** Styles applying to items in a button-toolbar-3 style menu
  *  menuitem class="button-toolbar-3"
  **/
+ 
+
+ 
   .button-toolbar-3 > .menubutton-icon-internal-box
     {
       border                : 1px outset #99CCCC;
@@ -48,8 +51,7 @@
  
  .button-toolbar[open="true"]
    {
-     border                 : 1px solid #336699;
-     border-bottom          : 1px solid #CCCCCC;
+     border                 : 1px solid #000000;
    }
 
 /* toolbar menubuttons */   
@@ -95,5 +97,4 @@ menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-b
     padding-left            : 4px;
     list-style-image        : url("chrome://global/skin/dropmarker-up-on.gif");
   } 
-  
-  
+

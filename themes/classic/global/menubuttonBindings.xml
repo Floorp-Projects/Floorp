@@ -6,15 +6,17 @@
           
   <binding id="menubutton-toolbar-top">
     <content excludes="observes,template,menupopup">
-      <xul:button class="classic-simplebutton" allowevents="true" flex="1"
+	   <xul:box class="classic-simplebutton-box" autostretch="never" flex="1">
+	      <xul:button class="classic-simplebutton" allowevents="true" flex="1"
                   inherits="value,src,accesskey,crop,disabled,buttonaction:oncommand" 
                   onmousedown="this.parentNode.setAttribute('buttondown','true');"
                   onmouseup="this.parentNode.removeAttribute('buttondown');"
                   onmouseover="this.parentNode.setAttribute('buttonover','true');"
                   onmouseout="this.parentNode.removeAttribute('buttonover');"/>
-      <xul:box class="classic-dropmarker-box" autostretch="never" valign="middle" inherits="disabled">
-        <xul:image class="classic-dropmarker" inherits="disabled"/>
-      </xul:box>
+       </xul:box>
+       <xul:box class="classic-dropmarker-box" autostretch="never" valign="middle" inherits="disabled">
+    	    <xul:image class="classic-dropmarker" inherits="disabled"/>
+       </xul:box>
     </content>
   </binding>
   

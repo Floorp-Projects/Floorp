@@ -7,19 +7,14 @@
       padding             : 0px;
       border              : 1px solid #000000;
       background-color    : #DDDDDD;
-      -moz-border-radius  : 4px 4px 4px 4px;
+      -moz-border-radius  : 4px;
       margin              : 1px 5px 2px 5px;
-    }
-
-  menulist[menuactive="true"],
-  menulist:hover 
-    {
-      border              : 1px solid #000000;
+      user-focus		  : ignore;
     }
 
   menulist[open="true"] 
     {
-      border              : 1px solid #000000;
+      background-color	  : #666666;
     }
   
   menulist[disabled="true"]
@@ -44,13 +39,23 @@
 /* text display frame */
   menulist > .menu-text 
     {
-      padding             : 0px 4px 0px 4px;
+      color				  : #000000;
+      padding             : 0px 4px;
       margin	          : 0px;
       border-top		  : 1px solid #FFFFFF;
       border-bottom		  : 1px solid #AAAAAA;
       border-left		  : 1px solid #FFFFFF;
       border-right		  : 1px solid #AAAAAA;
       -moz-border-radius  : 3px 2px 2px 2px;  /* Three pixels may be rounding error? */
+    }
+    
+   menulist[open="true"] > .menu-text 
+    {
+      color				  : #FFFFFF;
+      border-top		  : 1px solid #444444;
+      border-bottom		  : 1px solid #888888;
+      border-left		  : 1px solid #444444;
+      border-right		  : 1px solid #888888;
     }
     
 /* drop marker display frame */
@@ -122,41 +127,31 @@
       border-right          : 3px ridge black;
       border-bottom         : 3px ridge black;
       background-color	    : #DDDDDD;
-    }
-    
-  menulist > menupopup > .internal-box
-    {
-      border: none;
-    }
-    
-  menulist > menupopup > menuseparator 
-    {
-      border-top			  : 1px solid #888888;
-   	  border-bottom           : 1px solid white; 
-      margin                  : 2px 0px 2px 0px;
-    }
-
-
-  menulist > menupopup > menuitem 
-    {
-      padding             : 0px;
-      min-width: 0px;
-      max-width: auto;
-    }
-
-  menulist > menupopup > menuitem > .menu-left 
-    {
-      margin : 0px;
-      padding : 0px;
-      width               : 0px;
-    }
-
-  menulist > menupopup > menuitem[selected="true"] > .menu-left
-    {
-      list-style-image    : url(chrome://global/skin/menu-check.gif);
+      min-width				: 0px;
     }
   
-  menulist > menupopup > menuitem[menuactive="true"][selected="true"] > .menu-left
+  menulist > menupopup > menuitem
+  	{
+  	  font: 8pt geneva;
+  	  min-width: 0px;
+  	  max-width: auto;
+  	  padding: 0px 4px;
+  	}
+
+  menulist > menupopup > menuitem > .menu-iconic-left
     {
-      list-style-image    : url(chrome://global/skin/menu-check-hover.gif);
+      width               : 10px;
+      margin			  : 0px 5px 0px -6px;
+  	}
+  
+  menulist > menupopup > menuitem[menuactive="true"][selected="true"]
+    {
+      list-style-image    : url(chrome://global/skin/menulist-select-dot-active.gif);
+      margin-right		  : 3px;
+    }
+  
+  menulist > menupopup > menuitem[selected="true"]
+    {
+      list-style-image    : url(chrome://global/skin/menulist-select-dot.gif);
+      margin-right		  : 3px;
     }

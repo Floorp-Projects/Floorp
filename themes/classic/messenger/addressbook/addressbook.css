@@ -26,8 +26,8 @@ Rights Reserved.
 /* CardView styles - used in the Card View Pane*/
 
 #CardViewBox {
-/*	overflow: auto;*/
-	background-color: #EEEEEE;
+	overflow: auto;
+	background-color: #FFFFFF;
 	min-width: 150px;
 	user-focus: ignore;
 }
@@ -57,7 +57,7 @@ Rights Reserved.
 	padding: 1px;
 	padding-left: 5px;
 	margin: 0px 0px 1px 0px;
-	background-color: #99CCCC;
+	background-color: #CCCCFF;
 	color: black;
 	font-weight: bold;
 	min-width: 30px;

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<bindings id="buttonBindings"
+<bindings id="classicBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -54,7 +54,7 @@
     </content>
   </binding>
 
-  <binding id="thumb" extends="xul:box">
+  <binding id="thumb" extends="xul:button">
     <content>
       <xul:box class="thumb-box" autostretch="never" orient="vertical" flex="1">
         <xul:spring flex="1"/>

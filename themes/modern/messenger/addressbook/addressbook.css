@@ -26,7 +26,7 @@ Rights Reserved.
 /* CardView styles - used in the Card View Pane*/
 
 #CardViewBox {
-/*	overflow: auto;*/
+	overflow: auto;
 	background-color: #EEEEEE;
 	min-width: 150px;
 	user-focus: ignore;

@@ -30,6 +30,7 @@ menupopup, popup
     border-top            : thin solid white;
     border-right          : 3px ridge black;
     border-bottom         : 3px ridge black;
+    user-focus			  : ignore;
   }
 
 menupopup > menu, popup > menu,
@@ -37,7 +38,7 @@ menupopup > menuitem, popup > menuitem
   {
   	font				  : 9pt charcoal;
     max-width             : 250px;
-    min-width             : 125px;
+    min-width             : 0px;
     padding 			  : 0px;
   }
 
@@ -71,7 +72,7 @@ menubar > menu[menuactive="true"]
 
 menubar > menu[menuactive="true"][open="true"] 
   {
-    border                : 1px solid #336699;
+    border                : 1px solid #DDDDDD;
     border-bottom         : 1px solid #CCCCCC;
     background-color      : #CCCCCC;
     -moz-border-radius    : 4px 4px 0px 0px;
@@ -101,8 +102,8 @@ popup > menuitem[menuactive="true"]
 .menu-iconic-left 
   {
     color                 : inherit;
-    margin                : 0px 4px 0px 18px;
-    width                 : 13px;
+    margin                : 0px 9px 0px 1px;
+    width                 : 11px;
     text-align            : center;
     list-style-image      : inherit;
   }
@@ -118,10 +119,12 @@ popup > menuitem[menuactive="true"]
     color                 : inherit;
     margin                : 0px 2px 0px 0px;
   }
+  
+
 
 .menu-text 
   {
-    padding-left          : 18px;
+    padding-left          : 20px;
   }
 
 .menu-accel 
@@ -186,25 +189,32 @@ menuitem[checked="true"][menuactive="true"]
 .tooltip
   {
     background-color      : #FFFFCC;
-    border                : 1px outset #FFFFCC;
+    border                : none;
     color                 : #000000;
-    font                  : smaller;
-    padding               : 3px;
+    font                  : 7pt geneva;
+    padding               : 0px 5px 3px 4px;
+    margin				  : 0px;
+  }
+
+.tooltip > .popup-internal-box
+  {
+  	border: none;
+  	padding: 0px;
   }
   
 /*
  * Autorepeatbutton
  */
 .autorepeatbutton-up {
-    list-style-image: url("chrome://global/skin/scroll-up.gif")
+    list-style-image: url("chrome://global/skin/arrow-med-up.gif")
 }
 
 .autorepeatbutton-down {
-    list-style-image: url("chrome://global/skin/scroll-down.gif")
+    list-style-image: url("chrome://global/skin/arrow-med-down.gif")
 }
 
 autorepeatbutton {
-  text-align: center;
+  text-align: left;
   vertical-align: middle;
 }
 
@@ -212,8 +222,10 @@ autorepeatbutton:hover {
   background-color      : #333399;
 }
 
-  
-  
-  
-  
-  
+.autorepeatbutton-up:hover {
+    list-style-image: url("chrome://global/skin/arrow-med-up-hover.gif")
+}
+
+.autorepeatbutton-down:hover {
+    list-style-image: url("chrome://global/skin/arrow-med-down-hover.gif")
+}

@@ -74,7 +74,7 @@
           <xul:image inherits="src"/>
 	  </xul:scrollbarbutton>
       <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment">
-	        <xul:thumb inherits="align,src" flex="1"/>
+      	<xul:thumb inherits="align,src" flex="1"/>
       </xul:slider>
       <xul:scrollbarbutton type="increment" inherits="align:sborient">
       	  <xul:image inherits="src"/>
@@ -89,7 +89,7 @@
       </xul:box>
     </content>
   </binding>
-
+  
   <binding id="slider">
     <content>
 	    <xul:button class="slider-button"/>

@@ -8,12 +8,17 @@
     border                : 1px solid #DDDDDD;
   }
 
+.menubutton-dual[disabled="true"]
+  {
+  	color				  : #777777;
+  }
+
 .menubutton-dual:hover,
 .menubutton-dual[open="true"],
 .menubutton-dual[buttonover="true"],
 .menubutton-dual[buttondown="true"]
   {
-    border                : 1px solid black;
+    border                : 1px solid #000000;
   }
 
 .classic-dropmarker-box,
@@ -26,8 +31,8 @@
   
 .menubutton-dual:hover > .classic-dropmarker-box 
   {
-    border-left           : 1px solid white;
-    border-top            : 1px solid white;
+    border-left           : 1px solid #FFFFFF;
+    border-top            : 1px solid #FFFFFF;
     border-right          : 1px solid #9D9D9D;
     border-bottom         : 1px solid #9D9D9D;
   } 
@@ -36,59 +41,44 @@
   {
     border-left           : 1px solid #9D9D9D;
     border-top            : 1px solid #9D9D9D;
-    border-right          : 1px solid white;
-    border-bottom         : 1px solid white;
+    border-right          : 1px solid #FFFFFF;
+    border-bottom         : 1px solid #FFFFFF;
   }
 
 .classic-simplebutton,
 .classic-simplebutton[disabled="true"]:hover,
 .classic-simplebutton[disabled="true"]:hover:active,
-.menubutton[disabled="true"]:hover > .classic-simplebutton,
-.menubutton[disabled="true"]:hover:active > .classic-simplebutton,
-.menubutton-dual[buttonover="true"][disabled="true"] > .classic-simplebutton,
-.menubutton-dual[buttondown="true"][disabled="true"] > .classic-simplebutton
+.menubutton-dual[disabled="true"]:hover > .classic-simplebutton,
+.menubutton-dual[disabled="true"]:hover:active > .classic-simplebutton,
+.menubutton-dual[buttonover="true"][disabled="true"] > .classic-simplebutton
   {
     behavior              : url("chrome://global/skin/menubuttonBindings.xml#buttontop");
     margin                : 0px;
-    border                : 1px solid #DDDDDD;
+    border                : 1px solid #DDDDDD !important;
     min-width             : 0px;
     padding               : 2px 8px 2px 7px;
     text-align            : center;
-  }  
+  }
   
+
 .classic-simplebutton:hover,
 .menubutton-dual:hover > .classic-simplebutton,
 .menubutton-dual[open="true"] > .classic-simplebutton
   {
-    border-left           : 1px solid white;
-    border-top            : 1px solid white;
-    border-right          : 1px solid #9D9D9D;
-    border-bottom         : 1px solid #9D9D9D;
+    border-left           : 1px solid #FFFFFF !important;
+    border-top            : 1px solid #FFFFFF !important;
+    border-right          : 1px solid #9D9D9D !important;
+    border-bottom         : 1px solid #9D9D9D !important;
   }  
-  
-.menubutton-dual[buttonover="true"] > .classic-dropmarker-box
-  {
-    border-left           : 1px solid white;
-    border-top            : 1px solid white;
-    border-right          : 1px solid #9D9D9D;
-    border-bottom         : 1px solid #9D9D9D;
-  } 
   
 .classic-simplebutton:hover:active
   {
-    border-left           : 1px solid #9D9D9D;
-    border-top            : 1px solid #9D9D9D;
-    border-right          : 1px solid white;
-    border-bottom         : 1px solid white;
+    border-left           : 1px solid #9D9D9D !important;
+    border-top            : 1px solid #9D9D9D !important;
+    border-right          : 1px solid #FFFFFF !important;
+    border-bottom         : 1px solid #FFFFFF !important;
     padding               : 3px 7px 1px 8px;
-  }  
-  
-.menubutton-dual[buttondown="true"] > .classic-dropmarker-box
-  {
-    border-left           : 1px solid #9D9D9D;
-    border-top            : 1px solid #9D9D9D;
-    border-right          : 1px solid white;
-    border-bottom         : 1px solid white;
+    color				  : #000000;
   }  
   
 .classic-dropmarker
@@ -111,4 +101,4 @@
     list-style-image      : url("chrome://global/skin/dropmarker-down-disabled.gif");
   }  
   
-  
+ 
