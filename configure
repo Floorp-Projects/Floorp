@@ -12187,11 +12187,11 @@ echo "configure:12157: checking MOZ_GNOMEUI_LIBS" >&5
 
     fi
 
-    
-    
-    
 
 fi
+
+
+
 
 
 if (test "$MOZ_ENABLE_GTK"  || test "$MOZ_ENABLE_GTK2") \
