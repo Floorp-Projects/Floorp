@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.52 2003/04/17 00:32:54 jpierre%netscape.com Exp $
+ * $Id: certdb.c,v 1.53 2003/07/09 04:12:16 wtc%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -2629,9 +2629,10 @@ loser:
 
 PRBool CERT_IsUserCert(CERTCertificate* cert)
 {
-    if ( (cert->trust->sslFlags & CERTDB_USER ) ||
+    if ( cert->trust &&
+        ((cert->trust->sslFlags & CERTDB_USER ) ||
          (cert->trust->emailFlags & CERTDB_USER ) ||
-         (cert->trust->objectSigningFlags & CERTDB_USER ) ) {
+         (cert->trust->objectSigningFlags & CERTDB_USER )) ) {
         return PR_TRUE;
     } else {
         return PR_FALSE;
