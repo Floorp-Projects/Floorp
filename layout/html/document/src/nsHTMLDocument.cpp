@@ -492,12 +492,6 @@ nsHTMLDocument::CreateTextNode(const nsString& aData, nsIDOMText** aTextNode)
   return rv;
 }
 
-NS_IMETHODIMP    
-nsHTMLDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
-{
-  // XXX To be implemented
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP    
 nsHTMLDocument::CreateComment(const nsString& aData, nsIDOMComment** aReturn)

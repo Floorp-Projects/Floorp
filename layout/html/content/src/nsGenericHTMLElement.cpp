@@ -27,6 +27,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMDocumentFragment.h"
 #include "nsIEventListenerManager.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIHTMLStyleSheet.h"
@@ -76,6 +77,7 @@ static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 
 //----------------------------------------------------------------------
@@ -1858,43 +1860,113 @@ nsGenericHTMLContainerElement::InsertBefore(nsIDOMNode* aNewChild,
                                             nsIDOMNode* aRefChild,
                                             nsIDOMNode** aReturn)
 {
+  nsresult res;
+
+  *aReturn = nsnull;
   if (nsnull == aNewChild) {
-    *aReturn = nsnull;
     return NS_OK;/* XXX wrong error value */
   }
 
-  // Get the nsIContent interface for the new content
-  nsIContent* newContent = nsnull;
-  nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
-  NS_ASSERTION(NS_OK == res, "New child must be an nsIContent");
-  if (NS_OK == res) {
-    if (nsnull == aRefChild) {
-      // Append the new child to the end
-      SetDocumentInChildrenOf(newContent, mDocument);
-      res = AppendChildTo(newContent, PR_TRUE);
-    }
-    else {
-      // Get the index of where to insert the new child
-      nsIContent* refContent = nsnull;
-      res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
-      NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
-      if (NS_OK == res) {
-        PRInt32 pos;
-        IndexOf(refContent, pos);
-        if (pos >= 0) {
-          SetDocumentInChildrenOf(newContent, mDocument);
-          res = InsertChildAt(newContent, pos, PR_TRUE);
-        }
-        NS_RELEASE(refContent);
-      }
-    }
-    NS_RELEASE(newContent);
+  // Check if this is a document fragment. If it is, we need
+  // to remove the children of the document fragment and add them
+  // individually (i.e. we don't add the actual document fragment).
+  nsIDOMDocumentFragment* docFrag = nsnull;
+  if (NS_OK == aNewChild->QueryInterface(kIDOMDocumentFragmentIID,
+                                         (void **)&docFrag)) {
+    
+    nsIContent* docFragContent;
+    res = aNewChild->QueryInterface(kIContentIID, (void **)&docFragContent);
 
-    *aReturn = aNewChild;
-    NS_ADDREF(aNewChild);
+    if (NS_OK == res) {
+      nsIContent* refContent = nsnull;
+      nsIContent* childContent = nsnull;
+      PRInt32 refPos = 0;
+      PRInt32 i, count;
+
+      if (nsnull != aRefChild) {
+        res = aRefChild->QueryInterface(kIContentIID, (void **)&refContent);
+        NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
+        IndexOf(refContent, refPos);
+      }
+
+      docFragContent->ChildCount(count);
+      // Iterate through the fragments children, removing each from
+      // the fragment and inserting it into the child list of its
+      // new parent.
+      for (i = 0; i < count; i++) {
+        // Always get and remove the first child, since the child indexes
+        // change as we go along.
+        res = docFragContent->ChildAt(0, childContent);
+        if (NS_OK == res) {
+          res = docFragContent->RemoveChildAt(0, PR_FALSE);
+          if (NS_OK == res) {
+            SetDocumentInChildrenOf(childContent, mDocument);
+            if (nsnull == refContent) {
+              // Append the new child to the end
+              res = AppendChildTo(childContent, PR_TRUE);
+            }
+            else {
+              // Insert the child and increment the insertion position
+              res = InsertChildAt(childContent, refPos++, PR_TRUE);
+            }
+            if (NS_OK != res) {
+              // Stop inserting and indicate failure
+              break;
+            }
+          }
+          else {
+            // Stop inserting and indicate failure
+            break;
+          }
+        }
+        else {
+          // Stop inserting and indicate failure
+          break;
+        }
+      }
+      NS_RELEASE(docFragContent);
+      
+      // XXX Should really batch notification till the end
+      // rather than doing it for each element added
+      if (NS_OK == res) {
+        *aReturn = aNewChild;
+        NS_ADDREF(aNewChild);
+      }
+      NS_IF_RELEASE(refContent);
+    }
+    NS_RELEASE(docFrag);
   }
   else {
-    *aReturn = nsnull;
+    // Get the nsIContent interface for the new content
+    nsIContent* newContent = nsnull;
+    res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
+    NS_ASSERTION(NS_OK == res, "New child must be an nsIContent");
+    if (NS_OK == res) {
+      if (nsnull == aRefChild) {
+        // Append the new child to the end
+        SetDocumentInChildrenOf(newContent, mDocument);
+        res = AppendChildTo(newContent, PR_TRUE);
+      }
+      else {
+        // Get the index of where to insert the new child
+        nsIContent* refContent = nsnull;
+        res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
+        NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
+        if (NS_OK == res) {
+          PRInt32 pos;
+          IndexOf(refContent, pos);
+          if (pos >= 0) {
+            SetDocumentInChildrenOf(newContent, mDocument);
+            res = InsertChildAt(newContent, pos, PR_TRUE);
+          }
+          NS_RELEASE(refContent);
+        }
+      }
+      NS_RELEASE(newContent);
+
+      *aReturn = aNewChild;
+      NS_ADDREF(aNewChild);
+    }
   }
 
   return res;
@@ -1920,7 +1992,59 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
       nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
       NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
       if (NS_OK == res) {
-        res = ReplaceChildAt(newContent, pos, PR_TRUE);
+        // Check if this is a document fragment. If it is, we need
+        // to remove the children of the document fragment and add them
+        // individually (i.e. we don't add the actual document fragment).
+        nsIDOMDocumentFragment* docFrag = nsnull;
+        if (NS_OK == aNewChild->QueryInterface(kIDOMDocumentFragmentIID,
+                                               (void **)&docFrag)) {
+    
+          nsIContent* docFragContent;
+          res = aNewChild->QueryInterface(kIContentIID, (void **)&docFragContent);
+          if (NS_OK == res) {
+            PRInt32 count;
+
+            docFragContent->ChildCount(count);
+            // If there are children of the document
+            if (count > 0) {
+              nsIContent* childContent;
+              // Remove the last child of the document fragment
+              // and do a replace with it
+              res = docFragContent->ChildAt(count-1, childContent);
+              if (NS_OK == res) {
+                res = docFragContent->RemoveChildAt(count-1, PR_FALSE);
+                if (NS_OK == res) {
+                  SetDocumentInChildrenOf(childContent, mDocument);
+                  res = ReplaceChildAt(childContent, pos, PR_TRUE);
+                  // If there are more children, then insert them before
+                  // the newly replaced child
+                  if ((NS_OK == res) && (count > 1)) {
+                    nsIDOMNode* childNode = nsnull;
+
+                    res = childContent->QueryInterface(kIDOMNodeIID,
+                                                       (void **)&childNode);
+                    if (NS_OK == res) {
+                      nsIDOMNode* rv;
+
+                      res = InsertBefore(aNewChild, childNode, &rv);
+                      if (NS_OK == res) {
+                        NS_IF_RELEASE(rv);
+                      }
+                      NS_RELEASE(childNode);
+                    }
+                  }
+                }
+                NS_RELEASE(childContent);
+              }
+            }
+            NS_RELEASE(docFragContent);
+          }
+          NS_RELEASE(docFrag);
+        }
+        else {
+          SetDocumentInChildrenOf(newContent, mDocument);
+          res = ReplaceChildAt(newContent, pos, PR_TRUE);
+        }
         NS_RELEASE(newContent);
       }
       *aReturn = aOldChild;

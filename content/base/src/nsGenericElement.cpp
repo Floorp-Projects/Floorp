@@ -25,6 +25,8 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentFragment.h"
 #include "nsIEventListenerManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptContextOwner.h"
@@ -66,7 +68,8 @@ static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 
 //----------------------------------------------------------------------
 
@@ -848,7 +851,7 @@ nsGenericElement::GetDocument(nsIDocument*& aResult) const
 
 void
 nsGenericElement::SetDocumentInChildrenOf(nsIContent* aContent, 
-					  nsIDocument* aDocument)
+                                          nsIDocument* aDocument)
 {
   PRInt32 i, n;
   aContent->ChildCount(n);
@@ -1401,7 +1404,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 // modified slightly. Could be shared code.
 static nsresult EnsureWritableAttributes(nsIContent* aContent,
                                          nsIHTMLAttributes*& aAttributes, 
-					 PRBool aCreate)
+                                         PRBool aCreate)
 {
   nsresult  result = NS_OK;
 
@@ -1459,7 +1462,7 @@ nsGenericContainerElement::~nsGenericContainerElement()
 
 nsresult
 nsGenericContainerElement::CopyInnerTo(nsIContent* aSrcContent,
-				       nsGenericContainerElement* aDst)
+                                       nsGenericContainerElement* aDst)
 {
   aDst->mContent = aSrcContent;
   // XXX should the node's document be set?
@@ -1502,7 +1505,7 @@ nsGenericContainerElement::GetFirstChild(nsIDOMNode** aNode)
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
-  aNode = nsnull;
+  *aNode = nsnull;
   return NS_OK;
 }
 
@@ -1515,7 +1518,7 @@ nsGenericContainerElement::GetLastChild(nsIDOMNode** aNode)
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
-  aNode = nsnull;
+  *aNode = nsnull;
   return NS_OK;
 }
 
@@ -1525,46 +1528,116 @@ nsGenericContainerElement::GetLastChild(nsIDOMNode** aNode)
 
 nsresult
 nsGenericContainerElement::InsertBefore(nsIDOMNode* aNewChild,
-                                            nsIDOMNode* aRefChild,
-                                            nsIDOMNode** aReturn)
+                                        nsIDOMNode* aRefChild,
+                                        nsIDOMNode** aReturn)
 {
+  nsresult res;
+
+  *aReturn = nsnull;
   if (nsnull == aNewChild) {
-    *aReturn = nsnull;
     return NS_OK;/* XXX wrong error value */
   }
 
-  // Get the nsIContent interface for the new content
-  nsIContent* newContent = nsnull;
-  nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
-  NS_ASSERTION(NS_OK == res, "New child must be an nsIContent");
-  if (NS_OK == res) {
-    if (nsnull == aRefChild) {
-      // Append the new child to the end
-      SetDocumentInChildrenOf(newContent, mDocument);
-      res = AppendChildTo(newContent, PR_TRUE);
-    }
-    else {
-      // Get the index of where to insert the new child
-      nsIContent* refContent = nsnull;
-      res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
-      NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
-      if (NS_OK == res) {
-        PRInt32 pos;
-        IndexOf(refContent, pos);
-        if (pos >= 0) {
-          SetDocumentInChildrenOf(newContent, mDocument);
-          res = InsertChildAt(newContent, pos, PR_TRUE);
-        }
-        NS_RELEASE(refContent);
-      }
-    }
-    NS_RELEASE(newContent);
+  // Check if this is a document fragment. If it is, we need
+  // to remove the children of the document fragment and add them
+  // individually (i.e. we don't add the actual document fragment).
+  nsIDOMDocumentFragment* docFrag = nsnull;
+  if (NS_OK == aNewChild->QueryInterface(kIDOMDocumentFragmentIID,
+                                         (void **)&docFrag)) {
+    
+    nsIContent* docFragContent;
+    res = aNewChild->QueryInterface(kIContentIID, (void **)&docFragContent);
 
-    *aReturn = aNewChild;
-    NS_ADDREF(aNewChild);
+    if (NS_OK == res) {
+      nsIContent* refContent = nsnull;
+      nsIContent* childContent = nsnull;
+      PRInt32 refPos = 0;
+      PRInt32 i, count;
+
+      if (nsnull != aRefChild) {
+        res = aRefChild->QueryInterface(kIContentIID, (void **)&refContent);
+        NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
+        IndexOf(refContent, refPos);
+      }
+
+      docFragContent->ChildCount(count);
+      // Iterate through the fragments children, removing each from
+      // the fragment and inserting it into the child list of its
+      // new parent.
+      for (i = 0; i < count; i++) {
+        // Always get and remove the first child, since the child indexes
+        // change as we go along.
+        res = docFragContent->ChildAt(0, childContent);
+        if (NS_OK == res) {
+          res = docFragContent->RemoveChildAt(0, PR_FALSE);
+          if (NS_OK == res) {
+            SetDocumentInChildrenOf(childContent, mDocument);
+            if (nsnull == refContent) {
+              // Append the new child to the end
+              res = AppendChildTo(childContent, PR_TRUE);
+            }
+            else {
+              // Insert the child and increment the insertion position
+              res = InsertChildAt(childContent, refPos++, PR_TRUE);
+            }
+            if (NS_OK != res) {
+              // Stop inserting and indicate failure
+              break;
+            }
+          }
+          else {
+            // Stop inserting and indicate failure
+            break;
+          }
+        }
+        else {
+          // Stop inserting and indicate failure
+          break;
+        }
+      }
+      NS_RELEASE(docFragContent);
+      
+      // XXX Should really batch notification till the end
+      // rather than doing it for each element added
+      if (NS_OK == res) {
+        *aReturn = aNewChild;
+        NS_ADDREF(aNewChild);
+      }
+      NS_IF_RELEASE(refContent);
+    }
+    NS_RELEASE(docFrag);
   }
   else {
-    *aReturn = nsnull;
+    // Get the nsIContent interface for the new content
+    nsIContent* newContent = nsnull;
+    res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
+    NS_ASSERTION(NS_OK == res, "New child must be an nsIContent");
+    if (NS_OK == res) {
+      if (nsnull == aRefChild) {
+        // Append the new child to the end
+        SetDocumentInChildrenOf(newContent, mDocument);
+        res = AppendChildTo(newContent, PR_TRUE);
+      }
+      else {
+        // Get the index of where to insert the new child
+        nsIContent* refContent = nsnull;
+        res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
+        NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
+        if (NS_OK == res) {
+          PRInt32 pos;
+          IndexOf(refContent, pos);
+          if (pos >= 0) {
+            SetDocumentInChildrenOf(newContent, mDocument);
+            res = InsertChildAt(newContent, pos, PR_TRUE);
+          }
+          NS_RELEASE(refContent);
+        }
+      }
+      NS_RELEASE(newContent);
+
+      *aReturn = aNewChild;
+      NS_ADDREF(aNewChild);
+    }
   }
 
   return res;
@@ -1572,11 +1645,14 @@ nsGenericContainerElement::InsertBefore(nsIDOMNode* aNewChild,
 
 nsresult
 nsGenericContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
-                                            nsIDOMNode* aOldChild,
-                                            nsIDOMNode** aReturn)
+                                        nsIDOMNode* aOldChild,
+                                        nsIDOMNode** aReturn)
 {
-  nsIContent* content = nsnull;
   *aReturn = nsnull;
+  if (nsnull == aOldChild) {
+    return NS_OK;
+  }
+  nsIContent* content = nsnull;
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
   if (NS_OK == res) {
@@ -1587,7 +1663,59 @@ nsGenericContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
       nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
       NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
       if (NS_OK == res) {
-        res = ReplaceChildAt(newContent, pos, PR_TRUE);
+        // Check if this is a document fragment. If it is, we need
+        // to remove the children of the document fragment and add them
+        // individually (i.e. we don't add the actual document fragment).
+        nsIDOMDocumentFragment* docFrag = nsnull;
+        if (NS_OK == aNewChild->QueryInterface(kIDOMDocumentFragmentIID,
+                                               (void **)&docFrag)) {
+    
+          nsIContent* docFragContent;
+          res = aNewChild->QueryInterface(kIContentIID, (void **)&docFragContent);
+          if (NS_OK == res) {
+            PRInt32 count;
+
+            docFragContent->ChildCount(count);
+            // If there are children of the document
+            if (count > 0) {
+              nsIContent* childContent;
+              // Remove the last child of the document fragment
+              // and do a replace with it
+              res = docFragContent->ChildAt(count-1, childContent);
+              if (NS_OK == res) {
+                res = docFragContent->RemoveChildAt(count-1, PR_FALSE);
+                if (NS_OK == res) {
+                  SetDocumentInChildrenOf(childContent, mDocument);
+                  res = ReplaceChildAt(childContent, pos, PR_TRUE);
+                  // If there are more children, then insert them before
+                  // the newly replaced child
+                  if ((NS_OK == res) && (count > 1)) {
+                    nsIDOMNode* childNode = nsnull;
+
+                    res = childContent->QueryInterface(kIDOMNodeIID,
+                                                       (void **)&childNode);
+                    if (NS_OK == res) {
+                      nsIDOMNode* rv;
+
+                      res = InsertBefore(aNewChild, childNode, &rv);
+                      if (NS_OK == res) {
+                        NS_IF_RELEASE(rv);
+                      }
+                      NS_RELEASE(childNode);
+                    }
+                  }
+                }
+                NS_RELEASE(childContent);
+              }
+            }
+            NS_RELEASE(docFragContent);
+          }
+          NS_RELEASE(docFrag);
+        }
+        else {
+          SetDocumentInChildrenOf(newContent, mDocument);
+          res = ReplaceChildAt(newContent, pos, PR_TRUE);
+        }
         NS_RELEASE(newContent);
       }
       *aReturn = aOldChild;
@@ -1601,7 +1729,7 @@ nsGenericContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
 
 nsresult
 nsGenericContainerElement::RemoveChild(nsIDOMNode* aOldChild, 
-                                           nsIDOMNode** aReturn)
+                                       nsIDOMNode** aReturn)
 {
   nsIContent* content = nsnull;
   *aReturn = nsnull;
@@ -1630,8 +1758,8 @@ nsGenericContainerElement::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aRetu
 
 nsresult 
 nsGenericContainerElement::SetAttribute(const nsString& aName, 
-					const nsString& aValue,
-					PRBool aNotify)
+                                        const nsString& aValue,
+                                        PRBool aNotify)
 {
   nsresult rv = NS_OK;;
 
@@ -1654,7 +1782,7 @@ nsGenericContainerElement::SetAttribute(const nsString& aName,
 
 nsresult 
 nsGenericContainerElement::GetAttribute(const nsString& aName, 
-					nsString& aResult) const
+                                        nsString& aResult) const
 {
   nsresult rv = NS_OK;;
 
@@ -1671,43 +1799,43 @@ nsGenericContainerElement::GetAttribute(const nsString& aName,
       // Provide default conversions for most everything
       switch (value.GetUnit()) {
         case eHTMLUnit_Empty:
-	  aResult.Truncate();
-	  break;
+          aResult.Truncate();
+          break;
 
         case eHTMLUnit_String:
         case eHTMLUnit_Null:
-	  value.GetStringValue(aResult);
-	  break;
+          value.GetStringValue(aResult);
+          break;
 
         case eHTMLUnit_Integer:
-	  aResult.Truncate();
-	  aResult.Append(value.GetIntValue(), 10);
-	  break;
+          aResult.Truncate();
+          aResult.Append(value.GetIntValue(), 10);
+          break;
 
         case eHTMLUnit_Pixel:
-	  aResult.Truncate();
-	  aResult.Append(value.GetPixelValue(), 10);
-	  break;
+          aResult.Truncate();
+          aResult.Append(value.GetPixelValue(), 10);
+          break;
 
         case eHTMLUnit_Percent:
-	  aResult.Truncate(0);
-	  aResult.Append(PRInt32(value.GetPercentValue() * 100.0f), 10);
-	  aResult.Append('%');
-	  break;
+          aResult.Truncate(0);
+          aResult.Append(PRInt32(value.GetPercentValue() * 100.0f), 10);
+          aResult.Append('%');
+          break;
 
         case eHTMLUnit_Color:
-	  color = nscolor(value.GetColorValue());
-	  PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
-		      NS_GET_R(color), NS_GET_G(color), NS_GET_B(color));
-	  aResult.Truncate(0);
-	  aResult.Append(cbuf);
-	  break;
-
+          color = nscolor(value.GetColorValue());
+          PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
+                      NS_GET_R(color), NS_GET_G(color), NS_GET_B(color));
+          aResult.Truncate(0);
+          aResult.Append(cbuf);
+          break;
+          
         default:
         case eHTMLUnit_Enumerated:
-	  NS_NOTREACHED("no default enumerated value to string conversion");
-	  rv = NS_CONTENT_ATTR_NOT_THERE;
-	  break;
+          NS_NOTREACHED("no default enumerated value to string conversion");
+          rv = NS_CONTENT_ATTR_NOT_THERE;
+          break;
       }
     }
   }
@@ -1742,7 +1870,7 @@ nsGenericContainerElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
 
 nsresult 
 nsGenericContainerElement::GetAllAttributeNames(nsISupportsArray* aArray,
-						PRInt32& aCount) const
+                                                PRInt32& aCount) const
 {
   if (nsnull != mAttributes) {
     return mAttributes->GetAllAttributeNames(aArray, aCount);
@@ -1854,7 +1982,7 @@ nsGenericContainerElement::ChildCount(PRInt32& aCount) const
 
 nsresult
 nsGenericContainerElement::ChildAt(PRInt32 aIndex,
-                                       nsIContent*& aResult) const
+                                   nsIContent*& aResult) const
 {
   nsIContent *child = (nsIContent *)mChildren.ElementAt(aIndex);
   if (nsnull != child) {
@@ -1866,7 +1994,7 @@ nsGenericContainerElement::ChildAt(PRInt32 aIndex,
 
 nsresult
 nsGenericContainerElement::IndexOf(nsIContent* aPossibleChild,
-                                       PRInt32& aIndex) const
+                                   PRInt32& aIndex) const
 {
   NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
   aIndex = mChildren.IndexOf(aPossibleChild);
@@ -1875,8 +2003,8 @@ nsGenericContainerElement::IndexOf(nsIContent* aPossibleChild,
 
 nsresult
 nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
-                                             PRInt32 aIndex,
-                                             PRBool aNotify)
+                                         PRInt32 aIndex,
+                                         PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
@@ -1896,8 +2024,8 @@ nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
 
 nsresult
 nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
-                                              PRInt32 aIndex,
-                                              PRBool aNotify)
+                                          PRInt32 aIndex,
+                                          PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);

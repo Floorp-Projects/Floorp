@@ -2221,8 +2221,15 @@ HTMLStyleSheetImpl::ContentReplaced(nsIPresContext* aPresContext,
                                     nsIContent*     aNewChild,
                                     PRInt32         aIndexInContainer)
 {
-  NS_NOTYETIMPLEMENTED("content replaced");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // XXX For now, do a brute force remove and insert.
+  nsresult res = ContentRemoved(aPresContext, aContainer, 
+                                aOldChild, aIndexInContainer);
+  if (NS_OK == res) {
+    res = ContentInserted(aPresContext, aContainer, 
+                          aNewChild, aIndexInContainer);
+  }
+
+  return res;
 }
 
 NS_IMETHODIMP

@@ -52,21 +52,17 @@
 
 #include "nsSelection.h"
 #include "nsIDOMText.h"
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+#include "nsDocumentFragment.h"
 
+static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 #include "nsIDOMElement.h"
 
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMNSDocumentIID, NS_IDOMNSDOCUMENT_IID);
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
-static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIPostDataIID, NS_IPOSTDATA_IID);
@@ -1039,8 +1035,7 @@ nsDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
 NS_IMETHODIMP    
 nsDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_NewDocumentFragment(aReturn, this);
 }
 
 NS_IMETHODIMP    
