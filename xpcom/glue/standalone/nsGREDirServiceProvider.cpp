@@ -473,7 +473,7 @@ nsGREDirServiceProvider::AddGRELocationToPath()
   if (!grePath)
     return;
 
-  char* path = PR_GetEnv(XPCOM_SEARCH_KEY);
+  const char* path = PR_GetEnv(XPCOM_SEARCH_KEY);
   if (!path) {
     path = "";
   }
