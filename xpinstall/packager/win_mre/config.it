@@ -7,7 +7,7 @@
 ;            values.
 Run Mode=Normal
 
-Shared Install=FALSE
+Shared Install=TRUE
 Default AppID=$ProductName$User
 
 Company Name=$CompanyName$
@@ -20,7 +20,7 @@ User Agent=$UserAgent$
 ;   WINDISK
 ;   WINDIR
 ;   WINSYSDIR
-Path=[PROGRAMFILESDIR]\$CompanyName$\$ProductName$
+Path=[PROGRAMFILESDIR]\$CompanyName$\$ProductName$\$XPInstallVersion$
 
 ; Sub Path, when set will indicate to Setup to create a subfolder from
 ; what is offered to the user to change.  It will not be shown to the user
@@ -167,14 +167,14 @@ Readme App=notepad.exe
 ; set (Setup Type0, Setup Type1, Setup Type2, Setup Type3).
 [Setup Type0]
 ;*** LOCALIZE ME BABY ***
-Description Short=&MFCEmbed
+Description Short=&MRE
 ;*** LOCALIZE ME BABY ***
-Description Long=Install MFCEmbed.
+Description Long=Install the Mozilla Runtime Environment.
 
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
-C0=Component MFCEmbed
+C0=Component MRE
 C1=Component Uninstaller
 
 [Dialog Select Components]
@@ -182,7 +182,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=$ProductName$ Setup - Select Components
 ;*** LOCALIZE ME BABY ***
-Message0=MFCEmbed is always installed.  Select or clear the additional components you want to install.
+Message0=MRE is always installed.  Select or clear the additional components you want to install.
 
 [Dialog Select Additional Components]
 Show Dialog=FALSE
@@ -201,11 +201,20 @@ Message1=These settings allow you to set default Internet preferences for browsi
 
 ; Only a maximum of 4 "Windows Integration-Item"s are allowded.  Each Item
 ; shows up as a checkbox in the Windows Integration dialog.
-;[Windows Integration-Item0]
-;CheckBoxState=FALSE
-;Description=Make Mozilla my default Internet browser
-;Archive=
+[Windows Integration-Item0]
+CheckBoxState=FALSE
+Description=Make Mozilla my default Internet browser
+Archive=
 
+[Windows Integration-Item1]
+CheckBoxState=FALSE
+Description=Make Mozilla Netcenter my home page
+Archive=
+
+[Windows Integration-Item2]
+CheckBoxState=FALSE
+Description=Use Mozilla Netcenter to search the Web
+Archive=
 ;*** DO NOT LOCALIZE - END ***
 
 [Dialog Program Folder]
@@ -433,14 +442,14 @@ Close All Process Windows=TRUE
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\xpcom.dll
 
-[Component MFCEmbed]
-Description Short=MFCEmbed
+[Component MRE]
+Description Short=Mozilla Runtime Environment
 ;*** LOCALIZE ME BABY ***
-Description Long=MFCEmbed
-Archive=mfcembed.xpi
-$InstallSize$:mfcembed
+Description Long=for use by MRE based applications
+Archive=mre.xpi
+$InstallSize$:mre
 $InstallSizeSystem$
-$InstallSizeArchive$:mfcembed.xpi
+$InstallSizeArchive$:mre.xpi
 Attributes=SELECTED
 
 [Component Uninstaller]
@@ -541,7 +550,7 @@ Destination=[SETUP PATH]\Uninstall
 Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
 Name=DisplayName
-Name Value=MFCEmbed ($UserAgentShort$)
+Name Value=Mozilla Runtime Environment ($UserAgentShort$)
 Type=REG_SZ
 Decrypt Key=FALSE
 Decrypt Name=FALSE
