@@ -53,6 +53,7 @@ static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kSelectionCID,  NS_SELECTION_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kFrameUtilCID,  NS_FRAME_UTIL_CID);
+static NS_DEFINE_CID(kRangeCID,  NS_RANGE_CID);
 
 
 nsresult NS_NewRangeList(nsICollection **);
@@ -241,6 +242,11 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kFrameUtilCID)) {
     // XXX ibid
     if (NS_FAILED(res = NS_NewFrameUtil((nsIFrameUtil**) &inst)))
+      return res;
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kRangeCID)) {
+    if (NS_FAILED(res = NS_NewRange((nsIDOMRange**) &inst)))
       return res;
     refCounted = PR_TRUE;
   }
