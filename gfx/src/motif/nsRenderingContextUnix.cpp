@@ -465,10 +465,17 @@ nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
   // Must make sure this code never gets called when nsRenderingSurface is nsnull
   PRUint32 depth = DefaultDepth(mRenderingSurface->display,
 				DefaultScreen(mRenderingSurface->display));
+  Pixmap p;
 
-  Pixmap p = ::XCreatePixmap(mRenderingSurface->display,
+  if (aBounds != nsnull) {
+    p  = ::XCreatePixmap(mRenderingSurface->display,
 			     mRenderingSurface->drawable,
 			     aBounds->width, aBounds->height, depth);
+  } else {
+    p  = ::XCreatePixmap(mRenderingSurface->display,
+			     mRenderingSurface->drawable,
+			     2, 2, depth);
+  }
 
   nsDrawingSurfaceUnix * surface = new nsDrawingSurfaceUnix();
 
@@ -487,8 +494,8 @@ void nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
   ::XFreePixmap(surface->display, surface->drawable);
 
   //XXX greg, this seems bad. MMP
-  if (mRenderingSurface == surface)
-    mRenderingSurface = nsnull;
+  //if (mRenderingSurface == surface)
+    //mRenderingSurface = nsnull;
 
   delete aDS;
 }
@@ -787,24 +794,61 @@ void nsRenderingContextUnix :: DrawString(const nsString& aString,
 
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
+nscoord width,height;
+printf("1-----------------------\n");
+  width = NS_TO_INT_ROUND(mP2T * aImage->GetWidth());
+  height = NS_TO_INT_ROUND(mP2T * aImage->GetHeight());
+
+  this->DrawImage(aImage,aX,aY,width,height);
 }
 
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
                                         nscoord aWidth, nscoord aHeight) 
 {
+nsRect	tr;
+
+printf("2-----------------------\n");
+  tr.x = aX;
+  tr.y = aY;
+  tr.width = aWidth;
+  tr.height = aHeight;
+  this->DrawImage(aImage,tr);
 }
 
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
+nsRect	sr,dr;
+  
+  printf("nsRenderingContextUnixStretch :: DrawImage 0x%x\n",aImage);
+  sr = aSRect;
+  mTMatrix ->TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
+
+  dr = aDRect;
+  mTMatrix->TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
+  
+  ((nsImageUnix*)aImage)->Draw(*this,mRenderingSurface,sr.x,sr.y,sr.width,sr.height,
+                                 dr.x,dr.y,dr.width,dr.height);
 }
 
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
+nsRect	tr;
+
+  printf("nsRenderingContextUnix :: DrawImage 0x%x\n",aImage);
+  tr = aRect;
+  mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+
+  if (aImage != nsnull) {
+    ((nsImageUnix*)aImage)->Draw(*this,mRenderingSurface,tr.x,tr.y,tr.width,tr.height);
+  } else {
+    printf("Image is NULL!\n");
+  }
 }
 
 nsresult nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
 {
   
+printf("CopyOffScreenBits-----------------------\n");
   ::XCopyArea(mRenderingSurface->display, 
 	      mRenderingSurface->drawable,
 	      mFrontBuffer->drawable,
