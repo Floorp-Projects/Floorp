@@ -279,161 +279,38 @@ nsHTMLToTXTSinkStream::SetTitle(const nsString& aValue){
   return NS_OK;
 }
 
-
 /**
-  * This method is used to open the outer HTML container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::OpenHTML(const nsIParserNode& aNode){
-  return NS_OK;
-}
+  * All these HTML-specific methods may be called, or may not,
+  * depending on whether the parser is parsing XIF or HTML.
+  * So we can't depend on them; instead, we have Open/CloseContainer
+  * do all the specialized work, and the html-specific Open/Close
+  * methods must call the more general methods.
+  * Since there are so many of them, make a macro:
+  */
+
+#define USE_GENERAL_OPEN_METHOD(opentag) \
+NS_IMETHODIMP \
+nsHTMLToTXTSinkStream::opentag(const nsIParserNode& aNode) \
+{ return OpenContainer(aNode); }
+
+#define USE_GENERAL_CLOSE_METHOD(closetag) \
+NS_IMETHODIMP \
+nsHTMLToTXTSinkStream::closetag(const nsIParserNode& aNode) \
+{ return CloseContainer(aNode); }
 
 
-/**
-  * This method is used to close the outer HTML container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::CloseHTML(const nsIParserNode& aNode){
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to open the only HEAD container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::OpenHead(const nsIParserNode& aNode){
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to close the only HEAD container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::CloseHead(const nsIParserNode& aNode){
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to open the main BODY container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::OpenBody(const nsIParserNode& aNode){
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to close the main BODY container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::CloseBody(const nsIParserNode& aNode){
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to open a new FORM container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::OpenForm(const nsIParserNode& aNode){
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to close the outer FORM container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::CloseForm(const nsIParserNode& aNode){
-  return NS_OK;
-}
-
-/**
-  * This method is used to open a new FORM container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::OpenMap(const nsIParserNode& aNode){
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to close the outer FORM container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::CloseMap(const nsIParserNode& aNode){
-  return NS_OK;
-}
-
-    
-/**
-  * This method is used to open the FRAMESET container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::OpenFrameset(const nsIParserNode& aNode){
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to close the FRAMESET container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLToTXTSinkStream::CloseFrameset(const nsIParserNode& aNode){
-  return NS_OK;
-}
-
+USE_GENERAL_OPEN_METHOD(OpenHTML)
+USE_GENERAL_CLOSE_METHOD(CloseHTML)
+USE_GENERAL_OPEN_METHOD(OpenHead)
+USE_GENERAL_CLOSE_METHOD(CloseHead)
+USE_GENERAL_OPEN_METHOD(OpenBody)
+USE_GENERAL_CLOSE_METHOD(CloseBody)
+USE_GENERAL_OPEN_METHOD(OpenForm)
+USE_GENERAL_CLOSE_METHOD(CloseForm)
+USE_GENERAL_OPEN_METHOD(OpenMap)
+USE_GENERAL_CLOSE_METHOD(CloseMap)
+USE_GENERAL_OPEN_METHOD(OpenFrameset)
+USE_GENERAL_CLOSE_METHOD(CloseFrameset)
 
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::DoFragment(PRBool aFlag) 
