@@ -419,9 +419,15 @@ foreach my $grouptoadd (@groupstoadd) {
              VALUES ($id, $grouptoadd)");
 }
 
-# Add the comment
-SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) 
-         VALUES ($id, $::userid, now(), " . SqlQuote($comment) . ")");
+# Add the initial comment, allowing for the fact that it may be private
+my $privacy = 0;
+if (Param("insidergroup") && UserInGroup(Param("insidergroup"))) {
+    $privacy = $::FORM{'commentprivacy'} ? 1 : 0;
+}
+
+SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext, isprivate) 
+         VALUES ($id, " . SqlQuote($user->id) . ", " . SqlQuote($timestamp) . 
+        ", " . SqlQuote($comment) . ", $privacy)");
 
 # Insert the cclist into the database
 foreach my $ccid (keys(%ccids)) {

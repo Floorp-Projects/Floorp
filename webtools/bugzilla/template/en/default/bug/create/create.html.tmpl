@@ -18,6 +18,7 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #                 Ville Skyttä <ville.skytta@iki.fi>
+  #                 Shane H. W. Travis <travis@sedsystems.ca>
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -246,6 +247,22 @@ function set_assign_to() {
       <br>
     </td>
   </tr>
+
+  [% IF Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
+    <tr>
+      <td></td>
+      <td colspan="3">
+        &nbsp;&nbsp;
+        <input type="checkbox" id="commentprivacy" name="commentprivacy"
+          [% " checked=\"checked\"" IF commentprivacy %]>
+        <label for="commentprivacy">
+          Initial Description is Private
+        </label>
+      </td>
+    </tr>
+  [% ELSE %]
+    <input type="hidden" name="commentprivacy" value="0">
+  [% END %]
 
   [% IF UserInGroup('editbugs') %]
     [% IF use_keywords %]
