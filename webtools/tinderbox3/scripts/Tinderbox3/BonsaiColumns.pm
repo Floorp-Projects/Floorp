@@ -73,13 +73,14 @@ sub cell {
       my $who_email = $event->{who};
       $who_email =~ s/%/\@/g;
       my $checkin_date_str = time2str('%D %H:%M', $event->{checkin_date});
+      my $bonsai_url = $this->build_bonsai_url($event->{checkin_date} - 7*60, $event->{checkin_date}, $event->{who});
       my $popup_str = <<EOM;
 <a href='mailto:$who_email'>$who_email</a><br>
-<a href='@{[$this->build_bonsai_url($event->{checkin_date} - 7*60, $event->{checkin_date}, $event->{who})]}'>View Checkin</a> (+$event->{size_plus}/-$event->{size_minus}) $checkin_date_str<br>
+<a href='$bonsai_url'>View Checkin</a> (+$event->{size_plus}/-$event->{size_minus}) $checkin_date_str<br>
 $event->{description}
 EOM
 
-      $str .= "<a href='#' onclick='return do_popup(event, \"cvs\", \"" . escape_html(escape_js($popup_str)) . "\")'>$who</a> ";
+      $str .= "<a href='$bonsai_url' onclick='return do_popup(event, \"cvs\", \"" . escape_html(escape_js($popup_str)) . "\")'>$who</a> ";
     }
   } else {
     $str = "<td>";
