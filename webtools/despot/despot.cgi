@@ -893,7 +893,7 @@ sub CreateListRow {
     my @row;
     while (my @row = $query->fetchrow()) {
         my $v = $row[0];
-        if ($row[1] eq "Yes") {
+        if (defined $row[1] && $row[1] eq "Yes") {
             $v .= " (disabled)";
         }
         $result .= $v . "\n";
