@@ -615,7 +615,7 @@ nsDocument::nsDocument()
   mDocumentTitle = nsnull;
   mDocumentURL = nsnull;
   mDocumentURLGroup = nsnull;
-  mCharacterSet = nsnull;
+  mCharacterSet = "ISO-8859-1";
   mParentDocument = nsnull;
   mRootContent = nsnull;
   mScriptObject = nsnull;
@@ -902,14 +902,16 @@ nsDocument::GetBaseURL(nsIURL*& aURL) const
   return NS_OK;
 }
 
-nsString* nsDocument::GetDocumentCharacterSet() const
+NS_IMETHODIMP nsDocument::GetDocumentCharacterSet(nsString& oCharSetID) 
 {
-  return mCharacterSet;
+  oCharSetID = mCharacterSet;
+  return NS_OK;
 }
 
-void nsDocument::SetDocumentCharacterSet(nsString* aCharSetID)
+NS_IMETHODIMP nsDocument::SetDocumentCharacterSet(const nsString& aCharSetID)
 {
   mCharacterSet = aCharSetID;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocument::GetLineBreaker(nsILineBreaker** aResult) 
@@ -2621,9 +2623,7 @@ void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
   converter.AddStartTag("section"); 
   converter.AddStartTag("section_head");
 
-  nsString charset = "ISO-8859-1";
-  if (mCharacterSet != nsnull)
-    charset = *mCharacterSet;
+  nsString charset = mCharacterSet;
 
   converter.BeginStartTag("document_info");
   converter.AddAttribute(nsString("charset"),charset);

@@ -289,7 +289,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
   if (NS_OK == rv) { 
     nsIHTMLContentSink* sink;
 
-    nsAutoString defaultHTMLCharset = "ISO-8859-1"; // fallback value in case webShell return error
+    nsAutoString charset = "ISO-8859-1"; // fallback value in case webShell return error
     nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
 
 
@@ -299,14 +299,27 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
     NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
     aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
     rv = NS_NewHTMLContentSink(&sink, this, aURL, webShell);
-    if (NS_OK == rv) {
-		const PRUnichar* defaultFromWebShell = NULL;
-		rv = webShell->GetDefaultCharacterSet(&defaultFromWebShell);
-		defaultHTMLCharset = defaultFromWebShell;
-                charsetSource = kCharsetFromUserDefault;
+
+    if (NS_SUCCEEDED(rv)) {
+       const PRUnichar* defaultCharsetFromWebShell = NULL;
+       rv = webShell->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
+       if(NS_SUCCEEDED(rv)) {
+            charset = defaultCharsetFromWebShell;
+            charsetSource = kCharsetFromUserDefault;
+       }
     }
     NS_IF_RELEASE(webShell);
 #endif
+
+    // XXXX
+    // We should take care two more cases here
+    // 1. The charset attribute from HTTP header
+    // 2. The charset parameter from the META Tag - 
+    //   which explicit pass to nsWebShell from nsCharsetObserver
+
+    if (NS_SUCCEEDED(rv)) {
+       rv = this->SetDocumentCharacterSet(charset);
+    }
 
     if (NS_OK == rv) {
       // Set the parser as the stream listener for the document loader...
@@ -323,7 +336,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 //        nsIDTD* theDTD=0;
 //        NS_NewNavHTMLDTD(&theDTD);
 //        mParser->RegisterDTD(theDTD);
-        mParser->SetDocumentCharset( defaultHTMLCharset, charsetSource);
+        mParser->SetDocumentCharset( charset, charsetSource);
         mParser->SetCommand(aCommand);
         mParser->SetContentSink(sink); 
         mParser->Parse(aURL);

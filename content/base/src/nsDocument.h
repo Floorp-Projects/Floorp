@@ -137,8 +137,8 @@ public:
    * Return a standard name for the document's character set. This will
    * trigger a startDocumentLoad if necessary to answer the question.
    */
-  virtual nsString* GetDocumentCharacterSet() const;
-  virtual void SetDocumentCharacterSet(nsString* aCharSetID);
+  NS_IMETHOD GetDocumentCharacterSet(nsString& oCharsetID);
+  NS_IMETHOD SetDocumentCharacterSet(const nsString& aCharSetID);
 
   /**
    * Return the Line Breaker for the document
@@ -401,7 +401,7 @@ protected:
   nsString* mDocumentTitle;
   nsIURL* mDocumentURL;
   nsIURLGroup* mDocumentURLGroup;
-  nsString* mCharacterSet;
+  nsString mCharacterSet;
   nsIDocument* mParentDocument;
   nsVoidArray mSubDocuments;
   nsVoidArray mPresShells;

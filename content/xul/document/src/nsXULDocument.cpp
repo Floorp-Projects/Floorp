@@ -399,9 +399,9 @@ public:
 
     NS_IMETHOD GetBaseURL(nsIURL*& aURL) const;
 
-    virtual nsString* GetDocumentCharacterSet() const;
+    NS_IMETHOD GetDocumentCharacterSet(nsString& oCharSetID);
 
-    virtual void SetDocumentCharacterSet(nsString* aCharSetID);
+    NS_IMETHOD SetDocumentCharacterSet(const nsString& aCharSetID);
 
     NS_IMETHOD GetLineBreaker(nsILineBreaker** aResult) ;
     NS_IMETHOD SetLineBreaker(nsILineBreaker* aLineBreaker) ;
@@ -687,7 +687,7 @@ protected:
     nsIDocument*               mParentDocument;
     nsIScriptContextOwner*     mScriptContextOwner;
     void*                      mScriptObject;
-    nsString*                  mCharSetID;
+    nsString                   mCharSetID;
     nsVoidArray                mStyleSheets;
     nsIDOMSelection*           mSelection;
     PRBool                     mDisplaySelection;
@@ -736,6 +736,7 @@ XULDocumentImpl::XULDocumentImpl(void)
       mXULBuilder(nsnull),
       mLocalDataSource(nsnull),
       mDocumentDataSource(nsnull),
+      mCharSetID("UTF-8"),
       mLineBreaker(nsnull),
       mWordBreaker(nsnull),
       mContentViewerContainer(nsnull),
@@ -1190,6 +1191,8 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 
     parser->RegisterDTD(dtd);
     parser->SetCommand(aCommand);
+    nsAutoString utf8("UTF-8");
+    parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink); // grabs a reference to the parser
 
 		*created_parser = parser;
@@ -1271,16 +1274,18 @@ XULDocumentImpl::GetBaseURL(nsIURL*& aURL) const
     return NS_OK;
 }
 
-nsString* 
-XULDocumentImpl::GetDocumentCharacterSet() const
+NS_IMETHODIMP
+XULDocumentImpl::GetDocumentCharacterSet(nsString& oCharSetID) 
 {
-    return mCharSetID;
+    oCharSetID = mCharSetID;
+    return NS_OK;
 }
 
-void 
-XULDocumentImpl::SetDocumentCharacterSet(nsString* aCharSetID)
+NS_IMETHODIMP
+XULDocumentImpl::SetDocumentCharacterSet(const nsString& aCharSetID)
 {
     mCharSetID = aCharSetID;
+    return NS_OK;
 }
 
 
