@@ -17,22 +17,22 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Gagan Saksena <gagan@netscape.com>
- *
  * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Darin Fisher <darin@netscape.com>
  */
 
-#ifndef _nsAuth_h_
-#define _nsAuth_h_
+#ifndef nsAuth_h__
+#define nsAuth_h__
 
-/* 
-	The nsAuth struct holds all the information about a site authentication.
-	The username, password are needed here since a URI may not contain this
-	information and the user may have entered those thru a interactive dialog
-	box.
-
-	-Gagan Saksena  08/17/1999
-*/
+/*
+ * The nsAuth struct holds all the information about a site authentication.
+ * The username, password are needed here since a URI may not contain this
+ * information and the user may have entered those thru a interactive dialog
+ * box.
+ *
+ *  	-Gagan Saksena  08/17/1999
+ */
 
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
@@ -40,21 +40,20 @@
 class nsAuth
 {
 public:
-	// Constructor and Destructor
-    // TODO add stuff for realm and user/pass as well!!
-	nsAuth(nsIURI* iURI, 
-            const char* authString, 
-            const char* username = 0,
-            const char* password = 0,
-            const char* realm = 0);
-	virtual ~nsAuth();
+	nsAuth(nsIURI *uri,
+           const char *authString,
+           const char *username = 0,
+           const char *password = 0,
+           const char *realm = 0);
+   ~nsAuth();
 
-	char* 		encodedString;
-	char* 		password; 
-	char* 		realm; 
-	char* 		username;
+	char *encodedString;
+	char *password; 
+	char *realm; 
+	char *username;
+
 	// When we do proxy authentication this would be a union for the same.
-	nsCOMPtr<nsIURI> 	uri;
+	nsCOMPtr<nsIURI> uri;
 };
 
-#endif // _nsAuth_h_
+#endif

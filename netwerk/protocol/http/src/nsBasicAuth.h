@@ -18,33 +18,28 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Darin Fisher <darin@netscape.com>
  */
 
-#ifndef _nsBasicAuth_h_
-#define _nsBasicAuth_h_
+#ifndef nsBasicAuth_h__
+#define nsBasicAuth_h__
 
-#include "nsISupports.h"
 #include "nsIAuthenticator.h"
 
-/*
+class nsIURI;
+
+/**
  * The nsBasicAuth class produces HTTP Basic-auth responses for a username/
  * (optional)password pair, BASE64("user:pass").
  */
-
-class nsIURI;
 class nsBasicAuth : public nsIAuthenticator
 {
 public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIAUTHENTICATOR
 
-	// Constructor and Destructor
 	nsBasicAuth();
 	virtual ~nsBasicAuth();
-  
-  // Functions from nsISupports
-  NS_DECL_ISUPPORTS
-  
-  // Functions from nsIAuthenticator
-  NS_DECL_NSIAUTHENTICATOR
 };
 
-#endif // _nsBasicAuth_h_
+#endif

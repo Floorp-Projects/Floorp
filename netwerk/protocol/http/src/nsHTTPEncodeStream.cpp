@@ -29,10 +29,11 @@
 // nsHTTPEncodeStream methods:
 
 nsHTTPEncodeStream::nsHTTPEncodeStream()
-    : mInput(nsnull), mFlags(nsIHTTPProtocolHandler::ENCODE_NORMAL),
-      mLastLineComplete(PR_TRUE)
+    : mInput(nsnull)
+    , mFlags(nsIHTTPProtocolHandler::ENCODE_NORMAL)
+    , mLastLineComplete(PR_TRUE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsresult

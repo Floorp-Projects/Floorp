@@ -55,4 +55,4 @@ protected:
     PRBool                      mLastLineComplete;
 };
 
-#endif // nsHTTPEncodeStream_h__
+#endif

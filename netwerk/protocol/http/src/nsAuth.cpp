@@ -17,34 +17,34 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Gagan Saksena <gagan@netscape.com>
- *
  * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Darin Fisher <darin@netscape.com>
  */
 
 #include "nscore.h"
 #include "nsAuth.h"
 #include "nsCRT.h"
 
-nsAuth::nsAuth(nsIURI* i_URI, 
-        const char* i_encString, 
-        const char* i_username,
-        const char* i_password,
-        const char* i_realm):
-    encodedString(0),
-    password(0),
-    realm(0),
-    username(0),
-    uri(dont_QueryInterface(i_URI))
+nsAuth::nsAuth(nsIURI *aURI, 
+               const char *aEncString, 
+               const char *aUsername,
+               const char *aPassword,
+               const char *aRealm)
+    : encodedString(0)
+    , password(0)
+    , realm(0)
+    , username(0)
+    , uri(dont_QueryInterface(aURI))
 {
-    if (i_encString)
-        encodedString = nsCRT::strdup(i_encString);
-    if (i_username)
-        username = nsCRT::strdup(i_username);
-    if (i_password)
-        password = nsCRT::strdup(i_password);
-    if (i_realm)
-        realm = nsCRT::strdup(i_realm);
+    if (aEncString)
+        encodedString = nsCRT::strdup(aEncString);
+    if (aUsername)
+        username = nsCRT::strdup(aUsername);
+    if (aPassword)
+        password = nsCRT::strdup(aPassword);
+    if (aRealm)
+        realm = nsCRT::strdup(aRealm);
 }
 
 nsAuth::~nsAuth()

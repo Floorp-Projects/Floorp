@@ -101,8 +101,8 @@ public:
     nsresult            SetHTTPVersion (PRUint32   i_Version);
     nsresult            GetHTTPVersion (PRUint32 * o_Version);
 
-    nsresult            SetMethod(nsIAtom * i_Method);
-    nsIAtom *           GetMethod(void) const;
+    nsresult            SetMethod(nsIAtom *aMethod);
+    nsIAtom            *Method() const { return mMethod; }
                         
     nsresult            SetPriority(); // TODO 
     nsresult            GetPriority(); //TODO
