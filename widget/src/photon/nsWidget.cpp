@@ -371,7 +371,7 @@ NS_METHOD nsWidget::IsVisible( PRBool &aState ) {
 // Constrain a potential move to see if it fits onscreen
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY ) {
+NS_METHOD nsWidget::ConstrainPosition(int b,  PRInt32 *aX, PRInt32 *aY ) {
   return NS_OK;
 	}
 
@@ -499,10 +499,10 @@ PRBool nsWidget::OnMove( PRInt32 aX, PRInt32 aY ) {
 // Enable/disable this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::Enable( PRBool aState ) {
+NS_METHOD nsWidget::Enable( PRBool bState ) {
 	if( mWidget ) {
 	  PtArg_t arg;
-	  if( aState ) 
+	  if( bState ) 
 		   PtSetArg( &arg, Pt_ARG_FLAGS, 0, Pt_BLOCKED );
 	  else 
 		   PtSetArg( &arg, Pt_ARG_FLAGS, Pt_BLOCKED, Pt_BLOCKED );
@@ -511,11 +511,16 @@ NS_METHOD nsWidget::Enable( PRBool aState ) {
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsWidget::IsEnabled(PRBool *aState)
+{
+	NS_ENSURE_ARG_POINTER(aState);
 
-NS_METHOD nsWidget::IsEnabled( PRBool *aState ) {
-  NS_ENSURE_ARG_POINTER(aState);
-  *aState = PR_TRUE;
-  return NS_ERROR_NOT_IMPLEMENTED;
+	if (PtWidgetFlags(mWidget) & Pt_BLOCKED)
+		*aState = PR_FALSE;
+	else
+		*aState = PR_TRUE;
+
+	return NS_OK;
 }
 
 
@@ -1371,12 +1376,10 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 
     PRBool IsChar;
     unsigned long keysym;
-	if (Pk_KF_Sym_Valid & aPhKeyEvent->key_flags)
-	    keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
+    if (Pk_KF_Cap_Valid & aPhKeyEvent->key_flags)
+    	keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
 	else
-		/* Need this to support key release events on numeric key pad */
-	    keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
-
+        keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
 
     anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
@@ -1502,7 +1505,7 @@ PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
 
 ///* ATENTIE */ printf( "Ph_EV_PTR_MOTION_NOBUTTON (%d %d)\n", ptrev->pos.x, ptrev->pos.y );
 
-        	ScreenToWidget( ptrev->pos );
+        	ScreenToWidgetPos( ptrev->pos );
  	      	InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MOVE );
         	result = DispatchMouseEvent(theMouseEvent);
         	}
@@ -1513,7 +1516,17 @@ PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
        {
 
 	    	PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
-        nsMouseEvent   theMouseEvent;
+   		    nsMouseEvent   theMouseEvent;
+
+				/* there is no big region to capture the button press events outside the menu's area - this will be checked here, and if the click was not on a menu item, close the menu, if any */
+				nsWidget *parent = (nsWidget*)mParent;
+				if ((parent && (parent->mWindowType != eWindowType_popup) && (mWindowType != eWindowType_popup)) || (!parent && (mWindowType != eWindowType_popup)))
+				{
+			//	if( !parent || ( parent->mWindowType != eWindowType_popup ) ) {
+					if( gRollupWidget && gRollupListener ) {
+						gRollupListener->Rollup();
+						}
+					}
 
 				/* there should be no reason to do this - mozilla should figure out how to call SetFocus */
 				/* this though fixes the problem with the plugins capturing the focus */
@@ -1527,20 +1540,8 @@ PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
 						}
 					}
 
-
-
-				/* there is no big region to capture the button press events outside the menu's area - this will be checked here, and if the click was not on a menu item, close the menu, if any */
-				nsWidget *parent = (nsWidget*)mParent;
-				if( !parent || ( parent->mWindowType != eWindowType_popup ) ) {
-					if( gRollupWidget && gRollupListener ) {
-						gRollupListener->Rollup();
-						}
-					}
-
         if( ptrev ) {
-          ScreenToWidget( ptrev->pos );
-
-///* ATENTIE */ printf( "Ph_EV_PTR_PRESS (%d %d)\n", ptrev->pos.x, ptrev->pos.y );
+          ScreenToWidgetPos( ptrev->pos );
 
           if( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
 						InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_LEFT_BUTTON_DOWN );
@@ -1557,6 +1558,7 @@ PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
 						result = DispatchMouseEvent( theMouseEvent );
 						}
       	  }
+
       	 }
 		break;		
 		
@@ -1567,7 +1569,7 @@ PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
 			  
 			  if (event->subtype==Ph_EV_RELEASE_REAL || event->subtype==Ph_EV_RELEASE_PHANTOM) {
 				  if (ptrev) {
-					  ScreenToWidget( ptrev->pos );
+					  ScreenToWidgetPos( ptrev->pos );
 					  if ( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
 						 InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_LEFT_BUTTON_UP );
 					  else if( ptrev->buttons & Ph_BUTTON_MENU ) // the right button
@@ -1575,16 +1577,13 @@ PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
 					  else // middle button
 						 InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MIDDLE_BUTTON_UP );
 					  
-///* ATENTIE */ printf( "Ph_EV_PTR_RELEASE (%d %d)\n", ptrev->pos.x, ptrev->pos.y );
-
 					  result = DispatchMouseEvent(theMouseEvent);
 				  }
 			  }
 			  else if (event->subtype==Ph_EV_RELEASE_OUTBOUND) {
 				  PhRect_t rect = {{0,0},{0,0}};
 				  PhRect_t boundary = {{-10000,-10000},{10000,10000}};
-				  PhInitDrag( PtWidgetRid(mWidget), ( Ph_DRAG_KEY_MOTION | Ph_DRAG_TRACK ),&rect, &boundary, aCbInfo->event->input_group , NULL, NULL, NULL, NULL, NULL);
-///* ATENTIE */ printf( "PhInitDrag\n" );
+				  PhInitDrag( PtWidgetRid(mWidget), ( Ph_DRAG_KEY_MOTION | Ph_DRAG_TRACK | Ph_TRACK_DRAG),&rect, &boundary, aCbInfo->event->input_group , NULL, NULL, NULL, NULL, NULL);
 			  }
 		  }
 	    break;
@@ -1605,7 +1604,7 @@ PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
 						d->SetNativeDndData( widget, event );
 						}
 
-          ScreenToWidget( ptrev->pos );
+          ScreenToWidgetPos( ptrev->pos );
  	      	InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MOVE );
           result = DispatchMouseEvent(theMouseEvent);
         	}
@@ -1650,14 +1649,14 @@ PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
             	{  
  		      		nsMouseEvent      theMouseEvent;
               PhPointerEvent_t* ptrev2 = (PhPointerEvent_t*) PhGetData( event );
-              ScreenToWidget( ptrev2->pos );
+              ScreenToWidgetPos( ptrev2->pos );
               InitMouseEvent(ptrev2, this, theMouseEvent, NS_MOUSE_LEFT_BUTTON_UP );
               result = DispatchMouseEvent(theMouseEvent);
             	}
 							break;
 		  			case Ph_EV_DRAG_MOTION_EVENT: {
       		    PhPointerEvent_t* ptrev2 = (PhPointerEvent_t*) PhGetData( event );
-      		    ScreenToWidget( ptrev2->pos );
+      		    ScreenToWidgetPos( ptrev2->pos );
 
 							if( sDragService ) {
 								nsDragService *d;
@@ -1693,7 +1692,7 @@ PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
 	}
 
 
-void nsWidget::ScreenToWidget( PhPoint_t &pt ) {
+void nsWidget::ScreenToWidgetPos( PhPoint_t &pt ) {
   // pt is in screen coordinates
   // convert it to be relative to ~this~ widgets origin
   short x=0,y=0;
@@ -2078,7 +2077,7 @@ int nsWidget::DndCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbi
 
 			PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( cbinfo->event );
 //printf("Enter pos=%d %d\n", ptrev->pos.x, ptrev->pos.y );
-			pWidget->ScreenToWidget( ptrev->pos );
+			pWidget->ScreenToWidgetPos( ptrev->pos );
 //printf("After trans pos=%d %d pWidget=%p\n", ptrev->pos.x, ptrev->pos.y, pWidget );
 
 
@@ -2123,7 +2122,7 @@ nsAutoString nsWidget::GuiEventToString(nsGUIEvent * aGuiEvent)
 {
   NS_ASSERTION(nsnull != aGuiEvent,"cmon, null gui event.");
 
-  nsAutoString eventName(NS_LITERAL_STRING("UNKNOWN"));
+  nsAutoString eventName; eventName.AssignWithConversion("UNKNOWN");
 
 #define _ASSIGN_eventName(_value,_name)\
 case _value: eventName = (const PRUnichar *)  _name ; break
@@ -2209,7 +2208,7 @@ nsAutoString nsWidget::PhotonEventToString(PhEvent_t * aPhEvent)
 {
   NS_ASSERTION(nsnull != aPhEvent,"cmon, null photon gui event.");
 
-  nsAutoString eventName(NS_LITERAL_STRING("UNKNOWN"));
+  nsAutoString eventName; eventName.AssignWithConversion("UNKNOWN");
 
 #define _ASSIGN_eventName(_value,_name)\
 case _value: eventName = (const PRUnichar *) _name ; break

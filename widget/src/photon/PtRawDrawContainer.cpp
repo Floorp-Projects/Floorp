@@ -64,7 +64,9 @@ static void raw_draw_container_draw( PtWidget_t *widget, PhTile_t *damage )
 
   if (widget == NULL)
   {
+#ifdef DEBUG
     printf("raw_draw_container_draw NULL widget!\n");
+#endif
     return;	
   }
   if( rdc->draw_f )
