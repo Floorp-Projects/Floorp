@@ -82,7 +82,7 @@
       </menulist>
       
       <text class="label small-margin" value="&color.label;" accesskey="&color.accesskey;"/>
-      <colorpicker class="small-margin"  type="button" id="citationmenu" palettename="standard" oncommand="setColorWell(this);"/>
+      <colorpicker class="small-margin" type="button" id="citationmenu" palettename="standard" onchange="setColorWell(this);"/>
       <broadcaster id="mailCitationColor" pref="true" preftype="color" prefstring="mail.citation_color" prefattribute="value" wsm_attributes="value"/>
     </hbox>    
 
