@@ -327,10 +327,11 @@ function ReplaceWhitespace(string, charReplace) {
 }
 
 // Replace whitespace with "_" and allow only HTML CDATA
-//   characters: "a"-"z","A"-"Z","0"-"9", "_", ":", "-", and "."
+//   characters: "a"-"z","A"-"Z","0"-"9", "_", ":", "-", ".",
+//   and characters above ASCII 127
 function ConvertToCDATAString(string)
 {
-  return string.replace(/\s+/g,"_").replace(/[^a-zA-Z0-9_\.\-\:]+/g,'');
+  return string.replace(/\s+/g,"_").replace(/[^a-zA-Z0-9_\.\-\:\u0080-\uFFFF]+/g,'');
 }
 
 // this function takes an elementID and a flag
