@@ -472,7 +472,8 @@ PRBool nsMsgI18N7bit_data_part(const char *charset, const char *inString, const 
         srcLen = ((size - consumedLen) >= 512) ? 512 : (size - consumedLen);  // buffer len or remaining src len
         unicharLength = 512;
         res = decoder->Convert(currentSrcPtr, &srcLen, unicharBuff, &unicharLength);
-        if (NS_FAILED(res))
+        // break, if error or the input string not consumed
+        if (NS_FAILED(res) || !srcLen)
           break;
         for (PRInt32 i = 0; i < unicharLength; i++) {
           if (unicharBuff[i] > 127) {
