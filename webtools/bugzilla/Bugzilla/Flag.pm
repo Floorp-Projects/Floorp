@@ -244,12 +244,12 @@ sub process {
     # no longer valid.
     &::SendSQL("
         SELECT flags.id 
-        FROM flags, bugs LEFT OUTER JOIN flaginclusions i
-        ON (flags.type_id = i.type_id 
+        FROM (flags INNER JOIN bugs ON flags.bug_id = bugs.bug_id)
+          LEFT OUTER JOIN flaginclusions i
+            ON (flags.type_id = i.type_id 
             AND (bugs.product_id = i.product_id OR i.product_id IS NULL)
             AND (bugs.component_id = i.component_id OR i.component_id IS NULL))
         WHERE flags.type_id = $target->{'bug'}->{'id'} 
-        AND flags.bug_id = bugs.bug_id
         AND i.type_id IS NULL
     ");
     clear(&::FetchOneColumn()) while &::MoreSQLData();
