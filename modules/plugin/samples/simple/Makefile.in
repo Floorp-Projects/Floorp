@@ -44,7 +44,7 @@ XPIDLSRCS	= nsISimplePluginInstance.idl
 
 CPPSRCS		= npsimple.cpp
 
-LOCAL_INCLUDES	= -I$(srcdir)/.. -I$(srcdir)/../../public
+LOCAL_INCLUDES	= -I$(srcdir)/.. -I$(srcdir)/../../public -I$(XPIDL_GEN_DIR)
 
 EXTRA_DSO_LDOPTS += \
 	-L$(DIST)/lib \
