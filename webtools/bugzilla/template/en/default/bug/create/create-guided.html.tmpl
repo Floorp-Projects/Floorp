@@ -1,0 +1,542 @@
+<!-- 1.0@mozilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Christine Begle <cbegle@mozilla.org>
+  #%]
+
+[%# INTERFACE:
+  # This template has the same interface as create.html.tmpl
+  #%]
+    
+[% PROCESS global/header.html.tmpl
+   title = "Enter A Bug"
+   onload = "PutDescription()"
+ %]
+
+<p>
+  <font color="red">
+    This is a template used on mozilla.org - it, along with the 
+    comment-guided.txt.tmpl template, are included as a demo of what it's
+    possible to do with custom templates in general, and custom bug entry
+    templates in particular. It is recommended that this template be
+    customised if you want to use it on your Bugzilla installation.
+  </font>
+</p>
+
+[% tablecolour = "#FFFFCC" %]
+
+[%# This script displays the descriptions for selected components. %]
+<script>
+var descriptions = [
+[% FOREACH c = component_ %]
+  '[% c.description FILTER js %]',
+[% END %]
+];
+
+function PutDescription() {
+    if ((document.getElementById) && (document.body.innerHTML)) {
+        var componentIndex = document.getElementById('component').selectedIndex;
+        if (componentIndex != -1) {
+            var description = document.getElementById('description');
+            description.innerHTML = descriptions[componentIndex];
+        }
+    }
+}
+</script>
+
+[%# Browser sniff to try and reduce the incidence of 4.x and NS 6/7 bugs %]
+
+[% IF user_agent.search("Mozilla/4") AND NOT user_agent.search("compatible") %]
+   <div style="background-color: lightgrey; 
+               border: 1px solid black; 
+               padding: 2px">
+    <font color="#990000">
+      <b>
+        Note: This is a tool for reporting bugs
+        with the Mozilla web browser from mozilla.org. Use Netscape's
+        <a href="http://help.netscape.com/forms/bug-client.html">bug reporting
+        form</a> to report bugs with Netscape products like Navigator 4.x. 
+        Netscape products have a blue and black N in the top right hand
+        corner.
+      </b>
+    </font>
+  </div>
+[% END %]
+
+[% IF (matches = user_agent.match('Netscape(\d)')) %]
+  <div style="background-color: lightgrey; 
+              border: 1px solid black; 
+              padding: 2px">
+    <font color="#990000">
+      <b>
+        You are using Netscape [% matches.0 %]. 
+        Report bugs with this browser to the
+        <a href="http://home.netscape.com/browsers/[% matches.0 %]/feedback/index.html">
+         Netscape [% matches.0 %] Feedback Center.</a>
+      </b>
+    </font>
+    This form is only for reporting bugs in the Mozilla
+    web browser from mozilla.org. To report a bug you find in 
+    Netscape [% matches.0 %] with this form, 
+    you must reproduce it first in a 
+    <a href="http://ftp.mozilla.org/pub/mozilla/nightly/latest/">
+    recent build</a> of Mozilla to make sure the problem hasn't been 
+    fixed already.
+  </div>
+[% END %]
+
+<p>
+  This form prompts you for the information required to
+  file a good bug report (or enhancement request.)
+  It may seem lengthy, but Mozilla developers need all this information 
+  to understand and reproduce the bug, which is the first step towards 
+  fixing it. Please note that <strong>we do not accept bug reports by 
+  email</strong> - please do not email developers or mozilla.org staff 
+  with bug reports. <font color="red">Also, please do not
+  file bugs on copies of Mozilla older than two weeks.</font>
+</p>
+
+<a name="step1"></a> 
+<h3>Step 1 - search for your bug</h3>
+
+<p>
+  You need to see if your bug has already been reported. 
+  <font color="red">Please don't skip this step.</font> 
+  50% of the bugs filed in
+  Bugzilla are duplicates, and and this wastes a lot of our QA engineers' time.
+</p>
+
+[%# Stop NS 4.x and all v.3 browsers from getting <iframe> code %]
+[% IF (user_agent.search("Mozilla/4") 
+         AND NOT user_agent.search("compatible")) 
+       OR (user_agent.search("Mozilla/[123]")) %]
+  <p>
+    Visit the <a href="duplicates.cgi">most-frequently-reported bugs page</a>
+    and see if your bug is there. If not, go to the
+    <a href="query.cgi?format=modern">search page</a> 
+    and search Bugzilla by entering two or
+    three of the main words having to do with your bug in the top box. 
+    For example: <tt><b>pop3 mail</b></tt> or <tt><b>copy paste</b></tt>.
+  </p> 
+[% ELSE %]
+  <p>
+    Check the list of most-frequently-reported bugs below. 
+    If your bug isn't there, search Bugzilla by entering two or 
+    three of the main words having to do with your bug in this box. 
+    For example: <tt><b>pop3 mail</b></tt> or <tt><b>copy paste</b></tt>.
+  </p> 
+
+  <script type="text/javascript" language="JavaScript">
+    [%# Tell QuickSearch to use the custom-supplied load_relative_url() 
+        function. This was originally designed for the sidebar, hence the
+        variable name. %]
+    var sidebar = 1;
+
+    function load_relative_url(url) {
+        frames['somebugs'].location.href = url + "&format=simple";
+    }
+  </script>
+
+  <script type="text/javascript" language="JavaScript" 
+          src="localconfig.js"></script>
+  <script type="text/javascript" language="JavaScript" 
+          src="quicksearch.js"></script>
+
+  <form name="f" action="show_bug.cgi" method="get"
+      onsubmit="QuickSearch(f.id.value); return false;"> 
+
+    <input type="text" name="id" size="40">
+    <input type="submit" value="Search">
+  </form>
+
+  <iframe name="somebugs" width="100%" height="80%" 
+    style="border: 2px black solid"
+    src="duplicates.cgi?product=[% product FILTER uri %]&format=simple">
+  </iframe>
+[% END %]
+
+<p>
+  Look through the search results. If you get the
+  <tt><b>Zarro Boogs</b></tt> message, Bugzilla found no bugs that
+  match. Check for typos, or add fewer or different keywords.
+</p>
+
+<p>
+  If you find a bug that looks the same as yours, you can add
+  useful comments to that bug, but please don't open a new one. 
+  Please don't add comments like "please fix this bug" - this 
+  tends to annoy engineers and slow, rather than speed, the fixing of it.
+</p>
+
+<p>
+  If you find bugs similar to yours, read them and note which component
+  they are in. You should file your bug in that same component.
+</p>
+
+
+<a name="step2"></a> 
+<h3>Step 2 - give information</h3>
+
+<p>
+  If you're pretty certain that your bug isn't in there already, then
+  please try to complete this form as accurately as you
+  can. The more you can tell us, the better our chance of being able
+  to understand and reproduce your bug. 
+</p>
+
+<form method="post" action="post_bug.cgi">  
+  <input type="hidden" name="format" value="guided">
+  <input type="hidden" name="assigned_to" value="">
+  <input type="hidden" name="priority" value="[% default.priority %]">
+  <input type="hidden" name="version" value="[% default.version %]">
+  
+<table valign="top" cellpadding="5" cellspacing="5" border="0">
+
+  <tr bgcolor="[% tablecolour %]">
+    <td align="right" valign="middle">
+      <b>Product</b>
+    </td>
+    <td valign="top">
+      <input type="hidden" name="product" value="[% product FILTER html %]">
+      [% product FILTER html %]
+    </td>
+  </tr>
+
+  <tr>
+    <td align="right" valign="middle">
+      <b>Component</b>
+    </td>
+    <td valign="top">
+      <p>          
+        The area where the problem occurs.
+        To pick the right component, you could use the same one as 
+        similar bugs you found in your search, or read the full list of
+        <a href="describecomponents.cgi?product=[% product %]">component
+        descriptions</a> if you need more help.
+      </p>
+      
+      <table border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td valign="top">          
+            <select name="component" id="component" 
+                    size="5" onchange="PutDescription()">
+              [% FOREACH c = component_ %]
+                <option value="[% c.name FILTER html %]"
+                  [% " selected=\"selected\"" IF c == default.component_ %]>
+                  [% c.name FILTER html %]
+                </option>
+              [% END %]
+            </select>
+          </td>
+          <td valign="top" width="100%">
+            [% IF user_agent.search("Mozilla/5") %]
+              <div id="description" style="color: green; margin-left: 10px;
+                                           height: 5em; overflow: auto;">
+                Select a component to see its description here.
+              </div>
+            [% END %]
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  [%# We override rep_platform and op_sys for simplicity. The values chosen
+      are based on which are most common in the b.m.o database %]
+  [% rep_platform = [ "All", "PC", "Macintosh", "Sun", "Other" ] %]
+
+  <tr bgcolor="[% tablecolour %]">
+    <td align="right" valign="middle">
+      <b>Hardware Platform</b>
+    </td>
+    <td valign="top">
+      [% PROCESS select sel = 'rep_platform' %]
+    </td>
+  </tr>
+
+  [% op_sys = [ "All", "Windows 95", "Windows 98", "Windows NT", "Windows ME",
+                "Windows 2000", "Windows XP", "Mac System 8.6", 
+                "Mac System 9.x", "MacOS X", "Linux", "Solaris", 
+                "FreeBSD", "other" ] %]
+
+  <tr>
+    <td align="right" valign="middle">
+      <b>Operating System</b>
+    </td>
+    <td valign="top">  
+      [% PROCESS select sel = 'op_sys' %]
+    </td>
+  </tr>
+
+  [% matches = user_agent.match('Gecko/(\d+)') %]
+  [% buildid = user_agent IF matches %]
+
+  <tr bgcolor="[% tablecolour %]">
+    <td align="right" valign="middle">
+      <b>Build Identifier<br>(User Agent)</b>
+    </td>
+    <td valign="top">
+      <p>
+        This is the line beginning <tt>"Mozilla/5.0"</tt> in 
+        <tt>Help | About Mozilla</tt>. 
+        It identifies exactly the version of Mozilla you were using.
+        If you are using the problem copy of Mozilla, this will be
+        filled in correctly for you already.
+        If Mozilla won't start, just enter the URL of the directory you
+        downloaded it from.
+      </p>
+      <input type="text" size="80" name="buildid" value="[% buildid %]">      
+    </td>
+  </tr>
+
+  <tr>
+    <td align="right" valign="middle">
+      <b>URL</b>
+    </td>
+    <td valign="top">
+      <p>
+        URL that demonstrates the problem you are seeing (optional.)
+        <b>IMPORTANT</b>: If you are filing a bug about a broken web page, 
+        you need to read the 
+        <a href="http://www.mozilla.org/docs/web-developer/faq.html">Mozilla 
+        Web Developer FAQ</a>, which explains how we handle old or
+        badly-coded web pages.
+      </p>
+      <input type="text" size="80" name="bug_file_loc" value="http://">
+   </td>
+  </tr>
+
+  <tr bgcolor="[% tablecolour %]">
+    <td align="right" valign="middle">
+      <b>Summary</b> 
+    </td>
+    <td valign="top">
+      <p>
+        A sentence which summarises the problem.
+        Please be descriptive and use lots of keywords.
+      </p>  
+      <p>
+        <tt>
+          <font color="#990000">Bad example</font>: mail crashed
+        </tt>
+        <br>
+        <tt>
+          <font color="#009900">Good example</font>:
+          crash if I close the mail window while checking for new POP mail
+        </tt>
+      </p>
+      <input type="text" size="80" name="short_desc" id="short_desc">
+    </td>
+  </tr>
+
+  <tr>
+    <td align="right" valign="middle">
+      <b>Details</b> 
+    </td>
+    <td valign="top">
+      <p>
+        Expand on the Summary. Please be
+        as specific as possible about what is wrong.
+      </p>
+      <p>
+        <tt>
+          <font color="#990000">Bad example</font>: This page looks wrong in
+          Mozilla. Other browsers display it correctly. You suck!
+        </tt>
+        <br>
+        <tt>
+          <font color="#009900">Good example</font>: In the
+          page at http://www.foo.com/, text in the first column should be
+          fully justified -- text should be aligned with both the left and
+          right margins. In Mozilla, the text is only left-justified.
+        </tt>
+      </p>
+      <textarea rows="6" cols="80" name="comment" 
+                wrap="hard"></textarea>
+    </td>
+  </tr>
+
+  <tr bgcolor="[% tablecolour %]">
+    <td align="right" valign="middle">
+      <b>Reproducibility</b>
+    </td>
+    <td valign="top">
+      <p>
+        How often can you reproduce the problem?
+      </p>
+      <select name="reproducible">
+        <option name="AlwaysReproducible" value="Always">
+          Every time.
+        </option>
+        <option name="Sometimes" value="Sometimes">
+          Sometimes, but not always.
+        </option>
+        <option name="DidntTry" value="Didn't try">
+          Haven't tried to reproduce it.
+        </option>
+        <option name="NotReproducible" value="Couldn't Reproduce">
+          Tried, but couldn't reproduce it.
+        </option>
+      </select>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="right" valign="middle">
+      <b>Steps to Reproduce</b> 
+    </td>
+    <td valign="top">
+      <p>
+        Describe how to reproduce the problem, step by
+        step. Include any special setup steps.
+      </p>
+<textarea rows="4" cols="80" name="reproduce_steps" wrap="hard">
+1.
+2.
+3.
+</textarea>
+    </td>
+  </tr>
+
+  <tr bgcolor="[% tablecolour %]">
+    <td valign="middle" align="right">
+      <b>Actual Results</b> 
+    </td>
+    <td valign="top">
+      <p>
+        What happened after you performed the steps above?
+      </p>  
+      <textarea rows="4" cols="80" name="actual_results"
+                wrap="hard"></textarea>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="middle" align="right">
+      <b>Expected Results</b> 
+    </td>
+    <td valign="top">
+      <p>
+        What should Mozilla have done instead?
+      </p>
+      <textarea rows="4" cols="80" name="expected_results" 
+                wrap="hard"></textarea>
+    </td>
+  </tr>
+
+  <tr bgcolor="[% tablecolour %]">
+    <td valign="middle" align="right">
+      <b>Additional Information</b> 
+    </td>
+    <td valign="top">
+      <p>
+        Add any additional information you feel may be
+        relevant to this bug, such as the <b>theme</b> you were using 
+        (does the bug still occur
+        with the default theme?), a <b>Talkback crash ID</b>, or special
+        information about <b>your computer's configuration</b>. Any information
+        longer than a few lines, such as a <b>stack trace</b> or <b>HTML
+        testcase</b>, should be added 
+        using the "Create a new Attachment" link on the bug, after it is filed.
+        <br>
+        <br>
+        If you are reporting a crash, note the module in
+        which Mozilla crashed (e.g., <tt>Application Violation in
+        gkhtml.dll</tt>). On Macintosh, if you
+        have MacsBug, attach the results of the <b><tt>how</tt></b> and
+        <b><tt>sc</tt></b> commands.
+      </p>
+      <textarea rows="8" cols="80" name="additional_info"      
+                wrap="hard"></textarea>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="middle" align="right">
+      <b>Severity</b>
+    </td>
+    <td valign="top">
+      <p>
+        How serious the problem is. Also, if your bug is a request for a new
+        feature or enhancement, say so here.
+      </p>
+      <select name="bug_severity">
+        <option name="blocker" value="blocker">
+          Blocker: This bug prevents you from testing or developing Mozilla.
+        </option>
+        <option name="critical" value="critical">
+          Critical: Mozilla crashes, hangs, or causes you to 
+          lose data.
+        </option>
+        <option name="major" value="major">
+          Major: A major feature is broken.
+        </option>
+        <option name="normal" value="normal" selected>
+          Normal: It's a bug that should be fixed.
+        </option>
+        <option name="minor" value="minor">
+          Minor: Minor loss of function, and there's an easy workaround.
+        </option>
+        <option name="trivial" value="trivial">
+          Trivial: A cosmetic problem, such as a misspelled word or 
+          misaligned text.
+        </option>
+        <option name="enhancement" value="enhancement">
+          Enhancement: Request for new feature or enhancement.
+        </option>
+      </select>
+    </td>
+  </tr>
+</table>
+  
+  
+<a name="step3"></a> 
+<h3>Step 3 - submit the bug</h3>
+
+<p>
+  <input type="submit" value="    Submit Bug Report    " 
+   onclick="if (this.form.comment.value == '') 
+   { alert('Please enter some details about this bug.'); 
+     this.form.comment.focus();
+     return false; } return true;">
+</p>
+
+<p>
+  That's it! Thanks very much. You'll be notified by email about any
+  progress that is made on fixing your bug.
+</p>
+  
+    </form>
+
+[% PROCESS global/footer.html.tmpl %]
+
+[%############################################################################%]
+[%# Block for SELECT fields                                                  #%]
+[%############################################################################%]
+
+[% BLOCK select %]
+  <select name="[% sel %]">
+    [%- FOREACH x = $sel %]
+      <option value="[% x FILTER html %]"
+        [% " selected=\"selected\"" IF x == default.$sel %]>
+        [% x FILTER html -%]
+      </option>
+    [%- END %]
+  </select>
+[% END %]
