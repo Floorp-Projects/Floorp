@@ -27,14 +27,15 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=nsCSSKeywords.cpp nsCSSLayout.cpp nsCSSDeclaration.cpp \
     nsCSSParser.cpp nsCSSProps.cpp nsCSSRendering.cpp nsCSSScanner.cpp \
     nsCSSStyleRule.cpp nsCSSStyleSheet.cpp nsHTMLAttributes.cpp \
-    nsHTMLStyleSheet.cpp nsHTMLValue.cpp 
+    nsHTMLStyleSheet.cpp nsHTMLCSSStyleSheet.cpp nsHTMLValue.cpp 
 
 CPP_OBJS=.\$(OBJDIR)\nsCSSKeywords.obj .\$(OBJDIR)\nsCSSLayout.obj \
     .\$(OBJDIR)\nsCSSDeclaration.obj .\$(OBJDIR)\nsCSSParser.obj \
     .\$(OBJDIR)\nsCSSProps.obj .\$(OBJDIR)\nsCSSRendering.obj \
     .\$(OBJDIR)\nsCSSScanner.obj .\$(OBJDIR)\nsCSSStyleRule.obj \
     .\$(OBJDIR)\nsCSSStyleSheet.obj .\$(OBJDIR)\nsHTMLAttributes.obj \
-    .\$(OBJDIR)\nsHTMLStyleSheet.obj .\$(OBJDIR)\nsHTMLValue.obj 
+    .\$(OBJDIR)\nsHTMLStyleSheet.obj .\$(OBJDIR)\nsHTMLCSSStyleSheet.obj \
+    .\$(OBJDIR)\nsHTMLValue.obj 
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \
   -I..\..\..\base\src \
