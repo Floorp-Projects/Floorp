@@ -949,8 +949,6 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     nsCOMPtr<nsIEnumerator> aEnumerator;
     nsCOMPtr<nsIRDFResource> res;
     nsString2 uri("", eOneByte);
-    char* hostName = nsnull;
-	char *userName = nsnull;
     PRBool isTrashFolder = PR_FALSE;
     nsCString messageIds;
     nsMsgKeyArray srcKeyArray;
