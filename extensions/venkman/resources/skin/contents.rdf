@@ -46,7 +46,7 @@
   <!-- skin information -->
   <RDF:Description about="urn:mozilla:skin:modern/1.0"
         chrome:displayName="modern"
-        chrome:author="app_author}"
+        chrome:author="mozilla.org"
         chrome:name="modern/1.0">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:skin:modern/1.0:packages">
