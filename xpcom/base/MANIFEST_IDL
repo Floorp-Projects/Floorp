@@ -1,3 +1,6 @@
 nsISupports.idl
 nsrootidl.idl
 nsIInterfaceRequestor.idl
+nsIConsoleService.idl
+nsIConsoleMessage.idl
+nsIConsoleListener.idl

@@ -70,6 +70,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpcwrappednativeclass.obj	\
 	.\$(OBJDIR)\xpcwrappednativejsops.obj	\
 	.\$(OBJDIR)\xpcwrappednativescope.obj	\
+	.\$(OBJDIR)\nsScriptError.obj	\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpconnect -I$(PUBLIC)\xpcom -I$(PUBLIC)\js \
@@ -90,7 +91,6 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-    
 
 clobber::
 	rm -f $(DIST)\lib\$(DLLNAME).lib

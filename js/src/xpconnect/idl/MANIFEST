@@ -9,3 +9,4 @@ nsIXPCSecurityManager.idl
 xpccomponents.idl
 xpcexception.idl
 xpcjsid.idl
+nsIScriptError.idl
