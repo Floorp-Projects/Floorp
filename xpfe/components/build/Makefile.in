@@ -32,7 +32,7 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= nsModule.cpp
 
-ifeq ($(OS_ARCH),OS2)
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXTRA_DSO_LIBS	= autocomplete_s bookmarks_s directry history_s related_s \
 		search_s timebomb_s urlbarhistory_s	
 
