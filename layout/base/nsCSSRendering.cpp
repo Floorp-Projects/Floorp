@@ -2417,17 +2417,23 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
           "image had no child frame, which is impossible according to CSS. "
           "Make sure there isn't a background image specified on the "
           "|:viewport| pseudo-element in |html.css|.");
-        firstRootElementFrame->GetRect(firstRootElementFrameArea);
 
-        // Take the border out of the frame's rect
-        const nsStyleBorder* borderStyle;
-        firstRootElementFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
-        nsMargin border;
-        borderStyle->GetBorder(border);
-        firstRootElementFrameArea.Deflate(border);
+        // temporary null check -- see bug 97226
+        if (firstRootElementFrame) {
+          firstRootElementFrame->GetRect(firstRootElementFrameArea);
 
-        // Get the anchor point
-        ComputeBackgroundAnchorPoint(aColor, firstRootElementFrameArea, paddingArea, tileWidth, tileHeight, anchor);
+          // Take the border out of the frame's rect
+          const nsStyleBorder* borderStyle;
+          firstRootElementFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
+          nsMargin border;
+          borderStyle->GetBorder(border);
+          firstRootElementFrameArea.Deflate(border);
+
+          // Get the anchor point
+          ComputeBackgroundAnchorPoint(aColor, firstRootElementFrameArea, paddingArea, tileWidth, tileHeight, anchor);
+        } else {
+          ComputeBackgroundAnchorPoint(aColor, paddingArea, paddingArea, tileWidth, tileHeight, anchor);
+        }
       } else {
         // Otherwise, it is the normal case, and the background is
         // simply placed relative to the frame's padding area
