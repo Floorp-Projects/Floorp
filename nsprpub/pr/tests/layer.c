@@ -117,13 +117,7 @@ static void PR_CALLBACK Server(void *arg)
     PRUintn empty_flags = 0;
     PRIntn bytes_read, bytes_sent;
     PRFileDesc *stack = (PRFileDesc*)arg;
-    PRNetAddr any_address, client_address;
-
-    rv = PR_InitializeNetAddr(PR_IpAddrAny, default_port, &any_address);
-    PR_ASSERT(PR_SUCCESS == rv);
-
-    rv = PR_Bind(stack, &any_address); PR_ASSERT(PR_SUCCESS == rv);
-    rv = PR_Listen(stack, 10); PR_ASSERT(PR_SUCCESS == rv);
+    PRNetAddr client_address;
 
     service = PR_Accept(stack, &client_address, PR_INTERVAL_NO_TIMEOUT);
     if (verbosity > quiet)
@@ -237,6 +231,7 @@ PRIntn main(PRIntn argc, char **argv)
     PRIntn mits;
     PLOptStatus os;
     PRFileDesc *client, *service;
+    PRNetAddr any_address;
     const char *server_name = NULL;
     const PRIOMethods *stubMethods;
     PRThread *client_thread, *server_thread;
@@ -312,6 +307,10 @@ PRIntn main(PRIntn argc, char **argv)
             PR_fprintf(logFile, "Beginning non-layered test\n");
         client = PR_NewTCPSocket(); PR_ASSERT(NULL != client);
         service = PR_NewTCPSocket(); PR_ASSERT(NULL != service);
+        rv = PR_InitializeNetAddr(PR_IpAddrAny, default_port, &any_address);
+        PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Bind(service, &any_address); PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Listen(service, 10); PR_ASSERT(PR_SUCCESS == rv);
 
         minor_iterations = mits;
         server_thread = PR_CreateThread(
@@ -340,17 +339,23 @@ PRIntn main(PRIntn argc, char **argv)
         if (verbosity > silent)
             PR_fprintf(logFile, "Beginning layered test\n");
         client = PR_NewTCPSocket(); PR_ASSERT(NULL != client);
+        PushLayer(client);
         service = PR_NewTCPSocket(); PR_ASSERT(NULL != service);
+        PushLayer(service);
+        rv = PR_InitializeNetAddr(PR_IpAddrAny, default_port, &any_address);
+        PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Bind(service, &any_address); PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Listen(service, 10); PR_ASSERT(PR_SUCCESS == rv);
 
         minor_iterations = mits;
         server_thread = PR_CreateThread(
-            PR_USER_THREAD, Server, PushLayer(service),
+            PR_USER_THREAD, Server, service,
             PR_PRIORITY_HIGH, thread_scope,
             PR_JOINABLE_THREAD, 16 * 1024);
         PR_ASSERT(NULL != server_thread);
 
         client_thread = PR_CreateThread(
-            PR_USER_THREAD, Client, PushLayer(client),
+            PR_USER_THREAD, Client, client,
             PR_PRIORITY_NORMAL, thread_scope,
             PR_JOINABLE_THREAD, 16 * 1024);
         PR_ASSERT(NULL != client_thread);
