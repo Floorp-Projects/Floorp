@@ -552,6 +552,7 @@ Boolean 	GenerateIDIFromOpt(Str255, long, short, FSSpec *);
 void		AddKeyToIDI(short, Handle, char *);
 Boolean		ExistArchives(short, long);
 void		LaunchApps(short, long);
+void		DeleteXPIs(short, long);
 void		InitProgressBar(void);
 Boolean		InitSDLib(void);
 Boolean		LoadSDLib(FSSpec, SDI_NETINSTALL *, EventProc *, CFragConnectionID *);

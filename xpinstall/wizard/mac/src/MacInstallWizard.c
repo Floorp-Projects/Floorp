@@ -249,7 +249,7 @@ void MainEventLoop(void)
 		
 		if (!gDone)	 /* after cx switch back ensure not done */
 		{
-			if(WaitNextEvent(everyEvent, &evt, 0, mouseRgn))
+			if(WaitNextEvent(everyEvent, &evt, 1, mouseRgn))
 			{
 				if (mouseRgn)
 					SetRectRgn(mouseRgn, evt.where.h, evt.where.v, evt.where.h + 1, evt.where.v + 1);
