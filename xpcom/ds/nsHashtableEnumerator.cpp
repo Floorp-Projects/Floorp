@@ -49,21 +49,21 @@
 
 struct nsHashEnumClosure
 {
-    NS_HASH_ENUMERATOR_CONVERTER Converter;
+    nsHashEnumeratorConverterFunc Converter;
     nsISupports                  **Elements;
     PRUint32                     Current;
     void                         *Data;
 };
 
 PRBool PR_CALLBACK 
-hash_enumerator (nsHashKey *aKey, void *aObject, void *closure)
+hash_enumerator(nsHashKey *aKey, void *aObject, void *closure)
 {
     nsresult rv;
     
     nsHashEnumClosure *c = (nsHashEnumClosure *)closure;
     
-    rv = c->Converter (aKey, (void *)aObject, (void *)c->Data,
-                       &c->Elements[c->Current]);
+    rv = c->Converter(aKey, (void *)aObject, (void *)c->Data,
+                      &c->Elements[c->Current]);
 
     if (NS_SUCCEEDED(rv))
         c->Current++;
@@ -76,8 +76,8 @@ class nsHashtableEnumerator : public nsISimpleEnumerator
 {
 public:
     nsHashtableEnumerator(nsHashtable *aHash,
-                                NS_HASH_ENUMERATOR_CONVERTER aConverter,
-                                void* aData);
+                          nsHashEnumeratorConverterFunc aConverter,
+                          void* aData);
     virtual ~nsHashtableEnumerator();
 
     NS_DECL_ISUPPORTS
@@ -99,7 +99,7 @@ private:
 
 NS_COM nsresult
 NS_NewHashtableEnumerator(nsHashtable *aHash,
-                          NS_HASH_ENUMERATOR_CONVERTER aConverter,
+                          nsHashEnumeratorConverterFunc aConverter,
                           void* aData, nsISimpleEnumerator **retval)
 {
     *retval = nsnull;
@@ -117,7 +117,7 @@ NS_NewHashtableEnumerator(nsHashtable *aHash,
 }
 
 void*
-nsHashtableEnumerator::operator new (size_t size, nsHashtable* aHash)
+nsHashtableEnumerator::operator new(size_t size, nsHashtable* aHash)
     CPP_THROW_NEW
 {
     // create enough space such that mValueArray points to a large
@@ -135,12 +135,11 @@ nsHashtableEnumerator::operator new (size_t size, nsHashtable* aHash)
 NS_IMPL_ISUPPORTS1(nsHashtableEnumerator, nsISimpleEnumerator)
 
 nsHashtableEnumerator::nsHashtableEnumerator(nsHashtable *aHash,
-                                             NS_HASH_ENUMERATOR_CONVERTER
+                                             nsHashEnumeratorConverterFunc
                                              aConverter,
                                              void* aData)
 {
     NS_INIT_ISUPPORTS();
-    mCount = aHash->Count();
 
     nsHashEnumClosure c;
     c.Current = mCurrent = 0;
@@ -169,10 +168,11 @@ nsHashtableEnumerator::HasMoreElements(PRBool *aResult)
 NS_IMETHODIMP
 nsHashtableEnumerator::GetNext(nsISupports** aResult)
 {
-    if (mCurrent < mCount) return NS_ERROR_UNEXPECTED;
+    if (mCurrent >= mCount) return NS_ERROR_UNEXPECTED;
     
     *aResult = mElements[mCurrent++];
     // no need to addref - we'll just steal the refcount from the
-    // array of elements
+    // array of elements.. this is safe because the enumerator can
+    // only advance through the list once.
     return NS_OK;
 }
