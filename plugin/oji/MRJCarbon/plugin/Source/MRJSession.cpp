@@ -298,7 +298,9 @@ OSStatus MRJSession::close()
     	    mSession = NULL;
         }
 
+#if !TARGET_RT_MAC_MACHO // XXX right now, this hangs Chimera...
         mJavaVM->DestroyJavaVM();
+#endif
         mJavaVM = NULL;
     }
     return noErr;
