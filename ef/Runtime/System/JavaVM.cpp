@@ -20,7 +20,9 @@
 #include "plstr.h"
 #include "LogModule.h"
 #include "Debugger.h"
+#ifdef USE_JVMDI
 #include "jvmdi.h"
+#endif
 #include "Thread.h"
 #include "JniRuntime.h"
 
@@ -126,8 +128,10 @@ void VM::execute(const char *className,
 		void *code;
 		code = method->compile();
 
+#ifdef USE_JVMDI
 		if (debugger.getEnabled())
 			JVMDI_SetBreakpoint((JNIEnv *) code, 0, 0, 0);
+#endif
 
 		if (!noInvoke) {
 			/* You can only jump to a static method */

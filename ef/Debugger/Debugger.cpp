@@ -19,7 +19,9 @@
 #include <stdio.h>
 #include "CatchAssert.h"
 #include "Debugger.h"
+#ifdef USE_JVMDI
 #include "jvmdi.h"
+#endif
 #include "LogModule.h"
 #include "NativeCodeCache.h"
 #include "DebuggerChannel.h"
@@ -158,7 +160,9 @@ serverLoop()
 		switch(request) 
 		{
 		case 'b':
+#ifdef USE_JVMDI
 			JVMDI_SetBreakpoint(NULL, 0, 0, 0);
+#endif
 			break;
 		case 'g':
 			// Not implemented
