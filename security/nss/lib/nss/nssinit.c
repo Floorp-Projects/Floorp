@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.39 2002/02/22 04:23:20 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.40 2002/02/28 21:28:47 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -387,7 +387,7 @@ loser:
 				STAN_GetDefaultTrustDomain());
 #ifndef XP_MAC
 	/* only servers need this. We currently do not have a mac server */
-	if ((!readOnly) && (!noModDB) && (!noCertDB) && (!noRootInit)) {
+	if ((!noModDB) && (!noCertDB) && (!noRootInit)) {
 	    if (!SECMOD_HasRootCerts()) {
 		nss_FindExternalRoot(configdir);
 	    }
