@@ -1228,9 +1228,9 @@ nsMsgMessageDataSource::createMessageNameNode(nsIMessage *message,
 			if(NS_FAILED(rv))
 				return rv;
 
-      // strip out tabs from subject
+      // replace tabs with spaces in the subject
       nsAutoString tempStr(subject);
-      tempStr.StripChar((PRUnichar)'\t');
+      tempStr.ReplaceChar((PRUnichar)'\t',(PRUnichar)' ');
       *((PRUnichar **)getter_Copies(subject)) = nsXPIDLString::Copy(tempStr.GetUnicode());
 
       PRUint32 flags;
