@@ -32,10 +32,14 @@ ifeq ($(OS),Windows_NT)
 DIRS	+= nsztool
 endif
 
-DIRS	+= \
+ifndef MOZ_XUL_APP
+DIRS    += \
 	uninstall \
 	setuprsc \
-	setup \
+	setup
+endif
+
+DIRS	+= \
 	ren8dot3 \
 	ds32 \
 	GetShortPathName \
