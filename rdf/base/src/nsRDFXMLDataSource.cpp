@@ -1513,7 +1513,7 @@ RDFXMLDataSourceImpl::SerializeContainer(nsIOutputStream* aStream,
                                          nsIRDFResource* aContainer)
 {
     nsresult rv;
-    const PRUnichar* tag;
+    nsAutoString tag;
 
     // Decide if it's a sequence, bag, or alternation, and print the
     // appropriate tag-open sequence
