@@ -648,7 +648,7 @@
     <titledbutton id="saveButton"        class="button28" observes="Editor:Save"/>
     <titledbutton id="previewButton"     class="button28" observes="Editor:Preview"/>
     <titledbutton id="printButton"       class="other28"  observes="Editor:Print"      value="&printToolbarCmd.label;"/>
-    <titledbutton id="findButton"        class="other28"  observes="Editor:Find"       value="&findToolbarCmd.label;"/>
+    <titledbutton id="findButton"        class="other28"  observes="cmd_find"       value="&findToolbarCmd.label;"/>
     <titledbutton id="spellingButton"    class="other28"  value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
 
     <titledbutton id="imageButton"       class="other28" value="&imageToolbarCmd.label;"  onclick="EditorInsertOrEditImage()"/>
