@@ -180,6 +180,14 @@ WeekView.prototype.refreshEvents = function()
 
 
 
+
+
+
+
+
+
+
+
   var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
   var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
 
@@ -339,6 +347,9 @@ WeekView.prototype.createEventBox = function ( itemOccurrence )
     var startDate = itemOccurrence.occurrenceStartDate;
     var endDate = itemOccurrence.occurrenceEndDate;
     
+    dump("startdate: " + startDate + "\n");
+    dump("enddate:   " + endDate + "\n");
+
     var startHour = startDate.jsDate.getHours();
     var startMinutes = startDate.minute;
     var eventDuration = (endDate.jsDate - startDate.jsDate) / (60 * 60 * 1000);
@@ -375,7 +386,7 @@ WeekView.prototype.createEventBox = function ( itemOccurrence )
 
     var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
                   document.getElementById( "week-view-content-box" ).boxObject.x +
-                  ( /*calendarEventDisplay.startDrawSlot*/1 * eventSlotWidth );
+                  ( /*calendarEventDisplay.startDrawSlot*/0 * eventSlotWidth );
     dump(boxLeft + "\n");
     eventBox.setAttribute("left", boxLeft);
    
