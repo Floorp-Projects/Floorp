@@ -33,9 +33,8 @@ typedef struct DOM_HTMLElementPrivate {
 } DOM_HTMLElementPrivate;
 
 #define ELEMENT_PRIV(e) ((DOM_HTMLElementPrivate *)(((DOM_Node *)(e))->data))
-#define CURRENT_NODE(d) ((DOM_Node *)(d->current_node))
-#define LAST_NODE(d) ((DOM_Node *)(d->last_node))
-#define TOP_NODE(d) ((DOM_Node *)(d->top_node))
+#define CURRENT_NODE(d) ((DOM_Node *)(d->top_state->current_node))
+#define TOP_NODE(d) ((DOM_Node *)(d->top_state->top_node))
 
 DOM_Element *
 DOM_HTMLPopElementByType(TagType type, DOM_Element *node);

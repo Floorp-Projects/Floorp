@@ -404,7 +404,7 @@ lm_DOMGetDocumentElement(MochaDecoder *decoder, JSObject *docobj)
     */
 
     obj = DOM_NewNodeObject(decoder->js_context,
-                            top_state->doc_state->top_node);
+                            top_state->top_node);
 
     doc->dom_documentElement = obj;
     return obj;
