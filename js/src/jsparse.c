@@ -236,7 +236,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
     JSParseNode *pn;
 
     fp = cx->fp;
-    if (!fp || fp->scopeChain != chain) {
+    if (!fp || fp->varobj != chain || fp->scopeChain != chain) {
         memset(&frame, 0, sizeof frame);
         frame.varobj = frame.scopeChain = chain;
         frame.down = fp;
@@ -319,14 +319,17 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
              JSTreeContext *tc)
 {
     JSStackFrame *fp, frame;
+    JSObject *funobj;
     uintN oldflags;
     JSParseNode *pn;
 
     fp = cx->fp;
-    if (!fp || fp->scopeChain != fun->object) {
+    funobj = fun->object;
+    if (!fp || fp->fun != fun || fp->varobj != funobj ||
+        fp->scopeChain != funobj) {
         memset(&frame, 0, sizeof frame);
-        frame.varobj = frame.scopeChain = fun->object;
         frame.fun = fun;
+        frame.varobj = frame.scopeChain = funobj;
         frame.down = fp;
         cx->fp = &frame;
     }
