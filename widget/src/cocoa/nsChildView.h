@@ -44,6 +44,7 @@
 #include "nsIPluginWidget.h"
 #include "nsDeleteObserver.h"
 #include "nsIEventSink.h"
+#include "nsIScrollableView.h"
 
 #include "nsIWidget.h"
 #include "nsIKBStateControl.h"
@@ -93,6 +94,11 @@ class nsChildView;
   NSRange mMarkedRange;
   NSRange mSelectedRange;
   BOOL mInComposition;
+
+  BOOL mInHandScroll; // true for as long as we are hand scrolling
+  // hand scroll locations
+  NSPoint mHandScrollStartMouseLoc;
+  nscoord mHandScrollStartScrollX, mHandScrollStartScrollY;
 }
 
 @end
