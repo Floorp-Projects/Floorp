@@ -95,7 +95,11 @@
         [%- initialqacontact FILTER html %]">
    <input type="hidden" name="action" value="update">
    <input type="hidden" name="product" value="[% product FILTER html %]">
-   <input type="submit" value="Update">
+   <input type="submit" value="Update"> or <a 
+        href="editcomponents.cgi?action=del&amp;product=
+        [%- product FILTER url_quote %]&amp;component=
+        [%- name FILTER url_quote %]">Delete</a> this component.
+
 
 </form>
 
