@@ -23,48 +23,49 @@ void CreateHelpMenu (void)
 	CString file2 = root + "\\help2.txt";
 	CString HelpPath = root + "\\Configs\\" + config + "\\Temp\\";
 
-	ifstream help1(file1);
-	ifstream help2(file2);
+
 	_mkdir (HelpPath);
 	CString HelpMenuFile = HelpPath +"helpMenu.rdf";
-
-	ofstream Hlp(HelpMenuFile);
 	CString HelpMenuName = GetGlobal("HelpMenuCommandName");
 	CString HelpMenuUrl = GetGlobal("HelpMenuCommandURL");
 	
-	if (HelpMenuName.IsEmpty())
-		HelpMenuName = config + "-Help";
+	if ( !(HelpMenuName.IsEmpty()) && !(HelpMenuUrl.IsEmpty()) )
+	{
+		ifstream help1(file1);
+		ifstream help2(file2);
+		ofstream Hlp(HelpMenuFile);
+		char jsprefname[200];
 
-	char jsprefname[200];
-
-	if(!help1) {
-		cout << "cannot open the file \n";
+		if(!help1) 
+		{
+			cout << "cannot open the file \n";
 		}
-	while (!help1.eof()) {
-	
-		help1.getline(jsprefname,200);
-
-		Hlp <<jsprefname<<"\n";
-	}
-
-	Hlp << "	<menuitem label=\"" << HelpMenuName << "\"\n"; 
-	Hlp << "	 position=\"6\"\n"; 
-	Hlp << "	 oncommand=\"openTopWin('" << HelpMenuUrl << "');\" />\n";
-
-//	Hlp <<"<menuitem position=\"7\" value=\""<<HelpMenuName<<"\"\n\t";
-//	Hlp <<"oncommand=\"openTopWin('"<<HelpMenuUrl<<"')\" /> \n\t";
-//	Hlp <<"<menuseparator position=\"9\" /> \n";
-
-	if(!help2) {
-		cout << "cannot open the file \n";
+		while (!help1.eof()) 
+		{
+			help1.getline(jsprefname,200);
+			Hlp <<jsprefname<<"\n";
 		}
-	while (!help2.eof()) {
-	
-		help2.getline(jsprefname,200);
-		Hlp <<jsprefname<<"\n";
-	}
 
-	Hlp.close();
+		Hlp << "	<menuitem label=\"" << HelpMenuName << "\"\n"; 
+		Hlp << "	 position=\"6\"\n"; 
+		Hlp << "	 oncommand=\"openTopWin('" << HelpMenuUrl << "');\" />\n";
+
+	//	Hlp <<"<menuitem position=\"7\" value=\""<<HelpMenuName<<"\"\n\t";
+	//	Hlp <<"oncommand=\"openTopWin('"<<HelpMenuUrl<<"')\" /> \n\t";
+	//	Hlp <<"<menuseparator position=\"9\" /> \n";
+
+		if(!help2) 
+		{
+			cout << "cannot open the file \n";
+		}
+		while (!help2.eof()) 
+		{
+			help2.getline(jsprefname,200);
+			Hlp <<jsprefname<<"\n";
+		}
+
+		Hlp.close();
+	}
 }
 
 // This function creates the file "mailaccount.rdf" to customize the Mail account
