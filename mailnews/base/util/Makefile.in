@@ -51,7 +51,6 @@ EXTRA_DSO_LDOPTS =	\
 	-lxp		\
 	-lxpcom		\
 	-lrdfutil_s	\
-	-lmailnewsmsgdb	\
 	$(NULL)
 
 
