@@ -553,7 +553,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, n
         // need to remove ".sbd" from moveValue, and perhaps escape it.
         moveValue.ReplaceSubstring(".sbd/", "/");
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
         char *unescapedMoveValue = ToNewCString(moveValue);
         nsUnescape(unescapedMoveValue);
         moveValue.Assign(unescapedMoveValue);
