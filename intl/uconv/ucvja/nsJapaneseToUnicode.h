@@ -22,6 +22,6 @@
 
 nsresult NEW_ShiftJISToUnicode(nsISupports **aResult);
 nsresult NEW_EUCJPToUnicode(nsISupports **aResult);
-nsresult NEW_ISO2022ToUnicode(nsISupports **aResult);
+nsresult NEW_ISO2022JPToUnicode(nsISupports **aResult);
 
 #endif // nsShiftJISToUnicode_h__

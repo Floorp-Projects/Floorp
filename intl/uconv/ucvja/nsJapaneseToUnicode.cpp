@@ -31,14 +31,27 @@ class nsShiftJISToUnicode : public nsBasicDecoderSupport
 {
 public:
 
- nsShiftJISToUnicode() { mState=0; mData=0; };
+ nsShiftJISToUnicode() 
+     { 
+         mState=0; mData=0; 
+     };
  virtual ~nsShiftJISToUnicode() {};
 
  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
      PRUnichar * aDest, PRInt32 * aDestLength) ;
  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
-     PRInt32 * aDestLength) ;
- NS_IMETHOD Reset();
+     PRInt32 * aDestLength) 
+     {
+        *aDestLength = aSrcLength;
+        return NS_OK;
+     };
+ NS_IMETHOD Reset()
+     {
+        mState = 0;
+        return NS_OK;
+     };
+
+private:
 
 private:
  PRInt32  mState;
@@ -190,32 +203,31 @@ error1:
    *aSrcLen = src-(unsigned char*)aSrc;
    return NS_OK_UDEC_MOREOUTPUT;
 }
-NS_IMETHODIMP nsShiftJISToUnicode::GetMaxLength(
-     const char * aSrc, PRInt32 aSrcLength,
-     PRInt32 * aDestLength)
-{
-   *aDestLength = aSrcLength;
-   return NS_OK;
-}
-NS_IMETHODIMP nsShiftJISToUnicode::Reset()
-{
-   mState = 0;
-   return NS_OK;
-}
 
 
 class nsEUCJPToUnicodeV2 : public nsBasicDecoderSupport
 {
 public:
 
- nsEUCJPToUnicodeV2() { mState=0; mData=0; };
+ nsEUCJPToUnicodeV2() 
+     { 
+          mState=0; mData=0; 
+     };
  virtual ~nsEUCJPToUnicodeV2() {};
 
  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
      PRUnichar * aDest, PRInt32 * aDestLength) ;
  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
-     PRInt32 * aDestLength) ;
- NS_IMETHOD Reset();
+     PRInt32 * aDestLength) 
+     {
+        *aDestLength = aSrcLength;
+        return NS_OK;
+     };
+ NS_IMETHOD Reset()
+     {
+        mState = 0;
+        return NS_OK;
+     };
 
 private:
  PRInt32  mState;
@@ -417,20 +429,318 @@ error1:
    *aSrcLen = src-(unsigned char*)aSrc;
    return NS_OK_UDEC_MOREOUTPUT;
 }
-NS_IMETHODIMP nsEUCJPToUnicodeV2::GetMaxLength(
-     const char * aSrc, PRInt32 aSrcLength,
-     PRInt32 * aDestLength)
+
+class nsISO2022JPToUnicodeV2 : public nsBasicDecoderSupport
 {
-   *aDestLength = aSrcLength;
-   return NS_OK;
-}
-NS_IMETHODIMP nsEUCJPToUnicodeV2::Reset()
-{
-   mState = 0;
-   return NS_OK;
-}
+public:
+
+ nsISO2022JPToUnicodeV2() 
+     { 
+        mState=0; mData=0; mLastLegalState= 0;
+     };
+ virtual ~nsISO2022JPToUnicodeV2() {};
+
+ NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
+     PRUnichar * aDest, PRInt32 * aDestLength) ;
+ NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength,
+     PRInt32 * aDestLength) 
+     {
+        *aDestLength = aSrcLength;
+        return NS_OK;
+     };
+ NS_IMETHOD Reset()
+     {
+        mState = 0;
+        mLastLegalState = 0;
+        return NS_OK;
+     };
+
+private:
+ PRInt32  mState;
+ PRInt32  mLastLegalState;
+ PRInt32 mData;
+};
 
 
+NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
+   const char * aSrc, PRInt32 * aSrcLen,
+     PRUnichar * aDest, PRInt32 * aDestLen)
+{
+   static PRUint16 fbIdx[128] =
+   {
+/* 0x8X */
+     0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
+     0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
+/* 0x9X */
+     0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
+     0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
+/* 0xAX */
+     0xFFFD, 0,      94,     94* 2,  94* 3,  94* 4,  94* 5,  94* 6,  
+     94* 7,  94* 8 , 94* 9,  94*10,  94*11,  94*12,  94*13,  94*14,
+/* 0xBX */
+     94*15,  94*16,  94*17,  94*18,  94*19,  94*20,  94*21,  94*22,
+     94*23,  94*24,  94*25,  94*26,  94*27,  94*28,  94*29,  94*30,
+/* 0xCX */
+     94*31,  94*32,  94*33,  94*34,  94*35,  94*36,  94*37,  94*38,
+     94*39,  94*40,  94*41,  94*42,  94*43,  94*44,  94*45,  94*46,
+/* 0xDX */
+     94*47,  94*48,  94*49,  94*50,  94*51,  94*52,  94*53,  94*54,
+     94*55,  94*56,  94*57,  94*58,  94*59,  94*60,  94*61,  94*62,
+/* 0xEX */
+     94*63,  94*64,  94*65,  94*66,  94*67,  94*68,  94*69,  94*70,
+     94*71,  94*72,  94*73,  94*74,  94*75,  94*76,  94*77,  94*78,
+/* 0xFX */
+     94*79,  94*80,  94*81,  94*82,  94*83,  94*84,  94*85,  94*86,
+     94*87,  94*88,  94*89,  94*90,  94*91,  94*92,  94*93,  0xFFFD,
+   };
+   static PRUint8 sbIdx[256] =
+   {
+/* 0x0X */
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+/* 0x1X */
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+/* 0x2X */
+     0xFF, 0,    1,    2,    3,    4,    5,    6,  
+     7,    8 ,   9,    10,   11,   12,   13,   14,
+/* 0x3X */
+     15,   16,   17,   18,   19,   20,   21,   22, 
+     23,   24,   25,   26,   27,   28,   29,   30, 
+/* 0x4X */
+     31,   32,   33,   34,   35,   36,   37,   38, 
+     39,   40,   41,   42,   43,   44,   45,   46, 
+/* 0x5X */
+     47,   48,   49,   50,   51,   52,   53,   54, 
+     55,   56,   57,   58,   59,   60,   61,   62, 
+/* 0x6X */
+     63,   64,   65,   66,   67,   68,   69,   70, 
+     71,   72,   73,   74,   75,   76,   77,   78, 
+/* 0x7X */
+     79,   80,   81,   82,   83,   84,   85,   86, 
+     87,   88,   89,   90,   91,   92,   93,   0xFF, 
+/* 0x8X */
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+/* 0x9X */
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+/* 0xAX */
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+/* 0xBX */
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+/* 0xCX */
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+/* 0xDX */
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+/* 0xEX */
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+/* 0xFX */
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+   };
+
+   const unsigned char* srcEnd = (unsigned char*)aSrc + *aSrcLen;
+   const unsigned char* src =(unsigned char*) aSrc;
+   PRUnichar* destEnd = aDest + *aDestLen;
+   PRUnichar* dest = aDest;
+   while((src < srcEnd))
+   {
+     
+       switch(mState)
+       {
+          case 0:  // single byte mode
+            if(0x1b == *src)
+            {
+              mLastLegalState = mState;
+              mState = 1;
+            } else if(*src & 0x80) {
+              *dest++ = 0xFFFD;
+              if(dest >= destEnd)
+                 goto error1;
+            } else {
+              *dest++ = (PRUnichar) *src;
+              if(dest >= destEnd)
+                goto error1;
+            }
+          break;
+          
+          case 1: // ESC
+            if( '(' == *src) {
+              mState = 2;
+            } else if ('$' == *src)  {
+              mState = 3;
+            } else  {
+              if((dest+2) >= destEnd)
+                goto error1;
+              *dest++ = (PRUnichar) 0x1b;
+              *dest++ = (0x80 & *src) ? 0xFFFD : (PRUnichar) *src;
+              mState = mLastLegalState;
+            }
+          break;
+
+          case 2: // ESC (
+            if( 'B' == *src) {
+              mState = 0;
+            } else if ('J' == *src)  {
+              mState = 5; // JIS X 0201 1976
+            } else if ('I' == *src)  {
+              mState = 6; // JIS X 0201 1976 Kana
+            } else  {
+              if((dest+3) >= destEnd)
+                goto error1;
+              *dest++ = (PRUnichar) 0x1b;
+              *dest++ = (PRUnichar) '(';
+              *dest++ = (0x80 & *src) ? 0xFFFD : (PRUnichar) *src;
+              mState = mLastLegalState;
+            }
+          break;
+
+          case 3: // ESC $
+            if( '@' == *src) {
+              mState = 7; // JIS X 0208 1978
+            } else if ('B' == *src)  {
+              mState = 8; // JIS X 0208 1983
+            } else if ('(' == *src)  {
+              mState = 4;
+            } else  {
+              if((dest+3) >= destEnd)
+                goto error1;
+              *dest++ = (PRUnichar) 0x1b;
+              *dest++ = (PRUnichar) '$';
+              *dest++ = (0x80 & *src) ? 0xFFFD : (PRUnichar) *src;
+              mState = mLastLegalState;
+            }
+          break;
+
+          case 4: // ESC $ (
+            if( 'D' == *src) {
+              mState = 9; // JIS X 0212 1990
+            } else  {
+              if((dest+4) >= destEnd)
+                goto error1;
+              *dest++ = (PRUnichar) 0x1b;
+              *dest++ = (PRUnichar) '$';
+              *dest++ = (PRUnichar) '(';
+              *dest++ = (0x80 & *src) ? 0xFFFD : (PRUnichar) *src;
+              mState = mLastLegalState;
+            }
+          break;
+          case 5: //  JIS X 0201 1976
+            if(0x1b == *src) {
+              mLastLegalState = mState;
+              mState = 1;
+            } else if(*src & 0x80) {
+              *dest++ = 0xFFFD;
+              if(dest >= destEnd)
+                 goto error1;
+            } else {
+              // XXX We need to  decide how to handle \ and ~ here
+              // we may need a if statement here for '\' and '~' 
+              // to map them to Yen and Overbar
+              *dest++ = (PRUnichar) *src;
+              if(dest >= destEnd)
+                goto error1;
+            }
+          break;
+
+          case 6: //  JIS X 0201 1976 Kana
+            if(0x1b == *src) {
+              mLastLegalState = mState;
+              mState = 1;
+            } else {
+              if((0x21 <= *src) && (*src <= 0x5F)) {
+                *dest++ = (0xFF61-0x0021) + *src;
+              } else {
+                *dest++ = 0xFFFD;
+              }
+              if(dest >= destEnd)
+                goto error1;
+            }
+          break;
+
+          case 7: //  JIS X 0208 1978
+          case 8: //  JIS X 0208 1983
+          case 9: //  JIS X 0212 1990
+          break;
+            if(0x1b == *src) {
+              mLastLegalState = mState;
+              mState = 1;
+            } else if(*src & 0x80) {
+              mLastLegalState = mState;
+              mState = 13;
+            } else {
+              mData = fbIdx[*src & 0x7F];
+              mState = (0xFFFD == mData) ? 13 : (mState+3); // 10, 11, or 12
+            }
+          break;
+
+          case 10: //  JIS X 0208 1978 - got one byte
+          {
+            PRUint8 off = sbIdx[*src];
+            if(0xFF == off) {
+               *dest++ = 0xFFFD;
+            } else {
+               // XXX We need to map from JIS X 0208 1983 to 1987 
+               // in the next line before pass to *dest++
+               *dest++ = gJis0208map[mData+off];
+            }
+            if(dest >= destEnd)
+              goto error1;
+            mState = 7;
+          }
+          break;
+
+          case 11: //  JIS X 0208 1983 - got one byte
+          {
+            PRUint8 off = sbIdx[*src];
+            if(0xFF == off) {
+               *dest++ = 0xFFFD;
+            } else {
+               *dest++ = gJis0208map[mData+off];
+            }
+            if(dest >= destEnd)
+              goto error1;
+            mState = 8;
+          }
+          break;
+
+          case 12: //  JIS X 0212 1990 - got one byte
+          {
+            PRUint8 off = sbIdx[*src];
+            if(0xFF == off) {
+               *dest++ = 0xFFFD;
+            } else {
+               *dest++ = gJis0212map[mData+off];
+            }
+            if(dest >= destEnd)
+              goto error1;
+            mState = 9;
+          }
+          break;
+
+          case 13: //  got one illegal byte, neet to ignroe one
+             mState = mLastLegalState;
+             *dest++ = 0xFFFD;
+             if(dest >= destEnd)
+                goto error1;
+          break;
+
+       } // switch
+       src++;
+   }
+   *aDestLen = dest - aDest;
+   return NS_OK;
+error1:
+   *aDestLen = dest-aDest;
+   *aSrcLen = src-(unsigned char*)aSrc;
+   return NS_OK_UDEC_MOREOUTPUT;
+}
 nsresult NEW_ShiftJISToUnicode(nsISupports **aResult)
 {
    *aResult = new nsShiftJISToUnicode();
@@ -439,5 +749,10 @@ nsresult NEW_ShiftJISToUnicode(nsISupports **aResult)
 nsresult NEW_EUCJPToUnicode(nsISupports **aResult)
 {
    *aResult = new nsEUCJPToUnicodeV2();
+   return (NULL == *aResult) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+}
+nsresult NEW_ISO2022JPToUnicode(nsISupports **aResult)
+{
+   *aResult = new nsISO2022JPToUnicodeV2();
    return (NULL == *aResult) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
