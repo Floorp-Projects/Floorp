@@ -423,7 +423,8 @@ Contributor(s): ______________________________________. -->
   <box id="appcontent" align="vertical" flex="100%"
     onclick="if (event.button==2) browserHandleMiddleClick(event);"
     ondragover="return DragOverContentArea(event);"
-    ondragdrop="return DropOnContentArea(event);">
+    ondragdrop="return DropOnContentArea(event);"
+    ondraggesture="DragContentLink(event);">
 
     <!-- type attribute is used by frame construction to locate iframes
          intended to hold (html) content -->
