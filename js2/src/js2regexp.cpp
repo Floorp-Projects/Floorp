@@ -287,9 +287,9 @@ namespace MetaData {
         RegExpInstance *thisInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(thisValue));
         uint32 flags = 0;
 
-        const String *regexpStr = &meta->engine->Empty_StringAtom;
+        const String *regexpStr = meta->engine->allocStringPtr("");
         DEFINE_ROOTKEEPER(meta, rk1, regexpStr);
-        const String *flagStr = &meta->engine->Empty_StringAtom;
+        const String *flagStr = meta->engine->allocStringPtr("");
         DEFINE_ROOTKEEPER(meta, rk2, flagStr);
         if (argc > 0) {
             if (JS2VAL_IS_OBJECT(argv[0]) && !JS2VAL_IS_NULL(argv[0])

@@ -147,7 +147,7 @@ NPBool nsPluginInstance::init(NPWindow* aWindow)
   printf("Pandora: starting up\n");
   world = new World();
   metadata = new JavaScript::MetaData::JS2Metadata(*world);
-  spiderMonkeyClass = new (metadata) JS2SpiderMonkeyClass(&world->identifiers[widenCString("SpiderMonkey")]);
+  spiderMonkeyClass = new (metadata) JS2SpiderMonkeyClass(world->identifiers[widenCString("SpiderMonkey")]);
   printf("Pandora: done starting up\n");
  
   mInitialized = TRUE;
@@ -512,8 +512,8 @@ bool nsPluginInstance::convertJS2ValueToJSValue(JSContext *cx, js2val v, jsval *
 
 bool JS2SpiderMonkeyClass::Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval)
 {   
-    std::string str(multiname->name->length(), char());
-    std::transform(multiname->name->begin(), multiname->name->end(), str.begin(), narrow);
+    std::string str(multiname->name.length(), char());
+    std::transform(multiname->name.begin(), multiname->name.end(), str.begin(), narrow);
 
     printf("JS2SpiderMonkeyClass: Reading property \"%s\"\n", str.c_str());
     
@@ -547,8 +547,8 @@ bool JS2SpiderMonkeyClass::BracketRead(JS2Metadata *meta, js2val *base, js2val i
 }
 bool JS2SpiderMonkeyClass::Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
 {
-    std::string str(multiname->name->length(), char());
-    std::transform(multiname->name->begin(), multiname->name->end(), str.begin(), narrow);
+    std::string str(multiname->name.length(), char());
+    std::transform(multiname->name.begin(), multiname->name.end(), str.begin(), narrow);
 
     printf("JS2SpiderMonkeyClass: Writing property \"%s\"\n", str.c_str());
     
