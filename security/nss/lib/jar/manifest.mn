@@ -29,7 +29,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 
-MODULE = security
+MODULE = nss
 
 LIBRARY_NAME = jar
 
@@ -46,7 +46,7 @@ CSRCS =	\
 	jarint.c \
 	$(NULL)
 
-REQUIRES = security dbm
+REQUIRES = dbm
 
 EXPORTS	 = jar.h jar-ds.h jarfile.h
 

@@ -33,7 +33,7 @@
 
 CORE_DEPTH = ../../..
 
-MODULE = security
+MODULE = nss
 
 EXPORTS = \
 	crmf.h	\
@@ -67,7 +67,5 @@ CSRCS = crmfenc.c	\
 	challcli.c	\
 	asn1cmn.c	\
 	$(NULL)
-
-REQUIRES = dbm
 
 LIBRARY_NAME = crmf

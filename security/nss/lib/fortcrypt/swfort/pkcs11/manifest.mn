@@ -33,7 +33,7 @@
 
 CORE_DEPTH		= ../../../../..
 
-MODULE		= security
+MODULE		= nss
 LIBRARY_NAME	= swft
 #LIBRARY_VERSION	= 32
 
@@ -52,7 +52,7 @@ INCLUDES	= -I../..
 
 EXPORTS		= 
 
-REQUIRES	= security dbm
+REQUIRES	= dbm
 
 
 DEFINES		= -DSWFORT

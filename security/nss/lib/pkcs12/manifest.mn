@@ -41,7 +41,7 @@ EXPORTS = \
 	p12t.h \
 	$(NULL)
 
-MODULE = security
+MODULE = nss
 
 CSRCS = \
 	p12local.c \
@@ -53,6 +53,6 @@ CSRCS = \
 	p12d.c \
 	$(NULL)
 
-REQUIRES = security dbm
+REQUIRES = dbm
 
 LIBRARY_NAME = pkcs12

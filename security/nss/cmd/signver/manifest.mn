@@ -32,13 +32,13 @@
 
 CORE_DEPTH = ../../..
 
-MODULE = security
+MODULE = nss
 
 CSRCS = signver.c	\
         pk7print.c	\
 	$(NULL)
 
-REQUIRES = security dbm seccmd
+REQUIRES = dbm seccmd
 
 PROGRAM = signver
 

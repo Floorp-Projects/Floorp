@@ -32,7 +32,7 @@
 #
 CORE_DEPTH		= ../../..
 
-MODULE		= security
+MODULE		= nss
 LIBRARY_NAME	= fort
 #LIBRARY_VERSION	= 32
 
@@ -46,5 +46,5 @@ CSRCS		= forsock.c  \
 EXPORTS		= 
 PRIVATE_EXPORTS = maci.h cryptint.h
 
-REQUIRES	= security dbm
+REQUIRES	= dbm
 

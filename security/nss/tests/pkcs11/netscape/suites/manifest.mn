@@ -32,15 +32,6 @@
 #
 CORE_DEPTH = ../../../../..
  
-# MODULE = sectools
- 
-# IMPORTS =       nspr20/19971209C      \
-#                dbm/DBM_1_5           \
-#                security/HCL_1_5      \
-#                sectools/bin/19971218 \
-#                sectools/lib/19971218 \
-#                $(NULL)
- 
 DIRS =  security \
         $(NULL)
  

@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.5 $ $Date: 2002/01/10 15:11:04 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.6 $ $Date: 2002/09/06 16:38:38 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
@@ -46,7 +46,7 @@ PRIVATE_EXPORTS = \
 EXPORTS =	   \
 	$(NULL)
 
-MODULE = security
+MODULE = nss
 
 CSRCS =		  \
 	atav.c	  \
@@ -59,6 +59,6 @@ CSRCS =		  \
 	rdnseq.c  \
 	$(NULL)
 
-REQUIRES = security nspr
+REQUIRES = nspr
 
 LIBRARY_NAME = pki1

@@ -64,5 +64,5 @@ OLD_CSRCS	= dongle.c \
 		  stubs.c \
 		  $(NULL)
 
-REQUIRES	= security nspr dbm
+REQUIRES	= nss nspr dbm
 

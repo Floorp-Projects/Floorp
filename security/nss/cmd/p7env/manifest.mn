@@ -33,7 +33,7 @@
 
 CORE_DEPTH = ../../..
 
-MODULE = security
+MODULE = nss
 
 CSRCS = p7env.c  
 

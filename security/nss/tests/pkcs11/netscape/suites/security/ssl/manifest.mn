@@ -43,14 +43,7 @@ CSRCS = sslt.c \
 
 PROGRAM =  sslt
 
-#IMPORTS = nspr20/19980120   \
-#          sectools/bin/STP_1_51  \
-#	  sectools/lib/STP_1_51  \
-#          security/HCL_1_51 \
-#	  dbm/DBM_1_5   \
-#	  $(NULL)
-
-REQUIRES = security dbm seccmd
+REQUIRES = nss dbm seccmd
 
 DEFINES = -DNSPR20 -DREPLACER
 

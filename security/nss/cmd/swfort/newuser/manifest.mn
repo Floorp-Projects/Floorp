@@ -34,11 +34,11 @@ CORE_DEPTH = ../../../..
 
 DEFINES += -DNSPR20
 
-MODULE = security
+MODULE = nss
 
 CSRCS = newuser.c mktst.c
 
-REQUIRES = security nspr dbm seccmd
+REQUIRES = nspr dbm seccmd
 
 PROGRAM = newuser
 
