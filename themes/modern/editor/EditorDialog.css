@@ -30,7 +30,7 @@
 titledbox {
   margin:         2px 5px; 4px; 5px;
   padding-top:    2px;
-  padding-bottom: 10px;
+  padding-bottom: 4px;
 }
 
 .MinWidth5em {
@@ -78,6 +78,13 @@ titledbox {
  width: 1em;
 }
 
+/* Use this with groove-thin in dialogs 
+   to add margins to top and bottom
+*/
+.tb-margin {
+  margin-top    : 6px;
+  margin-bottom : 6px;
+}
 .color-well {
   width:20px;
   height: 16px; 
@@ -148,12 +155,12 @@ tree.list {
   list-style-image: url(chrome://global/skin/scroll-down.gif);
   /* bug 9459 - changing button text doesn't resize width.
      This covers that problem, but we want this size anyway */
-  min-width: 10em;
+  min-width: 12em;
 }
 
 #MoreFewerButton[more="1"] {
   list-style-image: url(chrome://global/skin/scroll-up.gif);
-  min-width: 10em;
+  min-width: 12em;
 }
 
 #PreviousButton {
@@ -235,6 +242,26 @@ tree.list {
 	list-style-image:url("chrome://editor/skin/images/img-align-left.gif");
 }
 
+/* Don't change width/height of these without changing values in 
+  GetOriginalWidth(), EdImageProps.js
+*/    
+#preview-image-box {
+  border: 1px inset #CCCCCC;
+  width      : 82px;
+  max-width  : 82px;
+  min-width  : 82px;
+  height     : 52px;
+  max-height : 52px;
+  min-height : 52px;
+  margin     : 6px 5px 6px 5px;
+  overflow   : hidden;
+}
+
+#preview-image-holder {
+  padding : 0px;
+  margin  : 0px;
+}
+
 /* Rest are from Ben Goodger for Advanced Edit dialog 
    These need reviewing and eliminate all but essential attributes */
 /* Have made some mods and eliminated some unnecessary portions. 
@@ -254,14 +281,17 @@ tree.AttributesTree {
 }
 
 tree.AttributesTree > treechildren > treeitem > treerow > treecell.value {
-    padding-left    : 0px;
-    padding-top     : 0px;
-    padding-bottom  : 0px;
-    padding-right   : 0px;
-    margin-left     : 0px;
+    padding     : 0px 0px 0px 2px;
+    margin-left : 0px;
 }
 
-input.AttributesCell {
+/* Selection color for "name" column */
+treeitem.ae-selection[selected="true"] > treerow { 
+  color : inherit;
+  background-color : #DDDDDD;
+}
+
+.AttributesCell {
   border: none;
   width: 100%;
   background-color: #FFFFFF;
@@ -272,8 +302,8 @@ input.AttributesCell {
   width: 100%;
 }
 
-treecell > input {
-  margin: 0px;
-  background-color: #E5E5E5 ! important;
-}
 
+/* Why is default padding so strict! */
+.treecell-header {
+  padding : 1px 1px 1px 4px;
+}
