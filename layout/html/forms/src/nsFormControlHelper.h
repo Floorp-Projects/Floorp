@@ -160,7 +160,7 @@ public:
     eHTMLTextWrap_Unknown = 0,
     eHTMLTextWrap_Off     = 1,
     eHTMLTextWrap_Hard    = 2,
-    eHTMLTextWrap_Soft    = 3,
+    eHTMLTextWrap_Soft    = 3
   } nsHTMLTextWrap;
 
   /** returns the value of the "wrap" property in aOutValue
