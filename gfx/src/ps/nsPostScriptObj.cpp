@@ -38,6 +38,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsReadableUtils.h"
 
 #include "nsICharsetAlias.h"
 #include "nsIURI.h"
@@ -128,6 +129,7 @@ nsPostScriptObj::nsPostScriptObj()
           (nsISupports**) &gPrefs);
 
 	gLangGroups = new nsHashtable();
+  mTitle = nsnull;
 }
 
 /** ---------------------------------------------------
@@ -157,6 +159,10 @@ nsPostScriptObj::~nsPostScriptObj()
   }
 #endif
   // Cleanup things allocated along the way
+  if (nsnull != mTitle){
+    nsMemory::Free(mTitle);
+  }
+
   if (nsnull != mPrintContext){
     if (nsnull != mPrintContext->prInfo){
       delete mPrintContext->prInfo;
@@ -187,7 +193,7 @@ nsPostScriptObj::~nsPostScriptObj()
  *	@update 2/1/99 dwc
  */
 nsresult 
-nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
+nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
 {
   PRBool isGray, isAPrinter, isFirstPageFirst;
   int printSize;
@@ -312,7 +318,12 @@ printf( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSe
     pi->pt_size = 0;		              // Size of above table 
     pi->n_pages = 0;	        	      // # of valid entries in above table 
 
-    pi->doc_title="Test Title";	      // best guess at title 
+    mTitle = nsnull;
+    if(nsnull != aTitle){
+      mTitle = ToNewCString(nsLiteralString(aTitle));
+    }
+
+    pi->doc_title = mTitle;
     pi->doc_width = 0;	              // Total document width 
     pi->doc_height = 0;	              // Total document height 
 

@@ -313,7 +313,7 @@ NS_IMETHODIMP nsDeviceContextPS::BeginDocument(PRUnichar * aTitle)
     mPSObj = new nsPostScriptObj();  
     res = mSpec->QueryInterface(kIDeviceContextSpecPSIID, (void **) &psSpec);
     if ( res == NS_OK ) {
-      res = mPSObj->Init(psSpec);
+      res = mPSObj->Init(psSpec,aTitle);
     }
   }
   return res;
