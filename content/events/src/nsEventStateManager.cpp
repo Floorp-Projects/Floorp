@@ -442,7 +442,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // focused element in its focus memory, then restore the focus to those
       // objects.
       EnsureDocument(aPresContext);
-
+#ifdef DEBUG_hyatt
+      printf("ESM: GOT ACTIVATE.\n");
+#endif
       nsCOMPtr<nsIFocusController> focusController;
       nsCOMPtr<nsIDOMElement> focusedElement;
       nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
@@ -459,6 +461,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         focusController->GetFocusedElement(getter_AddRefs(focusedElement));
 
         focusController->SetSuppressFocusScroll(PR_TRUE);
+        focusController->SetActive(PR_TRUE);
       }
 
 	    if (!focusedWindow) {
@@ -489,8 +492,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       }
 
       if (focusController) {
-        focusController->SetActive(PR_TRUE);
-        
         PRBool isSuppressed;
         focusController->GetSuppressFocus(&isSuppressed);
         while(isSuppressed){
