@@ -21,6 +21,11 @@
  */
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIControllers.h"
+#include "nsEditorController.h"
+#include "nsRDFCID.h"
+#include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
@@ -51,8 +56,10 @@ static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
 static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
+static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 class nsHTMLInputElement : public nsIDOMHTMLInputElement,
+                           public nsIDOMNSHTMLInputElement,
                            public nsIScriptObjectOwner,
                            public nsIDOMEventReceiver,
                            public nsIHTMLContent,
@@ -153,6 +160,10 @@ public:
   NS_IMETHOD Select();
   NS_IMETHOD Click();
 
+
+  // nsIDOMNSHTMLInputElement
+  NS_DECL_IDOMNSHTMLINPUTELEMENT
+
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
 
@@ -179,6 +190,7 @@ protected:
   nsIForm*                 mForm;
   PRInt32                  mType;
   PRBool                   mSkipFocusEvent;
+  nsCOMPtr<nsIControllers> mControllers;
 
   PRBool IsImage() const {
     nsAutoString tmp;
@@ -232,6 +244,11 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLInputElementIID)) {
     *aInstancePtr = (void*)(nsIDOMHTMLInputElement*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsIDOMNSHTMLInputElement::GetIID())) {
+    *aInstancePtr = (void*)(nsIDOMNSHTMLInputElement*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -953,3 +970,41 @@ nsHTMLInputElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 #endif
   return NS_OK;
 }
+
+// Controllers Methods
+NS_IMETHODIMP
+nsHTMLInputElement::GetControllers(nsIControllers** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  PRInt32 type;
+  GetType(&type);
+
+  //XXX: what about type "file"?
+  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type)
+  {
+    if (!mControllers)
+    {
+      NS_ENSURE_SUCCESS (
+        nsComponentManager::CreateInstance(kXULControllersCID,
+                                           nsnull,
+                                           NS_GET_IID(nsIControllers),
+                                           getter_AddRefs(mControllers)),
+        NS_ERROR_FAILURE);
+      if (!mControllers) { return NS_ERROR_NULL_POINTER; }
+
+      nsEditorController *controller = new nsEditorController();
+      if (!controller) { return NS_ERROR_NULL_POINTER; }
+      nsCOMPtr<nsIController> iController = do_QueryInterface(controller);
+      if (!iController) { return NS_ERROR_NULL_POINTER; }
+      NS_ADDREF(controller);
+      controller->SetContent(this);
+      mControllers->AppendController(iController);
+    }
+  }
+
+  *aResult = mControllers;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+

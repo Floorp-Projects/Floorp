@@ -70,44 +70,53 @@ NS_IMETHODIMP nsEditorController::IsCommandEnabled(const PRUnichar *aCommand, PR
 
   nsCOMPtr<nsIEditor> editor;
   NS_ENSURE_SUCCESS(GetEditor(getter_AddRefs(editor)), NS_ERROR_FAILURE);
-  if (!editor)
-  { // XXX: what does it mean if there is no editor?  It means we've never had focus
-    return NS_OK;
-  }
+  // a null editor is a legal state
 
   if (PR_TRUE==mUndoString.Equals(aCommand))
   { // we can undo if the editor says we can undo
-    PRBool isEnabled;
-    NS_ENSURE_SUCCESS(editor->CanUndo(isEnabled, *aResult), NS_ERROR_FAILURE);
+    if (editor)
+    {
+      PRBool isEnabled;
+      NS_ENSURE_SUCCESS(editor->CanUndo(isEnabled, *aResult), NS_ERROR_FAILURE);
+    }
   }
   else if (PR_TRUE==mRedoString.Equals(aCommand))
   { // we can redo if the editor says we can undo
-    PRBool isEnabled;
-    NS_ENSURE_SUCCESS(editor->CanRedo(isEnabled, *aResult), NS_ERROR_FAILURE);
+    if (editor)
+    {
+      PRBool isEnabled;
+      NS_ENSURE_SUCCESS(editor->CanRedo(isEnabled, *aResult), NS_ERROR_FAILURE);
+    }
   }
   else if (PR_TRUE==mCutString.Equals(aCommand))
   { // we can cut if the editor has a non-collapsed selection and is not readonly
-    nsCOMPtr<nsIDOMSelection> selection;
-    NS_ENSURE_SUCCESS(editor->GetSelection(getter_AddRefs(selection)), NS_ERROR_FAILURE);
-    if (selection)
+    if (editor)
     {
-      PRBool collapsed;
-      NS_ENSURE_SUCCESS(selection->GetIsCollapsed(&collapsed), NS_ERROR_FAILURE);
-      if ((PR_FALSE==collapsed) && (PR_TRUE==IsEnabled())) {
-        *aResult = PR_TRUE;
+      nsCOMPtr<nsIDOMSelection> selection;
+      NS_ENSURE_SUCCESS(editor->GetSelection(getter_AddRefs(selection)), NS_ERROR_FAILURE);
+      if (selection)
+      {
+        PRBool collapsed;
+        NS_ENSURE_SUCCESS(selection->GetIsCollapsed(&collapsed), NS_ERROR_FAILURE);
+        if ((PR_FALSE==collapsed) && (PR_TRUE==IsEnabled())) {
+          *aResult = PR_TRUE;
+        }
       }
     }
   }
   else if (PR_TRUE==mCopyString.Equals(aCommand))
   { // we can copy if the editor has a non-collapsed selection
-    nsCOMPtr<nsIDOMSelection> selection;
-    NS_ENSURE_SUCCESS(editor->GetSelection(getter_AddRefs(selection)), NS_ERROR_FAILURE);
-    if (selection)
+    if (editor)
     {
-      PRBool collapsed;
-      NS_ENSURE_SUCCESS(selection->GetIsCollapsed(&collapsed), NS_ERROR_FAILURE);
-      if (PR_FALSE==collapsed) {
-        *aResult = PR_TRUE;
+      nsCOMPtr<nsIDOMSelection> selection;
+      NS_ENSURE_SUCCESS(editor->GetSelection(getter_AddRefs(selection)), NS_ERROR_FAILURE);
+      if (selection)
+      {
+        PRBool collapsed;
+        NS_ENSURE_SUCCESS(selection->GetIsCollapsed(&collapsed), NS_ERROR_FAILURE);
+        if (PR_FALSE==collapsed) {
+          *aResult = PR_TRUE;
+        }
       }
     }
   }
@@ -157,7 +166,8 @@ NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
   nsCOMPtr<nsIEditor> editor;
   NS_ENSURE_SUCCESS(GetEditor(getter_AddRefs(editor)), NS_ERROR_FAILURE);
   if (!editor)
-  { // XXX: what does it mean if there is no editor?  It means we've never had focus, so we can't do anything
+  { // Q: What does it mean if there is no editor?  
+    // A: It means we've never had focus, so we can't do anything
     return NS_OK;
   }
 
@@ -246,4 +256,3 @@ PRBool nsEditorController::IsEnabled()
       check eEditorReadonlyBit and eEditorDisabledBit
    */
 }
-
