@@ -152,13 +152,12 @@ nsTransactionItem::Redo()
 {
   nsresult result;
 
-  if (!mTransaction)
-    return NS_OK;
+  if (mTransaction) {
+    result = mTransaction->Redo();
 
-  result = mTransaction->Redo();
-
-  if (!NS_SUCCEEDED(result))
-    return result;
+    if (!NS_SUCCEEDED(result))
+      return result;
+  }
 
   result = RedoChildren();
 
