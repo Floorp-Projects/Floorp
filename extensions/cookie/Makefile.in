@@ -42,6 +42,7 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  windowwatcher \
 		  docshell \
+		  appshell \
 		  $(NULL)
 
 ifdef ENABLE_TESTS
@@ -73,7 +74,6 @@ XPIDLSRCS	= \
 		nsICookieConsent.idl \
 		nsIImgManager.idl \
 		nsIPermissionManager.idl \
-		nsIPopupWindowManager.idl \
 		nsIPermission.idl \
                 nsICookieAcceptDialog.idl \
 		$(NULL)

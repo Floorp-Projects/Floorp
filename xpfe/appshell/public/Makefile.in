@@ -46,6 +46,7 @@ XPIDLSRCS	= \
 		nsIUserInfo.idl \
 		nsITimingService.idl \
 		nsINativeAppSupport.idl \
+		nsIPopupWindowManager.idl \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
