@@ -1880,14 +1880,21 @@ nsComponentManagerImpl::FreeLibraries(void)
 nsresult
 nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr)
 {
+    nsresult rv = NS_OK;
+
     PR_EnterMonitor(mMon);
     	
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
            ("nsComponentManager: Unloading Libraries."));
 
+    // XXX UnloadAll the loaders
+
+    // UnloadAll the native loader
+    rv = mNativeComponentLoader->UnloadAll(NS_Timer);
+
     PR_ExitMonitor(mMon);
 
-    return NS_OK;
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
