@@ -158,7 +158,7 @@
        
        (rule :disjunction ((gen-matcher (-> (integer) matcher)) (count-parens integer))
          (production :disjunction (:alternative) disjunction-one
-           (gen-matcher (gen-matcher :alternative))
+           ((gen-matcher paren-index) (return ((gen-matcher :alternative) paren-index)))
            (count-parens (count-parens :alternative)))
          (production :disjunction (:alternative #\| :disjunction) disjunction-more
            ((gen-matcher paren-index)
@@ -210,7 +210,7 @@
             (return m))
            (count-parens 0))
          (production :term (:atom) term-atom
-           (gen-matcher (gen-matcher :atom))
+           ((gen-matcher paren-index) (return ((gen-matcher :atom) paren-index)))
            (count-parens (count-parens :atom)))
          (production :term (:atom :quantifier) term-quantified-atom
            ((gen-matcher paren-index)
@@ -361,7 +361,7 @@
             (return m))
            (count-parens 0))
          (production :atom (#\\ :atom-escape) atom-atom-escape
-           (gen-matcher (gen-matcher :atom-escape))
+           ((gen-matcher paren-index) (return ((gen-matcher :atom-escape) paren-index)))
            (count-parens 0))
          (production :atom (:character-class) atom-character-class
            ((gen-matcher (paren-index :unused))
@@ -381,7 +381,7 @@
             (return m2))
            (count-parens (+ (count-parens :disjunction) 1)))
          (production :atom (#\( #\? #\: :disjunction #\)) atom-non-capturing-parentheses
-           (gen-matcher (gen-matcher :disjunction))
+           ((gen-matcher paren-index) (return ((gen-matcher :disjunction) paren-index)))
            (count-parens (count-parens :disjunction)))
          (production :atom (#\( #\? #\= :disjunction #\)) atom-positive-lookahead
            ((gen-matcher paren-index)

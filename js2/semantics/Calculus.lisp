@@ -27,7 +27,7 @@
 (defvar *trace-variables* nil)
 
 
-#+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (production . 3) (rule . 2) (function . 2)
+#+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
                              (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
                              (var . 2) (const . 2) (rwhen . 1) (while . 1) (:narrow . 1) (:select . 1)
                              (let-local-var . 2)))
@@ -839,7 +839,7 @@
 ;;;   :action        list of (grammar-info . grammar-symbol) that declare this action if this identifier is an action name
 ;;;
 ;;;   :depict-command           depictor function ((markup-stream world depict-env . form-arg-list) -> void)
-;;;   :depict-statement         depictor function ((markup-stream world . form-annotated-arg-list) -> void)
+;;;   :depict-statement         depictor function ((markup-stream world semicolon last-paragraph-style . form-annotated-arg-list) -> void)
 ;;;   :depict-special-form      depictor function ((markup-stream world level . form-annotated-arg-list) -> void)
 ;;;   :depict-type-constructor  depictor function ((markup-stream world level . form-arg-list) -> void)
 ;;;
@@ -4209,22 +4209,38 @@
       (error "Grammar needed"))))
 
 
-; (declare-action <action-name> <general-grammar-symbol> <type> <n-productions>)
-(defun scan-declare-action (world grammar-info-var action-name general-grammar-symbol-source type-expr n-productions)
-  (declare (ignore n-productions))
+; (declare-action <action-name> <general-grammar-symbol> <type> <mode> <parameter-list> <command> ... <command>)
+; <mode> is one of:
+;    :hide      Don't depict this action declaration because it's for a hidden production
+;    :singleton Don't depict this action declaration because it contains a singleton production
+;    :action    Depict this action declaration; all corresponding actions will be depicted by depict-action;
+;    :actfun    Depict this action declaration; all corresponding actions will be depicted by depict-actfun;
+; <parameter-list> contains the names of the action parameters when <mode> is :actfun.
+(defun scan-declare-action (world grammar-info-var action-name general-grammar-symbol-source type-expr mode parameter-list &rest commands)
+  (declare (ignore parameter-list))
+  (unless (member mode '(:hide :singleton :action :actfun))
+    (error "Bad declare-action mode ~S" mode))
   (let* ((grammar (checked-grammar grammar-info-var))
          (action-symbol (scan-name world action-name))
          (general-grammar-symbol (grammar-parametrization-intern grammar general-grammar-symbol-source)))
     (declare-action grammar general-grammar-symbol action-symbol type-expr)
     (dolist (grammar-symbol (general-grammar-symbol-instances grammar general-grammar-symbol))
       (push (cons (car grammar-info-var) grammar-symbol) (symbol-action action-symbol)))
-    (export-symbol action-symbol)))
+    (export-symbol action-symbol))
+  (scan-commands world grammar-info-var commands))
 
 
-; (action <action-name> <production-name> <type> <n-productions> <value>)
-; (actfun <action-name> <production-name> <type> <n-productions> <value>)
-(defun scan-action (world grammar-info-var action-name production-name type-expr n-productions value-expr)
-  (declare (ignore n-productions))
+; (action <action-name> <production-name> <type> <mode> <value>)
+; (actfun <action-name> <production-name> <type> <mode> <value>)
+; <mode> is one of:
+;    :hide      Don't depict this action;
+;    :singleton Depict this action along with its declaration;
+;    :first     Depict this action, which is the first in the rule
+;    :middle    Depict this action, which is neither the first nor the last in the rule
+;    :last      Depict this action, which is the last in the rule
+(defun scan-action (world grammar-info-var action-name production-name type-expr mode value-expr)
+  (unless (member mode '(:hide :singleton :first :middle :last))
+    (error "Bad action mode ~S" mode))
   (let ((grammar (checked-grammar grammar-info-var))
         (action-symbol (world-intern world action-name)))
     (define-action grammar production-name action-symbol type-expr value-expr)))
@@ -4243,6 +4259,7 @@
 (defparameter *default-specials*
   '((:preprocess
      (? preprocess-?)
+     (declare-action preprocess-declare-action)
      (define preprocess-define)
      (action preprocess-action)
      (grammar preprocess-grammar)
@@ -4920,6 +4937,17 @@
          nil)))))
 
 
+; (declare-action <action-name> <general-grammar-symbol> <type> <mode> <parameter-list> <command> ... <command>)
+;   ==>
+; (declare-action <action-name> <general-grammar-symbol> <type> <mode> <parameter-list> <command> ... <command>)
+(defun preprocess-declare-action (preprocessor-state command action-name general-grammar-symbol-source type-expr mode parameter-list &rest commands)
+  (declare (ignore command))
+  (values
+   (list (list* 'declare-action action-name general-grammar-symbol-source type-expr mode parameter-list
+                (preprocess-list preprocessor-state commands)))
+   nil))
+
+
 ; commands is a list of commands and/or (? <conditional> ...), where the ... is a list of commands.
 ; Call f on each non-deleted command, passing it that command and the current value of highlight.
 ; f returns a list of preprocessed commands; return the destructive concatenation of these lists.
@@ -4932,7 +4960,7 @@
            (let* ((commands (cddr command))
                   (new-highlight (resolve-conditional (preprocessor-state-world preprocessor-state) (second command))))
              (cond
-              ((eq new-highlight 'delete))
+              ((eq new-highlight 'delete) nil)
               ((eq new-highlight highlight) (each-preprocessed-command f preprocessor-state commands new-highlight))
               (t (list (list* '? (second command) (each-preprocessed-command f preprocessor-state commands new-highlight)))))))
          (funcall f command highlight)))
@@ -4961,15 +4989,15 @@
    nil))
 
 
-; (action <action-name> <production-name> <type> <n-productions> <value>)
+; (action <action-name> <production-name> <type> <mode> <value>)
 ;   ==>
-; (action <action-name> <production-name> <type> <n-productions> <value>)
+; (action <action-name> <production-name> <type> <mode> <value>)
 ;
-; (action (<action-name> (<arg1>) ... (<argn>)) <production-name> (-> (<type1> ... <typen>) <result-type>) <n-productions> . <statements>)
+; (action (<action-name> (<arg1>) ... (<argn>)) <production-name> (-> (<type1> ... <typen>) <result-type>) <mode> . <statements>)
 ;   ==>
-; (actfun <action-name> <production-name> (-> (<type1> ... <typen>) <result-type>) <n-productions>
+; (actfun <action-name> <production-name> (-> (<type1> ... <typen>) <result-type>) <mode>
 ;    (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>))
-(defun preprocess-action (preprocessor-state command action-name production-name type n-productions &rest value-or-statements)
+(defun preprocess-action (preprocessor-state command action-name production-name type mode &rest value-or-statements)
   (declare (ignore command preprocessor-state))
   (values
    (list
@@ -4988,8 +5016,8 @@
                                         (list binding type)))
                                   abbreviated-bindings
                                   ->-parameters)))
-            (list 'actfun action-name production-name type n-productions (list* 'lambda bindings ->-result value-or-statements)))))
-      (list* 'action action-name production-name type n-productions value-or-statements)))
+            (list 'actfun action-name production-name type mode (list* 'lambda bindings ->-result value-or-statements)))))
+      (list* 'action action-name production-name type mode value-or-statements)))
    nil))
 
 
@@ -5068,27 +5096,19 @@
           nil))
 
 
-; (production <lhs> <rhs> <name> (<action-spec-1> <type-1> . <body-1>) ... (<action-spec-n> <type-n> . <body-n>))
+; (production <lhs> <rhs> <name>)
 ;   ==>
 ; grammar:
 ;   (<lhs> <rhs> <name> <current-highlight>)
 ; commands:
 ;   (%rule <lhs>)
-;   (action <action-spec-1> <name> <type-1> 1 . <body-1>)
-;   ...
-;   (action <action-spec-n> <name> <type-n> 1 . <body-n>)
-(defun preprocess-production (preprocessor-state command lhs rhs name &rest actions)
+(defun preprocess-production (preprocessor-state command lhs rhs name)
   (declare (ignore command))
-  (assert-type actions (list (cons t (cons t t))))
   (preprocess-ensure-grammar preprocessor-state)
   (push (list lhs rhs name (preprocessor-state-highlight preprocessor-state))
         (preprocessor-state-grammar-source-reverse preprocessor-state))
-  (values
-   (cons (list '%rule lhs)
-         (mapcar #'(lambda (action)
-                     (list* 'action (first action) name (second action) 1 (cddr action)))
-                 actions))
-   t))
+  (values (list (list '%rule lhs))
+          t))
 
 
 ; (rule <general-grammar-symbol>
@@ -5105,15 +5125,15 @@
 ;   (%rule <lhs-1>)
 ;   ...
 ;   (%rule <lhs-m>)
-;   (declare-action <action-name-1> <general-grammar-symbol> <type-1> <n-productions>)
-;      (action <action-spec-1-1> <name-1> <type-1> <n-productions> . <body-1-1>)
+;   (declare-action <action-name-1> <general-grammar-symbol> <type-1> <mode> <parameter-list>)
+;      (action <action-spec-1-1> <name-1> <type-1> <mode> . <body-1-1>)
 ;      ...
-;      (action <action-spec-m-1> <name-m> <type-1> <n-productions> . <body-m-1>)
+;      (action <action-spec-m-1> <name-m> <type-1> <mode> . <body-m-1>)
 ;   ...
-;   (declare-action <action-name-n> <general-grammar-symbol> <type-n> <n-productions>)
-;      (action <action-spec-1-n> <name-1> <type-n> <n-productions> . <body-1-n>)
+;   (declare-action <action-name-n> <general-grammar-symbol> <type-n> <mode> <parameter-list>)
+;      (action <action-spec-1-n> <name-1> <type-n> <mode> . <body-1-n>)
 ;      ...
-;      (action <action-spec-m-n> <name-m> <type-n> <n-productions> . <body-m-n>)
+;      (action <action-spec-m-n> <name-m> <type-n> <mode> . <body-m-n>)
 ;
 ; The productions may be enclosed by (? <conditional> ...) preprocessor actions.
 (defun preprocess-rule (preprocessor-state command general-grammar-symbol action-declarations &rest productions)
@@ -5121,16 +5141,26 @@
   (assert-type action-declarations (list (tuple symbol t)))
   (preprocess-ensure-grammar preprocessor-state)
   (labels
-    ((actions-match (action-declarations actions)
-       (or (and (endp action-declarations) (endp actions))
+    ((actions-match (action-declarations parameter-lists actions)
+       (or (and (endp action-declarations) (endp parameter-lists) (endp actions))
            (let ((declared-action-name (caar action-declarations))
-                 (action-name (caar actions)))
+                 (action-name (caar actions))
+                 (parameter-list :value))
              (when (consp action-name)
+               (setq parameter-list (mapcar #'(lambda (arg)
+                                                (if (consp arg)
+                                                  (first arg)
+                                                  arg))
+                                            (rest action-name)))
                (setq action-name (first action-name)))
+             (when (eq (first parameter-lists) t)
+               (setf (first parameter-lists) parameter-list))
              (and (eq declared-action-name action-name)
-                  (actions-match (rest action-declarations) (rest actions)))))))
+                  (equal (first parameter-lists) parameter-list)
+                  (actions-match (rest action-declarations) (rest parameter-lists) (rest actions)))))))
     
     (let* ((n-productions 0)
+           (parameter-lists (make-list (length action-declarations) :initial-element t))
            (commands-reverse
             (nreverse
              (each-preprocessed-command
@@ -5140,29 +5170,43 @@
                         (rhs (third production))
                         (name (assert-type (fourth production) symbol))
                         (actions (assert-type (cddddr production) (list (cons t t)))))
-                    (unless (actions-match action-declarations actions)
-                      (error "Action name mismatch: ~S vs. ~S" action-declarations actions))
+                    (unless (actions-match action-declarations parameter-lists actions)
+                      (error "Action name or parameter list mismatch: ~S vs. ~S" action-declarations actions))
                     (push (list lhs rhs name highlight) (preprocessor-state-grammar-source-reverse preprocessor-state))
                     (incf n-productions)
                     (list (list '%rule lhs))))
               preprocessor-state
               productions
               (preprocessor-state-highlight preprocessor-state)))))
+      (when (= n-productions 0)
+        (error "Empty rule"))
       (dotimes (i (length action-declarations))
-        (let ((action-declaration (nth i action-declarations)))
-          (push (list 'declare-action (first action-declaration) general-grammar-symbol (second action-declaration) n-productions) commands-reverse)
-          (setq commands-reverse
-                (nreconc
+        (let* ((action-declaration (pop action-declarations))
+               (parameter-list (pop parameter-lists))
+               (declare-mode (cond
+                              ((= n-productions 1) :singleton)
+                              ((eq parameter-list :value) :action)
+                              (t (assert-true (listp parameter-list)) :actfun)))
+               (j 0))
+          (push (list*
+                 'declare-action (first action-declaration) general-grammar-symbol (second action-declaration) declare-mode parameter-list
                  (each-preprocessed-command
                   #'(lambda (production highlight)
                       (declare (ignore highlight))
                       (let ((name (fourth production))
-                            (action (nth (+ i 4) production)))
-                        (list (list* 'action (first action) name (second action-declaration) n-productions (rest action)))))
+                            (action (nth (+ i 4) production))
+                            (mode (cond
+                                   ((= n-productions 1) :singleton)
+                                   ((= j 0) :first)
+                                   ((= j (1- n-productions)) :last)
+                                   (t :middle))))
+                        (incf j)
+                        (list (list* 'action (first action) name (second action-declaration) mode (rest action)))))
                   preprocessor-state
                   productions
-                  (preprocessor-state-highlight preprocessor-state))
-                 commands-reverse))))
+                  (preprocessor-state-highlight preprocessor-state)))
+                commands-reverse)
+          (assert-true (= j n-productions))))
       (values (nreverse commands-reverse) t))))
 
 

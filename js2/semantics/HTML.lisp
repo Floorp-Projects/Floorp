@@ -480,11 +480,9 @@
     (:grammar-argument (:nest :nowrap (div (class "grammar-argument"))))
     (:semantic-comment (div (class "semantic-comment")))
     (:algorithm (div (class "algorithm")))
-    (:algorithm-next (div (class "algorithm-next")))
     (:algorithm-stmt (div (class "algorithm-stmt")))
-    (:algorithm-stmt-narrow :algorithm-stmt)
-    (:algorithm-next-stmt (div (class "algorithm-next-stmt")))
     ((:level 4) (div (class "lvl")))
+    ((:level-wide 4) (div (class "lvl-wide")))
     (:statement (div (class "stmt")))
     (:statement-last :statement)
     

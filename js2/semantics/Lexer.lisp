@@ -639,7 +639,7 @@
                  (production-number 0))
             (dolist (action (charclass-actions charclass))
               (let ((lexer-action (cdr action)))
-                (push (list 'declare-action (car action) nonterminal-source (lexer-action-type-expr lexer-action) 1) commands)))
+                (push (list 'declare-action (car action) nonterminal-source (lexer-action-type-expr lexer-action) :hide nil) commands)))
             (do ((charset (charclass-charset charclass)))
                 ((charset-empty? charset))
               (let* ((partition-name (if (charset-infinite? charset)
@@ -662,7 +662,7 @@
                                      ((eql t) 'true)
                                      (t (error "Cannot infer the type of ~S's result ~S" lexer-action-function result))))
                                  (list (lexer-action-name lexer-action) partition-name))))
-                    (push (list 'action (car action) production-name (lexer-action-type-expr lexer-action) 1 body) commands)))
+                    (push (list 'action (car action) production-name (lexer-action-type-expr lexer-action) :hide body) commands)))
                 (setq charset (charset-difference charset partition-charset)))))))
       
       (let ((partition-commands
@@ -671,8 +671,8 @@
                   (mapcan #'(lambda (lexer-action)
                               (let ((lexer-action-name (lexer-action-name lexer-action)))
                                 (list
-                                 (list 'declare-action lexer-action-name partition-name (lexer-action-type-expr lexer-action) 1)
-                                 (list 'terminal-action lexer-action-name partition-name (lexer-action-function lexer-action)))))
+                                 (list 'declare-action lexer-action-name partition-name (lexer-action-type-expr lexer-action) :hide nil
+                                       (list 'terminal-action lexer-action-name partition-name (lexer-action-function lexer-action))))))
                           (partition-lexer-actions (gethash partition-name (lexer-partitions lexer)))))
               (lexer-partition-names lexer))))
         (values

@@ -35,11 +35,10 @@ DT {font-style: italic; margin-top: 3pt}
 
 .stmt {margin-left: 36pt; text-indent: -36pt}
 .lvl {margin-left: 18pt}
+.lvl-wide {margin-left: 18pt; margin-bottom: 6pt}
 .algorithm {margin-left: 9pt; margin-top: 6pt; margin-bottom: 6pt}
-.algorithm-next {margin-left: 27pt; margin-bottom: 6pt}
 .algorithm-indent {margin-left: 36pt; margin-top: 6pt; margin-bottom: 6pt}
 .algorithm-stmt {margin-left: 45pt; text-indent: -36pt; margin-top: 6pt; margin-bottom: 6pt}
-.algorithm-next-stmt {margin-left: 63pt; text-indent: -36pt; margin-bottom: 6pt}
 
 .symbol {font-family: Symbol}
 .unicode {font-family: "Lucida Sans Unicode", serif}

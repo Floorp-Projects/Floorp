@@ -344,8 +344,7 @@
     ("grammar-argument" . :grammar-argument)
     ("indent" . :body-text)
     ("operator-heading" . :heading4)
-    ("algorithm-stmt" . :algorithm-stmt)
-    ("algorithm-next-stmt" . :algorithm-next-stmt)))
+    ("algorithm-stmt" . :algorithm-stmt)))
 
 
 (defun class-to-paragraph-style (element)
@@ -392,10 +391,10 @@
    ((equal class "algorithm")
     (let ((*algorithm-level* 0))
       (emit-paragraph-elements markup-stream element)))
-   ((or (equal class "algorithm-next") (equal class "algorithm-indent"))
+   ((equal class "algorithm-indent")
     (let ((*algorithm-level* 1))
       (emit-paragraph-elements markup-stream element)))
-   ((equal class "lvl")
+   ((or (equal class "lvl") (equal class "lvl-wide"))
     (let ((*algorithm-level* (1+ *algorithm-level*)))
       (emit-paragraph-elements markup-stream element)))
    ((equal class "stmt")
@@ -514,6 +513,8 @@
 
 (translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:stages.html"
                        "HTML-To-RTF/Stages.rtf" "Stages")
+(translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:es4:core:expressions.html"
+                       "HTML-To-RTF/Expressions.rtf" "Expressions")
 (translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:notation.html"
                        "HTML-To-RTF/FormalNotation.rtf" "Formal Notation")
 |#
