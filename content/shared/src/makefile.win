@@ -33,6 +33,7 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  unicharutil \
 		  layout \
+		  uconv \
 		  gfx \
 		  uconv \
 		  $(NULL)

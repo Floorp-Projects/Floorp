@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  pref \
 		  necko \
+		  uconv \
 		  htmlparser \
 		  unicharutil \
 		  uconv \
