@@ -98,8 +98,10 @@ int main()
     else
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->AddTwoLLs(LL_INIT(0,1),LL_INIT(0,1),&out64)))
+    {
         LL_L2I(tmp32, out64);
         printf("\t1L + 1L = %d\n", (int)tmp32);
+    }
     else
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->MultTwoInts(2,2,&out)))
@@ -107,8 +109,10 @@ int main()
     else
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->MultTwoLLs(LL_INIT(0,2),LL_INIT(0,2),&out64)))
+    {
         LL_L2I(tmp32, out64);
         printf("\t2L * 2L = %d\n", (int)tmp32);
+    }
     else
         printf("\tFAILED");
 
