@@ -2015,11 +2015,6 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
 			// release locale factory
 			NS_RELEASE(localeFactory);
 
-			// and locale name can be taken as below, category should be one of the following 
-			// probably NSILOCALE_COLLATE is appropriate 
-			nsString catagory = "NSILOCALE_COLLATE"; 
-			err = locale->GetCategory(&catagory, &localeName); 
-
 			nsICollationFactory *f;
 
 			err = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
@@ -2029,7 +2024,7 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
 				nsICollation *inst;
 
 				// get a collation interface instance 
-				err = f->CreateCollation(nsnull/*locale*/, &inst); // Temporary: pass null until bug#3867 is fixed
+				err = f->CreateCollation(locale, &inst);
 
 				// release locale, collation factory
 				NS_RELEASE(locale);
@@ -2037,7 +2032,7 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
 
 				if (NS_SUCCEEDED(err) && inst)
 				{
-					err = inst->CreateSortKey( kCollationCaseSensitive, nakedString, resultStr) ;
+					err = inst->CreateSortKey( kCollationCaseInSensitive, nakedString, resultStr) ;
 					NS_RELEASE(inst);
 				}
 			}
