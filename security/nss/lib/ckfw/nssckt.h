@@ -46,7 +46,7 @@
 #define NSSCKT_H
 
 #ifdef DEBUG
-static const char NSSCKT_CVS_ID[] = "@(#) $RCSfile: nssckt.h,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:33 $ $Name:  $";
+static const char NSSCKT_CVS_ID[] = "@(#) $RCSfile: nssckt.h,v $ $Revision: 1.2 $ $Date: 2000/05/09 18:57:58 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "nspr.h"
@@ -84,6 +84,12 @@ typedef CK_BYTE           CK_CHAR;
 
 /* a BYTE-sized Boolean flag */
 typedef CK_BYTE           CK_BBOOL;
+
+/* an unsigned value, at least 16 bits long */
+typedef unsigned short int CK_USHORT;
+
+/* a signed value, the same size as a CK_USHORT */
+typedef short int         CK_SHORT;
 
 /* an unsigned value, at least 32 bits long */
 typedef unsigned long int CK_ULONG;
