@@ -3235,9 +3235,6 @@ int _MD_unix_get_nonblocking_connect_error(int osfd)
             int err;
             _PRSockLen_t optlen = sizeof(err);
 
-            printf("_MD_unix_get_nonblocking_connect_error: "
-                    "Assuming Large TCP/IP Stack -REVISIT- Never Tested!\n");
-
             if (getsockopt(osfd, SOL_SOCKET, SO_ERROR,
                     (char *) &err, &optlen) == -1) {
                 return errno;
