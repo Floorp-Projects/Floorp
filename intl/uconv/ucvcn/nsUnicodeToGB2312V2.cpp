@@ -67,6 +67,7 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
       } else {
         // cannot convert
         res= NS_ERROR_UENC_NOMAPPING;
+        iSrcLength++;   // include length of the unmapped character
         break;
       }
     }
