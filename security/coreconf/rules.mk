@@ -380,19 +380,52 @@ WCCFLAGS1 := $(subst /,\\,$(CFLAGS))
 WCCFLAGS2 := $(subst -I,-i=,$(WCCFLAGS1))
 WCCFLAGS3 := $(subst -D,-d,$(WCCFLAGS2))
 
+# Translate source filenames to absolute paths. This is required for
+# debuggers under Windows & OS/2 to find source files automatically
+
+ifeq (,$(filter-out OS2%,$(OS_TARGET)))
+NEED_ABSOLUTE_PATH := 1
+PWD := $(shell pwd)
+endif
+
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+ifndef NS_USE_GCC
+NEED_ABSOLUTE_PATH := 1
+ifeq (,$(findstring ;,$(PATH)))
+PWD :=  $(subst \,/,$(shell cygpath -w `pwd`))
+else
+PWD := $(shell pwd)
+endif
+endif
+endif
+
+ifdef NEED_ABSOLUTE_PATH
+abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))
+else
+abspath = $(1)
+endif
+
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
 ifdef USE_NT_C_SYNTAX
-	$(CC) -Fo$@ -c $(CFLAGS) $<
+	$(CC) -Fo$@ -c $(CFLAGS) $(call abspath,$<)
+else
+ifdef NEED_ABSOLUTE_PATH
+	$(CC) -o $@ -c $(CFLAGS) $(call abspath,$<)
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
+endif
 endif
 
 $(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 ifdef USE_NT_C_SYNTAX
-	$(CC) -Fo$@ -c $(CFLAGS) $<
+	$(CC) -Fo$@ -c $(CFLAGS) $(call abspath,$<)
+else
+ifdef NEED_ABSOLUTE_PATH
+	$(CC) -o $@ -c $(CFLAGS) $(call abspath,$<)
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
+endif
 endif
 
 ifndef XP_OS2_VACPP
@@ -418,9 +451,13 @@ $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.S
 $(OBJDIR)/$(PROG_PREFIX)%: %.cpp
 	@$(MAKE_OBJDIR)
 ifdef USE_NT_C_SYNTAX
-	$(CCC) -Fo$@ -c $(CFLAGS) $<
+	$(CCC) -Fo$@ -c $(CFLAGS) $(call abspath,$<)
+else
+ifdef NEED_ABSOLUTE_PATH
+	$(CCC) -o $@ -c $(CFLAGS) $(call abspath,$<)
 else
 	$(CCC) -o $@ -c $(CFLAGS) $<
+endif
 endif
 
 #
@@ -438,9 +475,13 @@ ifdef STRICT_CPLUSPLUS_SUFFIX
 	rm -f $(OBJDIR)/t_$*.cc
 else
 ifdef USE_NT_C_SYNTAX
-	$(CCC) -Fo$@ -c $(CFLAGS) $<
+	$(CCC) -Fo$@ -c $(CFLAGS) $(call abspath,$<)
+else
+ifdef NEED_ABSOLUTE_PATH
+	$(CCC) -o $@ -c $(CFLAGS) $(call abspath,$<)
 else
 	$(CCC) -o $@ -c $(CFLAGS) $<
+endif
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
