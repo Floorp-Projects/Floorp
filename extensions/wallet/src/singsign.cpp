@@ -2042,14 +2042,14 @@ si_SaveSignonDataLocked(PRBool fullSave) {
   if (fullSave) {
     saveCountP += 16; /* preserve low order four bits which designate the file type */
   }
-  buffer.AppendWithConversion(PRInt32(saveCountP),10);
+  buffer.AppendInt(PRInt32(saveCountP),10);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave, 0, 0, PR_TRUE);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave, 0, 0, PR_TRUE);
 
   /* writeCount */
 
   buffer.SetLength(0);
-  buffer.AppendWithConversion(PRInt32(writeCount),10);
+  buffer.AppendInt(PRInt32(writeCount),10);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave, 0, 0, PR_TRUE);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave, 0, 0, PR_TRUE);
 
@@ -2914,9 +2914,9 @@ SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
           break;
         }
       }
-      buffer += BREAK;
+      buffer.AppendWithConversion(BREAK);
       buffer.AppendWithConversion("<OPTION value=");
-      buffer.AppendWithConversion(signonNum, 10);
+      buffer.AppendInt(signonNum, 10);
       buffer.AppendWithConversion(">");
       buffer.AppendWithConversion(url->URLName);
       buffer.AppendWithConversion(":");
@@ -2941,9 +2941,9 @@ SINGSIGN_GetRejectListForViewer(nsAutoString& aRejectList)
   PRInt32 rejectCount = LIST_COUNT(si_reject_list);
   for (PRInt32 i=0; i<rejectCount; i++) {
     reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
-    buffer += BREAK;
+    buffer.AppendWithConversion(BREAK);
     buffer.AppendWithConversion("<OPTION value=");
-    buffer.AppendWithConversion(rejectNum, 10);
+    buffer.AppendInt(rejectNum, 10);
     buffer.AppendWithConversion(">");
     buffer.AppendWithConversion(reject->URLName);
     buffer.AppendWithConversion(":");

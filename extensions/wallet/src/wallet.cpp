@@ -1995,13 +1995,13 @@ wallet_PutHeader(nsOutputFileStream strm, nsKeyType saveCount, nsKeyType writeCo
 
   /* saveCount */
   nsAutoString buffer;
-  buffer.AppendWithConversion(PRInt32(saveCount),10);
+  buffer.AppendInt(PRInt32(saveCount),10);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
 
   /* writeCount */
   buffer.SetLength(0);
-  buffer.AppendWithConversion(PRInt32(writeCount),10);
+  buffer.AppendInt(PRInt32(writeCount),10);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
 
@@ -3054,20 +3054,20 @@ WLLT_GetPrefillListForViewer(nsAutoString& aPrefillList)
     ptr = NS_STATIC_CAST(wallet_PrefillElement*, wallet_list->ElementAt(i));
     schema = ptr->schema->ToNewUnicode();
     value = ptr->value->ToNewUnicode();
-    buffer += BREAK;
-    buffer.AppendWithConversion(ptr->count,10);
-    buffer += BREAK;
+    buffer.AppendWithConversion(BREAK);
+    buffer.AppendInt(ptr->count,10);
+    buffer.AppendWithConversion(BREAK);
     buffer += schema;
-    buffer += BREAK;
+    buffer.AppendWithConversion(BREAK);
     buffer += value;
     Recycle(schema);
     Recycle(value);
   }
 
   PRUnichar * urlUnichar = wallet_url.ToNewUnicode();
-  buffer += BREAK;
-  buffer += (PRInt32)wallet_list;
-  buffer += BREAK;
+  buffer.AppendWithConversion(BREAK);
+  buffer.AppendInt(PRInt32(wallet_list));
+  buffer.AppendWithConversion(BREAK);
   buffer += urlUnichar;
   Recycle(urlUnichar);
 
@@ -3300,9 +3300,9 @@ WLLT_GetNopreviewListForViewer(nsAutoString& aNopreviewList)
   for (PRInt32 i=0; i<count; i++) {
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2.CharAt(NO_PREVIEW) == 'y') {
-      buffer += BREAK;
+      buffer.AppendWithConversion(BREAK);
       buffer.AppendWithConversion("<OPTION value=");
-      buffer.AppendWithConversion(nopreviewNum, 10);
+      buffer.AppendInt(nopreviewNum, 10);
       buffer.AppendWithConversion(">");
       buffer += url->item1;
       buffer.AppendWithConversion("</OPTION>\n");
@@ -3324,9 +3324,9 @@ WLLT_GetNocaptureListForViewer(nsAutoString& aNocaptureList)
   for (PRInt32 i=0; i<count; i++) {
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2.CharAt(NO_CAPTURE) == 'y') {
-      buffer += BREAK;
+      buffer.AppendWithConversion(BREAK);
       buffer.AppendWithConversion("<OPTION value=");
-      buffer.AppendWithConversion(nocaptureNum, 10);
+      buffer.AppendInt(nocaptureNum, 10);
       buffer.AppendWithConversion(">");
       buffer += url->item1;
       buffer.AppendWithConversion("</OPTION>\n");
@@ -3407,19 +3407,19 @@ WLLT_PreEdit(nsAutoString& walletList) {
   for (PRInt32 i=0; i<count; i++) {
     ptr = NS_STATIC_CAST(wallet_MapElement*, wallet_SchemaToValue_list->ElementAt(i));
 
-    walletList += ptr->item1; walletList.Append(BREAK);
+    walletList += ptr->item1; walletList.AppendWithConversion(BREAK);
     if (!ptr->item2.IsEmpty()) {
-      walletList += ptr->item2; walletList.Append(BREAK);
+      walletList += ptr->item2; walletList.AppendWithConversion(BREAK);
     } else {
       wallet_Sublist * ptr1;
       PRInt32 count2 = LIST_COUNT(ptr->itemList);
       for (PRInt32 i2=0; i2<count2; i2++) {
         ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i2));
-        walletList += ptr1->item; walletList.Append(BREAK);
+        walletList += ptr1->item; walletList.AppendWithConversion(BREAK);
 
       }
     }
-    walletList += BREAK;
+    walletList.AppendWithConversion(BREAK);
   }
 }
 
