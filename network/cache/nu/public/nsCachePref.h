@@ -41,10 +41,10 @@ public:
 
     enum Refresh 
     {
-        NEVER,
         ONCE,
-        ALWAYS
-    } r;
+        ALWAYS,
+        NEVER
+    };
 
     const PRUint32   BkgSleepTime(void);
     
@@ -66,7 +66,10 @@ public:
     /* Revalidating in background, makes IMS calls in the bkg thread to 
        update cache entries. TODO, this should be at a bigger time period
        than the cache cleanup routine */
-    PRBool           RevalidateInBkg(void);
+    PRBool          RevalidateInBkg(void);
+
+    /* Setup all prefs */
+    void            SetupPrefs(const char* i_Pref);
 
 /*
     NS_IMETHOD              QueryInterface(const nsIID& aIID, 

@@ -39,7 +39,9 @@ public:
 
     // Cache module interface
     PRBool          AddObject(nsCacheObject* io_pObject);
-    
+ 
+    PRUint32        AverageSize(void) const;
+
     PRBool          Contains(nsCacheObject* io_pObject) const;
     PRBool          Contains(const char* i_url) const;
     
@@ -50,15 +52,18 @@ public:
 
     nsStream*       GetStreamFor(const nsCacheObject* i_pObject);
 
-    PRBool          ReduceSizeTo(const PRUint32 i_NewSize);
-
     PRBool          Remove(const char* i_url);
+    PRBool          Remove(nsCacheObject* pObject);
     PRBool          Remove(const PRUint32 i_index);
 
     // To do cleanup set size to zero. Else initialize disk cache
     void            SetSize(const PRUint32 i_size);
 
     PRBool          Revalidate(void);
+
+protected:
+    
+    PRBool          ReduceSizeTo(const PRUint32 i_NewSize);
 
 private:
     enum sync_frequency
@@ -76,4 +81,14 @@ private:
     DB* m_pDB;
 };
 
+inline
+PRUint32 nsDiskModule::AverageSize(void) const
+{
+    MonitorLocker ml((nsDiskModule*)this);
+    if (Entries()>0)
+    {
+        return (PRUint32)(m_SizeInUse/m_Entries);
+    }
+    return 0;
+}
 #endif
