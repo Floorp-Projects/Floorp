@@ -269,14 +269,17 @@ nsIRDFResource*      XULContentSinkImpl::kXUL_element;
 ////////////////////////////////////////////////////////////////////////
 
 XULContentSinkImpl::XULContentSinkImpl()
-    : mDocumentURL(nsnull),
-      mDocumentBaseURL(nsnull),
-      mDataSource(nsnull),
-      mContextStack(nsnull),
-      mText(nsnull),
+    : mText(nsnull),
       mTextLength(0),
       mTextSize(0),
       mConstrainSize(PR_TRUE),
+      mInScript(PR_FALSE),
+      mScriptLineNo(0),
+      mDataSource(nsnull),
+      mState(eXULContentSinkState_InProlog),
+      mContextStack(nsnull),
+      mDocumentURL(nsnull),
+      mDocumentBaseURL(nsnull),
       mHaveSetRootResource(PR_FALSE),
       mDocument(nsnull),
       mParser(nsnull),
@@ -311,47 +314,49 @@ XULContentSinkImpl::XULContentSinkImpl()
 
 XULContentSinkImpl::~XULContentSinkImpl()
 {
-    // There shouldn't be any here except in an error condition
-    PRInt32 index = mNameSpaceStack.Count();
+    {
+        // There shouldn't be any here except in an error condition
+        PRInt32 i = mNameSpaceStack.Count();
 
-    while (0 < index--) {
-        nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[index];
+        while (0 < i--) {
+            nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[i];
 
 #ifdef PR_LOGGING
-        if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
-            nsAutoString uri;
-            nsCOMPtr<nsIAtom> prefixAtom;
+            if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+                nsAutoString uri;
+                nsCOMPtr<nsIAtom> prefixAtom;
 
-            nameSpace->GetNameSpaceURI(uri);
-            nameSpace->GetNameSpacePrefix(*getter_AddRefs(prefixAtom));
+                nameSpace->GetNameSpaceURI(uri);
+                nameSpace->GetNameSpacePrefix(*getter_AddRefs(prefixAtom));
 
-            nsAutoString prefix;
-            if (prefixAtom)
-                prefix = prefixAtom->GetUnicode();
-            else
-                prefix = "<default>";
+                nsAutoString prefix;
+                if (prefixAtom)
+                    prefix = prefixAtom->GetUnicode();
+                else
+                    prefix = "<default>";
 
-            char* prefixStr = prefix.ToNewCString();
-            char* uriStr = uri.ToNewCString();
+                char* prefixStr = prefix.ToNewCString();
+                char* uriStr = uri.ToNewCString();
 
-            PR_LOG(gLog, PR_LOG_ALWAYS,
-                   ("xul: warning: unclosed namespace '%s' (%s)",
-                    prefixStr, uriStr));
+                PR_LOG(gLog, PR_LOG_ALWAYS,
+                       ("xul: warning: unclosed namespace '%s' (%s)",
+                        prefixStr, uriStr));
 
-            delete[] prefixStr;
-            delete[] uriStr;
-        }
+                delete[] prefixStr;
+                delete[] uriStr;
+            }
 #endif
 
-        NS_RELEASE(nameSpace);
+            NS_RELEASE(nameSpace);
+        }
     }
 
     if (mContextStack) {
         // XXX we should never need to do this, but, we'll write the
         // code all the same. If someone left the content stack dirty,
         // pop all the elements off the stack and release them.
-        PRInt32 index = mContextStack->Count();
-        while (0 < index--) {
+        PRInt32 i = mContextStack->Count();
+        while (0 < i--) {
             nsIRDFResource* resource;
             XULContentSinkState state;
             PopResourceAndState(resource, state);
@@ -581,6 +586,7 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
         break;
 
     case eXULContentSinkState_InEpilog:
+    case eXULContentSinkState_InScript:
         PR_ASSERT(0);
         rv = NS_ERROR_UNEXPECTED; // XXX
         break;
@@ -1535,8 +1541,8 @@ XULContentSinkImpl::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
             nsAutoString val;
             PRBool isUndefined;
 
-            PRBool result = context->EvaluateString(aScript, url, aLineNo, 
-                                                    val, &isUndefined);
+            context->EvaluateString(aScript, url, aLineNo, 
+                                    val, &isUndefined);
 #ifdef NECKO
             nsCRT::free(url);
 #endif
@@ -1622,9 +1628,9 @@ XULContentSinkImpl::PopResourceAndState(nsIRDFResource*& rResource,
         return NS_ERROR_NULL_POINTER;
     }
 
-    PRInt32 index = mContextStack->Count() - 1;
-    e = NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(index));
-    mContextStack->RemoveElementAt(index);
+    PRInt32 i = mContextStack->Count() - 1;
+    e = NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(i));
+    mContextStack->RemoveElementAt(i);
 
     // don't bother Release()-ing: call it our implicit AddRef().
     rResource = e->mResource;
@@ -1664,7 +1670,7 @@ XULContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
             continue;
 
         nsAutoString prefix;
-        if (k.Length() >= sizeof(kNameSpaceDef)) {
+        if (k.Length() >= PRInt32(sizeof kNameSpaceDef)) {
             // If the next character is a :, there is a namespace prefix
             PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
             if (':' == next) {
@@ -1723,8 +1729,8 @@ XULContentSinkImpl::GetNameSpaceID(nsIAtom* aPrefix)
     PRInt32 id = kNameSpaceID_Unknown;
   
     if (0 < mNameSpaceStack.Count()) {
-        PRInt32 index = mNameSpaceStack.Count() - 1;
-        nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[index];
+        PRInt32 i = mNameSpaceStack.Count() - 1;
+        nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[i];
         nameSpace->FindNameSpaceID(aPrefix, id);
     }
 
@@ -1735,9 +1741,9 @@ void
 XULContentSinkImpl::PopNameSpaces(void)
 {
     if (0 < mNameSpaceStack.Count()) {
-        PRInt32 index = mNameSpaceStack.Count() - 1;
-        nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[index];
-        mNameSpaceStack.RemoveElementAt(index);
+        PRInt32 i = mNameSpaceStack.Count() - 1;
+        nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[i];
+        mNameSpaceStack.RemoveElementAt(i);
 
         // Releasing the most deeply nested namespace will recursively
         // release intermediate parent namespaces until the next
