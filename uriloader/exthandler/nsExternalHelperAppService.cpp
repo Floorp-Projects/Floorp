@@ -61,9 +61,10 @@ NS_INTERFACE_MAP_BEGIN(nsExternalHelperAppService)
    NS_INTERFACE_MAP_ENTRY(nsIExternalHelperAppService)
    NS_INTERFACE_MAP_ENTRY(nsPIExternalAppLauncher)
    NS_INTERFACE_MAP_ENTRY(nsIExternalProtocolService)
+   NS_INTERFACE_MAP_ENTRY(nsIMIMEService)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-nsExternalHelperAppService::nsExternalHelperAppService()
+nsExternalHelperAppService::nsExternalHelperAppService() : mDataSourceInitialized(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -72,9 +73,14 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
 {
 }
 
-nsresult nsExternalHelperAppService::Init()
+nsresult nsExternalHelperAppService::InitDataSource()
 {
   nsresult rv = NS_OK;
+
+  // don't re-initialize the data source if we've already done so...
+  if (mDataSourceInitialized)
+    return NS_OK;
+
   nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -125,7 +131,8 @@ nsresult nsExternalHelperAppService::Init()
     rdf->GetResource(NC_RDF_ALWAYSASK,     getter_AddRefs(kNC_AlwaysAsk));  
     rdf->GetResource(NC_RDF_PRETTYNAME,    getter_AddRefs(kNC_PrettyName));  
   }
-    
+  
+  mDataSourceInitialized = PR_TRUE;
   return rv;
 }
 
@@ -140,9 +147,10 @@ NS_IMETHODIMP nsExternalHelperAppService::CanHandleContent(const char *aMimeCont
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
                                                     PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
+  InitDataSource();
+
   // (1) try to get a mime info object for the content type....if we don't know anything about the type, then
   // we certainly can't handle it and we'll just return without creating a stream listener.
-
   *aStreamListener = nsnull;
 
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
@@ -192,6 +200,9 @@ nsresult nsExternalHelperAppService::FillTopLevelProperties(const char * aConten
   nsCOMPtr<nsIRDFLiteral> literal;
   const PRUnichar * stringValue;
   
+  rv = InitDataSource();
+  if (NS_FAILED(rv)) return NS_OK;
+
   // set the mime type
   aMIMEInfo->SetMIMEType(aContentType);
   
@@ -236,6 +247,8 @@ nsresult nsExternalHelperAppService::FillLiteralValueFromTarget(nsIRDFResource *
   nsCOMPtr<nsIRDFNode> target;
 
   *aLiteralValue = nsnull;
+  rv = InitDataSource();
+  if (NS_FAILED(rv)) return rv;
 
   mOverRideDataSource->GetTarget(aSource, aProperty, PR_TRUE, getter_AddRefs(target));
   if (target)
@@ -260,6 +273,9 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   nsCOMPtr<nsIRDFLiteral> literal;
   const PRUnichar * stringValue = nsnull;
   nsresult rv = NS_OK;
+
+  rv = InitDataSource();
+  if (NS_FAILED(rv)) return rv;
 
   nsCString contentTypeHandlerNodeName (NC_CONTENT_NODE_HANDLER_PREFIX);
   contentTypeHandlerNodeName.Append(aContentType);
@@ -318,6 +334,9 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
 nsresult nsExternalHelperAppService::GetMIMEInfoForMimeType(const char * aContentType, nsIMIMEInfo ** aMIMEInfo)
 {
   nsresult rv = NS_OK;
+
+  rv = InitDataSource();
+  if (NS_FAILED(rv)) return rv;
 
   // if we have a data source then use the information found in that...
   // if that fails....then try to the old mime service that i'm going to be
@@ -688,4 +707,62 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel()
     mTempFile = nsnull;
   }
   return NS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The following section contains our nsIMIMEService implementation and related methods.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// nsIMIMEService methods
+NS_IMETHODIMP nsExternalHelperAppService::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval) 
+{
+  nsresult rv = NS_OK;
+  // temporary implementation --> call through to original implementation...
+  nsCOMPtr<nsIMIMEService> oldService (do_GetService("component:||netscape|mimeold"));
+  NS_ENSURE_TRUE(oldService, NS_ERROR_FAILURE);
+  
+  return oldService->GetFromExtension(aFileExt, _retval);
+}
+
+
+
+NS_IMETHODIMP nsExternalHelperAppService::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval) 
+{
+  nsresult rv = NS_OK;
+  // temporary implementation --> call through to original implementation...
+  nsCOMPtr<nsIMIMEService> oldService (do_GetService("component:||netscape|mimeold"));
+  NS_ENSURE_TRUE(oldService, NS_ERROR_FAILURE);
+  
+  return oldService->GetFromMIMEType(aMIMEType, _retval);
+}
+
+NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFileExt, char **aContentType) 
+{
+  nsresult rv = NS_OK;
+  // temporary implementation --> call through to original implementation...
+  nsCOMPtr<nsIMIMEService> oldService (do_GetService("component:||netscape|mimeold"));
+  NS_ENSURE_TRUE(oldService, NS_ERROR_FAILURE);
+  
+  return oldService->GetTypeFromExtension(aFileExt, aContentType);  
+}
+
+NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aContentType) 
+{
+  nsresult rv = NS_OK;
+  // temporary implementation --> call through to original implementation...
+  nsCOMPtr<nsIMIMEService> oldService (do_GetService("component:||netscape|mimeold"));
+  NS_ENSURE_TRUE(oldService, NS_ERROR_FAILURE);
+  
+  return oldService->GetTypeFromURI(aURI, aContentType);  
+}
+
+NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile( nsIFile* aFile, char **aContentType )
+{
+  nsresult rv = NS_OK;
+  // temporary implementation --> call through to original implementation...
+  nsCOMPtr<nsIMIMEService> oldService (do_GetService("component:||netscape|mimeold"));
+  NS_ENSURE_TRUE(oldService, NS_ERROR_FAILURE);
+  
+  return oldService->GetTypeFromFile(aFile, aContentType);  
 }

@@ -33,7 +33,6 @@
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
- 	nsExternalHelperAppService::Init();
 }
 
 nsOSHelperAppService::~nsOSHelperAppService()

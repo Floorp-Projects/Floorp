@@ -40,4 +40,7 @@ nsIExternalHelperAppService
 #define NS_EXTERNALPROTOCOLSERVICE_PROGID \
 "component://netscape/uriloader/external-protocol-service"
 
+#define NS_MIMESERVICE_PROGID \
+"component:||netscape|mime"
+
 %}
