@@ -22,6 +22,7 @@
 #include "nsGUIEvent.h"
 #include "nsCOMPtr.h"
 #include "nsIDragSession.h"
+#include <ole2.h>
 
 class nsIDragService;
 class nsIWidget;

@@ -32,8 +32,6 @@
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 
-#include "DDCOMM.h"
-
 #include "nsVoidArray.h"
 #include "nsFileSpec.h"
 

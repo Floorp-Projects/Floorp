@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "Ddcomm.h"
 #include "nsNativeDragSource.h"
 #include <stdio.h>
 

@@ -29,7 +29,6 @@
 
 #include <OLE2.h>
 #include "OLEIDL.H"
-#include "DDCOMM.h" // SET_FORMATETC macro
 
 static const char * MULTI_MIME = "Mozilla/IDataObjectCollectionFormat";
 
