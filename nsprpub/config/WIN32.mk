@@ -116,16 +116,6 @@ endif
 DEFINES += -DWIN32
 
 #
-# On Win95, we use the TlsXXX() interface by default because that
-# allows us to load the NSPR DLL dynamically at run time.
-# If you want to use static thread-local storage (TLS) for better
-# performance, build the NSPR library with USE_STATIC_TLS=1.
-#
-ifeq ($(USE_STATIC_TLS),1)
-DEFINES += -D_PR_USE_STATIC_TLS
-endif
-
-#
 # NSPR uses both fibers and static thread-local storage
 # (i.e., __declspec(thread) variables) on NT.  We need the -GT
 # flag to turn off certain compiler optimizations so that fibers
