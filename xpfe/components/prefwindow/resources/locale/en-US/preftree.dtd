@@ -1,7 +1,5 @@
 <!-- extracted from content/preftree.xul -->
 
-<!ENTITY category.label "Category">
-
 <!--LOCALIZATION NOTE : FILE Lists preferences categories that appear on the left of the preferences dialog -->
 <!ENTITY appear.label "Appearance">
 <!ENTITY fonts.label "Fonts">
