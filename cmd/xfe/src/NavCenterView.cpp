@@ -43,12 +43,16 @@ void ncview_image_complete_cb(XtPointer client_data);
 };
 
 
+#ifdef USE_SELECTOR_BAR
 typedef struct _SelectorCBStruct {
   XFE_NavCenterView *ncview;
   HT_View view;
 } SelectorCBStruct;
 
-
+// Selector bar images list
+/* static */ RDFImageList * 
+XFE_NavCenterView::selectorBarImagesCache = NULL;
+#endif /*USE_SELECTOR_BAR*/
 
 //////////////////////////////////////////////////////////////////////////
 XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
@@ -74,6 +78,7 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 
   setBaseWidget(navCenterMainForm);
 
+#ifdef USE_SELECTOR_BAR
   m_selector = XtVaCreateManagedWidget("selector",
                    xfeToolScrollWidgetClass,
                    navCenterMainForm,
@@ -94,9 +99,7 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   XtVaSetValues(toolbar,
                 XmNshadowThickness,      0,
                 NULL);
-
-  m_htview = NULL;
-  m_pane = NULL;
+#endif /*USE_SELECTOR_BAR*/
 
   m_rdfview = new XFE_RDFView(this, m_widget, this, context);
 
@@ -107,8 +110,12 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 #else
                 XmNbottomAttachment, XmATTACH_FORM,
 #endif
+#ifdef USE_SELECTOR_BAR
                 XmNleftAttachment,   XmATTACH_WIDGET,
                 XmNleftWidget,       m_selector,
+#else
+                XmNleftAttachment,   XmATTACH_FORM,
+#endif /*USE_SELECTOR_BAR*/
                 XmNrightAttachment,  XmATTACH_FORM,
 
 
@@ -132,20 +139,17 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                 XmNtopWidget,        m_rdfview->getBaseWidget(),
                 XmNbottomAttachment, XmATTACH_FORM,
                 XmNleftAttachment,   XmATTACH_WIDGET,
+#ifdef USE_SELECTOR_BAR
+                XmNleftAttachment,   XmATTACH_WIDGET,
                 XmNleftWidget,       m_selector,
+#else
+                XmNleftAttachment,   XmATTACH_FORM,
+#endif /*USE_SELECTOR_BAR*/
                 XmNrightAttachment,  XmATTACH_FORM,
                 NULL);
 #endif
 
-
-
-  HT_Notification ns = new HT_NotificationStruct;
-  ns->notifyProc = &XFE_NavCenterView::notify_cb;
-  ns->data = this;
-
-  m_pane = HT_NewPane(ns);
-
-  HT_SetPaneFEData(m_pane, this);
+  newPane();
 
   // Register the MWContext in the XP list.
   XP_SetLastActiveContext(context);
@@ -163,11 +167,11 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
     * what the mode is. Maybe sitemap will be screwed up when we get there. 
     * But  we are not there yet. 
     **/
-  XP_RegisterNavCenter(m_pane, context);
+  XP_RegisterNavCenter(_ht_pane, context);
 
   // Need to figure out what to do in popup state
   if (!m_isStandalone)
-     XP_DockNavCenter(m_pane, context);
+     XP_DockNavCenter(_ht_pane, context);
 
   // add our subviews to the list of subviews for command dispatching and
   // deletion.
@@ -176,7 +180,9 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   addView(m_htmlview);
 #endif 
 
+#ifdef USE_SELECTOR_BAR
   XtManageChild(m_selector);
+#endif /*USE_SELECTOR_BAR*/
   m_rdfview->show();
 #ifdef HTML_PANE
   m_htmlview->show();
@@ -189,34 +195,19 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 XFE_NavCenterView::~XFE_NavCenterView()
 {
 	D(printf("XFE_NavCenterView DESTRUCTING\n"););
-    if (m_pane)
+    if (_ht_pane)
     {
         if (!m_isStandalone)
-          XP_UndockNavCenter(m_pane);
-        XP_UnregisterNavCenter(m_pane);
-        HT_DeletePane(m_pane);
+          XP_UndockNavCenter(_ht_pane);
+        XP_UnregisterNavCenter(_ht_pane);
     }
     // Remove yourself from XFE_RDFImage's listener list
     XFE_RDFImage::removeListener(this);
 
 }
-
-//////////////////////////////////////////////////////////////////////////
-/* static */ void 
-XFE_NavCenterView::notify_cb(HT_Notification	ns, 
-							 HT_Resource		n, 
-							 HT_Event			whatHappened, 
-							 void *				/* token */, 
-							 uint32				/* tokenType */)
-{
-	XFE_NavCenterView * theView = (XFE_NavCenterView *) ns->data;
-    
-	theView->notify(ns, n, whatHappened);
-}
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_NavCenterView::notify(HT_Notification	ns, 
-						  HT_Resource		n, 
+XFE_NavCenterView::notify(HT_Resource		n, 
 						  HT_Event			whatHappened)
 {
   switch (whatHappened) {
@@ -229,6 +220,7 @@ XFE_NavCenterView::notify(HT_Notification	ns,
       D(printf("HT_Event: %s on %s\n","HT_EVENT_VIEW_SELECTED",
                HT_GetNodeName(n)););
       
+#ifdef USE_SELECTOR_BAR
       HT_View view = HT_GetView(n);
 
       /* The following block of code is to make sure that the view that is
@@ -252,14 +244,14 @@ XFE_NavCenterView::notify(HT_Notification	ns,
        if (toolbar && button)
          XfeToolBarSetSelectedButton(toolbar, button);
 
-       if ((m_htview != view)  && toolbar && button) {
+       if ((_ht_view != view)  && toolbar && button) {
           // Set the RDFView
           setRDFView(view);
           // Make sure the corresponding button is marked as selected.
           XfeToolBarSetSelectedButton(toolbar, button);
 
        }
-      
+#endif /*USE_SELECTOR_BAR*/      
     }
     break;
   case HT_EVENT_VIEW_ADDED: 
@@ -267,10 +259,11 @@ XFE_NavCenterView::notify(HT_Notification	ns,
       D(printf("HT_Event: %s on %s\n","HT_EVENT_VIEW_ADDED",
                HT_GetNodeName(n)););
       
+#ifdef USE_SELECTOR_BAR
       HT_View view = HT_GetView(n);
       
       addRDFView(view);
-
+#endif
       return;
     }
     break;
@@ -288,9 +281,10 @@ XFE_NavCenterView::notify(HT_Notification	ns,
   }
   // Pass through to the outliner
   // xxxShould check to make sure that it applies to rdfview's view.
-  m_rdfview->notify(ns,n,whatHappened);
+  m_rdfview->notify(n,whatHappened);
 }
 //////////////////////////////////////////////////////////////////////
+#ifdef USE_SELECTOR_BAR
 void
 XFE_NavCenterView::setRDFView(HT_View view) 
 {
@@ -299,8 +293,8 @@ XFE_NavCenterView::setRDFView(HT_View view)
   XtVaGetValues(m_selector,XmNtoolBar,&toolbar,NULL);
   //XfeToolBarSetSelectedButton(toolbar, xxx);
 
-  HT_SetSelectedView(m_pane, view);
-  m_htview = view;
+  HT_SetSelectedView(_ht_pane, view);
+  _ht_view = view;
 }
 //////////////////////////////////////////////////////////////////////
 void
@@ -436,6 +430,7 @@ XFE_NavCenterView::getSelector(void)
   return (m_selector);
 
 }
+#endif /*USE_SELECTOR_BAR*/
 
  void 
 XFE_NavCenterView::handleDisplayPixmap(Widget w, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  width, PRInt32 height)

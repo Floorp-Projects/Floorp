@@ -27,7 +27,7 @@
 
 #include "View.h"
 #include "htrdf.h"
-//#include "RDFView.h"
+#include "RDFBase.h"
 #include "RDFImage.h"
 
 class XFE_HTMLView;
@@ -35,21 +35,23 @@ class XFE_RDFView;
 
 
 
-class XFE_NavCenterView : public XFE_View
+class XFE_NavCenterView : public XFE_View,
+                          public XFE_RDFBase
 {
 public:
   XFE_NavCenterView(XFE_Component *toplevel_component, Widget parent, XFE_View *parent_view, MWContext *context);
 
   virtual ~XFE_NavCenterView();
 
-  void notify(HT_Notification ns, HT_Resource n, HT_Event whatHappened);
+  virtual void notify(HT_Resource n, HT_Event whatHappened);
 
+#ifdef USE_SELECTOR_BAR
   void setRDFView(HT_View view);
   void addRDFView(HT_View view);
   Widget  getSelector(void);
-
   static void selector_activate_cb(Widget,XtPointer,XtPointer);
   static void selector_destroy_cb(Widget,XtPointer,XtPointer);
+#endif /*USE_SELECTORY_BAR*/
 
 
   virtual void handleDisplayPixmap(Widget, IL_Pixmap *, IL_Pixmap *, PRInt32 width, PRInt32 height);
@@ -57,21 +59,13 @@ public:
   virtual void handleImageComplete(Widget, IL_Pixmap *);  
 
 private:
-  HT_Pane        m_pane;
-  HT_View        m_htview;
   XFE_HTMLView * m_htmlview;
   XFE_RDFView  * m_rdfview;
+#ifdef USE_SELECTOR_BAR
   Widget         m_selector;
+#endif /*USE_SELECTORY_BAR*/
   Widget         rdf_parent;
   XP_Bool        m_isStandalone; // as oppposed to embedded in a browser
-
-
-	static void notify_cb(HT_Notification	ns, 
-						  HT_Resource		n, 
-						  HT_Event			whatHappened, 
-						  void *			token, 
-						  uint32			tokenType);
-
 };
 
 
