@@ -82,7 +82,7 @@ static void GetTreeItem(nsIDOMElement* aElement, nsIDOMElement** aResult)
   while (content) {
     nsCOMPtr<nsIAtom> tag;
     content->GetTag(*getter_AddRefs(tag));
-    if (tag == nsXULAtoms::treeitem) {
+    if (tag.get() == nsXULAtoms::treeitem) {
       nsCOMPtr<nsIDOMElement> result = do_QueryInterface(content);
       *aResult = result.get();
       NS_IF_ADDREF(*aResult);
