@@ -552,7 +552,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
     if (offset != kNotFound)
     {
         nsCAutoString symbol(errorMsg);
-        nsCAutoString demangledSymbol("");
+        nsCAutoString demangledSymbol;
         
         symbol.Cut(0,offset);
         
@@ -567,7 +567,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
         if (demangled && strlen(demangled))
             demangledSymbol = demangled;
         
-        if (demangledSymbol != (const char *) "")
+        if (!demangledSymbol.IsEmpty())
         {
             nsCAutoString tmp(errorMsg);
             
