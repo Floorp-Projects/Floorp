@@ -949,6 +949,7 @@ NS_ShutdownNativeCharsetUtils()
 //-----------------------------------------------------------------------------
 #elif defined(XP_OS2)
 
+#define INCL_DOS
 #include <os2.h>
 #include <uconv.h>
 #include "nsPromiseFlatString.h"
