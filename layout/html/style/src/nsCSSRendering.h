@@ -57,6 +57,15 @@ public:
                               nscoord aDX,
                               nscoord aDY);
 
+  static void DrawDashedSides(PRIntn startSide,
+                              nsIRenderingContext& aContext,
+                              const PRUint8 borderStyles[],
+                              const nscolor borderColors[],
+                              const nsRect& borderOutside,
+                              const nsRect& borderInside,
+                              PRIntn aSkipSides,
+                              nsRect* aGap);
+
 protected:
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                                 nscolor baseColor,
@@ -78,15 +87,6 @@ protected:
                        PRBool printing,
                        nscoord twipsPerPixel,
                        nsRect* aGap = 0);
-
-  static void DrawDashedSides(PRIntn startSide,
-                              nsIRenderingContext& aContext,
-                              const PRUint8 borderStyles[],
-                              const nscolor borderColors[],
-                              const nsRect& borderOutside,
-                              const nsRect& borderInside,
-                              PRIntn aSkipSides,
-                              nsRect* aGap);
 
   static void DrawLine (nsIRenderingContext& aContext, 
                         nscoord aX1, nscoord aY1, nscoord aX2, nscoord aY2,

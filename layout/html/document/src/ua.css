@@ -417,6 +417,12 @@ IFRAME {
 INPUT {
   vertical-align: bottom;
 }
+BUTTON {
+  vertical-align: bottom;
+  background-color: white; 
+	border: 3px outset grey; 
+	padding: 3px
+}
 SELECT {
   vertical-align: bottom;
 }
