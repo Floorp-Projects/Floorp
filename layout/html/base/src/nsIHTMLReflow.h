@@ -279,6 +279,7 @@ struct nsHTMLReflowState : nsReflowState {
    * the return value will be <0 which is illegal (CSS2 spec: section 10.8.1).
    */
   static nscoord CalcLineHeight(nsIPresContext& aPresContext,
+                                nsIRenderingContext* aRenderingContext,
                                 nsIFrame* aFrame);
 
   static nsCSSFrameType DetermineFrameType(nsIFrame* aFrame);
