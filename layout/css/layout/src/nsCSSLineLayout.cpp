@@ -18,17 +18,8 @@
  */
 #include "nsCSSLineLayout.h"
 #include "nsCSSLayout.h"
-
-#if 0
-#include "nsIFontMetrics.h"
-#include "nsIPresContext.h"
-#include "nsIRunaround.h"
+#include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
-
-// XXX nsCSSIIDs.[h,cpp]
-static NS_DEFINE_IID(kIInlineReflowIID, NS_IINLINE_REFLOW_IID);
-static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
-#endif
 
 void
 nsCSSTextRun::List(FILE* out, PRInt32 aIndent)
@@ -104,4 +95,24 @@ nsCSSLineLayout::AddText(nsIFrame* aTextFrame)
   }
   mNewTextRun->mArray.AppendElement(aTextFrame);
   return NS_OK;/* XXX */
+}
+
+// XXX move this somewhere else!!!
+PRBool
+nsCSSLineLayout::TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
+                                   const nsStylePosition* aPosition)
+{
+  if (NS_STYLE_POSITION_ABSOLUTE == aPosition->mPosition) {
+    return PR_FALSE;
+  }
+  if (NS_STYLE_FLOAT_NONE != aDisplay->mFloats) {
+    return PR_FALSE;
+  }
+  switch (aDisplay->mDisplay) {
+  case NS_STYLE_DISPLAY_BLOCK:
+  case NS_STYLE_DISPLAY_LIST_ITEM:
+  case NS_STYLE_DISPLAY_TABLE:
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }

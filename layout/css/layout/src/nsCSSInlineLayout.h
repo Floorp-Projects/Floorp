@@ -73,7 +73,8 @@ struct nsCSSInlineLayout {
                                   nsRect& kidRect,
                                   const nsReflowMetrics& kidMetrics,
                                   const nsMargin& kidMargin,
-                                  nsInlineReflowStatus kidReflowStatus);
+                                  nsInlineReflowStatus kidReflowStatus,
+                                  PRBool aIsBlock);
 
   nsresult MaybeCreateNextInFlow(nsIFrame*  aFrame,
                                  nsIFrame*& aNextInFlowResult);

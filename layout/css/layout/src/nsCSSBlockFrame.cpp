@@ -1474,26 +1474,6 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
   NS_ASSERTION(aDesiredRect.width < 1000000, "whoops");
 }
 
-// XXX move this somewhere else!!!
-static PRBool
-TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
-                  const nsStylePosition* aPosition)
-{
-  if (NS_STYLE_POSITION_ABSOLUTE == aPosition->mPosition) {
-    return PR_FALSE;
-  }
-  if (NS_STYLE_FLOAT_NONE != aDisplay->mFloats) {
-    return PR_FALSE;
-  }
-  switch (aDisplay->mDisplay) {
-  case NS_STYLE_DISPLAY_BLOCK:
-  case NS_STYLE_DISPLAY_LIST_ITEM:
-  case NS_STYLE_DISPLAY_TABLE:
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
 nsresult
 nsCSSBlockFrame::InitialReflow(nsCSSBlockReflowState& aState)
 {
@@ -1680,7 +1660,8 @@ nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
     if (NS_OK != rv) {
       return rv;
     }
-    PRBool isBlock = TreatFrameAsBlock(kidDisplay, kidPosition);
+    PRBool isBlock =
+      nsCSSLineLayout::TreatFrameAsBlock(kidDisplay, kidPosition);
 
     // If the child is an inline then add it to the lastLine (if it's
     // an inline line, otherwise make a new line). If the child is a
@@ -2001,7 +1982,7 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
     const nsStylePosition* position;
     frame->GetStyleData(eStyleStruct_Position,
                         (const nsStyleStruct*&) position);
-    PRBool isBlock = TreatFrameAsBlock(display, position);
+    PRBool isBlock = nsCSSLineLayout::TreatFrameAsBlock(display, position);
     NS_ASSERTION(isBlock == aLine->IsBlock(), "bad line isBlock");
 #endif 
    if (aLine->IsBlock()) {
@@ -2586,7 +2567,7 @@ nsCSSBlockFrame::PullFrame(nsCSSBlockReflowState& aState,
     const nsStylePosition* position;
     frame->GetStyleData(eStyleStruct_Position,
                         (const nsStyleStruct*&) position);
-    PRBool isBlock = TreatFrameAsBlock(display, position);
+    PRBool isBlock = nsCSSLineLayout::TreatFrameAsBlock(display, position);
     NS_ASSERTION(isBlock == aLine->IsBlock(), "bad line isBlock");
 #endif
   }
@@ -2987,9 +2968,10 @@ nsCSSBlockFrame::ContentInserted(nsIPresShell*   aShell,
   const nsStylePosition* position;
   newFrame->GetStyleData(eStyleStruct_Position,
                          (const nsStyleStruct*&) position);
-  PRUint16 newFrameIsBlock = TreatFrameAsBlock(display, position)
-    ? LINE_IS_BLOCK
-    : 0;
+  PRUint16 newFrameIsBlock =
+    nsCSSLineLayout::TreatFrameAsBlock(display, position)
+      ? LINE_IS_BLOCK
+      : 0;
 
   // Insert/append the frame into flows line list at the right spot
   LineData* newLine;

@@ -122,6 +122,19 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
                ("nsCSSInlineLayout::ReflowAndPlaceFrame: frame=%p x=%d",
                 aFrame, mX));
 
+  // If the frame is a block frame and this is not the first frame on
+  // the line, we need to break before the block frame.
+  const nsStyleDisplay* kidDisplay;
+  aFrame->GetStyleData(eStyleStruct_Display,
+                       (const nsStyleStruct*&) kidDisplay);
+  const nsStylePosition* kidPosition;
+  aFrame->GetStyleData(eStyleStruct_Position,
+                       (const nsStyleStruct*&) kidPosition);
+  PRBool isBlock = nsCSSLineLayout::TreatFrameAsBlock(kidDisplay, kidPosition);
+  if (isBlock && !IsFirstChild()) {
+    return NS_INLINE_LINE_BREAK_BEFORE(0);/* XXX indicate never-reflowed? */
+  }
+
   // Compute the maximum size of the frame. If there is no room at all
   // for it, then trigger a line-break before the frame.
   nsSize maxSize;
@@ -187,7 +200,7 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
   }
 
   nsRect frameRect(mX, mY, metrics.width, metrics.height);
-  return PlaceFrame(aFrame, frameRect, metrics, margin, rs);
+  return PlaceFrame(aFrame, frameRect, metrics, margin, rs, isBlock);
 }
 
 // XXX RTL
@@ -291,7 +304,8 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
                               nsRect& aFrameRect,
                               const nsReflowMetrics& aFrameMetrics,
                               const nsMargin& aFrameMargin,
-                              nsInlineReflowStatus aFrameReflowStatus)
+                              nsInlineReflowStatus aFrameReflowStatus,
+                              PRBool aIsBlock)
 {
   nscoord horizontalMargins = 0;
 
@@ -345,7 +359,7 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
                 aFrameRect.width, aFrameRect.height));
 
   // XXX this is not right; the max-element-size of a child depends on
-  // it's margins which it doesn't know how to add in
+  // its margins which it doesn't know how to add in
 
   // Fold in child's max-element-size information into our own
   if (mComputeMaxElementSize) {
@@ -368,6 +382,13 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
     return nsInlineReflowStatus(rv);
   }
   mFrameNum++;
+
+  if (aIsBlock) {
+    if (!NS_INLINE_IS_BREAK(aFrameReflowStatus)) {
+      aFrameReflowStatus =
+        NS_INLINE_LINE_BREAK_AFTER(aFrameReflowStatus & NS_FRAME_NOT_COMPLETE);
+    }
+  }
 
   return aFrameReflowStatus;
 }
