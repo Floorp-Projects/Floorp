@@ -23,15 +23,17 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+include $(topsrcdir)/config/config.mk
+
 REAL_XPDIR	= $(topsrcdir)/lib/xp
 
 HSRCS		= $(wildcard $(srcdir)/*.html)
 MSRCS		= $(wildcard $(srcdir)/*.msg)
 
-HOBJS		= $(subst $(srcdir),.,$(HSRCS))
+HOBJS		= $(subst $(srcdir)/,,$(HSRCS))
 HOBJS		:= $(HOBJS:.html=.h)
 
-MOBJS		= $(subst $(srcdir),.,$(MSRCS))
+MOBJS		= $(subst $(srcdir)/,,$(MSRCS))
 MOBJS		:= $(MOBJS:.msg=.h)
 
 RM		= /bin/rm -f
@@ -43,17 +45,19 @@ RM		= /bin/rm -f
 #
 TR69		= $(OBJDIR)/tr69
 
-TARGETS		= $(TR69) $(HOBJS) $(MOBJS) splash.h splash-java.h \
-		  about-lite.h about-java-lite.h splash-lite.h splash-java-lite.h
+TARGETS		= $(TR69)
+TARGETS		+= $(addprefix $(OBJDIR)/, $(HOBJS) $(MOBJS) splash.h \
+		  splash-java.h about-lite.h about-java-lite.h splash-lite.h \
+		  splash-java-lite.h )
+
+GARBAGE		+= $(OBJDIR)/about-lite.html $(OBJDIR)/about-java-lite.html
+GARBAGE		+= $(wildcard $(OBJDIR)/splash*.html) $(wildcard $(OBJDIR)/*.pc) $(wildcard $(OBJDIR)/*.input) $(wildcard $(OBJDIR)/*.h) $(wildcard $(OBJDIR)/*~)
 
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE		+= about-lite.html about-java-lite.html $(wildcard splash*.html) \
-		   $(wildcard *.pc) $(wildcard *.input) $(wildcard *.h) $(wildcard *~)
-
 .SUFFIXES:	.html .msg
 
-$(TR69):	tr69.c
+$(TR69):	$(srcdir)/tr69.c
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),OS2)
 	$(CCF) -Fe $@ $<
@@ -74,7 +78,7 @@ endif
 # Win16:  no Mercutio MDEF
 # Unix:   no Mercutio MDEF, no Macromedia, no Symantec, no Quicktime
 #
-about.h:	$(srcdir)/about-all.html
+$(OBJDIR)/about.h:	$(srcdir)/about-all.html $(TR69)
 	@echo generating $@ from $<;					\
 	NAME=Netscape;							\
 	CLASS=Netscape;							\
@@ -106,7 +110,7 @@ about.h:	$(srcdir)/about-all.html
 	echo;								\
 	$(RM) $$RTMP
 
-about-java.h:	$(srcdir)/about-all.html
+$(OBJDIR)/about-java.h:	$(srcdir)/about-all.html $(TR69)
 	@echo generating $@ from $<;					\
 	NAME=Netscape;							\
 	CLASS=Netscape;							\
@@ -138,40 +142,40 @@ about-java.h:	$(srcdir)/about-all.html
 	echo;								\
 	$(RM) $$RTMP
 
-about-all.h:	$(srcdir)/about-all.html
+$(OBJDIR)/about-all.h:	$(srcdir)/about-all.html $(TR69)
 	@echo "Garbage file" > $@
 
-splash.input:		about.h
-splash-java.input:	about-java.h
+$(OBJDIR)/splash.input:		$(OBJDIR)/about.h
+$(OBJDIR)/splash-java.input:	$(OBJDIR)/about-java.h
 
-splash.html:		splash.input
+$(OBJDIR)/splash.html:		$(OBJDIR)/splash.input
 	@echo generating $@ from $<...
 	@sed 's|<A [Hh]...="[^>]*">||g;s|</A>||g' $< > $@
 
-splash-java.html:	splash-java.input
+$(OBJDIR)/splash-java.html:	$(OBJDIR)/splash-java.input
 	@echo generating $@ from $<...
 	@sed 's|<A [Hh]...="[^>]*">||g;s|</A>||g' $< > $@
 
-splash-lite.html:	about-lite.html
+$(OBJDIR)/splash-lite.html:	$(OBJDIR)/about-lite.html
 	@echo generating $@ from $<...
 	@sed 's|<A [Hh]...="[^>]*">||g;s|</A>||g' $< > $@
 
-splash-java-lite.html:	about-java-lite.html
+$(OBJDIR)/splash-java-lite.html:	$(OBJDIR)/about-java-lite.html
 	@echo generating $@ from $<...
 	@sed 's|<A [Hh]...="[^>]*">||g;s|</A>||g' $< > $@
 
-about-lite.html:	splash.input
+$(OBJDIR)/about-lite.html:	$(OBJDIR)/splash.input
 	@echo generating $@ from $<...
 	@sed 's/Communicator/Navigator/' $< > $@
 
-about-java-lite.html:	splash-java.input
+$(OBJDIR)/about-java-lite.html:	$(OBJDIR)/splash-java.input
 	@echo generating $@ from $<...
 	@sed 's/Communicator/Navigator/' $< > $@
 
 #
 # Handle the rest of the HTML files.
 #
-.html.h:
+$(OBJDIR)/%.h: %.html $(TR69)
 	@echo generating $*.h from $<;					\
 	NAME=Netscape;							\
 	CLASS=Netscape;							\
@@ -193,7 +197,7 @@ about-java-lite.html:	splash-java.input
 	echo;								\
 	$(RM) $$RTMP
 
-.msg.h:
+$(OBJDIR)/%.h: %.msg $(TR69)
 	@echo generating $*.h from $<;					\
 	NAME=Netscape;							\
 	CLASS=Netscape;							\
