@@ -377,14 +377,14 @@ nsHTTPChannel::Open(void)
     nsresult rv = NS_OK;
 
     char* host;
+    PRInt32 port;
+    nsCOMPtr<nsIChannel> channel;
+
     rv = m_URI->GetHost(&host);
     if (NS_FAILED(rv)) return rv;
 
-    PRInt32 port;
     rv = m_URI->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
-    nsIChannel* temp;
-
     if (port == -1)
     {
         m_pHandler->GetDefaultPort(&port);
@@ -503,29 +503,30 @@ nsHTTPChannel::Open(void)
     NS_RELEASE(pModules);
     NS_IF_RELEASE(proxyObjectManager);
 
-    rv = m_pHandler->GetTransport(host, unsignedPort, &temp);
+    rv = m_pHandler->GetTransport(host, unsignedPort, getter_AddRefs(channel));
     nsCRT::free(host);
-    if (NS_SUCCEEDED(rv) && temp)
+    if (NS_SUCCEEDED(rv) && channel)
     {
-        m_pRequest->SetTransport(temp);
+        nsCOMPtr<nsIInputStream> stream;
 
-        nsIInputStream* stream;
+        m_pRequest->SetTransport(channel);
+
         //Get the stream where it will read the request data from
-        m_pRequest->GetInputStream(&stream);
+        rv = m_pRequest->GetInputStream(getter_AddRefs(stream));
+        if (NS_SUCCEEDED(rv) && stream) {
+            PRUint32 count;
 
-        PRUint32 count;
-        rv = stream->GetLength(&count);
-        rv = temp->AsyncWrite(stream, 0, count, this , m_pEventQ, m_pRequest);
-        if (NS_FAILED(rv)) 
-        {
-            NS_RELEASE(temp);
-            return rv;
+            // Write the request to the server...
+            rv = stream->GetLength(&count);
+            rv = channel->AsyncWrite(stream, 0, count, this , m_pEventQ, m_pRequest);
+            if (NS_FAILED(rv)) return rv;
+
+            m_State = HS_WAITING_FOR_RESPONSE;
+            m_bConnected = PR_TRUE;
+        } else {
+            NS_ERROR("Failed to get request Input stream.");
+            return NS_ERROR_FAILURE;
         }
-
-        m_State = HS_WAITING_FOR_RESPONSE;
-        m_bConnected = PR_TRUE;
-        NS_RELEASE(stream);
-        NS_RELEASE(temp);
     }
     else
         NS_ERROR("Failed to create/get a transport!");
