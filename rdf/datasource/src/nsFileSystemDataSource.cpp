@@ -100,6 +100,8 @@ static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 #endif
 
+#define NS_MOZICON_SCHEME           "moz-icon:"
+
 static const char kURINC_FileSystemRoot[] = "NC:FilesRoot";
 
 
@@ -116,6 +118,7 @@ private:
     static nsIRDFResource		*kNC_Child;
     static nsIRDFResource		*kNC_Name;
     static nsIRDFResource		*kNC_URL;
+    static nsIRDFResource		*kNC_Icon;
     static nsIRDFResource		*kNC_Length;
     static nsIRDFResource		*kWEB_LastMod;
     static nsIRDFResource		*kNC_FileSystemObject;
@@ -156,7 +159,7 @@ public:
     static nsresult GetVolumeList(nsISimpleEnumerator **aResult);
     static nsresult GetFolderList(nsIRDFResource *source, PRBool allowHidden, PRBool onlyFirst, nsISimpleEnumerator **aResult);
     static nsresult GetName(nsIRDFResource *source, nsIRDFLiteral** aResult);
-    static nsresult GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
+    static nsresult GetURL(nsIRDFResource *source, PRBool *isFavorite, nsIRDFLiteral** aResult);
     static nsresult GetFileSize(nsIRDFResource *source, nsIRDFInt** aResult);
     static nsresult GetLastMod(nsIRDFResource *source, nsIRDFDate** aResult);
 
@@ -186,6 +189,7 @@ nsIRDFResource		*FileSystemDataSource::kNC_FileSystemRoot;
 nsIRDFResource		*FileSystemDataSource::kNC_Child;
 nsIRDFResource		*FileSystemDataSource::kNC_Name;
 nsIRDFResource		*FileSystemDataSource::kNC_URL;
+nsIRDFResource		*FileSystemDataSource::kNC_Icon;
 nsIRDFResource		*FileSystemDataSource::kNC_Length;
 nsIRDFResource		*FileSystemDataSource::kWEB_LastMod;
 nsIRDFResource		*FileSystemDataSource::kNC_FileSystemObject;
@@ -315,6 +319,7 @@ FileSystemDataSource::FileSystemDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI  "child",            &kNC_Child);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "Name",             &kNC_Name);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "URL",              &kNC_URL);
+		gRDFService->GetResource(NC_NAMESPACE_URI  "Icon",             &kNC_Icon);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "Content-Length",   &kNC_Length);
 		gRDFService->GetResource(WEB_NAMESPACE_URI "LastModifiedDate", &kWEB_LastMod);
 		gRDFService->GetResource(NC_NAMESPACE_URI  "FileSystemObject", &kNC_FileSystemObject);
@@ -344,6 +349,7 @@ FileSystemDataSource::~FileSystemDataSource (void)
         NS_RELEASE(kNC_Child);
         NS_RELEASE(kNC_Name);
         NS_RELEASE(kNC_URL);
+        NS_RELEASE(kNC_Icon);
         NS_RELEASE(kNC_Length);
         NS_RELEASE(kWEB_LastMod);
         NS_RELEASE(kNC_FileSystemObject);
@@ -479,11 +485,31 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		else if (property == kNC_URL)
 		{
 			nsCOMPtr<nsIRDFLiteral> url;
-			rv = GetURL(source, getter_AddRefs(url));
+			rv = GetURL(source, nsnull, getter_AddRefs(url));
 			if (NS_FAILED(rv)) return(rv);
 			if (!url)	rv = NS_RDF_NO_VALUE;
 			if (rv == NS_RDF_NO_VALUE)	return(rv);
 
+			return url->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+		}
+		else if (property == kNC_Icon)
+		{
+			nsCOMPtr<nsIRDFLiteral> url;
+			PRBool isFavorite = PR_FALSE;
+			rv = GetURL(source, &isFavorite, getter_AddRefs(url));
+			if (NS_FAILED(rv)) return(rv);
+			if (isFavorite || !url)	rv = NS_RDF_NO_VALUE;
+			if (rv == NS_RDF_NO_VALUE)	return(rv);
+			
+			const PRUnichar *uni = nsnull;
+			url->GetValueConst(&uni);
+			if (!uni)   return(NS_RDF_NO_VALUE);
+			nsAutoString    urlStr;
+			urlStr.Assign(NS_LITERAL_STRING(NS_MOZICON_SCHEME).get());
+			urlStr.Append(uni);
+
+			rv = gRDFService->GetLiteral(urlStr.get(), getter_AddRefs(url));
+			if (NS_FAILED(rv) || !url)    return(NS_RDF_NO_VALUE);
 			return url->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 		}
 		else if (property == kNC_Length)
@@ -659,7 +685,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		else if (property == kNC_URL)
 		{
 			nsCOMPtr<nsIRDFLiteral> url;
-			rv = GetURL(source, getter_AddRefs(url));
+			rv = GetURL(source, nsnull, getter_AddRefs(url));
 			if (NS_FAILED(rv)) return rv;
 
 			nsISimpleEnumerator* result = new nsSingletonEnumerator(url);
@@ -827,23 +853,33 @@ FileSystemDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *
 NS_IMETHODIMP 
 FileSystemDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
 {
-    if (aSource == kNC_FileSystemRoot) {
-	*result = (aArc == kNC_Child || aArc == kNC_pulse);
-    }
-    else if (isFileURI(aSource)) {
-	if (aArc == kNC_pulse) {
-	    *result = PR_TRUE;
-	}
-	else if (isDirURI(aSource)) {
-#ifdef	XP_WIN
-	    *result = isValidFolder(aSource);
-#else
-	    *result = PR_TRUE;
-#endif
-	}
-    }
-    else {
 	*result = PR_FALSE;
+
+    if (aSource == kNC_FileSystemRoot)
+    {
+		*result = (aArc == kNC_Child || aArc == kNC_pulse);
+    }
+    else if (isFileURI(aSource))
+    {
+		if (aArc == kNC_pulse)
+		{
+	    	*result = PR_TRUE;
+		}
+		else if (isDirURI(aSource))
+		{
+#ifdef	XP_WIN
+	    	*result = isValidFolder(aSource);
+#else
+		    *result = PR_TRUE;
+#endif
+		}
+    	else if (aArc == kNC_pulse || aArc == kNC_Name || aArc == kNC_Icon ||
+    	         aArc == kNC_URL || aArc == kNC_Length || aArc == kWEB_LastMod ||
+    	         aArc == kNC_FileSystemObject || aArc == kRDF_InstanceOf ||
+    	         aArc == kRDF_type)
+    	{
+    	    *result = PR_TRUE;
+    	}
     }
     return NS_OK;
 }
@@ -905,8 +941,6 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 #endif
 	    array->AppendElement(kNC_pulse);
 	}
-
-	array->AppendElement(kRDF_type);
 
 	nsISimpleEnumerator* result = new nsArrayEnumerator(array);
 	if (! result)
@@ -1610,8 +1644,10 @@ FileSystemDataSource::getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL
 
 
 nsresult
-FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
+FileSystemDataSource::GetURL(nsIRDFResource *source, PRBool *isFavorite, nsIRDFLiteral** aResult)
 {
+    if (isFavorite) *isFavorite = PR_FALSE;
+
 	nsresult		rv;
 	const char		*uri;
 	rv = source->GetValueConst(&uri);
@@ -1625,6 +1661,7 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	{
 		if (url.Find(ieFavoritesDir) == 0)
 		{
+            if (isFavorite) *isFavorite = PR_TRUE;
 			rv = getIEFavoriteURL(source, url, aResult);
 			return(rv);
 		}
@@ -1637,6 +1674,7 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	{
 		if (url.Find(netPositiveDir) == 0)
 		{
+            if (isFavorite) *isFavorite = PR_TRUE;
 			rv = getNetPositiveURL(source, url, aResult);
 			return(rv);
 		}

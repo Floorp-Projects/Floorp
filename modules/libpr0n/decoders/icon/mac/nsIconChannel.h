@@ -26,6 +26,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIURI.h"
+#include <Icons.h>
 
 class nsIFile;
 
@@ -51,7 +52,15 @@ protected:
   nsCOMPtr<nsISupports>  mOwner; 
   nsresult mStatus;
   
-  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, char ** aContentType, char ** aFileExtension);
+  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize,
+                           char ** aContentType, char ** aFileExtension);
+
+  nsresult GetLockedIconData(IconFamilyHandle iconFamilyH, PRUint32 iconType,
+                           Handle iconDataH, PRUint32 *iconDataSize);
+
+  nsresult GetLockedIcons(IconFamilyHandle iconFamily, PRUint32 desiredImageSize,
+                           Handle iconH, PRUint32 *dataCount, PRBool *isIndexedData,
+                           Handle iconMaskH, PRUint32 *maskCount);
 
 };
 

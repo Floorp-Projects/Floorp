@@ -81,6 +81,7 @@
                   <menuitem value="..." uri="..."
                     desc="rdf:http://home.netscape.com/NC-rdf#Description"
                     ver="rdf:http://home.netscape.com/NC-rdf#Version"
+                    src="rdf:http://home.netscape.com/NC-rdf#Icon"
                     label="rdf:http://home.netscape.com/NC-rdf#Name"/>
                 </menupopup>
               </template>

@@ -3771,24 +3771,33 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	if (!searchRes)		return(NS_ERROR_UNEXPECTED);
 	if (!categoryRes)	return(NS_ERROR_UNEXPECTED);
 
+	nsAutoString	iconURL;
 	if (icon)
 	{
-	  nsXPIDLCString iconPath;
-	  icon->GetPath(getter_Copies(iconPath));
-	  nsFileSpec iconSpec((const char *)iconPath);
-		nsFileURL	iconFileURL(iconSpec);
-		nsAutoString	iconURL;
-		iconURL.AssignWithConversion(iconFileURL.GetURLString());
+		nsXPIDLCString  iconFileURL;
+		if (NS_FAILED(rv = icon->GetURL(getter_Copies(iconFileURL))))
+			return(rv);
+		iconURL.AssignWithConversion(iconFileURL);
+	}
+#ifdef XP_MAC
+	else if (file)
+	{
+		nsXPIDLCString  fileURL;
+		if (NS_FAILED(rv = file->GetURL(getter_Copies(fileURL))))
+			return(rv);
+		iconURL.Assign(NS_LITERAL_STRING("moz-icon:"));
+		iconURL.AppendWithConversion(fileURL);
+	}
+#endif
 
-		// save icon url (if we have one)
-		if (iconURL.Length() > 0)
+	// save icon url (if we have one)
+	if (iconURL.Length() > 0)
+	{
+		nsCOMPtr<nsIRDFLiteral>	iconLiteral;
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(iconURL.get(),
+				getter_AddRefs(iconLiteral))))
 		{
-			nsCOMPtr<nsIRDFLiteral>	iconLiteral;
-			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(iconURL.get(),
-					getter_AddRefs(iconLiteral))))
-			{
-				updateAtom(mInner, searchRes, kNC_Icon, iconLiteral, nsnull);
-			}
+			updateAtom(mInner, searchRes, kNC_Icon, iconLiteral, nsnull);
 		}
 	}
 
