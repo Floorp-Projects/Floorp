@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mike McCabe <mccabe@netscape.com>
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -39,78 +41,23 @@
 
 #include "xptiprivate.h"
 
-MOZ_DECL_CTOR_COUNTER(xptiTypelibGuts)
+// static 
+xptiTypelibGuts* 
+xptiTypelibGuts::NewGuts(XPTHeader* aHeader,
+                         xptiWorkingSet* aWorkingSet)
+{
+    NS_ASSERTION(aHeader, "bad param");
+    void* place = XPT_MALLOC(aWorkingSet->GetStructArena(),
+                             sizeof(xptiTypelibGuts) + 
+                             (sizeof(xptiInterfaceEntry*) *
+                              (aHeader->num_interfaces - 1)));
+    if(!place)
+        return nsnull;
+    return new(place) xptiTypelibGuts(aHeader);
+}
 
 xptiTypelibGuts::xptiTypelibGuts(XPTHeader* aHeader)
-     :  mHeader(aHeader), 
-        mInfoArray(nsnull)
+     :  mHeader(aHeader) 
 {
-    MOZ_COUNT_CTOR(xptiTypelibGuts);
-
-    NS_ASSERTION(mHeader, "bad param");
-
-    if(mHeader->num_interfaces)
-    {
-        mInfoArray =  new xptiInterfaceInfo*[GetInfoCount()];
-        if(mInfoArray)
-            memset(mInfoArray, 0, sizeof(xptiInterfaceInfo*) * GetInfoCount());
-        else    
-            mHeader = nsnull;
-    }        
+    // empty
 }
-
-xptiTypelibGuts::~xptiTypelibGuts()
-{
-    MOZ_COUNT_DTOR(xptiTypelibGuts);
-
-    if(mHeader && mInfoArray)
-        for(PRUint16 i = 0; i < GetInfoCount(); ++i)
-            NS_IF_RELEASE(mInfoArray[i]);
-    delete [] mInfoArray;
-}
-
-xptiTypelibGuts* 
-xptiTypelibGuts::Clone()
-{
-    xptiTypelibGuts* clone = new xptiTypelibGuts(mHeader);
-    if(clone && clone->IsValid())
-        for(PRUint16 i = 0; i < GetInfoCount(); ++i)
-            clone->SetInfoAt(i, GetInfoAtNoAddRef(i));
-    return clone;
-}
-
-nsresult
-xptiTypelibGuts::GetInfoAt(PRUint16 i, xptiInterfaceInfo** ptr)
-{
-    NS_ASSERTION(mHeader,"bad state!");
-    NS_ASSERTION(mInfoArray,"bad state!");
-    NS_ASSERTION(i < GetInfoCount(),"bad param!");
-    NS_ASSERTION(ptr,"bad param!");
-
-    NS_IF_ADDREF(*ptr = mInfoArray[i]);
-    return NS_OK;
-}        
-
-xptiInterfaceInfo* 
-xptiTypelibGuts::GetInfoAtNoAddRef(PRUint16 i)
-{
-    NS_ASSERTION(mHeader,"bad state!");
-    NS_ASSERTION(mInfoArray,"bad state!");
-    NS_ASSERTION(i < GetInfoCount(),"bad param!");
-
-    return mInfoArray[i];
-}        
-
-
-nsresult
-xptiTypelibGuts::SetInfoAt(PRUint16 i, xptiInterfaceInfo* ptr)
-{
-    NS_ASSERTION(mHeader,"bad state!");
-    NS_ASSERTION(mInfoArray,"bad state!");
-    NS_ASSERTION(i < GetInfoCount(),"bad param!");
-
-    NS_IF_ADDREF(ptr);
-    NS_IF_RELEASE(mInfoArray[i]);
-    mInfoArray[i] = ptr;
-    return NS_OK;
-}        

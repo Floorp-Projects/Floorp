@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mike McCabe <mccabe@netscape.com>
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -100,7 +102,8 @@ xptiInterfaceInfoManager::IsValid()
 {
     return mWorkingSet.IsValid() &&
            mResolveLock &&
-           mAutoRegLock;
+           mAutoRegLock &&
+           mInfoMonitor;
 }        
 
 xptiInterfaceInfoManager::xptiInterfaceInfoManager(nsISupportsArray* aSearchPath)
@@ -108,6 +111,7 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager(nsISupportsArray* aSearchPath
         mOpenLogFile(nsnull),
         mResolveLock(PR_NewLock()),
         mAutoRegLock(PR_NewLock()),
+        mInfoMonitor(nsAutoMonitor::NewMonitor("xptiInfoMonitor")),
         mSearchPath(aSearchPath)
 {
     NS_INIT_ISUPPORTS();
@@ -158,6 +162,12 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
         PR_DestroyLock(mResolveLock);
     if(mAutoRegLock)
         PR_DestroyLock(mAutoRegLock);
+    if(mInfoMonitor)
+        nsAutoMonitor::DestroyMonitor(mInfoMonitor);
+
+#ifdef DEBUG
+    xptiInterfaceInfo::DEBUG_ShutdownNotification();
+#endif
 }
 
 static PRBool
@@ -210,10 +220,9 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
     static int callCount = 0;
     NS_ASSERTION(!callCount++, "Expected only one call!");
 #endif
-        
-    nsCOMPtr<nsISupportsArray> searchPath =   
-        do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
-   
+
+    nsCOMPtr<nsISupportsArray> searchPath;
+    NS_NewISupportsArray(getter_AddRefs(searchPath));
     if(!searchPath)
         return PR_FALSE;
     
@@ -486,13 +495,13 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
     if(aTypelibRecord.IsZip())
     {
         // This also allocs zipItem.GetGuts() used below.
-        if(!zipItem->SetHeader(header))
+        if(!zipItem->SetHeader(header, aWorkingSet))
             return PR_FALSE;
     }
     else
     {
         // This also allocs fileRecord.GetGuts() used below.
-        if(!fileRecord->SetHeader(header))
+        if(!fileRecord->SetHeader(header, aWorkingSet))
             return PR_FALSE;
     }
 
@@ -505,34 +514,40 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
             { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } };
 
         XPTInterfaceDirectoryEntry* iface = header->interface_directory + i;
-        xptiInterfaceInfo* info;
         
+        xptiHashEntry* hashEntry;
+
         if(!iface->iid.Equals(zeroIID))
         {
-            info = (xptiInterfaceInfo*)
-                PL_HashTableLookup(aWorkingSet->mIIDTable, &iface->iid);
+            hashEntry = (xptiHashEntry*)
+                PL_DHashTableOperate(aWorkingSet->mIIDTable, 
+                                     &iface->iid, PL_DHASH_LOOKUP);
         }
         else
         {
-            info = (xptiInterfaceInfo*)
-                PL_HashTableLookup(aWorkingSet->mNameTable, iface->name);
+            hashEntry = (xptiHashEntry*)
+                PL_DHashTableOperate(aWorkingSet->mNameTable, 
+                                     iface->name, PL_DHASH_LOOKUP);
         }
 
-        if(!info)
+        xptiInterfaceEntry* entry = 
+            PL_DHASH_ENTRY_IS_FREE(hashEntry) ? nsnull : hashEntry->value;
+
+        if(!entry)
         {
             // This one is just not resolved anywhere!
             continue;    
         }
 
         if(aTypelibRecord.IsZip())
-            zipItem->GetGuts()->SetInfoAt(i, info);
+            zipItem->GetGuts()->SetEntryAt(i, entry);
         else
-            fileRecord->GetGuts()->SetInfoAt(i, info);
+            fileRecord->GetGuts()->SetEntryAt(i, entry);
 
         XPTInterfaceDescriptor* descriptor = iface->interface_descriptor;
 
-        if(descriptor && aTypelibRecord.Equals(info->GetTypelibRecord()))
-            info->PartiallyResolveLocked(descriptor, aWorkingSet);
+        if(descriptor && aTypelibRecord.Equals(entry->GetTypelibRecord()))
+            entry->PartiallyResolveLocked(descriptor, aWorkingSet);
     }
     return PR_TRUE;
 }
@@ -587,7 +602,6 @@ xptiSortFileList(const void * p1, const void *p2, void * closure)
     nsILocalFile* pFile1 = *((nsILocalFile**) p1);
     nsILocalFile* pFile2 = *((nsILocalFile**) p2);
     SortData* data = (SortData*) closure;
-    
     
     nsXPIDLCString name1;
     nsXPIDLCString name2;
@@ -672,7 +686,6 @@ xptiInterfaceInfoManager::BuildOrderedFileArray(nsISupportsArray* aSearchPath,
     // files will be ordered by file size (larger first) but all .xpt files
     // will preceed all zipfile of those files not already in the working set.
     // To do this we will do a fancy sort on a copy of aFileList.
-
 
     nsILocalFile** orderedFileList = nsnull;
     PRUint32 countOfFilesInFileList;
@@ -917,29 +930,29 @@ xptiInterfaceInfoManager::AddOnlyNewFilesFromFileList(nsISupportsArray* aSearchP
 
             for(PRUint16 k = 0; k < header->num_interfaces; k++)
             {
-                xptiInterfaceInfo* info = nsnull;
+                xptiInterfaceEntry* entry = nsnull;
     
-                if(!VerifyAndAddInterfaceIfNew(aWorkingSet,
-                                               header->interface_directory + k,
-                                               typelibRecord,
-                                               &info))
+                if(!VerifyAndAddEntryIfNew(aWorkingSet,
+                                           header->interface_directory + k,
+                                           typelibRecord,
+                                           &entry))
                     return PR_FALSE;    
     
-                if(!info)
+                if(!entry)
                     continue;
                 
                 // If this is the first interface we found for this file then
                 // setup the fileRecord for the header and infos.
                 if(!AddedFile)
                 {
-                    if(!fileRecord.SetHeader(header))
+                    if(!fileRecord.SetHeader(header, aWorkingSet))
                     {
                         // XXX that would be bad.
                         return PR_FALSE;    
                     }
                     AddedFile = PR_TRUE;
                 }
-                fileRecord.GetGuts()->SetInfoAt(k, info);
+                fileRecord.GetGuts()->SetEntryAt(k, entry);
             }
             
             // This will correspond to typelibRecord above.
@@ -1054,29 +1067,29 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aS
 
             for(PRUint16 k = 0; k < header->num_interfaces; k++)
             {
-                xptiInterfaceInfo* info = nsnull;
+                xptiInterfaceEntry* entry = nsnull;
     
-                if(!VerifyAndAddInterfaceIfNew(aWorkingSet,
-                                               header->interface_directory + k,
-                                               typelibRecord,
-                                               &info))
+                if(!VerifyAndAddEntryIfNew(aWorkingSet,
+                                           header->interface_directory + k,
+                                           typelibRecord,
+                                           &entry))
                     return PR_FALSE;    
     
-                if(!info)
+                if(!entry)
                     continue;
                 
                 // If this is the first interface we found for this file then
                 // setup the fileRecord for the header and infos.
                 if(!AddedFile)
                 {
-                    if(!fileRecord.SetHeader(header))
+                    if(!fileRecord.SetHeader(header, aWorkingSet))
                     {
                         // XXX that would be bad.
                         return PR_FALSE;    
                     }
                     AddedFile = PR_TRUE;
                 }
-                fileRecord.GetGuts()->SetInfoAt(k, info);
+                fileRecord.GetGuts()->SetEntryAt(k, entry);
             }
             
             // This will correspond to typelibRecord above.
@@ -1135,15 +1148,15 @@ xptiInterfaceInfoManager::FoundEntry(const char* entryName,
 
     for(PRUint16 k = 0; k < header->num_interfaces; k++)
     {
-        xptiInterfaceInfo* info = nsnull;
+        xptiInterfaceEntry* entry = nsnull;
     
-        if(!VerifyAndAddInterfaceIfNew(aWorkingSet,
-                                       header->interface_directory + k,
-                                       typelibRecord,
-                                       &info))
+        if(!VerifyAndAddEntryIfNew(aWorkingSet,
+                                   header->interface_directory + k,
+                                   typelibRecord,
+                                   &entry))
             return PR_FALSE;    
     
-        if(!info)
+        if(!entry)
             continue;
 
         // If this is the first interface we found for this item
@@ -1151,14 +1164,14 @@ xptiInterfaceInfoManager::FoundEntry(const char* entryName,
         if(!countOfInterfacesAddedForItem)
         {
             // XXX fix this!
-            if(!zipItemRecord.SetHeader(header))
+            if(!zipItemRecord.SetHeader(header, aWorkingSet))
             {
                 // XXX that would be bad.
                 return PR_FALSE;    
             }
         }
 
-        // zipItemRecord.GetGuts()->SetInfoAt(k, info);
+        // zipItemRecord.GetGuts()->SetEntryAt(k, entry);
         ++countOfInterfacesAddedForItem;
     }   
 
@@ -1179,15 +1192,15 @@ xptiInterfaceInfoManager::FoundEntry(const char* entryName,
 }
 
 PRBool 
-xptiInterfaceInfoManager::VerifyAndAddInterfaceIfNew(xptiWorkingSet* aWorkingSet,
-                                                   XPTInterfaceDirectoryEntry* iface,
-                                                   const xptiTypelib& typelibRecord,
-                                                   xptiInterfaceInfo** infoAdded)
+xptiInterfaceInfoManager::VerifyAndAddEntryIfNew(xptiWorkingSet* aWorkingSet,
+                                                 XPTInterfaceDirectoryEntry* iface,
+                                                 const xptiTypelib& typelibRecord,
+                                                 xptiInterfaceEntry** entryAdded)
 {
     NS_ASSERTION(iface, "loser!");
-    NS_ASSERTION(infoAdded, "loser!");
+    NS_ASSERTION(entryAdded, "loser!");
 
-    *infoAdded = nsnull;
+    *entryAdded = nsnull;
 
     if(!iface->interface_descriptor)
     {
@@ -1196,42 +1209,49 @@ xptiInterfaceInfoManager::VerifyAndAddInterfaceIfNew(xptiWorkingSet* aWorkingSet
         return PR_TRUE;
     }
     
-    xptiInterfaceInfo* info = (xptiInterfaceInfo*)
-        PL_HashTableLookup(aWorkingSet->mIIDTable, &iface->iid);
+    xptiHashEntry* hashEntry = (xptiHashEntry*)
+        PL_DHashTableOperate(aWorkingSet->mIIDTable, &iface->iid, PL_DHASH_LOOKUP);
+
+    xptiInterfaceEntry* entry = 
+        PL_DHASH_ENTRY_IS_FREE(hashEntry) ? nsnull : hashEntry->value;
     
-    if(info)
+    if(entry)
     {
         // XXX validate this info to find possible inconsistencies
         LOG_AUTOREG(("      ignoring repeated interface: %s\n", iface->name));
         return PR_TRUE;
     }
     
-    // Build a new xptiInterfaceInfo object and hook it up. 
+    // Build a new xptiInterfaceEntry object and hook it up. 
 
-    info = new xptiInterfaceInfo(iface->name, iface->iid,
-                                 typelibRecord, aWorkingSet);
-    if(!info)
+    entry = xptiInterfaceEntry::NewEntry(iface->name, iface->iid,
+                                         typelibRecord, aWorkingSet);
+    if(!entry)
     {
         // XXX bad!
-        return PR_FALSE;    
-    }
-
-    NS_ADDREF(info);
-    if(!info->IsValid())
-    {
-        // XXX bad!
-        NS_RELEASE(info);
         return PR_FALSE;    
     }
 
     //XXX  We should SetHeader too as part of the validation, no?
-    info->SetScriptableFlag(XPT_ID_IS_SCRIPTABLE(iface->interface_descriptor->flags));
+    entry->SetScriptableFlag(XPT_ID_IS_SCRIPTABLE(iface->interface_descriptor->flags));
 
-    // The name table now owns the reference we AddRef'd above
-    PL_HashTableAdd(aWorkingSet->mNameTable, iface->name, info);
-    PL_HashTableAdd(aWorkingSet->mIIDTable, &iface->iid, info);
+    // Add our entry to the iid hashtable.
+
+    hashEntry = (xptiHashEntry*)
+        PL_DHashTableOperate(aWorkingSet->mNameTable, 
+                             entry->GetTheName(), PL_DHASH_ADD);
+    if(hashEntry)
+        hashEntry->value = entry;
     
-    *infoAdded = info;
+    // Add our entry to the name hashtable.
+
+    hashEntry = (xptiHashEntry*)
+        PL_DHashTableOperate(aWorkingSet->mIIDTable, 
+                             entry->GetTheIID(), PL_DHASH_ADD);
+    if(hashEntry)
+        hashEntry->value = entry;
+    
+    *entryAdded = entry;
 
     LOG_AUTOREG(("      added interface: %s\n", iface->name));
 
@@ -1248,85 +1268,85 @@ struct TwoWorkingSets
     xptiWorkingSet* aDestWorkingSet;
 };        
 
-PR_STATIC_CALLBACK(PRIntn)
-xpti_Merger(PLHashEntry *he, PRIntn i, void *arg)
+PR_STATIC_CALLBACK(PLDHashOperator)
+xpti_Merger(PLDHashTable *table, PLDHashEntryHdr *hdr,
+            PRUint32 number, void *arg)
 {
-    xptiInterfaceInfo* srcInfo = (xptiInterfaceInfo*) he->value;
+    xptiInterfaceEntry* srcEntry = ((xptiHashEntry*)hdr)->value;
     xptiWorkingSet* aSrcWorkingSet = ((TwoWorkingSets*)arg)->aSrcWorkingSet;
     xptiWorkingSet* aDestWorkingSet = ((TwoWorkingSets*)arg)->aDestWorkingSet;
 
-    xptiInterfaceInfo* destInfo = (xptiInterfaceInfo*)
-            PL_HashTableLookup(aDestWorkingSet->mIIDTable, srcInfo->GetTheIID());
+    xptiHashEntry* hashEntry = (xptiHashEntry*)
+        PL_DHashTableOperate(aDestWorkingSet->mIIDTable, 
+                             srcEntry->GetTheIID(), PL_DHASH_LOOKUP);
+
+    xptiInterfaceEntry* destEntry = 
+        PL_DHASH_ENTRY_IS_FREE(hashEntry) ? nsnull : hashEntry->value;
     
-    if(destInfo)
+    if(destEntry)
     {
         // Let's see if this is referring to the same exact typelib
          
         const char* destFilename = 
-            aDestWorkingSet->GetTypelibFileName(destInfo->GetTypelibRecord());
+            aDestWorkingSet->GetTypelibFileName(destEntry->GetTypelibRecord());
         
         const char* srcFilename = 
-            aSrcWorkingSet->GetTypelibFileName(srcInfo->GetTypelibRecord());
+            aSrcWorkingSet->GetTypelibFileName(srcEntry->GetTypelibRecord());
     
         if(0 == PL_strcmp(destFilename, srcFilename) && 
-           (destInfo->GetTypelibRecord().GetZipItemIndex() ==
-            srcInfo->GetTypelibRecord().GetZipItemIndex()))
+           (destEntry->GetTypelibRecord().GetZipItemIndex() ==
+            srcEntry->GetTypelibRecord().GetZipItemIndex()))
         {
             // This is the same item.
             // But... Let's make sure they didn't change the interface name.
             // There are wacky developers that do stuff like that!
-            if(0 == PL_strcmp(destInfo->GetTheName(), srcInfo->GetTheName()))
-                return HT_ENUMERATE_NEXT;
+            if(0 == PL_strcmp(destEntry->GetTheName(), srcEntry->GetTheName()))
+                return PL_DHASH_NEXT;
         }
-        // else...
-        
-        // We need to remove the old item before adding the new one below.
-                   
-        PL_HashTableRemove(aDestWorkingSet->mNameTable, destInfo->GetTheName());
-        PL_HashTableRemove(aDestWorkingSet->mIIDTable, destInfo->GetTheIID());
-        
-        // Release the one reference that was held by the name table. 
-        NS_RELEASE(destInfo);
     }
     
-    // Clone the xptiInterfaceInfo into our destination WorkingSet.
+    // Clone the xptiInterfaceEntry into our destination WorkingSet.
 
     xptiTypelib typelibRecord;
 
-    uint16 fileIndex = srcInfo->GetTypelibRecord().GetFileIndex();
-    uint16 zipItemIndex = srcInfo->GetTypelibRecord().GetZipItemIndex();
+    uint16 fileIndex = srcEntry->GetTypelibRecord().GetFileIndex();
+    uint16 zipItemIndex = srcEntry->GetTypelibRecord().GetZipItemIndex();
     
     fileIndex += aDestWorkingSet->mFileMergeOffsetMap[fileIndex];
     
     // If it is not a zipItem, then the original index is fine.
-    if(srcInfo->GetTypelibRecord().IsZip())
+    if(srcEntry->GetTypelibRecord().IsZip())
         zipItemIndex += aDestWorkingSet->mZipItemMergeOffsetMap[zipItemIndex];
 
     typelibRecord.Init(fileIndex, zipItemIndex);
                 
-    destInfo = new xptiInterfaceInfo(*srcInfo, typelibRecord, aDestWorkingSet);
-
-    if(!destInfo)
+    destEntry = xptiInterfaceEntry::NewEntry(*srcEntry, typelibRecord, 
+                                             aDestWorkingSet);
+    if(!destEntry)
     {
         // XXX bad! should log
-        return HT_ENUMERATE_NEXT;    
+        return PL_DHASH_NEXT;
     }
 
-    NS_ADDREF(destInfo);
-    if(!destInfo->IsValid())
-    {
-        // XXX bad! should log
-        NS_RELEASE(destInfo);
-        return HT_ENUMERATE_NEXT;    
-    }
 
-    // The name table now owns the reference we AddRef'd above
-    PL_HashTableAdd(aDestWorkingSet->mNameTable, destInfo->GetTheName(), destInfo);
-    PL_HashTableAdd(aDestWorkingSet->mIIDTable, destInfo->GetTheIID(), destInfo);
+    // Add our entry to the iid hashtable.
 
-    return HT_ENUMERATE_NEXT;
+    hashEntry = (xptiHashEntry*)
+        PL_DHashTableOperate(aDestWorkingSet->mNameTable, 
+                             destEntry->GetTheName(), PL_DHASH_ADD);
+    if(hashEntry)
+        hashEntry->value = destEntry;
+    
+    // Add our entry to the name hashtable.
+
+    hashEntry = (xptiHashEntry*)
+        PL_DHashTableOperate(aDestWorkingSet->mIIDTable, 
+                             destEntry->GetTheIID(), PL_DHASH_ADD);
+    if(hashEntry)
+        hashEntry->value = destEntry;
+
+    return PL_DHASH_NEXT;
 }       
-
 
 PRBool 
 xptiInterfaceInfoManager::MergeWorkingSets(xptiWorkingSet* aDestWorkingSet,
@@ -1380,8 +1400,7 @@ xptiInterfaceInfoManager::MergeWorkingSets(xptiWorkingSet* aDestWorkingSet,
 
             PRUint32 newIndex = aDestWorkingSet->GetFileCount();
 
-            aDestWorkingSet->AppendFile(
-                    xptiFile(srcFile, aDestWorkingSet, PR_FALSE));
+            aDestWorkingSet->AppendFile(xptiFile(srcFile, aDestWorkingSet));
 
             // Fixup the merge offset map.
             aDestWorkingSet->mFileMergeOffsetMap[i] = newIndex - i;
@@ -1434,7 +1453,7 @@ xptiInterfaceInfoManager::MergeWorkingSets(xptiWorkingSet* aDestWorkingSet,
             PRUint32 newIndex = aDestWorkingSet->GetZipItemCount();
 
             aDestWorkingSet->AppendZipItem(
-                    xptiZipItem(srcZipItem, aDestWorkingSet, PR_FALSE));
+                    xptiZipItem(srcZipItem, aDestWorkingSet));
 
             // Fixup the merge offset map.
             aDestWorkingSet->mZipItemMergeOffsetMap[i] = newIndex - i;
@@ -1445,7 +1464,7 @@ xptiInterfaceInfoManager::MergeWorkingSets(xptiWorkingSet* aDestWorkingSet,
 
     TwoWorkingSets sets(aSrcWorkingSet, aDestWorkingSet);
 
-    PL_HashTableEnumerateEntries(aSrcWorkingSet->mNameTable, xpti_Merger, &sets);
+    PL_DHashTableEnumerate(aSrcWorkingSet->mNameTable, xpti_Merger, &sets);
 
     return PR_TRUE;
 }        
@@ -1523,18 +1542,19 @@ xptiInterfaceInfoManager::WriteToLog(const char *fmt, ...)
     }
 }        
 
-PR_STATIC_CALLBACK(PRIntn)
-xpti_ResolvedFileNameLogger(PLHashEntry *he, PRIntn i, void *arg)
+PR_STATIC_CALLBACK(PLDHashOperator)
+xpti_ResolvedFileNameLogger(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                            PRUint32 number, void *arg)
 {
-    xptiInterfaceInfo* ii = (xptiInterfaceInfo*) he->value;
+    xptiInterfaceEntry* entry = ((xptiHashEntry*)hdr)->value;
     xptiInterfaceInfoManager* mgr = (xptiInterfaceInfoManager*) arg;
 
-    if(ii->IsFullyResolved())
+    if(entry->IsFullyResolved())
     {
         xptiWorkingSet*  aWorkingSet = mgr->GetWorkingSet();
         PRFileDesc* fd = mgr->GetOpenLogFile();
 
-        const xptiTypelib& typelib = ii->GetTypelibRecord();
+        const xptiTypelib& typelib = entry->GetTypelibRecord();
         const char* filename = 
                 aWorkingSet->GetFileAt(typelib.GetFileIndex()).GetName();
         
@@ -1543,15 +1563,15 @@ xpti_ResolvedFileNameLogger(PLHashEntry *he, PRIntn i, void *arg)
             const char* zipItemName = 
                 aWorkingSet->GetZipItemAt(typelib.GetZipItemIndex()).GetName();
             PR_fprintf(fd, "xpti used interface: %s from %s::%s\n", 
-                       ii->GetTheName(), filename, zipItemName);
+                       entry->GetTheName(), filename, zipItemName);
         }    
         else
         {
             PR_fprintf(fd, "xpti used interface: %s from %s\n", 
-                       ii->GetTheName(), filename);
+                       entry->GetTheName(), filename);
         }
     }
-    return HT_ENUMERATE_NEXT;
+    return PL_DHASH_NEXT;
 }
 
 void   
@@ -1595,12 +1615,34 @@ xptiInterfaceInfoManager::LogStats()
     // Show name of each interface that was fully resolved and the name
     // of the file and (perhaps) zip from which it was loaded.
 
-    PL_HashTableEnumerateEntries(mWorkingSet.mNameTable, 
-                                 xpti_ResolvedFileNameLogger, this);
+    PL_DHashTableEnumerate(mWorkingSet.mNameTable, 
+                           xpti_ResolvedFileNameLogger, this);
 
 } 
 
 /***************************************************************************/
+
+// this is a private helper
+static nsresult 
+EntryToInfo(xptiInterfaceEntry* entry, nsIInterfaceInfo **_retval)
+{
+    xptiInterfaceInfo* info;
+    nsresult rv;
+
+    if(!entry)
+    {
+        *_retval = nsnull;
+        return NS_ERROR_FAILURE;    
+    }
+
+    rv = entry->GetInterfaceInfo(&info);
+    if(NS_FAILED(rv))
+        return rv;
+
+    // Transfer the AddRef done by GetInterfaceInfo.
+    *_retval = NS_STATIC_CAST(nsIInterfaceInfo*, info);
+    return NS_OK;    
+}
 
 /* nsIInterfaceInfo getInfoForIID (in nsIIDPtr iid); */
 NS_IMETHODIMP xptiInterfaceInfoManager::GetInfoForIID(const nsIID * iid, nsIInterfaceInfo **_retval)
@@ -1608,17 +1650,13 @@ NS_IMETHODIMP xptiInterfaceInfoManager::GetInfoForIID(const nsIID * iid, nsIInte
     NS_ASSERTION(iid, "bad param");
     NS_ASSERTION(_retval, "bad param");
 
-    xptiInterfaceInfo* info = (xptiInterfaceInfo*)
-        PL_HashTableLookup(mWorkingSet.mIIDTable, iid);
+    xptiHashEntry* hashEntry = (xptiHashEntry*)
+        PL_DHashTableOperate(mWorkingSet.mIIDTable, iid, PL_DHASH_LOOKUP);
 
-    if(!info)
-    {
-        *_retval = nsnull;
-        return NS_ERROR_FAILURE;    
-    }
+    xptiInterfaceEntry* entry = 
+        PL_DHASH_ENTRY_IS_FREE(hashEntry) ? nsnull : hashEntry->value;
 
-    NS_ADDREF(*_retval = NS_STATIC_CAST(nsIInterfaceInfo*, info));
-    return NS_OK;    
+    return EntryToInfo(entry, _retval);
 }
 
 /* nsIInterfaceInfo getInfoForName (in string name); */
@@ -1627,17 +1665,13 @@ NS_IMETHODIMP xptiInterfaceInfoManager::GetInfoForName(const char *name, nsIInte
     NS_ASSERTION(name, "bad param");
     NS_ASSERTION(_retval, "bad param");
 
-    xptiInterfaceInfo* info = (xptiInterfaceInfo*)
-        PL_HashTableLookup(mWorkingSet.mNameTable, name);
+    xptiHashEntry* hashEntry = (xptiHashEntry*)
+        PL_DHashTableOperate(mWorkingSet.mNameTable, name, PL_DHASH_LOOKUP);
 
-    if(!info)
-    {
-        *_retval = nsnull;
-        return NS_ERROR_FAILURE;    
-    }
+    xptiInterfaceEntry* entry = 
+        PL_DHASH_ENTRY_IS_FREE(hashEntry) ? nsnull : hashEntry->value;
 
-    NS_ADDREF(*_retval = NS_STATIC_CAST(nsIInterfaceInfo*, info));
-    return NS_OK;    
+    return EntryToInfo(entry, _retval);
 }
 
 /* nsIIDPtr getIIDForName (in string name); */
@@ -1646,16 +1680,19 @@ NS_IMETHODIMP xptiInterfaceInfoManager::GetIIDForName(const char *name, nsIID * 
     NS_ASSERTION(name, "bad param");
     NS_ASSERTION(_retval, "bad param");
 
-    xptiInterfaceInfo* info = (xptiInterfaceInfo*)
-        PL_HashTableLookup(mWorkingSet.mNameTable, name);
+    xptiHashEntry* hashEntry = (xptiHashEntry*)
+        PL_DHashTableOperate(mWorkingSet.mNameTable, name, PL_DHASH_LOOKUP);
 
-    if(!info)
+    xptiInterfaceEntry* entry = 
+        PL_DHASH_ENTRY_IS_FREE(hashEntry) ? nsnull : hashEntry->value;
+
+    if(!entry)
     {
         *_retval = nsnull;
         return NS_ERROR_FAILURE;    
     }
 
-    return info->GetIID(_retval);
+    return entry->GetIID(_retval);
 }
 
 /* string getNameForIID (in nsIIDPtr iid); */
@@ -1664,29 +1701,33 @@ NS_IMETHODIMP xptiInterfaceInfoManager::GetNameForIID(const nsIID * iid, char **
     NS_ASSERTION(iid, "bad param");
     NS_ASSERTION(_retval, "bad param");
 
-    xptiInterfaceInfo* info = (xptiInterfaceInfo*)
-        PL_HashTableLookup(mWorkingSet.mIIDTable, iid);
+    xptiHashEntry* hashEntry = (xptiHashEntry*)
+        PL_DHashTableOperate(mWorkingSet.mIIDTable, iid, PL_DHASH_LOOKUP);
 
-    if(!info)
+    xptiInterfaceEntry* entry = 
+        PL_DHASH_ENTRY_IS_FREE(hashEntry) ? nsnull : hashEntry->value;
+
+    if(!entry)
     {
         *_retval = nsnull;
         return NS_ERROR_FAILURE;    
     }
 
-    return info->GetName(_retval);
+    return entry->GetName(_retval);
 }
 
-PR_STATIC_CALLBACK(PRIntn)
-xpti_ArrayAppender(PLHashEntry *he, PRIntn i, void *arg)
+PR_STATIC_CALLBACK(PLDHashOperator)
+xpti_ArrayAppender(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                   PRUint32 number, void *arg)
 {
-    nsIInterfaceInfo* ii = (nsIInterfaceInfo*) he->value;
+    xptiInterfaceEntry* entry = ((xptiHashEntry*)hdr)->value;
     nsISupportsArray* array = (nsISupportsArray*) arg;
 
-    // XXX nsSupportsArray.h shows that this method returns the wrong value!
-    array->AppendElement(ii);
-    return HT_ENUMERATE_NEXT;
+    nsCOMPtr<nsIInterfaceInfo> ii;
+    if(NS_SUCCEEDED(EntryToInfo(entry, getter_AddRefs(ii))))
+        array->AppendElement(ii);
+    return PL_DHASH_NEXT;
 }
-
 
 /* nsIEnumerator enumerateInterfaces (); */
 NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateInterfaces(nsIEnumerator **_retval)
@@ -1696,13 +1737,50 @@ NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateInterfaces(nsIEnumerator **_ret
     // the table using an nsISupportsArray and builds an enumerator for that.
     // We can afford this transient cost.
 
-    nsCOMPtr<nsISupportsArray> array = 
-        do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
+    nsCOMPtr<nsISupportsArray> array;
+    NS_NewISupportsArray(getter_AddRefs(array));
     if(!array)
         return NS_ERROR_UNEXPECTED;
 
-    PL_HashTableEnumerateEntries(mWorkingSet.mNameTable, xpti_ArrayAppender, 
-                                 array);
+    PL_DHashTableEnumerate(mWorkingSet.mNameTable, xpti_ArrayAppender, array);
+    
+    return array->Enumerate(_retval);
+}
+
+struct ArrayAndPrefix
+{
+    nsISupportsArray* array;
+    const char*       prefix;
+    PRUint32          length;
+};
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+xpti_ArrayPrefixAppender(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                         PRUint32 number, void *arg)
+{
+    xptiInterfaceEntry* entry = ((xptiHashEntry*)hdr)->value;
+    ArrayAndPrefix* args = (ArrayAndPrefix*) arg;
+
+    const char* name = entry->GetTheName();
+    if(name != PL_strnstr(name, args->prefix, args->length))
+        return PL_DHASH_NEXT;
+
+    nsCOMPtr<nsIInterfaceInfo> ii;
+    if(NS_SUCCEEDED(EntryToInfo(entry, getter_AddRefs(ii))))
+        args->array->AppendElement(ii);
+    return PL_DHASH_NEXT;
+}
+
+/* nsIEnumerator enumerateInterfacesWhoseNamesStartWith (in string prefix); */
+NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateInterfacesWhoseNamesStartWith(const char *prefix, nsIEnumerator **_retval)
+{
+    nsCOMPtr<nsISupportsArray> array;
+    NS_NewISupportsArray(getter_AddRefs(array));
+    if(!array)
+        return NS_ERROR_UNEXPECTED;
+
+    ArrayAndPrefix args = {array, prefix, PL_strlen(prefix)};
+    PL_DHashTableEnumerate(mWorkingSet.mNameTable, xpti_ArrayPrefixAppender, &args);
     
     return array->Enumerate(_retval);
 }

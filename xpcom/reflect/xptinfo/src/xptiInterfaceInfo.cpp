@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mike McCabe <mccabe@netscape.com>
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -35,91 +37,116 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Implementation of xptiInterfaceInfo. */
+/* Implementation of xptiInterfaceEntry and xptiInterfaceInfo. */
 
 #include "xptiprivate.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(xptiInterfaceInfo, nsIInterfaceInfo)
+/***************************************************************************/
+// Debug Instrumentation...
 
-void 
-xptiInterfaceInfo::CopyName(const char* name,
-                            xptiWorkingSet* aWorkingSet)
+#ifdef SHOW_INFO_COUNT_STATS
+static int DEBUG_TotalInfos = 0;
+static int DEBUG_CurrentInfos = 0;
+static int DEBUG_MaxInfos = 0;
+static int DEBUG_MonitorEntryCount = 0;
+
+#define LOG_INFO_CREATE(t)                                                  \
+    DEBUG_TotalInfos++;                                                     \
+    DEBUG_CurrentInfos++;                                                   \
+    if(DEBUG_MaxInfos < DEBUG_CurrentInfos)                                 \
+        DEBUG_MaxInfos = DEBUG_CurrentInfos /* no ';' */
+
+#define LOG_INFO_DESTROY(t)                                                 \
+    DEBUG_CurrentInfos-- /* no ';' */
+
+#define LOG_INFO_MONITOR_ENTRY                                              \
+    DEBUG_MonitorEntryCount++ /* no ';' */
+
+#else /* SHOW_INFO_COUNT_STATS */
+
+#define LOG_INFO_CREATE(t)     ((void)0)
+#define LOG_INFO_DESTROY(t)    ((void)0)
+#define LOG_INFO_MONITOR_ENTRY ((void)0)
+#endif /* SHOW_INFO_COUNT_STATS */
+
+#ifdef DEBUG
+// static 
+void xptiInterfaceInfo::DEBUG_ShutdownNotification()
 {
-    NS_ASSERTION(name, "bad param!");
-    NS_ASSERTION(aWorkingSet, "bad param!");
-    NS_ASSERTION(!mName, "bad caller!");
+#ifdef SHOW_INFO_COUNT_STATS
+    printf("iiii %d total xptiInterfaceInfos created\n", DEBUG_TotalInfos);      
+    printf("iiii %d max xptiInterfaceInfos alive at one time\n", DEBUG_MaxInfos);       
+    printf("iiii %d xptiInterfaceInfos still alive\n", DEBUG_CurrentInfos);       
+    printf("iiii %d times locked\n", DEBUG_MonitorEntryCount);       
+#endif
+}
+#endif /* DEBUG */
 
-    int len = PL_strlen(name);
-    char* ptr = (char*) XPT_MALLOC(aWorkingSet->GetStringArena(), len+2);
-    if(ptr)
-    {
-        mName = &ptr[1];
-        memcpy(mName, name, len);    
-        // XXX These are redundant as long as the underlying arena continues
-        // to zero out all mallocs. But... 
-        mName[-1] = mName[len] = 0;
-    }
+/***************************************************************************/
 
-}        
+// static 
+xptiInterfaceEntry* 
+xptiInterfaceEntry::NewEntry(const char* name,
+                             const nsID& iid,
+                             const xptiTypelib& typelib,
+                             xptiWorkingSet* aWorkingSet)
+{
+    size_t nameLength = PL_strlen(name);
+    void* place = XPT_MALLOC(aWorkingSet->GetStructArena(),
+                             sizeof(xptiInterfaceEntry) + nameLength);
+    if(!place)
+        return nsnull;
+    return new(place) xptiInterfaceEntry(name, nameLength, iid, typelib);
+}
+
+// static 
+xptiInterfaceEntry* 
+xptiInterfaceEntry::NewEntry(const xptiInterfaceEntry& r,
+                             const xptiTypelib& typelib,
+                             xptiWorkingSet* aWorkingSet)
+{
+    size_t nameLength = PL_strlen(r.mName);
+    void* place = XPT_MALLOC(aWorkingSet->GetStructArena(),
+                             sizeof(xptiInterfaceEntry) + nameLength);
+    if(!place)
+        return nsnull;
+    return new(place) xptiInterfaceEntry(r, nameLength, typelib);
+}
 
 
-xptiInterfaceInfo::xptiInterfaceInfo(const char* name,
-                                     const nsID& iid,
-                                     const xptiTypelib& typelib,
-                                     xptiWorkingSet* aWorkingSet)
+xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
+                                       size_t nameLength,
+                                       const nsID& iid,
+                                       const xptiTypelib& typelib)
     :   mIID(iid),
-        mName(nsnull),
-        mTypelib(typelib)
+        mTypelib(typelib),
+        mInfo(nsnull),
+        mFlags(uint8(0))
 {
-    NS_INIT_REFCNT();
-    CopyName(name, aWorkingSet);
+    memcpy(mName, name, nameLength);
 }
 
-xptiInterfaceInfo::xptiInterfaceInfo(const xptiInterfaceInfo& r,
-                                     const xptiTypelib& typelib,
-                                     xptiWorkingSet* aWorkingSet)
+xptiInterfaceEntry::xptiInterfaceEntry(const xptiInterfaceEntry& r,
+                                       size_t nameLength,
+                                       const xptiTypelib& typelib)
     :   mIID(r.mIID),
-        mName(nsnull),
-        mTypelib(typelib)
+        mTypelib(typelib),
+        mInfo(nsnull),
+        mFlags(r.mFlags)
 {
-    NS_INIT_REFCNT();
-    CopyName(r.mName, aWorkingSet);
-    if(IsValid() && r.IsValid())
-    {
-        mName[-1] = r.mName[-1]; // copy any flags
-        SetResolvedState(NOT_RESOLVED);   
-    }
-}
-
-xptiInterfaceInfo::~xptiInterfaceInfo()
-{
-    if(HasInterfaceRecord())
-        delete mInterface;        
-}        
-
-void 
-xptiInterfaceInfo::Invalidate()
-{ 
-    if(IsValid())
-    {
-        // The order of operations here is important!
-        xptiTypelib typelib = GetTypelibRecord();
-        if(HasInterfaceRecord())
-            delete mInterface;        
-        mTypelib = typelib;
-        mName = nsnull;
-    }
+    SetResolvedState(NOT_RESOLVED);
+    memcpy(mName, r.mName, nameLength);
 }
 
 PRBool 
-xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet /* = nsnull */)
+xptiInterfaceEntry::Resolve(xptiWorkingSet* aWorkingSet /* = nsnull */)
 {
     nsAutoLock lock(xptiInterfaceInfoManager::GetResolveLock());
     return ResolveLocked(aWorkingSet);
 }
 
 PRBool 
-xptiInterfaceInfo::ResolveLocked(xptiWorkingSet* aWorkingSet /* = nsnull */)
+xptiInterfaceEntry::ResolveLocked(xptiWorkingSet* aWorkingSet /* = nsnull */)
 {
     int resolvedState = GetResolveState();
 
@@ -165,20 +192,20 @@ xptiInterfaceInfo::ResolveLocked(xptiWorkingSet* aWorkingSet /* = nsnull */)
 
     if(parent_index)
     {
-        xptiInterfaceInfo* parent = 
+        xptiInterfaceEntry* parent = 
             aWorkingSet->GetTypelibGuts(mInterface->mTypelib)->
-                                GetInfoAtNoAddRef(parent_index - 1);
+                                GetEntryAt(parent_index - 1);
         
         if(!parent || !parent->EnsureResolvedLocked())
         {
             xptiTypelib aTypelib = mInterface->mTypelib;
-            delete mInterface;
+            mInterface = nsnull;
             mTypelib = aTypelib;
             SetResolvedState(RESOLVE_FAILED);
             return PR_FALSE;
         }
 
-        NS_ADDREF(mInterface->mParent = parent);
+        mInterface->mParent = parent;
 
         mInterface->mMethodBaseIndex =
             parent->mInterface->mMethodBaseIndex + 
@@ -197,107 +224,85 @@ xptiInterfaceInfo::ResolveLocked(xptiWorkingSet* aWorkingSet /* = nsnull */)
 
 // This *only* gets called by xptiInterfaceInfoManager::LoadFile (while locked).
 PRBool 
-xptiInterfaceInfo::PartiallyResolveLocked(XPTInterfaceDescriptor*  aDescriptor,
-                                          xptiWorkingSet*          aWorkingSet)
+xptiInterfaceEntry::PartiallyResolveLocked(XPTInterfaceDescriptor*  aDescriptor,
+                                           xptiWorkingSet*          aWorkingSet)
 {
     NS_ASSERTION(GetResolveState() == NOT_RESOLVED, "bad state");
 
     LOG_RESOLVE(("~ partial  resolve of %s\n", mName));
 
     xptiInterfaceGuts* iface = 
-        new xptiInterfaceGuts(aDescriptor, mTypelib, aWorkingSet);
+        xptiInterfaceGuts::NewGuts(aDescriptor, mTypelib, aWorkingSet);
 
     if(!iface)
         return PR_FALSE;
 
     mInterface = iface;
 
-    if(!ScriptableFlagIsValid())
+#ifdef DEBUG
+    if(!DEBUG_ScriptableFlagIsValid())
     {
         NS_ERROR("unexpected scriptable flag!");
         SetScriptableFlag(XPT_ID_IS_SCRIPTABLE(mInterface->mDescriptor->flags));
     }
+#endif
+
     SetResolvedState(PARTIALLY_RESOLVED);
     return PR_TRUE;
-}
+}        
 
-/***************************************************************************/
+/**************************************************/
+// These non-virtual methods handle the delegated nsIInterfaceInfo methods.
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetName(char **name)
+nsresult
+xptiInterfaceEntry::GetName(char **name)
 {
-    NS_PRECONDITION(name, "bad param");
-
-    if(!mName)
-        return NS_ERROR_UNEXPECTED;
-
-    char* ptr = *name = (char*) nsMemory::Clone(mName, PL_strlen(mName)+1);
-    return ptr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-xptiInterfaceInfo::GetIID(nsIID **iid)
-{
-    NS_PRECONDITION(iid, "bad param");
-
-    nsIID* ptr = *iid = (nsIID*) nsMemory::Clone(&mIID, sizeof(nsIID));
-    return ptr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-xptiInterfaceInfo::IsScriptable(PRBool* result)
-{
-    NS_ASSERTION(result, "bad bad caller!");
-
     // It is not necessary to Resolve because this info is read from manifest.
+    *name = (char*) nsMemory::Clone(mName, PL_strlen(mName)+1);
+    return *name ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
 
-    NS_ASSERTION(ScriptableFlagIsValid(), "scriptable flag out of sync!");   
+nsresult
+xptiInterfaceEntry::GetIID(nsIID **iid)
+{
+    // It is not necessary to Resolve because this info is read from manifest.
+    *iid = (nsIID*) nsMemory::Clone(&mIID, sizeof(nsIID));
+    return *iid ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+nsresult
+xptiInterfaceEntry::IsScriptable(PRBool* result)
+{
+    // It is not necessary to Resolve because this info is read from manifest.
+    NS_ASSERTION(DEBUG_ScriptableFlagIsValid(), "scriptable flag out of sync!");   
     *result = GetScriptableFlag();
     return NS_OK;
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::IsFunction(PRBool* result)
+nsresult
+xptiInterfaceEntry::IsFunction(PRBool* result)
 {
-    NS_ASSERTION(result, "bad bad caller!");
-
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
-    *result = XPT_ID_IS_FUNCTION(mInterface->mDescriptor->flags);
+    *result = XPT_ID_IS_FUNCTION(GetInterfaceGuts()->mDescriptor->flags);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetParent(nsIInterfaceInfo** parent)
+nsresult
+xptiInterfaceEntry::GetMethodCount(uint16* count)
 {
-    NS_PRECONDITION(parent, "bad param");
-
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
-
-    NS_IF_ADDREF(*parent = mInterface->mParent);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-xptiInterfaceInfo::GetMethodCount(uint16* count)
-{
-    NS_PRECONDITION(count, "bad param");
-
-    if(!EnsureResolved())
-        return NS_ERROR_UNEXPECTED;
-
+    
     *count = mInterface->mMethodBaseIndex + 
              mInterface->mDescriptor->num_methods;
     return NS_OK;
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetConstantCount(uint16* count)
+nsresult
+xptiInterfaceEntry::GetConstantCount(uint16* count)
 {
-    NS_PRECONDITION(count, "bad param");
-
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
@@ -306,11 +311,9 @@ xptiInterfaceInfo::GetConstantCount(uint16* count)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetMethodInfo(uint16 index, const nsXPTMethodInfo** info)
+nsresult
+xptiInterfaceEntry::GetMethodInfo(uint16 index, const nsXPTMethodInfo** info)
 {
-    NS_PRECONDITION(info, "bad param");
-
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
@@ -333,21 +336,15 @@ xptiInterfaceInfo::GetMethodInfo(uint16 index, const nsXPTMethodInfo** info)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetMethodInfoForName(const char* methodName, uint16 *index,
-                                      const nsXPTMethodInfo** result)
+nsresult
+xptiInterfaceEntry::GetMethodInfoForName(const char* methodName, uint16 *index,
+                                         const nsXPTMethodInfo** result)
 {
-    NS_PRECONDITION(methodName, "bad param");
-    NS_PRECONDITION(index, "bad param");
-    NS_PRECONDITION(result, "bad param");
-
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
     // This is a slow algorithm, but this is not expected to be called much.
-    for(uint16 i = 0;
-        i < mInterface->mDescriptor->num_methods;
-        ++i)
+    for(uint16 i = 0; i < mInterface->mDescriptor->num_methods; ++i)
     {
         const nsXPTMethodInfo* info;
         info = NS_REINTERPRET_CAST(nsXPTMethodInfo*,
@@ -359,9 +356,9 @@ xptiInterfaceInfo::GetMethodInfoForName(const char* methodName, uint16 *index,
             return NS_OK;
         }
     }
+    
     if(mInterface->mParent)
-        return mInterface->mParent->GetMethodInfoForName(methodName,
-                                                         index, result);
+        return mInterface->mParent->GetMethodInfoForName(methodName, index, result);
     else
     {
         *index = 0;
@@ -370,11 +367,9 @@ xptiInterfaceInfo::GetMethodInfoForName(const char* methodName, uint16 *index,
     }
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetConstant(uint16 index, const nsXPTConstant** constant)
+nsresult
+xptiInterfaceEntry::GetConstant(uint16 index, const nsXPTConstant** constant)
 {
-    NS_PRECONDITION(constant, "bad param");
-
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
@@ -398,33 +393,30 @@ xptiInterfaceInfo::GetConstant(uint16 index, const nsXPTConstant** constant)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetInfoForParam(uint16 methodIndex,
-                                 const nsXPTParamInfo *param,
-                                 nsIInterfaceInfo** info)
-{
-    NS_PRECONDITION(param, "bad pointer");
-    NS_PRECONDITION(info, "bad pointer");
+// this is a private helper
 
+nsresult 
+xptiInterfaceEntry::GetEntryForParam(PRUint16 methodIndex, 
+                                     const nsXPTParamInfo * param,
+                                     xptiInterfaceEntry** entry)
+{
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
     if(methodIndex < mInterface->mMethodBaseIndex)
-        return mInterface->mParent->GetInfoForParam(methodIndex, param, info);
+        return mInterface->mParent->GetEntryForParam(methodIndex, param, entry);
 
     if(methodIndex >= mInterface->mMethodBaseIndex + 
                       mInterface->mDescriptor->num_methods)
     {
-        NS_PRECONDITION(0, "bad param");
-        *info = NULL;
+        NS_ERROR("bad param");
         return NS_ERROR_INVALID_ARG;
     }
 
     const XPTTypeDescriptor *td = &param->type;
 
     while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
-        td = &mInterface->mDescriptor->
-                                additional_types[td->type.additional_type];
+        td = &mInterface->mDescriptor->additional_types[td->type.additional_type];
     }
 
     if(XPT_TDP_TAG(td->prefix) != TD_INTERFACE_TYPE) {
@@ -432,36 +424,51 @@ xptiInterfaceInfo::GetInfoForParam(uint16 methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    nsIInterfaceInfo* theInfo =
-        mInterface->mWorkingSet->GetTypelibGuts(mInterface->mTypelib)->
-            GetInfoAtNoAddRef(td->type.iface - 1);
+    xptiInterfaceEntry* theEntry = 
+            mInterface->mWorkingSet->GetTypelibGuts(mInterface->mTypelib)->
+                GetEntryAt(td->type.iface - 1);
 
-    if(!theInfo)
-        return NS_ERROR_FAILURE;
-
-    NS_ADDREF(*info = theInfo);
+    NS_ASSERTION(theEntry, "bad state");
+    *entry = theEntry;
     return NS_OK;
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetIIDForParam(uint16 methodIndex,
-                                const nsXPTParamInfo* param, nsIID** iid)
+nsresult
+xptiInterfaceEntry::GetInfoForParam(uint16 methodIndex,
+                                    const nsXPTParamInfo *param,
+                                    nsIInterfaceInfo** info)
 {
-    nsCOMPtr<nsIInterfaceInfo> ii;
-    nsresult rv = GetInfoForParam(methodIndex, param, getter_AddRefs(ii));
+    xptiInterfaceEntry* entry;
+    nsresult rv = GetEntryForParam(methodIndex, param, &entry);
     if(NS_FAILED(rv))
         return rv;
-    return ii->GetIID(iid);
+
+    xptiInterfaceInfo* theInfo;
+    rv = entry->GetInterfaceInfo(&theInfo);    
+    if(NS_FAILED(rv))
+        return rv;
+
+    *info = NS_STATIC_CAST(nsIInterfaceInfo*, theInfo);
+    return NS_OK;
+}
+
+nsresult
+xptiInterfaceEntry::GetIIDForParam(uint16 methodIndex,
+                                   const nsXPTParamInfo* param, nsIID** iid)
+{
+    xptiInterfaceEntry* entry;
+    nsresult rv = GetEntryForParam(methodIndex, param, &entry);
+    if(NS_FAILED(rv))
+        return rv;
+    return entry->GetIID(iid);
 }
 
 // this is a private helper
-NS_IMETHODIMP
-xptiInterfaceInfo::GetTypeInArray(const nsXPTParamInfo* param,
-                                uint16 dimension,
-                                const XPTTypeDescriptor** type)
+nsresult
+xptiInterfaceEntry::GetTypeInArray(const nsXPTParamInfo* param,
+                                  uint16 dimension,
+                                  const XPTTypeDescriptor** type)
 {
-    NS_ASSERTION(param, "bad state");
-    NS_ASSERTION(type, "bad state");
     NS_ASSERTION(IsFullyResolved(), "bad state");
 
     const XPTTypeDescriptor *td = &param->type;
@@ -480,21 +487,18 @@ xptiInterfaceInfo::GetTypeInArray(const nsXPTParamInfo* param,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetTypeForParam(uint16 methodIndex,
-                                 const nsXPTParamInfo* param,
-                                 uint16 dimension,
-                                 nsXPTType* type)
+nsresult
+xptiInterfaceEntry::GetTypeForParam(uint16 methodIndex,
+                                    const nsXPTParamInfo* param,
+                                    uint16 dimension,
+                                    nsXPTType* type)
 {
-    NS_PRECONDITION(param, "bad pointer");
-    NS_PRECONDITION(type, "bad pointer");
-
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
     if(methodIndex < mInterface->mMethodBaseIndex)
-        return mInterface->mParent->GetTypeForParam(methodIndex, param, 
-                                                    dimension, type);
+        return mInterface->mParent->
+            GetTypeForParam(methodIndex, param, dimension, type);
 
     if(methodIndex >= mInterface->mMethodBaseIndex + 
                       mInterface->mDescriptor->num_methods)
@@ -517,22 +521,18 @@ xptiInterfaceInfo::GetTypeForParam(uint16 methodIndex,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetSizeIsArgNumberForParam(uint16 methodIndex,
-                                            const nsXPTParamInfo* param,
-                                            uint16 dimension,
-                                            uint8* argnum)
+nsresult
+xptiInterfaceEntry::GetSizeIsArgNumberForParam(uint16 methodIndex,
+                                               const nsXPTParamInfo* param,
+                                               uint16 dimension,
+                                               uint8* argnum)
 {
-    NS_PRECONDITION(param, "bad pointer");
-    NS_PRECONDITION(argnum, "bad pointer");
-
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
     if(methodIndex < mInterface->mMethodBaseIndex)
         return mInterface->mParent->
-                        GetSizeIsArgNumberForParam(methodIndex, param,
-                                                   dimension, argnum);
+            GetSizeIsArgNumberForParam(methodIndex, param, dimension, argnum);
 
     if(methodIndex >= mInterface->mMethodBaseIndex + 
                       mInterface->mDescriptor->num_methods)
@@ -566,22 +566,18 @@ xptiInterfaceInfo::GetSizeIsArgNumberForParam(uint16 methodIndex,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetLengthIsArgNumberForParam(uint16 methodIndex,
-                                              const nsXPTParamInfo* param,
-                                              uint16 dimension,
-                                              uint8* argnum)
+nsresult
+xptiInterfaceEntry::GetLengthIsArgNumberForParam(uint16 methodIndex,
+                                                 const nsXPTParamInfo* param,
+                                                 uint16 dimension,
+                                                 uint8* argnum)
 {
-    NS_PRECONDITION(param, "bad pointer");
-    NS_PRECONDITION(argnum, "bad pointer");
-
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
     if(methodIndex < mInterface->mMethodBaseIndex)
         return mInterface->mParent->
-                        GetLengthIsArgNumberForParam(methodIndex, param,
-                                                     dimension, argnum);
+            GetLengthIsArgNumberForParam(methodIndex, param, dimension, argnum);
 
     if(methodIndex >= mInterface->mMethodBaseIndex + 
                       mInterface->mDescriptor->num_methods)
@@ -616,21 +612,17 @@ xptiInterfaceInfo::GetLengthIsArgNumberForParam(uint16 methodIndex,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfo::GetInterfaceIsArgNumberForParam(uint16 methodIndex,
-                                                 const nsXPTParamInfo* param,
-                                                 uint8* argnum)
+nsresult
+xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16 methodIndex,
+                                                    const nsXPTParamInfo* param,
+                                                    uint8* argnum)
 {
-    NS_PRECONDITION(param, "bad pointer");
-    NS_PRECONDITION(argnum, "bad pointer");
-
     if(!EnsureResolved())
         return NS_ERROR_UNEXPECTED;
 
     if(methodIndex < mInterface->mMethodBaseIndex)
         return mInterface->mParent->
-                        GetInterfaceIsArgNumberForParam(methodIndex, param,
-                                                        argnum);
+            GetInterfaceIsArgNumberForParam(methodIndex, param, argnum);
 
     if(methodIndex >= mInterface->mMethodBaseIndex + 
                       mInterface->mDescriptor->num_methods)
@@ -656,49 +648,39 @@ xptiInterfaceInfo::GetInterfaceIsArgNumberForParam(uint16 methodIndex,
 }
 
 /* PRBool isIID (in nsIIDPtr IID); */
-NS_IMETHODIMP 
-xptiInterfaceInfo::IsIID(const nsIID * IID, PRBool *_retval)
+nsresult 
+xptiInterfaceEntry::IsIID(const nsIID * IID, PRBool *_retval)
 {
-    NS_PRECONDITION(IID, "bad pointer");
-    NS_PRECONDITION(_retval, "bad pointer");
-
+    // It is not necessary to Resolve because this info is read from manifest.
     *_retval = mIID.Equals(*IID);
     return NS_OK;
 }
 
 /* void getNameShared ([shared, retval] out string name); */
-NS_IMETHODIMP 
-xptiInterfaceInfo::GetNameShared(const char **name)
+nsresult 
+xptiInterfaceEntry::GetNameShared(const char **name)
 {
-    NS_PRECONDITION(name, "bad param");
-
-    if(!mName)
-        return NS_ERROR_UNEXPECTED;
-
+    // It is not necessary to Resolve because this info is read from manifest.
     *name = mName;
     return NS_OK;
 }
 
 /* void getIIDShared ([shared, retval] out nsIIDPtrShared iid); */
-NS_IMETHODIMP 
-xptiInterfaceInfo::GetIIDShared(const nsIID * *iid)
+nsresult 
+xptiInterfaceEntry::GetIIDShared(const nsIID * *iid)
 {
-    NS_PRECONDITION(iid, "bad param");
-
+    // It is not necessary to Resolve because this info is read from manifest.
     *iid = &mIID;
     return NS_OK;
 }
 
 /* PRBool hasAncestor (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-xptiInterfaceInfo::HasAncestor(const nsIID * iid, PRBool *_retval)
+nsresult 
+xptiInterfaceEntry::HasAncestor(const nsIID * iid, PRBool *_retval)
 {
-    NS_PRECONDITION(iid, "bad param");
-    NS_PRECONDITION(_retval, "bad param");
-
     *_retval = PR_FALSE;
 
-    for(xptiInterfaceInfo* current = this; 
+    for(xptiInterfaceEntry* current = this; 
         current;
         current = current->mInterface->mParent)
     {
@@ -713,3 +695,106 @@ xptiInterfaceInfo::HasAncestor(const nsIID * iid, PRBool *_retval)
 
     return NS_OK;
 }
+
+/***************************************************/
+
+nsresult 
+xptiInterfaceEntry::GetInterfaceInfo(xptiInterfaceInfo** info)
+{
+    nsAutoMonitor lock(xptiInterfaceInfoManager::GetInfoMonitor());
+    LOG_INFO_MONITOR_ENTRY;
+
+#ifdef SHOW_INFO_COUNT_STATS
+    static int callCount = 0;
+    if(!(++callCount%100))
+        printf("iiii %d xptiInterfaceInfos currently alive\n", DEBUG_CurrentInfos);       
+#endif
+
+    if(!mInfo)
+    {
+        mInfo = new xptiInterfaceInfo(this);
+        if(!mInfo)
+        {
+            *info = nsnull;    
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+    
+    NS_ADDREF(*info = mInfo);
+    return NS_OK;    
+}
+    
+void     
+xptiInterfaceEntry::LockedInvalidateInterfaceInfo()
+{
+    if(mInfo)
+    {
+        mInfo->Invalidate(); 
+        mInfo = nsnull;
+    }
+}
+
+/***************************************************************************/
+
+NS_IMPL_QUERY_INTERFACE1(xptiInterfaceInfo, nsIInterfaceInfo)
+
+xptiInterfaceInfo::xptiInterfaceInfo(xptiInterfaceEntry* entry)
+    : mEntry(entry), mParent(nsnull)
+{
+    NS_INIT_ISUPPORTS();
+    LOG_INFO_CREATE(this);
+}
+
+xptiInterfaceInfo::~xptiInterfaceInfo() 
+{
+    LOG_INFO_DESTROY(this);
+    NS_IF_RELEASE(mParent); 
+    NS_ASSERTION(!mEntry, "bad state in dtor");
+}
+
+nsrefcnt
+xptiInterfaceInfo::AddRef(void)
+{
+    nsrefcnt cnt = (nsrefcnt) PR_AtomicIncrement((PRInt32*)&mRefCnt);
+    NS_LOG_ADDREF(this, cnt, "xptiInterfaceInfo", sizeof(*this));
+    return cnt;
+}
+
+nsrefcnt
+xptiInterfaceInfo::Release(void)
+{
+    xptiInterfaceEntry* entry = mEntry;
+    nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
+    NS_LOG_RELEASE(this, cnt, "xptiInterfaceInfo");
+    if(!cnt)
+    {
+        nsAutoMonitor lock(xptiInterfaceInfoManager::GetInfoMonitor());
+        LOG_INFO_MONITOR_ENTRY;
+        
+        // If GetInterfaceInfo added and *released* a reference before we 
+        // acquired the monitor then 'this' might already be dead. In that
+        // case we would not want to try to access any instance data. We
+        // would want to bail immediately. If 'this' is already dead then the
+        // entry will no longer have a pointer to 'this'. So, we can protect 
+        // ourselves from danger without more aggressive locking.
+        if(entry && !entry->InterfaceInfoEquals(this))
+            return 0;
+
+        // If GetInterfaceInfo added a reference before we acquired the monitor
+        // then we want to bail out of here without destorying the object.
+        if(mRefCnt)
+            return 1;
+        
+        if(mEntry)
+        {
+            mEntry->LockedInterfaceInfoDeathNotification();
+            mEntry = nsnull;
+        }
+
+        NS_DELETEXPCOM(this);
+        return 0;    
+    }
+    return cnt;
+}
+
+/***************************************************************************/

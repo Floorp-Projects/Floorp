@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mike McCabe <mccabe@netscape.com>
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -58,9 +60,9 @@ static const xptiFileTypeEntry g_Entries[] =
 xptiFileType::Type xptiFileType::GetType(const char* name)
 {
     NS_ASSERTION(name, "loser!");
+    int len = PL_strlen(name);
     for(const xptiFileTypeEntry* p = g_Entries; p->name; p++)
     {
-        int len = PL_strlen(name);
         if(len > p->len && 0 == PL_strcasecmp(p->name, &(name[len - p->len])))
             return p->type;
     }
