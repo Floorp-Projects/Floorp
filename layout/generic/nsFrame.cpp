@@ -601,8 +601,6 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
     if (DisplaySelection(aPresContext) == PR_FALSE)
       return NS_OK;
 
-    PRBool clearAfterPaint = PR_FALSE;
-
     // Get Content
     nsIContent* content;
     nsresult rv = GetContent(content);
@@ -1736,7 +1734,7 @@ nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
 
   if (nsnull != mView) {
     IndentBy(out, aIndent);
-    fprintf(out, "<view addr=\"%x\">\n", mView);
+    fprintf(out, "<view addr=\"%p\">\n", mView);
     aIndent++;
     // XXX add in code to dump out view state too...
     aIndent--;
