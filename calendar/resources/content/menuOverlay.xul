@@ -46,7 +46,7 @@
 %navigatorDTD;
 ]>
 
-<overlay id="navigatorOverlay"
+<overlay id="calendarOverlay"
          xmlns:html="http://www.w3.org/1999/xhtml"
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -69,6 +69,7 @@
     <!-- Search Menu -->  
     <key id="key_find"              key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
     <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
+    <keyset id="tasksKeys"/>
   </keyset>
 
   <commandset id="commands">
@@ -87,12 +88,15 @@
     <!-- Search Menu -->
     <command id="Browser:Find" oncommand="BrowserFind();" />
     <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" /> 
+    <commandset id="tasksCommands"/>
   </commandset>
 
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="menu_File">
-      <menupopup id="menu_FilePopup"/>
+      <menupopup id="menu_FilePopup">
+        <menuitem id="calendar-new-event-menu" label="New Event" oncommand="newEventCommand()"/>
+      </menupopup>
     </menu>
 
 <!--
