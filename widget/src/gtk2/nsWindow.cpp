@@ -1160,31 +1160,50 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     if (aEvent->window != mDrawingarea->inner_window)
         return FALSE;
 
-    LOGDRAW(("sending expose event [%p] %p 0x%lx\n\t%d %d %d %d\n",
-             (void *)this,
-             (void *)aEvent->window,
-             GDK_WINDOW_XWINDOW(aEvent->window),
-             aEvent->area.x, aEvent->area.y,
-             aEvent->area.width, aEvent->area.height));
+    nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
 
+// defining NS_PAINT_SEPARATELY is useful for debugging invalidation
+// problems since it limits repainting to the rects that were actually
+// invalidated.
+#undef NS_PAINT_SEPARATELY
+
+#ifdef NS_PAINT_SEPARATELY
+    GdkRectangle *rects;
+    gint nrects;
+    gdk_region_get_rectangles(aEvent->region, &rects, &nrects);
+    for (GdkRectangle *r = rects, *r_end = rects + nrects; r < r_end; ++r) {
+
+    nsRect rect(r->x, r->y, r->width, r->height);
+#else
     // ok, send out the paint event
     // XXX figure out the region/rect stuff!
     nsRect rect(aEvent->area.x, aEvent->area.y,
                 aEvent->area.width, aEvent->area.height);
-    nsPaintEvent event(NS_PAINT, this);
+#endif
 
-    event.point.x = aEvent->area.x;
-    event.point.y = aEvent->area.y;
+    LOGDRAW(("sending expose event [%p] %p 0x%lx\n\t%d %d %d %d\n",
+             (void *)this,
+             (void *)aEvent->window,
+             GDK_WINDOW_XWINDOW(aEvent->window),
+             rect.x, rect.y, rect.width, rect.height));
+
+    nsPaintEvent event(NS_PAINT, this);
+    event.point.x = rect.x;
+    event.point.y = rect.y;
     event.rect = &rect;
     // XXX fix this!
     event.region = nsnull;
     // XXX fix this!
-    event.renderingContext = GetRenderingContext();
+    event.renderingContext = rc;
 
     nsEventStatus status;
     DispatchEvent(&event, status);
 
-    NS_RELEASE(event.renderingContext);
+#ifdef NS_PAINT_SEPARATELY
+    }
+
+    g_free(rects);
+#endif
 
     // check the return value!
     return TRUE;
