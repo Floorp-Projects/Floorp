@@ -123,6 +123,7 @@ function toNewTextEditorWindow()
 	    dump("Error; can't create toolkitCore\n");
 	}
 }
+
 function ShowWindowFromResource( node )
 {
 	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
@@ -142,3 +143,11 @@ function ShowWindowFromResource( node )
 	}
 }
 
+function OpenTaskURL( inURL )
+{
+	dump("loading "+inURL+"\n");
+	
+	window.content.location.href= inURL;
+	dump(window.content.location.href+"\n");
+    RefreshUrlbar();
+}

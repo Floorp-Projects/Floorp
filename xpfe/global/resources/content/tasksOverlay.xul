@@ -18,6 +18,20 @@
 <!ENTITY importUtilCmd.label					".Import Utility">  
 <!ENTITY javaConsoleCmd.label					".Java Console">
 
+<!-- taskbar -->
+<!ENTITY  mozillaButton.label "Mozilla">
+<!ENTITY  shoppingButton.label "Shopping">
+<!ENTITY  entertainment.label "Entertainment">
+<!ENTITY  openWinButton.label "Open Windows">
+<!-- taskbar popups -->
+<!ENTITY  bugzillaButton.label "Go to Bugzilla">
+<!ENTITY  tinderboxButton.label "Look at Tinderbox">
+<!ENTITY  bonsai.label "Look at Bonsai">
+
+<!ENTITY  booksButton.label "Buy Books at Fatbrain">
+<!ENTITY  cdButton.label "Buy CD's at CDNOW">
+<!ENTITY  lifeButton.label "Get a life at Match.com">
+
 ]> 
 
 
@@ -49,4 +63,49 @@
 	
 	</menu>
 
+	 <toolbar id="taskbar" chromeclass="status">
+
+		  <popup id="mozillaPopup">
+		    <menu>
+		    	<menuitem name="&bonsai.label;" onclick="OpenTaskURL('http://cvs-mirror.mozilla.org/webtools/bonsai/toplevel.cgi?treeid=SeaMonkey');"/>
+		    	<menuitem name="&bugzillaButton.label;" onclick="OpenTaskURL('http://bugzilla.mozilla.org');"/>
+		    </menu>
+		  </popup>
+		  
+		  <popup id="shoppingPopup">
+		    <menu>
+		    	<menuitem name="&booksButton.label;" onclick="OpenTaskURL('http://www.fatbrain.com' );"/>
+		    	<menuitem name="&cdButton.label;" onclick="OpenTaskURL('http://www.cdnow.com');" />
+		    	<menuitem name="&lifeButton.label;" onclick="OpenTaskURL('http://www.match.com');"/>
+		    </menu>
+		  </popup>
+		  
+		   <popup id="windowPopup" >
+		    <menu onclick="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot" >
+		    </menu>
+		  </popup>
+		
+		  
+	  	 <box align="horizontal">
+  			
+  	 		<titledbutton align="left" id="mini-nav" value="" onclick="toNavigator();"/>
+  	 		<titledbutton align="left" id="mini-mail" value="" onclick="OpenMessenger()"/>
+  	 		<titledbutton align="left" id="mini-addr" value="" onclick="OpenAddressbook()"/>
+  	 		<titledbutton align="left" id="mini-comp" value="" onclick="toEditor();" />
+	      </box>
+		  <spring flex="100%"/>
+	 	  <box align="horizontal">
+  	 		<titledbutton align="left"  class="popup" popup="mozillaPopup" tooltip="aTooltip" tooltiptext="Mozilla development info"
+			   popupanchor="topleft" popupalign="bottomleft" value="&mozillaButton.label;" />
+  	 		
+  	 		<titledbutton align="left"  class="popup" popup="shoppingPopup"
+			   popupanchor="topleft" popupalign="bottomleft" value="&shoppingButton.label;" />
+  	 
+			   
+			<titledbutton align="left" class="popup" value="&openWinButton.label;" popup="windowPopup"
+			 popupanchor="topleft" popupalign="bottomleft"  />
+          </box>
+		  <spring flex="100%"/>
+	   	 
+	  </toolbar>
 </overlay>		
