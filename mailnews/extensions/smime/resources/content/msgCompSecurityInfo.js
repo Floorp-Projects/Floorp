@@ -261,7 +261,7 @@ function onSelectionChange(event)
 
 function viewCertHelper(parent, cert) {
   var cd = Components.classes[nsCertificateDialogs].getService(nsICertificateDialogs);
-  cd->viewCert(parent, cert);
+  cd.viewCert(parent, cert);
 }
 
 function viewSelectedCert()
