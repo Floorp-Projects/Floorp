@@ -41,10 +41,7 @@ public:
 
 protected:
   virtual ~nsDeviceContextSpecPh();
-
   PpPrintContext_t *mPC;
-
-  int mIsQuite;
 };
 
 #endif

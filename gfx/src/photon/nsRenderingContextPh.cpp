@@ -1,5 +1,3 @@
-extern "C" int verbose=4;	// kedl, need this while using Bobby's test render lib...
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -199,26 +197,28 @@ NS_IMETHODIMP nsRenderingContextPh :: Init( nsIDeviceContext* aContext, nsIWidge
   PhRid_t rid = PtWidgetRid( mWidget );
   
 	if( rid ) {
-    mGC = PgCreateGC( 16 * 1024 );
-    if( !mGC ) abort();
+		mGC = PgCreateGC(0);
+		if( !mGC ) 
+		   abort();
+		PgSetDrawBufferSize(0x7fff);
 
-	/* Make sure the new GC is reset to the default settings */  
-    PgDefaultGC( mGC );
+		/* Make sure the new GC is reset to the default settings */  
+		PgDefaultGC( mGC );
 
-    mSurface = new nsDrawingSurfacePh();
-    if( mSurface ) {
-      res = mSurface->Init( mGC );
-      if( res != NS_OK ) return NS_ERROR_FAILURE;
-
-      mOffscreenSurface = mSurface;
-      NS_ADDREF( mSurface );
-
+		mSurface = new nsDrawingSurfacePh();
+		if( mSurface ) {
+			res = mSurface->Init( mGC );
+			if( res != NS_OK ) return NS_ERROR_FAILURE;
+			
+			mOffscreenSurface = mSurface;
+			NS_ADDREF( mSurface );
+			
 			/* hack up code to setup new GC for on screen drawing */
 			PgSetGC( mGC );
 			PgSetRegion( rid );
-    	}
-    else abort();
-  	}
+		}
+		else abort();
+	}
 
   mInitialized = PR_TRUE;
   return CommonInit();
@@ -284,12 +284,16 @@ NS_IMETHODIMP nsRenderingContextPh::UnlockDrawingSurface( void ) {
 	}
 
 
+extern "C" {
+int PdSetOffscreenTranslation(PdOffscreenContext_t *osc, PhPoint_t *trans);
+}
+
 NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface( nsDrawingSurface aSurface ) {
 
   if( nsnull==aSurface ) mSurface = mOffscreenSurface;
   else mSurface = (nsDrawingSurfacePh *) aSurface;
 
-  mSurface->Select();
+  mSurface->Select( );
 
   mBufferIsEmpty = PR_TRUE;
   return NS_OK;
@@ -408,7 +412,6 @@ NS_IMETHODIMP nsRenderingContextPh :: IsVisibleRect( const nsRect& aRect, PRBool
 NS_IMETHODIMP nsRenderingContextPh :: SetClipRect( const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty ) {
   nsresult   res = NS_ERROR_FAILURE;
   nsRect     trect = aRect;
-  PhRect_t  *rgn;
 
   if( mTranMatrix && mClipRegion ) {
     mTranMatrix->TransformCoord( &trect.x, &trect.y,&trect.width, &trect.height );
@@ -699,6 +702,8 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect( nscoord aX, nscoord aY, nscoord 
 
   SELECT( mSurface );
 
+	if( PgGetGC() != mGC ) PgSetGC( mGC );
+
   if( w && h ) {
 		int y2 = y + h - 1;
 		if( y < SHRT_MIN ) y = SHRT_MIN;			/* on very large documents, the PgDrawIRect will take only the short part from the int, which could lead to randomly, hazardous results see PR: 5864 */
@@ -741,7 +746,6 @@ NS_IMETHODIMP nsRenderingContextPh :: InvertRect( nscoord aX, nscoord aY, nscoor
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawPolygon( const nsPoint aPoints[], PRInt32 aNumPoints ) {
   	PhPoint_t *pts;
-  	int err = 0;
 
   	if( !aNumPoints ) return NS_OK;
 
@@ -870,7 +874,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawArc(nscoord aX, nscoord aY, nscoord aW
   radii.y = y+h-1;
   SELECT(mSurface);
 	PgSetStrokeColor( NS_TO_PH_RGB( mCurrentColor ));
-  PgDrawArc( &center, &radii, aStartAngle, aEndAngle, Pg_EXTENT_BASED | Pg_DRAW_STROKE );
+  PgDrawArc( &center, &radii, (unsigned int)aStartAngle, (unsigned int)aEndAngle, Pg_EXTENT_BASED | Pg_DRAW_STROKE );
 
   return NS_OK;
 	}
@@ -896,13 +900,12 @@ NS_IMETHODIMP nsRenderingContextPh :: FillArc( nscoord aX, nscoord aY, nscoord a
   radii.y = y+h-1;
   SELECT(mSurface);
 	PgSetFillColor( NS_TO_PH_RGB( mCurrentColor ));
-  PgDrawArc( &center, &radii, aStartAngle, aEndAngle, Pg_EXTENT_BASED | Pg_DRAW_FILL );
+  PgDrawArc( &center, &radii, (unsigned int)aStartAngle, (unsigned int)aEndAngle, Pg_EXTENT_BASED | Pg_DRAW_FILL );
 
   return NS_OK;
 	}
 
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth( char ch, nscoord& aWidth ) {
-  nsresult ret_code;
 
   // Check for the very common case of trying to get the width of a single
   // space.
@@ -917,7 +920,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth( char ch, nscoord& aWidth ) {
 
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth( PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID ) {
   PRUnichar buf[2];
-  nsresult ret_code;
 
   /* turn it into a string */
   buf[0] = ch;
@@ -931,7 +933,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth( const char* aString, nscoord& aW
 
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth ) {
   nsresult ret_code = NS_ERROR_FAILURE;
-  FontQueryInfo tsInfo;
   
   aWidth = 0;	// Initialize to zero in case we fail.
 
@@ -943,10 +944,10 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString, PRUint32 aLe
 
 	nsCString strTail("M");
 	char* tail=(char*)strTail.ToNewUnicode();
-	int tailLength=strlen(tail);	
+	PRUint32 tailLength=strlen(tail);	
 	char* text = (char*) nsMemory::Alloc(aLength + tailLength + 2);
 
-	int i;
+	PRUint32 i;
 	for(i=0;i<aLength;i++)
 		text[i]=aString[i];
 	for(i=0;i<tailLength;i++)
@@ -961,7 +962,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString, PRUint32 aLe
 			ret_code = NS_OK;
 	}
 	nsMemory::Free(text);
-	
   }
   else ret_code = NS_ERROR_FAILURE;
 
@@ -979,8 +979,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth( const PRUnichar *aString, PRUint
 
   	aWidth = 0;	// Initialize to zero in case we fail.
   	if( nsnull != mFontMetrics ) {
-			PhRect_t extent;
-
 			NS_ConvertUCS2toUTF8    theUnicodeString (aString, aLength);
 			ret_code = GetWidth( theUnicodeString.get(), strlen(theUnicodeString.get()), aWidth );
     	}
@@ -1020,7 +1018,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString( const char *aString, PRUint32 
 	}
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawString( const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing ) {
-	char *str;
 	NS_ConvertUCS2toUTF8 theUnicodeString( aString, aLength );
 	const char *p = theUnicodeString.get( );
 	return DrawString( p, strlen( p ), aX, aY, aSpacing );
@@ -1049,66 +1046,32 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, const nsRect& a
 
 NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight ) {
 	nscoord x, y, w, h;
-	nsresult res = NS_OK;
-	int ww,hh;
 
 	x = aX;
 	y = aY;
 	w = aWidth;
 	h = aHeight;
 	mTranMatrix->TransformCoord(&x, &y, &w, &h);
-#if 0
-  SELECT(mSurface);
-
-	ww = mSurface->mWidth;
-	hh = mSurface->mHeight;
-
-    nsDeviceContextPh  *phContext = (nsDeviceContextPh *)mContext;
-    if( !phContext || !phContext->IsPrinting() ) {
-			if( x >= ww || y >=hh ) return NS_OK;
-			}
-
-	if( x + w > ww ) w = ww - x; 
-	if( y + h > hh ) h = hh - y;
-#endif
 	return (aImage->Draw(*this, mSurface, x, y, w, h));
 	}
 
 
 NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect ) {
-#if 0
-  nsRect	sr,dr;
-  nsresult  res = NS_OK;
-
-  if( mClipRegion->IsEmpty() ) return NS_ERROR_FAILURE;
+	nsRect    sr,dr;
 
 	sr = aSRect;
 	mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+	sr.x -= mTranMatrix->GetXTranslationCoord();
+	sr.y -= mTranMatrix->GetYTranslationCoord();
+	
 	dr = aDRect;
 	mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
-
-  	SELECT(mSurface);
-
-	return aImage->Draw( *this, mSurface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height );
-#else
-nsRect    sr,dr;
-
-sr = aSRect;
-mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
-sr.x -= mTranMatrix->GetXTranslationCoord();
-sr.y -= mTranMatrix->GetYTranslationCoord();
-
-dr = aDRect;
-mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
-
-return aImage->Draw(*this, mSurface,
-                    sr.x, sr.y,
-                    sr.width, sr.height,
-                    dr.x, dr.y,
-                    dr.width, dr.height);
-#endif
-
-
+	
+	return aImage->Draw(*this, mSurface,
+						sr.x, sr.y,
+						sr.width, sr.height,
+						dr.x, dr.y,
+						dr.width, dr.height);
 	}
 
 /** ---------------------------------------------------
@@ -1137,7 +1100,6 @@ NS_IMETHODIMP nsRenderingContextPh::DrawTile( nsIImage *aImage, nscoord aSrcXOff
 	return NS_OK;
 	}
 
-
 NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits( nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY, const nsRect &aDestBounds, PRUint32 aCopyFlags ) {
 
   PhArea_t              darea, sarea;
@@ -1145,7 +1107,6 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits( nsDrawingSurface aSrcSu
   PRInt32               srcY = aSrcY;
   nsRect                drect = aDestBounds;
   nsDrawingSurfacePh    *destsurf;
-  unsigned char         *ptr;
 
   if( !aSrcSurf || !mTranMatrix || !mSurface ) return NS_ERROR_FAILURE;
   
@@ -1158,69 +1119,19 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits( nsDrawingSurface aSrcSu
   if( aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES )	mTranMatrix->TransformCoord( &srcX, &srcY );
   if( aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES )		mTranMatrix->TransformCoord( &drect.x, &drect.y, &drect.width, &drect.height );
 
-  darea.pos.x=drect.x;
-  darea.pos.y=drect.y;
-  darea.size.w=drect.width;
-  darea.size.h=drect.height;
+	destsurf->Select( );
+	(PgGetGC())->target_rid = 0;  // kedl, fix the animations showing thru all regions
 
-  nsRect rect;
-  PRBool valid;
-
-  /* Is this really needed?? */
-  GetClipRect( rect,valid );
-
-  /* Flush the Source buffer, Really need this  */
-  ((nsDrawingSurfacePh *)aSrcSurf)->Flush();
-
-	if( aSrcSurf != destsurf ) destsurf->Select();
-	else abort();
-
-{//xyz
-PhRect_t rsrc,rdst;
-PdOffscreenContext_t *d;
-int off;
-int oldrid;
-PhGC_t *oldgc;
-int ww,hh;
-int rid;
-
-	oldgc = PgGetGC();
-	oldrid=(PgGetGC())->rid;
-
-	destsurf->IsOffscreen(&off);
-	if (off)
-		d = (PdOffscreenContext_t *) destsurf->GetDC();
-	else
-	{
-		d=NULL;
- 		PhDCSetCurrent(NULL);
-		(PgGetGC())->target_rid = 0;	// kedl, fix the animations showing thru all regions
-	}
-
-	ww = destsurf->mWidth;
-	hh = destsurf->mHeight;
-	if (d && (darea.pos.x >= ww || darea.pos.y >=hh))
-		return NS_OK;
-	
-	PhArea_t sarea;
 	sarea.pos.x = srcX;
 	sarea.pos.y = srcY;
-	sarea.size.w = darea.size.w;
-	sarea.size.h = darea.size.h;
+	sarea.size.w = drect.width;
+	sarea.size.h = drect.height;
+	darea.pos.x = drect.x;
+	darea.pos.y = drect.y;
+	darea.size.w = sarea.size.w;
+	darea.size.h = sarea.size.h;
+	PgContextBlitArea( (PdOffscreenContext_t *) ((nsDrawingSurfacePh *)aSrcSurf)->GetDC(), &sarea, NULL, &darea );
 
-	PhDCSetCurrent(d);
-	rid = PtWidgetRid(mWidget);
-	PgSetRegion(rid);
-
-	PgContextBlitArea((PdOffscreenContext_t *) ((nsDrawingSurfacePh *)aSrcSurf)->GetDC(), &sarea, d, &darea);
-	
-	PgSetRegion(oldrid);
-	PgSetGC(oldgc);
-	ApplyClipping(oldgc);
-}
-
-	destsurf->Flush();
-  mBufferIsEmpty = PR_TRUE;
   return NS_OK;
 	}
 
@@ -1237,7 +1148,6 @@ void nsRenderingContextPh::ApplyClipping( PhGC_t *gc ) {
 	PgSetGC(mGC);	/* new */
   
 	if( mClipRegion ) {
-		int         err;
 		PhTile_t    *tiles = nsnull;
 		PhRect_t    *rects = nsnull;
 		int         rect_count;

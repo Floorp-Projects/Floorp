@@ -32,12 +32,6 @@
 NS_IMPL_ISUPPORTS2( nsDrawingSurfacePh, nsIDrawingSurface, nsIDrawingSurfacePh )
 
 nsDrawingSurfacePh :: nsDrawingSurfacePh( ) {
-	PhSysInfo_t sysinfo;
-	PhRect_t    rect = {{0, 0}, {SHRT_MAX, SHRT_MAX}};
-	char        *p;
-	int         inp_grp;
-	PhRegion_t  rid;
-
 	NS_INIT_REFCNT();
 
 	mDrawContext = nsnull;
@@ -152,7 +146,6 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock( PRInt32 aX, PRInt32 aY,
 	}
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Unlock( void ) {
-	PdOffscreenContext_t *off_dc = (PdOffscreenContext_t *) mDrawContext;
 	PhArea_t    dst_area, src_area;
 
 	if( !mLocked ) return NS_ERROR_FAILURE;
