@@ -39,6 +39,7 @@
 #include "nsISupports.idl"
 #include "nsrootidl.idl"
 
+interface nsIMemory;
 interface nsIInputStream;
 interface nsIOutputStream;
 
@@ -48,9 +49,16 @@ interface nsIOutputStream;
  * can be created to read the data from the buffer non-destructively.
  */
 
-[scriptable, uuid(604ad9d0-753e-11d3-90ca-0040056a906e)]
+[scriptable, uuid(604ad9d0-753e-11d3-90ca-34278643278f)]
 interface nsIStorageStream : nsISupports
 {
+    /**
+     *
+     * Initialize the stream, setting up the amount of space that will be
+     * allocated for the stream's backing-store.
+     */
+    void init(in PRUint32 segmentSize, in PRUint32 maxSize, in nsIMemory segmentAllocator);
+
     /**
      * Get a reference to the one and only output stream for this instance.
      * The zero-based startPosition argument is used is used to set the initial
