@@ -32,11 +32,7 @@
 #include "n_plugin_composer_Composer.c"
 #endif
 
-#ifndef NSPR20
-#include "prevent.h"
-#else
 #include "plevent.h"
-#endif
 #include "prmon.h"
 #include "prmem.h"
 #include "edtplug.h"

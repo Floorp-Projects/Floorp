@@ -26,11 +26,7 @@
 #include "ntypes.h"
 #include "fe_proto.h"
 
-#ifdef NSPR20
 #include "prinit.h"
-#else
-#include "prglobal.h"
-#endif
 
 #ifdef XP_UNIX
 #include <sys/fcntl.h>
@@ -60,13 +56,7 @@ extern char* gBookmarkURL;
 
 XP_BEGIN_PROTOS
 
-#ifdef NSPR20
 void ht_fprintf(PRFileDesc *file, const char *fmt, ...);
-#else
-void ht_fprintf(PRFileHandle file, const char *fmt, ...);
-#endif
-
-
 
 unsigned int		rdf_write_ready(NET_StreamClass *stream);
 void			rdf_complete(NET_StreamClass *stream);

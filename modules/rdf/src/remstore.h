@@ -22,11 +22,7 @@
 
 #include "rdf-int.h"
 
-#ifdef NSPR20
 #include "prtime.h"
-#else
-#include "prtime.h"
-#endif
 
 
 
