@@ -79,12 +79,9 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
  * entries, we use linear search and avoid allocating scope->table.
  */
 #define SCOPE_HASH_THRESHOLD    6
-
 #define MIN_SCOPE_SIZE_LOG2     4
 #define MIN_SCOPE_SIZE          JS_BIT(MIN_SCOPE_SIZE_LOG2)
-
-#define SCOPE_TABLE_SIZE(n)     ((n) * sizeof(JSScopeProperty **))
-#define MIN_SCOPE_TABLE_SIZE    SCOPE_TABLE_SIZE(MIN_SCOPE_SIZE)
+#define SCOPE_TABLE_NBYTES(n)   ((n) * sizeof(JSScopeProperty *))
 
 static void
 InitMinimalScope(JSScope *scope)
@@ -336,7 +333,7 @@ ChangeScope(JSContext *cx, JSScope *scope, int change)
     newlog2 = oldlog2 + change;
     oldsize = JS_BIT(oldlog2);
     newsize = JS_BIT(newlog2);
-    nbytes = newsize * sizeof(JSScopeProperty);
+    nbytes = SCOPE_TABLE_NBYTES(newsize);
     table = (JSScopeProperty **) calloc(nbytes, 1);
     if (!table) {
         JS_ReportOutOfMemory(cx);
@@ -1017,7 +1014,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                  * ancestor line from scope->lastProp.
                  */
                 spvec = (JSScopeProperty **)
-                    JS_malloc(cx, splen * sizeof(JSScopeProperty *));
+                        JS_malloc(cx, SCOPE_TABLE_NBYTES(splen));
                 if (!spvec)
                     goto fail_overwrite;
                 i = splen;
@@ -1049,16 +1046,14 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                                 i++;
                         } while ((tmp = tmp->parent) != NULL);
                         spp2 = (JSScopeProperty **)
-                            JS_realloc(cx, spvec,
-                                       (splen + i) * sizeof(JSScopeProperty *));
+                             JS_realloc(cx, spvec, SCOPE_TABLE_NBYTES(splen+i));
                         if (!spp2) {
                             JS_free(cx, spvec);
                             goto fail_overwrite;
                         }
 
                         spvec = spp2;
-                        memmove(spvec + i, spvec,
-                                splen * sizeof(JSScopeProperty *));
+                        memmove(spvec + i, spvec, SCOPE_TABLE_NBYTES(splen));
                         splen += i;
                     }
 
