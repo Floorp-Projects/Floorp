@@ -47,7 +47,7 @@
 // Errors and other utility definitions
 //----------------------------------------------
 #ifndef __gen_nsIFile_h__
-#define NS_ERROR_FILE_UNRECONGNIZED_PATH        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
+#define NS_ERROR_FILE_UNRECOGNIZED_PATH         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
 #define NS_ERROR_FILE_UNRESOLVABLE_SYMLINK      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 2)
 #define NS_ERROR_FILE_EXECUTION_FAILED          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 3)
 #define NS_ERROR_FILE_UNKNOWN_TYPE              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 4)
@@ -209,25 +209,25 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
   rv = localFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 0664, &fd);
   if (NS_FAILED(rv)) return rv;
 
-  PRUint16 mode;
-  PRInt32 err = mZip.ExtractFileToFileDesc(zipEntry, fd, &mode);
+  nsZipItem *item = 0;
+  PRInt32 err = mZip.ExtractFileToFileDesc(zipEntry, fd, &item);
+  PR_Close(fd);
 
   if (err != ZIP_OK)
     outFile->Delete(PR_FALSE);
-#if defined(XP_UNIX)
   else
   {
+#if defined(XP_UNIX)
     char *path;
-
-    // XXX Bug 28630: nsIFile::SetPermissions() doesn't work on Win32
 
     rv = outFile->GetPath(&path); 
     if (NS_SUCCEEDED(rv))
-      chmod(path, mode);
-  }
+      chmod(path, item->mode);
 #endif
 
-  PR_Close(fd);
+    RestoreModTime(item, outFile);  // non-fatal if this fails, ignore errors
+  }
+
   return ziperr2nsresult(err);
 }
 
@@ -709,8 +709,30 @@ nsJAR::VerifyEntry(const char* aEntryName, char* aEntryData,
 
   manItem->step2Complete = PR_TRUE;
   DumpMetadata("VerifyEntry end");
+#endif
   return NS_OK;
- #endif	
+}
+
+nsresult
+nsJAR::RestoreModTime(nsZipItem *aItem, nsIFile *aExtractedFile)
+{
+  if (!aItem || !aExtractedFile)
+    return NS_ERROR_NULL_POINTER;
+  
+  char *timestr;
+  PRTime prtime;
+  nsresult rv = NS_OK;
+  
+  timestr = aItem->GetModTime();
+  if (timestr)
+  {
+    if (PR_SUCCESS == PR_ParseTimeString(timestr, PR_FALSE, &prtime))
+      rv = aExtractedFile->SetLastModificationDate(prtime);
+
+    JAR_NULLFREE(timestr);
+  }
+
+  return rv;
 }
 
 //----------------------------------------------

@@ -86,7 +86,8 @@ char * strdup(const char *src)
 static PRUint16 xtoint(unsigned char *ii);
 static PRUint32 xtolong(unsigned char *ll);
 static PRUint16 ExtractMode(PRUint32 ext_attr);
-
+static void dosdate(char *aOutDateStr, PRUint16 aDate);
+static void dostime(char *aOutTimeStr, PRUint16 aTime);
 
 /*---------------------------------------------
  * C API wrapper for nsZipArchive
@@ -469,17 +470,17 @@ PRInt32 nsZipArchive::ExtractFile(const char* zipEntry, const char* aOutname)
   if (fOut == 0)
     return ZIP_ERR_DISK;
 
-  PRUint16 mode;
-  PRInt32 status = ExtractFileToFileDesc(zipEntry, fOut, &mode);
+  nsZipItem *item = 0;
+  PRInt32 status = ExtractFileToFileDesc(zipEntry, fOut, &item);
   PR_Close(fOut);
 
   if (status != ZIP_OK) {
       PR_Delete(aOutname);
   }
-#if defined(XP_UNIX) || defined(XP_PC)
+#if defined(XP_UNIX)
   else {
       //-- set extracted file permissions
-      chmod(aOutname, mode);
+      chmod(aOutname, item->mode);
   }
 #endif
   return status;
@@ -487,10 +488,10 @@ PRInt32 nsZipArchive::ExtractFile(const char* zipEntry, const char* aOutname)
 
 PRInt32
 nsZipArchive::ExtractFileToFileDesc(const char * zipEntry, PRFileDesc* outFD,
-                                    PRUint16 *itemModeResult)
+                                    nsZipItem **outItem)
 {
   //-- sanity check arguments
-  if ( zipEntry == 0 || outFD == 0 )
+  if ( zipEntry == 0 || outFD == 0 || outItem == 0)
     return ZIP_ERR_PARAM;
 
   PRInt32 status;
@@ -516,18 +517,8 @@ nsZipArchive::ExtractFileToFileDesc(const char * zipEntry, PRFileDesc* outFD,
       //-- unsupported compression type
       return ZIP_ERR_UNSUPPORTED;
   }
-#if 0
-  if (status != ZIP_OK)
-      PR_Delete(aOutname);
-#if defined(XP_UNIX) || defined(XP_PC)
-  else
-  {
-      //-- set extracted file permissions
-      chmod(aOutname, item->mode);
-  }
-#endif
-#endif
-  *itemModeResult = item->mode;
+
+  *outItem = item;
   return status;
 }
 
@@ -807,6 +798,8 @@ PRInt32 nsZipArchive::BuildFileList()
           item->realsize = xtolong( Central.orglen );
           item->crc32 = xtolong( Central.crc32 );
           item->mode = ExtractMode(xtolong( Central.external_attributes )); 
+          item->time = xtoint( Central.time );
+          item->date = xtoint( Central.date );
 
           //-- add item to file table
           hash = HashName( item->name );
@@ -1353,3 +1346,71 @@ static PRUint16 ExtractMode(PRUint32 ext_attr)
     return (PRUint16) ext_attr;
 }
 
+/*
+ *  d o s d a t e
+ *
+ *  Based on standard MS-DOS format date.
+ *  Tweaked to be Y2K compliant and NSPR friendly.
+ */
+static void dosdate (char *aOutDateStr, PRUint16 aDate)
+  {
+  PRUint16 y2kCompliantYear = (aDate >> 9) + 1980;
+
+  sprintf (aOutDateStr, "%02d/%02d/%02d",
+     ((aDate >> 5) & 0x0F), (aDate & 0x1F), y2kCompliantYear);
+
+  return;
+  }
+
+/*
+ *  d o s t i m e
+ *
+ *  Standard MS-DOS format time.
+ */
+static void dostime (char *aOutTimeStr, PRUint16 aTime)
+  {
+  sprintf (aOutTimeStr, "%02d:%02d",
+     ((aTime >> 11) & 0x1F), ((aTime >> 5) & 0x3F));
+
+  return;
+  }
+
+char *
+nsZipItem::GetModTime()
+{
+	char *timestr;    /* e.g. 21:07                        */
+	char *datestr;    /* e.g. 06/20/95                     */
+	char *nsprstr;    /* e.g. 06/20/95 21:07               */
+	                  /* NSPR bug parsing dd/mm/yyyy hh:mm */
+	                  /*        so we use mm/dd/yyyy hh:mm */
+	
+	timestr = (char *) malloc(6 * sizeof(char));
+	datestr = (char *) malloc(9 * sizeof(char));
+	nsprstr = (char *) malloc(16 * sizeof(char));
+	if (!timestr || !datestr || !nsprstr)
+	{
+		if (timestr)
+			free(timestr);
+		if (datestr)
+			free(datestr);
+		if (nsprstr)
+			free(nsprstr);
+		return 0;
+	}
+
+	memset(timestr, 0, 6);
+	memset(datestr, 0, 9);
+	memset(nsprstr, 0, 16);
+
+	dosdate(datestr, this->date);
+	dostime(timestr, this->time);
+
+	sprintf(nsprstr, "%s %s", datestr, timestr);
+
+    if (datestr)
+        free(datestr);
+    if (timestr)
+        free(timestr);
+
+	return nsprstr;
+}
