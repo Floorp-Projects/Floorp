@@ -34,7 +34,7 @@
 #
 # smime.pl - frontend for S/MIME message generation and parsing
 #
-# $Id: smime,v 1.5 2000/06/23 18:37:33 chrisk%netscape.com Exp $
+# $Id: smime,v 1.6 2000/07/07 00:57:39 chrisk%netscape.com Exp $
 #
 
 use Getopt::Std;
@@ -259,6 +259,8 @@ sub usage {
     print STDERR " -E rec1[,rec2...]   generate encrypted message for recipients\n";
     print STDERR " -D                  decode a S/MIME message\n";
     print STDERR " -C pathname         set pathname of \"cmsutil\"\n";
+    print STDERR " -d directory        set directory containing certificate db\n";
+    print STDERR "                     (default: ~/.netscape)\n";
     print STDERR "\nWith -S or -E, smime will take a regular RFC822 message or MIME entity\n";
     print STDERR "on stdin and generate a signed or encrypted S/MIME message with the same\n";
     print STDERR "headers and content from it. The output can be used as input to a MTA.\n";
@@ -273,7 +275,7 @@ sub usage {
 #
 # process command line options
 #
-unless (getopts('S:E:p:C:D')) {
+unless (getopts('S:E:p:d:C:D')) {
     usage();
     exit 1;
 }
@@ -286,6 +288,14 @@ unless (defined($opt_S) or defined($opt_E) or defined($opt_D)) {
 
 $signopts = "";
 $encryptopts = "";
+$decodeopts = "";
+
+# pass -d option along
+if (defined($opt_d)) {
+    $signopts .= "-d \"$opt_d\" ";
+    $encryptopts .= "-d \"$opt_d\" ";
+    $decodeopts .= "-d \"$opt_d\" ";
+}
 
 if (defined($opt_S)) {
     $signopts .= "-N \"$opt_S\" ";
@@ -293,6 +303,7 @@ if (defined($opt_S)) {
 
 if (defined($opt_p)) {
     $signopts .= "-p \"$opt_p\" ";
+    $decodeopts .= "-p \"$opt_p\" ";
 }
 
 if (defined($opt_E)) {
@@ -394,7 +405,7 @@ if (defined $opt_D) {
 		}
 
 		$mimeheaders = "";
-		open(TMP, "$cmsutilpath -D -h $layercounter -i $tmpderfile |") or die "ERROR: cannot open pipe to cmsutil";
+		open(TMP, "$cmsutilpath -D $decodeopts -h $layercounter -i $tmpderfile |") or die "ERROR: cannot open pipe to cmsutil";
 		$layercounter++;
 		while (<TMP>) {
 		    last if (/^\r?$/);			# empty lines mark end of header
@@ -408,7 +419,7 @@ if (defined $opt_D) {
 		    $$lastref .= $_;
 		}
 		# slurp in rest of the data to $mimebody
-		$olddelim = $/; $/ = undef; $mimebody = <TMP>; $/ = $olddelim;
+		$saveRS = $/; $/ = undef; $mimebody = <TMP>; $/ = $saveRS;
 		close(TMP);
 
 		unlink($tmpderfile);
@@ -485,7 +496,7 @@ if (defined $opt_D) {
 	    }
 
 	    $mimeheaders = "";
-	    open(TMP, "$cmsutilpath -D -h $layercounter -c $tmpmsgfile -i $tmpsigfile |") or die "ERROR: cannot open pipe to cmsutil";
+	    open(TMP, "$cmsutilpath -D $decodeopts -h $layercounter -c $tmpmsgfile -i $tmpsigfile |") or die "ERROR: cannot open pipe to cmsutil";
 	    $layercounter++;
 	    while (<TMP>) {
 		last if (/^\r?$/);
@@ -498,7 +509,7 @@ if (defined $opt_D) {
 		}
 		$$lastref .= $_;
 	    }
-	    $olddelim = $/; $/ = undef; $mimebody = <TMP>; $/ = $olddelim;
+	    $saveRS = $/; $/ = undef; $mimebody = <TMP>; $/ = $saveRS;
 	    close(TMP);
 	    unlink($tmpsigfile);
 	    unlink($tmpmsgfile);
