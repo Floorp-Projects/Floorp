@@ -368,6 +368,8 @@ nsFileBufferT<charT, traits>::int_type nsFileBufferT<charT, traits>::overflow(in
 {
 #ifdef NS_EXPLICIT_FUNC_TEMPLATE_ARG    
     const ofacet_type& ft=use_facet<ofacet_type>(getloc());
+#elif defined(XP_PC)
+	const ofacet_type& ft=use_facet(getloc(), (ofacet_type*)0, false);
 #else
     const ofacet_type& ft=use_facet(getloc(), (ofacet_type*)0);
 #endif
@@ -423,6 +425,8 @@ streamsize nsFileBufferT<charT, traits>::xsputn(const char_type* s, streamsize n
 {
 #ifdef NS_EXPLICIT_FUNC_TEMPLATE_ARG
     const ofacet_type& ft=use_facet<ofacet_type>(loc);
+#elif defined(XP_PC)
+	const ofacet_type& ft=use_facet(getloc(), (ofacet_type*)0, false);
 #else
     const ofacet_type& ft=use_facet(getloc(), (ofacet_type*)0);
 #endif
@@ -441,11 +445,12 @@ streamsize nsFileBufferT<charT, traits>::xsputn(const char_type* s, streamsize n
         result conv;
 #ifdef NS_EXPLICIT_FUNC_TEMPLATE_ARG     
         if ((conv=use_facet<ofacet_type>(getloc()).
-            out(fst, s, s+n, end, buf, buf+7, ebuf))==codecvt_base::noconv)
+#elif defined(XP_PC)
+	    if ((conv=use_facet(getloc(), (ofacet_type*)0, false).
 #else
         if ((conv=use_facet(getloc(), (ofacet_type*)0).
-            out(fst, s, s+n, end, buf, buf+7, ebuf))==codecvt_base::noconv)
 #endif
+            out(fst, s, s+n, end, buf, buf+7, ebuf))==codecvt_base::noconv)
             return (streamsize)PR_Write(mFileDesc, s, sizeof(char) * size_t(n));
         if ((conv==codecvt_base::partial) ||(conv==codecvt_base::error)) 
             return 0;
@@ -541,7 +546,12 @@ nsFileBufferT<charT, traits>::seekpos(pos_type sp, IOS_BASE::openmode)
 {
     if (!mFileDesc || sp==pos_type(-1))
         return -1;
-    PRInt32 position = PR_Seek(mFileDesc, sp.offset(), PR_SEEK_SET);
+#if defined(XP_PC)
+    PRInt32 position = sp;
+#else
+    PRInt32 position = sp.offset();
+#endif
+    position = PR_Seek(mFileDesc, position, PR_SEEK_SET);
     if (position < 0)
         return pos_type(-1);
     return position;
