@@ -27,10 +27,16 @@ struct nsID {
 typedef nsID nsIID;
 typedef nsID nsCID;
 */
-
 /* the above doesn't make nsID/nsIID/nsCID pass by reference in
  * method calls so we make these fake interfaces:
  */
+/* 
 interface nsID {};
 interface nsIID {};
 interface nsCID {};
+*/
+
+native nsID(nsID *);
+native nsCID(nsCID *);
+native nsIID(nsIID *);
+
