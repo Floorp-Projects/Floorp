@@ -832,7 +832,7 @@ sub expand_user_test_list {
 #
 sub expand_test_list_entry {
     my ($entry) = @_;
-	my $isFile = -f $entry;
+    my $isFile = -f $entry;
     my @retval;
 
     #
