@@ -20,13 +20,17 @@
    
    Contributor(s): 
   -->
+
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/PrefsWindow.dtd" >
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="StartUp('Top')"  title="&window.title;">
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="StartUp('Top')"
+  title="&window.title;"
+  >
 
 <html:script language="javascript" src="PrefsWindow.js"/>
 <html:div flex="100%">
@@ -37,10 +41,10 @@
 	src="chrome://pref/content/pref-appearance.xul" width="72%" height="356" resize="yes" scrolling="auto"/>
 <box>
    <spring flex="100%" />
-				<titledbutton align="bottom" value="&helpButton.label;" />				
-				<titledbutton align="bottom" value="&cancelButton.label;" onclick="prefwindow.cancelPrefs();" />				
-				<titledbutton align="bottom" value="&okButton.label;" onclick="prefwindow.savePrefs();" />
+   <titledbutton align="bottom" value="&helpButton.label;" />				
+   <titledbutton align="bottom" value="&cancelButton.label;" onclick="prefwindow.cancelPrefs();" />				
+   <titledbutton align="bottom" value="&okButton.label;" onclick="prefwindow.savePrefs();" />
 </box>
 </html:div>
-</xul:window>
+</window>
 
