@@ -1676,6 +1676,22 @@ PRInt32 nsPop3Protocol::SendPassword()
     {
         if (TestCapFlag(POP3_HAS_AUTH_PLAIN))
         {
+            // workaround for IPswitch's IMail server software
+            // this server goes into LOGIN mode even if we send "AUTH PLAIN"
+            // "VXNlc" is the begin of the base64 encoded prompt for LOGIN
+            if (m_commandResponse.Compare("VXNlc", PR_FALSE, 5) == 0)
+            {
+                // disable and enable LOGIN (in case it's not already enabled)
+                ClearCapFlag(POP3_HAS_AUTH_PLAIN);
+                SetCapFlag(POP3_HAS_AUTH_LOGIN);
+                m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+
+                // reenter authentication again at LOGIN response handler
+                m_pop3ConData->next_state = POP3_AUTH_LOGIN_RESPONSE;
+                m_pop3ConData->pause_for_read = PR_FALSE;
+                return 0;
+            }
+
             char plain_string[512];
             int len = 1; /* first <NUL> char */
 
