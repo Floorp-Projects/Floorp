@@ -23,7 +23,7 @@
 
 std::list<CControlSite *> CControlSite::m_cControlList;
 
-
+// Constructor
 CControlSite::CControlSite()
 {
 	NG_TRACE_METHOD(CControlSite::CControlSite);
@@ -53,13 +53,17 @@ CControlSite::CControlSite()
 }
 
 
+// Destructor
 CControlSite::~CControlSite()
 {
 	NG_TRACE_METHOD(CControlSite::~CControlSite);
+	Detach();
 	m_cControlList.remove(this);
 }
 
 
+// Create the specified control, optionally providing properties to initialise
+// it with and a name.
 HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl, const tstring szName)
 {
 	NG_TRACE_METHOD_ARGS(CControlSite::Create, "...,...,\"%s\"", szName.c_str());
@@ -81,6 +85,7 @@ HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl, const tstring szN
 }
 
 
+// Attach the created control to a window and activate it
 HRESULT CControlSite::Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInitStream)
 {
 	NG_TRACE_METHOD(CControlSite::Attach);
@@ -191,6 +196,7 @@ HRESULT CControlSite::Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInit
 }
 
 
+// Unhook the control from the window and throw it all away
 HRESULT CControlSite::Detach()
 {
 	NG_TRACE_METHOD(CControlSite::Detach);
@@ -209,7 +215,7 @@ HRESULT CControlSite::Detach()
 	if (m_spIOleObject)
 	{
 		m_spIOleObject->Close(OLECLOSE_NOSAVE);
-		m_spIOleObject->SetClientSite(this);
+		m_spIOleObject->SetClientSite(NULL);
 		m_spIOleObject.Release();
 	}
 
@@ -220,6 +226,7 @@ HRESULT CControlSite::Detach()
 }
 
 
+// Return the IUnknown of the contained control
 HRESULT CControlSite::GetControlUnknown(IUnknown **ppObject)
 {
 	*ppObject = NULL;
@@ -231,6 +238,36 @@ HRESULT CControlSite::GetControlUnknown(IUnknown **ppObject)
 }
 
 
+// Subscribe to an event sink on the control
+HRESULT CControlSite::Advise(IUnknown *pIUnkSink, const IID &iid, DWORD *pdwCookie)
+{
+	if (m_spObject == NULL)
+	{
+		return E_UNEXPECTED;
+	}
+
+	if (pIUnkSink == NULL || pdwCookie == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	return AtlAdvise(m_spObject, pIUnkSink, iid, pdwCookie);
+}
+
+
+// Unsubscribe event sink from the control
+HRESULT CControlSite::Unadvise(const IID &iid, DWORD dwCookie)
+{
+	if (m_spObject == NULL)
+	{
+		return E_UNEXPECTED;
+	}
+
+	return AtlUnadvise(m_spObject, iid, dwCookie);
+}
+
+
+// Draw the control
 HRESULT CControlSite::Draw(HDC hdc)
 {
 	NG_TRACE_METHOD(CControlSite::Draw);
@@ -247,6 +284,8 @@ HRESULT CControlSite::Draw(HDC hdc)
 	return S_OK;
 }
 
+
+// Execute the specified verb
 HRESULT CControlSite::DoVerb(LONG nVerb, LPMSG lpMsg)
 {
 	NG_TRACE_METHOD(CControlSite::DoVerb);
@@ -260,6 +299,7 @@ HRESULT CControlSite::DoVerb(LONG nVerb, LPMSG lpMsg)
 }
 
 
+// Set the position on the control
 HRESULT CControlSite::SetPosition(const RECT &rcPos)
 {
 	NG_TRACE_METHOD(CControlSite::SetPosition);
@@ -277,6 +317,7 @@ HRESULT CControlSite::SetPosition(const RECT &rcPos)
 
 ///////////////////////////////////////////////////////////////////////////////
 // IDispatch implementation
+
 
 HRESULT STDMETHODCALLTYPE CControlSite::GetTypeInfoCount(/* [out] */ UINT __RPC_FAR *pctinfo)
 {
@@ -343,6 +384,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::Invoke(/* [in] */ DISPID dispIdMember, /
 ///////////////////////////////////////////////////////////////////////////////
 // IAdviseSink implementation
 
+
 void STDMETHODCALLTYPE CControlSite::OnDataChange(/* [unique][in] */ FORMATETC __RPC_FAR *pFormatetc, /* [unique][in] */ STGMEDIUM __RPC_FAR *pStgmed)
 {
 }
@@ -372,6 +414,8 @@ void STDMETHODCALLTYPE CControlSite::OnClose(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 // IAdviseSink2 implementation
+
+
 void STDMETHODCALLTYPE CControlSite::OnLinkSrcChange(/* [unique][in] */ IMoniker __RPC_FAR *pmk)
 {
 }
@@ -379,6 +423,7 @@ void STDMETHODCALLTYPE CControlSite::OnLinkSrcChange(/* [unique][in] */ IMoniker
 
 ///////////////////////////////////////////////////////////////////////////////
 // IAdviseSinkEx implementation
+
 
 void STDMETHODCALLTYPE CControlSite::OnViewStatusChange(/* [in] */ DWORD dwViewStatus)
 {
@@ -403,6 +448,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::ContextSensitiveHelp(/* [in] */ BOOL fEn
 
 ///////////////////////////////////////////////////////////////////////////////
 // IOleClientSite implementation
+
 
 HRESULT STDMETHODCALLTYPE CControlSite::SaveObject(void)
 {
@@ -526,6 +572,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::OnPosRectChange(/* [in] */ LPCRECT lprcP
 ///////////////////////////////////////////////////////////////////////////////
 // IParseDisplayName implementation
 
+
 HRESULT STDMETHODCALLTYPE CControlSite::ParseDisplayName(/* [unique][in] */ IBindCtx __RPC_FAR *pbc, /* [in] */ LPOLESTR pszDisplayName, /* [out] */ ULONG __RPC_FAR *pchEaten, /* [out] */ IMoniker __RPC_FAR *__RPC_FAR *ppmkOut)
 {
 	// TODO
@@ -535,6 +582,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::ParseDisplayName(/* [unique][in] */ IBin
 
 ///////////////////////////////////////////////////////////////////////////////
 // IOleContainer implementation
+
 
 HRESULT STDMETHODCALLTYPE CControlSite::EnumObjects(/* [in] */ DWORD grfFlags, /* [out] */ IEnumUnknown __RPC_FAR *__RPC_FAR *ppenum)
 {
@@ -552,6 +600,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::LockContainer(/* [in] */ BOOL fLock)
 
 ///////////////////////////////////////////////////////////////////////////////
 // IOleItemContainer implementation
+
 
 HRESULT STDMETHODCALLTYPE CControlSite::GetObject(/* [in] */ LPOLESTR pszItem, /* [in] */ DWORD dwSpeedNeeded, /* [unique][in] */ IBindCtx __RPC_FAR *pbc, /* [in] */ REFIID riid, /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject)
 {
@@ -587,6 +636,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::IsRunning(/* [in] */ LPOLESTR pszItem)
 ///////////////////////////////////////////////////////////////////////////////
 // IOleInPlaceSiteEx implementation
 
+
 HRESULT STDMETHODCALLTYPE CControlSite::OnInPlaceActivateEx(/* [out] */ BOOL __RPC_FAR *pfNoRedraw, /* [in] */ DWORD dwFlags)
 {
 	m_bInPlaceActive = TRUE;
@@ -618,6 +668,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::RequestUIActivate(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 // IOleInPlaceSiteWindowless implementation
+
 
 HRESULT STDMETHODCALLTYPE CControlSite::CanWindowlessActivate(void)
 {
@@ -849,6 +900,7 @@ HRESULT STDMETHODCALLTYPE CControlSite::OnDefWindowMessage(/* [in] */ UINT msg, 
 
 ///////////////////////////////////////////////////////////////////////////////
 // IOleControlSite implementation
+
 
 HRESULT STDMETHODCALLTYPE CControlSite::OnControlInfoChanged(void)
 {
