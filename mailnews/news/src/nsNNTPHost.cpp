@@ -2016,7 +2016,7 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *_retval)
         char *groupname = nsnull;
         rv = NS_OK;
         
-		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) (*m_groups)[i];
+		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) m_groups->ElementAt(i);
         rv = info->GetName(&groupname);
        
 #ifdef DEBUG_NEWS
@@ -2122,7 +2122,7 @@ nsNNTPHost::AddGroup(const char *name,
                 rv = m_groups->Count(&cnt);
                 if (NS_FAILED(rv)) return rv;
 				newsInfo = (nsINNTPNewsgroup *)
-                    (*m_groups)[cnt - 1];
+                    m_groups->ElementAt(cnt - 1);
 			}
 			
 			if (!newsInfo) goto DONE;
@@ -2403,7 +2403,7 @@ nsNNTPHost::GetNumGroupsNeedingCounts(PRInt32 *value)
     int num = cnt;
 	PRInt32 result = 0;
 	for (int i=0 ; i<num ; i++) {
-		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
+		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) m_groups->ElementAt(i);
         PRBool wantNewTotals, subscribed;
         rv = info->GetWantNewTotals(&wantNewTotals);
         if (NS_SUCCEEDED(rv))
@@ -2428,7 +2428,7 @@ nsNNTPHost::GetFirstGroupNeedingCounts(char **result)
     if (NS_FAILED(rv)) return rv;
     int num = cnt;
 	for (int i=0 ; i<num ; i++) {
-		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
+		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*)m_groups->ElementAt(i);
         
         PRBool wantNewTotals, subscribed;
         rv = info->GetWantNewTotals(&wantNewTotals);
@@ -2481,7 +2481,7 @@ nsNNTPHost::SetWantNewTotals(PRBool value)
     if (NS_FAILED(rv)) return;  // XXX error?
     int n = cnt;
 	for (int i=0 ; i<n ; i++) {
-		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
+		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*)m_groups->ElementAt(i);
 		info->SetWantNewTotals(value);
 	}
 }
@@ -3417,7 +3417,7 @@ int nsNNTPHost::ReorderGroup(nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *gr
             if (NS_FAILED(rv)) return rv;
             for (idxInData = 0, idxInView = -1; idxInData < (PRInt32)cnt; idxInData++)
 			{
-				group = (nsIMsgFolder*)(*m_groups)[idxInData];
+				group = (nsIMsgFolder*)m_groups->ElementAt(idxInData);
 
                 nsIMsgFolder *groupInHostInfo;
                 (void)infoList->CurrentItem((nsISupports**)&groupInHostInfo);
@@ -3511,7 +3511,7 @@ nsNNTPHost::GetNewsgroupList(const char* name, nsINNTPNewsgroupList **_retval)
     int n = cnt;
 	for (int i=0 ; i<n ; i++) {
         char *newsgroupname = nsnull;
-		nsINNTPNewsgroupList* list = (nsINNTPNewsgroupList*) (*m_newsgrouplists)[i];
+		nsINNTPNewsgroupList* list = (nsINNTPNewsgroupList*)m_newsgrouplists->ElementAt(i);
         rv = list->GetGroupName(&newsgroupname);
        
 #ifdef DEBUG_NEWS
