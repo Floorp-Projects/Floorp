@@ -59,7 +59,7 @@ void nsMathMLAtoms::AddRefAtoms() {
     }
 
     // now register the atoms
-#define MATHML_ATOM(_name, _value) _name = NS_NewAtom(_value);
+#define MATHML_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
 #include "nsMathMLAtomList.h"
 #undef MATHML_ATOM
   }

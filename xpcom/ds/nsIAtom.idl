@@ -27,9 +27,16 @@ interface nsISizeOfHandler;
 
 %{C++
 #include "nsAWritableString.h"
+#include "nsCOMPtr.h"
 %}
 [ref] native nsStringRef(nsAWritableString);
 
+/*
+ * Should this really be scriptable?  Using atoms from script or proxies
+ * could be dangerous since double-wrapping could lead to loss of
+ * pointer identity.
+ */
+ 
 [scriptable, uuid(3d1b15b0-93b4-11d1-895b-006008911b81)]
 interface nsIAtom : nsISupports
 {
@@ -51,30 +58,62 @@ interface nsIAtom : nsISupports
 
 
 %{C++
+/*
+ * The three forms of NS_NewAtom and do_GetAtom (for use with
+ * |nsCOMPtr<nsIAtom>|) return the atom for the string given.  At any
+ * given time there will always be one atom representing a given string.
+ * Atoms are intended to make string comparison cheaper by simplifying
+ * it to pointer equality.  A pointer to the atom that does not own a
+ * reference is not guaranteed to be valid.
+ *
+ * The three forms of NS_NewPermanentAtom and do_GetPermanentAtom return
+ * the atom for the given string and ensure that the atom is permanent.
+ * An atom that is permanent will exist (occupy space at a specific
+ * location in memory) until XPCOM is shut down.  The advantage of
+ * permanent atoms is that they do not need to maintain a reference
+ * count, which requires locking and hurts performance.
+ */
+
 
 /**
- * Find an atom that matches the given iso-latin1 C string. The
- * C string is translated into it's unicode equivalent.
+ * Find an atom that matches the given ISO-Latin1 C string. The
+ * C string is translated into its unicode equivalent.
  */
 extern NS_COM nsIAtom* NS_NewAtom(const char* isolatin1);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const char* isolatin1);
+
+inline already_AddRefed<nsIAtom> do_GetAtom(const char* isolatin1)
+    { return NS_NewAtom(isolatin1); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const char* isolatin1)
+    { return NS_NewPermanentAtom(isolatin1); }
 
 /**
  * Find an atom that matches the given unicode string. The string is assumed
  * to be zero terminated.
  */
 extern NS_COM nsIAtom* NS_NewAtom(const PRUnichar* unicode);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const PRUnichar* unicode);
+
+inline already_AddRefed<nsIAtom> do_GetAtom(const PRUnichar* unicode)
+    { return NS_NewAtom(unicode); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const PRUnichar* unicode)
+    { return NS_NewPermanentAtom(unicode); }
 
 /**
  * Find an atom that matches the given string.
  */
 extern NS_COM nsIAtom* NS_NewAtom(const nsAReadableString& aString);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsAReadableString& aString);
+
+inline already_AddRefed<nsIAtom> do_GetAtom(const nsAReadableString& aString)
+    { return NS_NewAtom(aString); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsAReadableString& aString)
+    { return NS_NewPermanentAtom(aString); }
 
 /**
  * Return a count of the total number of atoms currently
  * alive in the system.
  */
 extern NS_COM nsrefcnt NS_GetNumberOfAtoms(void);
-
-extern NS_COM void NS_PurgeAtomTable(void);
 
 %}

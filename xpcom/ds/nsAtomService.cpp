@@ -52,9 +52,18 @@ nsAtomService::~nsAtomService()
 nsresult
 nsAtomService::GetAtom(const PRUnichar *aString, nsIAtom ** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
-  
   *aResult = NS_NewAtom(aString);
+
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  return NS_OK;
+}
+
+nsresult
+nsAtomService::GetPermanentAtom(const PRUnichar *aString, nsIAtom ** aResult)
+{
+  *aResult = NS_NewPermanentAtom(aString);
 
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;

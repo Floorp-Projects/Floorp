@@ -40,6 +40,12 @@
 
 #include "nsIAtom.h"
 
+/**
+ * A threadsafely-refcounted implementation of nsIAtom.  Note that
+ * AtomImpl objects are sometimes converted into PermanentAtomImpl
+ * objects using placement new and just overwriting the vtable pointer.
+ */
+
 class AtomImpl : public nsIAtom {
 public:
   AtomImpl();
@@ -48,15 +54,40 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIATOM
 
-  void* operator new(size_t size, const nsAReadableString& aString);
+  virtual PRBool IsPermanent();
+
+  void* operator new(size_t size, const nsAString& aString);
 
   void operator delete(void* ptr) {
     ::operator delete(ptr);
   }
 
+  // for |#ifdef NS_BUILD_REFCNT_LOGGING| access to reference count
+  nsrefcnt GetRefCount() { return mRefCnt; }
+
   // Actually more; 0 terminated. This slot is reserved for the
   // terminating zero.
   PRUnichar mString[1];
 };
+
+/**
+ * A non-refcounted implementation of nsIAtom.
+ */
+
+class PermanentAtomImpl : public AtomImpl {
+public:
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+
+  virtual PRBool IsPermanent();
+
+  void* operator new(size_t size, const nsAReadableString& aString) {
+    return AtomImpl::operator new(size, aString);
+  }
+  void* operator new(size_t size, AtomImpl* aAtom);
+
+};
+
+void NS_PurgeAtomTable();
 
 #endif // nsAtomTable_h__

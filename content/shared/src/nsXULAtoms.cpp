@@ -71,7 +71,7 @@ void nsXULAtoms::AddRefAtoms() {
     }
 
     // now register the atoms
-#define XUL_ATOM(_name, _value) _name = NS_NewAtom(_value);
+#define XUL_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
 #include "nsXULAtomList.h"
 #undef XUL_ATOM
   }

@@ -49,7 +49,7 @@ void nsHTMLAtoms::AddRefAtoms()
 {
   if (0 == gRefCnt++) {
     // create atoms
-#define HTML_ATOM(_name, _value) _name = NS_NewAtom(_value);
+#define HTML_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
 #include "nsHTMLAtomList.h"
 #undef HTML_ATOM
   }

@@ -76,7 +76,7 @@ void nsSVGAtoms::AddRefAtoms() {
     }
 
     // now register the atoms
-#define SVG_ATOM(_name, _value) _name = NS_NewAtom(_value);
+#define SVG_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
 #include "nsSVGAtomList.h"
 #undef SVG_ATOM
   }
