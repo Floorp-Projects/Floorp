@@ -33,6 +33,7 @@ REQUIRES	= dom js netlib rdf raptor xpcom locale
 
 CPPSRCS		= \
 		nsElementMap.cpp \
+		nsControllerCommandManager.cpp \
 		nsJSXULDocument.cpp \
 		nsJSXULElement.cpp \
 		nsJSXULCommandDispatcher.cpp \

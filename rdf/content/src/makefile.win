@@ -32,20 +32,21 @@ LCFLAGS = \
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsElementMap.obj              \
-	.\$(OBJDIR)\nsJSXULCommandDispatcher.obj  \
-	.\$(OBJDIR)\nsRDFGenericBuilder.obj       \
-	.\$(OBJDIR)\nsXULAttributes.obj		  \
-	.\$(OBJDIR)\nsXULCommandDispatcher.obj    \
-	.\$(OBJDIR)\nsXULControllers.obj    \
-	.\$(OBJDIR)\nsXULPopupListener.obj        \
+        .\$(OBJDIR)\nsControllerCommandManager.obj \
+        .\$(OBJDIR)\nsJSXULCommandDispatcher.obj  \
+        .\$(OBJDIR)\nsRDFGenericBuilder.obj       \
+        .\$(OBJDIR)\nsXULAttributes.obj		        \
+        .\$(OBJDIR)\nsXULCommandDispatcher.obj    \
+        .\$(OBJDIR)\nsXULControllers.obj          \
+        .\$(OBJDIR)\nsXULPopupListener.obj        \
         .\$(OBJDIR)\nsXULPrototypeDocument.obj    \
         .\$(OBJDIR)\nsXULPrototypeCache.obj       \
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \
-		.\$(OBJDIR)\nsJSXULPopupElement.obj            \
+        .\$(OBJDIR)\nsJSXULPopupElement.obj       \
         .\$(OBJDIR)\nsJSXULTreeElement.obj        \
         .\$(OBJDIR)\nsJSXULIFrameElement.obj      \
-        .\$(OBJDIR)\nsJSXULBrowserElement.obj      \
+        .\$(OBJDIR)\nsJSXULBrowserElement.obj     \
         .\$(OBJDIR)\nsJSXULEditorElement.obj      \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsXULElement.obj              \
@@ -56,9 +57,9 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsXULSortService.obj          \
         .\$(OBJDIR)\nsXULTreeElement.obj          \
         .\$(OBJDIR)\nsXULIFrameElement.obj        \
-        .\$(OBJDIR)\nsXULBrowserElement.obj        \
+        .\$(OBJDIR)\nsXULBrowserElement.obj       \
         .\$(OBJDIR)\nsXULEditorElement.obj        \
-		.\$(OBJDIR)\nsXULPopupElement.obj         \
+        .\$(OBJDIR)\nsXULPopupElement.obj         \
 	$(NULL)
 
 # XXX we are including layout\html\base\src to get HTML elements
