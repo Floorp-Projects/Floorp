@@ -1010,26 +1010,35 @@ nsImapProtocol::TellThreadToDie(PRBool isSafeToClose)
 
   m_urlInProgress = PR_TRUE;  // let's say it's busy so no one tries to use
                               // this about to die connection.
+  PRBool urlWritingData = PR_FALSE;
+  PRBool connectionIdle = !m_runningUrl;
+
+  if (!connectionIdle)
+    urlWritingData = m_imapAction == nsIImapUrl::nsImapAppendMsgFromFile 
+      || m_imapAction == nsIImapUrl::nsImapAppendDraftFromFile;
+
   PRBool closeNeeded = GetServerStateParser().GetIMAPstate() ==
                 nsImapServerResponseParser::kFolderSelected && isSafeToClose;
   nsCString command;
   nsresult rv = NS_OK;
 
-  if (m_currentServerCommandTagNumber > 0)
+  // if a url is writing data, we can't even logout, so we're just
+  // going to close the connection as if the user pressed stop.
+  if (m_currentServerCommandTagNumber > 0 && !urlWritingData)
   {
-    if (TestFlag(IMAP_CONNECTION_IS_OPEN) && m_idle)
+    PRBool isAlive = PR_FALSE;
+    if (m_transport)
+      rv = m_transport->IsAlive(&isAlive);
+
+    if (TestFlag(IMAP_CONNECTION_IS_OPEN) && m_idle && isAlive)
       EndIdle(PR_FALSE);
 
-    if (closeNeeded && GetDeleteIsMoveToTrash() &&
+    if (NS_SUCCEEDED(rv) && isAlive && closeNeeded && GetDeleteIsMoveToTrash() &&
         TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
-    {
-      Close(PR_TRUE);
-    }
+      Close(PR_TRUE, connectionIdle);
 
-    if (NS_SUCCEEDED(rv) && TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
-    {
-      Logout(PR_TRUE);
-    }
+    if (NS_SUCCEEDED(rv) && isAlive && TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
+      Logout(PR_TRUE, connectionIdle);
   }
 
   CloseStreams(); 
@@ -5611,9 +5620,11 @@ void nsImapProtocol::OnRefreshAllACLs()
 }
 
 // any state commands
-void nsImapProtocol::Logout(PRBool shuttingDown /* = PR_FALSE */)
+void nsImapProtocol::Logout(PRBool shuttingDown /* = PR_FALSE */, 
+                            PRBool waitForResponse /* = PR_TRUE */)
 {
-  ProgressEventFunctionUsingId (IMAP_STATUS_LOGGING_OUT);
+  if (!shuttingDown)
+    ProgressEventFunctionUsingId (IMAP_STATUS_LOGGING_OUT);
 
 /******************************************************************
  * due to the undo functionality we cannot issule a close when logout; there
@@ -5637,7 +5648,7 @@ void nsImapProtocol::Logout(PRBool shuttingDown /* = PR_FALSE */)
   if (m_transport && shuttingDown)
     m_transport->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, 5);
   // the socket may be dead before we read the response, so drop it.
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv) && waitForResponse)
       ParseIMAPandCheckForNewMail();
 }
 
@@ -7291,14 +7302,16 @@ void nsImapProtocol::ProcessStoreFlags(const char * messageIdsString,
 }
 
 
-void nsImapProtocol::Close(PRBool shuttingDown /* = PR_FALSE */)
+void nsImapProtocol::Close(PRBool shuttingDown /* = PR_FALSE */, 
+                           PRBool waitForResponse /* = PR_TRUE */)
 {
   IncrementCommandTagNumber();
 
   nsCString command(GetServerCommandTag());
   command.Append(" close" CRLF);
 
-  ProgressEventFunctionUsingId (IMAP_STATUS_CLOSE_MAILBOX);
+  if (!shuttingDown)
+    ProgressEventFunctionUsingId (IMAP_STATUS_CLOSE_MAILBOX);
 
   GetServerStateParser().ResetFlagInfo(0);
     
@@ -7306,7 +7319,7 @@ void nsImapProtocol::Close(PRBool shuttingDown /* = PR_FALSE */)
   if (m_transport && shuttingDown)
     m_transport->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, 5);
 
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv) && waitForResponse)
       ParseIMAPandCheckForNewMail();
 }
 

@@ -276,11 +276,11 @@ public:
   void FetchMsgAttribute(const char * messageIds, const char *attribute);
   void Expunge();
   void UidExpunge(const char* messageSet);
-  void Close(PRBool shuttingDown = PR_FALSE);
+  void Close(PRBool shuttingDown = PR_FALSE, PRBool waitForResponse = PR_TRUE);
   void Check();
   void SelectMailbox(const char *mailboxName);
   // more imap commands
-  void Logout(PRBool shuttingDown = PR_FALSE);
+  void Logout(PRBool shuttingDown = PR_FALSE, PRBool waitForResponse = PR_TRUE);
   void Noop();
   void XServerInfo();
   void Netscape();
