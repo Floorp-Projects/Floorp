@@ -31,6 +31,7 @@ LINCS=							\
 		-I$(PUBLIC)\xpcom		\
 		-I$(PUBLIC)\netlib		\
 		-I$(PUBLIC)\mailnews	\
+		-I$(PUBLIC)\news	\
 		-I$(PUBLIC)\security	\
 		-I$(PUBLIC)\pref		\
 		-I$(PUBLIC)\js			\
