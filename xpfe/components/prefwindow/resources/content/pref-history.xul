@@ -111,7 +111,6 @@
     pref.setComplexValue("general.open_location.last_url",
                          Components.interfaces.nsISupportsWString,
                          str);
-    button.setAttribute("disabled","true");
   }
   ]]>
   </script>
@@ -126,7 +125,7 @@
       <label value="&days.label;"/>
       <spacer flex="1"/>
       <button label="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
-        oncommand="prefClearGlobalHistory();"
+        oncommand="prefClearGlobalHistory(); this.disabled = true;"
         id="browserClearHistory"
         prefstring="pref.browser.history.disable_button.clear_hist"/>
     </hbox>
@@ -139,7 +138,7 @@
       <description flex="1">&clearLocationBar.label;</description>
       <hbox align="center" pack="end">
         <button id="ClearUrlBarHistoryButton" label="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
-         oncommand="prefClearUrlbarHistory();"
+         oncommand="prefClearUrlbarHistory(); this.disabled = true;"
          prefstring="pref.browser.history.disable_button.clear_urlbar"/>
       </hbox>
     </hbox>
