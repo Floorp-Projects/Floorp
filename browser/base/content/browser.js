@@ -512,6 +512,7 @@ function delayedStartup()
 
   clearObsoletePrefs();
 
+#ifdef XP_WIN
   // Perform default browser checking (after window opens).
   var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
                         .getService(Components.interfaces.nsIShellService);
@@ -537,6 +538,7 @@ function delayedStartup()
       shell.setDefaultBrowser(true);
     shell.shouldCheckDefaultBrowser = checkEveryTime.value;
   }
+#endif  
 }
 
 function Shutdown()
