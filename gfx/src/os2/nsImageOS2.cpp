@@ -231,10 +231,17 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
 
    nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
 
+   // limit the size of the blit to the amount of the image read in
+   PRInt32 notLoadedDY = 0;
+   if( mDecodedY2 < mInfo->cy)
+   {
+      notLoadedDY = aSH - PRInt32(float(mDecodedY2/float(mInfo->cy))*aSH);
+   }
+
    // Set up blit coord array
-   POINTL aptl[ 4] = { { rcl.xLeft, rcl.yBottom },
+   POINTL aptl[ 4] = { { rcl.xLeft, rcl.yBottom + notLoadedDY },
                        { rcl.xRight, rcl.yTop },
-                       { aSX, mInfo->cy - aSY - aSH},
+                       { aSX, mInfo->cy - aSY - aSH + notLoadedDY },
                        { aSX + aSW, mInfo->cy - aSY } };
 
    // Don't bother creating HBITMAPs, just use the pel data to GpiDrawBits
@@ -418,27 +425,27 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
    if( (aWidth <= tileWidth/2) || (aHeight <= tileHeight/2))
    {
       nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
-   
+
       // Find the compatible device context and create a memory one
       HDC hdcCompat = GpiQueryDevice( surf->mPS);
       DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
       HDC mDC = DevOpenDC( (HAB)0, OD_MEMORY, "*", 5,
                            (PDEVOPENDATA) &dop, hdcCompat);
-   
+
       if( DEV_ERROR != mDC)
       {
          // create the PS
          SIZEL sizel = { 0, 0 };
          HPS mPS = GpiCreatePS( (HAB)0, mDC, &sizel,
                                 PU_PELS | GPIT_MICRO | GPIA_ASSOC);
-   
+
          if( GPI_ERROR != mPS)
          {
             // now create a bitmap of the right size
             HBITMAP hBmp;
             HBITMAP hBmpMask = 0;
             BITMAPINFOHEADER2 hdr = { 0 };
-         
+
             hdr.cbFix = sizeof( BITMAPINFOHEADER2);
             // Maximum size of tiled area (could do this better)
             LONG endWidth = aWidth * 2;
@@ -454,31 +461,40 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
             hdr.cx = endWidth;
             hdr.cy = endHeight;
             hdr.cPlanes = 1;
-   
+
             // find bitdepth
             LONG lBitCount = 0;
             DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount);
             hdr.cBitCount = (USHORT) lBitCount;
-         
+
             hBmp = GpiCreateBitmap( mPS, &hdr, 0, 0, 0);
-   
+
             if( GPI_ERROR != hBmp)
             {
                if( mAlphaDepth != 0)
                   hBmpMask = GpiCreateBitmap( mPS, &hdr, 0, 0, 0);
+
                nsRect trect( aX0, aY0, tileWidth, tileHeight);
                RECTL  rcl;
                ((nsRenderingContextOS2 &)aContext).NS2PM_ININ( trect, rcl); // !! !! !!
-   
-   
-               // Set up blit coord array
-               POINTL aptl[ 4] = { { 0, 0 },
-                                   { aWidth - 1, aHeight - 1 },
-                                   { 0, 0 },
-                                   { mInfo->cx, mInfo->cy } };
-   
-               // Draw bitmap once into temporary PS
+
                GpiSetBitmap( mPS, hBmp);
+               PRInt32 notLoadedDY = 0;
+               if( mDecodedY2 < mInfo->cy)
+               {
+                  // If bitmap not fully loaded, fill unloaded area
+                  notLoadedDY = mInfo->cy - mDecodedY2;
+                  RECTL rect = { 0, 0, aWidth, notLoadedDY };
+                  WinFillRect( mPS, &rect, CLR_BACKGROUND);
+               }
+
+               // Set up blit coord array
+               POINTL aptl[ 4] = { { 0, notLoadedDY },
+                                   { aWidth - 1, aHeight - 1 },
+                                   { 0, notLoadedDY },
+                                   { mInfo->cx, mInfo->cy } };
+
+               // Draw bitmap once into temporary PS
                DrawBitmap( mPS, 4, aptl, ROP_SRCCOPY, PR_FALSE);
                if( hBmpMask)
                {
@@ -486,7 +502,7 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                   DrawBitmap( mPS, 4, aptl, ROP_SRCCOPY, PR_TRUE);
                   GpiSetBitmap( mPS, hBmp);
                }
-            
+
                // Copy bitmap horizontally, doubling each time
                while( aWidth < tileWidth)
                {
@@ -494,8 +510,7 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                                           { 2*aWidth, aHeight },
                                           { 0, 0 },
                                           { aWidth, aHeight } };
-            
-               
+
                   GpiBitBlt( mPS, mPS, 4, aptlCopy, ROP_SRCCOPY, 0L);
                   if( hBmpMask)
                   {
@@ -512,7 +527,7 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                                           { aWidth, 2*aHeight },
                                           { 0, 0 },
                                           { aWidth, aHeight } };
-               
+
                   GpiBitBlt( mPS, mPS, 4, aptlCopy, ROP_SRCCOPY, 0L);
                   if( hBmpMask)
                   {
@@ -522,12 +537,12 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                   }
                   aHeight *= 2;
                } 
-   
+
                POINTL aptlTile[ 4] = { { rcl.xLeft, rcl.yBottom },
                                        { rcl.xRight + 1, rcl.yTop + 1 },
                                        { 0, aHeight - tileHeight },
                                        { tileWidth, aHeight } };
-   
+
                // Copy tiled bitmap into destination PS
                if( mAlphaDepth == 0)
                {
@@ -546,10 +561,10 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                   GpiSetBitmap( mPS, hBmp);
                   GpiBitBlt( surf->mPS, mPS, 4, aptlTile, ROP_SRCPAINT, 0L);
                }
-   
+
                // Tiling successful
                didTile = PR_TRUE;
-   
+
                // Must deselect bitmap from PS before freeing bitmap and PS.
                GpiSetBitmap( mPS, NULLHANDLE);
                GpiDeleteBitmap( hBmp);
