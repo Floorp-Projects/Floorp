@@ -3094,6 +3094,12 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       nsCOMPtr<nsIPlaintextEditor> htmlEditor = do_QueryInterface(mEditor);
       if (!htmlEditor) return;
 
+      // Since this code does not handle user-generated changes to the text,
+      // make sure we don't fire oninput when the editor notifies us.
+      // Note: mNotifyOnInput must be reset before we return.
+      PRBool oldNotify = mNotifyOnInput;
+      mNotifyOnInput = PR_FALSE;
+
       // get the flags, remove readonly and disabled, set the value,
       // restore flags
       PRUint32 flags, savedFlags;
@@ -3112,6 +3118,8 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       mEditor->SetFlags(savedFlags);
       if (selPriv)
         selPriv->EndBatchChanges();
+
+      mNotifyOnInput = oldNotify;
     }
 
     if (mScrollableView)
