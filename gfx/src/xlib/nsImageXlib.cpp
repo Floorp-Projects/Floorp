@@ -1400,7 +1400,7 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
              PR_MIN(validWidth, aX1 - x),
              PR_MIN(validHeight, aY1 - y));
 
-    aContext.PopState(clipState);
+    aContext.PopState();
 
     return NS_OK;
   }
