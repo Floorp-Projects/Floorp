@@ -58,7 +58,7 @@ static JSValue object_toString(Context *, const JSValues& argv)
     return kUndefinedValue;
 }
 
-static JSValue object_constructor(Context *cx, const JSValues& argv)
+static JSValue object_constructor(Context *, const JSValues& /*argv*/)
 {
     // argv[0] will be NULL
     return JSValue(new JSObject());
@@ -82,13 +82,13 @@ JSObject *JSObject::initJSObject()
 {
     JSObject *result = new JSObject();
 
-    for (int i = 0; i < sizeof(ObjectFunctions) / sizeof(ObjectFunctionEntry); i++)
+    for (uint i = 0; i < sizeof(ObjectFunctions) / sizeof(ObjectFunctionEntry); i++)
         result->setProperty(widenCString(ObjectFunctions[i].name), JSValue(new JSNativeFunction(ObjectFunctions[i].fn) ) );
 
     return result;
 }
 
-void JSObject::initObjectObject(JSScope *g)
+void JSObject::initObjectObject(JSScope *)
 {
     // The ObjectPrototypeObject has already been constructed by static initialization.
     
@@ -168,7 +168,7 @@ void JSFunction::initFunctionObject(JSScope *g)
 {
     // first build the Function Prototype Object
     FunctionPrototypeObject = new JSNativeFunction(functionPrototypeFunction);
-    for (int i = 0; i < sizeof(FunctionFunctions) / sizeof(FunctionFunctionEntry); i++)
+    for (uint i = 0; i < sizeof(FunctionFunctions) / sizeof(FunctionFunctionEntry); i++)
         FunctionPrototypeObject->setProperty(widenCString(FunctionFunctions[i].name), JSValue(new JSNativeFunction(FunctionFunctions[i].fn) ) );
 
     ASSERT(g->getProperty(*FunctionString).isObject());
@@ -183,7 +183,7 @@ void JSFunction::initFunctionObject(JSScope *g)
 
 JSString* JSBoolean::BooleanString = new JSString("Boolean");
 
-static JSValue boolean_constructor(Context *cx, const JSValues& argv)
+static JSValue boolean_constructor(Context */*cx*/, const JSValues& argv)
 {
     // argv[0] will be NULL
     if (argv.size() > 1)
@@ -192,7 +192,7 @@ static JSValue boolean_constructor(Context *cx, const JSValues& argv)
         return JSValue(new JSBoolean(false));
 }
 
-static JSValue boolean_toString(Context *cx, const JSValues& argv)
+static JSValue boolean_toString(Context */*cx*/, const JSValues& argv)
 {
     if (argv.size() > 0) {
         JSValue theThis = argv[0];
@@ -209,7 +209,7 @@ static JSValue boolean_toString(Context *cx, const JSValues& argv)
     return kUndefinedValue;
 }
 
-static JSValue boolean_valueOf(Context *cx, const JSValues& argv)
+static JSValue boolean_valueOf(Context *, const JSValues&)
 {
     return kUndefinedValue;
 }
@@ -230,7 +230,7 @@ void JSBoolean::initBooleanObject(JSScope *g)
     BooleanPrototypeObject = new JSObject();
     BooleanPrototypeObject->setClass(new JSString(BooleanString));
 
-    for (int i = 0; i < sizeof(BooleanFunctions) / sizeof(BooleanFunctionEntry); i++)
+    for (uint i = 0; i < sizeof(BooleanFunctions) / sizeof(BooleanFunctionEntry); i++)
         BooleanPrototypeObject->setProperty(widenCString(BooleanFunctions[i].name), JSValue(new JSNativeFunction(BooleanFunctions[i].fn) ) );
 
     ASSERT(g->getProperty(*BooleanString).isObject());
@@ -240,13 +240,13 @@ void JSBoolean::initBooleanObject(JSScope *g)
 
 /********** Date Object Stuff **************************/
 
-static JSValue date_constructor(Context *cx, const JSValues& argv)
+static JSValue date_constructor(Context *, const JSValues&)
 {
     // return JSValue(new JSDate());
     return JSValue(new JSObject());
 }
 
-static JSValue date_invokor(Context *cx, const JSValues& argv)
+static JSValue date_invokor(Context *, const JSValues&)
 {
     return JSValue(new JSString("now"));
 }
@@ -447,6 +447,8 @@ int JSValue::operator==(const JSValue& value) const
         case integer_tag : return (this->f64 == value.f64);
         // question:  are all undefined values equal to one another?
         case undefined_tag: return 1;
+        default:
+            NOT_REACHED("Broken compiler?");            
         }
     }
     return 0;
@@ -654,7 +656,7 @@ JSValue JSValue::valueToInteger(const JSValue& value)
     ASSERT(result.tag == f64_tag);
     result.tag = i32_tag;
     bool neg = (result.f64 < 0);
-    result.i32 = floor((neg) ? -result.f64 : result.f64);
+    result.i32 = (int32)floor((neg) ? -result.f64 : result.f64);
     result.i32 = (neg) ? -result.i32 : result.i32;
     return result;
 }

@@ -504,7 +504,7 @@ void Context::initOperatorsPackage()
         { "defineIdentical",        defineIdentical },
     };
 
-    for (int i = 0; i < sizeof(OBOs) / sizeof(struct OBO); i++)
+    for (uint i = 0; i < sizeof(OBOs) / sizeof(struct OBO); i++)
         mGlobal->defineNativeFunction(mWorld.identifiers[widenCString(OBOs[i].name)], OBOs[i].fun);
 
     mHasOperatorsPackageLoaded = true;
@@ -535,7 +535,7 @@ void Context::initContext()
         { "none", &None_Type }
     };
 
-    for (int i = 0; i < sizeof(PDTs) / sizeof(struct PDT); i++)
+    for (uint i = 0; i < sizeof(PDTs) / sizeof(struct PDT); i++)
         mGlobal->defineVariable(widenCString(PDTs[i].name), &Type_Type, JSValue(PDTs[i].type));
 
     // set up the correct [[Class]] for the global object (matching SpiderMonkey)

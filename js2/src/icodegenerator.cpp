@@ -1902,7 +1902,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 FILE* f = fopen(str.c_str(), "r");
                 if (f) {
                     Context cx(*mWorld, mGlobal);
-                    JSValue result = cx.readEvalFile(f, *fileName);
+                    (void)cx.readEvalFile(f, *fileName);
                     fclose(f);
                 }
             }
