@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.10 2000/07/28 23:03:12 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.11 2000/08/01 01:38:29 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -156,7 +156,7 @@ mp_err mp_init_size(mp_int *mp, mp_size prec)
   structure.
  */
 
-mp_err mp_init_copy(mp_int *mp, mp_int *from)
+mp_err mp_init_copy(mp_int *mp, const mp_int *from)
 {
   ARGCHK(mp != NULL && from != NULL, MP_BADARG);
 
@@ -187,7 +187,7 @@ mp_err mp_init_copy(mp_int *mp, mp_int *from)
   instead). If 'from' and 'to' are identical, nothing happens.
  */
 
-mp_err mp_copy(mp_int *from, mp_int *to)
+mp_err mp_copy(const mp_int *from, mp_int *to)
 {
   ARGCHK(from != NULL && to != NULL, MP_BADARG);
 
@@ -373,7 +373,7 @@ mp_err mp_set_int(mp_int *mp, long z)
   its primary addend (single digits are unsigned anyway).
  */
 
-mp_err mp_add_d(mp_int *a, mp_digit d, mp_int *b)
+mp_err mp_add_d(const mp_int *a, mp_digit d, mp_int *b)
 {
   mp_int   tmp;
   mp_err   res;
@@ -417,7 +417,7 @@ CLEANUP:
   sign of its subtrahend (single digits are unsigned anyway).
  */
 
-mp_err mp_sub_d(mp_int *a, mp_digit d, mp_int *b)
+mp_err mp_sub_d(const mp_int *a, mp_digit d, mp_int *b)
 {
   mp_int   tmp;
   mp_err   res;
@@ -462,7 +462,7 @@ CLEANUP:
   of its multiplicand (single digits are unsigned anyway)
  */
 
-mp_err mp_mul_d(mp_int *a, mp_digit d, mp_int *b)
+mp_err mp_mul_d(const mp_int *a, mp_digit d, mp_int *b)
 {
   mp_err  res;
 
@@ -486,7 +486,7 @@ mp_err mp_mul_d(mp_int *a, mp_digit d, mp_int *b)
 
 /* {{{ mp_mul_2(a, c) */
 
-mp_err mp_mul_2(mp_int *a, mp_int *c)
+mp_err mp_mul_2(const mp_int *a, mp_int *c)
 {
   mp_err  res;
 
@@ -511,7 +511,7 @@ mp_err mp_mul_2(mp_int *a, mp_int *c)
   unsigned anyway).
  */
 
-mp_err mp_div_d(mp_int *a, mp_digit d, mp_int *q, mp_digit *r)
+mp_err mp_div_d(const mp_int *a, mp_digit d, mp_int *q, mp_digit *r)
 {
   mp_err   res;
   mp_int   qp;
@@ -570,7 +570,7 @@ mp_err mp_div_d(mp_int *a, mp_digit d, mp_int *q, mp_digit *r)
   Compute c = a / 2, disregarding the remainder.
  */
 
-mp_err mp_div_2(mp_int *a, mp_int *c)
+mp_err mp_div_2(const mp_int *a, mp_int *c)
 {
   mp_err  res;
 
@@ -589,7 +589,7 @@ mp_err mp_div_2(mp_int *a, mp_int *c)
 
 /* {{{ mp_expt_d(a, d, b) */
 
-mp_err mp_expt_d(mp_int *a, mp_digit d, mp_int *c)
+mp_err mp_expt_d(const mp_int *a, mp_digit d, mp_int *c)
 {
   mp_int   s, x;
   mp_err   res;
@@ -641,7 +641,7 @@ X:
   Compute b = |a|.  'a' and 'b' may be identical.
  */
 
-mp_err mp_abs(mp_int *a, mp_int *b)
+mp_err mp_abs(const mp_int *a, mp_int *b)
 {
   mp_err   res;
 
@@ -666,7 +666,7 @@ mp_err mp_abs(mp_int *a, mp_int *b)
   Compute b = -a.  'a' and 'b' may be identical.
  */
 
-mp_err mp_neg(mp_int *a, mp_int *b)
+mp_err mp_neg(const mp_int *a, mp_int *b)
 {
   mp_err   res;
 
@@ -694,7 +694,7 @@ mp_err mp_neg(mp_int *a, mp_int *b)
   Compute c = a + b.  All parameters may be identical.
  */
 
-mp_err mp_add(mp_int *a, mp_int *b, mp_int *c)
+mp_err mp_add(const mp_int *a, const mp_int *b, mp_int *c)
 {
   mp_int  tmp;
   mp_err  res;
@@ -744,7 +744,7 @@ CLEANUP:
   Compute c = a - b.  All parameters may be identical.
  */
 
-mp_err mp_sub(mp_int *a, mp_int *b, mp_int *c)
+mp_err mp_sub(const mp_int *a, const mp_int *b, mp_int *c)
 {
   mp_int  tmp;
   mp_err  res;
@@ -796,7 +796,7 @@ CLEANUP:
   Compute c = a * b.  All parameters may be identical.
  */
 
-mp_err mp_mul(mp_int *a, mp_int *b, mp_int *c)
+mp_err mp_mul(const mp_int *a, const mp_int *b, mp_int *c)
 {
   mp_err   res;
 
@@ -822,7 +822,7 @@ mp_err mp_mul(mp_int *a, mp_int *b, mp_int *c)
 /* {{{ mp_sqr(a, b) */
 
 #if MP_SQUARE
-mp_err mp_sqr(mp_int *a, mp_int *b)
+mp_err mp_sqr(const mp_int *a, mp_int *b)
 {
   mp_err   res;
 
@@ -855,7 +855,7 @@ mp_err mp_sqr(mp_int *a, mp_int *b)
   Pay no attention to the hacker behind the curtain.
  */
 
-mp_err mp_div(mp_int *a, mp_int *b, mp_int *q, mp_int *r)
+mp_err mp_div(const mp_int *a, const mp_int *b, mp_int *q, mp_int *r)
 {
   mp_err   res;
   mp_int   qtmp, rtmp;
@@ -919,7 +919,7 @@ CLEANUP:
 
 /* {{{ mp_div_2d(a, d, q, r) */
 
-mp_err mp_div_2d(mp_int *a, mp_digit d, mp_int *q, mp_int *r)
+mp_err mp_div_2d(const mp_int *a, mp_digit d, mp_int *q, mp_int *r)
 {
   mp_err  res;
 
@@ -1046,7 +1046,7 @@ mp_err mp_2expt(mp_int *a, mp_digit k)
   Compute c = a (mod m).  Result will always be 0 <= c < m.
  */
 
-mp_err mp_mod(mp_int *a, mp_int *m, mp_int *c)
+mp_err mp_mod(const mp_int *a, const mp_int *m, mp_int *c)
 {
   mp_err  res;
   int     mag;
@@ -1106,7 +1106,7 @@ mp_err mp_mod(mp_int *a, mp_int *m, mp_int *c)
 
   Compute c = a (mod d).  Result will always be 0 <= c < d
  */
-mp_err mp_mod_d(mp_int *a, mp_digit d, mp_digit *c)
+mp_err mp_mod_d(const mp_int *a, mp_digit d, mp_digit *c)
 {
   mp_err   res;
   mp_digit rem;
@@ -1148,7 +1148,7 @@ mp_err mp_mod_d(mp_int *a, mp_digit d, mp_digit *c)
 
   It is a range error to pass a negative value.
  */
-mp_err mp_sqrt(mp_int *a, mp_int *b)
+mp_err mp_sqrt(const mp_int *a, mp_int *b)
 {
   mp_int   x, t;
   mp_err   res;
@@ -1223,7 +1223,7 @@ mp_err mp_sqrt(mp_int *a, mp_int *b)
   Compute c = (a + b) mod m
  */
 
-mp_err mp_addmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
+mp_err mp_addmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c)
 {
   mp_err  res;
 
@@ -1248,7 +1248,7 @@ mp_err mp_addmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
   Compute c = (a - b) mod m
  */
 
-mp_err mp_submod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
+mp_err mp_submod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c)
 {
   mp_err  res;
 
@@ -1273,7 +1273,7 @@ mp_err mp_submod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
   Compute c = (a * b) mod m
  */
 
-mp_err mp_mulmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
+mp_err mp_mulmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c)
 {
   mp_err  res;
 
@@ -1293,7 +1293,7 @@ mp_err mp_mulmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
 /* {{{ mp_sqrmod(a, m, c) */
 
 #if MP_SQUARE
-mp_err mp_sqrmod(mp_int *a, mp_int *m, mp_int *c)
+mp_err mp_sqrmod(const mp_int *a, const mp_int *m, mp_int *c)
 {
   mp_err  res;
 
@@ -1324,7 +1324,7 @@ mp_err mp_sqrmod(mp_int *a, mp_int *m, mp_int *c)
   s_mp_reduce() below for details)
  */
 
-mp_err s_mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
+mp_err s_mp_exptmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c)
 {
   mp_int   s, x, mu;
   mp_err   res;
@@ -1410,7 +1410,7 @@ mp_err s_mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
 
 /* {{{ mp_exptmod_d(a, d, m, c) */
 
-mp_err mp_exptmod_d(mp_int *a, mp_digit d, mp_int *m, mp_int *c)
+mp_err mp_exptmod_d(const mp_int *a, mp_digit d, const mp_int *m, mp_int *c)
 {
   mp_int   s, x;
   mp_err   res;
@@ -1465,7 +1465,7 @@ X:
   Compare a <=> 0.  Returns <0 if a<0, 0 if a=0, >0 if a>0.
  */
 
-int    mp_cmp_z(mp_int *a)
+int    mp_cmp_z(const mp_int *a)
 {
   if(SIGN(a) == NEG)
     return MP_LT;
@@ -1486,7 +1486,7 @@ int    mp_cmp_z(mp_int *a)
   Compare a <=> d.  Returns <0 if a<d, 0 if a=d, >0 if a>d
  */
 
-int    mp_cmp_d(mp_int *a, mp_digit d)
+int    mp_cmp_d(const mp_int *a, mp_digit d)
 {
   ARGCHK(a != NULL, MP_EQ);
 
@@ -1501,7 +1501,7 @@ int    mp_cmp_d(mp_int *a, mp_digit d)
 
 /* {{{ mp_cmp(a, b) */
 
-int    mp_cmp(mp_int *a, mp_int *b)
+int    mp_cmp(const mp_int *a, const mp_int *b)
 {
   ARGCHK(a != NULL && b != NULL, MP_EQ);
 
@@ -1552,7 +1552,7 @@ int    mp_cmp_mag(mp_int *a, mp_int *b)
   frequently this wil get used anyway.  For small positive constants,
   you can always use mp_cmp_d(), and for zero, there is mp_cmp_z().
  */
-int    mp_cmp_int(mp_int *a, long z)
+int    mp_cmp_int(const mp_int *a, long z)
 {
   mp_int  tmp;
   int     out;
@@ -1576,7 +1576,7 @@ int    mp_cmp_int(mp_int *a, long z)
 
   Returns a true (non-zero) value if a is odd, false (zero) otherwise.
  */
-int    mp_isodd(mp_int *a)
+int    mp_isodd(const mp_int *a)
 {
   ARGCHK(a != NULL, 0);
 
@@ -1588,7 +1588,7 @@ int    mp_isodd(mp_int *a)
 
 /* {{{ mp_iseven(a) */
 
-int    mp_iseven(mp_int *a)
+int    mp_iseven(const mp_int *a)
 {
   return !mp_isodd(a);
 
@@ -2285,7 +2285,7 @@ void s_mp_setz(mp_digit *dp, mp_size count)
 
 #if MP_MACRO == 0
 /* Copy 'count' digits from sp to dp                                      */
-void s_mp_copy(mp_digit *sp, mp_digit *dp, mp_size count)
+void s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count)
 {
 #if MP_MEMCPY == 0
   int  ix;
@@ -2781,7 +2781,7 @@ mp_err   s_mp_mod_d(mp_int *mp, mp_digit d, mp_digit *r)
 /* {{{ s_mp_add(a, b) */
 
 /* Compute a = |a| + |b|                                                  */
-mp_err   s_mp_add(mp_int *a, mp_int *b)        /* magnitude addition      */
+mp_err   s_mp_add(mp_int *a, const mp_int *b)  /* magnitude addition      */
 {
   mp_word   w, k = 0;
   mp_size   ix;
@@ -2893,7 +2893,7 @@ mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset)
 /* {{{ s_mp_sub(a, b) */
 
 /* Compute a = |a| - |b|, assumes |a| >= |b|                              */
-mp_err   s_mp_sub(mp_int *a, mp_int *b)        /* magnitude subtract      */
+mp_err   s_mp_sub(mp_int *a, const mp_int *b)  /* magnitude subtract      */
 {
   mp_word   w, k = 0;
   mp_size   ix;
@@ -2918,7 +2918,6 @@ mp_err   s_mp_sub(mp_int *a, mp_int *b)        /* magnitude subtract      */
 
   /* Clobber any leading zeroes we created    */
   s_mp_clamp(a);
-  s_mp_clamp(b);
 
   /* 
      If there was a borrow out, then |b| > |a| in violation
@@ -2937,7 +2936,7 @@ mp_err   s_mp_sub(mp_int *a, mp_int *b)        /* magnitude subtract      */
 /* {{{ s_mp_mul(a, b) */
 
 /* Compute a = |a| * |b|                                                  */
-mp_err   s_mp_mul(mp_int *a, mp_int *b)
+mp_err   s_mp_mul(mp_int *a, const mp_int *b)
 {
   mp_digit *pb = MP_DIGITS(b);
   mp_word  w;
@@ -3300,7 +3299,7 @@ mp_err   s_mp_2expt(mp_int *a, mp_digit k)
   pp. 603-604.  
  */
 
-mp_err   s_mp_reduce(mp_int *x, mp_int *m, mp_int *mu)
+mp_err   s_mp_reduce(mp_int *x, const mp_int *m, const mp_int *mu)
 {
   mp_int   q;
   mp_err   res;
@@ -3354,7 +3353,7 @@ mp_err   s_mp_reduce(mp_int *x, mp_int *m, mp_int *mu)
 /* {{{ s_mp_cmp(a, b) */
 
 /* Compare |a| <=> |b|, return 0 if equal, <0 if a<b, >0 if a>b           */
-int      s_mp_cmp(mp_int *a, mp_int *b)
+int      s_mp_cmp(const mp_int *a, const mp_int *b)
 {
   if(USED(a) > USED(b))
     return MP_GT;
@@ -3380,7 +3379,7 @@ int      s_mp_cmp(mp_int *a, mp_int *b)
 /* {{{ s_mp_cmp_d(a, d) */
 
 /* Compare |a| <=> d, return 0 if equal, <0 if a<d, >0 if a>d             */
-int      s_mp_cmp_d(mp_int *a, mp_digit d)
+int      s_mp_cmp_d(const mp_int *a, mp_digit d)
 {
   if(USED(a) > 1)
     return MP_GT;

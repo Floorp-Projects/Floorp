@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.h,v 1.4 2000/07/30 06:35:38 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.h,v 1.5 2000/08/01 01:38:29 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPLOGIC_
@@ -63,8 +63,8 @@ mp_err mpl_xor(mp_int *a, mp_int *b, mp_int *c); /* bitwise XOR       */
 
 /* Shift functions                   */
 
-mp_err mpl_rsh(mp_int *a, mp_int *b, mp_digit d);   /* right shift    */
-mp_err mpl_lsh(mp_int *a, mp_int *b, mp_digit d);   /* left shift     */
+mp_err mpl_rsh(const mp_int *a, mp_int *b, mp_digit d);   /* right shift    */
+mp_err mpl_lsh(const mp_int *a, mp_int *b, mp_digit d);   /* left shift     */
 
 /* Bit count and parity              */
 
@@ -75,8 +75,8 @@ mp_err mpl_parity(mp_int *a);                    /* determine parity  */
 /* Get & Set the value of a bit */
 
 mp_err mpl_set_bit(mp_int *a, mp_size bitNum, mp_size value);
-mp_err mpl_get_bit(mp_int *a, mp_size bitNum);
-mp_err mpl_get_bits(mp_int *a, mp_size lsbNum, mp_size numBits);
-mp_err mpl_significant_bits(mp_int *a);
+mp_err mpl_get_bit(const mp_int *a, mp_size bitNum);
+mp_err mpl_get_bits(const mp_int *a, mp_size lsbNum, mp_size numBits);
+mp_err mpl_significant_bits(const mp_int *a);
 
 #endif /* end _H_MPLOGIC_ */

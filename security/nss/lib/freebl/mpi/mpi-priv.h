@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi-priv.h,v 1.3 2000/07/28 23:03:12 nelsonb%netscape.com Exp $
+ *  $Id: mpi-priv.h,v 1.4 2000/08/01 01:38:29 nelsonb%netscape.com Exp $
  */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
@@ -132,7 +132,7 @@ extern const float s_logv_2[];
  */
 #if MP_MACRO == 0
  void     s_mp_setz(mp_digit *dp, mp_size count); /* zero digits           */
- void     s_mp_copy(mp_digit *sp, mp_digit *dp, mp_size count); /* copy    */
+ void     s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count); /* copy */
  void    *s_mp_alloc(size_t nb, size_t ni);       /* general allocator     */
  void     s_mp_free(void *ptr);                   /* general free function */
 #else
@@ -184,13 +184,13 @@ mp_err   s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r);
 		                               /* unsigned digit divide   */
 mp_err   s_mp_mod_d(mp_int *mp, mp_digit d, mp_digit *r);
                                                /* unsigned digit rem      */
-mp_err   s_mp_reduce(mp_int *x, mp_int *m, mp_int *mu);
+mp_err   s_mp_reduce(mp_int *x, const mp_int *m, const mp_int *mu);
                                                /* Barrett reduction       */
-mp_err   s_mp_add(mp_int *a, mp_int *b);       /* magnitude addition      */
+mp_err   s_mp_add(mp_int *a, const mp_int *b); /* magnitude addition      */
 mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset);
                                                /* a += b * RADIX^offset   */
-mp_err   s_mp_sub(mp_int *a, mp_int *b);       /* magnitude subtract      */
-mp_err   s_mp_mul(mp_int *a, mp_int *b);       /* magnitude multiply      */
+mp_err   s_mp_sub(mp_int *a, const mp_int *b); /* magnitude subtract      */
+mp_err   s_mp_mul(mp_int *a, const mp_int *b); /* magnitude multiply      */
 mp_err   s_mp_mul_d_add_offset(mp_int *a, mp_digit b, mp_int *c, mp_size off);
                                       /* c += a * b * (MP_RADIX ** offset);  */
 #if MP_SQUARE
@@ -199,10 +199,10 @@ mp_err   s_mp_sqr(mp_int *a);                  /* magnitude square        */
 #define  s_mp_sqr(a) s_mp_mul(a, a)
 #endif
 mp_err   s_mp_div(mp_int *a, mp_int *b);       /* magnitude divide        */
-mp_err   s_mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
+mp_err   s_mp_exptmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c);
 mp_err   s_mp_2expt(mp_int *a, mp_digit k);    /* a = 2^k                 */
-int      s_mp_cmp(mp_int *a, mp_int *b);       /* magnitude comparison    */
-int      s_mp_cmp_d(mp_int *a, mp_digit d);    /* magnitude digit compare */
+int      s_mp_cmp(const mp_int *a, const mp_int *b); /* magnitude comparison */
+int      s_mp_cmp_d(const mp_int *a, mp_digit d); /* magnitude digit compare */
 int      s_mp_ispow2(mp_int *v);               /* is v a power of 2?      */
 int      s_mp_ispow2d(mp_digit d);             /* is d a power of 2?      */
 

@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.c,v 1.8 2000/07/30 06:35:38 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.c,v 1.9 2000/08/01 01:38:30 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -197,7 +197,7 @@ mp_err mpl_xor(mp_int *a, mp_int *b, mp_int *c)
 
 /* {{{ mpl_rsh(a, b, d) */
 
-mp_err mpl_rsh(mp_int *a, mp_int *b, mp_digit d)
+mp_err mpl_rsh(const mp_int *a, mp_int *b, mp_digit d)
 {
   mp_err   res;
   mp_digit dshift, bshift;
@@ -248,7 +248,7 @@ mp_err mpl_rsh(mp_int *a, mp_int *b, mp_digit d)
 
 /* {{{ mpl_lsh(a, b, d) */
 
-mp_err mpl_lsh(mp_int *a, mp_int *b, mp_digit d)
+mp_err mpl_lsh(const mp_int *a, mp_int *b, mp_digit d)
 {
   mp_err   res;
   mp_digit dshift, bshift;
@@ -435,7 +435,7 @@ mp_err mpl_set_bit(mp_int *a, mp_size bitNum, mp_size value)
 
   returns 0 or 1 or some (negative) error code.
  */
-mp_err mpl_get_bit(mp_int *a, mp_size bitNum)
+mp_err mpl_get_bit(const mp_int *a, mp_size bitNum)
 {
   mp_size      bit, ix;
   mp_err       rv;
@@ -460,7 +460,7 @@ mp_err mpl_get_bit(mp_int *a, mp_size bitNum)
   - lsbNum + numbits can be greater than the number of significant bits in
   integer a, as long as bit lsbNum is in the high order digit of a.
  */
-mp_err mpl_get_bits(mp_int *a, mp_size lsbNum, mp_size numBits) 
+mp_err mpl_get_bits(const mp_int *a, mp_size lsbNum, mp_size numBits) 
 {
   mp_size    rshift = (lsbNum % MP_DIGIT_BIT);
   mp_size    lsWndx = (lsbNum / MP_DIGIT_BIT);
@@ -484,7 +484,7 @@ mp_err mpl_get_bits(mp_int *a, mp_size lsbNum, mp_size numBits)
   returns number of significnant bits in abs(a).
   returns 1 if value is zero.
  */
-mp_err mpl_significant_bits(mp_int *a)
+mp_err mpl_significant_bits(const mp_int *a)
 {
   mp_err bits 	= 0;
   int    ix;
