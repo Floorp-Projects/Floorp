@@ -551,12 +551,13 @@ str_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-str_resolve(JSContext *cx, JSObject *obj, jsval id)
+str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+            JSObject **objp)
 {
     JSString *str, *str1;
     jsint slot;
 
-    if (!JSVAL_IS_INT(id))
+    if (!JSVAL_IS_INT(id) || (flags & JSRESOLVE_ASSIGNING))
         return JS_TRUE;
 
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
@@ -572,15 +573,16 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id)
                                  STRING_ELEMENT_ATTRS, NULL)) {
             return JS_FALSE;
         }
+        *objp = obj;
     }
     return JS_TRUE;
 }
 
 JSClass js_StringClass = {
     js_String_str,
-    JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub,  JS_PropertyStub,  str_getProperty,  JS_PropertyStub,
-    str_enumerate,    str_resolve,      JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
+    JS_PropertyStub,   JS_PropertyStub,   str_getProperty,   JS_PropertyStub,
+    str_enumerate, (JSResolveOp)str_resolve, JS_ConvertStub, JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -2470,6 +2472,9 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
     if (length == 0)
         return cx->runtime->emptyString;
 
+    if (start == 0 && length == JSSTRING_LENGTH(base))
+        return base;
+
     if (start > JSSTRDEP_START_MASK ||
         (start != 0 && length > JSSTRDEP_LENGTH_MASK)) {
         return js_NewStringCopyN(cx, JSSTRING_CHARS(base) + start, length,
@@ -2815,8 +2820,20 @@ js_InflateString(JSContext *cx, const char *bytes, size_t length)
         return NULL;
 
     INFLATE_STRING_BODY
-
     return chars;
+}
+
+#define DEFLATE_STRING_BODY                                                   \
+    for (i = 0; i < length; i++)                                              \
+        bytes[i] = (char) chars[i];                                           \
+    bytes[i] = 0;
+
+void
+js_DeflateStringToBuffer(char *bytes, const jschar *chars, size_t length)
+{
+    size_t i;
+
+    DEFLATE_STRING_BODY
 }
 
 /*
@@ -2832,9 +2849,8 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
     bytes = (char *) (cx ? JS_malloc(cx, size) : malloc(size));
     if (!bytes)
         return NULL;
-    for (i = 0; i < length; i++)
-        bytes[i] = (char) chars[i];
-    bytes[i] = 0;
+
+    DEFLATE_STRING_BODY
     return bytes;
 }
 
@@ -2906,7 +2922,7 @@ js_GetStringBytes(JSString *str)
                       *bytes == (char) JSSTRING_CHARS(str)[0]);
         } else {
             bytes = js_DeflateString(NULL, JSSTRING_CHARS(str),
-                                     JSSTRING_LENGTH(str));
+                                           JSSTRING_LENGTH(str));
             if (bytes) {
                 if (JS_HashTableRawAdd(cache, hep, hash, str, bytes)) {
 #ifdef DEBUG

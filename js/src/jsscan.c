@@ -75,6 +75,8 @@
 #define RESERVE_JAVA_KEYWORDS
 #define RESERVE_ECMA_KEYWORDS
 
+#define MAX_KEYWORD_LENGTH      12
+
 static struct keyword {
     const char  *name;
     JSTokenType tokentype;      /* JSTokenType */
@@ -176,10 +178,13 @@ JSBool
 js_InitScanner(JSContext *cx)
 {
     struct keyword *kw;
+    size_t length;
     JSAtom *atom;
 
     for (kw = keywords; kw->name; kw++) {
-        atom = js_Atomize(cx, kw->name, strlen(kw->name), ATOM_PINNED);
+        length = strlen(kw->name);
+        JS_ASSERT(length <= MAX_KEYWORD_LENGTH);
+        atom = js_Atomize(cx, kw->name, length, ATOM_PINNED);
         if (!atom)
             return JS_FALSE;
         ATOM_SET_KEYWORD(atom, kw);
@@ -1267,8 +1272,20 @@ retry:
         if (!hadUnicodeEscape && ATOM_KEYWORD(atom)) {
             struct keyword *kw = ATOM_KEYWORD(atom);
 
-            if (JS_VERSION_IS_ECMA(cx) ||
-                kw->version <= (cx->version & JSVERSION_MASK)) {
+            if (kw->tokentype == TOK_RESERVED) {
+                char buf[MAX_KEYWORD_LENGTH + 1];
+
+                js_DeflateStringToBuffer(buf, TOKENBUF_BASE(),
+                                              TOKENBUF_LENGTH());
+                if (!js_ReportCompileErrorNumber(cx, ts,
+                                                 JSREPORT_TS |
+                                                 JSREPORT_WARNING |
+                                                 JSREPORT_STRICT,
+                                                 JSMSG_RESERVED_ID, buf)) {
+                    goto error;
+                }
+            } else if (JS_VERSION_IS_ECMA(cx) ||
+                       kw->version <= (cx->version & JSVERSION_MASK)) {
                 tt = kw->tokentype;
                 tp->t_op = (JSOp) kw->op;
                 goto out;
