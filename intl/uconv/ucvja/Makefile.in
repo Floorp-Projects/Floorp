@@ -29,6 +29,7 @@ CSRCS		=  \
 		  $(NULL)
 
 CPPSRCS		= \
+                  nsJapaneseToUnicode.cpp \
                   nsSJIS2Unicode.cpp \
                   nsUnicodeToSJIS.cpp \
                   nsCP932ToUnicode.cpp \

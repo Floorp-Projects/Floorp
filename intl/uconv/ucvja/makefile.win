@@ -27,6 +27,7 @@ DLLNAME = ucvja
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
+	nsJapaneseToUnicode.cpp		\
 	nsSJIS2Unicode.cpp		\
 	nsUnicodeToSJIS.cpp		\
 	nsCP932ToUnicode.cpp		\
@@ -43,6 +44,7 @@ CPPSRCS =				\
 	$(NULL)
 
 CPP_OBJS=						\
+	.\$(OBJDIR)\nsJapaneseToUnicode.obj 			\
 	.\$(OBJDIR)\nsSJIS2Unicode.obj 			\
 	.\$(OBJDIR)\nsUnicodeToSJIS.obj			\
 	.\$(OBJDIR)\nsCP932ToUnicode.obj 			\
