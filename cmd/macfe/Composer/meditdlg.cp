@@ -112,9 +112,11 @@ static Boolean GetExtraHTML( char *pExtra, char **newExtraHTML , int16 win_csid)
 			XP_FREE( pCurrent );
 		
 		theMessage = handler.DoDialog();
-//			case msg_Help:
-//				newWindow->Help();
-//				break;
+
+		//case msg_help:		
+		//		newWindow->Help();
+		//		break;
+		
 	} while ( theMessage != msg_OK && theMessage != msg_Cancel );
 	
 	if ( theMessage == msg_OK )
@@ -205,83 +207,70 @@ void CEditorPrefContain::DrawSelf()
 
 Boolean CEditDialog::Start(ResIDT inWindowID, MWContext * context, short initTabValue, Boolean insert)
 {
-	CEditDialog *dlog = (CEditDialog *)URobustCreateWindow::CreateWindow( inWindowID, LCommander::GetTopCommander() );
-	if ( dlog == NULL )
-		return false;
 
-	UReanimator::LinkListenerToControls( dlog, dlog, inWindowID );		// the handler is listening; but we want a crack at the messages also...
-	dlog->SetContext( context );
-	dlog->SetInitTabValue( initTabValue );
-	dlog->SetInWindowID( inWindowID );
-	dlog->SetInsertFlag( insert );
-	dlog->InitializeDialogControls();
-	dlog->Show();
+
+	CEditDialog*	newWindow = NULL;
+	LEditField*		theEditField = NULL;
 	
-	return true;
-}
-
-
-void CEditDialog::ListenToMessage( MessageT inMessage, void* ioParam )
-{
-	switch ( inMessage )
-	{
-		case msg_Help:
-			Help();
-			break;
+	StBlockingDialogHandler	handler(inWindowID, LCommander::GetTopCommander());			// inSuperCommander
+	newWindow = (CEditDialog*)handler.GetDialog();
+	ThrowIfNULL_(newWindow);
+	
+	UReanimator::LinkListenerToControls( newWindow, newWindow, inWindowID );		// the handler is listening; but we want a crack at the messages also...
+	
+	newWindow->SetContext(context);
+	newWindow->SetInitTabValue(initTabValue);
+	newWindow->SetInWindowID(inWindowID);
+	newWindow->SetInsertFlag(insert);
+	newWindow->InitializeDialogControls();
+	newWindow->Show();
 		
-		case 'Xtra':
-			char * newExtraHTML = NULL;
-			INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo( GetContext() );
-			Boolean canceled = !GetExtraHTML( pExtra, &newExtraHTML ,INTL_GetCSIWinCSID(csi) );
-			if (!canceled)
-			{
-				if ( pExtra )
-					XP_FREE( pExtra );
-				pExtra = newExtraHTML;
-			}
-			break;
+	EDT_BeginBatchChanges(context);
 
-		case msg_OK:
-		case msg_Apply:
-			LCommander* theTarget = GetTarget();
-			if ( theTarget == NULL || theTarget->SwitchTarget(this) )
-			{
-				if ( CommitChanges( true ) )
-				{
-					if ( inMessage == msg_OK )
-					{
-						if ( mUndoInited )
-							EDT_EndBatchChanges( fContext );
-						
-						LDialogBox::ListenToMessage( cmd_Close, ioParam );
-						return;
-					}
+	while (TRUE) {			// Loop FOREVER. We exit from the loop by returning from particular cases.
+	
+		MessageT	theMessage = handler.DoDialog();
+		LCommander* theTarget = GetTarget();
+				
+		switch (theMessage) {
+		
+			case msg_Help:
+				newWindow->Help();
+			break;
+			
+			case msg_Apply:
+				if (theTarget == NULL || theTarget->SwitchTarget(newWindow))
+					if (newWindow->CommitChanges(TRUE)) {
 					
-					LStdControl* cancel = (LStdControl*)FindPaneByID( 'CANC' );
-					if (cancel)
-					{
-						StringHandle CloseHandle = GetString(CLOSE_STR_RESID);
-						if ( CloseHandle )
-						{
-							SInt8 hstate = HGetState( (Handle)CloseHandle );
-							HLock( (Handle)CloseHandle );
-							cancel->SetDescriptor( *CloseHandle );
-							HSetState( (Handle)CloseHandle, hstate );
+						LStdControl* cancel = (LStdControl*)newWindow->FindPaneByID( 'CANC' );
+						if (cancel) {
+							StringHandle CloseHandle = GetString(CLOSE_STR_RESID);
+							CStr255 Close = **( (CStr255**)CloseHandle );			// Lock it? I don't think so.
+							cancel->SetDescriptor(Close);
 						}
 					}
-				}
+			break;
+		
+			case msg_OK:
+				if (theTarget == NULL || theTarget->SwitchTarget(newWindow))
+					if (newWindow->CommitChanges(TRUE)) {
+					    EDT_EndBatchChanges(context);
+						return TRUE;									// Bye Bye!!
+					}
+			break;
+		
+			case msg_Cancel: {
+    			EDT_EndBatchChanges(context);
+				return FALSE;											// Bye Bye!!
 			}
 			break;
-		
-		case msg_Cancel:
-			if ( mUndoInited )
-				EDT_EndBatchChanges( fContext );
 			
-			LDialogBox::ListenToMessage( cmd_Close, ioParam );
-			break;
-		
-		default:
-			LDialogBox::ListenToMessage( inMessage, ioParam );
+		 	default:
+		 		// this should never happen; hopefully, non-debug code makes this case go away
+				XP_ASSERT( 0 );
+				break;
+		}
+
 	}
 }
 
@@ -289,33 +278,7 @@ void CEditDialog::ListenToMessage( MessageT inMessage, void* ioParam )
 Boolean CEditDialog::AllowSubRemoval( LCommander * /* inSub */ )
 {
 	// don't allow removal
-	return false;
-}
-
-
-// copied from StDialogHandler
-void CEditDialog::FindCommandStatus(
-	CommandT	/* inCommand */,
-	Boolean		&outEnabled,
-	Boolean&	/* outUsesMark */,
-	Char16&		/* outMark */,
-	Str255		/* outName */)
-{
-		// Don't enable any commands except cmd_About, which will keep
-		// the Apple menu enabled. This function purposely does not
-		// call the inherited FindCommandStatus, thereby suppressing
-		// commands that are handled by SuperCommanders. Only those
-		// commands enabled by SubCommanders will be active.
-		//
-		// This is usually what you want for a moveable modal dialog.
-		// Commands such as "New", "Open" and "Quit" that are handled
-		// by the Applcation are disabled, but items within the dialog
-		// can enable commands. For example, an EditField would enable
-		// items in the "Edit" menu.
-		
-	outEnabled = false;
-	// actually we don't want to enable "about" either as it might open
-	// a browser window or ??? which would be very bad
+	return false; 
 }
 
 
@@ -579,7 +542,7 @@ void CUnknownTag::ListenToMessage( MessageT inMessage, void* ioParam )
 		break;
 		
 		default:
-			CEditDialog::ListenToMessage( inMessage, ioParam );
+			LDialogBox::ListenToMessage( inMessage, ioParam );
 		break;
 	}
 }
@@ -1202,7 +1165,7 @@ void CPublish::ListenToMessage( MessageT inMessage, void* ioParam )
 			break;
 		
 		default:
-			CEditDialog::ListenToMessage( inMessage, ioParam );
+			LDialogBox::ListenToMessage( inMessage, ioParam );
 		break;
 	}
 }
@@ -2036,7 +1999,7 @@ void CTableInsertDialog::ListenToMessage( MessageT inMessage, void* ioParam )
 			break;
 		
 		default:
-			CEditDialog::ListenToMessage( inMessage, ioParam );
+			LDialogBox::ListenToMessage( inMessage, ioParam );
 			break;
 	}
 }
@@ -2045,6 +2008,9 @@ void CTableInsertDialog::ListenToMessage( MessageT inMessage, void* ioParam )
 void CEDTableContain::FinishCreateSelf()
 {
 	// Find Controls
+	fNumRowsEditText = (LGAEditField*)this->FindPaneByID( 'rows' );
+	fNumColsEditText = (LGAEditField*)this->FindPaneByID( 'cols' );
+	
 	fBorderCheckBox = (LControl*)FindPaneByID( 'BrdW' );
 	fBorderCheckBox->SetValueMessage( 'BrdW' );
 	
@@ -2128,8 +2094,12 @@ void CEDTableContain::PrefsFromControls()
 	EDT_TableData *fData = EDT_GetTableData(fContext);
 	if (fData == NULL)
 		return;
-	
+
 	LO_Color backgroundColor;
+	
+	fData->iRows = fNumRowsEditText->GetValue();
+	fData->iColumns = fNumColsEditText->GetValue();
+	
 	GetTableDataFromControls( fData, fBorderCheckBox, fBorderWidthEditText,
 							fCellSpacingEditText, fCellPaddingEditText, 
 							fCustomWidth, fWidthPopup, fWidthEditText,
@@ -2223,6 +2193,12 @@ void CEDTableContain::ControlsFromPref()
  	EDT_TableData* fData = EDT_GetTableData(fContext);
  	if (fData == NULL)
  		return;
+ 
+	fNumColsEditText->SetValue( fData->iColumns );
+	fNumColsEditText->Enable();
+	
+	fNumRowsEditText->SetValue( fData->iRows );
+	fNumRowsEditText->Enable();
 
 	switch (fData->align)
 	{
@@ -2288,6 +2264,24 @@ void CEDTableContain::ControlsFromPref()
 
 Boolean CEDTableContain::AllFieldsOK()
 {
+	EDT_TableData* fData = EDT_GetTableData(fContext);
+ 	if (fData == NULL)
+ 		return FALSE;
+ 		
+ 	int upperBoundRows = fData->iRows > 100 ? fData->iRows : 100;  // just in case iRows is over 100
+	if (!IsEditFieldWithinLimits(fNumRowsEditText, fData->iRows, upperBoundRows)) {
+		SwitchTarget( fNumRowsEditText );
+		fNumRowsEditText->SelectAll();
+		return FALSE;
+	}
+
+	int upperBoundCols =  fData->iColumns > 100 ? fData->iColumns : 100;
+	if (!IsEditFieldWithinLimits(fNumColsEditText, fData->iColumns, upperBoundCols)) {
+		SwitchTarget( fNumColsEditText );
+		fNumColsEditText->SelectAll();
+		return FALSE;
+	}
+	
 	if ( fBorderCheckBox->GetValue() )
 	{
 		if (!IsEditFieldWithinLimits(fBorderWidthEditText, 0, 10000)) {
