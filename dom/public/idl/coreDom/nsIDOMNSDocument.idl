@@ -21,7 +21,7 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMLocation;
+interface nsIBoxObject;
 
 
 [scriptable, uuid(a6cf90cd-15b3-11d2-932e-00805f8add32)]
@@ -29,10 +29,6 @@ interface nsIDOMNSDocument : nsISupports
 {
   readonly attribute DOMString            characterSet;
   readonly attribute nsIDOMPluginArray    plugins;
-
-  // location is settable too but when set it's always set to a string
-  // so we can't express that in XPIDL.
-  readonly attribute nsIDOMLocation       location;
 
   nsIDOMRange               createRange();
   void                      load(in DOMString url);
