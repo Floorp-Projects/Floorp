@@ -42,6 +42,70 @@
 #include <mshtml.h>
 #include <hlink.h>
 
+// A barely documented interface called ITargetFrame from IE
+// This is needed for targeted Hlink* calls (e.g. HlinkNavigateString) to
+// work. During the call, the Hlink API QIs and calls ITargetFrame::FindFrame
+// to determine the named target frame before calling IHlinkFrame::Navigate.
+//
+// MS mentions the methods at the url below:
+//
+// http://msdn.microsoft.com/workshop/browser/browser/Reference/IFaces/ITargetFrame/ITargetFrame.asp
+//
+// The interface is defined in very recent versions of Internet SDK part of
+// the PlatformSDK, from Dec 2002 onwards.
+//
+// http://www.microsoft.com/msdownload/platformsdk/sdkupdate/ 
+//
+// Neither Visual C++ 6.0 or 7.0 ship with this interface.
+//
+#ifdef USE_HTIFACE
+#include <htiface.h>
+#endif
+#ifndef __ITargetFrame_INTERFACE_DEFINED__
+// No ITargetFrame so make a binary compatible one
+MIDL_INTERFACE("d5f78c80-5252-11cf-90fa-00AA0042106e")
+IMozTargetFrame : public IUnknown
+{
+public:
+    virtual HRESULT STDMETHODCALLTYPE SetFrameName(
+        /* [in] */ LPCWSTR pszFrameName) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetFrameName(
+        /* [out] */ LPWSTR *ppszFrameName) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetParentFrame(
+        /* [out] */ IUnknown **ppunkParent) = 0;
+    virtual HRESULT STDMETHODCALLTYPE FindFrame( 
+        /* [in] */ LPCWSTR pszTargetName,
+        /* [in] */ IUnknown *ppunkContextFrame,
+        /* [in] */ DWORD dwFlags,
+        /* [out] */ IUnknown **ppunkTargetFrame) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetFrameSrc( 
+        /* [in] */ LPCWSTR pszFrameSrc) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetFrameSrc( 
+        /* [out] */ LPWSTR *ppszFrameSrc) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetFramesContainer( 
+        /* [out] */ IOleContainer **ppContainer) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetFrameOptions( 
+        /* [in] */ DWORD dwFlags) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetFrameOptions( 
+        /* [out] */ DWORD *pdwFlags) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetFrameMargins( 
+        /* [in] */ DWORD dwWidth,
+        /* [in] */ DWORD dwHeight) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetFrameMargins( 
+        /* [out] */ DWORD *pdwWidth,
+        /* [out] */ DWORD *pdwHeight) = 0;
+    virtual HRESULT STDMETHODCALLTYPE RemoteNavigate( 
+        /* [in] */ ULONG cLength,
+        /* [size_is][in] */ ULONG *pulData) = 0;
+    virtual HRESULT STDMETHODCALLTYPE OnChildFrameActivate( 
+        /* [in] */ IUnknown *pUnkChildFrame) = 0;
+    virtual HRESULT STDMETHODCALLTYPE OnChildFrameDeactivate( 
+        /* [in] */ IUnknown *pUnkChildFrame) = 0;
+};
+#define __ITargetFrame_INTERFACE_DEFINED__
+#define ITargetFrame IMozTargetFrame
+#endif
+
 #include "npapi.h"
 
 #include "nsCOMPtr.h"
@@ -61,6 +125,7 @@
 #include "XPConnect.h"
 #include "XPCBrowser.h"
 #include "LegacyPlugin.h"
+
 
 /*
  * This file contains partial implementations of various IE objects and
@@ -711,6 +776,7 @@ END_COM_MAP()
         
 };
 
+
 // Note: Corresponds to the document object in the IE DOM
 class IEDocument :
     public CComObjectRootEx<CComSingleThreadModel>,
@@ -718,7 +784,8 @@ class IEDocument :
     public IServiceProvider,
     public IOleContainer,
     public IBindHost,
-    public IHlinkFrame
+    public IHlinkFrame,
+    public ITargetFrame
 {
 public:
     PluginInstanceData *mData;
@@ -728,11 +795,13 @@ public:
     CComObject<IEWindow> *mWindow;
     CComObject<IEBrowser> *mBrowser;
     CComBSTR mURL;
+    BSTR mUseTarget;
 
     IEDocument() :
         mWindow(NULL),
         mBrowser(NULL),
-        mData(NULL)
+        mData(NULL),
+        mUseTarget(NULL)
     {
         MozAxPlugin::AddRef();
     }
@@ -793,6 +862,10 @@ public:
 
     virtual ~IEDocument()
     {
+        if (mUseTarget)
+        {
+            SysFreeString(mUseTarget);
+        }
         if (mBrowser)
         {
             mBrowser->Release();
@@ -814,6 +887,7 @@ BEGIN_COM_MAP(IEDocument)
     COM_INTERFACE_ENTRY(IBindHost)
     COM_INTERFACE_ENTRY_BREAK(IHlinkTarget)
     COM_INTERFACE_ENTRY(IHlinkFrame)
+    COM_INTERFACE_ENTRY(ITargetFrame)
 END_COM_MAP()
 
 // IServiceProvider
@@ -1598,7 +1672,7 @@ END_COM_MAP()
                     if (lh)
                     {
                         lh->OnLinkClick(nsnull, eLinkVerb_Replace,
-                            uri, szTargetFrame);
+                            uri, szTargetFrame ? szTargetFrame : mUseTarget);
                     }
                 }
                 hr = S_OK;
@@ -1618,6 +1692,11 @@ END_COM_MAP()
             CoTaskMemFree(szLocation);
         if (szTargetFrame)
             CoTaskMemFree(szTargetFrame);
+        if (mUseTarget)
+        {
+            SysFreeString(mUseTarget);
+            mUseTarget = NULL;
+        }
         return hr;
     }
     
@@ -1703,6 +1782,124 @@ END_COM_MAP()
         return E_NOTIMPL;
     }
 
+// ITargetFrame
+    virtual HRESULT STDMETHODCALLTYPE SetFrameName(
+        /* [in] */ LPCWSTR pszFrameName)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::SetFrameName is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE GetFrameName(
+        /* [out] */ LPWSTR *ppszFrameName)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::GetFrameName is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE GetParentFrame(
+        /* [out] */ IUnknown **ppunkParent)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::GetParentFrame is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE FindFrame( 
+        /* [in] */ LPCWSTR pszTargetName,
+        /* [in] */ IUnknown *ppunkContextFrame,
+        /* [in] */ DWORD dwFlags,
+        /* [out] */ IUnknown **ppunkTargetFrame)
+    {
+        if (dwFlags & 0x1) // TODO test if the named frame exists and presumably return NULL if it doesn't
+        {
+        }
+
+        if (mUseTarget)
+        {
+            SysFreeString(mUseTarget);
+            mUseTarget = NULL;
+        }
+        if (pszTargetName)
+        {
+            mUseTarget = SysAllocString(pszTargetName);
+        }
+
+        QueryInterface(__uuidof(IUnknown), (void **) ppunkTargetFrame);
+        return S_OK;;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE SetFrameSrc( 
+        /* [in] */ LPCWSTR pszFrameSrc)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::SetFrameSrc is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE GetFrameSrc( 
+        /* [out] */ LPWSTR *ppszFrameSrc)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::GetFrameSrc is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE GetFramesContainer( 
+        /* [out] */ IOleContainer **ppContainer)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::GetFramesContainer is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE SetFrameOptions( 
+        /* [in] */ DWORD dwFlags)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::SetFrameOptions is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE GetFrameOptions( 
+        /* [out] */ DWORD *pdwFlags)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::GetFrameOptions is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE SetFrameMargins( 
+        /* [in] */ DWORD dwWidth,
+        /* [in] */ DWORD dwHeight)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::SetFrameMargins is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE GetFrameMargins( 
+        /* [out] */ DWORD *pdwWidth,
+        /* [out] */ DWORD *pdwHeight)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::GetFrameMargins is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE RemoteNavigate( 
+        /* [in] */ ULONG cLength,
+        /* [size_is][in] */ ULONG *pulData)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::RemoteNavigate is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE OnChildFrameActivate( 
+        /* [in] */ IUnknown *pUnkChildFrame)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::OnChildFrameActivate is not implemented");
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE OnChildFrameDeactivate( 
+        /* [in] */ IUnknown *pUnkChildFrame)
+    {
+        NS_ASSERTION(FALSE, "ITargetFrame::OnChildFrameDeactivate is not implemented");
+        return E_NOTIMPL;
+    }
 };
 
 HRESULT MozAxPlugin::GetServiceProvider(PluginInstanceData *pData, IServiceProvider **pSP)
