@@ -305,7 +305,9 @@ void  nsTextEditor::InitRules()
 }
 
 
-NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
+NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty, 
+                                            const nsString *aAttribute, 
+                                            const nsString *aValue)
 {
   if (!aProperty)
     return NS_ERROR_NULL_POINTER;
@@ -329,10 +331,20 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
     if (PR_TRUE==isCollapsed)
     {
       // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-      SetTypeInStateForProperty(mTypeInState, aProperty);
+      SetTypeInStateForProperty(mTypeInState, aProperty, aAttribute);
     }
     else
     {
+      // remember start and end points of selection
+      // XXX: this won't work for discontiguous selections
+      nsCOMPtr<nsIDOMNode> selStartNode;
+      PRInt32 selStartOffset;
+      nsCOMPtr<nsIDOMNode> selEndNode;
+      PRInt32 selEndOffset;
+      selection->GetAnchorNodeAndOffset(getter_AddRefs(selStartNode), &selStartOffset);
+      selection->GetFocusNodeAndOffset(getter_AddRefs(selEndNode), &selEndOffset);
+
+      // set the text property for all selected ranges
       nsEditor::BeginTransaction();
       nsCOMPtr<nsIEnumerator> enumerator;
       enumerator = do_QueryInterface(selection);
@@ -360,7 +372,7 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
               startParent->GetParentNode(getter_AddRefs(commonParent));
               result = SetTextPropertiesForNode(startParent, commonParent, 
                                                 startOffset, endOffset,
-                                                aProperty);
+                                                aProperty, aAttribute, aValue);
             }
             else
             {
@@ -385,7 +397,7 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
                     result = SetTextPropertiesForNodesWithSameParent(startParent,startOffset,
                                                                      endParent,  endOffset,
                                                                      commonParent,
-                                                                     aProperty);
+                                                                     aProperty, aAttribute, aValue);
                   }
                   else
                   { // the range is between 2 nodes that have no simple relationship
@@ -393,7 +405,7 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
                                                                           startParent,startOffset, 
                                                                           endParent,  endOffset,
                                                                           commonParent,
-                                                                          aProperty);
+                                                                          aProperty, aAttribute, aValue);
                   }
                 }
               }
@@ -420,7 +432,10 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
   return result;
 }
 
-NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, PRBool &aAny, PRBool &aAll)
+NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, 
+                                            const nsString *aAttribute, 
+                                            const nsString *aValue,
+                                            PRBool &aFirst, PRBool &aAny, PRBool &aAll)
 {
   if (!aProperty)
     return NS_ERROR_NULL_POINTER;
@@ -497,7 +512,7 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, 
                 {
                   PRBool isSet;
                   nsCOMPtr<nsIDOMNode>resultNode;
-                  IsTextPropertySetByContent(node, aProperty, isSet, getter_AddRefs(resultNode));
+                  IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet, getter_AddRefs(resultNode));
                   if (PR_TRUE==first)
                   {
                     aFirst = isSet;
@@ -513,7 +528,7 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, 
               }
             }
             iter->Next();
-            result = iter->CurrentNode(getter_AddRefs(content));
+            iter->CurrentNode(getter_AddRefs(content));
           }
         }
       }
@@ -525,6 +540,7 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, 
 
 void nsTextEditor::IsTextStyleSet(nsIStyleContext *aSC, 
                                   nsIAtom *aProperty, 
+                                  const nsString *aAttribute,  
                                   PRBool &aIsSet) const
 {
   aIsSet = PR_FALSE;
@@ -542,13 +558,17 @@ void nsTextEditor::IsTextStyleSet(nsIStyleContext *aSC,
   }
 }
 
-void nsTextEditor::IsTextPropertySetByContent(nsIDOMNode  *aNode,
-                                              nsIAtom     *aProperty, 
-                                              PRBool      &aIsSet,
-                                              nsIDOMNode **aStyleNode) const
+// this will NOT find aAttribute unless aAttribute has a non-null value
+// so singleton attributes like <Table border> will not be matched!
+void nsTextEditor::IsTextPropertySetByContent(nsIDOMNode     *aNode,
+                                              nsIAtom        *aProperty, 
+                                              const nsString *aAttribute, 
+                                              const nsString *aValue, 
+                                              PRBool         &aIsSet,
+                                              nsIDOMNode    **aStyleNode) const
 {
   nsresult result;
-  aIsSet = PR_FALSE;
+  aIsSet = PR_FALSE;  // must be initialized to false for code below to work
   nsAutoString propName;
   aProperty->ToString(propName);
   nsCOMPtr<nsIDOMNode>parent;
@@ -563,8 +583,32 @@ void nsTextEditor::IsTextPropertySetByContent(nsIDOMNode  *aNode,
       element->GetTagName(tag);
       if (propName.Equals(tag))
       {
-        aIsSet = PR_TRUE;
-        break;
+        PRBool found = PR_FALSE;
+        if (aAttribute)
+        {
+          nsAutoString value;
+          element->GetAttribute(*aAttribute, value);
+          if (0!=value.Length())
+          {
+            if (!aValue) {
+              found = PR_TRUE;
+            }
+            else if (aValue->Equals(value)) {
+              found = PR_TRUE;
+            }
+            else {  // we found the prop with the attribute, but the value doesn't match
+              break;
+            }
+          }
+        }
+        else { 
+          found = PR_TRUE;
+        }
+        if (PR_TRUE==found)
+        {
+          aIsSet = PR_TRUE;
+          break;
+        }
       }
     }
     nsCOMPtr<nsIDOMNode>temp;
@@ -579,7 +623,7 @@ void nsTextEditor::IsTextPropertySetByContent(nsIDOMNode  *aNode,
 }
 
 
-NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty)
+NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute)
 {
   if (!aProperty)
     return NS_ERROR_NULL_POINTER;
@@ -603,11 +647,13 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty)
     if (PR_TRUE==isCollapsed)
     {
       // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-      SetTypeInStateForProperty(mTypeInState, aProperty);
+      SetTypeInStateForProperty(mTypeInState, aProperty, aAttribute);
     }
     else
     {
       nsEditor::BeginTransaction();
+      nsCOMPtr<nsIDOMNode> startParent, endParent;
+      PRInt32 startOffset, endOffset;
       nsCOMPtr<nsIEnumerator> enumerator;
       enumerator = do_QueryInterface(selection);
       if (enumerator)
@@ -622,10 +668,8 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty)
           result = range->GetCommonParent(getter_AddRefs(commonParent));
           if ((NS_SUCCEEDED(result)) && commonParent)
           {
-            PRInt32 startOffset, endOffset;
             range->GetStartOffset(&startOffset);
             range->GetEndOffset(&endOffset);
-            nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
             range->GetStartParent(getter_AddRefs(startParent));
             range->GetEndParent(getter_AddRefs(endParent));
             if (startParent.get()==endParent.get()) 
@@ -634,7 +678,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty)
               startParent->GetParentNode(getter_AddRefs(commonParent));
               result = RemoveTextPropertiesForNode(startParent, commonParent, 
                                                    startOffset, endOffset,
-                                                   aProperty);
+                                                   aProperty, nsnull);
             }
             else
             {
@@ -659,7 +703,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty)
                     result = RemoveTextPropertiesForNodesWithSameParent(startParent,startOffset,
                                                                         endParent,  endOffset,
                                                                         commonParent,
-                                                                        aProperty);
+                                                                        aProperty, nsnull);
                   }
                   else
                   { // the range is between 2 nodes that have no simple relationship
@@ -667,7 +711,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty)
                                                                              startParent,startOffset, 
                                                                              endParent,  endOffset,
                                                                              commonParent,
-                                                                             aProperty);
+                                                                             aProperty, nsnull);
                   }
                 }
               }
@@ -684,10 +728,11 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty)
         }
       }
       nsEditor::EndTransaction();
-    }
-    if (NS_SUCCEEDED(result))
-    { // set the selection
-      // XXX: can't do anything until I can create ranges
+      if (NS_SUCCEEDED(result))
+      { 
+        selection->Collapse(startParent, startOffset);
+        selection->Extend(endParent, endOffset);
+      }
     }
   }
   return result;
@@ -1065,11 +1110,13 @@ NS_IMETHODIMP nsTextEditor::OutputHTML(nsString& aOutputString)
 }
 
 
-NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode, 
-                                                     nsIDOMNode *aParent,
-                                                     PRInt32     aStartOffset,
-                                                     PRInt32     aEndOffset,
-                                                     nsIAtom    *aPropName)
+NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode  *aNode, 
+                                                     nsIDOMNode  *aParent,
+                                                     PRInt32      aStartOffset,
+                                                     PRInt32      aEndOffset,
+                                                     nsIAtom     *aPropName, 
+                                                     const nsString *aAttribute,
+                                                     const nsString *aValue)
 {
   if (gNoisy) { printf("nsTextEditor::SetTextPropertyForNode\n"); }
   nsresult result=NS_OK;
@@ -1080,50 +1127,95 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
 
   PRBool textPropertySet;
   nsCOMPtr<nsIDOMNode>resultNode;
-  IsTextPropertySetByContent(aNode, aPropName, textPropertySet, getter_AddRefs(resultNode));
+  IsTextPropertySetByContent(aNode, aPropName, aAttribute, aValue, textPropertySet, getter_AddRefs(resultNode));
   if (PR_FALSE==textPropertySet)
   {
     PRUint32 count;
     nodeAsChar->GetLength(&count);
 
     nsCOMPtr<nsIDOMNode>newTextNode;  // this will be the text node we move into the new style node
+    // split the node at the start offset unless the split would create an empty node
     if (aStartOffset!=0)
     {
       result = nsEditor::SplitNode(aNode, aStartOffset, getter_AddRefs(newTextNode));
+      if (gNoisy) { printf("* split created left node %p\n", newTextNode.get());}
+      if (gNoisy) {DebugDumpContent(); } // DEBUG
     }
     if (NS_SUCCEEDED(result))
     {
       if (aEndOffset!=(PRInt32)count)
       {
         result = nsEditor::SplitNode(aNode, aEndOffset-aStartOffset, getter_AddRefs(newTextNode));
+        if (gNoisy) { printf("* split created left node %p\n", newTextNode.get());}
+        if (gNoisy) {DebugDumpContent(); } // DEBUG
       }
       else
       {
         newTextNode = do_QueryInterface(aNode);
+        if (gNoisy) { printf("* second split not required, new text node set to aNode = %p\n", newTextNode.get());}
       }
       if (NS_SUCCEEDED(result))
       {
-        nsAutoString tag;
-        aPropName->ToString(tag);
-        PRInt32 offsetInParent;
-        result = nsIEditorSupport::GetChildOffset(aNode, aParent, offsetInParent);
-        if (NS_SUCCEEDED(result))
+        // optimization:  if all we're doing is changing a value for an existing attribute for the
+        //                entire selection, then just twiddle the existing style node
+        PRBool done = PR_FALSE; // set to true in optimized case if we can really do the optimization
+        if (aAttribute && aValue && (0==aStartOffset) && (aEndOffset==(PRInt32)count))
         {
-          nsCOMPtr<nsIDOMNode>newStyleNode;
-          result = nsEditor::CreateNode(tag, aParent, offsetInParent, getter_AddRefs(newStyleNode));
-          if (NS_SUCCEEDED(result))
+          // ??? can we really compute this?
+        }
+        if (PR_FALSE==done)
+        {
+          nsCOMPtr<nsIDOMCharacterData>newTextNodeAsChar;
+          newTextNodeAsChar =  do_QueryInterface(newTextNode);
+          PRUint32 newTextNodeLength;
+          newTextNodeAsChar->GetLength(&newTextNodeLength);
+          if (0==newTextNodeLength)
           {
-            result = nsEditor::DeleteNode(newTextNode);
-            if (NS_SUCCEEDED(result)) {
-              result = nsEditor::InsertNode(newTextNode, newStyleNode, 0);
-              if (NS_SUCCEEDED(result)) 
-              { // set the selection
-                nsCOMPtr<nsIDOMSelection>selection;
-                result = nsEditor::GetSelection(getter_AddRefs(selection));
-                if (NS_SUCCEEDED(result)) {
-                  selection->Collapse(newTextNode, 0);
-                  PRInt32 endOffset = aEndOffset-aStartOffset;
-                  selection->Extend(newTextNode, endOffset);
+            result = nsEditor::DeleteNode(newTextNode); 
+          }
+          else
+          {
+            nsAutoString tag;
+            aPropName->ToString(tag);
+            PRInt32 offsetInParent;
+            result = nsIEditorSupport::GetChildOffset(aNode, aParent, offsetInParent);
+            if (NS_SUCCEEDED(result))
+            {
+              nsCOMPtr<nsIDOMNode>newStyleNode;
+              result = nsEditor::CreateNode(tag, aParent, offsetInParent, getter_AddRefs(newStyleNode));
+              if (NS_SUCCEEDED(result) && newStyleNode)
+              {
+                if (gNoisy) { printf("* created new style node %p\n", newStyleNode.get());}
+                if (gNoisy) {DebugDumpContent(); } // DEBUG
+                if (aAttribute)
+                {
+                  nsCOMPtr<nsIDOMElement> newStyleElement;
+                  newStyleElement = do_QueryInterface(newStyleNode);
+                  nsAutoString value;
+                  if (aValue) {
+                    value = *aValue;
+                  }
+                  // XXX should be a call to editor to change attribute!
+                  result = newStyleElement->SetAttribute(*aAttribute, value);
+                }
+                if (NS_SUCCEEDED(result))
+                {
+                  result = nsEditor::DeleteNode(newTextNode);
+                  if (NS_SUCCEEDED(result)) 
+                  {
+                    result = nsEditor::InsertNode(newTextNode, newStyleNode, 0);
+                    if (NS_SUCCEEDED(result)) 
+                    { // set the selection
+                      nsCOMPtr<nsIDOMSelection>selection;
+                      result = nsEditor::GetSelection(getter_AddRefs(selection));
+                      if (NS_SUCCEEDED(result)) 
+                      {
+                        selection->Collapse(newTextNode, 0);
+                        PRInt32 endOffset = aEndOffset-aStartOffset;
+                        selection->Extend(newTextNode, endOffset);
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -1237,18 +1329,20 @@ nsTextEditor::IntermediateNodesAreInline(nsIDOMRange *aRange,
 
 /* this should only get called if the only intervening nodes are inline style nodes */
 NS_IMETHODIMP 
-nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
-                                                      PRInt32     aStartOffset,
-                                                      nsIDOMNode *aEndNode,
-                                                      PRInt32     aEndOffset,
-                                                      nsIDOMNode *aParent,
-                                                      nsIAtom    *aPropName)
+nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode  *aStartNode,
+                                                      PRInt32      aStartOffset,
+                                                      nsIDOMNode  *aEndNode,
+                                                      PRInt32      aEndOffset,
+                                                      nsIDOMNode  *aParent,
+                                                      nsIAtom     *aPropName,
+                                                      const nsString *aAttribute,
+                                                      const nsString *aValue)
 {
   if (gNoisy) { printf("nsTextEditor::SetTextPropertiesForNodesWithSameParent\n"); }
   nsresult result=NS_OK;
   PRBool textPropertySet;
   nsCOMPtr<nsIDOMNode>resultNode;
-  IsTextPropertySetByContent(aStartNode, aPropName, textPropertySet, getter_AddRefs(resultNode));
+  IsTextPropertySetByContent(aStartNode, aPropName, aAttribute, aValue, textPropertySet, getter_AddRefs(resultNode));
   if (PR_FALSE==textPropertySet)
   {
     nsCOMPtr<nsIDOMNode>newLeftTextNode;  // this will be the middle text node
@@ -1350,7 +1444,9 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
                                                            nsIDOMNode  *aEndNode,
                                                            PRInt32      aEndOffset,
                                                            nsIDOMNode  *aParent,
-                                                           nsIAtom     *aPropName)
+                                                           nsIAtom     *aPropName,
+                                                           const nsString *aAttribute,
+                                                           const nsString *aValue)
 {
   if (gNoisy) { printf("nsTextEditor::SetTextPropertiesForNodeWithDifferentParents\n"); }
   nsresult result=NS_OK;
@@ -1394,7 +1490,7 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
             node = do_QueryInterface(content);
             PRBool textPropertySet;
             nsCOMPtr<nsIDOMNode>resultNode;
-            IsTextPropertySetByContent(node, aPropName, textPropertySet, getter_AddRefs(resultNode));
+            IsTextPropertySetByContent(node, aPropName, aAttribute, aValue, textPropertySet, getter_AddRefs(resultNode));
             if (PR_FALSE==textPropertySet)
             {
               nsCOMPtr<nsIDOMNode>parent;
@@ -1435,7 +1531,7 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
     return NS_ERROR_FAILURE;
   PRUint32 count;
   nodeAsChar->GetLength(&count);
-  result = SetTextPropertiesForNode(aStartNode, parent, aStartOffset, count, aPropName);
+  result = SetTextPropertiesForNode(aStartNode, parent, aStartOffset, count, aPropName, aAttribute, aValue);
 
   // create a style node for the text in the end parent
   result = aEndNode->GetParentNode(getter_AddRefs(parent));
@@ -1446,7 +1542,7 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
   if (!nodeAsChar)
     return NS_ERROR_FAILURE;
   nodeAsChar->GetLength(&count);
-  result = SetTextPropertiesForNode(aEndNode, parent, 0, aEndOffset, aPropName);
+  result = SetTextPropertiesForNode(aEndNode, parent, 0, aEndOffset, aPropName, aAttribute, aValue);
 
   return result;
 }
@@ -1455,7 +1551,8 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
                                                         nsIDOMNode *aParent,
                                                         PRInt32     aStartOffset,
                                                         PRInt32     aEndOffset,
-                                                        nsIAtom    *aPropName)
+                                                        nsIAtom    *aPropName,
+                                                        const nsString *aAttribute)
 {
   if (gNoisy) { printf("nsTextEditor::RemoveTextPropertyForNode\n"); }
   nsresult result=NS_OK;
@@ -1463,7 +1560,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
   nodeAsChar =  do_QueryInterface(aNode);
   PRBool textPropertySet;
   nsCOMPtr<nsIDOMNode>resultNode;
-  IsTextPropertySetByContent(aNode, aPropName, textPropertySet, getter_AddRefs(resultNode));
+  IsTextPropertySetByContent(aNode, aPropName, aAttribute, nsnull, textPropertySet, getter_AddRefs(resultNode));
   if (PR_TRUE==textPropertySet)
   {
     nsCOMPtr<nsIDOMNode>parent; // initially set to first interior parent node to process
@@ -1670,7 +1767,8 @@ nsTextEditor::RemoveTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
                                                          nsIDOMNode *aEndNode,
                                                          PRInt32     aEndOffset,
                                                          nsIDOMNode *aParent,
-                                                         nsIAtom    *aPropName)
+                                                         nsIAtom    *aPropName,
+                                                         const nsString *aAttribute)
 {
   if (gNoisy) { printf("nsTextEditor::RemoveTextPropertiesForNodesWithSameParent\n"); }
   nsresult result=NS_OK;
@@ -1711,7 +1809,7 @@ nsTextEditor::RemoveTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
       }
       if (NS_SUCCEEDED(result)) {
         siblingNode->GetParentNode(getter_AddRefs(parentNode));
-        result = RemoveTextPropertiesForNode(siblingNode, parentNode, 0, childCount, aPropName);
+        result = RemoveTextPropertiesForNode(siblingNode, parentNode, 0, childCount, aPropName, aAttribute);
       }
     }
     siblingNode = do_QueryInterface(nextSiblingNode);    
@@ -1731,7 +1829,7 @@ nsTextEditor::RemoveTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
     }
     result = aStartNode->GetParentNode(getter_AddRefs(parentNode));
     if (NS_SUCCEEDED(result)) {
-      result = RemoveTextPropertiesForNode(aStartNode, parentNode, startOffset, endOffset, aPropName);
+      result = RemoveTextPropertiesForNode(aStartNode, parentNode, startOffset, endOffset, aPropName, aAttribute);
     }
   }
   if (NS_SUCCEEDED(result))
@@ -1741,7 +1839,7 @@ nsTextEditor::RemoveTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
     endOffset = aEndOffset;
     result = aEndNode->GetParentNode(getter_AddRefs(parentNode));
     if (NS_SUCCEEDED(result)) {
-      result = RemoveTextPropertiesForNode(aEndNode, parentNode, startOffset, endOffset, aPropName);
+      result = RemoveTextPropertiesForNode(aEndNode, parentNode, startOffset, endOffset, aPropName, aAttribute);
     }
   }
   return result;
@@ -1754,7 +1852,8 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRang
                                                               nsIDOMNode  *aEndNode,
                                                               PRInt32      aEndOffset,
                                                               nsIDOMNode  *aParent,
-                                                              nsIAtom     *aPropName)
+                                                              nsIAtom     *aPropName,
+                                                              const nsString *aAttribute)
 {
   if (gNoisy) { printf("nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents\n"); }
   nsresult result=NS_OK;
@@ -1776,8 +1875,8 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRang
   nodeAsChar = do_QueryInterface(aStartNode);
   if (!nodeAsChar) { return NS_ERROR_FAILURE; }
   nodeAsChar->GetLength(&count);
-  if (aStartOffset!=count) {  // only do this if at least one child is selected
-    result = RemoveTextPropertiesForNode(aStartNode, parent, aStartOffset, count, aPropName);
+  if ((PRUint32)aStartOffset!=count) {  // only do this if at least one child is selected
+    result = RemoveTextPropertiesForNode(aStartNode, parent, aStartOffset, count, aPropName, aAttribute);
     if (0!=aStartOffset) {
       rangeStartOffset = 0; // we split aStartNode at aStartOffset and it is the right node now
     }
@@ -1798,7 +1897,7 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRang
       if (!nodeAsChar) { return NS_ERROR_FAILURE; }
       nodeAsChar->GetLength(&count);
       if (aEndOffset!=0) {  // only do this if at least one child is selected
-        result = RemoveTextPropertiesForNode(aEndNode, parent, 0, aEndOffset, aPropName);
+        result = RemoveTextPropertiesForNode(aEndNode, parent, 0, aEndOffset, aPropName, aAttribute);
         if (0!=aEndOffset) {
           rangeEndOffset = 0; // we split aEndNode at aEndOffset and it is the right node now
         }
@@ -1934,7 +2033,9 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRang
 }
 
 NS_IMETHODIMP
-nsTextEditor::SetTypeInStateForProperty(TypeInState &aTypeInState, nsIAtom *aPropName)
+nsTextEditor::SetTypeInStateForProperty(TypeInState    &aTypeInState, 
+                                        nsIAtom        *aPropName, 
+                                        const nsString *aAttribute)
 {
   if (!aPropName) {
     return NS_ERROR_NULL_POINTER;
@@ -1950,7 +2051,7 @@ nsTextEditor::SetTypeInStateForProperty(TypeInState &aTypeInState, nsIAtom *aPro
       PRBool any = PR_FALSE;
       PRBool all = PR_FALSE;
       PRBool first = PR_FALSE;
-      GetTextProperty(aPropName, first, any, all); // operates on current selection
+      GetTextProperty(aPropName, aAttribute, nsnull, first, any, all); // operates on current selection
       aTypeInState.SetBold(!any);
     }
   }
@@ -1965,7 +2066,7 @@ nsTextEditor::SetTypeInStateForProperty(TypeInState &aTypeInState, nsIAtom *aPro
       PRBool any = PR_FALSE;
       PRBool all = PR_FALSE;
       PRBool first = PR_FALSE;
-      GetTextProperty(aPropName, first, any, all); // operates on current selection
+      GetTextProperty(aPropName, aAttribute, nsnull, first, any, all); // operates on current selection
       aTypeInState.SetItalic(!any);
     }    
   }
@@ -1980,7 +2081,7 @@ nsTextEditor::SetTypeInStateForProperty(TypeInState &aTypeInState, nsIAtom *aPro
       PRBool any = PR_FALSE;
       PRBool all = PR_FALSE;
       PRBool first = PR_FALSE;
-      GetTextProperty(aPropName, first, any, all); // operates on current selection
+      GetTextProperty(aPropName, aAttribute, nsnull, first, any, all); // operates on current selection
       aTypeInState.SetUnderline(!any);
     }    
   }

@@ -49,9 +49,14 @@ public:
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell )=0;
 
 // Methods shared with nsITextEditor (see nsITextEditor.h for details)
-  NS_IMETHOD SetTextProperty(nsIAtom *aProperty)=0;
-  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, PRBool &aAll, PRBool &aAny)=0;
-  NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty)=0;
+  NS_IMETHOD SetTextProperty(nsIAtom *aProperty, 
+                             const nsString *aAttribute,
+                             const nsString *aValue)=0;
+  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, 
+                             const nsString *aAttribute,
+                             const nsString *aValue,
+                             PRBool &aFirst, PRBool &aAll, PRBool &aAny)=0;
+  NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute)=0;
   NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir)=0;
   NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
   NS_IMETHOD InsertBreak()=0;

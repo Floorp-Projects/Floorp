@@ -59,30 +59,46 @@ public:
   /**
    * SetTextProperties() sets the aggregate properties on the current selection
    *
-   * @param aPropList  a list of properties to set across the selection 
-   * NOTE: this method is experimental, expect it to change.
+   * @param aProperty   the property to set on the selection 
+   * @param aAttribute  the attribute of the property, if applicable.  May be null.
+   *                    Example: aProperty="font", aAttribute="color"
+   * @param aValue      if aAttribute is not null, the value of the attribute.  May be null.
+   *                    Example: aProperty="font", aAttribute="color", aValue="0x00FFFF"
    */
-  NS_IMETHOD SetTextProperty(nsIAtom *aProperty)=0;
+  NS_IMETHOD SetTextProperty(nsIAtom *aProperty, 
+                             const nsString *aAttribute,
+                             const nsString *aValue)=0;
 
   /**
    * GetTextProperties() gets the aggregate properties of the current selection.
    * All object in the current selection are scanned and their attributes are
    * represented in a list of Property object.
    *
-   * @param aPropList A list of the various properties that are applied to the text content 
-   *                  in the current selection.  Each item in aPropList is an nsEditProperty.
-   * NOTE: this method is experimental, expect it to change.
+   * @param aProperty   the property to get on the selection 
+   * @param aAttribute  the attribute of the property, if applicable.  May be null.
+   *                    Example: aProperty="font", aAttribute="color"
+   * @param aValue      if aAttribute is not null, the value of the attribute.  May be null.
+   *                    Example: aProperty="font", aAttribute="color", aValue="0x00FFFF"
+   * @param aFirst      [OUT] PR_TRUE if the first text node in the selection has the property
+   * @param aAny        [OUT] PR_TRUE if any of the text nodes in the selection have the property
+   * @param aAll        [OUT] PR_TRUE if all of the text nodes in the selection have the property
    */
-  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, PRBool &aAny, PRBool &aAll)=0;
+  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, 
+                             const nsString *aAttribute,
+                             const nsString *aValue,
+                             PRBool &aFirst, PRBool &aAny, PRBool &aAll)=0;
 
   /**
    * RemoveTextProperties() deletes the properties from all text in the current selection.
    * If aProperty is not set on the selection, nothing is done.
    *
-   * @param aElement      the content element to operate on
-   * @param aAttribute    the string representation of the attribute to get
+   * @param aProperty   the property to reomve from the selection 
+   * @param aAttribute  the attribute of the property, if applicable.  May be null.
+   *                    Example: aProperty="font", aAttribute="color"
+   *                    nsIEditProperty::allAttributes is special.  It indicates that
+   *                    all content-based text properties are to be removed from the selection.
    */
-  NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty)=0;
+  NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute)=0;
 
   /** 
    * DeleteSelection removes all nodes in the current selection.

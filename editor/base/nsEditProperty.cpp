@@ -17,6 +17,7 @@
  */
 
 #include "nsEditProperty.h"
+#include "nsString.h"
 
 static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIEditPropertyIID, NS_IEDITPROPERTY_IID);
@@ -40,6 +41,7 @@ nsIAtom * nsIEditProperty::sub;
 nsIAtom * nsIEditProperty::sup;
 nsIAtom * nsIEditProperty::tt;
 nsIAtom * nsIEditProperty::u;
+nsString * nsIEditProperty::allProperties;
 
 void
 nsEditProperty::InstanceInit()
@@ -57,6 +59,7 @@ nsEditProperty::InstanceInit()
   nsIEditProperty::sup =  NS_NewAtom("SUP");
   nsIEditProperty::tt =   NS_NewAtom("TT");
   nsIEditProperty::u =    NS_NewAtom("U");
+  nsIEditProperty::allProperties = new nsString("moz_AllProperties");
 }
 
 void
@@ -75,6 +78,9 @@ nsEditProperty::InstanceShutdown()
   NS_IF_RELEASE(nsIEditProperty::sup);
   NS_IF_RELEASE(nsIEditProperty::tt);
   NS_IF_RELEASE(nsIEditProperty::u);
+  if (nsIEditProperty::allProperties) {
+    delete (nsIEditProperty::allProperties);
+  }
 }
 
 NS_IMETHODIMP

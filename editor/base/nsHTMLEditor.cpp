@@ -109,19 +109,24 @@ void  nsHTMLEditor::InitRules()
   mRules->Init(this);
 }
 
-NS_IMETHODIMP nsHTMLEditor::SetTextProperty(nsIAtom *aProperty)
+NS_IMETHODIMP nsHTMLEditor::SetTextProperty(nsIAtom *aProperty, 
+                                            const nsString *aAttribute,
+                                            const nsString *aValue)
 {
-  return nsTextEditor::SetTextProperty(aProperty);
+  return nsTextEditor::SetTextProperty(aProperty, aAttribute, aValue);
 }
 
-NS_IMETHODIMP nsHTMLEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, PRBool &aAny, PRBool &aAll)
+NS_IMETHODIMP nsHTMLEditor::GetTextProperty(nsIAtom *aProperty, 
+                                            const nsString *aAttribute, 
+                                            const nsString *aValue,
+                                            PRBool &aFirst, PRBool &aAny, PRBool &aAll)
 {
-  return nsTextEditor::GetTextProperty(aProperty, aFirst, aAny, aAll);
+  return nsTextEditor::GetTextProperty(aProperty, aAttribute, aValue, aFirst, aAny, aAll);
 }
 
-NS_IMETHODIMP nsHTMLEditor::RemoveTextProperty(nsIAtom *aProperty)
+NS_IMETHODIMP nsHTMLEditor::RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute)
 {
-  return nsTextEditor::RemoveTextProperty(aProperty);
+  return nsTextEditor::RemoveTextProperty(aProperty, aAttribute);
 }
 
 NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::Direction aDir)
