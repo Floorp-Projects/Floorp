@@ -128,22 +128,29 @@ nsresult nsStatusBarBiffManager::PlayBiffSound()
     nsXPIDLCString soundURLSpec;
     rv = pref->GetCharPref(PREF_NEW_MAIL_SOUND_URL, getter_Copies(soundURLSpec));
     if (NS_SUCCEEDED(rv) && !soundURLSpec.IsEmpty()) {
-      nsCOMPtr<nsIFileURL> soundURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv,rv);
-
-      rv = soundURL->SetSpec(soundURLSpec);                                       
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIFile> soundFile;
-        rv = soundURL->GetFile(getter_AddRefs(soundFile));
+      if (!strncmp(soundURLSpec.get(), "file://", 7)) {
+        nsCOMPtr<nsIFileURL> soundURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+        
+        rv = soundURL->SetSpec(soundURLSpec);                                       
         if (NS_SUCCEEDED(rv)) {
-          PRBool soundFileExists = PR_FALSE;
-          rv = soundFile->Exists(&soundFileExists);
-          if (NS_SUCCEEDED(rv) && soundFileExists) {
-            rv = mSound->Play(soundURL);
-            if (NS_SUCCEEDED(rv))
-              customSoundPlayed = PR_TRUE;
+          nsCOMPtr<nsIFile> soundFile;
+          rv = soundURL->GetFile(getter_AddRefs(soundFile));
+          if (NS_SUCCEEDED(rv)) {
+            PRBool soundFileExists = PR_FALSE;
+            rv = soundFile->Exists(&soundFileExists);
+            if (NS_SUCCEEDED(rv) && soundFileExists) {
+              rv = mSound->Play(soundURL);
+              if (NS_SUCCEEDED(rv))
+                customSoundPlayed = PR_TRUE;
+            }
           }
         }
+      }
+      else {
+        rv = mSound->PlaySystemSound(soundURLSpec.get());
+        if (NS_SUCCEEDED(rv))
+          customSoundPlayed = PR_TRUE;
       }
     }
   }    
