@@ -7,4 +7,3 @@ toolkit.jar:
 en-US.jar:
     locale/en-US/mozapps/xpinstall/xpinstallConfirm.dtd         (locale/xpinstallConfirm.dtd)
     locale/en-US/mozapps/xpinstall/xpinstallConfirm.properties  (locale/xpinstallConfirm.properties)
-    
