@@ -31,7 +31,6 @@ XPIDL_MODULE	= appshell
 EXPORTS		= \
 		nsIWebShellWindow.h \
 		nsAppShellCIDs.h \
-		nsBuildID.h \
 		nsFileLocations.h \
 		nsIDOMXPConnectFactory.h \
 		nsINetSupportDialogService.h \
@@ -48,7 +47,7 @@ XPIDLSRCS	= \
 		nsIFileLocator.idl \
 		nsIWindowMediator.idl \
 		nsIXULWindow.idl \
-        nsIUserInfo.idl \
+		nsIUserInfo.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
