@@ -1018,9 +1018,7 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
   if (aNodeType == eHTMLTag_form) {
     if (aForm) {
       // the form was already created
-      nsGenericHTMLElement* result;
-      CallQueryInterface(aForm, &result);
-      return result;
+      return aForm;
     }
     nsGenericHTMLElement* result = NS_NewHTMLFormElement(aNodeInfo);
     NS_IF_ADDREF(result);
@@ -2155,7 +2153,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     // If the document already has a root we'll use it. This will
     // happen when we do document.open()/.write()/.close()...
 
-    CallQueryInterface(doc_root, &mRoot);
+    NS_ADDREF(mRoot = NS_STATIC_CAST(nsGenericHTMLElement*, doc_root));
   } else {
     mRoot = NS_NewHTMLHtmlElement(nodeInfo);
     if (!mRoot) {
