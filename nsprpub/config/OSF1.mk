@@ -33,7 +33,9 @@ include $(MOD_DEPTH)/config/UNIX.mk
 # Temporary define for the Client; to be removed when binary release is used
 #
 ifdef MOZILLA_CLIENT
+ifneq ($(USE_PTHREADS),1)
 CLASSIC_NSPR = 1
+endif
 endif
 
 #
