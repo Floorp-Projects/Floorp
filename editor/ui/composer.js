@@ -70,11 +70,22 @@ pref("editor.toolbars.showbutton.cut", false);
 pref("editor.toolbars.showbutton.copy", false);
 pref("editor.toolbars.showbutton.paste", false);
 pref("editor.toolbars.showbutton.print", true);
+pref("editor.toolbars.showbutton.find", false);
 pref("editor.toolbars.showbutton.image", true);
 pref("editor.toolbars.showbutton.hline", false);
 pref("editor.toolbars.showbutton.table", true);
 pref("editor.toolbars.showbutton.link", true);
 pref("editor.toolbars.showbutton.namedAnchor", false);
+
+pref("editor.toolbars.showbutton.bold", true);
+pref("editor.toolbars.showbutton.italic", true);
+pref("editor.toolbars.showbutton.underline", true);
+pref("editor.toolbars.showbutton.DecreaseFontSize", true);
+pref("editor.toolbars.showbutton.IncreaseFontSize", true);
+pref("editor.toolbars.showbutton.ul", true);
+pref("editor.toolbars.showbutton.ol", true);
+pref("editor.toolbars.showbutton.outdent", true);
+pref("editor.toolbars.showbutton.indent", true);
 
 pref("editor.auto_save",                    false);
 pref("editor.auto_save_delay",              10);    // minutes

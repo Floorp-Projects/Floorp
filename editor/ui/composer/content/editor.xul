@@ -180,14 +180,15 @@
     <toolbarbutton id="cutButton"/>
     <toolbarbutton id="copyButton"/>
     <toolbarbutton id="pasteButton"/>
-    <toolbarbutton id="printButton" />
-    <toolbarbutton id="spellingButton"/>
+    <toolbarbutton id="printButton"/>
+    <toolbarbutton id="findButton"/>
     <toolbarseparator class="toolbarseparator-primary"/>
-    <toolbarbutton id="imageButton"/>
-    <toolbarbutton id="tableButton"/>
     <toolbarbutton id="linkButton"/>
     <toolbarbutton id="namedAnchorButton"/>
+    <toolbarbutton id="imageButton"/>
     <toolbarbutton id="hlineButton"/>
+    <toolbarbutton id="tableButton"/>
+    <toolbarbutton id="spellingButton"/>
     <spacer flex="1"/>
     <hbox id="throbber-box" align="center">
       <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')" tooltiptext="&throbber.tooltip;">
