@@ -111,6 +111,9 @@ DEFINE_RDF_VOCAB(CHROME_URI, CHROME, name);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, image);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, locType);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, allowScripts);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, skinVersion);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, localeVersion);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, packageVersion);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -321,6 +324,15 @@ nsChromeRegistry::Init()
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
   rv = mRDFService->GetResource(kURICHROME_allowScripts, getter_AddRefs(mAllowScripts));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_skinVersion, getter_AddRefs(mSkinVersion));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_localeVersion, getter_AddRefs(mLocaleVersion));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_packageVersion, getter_AddRefs(mPackageVersion));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
   NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
@@ -1661,6 +1673,22 @@ NS_IMETHODIMP nsChromeRegistry::DeselectLocaleForPackage(const PRUnichar *aLocal
   return SelectProviderForPackage(provider, aLocale, aPackageName, mSelectedLocale, aUseProfile, PR_FALSE);
 }
 
+NS_IMETHODIMP nsChromeRegistry::IsSkinSelectedForPackage(const PRUnichar *aSkin,
+                                                  const PRUnichar *aPackageName,
+                                                  PRBool aUseProfile, PRBool* aResult)
+{
+  nsCAutoString provider("skin");
+  return IsProviderSelectedForPackage(provider, aSkin, aPackageName, mSelectedSkin, aUseProfile, aResult);
+}
+
+NS_IMETHODIMP nsChromeRegistry::IsLocaleSelectedForPackage(const PRUnichar *aLocale,
+                                                    const PRUnichar *aPackageName,
+                                                    PRBool aUseProfile, PRBool* aResult)
+{
+  nsCAutoString provider("locale");
+  return IsProviderSelectedForPackage(provider, aLocale, aPackageName, mSelectedLocale, aUseProfile, aResult);
+}
+
 NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const nsCString& aProviderType,
                                         const PRUnichar *aProviderName, 
                                         const PRUnichar *aPackageName, 
@@ -1700,6 +1728,169 @@ NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const nsCString& aProvi
                                aUseProfile, nsnull, aIsAdding);;
 }
    
+NS_IMETHODIMP nsChromeRegistry::IsSkinSelected(const PRUnichar* aSkin,
+                                               PRBool aUseProfile, PRBool* aResult)
+{
+  return IsProviderSelected(nsCAutoString("skin"), aSkin, mSelectedSkin, aUseProfile, aResult);
+}
+
+NS_IMETHODIMP nsChromeRegistry::IsLocaleSelected(const PRUnichar* aLocale,
+                                                 PRBool aUseProfile, PRBool* aResult)
+{
+  return IsProviderSelected(nsCAutoString("locale"), aLocale, mSelectedLocale, aUseProfile, aResult);
+}
+
+NS_IMETHODIMP nsChromeRegistry::IsProviderSelected(const nsCString& aProvider,
+                                                   const PRUnichar* aProviderName,
+                                                   nsIRDFResource* aSelectionArc,
+                                                   PRBool aUseProfile, PRBool* aResult)
+{
+  // Build the provider resource str.
+  // e.g., urn:mozilla:skin:aqua/1.0
+  *aResult = PR_FALSE;
+  nsCAutoString resourceStr( "urn:mozilla:" );
+  resourceStr += aProvider;
+  resourceStr += ":";
+  resourceStr.AppendWithConversion(aProviderName);
+
+  // Obtain the provider resource.
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = GetResource(resourceStr, getter_AddRefs(resource));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the package resource.");
+    return rv;
+  }
+  NS_ASSERTION(resource, "failed to GetResource");
+
+  // Follow the packages arc to the package resources.
+  nsCOMPtr<nsIRDFNode> packageList;
+  rv = mChromeDataSource->GetTarget(resource, mPackages, PR_TRUE, getter_AddRefs(packageList));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the SEQ for the package list.");
+    return rv;
+  }
+  // ok for packageList to be null here -- it just means that we haven't encountered that package yet
+
+  nsCOMPtr<nsIRDFResource> packageSeq(do_QueryInterface(packageList, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  // Build an RDF container to wrap the SEQ
+  nsCOMPtr<nsIRDFContainer> container(do_CreateInstance("@mozilla.org/rdf/container;1"));
+  if (NS_FAILED(container->Init(mChromeDataSource, packageSeq)))
+    return NS_OK;
+
+  nsCOMPtr<nsISimpleEnumerator> arcs;
+  container->GetElements(getter_AddRefs(arcs));
+    
+  // For each skin/package entry, follow the arcs to the real package
+  // resource.
+  PRBool more;
+  rv = arcs->HasMoreElements(&more);
+  if (NS_FAILED(rv)) return rv;
+  while (more) {
+    nsCOMPtr<nsISupports> packageSkinEntry;
+    rv = arcs->GetNext(getter_AddRefs(packageSkinEntry));
+    if (NS_SUCCEEDED(rv) && packageSkinEntry) {
+      nsCOMPtr<nsIRDFResource> entry = do_QueryInterface(packageSkinEntry);
+      if (entry) {
+         // Obtain the real package resource.
+         nsCOMPtr<nsIRDFNode> packageNode;
+         rv = mChromeDataSource->GetTarget(entry, mPackage, PR_TRUE, getter_AddRefs(packageNode));
+         if (NS_FAILED(rv)) {
+           NS_ERROR("Unable to obtain the package resource.");
+           return rv;
+         }
+
+         // Select the skin for this package resource.
+         nsCOMPtr<nsIRDFResource> packageResource(do_QueryInterface(packageNode));
+         if (packageResource) {
+           rv = IsProviderSetForPackage(aProvider, packageResource, entry, aSelectionArc, aUseProfile, aResult);
+           if (NS_FAILED(rv)) {
+             NS_ERROR("Unable to set provider for package resource.");
+             return rv;
+           }
+           if (*aResult)
+             return NS_OK;
+         }
+      }
+    }
+    rv = arcs->HasMoreElements(&more);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::IsProviderSelectedForPackage(const nsCString& aProviderType,
+                                               const PRUnichar *aProviderName, 
+                                               const PRUnichar *aPackageName, 
+                                               nsIRDFResource* aSelectionArc, 
+                                               PRBool aUseProfile, PRBool* aResult)
+{
+  nsCAutoString package( "urn:mozilla:package:" );
+  package.AppendWithConversion(aPackageName);
+
+  nsCAutoString provider( "urn:mozilla:" );
+  provider += aProviderType;
+  provider += ":";
+  provider.AppendWithConversion(aProviderName);
+  provider += ":";
+  provider.AppendWithConversion(aPackageName);
+
+  // Obtain the package resource.
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIRDFResource> packageResource;
+  rv = GetResource(package, getter_AddRefs(packageResource));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the package resource.");
+    return rv;
+  }
+  NS_ASSERTION(packageResource, "failed to get packageResource");
+
+  // Obtain the provider resource.
+  nsCOMPtr<nsIRDFResource> providerResource;
+  rv = GetResource(provider, getter_AddRefs(providerResource));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the provider resource.");
+    return rv;
+  }
+  NS_ASSERTION(providerResource, "failed to get providerResource");
+
+  return IsProviderSetForPackage(aProviderType, packageResource, providerResource, aSelectionArc, 
+                                 aUseProfile, aResult);;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::IsProviderSetForPackage(const nsCString& aProvider,
+                                          nsIRDFResource* aPackageResource, 
+                                          nsIRDFResource* aProviderPackageResource, 
+                                          nsIRDFResource* aSelectionArc, 
+                                          PRBool aUseProfile, PRBool* aResult)
+{
+  nsresult rv;
+  // Figure out which file we're needing to modify, e.g., is it the install
+  // dir or the profile dir, and get the right datasource.
+  nsCAutoString dataSourceStr( "user-" );
+  dataSourceStr += aProvider;
+  dataSourceStr += "s.rdf";
+  
+  nsCOMPtr<nsIRDFDataSource> dataSource;
+  rv = LoadDataSource(dataSourceStr, getter_AddRefs(dataSource), aUseProfile, nsnull);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIRDFNode> retVal;
+  dataSource->GetTarget(aPackageResource, aSelectionArc, PR_TRUE, getter_AddRefs(retVal));
+  if (retVal) {
+    nsCOMPtr<nsIRDFNode> node(do_QueryInterface(aProviderPackageResource));
+    if (node == retVal)
+      *aResult = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
                                                 const nsCString& aBaseURL,
                                                 PRBool aUseProfile, PRBool aAllowScripts,
