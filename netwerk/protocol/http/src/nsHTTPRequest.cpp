@@ -37,13 +37,14 @@ extern PRLogModuleInfo* gHTTPLog;
 #endif /* PR_LOGGING */
 
 nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method, nsIChannel* i_pTransport):
-    m_pURI(i_pURL),
     m_Method(i_Method),
     m_pArray(new nsVoidArray()),
     m_Version(HTTP_ONE_ZERO),
     m_Request(nsnull)
 {
     NS_INIT_REFCNT();
+
+    m_pURL = do_QueryInterface(i_pURL);
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Creating nsHTTPRequest [this=%x].\n", this));
@@ -92,7 +93,7 @@ nsHTTPRequest::Build()
         return NS_ERROR_FAILURE;
     }
 
-    if (!m_pURI) {
+    if (!m_pURL) {
         NS_ERROR("No URL to build request for!");
         return NS_ERROR_NULL_POINTER;
     }
@@ -117,12 +118,21 @@ nsHTTPRequest::Build()
             this));
 
     // Write the request method and HTTP version.
-    char* filename;
+    char* name;
     lineBuffer.Append(MethodToString(m_Method));
 
-    rv = m_pURI->GetPath(&filename);
-    lineBuffer.Append(filename);
-    nsCRT::free(filename);
+    rv = m_pURL->GetPath(&name);
+    lineBuffer.Append(name);
+    nsCRT::free(name);
+
+    // Append the Query string if any...
+    name = nsnull;
+    rv = m_pURL->GetQuery(&name);
+    if (name && *name) {
+      lineBuffer.Append("?");
+      lineBuffer.Append(name);
+    }
+    nsCRT::free(name);
 
     lineBuffer.Append(" HTTP/1.0"CRLF);
     
