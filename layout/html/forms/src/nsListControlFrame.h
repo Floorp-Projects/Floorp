@@ -312,6 +312,8 @@ public:
   static nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLCollection& aOptions, PRInt32 aIndex);
   static nsIContent* GetOptionAsContent(nsIDOMHTMLCollection* aCollection,PRInt32 aIndex);
 
+  static void ComboboxFocusSet();
+
   // Weak Reference
   nsCWeakReferent *WeakReferent()
     { return &mWeakReferent; }
@@ -437,6 +439,7 @@ private:
 
   // for incremental typing navigation
   static nsAString& GetIncrementalString ();
+  static DOMTimeStamp gLastKeyTime;
 };
 
 #endif /* nsListControlFrame_h___ */
