@@ -2397,11 +2397,11 @@ nsGlobalHistory::CreateTokens()
 
 nsresult nsGlobalHistory::Commit(eCommitType commitType)
 {
+  if (!mStore || !mTable)
+    return NS_OK;
+
   nsresult	err = NS_OK;
   nsMdbPtr<nsIMdbThumb> thumb(mEnv);
-
-  if (!mStore || !mTable)
-    return NS_ERROR_NOT_INITIALIZED;
 
   if (commitType == kLargeCommit || commitType == kSessionCommit)
   {
@@ -2506,6 +2506,8 @@ nsGlobalHistory::CloseDB()
 
   if (mEnv)
     mEnv->CloseMdbObject(mEnv /* XXX */);
+
+  mTable = mEnv = mStore = nsnull;
 
   return NS_OK;
 }
