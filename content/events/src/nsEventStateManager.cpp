@@ -4145,9 +4145,13 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
 {
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
-  
+
+  nsCOMPtr<nsIContent> previousFocus = mCurrentFocus;
+
   if (nsnull != gLastFocusedPresContext) {
-    
+
+    nsCOMPtr<nsIContent> focusAfterBlur;
+
     if (gLastFocusedContent && gLastFocusedContent != mFirstBlurEvent) {
 
       //Store the first blur event we fire and don't refire blur
@@ -4215,12 +4219,19 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
           temp->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
           pusher.Pop();
 
+          focusAfterBlur = mCurrentFocus;
           esm->SetFocusedContent(nsnull);
         }
       }
 
       if (clearFirstBlurEvent) {
         mFirstBlurEvent = nsnull;
+      }
+
+      if (previousFocus != focusAfterBlur) {
+        // The content node's blur handler focused something else.
+        // In this case, abort firing any more blur or focus events.
+        return NS_OK;
       }
     }
 
@@ -4269,8 +4280,20 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       temp->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
       pusher.Pop();
 
+      if (mCurrentFocus != previousFocus) {
+        // The document's blur handler focused something else.
+        // Abort firing any additional blur or focus events.
+        return NS_OK;
+      }
+
       pusher.Push(globalObject);
       globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+
+      if (mCurrentFocus != previousFocus) {
+        // The window's blur handler focused something else.
+        // Abort firing any additional blur or focus events.
+        return NS_OK;
+      }
     }
   }
   
