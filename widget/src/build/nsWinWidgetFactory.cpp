@@ -220,6 +220,7 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     ///////////////////////////////////////
     // These are needed for Viewer only
     ///////////////////////////////////////
+#if 0
     else if (mClassID.Equals(kCButton)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsButton();
     }
@@ -232,7 +233,7 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCCheckButton)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsCheckButton();
     }
-
+#endif
     if (inst == NULL) {  
         return NS_ERROR_OUT_OF_MEMORY;  
     }  
