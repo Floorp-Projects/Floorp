@@ -28,6 +28,11 @@
   #define NEW_STRING_APIS 1
 #endif //NEW_STRING_APIS
 
+  // Need this to enable comparison profiling for a while
+#ifdef OLD_STRING_APIS
+  #undef NEW_STRING_APIS
+#endif
+
 /***********************************************************************
   MODULE NOTES:
 
