@@ -62,7 +62,7 @@ OBJS = \
     .\$(OBJDIR)\nsSSLSocketProvider.obj \
     .\$(OBJDIR)\nsSDR.obj \
     .\$(OBJDIR)\nsFSDR.obj \
-    .\$(OBJDRI)\nsCrypto.obj \
+    .\$(OBJDIR)\nsCrypto.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
