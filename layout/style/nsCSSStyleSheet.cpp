@@ -168,12 +168,11 @@ RuleHash_CIMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   if (match_atom == entry_atom)
     return PR_TRUE;
 
-  const PRUnichar *match_str, *entry_str;
-  match_atom->GetUnicode(&match_str);
-  entry_atom->GetUnicode(&entry_str);
+  const char *match_str, *entry_str;
+  match_atom->GetUTF8String(&match_str);
+  entry_atom->GetUTF8String(&entry_str);
 
-  return nsDependentString(match_str).Equals(nsDependentString(entry_str),
-                                          nsCaseInsensitiveStringComparator());
+  return (nsCRT::strcasecmp(entry_str, match_str) == 0);
 }
 
 PR_STATIC_CALLBACK(PRBool)
@@ -1116,8 +1115,8 @@ DOMMediaListImpl::GetText(nsAString& aMediaText)
     QueryElementAt(index++, NS_GET_IID(nsIAtom), getter_AddRefs(medium));
     NS_ENSURE_TRUE(medium, NS_ERROR_FAILURE);
 
-    const PRUnichar *buffer;
-    medium->GetUnicode(&buffer);
+    nsAutoString buffer;
+    medium->ToString(buffer);
     aMediaText.Append(buffer);
     if (index < count) {
       aMediaText.Append(NS_LITERAL_STRING(", "));
@@ -1234,8 +1233,8 @@ DOMMediaListImpl::Item(PRUint32 aIndex, nsAString& aReturn)
     nsCOMPtr<nsIAtom> medium(do_QueryInterface(tmp));
     NS_ENSURE_TRUE(medium, NS_ERROR_FAILURE);
 
-    const PRUnichar *buffer;
-    medium->GetUnicode(&buffer);
+    nsAutoString buffer;
+    medium->ToString(buffer);
     aReturn.Assign(buffer);
   } else {
     aReturn.Truncate();
@@ -3742,15 +3741,15 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             IDList = IDList->mNext;
           } while (IDList);
         } else {
-          const PRUnichar* id1Str;
-          data.mContentID->GetUnicode(&id1Str);
-          nsDependentString id1(id1Str);
+          const char* id1Str;
+          data.mContentID->GetUTF8String(&id1Str);
+          nsDependentCString id1(id1Str);
           do {
-            const PRUnichar* id2Str;
-            IDList->mAtom->GetUnicode(&id2Str);
-            nsDependentString id2(id2Str);
+            const char* id2Str;
+            IDList->mAtom->GetUTF8String(&id2Str);
+            nsDependentCString id2(id2Str);
             if (localTrue !=
-                id1.Equals(id2, nsCaseInsensitiveStringComparator())) {
+                id1.Equals(id2, nsCaseInsensitiveCStringComparator())) {
               result = PR_FALSE;
               break;
             }

@@ -2030,8 +2030,6 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
     // Now we execute the onchange handler in the context of the
     // observer. We need to find the observer in order to
     // execute the handler.
-    nsAutoString attrName;
-    aAttr->ToString(attrName);
 
     nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
     PRInt32 count;
@@ -2065,7 +2063,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
         child->GetAttr(kNameSpaceID_None, nsXULAtoms::attribute,
                        listeningToAttribute);
 
-        if (listeningToAttribute != attrName &&
+        if (!aAttr->Equals(listeningToAttribute) &&
             listeningToAttribute != NS_LITERAL_STRING("*")) {
             continue;
         }
@@ -3072,13 +3070,13 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
 
     // Ick. Construct a property from the attribute. Punt on
     // namespaces for now.
-    const PRUnichar* attrstr;
-    rv = aAttribute->GetUnicode(&attrstr);
+    const char* attrstr;
+    rv = aAttribute->GetUTF8String(&attrstr);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRDFResource> attr;
-    rv = gRDFService->GetUnicodeResource(nsDependentString(attrstr),
-                                         getter_AddRefs(attr));
+    rv = gRDFService->GetResource(nsDependentCString(attrstr),
+                                  getter_AddRefs(attr));
     if (NS_FAILED(rv)) return rv;
 
     // Turn the value into a literal
