@@ -1343,7 +1343,7 @@ nsGenericDOMDataNode::AppendTextTo(nsAString& aResult)
   if (mText.Is2b()) {
     aResult.Append(mText.Get2b(), mText.GetLength());
   } else {
-    AppendASCIItoUTF16(mText.Get1b(), aResult);
+    AppendUTF8toUTF16(mText.Get1b(), aResult);
   }
 
   return NS_OK;

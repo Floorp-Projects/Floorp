@@ -299,7 +299,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     buffer.Append(strNCR);
 
     buffer.Append(NS_LITERAL_STRING("</title><base href=\""));    
-    AppendASCIItoUTF16(baseUri, buffer);
+    buffer.Append(NS_ConvertASCIItoUCS2(baseUri));
     buffer.Append(NS_LITERAL_STRING("\"/>\n"));
 
     buffer.Append(NS_LITERAL_STRING("<style type=\"text/css\">\n") +
