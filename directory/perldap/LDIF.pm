@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: LDIF.pm,v 1.3 1998/08/09 01:16:54 leif Exp $
+# $Id: LDIF.pm,v 1.4 1998/08/13 11:02:40 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -11,7 +11,7 @@
 # License for the specific language governing rights and limitations
 # under the License.
 #
-# The Original Code is PerlDAP. The Initial Developer of the Original
+# The Original Code is PerLDAP. The Initial Developer of the Original
 # Code is Netscape Communications Corp. and Clayton Donley. Portions
 # created by Netscape are Copyright (C) Netscape Communications
 # Corp., portions created by Clayton Donley are Copyright (C) Clayton
@@ -20,11 +20,15 @@
 # Contributor(s):
 #
 # DESCRIPTION
-#    This is a description.
+#    Simple routines to read and write LDIF style files. You should open
+#    the input/output file manually, or use STDIN/STDOUT.
 #
 #############################################################################
 
 package Mozilla::LDAP::LDIF;
+
+use Mozilla::LDAP::Entry;
+use Mozilla::LDAP::Utils(qw(decodeBase64));
 
 
 #############################################################################
@@ -37,15 +41,15 @@ sub new
 
   if ($fh)
     {
-      $self->{_fh_} = $fh;
-      $self->{_canRead_} = 1;
-      $self->{_canWrite_} = 1;
+      $self->{"_fh_"} = $fh;
+      $self->{"_canRead_"} = 1;
+      $self->{"_canWrite_"} = 1;
     }
   else
     {
-      $self->{_fh_} = STDOUT;
-      $self->{_canRead_} = 1;
-      $self->{_canWrite_} = 0;
+      $self->{"_fh_"} = STDIN;
+      $self->{"_canRead_"} = 1;
+      $self->{"_canWrite_"} = 0;
     }
 
   return bless $self, $class;
@@ -55,10 +59,10 @@ sub new
 #############################################################################
 # Destructor, close file descriptors etc. (???)
 #
-sub DESTROY
-{
-  my $self = shift;
-}
+#sub DESTROY
+#{
+#  my $self = shift;
+#}
 
 
 #############################################################################
@@ -67,19 +71,24 @@ sub DESTROY
 sub readOneEntry
 {
   my ($self) = @_;
-  my ($attr, $val, $entry, $base64);
+  my ($attr, $val, $entry, $base64, $fh);
   local $_;
 
+  return unless $self->{"_canRead_"};
+  return unless defined($self->{"_fh_"});
+
   # Skip leading empty lines.
-  $entry = new Mozilla::LDAP::Entry;
-  while (<$self->{_fh_}>)
+  $fh = $self->{"_fh_"};
+  while (<$fh>)
     {
       chop;
       last unless /^\s*$/;
     }
   return if /^$/;		# EOF
 
-  $base64 = 0;
+  $self->{"_canWrite_"} = 0 if $self->{"_canWrite_"};
+
+  $entry = new Mozilla::LDAP::Entry();
   do
     {
       # See if it's a continuation line.
@@ -89,18 +98,22 @@ sub readOneEntry
 	}
       else
 	{
-	  if ($attr eq "dn")
+	  if ($val && $attr)
 	    {
-	      $entry->setDN($val);
-	    }
-	  elsif ($attr && $val)
-	    {
-	      $val = decode_base64($val) if $base64;
-	      $entry->addValue($attr, "$val");
+	      if ($attr eq "dn")
+		{
+		  $entry->setDN($val);
+		}
+	      else
+		{
+		  $val = decodeBase64($val) if $base64;
+		  $entry->addValue($attr, "$val", 1);
+		}
 	    }
 	  ($attr, $val) = split(/:\s+/, $_, 2);
 	  $attr = lc $attr;
-	  # Handle base-64'ed data.
+
+	  # Handle base64'ed data.
 	  if ($attr =~ /:$/o)
 	    {
 	      $base64 = 1;
@@ -112,15 +125,15 @@ sub readOneEntry
 	    }
 	}
 
-      $_ = <$self->{_fh_}>;
+      $_ = <$fh>;
       chop;
     } until /^\s*$/;
 
-  # Do the last attribute... Icky.
+  # Do the last attribute...
   if ($attr && ($attr ne "dn"))
     {
-      $val = decode_base64($val) if $base64;
-      $entry->addValue($attr, $val);
+      $val = decodeBase64($val) if $base64;
+      $entry->addValue($attr, "$val", 1);
     }
 
   return $entry;
@@ -130,21 +143,28 @@ sub readOneEntry
 
 #############################################################################
 # Print one entry, to the file handle. Note that we actually use some
-# internals from the ::Entry object here, which is a no-no...
+# internals from the ::Entry object here, which is a no-no... Also, we need
+# to support Base64 encoding of Binary attributes here.
 #
 sub writeOneEntry
 {
   my ($self, $entry) = @_;
+  my ($fh, $attr);
 
-  print $self->{_fh_} "dn: ", $self->getDN(),"\n";
-  foreach $attr (@{$self->{_oc_order_}})
+  return unless $self->{"_canWrite_"};
+  $self->{"_canRead_"} = 0 if $self->{"_canRead_"};
+
+  $fh = $self->{"_fh_"};
+  print $fh "dn: ", $entry->getDN(),"\n";
+  foreach $attr (@{$entry->{"_oc_order_"}})
     {
       next if ($attr =~ /^_.+_$/);
-      next if $self->{"_${attr}_deleted_"};
-      grep((print $self->{_fh_} "$attr: $_\n"), @{$self->{$attr}});
+      next if $entry->{"_${attr}_deleted_"};
+      # TODO: Add support for Binary attributes.
+      grep((print $fh "$attr: $_\n"), @{$entry->{$attr}});
     }
 
-  print $self->{_fh_} "\n";
+  print $fh "\n";
 }
 *writeEntry = \writeOneEntry;
 
@@ -159,6 +179,16 @@ sub readEntries
   my $entry;
   my (@entries);
 
+  return if (($num ne "") && ($num <= 0));
+  $num = -1 unless $num;
+
+  do 
+    {
+      $entry = $self->readOneEntry();
+      push(@entries, $entry) if ($entry);
+      $num--;
+    } until (! $entry || $num == 0);
+      
   return @entries;
 }
 
@@ -199,7 +229,7 @@ Mozilla::LDAP::LDIF - Read, write and modify LDIF files.
 
 =head1 ABSTRACT
 
-This package is the...
+This package is used to read and write LDIF information from files (actually, file handles).
 
 =head1 DESCRIPTION
 
@@ -219,13 +249,13 @@ package. See the installation procedures which are part of this package.
 
 This package can be retrieved from a number of places, including:
 
-    http://www.mozilla.org/
+    http://www.mozilla.org/directory/
     Your local CPAN server
 
 =head1 AUTHOR INFORMATION
 
-Address bug reports and comments to:
-xxx@netscape.com
+Address bug reports and comments to the Netscape DevEdge newsgroups at:
+nntps://secnews.netscape.com/netscape.dev.directory.
 
 =head1 CREDITS
 
