@@ -987,11 +987,13 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
     //with any tags that don't belong in the head.
   if(NS_OK==result) {
     if(mHasOpenHead){
-      if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag)){
-
-        CEndToken     theToken(eHTMLTag_head);
-        nsCParserNode theNode(&theToken,mLineNumber);
-        result=CloseContainer(theNode,eHTMLTag_head,PR_FALSE);
+      static eHTMLTags skip2[]={eHTMLTag_newline,eHTMLTag_whitespace};
+      if(!FindTagInSet(aTag,skip2,sizeof(skip2)/sizeof(eHTMLTag_unknown))){
+        if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag)){      
+          CEndToken     theToken(eHTMLTag_head);
+          nsCParserNode theNode(&theToken,mLineNumber);
+          result=CloseContainer(theNode,eHTMLTag_head,PR_FALSE);
+        }
       }
     }
   }
