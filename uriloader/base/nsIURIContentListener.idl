@@ -28,10 +28,18 @@
 */ 
 
 #include "nsISupports.idl"
-interface nsIProtocolHandler;
+#include "nsIProtocolHandler.idl"
+#include "nsIChannel.idl"
+//#include "nsIStreamListener.idl" This should be available!
+//#incldue "nsIURI.idl" This should be available!
 interface nsIStreamListener;
-interface nsIChannel;
 interface nsIURI;
+
+%{ C++
+#include "nsIStreamListener.h"
+#include "nsIURI.h"
+%}
+
 
 [scriptable, uuid(94928AB3-8B63-11d3-989D-001083010E9B)]
 interface nsIURIContentListener : nsISupports
