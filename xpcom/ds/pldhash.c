@@ -124,7 +124,7 @@ PL_DHashFinalizeStub(PLDHashTable *table)
 {
 }
 
-static PLDHashTableOps stub_ops = {
+const static PLDHashTableOps stub_ops = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     PL_DHashGetKeyStub,
@@ -136,14 +136,14 @@ static PLDHashTableOps stub_ops = {
     NULL
 };
 
-PR_IMPLEMENT(PLDHashTableOps *)
+PR_IMPLEMENT(const PLDHashTableOps *)
 PL_DHashGetStubOps(void)
 {
     return &stub_ops;
 }
 
 PR_IMPLEMENT(PLDHashTable *)
-PL_NewDHashTable(PLDHashTableOps *ops, void *data, PRUint32 entrySize,
+PL_NewDHashTable(const PLDHashTableOps *ops, void *data, PRUint32 entrySize,
                  PRUint32 capacity)
 {
     PLDHashTable *table;
@@ -166,7 +166,7 @@ PL_DHashTableDestroy(PLDHashTable *table)
 }
 
 PR_IMPLEMENT(PRBool)
-PL_DHashTableInit(PLDHashTable *table, PLDHashTableOps *ops, void *data,
+PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
                   PRUint32 entrySize, PRUint32 capacity)
 {
     int log2;

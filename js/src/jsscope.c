@@ -430,7 +430,7 @@ js_MatchScopeProperty(JSDHashTable *table,
     return SPROP_MATCH(sprop, kprop);
 }
 
-static JSDHashTableOps PropertyTreeHashOps = {
+static const JSDHashTableOps PropertyTreeHashOps = {
     JS_DHashAllocTable,
     JS_DHashFreeTable,
     JS_DHashGetKeyStub,
