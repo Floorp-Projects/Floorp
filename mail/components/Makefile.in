@@ -28,5 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS    = compose prefwindow addrbook migration
 
+ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
+DIRS += gnome
+endif
+
+DIRS += build
+
 include $(topsrcdir)/config/rules.mk
 

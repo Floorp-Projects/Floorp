@@ -281,12 +281,10 @@ en-US.jar:
     locale/en-US/messenger/vcard.properties                             (mime/cthandlers/resources/vcard.properties)
     locale/en-US/messenger/smime.properties                             (mime/cthandlers/resources/smime.properties)  
     locale/en-US/messenger/markByDate.dtd                               (base/resources/locale/en-US/markByDate.dtd)
+     locale/en-US/messenger-mapi/pref-mailnewsOverlay.dtd               (mapi/resources/locale/en-US/pref-mailnewsOverlay.dtd)
+     locale/en-US/messenger-mapi/mapi.properties                        (mapi/resources/locale/en-US/mapi.properties)
+*    locale/en-US/messenger-mapi/contents.rdf                           (mapi/resources/locale/en-US/contents.rdf)
 
 US.jar:
 *   locale/US/messenger-region/contents.rdf                             (base/resources/locale/en-US/contents-region.rdf)
     locale/US/messenger-region/region.properties                        (base/resources/locale/en-US/region.properties)
-
-en-win.jar:
-     locale/en-US/messenger-mapi/pref-mailnewsOverlay.dtd               (mapi/resources/locale/en-US/pref-mailnewsOverlay.dtd)
-     locale/en-US/messenger-mapi/mapi.properties                        (mapi/resources/locale/en-US/mapi.properties)
-*    locale/en-US/messenger-mapi/contents.rdf                           (mapi/resources/locale/en-US/contents.rdf)

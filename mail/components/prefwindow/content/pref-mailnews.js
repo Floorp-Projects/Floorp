@@ -20,7 +20,72 @@ function Startup()
   // see bug #158711
   var newMailNotificationAlertUI = document.getElementById("newMailNotificationAlert");
   newMailNotificationAlertUI.hidden = !("@mozilla.org/alerts-service;1" in Components.classes);
+
+#ifdef MOZ_WIDGET_GTK2
+  // first check whether GNOME is available.  if it's not, hide the whole
+  // default mail/news app section.
+
+  var mapiReg;
+  try {
+    mapiReg = Components.classes["@mozilla.org/mapiregistry;1"].
+                    getService(Components.interfaces.nsIMapiRegistry);
+  } catch (e) {}
+  if (!mapiReg) {
+    document.getElementById("defaultClientBox").hidden = true;
+    return;
+  }
+#endif
 }
+
+#ifdef MOZ_WIDGET_GTK2
+function checkDefaultMailNow(isNews) {
+  var mapiReg = Components.classes["@mozilla.org/mapiregistry;1"]
+                 .getService(Components.interfaces.nsIMapiRegistry);
+
+  var brandBundle = document.getElementById("brandBundle");
+  var mapiBundle = document.getElementById("mapiBundle");
+
+  var brandShortName = brandBundle.getString("brandRealShortName");
+  var promptTitle = mapiBundle.getFormattedString("dialogTitle",
+                                                  [brandShortName]);
+  var promptMessage;
+
+  var IPS = Components.interfaces.nsIPromptService;
+  var prompt = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                  .getService(IPS);
+
+  var isDefault;
+  var str;
+  if (isNews) {
+    isDefault = mapiReg.isDefaultNewsClient;
+    str = "News";
+  } else {
+    isDefault = mapiReg.isDefaultMailClient;
+    str = "Mail";
+  }
+
+  if (!isDefault) {
+    promptMessage = mapiBundle.getFormattedString("setDefault" + str,
+                                                  [brandShortName]);
+
+    var rv = prompt.confirmEx(window, promptTitle, promptMessage,
+                              (IPS.BUTTON_TITLE_YES * IPS.BUTTON_POS_0) +
+                              (IPS.BUTTON_TITLE_NO * IPS.BUTTON_POS_1),
+                              null, null, null, null, { });
+    if (rv == 0) {
+      if (isNews)
+        mapiReg.isDefaultNewsClient = true;
+      else
+        mapiReg.isDefaultMailClient = true;
+    }
+  } else {
+    promptMessage = mapiBundle.getFormattedString("alreadyDefault" + str,
+                                                  [brandShortName]);
+
+    prompt.alert(window, promptTitle, promptMessage);
+  }
+}
+#endif
 
 function setColorWell(menu) 
 {

@@ -35,3 +35,10 @@
 <!ENTITY setDefaultMailClient.accesskey         "u">
 <!ENTITY setDefaultNewsClient.label             "Use &vendorShortName; as the default news application">
 <!ENTITY setDefaultNewsClient.accesskey         "n">
+<!ENTITY checkNow.label                         "Check Now">
+<!ENTITY checkNow.accesskey                     "N">
+<!ENTITY whenStartingCheck.label                "When starting, &brandShortName; should check to see if it is the default application for">
+<!ENTITY mailApplication.label                  "Mail">
+<!ENTITY checkDefaultMail.accesskey             "d">
+<!ENTITY newsApplication.label                  "News">
+<!ENTITY checkDefaultNews.accesskey             "D">

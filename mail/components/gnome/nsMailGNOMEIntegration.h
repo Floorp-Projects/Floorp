@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,19 +12,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is the Mozilla GNOME integration code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Srilatha Moturi <srilatha@netscape.com>
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,36 +36,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsMailGNOMEIntegration_h_
+#define nsMailGNOMEIntegration_h_
 
-interface nsIDOMWindow;
+#include "nsIMapiRegistry.h"
+#include "nsString.h"
 
-/**
- * This interface provides support for registering Mozilla as the default
- * Mail Client. This interface can also be used to get/set the user preference
- * for the default Mail Client.
- * 
- */
-[scriptable, uuid(c5be14ba-4e0a-4eec-a1b8-04363761d63c)]
-interface nsIMapiRegistry: nsISupports {
+#define NS_MAILGNOMEINTEGRATION_CID \
+{0xbddef0f4, 0x5e2d, 0x4846, {0xbd, 0xec, 0x86, 0xd0, 0x78, 0x1d, 0x8d, 0xed}}
 
-   /** This is set to TRUE if Mozilla is the default Application
-    */
-   attribute boolean isDefaultMailClient;
+class nsMailGNOMEIntegration : public nsIMapiRegistry
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMAPIREGISTRY
 
-   /** This is set TRUE only once per session.
-    */
-   readonly attribute boolean showDialog;
+  NS_HIDDEN_(nsresult) Init();
 
-   /** This will bring the dialog asking the user if he/she wants to set
-    * Mozilla as default Mail Client.
-    * Call this only if Mozilla is not the default Mail client
-    */
-   void showMailIntegrationDialog(in nsIDOMWindow parentWindow);
-   
+private:
+  ~nsMailGNOMEIntegration() {}
+
+  NS_HIDDEN_(PRBool)   KeyMatchesAppName(const char *aKeyValue) const;
+  NS_HIDDEN_(nsresult) CheckDefault(const char* const *aProtocols,
+                                  unsigned int aLength, PRBool *aIsDefault);
+  NS_HIDDEN_(nsresult) MakeDefault(const char* const *aProtocols,
+                                 unsigned int aLength);
+
+  PRPackedBool mUseLocaleFilenames;
+  PRPackedBool mShowMailDialog;
+  PRPackedBool mShowNewsDialog;
+  nsCString mAppPath;
 };
 
-%{C++
-#define NS_IMAPIREGISTRY_CONTRACTID    "@mozilla.org/mapiregistry;1"
-#define NS_IMAPIREGISTRY_CLASSNAME "Mozilla MAPI Registry"
-%}
+#endif

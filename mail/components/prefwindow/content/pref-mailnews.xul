@@ -34,6 +34,9 @@
       onload="parent.initPanel('chrome://messenger/content/pref-mailnews.xul');"
       headertitle="&pane.title;">
 
+  <stringbundle id="mapiBundle" src="chrome://messenger-mapi/locale/mapi.properties"/>
+  <stringbundle id="brandBundle" src="chrome://global/locale/brand.properties"/>
+
   <script type="application/x-javascript" src="chrome://messenger/content/pref-mailnews.js"/>
 
   <script type="application/x-javascript">
@@ -42,6 +45,11 @@
     var _elementIDs = ["mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailPaneConfig", "mailnewsDoubleClick2NewWindow", "mailRememberLastMsg",
                        "mailnewsSoundFileUrl", "newMailNotification", "newMailNotificationType",
                        "newMailNotificationAlert"];
+
+#ifdef MOZ_WIDGET_GTK2
+    _elementIDs.push("checkDefaultMail");
+    _elementIDs.push("checkDefaultNews");
+#endif
   ]]>
   </script>
   
@@ -49,6 +57,34 @@
     <caption label="&generalSettings.label;"/>
     
     <hbox id="mapi"/>
+#ifdef MOZ_WIDGET_GTK2
+    <vbox align="left" id="defaultClientBox">
+      <label value="&whenStartingCheck.label;"/>
+      <grid flex="1" style="margin-left: 20px;">
+        <columns>
+          <column/>
+          <column flex="1" align="left"/>
+        </columns>
+        <rows>
+        <row>
+          <checkbox id="checkDefaultMail" prefstring="mail.checkDefaultMail"
+                    label="&mailApplication.label;"
+                    accesskey="&checkDefaultMail.accesskey;"/>
+          <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+                  oncommand="checkDefaultMailNow(false)"/>
+        </row>
+        <row>
+          <checkbox id="checkDefaultNews" prefstring="mail.checkDefaultNews"
+                    label="&newsApplication.label;"
+                    accesskey="&checkDefaultNews.accesskey;"/>
+          <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+                  oncommand="checkDefaultMailNow(true)"/>
+        </row>
+        </rows>
+      </grid>
+    </vbox>
+    <separator class="thin"/>
+#endif
 
     <checkbox id="mailRememberLastMsg" label="&rememberLastMsg.label;"
               prefstring="mailnews.remember_selected_message"

@@ -67,10 +67,8 @@ en-US.jar:
 +   locale/en-US/global/brand.properties            (locale/brand.properties) 
 *+  locale/en-US/global/brand.dtd                   (locale/brand.dtd) 
 +   locale/en-US/communicator/utilityOverlay.dtd    (locale/utilityOverlay.dtd)
++   locale/en-US/messenger-mapi/mapi.properties      (locale/mapi.properties)
 
 US.jar:
 +   locale/US/messenger-region/region.properties     (locale/region.properties)
 *+  locale/US/global-region/region.dtd               (locale/region.dtd)
-
-en-win.jar:
-+   locale/en-US/messenger-mapi/mapi.properties      (locale/mapi.properties)

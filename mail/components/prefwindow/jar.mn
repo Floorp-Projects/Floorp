@@ -4,7 +4,7 @@ messenger.jar:
     content/messenger/messengercompose/pref-sendOptions.xul            (content/pref-sendOptions.xul)
 +   content/messenger/pref-viewing_messages.xul                        (content/pref-viewing_messages.xul)
 *+  content/messenger/pref-mailnews.xul                                (content/pref-mailnews.xul)
-+   content/messenger/pref-mailnews.js                                 (content/pref-mailnews.js)
+*+   content/messenger/pref-mailnews.js                                 (content/pref-mailnews.js)
 *+  content/messenger/pref-advanced.xul                                (content/pref-advanced.xul)
 *+  content/messenger/pref-advanced.js                                 (content/pref-advanced.js)
 

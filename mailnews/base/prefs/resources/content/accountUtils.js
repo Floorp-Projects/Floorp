@@ -113,7 +113,7 @@ function showMailIntegrationDialog() {
         }
         catch (ex) {}
         try {
-          if (!prefLocked && !mapiRegistry.isDefaultMailClient)
+          if (!prefLocked)
             mapiRegistry.showMailIntegrationDialog(window /* parent window */);
         }
         catch (ex) {

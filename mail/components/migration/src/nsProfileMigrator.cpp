@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
 #include "nsILocalFile.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIProfileMigrator.h"
@@ -291,62 +290,3 @@ cleanup:
   NR_ShutdownRegistry();
   return migrated;
 }
-
-// Make this into a component
-
-#include "nsSeamonkeyProfileMigrator.h"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileMigrator)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSeamonkeyProfileMigrator)
-
-#include "nsDogbertProfileMigrator.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDogbertProfileMigrator)
-
-#ifdef XP_WIN32
-
-#include "nsOEProfileMigrator.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsOEProfileMigrator)
-
-#include "nsOutlookProfileMigrator.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsOutlookProfileMigrator)
-
-#endif
-
-#if defined (XP_WIN32) || defined (XP_MACOSX)
-#include "nsEudoraProfileMigrator.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsEudoraProfileMigrator)
-#endif
-
-static const nsModuleComponentInfo components[] =
-{
-  { "Profile Importer",
-    NS_THUNDERBIRD_PROFILEIMPORT_CID,
-    NS_PROFILEMIGRATOR_CONTRACTID,
-    nsProfileMigratorConstructor },
-  { "Seamonkey Profile Migrator",
-    NS_SEAMONKEYPROFILEMIGRATOR_CID,
-    NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey",
-    nsSeamonkeyProfileMigratorConstructor },
-  { "Netscape Communicator 4.x",
-    NS_DOGBERTPROFILEMIGRATOR_CID,
-    NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "dogbert",
-    nsDogbertProfileMigratorConstructor },
-#ifdef XP_WIN32
-  { "Outlook Express Profile Migrator",
-    NS_OEXPRESSPROFILEMIGRATOR_CID,
-    NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "oexpress",
-    nsOEProfileMigratorConstructor },
-  { "Outlook Profile Migrator",
-    NS_OUTLOOKPROFILEMIGRATOR_CID,
-    NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "outlook",
-    nsOutlookProfileMigratorConstructor },
-#endif
-#if defined (XP_WIN32) || defined (XP_MACOSX)
-  { "Eudora Profile Migrator",
-    NS_EUDORAPROFILEMIGRATOR_CID,
-    NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "eudora",
-    nsEudoraProfileMigratorConstructor },
-#endif
-};
-
-NS_IMPL_NSGETMODULE(nsMailProfileMigratorModule, components)

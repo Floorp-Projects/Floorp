@@ -115,6 +115,13 @@ pref("network.image.imageBehavior", 2);
 // End seamonkey suite mailnews.js pref overrides
 ///////////////////////////////////////////////////////////////// 
 
+#ifdef MOZ_WIDGET_GTK2
+// whether to check if we're the default mail client on startup (GNOME)
+pref("mail.checkDefaultMail", true);
+// whether to check if we're the default news client on startup (GNOME)
+pref("mail.checkDefaultNews", false);
+#endif
+
 /////////////////////////////////////////////////////////////////
 // Overrides for generic app behavior from the seamonkey suite's all.js
 /////////////////////////////////////////////////////////////////

@@ -95,6 +95,7 @@ XPIDLSRCS	= \
 		nsIMessengerOSIntegration.idl \
 		nsIMsgMdnGenerator.idl	        \
 		nsISpamSettings.idl	        \
+		nsIMapiRegistry.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
