@@ -82,13 +82,6 @@ nsMsgIncomingServer::nsMsgIncomingServer():
 
 nsMsgIncomingServer::~nsMsgIncomingServer()
 {
-  nsresult rv;
-    if (mFilterList) {
-        nsCOMPtr<nsIMsgFilterService> filterService =
-            do_GetService(kMsgFilterServiceCID, &rv);
-        if (NS_SUCCEEDED(rv))
-            rv = filterService->SaveFilterList(mFilterList, mFilterFile);
-    }
     if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID,
                                                   m_prefs,
                                                   nsnull);

@@ -1288,7 +1288,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 			newFolder->SetName(newFolderName.get());
 			nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
 			NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
-            ChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, nsnull);
+            PRBool changed = PR_FALSE;
+            ChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
 		}
         /***** jefft -
         * Needs to find a way to reselect the new renamed folder and the
@@ -1929,8 +1930,8 @@ nsMsgLocalMailFolder::CopyFolderLocal( nsIMsgFolder *destFolder, nsIMsgFolder *s
   PRUint32 flags;
   srcFolder->GetFlags(&flags);
   newMsgFolder->SetFlags(flags);
-
-  rv = srcFolder->ChangeFilterDestination(newMsgFolder, PR_TRUE, nsnull);
+  PRBool changed = PR_FALSE;
+  rv = srcFolder->ChangeFilterDestination(newMsgFolder, PR_TRUE, &changed);
 
   if (newMsgFolder) 
   {

@@ -5727,7 +5727,8 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
              nsAutoString unicodeOnlineName; unicodeOnlineName.AssignWithConversion(onlineName);
              folderInfo->SetMailboxName(&unicodeOnlineName);
            }
-           msgFolder->ChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, nsnull);
+           PRBool changed = PR_FALSE;
+           msgFolder->ChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, &changed);
         }
         unusedDB->SetSummaryValid(PR_TRUE);
         unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
@@ -5837,7 +5838,8 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubfolders(nsIMsgFolder *oldFolder)
      imapFolder->SetOnlineName(onlineCName.get());
      imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
      imapFolder->SetBoxFlags(boxflags);
-     msgFolder->ChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, nsnull);
+     PRBool changed = PR_FALSE;
+     msgFolder->ChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, &changed);
 
      rv = aEnumerator->Next();
 	

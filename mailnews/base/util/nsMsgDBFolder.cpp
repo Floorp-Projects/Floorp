@@ -1566,6 +1566,8 @@ nsMsgDBFolder::ChangeFilterDestination(nsIMsgFolder *newFolder, PRBool caseInsen
             rv = server->GetFilterList(getter_AddRefs(filterList));
             if (filterList && NS_SUCCEEDED(rv))
               rv = filterList->ChangeFilterTarget(oldUri, newUri, caseInsensitive, changed);
+            if (changed)
+              rv = filterList->SaveToDefaultFile();
           }
         }
       }

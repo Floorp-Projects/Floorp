@@ -909,8 +909,7 @@ NS_IMETHODIMP nsMsgFilterList::ChangeFilterTarget(const char *oldFolderUri, cons
             {
               rv = filter->SetActionTargetFolderUri(newFolderUri);
               NS_ENSURE_SUCCESS(rv,rv);
-              if (changed)  //for rename it will be null 
-                *changed =PR_TRUE;
+              *changed =PR_TRUE;
             }
           }
           else
@@ -919,8 +918,7 @@ NS_IMETHODIMP nsMsgFilterList::ChangeFilterTarget(const char *oldFolderUri, cons
             {
               rv = filter->SetActionTargetFolderUri(newFolderUri);
               NS_ENSURE_SUCCESS(rv,rv);
-              if (changed) //for rename it will be null;
-                *changed =PR_TRUE;
+              *changed =PR_TRUE;
             }
           }
       }
