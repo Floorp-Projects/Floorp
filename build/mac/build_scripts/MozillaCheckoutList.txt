@@ -16,3 +16,6 @@ mozilla/lib/mac/Instrumentation
 mozilla/gfx2
 mozilla/modules/libpr0n
 SeaMonkeyAll
+## You need this if you want to be able to use SVG
+## Note that this library is under the LGPL, not the MPL
+#mozilla/other-licenses/libart_lgpl
