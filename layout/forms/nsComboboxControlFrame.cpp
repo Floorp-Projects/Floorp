@@ -559,7 +559,7 @@ nsComboboxControlFrame::PaintComboboxControl(nsIPresContext&      aPresContext,
 
     aRenderingContext.SetColor(blkColor->mColor);
 
-    aRenderingContext.DrawString(mTextStr, x, y, 0);
+    aRenderingContext.DrawString(mTextStr, x, y);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, inside, *blkSpacing, blkStyle, 0);
 

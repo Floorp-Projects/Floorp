@@ -639,7 +639,7 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
           text.Append("*");
         }
       }
-      aRenderingContext.DrawString(text, x, y, 0); 
+      aRenderingContext.DrawString(text, x, y); 
     } else {
       float sbWidth;
       float sbHeight;
@@ -664,11 +664,11 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
         nsString substr;
         if (-1 == pos) {
           text.Right(substr, text.Length()-oldPos);
-          aRenderingContext.DrawString(substr, x, y, 0); 
+          aRenderingContext.DrawString(substr, x, y); 
           break;     
         } 
         text.Left(substr, pos);
-        aRenderingContext.DrawString(substr, x, y, 0);
+        aRenderingContext.DrawString(substr, x, y);
         y += textHeight;
         pos++;
         oldPos = pos;

@@ -149,8 +149,7 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
       fm = aCX.GetMetricsFor(myFont->mFont);
       GetListItemText(aCX, *myList, text);
       aRenderingContext.SetFont(fm);
-      aRenderingContext.GetWidth(text, width);
-      aRenderingContext.DrawString(text, mPadding.left, mPadding.top, width);
+      aRenderingContext.DrawString(text, mPadding.left, mPadding.top);
       NS_RELEASE(fm);
       break;
     }

@@ -1169,7 +1169,7 @@ nsFormControlFrame::PaintRectangularButton(nsIPresContext& aPresContext,
       y += onePixel;
     }
 
-    aRenderingContext.DrawString(aLabel, x, y, 0);
+    aRenderingContext.DrawString(aLabel, x, y);
     NS_RELEASE(context);
     PRBool clipEmpty;
     aRenderingContext.PopState(clipEmpty);

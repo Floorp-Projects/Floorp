@@ -677,7 +677,7 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
     if (nsnull != atom) {
       atom->ToString(tmp);
       NS_RELEASE(atom);
-      aRenderingContext.DrawString(tmp, px3, px3, 0);
+      aRenderingContext.DrawString(tmp, px3, px3);
     }
   }
   return NS_OK;
