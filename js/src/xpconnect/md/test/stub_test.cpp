@@ -100,8 +100,8 @@ static __declspec(naked) void SharedStub(void)
         push ecx            // make room for a ptr
         lea  eax, [ebp-4]   // pointer to stackBytesToPop
         push eax
-        lea  ebx, [ebp+16]  // pointer to args
-        push ebx
+        lea  ecx, [ebp+16]  // pointer to args
+        push ecx
         mov  edx, [ebp+4]   // vtbl_index
         push edx
         mov  eax, [ebp+12]  // this
