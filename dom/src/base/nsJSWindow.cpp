@@ -272,42 +272,6 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case WINDOW_CONTENT:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTENT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMWindow* prop;
-        nsresult result = NS_OK;
-        result = a->GetContent(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
-        }
-        break;
-      }
-      case WINDOW_SIDEBAR:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIDEBAR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsISidebar* prop;
-        nsresult result = NS_OK;
-        result = a->GetSidebar(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsISidebar), cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
-        }
-        break;
-      }
       case WINDOW_MENUBAR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MENUBAR, PR_FALSE);
@@ -463,24 +427,6 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
-        }
-        break;
-      }
-      case WINDOW_CONTROLLERS:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTROLLERS, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIControllers* prop;
-        nsresult result = NS_OK;
-        result = a->GetControllers(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIControllers), cx, obj, vp);
         }
         else {
           return nsJSUtils::nsReportError(cx, obj, result);
@@ -975,6 +921,219 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// content Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowcontentGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+  }
+
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTENT, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+        nsIDOMWindow* prop;
+        nsresult result = NS_OK;
+        result = a->GetContent(&prop);
+        if (NS_SUCCEEDED(result)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// content Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowcontentSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+  }
+
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTENT, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "content", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// sidebar Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowsidebarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+  }
+
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIDEBAR, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+        nsISidebar* prop;
+        nsresult result = NS_OK;
+        result = a->GetSidebar(&prop);
+        if (NS_SUCCEEDED(result)) {
+          // get the js object; n.b., this will do a release on 'prop'
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsISidebar), cx, obj, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// sidebar Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowsidebarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+  }
+
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIDEBAR, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "sidebar", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// controllers Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowcontrollersGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+  }
+
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTROLLERS, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+        nsIControllers* prop;
+        nsresult result = NS_OK;
+        result = a->GetControllers(&prop);
+        if (NS_SUCCEEDED(result)) {
+          // get the js object; n.b., this will do a release on 'prop'
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIControllers), cx, obj, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// controllers Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowcontrollersSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
+  }
+
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTROLLERS, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "controllers", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
   return PR_TRUE;
 }
 
@@ -2800,8 +2959,8 @@ static JSPropertySpec WindowProperties[] =
   {"history",    WINDOW_HISTORY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"content",    WINDOW_CONTENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"sidebar",    WINDOW_SIDEBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"content",    WINDOW_CONTENT,    JSPROP_ENUMERATE, WindowcontentGetter, WindowcontentSetter},
+  {"sidebar",    WINDOW_SIDEBAR,    JSPROP_ENUMERATE, WindowsidebarGetter, WindowsidebarSetter},
   {"menubar",    WINDOW_MENUBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"toolbar",    WINDOW_TOOLBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"locationbar",    WINDOW_LOCATIONBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
@@ -2811,7 +2970,7 @@ static JSPropertySpec WindowProperties[] =
   {"directories",    WINDOW_DIRECTORIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"closed",    WINDOW_CLOSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"frames",    WINDOW_FRAMES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"controllers",    WINDOW_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"controllers",    WINDOW_CONTROLLERS,    JSPROP_ENUMERATE, WindowcontrollersGetter, WindowcontrollersSetter},
   {"opener",    WINDOW_OPENER,    JSPROP_ENUMERATE},
   {"status",    WINDOW_STATUS,    JSPROP_ENUMERATE},
   {"defaultStatus",    WINDOW_DEFAULTSTATUS,    JSPROP_ENUMERATE},

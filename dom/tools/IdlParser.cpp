@@ -309,6 +309,7 @@ void IdlParser::ParseInterfaceBody(IdlSpecification &aSpecification, IdlInterfac
         break;
       case READONLY_TOKEN:
       case ATTRIBUTE_TOKEN:
+      case REPLACEABLE_TOKEN:
         aInterface.AddAttribute(ParseAttribute(aSpecification, token->id));
         break;
       default:
@@ -561,7 +562,7 @@ IdlAttribute* IdlParser::MaybeParseAttribute(IdlSpecification &aSpecification, i
     isNoScript = 1;
     TrimComments();
     token = mScanner->PeekToken();
-    if ((token->id != READONLY_TOKEN) && (token->id != ATTRIBUTE_TOKEN)) {
+    if ((token->id != READONLY_TOKEN) && (token->id != ATTRIBUTE_TOKEN) && (token->id != REPLACEABLE_TOKEN)) {
       return NULL;
     }
     mScanner->NextToken();
@@ -572,23 +573,32 @@ IdlAttribute* IdlParser::MaybeParseAttribute(IdlSpecification &aSpecification, i
 }
 
 /**
- * attr_dcl           = [ "readonly" ] "attribute" param_type_spec identifier
+ * attr_dcl           = [ "readonly" ] [ "replaceable" ] "attribute" param_type_spec identifier
  * param_type_spec    = base_type_spec / string_type / scoped_name
  */
 IdlAttribute* IdlParser::ParseAttribute(IdlSpecification &aSpecification, int aTokenID, int aIsNoScript)
 {
   Token *token;
   int isReadOnly = 0;
+  int isReplaceable = 0;
 
-  // if it was a readonly keyword read the next keyword
-  if (READONLY_TOKEN == aTokenID) {
-    isReadOnly = 1;
-    TrimComments();
-    token = mScanner->NextToken();
-    aTokenID = token->id;
-  }
-  if (ATTRIBUTE_TOKEN != aTokenID) {
-    throw AttributeParsingException("Missing attribute specifier.");
+  while (aTokenID != ATTRIBUTE_TOKEN) {
+    // if it was a readonly keyword read the next keyword
+    if (READONLY_TOKEN == aTokenID) {
+      isReadOnly = 1;
+      TrimComments();
+      token = mScanner->NextToken();
+      aTokenID = token->id;
+    }
+    else if (REPLACEABLE_TOKEN == aTokenID) {
+      isReplaceable = 1;
+      TrimComments();
+      token = mScanner->NextToken();
+      aTokenID = token->id;
+    }
+    else {
+      throw AttributeParsingException("Unknown attribute specifier.");
+    }
   }
   TrimComments();
 
@@ -596,6 +606,7 @@ IdlAttribute* IdlParser::ParseAttribute(IdlSpecification &aSpecification, int aT
   IdlAttribute *attrObj = new IdlAttribute();
   attrObj->SetIsNoScript(aIsNoScript);
   attrObj->SetReadOnly(isReadOnly);
+  attrObj->SetReplaceable(isReplaceable);
 
   // this must be the attribute type
   token = mScanner->NextToken();

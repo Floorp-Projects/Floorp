@@ -39,6 +39,7 @@ IdlAttribute::IdlAttribute()
 {
   mReadOnly = 0;
   mIsNoScript = 0;
+  mReplaceable = 0;
 }
 
 IdlAttribute::~IdlAttribute()
@@ -65,4 +66,16 @@ void
 IdlAttribute::SetIsNoScript(int aIsNoScript)
 {
   mIsNoScript = aIsNoScript;
+}
+
+int             
+IdlAttribute::GetReplaceable()
+{
+  return mReplaceable;
+}
+
+void            
+IdlAttribute::SetReplaceable(int aReplaceable)
+{
+  mReplaceable = aReplaceable;
 }

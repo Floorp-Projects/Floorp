@@ -71,6 +71,7 @@ protected:
      void     GenerateDefPtrs(IdlSpecification &aSpec);
      void     GeneratePropertySlots(IdlSpecification &aSpec);
      void     GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter);
+     void     GenerateCustomPropertyFuncs(IdlSpecification &aSpec);
      void     GenerateFinalize(IdlSpecification &aSpec);
      void     GenerateEnumerate(IdlSpecification &aSpec);
      void     GenerateResolve(IdlSpecification &aSpec);

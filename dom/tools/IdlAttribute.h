@@ -30,6 +30,7 @@ class IdlAttribute : public IdlVariable {
 private:
   int mReadOnly;
   int mIsNoScript;
+  int mReplaceable;
 
 public:
                   IdlAttribute();
@@ -40,6 +41,9 @@ public:
 
   int             GetIsNoScript();
   void            SetIsNoScript(int aIsNoScript);
+
+  int             GetReplaceable();
+  void            SetReplaceable(int aReplaceable);
 };
 
 #ifdef XP_MAC
