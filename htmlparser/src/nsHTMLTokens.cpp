@@ -547,6 +547,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
   start = origin;
   ++start;
   aScanner.SetPosition(start);
+  aScanner.EndReading(end);
 
   while((NS_OK==result) && (!done)) {
     result=aScanner.ReadUntil(start, end, theEndCondition, PR_FALSE);
