@@ -39,7 +39,8 @@ package org.mozilla.javascript;
 
 public class IdFunction extends BaseFunction
 {
-    public IdFunction(IdFunctionMaster master, String name, int id) {
+    public IdFunction(IdFunctionMaster master, String name, int id)
+    {
         this.functionName = name;
         this.master = master;
         this.methodId = id;
@@ -68,7 +69,8 @@ public class IdFunction extends BaseFunction
         ScriptableObject.defineProperty(scope, name, f, attributes);
     }
 
-    public Scriptable getPrototype() {
+    public Scriptable getPrototype()
+    {
         // Lazy initialization of prototype: for native functions this
         // may not be called at all
         Scriptable proto = super.getPrototype();
@@ -91,10 +93,15 @@ public class IdFunction extends BaseFunction
         if (useCallAsConstructor) {
             return null;
         }
+        // Throw error if not explicitly coded to be used as constructor,
+        // to satisfy ECMAScript standard (see bugzilla 202019).
+        // To follow current (2003-05-01) SpiderMonkey behavior, change it to:
+        // return super.createObject(cx, scope);
         throw NativeGlobal.typeError1("msg.not.ctor", functionName, scope);
     }
 
-    public String decompile(Context cx, int indent, boolean justbody) {
+    public String decompile(Context cx, int indent, boolean justbody)
+    {
         StringBuffer sb = new StringBuffer();
         if (!justbody) {
             sb.append("function ");
@@ -114,7 +121,8 @@ public class IdFunction extends BaseFunction
         return sb.toString();
     }
 
-    public int getArity() {
+    public int getArity()
+    {
         int arity = master.methodArity(methodId);
         if (arity < 0) {
             throw onBadMethodId(master, methodId);
@@ -128,13 +136,15 @@ public class IdFunction extends BaseFunction
      ** @param scope constructor scope
      ** @param prototype DontEnum, DontDelete, ReadOnly prototype property
      ** of the constructor */
-    public void initAsConstructor(Scriptable scope, Scriptable prototype) {
+    public void initAsConstructor(Scriptable scope, Scriptable prototype)
+    {
         useCallAsConstructor = true;
         setParentScope(scope);
         setImmunePrototypeProperty(prototype);
     }
 
-    static RuntimeException onBadMethodId(IdFunctionMaster master, int id) {
+    static RuntimeException onBadMethodId(IdFunctionMaster master, int id)
+    {
         // It is program error to call id-like methods for unknown or
         // non-function id
         return new RuntimeException("BAD FUNCTION ID="+id+" MASTER="+master);
