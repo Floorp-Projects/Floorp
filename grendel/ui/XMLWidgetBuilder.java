@@ -89,6 +89,13 @@ public abstract class XMLWidgetBuilder {
     }
   }
 
+  /**
+   * Get a label referenced by the string properties file.
+   * @param current the element to process
+   * @param attr the attribute to look up
+   * @return the string as post lookup, or the string pre lookup if 
+   * the lookup failed
+   */
   public String getReferencedLabel(Element current, String attr) {
     String label = current.getAttribute(attr);
     
