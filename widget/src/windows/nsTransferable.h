@@ -25,8 +25,6 @@ class nsISupportsArray;
 class nsIDataFlavor;
 class nsDataObj;
 
-#define MAX_FORMATS 32
-
 /**
  * Native Win32 Transferable wrapper
  */
@@ -52,7 +50,7 @@ public:
   NS_IMETHOD GetTransferString(nsString & aStr);
 
   NS_IMETHOD AddDataFlavor(const nsString & aMimeType, const nsString & aHumanPresentableName);
-  NS_IMETHOD SetNativeClipboard();
+  NS_IMETHOD IsLargeDataSet();
 
   // Used for native implementation
   nsDataObj * GetDataObj() { return mDataObj; }

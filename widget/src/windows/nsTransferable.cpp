@@ -147,10 +147,6 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void 
 
     mDataPtr = (void *)str;
     *aData = mDataPtr; 
-    //mDataPtr = (void *)new char[*aDataLen];
-    //memcpy(*mDataPtr, str, *aDataLen);
-    //delete[] str;
-
   } else if (mimeInQuestion.Equals(kHTMLMime)) {
 
   }
@@ -164,6 +160,10 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void 
   */
 NS_IMETHODIMP nsTransferable::SetTransferData(nsIDataFlavor * aDataFlavor, void * aData, PRUint32 aDataLen)
 {
+  if (aData == nsnull) {
+    return NS_OK;
+  }
+
   nsAutoString  mimeInQuestion;
   aDataFlavor->GetMimeType(mimeInQuestion);
 
@@ -208,122 +208,6 @@ NS_IMETHODIMP nsTransferable::GetTransferString(nsString & aStr)
   return NS_OK;
 }
 
-#if 0
-static void PlaceStringOnClipboard(PRUint32 aFormat, char* aData, int aLength)
-{
-  HGLOBAL     hGlobalMemory;
-  PSTR        pGlobalMemory;
-
-  PRInt32 size = aLength + 1;
-
-  if (aLength) {
-    // Copy text to Global Memory Area
-    hGlobalMemory = (HGLOBAL)::GlobalAlloc(GHND, size);
-    if (hGlobalMemory != NULL) {
-      pGlobalMemory = (PSTR) ::GlobalLock(hGlobalMemory);
-
-      int i;
-
-      char * s  = aData;
-      PRInt32 len = aLength;
-      for (i=0;i< len;i++) {
-	      *pGlobalMemory++ = *s++;
-      }
-
-      // Put data on Clipboard
-      ::GlobalUnlock(hGlobalMemory);
-      ::SetClipboardData(aFormat, hGlobalMemory);
-    }
-  }  
-}
-#endif
-
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsTransferable::SetNativeClipboard()
-{
-#if 0
-  ::OleFlushClipboard();
-
-  if (!mStrCache) {
-    return NS_OK;
-  }
-
-  char * str = mStrCache->ToNewCString();
-#if 0
-  ::OpenClipboard(NULL);
-  ::EmptyClipboard();
-	
-  PlaceStringOnClipboard(CF_TEXT, str, mStrCache->Length());
-			
-  ::CloseClipboard();
-#else 
-
-  if (mDataObj) {
-    mDataObj->Release();
-  }
-
-  	// make the IDataObject
-  /*IDataObject * dataObj = NULL;
-  
-  IClassFactory * pCF    = NULL;
-
-  HRESULT hr = ::CoGetClassObject(CLSID_CfDataObj, CLSCTX_INPROC_SERVER, NULL, IID_IClassFactory, (void **)&pCF); 
-	if (REGDB_E_CLASSNOTREG == hr) {
-		return hr;
-	}
-  //hresult = pCF->CreateInstance(pUnkOuter, riid, ppvObj) 
-  pCF->Release();
-
-  HRESULT ret = ::CoCreateInstance(CLSID_CfDataObj, NULL, CLSCTX_INPROC_SERVER, IID_IDataObject, (void **)&dataObj);
-	if (REGDB_E_CLASSNOTREG == ret) {
-		//return ret;
-	}
-	if (FAILED(ret)) {
-		//return ret;
-	}*/
-
-  mDataObj = new nsDataObj();
-  mDataObj->AddRef();
-
-  mDataObj->SetText(*mStrCache);
-
-  PRUint32 i;
-  for (i=0;i<mDFList->Count();i++) {
-    nsIDataFlavor * df;
-    nsISupports * supports = mDFList->ElementAt(i);
-    if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
-      nsString mime;
-      df->GetMimeType(mime);
-      UINT format;
-      if (mime.Equals(kTextMime)) {
-        format = CF_TEXT;
-      } else {
-        char * str = mime.ToNewCString();
-        UINT format = ::RegisterClipboardFormat(str);
-        delete[] str;
-      }
-      FORMATETC fe;
-      SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, 0, TYMED_HGLOBAL);
-      mDataObj->AddDataFlavor(df, &fe);
-      NS_RELEASE(df);
-    }
-    NS_RELEASE(supports);
-  }
-
-
-  IDataObject * ido = (IDataObject *)mDataObj;
-  ::OleSetClipboard(ido);
-
-#endif
-
-  delete[] str;
-#endif
-  return NS_OK;
-}
-
 /**
   * 
   *
@@ -339,22 +223,19 @@ NS_IMETHODIMP nsTransferable::AddDataFlavor(const nsString & aMimeType, const ns
   df->Init(aMimeType, aHumanPresentableName);
   mDFList->AppendElement(df);
   
-  /*FORMATETC fe;
-  if (aMimeType.Equals(kTextMime)) {
-    SET_FORMATETC(fe, CF_TEXT, 0, DVASPECT_CONTENT, 0, TYMED_HGLOBAL);
-    m_getFormats[m_numGetFormats++] = fe;
-
-    SET_FORMATETC(fe, CF_TEXT, 0, DVASPECT_CONTENT, 0, TYMED_HGLOBAL);
-    m_setFormats[m_numSetFormats++] = fe;
-  } else {
-    nsDataFlavor * ndf = (nsDataFlavor *)df;
-    SET_FORMATETC(fe, ndf->GetFormat(), 0, DVASPECT_CONTENT, 0, TYMED_HGLOBAL);
-    m_getFormats[m_numGetFormats++] = fe;
-
-    SET_FORMATETC(fe, ndf->GetFormat(), 0, DVASPECT_CONTENT, 0, TYMED_HGLOBAL);
-    m_setFormats[m_numSetFormats++] = fe;
-  }*/
-
   return rv;
+}
+
+/**
+  * 
+  *
+  */
+NS_IMETHODIMP nsTransferable::IsLargeDataSet()
+{
+  if (mStrCache) {
+    return (mStrCache->Length() > 1024?NS_OK:NS_ERROR_FAILURE);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 

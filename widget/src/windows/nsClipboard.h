@@ -25,6 +25,7 @@
 class nsITransferable;
 class nsDataObj;
 class nsIClipboardOwner;
+class nsIWidget;
 
 /**
  * Native Win32 Clipboard wrapper
@@ -43,18 +44,23 @@ public:
 
   // nsIClipboard  
   NS_IMETHOD SetTransferable(nsITransferable * aTransferable, nsIClipboardOwner * anOwner);
+  NS_IMETHOD GetTransferable(nsITransferable ** aTransferable);
 
   NS_IMETHOD GetClipboard();
   NS_IMETHOD SetClipboard();
   NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor);
+  NS_IMETHOD EmptyClipboard();
+  NS_IMETHOD ForceDataToClipboard();
 
 
 protected:
+  PRBool              mIgnoreEmptyNotification;
 
   nsIClipboardOwner * mClipboardOwner;
-  nsITransferable  * mTransferable;
+  nsITransferable   * mTransferable;
+  nsIWidget         * mWindow;
 
-  nsDataObj       * mDataObj;
+  nsDataObj         * mDataObj;
 
 };
 

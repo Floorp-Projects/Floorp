@@ -30,8 +30,8 @@ static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 ULONG nsDataObjClassFactory::g_cLock = 0;
 ULONG nsDataObj::g_cRef = 0;
 
-EXTERN_C GUID CDECL CLSID_nsDataObj;// =
-//	{ 0x1bba7640, 0xdf52, 0x11cf, { 0x82, 0x7b, 0, 0xa0, 0x24, 0x3a, 0xe5, 0x05 } };
+EXTERN_C GUID CDECL CLSID_nsDataObj =
+	{ 0x1bba7640, 0xdf52, 0x11cf, { 0x82, 0x7b, 0, 0xa0, 0x24, 0x3a, 0xe5, 0x05 } };
 
 /*
  * class nsDataObjClassFactory
