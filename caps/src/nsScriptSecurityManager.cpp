@@ -880,7 +880,7 @@ nsScriptSecurityManager::GetRootDocShell(JSContext *cx, nsIDocShell **result)
     nsCOMPtr<nsIDocShell> docshell;
     nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
     if (!scriptContext) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIScriptGlobalObject> globalObject = scriptContext->GetGlobalObject();
+    nsCOMPtr<nsIScriptGlobalObject> globalObject(dont_AddRef(scriptContext->GetGlobalObject()));
     if (!globalObject)  return NS_ERROR_FAILURE;
     rv = globalObject->GetDocShell(getter_AddRefs(docshell));
     if (NS_FAILED(rv)) return rv;
@@ -1133,7 +1133,7 @@ CheckConfirmDialog(JSContext* cx, const PRUnichar *szMessage, const PRUnichar *s
     nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
     if (scriptContext)
     {
-        nsCOMPtr<nsIScriptGlobalObject> globalObject = scriptContext->GetGlobalObject();
+        nsCOMPtr<nsIScriptGlobalObject> globalObject(dont_AddRef(scriptContext->GetGlobalObject()));
         NS_ASSERTION(globalObject, "script context has no global object");
         nsCOMPtr<nsIDOMWindowInternal> domWin = do_QueryInterface(globalObject);
         if (domWin)
@@ -1252,7 +1252,7 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
             NS_REINTERPRET_CAST(nsIScriptContext*,JS_GetContextPrivate(cx));
         if (scriptContext)
         {
-            nsCOMPtr<nsIScriptGlobalObject> global = scriptContext->GetGlobalObject();
+            nsCOMPtr<nsIScriptGlobalObject> global(dont_AddRef(scriptContext->GetGlobalObject()));
             NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
             nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
             NS_ENSURE_TRUE(globalData, NS_ERROR_FAILURE);
