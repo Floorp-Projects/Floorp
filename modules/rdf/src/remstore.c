@@ -65,6 +65,7 @@ PRBool
 asEqual(RDFT r, Assertion as, RDF_Resource u, RDF_Resource s, void* v, 
 	       RDF_ValueType type)
 {
+  XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
   return ((as->db == r) && (as->u == u) && (as->s == s) && (as->type == type) && 
 	  ((as->value == v) || 
 	   ((type == RDF_STRING_TYPE) && (strcmp(v, as->value) == 0))));
@@ -77,6 +78,7 @@ makeNewAssertion (RDFT r, RDF_Resource u, RDF_Resource s, void* v,
 			    RDF_ValueType type, PRBool tv)
 {
   Assertion newAs = (Assertion) getMem(sizeof(struct RDF_AssertionStruct));
+  XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
   newAs->u = u;
   newAs->s = s;
   newAs->value = v;
@@ -107,6 +109,7 @@ remoteAssert3 (RDFFile fi, RDFT mcf, RDF_Resource u, RDF_Resource s, void* v,
 		     RDF_ValueType type, PRBool tv)
 {
   Assertion as = remoteStoreAdd(mcf, u, s, v, type, tv);
+  XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
   if (as != NULL) {
     void addToAssertionList (RDFFile f, Assertion as) ;
     addToAssertionList(fi, as);
@@ -169,6 +172,7 @@ remoteStoreAdd (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v,
 			  RDF_ValueType type, PRBool tv)
 {
   Assertion nextAs, prevAs, newAs; 
+  XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
   nextAs = prevAs = u->rarg1;
 
   if (s == gNavCenter->RDF_Command)
@@ -217,6 +221,7 @@ remoteStoreRemove (RDFT mcf, RDF_Resource u, RDF_Resource s,
 {
   Assertion nextAs, prevAs, ans;
   PRBool found = false;
+  XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
   nextAs = prevAs = u->rarg1;
   while (nextAs != null) {
     if (asEqual(mcf, nextAs, u, s, v, type)) {
@@ -297,6 +302,7 @@ PRBool
 remoteStoreHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv)
 {
   Assertion nextAs;
+  XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
   
   if ((s == gNavCenter->RDF_Command) && (type == RDF_RESOURCE_TYPE) && (tv) && (v == gNavCenter->RDF_Command_Refresh))
   {
@@ -320,13 +326,18 @@ remoteStoreGetSlotValue (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_ValueType
   Assertion nextAs;
 
   if ((s == gWebData->RDF_URL) && (tv) && (!inversep) && (type == RDF_STRING_TYPE))
+  {	
+	
+    XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )resourceID(u))));
     return copyString(resourceID(u));         
+  }	
 
   nextAs = (inversep ? u->rarg2 : u->rarg1);
   while (nextAs != null) {
     if ((nextAs->db == mcf) && (nextAs->s == s) && (nextAs->tv == tv) && (nextAs->type == type)) {
       void* ans = (inversep ? nextAs->u : nextAs->value);
       if (type == RDF_STRING_TYPE) {
+        XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )ans)));
 	return copyString((char*)ans); 
       } else return ans;
     }

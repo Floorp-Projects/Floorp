@@ -24,6 +24,7 @@
 
 #include "hist2rdf.h"
 #include "remstore.h"
+#include "utils.h"
 
 static PRBool histInFlatFilep = 0;
 
@@ -116,6 +117,9 @@ collateOneHist (RDFT r, RDF_Resource u, char* url, char* title, time_t lastAcces
   if (startsWith("404", title)) return;
   urlUnit  = HistCreate(url, 1);
   existingName = nlocalStoreGetSlotValue(gLocalStore, urlUnit, gCoreVocab->RDF_name, RDF_STRING_TYPE, 0, 1);
+
+  XP_ASSERT( IsUTF8String((const char* )existingName));
+
   if (existingName == NULL) {
   if (title[0] != '\0')  remoteAddName(urlUnit, title);	  
   } else freeMem(existingName);
@@ -140,6 +144,7 @@ collateOneHist (RDFT r, RDF_Resource u, char* url, char* title, time_t lastAcces
 #else
 	strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
 #endif
+  	XP_ASSERT( IsUTF8String((const char* )buffer));
 	remoteStoreAdd(gRemoteStore, urlUnit, gWebData->RDF_lastVisitDate,
 		 (void *)copyString(buffer), RDF_STRING_TYPE, 1);
   }
@@ -153,6 +158,7 @@ collateOneHist (RDFT r, RDF_Resource u, char* url, char* title, time_t lastAcces
 #else
 	strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
 #endif
+  	XP_ASSERT( IsUTF8String((const char* )buffer));
 	remoteStoreAdd(gRemoteStore, urlUnit, gWebData->RDF_firstVisitDate,
 		 (void *)copyString(buffer), RDF_STRING_TYPE, 1);
   }
@@ -329,6 +335,7 @@ hostUnitOfDate (RDFT r, RDF_Resource u, time_t lastAccessDate)
 		setResourceType(node, HISTORY_RT);
 		remoteStoreAdd(gHistoryStore, node, gCoreVocab->RDF_parent,
 				parentNode, RDF_RESOURCE_TYPE, 1);
+  		XP_ASSERT( IsUTF8String((const char* )weekBuffer));
 		remoteStoreAdd(gHistoryStore, node, gCoreVocab->RDF_name,
 				copyString(weekBuffer), RDF_STRING_TYPE, 1);
 		parentNode = node;
@@ -347,6 +354,7 @@ hostUnitOfDate (RDFT r, RDF_Resource u, time_t lastAccessDate)
 		setResourceType(node, HISTORY_RT);
 		histAddParent(node, parentNode);
 		sprintf(bigBuffer,"%s - %s",weekBuffer,dayBuffer);
+  		XP_ASSERT( IsUTF8String((const char* )dayBuffer));
 		remoteStoreAdd(gHistoryStore, node, gCoreVocab->RDF_name,
 				copyString(dayBuffer), RDF_STRING_TYPE, 1);
 		parentNode = node;
@@ -363,6 +371,7 @@ hostUnitOfDate (RDFT r, RDF_Resource u, time_t lastAccessDate)
 		setResourceType(node, HISTORY_RT);
 		remoteStoreAdd(gHistoryStore, node, gCoreVocab->RDF_parent,
 				parentNode, RDF_RESOURCE_TYPE, 1);
+  		XP_ASSERT( IsUTF8String((const char* )hourBuffer));
 		remoteStoreAdd(gHistoryStore, node, gCoreVocab->RDF_name,
 				copyString(hourBuffer), RDF_STRING_TYPE, 1);
 		parentNode = node;
@@ -549,6 +558,8 @@ PRBool
 historyUnassert (RDFT hst,  RDF_Resource u, RDF_Resource s, void* v, 
 		       RDF_ValueType type)
 {
+
+  XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
   if ((type == RDF_RESOURCE_TYPE) && (resourceType((RDF_Resource)v) == HISTORY_RT) &&
       (s == gCoreVocab->RDF_parent)) {
     RDF_Resource parents[5];

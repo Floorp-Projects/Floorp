@@ -26,6 +26,7 @@
 #include "fs2rdf.h"
 #include "glue.h"
 #include "mcf.h"
+#include "utils.h"
 
 	/* external string references in allxpstr */
 extern	int	RDF_UNABLETODELETEFILE, RDF_UNABLETODELETEFOLDER;
@@ -886,6 +887,7 @@ fsGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PR
 			}
 		}
 	}
+	XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char*) retVal)));
 	return(retVal);
 }
 

@@ -17,6 +17,7 @@
  */
 
 #include "mcff2mcf.h"
+#include "utils.h"
 
 
 
@@ -229,6 +230,7 @@ void
 addSlotValue (RDFFile f, RDF_Resource u, RDF_Resource s, void* v,
 		RDF_ValueType type, PRBool tv)
 {
+   XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
    if (f == NULL || u == NULL || s == NULL || v == NULL)	return;
    if (s == gCoreVocab->RDF_child) {
      RDF_Resource temp = (RDF_Resource)v;

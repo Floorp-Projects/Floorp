@@ -386,8 +386,10 @@ pmGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,
   if ((resourceType(u) == PM_RT) && tv && (!inversep) && (type == RDF_STRING_TYPE) && (u->pdata)) {
     MM msg = (MM) u->pdata;
     if (s == gNavCenter->from) {
+      XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )msg->from)));
       return copyString(msg->from);
     } else if (s == gNavCenter->subject) {
+      XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )msg->subject)));
       return copyString(msg->subject);
     } else if (s == gNavCenter->date) {
       return copyString(msg->date);
@@ -467,6 +469,7 @@ pmHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType
 PRBool
 pmRemove (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
 {
+  XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char* )v)));
   if ((startsWith("mailbox://", rdf->url)) && (resourceType(u) == PM_RT) && (s == gCoreVocab->RDF_parent)
       && (type == RDF_RESOURCE_TYPE)) {
     RDF_Resource mbox = (RDF_Resource) v;
