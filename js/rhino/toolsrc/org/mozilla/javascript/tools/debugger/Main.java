@@ -1678,18 +1678,29 @@ class SetFilePosition implements Runnable {
 
 class UpdateFileText implements Runnable {
 
-    private FileWindow w;
+    private Main main;
+    private SourceInfo sourceInfo;
 
     private UpdateFileText() {}
 
-    static Runnable action(FileWindow w) {
+    static Runnable action(Main main, SourceInfo sourceInfo)
+    {
         UpdateFileText obj = new UpdateFileText();
-        obj.w = w;
+        obj.main = main;
+        obj.sourceInfo = sourceInfo;
         return obj;
     }
 
-    public void run() {
-        w.updateText();
+    public void run()
+    {
+        String fileName = sourceInfo.getUrl();
+        FileWindow w = main.getFileWindow(fileName);
+        if (w != null) {
+            w.updateText();
+            w.show();
+        } else if (!fileName.equals("<stdin>")) {
+            CreateFileWindow.action(main, sourceInfo, -1).run();
+        }
     }
 }
 
@@ -2407,8 +2418,11 @@ public class Main extends JFrame implements Debugger, ContextListener {
                     String source = null;
                     try {
                         InputStream is = openSource(url);
-                        try { source = readSource(is); }
-                        finally { is.close(); }
+                        try {
+                            source = Kit.readReader(new InputStreamReader(is));
+                        } finally {
+                            is.close();
+                        }
                     } catch (IOException ex) {
                         System.err.println
                             ("Failed to load source from "+url+": "+ ex);
@@ -2525,22 +2539,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return (new java.net.URL(sourceUrl)).openStream();
     }
 
-    private static String readSource(InputStream is) throws IOException {
-        byte[] buffer = new byte[4096];
-        int offset = 0;
-        for (;;) {
-            int n = is.read(buffer, 0, buffer.length - offset);
-            if (n < 0) { break; }
-            offset += n;
-            if (offset == buffer.length) {
-                byte[] tmp = new byte[buffer.length * 2];
-                System.arraycopy(buffer, 0, tmp, 0, offset);
-                buffer = tmp;
-            }
-        }
-        return new String(buffer, 0, offset);
-    }
-
     private SourceInfo registerSource(String sourceUrl, String source) {
         SourceInfo si;
         synchronized (sourceNames) {
@@ -2567,7 +2565,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
             functionNames.put(name, item);
         }
 
-        loadedFile(si);
+        swingInvokeLater(UpdateFileText.action(this, si));
+
         return item;
     }
 
@@ -2766,35 +2765,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return (FileWindow)fileWindows.get(url);
     }
 
-    void loadedFile(SourceInfo si) {
-        String fileName = si.getUrl();
-        FileWindow w = getFileWindow(fileName);
-        if (w != null) {
-            swingInvoke(UpdateFileText.action(w));
-            w.show();
-        } else if (!fileName.equals("<stdin>")) {
-            swingInvoke(CreateFileWindow.action(this, si, -1));
-        }
-    }
-
-    static void swingInvoke(Runnable f) {
-        if (SwingUtilities.isEventDispatchThread()) {
-            f.run();
-            return;
-        }
-        try {
-            SwingUtilities.invokeAndWait(f);
-        } catch (Exception exc) {
-            exc.printStackTrace();
-        }
-    }
-
-    static void swingInvokeLater(Runnable f) {
-        try {
-            SwingUtilities.invokeLater(f);
-        } catch (RuntimeException exc) {
-            exc.printStackTrace();
-        }
+    static void swingInvokeLater(Runnable f)
+    {
+        SwingUtilities.invokeLater(f);
     }
 
     int frameIndex = -1;
@@ -3352,22 +3325,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     java.util.Hashtable toplevels = new java.util.Hashtable();
 
-    boolean shouldDispatchTo(Component source) {
-        Component root = SwingUtilities.getRoot(source);
-        if (root == this) {
-            return true;
-        }
-        Enumeration e = toplevels.keys();
-        while (e.hasMoreElements()) {
-            Object key = e.nextElement();
-            JFrame frame = (JFrame)toplevels.get(key);
-            if (root == frame) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     void addTopLevel(String key, JFrame frame) {
         if (frame != this) {
             toplevels.put(key, frame);
@@ -3391,13 +3348,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
             Object source = event.getSource();
             if (source instanceof Component) {
                 Component comp = (Component)source;
-                // Suppress Window/InputEvent's that aren't
-                // directed to the Debugger
-                // if (!(event instanceof InputEvent ||
-                //event instanceof WindowEvent)||
-                //       shouldDispatchTo(comp)) {
-                //comp.dispatchEvent(event);
-                //}
                 comp.dispatchEvent(event);
             } else if (source instanceof MenuComponent) {
                 ((MenuComponent)source).dispatchEvent(event);
