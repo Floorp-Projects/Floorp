@@ -63,7 +63,7 @@ $BUILD_ROOT				= ":";
 								# then turn off all $pull variables, and set $BUILD_ROOT.
 $DEBUG					= 1;
 $CARBON					= 0;	# Turn on to build with TARGET_CARBON
-$NECKO					= 0;
+$NECKO					= 1;
 $MOZ_FULLCIRCLE			= 0;
 $PROFILE				= 0;
 
