@@ -65,7 +65,7 @@
 
       <radiogroup id="folderGroup">
         <radio oncommand="onFoldersOnly();" label="&foldersOnly.label;"/>
-        <radio oncommand="onMessagesOnly();" label="&messagesOnly.label;" checked="true"/>
+        <radio oncommand="onMessagesOnly();" label="&messagesOnly.label;" selected="true"/>
         <spacer flex="100%"/>
       </radiogroup>
 

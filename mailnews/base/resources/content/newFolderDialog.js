@@ -32,7 +32,7 @@ function onLoad()
 
   dialog = {};
 
-  dialog.OKButton = document.documentElement.getButton("accept");
+  dialog.OKButton = document.getElementById("ok");
 
   dialog.nameField = document.getElementById("name");
   dialog.nameField.focus();
