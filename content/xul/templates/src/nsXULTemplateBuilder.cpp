@@ -1588,7 +1588,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                ("rdfgeneric build-content-fromt-template %s [%s]",
                 tagCStr, (const char*) resourceCStr));
 
-        delete[] tagCStr;
+        nsCRT::free(tagCStr);
     }
 #endif
 
