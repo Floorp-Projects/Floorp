@@ -72,7 +72,7 @@ toolbar[printpreview="true"] {
 /* ::::: online/offline icons ::::: */
 
 #offline-status {
-  padding: 0px 2px 0px 2px;
+  padding: 2px;
 }
 
 #offline-status[offline="true"] {
