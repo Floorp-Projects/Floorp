@@ -127,6 +127,7 @@ public:
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
+    nsCOMPtr<nsIURI>                    mReferrer;
     PRBool                              mConnected; 
     HTTPState                           mState;
     nsCOMPtr<nsIHTTPEventSink>          mEventSink;

@@ -77,6 +77,8 @@ interface nsIHTTPChannel : nsIChannel
     */
     void   SetReferrer(in nsIURI referrer, in unsigned long referrerLevel);
 
+	 readonly attribute nsIURI referrer;
+
     readonly attribute unsigned long ResponseStatus;
 
     readonly attribute string ResponseString;

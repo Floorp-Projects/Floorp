@@ -2044,6 +2044,8 @@ nsHTTPChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerLevel)
     if (referrerLevel == 0)
         return NS_OK;
 
+    mReferrer = referrer;
+
     if (!referrer)
         return NS_ERROR_NULL_POINTER;
 
@@ -2057,6 +2059,16 @@ nsHTTPChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerLevel)
             return SetRequestHeader(nsHTTPAtoms::Referer, spec);
     }
     return NS_OK; 
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetReferrer(nsIURI** aReferrer)
+{
+   NS_ENSURE_ARG_POINTER(aReferrer);
+
+   *aReferrer = mReferrer;
+   NS_IF_ADDREF(*aReferrer);
+   return NS_OK;
 }
 
 nsresult DupString(char* *o_Dest, const char* i_Src)
