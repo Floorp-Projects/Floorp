@@ -29,6 +29,7 @@
 #include "nsHttpResponseHead.h"
 #include "nsHttpChunkedDecoder.h"
 #include "nsIStringStream.h"
+#include "nsIFileStream.h"
 #include "pratom.h"
 #include "plevent.h"
 
@@ -182,6 +183,14 @@ nsHttpTransaction::OnDataReadable(nsIInputStream *is)
 
         LOG(("restarting transaction @%x\n", this));
 
+        // rewind streams in case we already wrote out the request
+        nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mReqHeaderStream);
+        if (ras)
+            ras->Seek(PR_SEEK_SET, 0);
+        ras = do_QueryInterface(mReqUploadStream);
+        if (ras)
+            ras->Seek(PR_SEEK_SET, 0);
+
         // just in case the connection is holding the last reference to us...
         NS_ADDREF_THIS();
 
@@ -206,7 +215,7 @@ nsHttpTransaction::OnDataReadable(nsIInputStream *is)
     return rv;
 }
 
-// called on the socket transport thread
+// called on any thread
 nsresult
 nsHttpTransaction::OnStopTransaction(nsresult status)
 {
@@ -494,7 +503,7 @@ nsHttpTransaction::HandleContent(char *buf,
         if (priorVal == 0) {
             // let the connection know that we are done with it; this should
             // result in OnStopTransaction being fired.
-            return mConnection->OnTransactionComplete(NS_OK);
+            return mConnection->OnTransactionComplete(this, NS_OK);
         }
         return NS_OK;
     }
