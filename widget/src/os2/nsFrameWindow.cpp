@@ -226,7 +226,7 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    // NB: We haven't subclassed yet, so callbacks to change mBounds won't
    //     have happened!
    mBounds = frameRect;
-   mBounds.height = GetHeight( frameRect.height);
+   mBounds.height = frameRect.height;
 
    // Record passed in things
    mAppShell = aAppShell;
