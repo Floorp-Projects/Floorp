@@ -795,16 +795,14 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   case NS_STYLE_LIST_STYLE_SQUARE:
     t2p = aCX->GetTwipsToPixels();
     fm->GetMaxAscent(ascent);
-    bulletSize = NSTwipsToIntPixels((nscoord)NSToIntRound(0.8f * (float(ascent) / 2.0f)), t2p);
+    bulletSize = NSTwipsToIntPixels(
+      (nscoord)NSToIntRound(0.8f * (float(ascent) / 2.0f)), t2p);
     if (bulletSize < 1) {
       bulletSize = MIN_BULLET_SIZE;
     }
     p2t = aCX->GetPixelsToTwips();
     bulletSize = NSIntPixelsToTwips(bulletSize, p2t);
     mPadding.bottom = ascent / 8;
-    if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
-      mPadding.right = bulletSize / 2;
-    }
     aMetrics.width = mPadding.right + bulletSize;
     aMetrics.height = mPadding.bottom + bulletSize;
     aMetrics.ascent = mPadding.bottom + bulletSize;
@@ -818,12 +816,6 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
     GetListItemText(*aCX, *myList, text);
     fm->GetHeight(aMetrics.height);
-    if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
-      // Inside bullets need some extra width to get the padding
-      // between the list item and the content that follows.
-      mPadding.right = aMetrics.height / 2;          // From old layout engine
-    }
-
     aReflowState.rendContext->SetFont(fm);
     aReflowState.rendContext->GetWidth(text, aMetrics.width);
     aMetrics.width += mPadding.right;
