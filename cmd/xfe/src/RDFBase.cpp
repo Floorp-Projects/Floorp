@@ -25,7 +25,7 @@
 #include "xp_str.h"
 #include "xpassert.h"
 
-#if DEBUG_xxx
+#if DEBUG_slamm
 #define D(x) x
 #else
 #define D(x)
@@ -46,6 +46,14 @@ XFE_RDFBase::XFE_RDFBase()
 /*virtual*/
 XFE_RDFBase::~XFE_RDFBase() 
 {
+    if (isPaneCreator())
+    {
+        deletePane();
+    }
+    else
+    {
+        HT_SetViewFEData(_ht_view, NULL);
+    }
 }
 //////////////////////////////////////////////////////////////////////////
 /*static*/ XP_Bool
@@ -150,7 +158,7 @@ XFE_RDFBase::updateRoot()
 /*virtual*/ void
 XFE_RDFBase::notify(HT_Resource n, HT_Event whatHappened)
 {
-  D(debugEvent(n, whatHappened););
+  D(debugEvent(n, whatHappened,"Base"););
 
   switch (whatHappened) {
   case HT_EVENT_VIEW_ADDED:
@@ -208,7 +216,7 @@ XFE_RDFBase::finishPaneCreate()
 void
 XFE_RDFBase::deletePane()
 {
-    if (isPaneCreator())
+    if (_ht_ns)
     {
         delete _ht_ns;
 
@@ -247,11 +255,12 @@ XFE_RDFBase::isPaneCreator()
 //////////////////////////////////////////////////////////////////////////
 #ifdef DEBUG
 void
-XFE_RDFBase::debugEvent(HT_Resource n, HT_Event whatHappened)
+XFE_RDFBase::debugEvent(HT_Resource n, HT_Event whatHappened,
+                        const char * label)
 {
     HT_View view = HT_GetView(n);
-
     XP_ASSERT(view);
+    HT_Pane pane = HT_GetPane(view);
 
     char *viewName = HT_GetViewName(view);
     char *nodeName = HT_GetNodeName(n);
@@ -259,10 +268,40 @@ XFE_RDFBase::debugEvent(HT_Resource n, HT_Event whatHappened)
     if (strcmp(viewName, nodeName) == 0)
         nodeName = "<same>";
 
+    static HT_Resource      last_node    = 0;
+    static HT_Event         last_event   = 0;
+    static XFE_RDFBase *    last_obj     = 0;
+    static int              last_count   = 0;
+
+    if (last_node == n && 
+        last_event == whatHappened &&
+        last_obj == this)
+    {
+        last_count++;
+    }
+    else
+    {
+        last_node  = n;
+        last_event = whatHappened;
+        last_obj   = this;
+        last_count = 0;
+    }
+
+    if (pane != _ht_pane)
+    {
+        for (int ii=0; ii < last_count; ii++)
+            printf("    ");
+
+        printf("%s: Warning: pane(0x%x) and _ht_pane(0x%x) do not match\n",
+               label,pane,_ht_pane);
+    }
+
+    for (int ii=0; ii < last_count; ii++)
+        printf("    ");
 
 #ifdef DEBUG_slamm
-#define EVENTDEBUG(x) printf("%-21s %s, %s\n",(x),\
-                             viewName,nodeName);
+#define EVENTDEBUG(x) printf("%s: %-21s (0x%x) %s, %s\n",\
+                             label,(x),pane,viewName,nodeName);
 #else
 #define EVENTDEBUG(x)
 #endif

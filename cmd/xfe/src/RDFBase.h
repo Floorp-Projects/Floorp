@@ -87,7 +87,8 @@ protected:
     void                  deletePane            ();
 
 #ifdef DEBUG
-    void                  debugEvent            (HT_Resource n, HT_Event e);
+    void                  debugEvent            (HT_Resource n, HT_Event e,
+                                                 const char *name="HT_Event");
 #endif
 
     HT_Pane               _ht_pane;
