@@ -97,6 +97,8 @@ public:
   virtual nsCursor        GetCursor();
   NS_IMETHOD              SetCursor(nsCursor aCursor);
   NS_IMETHOD              GetWindowType(nsWindowType& aWindowType);
+  NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
+  NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
   virtual nsIRenderingContext* GetRenderingContext();
   virtual nsIDeviceContext* GetDeviceContext();
   virtual nsIAppShell *   GetAppShell();
@@ -104,7 +106,6 @@ public:
   NS_IMETHOD              SetModal(PRBool aModal); 
   NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
                             PRBool *aForWindow);
-  NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
   NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
   NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
   NS_IMETHOD              AddEventListener(nsIEventListener * aListener);

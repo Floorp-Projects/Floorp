@@ -103,6 +103,8 @@
 #include "nsIStyledContent.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
+#include "nsIViewManager.h"
+#include "nsIWidget.h"
 #include "nsIXULContent.h"
 #include "nsIXULDocument.h"
 #include "nsIXULPopupListener.h"
@@ -2594,6 +2596,16 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
         // XXX Some kind of special document update might need to happen here.
     }
 
+    nsCOMPtr<nsIAtom> tag;
+    GetTag(*getter_AddRefs(tag));
+
+    if (tag == nsXULAtoms::window &&
+        aNodeInfo->Equals(nsXULAtoms::hidechrome)) {
+      nsAutoString val;
+      val.Assign(aValue);
+      HideWindowChrome(val.EqualsIgnoreCase("true"));
+    }
+
     // XXX need to check if they're changing an event handler: if so, then we need
     // to unhook the old one.
 
@@ -2864,6 +2876,13 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
         }
       }
     }
+
+    nsCOMPtr<nsIAtom> tag;
+    GetTag(*getter_AddRefs(tag));
+
+    if (tag == nsXULAtoms::window &&
+        aName == nsXULAtoms::hidechrome)
+      HideWindowChrome(PR_FALSE);
 
     // XXX Know how to remove POPUP event listeners when an attribute is unset?
 
@@ -4763,6 +4782,45 @@ nsresult nsXULElement::MakeHeavyweight()
 
     proto->Release();
     return NS_OK;
+}
+
+nsresult
+nsXULElement::HideWindowChrome(PRBool aShouldHide)
+{
+  PRInt32 shellCount = mDocument->GetNumberOfShells();
+  if (shellCount > 0) {
+    nsCOMPtr<nsIPresShell> shell; 
+    mDocument->GetShellAt(0, getter_AddRefs(shell));
+
+    if (shell) {
+      nsIContent* content = NS_STATIC_CAST(nsIContent*, this);
+      nsIFrame* frame = nsnull;
+      shell->GetPrimaryFrameFor(content, &frame);
+   
+      nsCOMPtr<nsIPresContext> presContext;
+      shell->GetPresContext(getter_AddRefs(presContext));
+    
+      if (frame && presContext) {
+        nsIView* view = nsnull;
+        frame->GetView(presContext, &view);
+      
+        if (!view) {
+          frame->GetParentWithView(presContext, &frame);
+          if (frame)
+            frame->GetView(presContext, &view);
+        }
+
+        if (view) {
+          nsCOMPtr<nsIWidget> widget;
+          view->GetWidget(*getter_AddRefs(widget));
+
+          widget->HideWindowChrome(aShouldHide);
+        }
+      }           
+    }
+  }
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -85,6 +85,9 @@
 #include "nsIDOMCrypto.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMPkcs11.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIEventQueueService.h"
@@ -124,6 +127,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsDOMClassInfo.h"
 #include "nsIJSNativeInitializer.h"
+#include "nsIFullScreen.h"
 
 #include "plbase64.h"
 
@@ -171,7 +175,9 @@ GlobalWindowImpl::GlobalWindowImpl() :
   mScrollbars(nsnull), mTimeouts(nsnull), mTimeoutInsertionPoint(&mTimeouts),
   mRunningTimeout(nsnull), mTimeoutPublicIdCounter(1), mTimeoutFiringDepth(0),
   mTimeoutsWereCleared(PR_FALSE), mFirstDocumentLoad(PR_TRUE),
-  mIsScopeClear(PR_TRUE), mIsDocumentLoaded(PR_FALSE), mGlobalObjectOwner(nsnull),
+  mIsScopeClear(PR_TRUE), mIsDocumentLoaded(PR_FALSE), 
+  mFullScreen(PR_FALSE), mOriginalPos(nsnull), mOriginalSize(nsnull),
+  mGlobalObjectOwner(nsnull),
   mDocShell(nsnull), mMutationBits(0), mChromeEventHandler(nsnull)
 {
   NS_INIT_REFCNT();
@@ -474,6 +480,22 @@ GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
                        mJSObject, "closed", &val);
     }
 
+    // if we are closing the window while in full screen mode, 
+    // be sure to restore os chrome
+    if (mFullScreen) {
+      nsCOMPtr<nsIFocusController> focusController;
+      GetRootFocusController(getter_AddRefs(focusController));
+      PRBool isActive = PR_FALSE;
+      focusController->GetActive(&isActive);
+      // only restore OS chrome if the closing window was active
+      if (isActive) {
+        nsCOMPtr<nsIFullScreen> fullScreen =
+          do_GetService("@mozilla.org/browser/fullscreen;1");
+        if (fullScreen)
+          fullScreen->ShowAllOSChrome();
+      }
+    }
+
     mContext = nsnull;          // force release now
     mControllers = nsnull;      // force release now
     mChromeEventHandler = nsnull; // force release now
@@ -597,6 +619,21 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
       myCoord[3] = aEvent->refPoint.y;
       gEntropyCollector->RandomUpdate((void*)myCoord, sizeof(myCoord));
       gEntropyCollector->RandomUpdate((void*)&aEvent->time, sizeof(PRUint32));
+    }
+  }
+
+  // if the window is deactivated while in full screen mode,
+  // restore OS chrome, and hide it again upon re-activation
+  if (mFullScreen && (NS_EVENT_FLAG_CAPTURE != aFlags)) {
+    if (aEvent->message == NS_DEACTIVATE || aEvent->message == NS_ACTIVATE) {
+      nsCOMPtr<nsIFullScreen> fullScreen =
+        do_GetService("@mozilla.org/browser/fullscreen;1");
+      if (fullScreen) {
+        if (aEvent->message == NS_DEACTIVATE)
+          fullScreen->ShowAllOSChrome();
+        else
+          fullScreen->HideAllOSChrome();
+      }
     }
   }
 
@@ -1621,6 +1658,120 @@ GlobalWindowImpl::GetLength(PRUint32* aLength)
     return frames->GetLength(aLength);
   }
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::SetFullScreen(PRBool aFullScreen)
+{
+  if (aFullScreen == mFullScreen)
+    return NS_OK;
+
+  // SetFullScreen needs to be called on the root window, so get that
+  // via the DocShell tree, and if we are not already the root, 
+  // call SetFullScreen on that window instead.
+  nsCOMPtr<nsIDocShell> docShell;
+  GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(docShell);
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(rootItem);
+  if (!window)
+    return NS_ERROR_FAILURE;
+  if (rootItem != treeItem)
+    return window->SetFullScreen(aFullScreen);
+
+  // make sure we don't try to set full screen on a non-chrome window,
+  // which might happen in embedding world
+  PRInt32 itemType;
+  treeItem->GetItemType(&itemType);
+  if (itemType != nsIDocShellTreeItem::typeChrome)
+    return NS_ERROR_FAILURE;
+
+  // dispatch an onfullscreen DOM event so that XUL apps can 
+  // respond visually if we are kicked into full screen mode
+  nsCOMPtr<nsIDOMDocumentEvent> doc(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDOMEvent> event;
+  doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  if (!event)
+    return NS_ERROR_FAILURE;
+
+  event->InitEvent(NS_LITERAL_STRING("fullscreen"), PR_FALSE, PR_TRUE);
+  PRBool allowDefault;
+  DispatchEvent(event, &allowDefault);
+
+  // event handlers can prevent us from going into full-screen mode
+  if (!allowDefault)
+    return NS_OK;
+
+  if (aFullScreen) {
+    // hide window chrome
+    nsCOMPtr<nsIDOMElement> docEl;
+    mDocument->GetDocumentElement(getter_AddRefs(docEl));
+    if (docEl)
+        docEl->SetAttribute(NS_LITERAL_STRING("hidechrome"), NS_LITERAL_STRING("true"));
+
+    // store current position for restoration later on
+    if (!mOriginalPos)
+      mOriginalPos = new nsPoint();
+    if (!mOriginalPos)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    GetScreenX(&(mOriginalPos->x));
+    GetScreenY(&(mOriginalPos->y));
+
+    // store current size for restoration later on
+    if (!mOriginalSize)
+      mOriginalSize = new nsSize();
+    if (!mOriginalSize)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    GetOuterWidth(&(mOriginalSize->width));
+    GetOuterHeight(&(mOriginalSize->height));
+  
+    // get screen object so we can measure screen dimensions
+    nsCOMPtr<nsIDOMScreen> screen;
+    GetScreen(getter_AddRefs(screen));
+    PRInt32 width, height;
+    screen->GetWidth(&width);
+    screen->GetHeight(&height);
+  
+    // move to origin and size to fill entire screen
+    MoveTo(0, 0);
+    ResizeTo(width, height);
+
+    // hide all OS chrome (like the windows taskbar)
+    nsCOMPtr<nsIFullScreen> fullScreen =
+      do_GetService("@mozilla.org/browser/fullscreen;1");
+    if (fullScreen)
+      fullScreen->HideAllOSChrome();
+  } else {
+    // show window chrome again
+    nsCOMPtr<nsIDOMElement> docEl;
+    mDocument->GetDocumentElement(getter_AddRefs(docEl));
+    if (docEl)
+     docEl->RemoveAttribute(NS_LITERAL_STRING("hidechrome"));
+  
+    // restore window to original size/position
+    if (mOriginalPos)
+      MoveTo(mOriginalPos->x, mOriginalPos->y);
+    if (mOriginalSize)
+      ResizeTo(mOriginalSize->width, mOriginalSize->height);
+  
+    // show all OS chrome again
+    nsCOMPtr<nsIFullScreen> fullScreen =
+      do_GetService("@mozilla.org/browser/fullscreen;1");
+    if (fullScreen)
+      fullScreen->ShowAllOSChrome();
+  }
+  
+  mFullScreen = aFullScreen;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::GetFullScreen(PRBool* aFullScreen)
+{
+  *aFullScreen = mFullScreen;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4442,6 +4593,13 @@ nsGlobalChromeWindow::Minimize()
   nsresult rv = GetMainWidget(getter_AddRefs(widget));
 
   if (widget) {
+    // minimize doesn't send deactivate events on windows,
+    // so we need to forcefully restore the os chrome
+    nsCOMPtr<nsIFullScreen> fullScreen =
+      do_GetService("@mozilla.org/browser/fullscreen;1");
+    if (fullScreen)
+      fullScreen->ShowAllOSChrome();
+
     rv = widget->SetSizeMode(nsSizeMode_Minimized);
   }
 

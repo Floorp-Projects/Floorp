@@ -562,6 +562,12 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD GetWindowType(nsWindowType& aWindowType) = 0;
 
+    /** 
+     * Hide window chrome (borders, buttons) for this widget.
+     *
+     */
+    NS_IMETHOD HideWindowChrome(PRBool aShouldHide) = 0;
+
     /**
      * Validate the widget.
      *

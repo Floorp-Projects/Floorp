@@ -50,6 +50,7 @@
 #include "nsAppShell.h"
 #include "nsIServiceManager.h"
 #include "nsSound.h"
+#include "nsFullScreen.h"
 
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
@@ -77,6 +78,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFullScreen)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
@@ -203,6 +205,8 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/widget/dragservice/win;1",
     "@mozilla.org/widget/dragservice;1",
     nsDragServiceConstructor },
+    { "Full Screen", NS_FULLSCREEN_SERVICE_CID,
+      NS_FULLSCREEN_SERVICE_CONTRACTID, nsFullScreenConstructor },
 #ifdef IBMBIDI
   { "Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
