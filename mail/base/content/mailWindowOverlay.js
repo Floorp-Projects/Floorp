@@ -30,6 +30,10 @@ const MSG_FLAG_MDN_REPORT_SENT   = 0x800000;
 const MDN_DISPOSE_TYPE_DISPLAYED = 0;
 const ADDR_DB_LARGE_COMMIT       = 1;
 
+const kClassicMailLayout = 0;
+const kWideMailLayout = 1;
+const kVerticalMailLayout = 2;
+
 var gMessengerBundle;
 var gPromptService;
 var gOfflinePromptsBundle;
@@ -179,6 +183,28 @@ function view_init()
   document.getElementById("viewAttachmentsInlineMenuitem").setAttribute("checked", viewAttachmentInline ? "true" : "false");
 
   document.commandDispatcher.updateCommands('create-menu-view');
+}
+
+function InitViewLayoutStyleMenu()
+{
+  var paneConfig = pref.getIntPref("mail.pane_config.dynamic");
+
+  switch (paneConfig) 
+  {
+    case kClassicMailLayout:
+      id ="messagePaneClassic";
+      break;
+    case kWideMailLayout:	
+      id = "messagePaneWide";
+      break;
+    case kVerticalMailLayout:
+      id = "messagePaneVertical";
+      break;
+  }
+
+  var layoutStyleMenuitem = document.getElementById(id);
+  if (layoutStyleMenuitem)
+    layoutStyleMenuitem.setAttribute("checked", "true"); 
 }
 
 function setSortByMenuItemCheckState(id, value)
@@ -1412,6 +1438,12 @@ function MsgApplyFilters()
     }
   }
   filterService.applyFiltersToFolders(tempFilterList, selectedFolders, msgWindow);
+}
+
+function ChangeMailLayout(newLayout)
+{
+  gPrefs.setIntPref("mail.pane_config.dynamic", newLayout);
+  return true;
 }
 
 function MsgViewAllHeaders()
