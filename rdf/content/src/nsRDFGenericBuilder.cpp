@@ -771,7 +771,9 @@ RDFGenericBuilderImpl::OpenContainer(nsIContent* aElement)
     rv = CreateContainerContents(aElement, resource, PR_FALSE, getter_AddRefs(container), &newIndex);
     if (NS_FAILED(rv)) return rv;
 
-    if (container) {
+    if (container && IsTreeWidgetItem(aElement)) {
+        // The tree widget is special, and has to be spanked every
+        // time we add content to a container.
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
         if (! doc)
             return NS_ERROR_UNEXPECTED;
@@ -2462,22 +2464,11 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement,
         *aNewIndexInContainer = -1;
     }
 
-    // If it's XUL, then see if the item is even "open" (HTML content
-    // must be generated eagerly). If not, then just pretend it
-    // doesn't have _any_ contents. We check this _before_ checking
-    // the contents-generated attribute so that we don't eagerly set
-    // contents-generated on a closed node.
-    {
-        PRInt32 nameSpaceID;
-        rv = aElement->GetNameSpaceID(nameSpaceID);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get namespace ID");
-        if (NS_FAILED(rv)) return rv;
-
-        if (nameSpaceID == kNameSpaceID_XUL) {
-            if (! IsOpen(aElement))
-                return NS_OK;
-        }
-    }
+    // The tree widget is special. If the item isn't open, then just
+    // "pretend" that there aren't any contents here. We'll create
+    // them when OpenContainer() gets called.
+    if (IsTreeWidgetItem(aElement) && !IsOpen(aElement))
+        return NS_OK;
 
     // See if the element's templates contents have been generated:
     // this prevents a re-entrant call from triggering another

@@ -430,84 +430,48 @@ NS_IMETHODIMP nsContentTreeOwner::ApplyChromeMask()
    if(!mXULWindow->mChromeLoaded)
       return NS_OK;  // We'll do this later when chrome is loaded
       
-   nsCOMPtr<nsIDOMElement> domElement;
-   mXULWindow->GetDOMElementFromDocShell(mXULWindow->mDocShell, 
-      getter_AddRefs(domElement));
-   NS_ENSURE_TRUE(domElement, NS_ERROR_FAILURE);
+   nsCOMPtr<nsIDOMElement> window;
+   mXULWindow->GetDOMElementFromDocShell(mXULWindow->mDocShell, getter_AddRefs(window));
+   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
    
    mXULWindow->mWindow->ShowMenuBar(mChromeMask & 
                                     nsIWebBrowserChrome::menuBarOn ? 
                                     PR_TRUE : PR_FALSE);
 
-   // get a list of this document's elements with the chromeclass attribute specified
-   nsCOMPtr<nsIDOMXULElement> xulRoot(do_QueryInterface(domElement));
-   NS_ENSURE_TRUE(xulRoot, NS_ERROR_FAILURE);
+   // Construct the new value for the 'chromehidden' attribute that
+   // we'll whack onto the window. We've got style rules in
+   // navigator.css that trigger visibility based on the
+   // 'chromehidden' attribute of the <window> tag.
+   nsAutoString newvalue;
 
-   // todo (maybe) the longer, straight DOM (not RDF) version?
-   nsCOMPtr<nsIDOMNodeList> chromeNodes;
-   xulRoot->GetElementsByAttribute("chromeclass", "*", 
-      getter_AddRefs(chromeNodes));
-   NS_ENSURE_TRUE(chromeNodes, NS_ERROR_FAILURE);
+   if (! (mChromeMask & nsIWebBrowserChrome::menuBarOn)) {
+     newvalue += "menubar ";
+   } 
+   if (! (mChromeMask & nsIWebBrowserChrome::toolBarOn)) {
+     newvalue += "toolbar ";
+   }
+   if (! (mChromeMask & nsIWebBrowserChrome::locationBarOn)) {
+     newvalue += "location ";
+   }
+   if (! (mChromeMask & nsIWebBrowserChrome::personalToolBarOn)) {
+     newvalue += "directories ";
+   }
+   if (! (mChromeMask & nsIWebBrowserChrome::statusBarOn)) {
+     newvalue += "status ";
+   }
+   if (! (mChromeMask & nsIWebBrowserChrome::extraChromeOn)) {
+     newvalue += "extrachrome";
+   }
 
-   PRUint32 nodeCtr;
-   PRUint32 nodeCount;
+   // Get the old value, to avoid useless style reflows if we're just
+   // setting stuff to the exact same thing.
+   nsAutoString oldvalue;
+   window->GetAttribute("chromehidden", oldvalue);
 
-   chromeNodes->GetLength(&nodeCount);
+   if (oldvalue != newvalue) {
+     window->SetAttribute("chromehidden", newvalue);
+   }
 
-   for(nodeCtr = 0; nodeCtr < nodeCount; nodeCtr++)
-      {
-      nsCOMPtr<nsIDOMNode> domNode;
-      chromeNodes->Item(nodeCtr, getter_AddRefs(domNode));
-      nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(domNode));
-      if(domElement)
-         {
-         nsAutoString chromeClass;
-         PRBool       makeChange;
-         PRUint32     flag;
-         // show or hide the element according to its chromeclass and the chromemask
-         domElement->GetAttribute("chromeclass", chromeClass);
-         makeChange = PR_FALSE;
-         if(chromeClass == "menubar")
-            {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & nsIWebBrowserChrome::menuBarOn;
-            } 
-         else if(chromeClass == "toolbar")
-            {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & nsIWebBrowserChrome::toolBarOn;
-            }
-         else if(chromeClass == "location")
-            {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & nsIWebBrowserChrome::locationBarOn;
-            } 
-         else if(chromeClass == "directories")
-            {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & nsIWebBrowserChrome::personalToolBarOn;
-            } 
-         else if(chromeClass == "status")
-            {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & nsIWebBrowserChrome::statusBarOn;
-            }
-         else if(chromeClass == "extrachrome")
-            {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & nsIWebBrowserChrome::extraChromeOn;
-            }
-
-         if(makeChange)
-            {
-            if(flag)
-               domElement->RemoveAttribute("chromehidden");
-            else
-               domElement->SetAttribute("chromehidden", "T");
-            }
-         }
-      }
-   
    return NS_OK;
 }
 
