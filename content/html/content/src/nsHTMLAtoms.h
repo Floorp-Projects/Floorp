@@ -81,6 +81,9 @@ public:
   static nsIAtom* coords;
 
   static nsIAtom* data;
+  static nsIAtom* defer;
+  static nsIAtom* defaultchecked;
+  static nsIAtom* defaultvalue;
   static nsIAtom* dir;
   static nsIAtom* disabled;
   static nsIAtom* div;
@@ -132,12 +135,14 @@ public:
   static nsIAtom* marginwidth;
   static nsIAtom* maxlength;
   static nsIAtom* mayscript;
+  static nsIAtom* media;
   static nsIAtom* menu;
   static nsIAtom* method;
   static nsIAtom* multicol;
   static nsIAtom* multiple;
 
   static nsIAtom* name;
+  static nsIAtom* nohref;
   static nsIAtom* noresize;
   static nsIAtom* noshade;
   static nsIAtom* nowrap;
@@ -208,6 +213,7 @@ public:
 
   static nsIAtom* valign;
   static nsIAtom* value;
+  static nsIAtom* valuetype;
   static nsIAtom* variable;
   static nsIAtom* visibility;
   static nsIAtom* visited;
