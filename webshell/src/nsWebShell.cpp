@@ -43,7 +43,8 @@
 #include "prprf.h"
 #include "nsIPluginHost.h"
 #include "nsplugin.h"
-#include "nsPluginsCID.h"
+//#include "nsPluginsCID.h"
+#include "nsIPluginManager.h"
 #include "nsIPref.h"
 #include "nsIRefreshUrl.h"
 #include "nsITimer.h"
@@ -372,7 +373,8 @@ static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIPluginManagerIID,      NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginHostIID,         NS_IPLUGINHOST_IID);
-static NS_DEFINE_IID(kCPluginHostCID,         NS_PLUGIN_HOST_CID);
+//static NS_DEFINE_IID(kCPluginHostCID,         NS_PLUGIN_HOST_CID);
+static NS_DEFINE_IID(kCPluginManagerCID,      NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kRefreshURLIID,          NS_IREFRESHURL_IID);
 static NS_DEFINE_IID(kITimerCallbackIID,      NS_ITIMERCALLBACK_IID);
@@ -396,7 +398,7 @@ nsresult nsWebShell::CreatePluginHost(PRBool aAllowPlugins)
   {
     if (nsnull == mPluginManager)
     {
-      rv = nsRepository::CreateInstance(kCPluginHostCID, nsnull,
+      rv = nsRepository::CreateInstance(kCPluginManagerCID, nsnull,
                                         kIPluginManagerIID,
                                         (void**)&mPluginManager);
       if (NS_OK == rv)
