@@ -197,6 +197,7 @@ public:
                                   nsIContent* aContent2);
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
+                              PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
                               PRInt32      aHint);
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,

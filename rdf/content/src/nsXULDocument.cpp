@@ -301,6 +301,7 @@ public:
     NS_IMETHOD ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2);
 
     NS_IMETHOD AttributeChanged(nsIContent* aChild,
+                                PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 PRInt32 aHint); // See nsStyleConsts fot hint values
 
@@ -1700,6 +1701,7 @@ XULDocumentImpl::ContentStatesChanged(nsIContent* aContent1, nsIContent* aConten
 
 NS_IMETHODIMP 
 XULDocumentImpl::AttributeChanged(nsIContent* aElement,
+                                  PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute,
                                   PRInt32 aHint)
 {
@@ -1724,7 +1726,7 @@ XULDocumentImpl::AttributeChanged(nsIContent* aElement,
     // Now notify external observers
     for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-        observer->AttributeChanged(this, aElement, aAttribute, aHint);
+        observer->AttributeChanged(this, aElement, aNameSpaceID, aAttribute, aHint);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
             i--;
         }
