@@ -44,7 +44,7 @@ function initMessages()
     client.messageManager = new MessageManager();
     client.defaultBundle = client.messageManager.addBundle(path);
 
-    client.displayName = client.name = MSG_CLIENT_NAME;
+    client.viewName = client.unicodeName = MSG_CLIENT_NAME;
     client.responseCodeMap =
         {
             "HELLO": MSG_RSP_HELLO,
@@ -63,6 +63,8 @@ function initMessages()
             "KICK": "=-=",
             "MODE": "=-=",
             "END_STATUS": "---",
+            "DCC-CHAT": "[DCC]",
+            "DCC-FILE": "[DCC]",
             "315": "---", /* end of WHO */
             "318": "---", /* end of WHOIS */
             "366": "---", /* end of NAMES */
@@ -123,7 +125,7 @@ const MT_ERROR     = "ERROR";
 const MT_HELLO     = "HELLO";
 const MT_HELP      = "HELP";
 const MT_MODE      = "MODE";
-const MT_WARN      = "WARN";
+const MT_WARN      = "WARNING";
 const MT_INFO      = "INFO";
 const MT_USAGE     = "USAGE";
 const MT_STATUS    = "STATUS";

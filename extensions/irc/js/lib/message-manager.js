@@ -141,11 +141,12 @@ function mm_fromunicode(msg, charset)
     if (!charset)
         return msg;
 
-    if (charset != this.ucConverter.charset)
-        this.ucConverter.charset = charset;
-
     try
     {
+        // This can actually fail in bizare cases. Cope.
+        if (charset != this.ucConverter.charset)
+            this.ucConverter.charset = charset;
+
         if ("Finish" in this.ucConverter)
         {
             msg = this.ucConverter.ConvertFromUnicode(msg) +
@@ -196,7 +197,7 @@ function mm_getfrom (bundle, msgName, params, deflt)
     {
         var rv;
         
-        if (params && params instanceof Array)
+        if (params && isinstance(params, Array))
             rv = bundle.formatStringFromName (msgName, params, params.length);
         else if (params || params == 0)
             rv = bundle.formatStringFromName (msgName, [params], 1);

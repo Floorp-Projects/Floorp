@@ -69,11 +69,8 @@ function event_tracer (e)
 
         case "network":
         case "channel":
-            name = e.destObject.name;
-            break;
-
         case "user":
-            name = e.destObject.nick;
+            name = e.destObject.unicodeName;
             break;
 
         case "httpdoc":

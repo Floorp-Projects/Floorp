@@ -77,11 +77,13 @@ function PrefManager (branchName, defaultBundle)
     this.prefService =
         Components.classes[PREF_CTRID].getService(nsIPrefService);
     this.prefBranch = this.prefService.getBranch(branchName);
+    this.branchName = branchName;
     this.defaultValues = new Object();
     this.prefs = new Object();
     this.prefNames = new Array();
     this.prefRecords = new Object();
     this.observer = { observe: pm_observe };
+    this.observers = new Array();
 
     this.prefBranchInternal =
         this.prefBranch.QueryInterface(nsIPrefBranchInternal);
@@ -114,10 +116,33 @@ function pm_getbranchmgr(suffix)
     return new PrefManager(this.prefBranch.root + suffix);
 }
 
-PrefManager.prototype.onPrefChanged =
-function pm_changed(prefName, prefManager, topic)
+PrefManager.prototype.addObserver =
+function pm_addobserver(observer)
 {
-    /* clients can override this to hear about pref changes */
+    if (!("onPrefChanged" in observer))
+        throw "Bad observer!";
+
+    this.observers.push(observer);
+}
+
+PrefManager.prototype.removeObserver =
+function pm_removeobserver(observer)
+{
+    for (var i = 0; i < this.observers.length; i++)
+    {
+        if (this.observers[i] == observer)
+        {
+            arrayRemoveAt(this.observers, i);
+            break;
+        }
+    }
+}
+
+PrefManager.prototype.onPrefChanged =
+function pm_prefchanged(prefName, realValue, oldValue)
+{
+    for (var i = 0; i < this.observers.length; i++)
+        this.observers[i].onPrefChanged(prefName, realValue, oldValue);
 }
 
 PrefManager.prototype.listPrefs =
@@ -197,6 +222,9 @@ function pm_addprefsd(targetManager, writeThrough)
     };
 
     var setter = null;
+    
+    // Make sure we know about pref changes.
+    targetManager.addObserver(this);
     
     if (writeThrough)
         setter = deferSet;

@@ -74,6 +74,10 @@ a.chatzilla-link {
     color: black;
 }
 
+.progress-fg {
+    background-color: darkslategrey;
+}
+
 [condition] {
     font-weight: bold;
 }

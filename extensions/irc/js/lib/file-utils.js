@@ -103,11 +103,11 @@ function futils_nosepicker(initialPath, typeList, attribs)
     }
     else
         throw "bad type for param |attribs|";
-    
+
     if (initialPath)
     {
         var localFile;
-        
+
         if (typeof initialPath == "string")
         {
             localFile =
@@ -121,7 +121,7 @@ function futils_nosepicker(initialPath, typeList, attribs)
 
             localFile = initialPath;
         }
-        
+
         picker.displayDirectory = localFile
     }
 
@@ -140,23 +140,23 @@ function futils_nosepicker(initialPath, typeList, attribs)
                     allIncluded = true;
                     picker.appendFilters(FILTER_ALL);
                     break;
-                    
+
                 case "$html":
                     picker.appendFilters(FILTER_HTML);
                     break;
-                    
+
                 case "$text":
                     picker.appendFilters(FILTER_TEXT);
                     break;
-                    
+
                 case "$images":
                     picker.appendFilters(FILTER_IMAGES);
                     break;
-                    
+
                 case "$xml":
                     picker.appendFilters(FILTER_XML);
                     break;
-                    
+
                 case "$xul":
                     picker.appendFilters(FILTER_XUL);
                     break;
@@ -170,7 +170,7 @@ function futils_nosepicker(initialPath, typeList, attribs)
 
     if (!allIncluded)
         picker.appendFilters(FILTER_ALL);
- 
+
     return picker;
 }
 
@@ -178,14 +178,14 @@ function pickSaveAs (title, typeList, defaultFile, defaultDir)
 {
     if (!defaultDir && "lastSaveAsDir" in futils)
         defaultDir = futils.lastSaveAsDir;
-    
-    var picker = futils.getPicker (defaultDir, typeList, 
+
+    var picker = futils.getPicker (defaultDir, typeList,
                                    {defaultString: defaultFile});
     picker.init (window, title ? title : futils.MSG_SAVE_AS,
                  Components.interfaces.nsIFilePicker.modeSave);
 
     var reason;
-    
+
     try
     {
         reason = picker.show();
@@ -194,12 +194,12 @@ function pickSaveAs (title, typeList, defaultFile, defaultDir)
     {
         dd ("caught exception from file picker: " + ex);
     }
-    
+
     var obj = new Object();
-    
+
     obj.reason = reason;
     obj.picker = picker;
-    
+
     if (reason != PICK_CANCEL)
     {
         obj.file = picker.file;
@@ -217,14 +217,14 @@ function pickOpen (title, typeList, defaultFile, defaultDir)
 {
     if (!defaultDir && "lastOpenDir" in futils)
         defaultDir = futils.lastOpenDir;
-    
-    var picker = futils.getPicker (defaultDir, typeList, 
+
+    var picker = futils.getPicker (defaultDir, typeList,
                                    {defaultString: defaultFile});
     picker.init (window, title ? title : futils.MSG_OPEN,
                  Components.interfaces.nsIFilePicker.modeOpen);
 
     var rv = picker.show();
-    
+
     if (rv != PICK_CANCEL)
         futils.lastOpenDir = picker.file.parent;
 
@@ -264,13 +264,13 @@ function LocalFile(file, mode, perms, tmp)
     const FILEIN_CTRID = "@mozilla.org/network/file-input-stream;1";
     const FILEOUT_CTRID = "@mozilla.org/network/file-output-stream;1";
     const SCRIPTSTREAM_CTRID = "@mozilla.org/scriptableinputstream;1";
-    
+
     const nsIFile = interfaces.nsIFile;
     const nsILocalFile = interfaces.nsILocalFile;
     const nsIFileOutputStream = interfaces.nsIFileOutputStream;
     const nsIFileInputStream = interfaces.nsIFileInputStream;
     const nsIScriptableInputStream = interfaces.nsIScriptableInputStream;
-    
+
     if (typeof perms == "undefined")
         perms = 0666 & ~futils.umask;
 
@@ -291,7 +291,7 @@ function LocalFile(file, mode, perms, tmp)
                 throw "Invalid mode ``" + mode + "''";
         }
     }
-        
+
     if (typeof file == "string")
     {
         this.localFile = new nsLocalFile(file);
@@ -306,23 +306,23 @@ function LocalFile(file, mode, perms, tmp)
     }
 
     this.path = this.localFile.path;
-    
+
     if (mode & (MODE_WRONLY | MODE_RDWR))
     {
-        this.outputStream = 
+        this.outputStream =
             classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
         this.outputStream.init(this.localFile, mode, perms, 0);
     }
-    
+
     if (mode & (MODE_RDONLY | MODE_RDWR))
     {
-        this.baseInputStream = 
+        this.baseInputStream =
             classes[FILEIN_CTRID].createInstance(nsIFileInputStream);
         this.baseInputStream.init(this.localFile, mode, perms, tmp);
         this.inputStream =
             classes[SCRIPTSTREAM_CTRID].createInstance(nsIScriptableInputStream);
         this.inputStream.init(this.baseInputStream);
-    }    
+    }
 }
 
 LocalFile.prototype.write =
@@ -330,7 +330,7 @@ function fo_write(buf)
 {
     if (!("outputStream" in this))
         throw "file not open for writing.";
-    
+
     return this.outputStream.write(buf, buf.length);
 }
 
@@ -345,8 +345,8 @@ function fo_read(max)
         max = av;
 
     if (!av)
-        return null;    
-    
+        return null;
+
     var rv = this.inputStream.read(max);
     return rv;
 }

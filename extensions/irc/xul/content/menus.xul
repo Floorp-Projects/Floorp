@@ -41,8 +41,6 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://chatzilla/locale/chatzilla.dtd" >
 
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-
 <overlay id="chatzilla-menu-overlay"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -102,34 +100,22 @@
 
         <!-- File menu placeholder, see menus.js -->
         <menu id="mainmenu:file"/>
+        
+        <!-- Edit menu placeholder, see menus.js -->
+        <menu id="mainmenu:edit"/>
   
-        <!-- Edit menu -->
-        <menu id="menu_Edit">
-          <menupopup id="menu_Edit_Popup">
-            <menuitem id="menu_undo"/>
-            <menuitem id="menu_redo"/>
-            <menuseparator/>
-            <menuitem id="menu_cut"/>
-            <menuitem id="menu_copy"/>
-            <menuitem id="menu_paste"/>
-            <menuitem id="menu_delete"/>
-            <menuseparator/>
-            <menuitem id="menu_selectAll"/>
-            <menuseparator/>
-            <menuitem id="menu_preferences"
-              oncommand="window.openDialog('chrome://chatzilla/content/config.xul', '', 'chrome,resizable,dialog=no', window);"/>
-          </menupopup>
-        </menu> 
-  
-        <!-- View menu placeholder, see venkman-menus.js -->
+        <!-- View menu placeholder, see menus.js -->
         <menu id="mainmenu:view"/>
 
         <!-- Tasks menu -->
         <menu id="tasksMenu"/>
 
-        <!-- Tasks menu -->
+        <!-- Window menu -->
         <menu id="windowMenu"/>
 
+        <!-- Tools menu placeholder, see menus.js -->
+        <menu id="mainmenu:tools"/>
+        
         <!-- Help menu -->
         <!-- Mac expects a help menu with this ID, and there is nothing we can
              do about it. -->
@@ -144,9 +130,12 @@
   <overlaytarget id="statusbar-overlay-target">
     <statusbar class="chromeclass-status" id="status-bar" 
         persist="collapsed" flex="1">
-      <statusbarpanel id="component-bar"/>
-      <statusbarpanel id="status-text" label="" flex="1"
-        crop="right"/>
+      <statusbarpanel id="component-bar" collapsed="true"/>
+      <statusbarpanel id="status-text" label="" flex="1" crop="right"/>
+      <statusbarpanel class="statusbarpanel-progress" id="status-progress-panel">
+        <progressmeter class="progressmeter-statusbar" id="status-progress-bar" 
+            mode="undetermined" value="0"/>
+      </statusbarpanel>
 <!--
       <statusbarpanel class="statusbarpanel-iconic" id="offline-status"
         hidden="true" offline="true"/>

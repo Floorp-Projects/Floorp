@@ -41,20 +41,20 @@ const DEFAULT_NICK = "IRCMonkey"
 
 function initPrefs()
 {
-    client.prefManager = new PrefManager("extensions.irc.", 
+    client.prefManager = new PrefManager("extensions.irc.",
                                          client.defaultBundle);
     client.prefManagers = [client.prefManager];
 
     client.prefs = client.prefManager.prefs;
-    
+
     var profilePath = getSpecialDirectory("ProfD");
     profilePath.append("chatzilla");
 
-    client.prefManager.addPref("profilePath", profilePath.path, null, null, 
+    client.prefManager.addPref("profilePath", profilePath.path, null, null,
                                                                       "global");
-    
+
     profilePath = new nsLocalFile(client.prefs["profilePath"]);
-    
+
     if (!profilePath.exists())
         mkdir(profilePath);
 
@@ -79,8 +79,9 @@ function initPrefs()
         [
          ["activityFlashDelay", 200,      "global"],
          ["aliases",            [],       "lists.aliases"],
+         ["autoAwayCap",        300,      "global"],
          ["autoRejoin",         false,    ".connect"],
-         ["bugURL",           "http://bugzilla.mozilla.org/show_bug.cgi?id=%s", 
+         ["bugURL",           "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
                                           "global"],
          ["channelHeader",      true,     "global.header"],
          ["channelLog",         false,    "global.log"],
@@ -102,7 +103,7 @@ function initPrefs()
          ["font.family",        "default", "appearance.misc"],
          ["font.size",          0,        "appearance.misc"],
          ["initialURLs",        [],       "startup.initialURLs"],
-         ["initialScripts",     [getURLSpecFromFile(scriptPath.path)], 
+         ["initialScripts",     [getURLSpecFromFile(scriptPath.path)],
                                           "startup.initialScripts"],
          ["log",                false,    ".log"],
          ["logFileName",        logDefault.path, ".log"],
@@ -110,13 +111,13 @@ function initPrefs()
          ["messages.ctrlClick", "goto-url-newwin",   "global.links"],
          ["messages.metaClick", "goto-url-newtab",   "global.links"],
          ["messages.middleClick", "goto-url-newtab", "global.links"],
-         ["motif.dark",         "chrome://chatzilla/skin/output-dark.css", 
+         ["motif.dark",         "chrome://chatzilla/skin/output-dark.css",
                                           "appearance.motif"],
-         ["motif.light",        "chrome://chatzilla/skin/output-light.css", 
+         ["motif.light",        "chrome://chatzilla/skin/output-light.css",
                                           "appearance.motif"],
-         ["motif.default",      "chrome://chatzilla/skin/output-default.css", 
+         ["motif.default",      "chrome://chatzilla/skin/output-default.css",
                                           "appearance.motif"],
-         ["motif.current",      "chrome://chatzilla/skin/output-default.css", 
+         ["motif.current",      "chrome://chatzilla/skin/output-default.css",
                                           "appearance.motif"],
          //["msgBeep",            "beep beep", "global.sounds"],
          ["multiline",          false,    "global"],
@@ -125,13 +126,13 @@ function initPrefs()
          ["munger.channel-link",true,     "munger"],
          ["munger.colorCodes",  true,     "munger"],
          ["munger.ctrl-char",   true,     "munger"],
-         ["munger.ear",         false,    "munger"],
          ["munger.face",        true,     "munger"],
          ["munger.italic",      true,     "munger"],
          ["munger.link",        true,     "munger"],
          ["munger.mailto",      true,     "munger"],
          ["munger.quote",       true,     "munger"],
          ["munger.rheet",       true,     "munger"],
+         ["munger.teletype",    true,     "munger"],
          ["munger.underline",   true,     "munger"],
          ["munger.word-hyphenator", true, "munger"],
          ["networkHeader",      true,     "global.header"],
@@ -142,7 +143,7 @@ function initPrefs()
          ["nickCompleteStr",    ":",      "global"],
          ["nickname",           DEFAULT_NICK, ".ident"],
          ["outgoing.colorCodes",  false,  "global"],
-         ["outputWindowURL",   "chrome://chatzilla/content/output-window.html", 
+         ["outputWindowURL",   "chrome://chatzilla/content/output-window.html",
                                           "appearance.misc"],
          ["sortUsersByMode",    true,     "appearance.userlist"],
          //["queryBeep",          "beep",   "global.sounds"],
@@ -174,7 +175,7 @@ function initPrefs()
         ];
 
     client.prefManager.addPrefs(prefs);
-    client.prefManager.onPrefChanged = onPrefChanged;
+    client.prefManager.addObserver({ onPrefChanged: onPrefChanged });
 
     CIRCNetwork.prototype.stayingPower  = client.prefs["reconnect"];
     CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = client.prefs["connectTries"];
@@ -210,7 +211,7 @@ function getNetworkPrefManager(network)
     };
 
     var logDefault = client.prefManager.logPath.clone();
-    logDefault.append(escapeFileName(pref_mungeName(network.name)) + ".log");
+    logDefault.append(escapeFileName(pref_mungeName(network.encodedName)) + ".log");
 
     var prefs =
         [
@@ -220,7 +221,7 @@ function getNetworkPrefManager(network)
          ["connectTries",     defer, ".connect"],
          ["dcc.useServerIP",  defer, "dcc"],
          ["desc",             defer, ".ident"],
-         ["displayHeader",    client.prefs["networkHeader"], 
+         ["displayHeader",    client.prefs["networkHeader"],
                                                              "appearance.misc"],
          ["font.family",      defer, "appearance.misc"],
          ["font.size",        defer, "appearance.misc"],
@@ -239,24 +240,25 @@ function getNetworkPrefManager(network)
          ["autoperform",      [],    "lists.autoperform"]
         ];
 
-    var branch = "extensions.irc.networks." + pref_mungeName(network.name) +
+    var branch = "extensions.irc.networks." + pref_mungeName(network.encodedName) +
         ".";
     var prefManager = new PrefManager(branch, client.defaultBundle);
     prefManager.addPrefs(prefs);
-    prefManager.onPrefChanged = onPrefChanged;
+    prefManager.addObserver({ onPrefChanged: onPrefChanged });
+    client.prefManager.addObserver(prefManager);
 
     var value = prefManager.prefs["nickname"];
     if (value != CIRCNetwork.prototype.INITIAL_NICK)
         network.INITIAL_NICK = value;
-    
+
     value = prefManager.prefs["username"];
     if (value != CIRCNetwork.prototype.INITIAL_NAME)
         network.INITIAL_NAME = value;
-    
+
     value = prefManager.prefs["desc"];
     if (value != CIRCNetwork.prototype.INITIAL_DESC)
         network.INITIAL_DESC = value;
-    
+
     value = prefManager.prefs["usermode"];
     if (value != CIRCNetwork.prototype.INITIAL_UMODE)
         network.INITIAL_UMODE = value;
@@ -277,16 +279,16 @@ function getChannelPrefManager(channel)
     {
         return network.prefs[prefName];
     };
-    
+
     function onPrefChanged(prefName, newValue, oldValue)
     {
         onChannelPrefChanged (channel, prefName, newValue, oldValue);
     };
-    
+
     var logDefault = client.prefManager.logPath.clone();
-    var filename = pref_mungeName(network.name) + "," + 
-        pref_mungeName(channel.name);
-    
+    var filename = pref_mungeName(network.encodedName) + "," +
+        pref_mungeName(channel.encodedName);
+
     logDefault.append(escapeFileName(filename) + ".log");
 
     var prefs =
@@ -294,7 +296,7 @@ function getChannelPrefManager(channel)
          ["autoRejoin",       defer, ".connect"],
          ["charset",          defer, ".connect"],
          ["collapseMsgs",     defer, "appearance.misc"],
-         ["displayHeader",    client.prefs["channelHeader"], 
+         ["displayHeader",    client.prefs["channelHeader"],
                                                              "appearance.misc"],
          ["font.family",      defer, "appearance.misc"],
          ["font.size",        defer, "appearance.misc"],
@@ -306,15 +308,16 @@ function getChannelPrefManager(channel)
          ["timestampFormat",  defer, "appearance.timestamps"],
          ["outputWindowURL",  defer, "appearance.misc"]
         ];
-    
-    var branch = "extensions.irc.networks." + pref_mungeName(network.name) +
-        ".channels." + pref_mungeName(channel.normalizedName) + "."
+
+    var branch = "extensions.irc.networks." + pref_mungeName(network.encodedName) +
+        ".channels." + pref_mungeName(channel.encodedName) + "."
     var prefManager = new PrefManager(branch, client.defaultBundle);
     prefManager.addPrefs(prefs);
-    prefManager.onPrefChanged = onPrefChanged;
+    prefManager.addObserver({ onPrefChanged: onPrefChanged });
+    network.prefManager.addObserver(prefManager);
 
     client.prefManagers.push(prefManager);
-    
+
     return prefManager;
 }
 
@@ -326,15 +329,15 @@ function getUserPrefManager(user)
     {
         return network.prefs[prefName];
     };
-    
+
     function onPrefChanged(prefName, newValue, oldValue)
     {
         onUserPrefChanged (user, prefName, newValue, oldValue);
     };
-    
+
     var logDefault = client.prefManager.logPath.clone();
-    var filename = pref_mungeName(network.name);
-    filename += "," + pref_mungeName(user.nick);
+    var filename = pref_mungeName(network.encodedName);
+    filename += "," + pref_mungeName(user.encodedName);
     logDefault.append(escapeFileName(filename) + ".log");
 
     var prefs =
@@ -352,18 +355,19 @@ function getUserPrefManager(user)
          ["timestamps",       defer, "appearance.timestamps"],
          ["timestampFormat",  defer, "appearance.timestamps"]
         ];
-    
-    var branch = "extensions.irc.networks." + pref_mungeName(network.name) +
-        ".users." + pref_mungeName(user.nick) + ".";
+
+    var branch = "extensions.irc.networks." + pref_mungeName(network.encodedName) +
+        ".users." + pref_mungeName(user.encodedName) + ".";
     var prefManager = new PrefManager(branch, client.defaultBundle);
     prefManager.addPrefs(prefs);
-    prefManager.onPrefChanged = onPrefChanged;
+    prefManager.addObserver({ onPrefChanged: onPrefChanged });
+    network.prefManager.addObserver(prefManager);
 
     client.prefManagers.push(prefManager);
-    
+
     return prefManager;
 }
-                 
+
 function destroyPrefs()
 {
     if ("prefManagers" in client)
@@ -380,7 +384,7 @@ function onPrefChanged(prefName, newValue, oldValue)
         case "channelMaxLines":
             CIRCChannel.prototype.MAX_MESSAGES = newValue;
             break;
-            
+
         case "charset":
             client.charset = newValue;
             break;
@@ -388,14 +392,14 @@ function onPrefChanged(prefName, newValue, oldValue)
         case "clientMaxLines":
             client.MAX_MESSAGES = newValue;
             break;
-            
+
         case "connectTries":
             CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = newValue;
             break;
-            
+
         case "font.family":
         case "font.size":
-            dispatch("sync-fonts");
+            client.dispatch("sync-font");
             break;
 
         case "showModeSymbols":
@@ -404,7 +408,7 @@ function onPrefChanged(prefName, newValue, oldValue)
             else
                 setListMode("graphic");
             break;
-            
+
         case "nickname":
             CIRCNetwork.prototype.INITIAL_NICK = newValue;
             break;
@@ -420,7 +424,7 @@ function onPrefChanged(prefName, newValue, oldValue)
         case "userMaxLines":
             CIRCChanUser.prototype.MAX_MESSAGES = newValue;
             break;
-            
+
         case "debugMode":
             setDebugMode(newValue);
             break;
@@ -437,9 +441,9 @@ function onPrefChanged(prefName, newValue, oldValue)
         case "sortUsersByMode":
             if (client.currentObject.TYPE == "IRCChannel")
                 updateUserList();
-            
+
         case "motif.current":
-            dispatch("sync-motifs");
+            client.dispatch("sync-motif");
             break;
 
         case "multiline":
@@ -453,22 +457,22 @@ function onPrefChanged(prefName, newValue, oldValue)
         case "networkMaxLines":
             CIRCNetwork.prototype.MAX_MESSAGES = newValue;
             break;
-            
+
         case "outputWindowURL":
-            dispatch("sync-windows");
+            client.dispatch("sync-window");
             break;
 
         case "displayHeader":
-            dispatch("sync-headers");
+            client.dispatch("sync-header");
             break;
 
         case "timestamps":
         case "timestampFormat":
-            dispatch("sync-timestamps");
+            client.dispatch("sync-timestamp");
             break;
 
         case "log":
-            dispatch("sync-logs");
+            client.dispatch("sync-log");
             break;
 
         case "aliases":
@@ -479,7 +483,7 @@ function onPrefChanged(prefName, newValue, oldValue)
 
 function onNetworkPrefChanged(network, prefName, newValue, oldValue)
 {
-    if (network != client.networks[network.name])
+    if (network != client.networks[network.canonicalName])
     {
         /* this is a stale observer, remove it */
         network.prefManager.destroy();
@@ -514,31 +518,31 @@ function onNetworkPrefChanged(network, prefName, newValue, oldValue)
         case "reconnect":
             network.stayingPower = newValue;
             break;
-        
+
         case "font.family":
         case "font.size":
-            dispatch("sync-fonts");
+            network.dispatch("sync-font");
             break;
 
         case "motif.current":
-            dispatch("sync-motifs");
+            network.dispatch("sync-motif");
             break;
 
         case "outputWindowURL":
-            dispatch("sync-windows");
+            network.dispatch("sync-window");
             break;
 
         case "displayHeader":
-            dispatch("sync-headers");
+            network.dispatch("sync-header");
             break;
 
         case "timestamps":
         case "timestampFormat":
-            dispatch("sync-timestamps");
+            network.dispatch("sync-timestamp");
             break;
 
         case "log":
-            dispatch("sync-logs");
+            network.dispatch("sync-log");
             break;
 
         case "connectTries":
@@ -551,9 +555,9 @@ function onChannelPrefChanged(channel, prefName, newValue, oldValue)
 {
     var network = channel.parent.parent;
 
-    if (network != client.networks[network.name] ||
+    if (network != client.networks[network.canonicalName] ||
         channel.parent != network.primServ ||
-        channel != network.primServ.channels[channel.normalizedName])
+        channel != network.primServ.channels[channel.canonicalName])
     {
         /* this is a stale observer, remove it */
         channel.prefManager.destroy();
@@ -566,28 +570,28 @@ function onChannelPrefChanged(channel, prefName, newValue, oldValue)
     {
         case "font.family":
         case "font.size":
-            dispatch("sync-fonts");
+            channel.dispatch("sync-font");
             break;
 
         case "motif.current":
-            dispatch("sync-motifs");
+            channel.dispatch("sync-motif");
             break;
 
         case "outputWindowURL":
-            dispatch("sync-windows");
+            channel.dispatch("sync-window");
             break;
 
         case "displayHeader":
-            dispatch("sync-headers");
+            channel.dispatch("sync-header");
             break;
 
         case "timestamps":
         case "timestampFormat":
-            dispatch("sync-timestamps");
+            channel.dispatch("sync-timestamp");
             break;
 
         case "log":
-            dispatch("sync-logs");
+            channel.dispatch("sync-log");
             break;
     }
 }
@@ -596,9 +600,9 @@ function onUserPrefChanged(user, prefName, newValue, oldValue)
 {
     var network = user.parent.parent;
 
-    if (network != client.networks[network.name] ||
+    if (network != client.networks[network.canonicalName] ||
         user.parent != network.primServ ||
-        user != network.primServ.users[user.name])
+        user != network.primServ.users[user.canonicalName])
     {
         /* this is a stale observer, remove it */
         user.prefManager.destroy();
@@ -611,28 +615,28 @@ function onUserPrefChanged(user, prefName, newValue, oldValue)
     {
         case "font.family":
         case "font.size":
-            dispatch("sync-fonts");
+            user.dispatch("sync-font");
             break;
 
         case "motif.current":
-            dispatch("sync-motifs");
+            user.dispatch("sync-motif");
             break;
 
         case "outputWindowURL":
-            dispatch("sync-windows");
+            user.dispatch("sync-window");
             break;
 
         case "displayHeader":
-            dispatch("sync-headers");
+            user.dispatch("sync-header");
             break;
 
         case "timestamps":
         case "timestampFormat":
-            dispatch("sync-timestamps");
+            user.dispatch("sync-timestamp");
             break;
 
         case "log":
-            dispatch("sync-logs");
+            user.dispatch("sync-log");
             break;
     }
 }
@@ -644,9 +648,16 @@ function initAliases()
     for (var i = 0; i < aliasDefs.length; ++i)
     {
         var ary = aliasDefs[i].match(/^(.*?)\s*=\s*(.*)$/);
-        var name = ary[1];
-        var list = ary[2];
-        
-        client.commandManager.defineCommand(name, list);
+        if (ary)
+        {
+            var name = ary[1];
+            var list = ary[2];
+
+            client.commandManager.defineCommand(name, list);
+        }
+        else
+        {
+            dd("Malformed alias: " + aliasDefs[i]);
+        }
     }
 }

@@ -15,13 +15,12 @@
    -
    - The Original Code is Chatzilla.
    -
-   - The Initial Developer of the Original Code is
-   - Netscape Communications Corporation.
-   - Portions created by the Initial Developer are Copyright (C) 2001
+   - The Initial Developer of the Original Code is James Ross.
+   - Portions created by the Initial Developer are Copyright (C) 2004
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   James Ross, <twpol@aol.com>, original author
+   -   James Ross, <silver@warwickcompsoc.co.uk>, original author
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,15 +36,18 @@
    -
    - ***** END LICENSE BLOCK ***** -->
    
-<!--
-   - This file isn't used any more, and is only here to prevent the Mozilla
-   - preferences window from breaking.
-   -->
-
 <!DOCTYPE overlay SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <overlay id="ovCZPrefs" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <treechildren id="panelChildren">
+    <treeitem container="false" id="chatzillaItem" insertbefore="advancedItem">
+      <treerow>
+        <treecell url="chrome://chatzilla/content/pref-irc.xul" 
+            label="&pref-irc.window.title;"/>
+      </treerow>
+    </treeitem>
+  </treechildren>
 </overlay>
 
         

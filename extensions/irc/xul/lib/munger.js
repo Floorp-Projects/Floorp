@@ -44,6 +44,8 @@ function initMunger()
         /((\w[\w-]+):[^<>\[\]()\'\"\s\u201d]+|www(\.[^.<>\[\]()\'\"\s\u201d]+){2,})/;    
 
     var munger = client.munger = new CMunger();
+    // Special internal munger!
+    munger.addRule (".inline-buttons", /(\[\[.*?\]\])/, insertInlineButton, false);
     munger.addRule ("quote", /(``|'')/, insertQuote);
     munger.addRule ("bold", /(?:\s|^)(\*[^*()]*\*)(?:[\s.,]|$)/, 
                     "chatzilla-bold");
@@ -72,9 +74,8 @@ function initMunger()
                     insertChannelLink);
     
     munger.addRule ("face",
-         /((^|\s)[\<\>]?[\;\=\:]\~?[\-\^\v]?[\)\|\(pP\<\>oO0\[\]\/\\](\s|$))/,
+         /((^|\s)(?:[>]?[B8=:;(xX]\~?[-^v"]?[)|(PpDSs0oO\?\[\]\/\\]|[oO9][._][oO9])(\s|$))/,
          insertSmiley);
-    munger.addRule ("ear", /(?:\s|^)(\(\*)(?:\s|$)/, insertEar, false);
     munger.addRule ("rheet", /(?:\s|\W|^)(rhee+t\!*)(?:\s|$)/i, insertRheet);
     munger.addRule ("word-hyphenator",
                     new RegExp ("(\\S{" + client.MAX_WORD_DISPLAY + ",})"),

@@ -81,6 +81,12 @@ var headers = {
         prefix: "dcc-chat-",
         fields: ["container", "url-anchor", "remotestr", "title"],
         update: updateDCCChat
+    },
+    
+    IRCDCCFileTransfer: {
+        prefix: "dcc-file-",
+        fields: ["container", "file", "progress", "progressbar"],
+        update: updateDCCFile
     }
 };
 
@@ -110,6 +116,19 @@ function stock_initOutputWindow(newClient, newView, newClickHandler)
     getObjectDetails = mainWindow.getObjectDetails;
     dd = mainWindow.dd;
 
+    // Wheee... localize stuff!
+    //var nodes = document.getElementsByAttribute("localize", "*");
+    var nodes = document.getElementsByTagName("*");
+    for (var i = 0; i < nodes.length; i++)
+    {
+        if (nodes[i].hasAttribute("localize"))
+        {
+            var msg = nodes[i].getAttribute("localize");
+            msg = getMsg("msg." + msg);
+            nodes[i].appendChild(document.createTextNode(msg));
+        }
+    }
+
     changeCSS(view.prefs["motif.current"]);
     
     var output = document.getElementById("output");
@@ -126,8 +145,6 @@ function stock_initOutputWindow(newClient, newView, newClickHandler)
     var name;
     if ("unicodeName" in view)
         name = view.unicodeName;
-    else if ("properNick" in view)
-        name = view.properNick;
     else
         name = view.name;
     splash.appendChild(document.createTextNode(name));
@@ -166,13 +183,13 @@ function onTopicKeypress(e)
             break;
             
         default:
-            client.mainWindow.onInputKeypress(header["topicinput"]);
+            client.mainWindow.onInputKeyPress(e);
     }
 }
 
 function startTopicEdit()
 {
-    var me = view.getUser(view.parent.me.nick);
+    var me = view.getUser(view.parent.me.unicodeName);
     if (!me || (!view.mode.publicTopic && !me.isOp && !me.isHalfOp) ||
         !header["topicinput"].hasAttribute("hidden"))
     {
@@ -342,7 +359,7 @@ function updateNetwork()
         setText("status", MSG_CONNECTED);
         setAttribute("status","condition", "green");
         setAttribute("status", "title",
-                     getMsg(MSG_CONNECT_VIA, view.primServ.name));
+                     getMsg(MSG_CONNECT_VIA, view.primServ.unicodeName));
         if (view.primServ.lag != -1)
             setText("lag", getMsg(MSG_FMT_SECONDS, view.primServ.lag));
         else
@@ -410,7 +427,7 @@ function updateUser()
     else
         setText("serverstr", null, true);
 
-    setText("title", getMsg(MSG_TITLE_USER, [view.properNick, source]));
+    setText("title", getMsg(MSG_TITLE_USER, [view.unicodeName, source]));
 
     header["descnodes"].removeChild(header["descnodes"].firstChild);
     if (typeof view.desc != "undefined")
@@ -439,4 +456,15 @@ function updateDCCChat()
         setText("remotestr", null, true);
 
     setText("title", getMsg(MSG_TITLE_USER, [view.user.displayName, source]));
+}
+
+function updateDCCFile()
+{
+    var pcent = Math.floor(100 * view.position / view.size);
+    
+    setText("file", view.filename);
+    setText("progress", getMsg(MSG_DCCFILE_PROGRESS,
+                               [pcent, view.position, view.size]));
+
+    setAttribute("progressbar", "width", pcent + "%");
 }

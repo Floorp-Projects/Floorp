@@ -116,9 +116,11 @@ function PrefNetwork(parent, name, force, show)
         return parent.networks[name];
     
     this.parent = parent;
-    this.name = name;
-    this.displayName = this.name;
-    this.prettyName = getMsg(MSG_PREFS_FMT_DISPLAY_NETWORK, this.name);
+    this.unicodeName = name;
+    this.viewName = name;
+    this.canonicalName = name;
+    this.encodedName = name;
+    this.prettyName = getMsg(MSG_PREFS_FMT_DISPLAY_NETWORK, this.unicodeName);
     this.servers = new Object();
     this.primServ = new PrefServer(this, "dummy server");
     this.channels = this.primServ.channels;
@@ -131,7 +133,7 @@ function PrefNetwork(parent, name, force, show)
         this.prefs["hasPrefs"] = true;
     
     if (this.prefs["hasPrefs"] || show)
-        this.parent.networks[this.name] = this;
+        this.parent.networks[this.canonicalName] = this;
     
     return this;
 };
@@ -142,7 +144,7 @@ PrefNetwork.prototype.clear =
 function pnet_clear()
 {
     this.prefs["hasPrefs"] = false;
-    delete this.parent.networks[this.name];
+    delete this.parent.networks[this.canonicalName];
 }
 
 /* A middle-management object.
@@ -153,9 +155,11 @@ function pnet_clear()
 function PrefServer(parent, name)
 {
     this.parent = parent;
-    this.name = name;
-    this.displayName = this.name;
-    this.prettyName = this.name; // Not used, thus not localised.
+    this.unicodeName = name;
+    this.viewName = name;
+    this.canonicalName = name;
+    this.encodedName = name;
+    this.prettyName = this.unicodeName; // Not used, thus not localised.
     this.channels = new Object();
     this.users = new Object();
     this.parent.servers[name] = this;
@@ -173,11 +177,12 @@ function PrefChannel(parent, name, force, show)
         return parent.channels[name];
     
     this.parent = parent;
-    this.name = name;
-    this.normalizedName = this.name;
-    this.displayName = this.name;
+    this.unicodeName = name;
+    this.viewName = name;
+    this.canonicalName = name;
+    this.encodedName = name;
     this.prettyName = getMsg(MSG_PREFS_FMT_DISPLAY_CHANNEL, 
-                             [this.parent.parent.name, this.name]);
+                             [this.parent.parent.unicodeName, this.unicodeName]);
     this.prefManager = getChannelPrefManager(this);
     this.prefs = this.prefManager.prefs;
     delete this.prefManager.onPrefChanged;
@@ -186,7 +191,7 @@ function PrefChannel(parent, name, force, show)
         this.prefs["hasPrefs"] = true;
     
     if (this.prefs["hasPrefs"] || show)
-        this.parent.channels[this.name] = this;
+        this.parent.channels[this.canonicalName] = this;
     
     return this;
 };
@@ -197,7 +202,7 @@ PrefChannel.prototype.clear =
 function pchan_clear()
 {
     this.prefs["hasPrefs"] = false;
-    delete this.parent.channels[this.name];
+    delete this.parent.channels[this.canonicalName];
 }
 
 /* Represents a single user in the hierarchy.
@@ -210,11 +215,12 @@ function PrefUser(parent, name, force, show)
         return parent.users[name];
     
     this.parent = parent;
-    this.name = name;
-    this.nick = this.name;
-    this.displayName = this.name;
+    this.unicodeName = name;
+    this.viewName = name;
+    this.canonicalName = name;
+    this.encodedName = name;
     this.prettyName = getMsg(MSG_PREFS_FMT_DISPLAY_USER, 
-                             [this.parent.parent.name, this.name]);
+                             [this.parent.parent.unicodeName, this.unicodeName]);
     this.prefManager = getUserPrefManager(this);
     this.prefs = this.prefManager.prefs;
     delete this.prefManager.onPrefChanged;
@@ -223,7 +229,7 @@ function PrefUser(parent, name, force, show)
         this.prefs["hasPrefs"] = true;
     
     if (this.prefs["hasPrefs"] || show)
-        this.parent.users[this.name] = this;
+        this.parent.users[this.canonicalName] = this;
     
     return this;
 };
@@ -234,7 +240,7 @@ PrefUser.prototype.clear =
 function puser_clear()
 {
     this.prefs["hasPrefs"] = false;
-    delete this.parent.users[this.name];
+    delete this.parent.users[this.canonicalName];
 }
 
 // Stores a list of |PrefObject|s.
@@ -294,7 +300,7 @@ function ObjectPrivateData(parent, index)
     this.treeCell = document.createElement("treecell");
     
     this.treeContainer.setAttribute("prefobjectindex", this.arrayIndex);
-    this.treeCell.setAttribute("label", this.parent.name);
+    this.treeCell.setAttribute("label", this.parent.unicodeName);
     
     switch (this.parent.TYPE)
     {
@@ -915,8 +921,7 @@ function pwin_setTooltipState(visible)
          * things, and they do seem to matter, but don't work anything like
          * the documentation. Be careful changing them.
          */
-        tt.showPopup(this.tooltipObject, tipobjBox.screenX, 
-                     tipobjBox.screenY, "tooltip");
+        tt.showPopup(this.tooltipObject, -1, -1, "tooltip", "bottomleft", "topleft");
         
         // Set the timer to hide the tooltip some time later...
         // (note the fun inline function)
@@ -947,9 +952,9 @@ function pwin_onLoad()
     initMessages();
     
     // Use localised name.
-    client.name = MSG_PREFS_GLOBAL;
-    client.displayName = client.name;
-    client.prettyName = client.name;
+    client.viewName = MSG_PREFS_GLOBAL;
+    client.unicodeName = client.viewName;
+    client.prettyName = client.viewName;
     
     // Use the window mediator service to prevent mutliple instances.
     var windowMediator = Components.classes[MEDIATOR_CONTRACTID];
@@ -1052,18 +1057,18 @@ function pwin_onLoad()
                 // Network view...
                 if (view.TYPE == "IRCNetwork")
                 {
-                    n = new PrefNetwork(client, view.name, false, true);
+                    n = new PrefNetwork(client, view.unicodeName, false, true);
                     if (view == czWin.client.currentObject)
                         currentView = n;
                 }
                 
                 if (view.TYPE.match(/^IRC(Channel|User)$/))
-                    s = client.networks[view.parent.parent.name].primServ;
+                    s = client.networks[view.parent.parent.canonicalName].primServ;
                 
                 // Channel view...
                 if (view.TYPE == "IRCChannel")
                 {
-                    c = new PrefChannel(s, view.name, false, true);
+                    c = new PrefChannel(s, view.unicodeName, false, true);
                     if (view == czWin.client.currentObject)
                         currentView = c;
                 }
@@ -1518,17 +1523,17 @@ function pwin_onAddObject()
     {
         case "PrefNetwork":
             rv.type = "net";
-            rv.net = this.currentObject.parent.name;
+            rv.net = this.currentObject.parent.unicodeName;
             break;
         case "PrefChannel":
             rv.type = "chan";
-            rv.net = this.currentObject.parent.parent.parent.name;
-            rv.chan = this.currentObject.parent.name;
+            rv.net = this.currentObject.parent.parent.parent.unicodeName;
+            rv.chan = this.currentObject.parent.unicodeName;
             break;
         case "PrefUser":
             rv.type = "user";
-            rv.net = this.currentObject.parent.parent.parent.name;
-            rv.chan = this.currentObject.parent.name;
+            rv.net = this.currentObject.parent.parent.parent.unicodeName;
+            rv.chan = this.currentObject.parent.unicodeName;
             break;
     }
     
@@ -1573,7 +1578,7 @@ function pwin_onDeleteObject()
     var sel = this.currentObject;
     
     // Check they want to go ahead.
-    if (!confirm(getMsg(MSG_PREFS_OBJECT_DELETE, sel.parent.name)))
+    if (!confirm(getMsg(MSG_PREFS_OBJECT_DELETE, sel.parent.unicodeName)))
         return;
     
     // Select a new item BEFORE removing the current item, so the <tree> 
@@ -1608,7 +1613,7 @@ function pwin_onResetObject()
     var sel = this.currentObject;
     
     // Check they want to go ahead.
-    if (!confirm(getMsg(MSG_PREFS_OBJECT_RESET, sel.parent.name)))
+    if (!confirm(getMsg(MSG_PREFS_OBJECT_RESET, sel.parent.unicodeName)))
         return;
     
     // Reset the prefs.

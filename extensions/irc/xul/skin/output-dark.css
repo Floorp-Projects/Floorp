@@ -67,6 +67,10 @@ a.chatzilla-link:visited {
     -moz-border-radius: 7px;
 }
 
+.progress-fg {
+    background-color: silver;
+}
+
 .value {
     color: silver;
 }

@@ -73,7 +73,7 @@ if (DEBUG) {
                      return;
                  _dd_disableDepth = Number.MAX_VALUE;
                  var sufx = (new Date() - _dd_timeStack.pop()) / 1000 + " sec";
-                 _dd_currentIndent = 
+                 _dd_currentIndent =
                      _dd_currentIndent.substr(0, _dd_currentIndent.length -
                                               _dd_indentLength);
                  if (_dd_lastDumpWasOpen)
@@ -89,7 +89,7 @@ if (DEBUG) {
                      dump("\n");
                  dump(_dd_pfx + _dd_currentIndent + str + "\n");
                  _dd_lastDumpWasOpen = false;
-             }    
+             }
          }
 } else {
     dd = function (){};
@@ -113,7 +113,7 @@ function dumpObject (o, pfx, sep)
     var s = "";
 
     sep = (typeof sep == "undefined") ? " = " : sep;
-    pfx = (typeof pfx == "undefined") ? "" : pfx;    
+    pfx = (typeof pfx == "undefined") ? "" : pfx;
 
     for (p in o)
     {
@@ -155,7 +155,7 @@ function dumpObjectTree (o, recurse, compress, level)
         level = 0;
     if (typeof compress == "undefined")
         compress = true;
-    
+
     for (var i = 0; i < level; i++)
         pfx += (compress) ? "| " : "|  ";
 
@@ -164,7 +164,7 @@ function dumpObjectTree (o, recurse, compress, level)
     for (i in o)
     {
         var t, ex;
-        
+
         try
         {
             t = typeof o[i];
@@ -173,7 +173,7 @@ function dumpObjectTree (o, recurse, compress, level)
         {
             t = "ERROR";
         }
-        
+
         switch (t)
         {
             case "function":
@@ -195,9 +195,9 @@ function dumpObjectTree (o, recurse, compress, level)
                     s += " null\n";
                     break;
                 }
-                
+
                 s += "\n";
-                
+
                 if (!compress)
                     s += pfx + "|\n";
                 if ((i != "parent") && (recurse))
@@ -207,7 +207,7 @@ function dumpObjectTree (o, recurse, compress, level)
 
             case "string":
                 if (o[i].length > 200)
-                    s += pfx + tee + i + " (" + t + ") " + 
+                    s += pfx + tee + i + " (" + t + ") " +
                         o[i].length + " chars\n";
                 else
                     s += pfx + tee + i + " (" + t + ") '" + o[i] + "'\n";
@@ -216,10 +216,10 @@ function dumpObjectTree (o, recurse, compress, level)
             case "ERROR":
                 s += pfx + tee + i + " (" + t + ") ?\n";
                 break;
-                
+
             default:
                 s += pfx + tee + i + " (" + t + ") " + o[i] + "\n";
-                
+
         }
 
         if (!compress)
@@ -228,9 +228,9 @@ function dumpObjectTree (o, recurse, compress, level)
     }
 
     s += pfx + "*\n";
-    
+
     return s;
-    
+
 }
 
 function ecmaEscape(str)
@@ -244,7 +244,7 @@ function ecmaEscape(str)
             rv = "u0" + rv;
         else if (rv.length == 4)
             rv = "u" + rv;
-      
+
         return "%" + rv;
     };
 
@@ -295,17 +295,17 @@ function replaceVars(str, vars)
         var name = symbol.substr(1);
         if (name in vars)
             return vars[name];
-        
+
         return "$" + name;
     };
-    
+
     return str.replace(/(\$\w[\w\d\-]+)/g, doReplace);
 }
-    
+
 function formatException (ex)
 {
     if (ex instanceof Error)
-        return getMsg (MSG_FMT_JSEXCEPTION, [ex.name, ex.message, ex.fileName, 
+        return getMsg (MSG_FMT_JSEXCEPTION, [ex.name, ex.message, ex.fileName,
                                              ex.lineNumber]);
 
     return String(ex);
@@ -326,20 +326,20 @@ function Clone (obj)
         robj[p] = obj[p];
 
     return robj;
-    
+
 }
 
 function Copy(source, dest, overwrite)
 {
     if (!dest)
         dest = new Object();
-    
+
     for (var p in source)
     {
         if (overwrite || !(p in dest))
             dest[p] = source[p];
     }
-    
+
     return dest;
 }
 
@@ -351,12 +351,12 @@ function Copy(source, dest, overwrite)
 function matchObject (o, pattern, negate)
 {
     negate = Boolean(negate);
-    
+
     function _match (o, pattern)
     {
         if (pattern instanceof Function)
             return pattern(o);
-        
+
         for (p in pattern)
         {
             var val;
@@ -364,12 +364,12 @@ function matchObject (o, pattern, negate)
                  * properties of objects with obj$prop: "foo" syntax      */
                 /*
                   if (p[0] == "$")
-                  val = eval ("o." + 
+                  val = eval ("o." +
                   p.substr(1,p.length).replace (/\$/g, "."));
                   else
                 */
             val = o[p];
-            
+
             if (pattern[p] instanceof Function)
             {
                 if (!pattern[p](val))
@@ -391,32 +391,45 @@ function matchObject (o, pattern, negate)
 
     if (!(pattern instanceof Array))
         return Boolean (negate ^ _match(o, pattern));
-            
+
     for (var i in pattern)
         if (_match (o, pattern[i]))
             return !negate;
 
     return negate;
-    
+
 }
 
-function matchEntry (partialName, list)
+function utils_lcfn(text)
 {
-    
+    return text.toLowerCase();
+}
+
+function matchEntry (partialName, list, lcFn)
+{
+
     if ((typeof partialName == "undefined") ||
         (String(partialName) == ""))
-        return list;
-
-    var ary = new Array();
-
-    for (var i in list)
     {
-        if (list[i].indexOf(partialName) == 0)
-            ary.push (list[i]);
+        var ary = new Array();
+        for (var i in list)
+            ary.push(i);
+        return ary;
+    }
+
+    if (typeof lcFn != "function")
+        lcFn = utils_lcfn;
+
+    ary = new Array();
+
+    for (i in list)
+    {
+        if (lcFn(list[i]).indexOf(lcFn(partialName)) == 0)
+            ary.push(i);
     }
 
     return ary;
-    
+
 }
 
 function encodeChar(ch)
@@ -429,24 +442,27 @@ function escapeFileName(fileName)
     return fileName.replace(/[^\w\d.,#\-_%]/g, encodeChar);
 }
 
-function getCommonPfx (list)
+function getCommonPfx (list, lcFn)
 {
     var pfx = list[0];
     var l = list.length;
-    
+
+    if (typeof lcFn != "function")
+        lcFn = utils_lcfn;
+
     for (var i = 0; i < l; i++)
     {
         for (var c = 0; c < pfx.length; ++c)
         {
             if (c >= list[i].length)
             {
-                pfx = pfx.substr (0, c);
+                pfx = pfx.substr(0, c);
                 break;
             }
             else
             {
-                if (pfx[c] != list[i][c])
-                    pfx = pfx.substr (0, c);
+                if (lcFn(pfx[c]) != lcFn(list[i][c]))
+                    pfx = pfx.substr(0, c);
             }
         }
     }
@@ -459,7 +475,7 @@ function openTopWin (url)
 {
     return openDialog (getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
 }
-    
+
 function getWindowByType (windowType)
 {
     const MEDIATOR_CONTRACTID =
@@ -477,10 +493,10 @@ function renameProperty (obj, oldname, newname)
 
     if (oldname == newname)
         return;
-    
+
     obj[newname] = obj[oldname];
     delete obj[oldname];
-    
+
 }
 
 function newObject(contractID, iface)
@@ -507,7 +523,7 @@ function newObject(contractID, iface)
     }
 
     return rv;
-    
+
 }
 
 function getContentWindow(frame)
@@ -542,30 +558,30 @@ function getPriv (priv)
         dd ("getPriv: unable to get privlege '" + priv + "': " + e);
         rv = false;
     }
-    
+
     return rv;
-    
+
 }
 
 function len(o)
 {
     var l = 0;
-    
+
     for (var p in o)
         ++l;
-    
+
     return l;
 }
 
 function keys (o)
 {
     var rv = new Array();
-    
+
     for (var p in o)
         rv.push(p);
 
     return rv;
-    
+
 }
 
 function stringTrim (s)
@@ -574,7 +590,7 @@ function stringTrim (s)
         return "";
     s = s.replace (/^\s+/, "");
     return s.replace (/\s+$/, "");
-    
+
 }
 
 /* the offset should be in seconds, it will be rounded to 2 decimal places */
@@ -608,7 +624,7 @@ function formatDateOffset (offset, format)
         format = format.replace ("%m", minutes);
         format = format.replace ("%s", seconds);
     }
-    
+
     return format;
 }
 
@@ -630,7 +646,7 @@ function arrayIndexOf (ary, elem)
 
     return -1;
 }
-    
+
 function arrayInsertAt (ary, i, o)
 {
     ary.splice (i, 0, o);
@@ -689,10 +705,10 @@ function splitLongWord (str, pos)
 
     var ary = new Array();
     var right = str;
-    
+
     while (right.length > pos)
     {
-        /* search for a nice place to break the word, fuzzfactor of +/-5, 
+        /* search for a nice place to break the word, fuzzfactor of +/-5,
          * centered around |pos| */
         var splitPos =
             right.substring(pos - 5, pos + 5).search(/[^A-Za-z0-9]/);
@@ -717,7 +733,7 @@ function getRandomElement (ary)
 function roundTo (num, prec)
 {
 
-    return Math.round(num * Math.pow (10, prec)) / Math.pow (10, prec);   
+    return Math.round(num * Math.pow (10, prec)) / Math.pow (10, prec);
 
 }
 
@@ -751,7 +767,7 @@ function getStackTrace ()
     }
 
     return str;
-    
+
 }
 
 function getInterfaces (cls)
@@ -777,7 +793,7 @@ function getInterfaces (cls)
     }
 
     return rv;
-    
+
 }
 
 /**
@@ -787,10 +803,10 @@ function getInterfaces (cls)
  * @param ary           an array of objects
  * @param func_name     string name of function to call.
  * @param data          data object to pass to each object.
- */      
+ */
 function mapObjFunc(ary, func_name, data)
 {
-    /* 
+    /*
      * WARNING: Caller assumes resonsibility to verify ary
      * and func_name
      */
@@ -835,7 +851,7 @@ function getFileFromURLSpec(url)
 {
     const FILE_CTRID = "@mozilla.org/network/protocol;1?name=file";
     const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
-    
+
     var handler = Components.classes[FILE_CTRID].createInstance();
     handler = handler.QueryInterface(nsIFileProtocolHandler);
     return handler.getFileFromURLSpec(url);
@@ -851,7 +867,7 @@ function getURLSpecFromFile (file)
 
     const nsIIOService = Components.interfaces.nsIIOService;
     const nsILocalFile = Components.interfaces.nsILocalFile;
-    
+
     if (typeof file == "string")
     {
         var fileObj =
@@ -859,7 +875,7 @@ function getURLSpecFromFile (file)
         fileObj.initWithPath(file);
         file = fileObj;
     }
-    
+
     var service = Components.classes[IOS_CTRID].getService(nsIIOService);
     /* In sept 2002, bug 166792 moved this method to the nsIFileProtocolHandler
      * interface, but we need to support older versions too. */
@@ -956,4 +972,15 @@ function getHostmaskParts(hostmask)
     // And re-construct the 'parsed' hostmask.
     rv.mask = rv.nick + "!" + rv.user + "@" + rv.host;
     return rv;
+}
+
+function isinstance(inst, base)
+{
+    /* Returns |true| if |inst| was constructed by |base|. Not 100% accurate,
+     * but plenty good enough for us. This is to work around the fix for bug
+     * 254067 which makes instanceof fail if the two sides are 'from'
+     * different windows (something we don't care about).
+     */
+    return (inst && inst.constructor && base &&
+            (inst.constructor.name == base.name));
 }

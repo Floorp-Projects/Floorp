@@ -50,7 +50,8 @@
 
         #ch-usercount,
         #ch-modestr,
-        #net-lag {
+        #net-lag,
+        #dcc-file-progress {
           white-space: nowrap;
         }
 
@@ -71,7 +72,10 @@
         #usr-descnodes {
           text-align: center;
         }
-
+        
+        .crop-right {
+        }
+        
       </style>
 
       <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -86,12 +90,12 @@
         <table id="h-table">
           <tbody>
             <tr>
-              <td class="label">Known Networks</td>
-              <td class="value" id="cli-netcount">&lt;none&gt;</td>
+              <td class="label" localize="output.knownnets"></td>
+              <td class="value" id="cli-netcount"></td>
               <td class="label" id="cli-version-container"
-                  condition="yellow">ChatZilla <span id="cli-version">0.9.8</span></td>
-              <td class="label">Connected Networks</td>
-              <td class="value" id="cli-connectcount">&lt;none&gt;</td>
+                  condition="yellow">ChatZilla <span id="cli-version">error</span></td>
+              <td class="label" localize="output.connnets"></td>
+              <td class="value" id="cli-connectcount" localize="none"></td>
             </tr>
           </tbody>
         </table>
@@ -101,15 +105,15 @@
         <table id="h-table">
           <tbody>
             <tr>
-              <td class="label" id="net-url-l">URL</td>
-              <td class="value" id="net-url">
+              <td class="label" id="net-url-l" localize="output.url"></td>
+              <td class="value crop-right" id="net-url">
                 <a id="net-url-anchor" class="chatzilla-link"
                    href="irc://foo/bar">irc://foo/bar</a>
               </td>
               <td class="value" id="net-status"
-                  condition="red">Not Connected</td>
-              <td class="label" id="net-lag-l">Lag</td>
-              <td class="value" id="net-lag">&lt;unknown&gt;</td>
+                  condition="red" localize="output.notconn"></td>
+              <td class="label" id="net-lag-l" localize="output.lag"></td>
+              <td class="value" id="net-lag" localize="unknown"></td>
             </td>
             </tr>
           </tbody>
@@ -120,20 +124,20 @@
         <table id="h-table">
           <tbody>
             <tr>
-              <td class="label" id="ch-url-l">URL</td>
-              <td class="value" id="ch-url">
+              <td class="label" id="ch-url-l" localize="output.url"></td>
+              <td class="value crop-right" id="ch-url">
                 <a id="ch-url-anchor" class="chatzilla-link"
                    href="irc://foo/bar">irc://foo/bar</a>
               </td>
-              <td class="label" id="ch-modestr-l">Mode</td>
-              <td class="value" id="ch-modestr">&lt;none&gt;</td>
-              <td class="label" id="ch-usercount-l">Users</td>
-              <td class="value" id="ch-usercount">&lt;none&gt;</td>
+              <td class="label" id="ch-modestr-l" localize="output.mode"></td>
+              <td class="value" id="ch-modestr" localize="none"></td>
+              <td class="label" id="ch-usercount-l" localize="output.users"></td>
+              <td class="value" id="ch-usercount" localize="none"></td>
             </tr>
             <tr onclick="onTopicNodesClick(event);" style="cursor:default">
-              <td class="label" id="ch-topicnodes-l">Topic</td>
+              <td class="label" id="ch-topicnodes-l" localize="output.topic"></td>
               <td class="value" colspan="6">
-                <span id="ch-topicnodes">&lt;none&gt;</span>
+                <span id="ch-topicnodes" localize="none"></span>
                 <input hidden="true" id="ch-topicinput" style="width:100%"
                        onblur="cancelTopicEdit();"
                        onkeypress="onTopicKeypress(event);">
@@ -147,19 +151,19 @@
         <table id="h-table">
           <tbody>
             <tr>
-              <td class="label">URL</td>
-              <td class="value" width="100%">
+              <td class="label" localize="output.url"></td>
+              <td class="value crop-right" width="100%">
                 <a id="usr-url-anchor" class="chatzilla-link"
                    href="irc://foo/bar">irc://foo/bar</a>
               </td>
-              <td class="label" id="usr-serverstr-l">Connected via</td>
-              <td class="value" id="usr-serverstr">&lt;none&gt;</td>
+              <td class="label" id="usr-serverstr-l" localize="output.via"></td>
+              <td class="value" id="usr-serverstr" localize="none"></td>
             </tr>
             <tr>
-              <td id="usr-title" colspan="4">&lt;none&gt;</td>
+              <td id="usr-title" colspan="4" localize="none"></td>
             </tr>
             <tr>
-              <td id="usr-descnodes" colspan="4">&lt;none&gt;</td>
+              <td id="usr-descnodes" colspan="4" localize="none"></td>
             </tr>
           </tbody>
         </table>
@@ -169,16 +173,36 @@
         <table id="h-table">
           <tbody>
             <tr>
-              <td class="label">URL</td>
-              <td class="value" width="100%">
+              <td class="label" localize="output.url"></td>
+              <td class="value crop-right" width="100%">
                 <a id="dcc-chat-url-anchor" class="chatzilla-link"
                    href="irc://foo/bar">irc://foo/bar</a>
               </td>
-              <td class="label" id="dcc-chat-remotestr-l">Connected to</td>
-              <td class="value" id="dcc-chat-remotestr">&lt;none&gt;</td>
+              <td class="label" id="dcc-chat-remotestr-l" localize="output.to"></td>
+              <td class="value" id="dcc-chat-remotestr" localize="none"></td>
             </tr>
             <tr>
-              <td id="dcc-chat-title" colspan="4">&lt;none&gt;</td>
+              <td id="dcc-chat-title" colspan="4" localize="none"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="header" id="dcc-file-container" hidden="true">
+        <table id="h-table">
+          <tbody>
+            <tr>
+              <td class="label" localize="output.file"></td>
+              <td class="value crop-right" id="dcc-file-file" width="100%"></td>
+              <td class="label" localize="output.progress"></td>
+              <td class="value" id="dcc-file-progress" localize="unknown"></td>
+            </tr>
+            <tr>
+              <td colspan="4" class="progress-bg">
+                <table id="dcc-file-progressbar" width="0%"><tbody><tr>
+                  <td class="progress-fg">&nbsp;</td>
+                </tr></tbody></table>
+              </td>
             </tr>
           </tbody>
         </table>

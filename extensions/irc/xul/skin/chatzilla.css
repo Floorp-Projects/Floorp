@@ -38,10 +38,8 @@
 @import url(chrome://communicator/skin/);
 
 window {
-
     width: 640px;
     height: 480px;
-
 }
 
 #menu-view-none {
@@ -83,7 +81,8 @@ window {
 }
 
 .view-button {
-	/* do NOT set colour, at least not without background. :) */
+    /* do NOT set colour, at least not without background. :) */
+    text-align: center;
 }
 
 .view-button[state="current"] {
@@ -109,37 +108,8 @@ window {
     margin-left: 5px;
 }
 
-.header-box, .usercount-data {
-    padding-top: 2px;
-    padding-bottom: 2px;
-    padding-right: 10px;
-}
-
-#user-list {
-    margin: 0px;
-}
-
 #server-nick {
     padding-top: 5px;
-}
-
-.header-label {
-    font-weight: bold;
-    text-align: right;
-    margin-left: 10px;
-}
-
-.header-data {
-    text-align: left;
-    margin-left: 5px;
-}
-
-#channel-topic {
-    cursor: default;
-}
-
-#channel-topic[editable="true"] {
-    cursor: text;
 }
 
 .output-container {
@@ -226,6 +196,14 @@ treechildren::-moz-tree-image(op-true) {
     list-style-image: url(chrome://chatzilla/skin/images/op-graphic.png);
 }
 
+treechildren::-moz-tree-cell-text(away-true) {
+    color: GrayText;
+}
+
+treechildren::-moz-tree-cell-text(away-false) {
+}
+
+
 .colorGrid
 {
     width: 24px;
@@ -241,3 +219,17 @@ treechildren::-moz-tree-image(op-true) {
     -moz-box-align: center;
     -moz-box-pack: center;
 }
+
+/* Feel the hacks. */
+progressmeter[mode="undetermined"] {
+    -moz-appearance: none;
+}
+
+[dir="ltr"] {
+    direction: ltr;
+}
+
+[dir="rtl"] {
+    direction: rtl;
+}
+

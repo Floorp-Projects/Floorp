@@ -45,7 +45,7 @@ const nsIRDFNode = Components.interfaces.nsIRDFNode;
 function initRDF()
 {
     client.rdf = new RDFHelper();
-    
+
     client.rdf.initTree("user-list");
     client.rdf.setTreeRoot("user-list", client.rdf.resNullChan);
 }
@@ -61,8 +61,8 @@ function RDFHelper()
 
     this.ds =
         Components.classes[RDF_MEMORYDS_CONTRACTID].createInstance(RDF_DS_IID);
-    this.svc = 
-        Components.classes[RDF_DS_CONTRACTID].getService(RDF_SVC_IID);    
+    this.svc =
+        Components.classes[RDF_DS_CONTRACTID].getService(RDF_SVC_IID);
 
     /* predefined nodes */
     this.resRoot     = this.svc.GetResource ("NC:chatzilla-data");
@@ -79,23 +79,27 @@ function RDFHelper()
     this.resHalfOp   = this.svc.GetResource (RES_PFX + "halfop");
     this.resVoice    = this.svc.GetResource (RES_PFX + "voice");
     this.resNick     = this.svc.GetResource (RES_PFX + "nick");
+    this.resUniName  = this.svc.GetResource (RES_PFX + "unicodeName");
     this.resUser     = this.svc.GetResource (RES_PFX + "user");
+    this.resAway     = this.svc.GetResource (RES_PFX + "away");
     this.resHost     = this.svc.GetResource (RES_PFX + "host");
 
     /* predefined literals */
     this.litTrue     = this.svc.GetLiteral ("true");
     this.litFalse    = this.svc.GetLiteral ("false");
-    this.litUnk      = this.svc.GetLiteral (""); 
+    this.litUnk      = this.svc.GetLiteral ("");
 
     this.ds.Assert (this.resNullUser, this.resOp, this.litFalse, true);
     this.ds.Assert (this.resNullUser, this.resHalfOp, this.litFalse, true);
     this.ds.Assert (this.resNullUser, this.resVoice, this.litFalse, true);
     this.ds.Assert (this.resNullUser, this.resNick, this.litUnk, true);
+    this.ds.Assert (this.resNullUser, this.resUniName, this.litUnk, true);
     this.ds.Assert (this.resNullUser, this.resUser, this.litUnk, true);
+    this.ds.Assert (this.resNullUser, this.resAway, this.litFalse, true);
     this.ds.Assert (this.resNullUser, this.resHost, this.litUnk, true);
     this.ds.Assert (this.resRoot, this.resChannel, this.resNullChan, true);
     //this.ds.Assert (this.resNullChan, this.resChanUser, this.resNullUser,
-    //                true);    
+    //                true);
 }
 
 RDFHelper.prototype.GetResource =
@@ -134,10 +138,10 @@ function rdf_dassert (n1, a, n2, f)
     var n1v = n1 ? n1.Value : "!!!";
     var av = a ? a.Value : "!!!";
     var n2v = n2 ? n2.Value : "!!!";
-    
+
     if (!n1 || !a || !n2)
         dd(getStackTrace());
-    
+
     this.ds.Assert (n1, a, n2, f)
 }
 
@@ -148,10 +152,10 @@ function rdf_duassert (n1, a, n2)
     var n1v = n1 ? n1.Value : "!!!";
     var av = a ? a.Value : "!!!";
     var n2v = n2 ? n2.Value : "!!!";
-    
+
     if (!n1 || !a || !n2)
         dd(getStackTrace());
-    
+
     this.ds.Unassert (n1, a, n2)
 
 }
@@ -166,9 +170,9 @@ function rdf_change (n1, a, n2)
     {
         return null;
     }
-    
+
     return this.ds.Change (n1, a, oldN2, n2);
-    
+
 }
 
 RDFHelper.prototype.clearTargets =
@@ -204,11 +208,11 @@ function rdf_cleart (n1, a, recurse)
                 */
             }
         }
-        
+
         this.Unassert (n1, a, n2);
     }
-}        
-    
+}
+
 
 RDFHelper.prototype.initTree =
 function rdf_inittree (id)

@@ -48,6 +48,10 @@
     background-color: white;
 }
 
+.progress-fg {
+    background-color: grey;
+}
+
 .msg[msg-type="ACTION"] .msg-data {
     font-style: italic;
 }

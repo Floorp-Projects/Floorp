@@ -106,18 +106,53 @@ function initMenus()
         ]
     };
 
+    var inChannel = "((cx.TYPE == 'IRCChannel') and cx.channel.active)";
+
     client.menuSpecs["mainmenu:file"] = {
         label: MSG_MNU_FILE,
         getContext: getDefaultContext,
         items:
         [
-         ["leave", {visibleif: "cx.TYPE == 'IRCChannel'"}],
-         ["delete-view", {visibleif: "cx.TYPE != 'IRCChannel'"}],
+         ["leave",       {visibleif: inChannel}],
+         ["delete-view", {visibleif: "!" + inChannel}],
          ["disconnect"],
-         ["quit"],
          ["-"],
-         [navigator.platform.search(/win/i) == -1 ? 
-          "quit-mozilla" : "exit-mozilla"]
+         [navigator.platform.search(/win/i) == -1 ? "quit" : "exit"]
+        ]
+    };
+
+    var Mozilla = "(client.host == 'Mozilla')";
+    var FirefoxOnLinux = "((client.host == 'Firefox') and (client.platform == 'Linux'))";
+    var FirefoxNotOnLinux = "((client.host == 'Firefox') and !(client.platform == 'Linux'))";
+
+    client.menuSpecs["mainmenu:edit"] = {
+        label: MSG_MNU_EDIT,
+        getContext: getDefaultContext,
+        items:
+        [
+         ["cmd-undo",      {enabledif: "getCommandEnabled('cmd_undo')"}],
+         ["cmd-redo",      {enabledif: "getCommandEnabled('cmd_redo')"}],
+         ["-"],
+         ["cmd-cut",       {enabledif: "getCommandEnabled('cmd_cut')"}],
+         ["cmd-copy",      {enabledif: "getCommandEnabled('cmd_copy')"}],
+         ["cmd-paste",     {enabledif: "getCommandEnabled('cmd_paste')"}],
+         ["cmd-delete",    {enabledif: "getCommandEnabled('cmd_delete')"}],
+         ["-"],
+         ["cmd-selectall", {enabledif: "getCommandEnabled('cmd_selectAll')"}],
+         ["-",                   {visibleif: Mozilla}],
+         ["cmd-mozilla-prefs",   {visibleif: Mozilla}],
+         ["cmd-chatzilla-prefs", {visibleif: Mozilla}],
+         ["-",                   {visibleif: FirefoxOnLinux}],
+         ["cmd-prefs",           {visibleif: FirefoxOnLinux}]
+        ]
+    };
+
+    client.menuSpecs["mainmenu:tools"] = {
+        label: MSG_MNU_TOOLS,
+        getContext: getDefaultContext,
+        items:
+        [
+         ["cmd-chatzilla-opts", {visibleif: FirefoxNotOnLinux}]
         ]
     };
 
@@ -271,7 +306,7 @@ function initMenus()
     var urlenabled = "has('url')";
     var urlexternal = "has('url') && cx.url.search(/^irc:/i) == -1";
     var textselected = "getCommandEnabled('cmd_copy')";
-    
+
     client.menuSpecs["context:messages"] = {
         getContext: getMessagesContext,
         items:
@@ -294,8 +329,8 @@ function initMenus()
          ["query"],
          ["version"],
          ["-"],
-         ["leave", {visibleif: "cx.TYPE == 'IRCChannel'"}],
-         ["delete-view", {visibleif: "cx.TYPE != 'IRCChannel'"}],
+         ["leave",       {visibleif: inChannel}],
+         ["delete-view", {visibleif: "!" + inChannel}],
          ["disconnect"],
          ["-"],
          ["toggle-text-dir"]
@@ -312,8 +347,8 @@ function initMenus()
                  {type: "checkbox",
                   checkedif: "isStartupURL(cx.sourceObject.getURL())"}],
          ["-"],
-         ["leave", {visibleif: "cx.TYPE == 'IRCChannel'"}],
-         ["delete-view", {visibleif: "cx.TYPE != 'IRCChannel'"}],
+         ["leave",       {visibleif: inChannel}],
+         ["delete-view", {visibleif: "!" + inChannel}],
          ["disconnect"],
          ["-"],
          ["toggle-text-dir"]

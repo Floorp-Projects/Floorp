@@ -48,4 +48,10 @@ PACKAGE_FILE = chatzilla.pkg
 
 EXTRA_COMPONENTS = js/lib/chatzilla-service.js
 
+ifdef MOZ_PHOENIX
+	DIRS += ff
+else
+	DIRS += sm
+endif
+
 include $(topsrcdir)/config/rules.mk

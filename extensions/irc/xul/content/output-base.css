@@ -357,39 +357,103 @@ a.chatzilla-link:hover {
 .chatzilla-emote:after {            /* empty span to attach :after images to   */
     margin-left: 3px;
     margin-right: 3px;
-    content: url(chrome://chatzilla/skin/images/face-dunno.gif);
+    content: url(chrome://chatzilla/skin/images/face-question.png);
+}
+
+.chatzilla-emote[type="face-alien"]:after {
+    content: url(chrome://chatzilla/skin/images/face-alien.png);
 }
 
 .chatzilla-emote[type="face-angry"]:after {
-    content: url(chrome://chatzilla/skin/images/face-angry.gif);
+    content: url(chrome://chatzilla/skin/images/face-angry.png);
+}
+
+.chatzilla-emote[type="face-arrow"]:after {
+    content: url(chrome://chatzilla/skin/images/face-arrow.png);
 }
 
 .chatzilla-emote[type="face-cry"]:after {
-    content: url(chrome://chatzilla/skin/images/face-cry.gif);
+    content: url(chrome://chatzilla/skin/images/face-cry.png);
 }
 
-.chatzilla-emote[type="face-frown"]:after {
-    content: url(chrome://chatzilla/skin/images/face-frown.gif);
+.chatzilla-emote[type="face-confused"]:after {
+    content: url(chrome://chatzilla/skin/images/face-confused.png);
 }
 
-.chatzilla-emote[type="face-screw"]:after {
-    content: url(chrome://chatzilla/skin/images/face-screw.gif);
+.chatzilla-emote[type="face-cool"]:after {
+    content: url(chrome://chatzilla/skin/images/face-cool.png);
+}
+
+.chatzilla-emote[type="face-dizzy"]:after {
+    content: url(chrome://chatzilla/skin/images/face-dizzy.png);
+}
+
+.chatzilla-emote[type="face-eek"]:after {
+    content: url(chrome://chatzilla/skin/images/face-eek.png);
+}
+
+.chatzilla-emote[type="face-evil"]:after {
+    content: url(chrome://chatzilla/skin/images/face-evil.png);
+}
+
+.chatzilla-emote[type="face-exclaim"]:after {
+    content: url(chrome://chatzilla/skin/images/face-exclaim.png);
+}
+
+.chatzilla-emote[type="face-idea"]:after {
+    content: url(chrome://chatzilla/skin/images/face-idea.png);
+}
+
+.chatzilla-emote[type="face-laugh"]:after {
+    content: url(chrome://chatzilla/skin/images/face-laugh.png);
+}
+
+.chatzilla-emote[type="face-lol"]:after {
+    content: url(chrome://chatzilla/skin/images/face-lol.png);
+}
+
+.chatzilla-emote[type="face-mrgreen"]:after {
+    content: url(chrome://chatzilla/skin/images/face-mrgreen.png);
+}
+
+.chatzilla-emote[type="face-normal"]:after {
+    content: url(chrome://chatzilla/skin/images/face-normal.png);
+}
+
+.chatzilla-emote[type="face-question"]:after {
+    content: url(chrome://chatzilla/skin/images/face-question.png);
+}
+
+.chatzilla-emote[type="face-razz"]:after {
+    content: url(chrome://chatzilla/skin/images/face-razz.png);
+}
+
+.chatzilla-emote[type="face-red"]:after {
+    content: url(chrome://chatzilla/skin/images/face-red.png);
+}
+
+.chatzilla-emote[type="face-rolleyes"]:after {
+    content: url(chrome://chatzilla/skin/images/face-rolleyes.png);
+}
+
+.chatzilla-emote[type="face-sad"]:after {
+    content: url(chrome://chatzilla/skin/images/face-sad.png);
 }
 
 .chatzilla-emote[type="face-smile"]:after {
-    content: url(chrome://chatzilla/skin/images/face-smile.gif);
+    content: url(chrome://chatzilla/skin/images/face-smile.png);
 }
 
-.chatzilla-emote[type="face-surprise"]:after {
-    content: url(chrome://chatzilla/skin/images/face-surprise.gif);
+.chatzilla-emote[type="face-surprised"]:after {
+    content: url(chrome://chatzilla/skin/images/face-surprised.png);
 }
 
 .chatzilla-emote[type="face-tongue"]:after {
-    content: url(chrome://chatzilla/skin/images/face-tongue.gif);
+    content: url(chrome://chatzilla/skin/images/face-tongue.png);
 }
 
 .chatzilla-emote[type="face-wink"]:after {
-    content: url(chrome://chatzilla/skin/images/face-wink.gif);
+    content: url(chrome://chatzilla/skin/images/face-wink.png);
 }
 
 /******************************************************************************
@@ -413,9 +477,9 @@ a.chatzilla-link:hover {
 }
 
 .msg-timestamp {                            /* .msg-timestamp = timestamp for */
-	font-style: normal !important;          /* the message, done using        */
-	vertical-align: top;                    /* :before and content.           */
-	white-space: nowrap;
+    font-style: normal !important;          /* the message, done using        */
+    vertical-align: top;                    /* :before and content.           */
+    white-space: nowrap;
 }
 
 .msg-type {                                 /* .msg-type = message type       */

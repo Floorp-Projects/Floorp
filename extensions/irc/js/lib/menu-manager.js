@@ -189,6 +189,7 @@ function mmgr_showpop (event)
             return true;
         
         expr = expr.replace (/\Wand\W/gi, " && ");
+        expr = expr.replace (/\Wor\W/gi, " || ");
 
         try
         {

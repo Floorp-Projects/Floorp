@@ -44,7 +44,6 @@
 <?xml-stylesheet href="chrome://chatzilla/skin/chatzilla.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://chatzilla/content/scripts.xul"?>
 <?xul-overlay href="chrome://chatzilla/content/popups.xul"?>
 <?xul-overlay href="chrome://chatzilla/content/menus.xul"?>
@@ -83,15 +82,17 @@
                   <binding subject="?member" predicate="http://home.netscape.com/NC-irc#halfop" object="?halfop"/>
                   <binding subject="?member" predicate="http://home.netscape.com/NC-irc#voice" object="?voice"/>
                   <binding subject="?member" predicate="http://home.netscape.com/NC-irc#nick" object="?nick"/>
+                  <binding subject="?member" predicate="http://home.netscape.com/NC-irc#unicodeName" object="?unicodeName"/>
+                  <binding subject="?member" predicate="http://home.netscape.com/NC-irc#away" object="?away"/>
                 </bindings>
                 
                 <action>
                   <treechildren>
                     <treeitem uri="?member" flex="1"
-                      properties="op-?op halfop-?halfop voice-?voice">
+                      properties="op-?op halfop-?halfop voice-?voice away-?away">
                       <treerow>
-                          <treecell properties="op-?op halfop-?halfop voice-?voice"
-                           label="?nick"/>
+                          <treecell properties="op-?op halfop-?halfop voice-?voice away-?away"
+                           label="?nick" unicodeName="?unicodeName"/>
                       </treerow>
                     </treeitem>
                   </treechildren>
@@ -101,7 +102,7 @@
     
             <treecols>
               <treecol id="usercol" hideheader="true" flex="1"
-                properties="op-?op halfop-?halfop voice-?voice"/>
+                properties="op-?op halfop-?halfop voice-?voice away-?away"/>
             </treecols>
           </tree>
     
@@ -118,16 +119,15 @@
       </hbox> <!-- tabpanels-contents-box -->
     
       <hbox id="tabstrip-box" flex="0" crop="right">
-        <scrollbox id="view-tabs" persist="collapsed" orient="horizontal"
-          flex="1">
-  
-          <hbox>
-          <tabs class="tabs-bottom" id="views-tbar-inner" flex="1" crop="right">
-            <tab collapsed="true"/> <!-- dummy tab to keep the freaking xbl from
-                                         causing an exception -->
-          </tabs>
-          </hbox>
-        </scrollbox>
+        <hbox id="view-tabs" persist="collapsed" flex="1">
+          <scrollbox flex="1">
+            <tabs class="tabs-bottom" id="views-tbar-inner" flex="1" crop="right">
+              <tab collapsed="true"/> <!-- dummy tab to keep the freaking xbl from
+                                           causing an exception -->
+            </tabs>
+            <spacer flex="10000"/>
+          </scrollbox>
+        </hbox>
       </hbox>
   
     </vbox> <!-- upper-box -->
