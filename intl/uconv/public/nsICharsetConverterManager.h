@@ -49,6 +49,13 @@
 #define NS_ERROR_UCONV_NOCONV \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x01)
 
+#ifdef DEBUG
+#define REGSELF_PRINTF(x,y)                                             \
+  printf("RegSelf %s to %s converter complete\n",                       \
+         x, y)                                                         
+#else
+#define REGSELF_PRINTF(x,y)
+#endif
 
 #define NS_IMPL_NSUCONVERTERREGSELF                                     \
 static NS_IMETHODIMP                                                    \
@@ -85,8 +92,7 @@ nsUConverterRegSelf( const char* aFromCharset,                          \
   res = registry -> SetStringUTF8(key, "destination", aToCharset);          \
   if (NS_FAILED(res))                                                   \
     goto done;                                                          \
-  printf("RegSelf %s to %s converter complete\n",                       \
-         aFromCharset, aToCharset);                                     \
+  REGSELF_PRINTF(aFromCharset, aToCharset);                             \
 done:                                                                   \
   return res;                                                           \
 }
