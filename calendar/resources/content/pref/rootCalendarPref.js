@@ -62,10 +62,10 @@ calendarPrefObserver.prototype =
             case "calendar.week.d0sundaysoff":
             case "calendar.week.d1mondaysoff":
             case "calendar.week.d2tuesdaysoff":
-            case "calendar.week.d2wednesdaysoff":
-            case "calendar.week.d2thursdaysoff":
-            case "calendar.week.d2fridaysoff":
-            case "calendar.week.d2saturdaysoff":
+            case "calendar.week.d3wednesdaysoff":
+            case "calendar.week.d4thursdaysoff":
+            case "calendar.week.d5fridaysoff":
+            case "calendar.week.d6saturdaysoff":
                 if (this.CalendarPreferences.calendarWindow.currentView != null)
                 this.CalendarPreferences.calendarWindow.currentView.refresh();
                 break;
