@@ -268,7 +268,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.14 2001/05/08 20:34:31 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.15 2001/05/08 20:54:14 edburns%acm.org Exp $");
     
 }
 

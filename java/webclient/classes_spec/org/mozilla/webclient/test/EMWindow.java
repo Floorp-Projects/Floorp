@@ -57,7 +57,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.27 2001/05/08 20:34:27 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.28 2001/05/08 20:54:12 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
