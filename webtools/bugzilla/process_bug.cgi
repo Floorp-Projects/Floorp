@@ -279,6 +279,9 @@ sub ChangeStatus {
         } else {
             $::query .= "bug_status = '$str'";
         }
+        $::FORM{'bug_status'} = $str; # Used later for call to
+                                      # CheckCanChangeField to make sure this
+                                      # is really kosher.
     }
 }
 

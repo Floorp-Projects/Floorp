@@ -460,11 +460,18 @@ my $knum = 1;
 
 my $status = $bug{'bug_status'};
 
-my $canedit = UserInGroup("editbugs");
+# In the below, if the person hasn't logged in ($::userid == 0), then
+# we treat them as if they can do anything.  That's because we don't
+# know why they haven't logged in; it may just be because they don't
+# use cookies.  Display everything as if they have all the permissions
+# in the world; their permissions will get checked when they log in
+# and actually try to make the change.
+
+my $canedit = UserInGroup("editbugs") || ($::userid == 0);
 my $canconfirm;
 
 if ($status eq $::unconfirmedstate) {
-    $canconfirm = UserInGroup("canconfirm");
+    $canconfirm = UserInGroup("canconfirm") || ($::userid == 0);
     if ($canedit || $canconfirm) {
         print "<INPUT TYPE=radio NAME=knob VALUE=confirm>";
 	print "Confirm bug (change status to <b>NEW</b>)<br>";
@@ -473,8 +480,8 @@ if ($status eq $::unconfirmedstate) {
 }
 
 
-if ($::userid && ($canedit || $::userid == $assignedtoid ||
-                  $::userid == $reporterid || $::userid == $qacontactid)) {
+if ($canedit || $::userid == $assignedtoid ||
+      $::userid == $reporterid || $::userid == $qacontactid) {
     if (IsOpenedState($status)) {
         if ($status ne "ASSIGNED") {
             print "<INPUT TYPE=radio NAME=knob VALUE=accept>";
