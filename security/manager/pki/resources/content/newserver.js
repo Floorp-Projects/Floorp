@@ -31,35 +31,29 @@ var dialogParams;
 var pkiParams;
 var cert;
 
-
 function onLoad()
 {
-
   pkiParams    = window.arguments[0].QueryInterface(nsIPKIParamBlock);
   dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
 
   var isupport = pkiParams.getISupportAtIndex(1);
   cert = isupport.QueryInterface(nsIX509Cert);
 
-  var bundle = srGetStrBundle("chrome://pippki/locale/newserver.properties");
-  var gBundleBrand = srGetStrBundle("chrome://global/locale/brand.properties");
+  var bundle = document.getElementById("newserver_bundle");
 
-  var brandName = gBundleBrand.GetStringFromName("brandShortName");
-  var continueButton = bundle.GetStringFromName("continueButton");
+  var intro = bundle.getFormattedString(
+    "newserver.intro", [cert.commonName]);
 
-  document.documentElement.getButton("accept").label = continueButton;
+  var reason3 = bundle.getFormattedString(
+    "newserver.reason3", [cert.commonName]);
 
-  var message = 
-    bundle.formatStringFromName("newServerMessage",
-                                 [cert.commonName],
-                                 1);
-  var notRecognized = 
-    bundle.formatStringFromName("certNotRecognized", 
-                                 [brandName], 
-                                 1);
+  var question = bundle.getFormattedString(
+    "newserver.question", [cert.commonName]);
 
-  setText("message", message);
-  setText("notRecognized", notRecognized);
+  setText("intro", intro);
+  setText("reason3", reason3);
+  setText("question", question);
+
   window.sizeToContent();
 }
 
@@ -70,21 +64,28 @@ function doHelpButton()
 
 function doOK()
 {
-  // the user pressed OK
-  dialogParams.SetInt(1,1);
-  var checkbox = document.getElementById("alwaysAccept");
+  var selectedID = document.getElementById("whatnow").selectedItem.id;
 
-  // 0 = accept perm, 1 = accept for this session - just the opposite
-  // of the checkbox value.
-  dialogParams.SetInt(2, !checkbox.checked);
-  return true;
+  if (selectedID == "refuse") {
+    dialogParams.SetInt(1,0);
+  }
+  else {
+    dialogParams.SetInt(1,1);
+
+    // 0 = accept perm, 1 = accept for this session
+    var userchoice = 1;
+    
+    if (selectedID == "remember") {
+      userchoice = 0;
+    }
+
+    dialogParams.SetInt(2, userchoice);
+  }
 }
 
 function doCancel()
 {
-  // the user pressed cancel
   dialogParams.SetInt(1,0);
-  return true;
 }
 
 function viewCert()
