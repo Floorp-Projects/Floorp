@@ -87,7 +87,7 @@
 #ifdef XP_MAC
 #include <Menus.h>
 #endif
-		
+#include "nsIWindowMediator.h"
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
@@ -104,8 +104,13 @@ static NS_DEFINE_IID(kContextMenuCID,      NS_CONTEXTMENU_CID);
 static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
+
+
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+
 static NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
+
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -134,8 +139,11 @@ static NS_DEFINE_IID(kIXULCommandIID,  NS_IXULCOMMAND_IID);
 static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
+static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
+
 static NS_DEFINE_IID(kIXULPopupListenerIID, NS_IXULPOPUPLISTENER_IID);
 static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
+
 
 #ifdef DEBUG_rods
 #define DEBUG_MENUSDEL 1
@@ -1819,7 +1827,7 @@ void nsWebShellWindow::SetTitleFromXUL()
     webshellElement = do_QueryInterface(webshellNode);
   if (webshellElement && windowWidget &&
       NS_SUCCEEDED(webshellElement->GetAttribute("title", windowTitle)))
-    windowWidget->SetTitle(windowTitle);
+  SetTitle(windowTitle);
 } // SetTitleFromXUL
 
 
@@ -2070,9 +2078,33 @@ NS_IMETHODIMP nsWebShellWindow::GetChrome(PRUint32& aChromeMaskResult)
 NS_IMETHODIMP nsWebShellWindow::SetTitle(const PRUnichar* aTitle)
 {
    nsIWidget *windowWidget = GetWidget();
- 
+ 	
+
+// Get window modifier
+  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
+  nsCOMPtr<nsIDOMElement> webshellElement;
+  nsString windowTitleModifier;
+
+  if (webshellNode)
+    webshellElement = do_QueryInterface(webshellNode);
+  if (webshellElement )
+  	webshellElement->GetAttribute("titlemodifier", windowTitleModifier );
+   nsString title( aTitle );
+   title += windowTitleModifier;
+      
    if (windowWidget)
-     windowWidget->SetTitle(aTitle);
+     windowWidget->SetTitle(title);
+     
+     // Tell the window mediator that a title has changed
+   #if 1 
+   {
+   	  nsIWindowMediator* service;
+  		if (NS_FAILED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
+    		return NS_OK;
+  		service->UpdateWindowTitle( this, title );
+	 		nsServiceManager::ReleaseService(kWindowMediatorCID, service);
+   }
+   #endif // Window Mediation
    return NS_OK;
 }
  
