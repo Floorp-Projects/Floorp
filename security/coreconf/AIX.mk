@@ -78,3 +78,7 @@ endif
 PROCESS_MAP_FILE = grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
                 sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' > $@
 
+ifdef BUILD_OPT
+        OPTIMIZER += -qmaxmem=-1
+endif
+
