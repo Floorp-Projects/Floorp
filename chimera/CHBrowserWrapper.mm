@@ -474,10 +474,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [[self window] setFrame:frame display:YES];
 }
 
-#define NS_POPUP_BLOCK @"This Web site is attempting to open an unrequested popup window.  Navigator can \
-automatically prevent Web sites from opening popup advertisements.  Click OK to prevent all \
-unrequested popups (including this one) from opening."
-
 - (CHBrowserView*)createBrowserWindow:(unsigned int)aMask
 {
   nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
@@ -497,7 +493,7 @@ unrequested popups (including this one) from opening."
       // popup.
       nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
       BOOL confirm = [controller confirm: [self window] title: @"Unrequested Popup Detected"
-                                text: NS_POPUP_BLOCK];
+                                text: [NSString stringWithFormat: NSLocalizedString(@"PopupBlockMsg", @""), NSLocalizedString(@"Navigator", @"")]];
 
       // This is a one-time dialog.
       pref->SetBoolPref("browser.popups.showPopupBlocker", PR_FALSE);
