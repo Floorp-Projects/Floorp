@@ -22,6 +22,8 @@
  */
 
 #include "imgICache.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 #include "prtypes.h"
 
@@ -37,14 +39,19 @@ class nsICacheEntryDescriptor;
     {0x83, 0x91, 0xe1, 0x42, 0x42, 0xc5, 0x9a, 0x41} \
 }
 
-class imgCache : public imgICache
+class imgCache : public imgICache, 
+                 public nsIObserver,
+                 public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGICACHE
+  NS_DECL_NSIOBSERVER
 
   imgCache();
   virtual ~imgCache();
+
+  static nsresult Init();
 
   static void Shutdown(); // for use by the factory
 
