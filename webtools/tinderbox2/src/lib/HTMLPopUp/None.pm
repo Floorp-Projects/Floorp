@@ -3,8 +3,8 @@
 # HTMLPopUp::None.pm - the implementation of the header and link
 # command which will be used if no popup menus are desired.
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:20:10 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/09/06 01:24:18 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/None.pm,v $ 
 # $Name:  $ 
@@ -73,6 +73,7 @@ sub page_header {
 $header .=<<EOF;
 <HTML>
         <!-- This file was automatically created by $main::0  -->
+        <!-- version: $main::$VERSION -->
         <!-- at $main::LOCALTIME -->
 <HEAD>
 	$refresh
