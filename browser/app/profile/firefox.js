@@ -35,8 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
-//  The first character after a period must be alphabetic.
+#filter substitution
+
+# SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
+#  The first character after a period must be alphabetic.
 
 // pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
 pref("general.startup.browser", true);
@@ -51,12 +53,8 @@ pref("xpinstall.dialog.progress.type", "Download:Manager");
 // this application as an extension target, and by the SmartUpdate system to identify
 // this application to the Update server.
 pref("app.id", "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}");
-pref("app.version", 
-#expand __APP_VERSION__
-);
-pref("app.build_id", 
-#expand __BUILD_ID__
-);
+pref("app.version", @APP_VERSION@);
+pref("app.build_id", @BUILD_ID@);
 pref("app.extensions.version", "0.9");
 
 pref("update.app.enabled", true);               // Whether or not app updates are enabled
@@ -104,12 +102,10 @@ pref("update.extensions.count", 0);
 pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");
 
-#expand pref("general.useragent.locale", "@AB_CD@");
+pref("general.useragent.locale", "@AB_CD@");
 pref("general.skins.selectedSkin", "classic/1.0");
 pref("general.useragent.vendor", "Firefox");
-pref("general.useragent.vendorSub",
-#expand __APP_VERSION__
-);
+pref("general.useragent.vendorSub", @APP_VERSION@);
 
 pref("general.smoothScroll", false);
 #ifdef XP_UNIX
