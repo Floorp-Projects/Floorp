@@ -23,7 +23,7 @@
    type="text/css"?>
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://bookmarks/content/locale/bookmarks.dtd">
+<!DOCTYPE window SYSTEM "chrome://bookmarks/locale/bookmarks.dtd">
 <xul:window title="&bookmarksWindowTitle.label;"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -31,7 +31,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   width="500" height="400">
 
-  <html:script src="bookmarks.js"/>
+  <html:script src="chrome://bookmarks/content/bookmarks.js"/>
 
   <menubar>
     <menu value="&menu.file.label;">
