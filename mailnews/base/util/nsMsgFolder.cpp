@@ -337,9 +337,39 @@ NS_IMETHODIMP nsMsgFolder::SetName(char * name)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char* name, nsISupports* *result)
+NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+	NS_ASSERTION(aChild, "NULL child");
+	nsresult rv;
+	// will return nsnull if we can't find it
+	*aChild = nsnull;
+
+	nsCOMPtr<nsIMsgFolder> folder;
+
+	PRUint32 count;
+  rv = mSubFolders->Count(&count);
+  if (NS_FAILED(rv)) return rv;
+
+	for (PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
+		folder = do_QueryInterface(supports, &rv);
+		if(NS_SUCCEEDED(rv))
+		{
+			char *folderName;
+
+			folder->GetName(&folderName);
+			// case-insensitive compare is probably LCD across OS filesystems
+			if (folderName && PL_strcasecmp(name, folderName)!=0)
+			{
+				*aChild = folder;
+				delete[] folderName;
+				return NS_OK;
+			}
+		delete[] folderName;
+		}
+  }
+  return NS_OK;
 }
 
 
