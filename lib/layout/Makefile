@@ -67,6 +67,11 @@ CSRCS		+= layedit.c \
 		  layutil.c \
 		  $(NULL)
 
+ifdef SHACK
+CSRCS		+= laybuiltin.c \
+		  $(NULL)
+endif
+
 CPPSRCS		= streams.cpp \
 		  fsfile.cpp \
 		  editor.cpp \
