@@ -34,6 +34,7 @@
 #include <Script.h>
 #include "nsCarbonHelpers.h"
 #include "nsIRollupListener.h"
+#include <locale>
 
 
 //#define DEBUG_TSM

@@ -46,7 +46,14 @@ NS_IMPL_RELEASE(nsTextAreaWidget);
 //-------------------------------------------------------------------------
 
 #include <Scrap.h>
-#include <PP_Messages.h>		// for PP standard menu commands
+
+typedef		SInt32			MessageT;
+typedef   PRUint32    Uint32;
+const MessageT	cmd_Cut				= 12;	// nil
+const MessageT	cmd_Copy			= 13;	// nil
+const MessageT	cmd_Paste			= 14;	// nil
+const MessageT	cmd_Clear			= 15;	// nil
+const MessageT	cmd_SelectAll		= 16;	// nil
 enum
 {
 	menu_Apple = 128,
