@@ -48,6 +48,8 @@ DIRS = config pr lib
 ifdef MOZILLA_CLIENT
 PR_CLIENT_BUILD = 1
 PR_CLIENT_BUILD_UNIX = 1
+# Make nsinstall use absolute symlinks by default for Mozilla OSX builds
+# http://bugzilla.mozilla.org/show_bug.cgi?id=193164
 ifeq ($(OS_ARCH),Darwin)
 ifndef NSDISTMODE
 NSDISTMODE=absolute_symlink
