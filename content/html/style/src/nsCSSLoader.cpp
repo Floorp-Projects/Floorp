@@ -681,7 +681,7 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
  */
 static nsresult
 ReportToConsole(const PRUnichar* aMessageName, const PRUnichar **aParams, 
-                PRUint32 aParamsLength, PRUint32 aErrorFlags)
+                PRUint32 aParamsLength, PRUint32 aErrorFlags, const PRUnichar* aReferrer)
 {
   nsresult rv;
   nsCOMPtr<nsIConsoleService> consoleService =
@@ -703,7 +703,7 @@ ReportToConsole(const PRUnichar* aMessageName, const PRUnichar **aParams,
                                     getter_Copies(errorText));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = errorObject->Init(errorText.get(),
-                         EmptyString().get(), /* file name */
+                         aReferrer, /* file name */
                          EmptyString().get(), /* source line */
                          0, /* line number */
                          0, /* column number */
@@ -713,6 +713,17 @@ ReportToConsole(const PRUnichar* aMessageName, const PRUnichar **aParams,
   consoleService->LogMessage(errorObject);
 
   return NS_OK;
+}
+
+already_AddRefed<nsIURI>
+SheetLoadData::GetReferrerURI()
+{
+  nsIURI* uri = nsnull;
+  if (mParentData)
+    mParentData->mSheet->GetURL(uri);
+  if (!uri && mLoader->mDocument)
+    NS_IF_ADDREF(uri = mLoader->mDocument->GetDocumentURI());
+  return uri;
 }
 
 /*
@@ -789,35 +800,34 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
       contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE) ||
       contentType.IsEmpty();
                                           
-    if (mLoader->mCompatMode == eCompatibility_NavQuirks || validType) {
-      if (!validType) {
-        nsCAutoString spec;
-        if (channelURI) {
-          channelURI->GetSpec(spec);
-        }
-
-        const nsAFlatString& specUCS2 = NS_ConvertUTF8toUCS2(spec);
-        const nsAFlatString& ctypeUCS2 = NS_ConvertASCIItoUCS2(contentType);
-        const PRUnichar *strings[] = { specUCS2.get(), ctypeUCS2.get() };
-
-        ReportToConsole(NS_LITERAL_STRING("MimeNotCssWarn").get(), strings, 2,
-                        nsIScriptError::warningFlag);
-      }
-    } else {
-      // Drop the data stream so that we do not load it
-      aDataStream = nsnull;
-      
+    if (!validType) {
       nsCAutoString spec;
+      nsCAutoString referrer;
       if (channelURI) {
         channelURI->GetSpec(spec);
       }
 
-      const nsAFlatString& specUCS2 = NS_ConvertUTF8toUCS2(spec);
-      const nsAFlatString& ctypeUCS2 = NS_ConvertASCIItoUCS2(contentType);
-      const PRUnichar *strings[] = { specUCS2.get(), ctypeUCS2.get() };
+      {
+        nsCOMPtr<nsIURI> referrerURI = GetReferrerURI();
+        if (referrerURI)
+          referrerURI->GetSpec(referrer);
+      }
 
-      ReportToConsole(NS_LITERAL_STRING("MimeNotCss").get(), strings, 2,
-                      nsIScriptError::errorFlag);
+      const nsAFlatString& specUTF16 = NS_ConvertUTF8toUTF16(spec);
+      const nsAFlatString& ctypeUTF16 = NS_ConvertASCIItoUTF16(contentType);
+      const nsAFlatString& referrerUTF16 = NS_ConvertUTF8toUTF16(referrer);
+      const PRUnichar *strings[] = { specUTF16.get(), ctypeUTF16.get() };
+
+      if (mLoader->mCompatMode == eCompatibility_NavQuirks) {
+        ReportToConsole(NS_LITERAL_STRING("MimeNotCssWarn").get(), strings, 2,
+                        nsIScriptError::warningFlag, referrerUTF16.get());
+      } else {
+        // Drop the data stream so that we do not load it
+        aDataStream = nsnull;
+
+        ReportToConsole(NS_LITERAL_STRING("MimeNotCss").get(), strings, 2,
+                        nsIScriptError::errorFlag, referrerUTF16.get());
+      }
     }
   }
   
@@ -1399,17 +1409,9 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                   NS_LITERAL_CSTRING("text/css,*/*;q=0.1"),
                                   PR_FALSE);
-    if (aLoadData->mParentData) {
-      nsCOMPtr<nsIURI> parentURI;
-      aLoadData->mParentData->mSheet->GetURL(*getter_AddRefs(parentURI));
-      httpChannel->SetReferrer(parentURI);
-    } else if (mDocument) {
-      nsIURI *documentURI = mDocument->GetDocumentURI();
-      NS_ASSERTION(documentURI, "Null document uri is bad!");
-      if (documentURI) {
-        httpChannel->SetReferrer(documentURI);
-      }
-    }
+    nsCOMPtr<nsIURI> referrerURI = aLoadData->GetReferrerURI();
+    if (referrerURI)
+      httpChannel->SetReferrer(referrerURI);
   }
 
   // Now tell the channel we expect text/css data back....  We do

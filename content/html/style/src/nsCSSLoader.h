@@ -121,7 +121,8 @@ public:
                 nsICSSStyleSheet* aSheet,
                 PRBool aSyncLoad,
                 nsICSSLoaderObserver* aObserver);
-                 
+
+  already_AddRefed<nsIURI> GetReferrerURI();
   
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
