@@ -98,7 +98,7 @@
       <span class="newbie-help">
         <p>
           Welcome to the <b>Venkman Help System</b>.  From here you can search
-          for help on the various commands avaialble in Venkman.  To search for a
+          for help on the various commands available in Venkman.  To search for a
           particular command, type your search term in the box below and click
           <b>Go</b>, or press <b>Enter</b>.
         <p>
