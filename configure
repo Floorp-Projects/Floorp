@@ -2757,7 +2757,7 @@ fi
 test -n "$PERL" && break
 done
 
-if test -z "$PERL"; then
+if test -z "$PERL" || test "$PERL" = ":"; then
     { echo "configure: error: perl not found in \$PATH" 1>&2; exit 1; }
 fi
 
@@ -2931,7 +2931,7 @@ fi
 test -n "$ZIP" && break
 done
 
-if test -z "$ZIP"; then
+if test -z "$ZIP" || test "$ZIP" = ":"; then
     echo "configure: warning: zip not found in \$PATH. Disabling jar packaging" 1>&2
     MOZ_DISABLE_JAR_PACKAGING=1
 fi

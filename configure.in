@@ -290,7 +290,7 @@ AC_PROG_LN_S
 AC_PROG_AWK
 AC_PATH_PROGS(EMACS, xemacs lemacs emacs, :)
 AC_PATH_PROGS(PERL, perl5 perl )
-if test -z "$PERL"; then
+if test -z "$PERL" || test "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
 
@@ -318,7 +318,7 @@ AC_PATH_PROG(WHOAMI, whoami, :)
 AC_PATH_PROG(AUTOCONF, autoconf, :)
 AC_PATH_PROG(UNZIP, unzip, :)
 AC_PATH_PROGS(ZIP, zip)
-if test -z "$ZIP"; then
+if test -z "$ZIP" || test "$ZIP" = ":"; then
     AC_MSG_WARN([zip not found in \$PATH. Disabling jar packaging])
     MOZ_DISABLE_JAR_PACKAGING=1
 fi
