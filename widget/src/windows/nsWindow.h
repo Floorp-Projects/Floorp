@@ -51,7 +51,8 @@ struct IAccessible;
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
-
+#define COLOREF_2_NSRGB(color) \
+            NS_RGB(GetRValue(color), GetGValue(color), GetBValue(color))
 
 /** 
 * Native IMM wrapper

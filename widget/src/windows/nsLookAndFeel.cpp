@@ -25,6 +25,7 @@
 #include "nsXPLookAndFeel.h"
 #include <windows.h>
 #include "nsFont.h"
+#include "nsWindow.h"
  
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
@@ -196,7 +197,8 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
         break;
     }
 
-  aColor = ::GetSysColor(idx);
+  DWORD color = ::GetSysColor(idx);
+  aColor = COLOREF_2_NSRGB(color);
 
   return res;
 }
