@@ -64,19 +64,27 @@ class CToken {
     enum  eTokenOrigin {eSource,eResidualStyle};
 
     /**
-     * Use the arena to allocate memory
-     * @update	harishd 08/02/00
-     * @param   aSize   - Allocation size.
-     * @param   anArena - Used for allocating memory.
+     * 
+     * @update	harishd 08/01/00
+     * @param   aSize    - 
+     * @param   aArena   - Allocate memory from this pool.
      */
-    void* operator new(size_t aSize,nsFixedSizeAllocator& anArena);
-    
+    static void * operator new (size_t aSize, nsFixedSizeAllocator& anArena)
+    {
+      return anArena.Alloc(aSize);
+    }
+
     /**
-     * Free up the memory in the arena.
-     * @update	harishd 08/02/00
-     * @param   aPtr - Memory that's to be freed.
+     *  
+     *
+     * @update	harishd 08/01/00
+     * @param   aPtr     - The memory that should be recycled/freed.
+     * @param   aSize    - The size of memory that needs to be freed.
      */
-    void  operator delete(void* aPtr,size_t aSize);
+    static void operator delete (void* aPtr,size_t aSize)
+    {
+      nsFixedSizeAllocator::Free(aPtr,aSize);
+    }
 
     /**
      * Make a note on number of times you have been referenced
