@@ -54,6 +54,10 @@
 #include "nsWidgetsCID.h"
 #include "nsBoxFrame.h"
 #include "nsBoxObject.h"
+#ifdef USE_IMG2
+#include "imgIRequest.h"
+#include "imgiContainer.h"
+#endif
 
 #define ELLIPSIS "..."
 
@@ -201,7 +205,7 @@ NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 // Constructor
 nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
-:nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mOutlinerBoxObject(nsnull), mFocused(PR_FALSE),
+:nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mImageCache(nsnull), mOutlinerBoxObject(nsnull), mFocused(PR_FALSE),
  mTopRowIndex(0), mRowHeight(0), mIndentation(0), mColumns(nsnull), mScrollbar(nsnull)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
@@ -610,7 +614,7 @@ nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, const PRUnichar* aC
   // And colID too, if it is non-empty?
   mScratchArray->Clear();
   
-  // Check for focus.
+  // focus
   if (mFocused)
     mScratchArray->AppendElement(nsXULAtoms::focus);
 
@@ -618,18 +622,114 @@ nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, const PRUnichar* aC
     nsCOMPtr<nsIOutlinerSelection> selection;
     mView->GetSelection(getter_AddRefs(selection));
   
+    // selected
     PRBool isSelected;
     selection->IsSelected(aRowIndex, &isSelected);
     if (isSelected)
       mScratchArray->AppendElement(nsHTMLAtoms::selected);
 
+    // current
     PRInt32 currentIndex;
     selection->GetCurrentIndex(&currentIndex);
     if (aRowIndex == currentIndex)
       mScratchArray->AppendElement(nsXULAtoms::current);
+
+    // container
+    PRBool isContainer = PR_FALSE;
+    mView->IsContainer(aRowIndex, &isContainer);
+    if (isContainer) {
+      mScratchArray->AppendElement(nsXULAtoms::container);
+
+      // open
+      PRBool isOpen = PR_FALSE;
+      mView->IsContainerOpen(aRowIndex, &isOpen);
+      if (isOpen)
+        mScratchArray->AppendElement(nsXULAtoms::open);
+    }
   }
 }
 
+#ifdef USE_IMG2
+nsresult
+nsOutlinerBodyFrame::GetImage(nsIStyleContext* aStyleContext, imgIContainer** aResult)
+{
+  *aResult = nsnull;
+  if (mImageCache) {
+    // Look the image up in our cache.
+  }
+
+  if (!*aResult) {
+    // We missed.  Create a new imgIRequest object and pass it our row and column
+    // information.
+  }
+  return NS_OK;
+}
+#endif
+
+nsRect nsOutlinerBodyFrame::GetImageSize(nsIStyleContext* aStyleContext)
+{
+  // This method returns the width of the twisty INCLUDING borders and padding.
+  // It first checks the style context for a width.  If none is found, it tries to
+  // use the default image width for the twisty.  If no image is found, it defaults
+  // to border+padding.
+  nsRect r(0,0,0,0);
+  nsMargin m(0,0,0,0);
+  nsStyleBorderPadding  bPad;
+  aStyleContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
+  bPad.GetBorderPadding(m);
+  r.Inflate(m);
+
+  // Now r contains our border+padding info.  We now need to get our width and
+  // height.
+  PRBool needWidth = PR_FALSE;
+  PRBool needHeight = PR_FALSE;
+
+  const nsStylePosition* myPosition = (const nsStylePosition*)
+        aStyleContext->GetStyleData(eStyleStruct_Position);
+  if (myPosition->mWidth.GetUnit() == eStyleUnit_Coord)  {
+    PRInt32 val = myPosition->mWidth.GetCoordValue();
+    r.width += val;
+  }
+  else 
+    needWidth = PR_TRUE;
+
+  if (myPosition->mHeight.GetUnit() == eStyleUnit_Coord)  {
+    PRInt32 val = myPosition->mHeight.GetCoordValue();
+    r.height += val;
+  }
+  else 
+    needHeight = PR_TRUE;
+
+  if (needWidth || needHeight) {
+#ifdef USE_IMG2
+    // Get the natural image size.
+    if (mImageCache) {
+      nsISupportsKey key(aStyleContext);
+      nsCOMPtr<imgIRequest> imgReq = getter_AddRefs(NS_STATIC_CAST(imgIRequest*, mImageCache->Get(&key)));
+      if (imgReq) {
+        PRUint32 status;
+        imgReq->GetImageStatus(&status);
+        if (status & imgIRequest::STATUS_SIZE_AVAILABLE) {
+          // Use the size we find here.
+          nsCOMPtr<imgIContainer> image;
+          imgReq->GetImage(getter_AddRefs(image));
+          if (image) {
+            // Get the size from the image.
+            nscoord width;
+            image->GetWidth(&width);
+            r.width += width;
+            nscoord height;
+            image->GetHeight(&height);
+            r.height += height;
+          }
+        }
+      }
+    }
+#endif
+  }
+
+  return r;
+}
 
 PRInt32 nsOutlinerBodyFrame::GetRowHeight()
 {
@@ -921,21 +1021,21 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
   // XXX Implement RIGHT alignment!
 
   if (aColumn->IsPrimary()) {
-    // If we're the primary column, we need to indent and paint the twisty.
-    // First we indent
+    // If we're the primary column, we need to indent and paint the twisty and any connecting lines
+    // between siblings.
     PRInt32 level;
     mView->GetLevel(aRowIndex, &level);
 
     currX += mIndentation*level;
     remainingWidth -= mIndentation*level;
 
-    // Resolve style for line.
+    // Resolve the style to use for the connecting lines.
     nsCOMPtr<nsIStyleContext> lineContext;
     GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinerline, getter_AddRefs(lineContext));
     const nsStyleDisplay* displayStyle = (const nsStyleDisplay*)lineContext->GetStyleData(eStyleStruct_Display);
     
     if (displayStyle->IsVisibleOrCollapsed() && level) {
-      // Paint lines to show a connections between rows
+      // Paint the connecting lines.
       aRenderingContext.PushState();
 
       const nsStyleBorder* borderStyle = (const nsStyleBorder*)lineContext->GetStyleData(eStyleStruct_Border);
@@ -964,9 +1064,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
           aRenderingContext.DrawLine(aCellRect.x + (i - 1) * mIndentation, y, aCellRect.x + (i - 1) * mIndentation, y + mRowHeight / 2);
         PRInt32 parent;
         mView->GetParentIndex(currentParent, &parent);
-	if (parent == -1)
-	  break;
-	currentParent = parent;
+	      if (parent == -1)
+	        break;
+	      currentParent = parent;
       }
 
       aRenderingContext.DrawLine(aCellRect.x + (level - 1) * mIndentation, y + mRowHeight / 2, aCellRect.x + level * mIndentation, aCellRect.y + mRowHeight /2);
@@ -975,8 +1075,12 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
       aRenderingContext.PopState(clipState);
     }
 
-    // XXX Paint the twisty.
-  
+    // Always leave space for the twisty.
+    nsRect twistyRect(currX, cellRect.y, remainingWidth, cellRect.height);
+    nsRect dirtyRect;
+    if (dirtyRect.IntersectRect(aDirtyRect, twistyRect))
+      PaintTwisty(aRowIndex, aColumn, twistyRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer,
+                  remainingWidth);
   }
   
   // XXX Now paint the various images.
@@ -990,6 +1094,80 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
     if (dirtyRect.IntersectRect(aDirtyRect, textRect))
       PaintText(aRowIndex, aColumn, textRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   //}
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOutlinerBodyFrame::PaintTwisty(int                  aRowIndex,
+                                 nsOutlinerColumn*    aColumn,
+                                 const nsRect&        aTwistyRect,
+                                 nsIPresContext*      aPresContext,
+                                 nsIRenderingContext& aRenderingContext,
+                                 const nsRect&        aDirtyRect,
+                                 nsFramePaintLayer    aWhichLayer,
+                                 nscoord&             aRemainingWidth)
+{
+  // Paint the twisty, but only if we are a non-empty container.
+  PRBool shouldPaint = PR_FALSE;
+  PRBool isContainer = PR_FALSE;
+  mView->IsContainer(aRowIndex, &isContainer);
+  if (isContainer) {
+    PRBool isContainerEmpty = PR_FALSE;
+    mView->IsContainerEmpty(aRowIndex, &isContainerEmpty);
+    if (!isContainerEmpty)
+      shouldPaint = PR_TRUE;
+  }
+
+  // Resolve style for the twisty.
+  PrefillPropertyArray(aRowIndex, aColumn->GetID());
+  nsCOMPtr<nsIStyleContext> twistyContext;
+  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinertwisty, getter_AddRefs(twistyContext));
+
+  // Obtain the margins for the twisty and then deflate our rect by that 
+  // amount.  The twisty is assumed to be contained within the deflated rect.
+  nsRect twistyRect(aTwistyRect);
+  const nsStyleMargin* twistyMarginData = (const nsStyleMargin*)twistyContext->GetStyleData(eStyleStruct_Margin);
+  nsMargin twistyMargin;
+  twistyMarginData->GetMargin(twistyMargin);
+  twistyRect.Deflate(twistyMargin);
+
+  // The twisty rect extends all the way to the end of the cell.  This is incorrect.  We need to
+  // determine the twisty rect's true width.  This is done by examining the style context for
+  // a width first.  If it has one, we use that.  If it doesn't, we use the image's natural width.
+  // If the image hasn't loaded and if no width is specified, then we just bail.
+  nsRect imageSize = GetImageSize(twistyContext);
+  twistyRect.width = imageSize.width;
+
+  // Subtract out the remaining width.  This is done even when we don't actually paint a twisty in 
+  // this cell, so that cells in different rows still line up.
+  nsRect copyRect(twistyRect);
+  copyRect.Inflate(twistyMargin);
+  aRemainingWidth -= copyRect.width;
+
+  if (shouldPaint) {
+    // If the layer is the background layer, we must paint our borders and background for our
+    // image rect.
+    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
+      PaintBackgroundLayer(twistyContext, aPresContext, aRenderingContext, twistyRect, aDirtyRect);
+    else {
+      // Time to paint the twisty.
+
+      // Adjust the rect for its border and padding.
+      AdjustForBorderPadding(twistyContext, twistyRect);
+
+#ifdef USE_IMG2
+      // Get the image for drawing.
+      nsCOMPtr<imgIContainer> image; 
+      GetImage(twistyContext, getter_AddRefs(image));
+      if (image) {
+        // We got an image. Paint it.
+        nsPoint p(twistyRect.x, twistyRect.y);
+        aRenderingContext.DrawImage(image, &twistyRect, &p);
+      }
+#endif
+    }
+  }
 
   return NS_OK;
 }
