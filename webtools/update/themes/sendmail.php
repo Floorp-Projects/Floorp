@@ -39,7 +39,7 @@
 <?php
 //Mozilla Update Message System
 //Send Mail script... 
-
+exit;
 require"../core/config.php";
 
 if (!$_POST["senduserid"]) {
