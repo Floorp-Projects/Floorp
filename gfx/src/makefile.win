@@ -53,6 +53,7 @@ CPP_OBJS=.\$(OBJDIR)\nsColor.obj .\$(OBJDIR)\nsColorNames.obj \
     .\$(OBJDIR)\nsDeviceContext.obj \
 	.\$(OBJDIR)\nsImageNetContextSync.obj \
 	.\$(OBJDIR)\nsBlender.obj \
+  .\$(OBJDIR)\nsRenderingContextImpl.obj\
 	.\$(OBJDIR)\nsScriptableRegion.obj
 
 LINCS=-I$(PUBLIC)\util -I$(PUBLIC)\img \
