@@ -735,19 +735,31 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
 
   // And subtract out the border for the parent
   if (parent) {
-    border = nsnull;
+    PRBool includeBorder = PR_TRUE;  // set to false if border-box sizing is used
+    const nsStylePosition* position = nsnull;
+    parent->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+    if (position && position->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+      includeBorder = PR_FALSE;
+    }
+    
+    if (includeBorder) {
+      border = nsnull;
 
-    parent->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
-    if (border) {
-      if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-        origin.x -= border->mBorder.GetLeft(coord).GetCoordValue();
-      }
-      if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-        origin.y -= border->mBorder.GetTop(coord).GetCoordValue();
+      parent->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
+      if (border) {
+        if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
+          origin.x -= border->mBorder.GetLeft(coord).GetCoordValue();
+        }
+        if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
+          origin.y -= border->mBorder.GetTop(coord).GetCoordValue();
+        }
       }
     }
   }
 
+  // XXX We should really consider subtracting out padding for
+  // content-box sizing, but we should see what IE does....
+  
   // Get the scale from that Presentation Context
   float scale;
   context->GetTwipsToPixels(&scale);
