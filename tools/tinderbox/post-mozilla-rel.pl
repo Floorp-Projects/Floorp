@@ -648,8 +648,11 @@ sub main {
     return returnStatus("Pushing package $upload_directory failed", ("testfailed"));
   }
 
-
   if ($cachebuild) { 
+    # remove saved builds older than a week and save current build
+    TinderUtils::run_shell_command "find $mozilla_build_dir -type d -name \"200*-*\" -prune -mtime +7 -print | xargs rm -rf";
+    TinderUtils::run_shell_command "cp -rdpf $upload_directory $mozilla_build_dir/$datestamp";
+
     unlink "last-built";
     open BLAH, ">last-built"; 
     close BLAH;
