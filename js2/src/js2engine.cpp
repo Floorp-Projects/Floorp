@@ -66,17 +66,19 @@ namespace MetaData {
     // Begin execution of a bytecodeContainer
     js2val JS2Engine::interpret(Phase execPhase, BytecodeContainer *targetbCon)
     {
-        ActivationFrame *f = activationStackTop;
         jsr(execPhase, targetbCon);
+        ActivationFrame *f = activationStackTop;
         js2val result;
         try {
             result = interpreterLoop();
         }
         catch (Exception &jsx) {
             activationStackTop = f;
+            rts();
             throw jsx;
         }
-        activationStackTop = f;
+        activationStackTop = f;     // when execution falls 'off the bottom' an rts hasn't occurred
+                                    // so the activation stack is off by 1.
         return result;
     }
 

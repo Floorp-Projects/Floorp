@@ -91,7 +91,7 @@ namespace MetaData {
             }
         }
         catch (Exception &x) {
-            ASSERT(false);
+//            ASSERT(false);
             throw x;
         }
         return result;
@@ -151,508 +151,515 @@ namespace MetaData {
     {
         CompoundAttribute *a = NULL;
         JS2Object::RootIterator ri = JS2Object::addRoot(&a);
+        Frame *curTopFrame = env->getTopFrame();
 
-        switch (p->getKind()) {
-        case StmtNode::block:
-        case StmtNode::group:
-            {
-                BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
-                b->compileFrame = new BlockFrame();
-                bCon->saveFrame(b->compileFrame);   // stash this frame so it doesn't get gc'd before eval pass.
-                env->addFrame(b->compileFrame);
-                ValidateStmtList(cxt, env, b->statements);
-                env->removeTopFrame();
-            }
-            break;
-        case StmtNode::label:
-            {
-                LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
-                l->labelID = bCon->getLabel();
-/*
-    A labelled statement catches contained, named, 'breaks' but simply adds itself as a label for
-    contained iteration statements. (i.e. you can 'break' out of a labelled statement, but not 'continue'
-    one, however the statement label becomes a 'continuable' label for all contained iteration statements.
-*/
-                // Make sure there is no existing break target with the same name
-                for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
-                    switch ((*si)->getKind()) {
-                    case StmtNode::label:
-                        if (checked_cast<LabelStmtNode *>(*si)->name == l->name)
-                            reportError(Exception::syntaxError, "Duplicate statement label", p->pos);
-                        break;
-                    }
+        try {
+            switch (p->getKind()) {
+            case StmtNode::block:
+            case StmtNode::group:
+                {
+                    BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
+                    b->compileFrame = new BlockFrame();
+                    bCon->saveFrame(b->compileFrame);   // stash this frame so it doesn't get gc'd before eval pass.
+                    env->addFrame(b->compileFrame);
+                    ValidateStmtList(cxt, env, b->statements);
+                    env->removeTopFrame();
                 }
-                targetList.push_back(p);
-                ValidateStmt(cxt, env, l->stmt);
-                targetList.pop_back();
-            }
-            break;
-        case StmtNode::If:
-            {
-                UnaryStmtNode *i = checked_cast<UnaryStmtNode *>(p);
-                ValidateExpression(cxt, env, i->expr);
-                ValidateStmt(cxt, env, i->stmt);
-            }
-            break;
-        case StmtNode::IfElse:
-            {
-                BinaryStmtNode *i = checked_cast<BinaryStmtNode *>(p);
-                ValidateExpression(cxt, env, i->expr);
-                ValidateStmt(cxt, env, i->stmt);
-                ValidateStmt(cxt, env, i->stmt2);
-            }
-            break;
-        case StmtNode::ForIn:
-            // XXX need to validate that first expression is a single binding ?
-        case StmtNode::For:
-            {
-                ForStmtNode *f = checked_cast<ForStmtNode *>(p);
-                f->breakLabelID = bCon->getLabel();
-                f->continueLabelID = bCon->getLabel();
-                if (f->initializer)
-                    ValidateStmt(cxt, env, f->initializer);
-                if (f->expr2)
-                    ValidateExpression(cxt, env, f->expr2);
-                if (f->expr3)
-                    ValidateExpression(cxt, env, f->expr3);
-                f->breakLabelID = bCon->getLabel();
-                f->continueLabelID = bCon->getLabel();
-                targetList.push_back(p);
-                ValidateStmt(cxt, env, f->stmt);
-                targetList.pop_back();
-            }
-            break;
-        case StmtNode::Switch:
-            {
-                SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
-                sw->breakLabelID = bCon->getLabel();
-                ValidateExpression(cxt, env, sw->expr);
-                targetList.push_back(p);
-                StmtNode *s = sw->statements;
-                while (s) {
-                    if (s->getKind() == StmtNode::Case) {
-                        ExprStmtNode *c = checked_cast<ExprStmtNode *>(s);
-                        c->labelID = bCon->getLabel();
-                        if (c->expr)
-                            ValidateExpression(cxt, env, c->expr);
-                    }
-                    else
-                        ValidateStmt(cxt, env, s);
-                    s = s->next;
-                }
-                targetList.pop_back();
-            }
-            break;
-        case StmtNode::While:
-        case StmtNode::DoWhile:
-            {
-                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
-                w->breakLabelID = bCon->getLabel();
-                w->continueLabelID = bCon->getLabel();
-                targetList.push_back(p);
-                ValidateExpression(cxt, env, w->expr);
-                ValidateStmt(cxt, env, w->stmt);
-                targetList.pop_back();
-            }
-            break;
-        case StmtNode::Break:
-            {
-                GoStmtNode *g = checked_cast<GoStmtNode *>(p);
-                bool found = false;
-                for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); (si != end); si++) {
-                    if (g->name) {
-                        // Make sure the name is on the targetList as a viable break target...
-                        // (only label statements can introduce names)
-                        if ((*si)->getKind() == StmtNode::label) {
-                            LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
-                            if (l->name == *g->name) {
-                                g->tgtID = l->labelID;
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-                    else {
-                        // anything at all will do
+                break;
+            case StmtNode::label:
+                {
+                    LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
+                    l->labelID = bCon->getLabel();
+    /*
+        A labelled statement catches contained, named, 'breaks' but simply adds itself as a label for
+        contained iteration statements. (i.e. you can 'break' out of a labelled statement, but not 'continue'
+        one, however the statement label becomes a 'continuable' label for all contained iteration statements.
+    */
+                    // Make sure there is no existing break target with the same name
+                    for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
                         switch ((*si)->getKind()) {
                         case StmtNode::label:
-                            {
-                                LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
-                                g->tgtID = l->labelID;
-                            }
-                            break;
-                        case StmtNode::While:
-                        case StmtNode::DoWhile:
-                            {
-                                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
-                                g->tgtID = w->breakLabelID;
-                            }
-                            break;
-                        case StmtNode::For:
-                        case StmtNode::ForIn:
-                            {
-                                ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
-                                g->tgtID = f->breakLabelID;
-                            }
-                            break;
-                       case StmtNode::Switch:
-                            {
-                                SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(*si);
-                                g->tgtID = s->breakLabelID;
-                            }
+                            if (checked_cast<LabelStmtNode *>(*si)->name == l->name)
+                                reportError(Exception::syntaxError, "Duplicate statement label", p->pos);
                             break;
                         }
-                        found = true;
-                        break;
                     }
+                    targetList.push_back(p);
+                    ValidateStmt(cxt, env, l->stmt);
+                    targetList.pop_back();
                 }
-                if (!found) 
-                    reportError(Exception::syntaxError, "No such break target available", p->pos);
-            }
-            break;
-        case StmtNode::Continue:
-            {
-                GoStmtNode *g = checked_cast<GoStmtNode *>(p);
-                bool found = false;
-                for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
-                    if (g->name) {
-                        // Make sure the name is on the targetList as a viable continue target...
-                        if ((*si)->getKind() == StmtNode::label) {
-                            LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
-                            if (l->name == *g->name) {
-                                g->tgtID = l->labelID;
-                                found = true;
+                break;
+            case StmtNode::If:
+                {
+                    UnaryStmtNode *i = checked_cast<UnaryStmtNode *>(p);
+                    ValidateExpression(cxt, env, i->expr);
+                    ValidateStmt(cxt, env, i->stmt);
+                }
+                break;
+            case StmtNode::IfElse:
+                {
+                    BinaryStmtNode *i = checked_cast<BinaryStmtNode *>(p);
+                    ValidateExpression(cxt, env, i->expr);
+                    ValidateStmt(cxt, env, i->stmt);
+                    ValidateStmt(cxt, env, i->stmt2);
+                }
+                break;
+            case StmtNode::ForIn:
+                // XXX need to validate that first expression is a single binding ?
+            case StmtNode::For:
+                {
+                    ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+                    f->breakLabelID = bCon->getLabel();
+                    f->continueLabelID = bCon->getLabel();
+                    if (f->initializer)
+                        ValidateStmt(cxt, env, f->initializer);
+                    if (f->expr2)
+                        ValidateExpression(cxt, env, f->expr2);
+                    if (f->expr3)
+                        ValidateExpression(cxt, env, f->expr3);
+                    f->breakLabelID = bCon->getLabel();
+                    f->continueLabelID = bCon->getLabel();
+                    targetList.push_back(p);
+                    ValidateStmt(cxt, env, f->stmt);
+                    targetList.pop_back();
+                }
+                break;
+            case StmtNode::Switch:
+                {
+                    SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
+                    sw->breakLabelID = bCon->getLabel();
+                    ValidateExpression(cxt, env, sw->expr);
+                    targetList.push_back(p);
+                    StmtNode *s = sw->statements;
+                    while (s) {
+                        if (s->getKind() == StmtNode::Case) {
+                            ExprStmtNode *c = checked_cast<ExprStmtNode *>(s);
+                            c->labelID = bCon->getLabel();
+                            if (c->expr)
+                                ValidateExpression(cxt, env, c->expr);
+                        }
+                        else
+                            ValidateStmt(cxt, env, s);
+                        s = s->next;
+                    }
+                    targetList.pop_back();
+                }
+                break;
+            case StmtNode::While:
+            case StmtNode::DoWhile:
+                {
+                    UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
+                    w->breakLabelID = bCon->getLabel();
+                    w->continueLabelID = bCon->getLabel();
+                    targetList.push_back(p);
+                    ValidateExpression(cxt, env, w->expr);
+                    ValidateStmt(cxt, env, w->stmt);
+                    targetList.pop_back();
+                }
+                break;
+            case StmtNode::Break:
+                {
+                    GoStmtNode *g = checked_cast<GoStmtNode *>(p);
+                    bool found = false;
+                    for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); (si != end); si++) {
+                        if (g->name) {
+                            // Make sure the name is on the targetList as a viable break target...
+                            // (only label statements can introduce names)
+                            if ((*si)->getKind() == StmtNode::label) {
+                                LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
+                                if (l->name == *g->name) {
+                                    g->tgtID = l->labelID;
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                        else {
+                            // anything at all will do
+                            switch ((*si)->getKind()) {
+                            case StmtNode::label:
+                                {
+                                    LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
+                                    g->tgtID = l->labelID;
+                                }
+                                break;
+                            case StmtNode::While:
+                            case StmtNode::DoWhile:
+                                {
+                                    UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
+                                    g->tgtID = w->breakLabelID;
+                                }
+                                break;
+                            case StmtNode::For:
+                            case StmtNode::ForIn:
+                                {
+                                    ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
+                                    g->tgtID = f->breakLabelID;
+                                }
+                                break;
+                           case StmtNode::Switch:
+                                {
+                                    SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(*si);
+                                    g->tgtID = s->breakLabelID;
+                                }
                                 break;
                             }
-                        }
-                    }
-                    else {
-                        // only some non-label statements will do
-                        switch ((*si)->getKind()) {
-                        case StmtNode::While:
-                        case StmtNode::DoWhile:
-                            {
-                                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
-                                g->tgtID = w->breakLabelID;
-                            }
+                            found = true;
                             break;
-                        case StmtNode::For:
-                        case StmtNode::ForIn:
-                            {
-                                ForStmtNode *f = checked_cast<ForStmtNode *>(p);
-                                g->tgtID = f->breakLabelID;
+                        }
+                    }
+                    if (!found) 
+                        reportError(Exception::syntaxError, "No such break target available", p->pos);
+                }
+                break;
+            case StmtNode::Continue:
+                {
+                    GoStmtNode *g = checked_cast<GoStmtNode *>(p);
+                    bool found = false;
+                    for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
+                        if (g->name) {
+                            // Make sure the name is on the targetList as a viable continue target...
+                            if ((*si)->getKind() == StmtNode::label) {
+                                LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
+                                if (l->name == *g->name) {
+                                    g->tgtID = l->labelID;
+                                    found = true;
+                                    break;
+                                }
                             }
                         }
-                        found = true;
-                        break;
+                        else {
+                            // only some non-label statements will do
+                            switch ((*si)->getKind()) {
+                            case StmtNode::While:
+                            case StmtNode::DoWhile:
+                                {
+                                    UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
+                                    g->tgtID = w->breakLabelID;
+                                }
+                                break;
+                            case StmtNode::For:
+                            case StmtNode::ForIn:
+                                {
+                                    ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+                                    g->tgtID = f->breakLabelID;
+                                }
+                            }
+                            found = true;
+                            break;
+                        }
                     }
+                    if (!found) 
+                        reportError(Exception::syntaxError, "No such break target available", p->pos);
                 }
-                if (!found) 
-                    reportError(Exception::syntaxError, "No such break target available", p->pos);
-            }
-            break;
-        case StmtNode::Throw:
-            {
-                ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
-                ValidateExpression(cxt, env, e->expr);
-            }
-            break;
-        case StmtNode::Try:
-            {
-                TryStmtNode *t = checked_cast<TryStmtNode *>(p);
-                ValidateStmt(cxt, env, t->stmt);
-                if (t->finally)
-                    ValidateStmt(cxt, env, t->finally);
-                CatchClause *c = t->catches;
-                while (c) {                    
-                    ValidateStmt(cxt, env, c->stmt);
-                    if (c->type)
-                        ValidateExpression(cxt, env, c->type);
-                    c = c->next;
-                }
-            }
-            break;
-        case StmtNode::Return:
-            {
-                ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
-                if (e->expr) {
+                break;
+            case StmtNode::Throw:
+                {
+                    ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                     ValidateExpression(cxt, env, e->expr);
                 }
-            }
-            break;
-        case StmtNode::Function:
-            {
-                Attribute *attr = NULL;
-                FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
-                if (f->attributes) {
-                    ValidateAttributeExpression(cxt, env, f->attributes);
-                    attr = EvalAttributeExpression(env, CompilePhase, f->attributes);
-                }
-                a = Attribute::toCompoundAttribute(attr);
-                if (a->dynamic)
-                    reportError(Exception::definitionError, "Illegal attribute", p->pos);
-                VariableBinding *vb = f->function.parameters;
-                bool untyped = true;
-                while (vb) {
-                    if (vb->type) {
-                        untyped = false;
-                        break;
+                break;
+            case StmtNode::Try:
+                {
+                    TryStmtNode *t = checked_cast<TryStmtNode *>(p);
+                    ValidateStmt(cxt, env, t->stmt);
+                    if (t->finally)
+                        ValidateStmt(cxt, env, t->finally);
+                    CatchClause *c = t->catches;
+                    while (c) {                    
+                        ValidateStmt(cxt, env, c->stmt);
+                        if (c->type)
+                            ValidateExpression(cxt, env, c->type);
+                        c = c->next;
                     }
-                    vb = vb->next;
                 }
-                bool unchecked = !cxt->strict && (env->getTopFrame()->kind != ClassKind)
-                                    && (f->function.prefix == FunctionName::normal) && untyped;
-                bool prototype = unchecked || a->prototype;
-                Attribute::MemberModifier memberMod = a->memberMod;
-                if (env->getTopFrame()->kind == ClassKind) {
-                    if (memberMod == Attribute::NoModifier)
-                        memberMod = Attribute::Virtual;
+                break;
+            case StmtNode::Return:
+                {
+                    ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
+                    if (e->expr) {
+                        ValidateExpression(cxt, env, e->expr);
+                    }
                 }
-                else {
-                    if (memberMod != Attribute::NoModifier)
+                break;
+            case StmtNode::Function:
+                {
+                    Attribute *attr = NULL;
+                    FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
+                    if (f->attributes) {
+                        ValidateAttributeExpression(cxt, env, f->attributes);
+                        attr = EvalAttributeExpression(env, CompilePhase, f->attributes);
+                    }
+                    a = Attribute::toCompoundAttribute(attr);
+                    if (a->dynamic)
                         reportError(Exception::definitionError, "Illegal attribute", p->pos);
-                }
-                if (prototype && ((f->function.prefix != FunctionName::normal) || (memberMod == Attribute::Constructor))) {
-                    reportError(Exception::definitionError, "Illegal attribute", p->pos);
-                }
-                js2val compileThis = JS2VAL_VOID;
-                if (prototype || (memberMod == Attribute::Constructor) 
-                              || (memberMod == Attribute::Virtual) 
-                              || (memberMod == Attribute::Final))
-                    compileThis = JS2VAL_INACCESSIBLE;
-                ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
-                Frame *topFrame = env->getTopFrame();
-
-                if (unchecked 
-                        && ((topFrame->kind == GlobalObjectKind)
-                                        || (topFrame->kind == ParameterKind))
-                        && (f->attributes == NULL)) {
-                    HoistedVar *v = defineHoistedVar(env, f->function.name, p);
-                    // XXX Here the spec. has ???, so the following is tentative
-                    DynamicInstance *dInst = new DynamicInstance(functionClass);
-                    dInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
-                    f->fWrap = dInst->fWrap;
-                    v->value = OBJECT_TO_JS2VAL(dInst);
-                }
-                else {
-                    FixedInstance *fInst = new FixedInstance(functionClass);
-                    fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
-                    f->fWrap = fInst->fWrap;
-                    switch (memberMod) {
-                    case Attribute::NoModifier:
-                    case Attribute::Static:
-                        {
-                            Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
-                            defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                    VariableBinding *vb = f->function.parameters;
+                    bool untyped = true;
+                    while (vb) {
+                        if (vb->type) {
+                            untyped = false;
+                            break;
                         }
-                        break;
-                    case Attribute::Virtual:
-                    case Attribute::Final:
-                        {
-                            JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
-                            InstanceMember *m = new InstanceMethod(fInst);
-                            defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
-                        }
-                        break;
-                    case Attribute::Constructor:
-                        {
-                            // XXX 
-                        }
-                        break;
+                        vb = vb->next;
                     }
-                }
-
-
-                CompilationData *oldData = startCompilationUnit(f->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
-                env->addFrame(compileFrame);
-                VariableBinding *pb = f->function.parameters;
-                if (pb) {
-                    NamespaceList publicNamespaceList;
-                    publicNamespaceList.push_back(publicNamespace);
-                    uint32 pCount = 0;
-                    while (pb) {
-                        pCount++;
-                        pb = pb->next;
-                    }
-                    pb = f->function.parameters;
-                    compileFrame->positional = new Variable *[pCount];
-                    compileFrame->positionalCount = pCount;
-                    pCount = 0;
-                    while (pb) {
-                        // XXX define a static binding for each parameter
-                        Variable *v = new Variable();
-                        compileFrame->positional[pCount++] = v;
-                        pb->mn = defineStaticMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, p->pos);
-                        pb = pb->next;
-                    }
-                }
-                ValidateStmt(cxt, env, f->function.body);
-                env->removeTopFrame();
-                restoreCompilationUnit(oldData);
-            }
-            break;
-        case StmtNode::Var:
-        case StmtNode::Const:
-            {
-                bool immutable = (p->getKind() == StmtNode::Const);
-                Attribute *attr = NULL;
-                VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);
-
-                if (vs->attributes) {
-                    ValidateAttributeExpression(cxt, env, vs->attributes);
-                    attr = EvalAttributeExpression(env, CompilePhase, vs->attributes);
-                }
-                
-                VariableBinding *vb = vs->bindings;
-                Frame *regionalFrame = env->getRegionalFrame();
-                while (vb)  {
-                    const StringAtom *name = vb->name;
-                    if (vb->type)
-                        ValidateTypeExpression(cxt, env, vb->type);
-                    vb->member = NULL;
-
-                    if (cxt->strict && ((regionalFrame->kind == GlobalObjectKind)
-                                        || (regionalFrame->kind == ParameterKind))
-                                    && !immutable
-                                    && (vs->attributes == NULL)
-                                    && (vb->type == NULL)) {
-                        defineHoistedVar(env, name, p);
+                    bool unchecked = !cxt->strict && (env->getTopFrame()->kind != ClassKind)
+                                        && (f->function.prefix == FunctionName::normal) && untyped;
+                    bool prototype = unchecked || a->prototype;
+                    Attribute::MemberModifier memberMod = a->memberMod;
+                    if (env->getTopFrame()->kind == ClassKind) {
+                        if (memberMod == Attribute::NoModifier)
+                            memberMod = Attribute::Virtual;
                     }
                     else {
-                        a = Attribute::toCompoundAttribute(attr);
-                        if (a->dynamic || a->prototype)
+                        if (memberMod != Attribute::NoModifier)
                             reportError(Exception::definitionError, "Illegal attribute", p->pos);
-                        Attribute::MemberModifier memberMod = a->memberMod;
-                        if ((env->getTopFrame()->kind == ClassKind)
-                                && (memberMod == Attribute::NoModifier))
-                            memberMod = Attribute::Final;
+                    }
+                    if (prototype && ((f->function.prefix != FunctionName::normal) || (memberMod == Attribute::Constructor))) {
+                        reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                    }
+                    js2val compileThis = JS2VAL_VOID;
+                    if (prototype || (memberMod == Attribute::Constructor) 
+                                  || (memberMod == Attribute::Virtual) 
+                                  || (memberMod == Attribute::Final))
+                        compileThis = JS2VAL_INACCESSIBLE;
+                    ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
+                    Frame *topFrame = env->getTopFrame();
+
+                    if (unchecked 
+                            && ((topFrame->kind == GlobalObjectKind)
+                                            || (topFrame->kind == ParameterKind))
+                            && (f->attributes == NULL)) {
+                        HoistedVar *v = defineHoistedVar(env, f->function.name, p);
+                        // XXX Here the spec. has ???, so the following is tentative
+                        DynamicInstance *dInst = new DynamicInstance(functionClass);
+                        dInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
+                        f->fWrap = dInst->fWrap;
+                        v->value = OBJECT_TO_JS2VAL(dInst);
+                    }
+                    else {
+                        FixedInstance *fInst = new FixedInstance(functionClass);
+                        fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
+                        f->fWrap = fInst->fWrap;
                         switch (memberMod) {
                         case Attribute::NoModifier:
-                        case Attribute::Static: 
+                        case Attribute::Static:
                             {
-                                // Set type to FUTURE_TYPE - it will be resolved during 'PreEval'. The value is either FUTURE_VALUE
-                                // for 'const' - in which case the expression is compile time evaluated (or attempted) or set
-                                // to INACCESSIBLE until run time initialization occurs.
-                                Variable *v = new Variable(FUTURE_TYPE, immutable ? JS2VAL_FUTUREVALUE : JS2VAL_INACCESSIBLE, immutable);
-                                vb->member = v;
-                                v->vb = vb;
-                                vb->mn = defineStaticMember(env, name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                                Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
+                                defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
                             }
                             break;
                         case Attribute::Virtual:
-                        case Attribute::Final: 
+                        case Attribute::Final:
                             {
                                 JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
-                                InstanceMember *m = new InstanceVariable(FUTURE_TYPE, immutable, (memberMod == Attribute::Final), c->slotCount++);
-                                vb->member = m;
-                                vb->osp = defineInstanceMember(c, cxt, name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
+                                InstanceMember *m = new InstanceMethod(fInst);
+                                defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
                             }
                             break;
-                        default:
-                            reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                        case Attribute::Constructor:
+                            {
+                                // XXX 
+                            }
                             break;
                         }
                     }
-                    vb = vb->next;
-                }
-            }
-            break;
-        case StmtNode::expression:
-            {
-                ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
-                ValidateExpression(cxt, env, e->expr);
-            }
-            break;
-        case StmtNode::Namespace:
-            {
-                NamespaceStmtNode *ns = checked_cast<NamespaceStmtNode *>(p);
-                Attribute *attr = NULL;
-                if (ns->attributes) {
-                    ValidateAttributeExpression(cxt, env, ns->attributes);
-                    attr = EvalAttributeExpression(env, CompilePhase, ns->attributes);
-                }
-                a = Attribute::toCompoundAttribute(attr);
-                if (a->dynamic || a->prototype)
-                    reportError(Exception::definitionError, "Illegal attribute", p->pos);
-                if ( ! ((a->memberMod == Attribute::NoModifier) || ((a->memberMod == Attribute::Static) && (env->getTopFrame()->kind == ClassKind))) )
-                    reportError(Exception::definitionError, "Illegal attribute", p->pos);
-                Variable *v = new Variable(namespaceClass, OBJECT_TO_JS2VAL(new Namespace(&ns->name)), true);
-                defineStaticMember(env, &ns->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
-            }
-            break;
-        case StmtNode::Use:
-            {
-                UseStmtNode *u = checked_cast<UseStmtNode *>(p);
-                ExprList *eList = u->namespaces;
-                while (eList) {
-                    js2val av = EvalExpression(env, CompilePhase, eList->expr);
-                    if (JS2VAL_IS_NULL(av) || !JS2VAL_IS_OBJECT(av))
-                        reportError(Exception::badValueError, "Namespace expected in use directive", p->pos);
-                    JS2Object *obj = JS2VAL_TO_OBJECT(av);
-                    if ((obj->kind != AttributeObjectKind) || (checked_cast<Attribute *>(obj)->attrKind != Attribute::NamespaceAttr))
-                        reportError(Exception::badValueError, "Namespace expected in use directive", p->pos);
-                    cxt->openNamespaces.push_back(checked_cast<Namespace *>(obj));                    
-                    eList = eList->next;
-                }
-            }
-            break;
-        case StmtNode::Class:
-            {
-                ClassStmtNode *classStmt = checked_cast<ClassStmtNode *>(p);
-                JS2Class *superClass = objectClass;
-                if (classStmt->superclass) {
-                    ValidateExpression(cxt, env, classStmt->superclass);                    
-                    js2val av = EvalExpression(env, CompilePhase, classStmt->superclass);
-                    if (JS2VAL_IS_NULL(av) || !JS2VAL_IS_OBJECT(av))
-                        reportError(Exception::badValueError, "Class expected in inheritance", p->pos);
-                    JS2Object *obj = JS2VAL_TO_OBJECT(av);
-                    if (obj->kind != ClassKind)
-                        reportError(Exception::badValueError, "Class expected in inheritance", p->pos);
-                    superClass = checked_cast<JS2Class *>(obj);
-                }
-                Attribute *attr = NULL;
-                if (classStmt->attributes) {
-                    ValidateAttributeExpression(cxt, env, classStmt->attributes);
-                    attr = EvalAttributeExpression(env, CompilePhase, classStmt->attributes);
-                }
-                a = Attribute::toCompoundAttribute(attr);
-                if (!superClass->complete || superClass->final)
-                    reportError(Exception::definitionError, "Illegal inheritance", p->pos);
-                JS2Object *proto = NULL;
-                bool final = false;
-                switch (a->memberMod) {
-                case Attribute::NoModifier: 
-                    final = false; 
-                    break;
-                case Attribute::Static: 
-                    if (env->getTopFrame()->kind != ClassKind)
-                        reportError(Exception::definitionError, "Illegal use of static modifier", p->pos);
-                    final = false;
-                    break;
-                case Attribute::Final:
-                    final = true;
-                    break;
-                default:
-                    reportError(Exception::definitionError, "Illegal modifier for class definition", p->pos);
-                    break;
-                }
-                JS2Class *c = new JS2Class(superClass, proto, new Namespace(engine->private_StringAtom), (a->dynamic || superClass->dynamic), true, final, &classStmt->name);
-                classStmt->c = c;
-                Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(c), true);
-                defineStaticMember(env, &classStmt->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
-                if (classStmt->body) {
-                    env->addFrame(c);
-                    ValidateStmtList(cxt, env, classStmt->body->statements);
-                    ASSERT(env->getTopFrame() == c);
-                    env->removeTopFrame();
-                }
-                c->complete = true;
-            }
-            break;
-        case StmtNode::empty:
-            break;
-        }   // switch (p->getKind())
 
+
+                    CompilationData *oldData = startCompilationUnit(f->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
+                    env->addFrame(compileFrame);
+                    VariableBinding *pb = f->function.parameters;
+                    if (pb) {
+                        NamespaceList publicNamespaceList;
+                        publicNamespaceList.push_back(publicNamespace);
+                        uint32 pCount = 0;
+                        while (pb) {
+                            pCount++;
+                            pb = pb->next;
+                        }
+                        pb = f->function.parameters;
+                        compileFrame->positional = new Variable *[pCount];
+                        compileFrame->positionalCount = pCount;
+                        pCount = 0;
+                        while (pb) {
+                            // XXX define a static binding for each parameter
+                            Variable *v = new Variable();
+                            compileFrame->positional[pCount++] = v;
+                            pb->mn = defineStaticMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, p->pos);
+                            pb = pb->next;
+                        }
+                    }
+                    ValidateStmt(cxt, env, f->function.body);
+                    env->removeTopFrame();
+                    restoreCompilationUnit(oldData);
+                }
+                break;
+            case StmtNode::Var:
+            case StmtNode::Const:
+                {
+                    bool immutable = (p->getKind() == StmtNode::Const);
+                    Attribute *attr = NULL;
+                    VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);
+
+                    if (vs->attributes) {
+                        ValidateAttributeExpression(cxt, env, vs->attributes);
+                        attr = EvalAttributeExpression(env, CompilePhase, vs->attributes);
+                    }
+                
+                    VariableBinding *vb = vs->bindings;
+                    Frame *regionalFrame = env->getRegionalFrame();
+                    while (vb)  {
+                        const StringAtom *name = vb->name;
+                        if (vb->type)
+                            ValidateTypeExpression(cxt, env, vb->type);
+                        vb->member = NULL;
+
+                        if (cxt->strict && ((regionalFrame->kind == GlobalObjectKind)
+                                            || (regionalFrame->kind == ParameterKind))
+                                        && !immutable
+                                        && (vs->attributes == NULL)
+                                        && (vb->type == NULL)) {
+                            defineHoistedVar(env, name, p);
+                        }
+                        else {
+                            a = Attribute::toCompoundAttribute(attr);
+                            if (a->dynamic || a->prototype)
+                                reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                            Attribute::MemberModifier memberMod = a->memberMod;
+                            if ((env->getTopFrame()->kind == ClassKind)
+                                    && (memberMod == Attribute::NoModifier))
+                                memberMod = Attribute::Final;
+                            switch (memberMod) {
+                            case Attribute::NoModifier:
+                            case Attribute::Static: 
+                                {
+                                    // Set type to FUTURE_TYPE - it will be resolved during 'PreEval'. The value is either FUTURE_VALUE
+                                    // for 'const' - in which case the expression is compile time evaluated (or attempted) or set
+                                    // to INACCESSIBLE until run time initialization occurs.
+                                    Variable *v = new Variable(FUTURE_TYPE, immutable ? JS2VAL_FUTUREVALUE : JS2VAL_INACCESSIBLE, immutable);
+                                    vb->member = v;
+                                    v->vb = vb;
+                                    vb->mn = defineStaticMember(env, name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                                }
+                                break;
+                            case Attribute::Virtual:
+                            case Attribute::Final: 
+                                {
+                                    JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
+                                    InstanceMember *m = new InstanceVariable(FUTURE_TYPE, immutable, (memberMod == Attribute::Final), c->slotCount++);
+                                    vb->member = m;
+                                    vb->osp = defineInstanceMember(c, cxt, name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
+                                }
+                                break;
+                            default:
+                                reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                                break;
+                            }
+                        }
+                        vb = vb->next;
+                    }
+                }
+                break;
+            case StmtNode::expression:
+                {
+                    ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
+                    ValidateExpression(cxt, env, e->expr);
+                }
+                break;
+            case StmtNode::Namespace:
+                {
+                    NamespaceStmtNode *ns = checked_cast<NamespaceStmtNode *>(p);
+                    Attribute *attr = NULL;
+                    if (ns->attributes) {
+                        ValidateAttributeExpression(cxt, env, ns->attributes);
+                        attr = EvalAttributeExpression(env, CompilePhase, ns->attributes);
+                    }
+                    a = Attribute::toCompoundAttribute(attr);
+                    if (a->dynamic || a->prototype)
+                        reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                    if ( ! ((a->memberMod == Attribute::NoModifier) || ((a->memberMod == Attribute::Static) && (env->getTopFrame()->kind == ClassKind))) )
+                        reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                    Variable *v = new Variable(namespaceClass, OBJECT_TO_JS2VAL(new Namespace(&ns->name)), true);
+                    defineStaticMember(env, &ns->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                }
+                break;
+            case StmtNode::Use:
+                {
+                    UseStmtNode *u = checked_cast<UseStmtNode *>(p);
+                    ExprList *eList = u->namespaces;
+                    while (eList) {
+                        js2val av = EvalExpression(env, CompilePhase, eList->expr);
+                        if (JS2VAL_IS_NULL(av) || !JS2VAL_IS_OBJECT(av))
+                            reportError(Exception::badValueError, "Namespace expected in use directive", p->pos);
+                        JS2Object *obj = JS2VAL_TO_OBJECT(av);
+                        if ((obj->kind != AttributeObjectKind) || (checked_cast<Attribute *>(obj)->attrKind != Attribute::NamespaceAttr))
+                            reportError(Exception::badValueError, "Namespace expected in use directive", p->pos);
+                        cxt->openNamespaces.push_back(checked_cast<Namespace *>(obj));                    
+                        eList = eList->next;
+                    }
+                }
+                break;
+            case StmtNode::Class:
+                {
+                    ClassStmtNode *classStmt = checked_cast<ClassStmtNode *>(p);
+                    JS2Class *superClass = objectClass;
+                    if (classStmt->superclass) {
+                        ValidateExpression(cxt, env, classStmt->superclass);                    
+                        js2val av = EvalExpression(env, CompilePhase, classStmt->superclass);
+                        if (JS2VAL_IS_NULL(av) || !JS2VAL_IS_OBJECT(av))
+                            reportError(Exception::badValueError, "Class expected in inheritance", p->pos);
+                        JS2Object *obj = JS2VAL_TO_OBJECT(av);
+                        if (obj->kind != ClassKind)
+                            reportError(Exception::badValueError, "Class expected in inheritance", p->pos);
+                        superClass = checked_cast<JS2Class *>(obj);
+                    }
+                    Attribute *attr = NULL;
+                    if (classStmt->attributes) {
+                        ValidateAttributeExpression(cxt, env, classStmt->attributes);
+                        attr = EvalAttributeExpression(env, CompilePhase, classStmt->attributes);
+                    }
+                    a = Attribute::toCompoundAttribute(attr);
+                    if (!superClass->complete || superClass->final)
+                        reportError(Exception::definitionError, "Illegal inheritance", p->pos);
+                    JS2Object *proto = NULL;
+                    bool final = false;
+                    switch (a->memberMod) {
+                    case Attribute::NoModifier: 
+                        final = false; 
+                        break;
+                    case Attribute::Static: 
+                        if (env->getTopFrame()->kind != ClassKind)
+                            reportError(Exception::definitionError, "Illegal use of static modifier", p->pos);
+                        final = false;
+                        break;
+                    case Attribute::Final:
+                        final = true;
+                        break;
+                    default:
+                        reportError(Exception::definitionError, "Illegal modifier for class definition", p->pos);
+                        break;
+                    }
+                    JS2Class *c = new JS2Class(superClass, proto, new Namespace(engine->private_StringAtom), (a->dynamic || superClass->dynamic), true, final, &classStmt->name);
+                    classStmt->c = c;
+                    Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(c), true);
+                    defineStaticMember(env, &classStmt->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                    if (classStmt->body) {
+                        env->addFrame(c);
+                        ValidateStmtList(cxt, env, classStmt->body->statements);
+                        ASSERT(env->getTopFrame() == c);
+                        env->removeTopFrame();
+                    }
+                    c->complete = true;
+                }
+                break;
+            case StmtNode::empty:
+                break;
+            }   // switch (p->getKind())
+        }
+        catch (Exception x) {
+            env->setTopFrame(curTopFrame);
+            JS2Object::removeRoot(ri);
+            throw x;
+        }
         JS2Object::removeRoot(ri);
     }
 
@@ -3246,7 +3253,8 @@ readClassProperty:
             else
                 thisObject = lookupKind->thisObject;
             MemberDescriptor m2;
-            if (findStaticMember(checked_cast<JS2Class *>(container), multiname, ReadAccess, phase, &m2) && m2.staticMember)
+            if (!findStaticMember(checked_cast<JS2Class *>(container), multiname, ReadAccess, phase, &m2) 
+                        || m2.staticMember)
                 return readStaticMember(m2.staticMember, phase, rval);
             else {
                 if (JS2VAL_IS_NULL(thisObject))
@@ -3358,7 +3366,8 @@ readClassProperty:
             else
                 thisObject = lookupKind->thisObject;
             MemberDescriptor m2;
-            if (findStaticMember(checked_cast<JS2Class *>(container), multiname, WriteAccess, phase, &m2) && m2.staticMember)
+            if (!findStaticMember(checked_cast<JS2Class *>(container), multiname, WriteAccess, phase, &m2) 
+                            || m2.staticMember)
                 return writeStaticMember(m2.staticMember, newValue, phase);
             else {
                 if (JS2VAL_IS_NULL(thisObject))
@@ -3957,7 +3966,7 @@ deleteClassProperty:
             final(final),
             call(NULL),
             construct(JS2Engine::defaultConstructor),
-            slotCount(0),
+            slotCount(super ? super->slotCount : 0),
             name(name)
     {
 
