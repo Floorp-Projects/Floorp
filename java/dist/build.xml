@@ -30,7 +30,7 @@
 
   <property name="Name" value="webclient"/>
   <property name="name" value="webclient"/>
-  <property name="version" value="20040929"/>
+  <property name="version" value="2_0_a2"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -40,6 +40,7 @@
   <property environment="myenv" />
 
   <property name="dist.home" value="${basedir}/dist" />
+  <property name="source.home" value="${basedir}/.." />
   <property name="moz.dist" value="${myenv.MOZ_SRC}/mozilla/dist" />
 
   <target name="prepare">
@@ -107,6 +108,17 @@
     <copy todir="${dist.home}" file="${name}_${version}.zip" />
     <delete file="${name}_${version}.zip" />
 
+  </target>
+
+  <target name="src.dist">
+    <ant inheritAll="false" dir="${source.home}" target="clean"/>
+    <antcall target="prepare" />
+
+    <zip     destfile="${dist.home}/${name}-src-${version}.zip">
+      <zipfileset dir="${source.home}"
+             excludes="**/CVS/**,build.properties,**/.deps/**,**/build.test/**,**/dist/dist/**,**/Makefile"
+               prefix="${name}-src-${version}/src"/>
+    </zip>
   </target>
 
   <target name="test.dist" depends="prepare,clean.dev.build">
