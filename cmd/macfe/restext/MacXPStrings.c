@@ -17,10 +17,23 @@
  */
 
 
+/* BEGIN NEW_STRING_LIB */
 /* See the long commend in xpstring.xps for how this whole thing works */
 
+/*#include <stdio.h>*/
+
+/* Manually include the prefix file, so that MWCPPC picks it up */
+#include "MacConfigInclude.h"
+
+/*END NEW NEW_STRING_LIB*/
+
 /* the prefix file should have already defined OTUNIXERRORS at this stage */
-#include <OpenTransport.h>
+#include "OpenTransport.h"
+
+
+/* BEGIN NEW_STRING_LIB */
+#define RESOURCE_STR 1
+/*END NEW NEW_STRING_LIB*/
 
 #pragma export on
 

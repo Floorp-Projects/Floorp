@@ -333,10 +333,13 @@ static void XPStringsNotFoundAlert()
 	ExitToShell();
 }
 
+char * XP_GetBuiltinString(long i);
+
 //----------------------------------------------------------------------------------------
 char * XP_GetString( int xpStringID )
 //----------------------------------------------------------------------------------------
 {
+	/*
 	// Add the offset (the one added by the perl script) but leave it as 32 bits, so
 	// we can check the range.
 	int32 resID = xpStringID + RES_OFFSET;
@@ -356,12 +359,73 @@ char * XP_GetString( int xpStringID )
 	// You should call XP_STRDUP or otherwise store the string if you
 	// want it to persist
 	return GetCString(resID);
+	*/
+	
+	static char buf[128];
+	static char strclass[128];
+	char        *ret;
+	char        *type;
+	//XrmValue    value;
+ 
+ 	/*
+	(void) PR_snprintf(buf, sizeof (buf),
+		"%s.strings.%d", fe_progclass, xpStringID + RES_OFFSET);
+	(void) PR_snprintf(strclass, sizeof (strclass), 
+		"%s.Strings.Number", fe_progclass);
+	if (fe_display && ((database = XtDatabase(fe_display))) &&
+		XrmGetResource(database, buf, strclass, &type, &value))
+	{
+		return value.addr;
+	}
+	
+	if ((ret = mcom_cmd_xfe_xfe_err_h_strings (i + RES_OFFSET)))
+	{
+		return ret;
+	}
+	*/
+	return XP_GetBuiltinString((long)xpStringID);
+
+}
+
+extern "C" char * mcom_include_merrors_i_strings (long);
+extern "C" char * mcom_include_secerr_i_strings  (long);
+extern "C" char * mcom_include_sec_dialog_strings(long);
+extern "C" char * mcom_include_sslerr_i_strings  (long);
+extern "C" char * mcom_include_xp_error_i_strings(long);
+extern "C" char * mcom_include_xp_msg_i_strings  (long);
+		
+char * XP_GetBuiltinString(long i);
+//----------------------------------------------------------------------------------------
+char *
+XP_GetBuiltinString(long i)
+//----------------------------------------------------------------------------------------
+{
+	static char buf[128];
+	char        *ret;
+	
+	i += RES_OFFSET;
+	if
+	(
+		((ret = (mcom_include_merrors_i_strings (i)) )) ||
+		((ret = (mcom_include_secerr_i_strings  (i)) )) ||
+		((ret = (mcom_include_sec_dialog_strings(i)) )) ||
+		((ret = (mcom_include_sslerr_i_strings  (i)) )) ||
+		((ret = (mcom_include_xp_error_i_strings(i)) )) ||
+		((ret = (mcom_include_xp_msg_i_strings  (i)) ))
+	)
+	{
+		return ret;
+	}
+	(void) sprintf(buf, "XP_GetBuiltinString: %d not found", i);
+	 
+	return buf;
 }
 
 //-----------------------------------
 static void InitializeStrings()
 //-----------------------------------
 {
+	/*
 	static Boolean initialized = false;
 	if (initialized)
 		return;
@@ -404,6 +468,7 @@ static void InitializeStrings()
 	MoveResourceMapBelowApp();
 
 	UseResFile(currentFileRefNum);
+	*/
 } // InitializeStrings
 
 void MoveResourceMapBelowApp()

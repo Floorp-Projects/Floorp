@@ -28,6 +28,8 @@ extern int XP_DOCINFO_2;
 extern int XP_DOCINFO_3;
 extern int XP_DOCINFO_4;
 
+/*#include "allxpstr.h"*/
+
 PUBLIC int16
 INTL_CharSetNameToID(char	*charset)
 {
