@@ -63,7 +63,7 @@
 <!ENTITY pref.defalarmlen4events.label "Preaviso predet. antes de un evento:">
 <!ENTITY pref.defalarmlen4todos.label "Preaviso predet. antes de una tarea:">
 
-<!ENTITY pref.dateformat.label      "Formato del texto de la fecha:" >
+<!ENTITY pref.dateformat.label      "Formato de fecha (texto):" >
 <!ENTITY pref.dateformat.long       "Largo" >
 <!ENTITY pref.dateformat.short      "Corto"  >
 <!ENTITY pref.dateformat.storeingmt "Guardar fechas en formato de hora universal." >

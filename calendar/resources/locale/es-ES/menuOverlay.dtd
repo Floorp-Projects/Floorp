@@ -38,23 +38,23 @@
 <!ENTITY event.menu.title                       "Evento">
 <!ENTITY eventMenuCmd.accesskey                 "v">
 
-<!ENTITY event.new.event                        "Nuevo evento…">
+<!ENTITY event.new.event                        "Nuevo evento...">
 <!ENTITY event.new.event.key                    "N">
 <!ENTITY event.new.event.accesskey              "N">
 
-<!ENTITY event.new.todo                         "Nueva tarea…">
+<!ENTITY event.new.todo                         "Nueva tarea">
 <!ENTITY event.new.todo.key                     "T">
 <!ENTITY event.new.todo.accesskey               "T">
 
-<!ENTITY calendar.new.server.label              "Nuevo archivo de calendario…">
+<!ENTITY calendar.new.server.label              "Nuevo archivo de calendario...">
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "l">
 
-<!ENTITY calendar.open.file.label               "Abrir archivo de calendario…">
+<!ENTITY calendar.open.file.label               "Abrir archivo de calendario...">
 <!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "O">
 
-<!ENTITY event.edit.event                       "Editar…">
+<!ENTITY event.edit.event                       "Editar...">
 <!ENTITY event.edit.event.key                   "E">
 <!ENTITY event.edit.event.accesskey             "E">
 
@@ -64,7 +64,7 @@
 <!ENTITY event.delete.tasks                     "Borrar tareas seleccionadas">
 <!ENTITY event.delete.tasks.accesskey           "T">
 
-<!ENTITY event.mail.event                       "Enviar evento(s) seleccionado(s)…">
+<!ENTITY event.mail.event                       "Enviar evento(s) seleccionado(s)...">
 <!ENTITY event.mail.event.key                   "t">
 <!ENTITY event.mail.event.accesskey             "v">
 
@@ -82,7 +82,7 @@
 <!ENTITY calendar.import.key                    "I">
 <!ENTITY calendar.import.accesskey              "I">
 
-<!ENTITY calendar.wizard.label                  "Cargar asistente…">
+<!ENTITY calendar.wizard.label                  "Cargar asistente...">
 <!ENTITY calendar.wizard.accesskey              "W">
 
 <!ENTITY calendar.export.label                  "Exportar eventos seleccionados...">

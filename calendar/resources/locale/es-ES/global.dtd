@@ -63,10 +63,10 @@
 <!ENTITY day.1.Ddd "Dom" >
 <!ENTITY day.2.Ddd "Lun" >
 <!ENTITY day.3.Ddd "Mar" >
-<!ENTITY day.4.Ddd "Mie" >
+<!ENTITY day.4.Ddd "Mié" >
 <!ENTITY day.5.Ddd "Jue" >
 <!ENTITY day.6.Ddd "Vie" >
-<!ENTITY day.7.Ddd "Sab" >
+<!ENTITY day.7.Ddd "Sáb" >
 
 <!ENTITY day.1.DDD "DOM" >
 <!ENTITY day.2.DDD "LUN" >

@@ -73,14 +73,14 @@
 <!ENTITY newevent.startdate.label    "Inicio" >
 <!ENTITY newevent.enddate.label      "Fin" >
 <!ENTITY newevent.end.label          "Fin" >
-<!ENTITY newevent.alldayevent.label  "Este evento dura todo el día." >
-<!ENTITY newevent.description.label  "Nota" >
+<!ENTITY newevent.alldayevent.label  "Todo el día" >
+<!ENTITY newevent.description.label  "Descripción" >
 <!ENTITY newevent.uri.label          "URL" >
 <!ENTITY newevent.uri.visit.label    "Visitar URL" >
 <!ENTITY newevent.private.label      "Privado" >
 <!ENTITY newevent.private.note       "Este evento es privado." >
 <!ENTITY newevent.alarm.label        "Alarma" >
-<!ENTITY newevent.server.label       "Archivo de calendario" >
+<!ENTITY newevent.server.label       "Calendario" >
 <!ENTITY newevent.invite.label       "Invitar" >
 <!ENTITY newevent.email.label        "Enviar alarma a" >
 <!ENTITY newevent.beforealarm.label  "antes de que comience el evento" >
@@ -100,10 +100,11 @@
 <!ENTITY newevent.endtime.tooltip    "Elija una hora de fin para este evento" >
 <!ENTITY newevent.starttimeerror.alertmessage "El evento no puede terminar antes de haber empezado. Por favor, compruebe las horas de inicio y fin." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "La hora de repetición del evento no puede ser anterior a la hora de final. Por favor, compruebe esto o desative la repetición." >
-<!ENTITY newevent.newevent.tab.label "Evento" >
-<!ENTITY newevent.recurrence.tab.label "Repeticiones" >
-<!ENTITY newevent.contacts.tab.label "Contactos" >
-<!ENTITY newevent.files.tab.label "Archivos" >
+<!ENTITY newevent.general.tab.label         "General" >
+<!ENTITY newevent.recurrence.tab.label      "Repeticiones" >
+<!ENTITY newevent.attendees.tab.label       "Asistentes" >
+<!ENTITY newevent.attachments.tab.label     "Adjuntos" >
+<!ENTITY newevent.advanced.tab.label        "Avanzadas" >
 <!ENTITY newevent.status.label "Estado" >
 <!ENTITY newevent.status.longlabel "Estado del evento">
 <!ENTITY newevent.status.needsaction.label "Necesita acción" >
@@ -112,6 +113,10 @@
 <!ENTITY newevent.status.cancelled.label   "Cancelado" >
 <!ENTITY newevent.status.tentative.label   "Tentativa" >
 <!ENTITY newevent.status.confirmed.label   "Confirmado" >
+<!ENTITY newevent.itemType.label            "Tipo de elemento" >
+<!ENTITY newevent.itemType.event.label      "Evento" >
+<!ENTITY newevent.itemType.todo.label       "Tarea" >
+<!ENTITY newevent.itemType.journal.label    "Diario" >
 
 <!ENTITY newevent.advanced.repeat.dayofmonth.label "En el día x del mes">
 <!ENTITY newevent.advanced.repeat.dayofweek.label "4º martes del mes">
@@ -423,17 +428,17 @@
 <!ENTITY calendar.server.dialog.title.new           "Nuevo archivo de calendario">
 <!ENTITY calendar.server.dialog.title.open          "Abrir archivo de calendario">
 <!ENTITY calendar.server.dialog.title.edit          "Editar calendario">
-<!ENTITY calendar.server.dialog.name.label          "Nombre">
-<!ENTITY calendar.server.dialog.publish.label       "¿Publicar cambios automáticamente? Para calendarios remotos, esto descargará una nueva versión antes de que añada, edite o borre un evento. Se realizará la acción, y se descargará al servidor el nuevo archivo.">
-<!ENTITY calendar.server.dialog.location.label      "Lugar">
-<!ENTITY calendar.server.dialog.local.location.label "Lugar del archivo local">
-<!ENTITY calendar.server.dialog.browse.label        "Examinar archivo local...">
+<!ENTITY calendar.server.dialog.name.label          "Nombre del calendario:">
+<!ENTITY calendar.server.dialog.publish.label       "¿Publicar sus cambios automáticamente en el calendario remoto? Si lo habilita, esto descargará una nueva versión del calendario antes de aplicar cualquier cambio que haga usted. Sus cambios serán entonces aplicados y el calendario subido de nuevo al servidor.">
+<!ENTITY calendar.server.dialog.location.label      "URL del servidor remoto:">
+<!ENTITY calendar.server.dialog.local.location.label "Ubicación del archivo local:">
+<!ENTITY calendar.server.dialog.browse.label        "Examinar...">
 <!ENTITY calendar.server.dialog.help.label          "Puede introducir una ruta a un archivo local, o a un archivo remoto como http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Opcionalmente, puede especificar un directorio para crear los archivos de calendario.">
-<!ENTITY calendar.local.calendar.dialog.optional.label "Los siguientes campos son opcionales, y se usan para publicar el calendario en un sitio remoto.">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Use esto para especificar dónde en su ordenador se guarda el archivo de calendario. Es opcional.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Los siguientes campos opcionales se usan para publicar el calendario en un sitio remoto.">
 
 <!-- Calendar Coloring -->
-<!ENTITY calendar.server.dialog.color.label "Color">
+<!ENTITY calendar.server.dialog.color.label "Color:">
 
 
 <!-- Calendar Publish Dialog -->
@@ -490,3 +495,9 @@
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 
+<!-- Temporary, until brand.dtd works again. bug 272643 -->
+<!ENTITY  lang.version          "1.7a">
+<!ENTITY  brandShortName        "Sunbird">
+<!ENTITY  brandFullName         "Mozilla Sunbird">
+<!ENTITY  vendorShortName       "Mozilla">
+<!ENTITY  releaseURL            "http://www.mozilla.org/projects/calendar">
