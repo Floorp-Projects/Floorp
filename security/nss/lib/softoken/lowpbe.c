@@ -867,7 +867,7 @@ sec_pkcs5_des(SECItem *key, SECItem *iv, SECItem *src, PRBool triple_des,
 			encrypt);
 	
 	    if(ctxt != NULL) {
-		rv = ((encrypt != PR_TRUE) ? DES_Decrypt : DES_Encrypt)(
+		rv = (encrypt ? DES_Encrypt : DES_Decrypt)(
 			ctxt, dest->data, &dest->len,
 			dup_src->len + 64, dup_src->data, dup_src->len);
 
@@ -947,7 +947,7 @@ sec_pkcs5_rc2(SECItem *key, SECItem *iv, SECItem *src, PRBool dummy,
 					 	NSS_RC2_CBC, key->len);
 
 	    if(ctxt != NULL) {
-		rv = ((encrypt != PR_TRUE) ? RC2_Decrypt : RC2_Encrypt)(
+		rv = (encrypt ? RC2_Encrypt: RC2_Decrypt)(
 			ctxt, dest->data, &dest->len,
 			dup_src->len + 64, dup_src->data, dup_src->len);
 
@@ -1004,7 +1004,7 @@ sec_pkcs5_rc4(SECItem *key, SECItem *iv, SECItem *src, PRBool dummy_op,
 
 	    ctxt = RC4_CreateContext(key->data, key->len);
 	    if(ctxt) { 
-		rv = ((encrypt != PR_FALSE) ? RC4_Decrypt : RC4_Encrypt)(
+		rv = (encrypt ? RC4_Encrypt : RC4_Decrypt)(
 				ctxt, dest->data, &dest->len,
 				src->len + 64, src->data, src->len);
 		RC4_DestroyContext(ctxt, PR_TRUE);
