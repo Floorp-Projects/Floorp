@@ -233,7 +233,7 @@ nsSystemPrincipal::GetJsPrincipals(JSPrincipals **jsprin)
     NS_PRECONDITION(mJSPrincipals.nsIPrincipalPtr, "mJSPrincipals is uninitalized!");
 
     *jsprin = &mJSPrincipals;
-    JSPRINCIPALS_HOLD(cx, *jsprin);
+    JSPRINCIPALS_HOLD(nsnull, *jsprin);
     return NS_OK;
 }
 

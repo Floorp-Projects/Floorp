@@ -149,7 +149,7 @@ nsPrincipal::GetJsPrincipals(JSPrincipals **jsprin)
 
   // JSPRINCIPALS_HOLD does not use its first argument.
   // Just use a dummy cx to save the codesize.
-  JSPRINCIPALS_HOLD(cx, *jsprin);
+  JSPRINCIPALS_HOLD(nsnull, *jsprin);
 
   return NS_OK;
 }
