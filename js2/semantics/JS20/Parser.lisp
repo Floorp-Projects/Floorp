@@ -49,6 +49,7 @@
     (deftype object-u (union object (tag uninitialised)))
     
     (deftype boolean-opt (union boolean (tag none)))
+    (deftype integer-opt (union integer (tag none)))
     
     
     (%heading (3 :semantics) "Undefined")
@@ -429,33 +430,79 @@
         (:narrow finite-float64 (return (truncate-finite-float64 x)))
         (:narrow (union long u-long) (return (& value x)))))
     
-    (define (check-integer (x general-number)) integer
-      (rwhen (in x (tag nan32 nan64) :narrow-false)
-        (throw bad-value-error))
-      (rwhen (in x (tag +infinity32 +infinity64 -infinity32 -infinity64) :narrow-false)
-        (throw range-error))
-      (const r rational (to-rational x))
-      (rwhen (not-in r integer :narrow-false)
-        (throw bad-value-error))
-      (return r))
+    (define (check-integer (x general-number)) integer-opt
+      (case x
+        (:select (tag nan32 nan64 +infinity32 +infinity64 -infinity32 -infinity64) (return none))
+        (:select (tag +zero32 +zero64 -zero32 -zero64) (return 0))
+        (:narrow (union long u-long) (return (& value x)))
+        (:narrow (union nonzero-finite-float32 nonzero-finite-float64)
+          (const r rational (& value x))
+          (rwhen (not-in r integer :narrow-false)
+            (return none))
+          (return r))))
     
-    (define (check-long (i integer)) long
-      (if (cascade integer (neg (expt 2 63)) <= i <= (- (expt 2 63) 1))
-        (return (new long i))
-        (throw range-error)))
+    (define (integer-to-long (i integer)) general-number
+      (cond
+       ((cascade integer (neg (expt 2 63)) <= i <= (- (expt 2 63) 1))
+        (return (new long i)))
+       ((cascade integer (expt 2 63) <= i <= (- (expt 2 64) 1))
+        (return (new u-long i)))
+       (nil
+        (return (real-to-float64 i)))))
     
-    (define (check-u-long (i integer)) u-long
-      (if (cascade integer 0 <= i <= (- (expt 2 64) 1))
-        (return (new u-long i))
-        (throw range-error)))
+    (define (integer-to-u-long (i integer)) general-number
+      (cond
+       ((cascade integer 0 <= i <= (- (expt 2 64) 1))
+        (return (new u-long i)))
+       ((cascade integer (neg (expt 2 63)) <= i <= -1)
+        (return (new long i)))
+       (nil
+        (return (real-to-float64 i)))))
+    
+    (define (rational-to-long (q rational)) general-number
+      (cond
+       ((in q integer :narrow-true) (return (integer-to-long q)))
+       ((<= (rat-abs q) (expt 2 53) rational) (return (real-to-float64 q)))
+       ((or (< q (rat- (neg (expt 2 63)) (rat/ 1 2)) rational) (>= q (rat- (expt 2 64) (rat/ 1 2)) rational)) (return (real-to-float64 q)))
+       (nil
+        (/* (:def-const i integer) "Let " (:local i) " be the integer closest to " (:local q)
+            ". If " (:local q) " is halfway between two integers, pick " (:local i) " so that it is even.")
+        (var i integer (floor q))
+        (var frac rational (rat- q i))
+        (when (or (> frac (rat/ 1 2) rational) (and (= frac (rat/ 1 2) rational) (= (bitwise-and i 1) 1)))
+          (<- i (+ i 1)))
+        (*/)
+        (assert (cascade integer (neg (expt 2 63)) <= i <= (- (expt 2 64) 1)) "Note that " (:assertion))
+        (if (< i (expt 2 63))
+          (return (new long i))
+          (return (new u-long i))))))
+    
+    (define (rational-to-u-long (q rational)) general-number
+      (cond
+       ((in q integer :narrow-true) (return (integer-to-u-long q)))
+       ((<= (rat-abs q) (expt 2 53) rational) (return (real-to-float64 q)))
+       ((or (< q (rat- (neg (expt 2 63)) (rat/ 1 2)) rational) (>= q (rat- (expt 2 64) (rat/ 1 2)) rational)) (return (real-to-float64 q)))
+       (nil
+        (/* (:def-const i integer) "Let " (:local i) " be the integer closest to " (:local q)
+            ". If " (:local q) " is halfway between two integers, pick " (:local i) " so that it is even.")
+        (var i integer (floor q))
+        (var frac rational (rat- q i))
+        (when (or (> frac (rat/ 1 2) rational) (and (= frac (rat/ 1 2) rational) (= (bitwise-and i 1) 1)))
+          (<- i (+ i 1)))
+        (*/)
+        (assert (cascade integer (neg (expt 2 63)) <= i <= (- (expt 2 64) 1)) "Note that " (:assertion))
+        (if (>= i 0)
+          (return (new u-long i))
+          (return (new long i))))))
     
     (define (to-rational (x finite-general-number)) rational
       (case x
         (:select (tag +zero32 +zero64 -zero32 -zero64) (return 0))
         (:narrow (union nonzero-finite-float32 nonzero-finite-float64 long u-long) (return (& value x)))))
     
-    (define (float-to-float64 (x (union float32 float64))) float64
+    (define (to-float64 (x general-number)) float64
       (case x
+        (:narrow (union long u-long) (return (real-to-float64 (& value x))))
         (:narrow float32 (return (float32-to-float64 x)))
         (:narrow float64 (return x))))
     
@@ -2265,9 +2312,8 @@
     
     (define (general-number-negate (x general-number)) general-number
       (case x
-        (:narrow (union long u-long)
-          (const i integer (neg (& value x)))
-          (return (check-long i)))
+        (:narrow long (return (integer-to-long (neg (& value x)))))
+        (:narrow u-long (return (integer-to-u-long (neg (& value x)))))
         (:narrow float32 (return (float32-negate x)))
         (:narrow float64 (return (float64-negate x)))))
     
@@ -2324,54 +2370,43 @@
     (define (multiply (a object) (b object) (phase phase)) object
       (const x general-number (to-general-number a phase))
       (const y general-number (to-general-number b phase))
-      (cond
-       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
-        (const i integer (check-integer x))
-        (const j integer (check-integer y))
-        (const k integer (* i j))
-        (if (or (in x u-long) (in y u-long))
-          (return (check-u-long k))
-          (return (check-long k))))
-       ((or (in x float64 :narrow-false) (in y float64 :narrow-false))
-        (return (float64-multiply (float-to-float64 x) (float-to-float64 y))))
-       (nil (return (float32-multiply x y)))))
+      (when (or (in x (union long u-long)) (in y (union long u-long)))
+        (const i integer-opt (check-integer x))
+        (const j integer-opt (check-integer y))
+        (rwhen (and (not-in i (tag none) :narrow-true) (not-in j (tag none) :narrow-true))
+          (const k integer (* i j))
+          (if (or (in x u-long) (in y u-long))
+            (return (integer-to-u-long k))
+            (return (integer-to-long k)))))
+      (return (float64-multiply (to-float64 x) (to-float64 y))))
     
     (define (divide (a object) (b object) (phase phase)) object
       (const x general-number (to-general-number a phase))
       (const y general-number (to-general-number b phase))
-      (cond
-       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
-        (const i integer (check-integer x))
-        (const j integer (check-integer y))
-        (rwhen (= j 0)
-          (throw range-error))
-        (const q rational (rat/ i j))
-        (const k integer (if (>= q 0 rational) (floor q) (ceiling q)))
-        (if (or (in x u-long) (in y u-long))
-          (return (check-u-long k))
-          (return (check-long k))))
-       ((or (in x float64 :narrow-false) (in y float64 :narrow-false))
-        (return (float64-divide (float-to-float64 x) (float-to-float64 y))))
-       (nil (return (float32-divide x y)))))
+      (when (or (in x (union long u-long)) (in y (union long u-long)))
+        (const i integer-opt (check-integer x))
+        (const j integer-opt (check-integer y))
+        (rwhen (and (not-in i (tag none) :narrow-true) (not-in j (tag none) :narrow-true) (/= j 0))
+          (const q rational (rat/ i j))
+          (if (or (in x u-long) (in y u-long))
+            (return (rational-to-u-long q))
+            (return (rational-to-long q)))))
+      (return (float64-divide (to-float64 x) (to-float64 y))))
     
     (define (remainder (a object) (b object) (phase phase)) object
       (const x general-number (to-general-number a phase))
       (const y general-number (to-general-number b phase))
-      (cond
-       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
-        (const i integer (check-integer x))
-        (const j integer (check-integer y))
-        (rwhen (= j 0)
-          (throw range-error))
-        (const q rational (rat/ i j))
-        (const k integer (if (>= q 0 rational) (floor q) (ceiling q)))
-        (const r integer (- i (* j k)))
-        (if (in x u-long)
-          (return (new u-long r))
-          (return (new long r))))
-       ((or (in x float64 :narrow-false) (in y float64 :narrow-false))
-        (return (float64-remainder (float-to-float64 x) (float-to-float64 y))))
-       (nil (return (float32-remainder x y)))))
+      (when (or (in x (union long u-long)) (in y (union long u-long)))
+        (const i integer-opt (check-integer x))
+        (const j integer-opt (check-integer y))
+        (rwhen (and (not-in i (tag none) :narrow-true) (not-in j (tag none) :narrow-true) (/= j 0))
+          (const q rational (rat/ i j))
+          (const k integer (if (>= q 0 rational) (floor q) (ceiling q)))
+          (const r integer (- i (* j k)))
+          (if (or (in x u-long) (in y u-long))
+            (return (integer-to-u-long r))
+            (return (integer-to-long r)))))
+      (return (float64-remainder (to-float64 x) (to-float64 y))))
     
     
     (%heading 2 "Additive Operators")
@@ -2404,32 +2439,28 @@
         (return (append (to-string ap phase) (to-string bp phase))))
       (const x general-number (to-general-number ap phase))
       (const y general-number (to-general-number bp phase))
-      (cond
-       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
-        (const i integer (check-integer x))
-        (const j integer (check-integer y))
-        (const k integer (+ i j))
-        (if (or (in x u-long) (in y u-long))
-          (return (check-u-long k))
-          (return (check-long k))))
-       ((or (in x float64 :narrow-false) (in y float64 :narrow-false))
-        (return (float64-add (float-to-float64 x) (float-to-float64 y))))
-       (nil (return (float32-add x y)))))
+      (when (or (in x (union long u-long)) (in y (union long u-long)))
+        (const i integer-opt (check-integer x))
+        (const j integer-opt (check-integer y))
+        (rwhen (and (not-in i (tag none) :narrow-true) (not-in j (tag none) :narrow-true))
+          (const k integer (+ i j))
+          (if (or (in x u-long) (in y u-long))
+            (return (integer-to-u-long k))
+            (return (integer-to-long k)))))
+      (return (float64-add (to-float64 x) (to-float64 y))))
     
     (define (subtract (a object) (b object) (phase phase)) object
       (const x general-number (to-general-number a phase))
       (const y general-number (to-general-number b phase))
-      (cond
-       ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
-        (const i integer (check-integer x))
-        (const j integer (check-integer y))
-        (const k integer (- i j))
-        (if (in x u-long)
-          (return (check-u-long k))
-          (return (check-long k))))
-       ((or (in x float64 :narrow-false) (in y float64 :narrow-false))
-        (return (float64-subtract (float-to-float64 x) (float-to-float64 y))))
-       (nil (return (float32-subtract x y)))))
+      (when (or (in x (union long u-long)) (in y (union long u-long)))
+        (const i integer-opt (check-integer x))
+        (const j integer-opt (check-integer y))
+        (rwhen (and (not-in i (tag none) :narrow-true) (not-in j (tag none) :narrow-true))
+          (const k integer (- i j))
+          (if (or (in x u-long) (in y u-long))
+            (return (integer-to-u-long k))
+            (return (integer-to-long k)))))
+      (return (float64-subtract (to-float64 x) (to-float64 y))))
     
     
     (%heading 2 "Bitwise Shift Operators")
@@ -2713,15 +2744,15 @@
       (const y general-number (to-general-number b phase))
       (cond
        ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
-        (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer x)))
-        (const j (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer y)))
+        (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (truncate-to-integer x)))
+        (const j (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (truncate-to-integer y)))
         (const k (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (bitwise-and i j))
         (if (or (in x u-long) (in y u-long))
           (return (new u-long (unsigned-wrap64 k)))
           (return (new long k))))
        (nil
-        (const i integer (signed-wrap32 (truncate-to-integer x)))
-        (const j integer (signed-wrap32 (truncate-to-integer y)))
+        (const i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer x)))
+        (const j (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer y)))
         (return (real-to-float64 (bitwise-and i j))))))
     
     (define (bit-xor (a object) (b object) (phase phase)) general-number
@@ -2729,15 +2760,15 @@
       (const y general-number (to-general-number b phase))
       (cond
        ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
-        (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer x)))
-        (const j (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer y)))
+        (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (truncate-to-integer x)))
+        (const j (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (truncate-to-integer y)))
         (const k (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (bitwise-xor i j))
         (if (or (in x u-long) (in y u-long))
           (return (new u-long (unsigned-wrap64 k)))
           (return (new long k))))
        (nil
-        (const i integer (signed-wrap32 (truncate-to-integer x)))
-        (const j integer (signed-wrap32 (truncate-to-integer y)))
+        (const i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer x)))
+        (const j (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer y)))
         (return (real-to-float64 (bitwise-xor i j))))))
     
     (define (bit-or (a object) (b object) (phase phase)) general-number
@@ -2745,15 +2776,15 @@
       (const y general-number (to-general-number b phase))
       (cond
        ((or (in x (union long u-long) :narrow-false) (in y (union long u-long) :narrow-false))
-        (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer x)))
-        (const j (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (check-integer y)))
+        (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (truncate-to-integer x)))
+        (const j (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (signed-wrap64 (truncate-to-integer y)))
         (const k (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (bitwise-or i j))
         (if (or (in x u-long) (in y u-long))
           (return (new u-long (unsigned-wrap64 k)))
           (return (new long k))))
        (nil
-        (const i integer (signed-wrap32 (truncate-to-integer x)))
-        (const j integer (signed-wrap32 (truncate-to-integer y)))
+        (const i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer x)))
+        (const j (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer y)))
         (return (real-to-float64 (bitwise-or i j))))))
     
     
