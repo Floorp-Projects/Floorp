@@ -343,10 +343,12 @@ var nsSaveCommand =
     // Always allow saving when editing a remote document,
     //  otherwise the document modified state would prevent that
     //  when you first open a remote file.
-    var docUrl = GetDocumentUrl();
-    return window.editorShell && window.editorShell.documentEditable &&
-      (window.editorShell.documentModified || window.gHTMLSourceChanged ||
-       IsUrlAboutBlank(docUrl) || GetScheme(docUrl) != "file");
+    try {
+      var docUrl = GetDocumentUrl();
+      return window.editorShell && window.editorShell.documentEditable &&
+        (window.editorShell.documentModified || window.gHTMLSourceChanged ||
+         IsUrlAboutBlank(docUrl) || GetScheme(docUrl) != "file");
+    } catch (e) {return false;}
   },
   
   doCommand: function(aCommand)
@@ -448,9 +450,11 @@ var nsPublishCommand =
       // Always allow publishing when editing a local document,
       //  otherwise the document modified state would prevent that
       //  when you first open any local file.
-      var docUrl = GetDocumentUrl();
-      return window.editorShell.documentModified || window.gHTMLSourceChanged
-             || IsUrlAboutBlank(docUrl) || GetScheme(docUrl) == "file";
+      try {
+        var docUrl = GetDocumentUrl();
+        return window.editorShell.documentModified || window.gHTMLSourceChanged
+               || IsUrlAboutBlank(docUrl) || GetScheme(docUrl) == "file";
+      } catch (e) {return false;}
     }
     return false;
   },
@@ -833,6 +837,10 @@ const gShowDebugOutputSecurityChange = false;
 const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
 const nsIChannel = Components.interfaces.nsIChannel;
 
+const kErrorBindingAborted = 2152398850;
+const kErrorBindingRedirected = 2152398851;
+const kFileNotFound = 2152857618;
+
 var gEditorOutputProgressListener =
 {
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
@@ -853,7 +861,7 @@ var gEditorOutputProgressListener =
 
     if (gShowDebugOutputStateChange)
     {
-      dump("***** onStateChange request: " + requestSpec + "\n");
+      dump("\n***** onStateChange request: " + requestSpec + "\n");
       dump("      state flags: ");
 
       if (aStateFlags & nsIWebProgressListener.STATE_START)
@@ -867,25 +875,24 @@ var gEditorOutputProgressListener =
 
       DumpDebugStatus(aStatus);
     }
+    // The rest only concerns publishing, so bail out if no dialog
+    if (!gProgressDialog)
+      return;
 
     // Detect start of file upload of any file:
+    // (We ignore any START messages after gPersistObj says publishing is finished
     if ((aStateFlags & nsIWebProgressListener.STATE_START)
-         && requestSpec && gProgressDialog)
+         && gPersistObj && requestSpec
+         && (gPersistObj.currentState != gPersistObj.PERSIST_STATE_FINISHED))
     {
       try {
         // Add url to progress dialog's list showing each file uploading
-        // Note that even though we create dialog before calling OutputFileWithPersistAPI,
-        //  we can get here before dialog is initialized.
-        //  This will cause exception calling AddProgressListitem,
-        //  But we'll add any missed files in dialog later
         gProgressDialog.SetProgressStatus(GetFilename(requestSpec), "busy");
-      } catch(e) {
-        dump(" Exception error calling SetProgressStatus\n");
-      }
+      } catch(e) {}
     }
 
     // Detect end of file upload of any file:
-    if ((aStateFlags & nsIWebProgressListener.STATE_STOP))
+    if (aStateFlags & nsIWebProgressListener.STATE_STOP)
     {
       // ignore aStatus == kErrorBindingAborted; check http response for possible errors
       try {
@@ -906,108 +913,84 @@ var gEditorOutputProgressListener =
           aStatus = 0;
       }
 
+      // We abort publishing for all errors except if image src file is not found
+      var abortPublishing = (aStatus != 0 && aStatus != kFileNotFound);
+
       // Notify progress dialog when we receive the STOP
       //  notification for a file if there was an error 
-      //  or for a successful finish only if 
-      //  destination url is contains the publishing location
-      if (gProgressDialog &&
-          (aStatus != 0 
-           || requestSpec && requestSpec.indexOf(gPublishData.publishUrl) == 0))
+      //  or a successful finish
+      //  (Check requestSpec to be sure message is for destination url)
+      if (aStatus != 0 
+           || (requestSpec && requestSpec.indexOf(GetScheme(gPublishData.publishUrl)) == 0))
       {
         try {
           gProgressDialog.SetProgressFinished(GetFilename(requestSpec), aStatus);
         } catch(e) {}
       }
 
-      if (aStatus)
+
+      if (abortPublishing)
       {
-        // Cancel the publish 
+        // Cancel publishing
         gPersistObj.cancelSave();
-        gProgressDialog.SetProgressStatusCancel();
 
-        //XXX TODO: we should provide more meaningful errors (if possible)
-        var failedStr = GetString("PublishFailed");
-        
-        // XXX We don't have error codes in IDL !!!
-        // Give better error messages for cases we know about:
-        if (aStatus == 2152398868)  // Bad directory
-        {
-          var requestFilename = requestSpec ? GetFilename(requestSpec) : "";
-          var dir = (gPublishData.filename == requestFilename) ? 
-                       gPublishData.docDir : gPublishData.otherDir;
-
-          failedStr = GetString("PublishDirFailed").replace(/%dir%/, gPublishData.docDir);
-          if (gProgressDialog)
-            gProgressDialog.SetStatusMessage(failedStr);
-
-          // Remove directory from saved prefs
-          RemovePublishSubdirectoryFromPrefs(gPublishData, dir);
-        }
-
-        // Do not do any commands after failure
+        // Don't do any commands after failure
         gCommandAfterPublishing = null;
 
-        // Show error in progress dialog and let user close it
-        if (gProgressDialog)
-        {
-          try {
-            // Tell dialog final status value so it can show appropriate message
-            gProgressDialog.SetProgressFinished(null, aStatus);
-          } catch (e) { 
-            dump(" **** EXCEPTION ERROR CALLING ProgressDialog.SetProgressFinished\n");
-            AlertWithTitle(GetString("Publish"), failedStr); 
-          }
-        }
-        else
-        {
-          // In case we ever get final alert with no dialog
-          AlertWithTitle(GetString("Publish"), failedStr);
+        // Notify progress dialog that we're finished
+        //  and keep open to show error
+        gProgressDialog.SetProgressFinished(null,0);
 
-          // Final cleanup
-          FinishPublishing();
-        }
-        return;  // we don't want to change location or reset mod count, etc.
+        // We don't want to change location or reset mod count, etc.
+        return;
       }
 
-      if ((aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK))
+      // STATE_IS_NETWORK signals end of publishing, as does the gPersistObj.currentState
+      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK
+          && gPersistObj.currentState == gPersistObj.PERSIST_STATE_FINISHED)
       {
-        // All files are finished uploading
-        
-        // Publishing succeeded...
-        try {
-          // Get the new docUrl from the "browse location" in case "publish location" was FTP
-          var urlstring = GetDocUrlFromPublishData(gPublishData);
-
-          window.editorShell.doAfterSave(true, urlstring);  // we need to update the url before notifying listeners
-          var editor = window.editorShell.editor.QueryInterface(Components.interfaces.nsIEditor);
-          editor.resetModificationCount();
-          // this should cause notification to listeners that doc has changed
-
-          // Set UI based on whether we're editing a remote or local url
-          SetSaveAndPublishUI(urlstring);
-
-        } catch (e) {}
-
-        // Save publishData to prefs
-        if (gPublishData)
+        if (gPersistObj.result == 0)
         {
-          if (gPublishData.savePublishData)
-          {
-            // We published successfully, so we can safely
-            //  save docDir and otherDir to prefs
-            gPublishData.saveDirs = true;
-            SavePublishDataToPrefs(gPublishData);
-          }
-          else
-            SavePassword(gPublishData);
-        }
+          // All files are finished and publishing succeeded (some images may have failed)
+          try {
+            // Get the new docUrl from the "browse location" in case "publish location" was FTP
+            var urlstring = GetDocUrlFromPublishData(gPublishData);
 
-        // Ask progress dialog to close, but it may not
-        // if user checked checkbox to keep it open
-        if (gProgressDialog)
+            window.editorShell.doAfterSave(true, urlstring);  // we need to update the url before notifying listeners
+            var editor = window.editorShell.editor.QueryInterface(Components.interfaces.nsIEditor);
+            // this should cause notification to listeners that doc has changed
+            editor.resetModificationCount();
+
+            // Set UI based on whether we're editing a remote or local url
+            SetSaveAndPublishUI(urlstring);
+
+          } catch (e) {}
+
+          // Save publishData to prefs
+          if (gPublishData)
+          {
+            if (gPublishData.savePublishData)
+            {
+              // We published successfully, so we can safely
+              //  save docDir and otherDir to prefs
+              gPublishData.saveDirs = true;
+              SavePublishDataToPrefs(gPublishData);
+            }
+            else
+              SavePassword(gPublishData);
+          }
+
+          // Ask progress dialog to close, but it may not
+          // if user checked checkbox to keep it open
           gProgressDialog.RequestCloseDialog();
+        }
         else
-          FinishPublishing();
+        {
+          // We previously aborted publishing because of error:
+          //   Calling gPersistObj.cancelSave() resulted in a non-zero gPersistObj.result,
+          //   so notify progress dialog we're finished
+          gProgressDialog.SetProgressFinished(null,0);
+        }
       }
     }
   },
@@ -1015,8 +998,12 @@ var gEditorOutputProgressListener =
   onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress,
                               aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
+    if (!gPersistObj)
+      return;
+
     if (gShowDebugOutputProgress)
     {
+      dump("\n onProgressChange: gPersistObj.result="+gPersistObj.result+"\n");
       try {
       var channel = aRequest.QueryInterface(nsIChannel);
       dump("***** onProgressChange request: " + channel.URI.spec + "\n");
@@ -1025,17 +1012,12 @@ var gEditorOutputProgressListener =
       dump("*****       self:  "+aCurSelfProgress+" / "+aMaxSelfProgress+"\n");
       dump("*****       total: "+aCurTotalProgress+" / "+aMaxTotalProgress+"\n\n");
 
-      if (gPersistObj)
-      {
-        if(gPersistObj.currentState == gPersistObj.PERSIST_STATE_READY)
-          dump(" Persister is ready to save data\n\n");
-        else if(gPersistObj.currentState == gPersistObj.PERSIST_STATE_SAVING)
-          dump(" Persister is saving data.\n\n");
-        else if(gPersistObj.currentState == gPersistObj.PERSIST_STATE_FINISHED)
-        {
-          dump(" PERSISTER HAS FINISHED SAVING DATA\n\n\n");
-        }
-      }
+      if (gPersistObj.currentState == gPersistObj.PERSIST_STATE_READY)
+        dump(" Persister is ready to save data\n\n");
+      else if (gPersistObj.currentState == gPersistObj.PERSIST_STATE_SAVING)
+        dump(" Persister is saving data.\n\n");
+      else if (gPersistObj.currentState == gPersistObj.PERSIST_STATE_FINISHED)
+        dump(" PERSISTER HAS FINISHED SAVING DATA\n\n\n");
     }
   },
 
@@ -1270,82 +1252,82 @@ function PromptUsernameAndPassword(dlgTitle, text, savePW, userObj, pwObj)
   return ret;
 }
 
-const kErrorBindingAborted = 2152398850;
-
 function DumpDebugStatus(aStatus)
 {
   // see nsError.h and netCore.h and ftpCore.h
-  const kErrorBindingRedirected = 2152398851;
 
   if (aStatus == kErrorBindingAborted)
-    dump("*****        status is NS_BINDING_ABORTED\n");
+    dump("***** status is NS_BINDING_ABORTED\n");
   else if (aStatus == kErrorBindingRedirected)
-    dump("*****        status is NS_BINDING_REDIRECTED\n");
-  else if (aStatus == 2152398859) // in netCore.h
-    dump("*****        status is ALREADY_CONNECTED\n");
-  else if (aStatus == 2152398860) // in netCore.h
-    dump("*****        status is NOT_CONNECTED\n");
-  else if (aStatus == 2152398861) // in nsISocketTransportService.idl
-    dump("*****        status is NO_SERVER_ON_THIS_PORT\n");
-  else if (aStatus == 2152398862) // in nsISocketTransportService.idl
-    dump("*****        status is TIMEOUT_ERROR\n");
-  else if (aStatus == 2152398863) // in netCore.h
-    dump("*****        status is IN_PROGRESS\n");
-  else if (aStatus == 2152398864) // 0x804b0010 in netCore.h
-    dump("*****        status is OFFLINE\n");
-  else if (aStatus == 2152398865) // in netCore.h
-    dump("*****        status is NO_CONTENT\n");
-  else if (aStatus == 2152398867) // in netCore.h
-    dump("*****        status is NO_ACCESS_TO_PORT\n");
-  else if (aStatus == 2152398868) // in nsISocketTransportService.idl
-    dump("*****        status is NETWORK_RESET\n");
-  else if (aStatus == 2152398869) // in ftpCore.h
-    dump("*****        status is FTP_LOGIN_ERROR\n");
-  else if (aStatus == 2152398870) // in ftpCore.h
-    dump("*****        status is FTP_CHANGE_DIR_ERROR\n");
-  else if (aStatus == 2152398871) // in ftpCore.h
-    dump("*****        status is FTP_PASV_ERROR\n");
-  else if (aStatus == 2152398872) // in ftpCore.h
-    dump("*****        status is FTP_PWD_ERROR\n");
-
+    dump("***** status is NS_BINDING_REDIRECTED\n");
+  else if (aStatus == 2152398859) // in netCore.h 11
+    dump("***** status is ALREADY_CONNECTED\n");
+  else if (aStatus == 2152398860) // in netCore.h 12
+    dump("***** status is NOT_CONNECTED\n");
+  else if (aStatus == 2152398861) //  in nsISocketTransportService.idl 13
+    dump("***** status is CONNECTION_REFUSED\n");
+  else if (aStatus == 2152398862) // in nsISocketTransportService.idl 14
+    dump("***** status is NET_TIMEOUT\n");
+  else if (aStatus == 2152398863) // in netCore.h 15
+    dump("***** status is IN_PROGRESS\n");
+  else if (aStatus == 2152398864) // 0x804b0010 in netCore.h 16
+    dump("***** status is OFFLINE\n");
+  else if (aStatus == 2152398865) // in netCore.h 17
+    dump("***** status is NO_CONTENT\n");
+  else if (aStatus == 2152398866) // in netCore.h 18
+    dump("***** status is UNKNOWN_PROTOCOL\n");
+  else if (aStatus == 2152398867) // in netCore.h 19
+    dump("***** status is PORT_ACCESS_NOT_ALLOWED\n");
+  else if (aStatus == 2152398868) // in nsISocketTransportService.idl 20
+    dump("***** status is NET_RESET\n");
+  else if (aStatus == 2152398869) // in ftpCore.h 21
+    dump("***** status is FTP_LOGIN\n");
+  else if (aStatus == 2152398870) // in ftpCore.h 22
+    dump("***** status is FTP_CWD\n");
+  else if (aStatus == 2152398871) // in ftpCore.h 23
+    dump("***** status is FTP_PASV\n");
+  else if (aStatus == 2152398872) // in ftpCore.h 24
+    dump("***** status is FTP_PWD\n");
   else if (aStatus == 2152857601)
-    dump("*****        status is UNRECOGNIZED_PATH\n");
+    dump("***** status is UNRECOGNIZED_PATH\n");
   else if (aStatus == 2152857602)
-    dump("*****        status is UNRESOLABLE SYMLINK\n");
+    dump("***** status is UNRESOLABLE SYMLINK\n");
   else if (aStatus == 2152857604)
-    dump("*****        status is UNKNOWN_TYPE\n");
+    dump("***** status is UNKNOWN_TYPE\n");
   else if (aStatus == 2152857605)
-    dump("*****        status is DESTINATION_NOT_DIR\n");
+    dump("***** status is DESTINATION_NOT_DIR\n");
   else if (aStatus == 2152857606)
-    dump("*****        status is TARGET_DOES_NOT_EXIST\n");
+    dump("***** status is TARGET_DOES_NOT_EXIST\n");
   else if (aStatus == 2152857608)
-    dump("*****        status is ALREADY_EXISTS\n");
+    dump("***** status is ALREADY_EXISTS\n");
   else if (aStatus == 2152857609)
-    dump("*****        status is INVALID_PATH\n");
+    dump("***** status is INVALID_PATH\n");
   else if (aStatus == 2152857610)
-    dump("*****        status is DISK_FULL\n");
+    dump("***** status is DISK_FULL\n");
   else if (aStatus == 2152857612)
-    dump("*****        status is NOT_DIRECTORY\n");
+    dump("***** status is NOT_DIRECTORY\n");
   else if (aStatus == 2152857613)
-    dump("*****        status is IS_DIRECTORY\n");
+    dump("***** status is IS_DIRECTORY\n");
   else if (aStatus == 2152857614)
-    dump("*****        status is IS_LOCKED\n");
+    dump("***** status is IS_LOCKED\n");
   else if (aStatus == 2152857615)
-    dump("*****        status is TOO_BIG\n");
+    dump("***** status is TOO_BIG\n");
   else if (aStatus == 2152857616)
-    dump("*****        status is NO_DEVICE_SPACE\n");
+    dump("***** status is NO_DEVICE_SPACE\n");
   else if (aStatus == 2152857617)
-    dump("*****        status is NAME_TOO_LONG\n");
-  else if (aStatus == 2152857618) // 0x80520012
-    dump("*****        status is FILE_NOT_FOUND\n");
+    dump("***** status is NAME_TOO_LONG\n");
+  else if (aStatus == 2152857618) // 80520012
+    dump("***** status is FILE_NOT_FOUND\n");
   else if (aStatus == 2152857619)
-    dump("*****        status is READ_ONLY\n");
+    dump("***** status is READ_ONLY\n");
   else if (aStatus == 2152857620)
-    dump("*****        status is DIR_NOT_EMPTY\n");
+    dump("***** status is DIR_NOT_EMPTY\n");
   else if (aStatus == 2152857621)
-    dump("*****        status is ACCESS_DENIED\n");
+    dump("***** status is ACCESS_DENIED\n");
+  else if (aStatus == 2152398878)
+    dump("***** status is ? (No connection or time out?)\n");
   else
-    dump("*****        status is " + aStatus + "\n");
+    dump("***** status is " + aStatus + "\n");
 }
 
 // Update any data that the user supplied in a prompt dialog
