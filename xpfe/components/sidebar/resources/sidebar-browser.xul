@@ -20,6 +20,7 @@
   <titledbutton class="borderless paneltitle" 
                 value="&sidebar.customize.label;" 
 				onclick="var dialogWindow=customize();" />
+  <spring flex="100%"/>
  </box>
 </box>
 </window>
