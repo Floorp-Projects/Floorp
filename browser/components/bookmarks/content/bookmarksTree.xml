@@ -515,14 +515,14 @@
           }
           var selection = this._selection;
 
-          //XXXpch: broken since we have single ID...
-          //if (selection.isContainer[0]) {
-          //  if (this.clickCount == 1 && !modifKey) {
-          //    this.treeBoxObject.view.toggleOpenState(row);
-          //    if (selection.protocol[0] != "file")
-          //      return;
-          //  }
-          //}
+          if (selection.isContainer[0]) {
+            if (this.clickCount == 1 && !modifKey) {
+              this.treeBoxObject.view.toggleOpenState(row);
+              //XXXpch: broken since we have single IDs
+              //if (selection.protocol[0] != "file")
+                return;
+            }
+          }
           var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
           BookmarksCommand.openBookmark(selection, browserTarget, this.db);
         ]]></body>
