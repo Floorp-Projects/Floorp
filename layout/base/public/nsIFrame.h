@@ -193,6 +193,9 @@ typedef PRUint32 nsFrameState;
 #define NS_FRAME_IS_BIDI                              0x00020000
 #endif
 
+// If this bit is set the frame has descendant with a view
+#define NS_FRAME_HAS_CHILD_WITH_VIEW                  0x00040000
+
 // The lower 20 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED                             0x000FFFFF
 
