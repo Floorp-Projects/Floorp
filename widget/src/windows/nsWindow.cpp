@@ -2313,10 +2313,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 					char_result = (mDBCSLeadByte << 8) | ch;
 					mHaveDBCSLeadByte = FALSE;
 					mDBCSLeadByte = 0;
-					result = OnChar(char_result,0,true);
+					result = OnChar(char_result,ch,true);
 				} else {
 					char_result = ch;
-					result = OnChar(char_result,0,false);
+					result = OnChar(char_result,ch,false);
 				}
 
 				break;
