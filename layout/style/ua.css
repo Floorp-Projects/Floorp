@@ -442,21 +442,74 @@ INPUT[type=checkbox] {
   background-color:white;
   color:black;
 }
+
 INPUT[type=button] {
   border: 2px outset rgb(192, 192, 192);
   color:black;
   background-color: rgb(192, 192, 192);
 }
+
 INPUT[type=submit] {
-  border: 2px outset rgb(192, 192, 192);
+  border: 1px outset rgb(156, 154, 156);
+  background-color:rgb(206, 207, 206);
   color:black;
-  background-color: rgb(192, 192, 192);
 }
+
+INPUT[type=submit].ROLLOVER {
+}
+
+INPUT[type=submit].PRESSED {
+  border-style : inset;
+}
+
+INPUT[type=submit].DISABLED {
+  border-style : solid;
+}
+
+
 INPUT[type=reset] {
-  border: 2px outset rgb(192, 192, 192);
-  background-color: rgb(192, 192, 192);
+  border: 1px outset rgb(156, 154, 156);
+  background-color:rgb(206, 207, 206);
   color:black;
 }
+
+INPUT[type=reset].ROLLOVER {
+}
+
+INPUT[type=reset].PRESSED {
+  border-style : inset;
+}
+
+INPUT[type=reset].DISABLED {
+  border-style : solid;
+}
+
+INPUT[type=file] {
+  border: 1px outset rgb(156, 154, 156);
+  background-color:rgb(206, 207, 206);
+  color:black;
+}
+
+INPUT[type=file].ROLLOVER {
+}
+
+INPUT[type=file].PRESSED {
+  border-style : inset;
+}
+
+INPUT[type=file].DISABLED {
+  border-style : solid;
+}
+
+
+:BUTTON-OUTLINE {
+  border: 1px solid black;
+}
+
+:BUTTON-FOCUS {
+  border: 2px solid salmon;
+}
+
 INPUT[type=text] {
   border: 2px inset rgb(192, 192, 192);
   margin-right:10px; 
@@ -464,12 +517,6 @@ INPUT[type=text] {
   color: black;
 }
 INPUT[type=password] {
-  border: 2px inset rgb(192, 192, 192);
-  margin-right:10px; 
-  background-color: white;
-  color:black;
-}
-INPUT[type=file] {
   border: 2px inset rgb(192, 192, 192);
   margin-right:10px; 
   background-color: white;
