@@ -1005,7 +1005,7 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
       content->GetParent(content);
       NS_IF_RELEASE(lastContent);
     }
-    NS_IF_RELEASE(lastContent);
+    NS_IF_RELEASE(content);
     if (nsnull == selector) { // ran out, it matched
       nsIStyleRule* iRule;
       if (NS_OK == aRule->QueryInterface(kIStyleRuleIID, (void**)&iRule)) {
