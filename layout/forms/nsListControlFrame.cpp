@@ -2110,7 +2110,7 @@ nsListControlFrame::UpdateSelection()
   return rv;
 }
 
-void
+NS_IMETHODIMP
 nsListControlFrame::ComboboxFinish(PRInt32 aIndex)
 {
   if (mComboboxFrame) {
@@ -2129,6 +2129,8 @@ nsListControlFrame::ComboboxFinish(PRInt32 aIndex)
       FireOnChange();
     }
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
