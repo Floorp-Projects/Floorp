@@ -1014,6 +1014,11 @@ nsSelectControlFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+// Update the locally cached selection array.
+// XXX Note, this is not sufficient.  The selected state of the widget can change
+//     with mouse clicks, key presses, and focus changes.  This problem is particularly
+//     evident for combo boxes, which don't reliably receive mouseup (therefore click)
+//     We need to register this method as a "selection changed" callback.
 void
 nsSelectControlFrame::MouseClicked(nsIPresContext* aPresContext)
 {
@@ -1168,23 +1173,169 @@ NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& 
   } else if (nsHTMLAtoms::selectedindex == aName) {
     PRInt32 error = 0;
     PRInt32 selectedIndex = aValue.ToInteger(&error, 10); // Get index from aValue
-    if (error) {
+    if (error)
       return NS_ERROR_INVALID_ARG; // Couldn't convert to integer
-    } else {
-      // Update local cache of selected values
-      for (PRUint32 i=0; i < mNumOptions; i++)
-        SetOptionSelected(i, PR_FALSE);
-      SetOptionSelected(selectedIndex, PR_TRUE);
+
+    // Update local cache of selected values
+    for (PRUint32 i=0; i < mNumOptions; i++)
+      SetOptionSelected(i, PR_FALSE);
+    SetOptionSelected(selectedIndex, PR_TRUE);
+
+    // Update widget
+    nsIListWidget* listWidget;
+    nsresult result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
+    if ((NS_OK == result) && (nsnull != listWidget)) {
+      listWidget->Deselect();
+      listWidget->SelectItem(selectedIndex);
+      NS_RELEASE(listWidget);
+    }
+  } else if (nsHTMLAtoms::option == aName) { // Add or Remove an option
+    nsString aValCopy(aValue);
+    aValCopy.Trim("ar",PR_TRUE,PR_FALSE); // Chop off leading a or r
+    PRInt32 error = 0;
+    PRInt32 actionIndex = aValCopy.ToInteger(&error, 10);
+    if (error) return NS_ERROR_INVALID_ARG; // Couldn't convert to integer
+
+    // Grab the content model information (merge with postcreatewidget code?)
+    nsIDOMHTMLCollection* options = GetOptions();
+    if (!options) return NS_ERROR_UNEXPECTED;
+
+    // Save the cache data structure
+    PRUint32 saveNumOptions = mNumOptions;
+    PRBool* saveOptionSelected = mOptionSelected;
+    PRBool selected = PR_FALSE;
+    nsString text(" ");
+
+    // Grab the widget (we need to update it)
+    nsIListWidget* listWidget;
+    nsresult result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
+    if ((NS_FAILED(result)) || (nsnull == listWidget)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (!aValue.Find("a")) { // First character is "a" = add an option
+      mNumOptions++;
+      mOptionSelected = new PRBool[mNumOptions];
+      if (!mOptionSelected) return NS_ERROR_OUT_OF_MEMORY;
+
+      // Copy saved local cache into new local cache
+      for (PRUint32 i=0, j=0; j < mNumOptions; i++,j++) {
+        if (i == actionIndex) { // At the point of insertion
+
+          // Get the correct selected value and text of the option
+          nsIDOMNode* node = nsnull;
+          options->Item(i, &node);
+          if (node) {
+            nsIDOMHTMLOptionElement* option = nsnull;
+            nsresult result = node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
+            if ((NS_OK == result) && option) {
+              option->GetDefaultSelected(&selected);
+              mOptionSelected[j]=selected;
+
+              // XXX need to compress whitespace
+              if (NS_CONTENT_ATTR_HAS_VALUE != option->GetText(text)) {
+                text = " "; // needed?
+              }
+              NS_RELEASE(option);
+            } else {
+              mOptionSelected[j]=PR_FALSE; // Couldn't get selected val from content!
+            }
+            NS_RELEASE(node);
+          } else {
+            mOptionSelected[j]=PR_FALSE; // Couldn't get selected val from content!
+          }
+          j++;
+        }
+
+        // Copy old selected value
+        if (j < mNumOptions) {
+          mOptionSelected[j]=saveOptionSelected[i];
+        }
+      }
 
       // Update widget
-      nsIListWidget* listWidget;
-      nsresult result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
-      if ((NS_OK == result) && (nsnull != listWidget)) {
-        listWidget->Deselect();
-        listWidget->SelectItem(selectedIndex);
-        NS_RELEASE(listWidget);
+      listWidget->AddItemAt(text, actionIndex);
+    } else {
+      mNumOptions--;
+      if (mNumOptions) {
+        mOptionSelected = new PRBool[mNumOptions];
+        if (!mOptionSelected) return NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        mOptionSelected = nsnull;
+      }
+      // If we got the index, remove just that one option, like this:
+      if (actionIndex >= 0) {
+        // Copy saved local cache into new local cache
+        for (PRUint32 i=0, j=0; j < mNumOptions; i++,j++) {
+          if (i == actionIndex) i++; // At the point of insertion
+          mOptionSelected[j]=saveOptionSelected[i];
+        }
+
+        // Update widget
+        listWidget->RemoveItemAt(actionIndex);
+
+      // No index, so we'll have to remove all options and recreate. (Performance hit)
+      // We also loose the status of what has been selected.
+      } else {
+        // Remove all stale options
+        PRInt32 i;
+        for (i=saveNumOptions; i>=0; i--) {
+          listWidget->RemoveItemAt(i);
+        }
+
+        // Add all the options back in
+        PRBool selected = PR_FALSE;
+        nsString text(" ");
+        for (i=0; i<mNumOptions; i++) {
+          // Get the default (XXXincorrect) selected value and text of the option
+          nsIDOMNode* node = nsnull;
+          options->Item(i, &node);
+          if (node) {
+            nsIDOMHTMLOptionElement* option = nsnull;
+            nsresult result = node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
+            if ((NS_OK == result) && option) {
+              option->GetDefaultSelected(&selected); // Should be sel, not defsel :(
+              mOptionSelected[i]=selected;
+
+              // XXX need to compress whitespace
+              if (NS_CONTENT_ATTR_HAS_VALUE != option->GetText(text)) {
+                text = " "; // needed?
+              }
+              NS_RELEASE(option);
+            } else {
+              mOptionSelected[i]=PR_FALSE; // Couldn't get selected val from content!
+              text = " ";
+            }
+            NS_RELEASE(node);
+          } else {
+            mOptionSelected[i]=PR_FALSE; // Couldn't get selected val from content!
+            text = " ";
+          }
+          listWidget->AddItemAt(text, i);
+        }
       }
     }
+    // Select options as needed (this is needed for Windows at least)
+    // Note, as mentioned above, we can't restore selection if option is
+    // replaced - no index is reported back to us - use DefaultSelected instead
+    listWidget->Deselect();
+    PRInt32 selectedIndex = -1;
+    for (PRUint32 i=0; i < mNumOptions; i++) {
+      GetOptionSelected(i, &selected);
+      if (selected) {
+        listWidget->SelectItem(i);
+        selectedIndex = i;
+      }
+    }
+    if (mIsComboBox && (mNumOptions > 0) && (selectedIndex == -1)) {
+      listWidget->SelectItem(0);
+      SetOptionSelected(0, PR_TRUE);
+    }
+
+    NS_RELEASE(options);
+    NS_RELEASE(listWidget);
+    if (saveOptionSelected)
+      delete [] saveOptionSelected;
   } else {
     return nsFormControlFrame::SetProperty(aName, aValue);
   }
