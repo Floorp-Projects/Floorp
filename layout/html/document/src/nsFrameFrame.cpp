@@ -857,7 +857,7 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), absURL.GetUnicode(), nsnull);
+  NS_NewURI(getter_AddRefs(uri), absURL, nsnull);
 
   // Check for security
   NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,

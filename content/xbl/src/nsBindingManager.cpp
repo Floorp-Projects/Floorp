@@ -382,7 +382,7 @@ nsBindingManager::LoadBindingDocument(const nsString& aURL)
   // Load the binding doc.
   nsCString url; url.AssignWithConversion(aURL);
   nsCOMPtr<nsIXBLDocumentInfo> info;
-  xblService->LoadBindingDocumentInfo(nsnull, url, "", PR_TRUE, getter_AddRefs(info));
+  xblService->LoadBindingDocumentInfo(nsnull, url, nsCAutoString(), PR_TRUE, getter_AddRefs(info));
   if (!info)
     return NS_ERROR_FAILURE;
 

@@ -1573,7 +1573,7 @@ NS_IMETHODIMP CSSLoaderImpl::SetCharset(/*in*/ const nsString &aCharsetSrc)
   } else {
     NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
     NS_ASSERTION(calias, "cannot find charset alias");
-    nsAutoString charsetName = aCharsetSrc;
+    nsAutoString charsetName(aCharsetSrc);
     if( NS_SUCCEEDED(rv) && (nsnull != calias))
     {
       PRBool same = PR_FALSE;
