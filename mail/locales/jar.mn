@@ -145,6 +145,7 @@
   locale/@AB_CD@/messenger-smime/msgCompSecurityInfo.properties      (@AB_CD@/chrome/messenger-smime/msgCompSecurityInfo.properties)
   locale/@AB_CD@/messenger-smime/msgReadSecurityInfo.dtd             (@AB_CD@/chrome/messenger-smime/msgReadSecurityInfo.dtd)
   locale/@AB_CD@/messenger-smime/certFetchingStatus.dtd              (@AB_CD@/chrome/messenger-smime/certFetchingStatus.dtd)
+  locale/@AB_CD@/messenger-smime/ocsp.dtd                            (@AB_CD@/chrome/messenger-smime/ocsp.dtd)
   locale/@AB_CD@/messenger-smime/msgSecurityInfo.properties          (@AB_CD@/chrome/messenger-smime/msgSecurityInfo.properties) 
 * locale/@AB_CD@/messenger-smime/contents.rdf                        (generic/chrome/messenger-smime/contents.rdf)
 * locale/@AB_CD@/messenger-offline/contents.rdf        (generic/chrome/messenger-offline/contents.rdf)
