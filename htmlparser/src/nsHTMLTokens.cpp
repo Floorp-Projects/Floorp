@@ -1058,20 +1058,26 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
                //in this case, we're reading a long-form comment <-- xxx -->
             aString+=aChar;
             if(NS_OK==result) {
-              PRInt32 findpos=-1;
+              //Find the first ending sequence '--'
+              PRBool found = PR_FALSE;
               nsAutoString temp;
-              //Read to the first ending sequence '--'
-              while((kNotFound==findpos) && (NS_OK==result)) {
-                result=aScanner.ReadUntil(temp,kMinus,PR_TRUE);
-                findpos=temp.RFind("--");
-              } 
-              aString+=temp;
-              if(NS_OK==result) {
-                if(NS_OK==result) {
+              do {
+                result = aScanner.ReadUntil(temp,kMinus,PR_TRUE);
+                if (NS_FAILED(result)) return result;
+                  
+                result = aScanner.Peek(aChar);
+                if (NS_FAILED(result)) return result;
+                  
+                if (aChar == kMinus) {
+                  // found matching '--'
+                  found = PR_TRUE;
+                  aScanner.GetChar(aChar);
+                  aString += temp;
+                  aString += aChar;
                   // Read until "-" or ">"
-                  result=aScanner.ReadUntil(aString,endCommentCondition,PR_FALSE);
+                  result = aScanner.ReadUntil(aString,endCommentCondition,PR_FALSE);
                 }
-              } 
+              } while (!found);
             }
           } //
           else break; //go find '>'
