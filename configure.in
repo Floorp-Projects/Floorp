@@ -647,12 +647,14 @@ case "$target" in
     AC_DEFINE(_POSIX_SOURCE)
     AC_DEFINE(_SVID_SOURCE)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
-    USE_ELF_DYNSTR_GC=1
 
     case "${host_cpu}" in
     alpha*)
 	CFLAGS="$CFLAGS -mieee"
 	CXXFLAGS="$CXXFLAGS -mieee"
+    ;;
+    i?86)
+	USE_ELF_DYNSTR_GC=1
     ;;
     esac
     ;;
