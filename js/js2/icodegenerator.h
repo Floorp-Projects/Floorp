@@ -131,7 +131,9 @@ namespace JavaScript {
 
         InstructionStream *its_iCode;
 
-        void mergeStream(InstructionStream *mainStream, LabelList &labels);
+        static void mergeStream(InstructionStream *sideStream, InstructionStream *mainStream, LabelList &labels);
+
+        void mergeStream(InstructionStream *mainStream, LabelList &labels) { mergeStream(its_iCode, mainStream, labels); }
     };
 
     class WhileCodeState : public MultiPathICodeState {
@@ -140,6 +142,16 @@ namespace JavaScript {
                     : MultiPathICodeState(While_state, icg), whileCondition(conditionLabel), whileBody(bodyLabel) { }
         int32 whileCondition;
         int32 whileBody;
+    };
+
+    class ForCodeState : public MultiPathICodeState {
+    public:
+        ForCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg);        // inline below
+        InstructionStream *swapStream2(InstructionStream *iCode) { InstructionStream *t = its_iCode_2; its_iCode_2 = iCode; return t; }
+        void mergeStream2(InstructionStream *mainStream, LabelList &labels) { mergeStream(its_iCode_2, mainStream, labels); }
+        int32 forCondition;
+        int32 forBody;
+        InstructionStream *its_iCode_2;
     };
 
     class IfCodeState : public ICodeState {
@@ -241,9 +253,9 @@ namespace JavaScript {
 
 
         // for ( ... in ...) statements get turned into generic for statements by the parser (ok?)
-        void beginForStatement();                      // for initialization is emitted prior to this call
-        void forCondition(Register condition);         // required with optional <operand>
-        void forIncrement(Register expression);        // required with optional <operand>
+        void beginForStatement(const SourcePosition &pos);                      // for initialization is emitted prior to this call
+        void forCondition(Register condition);         // required
+        void forIncrement();                           // required
         void endForStatement();
 
 
@@ -290,5 +302,8 @@ namespace JavaScript {
 
     inline MultiPathICodeState::MultiPathICodeState(StateKind kind, ICodeGenerator *icg)
                     : ICodeState(kind, icg), its_iCode(icg->get_iCode()) {}
+
+    inline ForCodeState::ForCodeState(int32 conditionLabel, int32 bodyLabel, ICodeGenerator *icg) 
+                    : MultiPathICodeState(For_state, icg), forCondition(conditionLabel), forBody(bodyLabel), its_iCode_2(icg->get_iCode()) { }
 }
 #endif
