@@ -844,20 +844,14 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
               mTypes[i]|=details->mType;//add this bit
           }
         }
-        if (!mInit && mTypes) //we have details but none that we
-        {
-          delete mTypes;
-          mTypes = nsnull;
-          mDone = true;
-        }
         details= details->mNext;
       }
-	  if (!mInit && mTypes) //we have details but none that we care about.
-	  {
-        delete mTypes;
-		mTypes = nsnull;
-		mDone = PR_TRUE;//we are finished
-	  }
+	    if (!mInit && mTypes) //we have details but none that we care about.
+	    {
+          delete mTypes;
+    		  mTypes = nsnull;
+		      mDone = PR_TRUE;//we are finished
+	    }
     }
     else if (details->mStart == details->mEnd)//no collapsed selections here!
     {
