@@ -165,7 +165,8 @@ nsGIFModule::GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass,
 NS_IMETHODIMP
 nsGIFModule::RegisterSelf(nsIComponentManager *aCompMgr,
                           nsIFileSpec *location,
-                          const char *registryLocation)
+                          const char *registryLocation,
+                          const char *componentType)
 {
     nsresult rv;
     rv = aCompMgr->RegisterComponentSpec(kGIFDecoderCID, 
