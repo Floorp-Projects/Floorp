@@ -193,6 +193,8 @@ static NS_DEFINE_CID(kTextNodeCID,              NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kSelectionCID,             NS_SELECTION_CID);
 static NS_DEFINE_CID(kRangeCID,                 NS_RANGE_CID);
 static NS_DEFINE_CID(kRangeListCID,				NS_RANGELIST_CID);
+static NS_DEFINE_IID(kContentIteratorCID,       NS_CONTENTITERATOR_CID);
+static NS_DEFINE_IID(kSubtreeIteratorCID,       NS_SUBTREEITERATOR_CID);
 static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
 
 static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
@@ -274,6 +276,8 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kSelectionCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRangeCID,		    LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRangeListCID,		LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kContentIteratorCID,LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kSubtreeIteratorCID,LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kFrameUtilCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kCharsetConverterManagerCID,      UCONV_DLL, PR_FALSE, PR_FALSE);
