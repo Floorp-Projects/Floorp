@@ -94,6 +94,7 @@ Rights Reserved.
               seltype="multiple"
               datasources="rdf:null"
               flags="dont-build-content"
+              disableKeyNavigation="true"
               onkeypress="onSubscribeTreeKeyPress(event);"
               onclick="SubscribeOnClick(event);"> 
           <template>
@@ -146,6 +147,7 @@ Rights Reserved.
      </hbox>
      <hbox id="searchview">
        <tree id="searchTree" flex="1" 
+              disableKeyNavigation="true"
               onkeypress="onSearchTreeKeyPress(event);"
               onclick="SearchOnClick(event);"> 
          <treecols>
