@@ -113,6 +113,7 @@ interface(TreeState *state)
     char *classNameImpl = NULL;
     char *cp;
     gboolean ok = TRUE;
+    gboolean keepvtable;
     const char *iid;
     const char *name_space;
     struct nsID id;
@@ -175,8 +176,29 @@ interface(TreeState *state)
     if (doc_comments != NULL)
         printlist(state->file, doc_comments);
 
+    /*
+     * NS_NO_VTABLE is defined in nsISupportsUtils.h, and defined on windows
+     * to __declspec(novtable) on windows.  This optimization is safe
+     * whenever the constructor calls no virtual methods.  Writing in IDL
+     * almost guarantees this, except for the case when a %{C++ block occurs in
+     * the interface.  We detect that case, and emit a macro call that disables
+     * the optimization.
+     */
+    keepvtable = FALSE;
+    for (iter = IDL_INTERFACE(state->tree).body;
+         iter != NULL;
+         iter = IDL_LIST(iter).next)
+    {
+        IDL_tree data = IDL_LIST(iter).data;
+        if (IDL_NODE_TYPE(data) == IDLN_CODEFRAG)
+            keepvtable = TRUE;
+    }
+    
     /* The interface declaration itself. */
-    fprintf(state->file, "class %s", className);
+    fprintf(state->file,
+            "class %s%s",
+            (keepvtable ? "" : "NS_NO_VTABLE "), className);
+    
     if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
         fputs(" : ", state->file);
         if (IDL_LIST(iter).next != NULL) {
