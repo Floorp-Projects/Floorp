@@ -102,6 +102,7 @@ HJ26763
 extern int MK_MSG_ENTER_NAME_FOR_TEMPLATE;
 extern int MK_MSG_INVALID_NEWS_HEADER;
 extern int MK_MSG_INVALID_FOLLOWUP_TO_HEADER;
+extern int MK_MSG_OUTBOX_L10N_NAME_OLD;
 
 #include "xp_help.h"
 }

@@ -58,6 +58,7 @@
 #include "nsIXULWindowCallbacks.h"
 #include "nsIDocumentViewer.h"
 #include "nsIRDFResource.h"
+#include "nsINetService.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 
@@ -77,6 +78,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
 
 // defined in msgCompGlue.cpp
 extern char * INTL_GetDefaultMailCharset(void);
@@ -578,14 +580,19 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                                       (nsISupports**)&appShell);
     if (NS_FAILED(rv)) return rv;
 
-	nsIURL* url;
-	nsIWebShellWindow* newWindow;
-  
-	rv = NS_NewURL(&url, aUrl);
-	if (NS_FAILED(rv)) {
-	  goto done;
+	nsIURL* url = nsnull;
+	nsINetService * pNetService;
+	rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
+	if (NS_SUCCEEDED(rv) && pNetService) {
+		rv = pNetService->CreateURL(&url, aUrl);
+		NS_RELEASE(pNetService);
+		if (NS_FAILED(rv))
+			goto done;
 	}
+	else
+		goto done;
 
+	nsIWebShellWindow* newWindow;
 	controllerCID = "6B75BB61-BD41-11d2-9D31-00805F8ADDDF";
 	appShell->CreateTopLevelWindow(nsnull,      // parent
                                    url,

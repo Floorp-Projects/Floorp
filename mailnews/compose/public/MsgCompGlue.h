@@ -3,6 +3,7 @@
 #ifndef _MsgCompGlue_H_
 #define _MsgCompGlue_H_
 
+#include "mimeenc.h"
 #include "xpgetstr.h"
 #include "xp_qsort.h"
 #include "msgcom.h"
@@ -161,7 +162,6 @@ public:
 	virtual XP_Bool IMAPListMailboxExist() {return PR_FALSE;}
 };
 
-const int MK_MSG_OUTBOX_L10N_NAME_OLD = 0;
 #define QUEUE_FOLDER_NAME_OLD	MSG_GetSpecialFolderName(MK_MSG_OUTBOX_L10N_NAME_OLD)
 
 
@@ -245,6 +245,11 @@ extern char *msg_MagicFolderName(MSG_Prefs* prefs, uint32 flag, int *pStatus);
 
 #undef FE_Progress
 #define FE_Progress(cx,msg) printf("Progress: %s\n", msg)
+
+extern int MISC_ValidateReturnAddress (MWContext *,const char *);
+extern History_entry * SHIST_GetCurrent(History *);
+
+
 
 /*QUESTION: can we remove #ifdef XP_OS2 ?*/
 /*REMARK: as #define MOZ_NEWADDR is always true, we should remove it when used*/

@@ -698,7 +698,7 @@ int nsMsgSendPart::Write()
 			NS_ASSERTION(MIME_BUFFER_SIZE > 1000, "buffer size out of range"); /* SMTP (RFC821) limit */
 
 			while (1) {
-				char *line = XP_FileReadLine(buffer, MIME_BUFFER_SIZE-3, file);
+				char *line = /*JFD XP_FileReadLine(buffer, MIME_BUFFER_SIZE-3, file)*/ NULL;
 				if (!line)
 					break;  /* EOF */
 

@@ -65,6 +65,7 @@ CCCDataObject		INTL_CreateCharCodeConverter() {return NULL;}
 int16				INTL_GetCSIWinCSID(INTL_CharSetInfo) {return 2;}
 INTL_CharSetInfo	LO_GetDocumentCharacterSetInfo(MWContext *) {return NULL;}
 int16				INTL_GetCSIDocCSID(INTL_CharSetInfo obj) {return 2;}
+int16				INTL_DefaultWinCharSetID(MWContext *) {return 2;}
 int16				INTL_DefaultMailCharSetID(int16 csid) {return 2;}
 int16				INTL_DefaultNewsCharSetID(int16 csid) {return 2;}
 void				INTL_MessageSendToNews(XP_Bool toNews) {return;}
@@ -250,21 +251,27 @@ int					strncasecomp (const char *, const char *, int ) {return nsnull;}
 char *				strcasestr (const char * str, const char * substr) {return NULL;}
 
 XP_FILE_NATIVE_PATH WH_FileName (const char *, XP_FileType ) {return NULL;}
+XP_Bool				isMacFile(char* filename) {return PR_FALSE;}
 
 HJ10196
 History_entry *		SHIST_GetCurrent(History *) {return NULL;}
 int					MISC_ValidateReturnAddress (MWContext *,const char *) {return nsnull;}
 char *				msg_MagicFolderName(MSG_Prefs* prefs, uint32 flag, int *pStatus) {return NULL;}
 
+time_t 				GetTimeMac()	{return 0;}
+
+
 extern "C" {
-int MK_MSG_SAVE_TEMPLATE;
-int MK_MSG_INVALID_FOLLOWUP_TO_HEADER;
-int MK_MSG_INVALID_NEWS_HEADER;
-int	MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS;
-int MK_MSG_FAILED_COPY_OPERATION;
 
 void FE_MsgShowHeaders(MSG_Pane *, MSG_HEADER_SET) {return;}
 HJ98703
 }
 
-
+#include "allxpstr.h"
+extern "C" {
+        int MK_MSG_SAVE_TEMPLATE = XP_MSG_BASE + 1389;
+        int MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS = XP_MSG_BASE + 1455;
+        int MK_MSG_FAILED_COPY_OPERATION = XP_MSG_BASE + 0;
+        int MK_MSG_INVALID_FOLLOWUP_TO_HEADER = XP_MSG_BASE + 0;
+        int MK_MSG_INVALID_NEWS_HEADER = XP_MSG_BASE + 0;
+}

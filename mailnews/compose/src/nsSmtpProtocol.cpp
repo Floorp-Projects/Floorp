@@ -33,7 +33,8 @@
 
 #include "rosetta.h"
 
-#include "allxpstr.h"
+//#include "allxpstr.h" // already included into msgcompglue.cpp, cannot include it twice
+						// else we get a lot of link warnings
 #include "prtime.h"
 #include "prlog.h"
 #include "prerror.h"
@@ -43,6 +44,20 @@
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kRFC822ParserCID, NS_MSGRFC822PARSER_CID);
+
+extern "C" {
+	extern int MK_OUT_OF_MEMORY;
+	extern int MK_SMTP_SERVER_ERROR;
+	extern int MK_TCP_READ_ERROR;
+	extern int MK_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+	extern int MK_COULD_NOT_GET_USERS_MAIL_ADDRESS;
+	extern int MK_POP3_PASSWORD_UNDEFINED;
+	extern int MK_ERROR_SENDING_FROM_COMMAND;
+	extern int MK_ERROR_SENDING_RCPT_COMMAND;
+	extern int MK_ERROR_SENDING_DATA_COMMAND;
+	extern int MK_ERROR_SENDING_MESSAGE;
+	extern int MK_MIME_NO_RECIPIENTS;
+}
 
 /* the output_buffer_size must be larger than the largest possible line
  * 2000 seems good for news
