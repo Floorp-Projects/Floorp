@@ -60,6 +60,6 @@ EXPORT_RESOURCE_TOOBAR = \
 	$(NULL)
 
 
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
-	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(DIST)/bin/res/toolbar
+#install:: 
+#	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
+#	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(DIST)/bin/res/toolbar
