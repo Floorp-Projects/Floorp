@@ -1,7 +1,3 @@
-implementation
---------------
-* get the windows build glue wired up, and make the windows build work
-
 housecleaning
 ------------- 
 * sort out nsldap.h vs. nsLDAP.h.  can the former go away?
