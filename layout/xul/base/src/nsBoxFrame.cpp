@@ -1114,7 +1114,7 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
           }
       }
 
-      float stretchFactor = sizeRemaining/springConstantsRemaining;
+      float stretchFactor = (springConstantsRemaining == 0.0) ? float(0.0) : sizeRemaining/springConstantsRemaining;
 
         nscoord& s = GET_WIDTH(size);
         s = 0;
