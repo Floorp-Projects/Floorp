@@ -128,7 +128,7 @@ class nsHTMLSelectElement : public nsGenericHTMLContainerFormElement,
                             public nsISelectElement
 {
 public:
-  nsHTMLSelectElement();
+  nsHTMLSelectElement(PRBool aFromParser);
   virtual ~nsHTMLSelectElement();
 
   // nsISupports
@@ -238,7 +238,7 @@ protected:
   nsISelectControlFrame *GetSelectFrame();
 
   nsHTMLOptionCollection* mOptions;
-  PRBool    mIsDoneAddingContent;
+  PRBool    mIsDoneAddingChildren;
   PRUint32  mArtifactsAtTopLevel;
   PRInt32   mSelectedIndex;
   nsString* mRestoreState;
@@ -254,11 +254,12 @@ protected:
 
 nsresult
 NS_NewHTMLSelectElement(nsIHTMLContent** aInstancePtrResult,
-                        nsINodeInfo *aNodeInfo)
+                        nsINodeInfo *aNodeInfo,
+                        PRBool aFromParser)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLSelectElement* it = new nsHTMLSelectElement();
+  nsHTMLSelectElement* it = new nsHTMLSelectElement(aFromParser);
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -279,9 +280,11 @@ NS_NewHTMLSelectElement(nsIHTMLContent** aInstancePtrResult,
 }
 
 
-nsHTMLSelectElement::nsHTMLSelectElement()
+nsHTMLSelectElement::nsHTMLSelectElement(PRBool aFromParser)
 {
-  mIsDoneAddingContent = PR_TRUE;
+  // DoneAddingChildren() will be called later if it's from the parser,
+  // otherwise it is
+  mIsDoneAddingChildren = !aFromParser;
   mArtifactsAtTopLevel = 0;
 
   mOptions = new nsHTMLOptionCollection(this);
@@ -330,7 +333,7 @@ nsHTMLSelectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsHTMLSelectElement* it = new nsHTMLSelectElement();
+  nsHTMLSelectElement* it = new nsHTMLSelectElement(PR_FALSE);
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1581,7 +1584,7 @@ nsHTMLSelectElement::NamedItem(const nsAString& aName,
 nsresult
 nsHTMLSelectElement::CheckSelectSomething()
 {
-  if (mIsDoneAddingContent) {
+  if (mIsDoneAddingChildren) {
     PRInt32 size = 1;
     GetSize(&size);
     PRBool isMultiple;
@@ -1598,7 +1601,7 @@ nsresult
 nsHTMLSelectElement::SelectSomething()
 {
   // If we're not done building the select, don't play with this yet.
-  if (!mIsDoneAddingContent) {
+  if (!mIsDoneAddingChildren) {
     return NS_OK;
   }
 
@@ -1642,33 +1645,38 @@ nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::IsDoneAddingContent(PRBool * aIsDone)
+nsHTMLSelectElement::IsDoneAddingChildren(PRBool * aIsDone)
 {
-  *aIsDone = mIsDoneAddingContent;
+  *aIsDone = mIsDoneAddingChildren;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::DoneAddingContent(PRBool aIsDone)
+nsHTMLSelectElement::DoneAddingChildren()
 {
-  mIsDoneAddingContent = aIsDone;
+  mIsDoneAddingChildren = PR_TRUE;
 
-  nsISelectControlFrame* sFrame = GetSelectFrame();
+  nsISelectControlFrame* selectFrame = GetSelectFrame();
 
   // If we foolishly tried to restore before we were done adding
   // content, restore the rest of the options proper-like
-  if (mIsDoneAddingContent && mRestoreState) {
+  if (mRestoreState) {
     RestoreStateTo(mRestoreState);
     delete mRestoreState;
     mRestoreState = nsnull;
   }
 
-  if (sFrame) {
-    sFrame->DoneAddingContent(mIsDoneAddingContent);
+  // Notify the frame
+  if (selectFrame) {
+    selectFrame->DoneAddingChildren(PR_TRUE);
   }
 
-  // Now that we're done, select something
+  // Restore state
+  RestoreFormControlState(this, this);
+
+  // Now that we're done, select something (if it's a single select something
+  // must be selected)
   CheckSelectSomething();
 
   return NS_OK;
@@ -1803,8 +1811,7 @@ nsHTMLSelectElement::GetType(PRInt32* aType)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::SaveState(nsIPresContext* aPresContext,
-                               nsIPresState** aState)
+nsHTMLSelectElement::SaveState()
 {
   nsAutoString stateStr;
 
@@ -1826,24 +1833,19 @@ nsHTMLSelectElement::SaveState(nsIPresContext* aPresContext,
     }
   }
 
-  nsresult rv = GetPrimaryPresState(this, aState);
-  if (*aState) {
-    rv = (*aState)->SetStateProperty(NS_LITERAL_STRING("selecteditems"),
-                                     stateStr);
+  nsCOMPtr<nsIPresState> state;
+  nsresult rv = GetPrimaryPresState(this, getter_AddRefs(state));
+  if (state) {
+    rv = state->SetStateProperty(NS_LITERAL_STRING("selecteditems"),
+                                 stateStr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "selecteditems set failed!");
   }
   return rv;
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::RestoreState(nsIPresContext* aPresContext,
-                                  nsIPresState* aState)
+nsHTMLSelectElement::RestoreState(nsIPresState* aState)
 {
-  // XXX This works right now, but since this is only called from
-  // RestoreState() in the frame, this will happen at the first frame
-  // creation.  If JavaScript makes changes before then, and the page
-  // is being reloaded, these changes will be lost.
-  //
   // If RestoreState() is called a second time after SaveState() was
   // called, this will do nothing.
 
@@ -1880,7 +1882,7 @@ nsHTMLSelectElement::GetBoxObject(nsIBoxObject** aResult)
 nsresult
 nsHTMLSelectElement::RestoreStateTo(nsAString* aNewSelected)
 {
-  if (!mIsDoneAddingContent) {
+  if (!mIsDoneAddingChildren) {
     mRestoreState = new nsString;
     if (!mRestoreState) {
       return NS_OK;

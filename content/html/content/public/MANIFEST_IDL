@@ -3,3 +3,4 @@
 #
 
 nsISelectElement.idl
+nsITextAreaElement.idl

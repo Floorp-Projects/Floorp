@@ -42,7 +42,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsIStatefulFrame.h"
 #include "nsCOMPtr.h"
 #include "nsIHTMLContent.h"
 
@@ -57,9 +56,7 @@ class nsISupportsArray;
 class nsFileControlFrame : public nsAreaFrame,
                            public nsIFormControlFrame,
                            public nsIDOMMouseListener,
-                           public nsIAnonymousContentCreator,
-                           public nsIStatefulFrame
-
+                           public nsIAnonymousContentCreator
 {
 public:
   nsFileControlFrame();
@@ -182,10 +179,6 @@ public:
   NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
-
-  //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
 protected:
   virtual PRIntn GetSkipSides() const;

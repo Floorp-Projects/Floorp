@@ -38,7 +38,6 @@
 #define nsGfxCheckboxControlFrame_h___
 
 #include "nsFormControlFrame.h"
-#include "nsIStatefulFrame.h"
 #include "nsICheckboxControlFrame.h"
 
 #ifdef ACCESSIBILITY
@@ -50,7 +49,6 @@ class nsIAccessible;
 #define NS_GFX_CHECKBOX_CONTROL_FRAME_LAST_CONTEXT_INDEX   0
 
 class nsGfxCheckboxControlFrame : public nsFormControlFrame,
-                                  public nsIStatefulFrame,
                                   public nsICheckboxControlFrame//,
                                   //public nsIAccessible
 {
@@ -90,11 +88,7 @@ public:
     // nsIFormControlFrame
   NS_IMETHOD OnContentReset();
 
-   // nsIStatefulFrame
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
-
 
 #ifdef DEBUG_rodsXXX
   NS_IMETHOD Reflow(nsIPresContext*          aCX,
