@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Blake Kaplan <mrbkap@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -976,7 +977,7 @@ nsresult nsHTMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScann
 
   if (kNotAComment == result) {
     // AddToken has IF_FREE()'d our token, so...
-    return ConsumeText(aToken, aScanner);
+    result = ConsumeText(aToken, aScanner);
   }
 
   return result;
@@ -1054,6 +1055,11 @@ nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,n
     result=aToken->Consume(aChar,aScanner,mFlags);
     AddToken(aToken,result,&mTokenDeque,theAllocator);
   }
+
+  if (result == kNotAComment) {
+    result = ConsumeText(aToken, aScanner);
+  }
+
   return result;
 }
 
