@@ -1,1 +1,5 @@
 bin/libnssckbi.so
+bin/libnss3.so
+bin/libsmime3.so
+bin/libsoftokn3.so
+bin/libssl3.so

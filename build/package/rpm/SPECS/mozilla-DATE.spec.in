@@ -19,6 +19,7 @@ Source14:    mozilla-compose.desktop
 Source15:    mozilla-compose-icon.gif
 Source16:    mozilla-exclude-list
 Source17:    mozilla-psm-exclude-list
+Source18:    mozilla-xpcom-exclude-list
 Patch0:      mozilla-navigator-overlay-menu.patch
 Patch1:      mozilla-editor-overlay-menu.patch
 Patch6:      mozilla-prefs-debug.patch
@@ -27,6 +28,7 @@ Patch8:      mozilla-redhat-mail-home-page.patch
 Patch10:     mozilla-redhat-home-page-6.2.patch
 Patch11:     mozilla-taskbar-nomozilla.patch
 Patch12:     mozilla-psfonts-7.2.patch
+Patch13:     mozilla-nspr-packages.patch
 Buildroot:   /var/tmp/mozilla-root
 Prefix:      /usr
 Group:       Applications/Internet
@@ -34,11 +36,49 @@ Provides:    webclient
 BuildPrereq: libpng-devel, libjpeg-devel, zlib-devel, zip, perl, autoconf, indexhtml, ORBit-devel, glib-devel, gtk+-devel
 ExcludeArch: ia64
 Prereq:      fileutils
-Requires:    perl
+Requires:    perl mozilla-nspr = %{version}-%{release}
 
 %description
 Mozilla is an open-source web browser, designed for standards
 compliance, performance and portability.
+
+%package nspr
+Summary: Netscape Portable Runtime
+Group: Applications/Internet
+
+%description nspr
+NSPR provides platform independence for non-GUI operating system
+facilities. These facilities include threads, thread synchronization,
+normal file and network I/O, interval timing and calendar time, basic
+memory management (malloc and free) and shared library linking.
+
+%package nspr-devel
+Summary: Development Libraries for the Netscape Portable Runtime
+Group: Development/Libraries
+Requires: mozilla-nspr = %{version}-%{release}
+
+%description nspr-devel
+Header files for doing development with the Netscape Portable Runtime.
+
+%package nss
+Summary: Network Security Services
+Group: Applications/Internet
+Requires: mozilla-nspr = %{version}-%{release}
+
+%description nss
+Network Security Services (NSS) is a set of libraries designed to
+support cross-platform development of security-enabled server
+applications. Applications built with NSS can support SSL v2 and v3,
+TLS, PKCS #5, PKCS #7, PKCS #11, PKCS #12, S/MIME, X.509 v3
+certificates, and other security standards.
+
+%package nss-devel
+Summary: Development Libraries for Network Security Services
+Group: Applications/Internet
+Requires: mozilla-nss-devel = %{version}-%{release}
+
+%description nss-devel
+Header files to doing development with Network Security Services.
 
 %package devel
 Summary: Development files for Mozilla
@@ -58,12 +98,14 @@ Mail/news client based on the Mozilla web browser.  The mail/news
 client supports IMAP, POP, and NNTP and has an easy to use interface.
 
 %package psm
-Summary: SSL support for Mozilla.
+Summary: Personal Security Manager
 Group: Applications/Internet
-Prereq:      fileutils mozilla = %{version}-%{release}
+Prereq:      fileutils mozilla = %{version}-%{release} mozilla-nss = %{version}-%{release}
 
 %description psm
-SSL support for Mozilla.
+The Personal Security Manager is a set of libraries that allow Mozilla
+to talk to the Network Security Services layer.  It allows Mozilla to
+access SSL web sites and manage cryptographic keys.
 
 %package chat
 Summary: IRC client integrated with Mozilla
@@ -122,6 +164,8 @@ fi
 # Can't hurt to leave this in since the defaults are empty.
 %patch12 -p1
 
+%patch13 -p1
+
 %build
 
 if [ -x /usr/bin/getconf ]; then
@@ -153,10 +197,33 @@ BUILD_OFFICIAL=1 make -s
 /bin/rm -rf $RPM_BUILD_ROOT
 /bin/mkdir -p $RPM_BUILD_ROOT/%{prefix}/lib/mozilla
 /bin/mkdir -p $RPM_BUILD_ROOT/%{prefix}/bin
-/bin/mkdir -p $RPM_BUILD_ROOT/%{prefix}/include/mozilla/idl
+/bin/mkdir -p $RPM_BUILD_ROOT/%{prefix}/include/mozilla
+/bin/mkdir -p $RPM_BUILD_ROOT/%{prefix}/include/nspr
+/bin/mkdir -p $RPM_BUILD_ROOT/%{prefix}/include/nss
+/bin/mkdir -p $RPM_BUILD_ROOT/%{prefix}/share/idl/mozilla
 
 # create a list of all of the different package and the files that
 # will hold them
+
+/bin/rm -f /tmp/mozilla-nspr.list
+/bin/rm -f /tmp/mozilla-nspr.list.shared
+/bin/rm -f /tmp/mozilla-nspr.package
+%{SOURCE7} --package nspr --output-file /tmp/mozilla-nspr.list \
+    --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
+    --source $RPM_BUILD_DIR/mozilla/dist
+%{SOURCE7} --package nspr --output-file /tmp/mozilla-nspr.list.shared \
+    --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
+    --source $RPM_BUILD_DIR/mozilla/dist -shared
+
+/bin/rm -f /tmp/mozilla-nss.list
+/bin/rm -f /tmp/mozilla-nss.list.shared
+/bin/rm -f /tmp/mozilla-nss.package
+%{SOURCE7} --package nss --output-file /tmp/mozilla-nss.list \
+    --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
+    --source $RPM_BUILD_DIR/mozilla/dist
+%{SOURCE7} --package nss --output-file /tmp/mozilla-nss.list.shared \
+    --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
+    --source $RPM_BUILD_DIR/mozilla/dist -shared
 
 # build all of the default browser components
 /bin/rm -f /tmp/mozilla.list
@@ -185,10 +252,12 @@ BUILD_OFFICIAL=1 make -s
 
 %{SOURCE7} --package xpcom --output-file /tmp/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --source $RPM_BUILD_DIR/mozilla/dist
+    --source $RPM_BUILD_DIR/mozilla/dist \
+    --exclude-file=%{SOURCE18}
 %{SOURCE7} --package xpcom --output-file /tmp/mozilla.list.shared \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --source $RPM_BUILD_DIR/mozilla/dist --shared
+    --source $RPM_BUILD_DIR/mozilla/dist --shared \
+    --exclude-file=%{SOURCE18}
 
 %{SOURCE7} --package browser --output-file /tmp/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
@@ -217,9 +286,9 @@ BUILD_OFFICIAL=1 make -s
     --source $RPM_BUILD_DIR/mozilla/dist \
     --exclude-file=%{SOURCE17}
 
-# we don't actually build the shared list since the only one in the
-# package, libnssckbi.so, needs to be in /usr/lib/mozilla because it's
-# loaded by hand.  Just throw it into the regular list.
+# libnssckbi.so needs to be in /usr/lib/mozilla and in /usr/lib so
+# that it can ebe loaded by both mozilla and lame programs that don't
+# know about MOZILLA_FIVE_HOME
 
 echo libnssckbi.so >> /tmp/mozilla-psm.list
 
@@ -267,6 +336,24 @@ echo libnssckbi.so >> /tmp/mozilla-psm.list
     --source $RPM_BUILD_DIR/mozilla/dist --shared
 
 # copy all of the files
+%{SOURCE8} /tmp/mozilla-nspr.list /tmp/mozilla-nspr.package \
+    $RPM_BUILD_ROOT/%{prefix}/lib/mozilla \
+    $RPM_BUILD_DIR/mozilla/dist/bin \
+    %{prefix}/lib/mozilla
+%{SOURCE8} /tmp/mozilla-nspr.list.shared /tmp/mozilla-nspr.package \
+    $RPM_BUILD_ROOT/%{prefix}/lib \
+    $RPM_BUILD_DIR/mozilla/dist/bin \
+    %{prefix}/lib
+
+%{SOURCE8} /tmp/mozilla-nss.list /tmp/mozilla-nss.package \
+    $RPM_BUILD_ROOT/%{prefix}/lib/mozilla \
+    $RPM_BUILD_DIR/mozilla/dist/bin \
+    %{prefix}/lib/mozilla
+%{SOURCE8} /tmp/mozilla-nss.list.shared /tmp/mozilla-nss.package \
+    $RPM_BUILD_ROOT/%{prefix}/lib \
+    $RPM_BUILD_DIR/mozilla/dist/bin \
+    %{prefix}/lib
+
 %{SOURCE8} /tmp/mozilla.list /tmp/mozilla.package \
     $RPM_BUILD_ROOT/%{prefix}/lib/mozilla \
     $RPM_BUILD_DIR/mozilla/dist/bin \
@@ -343,12 +430,25 @@ popd
 # cp -L (dereference all symlinks) is required for fileutils >= 2.0.27
 # (POSIX compliance); prior versions don't understand -L, so fall back...
 
+# copy the nss files to the right place
+/usr/bin/find security/nss/lib/ -name '*.h' -type f -exec /bin/cp {} \
+ $RPM_BUILD_ROOT/%{prefix}/include/nss/ \;
+
+# copy the nspr files to the right place
+/bin/cp -rL dist/include/nspr/* \
+    $RPM_BUILD_ROOT/%{prefix}/include/nspr/ || \
+  /bin/cp -r dist/include/nspr/* \
+    $RPM_BUILD_ROOT/%{prefix}/include/nspr/
+
+# make sure to remove nspr so we don't get two copies of it
+#/bin/rm -rf dist/include/nspr
+
 # copy include and idl files
 /bin/cp -rL dist/include/* $RPM_BUILD_ROOT/%{prefix}/include/mozilla || \
     /bin/cp -r dist/include/* $RPM_BUILD_ROOT/%{prefix}/include/mozilla
 
-/bin/cp -rL dist/idl/* $RPM_BUILD_ROOT/%{prefix}/include/mozilla/idl || \
-    /bin/cp -r dist/idl/* $RPM_BUILD_ROOT/%{prefix}/include/mozilla/idl
+/bin/cp -rL dist/idl/* $RPM_BUILD_ROOT/%{prefix}/share/idl/mozilla || \
+    /bin/cp -r dist/idl/* $RPM_BUILD_ROOT/%{prefix}/share/idl/mozilla
 
 # copy our devel tools
 /bin/cp -rL dist/bin/xpcshell $RPM_BUILD_ROOT/%{prefix}/bin/ || \
@@ -401,6 +501,18 @@ fi
 %preun
 /bin/rm -rf /usr/lib/mozilla/chrome/overlayinfo
 /bin/rm -f /usr/lib/mozilla/chrome/*.rdf
+
+%post nspr
+/sbin/ldconfig >/dev/null 2>/dev/null
+
+%postun nspr
+/sbin/ldconfig >/dev/null 2>/dev/null
+
+%post nss
+/sbin/ldconfig >/dev/null 2>/dev/null
+
+%postun nss
+/sbin/ldconfig >/dev/null 2>/dev/null
 
 %post mail
 /sbin/ldconfig >/dev/null 2>/dev/null
@@ -514,6 +626,20 @@ fi
 
 /etc/X11/applnk/Internet/mozilla.desktop
 
+%files nspr -f /tmp/mozilla-nspr.package
+%defattr(-,root,root)
+
+%files nspr-devel
+%{prefix}/include/nspr/*
+%defattr(-,root,root)
+
+%files nss -f /tmp/mozilla-nss.package
+%defattr(-,root,root)
+
+%files nss-devel
+%{prefix}/include/nss/*
+%defattr(-,root,root)
+
 %files mail -f /tmp/mozilla-mail.package
 %defattr(-,root,root)
 /etc/X11/applnk/Internet/mozilla-mail.desktop
@@ -535,6 +661,7 @@ fi
 %defattr(-,root,root)
 %dir %{prefix}/include/mozilla
 %{prefix}/include/mozilla/*
+%{prefix}/share/idl/mozilla/*
 %{prefix}/bin/xpcshell
 %{prefix}/bin/xpidl
 %{prefix}/bin/xpt_dump

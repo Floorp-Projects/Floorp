@@ -1,0 +1,21 @@
+--- mozilla/xpinstall/packager/packages-unix.foobar	Thu Feb 28 18:09:39 2002
++++ mozilla/xpinstall/packager/packages-unix	Thu Feb 28 18:10:08 2002
+@@ -32,6 +32,18 @@
+ bin/defaults/profile/search.rdf
+ bin/defaults/profile/mimeTypes.rdf
+ 
++[nspr]
++bin/libnspr4.so
++bin/libplc4.so
++bin/libplds4.so
++
++[nss]
++bin/libnssckbi.so
++bin/libnss3.so
++bin/libsmime3.so
++bin/libsoftokn3.so
++bin/libssl3.so
++
+ [xpcom]
+ bin/libmozjs.so
+ bin/libnspr4.so
