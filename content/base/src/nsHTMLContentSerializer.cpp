@@ -39,13 +39,23 @@
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 
-static const char* kIndentStr = "  ";
-static const char* kMozStr = "_moz";
-static const char* kLessThan = "<";
-static const char* kGreaterThan = ">";
-static const char* kEndTag = "</";
+#define kIndentStr "  "
+#define kMozStr "_moz"
+#define kLessThan "<"
+#define kGreaterThan ">"
+#define kEndTag "</"
 
 static const PRInt32 kLongLineLen = 128;
+
+nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer)
+{
+  nsHTMLContentSerializer* it = new nsHTMLContentSerializer();
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return it->QueryInterface(NS_GET_IID(nsIContentSerializer), (void**)aSerializer);
+}
 
 nsHTMLContentSerializer::nsHTMLContentSerializer()
 {
@@ -64,8 +74,8 @@ nsHTMLContentSerializer::GetEntityConverter(nsIEntityConverter** aConverter)
   if (!mEntityConverter) {
     nsresult rv;
     rv = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, 
-					    NS_GET_IID(nsIEntityConverter),
-					    getter_AddRefs(mEntityConverter));
+                                            NS_GET_IID(nsIEntityConverter),
+                                            getter_AddRefs(mEntityConverter));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   }
 
@@ -124,9 +134,9 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn)
 
 NS_IMETHODIMP 
 nsHTMLContentSerializer::AppendText(nsIDOMText* aText, 
-				    PRInt32 aStartOffset,
-				    PRInt32 aEndOffset,
-				    nsAWritableString& aStr)
+                                    PRInt32 aStartOffset,
+                                    PRInt32 aEndOffset,
+                                    nsAWritableString& aStr)
 {
   NS_ENSURE_ARG(aText);
 
@@ -134,20 +144,20 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
 
   nsresult rv;
   rv = AppendTextData((nsIDOMNode*)aText, aStartOffset, 
-		      aEndOffset, data);
+                      aEndOffset, data);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   if (mPreLevel || (!mDoFormat && !HasLongLines(data))) {
     AppendToString(data,
-		   data.Length(),
-		   aStr,
-		   PR_TRUE);
+                   data.Length(),
+                   aStr,
+                   PR_TRUE);
   }
   else {
     AppendToStringWrapped(data,
-			  data.Length(),
-			  aStr,
-			  PR_TRUE);
+                          data.Length(),
+                          aStr,
+                          PR_TRUE);
   }
 
   return NS_OK;
@@ -156,8 +166,8 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
 
 void 
 nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
-					     nsIAtom* aTagName,
-					     nsAWritableString& aStr)
+                                             nsIAtom* aTagName,
+                                             nsAWritableString& aStr)
 {
   nsresult rv;
   PRInt32 index, count;
@@ -165,18 +175,20 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
   PRInt32 namespaceID;
   nsCOMPtr<nsIAtom> attrName, attrPrefix;
 
+  aContent->GetAttributeCount(count);
+
   for (index = 0; index < count; index++) {
     aContent->GetAttributeNameAt(index, 
-				 namespaceID,
-				 *getter_AddRefs(attrName),
-				 *getter_AddRefs(attrPrefix));
+                                 namespaceID,
+                                 *getter_AddRefs(attrName),
+                                 *getter_AddRefs(attrPrefix));
 
     // Filter out any attribute starting with _moz
     nsXPIDLString sharedName;
     attrName->GetUnicode(getter_Shares(sharedName));
     if (nsCRT::strncmp(sharedName, 
-		       NS_ConvertASCIItoUCS2(kMozStr), 
-		       sizeof(kMozStr) == 0)) {
+                       NS_ConvertASCIItoUCS2(kMozStr), 
+                       sizeof(kMozStr)-1) == 0) {
       continue;
     }
 
@@ -187,15 +199,15 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     // used by the editor.  Bug 16988.  Yuck.
     //
     if ((aTagName == nsHTMLAtoms::br) &&
-	(attrName.get() == nsHTMLAtoms::type) &&
-	(valueStr.EqualsWithConversion(kMozStr, PR_FALSE, sizeof(kMozStr)))) {
+        (attrName.get() == nsHTMLAtoms::type) &&
+        (valueStr.EqualsWithConversion(kMozStr, PR_FALSE, sizeof(kMozStr)-1))) {
       continue;
     }
 
     // Make all links absolute when converting only the selection:
     if ((mFlags & nsIDocumentEncoder::OutputAbsoluteLinks) &&
-	((attrName.get() == nsHTMLAtoms::href) || 
-	 (attrName.get() == nsHTMLAtoms::src))) {
+        ((attrName.get() == nsHTMLAtoms::href) || 
+         (attrName.get() == nsHTMLAtoms::src))) {
       // Would be nice to handle OBJECT and APPLET tags,
       // but that gets more complicated since we have to
       // search the tag list for CODEBASE as well.
@@ -203,13 +215,13 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
       nsCOMPtr<nsIDocument> document;
       aContent->GetDocument(*getter_AddRefs(document));
       if (document) {
-	nsCOMPtr<nsIURI> uri = dont_AddRef(document->GetDocumentURL());
-	if (uri) {
+        nsCOMPtr<nsIURI> uri = dont_AddRef(document->GetDocumentURL());
+        if (uri) {
           nsAutoString absURI;
-	  rv = NS_MakeAbsoluteURI(absURI, valueStr, uri);
-	  if (NS_SUCCEEDED(rv)) {
-	    valueStr = absURI;
-	  }
+          rv = NS_MakeAbsoluteURI(absURI, valueStr, uri);
+          if (NS_SUCCEEDED(rv)) {
+            valueStr = absURI;
+          }
         }
       }
     }
@@ -222,7 +234,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
 NS_IMETHODIMP
 nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
-					    nsAWritableString& aStr)
+                                            nsAWritableString& aStr)
 {
   NS_ENSURE_ARG(aElement);
   
@@ -243,6 +255,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   if (LineBreakBeforeOpen(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, mLineBreakLen, aStr);
+    mColPos = 0;
   }
 
   if (name.get() == nsHTMLAtoms::pre) {
@@ -251,18 +264,19 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   
   StartIndentation(name, hasDirtyAttr, aStr);
 
-  AppendToString(NS_LITERAL_STRING(kLessThan), sizeof(kLessThan), aStr);
+  AppendToString(NS_LITERAL_STRING(kLessThan), -1, aStr);
 
   nsXPIDLString sharedName;
   name->GetUnicode(getter_Shares(sharedName));
-  AppendToString(sharedName, -1, aStr);
+  AppendToString(sharedName, nsCRT::strlen(sharedName), aStr);
 
   SerializeAttributes(content, name, aStr);
 
-  AppendToString(NS_LITERAL_STRING(kGreaterThan), sizeof(kGreaterThan), aStr);
+  AppendToString(NS_LITERAL_STRING(kGreaterThan), -1, aStr);
 
   if (LineBreakAfterOpen(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, mLineBreakLen, aStr);
+    mColPos = 0;
   }
     
   return NS_OK;
@@ -270,7 +284,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   
 NS_IMETHODIMP 
 nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
-					  nsAWritableString& aStr)
+                                          nsAWritableString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
@@ -301,16 +315,18 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 
   if (LineBreakBeforeClose(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, mLineBreakLen, aStr);
+    mColPos = 0;
   }
 
   EndIndentation(name, hasDirtyAttr, aStr);
 
-  AppendToString(NS_LITERAL_STRING(kEndTag), sizeof(kEndTag), aStr);
+  AppendToString(NS_LITERAL_STRING(kEndTag), -1, aStr);
   AppendToString(sharedName, -1, aStr);
-  AppendToString(NS_LITERAL_STRING(kGreaterThan), sizeof(kGreaterThan), aStr);
+  AppendToString(NS_LITERAL_STRING(kGreaterThan), -1, aStr);
 
   if (LineBreakAfterClose(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, mLineBreakLen, aStr);
+    mColPos = 0;
   }
 
   return NS_OK;
@@ -318,8 +334,8 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 
 void
 nsHTMLContentSerializer::AppendToString(const PRUnichar* aStr,
-					PRInt32 aLength,
-					nsAWritableString& aOutputStr)
+                                        PRInt32 aLength,
+                                        nsAWritableString& aOutputStr)
 {
   if (mBodyOnly && !mInBody) {
     return;
@@ -334,9 +350,9 @@ nsHTMLContentSerializer::AppendToString(const PRUnichar* aStr,
 
 void 
 nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
-					       PRInt32 aLength,
-					       nsAWritableString& aOutputStr,
-					       PRBool aTranslateEntities)
+                                               PRInt32 aLength,
+                                               nsAWritableString& aOutputStr,
+                                               PRBool aTranslateEntities)
 {
   PRInt32 length = (aLength == -1) ? aStr.Length() : aLength;
 
@@ -360,25 +376,25 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
       // if there is no break than just add the entire string
       if (indx == kNotFound)
       {
-	if (strOffset == 0) {
-	  AppendToString(aStr, length, aOutputStr, aTranslateEntities);
-	}
-	else {
-	  lineLength = length - strOffset;
-	  aStr.Right(line, lineLength);
-	  AppendToString(line, lineLength, 
-			 aOutputStr, aTranslateEntities);
-	}
+        if (strOffset == 0) {
+          AppendToString(aStr, length, aOutputStr, aTranslateEntities);
+        }
+        else {
+          lineLength = length - strOffset;
+          aStr.Right(line, lineLength);
+          AppendToString(line, lineLength, 
+                         aOutputStr, aTranslateEntities);
+        }
         done = PR_TRUE;
       }
       else {
-	lineLength = indx - strOffset;
-	aStr.Mid(line, strOffset, lineLength);
-	AppendToString(line, lineLength, 
-		       aOutputStr, aTranslateEntities);
-	AppendToString(mLineBreak, mLineBreakLen, aOutputStr);
-	strOffset = indx+1;
-	mColPos = 0;
+        lineLength = indx - strOffset;
+        aStr.Mid(line, strOffset, lineLength);
+        AppendToString(line, lineLength, 
+                       aOutputStr, aTranslateEntities);
+        AppendToString(mLineBreak, mLineBreakLen, aOutputStr);
+        strOffset = indx+1;
+        mColPos = 0;
       }
     }
   }
@@ -386,9 +402,9 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
 
 void
 nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
-					PRInt32 aLength,
-					nsAWritableString& aOutputStr,
-					PRBool aTranslateEntities)
+                                        PRInt32 aLength,
+                                        nsAWritableString& aOutputStr,
+                                        PRBool aTranslateEntities)
 {
   if (mBodyOnly && !mInBody) {
     return;
@@ -406,12 +422,12 @@ nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
     if (converter) {
       PRUnichar *encodedBuffer;
       rv = mEntityConverter->ConvertToEntities(nsPromiseFlatString(aStr),
-					       nsIEntityConverter::html40Latin1,
-					       &encodedBuffer);
+                                               nsIEntityConverter::html40Latin1,
+                                               &encodedBuffer);
       if (NS_SUCCEEDED(rv)) {
-	aOutputStr.Append(encodedBuffer);
-	nsCRT::free(encodedBuffer);
-	return;
+        aOutputStr.Append(encodedBuffer);
+        nsCRT::free(encodedBuffer);
+        return;
       }
     }
   }
@@ -425,8 +441,8 @@ nsHTMLContentSerializer::HasDirtyAttr(nsIContent* aContent)
   nsAutoString val;
 
   if (NS_CONTENT_ATTR_NOT_THERE != aContent->GetAttribute(kNameSpaceID_None,
-							  nsLayoutAtoms::mozdirty,
-							  val)) {
+                                                          nsLayoutAtoms::mozdirty,
+                                                          val)) {
     return PR_TRUE;
   }
   else {
@@ -436,7 +452,7 @@ nsHTMLContentSerializer::HasDirtyAttr(nsIContent* aContent)
 
 PRBool 
 nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName, 
-					     PRBool aHasDirtyAttr)
+                                             PRBool aHasDirtyAttr)
 {
   if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel || !mColPos) {
     return PR_FALSE;
@@ -466,7 +482,7 @@ nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName,
 
 PRBool 
 nsHTMLContentSerializer::LineBreakAfterOpen(nsIAtom* aName, 
-					    PRBool aHasDirtyAttr)
+                                            PRBool aHasDirtyAttr)
 {
   if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel) {
     return PR_FALSE;
@@ -490,9 +506,9 @@ nsHTMLContentSerializer::LineBreakAfterOpen(nsIAtom* aName,
 
 PRBool 
 nsHTMLContentSerializer::LineBreakBeforeClose(nsIAtom* aName, 
-					     PRBool aHasDirtyAttr)
+                                              PRBool aHasDirtyAttr)
 {
-  if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel) {
+  if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel || !mColPos) {
     return PR_FALSE;
   }
 
@@ -512,7 +528,7 @@ nsHTMLContentSerializer::LineBreakBeforeClose(nsIAtom* aName,
 
 PRBool 
 nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName, 
-					     PRBool aHasDirtyAttr)
+                                             PRBool aHasDirtyAttr)
 {
   if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel) {
     return PR_FALSE;
@@ -547,13 +563,13 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
 
 void
 nsHTMLContentSerializer::StartIndentation(nsIAtom* aName,
-					  PRBool aHasDirtyAttr,
-					  nsAWritableString& aStr)
+                                          PRBool aHasDirtyAttr,
+                                          nsAWritableString& aStr)
 {
   if ((mDoFormat || aHasDirtyAttr) && !mPreLevel && !mColPos) {
     for (PRInt32 i = mIndent; --i >= 0; ) {
-      AppendToString(NS_ConvertASCIItoUCS2(kIndentStr), sizeof(kIndentStr), 
-		     aStr);
+      AppendToString(NS_ConvertASCIItoUCS2(kIndentStr), -1, 
+                     aStr);
     }
   }
 
@@ -571,8 +587,8 @@ nsHTMLContentSerializer::StartIndentation(nsIAtom* aName,
 
 void
 nsHTMLContentSerializer::EndIndentation(nsIAtom* aName,
-					PRBool aHasDirtyAttr,
-					nsAWritableString& aStr)
+                                        PRBool aHasDirtyAttr,
+                                        nsAWritableString& aStr)
 {
   if ((aName == nsHTMLAtoms::head) ||
       (aName == nsHTMLAtoms::table) ||
@@ -587,8 +603,8 @@ nsHTMLContentSerializer::EndIndentation(nsIAtom* aName,
 
   if ((mDoFormat || aHasDirtyAttr) && !mPreLevel && !mColPos) {
     for (PRInt32 i = mIndent; --i >= 0; ) {
-      AppendToString(NS_ConvertASCIItoUCS2(kIndentStr), sizeof(kIndentStr),
-		     aStr);
+      AppendToString(NS_ConvertASCIItoUCS2(kIndentStr), -1,
+                     aStr);
     }
   }
 }

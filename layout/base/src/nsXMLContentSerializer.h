@@ -20,6 +20,9 @@
  * Contributor(s): 
  */
 
+#ifndef nsXMLContentSerializer_h__
+#define nsXMLContentSerializer_h__
+
 #include "nsIContentSerializer.h"
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
@@ -81,3 +84,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   PRInt32 mPrefixIndex;
   nsVoidArray mNameSpaceStack;
 };
+
+extern nsresult NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer);
+
+#endif 

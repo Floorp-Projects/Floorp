@@ -42,6 +42,16 @@ typedef struct {
   nsIDOMElement* mOwner;
 } NameSpaceDecl;
 
+nsresult NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer)
+{
+  nsXMLContentSerializer* it = new nsXMLContentSerializer();
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return it->QueryInterface(NS_GET_IID(nsIContentSerializer), (void**)aSerializer);
+}
+
 nsXMLContentSerializer::nsXMLContentSerializer()
 {
   NS_INIT_ISUPPORTS();
