@@ -89,6 +89,7 @@
 
 #include "nsIXULPrototypeCache.h"
 #include "nsIDOMLoadListener.h"
+#include "nsIDOMEventGroup.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
@@ -737,9 +738,16 @@ nsXBLService::AttachGlobalKeyHandler(nsIDOMEventReceiver* aReceiver)
     return NS_ERROR_FAILURE;
 
   // listen to these events
-  rec->AddEventListener(NS_LITERAL_STRING("keydown"), handler, PR_FALSE);
-  rec->AddEventListener(NS_LITERAL_STRING("keyup"), handler, PR_FALSE);
-  rec->AddEventListener(NS_LITERAL_STRING("keypress"), handler, PR_FALSE);
+  nsCOMPtr<nsIDOMEventGroup> systemGroup;
+  rec->GetSystemEventGroup(getter_AddRefs(systemGroup));
+  nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(rec);
+
+  target->AddGroupedEventListener(NS_LITERAL_STRING("keydown"), handler,
+                                  PR_FALSE, systemGroup);
+  target->AddGroupedEventListener(NS_LITERAL_STRING("keyup"), handler, 
+                                  PR_FALSE, systemGroup);
+  target->AddGroupedEventListener(NS_LITERAL_STRING("keypress"), handler, 
+                                  PR_FALSE, systemGroup);
 
   // Release.  Do this so that only the event receiver holds onto the key handler.
   NS_RELEASE(handler);
@@ -763,12 +771,21 @@ nsXBLService::AttachGlobalDragHandler(nsIDOMEventReceiver* aReceiver)
   if (!handler)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDOMEventGroup> systemGroup;
+  aReceiver->GetSystemEventGroup(getter_AddRefs(systemGroup));
+  nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(aReceiver);
+
   // listen to these events
-  aReceiver->AddEventListener(NS_LITERAL_STRING("draggesture"), handler, PR_FALSE);
-  aReceiver->AddEventListener(NS_LITERAL_STRING("dragenter"), handler, PR_FALSE);
-  aReceiver->AddEventListener(NS_LITERAL_STRING("dragexit"), handler, PR_FALSE);
-  aReceiver->AddEventListener(NS_LITERAL_STRING("dragover"), handler, PR_FALSE);
-  aReceiver->AddEventListener(NS_LITERAL_STRING("dragdrop"), handler, PR_FALSE);
+  target->AddGroupedEventListener(NS_LITERAL_STRING("draggesture"), handler,
+                                  PR_FALSE, systemGroup);
+  target->AddGroupedEventListener(NS_LITERAL_STRING("dragenter"), handler,
+                                  PR_FALSE, systemGroup);
+  target->AddGroupedEventListener(NS_LITERAL_STRING("dragexit"), handler,
+                                  PR_FALSE, systemGroup);
+  target->AddGroupedEventListener(NS_LITERAL_STRING("dragover"), handler,
+                                  PR_FALSE, systemGroup);
+  target->AddGroupedEventListener(NS_LITERAL_STRING("dragdrop"), handler,
+                                  PR_FALSE, systemGroup);
 
   // Release.  Do this so that only the event receiver holds onto the handler.
   NS_RELEASE(handler);

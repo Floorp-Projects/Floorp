@@ -84,6 +84,7 @@ public:
   void AppendHandlerText(const nsAString& aText);
 
   PRUint8 GetPhase() { return mPhase; }
+  PRUint8 GetType() { return mType; }
 
   nsXBLPrototypeHandler* GetNextHandler() { return mNextHandler; }
   void SetNextHandler(nsXBLPrototypeHandler* aHandler) { mNextHandler = aHandler; }

@@ -75,6 +75,8 @@
 #include "nsIDOMScrollListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsXBLAtoms.h"
+#include "nsIDOMEventGroup.h"
+#include "nsIDOM3EventTarget.h"
 
 nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver,
                                      nsXBLPrototypeHandler* aHandler)
@@ -114,8 +116,15 @@ nsXBLEventHandler::RemoveEventHandlers()
 
   nsCOMPtr<nsIDOMEventListener> listener(do_QueryInterface(this));
 
-  if (found && listener)
-    mEventReceiver->RemoveEventListener(type, listener, useCapture);
+  // are we in the system event group?
+  nsCOMPtr<nsIDOMEventGroup> eventGroup;
+  if (mProtoHandler->GetType() & NS_HANDLER_TYPE_XBL_COMMAND)
+    mEventReceiver->GetSystemEventGroup(getter_AddRefs(eventGroup));
+
+  if (found && listener) {
+    nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(mEventReceiver);
+    target->RemoveGroupedEventListener(type, listener, useCapture, eventGroup);
+  }
 }
 
 /// Helpers that are relegated to the end of the file /////////////////////////////

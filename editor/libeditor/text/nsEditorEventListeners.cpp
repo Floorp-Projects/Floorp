@@ -304,7 +304,8 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     }
   }
 
-  textEditor->HandleKeyPress(keyEvent);
+  if (isSystemPass)
+    textEditor->HandleKeyPress(keyEvent);
 
   return NS_OK; // we don't PreventDefault() here or keybindings like control-x won't work 
 }

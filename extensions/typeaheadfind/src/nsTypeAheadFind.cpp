@@ -108,6 +108,8 @@
 #include "nsIPrivateCompositionEvent.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOM3EventTarget.h"
+#include "nsIDOMEventGroup.h"
 
 // Header for this class
 #include "nsTypeAheadFind.h"
@@ -2248,9 +2250,14 @@ nsTypeAheadFind::RemoveWindowListeners(nsIDOMWindow *aDOMWin)
   }
 
   // Use capturing, otherwise the normal find next will get activated when ours should
-  chromeEventHandler->RemoveEventListener(NS_LITERAL_STRING("keypress"),
-                                          NS_STATIC_CAST(nsIDOMKeyListener*, this),
-                                          PR_FALSE);
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(chromeEventHandler));
+  nsCOMPtr<nsIDOMEventGroup> systemGroup;
+  receiver->GetSystemEventGroup(getter_AddRefs(systemGroup));
+  nsCOMPtr<nsIDOM3EventTarget> target(do_QueryInterface(receiver));
+
+  target->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"),
+                                     NS_STATIC_CAST(nsIDOMKeyListener*, this),
+                                     PR_FALSE, systemGroup);
 
   if (aDOMWin == mFocusedWindow) {
     mFocusedWindow = nsnull;
@@ -2296,9 +2303,14 @@ nsTypeAheadFind::AttachWindowListeners(nsIDOMWindow *aDOMWin)
   }
 
   // Use capturing, otherwise the normal find next will get activated when ours should
-  chromeEventHandler->AddEventListener(NS_LITERAL_STRING("keypress"),
-                                       NS_STATIC_CAST(nsIDOMKeyListener*, this),
-                                       PR_FALSE);
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(chromeEventHandler));
+  nsCOMPtr<nsIDOMEventGroup> systemGroup;
+  receiver->GetSystemEventGroup(getter_AddRefs(systemGroup));
+  nsCOMPtr<nsIDOM3EventTarget> target(do_QueryInterface(receiver));
+
+  target->AddGroupedEventListener(NS_LITERAL_STRING("keypress"),
+                                  NS_STATIC_CAST(nsIDOMKeyListener*, this),
+                                  PR_FALSE, systemGroup);
 
   // Attach menu listeners, this will help us ignore keystrokes meant for menus
   nsIDOMEventListener *genericEventListener = 
