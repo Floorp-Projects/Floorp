@@ -154,11 +154,6 @@ typedef struct JSPropertyCache {
     uint32               flushes;
 } JSPropertyCache;
 
-/* Property-not-found lookup results are cached using this invalid pointer. */
-#define PROP_NOT_FOUND(obj,id)  ((JSProperty *) ((jsword)(id) | 1))
-#define PROP_NOT_FOUND_ID(prop) ((jsid) ((jsword)(prop) & ~1))
-#define PROP_FOUND(prop)        ((prop) && ((jsword)(prop) & 1) == 0)
-
 #define PROPERTY_CACHE_FILL(cx, cache, obj, id, prop)                         \
     JS_BEGIN_MACRO                                                            \
 	uintN _hashIndex = (uintN)PROPERTY_CACHE_HASH(obj, id);               \
@@ -188,9 +183,7 @@ typedef struct JSPropertyCache {
 	_pce_prop = PCE_PROPERTY(_entry);                                     \
 	_cache->tests++;                                                      \
 	if (_pce_prop &&                                                      \
-	    (((jsword)_pce_prop & 1)                                          \
-	     ? PROP_NOT_FOUND_ID(_pce_prop)                                   \
-	     : sym_id(((JSScopeProperty *)_pce_prop)->symbols)) == id &&      \
+	    sym_id(((JSScopeProperty *)_pce_prop)->symbols) == id &&          \
 	    PCE_OBJECT(_entry) == obj) {                                      \
 	    prop = _pce_prop;                                                 \
 	} else {                                                              \
@@ -204,9 +197,6 @@ js_FlushPropertyCache(JSContext *cx);
 
 extern void
 js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop);
-
-extern void
-js_FlushPropertyCacheNotFounds(JSContext *cx);
 
 extern JS_FRIEND_API(jsval *)
 js_AllocStack(JSContext *cx, uintN nslots, void **markp);

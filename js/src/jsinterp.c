@@ -108,36 +108,6 @@ js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop)
     cache->empty = empty;
 }
 
-void
-js_FlushPropertyCacheNotFounds(JSContext *cx)
-{
-    JSPropertyCache *cache;
-    JSBool empty;
-    JSPropertyCacheEntry *end, *pce, entry;
-    JSProperty *pce_prop;
-
-    cache = &cx->runtime->propertyCache;
-    if (cache->empty)
-        return;
-
-    empty = JS_TRUE;
-    end = &cache->table[PROPERTY_CACHE_SIZE];
-    for (pce = &cache->table[0]; pce < end; pce++) {
-        PCE_LOAD(cache, pce, entry);
-        pce_prop = PCE_PROPERTY(entry);
-        if (pce_prop) {
-            if (!PROP_FOUND(pce_prop)) {
-                PCE_OBJECT(entry) = NULL;
-                PCE_PROPERTY(entry) = NULL;
-                PCE_STORE(cache, pce, entry);
-            } else {
-                empty = JS_FALSE;
-            }
-        }
-    }
-    cache->empty = empty;
-}
-
 /*
  * Class for for/in loop property iterator objects.
  */
@@ -1603,7 +1573,7 @@ js_Interpret(JSContext *cx, jsval *result)
             /* Is this the first iteration ? */
             if (JSVAL_IS_VOID(rval)) {
                 /* Yes, create a new JSObject to hold the iterator state */
-                propobj = js_NewObject(cx, &prop_iterator_class, NULL, NULL);
+                propobj = js_NewObject(cx, &prop_iterator_class, NULL, obj);
                 if (!propobj) {
                     ok = JS_FALSE;
                     goto out;
@@ -1636,7 +1606,6 @@ js_Interpret(JSContext *cx, jsval *result)
 #if JS_INITIAL_NSLOTS < 5
 #error JS_INITIAL_NSLOTS must be greater than or equal to 5.
 #endif
-                propobj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(obj);
                 propobj->slots[JSSLOT_ITER_STATE] = iter_state;
             } else {
                 /* This is not the first iteration. Recover iterator state. */
@@ -1771,7 +1740,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #define CACHED_GET(call) {                                                    \
     JS_LOCK_OBJ(cx, obj);                                                     \
     PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);                   \
-    if (PROP_FOUND(prop)) {                                                   \
+    if (prop) {                                                               \
         JSScope *_scope = OBJ_SCOPE(obj);                                     \
         sprop = (JSScopeProperty *)prop;                                      \
         JS_ATOMIC_ADDREF(&sprop->nrefs, 1);                                   \
@@ -1802,9 +1771,8 @@ js_Interpret(JSContext *cx, jsval *result)
 #define CACHED_SET(call) {                                                    \
     JS_LOCK_OBJ(cx, obj);                                                     \
     PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);                   \
-    if (PROP_FOUND(prop) &&                                                   \
-        !(sprop = (JSScopeProperty *)prop,                                    \
-          sprop->attrs & JSPROP_READONLY)) {                                  \
+    if ((sprop = (JSScopeProperty *)prop) &&                                  \
+        !(sprop->attrs & JSPROP_READONLY)) {                                  \
         JSScope *_scope = OBJ_SCOPE(obj);                                     \
         JS_ATOMIC_ADDREF(&sprop->nrefs, 1);                                   \
         JS_UNLOCK_SCOPE(cx, _scope);                                          \
