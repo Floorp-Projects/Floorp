@@ -198,6 +198,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocLoaderImpl)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)   
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+   NS_INTERFACE_MAP_ENTRY(nsIHTTPEventSink)
 NS_INTERFACE_MAP_END
 
 
@@ -1384,6 +1385,19 @@ void nsDocLoaderImpl::CalculateMaxProgress(PRInt32 *aMax)
   }
 
   *aMax = max;
+}
+
+NS_IMETHODIMP nsDocLoaderImpl::OnHeadersAvailable(nsISupports * aContext)
+{
+  // right now I don't think we need to do anything special for this case...
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsISupports * aContext, nsIURI * aNewLocation)
+{
+  // right now I don't think we need to do anything special for this case...
+  FireOnLocationChange(this, mDocumentChannel, aNewLocation);
+  return NS_OK;
 }
 
 
