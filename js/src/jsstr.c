@@ -2308,7 +2308,7 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s, uintN gcflag)
     if (!news)
         return NULL;
     memcpy(news, s, m);
-    str = js_NewString(cx, news, js_strlen(news), gcflag);
+    str = js_NewString(cx, news, n, gcflag);
     if (!str)
         JS_free(cx, news);
     return str;
