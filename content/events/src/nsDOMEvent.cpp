@@ -225,7 +225,7 @@ NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
 
   nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
   //Add extra since loop will free one.
-  NS_ADDREF(parent);
+  NS_IF_ADDREF(parent);
   nsIWidget* tmp;
   while (nsnull != parent) {
     parent->GetBounds(bounds);
@@ -246,7 +246,7 @@ NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 
   nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
   //Add extra since loop will free one.
-  NS_ADDREF(parent);
+  NS_IF_ADDREF(parent);
   nsIWidget* tmp;
   while (nsnull != parent) {
     parent->GetBounds(bounds);
