@@ -209,6 +209,8 @@ static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_s
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS
+_TRY_SAFE_CALL
 
 ////////////////////////////////////////////////////////////////////////
 // Registry keys for caching plugin info
