@@ -11,13 +11,17 @@
 <h2>
 MRJ Plugin Build Instructions</h2></center>
 
-<center><i>(as of 7/30/99)</i>
+<center><i>(as of 16.II.2000)</i>
 <p>
 <hr></center>
 
 <center>
 <h3>
-In 6 Easy Steps</h3></center>
+In 8ish Easy Steps</h3></center>
+
+<center><font size=-1>(this requires the mac build environment as described
+on the <a href="http://www.mozilla.org/build/mac.html">Mozilla Mac Build
+Page</a>)</font></center>
 
 <ol>
 <li>
@@ -27,9 +31,16 @@ of your system volume, called "MRJ SDK 2.1." Copy the CIncludes and Libraries
 folders to the "MRJSDK" folder in mozilla/plugin/oji/MRJ.</li>
 
 <li>
-Open the project mozilla/plugin/oji/MRJ/plugin/MRJInABox.mcp. To build
-the plugin for 4.X browsers, build the "MRJInABox (4.X)" target. To build
-for 5.X, build the "MRJInABox" target.</li>
+Open the project mozilla/plugin/oji/MRJ/plugin/MRJInABox.mcp.</li>
+
+<ol>
+<li>
+Build the BackwardAdaptor target.</li>
+
+<li>
+To build the plugin for 4.X browsers, build the "MRJInABox (4.X)" target.
+To build for 5.X, build the "MRJInABox" target.</li>
+</ol>
 
 <li>
 Build the project mozilla/js/macbuild/LiveConnectClasses.mcp, and make
@@ -43,8 +54,8 @@ make an alias to the file ConsoleApplet.jar in mozilla/plugin/oji/MRJ/plugin.</l
 Finally, build the "MRJPlugin.jar" target in MRJInABox.mcp.</li>
 
 <li>
-To install the 5.X plugin, create a folder called "Netscape Plugins" in
-your "System/Extensions" folder, and drag both MRJInABox and MRJPlugin.jar
+To install the 5.X plugin, find the plugins folder for the debug; it should
+be ...dist:viewer_debug:Plugins.&nbsp;&nbsp; Drag both MRJInABox and MRJPlugin.jar
 into this folder. To install the 4.X plugin, drag both MRJPlugin and MRJPlugin.jar
 into your "Plug-ins" folder located inside your Netscape Communicator folder.</li>
 </ol>
@@ -53,7 +64,7 @@ into your "Plug-ins" folder located inside your Netscape Communicator folder.</l
 plugin.
 <p>
 <hr>
-<p>If you have comments or suggestions, email <a href="mailto:mark.lin@eng.sun.com">mark.lin@eng.sun.com</a></center>
+<p>If you have comments or suggestions, email <a href="mailto:modgock@eng.sun.com">modgock@eng.sun.com</a></center>
 
 </body>
 </html>
