@@ -700,20 +700,75 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
   nsresult rv;
   rv = LoadAccounts();
   if (NS_FAILED(rv)) return rv;
+
+  // order is important!
+  // remove it from the prefs first
+  nsXPIDLCString key;
+  rv = aAccount->GetKey(getter_Copies(key));
+  if (NS_FAILED(rv)) return rv;
   
-  rv = m_accounts->RemoveElement(aAccount);
+  rv = removeKeyedAccount(key);
+  if (NS_FAILED(rv)) return rv;
 
-#ifdef DEBUG_alecf
-  if (NS_FAILED(rv))
-    printf("error removing account. perhaps we need a NS_STATIC_CAST?\n");
-#endif
-
+  // we were able to save the new prefs (i.e. not locked) so now remove it
+  // from the account manager... ignore the error though, because the only
+  // possible problem is that it wasn't in the hash table anyway... and if
+  // so, it doesn't matter.
+  m_accounts->RemoveElement(aAccount);
+  
+  // XXX - need to figure out if this is the last time this server is
+  // being used, and only send notification then.
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = aAccount->GetIncomingServer(getter_AddRefs(server));
   if(NS_SUCCEEDED(rv))
   {
     NotifyServerUnloaded(server);
   }
+  return NS_OK;
+}
+
+// remove the account with the given key.
+// note that this does NOT remove any of the related prefs
+// (like the server, identity, etc)
+nsresult
+nsMsgAccountManager::removeKeyedAccount(const char *key)
+{
+  nsresult rv;
+  rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+
+  nsXPIDLCString accountList;
+  rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
+                             getter_Copies(accountList));
+  
+  if (NS_FAILED(rv)) return rv;
+
+  // reconstruct the new account list, re-adding all accounts except
+  // the one with 'key'
+  nsCString newAccountList;
+  char *rest = NS_CONST_CAST(char *,(const char*)accountList);
+
+  char *token = nsCRT::strtok(rest, ",", &rest);
+  while (token) {
+    nsCAutoString testKey(token);
+    testKey.StripWhitespace();
+
+    // re-add the candidate key only if it's not the key we're looking for
+    if (!testKey.IsEmpty() && !testKey.Equals(key)) {
+      if (!newAccountList.IsEmpty())
+        newAccountList += ',';
+      newAccountList += testKey;
+    }
+
+    token = nsCRT::strtok(rest, ",", &rest);
+  }
+
+  // now write the new account list back to the prefs
+  rv = m_prefs->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
+                              newAccountList.GetBuffer());
+  if (NS_FAILED(rv)) return rv;
+
+
   return NS_OK;
 }
 
@@ -1044,7 +1099,7 @@ nsMsgAccountManager::LoadAccounts()
     nsCAutoString str;
 
     token = nsCRT::strtok(rest, ",", &rest);
-    while (token && *token) {
+    while (token) {
       str = token;
       str.StripWhitespace();
       

@@ -111,7 +111,10 @@ private:
 
   nsresult createKeyedIdentity(const char* key,
                                nsIMsgIdentity **_retval);
-  
+
+  /* internal destruction routines - fixes prefs */
+  nsresult removeKeyedAccount(const char *key);
+    
   // hash table enumerators
 
 
