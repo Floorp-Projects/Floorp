@@ -73,7 +73,7 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 #endif //JFD
 
 // defined in msgCompGlue.cpp
-extern char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, XP_Bool bUseMime);
+extern char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime);
 extern PRBool INTL_stateful_charset(const char *charset);
 
 extern "C"
