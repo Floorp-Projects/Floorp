@@ -303,8 +303,10 @@ public:
       mText = (const nsStyleText*) sc->GetStyleData(eStyleStruct_Text);
       aRenderingContext.SetColor(mColor->mColor);
 
-      // Get the normal font
-      nsFont plainFont(mFont->mFont);
+      // Cache the original decorations and reuse the current font
+      // to query metrics, rather than creating a new font which is expensive.
+      nsFont& plainFont = (nsFont)mFont->mFont; //XXX: Change to use a CONST_CAST macro.
+      PRUint8 originalDecorations = plainFont.decorations;
       plainFont.decorations = NS_FONT_DECORATION_NONE;
       aPresContext->GetMetricsFor(plainFont, &mNormalFont);
       aRenderingContext.SetFont(mNormalFont);
@@ -314,12 +316,18 @@ public:
       // Get the small-caps font if needed
       mSmallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == plainFont.variant;
       if (mSmallCaps) {
+        nscoord originalSize = plainFont.size;
         plainFont.size = nscoord(0.7 * plainFont.size);
         aPresContext->GetMetricsFor(plainFont, &mSmallFont);
+        // Reset to the size value saved earlier.
+        plainFont.size = originalSize;
       }
       else {
         mSmallFont = nsnull;
       }
+
+      // Reset to the decoration saved earlier
+      plainFont.decorations = originalDecorations; 
 
       // XXX Get these from style
       mSelectionBGColor = NS_RGB(0, 0, 0);
