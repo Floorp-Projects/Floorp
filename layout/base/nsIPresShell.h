@@ -339,7 +339,7 @@ public:
    * Scrolls the view of the document so that the anchor with the specified
    * name is displayed at the top of the window
    */
-  NS_IMETHOD GoToAnchor(const nsString& aAnchorName) const = 0;
+  NS_IMETHOD GoToAnchor(const nsString& aAnchorName) = 0;
 
   /**
    * Scrolls the view of the document so that the frame is displayed at the 
