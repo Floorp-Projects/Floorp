@@ -593,7 +593,13 @@ extern JS_PUBLIC_API(JSBool)
 JS_LockGCThing(JSContext *cx, void *thing);
 
 extern JS_PUBLIC_API(JSBool)
+JS_LockGCThingRT(JSRuntime *rt, void *thing);
+
+extern JS_PUBLIC_API(JSBool)
 JS_UnlockGCThing(JSContext *cx, void *thing);
+
+extern JS_PUBLIC_API(JSBool)
+JS_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
 /*
  * For implementors of JSObjectOps.mark, to mark a GC-thing reachable via a
