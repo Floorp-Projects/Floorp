@@ -321,7 +321,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
   uri.Append(PRUnichar('/'));
 
   uri.Append(*name);
-  char* uriStr = nsCRT::strdup(NS_ConvertUCS2toUTF8(uri.get()).get());
+  char* uriStr = ToNewCString(uri);
   if (uriStr == nsnull) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -6901,7 +6901,11 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsg
      nsXPIDLString folderName;
      rv = msgFolder->GetName(getter_Copies(folderName));
      if (folderName.IsEmpty() || NS_FAILED(rv)) return rv;
-     nsAutoString unicodeLeafName(folderName.get());
+
+     nsXPIDLCString utf7LeafName;
+     utf7LeafName.Adopt(CreateUtf7ConvertedStringFromUnicode(folderName.get()));
+     nsAutoString unicodeLeafName;
+     unicodeLeafName.AssignWithConversion(utf7LeafName.get());
 
      rv = AddSubfolderWithPath(&unicodeLeafName, dbFileSpec, getter_AddRefs(child));
      
@@ -6913,9 +6917,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsg
      GetOnlineName(getter_Copies(onlineName));
      nsCAutoString onlineCName(onlineName);
      onlineCName.Append(char(hierarchyDelimiter));
-     char *utf7LeafName = CreateUtf7ConvertedStringFromUnicode(unicodeLeafName.get());
-     onlineCName.Append(utf7LeafName);
-     PR_Free(utf7LeafName);
+     onlineCName.Append(utf7LeafName.get());
      if (imapFolder)
      {
        imapFolder->SetVerifiedAsOnlineFolder(verified);

@@ -5473,7 +5473,7 @@ PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
       renameSucceeded = // rename this, and move subscriptions 
                 RenameMailboxRespectingSubscriptions(oldParentMailboxName,
                                                      newParentMailboxName, PR_TRUE);
-    
+
     PRInt32 numberToDelete = m_deletableChildren->Count();
         PRInt32 childIndex;
     
@@ -5482,18 +5482,15 @@ PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
     {
       // the imap parser has already converted to a non UTF7 string in the canonical
       // format so convert it back
-      char *currentName = (char *) m_deletableChildren->ElementAt(childIndex);
+        char *currentName = (char *) m_deletableChildren->ElementAt(childIndex);
         if (currentName)
         {
           char *serverName = nsnull;
           m_runningUrl->AllocateServerPath(currentName,
-                                           onlineDirSeparator,
-                                           &serverName);
-          char *convertedName = serverName ? 
-              CreateUtf7ConvertedString(serverName, PR_TRUE) : (char *)NULL;
-          PR_FREEIF(serverName);
+                                         onlineDirSeparator,
+                                         &serverName);
           PR_FREEIF(currentName);
-          currentName = convertedName;
+          currentName = serverName;
         }
         
         // calculate the new name and do the rename
