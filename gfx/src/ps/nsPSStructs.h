@@ -16,26 +16,21 @@
  * Reserved.
  */
 
-// STOLEN for mozilla/include/libi18n.h
-// XXX: Need a real implementation for this
 
-#include "prtypes.h"
-#include "xlate_i.h"
+#ifndef _PSSTRUCTS_H_
+#define _PSSTRUCTS_H_
 
-void 
-INTL_CharSetIDToName(int16 csid, char  *charset)
-{
-	//XXX: Fill me in with code from mozilla/lib/libi18n
-}
 
-/*
-** Here's a lovely hack.  This routine draws the header or footer for a page.
-*/
+struct PSContext_{
 
-/* XXX: Added this from print.c */
+    char        *url;         /* URL of current document */
+    char        * name;	      /* name of this context */
+    char        * title;		  /* title (if supplied) of current document */
+    PrintSetup	*prSetup;	    /* Info about print job */
+    PrintInfo	  *prInfo;	    /* State information for printing process */
+};
 
-void
-xl_annotate_page(PSContext *cx, char *template, int y, int delta_dir, int pn)
-{
-}
 
+typedef struct PSContext_ PSContext;
+
+#endif /* _PSSTRUCTS_H_ */

@@ -19,7 +19,6 @@
 #define nsPrintManager_h___
 
 #include "xp.h"
-#include "structs.h"
 #include "xlate.h"
 
 #define NS_LETTER_SIZE    0

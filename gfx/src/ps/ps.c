@@ -40,7 +40,7 @@ char* paper_string[]={ "Letter", "Legal", "Executive", "A4" };
 ** rotation.
 */
 
-void xl_initialize_translation(MWContext *cx, PrintSetup* pi)
+void xl_initialize_translation(PSContext *cx, PrintSetup* pi)
 {
   PrintSetup *dup = XP_NEW(PrintSetup);
   *dup = *pi;
@@ -59,13 +59,13 @@ void xl_initialize_translation(MWContext *cx, PrintSetup* pi)
   }	
 }
 
-void xl_finalize_translation(MWContext *cx)
+void xl_finalize_translation(PSContext *cx)
 {
     XP_DELETE(cx->prSetup);
     cx->prSetup = NULL;
 }
 
-void xl_begin_document(MWContext *cx)
+void xl_begin_document(PSContext *cx)
 {
     int i;
     XP_File f;
@@ -208,7 +208,7 @@ void xl_begin_document(MWContext *cx)
    XP_FilePrintf(f, "%%%%EndProlog\n");
 }
 
-void xl_begin_page(MWContext *cx, int pn)
+void xl_begin_page(PSContext *cx, int pn)
 {
   XP_File f;
 
@@ -232,7 +232,7 @@ void xl_begin_page(MWContext *cx, int pn)
   XP_FilePrintf(f, " closepath clip newpath\n");
 }
 
-void xl_end_page(MWContext *cx, int pn)
+void xl_end_page(PSContext *cx, int pn)
 {
 #if 0
   xl_annotate_page(cx, cx->prSetup->footer,
@@ -249,12 +249,12 @@ void xl_end_page(MWContext *cx, int pn)
   XP_FilePrintf(cx->prSetup->out, "showpage\n");
 }
 
-void xl_end_document(MWContext *cx)
+void xl_end_document(PSContext *cx)
 {
     XP_FilePrintf(cx->prSetup->out, "%%%%EOF\n");
 }
 
-void xl_moveto(MWContext* cx, int x, int y)
+void xl_moveto(PSContext* cx, int x, int y)
 {
   XL_SET_NUMERIC_LOCALE();
   y -= cx->prInfo->page_topy;
@@ -268,7 +268,7 @@ void xl_moveto(MWContext* cx, int x, int y)
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_moveto_loc(MWContext* cx, int x, int y)
+void xl_moveto_loc(PSContext* cx, int x, int y)
 {
   /* This routine doesn't care about the clip region in the page */
 
@@ -284,7 +284,20 @@ void xl_moveto_loc(MWContext* cx, int x, int y)
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_translate(MWContext* cx, int x, int y)
+void xl_lineto(PSContext* cx, int x1, int y1)
+{
+  XL_SET_NUMERIC_LOCALE();
+
+  y1 -= cx->prInfo->page_topy;
+  y1 = (cx->prInfo->page_height - y1 - 1) + cx->prSetup->bottom;
+
+  XP_FilePrintf(cx->prSetup->out, "%g %g lineto\n",
+		PAGE_TO_POINT_F(x1), PAGE_TO_POINT_F(y1));
+
+  XL_RESTORE_NUMERIC_LOCALE();
+}
+
+void xl_translate(PSContext* cx, int x, int y)
 {
     XL_SET_NUMERIC_LOCALE();
     y -= cx->prInfo->page_topy;
@@ -297,7 +310,7 @@ void xl_translate(MWContext* cx, int x, int y)
     XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_show(MWContext *cx, char* txt, int len, char *align)
+void xl_show(PSContext *cx, char* txt, int len, char *align)
 {
     XP_File f;
 
@@ -322,14 +335,14 @@ void xl_show(MWContext *cx, char* txt, int len, char *align)
     XP_FilePrintf(f, ") %sshow\n", align);
 }
 
-void xl_circle(MWContext* cx, int w, int h)
+void xl_circle(PSContext* cx, int w, int h)
 {
   XL_SET_NUMERIC_LOCALE();
   XP_FilePrintf(cx->prSetup->out, "%g %g c ", PAGE_TO_POINT_F(w)/2.0, PAGE_TO_POINT_F(h)/2.0);
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_box(MWContext* cx, int w, int h)
+void xl_box(PSContext* cx, int w, int h)
 {
   XL_SET_NUMERIC_LOCALE();
   XP_FilePrintf(cx->prSetup->out, "%g 0 rlineto 0 %g rlineto %g 0 rlineto closepath ",
@@ -338,7 +351,7 @@ void xl_box(MWContext* cx, int w, int h)
 }
 
 MODULE_PRIVATE void
-xl_draw_border(MWContext *cx, int x, int y, int w, int h, int thick)
+xl_draw_border(PSContext *cx, int x, int y, int w, int h, int thick)
 {
   XL_SET_NUMERIC_LOCALE();
   XP_FilePrintf(cx->prSetup->out, "gsave %g setlinewidth\n ",
@@ -351,7 +364,7 @@ xl_draw_border(MWContext *cx, int x, int y, int w, int h, int thick)
 }
 
 MODULE_PRIVATE void
-xl_draw_3d_border(MWContext *cx, int x, int y, int w, int h, int thick, int tl, int br)
+xl_draw_3d_border(PSContext *cx, int x, int y, int w, int h, int thick, int tl, int br)
 {
   int llx, lly;
 
@@ -389,7 +402,7 @@ xl_draw_3d_border(MWContext *cx, int x, int y, int w, int h, int thick, int tl, 
 }
 
 MODULE_PRIVATE void
-xl_draw_3d_radiobox(MWContext *cx, int x, int y, int w, int h, int thick,
+xl_draw_3d_radiobox(PSContext *cx, int x, int y, int w, int h, int thick,
 					int top, int bottom, int center)
 {
   int lx, ly;
@@ -439,7 +452,7 @@ xl_draw_3d_radiobox(MWContext *cx, int x, int y, int w, int h, int thick,
 }
 
 MODULE_PRIVATE void
-xl_draw_3d_checkbox(MWContext *cx, int x, int y, int w, int h, int thick,
+xl_draw_3d_checkbox(PSContext *cx, int x, int y, int w, int h, int thick,
 					int tl, int br, int center)
 {
   int llx, lly;
@@ -488,7 +501,7 @@ xl_draw_3d_checkbox(MWContext *cx, int x, int y, int w, int h, int thick,
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-extern void xl_draw_3d_arrow(MWContext *cx, int x , int y, int thick, int w,
+extern void xl_draw_3d_arrow(PSContext *cx, int x , int y, int thick, int w,
 							 int h, XP_Bool up, int left, int right, int base)
 {
 	int tx, ty;
@@ -569,7 +582,7 @@ extern void xl_draw_3d_arrow(MWContext *cx, int x , int y, int thick, int w,
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_line(MWContext* cx, int x1, int y1, int x2, int y2, int thick)
+void xl_line(PSContext* cx, int x1, int y1, int x2, int y2, int thick)
 {
   XL_SET_NUMERIC_LOCALE();
   XP_FilePrintf(cx->prSetup->out, "gsave %g setlinewidth\n ",
@@ -589,12 +602,12 @@ void xl_line(MWContext* cx, int x1, int y1, int x2, int y2, int thick)
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_stroke(MWContext *cx)
+void xl_stroke(PSContext *cx)
 {
     XP_FilePrintf(cx->prSetup->out, " stroke \n");
 }
 
-void xl_fill(MWContext *cx)
+void xl_fill(PSContext *cx)
 {
     XP_FilePrintf(cx->prSetup->out, " fill \n");
 }
@@ -615,7 +628,7 @@ void xl_fill(MWContext *cx)
 ** +  It should squish the image if squishing is currently in effect.
 */
 
-void xl_colorimage(MWContext *cx, int x, int y, int w, int h, IL_Pixmap *image,
+void xl_colorimage(PSContext *cx, int x, int y, int w, int h, IL_Pixmap *image,
                    IL_Pixmap *mask)
 {
     uint8 pixmap_depth;
@@ -738,7 +751,7 @@ void xl_colorimage(MWContext *cx, int x, int y, int w, int h, IL_Pixmap *image,
 }
 
 MODULE_PRIVATE void
-xl_begin_squished_text(MWContext *cx, float scale)
+xl_begin_squished_text(PSContext *cx, float scale)
 {
     XL_SET_NUMERIC_LOCALE();
     XP_FilePrintf(cx->prSetup->out, "gsave %g 1 scale\n", scale);
@@ -746,7 +759,7 @@ xl_begin_squished_text(MWContext *cx, float scale)
 }
 
 MODULE_PRIVATE void
-xl_end_squished_text(MWContext *cx)
+xl_end_squished_text(PSContext *cx)
 {
     XP_FilePrintf(cx->prSetup->out, "grestore\n");
 }

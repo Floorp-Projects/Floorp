@@ -26,7 +26,19 @@
 #include "nsIRenderingContext.h"
 #include "nsPrintManager.h"
 #include "nsVoidArray.h"
+#include "nsPSStructs.h"
 
+extern "C" void xl_begin_document(PSContext *cx);
+extern "C" void xl_initialize_translation(PSContext *cx, PrintSetup* ps);
+extern "C" void xl_end_document(PSContext *cx);
+extern "C" void xl_begin_page(PSContext *cx, int pn);
+extern "C" void xl_end_page(PSContext *cx, int pn);
+extern "C" void xl_finalize_translation(PSContext *cx);
+extern "C" void xl_show(PSContext *cx, char* txt, int len, char *align);
+extern "C" void xl_translate(PSContext* cx, int x, int y);
+extern "C" void xl_moveto(PSContext* cx, int x, int y);
+extern "C" void xl_line(PSContext* cx, int x1, int y1, int x2, int y2, int thick);
+extern "C" void xl_box(PSContext* cx, int w, int h);
 
 class nsDeviceContextWin;       // need to be a friend of the class using us.
 
@@ -76,9 +88,8 @@ protected:
   
   nsDrawingSurface 			mSurface;
   PRUint32 							mDepth;
-  MWContext             *mPrintContext; //XXX: Remove need for MWContext
+  PSContext             *mPrintContext; 
   nsIDeviceContextSpec  *mSpec;
-  nsIDeviceContext      *mDelContext;   // since this is not really a device context, we ned a deligate
   PrintSetup            *mPrintSetup;
   float                 mPixelScale;
   nsVoidArray           mFontMetrics;  // we are not using the normal font cache, this is special for PostScript.
@@ -87,7 +98,7 @@ protected:
 
 public:
   //static bool   GetMacFontNumber(const nsString& aFontName, short &fontNum);
-  MWContext*    GetPrintContext() { return mPrintContext; }
+  PSContext*    GetPrintContext() { return mPrintContext; }
 
 public:
   HDC           mDC;
