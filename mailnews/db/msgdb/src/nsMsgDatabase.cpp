@@ -2891,7 +2891,7 @@ nsresult nsMsgDatabase::RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_t
   }
   if (NS_SUCCEEDED(ret))
   {
-    ret = CreateCollationKey(NS_ConvertUTF8toUCS2(name).get(), result, len);
+    ret = CreateCollationKey(NS_ConvertUTF8toUCS2(name), result, len);
   }
   
   return ret;
@@ -2935,13 +2935,26 @@ nsresult nsMsgDatabase::GetCollationKeyGenerator()
 
 nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, PRUint8 **result, PRUint32 *len)
 {
-  nsXPIDLString nakedString;
+  const char *nakedString = nsnull;
   nsresult err;
   
-  err = RowCellColumnToMime2DecodedString(row, columnToken, getter_Copies(nakedString));
-  if (NS_SUCCEEDED(err))
-    err = CreateCollationKey((const PRUnichar *)nakedString, result, len);
-  
+  err = RowCellColumnToConstCharPtr(row, columnToken, &nakedString);
+  if (NS_SUCCEEDED(err) && nakedString && strlen(nakedString))
+  {
+    GetMimeConverter();
+    if (m_mimeConverter) 
+    {
+      nsXPIDLCString decodedStr;
+      const char *charSet;
+      PRBool characterSetOverride;
+      m_dbFolderInfo->GetConstCharPtrCharacterSet(&charSet);
+      m_dbFolderInfo->GetCharacterSetOverride(&characterSetOverride);
+      
+      err = m_mimeConverter->DecodeMimeHeader(nakedString, getter_Copies(decodedStr), charSet, characterSetOverride);
+      if (NS_SUCCEEDED(err))
+        err = CreateCollationKey(NS_ConvertUTF8toUCS2(decodedStr), result, len);
+    }
+  }
   return err;
 }
 
@@ -2958,13 +2971,13 @@ nsMsgDatabase::CompareCollationKeys(PRUint8 *key1, PRUint32 len1, PRUint8 *key2,
 }
 
 NS_IMETHODIMP 
-nsMsgDatabase::CreateCollationKey(const PRUnichar *sourceString, PRUint8 **result, PRUint32 *len)
+nsMsgDatabase::CreateCollationKey(const nsAString& sourceString, PRUint8 **result, PRUint32 *len)
 {
   nsresult err = GetCollationKeyGenerator();
   NS_ENSURE_SUCCESS(err,err);
   if (!m_collationKeyGenerator) return NS_ERROR_FAILURE;
 
-  err = m_collationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, nsDependentString(sourceString), result, len);
+  err = m_collationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, sourceString, result, len);
   NS_ENSURE_SUCCESS(err,err);
   return err;
 }

@@ -262,8 +262,8 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   attribute nsMsgKey nextPseudoMsgKey;   //for undo-redo of move pop->imap
   readonly attribute nsMsgKey nextFakeOfflineMsgKey; // for saving "fake" offline msg hdrs
   // for sorting
-  [noscript] void createCollationKey(in wstring sourceString, out octetPtr key, out unsigned long len);
-  [noscript] long compareCollationKeys(out octet key1, in unsigned long len1, out octet key2, in unsigned long len2);
+  [noscript] void createCollationKey(in AString sourceString, out octetPtr key, out unsigned long len);
+  [noscript] long compareCollationKeys(in octetPtr key1, in unsigned long len1, in octetPtr key2, in unsigned long len2);
 
   // when creating a view, the default sort order and view flags 
   // use these for the default.  (this allows news to override, so that
