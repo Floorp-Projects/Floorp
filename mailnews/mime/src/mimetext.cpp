@@ -194,6 +194,8 @@ MimeInlineText_finalize (MimeObject *obj)
   obj->clazz->parse_eof (obj, PR_FALSE);
   obj->clazz->parse_end (obj, PR_FALSE);
 
+  text->inputDecoder = nsnull;
+  text->utf8Encoder = nsnull;
   PR_FREEIF(text->charset);
 
   /* Should have been freed by parse_eof, but just in case... */
