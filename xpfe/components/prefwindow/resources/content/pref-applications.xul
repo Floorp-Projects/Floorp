@@ -116,11 +116,11 @@
       </vbox>
     </hbox>
   </groupbox>
-  <groupbox orient="horizontal" flex="1">
+  <groupbox>
     <caption label="&fileOpening.label;"/>
-    <description flex="1">&resetText.label;</description>
-    <separator orient="vertical"/>
-    <hbox pack="end">
+    <hbox pack="start" align="center">
+      <description flex="1">&resetText.label;</description>
+      <spacer flex="1"/>
       <button label="&resetButton.label;" oncommand="clearRememberedSettings();"/>
     </hbox>
   </groupbox>
