@@ -1,9 +1,16 @@
  
 menubar 
   {
-    background-color      : white;
+	behavior              : url("chrome://global/skin/globalBindings.xml#menubar");
+  background-color      : #B4C3D4;
+	border-top            : 1px solid #7693B3;
+	border-bottom         : 1px solid #DCEEFF;
   }
 
+.menubar-container {
+	border-bottom         : 1px solid #597899;
+}
+  
 menubar > toolbargrippy 
   {
     display               : none;
@@ -11,8 +18,8 @@ menubar > toolbargrippy
 
 menu, menuitem  
   {
-    color                 : #000000;
-	  vertical-align        : middle;
+    color                 : #17222E;
+    vertical-align        : middle;
   }
 
 menuitem[default="true"]
@@ -24,14 +31,14 @@ menu[disabled="true"], menuitem[disabled="true"],
 menu[menuactive="true"][disabled="true"],
 menuitem[menuactive="true"][disabled="true"]
   {
-	  color                 : #999999;
+	  color                 : #838E9B;
   }
 
 /* XXX menupopups have to have a color explicitly specified. this is a bug */
 menupopup, popup 
   {
-    background-color      : #CCCCCC;
-    border                : 1px solid #336699;
+    background-color      : #B4C3D4;
+    border                : 1px outset #B4C3D4;
   }
 
 menupopup > menu, popup > menu,
@@ -54,9 +61,9 @@ menuseparator
 
 menubar > menu 
   {
-    border                : 1px solid #FFFFFF;
-    padding               : 2px 3px 2px 3px;
-    margin                : 2px 0px 2px 0px;
+    border                : 1px solid #B4C3D4;
+    padding               : 1px 3px 2px 3px;
+    margin                : 1px 0px 1px 0px;
   }
 
 menupopup > menu, menupopup > menuitem,
@@ -67,17 +74,13 @@ popup > menu, popup > menuitem
 
 menubar > menu[menuactive="true"] 
   {
-    border                : 1px solid #CCCCCC;
-    background-color      : #CCCCCC;
-    -moz-border-radius    : 4px;
+  	border                : 1px outset #B4C3D4;
   }
 
 menubar > menu[menuactive="true"][open="true"] 
   {
-    border                : 1px solid #336699;
-    border-bottom         : 1px solid #CCCCCC;
-    background-color      : #CCCCCC;
-    -moz-border-radius    : 4px 4px 0px 0px;
+  	border: 1px inset #B4C3D4;
+	border-bottom: none;
   }
 
 menupopup > menu[menuactive="true"],
@@ -85,7 +88,7 @@ menupopup > menuitem[menuactive="true"],
 popup > menu[menuactive="true"],
 popup > menuitem[menuactive="true"]
   {
-    background-color      : #336699;
+    background-color      : #486380;
     color                 : #FFFFFF;
   }
 

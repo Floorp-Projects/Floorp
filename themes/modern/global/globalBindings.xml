@@ -6,6 +6,14 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 
+  <binding id="menubar" extends="xul:menubar">
+    <content>
+      <xul:box class="menubar-container" flex="1">
+	  	<children/>
+	  </xul:box>
+    </content>
+  </binding>
+  
   <binding id="status-bar" extends="xul:box">
     <content>
       <xul:box>
