@@ -222,6 +222,13 @@ nsInlineFrame::AttributeChanged(nsIPresShell* aShell,
                                 nsIContent* aChild,
                                 nsIAtom* aAttribute)
 {
+  nsresult result = nsHTMLContainerFrame::AttributeChanged(aShell, 
+                                                           aPresContext,
+                                                           aChild, 
+                                                           aAttribute);
+  if (NS_OK != result) {
+    return result;
+  }
   if (nsHTMLAtoms::color == aAttribute) {
     ApplyStyleChangeToTree(*aPresContext, this);
     ApplyRenderingChangeToTree(*aPresContext, this);

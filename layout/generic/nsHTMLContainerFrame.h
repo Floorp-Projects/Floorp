@@ -47,6 +47,11 @@ public:
                             nsIContent*     aChild,
                             PRInt32         aIndexInParent);
 
+  NS_IMETHOD AttributeChanged(nsIPresShell* aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute);
+
   nsresult WrapFrames(nsIPresContext& aPresContext,
                       nsIFrame* aPrevFrame, nsIFrame* aFrame);
 

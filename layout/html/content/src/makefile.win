@@ -24,6 +24,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=				\
 	nsCommentNode.cpp		\
+	nsDOMStyleDeclaration.cpp	\
 	nsGenericDOMDataNode.cpp	\
 	nsGenericHTMLElement.cpp	\
 	nsHTMLAnchorElement.cpp		\
@@ -90,6 +91,7 @@ CPPSRCS=				\
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsCommentNode.obj			\
+	.\$(OBJDIR)\nsDOMStyleDeclaration.obj		\
 	.\$(OBJDIR)\nsGenericDOMDataNode.obj		\
 	.\$(OBJDIR)\nsGenericHTMLElement.obj		\
 	.\$(OBJDIR)\nsHTMLAnchorElement.obj		\

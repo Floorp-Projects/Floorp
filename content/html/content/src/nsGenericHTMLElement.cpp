@@ -59,7 +59,10 @@
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMScriptObjectFactory.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsDOMStyleDeclaration.h"
 #include "prprf.h"
+#include "prmem.h"
 
 // XXX todo: add in missing out-of-memory checks
 
@@ -80,6 +83,7 @@ static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
+static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements nsIDOMAttribute and nsIDOMNode and
@@ -160,7 +164,7 @@ class nsChildContentList : public nsIDOMNodeList,
                            public nsIScriptObjectOwner 
 {
 public:
-  nsChildContentList();
+  nsChildContentList(nsGenericHTMLContainerElement *aContent);
   virtual ~nsChildContentList() {}
   
   NS_DECL_ISUPPORTS
@@ -171,24 +175,10 @@ public:
   // nsIDOMNodeList interface
   NS_DECL_IDOMNODELIST
   
-  // Methods stolen from nsVoidArray
-  PRInt32 Count() { return mArray.Count(); }
-  nsIContent* ElementAt(PRInt32 aIndex) const 
-  { return (nsIContent*)mArray.ElementAt(aIndex); }
-  PRBool InsertElementAt(nsIContent* aElement, PRInt32 aIndex)
-  { return mArray.InsertElementAt(aElement, aIndex); }
-  PRBool ReplaceElementAt(nsIContent* aElement, PRInt32 aIndex)
-  { return mArray.ReplaceElementAt(aElement, aIndex); }
-  PRBool AppendElement(nsIContent* aElement)
-  { return mArray.AppendElement(aElement); }
-  PRBool RemoveElementAt(PRInt32 aIndex)
-  { return mArray.RemoveElementAt(aIndex); }
-  PRInt32 IndexOf(nsIContent* aPossibleElement) const
-  { return mArray.IndexOf(aPossibleElement); }
-  void Compact() { mArray.Compact(); }
+  void DropContent();
 
 private:
-  nsVoidArray mArray;
+  nsGenericHTMLContainerElement *mContent;
   void *mScriptObject;
 };
 
@@ -638,7 +628,7 @@ nsGenericHTMLElement::nsGenericHTMLElement()
   mAttributes = nsnull;
   mTag = nsnull;
   mContent = nsnull;
-  mScriptObject = nsnull;
+  mDOMSlots = nsnull;
   mListenerManager = nsnull;
 }
 
@@ -649,7 +639,31 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
   }
   NS_IF_RELEASE(mTag);
   NS_IF_RELEASE(mListenerManager);
-  // XXX what about mScriptObject? it's now safe to GC it...
+  if (nsnull != mDOMSlots) {
+    if (nsnull != mDOMSlots->mChildNodes) {
+      mDOMSlots->mChildNodes->DropContent();
+      NS_RELEASE(mDOMSlots->mChildNodes);
+    }
+    if (nsnull != mDOMSlots->mStyle) {
+      mDOMSlots->mStyle->DropContent();
+      NS_RELEASE(mDOMSlots->mStyle);
+    } 
+    // XXX Should really be arena managed
+    PR_DELETE(mDOMSlots);
+  }
+}
+
+nsDOMSlots *
+nsGenericHTMLElement::GetDOMSlots()
+{
+  if (nsnull == mDOMSlots) {
+    mDOMSlots = PR_NEW(nsDOMSlots);
+    mDOMSlots->mScriptObject = nsnull;
+    mDOMSlots->mChildNodes = nsnull;
+    mDOMSlots->mStyle = nsnull;
+  }
+  
+  return mDOMSlots;
 }
 
 void
@@ -931,6 +945,26 @@ nsGenericHTMLElement::SetClassName(const nsString& aClassName)
 {
   SetAttribute(nsHTMLAtoms::kClass, aClassName, PR_TRUE);
   return NS_OK;
+}
+
+nsresult    
+nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
+{
+  nsresult res = NS_OK;
+  nsDOMSlots *slots = GetDOMSlots();
+
+  if (nsnull == slots->mStyle) {
+    slots->mStyle = new nsDOMStyleDeclaration(mContent);
+    if (nsnull == slots->mStyle) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(slots->mStyle);
+  }
+  
+  res = slots->mStyle->QueryInterface(kIDOMCSSStyleDeclarationIID,
+                                      (void **)aStyle);
+
+  return res;
 }
 
 nsresult
@@ -1655,7 +1689,9 @@ nsGenericHTMLElement::GetScriptObject(nsIScriptContext* aContext,
                                       void** aScriptObject)
 {
   nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
+  nsDOMSlots *slots = GetDOMSlots();
+
+  if (nsnull == slots->mScriptObject) {
     nsIDOMScriptObjectFactory *factory;
     
     res = GetScriptObjectFactory(&factory);
@@ -1666,17 +1702,19 @@ nsGenericHTMLElement::GetScriptObject(nsIScriptContext* aContext,
     nsAutoString tag;
     mTag->ToString(tag);
     res = factory->NewScriptElement(tag, aContext, mContent,
-                                    mParent, (void**)&mScriptObject);
+                                    mParent, (void**)&slots->mScriptObject);
     NS_RELEASE(factory);
   }
-  *aScriptObject = mScriptObject;
+  *aScriptObject = slots->mScriptObject;
   return res;
 }
 
 nsresult
 nsGenericHTMLElement::SetScriptObject(void *aScriptObject)
 {
-  mScriptObject = aScriptObject;
+  nsDOMSlots *slots = GetDOMSlots();
+
+  slots->mScriptObject = aScriptObject;
   return NS_OK;
 }
 
@@ -2681,6 +2719,20 @@ nsGenericHTMLLeafElement::Equals(nsIDOMNode* aNode, PRBool aDeep,
 }
 
 nsresult
+nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
+{
+  nsDOMSlots *slots = GetDOMSlots();
+
+  if (nsnull == slots->mChildNodes) {
+    slots->mChildNodes = new nsChildContentList(nsnull);
+    NS_ADDREF(slots->mChildNodes);
+  }
+
+  return slots->mChildNodes->QueryInterface(kIDOMNodeListIID, (void **)aChildNodes);
+}
+
+
+nsresult
 nsGenericHTMLLeafElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
   nsresult rv = NS_OK;
@@ -2745,9 +2797,12 @@ nsGenericHTMLLeafElement::SizeOf(nsISizeOfHandler* aHandler) const
 
 //----------------------------------------------------------------------
 
-nsChildContentList::nsChildContentList()
+nsChildContentList::nsChildContentList(nsGenericHTMLContainerElement *aContent)
 {
   NS_INIT_REFCNT();
+  // This reference is not reference-counted. The content
+  // object tells us when its about to go away.
+  mContent = aContent;
   mScriptObject = nsnull;
 }
 
@@ -2787,7 +2842,7 @@ nsChildContentList::GetScriptObject(nsIScriptContext *aContext, void** aScriptOb
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptNodeList(aContext, (nsISupports *)(nsIDOMNodeList *)this, nsnull, (void**)&mScriptObject);
+    res = NS_NewScriptNodeList(aContext, (nsISupports *)(nsIDOMNodeList *)this, mContent, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
@@ -2803,7 +2858,14 @@ nsChildContentList::SetScriptObject(void *aScriptObject)
 NS_IMETHODIMP    
 nsChildContentList::GetLength(PRUint32* aLength)
 {
-  *aLength = (PRUint32)mArray.Count();
+  if (nsnull != mContent) {
+    PRInt32 length;
+    mContent->ChildCount(length);
+    *aLength = (PRUint32)length;
+  }
+  else {
+    *aLength = 0;
+  }
   return NS_OK;
 }
 
@@ -2813,9 +2875,14 @@ nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   nsIContent *content;
   nsresult res = NS_OK;
   
-  content = (nsIContent *)mArray.ElementAt(aIndex);
-  if (nsnull != content) {
-    res = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+  if (nsnull != mContent) {
+    mContent->ChildAt(aIndex, content);
+    if (nsnull != content) {
+      res = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+    }
+    else {
+      *aReturn = nsnull;
+    }
   }
   else {
     *aReturn = nsnull;
@@ -2824,23 +2891,25 @@ nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return res;
 }
 
+void
+nsChildContentList::DropContent()
+{
+  mContent = nsnull;
+}
 
 //----------------------------------------------------------------------
 
 nsGenericHTMLContainerElement::nsGenericHTMLContainerElement()
 {
-  mChildren = new nsChildContentList();
-  mChildren->AddRef();
 }
 
 nsGenericHTMLContainerElement::~nsGenericHTMLContainerElement()
 {
-  PRInt32 n = mChildren->Count();
+  PRInt32 n = mChildren.Count();
   for (PRInt32 i = 0; i < n; i++) {
-    nsIContent* kid = mChildren->ElementAt(i);
+    nsIContent* kid = (nsIContent *)mChildren.ElementAt(i);
     NS_RELEASE(kid);
   }
-  mChildren->Release();
 }
 
 nsresult
@@ -2866,13 +2935,20 @@ nsGenericHTMLContainerElement::Equals(nsIDOMNode* aNode, PRBool aDeep,
 nsresult
 nsGenericHTMLContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  return mChildren->QueryInterface(kIDOMNodeListIID, (void **)aChildNodes);
+  nsDOMSlots *slots = GetDOMSlots();
+
+  if (nsnull == slots->mChildNodes) {
+    slots->mChildNodes = new nsChildContentList(this);
+    NS_ADDREF(slots->mChildNodes);
+  }
+
+  return slots->mChildNodes->QueryInterface(kIDOMNodeListIID, (void **)aChildNodes);
 }
 
 nsresult
 nsGenericHTMLContainerElement::GetHasChildNodes(PRBool* aReturn)
 {
-  if (0 != mChildren->Count()) {
+  if (0 != mChildren.Count()) {
     *aReturn = PR_TRUE;
   } 
   else {
@@ -2884,7 +2960,7 @@ nsGenericHTMLContainerElement::GetHasChildNodes(PRBool* aReturn)
 nsresult
 nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
 {
-  nsIContent *child = mChildren->ElementAt(0);
+  nsIContent *child = (nsIContent *)mChildren.ElementAt(0);
   if (nsnull != child) {
     nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
@@ -2897,7 +2973,7 @@ nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
 nsresult
 nsGenericHTMLContainerElement::GetLastChild(nsIDOMNode** aNode)
 {
-  nsIContent *child = mChildren->ElementAt(mChildren->Count()-1);
+  nsIContent *child = (nsIContent *)mChildren.ElementAt(mChildren.Count()-1);
   if (nsnull != child) {
     nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
@@ -3094,7 +3170,7 @@ nsGenericHTMLContainerElement::FinishConvertToXIF(nsXIFConverter& aConverter) co
 nsresult
 nsGenericHTMLContainerElement::Compact()
 {
-  mChildren->Compact();
+  mChildren.Compact();
   return NS_OK;
 }
 
@@ -3108,7 +3184,7 @@ nsGenericHTMLContainerElement::CanContainChildren(PRBool& aResult) const
 nsresult
 nsGenericHTMLContainerElement::ChildCount(PRInt32& aCount) const
 {
-  aCount = mChildren->Count();
+  aCount = mChildren.Count();
   return NS_OK;
 }
 
@@ -3116,7 +3192,7 @@ nsresult
 nsGenericHTMLContainerElement::ChildAt(PRInt32 aIndex,
                                        nsIContent*& aResult) const
 {
-  nsIContent *child = mChildren->ElementAt(aIndex);
+  nsIContent *child = (nsIContent *)mChildren.ElementAt(aIndex);
   if (nsnull != child) {
     NS_ADDREF(child);
   }
@@ -3129,7 +3205,7 @@ nsGenericHTMLContainerElement::IndexOf(nsIContent* aPossibleChild,
                                        PRInt32& aIndex) const
 {
   NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
-  aIndex = mChildren->IndexOf(aPossibleChild);
+  aIndex = mChildren.IndexOf(aPossibleChild);
   return NS_OK;
 }
 
@@ -3139,7 +3215,7 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
                                              PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
-  PRBool rv = mChildren->InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
+  PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
@@ -3160,8 +3236,8 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
                                               PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
-  nsIContent* oldKid = mChildren->ElementAt(aIndex);
-  PRBool rv = mChildren->ReplaceElementAt(aKid, aIndex);
+  nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
+  PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
@@ -3183,7 +3259,7 @@ nsresult
 nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   NS_PRECONDITION((nsnull != aKid) && (aKid != mContent), "null ptr");
-  PRBool rv = mChildren->AppendElement(aKid);
+  PRBool rv = mChildren.AppendElement(aKid);
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
@@ -3191,7 +3267,7 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     if (nsnull != doc) {
       aKid->SetDocument(doc);
       if (aNotify) {
-        doc->ContentAppended(mContent, mChildren->Count() - 1);
+        doc->ContentAppended(mContent, mChildren.Count() - 1);
       }
     }
   }
@@ -3201,10 +3277,10 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 nsresult
 nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 {
-  nsIContent* oldKid = mChildren->ElementAt(aIndex);
+  nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   if (nsnull != oldKid ) {
     nsIDocument* doc = mDocument;
-    PRBool rv = mChildren->RemoveElementAt(aIndex);
+    PRBool rv = mChildren.RemoveElementAt(aIndex);
     if (aNotify) {
       if (nsnull != doc) {
         doc->ContentRemoved(mContent, oldKid, aIndex);

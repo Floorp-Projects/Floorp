@@ -112,6 +112,10 @@ public:
   void  SetNoneValue(void);
   void  SetNormalValue(void);
 
+  static void ValueToString(nsString& aBuffer,
+                            const nsCSSValue& aValue,
+                            PRInt32 aPropID = -1);
+
   // debugging methods
   void  AppendToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
   void  ToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
@@ -326,6 +330,10 @@ public:
   virtual nsresult GetValue(PRInt32 aProperty, nsCSSValue& aValue) = 0;
 
   virtual nsresult GetImportantValues(nsICSSDeclaration*& aResult) = 0;
+  virtual nsresult GetValueIsImportant(const char *aProperty, PRBool& aIsImportant) = 0;
+
+  virtual nsresult Count(PRUint32* aCount) = 0;
+  virtual nsresult GetNthProperty(PRUint32 aIndex, nsString& aReturn) = 0;
 
   virtual nsresult ToString(nsString& aString) = 0;
 
