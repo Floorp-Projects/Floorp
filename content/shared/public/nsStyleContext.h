@@ -123,8 +123,6 @@ public:
 
   nsStyleStruct* GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleStructID& aSID);
 
-  void ClearCachedDataForRule(nsIStyleRule* aRule);
-
   void ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule);
 
   nsChangeHint CalcStyleDifference(nsStyleContext* aOther);

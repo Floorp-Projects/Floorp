@@ -398,16 +398,6 @@ nsStyleContext::ApplyStyleFixups(nsIPresContext* aPresContext)
 }
 
 void
-nsStyleContext::ClearCachedDataForRule(nsIStyleRule* aInlineStyleRule)
-{
-  mRuleNode->ClearCachedData(aInlineStyleRule); // XXXdwh.  If we're willing to *really* special case
-                                           // inline style, we could only invalidate the struct data
-                                           // that actually changed.  For example, if someone changes
-                                           // style.left, we really only need to blow away cached
-                                           // data in the position struct.
-}
-
-void
 nsStyleContext::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule)
 {
   PRBool matched = PR_TRUE;

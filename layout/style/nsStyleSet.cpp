@@ -194,7 +194,6 @@ public:
   virtual nsCachedStyleData* GetDefaultStyleData();
 
   virtual nsresult GetRuleTree(nsRuleNode** aResult);
-  virtual nsresult ClearCachedDataInRuleTree(nsIStyleRule* aRule);
   
   virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule);
 
@@ -1504,14 +1503,6 @@ nsCachedStyleData*
 StyleSetImpl::GetDefaultStyleData()
 {
   return &mDefaultStyleData;
-}
-
-nsresult
-StyleSetImpl::ClearCachedDataInRuleTree(nsIStyleRule* aInlineStyleRule)
-{
-  if (mRuleTree)
-    mRuleTree->ClearCachedDataInSubtree(aInlineStyleRule);
-  return NS_OK;
 }
 
 nsresult
