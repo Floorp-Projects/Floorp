@@ -4483,7 +4483,7 @@ nsListControlFrame::StartUpdateTimer(nsIPresContext * aPresContext)
   return NS_ERROR_FAILURE;
 }
 
-inline void
+void
 nsListControlFrame::StopUpdateTimer()
 {
   if (mUpdateTimer != nsnull) {
