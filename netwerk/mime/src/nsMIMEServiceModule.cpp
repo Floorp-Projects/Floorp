@@ -22,13 +22,26 @@
 
 #include "nsIGenericFactory.h"
 #include "nsMIMEService.h"
+#include "nsXMLMIMEDataSource.h"
+#include "nsMIMEInfoImpl.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl);
 
 static nsModuleComponentInfo gResComponents[] = {
     { "The MIME mapping service", 
       NS_MIMESERVICE_CID,
       "component:||netscape|mime",
       nsMIMEService::Create
-    }
+    },
+       { "xml mime datasource", 
+      NS_XMLMIMEDATASOURCE_CID,
+      NS_XMLMIMEDATASOURCE_PROGID,
+      nsXMLMIMEDataSource::Create
+    },
+        { "xml mime INFO", 
+      NS_MIMEINFO_CID,
+      NS_MIMEINFO_PROGID,
+      nsMIMEInfoImplConstructor
+    },
 };
 
 NS_IMPL_NSGETMODULE("nsMIMEService", gResComponents)
