@@ -99,8 +99,9 @@ nsresult nsExternalApplication::LaunchApplication(nsIFile * aTempFile)
   return rv;
 }
 
-// helper method:
+// helper methods: forward declarations...
 BYTE * GetValueBytes( HKEY hKey, const char *pValueName);
+nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFileExtension);
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
@@ -139,18 +140,31 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
   // ACK!!! we've done all this work to discover the content type just to find out that windows
   // registery uses the extension to figure out the right helper app....that's a bummer...
 
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
-
-  if (url)
+  nsCAutoString fileExtension;
+  // this is just a hack for now...look up the content type and find a file
+  // extension using information 4.x put in the windows registry...
+  nsresult rv = GetExtensionFrom4xRegistryInfo(aMimeContentType, fileExtension);
+  if (FAILED(rv))
   {
-     nsXPIDLCString fileExtension;
-     url->GetFileExtension(getter_Copies(fileExtension));
+    // if we couldn't find one, don't give up yet! Try and see if there is an extension in the 
+    // url itself...
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+
+    if (url)
+    {
+      nsXPIDLCString extenion;
+      url->GetFileExtension(getter_Copies(extenion));
     
-     nsCAutoString reg = ".";  
-     reg.Append(fileExtension);
+     fileExtension = ".";  
+     fileExtension.Append(extenion);
+    }
+  } // if we couldn't get extension information from the registry...
+
+  if (!fileExtension.IsEmpty())
+  {
      nsCAutoString appName;
      HKEY hKey;
-     LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, reg, 0, KEY_QUERY_VALUE, &hKey);
+     LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtension, 0, KEY_QUERY_VALUE, &hKey);
      if (err == ERROR_SUCCESS)
      {
         LPBYTE pBytes = GetValueBytes( hKey, NULL);
@@ -167,10 +181,14 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
         nsCOMPtr<nsISupports> appSupports = do_QueryInterface(application);
 
         // this code is incomplete and just here to get things started..
-        nsExternalAppHandler * handler = CreateNewExternalHandler(appSupports);
+        nsExternalAppHandler * handler = CreateNewExternalHandler(appSupports, fileExtension);
         handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
+
+        // close the key
+       ::RegCloseKey(hKey);
+
      } // if we got an entry out of the registry...
-  } // if url
+  } // if we have a file extension
 
   return NS_OK;
 }
@@ -184,6 +202,39 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIFile * aTempFile, n
   }
   else
     return NS_ERROR_FAILURE;
+}
+
+// We have a serious problem!! I have this content type and the windows registry only gives me
+// helper apps based on extension. Right now, we really don't have a good place to go for 
+// trying to figure out the extension for a particular mime type....One short term hack is to look
+// this information in 4.x (it's stored in the windows regsitry). 
+nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFileExtension)
+{
+   nsCAutoString command ("Software\\Netscape\\Netscape Navigator\\Suffixes");
+   nsresult rv = NS_OK;
+   HKEY hKey;
+   LONG err = ::RegOpenKeyEx( HKEY_CURRENT_USER, command, 0, KEY_QUERY_VALUE, &hKey);
+   if (err == ERROR_SUCCESS)
+   {
+      LPBYTE pBytes = GetValueBytes( hKey, aMimeType);
+      aFileExtension = ".";
+      aFileExtension.Append( (char *) pBytes);
+      
+      // this may be a comma separate list of extensions...just take the first one
+      // for now...
+
+      PRInt32 pos = aFileExtension.FindChar(',', PR_TRUE);
+      if (pos > 0) // we have a comma separated list of languages...
+        aFileExtension.Truncate(pos); // truncate everything after the first comma (including the comma)
+   
+      delete [] pBytes;
+      // close the key
+      ::RegCloseKey(hKey);
+   }
+   else
+     rv = NS_ERROR_FAILURE; // not 4.x extension mapping found!
+
+   return rv;
 }
 
 BYTE * GetValueBytes( HKEY hKey, const char *pValueName)
