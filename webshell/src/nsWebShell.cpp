@@ -94,10 +94,11 @@ public:
   NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
+  NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
   NS_IMETHOD SetParent(nsIWebShell* aParent);
   NS_IMETHOD GetParent(nsIWebShell*& aParent);
   NS_IMETHOD GetChildCount(PRInt32& aResult);
-  NS_IMETHOD AddChild(nsIWebShell* aChild, PRBool aRelationship = PR_TRUE);
+  NS_IMETHOD AddChild(nsIWebShell* aChild);
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIWebShell*& aResult);
   NS_IMETHOD GetName(nsString& aName);
   NS_IMETHOD SetName(const nsString& aName);
@@ -110,6 +111,8 @@ public:
                      nsIPostData* aPostData=nsnull);
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex, nsIStreamObserver* aObserver);
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
+  NS_IMETHOD SetTitle(const nsString& aTitle);
+  NS_IMETHOD GetTitle(nsString& aResult);
 
   // nsIWebShellContainer
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const nsString& aURL);
@@ -117,7 +120,6 @@ public:
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const nsString& aURL);
 
   // nsILinkHandler
-  NS_IMETHOD Init();
   NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
                          const nsString& aURLSpec,
                          const nsString& aTargetSpec,
@@ -133,8 +135,6 @@ public:
                             nsIPostData* aPostDat = 0);
 
   void ShowHistory();
-
-  nsIWebShell* GetRootWebShell();
 
   nsIWebShell* GetTarget(const nsString& aName);
 
@@ -153,6 +153,8 @@ protected:
 
   nsVoidArray mHistory;
   PRInt32 mHistoryIndex;
+
+  nsString mTitle;
 
   nsString mOverURL;
   nsString mOverTarget;
@@ -183,18 +185,6 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 
 //----------------------------------------------------------------------
-
-NS_WEB nsresult
-NS_NewWebShell(nsIWebShell*& aResult)
-{
-  nsIWebShell* it = new nsWebShell();
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  it->AddRef();
-  aResult = it;
-  return NS_OK;
-}
 
 // Note: operator new zeros our memory
 nsWebShell::nsWebShell()
@@ -451,6 +441,23 @@ nsWebShell::HandleEvent(nsGUIEvent *aEvent)
   return nsEventStatus_eIgnore;
 }
 
+nsresult
+nsWebShell::GetRootWebShell(nsIWebShell*& aResult)
+{
+  nsIWebShell* top = this;
+  for (;;) {
+    nsIWebShell* parent;
+    top->GetParent(parent);
+    if (nsnull == parent) {
+      break;
+    }
+    top = parent;
+  }
+  aResult = top;
+  NS_ADDREF(top);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsWebShell::SetParent(nsIWebShell* aParent)
 {
@@ -476,7 +483,7 @@ nsWebShell::GetChildCount(PRInt32& aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::AddChild(nsIWebShell* aChild, PRBool aRelationship)
+nsWebShell::AddChild(nsIWebShell* aChild)
 {
   NS_PRECONDITION(nsnull != aChild, "null ptr");
   if (nsnull == aChild) {
@@ -675,6 +682,33 @@ nsWebShell::ShowHistory()
 #endif
 }
 
+//----------------------------------------
+
+// Chrome API's
+
+NS_IMETHODIMP
+nsWebShell::SetTitle(const nsString& aTitle)
+{
+  // Record local title
+  mTitle = aTitle;
+
+  // Title's set on the top level web-shell are passed ont to the container
+  if (nsnull == mParent) {
+    if (nsnull != mContainer) {
+      mContainer->SetTitle(aTitle);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetTitle(nsString& aResult)
+{
+  aResult = mTitle;
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 
 // WebShell container implementation
@@ -768,12 +802,6 @@ OnLinkClickEvent::~OnLinkClickEvent()
 //----------------------------------------
 
 NS_IMETHODIMP
-nsWebShell::Init()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWebShell::OnLinkClick(nsIFrame* aFrame, 
                         const nsString& aURLSpec,
                         const nsString& aTargetSpec,
@@ -781,22 +809,6 @@ nsWebShell::OnLinkClick(nsIFrame* aFrame,
 {
   new OnLinkClickEvent(this, aURLSpec, aTargetSpec, aPostData);
   return NS_OK;
-}
-
-// Find the web shell at the top of our tree
-nsIWebShell*
-nsWebShell::GetRootWebShell()
-{
-  nsIWebShell* top = this;
-  for (;;) {
-    nsIWebShell* parent;
-    top->GetParent(parent);
-    if (nsnull == parent) {
-      break;
-    }
-    top = parent;
-  }
-  return top;
 }
 
 // Find the web shell in the entire tree that we can reach that the
@@ -810,13 +822,14 @@ nsWebShell::GetTarget(const nsString& aName)
   nsIWebShell* target = nsnull;
 
   if (aName.EqualsIgnoreCase("_blank")) {
-    // XXX Where should this logic live? _blank requires the app to
-    // get involved
+    // XXX Need api in nsIWebShellContainer
     NS_ASSERTION(0, "not implemented yet");
     target = this;
+    NS_ADDREF(target);
   } 
   else if (aName.EqualsIgnoreCase("_self")) {
     target = this;
+    NS_ADDREF(target);
   } 
   else if (aName.EqualsIgnoreCase("_parent")) {
     if (nsnull == mParent) {
@@ -825,21 +838,23 @@ nsWebShell::GetTarget(const nsString& aName)
     else {
       target = mParent;
     }
+    NS_ADDREF(target);
   }
   else if (aName.EqualsIgnoreCase("_top")) {
-    target = GetRootWebShell();
+    GetRootWebShell(target);
   }
   else {
     // Look from the top of the tree downward
-    nsIWebShell* top = GetRootWebShell();
+    nsIWebShell* top;
+    GetRootWebShell(top);
     top->FindChildWithName(aName, target);
     if (nsnull == target) {
       target = this;
+      NS_ADDREF(target);
     }
+    NS_RELEASE(top);
   }
-  if (target == this) {
-    NS_ADDREF(this);
-  }
+
   return target;
 }
 
@@ -898,8 +913,11 @@ nsWebShell:: GetLinkState(const nsString& aURLSpec, nsLinkState& aState)
 // Factory code for creating nsWebShell's
 
 class nsWebShellFactory : public nsIFactory
-{   
+{
 public:
+  nsWebShellFactory();
+  ~nsWebShellFactory();
+
   // nsISupports methods
   NS_IMETHOD QueryInterface(const nsIID &aIID, void **aResult);
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -912,24 +930,19 @@ public:
 
   NS_IMETHOD LockFactory(PRBool aLock);
 
-  nsWebShellFactory(const nsCID &aClass);
-  ~nsWebShellFactory();
-
 private:
   nsrefcnt  mRefCnt;
-  nsCID     mClassID;
-};   
+};
 
-nsWebShellFactory::nsWebShellFactory(const nsCID &aClass)   
-{   
+nsWebShellFactory::nsWebShellFactory()
+{
   mRefCnt = 0;
-  mClassID = aClass;
-}   
+}
 
-nsWebShellFactory::~nsWebShellFactory()   
-{   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-}   
+nsWebShellFactory::~nsWebShellFactory()
+{
+  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
+}
 
 nsresult
 nsWebShellFactory::QueryInterface(const nsIID &aIID, void **aResult)
@@ -976,30 +989,30 @@ nsWebShellFactory::CreateInstance(nsISupports *aOuter,
                                   const nsIID &aIID,
                                   void **aResult)
 {
+  nsresult rv;
+  nsWebShell *inst;
+
   if (aResult == NULL) {
     return NS_ERROR_NULL_POINTER;
   }
-
   *aResult = NULL;
-
-  nsWebShell *inst = nsnull;
-
-  if (mClassID.Equals(kWebShellCID)) {
-    inst = new nsWebShell();
+  if (nsnull != aOuter) {
+    rv = NS_ERROR_NO_AGGREGATION;
+    goto done;
   }
 
+  inst = new nsWebShell();
   if (inst == NULL) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    goto done;
   }
 
-  nsresult res = inst->QueryInterface(aIID, aResult);
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
 
-  if (res != NS_OK) {
-    // We didn't get the right interface, so clean up
-    delete inst;
-  }
-
-  return res;
+done:
+  return rv;
 }
 
 nsresult
@@ -1009,29 +1022,17 @@ nsWebShellFactory::LockFactory(PRBool aLock)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-
-// return the proper factory to the caller
 extern "C" NS_WEB nsresult
-NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+NS_NewWebShellFactory(nsIFactory** aFactory)
 {
   nsresult rv = NS_OK;
-
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
+  nsIFactory* inst = new nsWebShellFactory();
+  if (nsnull == inst) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
   }
-
-  if (aClass.Equals(kWebShellCID)) {
-    nsIFactory* inst = new nsWebShellFactory(aClass);
-    NS_IF_ADDREF(inst);
-    *aFactory = inst;
-    if (nsnull == inst) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
+  else {
+    NS_ADDREF(inst);
   }
-  else if (aClass.Equals(kDocumentLoaderCID)) {
-    rv = NS_NewDocumentLoaderFactory(aFactory);
-  }
-
+  *aFactory = inst;
   return rv;
 }
