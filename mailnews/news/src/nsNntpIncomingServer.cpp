@@ -26,8 +26,6 @@
 #include "nsNntpIncomingServer.h"
 #include "nsXPIDLString.h"
 #include "nsIPref.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
 #include "nsIMsgNewsFolder.h"
 #include "nsIFolder.h"
 #include "nsIFileSpec.h"
@@ -38,6 +36,8 @@
 #include "nsRDFCID.h"
 #include "nsMsgNewsCID.h"
 #include "nsNNTPProtocol.h"
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #define VALID_VERSION			1
 #define NEW_NEWS_DIR_NAME        "News"
@@ -63,8 +63,6 @@
 #define HOSTINFO_FILE_BUFFER_SIZE 1024
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);                            
-static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kSubscribableServerCID, NS_SUBSCRIBABLESERVER_CID);
@@ -205,20 +203,48 @@ nsNntpIncomingServer::SetNewsrcRootPath(nsIFileSpec *aNewsrcRootPath)
 NS_IMETHODIMP
 nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
 {
+    NS_ENSURE_ARG_POINTER(aNewsrcRootPath);
+    *aNewsrcRootPath = nsnull;
+    
     nsresult rv;
-
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
-
-    rv = prefs->GetFilePref(PREF_MAIL_NEWSRC_ROOT, aNewsrcRootPath);
-    if (NS_SUCCEEDED(rv)) return rv;
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    
+    PRBool havePref;
+    nsCOMPtr<nsIFile> localFile;
+    nsCOMPtr<nsILocalFile> prefLocal;
+    rv = prefs->GetFileXPref(PREF_MAIL_NEWSRC_ROOT, getter_AddRefs(prefLocal));
+    if (NS_SUCCEEDED(rv)) {
+        localFile = prefLocal;
+        havePref = PR_TRUE;
+    }
+    if (!localFile) {
+        rv = NS_GetSpecialDirectory(NS_APP_NEWS_50_DIR, getter_AddRefs(localFile));
+        if (NS_FAILED(rv)) return rv;
+        havePref = FALSE;
+    }
+        
+    PRBool exists;
+    rv = localFile->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && !exists) return rv;
+        rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0775);
     if (NS_FAILED(rv)) return rv;
-
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_NewsDirectory50, aNewsrcRootPath);
+    
+    // Make the resulting nsIFileSpec
+    // TODO: Convert arg to nsILocalFile and avoid this
+    nsXPIDLCString pathBuf;
+    rv = localFile->GetPath(getter_Copies(pathBuf));
     if (NS_FAILED(rv)) return rv;
-
-    rv = SetNewsrcRootPath(*aNewsrcRootPath);
+    nsCOMPtr<nsIFileSpec> outSpec;
+    rv = NS_NewFileSpec(getter_AddRefs(outSpec));
+    if (NS_FAILED(rv)) return rv;
+    outSpec->SetNativePath(pathBuf);
+    
+    if (!havePref || !exists)
+        rv = SetNewsrcRootPath(outSpec);
+        
+    *aNewsrcRootPath = outSpec;
+    NS_IF_ADDREF(*aNewsrcRootPath);
     return rv;
 }
 

@@ -30,8 +30,9 @@
 #include "nsIRDFResource.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsXPIDLString.h"
 #include "nsEscape.h"
 #include "nsSyncDecoderRing.h"
 #include "plstr.h"
@@ -50,7 +51,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
@@ -1126,16 +1126,29 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   // 
   // we want <profile>/absync.dat
   //
-  NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-  if (NS_FAILED(rv)) 
-    return rv;
 
-  rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(mHistoryFile));
-  if (NS_FAILED(rv)) 
-    return rv;
+  nsCOMPtr<nsIFile> historyFile;  
+  nsCOMPtr<nsIFile> lockFile;
+  
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(historyFile));
+  if (NS_FAILED(rv)) return rv;
+  rv = historyFile->Append("absync.dat");
+  if (NS_FAILED(rv)) return rv;
 
-  rv = mHistoryFile->AppendRelativeUnixPath((const char *)"absync.dat");
-  NS_ASSERTION(NS_SUCCEEDED(rv),"ab sync:  failed to append history filename");
+  // TODO: Convert the rest of the code to use
+  // nsIFile and avoid this conversion hack.
+  do
+  {
+    nsXPIDLCString pathBuf;
+    rv = lockFile->GetPath(getter_Copies(pathBuf));
+    if (NS_FAILED(rv)) break;
+    rv = NS_NewFileSpec(getter_AddRefs(mHistoryFile));
+    if (NS_FAILED(rv)) break;
+    rv = mHistoryFile->SetNativePath(pathBuf);
+  }
+  while (0);
+
+  NS_ASSERTION(NS_SUCCEEDED(rv),"ab sync:  failed to specify history file");
   if (NS_FAILED(rv)) 
   {
     rv = NS_ERROR_FAILURE;
@@ -1167,10 +1180,27 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   // address book and only insert entries that don't have matching CRC's
   //
   // Note: be very tolerant if any of this stuff fails ...
-  rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(mLockFile));
+  
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(lockFile));
   if (NS_SUCCEEDED(rv)) 
   {
-    rv = mLockFile->AppendRelativeUnixPath((const char *)"absync.lck");
+    rv = lockFile->Append((const char *)"absync.lck");
+    if (NS_SUCCEEDED(rv)) 
+    {
+    
+      // TODO: Convert the rest of the code to use
+      // nsIFile and avoid this conversion hack.
+      do
+      {
+        nsXPIDLCString pathBuf;
+        rv = lockFile->GetPath(getter_Copies(pathBuf));
+        if (NS_FAILED(rv)) break;
+        rv = NS_NewFileSpec(getter_AddRefs(mLockFile));
+        if (NS_FAILED(rv)) break;
+        rv = mLockFile->SetNativePath(pathBuf);
+      }
+      while (0);
+      
     if (NS_SUCCEEDED(rv)) 
     {
       PRBool      tExists = PR_FALSE;
@@ -1254,6 +1284,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
         }
       }
     }
+  }  
   }  
 
   // If the old table exists, then we need to load it up!
