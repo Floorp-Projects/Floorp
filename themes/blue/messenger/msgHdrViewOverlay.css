@@ -44,7 +44,7 @@ mail-emailaddress {
 .header-part2           { background-color: #CCCCCC; border: none; }
 .header-part3           { background-color: #CCCCCC; border: none; }
 
-.headerValueBox { width: 7.4em; text-align: right;}
+.headerValueBox { width: 7.7em; text-align: right;}
 
 #addToAddressBookButton {
 	list-style-image:url("chrome://messenger/skin/addtoab.gif");
