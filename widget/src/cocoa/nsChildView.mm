@@ -1946,13 +1946,11 @@ const PRInt32 kNumLines = 8;
   
   if (outGeckoEvent->eventStructType != NS_KEY_EVENT) {
     NSPoint mouseLoc = [inEvent locationInWindow];
-    outGeckoEvent->refPoint.x = NS_STATIC_CAST(nscoord, mouseLoc.x);
-    outGeckoEvent->refPoint.y = NS_STATIC_CAST(nscoord, mouseLoc.y);
     
     // convert point to view coordinate system
     NSPoint localPoint = [self convertPoint:mouseLoc fromView:nil];
-    outGeckoEvent->point.x = NS_STATIC_CAST(nscoord, localPoint.x);
-    outGeckoEvent->point.y = NS_STATIC_CAST(nscoord, localPoint.y);
+    outGeckoEvent->refPoint.x = outGeckoEvent->point.x = NS_STATIC_CAST(nscoord, localPoint.x);
+    outGeckoEvent->refPoint.y = outGeckoEvent->point.y = NS_STATIC_CAST(nscoord, localPoint.y);
 
     if (outGeckoEvent->message == NS_MOUSE_SCROLL) {
       outGeckoEvent->refPoint.x = outGeckoEvent->refPoint.y = 0;
