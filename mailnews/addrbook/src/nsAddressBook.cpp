@@ -50,7 +50,11 @@
 #include "nsICategoryManager.h"
 #include "nsIAbUpgrader.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsIFilePicker.h"
+#include "nsIPref.h"
+#include "nsVoidArray.h"
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
@@ -445,7 +449,7 @@ protected:
     nsresult ParseTabFile();
     nsresult ParseLDIFFile();
 	void AddTabRowToDatabase();
-	void AddLdifRowToDatabase();
+	void AddLdifRowToDatabase(PRBool bIsList);
 	void AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot, PRBool bIsList);
 
 	nsresult GetLdifStringRecord(char* buf, PRInt32 len, PRInt32* stopPos);
@@ -533,19 +537,6 @@ nsresult AddressBookParser::ParseFile()
 	if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
 
-    // Initialize the parser for a run...
-    mLine.Truncate();
-
-	if (mFileType == TABFile)
-		rv = ParseTabFile();
-	else if (mFileType == LDIFFile)
-		rv = ParseLDIFFile();
-	else 
-		rv = NS_ERROR_FAILURE;
-
-	if(NS_FAILED(rv))
-		return rv;
-
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 	if(NS_FAILED(rv))
 		return rv;
@@ -558,7 +549,33 @@ nsresult AddressBookParser::ParseFile()
 	if (parentUri)
 		PR_smprintf_free(parentUri);
 
-	parentDir->CreateNewDirectory(fileString.GetUnicode(), fileName, mMigrating);
+	if (PL_strcmp(fileName, kPersonalAddressbook) == 0)
+	{
+		// This is the personal address book, get name from prefs
+		nsresult rv = NS_OK;
+		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+		if (NS_FAILED(rv) || !pPref) 
+			return nsnull;
+		PRUnichar *dirName = nsnull;
+		rv = pPref->GetLocalizedUnicharPref("ldap_2.servers.pab.description", &dirName);
+		parentDir->CreateNewDirectory(dirName, fileName, mMigrating);
+		nsMemory::Free(dirName);
+	}
+	else
+		parentDir->CreateNewDirectory(fileString.GetUnicode(), fileName, mMigrating);
+
+    // Initialize the parser for a run...
+    mLine.Truncate();
+
+	if (mFileType == TABFile)
+		rv = ParseTabFile();
+	else if (mFileType == LDIFFile)
+		rv = ParseLDIFFile();
+	else 
+		rv = NS_ERROR_FAILURE;
+
+	if(NS_FAILED(rv))
+		return rv;
 
 	if (leafName)
 		nsCRT::free(leafName);
@@ -957,6 +974,9 @@ nsresult AddressBookParser::ParseLDIFFile()
 	PRInt32 startPos = 0;
     PRInt32 len = 0;
 	PRBool bEof = PR_FALSE;
+	nsVoidArray listPosArray;
+	PRInt32 savedStartPos = 0;
+	PRInt32 filePos = 0;
 
 	while (NS_SUCCEEDED(mFileSpec->Eof(&bEof)) && !bEof)
 	{
@@ -966,24 +986,53 @@ nsresult AddressBookParser::ParseLDIFFile()
 
 			while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, &startPos)))
 			{
-				AddLdifRowToDatabase();
+				if (mLine.Find("groupOfNames") == -1)
+					AddLdifRowToDatabase(PR_FALSE);
+				else
+				{
+					//keep file position for mailing list
+					listPosArray.AppendElement((void*)savedStartPos);
+					if (mLine.Length() > 0)
+						mLine.Truncate();
+				}
+				savedStartPos = filePos + startPos;
 			}
+			filePos += len;
 		}
 	}
 	//last row
-	if (mLine.Length() > 0)
-		AddLdifRowToDatabase(); 
+	if (mLine.Length() > 0 && mLine.Find("groupOfNames") == -1)
+		AddLdifRowToDatabase(PR_FALSE); 
+
+	// mail Lists
+    PRInt32 i;
+	PRInt32 listTotal = listPosArray.Count();
+	for (i = 0; i < listTotal; i++)
+	{
+		PRInt32 pos = (PRInt32)listPosArray.ElementAt(i);
+		if (NS_SUCCEEDED(mFileSpec->Seek(pos)))
+		{
+			if (NS_SUCCEEDED(mFileSpec->Read(&pBuf, (PRInt32)sizeof(buf), &len)) && len > 0)
+			{
+				startPos = 0;
+
+				while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, &startPos)))
+				{
+					if (mLine.Find("groupOfNames") != -1)
+					{
+						AddLdifRowToDatabase(PR_TRUE);
+						if (NS_SUCCEEDED(mFileSpec->Seek(0)))
+							break;
+					}
+				}
+			}
+		}
+	}
 	return NS_OK;
 }
 
-void AddressBookParser::AddLdifRowToDatabase()
+void AddressBookParser::AddLdifRowToDatabase(PRBool bIsList)
 {
-	PRBool bIsList = PR_FALSE;
-	if (mLine.Find("groupOfNames") == -1)
-		bIsList = PR_FALSE;
-	else
-		bIsList = PR_TRUE;
-
 	nsIMdbRow* newRow = nsnull;
 	if (mDatabase)
 	{

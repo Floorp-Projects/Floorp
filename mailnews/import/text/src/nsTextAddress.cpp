@@ -894,6 +894,9 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc)
 	PRInt32 startPos = 0;
     PRInt32 len = 0;
 	PRBool bEof = PR_FALSE;
+	nsVoidArray listPosArray;
+	PRInt32 savedStartPos = 0;
+	PRInt32 filePos = 0;
 
 	while (NS_SUCCEEDED(pSrc->Eof(&bEof)) && !bEof)
 	{
@@ -903,24 +906,52 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc)
 
 			while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, startPos)))
 			{
-				AddLdifRowToDatabase();
+				if (m_ldifLine.Find("groupOfNames") == -1)
+					AddLdifRowToDatabase(PR_FALSE);
+				else
+				{
+					//keep file position for mailing list
+					listPosArray.AppendElement((void*)savedStartPos);
+					if (m_ldifLine.Length() > 0)
+						m_ldifLine.Truncate();
+				}
+				savedStartPos = filePos + startPos;
 			}
+			filePos += len;
 		}
 	}
 	//last row
-	if (m_ldifLine.Length() > 0)
-		AddLdifRowToDatabase(); 
+	if (m_ldifLine.Length() > 0 && m_ldifLine.Find("groupOfNames") == -1)
+		AddLdifRowToDatabase(PR_FALSE); 
+	// mail Lists
+    PRInt32 i;
+	PRInt32 listTotal = listPosArray.Count();
+	for (i = 0; i < listTotal; i++)
+	{
+		PRInt32 pos = (PRInt32)listPosArray.ElementAt(i);
+		if (NS_SUCCEEDED(pSrc->Seek(pos)))
+		{
+			if (NS_SUCCEEDED(pSrc->Read(&pBuf, (PRInt32)sizeof(buf), &len)) && len > 0)
+			{
+				startPos = 0;
+
+				while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, startPos)))
+				{
+					if (m_ldifLine.Find("groupOfNames") != -1)
+					{
+						AddLdifRowToDatabase(PR_TRUE);
+						if (NS_SUCCEEDED(pSrc->Seek(0)))
+							break;
+					}
+				}
+			}
+		}
+	}
 	return NS_OK;
 }
 
-void nsTextAddress::AddLdifRowToDatabase( void)
+void nsTextAddress::AddLdifRowToDatabase(PRBool bIsList)
 {
-	PRBool bIsList = PR_FALSE;
-	if (m_ldifLine.Find("groupOfNames") == -1)
-		bIsList = PR_FALSE;
-	else
-		bIsList = PR_TRUE;
-
 	nsIMdbRow* newRow = nsnull;
 	if (m_database)
 	{

@@ -66,7 +66,7 @@ private:
 	char *		str_getline( char **next);
 	nsresult	GetLdifStringRecord(char* buf, PRInt32 len, PRInt32& stopPos);
 	nsresult	ParseLdifFile( nsIFileSpec *pSrc);
-	void		AddLdifRowToDatabase( void);
+	void		AddLdifRowToDatabase( PRBool bIsList);
 	void		AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot, PRBool bIsList);
 
 private:
