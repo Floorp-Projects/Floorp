@@ -60,7 +60,7 @@ PRLogModuleInfo* gFTPDirListConvLog = nsnull;
 #endif /* PR_LOGGING */
 
 // nsISupports implementation
-NS_IMPL_ISUPPORTS2(nsFTPDirListingConv, nsIStreamConverter, nsIStreamListener);
+NS_IMPL_ISUPPORTS3(nsFTPDirListingConv, nsIStreamConverter, nsIStreamListener, nsIStreamObserver);
 
 // nsIStreamConverter implementation
 
@@ -561,16 +561,17 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
 
     // DAY
     ecol = &bcol[3];                        
-    while (*ecol++ == ' ') ;            /* Spool to other side of day */
-    while (*ecol++ != ' ') ;
-    *--ecol = '\0';
+    while (*(++ecol) == ' ') ;
+    while (*(++ecol) != ' ') ;
+    *ecol = '\0';
+    bcol = ecol+1;
+    while (*(--ecol) != ' ') ;
 
     PRInt32 error;
-    nsCAutoString day(bcol);
+    nsCAutoString day(ecol);
     curTime.tm_mday = day.ToInteger(&error, 10);
 
     // YEAR
-    bcol = ++ecol;
     if ((ecol = PL_strchr(bcol, ':')) == NULL) {
         nsCAutoString intStr(bcol);
         curTime.tm_year = intStr.ToInteger(&error, 10);
@@ -587,13 +588,10 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
         intStr = bcol;
         curTime.tm_hour = intStr.ToInteger(&error, 10);  // Left side of ':' 
 
-        // Use the current year if one wasn't provided.
         PRExplodedTime nowETime;
         PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &nowETime);
         curTime.tm_year = nowETime.tm_year;
-    	//if (mktime(time_info) > curtime)
-        //	--time_info->tm_year;
-      }
+    }
 
     // set the out param
     outDate = PR_ImplodeTime(&curTime);
@@ -879,12 +877,7 @@ nsFTPDirListingConv::InitPRExplodedTime(PRExplodedTime& aTime) {
     aTime.tm_year = 0;
     aTime.tm_wday = 0;
     aTime.tm_yday = 0;
-    aTime.tm_params.tp_gmt_offset = 0;
-    aTime.tm_params.tp_dst_offset = 0;
-
-    // localize this sucker.
-    PRTimeParameters params = PR_LocalTimeParameters(&aTime);
-    aTime.tm_params = params;
+    aTime.tm_params = PR_LocalTimeParameters(&aTime);;
 }
 
 char *
@@ -1077,13 +1070,6 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
             aString.Append('0');
         }
         aString.Append(' ');
-
-
-        // CONTENT TYPE (not very useful for ftp listings)
-        // XXX this field is currently meaningless for FTP
-        //indexFormat.Append(thisEntry->mContentType);
-        //indexFormat.Append('\t');
-
 
         // MODIFIED DATE
         nsString lDate;
