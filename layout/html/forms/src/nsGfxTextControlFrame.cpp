@@ -3931,8 +3931,10 @@ nsEnderEventListener::MouseDown(nsIDOMEvent* aEvent)
         // or at least rewritten; we'll look into that post-M14.
         return NS_OK;
       case 3: //XXX: I can't believe there isn't a symbol for this!
+        // XXX See bug 27827 -- we need to disable right clicks
+        // just like we disabled middle clicks.
         eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
-        break;
+        return NS_OK;
       default:
         NS_ASSERTION(0, "bad button type");
         return NS_OK;
