@@ -21,7 +21,6 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsEditorEventListeners.h"
-#include "nsIHTMLEditor.h"
 #include "nsEditor.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -611,14 +610,13 @@ nsresult
 nsTextEditorDragListener::DragGesture(nsIDOMEvent* aDragEvent)
 {
   PRBool canDrag = PR_FALSE;
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-  if ( !htmlEditor )
+  if ( !mEditor )
     return NS_ERROR_NULL_POINTER;
   
   // ...figure out if a drag should be started...
-  nsresult rv = htmlEditor->CanDrag(aDragEvent, canDrag);
+  nsresult rv = mEditor->CanDrag(aDragEvent, canDrag);
   if ( NS_SUCCEEDED(rv) && canDrag )
-    rv = htmlEditor->DoDrag(aDragEvent);
+    rv = mEditor->DoDrag(aDragEvent);
 
   return rv;
 }
@@ -677,8 +675,7 @@ nsTextEditorDragListener::DragExit(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-  if ( htmlEditor )
+  if ( mEditor )
   {
     nsresult rv;
     NS_WITH_SERVICE(nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv);
@@ -764,7 +761,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
       }
     }
     // if we are not over orginal selection, drop that baby!
-    return htmlEditor->InsertFromDrop(aMouseEvent);
+    return mEditor->InsertFromDrop(aMouseEvent);
   }
 
   return NS_OK;
