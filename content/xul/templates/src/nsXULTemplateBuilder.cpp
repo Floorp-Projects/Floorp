@@ -1046,7 +1046,7 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement, nsIRDFResource *aP
 						nsCOMPtr<nsIAtom>	tag;
 						if (NS_SUCCEEDED(rv = aElement->GetTag(*getter_AddRefs(tag))))
 						{
-							if (tag.get() == rootAtom)
+							if (tag == rootAtom)
 							{
 								isRoot = PR_TRUE;
 							}
