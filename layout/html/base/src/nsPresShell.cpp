@@ -1290,7 +1290,7 @@ protected:
 
   nsresult GetSelectionForCopy(nsISelection** outSelection);
 
-  nsICSSStyleSheet*         mPrefStyleSheet; // mStyleSet owns it but we maintaina ref, may be null
+  nsICSSStyleSheet*         mPrefStyleSheet; // mStyleSet owns it but we maintain a ref, may be null
   PRUint32                  mUpdateCount;
   // normal reflow commands
   nsVoidArray               mReflowCommands; 
@@ -2210,7 +2210,7 @@ nsresult PresShell::ClearPreferenceStyleRules(void)
       printf("PrefStyleSheet removed\n");
 #endif
       // clear the sheet pointer: it is strictly historical now
-      NS_IF_RELEASE(mPrefStyleSheet);
+      NS_RELEASE(mPrefStyleSheet);
     }
   }
   return result;
@@ -2218,10 +2218,8 @@ nsresult PresShell::ClearPreferenceStyleRules(void)
 
 nsresult PresShell::CreatePreferenceStyleSheet(void)
 {
-  NS_ASSERTION(mPrefStyleSheet==nsnull, "prefStyleSheet already exists");
-  nsresult result = NS_OK;
-
-  result = nsComponentManager::CreateInstance(kCSSStyleSheetCID,nsnull,NS_GET_IID(nsICSSStyleSheet),(void**)&mPrefStyleSheet);
+  NS_ASSERTION(!mPrefStyleSheet, "prefStyleSheet already exists");
+  nsresult result = CallCreateInstance(kCSSStyleSheetCID, &mPrefStyleSheet);
   if (NS_SUCCEEDED(result)) {
     NS_ASSERTION(mPrefStyleSheet, "null but no error");
     nsCOMPtr<nsIURI> uri;
@@ -2231,7 +2229,13 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
       result = mPrefStyleSheet->Init(uri);
       if (NS_SUCCEEDED(result)) {
         mPrefStyleSheet->SetComplete();
-        mPrefStyleSheet->SetDefaultNameSpaceID(kNameSpaceID_XHTML);
+        nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet));
+        if (sheet) {
+          PRUint32 index;
+          result = sheet->InsertRule(NS_LITERAL_STRING("@namespace url(http://www.w3.org/1999/xhtml);"),
+                                     0, &index);
+          NS_ENSURE_SUCCESS(result, result);
+        }
         mStyleSet->InsertUserStyleSheetBefore(mPrefStyleSheet, nsnull);
       }
     }
@@ -2245,6 +2249,11 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
 
   return result;
 }
+
+// XXX We want these after the @namespace rule.  Does order matter
+// for these rules, or can we call nsICSSStyleRule::StyleRuleCount()
+// and just "append"?
+static PRUint32 sInsertPrefSheetRulesAt = 1;
 
 nsresult PresShell::SetPrefColorRules(void)
 {
@@ -2299,13 +2308,13 @@ nsresult PresShell::SetPrefColorRules(void)
                                          NS_LITERAL_STRING("background:") +
                                          strBackgroundColor +
                                          NS_LITERAL_STRING(" !important; }"),
-                                         0,&index);
+                                         sInsertPrefSheetRulesAt, &index);
               NS_ENSURE_SUCCESS(result, result);
 
               ///////////////////////////////////////////////////////////////
               // - everything else inherits the color, and has transparent background
               result = sheet->InsertRule(NS_LITERAL_STRING("* {color: inherit !important; border-color: -moz-use-text-color !important; background: transparent !important;} "),
-                                         0,&index);
+                                         sInsertPrefSheetRulesAt, &index);
             }
           }
         }
@@ -2331,7 +2340,7 @@ PresShell::SetPrefNoScriptRule()
     nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&rv));
     NS_ENSURE_SUCCESS(rv, rv);
     PRUint32 index = 0;
-    rv = sheet->InsertRule(NS_LITERAL_STRING("noscript{display:block}"), 0, &index);
+    rv = sheet->InsertRule(NS_LITERAL_STRING("noscript{display:block}"), sInsertPrefSheetRulesAt, &index);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -2381,35 +2390,35 @@ nsresult PresShell::SetPrefLinkRules(void)
           mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors, useDocColors);
 
           ///////////////////////////////////////////////////////////////
-          // - links: '*:link {color: #RRGGBB [!important];}'
+          // - links: '*|*:link {color: #RRGGBB [!important];}'
           ColorToString(linkColor,strColor);
           NS_NAMED_LITERAL_STRING(notImportantStr, "}");
           NS_NAMED_LITERAL_STRING(importantStr, "!important}");
           const nsAString& ruleClose = useDocColors ? notImportantStr : importantStr;
-          result = sheet->InsertRule(NS_LITERAL_STRING("*:link{color:") +
+          result = sheet->InsertRule(NS_LITERAL_STRING("*|*:link{color:") +
                                      strColor +
                                      ruleClose,
-                                     0,&index);
+                                     sInsertPrefSheetRulesAt, &index);
           NS_ENSURE_SUCCESS(result, result);
             
           ///////////////////////////////////////////////////////////////
-          // - visited links '*:visited {color: #RRGGBB [!important];}'
+          // - visited links '*|*:visited {color: #RRGGBB [!important];}'
           ColorToString(visitedColor,strColor);
           // insert the rule
-          result = sheet->InsertRule(NS_LITERAL_STRING("*:visited{color:") +
+          result = sheet->InsertRule(NS_LITERAL_STRING("*|*:visited{color:") +
                                      strColor +
                                      ruleClose,
-                                     0,&index);
+                                     sInsertPrefSheetRulesAt, &index);
             
           ///////////////////////////////////////////////////////////////
-          // - active links '*:-moz-any-link {color: red [!important];}'
+          // - active links '*|*:-moz-any-link {color: red [!important];}'
           // This has to be here (i.e. we can't just rely on the rule in the UA stylesheet)
           // because this entire stylesheet is at the user level (not UA level) and so
           // the two rules above override the rule in the UA stylesheet regardless of the
           // weights of the respective rules.
-          result = sheet->InsertRule(NS_LITERAL_STRING("*:-moz-any-link:active{color:red") +
+          result = sheet->InsertRule(NS_LITERAL_STRING("*|*:-moz-any-link:active{color:red") +
                                      ruleClose,
-                                     0,&index);
+                                     sInsertPrefSheetRulesAt, &index);
         }
 
         if (NS_SUCCEEDED(result)) {
@@ -2429,17 +2438,17 @@ nsresult PresShell::SetPrefLinkRules(void)
               printf (" - Creating rules for enabling link underlines\n");
   #endif
               // make a rule to make text-decoration: underline happen for links
-              strRule.Append(NS_LITERAL_STRING("*:-moz-any-link{text-decoration:underline}"));
+              strRule.Append(NS_LITERAL_STRING("*|*:-moz-any-link{text-decoration:underline}"));
             } else {
   #ifdef DEBUG_attinasi
               printf (" - Creating rules for disabling link underlines\n");
   #endif
               // make a rule to make text-decoration: none happen for links
-              strRule.Append(NS_LITERAL_STRING("*:-moz-any-link{text-decoration:none}"));
+              strRule.Append(NS_LITERAL_STRING("*|*:-moz-any-link{text-decoration:none}"));
             }
 
             // ...now insert the rule
-            result = sheet->InsertRule(strRule,0,&index);          
+            result = sheet->InsertRule(strRule, sInsertPrefSheetRulesAt, &index);          
           }
         }
       }
@@ -2487,7 +2496,7 @@ nsresult PresShell::SetPrefFocusRules(void)
         strRule.Append(strColor);
         strRule.Append(NS_LITERAL_STRING(" !important; } "));
         // insert the rules
-        result = sheet->InsertRule(strRule,0,&index);
+        result = sheet->InsertRule(strRule, sInsertPrefSheetRulesAt, &index);
       }
       PRUint8 focusRingWidth = 1;
       result = mPresContext->GetFocusRingWidth(&focusRingWidth);
@@ -2498,12 +2507,12 @@ nsresult PresShell::SetPrefFocusRules(void)
         PRUint32 index = 0;
         nsAutoString strRule;
         if (!focusRingOnAnything)
-          strRule.Append(NS_LITERAL_STRING(":link:focus, :visited"));    // If we only want focus rings on the normal things like links
+          strRule.Append(NS_LITERAL_STRING("*|*:link:focus, *|*:visited"));    // If we only want focus rings on the normal things like links
         strRule.Append(NS_LITERAL_STRING(":focus {-moz-outline: "));     // For example 3px dotted WindowText (maximum 4)
         strRule.AppendInt(focusRingWidth);
         strRule.Append(NS_LITERAL_STRING("px dotted WindowText !important; } "));     // For example 3px dotted WindowText
         // insert the rules
-        result = sheet->InsertRule(strRule,0,&index);
+        result = sheet->InsertRule(strRule, sInsertPrefSheetRulesAt, &index);
         NS_ENSURE_SUCCESS(result, result);
         if (focusRingWidth != 1) {
           // If the focus ring width is different from the default, fix buttons with rings
@@ -2512,13 +2521,13 @@ nsresult PresShell::SetPrefFocusRules(void)
           strRule.Append(NS_LITERAL_STRING("input[type=\"submit\"]::-moz-focus-inner { padding: 1px 2px 1px 2px; border: "));
           strRule.AppendInt(focusRingWidth);
           strRule.Append(NS_LITERAL_STRING("px dotted transparent !important; } "));
-          result = sheet->InsertRule(strRule,0,&index);
+          result = sheet->InsertRule(strRule, sInsertPrefSheetRulesAt, &index);
           NS_ENSURE_SUCCESS(result, result);
           
           strRule.Assign(NS_LITERAL_STRING("button:focus::-moz-focus-inner, input[type=\"reset\"]:focus::-moz-focus-inner,"));
           strRule.Append(NS_LITERAL_STRING("input[type=\"button\"]:focus::-moz-focus-inner, input[type=\"submit\"]:focus::-moz-focus-inner {"));
           strRule.Append(NS_LITERAL_STRING("border-color: ButtonText !important; }"));
-          result = sheet->InsertRule(strRule,0,&index);
+          result = sheet->InsertRule(strRule, sInsertPrefSheetRulesAt, &index);
         }
       }
     }

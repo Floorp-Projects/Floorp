@@ -783,7 +783,6 @@ public:
   nsISupportsArray*     mOrderedRules;
 
   nsCOMPtr<nsINameSpace> mNameSpace;
-  PRInt32               mDefaultNameSpaceID;
   PRPackedBool          mComplete;
 };
 
@@ -858,7 +857,6 @@ public:
   NS_IMETHOD  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const;
 
   NS_IMETHOD  GetNameSpace(nsINameSpace*& aNameSpace) const;
-  NS_IMETHOD  SetDefaultNameSpaceID(PRInt32 aDefaultNameSpaceID);
 
   NS_IMETHOD Clone(nsICSSStyleSheet* aCloneParent,
                    nsICSSImportRule* aCloneOwnerRule,
@@ -1465,7 +1463,6 @@ CSSStyleSheetInner::CSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
   : mSheets(),
     mOrderedRules(nsnull),
     mNameSpace(nsnull),
-    mDefaultNameSpaceID(kNameSpaceID_None),
     mComplete(PR_FALSE)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
@@ -1491,7 +1488,6 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
   : mSheets(),
     mURL(aCopy.mURL),
     mNameSpace(nsnull),
-    mDefaultNameSpaceID(aCopy.mDefaultNameSpaceID),
     mComplete(aCopy.mComplete)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
@@ -1586,14 +1582,7 @@ CSSStyleSheetInner::RebuildNameSpaces(void)
 {
   nsContentUtils::GetNSManagerWeakRef()->
       CreateRootNameSpace(getter_AddRefs(mNameSpace));
-  if (kNameSpaceID_Unknown != mDefaultNameSpaceID) {
-    nsCOMPtr<nsINameSpace> defaultNameSpace;
-    mNameSpace->CreateChildNameSpace(nsnull, mDefaultNameSpaceID,
-                                     getter_AddRefs(defaultNameSpace));
-    if (defaultNameSpace) {
-      mNameSpace = defaultNameSpace;
-    }
-  }
+
   if (mOrderedRules) {
     mOrderedRules->EnumerateForwards(CreateNameSpace, address_of(mNameSpace));
   }
@@ -2242,17 +2231,6 @@ CSSStyleSheetImpl::GetNameSpace(nsINameSpace*& aNameSpace) const
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP
-CSSStyleSheetImpl::SetDefaultNameSpaceID(PRInt32 aDefaultNameSpaceID)
-{
-  if (mInner) {
-    mInner->mDefaultNameSpaceID = aDefaultNameSpaceID;
-    mInner->RebuildNameSpaces();
-  }
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 CSSStyleSheetImpl::StyleSheetCount(PRInt32& aCount) const

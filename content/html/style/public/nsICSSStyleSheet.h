@@ -87,8 +87,6 @@ public:
   
   // get head of namespace chain for sheet
   NS_IMETHOD  GetNameSpace(nsINameSpace*& aNameSpace) const = 0;
-  // set default namespace for sheet (may be overridden by @namespace)
-  NS_IMETHOD  SetDefaultNameSpaceID(PRInt32 aDefaultNameSpaceID) = 0;
 
   NS_IMETHOD  Clone(nsICSSStyleSheet* aCloneParent,
                     nsICSSImportRule* aCloneOwnerRule,

@@ -4876,7 +4876,6 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 
   PRBool doneLoading;
   result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
-                                     kNameSpaceID_Unknown,
                                      ((blockParser) ? mParser : nsnull),
                                      doneLoading, 
                                      this);

@@ -87,7 +87,6 @@ public:
                              nsIUnicharInputStream* aStream, 
                              const nsAString& aTitle, 
                              const nsAString& aMedia, 
-                             PRInt32 aDefaultNameSpaceID,
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted,
                              nsICSSLoaderObserver* aObserver) = 0;
@@ -101,7 +100,6 @@ public:
                            nsIURI* aURL, 
                            const nsAString& aTitle, 
                            const nsAString& aMedia, 
-                           PRInt32 aDefaultNameSpaceID,
                            nsIParser* aParserToUnblock,
                            PRBool& aCompleted,
                            nsICSSLoaderObserver* aObserver) = 0;
@@ -110,7 +108,6 @@ public:
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURI* aURL, 
                             const nsAString& aMedia,
-                            PRInt32 aDefaultNameSpaceID,
                             nsICSSImportRule* aRule) = 0;
 
   // Load a user agent or user sheet.  The sheet is loaded

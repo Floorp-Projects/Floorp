@@ -31,7 +31,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
-#include "nsINameSpaceManager.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIConverterInputStream.h"
 #include "nsICharsetAlias.h"
@@ -958,7 +957,6 @@ CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
 nsresult
 CSSLoaderImpl::CreateSheet(nsIURI* aURI,
                            nsIContent* aLinkingContent,
-                           PRUint32 aDefaultNameSpaceID,
                            PRBool aSyncLoad,
                            StyleSheetState& aSheetState,
                            nsICSSStyleSheet** aSheet)
@@ -1039,8 +1037,6 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
     rv = NS_NewCSSStyleSheet(aSheet); // Don't init the sheet here, but in
                                       // ParseSheet once we know the final URI
     NS_ENSURE_SUCCESS(rv, rv);
-    
-    (*aSheet)->SetDefaultNameSpaceID(aDefaultNameSpaceID);
   }
 
   NS_ASSERTION(*aSheet, "We should have a sheet by now!");
@@ -1563,7 +1559,6 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
                                nsIUnicharInputStream* aStream, 
                                const nsAString& aTitle, 
                                const nsAString& aMedia, 
-                               PRInt32 aDefaultNameSpaceID,
                                nsIParser* aParserToUnblock,
                                PRBool& aCompleted,
                                nsICSSLoaderObserver* aObserver)
@@ -1586,8 +1581,8 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
   
   StyleSheetState state;
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  nsresult rv = CreateSheet(nsnull, aElement, aDefaultNameSpaceID, PR_FALSE,
-                            state, getter_AddRefs(sheet));
+  nsresult rv = CreateSheet(nsnull, aElement, PR_FALSE, state,
+                            getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(state == eSheetNeedsParser,
                "Inline sheets should not be cached");
@@ -1620,7 +1615,6 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
                              nsIURI* aURL, 
                              const nsAString& aTitle, 
                              const nsAString& aMedia, 
-                             PRInt32 aDefaultNameSpaceID,
                              nsIParser* aParserToUnblock,
                              PRBool& aCompleted,
                              nsICSSLoaderObserver* aObserver)
@@ -1651,7 +1645,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   
   StyleSheetState state;
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  rv = CreateSheet(aURL, aElement, aDefaultNameSpaceID, PR_FALSE, state,
+  rv = CreateSheet(aURL, aElement, PR_FALSE, state,
                    getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1705,7 +1699,6 @@ NS_IMETHODIMP
 CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                               nsIURI* aURL, 
                               const nsAString& aMedia,
-                              PRInt32 aDefaultNameSpaceID,
                               nsICSSImportRule* aParentRule)
 {
   LOG(("CSSLoaderImpl::LoadChildSheet"));
@@ -1761,7 +1754,7 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
   // loop) do so
   nsCOMPtr<nsICSSStyleSheet> sheet;
   StyleSheetState state;
-  rv = CreateSheet(aURL, nsnull, aDefaultNameSpaceID,
+  rv = CreateSheet(aURL, nsnull,
                    parentData ? parentData->mSyncLoad : PR_FALSE,
                    state, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1833,8 +1826,8 @@ CSSLoaderImpl::InternalLoadAgentSheet(nsIURI* aURL,
   nsCOMPtr<nsICSSStyleSheet> sheet;
   PRBool syncLoad = (aObserver == nsnull);
   
-  nsresult rv = CreateSheet(aURL, nsnull, kNameSpaceID_Unknown, syncLoad,
-                            state, getter_AddRefs(sheet));
+  nsresult rv = CreateSheet(aURL, nsnull, syncLoad, state,
+                            getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_NAMED_LITERAL_STRING(empty, "");

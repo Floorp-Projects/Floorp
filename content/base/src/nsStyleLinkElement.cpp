@@ -33,7 +33,6 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMText.h"
 #include "nsIHTMLContentContainer.h"
-#include "nsINameSpaceManager.h"
 #include "nsIUnicharInputStream.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
@@ -310,13 +309,11 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
     // Now that we have a url and a unicode input stream, parse the
     // style sheet.
     rv = loader->LoadInlineStyle(thisContent, uin, title, media,
-                                 kNameSpaceID_Unknown,
                                  ((blockParser) ? parser.get() : nsnull),
                                  doneLoading, aObserver);
   }
   else {
     rv = loader->LoadStyleLink(thisContent, uri, title, media,
-                               kNameSpaceID_Unknown,
                                ((blockParser) ? parser.get() : nsnull),
                                doneLoading, aObserver);
   }

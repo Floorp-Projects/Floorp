@@ -562,7 +562,7 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
             return NS_ERROR_FAILURE; // doc went away!
 
         PRBool doneLoading;
-        rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
+        rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
                                        ((blockParser) ? mParser : nsnull),
                                        doneLoading, nsnull);
         if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
