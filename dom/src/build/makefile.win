@@ -16,6 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
+include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_DOM
 
