@@ -71,7 +71,6 @@ EXTRA_DSO_LDOPTS = \
 
 CPPSRCS =   \
   nsSystemPref.cpp	   \
-  nsSystemPrefFactory.cpp  \
   $(NULL)
 
 EXPORTS		= \
