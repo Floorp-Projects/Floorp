@@ -315,6 +315,10 @@ struct JSScopeProperty {
                              JSMSG_GETTER_ONLY, NULL), JS_FALSE)              \
      : SPROP_CALL_SETTER(cx, sprop, (sprop)->setter, obj, obj2, vp))
 
+/* Macro for common expression to test for shared permanent attributes. */
+#define SPROP_IS_SHARED_PERMANENT(sprop)                                      \
+    ((~(sprop)->attrs & (JSPROP_SHARED | JSPROP_PERMANENT)) == 0)
+
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);
 

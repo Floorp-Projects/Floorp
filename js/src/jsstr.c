@@ -502,7 +502,7 @@ static JSPropertySpec string_props[] = {
 static JSBool
 str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSString *str, *str1;
+    JSString *str;
     jsint slot;
 
     if (!JSVAL_IS_INT(id))
@@ -511,22 +511,57 @@ str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!str)
         return JS_FALSE;
     slot = JSVAL_TO_INT(id);
-    if (slot == STRING_LENGTH) {
+    if (slot == STRING_LENGTH)
         *vp = INT_TO_JSVAL((jsint) JSSTRING_LENGTH(str));
-    } else {
-        /*
-         * ECMA extension: if the property has not been set already (possibly
-         * to a user-defined value), return as its value the character at the
-         * given index.  Don't use resolve, which penalizes all string method
-         * calls and other property accesses.  Let the property attributes be
-         * the default, so the user can override, enumerate, etc. and get the
-         * expected results.
-         */
-        if (JSVAL_IS_VOID(*vp) && (size_t)slot < JSSTRING_LENGTH(str)) {
-            str1 = js_NewDependentString(cx, str, (size_t)slot, 1, 0);
-            if (!str1)
-                return JS_FALSE;
-            *vp = STRING_TO_JSVAL(str1);
+    return JS_TRUE;
+}
+
+#define STRING_ELEMENT_ATTRS (JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_PERMANENT)
+
+static JSBool
+str_enumerate(JSContext *cx, JSObject *obj)
+{
+    JSString *str, *str1;
+    size_t i, length;
+
+    str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
+    if (!str)
+        return JS_FALSE;
+    length = JSSTRING_LENGTH(str);
+    for (i = 0; i < length; i++) {
+        str1 = js_NewDependentString(cx, str, i, 1, 0);
+        if (!str1)
+            return JS_FALSE;
+        if (!OBJ_DEFINE_PROPERTY(cx, obj, INT_TO_JSVAL(i),
+                                 STRING_TO_JSVAL(str1), NULL, NULL,
+                                 STRING_ELEMENT_ATTRS, NULL)) {
+            return JS_FALSE;
+        }
+    }
+    return JS_TRUE;
+}
+
+static JSBool
+str_resolve(JSContext *cx, JSObject *obj, jsval id)
+{
+    JSString *str, *str1;
+    jsint slot;
+
+    if (!JSVAL_IS_INT(id))
+        return JS_TRUE;
+
+    str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
+    if (!str)
+        return JS_FALSE;
+    slot = JSVAL_TO_INT(id);
+    if ((size_t)slot < JSSTRING_LENGTH(str)) {
+        str1 = js_NewDependentString(cx, str, (size_t)slot, 1, 0);
+        if (!str1)
+            return JS_FALSE;
+        if (!OBJ_DEFINE_PROPERTY(cx, obj, INT_TO_JSVAL(slot),
+                                 STRING_TO_JSVAL(str1), NULL, NULL,
+                                 STRING_ELEMENT_ATTRS, NULL)) {
+            return JS_FALSE;
         }
     }
     return JS_TRUE;
@@ -536,7 +571,7 @@ static JSClass string_class = {
     js_String_str,
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  str_getProperty,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    str_enumerate,    str_resolve,      JS_ConvertStub,   JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
