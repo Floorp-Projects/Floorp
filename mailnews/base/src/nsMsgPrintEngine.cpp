@@ -665,6 +665,13 @@ nsMsgPrintEngine::PrintMsgWindow()
       {
         mWebBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(mPrintSettings));
       }
+      
+      // fix for bug #118887 and bug #176016
+      // don't show the actual url when printing mail messages or addressbook cards.
+      // for mail, it can review the salt.  for addrbook, it's a data:// url, which
+      // means nothing to the end user.
+      mPrintSettings->SetDocURL(NS_LITERAL_STRING(" ").get());
+
       nsresult rv = NS_ERROR_FAILURE;
       if (mIsDoingPrintPreview) 
       {
