@@ -291,16 +291,16 @@ public class Interpreter {
                 while (child != null) {
                     if (child.getType() != TokenStream.FUNCTION)
                         iCodeTop = generateICode(child, iCodeTop);
-                    child = child.getNextSibling();
+                    child = child.getNext();
                 }
                 break;
 
             case TokenStream.CASE :
                 iCodeTop = updateLineNumber(node, iCodeTop);
-                child = child.getNextSibling();
+                child = child.getNext();
                 while (child != null) {
                     iCodeTop = generateICode(child, iCodeTop);
-                    child = child.getNextSibling();
+                    child = child.getNext();
                 }
                 break;
 
@@ -314,13 +314,13 @@ public class Interpreter {
                 iCodeTop = updateLineNumber(node, iCodeTop);
                 while (child != null) {
                     iCodeTop = generateICode(child, iCodeTop);
-                    child = child.getNextSibling();
+                    child = child.getNext();
                 }
                 break;
 
             case TokenStream.COMMA :
                 iCodeTop = generateICode(child, iCodeTop);
-                while (null != (child = child.getNextSibling())) {
+                while (null != (child = child.getNext())) {
                     iCodeTop = addByte(TokenStream.POP, iCodeTop);
                     itsStackDepth--;
                     iCodeTop = generateICode(child, iCodeTop);
@@ -387,7 +387,7 @@ public class Interpreter {
             case TokenStream.EQOP :
             case TokenStream.RELOP : {
                 iCodeTop = generateICode(child, iCodeTop);
-                child = child.getNextSibling();
+                child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
                 int op = node.getOperation();
                 if (version == Context.VERSION_1_2) {
@@ -424,7 +424,7 @@ public class Interpreter {
                             functionName = lastAddString;
                         }
                     }
-                    child = child.getNextSibling();
+                    child = child.getNext();
                     childCount++;
                 }
                 if (node.getProp(Node.SPECIALCALL_PROP) != null) {
@@ -527,7 +527,7 @@ public class Interpreter {
                 iCodeTop = addForwardGoto(TokenStream.IFNE, iCodeTop);
                 iCodeTop = addByte(TokenStream.POP, iCodeTop);
                 itsStackDepth--;
-                child = child.getNextSibling();
+                child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
                 resolveForwardGoto(falseJumpStart, iCodeTop);
                 break;
@@ -543,7 +543,7 @@ public class Interpreter {
                 iCodeTop = addForwardGoto(TokenStream.IFEQ, iCodeTop);
                 iCodeTop = addByte(TokenStream.POP, iCodeTop);
                 itsStackDepth--;
-                child = child.getNextSibling();
+                child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
                 resolveForwardGoto(trueJumpStart, iCodeTop);
                 break;
@@ -562,7 +562,7 @@ public class Interpreter {
                         badTree(node);
                     }
                 } else {
-                    child = child.getNextSibling();
+                    child = child.getNext();
                     iCodeTop = generateICode(child, iCodeTop);
                     iCodeTop = addByte(TokenStream.GETPROP, iCodeTop);
                     itsStackDepth--;
@@ -584,7 +584,7 @@ public class Interpreter {
             case TokenStream.MUL :
             case TokenStream.GETELEM :
                 iCodeTop = generateICode(child, iCodeTop);
-                child = child.getNextSibling();
+                child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addByte(type, iCodeTop);
                 itsStackDepth--;
@@ -641,7 +641,7 @@ public class Interpreter {
 
             case TokenStream.SETPROP : {
                 iCodeTop = generateICode(child, iCodeTop);
-                child = child.getNextSibling();
+                child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
                 String s = (String) node.getProp(Node.SPECIAL_PROP_PROP);
                 if (s != null) {
@@ -653,7 +653,7 @@ public class Interpreter {
                         badTree(node);
                     }
                 } else {
-                    child = child.getNextSibling();
+                    child = child.getNext();
                     iCodeTop = generateICode(child, iCodeTop);
                     iCodeTop = addByte(TokenStream.SETPROP, iCodeTop);
                     itsStackDepth -= 2;
@@ -663,9 +663,9 @@ public class Interpreter {
 
             case TokenStream.SETELEM :
                 iCodeTop = generateICode(child, iCodeTop);
-                child = child.getNextSibling();
+                child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
-                child = child.getNextSibling();
+                child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addByte(type, iCodeTop);
                 itsStackDepth -= 2;
@@ -673,7 +673,7 @@ public class Interpreter {
 
             case TokenStream.SETNAME :
                 iCodeTop = generateICode(child, iCodeTop);
-                child = child.getNextSibling();
+                child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addByte(TokenStream.SETNAME, iCodeTop);
                 iCodeTop = addString(firstChild.getString(), iCodeTop);
@@ -752,7 +752,7 @@ public class Interpreter {
                     case TokenStream.GETELEM : {
                         Node getPropChild = child.getFirstChild();
                         iCodeTop = generateICode(getPropChild, iCodeTop);
-                        getPropChild = getPropChild.getNextSibling();
+                        getPropChild = getPropChild.getNext();
                         iCodeTop = generateICode(getPropChild, iCodeTop);
                         if (childType == TokenStream.GETPROP) {
                             iCodeTop = addByte(type == TokenStream.INC
@@ -868,7 +868,7 @@ public class Interpreter {
                         the try statemets, we need to emit the endtry
                         before that goto.
                     */
-                    Node nextSibling = child.getNextSibling();
+                    Node nextSibling = child.getNext();
                     if (!insertedEndTry && nextSibling != null &&
                         (nextSibling == catchTarget ||
                          nextSibling == finallyTarget))
@@ -879,7 +879,7 @@ public class Interpreter {
                     }
                     iCodeTop = generateICode(child, iCodeTop);
                     lastChild = child;
-                    child = child.getNextSibling();
+                    child = child.getNext();
                 }
                 itsStackDepth = 0;
                 if (finallyTarget != null) {
@@ -959,7 +959,7 @@ public class Interpreter {
                     iCodeTop = generateICode(node, iCodeTop);
                 } else {
                     String name = child.getString();
-                    child = child.getNextSibling();
+                    child = child.getNext();
                     iCodeTop = generateICode(child, iCodeTop);
                     int index = itsVariableTable.getOrdinal(name);
                     iCodeTop = addByte(TokenStream.SETVAR, iCodeTop);

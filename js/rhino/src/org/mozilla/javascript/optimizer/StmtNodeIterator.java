@@ -49,21 +49,23 @@ public class StmtNodeIterator {
 
     private Node findFirstInterestingNode(Node theNode)
     {
-        if (theNode == null) return null;
-
-        if ((theNode.getType() == TokenStream.BLOCK)
-                || (theNode.getType() == TokenStream.LOOP)
-                || (theNode.getType() == TokenStream.FUNCTION)) {
-            if (theNode.getFirst() == null) {
-                return findFirstInterestingNode(theNode.getNext());
-            }
-            else {
-                itsStack.push(theNode);
-                return findFirstInterestingNode(theNode.getFirst());
+        while (theNode != null) {
+            int type = theNode.getType();
+            if (type == TokenStream.BLOCK || type == TokenStream.LOOP
+                || type == TokenStream.FUNCTION)
+            {
+                Node first = theNode.getFirstChild();
+                if (first == null) {
+                    theNode = theNode.getNext();
+                } else {
+                    itsStack.push(theNode);
+                    theNode = first;
+                }
+            } else {
+                break;
             }
         }
-        else
-            return theNode;
+        return theNode;
     }
 
     public Node nextNode()
@@ -75,14 +77,17 @@ public class StmtNodeIterator {
         if (itsCurrentNode == null) {
             while ( ! itsStack.isEmpty()) {
                 Node n = (Node)(itsStack.pop());
-                if (n.getNext() != null) {
-                    return itsCurrentNode = findFirstInterestingNode(n.getNext());
+                Node next = n.getNext();
+                if (next != null) {
+                    itsCurrentNode = findFirstInterestingNode(next);
+                    return itsCurrentNode;
                 }
             }
             return null;
+        } else {
+            itsCurrentNode = findFirstInterestingNode(itsCurrentNode);
+            return itsCurrentNode;
         }
-        else
-            return itsCurrentNode = findFirstInterestingNode(itsCurrentNode);
     }
 
     private ObjArray itsStack = new ObjArray();

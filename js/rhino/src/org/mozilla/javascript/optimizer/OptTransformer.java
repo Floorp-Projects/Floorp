@@ -80,9 +80,9 @@ class OptTransformer extends NodeTransformer {
 
         // count the arguments
         int argCount = 0;
-        Node arg = left.getNextSibling();
+        Node arg = left.getNext();
         while (arg != null) {
-            arg = arg.getNextSibling();
+            arg = arg.getNext();
             argCount++;
         }
 
@@ -91,7 +91,7 @@ class OptTransformer extends NodeTransformer {
                 markDirectCall(tree, node, argCount, left.getString());
             } else {
                 if (left.getType() == TokenStream.GETPROP) {
-                    Node name = left.getFirstChild().getNextSibling();
+                    Node name = left.getFirstChild().getNext();
                     markDirectCall(tree, node, argCount, name.getString());
                 }
             }
@@ -157,7 +157,7 @@ class OptTransformer extends NodeTransformer {
      * count for any call it encounters
      */
     void collectContainedFunctions(Node node) {
-        for (Node tNode=node; tNode != null; tNode = tNode.getNextSibling()) {
+        for (Node tNode=node; tNode != null; tNode = tNode.getNext()) {
             if (tNode.getType() == TokenStream.FUNCTION) {
                 FunctionNode fnNode = (FunctionNode)
                                       tNode.getProp(Node.FUNCTION_PROP);

@@ -62,25 +62,26 @@ public final class PreorderNodeIterator {
     public Node nextNode() {
         if (current == null) {
             current = start;
-        }
-        else if (current.first != null) {
-            stackPush(current);
-            cachedPrev = null;
-            current = current.first;
-        }
-        else {
-            for (;;) {
-                cachedPrev = current;
-                current = current.next;
-                if (current != null) { break; }
-                if (stackTop == 0) {
-                    // Iteration end: clear cachedPrev that currently points
-                    // to the last sibling of start
-                    cachedPrev = null; break;
+        } else {
+            Node first = current.getFirstChild();
+            if (first != null) {
+                stackPush(current);
+                cachedPrev = null;
+                current = first;
+            } else {
+                for (;;) {
+                    cachedPrev = current;
+                    current = current.next;
+                    if (current != null) { break; }
+                    if (stackTop == 0) {
+                        // Iteration end: clear cachedPrev that currently
+                        // points to the last sibling of start
+                        cachedPrev = null; break;
+                    }
+                    --stackTop;
+                    current = stack[stackTop];
+                    stack[stackTop] = null;
                 }
-                --stackTop;
-                current = stack[stackTop];
-                stack[stackTop] = null;
             }
         }
         return current;

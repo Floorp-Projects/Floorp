@@ -152,11 +152,11 @@ public class NodeTransformer {
                  */
                 Node breakTarget = new Node(TokenStream.TARGET);
                 Node parent = iterator.getCurrentParent();
-                Node next = node.getNextSibling();
+                Node next = node.getNext();
                 while (next != null &&
                        (next.getType() == TokenStream.LABEL ||
                         next.getType() == TokenStream.TARGET))
-                    next = next.getNextSibling();
+                    next = next.getNext();
                 if (next == null)
                     break;
                 parent.addChildAfter(breakTarget, next);
@@ -228,7 +228,7 @@ public class NodeTransformer {
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
                 loops.push(node);
-                Node leave = node.getNextSibling();
+                Node leave = node.getNext();
                 if (leave.getType() != TokenStream.LEAVEWITH) {
                     throw new RuntimeException("Unexpected tree");
                 }
@@ -406,7 +406,7 @@ public class NodeTransformer {
                     // Move cursor to next before createAssignment get chance
                     // to change n.next
                     Node n = cursor;
-                    cursor = cursor.getNextSibling();
+                    cursor = cursor.getNext();
                     if (!n.hasChildren())
                         continue;
                     Node init = n.getFirstChild();
@@ -452,7 +452,7 @@ public class NodeTransformer {
 
               case TokenStream.GETPROP:
                 if (inFunction) {
-                    Node n = node.getFirstChild().getNextSibling();
+                    Node n = node.getFirstChild().getNext();
                     String name = n == null ? "" : n.getString();
                     Context cx = Context.getCurrentContext();
                     if ((cx != null && cx.isActivationNeeded(name)) ||
@@ -516,7 +516,7 @@ public class NodeTransformer {
             if (nodeType != TokenStream.VAR)
                 continue;
             for (Node cursor = node.getFirstChild(); cursor != null;
-                 cursor = cursor.getNextSibling())
+                 cursor = cursor.getNext())
             {
                 String name = cursor.getString();
                 if (fNames == null || !fNames.has(name))
@@ -553,7 +553,7 @@ public class NodeTransformer {
         {
             // Add parameters
             for (Node cursor = args.getFirstChild(); cursor != null;
-                 cursor = cursor.getNextSibling())
+                 cursor = cursor.getNext())
             {
                 String arg = cursor.getString();
                 vars.addParameter(arg, createVariableObject(arg, true));
@@ -588,9 +588,9 @@ public class NodeTransformer {
         Node left = node.getFirstChild();
         // count the arguments
         int argCount = 0;
-        Node arg = left.getNextSibling();
+        Node arg = left.getNext();
         while (arg != null) {
-            arg = arg.getNextSibling();
+            arg = arg.getNext();
             argCount++;
         }
         boolean addGetThis = false;

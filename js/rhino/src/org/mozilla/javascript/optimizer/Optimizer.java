@@ -415,7 +415,7 @@ public class Optimizer {
                 }
             case TokenStream.SETVAR : {
                     Node lChild = n.getFirstChild();
-                    Node rChild = lChild.getNextSibling();
+                    Node rChild = lChild.getNext();
                     int rType = rewriteForNumberVariables(rChild);
                     OptLocalVariable theVar
                          = (OptLocalVariable)(n.getProp(Node.VARIABLE_PROP));
@@ -458,7 +458,7 @@ public class Optimizer {
                 }
             case TokenStream.RELOP : {
                     Node lChild = n.getFirstChild();
-                    Node rChild = lChild.getNextSibling();
+                    Node rChild = lChild.getNext();
                     int lType = rewriteForNumberVariables(lChild);
                     int rType = rewriteForNumberVariables(rChild);
                     markDCPNumberContext(lChild);
@@ -528,7 +528,7 @@ public class Optimizer {
 
             case TokenStream.ADD : {
                     Node lChild = n.getFirstChild();
-                    Node rChild = lChild.getNextSibling();
+                    Node rChild = lChild.getNext();
                     int lType = rewriteForNumberVariables(lChild);
                     int rType = rewriteForNumberVariables(rChild);
 
@@ -580,7 +580,7 @@ public class Optimizer {
             case TokenStream.DIV :
             case TokenStream.MOD : {
                     Node lChild = n.getFirstChild();
-                    Node rChild = lChild.getNextSibling();
+                    Node rChild = lChild.getNext();
                     int lType = rewriteForNumberVariables(lChild);
                     int rType = rewriteForNumberVariables(rChild);
                     markDCPNumberContext(lChild);
@@ -632,8 +632,8 @@ public class Optimizer {
                 }
             case TokenStream.SETELEM : {
                     Node arrayBase = n.getFirstChild();
-                    Node arrayIndex = arrayBase.getNextSibling();
-                    Node rValue = arrayIndex.getNextSibling();
+                    Node arrayIndex = arrayBase.getNext();
+                    Node rValue = arrayIndex.getNext();
                     int baseType = rewriteForNumberVariables(arrayBase);
                     if (baseType == TypeEvent.NumberType) {// can never happen ???
                         if (!convertParameter(arrayBase)) {
@@ -664,7 +664,7 @@ public class Optimizer {
                 }
             case TokenStream.GETELEM : {
                     Node arrayBase = n.getFirstChild();
-                    Node arrayIndex = arrayBase.getNextSibling();
+                    Node arrayIndex = arrayBase.getNext();
                     int baseType = rewriteForNumberVariables(arrayBase);
                     if (baseType == TypeEvent.NumberType) {// can never happen ???
                         if (!convertParameter(arrayBase)) {
@@ -695,15 +695,15 @@ public class Optimizer {
 */
                         Node child = n.getFirstChild(); // the function
                         rewriteForNumberVariables(child);
-                        child = child.getNextSibling(); // the 'this' object
+                        child = child.getNext(); // the 'this' object
                         rewriteForNumberVariables(child);
-                        child = child.getNextSibling(); // the first arg
+                        child = child.getNext(); // the first arg
                         while (child != null) {
                             int type = rewriteForNumberVariables(child);
                             if (type == TypeEvent.NumberType) {
                                 markDCPNumberContext(child);
                             }
-                            child = child.getNextSibling();
+                            child = child.getNext();
                         }
                         return TypeEvent.NoType;
                     }
@@ -712,7 +712,7 @@ public class Optimizer {
             default : {
                     Node child = n.getFirstChild();
                     while (child != null) {
-                        Node nextChild = child.getNextSibling();
+                        Node nextChild = child.getNext();
                         int type = rewriteForNumberVariables(child);
                         if (type == TypeEvent.NumberType) {
                             if (!convertParameter(child)) {
@@ -743,7 +743,7 @@ public class Optimizer {
         if(lChild == null){                 // no children -- exit
             return;
         }else{
-            rChild = lChild.getNextSibling();
+            rChild = lChild.getNext();
 
             if(rChild == null){
                 foldConstants(lChild, n);   // one child -- recurse
@@ -756,10 +756,10 @@ public class Optimizer {
         foldConstants(rChild, n);
 
         /* take care of all the other children */
-        Node child = rChild.getNextSibling();
+        Node child = rChild.getNext();
         while (child != null) {
             foldConstants(child, n);
-            child = child.getNextSibling();
+            child = child.getNext();
         }
 
 
@@ -768,7 +768,7 @@ public class Optimizer {
         if(lChild == null){                 // no children -- exit
             return;
         }else{
-            rChild = lChild.getNextSibling();
+            rChild = lChild.getNext();
 
             if(rChild == null){
                 return;
@@ -937,11 +937,11 @@ public class Optimizer {
 
                     if (definedBoolean == ALWAYS_FALSE_BOOLEAN) {
                         //if(false) -> replace by the else clause if it exists
-                        Node next1 = rChild.getNextSibling();
+                        Node next1 = rChild.getNext();
                         if (next1 != null) {
-                            Node next2 = next1.getNextSibling();
+                            Node next2 = next1.getNext();
                             if (next2 != null) {
-                                Node next3 = next2.getNextSibling();
+                                Node next3 = next2.getNext();
                                 if (next3 != null) {
                                     Node elseClause = next3.getFirstChild();
                                     if (elseClause != null) {
@@ -1004,7 +1004,7 @@ public class Optimizer {
         Node child = n.getFirstChild();
         while (child != null) {
             replaceVariableAccess(child, theVariables);
-            child = child.getNextSibling();
+            child = child.getNext();
         }
         switch (n.getType()) {
             case TokenStream.SETVAR : {

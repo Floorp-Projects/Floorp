@@ -150,7 +150,7 @@ public class Node implements Cloneable {
         return last;
     }
 
-    public Node getNextSibling() {
+    public Node getNext() {
         return next;
     }
 
@@ -541,7 +541,7 @@ public class Node implements Cloneable {
             s.append(toString());
             s.append('\n');
             for (Node cursor = getFirstChild(); cursor != null;
-                 cursor = cursor.getNextSibling())
+                 cursor = cursor.getNext())
             {
                 Node n = cursor;
                 if (cursor.getType() == TokenStream.FUNCTION) {
@@ -556,13 +556,10 @@ public class Node implements Cloneable {
         return "";
     }
 
-    public Node getFirst()  { return first; }
-    public Node getNext()   { return next; }
-
-    protected int type;      // type of the node; TokenStream.NAME for example
-    protected Node next;     // next sibling
-    protected Node first;    // first element of a linked list of children
-    protected Node last;     // last element of a linked list of children
+    int type;              // type of the node; TokenStream.NAME for example
+    Node next;             // next sibling
+    private Node first;    // first element of a linked list of children
+    private Node last;     // last element of a linked list of children
     private int intDatum = -1;    // encapsulated int data; depends on type
     private UintMap props;
 }

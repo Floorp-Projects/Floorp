@@ -494,8 +494,8 @@ public class IRFactory {
                 int catchLineNo = cb.getLineno();
 
                 Node name = cb.getFirstChild();
-                Node cond = name.getNextSibling();
-                Node catchBlock = cond.getNextSibling();
+                Node cond = name.getNext();
+                Node catchBlock = cond.getNext();
                 cb.removeChild(name);
                 cb.removeChild(cond);
                 cb.removeChild(catchBlock);
@@ -525,7 +525,7 @@ public class IRFactory {
                 pn.addChildToBack(catchStmt);
 
                 // move to next cb
-                cb = cb.getNextSibling();
+                cb = cb.getNext();
             }
 
             // Generate code to rethrow if no catch clause was executed
@@ -595,7 +595,7 @@ public class IRFactory {
             // Move cursor to cursor.next before elem.next can be
             // altered in new Node constructor
             elem = cursor;
-            cursor = cursor.getNextSibling();
+            cursor = cursor.getNext();
             if (elem.getType() == TokenStream.PRIMARY &&
                 elem.getOperation() == TokenStream.UNDEFINED)
             {
@@ -654,13 +654,13 @@ public class IRFactory {
         Node comma = new Node(TokenStream.COMMA, temp);
         for (Node cursor = ((Node) obj).getFirstChild(); cursor != null;) {
             Node n = cursor;
-            cursor = cursor.getNextSibling();
+            cursor = cursor.getNext();
             int op = (n.getType() == TokenStream.NAME)
                    ? TokenStream.SETPROP
                    : TokenStream.SETELEM;
             // Move cursor before next.next can be altered in new Node
             Node next = cursor;
-            cursor = cursor.getNextSibling();
+            cursor = cursor.getNext();
             Node addelem = new Node(op, createUseTemp(temp), n, next);
             comma.addChildToBack(addelem);
         }
@@ -951,7 +951,7 @@ public class IRFactory {
                     if (hasSideEffects(child))
                         return true;
                     else
-                        child = child.getNextSibling();
+                        child = child.getNext();
                 }
                 break;
         }

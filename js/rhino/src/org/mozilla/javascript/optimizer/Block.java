@@ -199,7 +199,7 @@ public class Block {
             case TokenStream.SETVAR :
                 {
                     Node lhs = n.getFirstChild();
-                    Node rhs = lhs.getNextSibling();
+                    Node rhs = lhs.getNext();
                     lookForVariablesAndCalls(rhs, liveSet, theVariables);
                     Object theVarProp = n.getProp(Node.VARIABLE_PROP);
                     if (theVarProp != null) {
@@ -212,7 +212,7 @@ public class Block {
                     Node child = n.getFirstChild();
                     while (child != null) {
                         lookForVariablesAndCalls(child, liveSet, theVariables);
-                        child = child.getNextSibling();
+                        child = child.getNext();
                     }
                     for (int i = 0; i < liveSet.length; i++) {
                         if (liveSet[i])
@@ -235,7 +235,7 @@ public class Block {
                 Node child = n.getFirstChild();
                 while (child != null) {
                     lookForVariablesAndCalls(child, liveSet, theVariables);
-                    child = child.getNextSibling();
+                    child = child.getNext();
                 }
                 break;
         }
@@ -289,7 +289,7 @@ public class Block {
             case TokenStream.SETVAR :
                 {
                     Node lhs = n.getFirstChild();
-                    Node rhs = lhs.getNextSibling();
+                    Node rhs = lhs.getNext();
                     lookForVariableAccess(rhs, lastUse);
                     Object theVarProp = n.getProp(Node.VARIABLE_PROP);
                     if (theVarProp != null) {
@@ -316,7 +316,7 @@ public class Block {
                 Node child = n.getFirstChild();
                 while (child != null) {
                     lookForVariableAccess(child, lastUse);
-                    child = child.getNextSibling();
+                    child = child.getNext();
                 }
                 break;
         }
@@ -415,7 +415,7 @@ public class Block {
                     // the result, otherwise it could be a string.
                     Node child = n.getFirstChild();
                     int lType = findExpressionType(child);
-                    int rType = findExpressionType(child.getNextSibling());
+                    int rType = findExpressionType(child.getNext());
                     return lType | rType;       // we're not distinguishng strings yet
                 }
             default : {
@@ -426,7 +426,7 @@ public class Block {
                         int result = TypeEvent.NoType;
                         while (child != null) {
                             result |= findExpressionType(child);
-                            child = child.getNextSibling();
+                            child = child.getNext();
                         }
                         return result;
                     }
@@ -442,7 +442,7 @@ public class Block {
                     Node child = n.getFirstChild();
                     while (child != null) {
                         result |= findDefPoints(child);
-                        child = child.getNextSibling();
+                        child = child.getNext();
                     }
                 }
                 break;
@@ -460,8 +460,8 @@ public class Block {
 
             case TokenStream.SETPROP : {
                     Node baseChild = n.getFirstChild();
-                    Node nameChild = baseChild.getNextSibling();
-                    Node rhs = nameChild.getNextSibling();
+                    Node nameChild = baseChild.getNext();
+                    Node rhs = nameChild.getNext();
                     if (baseChild != null) {
                         if (baseChild.getType() == TokenStream.GETVAR) {
                             OptLocalVariable theVar = (OptLocalVariable)
@@ -481,7 +481,7 @@ public class Block {
                     OptLocalVariable theVar = (OptLocalVariable)
                                       (n.getProp(Node.VARIABLE_PROP));
                     if (theVar != null) {
-                        Node rValue = firstChild.getNextSibling();
+                        Node rValue = firstChild.getNext();
                         int theType = findExpressionType(rValue);
                         result |= theVar.assignType(theType);
                     }
@@ -500,7 +500,7 @@ public class Block {
                     Node child = n.getFirstChild();
                     while (child != null) {
                         localCSE(n, child, theCSETable, theFunction);
-                        child = child.getNextSibling();
+                        child = child.getNext();
                     }
                 }
                 break;
@@ -508,7 +508,7 @@ public class Block {
             case TokenStream.INC : {
                     Node child = n.getFirstChild();
                     if (child.getType() == TokenStream.GETPROP) {
-                        Node nameChild = child.getFirstChild().getNextSibling();
+                        Node nameChild = child.getFirstChild().getNext();
                         if (nameChild.getType() == TokenStream.STRING)
                             theCSETable.remove(nameChild.getString());
                         else
@@ -521,8 +521,8 @@ public class Block {
                 break;
             case TokenStream.SETPROP : {
                     Node baseChild = n.getFirstChild();
-                    Node nameChild = baseChild.getNextSibling();
-                    Node rhs = nameChild.getNextSibling();
+                    Node nameChild = baseChild.getNext();
+                    Node rhs = nameChild.getNext();
                     if (baseChild != null) localCSE(n, baseChild, theCSETable, theFunction);
                     if (nameChild != null) localCSE(n, nameChild, theCSETable, theFunction);
                     if (rhs != null) localCSE(n, rhs, theCSETable, theFunction);
@@ -544,7 +544,7 @@ public class Block {
                     if (baseChild.getType() == TokenStream.PRIMARY
                         && baseChild.getOperation() == TokenStream.THIS)
                     {
-                        Node nameChild = baseChild.getNextSibling();
+                        Node nameChild = baseChild.getNext();
                         if (nameChild.getType() == TokenStream.STRING) {
                             String theName = nameChild.getString();
 //            System.out.println("considering " + theName);
@@ -558,7 +558,7 @@ public class Block {
                                     Node theCSE;
                                     if (cse instanceof CSEHolder) {
                                         CSEHolder cseHolder = (CSEHolder)cse;
-                                        Node nextChild = cseHolder.getPropChild.getNextSibling();
+                                        Node nextChild = cseHolder.getPropChild.getNext();
                                         cseHolder.getPropParent.removeChild(cseHolder.getPropChild);
                                         theCSE = itsIRFactory.createNewLocal(cseHolder.getPropChild);
                                         theFunction.incrementLocalCount();
@@ -570,7 +570,7 @@ public class Block {
                                     }
                                     else
                                         theCSE = (Node)cse;
-                                    Node nextChild = n.getNextSibling();
+                                    Node nextChild = n.getNext();
                                     parent.removeChild(n);
                                     Node cseUse = itsIRFactory.createUseLocal(theCSE);
                                     if (nextChild == null)
@@ -585,8 +585,8 @@ public class Block {
                 break;
             case TokenStream.SETELEM : {
                     Node lhsBase = n.getFirstChild();
-                    Node lhsIndex = lhsBase.getNextSibling();
-                    Node rhs = lhsIndex.getNextSibling();
+                    Node lhsIndex = lhsBase.getNext();
+                    Node rhs = lhsIndex.getNext();
                     if (lhsBase != null) localCSE(n, lhsBase, theCSETable, theFunction);
                     if (lhsIndex != null) localCSE(n, lhsIndex, theCSETable, theFunction);
                     if (rhs != null) localCSE(n, rhs, theCSETable, theFunction);
@@ -598,7 +598,7 @@ public class Block {
                     Node child = n.getFirstChild();
                     while (child != null) {
                         localCSE(n, child, theCSETable, theFunction);
-                        child = child.getNextSibling();
+                        child = child.getNext();
                     }
                     theCSETable.clear();
 //System.out.println("clear all at CALL");
