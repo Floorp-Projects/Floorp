@@ -1463,6 +1463,13 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
     LOG_URI("  Finished loading: '%s'", aLoadData->mURI);
     // Remove the data from the list of loading datas
     if (aLoadData->mIsLoading) {
+#ifdef DEBUG
+      SheetLoadData *loadingData;
+      NS_ASSERTION(mLoadingDatas.Get(aLoadData->mURI, &loadingData) &&
+                   loadingData == aLoadData,
+                   "Bad loading table");
+#endif
+
       mLoadingDatas.Remove(aLoadData->mURI);
       aLoadData->mIsLoading = PR_FALSE;
     }
