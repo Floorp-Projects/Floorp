@@ -1,21 +1,14 @@
  
 menubar 
   {
-	-moz-binding          : url("chrome://global/skin/globalBindings.xml#menubar");
   background-color      : #B4C3D4;
 	border-top            : 1px solid #7693B3;
-	border-bottom         : 1px solid #DCEEFF;
   }
 
-.menubar-container {
+menubar > .toolbar-holder {
 	border-bottom         : 1px solid #597899;
 }
   
-menubar > toolbargrippy 
-  {
-    display               : none;
-  }
-
 menu, menuitem  
   {
     color                 : #17222E;
@@ -198,8 +191,8 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
  **/
 .tooltip
   {
-    background-color      : #E0FFFF;
-    border                : 0px;
+    background-color      : #FFFFE7;
+    border                : 1px solid #000000;
     color                 : #000000;
     font-size             : 10px;
     padding               : 2px;
