@@ -54,18 +54,16 @@
 inline void nsCollationUnix::DoSetLocale()
 {
   char *locale = setlocale(LC_COLLATE, NULL);
-  mSavedLocale.AssignWithConversion(locale ? locale : "");
-  if (!mSavedLocale.EqualsIgnoreCase(mLocale)) {
-    (void) setlocale(LC_COLLATE,
-        NS_LossyConvertUCS2toASCII(Substring(mLocale,0,MAX_LOCALE_LEN)).get());
+  mSavedLocale.Assign(locale ? locale : "");
+  if (!mSavedLocale.EqualsIgnoreCase(mLocale.get())) {
+    (void) setlocale(LC_COLLATE, PromiseFlatCString(Substring(mLocale,0,MAX_LOCALE_LEN)).get());
   }
 }
 
 inline void nsCollationUnix::DoRestoreLocale()
 {
-  if (!mSavedLocale.EqualsIgnoreCase(mLocale)) { 
-    (void) setlocale(LC_COLLATE,
-        NS_LossyConvertUCS2toASCII(Substring(mSavedLocale,0,MAX_LOCALE_LEN)).get());
+  if (!mSavedLocale.EqualsIgnoreCase(mLocale.get())) { 
+    (void) setlocale(LC_COLLATE, PromiseFlatCString(Substring(mSavedLocale,0,MAX_LOCALE_LEN)).get());
   }
 }
 
@@ -113,7 +111,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
 
   // default platform locale
-  mLocale.Assign(NS_LITERAL_STRING("C"));
+  mLocale.Assign('C');
 
   PRUnichar *aLocaleUnichar = NULL;
   nsString aCategory;
@@ -156,7 +154,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       char platformLocale[kPlatformLocaleLength+1];
       res = posixLocale->GetPlatformLocale(&aLocale, platformLocale, kPlatformLocaleLength+1);
       if (NS_SUCCEEDED(res)) {
-        mLocale.AssignWithConversion(platformLocale);
+        mLocale.Assign(platformLocale);
       }
     }
 
@@ -174,7 +172,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 #if defined(DEBUG_UNIX_COLLATION)
   printf("nsCollationUnix::Initialize mLocale = %s\n" 
          "nsCollationUnix::Initialize mCharset = %s\n",
-         NS_LossyConvertUCS2toASCII(mLocale).get(),
+         mLocale.get(),
          NS_LossyConvertUCS2toASCII(mCharset).get());
 #endif
 
