@@ -966,8 +966,15 @@ NS_IMETHODIMP nsMsgDatabase::GetDBFolderInfo(nsIDBFolderInfo	**result)
 {
 	*result = m_dbFolderInfo;
 	if (m_dbFolderInfo)
+  {
 		m_dbFolderInfo->AddRef();
-	return NS_OK;
+	  return NS_OK;
+  }
+  else
+  {
+    NS_ASSERTION(PR_FALSE, "db must be corrupt");
+    return NS_ERROR_NULL_POINTER; // it's an error if we can't get this
+  }
 }
 
 NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
@@ -1138,9 +1145,21 @@ nsresult nsMsgDatabase::InitExistingDB()
 			{
 				NS_ADDREF(m_dbFolderInfo); // mscott: acquire a ref count. we shouldn't do this & should be going through
 									       // the component manager instead.
-				m_dbFolderInfo->InitFromExistingDB();
+				err = m_dbFolderInfo->InitFromExistingDB();
 			}
 		}
+    else
+      err = NS_ERROR_FAILURE;
+
+    // create new all msg hdrs table, if it doesn't exist.
+    if (NS_SUCCEEDED(err) && !m_mdbAllMsgHeadersTable)
+    {
+			nsIMdbStore *store = GetStore();
+			mdb_err mdberr = (nsresult) store->NewTable(GetEnv(), m_hdrRowScopeToken, 
+				m_hdrTableKindToken, PR_FALSE, nsnull, &m_mdbAllMsgHeadersTable);
+      if (mdberr != NS_OK || !m_mdbAllMsgHeadersTable)
+        err = NS_ERROR_FAILURE;
+    }
 	}
 	return err;
 }
