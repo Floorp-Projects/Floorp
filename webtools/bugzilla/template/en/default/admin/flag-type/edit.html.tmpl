@@ -163,7 +163,14 @@
     <tr>
       <th>CC List:</th>
       <td>
-        if requestable, who should get carbon copied on email notification of requests<br>
+        if requestable, who should get carbon copied on email notification of requests.
+        This is a comma-separated list of full e-mail addresses which do not
+        need to be [% terms.Bugzilla %] logins.
+        [% IF Param('emailsuffix') %]
+          Note that the configured emailsuffix
+          <kbd>[% Param('emailsuffix') %]</kbd> will <em>not</em> be appended
+          to these addresses, so you should add it explicitly if so desired.
+        [% END %]<br>
         <input type="text" name="cc_list" value="[% type.cc_list FILTER html %]" size="80" maxlength="200">
       </td>
     </tr>

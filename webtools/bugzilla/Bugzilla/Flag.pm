@@ -622,7 +622,7 @@ sub notify {
             next if $flag->{'target'}->{'attachment'}->{'isprivate'}
               && Param("insidergroup")
               && !$ccuser->in_group(Param("insidergroup"));
-            push(@new_cc_list, $cc.Param('emailsuffix'));
+            push(@new_cc_list, $cc);
         }
         $flag->{'type'}->{'cc_list'} = join(", ", @new_cc_list);
     }
