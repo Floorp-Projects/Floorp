@@ -603,17 +603,16 @@ GetVolumeList(nsVoidArray **array)
 FileSystemCursor::FileSystemCursor(nsIRDFResource *source,
 				nsIRDFResource *property,
 				nsVoidArray *array)
+	: mSource(source),
+	  mProperty(property),
+	  mArray(array),
+	  mCount(0),
+	  mTarget(nsnull),
+	  mValue(nsnull)
 {
 	NS_INIT_REFCNT();
-
-	mSource = source;
-	mProperty = property;
-	mArray = array;
 	NS_ADDREF(mSource);
 	NS_ADDREF(mProperty);
-	mCount = 0;
-	mTarget = nsnull;
-	mValue = nsnull;
 }
 
 
@@ -624,6 +623,10 @@ FileSystemCursor::~FileSystemCursor(void)
 	NS_IF_RELEASE(mValue);
 	NS_IF_RELEASE(mProperty);
 	NS_IF_RELEASE(mTarget);
+	if (nsnull != mArray)
+	{
+		delete mArray;
+	}
 }
 
 
