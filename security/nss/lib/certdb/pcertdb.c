@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.11 2001/02/28 22:50:12 nelsonb%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.12 2001/03/07 17:34:44 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -3985,6 +3985,9 @@ UpdateV5DB(CERTCertDBHandle *handle, DB *updatedb)
 			       (void *)handle);
     
     PZ_DestroyMonitor(updatehandle.dbMon);
+
+    (* updatedb->close)(updatedb);
+    return(SECSuccess);
     
     return(rv);
 }
