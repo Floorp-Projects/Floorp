@@ -338,8 +338,8 @@ alpha*-*-linux*)
     CFLAGS="$CFLAGS -Dunix"
     CXXFLAGS="$CXXFLAGS -Dunix"
     # At least for 1.3 and up, ld supports this, despite the test failing above.
-    MKSHLIB_FORCE_ALL='-whole-archive'
-    MKSHLIB_UNFORCE_ALL='-no-whole-archive'
+    MKSHLIB_FORCE_ALL='--whole-archive'
+    MKSHLIB_UNFORCE_ALL='--no-whole-archive'
     case `uname -m` in
 	*86)
 		MKSHLIB='$(LD) $(DSO_LDOPTS)'
