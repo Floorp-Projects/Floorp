@@ -65,8 +65,7 @@
 
           for (var i=4; i<buttons.childNodes.length; i++) {
             var button = buttons.childNodes[i];
-            if (!overflowed)
-              button.collapsed = false;
+            button.collapsed = overflowed;
             
             if (button.boxObject.x + button.boxObject.width > width) {
               overflowed = true;
@@ -113,7 +112,7 @@
           hbox.focus() <!-- buttons in the pt have -moz-user-focus: ignore -->
           this._selection   = this.getBTSelection(document.popupNode);
           this._orientation = this.getBTOrientation(aEvent, document.popupNode);
-          this._target      = BookmarksUtils.getTargetFromSelection(this._selection, this._orientation);
+          this._target      = this.getBTTarget(document.popupNode, this._orientation);
           BookmarksCommand.createContextMenu(aEvent, this._selection);
           this.onCommandUpdate();
           aEvent.target.addEventListener("mousemove", this.commandController.onMouseMove, false)
@@ -172,7 +171,7 @@
           var item;
           switch (aNode.id) {
           case "bookmarks-ptf":
-            item = "NC:PersonalToolbarFolder"
+            item = "NC:PersonalToolbarFolder";
             break;
           case "bookmarks-menu":
             item = "NC:BookmarksRoot";
@@ -196,6 +195,49 @@
       </method>
 
   <!--/////////////////////////////////////////////////////////////////////////////
+      // returns the insertion target from aNode -->
+      <method name="getBTTarget">
+        <parameter name="aNode"/>
+        <parameter name="aOrientation"/>
+        <body><![CDATA[
+          var item, parent, index;
+          switch (aNode.id) {
+          case "bookmarks-ptf":
+            parent = "NC:PersonalToolbarFolder";
+            item = this.getLastVisibleBookmark();
+            break;
+          case "bookmarks-menu":
+            parent = "NC:BookmarksRoot";
+            break;
+          default:
+            if (aNode.getAttribute("class") == "chevron") {
+              parent = "NC:PersonalToolbarFolder";
+              break;
+            }
+            if (aOrientation == BookmarksUtils.DROP_ON)
+              parent = aNode.id
+            else {
+              parent = this.getBTContainer(aNode);
+              item = aNode;
+            }
+          }
+
+          parent = RDF.GetResource(parent);
+          if (item && aOrientation != BookmarksUtils.DROP_ON) {
+            item = RDF.GetResource(item.id);
+            RDFC.Init(BMDS, parent);
+            index = RDFC.IndexOf(item);
+            if (aOrientation == BookmarksUtils.DROP_AFTER)
+              ++index;
+          } else
+            index = parseInt(BookmarksUtils.getProperty(parent, RDF_NS+"nextVal"));
+
+          var target = { parent: parent, index: index };
+          return target;
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
       // returns the parent resource of a node in the personal toolbar.
       // This is determined by inspecting the source element and walking up the 
       // DOM tree to find the appropriate containing node. -->
@@ -204,27 +246,22 @@
         <body><![CDATA[
           var parent;
           var item = aNode.id;
-          if (item == "NC:PersonalToolbarFolder")
-            parent = BookmarksUtils.getParentOfContainer(item);
-          else if (item == "NC:BookmarksRoot")
-            parent = null;
-          else if (this.isBTBookmark(item)) {
-            parent = aNode.parentNode.parentNode;
-            if (parent.getAttribute("class") == "chevron")
-               parent = parent.parentNode;
-            if (parent.localName == "stack")
-               parent = parent.parentNode;
-            parent = parent.id;
-            switch (parent) {
-            case "bookmarks-toolbar":
-              parent = "NC:PersonalToolbarFolder"
-              break;
-            case "bookmarks-menu":
-              parent = "NC:BookmarksRoot";
-              break;
-            }
-          } else
-            parent = "NC:BookmarksRoot"
+          if (!this.isBTBookmark(item))
+            return "NC:BookmarksRoot"
+          parent = aNode.parentNode.parentNode;
+          if (parent.getAttribute("class") == "chevron")
+            parent = parent.parentNode.parentNode;
+          if (parent.localName == "stack")
+            parent = parent.parentNode;
+          parent = parent.id;
+          switch (parent) {
+          case "bookmarks-toolbar":
+            parent = "NC:PersonalToolbarFolder"
+            break;
+          case "bookmarks-menu":
+            parent = "NC:BookmarksRoot";
+            break;
+          }
           return parent;
         ]]></body>
       </method>
@@ -268,9 +305,15 @@
             target = aEvent.originalTarget;
           else
             target = aTarget;
-          if (target.localName == "menu" &&
-              target.parentNode.localName != "menupopup")
+          if (target.localName == "menu"                 &&
+              target.parentNode.localName != "menupopup" ||
+              target.getAttribute("class") == "chevron")
             return BookmarksUtils.DROP_ON;
+          if (target.localName == "hbox") {
+            return target.childNodes.length>4?
+                   BookmarksUtils.DROP_AFTER:BookmarksUtils.DROP_ON;
+          }
+
           var overButtonBoxObject = target.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
           var overParentBoxObject = target.parentNode.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
 
@@ -316,7 +359,7 @@
       </method>
 
   <!--/////////////////////////////////////////////////////////////////////////////
-      // Returns true if the node is a container. -->
+      // expand the folder targeted by the context menu. -->
       <method name="expandBTFolder">
         <body><![CDATA[
            var target = document.popupNode.lastChild;
@@ -394,6 +437,23 @@
             aTarget.removeChild(aTarget.lastChild);
             aTarget.removeChild(aTarget.lastChild);
           }
+        ]]></body>
+      </method>
+
+  <!--/////////////////////////////////////////////////////////////////////////////
+      // returns the node of the last visible bookmark on the toolbar -->
+      <method name="getLastVisibleBookmark">
+        <body><![CDATA[
+          var buttons = (document.getAnonymousNodes(this))[0].firstChild;
+          var button = buttons.childNodes[3].nextSibling;
+          if (!button)
+            return null; // empty bookmarks toolbar
+          do {
+            if (button.collapsed)
+              return button.previousSibling;
+            button = button.nextSibling;
+          } while (button)
+          return buttons.lastChild;
         ]]></body>
       </method>
 

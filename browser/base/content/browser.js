@@ -2097,12 +2097,11 @@ var personalToolbarDNDObserver = {
 
     // if the personal toolbar does not exist, recreate it
     if (aEvent.originalTarget == "bookmarks-toolbar") {
-      BookmarksUtils.recreatePersonalToolbarFolder(transactionSet);
-      target = { parent: "NC:PersonalToolbarFolder", index: 1 };
+      //BookmarksUtils.recreatePersonalToolbarFolder(transactionSet);
+      //target = { parent: "NC:PersonalToolbarFolder", index: 1 };
     } else {
       var orientation = bt.getBTOrientation(aEvent);
-      var target      = bt.getBTSelection(aEvent.originalTarget);
-      target          = BookmarksUtils.getTargetFromSelection(target, orientation);
+      var target      = bt.getBTTarget(aEvent.originalTarget, orientation);
     }
 
     const kDSIID      = Components.interfaces.nsIDragService;
@@ -2116,10 +2115,13 @@ var personalToolbarDNDObserver = {
   canDrop: function (aEvent, aDragSession)
   {
     var target = aEvent.originalTarget;
-    return target.id && target.localName != "menupopup" && target.localName != "toolbar" &&
-           target.localName != "menuseparator" && target.localName != "toolbarseparator" &
+    var bt = document.getElementById("bookmarks-toolbar");
+    return bt.isBTBookmark(target.id)                  && 
            target.id != "NC:SystemBookmarksStaticRoot" &&
-           target.id.substring(0,5) != "find:";
+           target.id.substring(0,5) != "find:"         ||
+           target.id == "bookmarks-menu"               ||
+           target.getAttribute("class") == "chevron"   ||
+           target.localName == "hbox";
   },
 
   canHandleMultipleItems: true,
@@ -2154,9 +2156,11 @@ var personalToolbarDNDObserver = {
   get mObservers ()
   {
     if (!this._observers) {
+      var bt = document.getElementById("bookmarks-toolbar");
       this._observers = [
-        document.getElementById("bookmarks-ptf"),
-        document.getElementById("bookmarks-menu").parentNode
+        document.getAnonymousElementByAttribute(bt , "anonid", "bookmarks-ptf"),
+        document.getElementById("bookmarks-menu").parentNode,
+        document.getAnonymousElementByAttribute(bt , "class", "chevron").parentNode
       ]
     }
     return this._observers;
@@ -2308,23 +2312,31 @@ var personalToolbarDNDObserver = {
         }
         break;
       case "hbox"     : 
-        aTarget.lastChild.setAttribute("dragover-right", "true");
+        // hit between the last visible bookmark and the chevron
+        var bt = document.getElementById("bookmarks-toolbar");
+        var newTarget = bt.getLastVisibleBookmark();
+        if (newTarget)
+          newTarget.setAttribute("dragover-right", "true");
         break;
-      case "menupopup": 
-      case "toolbar"  : break;
-      case "bookmarks-toolbar": break; // no personal toolbar folder
-      default: dump("No feedback for: "+aTarget.localName+"\n");
+      case "stack"    :
+      case "menupopup": break; 
+     default: dump("No feedback for: "+aTarget.localName+"\n");
     }
   },
 
   onDragRemoveFeedBack: function (aTarget)
   { 
-    if (aTarget.localName == "bookmarks-toolbar") {
-      var ptf = document.getAnonymousElementByAttribute(aTarget, "anonid", "bookmarks-ptf");
-      if (ptf.hasChildNodes())
-        ptf.lastChild.removeAttribute("dragover-right");
-    } else if (aTarget.localName == "hbox") {
-      aTarget.lastChild.removeAttribute("dragover-right");
+    if (aTarget.localName == "hbox") { 
+      // hit when dropping in the bt or between the last visible bookmark 
+      // and the chevron
+      var bt = document.getElementById("bookmarks-toolbar");
+      var newTarget = bt.getLastVisibleBookmark();
+      if (newTarget)
+        newTarget.removeAttribute("dragover-right");
+    } else if (aTarget.localName == "stack") {
+      var bt = document.getElementById("bookmarks-toolbar");
+      var newTarget = bt.getLastVisibleBookmark();
+      newTarget.removeAttribute("dragover-right");
     } else {
       aTarget.removeAttribute("dragover-left");
       aTarget.removeAttribute("dragover-right");
@@ -2340,8 +2352,9 @@ var personalToolbarDNDObserver = {
 
   isContainer: function (aTarget)
   {
-    return  aTarget.localName == "menu" || (aTarget.localName == "toolbarbutton") &&
-           (aTarget.getAttribute("container") == "true" || aTarget.getAttribute("group") == "true");
+    return aTarget.localName == "menu"          || 
+           aTarget.localName == "toolbarbutton" &&
+           aTarget.getAttribute("type") == "menu";
   }
 }
 
