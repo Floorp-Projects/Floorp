@@ -28,8 +28,11 @@ import org.mozilla.util.ParameterCheck;
 
 import org.mozilla.webclient.Bookmarks;
 import org.mozilla.webclient.BookmarkEntry;
+import org.mozilla.webclient.UnimplementedException;
 
 import java.util.Properties;
+
+import javax.swing.tree.MutableTreeNode;
 
 public class BookmarkEntryImpl extends RDFTreeNode implements BookmarkEntry
 {
@@ -80,6 +83,31 @@ protected RDFTreeNode newRDFTreeNode(int nativeNode,
 }
 
 //
+// Methods from javax.swing.tree.MutableTreeNode
+//
+
+public void remove(int index) 
+{
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function BookmarkEntry::remove has not yet been implemented.\n");
+}
+
+public void remove(MutableTreeNode node) 
+{
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function BookmarkEntry::remove has not yet been implemented.\n");
+}
+
+public void removeFromParent() 
+{
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function BookmarkEntry::removeFromParent has not yet been implemented.\n");
+}
+
+public void setUserObject(Object object) 
+{
+
+}
+
+
+//
 // Methods from BookmarkEntry    
 //
 
@@ -110,7 +138,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("BookmarkEntryImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BookmarkEntryImpl.java,v 1.1 2000/03/04 01:10:55 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BookmarkEntryImpl.java,v 1.2 2000/08/04 21:46:10 edburns%acm.org Exp $");
 
 }
 
