@@ -39,7 +39,7 @@ ifdef JAVA_OR_OJI
 DIRS		= classes
 endif
 
-REQUIRES	= java js nspr 
+REQUIRES	= java js
 
 EXPORTS		= $(srcdir)/jsdebug.h
 

@@ -28,15 +28,15 @@ ifndef XCFLAGS
 OS2_IMPLIB=1
 LIBRARY	= jsxpcom$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
 DEF_FILE	= jsxpcomos2$(VERSION_NUMBER).def
-EXTRA_LIBS	= $(LIBNSPR) $(LIBNSJAVA)
+EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA)
 else
-EXTRA_LIBS	= $(LIBNSPR) $(LIBNSJAVA) $(OBJDIR)/libjs.lib
+EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA) $(OBJDIR)/libjs.lib
 endif
 endif
 
 MODULE		= jsxpcom
 
-REQUIRES	= xpcom js nspr
+REQUIRES	= xpcom js
 
 CSRCS		= $(NULL)
 
@@ -124,13 +124,7 @@ endif
 
 endif # sparc
 
-INCLUDES	+= -I. 
-
-ifdef NSPR20
-INCLUDES	+= -I$(DIST)/include/nspr20/pr
-else
-INCLUDES	+= -I$(XPDIST)/public/nspr
-endif
+INCLUDES	+= -I$(srcdir)
 
 ifndef NSBUILDROOT
 JSJAVA_STUBHEADERS = -I$(DEPTH)/sun-java/include/_gen \
@@ -144,8 +138,8 @@ JSJAVA_CFLAGS	= -I$(DEPTH)/sun-java/md-include \
 		  -I$(DEPTH)/sun-java/include \
 		  $(JSJAVA_STUBHEADERS)
 
-# LIBNSPR abstracts nspr version, etc. nicely.
-LDFLAGS 	+= -L$(DIST)/bin -lxpcom -lreg -ljsxpcom -ljs $(LIBNSPR) -lplc21 -lm
+# NSPR_LIBS abstracts nspr version, etc. nicely.
+LDFLAGS 	+= -L$(DIST)/bin -lxpcom -lreg -ljsxpcom -ljs $(NSPR_LIBS) -lm
 
 ifeq ($(OS_ARCH), OSF1)
 LDFLAGS += -lc_r

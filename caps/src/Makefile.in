@@ -46,7 +46,7 @@ CPPSRCS		=	        \
 		nsCCodeSourcePrincipal.cpp	\
 		$(NULL)
 
-REQUIRES	= nspr xpcom security layer js jar zlib pref img util rdf caps 
+REQUIRES	= xpcom security layer js jar zlib pref img util rdf caps 
 
 ifndef MOZ_NATIVE_ZLIB
 REQUIRES += zlib

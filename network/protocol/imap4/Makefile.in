@@ -41,7 +41,7 @@ EXPORTS= imap4pvt.h imap4url.h imapbody.h imaphier.h mkimap4.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES	=  util network nspr2 security \
+REQUIRES	=  util network security \
 	netcache network nspr2 dbm util pref js java fileurl \
 	security layer img httpurl mimetype htmldlgs
 

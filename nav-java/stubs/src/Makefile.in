@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= java
 LIBRARY_NAME	= stubnj
 
-REQUIRES	= js nspr java
+REQUIRES	= js java
 
 CSRCS		= stubnj.c
 

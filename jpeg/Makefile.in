@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= jpeg
 LIBRARY_NAME	= jpeg
 
-REQUIRES	= java nspr
+REQUIRES	= java
 
 EXPORTS		= jconfig.h jerror.h jinclude.h jmorecfg.h jpeglib.h jpegint.h jwinfig.h jos2fig.h
 

@@ -57,9 +57,6 @@ EX_LIBS = \
 	$(DIST)/bin/libraptorbase.so \
 	$(DIST)/bin/libgmbaseunix.so \
 	$(DIST)/bin/libsecfree.so \
-	$(DIST)/lib/libplc21.so \
-	$(DIST)/lib/libplds21.so	\
-	$(DIST)/lib/libnspr21.so \
 	$(NULL)
 
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
@@ -75,7 +72,7 @@ $(OBJDIR)/%.o: %.cpp
 
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
+	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
 
 export::
 

@@ -31,7 +31,7 @@ CSRCS		= \
 
 EXPORTS= $(srcdir)/mkcertld.h
 
-REQUIRES	= ldap network nspr2 dbm util pref js java fileurl \
+REQUIRES	= ldap network dbm util pref js java fileurl \
 	security layer img httpurl
 
 include $(topsrcdir)/config/rules.mk
