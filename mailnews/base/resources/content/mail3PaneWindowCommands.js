@@ -85,7 +85,7 @@ var FolderPaneController =
 				catch (ex) {
 					//dump("specialFolder failure: " + ex + "\n");
 				} 
-        if (specialFolder == "Inbox" || specialFolder == "Trash" || isServer == "true")
+        if (specialFolder == "Inbox" || specialFolder == "Trash" || specialFolder == "Drafts" || specialFolder == "Sent" || specialFolder == "Templates" || isServer == "true")
           canDeleteThisFolder = false;
         else
           canDeleteThisFolder = true;
