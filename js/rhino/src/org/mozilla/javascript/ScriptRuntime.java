@@ -2618,8 +2618,7 @@ public class ScriptRuntime {
      *
      * @return a instanceof b
      */
-    public static boolean instanceOf(Object a, Object b,
-                                     Context cx, Scriptable scope)
+    public static boolean instanceOf(Object a, Object b, Context cx)
     {
         // Check RHS is an object
         if (! (b instanceof Scriptable)) {
@@ -2665,7 +2664,7 @@ public class ScriptRuntime {
      *
      * @return true if property name or element number a is a property of b
      */
-    public static boolean in(Object a, Object b, Context cx, Scriptable scope)
+    public static boolean in(Object a, Object b, Context cx)
     {
         if (!(b instanceof Scriptable)) {
             throw typeError0("msg.instanceof.not.object");

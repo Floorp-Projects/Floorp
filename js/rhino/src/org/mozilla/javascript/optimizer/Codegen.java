@@ -3414,13 +3414,11 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             generateExpression(child, node);
             generateExpression(rChild, node);
             cfw.addALoad(contextLocal);
-            cfw.addALoad(variableObjectLocal);
             addScriptRuntimeInvoke(
                 (type == Token.INSTANCEOF) ? "instanceOf" : "in",
                 "(Ljava/lang/Object;"
                 +"Ljava/lang/Object;"
                 +"Lorg/mozilla/javascript/Context;"
-                +"Lorg/mozilla/javascript/Scriptable;"
                 +")Z");
             cfw.add(ByteCode.IFNE, trueGOTO);
             cfw.add(ByteCode.GOTO, falseGOTO);
