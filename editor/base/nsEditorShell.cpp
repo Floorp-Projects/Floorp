@@ -909,7 +909,9 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
   {
     if (mEditorTypeString.EqualsWithConversion("text"))
     {
-      err = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIPlaintextEditor::eEditorPlaintextMask | nsIPlaintextEditor::eEditorEnableWrapHackMask);
+      PRInt16 flags = nsIPlaintextEditor::eEditorPlaintextMask | nsIPlaintextEditor::eEditorEnableWrapHackMask;
+      if (mMailCompose) flags |= nsIPlaintextEditor::eEditorMailMask;
+      err = editor->Init(aDoc, aPresShell, nsnull, selCon, flags);
       mEditorType = ePlainTextEditorType;
     }
     else if (mEditorTypeString.EqualsWithConversion("html") || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
