@@ -146,7 +146,8 @@ nsresult nsObserverService::AddObserver(nsIObserver* anObserver, const PRUnichar
         return NS_ERROR_NULL_POINTER;
     }
 
-	rv = GetObserverList(aTopic, &anObserverList);
+    nsAutoString topic(aTopic);
+	rv = GetObserverList(topic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
 	if (anObserverList) {
@@ -171,7 +172,8 @@ nsresult nsObserverService::RemoveObserver(nsIObserver* anObserver, const PRUnic
         return NS_ERROR_NULL_POINTER;
     }
 
-	rv = GetObserverList(aTopic, &anObserverList);
+    nsAutoString topic(aTopic);
+	rv = GetObserverList(topic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
 	if (anObserverList) {
@@ -196,7 +198,8 @@ nsresult nsObserverService::EnumerateObserverList(const PRUnichar* aTopic, nsIEn
         return NS_ERROR_NULL_POINTER;
     }
 
-	rv = GetObserverList(aTopic, &anObserverList);
+    nsAutoString topic(aTopic);
+	rv = GetObserverList(topic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
 	if (anObserverList) {
