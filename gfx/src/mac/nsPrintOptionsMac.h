@@ -35,32 +35,28 @@
 class nsPrintOptionsMac : public nsPrintOptions
 {
 public:
-  nsPrintOptionsMac();
-  virtual ~nsPrintOptionsMac();
+              nsPrintOptionsMac();
+  virtual     ~nsPrintOptionsMac();
 
-private:
-	THPrint	GetPrintRecord(void) {return mPrintRecord;}
+  NS_IMETHOD  ShowNativeDialog(void);
+  NS_IMETHOD  GetNativeData(PRInt16 aDataType, void * *_retval);
 
-  NS_IMETHOD ShowNativeDialog(void);
-
-	// members
-	THPrint	mPrintRecord;
-
-};
-
-#else
-
-class nsPrintOptionsMac : public nsPrintOptions
-{
-public:
-  nsPrintOptionsMac() { };
-  virtual ~nsPrintOptionsMac() { };
-
-private:
-  //XXX FILL IN PRINT OPTIONS HERE FOR CARBON
+  NS_IMETHOD  ReadPrefs();
+  NS_IMETHOD  WritePrefs();
   
+protected:
+
+  nsresult    ReadPageSetupFromPrefs();
+  nsresult    WritePageSetupToPrefs();
+
+	THPrint     GetPrintRecord(void) { return mPrintRecord; }
+
+protected:
+
+	THPrint	    mPrintRecord;
+
 };
 
-#endif
+#endif /* TARGET_CARBON */
 
 #endif /* nsPrintOptionsMac_h__ */

@@ -44,13 +44,13 @@
 #include "nsIPrintOptions.h"
 #include "nsGfxCIID.h"
 
+#include "nsGfxUtils.h"
+
 #if !TARGET_CARBON
 #include "nsMacResources.h"
 #include <Resources.h>
 #include <Dialogs.h>
 #endif
-
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 #if !TARGET_CARBON
 
@@ -66,13 +66,13 @@ enum {
 
 // items to support the additional items for the dialog
 #define DITL_ADDITIONS  128
+
 static pascal TPPrDlg   MyJobDlgInit(THPrint);        // Our extention to PrJobInit
-static TPPrDlg          PrtJobDialog;                 // pointer to job dialog 
+static TPPrDlg          gPrtJobDialog;                 // pointer to job dialog 
 static long             prFirstItem;                  // our first item in the extended dialog
 static PItemUPP         prPItemProc;                  // store the old item handler here
-static nsIPrintOptions  *gCurrOptions;
 static PRBool           gPrintSelection;
-static UserItemUPP      myDrawListUPP=0;
+static UserItemUPP      gDrawListUPP = nsnull;
 
 
 typedef struct dialog_item_struct {
@@ -93,30 +93,27 @@ typedef struct append_item_list_struct {
  *  Construct the nsDeviceContextSpecMac
  *  @update   dc 12/02/98
  */
-nsDeviceContextSpecMac :: nsDeviceContextSpecMac()
+nsDeviceContextSpecMac::nsDeviceContextSpecMac()
+: mPrtRec(nsnull)
+, mPrintManagerOpen(PR_FALSE)
 {
   NS_INIT_REFCNT();
-  mPrtRec = nsnull;
-  mPrintManagerOpen = PR_FALSE;
-  
 }
 
 /** -------------------------------------------------------
  *  Destroy the nsDeviceContextSpecMac
  *  @update   dc 12/02/98
  */
-nsDeviceContextSpecMac :: ~nsDeviceContextSpecMac()
+nsDeviceContextSpecMac::~nsDeviceContextSpecMac()
 {
+  ClosePrintManager();
 
-  if(mPrtRec != nsnull){
+  if (mPrtRec) {
     ::DisposeHandle((Handle)mPrtRec);
     mPrtRec = nsnull;
-    ClosePrintManager();
   }
 
 }
-
-static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 
 NS_IMPL_ISUPPORTS2(nsDeviceContextSpecMac, nsIDeviceContextSpec, nsIPrintingContext)
 
@@ -128,12 +125,17 @@ NS_IMPL_ISUPPORTS2(nsDeviceContextSpecMac, nsIDeviceContextSpec, nsIPrintingCont
  */
 static pascal void MyBBoxDraw(WindowPtr theWindow, short aItemNo)
 {
-short   itemType;
-Rect    itemBox;
-Handle  itemH;
+  short   itemType;
+  Rect    itemBox;
+  Handle  itemH;
 
-  ::GetDialogItem((DialogPtr)PrtJobDialog,prFirstItem+eDrawFrameID-1,&itemType,&itemH,&itemBox);
-  ::FrameRect(&itemBox);
+  ::GetDialogItem((DialogPtr)gPrtJobDialog, prFirstItem + eDrawFrameID-1, &itemType, &itemH, &itemBox);
+  
+  // use appearance if possible
+  if ((long)DrawThemeSecondaryGroup != kUnresolvedCFragSymbolAddress)
+    ::DrawThemeSecondaryGroup(&itemBox, kThemeStateActive);
+  else
+    ::FrameRect(&itemBox);
 }
 
 
@@ -143,7 +145,7 @@ Handle  itemH;
  */
 static pascal void MyJobItems(TPPrDlg aDialog, short aItemNo)
 {
-short   myItem,firstItem,i,itemType;
+short   myItem, firstItem, i, itemType;
 short   value;
 Rect    itemBox;
 Handle  itemH;
@@ -151,57 +153,64 @@ Handle  itemH;
   firstItem = prFirstItem;
   
   myItem = aItemNo-firstItem+1;
-  if(myItem>0) {
+  if (myItem>0) {
     switch (myItem) {
       case ePrintSelectionCheckboxID:
-        ::GetDialogItem((DialogPtr)aDialog,firstItem,&itemType,&itemH,&itemBox);
-        gPrintSelection = (gPrintSelection==PR_TRUE)?PR_FALSE:PR_TRUE;
-        ::SetControlValue((ControlHandle)itemH,gPrintSelection);
+        ::GetDialogItem((DialogPtr)aDialog, firstItem, &itemType, &itemH, &itemBox);
+        gPrintSelection = !gPrintSelection;
+        ::SetControlValue((ControlHandle)itemH, gPrintSelection);
         break;
+
       case ePrintFrameAsIsCheckboxID:
       case ePrintSelectedFrameCheckboxID:
       case ePrintAllFramesCheckboxID:
-        for(i=ePrintFrameAsIsCheckboxID;i<=ePrintAllFramesCheckboxID;i++){
-          ::GetDialogItem((DialogPtr)aDialog,firstItem+i-1,&itemType,&itemH,&itemBox);
-          ::SetControlValue((ControlHandle)itemH,i==myItem);
+        for (i=ePrintFrameAsIsCheckboxID; i<=ePrintAllFramesCheckboxID; i++){
+          ::GetDialogItem((DialogPtr)aDialog, firstItem+i-1, &itemType, &itemH, &itemBox);
+          ::SetControlValue((ControlHandle)itemH, i==myItem);
         }
-      default: break;
+        break;
+        
+      default:
+        break;
     }
   } else {
     // chain to standard Item handler
-    CallPItemProc(prPItemProc,(DialogPtr)aDialog,aItemNo);
+    CallPItemProc(prPItemProc, (DialogPtr)aDialog, aItemNo);
     
-    if(aDialog->fDone) {
+    if (aDialog->fDone)
+    {
+      nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1");
       // cleanup and set the print options to what we want
-      if (gCurrOptions) {
+      if (printOptionsService)
+      {
         // print selection
-        ::GetDialogItem((DialogPtr)aDialog,firstItem+ePrintSelectionCheckboxID-1,&itemType,&itemH,&itemBox);
+        ::GetDialogItem((DialogPtr)aDialog, firstItem+ePrintSelectionCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
-        if(1==value){
-          gCurrOptions->SetPrintRange(nsIPrintOptions::kRangeSelection);
+        if (1==value){
+          printOptionsService->SetPrintRange(nsIPrintOptions::kRangeSelection);
         } else {
-          gCurrOptions->SetPrintRange(nsIPrintOptions::kRangeAllPages);
+          printOptionsService->SetPrintRange(nsIPrintOptions::kRangeAllPages);
         }
         
         // print frames as is
-        ::GetDialogItem((DialogPtr)aDialog,firstItem+ePrintFrameAsIsCheckboxID-1,&itemType,&itemH,&itemBox);
+        ::GetDialogItem((DialogPtr)aDialog, firstItem+ePrintFrameAsIsCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
-        if(1==value){
-          gCurrOptions->SetPrintFrameType(nsIPrintOptions::kFramesAsIs);
+        if (1==value){
+          printOptionsService->SetPrintFrameType(nsIPrintOptions::kFramesAsIs);
         }
         
         // selected frame
-        ::GetDialogItem((DialogPtr)aDialog,firstItem+ePrintSelectedFrameCheckboxID-1,&itemType,&itemH,&itemBox);
+        ::GetDialogItem((DialogPtr)aDialog, firstItem+ePrintSelectedFrameCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
-        if(1==value){
-          gCurrOptions->SetPrintFrameType(nsIPrintOptions::kSelectedFrame);
+        if (1==value){
+          printOptionsService->SetPrintFrameType(nsIPrintOptions::kSelectedFrame);
         }
         
         // print all frames
-        ::GetDialogItem((DialogPtr)aDialog,firstItem+ePrintAllFramesCheckboxID-1,&itemType,&itemH,&itemBox);
+        ::GetDialogItem((DialogPtr)aDialog, firstItem+ePrintAllFramesCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
-        if(1==value){
-          gCurrOptions->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
+        if (1==value){
+          printOptionsService->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
         }        
       }
     }
@@ -223,13 +232,13 @@ ItemListHandle  dlg_Item_List;
   firstItem = (**dlg_Item_List).max_index+2;
 
   theResult = nsMacResources::OpenLocalResourceFile();
-  if(theResult == NS_OK) {
-    myAppendDITLH = (ItemListHandle)::GetResource('DITL',aDITLID);
-    if(nsnull == myAppendDITLH) {
+  if (theResult == NS_OK) {
+    myAppendDITLH = (ItemListHandle)::GetResource('DITL', aDITLID);
+    if (nsnull == myAppendDITLH) {
       // some sort of error
       theResult = NS_ERROR_FAILURE;
     } else {
-      ::AppendDITL((DialogPtr)aDialog,(Handle)myAppendDITLH,appendDITLBottom);
+      ::AppendDITL((DialogPtr)aDialog, (Handle)myAppendDITLH, appendDITLBottom);
       ::ReleaseResource((Handle) myAppendDITLH);
     }
   theResult = nsMacResources::CloseLocalResourceFile();
@@ -245,64 +254,67 @@ ItemListHandle  dlg_Item_List;
  */
 static pascal TPPrDlg MyJobDlgInit(THPrint aHPrint)
 {
-PRInt32 i;
-short   itemType;
-Handle  itemH;
-Rect    itemBox;
-PRBool isOn;
-PRInt16 howToEnableFrameUI = nsIPrintOptions::kFrameEnableNone;
+  PRInt32 i;
+  short   itemType;
+  Handle  itemH;
+  Rect    itemBox;
+  PRBool  isOn;
+  PRInt16 howToEnableFrameUI = nsIPrintOptions::kFrameEnableNone;
 
+  prFirstItem = AppendToDialog(gPrtJobDialog, DITL_ADDITIONS);
 
-  prFirstItem = AppendToDialog(PrtJobDialog,DITL_ADDITIONS);
+  nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1");
 
-  if (gCurrOptions) {
-    gCurrOptions->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, &isOn);
-    gCurrOptions->GetHowToEnableFrameUI(&howToEnableFrameUI);
+  if (printOptionsService) {
+    printOptionsService->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, &isOn);
+    printOptionsService->GetHowToEnableFrameUI(&howToEnableFrameUI);
   }
 
-  ::GetDialogItem((DialogPtr) PrtJobDialog,prFirstItem+ePrintSelectionCheckboxID-1,&itemType,&itemH,&itemBox);
-  if( isOn ) {
-    ::HiliteControl((ControlHandle)itemH,0);
+  ::GetDialogItem((DialogPtr) gPrtJobDialog, prFirstItem+ePrintSelectionCheckboxID-1, &itemType, &itemH, &itemBox);
+  if ( isOn ) {
+    ::HiliteControl((ControlHandle)itemH, 0);
   } else {
-    ::HiliteControl((ControlHandle)itemH,255) ; 
+    ::HiliteControl((ControlHandle)itemH, 255); 
   }
   
   gPrintSelection = PR_FALSE;
-  ::SetControlValue((ControlHandle) itemH,gPrintSelection);
+  ::SetControlValue((ControlHandle) itemH, gPrintSelection);
 
   if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAll) {
-    for(i = ePrintFrameAsIsCheckboxID;i <= ePrintAllFramesCheckboxID;i++){
-      ::GetDialogItem((DialogPtr) PrtJobDialog,prFirstItem+i-1,&itemType,&itemH,&itemBox);
-      ::SetControlValue((ControlHandle) itemH,(i==2));
-      ::HiliteControl((ControlHandle)itemH,0);
+    for (i = ePrintFrameAsIsCheckboxID; i <= ePrintAllFramesCheckboxID; i++){
+      ::GetDialogItem((DialogPtr) gPrtJobDialog, prFirstItem+i-1, &itemType, &itemH, &itemBox);
+      ::SetControlValue((ControlHandle) itemH, (i==2));
+      ::HiliteControl((ControlHandle)itemH, 0);
     }
-  } else if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAsIsAndEach) {
-    for(i = ePrintFrameAsIsCheckboxID;i <= ePrintAllFramesCheckboxID;i++){
-      ::GetDialogItem((DialogPtr) PrtJobDialog,prFirstItem+i-1,&itemType,&itemH,&itemBox);
-      ::SetControlValue((ControlHandle) itemH,(i==2));
-      if( i == 3){
-        ::HiliteControl((ControlHandle)itemH,255) ;
+  }
+  else if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAsIsAndEach) {
+    for (i = ePrintFrameAsIsCheckboxID; i <= ePrintAllFramesCheckboxID; i++){
+      ::GetDialogItem((DialogPtr) gPrtJobDialog, prFirstItem+i-1, &itemType, &itemH, &itemBox);
+      ::SetControlValue((ControlHandle) itemH, (i==2));
+      if ( i == 3){
+        ::HiliteControl((ControlHandle)itemH, 255);
       }
     }
-  } else {
-    for(i = ePrintFrameAsIsCheckboxID;i <= ePrintAllFramesCheckboxID;i++){
-      ::GetDialogItem((DialogPtr) PrtJobDialog,prFirstItem+i-1,&itemType,&itemH,&itemBox);
-      ::SetControlValue((ControlHandle) itemH,FALSE);
-      ::HiliteControl((ControlHandle)itemH,255) ; 
+  }
+  else {
+    for (i = ePrintFrameAsIsCheckboxID; i <= ePrintAllFramesCheckboxID; i++){
+      ::GetDialogItem((DialogPtr) gPrtJobDialog, prFirstItem+i-1, &itemType, &itemH, &itemBox);
+      ::SetControlValue((ControlHandle) itemH, FALSE);
+      ::HiliteControl((ControlHandle)itemH, 255); 
     }
   }
   
   // attach our handler
-  prPItemProc = PrtJobDialog->pItemProc;
-  PrtJobDialog->pItemProc = NewPItemUPP(MyJobItems);
+  prPItemProc = gPrtJobDialog->pItemProc;
+  gPrtJobDialog->pItemProc = NewPItemUPP(MyJobItems);
 
 
   // attach a draw routine
-  myDrawListUPP = NewUserItemProc(MyBBoxDraw);
-  ::GetDialogItem((DialogPtr)PrtJobDialog,prFirstItem+eDrawFrameID-1,&itemType,&itemH,&itemBox);
-  ::SetDialogItem((DialogPtr)PrtJobDialog,prFirstItem+eDrawFrameID-1,itemType,(Handle)myDrawListUPP,&itemBox);
+  gDrawListUPP = NewUserItemProc(MyBBoxDraw);
+  ::GetDialogItem((DialogPtr)gPrtJobDialog, prFirstItem+eDrawFrameID-1, &itemType, &itemH, &itemBox);
+  ::SetDialogItem((DialogPtr)gPrtJobDialog, prFirstItem+eDrawFrameID-1, itemType, (Handle)gDrawListUPP, &itemBox);
 
-  return PrtJobDialog;
+  return gPrtJobDialog;
 }
 
 #endif
@@ -312,97 +324,110 @@ PRInt16 howToEnableFrameUI = nsIPrintOptions::kFrameEnableNone;
  *  Initialize the nsDeviceContextSpecMac
  *  @update   dc 05/04/2001
  */
-NS_IMETHODIMP nsDeviceContextSpecMac :: Init(PRBool aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecMac::Init(PRBool aQuiet)
 {
-nsresult    theResult = NS_ERROR_FAILURE;
-
 #if !TARGET_CARBON
 
-THPrint     hPrintRec;    // handle to print record
-GrafPtr     oldport;
-PDlgInitUPP theInitProcPtr;
+  THPrint     hPrintRec;    // handle to print record
+  GrafPtr     oldport;
+  PDlgInitUPP theInitProcPtr;
 
   ::GetPort(&oldport);
   
+  nsresult rv;
+  nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1", &rv);
+  if (NS_FAILED(rv)) return rv;
+
   // open the printing manager
   ::PrOpen();
-  if(::PrError() == noErr){
-    mPrintManagerOpen = PR_TRUE;
-    
-    // Allocate a print record
-    hPrintRec = (THPrint)::NewHandle(sizeof(TPrint));
-    if(nsnull != hPrintRec){    
-      // fill in default values
-      ::PrintDefault(hPrintRec);
-      // make sure the print record is valid
-      ::PrValidate(hPrintRec);
-      if(PrError() != noErr){
-        DisposeHandle((Handle)hPrintRec);
-        return theResult;
-      }
-      
-      // get pointer to invisible job dialog box
-      PrtJobDialog = PrJobInit(hPrintRec);
-      if(PrError() != noErr){
-        DisposeHandle((Handle)hPrintRec);
-        return theResult;      
-      }
-    
-      // create a UUP  for the dialog init procedure
-      theInitProcPtr = NewPDlgInitProc(MyJobDlgInit);
-      if(nsnull == theInitProcPtr){
-        DisposeHandle((Handle)hPrintRec);
-        return theResult;      
-      }
-    
-      // standard print dialog, if true print
-      nsWatchTask::GetTask().Suspend();
+  if (::PrError() != noErr)
+    return NS_ERROR_FAILURE;
 
-      // about to put up the dialog, so get the initial settings
-      nsresult  rv = NS_ERROR_FAILURE;
-      nsCOMPtr<nsIPrintOptions> printService = 
-               do_GetService(kPrintOptionsCID, &rv);
-      if (printService) {
-        gCurrOptions = printService;
-      } else {
-        gCurrOptions=nsnull;
-      }
-      if(PrDlgMain(hPrintRec,theInitProcPtr)){
-        // have the print record
-        theResult = NS_OK;
-        mPrtRec = hPrintRec;
-      }else{
-        // don't print
-        ::DisposeHandle((Handle)hPrintRec);
-        ::SetPort(oldport); 
-        theResult = NS_ERROR_ABORT;
-      }
-      
-      // clean up our dialog routines
-      DisposePItemUPP(PrtJobDialog->pItemProc);
-      PrtJobDialog->pItemProc = prPItemProc;        // put back the old just in case
-      
-      
-      DisposePItemUPP(theInitProcPtr);
-      DisposePItemUPP(myDrawListUPP); 
-          
-      nsWatchTask::GetTask().Resume();
-    }
+  mPrintManagerOpen = PR_TRUE;
+  
+  // Allocate a print record
+  hPrintRec = (THPrint)::NewHandleClear(sizeof(TPrint));
+  if (!hPrintRec) return NS_ERROR_OUT_OF_MEMORY;
+  
+  StHandleOwner printRecOwner((Handle)hPrintRec);
+  
+  // see if we have a print record
+  void* printRecordData = nsnull;
+  rv = printOptionsService->GetNativeData(nsIPrintOptions::kNativeDataPrintRecord, &printRecordData);
+  if (NS_SUCCEEDED(rv) && printRecordData)
+  {
+    ::BlockMoveData(printRecordData, *hPrintRec, sizeof(TPrint));
   }
-#endif
-  return theResult;
+  else
+  {
+    // fill in default values
+    ::PrintDefault(hPrintRec);
+  }
+
+  if (printRecordData)
+  {
+    nsMemory::Free(printRecordData);
+    printRecordData = nsnull;
+  }
+  
+  // make sure the print record is valid
+  ::PrValidate(hPrintRec);
+  if (::PrError() != noErr)
+    return NS_ERROR_FAILURE;
+  
+  // get pointer to invisible job dialog box
+  gPrtJobDialog = ::PrJobInit(hPrintRec);
+  if (::PrError() != noErr)
+    return NS_ERROR_FAILURE;      
+
+  // create a UUP  for the dialog init procedure
+  theInitProcPtr = NewPDlgInitProc(MyJobDlgInit);
+  if (!theInitProcPtr)
+    return NS_ERROR_FAILURE;      
+
+  // standard print dialog, if true print
+  nsWatchTask::GetTask().Suspend();
+
+  // put up the print dialog
+  if (::PrDlgMain(hPrintRec, theInitProcPtr))
+  {
+    // have the print record
+    rv = NS_OK;
+    printRecOwner.ClearHandle(false);
+    mPrtRec = hPrintRec;
+  }
+  else
+  {
+    // don't print
+    ::SetPort(oldport); 
+    rv = NS_ERROR_ABORT;
+  }
+  
+  // clean up our dialog routines
+  DisposePItemUPP(gPrtJobDialog->pItemProc);
+  gPrtJobDialog->pItemProc = prPItemProc;        // put back the old just in case
+  
+  DisposePItemUPP(theInitProcPtr);
+  DisposePItemUPP(gDrawListUPP);
+  gDrawListUPP = nsnull;
+      
+  nsWatchTask::GetTask().Resume();
+  return rv;
+
+#endif    /* TARGET_CARBON */
+
+  return NS_ERROR_FAILURE;
 }
 
 /** -------------------------------------------------------
  * Closes the printmanager if it is open.
  * @update   dc 12/03/98
  */
-NS_IMETHODIMP nsDeviceContextSpecMac :: ClosePrintManager()
+NS_IMETHODIMP nsDeviceContextSpecMac::ClosePrintManager()
 {
-PRBool  isPMOpen;
-
-  this->PrintManagerOpen(&isPMOpen);
-  if(isPMOpen){
+  PRBool  isPMOpen;
+  PrintManagerOpen(&isPMOpen);
+  if (isPMOpen) {
 #if !TARGET_CARBON
     ::PrClose();
 #endif
@@ -437,12 +462,12 @@ NS_IMETHODIMP nsDeviceContextSpecMac::EndPage()
 
 NS_IMETHODIMP nsDeviceContextSpecMac::GetPrinterResolution(double* aResolution)
 {
-    nsresult rv = NS_OK;
+    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
     return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecMac::GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight)
 {
-    nsresult rv = NS_OK;
+    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
     return rv;
 }

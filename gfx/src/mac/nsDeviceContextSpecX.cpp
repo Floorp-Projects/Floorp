@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Patrick C. Beard <beard@netscape.com>
+ *  Simon Fraser     <sfraser@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,16 +39,23 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDeviceContextSpecX.h"
+
 #include "prmem.h"
 #include "plstr.h"
+
+#include "nsIServiceManager.h"
+#include "nsIPrintOptions.h"
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecX
  *  @update   dc 12/02/98
  */
 nsDeviceContextSpecX::nsDeviceContextSpecX()
-    :   mPrintSession(0), mPageFormat(kPMNoPageFormat), mPrintSettings(kPMNoPrintSettings),
-        mSavedPort(0)
+: mPrintingContext(0)
+, mPageFormat(kPMNoPageFormat)
+, mPrintSettings(kPMNoPrintSettings)
+, mSavedPort(0)
+, mBeganPrinting(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -69,35 +77,59 @@ NS_IMPL_ISUPPORTS2(nsDeviceContextSpecX, nsIDeviceContextSpec, nsIPrintingContex
  */
 NS_IMETHODIMP nsDeviceContextSpecX::Init(PRBool	aQuiet)
 {
-    // create a print session. then a default print settings.
-    OSStatus status = ::PMCreateSession(&mPrintSession);
-    if (status != noErr) return NS_ERROR_FAILURE;
-    
-    status = ::PMCreatePageFormat(&mPageFormat);
-    if (status != noErr) return NS_ERROR_FAILURE;
-    
-    status = ::PMSessionDefaultPageFormat(mPrintSession, mPageFormat);
-    if (status != noErr) return NS_ERROR_FAILURE;
-    
-    status = ::PMCreatePrintSettings(&mPrintSettings);
-    if (status != noErr) return NS_ERROR_FAILURE;
-    
-    status = ::PMSessionDefaultPrintSettings(mPrintSession, mPrintSettings);
-    if (status != noErr) return NS_ERROR_FAILURE;
+  nsresult rv;
+  nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1", &rv);
+  if (NS_FAILED(rv)) return rv;
 
-    if (! aQuiet) {
-        Boolean accepted = false;
-        status = ::PMSessionPrintDialog(mPrintSession, mPrintSettings, mPageFormat, &accepted);
-        if (! accepted)
-            return NS_ERROR_ABORT;
-    }
+  // Because page setup can get called at any time, we can't use the session APIs here.
+  OSStatus status = ::PMBegin();
+  if (status != noErr) return NS_ERROR_FAILURE;
 
-    return NS_OK;
+  mBeganPrinting = PR_TRUE;
+  
+  PMPageFormat    optionsPageFormat = kPMNoPageFormat;
+  rv = printOptionsService->GetNativeData(nsIPrintOptions::kNativeDataPrintRecord, (void **)&optionsPageFormat);
+  if (NS_FAILED(rv)) return rv;
+  
+  status = ::PMNewPageFormat(&mPageFormat);
+  if (status != noErr) return NS_ERROR_FAILURE;
+  
+  if (optionsPageFormat != kPMNoPageFormat)
+  {
+    status = ::PMCopyPageFormat(optionsPageFormat, mPageFormat);
+    ::PMDisposePageFormat(optionsPageFormat);
+  }
+  else
+    status = ::PMDefaultPageFormat(mPageFormat);
+
+  if (status != noErr) return NS_ERROR_FAILURE;
+  
+  Boolean validated;
+  ::PMValidatePageFormat(mPageFormat, &validated);
+  
+  status = ::PMNewPrintSettings(&mPrintSettings);
+  if (status != noErr) return NS_ERROR_FAILURE;
+  
+  status = ::PMDefaultPrintSettings(mPrintSettings);
+  if (status != noErr) return NS_ERROR_FAILURE;
+
+  if (! aQuiet)
+  {
+    Boolean accepted = false;
+    status = ::PMPrintDialog(mPrintSettings, mPageFormat, &accepted);
+    if (! accepted)
+        return NS_ERROR_ABORT;
+
+    if (status != noErr)
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecX::PrintManagerOpen(PRBool* aIsOpen)
 {
-    *aIsOpen = (mPrintSession != 0);
+    *aIsOpen = mBeganPrinting;
     return NS_OK;
 }
 
@@ -108,17 +140,20 @@ NS_IMETHODIMP nsDeviceContextSpecX::PrintManagerOpen(PRBool* aIsOpen)
 NS_IMETHODIMP nsDeviceContextSpecX::ClosePrintManager()
 {
   if (mPrintSettings != kPMNoPrintSettings)
-    ::PMRelease(mPrintSettings);
+    ::PMDisposePrintSettings(mPrintSettings);
+
   if (mPageFormat != kPMNoPageFormat)
-    ::PMRelease(mPageFormat);
-  if (mPrintSession)
-    ::PMRelease(mPrintSession);
+    ::PMDisposePageFormat(mPageFormat);
+
+  if (mBeganPrinting)
+    ::PMEnd();
+    
 	return NS_OK;
 }  
 
 NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument()
 {
-    OSStatus status = ::PMSessionBeginDocument(mPrintSession, mPrintSettings, mPageFormat);
+    OSStatus status = ::PMBeginDocument(mPrintSettings, mPageFormat, &mPrintingContext);
     if (status != noErr) return NS_ERROR_FAILURE;
     
     return NS_OK;
@@ -126,20 +161,20 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument()
 
 NS_IMETHODIMP nsDeviceContextSpecX::EndDocument()
 {
-    PMSessionEndDocument(mPrintSession);
+    ::PMEndDocument(mPrintingContext);
+    mPrintingContext = 0;
     return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecX::BeginPage()
 {
 	// see http://devworld.apple.com/techpubs/carbon/graphics/CarbonPrintingManager/Carbon_Printing_Manager/Functions/PMSessionBeginPage.html
-    OSStatus status = ::PMSessionBeginPage(mPrintSession, mPageFormat, NULL);
+    OSStatus status = ::PMBeginPage(mPrintingContext, NULL);
     if (status != noErr) return NS_ERROR_FAILURE;
     
     ::GetPort(&mSavedPort);
     GrafPtr printingPort;
-    status = ::PMSessionGetGraphicsContext(mPrintSession, kPMGraphicsContextQuickdraw,
-                                           &(void*)printingPort);
+    status = ::PMGetGrafPtr(mPrintingContext, &printingPort);
     if (status != noErr) return NS_ERROR_FAILURE;
     ::SetPort(printingPort);
     return NS_OK;
@@ -147,8 +182,9 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginPage()
 
 NS_IMETHODIMP nsDeviceContextSpecX::EndPage()
 {
-    OSStatus status = ::PMSessionEndPage(mPrintSession);
-    if (mSavedPort) {
+    OSStatus status = ::PMEndPage(mPrintingContext);
+    if (mSavedPort)
+    {
         ::SetPort(mSavedPort);
         mSavedPort = 0;
     }
@@ -158,15 +194,10 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndPage()
 
 NS_IMETHODIMP nsDeviceContextSpecX::GetPrinterResolution(double* aResolution)
 {
-    PMPrinter currentPrinter;
-    OSStatus status = ::PMSessionGetCurrentPrinter(mPrintSession, &currentPrinter);
-    if (status != noErr) return NS_ERROR_FAILURE;
-
     PMResolution defaultResolution;
-    status = ::PMPrinterGetPrinterResolution(currentPrinter, kPMDefaultResolution, &defaultResolution);
+    OSStatus status = ::PMGetPrinterResolution(kPMDefaultResolution, &defaultResolution);
     if (status == noErr)
         *aResolution = defaultResolution.hRes;
-    ::PMRelease(currentPrinter);
     
     return (status == noErr ? NS_OK : NS_ERROR_FAILURE);
 }
@@ -174,7 +205,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetPrinterResolution(double* aResolution)
 NS_IMETHODIMP nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight)
 {
     PMRect pageRect;
-    PMGetAdjustedPageRect(mPageFormat, &pageRect);
+    ::PMGetAdjustedPageRect(mPageFormat, &pageRect);
     *aTop = pageRect.top, *aLeft = pageRect.left;
     *aBottom = pageRect.bottom, *aRight = pageRect.right;
     return NS_OK;

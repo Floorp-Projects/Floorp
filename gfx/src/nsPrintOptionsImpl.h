@@ -87,7 +87,7 @@ protected:
   PRBool        mPrintToFile;
   nsString      mToFileName;
 
-  static nsFont* mDefaultFont;
+  static nsFont* sDefaultFont;
 };
 
 

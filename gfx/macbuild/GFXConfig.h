@@ -20,5 +20,9 @@
  * Contributor(s): 
  */
 
-#include "MacSharedPrefix.h"
-#include "GFXConfig.h"
+#define _IMPL_NS_GFX 1
+
+#if TARGET_CARBON
+// we can't use the carbon printing session APIs
+#define PM_USE_SESSION_APIS 0
+#endif

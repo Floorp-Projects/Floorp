@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Simon Fraser <sfraser@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,88 +36,84 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <PMApplication.h>
+
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
 #include "nsIServiceManager.h"
-
 #include "nsWatchTask.h"
-#include "nsPrintOptionsMac.h"
-#include "nsGfxUtils.h"
+#include "nsPrintOptionsX.h"
+#include "nsIPref.h"
 
+#include "nsGfxUtils.h"
 #include "plbase64.h"
 #include "prmem.h"
 
-#define MAC_OS_PAGE_SETUP_PREFNAME  "print.macos.pagesetup"
+
+#define MAC_OS_X_PAGE_SETUP_PREFNAME  "print.macosx.pagesetup"
 
 /** ---------------------------------------------------
- *  See documentation in nsPrintOptionsWin.h
- *	@update 6/21/00 dwc
  */
-nsPrintOptionsMac::nsPrintOptionsMac()
+nsPrintOptionsX::nsPrintOptionsX()
+: mPageFormat(kPMNoPageFormat)
 {
-	// create the print style and print record
-	mPrintRecord = (THPrint)::NewHandleClear(sizeof(TPrint));
-	if (mPrintRecord)
-	{
-	  nsresult rv = ReadPageSetupFromPrefs();
-	  ::PrOpen();
-    if (::PrError() == noErr)
-    {
-  	  if (NS_FAILED(rv))
-    		::PrintDefault(mPrintRecord);
-      else
-        ::PrValidate(mPrintRecord);
+  OSStatus status = ::PMNewPageFormat(&mPageFormat);
+  NS_ASSERTION(status == noErr, "Error creating print settings");
+  
+  status = ::PMBegin();
+  NS_ASSERTION(status == noErr, "Error from PMBegin()");
 
-  		::PrClose();
-		}
-	}
-
+  nsresult rv = ReadPageSetupFromPrefs();
+  if (NS_FAILED(rv))
+    ::PMDefaultPageFormat(mPageFormat);
+  else
+  {
+    Boolean valid;
+    ::PMValidatePageFormat(mPageFormat, &valid);
+  }
+  
+  ::PMEnd();  
 }
 
 /** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 6/21/00 dwc
  */
-nsPrintOptionsMac::~nsPrintOptionsMac()
+nsPrintOptionsX::~nsPrintOptionsX()
 {
-	// get rid of the print record
-	if (mPrintRecord) {
-		::DisposeHandle((Handle)mPrintRecord);
-	}
+  if (mPageFormat)
+    ::PMDisposePageFormat(mPageFormat);
 }
 
 /** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 6/21/00 dwc
  */
 NS_IMETHODIMP
-nsPrintOptionsMac::ShowNativeDialog(void) 
+nsPrintOptionsX::ShowNativeDialog(void) 
 {
-  if (!mPrintRecord) return NS_ERROR_NOT_INITIALIZED;
+  NS_ASSERTION(mPageFormat != kPMNoPageFormat, "No page format");
+  if (mPageFormat == kPMNoPageFormat)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  OSStatus status = ::PMBegin();
+  if (status != noErr) return NS_ERROR_FAILURE;
+  
+  Boolean validated;
+  ::PMValidatePageFormat(mPageFormat, &validated);
 
-  // open the printing manager
-  ::PrOpen();
-  if(::PrError() != noErr)
-    return NS_ERROR_FAILURE;
-  
-  ::PrValidate(mPrintRecord);
-  NS_ASSERTION(::PrError() == noErr, "Printing error");
+  Boolean   accepted = false;
+  status = ::PMPageSetupDialog(mPageFormat, &accepted);
 
-  nsWatchTask::GetTask().Suspend();
-  Boolean   dialogOK = ::PrStlDialog(mPrintRecord);		// open up and process the style record
-  nsWatchTask::GetTask().Resume();
+  ::PMEnd();
   
-  OSErr err = ::PrError();
-  
-  ::PrClose();
-  
-  if (err != noErr)
+  if (status != noErr)
     return NS_ERROR_FAILURE;
+    
+  if (!accepted)
+    return NS_ERROR_ABORT;
+
   return NS_OK;
 } 
 
+
 NS_IMETHODIMP 
-nsPrintOptionsMac::ReadPrefs()
+nsPrintOptionsX::ReadPrefs()
 {
   // it doesn't really matter if this fails
   nsresult  rv = ReadPageSetupFromPrefs();
@@ -127,7 +123,7 @@ nsPrintOptionsMac::ReadPrefs()
 }
 
 NS_IMETHODIMP 
-nsPrintOptionsMac::WritePrefs()
+nsPrintOptionsX::WritePrefs()
 {
   // it doesn't really matter if this fails
   nsresult  rv = WritePageSetupToPrefs();
@@ -136,9 +132,10 @@ nsPrintOptionsMac::WritePrefs()
   return nsPrintOptions::WritePrefs();
 }
 
+
 /* [noscript] voidPtr GetNativeData (in short aDataType); */
 NS_IMETHODIMP
-nsPrintOptionsMac::GetNativeData(PRInt16 aDataType, void * *_retval)
+nsPrintOptionsX::GetNativeData(PRInt16 aDataType, void * *_retval)
 {
   nsresult rv = NS_OK;
   
@@ -148,17 +145,18 @@ nsPrintOptionsMac::GetNativeData(PRInt16 aDataType, void * *_retval)
   switch (aDataType)
   {
     case kNativeDataPrintRecord:
-      if (mPrintRecord)
-      {
-        void*   printRecord = nsMemory::Alloc(sizeof(TPrint));
-        if (!printRecord) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
-        }
-        
-        ::BlockMoveData(*mPrintRecord, printRecord, sizeof(TPrint));
-        *_retval = printRecord;
+      // we need to clone and pass out
+      PMPageFormat    pageFormat = kPMNoPageFormat;
+      OSStatus status = ::PMNewPageFormat(&pageFormat);
+      if (status != noErr) return NS_ERROR_FAILURE;
+      
+      status = ::PMCopyPageFormat(mPageFormat, pageFormat);
+      if (status != noErr) {
+        ::PMDisposePageFormat(pageFormat);
+        return NS_ERROR_FAILURE;
       }
+      
+      *_retval = pageFormat;
       break;
       
     default:
@@ -169,10 +167,11 @@ nsPrintOptionsMac::GetNativeData(PRInt16 aDataType, void * *_retval)
   return rv;
 }
 
+
 #pragma mark -
 
 nsresult
-nsPrintOptionsMac::ReadPageSetupFromPrefs()
+nsPrintOptionsX::ReadPageSetupFromPrefs()
 {
   nsresult rv;
   nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
@@ -180,7 +179,7 @@ nsPrintOptionsMac::ReadPageSetupFromPrefs()
     return rv;
     
   nsXPIDLCString  encodedData;
-  rv = prefs->GetCharPref(MAC_OS_PAGE_SETUP_PREFNAME, getter_Copies(encodedData));
+  rv = prefs->GetCharPref(MAC_OS_X_PAGE_SETUP_PREFNAME, getter_Copies(encodedData));
   if (NS_FAILED(rv))
     return rv;
 
@@ -190,19 +189,30 @@ nsPrintOptionsMac::ReadPageSetupFromPrefs()
   if (!decodedData)
     return NS_ERROR_FAILURE;
 
-  if (((encodedDataLen * 3) / 4) >= sizeof(TPrint))
-    ::BlockMoveData(decodedData, *mPrintRecord, sizeof(TPrint));
-  else
-    rv = NS_ERROR_FAILURE;    // the data was too small
-    
+  Handle    decodedDataHandle = nsnull;
+  OSErr err = ::PtrToHand(decodedData, &decodedDataHandle, (encodedDataLen * 3) / 4);
   PR_Free(decodedData);
-  return rv;
+  if (err != noErr)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  StHandleOwner   handleOwner(decodedDataHandle);  
+
+  PMPageFormat  newPageFormat = kPMNoPageFormat;
+  OSStatus  status = ::PMUnflattenPageFormat(decodedDataHandle, &newPageFormat);
+  if (status != noErr) 
+    return NS_ERROR_FAILURE;
+
+  status = ::PMCopyPageFormat(newPageFormat, mPageFormat);
+  ::PMDisposePageFormat(newPageFormat);
+  newPageFormat = kPMNoPageFormat;
+
+  return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
-nsPrintOptionsMac::WritePageSetupToPrefs()
+nsPrintOptionsX::WritePageSetupToPrefs()
 {
-  if (!mPrintRecord)
+  if (mPageFormat == kPMNoPageFormat)
     return NS_ERROR_NOT_INITIALIZED;
     
   nsresult rv;
@@ -210,13 +220,20 @@ nsPrintOptionsMac::WritePageSetupToPrefs()
   if (NS_FAILED(rv))
     return rv;
 
-  StHandleLocker  locker((Handle)mPrintRecord);
-
+  Handle    pageFormatHandle = nsnull;
+  OSStatus  err = ::PMFlattenPageFormat(mPageFormat, &pageFormatHandle);
+  if (err != noErr)
+    return NS_ERROR_FAILURE;
+    
+  StHandleOwner   handleOwner(pageFormatHandle);
+  StHandleLocker  handleLocker(pageFormatHandle);
+  
   nsXPIDLCString  encodedData;
-  encodedData.Adopt(::PL_Base64Encode((char *)*mPrintRecord, sizeof(TPrint), nsnull));
+  encodedData.Adopt(::PL_Base64Encode(*pageFormatHandle, ::GetHandleSize(pageFormatHandle), nsnull));
   if (!encodedData.get())
     return NS_ERROR_OUT_OF_MEMORY;
 
-  return prefs->SetCharPref(MAC_OS_PAGE_SETUP_PREFNAME, encodedData);
+  return prefs->SetCharPref(MAC_OS_X_PAGE_SETUP_PREFNAME, encodedData);
 }
+
 
