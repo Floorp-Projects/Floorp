@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_memory.h              copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.1                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Memory management (definition)                             * */
 /* *                                                                        * */
@@ -17,6 +17,9 @@
 /* *                                                                        * */
 /* * changes   : 0.5.1 - 05/08/2000 - G.Juyn                                * */
 /* *             - changed strict-ANSI stuff                                * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/12/2000 - G.Juyn                                * */
+/* *             - swapped MNG_COPY parameter-names                         * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -51,7 +54,7 @@
 #define MNG_FREEX(H,P,L)  { if (P) { H->fMemfree (P, L); } }
 #endif /* mng_internal_memmngmt */
 
-#define MNG_COPY(S,D,L)   { memcpy (S, D, L); }
+#define MNG_COPY(D,S,L)   { memcpy (D, S, L); }
 
 /* ************************************************************************** */
 

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_display.c             copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Display management (implementation)                        * */
 /* *                                                                        * */
@@ -49,6 +49,11 @@
 /* *             - fixed timer-handling to run with Mozilla (Tim Rowley)    * */
 /* *             0.5.2 - 06/10/2000 - G.Juyn                                * */
 /* *             - fixed some compilation-warnings (contrib Jason Morris)   * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/12/2000 - G.Juyn                                * */
+/* *             - fixed display of stored JNG images                       * */
+/* *             0.5.3 - 06/13/2000 - G.Juyn                                * */
+/* *             - fixed problem with BASI-IEND as object 0                 * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -577,49 +582,87 @@ mng_retcode display_image (mng_datap  pData,
                                        /* and image-buffer retrieval routine */
       switch (pImage->pImgbuf->iColortype)
       {
-        case 0 : { if (pImage->pImgbuf->iBitdepth > 8)
-                     pData->fRetrieverow = (mng_ptr)retrieve_g16;
-                   else
-                     pData->fRetrieverow = (mng_ptr)retrieve_g8;
+        case  0 : { if (pImage->pImgbuf->iBitdepth > 8)
+                      pData->fRetrieverow = (mng_ptr)retrieve_g16;
+                    else
+                      pData->fRetrieverow = (mng_ptr)retrieve_g8;
 
-                   pData->bIsOpaque      = (mng_bool)(!pImage->pImgbuf->bHasTRNS);
-                   break;
-                 }
+                    pData->bIsOpaque      = (mng_bool)(!pImage->pImgbuf->bHasTRNS);
+                    break;
+                  }
 
-        case 2 : { if (pImage->pImgbuf->iBitdepth > 8)
-                     pData->fRetrieverow = (mng_ptr)retrieve_rgb16;
-                   else
-                     pData->fRetrieverow = (mng_ptr)retrieve_rgb8;
+        case  2 : { if (pImage->pImgbuf->iBitdepth > 8)
+                      pData->fRetrieverow = (mng_ptr)retrieve_rgb16;
+                    else
+                      pData->fRetrieverow = (mng_ptr)retrieve_rgb8;
 
-                   pData->bIsOpaque      = (mng_bool)(!pImage->pImgbuf->bHasTRNS);
-                   break;
-                 }
-
-
-        case 3 : { pData->fRetrieverow   = (mng_ptr)retrieve_idx8;
-                   pData->bIsOpaque      = (mng_bool)(!pImage->pImgbuf->bHasTRNS);
-                   break;
-                 }
+                    pData->bIsOpaque      = (mng_bool)(!pImage->pImgbuf->bHasTRNS);
+                    break;
+                  }
 
 
-        case 4 : { if (pImage->pImgbuf->iBitdepth > 8)
-                     pData->fRetrieverow = (mng_ptr)retrieve_ga16;
-                   else
-                     pData->fRetrieverow = (mng_ptr)retrieve_ga8;
-
-                   pData->bIsOpaque      = MNG_FALSE;
-                   break;
-                 }
+        case  3 : { pData->fRetrieverow   = (mng_ptr)retrieve_idx8;
+                    pData->bIsOpaque      = (mng_bool)(!pImage->pImgbuf->bHasTRNS);
+                    break;
+                  }
 
 
-        case 6 : { if (pImage->pImgbuf->iBitdepth > 8)
-                     pData->fRetrieverow = (mng_ptr)retrieve_rgba16;
-                   else
-                     pData->fRetrieverow = (mng_ptr)retrieve_rgba8;
+        case  4 : { if (pImage->pImgbuf->iBitdepth > 8)
+                      pData->fRetrieverow = (mng_ptr)retrieve_ga16;
+                    else
+                      pData->fRetrieverow = (mng_ptr)retrieve_ga8;
 
-                   pData->bIsOpaque      = MNG_FALSE;
-                   break;
-                 }
+                    pData->bIsOpaque      = MNG_FALSE;
+                    break;
+                  }
+
+
+        case  6 : { if (pImage->pImgbuf->iBitdepth > 8)
+                      pData->fRetrieverow = (mng_ptr)retrieve_rgba16;
+                    else
+                      pData->fRetrieverow = (mng_ptr)retrieve_rgba8;
+
+                    pData->bIsOpaque      = MNG_FALSE;
+                    break;
+                  }
+
+        case  8 : { if (pImage->pImgbuf->iBitdepth > 8)
+                      pData->fRetrieverow = (mng_ptr)retrieve_g16;
+                    else
+                      pData->fRetrieverow = (mng_ptr)retrieve_g8;
+
+                    pData->bIsOpaque      = MNG_TRUE;
+                    break;
+                  }
+
+        case 10 : { if (pImage->pImgbuf->iBitdepth > 8)
+                      pData->fRetrieverow = (mng_ptr)retrieve_rgb16;
+                    else
+                      pData->fRetrieverow = (mng_ptr)retrieve_rgb8;
+
+                    pData->bIsOpaque      = MNG_TRUE;
+                    break;
+                  }
+
+
+        case 12 : { if (pImage->pImgbuf->iBitdepth > 8)
+                      pData->fRetrieverow = (mng_ptr)retrieve_ga16;
+                    else
+                      pData->fRetrieverow = (mng_ptr)retrieve_ga8;
+
+                    pData->bIsOpaque      = MNG_FALSE;
+                    break;
+                  }
+
+
+        case 14 : { if (pImage->pImgbuf->iBitdepth > 8)
+                      pData->fRetrieverow = (mng_ptr)retrieve_rgba16;
+                    else
+                      pData->fRetrieverow = (mng_ptr)retrieve_rgba8;
+
+                    pData->bIsOpaque      = MNG_FALSE;
+                    break;
+                  }
 
       }
 
@@ -1572,7 +1615,7 @@ mng_retcode process_display_basi (mng_datap  pData,
   mng_imagep     pImage = (mng_imagep)pData->pCurrentobj;
   mng_uint8p     pWork;
   mng_uint32     iX;
-  mng_imagedatap pBuf = pImage->pImgbuf;
+  mng_imagedatap pBuf;
   mng_retcode    iRetcode;
 
 #ifdef MNG_SUPPORT_TRACE
@@ -1581,6 +1624,8 @@ mng_retcode process_display_basi (mng_datap  pData,
 
   if (!pImage)                         /* or is it an "on-the-fly" image ? */
     pImage = (mng_imagep)pData->pObjzero;
+                                       /* address the object-buffer */
+  pBuf               = pImage->pImgbuf;
 
   pData->fDisplayrow = 0;              /* do nothing by default */
   pData->fCorrectrow = 0;
@@ -1595,7 +1640,7 @@ mng_retcode process_display_basi (mng_datap  pData,
     return iRetcode;
                                        /* save the viewable flag */
   pImage->bViewable = (mng_bool)(iViewable == 1);
-  pImage->pImgbuf->bViewable = pImage->bViewable;
+  pBuf->bViewable   = pImage->bViewable;
   pData->pStoreobj  = pImage;          /* let row-routines know which object */
 
   pWork = pBuf->pImgdata;              /* fill the object-buffer with the specified
@@ -1663,7 +1708,7 @@ mng_retcode process_display_basi (mng_datap  pData,
              }
 
     case 3 : {                         /* indexed */
-               pImage->pImgbuf->bHasPLTE = MNG_TRUE;
+               pBuf->bHasPLTE = MNG_TRUE;
 
                switch (pData->iBitdepth)
                {
@@ -2588,8 +2633,9 @@ mng_retcode process_display_jhdr (mng_datap pData)
     if ((!pData->bHasDHDR) || (pData->iDeltatype == MNG_DELTATYPE_REPLACE))
     {                                  /* 8-bit JPEG ? */
       if (pData->iJHDRimgbitdepth == 8)
-      {
-        pData->bIsRGBA16 = MNG_FALSE;  /* intermediate row is 8-bit deep */
+      {                                /* intermediate row is 8-bit deep */
+        pData->bIsRGBA16   = MNG_FALSE;
+        pData->iRowsamples = pData->iDatawidth;
 
         switch (pData->iJHDRcolortype) /* determine pixel processing routines */
         {

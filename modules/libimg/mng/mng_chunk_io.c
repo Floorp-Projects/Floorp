@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_chunk_io.c            copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.2                                                      * */
+/* * version   : 0.5.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Chunk I/O routines (implementation)                        * */
 /* *                                                                        * */
@@ -64,6 +64,11 @@
 /* *             - changed SWAP_ENDIAN to BIGENDIAN_SUPPORTED               * */
 /* *             0.5.2 - 06/03/2000 - G.Juyn                                * */
 /* *             - fixed makeup for Linux gcc compile                       * */
+/* *                                                                        * */
+/* *             0.5.3 - 06/12/2000 - G.Juyn                                * */
+/* *             - added processing of color-info on delta-image            * */
+/* *             0.5.3 - 06/13/2000 - G.Juyn                                * */
+/* *             - fixed handling of empty SAVE chunk                       * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -1136,13 +1141,25 @@ READ_CHUNK (read_gama)
   if ((pData->bHasIHDR) || (pData->bHasBASI) || (pData->bHasDHDR))
 #endif
   {
-    mng_imagep pImage = (mng_imagep)pData->pCurrentobj;
+    mng_imagep pImage;
 
-    if (!pImage)                       /* no object then dump it in obj 0 */
-      pImage = (mng_imagep)pData->pObjzero;
+    if (pData->bHasDHDR)               /* update delta image ? */
+    {
+      pImage = (mng_imagep)pData->pDeltaImage;
+
+      pImage->pImgbuf->iGamma   = mng_get_uint32 (pRawdata);
+      pImage->pImgbuf->bHasGAMA = MNG_TRUE;
+    }
+    else
+    {
+      pImage = (mng_imagep)pData->pCurrentobj;
+
+      if (!pImage)                     /* no object then dump it in obj 0 */
+        pImage = (mng_imagep)pData->pObjzero;
                                        /* store for color-processing routines */
-    pImage->pImgbuf->iGamma = mng_get_uint32 (pRawdata);
-    pImage->pImgbuf->bHasGAMA = MNG_TRUE;
+      pImage->pImgbuf->iGamma   = mng_get_uint32 (pRawdata);
+      pImage->pImgbuf->bHasGAMA = MNG_TRUE;
+    }
   }
   else
   {                                    /* store as global */
@@ -1237,23 +1254,44 @@ READ_CHUNK (read_chrm)
   if ((pData->bHasIHDR) || (pData->bHasBASI) || (pData->bHasDHDR))
 #endif
   {
-    mng_imagep     pImage = (mng_imagep)pData->pCurrentobj;
+    mng_imagep     pImage;
     mng_imagedatap pBuf;
 
-    if (!pImage)                       /* no object then dump it in obj 0 */
-      pImage = (mng_imagep)pData->pObjzero;
+    if (pData->bHasDHDR)               /* update delta image ? */
+    {
+      pImage = (mng_imagep)pData->pDeltaImage;
 
-    pBuf = pImage->pImgbuf;            /* address object buffer */
-    pBuf->bHasCHRM = MNG_TRUE;         /* and tell it it's got a CHRM now */
+      pBuf = pImage->pImgbuf;          /* address object buffer */
+      pBuf->bHasCHRM = MNG_TRUE;       /* and tell it it's got a CHRM now */
                                        /* store for color-processing routines */
-    pBuf->iWhitepointx   = mng_get_uint32 (pRawdata);
-    pBuf->iWhitepointy   = mng_get_uint32 (pRawdata+4);
-    pBuf->iPrimaryredx   = mng_get_uint32 (pRawdata+8);
-    pBuf->iPrimaryredy   = mng_get_uint32 (pRawdata+12);
-    pBuf->iPrimarygreenx = mng_get_uint32 (pRawdata+16);
-    pBuf->iPrimarygreeny = mng_get_uint32 (pRawdata+20);
-    pBuf->iPrimarybluex  = mng_get_uint32 (pRawdata+24);
-    pBuf->iPrimarybluey  = mng_get_uint32 (pRawdata+28);
+      pBuf->iWhitepointx   = mng_get_uint32 (pRawdata);
+      pBuf->iWhitepointy   = mng_get_uint32 (pRawdata+4);
+      pBuf->iPrimaryredx   = mng_get_uint32 (pRawdata+8);
+      pBuf->iPrimaryredy   = mng_get_uint32 (pRawdata+12);
+      pBuf->iPrimarygreenx = mng_get_uint32 (pRawdata+16);
+      pBuf->iPrimarygreeny = mng_get_uint32 (pRawdata+20);
+      pBuf->iPrimarybluex  = mng_get_uint32 (pRawdata+24);
+      pBuf->iPrimarybluey  = mng_get_uint32 (pRawdata+28);
+    }
+    else
+    {
+      pImage = (mng_imagep)pData->pCurrentobj;
+
+      if (!pImage)                     /* no object then dump it in obj 0 */
+        pImage = (mng_imagep)pData->pObjzero;
+
+      pBuf = pImage->pImgbuf;          /* address object buffer */
+      pBuf->bHasCHRM = MNG_TRUE;       /* and tell it it's got a CHRM now */
+                                       /* store for color-processing routines */
+      pBuf->iWhitepointx   = mng_get_uint32 (pRawdata);
+      pBuf->iWhitepointy   = mng_get_uint32 (pRawdata+4);
+      pBuf->iPrimaryredx   = mng_get_uint32 (pRawdata+8);
+      pBuf->iPrimaryredy   = mng_get_uint32 (pRawdata+12);
+      pBuf->iPrimarygreenx = mng_get_uint32 (pRawdata+16);
+      pBuf->iPrimarygreeny = mng_get_uint32 (pRawdata+20);
+      pBuf->iPrimarybluex  = mng_get_uint32 (pRawdata+24);
+      pBuf->iPrimarybluey  = mng_get_uint32 (pRawdata+28);
+    }
   }
   else
   {                                    /* store as global */
@@ -1372,13 +1410,25 @@ READ_CHUNK (read_srgb)
   if ((pData->bHasIHDR) || (pData->bHasBASI) || (pData->bHasDHDR))
 #endif
   {
-    mng_imagep pImage = (mng_imagep)pData->pCurrentobj;
+    mng_imagep pImage;
 
-    if (!pImage)                       /* no object then dump it in obj 0 */
-      pImage = (mng_imagep)pData->pObjzero;
+    if (pData->bHasDHDR)               /* update delta image ? */
+    {
+      pImage = (mng_imagep)pData->pDeltaImage;
+
+      pImage->pImgbuf->iRenderingintent = *pRawdata;
+      pImage->pImgbuf->bHasSRGB         = MNG_TRUE;
+    }
+    else
+    {
+      pImage = (mng_imagep)pData->pCurrentobj;
+
+      if (!pImage)                     /* no object then dump it in obj 0 */
+        pImage = (mng_imagep)pData->pObjzero;
                                        /* store for color-processing routines */
-    pImage->pImgbuf->iRenderingintent = *pRawdata;
-    pImage->pImgbuf->bHasSRGB         = MNG_TRUE;
+      pImage->pImgbuf->iRenderingintent = *pRawdata;
+      pImage->pImgbuf->bHasSRGB         = MNG_TRUE;
+    }
   }
   else
   {                                    /* store as global */
@@ -1498,17 +1548,37 @@ READ_CHUNK (read_iccp)
   if ((pData->bHasIHDR) || (pData->bHasBASI) || (pData->bHasDHDR))
 #endif
   {
-    mng_imagep pImage = (mng_imagep)pData->pCurrentobj;
+    mng_imagep pImage;
 
-    if (!pImage)                       /* no object then dump it in obj 0 */
-      pImage = (mng_imagep)pData->pObjzero;
-                                       /* store as local */
+    if (pData->bHasDHDR)               /* update delta image ? */
+    {
+      pImage = (mng_imagep)pData->pDeltaImage;
+
+      if (pImage->pImgbuf->pProfile)   /* profile existed ? */
+        MNG_FREEX (pData, pImage->pImgbuf->pProfile, pImage->pImgbuf->iProfilesize)
                                        /* allocate a buffer & copy it */
-    MNG_ALLOC (pData, pImage->pImgbuf->pProfile, iProfilesize)
-    MNG_COPY  (pImage->pImgbuf->pProfile, pBuf, iProfilesize)
+      MNG_ALLOC (pData, pImage->pImgbuf->pProfile, iProfilesize)
+      MNG_COPY  (pImage->pImgbuf->pProfile, pBuf, iProfilesize)
                                        /* store it's length as well */
-    pImage->pImgbuf->iProfilesize = iProfilesize;
-    pImage->pImgbuf->bHasICCP     = MNG_TRUE;
+      pImage->pImgbuf->iProfilesize = iProfilesize;
+      pImage->pImgbuf->bHasICCP     = MNG_TRUE;
+    }
+    else
+    {
+      pImage = (mng_imagep)pData->pCurrentobj;
+
+      if (!pImage)                     /* no object then dump it in obj 0 */
+        pImage = (mng_imagep)pData->pObjzero;
+
+      if (pImage->pImgbuf->pProfile)   /* profile existed ? */
+        MNG_FREEX (pData, pImage->pImgbuf->pProfile, pImage->pImgbuf->iProfilesize)
+                                       /* allocate a buffer & copy it */
+      MNG_ALLOC (pData, pImage->pImgbuf->pProfile, iProfilesize)
+      MNG_COPY  (pImage->pImgbuf->pProfile, pBuf, iProfilesize)
+                                       /* store it's length as well */
+      pImage->pImgbuf->iProfilesize = iProfilesize;
+      pImage->pImgbuf->bHasICCP     = MNG_TRUE;
+    }
   }
   else
   {                                    /* store as global */
@@ -4190,7 +4260,7 @@ READ_CHUNK (read_save)
                                        /* store the fields */
     ((mng_savep)*ppChunk)->bEmpty = (mng_bool)(iRawlen == 0);
 
-    if (!iRawlen)                      /* not empty ? */
+    if (iRawlen)                       /* not empty ? */
     {
       mng_uint8       iOtype = *pRawdata;
       mng_uint8       iEtype;
