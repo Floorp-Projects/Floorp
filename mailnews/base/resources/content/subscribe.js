@@ -4,6 +4,7 @@ var gChangeTable = {};
 var gServerURI = null;
 var RDF = null;
 var gSubscribeDS = null;
+var gStatusBar = null;
 
 function Stop()
 {
@@ -55,6 +56,8 @@ var MySubscribeListener = {
 	OnStopPopulating: function() {
 		dump("root subscribe tree at: "+ gServerURI +"\n");
 		gSubscribeTree.setAttribute('ref',gServerURI);
+		// Turn progress meter off.
+      	gStatusBar.setAttribute("mode","normal");	
 	}
 };
 
@@ -73,6 +76,8 @@ function SetUpTree()
 		subscribableServer.subscribeListener = MySubscribeListener;
 
 		subscribableServer.populateSubscribeDatasource(null /* eventually, a nsIMsgWindow */);
+		// Turn progress meter on.
+      	gStatusBar.setAttribute("mode","undetermined");	
 	}
 	catch (ex) {
 		dump("failed to populate subscribe ds: " + ex + "\n");
@@ -84,6 +89,7 @@ function SubscribeOnLoad()
 	dump("SubscribeOnLoad()\n");
 	
    	gSubscribeTree = document.getElementById('subscribetree');
+	gStatusBar = document.getElementById('statusbar-icon');
 
 	doSetOKCancel(subscribeOK,subscribeCancel);
 

@@ -112,6 +112,6 @@ Rights Reserved.
 			<progressmeter id="statusbar-icon" mode="normal" value="0" />
 			<spring flex="100%"/>
 		</box>
-		<text id="statusText" class="status-bar" align="left" flex="100%" value="Document: Done"/>
+		<text id="statusText" class="status-bar" align="left" flex="100%" value="this space for rent"/>
 	</box>	
 </window>
