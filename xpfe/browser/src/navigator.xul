@@ -203,84 +203,84 @@
   
   <menubar>
       <menu name="File">
-      <menuitem name="New Browser Window" onClick="BrowserNewWindow();"/>
+      <menuitem name="New Browser Window" onclick="BrowserNewWindow();"/>
       	<menu name="New">
-      		<menuitem name="Mail Message" onClick="MsgNewMessage();"/>
-		      <menuitem name="Chat Window" onClick="BrowserPrintPreview();"/>
+      		<menuitem name="Mail Message" onclick="MsgNewMessage();"/>
+		      <menuitem name="Chat Window" onclick="BrowserPrintPreview();"/>
 		      <separator />
-		      <menuitem name="Blank Page" onClick="BrowserNewWindow();"/>
-		      <menuitem name="Page Using Template..." onClick="BrowserNewWindow();"/>
-		      <menuitem name="Page Using Draft..." onClick="BrowserNewWindow();""/>
+		      <menuitem name="Blank Page" onclick="BrowserNewWindow();"/>
+		      <menuitem name="Page Using Template..." onclick="BrowserNewWindow();"/>
+		      <menuitem name="Page Using Draft..." onclick="BrowserNewWindow();""/>
     		</menu>
-      <menuitem name="Open" onClick="BrowserNewWindow();"/>
+      <menuitem name="Open" onclick="BrowserNewWindow();"/>
       <separator />
-      <menuitem name="Send Page" onClick="BrowserReload();"/>
-	   <menuitem name="Edit Page" onClick="BrowserReload();" />
+      <menuitem name="Send Page" onclick="BrowserReload();"/>
+	   <menuitem name="Edit Page" onclick="BrowserReload();" />
 	   <separator />
       <menu name="Offline">
-	      <menuitem name="Go Offline" onClick="BrowserReload();"/>
+	      <menuitem name="Go Offline" onclick="BrowserReload();"/>
 	      <separator />
-	      <menuitem name="Synchronize..." onClick="BrowserReload();"/>
+	      <menuitem name="Synchronize..." onclick="BrowserReload();"/>
       </menu>
       <separator />
-      <menuitem name="Print Setup" onClick=""/>
-      <menuitem name="Print Preview" onClick="BrowserPrintPreview();"/>
-      <menuitem name="Print" onClick=""/>
+      <menuitem name="Print Setup" onclick=""/>
+      <menuitem name="Print Preview" onclick="BrowserPrintPreview();"/>
+      <menuitem name="Print" onclick=""/>
       <separator />
-      <menuitem name="Close" onClick="BrowserClose();"/>
-      <menuitem name="Quit" onClick="BrowserExit();"/>
+      <menuitem name="Close" onclick="BrowserClose();"/>
+      <menuitem name="Quit" onclick="BrowserExit();"/>
     </menu>
     <menu name="Edit">
-      <menuitem name="Undo" onClick="BrowserReload();"/>
-      <menuitem name="Redo" onClick="BrowserReload();"/>
+      <menuitem name="Undo" onclick="BrowserReload();"/>
+      <menuitem name="Redo" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Cut" onClick="BrowserReload();"/>
-      <menuitem name="Copy" onClick="BrowserReload();"/>
-      <menuitem name="Paste" onClick="BrowserReload();"/>
-      <menuitem name="Delete" onClick="BrowserReload();"/>
+      <menuitem name="Cut" onclick="BrowserReload();"/>
+      <menuitem name="Copy" onclick="BrowserReload();"/>
+      <menuitem name="Paste" onclick="BrowserReload();"/>
+      <menuitem name="Delete" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Select All" onClick="BrowserReload();"/>
+      <menuitem name="Select All" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Preferences..." onClick="BrowserReload();"/>
+      <menuitem name="Preferences..." onclick="BrowserReload();"/>
     </menu>
     <menu name="View">
-      <menuitem name="Toolbars" onClick="BrowserReload();"/>
-      <menuitem name="Sidebar" onClick="BrowserReload();"/>
+      <menuitem name="Toolbars" onclick="BrowserReload();"/>
+      <menuitem name="Sidebar" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Enlarge Text Size" onClick="BrowserReload();"/>
-      <menuitem name="Reduce Text Size" onClick="BrowserReload();"/>
+      <menuitem name="Enlarge Text Size" onclick="BrowserReload();"/>
+      <menuitem name="Reduce Text Size" onclick="BrowserReload();"/>
       <separator />
-      <menu name="Use Stylesheet" onClick="BrowserReload();">
-	      <menuitem name="Default" onClick="BrowserReload();"/>
+      <menu name="Use Stylesheet" onclick="BrowserReload();">
+	      <menuitem name="Default" onclick="BrowserReload();"/>
 	      <separator />
-	      <menuitem name="Easy Reading" onClick="BrowserReload();"/>
-	      <menuitem name="Maximum Information" onClick="BrowserReload();"/>
-	      <menuitem name="Bizarre" onClick="BrowserReload();"/>
+	      <menuitem name="Easy Reading" onclick="BrowserReload();"/>
+	      <menuitem name="Maximum Information" onclick="BrowserReload();"/>
+	      <menuitem name="Bizarre" onclick="BrowserReload();"/>
       </menu>
       <separator />
-      <menuitem name="Reload" onClick="BrowserReload();"/>
-      <menuitem name="Show Images" onClick="BrowserReload();"/>
-      <menuitem name="Stop" onClick="BrowserReload();"/>
+      <menuitem name="Reload" onclick="BrowserReload();"/>
+      <menuitem name="Show Images" onclick="BrowserReload();"/>
+      <menuitem name="Stop" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Page Source" onClick="BrowserReload();"/>
-      <menuitem name="Page Info" onClick="BrowserReload();"/>
+      <menuitem name="Page Source" onclick="BrowserReload();"/>
+      <menuitem name="Page Info" onclick="BrowserReload();"/>
       <separator />
       <menu name="Translate">
-	      <menuitem name="French To English" onClick="BrowserReload();"/>
-	      <menuitem name="German To English" onClick="BrowserReload();"/>
-	      <menuitem name="Spanish To English" onClick="BrowserReload();"/>
+	      <menuitem name="French To English" onclick="BrowserReload();"/>
+	      <menuitem name="German To English" onclick="BrowserReload();"/>
+	      <menuitem name="Spanish To English" onclick="BrowserReload();"/>
 	      <separator />
-	      <menuitem name="English To French" onClick="BrowserReload();"/>
-	      <menuitem name="German To French" onClick="BrowserReload();"/>
-	      <menuitem name="Spanish To French" onClick="BrowserReload();"/>
+	      <menuitem name="English To French" onclick="BrowserReload();"/>
+	      <menuitem name="German To French" onclick="BrowserReload();"/>
+	      <menuitem name="Spanish To French" onclick="BrowserReload();"/>
 	      <separator />
-	      <menuitem name="English To German" onClick="BrowserReload();"/>
-	      <menuitem name="French To German" onClick="BrowserReload();"/>
-	      <menuitem name="Spanish To German" onClick="BrowserReload();"/>
+	      <menuitem name="English To German" onclick="BrowserReload();"/>
+	      <menuitem name="French To German" onclick="BrowserReload();"/>
+	      <menuitem name="Spanish To German" onclick="BrowserReload();"/>
 	      <separator />
-	      <menuitem name="English To Spanish" onClick="BrowserReload();"/>
-	      <menuitem name="French To Spanish" onClick="BrowserReload();"/>
-	      <menuitem name="German To Spanish" onClick="BrowserReload();"/>
+	      <menuitem name="English To Spanish" onclick="BrowserReload();"/>
+	      <menuitem name="French To Spanish" onclick="BrowserReload();"/>
+	      <menuitem name="German To Spanish" onclick="BrowserReload();"/>
     </menu>
       <menu name="Character Set">
 	      <menuitem name="Latin1" onclick="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
@@ -290,29 +290,29 @@
 	   </menu>
     </menu>
     <menu name="Search">
-      <menuitem name="Find On This page..." onClick="BrowserReload();"/>
-      <menuitem name="Find Again" onClick="BrowserReload();"/>
+      <menuitem name="Find On This page..." onclick="BrowserReload();"/>
+      <menuitem name="Find Again" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Search Parent Item..." onClick="BrowserReload();"/>
-      <menuitem name="Search Parent2 Item..." onClick="BrowserReload();"/>
-      <menuitem name="App Specific" onClick="BrowserReload();"/>
-      <menuitem name="App Specific" onClick="BrowserReload();"/>
+      <menuitem name="Search Parent Item..." onclick="BrowserReload();"/>
+      <menuitem name="Search Parent2 Item..." onclick="BrowserReload();"/>
+      <menuitem name="App Specific" onclick="BrowserReload();"/>
+      <menuitem name="App Specific" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Search The Internet..." onClick="BrowserReload();"/>
-      <menuitem name="Search All Mail..." onClick="BrowserReload();"/>
-      <menuitem name="Search Bookmarks" onClick="BrowserReload();"/>
-      <menuitem name="Search People" onClick="BrowserReload();"/>
+      <menuitem name="Search The Internet..." onclick="BrowserReload();"/>
+      <menuitem name="Search All Mail..." onclick="BrowserReload();"/>
+      <menuitem name="Search Bookmarks" onclick="BrowserReload();"/>
+      <menuitem name="Search People" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Search On This Computer..." onClick="BrowserReload();"/>
+      <menuitem name="Search On This Computer..." onclick="BrowserReload();"/>
     </menu>
     <menu name="Go">
-      <menuitem name="Back" onClick="BrowserBack();"/>
-      <menuitem name="Forward" onClick="BrowserForward();" />
-      <menuitem name="Home" onClick="BrowserHome();"/>
+      <menuitem name="Back" onclick="BrowserBack();"/>
+      <menuitem name="Forward" onclick="BrowserForward();" />
+      <menuitem name="Home" onclick="BrowserHome();"/>
       <separator />
-      <menuitem name="Previous Site 1" onClick="BrowserBack();"/>
-      <menuitem name="Previous Site 2" onClick="BrowserBack();"/>
-      <menuitem name="Previous Site n" onClick="BrowserBack();"/>
+      <menuitem name="Previous Site 1" onclick="BrowserBack();"/>
+      <menuitem name="Previous Site 2" onclick="BrowserBack();"/>
+      <menuitem name="Previous Site n" onclick="BrowserBack();"/>
     </menu>
     <menu name="Bookmarks" datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
 		<menuitem name="Add Current Page"/>
@@ -321,40 +321,40 @@
 		<separator/>
 	</menu>
 	 <menu name="Tasks">
-      <menuitem name="Navigator" onClick="BrowserReload();"/>
-      <menuitem name="Messenger" onClick="BrowserReload();" />
-      <menuitem name="Chat" onClick="BrowserReload();"/>
-      <menuitem name="Shopping Cart" onClick="BrowserReload();"/>
+      <menuitem name="Navigator" onclick="BrowserReload();"/>
+      <menuitem name="Messenger" onclick="BrowserReload();" />
+      <menuitem name="Chat" onclick="BrowserReload();"/>
+      <menuitem name="Shopping Cart" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="Services A" onClick="BrowserReload();"/>
-      <menuitem name="Services B" onClick="BrowserReload();" />
-      <menuitem name="Services C" onClick="BrowserReload();"/>
-      <menuitem name="Services D" onClick="BrowserReload();"/>
+      <menuitem name="Services A" onclick="BrowserReload();"/>
+      <menuitem name="Services B" onclick="BrowserReload();" />
+      <menuitem name="Services C" onclick="BrowserReload();"/>
+      <menuitem name="Services D" onclick="BrowserReload();"/>
       <separator />
       <menu name="Tools">
-	      <menuitem name="Plugins Info" onClick="BrowserReload();"/>
-	      <menuitem name="Server Tools" onClick="BrowserReload();" />
-	      <menuitem name="Java/JS Console" onClick="BrowserReload();"/>
-	      <menuitem name="JavaScript Debugger" onClick="BrowserReload();"/>
+	      <menuitem name="Plugins Info" onclick="BrowserReload();"/>
+	      <menuitem name="Server Tools" onclick="BrowserReload();" />
+	      <menuitem name="Java/JS Console" onclick="BrowserReload();"/>
+	      <menuitem name="JavaScript Debugger" onclick="BrowserReload();"/>
       </menu>
       <separator />
-      <menuitem name="Security Info" onClick="BrowserReload();"/>
+      <menuitem name="Security Info" onclick="BrowserReload();"/>
       <separator/>
-      <menuitem name="Window 1" onClick="BrowserReload();" key="1"/>
-      <menuitem name="Window 2" onClick="BrowserReload();" />
-      <menuitem name="Window 3" onClick="BrowserReload();" />
+      <menuitem name="Window 1" onclick="BrowserReload();" key="1"/>
+      <menuitem name="Window 2" onclick="BrowserReload();" />
+      <menuitem name="Window 3" onclick="BrowserReload();" />
     </menu>
      <menu name="Help">
-      <menuitem name="Help Contents" onClick="BrowserReload();"/>
+      <menuitem name="Help Contents" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="How To Tutorial" onClick="BrowserReload();"/>
-      <menuitem name="Help Channel" onClick="BrowserReload();" />
+      <menuitem name="How To Tutorial" onclick="BrowserReload();"/>
+      <menuitem name="Help Channel" onclick="BrowserReload();" />
       <separator />
-      <menuitem name="Software Updates" onClick="BrowserReload();"/>
-      <menuitem name="Technical Support" onClick="BrowserReload();"/>
-      <menuitem name="Release Notes" onClick="BrowserReload();"/>
+      <menuitem name="Software Updates" onclick="BrowserReload();"/>
+      <menuitem name="Technical Support" onclick="BrowserReload();"/>
+      <menuitem name="Release Notes" onclick="BrowserReload();"/>
       <separator />
-      <menuitem name="About Communicator Prototype" onClick="BrowserReload();" />
+      <menuitem name="About Communicator Prototype" onclick="BrowserReload();" />
     </menu>
   </menubar>
   
@@ -397,7 +397,7 @@
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
 	      	  
-	      <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="window.frames[0].home()"/>        
+	      <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="window.frames[0].home()"/>        
       </html:td>
  
       </html:tr></html:table>
