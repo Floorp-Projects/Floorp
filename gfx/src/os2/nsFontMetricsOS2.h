@@ -15,8 +15,16 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
  *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date           Modified by     Description of modification
+ * 03/28/2000   IBM Corp.        Changes to make os2.h file similar to windows.h file
  */
 
 #ifndef _nsFontMetricsOS2_h
@@ -60,13 +68,14 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    NS_IMETHOD  GetSubscriptOffset( nscoord &aResult);
    NS_IMETHOD  GetStrikeout( nscoord &aOffset, nscoord &aSize);
    NS_IMETHOD  GetUnderline( nscoord &aOffset, nscoord &aSize);
+
    NS_IMETHOD  GetHeight( nscoord &aHeight);
    NS_IMETHOD  GetLeading( nscoord &aLeading);
    NS_IMETHOD  GetMaxAscent( nscoord &aAscent);
    NS_IMETHOD  GetMaxDescent( nscoord &aDescent);
    NS_IMETHOD  GetMaxAdvance( nscoord &aAdvance);
-
    NS_IMETHOD  GetFont( const nsFont *&aFont);
+//   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
    NS_IMETHOD  GetFontHandle( nsFontHandle &aHandle);
 //   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
 
@@ -78,8 +87,6 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    nsresult RealizeFont();
  
    nsFont  *mFont;
-
-   nscoord  mXHeight;
    nscoord  mSuperscriptYOffset;
    nscoord  mSubscriptYOffset;
    nscoord  mStrikeoutPosition;
@@ -91,9 +98,10 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    nscoord  mMaxAscent;
    nscoord  mMaxDescent;
    nscoord  mMaxAdvance;
+   nscoord  mSpaceWidth;
+   nscoord  mXHeight;
 
    PRUint32 mDevMaxAscent;
-   nscoord  mSpaceWidth;
 
    nsFontHandleOS2    *mFontHandle;
    nsDeviceContextOS2 *mContext;    // sigh.. broken broken broken XP interfaces...

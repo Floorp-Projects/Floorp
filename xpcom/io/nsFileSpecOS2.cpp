@@ -19,6 +19,17 @@
  *                 00/01/06: general review and update against Win/Unix versions;
  *                           replaced nsFileSpec::Execute implementation with system() call
  *                           which properly launches OS/2 PM|VIO, WinOS2 and DOS programs
+ * 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 03/23/2000       IBM Corp.      Fixed bug where 2 char or less profile names treated as drive letters.
  */
 
 // This file is #include-d by nsFileSpec.cpp and contains OS/2 specific
@@ -79,7 +90,7 @@ void nsFileSpecHelpers::UnixToNative( nsSimpleCharString &ioPath)
          ioPath[1] = ':';
    
       // yucky specialcase for drive roots: "H:" is not valid, has to be "H:\"
-      if( ioPath[2] == '\0')
+      if(( ioPath[2] == '\0') && (ioPath[1] == ':')  && (ioPath[0] != '\0'))
       {
          char dl = ioPath[0];
          ioPath = " :\\";

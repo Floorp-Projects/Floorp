@@ -16,7 +16,16 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
  *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date           Modified by     Description of modification
+ * 03/28/2000   IBM Corp.        Changes to make os2.h file similar to windows.h file
  */
 
 // This class is part of the strange printing `architecture'.
@@ -38,10 +47,11 @@ class nsDeviceContextSpecFactoryOS2 : public nsIDeviceContextSpecFactory
 
    NS_DECL_ISUPPORTS
 
-   NS_IMETHOD Init();
+   NS_IMETHOD Init(void);
    NS_IMETHOD CreateDeviceContextSpec( nsIDeviceContextSpec *aOldSpec,
                                        nsIDeviceContextSpec *&aNewSpec,
                                        PRBool aQuiet);
+
  protected:
    virtual ~nsDeviceContextSpecFactoryOS2() {}
 };
