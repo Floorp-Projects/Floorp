@@ -5695,6 +5695,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
     mes.SizeBy(aMarginResult.left + aMarginResult.right, 
                aMarginResult.top  + aMarginResult.bottom);
     aState.StoreMaxElementSize(floater, mes);
+    aState.UpdateMaxElementSize(mes); // fix for bug 13553
   }
 #ifdef NOISY_FLOATER
   printf("end ReflowFloater %p, sized to %d,%d\n", floater, metrics.width, metrics.height);
