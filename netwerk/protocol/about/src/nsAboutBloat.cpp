@@ -98,7 +98,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     }
     else {
         nsCOMPtr<nsIFile> file;
-        rv = NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, 
+        rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
                                     getter_AddRefs(file));       
         if (NS_FAILED(rv)) return rv;
 
@@ -134,10 +134,12 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         rv = file->GetPath(&nativePath);
         if (NS_FAILED(rv)) return rv;
 
-        FILE* out = ::fopen(nativePath, "w");
-        nsCRT::free(nativePath);
-        if (out == nsnull)
+        FILE* out;
+        nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file);
+        if (lfile == nsnull)
             return NS_ERROR_FAILURE;
+        rv = lfile->OpenANSIFileDesc("w", &out);
+        if (NS_FAILED(rv)) return rv;
 
         rv = nsTraceRefcnt::DumpStatistics(statType, out);
         ::fclose(out);
