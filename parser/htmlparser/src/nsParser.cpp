@@ -35,6 +35,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_IID); 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
+static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 static const char* kNullURL = "Error: Null URL given";
 static const char* kNullFilename= "Error: Null filename given";
@@ -88,7 +89,7 @@ nsParser::nsParser() : mTokenDeque(gTokenKiller) {
   NS_INIT_REFCNT();
   mDTDDebug = 0;
   mParserFilter = 0;
-  mListener = 0;
+  mObserver = 0;
   mTransferBuffer=0;
   mSink=0;
   mCurrentPos=0;
@@ -107,7 +108,7 @@ nsParser::nsParser() : mTokenDeque(gTokenKiller) {
  *  @return  
  */
 nsParser::~nsParser() {
-  NS_IF_RELEASE(mListener);
+  NS_IF_RELEASE(mObserver);
   NS_IF_RELEASE(mDTDDebug);
   if(mTransferBuffer)
     delete [] mTransferBuffer;
@@ -152,6 +153,9 @@ nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   else if(aIID.Equals(kIParserIID)) {  //do IParser base class...
     *aInstancePtr = (nsIParser*)(this);                                        
+  }
+  else if(aIID.Equals(kIStreamListenerIID)) {  //do IStreamListener base class...
+    *aInstancePtr = (nsIStreamListener*)(this);                                        
   }
   else if(aIID.Equals(kClassIID)) {  //do this class...
     *aInstancePtr = (nsParser*)(this);                                        
@@ -383,7 +387,6 @@ PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
   return anErrorCode;
 }
 
-
 /**
  *  This is the main controlling routine in the parsing process. 
  *  Note that it may get called multiple times for the same scanner, 
@@ -427,7 +430,7 @@ PRBool nsParser::Parse(const char* aFilename){
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamListener* aListener, nsIDTDDebug * aDTDDebug) {
+PRInt32 nsParser::BeginParse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug * aDTDDebug) {
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   PRInt32 status=kBadURL;
@@ -439,12 +442,36 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamListener* aListener, nsIDTDDebug *
   mURL = aURL;
   NS_IF_ADDREF(mURL);
 
-  NS_IF_RELEASE(mListener);
-  mListener = aListener;
-  NS_IF_ADDREF(aListener);
+  NS_IF_RELEASE(mObserver);
+  mObserver = aListener;
+  NS_IF_ADDREF(mObserver);
  
   if(mURL) {
     mScanner=new CScanner(mParseMode);
+    status=NS_OK;
+  }
+  return status;
+}
+
+/**
+ *  This is the main controlling routine in the parsing process. 
+ *  Note that it may get called multiple times for the same scanner, 
+ *  since this is a pushed based system, and all the tokens may 
+ *  not have been consumed by the scanner during a given invocation 
+ *  of this method. 
+ *
+ *  NOTE: We don't call willbuildmodel here, because it will happen
+ *        as a result of calling OnStartBinding later on.
+ *
+ *  @update  gess 3/25/98
+ *  @param   aFilename -- const char* containing file to be parsed.
+ *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ */
+PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug * aDTDDebug) {
+  PRInt32 status;
+
+  status = BeginParse(aURL, aListener, aDTDDebug);
+  if (NS_OK == status) {
     status=mURL->Open(this);
   }
   return status;
@@ -574,8 +601,8 @@ nsParser::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
                          const nsString& aMsg)
 {
   nsresult result=0;
-  if (nsnull != mListener) {
-    mListener->OnProgress(aProgress, aProgressMax, aMsg);
+  if (nsnull != mObserver) {
+    mObserver->OnProgress(aProgress, aProgressMax, aMsg);
   }
   return result;
 }
@@ -587,9 +614,9 @@ nsParser::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
  *  @param   
  *  @return  
  */
-nsresult nsParser::OnStartBinding(const char* aContentType){
-  if (nsnull != mListener) {
-    mListener->OnStartBinding(aContentType);
+nsresult nsParser::OnStartBinding(const char *aContentType){
+  if (nsnull != mObserver) {
+    mObserver->OnStartBinding(aContentType);
   }
   nsresult result=WillBuildModel(mURL->GetSpec(),aContentType);
   if(!mTransferBuffer) {
@@ -607,10 +634,6 @@ nsresult nsParser::OnStartBinding(const char* aContentType){
  *  @return  error code (usually 0)
  */
 nsresult nsParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
-  if (nsnull != mListener) {
-    mListener->OnDataAvailable(pIStream, length);
-  }
-
   int len=0;
   int offset=0;
 
@@ -646,8 +669,8 @@ nsresult nsParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
  */
 nsresult nsParser::OnStopBinding(PRInt32 status, const nsString& aMsg){
   nsresult result=DidBuildModel(status);
-  if (nsnull != mListener) {
-    mListener->OnStopBinding(status, aMsg);
+  if (nsnull != mObserver) {
+    mObserver->OnStopBinding(status, aMsg);
   }
   return result;
 }

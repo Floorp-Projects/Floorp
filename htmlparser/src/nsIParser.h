@@ -29,7 +29,7 @@
 
 
 class nsIContentSink;
-class nsIStreamListener;
+class nsIStreamObserver;
 class nsString;
 class CToken;
 class nsIURL;
@@ -61,8 +61,12 @@ class nsIParser : public nsISupports {
      */
     virtual PRInt32 ConsumeToken(CToken*& aToken)=0;
 
+    virtual PRInt32 BeginParse(nsIURL* aURL,
+                               nsIStreamObserver* aListener = nsnull,
+                               nsIDTDDebug * aDTDDebug = 0) = 0;
+
     virtual PRInt32 Parse(nsIURL* aURL,
-                          nsIStreamListener* aListener,
+                          nsIStreamObserver* aListener = nsnull,
 						  nsIDTDDebug * aDTDDebug = 0) = 0;
 
     virtual PRInt32 Parse(const char* aFilename)=0;

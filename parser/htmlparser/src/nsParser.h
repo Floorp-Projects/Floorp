@@ -121,6 +121,10 @@ friend class CTokenHandler;
      */
     virtual CScanner* GetScanner(void);
 
+    virtual PRInt32 BeginParse(nsIURL* aURL,
+                               nsIStreamObserver* aListener, 
+                               nsIDTDDebug * aDTDDebug = 0);
+
     /**
      * Cause parser to parse input from given URL in given mode
      * @update	gess5/11/98
@@ -129,7 +133,7 @@ friend class CTokenHandler;
      * @return  TRUE if all went well -- FALSE otherwise
      */
     virtual PRInt32 Parse(nsIURL* aURL,
-                          nsIStreamListener* aListener, nsIDTDDebug * aDTDDebug = 0);
+                          nsIStreamObserver* aListener, nsIDTDDebug * aDTDDebug = 0);
 
     /**
      * Cause parser to parse input from given file in given mode
@@ -307,7 +311,7 @@ protected:
     // And now, some data members...
     //*********************************************
 
-    nsIStreamListener*  mListener;
+    nsIStreamObserver*  mObserver;
     nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
 
