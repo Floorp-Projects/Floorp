@@ -1213,6 +1213,21 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     //background: color
     nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
     nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+
+    // direction
+    aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
+    if (eHTMLUnit_String == value.GetUnit()) {
+      nsString dir;
+      value.GetStringValue(dir);
+      nsStyleDisplay* display = (nsStyleDisplay*)
+        aContext->GetMutableStyleData(eStyleStruct_Display);
+      if (dir.EqualsIgnoreCase("RTL")) {
+        display->mDirection = NS_STYLE_DIRECTION_RTL;
+      } 
+      else {
+        display->mDirection = NS_STYLE_DIRECTION_LTR;
+      }
+    }
   }
 }
 
