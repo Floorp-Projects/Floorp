@@ -1926,18 +1926,23 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
                      uintN attrs, uintN flags, intN shortid)
 {
     JSScope *scope;
+    JSScopeProperty *sprop;
 
+    JS_LOCK_OBJ(cx, obj);
     scope = js_GetMutableScope(cx, obj);
-    if (!scope)
-        return NULL;
-
-    /*
-     * Handle old bug that took empty string as zero index.  Also convert
-     * string indices to integers if appropriate.
-     */
-    CHECK_FOR_FUNNY_INDEX(id);
-    return js_AddScopeProperty(cx, scope, id, getter, setter, slot, attrs,
-                               flags, shortid);
+    if (!scope) {
+        sprop = NULL;
+    } else {
+        /*
+         * Handle old bug that took empty string as zero index.  Also convert
+         * string indices to integers if appropriate.
+         */
+        CHECK_FOR_FUNNY_INDEX(id);
+        sprop = js_AddScopeProperty(cx, scope, id, getter, setter, slot, attrs,
+                                    flags, shortid);
+    }
+    JS_UNLOCK_OBJ(cx, obj);
+    return sprop;
 }
 
 JSScopeProperty *
@@ -1947,16 +1952,19 @@ js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
 {
     JSScope *scope;
     
+    JS_LOCK_OBJ(cx, obj);
     scope = js_GetMutableScope(cx, obj);
-    if (!scope)
-        return NULL;
-
-    sprop = js_ChangeScopePropertyAttrs(cx, scope, sprop, attrs, mask,
-                                        getter, setter);
-    if (!sprop)
-        return NULL;
-
-    PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, sprop->id, sprop);
+    if (!scope) {
+        sprop = NULL;
+    } else {
+        sprop = js_ChangeScopePropertyAttrs(cx, scope, sprop, attrs, mask,
+                                            getter, setter);
+        if (sprop) {
+            PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, sprop->id,
+                                sprop);
+        }
+    }
+    JS_UNLOCK_OBJ(cx, obj);
     return sprop;
 }
 
@@ -2906,7 +2914,7 @@ out:
     return JS_TRUE;
 }
 
-extern JSIdArray *
+JSIdArray *
 js_NewIdArray(JSContext *cx, jsint length)
 {
     JSIdArray *ida;
@@ -2918,7 +2926,7 @@ js_NewIdArray(JSContext *cx, jsint length)
     return ida;
 }
 
-extern JSIdArray *
+JSIdArray *
 js_GrowIdArray(JSContext *cx, JSIdArray *ida, jsint length)
 {
     ida = (JSIdArray *)
