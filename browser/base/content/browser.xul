@@ -109,6 +109,8 @@
     <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
+    <command id="Browser:SendLink" oncommand="sendLink(Components.lookupMethod(window._content, 'location').call(window._content).href,
+                                              Components.lookupMethod(window._content.document, 'title').call(window._content.document));"/>
     <command id="Browser:Print" oncommand="BrowserPrint();"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
     <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
@@ -325,6 +327,12 @@
                 label="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
                 oncommand="gContextMenu.saveLink();"/>
+#ifndef XP_UNIX
+      <menuitem id="context-sendlink"
+                label="&sendLinkCmd.label;"
+                accesskey="&sendLinkCmd.accesskey;"
+                oncommand="gContextMenu.sendLink();"/>
+#endif
       <menuitem id="context-copyemail"
                 label="&copyEmailCmd.label;"
                 accesskey="&copyEmailCmd.accesskey;"
@@ -347,6 +355,12 @@
                 label="&saveImageCmd.label;"
                 accesskey="&saveImageCmd.accesskey;"
                 oncommand="gContextMenu.saveImage();"/>
+#ifndef XP_UNIX
+      <menuitem id="context-sendimage"  
+                label="&sendImageCmd.label;" 
+                accesskey="&sendImageCmd.accesskey;" 
+                oncommand="gContextMenu.sendImage();"/>
+#endif
       <menuitem id="context-setWallpaper"
                 label="&setWallpaperCmd.label;"
                 accesskey="&setWallpaperCmd.accesskey;"
@@ -380,6 +394,12 @@
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey;"
                 oncommand="saveDocument(window._content.document);"/>
+#ifndef XP_UNIX
+      <menuitem id="context-sendpage"  
+                label="&sendPageCmd.label;" 
+                accesskey="&sendPageCmd.accesskey;" 
+                command="Browser:SendLink"/>
+#endif
       <menuseparator id="context-sep-viewbgimage"/>  
       <menuitem id="context-viewbgimage"
                 label="&viewBGImageCmd.label;"
@@ -606,6 +626,9 @@
                 <menuseparator/>
                 <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
                 <menuitem id="menu_saveFrame" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
+#ifndef XP_UNIX
+                <menuitem id="menu_sendLink"  label="&sendPageCmd.label;"  accesskey="&sendPageCmd.accesskey;"  command="Browser:SendLink"/>
+#endif
                 <menuseparator/>
                 <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="BrowserPrintSetup();"/>
                 <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" oncommand="BrowserPrintPreview();"/>

@@ -212,6 +212,8 @@
 <!ENTITY bookmarkLinkCmd.accesskey    "L">
 <!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame...">
 <!ENTITY bookmarkFrameCmd.accesskey   "F">
+<!ENTITY sendPageCmd.label            "Send Page...">
+<!ENTITY sendPageCmd.accesskey        "S">
 <!ENTITY savePageCmd.label            "Save Page As...">
 <!ENTITY savePageCmd.accesskey        "A">
 <!ENTITY savePageCmd.commandkey       "s">
@@ -219,8 +221,12 @@
 <!ENTITY saveFrameCmd.accesskey       "F">
 <!ENTITY saveLinkCmd.label            "Save Link to Disk...">
 <!ENTITY saveLinkCmd.accesskey        "k">
+<!ENTITY sendLinkCmd.label            "Send Link..."> 
+<!ENTITY sendLinkCmd.accesskey        "d">
 <!ENTITY saveImageCmd.label           "Save Image As...">
 <!ENTITY saveImageCmd.accesskey       "v">
+<!ENTITY sendImageCmd.label           "Send Image...">
+<!ENTITY sendImageCmd.accesskey       "n">
 <!ENTITY copyLinkCmd.label            "Copy Link Location">
 <!ENTITY copyLinkCmd.accesskey        "C">
 <!ENTITY copyImageCmd.label           "Copy Image Location">
