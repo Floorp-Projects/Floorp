@@ -1,4 +1,3 @@
-
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -148,5 +147,20 @@ LPSTR w2a_malloc(LPCWSTR inWideString, int inWideChars, int* outACPChars);
 void dumpMemoryInfo();
 
 #define charcount(array) (sizeof(array) / sizeof(array[0]))
+
+
+// We use this API internally as well as externally.
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+	MOZCE_SHUNT_API int mozce_printf(const char *, ...);
+
+#ifdef __cplusplus
+};
+#endif
+
+void nclog (const char *fmt, ...);
+void nclograw(const char* data, long length);
 
 #endif /* __mozce_internal_h */

@@ -37,6 +37,8 @@
 #ifndef MOZCE_DEFS
 #define MOZCE_DEFS
 
+// #define USE_NC_LOGGING 1
+
 #define NOMINMAX
 
 #ifndef XP_WIN

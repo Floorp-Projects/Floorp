@@ -51,7 +51,7 @@ extern "C" {
 MOZCE_SHUNT_API int mozce_stat(const char* inPath, struct stat* outStats)
 {
 #ifdef DEBUG
-    printf("mozce_stat called\n");
+    mozce_printf("mozce_stat called\n");
 #endif
 
     int retval = -1;

@@ -57,7 +57,7 @@ MOZCE_SHUNT_API unsigned char* mozce_mbsinc(const unsigned char* inCurrent)
 {
 #ifdef LOG_CALLS
 #ifdef DEBUG
-    printf("mozce_mbsinc called\n");
+    mozce_printf("mozce_mbsinc called\n");
 #endif
 #endif
     //IsDBCSLeadByte(path[len-1])
@@ -69,7 +69,7 @@ MOZCE_SHUNT_API unsigned char* mozce_mbspbrk(const unsigned char* inString, cons
 {
 #ifdef LOG_CALLS
 #ifdef DEBUG
-    printf("mozce_mbspbrk called\n");
+    mozce_printf("mozce_mbspbrk called\n");
 #endif
 #endif
 
@@ -86,11 +86,11 @@ MOZCE_SHUNT_API unsigned char* mozce_mbsrchr(const unsigned char* inString, unsi
 {
 #ifdef LOG_CALLS
 #ifdef DEBUG
-    printf("mozce_mbsrchr called\n");
+    mozce_printf("mozce_mbsrchr called\n");
 #endif
 #endif
 
-	return (unsigned char*) strrchr((char*)inString, inC);
+    return (unsigned char*) strrchr((char*)inString, inC);
 }
 
 
@@ -98,7 +98,7 @@ MOZCE_SHUNT_API unsigned char* mozce_mbschr(const unsigned char* inString, unsig
 {
 #ifdef LOG_CALLS
 #ifdef DEBUG
-    printf("mozce_mbschr called\n");
+    mozce_printf("mozce_mbschr called\n");
 #endif
 #endif
     return (unsigned char*)strchr((const char*)inString, (int)inC);
