@@ -135,6 +135,7 @@ if (defined $tree->[1][0]->{'maintainer'}) {
   my $subject = "Bug import error: no maintainer";
   my $message = "Cannot import these bugs because no maintainer for "; 
   $message .=   "the exporting db is given.\n";
+  $message .=   "\n\nPlease re-open the original bug.\n";
   $message .= "\n\n$xml";
   my @to = (Param("maintainer"));
   MailMessage ($subject, $message, @to);
@@ -147,6 +148,7 @@ if (defined $tree->[1][0]->{'exporter'}) {
 } else {
   my $subject = "Bug import error: no exporter";
   my $message = "Cannot import these bugs because no exporter is given.\n";
+  $message .=   "\n\nPlease re-open the original bug.\n";
   $message .= "\n\n$xml";
   my @to = (Param("maintainer"), $maintainer);
   MailMessage ($subject, $message, @to);
@@ -158,6 +160,7 @@ if ( ! $exporterid ) {
   my $subject = "Bug import error: invalid exporter";
   my $message = "The user <$tree->[1][0]->{'exporter'}> who tried to move\n";
   $message .= "bugs here does not have an account in this database.\n";
+  $message .= "\n\nPlease re-open the original bug.\n";
   $message .= "\n\n$xml";
   my @to = (Param("maintainer"), $maintainer);
   MailMessage ($subject, $message, @to);
@@ -170,6 +173,7 @@ if (defined $tree->[1][0]->{'urlbase'}) {
 } else {
   my $subject = "Bug import error: invalid exporting database";
   my $message = "Cannot import these bugs because the name of the exporting db was not given.\n";
+  $message .= "\n\nPlease re-open the original bug.\n";
   $message .= "\n\n$xml";
   my @to = (Param("maintainer"), $maintainer, $exporter);
   MailMessage ($subject, $message, @to);
@@ -544,6 +548,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   $log .= "Bug $bug_fields{'bug_id'}\@$urlbase imported as bug $id.\n";
 }
 
-my $subject = "$bugqty bug(s) imported from $urlbase";
+my $subject = "$bugqty bug(s) successfully moved from $urlbase to " 
+               . Param("urlbase") ;
 my @to = ($exporter);
 MailMessage ($subject, $log, @to);
