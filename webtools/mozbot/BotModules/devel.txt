@@ -1,7 +1,7 @@
 MODULE API DOCUMENTATION  
 ========================
 
-This file documents the mozbot 2.0 bot module API.
+This file documents the mozbot 2.2 bot module API.
 Revisions are welcome.
 
 Sample module

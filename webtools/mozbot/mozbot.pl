@@ -8,7 +8,7 @@
 #   | '_ ` _ \ / _ \_  / '_ \ / _ \| __|
 #   | | | | | | (_) / /| |_) | (_) | |_
 #   |_| |_| |_|\___/___|_.__/ \___/ \__|
-#   =======================-  2 . 0  -==
+#   ====================================
 #
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
