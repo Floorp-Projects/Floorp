@@ -26,8 +26,8 @@
 #
 # features: reports tinderbox status upon request.
 # remembers urls. tells you the phase of the moon.
-# grabs mozillaZine headlines. bot will auto-op
-# based on nick and remote host.
+# grabs mozillaZine headlines. fetches slashdot.org
+# news. bot will auto-op based on nick and remote host.
 #
 # hack on me! required reading:
 #
@@ -54,7 +54,7 @@ use Carp;
 
 $|++;
 
-my $VERSION = "1.7"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.8"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %cmds = 
@@ -80,8 +80,7 @@ $channel = $channel             || "#mozilla";
 &create_pid_file;
 
 # read admin list 
-my %admins = ( "sar" => "netscape.com", "terry" => "netscape.com",
-	"harrison" => "(censor.com|netscape.com)");
+my %admins = ( "sar" => "netscape.com", "terry" => "netscape.com" );
 my $adminf = ".mozbot-admins";
 &fetch_admin_conf (\%admins);
 
@@ -112,12 +111,17 @@ my @greetings =
 	"hallo"
 	);
 
-# leave $mozillazine undef'd if you don't want headlines
-# checked every eight hours and available via
-# "mozilla, mozillazine" (or "zine" or "mz")
+# leave $slashdot tuned to undef if you don't want slashdot
+# headlines checked every two hours
+
+my $slashdot = "http://slashdot.org/ultramode.txt";
+my @slashdot;
+
+# leave $mozillazine undef'd if you don't want mozillazine
+# headlines checked every eight hours
 
 my $mozillazine = "http://www.mozillazine.org/home.html";
-my @headlines;
+my @mozillazine;
 
 my $irc = new Net::IRC or confess "$0: duh?";
 
@@ -146,6 +150,7 @@ $bot->add_handler ('join',   \&on_join);
 $bot->schedule (0, \&tinderbox);
 $bot->schedule (0, \&checksourcechange);
 $bot->schedule (0, \&mozillazine);
+$bot->schedule (0, \&slashdot);
 
 &debug ("connecting to $server $port as $nick on $channel");
 $irc->start;
@@ -312,7 +317,6 @@ sub on_public
         if ($cmd =~ /tree/i)
             {
             my $t = &bot_tinderbox (undef, undef, undef, 
-							# it's all about making perl happy
 							(defined $rest && $rest eq "all") ? 0 : 1);
             foreach (@$t)
                 {
@@ -320,17 +324,32 @@ sub on_public
                 $self->privmsg ($channel, "$_");
                 }
             }
+				elsif ($cmd =~ /^(slashdot|sd|\/\.)/)
+					{
+					$self->privmsg ($channel, "Headlines from http://slashdot.org:");
+					if ($#slashdot == -1)
+						{
+						$self->privmsg ($channel, "- no slashdot headlines yet -");
+						}
+					else
+						{
+						foreach (@slashdot)
+							{
+							$self->privmsg ($channel, $_);
+							}
+						}
+					}
 				elsif ($cmd =~ /^(zine|mozillazine|mz)/)
 					{
 					$self->privmsg ($channel, 
 						"Headlines from mozillaZine (http://www.mozillazine.org/)");
-					if ($#headlines == -1)
+					if ($#mozillazine == -1)
 						{
-						$self->privmsg ($channel, "- sorry, no headlines -");
+						$self->privmsg ($channel, "- sorry, no mozillazine headlines -");
 						}
 					else
 						{
-						foreach (@headlines)
+						foreach (@mozillazine)
 							{
 							$self->privmsg ($channel, $_);
 							}
@@ -621,6 +640,25 @@ sub create_pid_file
     }
 	}
 
+sub slashdot
+	{
+	return if (! defined $slashdot);
+	&debug ("fetching slashdot headlines");
+
+  my $output = get $slashdot;
+  return if (! $output);
+  my @sd = split /\n/, $output;
+ 
+  @slashdot = ();
+
+  foreach my $i (0 .. $#sd)
+    {
+    push @slashdot, $sd[$i+1] if ($sd[$i] eq "%%" && $i != $#sd);
+    }
+
+  $bot->schedule (60 * 60 * 2, \&slashdot);
+  }
+
 # fetches headlines from mozillaZine
 #
 # this should be a more general feature, to grab
@@ -631,21 +669,21 @@ sub create_pid_file
 
 sub mozillazine
 	{
-	&debug ("fetching mozillazine headers");
-	
 	return if (! defined $mozillazine);
+	&debug ("fetching mozillazine headlines");
+	
 	my $output = get $mozillazine;
 	return if (! $output);
 	my @mz = split /\n/, $output;
 	
-	@headlines = ();
+	@mozillazine = ();
 
 	foreach (@mz)
 		{
 		if (my ($h) = $_ =~ /COLOR="#FEFEFE"><B>([^<>]+)/)
 			{
 			$h =~ s/&nbsp;//g;
-			push @headlines, $h; 
+			push @mozillazine, $h; 
 			}
 		}
 
