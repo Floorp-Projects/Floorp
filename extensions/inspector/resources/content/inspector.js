@@ -113,7 +113,7 @@ InspectorApp.prototype =
     this.mClipboardHelper = XPCU.getService(kClipboardHelperCID, "nsIClipboardHelper");
 
     this.mPanelSet = document.getElementById("bxPanelSet");
-    this.mPanelSet.addObserver("panelsetready", this);
+    this.mPanelSet.addObserver("panelsetready", this, false);
     this.mPanelSet.initialize();
   },
 
@@ -129,7 +129,7 @@ InspectorApp.prototype =
   initViewerPanels: function()
   {
     this.mDocPanel = this.mPanelSet.getPanel(0);
-    this.mDocPanel.addObserver("subjectChange", this);
+    this.mDocPanel.addObserver("subjectChange", this, false);
     this.mObjectPanel = this.mPanelSet.getPanel(1);
 
     if (this.mInitTarget) {

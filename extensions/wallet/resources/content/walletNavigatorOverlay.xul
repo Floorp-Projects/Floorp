@@ -77,7 +77,7 @@
         observerService = observerService.QueryInterface(Components.interfaces.nsIObserverService);
         var observer = new navObserver();
         if (observerService && observer) {
-          observerService.AddObserver(observer, "EndDocumentLoad");
+          observerService.addObserver(observer, "EndDocumentLoad", PR_FALSE);
         } else {
           dump("FAILURE to get observer service\n");
         }

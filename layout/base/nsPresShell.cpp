@@ -103,6 +103,7 @@
 #include "plarena.h"
 #include "nsCSSAtoms.h"
 #include "nsIObserverService.h" // for reflow observation
+#include "nsObserverService.h"
 #include "nsIDocShell.h"        // for reflow observation
 #include "nsIDOMRange.h"
 #ifdef MOZ_PERF_METRICS
@@ -2507,9 +2508,6 @@ PresShell::NotifyReflowObservers(const char *aData)
   nsresult               result = NS_OK;
   nsCOMPtr<nsISupports>  pContainer;
   nsCOMPtr<nsIDocShell>  pDocShell;
-  nsAutoString           sTopic,
-                         sData;
-
 
   result = mPresContext->GetContainer( getter_AddRefs( pContainer ) );
 
@@ -2518,11 +2516,9 @@ PresShell::NotifyReflowObservers(const char *aData)
                                   &result );
 
     if (NS_SUCCEEDED( result ) && pDocShell && mObserverService) {
-      sTopic.AssignWithConversion( NS_PRESSHELL_REFLOW_TOPIC );
-      sData.AssignWithConversion( aData );
-      result = mObserverService->Notify( pDocShell,
-                                         sTopic.get(),
-                                         sData.get() );
+      result = mObserverService->NotifyObservers( pDocShell,
+                                                  NS_PRESSHELL_REFLOW_TOPIC,
+                                                  NS_ConvertASCIItoUCS2(aData).get() );
       // notice that we don't really care what the observer service returns
     }
   }

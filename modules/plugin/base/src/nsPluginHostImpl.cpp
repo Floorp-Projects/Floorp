@@ -57,6 +57,7 @@
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h" 
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIHttpChannel.h"
 #include "nsIUploadChannel.h"
@@ -2398,8 +2399,8 @@ nsPluginHostImpl::nsPluginHostImpl()
   nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   if (obsService)
   {
-    obsService->AddObserver(this, NS_LITERAL_STRING("quit-application").get());
-    obsService->AddObserver(this, NS_ConvertASCIItoUCS2(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+    obsService->AddObserver(this, "quit-application", PR_FALSE);
+    obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }
 
 #ifdef PLUGIN_LOGGING
@@ -2430,8 +2431,8 @@ nsPluginHostImpl::~nsPluginHostImpl()
   nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   if (obsService)
   {
-    obsService->RemoveObserver(this, NS_LITERAL_STRING("quit-application").get());
-    obsService->RemoveObserver(this, NS_ConvertASCIItoUCS2(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+    obsService->RemoveObserver(this, "quit-application");
+    obsService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   }
   Destroy();
 }
@@ -5709,18 +5710,14 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
 
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
-                                        const PRUnichar *aTopic,
+                                        const char *aTopic,
                                         const PRUnichar *someData)
 {
 #ifdef NS_DEBUG
-  nsAutoString topic(aTopic);
-  char * newString = ToNewCString(topic);
-  printf("nsPluginHostImpl::Observe \"%s\"\n", newString ? newString : "");
-  if (newString)
-    nsCRT::free(newString);
+  printf("nsPluginHostImpl::Observe \"%s\"\n", aTopic ? aTopic : "");
 #endif
-  if (NS_ConvertASCIItoUCS2(NS_XPCOM_SHUTDOWN_OBSERVER_ID).Equals(aTopic) ||
-      NS_LITERAL_STRING("quit-application").Equals(aTopic))
+  if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic) ||
+      !nsCRT::strcmp("quit-application", aTopic))
   {
     Destroy();
   }

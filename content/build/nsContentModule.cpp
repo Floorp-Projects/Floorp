@@ -85,6 +85,7 @@
 #include "nsINodeInfo.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMImplementation.h"
@@ -136,16 +137,14 @@ public:
   NS_DECL_NSIOBSERVER
 };
 
-static NS_NAMED_LITERAL_STRING(kXPCOMShutdownObserverID, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-
 NS_IMPL_ISUPPORTS1(ContentShutdownObserver, nsIObserver)
 
 NS_IMETHODIMP
 ContentShutdownObserver::Observe(nsISupports *aSubject,
-                                 const PRUnichar *aTopic,
+                                 const char *aTopic,
                                  const PRUnichar *someData)
 {
-  if (kXPCOMShutdownObserverID.Equals(aTopic))
+  if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
     nsContentUtils::Shutdown();
 
   return NS_OK;
@@ -190,7 +189,7 @@ Initialize(nsIModule* aSelf)
       new ContentShutdownObserver();
 
     if (observer)
-      observerService->AddObserver(observer, kXPCOMShutdownObserverID.get());
+      observerService->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }
 
   return NS_OK;

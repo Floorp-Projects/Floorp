@@ -43,7 +43,6 @@
 #include "nsIComponentManager.h"
 #include "nsIObserverService.h"
 #include "nsObserverService.h"
-#include "nsIObserverList.h"
 #include "nsObserverList.h"
 #include "nsHashtable.h"
 
@@ -65,7 +64,7 @@ NS_COM nsresult NS_NewObserverService(nsIObserverService** anObserverService)
 }
 
 nsObserverService::nsObserverService()
-    : mObserverTopicTable(NULL)
+    : mObserverTopicTable(nsnull)
 {
     NS_INIT_REFCNT();
     mObserverTopicTable = nsnull;
@@ -83,7 +82,7 @@ nsObserverService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstanc
 {
     nsresult rv;
     nsObserverService* os = new nsObserverService();
-    if (os == NULL)
+    if (os == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(os);
     rv = os->QueryInterface(aIID, aInstancePtr);
@@ -108,166 +107,112 @@ nsresult nsObserverService::GetObserverService(nsIObserverService** anObserverSe
 static PRBool PR_CALLBACK 
 ReleaseObserverList(nsHashKey *aKey, void *aData, void* closure)
 {
-    nsIObserverList* observerList = NS_STATIC_CAST(nsIObserverList*, aData);
-    NS_RELEASE(observerList);
+    nsObserverList* observerList = NS_STATIC_CAST(nsObserverList*, aData);
+    delete(observerList);
     return PR_TRUE;
 }
 
-nsresult nsObserverService::GetObserverList(const PRUnichar* aTopic, nsIObserverList** anObserverList)
+nsresult nsObserverService::GetObserverList(const char* aTopic, nsObserverList** anObserverList)
 {
-    if (anObserverList == NULL)
-    {
+    if (anObserverList == nsnull)
         return NS_ERROR_NULL_POINTER;
-    }
 	
-	if(mObserverTopicTable == NULL) {
-        mObserverTopicTable = new nsObjectHashtable(nsnull, nsnull,   // should never be cloned
-                                                    ReleaseObserverList, nsnull,
-                                                    256, PR_TRUE);
-        if (mObserverTopicTable == NULL)
+	if(mObserverTopicTable == nsnull) 
+    {
+        mObserverTopicTable = new nsObjectHashtable(nsnull, 
+                                                    nsnull,   // should never be cloned
+                                                    ReleaseObserverList, 
+                                                    nsnull,
+                                                    256, 
+                                                    PR_TRUE);
+        if (mObserverTopicTable == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
     }
+	
 
+	nsCStringKey key(aTopic);
 
-	 nsStringKey key(aTopic);
+    nsObserverList *topicObservers;
+    topicObservers = (nsObserverList *) mObserverTopicTable->Get(&key);
 
-    nsIObserverList *topicObservers = nsnull;
-    if (mObserverTopicTable->Exists(&key)) {
-        topicObservers = (nsIObserverList *) mObserverTopicTable->Get(&key);
-        if (topicObservers != NULL) {
-	        *anObserverList = topicObservers;	
-        } else {
-            NS_NewObserverList(&topicObservers);
-            mObserverTopicTable->Put(&key, topicObservers);
-        }
-    } else {
-        NS_NewObserverList(&topicObservers);
-        *anObserverList = topicObservers;
-        mObserverTopicTable->Put(&key, topicObservers);
-
+    if (topicObservers) 
+    {
+        *anObserverList = topicObservers;	
+        return NS_OK;
     }
 
+    topicObservers = new nsObserverList();
+    if (!topicObservers)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    *anObserverList = topicObservers;
+    mObserverTopicTable->Put(&key, topicObservers);
+    
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsObserverService::AddObserver(nsIObserver* anObserver, const PRUnichar* aTopic)
+NS_IMETHODIMP nsObserverService::AddObserver(nsIObserver* anObserver, const char* aTopic, PRBool ownsWeak)
 {
-	nsIObserverList* anObserverList;
+	nsObserverList* anObserverList;
 	nsresult rv;
 
-    if (anObserver == NULL)
-    {
+    if (anObserver == nsnull || aTopic == nsnull)
         return NS_ERROR_NULL_POINTER;
-    }
-
-	if (aTopic == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
 
 	rv = GetObserverList(aTopic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
-	if (anObserverList) {
-        return anObserverList->AddObserver(anObserver);
-    }
- 	
-	return NS_ERROR_FAILURE;
+    return anObserverList->AddObserver(anObserver, ownsWeak);
 }
 
-NS_IMETHODIMP nsObserverService::RemoveObserver(nsIObserver* anObserver, const PRUnichar* aTopic)
+NS_IMETHODIMP nsObserverService::RemoveObserver(nsIObserver* anObserver, const char* aTopic)
 {
-	nsIObserverList* anObserverList;
+	nsObserverList* anObserverList;
 	nsresult rv;
 
-    if (anObserver == NULL)
-    {
+    if (anObserver == nsnull || aTopic == nsnull)
         return NS_ERROR_NULL_POINTER;
-    }
-
-	if (aTopic == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
 
 	rv = GetObserverList(aTopic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
-	if (anObserverList) {
-        return anObserverList->RemoveObserver(anObserver);
-    }
- 	
-	return NS_ERROR_FAILURE;
+    return anObserverList->RemoveObserver(anObserver);
 }
 
-NS_IMETHODIMP nsObserverService::EnumerateObserverList(const PRUnichar* aTopic, nsIEnumerator** anEnumerator)
+NS_IMETHODIMP nsObserverService::EnumerateObservers(const char* aTopic, nsISimpleEnumerator** anEnumerator)
 {
-	nsIObserverList* anObserverList;
+	nsObserverList* anObserverList;
 	nsresult rv;
 
-    if (anEnumerator == NULL)
-    {
+    if (anEnumerator == nsnull || aTopic == nsnull)
         return NS_ERROR_NULL_POINTER;
-    }
-
-	if (aTopic == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
 
 	rv = GetObserverList(aTopic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
-	if (anObserverList) {
-        return anObserverList->EnumerateObserverList(anEnumerator);
-    }
- 	
-	return NS_ERROR_FAILURE;
+    return anObserverList->GetObserverList(anEnumerator);
 }
 
 // Enumerate observers of aTopic and call Observe on each.
-NS_IMETHODIMP nsObserverService::Notify( nsISupports *aSubject,
-                                    const PRUnichar *aTopic,
-                                    const PRUnichar *someData ) {
+NS_IMETHODIMP nsObserverService::NotifyObservers( nsISupports *aSubject,
+                                                  const char *aTopic,
+                                                  const PRUnichar *someData ) {
     nsresult rv = NS_OK;
-    nsIEnumerator *observers;
-    // Get observer list enumerator.
-    rv = this->EnumerateObserverList( aTopic, &observers );
-    if ( NS_SUCCEEDED( rv ) ) {
-        // Go to start of observer list.
-        rv = observers->First();
-        // Continue until error or end of list.
-        while ( observers->IsDone() != NS_OK && NS_SUCCEEDED(rv) ) {
-            PRBool advanceToNext = PR_TRUE;
-            // Get current item (observer).
-            nsISupports *base;
-            rv = observers->CurrentItem( &base );
-            if ( NS_SUCCEEDED( rv ) ) {                           
-                // Convert item to nsIObserver.
-                nsIObserver *observer;
-                rv = base->QueryInterface( NS_GET_IID(nsIObserver), (void**)&observer );
-                if ( NS_SUCCEEDED( rv ) && observer ) {
-                    // Tell the observer what's up.
-                    observer->Observe( aSubject, aTopic, someData );
-                    nsCOMPtr <nsISupports> currentItem;
-                    observers->CurrentItem(getter_AddRefs(currentItem));
-                    // check if the current item has changed, because the
-                    // observer removed the old current item.
-                    advanceToNext = (currentItem == base);
-                    // Release the observer.
-                    observer->Release();
-                }
-            NS_IF_RELEASE(base);
-            }
-            // Go on to next observer in list.
-            if (advanceToNext)
-              rv = observers->Next();
-        }
-        // Release the observer list.
-        observers->Release();
-        rv = NS_OK;
+    nsCOMPtr<nsISimpleEnumerator> observers;
+    nsCOMPtr<nsISupports> observerRef;
+
+    rv = EnumerateObservers( aTopic, getter_AddRefs(observers) );
+    if ( NS_FAILED( rv ) )
+        return rv;
+    PRBool loop = PR_TRUE;
+    while( NS_SUCCEEDED(observers->HasMoreElements(&loop)) && loop) 
+    {
+        observers->GetNext(getter_AddRefs(observerRef));
+        nsCOMPtr<nsIObserver> observer = do_QueryInterface(observerRef);
+        if ( observer ) 
+            observer->Observe( aSubject, aTopic, someData );
     }
-    return rv;
+    return NS_OK;
 }
 ////////////////////////////////////////////////////////////////////////////////
 

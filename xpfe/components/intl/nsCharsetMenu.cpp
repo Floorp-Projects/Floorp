@@ -339,12 +339,11 @@ private:
 
 NS_IMPL_ISUPPORTS1(nsCharsetMenuObserver, nsIObserver);
 
-NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   nsresult rv;
 
-  nsDependentString aTopicString(aTopic);
-  if (aTopicString.Equals(NS_LITERAL_STRING("nsPref:changed"))) {
+  if (!nsCRT::strcmp(aTopic, "nsPref:changed")) {
     nsDependentString prefName(someData);
 
     if (prefName.Equals(NS_LITERAL_STRING(kBrowserStaticPrefKey))) {

@@ -600,7 +600,7 @@ NS_CategoryManagerGetFactory( nsIFactory** aFactory )
 nsresult
 NS_CreateServicesFromCategory(const char *category,
                               nsISupports *origin,
-                              const PRUnichar *observerTopic)
+                              const char *observerTopic)
 {
     nsresult rv = NS_OK;
     

@@ -54,6 +54,7 @@
 #include "txAtom.h"
 #ifndef TX_EXE
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
@@ -2153,8 +2154,6 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
     if (aObserver) {
         nsresult res = NS_OK;
-        nsAutoString topic; topic.Assign(NS_LITERAL_STRING("xslt-done"));
-
         nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
         if (NS_SUCCEEDED(res)) {
             Node* docElement = resultDocument->getDocumentElement();
@@ -2166,8 +2165,8 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
                 nsDocElement = nsnull;
             }
 
-            anObserverService->AddObserver(aObserver, topic.get());
-            anObserverService->Notify(nsDocElement, topic.get(), nsnull);
+            anObserverService->AddObserver(aObserver, "xslt-done", PR_FALSE);
+            anObserverService->NotifyObservers(nsDocElement, "xslt-done", nsnull);
         }
     }
 

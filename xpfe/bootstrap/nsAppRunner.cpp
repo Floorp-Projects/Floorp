@@ -52,6 +52,7 @@
 #include "nsIAppShellService.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsAppShellCIDs.h"
 #include "prprf.h"
 #include "nsCRT.h"
@@ -1100,7 +1101,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     nsCOMPtr<nsIObserver> splashScreenObserver(do_QueryInterface(nativeApp));
     if (splashScreenObserver)
     {
-      obsService->AddObserver(splashScreenObserver, NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get());
+      obsService->AddObserver(splashScreenObserver, NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID, PR_FALSE);
     }
   }
   NS_TIMELINE_LEAVE("init observer service");
@@ -1135,7 +1136,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     nsCOMPtr<nsIObserver> splashScreenObserver(do_QueryInterface(nativeApp));
     if (splashScreenObserver)
     {
-      obsService->RemoveObserver(splashScreenObserver, NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get());
+      obsService->RemoveObserver(splashScreenObserver, NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
     }
   }
 

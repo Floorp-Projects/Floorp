@@ -374,12 +374,11 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 // The observe method is called on completion of the transform.  The nsISupports argument is an
 // nsIDOMElement interface to the root node of the output content model.
 NS_IMETHODIMP
-nsXMLContentSink::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+nsXMLContentSink::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   nsresult rv = NS_OK;
-  nsAutoString topic(aTopic);
 
-  if (topic.Equals(NS_LITERAL_STRING("xslt-done"))) {
+  if (!nsCRT::strcmp(aTopic, "xslt-done")) {
     nsCOMPtr<nsIContent> content;
 
     // Set the output content model on the document

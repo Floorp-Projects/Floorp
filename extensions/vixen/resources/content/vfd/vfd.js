@@ -57,7 +57,7 @@ var vxVFD =
     if (this.mTxMgrShell) {
       var rootShell = vxUtils.getRootShell();
       try {
-        rootShell.observerService.Notify(this.mTxMgrShell.mDataSource.mDataSource, 
+        rootShell.observerService.notifyObservers(this.mTxMgrShell.mDataSource.mDataSource, 
                                          "vfd-focus", this);
       }
       catch (e) {
@@ -75,7 +75,7 @@ var vxVFD =
     
     if (this.mTxMgrShell) {
       try {
-        rootShell.observerService.Notify(this.mTxMgrShell.mDataSource.mDataSource, "vfd-focus", this);
+        rootShell.observerService.notifyObservers(this.mTxMgrShell.mDataSource.mDataSource, "vfd-focus", this);
       }
       catch (e) {
         // No big deal, no observers.       

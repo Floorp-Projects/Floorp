@@ -27,7 +27,7 @@
 #include "nsP3PObserverFormSubmit.h"
 
 #include "nsIServiceManager.h"
-
+#include "nsObserverService.h"
 #include "nsIPresShell.h"
 
 #include "nsString.h"
@@ -93,8 +93,7 @@ nsP3PObserverFormSubmit::nsP3PObserverFormSubmit( )
 nsP3PObserverFormSubmit::~nsP3PObserverFormSubmit( ) {
 
   if (mObserverService) {
-    mObserverService->RemoveObserver( this,
-                                      mObserverTopic.get() );
+    mObserverService->RemoveObserver( this, NS_FORMSUBMIT_SUBJECT );
   }
 }
 
@@ -114,17 +113,13 @@ nsP3PObserverFormSubmit::Init( ) {
           PR_LOG_NOTICE,
           ("P3PObserverFormSubmit:  Init, initializing.\n") );
 
-  // Set the topic to be observed
-  mObserverTopic.AssignWithConversion( NS_FORMSUBMIT_SUBJECT );
-
   // Get the Observer service
   mObserverService = do_GetService( NS_OBSERVERSERVICE_CONTRACTID,
                                    &rv );
 
   if (NS_SUCCEEDED( rv )) {
     // Register to observe form submissions
-    rv = mObserverService->AddObserver( this,
-                                        mObserverTopic.get() );
+    rv = mObserverService->AddObserver( this, NS_FORMSUBMIT_SUBJECT, PR_FALSE);
 
     if (NS_FAILED( rv )) {
 #ifdef DEBUG_P3P

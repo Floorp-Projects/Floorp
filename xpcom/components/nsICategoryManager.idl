@@ -122,5 +122,5 @@ extern "C" NS_EXPORT nsresult NS_CategoryManagerGetFactory( nsIFactory** );
 NS_COM nsresult
 NS_CreateServicesFromCategory(const char *category,
                               nsISupports *origin,
-                              const PRUnichar *observerTopic);
+                              const char *observerTopic);
 %}

@@ -82,7 +82,7 @@ ObjectApp.prototype =
     this.mInitTarget = window.arguments && window.arguments.length > 0 ? window.arguments[0] : null;
 
     this.mPanelSet = document.getElementById("bxPanelSet");
-    this.mPanelSet.addObserver("panelsetready", this);
+    this.mPanelSet.addObserver("panelsetready", this, false);
     this.mPanelSet.initialize();
   },
   

@@ -789,12 +789,12 @@ var mailOfflineObserver = {
 function AddMailOfflineObserver() 
 {
   var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService); 
-  observerService.AddObserver(mailOfflineObserver, "network:offline-status-changed");
+  observerService.addObserver(mailOfflineObserver, "network:offline-status-changed", false);
 }
 
 function RemoveMailOfflineObserver()
 {
   var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService); 
-  observerService.RemoveObserver(mailOfflineObserver,"network:offline-status-changed");
+  observerService.removeObserver(mailOfflineObserver,"network:offline-status-changed");
 }
 

@@ -40,6 +40,7 @@
 #include "nsAlgorithm.h"
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsAutoLock.h"
 #include "nsIThread.h"
 #include "nsIEventQueueService.h"
@@ -189,7 +190,7 @@ MemoryFlusher::Run()
 #endif
 
         if (isLowMemory) {
-            mMemoryImpl->FlushMemory(NS_MEMORY_PRESSURE_LOW_MEMORY, PR_FALSE);
+            mMemoryImpl->FlushMemory(NS_LITERAL_STRING(NS_MEMORY_PRESSURE_LOW_MEMORY).get(), PR_FALSE);
         }
     }
 
@@ -320,7 +321,7 @@ nsMemoryImpl::Alloc(PRSize size)
     void* result = MALLOC1(size);
     if (! result) {
         // Request an asynchronous flush
-        FlushMemory(NS_MEMORY_PRESSURE_ALLOC_FAILURE, PR_FALSE);
+        FlushMemory(NS_LITERAL_STRING(NS_MEMORY_PRESSURE_ALLOC_FAILURE).get(), PR_FALSE);
     }
     return result;
 }
@@ -331,7 +332,7 @@ nsMemoryImpl::Realloc(void * ptr, PRSize size)
     void* result = REALLOC1(ptr, size);
     if (! result) {
         // Request an asynchronous flush
-        FlushMemory(NS_MEMORY_PRESSURE_ALLOC_FAILURE, PR_FALSE);
+        FlushMemory(NS_LITERAL_STRING(NS_MEMORY_PRESSURE_ALLOC_FAILURE).get(), PR_FALSE);
     }
     return result;
 }
@@ -345,7 +346,7 @@ nsMemoryImpl::Free(void * ptr)
 NS_IMETHODIMP
 nsMemoryImpl::HeapMinimize(PRBool aImmediate)
 {
-    return FlushMemory(NS_MEMORY_PRESSURE_HEAP_MINIMIZE, aImmediate);
+    return FlushMemory(NS_LITERAL_STRING(NS_MEMORY_PRESSURE_HEAP_MINIMIZE).get(), aImmediate);
 }
 
 NS_IMETHODIMP
@@ -457,7 +458,7 @@ nsMemoryImpl::RunFlushers(nsMemoryImpl* aSelf, const PRUnichar* aReason)
 {
     nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
     if (os) {
-        os->Notify(aSelf, NS_MEMORY_PRESSURE_TOPIC, aReason);
+        os->NotifyObservers(aSelf, NS_MEMORY_PRESSURE_TOPIC, aReason);
     }
 
     {

@@ -51,6 +51,7 @@
 #include "nsIErrorService.h" 
 #include "netCore.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
@@ -224,7 +225,7 @@ nsIOService::Init()
     nsCOMPtr<nsIObserverService> observerService =
         do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (observerService)
-        observerService->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+        observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
 
     return NS_OK;
 }
@@ -798,9 +799,9 @@ nsIOService::SetOffline(PRBool offline)
     if (offline) {
         // don't care if notification fails
         if (observerService)
-            (void)observerService->Notify(NS_STATIC_CAST(nsIIOService *, this),
-                                          NS_LITERAL_STRING("network:offline-status-changed").get(),
-                                          NS_LITERAL_STRING("offline").get());
+            (void)observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+                                                   "network:offline-status-changed",
+                                                   NS_LITERAL_STRING("offline").get());
     	mOffline = PR_TRUE;		// indicate we're trying to shutdown
         // be sure to try and shutdown both (even if the first fails)
         if (mDNSService)
@@ -824,9 +825,9 @@ nsIOService::SetOffline(PRBool offline)
                                 // brought up the services
         // don't care if notification fails
         if (observerService)
-            (void)observerService->Notify(NS_STATIC_CAST(nsIIOService *, this),
-                                          NS_LITERAL_STRING("network:offline-status-changed").get(),
-                                          NS_LITERAL_STRING("online").get());
+            (void)observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+                                                   "network:offline-status-changed",
+                                                   NS_LITERAL_STRING("online").get());
     }
     return NS_OK;
 }
@@ -994,15 +995,15 @@ nsIOService::GetPrefBranch(nsIPrefBranch **result)
 // nsIObserver interface
 NS_IMETHODIMP
 nsIOService::Observe(nsISupports *subject,
-                     const PRUnichar *topic,
+                     const char *topic,
                      const PRUnichar *data)
 {
-    if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("nsPref:changed").get())) {
+    if (!nsCRT::strcmp(topic, "nsPref:changed")) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
     }
-    else if (!nsCRT::strcmp(topic, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get())) {
+    else if (!nsCRT::strcmp(topic,NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
         // Clean up the prefs observer to break the reference cycle
         nsCOMPtr<nsIPrefBranch> prefBranch;
         GetPrefBranch(getter_AddRefs(prefBranch));

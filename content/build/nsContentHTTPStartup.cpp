@@ -54,7 +54,7 @@ NS_IMPL_ISUPPORTS1(nsContentHTTPStartup,nsIObserver)
 
 nsresult
 nsContentHTTPStartup::Observe( nsISupports *aSubject,
-                              const PRUnichar *aTopic,
+                              const char      *aTopic,
                               const PRUnichar *aData)
 {
     if (nsCRT::strcmp(aTopic, NS_HTTP_STARTUP_TOPIC) != 0)

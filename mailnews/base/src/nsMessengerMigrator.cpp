@@ -67,6 +67,7 @@
 #include "nsMsgUtils.h"
 #include "nsISmtpService.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 
 #include "nsIMsgAccount.h"
 #include "nsIMsgAccountManager.h"
@@ -366,8 +367,7 @@ nsMessengerMigrator::~nsMessengerMigrator()
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
-      nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      observerService->RemoveObserver(this, topic.get());
+      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }
   }     
 }
@@ -380,8 +380,7 @@ nsresult nsMessengerMigrator::Init()
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    observerService->AddObserver(this, topic.get());
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }    
 
   initializeStrings();
@@ -448,12 +447,9 @@ nsMessengerMigrator::initializeStrings()
 
 
 
-NS_IMETHODIMP nsMessengerMigrator::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsMessengerMigrator::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
-  nsAutoString topicString(aTopic);
-  nsAutoString shutdownString; shutdownString.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-
-  if(topicString == shutdownString)
+  if(!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
   {
     Shutdown();
   }

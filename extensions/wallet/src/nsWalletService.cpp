@@ -44,6 +44,7 @@
 #include "singsign.h"
 #include "nsPassword.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -211,11 +212,11 @@ NS_IMETHODIMP nsWalletlibService::SI_SignonViewerReturn(nsAutoString results){
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const PRUnichar *aTopic, const PRUnichar *someData) 
+NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const char *aTopic, const PRUnichar *someData) 
 {
-  if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
+  if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     WLLT_ClearUserData();
-    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+    if (!nsCRT::strcmp(someData, "shutdown-cleanse")) {
       WLLT_DeletePersistentUserData();
     }
   }
@@ -298,10 +299,9 @@ nsresult nsWalletlibService::Init()
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && svc) {
     // Register as an observer of form submission
-    nsAutoString  topic; topic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
-    svc->AddObserver(this, topic.get());
+    svc->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
     // Register as an observer of profile changes
-    svc->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+    svc->AddObserver(this, "profile-before-change", PR_TRUE);
   }
   else
     NS_ASSERTION(PR_FALSE, "Could not get nsIObserverService");
@@ -559,11 +559,11 @@ public:
     
     NS_DECL_ISUPPORTS
     
-    NS_IMETHODIMP Observe(nsISupports*, const PRUnichar *aTopic, const PRUnichar *someData) 
+    NS_IMETHODIMP Observe(nsISupports*, const char *aTopic, const PRUnichar *someData) 
     {
-        if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
+        if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
             SI_ClearUserData();
-        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
+        if (!nsCRT::strcmp(someData, "shutdown-cleanse"))
             SI_DeletePersistentUserData();
         }
         return NS_OK;
@@ -591,7 +591,7 @@ nsSingleSignOnPrompt::Init()
     if (!svc) return NS_ERROR_FAILURE;
     // The observer service holds the only ref to the observer
     // It thus has the lifespan of the observer service
-    svc->AddObserver(observer, NS_LITERAL_STRING("profile-before-change").get());
+    svc->AddObserver(observer, "profile-before-change", PR_TRUE);
     mgRegisteredObserver = PR_TRUE;
   }
   return NS_OK;

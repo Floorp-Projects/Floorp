@@ -462,9 +462,9 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
             rv = NS_GetServiceManager(getter_AddRefs(mgr));
             if (NS_SUCCEEDED(rv))
             {
-                nsAutoString topic;
-                topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-                (void) observerService->Notify(mgr, topic.get(), nsnull);
+                (void) observerService->NotifyObservers(mgr, 
+                                                        NS_XPCOM_SHUTDOWN_OBSERVER_ID, 
+                                                        nsnull);
             }
         }
     }

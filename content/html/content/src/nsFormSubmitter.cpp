@@ -45,6 +45,7 @@ static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 #include "nsNetUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIUnicodeEncoder.h"

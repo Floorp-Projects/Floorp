@@ -62,6 +62,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIAtom.h"
 #include "nsIObserverService.h" // so we can be an xpcom shutdown observer
+#include "nsObserverService.h"
 
 #ifdef XP_MAC
 #include "nsILocalFileMac.h"
@@ -150,7 +151,7 @@ nsExternalHelperAppService::nsExternalHelperAppService() : mDataSourceInitialize
   nsresult rv = NS_OK;
   nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (obs)
-    rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+    rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
 
 }
 
@@ -580,7 +581,7 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
 
 /* XPCOM Shutdown observer */
 NS_IMETHODIMP
-nsExternalHelperAppService::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData )
+nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData )
 {
   // we must be shutting down xpcom so remove our temporary files...
   ExpungeTemporaryFiles();
@@ -588,7 +589,7 @@ nsExternalHelperAppService::Observe(nsISupports *aSubject, const PRUnichar *aTop
 
   nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (obs)
-    rv = obs->RemoveObserver(NS_STATIC_CAST(nsIObserver*, this), NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+    rv = obs->RemoveObserver(NS_STATIC_CAST(nsIObserver*, this), NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 	return NS_OK;
 }
 

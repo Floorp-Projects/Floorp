@@ -86,6 +86,7 @@
 #include "nsXULAtoms.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsITreeFrame.h"
@@ -194,8 +195,7 @@ nsEventStateManager::Init()
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    observerService->AddObserver(this, topic.get());
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
   }
 
   rv = getPrefService();
@@ -257,8 +257,7 @@ nsEventStateManager::~nsEventStateManager()
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       {
-        nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-        observerService->RemoveObserver(this, topic.get());
+        observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       }
   }
   
@@ -292,12 +291,11 @@ nsEventStateManager::getPrefService()
 }
 
 NS_IMETHODIMP
-nsEventStateManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
-                             const PRUnichar *someData) {
-  nsAutoString topicString(aTopic);
-  nsAutoString shutdownString; shutdownString.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-
-  if (topicString == shutdownString)
+nsEventStateManager::Observe(nsISupports *aSubject, 
+                             const char *aTopic,
+                             const PRUnichar *someData)
+{
+  if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
     Shutdown();
 
   return NS_OK;

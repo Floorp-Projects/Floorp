@@ -45,6 +45,7 @@
 #include "nsIRegistry.h"
 #include "nsXPIDLString.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIXPCScriptable.h"
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
@@ -853,9 +854,9 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
           }
           statusMsg.Append(fileName);
           
-          (void) observerService->Notify(mgr,
-              NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
-              statusMsg.get());
+          (void) observerService->NotifyObservers(mgr,
+                                                  NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
+                                                  statusMsg.get());
         }
       }
     }
@@ -904,9 +905,9 @@ mozJSComponentLoader::UnregisterComponent(nsIFile *component)
         rv = NS_GetServiceManager(getter_AddRefs(mgr));
         if (NS_SUCCEEDED(rv))
         {
-          (void) observerService->Notify(mgr,
-              NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
-              NS_ConvertASCIItoUCS2("Unregistering JS component").get());
+            (void) observerService->NotifyObservers(mgr,
+                                                    NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
+                                                    NS_ConvertASCIItoUCS2("Unregistering JS component").get());
         }
       }
     }

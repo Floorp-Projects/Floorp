@@ -57,7 +57,9 @@
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsWeakReference.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -379,8 +381,8 @@ LocalStoreImpl::Init()
         do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
 
     if (obs) {
-        obs->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
-        obs->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+        obs->AddObserver(this, "profile-before-change", PR_TRUE);
+        obs->AddObserver(this, "profile-do-change", PR_TRUE);
     }
 
     return NS_OK;
@@ -492,11 +494,11 @@ LocalStoreImpl::DoCommand(nsISupportsArray* aSources,
 }
 
 NS_IMETHODIMP
-LocalStoreImpl::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+LocalStoreImpl::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
     nsresult rv = NS_OK;
 
-    if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
+    if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
         // Write out the old datasource's contents.
         if (mInner) {
             nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
@@ -508,14 +510,14 @@ LocalStoreImpl::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PR
         // profile-less.
         mInner = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "in-memory-datasource");
 
-        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+        if (!nsCRT::strcmp(NS_ConvertUCS2toUTF8(someData).get(), "shutdown-cleanse")) {
             nsCOMPtr<nsIFile> aFile;
             rv = NS_GetSpecialDirectory(NS_APP_LOCALSTORE_50_FILE, getter_AddRefs(aFile));
             if (NS_SUCCEEDED(rv))
                 rv = aFile->Remove(PR_FALSE);
         }
     }
-    else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get())) {
+    else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
         rv = LoadData();
     }
     return rv;

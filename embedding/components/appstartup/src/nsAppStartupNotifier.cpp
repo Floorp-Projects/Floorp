@@ -55,14 +55,9 @@ nsAppStartupNotifier::~nsAppStartupNotifier()
 {
 }
 
-NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
     NS_ENSURE_ARG(aTopic);
-
-    nsCAutoString strCategory; 
-    if(aTopic)
-	    strCategory.AssignWithConversion(aTopic);
-
     nsresult rv;
 
     // now initialize all startup listeners
@@ -71,7 +66,7 @@ NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const PRUnich
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISimpleEnumerator> enumerator;
-    rv = categoryManager->EnumerateCategory(strCategory.get(),
+    rv = categoryManager->EnumerateCategory(aTopic,
                                getter_AddRefs(enumerator));
     if (NS_FAILED(rv)) return rv;
 
@@ -84,9 +79,9 @@ NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const PRUnich
             rv = category->GetData(getter_Copies(categoryEntry));
 
             nsXPIDLCString contractId;
-            categoryManager->GetCategoryEntry(strCategory.get(), 
-                                    categoryEntry,
-                                    getter_Copies(contractId));
+            categoryManager->GetCategoryEntry(aTopic, 
+                                              categoryEntry,
+                                              getter_Copies(contractId));
 
             if (NS_SUCCEEDED(rv)) {
 

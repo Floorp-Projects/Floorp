@@ -41,6 +41,7 @@
 #include "nsIMsgAccountManager.h"
 #include "nsMsgBaseCID.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsStatusBarBiffManager.h"
 
 static NS_DEFINE_CID(kStatusBarBiffManagerCID, NS_STATUSBARBIFFMANAGER_CID);
@@ -87,8 +88,7 @@ nsMsgBiffManager::~nsMsgBiffManager()
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {    
-      nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      observerService->RemoveObserver(this, topic.get());
+      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }
   }
 }
@@ -112,8 +112,7 @@ nsresult nsMsgBiffManager::Init()
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {    
-    nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    observerService->AddObserver(this, topic.get());
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
   }
   
   
@@ -227,12 +226,9 @@ NS_IMETHODIMP nsMsgBiffManager::OnServerChanged(nsIMsgIncomingServer *server)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgBiffManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsMsgBiffManager::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
-  nsAutoString topicString(aTopic);
-  nsAutoString shutdownString; shutdownString.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-  
-  if(topicString == shutdownString)
+  if(!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
   {
     Shutdown();
   }

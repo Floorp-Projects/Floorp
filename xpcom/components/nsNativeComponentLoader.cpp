@@ -43,6 +43,8 @@
 #include "nsCRT.h"
 
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
+
 #include "nsITimelineService.h"
 
 #ifdef  XP_MAC  // sdagley dougt fix
@@ -687,9 +689,9 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
       rv = NS_GetServiceManager(getter_AddRefs(mgr));
       if (NS_SUCCEEDED(rv))
       {
-        (void) observerService->Notify(mgr,
-            NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
-            NS_ConvertASCIItoUCS2("Unregistering native component").get());
+        (void) observerService->NotifyObservers(mgr,
+                                                NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
+                                                NS_ConvertASCIItoUCS2("Unregistering native component").get());
       }
     }
 
@@ -859,9 +861,9 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
             }
             statusMsg.Append(fileName);
             
-            (void) observerService->Notify(mgr,
-                NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
-                statusMsg.get());
+            (void) observerService->NotifyObservers(mgr,
+                                                    NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
+                                                    statusMsg.get());
           }
         }
 

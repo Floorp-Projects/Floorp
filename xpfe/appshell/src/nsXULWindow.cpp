@@ -49,6 +49,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIWindowMediator.h"
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
@@ -1437,11 +1438,11 @@ NS_IMETHODIMP nsXULWindow::NotifyObservers(const PRUnichar* aTopic,
    nsCOMPtr<nsIWebShellWindow> 
       removeme(do_QueryInterface(NS_STATIC_CAST(nsIXULWindow*, this)));
 
-   nsAutoString topic; topic.AssignWithConversion(prefix);
-   topic.AppendWithConversion(";");
-   topic += aTopic;
-
-   NS_ENSURE_SUCCESS(service->Notify(removeme, topic.get(), aData),
+   nsCAutoString topic; topic.Assign(prefix);
+   topic.Append(";");
+   topic.AppendWithConversion(aTopic);
+   
+   NS_ENSURE_SUCCESS(service->NotifyObservers(removeme, topic.get(), aData),
       NS_ERROR_FAILURE);
    return NS_OK;
 }

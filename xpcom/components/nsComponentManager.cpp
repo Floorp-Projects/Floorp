@@ -52,6 +52,7 @@
 #include "nsXPIDLString.h"
 
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 
 #include "nsLocalFile.h"
 #include "nsDirectoryService.h"
@@ -2603,9 +2604,9 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     {
         // NO COMPtr as we dont release the service manager
         nsIServiceManager *mgr = NS_STATIC_CAST(nsIServiceManager*, this);
-        (void) observerService->Notify(mgr,
-                                       NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
-                                       NS_ConvertASCIItoUCS2("Starting component registration").get());
+        (void) observerService->NotifyObservers(mgr,
+                                                NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
+                                                NS_ConvertASCIItoUCS2("Starting component registration").get());
     }
 
     /* do the native loader first, so we can find other loaders */
@@ -2676,9 +2677,9 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     
     // NO COMPtr as we dont release the service manager
     nsIServiceManager *mgr = NS_STATIC_CAST(nsIServiceManager*, this);
-    (void) observerService->Notify(mgr,
-                                   NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
-                                   NS_ConvertASCIItoUCS2("Component registration finished").get());
+    (void) observerService->NotifyObservers(mgr,
+                                            NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
+                                            NS_ConvertASCIItoUCS2("Component registration finished").get());
     return rv;
 }
 
@@ -2827,7 +2828,6 @@ nsComponentManagerImpl::EnumerateContractIDs(nsIEnumerator** aEmumerator)
 nsresult
 nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
 {
-    nsresult rv = NS_OK;
     if (uuid.Equals(NS_GET_IID(nsIServiceManager)))
     {
         *result = NS_STATIC_CAST(nsIServiceManager*, this);

@@ -33,6 +33,7 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 
 #include "nspr.h"
 #include "prlock.h"
@@ -149,7 +150,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
 
     if (NS_SUCCEEDED(rv))
-        observerService->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+        observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
 }
 
 
@@ -218,11 +219,10 @@ nsSoftwareUpdate::Shutdown()
 }
 
 NS_IMETHODIMP nsSoftwareUpdate::Observe(nsISupports *aSubject, 
-                                        const PRUnichar *aTopic, 
+                                        const char *aTopic, 
                                         const PRUnichar *aData)
 {
-    nsDependentString topicString(aTopic);
-    if (topicString.Equals(NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID)))
+    if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
       Shutdown();
      
     return NS_OK;

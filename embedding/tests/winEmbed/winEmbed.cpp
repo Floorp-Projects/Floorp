@@ -57,6 +57,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIProfile.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIObserver.h"
 #include "nsIProfileChangeStatus.h"
 #include "nsIURI.h"
@@ -172,9 +173,9 @@ int main(int argc, char *argv[])
 
     ProfileChangeObserver *observer = new ProfileChangeObserver;
     observer->AddRef();
-    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), NS_LITERAL_STRING("profile-approve-change").get());
-    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), NS_LITERAL_STRING("profile-change-teardown").get());
-    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), NS_LITERAL_STRING("profile-after-change").get());
+    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-approve-change", PR_FALSE);
+    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-change-teardown", PR_FALSE);
+    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-after-change", PR_FALSE);
 
     InitializeWindowCreator();
 
@@ -211,11 +212,11 @@ ProfileChangeObserver::ProfileChangeObserver()
 //  CMfcEmbedApp : nsIObserver
 // ---------------------------------------------------------------------------
 
-NS_IMETHODIMP ProfileChangeObserver::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP ProfileChangeObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
     nsresult rv = NS_OK;
 
-    if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-approve-change").get()) == 0)
+    if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0)
     {
 		// The profile is about to change!
 
@@ -228,14 +229,14 @@ NS_IMETHODIMP ProfileChangeObserver::Observe(nsISupports *aSubject, const PRUnic
             status->VetoChange();
         }
     }
-    else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-change-teardown").get()) == 0)
+    else if (nsCRT::strcmp(aTopic, "profile-change-teardown") == 0)
     {
 		// The profile is changing!
 
 		// Prevent WM_QUIT by incrementing the dialog count
 		gDialogCount++;
     }
-    else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-after-change").get()) == 0)
+    else if (nsCRT::strcmp(aTopic, "profile-after-change") == 0)
     {
 		// Decrease the dialog count so WM_QUIT can once more happen
 		gDialogCount--;
@@ -1344,7 +1345,7 @@ nsresult AppCallbacks::CreateBrowserWindow(PRUint32 aChromeFlags,
   nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
   if (observerService)
     observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, chrome),
-                       NS_LITERAL_STRING("profile-change-teardown").get());
+                                 "profile-change-teardown", PR_FALSE);
 
   return NS_OK;
 }

@@ -28,7 +28,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-
+#include "nsObserverService.h"
 #include "nsIPresShell.h"
 
 #include "nsIDocShellTreeItem.h"
@@ -104,8 +104,7 @@ nsP3PObserverLayout::nsP3PObserverLayout( )
 nsP3PObserverLayout::~nsP3PObserverLayout( ) {
 
   if (mObserverService) {
-    mObserverService->RemoveObserver( this,
-                                      mObserverTopic.get() );
+    mObserverService->RemoveObserver( this, NS_PRESSHELL_REFLOW_TOPIC);
   }
 }
 
@@ -125,17 +124,13 @@ nsP3PObserverLayout::Init( ) {
           PR_LOG_NOTICE,
           ("P3PObserverLayout:  Init, initializing.\n") );
 
-  // Set the topic to be observed
-  mObserverTopic.AssignWithConversion( NS_PRESSHELL_REFLOW_TOPIC );
-
   // Get the Observer service
   mObserverService = do_GetService( NS_OBSERVERSERVICE_CONTRACTID,
                                    &rv );
 
   if (NS_SUCCEEDED( rv )) {
     // Register to observe Reflows
-    rv = mObserverService->AddObserver( this,
-                                        mObserverTopic.get() );
+    rv = mObserverService->AddObserver( this, NS_PRESSHELL_REFLOW_TOPIC, PR_FALSE)
 
     if (NS_FAILED( rv )) {
 #ifdef DEBUG_P3P

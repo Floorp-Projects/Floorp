@@ -43,6 +43,7 @@
 #include "nsIPref.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIMsgDBView.h"
 #include "nsReadableUtils.h"
 
@@ -94,15 +95,14 @@ public:
 
 NS_IMPL_ISUPPORTS1(nsFolderCharsetObserver, nsIObserver);
 
-NS_IMETHODIMP nsFolderCharsetObserver::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsFolderCharsetObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   nsresult rv;
 
   nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsDependentString aTopicString(aTopic);
-  if (aTopicString.Equals(NS_LITERAL_STRING("nsPref:changed")))
+  if (!nsCRT::strcmp(aTopic, "nsPref:changed"))
   {
     nsDependentString prefName(someData);
     
@@ -121,7 +121,7 @@ NS_IMETHODIMP nsFolderCharsetObserver::Observe(nsISupports *aSubject, const PRUn
       rv = prefs->GetBoolPref(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, &gDefaultCharacterOverride);
     }
   }
-  else if (aTopicString.Equals(NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID)))
+  else if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
   {
     rv = prefs->RemoveObserver(kMAILNEWS_VIEW_DEFAULT_CHARSET, this);
     rv = prefs->RemoveObserver(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, this);
@@ -211,7 +211,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
         nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
-          rv = observerService->AddObserver(gFolderCharsetObserver, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+          rv = observerService->AddObserver(gFolderCharsetObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
         }
       }
     }

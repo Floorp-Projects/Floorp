@@ -127,7 +127,7 @@ public:
 
   // nsIObserver
   NS_IMETHOD Observe(nsISupports *aSubject, 
-                     const PRUnichar *aTopic, 
+                     const char *aTopic, 
                      const PRUnichar *someData);
 
 protected:

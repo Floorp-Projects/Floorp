@@ -28,7 +28,7 @@
 #include "nsP3PLogging.h"
 
 #include "nsIServiceManager.h"
-
+#include "nsObserverService.h"
 #include "nsIParser.h"
 
 #include "nsIDocShell.h"
@@ -101,8 +101,7 @@ nsP3PObserverHTML::nsP3PObserverHTML( )
 nsP3PObserverHTML::~nsP3PObserverHTML( ) {
 
   if (mObserverService) {
-    mObserverService->RemoveObserver( this,
-                                      mObserverTopic.get() );
+    mObserverService->RemoveObserver( this, kHTMLTextContentType);
   }
 }
 
@@ -122,17 +121,13 @@ nsP3PObserverHTML::Init( ) {
           PR_LOG_NOTICE,
           ("P3PObserverHTML:  Init, initializing.\n") );
 
-  // Set the topic to be observed
-  mObserverTopic.AssignWithConversion( kHTMLTextContentType );
-
   // Get the Observer service
   mObserverService = do_GetService( NS_OBSERVERSERVICE_CONTRACTID,
                                    &rv );
 
   if (NS_SUCCEEDED( rv )) {
     // Register to observe HTML tags
-    rv = mObserverService->AddObserver( this,
-                                        mObserverTopic.get() );
+    rv = mObserverService->AddObserver( this, kHTMLTextContentType, PR_FALSE);
 
     if (NS_FAILED( rv )) {
 #ifdef DEBUG_P3P

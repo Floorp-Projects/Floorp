@@ -60,6 +60,11 @@ nsArrayEnumerator::HasMoreElements(PRBool* aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
+    if (!mValueArray) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+
     PRUint32 cnt;
     nsresult rv = mValueArray->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
@@ -73,6 +78,11 @@ nsArrayEnumerator::GetNext(nsISupports** aResult)
     NS_PRECONDITION(aResult != 0, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
+
+    if (!mValueArray) {
+        *aResult = nsnull;
+        return NS_OK;
+    }
 
     PRUint32 cnt;
     nsresult rv = mValueArray->Count(&cnt);

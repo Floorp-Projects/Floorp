@@ -42,6 +42,8 @@
 
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
+
 #include "nsString.h"
 
 #include "prlog.h"
@@ -218,11 +220,9 @@ nsEventQueueImpl::NotifyObservers(const char *aTopic)
 
   nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    nsAutoString topic;
-    topic.AssignWithConversion(aTopic);
     nsCOMPtr<nsIEventQueue> kungFuDeathGrip(this);
     nsCOMPtr<nsISupports> us(do_QueryInterface(kungFuDeathGrip));
-    os->Notify(us, topic.get(), NULL);
+    os->NotifyObservers(us, aTopic, NULL);
   }
 }
 

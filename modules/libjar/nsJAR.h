@@ -53,6 +53,7 @@
 #include "nsISignatureVerifier.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
+#include "nsIObserver.h"
 
 class nsIInputStream;
 class nsJARManifestItem;

@@ -43,6 +43,7 @@
 #include "nsMsgRDFUtils.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -80,8 +81,7 @@ nsMsgRDFDataSource::Init()
     nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID,
                                                      &rv);
     if (NS_FAILED(rv)) return rv;
-    nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), topic.get());
+    rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     /* Get and keep the rdf service. Will be released by the observer */
@@ -101,9 +101,8 @@ void nsMsgRDFDataSource::Cleanup()
     nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID,
                                                      &rv);
     if (NS_SUCCEEDED(rv)) {
-        nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         rv = obs->RemoveObserver(NS_STATIC_CAST(nsIObserver*, this),
-                                 topic.get());
+                                 NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }
     
     // release the window
@@ -323,7 +322,7 @@ nsMsgRDFDataSource::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 
 /* XPCOM Shutdown observer */
 NS_IMETHODIMP
-nsMsgRDFDataSource::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData )
+nsMsgRDFDataSource::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData )
 {
 	m_shuttingDown = PR_TRUE;
 	Cleanup();

@@ -562,7 +562,7 @@ var messageComposeOfflineObserver = {
 function AddMessageComposeOfflineObserver()
 {
   var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  observerService.AddObserver(messageComposeOfflineObserver, "network:offline-status-changed");
+  observerService.addObserver(messageComposeOfflineObserver, "network:offline-status-changed", false);
   
   isOffline = ioService.offline;
   // set the initial state of the send button
@@ -572,7 +572,7 @@ function AddMessageComposeOfflineObserver()
 function RemoveMessageComposeOfflineObserver()
 {
   var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  observerService.RemoveObserver(messageComposeOfflineObserver,"network:offline-status-changed");
+  observerService.removeObserver(messageComposeOfflineObserver,"network:offline-status-changed");
 }
 
 function MessageComposeOfflineStateChanged(goingOffline)
@@ -619,15 +619,15 @@ var directoryServerObserver = {
 
 function AddDirectoryServerObserver(flag) {
   if (flag) {
-    prefs.addObserver("ldap_2.autoComplete.useDirectory", directoryServerObserver);
-    prefs.addObserver("ldap_2.autoComplete.directoryServer", directoryServerObserver);
+    prefs.addObserver("ldap_2.autoComplete.useDirectory", directoryServerObserver, false);
+    prefs.addObserver("ldap_2.autoComplete.directoryServer", directoryServerObserver, false);
   }
   else
   {
     var prefstring = "mail.identity." + gCurrentIdentity.key + ".overrideGlobal_Pref";
-    prefs.addObserver(prefstring, directoryServerObserver);
+    prefs.addObserver(prefstring, directoryServerObserver, false);
     prefstring = "mail.identity." + gCurrentIdentity.key + ".directoryServer";
-    prefs.addObserver(prefstring, directoryServerObserver);
+    prefs.addObserver(prefstring, directoryServerObserver, false);
   }
 }
 
@@ -648,7 +648,7 @@ function RemoveDirectoryServerObserver(prefstring)
 
 function AddDirectorySettingsObserver()
 {
-  prefs.addObserver(currentAutocompleteDirectory, directoryServerObserver);
+  prefs.addObserver(currentAutocompleteDirectory, directoryServerObserver, false);
 }
 
 function RemoveDirectorySettingsObserver(prefstring)

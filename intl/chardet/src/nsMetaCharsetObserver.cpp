@@ -389,18 +389,11 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::Observe(nsISupports *aSubject,
-                            const PRUnichar *aTopic,
+                            const char *aTopic,
                                const PRUnichar *aData) 
 {
   nsresult rv = NS_OK;
-  nsDependentString aTopicString(aTopic);
-    /*
-      Warning!  |NS_LITERAL_STRING(APPSTARTUP_CATEGORY)| relies on the order of
-        evaluation of the two |#defines|.  This is known _not_ to work on platforms
-        that support wide characters directly.  Better to define |APPSTARTUP_CATEGORY|
-        in terms of |NS_LITERAL_STRING| directly.
-     */
-  if (aTopicString.Equals(NS_LITERAL_STRING(APPSTARTUP_CATEGORY))) //"app_startup"
+  if (!nsCRT::strcmp(aTopic, APPSTARTUP_CATEGORY))
     rv = Start();
   return rv;
 }

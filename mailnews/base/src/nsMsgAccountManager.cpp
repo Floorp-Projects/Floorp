@@ -67,6 +67,7 @@
 #include "nsISmtpService.h"
 #include "nsIMsgBiffManager.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIEventQueueService.h"
 #include "nsIDirectoryService.h"
@@ -163,10 +164,8 @@ nsMsgAccountManager::~nsMsgAccountManager()
 	           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv))
 	  {    
-      nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      observerService->RemoveObserver(this, topic.get());
-      topic.Assign(NS_LITERAL_STRING("network:offline-status-changed"));
-      observerService->RemoveObserver(this, topic.get());
+      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      observerService->RemoveObserver(this, "network:offline-status-changed");
     }
   }
 }
@@ -187,12 +186,11 @@ nsresult nsMsgAccountManager::Init()
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {    
-    nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    observerService->AddObserver(this, topic.get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("quit-application").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("network:offline-status-changed").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("session-logout").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+    observerService->AddObserver(this, "quit-application" , PR_TRUE);
+    observerService->AddObserver(this, "network:offline-status-changed", PR_TRUE);
+    observerService->AddObserver(this, "session-logout", PR_TRUE);
+    observerService->AddObserver(this, "profile-before-change", PR_TRUE);
   }
 
   return NS_OK;
@@ -232,25 +230,21 @@ nsMsgAccountManager::GetShutdownInProgress(PRBool *_retval)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
-  nsAutoString topicString(aTopic);
-  nsAutoString shutdownString;
-  shutdownString.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-  nsAutoString quitApplicationString;
-  quitApplicationString.Assign(NS_LITERAL_STRING("quit-application"));
-  nsAutoString offlineStatusChangedString(NS_LITERAL_STRING("network:offline-status-changed"));
-  NS_NAMED_LITERAL_STRING(sessionLogoutString, "session-logout");
-  NS_NAMED_LITERAL_STRING(beforeProfileChangeString, "profile-before-change");
-  if(topicString == shutdownString)
+  if(!nsCRT::strcmp(aTopic,NS_XPCOM_SHUTDOWN_OBSERVER_ID))
   {
     Shutdown();
+    return NS_OK;
   }
-  else if (topicString == quitApplicationString)
+  
+  if (!nsCRT::strcmp(aTopic,"quit-application"))
   {
     m_shutdownInProgress = PR_TRUE;
+    return NS_OK;
   }
-  else if (topicString == offlineStatusChangedString)
+  
+  if (!nsCRT::strcmp(aTopic,"network:offline-status-changed"))
   {
     nsAutoString dataString(NS_LITERAL_STRING("offline"));
     if (someData)
@@ -259,14 +253,19 @@ NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnicha
       if (dataString == someDataString)
         CloseCachedConnections();
     }
+    return NS_OK;
   }
-  else if (sessionLogoutString.Equals(topicString))
+  
+  if (!nsCRT::strcmp(aTopic, "session-logout"))
   {
     m_incomingServers.Enumerate(hashLogoutOfServer, nsnull);
+    return NS_OK;
   }
-  else if (beforeProfileChangeString.Equals(topicString))
+  
+  if (!nsCRT::strcmp(aTopic, "profile-before-change"))
   {
     Shutdown();
+    return NS_OK;
   }
 	
  return NS_OK;

@@ -2008,7 +2008,7 @@ static const char sPrincipalPrefix[] = "capability.principal";
 static const char sPolicyPrefix[] = "capability.policy";
 
 NS_IMETHODIMP
-nsScriptSecurityManager::Observe(nsISupports* aObject, const PRUnichar* aAction,
+nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aAction,
                                  const PRUnichar* aPrefName)
 {
     nsresult rv = NS_OK;
@@ -2428,7 +2428,6 @@ nsScriptSecurityManager::InitPrefs()
     // set observer callbacks in case the value of the pref changes
     prefBranchInternal->AddObserver(sJSEnabledPrefName, this);
     prefBranchInternal->AddObserver(sJSMailEnabledPrefName, this);
-
     PRUint32 prefCount;
     char** prefNames;
 

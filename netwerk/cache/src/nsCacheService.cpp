@@ -35,6 +35,7 @@
 #include "nsAutoLock.h"
 #include "nsIEventQueue.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
@@ -113,15 +114,15 @@ nsCacheProfilePrefObserver::Install()
     if (NS_FAILED(rv)) return rv;
     NS_ENSURE_ARG(observerService);
     
-    rv = observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+    rv = observerService->AddObserver(this, "profile-before-change", PR_FALSE);
     if (NS_FAILED(rv)) rv2 = rv;
     
-    rv = observerService->AddObserver(this, NS_LITERAL_STRING("profile-after-change").get());
+    rv = observerService->AddObserver(this, "profile-after-change", PR_FALSE);
     if (NS_FAILED(rv)) rv2 = rv;
 
 
     // install xpcom shutdown observer
-    rv = observerService->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+    rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
     if (NS_FAILED(rv)) rv2 = rv;
     
     
@@ -163,13 +164,13 @@ nsCacheProfilePrefObserver::Remove()
     if (NS_FAILED(rv)) return rv;
     NS_ENSURE_ARG(observerService);
 
-    rv = observerService->RemoveObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+    rv = observerService->RemoveObserver(this, "profile-before-change");
     if (NS_FAILED(rv)) rv2 = rv;
     
-    rv = observerService->RemoveObserver(this, NS_LITERAL_STRING("profile-after-change").get());
+    rv = observerService->RemoveObserver(this, "profile-after-change");
     if (NS_FAILED(rv)) rv2 = rv;
 
-    rv = observerService->RemoveObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+    rv = observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     if (NS_FAILED(rv)) rv2 = rv;
 
 
@@ -203,49 +204,48 @@ nsCacheProfilePrefObserver::Remove()
 
 NS_IMETHODIMP
 nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
-                                    const PRUnichar * topic,
+                                    const char * topic,
                                     const PRUnichar * data)
 {
 #ifdef DEBUG
-    printf("### nsCacheProfilePrefObserver::Observe [topic=%s data=%s]\n",
-            NS_ConvertUCS2toUTF8(topic).get(),
-            NS_ConvertUCS2toUTF8(data).get());
+    printf("### nsCacheProfilePrefObserver::Observe [topic=%s data=%s]\n", topic, 
+           NS_ConvertUCS2toUTF8(data).get());
 #endif
             
     nsresult rv;
-    if (NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).Equals(topic)) {
+    if (nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, topic)) {
         // xpcom going away, shutdown cache service
         if (nsCacheService::GlobalInstance())
             nsCacheService::GlobalInstance()->Shutdown();
     
-    } else if (NS_LITERAL_STRING("profile-before-change").Equals(topic)) {
+    } else if (!nsCRT::strcmp("profile-before-change", topic)) {
         // profile before change
         mHaveProfile = PR_FALSE;
 
         // XXX shutdown devices
-        nsCacheService::OnProfileShutdown(NS_LITERAL_STRING("shutdown-cleanse").Equals(data));
+        nsCacheService::OnProfileShutdown(!nsCRT::strcmp("shutdown-cleanse", NS_ConvertUCS2toUTF8(data).get()));
         
-    } else if (NS_LITERAL_STRING("profile-after-change").Equals(topic)) {
+    } else if (!nsCRT::strcmp("profile-after-change", topic)) {
         // profile after change
         mHaveProfile = PR_TRUE;
         ReadPrefs();
         nsCacheService::OnProfileChanged();
     
-    } else if (NS_LITERAL_STRING("nsPref:changed").Equals(topic)) {
+    } else if (!nsCRT::strcmp("nsPref:changed", topic)) {
         if (!mHaveProfile)  return NS_OK;
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject, &rv);
         if (NS_FAILED(rv))
             return rv;
 
         // which preference changed?
-        if (NS_LITERAL_STRING(DISK_CACHE_ENABLE_PREF).Equals(data)) {
+        if (!nsCRT::strcmp(DISK_CACHE_ENABLE_PREF, NS_ConvertUCS2toUTF8(data).get())) {
 
             rv = prefBranch->GetBoolPref(DISK_CACHE_ENABLE_PREF, &mDiskCacheEnabled);
             if (NS_FAILED(rv))  return rv;
             nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
             
 
-        } else if (NS_LITERAL_STRING(DISK_CACHE_CAPACITY_PREF).Equals(data)) {
+        } else if (!nsCRT::strcmp(DISK_CACHE_CAPACITY_PREF, NS_ConvertUCS2toUTF8(data).get())) {
 
             PRInt32 capacity = 0;
             rv = prefBranch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &capacity);
@@ -253,18 +253,18 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
             mDiskCacheCapacity = (PRUint32) PR_MAX(0, capacity);
             nsCacheService::SetDiskCacheCapacity(mDiskCacheCapacity);
 #if 0            
-        } else if (NS_LITERAL_STRING(DISK_CACHE_DIR_PREF).Equals(data)) {
+        } else if (!nsCRT::strcmp(DISK_CACHE_DIR_PREF, NS_ConvertUCS2toUTF8(data).get())) {
             // XXX we probaby don't want to respond to this pref except after profile changes
             // XXX ideally, there should be somekind of user notification that the pref change
             // XXX won't take effect until the next time the profile changes (browser launch)
 #endif            
-        } else if (NS_LITERAL_STRING(MEMORY_CACHE_ENABLE_PREF).Equals(data)) {
+        } else if (!nsCRT::strcmp(MEMORY_CACHE_ENABLE_PREF, NS_ConvertUCS2toUTF8(data).get())) {
 
             rv = prefBranch->GetBoolPref(MEMORY_CACHE_ENABLE_PREF, &mMemoryCacheEnabled);
             if (NS_FAILED(rv))  return rv;
             nsCacheService::SetMemoryCacheEnabled(MemoryCacheEnabled());
             
-        } else if (NS_LITERAL_STRING(MEMORY_CACHE_CAPACITY_PREF).Equals(data)) {
+        } else if (!nsCRT::strcmp(MEMORY_CACHE_CAPACITY_PREF, NS_ConvertUCS2toUTF8(data).get())) {
 
             PRInt32 capacity = 0;
             rv = prefBranch->GetIntPref(MEMORY_CACHE_CAPACITY_PREF, &capacity);

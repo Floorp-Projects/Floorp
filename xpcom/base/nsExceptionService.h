@@ -44,6 +44,7 @@
 #include "nsIExceptionService.h"
 #include "nsIObserverService.h"
 #include "nsHashtable.h"
+#include "nsIObserver.h"
 
 class nsExceptionManager;
 

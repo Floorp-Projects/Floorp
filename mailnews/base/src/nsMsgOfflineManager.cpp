@@ -383,7 +383,7 @@ nsMsgOfflineManager::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgOfflineManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsMsgOfflineManager::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   return NS_OK;
 }

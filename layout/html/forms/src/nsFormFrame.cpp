@@ -99,6 +99,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // FormSubmit observer notification
 #include "nsIFormSubmitObserver.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 
@@ -473,7 +474,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
     gInitPasswordManager = PR_TRUE;
     NS_CreateServicesFromCategory(NS_PASSWORDMANAGER_CATEGORY,
                                   NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(void*,this)),
-                                  NS_ConvertASCIItoUCS2(NS_PASSWORDMANAGER_CATEGORY).get());
+                                  NS_PASSWORDMANAGER_CATEGORY);
   }
 
   // Add this control to the list
@@ -881,7 +882,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       gFirstFormSubmitted = PR_TRUE;
       NS_CreateServicesFromCategory(NS_FIRST_FORMSUBMIT_CATEGORY,
                                     NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(void*,this)),
-                                    NS_ConvertASCIItoUCS2(NS_FIRST_FORMSUBMIT_CATEGORY).get());
+                                    NS_FIRST_FORMSUBMIT_CATEGORY);
     }
 
     // Notify observers that the form is being submitted.
@@ -890,9 +891,9 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &result);
     if (NS_FAILED(result)) return result;
 
-    nsString  theTopic; theTopic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
-    nsCOMPtr<nsIEnumerator> theEnum;
-    result = service->EnumerateObserverList(theTopic.get(), getter_AddRefs(theEnum));
+    nsCOMPtr<nsISimpleEnumerator> theEnum;
+    result = service->EnumerateObservers(NS_FORMSUBMIT_SUBJECT, getter_AddRefs(theEnum));
+
     if (NS_SUCCEEDED(result) && theEnum){
       nsCOMPtr<nsISupports> inst;
       PRBool cancelSubmit = PR_FALSE;
@@ -900,11 +901,11 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       nsCOMPtr<nsIScriptGlobalObject> globalObject;
       document->GetScriptGlobalObject(getter_AddRefs(globalObject));  
       nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(globalObject);
+      PRBool loop = PR_TRUE;
+      while(NS_SUCCEEDED(theEnum->HasMoreElements(&loop)) && loop) {
 
-      for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
-        nsresult gotObserver = NS_OK;
-        gotObserver = theEnum->CurrentItem(getter_AddRefs(inst));
-        if (NS_SUCCEEDED(gotObserver) && inst) {
+        theEnum->GetNext(getter_AddRefs(inst));
+        if (inst) {
           nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver = do_QueryInterface(inst, &result);
           if (NS_SUCCEEDED(result) && formSubmitObserver) {
             nsresult notifyStatus = formSubmitObserver->Notify(mContent, window, actionURL, &cancelSubmit);

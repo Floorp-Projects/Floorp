@@ -110,5 +110,5 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 #define NS_HTTP_STARTUP_CATEGORY "http-startup-category"
 // If the resulting service implements nsIObserver, then its Observer
 // method will be invoked with the following topic.
-#define NS_HTTP_STARTUP_TOPIC (NS_LITERAL_STRING("http-startup").get())
+#define NS_HTTP_STARTUP_TOPIC "http-startup"
 %}

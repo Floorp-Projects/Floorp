@@ -79,6 +79,7 @@
 #include "nsIChromeRegistry.h" // chromeReg
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsHashtable.h"
 
@@ -1117,15 +1118,15 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     {
         // Phase 1: See if anybody objects to the profile being changed.
         mProfileChangeVetoed = PR_FALSE;        
-        observerService->Notify(subject, NS_LITERAL_STRING("profile-approve-change").get(), context.get());
+        observerService->NotifyObservers(subject, "profile-approve-change", context.get());
         if (mProfileChangeVetoed)
             return NS_OK;
 
         // Phase 2: Send the "teardown" notification
-        observerService->Notify(subject, NS_LITERAL_STRING("profile-change-teardown").get(), context.get());
+        observerService->NotifyObservers(subject, "profile-change-teardown", context.get());
         
         // Phase 3: Notify observers of a profile change
-        observerService->Notify(subject, NS_LITERAL_STRING("profile-before-change").get(), context.get());        
+        observerService->NotifyObservers(subject, "profile-before-change", context.get());        
     }
 
     // Flush the stringbundle cache
@@ -1151,10 +1152,10 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     }
 
     // Phase 4: Notify observers that the profile has changed - Here they respond to new profile
-    observerService->Notify(subject, NS_LITERAL_STRING("profile-do-change").get(), context.get());
+    observerService->NotifyObservers(subject, "profile-do-change", context.get());
 
     // Phase 5: Now observers can respond to something another observer did in phase 4
-    observerService->Notify(subject, NS_LITERAL_STRING("profile-after-change").get(), context.get());
+    observerService->NotifyObservers(subject, "profile-after-change", context.get());
       
     // Now that a profile is established, set the profile defaults dir for the locale of this profile
     rv = DefineLocaleDefaultsDir();
@@ -1197,15 +1198,15 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
            
     // Phase 1: See if anybody objects to the profile being changed.
     mProfileChangeVetoed = PR_FALSE;        
-    observerService->Notify(subject, NS_LITERAL_STRING("profile-approve-change").get(), context.get());
+    observerService->NotifyObservers(subject, "profile-approve-change", context.get());
     if (mProfileChangeVetoed)
         return NS_OK;
 
     // Phase 2: Send the "teardown" notification
-    observerService->Notify(subject, NS_LITERAL_STRING("profile-change-teardown").get(), context.get());
+    observerService->NotifyObservers(subject, "profile-change-teardown", context.get());
     
     // Phase 3: Notify observers of a profile change
-    observerService->Notify(subject, NS_LITERAL_STRING("profile-before-change").get(), context.get());        
+    observerService->NotifyObservers(subject, "profile-before-change", context.get());        
 
     rv = UndefineFileLocations();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Could not undefine file locations");

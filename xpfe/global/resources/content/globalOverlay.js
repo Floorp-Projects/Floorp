@@ -6,7 +6,7 @@ function goQuitApplication()
   {
     try
     {
-      ObserverService.Notify(null, "quit-application", null);
+      ObserverService.notifyObservers(null, "quit-application", null);
     }
     catch (ex)
     {

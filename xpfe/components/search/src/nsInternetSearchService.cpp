@@ -76,6 +76,7 @@
 #include "nsIBookmarksService.h"
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIURL.h"
 #include "nsReadableUtils.h"
 
@@ -898,8 +899,8 @@ InternetSearchDataSource::Init()
   nsCOMPtr<nsIObserverService> observerService = 
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (observerService) {
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+    observerService->AddObserver(this, "profile-before-change", PR_TRUE);
+    observerService->AddObserver(this, "profile-do-change", PR_TRUE);
   }
 
 	return(rv);
@@ -5744,11 +5745,11 @@ InternetSearchDataSource::ConvertEntities(nsString &nameStr, PRBool removeHTMLFl
 }
 
 NS_IMETHODIMP
-InternetSearchDataSource::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+InternetSearchDataSource::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
     nsresult rv = NS_OK;
 
-    if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get()))
+    if (!nsCRT::strcmp(aTopic, "profile-before-change"))
     {
         // The profile is about to change.
         categoryDataSource = nsnull;
@@ -5762,7 +5763,7 @@ InternetSearchDataSource::Observe(nsISupports *aSubject, const PRUnichar *aTopic
                 rv = searchFile->Remove(PR_FALSE);
         }
     }
-    else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get()))
+    else if (!nsCRT::strcmp(aTopic, "profile-do-change"))
     {
         // The profile has aleady changed.
         if (!categoryDataSource)

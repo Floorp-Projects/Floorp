@@ -65,8 +65,6 @@ protected:
 
   PRBool                          mP3PIsEnabled;      // An indicator as to whether the P3P Service is enabled
 
-  nsString                        mObserverTopic;     // The topic to be observed
-
   nsCOMPtr<nsIObserverService>    mObserverService;   // The Observer Service
 
   nsCOMPtr<nsIURILoader>          mURILoader;         // The URI Loader service

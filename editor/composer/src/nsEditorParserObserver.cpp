@@ -101,7 +101,7 @@ NS_IMETHODIMP nsEditorParserObserver::Notify(nsISupports* aWebShell,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsEditorParserObserver::Observe(nsISupports*, const PRUnichar*, const PRUnichar*)
+NS_IMETHODIMP nsEditorParserObserver::Observe(nsISupports*, const char*, const PRUnichar*)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

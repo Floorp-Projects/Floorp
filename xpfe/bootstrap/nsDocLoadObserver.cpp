@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -68,8 +69,7 @@ void nsDocLoadObserver::Register()
 		nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv))
 		{
-			if (NS_SUCCEEDED(anObserverService->AddObserver(this, 
-				NS_ConvertASCIItoUCS2("EndDocumentLoad").get())))
+			if (NS_SUCCEEDED(anObserverService->AddObserver(this, "EndDocumentLoad", PR_FALSE)))
 			{
 				mRegistered = PR_TRUE;
 			}

@@ -30,6 +30,7 @@
 #include "nsIDOMPluginArray.h"
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 
 nsXPIProxy::nsXPIProxy()
 {
@@ -71,7 +72,7 @@ nsXPIProxy::NotifyRestartNeeded()
 {
     nsCOMPtr<nsIObserverService> obs(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
     if (obs)
-        obs->Notify( nsnull, NS_LITERAL_STRING("xpinstall-restart").get(), nsnull );
+        obs->NotifyObservers( nsnull, "xpinstall-restart", nsnull );
 
     return NS_OK;
 }

@@ -197,5 +197,5 @@ svc = _xpcom.GetGlobalServiceManager().GetService("@mozilla.org/observer-service
 # observer alive ourself, and must keep the COM object alive,
 # _not_ just the Python instance!!!
 _shutdownObserver = xpcom.server.WrapObject(_ShutdownObserver(), interfaces.nsIObserver)
-svc.AddObserver(_shutdownObserver, "xpcom-shutdown")
+svc.addObserver(_shutdownObserver, "xpcom-shutdown", false)
 del svc, _ShutdownObserver

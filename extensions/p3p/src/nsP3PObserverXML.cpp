@@ -28,7 +28,7 @@
 #include "nsP3PLogging.h"
 
 #include "nsIServiceManager.h"
-
+#include "nsObserverService.h"
 #include "nsIParser.h"
 
 #include "nsIDocShell.h"
@@ -132,14 +132,11 @@ nsP3PObserverXML::Init( ) {
 
   if (NS_SUCCEEDED( rv )) {
     // Register to observer XML tags
-    rv = mObserverService->AddObserver( this,
-                                      NS_LITERAL_STRING("text/xml").get() );
+    rv = mObserverService->AddObserver( this, "text/xml", PR_FALSE );
     if (NS_SUCCEEDED(rv)) {
-      rv = mObserverService->AddObserver( this,
-                                        NS_LITERAL_STRING("application/xml").get() );
+      rv = mObserverService->AddObserver( this, "application/xml",PR_FALSE );
       if (NS_SUCCEEDED(rv)) {
-        rv = mObserverService->AddObserver( this,
-                                          NS_LITERAL_STRING("application/xhtml+xml").get() );
+        rv = mObserverService->AddObserver( this, "application/xhtml" PR_FALSE );
       }
     }
 

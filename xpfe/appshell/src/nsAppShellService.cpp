@@ -46,6 +46,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
@@ -83,15 +84,13 @@ static NS_DEFINE_CID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
-static char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 
-// copied from nsEventQueue.cpp
-static char *gEQActivatedNotification = "nsIEventQueueActivated";
-static char *gEQDestroyedNotification = "nsIEventQueueDestroyed";
-
-NS_NAMED_LITERAL_STRING(gSkinSelectedTopic, "skin-selected");
-NS_NAMED_LITERAL_STRING(gLocaleSelectedTopic, "locale-selected");
-NS_NAMED_LITERAL_STRING(gInstallRestartTopic, "xpinstall-restart");
+#define sWindowWatcherContractID "@mozilla.org/embedcomp/window-watcher;1"
+#define gEQActivatedNotification "nsIEventQueueActivated"
+#define gEQDestroyedNotification "nsIEventQueueDestroyed"
+#define gSkinSelectedTopic       "skin-selected"
+#define gLocaleSelectedTopic     "locale-selected"
+#define gInstallRestartTopic     "xpinstall-restart"
 
 nsAppShellService::nsAppShellService() : 
   mAppShell( nsnull ),
@@ -760,13 +759,11 @@ nsAppShellService::SetQuitOnLastWindowClosing(PRBool aQuitOnLastWindowClosing)
 //-------------------------------------------------------------------------
 
 NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
-                                         const PRUnichar *aTopic,
+                                         const char *aTopic,
                                          const PRUnichar *)
 {
-  nsAutoString topic(aTopic);
-
   NS_ASSERTION(mAppShell, "appshell service notified before appshell built");
-  if (topic.EqualsWithConversion(gEQActivatedNotification)) {
+  if (!nsCRT::strcmp(aTopic, gEQActivatedNotification) ) {
     nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
     if (eq) {
       PRBool isNative = PR_TRUE;
@@ -775,7 +772,7 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
       if (isNative)
         mAppShell->ListenToEventQueue(eq, PR_TRUE);
     }
-  } else if (topic.EqualsWithConversion(gEQDestroyedNotification)) {
+  } else if (!nsCRT::strcmp(aTopic, gEQDestroyedNotification)) {
     nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
     if (eq) {
       PRBool isNative = PR_TRUE;
@@ -784,9 +781,9 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
       if (isNative)
         mAppShell->ListenToEventQueue(eq, PR_FALSE);
     }
-  } else if (topic.Equals(gSkinSelectedTopic) ||
-             topic.Equals(gLocaleSelectedTopic) ||
-             topic.Equals(gInstallRestartTopic)) {
+  } else if (!nsCRT::strcmp(aTopic, gSkinSelectedTopic) ||
+             !nsCRT::strcmp(aTopic, gLocaleSelectedTopic) ||
+             !nsCRT::strcmp(aTopic,  gInstallRestartTopic)) {
     if (mNativeAppSupport)
       mNativeAppSupport->SetIsServerMode(PR_FALSE);
   }
@@ -799,9 +796,6 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
   nsresult           rv;
   nsISupports        *glop;
 
-  nsAutoString topicA; topicA.AssignWithConversion(gEQActivatedNotification);
-  nsAutoString topicB; topicB.AssignWithConversion(gEQDestroyedNotification);
-
   // here's a silly dance. seems better to do it than not, though...
   nsCOMPtr<nsIObserver> weObserve(do_QueryInterface(NS_STATIC_CAST(nsIObserver *, this)));
 
@@ -812,19 +806,19 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
   if (NS_SUCCEEDED(rv)) {
     nsIObserverService *os = NS_STATIC_CAST(nsIObserverService*,glop);
     if (aRegister) {
-      os->AddObserver(weObserve, topicA.get());
-      os->AddObserver(weObserve, topicB.get());
-      os->AddObserver(weObserve, gSkinSelectedTopic.get());
-      os->AddObserver(weObserve, gLocaleSelectedTopic.get());
-      os->AddObserver(weObserve, gInstallRestartTopic.get());
+      os->AddObserver(weObserve, gEQActivatedNotification, PR_TRUE);
+      os->AddObserver(weObserve, gEQDestroyedNotification, PR_TRUE);
+      os->AddObserver(weObserve, gSkinSelectedTopic, PR_TRUE);
+      os->AddObserver(weObserve, gLocaleSelectedTopic, PR_TRUE);
+      os->AddObserver(weObserve, gInstallRestartTopic, PR_TRUE);
     } else {
-      os->RemoveObserver(weObserve, topicA.get());
-      os->RemoveObserver(weObserve, topicB.get());
-      os->RemoveObserver(weObserve, gSkinSelectedTopic.get());
-      os->RemoveObserver(weObserve, gLocaleSelectedTopic.get());
-      os->RemoveObserver(weObserve, gInstallRestartTopic.get());
+      os->RemoveObserver(weObserve, gEQActivatedNotification);
+      os->RemoveObserver(weObserve, gEQDestroyedNotification);
+      os->RemoveObserver(weObserve, gSkinSelectedTopic);
+      os->RemoveObserver(weObserve, gLocaleSelectedTopic);
+      os->RemoveObserver(weObserve, gInstallRestartTopic);
     }
-    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_CONTRACTID, glop);
+    NS_RELEASE(glop);
   }
 }
 
