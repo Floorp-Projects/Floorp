@@ -110,7 +110,6 @@ sub Checkout()
 	unless (defined($session)) { die "Checkout aborted. Cannot create session file: $session" }
 
 	my($LIBPREF_BRANCH) = "XPCOM_BRANCH";
-	my($IMGLIB_BRANCH) = "MODULAR_IMGLIB_BRANCH"; #// compile the "(standalone)" targets when pulling the tips
 	my($PLUGIN_BRANCH) = "OJI_19980618_BRANCH";
 
 	if ($main::pull{lizard})
@@ -143,9 +142,9 @@ sub Checkout()
 	}
 	if ($main::pull{imglib})
 	{
-		$session->checkout("mozilla/jpeg", $IMGLIB_BRANCH) || die "checkout failure";
-		$session->checkout("mozilla/modules/libutil", $IMGLIB_BRANCH) || die "checkout failure";
-		$session->checkout("mozilla/modules/libimg", $IMGLIB_BRANCH) || die "checkout failure";
+		$session->checkout("mozilla/jpeg") || die "checkout failure";
+		$session->checkout("mozilla/modules/libutil") || die "checkout failure";
+		$session->checkout("mozilla/modules/libimg") || die "checkout failure";
 	}
 	if ($main::pull{netlib})
 	{
@@ -329,11 +328,20 @@ sub BuildCommonProjects()
 
 	Moz::BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stubs");
 	Moz::BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
-	Moz::BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",							"Stubs");
-	Moz::BuildProjectClean(":mozilla:cmd:macfe:projects:client:Navigator.mcp",    				"Stub Library");
+	Moz::BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",				"Stubs");
+	Moz::BuildProjectClean(":mozilla:cmd:macfe:projects:client:Client.mcp",    		"Stubs");
 
 # shared
 
+	if ( $main::CARBON )
+	{
+		BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"Carbon Interfaces");
+	}
+	else
+	{
+		BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"MacOS Interfaces");
+	}
+		
 	Moz::BuildProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp");
 	MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", "$dist_dir");
 	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM", "$dist_dir") : 0;
@@ -374,12 +382,9 @@ sub BuildCommonProjects()
 
 	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",						"png$D.o");
 
-	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o");
-	#//BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o (standalone)");
+	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o (standalone)");
 
 	BuildProject(":mozilla:network:macbuild:network.mcp",		"NetworkModular$D.o");
-
-	# BuildProject(":mozilla:modules:oji:macbuild:oji.mcp",					"oji$D.o");
 
 }
 
