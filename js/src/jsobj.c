@@ -3079,7 +3079,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
         *attrsp = 0;
         clasp = OBJ_GET_CLASS(cx, obj);
         return !clasp->checkAccess ||
-               clasp->checkAccess(cx, obj, id, mode, vp);
+               clasp->checkAccess(cx, obj, js_IdToValue(id), mode, vp);
     }
     if (!OBJ_IS_NATIVE(pobj)) {
         OBJ_DROP_PROPERTY(cx, pobj, prop);
@@ -3093,7 +3093,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     clasp = LOCKED_OBJ_GET_CLASS(obj);
     if (clasp->checkAccess) {
         JS_UNLOCK_OBJ(cx, pobj);
-        ok = clasp->checkAccess(cx, obj, id, mode, vp);
+        ok = clasp->checkAccess(cx, obj, js_IdToValue(id), mode, vp);
         JS_LOCK_OBJ(cx, pobj);
     } else {
         ok = JS_TRUE;
