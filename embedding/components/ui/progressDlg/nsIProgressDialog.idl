@@ -61,6 +61,12 @@ interface nsIProgressDialog : nsIDownload {
    * open yet, or has been closed.
    */   
    attribute nsIDOMWindow dialog;
+   
+  /**
+   * Whether or not to cancel the download when the progress dialog is closed.
+   * If set, the Cancel button will also be hidden.
+   */
+   attribute boolean cancelOnClose;
 };
 
 
