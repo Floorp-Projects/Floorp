@@ -2004,10 +2004,16 @@ NS_IMETHODIMP nsDocShell::RefreshURI(nsIURI *aURI, PRInt32 aDelay, PRBool aRepea
    refreshTimer->mDelay = aDelay;
    refreshTimer->mRepeat = aRepeat;
 
+   if (!mRefreshURIList)
+   {
+      NS_ENSURE_SUCCESS(NS_NewISupportsArray(getter_AddRefs(mRefreshURIList)),
+         NS_ERROR_FAILURE);
+   }
+   
    nsCOMPtr<nsITimer> timer = do_CreateInstance("component://netscape/timer");
    NS_ENSURE_TRUE(timer, NS_ERROR_FAILURE);
-
-   mRefreshURIList.AppendElement(timer);
+    
+   mRefreshURIList->AppendElement(timer);    // owning timer ref
    timer->Init(refreshTimer, aDelay);
 
    return NS_OK;
@@ -2015,18 +2021,23 @@ NS_IMETHODIMP nsDocShell::RefreshURI(nsIURI *aURI, PRInt32 aDelay, PRBool aRepea
 
 NS_IMETHODIMP nsDocShell::CancelRefreshURITimers()
 {
-   PRInt32 n = mRefreshURIList.Count();
-   nsCOMPtr<nsITimer> timer;
+   if (!mRefreshURIList) return NS_OK;
 
-   while(n)
-      {
-      timer = dont_AddRef((nsITimer*)mRefreshURIList.ElementAt(0));
-      mRefreshURIList.RemoveElementAt(0);
+   PRUint32 n;
+   mRefreshURIList->Count(&n);
 
-      if(timer)
+   while (n)
+   {
+      nsCOMPtr<nsISupports> element;
+      mRefreshURIList->GetElementAt(0, getter_AddRefs(element));
+      nsCOMPtr<nsITimer> timer(do_QueryInterface(element));
+
+      mRefreshURIList->RemoveElementAt(0);    // bye bye owning timer ref
+
+      if (timer)
          timer->Cancel();
       n--;
-      }
+   }
 
    return NS_OK;
 }
