@@ -866,14 +866,8 @@ EmbedPrivate::GetPIDOMWindow(nsPIDOMWindow **aPIWin)
   // get the private DOM window
   nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
   // and the root window for that DOM window
-  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-  domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
+	*aPIWin = domWindowPrivate->GetPrivateRoot();
   
-  nsCOMPtr<nsIChromeEventHandler> chromeHandler;
-  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
-
-  *aPIWin = piWin.get();
-
   if (*aPIWin) {
     NS_ADDREF(*aPIWin);
     return NS_OK;

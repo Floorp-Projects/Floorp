@@ -62,7 +62,10 @@ class EmbedEventListener : public nsIDOMKeyListener,
   NS_IMETHOD MouseOut(nsIDOMEvent* aDOMEvent);
 
   // nsIDOMUIListener
-  NS_DECL_NSIDOMUILISTENER
+
+	NS_IMETHOD Activate(nsIDOMEvent* aDOMEvent);
+	NS_IMETHOD FocusIn(nsIDOMEvent* aDOMEvent);
+	NS_IMETHOD FocusOut(nsIDOMEvent* aDOMEvent);
 
  private:
 

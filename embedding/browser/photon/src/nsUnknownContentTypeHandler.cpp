@@ -99,9 +99,8 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsIHelperAppLaun
 	/* get the mime type */
 	nsCOMPtr<nsIMIMEInfo> mimeInfo;
 	aLauncher->GetMIMEInfo( getter_AddRefs(mimeInfo) );
-	char *mimeType;
-	mimeInfo->GetMIMEType( &mimeType );
-
+	nsCAutoString mimeType;
+	mimeInfo->GetMIMEType( mimeType );
 
 	PtCallbackInfo_t cbinfo;
 	PtWebUnknownWithNameCallback_t cb;
@@ -110,7 +109,7 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsIHelperAppLaun
 	cbinfo.reason = Pt_CB_MOZ_UNKNOWN;
 	cbinfo.cbdata = &cb;
 	cb.action = Pt_WEB_ACTION_OK;
-	cb.content_type = mimeType;
+	cb.content_type = (char*)mimeType.get();
 	cb.url = (char *)url;
 	cb.content_length = strlen( cb.url );
 	cb.suggested_filename = (char*)filename;
