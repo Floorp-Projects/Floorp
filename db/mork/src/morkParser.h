@@ -209,73 +209,73 @@ class morkParser /*d*/ : public morkNode {
 protected: // protected morkParser members
   
   nsIMdbHeap*      mParser_Heap;   // refcounted heap used for allocation
-    morkStream*   mParser_Stream; // refcounted input stream
-    
-    mork_u4       mParser_Tag; // must equal morkParser_kTag
-    mork_count    mParser_MoreGranularity; // constructor inBytesPerParseSegment
+  morkStream*   mParser_Stream; // refcounted input stream
 
-    mork_u4       mParser_State; // state where parser should resume
- 
-    // after finding ends of group transactions, we can re-seek the start:
-    mork_pos      mParser_GroupContentStartPos; // start of this group
-    
-    mork_gid      mParser_GroupId; // group ID if inside a group
-    mork_tid      mParser_TableId; // table ID if inside a table
-    mork_rid      mParser_RowId;   // row ID if inside a row
-    
-    mork_bool     mParser_InPort;  // called OnNewPort but not OnPortEnd?
-    mork_bool     mParser_InDict;  // called OnNewDict but not OnDictEnd?
-    mork_bool     mParser_InCell;  // called OnNewCell but not OnCellEnd?
-    mork_bool     mParser_InMeta;  // called OnNewMeta but not OnMetaEnd?
-   
-    mork_bool     mParser_InPortRow;  // called OnNewPortRow but not OnPortRowEnd?
-    mork_bool     mParser_IsBroken;   // has the parse become broken?
-    mork_bool     mParser_IsDone;     // has the parse finished?
-    mork_bool     mParser_DoMore;     // mParser_MoreGranularity not exhausted? 
-    
-    mork_change   mParser_Change;  // driven by modifier in text 
-    
-    morkAlias     mParser_Alias;   // current alias being parsed
-    // note that mParser_Alias.mAlias_Buf points at mParser_ScopeSpool below:
-    
-    // blob spools allocated in mParser_Heap
-    morkSpool     mParser_ScopeSpool;   // place to accumulate ID scope blobs
-    morkSpool     mParser_ValueSpool;   // place to accumulate value blobs
-    morkSpool     mParser_ColumnSpool;  // place to accumulate column blobs
-    morkSpool     mParser_StringSpool;  // place to accumulate string blobs
-    
-    morkSpoolSink mParser_ScopeSink;  // writes to mParser_ScopeSpool
-    morkSpoolSink mParser_ValueSink;  // writes to mParser_ValueSpool
-    morkSpoolSink mParser_ColumnSink; // writes to mParser_ColumnSpool
-    morkSpoolSink mParser_StringSink; // writes to mParser_StringSpool
+  mork_u4       mParser_Tag; // must equal morkParser_kTag
+  mork_count    mParser_MoreGranularity; // constructor inBytesPerParseSegment
 
-    // yarns allocated in mParser_Heap
-    morkYarn      mParser_AliasYarn;   // place to receive from AliasToYarn()
-  
+  mork_u4       mParser_State; // state where parser should resume
+
+  // after finding ends of group transactions, we can re-seek the start:
+  mork_pos      mParser_GroupContentStartPos; // start of this group
+
+  mork_gid      mParser_GroupId; // group ID if inside a group
+  mork_tid      mParser_TableId; // table ID if inside a table
+  mork_rid      mParser_RowId;   // row ID if inside a row
+
+  mork_bool     mParser_InPort;  // called OnNewPort but not OnPortEnd?
+  mork_bool     mParser_InDict;  // called OnNewDict but not OnDictEnd?
+  mork_bool     mParser_InCell;  // called OnNewCell but not OnCellEnd?
+  mork_bool     mParser_InMeta;  // called OnNewMeta but not OnMetaEnd?
+
+  mork_bool     mParser_InPortRow;  // called OnNewPortRow but not OnPortRowEnd?
+  mork_bool     mParser_IsBroken;   // has the parse become broken?
+  mork_bool     mParser_IsDone;     // has the parse finished?
+  mork_bool     mParser_DoMore;     // mParser_MoreGranularity not exhausted? 
+
+  mork_change   mParser_Change;  // driven by modifier in text 
+
+  morkAlias     mParser_Alias;   // current alias being parsed
+  // note that mParser_Alias.mAlias_Buf points at mParser_ScopeSpool below:
+
+  // blob spools allocated in mParser_Heap
+  morkSpool     mParser_ScopeSpool;   // place to accumulate ID scope blobs
+  morkSpool     mParser_ValueSpool;   // place to accumulate value blobs
+  morkSpool     mParser_ColumnSpool;  // place to accumulate column blobs
+  morkSpool     mParser_StringSpool;  // place to accumulate string blobs
+
+  morkSpoolSink mParser_ScopeSink;  // writes to mParser_ScopeSpool
+  morkSpoolSink mParser_ValueSink;  // writes to mParser_ValueSpool
+  morkSpoolSink mParser_ColumnSink; // writes to mParser_ColumnSpool
+  morkSpoolSink mParser_StringSink; // writes to mParser_StringSpool
+
+  // yarns allocated in mParser_Heap
+  morkYarn      mParser_AliasYarn;   // place to receive from AliasToYarn()
+
   // span showing current ongoing file position status:
-    morkSpan      mParser_PortSpan; // span of current db port file
-   
-    // various spans denoting nested subspaces inside the file's port span:
-    morkSpan      mParser_GroupSpan; // span of current transaction group
-    morkSpan      mParser_DictSpan;
-    morkSpan      mParser_AliasSpan;
-    morkSpan      mParser_MetaSpan;
-    morkSpan      mParser_TableSpan;
-    morkSpan      mParser_RowSpan;
-    morkSpan      mParser_CellSpan;
-    morkSpan      mParser_ColumnSpan;
-    morkSpan      mParser_SlotSpan;
+  morkSpan      mParser_PortSpan; // span of current db port file
+
+  // various spans denoting nested subspaces inside the file's port span:
+  morkSpan      mParser_GroupSpan; // span of current transaction group
+  morkSpan      mParser_DictSpan;
+  morkSpan      mParser_AliasSpan;
+  morkSpan      mParser_MetaSpan;
+  morkSpan      mParser_TableSpan;
+  morkSpan      mParser_RowSpan;
+  morkSpan      mParser_CellSpan;
+  morkSpan      mParser_ColumnSpan;
+  morkSpan      mParser_SlotSpan;
 
 private: // convenience inlines
 
-    mork_pos HerePos() const
-    { return mParser_PortSpan.mSpan_End.mPlace_Pos; }
+  mork_pos HerePos() const
+  { return mParser_PortSpan.mSpan_End.mPlace_Pos; }
 
-    void SetHerePos(mork_pos inPos)
-    { mParser_PortSpan.mSpan_End.mPlace_Pos = inPos; }
-    
-    void AddLine()
-    { ++ mParser_PortSpan.mSpan_End.mPlace_Line; }
+  void SetHerePos(mork_pos inPos)
+  { mParser_PortSpan.mSpan_End.mPlace_Pos = inPos; }
+
+  void AddLine()
+  { ++ mParser_PortSpan.mSpan_End.mPlace_Line; }
   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
@@ -353,64 +353,64 @@ public: // out virtual morkParser methods, data flow parser to subclass
 // mp:Slot      ::= OnValue | OnValueAlias | OnRowAlias | OnTableAlias
 
 
-    // Note that in interfaces below, mork_change parameters kAdd and kNil
-    // both mean about the same thing by default.  Only kCut is interesting,
-    // because this usually means to remove members instead of adding them.
+  // Note that in interfaces below, mork_change parameters kAdd and kNil
+  // both mean about the same thing by default.  Only kCut is interesting,
+  // because this usually means to remove members instead of adding them.
 
-    virtual void OnNewPort(morkEnv* ev, const morkPlace& inPlace) = 0;
-    virtual void OnPortGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
-    virtual void OnPortEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
+  virtual void OnNewPort(morkEnv* ev, const morkPlace& inPlace) = 0;
+  virtual void OnPortGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
+  virtual void OnPortEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
 
-    virtual void OnNewGroup(morkEnv* ev, const morkPlace& inPlace, mork_gid inGid) = 0;
-    virtual void OnGroupGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
-    virtual void OnGroupCommitEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
-    virtual void OnGroupAbortEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
+  virtual void OnNewGroup(morkEnv* ev, const morkPlace& inPlace, mork_gid inGid) = 0;
+  virtual void OnGroupGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
+  virtual void OnGroupCommitEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
+  virtual void OnGroupAbortEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
 
-    virtual void OnNewPortRow(morkEnv* ev, const morkPlace& inPlace, 
-      const morkAlias& inAlias, mork_change inChange) = 0;
-    virtual void OnPortRowGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
-    virtual void OnPortRowEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
+  virtual void OnNewPortRow(morkEnv* ev, const morkPlace& inPlace, 
+    const morkAlias& inAlias, mork_change inChange) = 0;
+  virtual void OnPortRowGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
+  virtual void OnPortRowEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
 
-    virtual void OnNewTable(morkEnv* ev, const morkPlace& inPlace,
-      const morkAlias& inAlias, mork_change inChange) = 0;
-    virtual void OnTableGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
-    virtual void OnTableEnd(morkEnv* ev, const morkSpan& inSpan) = 0;
-      
-    virtual void OnNewMeta(morkEnv* ev, const morkPlace& inPlace) = 0;
-    virtual void OnMetaGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
-    virtual void OnMetaEnd(morkEnv* ev, const morkSpan& inSpan) = 0;
+  virtual void OnNewTable(morkEnv* ev, const morkPlace& inPlace,
+    const morkAlias& inAlias, mork_change inChange) = 0;
+  virtual void OnTableGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
+  virtual void OnTableEnd(morkEnv* ev, const morkSpan& inSpan) = 0;
+    
+  virtual void OnNewMeta(morkEnv* ev, const morkPlace& inPlace) = 0;
+  virtual void OnMetaGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
+  virtual void OnMetaEnd(morkEnv* ev, const morkSpan& inSpan) = 0;
 
-    virtual void OnNewRow(morkEnv* ev, const morkPlace& inPlace, 
-      const morkAlias& inAlias, mork_change inChange) = 0;
-    virtual void OnRowGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
-    virtual void OnRowEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
+  virtual void OnNewRow(morkEnv* ev, const morkPlace& inPlace, 
+    const morkAlias& inAlias, mork_change inChange) = 0;
+  virtual void OnRowGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
+  virtual void OnRowEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
 
-    virtual void OnNewDict(morkEnv* ev, const morkPlace& inPlace) = 0;
-    virtual void OnDictGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
-    virtual void OnDictEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
+  virtual void OnNewDict(morkEnv* ev, const morkPlace& inPlace) = 0;
+  virtual void OnDictGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
+  virtual void OnDictEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
 
-    virtual void OnAlias(morkEnv* ev, const morkSpan& inSpan,
-      const morkAlias& inAlias) = 0;
+  virtual void OnAlias(morkEnv* ev, const morkSpan& inSpan,
+    const morkAlias& inAlias) = 0;
 
-    virtual void OnAliasGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
+  virtual void OnAliasGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
 
-    virtual void OnNewCell(morkEnv* ev, const morkPlace& inPlace,
-      const morkAlias& inAlias, mork_change inChange) = 0;
-    virtual void OnCellGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
-    virtual void OnCellForm(morkEnv* ev, mork_cscode inCharsetFormat) = 0;
-    virtual void OnCellEnd(morkEnv* ev, const morkSpan& inSpan) = 0;
-      
-    virtual void OnValue(morkEnv* ev, const morkSpan& inSpan,
-      const morkBuf& inBuf) = 0;
+  virtual void OnNewCell(morkEnv* ev, const morkPlace& inPlace,
+    const morkAlias& inAlias, mork_change inChange) = 0;
+  virtual void OnCellGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
+  virtual void OnCellForm(morkEnv* ev, mork_cscode inCharsetFormat) = 0;
+  virtual void OnCellEnd(morkEnv* ev, const morkSpan& inSpan) = 0;
+    
+  virtual void OnValue(morkEnv* ev, const morkSpan& inSpan,
+    const morkBuf& inBuf) = 0;
 
-    virtual void OnValueAlias(morkEnv* ev, const morkSpan& inSpan,
-      const morkAlias& inAlias) = 0;
+  virtual void OnValueAlias(morkEnv* ev, const morkSpan& inSpan,
+    const morkAlias& inAlias) = 0;
 
-    virtual void OnRowAlias(morkEnv* ev, const morkSpan& inSpan,
-      const morkAlias& inAlias) = 0;
+  virtual void OnRowAlias(morkEnv* ev, const morkSpan& inSpan,
+    const morkAlias& inAlias) = 0;
 
-    virtual void OnTableAlias(morkEnv* ev, const morkSpan& inSpan,
-      const morkAlias& inAlias) = 0;
+  virtual void OnTableAlias(morkEnv* ev, const morkSpan& inSpan,
+    const morkAlias& inAlias) = 0;
   
 // ````` ````` ````` `````   ````` ````` ````` `````  
 protected: // protected parser helper methods

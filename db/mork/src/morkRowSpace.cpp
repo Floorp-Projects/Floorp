@@ -327,7 +327,7 @@ morkRowSpace::NewRowWithOid(morkEnv* ev, const mdbOid* inOid)
     {
       row->InitRow(ev, inOid, this, /*length*/ 0, pool);
       
-      if ( ev->Good() )
+      if ( ev->Good() && mRowSpace_Rows.AddRow(ev, row) )
         outRow = row;
       else
         pool->ZapRow(ev, row);
@@ -354,7 +354,7 @@ morkRowSpace::NewRow(morkEnv* ev)
       {
         row->InitRow(ev, &oid, this, /*length*/ 0, pool);
         
-        if ( ev->Good() )
+        if ( ev->Good() && mRowSpace_Rows.AddRow(ev, row) )
           outRow = row;
         else
           pool->ZapRow(ev, row);

@@ -156,74 +156,201 @@ morkStream::CloseStream(morkEnv* ev) // called by CloseMorkNode();
 
 // } ===== end morkNode methods =====
 // ````` ````` ````` ````` ````` 
+  
+#define morkStream_kSpacesPerIndent 1 /* one space per indent */
+#define morkStream_kMaxIndentDepth 70 /* max indent of 70 space bytes */
+static const char* morkStream_kSpaces // next line to ease length perception
+= "                                                                        ";
+// 123456789_123456789_123456789_123456789_123456789_123456789_123456789_
+// morkStream_kSpaces above must contain (at least) 70 spaces (ASCII 0x20)
+ 
+mork_size
+morkStream::PutIndent(morkEnv* ev, mork_count inDepth)
+  // PutIndent() puts a linebreak, and then
+  // "indents" by inDepth, and returns the line length after indentation.
+{
+  mork_size outLength = 0;
 
-void
+  if ( ev->Good() )
+  {
+    this->PutLineBreak(ev);
+    if ( ev->Good() )
+    {
+      outLength = inDepth;
+      if ( inDepth )
+        this->Write(ev, morkStream_kSpaces, inDepth);
+    }
+  }
+  return outLength;
+}
+
+mork_size
+morkStream::PutByteThenIndent(morkEnv* ev, int inByte, mork_count inDepth)
+  // PutByteThenIndent() puts the byte, then a linebreak, and then
+  // "indents" by inDepth, and returns the line length after indentation.
+{
+  mork_size outLength = 0;
+  
+  if ( inDepth > morkStream_kMaxIndentDepth )
+    inDepth = morkStream_kMaxIndentDepth;
+  
+  this->Putc(ev, inByte);
+  if ( ev->Good() )
+  {
+    this->PutLineBreak(ev);
+    if ( ev->Good() )
+    {
+      outLength = inDepth;
+      if ( inDepth )
+        this->Write(ev, morkStream_kSpaces, inDepth);
+    }
+  }
+  return outLength;
+}
+  
+mork_size
+morkStream::PutStringThenIndent(morkEnv* ev,
+  const char* inString, mork_count inDepth)
+// PutStringThenIndent() puts the string, then a linebreak, and then
+// "indents" by inDepth, and returns the line length after indentation.
+{
+  mork_size outLength = 0;
+  
+  if ( inDepth > morkStream_kMaxIndentDepth )
+    inDepth = morkStream_kMaxIndentDepth;
+  
+  if ( inString )
+  {
+    mork_size length = MORK_STRLEN(inString);
+    if ( length && ev->Good() ) // any bytes to write?
+      this->Write(ev, inString, length);
+  }
+  
+  if ( ev->Good() )
+  {
+    this->PutLineBreak(ev);
+    if ( ev->Good() )
+    {
+      outLength = inDepth;
+      if ( inDepth )
+        this->Write(ev, morkStream_kSpaces, inDepth);
+    }
+  }
+  return outLength;
+}
+
+mork_size
 morkStream::PutString(morkEnv* ev, const char* inString)
 {
+  mork_size outSize = 0;
   if ( inString )
   {
-    mork_num length = MORK_STRLEN(inString);
-    if ( length && ev->Good() ) // any bytes to write?
+    outSize = MORK_STRLEN(inString);
+    if ( outSize && ev->Good() ) // any bytes to write?
     {
-      this->Write(ev, inString, length);
+      this->Write(ev, inString, outSize);
     }
   }
+  return outSize;
 }
 
-void
+mork_size
 morkStream::PutStringThenNewline(morkEnv* ev, const char* inString)
+  // PutStringThenNewline() returns total number of bytes written.
 {
+  mork_size outSize = 0;
   if ( inString )
   {
-    mork_num length = MORK_STRLEN(inString);
-    if ( length && ev->Good() ) // any bytes to write?
+    outSize = MORK_STRLEN(inString);
+    if ( outSize && ev->Good() ) // any bytes to write?
     {
-      this->Write(ev, inString, length);
+      this->Write(ev, inString, outSize);
       if ( ev->Good() )
-        this->WriteNewlines(ev, /*count*/ 1);
+        outSize += this->PutLineBreak(ev);
     }
   }
+  return outSize;
 }
 
-void
+mork_size
 morkStream::PutStringThenNewlineThenSpace(morkEnv* ev, const char* inString)
+  // PutStringThenNewlineThenSpace() returns total number of bytes written.
 {
+  mork_size outSize = 0;
   if ( inString )
   {
-    mork_num length = MORK_STRLEN(inString);
-    if ( length && ev->Good() ) // any bytes to write?
+    outSize = MORK_STRLEN(inString);
+    if ( outSize && ev->Good() ) // any bytes to write?
     {
-      this->Write(ev, inString, length);
+      this->Write(ev, inString, outSize);
       if ( ev->Good() )
       {
-        this->WriteNewlines(ev, /*count*/ 1);
+        outSize += this->PutLineBreak(ev);
         if ( ev->Good() )
+        {
           this->Putc(ev, ' ');
+          ++outSize;
+        }
       }
     }
   }
+  return outSize;
 }
 
-void
+mork_size
 morkStream::PutByteThenNewline(morkEnv* ev, int inByte)
+  // PutByteThenNewline() returns total number of bytes written.
 {
+  mork_size outSize = 1; // one for the following byte
   this->Putc(ev, inByte);
   if ( ev->Good() )
-    this->WriteNewlines(ev, /*count*/ 1);
+    outSize += this->PutLineBreak(ev);
+  return outSize;
 }
 
-void
+mork_size
 morkStream::PutByteThenNewlineThenSpace(morkEnv* ev, int inByte)
+  // PutByteThenNewlineThenSpace() returns total number of bytes written.
 {
+  mork_size outSize = 1; // one for the following byte
   this->Putc(ev, inByte);
   if ( ev->Good() )
   {
-    this->WriteNewlines(ev, /*count*/ 1);
+    outSize += this->PutLineBreak(ev);
     if ( ev->Good() )
+    {
       this->Putc(ev, ' ');
+      ++outSize;
+    }
   }
+  return outSize;
 }
 
+mork_size
+morkStream::PutLineBreak(morkEnv* ev)
+{
+#ifdef MORK_MAC
+
+  this->Putc(ev, mork_kCR);
+  return 1;
+  
+#else
+#  if defined(MORK_WIN) || defined(MORK_OS2)
+  
+  this->Putc(ev, mork_kCR);
+  this->Putc(ev, mork_kLF);
+  return 2;
+  
+#  else
+#    ifdef MORK_UNIX
+  
+  this->Putc(ev, mork_kLF);
+  return 1;
+  
+#    endif /* MORK_UNIX */
+#  endif /* MORK_WIN */
+#endif /* MORK_MAC */
+}
 // ````` ````` ````` `````   ````` ````` ````` `````  
 // public: // virtual morkFile methods
 
@@ -719,13 +846,9 @@ morkStream::spill_buf(morkEnv* ev) // spill/flush from buffer to file
     }
     else
     {
-#ifdef AB_CONFIG_TRACE
-      this->TraceObject(ev);
-#endif /*AB_CONFIG_TRACE*/
-
-#ifdef AB_CONFIG_DEBUG
-      ev->Break("<ab:stream:spill:not:dirty me=\"^%lX\"/>", (long) this);
-#endif /*AB_CONFIG_DEBUG*/
+#ifdef MORK_DEBUG
+      ev->NewWarning("stream:spill:not:dirty");
+#endif /*MORK_DEBUG*/
     }
   }
   else this->NewFileDownError(ev);

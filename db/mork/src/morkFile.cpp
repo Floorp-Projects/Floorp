@@ -239,18 +239,23 @@ morkFile::NewFileErrnoError(morkEnv* ev) const
 #  endif /* MORK_WIN */
 #endif /* MORK_MAC */
 
-void
+mork_size
 morkFile::WriteNewlines(morkEnv* ev, mork_count inNewlines)
+  // WriteNewlines() returns the number of bytes written.
 {
+  mork_size outSize = 0;
   while ( inNewlines && ev->Good() ) // more newlines to write?
   {
     mork_u4 quantum = inNewlines;
     if ( quantum > morkFile_kNewlinesCount )
       quantum = morkFile_kNewlinesCount;
 
-    this->Write(ev, morkFile_kNewlines, quantum * mork_kNewlineSize);
+    mork_size quantumSize = quantum * mork_kNewlineSize;
+    this->Write(ev, morkFile_kNewlines, quantumSize);
+    outSize += quantumSize;
     inNewlines -= quantum;
   }
+  return outSize;
 }
 
 // ````` ````` ````` ````` ````` 
@@ -309,7 +314,7 @@ morkStdioFile::OpenOldStdioFile(morkEnv* ev, nsIMdbHeap* ioHeap,
   morkStdioFile* outFile = 0;
   if ( ioHeap && inFilePath )
   {
-    const char* mode = (inFrozen)? "r" : "w";
+    const char* mode = (inFrozen)? "rb" : "wb";
     outFile = new(*ioHeap, ev)
       morkStdioFile(ev, morkUsage::kHeap, ioHeap, ioHeap, inFilePath, mode); 
       
@@ -331,7 +336,7 @@ morkStdioFile::CreateNewStdioFile(morkEnv* ev, nsIMdbHeap* ioHeap,
   morkStdioFile* outFile = 0;
   if ( ioHeap && inFilePath )
   {
-    const char* mode = "w+";
+    const char* mode = "wb+";
     outFile = new(*ioHeap, ev)
       morkStdioFile(ev, morkUsage::kHeap, ioHeap, ioHeap, inFilePath, mode); 
   }
@@ -386,7 +391,7 @@ morkStdioFile::AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap)
           this->SetFileIoOpen(morkBool_kFalse);
           mStdioFile_File = 0;
           
-          file = fopen(name, "w+"); // open for write, discarding old content
+          file = fopen(name, "wb+"); // open for write, discarding old content
           if ( file )
           {
             mStdioFile_File = file;
