@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -26,6 +25,7 @@
  *   Prabhat Hegde <prabhat.hegde@sun.com>
  *   Tomi Leppikangas <tomi.leppikangas@oulu.fi>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Daniel Glazman <glazman@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -967,9 +967,10 @@ class DrawSelectionIterator
 {
   enum {SELECTION_TYPES_WE_CARE_ABOUT=nsISelectionController::SELECTION_NONE+nsISelectionController::SELECTION_NORMAL};
 public:
-  DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText,
+  DrawSelectionIterator(nsIContent *aContent, const SelectionDetails *aSelDetails, PRUnichar *aText,
                         PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle,
-                        PRInt16 aSelectionStatus, nsIPresContext *aPresContext);
+                        PRInt16 aSelectionStatus, nsIPresContext *aPresContext,
+                        nsIStyleContext *aStyleContext);
   ~DrawSelectionIterator();
   PRBool      First();
   PRBool      Next();
@@ -980,7 +981,7 @@ public:
   PRUint32    CurrentLength();
   nsTextFrame::TextStyle & CurrentStyle();
   nscolor     CurrentForeGroundColor();
-  PRBool      CurrentBackGroundColor(nscolor &aColor);
+  PRBool      CurrentBackGroundColor(nscolor &aColor, PRBool *aIsTransparent);
   PRBool      IsBeforeOrAfter();
 private:
   union {
@@ -998,16 +999,23 @@ private:
   PRInt16    mSelectionStatus;//see nsIDocument.h SetDisplaySelection()
   nscolor   mDisabledColor;
   nscolor   mAttentionColor;
+
+  PRBool    mSelectionPseudoStyle;
+  nscolor   mSelectionPseudoFGcolor;
+  nscolor   mSelectionPseudoBGcolor;
+  PRBool    mSelectionPseudoBGIsTransparent;
   //private methods
   void FillCurrentData();
 };
 
-DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails, 
+DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
+                                             const SelectionDetails *aSelDetails, 
                                              PRUnichar *aText, 
                                              PRUint32 aTextLength, 
                                              nsTextFrame::TextStyle &aTextStyle, 
                                              PRInt16 aSelectionStatus, 
-                                             nsIPresContext *aPresContext)
+                                             nsIPresContext *aPresContext,
+                                             nsIStyleContext *aStyleContext)
                                              :mOldStyle(aTextStyle)
 {
     mDetails = aSelDetails;
@@ -1017,6 +1025,27 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
     mTypes = nsnull;
     mInit = PR_FALSE;
     mSelectionStatus = aSelectionStatus;
+    mSelectionPseudoStyle = PR_FALSE;
+    mSelectionPseudoBGIsTransparent = PR_FALSE;
+
+    if (aContent) {
+      nsIStyleContext *sc = nsnull;
+      nsCOMPtr<nsIContent> parentContent;
+      aContent->GetParent(*getter_AddRefs(parentContent));
+      aPresContext->ProbePseudoStyleContextFor(parentContent,
+  					     nsHTMLAtoms::mozSelectionPseudo,
+  					     aStyleContext, &sc);
+      if (nsnull != sc) {
+        mSelectionPseudoStyle = PR_TRUE;
+        const nsStyleBackground* bg = (const nsStyleBackground*)sc->GetStyleData(eStyleStruct_Background);
+        mSelectionPseudoBGIsTransparent = PRBool(bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+        if (!mSelectionPseudoBGIsTransparent )
+          mSelectionPseudoBGcolor = bg->mBackgroundColor;
+        const nsStyleColor* color =(const nsStyleColor*) sc->GetStyleData(eStyleStruct_Color);
+        mSelectionPseudoFGcolor = color->mColor;
+        NS_RELEASE(sc);
+      }
+    }
 
     // Get background colors for disabled selection at attention-getting selection (used with type ahead find)
     nsCOMPtr<nsILookAndFeel> look;
@@ -1191,16 +1220,16 @@ DrawSelectionIterator::CurrentStyle()
 nscolor
 DrawSelectionIterator::CurrentForeGroundColor()
 {
-	nscolor foreColor;
-	PRBool colorSet = PR_FALSE;
+  nscolor foreColor;
+  PRBool colorSet = PR_FALSE;
   
   if (!mTypes)
   {
-      if (mCurrentIdx == (PRUint32)mDetails->mStart)
-      {
-   			foreColor = mOldStyle.mSelectionTextColor;
-   			colorSet = PR_TRUE;
-   		}
+    if (mCurrentIdx == (PRUint32)mDetails->mStart)
+    {
+      foreColor = mOldStyle.mSelectionTextColor;
+      colorSet = PR_TRUE;
+    }
   }
   else if (mTypes[mCurrentIdx] | nsISelectionController::SELECTION_NORMAL)//Find color based on mTypes[mCurrentIdx];
   {
@@ -1208,24 +1237,33 @@ DrawSelectionIterator::CurrentForeGroundColor()
    	colorSet = PR_TRUE;
   }
 
-	if (colorSet && (foreColor != NS_DONT_CHANGE_COLOR))
-			return foreColor;
-
+  if (colorSet && (foreColor != NS_DONT_CHANGE_COLOR)) {
+    if (mSelectionPseudoStyle)
+      return mSelectionPseudoFGcolor;
+    else
+      return foreColor;
+  }
   return mOldStyle.mColor->mColor;
 }
 
 PRBool
-DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor)
+DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor, PRBool *aIsTransparent)
 { 
   //Find color based on mTypes[mCurrentIdx];
+  *aIsTransparent = PR_FALSE;
   if (mTypes? (mTypes[mCurrentIdx] | nsISelectionController::SELECTION_NORMAL): (mCurrentIdx == (PRUint32)mDetails->mStart)) {
     aColor = mOldStyle.mSelectionBGColor;
+    if (mSelectionPseudoStyle) {
+      aColor = mSelectionPseudoBGcolor;
+      *aIsTransparent = mSelectionPseudoBGIsTransparent;
+    }
     if (mSelectionStatus==nsISelectionController::SELECTION_ATTENTION)
       aColor = mAttentionColor;
     else if (mSelectionStatus != nsISelectionController::SELECTION_ON)
       aColor = mDisabledColor;
     return PR_TRUE;
   }
+
   return PR_FALSE;
 }
 
@@ -2128,8 +2166,8 @@ nsTextFrame::IsTextInSelection(nsIPresContext* aPresContext,
     if (!frameSelection)
       rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
 
+    nsCOMPtr<nsIContent> content;
     if (NS_SUCCEEDED(rv) && frameSelection){
-      nsCOMPtr<nsIContent> content;
       PRInt32 offset;
       PRInt32 length;
 
@@ -2149,7 +2187,7 @@ nsTextFrame::IsTextInSelection(nsIPresContext* aPresContext,
     }
     //while we have substrings...
     //PRBool drawn = PR_FALSE;
-    DrawSelectionIterator iter(details,text,(PRUint32)textLength, ts, nsISelectionController::SELECTION_NORMAL, aPresContext);
+    DrawSelectionIterator iter(content, details,text,(PRUint32)textLength, ts, nsISelectionController::SELECTION_NORMAL, aPresContext, mStyleContext);
     if (!iter.IsDone() && iter.First()) {
       return PR_TRUE;
     }
@@ -2320,8 +2358,8 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       nsresult rv = NS_OK;
       if (!frameSelection)
         rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+      nsCOMPtr<nsIContent> content;
       if (NS_SUCCEEDED(rv) && frameSelection){
-        nsCOMPtr<nsIContent> content;
         PRInt32 offset;
         PRInt32 length;
 
@@ -2372,7 +2410,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       }
       //while we have substrings...
       //PRBool drawn = PR_FALSE;
-      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext);
+      DrawSelectionIterator iter(content, details,text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext, mStyleContext);
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;
@@ -2390,6 +2428,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
           //TextStyle &currentStyle = iter.CurrentStyle();
           nscolor    currentFGColor = iter.CurrentForeGroundColor();
           nscolor    currentBKColor;
+          PRBool     isCurrentBKColorTransparent;
 
 #ifdef IBMBIDI
           if (currentlength > 0
@@ -2402,11 +2441,13 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
           if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
           {
 #endif
-            if (iter.CurrentBackGroundColor(currentBKColor) && !isPaginated)
+            if (iter.CurrentBackGroundColor(currentBKColor, &isCurrentBKColorTransparent) && !isPaginated)
             {//DRAW RECT HERE!!!
-              aRenderingContext.SetColor(currentBKColor);
-              aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
-							currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
+              if (!isCurrentBKColorTransparent) {
+                aRenderingContext.SetColor(currentBKColor);
+                aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+              }
+              currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
             }
           }
           else
@@ -3015,9 +3056,9 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
       frameSelection = do_QueryInterface(selCon); //this MAY implement
       if (!frameSelection)//if that failed get it from the presshell
         rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+      nsCOMPtr<nsIContent> content;
       if (NS_SUCCEEDED(rv) && frameSelection)
       {
-        nsCOMPtr<nsIContent> content;
         PRInt32 offset;
         PRInt32 length;
 
@@ -3040,7 +3081,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
         sdptr = sdptr->mNext;
       }
 
-      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext);
+      DrawSelectionIterator iter(content, details,text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext, mStyleContext);
       if (!iter.IsDone() && iter.First())
       {
 	      nscoord currentX = dx;
@@ -3052,15 +3093,18 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
 	      //TextStyle &currentStyle = iter.CurrentStyle();
 	      nscolor    currentFGColor = iter.CurrentForeGroundColor();
 	      nscolor    currentBKColor;
+	      PRBool     isCurrentBKColorTransparent;
 	      GetTextDimensions(aRenderingContext,aTextStyle,currenttext, (PRInt32)currentlength,&newDimensions);
 	      if (newDimensions.width)
 	      {
-		      if (iter.CurrentBackGroundColor(currentBKColor))
-		      {//DRAW RECT HERE!!!
-		      aRenderingContext.SetColor(currentBKColor);
-		      aRenderingContext.FillRect(currentX, dy, newDimensions.width, mRect.height);
-						      currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
-		      }
+            if (iter.CurrentBackGroundColor(currentBKColor, &isCurrentBKColorTransparent))
+            {//DRAW RECT HERE!!!
+              if (!isCurrentBKColorTransparent) {
+                aRenderingContext.SetColor(currentBKColor);
+                aRenderingContext.FillRect(currentX, dy, newDimensions.width, mRect.height);
+              }
+              currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
+            }
 	      }
 
         if (isPaginated && !iter.IsBeforeOrAfter()) {
@@ -3233,8 +3277,8 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
       nsresult rv = NS_OK;
       if (!frameSelection)//if that failed get it from the presshell
         rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+      nsCOMPtr<nsIContent> content;
       if (NS_SUCCEEDED(rv) && frameSelection){
-        nsCOMPtr<nsIContent> content;
         PRInt32 offset;
         PRInt32 length;
 
@@ -3252,7 +3296,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
         sdptr = sdptr->mNext;
       }
-      DrawSelectionIterator iter(details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext); //ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
+      DrawSelectionIterator iter(content, details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext, mStyleContext); //ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;
@@ -3264,21 +3308,23 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
           //TextStyle &currentStyle = iter.CurrentStyle();
           nscolor    currentFGColor = iter.CurrentForeGroundColor();
           nscolor    currentBKColor;
+          PRBool     isCurrentBKColorTransparent;
 
           if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
           {
-            if (iter.CurrentBackGroundColor(currentBKColor) && !isPaginated)
+            if (iter.CurrentBackGroundColor(currentBKColor, &isCurrentBKColorTransparent) && !isPaginated)
             {//DRAW RECT HERE!!!
-              aRenderingContext.SetColor(currentBKColor);
-              aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
-							currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
+              if (!isCurrentBKColorTransparent) {
+                aRenderingContext.SetColor(currentBKColor);
+                aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+              }
+              currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
             }
           }
           else
             newWidth =0;
 
           if (isPaginated && !iter.IsBeforeOrAfter()) {
-            aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
             aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
           } else if (!isPaginated) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,isPaginated));
