@@ -434,10 +434,11 @@ function RemovePanel()
 function CustomizePanel()
 {
   var tree  = document.getElementById('current-panels');
-  var numSelected = tree.selectedItems.length;
+  var numSelected = tree.treeBoxObject.selection ? tree.treeBoxObject.selection.count : 0;
 
   if (numSelected == 1) {
-    var selectedNode  = tree.selectedItems[0];
+    var index = tree.currentIndex;
+    var selectedNode = tree.contentView.getItemAtIndex(index);
     var panel_id = selectedNode.getAttribute('id');
     var customize_url = selectedNode.getAttribute('customize');
 
