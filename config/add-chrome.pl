@@ -2,14 +2,21 @@
 
 # add-chrome <jar-file-name> <pkg-name> <chrome-type> <installed-chrome.txt-file>
 
-my $jarFileName = $ARGV[0];
-my $pkgName = $ARGV[1];
-my $chromeType = $ARGV[2];
-my $installedChromeFile = $ARGV[3];
+my $installedChromeFile = $ARGV[0];
+my $chromeType = $ARGV[1];
+my $pkgName = $ARGV[2];
+my $jarFileName = $ARGV[3];
+my $disableJarPackaging = $ARGV[4];
 
 #print "add-chrome $jarFileName $pkgName $chromeType $installedChromeFile\n";
 
-my $line = "$chromeType,install,url,jar:resource:/chrome/$jarFileName!/";
+my $line;
+if ($disableJarPackaging) {
+    $line = "$chromeType,install,url,resource:/chrome/$jarFileName/";
+}
+else {
+    $line = "$chromeType,install,url,jar:resource:/chrome/$jarFileName.jar!/";
+}
 #coming...
 #my $line = "$chromeType,install,url,jar:resource:/chrome/$jarFileName!/$chromeType/$pkgName/"; 
 

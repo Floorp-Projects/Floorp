@@ -22,10 +22,4 @@
 DEPTH=..\..
 MODULE=profile
 
-include <$(DEPTH)\config\config.mak>
-
-!ifdef MOZ_DISABLE_JAR_PACKAGING
-DIRS=locale content 
-!endif
-
 include <$(DEPTH)\config\rules.mak>
