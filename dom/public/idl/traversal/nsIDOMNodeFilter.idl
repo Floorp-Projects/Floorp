@@ -36,7 +36,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(e4723748-1dd1-11b2-8ee6-866a532a6237)]
+[scriptable, function, uuid(e4723748-1dd1-11b2-8ee6-866a532a6237)]
 // Introduced in DOM Level 2:
 interface nsIDOMNodeFilter : nsISupports
 {
