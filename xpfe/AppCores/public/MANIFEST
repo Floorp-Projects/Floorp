@@ -8,3 +8,5 @@ nsIDOMMailCore.h
 nsIDOMToolbarCore.h
 nsIDOMBrowserAppCore.h
 nsAppCoresCIDs.h
+nsIDOMEditorAppCore.h
+nsIDOMToolkitCore.h
