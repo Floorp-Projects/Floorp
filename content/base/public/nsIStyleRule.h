@@ -36,6 +36,9 @@ public:
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const = 0;
   NS_IMETHOD HashValue(PRUint32& aValue) const = 0;
 
+  // Strength is an out-of-band weighting, useful for mapping CSS ! important
+  NS_IMETHOD GetStrength(PRInt32& aStrength) = 0;
+
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext) = 0;
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
