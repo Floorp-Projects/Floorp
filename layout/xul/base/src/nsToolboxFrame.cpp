@@ -36,6 +36,28 @@
 
 
 //
+// class StRenderingContext
+//
+// A stack-based helper class that guarantees taht the state will be restored to it's 
+// previous state when the current scope finishes. It is exception safe.
+//
+class StRenderingContextSaver
+{
+public:
+  StRenderingContextSaver ( nsIRenderingContext & inContext ) : mContext(&inContext) { mContext->PushState(); };
+  ~StRenderingContextSaver ( )
+  {
+    PRBool ignored;
+    mContext->PopState(ignored);
+  }
+
+private:
+  nsCOMPtr<nsIRenderingContext> mContext;
+
+}; // class StRenderingContextSaver
+
+
+//
 // NS_NewToolboxFrame
 //
 // Creates a new toolbox frame and returns it in |aNewFrame|
@@ -180,10 +202,16 @@ void
 nsToolboxFrame :: DrawGrippy (  nsIPresContext& aPresContext, nsIRenderingContext & aRenderingContext,
                                   const nsRect & aBoundingRect, PRBool aDrawHilighted ) const
 {
-  aRenderingContext.PushState();
+  StRenderingContextSaver saved(aRenderingContext);
   
   nsCOMPtr<nsIStyleContext> style ( aDrawHilighted ? mGrippyRolloverStyle : mGrippyNormalStyle ) ;
-  
+  if ( !mGrippyRolloverStyle ) {
+    #ifdef NS_DEBUG
+    printf("nsToolboxFrame::DrawGrippy() -- style context null, css file not loaded correctly??\n");
+    #endif
+    return;   // something must be seriously wrong
+  }
+
   const nsStyleColor*   grippyColor   = (const nsStyleColor*)style->GetStyleData(eStyleStruct_Color);
   const nsStyleSpacing* grippySpacing = (const nsStyleSpacing*)style->GetStyleData(eStyleStruct_Spacing);
   const nsStyleFont*    grippyFont    = (const nsStyleFont*)style->GetStyleData(eStyleStruct_Font);
@@ -193,9 +221,6 @@ nsToolboxFrame :: DrawGrippy (  nsIPresContext& aPresContext, nsIRenderingContex
                                     aBoundingRect, aBoundingRect, *grippyColor, *grippySpacing, 0, 0);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, nonConstSelf,
                                 aBoundingRect, aBoundingRect, *grippySpacing, style, 0);
-
-  PRBool clipState;
-  aRenderingContext.PopState(clipState);
 
 } // DrawGrippy
 
