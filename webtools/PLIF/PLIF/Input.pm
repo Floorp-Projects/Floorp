@@ -230,10 +230,23 @@ sub getArgumentsTree {
     return $data;
 }
 
+# out of band data like CGI version number or IRC server name
 sub getMetaData {
     my $self = shift;
     my($field) = @_;
-    $self->notImplemented();
+    return undef;
+}
+
+# out of band data like cookies or user prefs
+sub getSessionData {
+    my $self = shift;
+    my($field) = @_;
+    return undef;
+}
+
+# return 1 if we are not allowed to have side effects
+sub idempotent {
+    return 0;
 }
 
 sub hash {
@@ -266,6 +279,9 @@ sub hash {
 # for input devices that know the address of the user (and can thus
 # construct the username).
 #
+# 'idempotent' is set to 1 if the request is one that is not allowed
+# to have side effects. (e.g. a GET request by HTTP.)
+#
 # These are separate from the metadata fields, which are available
 # from getMetaData(). The following metadata fields are defined:
 #
@@ -276,3 +292,11 @@ sub hash {
 #    acceptCharset
 #    acceptEncoding
 #    acceptLanguage
+#
+# There may also be session-specific data accessible through
+# getSesionData. This is mainly for HTTP cookies, although other input
+# systems may have ways of exposing session data. To set session data,
+# for now, you have to use output-specific mechanisms. (e.g. for HTTP,
+# output Set-Cookie headers.) Eventually, output systems will have
+# out-of-band metadata too, such as Last-Modified dates and this
+# session data.
