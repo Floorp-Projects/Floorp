@@ -37,7 +37,7 @@ import java.math.BigInteger;
 
 /**
  * Certificates handled by JSS.  All certificates handled by JSS are
- * of this type, which is a subtype of java.security.cert.X509Certificate.
+ * of this type.
  */
 public interface X509Certificate
 {
