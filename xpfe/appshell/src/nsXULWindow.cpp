@@ -40,7 +40,9 @@
 #include "nsIDocument.h"
 #include "nsIDOMBarProp.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMXULElement.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMScreen.h"
 #include "nsIEmbeddingSiteWindow.h"
@@ -1329,8 +1331,19 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
     }
   }
 
-  char           sizeBuf[10];
-  nsAutoString   sizeString;
+  char                        sizeBuf[10];
+  nsAutoString                sizeString;
+  nsAutoString                windowElementId;
+  nsCOMPtr<nsIDOMXULDocument> ownerXULDoc;
+
+  { // fetch docShellElement's ID and XUL owner document
+    nsCOMPtr<nsIDOMDocument> ownerDoc;
+    docShellElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
+    ownerXULDoc = do_QueryInterface(ownerDoc);
+    nsCOMPtr<nsIDOMXULElement> XULElement(do_QueryInterface(docShellElement));
+    if (XULElement)
+      XULElement->GetId(windowElementId);
+  }
 
   // (only for size elements which are persisted)
   if(aPosition && sizeMode == nsSizeMode_Normal) {
@@ -1338,11 +1351,15 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)x);
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString);
+      if (ownerXULDoc) // force persistence in case the value didn't change
+        ownerXULDoc->Persist(windowElementId, SCREENX_ATTRIBUTE);
     }
     if(persistString.Find("screenY") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)y);
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString);
+      if (ownerXULDoc)
+        ownerXULDoc->Persist(windowElementId, SCREENY_ATTRIBUTE);
     }
   }
 
@@ -1351,11 +1368,15 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cx);
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString);
+      if (ownerXULDoc)
+        ownerXULDoc->Persist(windowElementId, WIDTH_ATTRIBUTE);
     }
     if(persistString.Find("height") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cy);
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString);
+      if (ownerXULDoc)
+        ownerXULDoc->Persist(windowElementId, HEIGHT_ATTRIBUTE);
     }
   }
 
@@ -1366,6 +1387,8 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
     else
       sizeString.Assign(SIZEMODE_NORMAL);
     docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString);
+    if (ownerXULDoc)
+      ownerXULDoc->Persist(windowElementId, MODE_ATTRIBUTE);
   }
 
   return NS_OK;
