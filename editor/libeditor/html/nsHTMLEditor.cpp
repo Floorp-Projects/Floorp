@@ -3597,6 +3597,23 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedTe
   quotedStuff += "\n\n";
 
   nsAutoEditBatch beginBatching(this);
+
+  // Wrap the inserted quote in a <pre> so it won't be wrapped:
+  nsCOMPtr<nsIDOMNode> preNode;
+  nsAutoString tag("pre");
+  rv = DeleteSelectionAndCreateNode(tag, getter_AddRefs(preNode));
+  // If this succeeded, then set selection inside the pre
+  // so the inserted text will end up there.
+  // If it failed, we don't care what the return value was,
+  // but we'll fall through and try to insert the text anyway.
+  if (NS_SUCCEEDED(rv) && preNode)
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    rv = GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(rv) && selection)
+      selection->Collapse(preNode, 0);
+  }
+
   return InsertText(quotedStuff);
 }
 
