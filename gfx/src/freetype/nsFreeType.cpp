@@ -106,6 +106,7 @@ FtFuncList nsFreeType2::FtFuncs [] = {
   {"FT_Init_FreeType",        NS_FT2_OFFSET(nsFT_Init_FreeType)},
   {"FT_Load_Glyph",           NS_FT2_OFFSET(nsFT_Load_Glyph)},
   {"FT_New_Face",             NS_FT2_OFFSET(nsFT_New_Face)},
+  {"FT_Outline_Decompose",    NS_FT2_OFFSET(nsFT_Outline_Decompose)},
   {"FT_Set_Charmap",          NS_FT2_OFFSET(nsFT_Set_Charmap)},
   {"FTC_Image_Cache_Lookup",  NS_FT2_OFFSET(nsFTC_Image_Cache_Lookup)},
   {"FTC_Manager_Lookup_Size", NS_FT2_OFFSET(nsFTC_Manager_Lookup_Size)},
