@@ -209,7 +209,12 @@ NS_IMETHODIMP nsWindow::Destroy()
 	   doing something really awful because it allows you to actually close (or appear to close)
 	   a window on the Mac, whose OS doesn't kill the window for you.
 	*/
-	Release();	// the ref added when nsWebShellWindow made us
+	/* Unfortunately this hack has the nasty side effect of causing a crash when trying
+	   to load a new URL in either appRunner or viewer.  Feeling that it is better to have
+	   windows that you can't close rather than to crash trying to browse I'm commenting
+	   out the Release() for now.
+	*/
+	//Release();	// the ref added when nsWebShellWindow made us
 
 	return NS_OK;
 }
