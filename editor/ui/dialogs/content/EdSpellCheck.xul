@@ -27,72 +27,64 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorSpellCheck.dtd">
 
 <!-- dialog containing a control requiring initial setup -->
-<xul:window class="dialog" title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
+<window class="dialog" title="&windowTitle.label;"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
     align="vertical">
 
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdSpellCheck.js">
-  </script>
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EdSpellCheck.js"/>
   <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
-  <xul:broadcaster id="args" value=""/>
+  <broadcaster id="args" value=""/>
 
-<xul:box align="vertical">
-  <label for="Word"> &wordEditField.label; </label>
-  <xul:box align="horizontal">
-    <input type="text" class="SpellCheckWord" id="Word" size="24"/>
-    <xul:spring class="bigspacer"/>
-    <xul:titledbutton class="push SizeToParent" id="CheckWord" onclick="CheckWord()" value="&checkwordButton.label;"/>
-    <xul:spring flex="100%"/>
-  </xul:box>
-  <label> &suggestions.label; </label>
-  <xul:box align="horizontal">
-    <select class="SpellCheckList" id="SuggestedList" size="8" onchange="SelectSuggestedWord()"/>
-    <div>
-      <table>
-        <tr>
-          <td>
-            <xul:titledbutton class="push SizeToParent"  id="Ignore" onclick="Ignore()" value="&ignoreButton.label;"/>
-          </td>
-          <td>
-            <xul:titledbutton class="push SizeToParent"  id="IgnoreAll" onclick="IgnoreAll()" value="&ignoreallButton.label;"/>
-          </td>
-        </tr>
-        <tr valign="top">
-          <td>
-            <xul:titledbutton class="push SizeToParent"  id="Replace" onclick="Replace()" value="&changeButton.label;"/>
-          </td>
-          <td>
-            <xul:titledbutton class="push SizeToParent"  id="ReplaceAll" onclick="ReplaceAll()" value="&changeallButton.label;"/>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2">
-            <label> &userDictionary.label; </label>
-         </td>
-        </tr>
-        <tr valign="top">
-          <td>
-            <xul:titledbutton class="push SizeToParent"  id="AddToDictionary" onclick="AddToDictionary()" value="&addtouserdictionaryButton.label;"/>
-          </td>
-          <td>
-            <xul:titledbutton class="push SizeToParent"  id="EditDictionary" onclick="EditDictionary()" value="&edituserdictionaryButton.label;"/>
-          </td>
-        </tr>
-      </table>
-    </div>
-  </xul:box>
-  <label> &languagePopup.label; </label>
-  <xul:box align="horizontal">
-    <select class="SpellCheckLanguage" id="LanguageList" size="1"  onchange="SelectLanguage()">
+<box align="vertical" debug="true">
+  <html:label for="Word"> &wordEditField.label; </html:label>
+  <box align="horizontal">
+    <html:input type="text" class="SpellCheckWord" id="Word" size="24"/>
+    <spring class="bigspacer"/>
+    <titledbutton class="push SizeToParent" id="CheckWord" onclick="CheckWord()" value="&checkwordButton.label;"/>
+    <spring flex="100%"/>
+  </box>
+  <spring class="spacer"/>
+  <html:label> &suggestions.label; </html:label>
+  <box align="horizontal">
+    <html:select class="SpellCheckList" id="SuggestedList" size="8" onchange="SelectSuggestedWord()"/>
+    <box align="vertical">
+      <box align="horizontal"> 
+        <spring class="bigspacer"/>
+        <titledbutton class="push SizeToParent" flex="100%" id="Ignore" onclick="Ignore()" value="&ignoreButton.label;"/>
+        <spring class="bigspacer"/>
+        <titledbutton class="push SizeToParent" flex="100%" id="IgnoreAll" onclick="IgnoreAll()" value="&ignoreallButton.label;"/>
+      </box>
+      <spring class="bigspacer"/>
+      <box align="horizontal"> 
+        <spring class="bigspacer"/>
+        <titledbutton class="push SizeToParent" flex="100%" id="Replace" onclick="Replace()" value="&changeButton.label;"/>
+        <spring class="bigspacer"/>
+        <titledbutton class="push SizeToParent" flex="100%" id="ReplaceAll" onclick="ReplaceAll()" value="&changeallButton.label;"/>
+      </box>
+      <spring class="bigspacer"/>
+      <box align="horizontal"> 
+        <spring class="bigspacer"/>
+        <html:label> &userDictionary.label; </html:label>
+      </box> 
+      <box align="horizontal"> 
+        <spring class="bigspacer"/>
+        <titledbutton class="push SizeToParent" flex="100%" id="AddToDictionary" onclick="AddToDictionary()" value="&addtouserdictionaryButton.label;"/>
+        <spring class="bigspacer"/>
+        <titledbutton class="push SizeToParent" flex="100%" id="EditDictionary" onclick="EditDictionary()" value="&edituserdictionaryButton.label;"/>
+      </box>
+    </box>
+  </box>
+  <html:label> &languagePopup.label; </html:label>
+  <box align="horizontal">
+    <html:select class="SpellCheckLanguage" id="LanguageList" size="1"  onchange="SelectLanguage()">
       <option> &englishLanguagePopup.value; </option>
-    </select>
-    <xul:spring class="bigspacer"/>
-    <xul:titledbutton class="push SizeToParent"  id="Close" onclick="Close()" value="&closeButton.label;"/>
-    <xul:spring flex="100%"/>
-  </xul:box> 
-</xul:box>
-</xul:window>
+    </html:select>
+    <spring flex="100%"/>
+    <titledbutton class="push SizeToParent"  id="Close" onclick="Close()" value="&closeButton.label;"/>
+    <spring class="bigspacer"/>
+  </box> 
+</box>
+</window>
