@@ -30,7 +30,10 @@ MODULE		= history
 LIBRARY_NAME	= history
 IS_COMPONENT	= 1
 
-CPPSRCS		= nsGlobalHistory.cpp
+CPPSRCS		= nsGlobalHistory.cpp  \
+                  nsSHEntry.cpp        \
+                  nsSHTransaction.cpp   \
+                  $(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
