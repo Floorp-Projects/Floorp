@@ -1,0 +1,137 @@
+[General]
+FONTNAME=MS Sans Serif
+FONTSIZE=8
+CHARSET=0
+;Here is a partial list CHAR_SETS
+;  ANSI_CHARSET = 0
+;  DEFAULT_CHARSET = 1
+;  SYMBOL_CHARSET = 2
+;  SHIFTJIS_CHARSET = 128
+;  GB2312_CHARSET = 134
+;  HANGEUL_CHARSET = 129
+;  CHINESEBIG5_CHARSET = 136
+;  OEM_CHARSET 255
+
+OK_=&OK
+OK=OK
+CANCEL=Cancel
+CANCEL_=&Cancel
+NEXT_=&Next >
+BACK_=< &Back
+IGNORE_=&Ignore
+PROXY_MESSAGE=To configure a Proxy server for this download, click the Connection... button. 
+PROXY_BUTTON=&Connection...
+PROXYSETTINGS=Proxy Settings:
+PROXYSETTINGS_=&Proxy Settings
+SERVER=Server:
+PORT=Port:
+USERID=User id:
+PASSWORD=Password:
+SELECTDIRECTORY=Select a directory
+DIRECTORIES_=&Directories:
+DRIVES_=Dri&ves:
+STATUS=Remaining:
+FILE=File:
+URL=URL:
+TO=To Path:
+ACCEPT_=&Accept
+DECLINE_=&Decline
+PROGRAMFOLDER_=&Program Folder:
+EXISTINGFOLDERS_=E&xisting Folders:
+SETUPMESSAGE=Setup has finished copying files to your computer.  Before you can use $ProductNameInternal$, you must restart Windows or your computer. Choose one of the following options and click OK to finish setup.
+RESTART=Restart
+YESRESTART=Yes, I want to restart my computer now.
+NORESTART=No, I will restart my computer later.
+ADDITIONALCOMPONENTS_=&Additional Components:
+DESCRIPTION=Description
+TOTALDOWNLOADSIZE=Total download size:
+SPACEAVAILABLE=Space Available:
+COMPONENTS_=C&omponents:
+BROWSEINFO=Choose a Folder to install $ProductName$ into:
+DESTINATIONDIRECTORY=Install Folder
+BROWSE_=B&rowse...
+DOWNLOADSIZE=Download Size: %u KB
+CURRENTSETTINGS=Current Settings:
+INSTALLFOLDER=...to the following location:
+ADDTLCOMPWRAPPER=- %s
+PRIMCOMPOTHERS=%s, and:
+PRIMCOMPNOOTHERS=%s
+INSTALL_=&Install
+DELETE_=&Delete
+CONTINUE_=&Continue
+SKIP_=&Skip
+README=Re&ad Me
+PAUSE_=&Pause
+RESUME_=&Resume
+CHECKED=Checked
+UNCHECKED=Unchecked
+
+EXTRACTING=Extracting...
+
+
+[Messages]
+
+ERROR_DIALOG_CREATE=Could not create %s dialog.
+ERROR_FAILED=%s failed.
+ERROR_FILE_NOT_FOUND=File not found: %s
+ERROR_GET_SYSTEM_DIRECTORY_FAILED=GetSystemDirectory() failed.
+ERROR_GET_WINDOWS_DIRECTORY_FAILED =GetWindowsDirectory() failed.
+DLGQUITTITLE=Exit Setup
+DLGQUITMSG=You have not finished installing $ProductName$. If you exit Setup now, $ProductName$ will not be installed. Are you sure you want to cancel Setup?
+DLG_REBOOT_TITLE=Restarting Windows
+ERROR_GETPROCADDRESS=GetProcAddress() of %s failed.
+ERROR_WRITEPRIVATEPROFILESTRING=WritePrivateProfileString() failed for file %s
+MSG_RETRIEVE_CONFIGINI=Please wait while Setup retrieves its configuration script from the web... 
+ERROR_CREATE_TEMP_DIR=Setup was unable to create the TEMP directory: %s
+DLGBROWSETITLE=Select a directory
+ERROR_DETERMINING_DISK_SPACE=Could not determine available disk space for: %s
+DLG_DISK_SPACE_CHECK_TITLE=Disk space check
+DLG_DISK_SPACE_CHECK_CRUTIAL_MSG=Setup has detected insufficient disk space to continue with installation on %s for the path: %sRequired: %sAvailable: %sClick Retry if more disk space has been made available, or click Cancel to cancel Setup.
+DLG_DISK_SPACE_CHECK_MSG=Setup has detected insufficient disk space to continue with installation process on %s for the path: %sRequired: %sAvailable: %sClick OK to go back and choose a different destination path.
+ERROR_CREATE_DIRECTORY=Could not create folder: %sMake sure you have access to create the folder.
+ERROR_MESSAGE_TITLE=$ProductNameInternal$ Setup Error
+STR_FILE_NUMBER=File count:
+STR_FILENAME=Filename:
+MSG_SMARTUPDATE_START=Preparing Install, please wait...
+MSG_CONFIGURING=Configuring %s, please wait...
+ERROR_XPI_INSTALL=Error occurred during installation
+ERROR_SETUP_REQUIREMENT=$ProductName$ can only run on Windows 95 or newer. Setup will now exit. 
+DLG_EXTRACTING_TITLE=$ProductName$ Setup - Install Progress
+STR_PROCESSINGFILE=Preparing file: %s
+STR_INSTALLING=Currently installing %s
+STR_COPYINGFILE=Copying file: %s
+MB_WARNING_STR=Warning
+MB_MESSAGE_STR=Message
+MB_ATTENTION_STR=Attention
+MSG_CREATE_DIRECTORY=The following directory does not exist:%sWould you like to create it?
+STR_CREATE_DIRECTORY=Create Directory?
+ERROR_PROGRAM_FOLDER_NAME=Invalid Program folder name entered.
+CB_DEFAULT=Default
+ERROR_DESTINATION_PATH=Invalid path entered.
+STR_SETUP_TYPE=Setup Type:
+STR_SELECTED_COMPONENTS=Selected Components:
+STR_DESTINATION_DIRECTORY=Destination Directory:
+STR_PROGRAM_FOLDER=Program Folder:
+STR_DELETING_DESTINATION_DIR=Deleting destination directory to be able to upgrade, please wait...
+STR_SETUP=Setup
+STR_DOWNLOAD_SITE=Download Site:
+STR_SAVE_INSTALLER_FILES=Save downloaded and Setup program files to:
+MSG_INIT_SETUP=Initializing Setup, please wait...
+STR_MESSAGEBOX_TITLE=%s Setup
+ERROR_GETVERSION=GetVersionEx() failed!
+DLG_USAGE_TITLE=Usage
+
+STATUS_EXTRACTING=Extracting %s
+STATUS_LAUNCHING_SETUP=Launching Setup...
+ERROR_FILE_WRITE=Unable to write file %s
+TITLE=Installation
+ERROR_OUT_OF_MEMORY=Out of memory!
+
+ERROR_DLL_LOAD=Could not load %s
+ERROR_STRING_LOAD=Could not load string resource ID %d
+ERROR_STRING_NULL=Null pointer encountered.
+ERROR_GLOBALALLOC=Memory allocation error.
+MSG_FORCE_QUIT_PROCESS=Setup has detected that %s (%s) is still running.  Click OK to quit %s and proceed with installation. Alternatively, use the Windows Task Manager to quit %s, and then click OK to continue with installation.
+MSG_FORCE_QUIT_PROCESS_FAILED=Setup will now exit. Setup could not continue because %s (%s) is still running. Try manually quitting %s using Windows Task Manager, and then run Setup again.
+ERROR_PATH_WITHIN_WINDIR=$ProductName$ cannot be installed into a folder that is inside the Windows folder. Please choose a different folder.
+
