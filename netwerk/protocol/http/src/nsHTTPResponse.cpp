@@ -28,6 +28,9 @@
 
 nsHTTPResponse::nsHTTPResponse(nsIHTTPConnection* i_pCon, nsIInputStream* i_InputStream):
     m_pConn(dont_QueryInterface(i_pCon)),
+    m_pArray(new nsVoidArray()),
+    mRefCnt(0),
+    m_pStatusString(0),
     m_pInputStream(i_InputStream)
 {
 }
@@ -37,6 +40,12 @@ nsHTTPResponse::~nsHTTPResponse()
     // m_pConn is released by nsCOMPtr.
     if (m_pStatusString)
         delete[] m_pStatusString;
+    if (m_pArray)
+    {
+        delete m_pArray;
+        m_pArray = 0;
+    }
+
 }
 
 NS_IMPL_ADDREF(nsHTTPResponse);
@@ -433,10 +442,12 @@ nsHTTPResponse::SetHeader(const char* i_Header, const char* i_Value)
 NS_METHOD
 nsHTTPResponse::SetHeaderInternal(const char* i_Header, const char* i_Value)
 {
+    NS_ASSERTION(m_pArray, "Ooops! array vanished!");
     if (i_Value)
     {
         //The tempValue gets copied so we can do away with it...
         nsString tempValue(i_Value);
+        tempValue.Trim(" \r\n");
         nsHeaderPair* pair = new nsHeaderPair(i_Header, &tempValue);
         if (pair)
         {
@@ -459,13 +470,13 @@ nsHTTPResponse::GetHeader(const char* i_Header, const char* *o_Value) const
     // TODO 
     // Common out the headerpair array functionality from 
     // request and put it in a class
-
+    nsIAtom* iAtom = NS_NewAtom(i_Header);
     if (m_pArray && (0< m_pArray->Count()))
     {
         for (PRInt32 i = m_pArray->Count() - 1; i >= 0; --i) 
         {
             nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
-            if ((element->atom == NS_NewAtom(i_Header)) && o_Value)
+            if ((element->atom == iAtom) && o_Value)
             {
                 *o_Value = (element->value) ? element->value->ToNewCString() : nsnull;
                 return NS_OK;

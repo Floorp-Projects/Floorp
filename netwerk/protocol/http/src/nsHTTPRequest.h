@@ -29,7 +29,6 @@ class nsVoidArray;
 class nsIByteBufferInputStream;
 class nsITransport;
 class nsHTTPConnection;
-
 /* 
     The nsHTTPRequest class is the request object created for each HTTP 
     request before the connection. A request object may be cloned and 

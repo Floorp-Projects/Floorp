@@ -94,9 +94,9 @@ nsHTTPConnection::GetInputStream(nsIInputStream* *o_Stream)
 {
     if (!m_bConnected)
         Open();
-    // How do I block here? 
     if (m_pResponse)
         return m_pResponse->GetInputStream(o_Stream);
+    NS_ERROR("No response!");
     return NS_OK; // change to error ? or block till response is set up?
 
 }
@@ -224,6 +224,7 @@ nsHTTPConnection::Open(void)
 
         m_State = HS_WAITING_FOR_RESPONSE;
         m_bConnected = PR_TRUE;
+        NS_RELEASE(temp);
     }
     else
         NS_ERROR("Failed to create/get a transport!");
@@ -241,18 +242,14 @@ nsHTTPConnection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     
     static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-    if (aIID.Equals(nsIProtocolConnection::GetIID())) {
-        *aInstancePtr = (void*) ((nsIProtocolConnection*)this);
+    if (aIID.Equals(nsIProtocolConnection::GetIID()) ||
+        aIID.Equals(kISupportsIID)) {
+        *aInstancePtr = NS_STATIC_CAST(nsIProtocolConnection*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
     if (aIID.Equals(nsIHTTPConnection::GetIID())) {
-        *aInstancePtr = (void*) ((nsIHTTPConnection*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)(nsIProtocolConnection*)this);
+        *aInstancePtr = NS_STATIC_CAST(nsIHTTPConnection*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
