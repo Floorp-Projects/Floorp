@@ -163,6 +163,7 @@ NS_IMETHODIMP nsFontRetrieverService::Advance()
   return NS_ERROR_FAILURE;
 }
 
+//----------------------------------------------------------
 static int CALLBACK MyEnumFontFamProc(ENUMLOGFONT FAR *lpelf, 
                                       NEWTEXTMETRIC FAR *lpntm, 
                                       unsigned long fontType, 
@@ -320,3 +321,26 @@ NS_IMETHODIMP nsFontRetrieverService::LoadFontList()
   return NS_OK;
 
 } 
+
+//----------------------------------------------------------
+NS_IMETHODIMP nsFontRetrieverService::IsFontScalable( const nsString * aFontName, PRBool* aResult )
+{
+  PRBool found = PR_FALSE;
+  Reset();
+  do {
+    nsAutoString name;
+    Get(&name);
+    if (name.Equals(*aFontName)) {
+      found = PR_TRUE;
+      break;
+    }
+  } while (Advance() == NS_OK);
+
+  if (found) {
+    FontInfo * fontInfo = (FontInfo *)mFontList->ElementAt(mNameIterInx);
+    *aResult = fontInfo->mIsScalable;
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
