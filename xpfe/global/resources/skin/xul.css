@@ -1113,6 +1113,12 @@ titledbutton.twisty
   visibility: hidden;
 }
 
+treecell > .tree-button {
+ margin: 0px;
+ padding: 0px;
+ border: none;
+ width: 100%;
+}
 
 treeitem > treerow > treecell > titledbutton.twisty {
  vertical-align: bottom;
