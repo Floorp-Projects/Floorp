@@ -738,15 +738,25 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
                           const char *filename, uintN lineno,
                           jsval *rval)
 {
+    uint32 flags;
     JSScript *script;
     JSBool ok;
 
+    /*
+     * XXX Hack around ancient compiler API to propagate the JSFRAME_SPECIAL
+     * flags to the code generator (see js_EmitTree's TOK_SEMI case).
+     */
+    flags = fp->flags;
+    fp->flags |= JSFRAME_DEBUGGER | JSFRAME_EVAL;
     script = JS_CompileUCScriptForPrincipals(cx, fp->scopeChain,
-                                             fp->script ? fp->script->principals
+                                             fp->script
+                                             ? fp->script->principals
                                              : NULL,
                                              bytes, length, filename, lineno);
+    fp->flags = flags;
     if (!script)
         return JS_FALSE;
+
     ok = js_Execute(cx, fp->scopeChain, script, fp,
                     JSFRAME_DEBUGGER | JSFRAME_EVAL, rval);
     js_DestroyScript(cx, script);
