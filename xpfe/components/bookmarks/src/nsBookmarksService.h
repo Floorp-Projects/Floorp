@@ -34,6 +34,8 @@
 #include "nsIBookmarksService.h"
 #include "nsString.h"
 #include "nsIFileSpec.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 #ifdef	DEBUG
 #ifdef	XP_MAC
@@ -45,7 +47,9 @@ class nsBookmarksService : public nsIBookmarksService,
 			   public nsIRDFDataSource,
 			   public nsIRDFRemoteDataSource,
 			   public nsIStreamListener,
-			   public nsIRDFObserver
+			   public nsIRDFObserver,
+			   public nsIObserver,
+			   public nsSupportsWeakReference
 {
 protected:
 	nsIRDFDataSource*		mInner;
@@ -99,6 +103,9 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 
 	// nsIStreamListener methods:
 	NS_DECL_NSISTREAMLISTENER
+
+	// nsIObserver methods:
+	NS_DECL_NSIOBSERVER
 
 public:
 	nsBookmarksService();

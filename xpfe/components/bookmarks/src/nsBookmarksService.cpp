@@ -37,7 +37,8 @@
 #include "nsFileStream.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIProfile.h"
+#include "nsIProfileChangeStatus.h"
+#include "nsIObserverService.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIRDFService.h"
@@ -1683,6 +1684,14 @@ nsBookmarksService::Init()
 		}
 	}
 
+    // Register as an observer of profile changes
+    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    NS_ASSERTION(observerService, "Could not get observer service.");
+    if (observerService) {
+        observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
+        observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
+    }
+
 	// read in bookmarks AFTER trying to get string bundle
 	rv = ReadBookmarks();
 	if (NS_FAILED(rv))	return(rv);
@@ -2477,6 +2486,27 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 	return(NS_OK);
 }
 
+// nsIObserver methods
+
+NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+  nsresult rv = NS_OK;
+
+  if (!nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC))
+  {
+    // The profile has not changed yet.
+    rv = Flush();
+  }    
+  else if (!nsCRT::strcmp(aTopic, PROFILE_DO_CHANGE_TOPIC))
+  {
+    // The profile has aleady changed.
+    rv = ReadBookmarks();
+  }
+
+  return rv;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_ADDREF(nsBookmarksService);
@@ -2507,13 +2537,15 @@ nsBookmarksService::Release()
 
 
 
-NS_IMPL_QUERY_INTERFACE6(nsBookmarksService, 
+NS_IMPL_QUERY_INTERFACE8(nsBookmarksService, 
 			 nsIBookmarksService,
 			 nsIRDFDataSource,
 			 nsIRDFRemoteDataSource,
 			 nsIRDFObserver,
 			 nsIStreamListener,
-			 nsIStreamObserver)
+			 nsIStreamObserver,
+			 nsIObserver,
+			 nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////
 // nsIBookmarksService
