@@ -1777,7 +1777,12 @@ PRIVATE net_number_of_proto_impls = 0;
 /* registers a protocol impelementation for a particular url_type
  * see NET_URL_Type() for types
  */
-void NET_RegisterProtocolImplementation(NET_ProtoImpl *impl, int for_url_type)
+#ifdef MODULAR_NETLIB
+PR_IMPLEMENT(void)
+#else
+void
+#endif /* MODULAR_NETLIB */
+ NET_RegisterProtocolImplementation(NET_ProtoImpl *impl, int for_url_type)
 {
 
 	if(!impl || for_url_type < 0 || for_url_type > LAST_URL_TYPE)

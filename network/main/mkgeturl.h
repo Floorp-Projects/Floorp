@@ -121,7 +121,12 @@ extern char * NET_FindProxyHostForUrl(int urltype, char *urladdress);
 /* registers a protocol impelementation for a particular url_type
  * see NET_URL_Type() for types
  */
-extern void NET_RegisterProtocolImplementation(NET_ProtoImpl *impl, int for_url_type);
+#ifdef MODULAR_NETLIB
+PR_EXTERN(void) 
+#else
+extern void
+#endif /* MODULAR_NETLIB */
+NET_RegisterProtocolImplementation(NET_ProtoImpl *impl, int for_url_type);
 
 PR_END_EXTERN_C
 #endif /* not MKGetURL_H */
