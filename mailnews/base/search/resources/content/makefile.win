@@ -26,7 +26,6 @@ CHROME_CONTENT_DIR = messenger\content
 
 CHROME_CONTENT = \
 	.\SearchDialog.xul \
-	.\SearchOptions.xul \
 	.\SearchDialog.js \
 	.\searchTermOverlay.js \
 	.\searchTermOverlay.xul \

@@ -31,7 +31,6 @@ CHROME_CONTENT_DIR = messenger/content
 
 CHROME_CONTENT = \
 		SearchDialog.xul \
-		SearchOptions.xul \
 		SearchDialog.js \
 		FilterListDialog.xul \
 		FilterListDialog.js \

@@ -26,7 +26,6 @@ CHROME_L10N_DIR = messenger\locale
 
 CHROME_L10N = \
 	.\SearchDialog.dtd \
-	.\SearchOptions.dtd \
 	.\FilterListDialog.dtd \
 	.\FilterEditor.dtd \
 	.\search-attributes.properties \
