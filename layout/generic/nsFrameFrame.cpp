@@ -212,7 +212,7 @@ nsHTMLFrameOuterFrame::GetBorderWidth(nsIPresContext& aPresContext)
 {
   if (IsInline()) {
     nsIFrame* firstChild = mFrames.FirstChild();
-    if (nsnull != FirstChild) {
+    if (nsnull != firstChild) {
       if (eFrameborder_No != ((nsHTMLFrameInnerFrame*)firstChild)->GetFrameBorder(eCompatibility_Standard)) {
         const nsStyleSpacing* spacing =
           (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
