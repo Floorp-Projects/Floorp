@@ -838,15 +838,17 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
     nsIMAPNamespace *ns = nsnull;
     rv = hostSessionList->GetNamespaceForMailboxForHost(serverKey,
       onlineMailboxName, ns); 
+    if (!ns)
+       hostSessionList->GetDefaultNamespaceOfTypeForHost(serverKey, kPersonalNamespace, ns);
     
     if (PL_strcasecmp(onlineMailboxName, "INBOX"))
     {
       NS_ASSERTION(ns, "couldn't find namespace for host");
-      if (ns && (PL_strlen(ns->GetPrefix()) != 0) && PL_strcmp(ns->GetPrefix(), onlineDir))
+      nsCAutoString onlineDirWithDelimiter(onlineDir);
+      // make sure the onlineDir ends with the hierarchy delimiter
+      if (ns)
       {
-        // Make sure onlineDir have the namespace delimiter
         char delimiter = ns->GetDelimiter();
-        nsCAutoString onlineDirWithDelimiter(onlineDir);
         if ( delimiter && delimiter != kOnlineHierarchySeparatorUnknown )
         {
           // try to change the canonical online dir name to real dir name first
@@ -855,10 +857,11 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
           if ( onlineDirWithDelimiter.Last() != delimiter )
             onlineDirWithDelimiter += delimiter;
           if ( !*onlineMailboxName )
-            onlineDirWithDelimiter.SetLength(
-            onlineDirWithDelimiter.Length()-1);
+            onlineDirWithDelimiter.SetLength(onlineDirWithDelimiter.Length()-1);
         }
-      
+      }
+      if (ns && (PL_strlen(ns->GetPrefix()) != 0) && !onlineDirWithDelimiter.Equals(ns->GetPrefix()))
+      {
         // The namespace for this mailbox is the root ("").
         // Prepend the online server directory
         int finalLen = onlineDirWithDelimiter.Length() +
@@ -871,12 +874,12 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
         }
       }
       // just prepend the online server directory if it doesn't start with it already
-      else if (strncmp(onlineMailboxName, onlineDir, strlen(onlineDir)))
+      else if (strncmp(onlineMailboxName, onlineDirWithDelimiter.get(), onlineDirWithDelimiter.Length()))
       {
-        newOnlineName = (char *)PR_Malloc(strlen(onlineMailboxName) + strlen(onlineDir) + 1);
+        newOnlineName = (char *)PR_Malloc(strlen(onlineMailboxName) + onlineDirWithDelimiter.Length() + 1);
         if (newOnlineName)
         {
-          PL_strcpy(newOnlineName, onlineDir);
+          PL_strcpy(newOnlineName, onlineDirWithDelimiter.get());
           PL_strcat(newOnlineName, onlineMailboxName);
         }
       }
