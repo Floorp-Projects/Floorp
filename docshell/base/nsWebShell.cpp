@@ -208,6 +208,9 @@ nsWebShell::nsWebShell()
 {
   NS_INIT_REFCNT();
   mHistoryIndex = -1;
+
+  mScriptGlobal = nsnull;
+  mScriptContext = nsnull;
 }
 
 nsWebShell::~nsWebShell()
@@ -221,6 +224,9 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mContentViewer);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mObserver);
+
+  NS_IF_RELEASE(mScriptGlobal);
+  NS_IF_RELEASE(mScriptContext);
 
   // Release references on our children
   ReleaseChildren();
@@ -1070,7 +1076,9 @@ nsWebShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
       return res;
     }
   }
+
   *aGlobal = mScriptGlobal;
+  NS_ADDREF(mScriptGlobal);
 
   return res;
 }
