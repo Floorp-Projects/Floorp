@@ -1,0 +1,537 @@
+#!#perl# #perlflags# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+
+# p4 - simulate the output of the command:
+#		p4 describe -s 567 568 569
+# So that I can debug tinderbox on machines where this
+# program is not installed.
+
+# $Revision: 1.1 $ 
+# $Date: 2003/05/12 13:51:20 $ 
+# $Author: kestes%walrus.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcsim/p4,v $ 
+# $Name:  $ 
+
+                  
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Tinderbox build tool.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@reefedge.com New work.
+#	 kestes@walrus.com Home.
+# Contributor(s): 
+
+
+use Time::Local;
+use Getopt::Long;
+
+
+# the list of types which can appear with a file update
+
+@ACTIONTYPES = qw(add delete edit edit edit edit edit edit edit edit);
+
+# the list of types which can appear with a job update
+
+@STATUSTYPES = qw( *closed* );
+@possible_statustypes = 
+    ( 'new', 'assigned', 'deferred', 'resolved', 'closed' );
+
+# Some of these authors come directly from the Mozilla project, others
+# look like the kind of CVS users I see on the projects I work on.
+
+@AUTHORS = qw( 
+	       bob@my_workspace steve@ProjectWorkSpace 
+	       joe@tmp alice@elm_ws 
+	       john jane sue
+	       ) ;
+
+# A list of typical file names.
+
+@BASENAMES = (
+	      'download.html',
+	      'nsLocalFileOS2.cpp',
+	      'nsLocalFileOS2.h',
+	      'Makefile.in',
+	      '.cvsignore',
+	      'configure',
+	      'rel_notes.txt',
+	      'configure.in',
+	      'file with spaces',
+	      );
+
+# Names of directories
+
+@DIRNAMES = qw(
+	       //mozilla/webtools
+	       //mozilla/webtools/tinderbox2
+	       //mozilla/webtools/tinderbox2/src
+	       //mozilla/webtools/tinderbox2/src/lib
+	       //mozilla/webtools/tinderbox2/src/bin
+	       //mozilla/webtools/tinderbox2/src/man
+	       );
+
+@JOBNAMES = qw( 
+		extraspacesinactions 
+		multipletargetactions 
+		recursiveontarget 
+		);
+
+
+@CHANGESET_COMMENTS = 
+    (
+
+     "\tIntegration of the Jam mainline into my branch\n",
+     
+     "\tFix a misplaced shell quoting operation, simplify the code.\n",
+     
+     
+     "\tConvert to logging using VCP::Logger to reduce stdout/err spew.\n".
+     "\tSimplify & speed up debugging quite a bit.\n".
+     "\tProvide more verbose information in logs.\n".
+     "\tPrint to STDERR progress reports to keep users from wondering\n".
+     "\twhat's going on.\n".
+     "\tBreaks test; halfway through upgrading run3() to an inline\n".
+     "\tfunction for speed and for VCP specific features.\n",
+     
+     "\tAdded copy/paste support in the depot view\n".
+     "\tAdded expand path to depot view\n".
+     "\tAdded bookmarks\n",
+     
+     "\tMake destinations call back to sources to check out files to\n".
+     "\tsimplify the architecture (is_metadata_only() no longer needed)\n".
+     "\tand make it more optimizable (checkouts can be batched).\n",
+     
+     "\tFinally fixed the stupid wrapping problem. Turns out there\n".
+     "\tare tabs in the text returned from Perforce.  No problem.\n".
+     "\tBut in NSTextView if a tab occurs beyond the last tab stop\n".
+     "\tthen NSTextView breaks the line.  So no what I want. The fix\n".
+     "\tis to create a bunch of tab stops out to the etherlands.\n".
+     
+     "\tDouble the speed of the RCS file parser.\n".
+     "\tDeprecate VCP::Revs::shift() in favor of remove_all().\n",
+     
+     "\tAdded double click support to the depot view and pending changelist\n".
+     "\tview.  Added View File In Editor item on the pending changeist context\n".
+     "\tmenu.\n",
+     
+     "\tMade multiple selection smarter by operating on the entire selection\n".
+     "\tas an atomic operation with the server. Also partially fixed the read\n".
+     "\tonly window to not wrap at the window boundary.  I did the same for\n".
+     "\tthe editable window, but now the problem appears to be that p4 change\n".
+     "\t-o is breaking its output at some character location before the string\n".
+     "\tgets into the editor (at least I think that is the problem).\n",
+     
+     "\tIntegration from the jam mainline.  Note, many of these are empty\n".
+     "\t  integrations, but I wanted to not leave any pending integrations \n".
+     "\t  into my branch.\n",
+     
+     
+     "\tIntegration from //guest/craig_mcpheeters/work/jam/src/...\n".
+     "\tThis return incorporates all of the Alias|Wavefront extensions to\n".
+     "\t  Jam, into an area which is a proper branch of the Jam mainline.\n".
+     "\t  An integration of these files into the Jam mainline will show all\n".
+     "\t  of the differences.\n".
+     "\tThere are several extensions to Jam in this return.  Look at the\n".
+     "\t  new file Jamfile.config for an explanation of the extensions, and\n".
+     "\t  how to compile them into your own copy of Jam.  If you want to \n".
+     "\t  build a copy of Jam with all of the extensions, do this:\n".
+     "\t    jam -sAllOptions=1\n".
+     "\t  Read the config file for more info.\n".
+     "\tThe extensions range from minor output tweaks and simple fixes to\n".
+     "\t  more major things like a header cache, serialization of output from\n".
+     "\t  multiple jobs, dynamic command block sizing\n".
+     "\tThese are all offered without warranty, etc.\n",
+     
+     );
+
+
+@JOB_COMMENTS = 
+    (
+     
+     "\tRepresentation for different filetypes.\n",
+     
+     "\tRevision expansion - white \"prev\" lines not \n".
+     "\tdrawn for files without integration histories.\n",
+     
+     "\tChange in \"if \$\(VAR\) in v1 v2 v3\" behavior\n",
+     
+     "\tIrrelevant revisions are left lying around - they shouldn't \n".
+     "\tappear at all.\n",
+     
+     "\tMax limit of 130 entities - can this be upped?\n",
+     
+     "\tHighlight the \"main\" line of FileRevs in the revision\n".
+     "\tdisplay.  (Requested at the 2001 Conference.)\n",
+     
+     "\tRemove all tabs from Jam sources?\n",
+     
+     "\tTEMPORARY is broken in stock Jam\n",
+     
+     "\tTOGETHER targets not removed on failure\n",
+     
+     "\tJam reverses slash direction on Windows\n",
+     
+     "\tError in the definition of FIncludes and FDefines for NT and OS2\?\n",
+     
+     "\tAnnoying several-second hangs if the server hasn't been\n".
+     "\taccessed for a while.  To reproduce, leave P4HL running\n".
+     "\twithout input for a few minutes, and then try to get\n".
+     "\t\"p4 info\".\n",
+     
+     "\tIf no depots are explicitly defined, assume that the default depot\n".
+     "\t\"depot\" is, and display it.  Jambase: \"makeString\" rule calls\n".
+     "\tno-longer-existant \"FConcat\"\n",
+     
+     "\tBranching display is arranged oddly for some complex\n".
+     "\tintegration scenarios.  At present, ordering of branches\n".
+     "\tis determined by the last point of integration rather\n".
+     "\tthan by the initial branch point; further, all ancestors\n".
+     "\tof the mainline are put into place before any of the\n".
+     "\tdescendants are.\n",
+     
+     "\tSuperfluous :E in Jambase\n",
+     
+     "\t(P4HL support code) Attempts to store revs even if they can't be\n".
+     "\tindexed by change.  This creates extra bogus FileRevs with a change of\n".
+     "\t\"\" - this only applies to changes submitted by ancient servers (before\n".
+     "\tsubmitted changes were numbered).  In P4HL this is pretty harmless,\n".
+     "\tbut it does lead to creation of extra entities.  In other applications\n".
+     "\tthis could lead to crashes, very hard-to-track down bugs, and me being\n".
+     "\tvery upset at myself when I find out what was causing the problem.\n",
+     
+     
+     "\t".'input:'."\n".
+     "\t".'x = [ MATCH (foo)(.*) : foo ] ;'."\n".
+     "\t".'ECHO -$(x)+ ;'."\n",
+     
+     "\tInstallInto dependency and chmod problems\n",
+     
+     "\tif ( \"\" a b ) returns false; was true in 2.3 \n",
+     
+     "\tSIR: propagate \"unchangedness\" of updated but unchanged targets\n",
+     
+     "\tUnreferenced local variables in jam 2.5 source code:\n",
+     
+     "\tJam and ar archive format issues on AIX 4.3\n",
+     
+     "\t@2826 p4 changes -m10 works okay but p4 -G changes -m10 lists 2826,\n".
+     "\t2825, and 2824.  For whatever reason p4 -G returns fewer than 10\n".
+     "\tchanges.\n",
+     
+     "\tConsider RSS2.0 as default output format\n".
+     "\tc.f. http://backend.userland.com/rss\n",
+     
+     "\ttest of links:  http://cnn.com\n",
+     
+     "\tBefore executing an action with multiple targets, we have to update\n".
+     "\tevery dependants of all targets of the actions. (Not just the\n".
+     "\tdepenants of the target we're currently updating).\n",
+     
+     "\tthis bug is a generalization of the bug submitted by \n".
+     "\thttp://maillist.perforce.com/pipermail/jamming/2001-December/001481.html\n",
+     
+     );
+
+
+
+
+# choose an element of a list at random
+
+sub pickone {
+    my (@list) = @_;
+
+    my ($random_num) = rand scalar(@list);
+    $random_num =~ s/\..*//;
+    my $element = $list[$random_num];
+
+    return $element;
+}
+
+# Given a time in perl time format return a string which looks like a
+# time string cvs would give us.  There are two types of strings
+# returned by different versioni of perl we randomly return a string
+# of either type.
+
+sub time2perforceFormat {
+  # convert time() format to the format which appears in perforce output
+  my ($time) = @_;
+
+  my ($sec,$min,$hour,$mday,$mon,
+      $year,$wday,$yday,$isdst) =
+        localtime($time);
+
+  $mon++;
+  $year += 1900;
+
+  my ($date_str);
+
+  $date_str = sprintf("%04u/%02u/%02u %02u:%02u:%02u",
+		      $year, $mon, $mday, $hour, $min, $sec);
+  return $date_str;
+}
+
+# generate numbers which look like perforce revision numbers.
+
+sub simulate_perforce_version {
+
+    # Most revisions have only one a single digit but there are some
+    # bigger revisions.
+
+    my $type = rand 10;
+    my $num;
+    if ($type >= 5) {
+	$num = rand 10;
+    } else {
+	$num = rand 1000;
+    }
+
+    $num =~ s/\..*//;
+    # do not allow zero to be a version
+    $num ++;
+
+    return $num;
+}
+
+
+sub simulate_perforce_jobnum {
+
+    # some users pick names for jobs mostly jobs are give numbers.
+
+    my $num = rand 10;
+    $num =~ s/\..*//;
+    if ($num == 5) {
+	my $out = pickone(@JOBNAMES);
+	return $out;
+    }
+
+    # Most revisions have only one a single digit but there are some
+    # bigger revisions.
+
+    my $type = rand 10;
+    my $num;
+    if ($type >= 5) {
+	$num = rand 10;
+    } else {
+	$num = rand 1000;
+    }
+
+    $num =~ s/\..*//;
+
+    # do not allow zero to be a version
+    $num ++;
+
+    my $padding_size = 6 - length($num);
+    if ( $padding_size < 0 ) { 
+	$padding_size = 0;
+    }
+    my $padding = '0' x $padding_size;
+    my $out = 'job'.$padding.$num;
+
+    return $out;
+}
+
+
+
+sub parse_args {
+
+# We must be able to simulate the cvs calls which tinderbox makes:
+#   p4 describe -s 1 2 3 4 5 6
+
+    @ORIG_ARGV = @ARGV;
+
+    while (scalar(@ARGV)) {
+	my $arg = shift(@ARGV);
+
+	($arg eq 'describe') &&
+	    next;
+
+	($arg eq '-s') &&
+	    (@CHANGE_NUMBERS =  @ARGV);
+    }
+
+    $TIME_NOW = time();
+
+    scalar(@CHANGE_NUMBERS) || 
+	die ("argument '-s num' is required.\n");
+
+  return 1;
+} # parse_args
+
+
+sub simulate_files {
+
+    # In the simulation we usually have one single checkin but
+    # sometimes we get a bunch of files at the same time.
+
+    my $num = rand 10;
+    $num =~ s/\..*//;
+    # do not allow zero files to be modified
+    $num ++;
+
+    if ($num >= 5) {
+	$num = 1;
+    }
+    
+    if ($num) {
+	print "Affected files ...\n\n";
+	my $elipsis= '...';
+	
+	foreach $i (1 .. $num) {
+	    
+	    my $dirname = pickone(@DIRNAMES);
+	    my $basename = pickone(@BASENAMES);
+	    my $version = simulate_perforce_version();
+	    my $actiontype = pickone(@ACTIONTYPES);
+	    
+	    print "$elipsis $dirname$basename\#$version $actiontype\n";
+	    
+	}
+	print "\n";
+    }
+
+    return ;
+}
+
+
+sub simulate_jobs{
+
+    # In the simulation we usually have no jobs or one single job but
+    # sometimes we get a bunch of files at the same time.
+
+    my $num = rand 20;
+    $num =~ s/\..*//;
+    if( $num >=10 ) {
+	$num = 0;
+    } elsif ($num >= 5) {
+	$num = 1;
+    }
+    
+    if ($num) {
+	print "Jobs fixed ...\n\n";
+	foreach $i (1 .. $num) {
+	    
+	    # The parser ignores the date
+	    my $date = '2003/05/11';
+	    my $jobnum = simulate_perforce_jobnum();
+	    my $author = pickone(@AUTHORS);
+	    my $statustype = pickone(@STATUSTYPES);
+	    my $comment = pickone(@JOB_COMMENTS);
+	    
+	    print "$jobnum on $date by $author $statustype\n";
+	    print "\n$comment\n";
+	}
+    }
+
+    return ;
+}
+
+
+parse_args();
+
+my $time = $DATE;
+
+foreach $CHANGE_NUMBER (@CHANGE_NUMBERS) {
+
+    if( $CHANGE_NUMBER == 0 ) {
+	print STDERR "Invalid changelist number '0'.\n";
+	exit 1;
+    }
+
+
+
+    if (0) {
+	
+	if( $CHANGE_NUMBER == 1 ) {
+	}
+	
+	while ($time < $TIME_NOW) {
+	    
+	    my $next_checkin = rand (60*60*2);
+	    $next_checkin =~ s/\..*//;
+	    
+	    $time += $next_checkin;
+	    
+	}
+    }
+
+
+    my $num = rand 10;
+    $num =~ s/\..*//;
+    if( $num == 5 ) {
+	# simulate being asked for a change list which does not yet exist.
+	
+	print STDERR "$CHANGE_NUMBER - no such changelist.\n";
+	exit 0;
+    }
+    
+    
+    my $author = pickone(@AUTHORS);
+    my $comment = pickone(@CHANGESET_COMMENTS);
+    my $date = '2003/05/11 18:58:44';
+    
+    print "Change $CHANGE_NUMBER by $author on $date\n";
+    print "\n";
+    print "$comment\n";
+    
+    simulate_jobs();
+    simulate_files();
+
+}
+exit 0;
+
+__END__
+
+The new 'p4 logger' command tracks updates to jobs and
+            changelists, enabling external scripting to export such
+            changes.  See 'p4 help logger' for more info.
+
+
+-------------------------------------------------
+
+
+
+kestes@linux:~/p4> p4 describe -s 3
+Change 3 by kestes@testworkspace on 2003/05/11 18:58:44
+
+        test this comment with
+        tabs in it. do tabs
+        work for me?<enter description here>
+
+Jobs fixed ...
+
+job000001 on 2003/05/11 by kestes *closed*
+
+        try a job<enter description here>
+
+job000002 on 2003/05/11 by kesteasdfs *closed*
+
+        you might like a job<enter description here>
+
+job000003 on 2003/05/11 by xxxxxxxxxkestes *closed*
+
+        is this your job?<enter description here>
+
+Affected files ...
+
+... //depot/t1#3 edit
+... //depot/t2#3 edit
+... //depot/t3#3 edit
+
+kestes@linux>
