@@ -32,7 +32,7 @@
 <!ENTITY tableSpacing.label               "Spacing:">
 <!ENTITY tablePadding.label               "Padding:">
 <!ENTITY tablePxBetwCells.label           "pixels between cells">
-<!-- Don't translate <html:br/> -->
+<!-- LOCALIZATION NOTE (tablePxBetwBrdrCellContent.label): Don't translate <html:br/> -->
 <!ENTITY tablePxBetwBrdrCellContent.label "pixels between border<html:br/>and cell content">
 <!ENTITY tableAlignment.label             "Table Alignment:">
 <!ENTITY tableCaption.label               "Caption:">
