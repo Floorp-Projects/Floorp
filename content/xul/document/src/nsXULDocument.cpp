@@ -125,7 +125,9 @@
 #include "nsIPrivateDOMImplementation.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsINodeInfo.h"
+#include "nsIDOMDocumentType.h"
 
+#include "nsIXIFConverter.h"
 //----------------------------------------------------------------------
 //
 // CIDs
@@ -159,6 +161,7 @@ static NS_DEFINE_CID(kXULKeyListenerCID,         NS_XULKEYLISTENER_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 static NS_DEFINE_CID(kXULTemplateBuilderCID,     NS_XULTEMPLATEBUILDER_CID);
 static NS_DEFINE_CID(kDOMImplementationCID,      NS_DOM_IMPLEMENTATION_CID);
+static NS_DEFINE_CID(kXIFConverterCID,           NS_XIFCONVERTER_CID);
 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
@@ -1766,17 +1769,6 @@ nsXULDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aS
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsXULDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
-{
-    return NS_OK;
-}
 
 NS_IMETHODIMP 
 nsXULDocument::FlushPendingNotifications()
@@ -1826,23 +1818,6 @@ nsXULDocument::GetNodeInfoManager(class nsINodeInfoManager *&aNodeInfoManager)
     return NS_OK;
 }
 
-void
-nsXULDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
-{
-    NS_ASSERTION(0,"BeginConvertToXIF");
-}
-
-void
-nsXULDocument::ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
-{
-    NS_ASSERTION(0,"ConvertChildrenToXIF");
-}
-
-void
-nsXULDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
-{
-    NS_ASSERTION(0,"FinishConvertToXIF");
-}
 
 PRBool
 nsXULDocument::IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const
@@ -1881,24 +1856,10 @@ nsXULDocument::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurren
 PRBool
 nsXULDocument::IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const
 {
-    PRBool  result = PR_FALSE;
-
-    if (mSelection != nsnull) {
-#if 0 // XXX can't include this because nsSelectionPoint is in another DLL.
-        nsSelectionRange* range = mSelection->GetRange();
-        if (range != nsnull) {
-            nsSelectionPoint* startPoint = range->GetStartPoint();
-            nsSelectionPoint* endPoint = range->GetEndPoint();
-
-            nsIContent* startContent = startPoint->GetContent();
-            nsIContent* endContent = endPoint->GetContent();
-            result = IsInRange(startContent, endContent, aContent);
-            NS_IF_RELEASE(startContent);
-            NS_IF_RELEASE(endContent);
-        }
-#endif
-    }
-    return result;
+  PRBool aYes = PR_FALSE;
+  nsCOMPtr<nsIDOMNode> node (do_QueryInterface((nsIContent *) aContent));
+  aSelection->ContainsNode(node, PR_FALSE, &aYes);
+  return aYes;
 }
 
 nsIContent*
@@ -2288,6 +2249,8 @@ NS_IMETHODIMP
 nsXULDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 {
     NS_NOTREACHED("nsXULDocument::GetDoctype");
+    NS_ENSURE_ARG_POINTER(aDoctype);
+    *aDoctype = nsnull;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -6174,6 +6137,168 @@ nsXULDocument::ParserObserver::OnStopRequest(nsIChannel* aChannel,
 
     return rv;
 }
+
+
+//XIF ADDITIONS CODE REPLICATION FROM NSDOCUMENT
+
+
+void nsXULDocument::BeginConvertToXIF(nsIXIFConverter *aConverter, nsIDOMNode* aNode)
+{
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  PRBool      isSynthetic = PR_TRUE;
+
+  // Begin Conversion
+  if (content) 
+  {
+    content->IsSynthetic(isSynthetic);
+    if (PR_FALSE == isSynthetic)
+    {
+      content->BeginConvertToXIF(aConverter);
+      content->ConvertContentToXIF(aConverter);
+    }
+  }
+}
+
+void nsXULDocument::ConvertChildrenToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode)
+{
+  // Iterate through the children, convertion child nodes
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMNode> child;
+  result = aNode->GetFirstChild(getter_AddRefs(child));
+    
+  while ((result == NS_OK) && (child != nsnull))
+  { 
+    nsCOMPtr<nsIDOMNode> temp(child);
+    result=ToXIF(aConverter,child);    
+    result = temp->GetNextSibling(getter_AddRefs(child));
+  }
+}
+
+void nsXULDocument::FinishConvertToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode)
+{
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  PRBool      isSynthetic = PR_TRUE;
+
+  if (content) 
+  {
+    content->IsSynthetic(isSynthetic);
+    if (PR_FALSE == isSynthetic)
+      content->FinishConvertToXIF(aConverter);
+  }
+}
+
+
+NS_IMETHODIMP
+nsXULDocument::ToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode)
+{
+  nsresult result=NS_OK;
+  nsCOMPtr<nsIDOMSelection> sel;
+  aConverter->GetSelection(getter_AddRefs(sel));
+  if (sel)
+  {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+
+    if (NS_SUCCEEDED(result) && content)
+    {
+      PRBool  isInSelection = IsInSelection(sel,content);
+
+      if (isInSelection == PR_TRUE)
+      {
+        BeginConvertToXIF(aConverter,aNode);
+        ConvertChildrenToXIF(aConverter,aNode);
+        FinishConvertToXIF(aConverter,aNode);
+      }
+      else
+      {
+        ConvertChildrenToXIF(aConverter,aNode);
+      }
+    }
+  }
+  else
+  {
+    BeginConvertToXIF(aConverter,aNode);
+    ConvertChildrenToXIF(aConverter,aNode);
+    FinishConvertToXIF(aConverter,aNode);
+  }
+  return result;
+} 
+
+NS_IMETHODIMP
+nsXULDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
+{
+  nsresult result=NS_OK;
+
+  nsCOMPtr<nsIXIFConverter> converter;
+  nsresult res = nsComponentManager::CreateInstance(kXIFConverterCID,
+                           nsnull,
+                           NS_GET_IID(nsIXIFConverter),
+                           getter_AddRefs(converter));
+  NS_ENSURE_TRUE(converter,NS_ERROR_FAILURE);
+  converter->Init(aBuffer);
+
+  converter->SetSelection(aSelection);
+
+  converter->AddStartTag( NS_ConvertToString("section") , PR_TRUE); 
+  converter->AddStartTag( NS_ConvertToString("section_head") , PR_TRUE);
+
+  converter->BeginStartTag( NS_ConvertToString("document_info") );
+  converter->AddAttribute(NS_ConvertToString("charset"),mCharSetID);
+/*  nsCOMPtr<nsIURI> uri (getter_AddRefs(GetDocumentURL()));
+  if (uri)
+  {
+    char* spec = 0;
+    if (NS_SUCCEEDED(uri->GetSpec(&spec)) && spec)
+    {
+      converter->AddAttribute(NS_ConvertToString("uri"), NS_ConvertToString(spec));
+      Recycle(spec);
+    }
+  }*/
+  converter->FinishStartTag(NS_ConvertToString("document_info"),PR_TRUE,PR_TRUE);
+
+  converter->AddEndTag(NS_ConvertToString("section_head"), PR_TRUE, PR_TRUE);
+  converter->AddStartTag(NS_ConvertToString("section_body"), PR_TRUE);
+//HACKHACKHACK DOCTYPE NOT DONE FOR XULDOCUMENTS>ASSIGN IN HTML
+  nsString hack;
+  hack.AssignWithConversion("DOCTYTPE html PUBLIC \"-//w3c//dtd html 4.0 transitional//en\"");
+  converter->AddMarkupDeclaration(hack);
+  
+  nsCOMPtr<nsIDOMDocumentType> doctype;
+//if we have a selection to iterate find the root of the selection.
+  nsCOMPtr<nsIDOMElement> rootElement;
+  if (aSelection)
+  {
+    PRInt32 rangeCount;
+    if (NS_SUCCEEDED(aSelection->GetRangeCount(&rangeCount)) && rangeCount == 1) //getter_AddRefs(node));
+    {
+      nsCOMPtr<nsIDOMNode> anchor;
+      nsCOMPtr<nsIDOMNode> focus;
+      if (NS_SUCCEEDED(aSelection->GetAnchorNode(getter_AddRefs(anchor))))
+      {
+        if (NS_SUCCEEDED(aSelection->GetFocusNode(getter_AddRefs(focus))))
+        {
+          if (focus.get() == anchor.get())
+            rootElement = do_QueryInterface(focus);//set root to top of selection
+          if (!rootElement)//maybe its a text node since both are the same. both parents are the same. pick one
+          {
+            nsCOMPtr<nsIDOMNode> parent;
+            anchor->GetParentNode(getter_AddRefs(parent));
+            rootElement = do_QueryInterface(parent);//set root to top of selection
+          }
+        }
+      }
+    }
+  }
+  if (!rootElement)
+    result=GetDocumentElement(getter_AddRefs(rootElement));
+  if (NS_SUCCEEDED(result) && rootElement)
+  {  
+    result=ToXIF(converter,rootElement);
+  }
+  converter->AddEndTag(NS_ConvertToString("section_body"), PR_TRUE, PR_TRUE);
+  converter->AddEndTag(NS_ConvertToString("section"), PR_TRUE, PR_TRUE);
+  return result;
+}
+
 
 //----------------------------------------------------------------------
 //

@@ -255,7 +255,7 @@ public:
 
     NS_IMETHOD CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection);
 
-    NS_IMETHOD ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+    NS_IMETHOD ToXIF(nsIXIFConverter *aConverter, nsIDOMNode* aNode);
 
     NS_IMETHOD FlushPendingNotifications();
 
@@ -265,11 +265,11 @@ public:
 
     NS_IMETHOD GetNodeInfoManager(class nsINodeInfoManager *&aNodeInfoManager);
 
-    virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+    virtual void BeginConvertToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode);
 
-    virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+    virtual void ConvertChildrenToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode);
 
-    virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+    virtual void FinishConvertToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode);
 
     virtual PRBool IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const;
 
