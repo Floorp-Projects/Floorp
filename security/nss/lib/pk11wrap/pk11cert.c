@@ -3918,6 +3918,9 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
     rwsession = PK11_GetRWSession(slot);
     if (rwsession == CK_INVALID_SESSION) {
 	PORT_SetError(SEC_ERROR_READ_ONLY);
+	if (free_slot) {
+	    PK11_FreeSlot(free_slot);
+	}
 	return SECFailure;
     }
 
