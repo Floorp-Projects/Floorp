@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.24 2001/09/18 01:59:18 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.25 2001/09/20 21:26:40 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -3222,7 +3222,7 @@ sendDHClientKeyExchange(sslSocket * ss, SECKEYPublicKey * svrPubKey)
     PRBool              isTLS;
     CK_MECHANISM_TYPE	target;
 
-    DHParams		dhParam;		/* DH parameters */
+    SECKEYDHParams	dhParam;		/* DH parameters */
     SECKEYPublicKey	*pubKey = NULL;		/* Ephemeral DH key */
     SECKEYPrivateKey	*privKey = NULL;	/* Ephemeral DH key */
 
