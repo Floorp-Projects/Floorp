@@ -6,8 +6,8 @@
 # URL.
 
 
-# $Revision: 1.11 $ 
-# $Date: 2000/11/28 17:53:24 $ 
+# $Revision: 1.12 $ 
+# $Date: 2001/01/04 00:20:26 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
@@ -241,8 +241,8 @@ sub write_update_record {
 
   $update_file = main::extract_filename_chars($update_file);
 
-  mkdir_R("$TINDERBOX_DATA_DIR/$tree/db", 0777);
-  mkdir_R("$TINDERBOX_DATA_DIR/$tree/h", 0777);
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/db");
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/h");
 
   Persistence::save_structure( 
                               \%data,

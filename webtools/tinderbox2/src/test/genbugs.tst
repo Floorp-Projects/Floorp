@@ -5,8 +5,8 @@
 # current time.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2000/11/28 17:53:06 $ 
+# $Revision: 1.5 $ 
+# $Date: 2001/01/04 00:19:53 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbugs.tst,v $ 
 # $Name:  $ 
@@ -104,8 +104,8 @@ $TINDERBOX_DATA_DIR = ( $TinderConfig::TINDERBOX_DATA_DIR ||
 foreach $tree (@TREES) {
 
 
-  mkdir_R("$TINDERBOX_DATA_DIR/$tree/db", 0777);
-  mkdir_R("$TINDERBOX_DATA_DIR/$tree/h", 0777);
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/db");
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/h");
       
   my ($timenow) = time();
 
