@@ -1175,7 +1175,9 @@ nsHTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
 
   nsCOMPtr<nsIDOMNode> node;
 
-  for (PRUint32 i = aStartIndex; (aForward ? i < numOptions : i != -1); i += (aForward ? 1 : -1)) {
+  for (PRInt32 i = aStartIndex;
+       (aForward ? i < (PRInt32)numOptions : i != -1);
+       i += (aForward ? 1 : -1)) {
     rv = Item(i, getter_AddRefs(node));
     if (NS_SUCCEEDED(rv) && node) {
       nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(node));
@@ -1950,9 +1952,8 @@ nsHTMLSelectElement::SaveState()
       PRBool isSelected;
       option->GetSelected(&isSelected);
       if (isSelected) {
-        nsCOMPtr<nsIOptionElement> optionElem = do_QueryInterface(option);
         nsAutoString value;
-        optionElem->GetValueOrText(value);
+        option->GetValue(value);
         state->mValues.Put(value);
       }
     }
@@ -2024,9 +2025,8 @@ nsHTMLSelectElement::RestoreStateTo(nsSelectState* aNewSelected)
     nsCOMPtr<nsIDOMHTMLOptionElement> option;
     mOptions->ItemAsOption(i, getter_AddRefs(option));
     if (option) {
-      nsCOMPtr<nsIOptionElement> optionElem = do_QueryInterface(option);
       nsAutoString value;
-      optionElem->GetValueOrText(value);
+      option->GetValue(value);
       if (aNewSelected->mValues.Contains(value)) {
         SetOptionsSelectedByIndex(i, i, PR_TRUE, PR_FALSE, PR_TRUE, PR_TRUE, nsnull);
       }
@@ -2146,11 +2146,11 @@ nsHTMLSelectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
       continue;
     }
 
-    nsCOMPtr<nsIOptionElement> optionElement = do_QueryInterface(option);
+    nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = do_QueryInterface(option);
     NS_ENSURE_TRUE(optionElement, NS_ERROR_UNEXPECTED);
 
     nsAutoString value;
-    rv = optionElement->GetValueOrText(value);
+    rv = optionElement->GetValue(value);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aFormSubmission->AddNameValuePair(this, name, value);
