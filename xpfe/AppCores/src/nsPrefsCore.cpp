@@ -618,7 +618,6 @@ NS_IMETHODIMP nsPrefsCore::ShowWindow(nsIDOMWindow* aCurrentFrontWin)
 {
     // (code adapted from nsToolkitCore::ShowModal. yeesh.)
     nsresult           rv;
-    nsString           controllerCID;
     nsIAppShellService *appShell;
     nsIWebShellWindow  *window;
 
@@ -638,12 +637,9 @@ NS_IMETHODIMP nsPrefsCore::ShowWindow(nsIDOMWindow* aCurrentFrontWin)
     //nsIXULWindowCallbacks *cb = new nsFindDialogCallbacks( aURL, aContentType );
     nsIXULWindowCallbacks *cb = nsnull;
 
-    // hardwired temporary hack.  See nsAppRunner.cpp at main()
-    controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aCurrentFrontWin, &parent);
-    appShell->CreateDialogWindow(parent, urlObj, controllerCID, window,
+    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
                                  nsnull, cb, 504, 436);
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
