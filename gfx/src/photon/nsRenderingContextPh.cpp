@@ -1000,6 +1000,7 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord a
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   SELECT(mSurface);
   PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_FILL_STROKE );
+//  PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_FILL );
 
   return NS_OK;
 }
@@ -1013,19 +1014,31 @@ nsRenderingContextPh :: InvertRect(const nsRect& aRect)
   return NS_OK;
 }
 
+// kedl,july 21, 1999
+// looks like we crashe on test12 when u try to select; but so does linux
+// and windows rips on test12.... yippeeeee; otherwise we look great!
 NS_IMETHODIMP 
 nsRenderingContextPh :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-int oldcolor;
-
 //	NS_NOTYETIMPLEMENTED("nsRenderingContextPh::InvertRect");
-  printf ("invert rect: %d %d %d %d\n",aX,aY,aWidth,aHeight);
 
-  oldcolor=PgSetFillColor(Pg_INVERT_COLOR);
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  SELECT(mSurface);
+//  printf ("invert rect: %d %d %d %d\n",x,y,w,h);
+
+  PgSetFillColor(Pg_INVERT_COLOR);
   PgSetDrawMode(Pg_DRAWMODE_XOR);
-  FillRect( aX, aY, aWidth, aHeight );
+  PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_FILL );
   PgSetDrawMode(Pg_DRAWMODE_OPAQUE);
-  PgSetFillColor(oldcolor);
+
+//good  mSurface->XOR(x,y,w,h);
 
   return NS_OK;
 }

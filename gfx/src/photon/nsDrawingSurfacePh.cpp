@@ -184,6 +184,30 @@ for (y=0;y<dim.h;y++)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDrawingSurfacePh :: XOR(PRInt32 aX, PRInt32 aY,
+                                          PRUint32 aWidth, PRUint32 aHeight)
+{
+//printf ("XOR: %d, %d %d %d %d\n",mIsOffscreen,aX,aY,aWidth,aHeight);
+
+int x;
+int y;
+unsigned char *ptr;
+
+PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
+ptr = mPixmap->image;
+
+for (y=aY;y<aY+aHeight;y++)
+{
+  for (x=aX;x<aX+aWidth;x++)
+  {
+	ptr[3*x+0+(y*mPixmap->bpl)]^=255;
+	ptr[3*x+1+(y*mPixmap->bpl)]^=255;
+	ptr[3*x+2+(y*mPixmap->bpl)]^=255;
+  }
+}
+  return NS_OK;
+}
+
 extern void *Mask;
 NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
 {
@@ -340,6 +364,7 @@ PhGC_t *gc=PgGetGC();
 
   if (mholdGC==nsnull) mholdGC = mGC;
 
+
   if (gc==mGC)
   {
     //printf ("don't set gc\n");
@@ -350,6 +375,7 @@ PhGC_t *gc=PgGetGC();
     if (mIsOffscreen)
     {
       //printf ("going offscreen: %p\n",mGC); fflush(stdout);
+      PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
       PmMemStart( (PmMemoryContext_t *) mGC);
 //      PgSetRegion(mGC->rid);
     }
