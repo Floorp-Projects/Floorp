@@ -119,7 +119,7 @@ public:
      */
     nsXPIDLString() : mBuf(0), mBufOwner(PR_FALSE) {}
 
-    virtual ~nsXPIDLString();
+    ~nsXPIDLString();
 
     /**
      * Return a reference to the immutable Unicode string.
@@ -262,7 +262,7 @@ public:
      */
     nsXPIDLCString() : mBuf(0), mBufOwner(PR_FALSE) {}
 
-    virtual ~nsXPIDLCString();
+    ~nsXPIDLCString();
 
     /**
      * Assign a single-byte string to this wrapper. Copies
