@@ -106,7 +106,7 @@ protected:
     char    mName[MAXREGPATHLEN]; // The name of the current key which is in mNext
     REGENUM mEnum;  // Corresponding libreg "enumerator".
     REGENUM mNext;  // Lookahead value.
-    uint32  mStyle; // Style (indicates all or some);
+    PRUint32  mStyle; // Style (indicates all or some);
     PRBool  mDone;  // Done flag.
 #ifdef EXTRA_THREADSAFE
     PRLock *mregLock;
@@ -250,7 +250,7 @@ static nsresult regerr2nsresult( REGERR err ) {
 | This utility function converts the type field in the REGINFO structure to    |
 | the corresponding nsIRegistry::DataType value.                              |
 ------------------------------------------------------------------------------*/
-static void reginfo2DataType( const REGINFO &in, uint32 &out ) {
+static void reginfo2DataType( const REGINFO &in, PRUint32 &out ) {
     // Transfer information, based on entry type.
     switch( in.entryType ) {
         case REGTYPE_ENTRY_STRING_UTF:
@@ -261,7 +261,7 @@ static void reginfo2DataType( const REGINFO &in, uint32 &out ) {
         case REGTYPE_ENTRY_INT32_ARRAY:
             out = nsIRegistry::Int32;
             // Convert length in bytes to array dimension.
-            //out.length = in.entryLength / sizeof(int32);
+            //out.length = in.entryLength / sizeof(PRInt32);
             break;
 
         case REGTYPE_ENTRY_BYTES:
@@ -278,9 +278,9 @@ static void reginfo2DataType( const REGINFO &in, uint32 &out ) {
 
 /*----------------------------- reginfo2DataType -------------------------------
 | This utility function converts the length field in the REGINFO structure to  |
-| the proper units (if type==Int32 array, we divide by sizeof(int32)).         |
+| the proper units (if type==Int32 array, we divide by sizeof(PRInt32)).         |
 ------------------------------------------------------------------------------*/
-static void reginfo2Length( const REGINFO &in, uint32 &out ) {
+static void reginfo2Length( const REGINFO &in, PRUint32 &out ) {
     // Transfer information, based on entry type.
     switch( in.entryType ) {
         case REGTYPE_ENTRY_STRING_UTF:
@@ -289,7 +289,7 @@ static void reginfo2Length( const REGINFO &in, uint32 &out ) {
 
         case REGTYPE_ENTRY_INT32_ARRAY:
             // Convert length in bytes to array dimension.
-            out = in.entryLength / sizeof(int32);
+            out = in.entryLength / sizeof(PRInt32);
             break;
 
         case REGTYPE_ENTRY_BYTES:
@@ -509,7 +509,7 @@ NS_IMETHODIMP nsRegistry::GetString( nsRegistryKey baseKey, const char *path, ch
     if ( err == REGERR_OK )
     {
         // Allocate buffer for return value
-        uint32 vallen = PL_strlen(regStr);
+        PRUint32 vallen = PL_strlen(regStr);
         *result = (char*)PR_Malloc( vallen + 1 );
         if (*result)
             PL_strcpy(*result, regStr);
@@ -519,7 +519,7 @@ NS_IMETHODIMP nsRegistry::GetString( nsRegistryKey baseKey, const char *path, ch
     else if ( err == REGERR_BUFTOOSMALL ) 
     {
         // find the real size and malloc it
-        uint32 length;
+        PRUint32 length;
         rv = GetValueLength( baseKey, path, &length );
         // See if that worked.
         if( rv == NS_OK ) 
@@ -570,21 +570,21 @@ NS_IMETHODIMP nsRegistry::SetString( nsRegistryKey baseKey, const char *path, co
 }
 
 /*---------------------------- nsRegistry::GetInt ------------------------------
-| This function is just shorthand for fetching a 1-element int32 array.  We    |
+| This function is just shorthand for fetching a 1-element PRInt32 array.  We  |
 | implement it "manually" using NR_RegGetEntry                                 |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetInt( nsRegistryKey baseKey, const char *path, int32 *result ) {
+NS_IMETHODIMP nsRegistry::GetInt( nsRegistryKey baseKey, const char *path, PRInt32 *result ) {
     nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
 
     // Make sure caller gave us place for result.
     if( result ) {
         // Get info about the requested entry.
-        uint32 type;
+        PRUint32 type;
         rv = GetValueType( baseKey, path, &type );
         // See if that worked.
         if( rv == NS_OK ) {
-            // Make sure the entry is an int32 array.
+            // Make sure the entry is an PRInt32 array.
             if( type == Int32 ) {
                 uint32 len = sizeof *result;
                 // Get int from registry into result field.
@@ -605,9 +605,9 @@ NS_IMETHODIMP nsRegistry::GetInt( nsRegistryKey baseKey, const char *path, int32
 }
 
 /*---------------------------- nsRegistry::SetInt ------------------------------
-| Write out the value as a one-element int32 array, using NR_RegSetEntry.      |
+| Write out the value as a one-element PRInt32 array, using NR_RegSetEntry.      |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::SetInt( nsRegistryKey baseKey, const char *path, int32 value ) {
+NS_IMETHODIMP nsRegistry::SetInt( nsRegistryKey baseKey, const char *path, PRInt32 value ) {
     REGERR err = REGERR_OK;
     // Set the contents.
     PR_Lock(mregLock);
@@ -808,10 +808,10 @@ NS_IMETHODIMP nsRegistry::EnumerateAllSubtrees( nsRegistryKey baseKey, nsIEnumer
 
 /*------------------------- nsRegistry::GetValueType ---------------------------
 | Gets the type from the registry using the NR_GetEntryInfo libreg API.        |
-| The result is transferred to the uint32 value passed in (with conversion     |
+| The result is transferred to the PRUint32 value passed in (with conversion     |
 | to the appropriate nsIRegistry::DataType value).                             |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetValueType( nsRegistryKey baseKey, const char *path, uint32 *result ) {
+NS_IMETHODIMP nsRegistry::GetValueType( nsRegistryKey baseKey, const char *path, PRUint32 *result ) {
     nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
     // Make sure we have a place to put the result.
@@ -837,7 +837,7 @@ NS_IMETHODIMP nsRegistry::GetValueType( nsRegistryKey baseKey, const char *path,
 | Gets the registry value info via NR_RegGetEntryInfo.  The length is          |
 | converted to the proper "units" via reginfo2Length.                          |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetValueLength( nsRegistryKey baseKey, const char *path, uint32 *result ) {
+NS_IMETHODIMP nsRegistry::GetValueLength( nsRegistryKey baseKey, const char *path, PRUint32 *result ) {
     nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
     // Make sure we have a place to put the result.
@@ -1091,7 +1091,7 @@ nsRegValueEnumerator::CurrentItem( nsISupports **result ) {
 NS_IMETHODIMP nsRegValueEnumerator::advance() {
     REGERR err = REGERR_OK;
     char name[MAXREGNAMELEN];
-    uint32 len = sizeof name;
+    PRUint32 len = sizeof name;
     REGINFO info = { sizeof info, 0, 0 };
     PR_Lock(mregLock);
     err = NR_RegEnumEntries( mReg, mKey, &mNext, name, len, &info );
@@ -1232,7 +1232,7 @@ NS_IMETHODIMP nsRegistryValue::GetType( PRUint32 *result ) {
 | getInfo.  We calculate the result by converting the REGINFO type field to    |
 | a nsIRegistry::DataType value (using reginfo2Length).                        |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistryValue::GetLength( uint32 *result ) {
+NS_IMETHODIMP nsRegistryValue::GetLength( PRUint32 *result ) {
     nsresult rv = NS_OK;
     // Make sure we have room for th result.
     if( result ) {
