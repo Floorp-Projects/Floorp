@@ -68,7 +68,8 @@
 /* :before and :after pseudoclasses form the decorations around nicknames.     */
 .msg-user:before,
 .msg-user:after {
-    font: 10pt courier;
+    font-size: 100%;
+    font-family: monospace;
     font-weight: bolder;
 }
 

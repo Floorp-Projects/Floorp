@@ -153,7 +153,6 @@
 
 body.chatzilla-body {               /* The topmost container in the ChatZilla */
     margin: 0px 0px 0px 0px;        /* output window. */
-    font: 10pt lucida, sans-serif;
 }
 
 /* links */
@@ -168,11 +167,11 @@ a.chatzilla-link:hover {
 
 /* basic styles */
 .chatzilla-highlight[name="Large"] {
-    font-size: 12pt;
+    font-size: larger;
 }
 
 .chatzilla-highlight[name="Small"] {
-    font-size: 8pt;
+    font-size: smaller;
 }
 
 .chatzilla-highlight[name="Bold text"],
@@ -398,7 +397,6 @@ a.chatzilla-link:hover {
 
 .msg {                                      /* .msg = a single message in the */
     width: 100%;                            /* output window                  */
-    font-size: 10pt;
 }
 
 .msg-timestamp {                            /* .msg-timestamp = timestamp for */
@@ -409,7 +407,7 @@ a.chatzilla-link:hover {
 
 .msg-type {                                 /* .msg-type = message type       */
     font-variant: small-caps;               /* indicator                      */
-    font-size: 9pt;
+    font-size: 90%;
     padding-right: 10px;
     text-align: right;
     vertical-align: top;
@@ -448,7 +446,7 @@ a.chatzilla-link:hover {
 .msg-data[msg-type="372"],                   /* MOTD                          */
 .msg-data[msg-type="EVAL-IN"],               /* /eval results                 */
 .msg-data[msg-type="EVAL-OUT"] {
-    font-size: 9pt;
+    font-size: 90%;
     font-family: monospace;
 }
 
