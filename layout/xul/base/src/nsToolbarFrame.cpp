@@ -292,7 +292,8 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
     mContent->ChildCount(numChildren);
     if ( numChildren ) {
       aRenderingContext.SetColor(color);
-      aRenderingContext.DrawLine(mXDropLoc, 0, mXDropLoc, mRect.height);
+      nsRect dividingLine ( mXDropLoc, 0, 40, mRect.height );
+      aRenderingContext.FillRect(dividingLine);
     }
     else
       aRenderingContext.DrawRect ( mRect );
