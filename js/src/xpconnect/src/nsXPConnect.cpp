@@ -176,19 +176,23 @@ nsXPConnect::nsXPConnect()
 
 nsXPConnect::~nsXPConnect()
 {
-    // Calling this Cleanup *before* doing the ShutDown stuff below is 
-    // fairly aggressive. There is some danger that we could get into trouble
-    // With reentrancy into the xpconnect runtime as we are in the process of
-    // kiling it. But, this seems to be working. This call could be moved lower
-    // in this dtor (or commented out!) if problems develop.
-    xpcPerThreadData::CleanupAllThreads();
-  
     NS_IF_RELEASE(mArbitraryScriptable);
     NS_IF_RELEASE(mInterfaceInfoManager);
     NS_IF_RELEASE(mContextStack);
     NS_IF_RELEASE(mDefaultSecurityManager);
 
     nsXPCWrappedNativeScope::SystemIsBeingShutDown();
+
+    // Unfortunately calling CleanupAllThreads before the stuff above
+    // (esp. SystemIsBeingShutDown) causes too many bad things to happen 
+    // as the Release calls propagate. See the comment in this function in 
+    // revision 1.35 of this file.
+    //
+    // I filed a bug on xpcom regarding the bad things that happen
+    // if people try to create components during shutdown. 
+    // http://bugzilla.mozilla.org/show_bug.cgi?id=37058
+    //
+    xpcPerThreadData::CleanupAllThreads();
 
     if(mThrower)
         delete mThrower;
