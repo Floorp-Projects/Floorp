@@ -1,45 +1,55 @@
-<?xml version="1.0"?>
-
 <!-- These strings are generic to all or most of the editor's dialogs. -->
 <!-- They should be moved into a "common" file -->
-
 <!ENTITY OKButton.label "OK">
 <!ENTITY CancelButton.label "Cancel">
-<!ENTITY pixels.label "pixels">
+<!ENTITY AdvancedEditButton.label "Advanced Edit...">
 
 <!-- This button is for the progressive disclosure of additional editing functionality -->
-<!-- THIS TEXT WILL CHANGE DYNAMICALLY, SO VALUES SHOULD BE IN Edidtor.properties STRING BUNDLE FILE -->
-<!ENTITY MoreOrLessButton.label "More">
+<!-- THIS TEXT WILL CHANGE DYNAMICALLY, SO VALUES SHOULD BE IN Editor.properties STRING BUNDLE FILE -->
+<!ENTITY MoreButton.label "More">
+<!ENTITY FewerButton.label "Fewer">
 
 <!-- These strings are for use specifically in the editor's image dialog. -->
 
+<!ENTITY pixelsPopup.value "pixels">
+<!ENTITY percentPopup.value "percent">
+
 <!-- These are in the location fieldset. -->
-<!ENTITY ImageLocationFieldset.label "Image Information">
-<!ENTITY ImageLocationEditField.label "Enter a remote URL or local file:">
-<!ENTITY ImageChooseFileButton.label "Choose File...">
-<!ENTITY ImageAlternateText.label "Alternative Text">
+<!ENTITY locationFieldset.label "Image Information">
+<!ENTITY locationEditField.label "Image URL">
+<!ENTITY altTextEditField.label "Alternative Text">
+<!ENTITY chooseButton.label "Choose File...">
 
 <!-- These controls are in the Dimensions Fieldset of the expanded area -->
-<!ENTITY ImageDimensionsFieldset.label "Dimensions">
-<!ENTITY ImageOriginalSizeRadio.label "Original Size">
-<!ENTITY ImageCustomSizeRadio.label "Custom Size">
-<!ENTITY ImageWidthEditField.label "Width">
-<!ENTITY ImageHeightEditField.label "Height">
-<!ENTITY ImagePercent.option "percent">
-<!ENTITY ImageConstrain.label "Constrain">
+<!ENTITY dimensionsFieldset.label "Dimensions">
+<!ENTITY originalSizeRadio.label "Original Size">
+<!ENTITY customSizeRadio.label "Custom Size">
+<!ENTITY heightEditField.label "Height">
+<!ENTITY widthEditField.label "Width">
+<!ENTITY constrainCheckbox.label "Constrain">
 
 <!-- These are the options for image alignment -->
-<!ENTITY ImageAlignTop.option "top alignment">
-<!ENTITY ImageAlignCenter.option "center alignment">
-<!ENTITY ImageAlignBottom.option "bottom alignment">
-<!ENTITY ImageAlignAroundLeft.option "left alignment with text wrap around">
-<!ENTITY ImageAlignAroundRight.option "right alignment with text wrap around">
+<!ENTITY alignment.label "Align Text to Image">
+<!ENTITY bottomPopup.value "at the bottom">
+<!ENTITY topPopup.value "at the top">
+<!ENTITY centerPopup.value "in the center">
+<!ENTITY wrapRightPopup.value "wrap around right side">
+<!ENTITY wrapLeftPopup.value "wrap around left side">
+<!ENTITY bottomIcon.url "chrome://editor/skin/images/ED_imgalignbottom.gif">
+<!ENTITY topIcon.url "chrome://editor/skin/images/ED_imgaligntop.gif">
+<!ENTITY centerIcon.url "chrome://editor/skin/images/ED_imgalignmiddle.gif">
+<!ENTITY wrapRightIcon.url "chrome://editor/skin/images/ED_imgalignleft.gif">
+<!ENTITY wrapLeftIcon.url "chrome://editor/skin/images/ED_imgalignright.gif">
 
 <!-- These controls are in the Spacing Fieldset of the expanded area -->
-<!ENTITY ImageSpacingFieldset.label "Spacing">
-<!ENTITY ImageSpacingLeftRight.label "Left and Right">
-<!ENTITY ImageSpacingTopBottom.label "Top and Bottom">
-<!ENTITY ImageSpacingSolidBorder.label "Solid Border">
+<!ENTITY spacingFieldset.label "Spacing">
+<!ENTITY leftRightEditField.label "Left and Right">
+<!ENTITY topBottomEditField.label "Top and Bottom">
+<!ENTITY borderEditField.label "Solid Border">
 
-<!-- These controls will be added -->
-<!ENTITY ImageLeaveAtLocationCheckbox.label "Leave">
+<!-- These controls may be added some day -->
+<!ENTITY leaveAtLocationCheckbox.label "Leave">
+<!ENTITY makePageBackgroundCheckbox.label "Make Page Background">
+<!ENTITY editImageButton.label "Edit Image">
+<!ENTITY removeImageMapButton.label "Remove Image Map">
+<!ENTITY addImageMapButton.label "Add Image Map">
