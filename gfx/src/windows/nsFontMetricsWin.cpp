@@ -274,12 +274,10 @@ nsFontMetricsWin :: GetWidth(const char* aString,
   BOOL status = GetTextExtentPoint32(hdc, aString, aLength, &size);
   ::ReleaseDC(win, hdc);
 
-  float app2dev, dev2twip;
-  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-  mDeviceContext->GetDevUnitsToTwips(dev2twip);
+  float  dev2app;
+  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
 
-  float app2twip = dev2twip * app2dev;
-  aWidth = nscoord(float(size.cx) * dev2twip);
+  aWidth = nscoord(float(size.cx) * dev2app);
   return NS_OK;
 }
 
@@ -308,12 +306,10 @@ nsFontMetricsWin :: GetWidth(const PRUnichar *aString,
   BOOL status = GetTextExtentPoint32W(hdc, aString, aLength, &size);
   ::ReleaseDC(win, hdc);
 
-  float app2dev, dev2twip;
-  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-  mDeviceContext->GetDevUnitsToTwips(dev2twip);
+  float  dev2app;
+  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
 
-  float app2twip = dev2twip * app2dev;
-  aWidth = nscoord(float(size.cx) * dev2twip);
+  aWidth = nscoord(float(size.cx) * dev2app);
   return NS_OK;
 }
 
