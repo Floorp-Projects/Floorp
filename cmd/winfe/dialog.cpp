@@ -55,6 +55,7 @@ CDialogURL::CDialogURL(CWnd* pParent, MWContext * context)
 #ifdef EDITOR
     m_bInitComposerComboBox = FALSE;
 #endif
+    XP_MEMSET(m_pNavTitleList, 0, MAX_HISTORY_LOCATIONS*sizeof(char*));
 }
 
 CDialogURL::~CDialogURL() 
@@ -258,8 +259,6 @@ CComboBox *CDialogURL::GetNavComboBox()
     if( m_bInitNavComboBox )
         return pComboBox;
 
-    XP_MEMSET(m_pNavTitleList, 0, MAX_HISTORY_LOCATIONS*sizeof(char*));
-
     m_bInitNavComboBox = TRUE;
 
     CDC *pDC = pComboBox->GetDC();
@@ -310,7 +309,6 @@ CComboBox *CDialogURL::GetNavComboBox()
 	    }
     }
 
-    iMaxWidth += 4;
     if( pComboBox->GetDroppedWidth() < iMaxWidth )
         pComboBox->SetDroppedWidth(iMaxWidth);
     
