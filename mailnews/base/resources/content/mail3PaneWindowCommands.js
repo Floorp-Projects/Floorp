@@ -915,6 +915,15 @@ function MsgDeleteFolder()
         var specialFolder = GetFolderAttribute(folderTree, folderResource, "SpecialFolder");
         if (specialFolder != "Inbox" && specialFolder != "Trash")
         {
+            var folder = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+            if (folder.flags & MSG_FOLDER_FLAG_VIRTUAL)
+            {
+                if (gCurrentVirtualFolderUri == folderResource.Value)
+                  gCurrentVirtualFolderUri = null;
+                var parentResource = selectedFolder.parent.QueryInterface(Components.interfaces.nsIRDFResource);
+                messenger.DeleteFolders(GetFolderDatasource(), parentResource, folderResource);
+                continue;
+            }
             var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + selectedFolder.server.type].getService(Components.interfaces.nsIMsgProtocolInfo);
 
             // do not allow deletion of special folders on imap accounts

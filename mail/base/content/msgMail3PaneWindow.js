@@ -241,16 +241,29 @@ var folderListener = {
               }
            }
            //folder loading is over, now issue quick search if there is an email address
+//           dump("in folder loaded gVirtualFolderTerms = " + gVirtualFolderTerms + "\n");
            if (gSearchEmailAddress)
            {
              Search(gSearchEmailAddress);
              gSearchEmailAddress = null;
            } 
+           else if (gVirtualFolderTerms)
+           {
+              gDefaultSearchViewTerms = null;
+              ViewChangeByValue(-1); // override current view
+              Search("");
+//              gVirtualFolderTerms = null;
+           }
+           else if (gMsgFolderSelected.flags & MSG_FOLDER_FLAG_VIRTUAL)
+           {
+              gDefaultSearchViewTerms = null;
+           }
            else if (gDefaultSearchViewTerms)
            {
              Search("");
            }
-           else {
+           else
+           {
              ViewChangeByValue(pref.getIntPref("mailnews.view.last"));
            }
          }
@@ -523,20 +536,30 @@ function LoadCurrentlyDisplayedMessage()
 
 function IsCurrentLoadedFolder(folder)
 {
-	var msgfolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-	if(msgfolder)
-	{
-		var folderResource = msgfolder.QueryInterface(Components.interfaces.nsIRDFResource);
-		if(folderResource)
-		{
-			var folderURI = folderResource.Value;
-			var currentLoadedFolder = GetThreadPaneFolder();
-			var currentURI = currentLoadedFolder.URI;
-			return(currentURI == folderURI);
-		}
-	}
+  var msgfolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+  if(msgfolder)
+  {
+    var folderResource = msgfolder.QueryInterface(Components.interfaces.nsIRDFResource);
+    if(folderResource)
+    {
+      var folderURI = folderResource.Value;
+      var currentLoadedFolder = GetThreadPaneFolder();
+      if (currentLoadedFolder.flags & MSG_FOLDER_FLAG_VIRTUAL)
+      {
+        var msgDatabase = currentLoadedFolder.getMsgDatabase(msgWindow);
+        var dbFolderInfo = msgDatabase.dBFolderInfo;
+        var srchFolderUri = dbFolderInfo.getCharPtrProperty("searchFolderUri");
+        var re = new RegExp("^" + folderURI + "$|^" + folderURI + "\||\|" + folderURI + "$|\|" + folderURI +"\|");
+        var retval = (currentLoadedFolder.URI.match(re));
+        return retval;
 
-	return false;
+      }
+      var currentURI = currentLoadedFolder.URI;
+      return(currentURI == folderURI);
+    }
+  }
+
+  return false;
 }
 
 function ServerContainsFolder(server, folder)
@@ -1311,10 +1334,6 @@ function FolderPaneOnClick(event)
     }
     else if (event.detail == 2) {
       FolderPaneDoubleClick(row.value, event);
-    }
-    else if (gDBView && gDBView.viewType == nsMsgViewType.eShowQuickSearchResults)
-    {
-      onClearSearch();
     }
 
 }

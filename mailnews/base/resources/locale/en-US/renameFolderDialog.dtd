@@ -1,3 +1,6 @@
 <!ENTITY renameFolderDialog.title          "Rename Folder">
 <!ENTITY rename.label                      "Enter the new name for your folder:">
 <!ENTITY rename.accesskey                  "E">
+<!ENTITY createVFDialog.title              "Create Virtual Folder">
+<!ENTITY virtualFolder.label               "Enter the name for your virtual folder:">
+<!ENTITY virtualFolder.accesskey           "E">

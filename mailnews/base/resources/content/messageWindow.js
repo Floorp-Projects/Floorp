@@ -208,7 +208,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
     {
       var nextMstKey = gDBView.getKeyAt(gNextMessageViewIndexAfterDelete);
       if (nextMstKey != nsMsgKey_None) {
-        LoadMessageByMsgKey(nextMstKey);
+        LoadMessageByViewIndex(gNextMessageViewIndexAfterDelete);
       }
       else {
         window.close();
@@ -1094,12 +1094,16 @@ function GetDBView()
 
 function LoadMessageByMsgKey(messageKey)
 {
+  gDBView.loadMessageByMsgKey(messageKey);
+ // we only want to update the toolbar if there was no previous selected message.
+  if (nsMsgKey_None == gDBView.keyForFirstSelectedMessage)
+    UpdateMailToolbar("update toolbar for message Window");
+}
+
+function LoadMessageByViewIndex(viewIndex)
+{
+  gDBView.loadMessageByViewIndex(viewIndex);
   // we only want to update the toolbar if there was no previous selected message.
   if (nsMsgKey_None == gDBView.keyForFirstSelectedMessage)
-  {
-    gDBView.loadMessageByMsgKey(messageKey);
     UpdateMailToolbar("update toolbar for message Window");
-  }
-  else
-    gDBView.loadMessageByMsgKey(messageKey);
 }

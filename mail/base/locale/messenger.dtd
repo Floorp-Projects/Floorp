@@ -494,6 +494,7 @@
 <!ENTITY viewPickerAll.label "All">
 <!ENTITY viewPickerUnread.label "Unread">
 <!ENTITY viewPickerCustomView.label "Customize...">
+<!ENTITY viewPickerSaveAsVirtualFolder.label "Save As Virtual Folder">
 <!ENTITY SearchNameOrEmail.label "Name or Email contains:">
 <!ENTITY SearchNameOrEmail.accesskey "N">
 <!ENTITY clearButton.label "Clear">
@@ -503,6 +504,7 @@
 <!ENTITY searchSubjectMenu.label "Subject">
 <!ENTITY searchSenderMenu.label "Sender">
 <!ENTITY searchSubjectOrSenderMenu.label "Subject Or Sender">
+<!ENTITY saveAsVirtualFolderMenu.label "Save as Virtual Folder">
 <!ENTITY searchMessageBody.label "Message Body">
 <!ENTITY findInMessageMenu.label "Find In Message">
 

@@ -551,6 +551,7 @@
 <!ENTITY SearchNameOrEmail.accesskey "N">
 <!ENTITY advancedButton.label "Advanced...">
 <!ENTITY advancedButton.accesskey "A">
+<!ENTITY saveAsVirtualFolderMenu.label "Save as Virtual Folder">
 
 <!ENTITY clearButton.label "Clear">
 <!ENTITY clearButton.accesskey "C">

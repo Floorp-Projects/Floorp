@@ -81,6 +81,7 @@
       <command id="cmd_open" oncommand="goDoCommand('cmd_open')" disabled="true"/>
       <command id="button_delete" oncommand="goDoCommand('button_delete')" disabled="true"/>
       <command id="goto_folder_button" oncommand="goDoCommand('goto_folder_button')" disabled="true"/>
+      <command id="saveas_vf_button" oncommand="goDoCommand('saveas_vf_button')" disabled="false"/>
       <command id="file_message_button"/>
       <command id="cmd_delete"/>
     </commandset>
@@ -207,6 +208,7 @@
 
       <button label="&deleteButton.label;" id="deleteButton" command="button_delete" accesskey="&deleteButton.accesskey;"/>
       <button label="&goToFolderButton.label;" id="goToFolderButton" command="goto_folder_button" accesskey="&goToFolderButton.accesskey;" />
+      <button label="&saveAsVFButton.label;" id="saveAsVFButton" command="saveas_vf_button" accesskey="&saveAsVFButton.accesskey;" />
       <spacer flex="1" />
     </hbox>      
   </vbox>

@@ -177,7 +177,7 @@ function MsgCompactFolder(isAll)
 
 function MsgFolderProperties() 
 {
-	var preselectedURI = GetSelectedFolderURI();
+  var preselectedURI = GetSelectedFolderURI();
   var msgFolder = GetMsgFolderFromUri(preselectedURI, true);
 
   // if a server is selected, view settings for that account
@@ -186,20 +186,26 @@ function MsgFolderProperties()
     return;
   }
 
-	var serverType = msgFolder.server.type;
-	var folderTree = GetFolderTree();
+  var serverType = msgFolder.server.type;
+  var folderTree = GetFolderTree();
 
-	var name = GetFolderNameFromUri(preselectedURI, folderTree);
+  // we'll probably want a new "server type" for virtual folders
+  // that will allow the user to edit the search criteria.
+  // But for now, we'll just disable other properties.
+  if (msgFolder.flags & MSG_FOLDER_FLAG_VIRTUAL)
+    serverType = "none";
 
-	var windowTitle = gMessengerBundle.getString("folderProperties");
-	var dialog = window.openDialog(
-                    "chrome://messenger/content/folderProps.xul",
-                    "",
-                    "chrome,centerscreen,titlebar,modal",
-                    {preselectedURI:preselectedURI, serverType:serverType,
-                    msgWindow:msgWindow, title:windowTitle,
-                    okCallback:FolderProperties, 
-                    tabID:"", tabIndex:0, name:name});
+  var name = GetFolderNameFromUri(preselectedURI, folderTree);
+
+  var windowTitle = gMessengerBundle.getString("folderProperties");
+  var dialog = window.openDialog(
+              "chrome://messenger/content/folderProps.xul",
+              "",
+              "chrome,centerscreen,titlebar,modal",
+              {preselectedURI:preselectedURI, serverType:serverType,
+              msgWindow:msgWindow, title:windowTitle,
+              okCallback:FolderProperties, 
+              tabID:"", tabIndex:0, name:name});
 }
 
 function FolderProperties(name, uri)

@@ -48,7 +48,7 @@
   <hbox id="searchBox">
     <hbox id="viewPickerBox" insertbefore="searchCriteria" align="center">
       <label value="&viewPicker.label;" control="viewPicker"  accesskey="&viewPicker.accesskey;"/>
-      <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this);">
+      <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this, this.value);">
        <menupopup id="viewPickerPopup">
          <menuitem value="0" id="viewPickerAll" label="&viewPickerAll.label;"/>
          <menuitem value="1" id="viewPickerUnread" label="&viewPickerUnread.label;"/>

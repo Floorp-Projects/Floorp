@@ -68,6 +68,8 @@ var gViewSearchListener;
 var gSearchStopButton;
 var gMailSession;
 
+var MSG_FOLDER_FLAG_VIRTUAL = 0x0020;
+
 // Controller object for search results thread pane
 var nsSearchResultsController =
 {
@@ -80,6 +82,7 @@ var nsSearchResultsController =
         case "cmd_open":
         case "file_message_button":
         case "goto_folder_button":
+        case "saveas_vf_button":
             return true;
         default:
             return false;
@@ -105,6 +108,9 @@ var nsSearchResultsController =
             if (GetNumSelectedMessages() <= 0 || isNewsURI(gSearchView.getURIForViewIndex(0)))
               enabled = false;
             break;
+          case "saveas_vf_button":
+              // need someway to see if there are any search criteria...
+              return true;
           default:
             if (GetNumSelectedMessages() <= 0)
               enabled = false;
@@ -133,6 +139,12 @@ var nsSearchResultsController =
             GoToFolder();
             return true;
 
+        case "saveas_vf_button":
+            // prompt for view name - create virtual folder in ok callback.
+          getViewName("search");
+
+
+            return true;
         default:
             return false;
         }
@@ -433,7 +445,7 @@ function AddSubFolders(folder) {
       if (next)
       {
         var nextFolder = next.QueryInterface(Components.interfaces.nsIMsgFolder);
-        if (nextFolder)
+        if (nextFolder && ! (nextFolder.flags & MSG_FOLDER_FLAG_VIRTUAL))
         {
           if (!nextFolder.noSelect)
             gSearchSession.addScopeTerm(GetScopeForFolder(nextFolder), nextFolder);
@@ -450,6 +462,50 @@ function AddSubFolders(folder) {
        }
     }
   }
+}
+
+function AddSubFoldersToURI(folder) 
+{
+  var returnString = "";
+  if (folder.hasSubFolders)
+  {
+    var subFolderEnumerator = folder.GetSubFolders();
+    var done = false;
+    while (!done)
+    {
+      var next = subFolderEnumerator.currentItem();
+      if (next)
+      {
+        var nextFolder = next.QueryInterface(Components.interfaces.nsIMsgFolder);
+        if (nextFolder && ! (nextFolder.flags & MSG_FOLDER_FLAG_VIRTUAL))
+        {
+          if (!nextFolder.noSelect && !nextFolder.isServer)
+          {
+            if (returnString.length > 0)
+              returnString += '|';
+            returnString += nextFolder.URI;
+          }
+          var subFoldersString = AddSubFoldersToURI(nextFolder);
+          if (subFoldersString.length > 0)
+          {
+            if (returnString.length > 0)
+              returnString += '|';
+            returnString += subFoldersString;
+          }
+
+        }
+      }
+      try
+      {
+        subFolderEnumerator.next();
+       }
+       catch (ex)
+       {
+          done = true;
+       }
+    }
+  }
+  return returnString;
 }
 
 
@@ -732,4 +788,42 @@ function BeginDragThreadPane(event)
 {
     // no search pane dnd yet
     return false;
+}
+
+function getViewName(defaultViewName) 
+{
+  var preselectedURI = gCurrentFolder.URI;
+
+  var name = gCurrentFolder.name;
+  name += defaultViewName + "-view";
+  dump("preselectedURI = " + preselectedURI + "\n");
+  searchFolderURIs = preselectedURI;
+
+  var searchSubfolders = document.getElementById("checkSearchSubFolders").checked;
+  if (gCurrentFolder && (searchSubfolders || gCurrentFolder.isServer || gCurrentFolder.noSelect))
+  {
+      var subFolderURIs = AddSubFoldersToURI(gCurrentFolder);
+      if (subFolderURIs.length > 0)
+          searchFolderURIs += '|' + subFolderURIs;
+  }
+
+  dump("search folders = " + searchFolderURIs + "\n");
+
+  // need to calculate the uri string of all the folders
+  // to search over, folder1|folder2|folder3...
+  var dialog = window.openDialog(
+                          "chrome://messenger/content/virtualFolderName.xul",
+                          "newFolder",
+                          "chrome,titlebar,modal",
+                          {siblingFolderURI: preselectedURI, searchFolderURIs: searchFolderURIs,
+                          okCallback: CreateSearchView, name: name});
+}
+
+function CreateSearchView(newName, siblingFolderURI, foldersToSearch)
+{
+  dump ("in create view, new name = " + newName + " orig uri = " + siblingFolderURI + "\n");
+  var siblingFolder = GetResourceFromUri(siblingFolderURI);
+  var siblingMsgFolder = siblingFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+  CreateVirtualFolder(newName, siblingMsgFolder.parent ? siblingMsgFolder.parent : siblingMsgFolder, 
+                      foldersToSearch, gSearchSession.searchTerms);
 }

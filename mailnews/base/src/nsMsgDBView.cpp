@@ -1983,6 +1983,8 @@ NS_IMETHODIMP nsMsgDBView::GetURIForViewIndex(nsMsgViewIndex index, char **resul
     rv = GetFolderForViewIndex(index, getter_AddRefs(folder));
     NS_ENSURE_SUCCESS(rv,rv);
   }
+  if (index == nsMsgViewIndex_None)
+    return NS_MSG_INVALID_DBVIEW_INDEX;
   return GenerateURIForMsgKey(m_keys[index], folder, result);
 }
 

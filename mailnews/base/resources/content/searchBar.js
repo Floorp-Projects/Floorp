@@ -48,6 +48,8 @@ var gSearchInput = null;
 var gClearButton = null;
 var gDefaultSearchViewTerms = null;
 var gQSViewIsDirty = false;
+var gNumTotalMessages;
+var gNumUnreadMessages;
 
 function SetQSStatusText(aNumHits)
 {
@@ -71,6 +73,9 @@ var gSearchNotificationListener =
 {
     onSearchHit: function(header, folder)
     {
+      gNumTotalMessages++;
+      if (!header.isRead)
+        gNumUnreadMessages++;
         // XXX todo
         // update status text?
     },
@@ -81,6 +86,17 @@ var gSearchNotificationListener =
         statusFeedback.showProgress(0);
         gStatusBar.setAttribute("mode","normal");
         gSearchInProgress = false;
+        // ### TODO need to find out if there's quick search within a virtual folder.
+        if (gCurrentVirtualFolderUri && gCurrentVirtualFolderUri != "")
+        {
+          var vFolder = GetMsgFolderFromUri(gCurrentVirtualFolderUri, false);
+          var dbFolderInfo = vFolder.getMsgDatabase(msgWindow).dBFolderInfo;
+          dbFolderInfo.NumUnreadMessages = gNumUnreadMessages;
+          dbFolderInfo.NumMessages = gNumTotalMessages;
+          vFolder.updateSummaryTotals(true); // force update from db.
+          var msgdb = vFolder.getMsgDatabase(msgWindow);
+          msgdb.Commit(MSG_DB_LARGE_COMMIT);
+        }
     },
 
     onNewSearch: function()
@@ -89,6 +105,8 @@ var gSearchNotificationListener =
       statusFeedback.showStatusString(gSearchBundle.getString("searchingMessage"));
       gStatusBar.setAttribute("mode","undetermined");
       gSearchInProgress = true;
+      gNumTotalMessages = 0; 
+      gNumUnreadMessages = 0;
     }
 }
 
@@ -125,12 +143,20 @@ function initializeGlobalListeners()
 
 function createQuickSearchView()
 {
-  if (gDBView.viewType != nsMsgViewType.eShowQuickSearchResults)  //otherwise we are already in quick search view
+  //if not already in quick search view 
+  if (gDBView.viewType != nsMsgViewType.eShowQuickSearchResults)  
   {
     var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);  //clear selection
-    treeView.selection.clearSelection();
+    if (treeView && treeView.selection)
+      treeView.selection.clearSelection();
     gPreQuickSearchView = gDBView;
-    CreateDBView(gDBView.msgFolder, nsMsgViewType.eShowQuickSearchResults, nsMsgViewFlagsType.kNone, gDBView.sortType, gDBView.sortOrder);
+    if (gDBView.viewType == nsMsgViewType.eShowVirtualFolderResults)
+    {
+      // remove the view as a listener on the search results
+      var saveViewSearchListener = gDBView.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
+      gSearchSession.unregisterListener(saveViewSearchListener);
+    }
+    CreateDBView(gDBView.msgFolder, (gXFVirtualFolderTerms) ? nsMsgViewType.eShowVirtualFolderResults : nsMsgViewType.eShowQuickSearchResults, nsMsgViewFlagsType.kNone, gDBView.sortType, gDBView.sortOrder);
   }
 }
 
@@ -158,24 +184,32 @@ function initializeSearchBar()
 
 function onEnterInSearchBar()
 {
-   if (gSearchInput.value == "") 
+//  dump ("onEnterInSearchBar gSearchInput.value = " + gSearchInput.value + " showing criteria = " + gSearchInput.showingSearchCriteria +"\n");
+   if (gSearchInput.value == "" || gSearchInput.showingSearchCriteria) 
    {
-     if (gDBView.viewType == nsMsgViewType.eShowQuickSearchResults)
+     
+     if (gDBView.viewType == nsMsgViewType.eShowQuickSearchResults 
+        || gDBView.viewType == nsMsgViewType.eShowVirtualFolderResults)
      {
        statusFeedback.showStatusString("");
        disableQuickSearchClearButton();
 
-       if (gDefaultSearchViewTerms)
+//       dump ("onEnterInSearchBar gDefaultSearchViewTerms = " + gDefaultSearchViewTerms + "gVirtualFolderTerms = " 
+//        + gVirtualFolderTerms + "gXFVirtualFolderTerms = " + gXFVirtualFolderTerms + "\n");
+       var addTerms = gDefaultSearchViewTerms || gVirtualFolderTerms || gXFVirtualFolderTerms;
+       if (addTerms)
        {
-         if (gQSViewIsDirty)
-         {
+//           dump ("addTerms = " + addTerms + " count = " + addTerms.Count() + "\n");
            initializeSearchBar();
-           onSearch(gDefaultSearchViewTerms);
-         }
+           onSearch(addTerms);
        }
-       else
+       else if (gPreQuickSearchView)
         restorePreSearchView();
      }
+     else if (gPreQuickSearchView && !gDefaultSearchViewTerms)// maybe a quick search from a cross-folder virtual folder
+      restorePreSearchView();
+     
+     gSearchInput.showingSearchCriteria = true;
      
      gQSViewIsDirty = false;
      return;
@@ -183,7 +217,8 @@ function onEnterInSearchBar()
 
    initializeSearchBar();
 
-   gClearButton.setAttribute("disabled", false); //coming into search enable clear button   
+   if (gClearButton)
+    gClearButton.setAttribute("disabled", false); //coming into search enable clear button   
 
    ClearThreadPaneSelection();
    ClearMessagePane();
@@ -215,6 +250,14 @@ function restorePreSearchView()
   if (gPreQuickSearchView)
   {
     gDBView = gPreQuickSearchView;
+    if (gDBView.viewType == nsMsgViewType.eShowVirtualFolderResults)
+    {
+      // readd the view as a listener on the search results
+      var saveViewSearchListener = gDBView.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
+      if (gSearchSession)
+        gSearchSession.registerListener(saveViewSearchListener);
+    }
+//    dump ("view type = " + gDBView.viewType + "\n");
 
     if (sortType != gDBView.sortType || sortOrder != gDBView.sortOrder)
     {
@@ -318,8 +361,25 @@ function createSearchTermsWithList(aTermsArray)
   searchTermsArray.Clear();
 
   var selectedFolder = GetThreadPaneFolder();
-  gSearchSession.addScopeTerm(nsMsgSearchScope.offlineMail, selectedFolder);
-
+  if (gXFVirtualFolderTerms)
+  {
+    var msgDatabase = selectedFolder.getMsgDatabase(msgWindow);
+    if (msgDatabase)
+    {
+      var dbFolderInfo = msgDatabase.dBFolderInfo;
+      var srchFolderUri = dbFolderInfo.getCharPtrProperty("searchFolderUri");
+      var srchFolderUriArray = srchFolderUri.split('|');
+      for (var i in srchFolderUriArray) 
+      {
+        var realFolderRes = GetResourceFromUri(srchFolderUriArray[i]);
+        var realFolder = realFolderRes.QueryInterface(Components.interfaces.nsIMsgFolder);
+        if (!realFolder.isServer)
+          gSearchSession.addScopeTerm(nsMsgSearchScope.offlineMail, realFolder);
+      }
+    }
+  }
+  else
+    gSearchSession.addScopeTerm(nsMsgSearchScope.offlineMail, selectedFolder);
   // add each item in termsArray to the search session
 
   var termsArray = aTermsArray.QueryInterface(Components.interfaces.nsISupportsArray);
@@ -370,13 +430,16 @@ function createSearchTerms()
     searchTermsArray.AppendElement(term);
   }
 
-  // now append the default view criteria to the quick search so we don't lose any default
-  // view information
-  if (gDefaultSearchViewTerms)
+  // now append the default view or virtual folder criteria to the quick search   
+  // so we don't lose any default view information
+//  dump("gDefaultSearchViewTerms = " + gDefaultSearchViewTerms + "gVirtualFolderTerms = " + gVirtualFolderTerms + 
+//    "gXFVirtualFolderTerms = " + gXFVirtualFolderTerms + "\n");
+  var defaultSearchTerms = (gDefaultSearchViewTerms || gVirtualFolderTerms || gXFVirtualFolderTerms);
+  if (defaultSearchTerms)
   {
     var isupports = null;
     var searchTerm; 
-    var termsArray = gDefaultSearchViewTerms.QueryInterface(Components.interfaces.nsISupportsArray);
+    var termsArray = defaultSearchTerms.QueryInterface(Components.interfaces.nsISupportsArray);
     for (i = 0; i < termsArray.Count(); i++)
     {
       isupports = termsArray.GetElementAt(i);
@@ -451,6 +514,10 @@ function ClearQSIfNecessary()
 
 function Search(str)
 {
+//  dump("in Search str = " + str + "gSearchInput.showingSearchCriteria = " + gSearchInput.showingSearchCriteria + "\n");
+  if (gSearchInput.showingSearchCriteria && str != "")
+    return;
+
   GetSearchInput();
 
   if (str != gSearchInput.value)
@@ -459,3 +526,18 @@ function Search(str)
   gSearchInput.value = str;  //on input does not get fired for some reason
   onSearchInput(true);
 }
+
+function saveViewAsVirtualFolder()
+{
+// prompt for view name - create virtual folder in ok callback.
+  getViewName(CreateView, gSearchInput.value);
+}
+
+function CreateView(newName, origFolderURI)
+{
+  var selectedFolder = GetResourceFromUri(origFolderURI);
+  var folderToSearch = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+  CreateVirtualFolder(newName, folderToSearch.parent, origFolderURI, gSearchSession.searchTerms);
+}
+
+

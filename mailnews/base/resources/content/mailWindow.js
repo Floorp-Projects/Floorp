@@ -127,7 +127,6 @@ function OnMailWindowUnload()
 
 
   msgWindow.closeWindow();
-
 }
 
 function CreateMessenger()

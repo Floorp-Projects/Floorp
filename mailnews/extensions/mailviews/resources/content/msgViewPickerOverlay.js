@@ -38,11 +38,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 const kLabelOffset = 1;  // 1=2-1, from msgViewPickerOveraly.xul, <menuitem value="2" id="labelMenuItem1"/>
-const kLastDefaultViewIndex = 8;  // 8, because 7 + 1, <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
-const kCustomItemValue = "7"; // from msgViewPickerOveraly.xul, <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
+const kLastDefaultViewIndex = 9;  // 9, because 8 + 1, <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
+const kCustomItemValue = "8"; // from msgViewPickerOveraly.xul, <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
 
 var gMailViewList = null;
 var gCurrentViewValue = "0"; // initialize to the first view ("All")
+var gCurrentViewLabel = "";
 
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
@@ -50,10 +51,8 @@ var nsMsgSearchOp = Components.interfaces.nsMsgSearchOp;
 
 // when the item in the list box changes....
 
-function viewChange(aMenuList)
+function viewChange(aMenuList, val)
 {
-  var val = aMenuList.value;
-
   if (val == kCustomItemValue) { 
     // restore to the previous view value, in case they cancel
     aMenuList.value = gCurrentViewValue;
@@ -64,10 +63,12 @@ function viewChange(aMenuList)
   // bail out early if the user picked the same view
   if (val == gCurrentViewValue)
     return; 
+  var oldViewValue = gCurrentViewValue;
   gCurrentViewValue = val;
-
   switch (val)
   {
+   case -1:
+   case "-1":
    case "0": // View All
      gDefaultSearchViewTerms = null;
      break;
@@ -81,16 +82,35 @@ function viewChange(aMenuList)
    case "6": // label 5
      ViewLabel(parseInt(val) - kLabelOffset);
      break;
+   case "7": // save view as virtual folder
+     getViewName(CreateVFFromView, gCurrentViewLabel);
+     val = oldViewValue;
+     aMenuList.value = val;
+     break;
    default:
      LoadCustomMailView(parseInt(val) - kLastDefaultViewIndex);
      break;
   } //      
 
   // store this, to persist across sessions
-  gPrefBranch.setIntPref("mailnews.view.last", parseInt(val));
-
+  if (val != "-1" && val != -1)
+  {
+    if (aMenuList.selectedItem)
+      gCurrentViewLabel = aMenuList.selectedItem.label;
+    gPrefBranch.setIntPref("mailnews.view.last", parseInt(val));  
+  }
+  // if we're switching to -1 (virtual folder), don't do a search 
+  if (val != "-1" && val != -1)
+    onEnterInSearchBar();
   gQSViewIsDirty = true;
-  onEnterInSearchBar();
+}
+
+function CreateVFFromView(newName, origFolderURI)
+{
+  var selectedFolder = GetResourceFromUri(origFolderURI);
+  var folderToSearch = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+  CreateVirtualFolder(newName, folderToSearch.parent, origFolderURI, gDefaultSearchViewTerms);
 }
 
 const kLabelPrefs = "mailnews.labels.description.";
@@ -150,37 +170,9 @@ function LoadCustomMailView(index)
 {
   prepareForViewChange();
 
-  var searchTermsArray = gMailViewList.getMailViewAt(index).searchTerms;
-  
-  // create a temporary isupports array to store our search terms
-  // since we will be modifying the terms so they work with quick search
-  // and we don't want to write out the modified terms when we save the custom view
-  // (see bug #189890)
-  var searchTermsArrayForQS = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-  
-  var numEntries = searchTermsArray.Count();
-  for (var i = 0; i < numEntries; i++) {
-    var searchTerm = searchTermsArray.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgSearchTerm); 
-
-    // clone the term, since we might be modifying it
-    var searchTermForQS = gSearchSession.createTerm();
-    searchTermForQS.value = searchTerm.value;
-    searchTermForQS.attrib = searchTerm.attrib;
-    searchTermForQS.op = searchTerm.op;
-
-    // mark the first node as a group
-    if (i == 0)
-      searchTermForQS.beginsGrouping = true;
-    else if (i == numEntries - 1)
-      searchTermForQS.endsGrouping = true;
-
-    // turn the first term to true to work with quick search...
-    searchTermForQS.booleanAnd = i ? searchTerm.booleanAnd : true; 
-    
-    searchTermsArrayForQS.AppendElement(searchTermForQS);
-  }
-
+  var searchTermsArrayForQS = CreateGroupedSearchTerms(gMailViewList.getMailViewAt(index).searchTerms);
   createSearchTermsWithList(searchTermsArrayForQS);
+  AddVirtualFolderTerms(searchTermsArrayForQS);
   gDefaultSearchViewTerms = searchTermsArrayForQS;
 }
 
@@ -234,8 +226,16 @@ function refreshCustomMailViews(aDefaultSelectedIndex)
 function ViewChangeByValue(aValue)
 {
   var viewPicker = document.getElementById('viewPicker');
-  viewPicker.selectedItem = viewPicker.getElementsByAttribute("value", aValue)[0];
-  viewChange(viewPicker);
+  if (aValue == -1)
+  {
+    viewPicker.selectedItem = null;
+    viewChange(viewPicker, -1);
+  }
+  else
+  {
+    viewPicker.selectedItem = viewPicker.getElementsByAttribute("value", aValue)[0];
+    viewChange(viewPicker, viewPicker.value);
+  }
 }
 
 function FillLabelValues()
@@ -253,6 +253,8 @@ function setLabelAttributes(labelID, menuItemID)
 
 function prepareForViewChange()
 {
+  // this is a problem - it saves the current view in gPreQuickSearchView
+  // then we eventually call onEnterInSearchBar, and we think we need to restore the pre search view!
   initializeSearchBar();
   ClearThreadPaneSelection();
   ClearMessagePane();
@@ -275,6 +277,7 @@ function ViewLabel(labelID)
   term.booleanAnd = true;
 
   searchTermsArray.AppendElement(term);
+  AddVirtualFolderTerms(searchTermsArray);
   createSearchTermsWithList(searchTermsArray);
   gDefaultSearchViewTerms = searchTermsArray;
 }
@@ -285,6 +288,7 @@ function ViewNewMail()
 
   // create an i supports array to store our search terms 
   var searchTermsArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+
   var term = gSearchSession.createTerm();
   var value = term.value;
 
@@ -294,10 +298,32 @@ function ViewNewMail()
   term.attrib = nsMsgSearchAttrib.MsgStatus;
   term.op = nsMsgSearchOp.Isnt;
   term.booleanAnd = true;
-
   searchTermsArray.AppendElement(term);
+
+  AddVirtualFolderTerms(searchTermsArray);
+
   createSearchTermsWithList(searchTermsArray);
+  // not quite right - these want to be just the view terms...but it might not matter.
   gDefaultSearchViewTerms = searchTermsArray;
 }
+
+function AddVirtualFolderTerms(searchTermsArray)
+{
+  // add in any virtual folder terms
+  var virtualFolderSearchTerms = (gVirtualFolderTerms || gXFVirtualFolderTerms);
+  if (virtualFolderSearchTerms)
+  {
+    var isupports = null;
+    var searchTerm; 
+    var termsArray = virtualFolderSearchTerms.QueryInterface(Components.interfaces.nsISupportsArray);
+    for (i = 0; i < termsArray.Count(); i++)
+    {
+      isupports = termsArray.GetElementAt(i);
+      searchTerm = isupports.QueryInterface(Components.interfaces.nsIMsgSearchTerm);
+      searchTermsArray.AppendElement(searchTerm);
+    }
+  }
+}
+
 
 window.addEventListener("load", viewPickerOnLoad, false);

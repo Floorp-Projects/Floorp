@@ -42,6 +42,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const MSG_FLAG_READ              = 0x000001;
 const MSG_FLAG_IMAP_DELETED      = 0x200000;
 const MSG_FLAG_MDN_REPORT_NEEDED = 0x400000;
 const MSG_FLAG_MDN_REPORT_SENT   = 0x800000;
@@ -316,7 +317,7 @@ function ViewMessagesBy(id)
 {
   var viewPicker = document.getElementById('viewPicker');
   viewPicker.selectedItem = document.getElementById(id);
-  viewChange(viewPicker);
+  viewChange(viewPicker, viewPicker.value);
 }
 
 function InitMessageMenu()

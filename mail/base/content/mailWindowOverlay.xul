@@ -1832,7 +1832,7 @@
 
 <hbox id="searchBox" persist="collapsed" align="center">
   <label value="&viewPicker.label;" control="viewPicker"  accesskey="&viewPicker.accesskey;"/>
-  <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this);">
+  <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this, this.value);">
     <menupopup id="viewPickerPopup">
       <menuitem value="0" id="viewPickerAll" label="&viewPickerAll.label;"/>
       <menuitem value="1" id="viewPickerUnread" label="&viewPickerUnread.label;"/>
@@ -1842,9 +1842,11 @@
       <menuitem value="4" id="labelMenuItem3"/>
       <menuitem value="5" id="labelMenuItem4"/>
       <menuitem value="6" id="labelMenuItem5"/>
+      <menuseparator/>
+      <menuitem id="saveAsVirtualFolder" value="7" label="&viewPickerSaveAsVirtualFolder.label;"/>
       <menuseparator id="lastDefaultView"/>
       <menuseparator id="createCustomViewSeparator"/>
-      <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
+      <menuitem id="createCustomView" value="8" label="&viewPickerCustomView.label;"/>
     </menupopup>
   </menulist>
   
@@ -1862,7 +1864,10 @@
         <menuitem value="3" label="&searchMessageBody.label;" type="radio" 
                   oncommand="changeQuickSearchMode(this)"/>
         <menuseparator/>
-        <menuitem value="4" label="&findInMessageMenu.label;" type="radio" 
+        <menuitem value="4" label="&saveAsVirtualFolderMenu.label;" 
+                  oncommand="saveViewAsVirtualFolder()"/>
+        <menuseparator/>
+        <menuitem value="5" label="&findInMessageMenu.label;" type="radio" 
                   oncommand="changeQuickSearchMode(this)"/>
       </menupopup>
     </button>

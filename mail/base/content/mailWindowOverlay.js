@@ -24,11 +24,13 @@
 #               Seth Spitzer <sspitzer@netscape.com>
 #               David Bienvenu <bienvenu@netscape.com>
 
+const MSG_FLAG_READ              = 0x000001;
 const MSG_FLAG_IMAP_DELETED      = 0x200000;
 const MSG_FLAG_MDN_REPORT_NEEDED = 0x400000;
 const MSG_FLAG_MDN_REPORT_SENT   = 0x800000;
 const MDN_DISPOSE_TYPE_DISPLAYED = 0;
 const ADDR_DB_LARGE_COMMIT       = 1;
+const MSG_DB_LARGE_COMMIT        = 1;
 
 const kClassicMailLayout = 0;
 const kWideMailLayout = 1;
@@ -336,7 +338,7 @@ function ViewMessagesBy(id)
 {
   var viewPicker = document.getElementById('viewPicker');
   viewPicker.selectedItem = document.getElementById(id);
-  viewChange(viewPicker);
+  viewChange(viewPicker, viewPicker.value);
 }
 
 function InitMessageMenu()
