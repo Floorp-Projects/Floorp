@@ -53,6 +53,7 @@ XPIDLSRCS	= \
 		nsINetPrompt.idl \
 		nsISocketTransport.idl \
 		nsIURLParser.idl \
+		nsIProxy.idl \
 		$(NULL)
 
 EXPORTS		= \

@@ -26,7 +26,6 @@ include <$(DEPTH)/config/config.mak>
 
 EXPORTS =                           \
         netCore.h                   \
-        nsIProxy.h                  \
         nsNetUtil.h                 \
         $(NULL)
 
@@ -53,7 +52,8 @@ XPIDLSRCS =                             \
         .\nsIStreamLoader.idl           \
         .\nsINetPrompt.idl    		\
         .\nsISocketTransport.idl        \
-	.\nsIURLParser.idl              \
+	    .\nsIURLParser.idl              \
+        .\nsIProxy.idl                  \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
