@@ -462,7 +462,8 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll, const char *registryLocatio
             nsCOMPtr<nsIFileSpec> fs;
             res = dll->GetDllSpec(getter_AddRefs(fs));
             if (NS_SUCCEEDED(res))
-                res = mobj->RegisterSelf(mCompMgr, fs, registryLocation);
+                res = mobj->RegisterSelf(mCompMgr, fs, registryLocation,
+                                         nativeComponentType);
             else
                 {
                     PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 

@@ -35,7 +35,8 @@ interface nsIModule : nsISupports
 
     // Component registration
     void RegisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location,
-                      in string registryLocation);
+                      in string registryLocation, in string componentType);
+
     void UnregisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location,
                         in string registryLocation);
 

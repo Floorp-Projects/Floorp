@@ -425,7 +425,8 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
 
     module = ModuleForLocation(registryLocation, component);
 
-    rv = module->RegisterSelf(mCompMgr, component, registryLocation);
+    rv = module->RegisterSelf(mCompMgr, component, registryLocation,
+                              jsComponentTypeName);
     if (NS_FAILED(rv)) {
         fprintf(stderr, "module->RegisterSelf failed(%x)\n", rv);
         goto out;

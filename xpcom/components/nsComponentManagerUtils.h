@@ -176,5 +176,6 @@ extern const char xpcomBaseName[];
 extern const char xpcomKeyName[];
 extern const char lastModValueName[];
 extern const char fileSizeValueName[];
+extern const char nativeComponentType[];
 
 #endif /* nsComponentManagerUtils_h__ */
