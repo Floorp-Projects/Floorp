@@ -218,7 +218,8 @@ protected:
 
 private:
     nsresult DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventType);
-    PRBool   IsMatchingKey(PRUint32 theChar, nsString keyName);
+    inline PRBool   IsMatchingKeyCode(const PRUint32 theChar, const nsString &keyName);
+    inline PRBool   IsMatchingCharCode(const nsString &theChar, const nsString &keyName);
 
     nsIDOMElement* element; // Weak reference. The element will go away first.
     nsIDOMDocument* mDOMDocument; // Weak reference.
@@ -317,183 +318,254 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 
 nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventType)
 {
-  static PRBool executingKeyBind = PR_FALSE;
+	static PRBool executingKeyBind = PR_FALSE;
+	nsresult ret = NS_OK;
+	nsAutoString trueString = "true";
+	nsAutoString falseString = "false";
+
+	if(executingKeyBind)
+		return NS_OK;
+	else 
+		executingKeyBind = PR_TRUE;
+
+	if(!aKeyEvent) {
+		executingKeyBind = PR_FALSE;
+		return ret;
+	}
+
+	if(!mDOMDocument) {
+		executingKeyBind = PR_FALSE;
+		return ret;
+	}
   
-  if(executingKeyBind)
-    return NS_OK;
-  else 
-    executingKeyBind = PR_TRUE;
-  
-  if(aKeyEvent && mDOMDocument) {
-    // Get DOMEvent target
-    nsIDOMNode* target = nsnull;
-    aKeyEvent->GetTarget(&target);
-    
-  nsIDOMUIEvent * theEvent;
-  aKeyEvent->QueryInterface(kIDomUIEventIID, (void**)&theEvent);
-    // Find a keyset node
-    
-    
-    
-  // locate the window element which holds the top level key bindings
-  nsCOMPtr<nsIDOMElement> rootElement;
-  mDOMDocument->GetDocumentElement(getter_AddRefs(rootElement));
-  if (!rootElement) {
-    executingKeyBind = PR_FALSE;
-    return !NS_OK;
-  }
-  nsString rootName;
-  rootElement->GetNodeName(rootName);
-  //printf("Root Node [%s] \n", rootName.ToNewCString()); // this leaks
-  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
-  
-  nsresult rv = NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsIDOMNode> keysetNode;
-  rootNode->GetFirstChild(getter_AddRefs(keysetNode));
-  while (keysetNode) {
-     nsString keysetNodeType;
-     nsCOMPtr<nsIDOMElement> keysetElement(do_QueryInterface(keysetNode));
-     if(!keysetElement) {
-       executingKeyBind = PR_FALSE;
-       return rv;
-     }
+	// Get DOMEvent target
+	nsIDOMNode* target = nsnull;
+	aKeyEvent->GetTarget(&target);
+
+	nsIDOMUIEvent * theEvent;
+	aKeyEvent->QueryInterface(kIDomUIEventIID, (void**)&theEvent);
+	// Find a keyset node
+
+	// locate the window element which holds the top level key bindings
+	nsCOMPtr<nsIDOMElement> rootElement;
+	mDOMDocument->GetDocumentElement(getter_AddRefs(rootElement));
+	if (!rootElement) {
+	  executingKeyBind = PR_FALSE;
+	  return !NS_OK;
+	}
+	
+	nsAutoString rootName;
+	rootElement->GetNodeName(rootName);
+	//printf("Root Node [%s] \n", rootName.ToNewCString()); // this leaks
+	nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
+
+	nsresult rv = NS_ERROR_FAILURE;
+
+	nsCOMPtr<nsIDOMNode> keysetNode;
+	rootNode->GetFirstChild(getter_AddRefs(keysetNode));
+	
+	while (keysetNode) {
+		nsAutoString keysetNodeType;
+		nsCOMPtr<nsIDOMElement> keysetElement(do_QueryInterface(keysetNode));
+		if(!keysetElement) {
+			executingKeyBind = PR_FALSE;
+			return rv;
+		}
        
-     keysetElement->GetNodeName(keysetNodeType);
-	 if (keysetNodeType.Equals("keyset")) {
-	  // Given the DOM node and Key Event
-	  // Walk the node's children looking for 'key' types
-	  
-	  // If the node isn't tagged disabled
-	    // Compares the received key code to found 'key' types
-	    // Executes command if found
-	    // Marks event as consumed
+		keysetElement->GetNodeName(keysetNodeType);
+		if (!keysetNodeType.Equals("keyset")) {
+		  nsCOMPtr<nsIDOMNode> oldkeysetNode(keysetNode);  
+          oldkeysetNode->GetNextSibling(getter_AddRefs(keysetNode));
+		  continue;
+		}
+		// Given the DOM node and Key Event
+		// Walk the node's children looking for 'key' types
+
+		// If the node isn't tagged disabled
+		// Compares the received key code to found 'key' types
+		// Executes command if found
+		// Marks event as consumed
 	    nsCOMPtr<nsIDOMNode> keyNode;
 	    keysetNode->GetFirstChild(getter_AddRefs(keyNode));
 	    while (keyNode) {
-	      nsCOMPtr<nsIDOMElement> keyElement(do_QueryInterface(keyNode));
-		  if (keyElement) {
-		    nsString keyNodeType;
-		    nsString keyName;
-		    nsString disabled;
-		    nsString modCommand;
-		    nsString modControl;
-		    nsString modShift;
-		    nsString modAlt;
-		    nsString cmdToExecute;
-		    keyElement->GetNodeName(keyNodeType);
-		    //printf("keyNodeType [%s] \n", keyNodeType.ToNewCString()); // this leaks
-		    if (keyNodeType.Equals("key")) {
-		      keyElement->GetAttribute(nsAutoString("key"), keyName);
-		      //printf("Found key [%s] \n", keyName.ToNewCString()); // this leaks
-		      keyElement->GetAttribute(nsAutoString("disabled"),        disabled);
-		      if (disabled == "false") {
-	            PRUint32 theChar;
+			nsCOMPtr<nsIDOMElement> keyElement(do_QueryInterface(keyNode));
+			if (!keyElement) {
+			  continue;
+			}
+			
+			nsAutoString property;
+			keyElement->GetNodeName(property);
+			//printf("keyNodeType [%s] \n", keyNodeType.ToNewCString()); // this leaks
+			if (property.Equals("key")) {
+				//printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
+				do {	
+				    property = falseString;	
+		            keyElement->GetAttribute(nsAutoString("disabled"), property);
+					if (property == trueString) {
+					  break;
+					}
+					
+					nsAutoString keyName; // This should be phased out for keycode and charcode
+					keyElement->GetAttribute(nsAutoString("key"), keyName);
+		            //printf("Found key [%s] \n", keyName.ToNewCString()); // this leaks
+		            
+					PRUint32 theChar;
+					nsAutoString code; // either keycode or charcode
+					PRBool   gotCharCode = PR_FALSE;
+					PRBool   gotKeyCode  = PR_FALSE;
+					keyElement->GetAttribute(nsAutoString("charcode"), code);
+					if(code.IsEmpty()) {
+						keyElement->GetAttribute(nsAutoString("keycode"), code);
+                        if(code.IsEmpty()) {
+                          // HACK for temporary compatibility
+                          theEvent->GetKeyCode(&theChar);
+                        } else {
+                          // We want a keycode
+                          theEvent->GetKeyCode(&theChar);
+                          gotKeyCode = PR_TRUE;
+                        }
+					} else {
+					  // We want a charcode
+					  theEvent->GetCharCode(&theChar);
+					  gotCharCode = PR_TRUE;
+					}		
+						
+			        char tempChar[2];
+			        tempChar[0] = theChar;
+			        tempChar[1] = 0;
+			        nsAutoString tempChar2 = tempChar;
+			        //printf("compare key [%s] \n", tempChar2.ToNewCString()); // this leaks
+			        // NOTE - convert theChar and keyName to upper
+			        keyName.ToUpperCase();
+			        tempChar2.ToUpperCase();
+	         
+			        PRBool isMatching;
+			        if(gotCharCode){ 
+		              isMatching = IsMatchingCharCode(tempChar2, code);
+			        } else if(gotKeyCode){
+			          isMatching = IsMatchingKeyCode(theChar, code);
+			        }
+			        
+			        // HACK for backward compatibility
+			        if(!gotCharCode && ! gotKeyCode){
+			          isMatching = IsMatchingCharCode(tempChar2, keyName);
+			        }
+			        
+			        if (!isMatching) {
+			          break;
+			        } 
+				
+				    
+				    PRBool modCommand = PR_FALSE;
+			        PRBool modControl = PR_FALSE;
+			        
+			        property = falseString;
+					keyElement->GetAttribute(nsAutoString("command"), property);
+					if(property == trueString)
+					  modCommand = PR_TRUE;
+					  
+					property = falseString;
+					keyElement->GetAttribute(nsAutoString("control"), property);
+					if(property == trueString)
+					  modControl = PR_TRUE;
+					
+			    #ifdef XP_MAC
+					// Test Command attribute
+					PRBool isCommand = PR_FALSE;
+					theEvent->GetMetaKey(&isCommand);
+					if ((isCommand && (!modCommand)) ||
+					   (!isCommand && (modCommand)))
+					{ 
+					  break;
+					}
+					//printf("Passed command test \n"); // this leaks
 
-				      switch(aEventType) {
-				        case eKeyPress:
-		              theEvent->GetCharCode(&theChar);
-				        break;
-				        case eKeyUp:
-				        case eKeyDown:
-		              theEvent->GetKeyCode(&theChar);
-				        break;
-				      }
-		        
-		        char tempChar[2];
-		        tempChar[0] = theChar;
-		        tempChar[1] = 0;
-		        nsString tempChar2 = tempChar;
-		        //printf("compare key [%s] \n", tempChar2.ToNewCString()); // this leaks
-		         // NOTE - convert theChar and keyName to upper
-		         keyName.ToUpperCase();
-		         tempChar2.ToUpperCase();
-		        //if (tempChar2 == keyName) {
-		        if ( IsMatchingKey(theChar, keyName) ) {
-			      keyElement->GetAttribute(nsAutoString("command"), modCommand);
-			      keyElement->GetAttribute(nsAutoString("control"), modControl);
-			      keyElement->GetAttribute(nsAutoString("shift"),   modShift);
-			      keyElement->GetAttribute(nsAutoString("alt"),     modAlt);
-			      switch(aEventType) {
-			        case eKeyPress:
-			          keyElement->GetAttribute(nsAutoString("onkeypress"), cmdToExecute);
-			        break;
-			        case eKeyDown:
-			          keyElement->GetAttribute(nsAutoString("onkeydown"), cmdToExecute);
-			        break;
-			        case eKeyUp:
-			          keyElement->GetAttribute(nsAutoString("onkeyup"), cmdToExecute);
-			        break;
-			      }
-			      
-			      
-			      //printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
-		          do {
-		          #ifdef XP_MAC
-		            // Test Command attribute
-		            PRBool isCommand = PR_FALSE;
-		            theEvent->GetMetaKey(&isCommand);
-		            if ((isCommand && (modCommand != "true")) ||
-		                (!isCommand && (modCommand == "true")))
-		              break;
-                    //printf("Passed command test \n"); // this leaks
-                     
-		            PRBool isControl = PR_FALSE;
-		            theEvent->GetCtrlKey(&isControl);
-		            if ((isControl && (modControl != "true")) ||
-		                (!isControl && (modControl == "true")))
-		                break;
-		            //printf("Passed control test \n"); // this leaks 
-		          #else
-                    // Test Command attribute
-		            PRBool isCommand = PR_FALSE;
-		            PRBool isControl = PR_FALSE;
-		            theEvent->GetMetaKey(&isCommand);
-		            theEvent->GetCtrlKey(&isControl);
-		            if (((isCommand && (modCommand == "false")) ||
-		                (!isCommand && (modCommand == "true"))) || 
-		                ((isControl && (modControl == "false")) ||
-		                (!isControl && (modControl == "true"))))
-		              break;
-                    //printf("Passed command/ctrl test \n"); // this leaks   
-		          #endif
-		          
-		            // Test Shift attribute
-		            PRBool isShift = PR_FALSE;
-		            theEvent->GetShiftKey(&isShift);
-		            if ((isShift && (modShift != "true")) ||
-		                (!isShift && (modShift == "true")))
-		                break;
-		            
-		            // Test Alt attribute
-		            PRBool isAlt = PR_FALSE;
-		            theEvent->GetAltKey(&isAlt);
-		              if ((isAlt && (modAlt != "true")) ||
-		                  (!isAlt && (modAlt == "true")))
-		                break;
-		            
-		            // Modifier tests passed so execute onclick command
-		            
+					PRBool isControl = PR_FALSE;
+					theEvent->GetCtrlKey(&isControl);
+					if ((isControl && (!modControl)) ||
+					   (!isControl && (modControl)))
+					{
+					  break;
+					}
+					//printf("Passed control test \n"); // this leaks 
+			    #else
+					// Test Command attribute
+					PRBool isCommand = PR_FALSE;
+					PRBool isControl = PR_FALSE;
+					theEvent->GetMetaKey(&isCommand);
+					theEvent->GetCtrlKey(&isControl);
+					if (((isCommand && (!modCommand)) ||
+					    (!isCommand && (modCommand))) || 
+					    ((isControl && (!modControl)) ||
+					    (!isControl && (modControl))))
+					{
+					  break;
+					}
+					//printf("Passed command/ctrl test \n"); // this leaks   
+				#endif
 
-				    // This code executes in every presentation context in which this
-				    // document is appearing.
-				    nsCOMPtr<nsIContent> content;
-				    content = do_QueryInterface(keyElement);
-				    if (!content) {
-				      executingKeyBind = PR_FALSE;
-				      return NS_OK;
-				    }
-				
-				    nsCOMPtr<nsIDocument> document;
-				    content->GetDocument(*getter_AddRefs(document));
-				
-				    if (!document) {
-				      executingKeyBind = PR_FALSE;
-				      return NS_OK;
-				    }
-				
-				    PRInt32 count = document->GetNumberOfShells();
-				    for (PRInt32 i = 0; i < count; i++) {
+					// Test Shift attribute
+					PRBool modShift = PR_FALSE;
+					property = falseString;
+					keyElement->GetAttribute(nsAutoString("shift"), property);
+					if(property == trueString)
+					  modShift = PR_TRUE;
+					  
+					PRBool isShift = PR_FALSE;
+					theEvent->GetShiftKey(&isShift);
+					if ((isShift && (!modShift)) || 
+					   (!isShift && (modShift)))
+					{
+					  break;
+                    }
+                    
+					// Test Alt attribute
+					PRBool modAlt = PR_FALSE;
+					property = falseString;
+					keyElement->GetAttribute(nsAutoString("alt"),     property);
+					if(property == trueString)
+					  modAlt = PR_TRUE;
+					  
+					PRBool isAlt = PR_FALSE;
+					theEvent->GetAltKey(&isAlt);
+					if ((isAlt && (!modAlt)) || 
+					   (!isAlt && (modAlt))) 
+					{
+					  break;
+                    }
+					// Modifier tests passed so execute onclick command
+					nsAutoString cmdToExecute;
+					switch(aEventType) {
+						case eKeyPress:
+						  keyElement->GetAttribute(nsAutoString("onkeypress"), cmdToExecute);
+						break;
+						case eKeyDown:
+						  keyElement->GetAttribute(nsAutoString("onkeydown"), cmdToExecute);
+						break;
+						case eKeyUp:
+						  keyElement->GetAttribute(nsAutoString("onkeyup"), cmdToExecute);
+						break;
+					}   
+
+					// This code executes in every presentation context in which this
+					// document is appearing.
+					nsCOMPtr<nsIContent> content;
+					content = do_QueryInterface(keyElement);
+					if (!content) {
+					  executingKeyBind = PR_FALSE;
+					  return NS_OK;
+					}
+
+					nsCOMPtr<nsIDocument> document;
+					content->GetDocument(*getter_AddRefs(document));
+
+					if (!document) {
+					  executingKeyBind = PR_FALSE;
+					  return NS_OK;
+					}
+
+					PRInt32 count = document->GetNumberOfShells();
+					for (PRInt32 i = 0; i < count; i++) {
 				        nsIPresShell* shell = document->GetShellAt(i);
 				        if (nsnull == shell)
 				            continue;
@@ -517,35 +589,36 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 				        aKeyEvent->PreventBubble();
 				        aKeyEvent->PreventCapture();
 				        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+                        ret = NS_ERROR_BASE;
 
-                if (aEventType == eKeyPress) {
-                  // Also execute the oncommand handler on a key press.
-                  // Execute the oncommand event handler.
-                  nsEventStatus stat = nsEventStatus_eIgnore;
-                  nsMouseEvent evt;
-                  evt.eventStructType = NS_EVENT;
-                  evt.message = NS_MENU_ACTION;
-                  content->HandleDOMEvent(*aPresContext, &evt, nsnull, NS_EVENT_FLAG_INIT, stat);
-				        }
-              }
-		          } while (PR_FALSE);
-		        } // end if (theChar == keyName)
-		      } // end if (disabled == "false")
-		    } // end if (keyNodeType.Equals("key"))
-		  } // end if(keyelement)
-		  nsCOMPtr<nsIDOMNode> oldkeyNode(keyNode);  
-	      oldkeyNode->GetNextSibling(getter_AddRefs(keyNode));
-		} // end while(keynode)
-	  } // end  if (keysetNodeType.Equals("keyset")) {
-	  nsCOMPtr<nsIDOMNode> oldkeysetNode(keysetNode);  
-      oldkeysetNode->GetNextSibling(getter_AddRefs(keysetNode));
+		                if (aEventType == eKeyPress) {
+		                  // Also execute the oncommand handler on a key press.
+		                  // Execute the oncommand event handler.
+		                  nsEventStatus stat = nsEventStatus_eIgnore;
+		                  nsMouseEvent evt;
+		                  evt.eventStructType = NS_EVENT;
+		                  evt.message = NS_MENU_ACTION;
+		                  content->HandleDOMEvent(*aPresContext, &evt, nsnull, NS_EVENT_FLAG_INIT, stat);
+						}
+					    // Ok, we got this far and handled the event, so don't continue scanning nodes
+					    //printf("Keybind executed \n");
+					    executingKeyBind = PR_FALSE;
+	                    return ret;
+                    } // end for (PRInt32 i = 0; i < count; i++)
+                } while (PR_FALSE);
+	        } // end if (keyNodeType.Equals("key"))
+	        nsCOMPtr<nsIDOMNode> oldkeyNode(keyNode);  
+            oldkeyNode->GetNextSibling(getter_AddRefs(keyNode));
+	    } // end while(keynode)
+        //nsCOMPtr<nsIDOMNode> oldkeysetNode(keysetNode);  
+        //oldkeysetNode->GetNextSibling(getter_AddRefs(keysetNode));
+        keysetNode = nsnull;
 	} // end while(keysetNode)
-  } // end if(aKeyEvent && mDOMDocument) 
-  executingKeyBind = PR_FALSE;
-  return NS_OK;
+	executingKeyBind = PR_FALSE;
+	return ret;
 }
 
-PRBool nsXULKeyListenerImpl::IsMatchingKey(PRUint32 theChar, nsString keyName)
+PRBool nsXULKeyListenerImpl::IsMatchingKeyCode(const PRUint32 theChar, const nsString &keyName)
 {
   PRBool ret = PR_FALSE;
   
@@ -1003,6 +1076,19 @@ PRBool nsXULKeyListenerImpl::IsMatchingKey(PRUint32 theChar, nsString keyName)
         ret = PR_TRUE;
         break;
   }
+  
+  return ret;
+}
+
+PRBool nsXULKeyListenerImpl::IsMatchingCharCode(const nsString &theChar, const nsString &keyName)
+{
+  PRBool ret = PR_FALSE;
+  
+  //printf("theChar = %s \n", theChar.ToNewCString());
+  //printf("keyName = %s \n", keyName.ToNewCString());
+  //printf("\n");
+  if(theChar == keyName)
+    ret = PR_TRUE;
   
   return ret;
 }
