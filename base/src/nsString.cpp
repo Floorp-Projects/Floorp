@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #include <iostream.h>
 #include <ctype.h>
 #include <string.h>
@@ -39,15 +40,11 @@ PRBool nsString::mSelfTested = PR_FALSE;
 
 
 /***********************************************************************
-  MODULE NOTES:
+  IMPLEMENTATION NOTES:
 
-    A. There are two philosophies to building string classes:
-        1. Hide the underlying buffer & offer API's allow indirect iteration
-        2. Reveal underlying buffer, risk corruption, but gain performance
-        
-       We chose the second option for performance reasons. 
-
-    B Our internal buffer always holds capacity+1 bytes.
+  Man I hate writing string classes. 
+  You'd think after about a qintrillion lines of code have been written,
+  that no poor soul would ever have to do this again. Sigh.
  ***********************************************************************/
 
 
@@ -127,6 +124,21 @@ nsString::~nsString()
     delete [] mStr;
   mStr=0;
   mCapacity=mLength=0;
+}
+
+
+/**
+ * This method truncates this string to given length.
+ *
+ * @update	gess 7/27/98
+ * @param   anIndex -- new length of string
+ * @return  nada
+ */
+void nsString::Truncate(PRInt32 anIndex) {
+  if((anIndex>-1) && (anIndex<mLength)) {
+    mLength=anIndex;
+    mStr[mLength]=0;
+  }
 }
 
 void nsString::SizeOf(nsISizeOfHandler* aHandler) const
@@ -211,19 +223,6 @@ void nsString::SetLength(PRInt32 aLength) {
   mLength=aLength;
 }
 
-/**
- * This method truncates this string to given length.
- *
- * @update	gess 7/27/98
- * @param   anIndex -- new length of string
- * @return  nada
- */
-void nsString::Truncate(PRInt32 anIndex) {
-  if((anIndex>-1) && (anIndex<mLength)) {
-    mLength=anIndex;
-    mStr[mLength]=0;
-  }
-}
 
 /*********************************************************
   ACCESSOR METHODS....
@@ -591,39 +590,6 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode) const {
   return rv;
 }
 
-
-/**
- * assign given string to this one
- * @update	gess 7/27/98
- * @param   aString: string to be added to this
- * @return  this
- */
-nsString& nsString::operator=(const nsString& aString) {
-  return this->SetString(aString.mStr,aString.mLength);
-}
-
-
-/**
- * assign given char* to this string
- * @update	gess 7/27/98
- * @param   anISOLatin1: buffer to be assigned to this 
- * @return  this
- */
-nsString& nsString::operator=(const char* anISOLatin1) {
-  return SetString(anISOLatin1);
-}
-
-
-/**
- * assign given char to this string
- * @update	gess 7/27/98
- * @param   aChar: char to be assignd to this
- * @return  this
- */
-nsString& nsString::operator=(char aChar) {
-  return this->operator=(PRUnichar(aChar));
-}
-
 /**
  * assign given PRUnichar* to this string
  * @update	gess 7/27/98
@@ -684,6 +650,37 @@ nsString& nsString::operator=(const PRUnichar* aStr) {
   return this->SetString(aStr);
 }
 
+/**
+ * assign given string to this one
+ * @update	gess 7/27/98
+ * @param   aString: string to be added to this
+ * @return  this
+ */
+nsString& nsString::operator=(const nsString& aString) {
+  return this->SetString(aString.mStr,aString.mLength);
+}
+
+
+/**
+ * assign given char* to this string
+ * @update	gess 7/27/98
+ * @param   anISOLatin1: buffer to be assigned to this 
+ * @return  this
+ */
+nsString& nsString::operator=(const char* anISOLatin1) {
+  return SetString(anISOLatin1);
+}
+
+
+/**
+ * assign given char to this string
+ * @update	gess 7/27/98
+ * @param   aChar: char to be assignd to this
+ * @return  this
+ */
+nsString& nsString::operator=(char aChar) {
+  return this->operator=(PRUnichar(aChar));
+}
 
 /**
  * assign given char to this string
@@ -930,38 +927,41 @@ PRInt32 nsString::Right(nsString& aCopy,PRInt32 aCount) {
  */
 PRInt32 nsString::Insert(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
   aCount=(aCount>aCopy.mLength) ? aCopy.mLength : aCount; //don't try to copy more than you are given
-  if(aCount>0) {
+  if(0<anOffset) {
+    if(aCount>0) {
 
-    //1st optimization: If you're inserting at end, then simply append!
-    if(anOffset>=mLength){
-      Append(aCopy,aCopy.mLength);
-      return aCopy.mLength;
-    }
+      //1st optimization: If you're inserting at end, then simply append!
+      if(anOffset>=mLength){
+        Append(aCopy,aCopy.mLength);
+        return aCopy.mLength;
+      }
 
-    if(mLength+aCount >= mCapacity) {
-      EnsureCapacityFor(mLength+aCount);
-    }
+      if(mLength+aCount >= mCapacity) {
+        EnsureCapacityFor(mLength+aCount);
+      }
 
-    PRUnichar* last = mStr + mLength;
-    PRUnichar* first = mStr + anOffset-1;
-    PRUnichar* next = mStr + mLength + aCount;
+      PRUnichar* last = mStr + mLength;
+      PRUnichar* first = mStr + anOffset-1;
+      PRUnichar* next = mStr + mLength + aCount;
   
-    //Copy rightmost chars, up to offset+aCount...
-    while(first<last) {
-      *next=*last;  
-      next--;
-      last--;
-    }
+      //Copy rightmost chars, up to offset+aCount...
+      while(first<last) {
+        *next=*last;  
+        next--;
+        last--;
+      }
 
-    //now insert new chars, starting at offset
-    next = last;
-    first = aCopy.mStr - 1;
-    last = aCopy.mStr + aCount;
+      //now insert new chars, starting at offset
+      next = last;
+      first = aCopy.mStr - 1;
+      last = aCopy.mStr + aCount;
 
-    while (++first<last) {
-      *(++next)=*first;
+      while (++first<last) {
+        *(++next)=*first;
+      }
+      mLength+=aCount;
     }
-    mLength+=aCount;
+    else aCount=0;
   }
   return aCount;
 }
@@ -1243,8 +1243,9 @@ PRInt32 nsString::Find(const char* anISOLatin1Buf) const{
   PRInt32 result=kNotFound;
   if(anISOLatin1Buf) {
     PRInt32 len=strlen(anISOLatin1Buf);
-    if(len<=mLength) { //only enter if abuffer length is <= mStr length.
-      for(PRInt32 offset=0;offset<mLength-len;offset++) 
+    if((0<len) && (len<=mLength)) { //only enter if abuffer length is <= mStr length.
+      PRInt32 max=mLength-len;
+      for(PRInt32 offset=0;offset<=max;offset++) 
         if(0==nsCRT::strncmp(&mStr[offset],anISOLatin1Buf,len)) 
           return offset;  //in this case, 0 means they match
     }
@@ -1264,8 +1265,9 @@ PRInt32 nsString::Find(const PRUnichar* aString) const{
   PRInt32 result=kNotFound;
   if(aString) {
     PRInt32 len=nsCRT::strlen(aString);
-    if(len<=mLength) { //only enter if abuffer length is <= mStr length.
-      for(PRInt32 offset=0;offset<mLength-len;offset++) 
+    if((0<len) && (len<=mLength)) { //only enter if abuffer length is <= mStr length.
+      PRInt32 max=mLength-len;
+      for(PRInt32 offset=0;offset<=max;offset++) 
         if(0==nsCRT::strncmp(&mStr[offset],aString,len)) 
           return offset;  //in this case, 0 means they match
     }
@@ -1285,8 +1287,10 @@ PRInt32 nsString::Find(const nsString& aString) const{
   PRInt32 result=kNotFound;
 
   PRInt32 len=aString.mLength;
-  if(len<=mLength) { //only enter if abuffer length is <= mStr length.
-    for(PRInt32 offset=0;offset<mLength-len;offset++) {
+  PRInt32 offset=0;
+  if((0<len) && (len<=mLength)) { //only enter if abuffer length is <= mStr length.
+    PRInt32 max=mLength-len;
+    for(offset=0;offset<=max;offset++) {
       if(0==nsCRT::strncmp(&mStr[offset],aString.mStr,len)) {
         return offset;  //in this case, 0 means they match
       }
@@ -1319,7 +1323,7 @@ PRInt32 nsString::Find(PRUnichar aChar, PRInt32 anOffset) const{
  *  @param   
  *  @return  
  */
-PRInt32 nsString::FindFirstCharInSet(const char* anISOLatin1Set,PRInt32 anOffset) const{
+PRInt32 nsString::FindCharInSet(const char* anISOLatin1Set,PRInt32 anOffset) const{
   NS_ASSERTION(0!=anISOLatin1Set,kNullPointerError);
   if(anISOLatin1Set && (strlen(anISOLatin1Set))) {
     for(PRInt32 i=anOffset;i<mLength;i++){
@@ -1338,7 +1342,7 @@ PRInt32 nsString::FindFirstCharInSet(const char* anISOLatin1Set,PRInt32 anOffset
  *  @param   
  *  @return  
  */
-PRInt32 nsString::FindFirstCharInSet(nsString& aSet,PRInt32 anOffset) const{
+PRInt32 nsString::FindCharInSet(nsString& aSet,PRInt32 anOffset) const{
   if(aSet.Length()) {
     for(PRInt32 i=anOffset;i<mLength;i++){
       PRInt32 pos=aSet.Find(mStr[i]);
@@ -1356,7 +1360,7 @@ PRInt32 nsString::FindFirstCharInSet(nsString& aSet,PRInt32 anOffset) const{
  *  @param   
  *  @return   
  */
-PRInt32 nsString::FindLastCharInSet(const char* anISOLatin1Set,PRInt32 anOffset) const{
+PRInt32 nsString::RFindCharInSet(const char* anISOLatin1Set,PRInt32 anOffset) const{
   NS_ASSERTION(0!=anISOLatin1Set,kNullPointerError);
   if(anISOLatin1Set && strlen(anISOLatin1Set)) {
     for(PRInt32 i=mLength-1;i>0;i--){
@@ -1375,7 +1379,7 @@ PRInt32 nsString::FindLastCharInSet(const char* anISOLatin1Set,PRInt32 anOffset)
  *  @param   
  *  @return   
  */
-PRInt32 nsString::FindLastCharInSet(nsString& aSet,PRInt32 anOffset) const{
+PRInt32 nsString::RFindCharInSet(nsString& aSet,PRInt32 anOffset) const{
   if(aSet.Length()) {
     for(PRInt32 i=mLength-1;i>0;i--){
       PRInt32 pos=aSet.Find(mStr[i]);
@@ -2038,6 +2042,18 @@ void nsString::SelfTest(void) {
   //Now let's test a few string COMPARISION ops...
   //**********************************************
 
+  nsString  sourceString("Hello how are you"); 
+  nsString  subString("you"); 
+  nsString  replacementStr("xxx"); 
+
+  PRInt32 offset = sourceString.Find(subString);  
+  sourceString.Cut(offset, subString.Length());    
+  sourceString.Insert(replacementStr, offset, replacementStr.Length()); // Offset isn't checked in Insert either 
+
+  //**********************************************
+  //Now let's test a few string COMPARISION ops...
+  //**********************************************
+
   nsString temp8("aaaa");
   nsString temp8a("AAAA");
   nsString temp9("bbbb");
@@ -2183,10 +2199,10 @@ void nsString::SelfTest(void) {
   pos=temp15.Find(PRUnichar('r'));
   NS_ASSERTION(pos==17,"Error: Find char routine");
 
-  pos=temp15.FindFirstCharInSet("12k");
+  pos=temp15.FindCharInSet("12k");
   NS_ASSERTION(pos==10,"Error: FindFirstInChar routine");
 
-  pos=temp15.FindLastCharInSet("12k");
+  pos=temp15.RFindCharInSet("12k");
   NS_ASSERTION(pos==10,"Error: FindLastInChar routine");
 
   pos=temp15.RFind("abc");
