@@ -485,6 +485,7 @@ nsRangeList::nsRangeList()
     sCellAtom = NS_NewAtom("td");
     sTbodyAtom = NS_NewAtom("tbody");
   }
+  mHint = HINTLEFT;
   sInstanceCount ++;
 }
 
@@ -1648,10 +1649,16 @@ nsDOMSelection::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
   if (!aRange) 
     return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIContentIterator> iter;
+  nsCOMPtr<nsIContentIterator> inneriter;
   nsresult result = nsComponentManager::CreateInstance(kCSubtreeIteratorCID, nsnull,
                                               nsIContentIterator::GetIID(), 
                                               getter_AddRefs(iter));
-  if ((NS_SUCCEEDED(result)) && iter)
+  if (NS_FAILED(result))
+    return result;
+  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                              nsIContentIterator::GetIID(), 
+                                              getter_AddRefs(inneriter));
+  if ((NS_SUCCEEDED(result)) && iter && inneriter)
   {
     iter->Init(aRange);
     // loop through the content iterator for each content node
@@ -1681,12 +1688,24 @@ nsDOMSelection::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
         result = iter->CurrentNode(getter_AddRefs(content));
         if (NS_FAILED(result) || !content)
           return result;
-        result = mRangeList->GetTracker()->GetPrimaryFrameFor(content, &frame);
-        if (NS_SUCCEEDED(result) && frame)
-           frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+        result = inneriter->Init(content);
+        if (NS_SUCCEEDED(result))
+        {
+          nsCOMPtr<nsIContent> innercontent;
+          while (NS_COMFALSE == inneriter->IsDone())
+          {
+            result = iter->CurrentNode(getter_AddRefs(innercontent));
+            if (NS_FAILED(result) || !innercontent)
+              continue;
+            result = mRangeList->GetTracker()->GetPrimaryFrameFor(innercontent, &frame);
+            if (NS_SUCCEEDED(result) && frame)
+              frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+            result = inneriter->Next();
+            if (NS_FAILED(result))
+        	    return result;
+          }
+        }
         result = iter->Next();
-        if (NS_FAILED(result))
-      	  return result;
       }
     }
 //we must now do the last one  if it is not the same as the first

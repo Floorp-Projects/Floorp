@@ -232,7 +232,7 @@ nsresult nsContentIterator::Init(nsIContent* aRoot)
 {
   if (!aRoot) 
     return NS_ERROR_NULL_POINTER; 
-
+  mIsDone = PR_FALSE;
   nsCOMPtr<nsIContent> root( do_QueryInterface(aRoot) );
   mFirst = GetDeepFirstChild(root); 
   mLast = root;

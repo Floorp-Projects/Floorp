@@ -1033,7 +1033,16 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
   if (!ts.mSmallCaps && !ts.mWordSpacing && !ts.mLetterSpacing) {
     return NS_ERROR_INVALID_ARG;
   }
+  nsIView * view;
+  nsPoint origin;
+  GetView(&view);
+  GetOffsetFromView(origin, &view);
 
+  if (aXCoord - origin.x <0)
+  {
+      *aNewContent = mContent;
+      aOffset =0;
+  }
   nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(&aPresContext)));
 
   // Make enough space to transform
@@ -1047,6 +1056,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
     paintBuf = new PRUnichar[mContentLength];
   }
   PRInt32 textLength;
+  PRInt32 actualLength;
 
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
@@ -1057,17 +1067,13 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
   PrepareUnicodeText(tx, ip, paintBuf, &textLength);
   if (textLength <= 0)
     return NS_ERROR_FAILURE;
-  nsPoint origin;
-  nsIView * view;
-  GetView(&view);
-  GetOffsetFromView(origin, &view);
+  actualLength = textLength;
 
   nscoord charWidth,widthsofar = 0;
   PRInt32 indx = 0;
   PRBool found = PR_FALSE;
   PRUnichar* startBuf = paintBuf;
   nsIFontMetrics* lastFont = ts.mLastFont;
-
   for (; --textLength >= 0; paintBuf++,indx++) {
     nsIFontMetrics* nextFont;
     nscoord glyphWidth;
@@ -1120,6 +1126,8 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
   paintBuf = startBuf;
   if (!found){
     aOffset = textLength;
+    if (aOffset <0)
+      aOffset = actualLength;//max length before textlength was reduced
   }
   aOffset += mContentOffset;//offset;//((nsTextFrame *)aNewFrame)->mContentOffset;
   PRInt32 i;
@@ -1945,7 +1953,7 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
   if (inContentOffset < mContentOffset) //could happen with floaters!
   {
     result = GetPrevInFlow(outChildFrame);
-    if (NS_SUCCEEDED(result))
+    if (NS_SUCCEEDED(result) && outChildFrame)
       return (*outChildFrame)->GetChildFrameContainingOffset(inContentOffset, inHint,
         outFrameContentOffset,outChildFrame);
     else
