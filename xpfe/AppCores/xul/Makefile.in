@@ -29,10 +29,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/EditorCommands.js \
 	$(srcdir)/EditorInitPage.html \
 	$(srcdir)/EditorInitPagePlain.html \
-	$(srcdir)/MailAppShell.html \
-	$(srcdir)/MailAppShellNoTB.html \
-	$(srcdir)/MailFrame.html \
-	$(srcdir)/MailToolbar.xml \
 	$(srcdir)/pref-appearance.html \
 	$(srcdir)/pref-fonts.html \
 	$(srcdir)/pref-navigator.html \
