@@ -23,6 +23,7 @@ DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
 CPPSRCS =				\
 	nsContentList.cpp		\
 	nsDocument.cpp			\
+	nsDocumentFragment.cpp		\
 	nsFrameImageLoader.cpp		\
 	nsGalleyContext.cpp		\
 	nsPresContext.cpp		\
@@ -45,6 +46,7 @@ EXPORTS=nsSelectionRange.h nsSelectionPoint.h
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsContentList.obj 	 	\
 	.\$(OBJDIR)\nsDocument.obj		\
+	.\$(OBJDIR)\nsDocumentFragment.obj	\
 	.\$(OBJDIR)\nsFrameImageLoader.obj	\
 	.\$(OBJDIR)\nsGalleyContext.obj		\
 	.\$(OBJDIR)\nsPresContext.obj		\
@@ -62,7 +64,7 @@ CPP_OBJS=					\
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
     -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib \
-    -I$(PUBLIC)\pref -I..\..\html\base\src
+    -I$(PUBLIC)\pref -I..\..\html\base\src -I..\..\html\content\src
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -391,6 +391,77 @@ nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsHTMLDocument::ContentAppended(nsIContent* aContainer,
+                                PRInt32 aNewIndexInContainer)
+{
+  if (nsnull != mNamedItems) {
+    nsIContent* child;
+    nsIAtom *name;
+
+    aContainer->GetTag(name);
+    aContainer->ChildAt(aNewIndexInContainer, child);
+    RegisterNamedItems(aContainer, name == nsHTMLAtoms::form);
+    NS_IF_RELEASE(child);
+    NS_IF_RELEASE(name);
+  }
+
+  return nsDocument::ContentAppended(aContainer, aNewIndexInContainer);
+}
+
+NS_IMETHODIMP 
+nsHTMLDocument::ContentInserted(nsIContent* aContainer,
+                                nsIContent* aChild,
+                                PRInt32 aIndexInContainer)
+{
+  if (nsnull != mNamedItems) {
+    nsIAtom *name;
+
+    aContainer->GetTag(name);
+    RegisterNamedItems(aChild, name == nsHTMLAtoms::form);
+    NS_IF_RELEASE(name);
+  }
+
+  return nsDocument::ContentInserted(aContainer, aChild, aIndexInContainer);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::ContentReplaced(nsIContent* aContainer,
+                                nsIContent* aOldChild,
+                                nsIContent* aNewChild,
+                                PRInt32 aIndexInContainer)
+{
+  if (nsnull != mNamedItems) {
+    nsIAtom *name;
+
+    aContainer->GetTag(name);
+    UnregisterNamedItems(aOldChild, name == nsHTMLAtoms::form);
+    RegisterNamedItems(aNewChild, name == nsHTMLAtoms::form);
+
+    NS_IF_RELEASE(name);
+  }
+
+  return nsDocument::ContentReplaced(aContainer, aOldChild, 
+                                     aNewChild, aIndexInContainer);
+}
+
+NS_IMETHODIMP 
+nsHTMLDocument::ContentRemoved(nsIContent* aContainer,
+                               nsIContent* aChild,
+                               PRInt32 aIndexInContainer)
+{
+  if (nsnull != mNamedItems) {
+    nsIAtom *name;
+
+    aContainer->GetTag(name);
+    UnregisterNamedItems(aChild, name == nsHTMLAtoms::form);
+
+    NS_IF_RELEASE(name);
+  }
+
+  return nsDocument::ContentRemoved(aContainer, aChild, aIndexInContainer);
+}
+
 //
 // nsIDOMDocument interface implementation
 //
@@ -934,26 +1005,66 @@ nsHTMLDocument::DeleteNamedItems()
   }
 }
 
-void
-nsHTMLDocument::RegisterNamedItems(nsIContent *aContent, PRBool aInForm)
+static PRBool
+IsNamedItem(nsIContent* aContent, nsIAtom *aTag,
+            PRBool aInForm, nsString& aName)
 {
   static nsAutoString name("NAME");
-  nsAutoString value;
-  nsIAtom *tag;
-  aContent->GetTag(tag);
-  PRBool inForm;
 
   // Only the content types reflected in Level 0 with a NAME
   // attribute are registered. Images and forms always get 
   // reflected up to the document. Applets and embeds only go
   // to the closest container (which could be a form).
-  if ((tag == nsHTMLAtoms::img) || (tag == nsHTMLAtoms::form) ||
-      (!aInForm && ((tag == nsHTMLAtoms::applet) || 
-                    (tag == nsHTMLAtoms::embed)))) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(name, value)) {
-      char *nameStr = value.ToNewCString();
-      PL_HashTableAdd(mNamedItems, nameStr, aContent);
+  if ((aTag == nsHTMLAtoms::img) || (aTag == nsHTMLAtoms::form) ||
+      (!aInForm && ((aTag == nsHTMLAtoms::applet) || 
+                    (aTag == nsHTMLAtoms::embed)))) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(name, aName)) {
+      return PR_TRUE;
     }
+  }
+
+  return PR_FALSE;
+}
+
+void
+nsHTMLDocument::UnregisterNamedItems(nsIContent *aContent, PRBool aInForm)
+{
+  nsAutoString value;
+  nsIAtom *tag;
+  aContent->GetTag(tag);
+  PRBool inForm;
+
+  if (IsNamedItem(aContent, tag, aInForm, value)) {
+      char *nameStr = value.ToNewCString();
+      // XXX What about the string held in the hash table entry
+      PL_HashTableRemove(mNamedItems, nameStr);
+      delete [] nameStr;
+  }
+  
+  inForm = aInForm || (tag == nsHTMLAtoms::form);
+  NS_IF_RELEASE(tag);
+  
+  PRInt32 i, count;
+  aContent->ChildCount(count);
+  for (i = 0; i < count; i++) {
+    nsIContent *child;
+    aContent->ChildAt(i, child);
+    UnregisterNamedItems(child, inForm);
+    NS_RELEASE(child);
+  }    
+}
+
+void
+nsHTMLDocument::RegisterNamedItems(nsIContent *aContent, PRBool aInForm)
+{
+  nsAutoString value;
+  nsIAtom *tag;
+  aContent->GetTag(tag);
+  PRBool inForm;
+
+  if (IsNamedItem(aContent, tag, aInForm, value)) {
+    char *nameStr = value.ToNewCString();
+    PL_HashTableAdd(mNamedItems, nameStr, aContent);
   }
 
   inForm = aInForm || (tag == nsHTMLAtoms::form);
@@ -969,22 +1080,68 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent, PRBool aInForm)
   }  
 }
 
+nsIContent*
+nsHTMLDocument::FindNamedItem(nsIContent *aContent, 
+                              const nsString& aName,
+                              PRBool aInForm)
+{
+  nsAutoString value;
+  nsIAtom *tag;
+  aContent->GetTag(tag);
+  PRBool inForm;
+
+  if (IsNamedItem(aContent, tag, aInForm, value)) {
+    if (aName.Equals(value)) {
+      NS_IF_RELEASE(tag);
+      return aContent;
+    }
+  }
+
+  inForm = aInForm || (tag == nsHTMLAtoms::form);
+  NS_IF_RELEASE(tag);
+  
+  PRInt32 i, count;
+  nsIContent *result = nsnull;
+  aContent->ChildCount(count);
+  for (i = 0; (i < count) && (nsnull == result); i++) {
+    nsIContent *child;
+    aContent->ChildAt(i, child);
+    result = FindNamedItem(child, aName, inForm);
+    NS_RELEASE(child);
+  }  
+
+  return result;
+}
+
 NS_IMETHODIMP    
 nsHTMLDocument::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
 {
-  static nsAutoString name("NAME");
   nsresult result = NS_OK;
-  nsIContent *content;
+  nsIContent *content = nsnull;
 
-  if (nsnull == mNamedItems) {
-    mNamedItems = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
-                                  PL_CompareValues, nsnull, nsnull);
-    RegisterNamedItems(mRootContent, PR_FALSE);
+  // XXX If we have a parser, it means that we're still loading the
+  // document. Since there's still content coming in (and not all
+  // may yet have been explicitly added to the document), we do
+  // a depth-first search rather than build up a table.
+  // Obviously, this may be inefficient for large documents.
+  if (nsnull != mParser) {
+    content = FindNamedItem(mRootContent, aName, PR_FALSE);
+  }
+  else {
+    // If the document has completed loading, we build a table and
+    // cache the named items. The table will be updated as content
+    // is added and removed.
+    if (nsnull == mNamedItems) {
+      mNamedItems = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
+                                    PL_CompareValues, nsnull, nsnull);
+      RegisterNamedItems(mRootContent, PR_FALSE);
+    }
+
+    char *str = aName.ToNewCString();
+    content = (nsIContent *)PL_HashTableLookup(mNamedItems, str);
+    delete [] str;
   }
 
-  char *str = aName.ToNewCString();
-
-  content = (nsIContent *)PL_HashTableLookup(mNamedItems, str);
   if (nsnull != content) {
     result = content->QueryInterface(kIDOMElementIID, (void **)aReturn);
   }
@@ -992,7 +1149,6 @@ nsHTMLDocument::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
     *aReturn = nsnull;
   }
 
-  delete [] str;
   return result;
 }
 

@@ -60,6 +60,19 @@ public:
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
   NS_IMETHOD SetDTDMode(nsDTDMode aMode);
 
+  NS_IMETHOD ContentAppended(nsIContent* aContainer,
+                             PRInt32 aNewIndexInContainer);
+  NS_IMETHOD ContentInserted(nsIContent* aContainer,
+                             nsIContent* aChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentReplaced(nsIContent* aContainer,
+                             nsIContent* aOldChild,
+                             nsIContent* aNewChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentRemoved(nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer);
+
   // nsIDOMDocument interface
   NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDocumentType);
   NS_IMETHOD    GetImplementation(nsIDOMDOMImplementation** aImplementation)
@@ -138,6 +151,10 @@ protected:
 protected:
   static PRIntn RemoveStrings(PLHashEntry *he, PRIntn i, void *arg);
   void RegisterNamedItems(nsIContent *aContent, PRBool aInForm);
+  void UnregisterNamedItems(nsIContent *aContent, PRBool aInForm);
+  nsIContent* FindNamedItem(nsIContent *aContent, const nsString& aName,
+                            PRBool aInForm);
+
   void DeleteNamedItems();
   nsIContent *MatchName(nsIContent *aContent, const nsString& aName);
 
