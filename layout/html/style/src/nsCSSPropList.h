@@ -146,7 +146,7 @@ CSS_PROP(min-height, min_height, REFLOW)
 CSS_PROP(min-width, min_width, REFLOW)
 CSS_PROP(opacity, opacity, VISUAL)
 CSS_PROP(orphans, orphans, REFLOW)
-CSS_PROP(mozoutline, outline, VISUAL)  // XXX This is temporary fix for nsbeta3+ Bug 48973, turning outline into mozoutline
+CSS_PROP(-moz-outline, outline, VISUAL)  // XXX This is temporary fix for nsbeta3+ Bug 48973, turning outline into mozoutline
 CSS_PROP(outline-color, outline_color, VISUAL)
 CSS_PROP(outline-style, outline_style, VISUAL)
 CSS_PROP(outline-width, outline_width, VISUAL)
