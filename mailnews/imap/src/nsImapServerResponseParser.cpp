@@ -1172,10 +1172,10 @@ void nsImapServerResponseParser::msg_fetch()
 			internal_date(); 
 		else if (!PL_strcasecmp(fNextToken, "XAOL-ENVELOPE"))
 		{
-      BeginMessageDownload(MESSAGE_RFC822);
-			xaolenvelope_data();
 			fDownloadingHeaders = PR_TRUE;
 			bNeedEndMessageDownload = PR_TRUE;
+      BeginMessageDownload(MESSAGE_RFC822);
+			xaolenvelope_data();
 		}
 		else
 			SetSyntaxError(PR_TRUE);
