@@ -632,10 +632,6 @@ HDC   ps = NULL;
 
   delete font;
 
-  if (!strcmp(szFamily, "Verdana")) {
-    return NS_ERROR_FAILURE;
-  } /* endif */
-
    nsFontHandleOS2 *fh = new nsFontHandleOS2;
    if (!fh)
      return NS_ERROR_OUT_OF_MEMORY;
