@@ -265,6 +265,7 @@ nsMsgIdentity::setIntPref(const char *prefname,
 nsresult
 nsMsgIdentity::SetKey(char* identityKey)
 {
+  PR_FREEIF(m_identityKey);
   m_identityKey = PL_strdup(identityKey);
   return NS_OK;
 }
