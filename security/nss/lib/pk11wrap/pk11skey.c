@@ -4122,6 +4122,9 @@ finalize:
     }
 
     if (crv != CKR_OK) {
+	if (buffer != stackBuf) {
+	    PORT_Free(buffer);
+	}
 	if (crv == CKR_OPERATION_NOT_INITIALIZED) {
 	    /* if there's no operation, it is finalized */
 	    return SECSuccess;
@@ -4131,13 +4134,20 @@ finalize:
     }
 
     /* try to finalize the session with a buffer */
-    if (buffer == NULL && count > 0) { 
-	if (count < sizeof stackBuf) {
+    if (buffer == NULL) { 
+	if (count <= sizeof stackBuf) {
 	    buffer = stackBuf;
-	    goto finalize;
 	} else {
-	    return SECFailure;
+	    buffer = PORT_Alloc(count);
+	    if (buffer == NULL) {
+		PORT_SetError(SEC_ERROR_NO_MEMORY);
+		return SECFailure;
+	    }
 	}
+	goto finalize;
+    }
+    if (buffer != stackBuf) {
+	PORT_Free(buffer);
     }
     return SECSuccess;
 }
