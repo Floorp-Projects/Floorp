@@ -3023,6 +3023,20 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
           result = localTrue;
         }
       }
+      else if (nsCSSAtoms::xblBoundElementPseudo == pseudoClass->mAtom) {
+        if (!data.mStyleRuleSupplier) {
+          nsCOMPtr<nsIPresShell> shell;
+          data.mPresContext->GetShell(getter_AddRefs(shell));
+          nsCOMPtr<nsIStyleSet> styleSet;
+          shell->GetStyleSet(getter_AddRefs(styleSet));
+          styleSet->GetStyleRuleSupplier(getter_AddRefs(data.mStyleRuleSupplier));
+        }
+
+        if (data.mStyleRuleSupplier)
+          data.mStyleRuleSupplier->MatchesScopedRoot(data.mContent, &result);
+        else 
+          result = localFalse;
+      }
       else if (nsCSSAtoms::langPseudo == pseudoClass->mAtom) {
         // XXX not yet implemented
         result = localFalse;
@@ -3063,20 +3077,6 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
               result = PRBool(localTrue == (eLinkState_Visited == data.mLinkState));
             }
           }
-        }
-        else if (nsCSSAtoms::xblBoundElementPseudo == pseudoClass->mAtom) {
-          if (!data.mStyleRuleSupplier) {
-            nsCOMPtr<nsIPresShell> shell;
-            data.mPresContext->GetShell(getter_AddRefs(shell));
-            nsCOMPtr<nsIStyleSet> styleSet;
-            shell->GetStyleSet(getter_AddRefs(styleSet));
-            styleSet->GetStyleRuleSupplier(getter_AddRefs(data.mStyleRuleSupplier));
-          }
-
-          if (data.mStyleRuleSupplier)
-            data.mStyleRuleSupplier->MatchesScopedRoot(data.mContent, &result);
-          else 
-            result = localFalse;
         }
         else {
           result = localFalse;  // not a link
