@@ -32,6 +32,7 @@ class nsIContent;
 class nsVoidArray;
 class nsIXMLDocument;
 class nsIUnicharInputStream;
+class nsIParser;
 
 typedef enum {
   eXMLContentSinkState_InProlog,
@@ -59,6 +60,7 @@ public:
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
+  NS_IMETHOD SetParser(nsIParser* aParser);  
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
@@ -100,6 +102,7 @@ protected:
   nsIDocument* mDocument;
   nsIURL* mDocumentURL;
   nsIWebShell* mWebShell;
+  nsIParser* mParser;
 
   nsIContent* mRootElement;
   nsIContent* mDocElement;

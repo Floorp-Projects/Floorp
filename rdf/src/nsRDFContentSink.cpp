@@ -373,6 +373,12 @@ nsRDFContentSink::WillResume(void)
 }
 
 NS_IMETHODIMP 
+nsRDFContentSink::SetParser(nsIParser* aParser)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
 nsRDFContentSink::OpenContainer(const nsIParserNode& aNode)
 {
     // XXX Hopefully the parser will flag this before we get here. If

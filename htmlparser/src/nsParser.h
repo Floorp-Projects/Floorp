@@ -319,6 +319,7 @@ protected:
     PRBool              mParserEnabled;
     nsString            mCommand;
     eStreamState        mStreamListenerState; //this is really only here for debug purposes.
+    PRInt32             mStreamStatus;
 };
 
 

@@ -76,6 +76,7 @@ public:
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel) { return NS_OK; }
   NS_IMETHOD WillInterrupt(void) { return NS_OK; }
   NS_IMETHOD WillResume(void) { return NS_OK; }
+  NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
 
   // nsIRobotSink
   NS_IMETHOD Init(nsIURL* aDocumentURL);

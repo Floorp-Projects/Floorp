@@ -232,6 +232,7 @@ public:
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
+  NS_IMETHOD SetParser(nsIParser* aParser);  
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
@@ -288,6 +289,12 @@ nsFrameRegressionDataSink::WillInterrupt()
 
 NS_IMETHODIMP
 nsFrameRegressionDataSink::WillResume()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsFrameRegressionDataSink::SetParser(nsIParser* aParser)
 {
   return NS_OK;
 }

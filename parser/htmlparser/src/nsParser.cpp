@@ -194,6 +194,7 @@ nsParser::nsParser() : mCommand("") {
   mSink=0;
   mParserContext=0;
   mDTDVerification=PR_FALSE;
+  mParserEnabled=PR_TRUE;
   MakeConversionTable();
 }
 
@@ -305,6 +306,7 @@ nsIContentSink* nsParser::SetContentSink(nsIContentSink* aSink) {
   if(aSink) {
     mSink=aSink;
     NS_ADDREF(aSink);
+    mSink->SetParser(this);
   }
   return old;
 }
@@ -572,6 +574,13 @@ CParserContext* nsParser::PopContext() {
  *  @return  current state
  */
 PRBool nsParser::EnableParser(PRBool aState){
+  // If we're reenabling the parser
+  if ((PR_FALSE == mParserEnabled) && aState) {
+    ResumeParse();
+    if (eOnStop == mStreamListenerState) {
+      DidBuildModel(mStreamStatus);
+    }
+  }
   mParserEnabled=aState;
   return mParserEnabled;
 }
@@ -671,7 +680,7 @@ PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVeri
 
 /**
  *  This routine is called to cause the parser to continue
- *  parsing it's underling stream. This call allows the
+ *  parsing it's underlying stream. This call allows the
  *  parse process to happen in chunks, such as when the
  *  content is push based, and we need to parse in pieces.
  *  
@@ -681,13 +690,20 @@ PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVeri
  */
 PRInt32 nsParser::ResumeParse() {
   PRInt32 result=kNoError;
+  PRInt32 buildResult=kNoError;
 
   mParserContext->mDTD->WillResumeParse();
   if(kNoError==result) {
     result=Tokenize();
-    BuildModel();
+    buildResult=BuildModel();
     if(kInterrupted==result)
       mParserContext->mDTD->WillInterruptParse();
+     // If we're told to block the parser, we disable
+     // all further parsing (and cache any data coming
+     // in) until the parser is enabled.
+     if(NS_ERROR_HTMLPARSER_BLOCK==buildResult) {
+       mParserEnabled=PR_FALSE;
+     }
   }
   return result;
 }
@@ -926,7 +942,12 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
     } //if
   }
 
-  return ResumeParse();
+  if (mParserEnabled) {
+    return ResumeParse();
+  }
+  else {
+    return NS_OK;
+  }
 }
 
 /**
@@ -938,7 +959,15 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
  */
 nsresult nsParser::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg){
   mStreamListenerState=eOnStop;
-  nsresult result=DidBuildModel(status);
+  mStreamStatus=status;
+  nsresult result;
+  // If the parser isn't enabled, we don't finish parsing till
+  // it is reenabled.
+  if (mParserEnabled) {
+    result=DidBuildModel(status);
+  }
+  // XXX Should we wait to notify our observers as well if the
+  // parser isn't yet enabled?
   if (nsnull != mObserver) {
     mObserver->OnStopBinding(aURL, status, aMsg);
   }

@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsIHTMLContentSink.h"
+#include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIHTMLContent.h"
@@ -145,7 +146,8 @@ public:
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
-
+  NS_IMETHOD SetParser(nsIParser* aParser);  
+  
   // nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aID);
   NS_IMETHOD EndContext(PRInt32 aID);
@@ -174,6 +176,7 @@ public:
   nsIScriptObjectOwner* mDocumentScript;
   nsIURL* mDocumentURL;
   nsIWebShell* mWebShell;
+  nsIParser* mParser;
 
   nsIHTMLContent* mRoot;
   nsIHTMLContent* mBody;
@@ -1247,6 +1250,7 @@ HTMLContentSink::HTMLContentSink()
   }
 #endif
   mNotAtRef = PR_TRUE;
+  mParser = nsnull;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -1259,6 +1263,7 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mWebShell);
+  NS_IF_RELEASE(mParser);
 
   NS_IF_RELEASE(mCurrentForm);
   NS_IF_RELEASE(mCurrentMap);
@@ -1384,6 +1389,9 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   ScrollToRef();
 
   mDocument->EndLoad();
+  // Drop our reference to the parser to get rid of a circular
+  // reference.
+  NS_IF_RELEASE(mParser);
   return NS_OK;
 }
 
@@ -1407,6 +1415,16 @@ HTMLContentSink::WillResume()
 {
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::WillResume: this=%p", this));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::SetParser(nsIParser* aParser)
+{
+  NS_IF_RELEASE(mParser);
+  mParser = aParser;
+  NS_IF_ADDREF(mParser);
+  
   return NS_OK;
 }
 

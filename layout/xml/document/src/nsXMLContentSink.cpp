@@ -18,6 +18,7 @@
  */
 
 #include "nsXMLContentSink.h"
+#include "nsIParser.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIDocument.h"
 #include "nsIXMLDocument.h"
@@ -104,6 +105,7 @@ nsXMLContentSink::nsXMLContentSink()
   mDocument = nsnull;
   mDocumentURL = nsnull;
   mWebShell = nsnull;
+  mParser = nsnull;
   mRootElement = nsnull;
   mDocElement = nsnull;
   mContentStack = nsnull;
@@ -120,6 +122,7 @@ nsXMLContentSink::~nsXMLContentSink()
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mWebShell);
+  NS_IF_RELEASE(mParser);
   NS_IF_RELEASE(mRootElement);
   NS_IF_RELEASE(mDocElement);
   if (nsnull != mContentStack) {
@@ -244,6 +247,9 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // ScrollToRef();
 
   mDocument->EndLoad();
+  // Drop our reference to the parser to get rid of a circular
+  // reference.
+  NS_IF_RELEASE(mParser);
   return NS_OK;
 }
 
@@ -256,6 +262,16 @@ nsXMLContentSink::WillInterrupt(void)
 NS_IMETHODIMP 
 nsXMLContentSink::WillResume(void)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLContentSink::SetParser(nsIParser* aParser)
+{
+  NS_IF_RELEASE(mParser);
+  mParser = aParser;
+  NS_IF_ADDREF(mParser);
+  
   return NS_OK;
 }
 
@@ -961,7 +977,6 @@ PRInt32
 nsXMLContentSink::GetNameSpaceId(nsIAtom* aPrefix)
 {
   PRInt32 id = kNameSpaceID_Unknown;
-  
   if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
     PRInt32 index = mNameSpaceStack->Count() - 1;
     nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
