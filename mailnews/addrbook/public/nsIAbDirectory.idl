@@ -46,6 +46,5 @@ interface nsIAbDirectory : nsISupports {
 	void HasDirectory(in nsIAbDirectory dir, out boolean hasDir);
 	void GetMailingList(out nsIEnumerator mailingList);
 	void CreateNewDirectory(in string dirName, in string fileName);
-	void GetDirUri(out string uri);
 
 };
