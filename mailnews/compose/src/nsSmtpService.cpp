@@ -18,6 +18,8 @@
 
 #include "msgCore.h"    // precompiled header...
 #include "nsXPIDLString.h"
+#include "nsIPref.h"
+
 #include "nsSmtpService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
@@ -233,12 +235,50 @@ nsSmtpService::GetSmtpServers(nsISupportsArray ** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
+  nsresult rv;
+  
+  // now read in the servers from prefs if necessary
+  PRUint32 serverCount;
+  rv = mSmtpServers->Count(&serverCount);
+  if (NS_FAILED(rv)) return rv;
+
+  if (serverCount<=0) loadSmtpServers();
+
   *aResult = mSmtpServers;
   NS_ADDREF(*aResult);
 
-  // now read in the servers from prefs if necessary
-  
   return NS_OK;
+}
+
+nsresult
+nsSmtpService::loadSmtpServers()
+{
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsXPIDLCString serverList;
+    rv = prefs->CopyCharPref("mail.smtpservers", getter_Copies(serverList));
+    if (NS_FAILED(rv)) return rv;
+
+    char *newStr;
+    char *pref = nsCRT::strtok((char*)(const char*)serverList, ", ", &newStr);
+    while (pref) {
+        nsCOMPtr<nsISmtpServer> smtpServer;
+        rv = nsComponentManager::CreateInstance(NS_SMTPSERVER_PROGID,
+                                                nsnull,
+                                                NS_GET_IID(nsISmtpServer),
+                                                (void **)getter_AddRefs(smtpServer));
+        if (NS_SUCCEEDED(rv)) {
+            smtpServer->SetKey(pref);
+            mSmtpServers->AppendElement(smtpServer);
+        }
+        
+        pref = nsCRT::strtok((char*)(const char*)serverList, ", ", &newStr);
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP

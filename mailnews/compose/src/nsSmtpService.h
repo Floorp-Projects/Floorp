@@ -52,6 +52,9 @@ public:
 	//////////////////////////////////////////////////////////////////////////
     NS_DECL_NSIPROTOCOLHANDLER
 
+protected:
+    nsresult loadSmtpServers();
+
     
 private:
     nsCOMPtr<nsISupportsArray> mSmtpServers;
