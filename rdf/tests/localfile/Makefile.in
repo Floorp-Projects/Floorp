@@ -24,11 +24,13 @@ include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= localfile.cpp
 
-LOCAL_INCLUDES = -I/usr/include/sys
+LOCAL_INCLUDES = 
 
 REQUIRES	= 
 
 LIBS		= \
+	-lxpcom \
+	-lraptorbase \
 	$(NSPR_LIBS) \
 	$(NULL)
 
