@@ -755,7 +755,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           /* set the next dialog to be shown depending on the 
              what the user selected */
           dwWizardState = DLG_SETUP_TYPE;
-          CheckWizardStateCustom(DLG_WINDOWS_INTEGRATION);
+          CheckWizardStateCustom(DLG_ADVANCED_SETTINGS);
 
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
@@ -2098,10 +2098,15 @@ void InstantiateDialog(DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc)
   }
 }
 
-void CheckWizardStateCustom(DWORD dwDefault)
+BOOL CheckWizardStateCustom(DWORD dwDefault)
 {
   if(sgProduct.dwCustomType != dwSetupType)
+  {
     dwWizardState = dwDefault;
+    return(FALSE);
+  }
+
+  return(TRUE);
 }
 
 void DlgSequenceNext()
@@ -2137,7 +2142,7 @@ void DlgSequenceNext()
         InstantiateDialog(dwWizardState, diSetupType.szTitle, DlgProcSetupType);
       else
       {
-        CheckWizardStateCustom(DLG_SELECT_ADDITIONAL_COMPONENTS);
+        CheckWizardStateCustom(DLG_ADVANCED_SETTINGS);
         PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
       }
       break;
@@ -2172,28 +2177,6 @@ void DlgSequenceNext()
     case DLG_WINDOWS_INTEGRATION:
       dwWizardState = DLG_PROGRAM_FOLDER;
       gbProcessingXpnstallFiles = FALSE;
-      do
-      {
-        hrValue = VerifyDiskSpace();
-        if(hrValue == IDOK)
-        {
-          /* show previous visible window */
-          DlgSequencePrev();
-          break;
-        }
-        else if(hrValue == IDCANCEL)
-        {
-          AskCancelDlg(hWndMain);
-          hrValue = IDRETRY;
-        }
-      }while(hrValue == IDRETRY);
-
-      if(hrValue == IDOK)
-      {
-        /* break out of this case because we need to show the previous dialog */
-        break;
-      }
-
       if(diProgramFolder.bShowDialog)
         InstantiateDialog(dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
       else
@@ -2218,6 +2201,29 @@ void DlgSequenceNext()
     case DLG_ADVANCED_SETTINGS:
       dwWizardState = DLG_START_INSTALL;
       gbProcessingXpnstallFiles = FALSE;
+      do
+      {
+        hrValue = VerifyDiskSpace();
+        if(hrValue == IDOK)
+        {
+          /* show previous visible window */
+          dwWizardState = DLG_ADVANCED_SETTINGS;
+          DlgSequencePrev();
+          break;
+        }
+        else if(hrValue == IDCANCEL)
+        {
+          AskCancelDlg(hWndMain);
+          hrValue = IDRETRY;
+        }
+      }while(hrValue == IDRETRY);
+
+      if(hrValue == IDOK)
+      {
+        /* break out of this case because we need to show the previous dialog */
+        break;
+      }
+
       if(diStartInstall.bShowDialog)
         InstantiateDialog(dwWizardState, diStartInstall.szTitle, DlgProcStartInstall);
       else
@@ -2319,8 +2325,13 @@ void DlgSequencePrev()
     case DLG_ADVANCED_SETTINGS:
       dwWizardState = DLG_PROGRAM_FOLDER;
       gbProcessingXpnstallFiles = FALSE;
-      if(diProgramFolder.bShowDialog)
-        InstantiateDialog(dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
+      if(CheckWizardStateCustom(DLG_SELECT_COMPONENTS))
+      {
+        if(diProgramFolder.bShowDialog)
+          InstantiateDialog(dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
+        else
+          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+      }
       else
         PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
       break;
@@ -2331,10 +2342,7 @@ void DlgSequencePrev()
       if(diWindowsIntegration.bShowDialog)
         InstantiateDialog(dwWizardState, diWindowsIntegration.szTitle, DlgProcWindowsIntegration);
       else
-      {
-        CheckWizardStateCustom(DLG_SELECT_COMPONENTS);
         PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      }
       break;
 
     case DLG_WINDOWS_INTEGRATION:
