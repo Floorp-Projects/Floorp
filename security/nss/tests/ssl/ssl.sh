@@ -287,7 +287,12 @@ do
 	else
 	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &
 	fi
-	sleep 20
+	tstclnt -p ${PORT} -h ${HOST} -q
+	if [ $? -ne 0 ]; then
+    	echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+		tstclnt -p ${PORT} -h ${HOST} -q
+	fi
+	#sleep 20
 	pwd
 	echo "tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam}"
 	tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} < ${REQUEST_FILE}
@@ -307,8 +312,10 @@ do
 
 	if [ $ret -ne $value ]; then
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+		echo "FAILURE: test $testname produced a returncode of $ret, expected is $value"
 	else
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
+		echo "test $testname produced a returncode of $ret as expected "
 	fi
 	${KILL} `cat ${SERVERPID}`
 	wait `cat ${SERVERPID}`
@@ -341,7 +348,12 @@ do
 	else
 	    selfserv -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} $verbose &
 	fi
-	sleep 20
+	#sleep 20
+	tstclnt -p ${PORT} -h ${HOST} -q
+	if [ $? -ne 0 ]; then
+    	echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+		tstclnt -p ${PORT} -h ${HOST} -q
+	fi
 
 	echo "strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF} "
 	strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF} 
