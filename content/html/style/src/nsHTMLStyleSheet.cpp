@@ -1595,7 +1595,7 @@ HTMLStyleSheetImpl::ContentRemoved(nsIPresContext* aPresContext,
     // Notify the parent frame with a reflow command.
     nsIReflowCommand* reflowCmd;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
-                                 nsIReflowCommand::FrameDeleted, childFrame);
+                                 nsIReflowCommand::FrameRemoved, childFrame);
 
     if (NS_SUCCEEDED(rv)) {
       shell->AppendReflowCommand(reflowCmd);
