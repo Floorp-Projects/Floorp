@@ -329,12 +329,12 @@ nsNetlibService::SetContainerApplication(nsINetContainerApplication *aContainer)
         mContainer->GetAppName(str);
         XP_AppName = str.ToNewCString();
         if (XP_AppPlatform) {
-            PR_Free(XP_AppPlatform);
+            PR_Free((void *)XP_AppPlatform);
         }
         mContainer->GetPlatform(str);
         XP_AppPlatform = str.ToNewCString();
         if (XP_AppLanguage) {
-            PR_Free(XP_AppLanguage);
+            PR_Free((void *)XP_AppLanguage);
         }
         mContainer->GetLanguage(str);
         XP_AppLanguage = str.ToNewCString();
