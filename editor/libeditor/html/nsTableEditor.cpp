@@ -102,7 +102,7 @@ public:
 
 NS_IMETHODIMP
 nsHTMLEditor::InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpan, 
-                         PRBool aAfter, nsIDOMElement **aNewCell)
+                         PRBool aAfter, PRBool aIsHeader, nsIDOMElement **aNewCell)
 {
   if (!aCell) return NS_ERROR_NULL_POINTER;
   if (aNewCell) *aNewCell = nsnull;
@@ -119,7 +119,11 @@ nsHTMLEditor::InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpa
   if (NS_FAILED(res)) return res;
 
   nsCOMPtr<nsIDOMElement> newCell;
-  res = CreateElementWithDefaults(NS_ConvertASCIItoUCS2("td"), getter_AddRefs(newCell));
+  if (aIsHeader)
+    res = CreateElementWithDefaults(NS_ConvertASCIItoUCS2("th"), getter_AddRefs(newCell));
+  else
+    res = CreateElementWithDefaults(NS_ConvertASCIItoUCS2("td"), getter_AddRefs(newCell));
+    
   if(NS_FAILED(res)) return res;
   if(!newCell) return NS_ERROR_FAILURE;
 
@@ -1401,7 +1405,7 @@ nsHTMLEditor::SplitCellIntoColumns(nsIDOMElement *aTable, PRInt32 aRowIndex, PRI
   if (NS_FAILED(res)) return res;
   
   // Insert new cell after using the remaining span;
-  return InsertCell(cell, actualRowSpan, aColSpanRight, PR_TRUE, aNewCell);
+  return InsertCell(cell, actualRowSpan, aColSpanRight, PR_TRUE, PR_FALSE, aNewCell);
 }
 
 NS_IMETHODIMP
@@ -1488,11 +1492,49 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
     insertAfter = PR_TRUE; // Should always be true, but let's be sure
   }
 
-  res = InsertCell(cell2, aRowSpanBelow, actualColSpan, insertAfter, aNewCell);
+  res = InsertCell(cell2, aRowSpanBelow, actualColSpan, insertAfter, PR_FALSE, aNewCell);
   if (NS_FAILED(res)) return res;
 
   // Reduce rowspan of cell to split
   return SetRowSpan(cell, aRowSpanAbove);
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElement **aNewCell)
+{
+  if (!aSourceCell) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMElement> sourceCell = aSourceCell;
+  nsCOMPtr<nsIDOMElement> newCell;
+  nsAutoString tagName;
+  nsEditor::GetTagString(aSourceCell, tagName);
+  // Set to the opposite of current type
+  PRBool headerType = (tagName == NS_ConvertASCIItoUCS2("td"));
+
+  // Create the new cell, inserting it just before existing cell
+  // Just assume colspan and rowspan = 1 (we'll copy  real values with CloneAttributes)
+  nsresult res = InsertCell(aSourceCell, 1, 1, PR_TRUE, headerType, getter_AddRefs(newCell));
+  if (NS_FAILED(res)) return res;
+  if (!newCell) return res;
+
+  // Copy all of the original attributes to the new cell
+  nsCOMPtr<nsIDOMNode> sourceCellNode = do_QueryInterface(sourceCell);
+  nsCOMPtr<nsIDOMNode> newCellNode = do_QueryInterface(newCell);
+  res = CloneAttributes(newCellNode, sourceCellNode);
+  if (NS_FAILED(res)) return res;
+
+  // Move all contents from original cell to new cell then delete original (3rd param = PR_TRUE)
+  res = MergeCells(newCell, sourceCell, PR_TRUE);    
+  if (NS_FAILED(res)) return res;
+
+  // Return the new cell
+  if (aNewCell)
+  {
+    *aNewCell = newCell.get();
+    NS_ADDREF(*aNewCell);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1926,7 +1968,7 @@ nsHTMLEditor::NormalizeTable(nsIDOMElement *aTable)
         if(previousCellInRow)
         {
           // Insert a new cell after (PR_TRUE), and return the new cell to us
-          res = InsertCell(previousCellInRow, 1, 1, PR_TRUE, getter_AddRefs(cell));          
+          res = InsertCell(previousCellInRow, 1, 1, PR_TRUE, PR_FALSE, getter_AddRefs(cell));
           if (NS_FAILED(res)) return res;
 
           // Set this so we use returned new "cell" to set previousCellInRow below
