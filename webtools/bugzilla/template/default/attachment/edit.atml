@@ -26,7 +26,7 @@
       <td width="25%">
         <small>
         <b>Description:</b><br>
-          <textarea rows="3" cols="25" name="description">[% description %]</textarea><br>
+          <textarea rows="3" cols="25" name="description" wrap="soft">[% description %]</textarea><br>
 
         <b>MIME Type:</b><br>
           <input type="text" size="20" name="mimetype" value="[% mimetype %]"><br>
@@ -44,7 +44,7 @@
 
         <div id="smallCommentFrame">
           <b>Comment (on the bug):</b><br>
-            <textarea name="comment" rows="5" cols="25"></textarea><br>
+            <textarea name="comment" rows="5" cols="25" wrap="soft"></textarea><br>
         </div>
 
         <input type="submit" value="Submit">
