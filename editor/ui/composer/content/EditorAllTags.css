@@ -1,4 +1,4 @@
-o/* 
+/* 
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -24,664 +24,719 @@ o/*
  *  for the "All Tags Edit Mode" Every HTML tag shows up as an icon.
 */
 
+/* For "userdefined" or "unknown" tags */
 
-a[href] {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+*[_moz-userdefined] {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-unknown.gif) no-repeat; 
   background-position: top left;
 }
 
-a[name] {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/div.gif) no-repeat; 
+*[_moz-userdefined]:before {
+  content: url(chrome://editor/skin/images/tag-unknown.gif);
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+}
+
+foo[_moz-userdefined] {
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-a.gif) no-repeat; 
+  background-position: top left;
+}
+
+foo[_moz-userdefined]:before {
+  content: url(chrome://editor/skin/images/tag-abr.gif.gif);
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+}
+
+a {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-a.gif) no-repeat; 
   background-position: top left;
 }
 
 abbr {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-abr.gif) no-repeat; 
   background-position: top left;
 }
 
 
 acronym {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-acr.gif) no-repeat; 
   background-position: top left;
 }
 
 address {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-adr.gif) no-repeat; 
   background-position: top left;
 }
 
 applet {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-app.gif) no-repeat; 
   background-position: top left;
 }
 
 area {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-ara.gif) no-repeat; 
   background-position: top left;
 }
 
 b {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  content: url(chrome://editor/skin/images/tag-b.gif);
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+/*
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-b.gif) no-repeat; 
   background-position: top left;
-}
-
-base {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
-  background-position: top left;
+*/
 }
 
 basefont {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-bsf.gif) no-repeat; 
   background-position: top left;
 }
 
 bdo {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-bdo.gif) no-repeat; 
   background-position: top left;
 }
 
 big {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-big.gif) no-repeat; 
   background-position: top left;
 }
 
 blockquote {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-blq.gif) no-repeat; 
   background-position: top left;
 }
 
 body {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/div.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-body.gif) no-repeat; 
   background-position: top left;
 }
 
 br {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-br.gif) no-repeat; 
   background-position: top left;
 }
 
 button {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-btn.gif) no-repeat; 
   background-position: top left;
 }
 
 caption {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-cpt.gif) no-repeat; 
   background-position: top left;
 }
 
-top {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+center {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-ctr.gif) no-repeat; 
   background-position: top left;
 }
 
 cite {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-cit.gif) no-repeat; 
   background-position: top left;
 }
 
 code {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-cod.gif) no-repeat; 
   background-position: top left;
 }
 
 col {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-col.gif) no-repeat; 
   background-position: top left;
 }
 
 colgroup {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-clg.gif) no-repeat; 
   background-position: top left;
 }
 
 dd {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-dd.gif) no-repeat; 
   background-position: top left;
 }
 
 del {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-del.gif) no-repeat; 
   background-position: top left;
 }
 
 dfn {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-dfn.gif) no-repeat; 
   background-position: top left;
 }
 
 dir {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-dir.gif) no-repeat; 
   background-position: top left;
 }
 
 div {
-  margin-left: 2px; margin-top: 2px;
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
   /* TEMPORARY TO COMPENSATE FOR BUG */
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/div.gif) no-repeat; 
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-div.gif) no-repeat; 
   background-position: top left;
 }
 
 dl {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-dl.gif) no-repeat; 
   background-position: top left;
 }
 
 dt {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-dt.gif) no-repeat; 
   background-position: top left;
 }
 
 em {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-em.gif) no-repeat; 
   background-position: top left;
 }
 
 fieldset {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-fld.gif) no-repeat; 
   background-position: top left;
 }
 
 font {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-fnt.gif) no-repeat; 
   background-position: top left;
 }
 
 form {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-for.gif) no-repeat; 
   background-position: top left;
 }
 
 frame {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-frm.gif) no-repeat; 
   background-position: top left;
 }
 
 frameset {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-fst.gif) no-repeat; 
   background-position: top left;
 }
 
 h1 {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-h1.gif) no-repeat; 
   background-position: top left;
 }
 
 h2 {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-h2.gif) no-repeat; 
   background-position: top left;
 }
 
 h3 {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-h3.gif) no-repeat; 
   background-position: top left;
 }
 
 h4 {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-h4.gif) no-repeat; 
   background-position: top left;
 }
 
 h5 {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-h5.gif) no-repeat; 
   background-position: top left;
 }
 
 h6 {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-h6.gif) no-repeat; 
   background-position: top left;
 }
-
-/*
-head {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
-  background-position: top left;
-}
-*/
 
 hr {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-hr.gif) no-repeat; 
   background-position: top left;
 }
-
-/*
-html {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
-  background-position: top left;
-}
-*/
 
 i {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-i.gif) no-repeat; 
   background-position: top left;
 }
 
 iframe {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-ifr.gif) no-repeat; 
   background-position: top left;
 }
 
 img {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-img.gif) no-repeat; 
   background-position: top left;
 }
 
 input {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-inp.gif) no-repeat; 
   background-position: top left;
 }
 
 ins {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-ins.gif) no-repeat; 
   background-position: top left;
 }
 
 isindex {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-isx.gif) no-repeat; 
   background-position: top left;
 }
 
 kbd {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-kbd.gif) no-repeat; 
   background-position: top left;
 }
 
 label {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-lbl.gif) no-repeat; 
   background-position: top left;
 }
 
 legend {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-lgn.gif) no-repeat; 
   background-position: top left;
 }
 
 li {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-li.gif) no-repeat; 
   background-position: top left;
 }
 
-link {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+listing {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-lst.gif) no-repeat; 
   background-position: top left;
 }
 
 map {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-map.gif) no-repeat; 
   background-position: top left;
 }
 
 menu {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-men.gif) no-repeat; 
   background-position: top left;
 }
-
-/*
-meta {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
-  background-position: top left;
-}
-*/
 
 noframes {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-nfr.gif) no-repeat; 
   background-position: top left;
 }
 
 noscript {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-nsc.gif) no-repeat; 
   background-position: top left;
 }
 
 object {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-obj.gif) no-repeat; 
   background-position: top left;
 }
 
 ol {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-ol.gif) no-repeat; 
   background-position: top left;
 }
 
 optgroup {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-opg.gif) no-repeat; 
   background-position: top left;
 }
 
 option {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-opt.gif) no-repeat; 
   background-position: top left;
 }
 
 p {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-p.gif) no-repeat; 
   background-position: top left;
 }
 
 param {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-prm.gif) no-repeat; 
+  background-position: top left;
+}
+
+plaintext {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-pln.gif) no-repeat; 
   background-position: top left;
 }
 
 pre {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-pre.gif) no-repeat; 
   background-position: top left;
 }
 
 q {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-q.gif) no-repeat; 
   background-position: top left;
 }
 
 s {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-s.gif) no-repeat; 
   background-position: top left;
 }
 
 samp {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-smp.gif) no-repeat; 
   background-position: top left;
 }
 
-/*
 script {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-scr.gif) no-repeat; 
   background-position: top left;
 }
-*/
 
 select {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-slc.gif) no-repeat; 
   background-position: top left;
 }
 
 small {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-sml.gif) no-repeat; 
   background-position: top left;
 }
 
 span {
-  margin-left: 2px; margin-top: 2px;
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
   /* TEMPORARY TO COMPENSATE FOR BUG */
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-spn.gif) no-repeat; 
   background-position: top left;
 }
 
 strike {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-stk.gif) no-repeat; 
   background-position: top left;
 }
 
 strong {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-stn.gif) no-repeat; 
   background-position: top left;
 }
-
-/*
-style {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
-  background-position: top left;
-}
-*/
 
 sub {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-sub.gif) no-repeat; 
   background-position: top left;
 }
 
 sup {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-sup.gif) no-repeat; 
   background-position: top left;
 }
 
+/* The background image technique is not working for 
+   some table elements. Trying the "before" strategy
+*/
+
 table:before {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
+  content: url(chrome://editor/skin/images/tag-tbl.gif);
+  /*
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-tbl.gif) no-repeat; 
   background-position: top left;
+  */
 }
 
 tbody:before {
-  margin-left: 2px; margin-top: 1px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
+  content: url(chrome://editor/skin/images/tag-tbd.gif);
+  /*
+  min-height: 35px; margin-left: 2px; margin-top: 1px;
+  padding-left: 16px; 
+  content: url(chrome://editor/skin/images/tag-tbd.gif) no-repeat; 
   background-position: top left;
+  */
 }
 
 td {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background-image: url(chrome://editor/skin/images/div.gif);
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background-image: url(chrome://editor/skin/images/tag-td.gif);
   background-repeat: no-repeat;
   background-position: top left;
 }
 
 textarea {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-txt.gif) no-repeat; 
   background-position: top left;
 }
 
-tfoot {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+tfoot:before {
+  content: url(chrome://editor/skin/images/tag-tft.gif.gif);
+  /*
+  min-height: 35px; margin-left: 2px; margin-top: 1px;
+  padding-left: 16px; 
+  content: url(chrome://editor/skin/images/tag-tft.gif) no-repeat; 
   background-position: top left;
+  */
 }
 
 th {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-th.gif) no-repeat; 
   background-position: top left;
 }
 
-thead {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+thead:before {
+  content: url(chrome://editor/skin/images/tag-thd.gif);
+  /*
+  min-height: 35px; margin-left: 2px; margin-top: 1px;
+  padding-left: 16px; 
+  content: url(chrome://editor/skin/images/tag-thd.gif) no-repeat; 
   background-position: top left;
+  */
 }
-
-/*
-title {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
-  background-position: top left;
-}
-*/
 
 tr {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-tr.gif) no-repeat; 
   background-position: top left;
 }
 
 tt {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-tt.gif) no-repeat; 
   background-position: top left;
 }
 
-u {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+u:before {
+  min-height: 35px; margin-left: 2px;
+  content: url(chrome://editor/skin/images/tag-u.gif);
+/*
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-u.gif) no-repeat; 
   background-position: top left;
+*/
 }
 
 ul {
-  margin-left: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-ul.gif) no-repeat; 
   background-position: top left;
 }
 
 var {
-  margin-left: 2px; margin-top: 2px;
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-var.gif) no-repeat; 
   background-position: top left;
 }
 
+xmp {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-xmp.gif) no-repeat; 
+  background-position: top left;
+}
+
+
+/* These are tags that we DON'T want to show icons for.
+   We have images for them in case we want to utilize them
+   for some other purpose than the "All Tags" editor mode
+
+html {
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-html.gif) no-repeat; 
+  background-position: top left;
+}
+
+head {
+  min-height: 35px; margin-left: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-hed.gif) no-repeat; 
+  background-position: top left;
+}
+
+These are tags that are ONLY allowed as children of HEAD:
+
+title {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-ttl.gif) no-repeat; 
+  background-position: top left;
+}
+
+base {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-bas.gif) no-repeat; 
+  background-position: top left;
+}
+
+style {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-stl.gif) no-repeat; 
+  background-position: top left;
+}
+
+meta {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-met.gif) no-repeat; 
+  background-position: top left;
+}
+
+link {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/tag-lnk.gif) no-repeat; 
+  background-position: top left;
+}
+*/
