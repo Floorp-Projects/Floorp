@@ -281,8 +281,16 @@ nsHelperAppDialog.prototype = {
 
          this.initAppAndSaveToDiskValues();
 
-         // Initialize "always ask me" box.
-         this.dialogElement( "alwaysAskMe" ).checked = this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
+         // Initialize "always ask me" box. This should always be disabled
+         // and set to true for the ambiguous type application/octet-stream.
+         var alwaysAskCheckbox = this.dialogElement( "alwaysAskMe" );
+         if (this.mLauncher.MIMEInfo.MIMEType == "application/octet-stream") {
+            alwaysAskCheckbox.checked = true;
+            alwaysAskCheckbox.disabled = true;
+         }
+         else {
+            alwaysAskCheckbox.checked = this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
+         }
 
          // Position it.
          if ( this.mDialog.opener ) {
@@ -584,8 +592,11 @@ nsHelperAppDialog.prototype = {
             }
         }
         
-        // Update user pref for this mime type (if necessary).
-        this.updateHelperAppPref();
+        // Update user pref for this mime type (if necessary). We do not
+        // store anything in the mime type preferences for the ambiguous
+        // type application/octet-stream.
+        if ( this.mLauncher.MIMEInfo.MIMEType != "application/octet-stream" )
+            this.updateHelperAppPref();
  
         // Remove our web progress listener (a progress dialog will be
         // taking over).
