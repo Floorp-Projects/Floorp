@@ -52,9 +52,6 @@ static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 nsInstallProgressDialog::nsInstallProgressDialog()
 {
     NS_INIT_REFCNT();
-    mWindow = nsnull;
-    mDocument = nsnull;
-
 }
 
 nsInstallProgressDialog::~nsInstallProgressDialog()
@@ -214,10 +211,7 @@ nsInstallProgressDialog::Open()
     nsresult rv = NS_OK;
 
     // Get app shell service.
-    nsIAppShellService *appShell;
-    rv = nsServiceManager::GetService( kAppShellServiceCID,
-                                       nsIAppShellService::GetIID(),
-                                       (nsISupports**)&appShell );
+    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv );
 
     if ( NS_SUCCEEDED( rv ) ) 
     {
@@ -240,12 +234,10 @@ nsInstallProgressDialog::Open()
         
         if ( NS_SUCCEEDED(rv) ) 
         {
-        
-            nsCOMPtr<nsIWebShellWindow> newWindow;
             rv = appShell->CreateTopLevelWindow( nsnull,
                                                  url,
                                                  PR_TRUE,
-                                                 *getter_AddRefs(newWindow),
+                                                 *getter_AddRefs(mWindow),
                                                  nsnull,
                                                  this,  // callbacks??
                                                  0,
@@ -253,10 +245,10 @@ nsInstallProgressDialog::Open()
 
             if ( NS_SUCCEEDED( rv ) ) 
             {
-                mWindow = newWindow;			// ownership?
-
-                 if (mWindow != nsnull)
+                if ( mWindow )
                     mWindow->Show(PR_TRUE);
+                else
+                    rv = NS_ERROR_NULL_POINTER;
             }
             else 
             {
@@ -264,14 +256,13 @@ nsInstallProgressDialog::Open()
             }
             NS_RELEASE( url );
         }
-        
-        nsServiceManager::ReleaseService( kAppShellServiceCID, appShell );
     } 
     else 
     {
         DEBUG_PRINTF( PR_STDOUT, "Unable to get app shell service, rv=0x%X\n", (int)rv );
     }
-    return NS_OK;
+
+    return rv;
 }
 
 NS_IMETHODIMP

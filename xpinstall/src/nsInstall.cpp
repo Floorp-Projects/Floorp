@@ -135,7 +135,7 @@ nsInstall::nsInstall()
     
     if (NS_SUCCEEDED(rv))
     {
-        su->GetTopLevelNotifier(&mNotifier);
+        su->GetMasterNotifier( &mNotifier );
     }
 
     su->Release();

@@ -20,6 +20,7 @@
  *
  * Contributors:
  *     Douglas Turner <dougt@netscape.com>
+ *     Daniel Veditz <dveditz@netscape.com>
  */
 
 #ifndef nsTopProgressNotifier_h__
@@ -38,10 +39,12 @@ class nsTopProgressNotifier : public nsIXPINotifier
 
         long RegisterNotifier(nsIXPINotifier * newNotifier);
         void UnregisterNotifier(long id);
+        void SetActiveNotifier(nsIXPINotifier *aNotifier) 
+            { mActive = aNotifier; }
 
         NS_DECL_ISUPPORTS
 
-        // nsIXPINotifier interfaces
+        // implements nsIXPINotifier
         NS_IMETHOD BeforeJavascriptEvaluation();
         NS_IMETHOD AfterJavascriptEvaluation();
         NS_IMETHOD InstallStarted(const char* UIPackageName);
@@ -51,7 +54,8 @@ class nsTopProgressNotifier : public nsIXPINotifier
         NS_IMETHOD LogComment(const char* comment);
    
    private:
-        nsVector *mNotifiers;
+        nsVector        *mNotifiers;
+        nsIXPINotifier  *mActive;
 
 };
 

@@ -341,6 +341,8 @@ nsXPInstallManager::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUi
 }
 
 
+
+
 // IXPINotifier methods
 
 NS_IMETHODIMP 

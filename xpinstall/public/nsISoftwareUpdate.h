@@ -57,11 +57,10 @@ class nsISoftwareUpdate : public nsISupports
             
             NS_IMETHOD RegisterNotifier(nsIXPINotifier *notifier) = 0;
             
-//            NS_IMETHOD InstallPending(void) = 0;
-
             /* FIX: these should be in a private interface */
             NS_IMETHOD InstallJarCallBack()                   = 0; 
-            NS_IMETHOD GetTopLevelNotifier(nsIXPINotifier **notifier) = 0;
+            NS_IMETHOD GetMasterNotifier(nsIXPINotifier **notifier) = 0;
+            NS_IMETHOD SetActiveNotifier(nsIXPINotifier *notifier) = 0;
 };
 
 
