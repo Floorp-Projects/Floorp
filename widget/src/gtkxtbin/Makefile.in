@@ -47,6 +47,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE          = gtkxtbin
 LIBRARY_NAME	= gtkxtbin
 EXPORT_LIBRARY = 1
+LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = gtkxtbin.pkg
 

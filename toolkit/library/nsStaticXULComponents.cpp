@@ -45,8 +45,117 @@
 
 #define NSGETMODULE(_name) _name##_NSGetmodule
 
-#define XUL_MODULES             \
-	MODULE(xpcomObsoleteModule) \
+#ifdef MOZ_MATHML
+#define MATHML_MODULES MODULE(nsUCvMathModule)
+#else
+#define MATHML_MODULES
+#endif
+
+#ifdef XP_WIN
+#define INTL_COMPAT_MODULES MODULE(I18nCompatibility)
+#else
+#define INTL_COMPAT_MODULES
+#endif
+
+#ifdef NECKO2
+#define NECKO2_MODULES MODULE(necko_secondary_protocols)
+#else
+#define NECKO2_MODULES
+#endif
+
+#ifdef MOZ_IPCD
+#define IPC_MODULE MODULE(ipcdclient)
+#else
+#define IPC_MODULE
+#endif
+
+#ifdef MOZ_ENABLE_POSTSCRIPT
+#define POSTSCRIPT_MODULES MODULE(nsGfxPSModule)
+#else
+#define POSTSCRIPT_MODULES
+#endif
+
+#if MOZ_WIDGET_TOOLKIT==windows
+#  define GFX_MODULES MODULE(nsGfxModule)
+#  define WIDGET_MODULES MODULE(nsWidgetModule)
+#elif MOZ_WIDGET_TOOLKIT==mac || MOZ_WIDGET_TOOLKIT=cocoa
+#  define GFX_MODULES MODULE(nsGfxMacModule)
+#  define WIDGET_MODULES MODULE(nsWidgetMacModule)
+#elif MOZ_WIDGET_TOOLKIT==beos
+#  define GFX_MODULES MODULE(nsGfxBeOSModule)
+#  define WIDGET_MODULES MODULE(nsWidgetBeOSModule)
+#elif MOZ_WIDGET_TOOLKIT==os2
+#  define GFX_MODULES MODULE(nsGfxOS2Module)
+#  define WIDGET_MODULES MODULE(nsWidgetOS2Module)
+#endif
+
+#ifdef MOZ_ENABLE_CAIRO_GFX
+#define GFX_MODULES MODULE(nsGfxModule)
+#else
+#  if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+#  define GFX_MODULES MODULE(nsGfxGTKModule)
+#  elif defined(MOZ_WIDGET_QT)
+#  define GFX_MODULES MODULE(nsGfxQtModule)
+#  elif defined(MOZ_WIDGET_XLIB)
+#  define GFX_MODULES MODULE(nsGfxXlibModule)
+#  elif defined(MOZ_WIDGET_PHOTON)
+#  define GFX_MODULES MODULE(nsGfxPhModule)
+#  endif
+#endif
+
+#ifdef ICON_DECODER
+#define ICON_MODULE MODULE(nsIconDecoderModule)
+#else
+#define ICON_MODULE
+#endif
+
+#ifdef MOZ_WIDGET_GTK
+#define WIDGET_MODULES MODULE(nsWidgetGTKModule)
+#endif
+#ifdef MOZ_WIDGET_GTK2
+#define WIDGET_MODULES MODULE(nsWidgetGtk2Module)
+#endif
+#ifdef MOZ_WIDGET_XLIB
+#define WIDGET_MODULES MODULE(nsWidgetXLIBModule)
+#endif
+#ifdef MOZ_WIDGET_PHOTON
+#define WIDGET_MODULES MODULE(nsWidgetPhModule)
+#endif
+
+#ifdef MOZ_ENABLE_XPRINT
+#define XPRINT_MODULES MODULE(nsGfxXprintModule)
+#else
+#define XPRINT_MODULES
+#endif
+
+#ifdef MOZ_ENABLE_XREMOTE
+#define XREMOTE_MODULES MODULE(XRemoteClientModule)
+#else
+#define XREMOTE_MODULES
+#endif
+
+#define XUL_MODULES                          \
+    MODULE(xpcomObsoleteModule)              \
+    MODULE(xpconnect)                        \
+    MATHML_MODULES                           \
+    MODULE(nsUConvModule)                    \
+    MODULE(nsI18nModule)                     \
+    INTL_COMPAT_MODULES                      \
+    MODULE(necko_core_and_primary_protocols) \
+    NECKO2_MODULES                           \
+    IPC_MODULE                               \
+    MODULE(nsJarModule)                      \
+    MODULE(nsPrefModule)                     \
+    MODULE(nsSecurityManagerModule)          \
+    MODULE(nsRDFModule)                      \
+    MODULE(nsParserModule)                   \
+    POSTSCRIPT_MODULES                       \
+    GFX_MODULES                              \
+    WIDGET_MODULES                           \
+    XREMOTE_MODULES                          \
+    MODULE(nsImageLib2Module)                \
+    ICON_MODULE                              \
+    MODULE(nsPluginModule)                   \
     /* end of list */
 
 #define MODULE(_name)                                           \

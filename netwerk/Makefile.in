@@ -60,7 +60,7 @@ DIRS		= \
 		$(NULL)
 
 ifdef ENABLE_TESTS
-DIRS		+= test
+TOOL_DIRS  += test
 endif
 
 EXPORTS     = necko-config.h

@@ -97,7 +97,7 @@ MouseTrailer *MouseTrailer::theMouseTrailer = NULL;
 PRBool        MouseTrailer::gIgnoreNextCycle(PR_FALSE);
 PRBool        MouseTrailer::mIsInCaptureMode(PR_FALSE);
 
-#ifndef MOZ_STATIC_COMPONENT_LIBS
+#if !defined(MOZ_STATIC_COMPONENT_LIBS) && !defined(MOZ_ENABLE_LIBXUL)
 //
 // Dll entry point. Keep the dll instance
 //

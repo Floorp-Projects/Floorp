@@ -46,6 +46,7 @@ MODULE		= imgpng
 LIBRARY_NAME	= imgpng_s
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsPNGDecoderModule
+LIBXUL_LIBRARY = 1
 
 EXTRA_DSO_LIBS	= gkgfx
 

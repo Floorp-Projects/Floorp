@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= widget
 LIBRARY_NAME	= gtksuperwin
 EXPORT_LIBRARY = 1
+LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = gtksuperwin.pkg
 

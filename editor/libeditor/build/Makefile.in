@@ -53,7 +53,9 @@ GRE_MODULE	= 1
 
 PACKAGE_FILE = editor.pkg
 
+ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS	= gkgfx
+endif
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR)		 \

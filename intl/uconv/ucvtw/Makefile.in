@@ -44,8 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ucvtw
 LIBRARY_NAME	= ucvtw_s
-MODULE_NAME	= nsUCvTWModule
 FORCE_STATIC_LIB=1
+LIBXUL_LIBRARY = 1
+
 REQUIRES	= xpcom \
 		  uconv \
 		  $(NULL)

@@ -413,6 +413,7 @@ endif
 EXPORT_LIBRARY=
 FORCE_STATIC_LIB=1
 _ENABLE_PIC=1
+SHORT_LIBNAME=
 endif
 endif
 
@@ -457,6 +458,26 @@ endif
 # the profile-generate flags?" which is not trivial.
 ifdef MOZ_PROFILE_USE
 DSO_PIC_CFLAGS += $(PROFILE_USE_CFLAGS)
+endif
+
+# Force XPCOM/widget/gfx methods to be _declspec(dllexport) when we're
+# building libxul libraries
+ifdef MOZ_ENABLE_LIBXUL
+ifdef LIBXUL_LIBRARY
+DEFINES += \
+		-D_IMPL_NS_COM \
+		-DEXPORT_XPT_API \
+		-DEXPORT_XPTC_API \
+		-DEXPORT_XPTI_API \
+		-D_IMPL_NS_COM_OBSOLETE \
+		-D_IMPL_NS_GFX \
+		-D_IMPL_NS_WIDGET \
+		$(NULL)
+
+ifndef MOZ_NATIVE_ZLIB
+DEFINES += -DZLIB_INTERNAL
+endif
+endif
 endif
 
 # Force _all_ exported methods to be |_declspec(dllexport)| when we're

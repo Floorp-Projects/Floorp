@@ -48,6 +48,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= necko_core_and_primary_protocols
 GRE_MODULE	= 1
+LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = necko.pkg
 

@@ -28,10 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= png
 LIBRARY_NAME	= mozpng
-
 ifeq ($(OS_ARCH),WINNT)
 LIBRARY_NAME	= png
 endif
+LIBXUL_LIBRARY = 1
 
 REQUIRES	= $(ZLIB_REQUIRES) \
 		  $(NULL)

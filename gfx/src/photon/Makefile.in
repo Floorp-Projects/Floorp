@@ -47,6 +47,7 @@ LIBRARY_NAME	= gfx_photon
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxPhModule
+LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = photon.pkg
 

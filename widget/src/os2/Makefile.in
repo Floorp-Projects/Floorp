@@ -49,6 +49,7 @@ IS_COMPONENT	= 1
 RESFILE		= widget.res
 MODULE_NAME	= nsWidgetOS2Module
 GRE_MODULE	= 1
+LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = widget_os2.pkg
 

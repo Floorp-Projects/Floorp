@@ -48,6 +48,7 @@ LIBRARY_NAME	= ipcdc
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME		= ipcdclient
+LIBXUL_LIBRARY = 1
 
 REQUIRES	= \
             xpcom \

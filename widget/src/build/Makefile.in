@@ -48,6 +48,7 @@ EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 RESFILE		= widget.res
 MODULE_NAME	= nsWidgetModule
+LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = widget_win.pkg
 
