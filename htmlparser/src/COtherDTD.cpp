@@ -44,7 +44,6 @@
 #include "prtypes.h"
 #include "prio.h"
 #include "plstr.h"
-#include <fstream.h>
 
 
 #ifdef XP_PC

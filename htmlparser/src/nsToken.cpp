@@ -38,6 +38,8 @@ CToken::CToken(PRInt32 aTag) : mTextValue() {
   mTypeID=aTag;
   mAttrCount=0;
   TokenCount++;
+  mOrigin=eSource;
+  mRecycle=PR_TRUE;
 }
 
 /**
@@ -50,6 +52,8 @@ CToken::CToken(const nsString& aName) : mTextValue(aName) {
   mTypeID=0;
   mAttrCount=0;
   TokenCount++;
+  mOrigin=eSource;
+  mRecycle=PR_TRUE;
 }
 
 /**
@@ -62,6 +66,8 @@ CToken::CToken(const char* aName) : mTextValue(aName) {
   mTypeID=0;
   mAttrCount=0;
   TokenCount++;
+  mOrigin=eSource;
+  mRecycle=PR_TRUE;
 }
  
 /**
@@ -89,6 +95,8 @@ void CToken::Reinitialize(PRInt32 aTag, const nsString& aString){
   mAttrCount=0;
   mTypeID=aTag;
   mAttrCount=0;
+  mOrigin=eSource;
+  mRecycle=PR_TRUE;
 }
  
 /**

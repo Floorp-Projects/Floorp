@@ -549,6 +549,10 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) 
 }
 
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle) {
+#ifdef RICKG_DEBUG
+
+#include <fstream.h>
+
   const char* prefix="     ";
   fstream out(aFilename,ios::out);
   out << "==================================================" << endl;
@@ -578,6 +582,7 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
     }
     else out<<"(not container)" << endl;
   }
+#endif
 }
 
 

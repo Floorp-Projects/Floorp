@@ -40,7 +40,6 @@
 
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
-#include <iostream.h>
 #endif
 #include "prmem.h"
 
@@ -476,7 +475,8 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
 
   mFilename=aFilename;
   mHasOpenBody=PR_FALSE;
-  mHadBodyOrFrameset=PR_FALSE;
+  mHadBody=PR_FALSE;
+  mHadFrameset=PR_FALSE;
   mLineNumber=1;
   mHasOpenScript=PR_FALSE;
   mSink=(nsIHTMLContentSink*)aSink;
@@ -542,7 +542,7 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
 nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result= NS_OK;
 
-  if((NS_OK==anErrorCode) && (!mHadBodyOrFrameset)) {
+  if((NS_OK==anErrorCode) && (!mHadBody) && (!mHadFrameset)) {
     CStartToken theToken(eHTMLTag_body);  //open the body container...
     result=HandleStartToken(&theToken);
     mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content
@@ -625,6 +625,8 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
     eHTMLTags       theTag=(eHTMLTags)theToken->GetTypeID();
     PRBool          execSkipContent=PR_FALSE;
 
+    theToken->mRecycle=PR_TRUE;  //assume every token coming into this system needs recycling.
+
     /* ---------------------------------------------------------------------------------
        To understand this little piece of code, you need to look below too.
        In essence, this code caches "skipped content" until we find a given skiptarget.
@@ -658,11 +660,12 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       static eHTMLTags passThru[]= {eHTMLTag_html,eHTMLTag_comment,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_script};
       if(!FindTagInSet(theTag,passThru,sizeof(passThru)/sizeof(eHTMLTag_unknown))){
         if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
-          if(!mHadBodyOrFrameset){
+          if((!mHadBody) && (!mHadFrameset)){
             if(mHasOpenHead) {
               //just fall through and handle current token
               if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag)){
                 mMisplacedContent.Push(aToken);
+                aToken->mRecycle=PR_FALSE;
                 return result;
               }
             }
@@ -695,7 +698,8 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
           mParser=(nsParser*)aParser;
           result=(*theHandler)(theToken,this);
           if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
-            gRecycler->RecycleToken(theToken);
+            if(theToken->mRecycle)
+              gRecycler->RecycleToken(theToken);
           }
           else if(result==NS_ERROR_HTMLPARSER_STOPPARSING)
             return result;
@@ -755,10 +759,6 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
   nsresult result=NS_OK;
 
   switch(aChildTag){
-    case eHTMLTag_body:
-    case eHTMLTag_frameset:
-      mHadBodyOrFrameset=PR_TRUE;
-      break;
 
     case eHTMLTag_pre:
     case eHTMLTag_listing:
@@ -1280,12 +1280,13 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
   //of another section. If it is, the cache it for later.
   //  1. Get the root node for the child. See if the ultimate node is the BODY, FRAMESET, HEAD or HTML
   PRInt32   theTagCount = mBodyContext->GetCount();
+  PRInt32   attrCount   = aToken->GetAttributeCount();
 
   if(gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) {
     eHTMLTags theTag;
     PRInt32   theBCIndex;
     PRBool    isNotWhiteSpace = PR_FALSE;
-    PRInt32   attrCount   = aToken->GetAttributeCount();
+    
     while(theTagCount > 0) {
       theTag = mBodyContext->TagAt(--theTagCount);
       if(!gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch)) {
@@ -1312,6 +1313,24 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
         mSaveBadTokens = PR_FALSE;
       }
       result=NS_ERROR_HTMLPARSER_MISPLACED;
+    }
+  }
+
+  if((aChildTag!=aParent) && (gHTMLElements[aParent].HasSpecialProperty(kSaveMisplaced))) {
+    mMisplacedContent.Push(aToken);
+    aToken->mRecycle=PR_FALSE;
+
+    // If the token is attributed then save those attributes too.
+    if(attrCount > 0) {
+      nsCParserNode* theAttrNode = (nsCParserNode*)&aNode;
+      while(attrCount > 0){ 
+        CToken* theToken=theAttrNode->PopAttributeToken();
+        if(theToken){
+          mMisplacedContent.Push(theToken);
+          theToken->mRecycle=PR_FALSE;
+        }
+        attrCount--;
+      }
     }
   }
   return result;
@@ -1356,7 +1375,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
               return OpenContainer(attrNode,PR_FALSE);
             break;
           case eHTMLTag_head:
-            if(mHadBodyOrFrameset) {
+            if(mHadBody || mHadFrameset) {
               result=HandleOmittedTag(aToken,theChildTag,theParent,attrNode);
               if(result == NS_OK)
                 return result;
@@ -1985,6 +2004,10 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
     }
   }
 
+  if(gHTMLElements[aParent].HasSpecialProperty(kSaveMisplaced)) {
+    return PR_TRUE;
+  }
+
   return PR_FALSE;
 }
      
@@ -2339,6 +2362,8 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
 
   nsresult result=NS_OK;
 
+  mHadBody=PR_TRUE;
+
   PRInt32 theHTMLPos=GetTopmostIndexOf(eHTMLTag_html);
   if(kNotFound==theHTMLPos){ //someone forgot to open HTML. Let's do it for them.
     nsAutoString  theEmpty;
@@ -2463,9 +2488,11 @@ nsresult CNavDTD::CloseMap(const nsIParserNode& aNode){
  */
 nsresult CNavDTD::OpenFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
+
+  mHadFrameset=PR_TRUE;
   nsresult result=(mSink) ? mSink->OpenFrameset(aNode) : NS_OK; 
   mBodyContext->Push((eHTMLTags)aNode.GetNodeType());
-  mHadBodyOrFrameset=PR_TRUE;
+  mHadFrameset=PR_TRUE;
   return result;
 }
 

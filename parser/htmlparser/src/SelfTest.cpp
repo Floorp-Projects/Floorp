@@ -37,7 +37,6 @@
 #define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
 #endif
 
-ofstream filelist("filelist.out");
 
 PRBool compareFiles(const char* file1,const char* file2,int& failpos) {
   PRBool result=PR_TRUE;
@@ -131,7 +130,8 @@ void parseFile (const char* aFilename,int size)
   int failpos=0;
 
   if(!compareFiles(aFilename,filename,failpos)) {
-    filelist << "FAILED: " << aFilename << "[" << failpos << "]" << endl;
+    char buffer[100];
+    printf("FAILED: %s [%i]\n",aFilename,failpos);
   }
 }
 

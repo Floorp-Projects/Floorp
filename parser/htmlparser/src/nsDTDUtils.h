@@ -34,7 +34,6 @@
 #include "nsCRT.h"
 #include "nsDeque.h"
 #include "nsIDTD.h"
-#include <fstream.h>
 #include "nsITokenizer.h"
 #include "nsString.h"
 #include "nsIElementObserver.h"

@@ -145,6 +145,7 @@ static const int kBadContentWatch = 0x0020;
 static const int kNoStyleLeaksIn  = 0x0040; 
 static const int kNoStyleLeaksOut = 0x0080; 
 static const int kMustCloseSelf   = 0x0100; 
+static const int kSaveMisplaced   = 0x0200; //If set, then children this tag can't contain are pushed onto the misplaced stack
 
 //*********************************************************************************************
 // The following ints define the standard groups of HTML elements...
