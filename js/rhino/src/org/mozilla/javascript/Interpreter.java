@@ -193,10 +193,12 @@ public class Interpreter
 
     private static final Object DBL_MRK = new Object();
 
-
-    private static class State
+    /**
+     * Class to hold data corresponding to one interpreted call stack frame.
+     */
+    private static class CallFrame
     {
-        State callerState;
+        CallFrame parentFrame;
 
         InterpretedFunction fnOrScript;
         InterpreterData idata;
@@ -1975,10 +1977,10 @@ public class Interpreter
 
     static String getSourcePositionFromStack(Context cx, int[] linep)
     {
-        State state = (State)cx.interpreterLineCounting;
-        InterpreterData idata = state.idata;
-        if (state.pcSourceLineStart >= 0) {
-            linep[0] = getShort(idata.itsICode, state.pcSourceLineStart);
+        CallFrame frame = (CallFrame)cx.interpreterLineCounting;
+        InterpreterData idata = frame.idata;
+        if (frame.pcSourceLineStart >= 0) {
+            linep[0] = getShort(idata.itsICode, frame.pcSourceLineStart);
         } else {
             linep[0] = 0;
         }
@@ -2021,19 +2023,23 @@ public class Interpreter
             }
         }
 
-        State state = new State();
-        initState(cx, scope, thisObj, args, null, 0, args.length,
-                  ifun, null, state);
+        CallFrame frame = new CallFrame();
+        initFrame(cx, scope, thisObj, args, null, 0, args.length,
+                  ifun, null, frame);
+
         try {
-            return interpret(cx, state);
+            frame = interpret(cx, frame);
         } finally {
             // Always clenup interpreterLineCounting to avoid memory leaks
-            // throgh stored in Context state
+            // throgh stored in Context frame
             cx.interpreterLineCounting = null;
         }
+
+        return (frame.result != DBL_MRK)
+            ? frame.result : doubleWrap(frame.resultDbl);
     }
 
-    private static Object interpret(Context cx, State state)
+    private static CallFrame interpret(Context cx, CallFrame frame)
     {
         final Object DBL_MRK = Interpreter.DBL_MRK;
         final Scriptable undefined = Undefined.instance;
@@ -2046,22 +2052,22 @@ public class Interpreter
         final boolean instructionCounting = (cx.instructionThreshold != 0);
 
         StateLoop: for (;;) {
-            // Use local variables for constant values in state
+            // Use local variables for constant values in frame
             // for faster access
-            Object[] stack = state.stack;
-            double[] sDbl = state.sDbl;
-            byte[] iCode = state.idata.itsICode;
-            String[] strings = state.idata.itsStringTable;
-            boolean useActivation = state.useActivation;
+            Object[] stack = frame.stack;
+            double[] sDbl = frame.sDbl;
+            byte[] iCode = frame.idata.itsICode;
+            String[] strings = frame.idata.itsStringTable;
+            boolean useActivation = frame.useActivation;
 
             // Use local for stackTop as well. Since execption handlers
             // can only exist at statement level where stack is empty,
             // it is necessary to save/restore stackTop only accross
             // function calls and normal returns.
-            int stackTop = state.savedStackTop;
+            int stackTop = frame.savedStackTop;
 
-            // Point line counting to the new state
-            cx.interpreterLineCounting = state;
+            // Point line counting to the new frame
+            cx.interpreterLineCounting = frame;
 
             Loop: for (;;) {
 
@@ -2072,7 +2078,7 @@ public class Interpreter
                     // Exception handler assumes that PC is already incremented
                     // pass the instruction start when it searches the
                     // exception handler
-                    int op = iCode[state.pc++];
+                    int op = iCode[frame.pc++];
                     jumplessRun: {
 
     // Back indent to ease imlementation reading
@@ -2082,9 +2088,9 @@ switch (op) {
         if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
         --stackTop;
 
-        int sourceLine = getShort(iCode, state.pc);
+        int sourceLine = getShort(iCode, frame.pc);
         throwable = new JavaScriptException(value,
-                                            state.idata.itsSourceFile,
+                                            frame.idata.itsSourceFile,
                                             sourceLine);
         break withoutExceptions;
     }
@@ -2093,7 +2099,7 @@ switch (op) {
     case Token.GT :
     case Token.LT :
         --stackTop;
-        do_cmp(state, stackTop, op);
+        do_cmp(frame, stackTop, op);
         continue Loop;
     case Token.IN : {
         Object rhs = stack[stackTop];
@@ -2101,7 +2107,7 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        boolean valBln = ScriptRuntime.in(lhs, rhs, cx, state.scope);
+        boolean valBln = ScriptRuntime.in(lhs, rhs, cx, frame.scope);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         continue Loop;
     }
@@ -2111,35 +2117,35 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        boolean valBln = ScriptRuntime.instanceOf(lhs, rhs, cx, state.scope);
+        boolean valBln = ScriptRuntime.instanceOf(lhs, rhs, cx, frame.scope);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         continue Loop;
     }
     case Token.EQ :
     case Token.NE :
         --stackTop;
-        do_eq(state, stackTop, op);
+        do_eq(frame, stackTop, op);
         continue Loop;
     case Token.SHEQ :
     case Token.SHNE :
         --stackTop;
-        do_sheq(state, stackTop, op);
+        do_sheq(frame, stackTop, op);
         continue Loop;
     case Token.IFNE :
-        if (stack_boolean(state, stackTop--)) {
-            state.pc += 2;
+        if (stack_boolean(frame, stackTop--)) {
+            frame.pc += 2;
             continue Loop;
         }
         break jumplessRun;
     case Token.IFEQ :
-        if (!stack_boolean(state, stackTop--)) {
-            state.pc += 2;
+        if (!stack_boolean(frame, stackTop--)) {
+            frame.pc += 2;
             continue Loop;
         }
         break jumplessRun;
     case Icode_IFEQ_POP :
-        if (!stack_boolean(state, stackTop--)) {
-            state.pc += 2;
+        if (!stack_boolean(frame, stackTop--)) {
+            frame.pc += 2;
             continue Loop;
         }
         stack[stackTop--] = null;
@@ -2149,14 +2155,14 @@ switch (op) {
     case Icode_GOSUB :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = state.pc + 2;
+        sDbl[stackTop] = frame.pc + 2;
         break jumplessRun;
     case Icode_RETSUB : {
         // indexReg: local to store return address
         if (instructionCounting) {
-            addInstructionCount(cx, state, 0);
+            addInstructionCount(cx, frame, 0);
         }
-        indexReg += state.localShift;
+        indexReg += frame.localShift;
         Object value = stack[indexReg];
         if (value != DBL_MRK) {
             // Invocation from exception handler, restore object to rethrow
@@ -2164,9 +2170,9 @@ switch (op) {
             break withoutExceptions;
         }
         // Normal return from GOSUB
-        state.pc = (int)sDbl[indexReg];
+        frame.pc = (int)sDbl[indexReg];
         if (instructionCounting) {
-            state.pcPrevBranch = state.pc;
+            frame.pcPrevBranch = frame.pc;
         }
         continue Loop;
     }
@@ -2175,8 +2181,8 @@ switch (op) {
         stackTop--;
         continue Loop;
     case Icode_POP_RESULT :
-        state.result = stack[stackTop];
-        state.resultDbl = sDbl[stackTop];
+        frame.result = stack[stackTop];
+        frame.resultDbl = sDbl[stackTop];
         stack[stackTop] = null;
         --stackTop;
         continue Loop;
@@ -2202,14 +2208,14 @@ switch (op) {
         continue Loop;
     }
     case Token.RETURN :
-        state.result = stack[stackTop];
-        state.resultDbl = sDbl[stackTop];
+        frame.result = stack[stackTop];
+        frame.resultDbl = sDbl[stackTop];
         --stackTop;
         break Loop;
     case Token.RETURN_RESULT :
         break Loop;
     case Icode_RETUNDEF :
-        state.result = undefined;
+        frame.result = undefined;
         break Loop;
     case Token.BITNOT : {
         int rIntValue = stack_int32(stack, sDbl, stackTop);
@@ -2260,19 +2266,19 @@ switch (op) {
     case Token.URSH : {
         int rIntValue = stack_int32(stack, sDbl, stackTop) & 0x1F;
         --stackTop;
-        double lDbl = stack_double(state, stackTop);
+        double lDbl = stack_double(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = ScriptRuntime.toUint32(lDbl) >>> rIntValue;
         continue Loop;
     }
     case Token.NEG : {
-        double rDbl = stack_double(state, stackTop);
+        double rDbl = stack_double(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = -rDbl;
         continue Loop;
     }
     case Token.POS : {
-        double rDbl = stack_double(state, stackTop);
+        double rDbl = stack_double(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = rDbl;
         continue Loop;
@@ -2281,44 +2287,44 @@ switch (op) {
         stackTop = do_add(stack, sDbl, stackTop, cx);
         continue Loop;
     case Token.SUB : {
-        double rDbl = stack_double(state, stackTop);
+        double rDbl = stack_double(frame, stackTop);
         --stackTop;
-        double lDbl = stack_double(state, stackTop);
+        double lDbl = stack_double(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lDbl - rDbl;
         continue Loop;
     }
     case Token.MUL : {
-        double rDbl = stack_double(state, stackTop);
+        double rDbl = stack_double(frame, stackTop);
         --stackTop;
-        double lDbl = stack_double(state, stackTop);
+        double lDbl = stack_double(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lDbl * rDbl;
         continue Loop;
     }
     case Token.DIV : {
-        double rDbl = stack_double(state, stackTop);
+        double rDbl = stack_double(frame, stackTop);
         --stackTop;
-        double lDbl = stack_double(state, stackTop);
+        double lDbl = stack_double(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         // Detect the divide by zero or let Java do it ?
         sDbl[stackTop] = lDbl / rDbl;
         continue Loop;
     }
     case Token.MOD : {
-        double rDbl = stack_double(state, stackTop);
+        double rDbl = stack_double(frame, stackTop);
         --stackTop;
-        double lDbl = stack_double(state, stackTop);
+        double lDbl = stack_double(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lDbl % rDbl;
         continue Loop;
     }
     case Token.NOT :
-        stack[stackTop] = stack_boolean(state, stackTop)
+        stack[stackTop] = stack_boolean(frame, stackTop)
                           ? Boolean.FALSE : Boolean.TRUE;
         continue Loop;
     case Token.BINDNAME :
-        stack[++stackTop] = ScriptRuntime.bind(cx, state.scope, stringReg);
+        stack[++stackTop] = ScriptRuntime.bind(cx, frame.scope, stringReg);
         continue Loop;
     case Token.SETNAME : {
         Object rhs = stack[stackTop];
@@ -2326,7 +2332,7 @@ switch (op) {
         --stackTop;
         Scriptable lhs = (Scriptable)stack[stackTop];
         stack[stackTop] = ScriptRuntime.setName(lhs, rhs, cx,
-                                                state.scope, stringReg);
+                                                frame.scope, stringReg);
         continue Loop;
     }
     case Token.DELPROP : {
@@ -2335,14 +2341,14 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.delete(cx, state.scope, lhs, rhs);
+        stack[stackTop] = ScriptRuntime.delete(cx, frame.scope, lhs, rhs);
         continue Loop;
     }
     case Token.GETPROP : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.getObjectProp(lhs, stringReg,
-                                                      cx, state.scope);
+                                                      cx, frame.scope);
         continue Loop;
     }
     case Token.SETPROP : {
@@ -2352,25 +2358,25 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.setObjectProp(lhs, stringReg, rhs,
-                                                      cx, state.scope);
+                                                      cx, frame.scope);
         continue Loop;
     }
     case Icode_PROP_INC_DEC : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.propIncrDecr(lhs, stringReg,
-                                                     state.scope,
-                                                     iCode[state.pc]);
-        ++state.pc;
+                                                     frame.scope,
+                                                     iCode[frame.pc]);
+        ++frame.pc;
         continue Loop;
     }
     case Token.GETELEM :
         --stackTop;
-        do_getElem(state, stackTop, cx);
+        do_getElem(frame, stackTop, cx);
         continue Loop;
     case Token.SETELEM :
         stackTop -= 2;
-        do_setElem(state, stackTop, cx);
+        do_setElem(frame, stackTop, cx);
         continue Loop;
     case Icode_ELEM_INC_DEC: {
         Object rhs = stack[stackTop];
@@ -2378,9 +2384,9 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, cx, state.scope,
-                                                     iCode[state.pc]);
-        ++state.pc;
+        stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, cx, frame.scope,
+                                                     iCode[frame.pc]);
+        ++frame.pc;
         continue Loop;
     }
     case Token.GET_REF : {
@@ -2407,19 +2413,19 @@ switch (op) {
     case Icode_REF_INC_DEC : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.referenceIncrDecr(lhs, iCode[state.pc]);
-        ++state.pc;
+        stack[stackTop] = ScriptRuntime.referenceIncrDecr(lhs, iCode[frame.pc]);
+        ++frame.pc;
         continue Loop;
     }
     case Token.LOCAL_SAVE :
-        indexReg += state.localShift;
+        indexReg += frame.localShift;
         stack[indexReg] = stack[stackTop];
         sDbl[indexReg] = sDbl[stackTop];
         --stackTop;
         continue Loop;
     case Token.LOCAL_LOAD :
         ++stackTop;
-        indexReg += state.localShift;
+        indexReg += frame.localShift;
         stack[stackTop] = stack[indexReg];
         sDbl[stackTop] = sDbl[indexReg];
         continue Loop;
@@ -2427,7 +2433,7 @@ switch (op) {
         // stringReg: name
         ++stackTop;
         stack[stackTop] = ScriptRuntime.getNameFunctionAndThis(stringReg,
-                                                               cx, state.scope);
+                                                               cx, frame.scope);
         ++stackTop;
         stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
         continue Loop;
@@ -2436,7 +2442,7 @@ switch (op) {
         if (obj == DBL_MRK) obj = doubleWrap(sDbl[stackTop]);
         // stringReg: property
         stack[stackTop] = ScriptRuntime.getPropFunctionAndThis(obj, stringReg,
-                                                               cx, state.scope);
+                                                               cx, frame.scope);
         ++stackTop;
         stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
         continue Loop;
@@ -2448,7 +2454,7 @@ switch (op) {
         if (id == DBL_MRK) id = doubleWrap(sDbl[stackTop]);
         stack[stackTop - 1] = ScriptRuntime.getElemFunctionAndThis(obj, id,
                                                                    cx,
-                                                                   state.scope);
+                                                                   frame.scope);
         stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
         continue Loop;
     }
@@ -2464,9 +2470,9 @@ switch (op) {
         if (instructionCounting) {
             cx.instructionCount += INVOCATION_COST;
         }
-        int callType = iCode[state.pc] & 0xFF;
-        boolean isNew =  (iCode[state.pc + 1] != 0);
-        int sourceLine = getShort(iCode, state.pc + 2);
+        int callType = iCode[frame.pc] & 0xFF;
+        boolean isNew =  (iCode[frame.pc + 1] != 0);
+        int sourceLine = getShort(iCode, frame.pc + 2);
 
         // indexReg: number of arguments
         if (isNew) {
@@ -2478,7 +2484,7 @@ switch (op) {
             Object[] outArgs = getArgsArray(
                                    stack, sDbl, stackTop + 1, indexReg);
             stack[stackTop] = ScriptRuntime.newSpecial(
-                                  cx, function, outArgs, state.scope, callType);
+                                  cx, function, outArgs, frame.scope, callType);
         } else {
             // stack change: function thisObj arg0 .. argN -> result
             stackTop -= 1 + indexReg;
@@ -2491,10 +2497,10 @@ switch (op) {
                                    stack, sDbl, stackTop + 2, indexReg);
             stack[stackTop] = ScriptRuntime.callSpecial(
                                   cx, function, functionThis, outArgs,
-                                  state.scope, state.thisObj, callType,
-                                  state.idata.itsSourceFile, sourceLine);
+                                  frame.scope, frame.thisObj, callType,
+                                  frame.idata.itsSourceFile, sourceLine);
         }
-        state.pc += 4;
+        frame.pc += 4;
         continue Loop;
     }
     case Token.CALL :
@@ -2511,47 +2517,47 @@ switch (op) {
         Scriptable funThisObj = (Scriptable)stack[stackTop + 1];
         Function fun = (Function)stack[stackTop];
 
-        Scriptable funScope = state.scope;
+        Scriptable funScope = frame.scope;
         if (useActivation) {
-            funScope = ScriptableObject.getTopLevelScope(state.scope);
+            funScope = ScriptableObject.getTopLevelScope(frame.scope);
         }
 
         if (fun instanceof InterpretedFunction) {
             // Inlining of InterpretedFunction.call not to create
             // argument array
             InterpretedFunction ifun = (InterpretedFunction)fun;
-            if (state.fnOrScript.securityDomain == ifun.securityDomain) {
-                State callParentState = state;
-                State calleeState = new State();
+            if (frame.fnOrScript.securityDomain == ifun.securityDomain) {
+                CallFrame callParentFrame = frame;
+                CallFrame calleeFrame = new CallFrame();
                 if (op == Icode_TAIL_CALL) {
                     // In principle tail call can re-use the current
-                    // state and its stack arrays but it is hard to
+                    // frame and its stack arrays but it is hard to
                     // do properly. Any exceptions that can legally
-                    // happen during state re-initialization including
+                    // happen during frame re-initialization including
                     // StackOverflowException during innocent looking
-                    // System.arraycopy may leave the current state
+                    // System.arraycopy may leave the current frame
                     // data corrupted leading to undefined behaviour
                     // in the catch code bellow that unwinds JS stack
-                    // on exceptions. Then there is issue about state release
+                    // on exceptions. Then there is issue about frame release
                     // end exceptions there.
-                    // To avoid state allocation a released state
+                    // To avoid frame allocation a released frame
                     // can be cached for re-use which would also benefit
                     // non-tail calls but it is not clear that this caching
                     // would gain in performance due to potentially
                     // bad iteraction with GC.
-                    callParentState = state.callerState;
+                    callParentFrame = frame.parentFrame;
                 }
-                initState(cx, funScope, funThisObj, stack, sDbl,
-                          stackTop + 2, indexReg, ifun, callParentState,
-                          calleeState);
+                initFrame(cx, funScope, funThisObj, stack, sDbl,
+                          stackTop + 2, indexReg, ifun, callParentFrame,
+                          calleeFrame);
                 if (op == Icode_TAIL_CALL) {
                     // Release the parent
-                    releaseState(cx, state, null);
+                    releaseFrame(cx, frame, null);
                 } else {
-                    state.savedStackTop = stackTop;
-                    state.savedCallOp = op;
+                    frame.savedStackTop = stackTop;
+                    frame.savedCallOp = op;
                 }
-                state = calleeState;
+                frame = calleeFrame;
                 continue StateLoop;
             }
         }
@@ -2572,9 +2578,9 @@ switch (op) {
         Scriptable funThisObj = (Scriptable)stack[stackTop + 1];
         Function fun = (Function)stack[stackTop];
 
-        Scriptable funScope = state.scope;
+        Scriptable funScope = frame.scope;
         if (useActivation) {
-            funScope = ScriptableObject.getTopLevelScope(state.scope);
+            funScope = ScriptableObject.getTopLevelScope(frame.scope);
         }
         Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 2, indexReg);
         stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj, outArgs,
@@ -2594,17 +2600,17 @@ switch (op) {
             // Inlining of InterpretedFunction.construct not to create
             // argument array
             InterpretedFunction f = (InterpretedFunction)lhs;
-            if (state.fnOrScript.securityDomain == f.securityDomain) {
-                Scriptable newInstance = f.createObject(cx, state.scope);
-                State calleeState = new State();
-                initState(cx, state.scope, newInstance, stack, sDbl,
-                          stackTop + 1, indexReg, f, state,
-                          calleeState);
+            if (frame.fnOrScript.securityDomain == f.securityDomain) {
+                Scriptable newInstance = f.createObject(cx, frame.scope);
+                CallFrame calleeFrame = new CallFrame();
+                initFrame(cx, frame.scope, newInstance, stack, sDbl,
+                          stackTop + 1, indexReg, f, frame,
+                          calleeFrame);
 
                 stack[stackTop] = newInstance;
-                state.savedStackTop = stackTop;
-                state.savedCallOp = op;
-                state = calleeState;
+                frame.savedStackTop = stackTop;
+                frame.savedCallOp = op;
+                frame = calleeFrame;
                 continue StateLoop;
             }
         }
@@ -2614,7 +2620,7 @@ switch (op) {
         }
         Function f = (Function)lhs;
         Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, indexReg);
-        stack[stackTop] = f.construct(cx, state.scope, outArgs);
+        stack[stackTop] = f.construct(cx, frame.scope, outArgs);
         continue Loop;
     }
     case Token.TYPEOF : {
@@ -2624,7 +2630,7 @@ switch (op) {
         continue Loop;
     }
     case Icode_TYPEOFNAME :
-        stack[++stackTop] = ScriptRuntime.typeofName(state.scope, stringReg);
+        stack[++stackTop] = ScriptRuntime.typeofName(frame.scope, stringReg);
         continue Loop;
     case Token.STRING :
         stack[++stackTop] = stringReg;
@@ -2632,30 +2638,30 @@ switch (op) {
     case Icode_SHORTNUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = getShort(iCode, state.pc);
-        state.pc += 2;
+        sDbl[stackTop] = getShort(iCode, frame.pc);
+        frame.pc += 2;
         continue Loop;
     case Icode_INTNUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = getInt(iCode, state.pc);
-        state.pc += 4;
+        sDbl[stackTop] = getInt(iCode, frame.pc);
+        frame.pc += 4;
         continue Loop;
     case Token.NUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = state.idata.itsDoubleTable[indexReg];
+        sDbl[stackTop] = frame.idata.itsDoubleTable[indexReg];
         continue Loop;
     case Token.NAME :
-        stack[++stackTop] = ScriptRuntime.name(cx, state.scope, stringReg);
+        stack[++stackTop] = ScriptRuntime.name(cx, frame.scope, stringReg);
         continue Loop;
     case Icode_NAME_INC_DEC :
-        stack[++stackTop] = ScriptRuntime.nameIncrDecr(state.scope, stringReg,
-                                                       iCode[state.pc]);
-        ++state.pc;
+        stack[++stackTop] = ScriptRuntime.nameIncrDecr(frame.scope, stringReg,
+                                                       iCode[frame.pc]);
+        ++frame.pc;
         continue Loop;
     case Icode_SETVAR1:
-        indexReg = iCode[state.pc++];
+        indexReg = iCode[frame.pc++];
         // fallthrough
     case Token.SETVAR :
         if (!useActivation) {
@@ -2664,11 +2670,11 @@ switch (op) {
         } else {
             Object val = stack[stackTop];
             if (val == DBL_MRK) val = doubleWrap(sDbl[stackTop]);
-            activationPut(state, indexReg, val);
+            activationPut(frame, indexReg, val);
         }
         continue Loop;
     case Icode_GETVAR1:
-        indexReg = iCode[state.pc++];
+        indexReg = iCode[frame.pc++];
         // fallthrough
     case Token.GETVAR :
         ++stackTop;
@@ -2676,13 +2682,13 @@ switch (op) {
             stack[stackTop] = stack[indexReg];
             sDbl[stackTop] = sDbl[indexReg];
         } else {
-            stack[stackTop] = activationGet(state, indexReg);
+            stack[stackTop] = activationGet(frame, indexReg);
         }
         continue Loop;
     case Icode_VAR_INC_DEC : {
         // indexReg : varindex
         ++stackTop;
-        int incrDecrMask = iCode[state.pc];
+        int incrDecrMask = iCode[frame.pc];
         if (!useActivation) {
             stack[stackTop] = DBL_MRK;
             Object varValue = stack[indexReg];
@@ -2698,11 +2704,11 @@ switch (op) {
             sDbl[indexReg] = d2;
             sDbl[stackTop] = ((incrDecrMask & Node.POST_FLAG) == 0) ? d2 : d;
         } else {
-            String varName = state.fnOrScript.argNames[indexReg];
-            stack[stackTop] = ScriptRuntime.nameIncrDecr(state.scope, varName,
+            String varName = frame.fnOrScript.argNames[indexReg];
+            stack[stackTop] = ScriptRuntime.nameIncrDecr(frame.scope, varName,
                                                          incrDecrMask);
         }
-        ++state.pc;
+        ++frame.pc;
         continue Loop;
     }
     case Icode_ZERO :
@@ -2719,10 +2725,10 @@ switch (op) {
         stack[++stackTop] = null;
         continue Loop;
     case Token.THIS :
-        stack[++stackTop] = state.thisObj;
+        stack[++stackTop] = frame.thisObj;
         continue Loop;
     case Token.THISFN :
-        stack[++stackTop] = state.fnOrScript;
+        stack[++stackTop] = frame.fnOrScript;
         continue Loop;
     case Token.FALSE :
         stack[++stackTop] = Boolean.FALSE;
@@ -2737,13 +2743,13 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
-        state.scope = ScriptRuntime.enterWith(lhs, state.scope);
-        ++state.withDepth;
+        frame.scope = ScriptRuntime.enterWith(lhs, frame.scope);
+        ++frame.withDepth;
         continue Loop;
     }
     case Token.LEAVEWITH :
-        state.scope = ScriptRuntime.leaveWith(state.scope);
-        --state.withDepth;
+        frame.scope = ScriptRuntime.leaveWith(frame.scope);
+        --frame.withDepth;
         continue Loop;
     case Token.CATCH_SCOPE :
         stack[stackTop] = ScriptRuntime.newCatchScope(stringReg,
@@ -2753,21 +2759,21 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
-        indexReg += state.localShift;
-        stack[indexReg] = ScriptRuntime.enumInit(lhs, state.scope);
+        indexReg += frame.localShift;
+        stack[indexReg] = ScriptRuntime.enumInit(lhs, frame.scope);
         continue Loop;
     }
     case Token.ENUM_INIT_VALUES : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
-        indexReg += state.localShift;
-        stack[indexReg] = ScriptRuntime.enumValuesInit(lhs, state.scope);
+        indexReg += frame.localShift;
+        stack[indexReg] = ScriptRuntime.enumValuesInit(lhs, frame.scope);
         continue Loop;
     }
     case Token.ENUM_NEXT :
     case Token.ENUM_ID : {
-        indexReg += state.localShift;
+        indexReg += frame.localShift;
         Object val = stack[indexReg];
         ++stackTop;
         stack[stackTop] = (op == Token.ENUM_NEXT)
@@ -2780,28 +2786,28 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.specialReference(lhs, stringReg,
-                                                         cx, state.scope);
+                                                         cx, frame.scope);
         continue Loop;
     }
     case Token.XML_REF : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.xmlReference(lhs, cx, state.scope);
+        stack[stackTop] = ScriptRuntime.xmlReference(lhs, cx, frame.scope);
         continue Loop;
     }
     case Icode_SCOPE :
-        stack[++stackTop] = state.scope;
+        stack[++stackTop] = frame.scope;
         continue Loop;
     case Icode_CLOSURE_EXPR :
-        stack[++stackTop] = InterpretedFunction.createFunction(cx, state.scope,
-                                                               state.fnOrScript,
+        stack[++stackTop] = InterpretedFunction.createFunction(cx, frame.scope,
+                                                               frame.fnOrScript,
                                                                indexReg);
         continue Loop;
     case Icode_CLOSURE_STMT :
-        initFunction(cx, state.scope, state.fnOrScript, indexReg);
+        initFunction(cx, frame.scope, frame.fnOrScript, indexReg);
         continue Loop;
     case Token.REGEXP :
-        stack[++stackTop] = state.scriptRegExps[indexReg];
+        stack[++stackTop] = frame.scriptRegExps[indexReg];
         continue Loop;
     case Icode_LITERAL_NEW :
         // indexReg: number of values in the literal
@@ -2824,15 +2830,15 @@ switch (op) {
         Object[] data = (Object[])stack[stackTop];
         Object val;
         if (op == Token.OBJECTLIT) {
-            Object[] ids = (Object[])state.idata.literalIds[indexReg];
-            val = ScriptRuntime.newObjectLiteral(ids, data, cx, state.scope);
+            Object[] ids = (Object[])frame.idata.literalIds[indexReg];
+            val = ScriptRuntime.newObjectLiteral(ids, data, cx, frame.scope);
         } else {
             int[] skipIndexces = null;
             if (op == Icode_SPARE_ARRAYLIT) {
-                skipIndexces = (int[])state.idata.literalIds[indexReg];
+                skipIndexces = (int[])frame.idata.literalIds[indexReg];
             }
             val = ScriptRuntime.newArrayLiteral(data, skipIndexces, cx,
-                                                state.scope);
+                                                frame.scope);
         }
         stack[stackTop] = val;
         continue Loop;
@@ -2841,18 +2847,18 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
-        state.scope = ScriptRuntime.enterDotQuery(lhs, state.scope);
-        ++state.withDepth;
+        frame.scope = ScriptRuntime.enterDotQuery(lhs, frame.scope);
+        ++frame.withDepth;
         continue Loop;
     }
     case Icode_LEAVEDQ : {
-        boolean valBln = stack_boolean(state, stackTop);
-        Object x = ScriptRuntime.updateDotQuery(valBln, state.scope);
+        boolean valBln = stack_boolean(frame, stackTop);
+        Object x = ScriptRuntime.updateDotQuery(valBln, frame.scope);
         if (x != null) {
             stack[stackTop] = x;
-            state.scope = ScriptRuntime.leaveDotQuery(state.scope);
-            --state.withDepth;
-            state.pc += 2;
+            frame.scope = ScriptRuntime.leaveDotQuery(frame.scope);
+            --frame.withDepth;
+            frame.pc += 2;
             continue Loop;
         }
         // reset stack and PC to code after ENTERDQ
@@ -2896,16 +2902,16 @@ switch (op) {
         if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
         // stringReg contains namespace
         stack[stackTop] = ScriptRuntime.toQualifiedName(stringReg, value,
-                                                        cx, state.scope);
+                                                        cx, frame.scope);
         continue Loop;
     }
     case Icode_LINE :
-        state.pcSourceLineStart = state.pc;
-        if (state.debuggerFrame != null) {
-            int line = getShort(iCode, state.pc);
-            state.debuggerFrame.onLineChange(cx, line);
+        frame.pcSourceLineStart = frame.pc;
+        if (frame.debuggerFrame != null) {
+            int line = getShort(iCode, frame.pc);
+            frame.debuggerFrame.onLineChange(cx, line);
         }
-        state.pc += 2;
+        frame.pc += 2;
         continue Loop;
     case Icode_REG_IND_C0:
         indexReg = 0;
@@ -2926,16 +2932,16 @@ switch (op) {
         indexReg = 5;
         continue Loop;
     case Icode_REG_IND1:
-        indexReg = 0xFF & iCode[state.pc];
-        ++state.pc;
+        indexReg = 0xFF & iCode[frame.pc];
+        ++frame.pc;
         continue Loop;
     case Icode_REG_IND2:
-        indexReg = getIndex(iCode, state.pc);
-        state.pc += 2;
+        indexReg = getIndex(iCode, frame.pc);
+        frame.pc += 2;
         continue Loop;
     case Icode_REG_IND4:
-        indexReg = getInt(iCode, state.pc);
-        state.pc += 4;
+        indexReg = getInt(iCode, frame.pc);
+        frame.pc += 4;
         continue Loop;
     case Icode_REG_STR_C0:
         stringReg = strings[0];
@@ -2950,21 +2956,21 @@ switch (op) {
         stringReg = strings[3];
         continue Loop;
     case Icode_REG_STR1:
-        stringReg = strings[0xFF & iCode[state.pc]];
-        ++state.pc;
+        stringReg = strings[0xFF & iCode[frame.pc]];
+        ++frame.pc;
         continue Loop;
     case Icode_REG_STR2:
-        stringReg = strings[getIndex(iCode, state.pc)];
-        state.pc += 2;
+        stringReg = strings[getIndex(iCode, frame.pc)];
+        frame.pc += 2;
         continue Loop;
     case Icode_REG_STR4:
-        stringReg = strings[getInt(iCode, state.pc)];
-        state.pc += 4;
+        stringReg = strings[getInt(iCode, frame.pc)];
+        frame.pc += 4;
         continue Loop;
     default :
-        dumpICode(state.idata);
+        dumpICode(frame.idata);
         throw new RuntimeException(
-            "Unknown icode : "+op+" @ pc : "+(state.pc-1));
+            "Unknown icode : "+op+" @ pc : "+(frame.pc-1));
 }  // end of interpreter switch
 
                     } // end of jumplessRun label block
@@ -2972,18 +2978,18 @@ switch (op) {
                     // This should be reachable only for jump implementation
                     // when pc points to encoded target offset
                     if (instructionCounting) {
-                        addInstructionCount(cx, state, 2);
+                        addInstructionCount(cx, frame, 2);
                     }
-                    int offset = getShort(iCode, state.pc);
+                    int offset = getShort(iCode, frame.pc);
                     if (offset != 0) {
                         // -1 accounts for pc pointing to jump opcode + 1
-                        state.pc += offset - 1;
+                        frame.pc += offset - 1;
                     } else {
-                        state.pc = state.idata.longJumps.
-                                       getExistingInt(state.pc);
+                        frame.pc = frame.idata.longJumps.
+                                       getExistingInt(frame.pc);
                     }
                     if (instructionCounting) {
-                        state.pcPrevBranch = state.pc;
+                        frame.pcPrevBranch = frame.pc;
                     }
                     continue Loop;
 
@@ -2997,48 +3003,47 @@ switch (op) {
                 // explicit throw
                 if (throwable == null) Kit.codeBug();
 
-                state = handleException(cx, state, throwable);
+                frame = handleException(cx, frame, throwable);
                 continue StateLoop;
 
             } // end of Loop: for
 
-            releaseState(cx, state, null);
-            if (state.callerState != null) {
-                Object calleeResult = state.result;
-                double calleeResultDbl = state.resultDbl;
-                state = state.callerState;
+            releaseFrame(cx, frame, null);
+            if (frame.parentFrame != null) {
+                Object calleeResult = frame.result;
+                double calleeResultDbl = frame.resultDbl;
+                frame = frame.parentFrame;
 
-                if (state.savedCallOp == Token.CALL) {
-                    state.stack[state.savedStackTop] = calleeResult;
-                    state.sDbl[state.savedStackTop] = calleeResultDbl;
-                } else if (state.savedCallOp == Token.NEW) {
+                if (frame.savedCallOp == Token.CALL) {
+                    frame.stack[frame.savedStackTop] = calleeResult;
+                    frame.sDbl[frame.savedStackTop] = calleeResultDbl;
+                } else if (frame.savedCallOp == Token.NEW) {
                     // If construct returns scriptable,
                     // then it replaces on stack top saved original instance
                     // of the object.
                     if (calleeResult instanceof Scriptable
                         && calleeResult != undefined)
                     {
-                        state.stack[state.savedStackTop] = calleeResult;
+                        frame.stack[frame.savedStackTop] = calleeResult;
                     }
                 } else {
                     Kit.codeBug();
                 }
-                state.savedCallOp = 0;
+                frame.savedCallOp = 0;
                 continue StateLoop;
             }
 
-            return (state.result != DBL_MRK)
-                ? state.result : doubleWrap(state.resultDbl);
+            return frame;
 
         } // end of StateLoop: for(;;)
     }
 
-    private static void initState(Context cx, Scriptable callerScope,
+    private static void initFrame(Context cx, Scriptable callerScope,
                                   Scriptable thisObj,
                                   Object[] args, double[] argsDbl,
                                   int argShift, int argCount,
                                   InterpretedFunction fnOrScript,
-                                  State callerState, State state)
+                                  CallFrame parentFrame, CallFrame frame)
     {
         InterpreterData idata = fnOrScript.idata;
 
@@ -3053,7 +3058,7 @@ switch (op) {
 
         boolean activationFunctionIsEntered = false;
         // If any exception happens then ScriptRuntime.exitActivationFunction
-        // and debugger.onExit should be called to restore state properly
+        // and debugger.onExit should be called to restore frame properly
         try {
             if (useActivation) {
                 // Copy args to new array to pass to enterActivationFunction
@@ -3126,11 +3131,11 @@ switch (op) {
             Object[] stack;
             double[] sDbl;
             boolean stackReuse;
-            if (state.stack != null && maxFrameArray <= state.stack.length) {
-                // Reuse stacks from old state
+            if (frame.stack != null && maxFrameArray <= frame.stack.length) {
+                // Reuse stacks from old frame
                 stackReuse = true;
-                stack = state.stack;
-                sDbl = state.sDbl;
+                stack = frame.stack;
+                sDbl = frame.sDbl;
             } else {
                 stackReuse = false;
                 stack = new Object[maxFrameArray];
@@ -3140,34 +3145,34 @@ switch (op) {
             int definedArgs = idata.argCount;
             if (definedArgs > argCount) { definedArgs = argCount; }
 
-            // Fill the state structure
+            // Fill the frame structure
 
-            state.callerState = callerState;
-            state.fnOrScript = fnOrScript;
-            state.idata = idata;
+            frame.parentFrame = parentFrame;
+            frame.fnOrScript = fnOrScript;
+            frame.idata = idata;
 
-            state.stack = stack;
-            state.sDbl = sDbl;
-            state.localShift = idata.itsMaxVars;
-            state.emptyStackTop = emptyStackTop;
+            frame.stack = stack;
+            frame.sDbl = sDbl;
+            frame.localShift = idata.itsMaxVars;
+            frame.emptyStackTop = emptyStackTop;
 
-            state.debuggerFrame = debuggerFrame;
-            state.useActivation = useActivation;
+            frame.debuggerFrame = debuggerFrame;
+            frame.useActivation = useActivation;
 
-            state.thisObj = thisObj;
-            state.scriptRegExps = scriptRegExps;
+            frame.thisObj = thisObj;
+            frame.scriptRegExps = scriptRegExps;
 
             // Initialize initial values of variables that change during
             // interpretation.
-            state.result = Undefined.instance;
-            state.pc = 0;
-            state.pcPrevBranch = 0;
-            state.pcSourceLineStart = idata.firstLinePC;
-            state.withDepth = 0;
-            state.scope = scope;
+            frame.result = Undefined.instance;
+            frame.pc = 0;
+            frame.pcPrevBranch = 0;
+            frame.pcSourceLineStart = idata.firstLinePC;
+            frame.withDepth = 0;
+            frame.scope = scope;
 
-            state.savedStackTop = emptyStackTop;
-            state.savedCallOp = 0;
+            frame.savedStackTop = emptyStackTop;
+            frame.savedCallOp = 0;
 
             System.arraycopy(args, argShift, stack, 0, definedArgs);
             if (argsDbl != null) {
@@ -3187,7 +3192,7 @@ switch (op) {
             // Restore activation records and debugger
             if (activationFunctionIsEntered) {
                 ScriptRuntime.exitActivationFunction(cx);
-                state.useActivation = false;
+                frame.useActivation = false;
             }
             if (debuggerFrame != null) {
                 debuggerFrame.onExit(cx, true, ex);
@@ -3201,21 +3206,21 @@ switch (op) {
         }
     }
 
-    private static void releaseState(Context cx, State state,
+    private static void releaseFrame(Context cx, CallFrame frame,
                                      Throwable throwable)
     {
-        if (state.idata.itsFunctionType != 0) {
-            if (state.useActivation) {
+        if (frame.idata.itsFunctionType != 0) {
+            if (frame.useActivation) {
                 ScriptRuntime.exitActivationFunction(cx);
             }
         }
 
-        if (state.debuggerFrame != null) {
+        if (frame.debuggerFrame != null) {
             try {
                 if (throwable != null) {
-                    state.debuggerFrame.onExit(cx, true, throwable);
+                    frame.debuggerFrame.onExit(cx, true, throwable);
                 } else {
-                    state.debuggerFrame.onExit(cx, false, state.result);
+                    frame.debuggerFrame.onExit(cx, false, frame.result);
                 }
             } catch (Throwable ex) {
                 System.err.println(
@@ -3225,8 +3230,8 @@ switch (op) {
         }
     }
 
-    private static State handleException(Context cx, State state,
-                                         Throwable throwable)
+    private static CallFrame handleException(Context cx, CallFrame frame,
+                                             Throwable throwable)
     {
         // arbitrary exception cost for instruction counting
         final int EXCEPTION_COST = 100;
@@ -3255,7 +3260,7 @@ switch (op) {
 
         if (instructionCounting) {
             try {
-                addInstructionCount(cx, state, EXCEPTION_COST);
+                addInstructionCount(cx, frame, EXCEPTION_COST);
             } catch (RuntimeException ex) {
                 throwable = ex;
                 exState = EX_FINALLY_STATE;
@@ -3266,11 +3271,11 @@ switch (op) {
                 exState = EX_NO_JS_STATE;
             }
         }
-        if (state.debuggerFrame != null
+        if (frame.debuggerFrame != null
             && !(throwable instanceof Error))
         {
             try {
-                state.debuggerFrame.onExceptionThrown(
+                frame.debuggerFrame.onExceptionThrown(
                     cx, throwable);
             } catch (Throwable ex) {
                 // Any exception from debugger
@@ -3286,11 +3291,11 @@ switch (op) {
         boolean catchHandler = false;
         for (;;) {
             if (exState != EX_NO_JS_STATE) {
-                table = state.idata.itsExceptionTable;
+                table = frame.idata.itsExceptionTable;
                 // Icode switch in the interpreter increments PC immediately
                 // and it is necessary to subtract 1 from the saved PC
                 // to point it before the start of the next instruction.
-                handler = getExceptionHandler(table, state.pc - 1);
+                handler = getExceptionHandler(table, frame.pc - 1);
                 if (handler >= 0) {
                     if (exState == EX_CATCH_STATE) {
                         // Check for catch but only if it is allowed
@@ -3309,10 +3314,10 @@ switch (op) {
             // No allowed execption handlers in this frame, unwind
             // to parent and try to look there
 
-            releaseState(cx, state, throwable);
+            releaseFrame(cx, frame, throwable);
 
-            if (state.callerState == null) {
-                // No more parent state frames, rethrow the exception.
+            if (frame.parentFrame == null) {
+                // No more parent frame frames, rethrow the exception.
                 if (throwable instanceof RuntimeException) {
                     throw (RuntimeException)throwable;
                 } else {
@@ -3321,31 +3326,31 @@ switch (op) {
                 }
             }
 
-            state = state.callerState;
+            frame = frame.parentFrame;
         }
 
         // We caught an exception
 
         int tryWithDepth = table[handler + EXCEPTION_WITH_DEPTH_SLOT];
-        while (state.withDepth != tryWithDepth) {
-            if (state.scope == null) Kit.codeBug();
-            state.scope = ScriptRuntime.leaveWith(state.scope);
-            --state.withDepth;
+        while (frame.withDepth != tryWithDepth) {
+            if (frame.scope == null) Kit.codeBug();
+            frame.scope = ScriptRuntime.leaveWith(frame.scope);
+            --frame.withDepth;
         }
 
-        state.pc = handlerPC;
+        frame.pc = handlerPC;
         if (instructionCounting) {
-            state.pcPrevBranch = handlerPC;
+            frame.pcPrevBranch = handlerPC;
         }
 
-        // The state is almost restored and only stack initialization is left.
+        // The frame is almost restored and only stack initialization is left.
 
-        state.savedStackTop = state.emptyStackTop;
+        frame.savedStackTop = frame.emptyStackTop;
         if (catchHandler) {
             int exLocal = table[handler + EXCEPTION_LOCAL_SLOT];
             try {
-                state.stack[state.localShift + exLocal]
-                    = ScriptRuntime.getCatchObject(cx, state.scope,
+                frame.stack[frame.localShift + exLocal]
+                    = ScriptRuntime.getCatchObject(cx, frame.scope,
                                                    throwable);
             } catch (Throwable ex) {
                 // getCatchObject can even theoretically execute script code so
@@ -3353,19 +3358,19 @@ switch (op) {
                 // recusrsively but before that make the execption like
                 // it was executed during first icode of the catch block
                 // which is simulated by increasing PC by one
-                ++state.pc;
-                return handleException(cx, state, ex);
+                ++frame.pc;
+                return handleException(cx, frame, ex);
 
             }
         } else {
-            ++state.savedStackTop;
+            ++frame.savedStackTop;
             // Call finally handler with throwable on stack top to
             // distinguish from normal invocation through GOSUB
             // which would contain DBL_MRK on the stack
-            state.stack[state.savedStackTop] = throwable;
+            frame.stack[frame.savedStackTop] = throwable;
         }
 
-        return state;
+        return frame;
     }
 
     private static Object doubleWrap(double x)
@@ -3385,21 +3390,21 @@ switch (op) {
         return ScriptRuntime.toInt32(value);
     }
 
-    private static double stack_double(State state, int i)
+    private static double stack_double(CallFrame frame, int i)
     {
-        Object x = state.stack[i];
-        return (x != DBL_MRK) ? ScriptRuntime.toNumber(x) : state.sDbl[i];
+        Object x = frame.stack[i];
+        return (x != DBL_MRK) ? ScriptRuntime.toNumber(x) : frame.sDbl[i];
     }
 
-    private static boolean stack_boolean(State state, int i)
+    private static boolean stack_boolean(CallFrame frame, int i)
     {
-        Object x = state.stack[i];
+        Object x = frame.stack[i];
         if (x == Boolean.TRUE) {
             return true;
         } else if (x == Boolean.FALSE) {
             return false;
         } else if (x == DBL_MRK) {
-            double d = state.sDbl[i];
+            double d = frame.sDbl[i];
             return d == d && d != 0.0;
         } else if (x == null || x == Undefined.instance) {
             return false;
@@ -3485,10 +3490,10 @@ switch (op) {
         }
     }
 
-    private static void do_cmp(State state, int i, int op)
+    private static void do_cmp(CallFrame frame, int i, int op)
     {
-        Object rhs = state.stack[i + 1];
-        Object lhs = state.stack[i];
+        Object rhs = frame.stack[i + 1];
+        Object lhs = frame.stack[i];
         boolean result;
       object_compare:
         {
@@ -3496,11 +3501,11 @@ switch (op) {
             {
                 double rDbl, lDbl;
                 if (rhs == DBL_MRK) {
-                    rDbl = state.sDbl[i + 1];
-                    lDbl = stack_double(state, i);
+                    rDbl = frame.sDbl[i + 1];
+                    lDbl = stack_double(frame, i);
                 } else if (lhs == DBL_MRK) {
                     rDbl = ScriptRuntime.toNumber(rhs);
-                    lDbl = state.sDbl[i];
+                    lDbl = frame.sDbl[i];
                 } else {
                     break number_compare;
                 }
@@ -3538,42 +3543,42 @@ switch (op) {
                 throw Kit.codeBug();
             }
         }
-        state.stack[i] = result ? Boolean.TRUE : Boolean.FALSE;
+        frame.stack[i] = result ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    private static void do_eq(State state, int i, int op)
+    private static void do_eq(CallFrame frame, int i, int op)
     {
         boolean result;
-        Object rhs = state.stack[i + 1];
-        Object lhs = state.stack[i];
+        Object rhs = frame.stack[i + 1];
+        Object lhs = frame.stack[i];
         if (rhs == DBL_MRK) {
             if (lhs == DBL_MRK) {
-                result = (state.sDbl[i] == state.sDbl[i + 1]);
+                result = (frame.sDbl[i] == frame.sDbl[i + 1]);
             } else {
-                result = ScriptRuntime.eqNumber(state.sDbl[i + 1], lhs);
+                result = ScriptRuntime.eqNumber(frame.sDbl[i + 1], lhs);
             }
         } else {
             if (lhs == DBL_MRK) {
-                result = ScriptRuntime.eqNumber(state.sDbl[i], rhs);
+                result = ScriptRuntime.eqNumber(frame.sDbl[i], rhs);
             } else {
                 result = ScriptRuntime.eq(lhs, rhs);
             }
         }
         result ^= (op == Token.NE);
-        state.stack[i] = (result) ? Boolean.TRUE : Boolean.FALSE;
+        frame.stack[i] = (result) ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    private static void do_sheq(State state, int i, int op)
+    private static void do_sheq(CallFrame frame, int i, int op)
     {
-        Object rhs = state.stack[i + 1];
-        Object lhs = state.stack[i];
+        Object rhs = frame.stack[i + 1];
+        Object lhs = frame.stack[i];
         boolean result;
       double_compare: {
             double rdbl, ldbl;
             if (rhs == DBL_MRK) {
-                rdbl = state.sDbl[i + 1];
+                rdbl = frame.sDbl[i + 1];
                 if (lhs == DBL_MRK) {
-                    ldbl = state.sDbl[i];
+                    ldbl = frame.sDbl[i];
                 } else if (lhs instanceof Number) {
                     ldbl = ((Number)lhs).doubleValue();
                 } else {
@@ -3581,9 +3586,9 @@ switch (op) {
                     break double_compare;
                 }
             } else if (lhs == DBL_MRK) {
-                ldbl = state.sDbl[i];
+                ldbl = frame.sDbl[i];
                 if (rhs == DBL_MRK) {
-                    rdbl = state.sDbl[i + 1];
+                    rdbl = frame.sDbl[i + 1];
                 } else if (rhs instanceof Number) {
                     rdbl = ((Number)rhs).doubleValue();
                 } else {
@@ -3597,27 +3602,27 @@ switch (op) {
             result = ldbl == rdbl;
         }
         result ^= (op == Token.SHNE);
-        state.stack[i] = (result) ? Boolean.TRUE : Boolean.FALSE;
+        frame.stack[i] = (result) ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    private static void do_getElem(State state, int i, Context cx)
+    private static void do_getElem(CallFrame frame, int i, Context cx)
     {
-        Object lhs = state.stack[i];
-        if (lhs == DBL_MRK) lhs = doubleWrap(state.sDbl[i]);
+        Object lhs = frame.stack[i];
+        if (lhs == DBL_MRK) lhs = doubleWrap(frame.sDbl[i]);
 
         Object result;
-        Object id = state.stack[i + 1];
+        Object id = frame.stack[i + 1];
         if (id != DBL_MRK) {
-            result = ScriptRuntime.getObjectElem(lhs, id, cx, state.scope);
+            result = ScriptRuntime.getObjectElem(lhs, id, cx, frame.scope);
         } else {
-            double val = state.sDbl[i + 1];
+            double val = frame.sDbl[i + 1];
             if (lhs == null || lhs == Undefined.instance) {
                 throw ScriptRuntime.undefReadError(
                           lhs, ScriptRuntime.toString(val));
             }
             Scriptable obj = (lhs instanceof Scriptable)
                              ? (Scriptable)lhs
-                             : ScriptRuntime.toObject(cx, state.scope, lhs);
+                             : ScriptRuntime.toObject(cx, frame.scope, lhs);
             int index = (int)val;
             if (index == val) {
                 result = ScriptRuntime.getObjectIndex(obj, index, cx);
@@ -3626,29 +3631,29 @@ switch (op) {
                 result = ScriptRuntime.getObjectProp(obj, s, cx);
             }
         }
-        state.stack[i] = result;
+        frame.stack[i] = result;
     }
 
-    private static void do_setElem(State state, int i, Context cx)
+    private static void do_setElem(CallFrame frame, int i, Context cx)
     {
-        Object rhs = state.stack[i + 2];
-        if (rhs == DBL_MRK) rhs = doubleWrap(state.sDbl[i + 2]);
-        Object lhs = state.stack[i];
-        if (lhs == DBL_MRK) lhs = doubleWrap(state.sDbl[i]);
+        Object rhs = frame.stack[i + 2];
+        if (rhs == DBL_MRK) rhs = doubleWrap(frame.sDbl[i + 2]);
+        Object lhs = frame.stack[i];
+        if (lhs == DBL_MRK) lhs = doubleWrap(frame.sDbl[i]);
 
         Object result;
-        Object id = state.stack[i + 1];
+        Object id = frame.stack[i + 1];
         if (id != DBL_MRK) {
-            result = ScriptRuntime.setObjectElem(lhs, id, rhs, cx, state.scope);
+            result = ScriptRuntime.setObjectElem(lhs, id, rhs, cx, frame.scope);
         } else {
-            double val = state.sDbl[i + 1];
+            double val = frame.sDbl[i + 1];
             if (lhs == null || lhs == Undefined.instance) {
                 throw ScriptRuntime.undefWriteError(
                           lhs, ScriptRuntime.toString(val), rhs);
             }
             Scriptable obj = (lhs instanceof Scriptable)
                              ? (Scriptable)lhs
-                             : ScriptRuntime.toObject(cx, state.scope, lhs);
+                             : ScriptRuntime.toObject(cx, frame.scope, lhs);
             int index = (int)val;
             if (index == val) {
                 result = ScriptRuntime.setObjectIndex(obj, index, rhs, cx);
@@ -3657,7 +3662,7 @@ switch (op) {
                 result = ScriptRuntime.setObjectProp(obj, s, rhs, cx);
             }
         }
-        state.stack[i] = result;
+        frame.stack[i] = result;
     }
 
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,
@@ -3675,26 +3680,27 @@ switch (op) {
         return args;
     }
 
-    private static Object activationGet(State state, int slot)
+    private static Object activationGet(CallFrame frame, int slot)
     {
-        String name = state.fnOrScript.argNames[slot];
-        Scriptable scope = state.scope;
+        String name = frame.fnOrScript.argNames[slot];
+        Scriptable scope = frame.scope;
         Object val = scope.get(name, scope);
     // Activation parameter or var is permanent
         if (val == Scriptable.NOT_FOUND) Kit.codeBug();
         return val;
     }
 
-    private static void activationPut(State state, int slot, Object value)
+    private static void activationPut(CallFrame frame, int slot, Object value)
     {
-        String name = state.fnOrScript.argNames[slot];
-        Scriptable scope = state.scope;
+        String name = frame.fnOrScript.argNames[slot];
+        Scriptable scope = frame.scope;
         scope.put(name, scope, value);
     }
 
-    private static void addInstructionCount(Context cx, State state, int extra)
+    private static void addInstructionCount(Context cx, CallFrame frame,
+                                            int extra)
     {
-        cx.instructionCount += state.pc - state.pcPrevBranch + extra;
+        cx.instructionCount += frame.pc - frame.pcPrevBranch + extra;
         if (cx.instructionCount > cx.instructionThreshold) {
             cx.observeInstructionCount(cx.instructionCount);
             cx.instructionCount = 0;
