@@ -621,32 +621,6 @@ mime_fix_up_html_address( char **addr)
   }
 }
 
-static void  
-mime_intl_mimepart_2_str(char **str, char *mcharset)
-{
-  //
-  // Converting these header values for UTF-8 for proper display
-  // in the text input widgets.
-  //
-  if (str && *str)
-  {
-    // Now do conversion to UTF-8???
-    char  *newStr = NULL;
-    PRInt32 newStrLen;
-    PRInt32 res = MIME_ConvertCharset(PR_TRUE, mcharset, "UTF-8", *str, nsCRT::strlen(*str), 
-                                    &newStr, &newStrLen, NULL);
-    if ( (NS_SUCCEEDED(res)) && (newStr && newStr != *str))
-    {
-      PR_FREEIF(*str);
-      *str = newStr;
-    }
-    else
-    {
-      MIME_StripContinuations(*str);
-    }
-  }
-}
-
 static void 
 mime_intl_insert_message_header_1(char        **body, 
                                   char        **hdr_value,
@@ -1432,15 +1406,16 @@ mime_parse_stream_complete (nsMIMESession *stream)
           if (bodyCharset)
           {
             // Now do conversion to UTF-8 for output
-            char  *convertedString = nsnull;
-            PRInt32 convertedStringLen;
-            PRInt32 res = MIME_ConvertCharset(PR_FALSE, bodyCharset, "UTF-8", body, nsCRT::strlen(body), 
-                                              &convertedString, &convertedStringLen, NULL);
-            if (res == 0)
+            nsAutoString tempUnicodeString;
+            if (NS_SUCCEEDED(ConvertToUnicode(bodyCharset, body, tempUnicodeString)))
             {
-              PR_FREEIF(body);
-              body = convertedString;
-            }  
+              char *utf8Str = nsCRT::strdup(NS_ConvertUCS2toUTF8(tempUnicodeString.get()).get());
+              if (utf8Str)
+              {
+                PR_FREEIF(body);
+                body = utf8Str;
+              }
+            }
 
             PR_FREEIF(bodyCharset);
           }

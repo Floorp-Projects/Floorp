@@ -57,10 +57,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgHeaderParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeHeaders)
 
 // Destructor for stream converter
-extern "C" void comi18n_destructor();
 static NS_IMETHODIMP streamConverterDestructor()
 {
-  comi18n_destructor();
   return NS_OK;
 }
 

@@ -95,11 +95,6 @@ public:
                                       const PRInt32 encodedWordSize,     
                                       char          **encodedString) = 0;
 
-  // Apply charset conversion to a given buffer. The conversion is done by an unicode round trip.
-  NS_IMETHOD ConvertCharset(const PRBool autoDetection, const char* from_charset, const char* to_charset,
-                            const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
-                            PRInt32* numUnConverted) = 0;
-
   NS_IMETHOD B64EncoderInit(nsresult (*PR_CALLBACK output_fn) (const char *buf, PRInt32 size, void *closure), 
                                 void *closure, MimeEncoderData **returnEncoderData)  = 0;
 

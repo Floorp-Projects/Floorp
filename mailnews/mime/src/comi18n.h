@@ -87,45 +87,6 @@ extern "C" char *MIME_DecodeMimeHeader(const char *header,
 char *MIME_EncodeMimePartIIStr(const char *header, const char* mailCharset, const PRInt32 encodedWordSize);
 
 /**
- * Apply charset conversion to a given string. The conversion is done by an unicode round trip.
- * This is a replacement for INTL_ConvertLineWithoutAutoDetect.
- * The caller should instanticate converters by XPCOM for that purpose.
- *
- * Note the caller cannot call this muliple times for a large buffer (of multi byte text)
- * since this will not save a state info (i.e. converter instance will be created/destroyed for every call).
- *
- * @param from_charset[IN] A charset name in C string.
- * @param to_charset  [IN] A charset name in C string.
- * @param inCstring   [IN] Input buffer (in C string) to convert.
- * @param outCstring  [OUT] Converted buffer (in C string) is set. Allocated buffer should be freed by PR_FREE.
- * @return            0 is success, otherwise error.
- */
-PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
-                             const char* inCstring, char** outCstring);
-
-/**
- * Apply charset conversion to a given buffer. The conversion is done by an unicode round trip.
- *
- * Note the caller cannot call this muliple times for a large buffer (of multi byte text)
- * since this will not save a state info (i.e. converter instance will be created/destroyed for every call).
- * The caller should instanticate converters by XPCOM for that purpose.
- *
- * @param autoDetection [IN] True if apply auto charset detection.
- * @param from_charset[IN] A charset name in C string.
- * @param to_charset  [IN] A charset name in C string.
- * @param inBuffer    [IN] Input buffer to convert.
- * @param inLength    [IN] Input buffer length.
- * @param outBuffer   [OUT] Converted buffer is set. Allocated buffer should be freed by PR_FREE.
- * @param outLength   [OUT] Converted buffer length is set.
- * @param numUnConverted [OUT] Number of unconverted characters (can be NULL).
- * @return            0 is success, otherwise error.
- */
-PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset, const char* to_charset,
-                            const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
-                            PRInt32* numUnConverted);
-
-
-/**
  * Get a next character position in an UTF-8 string.
  * Example: s = NextChar_UTF8(s);  // get a pointer for the next character
  *

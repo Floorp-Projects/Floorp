@@ -55,6 +55,7 @@
 #include "msgCore.h"
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
+#include "nsMsgI18N.h"
 
 // Forward declares...
 extern "C"  char    *MIME_StripContinuations(char *original);
@@ -831,8 +832,12 @@ mime_decode_filename(char *name, const char *charset,
 	// If charset parameter is used, this is RFC2231 encoding.
 	if (charset)
 	{
-		MIME_ConvertString(charset, "UTF-8", name, &returnVal);
-		return returnVal;
+    nsAutoString tempUnicodeString;
+    if (NS_SUCCEEDED(ConvertToUnicode(charset, name, tempUnicodeString)))
+    {
+      if (returnVal = nsCRT::strdup(NS_ConvertUCS2toUTF8(tempUnicodeString.get()).get()))
+        return returnVal;
+    }
 	}
 
 	while (*s)

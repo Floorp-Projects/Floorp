@@ -387,7 +387,7 @@ MimeInlineText_convert_and_parse_line(char *line, PRInt32 length, MimeObject *ob
   PRBool useInputCharsetConverter = obj->options->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(text->charset, obj->options->charsetForCachedInputDecoder.get());
 
   if (useInputCharsetConverter)
-    status = obj->options->charset_conversion_fn(/*input_autodetect*/PR_FALSE, line, length,
+    status = obj->options->charset_conversion_fn(line, length,
                          text->charset,
 												 "UTF-8",
 												 &converted,
@@ -395,7 +395,7 @@ MimeInlineText_convert_and_parse_line(char *line, PRInt32 length, MimeObject *ob
                          obj->options->stream_closure, obj->options->m_inputCharsetToUnicodeDecoder,
                        obj->options->m_unicodeToUTF8Encoder);
   else
-    status = obj->options->charset_conversion_fn(/*input_autodetect*/PR_FALSE, line, length,
+    status = obj->options->charset_conversion_fn(line, length,
                          text->charset,
 												 "UTF-8",
 												 &converted,

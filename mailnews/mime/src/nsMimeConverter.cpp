@@ -137,14 +137,12 @@ nsMimeConverter::EncodeMimePartIIStr(const char    *header,
                                            const PRInt32 encodedWordSize, 
                                            char          **encodedString)
 {
-  char *utf8String;
 
   // Encoder needs utf-8 string.
-  if (MIME_ConvertString(mailCharset, "UTF-8", header, &utf8String) != 0)
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = EncodeMimePartIIStr_UTF8((const char *) utf8String, mailCharset, encodedWordSize, encodedString);
-  nsCRT::free(utf8String);
+  nsAutoString tempUnicodeString;
+  nsresult rv = ConvertToUnicode(mailCharset, header, tempUnicodeString);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = EncodeMimePartIIStr_UTF8(NS_ConvertUCS2toUTF8(tempUnicodeString).get(), mailCharset, encodedWordSize, encodedString);
   return rv;
 }
 
@@ -162,16 +160,6 @@ nsMimeConverter::EncodeMimePartIIStr_UTF8(const char    *header,
     *encodedString = retString;
     return NS_OK;
   }
-}
-
-// Apply charset conversion to a given buffer. The conversion is done by an unicode round trip.
-nsresult
-nsMimeConverter::ConvertCharset(const PRBool autoDetection, const char* from_charset, const char* to_charset,
-                                const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
-                                PRInt32* numUnConverted)
-{
-  return MIME_ConvertCharset(autoDetection, from_charset, to_charset, inBuffer, inLength, 
-                             outBuffer, outLength, numUnConverted);
 }
 
 

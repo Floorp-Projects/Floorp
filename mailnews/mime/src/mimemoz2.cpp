@@ -756,7 +756,7 @@ int ConvertUsingEncoderAndDecoder(const char *stringToUse, PRInt32 inLength, nsI
 
 
 static int
-mime_convert_charset (const PRBool input_autodetect, const char *input_line, PRInt32 input_length,
+mime_convert_charset (const char *input_line, PRInt32 input_length,
                       const char *input_charset, const char *output_charset,
                       char **output_ret, PRInt32 *output_size_ret,
                       void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder)
@@ -764,16 +764,10 @@ mime_convert_charset (const PRBool input_autodetect, const char *input_line, PRI
   PRInt32 res;
   char  *convertedString = NULL;
   PRInt32 convertedStringLen;
-  if (!input_autodetect && encoder && decoder)
+  if (encoder && decoder)
   {
     res = ConvertUsingEncoderAndDecoder(input_line, input_length, encoder, decoder, &convertedString);
     convertedStringLen = (convertedString) ? nsCRT::strlen(convertedString) : 0;
-  }
-  else
-  {
-  // Now do conversion to UTF-8 for output
-    res = MIME_ConvertCharset(input_autodetect, input_charset, "UTF-8", input_line, input_length, 
-                                      &convertedString, &convertedStringLen, NULL);
   }
   if (res != 0)
   {
