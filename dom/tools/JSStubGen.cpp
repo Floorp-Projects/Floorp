@@ -1020,7 +1020,7 @@ static const char *kMethodXPIDLObjectParamStr = "\n"
 #ifdef USE_COMPTR
 "    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(getter_AddRef(b%d),\n"
 #else
-"    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(&b%d,\n"
+"    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports**) &b%d,\n"
 #endif
 "                                           kI%sIID, cx, argv[%d])) {\n"
 "      return JS_FALSE;\n"
