@@ -893,7 +893,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetStatus(const nsAReadableString& aStatus)
    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
    GetWebBrowserChrome(getter_AddRefs(browserChrome));
    if(browserChrome)
-      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, nsPromiseFlatString(aStatus));
+      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, nsPromiseFlatString(aStatus).get());
 
   return NS_OK;
 }
@@ -911,7 +911,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetDefaultStatus(const nsAReadableString& aDefau
    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
    GetWebBrowserChrome(getter_AddRefs(browserChrome));
    if(browserChrome)
-      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT_DEFAULT, nsPromiseFlatString(aDefaultStatus));
+      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT_DEFAULT, nsPromiseFlatString(aDefaultStatus).get());
 
   return NS_OK;
 }
@@ -932,7 +932,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetName(const nsAReadableString& aName)
   nsresult result = NS_OK;
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   if (docShellAsItem)
-    result = docShellAsItem->SetName(nsPromiseFlatString(aName));
+    result = docShellAsItem->SetName(nsPromiseFlatString(aName).get());
   return result;
 }
 
@@ -1038,7 +1038,7 @@ GlobalWindowImpl::SetTitle(const nsAReadableString& aTitle)
         treeOwner->GetPrimaryContentShell(getter_AddRefs(primaryContent));
         nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(primaryContent));
         if (docShellAsWin) {
-          docShellAsWin->SetTitle(nsPromiseFlatString(aTitle));
+          docShellAsWin->SetTitle(nsPromiseFlatString(aTitle).get());
         }
       }
     }
@@ -2072,7 +2072,9 @@ NS_IMETHODIMP GlobalWindowImpl::Escape(const nsAReadableString& aStr, nsAWritabl
 
   PRInt32 maxByteLen, srcLen;
   srcLen = aStr.Length();
-  const PRUnichar* src = nsPromiseFlatString(aStr);
+
+  nsPromiseFlatString flatSrc(aStr);
+  const PRUnichar* src = flatSrc.get();
 
   // Get the expected length of result string
   result = encoder->GetMaxLength(src, srcLen, &maxByteLen);
