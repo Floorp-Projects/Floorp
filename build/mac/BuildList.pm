@@ -58,10 +58,12 @@ sub BuildMozilla()
 			}
 
 			#
-			# Make the project that copies headers
+			# Make the project that copies headers. The target is called "Stubs" so that
+			# the AppleScript does a 'remove binaries' on the target first to guarantee
+			# that it builds.
 			#
 		
-		BuildProject(":build:mac:MakeDist.mcp",															"MakeDist");
+		BuildProject(":build:mac:MakeDist.mcp",																"Stubs");
 		
 			#
 			# Build the appropriate target of each project
