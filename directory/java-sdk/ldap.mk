@@ -49,7 +49,7 @@
 #
 # --- LDAPFILTER ---
 # To compile the optional ldapfilter package, you must have OROMatcher(R)
-# java regular expressions package com.oroinc.text.regex in your CLASSPATH.
+# java regular expressions package com.oroinc.text.regex in your CLASSPATH.
 # The package is available at http://www.oroinc.com. Use 'filterclasses'
 # and 'filterpackage' as make targets. 
 #
