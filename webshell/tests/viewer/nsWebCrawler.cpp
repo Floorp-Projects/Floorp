@@ -52,8 +52,7 @@
 #include "nsIContentViewer.h"
 #include "nsIContentViewerFile.h"
 
-
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
+static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kFrameUtilCID, NS_FRAME_UTIL_CID);
 static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
