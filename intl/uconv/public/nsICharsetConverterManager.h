@@ -52,7 +52,7 @@
     {0x8a, 0x86, 0x00, 0x60, 0x08, 0x11, 0xa8, 0x36} \
 }
 
-#define NS_CHARSETCONVERTERMANAGER_PROGID "componment://netscape/intl/charsetconvertermanager"
+#define NS_CHARSETCONVERTERMANAGER_PROGID "component://netscape/intl/charsetconvertermanager"
 
 #define NS_ERROR_UCONV_NOCONV \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV,1)
