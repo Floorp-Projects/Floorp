@@ -111,6 +111,10 @@ YesToAll=Y&es to all
 [Restore Desktop Integration]
 Enabled=TRUE
 
+; This section attempts to cleanup the UnreadMail registry keys set up by mail.
+[Cleanup Mail Integration]
+Enabled=TRUE
+
 [Messages]
 ERROR_DLL_LOAD=Could not load %s
 ERROR_STRING_LOAD=Could not load string resource ID %d
