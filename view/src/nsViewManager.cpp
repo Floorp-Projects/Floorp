@@ -1443,7 +1443,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
 
 
 // Invalidate all widgets which overlap the view, other than the view's own widgets.
-NS_IMETHODIMP
+void
 nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
@@ -1458,7 +1458,7 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
   PRBool isEmpty;
   view->GetClippedRect(damageRect, isClipped, isEmpty);
   if (isEmpty) {
-    return NS_OK;
+    return;
   }
   view->ConvertFromParentCoords(&damageRect.x, &damageRect.y);
   damageRect.x += origin.x;
@@ -1469,7 +1469,7 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
   PRBool viewIsFloating = PR_FALSE;
   view->GetFloating(viewIsFloating);
   if (viewIsFloating) {
-    return NS_OK;
+    return;
   }
 
   nsView* realRoot = mRootView;
@@ -1477,87 +1477,86 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
     realRoot = realRoot->GetParent();
   }
 
-  UpdateAllCoveringWidgets(realRoot, view, damageRect, PR_FALSE);
+  UpdateWidgetArea(realRoot, damageRect, view);
+
   Composite();
-  return NS_OK;
 }
 
 // Returns true if this view's widget(s) completely cover the rectangle
-// The specified rectangle, relative to aView, is invalidated in every widget child of aView.
-// If non-null, aTarget and its children are ignored and only widgets above aTarget's widget
-// in Z-order are invalidated (if possible).
-PRBool nsViewManager::UpdateAllCoveringWidgets(nsView *aView, nsView *aTarget,
-                                               nsRect &aDamagedRect, PRBool aRepaintOnlyUnblittableViews)
+// The specified rectangle, relative to aWidgetView, is invalidated in every widget child of aWidgetView,
+// plus aWidgetView's own widget
+// If non-null, the aIgnoreWidgetView's widget and its children are not updated.
+PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamagedRect, nsView* aIgnoreWidgetView)
 {
-  if (aView == aTarget) {
-    aRepaintOnlyUnblittableViews = PR_TRUE;
-  }
-
   nsRect bounds;
-  aView->GetBounds(bounds);
-  aView->ConvertFromParentCoords(&bounds.x, &bounds.y);
+  aWidgetView->GetDimensions(bounds);
+
   PRBool overlap = bounds.IntersectRect(bounds, aDamagedRect);
-    
   if (!overlap) {
     return PR_FALSE;
   }
 
   PRBool noCropping = bounds == aDamagedRect;
-    
-  PRBool hasWidget = PR_FALSE;
-  if (mRootView == aView) {
-    hasWidget = PR_TRUE;
-  } else {
-    aView->HasWidget(&hasWidget);
+  nsViewVisibility visible;
+  aWidgetView->GetVisibility(visible);
+
+  if (aWidgetView == aIgnoreWidgetView) {
+    // the widget for aIgnoreWidgetView (and its children) should be treated as already updated.
+    // We still need to report whether this widget covers the rectangle.
+    return noCropping && nsViewVisibility_kShow == visible;
   }
 
-  PRUint32 flags = aView->GetViewFlags();
-  PRBool isBlittable = (flags & NS_VIEW_FLAG_DONT_BITBLT) == 0;
-    
-  nsView* childView = aView->GetFirstChild();
+  nsCOMPtr<nsIWidget> widget;
+  GetWidgetForView(aWidgetView, getter_AddRefs(widget));
+  NS_ASSERTION(nsnull != widget, "aWidgetView must have a widget");
+  if (!widget) {
+    return PR_FALSE;
+  }
+
   PRBool childCovers = PR_FALSE;
-  while (nsnull != childView) {
-    nsRect childRect = bounds;
-    childView->ConvertFromParentCoords(&childRect.x, &childRect.y);
-    if (UpdateAllCoveringWidgets(childView, aTarget, childRect, aRepaintOnlyUnblittableViews)) {
-      childCovers = PR_TRUE;
-      // we can't stop here. We're not making any assumptions about how the child
-      // widgets are z-ordered, and we can't risk failing to invalidate the top-most
-      // one.
-    }
-    childView = childView->GetNextSibling();
+  nsCOMPtr<nsIEnumerator> children(dont_AddRef(widget->GetChildren()));
+  if (children) {
+    children->First();
+    do {
+      nsCOMPtr<nsISupports> child;
+      if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
+        nsCOMPtr<nsIWidget> childWidget = do_QueryInterface(child);
+        if (childWidget) {
+          nsView* view = nsView::GetViewFor(childWidget);
+          if (nsnull != view) {
+            nsRect damage = bounds;
+            nsView* vp = view;
+            while (vp != aWidgetView && nsnull != vp) {
+              vp->ConvertFromParentCoords(&damage.x, &damage.y);
+              vp = vp->GetParent();
+            }
+            
+            if (nsnull != vp) { // vp == nsnull means it's in a different hierarchy so we ignore it
+              if (UpdateWidgetArea(view, damage, aIgnoreWidgetView)) {
+                childCovers = PR_TRUE;
+              }
+            }
+          }
+        }
+      }
+    } while (NS_SUCCEEDED(children->Next()));
   }
 
-  if (!childCovers && (!isBlittable || (hasWidget && !aRepaintOnlyUnblittableViews))) {
-    nsViewManager* vm = aView->GetViewManager();
+  if (!childCovers) {
+    nsViewManager* vm = aWidgetView->GetViewManager();
     ++vm->mUpdateCnt;
 
     if (!vm->mRefreshEnabled) {
       // accumulate this rectangle in the view's dirty region, so we can process it later.
-      vm->AddRectToDirtyRegion(aView, bounds);
+      vm->AddRectToDirtyRegion(aWidgetView, bounds);
       vm->mHasPendingInvalidates = PR_TRUE;
     } else {
-      nsView* widgetView = GetWidgetView(aView);
-      if (widgetView != nsnull) {
-        ViewToWidget(aView, widgetView, bounds);
-
-        nsCOMPtr<nsIWidget> widget;
-        vm->GetWidgetForView(widgetView, getter_AddRefs(widget));
-        widget->Invalidate(bounds, PR_FALSE);
-      }
+      ViewToWidget(aWidgetView, aWidgetView, bounds);
+      widget->Invalidate(bounds, PR_FALSE);
     }
   }
 
-  PRBool hasVisibleWidget = PR_FALSE;
-  if (hasWidget) {
-    nsViewVisibility visible;
-    aView->GetVisibility(visible);
-    if (visible == nsViewVisibility_kShow) {
-      hasVisibleWidget = PR_TRUE;
-    }
-  }
-
-  return noCropping && (hasVisibleWidget || childCovers);
+  return noCropping && (nsViewVisibility_kShow == visible || childCovers);
 }
 
 NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
@@ -1612,7 +1611,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
       widgetParent->HasWidget(&hasWidget);
     }
 
-    UpdateAllCoveringWidgets(widgetParent, nsnull, damagedRect, PR_FALSE);
+    UpdateWidgetArea(widgetParent, damagedRect, nsnull);
   } else {
     nsPoint origin(damagedRect.x, damagedRect.y);
     ComputeViewOffset(view, &origin);
@@ -1624,7 +1623,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
       realRoot = realRoot->GetParent();
     }
 
-    UpdateAllCoveringWidgets(realRoot, nsnull, damagedRect, PR_FALSE);
+    UpdateWidgetArea(realRoot, damagedRect, nsnull);
   }
 
   ++mUpdateCnt;

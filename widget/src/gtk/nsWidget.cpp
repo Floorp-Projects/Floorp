@@ -1166,11 +1166,11 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   if (aNativeParent) {
     parentWidget = GTK_OBJECT(aNativeParent);
-    // we've got a native parent so listen for resizes
     mListenForResizes = PR_TRUE;
   } else if (aParent) {
     // this ups the refcount of the gtk widget, we must unref later.
     parentWidget = GTK_OBJECT(aParent->GetNativeData(NS_NATIVE_WIDGET));
+    mListenForResizes = aInitData ? aInitData->mListenForResizes : PR_FALSE;
   }
 
   mBounds = aRect;

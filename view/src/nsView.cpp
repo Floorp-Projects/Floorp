@@ -788,8 +788,17 @@ NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
         mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
       else
       {
+        nsWidgetInitData initData;
+        if (nsnull == aWidgetInitData && nsnull != GetParent()) {
+          if (GetParent()->GetViewManager() != mViewManager) {
+            initData.mListenForResizes = PR_TRUE;
+            aWidgetInitData = &initData;
+          }
+        }
+
         nsIWidget *parent;
         GetOffsetFromWidget(nsnull, nsnull, parent);
+
         mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
         NS_IF_RELEASE(parent);
       }
