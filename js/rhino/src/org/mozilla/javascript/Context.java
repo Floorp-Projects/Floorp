@@ -1487,6 +1487,10 @@ public class Context
         while ((e instanceof InvocationTargetException)) {
             e = ((InvocationTargetException) e).getTargetException();
         }
+        // special handling of Error so scripts would not catch them
+        if (e instanceof Error) {
+            throw (Error)e;
+        }
         if (e instanceof EvaluatorException) {
             throw (EvaluatorException)e;
         }
