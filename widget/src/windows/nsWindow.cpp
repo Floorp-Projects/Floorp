@@ -1270,6 +1270,11 @@ nsIWidget* nsWindow::GetParent(void)
        // a HWND which is not associated with a nsIWidget.
       return nsnull;
     }
+    /* If this widget has already been destroyed, pretend we have no parent.
+       This corresponds to code in Destroy which removes the destroyed
+       widget from its parent's child list. */
+    if (mIsDestroying || mOnDestroyCalled)
+      return nsnull;
 
 
     nsWindow* widget = nsnull;
