@@ -369,6 +369,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   void markAllMessagesRead();
   void markMessagesFlagged(in nsISupportsArray messages, in boolean markFlagged);
   void markThreadRead(in nsIMsgThread thread);
+  void setLabelForMessages(in nsISupportsArray messages, in nsMsgLabelValue label);
   nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
   void setMsgDatabase (in nsIMsgDatabase msgDatabase);
   nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);

@@ -2222,6 +2222,25 @@ nsMsgFolder::MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged)
 }
 
 NS_IMETHODIMP
+nsMsgFolder::SetLabelForMessages(nsISupportsArray *aMessages, nsMsgLabelValue aLabel)
+{
+  PRUint32 count;
+  NS_ENSURE_ARG(aMessages);
+  nsresult rv = aMessages->Count(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for(PRUint32 i = 0; i < count; i++)
+  {
+    nsCOMPtr<nsIMsgDBHdr> message = do_QueryElementAt(aMessages, i, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = message->SetLabel(aLabel);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgFolder::AddMessageDispositionState(nsIMsgDBHdr *aMessage, nsMsgDispositionState aDispositionFlag)
 {
   // most folders don't do anything for this...

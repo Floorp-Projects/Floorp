@@ -193,6 +193,7 @@ public:
   NS_IMETHOD MarkAllMessagesRead(void);
   NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
   NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
+  NS_IMETHOD SetLabelForMessages(nsISupportsArray *messages, nsMsgLabelValue label);
 
   NS_IMETHOD GetChildWithURI(const char *uri, PRBool deep, PRBool caseInsensitive, nsIMsgFolder **_retval); 
   NS_IMETHOD EnableNotifications(PRInt32 notificationType, PRBool enable, PRBool dbBatching);

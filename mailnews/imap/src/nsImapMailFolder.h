@@ -246,6 +246,7 @@ public:
 	NS_IMETHOD MarkAllMessagesRead(void);
 	NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
   NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
+  NS_IMETHOD SetLabelForMessages(nsISupportsArray *aMessages, nsMsgLabelValue aLabel);
 
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
 	NS_IMETHOD ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element);

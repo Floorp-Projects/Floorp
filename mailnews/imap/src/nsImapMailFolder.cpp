@@ -1628,6 +1628,19 @@ nsImapMailFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
 }
 
 NS_IMETHODIMP
+nsImapMailFolder::SetLabelForMessages(nsISupportsArray *aMessages, nsMsgLabelValue aLabel)
+{
+  PRUint32 count;
+  NS_ENSURE_ARG(aMessages);
+
+  nsCAutoString messageIds;
+  nsMsgKeyArray keysToLabel;
+  nsresult rv = BuildIdsAndKeyArray(aMessages, messageIds, keysToLabel);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return StoreImapFlags((aLabel << 9), PR_TRUE, keysToLabel.GetArray(), keysToLabel.GetSize());
+}
+
+NS_IMETHODIMP
 nsImapMailFolder::MarkAllMessagesRead(void)
 {
   nsresult rv = GetDatabase(nsnull);
