@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.14 $ 
-# $Date: 2002/04/26 22:40:11 $ 
+# $Revision: 1.15 $ 
+# $Date: 2002/04/26 22:57:22 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -103,7 +103,10 @@ package BuildStatus;
                            },
            
            'building' => {
+                           # for color blind people, we choose our colors 
+                           # to be distinguishable.
                           'html_color'=>  'yellow',
+                          'html_color'=>  '#eeff00',
                           'hdml_char'=> '.',
                           'handler'=> \&main::null,
                           'description'=>  'Build in progress - status available',
@@ -111,7 +114,10 @@ package BuildStatus;
                          },
            
            'build_failed' => {
+                        # for color blind people, we choose our colors 
+                        # to be distinguishable.
                         'html_color' => 'red',
+                        'html_color' => '#ee0000',
                         'hdml_char'=> '!',
                         'handler' => \&main::null,
                         'description' => 'Build failed',
@@ -119,7 +125,10 @@ package BuildStatus;
                        },
 
            'test_failed' => {
+                             # for color blind people, we choose our colors 
+                             # to be distinguishable.
                             'html_color' => 'orange',
+                            'html_color' => '#ffaa00',
                             'hdml_char'=> '~',
                             'handler' => \&main::null,
                             'description' => 'Build succeded but tests failed',
@@ -127,7 +136,10 @@ package BuildStatus;
                            },
 
            'success' => {
+                          # for color blind people, we choose our colors 
+                          # to be distinguishable.
                          'html_color' => 'lime',
+                         'html_color' => '#11dd11',
                          'hdml_char'=> '+',
                          'handler' => \&main::null,
                          'description'=> 'Build and all tests were successful',
