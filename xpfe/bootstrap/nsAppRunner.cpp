@@ -104,14 +104,8 @@ static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 
-/*********************************************
- AppCores
-*********************************************/
-
-#include "nsAppCoresCIDs.h"
-#include "nsIDOMAppCoresManager.h"
-static NS_DEFINE_CID(kAppCoresManagerCID,     NS_APPCORESMANAGER_CID);
 #include "nsNativeAppSupport.h"
+
 /*********************************************/
 // Default implemenations for nativeAppSupport
 // If your platform implements these functions if def out this code.
@@ -515,20 +509,6 @@ static nsresult main1(int argc, char* argv[])
     return rv;
   }
 
-  // Kick off appcores
-  NS_WITH_SERVICE(nsIDOMAppCoresManager, appCoresManager, kAppCoresManagerCID, &rv);
-  
-  if (NS_SUCCEEDED(rv)){
-		if (appCoresManager->Startup() != NS_OK) {
-		  appCoresManager->Shutdown();
-      nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoresManager);
-		}
-  }
-#ifdef DEBUG
-  printf("started appcores\n");
-#endif
-
-  
   // Create the Application Shell instance...
   NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv)) {

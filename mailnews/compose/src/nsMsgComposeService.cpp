@@ -24,12 +24,10 @@
 #include "nsAppShellCIDs.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
-#include "nsAppCoresCIDs.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgIdentity.h"
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kToolkitCoreCID, NS_TOOLKITCORE_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID);
 
 nsMsgComposeService::nsMsgComposeService()
