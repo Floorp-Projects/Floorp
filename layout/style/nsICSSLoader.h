@@ -35,12 +35,13 @@ class nsIContent;
 class nsIParser;
 class nsIDocument;
 class nsIUnicharInputStream;
+class nsICSSLoaderObserver;
 
 // IID for the nsIStyleSheetLoader interface {a6cf9101-15b3-11d2-932e-00805f8add32}
 #define NS_ICSS_LOADER_IID     \
 {0xa6cf9101, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
-typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData);
+typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, PRBool aDidNotify);
 
 class nsICSSLoader : public nsISupports {
 public:
@@ -70,7 +71,8 @@ public:
                              PRInt32 aDefaultNameSpaceID,
                              PRInt32 aDocIndex,
                              nsIParser* aParserToUnblock,
-                             PRBool& aCompleted) = 0;
+                             PRBool& aCompleted,
+                             nsICSSLoaderObserver* aObserver) = 0;
 
   // Load a linked style sheet
   // - if aCompleted is PR_TRUE, the sheet is fully loaded, don't
@@ -84,7 +86,8 @@ public:
                            PRInt32 aDefaultNameSpaceID,
                            PRInt32 aDocIndex,
                            nsIParser* aParserToUnblock,
-                           PRBool& aCompleted) = 0;
+                           PRBool& aCompleted,
+                           nsICSSLoaderObserver* aObserver) = 0;
 
   // Load a child style sheet (@import)
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
@@ -101,8 +104,7 @@ public:
   NS_IMETHOD LoadAgentSheet(nsIURI* aURL, 
                             nsICSSStyleSheet*& aSheet,
                             PRBool& aCompleted,
-                            nsCSSLoaderCallbackFunc aCallback,
-                            void *aData) = 0;
+                            nsICSSLoaderObserver* aObserver) = 0;
 };
 
 extern NS_HTML nsresult 
