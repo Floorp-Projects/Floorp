@@ -204,7 +204,7 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 		virtual void			NoteAllConnectionsComplete(void);
 
 		virtual ResIDT			GetStatusResID(void) const { return res_ID; }
-		virtual UInt16			GetValidStatusVersion(void) const { return 0x0113; }
+		virtual UInt16			GetValidStatusVersion(void) const { return 0x0114; }
 		
 		virtual void			ShowStatus(Chrome* inChromeInfo); // 97-05-12 pkc -- pass in Chrome struct
 		
@@ -237,7 +237,7 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 		Boolean					mIsHTMLHelp;
 		
 	private:
-		CRDFCoordinator*		mNavCenterParent;			// top level of navcenter hierarchy
+		CDockedRDFCoordinator* mNavCenterParent;			// top level of navcenter hierarchy
 		CHTMLView*				mHTMLView;
 
 		LStr255					mCurrentKeyword;			// holds current internet keyword string

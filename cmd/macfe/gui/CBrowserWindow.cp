@@ -153,7 +153,7 @@ void CBrowserWindow::FinishCreateSelf(void)
 	mHTMLView = dynamic_cast<CHTMLView*>(FindPaneByID(CHTMLView::pane_ID));
 	ThrowIfNil_(mHTMLView);
 	
-	mNavCenterParent = dynamic_cast<CRDFCoordinator*>(FindPaneByID(CRDFCoordinator::pane_ID));
+	mNavCenterParent = dynamic_cast<CDockedRDFCoordinator*>(FindPaneByID(CDockedRDFCoordinator::pane_ID));
 		
 	if (HasAttribute(windAttr_Regular) && HasAttribute(windAttr_Resizable))
 		FinishCreateWindow();
@@ -173,23 +173,12 @@ void CBrowserWindow::FinishCreateSelf(void)
 	ShowOneDragBar(PersonalToolbar_PaneID, value);
 	mToolbarShown[eStatusBar] = TRUE; // no pref for status bar
 
-	// Handle NavCenter pane. There are two separate prefs here: one to control showing/hiding the
-	// selector widget, the other for the shelf itself. Recall that Composer doesn't have a nav center...
+	// Handle NavCenter pane.
+	//
+	//¥¥¥For now, always hide it at startup, but this will proabably change, hopefully
+	//¥¥¥with an XP callback so this code can stay the same...
 	if ( mNavCenterParent ) {
-		if ( PREF_GetBoolPref(CRDFCoordinator::Pref_ShowNavCenterSelector, &value) == PREF_ERROR )
-			value = true;
-		mNavCenterParent->NavCenterSelector().SetShelfState ( value );
-
-		// don't worry about showing the shelf if the selector is not visible. Otherwise do
-		// what the pref says.
-		if ( value ) {
-			// if the pref is missing, close it by default. If the pref exists, use whatever is
-			// stored there. There is no need to set the current view because HT handles that.
-			if ( PREF_GetBoolPref(CRDFCoordinator::Pref_ShowNavCenterShelf, &value) == PREF_ERROR )
-				value = false;
-			mNavCenterParent->NavCenterShelf().SetShelfState ( value );
-		} // if selector visible
-		
+		mNavCenterParent->NavCenterShelf().SetShelfState ( false );
 	} // if there is a navcenter
 			
 	// Delete the Admin Kit co-brand button if a
@@ -461,14 +450,6 @@ void CBrowserWindow::FindCommandStatus(
 			::GetIndString(outName, BROWSER_MENU_TOGGLE_STRINGS_ID, (mToolbarShown[ePersonalToolbar] ? HIDE_PERSONAL_TOOLBAR_STRING : SHOW_PERSONAL_TOOLBAR_STRING));
 			break;
 		
-		case cmd_NCToggle:
-			outEnabled = (mContext && mNavCenterParent) ? !(mIsRootDocInfo || mIsViewSource || mIsHTMLHelp || PREF_PrefIsLocked(CRDFCoordinator::Pref_ShowNavCenterSelector)) : true;
-			Uint32 strID = SHOW_NAVCENTER_STRING;
-			if ( mNavCenterParent && mNavCenterParent->NavCenterSelector().IsShelfOpen() )
-				strID = HIDE_NAVCENTER_STRING;
-			::GetIndString(outName, BROWSER_MENU_TOGGLE_STRINGS_ID, strID);
-			break;
-			
 		case cmd_NetSearch:
 			outEnabled = (mContext) ? !(mIsRootDocInfo || mIsViewSource || mIsHTMLHelp) : true;
 			break;
@@ -637,16 +618,6 @@ Boolean	CBrowserWindow::ObeyCommand(
 				cmdHandled = true;
 				break;
 				
-			case cmd_NCToggle:
-				// Note that this allows the user to hide the selector while the shelf is 
-				// still open. This isn't the end of the world, at least, because the closebox
-				// is there so the user can still figure out how to get rid of it and
-				// close it if they want.
-				if ( mNavCenterParent )
-					mNavCenterParent->NavCenterSelector().ToggleShelf();
-				cmdHandled = true;
-				break;
-								
 			case cmd_Reload:
 			{
 				if (CApplicationEventAttachment::CurrentEventHasModifiers(optionKey) ||
@@ -1272,12 +1243,8 @@ void CBrowserWindow::SetChromeInfo(Chrome* inChrome, Boolean inNotifyMenuBarMode
 		// we probably don't want the NavCenter showing up. Don't let this temporary setting of
 		// the shelf states affect the global preference, however.
 		if ( mNavCenterParent ) {
-			if ( !inChrome->show_directory_buttons ) {
+			if ( !inChrome->show_directory_buttons )
 				mNavCenterParent->NavCenterShelf().SetShelfState(CShelf::kClosed, false);
-				mNavCenterParent->NavCenterSelector().SetShelfState(CShelf::kClosed, false);
-			}
-			else
-				mNavCenterParent->NavCenterSelector().SetShelfState(CShelf::kOpen, false);
 		}
 		ShowStatus(inChrome);
 		
