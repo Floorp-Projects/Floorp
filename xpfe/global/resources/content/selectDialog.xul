@@ -25,9 +25,10 @@ Contributor(s): ______________________________________. -->
  
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
       onload="selectDialogOnLoad()"
-      ondialogaccept="return CommonDialogOnOk();"
-      ondialogcancel="return CommonDialogOnCancel();">
+      ondialogaccept="return commonDialogOnOK();"
+      ondialogcancel="return commonDialogOnCancel();">
 
+  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
   <script type="application/x-javascript" src="chrome://global/content/selectDialog.js" />
   <keyset id="dialogKeys"/>
   <vbox style="width: 24em;margin: 5px;">
