@@ -46,7 +46,7 @@ interface nsIEditorShell : nsISupports
   attribute nsIDOMWindowInternal contentWindow;
   attribute wstring              editorType;
            
-  [noscript] readonly attribute nsIEditor editor;
+  readonly attribute nsIEditor editor;
   
 %{C++
 
