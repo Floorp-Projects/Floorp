@@ -628,7 +628,7 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
   } else { // Normal reflow.
 
     nsCompatibility mode;
-    aPresContext->GetCompatibilityMode(&mode);
+    nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
 
     if (mode == eCompatibility_NavQuirks) {
       // nsHTMLButtonControlFrame::Reflow registers it for Standard Mode

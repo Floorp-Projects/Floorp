@@ -1569,6 +1569,9 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
     aDesiredSize.height = GUESS_INPUT_SIZE; // punt
   }
 
+  // Internal padding is necessary for better matching IE's width
+  nscoord internalPadding = 0;
+
   // Get the Average char width to calc the min width and 
   // pref width. Pref Width is calced by multiplying the size times avecharwidth
   // 
@@ -1578,6 +1581,15 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
   // the platforms and ports.
 #if defined(_WIN32) || defined(XP_OS2)
   fontMet->GetAveCharWidth(charWidth);
+
+  // Get frame font
+  const nsFont * font = nsnull;
+  if (NS_SUCCEEDED(aFrame->GetFont(aPresContext, font))) {
+    // To better match IE, take the size (in twips) and remove 4 pixels
+    // add this on as additional padding
+    internalPadding = PR_MAX(font->size - NSToCoordRound(4 * p2t), 0);
+  }
+
 #else
   // XP implementation of AveCharWidth
   nsAutoString aveStr; 
@@ -1607,6 +1619,9 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
   } else {
     aDesiredSize.width = aSpec.mColDefaultSize * charWidth;
   }
+
+  // Now add the extra internal padding on
+  aDesiredSize.width += internalPadding;
 
   aRowHeight      = aDesiredSize.height;
   aMinSize.height = aDesiredSize.height;
@@ -2274,7 +2289,7 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
     mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
 
   nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(&mode); 
+  nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
   PRBool navQuirksMode = eCompatibility_NavQuirks == mode && nameSpaceID == kNameSpaceID_HTML;
 
   nsReflowStatus aStatus;
@@ -2409,7 +2424,7 @@ nsGfxTextControlFrame2::GetSizeFromContent(PRInt32* aSize) const
     // then we can check the compatibility mode
 #ifdef FUTURE_ADDITIONAL_FIX_FOR_46224
     nsCompatibility mode;
-    mPresContext->GetCompatibilityMode(&mode); 
+    nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
     if (eCompatibility_NavQuirks == mode) {
       *aSize = 1;
     } else {

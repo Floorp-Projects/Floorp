@@ -33,6 +33,10 @@
 #include "nsStyleUtil.h"
 #include "nsCSSAtoms.h"
 
+// Temporary - Test of full time Standard mode for forms
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+
 class nsShellISupportsKey : public nsHashKey {
 public:
   nsISupports* mKey;
@@ -1239,8 +1243,22 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
       case NS_STYLE_FONT_FIELD:         sysID = eSystemAttr_Font_Field;         break;
     }
 
-    nsCompatibility mode;
-    mPresContext->GetCompatibilityMode(&mode);
+    nsCompatibility mode = eCompatibility_Standard;
+
+    if (sysID == eSystemAttr_Font_Field ||
+        sysID == eSystemAttr_Font_List ||
+        sysID == eSystemAttr_Font_Button) {
+      nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
+      if (prefService) {
+        PRBool useEitherMode;
+        if (NS_SUCCEEDED(prefService->GetBoolPref("layout.forms.use_standard_or_quirks", &useEitherMode))) {
+          if (useEitherMode) {
+            mPresContext->GetCompatibilityMode(&mode);
+          }
+        }
+      }
+    }
+
 		nsCOMPtr<nsIDeviceContext> dc;
     mPresContext->GetDeviceContext(getter_AddRefs(dc));
     if (dc) {

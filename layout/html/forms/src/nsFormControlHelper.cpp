@@ -81,6 +81,10 @@ static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
                                               // it a synonym for "soft" 
 #define kTextControl_Wrap_Off  "OFF"
 
+// Temporary - Test of full time Standard mode for forms (Bug 91602)
+#include "nsIPref.h"
+PRPackedBool nsFormControlHelper::mCompatFirstTime = PR_TRUE;
+PRPackedBool nsFormControlHelper::mUseEitherMode  = PR_FALSE;
 
 
 MOZ_DECL_CTOR_COUNTER(nsFormControlHelper)
@@ -147,7 +151,7 @@ nsCompatibility
 nsFormControlHelper::GetRepChars(nsIPresContext* aPresContext, char& char1, char& char2) 
 {
   nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(&mode);
+  nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
   if (eCompatibility_Standard == mode) {
     char1 = 'W';
     char2 = 'w';
@@ -464,7 +468,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
 #endif
 
   nsCompatibility qMode;
-  aPresContext->GetCompatibilityMode(&qMode);
+  nsFormControlHelper::GetFormCompatibilityMode(aPresContext, qMode);
 
   // determine the width, char height, row height
   if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
@@ -599,7 +603,7 @@ nsFormControlHelper::GetFont(nsIFormControlFrame * aFormFrame,
   }
 
   nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(&mode);
+  nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
 
   if (eCompatibility_Standard == mode) {
     aFont = &styleFont->mFont;
@@ -1003,3 +1007,27 @@ nsFormControlHelper::DoManualSubmitOrReset(nsIPresContext* aPresContext,
   return result;
 }
 
+// Temporary - Test of full time Standard mode for forms (Bug 91602)
+//
+void nsFormControlHelper::GetFormCompatibilityMode(nsIPresContext* aPresContext, 
+                                                   nsCompatibility& aCompatMode)
+{
+  if (mCompatFirstTime) {
+    nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
+    if (prefService) {
+      PRBool useEitherMode;
+      if (NS_SUCCEEDED(prefService->GetBoolPref("layout.forms.use_standard_or_quirks", &useEitherMode))) {
+        if (useEitherMode) {
+          mUseEitherMode = PR_TRUE;
+        }
+      }
+    }
+    mCompatFirstTime = PR_FALSE;
+  }
+
+  if (mUseEitherMode) {
+    aPresContext->GetCompatibilityMode(&aCompatMode);
+  } else {
+    aCompatMode = eCompatibility_Standard;
+  }
+}

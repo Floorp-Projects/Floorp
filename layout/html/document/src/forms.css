@@ -265,6 +265,7 @@ input[type="radio"] {
   vertical-align: baseline;
   -moz-border-radius: 100%;
   -moz-binding: none;
+  margin: 3px 3px 0px 5px;
   padding: 0;
 }
 
@@ -278,7 +279,7 @@ input[type="checkbox"] {
   cursor: default;
   vertical-align: text-bottom;
   -moz-binding: none;
-  margin: 3px 4px 3px 4px;
+  margin: 3px 3px 3px 4px;
   padding: 0;
 }
 
