@@ -14,6 +14,7 @@
 
 ( exec "$@" ) || {
     echo
+    echo "In the directory " `pwd`
     echo "The following command failed to execute properly:"
     echo "$@"
     exit 1;
