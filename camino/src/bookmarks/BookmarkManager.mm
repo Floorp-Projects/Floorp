@@ -575,10 +575,12 @@ BookmarkFolder* root = [[BookmarkFolder alloc] init];
   NSString *utfdash8Key = @"content=\"text/html; charset=utf-8" ;
   NSString *xmacromanKey = @"content=\"text/html; charset=x-mac-roman";
   NSString *xmacsystemKey = @"CONTENT=\"text/html; charset=X-MAC-SYSTEM";
+  NSString *shiftJisKey = @"CONTENT=\"text/html; charset=Shift_JIS";
 
   NSDictionary *encodingDict = [NSDictionary dictionaryWithObjectsAndKeys:
     [NSNumber numberWithUnsignedInt:NSUTF8StringEncoding],utfdash8Key,
     [NSNumber numberWithUnsignedInt:NSMacOSRomanStringEncoding],xmacromanKey,
+    [NSNumber numberWithUnsignedInt:NSShiftJISStringEncoding],shiftJisKey,
     [NSNumber numberWithUnsignedInt:[NSString defaultCStringEncoding]],xmacsystemKey,
     nil];
 
@@ -668,6 +670,15 @@ BookmarkFolder* root = [[BookmarkFolder alloc] init];
         if (![tokenScanner isAtEnd]) {
           [tokenScanner setScanLocation:([tokenScanner scanLocation]+6)];
           [tokenScanner scanUpToString:@"\"" intoString:&tempItem];
+          if ([tokenScanner isAtEnd]) {
+            // we scanned up to the </A> but didn't find a " character ending the HREF. This is probably
+            // because we're scanning a bookmarklet that contains an embedded <A></A> so we're in the
+            // middle of the string. Just bail and dont import this bookmark. The parser should be able
+            // to recover on its own once it gets to the next "<A" token.
+            [tokenScanner release];
+            [fileScanner setScanLocation:([fileScanner scanLocation]+1)];
+            continue;
+          }
           currentItem = [currentArray addBookmark];
           [(Bookmark *)currentItem setUrl:[tempItem stringByRemovingAmpEscapes]];
           [tokenScanner scanUpToString:@">" intoString:&tempItem];
