@@ -23,6 +23,7 @@
 #include "nsFileSpec.h"
 
 #include "nsIURL.h"
+#include "nsIMsgMailNewsUrl.h"
 
 #include "nsISupports.h"
 
@@ -50,7 +51,7 @@
 // we'll just bring up the  compose window.
 // mscott --> we could break this down into two SMTP url classes....
 //////////////////////////////////////////////////////////////////////////////////////
-class nsISmtpUrl : public nsIURL
+class nsISmtpUrl : public nsIMsgMailNewsUrl
 {
 public:
     static const nsIID& IID() { static nsIID iid = NS_ISMTPURL_IID; return iid; }
@@ -111,14 +112,8 @@ public:
 	// Getters and Setters for the smtp specific event sinks to bind to to your url
 	///////////////////////////////////////////////////////////////////////////////
 
-	// mscott: this interface really belongs in nsIURL and I will move it there after talking
-	// it over with core netlib. This error message replaces the err_msg which was in the 
-	// old URL_struct. Also, it should probably be a nsString or a PRUnichar *. I don't know what
-	// XP_GetString is going to return in mozilla. 
+	// smtp urls don't have any event sinks yet...
 
-	NS_IMETHOD SetErrorMessage (char * errorMessage) = 0;
-	// caller must free using PR_FREE
-	NS_IMETHOD GetErrorMessage (char ** errorMessage) const = 0;
 };
 
 #endif /* nsISmtpUrl_h___ */
