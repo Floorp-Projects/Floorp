@@ -18,6 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Dan Mosedale <dmose@mozilla.org>
+ *                 Leif Hedstrom <leif@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -44,6 +45,9 @@
 #include "nsILDAPMessageListener.h"
 #include "nsHashtable.h"
 #include "nspr.h"
+#include "nsWeakReference.h"
+#include "nsWeakPtr.h"
+
 
 // 0d871e30-1dd2-11b2-8ea9-831778c78e93
 //
@@ -51,14 +55,15 @@
 { 0x0d871e30, 0x1dd2, 0x11b2, \
  { 0x8e, 0xa9, 0x83, 0x17, 0x78, 0xc7, 0x8e, 0x93 }}
 
-class nsLDAPConnection : public nsILDAPConnection, nsIRunnable
+class nsLDAPConnection : public nsILDAPConnection,
+                         public nsSupportsWeakReference
 {
     friend class nsLDAPOperation;
     friend class nsLDAPMessage;
+    friend class nsLDAPConnectionLoop;
 
   public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIRUNNABLE
     NS_DECL_NSILDAPCONNECTION
 
     // constructor & destructor
@@ -99,12 +104,39 @@ class nsLDAPConnection : public nsILDAPConnection, nsIRunnable
      */
     nsresult RemovePendingOperation(nsILDAPOperation *aOperation);
 
-
     LDAP *mConnectionHandle;            // the LDAP C SDK's connection object
     nsString *mBindName;                // who to bind as
     nsCOMPtr<nsIThread> mThread;        // thread which marshals results
 
     nsSupportsHashtable *mPendingOperations; // keep these around for callbacks
+    nsLDAPConnectionLoop *mRunnable;    // nsIRunnable object
+};
+
+// This class implements the nsIRunnable interface, in this case just a
+// Run() method. This is to be used within the nsLDAPConnection only, when
+// creating a new thread.
+//
+class nsLDAPConnectionLoop : public nsIRunnable
+{
+    friend class nsLDAPConnection;
+    friend class nsLDAPMessage;
+
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIRUNNABLE
+
+    // constructor & destructor
+    //
+    nsLDAPConnectionLoop();
+    virtual ~nsLDAPConnectionLoop();
+
+    NS_IMETHOD Init();
+
+  protected:
+
+    nsWeakPtr mWeakConn;        // the connection object, a weak reference
+    PRLock *mLock;              // Lock mechanism, since weak references
+                                // aren't thread safe
 };
 
 #endif // _nsLDAPConnection_h_ 
