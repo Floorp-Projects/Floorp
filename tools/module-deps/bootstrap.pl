@@ -37,7 +37,7 @@ my $debug = 1;
 sub PrintUsage {
   die <<END_USAGE
   usage: $0 --modules=mod1,mod2,.. --skip-cvs
-  (Assumes all.dot is in cwd, and you can check out a new cvs tree here)
+  (Assumes you can check out a new cvs tree here)
 END_USAGE
 }
 
@@ -50,8 +50,9 @@ sub parse_args() {
 
   # Stuff arguments into variables.
   # Print usage if we get an unknown argument.
-  PrintUsage() if !GetOptions('modules=s' => \$root_modules,
-                             'skip-cvs' => \$skip_cvs);
+  PrintUsage() if !GetOptions('module=s' => \$root_modules,
+                              'modules=s' => \$root_modules,
+                              'skip-cvs' => \$skip_cvs);
   if ($root_modules) {
     print "root_modules = $root_modules\n";
 
@@ -148,14 +149,7 @@ sub FindMakefiles {
   # Get options.
   parse_args();
 
-  #
-  # Assume all.dot is checked in somewhere.
-  #
-  unless (-e "all.dot") {
-    print "No all.dot file found.  Get one by running\n  tools/module-deps/module-graph.pl . > all.dot\non built tree from the mozilla directory, or find one checked in somewhere.\n\n";
-    PrintUsage();
-  }
-
+  # Module map file is currently mozilla/tools/module-deps/all.dot
 
   # Pull core build stuff.
   unless($skip_cvs) {
@@ -182,7 +176,7 @@ sub FindMakefiles {
   my @modules;
   my $modules_string = "";
   my $num_modules = 0;
-  my $modules_cmd = "mozilla/tools/module-deps/module-graph\.pl --file all\.dot --start-module $root_modules --list-only";
+  my $modules_cmd = "mozilla/tools/module-deps/module-graph\.pl --file mozilla/tools/module-deps/all\.dot --start-module $root_modules --list-only";
   $modules_string = run_shell_command($modules_cmd, 0);
   @modules = split(' ', $modules_string);
   $num_modules = $#modules + 1;
