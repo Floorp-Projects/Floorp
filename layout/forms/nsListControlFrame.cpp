@@ -930,7 +930,11 @@ nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
     PRBool isShift;
     PRBool isControl;
+#ifdef XP_MAC
+    mouseEvent->GetMetaKey(&isControl);
+#else
     mouseEvent->GetCtrlKey(&isControl);
+#endif
     mouseEvent->GetShiftKey(&isShift);
     MultipleSelection(isShift, isControl);
   } else {
