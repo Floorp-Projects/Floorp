@@ -28,6 +28,7 @@
 #include "nsIDeviceContext.h"
 #include "nsISpaceManager.h"
 #include "nsIPtr.h"
+#include "nsAbsoluteFrame.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -39,6 +40,7 @@
 
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
@@ -667,6 +669,7 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
     // Resolve style
     nsIStyleContextPtr kidStyleContext =
       aPresContext->ResolveStyleContextFor(kid, this);
+    nsStylePosition* kidPosition = (nsStylePosition*)kidStyleContext->GetData(kStylePositionSID);
     nsStyleMolecule* kidMol =
       (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
 
@@ -676,7 +679,10 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
     ReflowStatus    status;
 
     // Create a child frame
-    if (nsnull == kidPrevInFlow) {
+    if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
+      AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
+      kidFrame->SetStyleContext(kidStyleContext);
+    } else if (nsnull == kidPrevInFlow) {
       // Figure out how to treat the content
       nsIContentDelegate* kidDel = nsnull;
       switch (kidMol->display) {
@@ -1194,16 +1200,16 @@ NS_METHOD ColumnFrame::ContentAppended(nsIPresShell* aShell,
     // Get style context for the kid
     nsIStyleContextPtr kidStyleContext =
       aPresContext->ResolveStyleContextFor(kid, this);
+    nsStylePosition* kidPosition = (nsStylePosition*)kidStyleContext->GetData(kStylePositionSID);
     nsStyleMolecule* kidMol =
       (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
 
     // See what display mode it has
     nsIFrame* kidFrame;
     nsIContentDelegate* del;
-    switch (kidMol->display) {
-    case NS_STYLE_DISPLAY_NONE:
-      // Create place holder frame
-      nsFrame::NewFrame(&kidFrame, kid, kidIndex, this);
+
+    if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
+      AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
       kidFrame->SetStyleContext(kidStyleContext);
 
       // Append it to the child list
@@ -1218,77 +1224,97 @@ NS_METHOD ColumnFrame::ContentAppended(nsIPresShell* aShell,
       pseudoFrame = nsnull;
       kidIndex++;
       mLastContentOffset = kidIndex;
-      break;
-
-    case NS_STYLE_DISPLAY_BLOCK:
-    case NS_STYLE_DISPLAY_LIST_ITEM:
-      // Block and list-item's don't go into our pseudo-frames
-      // therefore we just make a frame.
-      del = kid->GetDelegate(aPresContext);
-      kidFrame = del->CreateFrame(aPresContext, kid, kidIndex, this);
-      NS_RELEASE(del);
-      kidFrame->SetStyleContext(kidStyleContext);
-
-      // Append it to the child list
-      if (nsnull == prevKidFrame) {
-        mFirstChild = kidFrame;
-        mFirstContentOffset = kidIndex;
-      } else {
-        prevKidFrame->SetNextSibling(kidFrame);
-      }
-      mChildCount++;
-      prevKidFrame = kidFrame;
-      pseudoFrame = nsnull;
-      kidIndex++;
-      mLastContentOffset = kidIndex;
-      break;
-
-    case NS_STYLE_DISPLAY_INLINE:
-      if (nsnull == pseudoFrame) {
-        // Inline elements are wrapped in a block pseudo frame; that
-        // way the body doesn't have to deal with 2D layout
-        nsBlockFrame::NewFrame(&kidFrame, mContent, mIndexInParent, this);
-
-        // Resolve style for the pseudo-frame (kid's style won't do)
-        kidStyleContext = aPresContext->ResolveStyleContextFor(mContent, this);
+    } else {
+      switch (kidMol->display) {
+      case NS_STYLE_DISPLAY_NONE:
+        // Create place holder frame
+        nsFrame::NewFrame(&kidFrame, kid, kidIndex, this);
         kidFrame->SetStyleContext(kidStyleContext);
-
-        // Append the pseudo frame to the child list
-        pseudoFrame = (nsBlockFrame*) kidFrame;
+  
+        // Append it to the child list
         if (nsnull == prevKidFrame) {
           mFirstChild = kidFrame;
           mFirstContentOffset = kidIndex;
         } else {
-          prevKidFrame->SetNextSibling(pseudoFrame);
+          prevKidFrame->SetNextSibling(kidFrame);
         }
         mChildCount++;
-
-        // Set the content offset for the pseudo frame, so it knows
-        // which content to begin with
-        pseudoFrame->SetFirstContentOffset(kidIndex);
-        pseudoFrame->SetLastContentOffset(kidIndex);
-        prevKidFrame = pseudoFrame;
+        prevKidFrame = kidFrame;
+        pseudoFrame = nsnull;
+        kidIndex++;
+        mLastContentOffset = kidIndex;
+        break;
+  
+      case NS_STYLE_DISPLAY_BLOCK:
+      case NS_STYLE_DISPLAY_LIST_ITEM:
+        // Block and list-item's don't go into our pseudo-frames
+        // therefore we just make a frame.
+        del = kid->GetDelegate(aPresContext);
+        kidFrame = del->CreateFrame(aPresContext, kid, kidIndex, this);
+        NS_RELEASE(del);
+        kidFrame->SetStyleContext(kidStyleContext);
+  
+        // Append it to the child list
+        if (nsnull == prevKidFrame) {
+          mFirstChild = kidFrame;
+          mFirstContentOffset = kidIndex;
+        } else {
+          prevKidFrame->SetNextSibling(kidFrame);
+        }
+        mChildCount++;
+        prevKidFrame = kidFrame;
+        pseudoFrame = nsnull;
+        kidIndex++;
+        mLastContentOffset = kidIndex;
+        break;
+  
+      case NS_STYLE_DISPLAY_INLINE:
+        if (nsnull == pseudoFrame) {
+          // Inline elements are wrapped in a block pseudo frame; that
+          // way the body doesn't have to deal with 2D layout
+          nsBlockFrame::NewFrame(&kidFrame, mContent, mIndexInParent, this);
+  
+          // Resolve style for the pseudo-frame (kid's style won't do)
+          kidStyleContext = aPresContext->ResolveStyleContextFor(mContent, this);
+          kidFrame->SetStyleContext(kidStyleContext);
+  
+          // Append the pseudo frame to the child list
+          pseudoFrame = (nsBlockFrame*) kidFrame;
+          if (nsnull == prevKidFrame) {
+            mFirstChild = kidFrame;
+            mFirstContentOffset = kidIndex;
+          } else {
+            prevKidFrame->SetNextSibling(pseudoFrame);
+          }
+          mChildCount++;
+  
+          // Set the content offset for the pseudo frame, so it knows
+          // which content to begin with
+          pseudoFrame->SetFirstContentOffset(kidIndex);
+          pseudoFrame->SetLastContentOffset(kidIndex);
+          prevKidFrame = pseudoFrame;
+        }
+  
+        // The child frame needs to belong to the pseudo-frame (or one
+        // of it's pseudos). Let it do the content appended frame
+        // creation.
+        pseudoFrame->ContentAppended(aShell, aPresContext, aContainer);
+  
+        // Update *our* last content offset since this child is our last
+        // child and it just consumed one or more of the appended
+        // children.
+  #ifdef NS_DEBUG
+        if (pseudoFrame == mFirstChild) {
+          PRInt32 pfco = pseudoFrame->GetFirstContentOffset();
+          NS_ASSERTION(mFirstContentOffset == pfco, "bad pseudo first offset");
+        }
+  #endif
+        mLastContentOffset = pseudoFrame->GetLastContentOffset();
+  
+        // Pick up where it stopped
+        kidIndex = NextChildOffset();
+        break;
       }
-
-      // The child frame needs to belong to the pseudo-frame (or one
-      // of it's pseudos). Let it do the content appended frame
-      // creation.
-      pseudoFrame->ContentAppended(aShell, aPresContext, aContainer);
-
-      // Update *our* last content offset since this child is our last
-      // child and it just consumed one or more of the appended
-      // children.
-#ifdef NS_DEBUG
-      if (pseudoFrame == mFirstChild) {
-        PRInt32 pfco = pseudoFrame->GetFirstContentOffset();
-        NS_ASSERTION(mFirstContentOffset == pfco, "bad pseudo first offset");
-      }
-#endif
-      mLastContentOffset = pseudoFrame->GetLastContentOffset();
-
-      // Pick up where it stopped
-      kidIndex = NextChildOffset();
-      break;
     }
   }
   SetLastContentOffset(prevKidFrame);

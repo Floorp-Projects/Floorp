@@ -26,6 +26,7 @@
 #include "nsCSSLayout.h"
 #include "nsPlaceholderFrame.h"
 #include "nsReflowCommand.h"
+#include "nsAbsoluteFrame.h"
 
 // XXX To Do:
 // 2. horizontal child margins
@@ -36,6 +37,7 @@
 // 7. CSS line-height property
 
 #define DEFAULT_ASCENT_LEN  10
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 
@@ -551,13 +553,16 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
 
     // Figure out how we should treat the child
     nsIFrame*        kidFrame;
-    nsStyleMolecule* kidMol =
-      (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
+    nsStylePosition* kidPosition = (nsStylePosition*)kidStyleContext->GetData(kStylePositionSID);
+    nsStyleMolecule* kidMol = (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
 
-    if (kidMol->floats != NS_STYLE_FLOAT_NONE) {
+    // Check whether it wants to floated or absolutely positioned
+    if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
+      AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
+      kidFrame->SetStyleContext(kidStyleContext);
+    } else if (kidMol->floats != NS_STYLE_FLOAT_NONE) {
       PlaceholderFrame::NewFrame(&kidFrame, kid, kidIndex, this);
       kidFrame->SetStyleContext(kidStyleContext);
-
     } else if (nsnull == kidPrevInFlow) {
       nsIContentDelegate* kidDel;
       switch (kidMol->display) {
