@@ -375,9 +375,13 @@ nsMsgComposeService::DetermineComposeHTML(nsIMsgIdentity *aIdentity, MSG_Compose
 
 NS_IMETHODIMP
 nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const char *originalMsgURI,
-  MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * identity, nsIMsgWindow *aMsgWindow)
+  MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * aIdentity, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
+
+  nsCOMPtr<nsIMsgIdentity> identity = aIdentity;
+  if (!identity)
+    GetDefaultIdentity(getter_AddRefs(identity));
   
   /* Actually, the only way to implement forward inline is to simulate a template message. 
      Maybe one day when we will have more time we can change that
@@ -442,7 +446,8 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
       PRBool requestForReturnReceipt = PR_FALSE;
       PRBool useCustomPrefs = PR_FALSE;
       PRInt32 receiptType = nsIMsgMdnGenerator::eDntType;
-      identity->GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
+      if (identity)
+        identity->GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
       if (useCustomPrefs)
       {
           identity->GetBoolAttribute("request_return_receipt_on",
