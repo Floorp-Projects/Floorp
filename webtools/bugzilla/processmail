@@ -364,6 +364,8 @@ if ($ARGV[0] eq "regenerate") {
     }
     foreach my $i (@regenerate_list) {
         ProcessOneBug($i);
+        Unlock();
+        Lock();
     }
     print("\n");
     exit;
