@@ -1038,7 +1038,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
       }
       else if (anAnchorAlignment == "bottomleft") {
         aXPos = rect.x + aXPos;
-        aYPos = rect.y + rect.height + aXPos;
+        aYPos = rect.y + rect.height + aYPos;
       }
       else {
         aXPos = rect.x + rect.width + aXPos;
