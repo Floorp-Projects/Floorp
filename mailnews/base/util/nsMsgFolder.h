@@ -56,10 +56,11 @@ public:
   NS_IMETHOD GetName(char **name);
   NS_IMETHOD SetName(char *name);
   NS_IMETHOD GetChildNamed(const char *name, nsISupports* *result);
-  NS_IMETHOD GetParent(nsIFolder* *parent);
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
 	NS_IMETHOD AddFolderListener(nsIFolderListener * listener);
 	NS_IMETHOD RemoveFolderListener(nsIFolderListener * listener);
+	NS_IMETHOD GetParent(nsIFolder * *aParent);
+	NS_IMETHOD SetParent(nsIFolder * aParent);
 
 
   // nsIMsgFolder methods:
@@ -116,8 +117,7 @@ public:
   NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32*);
 
   NS_IMETHOD ContainsChildNamed(const char *name, PRBool *containsChild);
-  NS_IMETHOD FindParentOf(nsIMsgFolder * aFolder, nsIMsgFolder ** aParent);
-  NS_IMETHOD IsParentOf(nsIMsgFolder *, PRBool deep, PRBool *isParent);
+  NS_IMETHOD IsAncestorOf(nsIMsgFolder * folder, PRBool *isParent);
 
   NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, nsIMsgFolder *otherFolder,
                                          char **name);
@@ -248,9 +248,11 @@ protected:
 	nsresult NotifyItemAdded(nsISupports *item);
 	nsresult NotifyItemDeleted(nsISupports *item);
 
+
 protected:
   nsString mName;
   PRUint32 mFlags;
+  nsIFolder *mParent;     //This won't be refcounted for ownership reasons.
   PRInt32 mNumUnreadMessages;        /* count of unread messages (-1 means
                                          unknown; -2 means unknown but we already
                                          tried to find out.) */
@@ -263,7 +265,7 @@ protected:
   PRUint8 mDepth;
   PRInt32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
   nsISupports *mSemaphoreHolder; // set when the folder is being written to
-																 //Due to ownership issues, this won't be AddRef'd.
+								//Due to ownership issues, this won't be AddRef'd.
 
 #ifdef HAVE_DB
   nsMsgKey	m_lastMessageLoaded;

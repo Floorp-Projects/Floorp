@@ -48,7 +48,8 @@ nsMsgFolder::nsMsgFolder(void)
 		mListeners(nsnull),
     mCsid(0),
     mDepth(0), 
-    mPrefFlags(0)
+    mPrefFlags(0),
+	mParent(nsnull)
 {
 //  NS_INIT_REFCNT(); done by superclass
 
@@ -102,7 +103,26 @@ nsMsgFolder::~nsMsgFolder(void)
 
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsMsgFolder, nsRDFResource, nsIMsgFolder)
+NS_IMPL_ADDREF_INHERITED(nsMsgFolder, nsRDFResource)
+NS_IMPL_RELEASE_INHERITED(nsMsgFolder, nsRDFResource)
+
+NS_IMETHODIMP nsMsgFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+	*aInstancePtr = nsnull;
+	if (aIID.Equals(nsIMsgFolder::GetIID()) || aIID.Equals(nsIFolder::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsIMsgFolder*, this);
+	}              
+
+	if(*aInstancePtr)
+	{
+		AddRef();
+		return NS_OK;
+	}
+
+	return nsRDFResource::QueryInterface(aIID, aInstancePtr);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -178,6 +198,23 @@ NS_IMETHODIMP nsMsgFolder::RemoveFolderListener(nsIFolderListener * listener)
 
 }
 
+NS_IMETHODIMP nsMsgFolder::SetParent(nsIFolder *parent)
+{
+	//Don't addref due to ownership issues.
+	mParent = parent;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMsgFolder::GetParent(nsIFolder **parent)
+{
+	if(!parent)
+		return NS_ERROR_NULL_POINTER;
+
+	*parent = mParent;
+	NS_IF_ADDREF(*parent);
+	return NS_OK;
+}
 
 NS_IMETHODIMP
 nsMsgFolder::GetMessages(nsIEnumerator* *result)
@@ -303,10 +340,6 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char* name, nsISupports* *result)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetParent(nsIFolder* *parent)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP nsMsgFolder::GetPrettiestName(char **name)
 {
@@ -513,55 +546,11 @@ NS_IMETHODIMP nsMsgFolder::ContainsChildNamed(const char *name, PRBool* contains
 		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsMsgFolder::FindParentOf(nsIMsgFolder * aFolder, nsIMsgFolder ** aParent)
+
+
+NS_IMETHODIMP nsMsgFolder::IsAncestorOf(nsIMsgFolder *child, PRBool *isAncestor)
 {
-	if(!aParent)
-		return NS_ERROR_NULL_POINTER;
-
-	nsresult rv;
-
-	*aParent = nsnull;
-
-	PRUint32 count = mSubFolders->Count();
-	nsCOMPtr<nsISupports> supports;
-	nsCOMPtr<nsIMsgFolder> child;
-
-	for (PRUint32 i = 0; i < count && *aParent == NULL; i++)
-	{
-		supports = getter_AddRefs(mSubFolders->ElementAt(i));
-		child = do_QueryInterface(supports, &rv);
-		if(NS_SUCCEEDED(rv) && child)
-		{
-			if (aFolder == child.get())
-			{
-				*aParent = this;
-				NS_ADDREF(*aParent);
-				return NS_OK;
-			}
-		}
-	}
-
-	for (PRUint32 j = 0; j < count && *aParent == NULL; j++)
-	{
-
-		supports = getter_AddRefs(mSubFolders->ElementAt(j));
-		child = do_QueryInterface(supports, &rv);
-		if(NS_SUCCEEDED(rv) && child)
-		{
-			rv = child->FindParentOf(aFolder, aParent);
-			if(NS_SUCCEEDED(rv))
-				return rv;
-		}
-
-	}
-
-	return rv;
-
-}
-
-NS_IMETHODIMP nsMsgFolder::IsParentOf(nsIMsgFolder *child, PRBool deep, PRBool *isParent)
-{
-	if(!isParent)
+	if(!isAncestor)
 		return NS_ERROR_NULL_POINTER;
 	
 	nsresult rv = NS_OK;
@@ -575,16 +564,17 @@ NS_IMETHODIMP nsMsgFolder::IsParentOf(nsIMsgFolder *child, PRBool deep, PRBool *
 		if(NS_SUCCEEDED(rv))
 		{
 			if (folder.get() == child )
-				*isParent = PR_TRUE;
-			else if(deep)
 			{
-				folder->IsParentOf(child, deep, isParent);
+				*isAncestor = PR_TRUE;
 			}
+			else
+				folder->IsAncestorOf(child, isAncestor);
+
 		}
-		if(*isParent)
+		if(*isAncestor)
 			return NS_OK;
     }
-	*isParent = PR_FALSE;
+	*isAncestor = PR_FALSE;
 	return rv;
 
 }
@@ -1013,10 +1003,10 @@ NS_IMETHODIMP nsMsgFolder::DisplayRecipients(PRBool *displayRecipients)
 #endif
 			for (int i = 0; i < numFccFolders; i++)
 			{
-				PRBool isParent;
-				if(NS_SUCCEEDED(rv = fccFolders[i]->IsParentOf(this, PR_TRUE, &isParent)))
+				PRBool isAncestor;
+				if(NS_SUCCEEDED(rv = fccFolders[i]->IsAncestorOf(this, &isAncestor)))
 				{
-					if (isParent)
+					if (isAncestor)
 						*displayRecipients = PR_TRUE;
 				}
 				NS_RELEASE(fccFolders[i]);
@@ -1281,7 +1271,6 @@ nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *item)
 
 
 nsresult
-
 nsGetMailFolderSeparator(nsString& result)
 {
   static char* gMailFolderSep = nsnull;         // never freed
