@@ -1900,22 +1900,6 @@ nsMsgAccountManager::InternalFindServer(const char* username,
   nsresult rv;
   nsCOMPtr<nsISupportsArray> servers;
  
-  // If 'useRealSetting' is set then we want to scan all existing accounts
-  // to make sure there's no duplicate including those whose host and/or
-  // user names have been changed.
-  if (!useRealSetting &&
-      (m_lastFindServerHostName.Equals(hostname)) &&
-      (m_lastFindServerUserName.Equals(username)) &&
-      (m_lastFindServerType.Equals(type)) &&
-      m_lastFindServerResult) 
-  {
-    NS_ADDREF(*aResult = m_lastFindServerResult);
-    return NS_OK;
-  }
-
-  rv = GetAllServers(getter_AddRefs(servers));
-  if (NS_FAILED(rv)) return rv;
-
   findServerEntry serverInfo;
 
   // "" acts as the wild card.
@@ -1927,6 +1911,22 @@ nsMsgAccountManager::InternalFindServer(const char* username,
   // type might be blank, pass "" instead
   serverInfo.type = type ? type : "";
   serverInfo.useRealSetting = useRealSetting;
+
+  // If 'useRealSetting' is set then we want to scan all existing accounts
+  // to make sure there's no duplicate including those whose host and/or
+  // user names have been changed.
+  if (!useRealSetting &&
+      (m_lastFindServerHostName.Equals(serverInfo.hostname)) &&
+      (m_lastFindServerUserName.Equals(serverInfo.username)) &&
+      (m_lastFindServerType.Equals(serverInfo.type)) &&
+      m_lastFindServerResult) 
+  {
+    NS_ADDREF(*aResult = m_lastFindServerResult);
+    return NS_OK;
+  }
+
+  rv = GetAllServers(getter_AddRefs(servers));
+  if (NS_FAILED(rv)) return rv;
 
   serverInfo.server = *aResult = nsnull;
   
