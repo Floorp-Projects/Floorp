@@ -83,6 +83,19 @@
 #include "nsUnicharUtils.h"
 #include "nsHTMLAtoms.h"
 #include "nsIURI.h"
+#include "nsIImage.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsIImageFrame.h"
+#include "nsIFrame.h"
+#include "nsLayoutAtoms.h"
+#include "imgIContainer.h"
+#include "imgIRequest.h"
+#include "gfxIImageFrame.h"
+#include "nsIInterfaceRequestor.h"
+
+
 
 NS_IMPL_ADDREF(nsContentAreaDragDrop)
 NS_IMPL_RELEASE(nsContentAreaDragDrop)
@@ -700,15 +713,15 @@ nsContentAreaDragDrop::GetEventDocument(nsIDOMEvent* inEvent, nsIDOMDocument** o
 //
 PRBool
 nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outURLString, nsAString & outTitleString,
-                                        nsAString & outHTMLString, PRBool* outIsAnchor)
+                                        nsAString & outHTMLString, nsIImage** outImage, PRBool* outIsAnchor)
 {
-  if ( !outIsAnchor )
+  if ( !outIsAnchor || !outImage )
     return PR_FALSE;
  
   outURLString.Truncate();
   outTitleString.Truncate();
   outHTMLString.Truncate();
- 
+  *outImage = nsnull; 
   *outIsAnchor = PR_FALSE;
   
   nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(inMouseEvent));
@@ -821,6 +834,9 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
           GetAnchorURL(parentAnchor, urlString);
           CreateLinkText(urlString, htmlString, htmlString);
         }
+        
+        // also grab the image data
+        GetImageFromDOMNode(draggedNode, outImage);
       } // img
       else {
         nsCOMPtr<nsIDOMHTMLLinkElement> link(do_QueryInterface(draggedNode));
@@ -875,7 +891,8 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
 //
 nsresult
 nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const nsAString & inTitleString, 
-                                          const nsAString & inHTMLString, PRBool inIsAnchor, nsITransferable** outTrans)
+                                          const nsAString & inHTMLString, nsIImage* inImage, PRBool inIsAnchor,
+                                          nsITransferable** outTrans)
 {
   if ( !outTrans )
     return NS_ERROR_FAILURE;
@@ -892,7 +909,7 @@ nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const n
     nsAutoString dragData ( inURLString );
     dragData += NS_LITERAL_STRING("\n");
     dragData += inTitleString;
-    nsCOMPtr<nsISupportsWString> urlPrimitive(do_CreateInstance("@mozilla.org/supports-wstring;1"));
+    nsCOMPtr<nsISupportsWString> urlPrimitive(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
     if ( !urlPrimitive )
       return NS_ERROR_FAILURE;
     urlPrimitive->SetData(dragData.get());
@@ -900,7 +917,7 @@ nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const n
   }
   
   // add the full html
-  nsCOMPtr<nsISupportsWString> htmlPrimitive(do_CreateInstance("@mozilla.org/supports-wstring;1"));
+  nsCOMPtr<nsISupportsWString> htmlPrimitive(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
   if ( !htmlPrimitive )
     return NS_ERROR_FAILURE;
   htmlPrimitive->SetData(PromiseFlatString(inHTMLString).get());
@@ -909,11 +926,22 @@ nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const n
   // add the plain (unicode) text. we use the url for text/unicode data if an anchor
   // is being dragged, rather than the title text of the link or the alt text for
   // an anchor image. 
-  nsCOMPtr<nsISupportsWString> textPrimitive(do_CreateInstance("@mozilla.org/supports-wstring;1"));
+  nsCOMPtr<nsISupportsWString> textPrimitive(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
   if ( !textPrimitive )
     return NS_ERROR_FAILURE;
   textPrimitive->SetData(PromiseFlatString(inIsAnchor ? inURLString : inTitleString).get());
-  trans->SetTransferData(kUnicodeMime, textPrimitive, (inIsAnchor ? inURLString.Length() : inTitleString.Length()) * 2);
+  trans->SetTransferData(kUnicodeMime, textPrimitive, (inIsAnchor ? inURLString.Length() : inTitleString.Length()) * 2);  
+  
+  // add image data, if present. For now, all we're going to do with this is turn it
+  // into a native data flavor, so indicate that with a new flavor so as not to confuse
+  // anyone who is really registered for image/gif or image/jpg.
+  if ( inImage ) {
+    nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive(do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID));
+    if ( !ptrPrimitive )
+      return NS_ERROR_FAILURE;
+    ptrPrimitive->SetData(inImage);
+    trans->SetTransferData(kNativeImageMime, ptrPrimitive, sizeof(nsIImage*));
+  }
   
   *outTrans = trans;
   NS_IF_ADDREF(*outTrans);
@@ -949,13 +977,14 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
   
   nsAutoString urlString, titleString, htmlString;
   PRBool isAnchor = PR_FALSE;
+  nsCOMPtr<nsIImage> image;
   
   // crawl the dom for the appropriate drag data depending on what was clicked
-  PRBool startDrag = BuildDragData(inMouseEvent, urlString, titleString, htmlString, &isAnchor);
+  PRBool startDrag = BuildDragData(inMouseEvent, urlString, titleString, htmlString, getter_AddRefs(image), &isAnchor);
   if ( startDrag ) {
     // build up the transferable with all this data.
     nsCOMPtr<nsITransferable> trans;
-    nsresult rv = CreateTransferable(urlString, titleString, htmlString, isAnchor, getter_AddRefs(trans));
+    nsresult rv = CreateTransferable(urlString, titleString, htmlString, image, isAnchor, getter_AddRefs(trans));
     if ( trans ) {
       // if the client has provided an override callback, let them manipulate
       // the flavors or drag data
@@ -990,3 +1019,104 @@ nsContentAreaDragDrop::HandleEvent(nsIDOMEvent *event)
 
 }
 
+
+//
+// GetImageFrame
+//
+// Finds the image from from a content node
+//
+nsresult 
+nsContentAreaDragDrop::GetImageFrame(nsIContent* aContent, nsIDocument *aDocument, nsIPresContext *aPresContext,
+                                        nsIPresShell *aPresShell, nsIImageFrame** aImageFrame)
+{
+	NS_ENSURE_ARG_POINTER(aImageFrame); 
+	*aImageFrame = nsnull;
+
+	nsresult rv = NS_ERROR_FAILURE;
+
+	if (aDocument) {
+		// Make sure the presentation is up-to-date
+		rv = aDocument->FlushPendingNotifications();
+		if (NS_FAILED(rv))
+			return rv;
+	}
+
+	if (aContent && aDocument && aPresContext && aPresShell) {
+		nsIFrame* frame = nsnull;
+		rv = aPresShell->GetPrimaryFrameFor(aContent, &frame);
+		if (NS_SUCCEEDED(rv) && frame) {
+			nsCOMPtr<nsIAtom> type;
+			frame->GetFrameType(getter_AddRefs(type));
+			if (type.get() == nsLayoutAtoms::imageFrame) {
+				nsIImageFrame* imageFrame;
+				rv = frame->QueryInterface(NS_GET_IID(nsIImageFrame), (void**)&imageFrame);
+				if (NS_FAILED(rv)) {
+					NS_WARNING("Should not happen - frame is not image frame even though type is nsLayoutAtoms::imageFrame");
+					return rv;
+				}
+				*aImageFrame = imageFrame;
+			}
+			else
+				return NS_ERROR_FAILURE;
+		}
+		else
+			rv = NS_OK;
+	}
+	return rv;
+}
+
+
+//
+// GetImage
+//
+// Given a dom node that's an image, finds the nsIImage associated with it.
+//
+nsresult
+nsContentAreaDragDrop::GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage**outImage)
+{
+	NS_ENSURE_ARG_POINTER(outImage);
+	*outImage = nsnull;
+
+	nsresult rv = NS_ERROR_NOT_AVAILABLE;
+
+	nsCOMPtr<nsIContent> content(do_QueryInterface(inNode));
+	if ( content ) {
+		nsCOMPtr<nsIDocument> document;
+		content->GetDocument(*getter_AddRefs(document));
+		if ( document ) {
+		  nsCOMPtr<nsIPresShell> presShell;
+			document->GetShellAt(0, getter_AddRefs(presShell));
+			if ( presShell ) {
+			  nsCOMPtr<nsIPresContext> presContext;
+				presShell->GetPresContext(getter_AddRefs(presContext));
+				if (presContext) {
+					nsCOMPtr<imgIContainer> imgContainer;
+					
+					nsIImageFrame* imageFrame = nsnull;
+					if ( NS_SUCCEEDED(GetImageFrame(content, document, presContext, presShell, &imageFrame)) && imageFrame ) {
+						nsCOMPtr<imgIRequest> imgRequest;
+						imageFrame->GetImageRequest(getter_AddRefs(imgRequest));
+						if (imgRequest)
+							imgRequest->GetImage(getter_AddRefs(imgContainer));
+					}
+					else {
+						// We could try the background image, but we really don't want to be dragging
+						// the bg image in any case.
+					}
+
+					if (imgContainer) {
+						nsCOMPtr<gfxIImageFrame> imgFrame;
+						imgContainer->GetFrameAt(0, getter_AddRefs(imgFrame));
+						if ( imgFrame )	{
+							nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(imgFrame);
+							if ( ir )
+								rv = ir->GetInterface(NS_GET_IID(nsIImage), (void**)outImage);      // will addreff
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return rv;
+}

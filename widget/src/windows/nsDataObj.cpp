@@ -382,10 +382,21 @@ nsDataObj :: GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG 
   PRNTDEBUG("nsDataObj::GetDib\n");
   ULONG result = E_FAIL;
   
+  
   PRUint32 len = 0;
   nsCOMPtr<nsISupports> genericDataWrapper;
   mTransferable->GetTransferData(PromiseFlatCString(inFlavor).get(), getter_AddRefs(genericDataWrapper), &len);
   nsCOMPtr<nsIImage> image ( do_QueryInterface(genericDataWrapper) );
+  if ( !image ) {
+    // In the 0.9.4 timeframe, I had some embedding clients put the nsIImage directly into the
+    // transferable. Newer code, however, wraps the nsIImage in a nsISupportsInterfacePointer.
+    // We should be backwards compatibile with code already out in the field. If we can't find
+    // the image directly out of the transferable,  unwrap the image from its wrapper.
+    nsCOMPtr<nsISupportsInterfacePointer> ptr(do_QueryInterface(genericDataWrapper));
+    if ( ptr )
+      ptr->GetData(getter_AddRefs(image));
+  }
+  
   if ( image ) {
     // use a the helper class to build up a bitmap. We now own the bits,
     // and pass them back to the OS in |aSTG|.

@@ -199,7 +199,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
 #endif
       }
       else if ( strcmp(flavorStr, kPNGImageMime) == 0 || strcmp(flavorStr, kJPEGImageMime) == 0 ||
-                  strcmp(flavorStr, kGIFImageMime) == 0 ) {
+                  strcmp(flavorStr, kGIFImageMime) == 0 || strcmp(flavorStr, kNativeImageMime) == 0  ) {
         // if we're an image, register the native bitmap flavor
         FORMATETC imageFE;
         SET_FORMATETC(imageFE, CF_DIB, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
