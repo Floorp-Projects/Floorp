@@ -352,6 +352,7 @@ nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **r
     if (NS_FAILED(rv)) return rv;
     
     *result = channel;
+	NS_ADDREF(*result);
     return NS_OK;
 }
 
