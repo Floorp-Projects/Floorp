@@ -193,7 +193,7 @@ sub ParseHeapOutput($$)
   DumpHashDiffs(\%before_data, \%after_data);
 
   my $heap_diff = $after_heap - $before_heap;
-  TinderUtils::print_log("TinderboxPrint:<acronym title=\"Per-window leaks\">Lw:".TinderUtils::PrintSize($heap_diff)."B</acronym>\n");
+  TinderUtils::print_log("TinderboxPrint:<acronym title=\"Per-window leaks\">Lw:".TinderUtils::PrintSize($heap_diff, 3)."B</acronym>\n");
 }
 
 
