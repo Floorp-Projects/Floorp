@@ -31,7 +31,16 @@ interface nsIMsgFolder : nsISupports {
   attribute long depth;
   nsISupportsArray GetSubFolders();
   nsIMsgFolder FindParentOf(in nsIMsgFolder childFolder);
-
+  
+  void AddSubfolder(in nsIMsgFolder newSubfolder);
+  void AddSubfolderIfUnique(in nsIMsgFolder newSubfolder);
+  void RemoveSubfolder(in nsIMsgFolder folder);
+  void ReplaceSubfolder(in nsIMsgFolder oldFolder,
+                        in nsIMsgFolder newFolder);
+  
+  void SetFlag(in long flag);
+  void ClearFlag(in long flag);
+  boolean GetFlag(in long flag);
 };
 
 

@@ -36,6 +36,27 @@ class nsIMsgFolder : public nsISupports {
 
   /*  <IDL>  */
   NS_IMETHOD FindParentOf(const nsIMsgFolder *childFolder, nsIMsgFolder **_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD AddSubfolder(const nsIMsgFolder *newSubfolder) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD AddSubfolderIfUnique(const nsIMsgFolder *newSubfolder) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD RemoveSubfolder(const nsIMsgFolder *folder) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD ReplaceSubfolder(const nsIMsgFolder *oldFolder, const nsIMsgFolder *newFolder) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD SetFlag(PRInt32 flag) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD ClearFlag(PRInt32 flag) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetFlag(PRInt32 flag, PRBool *_retval) = 0;
 };
 
 #endif /* __gen_nsIMsgFolder_h__ */
