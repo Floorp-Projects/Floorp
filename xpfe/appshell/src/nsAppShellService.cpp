@@ -791,12 +791,22 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
   NS_ASSERTION(mAppShell, "appshell service notified before appshell built");
   if (topic.EqualsWithConversion(gEQActivatedNotification)) {
     nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
-    if (eq)
-      mAppShell->ListenToEventQueue(eq, PR_TRUE);
+    if (eq) {
+      PRBool isNative = PR_TRUE;
+      // we only add native event queues to the appshell
+      eq->IsQueueNative(&isNative);
+      if (isNative)
+        mAppShell->ListenToEventQueue(eq, PR_TRUE);
+    }
   } else if (topic.EqualsWithConversion(gEQDestroyedNotification)) {
     nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
-    if (eq)
-      mAppShell->ListenToEventQueue(eq, PR_FALSE);
+    if (eq) {
+      PRBool isNative = PR_TRUE;
+      // we only remove native event queues from the appshell
+      eq->IsQueueNative(&isNative);
+      if (isNative)
+        mAppShell->ListenToEventQueue(eq, PR_FALSE);
+    }
   }
   return NS_OK;
 }
