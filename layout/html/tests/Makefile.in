@@ -34,7 +34,29 @@ include $(topsrcdir)/config/config.mk
 
 SIMPLE_PROGRAMS = $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
-LIBS = \
+ifndef NECKO
+LIBS = 		\
+	-lpwcac \
+	-lfileurl \
+	-lftpurl \
+	-lgophurl \
+	-lremoturl \
+	-lnetcnvts \
+	-labouturl \
+	-lhttpurl \
+	-lmimetype \
+	-lnetcache \
+	-lnetlib 	\
+	-lnetwork 	\
+	-lsockstuburl \
+	$(NULL)
+else
+LIBS = 		\
+	-lneckoutil_s \
+	$(NULL)
+endif
+
+LIBS += \
 	-limg \
 	$(PNG_LIBS) \
 	$(JPEG_LIBS) \
@@ -57,27 +79,6 @@ LIBS = \
 	$(NSPR_LIBS) \
 	$(NULL)
 
-ifndef NECKO
-LIBS += 		\
-	-lpwcac \
-	-lfileurl \
-	-lftpurl \
-	-lgophurl \
-	-lremoturl \
-	-lnetcnvts \
-	-labouturl \
-	-lhttpurl \
-	-lmimetype \
-	-lnetcache \
-	-lnetlib 	\
-	-lnetwork 	\
-	-lsockstuburl \
-	$(NULL)
-else
-LIBS += 		\
-	-lneckoutil_s \
-	$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
 
