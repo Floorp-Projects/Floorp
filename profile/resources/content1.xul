@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="common.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<xul:window
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns="http://www.w3.org/TR/REC-html40">
+
+
+<script>
+function commit()
+{
+}
+</script>
+
+
+<b>Communicator Profile Manager</b>
+<p>
+Creating a New Profile
+<br></br>
+Communicator stores information about your settings, preferences, bookmarks and 
+<br></br>
+stored messages in your personal profile.
+</p>
+
+<p>
+If you are sharing this copy of Communicator with other users, you can use profiles 
+<br></br>
+to keep each user's information separate. To do this, each user should create his or 
+<br></br>
+her own profile and optionally protect it with a password.
+</p>
+
+<p>
+If you are the only person using this copy of Communicator, you must create atleast
+<br></br>
+one profile. If you would like, you can create multiple profiles for yourself to store 
+<br></br>
+different sets of setting and preferences. For example, you may want to have separate 
+<br></br>
+profiles for business and personal use.
+</p>
+
+
+<p>
+To begin Creating your profile, click Next.
+</p>
+
+</xul:window>
