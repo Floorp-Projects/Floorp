@@ -134,6 +134,7 @@ viewer:Components:nsIStringBundle.xpt
 viewer:Components:nslocale.shlb 
 viewer:Components:nsLocale.xpt 
 viewer:Components:nsSidebar.js
+viewer:Components:oji.shlb
 viewer:Components:oji.xpt 
 viewer:Components:PIPNSS.shlb
 viewer:Components:pipnss.xpt
