@@ -235,7 +235,11 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
    return NS_OK;
 error1:
    *aDestLen = dest-aDest;
-   *aSrcLen = src-(unsigned char*)aSrc;
+   src++;
+   if ((mState == 0) && (src == srcEnd)) {
+     return NS_OK;
+   }
+   *aSrcLen = src - (const unsigned char*)aSrc;
    return NS_OK_UDEC_MOREOUTPUT;
 }
 
@@ -442,7 +446,11 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
    return NS_OK;
 error1:
    *aDestLen = dest-aDest;
-   *aSrcLen = src-(unsigned char*)aSrc;
+   src++;
+   if ((mState == 0) && (src == srcEnd)) {
+     return NS_OK;
+   } 
+   *aSrcLen = src - (const unsigned char*)aSrc;
    return NS_OK_UDEC_MOREOUTPUT;
 }
 
@@ -929,6 +937,10 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
    return NS_OK;
 error1:
    *aDestLen = dest-aDest;
-   *aSrcLen = src-(unsigned char*)aSrc;
+   src++;
+   if ((mState == 0) && (src == srcEnd)) {
+     return NS_OK;
+   }
+   *aSrcLen = src - (const unsigned char*)aSrc;
    return NS_OK_UDEC_MOREOUTPUT;
 }
