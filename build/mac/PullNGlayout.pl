@@ -32,12 +32,8 @@ use Moz;
 # configuration variables
 $DEBUG = 1;
 $pull{all} = 1;
-$pull{lizard} = 0;
-$pull{xpcom} = 0;
-$pull{imglib} = 0;
-$pull{netlib} = 0;
-$pull{nglayout} = 0;
-$pull{mac} = 0;
+$pull{moz} = 0;
+$pull{runtime} = 0;
 
 if ($pull{all})
 {

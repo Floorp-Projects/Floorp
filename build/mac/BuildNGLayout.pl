@@ -40,12 +40,8 @@ $PROFILE				= 0;
 $GC_LEAK_DETECTOR		= 0;	# turn on to use GC leak detection
 
 $pull{all} 				= 0;
-$pull{lizard} 			= 0;
-$pull{xpcom} 			= 0;
-$pull{imglib} 			= 0;
-$pull{netlib} 			= 0;
-$pull{nglayout} 		= 0;
-$pull{mac} 				= 0;
+$pull{moz}				= 0;
+$pull{runtime} 			= 0;
 
 $build{all} 			= 1;			# turn off to do individual builds, or to do "most"
 $build{most} 			= 0;			# turn off to do individual builds
@@ -167,9 +163,7 @@ else
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
 
-if ($pull{all}) { 
-   Checkout();
-}
+Checkout();
 
 SetBuildNumber();
 
