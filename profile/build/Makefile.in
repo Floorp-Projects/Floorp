@@ -93,6 +93,3 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../src \
 		$(NULL)
 
-ifeq ($(OS_ARCH), Linux)
-DEFINES         += -D_BSD_SOURCE -D_POSIX_C_SOURCE=199506L
-endif

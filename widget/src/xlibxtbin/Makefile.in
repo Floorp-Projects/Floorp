@@ -46,10 +46,6 @@ CFLAGS		+= $(MOZ_XLIB_CFLAGS)
 
 DEFINES		+= -D_IMPL_NS_WIDGET -DUSE_XIM
 
-# ifeq ($(OS_ARCH), Linux)
-# DEFINES		+= -D_BSD_SOURCE
-# endif
-
 INCLUDES	+= \
 		-I$(srcdir) \
 		$(NULL)

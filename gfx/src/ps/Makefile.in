@@ -90,9 +90,6 @@ ifdef MOZ_ENABLE_FREETYPE2
 INCLUDES        += $(FT2_CFLAGS)
 endif
 
-ifeq ($(OS_ARCH), Linux)
-DEFINES         += -D_BSD_SOURCE
-endif
 CFLAGS		+= $(TK_CFLAGS)
 CXXFLAGS	+= $(TK_CFLAGS)
 

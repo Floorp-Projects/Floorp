@@ -97,9 +97,6 @@ CFLAGS		+= $(MOZ_GTK_CFLAGS)
 
 DEFINES		+= -D_IMPL_NS_WIDGET -DUSE_XIM
 
-ifeq ($(OS_ARCH), Linux)
-DEFINES		+= -D_BSD_SOURCE
-endif
 ifeq ($(OS_ARCH), SunOS)
 ifndef GNU_CC
 # When using Sun's WorkShop compiler, including
