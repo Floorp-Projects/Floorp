@@ -47,6 +47,8 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+extern "C" MimeObjectClass mimeMultipartRelatedClass;
+
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartAlternative, MimeMultipartAlternativeClass,
        mimeMultipartAlternativeClass, &MIME_SUPERCLASS);
@@ -315,7 +317,7 @@ MimeMultipartAlternative_display_cached_part(MimeObject *obj)
      However, we still have to call decompose_file_init_fn and decompose_file_close_fn
      in order to set the correct content-type. But don't call MimePartBufferRead
   */
-  PRBool multipartChild = mime_typep(obj->parent, (MimeObjectClass *) &mimeMultipartClass);
+  PRBool multipartRelatedChild = mime_typep(obj->parent,(MimeObjectClass*)&mimeMultipartRelatedClass);
   PRBool decomposeFile = obj->options &&
                   obj->options->decompose_file_p &&
                   obj->options->decompose_file_init_fn &&
@@ -337,7 +339,7 @@ MimeMultipartAlternative_display_cached_part(MimeObject *obj)
   if (status < 0) return status;
 
 #ifdef MIME_DRAFTS
-  if (decomposeFile && !multipartChild)
+  if (decomposeFile && !multipartRelatedChild)
     status = MimePartBufferRead (malt->part_buffer,
                   obj->options->decompose_file_output_fn,
                   obj->options->stream_closure);
