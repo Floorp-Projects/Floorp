@@ -325,6 +325,10 @@ nsBaseURLParser::ParseFilePath(const char *filepath, PRInt32 filepathLen,
     for (p = end - 1; *p != '/' && p > filepath; --p)
         ;
     if (*p == '/') {
+        // catch /.. and /.
+        if ((p+1 < end && *(p+1) == '.') && 
+           (p+2 == end || (p+2 < end && *(p+2) == '.' && p+3 == end)))
+            p = end - 1;
         // filepath = <directory><filename>.<extension>
         SET_RESULT(directory, 0, p - filepath + 1);
         ParseFileName(p + 1, end - (p + 1),
