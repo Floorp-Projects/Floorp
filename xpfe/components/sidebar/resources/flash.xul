@@ -43,9 +43,7 @@
       <treechildren>
         <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
           <treerow>
-            <treecell>
-              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#description" align="left" />
-            </treecell>
+            <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#description" align="left" />
           </treerow>
         </treeitem>
       </treechildren>
