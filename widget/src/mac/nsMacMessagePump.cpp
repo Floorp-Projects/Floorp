@@ -186,7 +186,7 @@ nsWindow			*thewindow;
 nsRect 				rect;
 RgnHandle			updateregion;
 nsPaintEvent 	pevent;
-nsRefData				*theRefData;
+nsRefData			*theRefData;
  
  	::GetPort(&curport);
 	whichwindow = (WindowPtr)aTheEvent->message;
@@ -266,6 +266,7 @@ nsMacMessagePump::DoMouseDown(EventRecord *aTheEvent)
 PRBool				result;
 Rect					therect;
 Point					hitPoint;
+PRInt32				newx,newy;
 WindowPtr			whichwindow;
 PRInt16				partcode;
 nsWindow			*thewindow;
@@ -308,8 +309,14 @@ nsRefData			*theRefData;
 					{
 					mouseevent.message = NS_MOUSE_LEFT_BUTTON_DOWN;
 					mouseevent.widget  = (nsWindow *) thewindow;
-					mouseevent.point.x = hitPoint.h;
-					mouseevent.point.y = hitPoint.v;					
+					
+					// calculate the offset for the event passed in	
+					newx = hitPoint.h;
+					newy = hitPoint.v;
+					thewindow->ConvertToDeviceCoordinates(newx,newy);
+					
+					mouseevent.point.x = newx;
+					mouseevent.point.y = newy;					
 					mouseevent.time = 0;
 					mouseevent.isShift = FALSE;
 					mouseevent.isControl = FALSE;
@@ -437,6 +444,7 @@ nsMacMessagePump::DoMouseUp(EventRecord *aTheEvent)
 {
 WindowPtr			whichwindow;
 PRInt16				partcode;
+PRInt32				newx,newy;
 Point					hitPoint;
 nsWindow			*thewindow;
 nsMouseEvent	mouseevent;
@@ -452,8 +460,14 @@ nsRefData			*theRefData;
 		mouseevent.widget  = (nsWindow *) gGrabWindow;
 		hitPoint = aTheEvent->where;
 		GlobalToLocal(&hitPoint);
-		mouseevent.point.x = hitPoint.h;
-		mouseevent.point.y = hitPoint.v;					
+
+					// calculate the offset for the event passed in	
+					newx = hitPoint.h;
+					newy = hitPoint.v;
+					gGrabWindow->ConvertToDeviceCoordinates(newx,newy);
+
+		mouseevent.point.x = newx;
+		mouseevent.point.y = newy;					
 		mouseevent.time = 0;
 		mouseevent.isShift = FALSE;
 		mouseevent.isControl = FALSE;
@@ -488,8 +502,13 @@ nsRefData			*theRefData;
 					{
 					mouseevent.message = NS_MOUSE_LEFT_BUTTON_UP;
 					mouseevent.widget  = (nsWindow *) thewindow;
-					mouseevent.point.x = hitPoint.h;
-					mouseevent.point.y = hitPoint.v;					
+					
+					// calculate the offset for the event passed in	
+					newx = hitPoint.h;
+					newy = hitPoint.v;
+					thewindow->ConvertToDeviceCoordinates(newx,newy);
+					mouseevent.point.x = newx;
+					mouseevent.point.y = newy;					
 					mouseevent.time = 0;
 					mouseevent.isShift = FALSE;
 					mouseevent.isControl = FALSE;
@@ -515,6 +534,7 @@ nsMacMessagePump::DoMouseMove(EventRecord *aTheEvent)
 {
 WindowPtr			whichwindow;
 PRInt16				partcode;
+PRInt32				newx,newy;
 Point					hitPoint;
 nsWindow			*thewindow,*lastwindow;
 nsMouseEvent	mouseevent;
@@ -559,8 +579,13 @@ nsRefData			*theRefData;
 			mouseevent.widget  = (nsWindow *) gGrabWindow;
 			hitPoint = aTheEvent->where;
 			GlobalToLocal(&hitPoint);
-			mouseevent.point.x = hitPoint.h;
-			mouseevent.point.y = hitPoint.v;				
+
+					// calculate the offset for the event passed in	
+					newx = hitPoint.h;
+					newy = hitPoint.v;
+					gGrabWindow->ConvertToDeviceCoordinates(newx,newy);
+			mouseevent.point.x = newx;
+			mouseevent.point.y = newy;				
 			gGrabWindow->DispatchMouseEvent(mouseevent);
 			this->SetCurrentWindow(thewindow);
 			}
@@ -575,8 +600,14 @@ nsRefData			*theRefData;
 					mouseevent.widget  = (nsWindow *) gGrabWindow;
 					hitPoint = aTheEvent->where;
 					GlobalToLocal(&hitPoint);
-					mouseevent.point.x = hitPoint.h;
-					mouseevent.point.y = hitPoint.v;					
+					
+					// calculate the offset for the event passed in	
+					newx = hitPoint.h;
+					newy = hitPoint.v;
+					gGrabWindow->ConvertToDeviceCoordinates(newx,newy);
+
+					mouseevent.point.x = newx;
+					mouseevent.point.y = newy;					
 					gGrabWindow->DispatchMouseEvent(mouseevent);	
 					this->SetCurrentWindow(thewindow);				
 					}
@@ -586,8 +617,13 @@ nsRefData			*theRefData;
 					mouseevent.widget  = (nsWindow *) gGrabWindow;
 					hitPoint = aTheEvent->where;
 					GlobalToLocal(&hitPoint);
-					mouseevent.point.x = hitPoint.h;
-					mouseevent.point.y = hitPoint.v;					
+					// calculate the offset for the event passed in	
+					newx = hitPoint.h;
+					newy = hitPoint.v;
+					gGrabWindow->ConvertToDeviceCoordinates(newx,newy);
+
+					mouseevent.point.x = newx;
+					mouseevent.point.y = newy;					
 					gGrabWindow->DispatchMouseEvent(mouseevent);
 					this->SetCurrentWindow(thewindow);				
 					}
@@ -612,8 +648,15 @@ nsRefData			*theRefData;
 							mouseevent.widget  = (nsWindow *) lastwindow;
 							hitPoint = aTheEvent->where;
 							GlobalToLocal(&hitPoint);
-							mouseevent.point.x = hitPoint.h;
-							mouseevent.point.y = hitPoint.v;					
+					// calculate the offset for the event passed in	
+					newx = hitPoint.h;
+					newy = hitPoint.v;
+					thewindow->ConvertToDeviceCoordinates(newx,newy);
+
+					mouseevent.point.x = newx;
+					mouseevent.point.y = newy;					
+							//mouseevent.point.x = hitPoint.h;
+							//mouseevent.point.y = hitPoint.v;					
 							lastwindow->DispatchMouseEvent(mouseevent);
 							}
 
@@ -623,8 +666,15 @@ nsRefData			*theRefData;
 						mouseevent.widget  = (nsWindow *) thewindow;
 						hitPoint = aTheEvent->where;
 						GlobalToLocal(&hitPoint);
-						mouseevent.point.x = hitPoint.h;
-						mouseevent.point.y = hitPoint.v;					
+					// calculate the offset for the event passed in	
+					newx = hitPoint.h;
+					newy = hitPoint.v;
+					thewindow->ConvertToDeviceCoordinates(newx,newy);
+
+					mouseevent.point.x = newx;
+					mouseevent.point.y = newy;					
+						//mouseevent.point.x = hitPoint.h;
+						//mouseevent.point.y = hitPoint.v;					
 						thewindow->DispatchMouseEvent(mouseevent);	
 						}
 					else
@@ -634,8 +684,15 @@ nsRefData			*theRefData;
 						mouseevent.widget  = (nsWindow *) thewindow;
 						hitPoint = aTheEvent->where;
 						GlobalToLocal(&hitPoint);
-						mouseevent.point.x = hitPoint.h;
-						mouseevent.point.y = hitPoint.v;		
+					// calculate the offset for the event passed in	
+					newx = hitPoint.h;
+					newy = hitPoint.v;
+					thewindow->ConvertToDeviceCoordinates(newx,newy);
+
+					mouseevent.point.x = newx;
+					mouseevent.point.y = newy;					
+						//mouseevent.point.x = hitPoint.h;
+						//mouseevent.point.y = hitPoint.v;		
 						thewindow->DispatchMouseEvent(mouseevent);
 						break;
 						}
@@ -649,8 +706,15 @@ nsRefData			*theRefData;
 					mouseevent.widget  = (nsWindow *) lastwindow;
 					hitPoint = aTheEvent->where;
 					GlobalToLocal(&hitPoint);
-					mouseevent.point.x = hitPoint.h;
-					mouseevent.point.y = hitPoint.v;					
+					// calculate the offset for the event passed in	
+					newx = hitPoint.h;
+					newy = hitPoint.v;
+					lastwindow->ConvertToDeviceCoordinates(newx,newy);
+
+					mouseevent.point.x = newx;
+					mouseevent.point.y = newy;					
+					//mouseevent.point.x = hitPoint.h;
+					//mouseevent.point.y = hitPoint.v;					
 					lastwindow->DispatchMouseEvent(mouseevent);
 					}
 				break;
