@@ -44,7 +44,7 @@
 
       if (!spellChecker) {
         var spellCheckerCheckbox = document.getElementById("spellCheckBeforeSend");
-        spellCheckerCheckbox.setAttribute("disabled","true");
+        spellCheckerCheckbox.setAttribute("hidden","true");
       }
     }
   ]]>
