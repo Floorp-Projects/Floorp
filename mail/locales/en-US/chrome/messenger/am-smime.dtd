@@ -13,20 +13,12 @@
 <!ENTITY signingCert.message "Use this certificate to digitally sign messages you send:">
 <!ENTITY signingCert.notselected "No certificate set">
 
-<!ENTITY  managecerts.label      "Manage Certificates and Devices">
-<!ENTITY  managecerts.button     "Manage Certificates...">
-<!ENTITY  managecerts.accesskey  "M">
-<!ENTITY  managedevices.button   "Manage Security Devices...">
-<!ENTITY  managedevices.accesskey   "S">
-
-<!-- used by overloaded pref-smime-advanced overlay --> 
-<!ENTITY  managecertsPref.label  "Manage your personal certificates:"> 
-<!ENTITY  managedevicesPref.label "Manage your security devices such as smart cards:"> 
-<!ENTITY  passwordAndSecurity.label      "Passwords and Security">
-
-<!-- Certs -->
-<!ENTITY certs.label                  "Certificates">
-<!ENTITY  managecerts.label           "Manage Certificates">
-<!ENTITY  managecerts.text            "Use the Certificate Manager to manage your personal certificates, as well as those of other people and certificate authorities.">
-<!ENTITY  managedevices.label         "Manage Security Devices">
-<!ENTITY  managedevices.text          "Manage your security devices, such as smart cards.">
+<!ENTITY managecerts.label      "Certificates">
+<!ENTITY managecerts.button     "View Certificates">
+<!ENTITY managecerts.accesskey  "V">
+<!ENTITY managedevices.button   "Security Devices">
+<!ENTITY managedevices.accesskey "S">
+<!ENTITY viewCRLs.button         "Revocation Lists">
+<!ENTITY viewCRLs.accesskey      "e">
+<!ENTITY viewOCSP.button         "Verification">
+<!ENTITY viewOCSP.accesskey      "V">
