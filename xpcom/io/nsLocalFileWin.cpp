@@ -357,8 +357,14 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
             // we have a drive letter and a colon (eg 'c:'
             // this is resolve already
             
-            *resolvedPath = (char*) nsMemory::Clone( filePath, strlen(filePath)+2 );
-            strcat(*resolvedPath, "\\");
+            int filePathLen = strlen(filePath);
+            char* rp = (char*) nsMemory::Alloc( filePathLen + 2 );
+            if (!rp)
+                return NS_ERROR_OUT_OF_MEMORY;
+            memcpy( rp, filePath, filePathLen );
+            rp[filePathLen] = '\\';
+            rp[filePathLen+1] = 0;
+            *resolvedPath = rp;
 
             nsMemory::Free(filePath);
             return NS_OK;
@@ -545,7 +551,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
         int pathLen = strlen(workingFilePath);
         const char* leaf = workingFilePath + pathLen - 4;
     
-        if ( (strcmp(leaf, ".lnk") != 0))
+        if (pathLen >= 4 && (strcmp(leaf, ".lnk") != 0))
         {
 		    mDirty = PR_FALSE;
             return NS_OK;
@@ -613,11 +619,16 @@ nsLocalFile::InitWithPath(const char *filePath)
     
     if ( (filePath[2] == 0) && (filePath[1] == ':') )
     {
-        nativeFilePath = (char*) nsMemory::Clone( filePath, 4 );
         // C : //
+        nativeFilePath = (char*) nsMemory::Alloc( 4 );
+        if (!nativeFilePath)
+            return NS_ERROR_OUT_OF_MEMORY;
+        nativeFilePath[0] = filePath[0];
+        nativeFilePath[1] = ':';
         nativeFilePath[2] = '\\';
+        nativeFilePath[3] = 0;
     }
-
+    // XXX is this an 'else'? Otherwise 'nativeFilePath' could leak.
     if ( ( (filePath[1] == ':')  && (strchr(filePath, '/') == 0) ) ||  // normal windows path
          ( (filePath[0] == '\\') && (filePath[1] == '\\') ) )  // netwerk path
     {
