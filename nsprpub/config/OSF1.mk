@@ -40,7 +40,7 @@
 # which we use to stop LOOP_OVER_DIRS submakes as soon as any
 # submake fails.  So we use the Korn shell instead.
 #
-SHELL			= /usr/bin/ksh
+SHELL			:= /usr/bin/ksh
 
 include $(MOD_DEPTH)/config/UNIX.mk
 

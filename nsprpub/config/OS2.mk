@@ -61,7 +61,7 @@ endif
 #
 # On OS/2 we proudly support gbash...
 #
-SHELL = GBASH.EXE
+SHELL := GBASH.EXE
 
 CC			= icc -q -DXP_OS2 -N10
 CCC			= icc -q -DXP_OS2 -DOS2=4 -N10
