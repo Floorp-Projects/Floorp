@@ -155,14 +155,6 @@ nsMsgAccount::createIncomingServer()
     serverType.Adopt(nsCRT::strdup("generic"));
   }
     
-#ifdef DEBUG_alecf
-  if (NS_FAILED(rv)) {
-    printf("\tCould not read pref %s\n", (const char*)serverTypePref);
-  } else {
-    printf("\t%s's   type: %s\n",
-           (const char*)m_accountKey, (const char*)serverType);
-  }
-#endif
     
   // get the server from the account manager
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
@@ -173,9 +165,6 @@ nsMsgAccount::createIncomingServer()
   rv = accountManager->GetIncomingServer(serverKey, getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv, rv);
   
-#ifdef DEBUG_alecf
-  printf("%s loaded.\n", (const char*)m_accountKey);
-#endif
   // store the server in this structure
   m_incomingServer = server;
   accountManager->NotifyServerLoaded(server);

@@ -647,13 +647,6 @@ nsMsgFolder::parseURI(PRBool needServer)
                do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) return rv;
 
-#ifdef DEBUG_alecf
-      // this is a failing case, and it would be nice if this
-      // was never called
-      // (we should ALWAYS handle this case, but try to design
-      // the code so we have a parent wherever possible)
-      printf("No parent->");
-#endif
       rv = accountManager->FindServer(userName,
                                       hostName,
                                       GetIncomingServerType(),
