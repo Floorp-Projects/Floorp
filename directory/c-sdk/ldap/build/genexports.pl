@@ -193,9 +193,13 @@ print_export {
     }
 
 # finally, print out an appropriate export line
-    if ( $type eq "Win32" || $type eq "OS2" ) {
+    if ( $type eq "Win32" ) {
 	if ( $symtype ne "G" ) {
 	    print "\t$symbol\t\t\@$ordinal\n";
+	}
+    } elsif ( $type eq "OS2" ) {
+	if ( $symtype ne "G" ) {
+	    print "\t_$symbol\t\t\@$ordinal\n";
 	}
     } elsif ( $type eq "Win16" ) {
 	if ( $symtype eq "C" ) {
