@@ -4825,15 +4825,14 @@ void lo_RelayoutTextElements ( MWContext * context,
 	block->endTextElement = NULL;
 	
 	if ( fromElement == NULL )
-		{
-		fromElement = (LO_TextStruct *) startElement;
-		}
+      fromElement = lo_tv_GetNextLayoutElement ( state, (LO_Element*)block, FALSE );
+
+    if ( fromElement == NULL)
+      fromElement = (LO_TextStruct *) startElement;
 	
 	/* sanity check */
 	if ( fromElement == NULL )
-		{
-		return;
-		}
+      return;
 	
 	/*
 	 * We need to run through all elements up to start element and place them
@@ -4841,7 +4840,7 @@ void lo_RelayoutTextElements ( MWContext * context,
 	 * (linefeeds and bullets)
 	 */
 	element = startElement;
-	
+
 	while ( element != (LO_Element *) fromElement )
 		{
 		next = lo_tv_GetNextLayoutElement ( state, element, FALSE );
@@ -4863,6 +4862,9 @@ void lo_RelayoutTextElements ( MWContext * context,
 				element->lo_any.next = NULL;
 				lo_RecycleElements( context, state, element );
 				
+                /* and then add a new linefeed */
+                lo_rl_AddSoftBreakAndFlushLine ( context, state );
+
 				break;
 			
 			default:
@@ -4890,92 +4892,68 @@ void lo_RelayoutTextElements ( MWContext * context,
      */
 	
 	element = (LO_Element *) fromElement;
-	done = element == endElement;
-	fastPreformat = ( block->format_mode == PRE_TEXT_YES ) || ( block->format_mode == PRE_TEXT_COLS );
-	
-	while ( ( !done ) && ( element != NULL ) )
-		{
-		next = lo_tv_GetNextLayoutElement ( state, element, FALSE );
-		
-		/* if this element is text, see if it will fit. otherwise recycle it */
-		switch ( element->lo_any.type )
-			{
-			case LO_TEXT:
-				/* 
-                 * We only assume this element can be reused if the
-				 * line width is exactly the same as last time. If the
-				 * line is longer, we could potentially reuse this
-				 * element (the next one may appear on this line as
-				 * well) but we won't be able to set the state's
-				 * old_break_position, which may be needed!
-				 *
-				 * We can also always flush column or line wrapped
-				 * preformatted text (word wrapped preformatted text
-				 * may need to be layed out again as it's wrapping may
-				 * change).  
-                 */
-				lineWidth = state->right_margin - state->x;
-				
-				if ( fastPreformat || ( element->lo_text.doc_width == lineWidth ) )
-					{
-					lo_PrepareElementForReuse ( context, state, element, element->lo_any.edit_element,
-							element->lo_any.edit_offset );
-					lo_FlushTextElement ( context, state, block, (LO_TextStruct *) element );
-					}
-				else
-					{
-					/* the size has changed, we must relayout this element */
-					done = TRUE;
-					}
-				
-				break;
-			
-			case LO_LINEFEED:
-				/* recycle this element */
-				element->lo_any.prev = NULL;
-				element->lo_any.next = NULL;
-				lo_RecycleElements( context, state, element );
-
-				break;
-			
-			default:
-				element->lo_any.prev = NULL;
-				element->lo_any.next = NULL;
-				lo_RecycleElements( context, state, element );
-				break;
-			}
-			
-		element = next;
-		
-		/*
-		 * if we're at the last element, bail as we always need to layout this
-		 * one so that the state record is updated properly
-		 */
-		if ( element == endElement )
-			{
-			break;
-			}
-		}
-	
-	/* 
-     * now run through and delete all the remaining elements in this
-	 * text block.  
-     */
-	while ( element != NULL )
-		{
-		next = lo_tv_GetNextLayoutElement ( state, element, FALSE );
-
-		element->lo_any.prev = NULL;
-		element->lo_any.next = NULL;
-		lo_RecycleElements( context, state, element );
-		
-		if ( element == endElement )
-			{
-			break;
-			}
-			
-		element = next;
-		}
+    fastPreformat = ( block->format_mode == PRE_TEXT_YES ) || ( block->format_mode == PRE_TEXT_COLS );
+        
+    while ( element != NULL )
+      {
+        next = lo_tv_GetNextLayoutElement ( state, element, FALSE );
+        
+        /* if this element is text, see if it will fit. otherwise recycle it */
+        switch ( element->lo_any.type )
+          {
+          case LO_TEXT:
+            /* 
+             * We only assume this element can be reused if the
+             * line width is exactly the same as last time. If the
+             * line is longer, we could potentially reuse this
+             * element (the next one may appear on this line as
+             * well) but we won't be able to set the state's
+             * old_break_position, which may be needed!
+             *
+             * We can also always flush column or line wrapped
+             * preformatted text (word wrapped preformatted text
+             * may need to be layed out again as it's wrapping may
+             * change).  
+             */
+            lineWidth = state->right_margin - state->x;
+            
+            if ( fastPreformat || ( element->lo_text.doc_width == lineWidth ) )
+              {
+                lo_PrepareElementForReuse ( context, state, element, element->lo_any.edit_element,
+                                            element->lo_any.edit_offset );
+                lo_FlushTextElement ( context, state, block, (LO_TextStruct *) element );
+              }
+            else
+              {
+                /* the size has changed, we must relayout this element */
+                done = TRUE;
+              }
+            
+            break;
+            
+          case LO_LINEFEED:
+            /* recycle this element */
+            element->lo_any.prev = NULL;
+            element->lo_any.next = NULL;
+            lo_RecycleElements( context, state, element );
+            
+            /* and then add a new linefeed */
+            lo_rl_AddSoftBreakAndFlushLine ( context, state );
+            
+            break;
+            
+          default:
+            element->lo_any.prev = NULL;
+            element->lo_any.next = NULL;
+            lo_RecycleElements( context, state, element );
+            break;
+          }
+        
+        if ( element == endElement )
+          break;
+        
+        element = next;
+      }
 }
 
 LO_Element * lo_RelayoutTextBlock ( MWContext * context, lo_DocState * state, LO_TextBlock * block, LO_TextStruct * fromElement )
@@ -5137,7 +5115,7 @@ LO_Element * lo_RelayoutTextBlock ( MWContext * context, lo_DocState * state, LO
 
 		lo_RelayoutTextElements ( context, state, block, fromElement );
 		}
-		
+
 	/* Because we're lame for now we just delete all the old linefeeds
 	 * and lay the text out afresh */
 	
