@@ -36,7 +36,7 @@
 #include "nsVoidArray.h"
 #include "nsIRegion.h"
 
-#include "Xm/Xm.h"
+#include "X11/Xlib.h"
 
 #include "nsDeviceContextUnix.h"
 

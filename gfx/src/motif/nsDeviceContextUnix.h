@@ -26,7 +26,7 @@
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
 
-#include "Xm/Xm.h"
+#include "X11/Xlib.h"
 
 /* nsDrawingSurface is actually the following struct */
 typedef struct nsDrawingSurfaceUnix {

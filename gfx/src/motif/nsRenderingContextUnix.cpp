@@ -60,7 +60,7 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
 
   mRenderingSurface = new nsDrawingSurfaceUnix();
 
-  mRenderingSurface->display =  XtDisplay((Widget)aWindow->GetNativeData(NS_NATIVE_WIDGET));
+  mRenderingSurface->display =  (Display *)aWindow->GetNativeData(NS_NATIVE_DISPLAY);
   mRenderingSurface->drawable = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
   mRenderingSurface->gc       = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
 
