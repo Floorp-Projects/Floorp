@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsInlineFrame.h"
+#include "nsBlockFrame.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIStyleContext.h"
@@ -784,16 +785,24 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
     }
   }
   else if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-    nsIFrame* newFrame;
-    rv = CreateNextInFlow(aPresContext, this, aFrame, newFrame);
-    if (NS_FAILED(rv)) {
-      return rv;
+    nsCOMPtr<nsIAtom> frameType;
+    aFrame->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::placeholderFrame == frameType) {
+      nsBlockReflowState* blockRS = lineLayout->mBlockRS;
+      blockRS->mBlock->SplitPlaceholder(*blockRS, *aFrame);
     }
-    if (!reflowingFirstLetter) {
-      nsIFrame* nextFrame;
-      aFrame->GetNextSibling(&nextFrame);
-      if (nsnull != nextFrame) {
-        PushFrames(aPresContext, nextFrame, aFrame);
+    else {
+      nsIFrame* newFrame;
+      rv = CreateNextInFlow(aPresContext, this, aFrame, newFrame);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (!reflowingFirstLetter) {
+        nsIFrame* nextFrame;
+        aFrame->GetNextSibling(&nextFrame);
+        if (nsnull != nextFrame) {
+          PushFrames(aPresContext, nextFrame, aFrame);
+        }
       }
     }
   }

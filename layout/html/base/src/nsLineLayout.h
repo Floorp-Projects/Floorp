@@ -272,6 +272,10 @@ protected:
   nsSpaceManager* mSpaceManager;
   const nsStyleText* mStyleText; // for the block
   const nsHTMLReflowState* mBlockReflowState;
+
+  // XXX remove this when landing bug 154892 (splitting absolute positioned frames)
+  friend class nsInlineFrame;
+
   nsBlockReflowState* mBlockRS;/* XXX hack! */
   nsCompatibility mCompatMode;
   nscoord mMinLineHeight;

@@ -51,6 +51,8 @@ public:
    * Create a new placeholder frame
    */
   friend nsresult NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsIFrame**  aInstancePtrResult);
+  nsPlaceholderFrame();
+  virtual ~nsPlaceholderFrame();
 
   // Get/Set the associated out of flow frame
   nsIFrame*  GetOutOfFlowFrame() const {return mOutOfFlowFrame;}

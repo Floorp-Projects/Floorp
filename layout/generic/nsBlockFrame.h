@@ -199,6 +199,11 @@ public:
 
   inline nscoord GetAscent() { return mAscent; }
 
+  // Create a contination for aPlaceholder and its out of flow frame and
+  // add it to the list of overflow floaters
+  nsresult SplitPlaceholder(nsBlockReflowState& aState,
+                            nsIFrame&           aPlaceholder);
+
 protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
@@ -427,11 +432,6 @@ protected:
                                     line_iterator       aLine,
                                     nsIFrame*           aLastPlaceholder,
                                     PRBool&             aKeepReflowGoing);
-
-  // Create a contination for aPlaceholder and its out of flow frame and
-  // add it to the list of overflow floaters
-  nsresult SplitPlaceholder(nsBlockReflowState& aState,
-                            nsIFrame&           aPlaceholder);
 
   nsresult SplitLine(nsBlockReflowState& aState,
                      nsLineLayout& aLineLayout,
