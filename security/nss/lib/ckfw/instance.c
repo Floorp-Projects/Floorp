@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.6 $ $Date: 2002/08/27 23:29:36 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.7 $ $Date: 2002/10/10 22:39:22 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -392,6 +392,14 @@ nssCKFWInstance_Destroy
 
   if( (void *)NULL != (void *)fwInstance->mdInstance->Finalize ) {
     fwInstance->mdInstance->Finalize(fwInstance->mdInstance, fwInstance);
+  }
+
+  if (fwInstance->sessionHandleHash) {
+     nssCKFWHash_Destroy(fwInstance->sessionHandleHash);
+  }
+
+  if (fwInstance->objectHandleHash) {
+     nssCKFWHash_Destroy(fwInstance->objectHandleHash);
   }
 
 #ifdef DEBUG

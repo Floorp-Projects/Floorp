@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.3 $ $Date: 2000/09/06 22:23:57 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.4 $ $Date: 2002/10/10 22:39:23 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -256,6 +256,9 @@ nssCKFWSlot_Destroy
     return error;
   }
 #endif /* NSSDEBUG */
+  if (fwSlot->fwToken) {
+    nssCKFWToken_Destroy(fwSlot->fwToken);
+  }
 
   (void)nssCKFWMutex_Destroy(fwSlot->mutex);
 
