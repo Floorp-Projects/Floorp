@@ -736,6 +736,13 @@ nsHttpTransaction::Read(char *buf, PRUint32 count, PRUint32 *bytesWritten)
             // return would block to prevent being called again.
             return NS_BASE_STREAM_WOULD_BLOCK;
         }
+        if (!mHaveAllHeaders && !mLineBuf.IsEmpty()) {
+            // the server has not sent the final \r\n terminating the header section,
+            // and there is still a header line unparsed.  let's make sure we parse
+            // the remaining header line, and then hopefully, the response will be
+            // usable (see bug 88792).
+            ParseLineSegment("\n", 1);
+        }
         return rv;
     }
 
