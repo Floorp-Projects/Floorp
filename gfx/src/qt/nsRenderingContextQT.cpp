@@ -389,6 +389,14 @@ NS_IMETHODIMP nsRenderingContextQT::GetClipRect(nsRect &aRect,
     return NS_OK;
 }
 
+/**
+ * Fills in |aRegion| with a copy of the current clip region.
+ */
+NS_IMETHODIMP nsRenderingContextQT::CopyClipRegion(nsIRegion &aRegion)
+{
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsRenderingContextQT::SetClipRect(const nsRect& aRect,
                                                 nsClipCombine aCombine,
                                                 PRBool &aClipEmpty)
