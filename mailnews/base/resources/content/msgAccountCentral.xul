@@ -47,7 +47,7 @@ Rights Reserved.
   <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/msgAccountCentral.js"/>
 
-  <grid flex="1" id="acctCentralGrid"> 
+  <grid id="acctCentralGrid" flex="1" style="overflow: auto;"> 
     <columns>
       <column flex="40" id="acctCentralActionsColumn"/>
       <column flex="60" id="acctCentralHelpDataColumn"/>
