@@ -1231,7 +1231,9 @@ case "$target" in
     PR_MD_ARCH_DIR=windows
     RESOLVE_LINK_SYMBOLS=1
     NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
-    CYGWIN_WRAPPER='sh $(topsrcdir)/build/cygwin-wrapper'
+    if test `echo "${PATH}" | grep -c \;` = 0; then
+        CYGWIN_WRAPPER='sh $(topsrcdir)/build/cygwin-wrapper'
+    fi
 
     if test -n "$GNU_CC"; then
         CC="$CC -mno-cygwin"
