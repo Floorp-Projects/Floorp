@@ -142,24 +142,32 @@ void CEmbedEventAttachment::ExecuteSelf(MessageT	inMessage,
     	   	  
         switch (inMacEvent->what)
   	    {	
-  		    case mouseDown:
-  		    {
-	            SInt16 thePart = ::MacFindWindow(inMacEvent->where, &macWindowP);
-	            if (thePart == inContent && IsAlienGeckoWindow(macWindowP)) {
-                  nsCOMPtr<nsIEventSink> sink;
-                  GetWindowEventSink(macWindowP, getter_AddRefs(sink));
-                  if ( sink ) {
-                    PRBool handled = PR_FALSE;
-  	                sink->DispatchEvent(inMacEvent, &handled);
-  	                mLastAlienWindowClicked = macWindowP;
-  	                SetExecuteHost(false);
-  	              }
-	            }
-	            else
-	                mLastAlienWindowClicked = nil;
-	        }
-  			break;
-  			
+          case mouseDown:
+          {
+              mLastAlienWindowClicked = nil;
+              // If an alien window is frontmost, as they always are when present,
+              // Gecko needs to get the event - no matter where the click occured.
+              // This is so the pop-up window (what these alien windows are used for)
+              // will be rolled up on a click in the menu bar, title bar, etc.
+              WindowPtr frontWindow = ::FrontWindow();
+              if (IsAlienGeckoWindow(frontWindow)) {
+                 nsCOMPtr<nsIEventSink> sink;
+                 GetWindowEventSink(frontWindow, getter_AddRefs(sink));
+                 if (sink) {
+                   PRBool handled = PR_FALSE;
+                   sink->DispatchEvent(inMacEvent, &handled);
+                   SInt16 thePart = ::MacFindWindow(inMacEvent->where, &macWindowP);
+                   if ((thePart == inContent) && (frontWindow == macWindowP)) {
+                     // It the click was actually in an alien window - done processing
+                     // Otherwise, let PowerPlant continue processing the click.
+                     mLastAlienWindowClicked = macWindowP;
+                     SetExecuteHost(false);
+                  }
+               }
+            }
+         }
+         break;
+
   		    case mouseUp:
   		    {
   		        if (mLastAlienWindowClicked) {
