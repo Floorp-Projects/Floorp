@@ -163,6 +163,7 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
 
   case NS_DESTROY:
     bw->Destroy();
+    NS_RELEASE(bw);
     return nsEventStatus_eConsumeDoDefault;
 
   case NS_MENU_SELECTED:
@@ -278,10 +279,12 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 void
 nsBrowserWindow::Destroy()
 {
-  mWebShell->SetContainer(nsnull);
-  mWebShell->SetObserver(nsnull);
-  printf("refcnt=%d\n", mRefCnt);
-  Release();
+  RemoveBrowser(this);
+  if (nsnull != mWebShell) {
+    mWebShell->SetContainer(nsnull);
+    mWebShell->SetObserver(nsnull);
+    NS_RELEASE(mWebShell);
+  }
 }
 
 void
@@ -373,7 +376,7 @@ nsBrowserWindow::nsBrowserWindow()
 
 nsBrowserWindow::~nsBrowserWindow()
 {
-  RemoveBrowser(this);
+  Destroy();
 }
 
 NS_IMPL_ADDREF(nsBrowserWindow)

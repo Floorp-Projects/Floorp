@@ -319,7 +319,9 @@ StartsWith(const nsString& s1, const char* s2)
 PRBool
 nsWebCrawler::OkToLoad(const nsString& aURLSpec)
 {
-  if (!StartsWith(aURLSpec, "http:") && !StartsWith(aURLSpec, "ftp:")) {
+  if (!StartsWith(aURLSpec, "http:") && !StartsWith(aURLSpec, "ftp:") &&
+      !StartsWith(aURLSpec, "file:") &&
+      !StartsWith(aURLSpec, "resource:")) {
     return PR_FALSE;
   }
 
