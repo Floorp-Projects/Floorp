@@ -30,6 +30,8 @@ CPPSRCS =			\
 	TestSocketTransport.cpp \
 	TestFileInput.cpp 	\
 	TestProtocols.cpp 	\
+	urltest.cpp	 	\
+	TestFileInput2.cpp 	\
 	$(NULL)
 
 BASE_LIBS =	     \
@@ -49,5 +51,10 @@ REQUIRES=libreg xpcom
 include $(topsrcdir)/config/config.mk
 
 SIMPLE_PROGRAMS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+
+# hack until necko lands
+ifndef NECKO
+PUBLIC = $(DEPTH)/netwerk/dist/include
+endif
 
 include $(topsrcdir)/config/rules.mk
