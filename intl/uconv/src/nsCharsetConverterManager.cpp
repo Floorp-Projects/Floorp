@@ -27,6 +27,7 @@
 #include "nsIRegistry.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 #include "nsIStringBundle.h"
 #include "nsICharsetDetector.h"
 #include "nsILocaleService.h"
@@ -42,6 +43,7 @@ static NS_DEFINE_IID(kRegistryNodeIID, NS_IREGISTRYNODE_IID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
+static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID); 
 
 //----------------------------------------------------------------------------
 // Class nsConverterInfo [declaration]
@@ -66,7 +68,8 @@ public:
  * @created         15/Nov/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsCharsetConverterManager : public nsICharsetConverterManager
+class nsCharsetConverterManager : public nsICharsetConverterManager, 
+nsICharsetConverterManager2
 {
   NS_DECL_ISUPPORTS
 
@@ -129,6 +132,15 @@ public:
   NS_IMETHOD GetMIMEMailCharset(nsString * aCharset, nsString ** aResult);
   NS_IMETHOD GetMIMEHeaderEncodingMethod(nsString * aCharset, nsString ** 
       aResult);
+
+  //--------------------------------------------------------------------------
+  // Interface nsICharsetConverterManager2 [declaration]
+
+  NS_IMETHOD GetDecoderList(nsISupportsArray ** aResult);
+  NS_IMETHOD GetCharsetAtom(const PRUnichar * aCharset, nsIAtom ** aResult);
+  NS_IMETHOD GetCharsetTitle(const nsIAtom * aCharset, PRUnichar ** aResult);
+  NS_IMETHOD GetCharsetData(const nsIAtom * aCharset, const PRUnichar * aProp, 
+      PRUnichar ** aResult);
 };
 
 //----------------------------------------------------------------------------
@@ -179,7 +191,8 @@ nsConverterInfo::~nsConverterInfo()
 //----------------------------------------------------------------------------
 // Class nsCharsetConverterManager [implementation]
 
-NS_IMPL_ISUPPORTS(nsCharsetConverterManager, NS_GET_IID(nsICharsetConverterManager));
+NS_IMPL_ISUPPORTS2(nsCharsetConverterManager, nsICharsetConverterManager, 
+                   nsICharsetConverterManager2);
 
 nsCharsetConverterManager::nsCharsetConverterManager() 
 :mDataBundle(NULL), mTitleBundle(NULL)
@@ -654,4 +667,132 @@ NS_IMETHODIMP nsCharsetConverterManager::GetMIMEHeaderEncodingMethod(
 {
   nsAutoString prop(".MIMEHeaderEncodingMethod");
   return GetCharsetData(aCharset, &prop, aResult);
+}
+
+//----------------------------------------------------------------------------
+// Interface nsICharsetConverterManager2 [implementation]
+
+// XXX this interface is THE RIGHT WAY; but the implementation is the old one
+// change it, improve it, mutate it...
+
+NS_IMETHODIMP nsCharsetConverterManager::GetDecoderList(
+                                         nsISupportsArray ** aResult)
+{
+  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
+  *aResult = NULL;
+
+  nsresult res = NS_OK;
+  nsString ** decs = NULL;
+  PRInt32 count = 0;
+  nsCOMPtr<nsISupportsArray> array = NULL;
+  PRInt32 i;
+
+  res = nsComponentManager::CreateInstance(kSupportsArrayCID, NULL, 
+      NS_GET_IID(nsISupportsArray), getter_AddRefs(array));
+  if (NS_FAILED(res)) goto done;
+
+
+  res = GetDecoderList(&decs, &count);
+  if (NS_FAILED(res)) goto done;
+
+  // Add all these charsets to the array
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsIAtom> atom;
+    res = GetCharsetAtom(decs[i]->GetUnicode(), getter_AddRefs(atom));
+    if (NS_FAILED(res)) goto done;
+
+    res = array->AppendElement(atom);
+    if (NS_FAILED(res)) goto done;
+  }
+
+  // everything was fine, set the result
+  *aResult = array;
+  NS_ADDREF(*aResult);
+
+done:
+  if (decs != NULL) delete [] decs;
+
+  return res;
+}
+
+// XXX In the future, this method will also do the alias resolution; but it is
+// just a lower case today...
+NS_IMETHODIMP nsCharsetConverterManager::GetCharsetAtom(
+                                         const PRUnichar * aCharset, 
+                                         nsIAtom ** aResult)
+{
+  if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
+  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
+  *aResult = NULL;
+
+  nsAutoString str(aCharset);
+  str.ToLowerCase();
+
+  nsCOMPtr<nsIAtom> atom =  getter_AddRefs(NS_NewAtom(str));
+  if (atom == NULL) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // everything was fine, set the result
+  *aResult = atom;
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(
+                                         const nsIAtom * aCharset, 
+                                         PRUnichar ** aResult)
+{
+  if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
+  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
+  *aResult = NULL;
+
+  nsresult res = NS_OK;
+
+  nsAutoString charset;
+  res = ((nsIAtom *) aCharset)->ToString(charset);
+  if (NS_FAILED(res)) return res;
+
+  nsString * title;
+  res = GetCharsetTitle(&charset, &title);
+  if (NS_FAILED(res)) return res;
+
+  *aResult = (PRUnichar *) nsAllocator::Clone(title->GetUnicode(), 
+      sizeof(PRUnichar) * (title->Length()+1));
+
+  delete title;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCharsetConverterManager::GetCharsetData(
+                                         const nsIAtom * aCharset, 
+                                         const PRUnichar * aProp,
+                                         PRUnichar ** aResult)
+{
+  if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
+  // aProp can be NULL
+  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
+  *aResult = NULL;
+
+  nsresult res = NS_OK;
+
+  nsAutoString charset;
+  res = ((nsIAtom *) aCharset)->ToString(charset);
+  if (NS_FAILED(res)) return res;
+
+  nsAutoString prop(aProp);
+
+  nsString * data;
+  res = GetCharsetData(&charset, &prop, &data);
+  if (NS_FAILED(res)) return res;
+
+  *aResult = (PRUnichar *) nsAllocator::Clone(data->GetUnicode(), 
+      sizeof(PRUnichar) * (data->Length()+1));
+
+  delete data;
+
+  return NS_OK;
 }
