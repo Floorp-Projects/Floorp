@@ -2869,6 +2869,8 @@ fi
 dnl system FullCircle/Talkback support (Crash-reporting mechanism)
 dnl ==============================================================
 
+MOZ_FULLCIRCLE=
+FULLCIRCLE_LIBS=
 MOZ_ARG_ENABLE_BOOL(fullcircle,
 [  --enable-fullcircle           Enable FullCircle/Talkback support],
 [ MOZ_FULLCIRCLE=1 FULLCIRCLE_LIBS="-lfullsoft" ])
@@ -2903,6 +2905,8 @@ if test ! -z "$MISSING_FULLCIRCLE"; then
     echo
     echo "Could not find FullCircle library -- ignoring it"
     echo
+    MOZ_FULLCIRCLE=
+    FULLCIRCLE_LIBS=
 else
     AC_DEFINE(MOZ_FULLCIRCLE)
     CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
@@ -2911,7 +2915,8 @@ fi
 
 fi
 
-dnl AC_SUBST(FULLCIRCLE_LIBS)
+AC_SUBST(MOZ_FULLCIRCLE)
+AC_SUBST(FULLCIRCLE_LIBS)
 
 
 LDFLAGS=`echo \
