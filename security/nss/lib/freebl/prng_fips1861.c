@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: prng_fips1861.c,v 1.4 2000/08/08 05:56:56 nelsonb%netscape.com Exp $
+ * $Id: prng_fips1861.c,v 1.5 2000/08/08 20:30:56 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -334,7 +334,7 @@ prng_RandomUpdate(RNGContext *rng, void *data, size_t bytes, unsigned char *q)
     /* --- UNLOCKED --- */
     /* housekeeping */
     memset(inputhash, 0, BSIZE);
-/*  memset(data, 0, BSIZE);  /* let the caller free */
+    memset(data, 0, bytes);  /* let the caller free */
     return rv;
 }
 
