@@ -53,6 +53,35 @@ var console = new Object();
 
 /* |this|less functions */
 
+function startupTests()
+{
+    if (0)
+    {    
+        dispatchCommand ("fbreak ContextMenu 199");
+
+        function loaded (data, url)
+        {
+            focusSource (url, 100);
+        }
+        loadSource ("chrome://venkman/content/venkman-debugger.js", loaded);
+    }
+    
+}
+
+function cont ()
+{
+    console._stackOutlinerView.setStack(null);
+    console.jsds.exitNestedEventLoop();
+    return true;
+}
+
+function dispatchCommand (text)
+{
+    var ev = new Object();
+    ev.line = text;
+    console.onInputCompleteLine (ev);
+}
+
 function display(message, msgtype)
 {
     if (typeof message == "undefined")
@@ -100,6 +129,20 @@ function displayCommands (pattern)
     else
         display (getMsg(MSN_CMDMATCH_ALL,
                         "[" + console._commands.listNames().join(", ") + "]"));
+}
+
+function focusSource (url, lineNumber)
+{
+    var sourceArray = console._sources[url];
+    ASSERT (sourceArray, "Attempt to focus unknown source: " + url);
+
+    console._sourceOutlinerView.setSourceArray(sourceArray, url);
+    console._sourceOutlinerView.setCurrentLine(lineNumber);
+
+    var hdr = document.getElementById("source-line-text");
+    hdr.setAttribute ("label", url);
+    hdr = document.getElementById("source-line-number");
+    hdr.setAttribute ("label", "(" + lineNumber + ")");    
 }
 
 function evalInDebuggerScope (script)
@@ -219,18 +262,14 @@ function htmlVA (attribs, href, contents)
     
 function init()
 {
-    initCommands();
     initPrefs();
+    initCommands();
     initDebugger();
+    initOutliners();
     
-    window._content = console._outputDocument = window.frames[0].document;
-    /* This should be = document.getElementById("output-iframe").contentDocument;
-     * XUL iframes don't do contentDocument, and html iframes don't support
-     * tooltips or drag and drop, so we've got to bend over.
-     * Also, we need to set window._content manually here because the
-     * drag and drop code fails as quietly as possible without it.
-     */
-    
+    window._content = console._outputDocument = 
+        document.getElementById("output-iframe").contentDocument;
+
     console._outputElement = 
         console._outputDocument.getElementById("output-tbody");    
 
@@ -244,11 +283,15 @@ function init()
         ("link", /((\w+):\/\/[^<>()\'\"\s:]+|www(\.[^.<>()\'\"\s:]+){2,})/,
          insertLink);
     console._munger.addRule ("word-hyphenator",
-                             new RegExp ("(\\S{" + console.prefs["output.wordbreak.length"] + ",})"),
+                             new RegExp ("(\\S{" + 
+                                         console.prefs["output.wordbreak.length"]
+                                         + ",})"),
                              insertHyphenatedWord);
     
     display(MSG_HELLO, MT_HELLO);
     displayCommands();
+    
+    startupTests();
 }
 
 function insertHyphenatedWord (longWord, containerTag)
@@ -341,6 +384,7 @@ const ERR_INVALID_PARAM   = 2;
 const ERR_SUBSCRIPT_LOAD  = 3;
 const ERR_NO_DEBUGGER     = 4;
 const ERR_FAILURE         = 5;
+const ERR_NO_STACK        = 6;
 
 /* venkman exception factory, can be used with or without |new|.
  * throw BadMojo (ERR_REQUIRED_PARAM, MSG_VAL_OBJECT);
