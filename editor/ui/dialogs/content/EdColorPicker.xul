@@ -85,7 +85,7 @@
     <text class="label" value="&setColor2.label;"/>
     <text class="label" value="&setColorExample.label;"/>
     <hbox valign="middle" autostretch="never" flex="1=">
-      <textbox id="ColorInput" style="width: 8em" oninput="SetColorSwatch()"/>
+      <textbox id="ColorInput" style="width: 8em" oninput="SetColorSwatch(); SetDefaultToOk();"/>
       <spacer flex="1"/>
       <spacer id="ColorPickerSwatch"/>
       <spacer flex="1"/>
