@@ -82,6 +82,8 @@ void nsHTTreeItem::GetItemStyle(nsIDeviceContext* dc, nsTreeItemStyleInfo& style
 	styleInfo.showIcon = PR_TRUE;
 	styleInfo.leftJustifyTrigger = PR_FALSE;
 	
+	styleInfo.rolloverFGColor = NS_RGB(128,128,128);
+
 	styleInfo.showHorizontalDivider = PR_TRUE;
 	styleInfo.showVerticalDivider = PR_TRUE;
 	styleInfo.horizontalDividerColor = NS_RGB(255,255,255);

@@ -166,58 +166,7 @@ nsEventStatus nsTreeView::HandleEvent(nsGUIEvent *aEvent)
   }
   else if (aEvent->message == NS_MOUSE_MOVE)
   {
-	  mCachedMovePoint.x = aEvent->point.x;
-	  mCachedMovePoint.y = aEvent->point.y;
-	  
-	  if (mMouseDown)
-	  {
-		  if (!mMouseDragging)
-		  {
-			  // We have the left mouse button down and we're moving. Check to see if we should
-			  // initiate a drag and drop operation.
-			  if (mCachedMovePoint.x < mCachedDownPoint.x - 3 ||
-				  mCachedMovePoint.x > mCachedDownPoint.x + 3 ||
-				  mCachedMovePoint.y < mCachedDownPoint.y - 3 ||
-				  mCachedMovePoint.y > mCachedDownPoint.y + 3)
-			  {
-				  // We're dragging baby.
-				  mMouseDragging = PR_TRUE;
-
-				  // Question is, just what are we dragging?
-				  if (mColumnBarRect.Contains(mCachedDownPoint.x, mCachedDownPoint.y))
-				  {
-					  // The user is messing with the columns.  Either a column header
-					  // is being resized or a column is being dragged.
-					  if (DownOnColumnEdge(mCachedDownPoint))
-					  {
-						  mDraggingColumnEdge = PR_TRUE;
-						  mLastXPosition = mCachedDownPoint.x;
-						  DragColumnEdge(mCachedMovePoint.x);
-					  }
-				  }
-			  }
-		  }
-		  else
-		  {
-			  if (mDraggingColumnEdge)
-			  {
-				  // Keep on dragging.
-				  DragColumnEdge(mCachedMovePoint.x);
-			  }	
-		  }
-	  }
-	  else
-	  {	  
-		  aEvent->widget->Invalidate(PR_FALSE);
-		  
-		  if (mColumnBarRect.Contains(mCachedMovePoint.x, mCachedMovePoint.y) &&
-			  DownOnColumnEdge(mCachedMovePoint))
-		  {
-			  // Change the cursor to a WE resize if on a column edge.
-			  aEvent->widget->SetCursor(eCursor_sizeWE);
-		  }
-		  else aEvent->widget->SetCursor(eCursor_standard);
-	  }
+	  HandleMouseMove(aEvent); 
   }
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)
   {
@@ -264,6 +213,11 @@ nsEventStatus nsTreeView::HandleEvent(nsGUIEvent *aEvent)
 				  currentPosition += pixelWidth;
 
 				  // TODO: See if we hit this column header
+				  if (mCachedMovePoint.x < currentPosition)
+				  {
+					  // We hit this column header.
+					  return nsEventStatus_eIgnore;
+				  }
 			  }
 			  
 			  // Must have hit a pusher
@@ -274,6 +228,71 @@ nsEventStatus nsTreeView::HandleEvent(nsGUIEvent *aEvent)
 	  }
   }
   return nsEventStatus_eIgnore;
+}
+
+void nsTreeView::HandleMouseMove(nsGUIEvent* aEvent)
+{
+  // Remember our point for easy reference.
+  mCachedMovePoint.x = aEvent->point.x;
+  mCachedMovePoint.y = aEvent->point.y;
+	  
+  if (mMouseDown)
+  {
+	  // The user has the left mouse button down.
+	  if (!mMouseDragging)
+	  {
+		  // We have the left mouse button down and we're moving. Check to see if we should
+		  // initiate a drag and drop operation.
+		  if (mCachedMovePoint.x < mCachedDownPoint.x - 3 ||
+			  mCachedMovePoint.x > mCachedDownPoint.x + 3 ||
+			  mCachedMovePoint.y < mCachedDownPoint.y - 3 ||
+			  mCachedMovePoint.y > mCachedDownPoint.y + 3)
+		  {
+			  // We're dragging baby.
+			  mMouseDragging = PR_TRUE;
+
+			  // Question is, just what are we dragging?
+			  if (mColumnBarRect.Contains(mCachedDownPoint.x, mCachedDownPoint.y))
+			  {
+				  // The user is messing with the columns.  Either a column header
+				  // is being resized or a column is being dragged.
+				  if (DownOnColumnEdge(mCachedDownPoint))
+				  {
+					  mDraggingColumnEdge = PR_TRUE;
+					  mLastXPosition = mCachedDownPoint.x;
+					  DragColumnEdge(mCachedMovePoint.x);
+				  }
+			  }
+			  else if (mTreeRect.Contains(mCachedDownPoint.x, mCachedDownPoint.y))
+			  {
+				  // The user is dragging a tree item
+			  }
+		  }
+	  }
+	  else
+	  {
+		  // The user is dragging.
+		  if (mDraggingColumnEdge)
+		  {
+			  // Keep on dragging.
+			  DragColumnEdge(mCachedMovePoint.x);
+		  }	
+		  // Will add code for dragging column headers and tree items here.
+	  }
+  }
+  else
+  {	  
+	  // The user doesn't have a mouse down. Just rolling over items.
+	  aEvent->widget->Invalidate(PR_FALSE);
+	  
+	  if (mColumnBarRect.Contains(mCachedMovePoint.x, mCachedMovePoint.y) &&
+		  DownOnColumnEdge(mCachedMovePoint))
+	  {
+		  // Change the cursor to a WE resize if on a column edge.
+		  aEvent->widget->SetCursor(eCursor_sizeWE);
+	  }
+	  else aEvent->widget->SetCursor(eCursor_standard);
+  }
 }
 
 void nsTreeView::PaintTitleBar(nsIRenderingContext* drawCtx, 
@@ -721,9 +740,6 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 		drawCtx->DrawLine(0, yPosition-1, mColumnBarRect.width, yPosition-1);
 	}
 
-	// Set to foreground color.
-	drawCtx->SetColor(styleInfo.foregroundColor);
-
 	// Iterate over the visible columns and paint the data specified.
 	PRUint32 count = mDataModel->GetVisibleColumnCount();
 	int currentPosition = 0;
@@ -733,8 +749,6 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 		nsTreeColumn* pColumn = mDataModel->GetNthColumn(n);
 		if (pColumn)
 		{
-			drawCtx->SetColor(styleInfo.foregroundColor); // Will be sorting highlighting eventually
-
 			// Retrieve the column's current pixel width.
 			int pixelWidth = pColumn->GetPixelWidth();
 
@@ -774,8 +788,27 @@ void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, i
 			// Determine the rect to use. 
 			int start = lineRect.y + (lineHeight-fontWithPadding-1)/2; 
 			nsRect textRect(textStart, start, pixelWidth-2-(textStart-currentPosition), fontWithPadding);
-			DrawCroppedString(drawCtx, nodeText, textRect);
+			nsRect resultRect = DrawCroppedString(drawCtx, nodeText, textRect, PR_FALSE);
 			
+			// Modify the result rect so it is the appropriate size for the drawing of rollover and
+			// selection.
+			resultRect.y = lineRect.y; 
+			resultRect.height = lineRect.height;
+			
+			// Now we really draw the string, using the appropriate colors/styles.
+			// Options are ROLLOVER, SELECTION, or NORMAL.  
+			if (resultRect.Contains(mCachedMovePoint.x, mCachedMovePoint.y))
+			{
+				// Rollover style should be applied.
+				drawCtx->SetColor(styleInfo.rolloverFGColor);
+				
+				// TODO: Handle Rollover BACKGROUND color. Could be applied to text, to cell, or to line.
+			}
+			else drawCtx->SetColor(styleInfo.foregroundColor);
+
+			// Now draw the column data for real.
+			DrawCroppedString(drawCtx, nodeText, textRect);
+
 			currentPosition += pixelWidth;
 
 			// Draw the vertical divider
@@ -1039,8 +1072,8 @@ void nsTreeView::ParseColor(char* colorString, nscolor& colorValue)
 		NS_HexToRGB(colorString, &colorValue);
 }
 
-void nsTreeView::DrawCroppedString(nsIRenderingContext* drawCtx, nsString text, 
-							const nsRect& rect)
+nsRect nsTreeView::DrawCroppedString(nsIRenderingContext* drawCtx, nsString text, 
+							const nsRect& rect, PRBool drawText)
 {
 	int strWidth = 0;
 	drawCtx->GetWidth(text, strWidth);
@@ -1066,7 +1099,15 @@ void nsTreeView::DrawCroppedString(nsIRenderingContext* drawCtx, nsString text,
 		}
 	}
 
-	// Draw the cropString.
-	drawCtx->DrawString(cropString, rect.x + 2, rect.y + 2, 1); 
+	if (drawText)
+	{
+		// Draw the cropString.
+		drawCtx->DrawString(cropString, rect.x + 2, rect.y + 2, 1); 
+	}
+
+	int width = strWidth + 4;
+	if (width > rect.width)
+		width = rect.width;
+	return nsRect(rect.x, rect.y, width, rect.height);
 }
 
