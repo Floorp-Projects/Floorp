@@ -234,7 +234,7 @@ build_all: build_nspr build_seamonkey
 clobber_nspr:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 !ifdef USE_NSPR_AUTOCONF
-	gmake clobber_all
+	gmake distclean
 !else
 	nmake -f makefile.win clobber_all
 !endif
