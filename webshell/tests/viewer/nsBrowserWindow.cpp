@@ -169,6 +169,7 @@ static void* GetItemsNativeData(nsISupports* aObject);
 
 //----------------------------------------------------------------------
 
+static
 nsIPresShell*
 GetPresShellFor(nsIWebShell* aWebShell)
 {
@@ -2331,7 +2332,6 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
 void
 nsBrowserWindow::DoEditorTest(nsIWebShell *aWebShell, PRInt32 aCommandID)
 {
-  PRInt32 i, n;
   if (nsnull != aWebShell) {
     nsIContentViewer* mCViewer;
     aWebShell->GetContentViewer(&mCViewer);
@@ -2406,6 +2406,7 @@ nsBrowserWindow::DumpWebShells(FILE* out)
   DumpAWebShell(mWebShell, out, 0);
 }
 
+static
 void 
 DumpMultipleWebShells(nsBrowserWindow& aBrowserWindow, nsIWebShell* aWebShell, FILE* aOut)
 { 
@@ -2419,6 +2420,7 @@ DumpMultipleWebShells(nsBrowserWindow& aBrowserWindow, nsIWebShell* aWebShell, F
   }
 }
 
+static
 void
 DumpContentRecurse(nsIWebShell* aWebShell, FILE* out)
 {
@@ -2460,6 +2462,7 @@ nsBrowserWindow::DumpContent(FILE* out)
   DumpMultipleWebShells(*this, mWebShell, out);
 }
 
+static
 void
 DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
 {
@@ -2497,6 +2500,7 @@ nsBrowserWindow::DumpFrames(FILE* out, nsString *aFilterName)
   DumpMultipleWebShells(*this, mWebShell, out);
 }
 
+static
 void
 DumpViewsRecurse(nsIWebShell* aWebShell, FILE* out)
 {
@@ -3101,6 +3105,7 @@ nsBrowserWindowFactory::LockFactory(PRBool aLock)
   return NS_OK;
 }
 
+nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
 nsresult
 NS_NewBrowserWindowFactory(nsIFactory** aFactory)
 {
