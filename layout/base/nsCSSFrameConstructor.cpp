@@ -5750,13 +5750,15 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       isAppend = PR_TRUE;
       shell->GetPrimaryFrameFor(aContainer, &parentFrame);
       
-      // If we didn't process children when we originally created the frame,
-      // then don't do any processing now
-      nsCOMPtr<nsIAtom>  frameType;
-      parentFrame->GetFrameType(getter_AddRefs(frameType));
-      if (frameType.get() == nsLayoutAtoms::objectFrame) {
-        // This handles APPLET, EMBED, and OBJECT
-        return NS_OK;
+      if (parentFrame) {
+        // If we didn't process children when we originally created the frame,
+        // then don't do any processing now
+        nsCOMPtr<nsIAtom>  frameType;
+        parentFrame->GetFrameType(getter_AddRefs(frameType));
+        if (frameType.get() == nsLayoutAtoms::objectFrame) {
+          // This handles APPLET, EMBED, and OBJECT
+          return NS_OK;
+        }
       }
     }
 
