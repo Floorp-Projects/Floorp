@@ -26,15 +26,34 @@
  * Native Motif Listbox wrapper
  */
 
-class nsComboBox :   public nsWindow
+class nsComboBox : public nsWindow,
+                   public nsIListWidget,
+                   public nsIComboBox
 {
 
 public:
-    nsComboBox(nsISupports *aOuter);
-    virtual ~nsComboBox();
+    nsComboBox();
+    ~nsComboBox();
 
-    // nsISupports. Forward to the nsObject base class
-    NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+   
+    // nsIWidget overrides
+    virtual void   GetBounds(nsRect &aRect);
+
+    // nsIComboBox interface
+    virtual void    AddItemAt(nsString &aItem, PRInt32 aPosition);
+    virtual PRInt32 FindItem(nsString &aItem, PRInt32 aStartPos);
+    virtual PRInt32 GetItemCount();
+    virtual PRBool  RemoveItemAt(PRInt32 aPosition);
+    virtual PRBool  GetItemAt(nsString& anItem, PRInt32 aPosition);
+    virtual void    GetSelectedItem(nsString& aItem);
+    virtual PRInt32 GetSelectedIndex();
+    virtual void    SelectItem(PRInt32 aPosition);
+    virtual void    Deselect() ;
+
+    virtual void    PreCreateWidget(nsWidgetInitData *aInitData);
 
     void Create(nsIWidget *aParent,
                 const nsRect &aRect,
@@ -55,23 +74,14 @@ public:
     virtual void SetForegroundColor(const nscolor &aColor);
     virtual void SetBackgroundColor(const nscolor &aColor);
 
-    virtual PRBool    OnMove(PRInt32 aX, PRInt32 aY);
+    virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool OnPaint(nsPaintEvent & aEvent);
     virtual PRBool OnResize(nsSizeEvent &aEvent);
 
     // nsIComboBox interface
     void      SetMultipleSelection(PRBool aMultipleSelections);
-    void      AddItemAt(nsString &aItem, PRInt32 aPosition);
-    PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
-    PRInt32   GetItemCount();
-    PRBool    RemoveItemAt(PRInt32 aPosition);
-    PRBool    GetItemAt(nsString& anItem, PRInt32 aPosition);
-    void      GetSelectedItem(nsString& aItem);
-    PRInt32   GetSelectedIndex();
     PRInt32   GetSelectedCount();
     void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SelectItem(PRInt32 aPosition);
-    void      Deselect() ;
 
 protected:
     Widget  mPullDownMenu;
@@ -81,42 +91,6 @@ protected:
     Widget  * mItems; // an array of Widgets
     int       mMaxNumItems;
     int       mNumItems;
-
-private:
-
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsComboBox,mAggWidget);
-  }
-
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIComboBox interface to nsComboBox w/o using multiple
-  // inheritance.
-  class AggComboBox : public nsIComboBox {
-  public:
-    AggComboBox();
-    virtual ~AggComboBox();
-
-    AGGREGATE_METHOD_DEF
-
-    // nsIComboBox
-    void      SetMultipleSelection(PRBool aMultipleSelections);
-    void      AddItemAt(nsString &aItem, PRInt32 aPosition);
-    PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
-    PRInt32   GetItemCount();
-    PRBool    RemoveItemAt(PRInt32 aPosition);
-    PRBool    GetItemAt(nsString& anItem, PRInt32 aPosition);
-    void      GetSelectedItem(nsString& aItem);
-    PRInt32   GetSelectedIndex();
-    PRInt32   GetSelectedCount();
-    void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SelectItem(PRInt32 aPosition);
-    void      Deselect() ;
-
-  };
-  AggComboBox mAggWidget;
-  friend class AggComboBox;
 
 };
 
