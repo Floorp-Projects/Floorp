@@ -1,6 +1,8 @@
+file://s:/mozilla/layout/html/tests/table/other/cellspacing.html
 file://s:/mozilla/layout/html/tests/table/other/cell_widths.html
 file://s:/mozilla/layout/html/tests/table/other/empty_cells.html
 file://s:/mozilla/layout/html/tests/table/other/nestedTables.html
+file://s:/mozilla/layout/html/tests/table/other/padding.html
 file://s:/mozilla/layout/html/tests/table/other/slashlogo.html
 file://s:/mozilla/layout/html/tests/table/other/wa_table_thtd_rowspan.html
 file://s:/mozilla/layout/html/tests/table/other/wa_table_tr_align.html
