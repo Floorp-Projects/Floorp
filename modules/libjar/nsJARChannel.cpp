@@ -54,7 +54,7 @@ public:
         nsAutoLock lock(mJARChannel->mLock);
 
         if (NS_SUCCEEDED(status) && mJARChannel->mJarCacheTransport) {
-            NS_ASSERTION(jarCacheTransport == mJARChannel->mJarCacheTransport,
+            NS_ASSERTION(jarCacheTransport == (mJARChannel->mJarCacheTransport).get(),
                          "wrong transport");
             // after successfully downloading the jar file to the cache,
             // start the extraction process:
