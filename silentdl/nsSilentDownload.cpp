@@ -203,7 +203,7 @@ CreateOutFileLocation(char* url, char* directory)
     } 
     else 
     {
-        directory = getenv("MOZILLA_HOME");
+        directory = getenv("MOZILLA_FIVE_HOME");
         if (directory) 
         {
            PR_snprintf( Path, MAXPATHLEN, "%s/", directory);

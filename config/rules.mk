@@ -377,13 +377,13 @@ checkout:
 
 run_viewer: $(DIST)/bin/viewer
 	cd $(DIST)/bin; \
-	MOZILLA_HOME= ; \
+	MOZILLA_FIVE_HOME= ; \
 	LD_LIBRARY_PATH=".:$(LIBS_PATH):$$LD_LIBRARY_PATH" \
 	viewer
 
 run_apprunner: $(DIST)/bin/apprunner
 	cd $(DIST)/bin; \
-	MOZILLA_HOME= ; \
+	MOZILLA_FIVE_HOME= ; \
 	LD_LIBRARY_PATH=".:$(LIBS_PATH):$$LD_LIBRARY_PATH" \
 	apprunner
 

@@ -2480,9 +2480,9 @@ pref_LoadAutoAdminLib()
 		}
 		else
 		{
-			if (getenv("MOZILLA_HOME"))
+			if (getenv("MOZILLA_FIVE_HOME"))
 			{
-				PL_strcpy(aalib, getenv("MOZILLA_HOME"));
+				PL_strcpy(aalib, getenv("MOZILLA_FIVE_HOME"));
 				lib = PR_LoadLibrary(PL_strcat(aalib, ADMNLIBNAME));
 			}
 			if (lib == NULL)

@@ -1466,7 +1466,7 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
 //
 // Obtain the resource: url base from the environment variable
 //
-// MOZILLA_HOME
+// MOZILLA_FIVE_HOME
 //
 // Which is the standard place where mozilla stores global (ie, not
 // user specific) data
@@ -1476,13 +1476,13 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
 #define MAXPATHLEN 1024 // A good guess, i suppose
 #endif
 
-#define MOZILLA_HOME "MOZILLA_HOME"
+#define MOZILLA_FIVE_HOME "MOZILLA_FIVE_HOME"
 
     static char * nsUnixMozillaHomePath = nsnull;
 
     if (nsnull == nsUnixMozillaHomePath)
     {
-      nsUnixMozillaHomePath = PR_GetEnv(MOZILLA_HOME);
+      nsUnixMozillaHomePath = PR_GetEnv(MOZILLA_FIVE_HOME);
     }
     if (nsnull == nsUnixMozillaHomePath)
     {

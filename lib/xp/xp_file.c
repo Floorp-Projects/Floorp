@@ -1123,7 +1123,7 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
      {
          extern void fe_GetProgramDirectory(char *path, int len);
          char *policyFN = "moz40p3";
-         char *mozHome  = getenv("MOZILLA_HOME");
+         char *mozHome  = getenv("MOZILLA_FIVE_HOME");
          char *lang     = getenv("LANG");
          char  dirName[1024];
 

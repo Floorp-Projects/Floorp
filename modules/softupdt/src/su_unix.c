@@ -44,7 +44,7 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 		{
 			if ( getenv (UNIX_GLOBAL_FLAG) )
 			{	
-				if (directory = getenv("MOZILLA_HOME"))
+				if (directory = getenv("MOZILLA_FIVE_HOME"))
 				{
     					PR_snprintf( Path, MAXPATHLEN, "%s/", directory);
 				}
@@ -68,7 +68,7 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 		break;
 
 		case eCommunicatorFolder:
-		if (directory = getenv("MOZILLA_HOME"))
+		if (directory = getenv("MOZILLA_FIVE_HOME"))
 		{
     			PR_snprintf( Path, MAXPATHLEN, "%s/", directory );
 			directory = XP_STRDUP( Path );
@@ -98,7 +98,7 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 		break;
 
 		case eJavaBinFolder:
-		if (directory = getenv("MOZILLA_HOME"))
+		if (directory = getenv("MOZILLA_FIVE_HOME"))
 		{
     			PR_snprintf( Path, MAXPATHLEN, "%s/", directory);
 		}
@@ -109,7 +109,7 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 		break;
 
 		case eJavaClassesFolder:
-		if (directory = getenv("MOZILLA_HOME"))
+		if (directory = getenv("MOZILLA_FIVE_HOME"))
 		{
     			PR_snprintf( Path, MAXPATHLEN, "%s/", directory);
 		}
@@ -123,7 +123,7 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 		{
 			if ( getenv (UNIX_GLOBAL_FLAG) )
 			{	
-				if (directory = getenv("MOZILLA_HOME"))
+				if (directory = getenv("MOZILLA_FIVE_HOME"))
 				{
     					PR_snprintf( Path, MAXPATHLEN, "%s/", directory);
 				}

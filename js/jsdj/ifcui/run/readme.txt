@@ -49,24 +49,24 @@
  * For UNIX users: Before installing Netscape JavaScript Debugger, you
    must set the following environment variables and restart Communicator:
 
-   MOZILLA_HOME
+   MOZILLA_FIVE_HOME
    Set to the directory in which Communicator is installed. (You may
    have done this when installing Communicator.)  If you installed
    Communicator in /communicator_installation_directory, you could use
    a call such as:
 
-      setenv  MOZILLA_HOME /communicator_installation_directory
+      setenv  MOZILLA_FIVE_HOME /communicator_installation_directory
 
    LD_LIBRARY_PATH
-   Add MOZILLA_HOME to this path. If you already have this variable
-   set, you can add MOZILLA_HOME with a call such as the following:
+   Add MOZILLA_FIVE_HOME to this path. If you already have this variable
+   set, you can add MOZILLA_FIVE_HOME with a call such as the following:
 
-      setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${MOZILLA_HOME}
+      setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${MOZILLA_FIVE_HOME}
 
    If you do not already have this variable set, you can set it with a
    call such as the following:
 
-      setenv LD_LIBRARY_PATH ${MOZILLA_HOME}
+      setenv LD_LIBRARY_PATH ${MOZILLA_FIVE_HOME}
 
  * IMPORTANT NOTE to Visual JavaScript PR1 users: Due to a CLASSPATH
    conflict, you must uninstall Visual JavaScript PR1 *before*
