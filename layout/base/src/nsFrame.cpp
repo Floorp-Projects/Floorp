@@ -509,10 +509,12 @@ NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
 
   PRBool inRange = doc->IsInRange(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), content);
   
+#ifdef DONT_DO_THIS_USE_NSPR_LOGGING_INSTEAD
   if (PR_TRUE == inRange)
     cout << "IN" << endl;
   else
     cout << "OUT" << endl;
+#endif
 
 
   if (inRange) {
@@ -652,7 +654,7 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
   PRBool inRange  = gDoc->IsInRange(mSelectionRange->GetStartContent(), mSelectionRange->GetEndContent(), newContent);  
   PRBool isBefore = gDoc->IsBefore(newContent,startContent);  
 
-#if 0
+#ifdef DONT_DO_THIS_USE_NSPR_LOGGING_INSTEAD
   if (PR_TRUE == inRange)
     cout << "IN" << endl;
   else if (PR_TRUE == isBefore)
@@ -1636,10 +1638,13 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
   nsIPresShell       * shell     = aPresContext.GetShell();
   nsIDocument        * doc       = shell->GetDocument();
   PRBool inRange = doc->IsInRange(mStartSelectionPoint->GetContent(), mEndSelectionPoint->GetContent(), aNewContent);  
+
+#ifdef DONT_DO_THIS_USE_NSPR_LOGGING_INSTEAD
   if (PR_TRUE == inRange)
     cout << "IN" << endl;
   else
     cout << "OUT" << endl;
+#endif
 
   // Check to see if the new content is in the selection
   if (inRange) {
@@ -1741,10 +1746,13 @@ void nsFrame::NewContentIsAfter(nsIPresContext& aPresContext,
   nsIPresShell       * shell     = aPresContext.GetShell();
   nsIDocument        * doc       = shell->GetDocument();
   PRBool inRange = doc->IsInRange(mStartSelectionPoint->GetContent(), mEndSelectionPoint->GetContent(), aNewContent);  
-  /*if (PR_TRUE == inRange)
+
+#ifdef DONT_DO_THIS_USE_NSPR_LOGGING_INSTEAD
+  if (PR_TRUE == inRange)
     cout << "IN" << endl;
   else
-    cout << "OUT" << endl;*/
+    cout << "OUT" << endl;
+#endif
 
   if (inRange) {
 
@@ -1945,6 +1953,17 @@ void addRangeToSelectionTrackers(nsIContent * aStartContent, nsIContent * aEndCo
   }
 }
 
+void PrintIndex(char * aStr, nsIContent * aContent) {
+#ifdef DONT_DO_THIS_USE_NSPR_LOGGING_INSTEAD
+  for (PRInt32 j=0;j<fMax;j++) {
+    nsIContent * node = (nsIContent *)fContentArray[j];
+    if (node == aContent) {
+      printf("%s %d\n", aStr, j);
+      return;
+    }
+  }
+#endif
+}
 
 #ifdef NS_DEBUG
 static void
