@@ -61,7 +61,7 @@
 #include "allxpstr.h"
 #undef WANT_ENUM_STRING_IDS
 
-//#include <LGAPopup.h>
+#include <LGAPopup.h>
 
 #ifdef PROFILE
 #include <profiler.h>
@@ -261,8 +261,8 @@ void CEditView::FinishCreateSelf(void)
 	while (view->GetSuperView())
 		view = view->GetSuperView();
 
-	mParagraphToolbarPopup = (LControl *)view->FindPaneByID( cmd_Paragraph_Hierarchical_Menu );
-	mSizeToolbarPopup = (LControl *)view->FindPaneByID( cmd_Font_Size_Hierarchical_Menu );
+	mParagraphToolbarPopup = (LGAPopup *)view->FindPaneByID( cmd_Paragraph_Hierarchical_Menu );
+	mSizeToolbarPopup = (LGAPopup *)view->FindPaneByID( cmd_Font_Size_Hierarchical_Menu );
 	mAlignToolbarPopup = (CPatternButtonPopup *)view->FindPaneByID( cmd_Align_Hierarchical_Menu );
 	mFontToolbarPopup = (CFontMenuPopup *)view->FindPaneByID( 'Font' );
 	mColorPopup = (CColorPopup *)view->FindPaneByID( 'Colr' );

@@ -36,7 +36,7 @@
 #pragma once
 
 
-#include <LIconControl.h>
+#include <LGAIconButton.h>
 
 
 class CScrollerWithArrows : public LView,
@@ -92,20 +92,19 @@ protected:
 }; // class CScrollerWithArrows
 
 
-class CScrollArrowControl : public LIconControl
+class CScrollArrowControl : public LGAIconButton
 {
 public:
-	enum { class_ID = 'CSAC', imp_class_ID = 'iSAC' } ;
-	enum { kIconUp = 14505, kIconDown = 14505, kIconLeft = 14504, kIconRight = 14505 } ;
+	enum { class_ID = 'CSAC' } ;
+	enum { kIconUp = 14504, kIconDown = 14505, kIconLeft = 14504, kIconRight = 14505 } ;
 	 						
-	CScrollArrowControl(
-			const SPaneInfo	&inPaneInfo,
-			MessageT		inValueMessage,
-			Int16			inContentResID );
+	CScrollArrowControl ( const SPaneInfo &inPaneInfo, const SControlInfo &inControlInfo,
+							ResIDT inIconResID  );
+	CScrollArrowControl ( LStream* inStream ) ;
 	
 protected:
 
-//	virtual void DrawSelf ( ) ;
+	virtual void DrawSelf ( ) ;
 	virtual void HotSpotAction ( Int16 inHotSpot, Boolean inCurrInside, Boolean inPrevInside );
 
 }; // class CScrollArrowControl

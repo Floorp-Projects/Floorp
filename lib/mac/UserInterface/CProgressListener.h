@@ -23,7 +23,8 @@
 
 #include <LListener.h>
 
-class CProgressCaption;
+class LCaption;
+class CPatternProgressCaption;
 class LBroadcaster;
 
 //======================================
@@ -60,7 +61,7 @@ public:
 		lazy_VeryButForThisCommandOnly
 	};
 
-	CProgressListener(CProgressCaption* progressCaption)
+	CProgressListener(CPatternProgressCaption* progressCaption)
 	: mProgressCaption(progressCaption) {}
 	CProgressListener(LView* superview, LBroadcaster* broadcaster);
 		// The broadcaster is the one to listen to.
@@ -69,12 +70,12 @@ public:
 	void SetLaziness(ProgressBarLaziness inLaziness);
 
 protected:
-
-	CProgressCaption*		mProgressCaption;
-	unsigned long			mProgressLastTicks;
-	unsigned long			mMessageLastTicks;
-	unsigned long			mPercentLastTicks;
-	ProgressBarLaziness		mLaziness;
-	ProgressBarLaziness		mPreviousLaziness;
-	
+//	LCaption* mCaption;
+//	CProgressBar* mProgressBar;
+	CPatternProgressCaption* mProgressCaption;
+	unsigned long			 mProgressLastTicks;
+	unsigned long			 mMessageLastTicks;
+	unsigned long			 mPercentLastTicks;
+	ProgressBarLaziness		 mLaziness;
+	ProgressBarLaziness		 mPreviousLaziness;
 }; // class ProgressListener
