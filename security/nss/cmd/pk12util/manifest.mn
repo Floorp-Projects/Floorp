@@ -1,5 +1,4 @@
-#
-#
+# 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -34,25 +33,17 @@
 
 CORE_DEPTH = ../../..
 
-MODULE = security
+DEFINES += -DNSPR20
 
-EXPORTS = 
+# MODULE public and private header  directories are implicitly REQUIRED.
+MODULE = security 
 
-CSRCS =	pk12util.c	\
+CSRCS = \
+	pk12util.c \
 	$(NULL)
 
-#CSRCS =	keydb-v2.c	\
-#	keyconv32.c	\
-#	pcertdb-v5.c	\
-#	certinit-v5.c	\
-#	certconv75.c	\
-#	pk12util.c	\
-#	cvtdb.c	\
-#	$(NULL)
+# The MODULE is always implicitly required.
+# Listing it here in REQUIRES makes it appear twice in the cc command line.
+REQUIRES = dbm seccmd
 
-PROGRAM =  pk12util
-
-REQUIRES = security dbm seccmd
-
-DEFINES = -DNSPR20 -DPK12UTIL
-
+PROGRAM = pk12util
