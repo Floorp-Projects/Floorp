@@ -264,7 +264,7 @@ public:
        NS_ASSERTION(value == gEntityArray[i].mUnicode, "bad unicode value");
 
        entity.AssignWithConversion(nsHTMLEntities::UnicodeToEntity(value));
-       NS_ASSERTION(entity.EqualsWithConversion(gEntityArray[i].mStr), "bad entity name");
+       NS_ASSERTION(entity.EqualsASCII(gEntityArray[i].mStr), "bad entity name");
      }
 
      // Make sure we don't find things that aren't there

@@ -7502,7 +7502,7 @@ void ReflowCountMgr::Add(const char * aName, nsReflowReason aType, nsIFrame * aF
       PL_HashTableAdd(mIndiFrameCounts, key, counter);
     }
     // this eliminates extra counts from super classes
-    if (counter != nsnull && counter->mName.EqualsWithConversion(aName)) {
+    if (counter != nsnull && counter->mName.EqualsASCII(aName)) {
       counter->mCount++;
       counter->mCounter.Add(aType, 1);
     }
@@ -7522,7 +7522,7 @@ void ReflowCountMgr::PaintCount(const char *    aName,
     char * key = new char[16];
     sprintf(key, "%p", (void*)aFrame);
     IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
-    if (counter != nsnull && counter->mName.EqualsWithConversion(aName)) {
+    if (counter != nsnull && counter->mName.EqualsASCII(aName)) {
       aRenderingContext->PushState();
       nsFont font("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
                   NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(8));

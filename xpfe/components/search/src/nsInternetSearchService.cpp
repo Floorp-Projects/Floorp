@@ -3622,9 +3622,9 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding,
   if (!numericEncoding.IsEmpty())	{
     for (PRUint32 i = 0; encodingList[i].numericEncoding != nsnull; i++)
     {
-      if (numericEncoding.EqualsWithConversion(encodingList[i].numericEncoding)) 
+      if (numericEncoding.EqualsASCII(encodingList[i].numericEncoding)) 
       {
-        stringEncoding.AssignWithConversion(encodingList[i].stringEncoding);
+        stringEncoding.AssignASCII(encodingList[i].stringEncoding);
         return NS_OK;
       }
     }
@@ -3935,9 +3935,9 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 				    
 				    // construct post data to send
 				    nsAutoString	postStr;
-				    postStr.AssignWithConversion(POSTHEADER_PREFIX);
+				    postStr.AssignASCII(POSTHEADER_PREFIX);
 				    postStr.AppendInt(input.Length(), 10);
-				    postStr.AppendWithConversion(POSTHEADER_SUFFIX);
+				    postStr.AppendASCII(POSTHEADER_SUFFIX);
 				    postStr += input;
 				    
 				    nsCOMPtr<nsIInputStream>	postDataStream;
@@ -4050,10 +4050,10 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
   if (NS_FAILED(rv)) return rv;
   
 	nsAutoString	searchURL;
-	searchURL.AssignWithConversion(kEngineProtocol);
+	searchURL.AssignASCII(kEngineProtocol);
 	char		*uriCescaped = nsEscape(filePath.get(), url_Path);
 	if (!uriCescaped)	return(NS_ERROR_NULL_POINTER);
-	searchURL.AppendWithConversion(uriCescaped);
+	searchURL.AppendASCII(uriCescaped);
 	nsCRT::free(uriCescaped);
 
 	if ((extensionOffset = searchURL.RFindChar(PRUnichar('.'))) > 0)
@@ -4151,7 +4151,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 			if (catURI)
 			{
 				nsAutoString	catList;
-				catList.AssignWithConversion(kURINC_SearchCategoryPrefix);
+				catList.AssignASCII(kURINC_SearchCategoryPrefix);
 				catList.AppendWithConversion(catURI);
 				gRDFService->GetUnicodeResource(catList, getter_AddRefs(catRes));
 			}
