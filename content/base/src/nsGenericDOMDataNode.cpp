@@ -1349,6 +1349,21 @@ nsGenericDOMDataNode::CloneContent(PRBool aCloneText, nsITextContent** aClone)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsGenericDOMDataNode::AppendTextTo(nsAString& aResult)
+{
+  if (mText.Is2b()) {
+    aResult.Append(mText.Get2b(), mText.GetLength());
+  } else {
+    // XXX we would like to have a AppendASCIItoUCS2 here
+    aResult.Append(NS_ConvertASCIItoUCS2(mText.Get1b(),
+                                         mText.GetLength()).get(),
+                   mText.GetLength());
+  }
+
+  return NS_OK;
+}
+
 void
 nsGenericDOMDataNode::LookupListenerManager(nsIEventListenerManager **aListenerManager) const
 {

@@ -241,6 +241,7 @@ public:
   NS_IMETHOD SetText(const char* aBuffer, PRInt32 aLength, PRBool aNotify);
   NS_IMETHOD IsOnlyWhitespace(PRBool* aResult);
   NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone);
+  NS_IMETHOD AppendTextTo(nsAString& aResult);
 
   //----------------------------------------
 

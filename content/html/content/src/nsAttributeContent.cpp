@@ -211,7 +211,8 @@ public:
                    PRInt32 aLength,
                    PRBool aNotify);
   NS_IMETHOD IsOnlyWhitespace(PRBool* aResult);
-  NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone); 
+  NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone);
+  NS_IMETHOD AppendTextTo(nsAString& aResult);
 
   //----------------------------------------
 
@@ -439,7 +440,8 @@ nsAttributeContent::CopyText(nsAString& aResult)
     aResult.Assign(mText.Get2b(), mText.GetLength());
   }
   else {
-    aResult.Assign(NS_ConvertASCIItoUCS2(mText.Get1b(), mText.GetLength()).get(), mText.GetLength());
+    const char *data = mText.Get1b();
+    CopyASCIItoUCS2(Substring(data, data + mText.GetLength()), aResult);
   }
   return NS_OK;
 }
@@ -554,4 +556,21 @@ nsAttributeContent::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
   }
   it->mText = mText;
   return result;
+}
+
+NS_IMETHODIMP
+nsAttributeContent::AppendTextTo(nsAString& aResult)
+{
+  ValidateTextFragment();
+  if (mText.Is2b()) {
+    aResult.Append(mText.Get2b(), mText.GetLength());
+  }
+  else {
+    // XXX we would like to have a AppendASCIItoUCS2 here
+    aResult.Append(NS_ConvertASCIItoUCS2(mText.Get1b(),
+                                         mText.GetLength()).get(),
+                   mText.GetLength());
+  }
+
+  return NS_OK;
 }

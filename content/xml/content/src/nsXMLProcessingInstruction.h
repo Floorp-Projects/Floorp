@@ -65,6 +65,7 @@ public:
 
   // nsIContent
   NS_IMETHOD GetTag(nsIAtom** aResult) const;
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
