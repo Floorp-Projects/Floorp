@@ -78,6 +78,9 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
     // kick off a search
     nsresult StartLDAPSearch();
 
+    // check if the LDAP message received is current
+    nsresult IsMessageCurrent(nsILDAPMessage *aMessage, PRBool *aIsCurrent);
+
     // finish a search by calling mListener->OnAutoComplete, resetting state,
     // and freeing resources.
     void FinishAutoCompleteLookup(AutoCompleteStatus aACStatus);
