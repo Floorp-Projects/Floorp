@@ -202,19 +202,26 @@ unless (have_vers("CGI::Carp",0))    { push @missing,"CGI::Carp" }
 $::SIG{__DIE__} = $saved_die_handler;
 $::SIG{__WARN__} = $saved_warn_handler;
 
-print "\nThe following two modules are optional:\n";
+print "\nThe following Perl modules are optional:\n";
 my $charts = 0;
 $charts++ if have_vers("GD","1.19");
 $charts++ if have_vers("Chart::Base","0.99");
+my $xmlparser = have_vers("XML::Parser",0);
+
+print "\n";
 if ($charts != 2) {
     print "If you you want to see graphical bug dependency charts, you may install\n",
     "the optional libgd and the Perl modules GD-1.19 and Chart::Base-0.99b, e.g. by\n",
     "running (as root)\n\n",
-    "   perl -MCPAN -eshell\n",
-    "   install LDS/GD-1.19.tar.gz\n",
-    "   install N/NI/NINJAZ/Chart-0.99b.tar.gz\n\n";
+    "   perl -MCPAN -e'install \"LDS/GD-1.19.tar.gz\"'\n",
+    "   perl -MCPAN -e'install \"N/NI/NINJAZ/Chart-0.99b.tar.gz\"'\n\n";
 }
-
+if (!$xmlparser) {
+    print "If you want to use the bug import/export feature to move bugs to or from\n",
+    "other bugzilla installations, you will need to install the XML::Parser module by\n",
+    "running (as root)\n\n",
+    "   perl -MCPAN -e'install \"XML::Parser\"'\n\n";
+}
 if (@missing > 0) {
     print "\n\n";
     print "You are missing some Perl modules which are required by Bugzilla.\n";
@@ -590,6 +597,7 @@ if ($my_db_check) {
     my $sql_vok = ((vers_cmp($sql_vers,$sql_want) > -1)
       && ($sql_vers ne "3.23.29")); # encrypt() is broken in 3.23.29
     print (($sql_vok ? "ok: " : " "), "found v$sql_vers\n");
+    print "\n";
     unless ($sql_vok) {
       die "Your MySQL server is either too old or a known broken version.\n",
           "   Bugzilla requires version $sql_want or later of MySQL.\n",
