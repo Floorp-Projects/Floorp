@@ -122,23 +122,13 @@
 /*
 	Random stuff in a random place
 */
-#if defined (XP_WIN) || defined (XP_OS2)
-#define XP_RANDOM 		rand
-#define XP_SRANDOM(seed)	srand((seed))
-#endif
-#ifdef XP_MAC
-#define XP_RANDOM 		rand
-#define XP_SRANDOM(seed)	srand((seed))
-#endif
-#ifdef XP_UNIX
 #if !defined(XP_RANDOM) || !defined(XP_SRANDOM)   /* defined in both xp_mcom.h and xp_str.h */
-#if defined(UNIXWARE) || defined(_INCLUDE_HPUX_SOURCE) || defined(SOLARIS) || defined(SNI) || defined(NCR)
-#define XP_RANDOM		rand
-#define XP_SRANDOM(seed)	srand((seed))
-#else
+#ifdef HAVE_RANDOM
 #define XP_RANDOM		random
 #define XP_SRANDOM(seed)	srandom((seed))
-#endif
+#else
+#define XP_RANDOM		rand
+#define XP_SRANDOM(seed)	srand((seed))
 #endif
 #endif
 
