@@ -34,7 +34,7 @@
 #include "nsMemory.h"
 #include "nsITimer.h"
 
-NS_IMPL_ISUPPORTS3(imgContainerGIF, imgIContainer, nsITimerCallback, imgIDecoderObserver)
+NS_IMPL_ISUPPORTS2(imgContainerGIF, imgIContainer, nsITimerCallback)
 
 //******************************************************************************
 imgContainerGIF::imgContainerGIF() :
@@ -683,42 +683,10 @@ void imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
   BuildCompositeMask(mCompositingFrame, nextFrame);
 
 }
-//******************************************************************************
-/* void onStartDecode (in imgIRequest aRequest, in nsISupports cx); */
-NS_IMETHODIMP imgContainerGIF::OnStartDecode(imgIRequest *aRequest,
-                                             nsISupports *cx)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 //******************************************************************************
-/* void onStartContainer (in imgIRequest aRequest, in nsISupports cx,
-                          in imgIContainer aContainer); */
-NS_IMETHODIMP imgContainerGIF::OnStartContainer(imgIRequest *aRequest,
-                                                nsISupports *cx,
-                                                imgIContainer *aContainer)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//******************************************************************************
-/* void onStartFrame (in imgIRequest aRequest, in nsISupports cx,
-                      in gfxIImageFrame aFrame); */
-NS_IMETHODIMP imgContainerGIF::OnStartFrame(imgIRequest *aRequest,
-                                            nsISupports *cx,
-                                            gfxIImageFrame *aFrame)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//******************************************************************************
-/* [noscript] void onDataAvailable (in imgIRequest aRequest,
-                                    in nsISupports cx, in gfxIImageFrame aFrame,
-                                    [const] in nsRect aRect); */
-NS_IMETHODIMP imgContainerGIF::OnDataAvailable(imgIRequest *aRequest,
-                                               nsISupports *cx,
-                                               gfxIImageFrame *aFrame,
-                                               const nsRect * aRect)
+NS_IMETHODIMP imgContainerGIF::NewFrameData(gfxIImageFrame *aFrame,
+                                            const nsRect * aRect)
 {
   if(mCompositingFrame && !mCurrentDecodingFrameIndex) {
     // Update the composite frame
@@ -728,49 +696,6 @@ NS_IMETHODIMP imgContainerGIF::OnDataAvailable(imgIRequest *aRequest,
     BuildCompositeMask(mCompositingFrame, aFrame);
   }
   return NS_OK;
-}
-
-//******************************************************************************
-/* void onStopFrame (in imgIRequest aRequest, in nsISupports cx,
-                     in gfxIImageFrame aFrame); */
-NS_IMETHODIMP imgContainerGIF::OnStopFrame(imgIRequest *aRequest,
-                                           nsISupports *cx,
-                                           gfxIImageFrame *aFrame)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//******************************************************************************
-/* void onStopContainer (in imgIRequest aRequest, in nsISupports cx,
-                         in imgIContainer aContainer); */
-NS_IMETHODIMP imgContainerGIF::OnStopContainer(imgIRequest *aRequest,
-                                               nsISupports *cx,
-                                               imgIContainer *aContainer)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//******************************************************************************
-/* void onStopDecode (in imgIRequest aRequest, in nsISupports cx,
-                      in nsresult status, in wstring statusArg); */
-NS_IMETHODIMP imgContainerGIF::OnStopDecode(imgIRequest *aRequest,
-                                            nsISupports *cx,
-                                            nsresult status,
-                                            const PRUnichar *statusArg)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//******************************************************************************
-/* [noscript] void frameChanged (in imgIContainer aContainer,
-                                 in nsISupports aCX, in gfxIImageFrame aFrame,
-                                 in nsRect aDirtyRect); */
-NS_IMETHODIMP imgContainerGIF::FrameChanged(imgIContainer *aContainer,
-                                            nsISupports *aCX,
-                                            gfxIImageFrame *aFrame,
-                                            nsRect * aDirtyRect)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //******************************************************************************
