@@ -43,7 +43,7 @@
  * allowed to access this pref. canAccessSecurityPreferences is called to
  * determine that.
  *
- * INTERFACES THAT NEED TO BE IMPLEMENTED:
+ * INTERFACES THAT MUST BE IMPLEMENTED:
  *   nsISupports
  *   nsIPrefSecurityCheck
  */
