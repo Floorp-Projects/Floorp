@@ -43,6 +43,7 @@
 #include "nsMailboxUrl.h"
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsEscape.h"
 #include "nsCRT.h"
 #include "nsLocalUtils.h"
@@ -251,7 +252,7 @@ NS_IMETHODIMP nsMailboxUrl::GetUri(char ** aURI)
   // otherwise try to reconstruct a URI on the fly....
 
   if (!mURI.IsEmpty())
-    *aURI = mURI.ToNewCString();
+    *aURI = ToNewCString(mURI);
   else
 	{
 		nsFileSpec * filePath = nsnull;
@@ -267,7 +268,7 @@ NS_IMETHODIMP nsMailboxUrl::GetUri(char ** aURI)
 			nsBuildLocalMessageURI(baseMessageURI, m_messageKey, uriStr);
             PL_strfree(baseuri);
 			nsCRT::free(baseMessageURI);
-			uri = uriStr.ToNewCString();
+			uri = ToNewCString(uriStr);
 			*aURI = uri;
 		}
 		else
@@ -505,7 +506,7 @@ NS_IMETHODIMP nsMailboxUrl::GetFolderCharsetOverride(PRBool * aCharacterSetOverr
 NS_IMETHODIMP nsMailboxUrl::GetCharsetOverRide(PRUnichar ** aCharacterSet)
 {
   if (!mCharsetOverride.IsEmpty())
-    *aCharacterSet = mCharsetOverride.ToNewUnicode(); 
+    *aCharacterSet = ToNewUnicode(mCharsetOverride); 
   else
     *aCharacterSet = nsnull;
   return NS_OK;

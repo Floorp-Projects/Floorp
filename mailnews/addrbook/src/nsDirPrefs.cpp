@@ -48,6 +48,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIAbUpgrader.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 #include "plstr.h"
 #include "prmem.h"
@@ -319,7 +320,7 @@ PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength,
 // This can now use ToNewUTF8String (or this function itself can be substitued by that).
 // e.g.
 // nsAutoString aStr(uniBuffer);
-// *aBuffer = aStr.ToNewUTF8String();
+// *aBuffer = ToNewUTF8String(aStr);
 // Do not use void* that was inherited from old libmime when it could not include C++, use PRUnichar* instead.
 PRInt32 INTL_ConvertFromUnicode(const PRUnichar* uniBuffer, const PRInt32 uniLength, char** aBuffer)
 {
@@ -329,7 +330,7 @@ PRInt32 INTL_ConvertFromUnicode(const PRUnichar* uniBuffer, const PRInt32 uniLen
 	}
 
   NS_ConvertUCS2toUTF8 temp(uniBuffer, uniLength);
-  *aBuffer = temp.ToNewCString();
+  *aBuffer = ToNewCString(temp);
   return (*aBuffer) ? 0 : -1;
 }
 
@@ -420,7 +421,7 @@ static nsresult dir_ConvertToMabFileName()
 					name.Cut(pos, PL_strlen(ABFileName_kPreviousSuffix));
 					name.Append(ABFileName_kCurrentSuffix);
 					PR_FREEIF (server->fileName);
-					server->fileName = name.ToNewCString();
+					server->fileName = ToNewCString(name);
 				}
 				DIR_SavePrefsForOneServer(server);
 			}

@@ -54,6 +54,7 @@
 #include "nsIFactory.h"
 #include "nsIWebShell.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "plevent.h"
 #include "prthread.h"
 #include "private/pprthred.h"
@@ -276,7 +277,7 @@ STDAPI DllRegisterServer(void)
 
     StringFromGUID2(WebShellCID, IIDString, sizeof(IIDString));
     tmp = IIDString;
-    WebShellCLSID = tmp.ToNewCString();
+    WebShellCLSID = ToNewCString(tmp);
     
     // end hack...
 
@@ -351,7 +352,7 @@ STDAPI DllUnregisterServer(void)
 
     StringFromGUID2(WebShellCID, IIDString, sizeof(IIDString));
     tmp = IIDString;
-    WebShellCLSID = tmp.ToNewCString();
+    WebShellCLSID = ToNewCString(tmp);
 
     // end hack...
 

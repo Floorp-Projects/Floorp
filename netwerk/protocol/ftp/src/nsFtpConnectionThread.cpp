@@ -43,6 +43,7 @@
 
 #include "nsISocketTransport.h"
 #include "nsIStreamConverterService.h"
+#include "nsReadableUtils.h"
 #include "prprf.h"
 #include "prlog.h"
 #include "prnetdb.h"
@@ -422,7 +423,7 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
         char *cleanup = nsnull;
         if (!mControlReadCarryOverBuf.IsEmpty() ) {
             mControlReadCarryOverBuf += buffer;
-            cleanup = tmpBuffer = mControlReadCarryOverBuf.ToNewCString();
+            cleanup = tmpBuffer = ToNewCString(mControlReadCarryOverBuf);
             mControlReadCarryOverBuf.Truncate(0);
             if (!tmpBuffer) return NS_ERROR_OUT_OF_MEMORY;
         } else {
@@ -1417,7 +1418,7 @@ nsFtpState::R_pasv() {
         return FTP_ERROR;
     }
 
-    char *response = mResponseMsg.ToNewCString();
+    char *response = ToNewCString(mResponseMsg);
     if (!response) return FTP_ERROR;
     char *ptr = response;
 
@@ -1556,7 +1557,7 @@ nsFtpState::GetName(PRUnichar* *result)
     if (NS_FAILED(rv)) return rv;
     nsString name;
     name.AppendWithConversion(urlStr);
-    *result = name.ToNewUnicode();
+    *result = ToNewUnicode(name);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

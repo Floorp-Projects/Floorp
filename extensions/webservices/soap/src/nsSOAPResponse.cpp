@@ -44,6 +44,7 @@
 #include "nsISOAPParameter.h"
 #include "nsIComponentManager.h"
 #include "nsMemory.h"
+#include "nsReadableUtils.h"
 
 nsSOAPResponse::nsSOAPResponse(nsIDOMDocument* aEnvelopeDocument)
 {
@@ -165,7 +166,7 @@ NS_IMETHODIMP nsSOAPResponse::GetTargetObjectURI(char * *aTargetObjectURI)
     nsAutoString ns;
     mResultElement->GetNamespaceURI(ns);
     if (ns.Length() > 0) {
-      *aTargetObjectURI = ns.ToNewCString();
+      *aTargetObjectURI = ToNewCString(ns);
     }
   }
   return NS_OK;
@@ -180,7 +181,7 @@ NS_IMETHODIMP nsSOAPResponse::GetMethodName(char * *aMethodName)
     nsAutoString localName;
     mResultElement->GetLocalName(localName);
     if (localName.Length() > 0) {
-      *aMethodName = localName.ToNewCString();
+      *aMethodName = ToNewCString(localName);
     }
   }
   return NS_OK;

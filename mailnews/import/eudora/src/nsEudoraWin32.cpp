@@ -20,6 +20,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIMsgAccountManager.h"
@@ -747,7 +748,7 @@ PRBool nsEudoraWin32::BuildPOPAccount( nsIMsgAccountManager *accMgr, const char 
 			nsString	prettyName;
 			GetAccountName( pSection, prettyName);
 
-			PRUnichar *pretty = prettyName.ToNewUnicode();
+			PRUnichar *pretty = ToNewUnicode(prettyName);
 			IMPORT_LOG1( "\tSet pretty name to: %S\n", pretty);
 			rv = in->SetPrettyName( pretty);
 			nsCRT::free( pretty);
@@ -808,7 +809,7 @@ PRBool nsEudoraWin32::BuildIMAPAccount( nsIMsgAccountManager *accMgr, const char
 			nsString	prettyName;
 			GetAccountName( pSection, prettyName);
 
-			PRUnichar *pretty = prettyName.ToNewUnicode();
+			PRUnichar *pretty = ToNewUnicode(prettyName);
 			
 			IMPORT_LOG1( "\tSet pretty name to: %S\n", pretty);
 

@@ -36,6 +36,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsMimeTypes.h"
+#include "nsReadableUtils.h"
 
 #define MIME_SUPERCLASS mimeLeafClass
 MimeDefClass(MimeInlineText, MimeInlineTextClass, mimeInlineTextClass,
@@ -115,11 +116,10 @@ MimeInlineText_initialize (MimeObject *obj)
           nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
           if ( NS_SUCCEEDED(rv) && prefs)
           {
-            PRUnichar* value;
-            rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", &value);
+            nsXPIDLString value;
+            rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", getter_Copies(value));
             if(NS_SUCCEEDED(rv)) {
-              text->defaultCharset = NS_ConvertUCS2toUTF8(value).ToNewCString();
-              nsMemory::Free(value);
+              text->defaultCharset = ToNewUTF8String(value);
             }
           }
 

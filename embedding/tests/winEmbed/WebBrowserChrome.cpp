@@ -35,7 +35,6 @@
 #include "nsIChannel.h"
 #include "nsCWebBrowser.h"
 #include "nsWidgetsCID.h"
-#include "nsXPIDLString.h"
 #include "nsIProfileChangeStatus.h"
 
 // Local includes
@@ -458,10 +457,7 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
         uriAStr.Append(NS_ConvertASCIItoUCS2(" purged from Session History"));
     }
 
-    PRUnichar * uriStr = nsnull;
-    uriStr = uriAStr.ToNewUnicode();
-    WebBrowserChromeUI::UpdateStatusBarText(this, uriStr);
-    nsCRT::free(uriStr);
+    WebBrowserChromeUI::UpdateStatusBarText(this, uriAStr.get());
 
     return NS_OK;
 }

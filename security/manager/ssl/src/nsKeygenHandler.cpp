@@ -40,6 +40,7 @@ extern "C" {
 #include "nsIContent.h"
 #include "nsINSSDialogs.h"
 #include "nsKeygenThread.h"
+#include "nsReadableUtils.h"
 
 //These defines are taken from the PKCS#11 spec
 #define CKM_RSA_PKCS_KEY_PAIR_GEN     0x00000000
@@ -186,17 +187,17 @@ nsKeygenFormProcessor::Init()
   nssComponent->GetPIPNSSBundleString(
                             NS_LITERAL_STRING("HighGrade").get(),
                             str);
-  SECKeySizeChoiceList[0].name = str.ToNewUnicode();
+  SECKeySizeChoiceList[0].name = ToNewUnicode(str);
 
   nssComponent->GetPIPNSSBundleString(
                             NS_LITERAL_STRING("MediumGrade").get(),
                             str);
-  SECKeySizeChoiceList[1].name = str.ToNewUnicode();
+  SECKeySizeChoiceList[1].name = ToNewUnicode(str);
 
   nssComponent->GetPIPNSSBundleString(
                             NS_LITERAL_STRING("LowGrade").get(),
                             str);
-  SECKeySizeChoiceList[2].name = str.ToNewUnicode();
+  SECKeySizeChoiceList[2].name = ToNewUnicode(str);
 
   return NS_OK;
 }
@@ -282,7 +283,7 @@ GetSlotWithMechanism(PRUint32 aMechanism,
         i = 0;
         slotElement = PK11_GetFirstSafe(slotList);
         while (slotElement) {
-			tokenNameList[i] = NS_ConvertUTF8toUCS2(PK11_GetTokenName(slotElement->slot)).ToNewUnicode();
+			tokenNameList[i] = ToNewUnicode(NS_ConvertUTF8toUCS2(PK11_GetTokenName(slotElement->slot)));
             slotElement = PK11_GetNextSafe(slotList, slotElement, PR_FALSE);
             i++;
         }
@@ -385,7 +386,7 @@ nsKeygenFormProcessor::GetPublicKey(nsString& aValue, nsString& aChallenge,
         keyGenMechanism = CKM_RSA_PKCS_KEY_PAIR_GEN;
     } else  if (aKeyType.Equals(dsaStr)) {
         char * end;
-        pqgString = aPqg.ToNewCString();
+        pqgString = ToNewCString(aPqg);
         type = dsaKey;
         keyGenMechanism = CKM_DSA_KEY_PAIR_GEN;
         if (strcmp(pqgString, "null") == 0)
@@ -499,7 +500,7 @@ found_match:
      */
     pkac.spki = spkiItem;
 	pkac.challenge.len = aChallenge.Length();
-    pkac.challenge.data = (unsigned char *)aChallenge.ToNewCString();
+    pkac.challenge.data = (unsigned char *)ToNewCString(aChallenge);
     
     sec_rv = DER_Encode(arena, &pkacItem, CERTPublicKeyAndChallengeTemplate, &pkac);
     if ( sec_rv != SECSuccess ) {

@@ -27,6 +27,7 @@
 #endif
 
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsIServiceManager.h"
 #define NS_IMPL_IDS
@@ -93,7 +94,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
   char *title = ConvertToFileSystemCharset(mTitle.get());
   if (nsnull == title)
-    title = mTitle.ToNewCString();
+    title = ToNewCString(mTitle);
   char *initialDir;
   mDisplayDirectory->GetPath(&initialDir);
 

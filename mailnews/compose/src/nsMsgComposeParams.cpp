@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMsgComposeParams.h"
+#include "nsReadableUtils.h"
 
 nsMsgComposeParams::nsMsgComposeParams() :
   mType(nsIMsgCompType::New),
@@ -86,7 +87,7 @@ NS_IMETHODIMP nsMsgComposeParams::GetOriginalMsgURI(char * *aOriginalMsgURI)
 {
   NS_ENSURE_ARG_POINTER(aOriginalMsgURI);
   
-  *aOriginalMsgURI = mOriginalMsgUri.ToNewCString();
+  *aOriginalMsgURI = ToNewCString(mOriginalMsgUri);
   return NS_OK;
 }
 NS_IMETHODIMP nsMsgComposeParams::SetOriginalMsgURI(const char * aOriginalMsgURI)
@@ -174,7 +175,7 @@ NS_IMETHODIMP nsMsgComposeParams::GetSmtpPassword(char * *aSmtpPassword)
 {
   NS_ENSURE_ARG_POINTER(aSmtpPassword);
   
-  *aSmtpPassword = mSMTPPassword.ToNewCString();
+  *aSmtpPassword = ToNewCString(mSMTPPassword);
   return NS_OK;
 }
 NS_IMETHODIMP nsMsgComposeParams::SetSmtpPassword(const char * aSmtpPassword)

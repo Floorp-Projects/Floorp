@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "prtypes.h"
 #include "nsAutoComplete.h"
+#include "nsReadableUtils.h"
 
 /******************************************************************************
  * nsAutoCompleteItem
@@ -70,7 +71,7 @@ NS_IMETHODIMP nsAutoCompleteItem::SetValue(const nsAReadableString& aValue)
 NS_IMETHODIMP nsAutoCompleteItem::GetComment(PRUnichar * *aComment)
 {
     if (!aComment) return NS_ERROR_NULL_POINTER;
-    *aComment = mComment.ToNewUnicode();
+    *aComment = ToNewUnicode(mComment);
     return NS_OK;
 }
 NS_IMETHODIMP nsAutoCompleteItem::SetComment(const PRUnichar * aComment)
@@ -83,7 +84,7 @@ NS_IMETHODIMP nsAutoCompleteItem::SetComment(const PRUnichar * aComment)
 NS_IMETHODIMP nsAutoCompleteItem::GetClassName(char * *aClassName)
 {
     if (!aClassName) return NS_ERROR_NULL_POINTER;
-    *aClassName = mClassName.ToNewCString();
+    *aClassName = ToNewCString(mClassName);
     return NS_OK;
 }
 NS_IMETHODIMP nsAutoCompleteItem::SetClassName(const char * aClassName)
@@ -126,7 +127,7 @@ nsAutoCompleteResults::~nsAutoCompleteResults()
 NS_IMETHODIMP nsAutoCompleteResults::GetSearchString(PRUnichar * *aSearchString)
 {
     if (!aSearchString) return NS_ERROR_NULL_POINTER;
-    *aSearchString = mSearchString.ToNewUnicode();  
+    *aSearchString = ToNewUnicode(mSearchString);  
     return NS_OK;
 }
 

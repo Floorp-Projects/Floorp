@@ -41,6 +41,7 @@
 #include "nsCRT.h"
 #include "nsDOMError.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsJSProtocolHandler.h"
 #include "nsNetUtil.h"
 
@@ -267,7 +268,7 @@ nsresult nsJSThunk::EvaluateScript()
     }
     else {
         // XXXbe this should not decimate! pass back UCS-2 to necko
-        mResult = result.ToNewCString();
+        mResult = ToNewCString(result);
         mLength = result.Length();
     }
     return rv;

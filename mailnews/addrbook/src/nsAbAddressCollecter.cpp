@@ -49,6 +49,7 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "prmem.h"
   
   // For the new pref API's
@@ -91,7 +92,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar * aAdd
 
   // convert the unicode string to UTF-8...
   nsAutoString unicodeString (aAddress);
-  char * utf8Version = unicodeString.ToNewUTF8String();
+  char * utf8Version = ToNewUTF8String(unicodeString);
   if (utf8Version)
   {
     rv = CollectAddress(utf8Version);

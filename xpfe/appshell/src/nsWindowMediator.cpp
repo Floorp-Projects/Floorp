@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoLock.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "rdf.h"
 #include "nsIBaseWindow.h"
@@ -753,7 +754,7 @@ NS_IMETHODIMP  nsWindowMediator::GetWindowForResource( const PRUnichar* inResour
 	// Find the window
 	//nsresult result = NS_ERROR_FAILURE;
 	nsAutoString temp( inResource );
-	char* resourceString = temp.ToNewCString();
+	char* resourceString = ToNewCString(temp);
 	nsWindowInfo *info,
 	             *listEnd;
 

@@ -39,6 +39,7 @@
 #include "nsSOAPFault.h"
 #include "nsSOAPUtils.h"
 #include "nsIDOMNodeList.h"
+#include "nsReadableUtils.h"
 
 nsSOAPFault::nsSOAPFault(nsIDOMElement* aElement)
 {
@@ -85,7 +86,7 @@ NS_IMETHODIMP nsSOAPFault::GetFaultCode(PRUnichar * *aFaultCode)
       nsAutoString text;
       nsSOAPUtils::GetElementTextContent(element, text);
       if (text.Length() > 0) {
-	*aFaultCode = text.ToNewUnicode();
+	*aFaultCode = ToNewUnicode(text);
 	if (!*aFaultCode) return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -118,7 +119,7 @@ NS_IMETHODIMP nsSOAPFault::GetFaultString(PRUnichar * *aFaultString)
       nsAutoString text;
       nsSOAPUtils::GetElementTextContent(element, text);
       if (text.Length() > 0) {
-	*aFaultString = text.ToNewUnicode();
+	*aFaultString = ToNewUnicode(text);
 	if (!*aFaultString) return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -151,7 +152,7 @@ NS_IMETHODIMP nsSOAPFault::GetFaultActor(PRUnichar * *aFaultActor)
       nsAutoString text;
       nsSOAPUtils::GetElementTextContent(element, text);
       if (text.Length() > 0) {
-	*aFaultActor = text.ToNewUnicode();
+	*aFaultActor = ToNewUnicode(text);
 	if (!*aFaultActor) return NS_ERROR_OUT_OF_MEMORY;
       }
     }

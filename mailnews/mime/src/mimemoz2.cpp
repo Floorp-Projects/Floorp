@@ -61,6 +61,7 @@
 #include "comi18n.h"
 #include "nsIStringBundle.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsMimeStringResources.h"
 #include "nsStreamConverter.h"
 #include "nsIMsgSend.h"
@@ -278,7 +279,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
       }        
     }
 
-    aAttach->real_name = newAttachName.ToNewCString();
+    aAttach->real_name = ToNewCString(newAttachName);
   }  
 }
 
@@ -1831,42 +1832,36 @@ char *
 MimeGetStringByID(PRInt32 stringID)
 {
   char          *tempString = nsnull;
-	char          *resultString = "???";
-	nsresult      res = NS_OK;
+  const char    *resultString = "???";
+  nsresult      res = NS_OK;
 
-	if (!stringBundle)
-	{
-		char*       propertyURL = NULL;
+  if (!stringBundle)
+  {
+    char* propertyURL = NULL;
 
-		propertyURL = MIME_URL;
+    propertyURL = MIME_URL;
 
-		nsCOMPtr<nsIStringBundleService> sBundleService = 
-		         do_GetService(kStringBundleServiceCID, &res); 
-		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
-		{
-			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
-		}
-	}
-
-	if (stringBundle)
-	{
-		PRUnichar *ptrv = nsnull;
-		res = stringBundle->GetStringFromID(stringID, &ptrv);
-
-		if (NS_FAILED(res)) 
-      return nsCRT::strdup(resultString);
-		else
+    nsCOMPtr<nsIStringBundleService> sBundleService = 
+             do_GetService(kStringBundleServiceCID, &res); 
+    if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
     {
-      nsAutoString v;
-      v = ptrv;
-			tempString = v.ToNewUTF8String();
+      res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
     }
-	}
+  }
+
+  if (stringBundle)
+  {
+    nsXPIDLString v;
+    res = stringBundle->GetStringFromID(stringID, getter_Copies(v));
+
+    if (NS_SUCCEEDED(res)) 
+      tempString = ToNewUTF8String(v);
+  }
 
   if (!tempString)
-    return nsCRT::strdup(resultString);
-  else
-    return tempString;
+    tempString = nsCRT::strdup(resultString);
+
+  return tempString;
 }
 
 void PR_CALLBACK

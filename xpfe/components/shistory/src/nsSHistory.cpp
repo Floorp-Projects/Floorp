@@ -25,11 +25,11 @@
 
 // Helper Classes
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 // Interfaces Needed
 #include "nsILayoutHistoryState.h"
 #include "nsIDocShellLoadInfo.h"
-#include "nsXPIDLString.h"
 #include "nsISHContainer.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
@@ -297,7 +297,7 @@ nsSHistory::PrintHistory()
 			  char * titleCStr=nsnull;
 
 			  nsString titlestr(title);
-              titleCStr = titlestr.ToNewCString();
+              titleCStr = ToNewCString(titlestr);
               printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
               printf("\t\t URL = %s\n", url);
               printf("\t\t Title = %s\n", titleCStr);

@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "msgCore.h"
+#include "nsReadableUtils.h"
 #include "nsMsgProtocol.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsISocketTransportService.h"
@@ -337,7 +338,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctx
           nsAutoString resultString(NS_LITERAL_STRING("[StringID "));
           resultString.AppendInt(errorID, 10);
           resultString.Append(NS_LITERAL_STRING("?]"));
-          errorMsg = resultString.ToNewUnicode();
+          errorMsg = ToNewUnicode(resultString);
         }
         rv = msgPrompt->Alert(nsnull, errorMsg);
         nsMemory::Free(errorMsg);
@@ -489,7 +490,7 @@ NS_IMETHODIMP nsMsgProtocol::GetContentType(char * *aContentType)
   if (m_ContentType.IsEmpty())
 	  *aContentType = nsCRT::strdup("message/rfc822");
   else
-    *aContentType = m_ContentType.ToNewCString();
+    *aContentType = ToNewCString(m_ContentType);
 	return NS_OK;
 }
 

@@ -45,6 +45,7 @@
 #include "nsISupports.h"
 #include "nsNativeCharDetDll.h"
 #include "pratom.h"
+#include "nsReadableUtils.h"
 
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionObserver.h"
@@ -84,7 +85,7 @@ static HRESULT DetectCharsetUsingMLang(IMultiLanguage *aMultiLanguage, IMLangCon
           if (SUCCEEDED(hr)) {
             // convert WCHAR* to char*
             nsString aCharset(aCodePageInfo.wszWebCharset);
-            char *cstr = aCharset.ToNewCString();
+            char *cstr = ToNewCString(aCharset);
             PL_strcpy(charset, cstr);
             delete [] cstr;
             aConfidence = eSureAnswer;

@@ -50,6 +50,7 @@
 #include "nsIParserNode.h"
 #include <ctype.h>
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIParser.h"
 #include "nsICharsetAlias.h"
 #include "nsIServiceManager.h"
@@ -667,7 +668,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 #ifdef DEBUG_prettyprint
   if (isDirty)
     printf("AddStartTag(%s): BBO=%d, BAO=%d, BBC=%d, BAC=%d\n",
-           name.ToNewCString(),
+           NS_LossyConvertUCS2toASCII(name).get(),
            BreakBeforeOpen(tag),
            BreakAfterOpen(tag),
            BreakBeforeClose(tag),

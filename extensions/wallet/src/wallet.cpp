@@ -47,6 +47,7 @@
 #include "singsign.h"
 
 #include "nsNetUtil.h"
+#include "nsReadableUtils.h"
 
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
@@ -476,7 +477,7 @@ Wallet_Localize(char* genericString) {
 #ifdef DEBUG
     printf("cannot get string service\n");
 #endif
-    return v.ToNewUnicode();
+    return ToNewUnicode(v);
   }
   nsCOMPtr<nsIStringBundle> bundle;
   ret = pStringService->CreateBundle(PROPERTIES_URL, getter_AddRefs(bundle));
@@ -484,7 +485,7 @@ Wallet_Localize(char* genericString) {
 #ifdef DEBUG
     printf("cannot create instance\n");
 #endif
-    return v.ToNewUnicode();
+    return ToNewUnicode(v);
   }
 
   /* localize the given string */
@@ -496,7 +497,7 @@ Wallet_Localize(char* genericString) {
 #ifdef DEBUG
     printf("cannot get string from name\n");
 #endif
-    return v.ToNewUnicode();
+    return ToNewUnicode(v);
   }
   v = ptrv;
   nsCRT::free(ptrv);
@@ -509,7 +510,7 @@ Wallet_Localize(char* genericString) {
     }
   }
 
-  return v.ToNewUnicode();
+  return ToNewUnicode(v);
 }
 
 /**********************/
@@ -784,7 +785,7 @@ Wallet_Encrypt (const nsString& text, nsString& crypt) {
   
   /* encrypt text to crypt */
   char * cryptCString = nsnull;
-  char * UTF8textCString = UTF8text.ToNewCString();
+  char * UTF8textCString = ToNewCString(UTF8text);
   nsresult rv = EncryptString(UTF8textCString, cryptCString);
   Recycle (UTF8textCString);
   if NS_FAILED(rv) {
@@ -799,7 +800,7 @@ PUBLIC nsresult
 Wallet_Decrypt(const nsString& crypt, nsString& text) {
 
   /* decrypt crypt to text */
-  char * cryptCString = crypt.ToNewCString();
+  char * cryptCString = ToNewCString(crypt);
   char * UTF8textCString = nsnull;
 
   nsresult rv = DecryptString(cryptCString, UTF8textCString);
@@ -2676,7 +2677,7 @@ WLLT_GetPrefillListForViewer(nsString& aPrefillList)
     buffer.Append(mapElementPtr->value);
   }
 
-  PRUnichar * urlUnichar = wallet_url.ToNewUnicode();
+  PRUnichar * urlUnichar = ToNewUnicode(wallet_url);
   buffer.AppendWithConversion(BREAK);
   buffer.AppendInt(NS_PTR_TO_INT32(wallet_list));
   buffer.AppendWithConversion(BREAK);
@@ -3819,7 +3820,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
   }
   (void)docURL->GetSpec(&URLName);
   wallet_GetHostFile(docURL, strippedURLNameAutoString);
-  strippedURLName = strippedURLNameAutoString.ToNewCString();
+  strippedURLName = ToNewCString(strippedURLNameAutoString);
 
   /* get to the form elements */
   nsCOMPtr<nsIDOMHTMLDocument> htmldoc(do_QueryInterface(doc));

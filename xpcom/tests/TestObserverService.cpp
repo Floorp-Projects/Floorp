@@ -42,6 +42,7 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prprf.h"
 #include <iostream.h>
 #include <iomanip.h>   // needed for libstdc++-v3
@@ -59,7 +60,7 @@ static void testResult( nsresult rv ) {
 }
 
 extern ostream &operator<<( ostream &s, nsString &str ) {
-    const char *cstr = str.ToNewCString();
+    const char *cstr = ToNewCString(str);
     s << cstr;
     delete [] (char*)cstr;
     return s;

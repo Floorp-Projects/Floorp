@@ -47,6 +47,7 @@
 #include "nsIEventQueueService.h"
 #include "nsMemory.h"
 #include "jsdebug.h"
+#include "nsReadableUtils.h"
 
 /* XXX this stuff is used by NestEventLoop, a temporary hack to be refactored
  * later */
@@ -451,7 +452,7 @@ jsdObject::GetJSDObject(JSDObject **_rval)
 NS_IMETHODIMP
 jsdObject::GetCreatorURL(char **_rval)
 {
-    *_rval = nsCString(JSD_GetObjectNewURL(mCx, mObject)).ToNewCString();
+    *_rval = ToNewCString(nsDependentCString(JSD_GetObjectNewURL(mCx, mObject)));
     return NS_OK;
 }
 
@@ -465,7 +466,7 @@ jsdObject::GetCreatorLine(PRUint32 *_rval)
 NS_IMETHODIMP
 jsdObject::GetConstructorURL(char **_rval)
 {
-    *_rval = nsCString(JSD_GetObjectConstructorURL(mCx, mObject)).ToNewCString();
+    *_rval = ToNewCString(nsDependentCString(JSD_GetObjectConstructorURL(mCx, mObject)));
     return NS_OK;
 }
 
@@ -680,14 +681,14 @@ jsdScript::GetIsValid(PRBool *_rval)
 NS_IMETHODIMP
 jsdScript::GetFileName(char **_rval)
 {
-    *_rval = mFileName->ToNewCString();
+    *_rval = ToNewCString(*mFileName);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 jsdScript::GetFunctionName(char **_rval)
 {
-    *_rval = mFunctionName->ToNewCString();
+    *_rval = ToNewCString(*mFunctionName);
     return NS_OK;
 }
 
@@ -1035,7 +1036,7 @@ NS_IMETHODIMP
 jsdValue::GetJsClassName(char **_rval)
 {
     ASSERT_VALID_VALUE;
-    *_rval = nsCString(JSD_GetValueClassName(mCx, mValue)).ToNewCString();
+    *_rval = ToNewCString(nsDependentCString(JSD_GetValueClassName(mCx, mValue)));
     return NS_OK;
 }
 
@@ -1052,7 +1053,7 @@ NS_IMETHODIMP
 jsdValue::GetJsFunctionName(char **_rval)
 {
     ASSERT_VALID_VALUE;
-    *_rval = nsCString(JSD_GetValueFunctionName(mCx, mValue)).ToNewCString();
+    *_rval = ToNewCString(nsDependentCString(JSD_GetValueFunctionName(mCx, mValue)));
     return NS_OK;
 }
 
@@ -1099,7 +1100,7 @@ jsdValue::GetStringValue(char **_rval)
 {
     ASSERT_VALID_VALUE;
     JSString *jstr_val = JSD_GetValueString(mCx, mValue);
-    *_rval = nsCString(JS_GetStringBytes(jstr_val)).ToNewCString();
+    *_rval = ToNewCString(nsDependentCString(JS_GetStringBytes(jstr_val)));
     return NS_OK;
 }
 

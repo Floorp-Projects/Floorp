@@ -38,6 +38,7 @@
 #include "nsWinReg.h"
 #include "nsWinRegItem.h"
 #include <windows.h> /* is this needed? */
+#include "nsReadableUtils.h"
 
 /* Public Methods */
 
@@ -411,7 +412,7 @@ nsWinReg::NativeKeyExists(const nsString& subkey)
     HKEY    root, newkey;
     LONG    result;
     PRInt32 keyExists     = PR_FALSE;
-    char*   subkeyCString = subkey.ToNewCString();
+    char*   subkeyCString = ToNewCString(subkey);
 
 #ifdef WIN32
     root   = (HKEY)mRootKey;
@@ -444,8 +445,8 @@ nsWinReg::NativeValueExists(const nsString& subkey, const nsString& valname)
     PRInt32       valueExists = PR_FALSE;
     DWORD         length      = _MAXKEYVALUE_;
     unsigned char valbuf[_MAXKEYVALUE_];
-    char*         subkeyCString   = subkey.ToNewCString();
-    char*         valnameCString  = valname.ToNewCString();
+    char*         subkeyCString   = ToNewCString(subkey);
+    char*         valnameCString  = ToNewCString(valname);
     
 #ifdef WIN32
     root   = (HKEY) mRootKey;
@@ -521,7 +522,7 @@ nsWinReg::NativeIsKeyWritable(const nsString& subkey)
     if(rv)
     {
         rv            = PR_FALSE;
-        subkeyCString = subkeyParent.ToNewCString();
+        subkeyCString = ToNewCString(subkeyParent);
         if(!subkeyCString)
             result = nsInstall::OUT_OF_MEMORY;
         else
@@ -554,8 +555,8 @@ nsWinReg::NativeCreateKey(const nsString& subkey, const nsString& classname)
     HKEY    root, newkey;
     LONG    result;
     ULONG   disposition;
-    char*   subkeyCString     = subkey.ToNewCString();
-    char*   classnameCString  = classname.ToNewCString();
+    char*   subkeyCString     = ToNewCString(subkey);
+    char*   classnameCString  = ToNewCString(classname);
 
 #ifdef WIN32
     root   = (HKEY)mRootKey;
@@ -578,7 +579,7 @@ nsWinReg::NativeDeleteKey(const nsString& subkey)
 {
     HKEY  root;
     LONG  result;
-    char* subkeyCString = subkey.ToNewCString();
+    char* subkeyCString = ToNewCString(subkey);
 
 #ifdef WIN32
     root   = (HKEY) mRootKey;
@@ -596,8 +597,8 @@ nsWinReg::NativeDeleteValue(const nsString& subkey, const nsString& valname)
 #if defined (WIN32) || defined (XP_OS2)
     HKEY    root, newkey;
     LONG    result;
-    char*   subkeyCString   = subkey.ToNewCString();
-    char*   valnameCString  = valname.ToNewCString();
+    char*   subkeyCString   = ToNewCString(subkey);
+    char*   valnameCString  = ToNewCString(valname);
 
     root   = (HKEY) mRootKey;
     result = RegOpenKeyEx( root, subkeyCString, 0, KEY_WRITE, &newkey);
@@ -625,9 +626,9 @@ nsWinReg::NativeSetValueString(const nsString& subkey, const nsString& valname, 
     LONG    result;
     DWORD   length;
 
-    char*   subkeyCString   = subkey.ToNewCString();
-    char*   valnameCString  = valname.ToNewCString();
-    char*   valueCString    = value.ToNewCString();
+    char*   subkeyCString   = ToNewCString(subkey);
+    char*   valnameCString  = ToNewCString(valname);
+    char*   valueCString    = ToNewCString(value);
     
     length = value.Length();
 
@@ -658,8 +659,8 @@ nsWinReg::NativeGetValueString(const nsString& subkey, const nsString& valname, 
     LONG              result;
     DWORD             type            = REG_SZ;
     DWORD             length          = _MAXKEYVALUE_;
-    char*             subkeyCString   = subkey.ToNewCString();
-    char*             valnameCString  = valname.ToNewCString();
+    char*             subkeyCString   = ToNewCString(subkey);
+    char*             valnameCString  = ToNewCString(valname);
 
     root   = (HKEY) mRootKey;
     result = RegOpenKeyEx( root, subkeyCString, 0, KEY_READ, &newkey );
@@ -687,8 +688,8 @@ nsWinReg::NativeSetValueNumber(const nsString& subkey, const nsString& valname, 
     HKEY    newkey;
     LONG    result;
 
-    char*   subkeyCString   = subkey.ToNewCString();
-    char*   valnameCString  = valname.ToNewCString();
+    char*   subkeyCString   = ToNewCString(subkey);
+    char*   valnameCString  = ToNewCString(valname);
     
     root   = (HKEY) mRootKey;
     result = RegOpenKeyEx( root, subkeyCString, 0, KEY_WRITE, &newkey);
@@ -715,8 +716,8 @@ nsWinReg::NativeGetValueNumber(const nsString& subkey, const nsString& valname, 
     LONG    result;
     DWORD   type            = REG_DWORD;
     DWORD   length          = _MAXKEYVALUE_;
-    char*   subkeyCString   = subkey.ToNewCString();
-    char*   valnameCString  = valname.ToNewCString();
+    char*   subkeyCString   = ToNewCString(subkey);
+    char*   valnameCString  = ToNewCString(valname);
 
     valbuflen = sizeof(PRInt32);
     root      = (HKEY) mRootKey;
@@ -748,8 +749,8 @@ nsWinReg::NativeSetValue(const nsString& subkey, const nsString& valname, nsWinR
     DWORD   length;
     DWORD   type;
     unsigned char*    data;
-    char*   subkeyCString   = subkey.ToNewCString();
-    char*   valnameCString  = valname.ToNewCString();
+    char*   subkeyCString   = ToNewCString(subkey);
+    char*   valnameCString  = ToNewCString(valname);
 
 
     root   = (HKEY) mRootKey;
@@ -786,8 +787,8 @@ nsWinReg::NativeGetValue(const nsString& subkey, const nsString& valname)
     DWORD   type;
     nsString* data;
     nsWinRegValue* value = nsnull;
-    char*   subkeyCString   = subkey.ToNewCString();
-    char*   valnameCString  = valname.ToNewCString();
+    char*   subkeyCString   = ToNewCString(subkey);
+    char*   valnameCString  = ToNewCString(valname);
 
     root   = (HKEY) mRootKey;
     result = RegOpenKeyEx( root, subkeyCString, 0, KEY_READ, &newkey );

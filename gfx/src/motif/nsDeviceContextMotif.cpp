@@ -43,6 +43,7 @@
 #include "math.h"
 #include "nspr.h"
 #include "il_util.h"
+#include "nsReadableUtils.h"
 
 
 #define NS_TO_X_COMPONENT(a) ((a << 8) | (a))
@@ -442,7 +443,7 @@ NS_IMETHODIMP nsDeviceContextMotif :: CheckFontExistence(const nsString& aFontNa
   else
     dpi = 100;
 
-  char* fontName = aFontName.ToNewCString();
+  char* fontName = ToNewCString(aFontName);
   PR_snprintf(wildstring, namelen + 200,
              "*-%s-*-*-normal--*-*-%d-%d-*-*-*",
              fontName, dpi, dpi);

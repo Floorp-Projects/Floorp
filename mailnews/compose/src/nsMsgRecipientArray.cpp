@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsMsgRecipientArray.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 nsMsgRecipientArray::nsMsgRecipientArray()
 {
@@ -61,7 +62,7 @@ nsresult nsMsgRecipientArray::StringAt(PRInt32 idx, PRUnichar **_retval)
 	
 	nsString aStr;
 	m_array->StringAt(idx, aStr);
-	*_retval = aStr.ToNewUnicode();
+	*_retval = ToNewUnicode(aStr);
 	return NS_OK;
 }
 

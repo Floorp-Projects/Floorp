@@ -44,6 +44,7 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "prprf.h"
 
@@ -204,7 +205,7 @@ PageGrabber::NextFile(const char* aExtension)
 
     // See if file already exists; if it does advance mFileNum by 100 and
     // try again.
-    cname = name.ToNewCString();
+    cname = ToNewCString(name);
     struct stat sb;
     int s = stat(cname, &sb);
     if (s < 0) {

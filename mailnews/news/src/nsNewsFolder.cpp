@@ -791,7 +791,7 @@ nsresult nsMsgNewsFolder::AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 
   // we are going to set *prettyName to something else, so free what was there
   
   PR_FREEIF(*prettyName);
-  *prettyName = out.ToNewUnicode();
+  *prettyName = ToNewUnicode(out);
   
   return (*prettyName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }

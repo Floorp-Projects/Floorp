@@ -54,6 +54,7 @@
 #include "nsIServiceManager.h"
 #include "nsEnumeratorUtils.h"
 #include "prprf.h"
+#include "nsReadableUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // globals and constants
@@ -685,7 +686,7 @@ inDOMDataSource::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer, 
   nsAutoString nodeName;
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContainer);
   node->GetNodeName(nodeName);
-  //printf("=== CONTENT REMOVED (%s) ===\n", nodeName.ToNewCString());
+  //printf("=== CONTENT REMOVED (%s) ===\n", NS_LossyConvertUCS2toASCII(nodeName).get());
   nsresult rv;
 
   nsCOMPtr<nsIRDFResource> containerRes;
@@ -936,10 +937,8 @@ inDOMDataSource::CreateLiteral(nsString& str, nsIRDFNode **aResult)
   nsresult rv;
   nsCOMPtr<nsIRDFLiteral> literal;
    
-  PRUnichar* uniStr = str.ToNewUnicode();
-  rv = GetRDFService()->GetLiteral(uniStr, getter_AddRefs(literal));
-  nsMemory::Free(uniStr);
-    
+  rv = GetRDFService()->GetLiteral(str.get(), getter_AddRefs(literal));
+
   *aResult = literal;
   NS_IF_ADDREF(*aResult);
   return NS_OK;

@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 #include "secmod.h"
 
@@ -87,18 +88,15 @@ nsPKCS11Slot::GetName(PRUnichar **aName)
 {
   char *csn = PK11_GetSlotName(mSlot);
   if (strlen(csn) > 0) {
-    nsAutoString sn = NS_ConvertUTF8toUCS2(csn);
-    *aName = sn.ToNewUnicode();
+    *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(csn));
   } else if (PK11_HasRootCerts(mSlot)) {
     // This is a workaround to an NSS bug - the root certs module has
     // no slot name.  Not bothering to localize, because this is a workaround
     // and for now all the slot names returned by NSS are char * anyway.
-    nsAutoString sn(NS_LITERAL_STRING("Root Certificates").get());
-    *aName = sn.ToNewUnicode();
+    *aName = ToNewUnicode(NS_LITERAL_STRING("Root Certificates"));
   } else {
     // same as above, this is a catch-all
-    nsAutoString sn(NS_LITERAL_STRING("Unnamed Slot").get());
-    *aName = sn.ToNewUnicode();
+    *aName = ToNewUnicode(NS_LITERAL_STRING("Unnamed Slot"));
   }
   if (!*aName) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
@@ -108,7 +106,7 @@ nsPKCS11Slot::GetName(PRUnichar **aName)
 NS_IMETHODIMP 
 nsPKCS11Slot::GetDesc(PRUnichar **aDesc)
 {
-  *aDesc = mSlotDesc.ToNewUnicode();
+  *aDesc = ToNewUnicode(mSlotDesc);
   if (!*aDesc) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -117,7 +115,7 @@ nsPKCS11Slot::GetDesc(PRUnichar **aDesc)
 NS_IMETHODIMP 
 nsPKCS11Slot::GetManID(PRUnichar **aManID)
 {
-  *aManID = mSlotManID.ToNewUnicode();
+  *aManID = ToNewUnicode(mSlotManID);
   if (!*aManID) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -126,7 +124,7 @@ nsPKCS11Slot::GetManID(PRUnichar **aManID)
 NS_IMETHODIMP 
 nsPKCS11Slot::GetHWVersion(PRUnichar **aHWVersion)
 {
-  *aHWVersion = mSlotHWVersion.ToNewUnicode();
+  *aHWVersion = ToNewUnicode(mSlotHWVersion);
   if (!*aHWVersion) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -135,7 +133,7 @@ nsPKCS11Slot::GetHWVersion(PRUnichar **aHWVersion)
 NS_IMETHODIMP 
 nsPKCS11Slot::GetFWVersion(PRUnichar **aFWVersion)
 {
-  *aFWVersion = mSlotFWVersion.ToNewUnicode();
+  *aFWVersion = ToNewUnicode(mSlotFWVersion);
   if (!*aFWVersion) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -156,8 +154,7 @@ nsPKCS11Slot::GetToken(nsIPK11Token **_retval)
 NS_IMETHODIMP 
 nsPKCS11Slot::GetTokenName(PRUnichar **aName)
 {
-  nsAutoString tn = NS_ConvertUTF8toUCS2(PK11_GetTokenName(mSlot));
-  *aName = tn.ToNewUnicode();
+  *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(PK11_GetTokenName(mSlot)));
   if (!*aName) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -198,8 +195,7 @@ nsPKCS11Module::~nsPKCS11Module()
 NS_IMETHODIMP 
 nsPKCS11Module::GetName(PRUnichar **aName)
 {
-  nsAutoString mn = NS_ConvertUTF8toUCS2(mModule->commonName);
-  *aName = mn.ToNewUnicode();
+  *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(mModule->commonName));
   return NS_OK;
 }
 
@@ -207,8 +203,7 @@ nsPKCS11Module::GetName(PRUnichar **aName)
 NS_IMETHODIMP 
 nsPKCS11Module::GetLibName(PRUnichar **aName)
 {
-  nsAutoString ln = NS_ConvertUTF8toUCS2(mModule->dllName);
-  *aName = ln.ToNewUnicode();
+  *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(mModule->dllName));
   return NS_OK;
 }
 
@@ -218,7 +213,7 @@ nsPKCS11Module::FindSlotByName(const PRUnichar *aName,
                                nsIPKCS11Slot **_retval)
 {
   char *asciiname = NULL;
-  asciiname = NS_ConvertUCS2toUTF8(aName).ToNewCString();
+  asciiname = ToNewUTF8String(nsDependentString(aName));
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", asciiname));
   PK11SlotInfo *slotinfo = SECMOD_FindSlot(mModule, asciiname);
   if (!slotinfo) {

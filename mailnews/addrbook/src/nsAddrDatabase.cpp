@@ -42,6 +42,7 @@
 #include "nsIEnumerator.h"
 #include "nsFileStream.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
 #include "nsIAbMDBCard.h"
@@ -1094,7 +1095,7 @@ nsresult nsAddrDatabase::ConvertAndAddLowercaseColumn
 	err = GetStringColumn(row, fromCol, colUtf8String);
 	if (colUtf8String.Length())
 	{
-		char* pUTF8String = colUtf8String.ToNewCString();
+		char* pUTF8String = ToNewCString(colUtf8String);
 		err = AddLowercaseColumn(row, toCol, pUTF8String);
 		nsCRT::free(pUTF8String);
 	}
@@ -1108,30 +1109,20 @@ nsresult nsAddrDatabase::AddUnicodeToColumn(nsIMdbRow * row, mdb_token colToken,
 {
 	nsresult err = NS_OK;
 	nsAutoString displayString(pUnicodeStr);
-  char* pDisplayUTF8Str = displayString.ToNewUTF8String();
-	nsAutoString newUnicodeString(pUnicodeStr);
-	newUnicodeString.ToLowerCase();
-	char* pUTF8Str = newUnicodeString.ToNewUTF8String();
-	if (pUTF8Str && pDisplayUTF8Str)
+	NS_ConvertUCS2toUTF8 displayUTF8Str(displayString);
+	displayString.ToLowerCase();
+	NS_ConvertUCS2toUTF8 UTF8Str(displayString);
+	if (colToken == m_PriEmailColumnToken)
 	{
-		if (colToken == m_PriEmailColumnToken)
-		{
-			err = AddCharStringColumn(row, m_PriEmailColumnToken, pDisplayUTF8Str);
-			err = AddLowercaseColumn(row, m_LowerPriEmailColumnToken, pUTF8Str);
-		}
-		else if (colToken == m_ListNameColumnToken)
-		{
-			err = AddCharStringColumn(row, m_ListNameColumnToken, pDisplayUTF8Str);
-			err = AddLowercaseColumn(row, m_LowerListNameColumnToken, pUTF8Str);
-		}
+		err = AddCharStringColumn(row, m_PriEmailColumnToken, displayUTF8Str.get());
+		err = AddLowercaseColumn(row, m_LowerPriEmailColumnToken, UTF8Str.get());
 	}
-    else
-        err = NS_ERROR_OUT_OF_MEMORY;
+	else if (colToken == m_ListNameColumnToken)
+	{
+		err = AddCharStringColumn(row, m_ListNameColumnToken, displayUTF8Str.get());
+		err = AddLowercaseColumn(row, m_LowerListNameColumnToken, UTF8Str.get());
+	}
 
-	if (pDisplayUTF8Str)
-		Recycle(pDisplayUTF8Str);
-	if (pUTF8Str)
-		Recycle(pUTF8Str);
 	return err;
 }
 
@@ -2594,7 +2585,7 @@ NS_IMETHODIMP nsAddrDatabase::AddLdifListMember(nsIMdbRow* listRow, const char* 
 	PRInt32 emailPos = valueString.Find("mail=");
 	emailPos += nsCRT::strlen("mail=");
 	valueString.Right(email, valueString.Length() - emailPos);
-	char* emailAddress = (char*)email.ToNewCString();
+	char* emailAddress = ToNewCString(email);
 	nsIMdbRow	*cardRow = nsnull;	
 	nsresult result = GetRowForEmailAddress(emailAddress, &cardRow);
 	if (cardRow)
@@ -2631,7 +2622,7 @@ void nsAddrDatabase::GetCharStringYarn(char* str, struct mdbYarn* strYarn)
 
 void nsAddrDatabase::GetStringYarn(nsString* str, struct mdbYarn* strYarn)
 {
-	strYarn->mYarn_Buf = str->ToNewCString();
+	strYarn->mYarn_Buf = ToNewCString(*str);
 	strYarn->mYarn_Size = PL_strlen((const char *) strYarn->mYarn_Buf) + 1;
 	strYarn->mYarn_Fill = strYarn->mYarn_Size - 1;
 	strYarn->mYarn_Form = 0;	 
@@ -2903,7 +2894,6 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousStringAttribute(const char *attrname, 
 		nsIMdbTableRowCursor* rowCursor;
 		mdb_pos rowPos;
 		nsAutoString tempString;
-		char *tempCString = nsnull;
 
 		mdb_token anonymousColumnToken;
 		GetStore()->StringToToken(GetEnv(), attrname, &anonymousColumnToken);
@@ -2917,11 +2907,9 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousStringAttribute(const char *attrname, 
 			if (NS_SUCCEEDED(err) && cardRow)
 			{
 				err = GetStringColumn(cardRow, anonymousColumnToken, tempString);
-				if (NS_SUCCEEDED(err) && tempString.Length())
+				if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
 				{
-          tempCString = tempString.ToNewUTF8String();
-					*value = nsCRT::strdup(tempCString);
-					Recycle(tempCString);
+					*value = ToNewUTF8String(tempString);
 					return NS_OK;
 				}
 				cardRow->CutStrongRef(GetEnv());
@@ -3047,13 +3035,13 @@ nsresult nsAddrDatabase::AddLowercaseColumn
 		{
 			nsAutoString newUnicodeString(unicodeStr);
 			newUnicodeString.ToLowerCase();
-			char * utf8Str = newUnicodeString.ToNewUTF8String();
+			char * utf8Str = ToNewUTF8String(newUnicodeString);
 			if (utf8Str)
 			{
 				err = AddCharStringColumn(row, columnToken, utf8Str);
 				Recycle(utf8Str);
-			}
-			PR_FREEIF(unicodeStr);
+			}	
+			PR_Free(unicodeStr);
 		}
 	}
 	return err;
@@ -3910,7 +3898,7 @@ nsresult nsAddrDatabase::GetRowForEmailAddress(const char *emailAddress, nsIMdbR
 	{
 		nsAutoString newUnicodeString(unicodeStr);
 		newUnicodeString.ToLowerCase();
-		char * pUTF8Str = newUnicodeString.ToNewUTF8String();
+		char * pUTF8Str = ToNewUTF8String(newUnicodeString);
 		if (pUTF8Str)
 		{
 			result = GetRowForCharColumn(pUTF8Str, m_LowerPriEmailColumnToken, PR_TRUE, cardRow);
@@ -4055,7 +4043,7 @@ NS_IMETHODIMP nsAddrDatabase::FindMailListbyUnicodeName(const PRUnichar *listNam
 	nsresult rv = NS_ERROR_FAILURE;
 	nsAutoString unicodeString(listName);
 	unicodeString.ToLowerCase();
-	char* pUTF8Str = unicodeString.ToNewUTF8String();
+	char* pUTF8Str = ToNewUTF8String(unicodeString);
 	if (pUTF8Str)
 	{
 		nsIMdbRow	*pListRow = nsnull;
@@ -4121,7 +4109,7 @@ nsresult nsAddrDatabase::GetRowForCharColumn
 	nsresult rv = NS_ERROR_FAILURE;
 	nsAutoString unicodeString(unicodeStr);
 	unicodeString.ToLowerCase();
-	char* pUTF8Str = unicodeString.ToNewUTF8String();
+	char* pUTF8Str = ToNewUTF8String(unicodeString);
 	if (pUTF8Str)
 	{
 		rv = GetRowForCharColumn(pUTF8Str, findColumn, bIsCard, findRow);

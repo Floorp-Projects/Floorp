@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "msgCore.h"
+#include "nsReadableUtils.h"
 #include "nsMsgDBView.h"
 #include "nsISupports.h"
 #include "nsIMsgFolder.h"
@@ -257,7 +258,7 @@ nsresult nsMsgDBView::FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnich
     nsAutoString reSubject;
     reSubject.Assign(NS_LITERAL_STRING("Re: "));
     reSubject.Append(subject);
-    *aValue = reSubject.ToNewUnicode();
+    *aValue = ToNewUnicode(reSubject);
   }
   else
     aMsgHdr->GetMime2DecodedSubject(aValue);
@@ -320,7 +321,7 @@ nsresult nsMsgDBView::FetchDate(nsIMsgHdr * aHdr, PRUnichar ** aDateString)
                                       formattedDateString);
 
   if (NS_SUCCEEDED(rv))
-    *aDateString = formattedDateString.ToNewUnicode();
+    *aDateString = ToNewUnicode(formattedDateString);
   
   return rv;
 }
@@ -369,7 +370,7 @@ nsresult nsMsgDBView::FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString)
     formattedSizeString.Append(NS_LITERAL_STRING("KB"));
   }
 
-  *aSizeString = formattedSizeString.ToNewUnicode();
+  *aSizeString = ToNewUnicode(formattedSizeString);
   return NS_OK;
 }
 
@@ -976,7 +977,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, P
           PRUint32 numChildren;
           thread->GetNumChildren(&numChildren);
           formattedCountString.AppendInt(numChildren);
-          *aValue = formattedCountString.ToNewUnicode();
+          *aValue = ToNewUnicode(formattedCountString);
         }
       }
     }
@@ -996,7 +997,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, P
           if (numUnreadChildren > 0)
           {
             formattedCountString.AppendInt(numUnreadChildren);
-            *aValue = formattedCountString.ToNewUnicode();
+            *aValue = ToNewUnicode(formattedCountString);
           }
         }
       }

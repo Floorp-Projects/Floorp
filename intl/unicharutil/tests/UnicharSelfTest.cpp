@@ -49,6 +49,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
@@ -467,7 +468,7 @@ static void TestSaveAsCharset()
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
   else {cout << outString << "\n"; nsMemory::Free(outString);}
   if (NS_ERROR_UENC_NOMAPPING == res) {
-    outString = inString.ToNewUTF8String();
+    outString = ToNewUTF8String(inString);
     if (NULL == outString) {cout << "\tFailed!! output null\n";}
     else {cout << "Fall back to UTF-8: " << outString << "\n"; nsMemory::Free(outString);}
   }

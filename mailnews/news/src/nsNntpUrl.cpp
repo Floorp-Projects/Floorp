@@ -43,6 +43,7 @@
 #include "nsNntpUrl.h"
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "prprf.h"
@@ -160,7 +161,7 @@ NS_IMETHODIMP nsNntpUrl::GetUri(char ** aURI)
     mURI = (const char *)spec;
   }
   
-  *aURI = mURI.ToNewCString();
+  *aURI = ToNewCString(mURI);
   if (!*aURI) return NS_ERROR_OUT_OF_MEMORY; 
   return rv;
 }
@@ -313,7 +314,7 @@ NS_IMETHODIMP nsNntpUrl::GetFolderCharsetOverride(PRBool * aCharacterSetOverride
 NS_IMETHODIMP nsNntpUrl::GetCharsetOverRide(PRUnichar ** aCharacterSet)
 {
   if (!mCharsetOverride.IsEmpty())
-    *aCharacterSet = mCharsetOverride.ToNewUnicode(); 
+    *aCharacterSet = ToNewUnicode(mCharsetOverride); 
   else
     *aCharacterSet = nsnull;
   return NS_OK;

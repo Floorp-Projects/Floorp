@@ -34,6 +34,7 @@
  */
 
 #include "nsLDAPURL.h"
+#include "nsReadableUtils.h"
 
 // The two schemes we support, LDAP and LDAPS
 //
@@ -109,7 +110,7 @@ nsLDAPURL::GetSpec(char **_retval)
 
         spec.Append('?');
         while (index < count) {
-            spec.Append((mAttributes->CStringAt(index++))->ToNewCString());
+            spec.Append(*(mAttributes->CStringAt(index++)));
             if (index < count) {
                 spec.Append(',');
             }
@@ -131,7 +132,7 @@ nsLDAPURL::GetSpec(char **_retval)
         }
     }
 
-    *_retval = spec.ToNewCString();
+    *_retval = ToNewCString(spec);
     if (!*_retval) {
         NS_ERROR("nsLDAPURL::GetSpec: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
@@ -291,7 +292,7 @@ nsLDAPURL::GetHost(char **_retval)
         return NS_ERROR_NULL_POINTER;
     }
 
-    *_retval = mHost.ToNewCString();
+    *_retval = ToNewCString(mHost);
     if (!*_retval) {
         NS_ERROR("nsLDAPURL::GetHost: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
@@ -350,7 +351,7 @@ NS_IMETHODIMP nsLDAPURL::GetPath(char **_retval)
         return NS_ERROR_NULL_POINTER;
     }
 
-    *_retval = mDN.ToNewCString();
+    *_retval = ToNewCString(mDN);
     if (!*_retval) {
         NS_ERROR("nsLDAPURL::GetPath: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
@@ -411,7 +412,7 @@ NS_IMETHODIMP nsLDAPURL::GetDn(char **_retval)
         return NS_ERROR_NULL_POINTER;
     }
 
-    *_retval = mDN.ToNewCString();
+    *_retval = ToNewCString(mDN);
     if (!*_retval) {
         NS_ERROR("nsLDAPURL::GetDN: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
@@ -449,7 +450,7 @@ NS_IMETHODIMP nsLDAPURL::GetAttributes(PRUint32 *aCount, char ***_retval)
     // Loop through the string array, and build up the C-array.
     //
     while (index < count) {
-        if (!(cArray[index] = (mAttributes->CStringAt(index))->ToNewCString())) {
+        if (!(cArray[index] = ToNewCString(*(mAttributes->CStringAt(index))))) {
             NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(index, cArray);
             NS_ERROR("nsLDAPURL::GetAttributes: out of memory ");
             return NS_ERROR_OUT_OF_MEMORY;
@@ -567,7 +568,7 @@ NS_IMETHODIMP nsLDAPURL::GetFilter(char **_retval)
         return NS_ERROR_NULL_POINTER;
     }
 
-    *_retval = mFilter.ToNewCString();
+    *_retval = ToNewCString(mFilter);
     if (!*_retval) {
         NS_ERROR("nsLDAPURL::GetFilter: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;

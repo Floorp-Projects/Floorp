@@ -42,6 +42,7 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStringUtil.h"
 
 #include "nsIAppShell.h"
@@ -112,7 +113,7 @@ NS_METHOD nsPopUpMenu::AddItem(nsIMenuItem * aMenuItem)
 
   aMenuItem->GetCommand(command);
   aMenuItem->GetLabel(name);
-  char * nameStr = name.ToNewCString();
+  char * nameStr = ToNewCString(name);
 
   MENUITEMINFO menuInfo;
   menuInfo.cbSize     = sizeof(menuInfo);
@@ -135,7 +136,7 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
 #if 0
   nsString name;
   aMenu->GetLabel(name);
-  char * nameStr = name.ToNewCString();
+  char * nameStr = ToNewCString(name);
 
   HMENU nativeMenuHandle;
   void * voidData;

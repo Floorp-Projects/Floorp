@@ -51,6 +51,7 @@
 #include "nsMimeTypes.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
 #include "nsIURI.h"
@@ -1557,7 +1558,7 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
     if (NS_FAILED(rv)) 
       uStr.AssignWithConversion(attachment->m_real_name);
 
-    char *utf8Str = uStr.ToNewUTF8String();
+    char *utf8Str = ToNewUTF8String(uStr);
 
 	  /* Try to MIME-2 encode the filename... */
     char *mime2Name = nsMsgI18NEncodeMimePartIIStr((NULL != utf8Str) ? utf8Str : attachment->m_real_name, 
@@ -1941,7 +1942,7 @@ nsMsgGetExtensionFromFileURL(nsString aUrl)
   if (aUrl.IsEmpty())
     return nsnull;
 
-  url = aUrl.ToNewCString();
+  url = ToNewCString(aUrl);
   if (!url)
     goto ERROR_OUT;
 

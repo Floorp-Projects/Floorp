@@ -41,6 +41,7 @@
 #include "nsIServiceManager.h"
 #include "prsystem.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsINntpIncomingServer.h"
@@ -148,7 +149,7 @@ nsresult nsCreateNewsBaseMessageURI(const char *baseURI, char **baseMessageURI)
 	nsCAutoString baseURIStr(kNewsMessageRootURI);
 	baseURIStr += tailURI;
 
-	*baseMessageURI = baseURIStr.ToNewCString();
+	*baseMessageURI = ToNewCString(baseURIStr);
 	if(!*baseMessageURI)
 		return NS_ERROR_OUT_OF_MEMORY;
 

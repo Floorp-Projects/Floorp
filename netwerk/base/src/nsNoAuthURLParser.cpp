@@ -21,6 +21,7 @@
 #include "nsURLHelper.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prprf.h"
 #include "prnetdb.h"
 
@@ -199,7 +200,7 @@ nsNoAuthURLParser::ParseAtPath(const char* i_Spec, char* *o_Path)
     
     dir += i_Spec;
 
-    *o_Path = dir.ToNewCString();
+    *o_Path = ToNewCString(dir);
     return (*o_Path ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
 
@@ -280,7 +281,7 @@ nsNoAuthURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
             tempdir += dirfile;
             tempdir += "/";
             CRTFREEIF(dirfile);
-            dirfile = tempdir.ToNewCString();
+            dirfile = ToNewCString(tempdir);
             if (!dirfile) return NS_ERROR_OUT_OF_MEMORY;
         }
 #if 0
@@ -301,7 +302,7 @@ nsNoAuthURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
                 }
                 tempdir += dirfile;
                 CRTFREEIF(dirfile);
-                dirfile = tempdir.ToNewCString();
+                dirfile = ToNewCString(tempdir);
                 if (!dirfile) return NS_ERROR_OUT_OF_MEMORY;
             }
         } 
@@ -328,7 +329,7 @@ nsNoAuthURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
                 dir += "/" ;
                 dir += *o_Directory;
                 CRTFREEIF(*o_Directory);
-                *o_Directory = dir.ToNewCString();
+                *o_Directory = ToNewCString(dir);
             }
         } else {
             DupString(o_Directory, "/");

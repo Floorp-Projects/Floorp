@@ -45,6 +45,7 @@
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIImportService.h"
 #include "nsOEImport.h"
@@ -202,7 +203,7 @@ NS_IMETHODIMP nsOEImport::GetName( PRUnichar **name)
         return NS_ERROR_NULL_POINTER;
 
 	// nsString	title = "Outlook Express";
-	// *name = title.ToNewUnicode();
+	// *name = ToNewUnicode(title);
 	*name = nsOEStringBundle::GetStringByID( OEIMPORT_NAME);
 		
     return NS_OK;
@@ -215,7 +216,7 @@ NS_IMETHODIMP nsOEImport::GetDescription( PRUnichar **name)
         return NS_ERROR_NULL_POINTER;
 
 	// nsString	desc = "Outlook Express mail and address books";
-	// *name = desc.ToNewUnicode();
+	// *name = ToNewUnicode(desc);
 	*name = nsOEStringBundle::GetStringByID( OEIMPORT_DESCRIPTION);
 		
     return NS_OK;
@@ -426,9 +427,9 @@ void ImportOEMailImpl::ReportError( PRInt32 errorNum, nsString& name, nsString *
 void ImportOEMailImpl::SetLogs( nsString& success, nsString& error, PRUnichar **pError, PRUnichar **pSuccess)
 {
 	if (pError)
-		*pError = error.ToNewUnicode();
+		*pError = ToNewUnicode(error);
 	if (pSuccess)
-		*pSuccess = success.ToNewUnicode();
+		*pSuccess = ToNewUnicode(success);
 }
 
 NS_IMETHODIMP ImportOEMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource, 
@@ -567,7 +568,7 @@ NS_IMETHODIMP ImportOEAddressImpl::GetAutoFind(PRUnichar **description, PRBool *
     
     *_retval = PR_TRUE;
     nsString str; str.Append(nsOEStringBundle::GetStringByID(OEIMPORT_AUTOFIND));
-    *description = str.ToNewUnicode();
+    *description = ToNewUnicode(str);
     
     return( NS_OK);
 }

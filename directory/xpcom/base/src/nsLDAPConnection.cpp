@@ -40,6 +40,7 @@
 #include "nsLDAPInternal.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIComponentManager.h"
 #include "nsLDAPConnection.h"
 #include "nsLDAPMessage.h"
@@ -307,7 +308,7 @@ nsLDAPConnection::GetBindName(PRUnichar **_retval)
 
         // otherwise, hand out a copy of the bind name
         //
-        *_retval = mBindName->ToNewUnicode();
+        *_retval = ToNewUnicode(*mBindName);
         if (!(*_retval)) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -328,8 +329,8 @@ nsLDAPConnection::GetLdErrno(PRUnichar **matched, PRUnichar **errString,
     NS_ENSURE_ARG_POINTER(_retval);
 
     *_retval = ldap_get_lderrno(mConnectionHandle, &match, &err);
-    *matched = NS_ConvertUTF8toUCS2(match).ToNewUnicode();
-    *errString = NS_ConvertUTF8toUCS2(err).ToNewUnicode();
+    *matched = ToNewUnicode(NS_ConvertUTF8toUCS2(match));
+    *errString = ToNewUnicode(NS_ConvertUTF8toUCS2(err));
 
     return NS_OK;
 }
@@ -353,7 +354,7 @@ nsLDAPConnection::GetErrorString(PRUnichar **_retval)
 
     // make a copy using the XPCOM shared allocator
     //
-    *_retval = NS_ConvertUTF8toUCS2(rv).ToNewUnicode();
+    *_retval = ToNewUnicode(NS_ConvertUTF8toUCS2(rv));
     if (!*_retval) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

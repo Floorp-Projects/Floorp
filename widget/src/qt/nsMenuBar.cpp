@@ -40,6 +40,7 @@
 #include "nsIWidget.h"
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStringUtil.h"
 
 #include "nsQEventHandler.h"
@@ -160,7 +161,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 
     aMenu->GetLabel(Label);
 
-    labelStr = Label.ToNewCString();
+    labelStr = ToNewCString(Label);
 
     QString string = labelStr;
 

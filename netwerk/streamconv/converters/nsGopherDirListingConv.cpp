@@ -28,6 +28,7 @@
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsEscape.h"
@@ -183,7 +184,7 @@ nsGopherDirListingConv::OnDataAvailable(nsIRequest *request,
         // combine the buffers so we don't lose any data.
         mBuffer.Append(buffer);
         nsMemory::Free(buffer);
-        buffer = mBuffer.ToNewCString();
+        buffer = ToNewCString(mBuffer);
         mBuffer.Truncate();
     }
 

@@ -45,6 +45,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 #include "nsIPref.h"
 #include "nsMsgBaseCID.h"
@@ -374,7 +375,7 @@ nsMsgAccount::ToString(PRUnichar **aResult)
   nsAutoString val; val.AssignWithConversion("[nsIMsgAccount: ");
   val.AppendWithConversion(m_accountKey);
   val.AppendWithConversion("]");
-  *aResult = val.ToNewUnicode();
+  *aResult = ToNewUnicode(val);
   return NS_OK;
 }
 

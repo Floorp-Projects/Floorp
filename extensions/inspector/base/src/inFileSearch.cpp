@@ -40,6 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -125,7 +126,7 @@ inFileSearch::SearchAsync(inISearchObserver *aObserver)
   } else {
     nsAutoString msg;
     msg.AssignWithConversion("No search path has been provided");
-    mObserver->OnSearchError(this, msg.ToNewUnicode());
+    mObserver->OnSearchError(this, ToNewUnicode(msg));
     KillSearch(inISearchObserver::ERROR);
   }
 
@@ -176,7 +177,7 @@ inFileSearch::GetStringResultAt(PRInt32 aIndex, PRUnichar **_retval)
     path.AssignWithConversion(temp);
     if (mReturnRelativePaths)
       MakePathRelative(&path);
-    *_retval = path.ToNewUnicode();
+    *_retval = ToNewUnicode(path);
   } else {
     return NS_ERROR_FAILURE;
   }
@@ -203,7 +204,7 @@ NS_IMETHODIMP
 inFileSearch::GetBasePath(PRUnichar** aBasePath)
 {
   if (mBasePath) {
-    *aBasePath = mBasePath->ToNewUnicode();
+    *aBasePath = ToNewUnicode(*mBasePath);
   } else {
     return NS_ERROR_FAILURE;
   }
@@ -282,7 +283,7 @@ inFileSearch::SetFilenameCriteria(const PRUnichar* aFilenameCriteria)
 NS_IMETHODIMP 
 inFileSearch::GetTextCriteria(PRUnichar** aTextCriteria)
 {
-  *aTextCriteria = mTextCriteria->ToNewUnicode();
+  *aTextCriteria = ToNewUnicode(*mTextCriteria);
   return NS_OK;
 }
 
@@ -550,7 +551,7 @@ inFileSearch::MatchFile(nsIFile* aFile)
   nsAutoString temp;
   temp.AssignWithConversion(fileName);
 
-  PRUnichar* fileNameUnicode = temp.ToNewUnicode();
+  PRUnichar* fileNameUnicode = ToNewUnicode(temp);
   
   PRBool match;
 

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAbBooleanExpression.h"
+#include "nsReadableUtils.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbBooleanConditionString, nsIAbBooleanConditionString)
 
@@ -78,7 +79,7 @@ NS_IMETHODIMP nsAbBooleanConditionString::GetName(char** aName)
     if (!value)
         *aName = 0;
     else
-        *aName = mName.ToNewCString ();
+        *aName = ToNewCString(mName);
 
     return NS_OK;
 
@@ -99,7 +100,7 @@ NS_IMETHODIMP nsAbBooleanConditionString::GetValue(PRUnichar** aValue)
     if (!aValue)
         return NS_ERROR_NULL_POINTER;
 
-    *aValue = mValue.ToNewUnicode();
+    *aValue = ToNewUnicode(mValue);
 
     return NS_OK;
 }

@@ -44,6 +44,7 @@
 #include "nsEscape.h"
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsNetCID.h"
 
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
@@ -157,7 +158,7 @@ MangleKeywordIntoHTTPURL(const char *aSpec, const char *aHTTPURL) {
     // XXX this url should come from somewhere else
     query.Insert(aHTTPURL, 0);
 
-    return query.ToNewCString();
+    return ToNewCString(query);
 }
 
 // digests a spec of the form "keyword:blah"

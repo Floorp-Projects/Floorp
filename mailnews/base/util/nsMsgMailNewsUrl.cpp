@@ -41,6 +41,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgAccountManager.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIDocumentLoader.h"
 #include "nsILoadGroup.h"
 #include "nsIWebShell.h"
@@ -595,7 +596,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetFileName(char * *aFileName)
 {
   if (!mAttachmentFileName.IsEmpty())
   {
-    *aFileName = mAttachmentFileName.ToNewCString();
+    *aFileName = ToNewCString(mAttachmentFileName);
     return NS_OK;
   }
   else
@@ -622,7 +623,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetFileExtension(char * *aFileExtension)
       mAttachmentFileName.Right(extension,
                                 mAttachmentFileName.Length() -
                                 (pos + 1) /* skip the '.' */);
-    *aFileExtension = extension.ToNewCString();
+    *aFileExtension = ToNewCString(extension);
     return NS_OK;
   }
   else

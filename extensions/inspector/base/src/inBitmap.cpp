@@ -40,6 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -119,7 +120,7 @@ inBitmap::GetPixelHex(PRUint32 aX, PRUint32 aY, PRUnichar **_retval)
   str.AssignWithConversion(s);
   delete s;
   
-  *_retval = str.ToNewUnicode();
+  *_retval = ToNewUnicode(str);
 
   return NS_OK;
 }

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "msgCore.h"    // precompiled header...
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIPref.h"
 #include "nsIIOService.h"
 
@@ -313,7 +314,7 @@ nsAddbookProtocolHandler::FindPossibleAbName(nsIAbCard  *aCard,
           char *val = (char *)valuelist->ElementAt(i);
           if ( (val) && (*val) )
           {
-            *retName = NS_ConvertASCIItoUCS2(val).ToNewUnicode();
+            *retName = ToNewUnicode(nsDependentCString(val));
             rv = NS_OK;
           }
         }
@@ -364,7 +365,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
       goto EarlyExit;
 
     // Make it a char *
-    charEmail = nsString(workEmail).ToNewCString();
+    charEmail = ToNewCString(nsDependentString(workEmail));
     if (!charEmail)
       goto EarlyExit;
   }
@@ -378,7 +379,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
   if ( (NS_SUCCEEDED(rv)) && (workAb) && (*workAb)) 
   {
     // Make it a char *
-    charAb = nsString(workAb).ToNewCString();
+    charAb = ToNewCString(nsDependentString(workAb));
     if (!charAb)
       goto EarlyExit;
 
@@ -417,7 +418,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
   else
     rv = BuildAllHTML(aDatabase, directory, workBuffer);
 
-  *outBuf = workBuffer.ToNewUTF8String();
+  *outBuf = ToNewUTF8String(workBuffer);
 
 EarlyExit:
   // Database is open...make sure to close it

@@ -58,6 +58,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 #include "nsIURL.h"
 #include "nsINetService.h"
@@ -151,7 +152,7 @@ NS_IMETHODIMP TestConsumer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnStatus: ");
         nsAutoString str(aMsg);
-        char* c = str.ToNewCString();
+        char* c = ToNewCString(str);
         fputs(c, stdout);
         free(c);
         fputs("\n", stdout);

@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 NS_IMPL_QUERY_INTERFACE3_CI(nsCodebasePrincipal,
                             nsICodebasePrincipal,
@@ -84,7 +85,7 @@ nsCodebasePrincipal::GetPreferences(char** aPrefName, char** aID,
         s.Assign("capability.principal.codebase.p");
         s.AppendInt(mCapabilitiesOrdinal++);
         s.Append(".id");
-        mPrefName = s.ToNewCString();
+        mPrefName = ToNewCString(s);
     }
     return nsBasePrincipal::GetPreferences(aPrefName, aID, 
                                            aGrantedList, aDeniedList);

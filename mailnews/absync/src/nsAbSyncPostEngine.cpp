@@ -51,6 +51,7 @@
 #include "nsIComponentManager.h"
 #include "nsIURI.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsAbSyncPostEngine.h"
 #include "nsIIOService.h"
 #include "nsIChannel.h"
@@ -534,7 +535,7 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
   }
   else
   {
-    tProtResponse = mProtocolResponse.ToNewCString();
+    tProtResponse = ToNewCString(mProtocolResponse);
     NotifyListenersOnStopSending(mTransactionID, aStatus, tProtResponse);
   }
 

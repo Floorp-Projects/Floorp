@@ -37,6 +37,7 @@
 #include "msgCore.h"
 #include "nsMsgSearchAdapter.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsMsgSearchScopeTerm.h"
 #include "nsMsgResultElement.h"
 #include "nsMsgSearchTerm.h"
@@ -77,7 +78,7 @@ nsresult nsMsgSearchOnlineMail::ValidateTerms ()
 
 NS_IMETHODIMP nsMsgSearchOnlineMail::GetEncoding (char **result)
 {
-  *result = m_encoding.ToNewCString();
+  *result = ToNewCString(m_encoding);
   return NS_OK;
 }
 

@@ -178,7 +178,7 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   rv = proxyPrompt->PromptPassword(nsnull, promptString.get(),
                                    &password, nsnull, nsnull, &value);
   if (NS_SUCCEEDED(rv) && value) {
-    char* str = nsString(password).ToNewCString();
+    char* str = ToNewCString(nsDependentString(password));
     Recycle(password);
     return str;
   }

@@ -43,6 +43,7 @@
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgCompCID.h"
 #include "nsMsgPrompts.h"
+#include "nsReadableUtils.h"
 
 
 NS_IMPL_ISUPPORTS1(nsMsgProcessReport, nsIMsgProcessReport)
@@ -87,7 +88,7 @@ NS_IMETHODIMP nsMsgProcessReport::SetError(nsresult aError)
 NS_IMETHODIMP nsMsgProcessReport::GetMessage(PRUnichar * *aMessage)
 {
   NS_ENSURE_ARG_POINTER(aMessage);
-  *aMessage = mMessage.ToNewUnicode();
+  *aMessage = ToNewUnicode(mMessage);
   return NS_OK;
 }
 NS_IMETHODIMP nsMsgProcessReport::SetMessage(const PRUnichar * aMessage)
@@ -298,7 +299,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
           nsMsgBuildErrorMessageByID(currError, errorMsg);
 
           if (! errorMsg.IsEmpty())
-            currMessage.Adopt(errorMsg.ToNewUnicode());
+            currMessage.Adopt(ToNewUnicode(errorMsg));
           break;
       }
   }
@@ -364,7 +365,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
         if (! dialogMessage.IsEmpty())
           temp.Append(NS_LITERAL_STRING("\n"));
         temp.Append(currMessage);
-        dialogMessage.Adopt(temp.ToNewUnicode());
+        dialogMessage.Adopt(ToNewUnicode(temp));
       }
     }
       
@@ -377,7 +378,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
       if (! dialogMessage.IsEmpty())
         temp.Append(NS_LITERAL_STRING("\n"));
       temp.Append(text1);
-      dialogMessage.Adopt(temp.ToNewUnicode());
+      dialogMessage.Adopt(ToNewUnicode(temp));
       nsMsgAskBooleanQuestionByString(prompt, dialogMessage, &oopsGiveMeBackTheComposeWindow, dialogTitle);
       if (!oopsGiveMeBackTheComposeWindow)
         *_retval = NS_OK;
@@ -430,7 +431,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
       if (! dialogMessage.IsEmpty())
         temp.Append(NS_LITERAL_STRING("\n"));
       temp.Append(currMessage);
-      dialogMessage.Adopt(temp.ToNewUnicode());
+      dialogMessage.Adopt(ToNewUnicode(temp));
     }
 
     nsMsgDisplayMessageByString(prompt, dialogMessage, dialogTitle);

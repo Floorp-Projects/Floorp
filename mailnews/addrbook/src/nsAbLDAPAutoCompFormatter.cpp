@@ -36,6 +36,7 @@
 #include "nsILDAPMessage.h"
 #include "nsLDAP.h"
 #include "prlog.h"
+#include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDNSService.h"
@@ -410,7 +411,7 @@ nsAbLDAPAutoCompFormatter::GetAttributes(PRUint32 *aCount, char ** *aAttrs)
     //
     while (rawSearchAttrsSize < count) {
         if (!(rawSearchAttrs[rawSearchAttrsSize] = 
-              (mSearchAttrs.CStringAt(rawSearchAttrsSize))->ToNewCString())) {
+              ToNewCString(*(mSearchAttrs.CStringAt(rawSearchAttrsSize))))) {
             NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(rawSearchAttrsSize, 
                                                   rawSearchAttrs);
             NS_ERROR("nsAbLDAPAutoCompFormatter::GetAttributes(): out "

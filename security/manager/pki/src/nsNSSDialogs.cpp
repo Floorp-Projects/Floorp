@@ -28,6 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIPrompt.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDialogParamBlock.h"
@@ -382,7 +383,7 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
   aDateTimeFormat->FormatPRTime(nsnull, kDateFormatShort, 
                                 kTimeFormatNoSeconds, timeToUse, 
                                 formattedDate);
-  PRUnichar *formattedDatePR = formattedDate.ToNewUnicode();
+  PRUnichar *formattedDatePR = ToNewUnicode(formattedDate);
   const PRUnichar *formatStrings[2] = { commonName, formattedDatePR }; 
   nsString keyString = NS_ConvertASCIItoUCS2(key);
   nsString titleKeyString = NS_ConvertASCIItoUCS2(titleKey);

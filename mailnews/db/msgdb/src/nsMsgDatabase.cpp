@@ -48,6 +48,7 @@
 #include "nsFileStream.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsMsgBaseCID.h"
 #include "nsMorkCID.h"
@@ -2949,7 +2950,7 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 
 /* static */struct mdbYarn *nsMsgDatabase::nsStringToYarn(struct mdbYarn *yarn, nsString *str)
 {
-	yarn->mYarn_Buf = str->ToNewCString();
+	yarn->mYarn_Buf = ToNewCString(*str);
 	yarn->mYarn_Size = PL_strlen((const char *) yarn->mYarn_Buf) + 1;
 	yarn->mYarn_Fill = yarn->mYarn_Size - 1;
 	yarn->mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...

@@ -45,6 +45,7 @@
 #include "nsIScriptContext.h"
 #include <stdio.h>
 #include "jsapi.h"
+#include "nsReadableUtils.h"
 
 HINSTANCE JSConsole::sAppInstance = 0;
 HACCEL JSConsole::sAccelTable = 0;
@@ -916,7 +917,7 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
                 int bDelete = 0;
 
                 JSContext *cx = (JSContext *)mContext->GetNativeContext();
-                char *str = returnValue.ToNewCString();
+                char *str = ToNewCString(returnValue);
 
                 ::printf("The return value is %s\n", str);
 

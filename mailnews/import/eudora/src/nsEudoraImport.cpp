@@ -47,6 +47,7 @@
 #include "nsEudoraStringBundle.h"
 #include "nsIStringBundle.h"
 #include "nsEudoraSettings.h"
+#include "nsReadableUtils.h"
 
 
 #ifdef XP_PC
@@ -225,7 +226,7 @@ NS_IMETHODIMP nsEudoraImport::GetName( PRUnichar **name)
         return NS_ERROR_NULL_POINTER;
 
 	// nsString	title = "Outlook Express";
-	// *name = title.ToNewUnicode();
+	// *name = ToNewUnicode(title);
 	*name = nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_NAME);
 		
     return NS_OK;
@@ -238,7 +239,7 @@ NS_IMETHODIMP nsEudoraImport::GetDescription( PRUnichar **name)
         return NS_ERROR_NULL_POINTER;
 
 	// nsString	desc = "Outlook Express mail and address books";
-	// *name = desc.ToNewUnicode();
+	// *name = ToNewUnicode(desc);
 	*name = nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_DESCRIPTION);
 		
     return NS_OK;
@@ -452,9 +453,9 @@ void ImportEudoraMailImpl::ReportError( PRInt32 errorNum, nsString& name, nsStri
 void ImportEudoraMailImpl::SetLogs( nsString& success, nsString& error, PRUnichar **pError, PRUnichar **pSuccess)
 {
 	if (pError)
-		*pError = error.ToNewUnicode();
+		*pError = ToNewUnicode(error);
 	if (pSuccess)
-		*pSuccess = success.ToNewUnicode();
+		*pSuccess = ToNewUnicode(success);
 }
 
 NS_IMETHODIMP ImportEudoraMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource, 
@@ -590,7 +591,7 @@ NS_IMETHODIMP ImportEudoraAddressImpl::GetAutoFind(PRUnichar **description, PRBo
     nsString	str;
     *_retval = PR_FALSE;
     nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_NICKNAMES_NAME, str);
-    *description = str.ToNewUnicode();
+    *description = ToNewUnicode(str);
     
     return( NS_OK);
 }

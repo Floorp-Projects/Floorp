@@ -26,6 +26,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 #include "nsMemory.h"
 
@@ -519,7 +520,7 @@ NS_IMETHODIMP mozXMLTermStream::Write(const PRUnichar* buf)
   nsAutoString strBuf ( buf );
 
   // Convert Unicode string to UTF8 and store in buffer
-  char* utf8Str = strBuf.ToNewUTF8String();
+  char* utf8Str = ToNewUTF8String(strBuf);
   mUTF8Buffer = utf8Str;
   nsMemory::Free(utf8Str);
 

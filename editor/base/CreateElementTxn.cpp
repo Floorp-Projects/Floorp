@@ -43,6 +43,7 @@
 #include "nsISelection.h"
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
+#include "nsReadableUtils.h"
 
 //included for new nsEditor::CreateContent()
 #include "nsIContent.h"
@@ -90,7 +91,7 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
 {
   if (gNoisy)
   {
-    char* nodename = mTag.ToNewCString();
+    char* nodename = ToNewCString(mTag);
     printf("Do Create Element parent = %p <%s>, offset = %d\n", 
            mParent.get(), nodename, mOffsetInParent);
     nsMemory::Free(nodename);

@@ -463,8 +463,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
 
   nsMsgCompFields * fields = (nsMsgCompFields *)compFields.get();
 
-  nsString authorStr; authorStr.AssignWithConversion(author);
-  fields->SetFrom(authorStr.ToNewUnicode());
+  fields->SetFrom(author.get());
 
   if (m_to)
   	fields->SetTo(m_to);

@@ -21,6 +21,7 @@
 #include "nsURLHelper.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prprf.h"
 #include "prnetdb.h"
 
@@ -394,7 +395,7 @@ nsStdURLParser::ParseAtPath(const char* i_Spec, char* *o_Path)
     
     dir += i_Spec;
 
-    *o_Path = dir.ToNewCString();
+    *o_Path = ToNewCString(dir);
     return (*o_Path ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
 
@@ -488,7 +489,7 @@ nsStdURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
                 dir += "/" ;
                 dir += *o_Directory;
                 CRTFREEIF(*o_Directory);
-                *o_Directory = dir.ToNewCString();
+                *o_Directory = ToNewCString(dir);
             }
         } else {
             DupString(o_Directory, "/");

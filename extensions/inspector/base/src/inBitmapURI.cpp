@@ -24,6 +24,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
 #define DEFAULT_IMAGE_SIZE          16
@@ -52,7 +53,7 @@ inBitmapURI::~inBitmapURI()
 NS_IMETHODIMP
 inBitmapURI::GetBitmapName(PRUnichar** aBitmapName)
 {
-  *aBitmapName = mBitmapName.ToNewUnicode();
+  *aBitmapName = ToNewUnicode(mBitmapName);
   return NS_OK;
 }
 

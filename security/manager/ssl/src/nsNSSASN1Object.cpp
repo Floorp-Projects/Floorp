@@ -34,6 +34,7 @@
 #include "nsNSSASN1Object.h"
 #include "nsIComponentManager.h"
 #include "secasn1.h"
+#include "nsReadableUtils.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Sequence, nsIASN1Sequence, 
                                                  nsIASN1Object);
@@ -300,7 +301,7 @@ NS_IMETHODIMP
 nsNSSASN1Sequence::GetDisplayName(PRUnichar * *aDisplayName)
 {
   NS_ENSURE_ARG_POINTER(aDisplayName);
-  *aDisplayName = mDisplayName.ToNewUnicode();
+  *aDisplayName = ToNewUnicode(mDisplayName);
   return (*aDisplayName) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -316,7 +317,7 @@ NS_IMETHODIMP
 nsNSSASN1Sequence::GetDisplayValue(PRUnichar * *aDisplayValue)
 {
   NS_ENSURE_ARG_POINTER(aDisplayValue);
-  *aDisplayValue = mDisplayValue.ToNewUnicode();
+  *aDisplayValue = ToNewUnicode(mDisplayValue);
   return NS_OK;
 }
 
@@ -379,7 +380,7 @@ nsNSSASN1PrintableItem::~nsNSSASN1PrintableItem()
 NS_IMETHODIMP 
 nsNSSASN1PrintableItem::GetDisplayValue(PRUnichar * *aValue)
 {
-  *aValue = mValue.ToNewUnicode();
+  *aValue = ToNewUnicode(mValue);
   return NS_OK;
 }
 
@@ -461,7 +462,7 @@ NS_IMETHODIMP
 nsNSSASN1PrintableItem::GetDisplayName(PRUnichar * *aDisplayName)
 {
   NS_ENSURE_ARG_POINTER(aDisplayName);
-  *aDisplayName = mDisplayName.ToNewUnicode();
+  *aDisplayName = ToNewUnicode(mDisplayName);
   return (*aDisplayName) ? NS_OK : NS_ERROR_FAILURE;
 }
 

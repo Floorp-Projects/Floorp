@@ -386,9 +386,7 @@ nsAttributeContent::ValidateTextFragment()
     nsAutoString result;
     mContent->GetAttr(mNameSpaceID, mAttrName, result);
 
-    PRUnichar * text = result.ToNewUnicode();
-    mText.SetTo(text, result.Length());
-    nsCRT::free(text);
+    mText.SetTo(result.get(), result.Length());
   }
   else {
     mText.SetTo("", 0);

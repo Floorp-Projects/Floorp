@@ -40,6 +40,7 @@
 
 #include "nsEditorMode.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIDOMDocument.h"
 
 #include "nsIEditor.h"
@@ -128,7 +129,7 @@ static nsresult PrintEditorOutput(nsIEditor* editor, PRInt32 aCommandID)
         break;
 	}
 
-	cString = outString.ToNewCString();
+	cString = ToNewCString(outString);
 	printf(cString);
 	delete [] cString;
 	

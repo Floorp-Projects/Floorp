@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsICaret.h"
 
+#include "nsReadableUtils.h"
 
 #include "nsHTMLEditor.h"
 #include "nsHTMLEditRules.h"
@@ -545,7 +546,7 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
     {
       nsAutoString assertmsg (NS_LITERAL_STRING("Parser and editor disagree on blockness: "));
       assertmsg.Append(tagName);
-      char* assertstr = assertmsg.ToNewCString();
+      char* assertstr = ToNewCString(assertmsg);
       NS_ASSERTION(*aIsBlock, assertstr);
       Recycle(assertstr);
     }

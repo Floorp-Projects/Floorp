@@ -40,6 +40,7 @@
 #include "nsISelection.h"
 #include "nsIContent.h"
 #include "nsIDOMNodeList.h"
+#include "nsReadableUtils.h"
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -84,7 +85,7 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
     nsCOMPtr<nsIContent>parentAsContent = do_QueryInterface(mParent);
     nsString namestr;
     mNode->GetNodeName(namestr);
-    char* nodename = namestr.ToNewCString();
+    char* nodename = ToNewCString(namestr);
     printf("%p Do Insert Element of %p <%s> into parent %p at offset %d\n", 
            this, nodeAsContent.get(), nodename,
            parentAsContent.get(), mOffset); 

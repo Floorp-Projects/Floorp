@@ -49,6 +49,7 @@
 #include "prlink.h"
 #include "plstr.h"
 #include "prmem.h"
+#include "nsReadableUtils.h"
 
 #include "nsSpecialSystemDirectory.h"
 
@@ -254,8 +255,8 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     if (appinfo.GetVersionInfo(&vinfo, B_APP_VERSION_KIND) == B_OK
         && strlen(vinfo.short_info) > 0) {
         // XXX convert UTF-8 2byte chars to 1 byte chars, to avoid string corruption
-        info.fName = PL_strdup(NS_ConvertUTF8toUCS2(vinfo.short_info).ToNewCString());
-        info.fDescription = PL_strdup(NS_ConvertUTF8toUCS2(vinfo.long_info).ToNewCString());
+        info.fName = ToNewCString(NS_ConvertUTF8toUCS2(vinfo.short_info));
+        info.fDescription = ToNewCString(NS_ConvertUTF8toUCS2(vinfo.long_info));
     } else {
         // use filename as its name
         info.fName = GetFileName(path);

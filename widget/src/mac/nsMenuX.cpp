@@ -54,6 +54,7 @@
 #include "nsIPresContext.h"
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStringUtil.h"
 
 #include "nsINameSpaceManager.h"
@@ -331,7 +332,7 @@ NS_METHOD nsMenuX::AddMenu(nsIMenu * aMenu)
   // We have to add it as a menu item and then associate it with the item
   nsAutoString label;
   aMenu->GetLabel(label);
-  //printf("AddMenu %s \n", label.ToNewCString());
+  //printf("AddMenu %s \n", NS_LossyConvertUCS2toASCII(label).get());
 
   CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.get(), label.Length());
   ::InsertMenuItemTextWithCFString(mMacMenuHandle, labelRef, currItemIndex, 0, 0);
@@ -546,7 +547,7 @@ nsEventStatus nsMenuX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  //printf("MenuSelected called for %s \n", mLabel.ToNewCString());
+  //printf("MenuSelected called for %s \n", NS_LossyConvertUCS2toASCII(mLabel).get());
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
   // Determine if this is the correct menu to handle the event
@@ -634,7 +635,7 @@ nsEventStatus nsMenuX::MenuConstruct(
   // reset destroy handler flag so that we'll know to fire it next time this menu goes away.
   mDestroyHandlerCalled = PR_FALSE;
   
-  //printf("nsMenuX::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
+  //printf("nsMenuX::MenuConstruct called for %s = %d \n", NS_LossyConvertUCS2toASCII(mLabel).get(), mMacMenuHandle);
   // Begin menuitem inner loop
   
   // Retrieve our menupopup.
@@ -676,7 +677,7 @@ nsEventStatus nsMenuX::HelpMenuConstruct(
     void              * /* menuNode */,
     void              * aWebShell)
 {
-  //printf("nsMenuX::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
+  //printf("nsMenuX::MenuConstruct called for %s = %d \n", NS_LossyConvertUCS2toASCII(mLabel).get(), mMacMenuHandle);
  
   int numHelpItems = ::CountMenuItems(mMacMenuHandle);
   for (int i=0; i < numHelpItems; ++i) {
@@ -716,7 +717,7 @@ nsEventStatus nsMenuX::HelpMenuConstruct(
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuX::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
-  //printf("nsMenuX::MenuDestruct() called for %s \n", mLabel.ToNewCString());
+  //printf("nsMenuX::MenuDestruct() called for %s \n", NS_LossyConvertUCS2toASCII(mLabel).get());
   
   // Fire our ondestroy handler. If we're told to stop, don't destroy the menu
   PRBool keepProcessing = OnDestroy();
@@ -914,7 +915,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuitemName);
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, menuitemCmd);
 
-    //printf("menuitem %s \n", menuitemName.ToNewCString());
+    //printf("menuitem %s \n", NS_LossyConvertUCS2toASCII(menuitemName).get());
               
     PRBool enabled = ! (disabled == NS_LITERAL_STRING("true"));
     
@@ -961,7 +962,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
       PRUint8 modifiers = knsMenuItemNoModifier;
 	    nsAutoString modifiersStr;
       keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
-		  char* str = modifiersStr.ToNewCString();
+		  char* str = ToNewCString(modifiersStr);
 		  char* newStr;
 		  char* token = nsCRT::strtok( str, ", ", &newStr );
 		  while( token != NULL ) {
@@ -1005,7 +1006,7 @@ nsMenuX::LoadSubMenu( nsIMenu * pParentMenu, nsIContent* inMenuItemContent )
   
   nsAutoString menuName; 
   inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
-  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+  //printf("Creating Menu [%s] \n", NS_LossyConvertUCS2toASCII(menuName).get());
 
   // Create nsMenu
   nsCOMPtr<nsIMenu> pnsMenu ( do_CreateInstance(kMenuCID) );

@@ -51,6 +51,7 @@
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsMemory.h"
@@ -180,14 +181,14 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
           charset = uniCharset;
           if (NS_SUCCEEDED(rv) && !charset.IsEmpty() ) {
             *override_charset = PR_TRUE;
-            *default_charset = charset.ToNewCString();
+            *default_charset = ToNewCString(charset);
           }
           else
           {
             i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
             charset = uniCharset;
             if (!charset.IsEmpty())
-              *default_charset = charset.ToNewCString();
+              *default_charset = ToNewCString(charset);
           }
 
           // if there is no manual override and a folder charset exists
@@ -760,7 +761,7 @@ NS_IMETHODIMP nsStreamConverter::GetContentType(char **aOutputContentType)
 	// and not nsCRT::strdup!
   //  (1) check to see if we have a real content type...use it first...
   if (!mRealContentType.IsEmpty())
-    *aOutputContentType = mRealContentType.ToNewCString();
+    *aOutputContentType = ToNewCString(mRealContentType);
   else if (nsCRT::strcasecmp(mOutputFormat, "raw") == 0)
 		*aOutputContentType = (char *) nsMemory::Clone(UNKNOWN_CONTENT_TYPE, nsCRT::strlen(UNKNOWN_CONTENT_TYPE) + 1);
 	else

@@ -41,6 +41,7 @@
 #include "nsNetCID.h"
 #include "nsSmtpUrl.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "nsEscape.h"
 
@@ -274,35 +275,35 @@ NS_IMETHODIMP nsMailtoUrl::GetMessageContents(char ** aToPart, char ** aCcPart, 
 		char ** aNewsgroupPart, char ** aNewsHostPart, PRBool * aForcePlainText)
 {
 	if (aToPart)
-		*aToPart = m_toPart.ToNewCString();
+		*aToPart = ToNewCString(m_toPart);
 	if (aCcPart)
-		*aCcPart = m_ccPart.ToNewCString();
+		*aCcPart = ToNewCString(m_ccPart);
 	if (aBccPart)
-		*aBccPart = m_bccPart.ToNewCString();
+		*aBccPart = ToNewCString(m_bccPart);
 	if (aFromPart)
-		*aFromPart = m_fromPart.ToNewCString();
+		*aFromPart = ToNewCString(m_fromPart);
 	if (aFollowUpToPart)
-		*aFollowUpToPart = m_followUpToPart.ToNewCString();
+		*aFollowUpToPart = ToNewCString(m_followUpToPart);
 	if (aOrganizationPart)
-		*aOrganizationPart = m_organizationPart.ToNewCString();
+		*aOrganizationPart = ToNewCString(m_organizationPart);
 	if (aReplyToPart)
-		*aReplyToPart = m_replyToPart.ToNewCString();
+		*aReplyToPart = ToNewCString(m_replyToPart);
 	if (aSubjectPart)
-		*aSubjectPart = m_subjectPart.ToNewCString();
+		*aSubjectPart = ToNewCString(m_subjectPart);
 	if (aBodyPart)
-		*aBodyPart = m_bodyPart.ToNewCString();
+		*aBodyPart = ToNewCString(m_bodyPart);
 	if (aHtmlPart)
-		*aHtmlPart = m_htmlPart.ToNewCString();
+		*aHtmlPart = ToNewCString(m_htmlPart);
 	if (aReferencePart)
-		*aReferencePart = m_referencePart.ToNewCString();
+		*aReferencePart = ToNewCString(m_referencePart);
 	if (aAttachmentPart)
 		*aAttachmentPart = nsnull; // never pass out an attachment part as part of a mailto url
 	if (aPriorityPart)
-		*aPriorityPart = m_priorityPart.ToNewCString();
+		*aPriorityPart = ToNewCString(m_priorityPart);
 	if (aNewsgroupPart)
-		*aNewsgroupPart = m_newsgroupPart.ToNewCString();
+		*aNewsgroupPart = ToNewCString(m_newsgroupPart);
 	if (aNewsHostPart)
-		*aNewsHostPart = m_newsHostPart.ToNewCString();
+		*aNewsHostPart = ToNewCString(m_newsHostPart);
 	if (aForcePlainText)
 		*aForcePlainText = m_forcePlainText;
 	return NS_OK;
@@ -483,7 +484,7 @@ nsSmtpUrl::GetRecipients(char ** aRecipientsList)
 {
   NS_ENSURE_ARG_POINTER(aRecipientsList);
 	if (aRecipientsList)
-		*aRecipientsList = m_toPart.ToNewCString();
+		*aRecipientsList = ToNewCString(m_toPart);
 	return NS_OK;
 }
 

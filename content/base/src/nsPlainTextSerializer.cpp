@@ -52,6 +52,7 @@
 #include "nsTextFragment.h"
 #include "nsParserCIID.h"
 #include "nsContentUtils.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -1499,7 +1500,7 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
 #ifdef DEBUG_wrapping
     nsAutoString remaining;
     str.Right(remaining, totLen - bol);
-    foo = remaining.ToNewCString();
+    foo = ToNewCString(remaining);
     //    printf("Next line: bol = %d, newlinepos = %d, totLen = %d, string = '%s'\n",
     //           bol, nextpos, totLen, foo);
     nsMemory::Free(foo);

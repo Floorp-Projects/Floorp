@@ -44,6 +44,7 @@
 
 #include "nsCOMPtr.h"
 #include "nscore.h"
+#include "nsReadableUtils.h"
 #include "nsOEImport.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -358,7 +359,7 @@ PRBool OESettings::DoIMAPServer( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 			else
 				prettyName.AssignWithConversion((const char *)pServerName);
 
-			PRUnichar *pretty = prettyName.ToNewUnicode();
+			PRUnichar *pretty = ToNewUnicode(prettyName);
 			
 			IMPORT_LOG1( "\tSet pretty name to: %S\n", pretty);
 
@@ -423,7 +424,7 @@ PRBool OESettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 			else
 				prettyName.AssignWithConversion((const char *)pServerName);
 
-			PRUnichar *pretty = prettyName.ToNewUnicode();
+			PRUnichar *pretty = ToNewUnicode(prettyName);
 			
 			IMPORT_LOG1( "\tSet pretty name to: %S\n", pretty);
 
@@ -488,7 +489,7 @@ PRBool OESettings::IdentityMatches( nsIMsgIdentity *pIdent, const char *pName, c
 	if (ppIName) {
 		nsString name(ppIName);
 		nsCRT::free( ppIName);
-		pIName = name.ToNewCString();
+		pIName = ToNewCString(name);
 	}
 
 	// for now, if it's the same server and reply to and email then it matches

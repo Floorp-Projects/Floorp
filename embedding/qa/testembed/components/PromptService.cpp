@@ -48,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIDOMWindow.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIFactory.h"
@@ -211,7 +212,7 @@ NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent,
     nsString csPromptEditValue;
     csPromptEditValue.AssignWithConversion(dlg.m_csPromptAnswer.GetBuffer(0));
 
-    *value = csPromptEditValue.ToNewUnicode();
+    *value = ToNewUnicode(csPromptEditValue);
 
     *_retval = PR_TRUE;
   } else
@@ -247,7 +248,7 @@ NS_IMETHODIMP CPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
     }
     nsString csUserName;
     csUserName.AssignWithConversion(dlg.m_csUserName.GetBuffer(0));
-    *username = csUserName.ToNewUnicode();
+    *username = ToNewUnicode(csUserName);
 
     // Get the password entered
     if (password && *password) {
@@ -256,7 +257,7 @@ NS_IMETHODIMP CPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
     }
     nsString csPassword;
     csPassword.AssignWithConversion(dlg.m_csPassword.GetBuffer(0));
-    *password = csPassword.ToNewUnicode();
+    *password = ToNewUnicode(csPassword);
 
     if(checkValue)		
       *checkValue = dlg.m_bCheckBoxValue;
@@ -292,7 +293,7 @@ NS_IMETHODIMP CPromptService::PromptPassword(nsIDOMWindow *parent,
     }
     nsString csPassword;
     csPassword.AssignWithConversion(dlg.m_csPassword.GetBuffer(0));
-    *password = csPassword.ToNewUnicode();
+    *password = ToNewUnicode(csPassword);
 
     if(checkValue)
       *checkValue = dlg.m_bCheckBoxValue;

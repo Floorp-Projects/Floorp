@@ -40,6 +40,7 @@
 
 #include "nsCRT.h"
 #include "prprf.h"
+#include "nsReadableUtils.h"
 
 
 int			CMapiApi::m_clients = 0;
@@ -1602,13 +1603,13 @@ void CMapiFolderList::DumpList( void)
 		nsCRT::memset( prefix, ' ', depth);
 		prefix[depth] = 0;
 #ifdef MAPI_DEBUG
-        char *ansiStr = str.ToNewCString();
+        char *ansiStr = ToNewCString(str);
 		MAPI_TRACE2( "%s%s: ", prefix, ansiStr);
 		nsCRT::free(ansiStr);
 #endif
 		pFolder->GetFilePath( str);
 #ifdef MAPI_DEBUG
-        ansiStr = str.ToNewCString();
+        ansiStr = ToNewCString(str);
 		MAPI_TRACE2( "depth=%d, filePath=%s\n", pFolder->GetDepth(), ansiStr);
 		nsCRT::free(ansiStr);
 #endif

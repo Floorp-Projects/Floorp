@@ -47,6 +47,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsNewsUtils.h"
 #include "nsNewsDatabase.h"
 #include "nsMsgDBCID.h"
@@ -860,10 +861,10 @@ nsNntpService::GenerateNewsHeaderValsForPosting(const char *newsgroupsList, char
   }
   CRTFREEIF(list);
   
-  *newshostHeaderVal = host.ToNewCString();
+  *newshostHeaderVal = ToNewCString(host);
   if (!*newshostHeaderVal) return NS_ERROR_OUT_OF_MEMORY;
 
-  *newsgroupsHeaderVal = newsgroups.ToNewCString();
+  *newsgroupsHeaderVal = ToNewCString(newsgroups);
   if (!*newsgroupsHeaderVal) return NS_ERROR_OUT_OF_MEMORY;
   
   return NS_OK;

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMsgComposeProgressParams.h"
+#include "nsReadableUtils.h"
 
 
 NS_IMPL_ISUPPORTS1(nsMsgComposeProgressParams, nsIMsgComposeProgressParams)
@@ -56,7 +57,7 @@ NS_IMETHODIMP nsMsgComposeProgressParams::GetSubject(PRUnichar * *aSubject)
 {
   NS_ENSURE_ARG(aSubject);
   
-  *aSubject = m_subject.ToNewUnicode();
+  *aSubject = ToNewUnicode(m_subject);
   return NS_OK;
 }
 NS_IMETHODIMP nsMsgComposeProgressParams::SetSubject(const PRUnichar * aSubject)

@@ -40,6 +40,7 @@
 #include "nsIMemory.h"
 #include "plstr.h"
 #include "stdio.h"
+#include "nsReadableUtils.h"
 #include "nsIWalletService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMWindowInternal.h"
@@ -80,7 +81,7 @@ WalletPreviewImpl::GetPrefillValue(PRUnichar** aValue)
   nsAutoString walletList;
   res = walletservice->WALLET_GetPrefillListForViewer(walletList);
   if (NS_SUCCEEDED(res)) {
-    *aValue = walletList.ToNewUnicode();
+    *aValue = ToNewUnicode(walletList);
   }
   return res;
 }

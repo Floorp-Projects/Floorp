@@ -24,6 +24,7 @@
 #include "nsIAbCard.h"
 #include "nsIServiceManager.h"
 #include "nsEudoraImport.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
 
@@ -705,7 +706,6 @@ void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, n
 	
 	nsIMdbRow* newRow = nsnull;
 	pDb->GetNewRow( &newRow); 
-	char *		pCStr;
 	
 	/*
 		
@@ -736,55 +736,46 @@ void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, n
 	phone.ReplaceSubstring( "\x03", " ");
 	name.ReplaceSubstring( "\x03", " ");
 	
-	nsString	uniStr;
-
 	if (newRow) {
-		ConvertToUnicode( displayName, uniStr);
-		pDb->AddDisplayName( newRow, pCStr = uniStr.ToNewUTF8String());
-		nsCRT::free( pCStr);
-				
-		ConvertToUnicode( pEntry->m_name, uniStr);
-		pDb->AddNickName( newRow, pCStr = uniStr.ToNewUTF8String());
-		nsCRT::free( pCStr);
-		
-			
-		ConvertToUnicode( pData->m_email, uniStr);
-		pDb->AddPrimaryEmail( newRow, pCStr = uniStr.ToNewUTF8String());
-		nsCRT::free( pCStr);
-		
+		nsAutoString uniStr;
+
+		ConvertToUnicode( displayName.get(), uniStr);
+		pDb->AddDisplayName( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
+
+		ConvertToUnicode( pEntry->m_name.get(), uniStr);
+		pDb->AddNickName( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
+
+		ConvertToUnicode( pData->m_email.get(), uniStr);
+		pDb->AddPrimaryEmail( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
+
 		if (!fax.IsEmpty()) {
-			ConvertToUnicode( fax, uniStr);
-			pDb->AddFaxNumber( newRow, pCStr = uniStr.ToNewUTF8String());
-			nsCRT::free( pCStr);
+			ConvertToUnicode( fax.get(), uniStr);
+			pDb->AddFaxNumber( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
 		}
 
 		if (!phone.IsEmpty()) {
-			ConvertToUnicode( phone, uniStr);
-			pDb->AddHomePhone( newRow, pCStr = uniStr.ToNewUTF8String());
-			nsCRT::free( pCStr);
+			ConvertToUnicode( phone.get(), uniStr);
+			pDb->AddHomePhone( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
 		}
 
 		if (!address.IsEmpty()) {
-			ConvertToUnicode( address, uniStr);
-			pDb->AddHomeAddress( newRow, pCStr = uniStr.ToNewUTF8String());
-			nsCRT::free( pCStr);
+			ConvertToUnicode( address.get(), uniStr);
+			pDb->AddHomeAddress( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
 		}
 
 		if (!address2.IsEmpty()) {
-			ConvertToUnicode( address2, uniStr);
-			pDb->AddHomeAddress2( newRow, pCStr = uniStr.ToNewUTF8String());
-			nsCRT::free( pCStr);
+			ConvertToUnicode( address2.get(), uniStr);
+			pDb->AddHomeAddress2( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
 		}
 
 		if (!note.IsEmpty()) {
-			ConvertToUnicode( note, uniStr);
-			pDb->AddNotes( newRow, pCStr = uniStr.ToNewUTF8String());
-			nsCRT::free( pCStr);
+			ConvertToUnicode( note.get(), uniStr);
+			pDb->AddNotes( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
 		}
 
 		pDb->AddCardRowToDB( newRow);
-		
-		IMPORT_LOG1( "Added card to db: %s\n", (const char *)displayName);
+
+		IMPORT_LOG1( "Added card to db: %s\n", displayName.get());
 	}		
 }
 

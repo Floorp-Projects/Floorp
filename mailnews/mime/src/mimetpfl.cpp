@@ -42,6 +42,7 @@
 #include "plstr.h"
 #include "mozITXTToHTMLConv.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsMimeStringResources.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
@@ -373,7 +374,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       // convert to unicode so it won't confuse ScanTXT.
       char *newcstr;
 
-      newcstr = lineSource.ToNewCString();      // lineSource uses nsString but the string is NOT unicode
+      newcstr = ToNewCString(lineSource);      // lineSource uses nsString but the string is NOT unicode
       if (!newcstr) return -1;
 
       nsAutoString ustr;
@@ -487,10 +488,10 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
   if (!(exdata->isSig && quoting))
   {
-    char* tmp = preface.ToNewCString();
+    char* tmp = ToNewCString(preface);
     status = MimeObject_write(obj, tmp, preface.Length(), PR_TRUE);
     Recycle(tmp);
-    tmp = lineResult2.ToNewCString();
+    tmp = ToNewCString(lineResult2);
     status = MimeObject_write(obj, tmp, lineResult2.Length(), PR_TRUE);
     Recycle(tmp);
     return status;

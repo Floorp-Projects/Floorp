@@ -27,6 +27,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsMimeTypes.h"
 #include "nsMemory.h"
 #include "nsIStringStream.h"
@@ -336,7 +337,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
       nsCAutoString formattedFileExt;
       formattedFileExt = ".";
       formattedFileExt.Append(fileExt.get());
-      *((char **)getter_Copies(filePath)) = formattedFileExt.ToNewCString(); // yuck...shove it into our xpidl string...
+      filePath.Adopt(ToNewCString(formattedFileExt));
     }
   }
 

@@ -46,6 +46,7 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsEscape.h"
 
 #include "nsMsgBaseCID.h"
@@ -271,7 +272,7 @@ nsMsgIncomingServer::GetServerURI(char* *aResult)
         uri.Append(escapedHostname);
     }
 
-    *aResult = uri.ToNewCString();
+    *aResult = ToNewCString(uri);
     return NS_OK;
 }
 
@@ -632,7 +633,7 @@ nsMsgIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
 
   prettyName.AppendWithConversion(hostname);
 
-  *retval = prettyName.ToNewUnicode();
+  *retval = ToNewUnicode(prettyName);
   
   return NS_OK;
 }
@@ -643,7 +644,7 @@ nsMsgIncomingServer::ToString(PRUnichar** aResult) {
   servername.AppendWithConversion(m_serverKey);
   servername.AppendWithConversion("]");
   
-  *aResult = servername.ToNewUnicode();
+  *aResult = ToNewUnicode(servername);
   NS_ASSERTION(*aResult, "no server name!");
   return NS_OK;
 }
@@ -671,7 +672,7 @@ NS_IMETHODIMP nsMsgIncomingServer::GetPassword(char ** aPassword)
 {
     NS_ENSURE_ARG_POINTER(aPassword);
 
-	*aPassword = m_password.ToNewCString();
+	*aPassword = ToNewCString(m_password);
 
     return NS_OK;
 }

@@ -38,6 +38,7 @@
 #include "nsDebug.h"
 #include "nsCRT.h"
 #include "nsLDAPConnection.h"
+#include "nsReadableUtils.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPMessage, nsILDAPMessage);
 
@@ -457,7 +458,7 @@ NS_IMETHODIMP nsLDAPMessage::GetDn(PRUnichar **aDn)
     // get a copy made with the shared allocator, and dispose of the original
     //
 
-    *aDn = NS_ConvertUTF8toUCS2(rawDn).ToNewUnicode();
+    *aDn = ToNewUnicode(NS_ConvertUTF8toUCS2(rawDn));
     ldap_memfree(rawDn);
 
     if (!*aDn) {
@@ -521,7 +522,7 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
     //
     PRUint32 i;
     for ( i = 0 ; i < numVals ; i++ ) {
-        (*aValues)[i] = NS_ConvertUTF8toUCS2(values[i]).ToNewUnicode();
+        (*aValues)[i] = ToNewUnicode(NS_ConvertUTF8toUCS2(values[i]));
         if ( ! (*aValues)[i] ) {
             NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, aValues);
             return NS_ERROR_OUT_OF_MEMORY;

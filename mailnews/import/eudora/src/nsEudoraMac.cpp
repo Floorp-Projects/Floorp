@@ -36,6 +36,7 @@
 #include "nsEudoraStringBundle.h"
 #include "nsEudoraImport.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsReadableUtils.h"
 
 #include "EudoraDebugLog.h"
 
@@ -712,7 +713,7 @@ PRBool nsEudoraMac::BuildPOPAccount( nsIMsgAccountManager *accMgr, nsCString **p
 
 			IMPORT_LOG2( "Created POP3 server named: %s, userName: %s\n", (const char *)(*(pStrs[kPopServerStr])), (const char *)(*(pStrs[kPopAccountNameStr])));
 
-			PRUnichar *pretty = accName.ToNewUnicode();
+			PRUnichar *pretty = ToNewUnicode(accName);
 			IMPORT_LOG1( "\tSet pretty name to: %S\n", pretty);
 			rv = in->SetPrettyName( pretty);
 			nsCRT::free( pretty);
@@ -764,7 +765,7 @@ PRBool nsEudoraMac::BuildIMAPAccount( nsIMsgAccountManager *accMgr, nsCString **
 			
 			IMPORT_LOG2( "Created IMAP server named: %s, userName: %s\n", (const char *)(*(pStrs[kPopServerStr])), (const char *)(*(pStrs[kPopAccountNameStr])));
 			
-			PRUnichar *pretty = accName.ToNewUnicode();
+			PRUnichar *pretty = ToNewUnicode(accName);
 			
 			IMPORT_LOG1( "\tSet pretty name to: %S\n", pretty);
 

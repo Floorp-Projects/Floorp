@@ -95,6 +95,7 @@
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsXULElement.h"
 #include "prlog.h"
 #include "prmem.h"
@@ -425,8 +426,8 @@ XULContentSinkImpl::~XULContentSinkImpl()
                         prefix.AssignWithConversion("<default>");
                     }
 
-                char* prefixStr = prefix.ToNewCString();
-                char* uriStr = uri.ToNewCString();
+                char* prefixStr = ToNewCString(prefix);
+                char* uriStr = ToNewCString(uri);
 
                 PR_LOG(gLog, PR_LOG_ALWAYS,
                        ("xul: warning: unclosed namespace '%s' (%s)",

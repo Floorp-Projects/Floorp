@@ -51,6 +51,7 @@
 #include "nsGfxCIID.h"
 #include "resource.h"
 #include "prtime.h"
+#include "nsReadableUtils.h"
 
 #include <InterfaceDefs.h>
 #include <Region.h>
@@ -2622,7 +2623,7 @@ PRBool nsWindow::OnScroll()
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle) 
 {
-	const char *text = aTitle.ToNewUTF8String();
+	const char *text = ToNewUTF8String(aTitle);
 	if(text && mView->LockLooper())
 	{
 		mView->Window()->SetTitle(text);

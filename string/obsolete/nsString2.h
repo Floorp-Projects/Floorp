@@ -281,30 +281,6 @@ public:
   nsString* ToNewString() const;
 
   /**
-   * Creates an ISOLatin1 clone of this string
-   * Note that calls to this method should be matched with calls to
-   * |nsMemory::Free|.
-   * @return  ptr to new isolatin1 string
-   */
-  char* ToNewCString() const;
-
-  /**
-   * Creates an UTF8 clone of this string
-   * Note that calls to this method should be matched with calls to
-   * |nsMemory::Free|.
-   * @return  ptr to new null-terminated UTF8 string
-   */
-  char* ToNewUTF8String() const;
-
-  /**
-   * Creates a unicode clone of this string
-   * Note that calls to this method should be matched with calls to
-   * |nsMemory::Free|.
-   * @return  ptr to new unicode string
-   */
-  PRUnichar* ToNewUnicode() const;
-
-  /**
    * Copies data from internal buffer onto given char* buffer
    * NOTE: This only copies as many chars as will fit in given buffer (clips)
    * @param aBuf is the buffer where data is stored

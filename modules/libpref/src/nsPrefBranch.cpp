@@ -42,6 +42,7 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIStringBundle.h"
@@ -170,7 +171,7 @@ NS_IMETHODIMP nsPrefBranch::GetRoot(char * *aRoot)
   NS_ENSURE_ARG_POINTER(aRoot);
 
   mPrefRoot.Truncate(mPrefRootLength);
-  *aRoot = mPrefRoot.ToNewCString();
+  *aRoot = ToNewCString(mPrefRoot);
   return NS_OK;
 }
 

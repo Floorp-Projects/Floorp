@@ -41,6 +41,7 @@
 #include "nsIMenuItem.h"
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStringUtil.h"
 #include "nsIMenuListener.h"
 #include "nsQEventHandler.h"
@@ -219,7 +220,7 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
 NS_METHOD nsMenu::GetAccessKey(nsString &aText)
 {
     aText = mAccessKey;
-    char *foo = mAccessKey.ToNewCString();
+    char *foo = ToNewCString(mAccessKey);
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsMenu::GetAccessKey returns \"%s\"\n",
                                        foo));
     delete [] foo;
@@ -230,7 +231,7 @@ NS_METHOD nsMenu::GetAccessKey(nsString &aText)
 NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
 {
     mAccessKey = aText;
-    char *foo = mAccessKey.ToNewCString();
+    char *foo = ToNewCString(mAccessKey);
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsMenu::SetAccessKey to \"%s\"\n",
                                        foo));
     delete [] foo;
@@ -291,7 +292,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 
     aMenu->GetLabel(Label);
 
-    labelStr = Label.ToNewCString();
+    labelStr = ToNewCString(Label);
 
     QString string = labelStr;
 

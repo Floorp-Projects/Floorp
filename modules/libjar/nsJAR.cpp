@@ -29,6 +29,7 @@
 #include "nsJARInputStream.h"
 #include "nsJAR.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "plbase64.h"
 #include "nsIConsoleService.h"
@@ -821,13 +822,10 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
   nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
   if (console)
   {
-    PRUnichar* messageUni = message.ToNewUnicode();
-    if (!messageUni) return;
-    console->LogStringMessage(messageUni);
-    nsMemory::Free(messageUni);
+    console->LogStringMessage(message.get());
   }
 #ifdef DEBUG
-  char* messageCstr = message.ToNewCString();
+  char* messageCstr = ToNewCString(message);
   if (!messageCstr) return;
   fprintf(stderr, "%s\n", messageCstr);
   nsMemory::Free(messageCstr);
@@ -903,7 +901,7 @@ PrintManItem(nsHashKey* aKey, void* aData, void* closure)
     if (manItem)
     {
       nsCStringKey* key2 = (nsCStringKey*)aKey;
-      char* name = key2->GetString().ToNewCString();
+      char* name = ToNewCString(key2->GetString());
       if (!(PL_strcmp(name, "") == 0))
         printf("%s s=%i\n",name, manItem->status);
     }

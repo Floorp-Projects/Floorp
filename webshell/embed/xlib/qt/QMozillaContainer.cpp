@@ -24,6 +24,7 @@
 #include "QMozillaContainer.h"
 #include "nsQtEventProcessor.h"
 
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIXlibWindowService.h"
@@ -167,7 +168,7 @@ void QMozillaContainer::loadURL( const char *url )
 	if ( m_WebShell )
 	{
 		nsString URL(url);
-		PRUnichar *u_url = URL.ToNewUnicode();
+		PRUnichar *u_url = ToNewUnicode(URL);
 		m_WebShell->LoadURL(u_url);
 	}
 }

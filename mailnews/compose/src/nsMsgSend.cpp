@@ -62,6 +62,7 @@
 #include "nsIFileSpec.h"
 #include "nsMsgCopy.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsMsgPrompts.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLLinkElement.h"
@@ -1686,11 +1687,11 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       
       if (NS_FAILED(image->GetName(tName)))
         return NS_ERROR_OUT_OF_MEMORY;
-      attachment.real_name = tName.ToNewCString();
+      attachment.real_name = ToNewCString(tName);
       
       if (NS_FAILED(image->GetLongDesc(tDesc)))
         return NS_ERROR_OUT_OF_MEMORY;
-      attachment.description = tDesc.ToNewCString();
+      attachment.description = ToNewCString(tDesc);
       
     }
     else if (link)        // Is this a link?
@@ -1724,7 +1725,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       
       if (NS_FAILED(anchor->GetName(tName)))
         return NS_ERROR_OUT_OF_MEMORY;
-      attachment.real_name = tName.ToNewCString();
+      attachment.real_name = ToNewCString(tName);
     }
     else
     {
@@ -1861,7 +1862,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       }
 
       if (!domURL.IsEmpty())
-        domSaveArray[j].url = domURL.ToNewCString();
+        domSaveArray[j].url = ToNewCString(domURL);
     }
   }
   
@@ -2181,7 +2182,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
                    str.Find("snews_message:") != -1)
             (*aNewsCount)++;
           
-          m_attachments[newLoc].m_uri = str.ToNewCString();
+          m_attachments[newLoc].m_uri = ToNewCString(str);
           ++newLoc;
 		}
       }

@@ -41,6 +41,7 @@
 #include "nsPersistentProperties.h"
 #include "nsID.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
 #include "nsIInputStream.h"
 #include "nsIProperties.h"
 #include "nsIUnicharInputStream.h"
@@ -228,10 +229,8 @@ NS_IMETHODIMP
 nsPersistentProperties::SetStringProperty(const nsString& aKey, nsString& aNewValue,
   nsString& aOldValue)
 {
-  // XXX The ToNewCString() calls allocate memory using "new" so this code
-  // causes a memory leak...
 #if 0
-  cout << "will add " << aKey.ToNewCString() << "=" << aNewValue.ToNewCString() << endl;
+  cout << "will add " << NS_LossyConvertUCS2toASCII(aKey).get() << "=" << NS_LossyConvertUCS2ToASCII(aNewValue).get() << endl;
 #endif
   if (!mTable) {
     return NS_ERROR_FAILURE;
@@ -251,8 +250,8 @@ nsPersistentProperties::SetStringProperty(const nsString& aKey, nsString& aNewVa
 #endif
     return NS_OK;
   }
-  PL_HashTableRawAdd(mTable, hep, hashValue, aKey.ToNewUnicode(),
-                     aNewValue.ToNewUnicode());
+  PL_HashTableRawAdd(mTable, hep, hashValue, ToNewUnicode(aKey),
+                     ToNewUnicode(aNewValue));
 
   return NS_OK;
 }
@@ -484,7 +483,7 @@ nsPropertyElement::GetKey(PRUnichar **aReturnKey)
 {
   if (aReturnKey)
   {
-    *aReturnKey = (PRUnichar *) mKey->ToNewUnicode();
+    *aReturnKey = ToNewUnicode(*mKey);
     return NS_OK;
   }
 
@@ -496,7 +495,7 @@ nsPropertyElement::GetValue(PRUnichar **aReturnValue)
 {
   if (aReturnValue)
   {
-    *aReturnValue = (PRUnichar *) mValue->ToNewUnicode();
+    *aReturnValue = ToNewUnicode(*mValue);
     return NS_OK;
   }
 

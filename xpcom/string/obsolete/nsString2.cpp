@@ -41,6 +41,7 @@
 #include <string.h> 
 #include <stdlib.h>
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsDebug.h"
 #include "nsDeque.h"
 
@@ -559,64 +560,6 @@ nsString::CompressWhitespace( PRBool aEliminateLeading,PRBool aEliminateTrailing
  */
 nsString* nsString::ToNewString() const {
   return new nsString(*this);
-}
-
-/**
- * Creates an ascii clone of this string
- * Note that calls to this method should be matched with calls to
- * |nsMemory::Free|.
- * @update  gess 02/24/00
- * @WARNING! Potential i18n issue here, since we're stepping down from 2byte chars to 1byte chars!
- * @return  ptr to new ascii string
- */
-char* nsString::ToNewCString() const {
-  char* result = NS_STATIC_CAST(char*, nsMemory::Alloc(mLength + 1));
-  if (result) {
-    CBufDescriptor desc(result, PR_TRUE, mLength + 1, 0);
-    nsCAutoString temp(desc);
-    temp.AssignWithConversion(*this);
-  }
-  return result;
-}
-
-/**
- * Creates an UTF8 clone of this string
- * Note that calls to this method should be matched with calls to
- * |nsMemory::Free|.
- * @update  ftang 09/10/99
- * @return  ptr to new UTF8 string
- * http://www.cis.ohio-state.edu/htbin/rfc/rfc2279.html
- */
-char* nsString::ToNewUTF8String() const {
-  NS_ConvertUCS2toUTF8 temp(mUStr);
-
-  char* result;
-  if (temp.mOwnsBuffer) {
-    // We allocated. Trick the string into not freeing its buffer to
-    // avoid an extra allocation.
-    result = temp.mStr;
-
-    temp.mStr=0;
-    temp.mOwnsBuffer = PR_FALSE;
-  }
-  else {
-    // We didn't allocate a buffer, so we need to copy it out of the
-    // nsCAutoString's storage.
-    result = nsCRT::strdup(temp.mStr);
-  }
-
-  return result;
-}
-
-/**
- * Creates an ascii clone of this string
- * Note that calls to this method should be matched with calls to
- * |nsMemory::Free|.
- * @update  gess 02/24/00
- * @return  ptr to new ascii string
- */
-PRUnichar* nsString::ToNewUnicode() const {
-  return nsCRT::strdup(mUStr);
 }
 
 /**
@@ -1556,7 +1499,7 @@ NS_COM int fputs(const nsString& aString, FILE* out)
   char* cp = buf;
   PRInt32 len = aString.mLength;
   if (len >= PRInt32(sizeof(buf))) {
-    cp = aString.ToNewCString();
+    cp = ToNewCString(aString);
   } else {
     aString.ToCString(cp, len + 1);
   }

@@ -68,6 +68,7 @@
 #include "nsISocketTransportService.h"
 #include "nsNetUtil.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIPipe.h"
 #include "nsIMsgFolder.h"
 #include "nsImapStringBundle.h"
@@ -2357,7 +2358,7 @@ char *nsImapProtocol::CreateEscapedMailboxName(const char *rawName)
       escapedName.Insert('\\', strIndex++);
     }
   }
-  return escapedName.ToNewCString();
+  return ToNewCString(escapedName);
 }
 
 void nsImapProtocol::SelectMailbox(const char *mailboxName)
@@ -2672,7 +2673,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
     
     if (protocolString)
     {
-    char *cCommandStr = commandString.ToNewCString();
+    char *cCommandStr = ToNewCString(commandString);
     if ((whatToFetch == kMIMEPart) ||
       (whatToFetch == kMIMEHeader))
     {
@@ -4254,7 +4255,7 @@ PRUnichar * nsImapProtocol::CreatePRUnicharStringFromUTF7(const char * aSourceSt
       NS_IF_RELEASE(decoder);
       // convert the unicode to 8 bit ascii.
       nsString unicodeStr(unichars);
-      convertedString = unicodeStr.ToNewUnicode();
+      convertedString = ToNewUnicode(unicodeStr);
     }
     }
     return convertedString;
@@ -6067,7 +6068,7 @@ char * nsImapProtocol::CreatePossibleTrashName(const char *prefix)
   nsCString returnTrash(prefix);
 
   returnTrash += "Trash";
-  return returnTrash.ToNewCString();
+  return ToNewCString(returnTrash);
 }
 
 void nsImapProtocol::Lsub(const char *mailboxPattern, PRBool addDirectoryIfNecessary)
@@ -7297,7 +7298,7 @@ NS_IMETHODIMP nsImapMockChannel::GetContentType(char * *aContentType)
   if (m_ContentType.IsEmpty())
     *aContentType = nsCRT::strdup("message/rfc822");
   else
-    *aContentType = m_ContentType.ToNewCString();
+    *aContentType = ToNewCString(m_ContentType);
   return NS_OK;
 }
 

@@ -41,6 +41,7 @@
 #include "nsIStringBundle.h"
 #include "nsImportFieldMap.h"
 #include "nsImportStringBundle.h"
+#include "nsReadableUtils.h"
 
 #include "ImportDebug.h"
 
@@ -138,7 +139,7 @@ NS_IMETHODIMP nsImportFieldMap::GetFieldDescription(PRInt32 index, PRUnichar **_
 	if ((index < 0) || (index >= m_descriptions.Count()))
 		return( NS_ERROR_FAILURE);
 	
-	*_retval = ((nsString *)m_descriptions.ElementAt( index))->ToNewUnicode();
+	*_retval = ToNewUnicode(*((nsString *)m_descriptions.ElementAt(index)));
 	return( NS_OK);
 }
 
@@ -257,7 +258,7 @@ NS_IMETHODIMP nsImportFieldMap::SetFieldValue(nsIAddrDatabase *database, nsIMdbR
 	nsresult rv;
 	
 	nsString str(value);
-	char *pVal = str.ToNewUTF8String();
+	char *pVal = ToNewUTF8String(str);
 
 	switch( fieldNum) {
 	case 0:

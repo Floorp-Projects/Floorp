@@ -33,6 +33,7 @@
  */
 
 #include "nsLDAPServer.h"
+#include "nsReadableUtils.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPServer, nsILDAPServer)
 
@@ -55,7 +56,7 @@ NS_IMETHODIMP nsLDAPServer::GetKey(PRUnichar **_retval)
         return NS_ERROR_NULL_POINTER;
     }
 
-    *_retval = mKey.ToNewUnicode();
+    *_retval = ToNewUnicode(mKey);
     if (!*_retval) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -76,7 +77,7 @@ NS_IMETHODIMP nsLDAPServer::GetUsername(PRUnichar **_retval)
         return NS_ERROR_NULL_POINTER;
     }
 
-    *_retval = mUsername.ToNewUnicode();
+    *_retval = ToNewUnicode(mUsername);
     if (!*_retval) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -97,7 +98,7 @@ NS_IMETHODIMP nsLDAPServer::GetPassword(PRUnichar **_retval)
         return NS_ERROR_NULL_POINTER;
     }
 
-    *_retval = mPassword.ToNewUnicode();
+    *_retval = ToNewUnicode(mPassword);
     if (!*_retval) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -118,7 +119,7 @@ NS_IMETHODIMP nsLDAPServer::GetBinddn(PRUnichar **_retval)
         return NS_ERROR_NULL_POINTER;
     }
 
-    *_retval = mBindDN.ToNewUnicode();
+    *_retval = ToNewUnicode(mBindDN);
     if (!*_retval) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

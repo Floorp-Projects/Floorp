@@ -46,6 +46,7 @@
 #include "nsWeakReference.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
@@ -262,7 +263,7 @@ extern "C" NS_EXPORT int DebugRobot(
     if (NS_FAILED(rv)) return rv;
 
     nsIURI *uri = nsnull;
-    char *uriStr = urlName->ToNewCString();
+    char *uriStr = ToNewCString(*urlName);
     if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
     rv = service->NewURI(uriStr, nsnull, &uri);
     nsCRT::free(uriStr);

@@ -58,6 +58,7 @@
 #include "nsIMemory.h"
 #include "nsIPipe.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgNewsCID.h"
@@ -2650,25 +2651,25 @@ void nsNNTPProtocol::ParseHeaderForCancel(char *buf)
     case 'F': case 'f':
         if (header.Find("From",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelFromHdr);
-			m_cancelFromHdr = value.ToNewCString();
+			m_cancelFromHdr = ToNewCString(value);
         }
         break;
     case 'M': case 'm':
         if (header.Find("Message-ID",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelID);
-			m_cancelID = value.ToNewCString();
+			m_cancelID = ToNewCString(value);
         }
         break;
     case 'N': case 'n':
         if (header.Find("Newsgroups",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelNewsgroups);
-			m_cancelNewsgroups = value.ToNewCString();
+			m_cancelNewsgroups = ToNewCString(value);
         }
         break;
      case 'D': case 'd':
         if (header.Find("Distributions",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelDistribution);
-			m_cancelDistribution = value.ToNewCString();
+			m_cancelDistribution = ToNewCString(value);
         }       
         break;
     }
@@ -3679,7 +3680,7 @@ nsresult nsNNTPProtocol::GetNewsStringByID(PRInt32 stringID, PRUnichar **aString
 			resultString.Assign(NS_LITERAL_STRING("[StringID"));
 			resultString.AppendInt(stringID, 10);
 			resultString.Append(NS_LITERAL_STRING("?]"));
-			*aString = resultString.ToNewUnicode();
+			*aString = ToNewUnicode(resultString);
 		}
 		else {
 			*aString = ptrv;
@@ -3687,7 +3688,7 @@ nsresult nsNNTPProtocol::GetNewsStringByID(PRInt32 stringID, PRUnichar **aString
 	}
 	else {
 		rv = NS_OK;
-		*aString = resultString.ToNewUnicode();
+		*aString = ToNewUnicode(resultString);
 	}
 	return rv;
 }
@@ -3718,7 +3719,7 @@ nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aStr
 			resultString.Assign(NS_LITERAL_STRING("[StringName"));
 			resultString.AppendWithConversion(aName);
 			resultString.Append(NS_LITERAL_STRING("?]"));
-			*aString = resultString.ToNewUnicode();
+			*aString = ToNewUnicode(resultString);
 		}
 		else
 		{
@@ -3728,7 +3729,7 @@ nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aStr
 	else
 	{
 		rv = NS_OK;
-		*aString = resultString.ToNewUnicode();
+		*aString = ToNewUnicode(resultString);
 	}
 	return rv;
 }
@@ -5421,7 +5422,7 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
   // this happens when we go through libmime now as it sets our new content type
   if (!m_ContentType.IsEmpty())
   {
-    *aContentType = m_ContentType.ToNewCString();
+    *aContentType = ToNewCString(m_ContentType);
     return NS_OK;
   }
 

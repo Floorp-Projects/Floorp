@@ -20,6 +20,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsEudoraMailbox.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsEudoraCompose.h"
@@ -1028,7 +1029,7 @@ PRBool nsEudoraMailbox::AddAttachment( nsCString& fileName)
 	}
 
 	ImportAttachment *a = new ImportAttachment;
-	a->mimeType = mimeType.ToNewCString();
+	a->mimeType = ToNewCString(mimeType);
 	a->description = nsCRT::strdup( "Attached File");
 	a->pAttachment = pSpec;
 

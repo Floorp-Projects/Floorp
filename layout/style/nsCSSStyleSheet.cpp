@@ -62,6 +62,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIFrame.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "nsIUnicharInputStream.h"
 #include "nsHTMLIIDs.h"
@@ -2284,7 +2285,7 @@ CSSStyleSheetImpl::CheckRuleForAttributes(nsICSSRule *aRule)
 #ifdef DEBUG_shaver_off
           nsAutoString str;
           sel->mAttr->ToString(str);
-          char * chars = str.ToNewCString();
+          char * chars = ToNewCString(str);
           fprintf(stderr, "[%s@%p]", chars, this);
           nsMemory::Free(chars);
 #endif

@@ -55,6 +55,7 @@
 #include "nsIURI.h"
 #include "nsMsgI18N.h"
 #include "nsMsgUtils.h"
+#include "nsReadableUtils.h"
 
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
@@ -1898,7 +1899,7 @@ nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
       nsAutoString v;
       v.Append(ptrv);
 	    PR_FREEIF(ptrv);
-      tempString = v.ToNewUTF8String();
+      tempString = ToNewUTF8String(v);
     }
 	}
 

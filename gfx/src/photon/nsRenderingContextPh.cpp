@@ -52,6 +52,7 @@
 #include "nsDrawingSurfacePh.h"
 #include <stdlib.h>
 #include <mem.h>
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
@@ -957,8 +958,14 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString, PRUint32 aLe
 
 	//using "M" to get rid of the right bearing of the right most char of the string.
 
+        /* XXXjag this code looks very bogus to me, but I've no idea what they're
+         * trying to accomplish here. At my best guess they're trying to do this:
+         * char* text = ToNewCString(nsDependentCString(aString, aLength) +
+         *                           NS_LITERAL_CSTRING("M."));
+         *              text[aLength + 1] = '\0'; // overwrites the '.' above
+         */
 	nsCString strTail("M");
-	char* tail=(char*)strTail.ToNewUnicode();
+	char* tail=(char*)ToNewUnicode(strTail);
 	PRUint32 tailLength=strlen(tail);	
 	char* text = (char*) nsMemory::Alloc(aLength + tailLength + 2);
 

@@ -59,6 +59,7 @@
 #include "nsHankakuToZenkakuCID.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prmem.h"
 #include "nsFileSpec.h"
 
@@ -89,7 +90,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
     return NS_OK;
   }
   else if (aCharset.EqualsIgnoreCase("UTF-8")) {
-    char *s = inString.ToNewUTF8String();
+    char *s = ToNewUTF8String(inString);
     if (NULL == s)
       return NS_ERROR_OUT_OF_MEMORY;
     outString.Assign(s);
@@ -238,11 +239,11 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
   else if (aCharset.IsEmpty() ||
       aCharset.EqualsIgnoreCase("us-ascii") ||
       aCharset.EqualsIgnoreCase("ISO-8859-1")) {
-    *outCString = inString.ToNewCString();
+    *outCString = ToNewCString(inString);
     return (NULL == *outCString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
   }
   else if (aCharset.EqualsIgnoreCase("UTF-8")) {
-    *outCString = inString.ToNewUTF8String();
+    *outCString = ToNewUTF8String(inString);
     return (NULL == *outCString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
   }
 
@@ -430,17 +431,16 @@ char * nsMsgI18NGetDefaultMailCharset()
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
   if (nsnull != prefs && NS_SUCCEEDED(res))
   {
-      PRUnichar *prefValue;
-	  res = prefs->GetLocalizedUnicharPref("mailnews.send_default_charset", &prefValue);
-	  
-	  if (NS_SUCCEEDED(res)) 
-	  {
-  		//TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.
-  		 retVal = NS_ConvertUCS2toUTF8(prefValue).ToNewCString();
-                 nsMemory::Free(prefValue);
-	  }
-	  else 
-		  retVal = nsCRT::strdup("ISO-8859-1");
+    nsXPIDLString prefValue;
+    res = prefs->GetLocalizedUnicharPref("mailnews.send_default_charset", getter_Copies(prefValue));
+
+    if (NS_SUCCEEDED(res))
+    {
+      //TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.
+      retVal = ToNewUTF8String(prefValue);
+    }
+    else 
+      retVal = nsCRT::strdup("ISO-8859-1");
   }
 
   return (nsnull != retVal) ? retVal : nsCRT::strdup("ISO-8859-1");

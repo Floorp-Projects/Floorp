@@ -970,7 +970,7 @@ si_GetUser(nsIPrompt* dialog, const char* passwordRealm, PRBool pickFirstUser, c
         }
         nsAutoString userName;
         if (NS_SUCCEEDED(si_Decrypt (data->value, userName))) {
-          *(list2++) = userName.ToNewUnicode();
+          *(list2++) = ToNewUnicode(userName);
           *(users2++) = user;
           user_count++;
         } else {
@@ -1141,7 +1141,7 @@ si_GetURLAndUserForChangeForm(nsIPrompt* dialog, const nsString& password)
             temp.AppendWithConversion(":");
             temp.Append(userName);
 
-            *list2 = temp.ToNewUnicode();
+            *list2 = ToNewUnicode(temp);
             list2++;
             *(users2++) = user;
             *(urls2++) = url;
@@ -1688,7 +1688,7 @@ SI_LoadSignonData() {
       break; /* end of reject list */
     }
     si_StripLF(buffer);
-    passwordRealm = buffer.ToNewCString();
+    passwordRealm = ToNewCString(buffer);
     si_PutReject(passwordRealm, buffer, PR_FALSE); /* middle parameter is obsolete */
     Recycle (passwordRealm);
   }
@@ -1697,7 +1697,7 @@ SI_LoadSignonData() {
   while (NS_SUCCEEDED(si_ReadLine(strm, buffer))) {
     si_StripLF(buffer);
     /* a blank line is perfectly valid here -- corresponds to a local file */
-    passwordRealm = buffer.ToNewCString();
+    passwordRealm = ToNewCString(buffer);
     if (!passwordRealm) {
       si_unlock_signon_list();
       return -1;
@@ -2132,7 +2132,7 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
           if (data->isPassword) {
             nsAutoString password;
             if (NS_SUCCEEDED(si_Decrypt(data->value, password))) {
-              *value = password.ToNewUnicode();
+              *value = ToNewUnicode(password);
             }
             si_unlock_signon_list();
             return;
@@ -2153,7 +2153,7 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
       if(correctedName.Length() && (data->name == correctedName)) {
         nsAutoString password;
         if (NS_SUCCEEDED(si_Decrypt(data->value, password))) {
-          *value = password.ToNewUnicode();
+          *value = ToNewUnicode(password);
         }
         si_unlock_signon_list();
         return;
@@ -2350,10 +2350,10 @@ SINGSIGN_PromptUsernameAndPassword
   si_RestoreOldSignonDataFromBrowser(dialog, passwordRealm, PR_FALSE, username, password);
 
   /* get new username/password from user */
-  if (!(*user = username.ToNewUnicode())) {
+  if (!(*user = ToNewUnicode(username))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  if (!(*pwd = password.ToNewUnicode())) {
+  if (!(*pwd = ToNewUnicode(password))) {
     PR_Free(*user);
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2410,13 +2410,13 @@ SINGSIGN_PromptPassword
 
   /* return if a password was found */
   if (password.Length() != 0) {
-    *pwd = password.ToNewUnicode();
+    *pwd = ToNewUnicode(password);
     *pressedOK = PR_TRUE;
     return NS_OK;
   }
 
   /* no password found, get new password from user */
-  *pwd = password.ToNewUnicode();
+  *pwd = ToNewUnicode(password);
   PRBool checked = PR_FALSE;
   res = si_CheckGetPassword(pwd, dialogTitle, text, dialog, savePassword, &checked);
   if (NS_FAILED(res)) {
@@ -2463,14 +2463,14 @@ SINGSIGN_Prompt
 
   /* return if data was found */
   if (data.Length() != 0) {
-    *resultText = data.ToNewUnicode();
+    *resultText = ToNewUnicode(data);
     *pressedOK = PR_TRUE;
     return NS_OK;
   }
 
   /* no data found, get new data from user */
   data = defaultText;
-  *resultText = data.ToNewUnicode();
+  *resultText = ToNewUnicode(data);
   PRBool checked = PR_FALSE;
   res = si_CheckGetData(resultText, dialogTitle, text, dialog, savePassword, &checked);
   if (NS_FAILED(res)) {
@@ -2665,7 +2665,7 @@ SINGSIGN_Enumerate
     /* don't display saved signons if user couldn't unlock the database */
     return NS_ERROR_FAILURE;
   }
-  if (!(*user = userName.ToNewUnicode())) {
+  if (!(*user = ToNewUnicode(userName))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -2683,7 +2683,7 @@ SINGSIGN_Enumerate
     Recycle(*user);
     return NS_ERROR_FAILURE;
   }
-  if (!(*pswd = passWord.ToNewUnicode())) {
+  if (!(*pswd = ToNewUnicode(passWord))) {
     Recycle(*user);
     return NS_ERROR_OUT_OF_MEMORY;
   }

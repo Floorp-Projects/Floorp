@@ -34,6 +34,7 @@
 #include "nsInstallLogComment.h"
 #include "nsInstallBitwise.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 /* Public Methods */
 
@@ -354,7 +355,7 @@ char* nsInstallFile::toString()
           interimStr.AssignWithConversion("(*dnu*) ");
 
         interimStr.AppendWithConversion(rsrcVal);
-        interimCStr = interimStr.ToNewCString();
+        interimCStr = ToNewCString(interimStr);
 
         if(interimCStr)
         {

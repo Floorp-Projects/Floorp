@@ -57,6 +57,7 @@
 #include "nsIRDFService.h"
 #include "nsIEventQueueService.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsRDFCID.h"
 #include "nsEscape.h"
 #include "nsIMsgStatusFeedback.h"
@@ -1073,7 +1074,7 @@ nsresult nsImapService::DecomposeImapURI(const char * aMessageURI, nsIMsgFolder 
     if (msgKey) {
       nsCAutoString messageIdString;
       messageIdString.AppendInt(msgKey, 10 /* base 10 */);
-      *aMsgKey = messageIdString.ToNewCString();
+      *aMsgKey = ToNewCString(messageIdString);
     }
 
     return rv;

@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsEditorService.h"
+#include "nsReadableUtils.h"
 
 nsEditorService::nsEditorService()
 {

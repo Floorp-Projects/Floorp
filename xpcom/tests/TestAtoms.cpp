@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIAtom.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prprf.h"
 #include "prtime.h"
 #include <stdio.h>
@@ -64,9 +65,9 @@ int main(int argc, char** argv)
     }
     nsAutoString sb;
     sb.AssignWithConversion(buf);
-    strings[count++] = sb.ToNewUnicode();
+    strings[count++] = ToNewUnicode(sb);
     sb.ToUpperCase();
-    strings[count++] = sb.ToNewUnicode();
+    strings[count++] = ToNewUnicode(sb);
   }
   PRTime end0 = PR_Now();
 
@@ -87,7 +88,7 @@ int main(int argc, char** argv)
       id->ToString(s1);
       ids[i]->ToString(s2);
       printf("find failed: id='%s' ids[%d]='%s'\n",
-             s1.ToNewCString(), i, s2.ToNewCString());
+             NS_LossyConvertUCS2toASCII(s1).get(), i, NS_LossyConvertUCS2toASCII(s2).get());
       return -1;
     }
     NS_RELEASE(id);

@@ -48,6 +48,7 @@
 #include "nsIObserverService.h"
 #include "nsIEventQueueService.h"
 #include "nsLiteralString.h"
+#include "nsReadableUtils.h"
 
 // nsISupports Implementation
 
@@ -91,7 +92,7 @@ NS_IMETHODIMP nsAutoConfig::GetConfigURL(char * *aConfigURL)
         return NS_OK;
     }
     
-    *aConfigURL = mConfigURL.ToNewCString();
+    *aConfigURL = ToNewCString(mConfigURL);
     if (!*aConfigURL)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;

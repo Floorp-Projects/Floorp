@@ -82,6 +82,7 @@
 #include "nsIWindowMediator.h"
 #include "plevent.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
@@ -887,7 +888,7 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindowInternal* aWin)
   docShellAsItem->GetName(getter_Copies(name));
   nsAutoString str(name);
 
-  char* cstr = str.ToNewCString();
+  char* cstr = ToNewCString(str);
   printf("Attaching to WebShellWindow[%s]\n", cstr);
   nsCRT::free(cstr);
 #endif
@@ -941,7 +942,7 @@ nsEditorShell::GetEditorType(PRUnichar **_retval)
   if (!_retval)
     return NS_ERROR_NULL_POINTER;
 
-  *_retval = mEditorTypeString.ToNewUnicode();
+  *_retval = ToNewUnicode(mEditorTypeString);
 
   return NS_OK;
 }
@@ -951,7 +952,7 @@ NS_IMETHODIMP
 nsEditorShell::GetContentsMIMEType(char * *aContentsMIMEType)
 {
   NS_ENSURE_ARG_POINTER(aContentsMIMEType);
-  *aContentsMIMEType = mContentMIMEType.ToNewCString();
+  *aContentsMIMEType = ToNewCString(mContentMIMEType);
   return NS_OK;
 }
 
@@ -1014,7 +1015,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     nsAutoString  errorMsg; errorMsg.AssignWithConversion("Failed to init editor. Unknown editor type \"");
     errorMsg += mEditorTypeString;
     errorMsg.AppendWithConversion("\"\n");
-    char  *errorMsgCString = errorMsg.ToNewCString();
+    char  *errorMsgCString = ToNewCString(errorMsg);
     NS_WARNING(errorMsgCString);
     nsCRT::free(errorMsgCString);
 #endif
@@ -1324,7 +1325,7 @@ nsEditorShell::GetParagraphState(PRBool *aMixed, PRUnichar **_retval)
     nsAutoString state;
     err = htmlEditor->GetParagraphState(&bMixed, state);
     if (!bMixed)
-      *_retval = state.ToNewUnicode();
+      *_retval = ToNewUnicode(state);
   }
   return err;
 }
@@ -1350,7 +1351,7 @@ nsEditorShell::GetListState(PRBool *aMixed, PRUnichar **_retval)
         if (bOL) tagStr.AssignWithConversion("ol");
         else if (bUL) tagStr.AssignWithConversion("ul");
         else if (bDL) tagStr.AssignWithConversion("dl");
-        *_retval = tagStr.ToNewUnicode();
+        *_retval = ToNewUnicode(tagStr);
       }
     }  
   }
@@ -1378,7 +1379,7 @@ nsEditorShell::GetListItemState(PRBool *aMixed, PRUnichar **_retval)
         if (bLI) tagStr.AssignWithConversion("li");
         else if (bDT) tagStr.AssignWithConversion("dt");
         else if (bDD) tagStr.AssignWithConversion("dd");
-        *_retval = tagStr.ToNewUnicode();
+        *_retval = ToNewUnicode(tagStr);
       }
     }  
   }
@@ -1409,7 +1410,7 @@ nsEditorShell::GetAlignment(PRBool *aMixed, PRUnichar **_retval)
         tagStr.AssignWithConversion("right");
       else if (firstAlign == nsIHTMLEditor::eJustify)
         tagStr.AssignWithConversion("justify");
-      *_retval = tagStr.ToNewUnicode();
+      *_retval = ToNewUnicode(tagStr);
     }  
   }
   return err;
@@ -2220,7 +2221,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindowInternal *parent, const PRUnichar *fi
         
         nsAutoString returnVal;
         returnVal.AssignWithConversion((const char*) url);
-        *_retval = returnVal.ToNewUnicode();
+        *_retval = ToNewUnicode(returnVal);
 
         if (!*_retval)
           res = NS_ERROR_OUT_OF_MEMORY;
@@ -2337,11 +2338,11 @@ nsEditorShell::GetDocumentTitle(PRUnichar **title)
   nsresult res = GetDocumentTitleString(titleStr);
   if (NS_SUCCEEDED(res))
   {
-    *title = titleStr.ToNewUnicode();
+    *title = ToNewUnicode(titleStr);
   } else {
     // Don't fail, just return an empty string    
     nsAutoString empty;
-    *title = empty.ToNewUnicode();
+    *title = ToNewUnicode(empty);
     res = NS_OK;
   }
   return res;
@@ -3004,7 +3005,7 @@ nsEditorShell::GetContentsAs(const PRUnichar *format, PRUint32 flags,
   if (editor)
     err = editor->OutputToString(contentsAs, aFormat, flags);
 
-  *aContentsAs = contentsAs.ToNewUnicode();
+  *aContentsAs = ToNewUnicode(contentsAs);
   
   return err;
 }
@@ -3020,7 +3021,7 @@ nsEditorShell::GetHeadContentsAsHTML(PRUnichar **aHeadContents)
   if (editor)
     err = editor->GetHeadContentsAsHTML(headContents);
 
-  *aHeadContents = headContents.ToNewUnicode();
+  *aHeadContents = ToNewUnicode(headContents);
   
   return err;
 }
@@ -4291,7 +4292,7 @@ nsEditorShell::GetSelectedOrParentTableElement(PRUnichar **aTagName, PRInt32 *aS
         nsAutoString TagName(*aTagName);
         if (tableEditor)
           result = tableEditor->GetSelectedOrParentTableElement(*_retval, TagName, *aSelectedCount);
-          *aTagName = TagName.ToNewUnicode();
+          *aTagName = ToNewUnicode(TagName);
       }
       break;
     default:
@@ -4457,7 +4458,7 @@ nsEditorShell::GetNextMisspelledWord(PRUnichar **aNextMisspelledWord)
     DeleteSuggestedWordList();
     result = mSpellChecker->NextMisspelledWord(&nextMisspelledWord, &mSuggestedWordList);
   }
-  *aNextMisspelledWord = nextMisspelledWord.ToNewUnicode();
+  *aNextMisspelledWord = ToNewUnicode(nextMisspelledWord);
   return result;
 }
 
@@ -4479,7 +4480,7 @@ nsEditorShell::GetSuggestedWord(PRUnichar **aSuggestedWord)
     }
     result = NS_OK;
   }
-  *aSuggestedWord = word.ToNewUnicode();
+  *aSuggestedWord = ToNewUnicode(word);
   return result;
 }
 
@@ -4553,7 +4554,7 @@ nsEditorShell::GetPersonalDictionaryWord(PRUnichar **aDictionaryWord)
     }
     result = NS_OK;
   }
-  *aDictionaryWord = word.ToNewUnicode();
+  *aDictionaryWord = ToNewUnicode(word);
   return result;
 }
 
@@ -4635,7 +4636,7 @@ nsEditorShell::GetDictionaryList(PRUnichar ***aDictionaryList, PRUint32 *aCount)
     for (i = 0; i < *aCount; i++)
     {
       dictList.StringAt(i, dictStr);
-      tmpPtr[i] = dictStr.ToNewUnicode();
+      tmpPtr[i] = ToNewUnicode(dictStr);
     }
   }
 
@@ -4660,7 +4661,7 @@ nsEditorShell::GetCurrentDictionary(PRUnichar **aDictionary)
     if (NS_FAILED(result))
       return result;
 
-    *aDictionary = dictStr.ToNewUnicode();
+    *aDictionary = ToNewUnicode(dictStr);
   }
 
   return result;

@@ -44,6 +44,7 @@
 #include "nsIServiceManager.h"
 #include "nsProxiedService.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsNetCID.h"
 #include "prlog.h"
 #include "nsProtocolProxyService.h"
@@ -801,7 +802,7 @@ nsSocketTransportService::GetNeckoStringByName (const char *aName, PRUnichar **a
 			resultString.AssignWithConversion("[StringName");
 			resultString.AppendWithConversion(aName);
 			resultString.AppendWithConversion("?]");
-			*aString = resultString.ToNewUnicode();
+			*aString = ToNewUnicode(resultString);
 		}
 		else
 		{
@@ -811,7 +812,7 @@ nsSocketTransportService::GetNeckoStringByName (const char *aName, PRUnichar **a
 	else
 	{
 		res = NS_OK;
-		*aString = resultString.ToNewUnicode();
+		*aString = ToNewUnicode(resultString);
 	}
 
 	return res;

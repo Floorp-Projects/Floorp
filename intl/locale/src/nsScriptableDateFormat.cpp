@@ -45,6 +45,7 @@
 #include "nsIDateTimeFormat.h"
 #include "nsIScriptableDateFormat.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -138,7 +139,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
           rv = aDateTimeFormat->FormatTime(aLocale, dateFormatSelector, timeFormatSelector, 
                                            timetTime, mStringOut);
           if (NS_SUCCEEDED(rv)) {
-            *dateTimeString = mStringOut.ToNewUnicode();
+            *dateTimeString = ToNewUnicode(mStringOut);
           }
         }
         else {
@@ -153,7 +154,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
             rv = aDateTimeFormat->FormatPRTime(aLocale, dateFormatSelector, timeFormatSelector, 
                                                prtime, mStringOut);
             if (NS_SUCCEEDED(rv)) {
-              *dateTimeString = mStringOut.ToNewUnicode();
+              *dateTimeString = ToNewUnicode(mStringOut);
             }
           }
         }

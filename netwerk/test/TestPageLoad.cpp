@@ -49,6 +49,7 @@
 #include "plstr.h"
 #include "nsSupportsArray.h"
 #include <fstream.h>
+#include "nsReadableUtils.h"
 
 int getStrLine(const char *src, char *str, int ind, int max);
 nsresult auxLoad(char *uriBuf);
@@ -92,7 +93,7 @@ static NS_METHOD streamParse (nsIInputStream* in,
 
   if(globalStream.Length() > 0) {
     globalStream.AppendWithConversion(fromRawSegment);
-    tmp = globalStream.ToNewCString();
+    tmp = ToNewCString(globalStream);
     //printf("\n>>NOW:\n^^^^^\n%s\n^^^^^^^^^^^^^^", tmp);
   } else {
     tmp = (char *)fromRawSegment;

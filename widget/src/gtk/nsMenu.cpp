@@ -45,6 +45,7 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsGtkEventHandler.h"
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
@@ -194,7 +195,7 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
 NS_METHOD nsMenu::GetAccessKey(nsString &aText)
 {
   aText = mAccessKey;
-  char *foo = mAccessKey.ToNewCString();
+  char *foo = ToNewCString(mAccessKey);
 
 #ifdef DEBUG_pavlov
   g_print("GetAccessKey returns \"%s\"\n", foo);
@@ -208,7 +209,7 @@ NS_METHOD nsMenu::GetAccessKey(nsString &aText)
 NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
 {
   mAccessKey = aText;
-  char *foo = mAccessKey.ToNewCString();
+  char *foo = ToNewCString(mAccessKey);
 
 #ifdef DEBUG_pavlov
   g_print("SetAccessKey setting to \"%s\"\n", foo);
@@ -760,7 +761,7 @@ void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
 {
   nsString menuName;
   menuElement->GetAttribute(nsAutoString("label"), menuName);
-  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+  //printf("Creating Menu [%s] \n", NS_LossyConvertUCS2toASCII(menuName).get());
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
@@ -799,7 +800,7 @@ void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
         menuitemElement->GetNodeName(menuitemNodeType);
 
 #ifdef DEBUG_saari
-        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("menuseparator"));
+        printf("Type [%s] %d\n", NS_LossyConvertUCS2toASCII(menuitemNodeType).get(), menuitemNodeType.Equals("menuseparator"));
 #endif
 
         if (menuitemNodeType.Equals("menuitem")) {

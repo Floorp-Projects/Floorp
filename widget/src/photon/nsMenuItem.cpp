@@ -47,6 +47,7 @@
 #include "nsIPopUpMenu.h"
 
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
@@ -122,7 +123,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 //-------------------------------------------------------------------------
 nsMenuItem::~nsMenuItem()
 {
-  char *str=mLabel.ToNewCString();
+  char *str = ToNewCString(mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuItem::~nsMenuItem Destructor called for <%s>\n", str));
   delete [] str;
    
@@ -150,7 +151,7 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
     return;
   }
 
-  char * nameStr = mLabel.ToNewCString();
+  char * nameStr = ToNewCString(mLabel);
 
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuItem::nsMenuItem Create with MenuBar parent this=<%p> aMBParent=<%p> aParent=<%p> label=<%s>\n", this, aMBParent,aParent, nameStr));
 
@@ -284,7 +285,7 @@ NS_METHOD nsMenuItem::Create(nsISupports     *aParent,
                              const nsString  &aLabel,  
                              PRBool           aIsSeparator)
 {
-  char *str=aLabel.ToNewCString();
+  char *str = ToNewCString(aLabel);
   PR_LOG(PhWidLog, PR_LOG_ERROR,("nsMenuItem::Create with nsIMenu this=<%p>, aParent=<%p> aLabel=<%s> aIsSep=<%d>\n",this, aParent, str, aIsSeparator));
   delete [] str;
 
@@ -494,7 +495,7 @@ nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
 */
 NS_METHOD nsMenuItem::SetCommand(const nsString & aStrCmd)
 {
-  char *str = aStrCmd.ToNewCString();
+  char *str = ToNewCString(aStrCmd);
   PR_LOG(PhWidLog, PR_LOG_ERROR,("nsMenuItem::SetCommand  mCommandStr=<%s>\n", str));
   delete [] str;
   
@@ -672,7 +673,7 @@ int nsMenuItem::MenuItemArmCb (PtWidget_t *widget, void *nsClassPtr, PtCallbackI
   nsEventStatus status;
   nsMenuItem *aMenuItem = (nsMenuItem *) nsClassPtr;
 
-  char *str = aMenuItem->mLabel.ToNewCString();
+  char *str = ToNewCString(aMenuItem->mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuItem::MenuItemArmCB Callback for <%s>\n", str));
   delete [] str;
 
@@ -685,7 +686,7 @@ int nsMenuItem::MenuItemDisarmCb (PtWidget_t *widget, void *nsClassPtr, PtCallba
   nsEventStatus status;
   nsMenuItem *aMenuItem = (nsMenuItem *) nsClassPtr;
 
-  char *str = aMenuItem->mLabel.ToNewCString();
+  char *str = ToNewCString(aMenuItem->mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuItem::MenuItemDisarmCB Callback for <%s>\n", str));
   delete [] str;
 

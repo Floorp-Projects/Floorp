@@ -68,6 +68,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsXULAtoms.h"
 #include "nsGUIEvent.h"
 #include "nsIXPConnect.h"
@@ -980,7 +981,7 @@ nsXBLPrototypeHandler::ConstructMask()
   nsAutoString modifiers;
   mHandlerElement->GetAttr(kNameSpaceID_None, kModifiersAtom, modifiers);
   if (!modifiers.IsEmpty()) {
-    char* str = modifiers.ToNewCString();
+    char* str = ToNewCString(modifiers);
     char* newStr;
     char* token = nsCRT::strtok( str, ", ", &newStr );
     while( token != NULL ) {

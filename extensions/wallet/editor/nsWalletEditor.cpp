@@ -44,6 +44,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsWalletEditor.h"
@@ -77,7 +78,7 @@ WalletEditorImpl::GetValue(PRUnichar** aValue)
   nsAutoString walletList;
   res = walletservice->WALLET_PreEdit(walletList);
   if (NS_SUCCEEDED(res)) {
-    *aValue = walletList.ToNewUnicode();
+    *aValue = ToNewUnicode(walletList);
   }
   return res;
 }

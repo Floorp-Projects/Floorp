@@ -51,6 +51,7 @@
 #include "Courier-BoldOblique.h"
 #include "Courier-Oblique.h"
 #include "Symbol.h"
+#include "nsReadableUtils.h"
 
 
 
@@ -302,7 +303,7 @@ PRBool  bvalue;
 AFMKey  key;
 double  value;
 PRInt32 ivalue;
-char* AFMFileName= aFontName.name.ToNewUTF8String(); // file we will open
+char* AFMFileName= ToNewUTF8String(aFontName.name); // file we will open
 
   if(nsnull == AFMFileName) 
     return (success);

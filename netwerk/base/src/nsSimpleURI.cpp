@@ -41,6 +41,7 @@
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "nsURLHelper.h"
@@ -138,7 +139,7 @@ nsSimpleURI::GetSpec(char* *result)
     string.AppendWithConversion(mPath);
 
 //    NS_UNLOCK_INSTANCE();
-    *result = string.ToNewCString();
+    *result = ToNewCString(string);
     return NS_OK;
 }
 
@@ -160,13 +161,13 @@ nsSimpleURI::SetSpec(const char* aSpec)
     NS_ASSERTION(n == count, "Mid failed");
     if (mScheme) 
         nsCRT::free(mScheme);
-    mScheme = scheme.ToNewCString();
+    mScheme = ToNewCString(scheme);
     if (mScheme == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     ToLowerCase(mScheme);
     if (mPath)   
         nsCRT::free(mPath);
-    mPath = path.ToNewCString();
+    mPath = ToNewCString(path);
     if (mPath == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -193,7 +194,7 @@ nsSimpleURI::GetPrePath(char* *result)
 {
     nsCAutoString prePath(mScheme);
     prePath += ":";
-    *result = prePath.ToNewCString();
+    *result = ToNewCString(prePath);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

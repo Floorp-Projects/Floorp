@@ -41,6 +41,7 @@
 #include "pratom.h"
 #include "nsURLProperties.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsLocaleCID.h"
 #include "nsUConvDll.h"
 #include "nsIComponentManager.h"
@@ -167,7 +168,7 @@ nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar
   if (mLocale.Equals(localeNameAsString) ||
      // support the 4.x behavior
      (mLocale.EqualsIgnoreCase("en_US") && localeNameAsString.EqualsIgnoreCase("C"))) {
-    *_retValue = mCharset.ToNewUnicode();
+    *_retValue = ToNewUnicode(mCharset);
     return NS_OK;
   }
 
@@ -181,7 +182,7 @@ nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar
   // 
   NS_ASSERTION(0, "GetDefaultCharsetForLocale: need to add multi locale support");
   // until we add multi locale support: use the the charset of the user's locale
-  *_retValue = mCharset.ToNewUnicode();
+  *_retValue = ToNewUnicode(mCharset);
   return NS_ERROR_USING_FALLBACK_LOCALE;
 #endif
 
@@ -193,13 +194,13 @@ nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar
   nsString charset;
   nsresult res = ConvertLocaleToCharsetUsingDeprecatedConfig(localeStr, charset);
   if (NS_SUCCEEDED(res)) {
-    *_retValue = charset.ToNewUnicode();
+    *_retValue = ToNewUnicode(charset);
     return res; // succeeded
   }
 
   NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
   charset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
-  *_retValue=charset.ToNewUnicode();
+  *_retValue = ToNewUnicode(charset);
   return NS_ERROR_USING_FALLBACK_LOCALE;
 }
 

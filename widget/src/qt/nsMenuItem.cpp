@@ -44,6 +44,7 @@
 #include "nsIPopUpMenu.h"
 #include "nsQEventHandler.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIContent.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMElement.h"
@@ -137,7 +138,7 @@ void nsMenuItem::Create(nsIWidget      * aMBParent,
         return;
     }
 
-    char * nameStr = mLabel.ToNewCString();
+    char * nameStr = ToNewCString(mLabel);
 
     mMenuItem = new QString(nameStr);
 

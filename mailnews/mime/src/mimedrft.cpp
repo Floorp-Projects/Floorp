@@ -58,6 +58,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
@@ -1104,7 +1105,7 @@ mime_insert_forwarded_message_headers(char            **body,
     char *utf8 = NULL;
     nsAutoString ucs2;
     if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode(nsCAutoString(mailcharset), nsCAutoString(*body), ucs2))) {
-      utf8 = ucs2.ToNewUTF8String();
+      utf8 = ToNewUTF8String(ucs2);
       if (NULL != utf8) {
         PR_Free(*body);
         *body = utf8;

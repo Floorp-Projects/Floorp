@@ -44,6 +44,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIMsgDBView.h"
+#include "nsReadableUtils.h"
 
 static const char *kDBFolderInfoScope = "ns:msg:db:row:scope:dbfolderinfo:all";
 static const char *kDBFolderInfoTableKind = "ns:msg:db:table:kind:dbfolderinfo";
@@ -672,7 +673,7 @@ nsDBFolderInfo::GetCharPtrCharacterSet(char **result)
 
     if (NS_SUCCEEDED(rv) && (*result == nsnull || **result == '\0'))
     {
-        *result = gDefaultCharacterSet.ToNewCString();
+        *result = ToNewCString(gDefaultCharacterSet);
     }
 
     return rv;

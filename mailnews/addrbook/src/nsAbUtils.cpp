@@ -40,6 +40,7 @@
 #include "nsAbUtils.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 /*
  * Convert the nsCStringArray to a char* array
@@ -66,9 +67,9 @@ nsresult CStringArrayToCharPtrArray::Convert (nsCStringArray& array,
 
         if (copyElements == PR_TRUE)
             (*returnPropertiesArray)[i] =
-                array[i]->ToNewCString();
+                ToNewCString(*array[i]);
         else
-            (*returnPropertiesArray)[i] = NS_CONST_CAST(char *, (array[i]->ToNewCString()));
+            (*returnPropertiesArray)[i] = ToNewCString(*array[i]);
     }
 
     return NS_OK;
@@ -120,9 +121,9 @@ nsresult StringArrayToPRUnicharPtrArray::Convert (nsStringArray& array,
 
         if (copyElements == PR_TRUE)
             (*returnPropertiesArray)[i] =
-                array[i]->ToNewUnicode();
+                ToNewUnicode(*array[i]);
         else
-            (*returnPropertiesArray)[i] = NS_REINTERPRET_CAST(PRUnichar*,array[i]->ToNewCString());
+            (*returnPropertiesArray)[i] = ToNewUnicode(*array[i]);
     }
 
     return NS_OK;

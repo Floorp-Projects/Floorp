@@ -52,6 +52,7 @@
 #include "nsNetUtil.h"
 #include "nsIDocument.h"
 #include "nsHTMLUtils.h"
+#include "nsReadableUtils.h"
 
 // XXX no SRC attribute
 
@@ -285,7 +286,7 @@ nsHTMLStyleElement::GetHrefCString(char* &aBuf)
     }
     else {
       // Absolute URL is same as relative URL.
-      aBuf = relURLSpec.ToNewUTF8String();
+      aBuf = ToNewUTF8String(relURLSpec);
     }
   }
   else {

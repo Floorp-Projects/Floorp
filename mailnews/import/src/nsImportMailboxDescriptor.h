@@ -39,6 +39,7 @@
 #define nsImportMailboxDescriptor_h___
 
 #include "nscore.h"
+#include "nsReadableUtils.h"
 #include "nsIImportMailboxDescriptor.h"
 #include "nsIFileSpec.h"
 
@@ -62,7 +63,7 @@ public:
 	NS_IMETHOD	SetSize( PRUint32 theSize) { m_size = theSize; return( NS_OK);}
 	
 	/* attribute wstring displayName; */
-	NS_IMETHOD	GetDisplayName( PRUnichar **pName) { *pName = m_displayName.ToNewUnicode(); return( NS_OK);}
+	NS_IMETHOD	GetDisplayName( PRUnichar **pName) { *pName = ToNewUnicode(m_displayName); return( NS_OK);}
 	NS_IMETHOD	SetDisplayName( const PRUnichar * pName) { m_displayName = pName; return( NS_OK);}
 	
 	/* attribute boolean import; */

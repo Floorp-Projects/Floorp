@@ -45,6 +45,7 @@
 #include "nsMimeMapper.h"
 #include "nsITransferable.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 #include <Drag.h>
 #include <Scrap.h>
@@ -226,7 +227,7 @@ nsMimeMapperMac :: ExportMapping ( short * outLength ) const
 
   // for each pair, write out flavor and mime types
   for ( MimeMapConstIterator it = mMappings.begin(); it != mMappings.end(); ++it ) {
-    const char* mimeType = it->second.ToNewCString();
+    const char* mimeType = ToNewCString(it->second);
   	ostr << it->first << ' ' << mimeType << ' ';
   	delete [] mimeType;
   }
@@ -257,7 +258,7 @@ nsMimeMapperMac :: ExportMapping ( short * outLength ) const
       // create a buffer for this mapping, fill it in, and append it to our
       // ongoing result buffer, |exportBuffer|. 
       char* currMapping = new char[10 + 2 + it->second.Length() + 1];  // same computation as above, plus NULL
-      char* mimeType = it->second.ToNewCString();
+      char* mimeType = ToNewCString(it->second);
       if ( currMapping && mimeType ) {
         sprintf(currMapping, "%ld %s ", it->first, mimeType);
         strcat(posInString, currMapping);

@@ -42,6 +42,7 @@
 #include "mimecth.h"
 #include "mimeobj.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
 
 // String bundles...
 #include "nsIStringBundle.h"
@@ -93,7 +94,7 @@ nsCOMPtr<nsIStringBundle> stringBundle = nsnull;
       nsAutoString v;
       v.Append(ptrv);
 	    PR_FREEIF(ptrv);
-      tempString = v.ToNewUTF8String();
+      tempString = ToNewUTF8String(v);
     }
 	}
 
@@ -162,7 +163,7 @@ GenerateMessage(char** html)
   PR_FREEIF(tString);
 
   temp.Append("</CENTER></td></tr></table></center><BR>");
-  *html = temp.ToNewCString();
+  *html = ToNewCString(temp);
   return 0;
 }
 

@@ -28,6 +28,7 @@
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIImportService.h"
 #include "nsIComponentManager.h"
@@ -277,7 +278,7 @@ NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **addrDescription, PRBool
     nsString	str;
     *_retval = PR_FALSE;
     nsTextStringBundle::GetStringByID( TEXTIMPORT_ADDRESS_NAME, str);
-    *addrDescription = str.ToNewUnicode();
+    *addrDescription = ToNewUnicode(str);
     
     return( NS_OK);
 }
@@ -431,9 +432,9 @@ void ImportAddressImpl::ReportError( PRInt32 errorNum, nsString& name, nsString 
 void ImportAddressImpl::SetLogs( nsString& success, nsString& error, PRUnichar **pError, PRUnichar **pSuccess)
 {
 	if (pError)
-		*pError = error.ToNewUnicode();
+		*pError = ToNewUnicode(error);
 	if (pSuccess)
-		*pSuccess = success.ToNewUnicode();
+		*pSuccess = ToNewUnicode(success);
 }
 
 

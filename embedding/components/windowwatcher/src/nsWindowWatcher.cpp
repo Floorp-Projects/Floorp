@@ -74,6 +74,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIWindowCreator.h"
 #include "nsIXPConnect.h"
+#include "nsReadableUtils.h"
 
 #ifdef XP_UNIX
 // please see bug 78421 for the eventual "right" fix for this
@@ -1036,7 +1037,7 @@ void nsWindowWatcher::CheckWindowName(nsString& aName)
       nsAutoString warn;
       warn.AssignWithConversion("Illegal character in window name ");
       warn.Append(aName);
-      char *cp = warn.ToNewCString();
+      char *cp = ToNewCString(warn);
       NS_WARNING(cp);
       nsCRT::free(cp);
       break;

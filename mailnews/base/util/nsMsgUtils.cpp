@@ -40,6 +40,7 @@
 #include "nsIMsgHdr.h"
 #include "nsMsgUtils.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsFileSpec.h"
 #include "nsEscape.h"
 #include "nsIServiceManager.h"
@@ -485,7 +486,7 @@ nsresult NS_MsgDecodeUnescapeURLPath(const char *path, PRUnichar **result)
   nsUnescape(unescapedName);
   nsAutoString resultStr;
   resultStr = NS_ConvertUTF8toUCS2(unescapedName);
-  *result = resultStr.ToNewUnicode();
+  *result = ToNewUnicode(resultStr);
   if (!*result) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }

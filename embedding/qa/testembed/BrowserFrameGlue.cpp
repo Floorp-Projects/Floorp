@@ -64,6 +64,7 @@
 #include "TestEmbed.h"
 #include "BrowserFrm.h"
 #include "Dialogs.h"
+#include "nsReadableUtils.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // IBrowserFrameGlue implementation
@@ -129,7 +130,7 @@ void CBrowserFrame::BrowserFrameGlueObj::GetBrowserFrameTitle(PRUnichar **aTitle
 		nsString nsTitle;
 		nsTitle.AssignWithConversion(title.GetBuffer(0));
 
-		*aTitle = nsTitle.ToNewUnicode();
+		*aTitle = ToNewUnicode(nsTitle);
 	}
 }
 

@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsICharsetConverterManager.h"
 #include "prmem.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -214,7 +215,7 @@ nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **aUni
       }
       NS_IF_RELEASE(decoder);
       nsString unicodeStr(unichars);
-      convertedString = unicodeStr.ToNewUnicode();
+      convertedString = ToNewUnicode(unicodeStr);
 	  delete [] unichars;
     }
   }

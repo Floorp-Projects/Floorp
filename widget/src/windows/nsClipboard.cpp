@@ -51,6 +51,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsIURL.h"
 #include "nsImageClipboard.h"
@@ -662,7 +663,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
         nsMemory::Free(*outData);
         nsAutoString urlUnicode;
         urlUnicode.AssignWithConversion( buffer );
-        *outData = urlUnicode.ToNewUnicode();
+        *outData = ToNewUnicode(urlUnicode);
         *outDataLen = strlen(buffer) * sizeof(PRUnichar);
         nsMemory::Free(buffer);
 
@@ -680,7 +681,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
           nsMemory::Free(*outData);
           nsAutoString urlSpecUnicode;
           urlSpecUnicode.AssignWithConversion( urlSpec );
-          *outData = urlSpecUnicode.ToNewUnicode();
+          *outData = ToNewUnicode(urlSpecUnicode);
           *outDataLen = strlen(urlSpec.get()) * sizeof(PRUnichar);
           dataFound = PR_TRUE;
         

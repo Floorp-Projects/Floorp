@@ -72,6 +72,7 @@
 #include "nsIAtom.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsReadableUtils.h"
 
 #include "nsISound.h"
 #include "nsIPrompt.h"
@@ -1862,7 +1863,7 @@ nsBookmarksService::ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool 
 		
 
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-	char *methodStr = notificationMethod.ToNewCString();
+	char *methodStr = ToNewCString(notificationMethod);
 	if (methodStr)
 	{
 		printf("Start Hour: %d    End Hour: %d    Duration: %d mins    Method: '%s'\n",
@@ -4345,7 +4346,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 	nsAutoString	indentationString;
 	  // STRING USE WARNING: converting in a loop.  Probably not a good idea
 	for (PRInt32 loop=0; loop<level; loop++)	indentationString.AppendWithConversion("    ");
-	char		*indentation = indentationString.ToNewCString();
+	char		*indentation = ToNewCString(indentationString);
 	if (nsnull == indentation)	return(NS_ERROR_OUT_OF_MEMORY);
 
 	strm << indentation;
@@ -4393,7 +4394,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 						if (NS_SUCCEEDED(rv = nameLiteral->GetValueConst(&title)))
 						{
 							nameString = title;
-							name = nameString.ToNewUTF8String();
+							name = ToNewUTF8String(nameString);
 						}
 					}
 				}
@@ -4629,7 +4630,7 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileSt
 		nsAutoString	literalString;
 		if (NS_SUCCEEDED(rv = GetTextForNode(node, literalString)))
 		{
-			char		*attribute = literalString.ToNewUTF8String();
+			char		*attribute = ToNewUTF8String(literalString);
 			if (nsnull != attribute)
 			{
 				if (isFirst == PR_FALSE)

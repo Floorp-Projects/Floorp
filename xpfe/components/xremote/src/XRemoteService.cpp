@@ -492,7 +492,7 @@ XRemoteService::BuildResponse(const char *aError, const char *aMessage)
   retvalString.Append(" ");
   retvalString.Append(aMessage);
 
-  retval = retvalString.ToNewCString();
+  retval = ToNewCString(retvalString);
   return retval;
 }
 

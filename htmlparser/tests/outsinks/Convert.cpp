@@ -29,6 +29,7 @@
 #include "nsLayoutCID.h"
 #include "nsIHTMLToTextSink.h"
 #include "nsIComponentManager.h"
+#include "nsReadableUtils.h"
 
 extern "C" void NS_SetupRegistry();
 
@@ -49,7 +50,7 @@ Compare(nsString& str, nsString& aFileName)
 {
   // Open the file in a Unix-centric way,
   // until I find out how to use nsFileSpec:
-  char* filename = aFileName.ToNewCString();
+  char* filename = ToNewCString(aFileName);
   FILE* file = fopen(filename, "r");
   if (!file)
   {
@@ -89,7 +90,7 @@ Compare(nsString& str, nsString& aFileName)
   {
     nsAutoString left;
     str.Left(left, different);
-    char* cstr = left.ToNewUTF8String();
+    char* cstr = ToNewUTF8String(left);
     printf("Comparison failed at char %d:\n-----\n%s\n-----\n",
            different, cstr);
     Recycle(cstr);
@@ -141,8 +142,8 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
   if (inType != NS_LITERAL_STRING("text/html")
       || outType != NS_LITERAL_STRING("text/plain"))
   {
-    char* in = inType.ToNewCString();
-    char* out = outType.ToNewCString();
+    char* in = ToNewCString(inType);
+    char* out = ToNewCString(outType);
     printf("Don't know how to convert from %s to %s\n", in, out);
     Recycle(in);
     Recycle(out);
@@ -177,7 +178,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
 
   parser->RegisterDTD(dtd);
 
-  char* inTypeStr = inType.ToNewCString();
+  char* inTypeStr = ToNewCString(inType);
   rv = parser->Parse(inString, 0, NS_ConvertASCIItoUCS2(inTypeStr), PR_FALSE, PR_TRUE);
   delete[] inTypeStr;
   if (NS_FAILED(rv))
@@ -190,7 +191,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
   if (compareAgainst.Length() > 0)
     return Compare(outString, compareAgainst);
 
-  char* charstar = outString.ToNewUTF8String();
+  char* charstar = ToNewUTF8String(outString);
   printf("Output string is:\n--------------------\n%s--------------------\n",
          charstar);
   delete[] charstar;

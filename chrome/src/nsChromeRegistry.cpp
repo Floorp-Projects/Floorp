@@ -64,6 +64,7 @@
 #include "nsIRDFContainerUtils.h"
 #include "nsHashtable.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "nsIStringBundle.h"
 #include "nsISimpleEnumerator.h"
@@ -2751,7 +2752,7 @@ nsChromeRegistry::GetBackstopSheets(nsIDocShell* aDocShell, nsISupportsArray **a
       if (!sheets.IsEmpty()) {
         // Construct the URIs and try to load each sheet.
         nsCAutoString sheetsStr; sheetsStr.AssignWithConversion(sheets);
-        char* str = sheets.ToNewCString();
+        char* str = ToNewCString(sheets);
         char* newStr;
         char* token = nsCRT::strtok( str, ", ", &newStr );
         while (token) {

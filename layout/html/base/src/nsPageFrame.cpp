@@ -47,6 +47,7 @@
 #include "nsIStyleSet.h"
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"
+#include "nsReadableUtils.h"
 
 // for page number localization formatting
 #include "nsTextFormatter.h"
@@ -273,9 +274,7 @@ nsPageFrame::IsPercentageBase(PRBool& aBase) const
 static PRUnichar *
 GetUStr(const char * aCStr)
 {
-  nsAutoString str;
-  str.AssignWithConversion(aCStr);
-  return str.ToNewUnicode();
+  return ToNewUnicode(nsDependentCString(aCStr));
 }
 
 // replace the &<code> with the value, but if the value is empty
@@ -309,10 +308,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
       if (mDateTimeStr != nsnull) {
         aNewStr.ReplaceSubstring(kDate, mDateTimeStr);
       } else {
-        nsAutoString empty;
-        PRUnichar * uEmpty = empty.ToNewUnicode();
-        aNewStr.ReplaceSubstring(kDate, uEmpty);
-        nsMemory::Free(uEmpty);
+        aNewStr.ReplaceSubstring(kDate, NS_LITERAL_STRING("").get());
       }
       nsMemory::Free(kDate);
       return;
@@ -514,7 +510,7 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     aRenderingContext.PopState(clipEmpty);
 #ifdef DEBUG_PRINTING
     PRINT_DEBUG_MSG2("Page: %p", this);
-    char * s = str.ToNewCString();
+    char * s = ToNewCString(str);
     if (s) {
       PRINT_DEBUG_MSG2(" [%s]", s);
       nsMemory::Free(s);

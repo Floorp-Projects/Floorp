@@ -43,6 +43,7 @@
 #include "nsPhGfxLog.h"
 #include "nsHashtable.h"
 #include "nsIPref.h"
+#include "nsReadableUtils.h"
 
 #include <errno.h>
 #include <string.h>
@@ -159,7 +160,7 @@ NS_IMPL_ISUPPORTS1( nsFontMetricsPh, nsIFontMetrics )
 
 	result = aContext->FirstExistingFont(aFont, firstFace);
 
-	str = firstFace.ToNewCString();
+	str = ToNewCString(firstFace);
 
 	if( !str || !str[0] )
 	  {
@@ -171,7 +172,7 @@ NS_IMPL_ISUPPORTS1( nsFontMetricsPh, nsIFontMetrics )
 	const PRUnichar *uc;
 	aLangGroup->GetUnicode( &uc );
 	nsString language( uc );
-	char *cstring = language.ToNewCString();
+	char *cstring = ToNewCString(language);
 
 	char prop[256];
 	sprintf( prop, "font.name.%s.%s", str, cstring );
@@ -289,7 +290,7 @@ NS_IMETHODIMP nsFontMetricsPh :: Destroy( )
 
 static void apGenericFamilyToFont( const nsString& aGenericFamily, nsIDeviceContext* aDC, nsString& aFontFace )
 {
-	char *str = aGenericFamily.ToNewCString();
+	char *str = ToNewCString(aGenericFamily);
 	//delete [] str;
 	free (str);
 }
@@ -469,7 +470,7 @@ static PRIntn EnumerateFamily( PLHashEntry* he, PRIntn i, void* arg )
 	EnumerateFamilyInfo* info = (EnumerateFamilyInfo*) arg;
 	PRUnichar** array = info->mArray;
 	int j = info->mIndex;
-	PRUnichar* str = ((nsString*) he->key)->ToNewUnicode();
+	PRUnichar* str = ToNewUnicode(*NS_STATIC_CAST(const nsString*, he->key));
 
 	if (!str)
 	  {
@@ -573,12 +574,12 @@ NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const 
 				if(stricmp(aGeneric, "monospace") == 0)
 				  {
 					  if(gFontDetails[i].flags & PHFONT_INFO_FIXED)
-						 array[nCount++] = gFontNames[i]->ToNewUnicode();
+						 array[nCount++] = ToNewUnicode(*gFontNames[i]);
 				  }
 				else
 				  {
 					  if (gFontDetails[i].flags & PHFONT_INFO_PROP)
-						 array[nCount++] = gFontNames[i]->ToNewUnicode();
+						 array[nCount++] = ToNewUnicode(*gFontNames[i]);
 				  }
 			}
 		  *aCount = nCount;

@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsXMLContentSink.h"
 #include "nsIElementFactory.h"
 #include "nsIParser.h"
@@ -276,7 +277,7 @@ nsXMLContentSink::ScrollToRef()
   // XXX Duplicate code in nsHTMLContentSink.
   // XXX Be sure to change both places if you make changes here.
   if (!mRef.IsEmpty()) {
-    char* tmpstr = mRef.ToNewCString();
+    char* tmpstr = ToNewCString(mRef);
     if(! tmpstr)
       return;
     nsUnescape(tmpstr);

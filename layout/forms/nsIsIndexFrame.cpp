@@ -67,6 +67,7 @@
 #include "nsILinkHandler.h"
 #include "nsIHTMLDocument.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsICharsetConverterManager.h"
 #include "nsEscape.h"
@@ -569,7 +570,7 @@ nsIsIndexFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder, n
     inBuf  = UnicodeToNewBytes(aString.get(), aString.Length(), encoder);
 
   if(nsnull == inBuf)
-    inBuf  = aString.ToNewCString();
+    inBuf  = ToNewCString(aString);
 
   // convert to CRLF breaks
   char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(inBuf,

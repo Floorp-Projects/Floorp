@@ -43,6 +43,7 @@
 #include "nsISupportsArray.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsAutoLock.h"
 #include "nsMemory.h"
@@ -864,7 +865,7 @@ NS_IMETHODIMP nsMsgFolder::GetName(PRUnichar **name)
       return server->GetPrettyName(name);
   }
 
-  *name = mName.ToNewUnicode();
+  *name = ToNewUnicode(mName);
   
   if (!(*name)) return NS_ERROR_OUT_OF_MEMORY;
 	return NS_OK;
@@ -2074,7 +2075,7 @@ NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aD
 			description.Append(serverName);
     }
 	}
-	*aDescription = description.ToNewUnicode();
+	*aDescription = ToNewUnicode(description);
 	return NS_OK;
 }
 
@@ -2600,7 +2601,7 @@ NS_IMETHODIMP nsMsgFolder::GetUriForMsg(nsIMsgDBHdr *msgHdr, char **aURI)
   uri.Append('#');
   uri.AppendInt(msgKey);
 
-  *aURI = uri.ToNewCString();
+  *aURI = ToNewCString(uri);
   return NS_OK;
 }
 
@@ -2619,7 +2620,7 @@ NS_IMETHODIMP nsMsgFolder::GenerateMessageURI(nsMsgKey msgKey, char **aURI)
   uri.Append('#');
   uri.AppendInt(msgKey);
 
-  *aURI = uri.ToNewCString();
+  *aURI = ToNewCString(uri);
   if (! *aURI)
 	  return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;

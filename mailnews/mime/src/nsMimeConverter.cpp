@@ -43,6 +43,7 @@
 #include "nsMsgI18N.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "nsReadableUtils.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsMimeConverter)
 NS_IMPL_THREADSAFE_RELEASE(nsMimeConverter)
@@ -97,9 +98,9 @@ nsMimeConverter::DecodeMimeHeader(const char *header,
   decodedCstr = MIME_DecodeMimeHeader(header, default_charset,
                                       override_charset, eatContinuations);
   if (nsnull == decodedCstr) {
-    *decodedString = NS_ConvertUTF8toUCS2(header).ToNewUnicode();
+    *decodedString = ToNewUnicode(NS_ConvertUTF8toUCS2(header));
   } else {
-    *decodedString = NS_ConvertUTF8toUCS2(decodedCstr).ToNewUnicode();
+    *decodedString = ToNewUnicode(NS_ConvertUTF8toUCS2(decodedCstr));
     PR_FREEIF(decodedCstr);
   }
   if (!(*decodedString))

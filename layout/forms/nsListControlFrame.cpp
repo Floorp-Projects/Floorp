@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nscore.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsListControlFrame.h"
 #include "nsFormControlFrame.h" // for COMPARE macro
 #include "nsFormControlHelper.h"
@@ -708,7 +709,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         } else {
             text = "No Value";
         }          
-        printf("[%d] - %s\n", i, text.ToNewCString());
+        printf("[%d] - %s\n", i, NS_LossyConvertUCS2toASCII(text).get());
       }
     }
   }

@@ -47,6 +47,7 @@
 #include "nsCOMPtr.h" 
 #include "nspr.h" 
 #include "nsHashtable.h" 
+#include "nsReadableUtils.h"
  
 #undef USER_DEFINED 
 #define USER_DEFINED "x-user-def" 
@@ -351,7 +352,7 @@ nsFontMetricsBeOS::FamilyExists(const nsString& aName)
   name.ToLowerCase(); 
   PRBool  isthere = PR_FALSE; 
  
-  char* cStr = name.ToNewCString(); 
+  char* cStr = ToNewCString(name); 
  
        int32 numFamilies = count_font_families(); 
        for(int32 i = 0; i < numFamilies; i++) 
@@ -426,7 +427,7 @@ EnumFonts(nsIAtom* aLangGroup, const char* aGeneric, PRUint32* aCount,
                if(get_font_family(i, &family, &flags) == B_OK) 
                { 
                        font_name.AssignWithConversion(family); 
-                       array[i] = font_name.ToNewUnicode(); 
+                       array[i] = ToNewUnicode(font_name); 
                } 
        } 
  

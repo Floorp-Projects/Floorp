@@ -41,6 +41,7 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStringUtil.h"
 
 #include "nsWindow.h"
@@ -135,7 +136,7 @@ NS_METHOD nsTextHelper::GetText(nsString& aTextBuffer,
 //-------------------------------------------------------------------------
 NS_METHOD nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
 {
-    char *buf = aText.ToNewCString();
+    char *buf = ToNewCString(aText);
 
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsTextHelper::SetText to \"%s\"\n",
                                        buf));

@@ -40,6 +40,7 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsAbBaseCID.h"
 #include "prmem.h"	 
 #include "prlog.h"	 
@@ -468,8 +469,8 @@ static const char *kAbPrintUrlFormat = "addbook:printone?email=%s&folder=%s";
 	}
 	dirNameStr.ReplaceSubstring(NS_ConvertASCIItoUCS2(" "), NS_ConvertASCIItoUCS2("%20"));
 
-  char *emailCharStr = emailStr.ToNewUTF8String();
-  char *dirCharStr = dirNameStr.ToNewUTF8String();
+  char *emailCharStr = ToNewUTF8String(emailStr);
+  char *dirCharStr = ToNewUTF8String(dirNameStr);
 
 	*aPrintCardUrl = PR_smprintf(kAbPrintUrlFormat, emailCharStr, dirCharStr);
 

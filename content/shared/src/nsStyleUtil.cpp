@@ -55,6 +55,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
+#include "nsReadableUtils.h"
 
 // XXX This is here because nsCachedStyleData is accessed outside of
 // the content module; e.g., by nsCSSFrameConstructor.
@@ -717,7 +718,7 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresCon
 
         // convert here, rather than twice in NS_MakeAbsoluteURI and
         // back again
-        char * href = val.ToNewCString();
+        char * href = ToNewCString(val);
         char * absHREF = nsnull;
         (void) NS_MakeAbsoluteURI(&absHREF, href, baseURI);
         nsCRT::free(href);

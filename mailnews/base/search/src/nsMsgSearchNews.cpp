@@ -37,6 +37,7 @@
 #include "msgCore.h"
 #include "nsMsgSearchAdapter.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsMsgSearchScopeTerm.h"
 #include "nsMsgResultElement.h"
 #include "nsMsgSearchTerm.h"
@@ -247,7 +248,7 @@ char *nsMsgSearchNews::EncodeTerm (nsIMsgSearchTerm *term)
 nsresult nsMsgSearchNews::GetEncoding(char **result)
 {
   NS_ENSURE_ARG(result);
-  *result = m_encoding.ToNewCString();
+  *result = ToNewCString(m_encoding);
   return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

@@ -44,6 +44,7 @@
 #include "nsIRDFResource.h"
 
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "prthread.h"
 
 
@@ -300,7 +301,7 @@ NS_IMETHODIMP nsAbDirectoryQueryPropertyValue::GetName(char*  *aName)
     if (!value)
         *aName = 0;
     else
-        *aName = mName.ToNewCString ();
+        *aName = ToNewCString(mName);
 
     return NS_OK;
 
@@ -309,7 +310,7 @@ NS_IMETHODIMP nsAbDirectoryQueryPropertyValue::GetName(char*  *aName)
 /* read only attribute wstring value; */
 NS_IMETHODIMP nsAbDirectoryQueryPropertyValue::GetValue(PRUnichar*  *aValue)
 {
-    *aValue = mValue.ToNewUnicode();
+    *aValue = ToNewUnicode(mValue);
     if (!(*aValue)) 
         return NS_ERROR_OUT_OF_MEMORY;
     else

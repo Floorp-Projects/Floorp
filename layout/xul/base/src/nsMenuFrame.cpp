@@ -80,6 +80,7 @@
 #include "nsIPref.h"
 #include "nsIScrollableView.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
 #include "nsGUIEvent.h"
 
@@ -1451,7 +1452,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   nsAutoString modifiers;
   keyElement->GetAttr(kNameSpaceID_None, nsXULAtoms::modifiers, modifiers);
   
-  char* str = modifiers.ToNewCString();
+  char* str = ToNewCString(modifiers);
   char* newStr;
   char* token = nsCRT::strtok(str, ", ", &newStr);
   while (token) {

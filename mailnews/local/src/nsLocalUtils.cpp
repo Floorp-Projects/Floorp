@@ -40,6 +40,7 @@
 #include "nsIServiceManager.h"
 #include "prsystem.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsEscape.h"
 #include "nsIFileSpec.h"
 
@@ -315,7 +316,7 @@ nsresult nsCreateLocalBaseMessageURI(const char *baseURI, char **baseMessageURI)
 	nsCAutoString baseURIStr(kMailboxMessageRootURI);
 	baseURIStr += tailURI;
 
-	*baseMessageURI = baseURIStr.ToNewCString();
+	*baseMessageURI = ToNewCString(baseURIStr);
 	if(!*baseMessageURI)
 		return NS_ERROR_OUT_OF_MEMORY;
 

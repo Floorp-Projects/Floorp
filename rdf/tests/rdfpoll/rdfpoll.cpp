@@ -72,6 +72,7 @@
 #include "plstr.h"
 #include "nsParserCIID.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsNetCID.h"
 
 #if defined(XP_PC)
@@ -202,7 +203,7 @@ rdf_WriteOp(const char* aOp,
         rv = literal->GetValue(getter_Copies(target));
         if (NS_FAILED(rv)) return rv;
 
-        char* p = nsAutoString(target).ToNewCString();
+        char* p = ToNewCString(target);
         if (! p)
             return NS_ERROR_OUT_OF_MEMORY;
         

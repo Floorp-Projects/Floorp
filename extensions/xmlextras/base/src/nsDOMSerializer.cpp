@@ -47,6 +47,7 @@
 #include "nsIComponentManager.h"
 #include "nsIContentSerializer.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 #include "nsLayoutCID.h" // XXX Need range CID
 static NS_DEFINE_CID(kRangeCID,NS_RANGE_CID);
@@ -145,7 +146,7 @@ nsDOMSerializer::SerializeToString(nsIDOMNode *root, PRUnichar **_retval)
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = str.ToNewUnicode();
+  *_retval = ToNewUnicode(str);
   if (!*_retval)
     return NS_ERROR_OUT_OF_MEMORY;
 

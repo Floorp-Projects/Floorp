@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsReadableUtils.h"
+
 #include "DeleteElementTxn.h"
 #ifdef NS_DEBUG
 #include "nsIDOMElement.h"
@@ -90,8 +92,8 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
   if (parentElement)
     parentElement->GetTagName(parentElementTag);
   char *c, *p;
-  c = elementTag.ToNewCString();
-  p = parentElementTag.ToNewCString();
+  c = ToNewCString(elementTag);
+  p = ToNewCString(parentElementTag);
   if (c&&p)
   {
     if (gNoisy)
@@ -129,8 +131,8 @@ NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
   if (parentElement)
     parentElement->GetTagName(parentElementTag);
   char *c, *p;
-  c = elementTag.ToNewCString();
-  p = parentElementTag.ToNewCString();
+  c = ToNewCString(elementTag);
+  p = ToNewCString(parentElementTag);
   if (c&&p)
   {
     if (gNoisy)

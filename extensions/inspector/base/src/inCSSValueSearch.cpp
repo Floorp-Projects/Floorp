@@ -40,6 +40,7 @@
 
 #include "nsIComponentManager.h"
 #include "nsVoidArray.h"
+#include "nsReadableUtils.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -146,9 +147,9 @@ inCSSValueSearch::GetStringResultAt(PRInt32 aIndex, PRUnichar **_retval)
 {
   if (mHoldResults) {
     nsAutoString* result = (nsAutoString*)mResults->ElementAt(aIndex);
-    *_retval = result->ToNewUnicode();
+    *_retval = ToNewUnicode(*result);
   } else if (aIndex == mResultCount-1) {
-    *_retval = mLastResult->ToNewUnicode();
+    *_retval = ToNewUnicode(*mLastResult);
   } else {
     return NS_ERROR_FAILURE;
   }
@@ -188,7 +189,7 @@ inCSSValueSearch::SetDocument(nsIDOMDocument* aDocument)
 NS_IMETHODIMP 
 inCSSValueSearch::GetBaseURL(PRUnichar** aBaseURL)
 {
-  *aBaseURL = mBaseURL->ToNewUnicode();
+  *aBaseURL = ToNewUnicode(*mBaseURL);
   return NS_OK;
 }
 
@@ -243,7 +244,7 @@ inCSSValueSearch::AddPropertyCriteria(const PRUnichar *aPropName)
 NS_IMETHODIMP 
 inCSSValueSearch::GetTextCriteria(PRUnichar** aTextCriteria)
 {
-  *aTextCriteria = mTextCriteria->ToNewUnicode();
+  *aTextCriteria = ToNewUnicode(*mTextCriteria);
   return NS_OK;
 }
 
@@ -352,7 +353,7 @@ inCSSValueSearch::EqualizeURL(nsAutoString* aURL)
     if (aURL->Find("chrome://", PR_FALSE, 0, 1) >= 0) {
       PRUint32 len = aURL->Length();
       char* result = new char[len-8];
-      char* buffer = aURL->ToNewCString();
+      char* buffer = ToNewCString(*aURL);
       PRUint32 i = 9;
       PRUint32 milestone = 0;
       PRUint32 s = 0;

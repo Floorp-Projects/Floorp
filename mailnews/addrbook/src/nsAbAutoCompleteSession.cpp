@@ -44,6 +44,7 @@
 #include "nsIAbDirectory.h"
 #include "nsIAbCard.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgI18N.h"
 #include "nsIMsgIdentity.h"
@@ -140,34 +141,31 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
     nsAutoString aStr(pDisplayNameStr);
     aStr.AppendWithConversion('@');
     aStr += mDefaultDomain;
-    fullAddrStr = aStr.ToNewUnicode();
+    fullAddrStr = ToNewUnicode(aStr);
   }
   else
   {
     if (mParser)
     {
-      char * fullAddress = nsnull;
-      char * utf8Name = nsAutoString(pDisplayNameStr).ToNewUTF8String();
-      char * utf8Email;
+      nsXPIDLCString fullAddress;
+      nsXPIDLCString utf8Email;
       if (bIsMailList)
       {
         if (pNotesStr && pNotesStr[0] != 0)
-          utf8Email = nsAutoString(pNotesStr).ToNewUTF8String();   
+          utf8Email.Adopt(ToNewUTF8String(nsDependentString(pNotesStr)));
         else
-          utf8Email = nsAutoString(pDisplayNameStr).ToNewUTF8String();   
+          utf8Email.Adopt(ToNewUTF8String(nsDependentString(pDisplayNameStr)));
       }
       else
-        utf8Email = nsAutoString(pEmailStr).ToNewUTF8String();   
+        utf8Email.Adopt(ToNewUTF8String(nsDependentString(pEmailStr)));
 
-      mParser->MakeFullAddress(nsnull, utf8Name, utf8Email, &fullAddress);
-      if (fullAddress && *fullAddress)
+      mParser->MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(pDisplayNameStr).get(),
+                               utf8Email, getter_Copies(fullAddress));
+      if (!fullAddress.IsEmpty())
       {
         /* We need to convert back the result from UTF-8 to Unicode */
-        INTL_ConvertToUnicode(fullAddress, nsCRT::strlen(fullAddress), (void**)&fullAddrStr);
-        PR_Free(fullAddress);
+        INTL_ConvertToUnicode(fullAddress.get(), fullAddress.Length(), (void**)&fullAddrStr);
       }
-      Recycle(utf8Name);
-      Recycle(utf8Email);
     }
   
     if (!fullAddrStr)
@@ -189,7 +187,7 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
         aStr.AppendWithConversion(" <");
         aStr += pStr;
         aStr.AppendWithConversion(">");
-        fullAddrStr = aStr.ToNewUnicode();
+        fullAddrStr = ToNewUnicode(aStr);
       }
       else
         fullAddrStr = nsnull;
@@ -458,7 +456,7 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, nsAbAutoCo
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr <nsIRDFResource> resource;
-    char * strFileName = fileName.ToNewCString();
+    char * strFileName = ToNewCString(fileName);
     rv = rdfService->GetResource(strFileName, getter_AddRefs(resource));
     Recycle(strFileName);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -675,7 +673,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::GetDefaultDomain(PRUnichar * *aDefaultDom
     if (!aDefaultDomain)
         return NS_ERROR_NULL_POINTER;
 
-    *aDefaultDomain = mDefaultDomain.ToNewUnicode();
+    *aDefaultDomain = ToNewUnicode(mDefaultDomain);
     return NS_OK;
 }
 

@@ -45,6 +45,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsISupportsArray.h"
 
 const char* nsSOAPUtils::kSOAPEnvURI = "http://schemas.xmlsoap.org/soap/envelope/";
@@ -160,7 +161,7 @@ nsSOAPUtils::GetInheritedEncodingStyle(nsIDOMElement* aEntry,
                               NS_ConvertASCIItoUCS2(nsSOAPUtils::kEncodingStyleAttribute),
                               value);
       if (value.Length() > 0) {
-        *aEncodingStyle = value.ToNewCString();
+        *aEncodingStyle = ToNewCString(value);
         return;
       }
     }

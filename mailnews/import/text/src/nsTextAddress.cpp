@@ -24,6 +24,7 @@
 #include "nsIAddrDatabase.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
@@ -966,7 +967,7 @@ void nsTextAddress::AddLdifRowToDatabase(PRBool bIsList)
 	else
 		return;
 
-	char* cursor = (char*)m_ldifLine.ToNewCString(); 
+	char* cursor = ToNewCString(m_ldifLine); 
 	char* saveCursor = cursor;  /* keep for deleting */ 
 	char* line = 0; 
 	char* typeSlot = 0; 

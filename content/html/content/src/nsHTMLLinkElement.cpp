@@ -50,6 +50,7 @@
 #include "nsIStyleSheet.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsStyleLinkElement.h"
+#include "nsReadableUtils.h"
 #include "nsHTMLUtils.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -355,7 +356,7 @@ nsHTMLLinkElement::GetHrefCString(char* &aBuf)
     }
     else {
       // Absolute URL is same as relative URL.
-      aBuf = relURLSpec.ToNewUTF8String();
+      aBuf = ToNewUTF8String(relURLSpec);
     }
   }
   else {

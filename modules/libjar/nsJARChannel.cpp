@@ -33,6 +33,7 @@
 #include "nsIAggregatePrincipal.h"
 #include "nsIProgressEventSink.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIJAR.h"
 #include "prthread.h"
 
@@ -142,7 +143,7 @@ nsJARChannel::GetName(PRUnichar* *result)
     if (NS_FAILED(rv)) return rv;
     nsString name;
     name.AppendWithConversion(urlStr);
-    *result = name.ToNewUnicode();
+    *result = ToNewUnicode(name);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

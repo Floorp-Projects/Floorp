@@ -64,6 +64,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIWebProgress.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsICategoryManager.h"
 
 // for making the leap from nsIDOMWindowInternal -> nsIPresShell
@@ -137,7 +138,7 @@ nsWalletlibService::WALLET_PrefillOneElement
 {
   nsAutoString compositeValue;
   nsresult rv = ::WLLT_PrefillOneElement(aWin, elementNode, compositeValue);
-  *value = compositeValue.ToNewUnicode();
+  *value = ToNewUnicode(compositeValue);
   return rv;
 }
 
@@ -429,7 +430,7 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                             nsAutoString field;
                             rv = inputElement->GetName(field);
                             if (NS_SUCCEEDED(rv)) {
-                              PRUnichar* nameString = field.ToNewUnicode();
+                              PRUnichar* nameString = ToNewUnicode(field);
                               if (nameString) {
                                 /* note: we do not want to prefill if there is a default value */
                                 nsAutoString value;
@@ -535,7 +536,7 @@ nsWalletlibService::WALLET_Encrypt (const PRUnichar *text, char **crypt) {
   nsAutoString textAutoString( text );
   nsAutoString cryptAutoString;
   PRBool rv = ::Wallet_Encrypt(textAutoString, cryptAutoString);
-  *crypt = cryptAutoString.ToNewCString();
+  *crypt = ToNewCString(cryptAutoString);
   return rv;
 }
 
@@ -544,7 +545,7 @@ nsWalletlibService::WALLET_Decrypt (const char *crypt, PRUnichar **text) {
   nsAutoString cryptAutoString; cryptAutoString.AssignWithConversion(crypt);
   nsAutoString textAutoString;
   PRBool rv = ::Wallet_Decrypt(cryptAutoString, textAutoString);
-  *text = textAutoString.ToNewUnicode();
+  *text = ToNewUnicode(textAutoString);
   return rv;
 }
 

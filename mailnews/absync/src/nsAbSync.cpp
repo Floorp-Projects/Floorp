@@ -53,6 +53,7 @@
 #include "nsSyncDecoderRing.h"
 #include "plstr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
 #include "nsMsgI18N.h"
@@ -695,7 +696,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(nsIDOMWindowInternal *aDOMWindow, PRInt32 
   mPostString.Insert(NS_ConvertASCIItoUCS2(prefixStr), 0);
   nsCRT::free(prefixStr);
 
-  protocolRequest = mPostString.ToNewCString();
+  protocolRequest = ToNewCString(mPostString);
   if (!protocolRequest)
     goto EarlyExit;
 
@@ -897,9 +898,9 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
     if (NS_SUCCEEDED(aCard->GetPreferMailFormat(&format)))
     {
       if (format != nsIAbPreferMailFormat::html)
-        aName = nsString(NS_ConvertASCIItoUCS2("0")).ToNewUnicode();
+        aName = ToNewUnicode(NS_LITERAL_STRING("0"));
       else  
-        aName = nsString(NS_ConvertASCIItoUCS2("1")).ToNewUnicode();
+        aName = ToNewUnicode(NS_LITERAL_STRING("1"));
     
       // Just some sanity...
       if (aName)
@@ -929,7 +930,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
       }
     }
 
-    char *tLine = tProtLine.ToNewCString();
+    char *tLine = ToNewCString(tProtLine);
     if (!tLine)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1015,7 +1016,7 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
     return PR_FALSE;
 
   // Get the CRC for this temp entry line...
-  char *tLine = tempProtocolLine.ToNewCString();
+  char *tLine = ToNewCString(tempProtocolLine);
   if (!tLine)
     return PR_FALSE;
   newSyncRecord->CRC = GetCRC(tLine);
@@ -1293,7 +1294,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
                 mCrashTable[workCounter].localID = aKey;
                 if (NS_SUCCEEDED(GenerateProtocolForCard(card, PR_FALSE, tProtLine)))
                 {
-                  char    *tCRCLine = tProtLine.ToNewCString();
+                  char    *tCRCLine = ToNewCString(tProtLine);
                   if (tCRCLine)
                   {
                     mCrashTable[workCounter].CRC = GetCRC(tCRCLine);
@@ -1438,7 +1439,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
           if (mNewSyncMapingTable[workCounter].flags & SYNC_ADD)
           {
 #ifdef DEBUG_rhp
-  char *t = singleProtocolLine.ToNewCString();
+  char *t = ToNewCString(singleProtocolLine);
   printf("ABSYNC: ADDING Card: %s\n", t);
   PR_FREEIF(t);
 #endif
@@ -1458,7 +1459,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
           else if (mNewSyncMapingTable[workCounter].flags & SYNC_MODIFIED)
           {
 #ifdef DEBUG_rhp
-  char *t = singleProtocolLine.ToNewCString();
+  char *t = ToNewCString(singleProtocolLine);
   printf("ABSYNC: MODIFYING Card: %s\n", t);
   PR_FREEIF(t);
 #endif
@@ -2079,7 +2080,7 @@ nsAbSync::ExtractCurrentLine()
     if (*mProtocolOffset == nsCRT::LF)
       mProtocolOffset++;
 
-    char *tString = extractString.ToNewCString();
+    char *tString = ToNewCString(extractString);
     if (tString)
     {
       char *ret = nsUnescape(tString);
@@ -2475,7 +2476,7 @@ nsAbSync::CardAlreadyInAddressBook(nsIAbCard        *newCard,
   if (NS_FAILED(GenerateProtocolForCard(newCard, PR_FALSE, tProtLine)))
     return PR_FALSE;
  
-  char    *tCRCLine = tProtLine.ToNewCString();
+  char    *tCRCLine = ToNewCString(tProtLine);
   if (!tCRCLine)
     return PR_FALSE;
 
@@ -2665,7 +2666,7 @@ nsAbSync::AddNewUsers()
         // Ok, "val" could still be URL Encoded, so we need to decode
         // first and then pass into the call...
         //
-        char *myTStr = val->ToNewCString();
+        char *myTStr = ToNewCString(*val);
         if (myTStr)
         {
           char *ret = nsUnescape(myTStr);
@@ -2750,7 +2751,7 @@ nsAbSync::AddNewUsers()
         continue;
 
       // Get the CRC for this temp entry line...
-      char *tLine = tempProtocolLine.ToNewCString();
+      char *tLine = ToNewCString(tempProtocolLine);
       if (!tLine)
         continue;
 
@@ -2900,7 +2901,7 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   nsString  outValue;
   char      *tValue = nsnull;
 
-  tValue = aTagValue->ToNewCString();
+  tValue = ToNewCString(*aTagValue);
   if (tValue)
   {
     rv = nsMsgI18NConvertToUnicode(nsCAutoString("UTF-8"), nsCAutoString(tValue), outValue);
@@ -2938,7 +2939,7 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   else if (!aTagName->CompareWithConversion(kServerPriEmailColumn))
   {
 #ifdef DEBUG_rhp
-  char *t = aTagValue->ToNewCString();
+  char *t = ToNewCString(*aTagValue);
   printf("Email: %s\n", t);
   PR_FREEIF(t);
 #endif

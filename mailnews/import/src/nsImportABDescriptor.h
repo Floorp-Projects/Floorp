@@ -40,6 +40,7 @@
 
 #include "nscore.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIImportABDescriptor.h"
 #include "nsIFileSpec.h"
 
@@ -63,7 +64,7 @@ public:
 	NS_IMETHOD	SetSize( PRUint32 theSize) { m_size = theSize; return( NS_OK);}
 	
 	/* attribute wstring displayName; */
-	NS_IMETHOD	GetPreferredName( PRUnichar **pName) { *pName = m_displayName.ToNewUnicode(); return( NS_OK);}
+	NS_IMETHOD	GetPreferredName( PRUnichar **pName) { *pName = ToNewUnicode(m_displayName); return( NS_OK);}
 	NS_IMETHOD	SetPreferredName( const PRUnichar * pName) { m_displayName = pName; return( NS_OK);}
 	
 	/* readonly attribute nsIFileSpec fileSpec; */

@@ -39,6 +39,7 @@
 #include "nsIFileChannel.h"
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
@@ -143,7 +144,7 @@ nsFileChannel::GetName(PRUnichar* *result)
     if (NS_FAILED(rv)) return rv;
     nsAutoString name;
     name.AppendWithConversion(urlStr);
-    *result = name.ToNewUnicode();
+    *result = ToNewUnicode(name);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -347,7 +348,7 @@ nsFileChannel::GetContentType(char * *aContentType)
             mContentType = UNKNOWN_CONTENT_TYPE;
         }
     }
-    *aContentType = mContentType.ToNewCString();
+    *aContentType = ToNewCString(mContentType);
 
     if (!*aContentType) {
         return NS_ERROR_OUT_OF_MEMORY;

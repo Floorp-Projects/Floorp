@@ -50,6 +50,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsNetUtil.h"

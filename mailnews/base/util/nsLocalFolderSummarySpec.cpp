@@ -38,6 +38,7 @@
 #include "nsLocalFolderSummarySpec.h"
 #include "plstr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 MOZ_DECL_CTOR_COUNTER(nsLocalFolderSummarySpec)
 
@@ -89,7 +90,7 @@ void nsLocalFolderSummarySpec::	CreateSummaryFileName()
 	// Mac and Unix can decide for themselves.
 
 	fullLeafName.AppendWithConversion(".msf");				// message summary file
-	char *cLeafName = fullLeafName.ToNewCString();
+	char *cLeafName = ToNewCString(fullLeafName);
 	SetLeafName(cLeafName);
     nsMemory::Free(cLeafName);
 	PL_strfree(leafName);

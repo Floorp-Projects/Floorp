@@ -58,6 +58,7 @@
 #include "nsRDFCID.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nscore.h"
 #include "plhash.h"
 #include "plstr.h"
@@ -382,7 +383,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ct
 		if (oneLiner.Length() < 1)	break;
 
 #if 0
-		printf("RL: '%s'\n", oneLiner.ToNewCString());
+		printf("RL: '%s'\n", NS_LossyConvertUCS2toASCII(oneLiner).get());
 #endif
 
 		// yes, very primitive RDF parsing follows
@@ -495,7 +496,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ct
 		{
 
 #if 0
-			printf("RL: '%s'  -  '%s'\n", title.ToNewCString(), child.ToNewCString());
+			printf("RL: '%s'  -  '%s'\n", NS_LossyConvertUCS2toASCII(title).get(), NS_LossyConvertUCS2toASCII(child).get());
 #endif
 			const PRUnichar	*url = child.get();
 			if (nsnull != url)

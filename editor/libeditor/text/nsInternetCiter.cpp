@@ -39,6 +39,7 @@
 
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsInternetCiter.h"
 
 #include "nsCOMPtr.h"
@@ -229,7 +230,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
   {
 #ifdef DEBUG_wrapping
     nsAutoString debug (Substring(tString, posInString, length-posInString));
-    printf("Outer loop: '%s'\n", debug.ToNewCString());
+    printf("Outer loop: '%s'\n", NS_LossyConvertUCS2toASCII(debug).get());
 #endif
 
     // Get the new cite level here since we're at the beginning of a line
@@ -309,7 +310,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
 #ifdef DEBUG_wrapping
       nsAutoString debug (Substring(tString, posInString,
                                     nextNewline-posInString));
-      printf("Unquoted: appending '%s'\n", debug.ToNewCString());
+      printf("Unquoted: appending '%s'\n", NS_LossyConvertUCS2toASCII(debug).get());
 #endif
       aOutString.Append(Substring(tString, posInString,
                                   nextNewline-posInString));
@@ -332,7 +333,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
     {
 #ifdef DEBUG_wrapping
       nsAutoString debug (Substring(tString, posInString, nextNewline-posInString));
-      printf("Inner loop: '%s'\n", debug.ToNewCString());
+      printf("Inner loop: '%s'\n", NS_LossyConvertUCS2toASCII(debug).get());
 #endif
 
       // If this is a short line, just append it and continue:
@@ -344,7 +345,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
           ++nextNewline;
 #ifdef DEBUG_wrapping
         nsAutoString debug (Substring(tString, posInString, nextNewline - posInString));
-        printf("Short line: '%s'\n", debug.ToNewCString());
+        printf("Short line: '%s'\n", NS_LossyConvertUCS2toASCII(debug).get());
 #endif
         aOutString += Substring(tString,
                                 posInString, nextNewline - posInString);
@@ -401,7 +402,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
     } // end inner loop within one line of aInString
 #ifdef DEBUG_wrapping
     printf("---------\nEnd inner loop: out string is now '%s'\n-----------\n",
-           aOutString.ToNewCString());
+           NS_LossyConvertUCS2toASCII(aOutString).get());
 #endif
   } // end outer loop over lines of aInString
 

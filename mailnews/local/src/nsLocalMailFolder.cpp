@@ -81,6 +81,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsLocalFolderSummarySpec.h"
 #include "nsMsgUtils.h"
 #include "nsICopyMsgStreamListener.h"
@@ -650,7 +651,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetFolderURL(char **url)
   nsCAutoString urlStr(urlScheme);
   urlStr.Append(tmpPath);
 
-  *url = urlStr.ToNewCString();
+  *url = ToNewCString(urlStr);
 	return NS_OK;
 
 }

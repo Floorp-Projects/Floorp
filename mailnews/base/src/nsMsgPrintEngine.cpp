@@ -24,6 +24,7 @@
 #include "nsIURI.h"
 #include "nsEscape.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
@@ -301,7 +302,7 @@ nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
 {
   nsresult      rv = NS_OK;
 
-  char  *tString = uri->ToNewCString();
+  char  *tString = ToNewCString(*uri);
   if (!tString)
     return NS_ERROR_OUT_OF_MEMORY;
 

@@ -46,6 +46,7 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIImportService.h"
@@ -246,28 +247,22 @@ PRBool nsOEAddressIterator::BuildCard( const PRUnichar * pName, nsIMdbRow *newRo
 		}
 	}
 	
-	char *pCStr;
 	// We now have the required fields
 	// write them out followed by any optional fields!
 	if (!displayName.IsEmpty()) {
-		m_database->AddDisplayName( newRow, pCStr = displayName.ToNewUTF8String());
-		nsCRT::free( pCStr);
+		m_database->AddDisplayName( newRow, NS_ConvertUCS2toUTF8(displayName).get());
 	}
 	if (!firstName.IsEmpty()) {
-		m_database->AddFirstName( newRow, pCStr = firstName.ToNewUTF8String());
-		nsCRT::free( pCStr);
+		m_database->AddFirstName( newRow, NS_ConvertUCS2toUTF8(firstName).get());
 	}
 	if (!lastName.IsEmpty()) {
-		m_database->AddLastName( newRow, pCStr = lastName.ToNewUTF8String());
-		nsCRT::free( pCStr);
+		m_database->AddLastName( newRow, NS_ConvertUCS2toUTF8(lastName).get());
 	}
 	if (!nickName.IsEmpty()) {
-		m_database->AddNickName( newRow, pCStr = nickName.ToNewUTF8String());
-		nsCRT::free( pCStr);
+		m_database->AddNickName( newRow, NS_ConvertUCS2toUTF8(nickName).get());
 	}
 	if (!eMail.IsEmpty()) {
-		m_database->AddPrimaryEmail( newRow, pCStr = eMail.ToNewUTF8String());
-		nsCRT::free( pCStr);
+		m_database->AddPrimaryEmail( newRow, NS_ConvertUCS2toUTF8(eMail).get());
 	}
 
 	// Do all of the extra fields!

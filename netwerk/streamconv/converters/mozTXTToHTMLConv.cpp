@@ -36,6 +36,7 @@
 #include "mozTXTToHTMLConv.h"
 #include "nsIServiceManager.h"
 #include "nsNetCID.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -369,7 +370,7 @@ mozTXTToHTMLConv::CheckURLAndCreateHTML(
   if (NS_FAILED(rv) || !mIOService)
     return PR_FALSE;
 
-  char* specStr = txtURL.ToNewCString();  //I18N this forces a single byte char
+  char* specStr = ToNewCString(txtURL);  //I18N this forces a single byte char
   if (specStr == nsnull)
     return PR_FALSE;
 
@@ -1250,7 +1251,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar *text, PRUint32 whattodo,
   outString.SetCapacity(PRUint32(inLength * growthRate));
   ScanTXT(text, inLength, whattodo, outString);
 
-  *_retval = outString.ToNewUnicode();
+  *_retval = ToNewUnicode(outString);
   return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -1266,7 +1267,7 @@ mozTXTToHTMLConv::ScanHTML(const PRUnichar *text, PRUint32 whattodo,
   outString.SetCapacity(PRUint32(inString.Length() * growthRate));
 
   ScanHTML(inString, whattodo, outString);
-  *_retval = outString.ToNewUnicode();
+  *_retval = ToNewUnicode(outString);
   return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMsgWindow.h"
+#include "nsReadableUtils.h"
 #include "nsIURILoader.h"
 #include "nsCURILoader.h"
 #include "nsIDocShell.h"
@@ -311,7 +312,7 @@ NS_IMETHODIMP nsMsgWindow::GetMailCharacterSet(PRUnichar * *aMailCharacterSet)
   if(!aMailCharacterSet)
     return NS_ERROR_NULL_POINTER;
 
-  *aMailCharacterSet = mMailCharacterSet.ToNewUnicode();
+  *aMailCharacterSet = ToNewUnicode(mMailCharacterSet);
   if (!(*aMailCharacterSet))
     return NS_ERROR_OUT_OF_MEMORY;
 

@@ -42,6 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
@@ -106,7 +107,7 @@ NS_IMETHODIMP nsAbDirProperty::GetDirName(PRUnichar **aDirName)
 {
 	if (aDirName)
 	{
-		*aDirName = m_DirName.ToNewUnicode();
+		*aDirName = ToNewUnicode(m_DirName);
 		if (!(*aDirName)) 
 			return NS_ERROR_OUT_OF_MEMORY;
 		else
@@ -147,7 +148,7 @@ nsresult nsAbDirProperty::GetAttributeName(PRUnichar **aName, nsString& value)
 {
 	if (aName)
 	{
-		*aName = value.ToNewUnicode();
+		*aName = ToNewUnicode(value);
 		if (!(*aName)) 
 			return NS_ERROR_OUT_OF_MEMORY;
 		else

@@ -47,6 +47,7 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStringUtil.h"
 
 #include "nsIAppShell.h"
@@ -135,7 +136,7 @@ nsMenu::nsMenu() : nsIMenu()
 //-------------------------------------------------------------------------
 nsMenu::~nsMenu()
 {
-  char *str=mLabel.ToNewCString();
+  char *str = ToNewCString(mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::~nsMenu Destructor called for <%s>\n", str));
   delete [] str;
 
@@ -157,7 +158,7 @@ nsMenu::~nsMenu()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::Create(nsISupports * aParent, const nsString &aLabel)
 {
- char *str=aLabel.ToNewCString();
+ char *str = ToNewCString(aLabel);
  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::Create with nsISupports aLabel=<%s> this=<%p>\n", str, this));
  delete [] str;
  
@@ -170,7 +171,7 @@ NS_METHOD nsMenu::Create(nsISupports * aParent, const nsString &aLabel)
   mLabel = aLabel;
 
   /* Create a Char * string from a nsString */
-  char *labelStr = mLabel.ToNewCString();
+  char *labelStr = ToNewCString(mLabel);
 
  if(aParent)
  {
@@ -280,7 +281,7 @@ NS_METHOD nsMenu::GetParent(nsISupports*& aParent)
 NS_METHOD nsMenu::GetLabel(nsString &aText)
 {
 #if 1
-  char *str = mLabel.ToNewCString();
+  char *str = ToNewCString(mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::GetLabel mLabel=<%s>\n", str));
   delete [] str;
 #endif
@@ -295,7 +296,7 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
   mLabel = aText;
     
 #if 1
-  char * labelStr = mLabel.ToNewCString();
+  char * labelStr = ToNewCString(mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::SetLabel to this=<%p> <%s>\n", this, labelStr));
   delete [] labelStr;
 #endif
@@ -374,7 +375,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   nsString Label;
   
   aMenu->GetLabel(Label);
-  char *labelStr = Label.ToNewCString();
+  char *labelStr = ToNewCString(Label);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::AddMenu this=<%p> aMenu=<%p> label=<%s>\n", this, aMenu, labelStr));
   delete[] labelStr;
 #endif
@@ -530,7 +531,7 @@ NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  char *labelStr = mLabel.ToNewCString();
+  char *labelStr = ToNewCString(mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::MenuItemSelected mLabel=<%s>\n", labelStr));
   delete [] labelStr;
   
@@ -544,7 +545,7 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  char *labelStr = mLabel.ToNewCString();
+  char *labelStr = ToNewCString(mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::MenuSelected  mLabel=<%s> mConstruct=<%d>\n", labelStr, mConstruct));
   delete [] labelStr;
 
@@ -572,7 +573,7 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
-  char *str=mLabel.ToNewCString();
+  char *str = ToNewCString(mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::MenuDeSelected  for <%s> - Not Implemented\n", str));
   delete [] str;
 
@@ -591,7 +592,7 @@ nsEventStatus nsMenu::MenuConstruct(
     void              * menuNode,
     void              * aWebShell)
 {
-  char *str=mLabel.ToNewCString();
+  char *str = ToNewCString(mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::MenuConstruct for <%s>\n", str));
   delete [] str;
 
@@ -662,7 +663,7 @@ nsEventStatus nsMenu::MenuConstruct(
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
-  char *str=mLabel.ToNewCString();
+  char *str = ToNewCString(mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::MenuDestruct called for <%s> mRefCnt=<%d>\n", str, this->mRefCnt));
   delete [] str;
 
@@ -748,7 +749,7 @@ void nsMenu::LoadMenuItem(
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
 
 #if 1
-  char *str = menuitemName.ToNewCString();
+  char *str = ToNewCString(menuitemName);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::LoadMenuItem  -1- Label=<%s> mRefCnt=<%d> this=<%p>\n",str, mRefCnt, this));
   delete [] str; 
 #endif
@@ -805,7 +806,7 @@ void nsMenu::LoadSubMenu(
   nsString menuName;
   menuElement->GetAttribute(nsAutoString("value"), menuName);
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::LoadSubMenu <%s>\n", menuName.ToNewCString()));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::LoadSubMenu <%s>\n", NS_LossyConvertUCS2toASCII(menuName).get()));
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
@@ -845,7 +846,7 @@ int nsMenu::TopLevelMenuItemArmCb (PtWidget_t *widget, void *aNSMenu, PtCallback
 
   if ((aMenu) && aMenu->mMenu)
   {
-    char *labelStr = aMenu->mLabel.ToNewCString();
+    char *labelStr = ToNewCString(aMenu->mLabel);
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::TopLevelMenuItemArmCb - mLabel=<%s>\n", labelStr));
     delete [] labelStr;
   }
@@ -889,7 +890,7 @@ int nsMenu::SubMenuMenuItemArmCb (PtWidget_t *widget, void *aNSMenu, PtCallbackI
   PtArg_t       arg[5];
   nsMenu *aMenu = (nsMenu *) aNSMenu;
 
-  char *labelStr = aMenu->mLabel.ToNewCString();
+  char *labelStr = ToNewCString(aMenu->mLabel);
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::SubMenuMenuItemArmCb - mLabel=<%s> mRefCnt=<%d> aMenu->mMenu=<%p> Reason=<%d>\n",
   	labelStr, aMenu->mRefCnt, aMenu->mMenu, cbinfo->reason));
   delete [] labelStr;
@@ -962,7 +963,7 @@ int nsMenu::MenuRealizedCb (PtWidget_t *widget, void *aNSMenu, PtCallbackInfo_t 
 
   if ((aMenu) && aMenu->mMenu)
   {
-    char *labelStr = aMenu->mLabel.ToNewCString();
+    char *labelStr = ToNewCString(aMenu->mLabel);
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::MenuRealizedCb - mLabel=<%s>\n", labelStr));
     delete [] labelStr;
   }
@@ -977,7 +978,7 @@ int nsMenu::MenuUnRealizedCb (PtWidget_t *widget, void *aNSMenu, PtCallbackInfo_
 
   if ((aMenu) && aMenu->mMenu)
   {
-    char *labelStr = aMenu->mLabel.ToNewCString();
+    char *labelStr = ToNewCString(aMenu->mLabel);
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::MenuUnRealizedCb - mLabel=<%s>\n", labelStr));
     delete [] labelStr;
   }
@@ -1014,7 +1015,7 @@ int nsMenu::SubMenuMenuItemMenuCb (PtWidget_t *widget, void *aNSMenu, PtCallback
   nsMenu *aMenu = (nsMenu *) aNSMenu;
   if ((aMenu) && aMenu->mMenu)
   {
-    char *labelStr = aMenu->mLabel.ToNewCString();
+    char *labelStr = ToNewCString(aMenu->mLabel);
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::SubMenuMenuItemMenuCb - mLabel=<%s>\n", labelStr));
     delete [] labelStr;
   }

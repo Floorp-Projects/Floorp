@@ -49,6 +49,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsXULAtoms.h"
 #include "nsIXPConnect.h"
 #include "nsIDOMScriptObjectFactory.h"
@@ -575,7 +576,7 @@ nsresult nsXBLPrototypeProperty::ParseMethod(nsIScriptContext * aContext)
       // Get the argname and add it to the array.
       nsAutoString argName;
       arg->GetAttr(kNameSpaceID_None, kNameAtom, argName);
-      char* argStr = argName.ToNewCString();
+      char* argStr = ToNewCString(argName);
       args[argCount] = argStr;
       argCount++;
     }

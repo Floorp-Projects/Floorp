@@ -38,6 +38,7 @@
 
 #include "msgCore.h"    // precompiled header...
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIPref.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
@@ -812,7 +813,7 @@ nsSmtpService::DeleteSmtpServer(nsISmtpServer *aServer)
     
     nsCAutoString newServerList;
     char *newStr;
-    char *rest = mServerKeyList.ToNewCString();
+    char *rest = ToNewCString(mServerKeyList);
     
     char *token = nsCRT::strtok(rest, ",", &newStr);
     while (token) {

@@ -39,6 +39,7 @@
 #define NS_IMPL_IDS
 
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
 #include "nsIAcceptLang.h"
@@ -178,7 +179,7 @@ main(int argc, char *argv[])
     return 1;
   }
   v = ptrv;
-  value = v.ToNewCString();
+  value = ToNewCString(v);
   cout << "123=\"" << value << "\"" << endl;
 
   // file
@@ -191,7 +192,7 @@ main(int argc, char *argv[])
     return 1;
   }
   v = ptrv;
-  value = v.ToNewCString();
+  value = ToNewCString(v);
   cout << "file=\"" << value << "\"" << endl;
 
  nsIBidirectionalEnumerator* propEnum = nsnull;
@@ -235,8 +236,8 @@ main(int argc, char *argv[])
     nsAutoString keyAdjustedLengthBuff(pKey);
     nsAutoString valAdjustedLengthBuff(pVal);
 
-    char* keyCStr = keyAdjustedLengthBuff.ToNewCString();
-    char* valCStr = valAdjustedLengthBuff.ToNewCString();
+    char* keyCStr = ToNewCString(keyAdjustedLengthBuff);
+    char* valCStr = ToNewCString(valAdjustedLengthBuff);
     if (keyCStr && valCStr) 
     cout << keyCStr << "\t" << valCStr << endl;
     delete[] keyCStr;

@@ -188,7 +188,6 @@ NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
   // and broadcast them to the header sink. However, we need to 
   // convert our UTF-8 header values into unicode before 
   // broadcasting them....
-  nsXPIDLString unicodeHeaderValue;
 
   for (PRInt32 i=0; i<mHeaderArray->Count(); i++)
   {
@@ -219,11 +218,8 @@ NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
       }
       else
       {
-        // Convert UTF-8 to UCS2
-        unicodeHeaderValue.Adopt(NS_ConvertUTF8toUCS2(headerValue).ToNewUnicode());
-
         if (NS_SUCCEEDED(rv))
-          headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue, bFromNewsgroups);
+          headerSink->HandleHeader(headerInfo->name, NS_ConvertUTF8toUCS2(headerValue).get(), bFromNewsgroups);
       }
     }
   }
@@ -287,7 +283,7 @@ nsresult nsMimeHtmlDisplayEmitter::GenerateDateString(const char * dateString, P
                                       formattedDateString);
 
   if (NS_SUCCEEDED(rv))
-    *aDateString = formattedDateString.ToNewUnicode();
+    *aDateString = ToNewUnicode(formattedDateString);
 
   return rv;
 }
@@ -349,7 +345,7 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
 
   if (NS_FAILED(rv))
   {
-    unicodeHeaderValue.Adopt(NS_ConvertUTF8toUCS2(name).ToNewUnicode());
+    unicodeHeaderValue.Adopt(ToNewUnicode(NS_ConvertUTF8toUCS2(name)));
 
       // but it's not really a failure if we didn't have a converter in the first place
     if ( !mUnicodeConverter )

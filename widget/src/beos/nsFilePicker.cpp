@@ -32,6 +32,7 @@
 #include "nsIURL.h"
 #include "nsIFileChannel.h"
 #include "nsIStringBundle.h"
+#include "nsReadableUtils.h"
 
 #include <Window.h>
 #include <View.h>
@@ -105,14 +106,14 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
   // set title
   if (mTitle.Length() > 0) {
-    char *title_utf8 = mTitle.ToNewUTF8String();
+    char *title_utf8 = ToNewUTF8String(mTitle);
     ppanel->Window()->SetTitle(title_utf8);
     Recycle(title_utf8);
   }
 
   // set default text
   if (mDefault.Length() > 0) {
-    char *defaultText = mDefault.ToNewCString();
+    char *defaultText = ToNewCString(mDefault);
     ppanel->SetSaveText(defaultText);
     Recycle(defaultText);
   }

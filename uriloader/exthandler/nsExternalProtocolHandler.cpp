@@ -24,6 +24,7 @@
 #include "nsIURL.h"
 #include "nsExternalProtocolHandler.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsNetCID.h"
@@ -270,7 +271,7 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 NS_IMETHODIMP nsExternalProtocolHandler::GetScheme(char * *aScheme)
 {
-	*aScheme = m_schemeName.ToNewCString();
+	*aScheme = ToNewCString(m_schemeName);
 	return NS_OK;
 }
 

@@ -37,6 +37,7 @@
 #include "nsLDAPConnection.h"
 #include "nsLDAPOperation.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
 #include "nsILDAPURL.h"
@@ -1006,22 +1007,21 @@ char *
 nsLDAPService::NextToken(nsReadingIterator<PRUnichar> & aIter,
                          nsReadingIterator<PRUnichar> & aIterEnd)
 {
-    nsAutoString token;
-
     // move past any leading whitespace
     //
     while ( aIter != aIterEnd && nsCRT::IsAsciiSpace(*aIter) ) {
         ++aIter;
     }
 
+    nsAString::const_iterator start(aIter);
+
     // copy the token into our local variable
     //
     while ( aIter != aIterEnd && !nsCRT::IsAsciiSpace(*aIter) ) {
-        token.Append(*aIter);
         ++aIter;
     }
 
-    return NS_ConvertUCS2toUTF8(token).ToNewCString();
+    return ToNewUTF8String(Substring(start, aIter));
 }
 
 // Note that these 2 functions might go away in the future, see bug 84186.
@@ -1038,7 +1038,7 @@ nsLDAPService::UCS2toUTF8(const nsAReadableString &aString,
         return NS_ERROR_NULL_POINTER;
     }
 
-    str = NS_ConvertUCS2toUTF8(aString).ToNewCString();
+    str = ToNewUTF8String(aString);
     if (!str) {
         NS_ERROR("nsLDAPService::UCS2toUTF8: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1053,14 +1053,6 @@ NS_IMETHODIMP
 nsLDAPService::UTF8toUCS2(const char *aString,
                                         nsAWritableString &_retval)
 {
-    PRUnichar *str;
-
-    str = NS_ConvertUTF8toUCS2(aString).ToNewUnicode();
-    if (!str) {
-        NS_ERROR("nsLDAPService::UTF8toUCS2: out of memory ");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    _retval = str;
+    _retval = NS_ConvertUTF8toUCS2(aString);
     return NS_OK;
 }

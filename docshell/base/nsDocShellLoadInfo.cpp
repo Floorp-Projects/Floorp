@@ -23,6 +23,7 @@
 
 // Local Includes
 #include "nsDocShellLoadInfo.h"
+#include "nsReadableUtils.h"
 
 //*****************************************************************************
 //***    nsDocShellLoadInfo: Object Management
@@ -133,7 +134,7 @@ NS_IMETHODIMP nsDocShellLoadInfo::GetTarget(char** aTarget)
 {
    NS_ENSURE_ARG_POINTER(aTarget);
 
-   *aTarget = mTarget.ToNewCString();
+   *aTarget = ToNewCString(mTarget);
 
    return NS_OK;
 }

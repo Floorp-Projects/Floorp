@@ -47,6 +47,7 @@
 #include "prprf.h"	 
 #include "rdf.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 
 #include "nsIPref.h"
 #include "nsIAbDirectory.h"
@@ -94,7 +95,7 @@ nsresult nsAbCardProperty::GetAttributeName(PRUnichar **aName, nsString& value)
 {
 	if (aName)
 	{
-		*aName = value.ToNewUnicode();
+		*aName = ToNewUnicode(value);
 		if (!(*aName)) 
 			return NS_ERROR_OUT_OF_MEMORY;
 		else
@@ -256,7 +257,7 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **v
             formatStr.AssignWithConversion("unknown");
             break;
         }
-        *value = (PRUnichar *) formatStr.ToNewUnicode ();
+        *value = ToNewUnicode(formatStr);
     }
     
 	/* else handle pass down attribute */
@@ -715,7 +716,7 @@ nsAbCardProperty::GetName(PRUnichar * *aName)
 				}
 			}
 				
-			*aName = name.ToNewUnicode();
+			*aName = ToNewUnicode(name);
 			if (!(*aName)) 
 				return NS_ERROR_OUT_OF_MEMORY;
 			else

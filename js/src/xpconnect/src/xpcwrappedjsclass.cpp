@@ -1133,13 +1133,12 @@ pre_call_clean_up:
                                 nsAutoString newMessage;
                                 newMessage.AssignWithConversion(exn_string);
                                 nsMemory::Free((void *) exn_string);
-                                PRUnichar* newMessageUni;
-                                newMessageUni = newMessage.ToNewUnicode();
 
                                 // try to get filename, lineno from the first
                                 // stack frame location.
                                 PRUnichar* sourceNameUni = nsnull;
                                 PRInt32 lineNumber = 0;
+                                nsXPIDLCString sourceName;
 
                                 nsCOMPtr<nsIStackFrame> location;
                                 xpc_exception->
@@ -1150,24 +1149,16 @@ pre_call_clean_up:
                                     location->GetLineNumber(&lineNumber);
 
                                     // get a filename.
-                                    char *csourceName;
-                                    rv = location->GetFilename(&csourceName);
-                                    nsAutoString newSourceName;
-                                    newSourceName.
-                                        AssignWithConversion(csourceName);
-                                    nsMemory::Free((void *)csourceName);
-                                    sourceNameUni = newSourceName.ToNewUnicode();
+                                    rv = location->GetFilename(getter_Copies(sourceName));
                                 }
 
-                                rv = scriptError->Init(newMessageUni,
-                                                       sourceNameUni, nsnull,
+                                rv = scriptError->Init(newMessage.get(),
+                                                       NS_ConvertASCIItoUCS2(sourceName).get(),
+                                                       nsnull,
                                                        lineNumber, 0, 0,
                                                        "XPConnect JavaScript");
                                 if(NS_FAILED(rv))
                                     scriptError = nsnull;
-                                nsMemory::Free((void *)newMessageUni);
-                                if(nsnull != sourceNameUni)
-                                    nsMemory::Free((void *)sourceNameUni);
                             }
                         }
                     }

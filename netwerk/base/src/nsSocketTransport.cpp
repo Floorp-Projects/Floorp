@@ -55,6 +55,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProxyObjectManager.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsISSLSocketControl.h"
 #include "nsITransportSecurityInfo.h"
@@ -1347,7 +1348,7 @@ nsSocketTransport::GetName(PRUnichar **result)
     name.AppendWithConversion(mHostName);
     name.AppendWithConversion(":");
     name.AppendInt(mPort);
-    *result = name.ToNewUnicode();
+    *result = ToNewUnicode(name);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

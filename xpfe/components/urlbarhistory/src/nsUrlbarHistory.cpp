@@ -23,6 +23,7 @@
 
 // Local Includes 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsUrlbarHistory.h"
 
 // Helper Classes
@@ -210,7 +211,7 @@ nsUrlbarHistory::PrintHistory()
 	   entry = (nsString *) mArray.ElementAt(i);
 	   NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 	   char * cEntry;
-	   cEntry = entry->ToNewCString();
+	   cEntry = ToNewCString(*entry);
 	   printf("Entry at index %d is %s\n", i, cEntry);
 	   Recycle(cEntry);
 	}
@@ -399,7 +400,10 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
         // There was no protocol in the search string. 
         searchPath = searchAutoStr;
     }
-	//printf("Search String is %s path = %s protocol = %s \n", searchAutoStr.ToNewCString(), searchPath.ToNewCString(), searchProtocol.ToNewCString());
+	//printf("Search String is %s path = %s protocol = %s \n",
+	//       NS_LossyConvertUCS2toASCII(searchAutoStr).get(),
+	//       NS_LossyConvertUCS2toASCII(searchPath).get(),
+	//       NS_LossyConvertUCS2toASCII(searchProtocol).get());
 	   
 	if (!gRDFCUtils || !kNC_URLBARHISTORY)
         return NS_ERROR_FAILURE;
@@ -427,7 +431,7 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
        nsAutoString rdfAutoStr;
        nsAutoString rdfProtocol, rdfPath;
        PRInt32 rdfLength, rdfPathIndex, index = -1;
-       PRUnichar * match = nsnull;
+       const PRUnichar * match = nsnull;
        const PRUnichar * rdfValue = nsnull;   
 
        rv = entries->GetNext(getter_AddRefs(entry));
@@ -453,7 +457,10 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
           // There was no protocol.
           rdfPath = rdfAutoStr;
        }
-       //printf("RDFString is %s path = %s protocol = %s\n", rdfAutoStr.ToNewCString(), rdfPath.ToNewCString(), rdfProtocol.ToNewCString());
+       //printf("RDFString is %s path = %s protocol = %s\n",
+	//       NS_LossyConvertUCS2toASCII(rdfAutoStr).get(),
+	//       NS_LossyConvertUCS2toASCII(rdfPath).get(),
+	//       NS_LossyConvertUCS2toASCII(rdfProtocol).get());
        // We have all the data we need. Let's do the comparison
        // We compare the path first and compare the protocol next
        index = rdfPath.Find(searchPath, PR_TRUE);       
@@ -464,7 +471,7 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
               protocolIndex = rdfProtocol.Find(searchProtocol);
               if (protocolIndex == 0) {
                   // Both protocols match. We found a result item
-                  match = rdfAutoStr.ToNewUnicode();
+                  match = rdfAutoStr.get();
               } 
            } 
            else if (searchProtocol.Length() && (rdfProtocol.Length() <= 0)) {
@@ -477,7 +484,7 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
                // all urls to be char *
                if ((searchProtocol.Find("http://", PR_TRUE)) == 0) {
                   resultAutoStr = searchProtocol + rdfPath;
-                  match = resultAutoStr.ToNewUnicode();
+                  match = resultAutoStr.get();
                }
            }
            else if ((searchProtocol.Length() <=0) && rdfProtocol.Length() ||
@@ -487,7 +494,7 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
                 * a) searchString has no protocol but rdfString has protocol
                 * b) Both searchString and rdfString don't have a protocol
                 */ 
-               match = rdfPath.ToNewUnicode();
+               match = rdfPath.get();
            }           
        }  // (index == 0)
 
@@ -506,21 +513,20 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
            PRBool itemPresent = PR_FALSE;
            rv = CheckItemAvailability(match, results, &itemPresent);
            if (itemPresent) {
-               Recycle (match);
                continue;
            }
            //Create an AutoComplete Item 
-		   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
-		   NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
+           nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
+           NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
            
            newItem->SetValue(nsDependentString(match));
            nsCOMPtr<nsISupportsArray> array;
            rv = results->GetItems(getter_AddRefs(array));
            if (NS_SUCCEEDED(rv))
-		   { 
-			  // printf("Appending element %s to the results array\n", item->ToNewCString());
-                array->AppendElement((nsISupports*)newItem);
-		   }	
+           { 
+               // printf("Appending element %s to the results array\n", ToNewCString(*item)); // leaks
+               array->AppendElement((nsISupports*)newItem);
+           }
            /* The result may be much more than what was asked for. For example
             * the user types http://www.moz and we had http://www.mozilla.org/sidebar
             * as an entry in the history. This will match our selection criteria above
@@ -530,10 +536,8 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
             * as a result option(probably the default result).
             */
             rv = VerifyAndCreateEntry(searchStr, match, results);
-	   }   
+        }   
 
-	   if (match)
-		   Recycle(match);
     }    // while 
     return rv;
 }
@@ -625,7 +629,7 @@ nsUrlbarHistory::CheckItemAvailability(const PRUnichar * aItem, nsIAutoCompleteR
 }
 
 NS_IMETHODIMP
-nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar * aMatchStr, nsIAutoCompleteResults * aResultArray)
+nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, const PRUnichar * aMatchStr, nsIAutoCompleteResults * aResultArray)
 {
     if (!aSearchItem || !aMatchStr || !aResultArray)
         return NS_ERROR_FAILURE;
@@ -660,7 +664,7 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar *
         // Extract the host name
         nsAutoString hostName;
         matchAutoStr.Left(hostName, slashIndex);
-        //printf("#### Host Name is %s\n", hostName.ToNewCString());
+        //printf("#### Host Name is %s\n", NS_LossyConvertUCS2toASCII(hostName).get());
         // Check if this host is already present in the result array
         // If not add it to the result array
         PRBool itemAvailable = PR_TRUE;

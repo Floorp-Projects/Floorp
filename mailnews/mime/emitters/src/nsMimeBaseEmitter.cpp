@@ -39,6 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "stdio.h"
 #include "nsMimeBaseEmitter.h"
 #include "nsMailHeaders.h"
@@ -236,7 +237,7 @@ nsMimeBaseEmitter::MimeGetStringByName(const char *aHeaderName)
     // This returns a UTF-8 string so the caller needs to perform a conversion 
     // if this is used as UCS-2 (e.g. cannot do nsString(utfStr);
     //
-    return v.ToNewUTF8String();
+    return ToNewUTF8String(v);
 	}
 	else
 	{

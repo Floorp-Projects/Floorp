@@ -947,7 +947,7 @@ RDFContentSinkImpl::GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI
         if (aPrefix)
             aPrefix->ToString(prefixStr);
 
-        char* prefixCStr = prefixStr.ToNewCString();
+        char* prefixCStr = ToNewCString(prefixStr);
 
         PR_LOG(gLog, PR_LOG_ALWAYS,
                ("rdfxml: undeclared namespace prefix '%s'",

@@ -43,6 +43,8 @@
 #include "nscore.h"
 #include "nsRange.h"
 
+#include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
@@ -2299,7 +2301,7 @@ nsRange::CreateContextualFragment(const nsAReadableString& aFragment,
           if (nsIDOMNode::ELEMENT_NODE == nodeType) {
             parent->GetNodeName(tagName);
             // XXX Wish we didn't have to allocate here
-            name = tagName.ToNewUnicode();
+            name = ToNewUnicode(tagName);
             if (name) {
               tagStack->Push(name);
               temp = parent;

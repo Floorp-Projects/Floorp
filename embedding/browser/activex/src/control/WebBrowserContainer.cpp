@@ -45,6 +45,7 @@
 #include "WebBrowserContainer.h"
 
 #include "nsICategoryManager.h"
+#include "nsReadableUtils.h"
 
 CWebBrowserContainer::CWebBrowserContainer(CMozillaBrowser *pOwner)
 {
@@ -491,7 +492,7 @@ CWebBrowserContainer::GetTitle(PRUnichar * *aTitle)
     if (!aTitle)
         return E_INVALIDARG;
 
-    *aTitle = m_sTitle.ToNewUnicode();
+    *aTitle = ToNewUnicode(m_sTitle);
 
     return NS_OK;
 }

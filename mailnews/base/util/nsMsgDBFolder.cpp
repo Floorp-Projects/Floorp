@@ -38,6 +38,7 @@
 
 #include "msgCore.h"
 #include "xp_core.h"
+#include "nsReadableUtils.h"
 #include "nsMsgDBFolder.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIPref.h"
@@ -232,7 +233,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
     rv = folderInfo->GetCharPtrCharacterSet(getter_Copies(charset));
     if(NS_SUCCEEDED(rv))
     {
-      *aCharset = NS_ConvertASCIItoUCS2(charset.get()).ToNewUnicode();
+      *aCharset = ToNewUnicode(charset);
     }
   }
   return rv;

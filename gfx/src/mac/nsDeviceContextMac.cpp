@@ -65,6 +65,7 @@
 #include "nsRegionMac.h"
 #include "nsIScreenManager.h"
 #include "nsIServiceManager.h"
+#include "nsReadableUtils.h"
 
 
 PRUint32 nsDeviceContextMac::mPixelsPerInch = 96;
@@ -1095,7 +1096,7 @@ EnumerateFamily(nsHashKey *aKey, void *aData, void* closure)
   int j = info->mIndex;
   
   
-  PRUnichar* str = (((FontNameKey*)aKey)->mString).ToNewUnicode();
+  PRUnichar* str = ToNewUnicode(((FontNameKey*)aKey)->mString);
   if (!str) {
     for (j = j - 1; j >= 0; j--) {
       nsMemory::Free(array[j]);
@@ -1164,7 +1165,7 @@ EnumerateFont(nsHashKey *aKey, void *aData, void* closure)
   short	fondID = (short) aData;
   ScriptCode script = ::FontToScript(fondID);
 	if(script == info->mScript) {
-	  PRUnichar* str = (((FontNameKey*)aKey)->mString).ToNewUnicode();
+	  PRUnichar* str = ToNewUnicode(((FontNameKey*)aKey)->mString);
 	  if (!str) {
 	    for (j = j - 1; j >= 0; j--) {
 	      nsMemory::Free(array[j]);

@@ -74,6 +74,7 @@ typedef unsigned long HMTX;
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "plevent.h"
@@ -524,7 +525,7 @@ nsWebShell::GetURL(PRInt32 aIndex, const PRUnichar** aURLResult)
    nsXPIDLCString spec;
    uri->GetSpec(getter_Copies(spec));
 
-   *aURLResult = NS_ConvertASCIItoUCS2(spec).ToNewUnicode();
+   *aURLResult = ToNewUnicode(NS_ConvertASCIItoUCS2(spec));
 
    return NS_OK;
 }

@@ -55,6 +55,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsImapUtils.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsAutoLock.h"
 #include "nsIMAPNamespace.h"
 #include "nsICacheEntryDescriptor.h"
@@ -374,7 +375,7 @@ NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char ** aResult)
 		bytesToCopy = PR_MIN(bytesToCopy, wherePart - m_listOfMessageIds);
 
 	newStr.Assign(m_listOfMessageIds, bytesToCopy);
-  *aResult = newStr.ToNewCString();
+  *aResult = ToNewCString(newStr);
 	return NS_OK;
 }
   
@@ -737,7 +738,7 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
     rv = server->GetKey(getter_Copies(serverKey));
     if (NS_FAILED(rv)) return rv;
     rv = hostSessionList->GetOnlineDirForHost(serverKey, aString);
-    char *onlineDir = aString.Length() > 0 ? aString.ToNewCString() : nsnull;
+    char *onlineDir = !aString.IsEmpty() ? ToNewCString(aString) : nsnull;
 
 	// If this host has an online server directory configured
 	if (onlineMailboxName && onlineDir)
@@ -940,7 +941,7 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
   // First we have to check to see if we should strip off an online server
   // subdirectory 
 	// If this host has an online server directory configured
-	onlineDir = aString.Length() > 0? aString.ToNewCString(): nsnull;
+	onlineDir = !aString.IsEmpty() ? ToNewCString(aString) : nsnull;
 
 	if (currentPath && onlineDir)
 	{
@@ -1202,7 +1203,7 @@ NS_IMETHODIMP nsImapUrl::GetUri(char** aURI)
 {
   nsresult rv = NS_OK;
   if (!mURI.IsEmpty())
-    *aURI = mURI.ToNewCString();
+    *aURI = ToNewCString(mURI);
   else
 	{
     *aURI = nsnull;
@@ -1224,7 +1225,7 @@ NS_IMETHODIMP nsImapUrl::GetUri(char** aURI)
     nsCAutoString uriStr;
     rv = nsBuildImapMessageURI(baseMessageURI, key, uriStr);
     nsCRT::free(baseMessageURI);
-    *aURI = uriStr.ToNewCString();
+    *aURI = ToNewCString(uriStr);
   }
   
   return rv;
@@ -1512,7 +1513,7 @@ NS_IMETHODIMP nsImapUrl::GetFolderCharsetOverride(PRBool * aCharacterSetOverride
 NS_IMETHODIMP nsImapUrl::GetCharsetOverRide(PRUnichar ** aCharacterSet)
 {
   if (!mCharsetOverride.IsEmpty())
-    *aCharacterSet = mCharsetOverride.ToNewUnicode(); 
+    *aCharacterSet = ToNewUnicode(mCharsetOverride); 
   else
     *aCharacterSet = nsnull;
   return NS_OK;

@@ -109,7 +109,7 @@ NS_IMETHODIMP nsMsgFilter::GetFilterName(PRUnichar **name)
 {
     NS_ENSURE_ARG_POINTER(name);
     
-    *name = m_filterName.ToNewUnicode();
+    *name = ToNewUnicode(m_filterName);
 	return NS_OK;
 }
 
@@ -123,7 +123,7 @@ NS_IMETHODIMP nsMsgFilter::GetFilterDesc(char **description)
 {
     NS_ENSURE_ARG_POINTER(description);
 
-    *description = m_description.ToNewCString();
+    *description = ToNewCString(m_description);
 	return NS_OK;
 }
 
@@ -276,7 +276,7 @@ nsMsgFilter::GetActionTargetFolderUri(char** aResult)
     NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::MoveToFolder,
                    NS_ERROR_ILLEGAL_VALUE);
     if (m_action.m_folderUri)
-      *aResult = m_action.m_folderUri.ToNewCString();
+      *aResult = ToNewCString(m_action.m_folderUri);
     return NS_OK;
 }
 
@@ -303,11 +303,9 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 	msgHdr->GetSubject(getter_Copies(subject));
 	if (stream)
 	{
-        char *utf8name = nsAutoString(filterName).ToNewUTF8String();
         
 		*stream << "Applied filter \"";
-		*stream << utf8name;
-        ::Recycle(utf8name);
+		*stream << NS_ConvertUCS2toUTF8(filterName).get();
         
 		*stream << "\" to message from ";
 		*stream << (const char*)author;
@@ -472,7 +470,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
         moveValue.ReplaceSubstring(".sbd/", "/");
 
 #ifdef XP_MAC
-        char *unescapedMoveValue = moveValue.ToNewCString();
+        char *unescapedMoveValue = ToNewCString(moveValue);
         nsUnescape(unescapedMoveValue);
         moveValue.Assign(unescapedMoveValue);
         nsCRT::free(unescapedMoveValue);

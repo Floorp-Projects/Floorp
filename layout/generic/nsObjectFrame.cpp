@@ -2099,8 +2099,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
                 }
               }
 */
-              mAttrNames[mNumAttrs] = name.ToNewUTF8String();
-              mAttrVals[mNumAttrs] = value.ToNewUTF8String();
+              mAttrNames[mNumAttrs] = ToNewUTF8String(name);
+              mAttrVals[mNumAttrs] = ToNewUTF8String(value);
               mNumAttrs++;
             }
           }
@@ -2473,7 +2473,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
         if (NS_FAILED(rv))
             return rv;
 
-        mTagText = elementHTML.ToNewUTF8String();
+        mTagText = ToNewUTF8String(elementHTML);
         if (!mTagText)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2601,8 +2601,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const
                        */
                       name.CompressWhitespace();
                       val.CompressWhitespace();
-                      mParamNames[mNumParams] = name.ToNewUTF8String();
-                      mParamVals[mNumParams]  = val.ToNewUTF8String();
+                      mParamNames[mNumParams] = ToNewUTF8String(name);
+                      mParamVals[mNumParams]  = ToNewUTF8String(val);
                       mNumParams++;
                     }
                   }

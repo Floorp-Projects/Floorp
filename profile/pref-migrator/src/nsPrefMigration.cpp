@@ -59,6 +59,7 @@
 #include "plstr.h"
 #include "prprf.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
 #include "nsProxiedService.h"
@@ -1606,7 +1607,7 @@ static nsresult
 PutCookieLine(nsOutputFileStream &strm, const nsString& aLine)
 {
   /* allocate a buffer from the heap */
-  char * cp = aLine.ToNewCString();
+  char * cp = ToNewCString(aLine);
   if (! cp) {
     return NS_ERROR_FAILURE;
   }
@@ -1680,7 +1681,7 @@ Fix4xCookies(nsIFileSpec * profilePath) {
     inBuffer.Mid(suffix, nameIndex, inBuffer.Length()-nameIndex);
 
     /* correct the expires field */
-    char * expiresCString = expiresString.ToNewCString();
+    char * expiresCString = ToNewCString(expiresString);
     unsigned long expires = strtoul(expiresCString, nsnull, 10);
     nsCRT::free(expiresCString);
 
@@ -2122,7 +2123,7 @@ ConvertStringToUTF8(nsAutoString& aCharset, const char* inString, char** outStri
             nsAutoString aString;
             aString.Assign(unichars, uniLength);
             // convert to UTF-8
-            *outString = aString.ToNewUTF8String();
+            *outString = ToNewUTF8String(aString);
           }
           delete [] unichars;
         }

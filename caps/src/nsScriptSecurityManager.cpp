@@ -50,6 +50,7 @@
 #include "nsAggregatePrincipal.h"
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIJSContextStack.h"
 #include "nsDOMError.h"
 #include "nsDOMCID.h"
@@ -218,7 +219,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         propertyStr.AppendWithConversion((PRUnichar*)JSValIDToString(aJSContext, aName));
 
         char* property;
-        property = propertyStr.ToNewCString();
+        property = ToNewCString(propertyStr);
         printf("### CanAccess(%s, %i) ", property, aAction);
         PR_FREEIF(property);
     }
@@ -939,14 +940,14 @@ nsScriptSecurityManager::ReportErrorToConsole(nsIURI* aTarget)
     nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
     if (console)
     {
-      PRUnichar* messageUni = msg.ToNewUnicode();
+      PRUnichar* messageUni = ToNewUnicode(msg);
       if (!messageUni)
           return NS_ERROR_FAILURE;
       console->LogStringMessage(messageUni);
       nsMemory::Free(messageUni);
     }
 #ifdef DEBUG
-    char* messageCstr = msg.ToNewCString();
+    char* messageCstr = ToNewCString(msg);
     if (!messageCstr)
         return NS_ERROR_FAILURE;
     fprintf(stderr, "%s\n", messageCstr);
@@ -2007,7 +2008,7 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const PRUnichar* aAction,
     nsresult rv = NS_OK;
     nsCAutoString prefNameStr;
     prefNameStr.AssignWithConversion(aPrefName);
-    char* prefName = prefNameStr.ToNewCString();
+    char* prefName = ToNewCString(prefNameStr);
     if (!prefName)
         return NS_ERROR_OUT_OF_MEMORY;
     nsCOMPtr<nsISecurityPref> securityPref(do_QueryReferent(mPrefBranchWeakRef));

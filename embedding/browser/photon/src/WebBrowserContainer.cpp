@@ -47,6 +47,7 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIWindowCreator.h"
 #include "nsIWindowWatcher.h"
+#include "nsReadableUtils.h"
 
 CWebBrowserContainer::CWebBrowserContainer(PtWidget_t *pOwner)
 {
@@ -202,7 +203,7 @@ NS_IMETHODIMP CWebBrowserContainer::OnShowContextMenu(PRUint32 aContextFlags, ns
 		}
 
 	if( moz->rightClickUrl ) free( moz->rightClickUrl );
-	moz->rightClickUrl = strdup( rightClickUrl.ToNewCString() );
+	moz->rightClickUrl = ToNewCString(rightClickUrl);
 
 	return NS_OK;
 	}
@@ -854,7 +855,7 @@ NS_IMETHODIMP CWebBrowserContainer::GetTitle(PRUnichar * *aTitle)
 }
 NS_IMETHODIMP CWebBrowserContainer::SetTitle(const PRUnichar * aTitle) {
 	nsString mTitleString(aTitle);
-	InvokeInfoCallback(Pt_MOZ_INFO_TITLE, (unsigned int) 0, mTitleString.ToNewCString());
+	InvokeInfoCallback(Pt_MOZ_INFO_TITLE, (unsigned int) 0, ToNewCString(mTitleString));
 	return NS_OK;
 }
 
@@ -913,7 +914,7 @@ CWebBrowserContainer::SetStatus(PRUint32 statusType, const PRUnichar *status)
 
 
 	if (type != 0)
-		InvokeInfoCallback(type, (unsigned int) 0, mStatus.ToNewCString());
+		InvokeInfoCallback(type, (unsigned int) 0, ToNewCString(mStatus));
 
 	return NS_OK;
 }

@@ -40,6 +40,7 @@
 #include "nsMsgIdentity.h"
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 #include "nsMsgCompCID.h"
 #include "nsIRDFService.h"
@@ -338,7 +339,7 @@ nsMsgIdentity::GetIdentityName(PRUnichar **idName) {
     str.AppendWithConversion(" <");
     str.AppendWithConversion((const char*)email);
     str.AppendWithConversion(">");
-    *idName = str.ToNewUnicode();
+    *idName = ToNewUnicode(str);
     rv = NS_OK;
   }
 
@@ -356,7 +357,7 @@ nsMsgIdentity::ToString(PRUnichar **aResult)
   idname.AppendWithConversion(m_identityKey);
   idname.AppendWithConversion("]");
 
-  *aResult = idname.ToNewUnicode();
+  *aResult = ToNewUnicode(idname);
   return NS_OK;
 }
 

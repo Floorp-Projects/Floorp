@@ -77,6 +77,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIImapFlagAndUidState.h"
 #include "nsIMessenger.h"
 #include "nsIMsgSearchAdapter.h"
@@ -302,7 +303,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
   uri.AppendWithConversion('/');
 
   uri.Append(*name);
-  char* uriStr = uri.ToNewCString();
+  char* uriStr = ToNewCString(uri);
   if (uriStr == nsnull) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -949,7 +950,7 @@ NS_IMETHODIMP nsImapMailFolder::GetOnlineDelimiter(char** onlineDelimiter)
         PRUnichar delimiter = 0;
         rv = GetHierarchyDelimiter(&delimiter);
         nsAutoString aString(delimiter);
-        *onlineDelimiter = aString.ToNewCString();
+        *onlineDelimiter = ToNewCString(aString);
         return rv;
     }
     return NS_ERROR_NULL_POINTER;
@@ -1680,7 +1681,7 @@ NS_IMETHODIMP nsImapMailFolder::GetOnlineName(char ** aOnlineFolderName)
   if (!aOnlineFolderName)
     return NS_ERROR_NULL_POINTER;
   ReadDBFolderInfo(PR_FALSE); // update cache first.
-  *aOnlineFolderName = m_onlineFolderName.ToNewCString();
+  *aOnlineFolderName = ToNewCString(m_onlineFolderName);
   return (*aOnlineFolderName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 
   // ### do we want to read from folder cache first, or has that been done?

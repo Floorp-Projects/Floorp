@@ -118,7 +118,7 @@ MimeTextBuildPrefixCSS(PRInt32    quotedSizeSetting,   // mail.quoted_size
     formatString += ';';
   }
 
-  formatCstr = formatString.ToNewCString();
+  formatCstr = ToNewCString(formatString);
   return formatCstr;
 }
 

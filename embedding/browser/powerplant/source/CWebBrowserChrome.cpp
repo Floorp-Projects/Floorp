@@ -29,6 +29,7 @@
 #include "nsIGenericFactory.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIURI.h"
 #include "nsIWebProgress.h"
 #include "nsIDocShellTreeItem.h"
@@ -454,7 +455,7 @@ NS_IMETHODIMP CWebBrowserChrome::GetTitle(PRUnichar * *aTitle)
    
    mBrowserWindow->GetDescriptor(pStr);
    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, titleStr);
-   *aTitle = titleStr.ToNewUnicode();
+   *aTitle = ToNewUnicode(titleStr);
    
    return NS_OK;
 }

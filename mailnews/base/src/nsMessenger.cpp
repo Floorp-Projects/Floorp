@@ -46,6 +46,7 @@
 #include "nsIStringStream.h"
 #include "nsEscape.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsTextFormatter.h"
 #include "nsIFileSpec.h"
 #ifdef XP_MAC
@@ -582,7 +583,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   urlString.AssignWithConversion(unescapedUrl);
 
   urlString.ReplaceSubstring(NS_ConvertASCIItoUCS2("/;section"), NS_ConvertASCIItoUCS2("?section"));
-  urlCString = urlString.ToNewCString();
+  urlCString = ToNewCString(urlString);
 
   rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
   nsCRT::free(urlCString);
@@ -907,7 +908,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
             else
                 urlString.AppendWithConversion("?header=print");
             
-            urlCString = urlString.ToNewCString();
+            urlCString = ToNewCString(urlString);
             rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
             nsCRT::free(urlCString);
             if (NS_FAILED(rv)) goto done;

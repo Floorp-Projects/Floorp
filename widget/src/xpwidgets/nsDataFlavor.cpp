@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDataFlavor.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_IID(kIDataFlavor, NS_IDATAFLAVOR_IID);
 
@@ -94,7 +95,7 @@ NS_METHOD nsDataFlavor::Init(const nsString & aMimeType, const nsString & aHuman
   mMimeType = aMimeType;
   mHumanPresentableName = aHumanPresentableName;
 
-  char * str = mMimeType.ToNewCString();
+  char * str = ToNewCString(mMimeType);
 
   delete[] str;
 

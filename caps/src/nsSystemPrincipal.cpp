@@ -45,6 +45,7 @@
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 
 NS_IMPL_QUERY_INTERFACE2_CI(nsSystemPrincipal, nsIPrincipal, nsISerializable)
@@ -64,7 +65,7 @@ nsSystemPrincipal::ToString(char **result)
     nsAutoString buf;
     buf.AssignWithConversion("[System]");
 
-    *result = buf.ToNewCString();
+    *result = ToNewCString(buf);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

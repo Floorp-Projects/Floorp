@@ -37,6 +37,7 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
 #include "nsOutlookStringBundle.h"
 #include "nsIServiceManager.h"
@@ -117,7 +118,7 @@ PRUnichar *nsOutlookStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundl
 	resultString.AppendInt(stringID, 10);
 	resultString.AppendWithConversion("?]");
 
-	return( resultString.ToNewUnicode());
+	return ToNewUnicode(resultString);
 }
 
 void nsOutlookStringBundle::Cleanup( void)

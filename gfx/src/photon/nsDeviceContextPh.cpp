@@ -42,6 +42,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
 
 #include "nsDeviceContextPh.h"
 #include "nsRenderingContextPh.h"
@@ -394,7 +395,7 @@ NS_IMETHODIMP nsDeviceContextPh :: GetClientRect( nsRect &aRect ) {
 /* I need to know the requested font size to finish this function */
 NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence( const nsString& aFontName ) {
   nsresult    ret_code = NS_ERROR_FAILURE;
-  char        *fontName = aFontName.ToNewCString();
+  char        *fontName = ToNewCString(aFontName);
 
   if( fontName ) {
 		FontID *id = NULL;

@@ -50,6 +50,7 @@
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgCompCID.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #include "nsMsgPrompts.h"
@@ -1099,7 +1100,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
             char    *tData = nsnull;
             nsAutoString charset; charset.AssignWithConversion(m_charset);
             if (NS_FAILED(ConvertFromUnicode(charset, conData, &tData)))
-              tData = conData.ToNewCString();
+              tData = ToNewCString(conData);
             if (tData)
             {
               (void) tempfile.write(tData, nsCRT::strlen(tData));

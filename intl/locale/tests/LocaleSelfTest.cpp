@@ -56,6 +56,7 @@
 #include "nsICollation.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
+#include "nsReadableUtils.h"
 
 #ifdef XP_MAC
 #define LOCALE_DLL_NAME "NSLOCALE_DLL"
@@ -419,7 +420,7 @@ static void DebugPrintCompResult(nsString string1, nsString string2, int result)
   printf(" %s\n", s);
 #else
     // Warning: casting to char*
-    char *cstr = string1.ToNewCString();
+    char *cstr = ToNewCString(string1);
     
     if (cstr) {
       cout << cstr << ' ';
@@ -436,7 +437,7 @@ static void DebugPrintCompResult(nsString string1, nsString string2, int result)
       cout << '<';
       break;
     }
-    cstr = string2.ToNewCString();
+    cstr = ToNewCString(string2);
     if (cstr) {
       cout << ' ' << cstr << '\n';
       delete [] cstr;

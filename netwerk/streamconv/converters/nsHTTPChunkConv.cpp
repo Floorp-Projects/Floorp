@@ -41,6 +41,7 @@
 #include "prlog.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsIStringStream.h"
 
@@ -82,8 +83,8 @@ nsHTTPChunkConv::AsyncConvertData (
     nsString from (aFromType);
     nsString to   ( aToType );
 
-    char * fromStr = from.ToNewCString ();
-    char *   toStr =   to.ToNewCString ();
+    char * fromStr = ToNewCString(from);
+    char *   toStr =   ToNewCString(to);
 
     if (!PL_strncasecmp (fromStr, HTTP_CHUNK_TYPE, strlen (HTTP_CHUNK_TYPE  ) )
         &&

@@ -41,6 +41,7 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsAbBaseCID.h"
 #include "prmem.h"	 
@@ -202,7 +203,7 @@ nsresult nsAbCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
   uri.Append(mURI);
   uri.Append('/');
 
-  char *utf8Name = name.ToNewUTF8String();
+  char *utf8Name = ToNewUTF8String(name);
   if (!utf8Name)
     return NS_ERROR_OUT_OF_MEMORY;
   uri.Append(utf8Name);

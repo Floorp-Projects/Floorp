@@ -37,6 +37,7 @@
 
 #include "msgCore.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 #include "nsMsgSearchCore.h"
 #include "nsIMsgSearchSession.h"
@@ -820,7 +821,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 			srcCharset.AssignWithConversion(charset);
 			nsString out;
 			ConvertToUnicode(srcCharset, stringToMatch ? stringToMatch : "", out);
-			utf8 = out.ToNewUTF8String();
+			utf8 = ToNewUTF8String(out);
 		}
 	}
 
@@ -1255,7 +1256,7 @@ NS_IMETHODIMP
 nsMsgSearchTerm::GetArbitraryHeader(char* *aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-    *aResult = m_arbitraryHeader.ToNewCString();
+    *aResult = ToNewCString(m_arbitraryHeader);
     return NS_OK;
 }
 
@@ -1442,7 +1443,7 @@ nsresult nsMsgResultElement::AssignValues (nsIMsgSearchValue *src, nsMsgSearchVa
 			NS_ASSERTION(IS_STRING_ATTRIBUTE(dst->attribute), "assigning non-string result");
             nsXPIDLString unicodeString;
 			err = src->GetStr(getter_Copies(unicodeString));
-            dst->string = NS_ConvertUCS2toUTF8(unicodeString).ToNewCString();
+            dst->string = ToNewUTF8String(unicodeString);
 		}
 		else
 			err = NS_ERROR_INVALID_ARG;

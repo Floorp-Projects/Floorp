@@ -40,6 +40,7 @@
 #include "nsSOAPUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIServiceManager.h"
+#include "nsReadableUtils.h"
 
 nsSOAPParameter::nsSOAPParameter()
 {
@@ -73,7 +74,7 @@ NS_IMETHODIMP nsSOAPParameter::GetEncodingStyleURI(char * *aEncodingStyleURI)
 {
   NS_ENSURE_ARG_POINTER(aEncodingStyleURI);
   if (mEncodingStyleURI.Length() > 0) {
-    *aEncodingStyleURI = mEncodingStyleURI.ToNewCString();
+    *aEncodingStyleURI = ToNewCString(mEncodingStyleURI);
   }
   else {
     *aEncodingStyleURI = nsnull;
@@ -97,7 +98,7 @@ NS_IMETHODIMP nsSOAPParameter::GetName(PRUnichar * *aName)
 {
   NS_ENSURE_ARG_POINTER(aName);
   if (mName.Length() > 0) {
-    *aName = mName.ToNewUnicode();
+    *aName = ToNewUnicode(mName);
   }
   else {
     *aName = nsnull;

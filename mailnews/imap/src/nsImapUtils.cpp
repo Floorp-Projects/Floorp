@@ -39,6 +39,7 @@
 #include "msgCore.h"
 #include "nsImapUtils.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "prsystem.h"
 #include "nsEscape.h"
@@ -114,7 +115,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
            do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if(NS_FAILED(rv)) return rv;
 
-  char *unescapedUserName = username.ToNewCString();
+  char *unescapedUserName = ToNewCString(username);
   if (unescapedUserName)
   {
 	  nsUnescape(unescapedUserName);
@@ -187,7 +188,7 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, const char* uriStr
     if (hostEnd <= 0) return NS_ERROR_FAILURE;
     uri.Right(fullName, uri.Length() - hostEnd - 1);
     if (fullName.IsEmpty()) return NS_ERROR_FAILURE;
-    *name = fullName.ToNewCString();
+    *name = ToNewCString(fullName);
     return NS_OK;
 }
 
@@ -222,7 +223,7 @@ nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *
       {
         nsCString partSubStr;
         uriStr.Right(partSubStr, uriStr.Length() - keyEndSeparator);
-        *part = partSubStr.ToNewCString();
+        *part = ToNewCString(partSubStr);
 
       }
     }
@@ -254,7 +255,7 @@ nsresult nsCreateImapBaseMessageURI(const char *baseURI, char **baseMessageURI)
 	nsCAutoString baseURIStr(kImapMessageRootURI);
 	baseURIStr += tailURI;
 
-	*baseMessageURI = baseURIStr.ToNewCString();
+	*baseMessageURI = ToNewCString(baseURIStr);
 	if(!*baseMessageURI)
 		return NS_ERROR_OUT_OF_MEMORY;
 

@@ -37,6 +37,7 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
 #include "nsImportStringBundle.h"
 #include "nsIServiceManager.h"
@@ -115,7 +116,7 @@ PRUnichar *nsImportStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundle
 	resultString.AppendInt(stringID, 10);
 	resultString.AppendWithConversion("?]");
 
-	return( resultString.ToNewUnicode());
+	return( ToNewUnicode(resultString));
 }
 
 void nsImportStringBundle::Cleanup( void)

@@ -45,6 +45,7 @@
 #include "nsMsgImapCID.h"
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 #include "nsIMAPHostSessionList.h"
 #include "nsImapIncomingServer.h"
@@ -2069,7 +2070,7 @@ NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar
 			resultString.AssignWithConversion("[StringID");
 			resultString.AppendInt(aMsgId, 10);
 			resultString.AssignWithConversion("?]");
-			*aString = resultString.ToNewUnicode();
+			*aString = ToNewUnicode(resultString);
 		}
 		else
 		{
@@ -2079,7 +2080,7 @@ NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar
 	else
 	{
 		res = NS_OK;
-		*aString = resultString.ToNewUnicode();
+		*aString = ToNewUnicode(resultString);
 	}
 	return res;
 }
@@ -2366,7 +2367,7 @@ NS_IMETHODIMP nsImapIncomingServer::GetManageMailAccountUrl(char **manageMailAcc
 	if (!manageMailAccountUrl)
 		return NS_ERROR_NULL_POINTER;
 
-	*manageMailAccountUrl = m_manageMailAccountUrl.ToNewCString();
+	*manageMailAccountUrl = ToNewCString(m_manageMailAccountUrl);
 	return NS_OK;
 }
 

@@ -47,6 +47,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 #include "nsID.h"
 
@@ -665,7 +666,7 @@ NS_NewFormFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags)
 PRIVATE
 void DebugPrint(char* aLabel, nsString aString)
 {
-  char* out = aString.ToNewCString();
+  char* out = ToNewCString(aString);
   printf("\n %s=%s\n", aLabel, out);
   delete [] out;
 }
@@ -943,15 +944,15 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 #if defined(DEBUG_rods) || defined(DEBUG_pollmann)
       {
         printf("******\n");
-        char * str = data.ToNewCString();
+        char * str = ToNewCString(data);
         printf("postBuffer[%s]\n", str);
         Recycle(str);
 
-        str = absURLSpec.ToNewCString();
+        str = ToNewCString(absURLSpec);
         printf("absURLSpec[%s]\n", str);
         Recycle(str);
 
-        str = target.ToNewCString();
+        str = ToNewCString(target);
         printf("target    [%s]\n", str);
         Recycle(str);
         printf("******\n");
@@ -1053,7 +1054,7 @@ nsFormFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder)
     inBuf  = UnicodeToNewBytes(aString.get(), aString.Length(), encoder);
 
   if(nsnull == inBuf)
-    inBuf  = aString.ToNewCString();
+    inBuf  = ToNewCString(aString);
 
   // convert to CRLF breaks
   char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(inBuf,
@@ -1092,7 +1093,7 @@ void nsFormFrame::GetSubmitCharset(nsString& oCharset)
     }
   }
 #ifdef DEBUG_ftang
-  printf("accept-charset = %s\n", acceptCharsetValue.ToNewUTF8String());
+  printf("accept-charset = %s\n", NS_LossyConvertUCS2toASCII(acceptCharsetValue).get());
 #endif
   PRInt32 l = acceptCharsetValue.Length();
   if(l > 0 ) {
@@ -1108,7 +1109,7 @@ void nsFormFrame::GetSubmitCharset(nsString& oCharset)
           nsAutoString charset;
           acceptCharsetValue.Mid(charset, offset, cnt);
 #ifdef DEBUG_ftang
-          printf("charset[i] = %s\n",charset.ToNewUTF8String());
+          printf("charset[i] = %s\n", NS_LossyConvertUCS2toASCII(charset).get());
 #endif
           if(NS_SUCCEEDED(calias->GetPreferred(charset,oCharset)))
             return;
@@ -1154,7 +1155,7 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   nsresult rv = NS_OK;
   GetSubmitCharset(charset);
 #ifdef DEBUG_ftang
-  printf("charset=%s\n", charset.ToNewCString());
+  printf("charset=%s\n", NS_LossyConvertUCS2toASCII(charset).get());
 #endif
   
   // Get Charset, get the encoder.
@@ -1496,9 +1497,9 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,
           } 
 
           if(nsnull == name)
-            name  = names[valueX].ToNewCString();
+            name  = ToNewCString(names[valueX]);
           if(nsnull == value)
-            value = valueStr.ToNewCString();
+            value = ToNewCString(valueStr);
 
           if (0 == names[valueX].Length()) {
             continue;
@@ -1651,9 +1652,9 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,
             }
 
             if(nsnull == name)
-              name  = names[valueX].ToNewCString();
+              name  = ToNewCString(names[valueX]);
             if(nsnull == value)
-              value = valueStr.ToNewCString();
+              value = ToNewCString(valueStr);
 
             if (0 == names[valueX].Length()) {
               continue;

@@ -79,6 +79,7 @@
 #include "nsIDOMElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsWeakReference.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsICaret.h"
@@ -7328,7 +7329,7 @@ static void RecurseIndiTotals(nsIPresContext* aPresContext,
   IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(aHT, key);
   if (counter) {
     counter->mHasBeenOutput = PR_TRUE;
-    char * name = counter->mName.ToNewCString();
+    char * name = ToNewCString(counter->mName);
     for (PRInt32 i=0;i<aLevel;i++) printf(" ");
     printf("%s - %p   [%d][", name, aParentFrame, counter->mCount);
     for (PRInt32 inx=0;inx<5;inx++) {
@@ -7354,7 +7355,7 @@ PRIntn ReflowCountMgr::DoSingleIndi(PLHashEntry *he, PRIntn i, void *arg)
   char *str = (char *)he->key;
   IndiReflowCounter * counter = (IndiReflowCounter *)he->value;
   if (counter && !counter->mHasBeenOutput) {
-    char * name = counter->mName.ToNewCString();
+    char * name = ToNewCString(counter->mName);
     printf("%s - %p   [%d][", name, counter->mFrame, counter->mCount);
     for (PRInt32 inx=0;inx<5;inx++) {
       if (inx != 0) printf(",");

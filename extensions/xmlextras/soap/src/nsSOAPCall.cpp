@@ -48,6 +48,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIJSContextStack.h"
 #include "nsIURI.h"
@@ -269,7 +270,7 @@ NS_IMETHODIMP nsSOAPCall::GetEncodingStyleURI(char * *aEncodingStyleURI)
                                         value);
 
   if (value.Length() > 0) {
-    *aEncodingStyleURI = value.ToNewCString();
+    *aEncodingStyleURI = ToNewCString(value);
     if (nsnull == *aEncodingStyleURI) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -374,7 +375,7 @@ NS_IMETHODIMP nsSOAPCall::GetTargetObjectURI(char * *aTargetObjectURI)
   NS_ENSURE_ARG_POINTER(aTargetObjectURI);
   
   if (mTargetObjectURI.Length() > 0) {
-    *aTargetObjectURI = mTargetObjectURI.ToNewCString();
+    *aTargetObjectURI = ToNewCString(mTargetObjectURI);
   }
   else {
     *aTargetObjectURI = nsnull;
@@ -400,7 +401,7 @@ NS_IMETHODIMP nsSOAPCall::GetMethodName(PRUnichar * *aMethodName)
   NS_ENSURE_ARG_POINTER(aMethodName);
   
   if (mMethodName.Length() > 0) {
-    *aMethodName = mMethodName.ToNewUnicode();
+    *aMethodName = ToNewUnicode(mMethodName);
   }
   else {
     *aMethodName = nsnull;
@@ -426,7 +427,7 @@ NS_IMETHODIMP nsSOAPCall::GetDestinationURI(char * *aDestinationURI)
   NS_ENSURE_ARG_POINTER(aDestinationURI);
   
   if (mDestinationURI.Length() > 0) {
-    *aDestinationURI = mDestinationURI.ToNewCString();
+    *aDestinationURI = ToNewCString(mDestinationURI);
   }
   else {
     *aDestinationURI = nsnull;
@@ -452,7 +453,7 @@ NS_IMETHODIMP nsSOAPCall::GetActionURI(char * *aActionURI)
   NS_ENSURE_ARG_POINTER(aActionURI);
   
   if (mActionURI.Length() > 0) {
-    *aActionURI = mActionURI.ToNewCString();
+    *aActionURI = ToNewCString(mActionURI);
   }
   else {
     *aActionURI = nsnull;

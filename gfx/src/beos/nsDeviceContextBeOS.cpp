@@ -43,6 +43,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
 
 #include "nsDeviceContextBeOS.h"
 #include "nsFontMetricsBeOS.h"
@@ -349,7 +350,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::CheckFontExistence(const nsString& aFontName)
 {
   PRBool  isthere = PR_FALSE;
 
-  char* cStr = aFontName.ToNewCString();
+  char* cStr = ToNewCString(aFontName);
 
 	int32 numFamilies = count_font_families();
 	for(int32 i = 0; i < numFamilies; i++)

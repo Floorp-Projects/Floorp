@@ -63,6 +63,7 @@
 #include "nsIContentViewerFile.h"
 #include "nsIDocShell.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsICategoryManager.h"
 #include "nsIAbUpgrader.h"
 #include "nsSpecialSystemDirectory.h"
@@ -1085,7 +1086,7 @@ void AddressBookParser::AddLdifRowToDatabase(PRBool bIsList)
 	else
 		return;
 
-	char* cursor = (char*)mLine.ToNewCString(); 
+	char* cursor = ToNewCString(mLine); 
 	char* saveCursor = cursor;  /* keep for deleting */ 
 	char* line = 0; 
 	char* typeSlot = 0; 

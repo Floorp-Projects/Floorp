@@ -41,6 +41,7 @@
 #include "nsIParserNode.h"
 #include "nsIParser.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIURL.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
@@ -372,7 +373,7 @@ void RobotSink::ProcessLink(const nsString& aLink)
     rv = mDocumentURL->QueryInterface(NS_GET_IID(nsIURI), (void**)&baseUri);
     if (NS_FAILED(rv)) return;
 
-    char *uriStr = aLink.ToNewCString();
+    char *uriStr = ToNewCString(aLink);
     if (!uriStr) return;
     rv = service->NewURI(uriStr, baseUri, &uri);
     nsCRT::free(uriStr);

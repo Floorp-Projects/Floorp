@@ -48,6 +48,7 @@
 #include "nsMsgUtils.h"
 #include "nsMsgSearchTerm.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIImportService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFilterService.h"
@@ -558,7 +559,7 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
               {
                 nsAutoString unicodeStr;
                 impSvc->SystemStringToUnicode(value.get(), unicodeStr);
-                char *utf8 = unicodeStr.ToNewUTF8String();
+                char *utf8 = ToNewUTF8String(unicodeStr);
                 value.Assign(utf8);
                 nsMemory::Free(utf8);
               }

@@ -51,7 +51,7 @@ protected:
    NS_IMETHOD SearchCache(const PRUnichar *, nsIAutoCompleteResults *);
    NS_IMETHOD GetHostIndex(const PRUnichar * aPath, PRInt32 * aReturn);
    NS_IMETHOD CheckItemAvailability(const PRUnichar * aItem, nsIAutoCompleteResults * aArray, PRBool * aResult);
-   NS_IMETHOD VerifyAndCreateEntry(const PRUnichar * aItem, PRUnichar * aMatchItem, nsIAutoCompleteResults * aArray);
+   NS_IMETHOD VerifyAndCreateEntry(const PRUnichar * aItem, const PRUnichar * aMatchItem, nsIAutoCompleteResults * aArray);
 
 private:
     nsVoidArray   mArray;

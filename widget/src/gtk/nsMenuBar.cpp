@@ -46,6 +46,7 @@
 #include "nsIWidget.h"
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 #include "nsGtkEventHandler.h"
 
@@ -173,7 +174,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
       Label.Insert("_", offset);
   }
 
-  char *foo = Label.ToNewCString();
+  char *foo = ToNewCString(Label);
 #ifdef DEBUG
   g_print("%s\n", foo);
 #endif

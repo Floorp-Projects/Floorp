@@ -49,6 +49,7 @@
 #include "nsIImportABDescriptor.h"
 #include "nsIImportMimeEncode.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsOutlookStringBundle.h"
 #include "nsABBaseCID.h"
 #include "nsIAbCard.h"
@@ -1091,32 +1092,25 @@ PRBool nsOutlookMail::BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, n
 		}
 	}
 	
-	char *pCStr;
 	// We now have the required fields
 	// write them out followed by any optional fields!
 	if (!displayName.IsEmpty()) {
-		pDb->AddDisplayName( newRow, pCStr = displayName.ToNewUTF8String());
-		nsCRT::free( pCStr);
+		pDb->AddDisplayName( newRow, NS_ConvertUCS2toUTF8(displayName).get());
 	}
 	if (!firstName.IsEmpty()) {
-		pDb->AddFirstName( newRow, pCStr = firstName.ToNewUTF8String());
-		nsCRT::free( pCStr);
+		pDb->AddFirstName( newRow, NS_ConvertUCS2toUTF8(firstName).get());
 	}
 	if (!lastName.IsEmpty()) {
-		pDb->AddLastName( newRow, pCStr = lastName.ToNewUTF8String());
-		nsCRT::free( pCStr);
+		pDb->AddLastName( newRow, NS_ConvertUCS2toUTF8(lastName).get());
 	}
 	if (!nickName.IsEmpty()) {
-		pDb->AddNickName( newRow, pCStr = nickName.ToNewUTF8String());
-		nsCRT::free( pCStr);
+		pDb->AddNickName( newRow, NS_ConvertUCS2toUTF8(nickName).get());
 	}
 	if (!eMail.IsEmpty()) {
-		pDb->AddPrimaryEmail( newRow, pCStr = eMail.ToNewUTF8String());
-		nsCRT::free( pCStr);
+		pDb->AddPrimaryEmail( newRow, NS_ConvertUCS2toUTF8(eMail).get());
 	}
 	if (!secondEMail.IsEmpty()) {
-		pDb->Add2ndEmail( newRow, pCStr = secondEMail.ToNewUTF8String());
-		nsCRT::free( pCStr);
+		pDb->Add2ndEmail( newRow, NS_ConvertUCS2toUTF8(secondEMail).get());
 	}
 
 	// Do all of the extra fields!

@@ -45,6 +45,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsSignonViewer.h"
 
@@ -77,7 +78,7 @@ SignonViewerImpl::GetNopreviewValue(PRUnichar** aValue)
   nsAutoString nopreviewList;
   res = walletservice->WALLET_GetNopreviewListForViewer(nopreviewList);
   if (NS_SUCCEEDED(res)) {
-    *aValue = nopreviewList.ToNewUnicode();
+    *aValue = ToNewUnicode(nopreviewList);
   }
   return res;
 }
@@ -96,7 +97,7 @@ SignonViewerImpl::GetNocaptureValue(PRUnichar** aValue)
   nsAutoString nocaptureList;
   res = walletservice->WALLET_GetNocaptureListForViewer(nocaptureList);
   if (NS_SUCCEEDED(res)) {
-    *aValue = nocaptureList.ToNewUnicode();
+    *aValue = ToNewUnicode(nocaptureList);
   }
   return res;
 }

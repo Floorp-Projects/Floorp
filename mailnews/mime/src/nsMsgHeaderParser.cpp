@@ -38,6 +38,7 @@
 
 #include "msgCore.h"    // precompiled header...
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsMsgHeaderParser.h"
 #include "nsISimpleEnumerator.h"	 
 #include "comi18n.h"
@@ -116,13 +117,13 @@ NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(PRUnichar ** aAddress, 
   if (aAddress)
   {
     result = MIME_DecodeMimeHeader(mCurrentAddress, NULL, PR_FALSE, PR_TRUE);
-    *aAddress = NS_ConvertUTF8toUCS2(result ? result : mCurrentAddress).ToNewUnicode();
+    *aAddress = ToNewUnicode(NS_ConvertUTF8toUCS2(result ? result : mCurrentAddress));
     PR_FREEIF(result);
   }
   if (aName)
   {
     result = MIME_DecodeMimeHeader(mCurrentName, NULL, PR_FALSE, PR_TRUE);
-    *aName = NS_ConvertUTF8toUCS2(result ? result : mCurrentName).ToNewUnicode();
+    *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(result ? result : mCurrentName));
     PR_FREEIF(result);
   }
   if (aFullAddress)
@@ -134,7 +135,7 @@ NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(PRUnichar ** aAddress, 
     if (NS_SUCCEEDED(rv) && (const char*)fullAddress)
     {
       result = MIME_DecodeMimeHeader(fullAddress, NULL, PR_FALSE, PR_TRUE);
-      *aFullAddress = NS_ConvertUTF8toUCS2(result ? result : (const char*)fullAddress).ToNewUnicode();
+      *aFullAddress = ToNewUnicode(NS_ConvertUTF8toUCS2(result ? result : (const char*)fullAddress));
       PR_FREEIF(result);
     }
 
@@ -252,7 +253,7 @@ NS_IMETHODIMP nsMsgHeaderParser::ParseHeadersWithEnumerator(const PRUnichar *lin
 
   // need to convert unicode to UTF-8...
   nsAutoString tempString (line);
-  char * utf8String = tempString.ToNewUTF8String();
+  char * utf8String = ToNewUTF8String(tempString);
 
   rv = ParseHeaderAddresses("UTF-8", utf8String, &names, &addresses, &numAddresses);
   nsCRT::free(utf8String);

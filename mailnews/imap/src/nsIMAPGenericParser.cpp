@@ -41,6 +41,7 @@
 #include "nsImapProtocol.h"
 #include "nsIMAPGenericParser.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 /*************************************************
    The following functions are used to implement
@@ -507,7 +508,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 	else
 		NS_ASSERTION(PR_FALSE, "didn't find close quote");
 	
-	return returnString.ToNewCString();
+	return ToNewCString(returnString);
 }
 
 
@@ -755,6 +756,6 @@ char *nsIMAPGenericParser::CreateParenGroup()
 		fNextToken = GetNextToken();
 	}
 
-	return returnString.ToNewCString();
+	return ToNewCString(returnString);
 }
 

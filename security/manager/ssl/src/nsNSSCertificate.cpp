@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.52 2001/09/25 00:08:48 ddrinan%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.53 2001/09/29 08:27:59 jaggernaut%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -51,6 +51,7 @@
 #include "nsNSSASN1Object.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsILocaleService.h"
@@ -539,7 +540,7 @@ NS_IMETHODIMP nsX509CertValidity::GetNotBeforeLocalTime(PRUnichar **aNotBeforeLo
   PR_ExplodeTime(mNotBefore, PR_LocalTimeParameters, &explodedTime);
   dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
                                       &explodedTime, date);
-  *aNotBeforeLocalTime = date.ToNewUnicode();
+  *aNotBeforeLocalTime = ToNewUnicode(date);
   return NS_OK;
 }
 
@@ -561,7 +562,7 @@ NS_IMETHODIMP nsX509CertValidity::GetNotBeforeGMT(PRUnichar **aNotBeforeGMT)
   PR_ExplodeTime(mNotBefore, PR_GMTParameters, &explodedTime);
   dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
                                       &explodedTime, date);
-  *aNotBeforeGMT = date.ToNewUnicode();
+  *aNotBeforeGMT = ToNewUnicode(date);
   return NS_OK;
 }
 
@@ -596,7 +597,7 @@ NS_IMETHODIMP nsX509CertValidity::GetNotAfterLocalTime(PRUnichar **aNotAfterLoca
   PR_ExplodeTime(mNotAfter, PR_LocalTimeParameters, &explodedTime);
   dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
                                       &explodedTime, date);
-  *aNotAfterLocaltime = date.ToNewUnicode();
+  *aNotAfterLocaltime = ToNewUnicode(date);
   return NS_OK;
 }
 
@@ -618,7 +619,7 @@ NS_IMETHODIMP nsX509CertValidity::GetNotAfterGMT(PRUnichar **aNotAfterGMT)
   PR_ExplodeTime(mNotAfter, PR_GMTParameters, &explodedTime);
   dateFormatter->FormatPRExplodedTime(nsnull, kDateFormatShort, kTimeFormatSecondsForce24Hour,
                                       &explodedTime, date);
-  *aNotAfterGMT = date.ToNewUnicode();
+  *aNotAfterGMT = ToNewUnicode(date);
   return NS_OK;
 }
 
@@ -731,8 +732,7 @@ nsNSSCertificate::GetNickname(PRUnichar **_nickname)
 {
   NS_ENSURE_ARG(_nickname);
   const char *nickname = (mCert->nickname) ? mCert->nickname : "(no nickname)";
-  nsAutoString nn = NS_ConvertASCIItoUCS2(nickname);
-  *_nickname = nn.ToNewUnicode();
+  *_nickname = ToNewUnicode(nsDependentCString(nickname));
   return NS_OK;
 }
 
@@ -742,8 +742,7 @@ nsNSSCertificate::GetEmailAddress(PRUnichar **_emailAddress)
 {
   NS_ENSURE_ARG(_emailAddress);
   const char *email = (mCert->emailAddr) ? mCert->emailAddr : "(no email address)";
-  nsAutoString em = NS_ConvertASCIItoUCS2(email);
-  *_emailAddress = em.ToNewUnicode();
+  *_emailAddress = ToNewUnicode(nsDependentCString(email));
   return NS_OK;
 }
 
@@ -755,10 +754,9 @@ nsNSSCertificate::GetCommonName(PRUnichar **aCommonName)
   if (mCert) {
     char *commonName = CERT_GetCommonName(&mCert->subject);
     if (commonName) {
-      nsAutoString cn = NS_ConvertASCIItoUCS2(commonName);
-      *aCommonName = cn.ToNewUnicode();
+      *aCommonName = ToNewUnicode(nsDependentCString(commonName));
     } /*else {
-      *aCommonName = NS_LITERAL_STRING("<not set>").get(), 
+      *aCommonName = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
     }*/
   }
   return NS_OK;
@@ -772,10 +770,9 @@ nsNSSCertificate::GetOrganization(PRUnichar **aOrganization)
   if (mCert) {
     char *organization = CERT_GetOrgName(&mCert->subject);
     if (organization) {
-      nsAutoString org = NS_ConvertASCIItoUCS2(organization);
-      *aOrganization = org.ToNewUnicode();
+      *aOrganization = ToNewUnicode(nsDependentCString(organization));
     } /*else {
-      *aOrganization = NS_LITERAL_STRING("<not set>").get(), 
+      *aOrganization = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
     }*/
   }
   return NS_OK;
@@ -789,8 +786,7 @@ nsNSSCertificate::GetIssuerCommonName(PRUnichar **aCommonName)
   if (mCert) {
     char *commonName = CERT_GetCommonName(&mCert->issuer);
     if (commonName) {
-      nsAutoString cn = NS_ConvertASCIItoUCS2(commonName);
-      *aCommonName = cn.ToNewUnicode();
+      *aCommonName = ToNewUnicode(nsDependentCString(commonName));
     }
   }
   return NS_OK;
@@ -804,8 +800,7 @@ nsNSSCertificate::GetIssuerOrganization(PRUnichar **aOrganization)
   if (mCert) {
     char *organization = CERT_GetOrgName(&mCert->issuer);
     if (organization) {
-      nsAutoString org = NS_ConvertASCIItoUCS2(organization);
-      *aOrganization = org.ToNewUnicode();
+      *aOrganization = ToNewUnicode(nsDependentCString(organization));
     }
   }
   return NS_OK;
@@ -819,8 +814,7 @@ nsNSSCertificate::GetIssuerOrganizationUnit(PRUnichar **aOrganizationUnit)
   if (mCert) {
     char *organizationUnit = CERT_GetOrgUnitName(&mCert->issuer);
     if (organizationUnit) {
-      nsAutoString orgUnit = NS_ConvertASCIItoUCS2(organizationUnit);
-      *aOrganizationUnit = orgUnit.ToNewUnicode();
+      *aOrganizationUnit = ToNewUnicode(nsDependentCString(organizationUnit));
     }
   }
   return NS_OK;
@@ -851,10 +845,9 @@ nsNSSCertificate::GetOrganizationalUnit(PRUnichar **aOrganizationalUnit)
   if (mCert) {
     char *orgunit = CERT_GetOrgUnitName(&mCert->subject);
     if (orgunit) {
-      nsAutoString ou = NS_ConvertASCIItoUCS2(orgunit);
-      *aOrganizationalUnit = ou.ToNewUnicode();
+      *aOrganizationalUnit = ToNewUnicode(nsDependentCString(orgunit));
     } /*else {
-      *aOrganizationalUnit = NS_LITERAL_STRING("<not set>").get(), 
+      *aOrganizationalUnit = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
     }*/
   }
   return NS_OK;
@@ -924,8 +917,7 @@ nsNSSCertificate::GetSubjectName(PRUnichar **_subjectName)
   NS_ENSURE_ARG(_subjectName);
   *_subjectName = nsnull;
   if (mCert->subjectName) {
-    nsAutoString sn = NS_ConvertASCIItoUCS2(mCert->subjectName);
-    *_subjectName = sn.ToNewUnicode();
+    *_subjectName = ToNewUnicode(nsDependentCString(mCert->subjectName));
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -938,8 +930,7 @@ nsNSSCertificate::GetIssuerName(PRUnichar **_issuerName)
   NS_ENSURE_ARG(_issuerName);
   *_issuerName = nsnull;
   if (mCert->issuerName) {
-    nsAutoString in = NS_ConvertASCIItoUCS2(mCert->issuerName);
-    *_issuerName = in.ToNewUnicode();
+    *_issuerName = ToNewUnicode(nsDependentCString(mCert->issuerName));
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -951,11 +942,9 @@ nsNSSCertificate::GetSerialNumber(PRUnichar **_serialNumber)
 {
   NS_ENSURE_ARG(_serialNumber);
   *_serialNumber = nsnull;
-  char *tmpstr = CERT_Hexify(&mCert->serialNumber, 1);
-  if (tmpstr) {
-    nsAutoString sn = NS_ConvertASCIItoUCS2(tmpstr);
-    *_serialNumber = sn.ToNewUnicode();
-    PR_Free(tmpstr);
+  nsXPIDLCString tmpstr; tmpstr.Adopt(CERT_Hexify(&mCert->serialNumber, 1));
+  if (tmpstr.get()) {
+    *_serialNumber = ToNewUnicode(tmpstr);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -967,12 +956,10 @@ nsNSSCertificate::GetRsaPubModulus(PRUnichar **_rsaPubModulus)
 {
   NS_ENSURE_ARG(_rsaPubModulus);
   *_rsaPubModulus = nsnull;
-  //char *tmpstr = CERT_Hexify(&mCert->serialNumber, 1);
-  char *tmpstr = PL_strdup("not yet implemented");
-  if (tmpstr) {
-    nsAutoString rsap = NS_ConvertASCIItoUCS2(tmpstr);
-    *_rsaPubModulus = rsap.ToNewUnicode();
-    PR_Free(tmpstr);
+  //nsXPIDLCString tmpstr; tmpstr.Adopt(CERT_Hexify(&mCert->serialNumber, 1));
+  NS_NAMED_LITERAL_CSTRING(tmpstr, "not yet implemented");
+  if (tmpstr.get()) {
+    *_rsaPubModulus = ToNewUnicode(tmpstr);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -985,18 +972,15 @@ nsNSSCertificate::GetSha1Fingerprint(PRUnichar **_sha1Fingerprint)
   NS_ENSURE_ARG(_sha1Fingerprint);
   *_sha1Fingerprint = nsnull;
   unsigned char fingerprint[20];
-  char *fpStr = NULL;
   SECItem fpItem;
   memset(fingerprint, 0, sizeof fingerprint);
   PK11_HashBuf(SEC_OID_SHA1, fingerprint, 
                mCert->derCert.data, mCert->derCert.len);
   fpItem.data = fingerprint;
   fpItem.len = SHA1_LENGTH;
-  fpStr = CERT_Hexify(&fpItem, 1);
-  if (fpStr) {
-    nsAutoString sha1str = NS_ConvertASCIItoUCS2(fpStr);
-    *_sha1Fingerprint = sha1str.ToNewUnicode();
-    PR_Free(fpStr);
+  nsXPIDLCString fpStr; fpStr.Adopt(CERT_Hexify(&fpItem, 1));
+  if (fpStr.get()) {
+    *_sha1Fingerprint = ToNewUnicode(fpStr);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -1009,18 +993,15 @@ nsNSSCertificate::GetMd5Fingerprint(PRUnichar **_md5Fingerprint)
   NS_ENSURE_ARG(_md5Fingerprint);
   *_md5Fingerprint = nsnull;
   unsigned char fingerprint[20];
-  char *fpStr = NULL;
   SECItem fpItem;
   memset(fingerprint, 0, sizeof fingerprint);
   PK11_HashBuf(SEC_OID_MD5, fingerprint, 
                mCert->derCert.data, mCert->derCert.len);
   fpItem.data = fingerprint;
   fpItem.len = MD5_LENGTH;
-  fpStr = CERT_Hexify(&fpItem, 1);
-  if (fpStr) {
-    nsAutoString md5str = NS_ConvertASCIItoUCS2(fpStr);
-    *_md5Fingerprint = md5str.ToNewUnicode();
-    PR_Free(fpStr);
+  nsXPIDLCString fpStr; fpStr.Adopt(CERT_Hexify(&fpItem, 1));
+  if (fpStr.get()) {
+    *_md5Fingerprint = ToNewUnicode(fpStr);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -1045,7 +1026,7 @@ nsNSSCertificate::GetIssuedDate(PRUnichar **_issuedDate)
   nsAutoString date;
   dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
                               beforeTime, date);
-  *_issuedDate = date.ToNewUnicode();
+  *_issuedDate = ToNewUnicode(date);
   return NS_OK;
 }
 
@@ -1068,7 +1049,7 @@ nsNSSCertificate::GetExpiresDate(PRUnichar **_expiresDate)
   nsAutoString date;
   dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
                               afterTime, date);
-  *_expiresDate = date.ToNewUnicode();
+  *_expiresDate = ToNewUnicode(date);
   return NS_OK;
 }
 
@@ -1089,8 +1070,7 @@ nsNSSCertificate::GetTokenName(PRUnichar **aTokenName)
     if (mCert->slot && !mCert->isperm) {
       char *token = PK11_GetTokenName(mCert->slot);
       if (token) {
-        nsAutoString tok = NS_ConvertASCIItoUCS2(token);
-        *aTokenName = tok.ToNewUnicode();
+        *aTokenName = ToNewUnicode(nsDependentCString(token));
       }
     } else {
       nsresult rv;
@@ -1101,7 +1081,7 @@ nsNSSCertificate::GetTokenName(PRUnichar **aTokenName)
       rv = nssComponent->GetPIPNSSBundleString(
                                 NS_LITERAL_STRING("InternalToken").get(), tok);
       if (!NS_FAILED(rv))
-        *aTokenName = tok.ToNewUnicode();
+        *aTokenName = ToNewUnicode(tok);
     }
   }
   return NS_OK;
@@ -1217,114 +1197,114 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
                          certUsageSSLClient, NULL) == SECSuccess) {
     // add client to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLClient").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLClient"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageSSLServer, NULL) == SECSuccess) {
     // add server to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLServer").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLServer"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageSSLServerWithStepUp, NULL) == SECSuccess) {
     // add stepup to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLStepUp").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLStepUp"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageEmailSigner, NULL) == SECSuccess) {
     // add signer to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyEmailSigner").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifyEmailSigner"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageEmailRecipient, NULL) == SECSuccess) {
     // add recipient to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyEmailRecip").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifyEmailRecip"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageObjectSigner, NULL) == SECSuccess) {
     // add objsigner to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyObjSign").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifyObjSign"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
 #if 0
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageProtectedObjectSigner, NULL) == SECSuccess) {
     // add protected objsigner to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyProtectObjSign").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifyProtectObjSign"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageUserCertImport, NULL) == SECSuccess) {
     // add user import to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyUserImport").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifyUserImport"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
 #endif
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageSSLCA, NULL) == SECSuccess) {
     // add SSL CA to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLCA").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifySSLCA"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
 #if 0
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageVerifyCA, NULL) == SECSuccess) {
     // add verify CA to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyCAVerifier").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifyCAVerifier"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
 #endif
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageStatusResponder, NULL) == SECSuccess) {
     // add status responder to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyStatusResponder").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifyStatusResponder"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
 #if 0
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageAnyCA, NULL) == SECSuccess) {
     // add any CA to usage
     nsAutoString verifyDesc;
-    nsAutoString typestr(NS_LITERAL_STRING("VerifyAnyCA").get());
+    nsAutoString typestr(NS_LITERAL_STRING("VerifyAnyCA"));
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
+    tmpUsages[tmpCount++] = ToNewUnicode(verifyDesc);
   }
 #endif
   if (tmpCount == 0) {
@@ -1860,7 +1840,7 @@ nsNSSCertificate::GetPurposes(PRUint32   *_verified,
     nsMemory::Free(tmpUsages[i]);
   }
   if (_purposes != NULL) {  // skip it for verify-only
-    *_purposes = porpoises.ToNewUnicode();
+    *_purposes = ToNewUnicode(porpoises);
   }
   return NS_OK;
 }
@@ -2098,11 +2078,10 @@ ProcessName(CERTName *name, nsINSSComponent *nssComponent, PRUnichar **value)
       nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("AVATemplate").get(),
                                                   params, 2, 
                                                   getter_Copies(temp));
-      finalString.Append(temp.get());
-      finalString.Append(NS_LITERAL_STRING("\n").get());
+      finalString += temp + NS_LITERAL_STRING("\n");
     }
   }
-  *value = finalString.ToNewUnicode();    
+  *value = ToNewUnicode(finalString);    
   return NS_OK;
 }
 
@@ -2822,12 +2801,12 @@ default_nickname(CERTCertificate *cert, nsIInterfaceRequestor* ctx)
   nssComponent->GetPIPNSSBundleString(
                               NS_LITERAL_STRING("nick_template").get(),
                               tmpNickFmt);
-  nickFmt = tmpNickFmt.ToNewUTF8String();
+  nickFmt = ToNewUTF8String(tmpNickFmt);
 
   nssComponent->GetPIPNSSBundleString(
                               NS_LITERAL_STRING("nick_template_with_num").get(),
                               tmpNickFmtWithNum);
-  nickFmtWithNum = tmpNickFmtWithNum.ToNewUTF8String();
+  nickFmtWithNum = ToNewUTF8String(tmpNickFmtWithNum);
 
 
   nickname = PR_smprintf(nickFmt, username, caname);
@@ -3179,7 +3158,7 @@ nsOCSPResponder::~nsOCSPResponder()
 NS_IMETHODIMP nsOCSPResponder::GetResponseSigner(PRUnichar** aCA)
 {
   NS_ENSURE_ARG(aCA);
-  *aCA = mCA.ToNewUnicode();
+  *aCA = ToNewUnicode(mCA);
   return NS_OK;
 }
 
@@ -3187,7 +3166,7 @@ NS_IMETHODIMP nsOCSPResponder::GetResponseSigner(PRUnichar** aCA)
 NS_IMETHODIMP nsOCSPResponder::GetServiceURL(PRUnichar** aURL)
 {
   NS_ENSURE_ARG(aURL);
-  *aURL = mURL.ToNewUnicode();
+  *aURL = ToNewUnicode(mURL);
   return NS_OK;
 }
 
@@ -3289,11 +3268,11 @@ GetOCSPResponders (CERTCertificate *aCert,
   // Get the AIA and nickname //
   serviceURL = CERT_GetOCSPAuthorityInfoAccessLocation(aCert);
   if (serviceURL) {
-	url = NS_ConvertASCIItoUCS2(serviceURL).ToNewUnicode();
+	url = ToNewUnicode(nsDependentCString(serviceURL));
   }
 
   nickname = aCert->nickname;
-  nn = NS_ConvertASCIItoUCS2(nickname).ToNewUnicode();
+  nn = ToNewUnicode(nsDependentCString(nickname));
 
   nsCOMPtr<nsIOCSPResponder> new_entry = new nsOCSPResponder(nn, url);
 
@@ -3403,7 +3382,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
       certstr += certname;
       certstr.AppendWithConversion(DELIM);
       certstr += keystr;
-      tmpArray[i++] = certstr.ToNewUnicode();
+      tmpArray[i++] = ToNewUnicode(certstr);
     }
   }
 finish:
@@ -3560,7 +3539,7 @@ nsCrlEntry::~nsCrlEntry()
 NS_IMETHODIMP nsCrlEntry::GetOrg(PRUnichar** aOrg)
 {
   NS_ENSURE_ARG(aOrg);
-  *aOrg = mOrg.ToNewUnicode();
+  *aOrg = ToNewUnicode(mOrg);
   return NS_OK;
 }
 
@@ -3568,7 +3547,7 @@ NS_IMETHODIMP nsCrlEntry::GetOrg(PRUnichar** aOrg)
 NS_IMETHODIMP nsCrlEntry::GetOrgUnit(PRUnichar** aOrgUnit)
 {
   NS_ENSURE_ARG(aOrgUnit);
-  *aOrgUnit = mOrgUnit.ToNewUnicode();
+  *aOrgUnit = ToNewUnicode(mOrgUnit);
   return NS_OK;
 }
 
@@ -3576,7 +3555,7 @@ NS_IMETHODIMP nsCrlEntry::GetOrgUnit(PRUnichar** aOrgUnit)
 NS_IMETHODIMP nsCrlEntry::GetLastUpdate(PRUnichar** aLastUpdate)
 {
   NS_ENSURE_ARG(aLastUpdate);
-  *aLastUpdate = mLastUpdate.ToNewUnicode();
+  *aLastUpdate = ToNewUnicode(mLastUpdate);
   return NS_OK;
 }
 
@@ -3584,7 +3563,7 @@ NS_IMETHODIMP nsCrlEntry::GetLastUpdate(PRUnichar** aLastUpdate)
 NS_IMETHODIMP nsCrlEntry::GetNextUpdate(PRUnichar** aNextUpdate)
 {
   NS_ENSURE_ARG(aNextUpdate);
-  *aNextUpdate = mNextUpdate.ToNewUnicode();
+  *aNextUpdate = ToNewUnicode(mNextUpdate);
   return NS_OK;
 }
 

@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h" 
+#include "nsReadableUtils.h"
 #include "nsSimplePageSequence.h"
 #include "nsIPresContext.h"
 #include "nsIReflowCommand.h"
@@ -465,7 +466,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
           time_t ltime;
           time( &ltime );
           if (NS_SUCCEEDED(dateTime->FormatTime(locale, kDateFormatShort, kTimeFormatNoSeconds, ltime, dateString))) {
-            PRUnichar * uStr = dateString.ToNewUnicode();
+            PRUnichar * uStr = ToNewUnicode(dateString);
             nsPageFrame::SetDateTimeStr(uStr); // nsPageFrame will own memory
           }
         }
@@ -579,7 +580,7 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
   // Now go get the Localized Page Formating String
   nsAutoString propName;
   propName.AssignWithConversion(aPropName);
-  PRUnichar* uPropName = propName.ToNewUnicode();
+  PRUnichar* uPropName = ToNewUnicode(propName);
   if (uPropName != nsnull) {
     nsresult rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, uPropName, pageNumberFormat);
     if (NS_FAILED(rv)) { // back stop formatting
@@ -588,7 +589,7 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
     nsMemory::Free(uPropName);
   }
   // Sets the format into a static data memeber which will own the memory and free it
-  PRUnichar* uStr = pageNumberFormat.ToNewUnicode();
+  PRUnichar* uStr = ToNewUnicode(pageNumberFormat);
   if (uStr != nsnull) {
     nsPageFrame::SetPageNumberFormat(uStr, aPageNumOnly); // nsPageFrame will own the memory
   }

@@ -38,6 +38,7 @@
 
 #include "MailNewsTypes.h"
 #include "nsMsgSearchValue.h"
+#include "nsReadableUtils.h"
 
 nsMsgSearchValueImpl::nsMsgSearchValueImpl(nsMsgSearchValue *aInitialValue)
 {
@@ -63,7 +64,7 @@ nsMsgSearchValueImpl::GetStr(PRUnichar** aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_TRUE(IS_STRING_ATTRIBUTE(mValue.attribute), NS_ERROR_ILLEGAL_VALUE);
-    *aResult = NS_ConvertUTF8toUCS2(mValue.string).ToNewUnicode();
+    *aResult = ToNewUnicode(NS_ConvertUTF8toUCS2(mValue.string));
     return NS_OK;
 }
 
@@ -73,7 +74,7 @@ nsMsgSearchValueImpl::SetStr(const PRUnichar* aValue)
     NS_ENSURE_TRUE(IS_STRING_ATTRIBUTE(mValue.attribute), NS_ERROR_ILLEGAL_VALUE);
     if (mValue.string)
         nsCRT::free(mValue.string);
-    mValue.string = NS_ConvertUCS2toUTF8(aValue).ToNewCString();
+    mValue.string = ToNewUTF8String(nsDependentString(aValue));
     return NS_OK;
 }
 
@@ -242,6 +243,6 @@ nsMsgSearchValueImpl::ToString(PRUnichar **aResult)
 
     resultStr.AppendWithConversion("]");
 
-    *aResult = resultStr.ToNewUnicode();
+    *aResult = ToNewUnicode(resultStr);
     return NS_OK;
 }

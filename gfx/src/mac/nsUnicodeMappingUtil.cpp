@@ -42,6 +42,7 @@
 #include "nsUnicodeMappingUtil.h"
 #include "nsUnicodeFontMappingCache.h"
 #include "nsDeviceContextMac.h"
+#include "nsReadableUtils.h"
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define BAD_FONT_NUM -1 
@@ -349,7 +350,7 @@ nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
   	delete Self->mGenericFontMapping[script][type];
   Self->mGenericFontMapping[script][type] = fontname;
 #ifdef DEBUG_ftang_font
-  char* utf8 = fontname->ToNewUTF8String();
+  char* utf8 = ToNewUTF8String(*fontname);
   printf("font %d %d %s= %s\n",script , type, aName,utf8);
   Recycle(utf8); 
 #endif

@@ -45,6 +45,7 @@
 #include "nsIWordBreaker.h"
 #include "nsIBreakState.h"
 #include "nsLWBrkCIID.h"
+#include "nsReadableUtils.h"
 
 #define WORK_AROUND_SERVICE_MANAGER_ASSERT
 
@@ -486,7 +487,7 @@ void SamplePrintWordWithBreak()
       }
    }
    cout << "Output From  SamplePrintWordWithBreak() \n\n";
-   cout << "[" << result.ToNewCString() << "]\n";
+   cout << "[" << NS_LossyConvertUCS2toASCII(result).get() << "]\n";
 }
 
 void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
@@ -574,7 +575,7 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
    }
    
    cout << "Output From  SamplePrintWordWithBreak() \n\n";
-   cout << "[" << result.ToNewCString() << "]\n";
+   cout << "[" << NS_LossyConvertUCS2toASCII(result).get() << "]\n";
 }
 
 // Main

@@ -37,6 +37,7 @@
 #include "nsLDAPConnection.h"
 #include "nsLDAPChannel.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsMimeTypes.h"
 #include "nsIPipe.h"
 #include "nsXPIDLString.h"
@@ -926,7 +927,7 @@ nsLDAPChannel::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
         // print all values of this attribute
         //
         for ( PRUint32 j=0 ; j < valueCount; j++ ) {
-            entry.Append(NS_ConvertASCIItoUCS2(attrs[i]).ToNewUnicode());
+            entry.Append(NS_ConvertASCIItoUCS2(attrs[i]));
             entry.Append(NS_LITERAL_STRING(": "));
             entry.Append(vals[j]);
             entry.Append(NS_LITERAL_STRING("\n"));

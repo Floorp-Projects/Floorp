@@ -38,6 +38,7 @@
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -466,7 +467,7 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
   if (el != nsnull) {
     if (strcmp(col, "certcol") == 0) {
       nsAutoString oName(el->orgName);
-      *_retval = oName.ToNewUnicode();
+      *_retval = ToNewUnicode(oName);
     } else {
       *_retval = nsnull;
     }
@@ -483,12 +484,12 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
       PRUnichar *tmp = nsnull;
       rv = cert->GetNickname(&tmp);
       nsAutoString nick(tmp);
-      char *tmps = nick.ToNewCString();
+      char *tmps = ToNewCString(nick);
       char *mark = strchr(tmps, ':');
       if (mark) {
         str = PL_strdup(mark + 1);
       } else {
-        wstr = nick.ToNewUnicode();
+        wstr = ToNewUnicode(nick);
       }
       nsMemory::Free(tmp);
       nsMemory::Free(tmps);
@@ -511,13 +512,13 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
       rv = nssComponent->GetPIPNSSBundleString(
                                 NS_LITERAL_STRING("VerifiedTrue").get(), vfy);
       if (!NS_FAILED(rv))
-        wstr = vfy.ToNewUnicode();
+        wstr = ToNewUnicode(vfy);
     } else {
       nsAutoString vfy;
       rv = nssComponent->GetPIPNSSBundleString(
                                 NS_LITERAL_STRING("VerifiedFalse").get(), vfy);
       if (!NS_FAILED(rv))
-        wstr = vfy.ToNewUnicode();
+        wstr = ToNewUnicode(vfy);
     }
     if (ocspEnabled) {
       nssComponent->EnableOCSP();
@@ -550,7 +551,7 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
   }
   if (str) {
     nsAutoString astr = NS_ConvertASCIItoUCS2(str);
-    wstr = astr.ToNewUnicode();
+    wstr = ToNewUnicode(astr);
   }
   *_retval = wstr;
   return rv;
@@ -643,7 +644,7 @@ nsCertOutliner::dumpMap()
 {
   for (int i=0; i<mNumOrgs; i++) {
     nsAutoString org(mOutlinerArray[i].orgName);
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("ORG[%s]", org.ToNewCString()));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("ORG[%s]", NS_LossyConvertUCS2toASCII(org).get()));
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("OPEN[%d]", mOutlinerArray[i].open));
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("INDEX[%d]", mOutlinerArray[i].certIndex));
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NCHILD[%d]", mOutlinerArray[i].numChildren));
@@ -652,14 +653,14 @@ nsCertOutliner::dumpMap()
     outlinerArrayEl *el = GetThreadDescAtIndex(i);
     if (el != nsnull) {
       nsAutoString td(el->orgName);
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("thread desc[%d]: %s",i,td.ToNewCString()));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("thread desc[%d]: %s", i, NS_LossyConvertUCS2toASCII(td).get()));
     }
     nsCOMPtr<nsIX509Cert> ct = GetCertAtIndex(i);
     if (ct != nsnull) {
       PRUnichar *goo;
       ct->GetCommonName(&goo);
       nsAutoString doo(goo);
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("cert [%d]: %s",i,doo.ToNewCString()));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("cert [%d]: %s", i, NS_LossyConvertUCS2toASCII(doo).get()));
     }
   }
 }

@@ -62,6 +62,7 @@
 #include "nsIPluginStreamListener2.h"
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIPref.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIStreamConverterService.h"
@@ -1285,7 +1286,7 @@ nsPluginStreamInfo::MakeByteRangeString(nsByteRange* aRangeList, char** rangeReq
   // get rid of possible trailing comma
   string.Trim(",", PR_FALSE);
 
-  *rangeRequest = string.ToNewCString();
+  *rangeRequest = ToNewCString(string);
   *numRequests  = requestCnt;
   return;
 }
@@ -5368,7 +5369,7 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
 {
 #ifdef NS_DEBUG
   nsAutoString topic(aTopic);
-  char * newString = topic.ToNewCString();
+  char * newString = ToNewCString(topic);
   printf("nsPluginHostImpl::Observe \"%s\"\n", newString ? newString : "");
   if (newString)
     nsCRT::free(newString);

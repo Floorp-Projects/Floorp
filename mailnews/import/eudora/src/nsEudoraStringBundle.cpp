@@ -19,6 +19,7 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
 #include "nsEudoraStringBundle.h"
 #include "nsIServiceManager.h"
@@ -97,7 +98,7 @@ PRUnichar *nsEudoraStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundle
 	resultString.AppendInt(stringID, 10);
 	resultString.AppendWithConversion("?]");
 
-	return( resultString.ToNewUnicode());
+	return ToNewUnicode(resultString);
 }
 
 void nsEudoraStringBundle::Cleanup( void)

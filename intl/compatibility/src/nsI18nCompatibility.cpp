@@ -41,6 +41,7 @@
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIFactory.h"
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
@@ -73,7 +74,7 @@ NS_IMETHODIMP nsI18nCompatibility::CSIDtoCharsetName(PRUint16 csid, PRUnichar **
 {
   nsString charsetname; charsetname.AssignWithConversion(I18N_CSIDtoCharsetName(csid));
 
-  *_retval = charsetname.ToNewUnicode();
+  *_retval = ToNewUnicode(charsetname);
 
   return NS_OK;
 }

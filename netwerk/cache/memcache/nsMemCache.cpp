@@ -33,6 +33,7 @@
 #include "nsMemCacheRecord.h"
 #include "nsIGenericFactory.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsHashtable.h"
 #include "nsHashtableEnumerator.h"
 #include "nsEnumeratorUtils.h"
@@ -74,7 +75,7 @@ nsMemCache::GetDescription(PRUnichar * *aDescription)
     nsAutoString description;
     description.AssignWithConversion("Memory Cache");
 
-    *aDescription = description.ToNewUnicode();
+    *aDescription = ToNewUnicode(description);
     if (!*aDescription)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;

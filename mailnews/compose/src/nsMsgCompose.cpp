@@ -1357,7 +1357,7 @@ NS_IMETHODIMP nsMsgCompose::SetSavedFolderURI(const char *folderURI)
 NS_IMETHODIMP nsMsgCompose::GetSavedFolderURI(char ** folderURI)
 {
   NS_ENSURE_ARG_POINTER(folderURI);
-  *folderURI = m_folderName.ToNewCString();
+  *folderURI = ToNewCString(m_folderName);
   return (*folderURI) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -1737,7 +1737,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     if (!composeHTML)
     {
       // Downsampling. The charset should only consist of ascii.
-      char *target_charset = aCharset.ToNewCString();
+      char *target_charset = ToNewCString(aCharset);
       PRBool formatflowed = UseFormatFlowed(target_charset);
       ConvertToPlainText(formatflowed);
       Recycle(target_charset);
@@ -2928,7 +2928,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* url, PRUnichar** _retval
 	  nsAutoString unicodeUrl;
 	  unicodeUrl.AssignWithConversion(url);
 
-		*_retval = unicodeUrl.ToNewUnicode();
+		*_retval = ToNewUnicode(unicodeUrl);
 		return NS_OK;
 	}
 	
@@ -2943,7 +2943,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* url, PRUnichar** _retval
     		nsresult rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), leafName, tempStr);
     		if (NS_FAILED(rv))
     			tempStr.AssignWithConversion(leafName);
-			*_retval = tempStr.ToNewUnicode();
+			*_retval = ToNewUnicode(tempStr);
 			nsCRT::free(leafName);
 			return NS_OK;
 		}
@@ -2952,7 +2952,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* url, PRUnichar** _retval
 	if (PL_strncasestr(unescapeURL, "http:", 5))
 		unescapeURL.Cut(0, 7);
 
-	*_retval = unescapeURL.ToNewUnicode();
+	*_retval = ToNewUnicode(unescapeURL);
 	return NS_OK;
 }
 
@@ -3299,19 +3299,15 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
 
                     if (parser)
                     {
-                      char * fullAddress = nsnull;
-                      char * utf8Name = nsAutoString((const PRUnichar*)pDisplayName).ToNewUTF8String();
-                      char * utf8Email = nsAutoString((const PRUnichar*)pEmail).ToNewUTF8String();
+                      nsXPIDLCString fullAddress;
 
-                      parser->MakeFullAddress(nsnull, utf8Name, utf8Email, &fullAddress);
-                      if (fullAddress && *fullAddress)
+                      parser->MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(pDisplayName).get(),
+                                              NS_ConvertUCS2toUTF8(pEmail).get(), getter_Copies(fullAddress));
+                      if (!fullAddress.IsEmpty())
                       {
                         /* We need to convert back the result from UTF-8 to Unicode */
-		                    (void)ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), fullAddress, fullNameStr);
-                        PR_Free(fullAddress);
+		                    (void)ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), fullAddress.get(), fullNameStr);
                       }
-                      Recycle(utf8Name);
-                      Recycle(utf8Email);
                     }
                     if (fullNameStr.IsEmpty())
                     {
@@ -3485,7 +3481,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
   }
 
   if (returnNonHTMLRecipients)
-    *nonHTMLRecipients = nonHtmlRecipientsStr.ToNewUnicode();
+    *nonHTMLRecipients = ToNewUnicode(nonHtmlRecipientsStr);
 
 	return rv;
 }
@@ -4023,23 +4019,19 @@ nsMsgMailList::nsMsgMailList(nsString listName, nsString listDescription, nsIAbD
 
   if (parser)
   {
-    char * fullAddress = nsnull;
-    char * utf8Name = listName.ToNewUTF8String();
-    char * utf8Email;
+    nsXPIDLCString fullAddress;
+    nsXPIDLCString utf8Email;
     if (listDescription.IsEmpty())
-      utf8Email = listName.ToNewUTF8String();   
+      utf8Email.Adopt(ToNewUTF8String(listName));
     else
-      utf8Email = listDescription.ToNewUTF8String();   
+      utf8Email.Adopt(ToNewUTF8String(listDescription));
 
-    parser->MakeFullAddress(nsnull, utf8Name, utf8Email, &fullAddress);
-    if (fullAddress && *fullAddress)
+    parser->MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(listName).get(), utf8Email, getter_Copies(fullAddress));
+    if (!fullAddress.IsEmpty())
     {
       /* We need to convert back the result from UTF-8 to Unicode */
 		  (void)ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), fullAddress, mFullName);
-      PR_Free(fullAddress);
     }
-    Recycle(utf8Name);
-    Recycle(utf8Email);
   }
 
   if (mFullName.IsEmpty())

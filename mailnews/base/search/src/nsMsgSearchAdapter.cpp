@@ -43,6 +43,7 @@
 #include "nsMsgI18N.h"
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsMsgSearchTerm.h"
 #include "nsMsgSearchBoolExpression.h"
 #include "nsIIOService.h"
@@ -771,7 +772,7 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsISupportsArray 
 
 		// Set output parameter if we encoded the query successfully
 		if (NS_SUCCEEDED(err))
-			*ppOutEncoding = encodingBuff.ToNewCString();
+			*ppOutEncoding = ToNewCString(encodingBuff);
 	}
 
 	delete [] termEncodings;

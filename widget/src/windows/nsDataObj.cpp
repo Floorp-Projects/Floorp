@@ -38,6 +38,7 @@
 
 #include "nsDataObj.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "nsITransferable.h"
 #include "nsISupportsPrimitives.h"
@@ -462,7 +463,7 @@ nsDataObj :: GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG
     nsAutoString title;
     if ( NS_FAILED(ExtractShortcutTitle(title)) )
       return E_OUTOFMEMORY;
-    char* titleStr = title.ToNewCString();        // XXX what about unicode urls?!?!
+    char* titleStr = ToNewCString(title);         // XXX what about unicode urls?!?!
     if ( !titleStr )
       return E_OUTOFMEMORY;
 
@@ -508,7 +509,7 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   nsAutoString url;
   if ( NS_FAILED(ExtractShortcutURL(url)) )
     return E_OUTOFMEMORY;
-  char* urlStr = url.ToNewCString();        // XXX what about unicode urls?!?!
+  char* urlStr = ToNewCString(url);         // XXX what about unicode urls?!?!
   if ( !urlStr )
     return E_OUTOFMEMORY;
     

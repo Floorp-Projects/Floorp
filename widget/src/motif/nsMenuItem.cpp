@@ -48,6 +48,7 @@
 #include "nsIPopUpMenu.h"
 
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIContent.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMElement.h"
@@ -301,7 +302,7 @@ NS_METHOD nsMenuItem::Create(nsISupports *aParent,
   if(mIsSeparator) {
     mMenuItem = nsnull;
   } else {
-    char * nameStr = mLabel.ToNewCString();
+    char * nameStr = ToNewCString(mLabel);
     Widget parentMenuHandle = GetNativeParent();
     mMenuItem = XtVaCreateManagedWidget(nameStr, xmCascadeButtonGadgetClass,
                                                  parentMenuHandle,

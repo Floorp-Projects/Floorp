@@ -40,6 +40,7 @@
 #include "prprf.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIWebBrowserChrome.h"
@@ -1126,7 +1127,7 @@ nsDocShell::GetCharset(PRUnichar** aCharset)
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
     nsAutoString charset;
     NS_ENSURE_SUCCESS(doc->GetDocumentCharacterSet(charset), NS_ERROR_FAILURE);
-    *aCharset = charset.ToNewUnicode();
+    *aCharset = ToNewUnicode(charset);
 
     return NS_OK;
 }
@@ -1416,7 +1417,7 @@ NS_IMETHODIMP
 nsDocShell::GetName(PRUnichar ** aName)
 {
     NS_ENSURE_ARG_POINTER(aName);
-    *aName = mName.ToNewUnicode();
+    *aName = ToNewUnicode(mName);
     return NS_OK;
 }
 
@@ -1864,7 +1865,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     if (NS_FAILED(res))
         return NS_OK;
 
-    // printf("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n", parentCS.ToNewCString(), mItemType);
+    // printf("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n", NS_LossyConvertUCS2toASCII(parentCS).get(), mItemType);
 
     return NS_OK;
 }
@@ -3083,7 +3084,7 @@ nsDocShell::GetTitle(PRUnichar ** aTitle)
 {
     NS_ENSURE_ARG_POINTER(aTitle);
 
-    *aTitle = mTitle.ToNewUnicode();
+    *aTitle = ToNewUnicode(mTitle);
     return NS_OK;
 }
 
@@ -4936,7 +4937,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor)
         if (NS_SUCCEEDED(rv) && shell) {
             *aWasAnchor = PR_TRUE;
 
-            char *str = sNewRef.ToNewCString();
+            char *str = ToNewCString(sNewRef);
 
             // nsUnescape modifies the string that is passed into it.
             nsUnescape(str);
@@ -4965,11 +4966,11 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor)
                 nsAutoString aCharset;
                 rv = doc->GetDocumentCharacterSet(aCharset);
                 NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-                char *charsetStr = aCharset.ToNewCString();
+                char *charsetStr = ToNewCString(aCharset);
                 NS_ENSURE_TRUE(charsetStr, NS_ERROR_OUT_OF_MEMORY);
 
                 // Use the saved string
-                char *uriStr = savedNewRef.ToNewCString();
+                char *uriStr = ToNewCString(savedNewRef);
                 if (!uriStr) {
                     nsMemory::Free(charsetStr);
                     return NS_ERROR_OUT_OF_MEMORY;

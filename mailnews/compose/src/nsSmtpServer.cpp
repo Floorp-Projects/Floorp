@@ -42,6 +42,7 @@
 #include "nsIPrompt.h"
 #include "nsIWalletService.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
@@ -69,7 +70,7 @@ nsSmtpServer::GetKey(char * *aKey)
     if (mKey.IsEmpty())
         *aKey = nsnull;
     else
-        *aKey = mKey.ToNewCString();
+        *aKey = ToNewCString(mKey);
     return NS_OK;
 }
 
@@ -210,7 +211,7 @@ NS_IMETHODIMP
 nsSmtpServer::GetPassword(char * *aPassword)
 {
     NS_ENSURE_ARG_POINTER(aPassword);
-	*aPassword = m_password.ToNewCString();
+	*aPassword = ToNewCString(m_password);
     return NS_OK;
 }
 
@@ -375,7 +376,7 @@ nsSmtpServer::GetServerURI(char **aResult)
         uri.Append(escapedHostname);
     }
 
-    *aResult = uri.ToNewCString();
+    *aResult = ToNewCString(uri);
     return NS_OK;
 }
                           

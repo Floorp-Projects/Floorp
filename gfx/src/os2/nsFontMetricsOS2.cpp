@@ -34,6 +34,7 @@
 #include "prmem.h"
 #include "plhash.h"
 #include "prprf.h"
+#include "nsReadableUtils.h"
 
 #ifdef MOZ_MATHML
   #include <math.h>
@@ -1518,7 +1519,7 @@ nsFontMetricsOS2::SetUnicodeFont( HPS aPS, LONG lcid )
 {
   char fontPref[32];
   char* value = nsnull;
-  char* generic = mGeneric->ToNewCString();
+  char* generic = ToNewCString(*mGeneric);
 
   sprintf( fontPref, "font.name.%s.x-unicode", generic );
   nsMemory::Free( generic );
@@ -1673,7 +1674,7 @@ nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
   {
     nsGlobalFont* font = &(nsFontMetricsOS2::gGlobalFonts[i]);
     FONTMETRICS* fm = &(font->fontMetrics);
-    PRUnichar* str = font->name->ToNewUnicode();
+    PRUnichar* str = ToNewUnicode(*(font->name));
 
     if (!str) {
       for (i = count - 1; i >= 0; i--) {
@@ -1796,7 +1797,7 @@ nsFontEnumeratorOS2::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
   int i = 0;
   while( i < nsFontMetricsOS2::gGlobalFontsCount )
   {
-    PRUnichar* str = nsFontMetricsOS2::gGlobalFonts[i].name->ToNewUnicode();
+    PRUnichar* str = ToNewUnicode(*nsFontMetricsOS2::gGlobalFonts[i].name);
     if (!str) {
       for (i = i - 1; i >= 0; i--) {
         nsMemory::Free(array[i]);

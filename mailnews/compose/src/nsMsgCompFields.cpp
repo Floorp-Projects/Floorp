@@ -46,6 +46,7 @@
 #include "nsMsgCompUtils.h"
 #include "prmem.h"
 #include "nsIFileChannel.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
@@ -230,7 +231,7 @@ nsresult nsMsgCompFields::GetUnicodeHeader(MsgHeaderID header, PRUnichar **_retv
 {
 	nsString unicodeStr;
 	ConvertToUnicode(m_internalCharSet, GetAsciiHeader(header), unicodeStr);
-	*_retval = unicodeStr.ToNewUnicode();
+	*_retval = ToNewUnicode(unicodeStr);
 	return NS_OK;
 }
 
@@ -545,7 +546,7 @@ NS_IMETHODIMP nsMsgCompFields::GetBody(PRUnichar **_retval)
 	nsString unicodeStr;
 	const char* cString = GetBody();
 	ConvertToUnicode(m_internalCharSet, cString, unicodeStr);
-	*_retval = unicodeStr.ToNewUnicode();
+	*_retval = ToNewUnicode(unicodeStr);
 
 	return NS_OK;
 }

@@ -41,6 +41,7 @@
 #include "prerror.h"
 #include "nsFileSpec.h"
 #include "plstr.h"
+#include "nsReadableUtils.h"
 
 //========================================================================================
 class BasicStringImpl
@@ -424,13 +425,13 @@ class ConstStringImpl
 {
     public:
                                         ConstStringImpl(const nsString& inString)
-                                            : ConstCharImpl(inString.ToNewCString(),
+                                            : ConstCharImpl(ToNewCString(inString),
                                                             inString.Length())
                                         {
                                         }
 
                                         ConstStringImpl(const nsCString& inString)
-                                            : ConstCharImpl(inString.ToNewCString(),
+                                            : ConstCharImpl(ToNewCString(inString),
                                                             inString.Length())
                                         {
                                         }
@@ -467,7 +468,7 @@ class StringImpl
                                             if (!buf)
                                                 return 0;
                                             // Clone our string as chars
-                                            char* cstring = mString.ToNewCString();
+                                            char* cstring = ToNewCString(mString);
                                             // Make a CharImpl and do the write
                                             CharImpl chars(&cstring, mString.Length());
                                             chars.Seek(PR_SEEK_SET, mOffset);

@@ -20,6 +20,7 @@
 #include "nscore.h"
 #include "prthread.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
 #include "nsIComponentManager.h"
@@ -616,7 +617,7 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg)
 	// what about all of the other headers?!?!?!?!?!?!
 	char *pMimeType = nsnull;
 	if (bodyType.Length())
-		pMimeType = bodyType.ToNewCString();
+		pMimeType = ToNewCString(bodyType);
 	
 	// IMPORT_LOG0( "Outlook compose calling CreateAndSendMessage\n");
 	nsMsgAttachedFile *pAttach = GetLocalAttachments();

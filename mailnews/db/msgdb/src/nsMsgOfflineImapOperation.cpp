@@ -37,6 +37,7 @@
 
 #include "msgCore.h"
 #include "nsMsgOfflineImapOperation.h"
+#include "nsReadableUtils.h"
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsMsgOfflineImapOperation, nsIMsgOfflineImapOperation)
@@ -262,7 +263,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetCopyDestination(PRInt32 copyIndex, c
   nsCString *copyDest = m_copyDestinations.CStringAt(copyIndex);
   if (copyDest)
   {
-    *retval = copyDest->ToNewCString();
+    *retval = ToNewCString(*copyDest);
     return (*retval) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
   else

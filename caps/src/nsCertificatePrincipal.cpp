@@ -41,6 +41,7 @@
 #include "nsCertificatePrincipal.h"
 #include "prmem.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_IID(kICertificatePrincipalIID, NS_ICERTIFICATEPRINCIPAL_IID);
 
@@ -116,7 +117,7 @@ nsCertificatePrincipal::GetPreferences(char** aPrefName, char** aID,
         s.Assign("capability.principal.certificate.p");
         s.AppendInt(mCapabilitiesOrdinal++);
         s.Append(".id");
-        mPrefName = s.ToNewCString();
+        mPrefName = ToNewCString(s);
     }
     return nsBasePrincipal::GetPreferences(aPrefName, aID, 
                                            aGrantedList, aDeniedList);

@@ -44,6 +44,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCookieViewer.h"
 #include "nsIDocShell.h"
@@ -80,7 +81,7 @@ CookieViewerImpl::GetCookieValue(char** aValue)
   nsAutoString cookieList;
   res = cookieservice->Cookie_GetCookieListForViewer(cookieList);
   if (NS_SUCCEEDED(res)) {
-    *aValue = cookieList.ToNewCString();
+    *aValue = ToNewCString(cookieList);
   }
   return res;
 }
@@ -100,7 +101,7 @@ CookieViewerImpl::GetPermissionValue(PRInt32 type, char** aValue)
   nsAutoString PermissionList;
   res = cookieservice->Cookie_GetPermissionListForViewer(PermissionList, type);
   if (NS_SUCCEEDED(res)) {
-    *aValue = PermissionList.ToNewCString();
+    *aValue = ToNewCString(PermissionList);
   }
   return res;
 }

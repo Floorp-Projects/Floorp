@@ -41,6 +41,7 @@
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsEnumeratorUtils.h"
 #include "nsITransport.h"
 #include "nsIFileTransportService.h"
@@ -348,7 +349,7 @@ nsXMLMIMEDataSource::Serialize() {
 		buffer+="=\"";
 		nsString temp( unidata );
 		nsMemory::Free( unidata );
-		char* utf8 = temp.ToNewUTF8String();
+		char* utf8 = ToNewUTF8String(temp);
 		buffer+=utf8;
 		nsMemory::Free( utf8 );
 		buffer+="\" ";

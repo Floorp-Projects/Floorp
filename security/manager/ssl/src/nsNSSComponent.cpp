@@ -49,6 +49,7 @@
 #include "nsIPrompt.h"
 #include "nsProxiedService.h"
 #include "nsICertificatePrincipal.h"
+#include "nsReadableUtils.h"
 
 #include "nss.h"
 #include "pk11func.h"
@@ -238,7 +239,7 @@ nsNSSComponent::InstallLoadableRoots()
     nsMemory::Free(processDir);
 #endif
     /* If a module exists with the same name, delete it. */
-    char *modNameCString = modName.ToNewCString();
+    char *modNameCString = ToNewCString(modName);
     int modType;
     SECMOD_DeleteModule(modNameCString, &modType);
     SECMOD_AddNewModule(modNameCString, fullModuleName, 0, 0);
@@ -261,7 +262,7 @@ nsNSSComponent::GetPK11String(const PRUnichar *name, PRUint32 len)
   str = (char *)PR_Malloc(len+1);
   rv = GetPIPNSSBundleString(name, nsstr);
   if (NS_FAILED(rv)) return NULL;
-  tmpstr = nsstr.ToNewCString();
+  tmpstr = ToNewCString(nsstr);
   if (!tmpstr) return NULL;
   tmplen = strlen(tmpstr);
   if (len > tmplen) {

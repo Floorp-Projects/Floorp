@@ -41,6 +41,7 @@
 #include "nsPop3URL.h"
 #include "nsPop3Protocol.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "prprf.h"
@@ -83,7 +84,7 @@ nsPop3URL::GetMessageUri(char ** aMessageUri)
 {
     if(!aMessageUri || m_messageUri.Length() == 0)
         return NS_ERROR_NULL_POINTER;
-    *aMessageUri = m_messageUri.ToNewCString();
+    *aMessageUri = ToNewCString(m_messageUri);
     return NS_OK;
 }
 

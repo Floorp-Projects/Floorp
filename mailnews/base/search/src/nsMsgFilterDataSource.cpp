@@ -44,6 +44,7 @@
 #include "nsIMsgFilterList.h"
 
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 #define NC_RDF_ENABLED NC_NAMESPACE_URI "Enabled"
 
@@ -326,7 +327,7 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
 
         nsAutoString filterString(filterName);
 
-        char *utf8Name = filterString.ToNewUTF8String();
+        char *utf8Name = ToNewUTF8String(filterString);
         filterUri.Append(utf8Name);
         Recycle(utf8Name);
         

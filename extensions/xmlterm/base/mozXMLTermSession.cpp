@@ -477,7 +477,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
     nsMemory::Free(buf_str);
     nsMemory::Free(buf_style);
 
-    char* temCString = bufString.ToNewCString();
+    char* temCString = ToNewCString(bufString);
     XMLT_LOG(mozXMLTermSession::ReadAll,68,("bufString=%s\n", temCString));
     nsCRT::free(temCString);
 
@@ -1186,7 +1186,7 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
   if (NS_FAILED(result))
     return NS_ERROR_FAILURE;
 
-  char* temCString = aString.ToNewCString();
+  char* temCString = ToNewCString(aString);
   XMLT_LOG(mozXMLTermSession::DisplayInput,72,
            ("aString=%s\n", temCString));
   nsCRT::free(temCString);
@@ -1840,7 +1840,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
            ("mOutputDisplayType=%d, uniformStyle=0x%x, newline=%d\n",
             mOutputDisplayType, uniformStyle, newline));
 
-  char* temCString = aString.ToNewCString();
+  char* temCString = ToNewCString(aString);
   XMLT_LOG(mozXMLTermSession::AppendOutput,72,
            ("aString=%s\n", temCString));
   nsCRT::free(temCString);
@@ -2107,7 +2107,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
     return AppendOutput(aString, aStyle, PR_TRUE);
   }
 
-  char* temCString = aString.ToNewCString();
+  char* temCString = ToNewCString(aString);
   XMLT_LOG(mozXMLTermSession::AppendLineLS,62,("aString=%s\n", temCString));
   nsCRT::free(temCString);
 
@@ -2270,7 +2270,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
 {
   nsresult result;
 
-  char* temCString = aString.ToNewCString();
+  char* temCString = ToNewCString(aString);
   XMLT_LOG(mozXMLTermSession::InsertFragment,70,("aString=%s\n", temCString));
   nsCRT::free(temCString);
 
@@ -2471,7 +2471,7 @@ void mozXMLTermSession::SanitizeAttribute(nsString& aAttrValue,
     // Character '{' and string "function" both found in attribute value;
     // set to null string
 
-    char* temCString = aAttrValue.ToNewCString();
+    char* temCString = ToNewCString(aAttrValue);
     XMLT_WARNING("mozXMLTermSession::SanitizeAttribute: Warning - deleted attribute on%s='%s'\n", aEventName, temCString);
     nsCRT::free(temCString);
 
@@ -3001,7 +3001,7 @@ NS_IMETHODIMP mozXMLTermSession::SetHistory(PRInt32 aHistory)
 NS_IMETHODIMP mozXMLTermSession::GetPrompt(PRUnichar **_aPrompt)
 {
   // NOTE: Need to be sure that this may be freed by nsMemory::Free
-  *_aPrompt = mPromptHTML.ToNewUnicode();
+  *_aPrompt = ToNewUnicode(mPromptHTML);
   return NS_OK;
 }
 
@@ -4359,7 +4359,7 @@ void mozXMLTermSession::TraverseDOMTree(FILE* fileStream,
 
       fprintf(fileStream, "%s:\n", treeActionNames[treeActionCode-1]);
 
-      char* htmlCString = htmlString.ToNewCString();
+      char* htmlCString = ToNewCString(htmlString);
       fprintf(fileStream, "%s", htmlCString);
       nsCRT::free(htmlCString);
 
@@ -4386,7 +4386,7 @@ void mozXMLTermSession::TraverseDOMTree(FILE* fileStream,
 
       result = domElement->GetTagName(tagName);
       if (NS_SUCCEEDED(result)) {
-        char* tagCString = tagName.ToNewCString();
+        char* tagCString = ToNewCString(tagName);
         fprintf(fileStream, "%s", tagCString);
         nsCRT::free(tagCString);
 
@@ -4400,7 +4400,7 @@ void mozXMLTermSession::TraverseDOMTree(FILE* fileStream,
           result = domElement->GetAttribute(attName, attValue);
           if (NS_SUCCEEDED(result) && (attValue.Length() > 0)) {
             // Print attribute value
-            char* tagCString2 = attValue.ToNewCString();
+            char* tagCString2 = ToNewCString(attValue);
             fprintf(fileStream, " %s=%s", printAttributeNames[j], tagCString2);
             nsCRT::free(tagCString2);
           }

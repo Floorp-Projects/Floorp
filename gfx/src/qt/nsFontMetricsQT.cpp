@@ -43,6 +43,7 @@
 #include "nsFontMetricsQT.h"
 #include "nsFont.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsISaveAsCharset.h"
 #include "nsIPref.h"
@@ -2104,7 +2105,7 @@ static nsresult EnumFonts(nsIAtom *aLangGroup,const char *aGeneric,
         }
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      node->name = name.ToNewUnicode();
+      node->name = ToNewUnicode(name);
       if (!node->name) {
         FontEnumNode *ptr = head,*tmp;
         while (ptr) {

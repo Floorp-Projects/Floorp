@@ -39,6 +39,7 @@
 #include <nsIDOMEventListener.h>
 #include <nsIDOMLoadListener.h>
 #include "nsContentCID.h"
+#include "nsReadableUtils.h"
 static NS_DEFINE_CID( kXMLDocumentCID, NS_XMLDOCUMENT_CID );
 
 #if 0
@@ -265,7 +266,7 @@ int main (int argc, char* argv[])
     pDOMDocument->GetDocumentElement(getter_AddRefs(element));
     nsAutoString tagName;
     if (element) element->GetTagName(tagName);
-    char *s = tagName.ToNewCString();
+    char *s = ToNewCString(tagName);
     printf("Document element=\"%s\"\n",s);
     nsCRT::free(s);
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(pDOMDocument);

@@ -60,6 +60,7 @@
 #include "nsIJSRuntimeService.h"
 #include "nsIPref.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsJSUtils.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -216,7 +217,7 @@ NS_ScriptErrorReporter(JSContext *cx,
     error.AppendWithConversion("Error was suppressed by event handler\n");
 
 #ifdef DEBUG  
-  char *errorStr = error.ToNewCString();
+  char *errorStr = ToNewCString(error);
   if (errorStr) {
     fprintf(stderr, "%s\n", errorStr);
     fflush(stderr);

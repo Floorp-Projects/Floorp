@@ -37,6 +37,7 @@
 #include "nsInstall.h"
 #include "nsIDOMInstallVersion.h"
 #include "nsProcess.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID); 
 
@@ -93,7 +94,7 @@ PRInt32 nsInstallExecute::Complete()
 
     nsCOMPtr<nsIProcess> process = do_CreateInstance(kIProcessCID);
 
-    cArgs[0] = mArgs.ToNewCString();
+    cArgs[0] = ToNewCString(mArgs);
 
     if(cArgs[0] == nsnull)
       return nsInstall::OUT_OF_MEMORY;
@@ -148,7 +149,7 @@ char* nsInstallExecute::toString()
 
     if (mExecutableFile == nsnull)
     {
-        char *tempString = mJarLocation.ToNewCString();
+        char *tempString = ToNewCString(mJarLocation);
         rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("Execute"));
 
         if (rsrcVal)

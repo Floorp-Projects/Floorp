@@ -41,6 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsICharsetAlias.h"
 #include "nsIRegistry.h"
 #include "nsIServiceManager.h"
@@ -246,7 +247,7 @@ nsresult nsCharsetConverterManager::RegisterConverterTitles(
   nsAutoString str; str.AssignWithConversion(aRegistryPath);
   str.AppendWithConversion("defaultFile");
 
-  char * p = str.ToNewCString();
+  char * p = ToNewCString(str);
   res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
   nsMemory::Free(p);
   if (NS_FAILED(res)) return res;
@@ -266,7 +267,7 @@ nsresult nsCharsetConverterManager::RegisterConverterData(
   nsAutoString str; str.AssignWithConversion(aRegistryPath);
   str.AppendWithConversion("defaultFile");
 
-  char * p = str.ToNewCString();
+  char * p = ToNewCString(str);
   res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
   nsMemory::Free(p);
   if (NS_FAILED(res)) return res;
