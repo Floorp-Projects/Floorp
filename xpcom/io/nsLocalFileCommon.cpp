@@ -27,6 +27,9 @@
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
 
+/* nsFileSpec stuff. put here untill it got obsoleted */
+#include "nsFileSpec.h"
+
 #ifdef XP_PC
 #include "nsLocalFileWin.h"
 #endif
@@ -69,6 +72,16 @@ private:
      }                                                          \
    }                                                            \
    return res;                                                  \
+}
+#define VOID_SET_UCS( func , arg, assertion_msg)                \
+ {                                                              \
+   char* tmp;                                                   \
+   nsresult res;                                                \
+   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((arg), &tmp))) { \
+     (func)(tmp);                                               \
+     nsAllocator::Free(tmp);                                    \
+   }                                                            \
+   NS_ASSERTION(NS_SUCCEEDED(res), assertion_msg);              \
 }
 #define SET_UCS( func , arg)                                    \
  {                                                              \
@@ -266,3 +279,61 @@ NS_NewUnicodeLocalFile(const PRUnichar* path, nsILocalFile* *result)
 {
    SET_UCS_2ARGS_1( NS_NewLocalFile , path, result)
 }
+
+// ==================================================================
+//  nsFileSpec stuff . put here untill nsFileSpec get obsoleted     
+// ==================================================================
+
+void nsFileSpec::operator = (const nsString& inNativePath)
+{
+   char* tmp;                                                   
+   nsresult res;                                                
+   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((inNativePath.GetUnicode()), &tmp))) { 
+     *this = tmp;
+     nsAllocator::Free(tmp);                                    
+   }                                                            
+   mError = res;
+   NS_ASSERTION(NS_SUCCEEDED(res), "nsFileSpec = filed");
+}
+nsFileSpec nsFileSpec::operator + (const nsString& inRelativeUnixPath) const
+{
+   nsFileSpec resultSpec;
+   char* tmp;                                                   
+   nsresult res;                                                
+   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((inRelativeUnixPath.GetUnicode()), &tmp))) { 
+     resultSpec = *this;
+     resultSpec += tmp;
+     nsAllocator::Free(tmp);                                    
+   }                                                            
+   NS_ASSERTION(NS_SUCCEEDED(res), "nsFileSpec + filed");
+   return resultSpec;
+}
+void nsFileSpec::operator += (const nsString& inRelativeUnixPath)
+{
+   char* tmp;                                                   
+   nsresult res;                                                
+   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((inRelativeUnixPath.GetUnicode()), &tmp))) { 
+     *this += tmp;
+     nsAllocator::Free(tmp);                                    
+   }                                                            
+   mError = res;
+   NS_ASSERTION(NS_SUCCEEDED(res), "nsFileSpec + filed");
+}
+
+void nsFileSpec::SetLeafName (const nsString& inLeafName)
+{
+  VOID_SET_UCS( SetLeafName , inLeafName.GetUnicode(),"nsFileSpec::SetLeafName failed");
+}
+void nsFileSpec::MakeUnique(const nsString& inSuggestedLeafName)
+{
+  VOID_SET_UCS( MakeUnique,inSuggestedLeafName.GetUnicode(),"nsFileSpec::MakeUnique failed");
+}
+nsresult nsFileSpec::Rename(const nsString& inNewName)
+{
+  SET_UCS( Rename , inNewName.GetUnicode());
+}
+nsresult nsFileSpec::Execute(const nsString& args) const
+{
+  SET_UCS( Execute , args.GetUnicode());
+}
+
