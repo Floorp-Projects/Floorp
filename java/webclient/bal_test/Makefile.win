@@ -50,7 +50,7 @@ LLIBS = \
 include <$(DEPTH)\config\rules.mak>
 
 INCS = \
-	-I..\src_moz \
+	-I..\src_share \
 	-I..\bal \
 	-I..\bal\win32 \
 	$(NULL)
