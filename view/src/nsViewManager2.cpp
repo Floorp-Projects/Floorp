@@ -48,6 +48,10 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 #define VIEW_TRANSPARENT	0x00000008
 #define VIEW_TRANSLUCENT	0x00000010
 
+// Uncomment the following to use the nsIBlender. Turned off for now,
+// so that we won't crash.
+//#define SUPPORT_TRANSLUCENT_VIEWS
+
 // display list elements
 struct DisplayListElement2 {
 	nsIView*			mView;
@@ -253,7 +257,6 @@ NS_IMETHODIMP nsViewManager2::Init(nsIDeviceContext* aContext)
 	mContext->GetAppUnitsToDevUnits(mTwipsToPixels);
 	mContext->GetDevUnitsToAppUnits(mPixelsToTwips);
 
-	mDSBounds.Empty();
 	mTimer = nsnull;
 	mFrameRate = 0;
 	mTrueFrameRate = 0;
@@ -704,7 +707,8 @@ void nsViewManager2::RenderDisplayListElement(DisplayListElement2* element, nsIR
 		
 		aRC.PopState(unused);
 	}
-	
+
+#if defined(SUPPORT_TRANSLUCENT_VIEWS)	
 	if (mTranslucentViewCount > 0 && (isTranslucent || mTranslucentBounds.Intersects(element->mDirty))) {
 		// transluscency case. if this view is transluscent, have to use the nsIBlender, otherwise, just
 		// render in the offscreen. when we reach the last transluscent view, then we flush the bits
@@ -765,6 +769,7 @@ void nsViewManager2::RenderDisplayListElement(DisplayListElement2* element, nsIR
             					  NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
 		}
 	}
+#endif
 }
 
 void nsViewManager2::PaintView(nsIView *aView, nsIRenderingContext &aRC, nscoord x, nscoord y,
@@ -854,42 +859,39 @@ nsresult nsViewManager2::CreateBlendingBuffers(nsIRenderingContext &aRC)
 	return NS_OK;
 }
 
-void nsViewManager2::UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const
+void nsViewManager2::InvalidateChildWidgets(nsIView *aView, nsRect& aDirtyRect) const
 {
 	nsRect bounds;
 	aView->GetBounds(bounds);
 
-	// translate parent rect into child coords.
-	nsRect parDamage;
-	if (nsnull != aParentRect) {
-		parDamage = *aParentRect;
-		parDamage.IntersectRect(bounds, parDamage);
-		parDamage.MoveBy(-bounds.x, -bounds.y);
-	} else
-		parDamage = bounds;
+	// translate dirty rect into view coordinates.
+	aDirtyRect.MoveBy(-bounds.x, -bounds.y);
 
-	if (PR_FALSE == parDamage.IsEmpty()) {
+	nsRect invalidRect(0, 0, bounds.width, bounds.height);
+	invalidRect.IntersectRect(invalidRect, aDirtyRect);
+	if (!invalidRect.IsEmpty()) {
 		nsCOMPtr<nsIWidget> widget;
 		aView->GetWidget(*getter_AddRefs(widget));
 		if (nsnull != widget) {
-			nsRect pixrect = parDamage;
-
 			float scale;
 			mContext->GetAppUnitsToDevUnits(scale);
-			pixrect.ScaleRoundOut(scale);
+			invalidRect.ScaleRoundOut(scale);
 
 			//printf("invalidating: view %x (pix) %d, %d\n", aView, pixrect.width, pixrect.height);
-			widget->Invalidate(pixrect, PR_FALSE);
+			widget->Invalidate(invalidRect, PR_FALSE);
 		}
 	}
 
-	// Check our child views
+	// invalidate any child widgets that intersect this rectangle.
 	nsIView *child;
 	aView->GetChild(0, child);
 	while (nsnull != child) {
-		UpdateDirtyViews(child, &parDamage);
+		InvalidateChildWidgets(child, aDirtyRect);
 		child->GetNextSibling(child);
 	}
+	
+	// back the transformation out.
+	aDirtyRect.MoveBy(bounds.x, bounds.y);
 }
 
 void nsViewManager2::ProcessPendingUpdates(nsIView* aView)
@@ -985,7 +987,7 @@ NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, const nsRect &aRect, PR
 
 		// Add this rect to the widgetView's dirty region.
 		if (nsnull != widgetView)
-			UpdateDirtyViews(widgetView, &widgetRect);
+			InvalidateChildWidgets(widgetView, widgetRect);
 #else
 		// Go ahead and invalidate the entire rectangular area.
 		// regardless of parentage.
@@ -994,6 +996,17 @@ NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, const nsRect &aRect, PR
 		nsCOMPtr<nsIWidget> widget;
 		widgetView->GetWidget(*getter_AddRefs(widget));
 		widget->Invalidate(widgetRect, PR_FALSE);
+
+#if 0
+		// invalidate all child views that could possibly intersect this view.
+		nsIView *child;
+		widgetView->GetChild(0, child);
+		while (nsnull != child) {
+			InvalidateChildWidgets(child, widgetRect);
+			child->GetNextSibling(child);
+		}
+#endif
+
 #endif
 
 		// See if we should do an immediate refresh or wait
@@ -1427,7 +1440,7 @@ NS_IMETHODIMP nsViewManager2::ResizeView(nsIView *aView, nscoord width, nscoord 
 			parentView = aView;
 
 		// resize the view.
-		aView->SetDimensions(width, height);
+		aView->SetDimensions(width, height, PR_TRUE);
 
 #if 1
 		// refresh the bounding box of old and new areas.
@@ -2114,8 +2127,10 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 			PRUint32 flags = VIEW_RENDERED;
 			if (transparent)
 				flags |= VIEW_TRANSPARENT;
+#if defined(SUPPORT_TRANSLUCENT_VIEWS)
 			if (opacity < 1.0f)
 				flags |= VIEW_TRANSLUCENT;
+#endif
 			retval = AddToDisplayList(aIndex, aView, lrect, irect, flags);
 
 			if (retval || !transparent && (opacity == 1.0f) && (irect == *aDamageRect))

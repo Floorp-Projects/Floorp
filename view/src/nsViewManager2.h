@@ -140,7 +140,7 @@ protected:
 private:
 	nsIRenderingContext *CreateRenderingContext(nsIView &aView);
 	void AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const;
-	void UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const;
+	void InvalidateChildWidgets(nsIView *aView, nsRect& aDirtyRect) const;
 	void UpdateTransCnt(nsIView *oldview, nsIView *newview);
 
 	void ProcessPendingUpdates(nsIView *aView);
