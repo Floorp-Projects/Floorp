@@ -74,7 +74,8 @@ function doAdd() {
 
     // XXX This should be something like "subscribe to feed".
 		dump ("feed name = " + feed.name + "\n");
-    addFeed(feedProperties.feedLocation, feed.name, null, folder);
+    addFeed(feedProperties.feedLocation, feed.name, null, folder); // add feed flushes the subscription database
+
     // now download it for real, now that we have a folder.
     feed.download();
 }
@@ -234,8 +235,8 @@ function doRemove() {
         feeds.RemoveElementAt(index, true);
     }
     // Remove all assertions about the feed from the subscriptions database.
-    var ds = getSubscriptionsDS();
     removeAssertions(ds, feed);
+    ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
 
     // Remove all assertions about items in the feed from the items database.
     ds = getItemsDS();
@@ -249,8 +250,6 @@ function doRemove() {
         else
             removeAssertions(ds, item);
     }
-
-    //tree.builder.rebuild();
 }
 
 
