@@ -365,7 +365,7 @@ function printDayView(currentDate) {
   mydateshow+=ArrayOfDayNames[currentDate.getDay()];
   mydateshow+=", ";
   mydateshow+=monthNames[currentDate.getMonth()]+" "+currentDate.getDate()+" "+currentDate.getFullYear();
-  gHtmlDocument.write("<table>");
+  gHtmlDocument.write("<table style='border:1px solid black;' width=100%>");
   gHtmlDocument.write("<tr ><td colspan=2 align=center style='font-size:26px;font-weight:bold;border-bottom:1px solid black;'>");
   gHtmlDocument.write(mydateshow);
   gHtmlDocument.write("</td></tr>");
@@ -392,21 +392,21 @@ function printDayView(currentDate) {
       var formattedEndTime=returnTime(eventEndTime);
       var formattedTime=formattedStartTime+"-"+formattedEndTime;
       if (calendarEventDisplay.event.allDay)
-        formattedTime=''; // all day event
+        formattedTime='All Day'; // all day event
       gHtmlDocument.write(formattedTime);
       gHtmlDocument.write("</td><td valign=top style='border-bottom:1px solid black;'>"+calendarEventDisplay.event.title);
       if (calendarEventDisplay.event.description)
-        gHtmlDocument.write("<br>"+descriptionTag+": "+calendarEventDisplay.event.description);
+        gHtmlDocument.write("<br><Strong>"+descriptionTag+"</strong>: "+calendarEventDisplay.event.description);
       if (calendarEventDisplay.event.location)
-        gHtmlDocument.write("<br>"+locationTag+": "+calendarEventDisplay.event.location);
+        gHtmlDocument.write("<br><strong>"+locationTag+"</strong>: "+calendarEventDisplay.event.location);
       if (calendarEventDisplay.event.url)
-        gHtmlDocument.write("<br>"+uriTag+": "+calendarEventDisplay.event.url);
+        gHtmlDocument.write("<br><strong>"+uriTag+"</strong>: "+calendarEventDisplay.event.url);
       var mystat='Cancelled';
       if (calendarEventDisplay.event.status == 10029)
         mystat='Tentative';
       if (calendarEventDisplay.event.status == 10030)
         mystat='Confirmed';
-      gHtmlDocument.write("<br>Status: "+mystat);
+      gHtmlDocument.write("<br><strong>Status</strong>: "+mystat);
       gHtmlDocument.write("</td></tr>");
       gHtmlDocument.write("<tr style='height=20px;'><td colspan=2  style='border-bottom:1px solid black;'> </td></tr>"); // for entering a new appt
     }
