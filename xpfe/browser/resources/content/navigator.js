@@ -1226,9 +1226,10 @@ function BrowserLoadURL(aTriggeringEvent)
     else if (saveModifier) {
       try {
         // Firstly, fixup the url so that (e.g.) "www.foo.com" works
+        const nsIURIFixup = Components.interfaces.nsIURIFixup;
         if (!gURIFixup)
           gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
-                                .getService(Components.interfaces.nsIURIFixup);
+                                .getService(nsIURIFixup);
         url = gURIFixup.createFixupURI(url, nsIURIFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI).spec;
         // Open filepicker to save the url
         saveURL(url, "");
