@@ -214,15 +214,8 @@
               <menuitem value="&AlignCenter.label;"      data="center"/>
               <menuitem value="&AlignRight.label;"       data="right"/>
               <menuitem value="&cellAlignJustify.label;" data="justify"/>
-              <menuitem value="&cellAlignAtChar.label;"  data="char"/>
             </menupopup>
           </menulist>
-          <box style="width: 5em min-width: 5em">
-            <!-- We collapse this if not needed, so box preserves space 
-                 XXX doesn't work! collapse/uncollapse causes relayout
-            -->
-            <textfield id="CellAlignCharInput" style="width: 2em" collapsed="true"/>
-          </box>
           <spring class="spacer"/>
           <checkbox id="CellVAlignCheckbox" value="&cellVertical.label;"/>
           <menulist id="CellVAlignList" oncommand="SetCheckbox('CellVAlignCheckbox');">
@@ -234,7 +227,6 @@
           </menulist>
         </titledbox>
         <spring class="spacer"/>
-        
         <box valign="middle" autostretch="never">
           <checkbox id="CellStyleCheckbox" value="&cellStyle.label;"/>
           <menulist id="CellStyleList" oncommand="SetCheckbox('CellStyleCheckbox');">
