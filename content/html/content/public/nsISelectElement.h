@@ -39,7 +39,9 @@
  */
 class nsISelectElement : public nsISupports {
 public:
-  
+
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISELECTELEMENT_IID)
+
   /**
    * An OPTION element has been added to the SELECT's
    * subtree.
@@ -51,6 +53,18 @@ public:
    * subtree.
    */
   NS_IMETHOD RemoveOption(nsIContent* aContent) = 0;
+
+  /**
+  * Indicates that we're done adding child content
+  * to the select during document loading.
+  */
+  NS_IMETHOD DoneAddingContent() = 0;
+
+  /**
+  * Returns whether we're done adding child content
+  * to the select during document loading.
+  */
+  NS_IMETHOD IsDoneAddingContent(PRBool * aIsDone) = 0;
 };
 
 #endif // nsISelectElement_h___
