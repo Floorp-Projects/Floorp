@@ -311,6 +311,8 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
   {
     if(pluginHost->IsPluginEnabledForType(aContentType) == NS_OK)
       return NS_NewPluginContentViewer(aCommand, aDocListener, aDocViewer);
+    else
+      return NS_ERROR_FAILURE;
   }
 
   return rv;
