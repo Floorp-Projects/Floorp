@@ -1653,7 +1653,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
 #endif // IBMBIDI
     result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
   }
-  else if (NS_FAILED(result))
+  if (NS_FAILED(result))
   {
     if (nsIDOMKeyEvent::DOM_VK_UP == aKeycode)
     {
@@ -6505,7 +6505,9 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       res = CopyRangeToAnchorFocus(range);
       if (NS_FAILED(res))
         return res;
-      selectFrames(presContext, difRange, 0);//deselect now if fixup succeeded
+      RemoveItem(mAnchorFocusRange);
+      selectFrames(presContext, difRange, PR_FALSE);//deselect now if fixup succeeded
+      AddItem(mAnchorFocusRange);
       difRange->SetEnd(FetchEndParent(range),FetchEndOffset(range));
       selectFrames(presContext, difRange, PR_TRUE);//must reselect last node maybe more if fixup did something
     }
@@ -6542,7 +6544,9 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         if (NS_FAILED(res))
           return res;
         //deselect from 1 to a
+        RemoveItem(mAnchorFocusRange);
         selectFrames(presContext, difRange , PR_FALSE);
+        AddItem(mAnchorFocusRange);
       }
       else
       {
@@ -6582,7 +6586,9 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       res = CopyRangeToAnchorFocus(range);
       if (NS_FAILED(res))
         return res;
+      RemoveItem(mAnchorFocusRange);
       selectFrames(presContext, difRange , PR_FALSE);
+      AddItem(mAnchorFocusRange);
       difRange->SetStart(FetchStartParent(range),FetchStartOffset(range));
       selectFrames(presContext, difRange, PR_TRUE);//must reselect last node
     }
@@ -6614,7 +6620,9 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
         res = CopyRangeToAnchorFocus(range);
         if (NS_FAILED(res))
           return res;
+        RemoveItem(mAnchorFocusRange);
         selectFrames(presContext, difRange, 0);
+        AddItem(mAnchorFocusRange);
       }
       else
       {
