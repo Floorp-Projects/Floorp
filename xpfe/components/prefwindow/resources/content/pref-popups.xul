@@ -45,7 +45,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="popupsPanel"
-      onload="init()"
+      onload="parent.initPanel('chrome://cookie/content/pref-popups.xul');"
       headertitle="&title;">
           
   <script type="application/x-javascript">
@@ -66,9 +66,7 @@
       var permissionManager;
       var ioService;
 
-      function init() {
-        parent.initPanel("chrome://cookie/content/pref-popups.xul");
-
+      function Startup() {
         permissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
                                       .getService(Components.interfaces.nsIPermissionManager);
 
@@ -94,8 +92,11 @@
           document.getElementById("prefillWhitelist").setAttribute("value", false);
         }
 
-        if (!parent.window.opener.location) // opened from About Popups menuitem
+        if (parent.queuedTag == "chrome://cookie/content/pref-popups.xul") {
+          // opened from About Popups menuitem
           gPolicyCheckbox.checked = true;
+          parent.queuedTag = null;
+        }
 
         setButtons();
       }
