@@ -36,8 +36,8 @@
 
 /* Duplicates defines as in nsIPrompt.idl -- keep in sync! */
 #define SINGSIGN_SAVE_PASSWORD_NEVER 0
-#define SINGSIGN_SAVE_FOR_SESSION    1
-#define SINGSIGN_SAVE_PERMANENTLY    2
+#define SINGSIGN_SAVE_PASSWORD_FOR_SESSION    1
+#define SINGSIGN_SAVE_PASSWORD_PERMANENTLY    2
 
 class nsIPrompt;
 XP_BEGIN_PROTOS
@@ -57,17 +57,20 @@ SINGSIGN_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const P
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword
     (const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
-     const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue, PRUint32 savePassword = SINGSIGN_SAVE_PERMANENTLY);
+     const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue,
+     PRUint32 savePassword = SINGSIGN_SAVE_PASSWORD_PERMANENTLY);
 
 extern nsresult
 SINGSIGN_PromptPassword
-    (const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **pwd, const char* passwordRealm,
-     nsIPrompt* dialog, PRBool *returnValue, PRUint32 savePassword = SINGSIGN_SAVE_PERMANENTLY);
+    (const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **pwd,
+     const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue,
+     PRUint32 savePassword = SINGSIGN_SAVE_PASSWORD_PERMANENTLY);
 
 extern nsresult
 SINGSIGN_Prompt
     (const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **resultText,
-     const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue, PRUint32 savePassword = SINGSIGN_SAVE_PERMANENTLY);
+     const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue,
+     PRUint32 savePassword = SINGSIGN_SAVE_PASSWORD_PERMANENTLY);
 
 extern PRBool
 SINGSIGN_RemoveUser

@@ -1408,7 +1408,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
       if (NS_FAILED(rv)) return rv;
 
       nsAutoString realm = NS_ConvertToString(signonURL);
-      rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, realm.GetUnicode(), PR_TRUE,
+      rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, realm.GetUnicode(), nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
                                   getter_Copies(uniGroupPassword), &okayValue);
       if (NS_FAILED(rv)) return rv;
 

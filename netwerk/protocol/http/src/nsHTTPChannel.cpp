@@ -1844,7 +1844,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         rv = mPrompter->PromptUsernameAndPassword(nsnull,
                                                   message.GetUnicode(),
                                                   prePath.GetUnicode(),
-                                                  PR_FALSE,
+                                                  nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                   getter_Copies(userBuf),
                                                   getter_Copies(passwdBuf),
                                                   &retval);

@@ -2494,7 +2494,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 password = SI_PromptPassword
                     (ce->window_id,
                      prompt, usernameAndHost,
-                     PR_FALSE, !TestFlag(POP3_PASSWORD_FAILED));
+                     nsIPrompt::SAVE_PASSWORD_PERMANENTLY, !TestFlag(POP3_PASSWORD_FAILED));
 				ClearFlag(POP3_PASSWORD_FAILED);
                 PR_Free(usernameAndHost);
 #else

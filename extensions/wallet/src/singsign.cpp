@@ -367,7 +367,7 @@ si_CheckGetPassword
   if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
     prompt_string = Wallet_Localize("PromptForPassword");
   PRUnichar * check_string;
-  if (savePassword != SINGSIGN_SAVE_PERMANENTLY) {
+  if (savePassword != SINGSIGN_SAVE_PASSWORD_PERMANENTLY) {
     check_string = nsnull;
   } else if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
     check_string = Wallet_Localize("SaveThisValueEncrypted");
@@ -428,7 +428,7 @@ si_CheckGetData
   if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
     prompt_string = Wallet_Localize("PromptForData");
   PRUnichar * check_string;
-  if (savePassword != SINGSIGN_SAVE_PERMANENTLY) {
+  if (savePassword != SINGSIGN_SAVE_PASSWORD_PERMANENTLY) {
     check_string = nsnull;
   } else if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
     check_string = Wallet_Localize("SaveThisValueEncrypted");
@@ -491,7 +491,7 @@ si_CheckGetUsernamePassword
   PRUnichar * user_string = Wallet_Localize("UserName");
   PRUnichar * password_string = Wallet_Localize("Password");
   PRUnichar * check_string;
-  if (savePassword != SINGSIGN_SAVE_PERMANENTLY) {
+  if (savePassword != SINGSIGN_SAVE_PASSWORD_PERMANENTLY) {
     check_string = nsnull;
   } else if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
     check_string = Wallet_Localize("SaveTheseValuesEncrypted");

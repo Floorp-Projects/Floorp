@@ -315,7 +315,7 @@ char * PromptUserCallback(void *arg, char *prompt, int isPasswd)
     if (NS_SUCCEEDED(rv)) {
 	    rv = dialog->PromptPassword(nsnull, NS_ConvertASCIItoUCS2(prompt).GetUnicode(),
                                   NS_ConvertASCIItoUCS2(" ").GetUnicode(),      // hostname
-                                  PR_TRUE, &password, &value);
+                                  nsIPrompt::SAVE_PASSWORD_NEVER, &password, &value);
 
         if (NS_SUCCEEDED(rv) && value) {
             nsString a(password);
