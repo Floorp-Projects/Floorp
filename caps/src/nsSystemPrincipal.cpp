@@ -228,12 +228,12 @@ nsSystemPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::GetJsPrincipals(JSPrincipals **jsprin)
+nsSystemPrincipal::GetJSPrincipals(JSContext *cx, JSPrincipals **jsprin)
 {
     NS_PRECONDITION(mJSPrincipals.nsIPrincipalPtr, "mJSPrincipals is uninitalized!");
 
+    JSPRINCIPALS_HOLD(cx, &mJSPrincipals);
     *jsprin = &mJSPrincipals;
-    JSPRINCIPALS_HOLD(nsnull, *jsprin);
     return NS_OK;
 }
 
