@@ -671,15 +671,15 @@ extern "C++" {
 
 class nsISupports;
 
-template <class SourceType, class DestinationType>
+template <class DestinationType>
 inline
 nsresult
-CallQueryInterface( SourceType* aSource, DestinationType** aDestination )
+CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
 		// a type-safe shortcut for calling the |QueryInterface()| member function
 	{
 		NS_PRECONDITION(aSource, "null parameter");
 
-		return aSource->QueryInterface(DestinationType::GetIID(), aDestination);
+		return aSource->QueryInterface(DestinationType::GetIID(), (void**)aDestination);
 	}
 
 } // extern "C++"
