@@ -380,6 +380,12 @@ def test_all():
     c = xpcom.components.classes[contractid].createInstance()
     test_base_interface(c)
     test_derived_interface(c, test_flat=1)
+
+    # We had a bug where a "set" of an attribute before a "get" failed.
+    # Don't let it happen again :)
+    c = xpcom.components.classes[contractid].createInstance()
+    c.boolean_value = 0
+    
     # This name is used in exceptions etc - make sure we got it from nsIClassInfo OK.
     assert c._object_name_ == "Python.TestComponent"
 
