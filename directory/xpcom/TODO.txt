@@ -8,7 +8,7 @@ housecleaning for first 0.x release
   threadsafety work related to the data and interfaces touched by 
   nsLDAPChannel::Cancel, since these are used in the connection
   callbacks, and we also need to be able to cancel from the connection
-  callbacks themselves.
+  callbacks themselves. 
 
 * audit for and fix leaks / bloat
 
