@@ -1087,7 +1087,7 @@ $(OBJDIR)/Netscape-nis-export.ad $(OBJDIR)/Netscape-export.ad: Makefile resource
 $(OBJDIR)/$(DSO_PROGNAME)-export: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-ifdef BUILD_OFFICIAL
+ifdef NETSCAPE_OFFICIAL
 	rm -rf $(OBJDIR)/objs.txt
 	@echo Creating a list of all object files ... objs.txt
 	@echo $(OBJS) > $(OBJDIR)/objs.txt
