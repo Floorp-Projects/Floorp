@@ -446,11 +446,6 @@ function ClearCurrentHeaders()
 
 function ShowMessageHeaderPane()
 { 
-	/* workaround for 39655 */
-  var messagePaneBox = document.getElementById("messagepanebox");
-  if (messagePaneBox && gFolderJustSwitched)
-    messagePaneBox.setAttribute("collapsed", "true");
-
   var node;
   if (gCollapsedHeaderViewMode)
   {          
@@ -465,12 +460,12 @@ function ShowMessageHeaderPane()
       node.removeAttribute("collapsed");
   }
 
-	/* more workaround for 39655 */
-  if (messagePaneBox && gFolderJustSwitched) 
+	/* workaround for 39655 */
+  if (gFolderJustSwitched) 
   {
-    messagePaneBox.setAttribute("collapsed", "false");
-    messagePaneBox.removeAttribute("collapsed");
-	  gFolderJustSwitched = false;
+    var el = document.getElementById("msgHeaderView");
+    el.setAttribute("style", el.getAttribute("style"));
+    gFolderJustSwitched = false;    
   }
 }
 
