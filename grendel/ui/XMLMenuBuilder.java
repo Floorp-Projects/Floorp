@@ -52,6 +52,9 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import grendel.widgets.MenuCtrl;
+import grendel.widgets.MenuBarCtrl;
+
 /**
  * Build a menu bar from an XML data source. This builder supports:
  * <UL>
@@ -77,7 +80,7 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
   protected Hashtable button_group;
 
   Hashtable actions;
-  JMenuBar component;
+  MenuBarCtrl component;
 
   /**
    * Build a menu builder which operates on XML formatted data
@@ -157,7 +160,7 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     // skip to the "menubar" tag
     node = tree.getNextElement("menubar");
     current = (Element)node;
-    component = new JMenuBar();
+    component = new MenuBarCtrl();
     
     // iterate through every node
     node = node.getFirstChild();
@@ -196,21 +199,31 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     if (node.getNodeType() != Node.ELEMENT_NODE) return; // can't process it
 
     // things will recurse through here
-    item = buildComponent((Element)node, (JComponent)parent);
-
+    item = buildComponent((Element)node);
+    
     // find out where we stash the item
     if (item != null) {
       Element current = (Element)node;
-      parent.add(item);
+      if (item instanceof JSeparator) {
+	parent.add(item);
+      } else if (parent instanceof MenuCtrl) {
+	((MenuCtrl)parent).addItemByName(current.getAttribute(id_attr), 
+					 (JMenuItem)item);
+	System.out.println("adding " + current.getAttribute(id_attr));
+	
+      } else if (parent instanceof MenuBarCtrl) {
+	((MenuBarCtrl)parent).addItemByName(current.getAttribute(id_attr), 
+					    (JMenuItem)item);
+	System.out.println("adding " + current.getAttribute(id_attr));
+      }
     }
   }
 
   /**
    * Build the component at the current XML element and add to the parent
    * @param current the current element
-   * @param parent the parent to add to
    */
-  protected JComponent buildComponent(Element current, JComponent parent) {
+  protected JComponent buildComponent(Element current) {
     String tag = current.getTagName();
     JComponent comp = null;
     String label = null;;
@@ -218,7 +231,7 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     // menu tag
     if (tag.equals(menu_tag)) {
       Node node;
-      JMenu menu = new JMenu();
+      JMenu menu = new MenuCtrl();
       String my_id = current.getAttribute(id_attr);
       comp = menu;
 
