@@ -222,12 +222,11 @@ public:
 
     NS_IMETHOD SetParentDocument(nsIDocument* aParent);
 
-    NS_IMETHOD SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc);
+    NS_IMETHOD AddSubDocument(nsIDocument* aSubDoc);
 
-    NS_IMETHOD GetSubDocumentFor(nsIContent *aContent, nsIDocument** aSubDoc);
+    NS_IMETHOD GetNumberOfSubDocuments(PRInt32* aCount);
 
-    NS_IMETHOD FindContentForSubDocument(nsIDocument *aDocument,
-                                         nsIContent **aContent);
+    NS_IMETHOD GetSubDocumentAt(PRInt32 aIndex, nsIDocument** aSubDoc);
 
     NS_IMETHOD GetRootContent(nsIContent** aRoot);
 
@@ -334,8 +333,6 @@ public:
 
     NS_IMETHOD AddReference(void *aKey, nsISupports *aReference);
     NS_IMETHOD RemoveReference(void *aKey, nsISupports **aOldReference);
-    NS_IMETHOD SetContainer(nsISupports *aContainer);
-    NS_IMETHOD GetContainer(nsISupports **aContainer);
 
     virtual void SetDisplaySelection(PRInt8 aToggle);
 
@@ -565,7 +562,6 @@ protected:
     nsCOMPtr<nsIURI>           mDocumentURL;        // [OWNER] ??? compare with loader
     nsCOMPtr<nsIURI>           mDocumentBaseURL;
     nsWeakPtr                  mDocumentLoadGroup;  // [WEAK] leads to loader
-    nsWeakPtr                  mDocumentContainer;  // [WEAK] leads to container
     nsCOMPtr<nsIPrincipal>     mDocumentPrincipal;  // [OWNER]
     nsCOMPtr<nsIContent>       mRootContent;        // [OWNER]
     nsIDocument*               mParentDocument;     // [WEAK]
@@ -594,7 +590,7 @@ protected:
     nsCOMPtr<nsIRDFDataSource>          mLocalStore;
     nsCOMPtr<nsILineBreaker>            mLineBreaker;    // [OWNER] 
     nsCOMPtr<nsIWordBreaker>            mWordBreaker;    // [OWNER] 
-    PLDHashTable              *mSubDocuments;     // [OWNER] of subelements
+    nsVoidArray                mSubDocuments;     // [OWNER] of subelements
     PRPackedBool               mIsPopup;
     PRPackedBool               mIsFastLoad;
     PRPackedBool               mApplyingPersistedAttrs;

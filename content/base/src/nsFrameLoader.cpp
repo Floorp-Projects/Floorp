@@ -40,14 +40,13 @@
 #include "nsIFrameLoader.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLFrameElement.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMWindow.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMWindow.h"
-#include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIDocShell.h"
@@ -57,6 +56,9 @@
 #include "nsIDocShellLoadInfo.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebShell.h"
+#include "nsIWebProgressListener.h"
+#include "nsIWebProgress.h"
+#include "nsWeakReference.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsICodebasePrincipal.h"
@@ -64,17 +66,10 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
-#include "nsHTMLAtoms.h"
-#include "nsINameSpaceManager.h"
-
-
-// Bug 8065: Limit content frame depth to some reasonable level. This
-// does not count chrome frames when determining depth, nor does it
-// prevent chrome recursion.
-#define MAX_DEPTH_CONTENT_FRAMES 25
-
-
-class nsFrameLoader : public nsIFrameLoader
+class nsFrameLoader : public nsIFrameLoader,
+                      public nsIDOMEventListener,
+                      public nsIWebProgressListener,
+                      public nsSupportsWeakReference
 {
 public:
   nsFrameLoader();
@@ -84,19 +79,26 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIFrameLoader
-  NS_IMETHOD Init(nsIContent *aOwner);
-  NS_IMETHOD LoadFrame();
+  NS_IMETHOD Init(nsIDOMElement *aOwner);
+  NS_IMETHOD LoadURI(nsIURI *aURI);
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
   NS_IMETHOD Destroy();
+
+  // nsIDOMEventListener
+  NS_DECL_NSIDOMEVENTLISTENER
+
+  // nsIWebProgressListener
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
 protected:
   nsresult GetPresContext(nsIPresContext **aPresContext);
   nsresult EnsureDocShell();
-  void GetURL(nsAString& aURL);
 
   nsCOMPtr<nsIDocShell> mDocShell;
 
-  nsIContent *mOwnerContent; // WEAK
+  nsCOMPtr<nsIDOMElement> mOwnerElement;
+
+  nsCOMPtr<nsIURI> mURI;
 };
 
 nsresult
@@ -110,22 +112,26 @@ NS_NewFrameLoader(nsIFrameLoader **aFrameLoader)
   return NS_OK;
 }
 
+
 nsFrameLoader::nsFrameLoader()
-  : mOwnerContent(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
 
 nsFrameLoader::~nsFrameLoader()
 {
-  Destroy();
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(mDocShell));
+
+  if (treeOwnerAsWin) {
+    treeOwnerAsWin->Destroy();
+  }
 }
 
 
 // QueryInterface implementation for nsFrameLoader
 NS_INTERFACE_MAP_BEGIN(nsFrameLoader)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIFrameLoader)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 
@@ -133,49 +139,27 @@ NS_IMPL_ADDREF(nsFrameLoader);
 NS_IMPL_RELEASE(nsFrameLoader);
 
 NS_IMETHODIMP
-nsFrameLoader::Init(nsIContent *aOwner)
+nsFrameLoader::Init(nsIDOMElement *aOwner)
 {
-  mOwnerContent = aOwner; // WEAK
+  mOwnerElement = aOwner;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFrameLoader::LoadFrame()
+nsFrameLoader::LoadURI(nsIURI *aURI)
 {
-  NS_ENSURE_TRUE(mOwnerContent, NS_ERROR_NOT_INITIALIZED);
+  mURI = aURI;
 
   nsresult rv = EnsureDocShell();
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> doc;
-  mOwnerContent->GetDocument(*getter_AddRefs(doc));
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-  nsAutoString src;
-  GetURL(src);
+  // Prevent recursion
 
-  src.Trim(" \t\n\r");
 
-  if (src.IsEmpty()) {
-    // about:blank will be synthesized into a frame if not URL is
-    // loaded into it (bug 35986)
 
-    return NS_OK;
-  }
+  //    mCreatingViewer=PR_TRUE;
 
-  // Make an absolute URI
-  nsCOMPtr<nsIURI> base_uri;
-  doc->GetBaseURL(*getter_AddRefs(base_uri));
-
-  nsAutoString doc_charset;
-  doc->GetDocumentCharacterSet(doc_charset);
-
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), src,
-                 doc_charset.IsEmpty() ? nsnull :
-                 NS_ConvertUCS2toUTF8(doc_charset).get(), base_uri);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Check for security
   nsCOMPtr<nsIScriptSecurityManager> secMan =
@@ -213,21 +197,31 @@ nsFrameLoader::LoadFrame()
 
     loadInfo->SetInheritOwner(PR_TRUE);
 
-    referrer = base_uri;
+    nsCOMPtr<nsIDOMDocument> dom_doc;
+    mOwnerElement->GetOwnerDocument(getter_AddRefs(dom_doc));
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
+
+    if (doc) {
+      doc->GetBaseURL(*getter_AddRefs(referrer));
+    }
   }
 
   loadInfo->SetReferrer(referrer);
 
   // Check if we are allowed to load absURL
-  rv = secMan->CheckLoadURI(referrer, uri,
+  rv = secMan->CheckLoadURI(referrer, mURI,
                             nsIScriptSecurityManager::STANDARD);
   if (NS_FAILED(rv)) {
     return rv; // We're not
   }
 
-  // Kick off the load...
-  rv = mDocShell->LoadURI(uri, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
-                          PR_FALSE);
+  nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mDocShell));
+
+  if (webProgress) {
+    webProgress->AddProgressListener(this);
+  }
+
+  rv = mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
 
   return rv;
@@ -247,25 +241,12 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
 NS_IMETHODIMP
 nsFrameLoader::Destroy()
 {
-  if (mOwnerContent) {
-    nsCOMPtr<nsIDocument> doc;
+  return NS_OK;
+}
 
-    mOwnerContent->GetDocument(*getter_AddRefs(doc));
-
-    if (doc) {
-      doc->SetSubDocumentFor(mOwnerContent, nsnull);
-    }
-
-    mOwnerContent = nsnull;
-  }
-
-  nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mDocShell));
-
-  if (base_win) {
-    base_win->Destroy();
-  }
-
-  mDocShell = nsnull;
+NS_IMETHODIMP
+nsFrameLoader::HandleEvent(nsIDOMEvent *aEvent)
+{
 
   return NS_OK;
 }
@@ -275,8 +256,10 @@ nsFrameLoader::GetPresContext(nsIPresContext **aPresContext)
 {
   *aPresContext = nsnull;
 
-  nsCOMPtr<nsIDocument> doc;
-  mOwnerContent->GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsIDOMDocument> dom_doc;
+  mOwnerElement->GetOwnerDocument(getter_AddRefs(dom_doc));
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
 
   while (doc) {
     nsCOMPtr<nsIPresShell> presShell;
@@ -304,15 +287,16 @@ nsFrameLoader::EnsureDocShell()
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(getter_AddRefs(presContext));
-  NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
+#if 0
+
+
+
 
   // Bug 8065: Don't exceed some maximum depth in content frames
   // (MAX_DEPTH_CONTENT_FRAMES)
   PRInt32 depth = 0;
   nsCOMPtr<nsISupports> parentAsSupports;
-  presContext->GetContainer(getter_AddRefs(parentAsSupports));
+  aPresContext->GetContainer(getter_AddRefs(parentAsSupports));
 
   if (parentAsSupports) {
     nsCOMPtr<nsIDocShellTreeItem> parentAsItem =
@@ -337,16 +321,32 @@ nsFrameLoader::EnsureDocShell()
       }
     }
   }
+#endif
 
-  // Create the docshell...
   mDocShell = do_CreateInstance("@mozilla.org/webshell;1");
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
-  // Get the frame name and tell the docshell about it.
+#if 0
+  // notify the pres shell that a docshell has been created
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+
+  if (presShell) {
+    nsCOMPtr<nsISupports> subShellAsSupports(do_QueryInterface(mDocShell));
+    NS_ENSURE_TRUE(subShellAsSupports, NS_ERROR_FAILURE);
+
+    presShell->SetSubShellFor(mContent, subShellAsSupports);
+
+    // We need to be able to get back to the presShell to unset the
+    // subshell at destruction
+    mPresShellWeak = getter_AddRefs(NS_GetWeakReference(presShell));
+  }
+#endif
+
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
   nsAutoString frameName;
-  mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, frameName);
+  mOwnerElement->GetAttribute(NS_LITERAL_STRING("name"), frameName);
 
   if (!frameName.IsEmpty()) {
     docShellAsItem->SetName(frameName.get());
@@ -356,148 +356,178 @@ nsFrameLoader::EnsureDocShell()
   // child. If it's not a web-shell then some things will not operate
   // properly.
 
+
+  nsCOMPtr<nsIPresContext> presContext;
+  GetPresContext(getter_AddRefs(presContext));
+
+
+
+
+
+
+
+
+
+
+
+  // what if !presContext ?
+
+
+
+
+
+
+
+
+
   nsCOMPtr<nsISupports> container;
   presContext->GetContainer(getter_AddRefs(container));
 
-  nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(container));
-  if (parentAsNode) {
-    nsCOMPtr<nsIDocShellTreeItem> parentAsItem =
-      do_QueryInterface(parentAsNode);
+  if (container) {
+    nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(container));
+    if (parentAsNode) {
+      nsCOMPtr<nsIDocShellTreeItem> parentAsItem =
+        do_QueryInterface(parentAsNode);
 
-    PRInt32 parentType;
-    parentAsItem->GetItemType(&parentType);
+      PRInt32 parentType;
+      parentAsItem->GetItemType(&parentType);
 
-    nsAutoString value;
-    PRBool isContent;
+      nsAutoString value, valuePiece;
+      PRBool isContent;
 
-    isContent = PR_FALSE;
+      isContent = PR_FALSE;
+      mOwnerElement->GetAttribute(NS_LITERAL_STRING("type"), value);
 
-    if (mOwnerContent->IsContentOfType(nsIContent::eXUL)) {
-      mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
-    }
+      if (!value.IsEmpty()) {
+        // we accept "content" and "content-xxx" values.
+        // at time of writing, we expect "xxx" to be "primary", but
+        // someday it might be an integer expressing priority
 
-    if (!value.IsEmpty()) {
-      // we accept "content" and "content-xxx" values.
-      // at time of writing, we expect "xxx" to be "primary", but
-      // someday it might be an integer expressing priority
 
-      if (value.Length() >= 7) {
-        ToLowerCase(value);
 
-        nsAutoString::const_iterator start, end;
-        value.BeginReading(start);
-        value.EndReading(end);
 
-        nsAutoString::const_iterator iter(start);
-        iter.advance(7);
+        // string iterators!
 
-        const nsAString& valuePiece = Substring(start, iter);
 
-        if (valuePiece.Equals(NS_LITERAL_STRING("content")) &&
-            (iter == end || *iter == '-')) {
+        value.Left(valuePiece, 7);
+        if (valuePiece.EqualsIgnoreCase("content") &&
+           (value.Length() == 7 ||
+            value.Mid(valuePiece, 7, 1) == 1 &&
+            valuePiece.EqualsWithConversion("-"))) {
           isContent = PR_TRUE;
         }
       }
-    }
 
-    if (isContent) {
-      // The web shell's type is content.
-
-      docShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);
-    } else {
-      // Inherit our type from our parent webshell.  If it is
-      // chrome, we'll be chrome.  If it is content, we'll be
-      // content.
-
-      docShellAsItem->SetItemType(parentType);
-    }
-
-    parentAsNode->AddChild(docShellAsItem);
-
-    if (isContent) {
-      nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
-      parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
-
-      if(parentTreeOwner) {
-        // value is lowercased above.
-        PRBool is_primary = value.Equals(NS_LITERAL_STRING("content-primary"));
-
-        parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
-                                           value.get());
+      if (isContent) {
+        // The web shell's type is content.
+        docShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);
+      } else {
+        // Inherit our type from our parent webshell.  If it is
+        // chrome, we'll be chrome.  If it is content, we'll be
+        // content.
+        docShellAsItem->SetItemType(parentType);
       }
+
+      parentAsNode->AddChild(docShellAsItem);
+
+      if (isContent) {
+        nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
+        parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
+        if(parentTreeOwner) {
+          PRBool is_primary = value.EqualsIgnoreCase("content-primary");
+
+          parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
+                                             value.get());
+        }
+      }
+
+      // connect the container...
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+      nsCOMPtr<nsIWebShellContainer> outerContainer =
+        do_QueryInterface(container);
+
+      if (outerContainer) {
+        webShell->SetContainer(outerContainer);
+      }
+
+      // Make sure all shells have links back to the content element
+      // in the nearest enclosing chrome shell.
+      nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+
+      if (parentType == nsIDocShellTreeItem::typeChrome) {
+        // Our parent shell is a chrome shell. It is therefore our nearest
+        // enclosing chrome shell.
+        chromeEventHandler = do_QueryInterface(mOwnerElement);
+        NS_WARN_IF_FALSE(chromeEventHandler,
+                         "This mContent should implement this.");
+      } else {
+        nsCOMPtr<nsIDocShell> parentShell(do_QueryInterface(parentAsNode));
+
+        // Our parent shell is a content shell. Get the chrome info from
+        // it and use that for our shell as well.
+        parentShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+      }
+
+
+
+      // Should this be in the layout code?
+
+      mDocShell->SetChromeEventHandler(chromeEventHandler);
     }
-
-    // connect the container...
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-    nsCOMPtr<nsIWebShellContainer> outerContainer =
-      do_QueryInterface(container);
-
-    if (outerContainer) {
-      webShell->SetContainer(outerContainer);
-    }
-
-    // Make sure all shells have links back to the content element
-    // in the nearest enclosing chrome shell.
-    nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
-
-    if (parentType == nsIDocShellTreeItem::typeChrome) {
-      // Our parent shell is a chrome shell. It is therefore our nearest
-      // enclosing chrome shell.
-
-      chromeEventHandler = do_QueryInterface(mOwnerContent);
-      NS_WARN_IF_FALSE(chromeEventHandler,
-                       "This mContent should implement this.");
-    } else {
-      nsCOMPtr<nsIDocShell> parentShell(do_QueryInterface(parentAsNode));
-
-      // Our parent shell is a content shell. Get the chrome event
-      // handler from it and use that for our shell as well.
-
-      parentShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
-    }
-
-    mDocShell->SetChromeEventHandler(chromeEventHandler);
   }
-
-  // This is nasty, this code (the do_GetInterface(mDocShell) below)
-  // *must* come *after* the above call to
-  // mDocShell->SetChromeEventHandler() for the global window to get
-  // the right chrome event handler.
-
-  // Tell the window about the frame that hosts it.
-  nsCOMPtr<nsIDOMElement> frame_element(do_QueryInterface(mOwnerContent));
-  NS_ASSERTION(frame_element, "frame loader owner element not a DOM element!");
-
-  nsCOMPtr<nsIDOMWindow> win(do_GetInterface(mDocShell));
-  nsCOMPtr<nsPIDOMWindow> win_private(do_QueryInterface(win));
-  NS_ENSURE_TRUE(win_private, NS_ERROR_UNEXPECTED);
-
-  win_private->SetFrameElementInternal(frame_element);
-
-  nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mDocShell));
-  NS_ENSURE_TRUE(base_win, NS_ERROR_UNEXPECTED);
-
-  // This is kinda whacky, this call doesn't really create anything,
-  // but it must be called to make sure things are properly
-  // initialized
-
-  base_win->Create();
 
   return NS_OK;
 }
 
-void
-nsFrameLoader::GetURL(nsAString& aURI)
+NS_IMETHODIMP
+nsFrameLoader::OnStateChange(nsIWebProgress *aWebProgress,
+                             nsIRequest *aRequest,
+                             PRInt32 aStateFlags, PRUint32 aStatus)
 {
-  aURI.Truncate();
+  if (!((~aStateFlags) & (nsIWebProgressListener::STATE_IS_DOCUMENT |
+                          nsIWebProgressListener::STATE_TRANSFERRING))) {
+    nsCOMPtr<nsIDOMWindow> win(do_GetInterface(mDocShell));
+    nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(win));
 
-  nsCOMPtr<nsIAtom> type;
-  mOwnerContent->GetTag(*getter_AddRefs(type));
-
-  if (type == nsHTMLAtoms::object) {
-    mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, aURI);
-  } else {
-    mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aURI);
+    if (eventTarget) {
+      eventTarget->AddEventListener(NS_LITERAL_STRING("load"), this,
+                                    PR_FALSE);
+    }
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::OnProgressChange(nsIWebProgress *aWebProgress,
+                                nsIRequest *aRequest,
+                                PRInt32 aCurSelfProgress,
+                                PRInt32 aMaxSelfProgress,
+                                PRInt32 aCurTotalProgress,
+                                PRInt32 aMaxTotalProgress)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::OnLocationChange(nsIWebProgress *aWebProgress,
+                                nsIRequest *aRequest, nsIURI *location)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::OnStatusChange(nsIWebProgress *aWebProgress,
+                              nsIRequest *aRequest, nsresult aStatus,
+                              const PRUnichar *aMessage)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::OnSecurityChange(nsIWebProgress *aWebProgress,
+                                nsIRequest *aRequest, PRInt32 state)
+{
+  return NS_OK;
 }
 
