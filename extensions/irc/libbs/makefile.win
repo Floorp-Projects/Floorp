@@ -45,7 +45,7 @@ OBJS = \
     .\$(OBJDIR)\bsserver.obj \
     .\$(OBJDIR)\bsconnection.obj \
     .\$(OBJDIR)\bsXPCConnection.obj \
-    .\$(OBJDIR)\bsConnectionFactory.obj \
+    .\$(OBJDIR)\bsXPCConnectionFactory.obj \
     $(NULL)
 
 REQUIRES = bs xpcom

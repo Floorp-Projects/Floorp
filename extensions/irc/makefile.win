@@ -39,6 +39,9 @@ XULLIBFILES = \
     $(NULL)
 
 TESTFILES = \
+    .\xul\tests\test1.html \
+    .\xul\tests\test1-handlers.js \
+    .\xul\tests\test1-static.js \
     .\xul\tests\test2.html \
     .\xul\tests\test2.css \
     .\xul\tests\test2-static.js \
