@@ -139,7 +139,8 @@ BOOL CInterpret::BrowseFile(WIDGET *curWidget)
 	if (fileDlg.GetPathName() != "")
 	{	
 		fullFileName = fileDlg.GetPathName();
-		if ((fullFileName.Right(fileLength - dotPlace -1) == fileExt) && (tmpWidget && (CEdit*)tmpWidget->control))
+//		if ((fullFileName.Right(fileLength - dotPlace -1) == fileExt) && (tmpWidget && (CEdit*)tmpWidget->control))
+		if (tmpWidget && (CEdit*)tmpWidget->control)
 			((CEdit*)tmpWidget->control)->SetWindowText(fullFileName);
 	}
 	return TRUE;
