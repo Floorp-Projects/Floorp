@@ -40,10 +40,14 @@
 
 #include "nsBrowserCompsCID.h"
 #include "nsGlobalHistory.h"
+#include "nsDownloadManager.h"
+#include "nsDownloadProxy.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -62,7 +66,15 @@ static const nsModuleComponentInfo components[] =
   { "Global History",
     NS_GLOBALHISTORY_CID,
     NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
-    nsGlobalHistoryConstructor }
+    nsGlobalHistoryConstructor },
+
+  { "Download Manager",
+    NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID,
+    nsDownloadManagerConstructor },
+
+  { "Download",
+    NS_DOWNLOAD_CID, NS_DOWNLOAD_CONTRACTID,
+    nsDownloadProxyConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsBrowserCompsModule, components);

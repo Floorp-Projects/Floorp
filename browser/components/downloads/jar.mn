@@ -1,0 +1,8 @@
+browser.jar:
+  content/browser/downloads/downloadmanager.xul (content/downloadmanager.xul)
+  content/browser/downloads/downloadmanager.js  (content/downloadmanager.js)
+
+en-US.jar:
+  locale/en-US/browser/downloads/downloadmanager.dtd        (locale/downloadmanager.dtd)
+  locale/en-US/browser/downloads/downloadmanager.properties (locale/downloadmanager.properties)
+

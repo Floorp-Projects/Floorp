@@ -42,6 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = prefwindow history bookmarks console
+DIRS = prefwindow history bookmarks console downloads build
 
 include $(topsrcdir)/config/rules.mk
