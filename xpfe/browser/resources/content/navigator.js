@@ -513,28 +513,30 @@ function Startup()
 
   // only load url passed in when we're not page cycling
   if (!isPageCycling) {
-    var startPage;
+    var uriToLoad;
 
     if (!appCore.cmdLineURLUsed) {
       var cmdLineService = Components.classes["@mozilla.org/appshell/commandLineService;1"]
                                      .getService(Components.interfaces.nsICmdLineService);
-      startPage = cmdLineService.URLToLoad;
-      if (!startPage) {
+      uriToLoad = cmdLineService.URLToLoad;
+      if (!uriToLoad) {
         var cmdLineHandler = Components.classes["@mozilla.org/commandlinehandler/general-startup;1?type=browser"]
                                        .getService(Components.interfaces.nsICmdLineHandler);
-        startPage = cmdLineHandler.defaultArgs;
+        uriToLoad = cmdLineHandler.defaultArgs;
       }
       appCore.cmdLineURLUsed = true;
     }
 
-    if (!startPage) {
-      // Check for window.arguments[0]. If present, use that for startPage.
+    if (!uriToLoad) {
+      // Check for window.arguments[0]. If present, use that for uriToLoad.
       if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
-        startPage = window.arguments[0];
+        uriToLoad = window.arguments[0];
     }
 
-    if (startPage && startPage != "about:blank")
-      loadURI(startPage);
+    if (uriToLoad && uriToLoad != "about:blank") {
+      gURLBar.value = uriToLoad;
+      loadURI(uriToLoad);
+    }
 
     // Focus the content area if the caller instructed us to.
     if ("arguments" in window && window.arguments.length >= 3 && window.arguments[2] == true)
