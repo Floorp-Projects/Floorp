@@ -369,7 +369,7 @@ public:
   NS_IMETHOD GetPaginatedScrolling(PRBool* aResult) = 0;
 
   /**
-   * Gets the rect for the page Dimimensions, 
+   * Gets the rect for the page dimensions,
    * this includes X,Y Offsets which are used to determine 
    * the inclusion of margins
    * Also, indicates whether the size has been overridden

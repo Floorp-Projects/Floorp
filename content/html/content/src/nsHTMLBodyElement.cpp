@@ -436,56 +436,162 @@ nsHTMLBodyElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, ALink, alink)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Background, background)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Link, link)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Text, text)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, VLink, vlink)
 
+
+NS_IMETHODIMP
+nsHTMLBodyElement::GetVLink(nsAString& aVlinkColor)
+{
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::vlink, aVlinkColor);
+
+  // If we don't have an attribute, find the default color from the
+  // UA stylesheet.
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    nsCOMPtr<nsIPresContext> context;
+    GetPresContext(this, getter_AddRefs(context));
+
+    if (context) {
+      nscolor vlinkColor;
+      context->GetDefaultVisitedLinkColor(&vlinkColor);
+
+      nsHTMLValue value(vlinkColor);
+      ColorToString(value, aVlinkColor);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::SetVLink(const nsAString& aVlinkColor)
+{
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::vlink, aVlinkColor, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::GetALink(nsAString& aAlinkColor)
+{
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::alink, aAlinkColor);
+
+  // If we don't have an attribute, find the default color from the
+  // UA stylesheet.
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    nsCOMPtr<nsIPresContext> context;
+    GetPresContext(this, getter_AddRefs(context));
+
+    if (context) {
+      // XXX We don't have the backend or the UI to get ALINKs from the
+      // UA stylesheet yet, so we'll piggyback to the default link color like IE.
+      nscolor alinkColor;
+      context->GetDefaultLinkColor(&alinkColor);
+
+      nsHTMLValue value(alinkColor);
+      ColorToString(value, aAlinkColor);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::SetALink(const nsAString& aAlinkColor)
+{
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::alink, aAlinkColor, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::GetLink(nsAString& aLinkColor)
+{
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::link, aLinkColor);
+
+  // If we don't have an attribute, find the default color from the
+  // UA stylesheet.
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    nsCOMPtr<nsIPresContext> context;
+    GetPresContext(this, getter_AddRefs(context));
+
+    if (context) {
+      nscolor linkColor;
+      context->GetDefaultLinkColor(&linkColor);
+
+      nsHTMLValue value(linkColor);
+      ColorToString(value, aLinkColor);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::SetLink(const nsAString& aLinkColor)
+{
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::link, aLinkColor, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::GetText(nsAString& aTextColor)
+{
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::text, aTextColor);
+
+  // If we don't have an attribute, find the default color from the
+  // UA stylesheet.
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    nsCOMPtr<nsIPresContext> context;
+    GetPresContext(this, getter_AddRefs(context));
+
+    if (context) {
+      nscolor textColor;
+      context->GetDefaultColor(&textColor);
+
+      nsHTMLValue value(textColor);
+      ColorToString(value, aTextColor);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::SetText(const nsAString& aTextColor)
+{
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::text, aTextColor, PR_TRUE);
+}
 
 NS_IMETHODIMP 
 nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
 {
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor);
+
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
-  if (NS_CONTENT_ATTR_NOT_THERE == GetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor)) {
-    nsresult result = NS_OK;
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
     if (mDocument) {
       // Make sure the presentation is up-to-date
-      result = mDocument->FlushPendingNotifications();
-      if (NS_FAILED(result)) {
-        return result;
-      }
+      rv = mDocument->FlushPendingNotifications();
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     nsCOMPtr<nsIPresContext> context;
-    result = GetPresContext(this, getter_AddRefs(context));
-    if (NS_FAILED(result)) {
-      return result;
-    }
-    
-    nsCOMPtr<nsIPresShell> shell;
-    result = context->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(result)) {
-      return result;
-    }
-    
-    nsIFrame* frame;
-    result = shell->GetPrimaryFrameFor(this, &frame);
-    if (NS_FAILED(result)) {
-      return result;
-    }
+    GetPresContext(this, getter_AddRefs(context));
 
-    if (frame) {
-      const nsStyleBackground* StyleBackground;
-      result = frame->GetStyleData(eStyleStruct_Background,
+    if (context) {
+      nsCOMPtr<nsIPresShell> shell;
+      rv = context->GetShell(getter_AddRefs(shell));
+      NS_ENSURE_SUCCESS(rv, rv);
+    
+      nsIFrame* frame;
+      rv = shell->GetPrimaryFrameFor(this, &frame);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (frame) {
+        const nsStyleBackground* StyleBackground;
+        rv = frame->GetStyleData(eStyleStruct_Background,
                                    (const nsStyleStruct*&)StyleBackground);
-      if (NS_FAILED(result)) {
-        return result;
-      }
+        NS_ENSURE_SUCCESS(rv, rv);
 
-      nsHTMLValue value(StyleBackground->mBackgroundColor);
-      ColorToString(value, aBgColor);
+        nsHTMLValue value(StyleBackground->mBackgroundColor);
+        ColorToString(value, aBgColor);
+      }
     }
   }
 
