@@ -31,7 +31,11 @@
 
 extern nsIID kIXPCOMApplicationShellCID ;
 
-static NS_DEFINE_IID(kCShellInstanceIID, NS_ISHELLINSTANCE_IID);
+static NS_DEFINE_IID(kIApplicationShellIID, NS_IAPPLICATIONSHELL_IID);
+static NS_DEFINE_IID(kCApplicationShellIID, NS_IAPPLICATIONSHELL_CID);
+
+static NS_DEFINE_IID(kIShellInstanceIID, NS_ISHELLINSTANCE_IID);
+static NS_DEFINE_IID(kCShellInstanceCID, NS_SHELLINSTANCE_CID);
 
 XtAppContext app_context ;
 
@@ -49,28 +53,28 @@ void main(int argc, char **argv)
   topLevel = XtVaAppInitialize(&app_context, "Shell", NULL, 0, &argc, argv, NULL, NULL);
 
 
+    // Let get a ShellInstance for this Application instance
+    NSRepository::RegisterFactory(kCShellInstanceCID, SHELL_DLL, PR_FALSE, PR_FALSE);
 
-  // Let get a ShellInstance for this Application instance
-  NSRepository::RegisterFactory(kCShellInstanceIID, SHELL_DLL, PR_FALSE, PR_FALSE);
+	result = NSRepository::CreateInstance(kCShellInstanceCID,
+										  NULL,
+										  kIShellInstanceIID,
+										  (void **) &pShellInstance) ;
 
-  result = NSRepository::CreateInstance(kCShellInstanceIID,
-					NULL,
-					kCShellInstanceIID,
-					(void **) &pShellInstance) ;
+	if (result != NS_OK)
+		return result ;
 
-  if (result != NS_OK)
-    return  ;
+    // Let's instantiate the Application's Shell
+    NS_RegisterApplicationShellFactory() ;
 
-  // Let's instantiate the Application's Shell
-  NS_RegisterApplicationShellFactory() ;
-
-  result = NSRepository::CreateInstance(kIXPCOMApplicationShellCID,
-					NULL,
-					kIXPCOMApplicationShellCID,
-					(void **) &pApplicationShell) ;
+	result = NSRepository::CreateInstance(kIXPCOMApplicationShellCID,
+										  NULL,
+										  kIXPCOMApplicationShellCID,
+										  (void **) &pApplicationShell) ;
 		
-  if (result != NS_OK)
-    return  ;
+	if (result != NS_OK)
+		return result ;
+
 
   // Let the the State know who it's Application Instance is
     pShellInstance->SetNativeInstance((nsNativeApplicationInstance) topLevel);
