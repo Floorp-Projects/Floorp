@@ -88,9 +88,11 @@ typedef struct _reginfo
 #define REGTYPE_ENTRY_BYTES           (REGTYPE_ENTRY + 3)
 #define REGTYPE_ENTRY_FILE            (REGTYPE_ENTRY + 4)
 
-#define REG_DELETE_LIST_KEY  "Netscape/Communicator/SoftwareUpdate/Delete List"
-#define REG_REPLACE_LIST_KEY "Netscape/Communicator/SoftwareUpdate/Replace List"
-#define REG_UNINSTALL_DIR    "Netscape/Communicator/SoftwareUpdate/Uninstall/"
+#define REG_DELETE_LIST_KEY  "Mozilla/XPInstall/Delete List"
+#define REG_REPLACE_LIST_KEY "Mozilla/XPInstall/Replace List"
+#define REG_UNINSTALL_DIR    "Mozilla/XPInstall/Uninstall/"
+#define REG_REPLACE_SRCFILE  "ReplacementFile"
+#define REG_REPLACE_DESTFILE "DestinationFile"
 
 #define UNINSTALL_NAV_STR "_"
 
