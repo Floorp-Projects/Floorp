@@ -40,7 +40,7 @@ MAPFILE		= $(DLLNAME).map
 RESFILE		= $(DLLNAME).res
 DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 MAKE_OBJ_TYPE	= DLL
-
+IS_COMPONENT=1
 LINCS = -I$(PUBLIC)/js \
 	-I$(PUBLIC)/pref \
 	-I$(PUBLIC)/java \
@@ -109,7 +109,7 @@ LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(DLL)	
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) .\init\netscape.cfg $(DIST)\bin
     $(MAKE_INSTALL) .\initpref.js $(DIST)\bin\components
