@@ -2036,6 +2036,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 	}
     else  /* article or cancel */
 	{
+        NS_ASSERTION(m_path, "no m_path, see bugs #57659 and #72317");
+        if (!m_path) return -1;
+
 		if (m_typeWanted == CANCEL_WANTED) {
 			NET_SACopy(&command, "HEAD ");
         }
@@ -2043,10 +2046,10 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
             NS_ASSERTION(m_typeWanted == ARTICLE_WANTED, "not cancel, and not article");
 			NET_SACopy(&command, "ARTICLE ");
         }
-		if (m_path && *m_path != '<')
+
+		if (*m_path != '<')
 			NET_SACat(&command,"<");
 
-        NS_ASSERTION(m_path, "no path");
 		NET_SACat(&command, m_path);
 
 		if (PL_strchr(command+8, '>')==0) 
@@ -2064,7 +2067,6 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 		m_nextStateAfterResponse = SEND_FIRST_NNTP_COMMAND_RESPONSE;
 	SetFlag(NNTP_PAUSE_FOR_READ);
     return(status);
-
 } /* sent first command */
 
 
