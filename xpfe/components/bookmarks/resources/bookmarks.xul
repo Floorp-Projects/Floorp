@@ -59,11 +59,9 @@
       <menuitem value="x&menuitem.delete.label;"/>
       <menuitem value="x&menuitem.selectAll.label;"/>
       <menuseparator/>
-      <menuitem value="x&menuitem.find.label;"/>
-      <menuitem value="x&menuitem.findAgain.label;"/>
+      <menuitem value="&menuitem.find.label;" onaction="OpenSearch('find');"/>
       <menuseparator/>
-      <menuitem value="&menuitem.properties.label;"
-                onaction="BookmarkProperties();"/>
+      <menuitem value="&menuitem.properties.label;" onaction="BookmarkProperties();"/>
 	  </menupopup>
     </menu>
   </menubar>
