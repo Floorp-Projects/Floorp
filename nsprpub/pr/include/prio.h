@@ -345,6 +345,8 @@ typedef PRStatus (PR_CALLBACK *PRSetsocketoptionFN)(
 typedef PRInt32 (PR_CALLBACK *PRSendfileFN)(
 	PRFileDesc *networkSocket, PRSendFileData *sendData,
 	PRTransmitFileFlags flags, PRIntervalTime timeout);
+typedef PRStatus (PR_CALLBACK *PRConnectcontinueFN)(
+    PRFileDesc *fd, PRInt16 out_flags);
 typedef PRIntn (PR_CALLBACK *PRReservedFN)(PRFileDesc *fd);
 
 struct PRIOMethods {
@@ -381,7 +383,8 @@ struct PRIOMethods {
     PRSetsocketoptionFN setsocketoption;
                                     /* Set value of specified option            */
     PRSendfileFN sendfile;			/* Send a (partial) file with header/trailer*/
-    PRReservedFN reserved_fn_4;		/* reserved for future use */
+    PRConnectcontinueFN connectcontinue;
+                                    /* Continue a nonblocking connect */
     PRReservedFN reserved_fn_3;		/* reserved for future use */
     PRReservedFN reserved_fn_2;		/* reserved for future use */
     PRReservedFN reserved_fn_1;		/* reserved for future use */
@@ -1202,6 +1205,42 @@ NSPR_API(PRStatus) PR_Connect(
 
 /*
  *************************************************************************
+ * FUNCTION: PR_ConnectContinue
+ * DESCRIPTION:
+ *     Continue a nonblocking connect.  After a nonblocking connect
+ *     is initiated with PR_Connect() (which fails with
+ *     PR_IN_PROGRESS_ERROR), one should call PR_Poll() on the socket,
+ *     with the in_flags PR_POLL_WRITE | PR_POLL_EXCEPT.  When
+ *     PR_Poll() returns, one calls PR_ConnectContinue() on the
+ *     socket to determine whether the nonblocking connect has
+ *     completed or is still in progress.  Repeat the PR_Poll(),
+ *     PR_ConnectContinue() sequence until the nonblocking connect
+ *     has completed.
+ * INPUTS:
+ *     PRFileDesc *fd
+ *         the file descriptor representing a socket
+ *     PRInt16 out_flags
+ *         the out_flags field of the poll descriptor returned by
+ *         PR_Poll()
+ * RETURN: PRStatus
+ *     If the nonblocking connect has successfully completed,
+ *     PR_GetConnectStatus returns PR_SUCCESS.  If PR_GetConnectStatus()
+ *     returns PR_FAILURE, call PR_GetError():
+ *     - PR_IN_PROGRESS_ERROR: the nonblocking connect is still in
+ *       progress and has not completed yet.  The caller should poll
+ *       on the file descriptor for the in_flags
+ *       PR_POLL_WRITE|PR_POLL_EXCEPT and retry PR_ConnectContinue
+ *       later when PR_Poll() returns.
+ *     - Other errors: the nonblocking connect has failed with this
+ *       error code.
+ */
+
+NSPR_API(PRStatus)    PR_ConnectContinue(PRFileDesc *fd, PRInt16 out_flags);
+
+/*
+ *************************************************************************
+ * THIS FUNCTION IS DEPRECATED.  USE PR_ConnectContinue INSTEAD.
+ *
  * FUNCTION: PR_GetConnectStatus
  * DESCRIPTION:
  *     Get the completion status of a nonblocking connect.  After

@@ -175,6 +175,15 @@ static PRStatus PR_CALLBACK pl_DefConnect (
     return (fd->lower->methods->connect)(fd->lower, addr, timeout);
 }
 
+static PRStatus PR_CALLBACK pl_DefConnectcontinue (
+    PRFileDesc *fd, PRInt16 out_flags)
+{
+    PR_ASSERT(fd != NULL);
+    PR_ASSERT(fd->lower != NULL);
+
+    return (fd->lower->methods->connectcontinue)(fd->lower, out_flags);
+}
+
 static PRFileDesc* PR_CALLBACK pl_TopAccept (
     PRFileDesc *fd, PRNetAddr *addr, PRIntervalTime timeout)
 {
@@ -427,7 +436,7 @@ static PRIOMethods pl_methods = {
     pl_DefGetsocketoption,
     pl_DefSetsocketoption,
     pl_DefSendfile,
-    (PRReservedFN)_PR_InvalidInt,
+    pl_DefConnectcontinue,
     (PRReservedFN)_PR_InvalidInt,
     (PRReservedFN)_PR_InvalidInt,
     (PRReservedFN)_PR_InvalidInt,
