@@ -30,7 +30,6 @@
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <script type="application/x-javascript" src="chrome://messenger-smime/content/msgCompSMIMEOverlay.js"/>
   <script type="application/x-javascript"><![CDATA[
     window.addEventListener("load", smimeComposeOnLoad, true);
