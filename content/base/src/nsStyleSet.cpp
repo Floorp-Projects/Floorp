@@ -29,12 +29,22 @@
 #include "nsIDocument.h"
 #include "nsIStyleFrameConstruction.h"
 #include "nsLayoutAtoms.h"
+#include "stopwatch.h"
+#ifdef RAPTOR_PERF_METRICS
+#include "nsITimeRecorder.h"
+
+#define NS_TIMER_STYLE_RESOLUTION 1
+#endif
 
 static NS_DEFINE_IID(kIStyleSetIID, NS_ISTYLE_SET_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
 
-class StyleSetImpl : public nsIStyleSet {
+class StyleSetImpl : public nsIStyleSet 
+#ifdef RAPTOR_PERF_METRICS
+                   , public nsITimeRecorder
+#endif
+{
 public:
   StyleSetImpl();
 
@@ -154,6 +164,10 @@ public:
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0);
 
+#ifdef RAPTOR_PERF_METRICS
+  NS_DECL_NSITIMERECORDER
+#endif
+
 private:
   // These are not supported and are not implemented!
   StyleSetImpl(const StyleSetImpl& aCopy);
@@ -174,6 +188,10 @@ protected:
   nsISupportsArray* mRecycler;
 
   nsIStyleFrameConstruction* mFrameConstructor;
+
+#ifdef RAPTOR_PERF_METRICS
+  Stopwatch mStyleResolutionWatch;
+#endif
 };
 
 
@@ -196,7 +214,11 @@ StyleSetImpl::~StyleSetImpl()
   NS_IF_RELEASE(mRecycler);
 }
 
+#ifndef RAPTOR_PERF_METRICS
 NS_IMPL_ISUPPORTS(StyleSetImpl, kIStyleSetIID)
+#else
+NS_IMPL_ISUPPORTS2(StyleSetImpl, nsIStyleSet, nsITimeRecorder)
+#endif
 
 PRBool StyleSetImpl::EnsureArray(nsISupportsArray** aArray)
 {
@@ -519,6 +541,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique)
 {
+  NS_START_STOPWATCH(mStyleResolutionWatch)
   nsIStyleContext*  result = nsnull;
 
   NS_ASSERTION(aContent, "must have content");
@@ -569,6 +592,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
     }
   }
 
+  NS_STOP_STOPWATCH(mStyleResolutionWatch)
   return result;
 }
 
@@ -618,6 +642,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
                                                      nsIStyleContext* aParentContext,
                                                      PRBool aForceUnique)
 {
+  NS_START_STOPWATCH(mStyleResolutionWatch)
   nsIStyleContext*  result = nsnull;
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
@@ -669,6 +694,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
     }
   }
 
+  NS_STOP_STOPWATCH(mStyleResolutionWatch)
   return result;
 }
 
@@ -988,6 +1014,7 @@ void StyleSetImpl::List(FILE* out, PRInt32 aIndent)
 //  List(out, aIndent, mBackstopSheets);
 }
 
+
 void StyleSetImpl::ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent)
 {
   aRootContext->List(out, aIndent);
@@ -1009,3 +1036,64 @@ NS_NewStyleSet(nsIStyleSet** aInstancePtrResult)
 
   return it->QueryInterface(kIStyleSetIID, (void **) aInstancePtrResult);
 }
+
+// nsITimeRecorder implementation
+
+#ifdef RAPTOR_PERF_METRICS
+NS_IMETHODIMP
+StyleSetImpl::ResetTimer(PRUint32 aTimerID)
+{
+  nsresult rv = NS_OK;
+
+  if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
+    mStyleResolutionWatch.Reset();
+  }
+  else 
+    rv = NS_ERROR_NOT_IMPLEMENTED;
+  
+  return rv;
+}
+
+NS_IMETHODIMP
+StyleSetImpl::StartTimer(PRUint32 aTimerID)
+{
+  nsresult rv = NS_OK;
+
+  if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
+    mStyleResolutionWatch.Start();
+  }
+  else 
+    rv = NS_ERROR_NOT_IMPLEMENTED;
+  
+  return rv;
+}
+
+NS_IMETHODIMP
+StyleSetImpl::StopTimer(PRUint32 aTimerID)
+{
+  nsresult rv = NS_OK;
+
+  if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
+    mStyleResolutionWatch.Stop();
+  }
+  else 
+    rv = NS_ERROR_NOT_IMPLEMENTED;
+  
+  return rv;
+}
+
+NS_IMETHODIMP
+StyleSetImpl::PrintTimer(PRUint32 aTimerID)
+{
+  nsresult rv = NS_OK;
+
+  if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
+    mStyleResolutionWatch.Print();
+  }
+  else 
+    rv = NS_ERROR_NOT_IMPLEMENTED;
+  
+  return rv;
+}
+
+#endif
