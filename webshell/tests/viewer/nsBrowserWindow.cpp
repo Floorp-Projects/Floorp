@@ -1046,7 +1046,6 @@ nsBrowserWindow::~nsBrowserWindow()
 {
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mAppShell);
-  NS_IF_RELEASE(mTreeView);
   NS_IF_RELEASE(mTableInspectorDialog);
   NS_IF_RELEASE(mImageInspectorDialog);
 

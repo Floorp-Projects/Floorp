@@ -253,8 +253,6 @@ public:
   nsIButton* mBack;
   nsIButton* mForward;
   nsIThrobber* mThrobber;
-  nsIContentConnector* mTreeView;   // HACK
-  nsIContentConnector* mToolbox;    // HACK
   
   // "Status bar"
   nsITextWidget* mStatus;
