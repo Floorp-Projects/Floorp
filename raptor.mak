@@ -32,7 +32,7 @@ RAPTOR_BRANCH = RAPTOR_BRANCH
 CVSCO_XPCOM = $(CVSCO) -r $(XPCOM_BRANCH)
 CVSCO_IMGLIB = $(CVSCO) -r $(IMGLIB_BRANCH)
 CVSCO_NETLIB = $(CVSCO) -r $(NETLIB_BRANCH)
-CVSCO_RAPTOR = $(CVSCO) -r $(RAPTOR_BRANCH)
+CVSCO_RAPTOR = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
 
 # The list of directories that need to be built to build the standalone
@@ -81,6 +81,9 @@ real_all: pass1_all pass2_all
 
 pass1_all:
     $(NMAKE) -f $(THIS_MAKEFILE) export
+    cd $(MOZ_SRC)\ns\base
+    $(NMAKE) -f makefile.win export
+    cd $(MOZ_SRC)\ns
     $(NMAKE) -f $(THIS_MAKEFILE) libs
     $(NMAKE) -f $(THIS_MAKEFILE) install
 
