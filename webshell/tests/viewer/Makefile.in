@@ -206,6 +206,9 @@ endif # BUILD_STATIC_LIBS
 
 ifeq ($(OS_ARCH),Darwin)
 LOCAL_INCLUDES		+= -I$(topsrcdir)/widget/src/mac
+ifdef BUILD_STATIC_LIBS
+LDFLAGS	+= -framework QuickTime $(TK_LIBS)
+endif
 endif
 
 CXXFLAGS		+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
