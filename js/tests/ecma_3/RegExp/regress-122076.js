@@ -53,6 +53,10 @@ var summary = "Don't crash on invalid regexp literals /  \\/  /";
 var STRESS = 10;
 var sEval = '';
 
+printBugNumber(bug);
+printStatus(summary);
+
+
 sEval += 'function checkDate()'
 sEval += '{'
 sEval += 'return (this.value.search(/^[012]?\d\/[0123]?\d\/[0]\d$/) != -1);'
