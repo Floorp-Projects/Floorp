@@ -26,6 +26,7 @@ CPPSRCS =				\
       nsEditFactory.cpp \
       EditTxn.cpp \
       ChangeAttributeTxn.cpp \
+      InsertTextTxn.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
@@ -34,6 +35,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\editorInterfaces.obj		\
   .\$(OBJDIR)\EditTxn.obj \
   .\$(OBJDIR)\ChangeAttributeTxn.obj \
+  .\$(OBJDIR)\InsertTextTxn.obj \
 	$(NULL)
 
 MODULE=editor 
