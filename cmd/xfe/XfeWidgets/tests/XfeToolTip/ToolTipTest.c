@@ -33,6 +33,8 @@ static Widget	_label_gadgets[3];
 static Widget	_button_widgets[3];
 static Widget	_label_widgets[3];
 
+static void tool_tip_cb(Widget,XtPointer,XtPointer);
+
 /*----------------------------------------------------------------------*/
 int
 main(int argc,char *argv[])
@@ -103,10 +105,32 @@ main(int argc,char *argv[])
 /* 	XfeToolTipAdd(_label_gadgets[2]); */
 
 
+	XfeToolTipSetStringCallback(_button_widgets[0],
+								tool_tip_cb,
+								NULL);
+
  	XfeToolTipGlobalSetEnabledState(True);
 
     XfeAppMainLoop();
 
 	return 0;
+}
+/*----------------------------------------------------------------------*/
+static void
+tool_tip_cb(Widget		w,
+			XtPointer	client_data,
+			XtPointer	call_data)
+{
+	XfeToolTipLabelCallbackStruct * data = 
+		(XfeToolTipLabelCallbackStruct *) call_data;
+
+	static int count = 1;
+
+	char buf[256];
+
+	sprintf(buf,"%s_%d","Count",count++);
+
+	data->label_return = XmStringCreateLocalized(buf);
+	data->need_to_free_return = True;
 }
 /*----------------------------------------------------------------------*/

@@ -111,3 +111,6 @@ ToolTipTest*XmLabelGadget.bottomOffset:				10
 ToolTipTest*XmLabelGadget.leftOffset:				10  
 ToolTipTest*XmLabelGadget.rightOffset:				10
 ToolTipTest*XmLabelGadget.topOffset:				10
+
+
+ToolTipTest*XmLabelGadget*tipString:				This is a Tool Tip

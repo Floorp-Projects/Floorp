@@ -77,10 +77,8 @@ typedef struct _XfeToolTipShellPart
     unsigned char		tool_tip_placement;		/* Tool tip placement	*/
 
 	/* Offset resources */
-	int					bottom_offset;			/* bottom_offset		*/
-	int					left_offset;			/* left_offset			*/
-	int					right_offset;			/* right_offset			*/
-	int					top_offset;				/* top_offset			*/
+	int					horizontal_offset;		/* Horizontal offset	*/
+	int					vertical_offset;		/* Vertical offset		*/
 
     /* Private data -- Dont even look past this comment -- */
 	XtIntervalId		tool_tip_timer_id;		/* Tool tip timer id	*/

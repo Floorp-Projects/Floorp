@@ -119,43 +119,25 @@ static XtResource resources[] =
 		sizeof(unsigned char),
 		XtOffsetOf(XfeToolTipShellRec , xfe_tool_tip_shell . tool_tip_placement),
 		XmRImmediate, 
-		(XtPointer) 0
+		(XtPointer) XmTOOL_TIP_PLACE_BOTTOM
     },
 
 	/* Offset resources */
     { 
-		XmNbottomOffset,
+		XmNtoolTipHorizontalOffset,
 		XmCOffset,
 		XmRInt,
 		sizeof(int),
-		XtOffsetOf(XfeToolTipShellRec , xfe_tool_tip_shell . bottom_offset),
+		XtOffsetOf(XfeToolTipShellRec , xfe_tool_tip_shell . horizontal_offset),
 		XmRImmediate, 
 		(XtPointer) 0
     },
     { 
-		XmNleftOffset,
+		XmNtoolTipVerticalOffset,
 		XmCOffset,
 		XmRInt,
 		sizeof(int),
-		XtOffsetOf(XfeToolTipShellRec , xfe_tool_tip_shell . left_offset),
-		XmRImmediate, 
-		(XtPointer) 0
-    },
-    { 
-		XmNrightOffset,
-		XmCOffset,
-		XmRInt,
-		sizeof(int),
-		XtOffsetOf(XfeToolTipShellRec , xfe_tool_tip_shell . right_offset),
-		XmRImmediate, 
-		(XtPointer) 0
-    },
-    { 
-		XmNtopOffset,
-		XmCOffset,
-		XmRInt,
-		sizeof(int),
-		XtOffsetOf(XfeToolTipShellRec , xfe_tool_tip_shell . top_offset),
+		XtOffsetOf(XfeToolTipShellRec , xfe_tool_tip_shell . vertical_offset),
 		XmRImmediate, 
 		(XtPointer) 0
     },
@@ -364,8 +346,10 @@ RegisterToolTipPlacement(void)
 {
     static String names[] = 
     { 
-		"tool_tip_editable",
-		"tool_tip_read_only"
+		"tool_tip_place_bottom",
+		"tool_tip_place_left",
+		"tool_tip_place_right",
+		"tool_tip_place_top"
     };
 
     XmRepTypeRegister(XmRToolTipPlacement,names,NULL,XtNumber(names));
@@ -388,7 +372,7 @@ RegisterToolTipType(void)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeToolTipShell action procedures											*/
+/* XfeToolTipShell action procedures									*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void
@@ -417,7 +401,7 @@ ActionHighlight(Widget item,XEvent * event,char ** params,Cardinal * nparams)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* ToolTipShell widget functions												*/
+/* ToolTipShell widget functions										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 static Widget

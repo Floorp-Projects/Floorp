@@ -33,13 +33,16 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeToolTip string collection callback								*/
+/* ToolTip label callback structure										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-typedef void	(*XfeToolTipLabelCallback)		(Widget			w,
-												 XtPointer		client_data,
-												 XmString *		string);
-	
+typedef struct
+{
+    int			reason;					/* Reason why CB was invoked	*/
+    XEvent *	event;					/* Event that triggered CB		*/
+    XmString 	label_return;			/* Label slot for caller		*/
+    Boolean 	need_to_free_return;	/* Should the label be freed ?	*/
+} XfeToolTipLabelCallbackStruct;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -67,9 +70,9 @@ XfeToolTipGetEnabledState		(Widget		w);
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern void
-XfeToolTipSetStringCallback		(Widget						w,
-								 XfeToolTipLabelCallback	callback,
-								 XtPointer					client_data);
+XfeToolTipSetStringCallback		(Widget				w,
+								 XtCallbackProc		callback,
+								 XtPointer			client_data);
 /*----------------------------------------------------------------------*/
 extern void
 XfeToolTipClearStringCallback	(Widget						w);

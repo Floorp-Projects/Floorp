@@ -58,13 +58,27 @@ enum
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XmRToolTipPlacement													*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+enum
+{
+	XmTOOL_TIP_PLACE_BOTTOM,					/*						*/
+	XmTOOL_TIP_PLACE_LEFT,						/*						*/
+	XmTOOL_TIP_PLACE_RIGHT,						/*						*/
+	XmTOOL_TIP_PLACE_TOP						/*						*/
+};
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeTip class names													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 externalref WidgetClass xfeToolTipShellWidgetClass;
 
-typedef struct _XfeToolTipShellClassRec *			XfeToolTipShellWidgetClass;
-typedef struct _XfeToolTipShellRec *				XfeToolTipShellWidget;
+typedef struct _XfeToolTipShellClassRec *		XfeToolTipShellWidgetClass;
+typedef struct _XfeToolTipShellRec *			XfeToolTipShellWidget;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -80,12 +94,12 @@ typedef struct _XfeToolTipShellRec *				XfeToolTipShellWidget;
 /*----------------------------------------------------------------------*/
 extern Widget
 XfeCreateToolTipShell				(Widget		pw,
-								 String		name,
-								 Arg *		av,
-								 Cardinal	ac);
+									 String		name,
+									 Arg *		av,
+									 Cardinal	ac);
 /*----------------------------------------------------------------------*/
 extern Widget
-XfeToolTipShellGetLabel			(Widget		w);
+XfeToolTipShellGetLabel				(Widget		w);
 /*----------------------------------------------------------------------*/
 
 extern void

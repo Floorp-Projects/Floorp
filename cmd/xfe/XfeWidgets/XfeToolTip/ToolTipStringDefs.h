@@ -41,10 +41,12 @@
 /*----------------------------------------------------------------------*/
 #define XmNdocumentationString			"documentationString"
 #define XmNtipString					"tipString"
+#define XmNtoolTipLabel					"toolTipLabel"
 #define XmNtoolTipPlacement				"toolTipPlacement"
 #define XmNtoolTipTimeout				"toolTipTimeout"
 #define XmNtoolTipType					"toolTipType"
-#define XmNtoolTipLabel					"toolTipLabel"
+#define XmNtoolTipHorizontalOffset		"toolTipHorizontalOffset"
+#define XmNtoolTipVerticalOffset		"toolTipVerticalOffset"
 
 /*----------------------------------------------------------------------*/
 /*																		*/

@@ -53,8 +53,8 @@ typedef struct
 {
 	Widget						widget;
 	Boolean						enabled;
-	XfeToolTipLabelCallback		label_callback;
-	XtPointer					label_client_data;
+	XtCallbackRec				label_callback;
+/* 	XtPointer					label_client_data; */
 } _XfeTipItemInfoRec,*_XfeTipItemInfo;
 /*----------------------------------------------------------------------*/
 
@@ -123,6 +123,9 @@ static void					GadgetFreeInfo		(_XfeTipItemInfo);
 /*																		*/
 /*----------------------------------------------------------------------*/
 static _XfeTipItemInfo		ItemGetInfo			(Widget);
+static void					ItemGetLabelString	(Widget,XmString *,Boolean *);
+static void					ItemPostToolTip		(Widget);
+static void					ItemUnPostToolTip	(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -560,10 +563,10 @@ WidgetAllocateInfo(Widget w,Boolean enabled)
 	item_info = (_XfeTipItemInfo) XtMalloc(sizeof(_XfeTipItemInfoRec) * 1);
 
 	/* Initialize the members */
-	item_info->widget				= w;
-	item_info->enabled				= enabled;
-	item_info->label_callback		= NULL;
-	item_info->label_client_data	= NULL;
+	item_info->widget					= w;
+	item_info->enabled					= enabled;
+	item_info->label_callback.callback	= NULL;
+	item_info->label_callback.closure	= NULL;
 
 	XtAddCallback(w,
 				  XmNdestroyCallback,
@@ -801,7 +804,55 @@ ItemGetInfo(Widget w)
 	return item_info;
 }
 /*----------------------------------------------------------------------*/
+static void
+ItemGetLabelString(Widget w,XmString * xmstr_out,Boolean * need_to_free_out)
+{
+	_XfeTipItemInfo	item_info;
 
+	assert( xmstr_out != NULL );
+	assert( need_to_free_out != NULL );
+
+	*xmstr_out = NULL;
+	*need_to_free_out = False;
+
+	assert( _XfeIsAlive(w) );
+	
+	item_info = ItemGetInfo(w);
+	
+	assert( item_info != NULL );
+
+	/* Invoke the label callback if present */
+	if (item_info->label_callback.callback != NULL)
+	{
+		XfeToolTipLabelCallbackStruct cbs;
+
+		cbs.reason = 0;
+		cbs.event = NULL;
+		cbs.label_return = NULL;
+		cbs.need_to_free_return = False;
+		
+		(*item_info->label_callback.callback)(w,
+											  item_info->label_callback.closure,
+											  &cbs);
+
+		*xmstr_out = cbs.label_return;
+		*need_to_free_out = cbs.need_to_free_return;
+	}
+	/* Check resources directly */
+	else
+	{
+		*xmstr_out = XfeSubResourceGetWidgetXmStringValue(w, 
+														  XmNtipString, 
+														  XmCTipString);
+		
+		/*
+		 * No need to free this string.  The Xt resource destructor
+		 * should take care of freeing this memory.
+		 */
+		*need_to_free_out = False;
+	}
+}
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -842,28 +893,19 @@ ItemLeave(Widget w,_XfeTipItemInfo item_info)
 	if (_XfeIsAlive(_xfe_tt_stage_one_target))
 	{
 		_xfe_tt_stage_one_target = NULL;
-
-		printf("ItemLeave(%s): Reseting the target so that stage two aborts\n",
-			   XtName(w));
 	}
 
 	/* Remove the timeout if its still active */
 	StageTwoRemoveTimeout(w);
 
 	/* Check for stage two */
-
 	if (_XfeIsAlive(_xfe_tt_stage_two_target))
 	{
-		Widget tt_shell = _XfeToolTipGetShell(w);
-
-		assert( _XfeIsAlive(tt_shell) );
-
+		/* Set the stage two target */
 		_xfe_tt_stage_two_target = NULL;
-		
-/*  		XtPopdown(tt_shell); */
-	}
 
-	printf("Leave(%s)\n",XtName(w));
+		ItemUnPostToolTip(w);
+	}
 
 	_XfeToolTipUnlock();
 }
@@ -872,28 +914,72 @@ static void
 ItemCancel(Widget w,_XfeTipItemInfo item_info)
 {
 	ItemLeave(w,item_info);
-
-#if 0
-	assert( _XfeIsAlive(w) );
-
-	/* If a target exists, reset it so that stage two aborts */
-	if (_XfeIsAlive(_xfe_tt_stage_one_target))
-	{
-		_xfe_tt_stage_one_target = NULL;
-
-		printf("ItemLeave(%s): Reseting the target so that stage two aborts\n",
-			   XtName(w));
-	}
-
-	/* Remove the timeout if its still active */
-	StageTwoRemoveTimeout(w);
-
-	printf("Leave(%s)\n",XtName(w));
-
-	_XfeToolTipUnlock();
-#endif
 }
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Itme Post / UnPost ToolTip functions									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static Boolean		_xfe_tt_posted = False;
+
+static void
+ItemPostToolTip(Widget w)
+{
+	Widget		shell = NULL;
+	Widget		label = NULL;
+
+	XmString	xmstr = NULL;
+	Boolean		need_to_free = False;
+
+	assert( _XfeIsAlive(w) );
+
+	shell =_XfeToolTipGetShell(w);
+
+	assert( _XfeIsAlive(shell) );
+
+	label = _XfeToolTipGetLabel(w);
+
+	assert( _XfeIsAlive(label) );
+
+	ItemGetLabelString(w,&xmstr,&need_to_free);
+ 
+	if (xmstr != NULL)
+	{
+ 		XfeLabelSetString(label,xmstr);
+
+		/* Free the string if needed */
+		if (need_to_free)
+		{
+			XmStringFree(xmstr);
+		}
+		
+		XfeBypassShellUpdateSize(shell);
+
+		_xfe_tt_posted = True;
+
+		XtPopup(shell,XtGrabNone);
+	}
+}
+/*----------------------------------------------------------------------*/
+static void
+ItemUnPostToolTip(Widget w)
+{
+	if (_xfe_tt_posted)
+	{
+		Widget shell = _XfeToolTipGetShell(w);
+
+		_xfe_tt_posted = True;
+
+		if (_XfeIsAlive(shell))
+		{
+			XtPopdown(shell);
+		}
+	}
+}
+/*----------------------------------------------------------------------*/
+
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -930,8 +1016,7 @@ ChildrenListTestFunc(XtPointer item,XtPointer client_data)
 static void
 StageTwoTimeout(XtPointer closure,XtIntervalId * id)
 {
-    Widget		w = (Widget) closure;
-	Widget		tt_shell = NULL;	
+    Widget 		w = (Widget) closure;
 	
 	/*
 	 * Always clear timer_id, so we don't kill someone else's timer
@@ -939,44 +1024,25 @@ StageTwoTimeout(XtPointer closure,XtIntervalId * id)
 	 */
 	_xfe_tt_timer_id = 0;
 
-#if 0
-	/* Make sure the widget is still alive */
-	if (!_XfeIsAlive(w))
+
+	/*
+	 * Post the tooltip if a target is still alive.
+	 *
+	 * A dead or missing target means the tooltip operation was aborted.
+	 * The user could have boinked or left the target.
+	 */
+	if (_XfeIsAlive(_xfe_tt_stage_one_target))
 	{
-		return;
+		assert( w == _xfe_tt_stage_one_target);
+		
+		/* Reset the stage one target */
+		_xfe_tt_stage_one_target = NULL;
+		
+		/* Set the stage two target */
+		_xfe_tt_stage_two_target = w;
+
+		ItemPostToolTip(w);
 	}
-#endif
-
-	if (!_XfeIsAlive(_xfe_tt_stage_one_target))
-	{
-		printf("StageTwoTimeout: The target widget is dead. Aborting.\n");
-	}
-
-	assert( w == _xfe_tt_stage_one_target);
-
-	printf("StageTwoTimeout: Im here baby!.\n");
-
-	/* Reset the stage one target */
-	_xfe_tt_stage_one_target = NULL;
-
-	tt_shell =_XfeToolTipGetShell(w);
-
-	assert( _XfeIsAlive(tt_shell) );
-
-	{
-		Widget label = _XfeToolTipGetLabel(w);
-
-		assert( _XfeIsAlive(label) );
-
-		XfeLabelSetStringPSZ(label,XtName(w));
-
-		XfeBypassShellUpdateSize(tt_shell);
-	}
-
-	XtPopup(tt_shell,XtGrabNone);
-
-	/* Set the stage two target */
-	_xfe_tt_stage_two_target = w;
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1194,11 +1260,6 @@ XfeToolTipSetEnabledState(Widget w,Boolean state)
 	}
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeToolTipAddItemUnique(Widget w,XmString item,int position)
-{
-}
-/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -1206,15 +1267,27 @@ XfeToolTipAddItemUnique(Widget w,XmString item,int position)
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipSetStringCallback(Widget					w,
-							XfeToolTipLabelCallback	callback,
-							XtPointer				client_data)
+XfeToolTipSetStringCallback(Widget			w,
+							XtCallbackProc	callback,
+							XtPointer		client_data)
 {
+	_XfeTipItemInfo item_info;
+	
+	assert( _XfeIsAlive(w) );
+
+	item_info = ItemGetInfo(w);
+
+	if (item_info != NULL)
+	{
+		item_info->label_callback.callback = callback;
+		item_info->label_callback.closure = client_data;
+	}
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeToolTipClearStringCallback(Widget				w)
+XfeToolTipClearStringCallback(Widget w)
 {
+	XfeToolTipSetStringCallback(w,NULL,NULL);
 }
 /*----------------------------------------------------------------------*/
 
