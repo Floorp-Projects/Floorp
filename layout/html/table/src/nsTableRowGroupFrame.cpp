@@ -262,7 +262,17 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
     }
   }
   else {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
+      aRenderingContext.PushState();
+      SetOverflowClipRect(aRenderingContext);
+    }
     PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+    if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
+      PRBool clipState;
+      aRenderingContext.PopState(clipState);
+    }
   }
   return NS_OK;
   /*nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);*/

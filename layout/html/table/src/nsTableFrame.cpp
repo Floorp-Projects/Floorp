@@ -1501,8 +1501,22 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 #endif
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
 
+  // If overflow is hidden then set the clip rect so that children don't
+  // leak out of us. Note that because overflow'-clip' only applies to
+  // the content area we do this after painting the border and background
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    aRenderingContext.PushState();
+    SetOverflowClipRect(aRenderingContext);
+  }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    PRBool clipState;
+    aRenderingContext.PopState(clipState);
+  }
   DO_GLOBAL_REFLOW_COUNT_DSP_J("nsTableFrame", &aRenderingContext, NS_RGB(255,128,255));
   return NS_OK;
   /*nsFrame::Paint(aPresContext,

@@ -357,14 +357,12 @@ nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
 
   // Child elements have the opportunity to override the visibility property
   // of their parent and display even if the parent is hidden
-  PRBool clipState;
-
+  
   // If overflow is hidden then set the clip rect so that children
   // don't leak out of us
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
-                                  nsClipCombine_kIntersect, clipState);
+    SetOverflowClipRect(aRenderingContext);
   }
 
   if (mCaptionFrame) {
@@ -377,6 +375,7 @@ nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    PRBool clipState;
     aRenderingContext.PopState(clipState);
   }
   
