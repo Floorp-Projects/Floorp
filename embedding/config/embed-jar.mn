@@ -25,6 +25,13 @@ skin/classic/communicator/dialogOverlay.css, classic/skin/classic/communicator/d
 skin/classic/communicator/smallheader-bg.gif, classic/skin/classic/communicator/smallheader-bg.gif
 skin/classic/communicator/plugins.css, classic/skin/classic/communicator/plugins.css
 
+# Every locale package needs to have at least a dummy content package, so
+# that locale auto-selection works correctly. See bug 234109
+content/necko/contents.rdf, comm/content/necko/contents.rdf
+content/navigator/contents.rdf, comm/content/navigator/contents.rdf
+content/navigator-platform/contents.rdf, comm/content/navigator-platform/contents.rdf
+
+
 # Locale stuff
 locale/XXXX/global, XXXX/locale/XXXX/global
 locale/XXXX/necko/contents.rdf, XXXX/locale/XXXX/necko/contents.rdf
