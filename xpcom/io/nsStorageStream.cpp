@@ -33,7 +33,7 @@
 #include "prbit.h"
 
 nsStorageStream::nsStorageStream()
-    : mSegmentedBuffer(0), mSegmentSize(0), mWriteInProgress(false),
+    : mSegmentedBuffer(0), mSegmentSize(0), mWriteInProgress(PR_FALSE),
       mWriteCursor(0), mSegmentEnd(0), mLogicalLength(0), mLastSegmentNum(-1)
 {
     NS_INIT_REFCNT();
@@ -104,14 +104,14 @@ nsStorageStream::GetOutputStream(PRInt32 aStartingOffset,
     
     NS_ADDREF(this);
     *aOutputStream = NS_STATIC_CAST(nsIOutputStream*, this);
-    mWriteInProgress = true;
+    mWriteInProgress = PR_TRUE;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsStorageStream::Close()
 {
-    mWriteInProgress = false;
+    mWriteInProgress = PR_FALSE;
     
     PRInt32 segmentOffset = SegOffset(mLogicalLength);
 
