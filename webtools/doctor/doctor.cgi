@@ -110,14 +110,6 @@ my $WEB_BASE_PATH = $config->get('WEB_BASE_PATH');
 use Cwd;
 my $HOME = cwd;
 
-# Whether or not the user submitted their username with an at sign (@) instead
-# of a percentage mark (%).  CVS usernames cannot contain at signs, so the sign
-# gets replaced by a percentage mark when people use their email addresses as
-# usernames, but those people generally forget about the replacement and enter
-# their username with the at sign, so we convert it automatically and set this
-# variable so we know to warn them about it if it happens.
-my $at_sign = 0;
-
 ################################################################################
 # Main Body Execution
 ################################################################################
@@ -251,7 +243,12 @@ sub ValidateUsername
     && exit;
 
   my $username = $request->param('username');
-  if ($username =~ s/@/%/) { $at_sign = 1 };
+
+  # If the username has an at sign in it, convert it to a percentage sign,
+  # since that is probably what the user meant (CVS usernames are often
+  # email addresses in which the at sign has been converted to a percentage sign.
+  $username =~ s/@/%/;
+
   $request->param('username', $username);
 }
 
