@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.232 $ ';
+$::UtilsVersion = '$Revision: 1.233 $ ';
 
 package TinderUtils;
 
@@ -292,6 +292,7 @@ sub LoadConfig {
     }
 }
 
+my $objdir;
 sub SetupEnv {
     umask 0;
 
@@ -300,6 +301,7 @@ sub SetupEnv {
     $Settings::BaseDir = get_system_cwd();
 
     my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
+    $objdir = "$topsrcdir/${Settings::ObjDir}";
 
     if ($Settings::ObjDir ne '') {
         $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:" . "$ENV{LD_LIBRARY_PATH}";
@@ -2023,7 +2025,7 @@ sub CodesizeTest {
     $bash_cmd .= $type . "summary.unix.bash";
   }
  
-  $bash_cmd .= " -o $Settings::ObjDir" if ($Settings::ObjDir ne "");
+  $bash_cmd .= " -o $objdir" if ($Settings::ObjDir ne "");
  
   my $test_result =
     FileBasedTest($test_name, 
