@@ -6696,6 +6696,12 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* check the windows registry to see if a previous instance of setup finished downloading
    * all the required archives. */
   dwPreviousUnfinishedState = GetPreviousUnfinishedState();
+
+  // Delete archives from the previous state *if* the user did not cancel
+  // out of the download state.
+  if(dwPreviousUnfinishedState == PUS_NONE)
+    DeleteArchives(DA_ONLY_IF_NOT_IN_ARCHIVES_LST);
+
   gbPreviousUnfinishedDownload = dwPreviousUnfinishedState == PUS_DOWNLOAD;
   if(gbPreviousUnfinishedDownload)
   {
