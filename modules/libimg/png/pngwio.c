@@ -1,9 +1,9 @@
 
 /* pngwio.c - functions for data output
  *
- * libpng 1.0.9 - January 31, 2001
+ * libpng 1.2.5 - October 2, 2002
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2001 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2002 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -17,6 +17,7 @@
 
 #define PNG_INTERNAL
 #include "png.h"
+#ifdef PNG_WRITE_SUPPORTED
 
 /* Write the data to whatever output you are using.  The default routine
    writes to a file pointer.  Note that this routine sometimes gets called
@@ -39,7 +40,7 @@ png_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
    write_data function and use it at run time with png_set_write_fn(), rather
    than changing the library. */
 #ifndef USE_FAR_KEYWORD
-static void /* PRIVATE */
+void PNGAPI
 png_default_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    png_uint_32 check;
@@ -62,7 +63,7 @@ png_default_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 #define NEAR_BUF_SIZE 1024
 #define MIN(a,b) (a <= b ? a : b)
 
-static void /* PRIVATE */
+void PNGAPI
 png_default_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    png_uint_32 check;
@@ -125,7 +126,7 @@ png_flush(png_structp png_ptr)
 }
 
 #if !defined(PNG_NO_STDIO)
-static void /* PRIVATE */
+void PNGAPI
 png_default_flush(png_structp png_ptr)
 {
 #if !defined(_WIN32_WCE)
@@ -224,3 +225,4 @@ void *png_far_to_near(png_structp png_ptr,png_voidp ptr, int check)
 }
 #   endif
 #   endif
+#endif /* PNG_WRITE_SUPPORTED */

@@ -1,9 +1,9 @@
 
 /* pngget.c - retrieval of values from info struct
  *
- * libpng 1.0.9 - January 31, 2001
+ * libpng 1.2.5 - October 2, 2002
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2001 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2002 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -137,7 +137,7 @@ png_get_y_pixels_per_meter(png_structp png_ptr, png_infop info_ptr)
 #if defined(PNG_pHYs_SUPPORTED)
    if (info_ptr->valid & PNG_INFO_pHYs)
    {
-       png_debug1(1, "in %s retrieval function\n", "png_get_y_pixels_per_meter");
+      png_debug1(1, "in %s retrieval function\n", "png_get_y_pixels_per_meter");
       if(info_ptr->phys_unit_type != PNG_RESOLUTION_METER)
           return (0);
       else return (info_ptr->y_pixels_per_unit);
@@ -297,7 +297,7 @@ png_get_y_offset_inches(png_structp png_ptr, png_infop info_ptr)
      *.00003937);
 }
 
-#if defined(PNG_READ_pHYs_SUPPORTED)
+#if defined(PNG_pHYs_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_pHYs_dpi(png_structp png_ptr, png_infop info_ptr,
    png_uint_32 *res_x, png_uint_32 *res_y, int *unit_type)
@@ -330,7 +330,7 @@ png_get_pHYs_dpi(png_structp png_ptr, png_infop info_ptr,
    }
    return (retval);
 }
-#endif /* PNG_READ_pHYs_SUPPORTED */
+#endif /* PNG_pHYs_SUPPORTED */
 #endif  /* PNG_INCH_CONVERSIONS && PNG_FLOATING_POINT_SUPPORTED */
 
 /* png_get_channels really belongs in here, too, but it's been around longer */
@@ -355,7 +355,7 @@ png_get_signature(png_structp png_ptr, png_infop info_ptr)
       return (NULL);
 }
 
-#if defined(PNG_READ_bKGD_SUPPORTED)
+#if defined(PNG_bKGD_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_bKGD(png_structp png_ptr, png_infop info_ptr,
    png_color_16p *background)
@@ -371,7 +371,7 @@ png_get_bKGD(png_structp png_ptr, png_infop info_ptr,
 }
 #endif
 
-#if defined(PNG_READ_cHRM_SUPPORTED)
+#if defined(PNG_cHRM_SUPPORTED)
 #ifdef PNG_FLOATING_POINT_SUPPORTED
 png_uint_32 PNGAPI
 png_get_cHRM(png_structp png_ptr, png_infop info_ptr,
@@ -435,7 +435,7 @@ png_get_cHRM_fixed(png_structp png_ptr, png_infop info_ptr,
 #endif
 #endif
 
-#if defined(PNG_READ_gAMA_SUPPORTED)
+#if defined(PNG_gAMA_SUPPORTED)
 #ifdef PNG_FLOATING_POINT_SUPPORTED
 png_uint_32 PNGAPI
 png_get_gAMA(png_structp png_ptr, png_infop info_ptr, double *file_gamma)
@@ -467,7 +467,7 @@ png_get_gAMA_fixed(png_structp png_ptr, png_infop info_ptr,
 #endif
 #endif
 
-#if defined(PNG_READ_sRGB_SUPPORTED)
+#if defined(PNG_sRGB_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_sRGB(png_structp png_ptr, png_infop info_ptr, int *file_srgb_intent)
 {
@@ -482,7 +482,7 @@ png_get_sRGB(png_structp png_ptr, png_infop info_ptr, int *file_srgb_intent)
 }
 #endif
 
-#if defined(PNG_READ_iCCP_SUPPORTED)
+#if defined(PNG_iCCP_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_iCCP(png_structp png_ptr, png_infop info_ptr,
              png_charpp name, int *compression_type,
@@ -504,7 +504,7 @@ png_get_iCCP(png_structp png_ptr, png_infop info_ptr,
 }
 #endif
 
-#if defined(PNG_READ_sPLT_SUPPORTED)
+#if defined(PNG_sPLT_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_sPLT(png_structp png_ptr, png_infop info_ptr,
              png_sPLT_tpp spalettes)
@@ -515,7 +515,7 @@ png_get_sPLT(png_structp png_ptr, png_infop info_ptr,
 }
 #endif
 
-#if defined(PNG_READ_hIST_SUPPORTED)
+#if defined(PNG_hIST_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_hIST(png_structp png_ptr, png_infop info_ptr, png_uint_16p *hist)
 {
@@ -547,7 +547,11 @@ png_get_IHDR(png_structp png_ptr, png_infop info_ptr,
       *width = info_ptr->width;
       *height = info_ptr->height;
       *bit_depth = info_ptr->bit_depth;
+      if (info_ptr->bit_depth < 1 || info_ptr->bit_depth > 16)
+        png_error(png_ptr, "Invalid bit depth");
       *color_type = info_ptr->color_type;
+      if (info_ptr->color_type > 6)
+        png_error(png_ptr, "Invalid color type");
       if (compression_type != NULL)
          *compression_type = info_ptr->compression_type;
       if (filter_type != NULL)
@@ -566,6 +570,10 @@ png_get_IHDR(png_structp png_ptr, png_infop info_ptr,
          channels++;
       pixel_depth = *bit_depth * channels;
       rowbytes_per_pixel = (pixel_depth + 7) >> 3;
+      if (width == 0 || *width > PNG_MAX_UINT)
+        png_error(png_ptr, "Invalid image width");
+      if (height == 0 || *height > PNG_MAX_UINT)
+        png_error(png_ptr, "Invalid image height");
       if (*width > PNG_MAX_UINT/rowbytes_per_pixel - 64)
       {
          png_error(png_ptr,
@@ -576,7 +584,7 @@ png_get_IHDR(png_structp png_ptr, png_infop info_ptr,
    return (0);
 }
 
-#if defined(PNG_READ_oFFs_SUPPORTED)
+#if defined(PNG_oFFs_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_oFFs(png_structp png_ptr, png_infop info_ptr,
    png_int_32 *offset_x, png_int_32 *offset_y, int *unit_type)
@@ -594,7 +602,7 @@ png_get_oFFs(png_structp png_ptr, png_infop info_ptr,
 }
 #endif
 
-#if defined(PNG_READ_pCAL_SUPPORTED)
+#if defined(PNG_pCAL_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_pCAL(png_structp png_ptr, png_infop info_ptr,
    png_charp *purpose, png_int_32 *X0, png_int_32 *X1, int *type, int *nparams,
@@ -618,7 +626,7 @@ png_get_pCAL(png_structp png_ptr, png_infop info_ptr,
 }
 #endif
 
-#if defined(PNG_READ_sCAL_SUPPORTED) || defined(PNG_WRITE_sCAL_SUPPORTED)
+#if defined(PNG_sCAL_SUPPORTED)
 #ifdef PNG_FLOATING_POINT_SUPPORTED
 png_uint_32 PNGAPI
 png_get_sCAL(png_structp png_ptr, png_infop info_ptr,
@@ -654,7 +662,7 @@ png_get_sCAL_s(png_structp png_ptr, png_infop info_ptr,
 #endif
 #endif
 
-#if defined(PNG_READ_pHYs_SUPPORTED)
+#if defined(PNG_pHYs_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_pHYs(png_structp png_ptr, png_infop info_ptr,
    png_uint_32 *res_x, png_uint_32 *res_y, int *unit_type)
@@ -701,7 +709,7 @@ png_get_PLTE(png_structp png_ptr, png_infop info_ptr, png_colorp *palette,
    return (0);
 }
 
-#if defined(PNG_READ_sBIT_SUPPORTED)
+#if defined(PNG_sBIT_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_sBIT(png_structp png_ptr, png_infop info_ptr, png_color_8p *sig_bit)
 {
@@ -716,7 +724,7 @@ png_get_sBIT(png_structp png_ptr, png_infop info_ptr, png_color_8p *sig_bit)
 }
 #endif
 
-#if defined(PNG_READ_TEXT_SUPPORTED)
+#if defined(PNG_TEXT_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_text(png_structp png_ptr, png_infop info_ptr, png_textp *text_ptr,
    int *num_text)
@@ -738,7 +746,7 @@ png_get_text(png_structp png_ptr, png_infop info_ptr, png_textp *text_ptr,
 }
 #endif
 
-#if defined(PNG_READ_tIME_SUPPORTED)
+#if defined(PNG_tIME_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_tIME(png_structp png_ptr, png_infop info_ptr, png_timep *mod_time)
 {
@@ -753,7 +761,7 @@ png_get_tIME(png_structp png_ptr, png_infop info_ptr, png_timep *mod_time)
 }
 #endif
 
-#if defined(PNG_READ_tRNS_SUPPORTED)
+#if defined(PNG_tRNS_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_tRNS(png_structp png_ptr, png_infop info_ptr,
    png_bytep *trans, int *num_trans, png_color_16p *trans_values)
@@ -792,7 +800,7 @@ png_get_tRNS(png_structp png_ptr, png_infop info_ptr,
 }
 #endif
 
-#if defined(PNG_READ_UNKNOWN_CHUNKS_SUPPORTED)
+#if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_unknown_chunks(png_structp png_ptr, png_infop info_ptr,
              png_unknown_chunkpp unknowns)
@@ -811,7 +819,7 @@ png_get_rgb_to_gray_status (png_structp png_ptr)
 }
 #endif
 
-#if defined(PNG_READ_USER_CHUNKS_SUPPORTED)
+#if defined(PNG_USER_CHUNKS_SUPPORTED)
 png_voidp PNGAPI
 png_get_user_chunk_ptr(png_structp png_ptr)
 {
@@ -826,3 +834,94 @@ png_get_compression_buffer_size(png_structp png_ptr)
    return (png_uint_32)(png_ptr? png_ptr->zbuf_size : 0L);
 }
 
+
+#ifndef PNG_1_0_X
+#ifdef PNG_ASSEMBLER_CODE_SUPPORTED
+/* this function was added to libpng 1.2.0 and should exist by default */
+png_uint_32 PNGAPI
+png_get_asm_flags (png_structp png_ptr)
+{
+    return (png_uint_32)(png_ptr? png_ptr->asm_flags : 0L);
+}
+
+/* this function was added to libpng 1.2.0 and should exist by default */
+png_uint_32 PNGAPI
+png_get_asm_flagmask (int flag_select)
+{
+    png_uint_32 settable_asm_flags = 0;
+
+    if (flag_select & PNG_SELECT_READ)
+        settable_asm_flags |=
+          PNG_ASM_FLAG_MMX_READ_COMBINE_ROW  |
+          PNG_ASM_FLAG_MMX_READ_INTERLACE    |
+          PNG_ASM_FLAG_MMX_READ_FILTER_SUB   |
+          PNG_ASM_FLAG_MMX_READ_FILTER_UP    |
+          PNG_ASM_FLAG_MMX_READ_FILTER_AVG   |
+          PNG_ASM_FLAG_MMX_READ_FILTER_PAETH ;
+          /* no non-MMX flags yet */
+
+#if 0
+    /* GRR:  no write-flags yet, either, but someday... */
+    if (flag_select & PNG_SELECT_WRITE)
+        settable_asm_flags |=
+          PNG_ASM_FLAG_MMX_WRITE_ [whatever] ;
+#endif /* 0 */
+
+    return settable_asm_flags;  /* _theoretically_ settable capabilities only */
+}
+#endif /* PNG_ASSEMBLER_CODE_SUPPORTED */
+
+
+#if defined(PNG_ASSEMBLER_CODE_SUPPORTED)
+    /* GRR:  could add this:   && defined(PNG_MMX_CODE_SUPPORTED) */
+/* this function was added to libpng 1.2.0 */
+png_uint_32 PNGAPI
+png_get_mmx_flagmask (int flag_select, int *compilerID)
+{
+    png_uint_32 settable_mmx_flags = 0;
+
+    if (flag_select & PNG_SELECT_READ)
+        settable_mmx_flags |=
+          PNG_ASM_FLAG_MMX_READ_COMBINE_ROW  |
+          PNG_ASM_FLAG_MMX_READ_INTERLACE    |
+          PNG_ASM_FLAG_MMX_READ_FILTER_SUB   |
+          PNG_ASM_FLAG_MMX_READ_FILTER_UP    |
+          PNG_ASM_FLAG_MMX_READ_FILTER_AVG   |
+          PNG_ASM_FLAG_MMX_READ_FILTER_PAETH ;
+#if 0
+    /* GRR:  no MMX write support yet, but someday... */
+    if (flag_select & PNG_SELECT_WRITE)
+        settable_mmx_flags |=
+          PNG_ASM_FLAG_MMX_WRITE_ [whatever] ;
+#endif /* 0 */
+
+    if (compilerID != NULL) {
+#ifdef PNG_USE_PNGVCRD
+        *compilerID = 1;    /* MSVC */
+#else
+#ifdef PNG_USE_PNGGCCRD
+        *compilerID = 2;    /* gcc/gas */
+#else
+        *compilerID = -1;   /* unknown (i.e., no asm/MMX code compiled) */
+#endif
+#endif
+    }
+
+    return settable_mmx_flags;  /* _theoretically_ settable capabilities only */
+}
+
+/* this function was added to libpng 1.2.0 */
+png_byte PNGAPI
+png_get_mmx_bitdepth_threshold (png_structp png_ptr)
+{
+    return (png_byte)(png_ptr? png_ptr->mmx_bitdepth_threshold : 0);
+}
+
+/* this function was added to libpng 1.2.0 */
+png_uint_32 PNGAPI
+png_get_mmx_rowbytes_threshold (png_structp png_ptr)
+{
+    return (png_uint_32)(png_ptr? png_ptr->mmx_rowbytes_threshold : 0L);
+}
+#endif /* PNG_ASSEMBLER_CODE_SUPPORTED */
+#endif /* PNG_1_0_X */

@@ -1,21 +1,5 @@
 
 Changes made to pristine png source by mozilla.org developers.
 
-2002/02/15  -- Synced with 1.0.9 tree
+2002/10/03  -- Synced with libpng-1.2.5 tree
 
-Following changes applied:
-
-Bug 78649 - Wrapped stderr fprintfs inside DEBUG ifdef.
-	Affected files: pnggccrd.c, ipng.cpp, if.cpp
-
-Bug 81794 - crash/leak fix for pngrutil.c
-	Affected files: pngrutil.c
-
-Bug 135579 - small interlaced PNG images not decoded correctly.
-	Affected files: pngpread.c
-
-Bug 154996 - PNG files with invalid IHDR can crash/hand browser.
-	Affected files: pngpread.c
-
-Bug 155222 - PNG files with invalid IHDR can corrupt heap.
-	Affected files: pngget.c
