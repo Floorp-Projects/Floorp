@@ -176,7 +176,6 @@ function onOK()
       window.arguments[0].updateSelf = true;
   }
 
-  window.opener.gNewTypeRV = gMIMEField.value;
   window.close();  
   return false;
 }
