@@ -103,7 +103,7 @@ void bcXPCOMStub::DispatchAndSaveThread(bcICall *call, nsIEventQueue *eventQueue
         mt = new bcXPCOMMarshalToolkit(mid, interfaceInfo, params, call->GetORB());
         bcIUnMarshaler * um = call->GetUnMarshaler();
         mt->UnMarshal(um);
-        //delete um;
+        delete um;
     }
     //push caller eventQ
     nsCOMPtr<bcIXPCOMStubsAndProxies> stubsAndProxiesService;
@@ -112,12 +112,12 @@ void bcXPCOMStub::DispatchAndSaveThread(bcICall *call, nsIEventQueue *eventQueue
     //nb return value; excepion handling
     PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade about to XPTC_InvokeByIndex\n"));
     XPTC_InvokeByIndex(object, mid, paramCount, params);
-    PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade after XPTC_InvokeByIndex\n"));                
+    PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade after XPTC_InvokeByIndex\n"));
     if (mt != NULL) { //nb to do what about nsresult ?
-        bcIMarshaler * m = call->GetMarshaler();    
-        PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade about to mt->Marshal\n"));                
+        bcIMarshaler * m = call->GetMarshaler();
+        PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade about to mt->Marshal\n"));
         mt->Marshal(m);
-        //delete m;
+        delete m;
     }
     delete mt;
     //pop caller eventQueue

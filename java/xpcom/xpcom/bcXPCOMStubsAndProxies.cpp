@@ -41,7 +41,7 @@ static  nsModuleComponentInfo components[] =
 
 NS_IMPL_NSGETMODULE("BlackConnect XPCOM stubs and proxies",components);
 
-NS_IMPL_ISUPPORTS(bcXPCOMStubsAndProxies,NS_GET_IID(bcXPCOMStubsAndProxies));
+NS_IMPL_THREADSAFE_ISUPPORTS(bcXPCOMStubsAndProxies,NS_GET_IID(bcXPCOMStubsAndProxies));
 
 
 
@@ -79,7 +79,7 @@ bcXPCOMStubsAndProxies::~bcXPCOMStubsAndProxies() {
 
 NS_IMETHODIMP bcXPCOMStubsAndProxies::GetStub(nsISupports *obj, bcIStub **stub) {
     if (!stub) {
-	return NS_ERROR_NULL_POINTER;
+        return NS_ERROR_NULL_POINTER;
     }
     *stub = new bcXPCOMStub(obj);
     return NS_OK;
