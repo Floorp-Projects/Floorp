@@ -2312,14 +2312,18 @@ needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
       return PR_TRUE;
     }
   }
-   
+
   cached_cx = cx;
   cached_wrapper = wrapper;
+
   return PR_FALSE;
 }
 
 
 // Window helper
+
+// static
+PRBool nsWindowSH::sDoSecurityCheckInAddProperty = PR_TRUE;
 
 nsresult
 nsWindowSH::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
@@ -2399,11 +2403,73 @@ NS_IMETHODIMP
 nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
 {
-  nsresult rv = NS_OK;
+  // The order in which things are done in this method are a bit
+  // whacky, that's because this method is *extremely* performace
+  // critical. Don't touch this unless you know what you're doing.
+
+  if (JSVAL_IS_NUMBER(id)) {
+    // If we're accessing a numeric property we'll treat that as if
+    // window.frames.n is accessed (since window.frames === window),
+    // if window.frames.n is a child frame, wrap the frame and return
+    // it without doing a security check.
+
+    nsCOMPtr<nsISupports> native;
+    wrapper->GetNative(getter_AddRefs(native));
+
+    nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(native));
+
+    nsCOMPtr<nsIDOMWindowCollection> frames;
+    win->GetFrames(getter_AddRefs(frames));
+
+    if (frames) {
+      nsCOMPtr<nsIDOMWindow> frame;
+      frames->Item(JSVAL_TO_INT(id), getter_AddRefs(frame));
+
+      if (frame) {
+        // A numeric property accessed and the numeric proerty is a
+        // child frame, wrap the child frame without doing a security
+        // check and return.
+
+        return WrapNative(cx, ::JS_GetGlobalObject(cx), frame,
+                          NS_GET_IID(nsIDOMWindow), vp);
+      }
+    }
+  }
 
   if (needsSecurityCheck(cx, wrapper)) {
-    rv = doCheckPropertyAccess(cx, obj, id, wrapper,
-                               nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+    // Even if we'd need to do a security check for access to "normal"
+    // properties on a window, we won't do a security check if we're
+    // accessing a child frame.
+
+    if (JSVAL_IS_STRING(id) && !JSVAL_IS_PRIMITIVE(*vp) &&
+        ::JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION) {
+      // A named property accessed which could have been resolved to a
+      // child frame in nsWindowSH::NewResolve() (*vp will tell us if
+      // that's the case). If *vp is a window object (i.e. a child
+      // frame), return without doing a security check.
+
+      nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+      sXPConnect->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*vp),
+                                             getter_AddRefs(wrapper));
+
+      if (wrapper) {
+        nsCOMPtr<nsISupports> native;
+        wrapper->GetNative(getter_AddRefs(native));
+
+        nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(native));
+
+        if (window) {
+          // Yup, *vp is a window object, return early (*vp is already
+          // the window, so no need to wrap it again).
+
+          return NS_OK;
+        }
+      }
+    }
+
+    nsresult rv =
+      doCheckPropertyAccess(cx, obj, id, wrapper,
+                            nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 
     if (NS_FAILED(rv)) {
       // Security check failed. The security manager set a JS
@@ -2411,33 +2477,11 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       *_retval = PR_FALSE;
 
-      return NS_OK;
+      *vp = JSVAL_NULL;
     }
   }
 
-  if (JSVAL_IS_NUMBER(id)) {
-    nsCOMPtr<nsISupports> native;
-    wrapper->GetNative(getter_AddRefs(native));
-
-    nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(native));
-
-    nsCOMPtr<nsIDOMWindowCollection> frames;
-
-    win->GetFrames(getter_AddRefs(frames));
-
-    if (frames) {
-      nsCOMPtr<nsIDOMWindow> f;
-
-      frames->Item(JSVAL_TO_INT(id), getter_AddRefs(f));
-
-      if (f) {
-        rv = WrapNative(cx, ::JS_GetGlobalObject(cx), f,
-                        NS_GET_IID(nsIDOMWindow), vp);
-      }
-    }
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2494,6 +2538,12 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, jsval *vp,
                         PRBool *_retval)
 {
+  // If we're in a state where we're not supposed to do a security
+  // check, return early.
+  if (!sDoSecurityCheckInAddProperty) {
+    return NS_OK;
+  }
+
   nsresult rv = doCheckPropertyAccess(cx, obj, id, wrapper,
                                nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
 
@@ -3065,13 +3115,31 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // for again for this property name.
 
         jsval v;
-
         rv = WrapNative(cx, ::JS_GetGlobalObject(cx), child_win,
                         NS_GET_IID(nsIDOMWindowInternal), &v);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        if (!::JS_DefineUCProperty(cx, obj, chars, ::JS_GetStringLength(str),
-                                   v, nsnull, nsnull, 0)) {
+        // Script is accessing a child frame and this access can
+        // potentially come from a context from a different domain.
+        // ::JS_DefineUCProperty() will call
+        // nsWindowSH::AddProperty(), and that method will do a
+        // security check and that security check will fail since
+        // other domains can't add properties to a global object in
+        // this domain. Set the sDoSecurityCheckInAddProperty flag to
+        // false (and set it to true immediagtely when we're done) to
+        // tell nsWindowSH::AddProperty() that defining this new
+        // property is 'ok' in this case, even if the call comes from
+        // a different context.
+
+        sDoSecurityCheckInAddProperty = PR_FALSE;
+
+        PRBool ok = ::JS_DefineUCProperty(cx, obj, chars,
+                                          ::JS_GetStringLength(str), v, nsnull,
+                                          nsnull, 0);
+
+        sDoSecurityCheckInAddProperty = PR_TRUE;
+
+        if (!ok) {
           return NS_ERROR_FAILURE;
         }
 

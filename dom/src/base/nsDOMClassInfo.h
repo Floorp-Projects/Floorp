@@ -276,6 +276,8 @@ public:
   {
     return new nsWindowSH(aID);
   }
+
+  static PRBool sDoSecurityCheckInAddProperty;
 };
 
 
