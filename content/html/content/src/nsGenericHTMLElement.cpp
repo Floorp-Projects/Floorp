@@ -1150,45 +1150,57 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
         break;
 
       case NS_MOUSE_LEFT_CLICK:
-      case NS_KEY_PRESS:
       {
         if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
-
-          // both mouse and key events are input events, so this is ok.
           nsInputEvent* inputEvent = NS_STATIC_CAST(nsInputEvent*, aEvent);
-
-          nsKeyEvent * keyEvent;
-          if (aEvent->eventStructType == NS_KEY_EVENT) {
-            //Handle key commands from keys with char representation here, not on KeyDown
-            keyEvent = (nsKeyEvent *)aEvent;
+          nsAutoString target;
+          nsCOMPtr<nsIURI> baseURL;
+          GetBaseURL(*getter_AddRefs(baseURL));
+          GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
+          if (target.Length() == 0) {
+            GetBaseTarget(target);
+          }
+          if (inputEvent->isControl || inputEvent->isMeta ||
+              inputEvent->isAlt ||inputEvent->isShift) {
+            break;  // let the click go through so we can handle it in JS/XUL
           }
 
-          //Click or return key
-          if ((aEvent->message == NS_MOUSE_LEFT_CLICK) ||
-              (keyEvent->keyCode == NS_VK_RETURN)) {
-            nsAutoString target;
-            nsCOMPtr<nsIURI> baseURL;
-            GetBaseURL(*getter_AddRefs(baseURL));
-            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
-            if (target.Length() == 0) {
-              GetBaseTarget(target);
-            }
-            if (inputEvent->isControl || inputEvent->isMeta ||
-                inputEvent->isAlt ||inputEvent->isShift) {
-              break;  // let the click go through so we can handle it in JS/XUL
-            }
+          ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href,
+                            target, PR_TRUE);
 
-            ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href,
-                              target, PR_TRUE);
-
-            *aEventStatus = nsEventStatus_eConsumeDoDefault;
-          }
+          *aEventStatus = nsEventStatus_eConsumeDoDefault;
         }
       }
       break;
 
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
-        // XXX Bring up a contextual menu provided by the application
+      case NS_KEY_PRESS:
+        if (aEvent->eventStructType == NS_KEY_EVENT) {
+          nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aEvent);
+          if (keyEvent->keyCode == NS_VK_RETURN) {
+            nsMouseEvent event;
+            nsEventStatus status = nsEventStatus_eIgnore;
+            nsCOMPtr<nsIContent> mouseContent;
+
+            //fire click
+            event.message = NS_MOUSE_LEFT_CLICK;
+            event.eventStructType = NS_MOUSE_EVENT;
+            nsGUIEvent* guiEvent = NS_STATIC_CAST(nsGUIEvent*, aEvent);
+            event.widget = guiEvent->widget;
+            event.point = aEvent->point;
+            event.refPoint = aEvent->refPoint;
+            event.clickCount = 1;
+            event.isShift = keyEvent->isShift;
+            event.isControl = keyEvent->isControl;
+            event.isAlt = keyEvent->isAlt;
+            event.isMeta = keyEvent->isMeta;
+
+            nsCOMPtr<nsIPresShell> presShell;
+            aPresContext->GetShell(getter_AddRefs(presShell));
+            if (presShell) {
+              ret = presShell->HandleDOMEventWithTarget(this, &event, &status);
+            }
+          }
+        }
         break;
 
       case NS_MOUSE_ENTER_SYNTH:
@@ -1294,39 +1306,7 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
   }
   else {
     // Check for event handlers
-    if (nsLayoutAtoms::onclick == aAttribute ||
-        nsLayoutAtoms::ondblclick == aAttribute ||
-        nsLayoutAtoms::onmousedown == aAttribute ||
-        nsLayoutAtoms::onmouseup == aAttribute ||
-        nsLayoutAtoms::onmouseover == aAttribute ||
-        nsLayoutAtoms::onmouseout == aAttribute ||
-        nsLayoutAtoms::onkeydown == aAttribute ||
-        nsLayoutAtoms::onkeyup == aAttribute ||
-        nsLayoutAtoms::onkeypress == aAttribute ||
-        nsLayoutAtoms::onmousemove == aAttribute ||
-        nsLayoutAtoms::onload == aAttribute ||
-        nsLayoutAtoms::onunload == aAttribute ||
-        nsLayoutAtoms::onabort == aAttribute ||
-        nsLayoutAtoms::onerror == aAttribute ||
-        nsLayoutAtoms::onfocus == aAttribute ||
-        nsLayoutAtoms::onblur == aAttribute ||
-        nsLayoutAtoms::onsubmit == aAttribute ||
-        nsLayoutAtoms::onreset == aAttribute ||
-        nsLayoutAtoms::onchange == aAttribute ||
-        nsLayoutAtoms::onselect == aAttribute || 
-        nsLayoutAtoms::onpaint == aAttribute ||
-        nsLayoutAtoms::onresize == aAttribute ||
-        nsLayoutAtoms::onscroll == aAttribute ||
-        nsLayoutAtoms::oninput == aAttribute ||
-        nsLayoutAtoms::oncontextmenu == aAttribute || 
-        nsLayoutAtoms::onDOMAttrModified == aAttribute ||
-        nsLayoutAtoms::onDOMCharacterDataModified == aAttribute || 
-        nsLayoutAtoms::onDOMSubtreeModified == aAttribute ||
-        nsLayoutAtoms::onDOMNodeInsertedIntoDocument == aAttribute || 
-        nsLayoutAtoms::onDOMNodeRemovedFromDocument == aAttribute ||
-        nsLayoutAtoms::onDOMNodeInserted  == aAttribute || 
-        nsLayoutAtoms::onDOMNodeRemoved == aAttribute
-        ) {
+    if (IsEventName(aAttribute)) {
       AddScriptEventListener(aAttribute, aValue);
     }
   }
@@ -1450,6 +1430,43 @@ nsGenericHTMLElement::SetAttribute(nsINodeInfo* aNodeInfo,
 
   return NS_STATIC_CAST(nsIContent *, this)->SetAttribute(nsid, atom, aValue,
                                                           aNotify);
+}
+
+PRBool nsGenericHTMLElement::IsEventName(nsIAtom* aName)
+{
+  return (nsLayoutAtoms::onclick == aName ||
+    nsLayoutAtoms::ondblclick == aName ||
+    nsLayoutAtoms::onmousedown == aName ||
+    nsLayoutAtoms::onmouseup == aName ||
+    nsLayoutAtoms::onmouseover == aName ||
+    nsLayoutAtoms::onmouseout == aName ||
+    nsLayoutAtoms::onkeydown == aName ||
+    nsLayoutAtoms::onkeyup == aName ||
+    nsLayoutAtoms::onkeypress == aName ||
+    nsLayoutAtoms::onmousemove == aName ||
+    nsLayoutAtoms::onload == aName ||
+    nsLayoutAtoms::onunload == aName ||
+    nsLayoutAtoms::onabort == aName ||
+    nsLayoutAtoms::onerror == aName ||
+    nsLayoutAtoms::onfocus == aName ||
+    nsLayoutAtoms::onblur == aName ||
+    nsLayoutAtoms::onsubmit == aName ||
+    nsLayoutAtoms::onreset == aName ||
+    nsLayoutAtoms::onchange == aName ||
+    nsLayoutAtoms::onselect == aName || 
+    nsLayoutAtoms::onpaint == aName ||
+    nsLayoutAtoms::onresize == aName ||
+    nsLayoutAtoms::onscroll == aName ||
+    nsLayoutAtoms::oninput == aName ||
+    nsLayoutAtoms::oncontextmenu == aName || 
+    nsLayoutAtoms::onDOMAttrModified == aName ||
+    nsLayoutAtoms::onDOMCharacterDataModified == aName || 
+    nsLayoutAtoms::onDOMSubtreeModified == aName ||
+    nsLayoutAtoms::onDOMNodeInsertedIntoDocument == aName || 
+    nsLayoutAtoms::onDOMNodeRemovedFromDocument == aName ||
+    nsLayoutAtoms::onDOMNodeInserted  == aName || 
+    nsLayoutAtoms::onDOMNodeRemoved == aName
+    );
 }
 
 static PRInt32 GetStyleImpactFrom(const nsHTMLValue& aValue)
@@ -1579,6 +1596,16 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
       (kNameSpaceID_None != aNameSpaceID) &&
       (kNameSpaceID_Unknown != aNameSpaceID)) {
     return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  // Check for event handlers
+  if (IsEventName(aAttribute)) {
+    nsCOMPtr<nsIEventListenerManager> manager;
+    GetListenerManager(getter_AddRefs(manager));
+
+    if (manager) {
+      result = manager->RemoveScriptEventListener(aAttribute);
+    }
   }
 
   nsCOMPtr<nsIHTMLStyleSheet> sheet;

@@ -106,6 +106,7 @@ public:
                                           nsIAtom *aName, 
                                           const nsAReadableString& aFunc, 
                                           PRBool aDeferCompilation); 
+  virtual nsresult RemoveScriptEventListener(nsIAtom *aName);
   virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext, 
                                                nsIScriptObjectOwner *aScriptObjectOwner, 
                                                nsIAtom* aName);

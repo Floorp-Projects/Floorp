@@ -355,6 +355,8 @@ protected:
                                  void** aScriptObject);
   PRBool GetPluginProperty(JSContext *aContext, JSObject *aObj, jsval aID,
                            jsval *aVp);
+
+  PRBool IsEventName(nsIAtom* aName);
 };
 
 //----------------------------------------------------------------------

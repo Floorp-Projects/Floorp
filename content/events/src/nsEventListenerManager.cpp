@@ -499,7 +499,7 @@ nsresult nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListe
     if (content) {
       content->GetDocument(*getter_AddRefs(document));
       if (document) {
-        //Deccrement capturers by 1
+        //Decrement capturers by 1
         document->EventCaptureRegistration(-1);
       }
     }
@@ -869,9 +869,37 @@ nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
 }
 
 nsresult
+nsEventListenerManager::RemoveScriptEventListener(nsIAtom *aName)
+{
+  nsresult result = NS_OK;
+  nsListenerStruct *ls;
+  PRInt32 flags;
+  EventArrayType arrayType;
+
+  NS_ENSURE_SUCCESS(GetIdentifiersForType(aName, &arrayType, &flags), NS_ERROR_FAILURE);
+  ls = FindJSEventListener(arrayType);
+
+  if (ls) {
+    ls->mSubType &= ~flags;
+    if (ls->mSubType == NS_EVENT_BITS_NONE) {
+      NS_RELEASE(ls->mListener);
+
+      //Get the listeners array so we can remove ourselves from it
+      nsVoidArray* listeners;
+      listeners = GetListenersByType(arrayType, nsnull, PR_FALSE);
+      NS_ENSURE_TRUE(listeners, NS_ERROR_FAILURE);
+      listeners->RemoveElement((void*)ls);
+      PR_DELETE(ls);
+    }
+  }
+
+  return result;
+}
+
+nsresult
 nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext, 
-                                                             nsIScriptObjectOwner *aScriptObjectOwner, 
-                                                             nsIAtom *aName)
+                                                    nsIScriptObjectOwner *aScriptObjectOwner, 
+                                                    nsIAtom *aName)
 {
   // Check that we have access to set an event listener. Prevents snooping attacks across 
   // domains by setting onkeypress handlers, for instance.
@@ -2090,9 +2118,9 @@ nsresult nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
                                              nsIDOMEvent** aDOMEvent)
 {
   nsAutoString str(aEventType);
-  if (!aEvent && !str.EqualsIgnoreCase("MouseEvent") && !str.EqualsIgnoreCase("KeyEvent") &&
-      !str.EqualsIgnoreCase("HTMLEvent") && !str.EqualsIgnoreCase("MutationEvents") &&
-      !str.EqualsIgnoreCase("Event")) {
+  if (!aEvent && !str.EqualsIgnoreCase("MouseEvents") && !str.EqualsIgnoreCase("KeyEvents") &&
+      !str.EqualsIgnoreCase("HTMLEvents") && !str.EqualsIgnoreCase("MutationEvents") &&
+      !str.EqualsIgnoreCase("Events")) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 

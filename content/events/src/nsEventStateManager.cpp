@@ -2681,8 +2681,14 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
                     if (childArea.get() == mCurrentFocus) {
                       nsAutoString tabIndexStr;
                       childArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
-                      PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
-                      if (NS_OK == ec && mCurrentTabIndex == val) {
+                      PRInt32 val = 0;
+                      if (!tabIndexStr.IsEmpty()) {
+                        PRInt32 ec, tabIndexVal = tabIndexStr.ToInteger(&ec);
+                        if (NS_SUCCEEDED(ec)) {
+                          val = tabIndexVal;
+                        }
+                      }
+                      if (mCurrentTabIndex == val) {
                         //mCurrentFocus is in this map so we must start iterating past it.
                         //We skip the case where mCurrentFocus has the same tab index
                         //as mCurrentTabIndex since the next tab ordered element might
@@ -2700,8 +2706,14 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
                     //Got the map area, check its tabindex.
                     nsAutoString tabIndexStr;
                     childArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
-                    PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
-                    if (NS_OK == ec && mCurrentTabIndex == val) {
+                    PRInt32 val = 0;
+                    if (!tabIndexStr.IsEmpty()) {
+                      PRInt32 ec, tabIndexVal = tabIndexStr.ToInteger(&ec);
+                      if (NS_SUCCEEDED(ec)) {
+                        val = tabIndexVal;
+                      }
+                    }
+                    if (mCurrentTabIndex == val) {
                       //tabindex == the current one, use it.
                       *aResult = childArea;
                       NS_IF_ADDREF(*aResult);
