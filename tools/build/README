@@ -15,3 +15,8 @@ Table of Contents
    Typical usage for mozilla prereq building:
       gnome-tip-nightly gtk+ /builds/gnome /usr/local --with-threads=posix
       gnome-tip-nightly glib /builds/gnome /usr/local --with-threads=posix
+
+* check-modules.pl
+  A perl script to check the modules file for duplicates and syntax errors.
+  Usage: check-modules.pl CVSROOT/modules
+         check-modules.pl -v CVSROOT/modules (verbose: Print the modules out)
