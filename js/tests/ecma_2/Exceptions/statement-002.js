@@ -50,9 +50,7 @@
     var expect = "Passed";
 
     try {
-        for ( var i, p in this) {
-            result += this[p];
-        }
+        eval(" for ( var i, p in this) { result += this[p]; }");
     } catch ( e ) {
         result = expect;
         exception = e.toString();
