@@ -1802,47 +1802,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
   nsresult  rv;
   nsIURI    *url;
   PRBool isJavaEnabled = PR_TRUE;
-  nsCOMPtr<nsIPluginTagInfo2> pti2 = nsnull;
-  nsPluginTagType tagType;
 
 #ifdef NS_DEBUG
   printf("InstantiateFullPagePlugin for %s\n",aMimeType);
 #endif
-  rv = aOwner->QueryInterface(kIPluginTagInfo2IID, getter_AddRefs(pti2));
-  
-  if(rv != NS_OK) {
-    return rv;
-  }
-  
-  rv = pti2->GetTagType(&tagType);
-  
-  if((rv != NS_OK) || !((tagType == nsPluginTagType_Embed)
-                        || (tagType == nsPluginTagType_Applet)
-                        || (tagType == nsPluginTagType_Object)))
-    {
-      return rv;
-    }
-  
-  if (tagType == nsPluginTagType_Applet) {
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-    // see if java is enabled
-    if (prefs) {
-      rv = prefs->GetBoolPref("security.enable_java", &isJavaEnabled);
-      if (NS_SUCCEEDED(rv)) {
-        // if not, don't show this plugin
-        if (!isJavaEnabled) {
-          return NS_ERROR_FAILURE;
-        }
-      }
-      else {
-        // if we were unable to get the pref, assume java is enabled
-        // and rely on the "find the plugin or not" logic.
-        
-        // make sure the value wasn't modified in GetBoolPref
-        isJavaEnabled = PR_TRUE;
-      }
-    }
-  }
   
   //create a URL so that the instantiator can do file ext.
   //based plugin lookups...
