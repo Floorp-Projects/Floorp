@@ -279,13 +279,13 @@ namespace ICG {
     void ICodeGenerator::setLabel(Label *l)
     {
         l->mBase = iCode;
-        l->mOffset = static_cast<int32>(iCode->size());
+        l->mOffset = iCode->size();
     }
 
     void ICodeGenerator::setLabel(InstructionStream *stream, Label *l)
     {
         l->mBase = stream;
-        l->mOffset = static_cast<int32>(stream->size());
+        l->mOffset = stream->size();
     }
 
     /********************************************************************/
