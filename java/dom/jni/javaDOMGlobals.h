@@ -62,6 +62,22 @@ class JavaDOMGlobals {
   static jfieldID nodeTypeProcessingInstructionFID;
   static jfieldID nodeTypeTextFID;
 
+  static jclass domExceptionClass;
+  static jmethodID domExceptionInitMID;
+  static jclass runtimeExceptionClass;
+  static jmethodID runtimeExceptionInitMID;
+  static jshort exceptionCodeIndexSize;
+  static jshort exceptionCodeDomStringSize;
+  static jshort exceptionCodeHierarchyRequest;
+  static jshort exceptionCodeWrongDocument;
+  static jshort exceptionCodeInvalidCharacter;
+  static jshort exceptionCodeNoDataAllowed;
+  static jshort exceptionCodeNoModificationAllowed;
+  static jshort exceptionCodeNotFound;
+  static jshort exceptionCodeNotSupported;
+  static jshort exceptionCodeInuseAttribute;
+  static const char* const exceptionMessage[];
+  
   static PRLogModuleInfo* log;
   static PRCList garbage;
   static PRLock* garbageLock;
@@ -73,6 +89,11 @@ class JavaDOMGlobals {
 
   static void AddToGarbage(nsISupports* domObject);
   static void TakeOutGarbage();
-};
 
+  static void ThrowDOMException(JNIEnv *env,
+                                jshort code);
+  static void ThrowException(JNIEnv *env,
+                             const char * message);
+};
+  
 #endif /* __JavaDOMGlobals_h__ */
