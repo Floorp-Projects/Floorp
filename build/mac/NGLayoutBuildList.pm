@@ -334,7 +334,7 @@ sub BuildClientDist()
 
 	#LOCALE
 	_InstallFromManifest(":mozilla:intl:locale:public:MANIFEST",						"$distdirectory:locale:");
-	_InstallFromManifest(":mozilla:intl:locale:public:MANIFEST_IDL",			"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:intl:locale:idl:MANIFEST_IDL",			"$distdirectory:idl:");
 
 	#LWBRK
 	_InstallFromManifest(":mozilla:intl:lwbrk:public:MANIFEST",						"$distdirectory:lwbrk:");
