@@ -76,6 +76,7 @@ function Startup()
 
   dialog.ColorInput.value = "";
   var tmpColor;
+  var haveTableRadio = false;
 
   switch (ColorType)
   {
@@ -95,15 +96,18 @@ function Startup()
     case "TableOrCell":
       TableOrCell = true;
       document.getElementById("TableOrCellGroup").setAttribute("collapsed", "false");
+      haveTableRadio = true;
       if (gColorObj.TableColor)
       {
         color = gColorObj.TableColor;
         dialog.TableRadio.checked = true;
+        dialog.TableRadio.focus();
       }
       else 
       {
         color = gColorObj.CellColor;
         dialog.CellRadio.checked = true;
+        dialog.CellRadio.focus();
       }
       break;
     default:
@@ -115,7 +119,8 @@ function Startup()
       break;
   }
 
-  SetCurrentColor(color)
+  // Set initial color in input field and in the colorpicker
+  dialog.ColorPicker.color = color;
 
   // Use last-picked colors passed in, or those persistent on dialog
   if (TextType)
@@ -151,7 +156,9 @@ function Startup()
     document.getElementById("DefaultColorButton").setAttribute("collapsed","true");
   }
 
-  SetTextboxFocus(dialog.ColorInput);
+  // Set focus to colorpicker if not set to table radio buttons above
+  if (!haveTableRadio)
+    dialog.ColorPicker.focus();
 
   SetWindowLocation();
 }
