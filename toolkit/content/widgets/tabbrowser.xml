@@ -519,6 +519,7 @@
         <parameter name="evt"/>
         <body>
           <![CDATA[
+            
             evt.preventBubble();
           ]]> 
         </body>
@@ -1154,7 +1155,6 @@
 
       <constructor>
         <![CDATA[
-        this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
         this.mCurrentBrowser = this.mPanelContainer.firstChild;
         this.mCurrentTab = this.mTabContainer.firstChild;
         this.mTabBox.setAttribute("handleCtrlTab", "false");
