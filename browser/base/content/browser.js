@@ -3227,8 +3227,11 @@ nsBrowserContentListener.prototype =
 }
 
 function toggleSidebar(aCommandID) {
-  var elt = document.getElementById(aCommandID);
   var sidebarBox = document.getElementById("sidebar-box");
+  if (!aCommandID)
+    aCommandID = sidebarBox.getAttribute("sidebarcommand");
+
+  var elt = document.getElementById(aCommandID);
   var sidebar = document.getElementById("sidebar");
   var sidebarTitle = document.getElementById("sidebar-title");
   var sidebarSplitter = document.getElementById("sidebar-splitter");
