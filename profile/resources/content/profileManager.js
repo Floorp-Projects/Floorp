@@ -57,7 +57,7 @@ function RenameProfile()
   }
   else {
     var selected = profileTree.selectedItems[0];
-    if( selected.getAttribute("rowMigrate") == "no" ) {
+    if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
       // migrate if the user wants to
       var lString = bundle.GetStringFromName("migratebeforerename");
       lString = lString.replace(/\s*<html:br\/>/g,"\n");
@@ -85,7 +85,7 @@ function RenameProfile()
         }
       }
         
-      var migrate = selected.getAttribute("rowMigrate");
+      var migrate = selected.firstChild.firstChild.getAttribute("rowMigrate");
       dump("*** oldName = "+ oldName+ ", newName = "+ newName+ ", migrate = "+ migrate+ "\n");
       try {
         profile.renameProfile(oldName, newName);
@@ -122,7 +122,7 @@ function ConfirmDelete()
   var selected = profileTree.selectedItems[0];
   var name = selected.getAttribute("rowName");
 
-  if( selected.getAttribute("rowMigrate") == "no" ) {
+  if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
       // auto migrate if the user wants to. THIS IS REALLY REALLY DUMB PLEASE FIX THE BACK END.
     var lString = bundle.GetStringFromName("migratebeforedelete");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");

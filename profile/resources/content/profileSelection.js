@@ -139,7 +139,7 @@ function onStart()
   var selected = profileTree.selectedItems[0];
     
   var profilename = selected.getAttribute("profile_name");
-  if( selected.getAttribute("rowMigrate") == "no" ) {
+  if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
     var lString = bundle.GetStringFromName("migratebeforestart");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
     if( confirm( lString ) ) 
