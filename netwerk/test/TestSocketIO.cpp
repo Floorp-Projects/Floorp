@@ -36,11 +36,13 @@
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
+#define NETLIB_DLL  "netwerk.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
 #define XPCOM_DLL  "libxpcom.so"
+#define NETLIB_DLL  "libnetwerk.so"
 #endif
 #endif
 
@@ -210,6 +212,8 @@ main(int argc, char* argv[])
   // XXX why do I have to do this?!
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kSocketTransportServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+
   rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                         "components");
   if (NS_FAILED(rv)) return rv;
@@ -241,6 +245,23 @@ main(int argc, char* argv[])
   // Create the socket transport...
   nsITransport* transport;
   rv = sts->CreateTransport(hostName, port, &transport);
+
+// This stuff is used to test the output stream
+#if 0
+  nsIOutputStream* outStr = nsnull;
+  rv = transport->OpenOutputStream(&outStr);
+
+  if (NS_SUCCEEDED(rv)) {
+    PRUint32 bytes;
+    rv = outStr->Write("test", 4, &bytes);
+
+
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  rv = outStr->Close();
+#else
+
   if (NS_SUCCEEDED(rv)) {
     TestWriteObserver* observer = new TestWriteObserver(transport);
 
@@ -249,10 +270,13 @@ main(int argc, char* argv[])
 
     NS_RELEASE(transport);
   }
+#endif
+
+  if (NS_FAILED(rv)) return rv;
 
   // Enter the message pump to allow the URL load to proceed.
   while ( gKeepRunning ) {
-#ifdef XP_PC
+#ifdef WIN32
     MSG msg;
 
     if (GetMessage(&msg, NULL, 0, 0)) {
@@ -264,6 +288,7 @@ main(int argc, char* argv[])
 #endif
   }
 
+
   PRTime endTime;
   endTime = PR_Now();
   printf("Elapsed time: %ld\n", (PRInt32)(endTime/1000UL-gElapsedTime/1000UL));
@@ -274,4 +299,3 @@ main(int argc, char* argv[])
 
   return 0;
 }
-
