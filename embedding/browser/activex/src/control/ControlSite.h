@@ -61,6 +61,21 @@
     COM_INTERFACE_ENTRY(IBindStatusCallback) \
     COM_INTERFACE_ENTRY(IWindowForBindingUI)
 
+
+// Class that defines the control's security policy with regards to
+// what controls it hosts etc.
+
+class CControlSiteSecurityPolicy
+{
+public:
+    // Test if the class is safe to host
+    virtual BOOL IsClassSafeToHost(const CLSID & clsid) = 0;
+    // Test if the specified class is marked safe for scripting
+    virtual BOOL IsClassMarkedSafeForScripting(const CLSID & clsid, BOOL &bClassExists) = 0;
+    // Test if the instantiated object is safe for scripting on the specified interface
+    virtual BOOL IsObjectSafeForScripting(IUnknown *pObject, const IID &iid) = 0;
+};
+
 //
 // Class for hosting an ActiveX control
 //
@@ -85,6 +100,7 @@
 //   pSite = NULL;
 
 class CControlSite :    public CComObjectRootEx<CComSingleThreadModel>,
+                        public CControlSiteSecurityPolicy,
                         public IOleClientSite,
                         public IOleInPlaceSiteWindowless,
                         public IOleControlSite,
@@ -135,9 +151,13 @@ protected:
     // Pointer to object's IOleInPlaceObjectWindowless interface
     CComQIPtr<IOleInPlaceObjectWindowless, &IID_IOleInPlaceObjectWindowless> m_spIOleInPlaceObjectWindowless;
     // CLSID of the control
-    CLSID m_clsid;
+    CLSID m_CLSID;
     // Parameter list
     PropertyList m_ParameterList;
+    // Default security policy
+    CControlSiteSecurityPolicy *m_pDefaultSecurityPolicy;
+    // Pointer to the security policy
+    CControlSiteSecurityPolicy *m_pSecurityPolicy;
 
 // Binding variables
     // Flag indicating whether binding is in progress
@@ -196,9 +216,6 @@ END_OLECOMMAND_TABLE()
     // List of controls
     static std::list<CControlSite *> m_cControlList;
 
-    // Helper method
-    static HRESULT ClassImplementsCategory(const CLSID &clsid, const CATID &catid);
-
     // Returns the window used when processing ole commands
     HWND GetCommandTargetWindow()
     {
@@ -234,6 +251,16 @@ END_OLECOMMAND_TABLE()
     {
         m_spContainer = pContainer;
     }
+    // Set the security policy object. Ownership of this object remains with the caller and the security
+    // policy object is meant to exist for as long as it is set here.
+    virtual void SetSecurityPolicy(CControlSiteSecurityPolicy *pSecurityPolicy)
+    {
+        m_pSecurityPolicy = pSecurityPolicy;
+    }
+    virtual CControlSiteSecurityPolicy *GetSecurityPolicy() const
+    {
+        return m_pSecurityPolicy;
+    }
 
 // Methods to set ambient properties
     virtual void SetAmbientUserMode(BOOL bUser);
@@ -242,7 +269,7 @@ END_OLECOMMAND_TABLE()
     // Returns the object's CLSID
     virtual const CLSID &GetObjectCLSID() const
     {
-        return m_clsid;
+        return m_CLSID;
     }
     // Tests if the object is valid or not
     virtual BOOL IsObjectValid() const
@@ -259,6 +286,16 @@ END_OLECOMMAND_TABLE()
     {
         return m_bInPlaceActive;
     }
+
+// CControlSiteSecurityPolicy
+    // Test if the class is safe to host
+    virtual BOOL IsClassSafeToHost(const CLSID & clsid);
+    // Test if the specified class is marked safe for scripting
+    virtual BOOL IsClassMarkedSafeForScripting(const CLSID & clsid, BOOL &bClassExists);
+    // Test if the instantiated object is safe for scripting on the specified interface
+    virtual BOOL IsObjectSafeForScripting(IUnknown *pObject, const IID &iid);
+    // Test if the instantiated object is safe for scripting on the specified interface
+    virtual BOOL IsObjectSafeForScripting(const IID &iid);
 
 // IServiceProvider
     virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void** ppv);

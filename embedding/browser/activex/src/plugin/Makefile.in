@@ -119,7 +119,6 @@ CPPSRCS = \
     StdAfx.cpp             \
     LegacyPlugin.cpp       \
     MozActiveX.cpp         \
-    PrefObserver.cpp       \
     npwin.cpp              \
     $(_CONTROL_CPPSRCS)    \
     $(NULL)
@@ -131,6 +130,10 @@ endif
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 CPPSRCS += LiveConnect.cpp
 CSRCS += javastubs.c
+endif
+
+ifdef XPC_IDISPATCH_SUPPORT
+CPPSRCS += PrefObserver.cpp
 endif
 
 LOCAL_INCLUDES = -I$(MOZCTLSRC)
@@ -198,6 +201,9 @@ install-class: MozAxPlugin.class
 install-typelib: $(XPIDL_GEN_DIR)/nsIMozAxPlugin.xpt
 	$(INSTALL) $< $(DIST)/bin/plugins
 
+install-securitypolicy: nsAxSecurityPolicy.js
+	$(INSTALL) $< $(DIST)/bin/components
+
 libs:: install-plugin
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
@@ -206,6 +212,10 @@ endif
 
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 libs:: install-typelib
+endif
+
+ifdef XPC_IDISPATCH_SUPPORT
+libs:: install-securitypolicy
 endif
 
 ## Note: Ensure you create the redist dir containing the correct runtime dlls

@@ -64,9 +64,6 @@
 
 #include "nsIScriptEventManager.h"
 #include "jsapi.h"
-#ifdef XPC_IDISPATCH_SUPPORT
-#include "nsIDispatchSupport.h"
-#endif
 
 #include "LegacyPlugin.h"
 #include "XPConnect.h"
@@ -82,13 +79,13 @@ nsScriptablePeer::nsScriptablePeer() :
 {
     NS_INIT_ISUPPORTS();
     NS_ASSERTION(mTearOff, "can't create tearoff");
-    xpc_AddRef();
+    MozAxPlugin::AddRef();
 }
 
 nsScriptablePeer::~nsScriptablePeer()
 {
     delete mTearOff;
-    xpc_Release();
+    MozAxPlugin::Release();
 }
 
 NS_IMPL_ADDREF(nsScriptablePeer)
@@ -760,10 +757,6 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
 
     nsDependentString eventName(bstrName.m_str);
 
-    nsresult rv;
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    nsCOMPtr<nsIDOMNodeList> scriptElements;
-
     // Fire the script event handler...
     nsCOMPtr<nsIDOMWindow> window;
     NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMWindow, (void *)&window);
@@ -920,20 +913,28 @@ HRESULT STDMETHODCALLTYPE nsScriptablePeerTearOff::Invoke(DISPID dispIdMember, R
 
 static PRUint32 gInstances = 0;
 
-void xpc_AddRef()
+void MozAxPlugin::AddRef()
 {
     if (gInstances == 0)
-      XPCOMGlueStartup(nsnull);
+    {
+        XPCOMGlueStartup(nsnull);
+        MozAxPlugin::PrefGetHostingFlags(); // Initial call to set it up
+    }
     gInstances++;
 }
 
-void xpc_Release()
+void MozAxPlugin::Release()
 {
     if (--gInstances == 0)
-      XPCOMGlueShutdown();
+    {
+#ifdef XPC_IDISPATCH_SUPPORT
+        MozAxPlugin::ReleasePrefObserver();
+#endif
+        XPCOMGlueShutdown();
+    }
 }
 
-CLSID xpc_GetCLSIDForType(const char *mimeType)
+CLSID MozAxPlugin::GetCLSIDForType(const char *mimeType)
 {
     if (mimeType == NULL)
     {
@@ -954,7 +955,7 @@ CLSID xpc_GetCLSIDForType(const char *mimeType)
 	        ULONG nCount = (sizeof(szGUID) / sizeof(szGUID[0])) - 1;
 
             GUID guidValue = GUID_NULL;
-            if (keyMimeType.QueryValue(_T("CLSID"), szGUID, &nCount) == ERROR_SUCCESS &&
+            if (keyMimeType.QueryValue(szGUID, _T("CLSID"), &nCount) == ERROR_SUCCESS &&
                 SUCCEEDED(::CLSIDFromString(T2OLE(szGUID), &guidValue)))
             {
                 return guidValue;
@@ -966,20 +967,16 @@ CLSID xpc_GetCLSIDForType(const char *mimeType)
 
 
 nsScriptablePeer *
-xpc_GetPeerForCLSID(const CLSID &clsid)
+MozAxPlugin::GetPeerForCLSID(const CLSID &clsid)
 {
-#ifdef XPC_IDISPATCH_SUPPORT
     return new nsScriptablePeer();
-#else
-    return new nsScriptablePeer();
-#endif
 }
 
 void
-xpc_GetIIDForCLSID(const CLSID &clsid, nsIID &iid)
+MozAxPlugin::GetIIDForCLSID(const CLSID &clsid, nsIID &iid)
 {
 #ifdef XPC_IDISPATCH_SUPPORT
-    memcpy(&iid, &_uuidof(IDispatch), sizeof(iid));
+    memcpy(&iid, &__uuidof(IDispatch), sizeof(iid));
 #else
     iid = NS_GET_IID(nsIMozAxPlugin);
 #endif
@@ -987,7 +984,7 @@ xpc_GetIIDForCLSID(const CLSID &clsid, nsIID &iid)
 
 // Called by NPP_GetValue to provide the scripting values
 NPError
-xpc_GetValue(NPP instance, NPPVariable variable, void *value)
+MozAxPlugin::GetValue(NPP instance, NPPVariable variable, void *value)
 {
     if (instance == NULL)
     {
@@ -1002,6 +999,55 @@ xpc_GetValue(NPP instance, NPPVariable variable, void *value)
         return NPERR_GENERIC_ERROR;
     }
 
+    // Test if the object is allowed to be scripted
+
+#ifdef XPC_IDISPATCH_SUPPORT
+    PRUint32 hostingFlags = MozAxPlugin::PrefGetHostingFlags();
+    if (hostingFlags & nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS &&
+        !(hostingFlags & nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_ALL_OBJECTS))
+    {
+        // Ensure the object is safe for scripting on the specified interface
+        nsCOMPtr<nsIDispatchSupport> dispSupport = do_GetService(NS_IDISPATCH_SUPPORT_CONTRACTID);
+        if (!dispSupport) return NPERR_GENERIC_ERROR;
+        
+        PRBool isScriptable = PR_FALSE;
+
+        // Test if the object says its safe for scripting on IDispatch
+        nsIID iid;
+        memcpy(&iid, &__uuidof(IDispatch), sizeof(iid));
+        CComPtr<IUnknown> controlUnk;
+        pData->pControlSite->GetControlUnknown(&controlUnk);
+        dispSupport->IsObjectSafeForScripting(reinterpret_cast<void *>(controlUnk.p), iid, &isScriptable);
+
+        // Test if the class id says safe for scripting
+        if (!isScriptable)
+        {
+            PRBool classExists = PR_FALSE;
+            nsCID cid;
+            memcpy(&iid, &pData->clsid, sizeof(cid));
+            dispSupport->IsClassMarkedSafeForScripting(cid, &classExists, &isScriptable);
+        }
+        if (!isScriptable)
+        {
+            return NPERR_GENERIC_ERROR;
+        }
+    }
+    else if (hostingFlags & nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_ALL_OBJECTS)
+    {
+        // Drop through since all objects are scriptable
+    }
+    else
+    {
+        return NPERR_GENERIC_ERROR;
+    }
+#else
+    // Object *must* be safe
+    if (!pData->pControlSite->IsObjectSafeForScripting(__uuidof(IDispatch)))
+    {
+        return NPERR_GENERIC_ERROR;
+    }
+#endif
+
     // Happy happy fun fun - redefine some NPPVariable values that we might
     // be asked for but not defined by every PluginSDK 
 
@@ -1012,7 +1058,7 @@ xpc_GetValue(NPP instance, NPPVariable variable, void *value)
     {
         if (!pData->pScriptingPeer)
         {
-            nsScriptablePeer *peer  = xpc_GetPeerForCLSID(pData->clsid);
+            nsScriptablePeer *peer = MozAxPlugin::GetPeerForCLSID(pData->clsid);
             if (peer)
             {
                 peer->AddRef();
@@ -1030,7 +1076,7 @@ xpc_GetValue(NPP instance, NPPVariable variable, void *value)
     else if (variable == kVarScriptableIID)
     {
         nsIID *piid = (nsIID *) NPN_MemAlloc(sizeof(nsIID));
-        xpc_GetIIDForCLSID(pData->clsid, *piid);
+        GetIIDForCLSID(pData->clsid, *piid);
         *((nsIID **) value) = piid;
         return NPERR_NO_ERROR;
     }

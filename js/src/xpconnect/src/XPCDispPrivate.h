@@ -1005,13 +1005,14 @@ public:
      * Instantiates a COM object given a class ID or a prog ID
      * @param className a prog ID or a class ID in the form of 
      * {00000000-0000-0000-0000-000000000000}
-     * @param testScriptability if true, this tests the objects for scripting
-     * this tests the category and the IObjectSafety interface
+     * @param enforceSecurity if true, will apply checks to ensure
+     *                        the object can be created giving the current
+     *                        security settings.
      * @param result pointer to the pointer to receive the interface pointer
      */
     static
     HRESULT COMCreateInstance(BSTR className, 
-                               PRBool testScriptability, IDispatch ** result);
+                               PRBool enforceSecurity, IDispatch ** result);
     /**
      * Wraps an IDispatch interface, returning the object as a jsval
      * @param pDispatch IDispatch pointer

@@ -734,7 +734,7 @@ public:
         mBrowser(NULL),
         mData(NULL)
     {
-        xpc_AddRef();
+        MozAxPlugin::AddRef();
     }
 
     HRESULT Init(PluginInstanceData *pData)
@@ -799,7 +799,7 @@ public:
         {
             mWindow->Release();
         }
-        xpc_Release();
+        MozAxPlugin::Release();
     }
 
 BEGIN_COM_MAP(IEDocument)
@@ -1703,7 +1703,7 @@ END_COM_MAP()
 
 };
 
-HRESULT xpc_GetServiceProvider(PluginInstanceData *pData, IServiceProvider **pSP)
+HRESULT MozAxPlugin::GetServiceProvider(PluginInstanceData *pData, IServiceProvider **pSP)
 {
     // Note this should be called on the main NPAPI thread
     CComObject<IEDocument> *pDoc = NULL;

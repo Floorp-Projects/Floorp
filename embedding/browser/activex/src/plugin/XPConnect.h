@@ -41,8 +41,16 @@
 
 #include <servprov.h>
 
+#ifdef XPC_IDISPATCH_SUPPORT
+#include "nsIDispatchSupport.h"
+#include "nsIActiveXSecurityPolicy.h"
+#endif
+
+#include "nsID.h"
+#include "nsCOMPtr.h"
 #include "nsIClassInfo.h"
 #include "nsIMozAxPlugin.h"
+#include "nsIServiceManagerUtils.h"
 
 #include "ControlEventSink.h"
 
@@ -133,12 +141,18 @@ public:
 typedef CComObject<nsEventSink> nsEventSinkInstance;
 #endif
 
-extern void xpc_AddRef();
-extern void xpc_Release();
-extern CLSID xpc_GetCLSIDForType(const char *mimeType);
-extern NPError xpc_GetValue(NPP instance, NPPVariable variable, void *value);
-extern nsScriptablePeer *xpc_GetPeerForCLSID(const CLSID &clsid);
-extern nsIID xpc_GetIIDForCLSID(const CLSID &clsid);
-extern HRESULT xpc_GetServiceProvider(PluginInstanceData *pData, IServiceProvider **pSP);
+namespace MozAxPlugin {
+    extern void AddRef();
+    extern void Release();
+    extern CLSID GetCLSIDForType(const char *mimeType);
+    extern NPError GetValue(NPP instance, NPPVariable variable, void *value);
+    extern nsScriptablePeer *GetPeerForCLSID(const CLSID &clsid);
+    extern void GetIIDForCLSID(const CLSID &clsid, nsIID &iid);
+    extern HRESULT GetServiceProvider(PluginInstanceData *pData, IServiceProvider **pSP);
+#ifdef XPC_IDISPATCH_SUPPORT
+    extern PRUint32 PrefGetHostingFlags();
+    extern void ReleasePrefObserver();
+#endif
+}
 
 #endif
