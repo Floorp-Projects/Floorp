@@ -40,11 +40,23 @@
    ====================================================================== */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace url("http://www.w3.org/1999/xhtml");
 
 /* ::::: Themes ::::: */
 
 #skinsTree {
   height: 80px;
+}
+
+#themesLink {
+  margin-left: 5px;
+  text-decoration: underline;
+  color: blue;
+  cursor: pointer;
+}
+
+#themesLink:active {
+  color: red;
 }
 
 #previewImageContainer {
@@ -79,5 +91,3 @@
 .file-icon-large {
   list-style-image: url("chrome://communicator/skin/icons/content-large.gif");
 }
-
-
