@@ -29,7 +29,9 @@
 #include "mimetric.h"   /* for MIME_RichtextConverter */
 #include "mimethtm.h"
 #include "mimemsig.h"
+#ifdef MOZ_SECURITY
 #include "mimecryp.h"
+#endif
 #ifndef MOZILLA_30
 #include "mimemrel.h"
 #include "mimemalt.h"
@@ -1679,10 +1681,16 @@ mime_get_main_object(MimeObject* obj)
   if (cobj->nchildren != 1) return obj;
   obj = cobj->children[0];
   for (;;) {
-    if (!mime_subclass_p(obj->class,
-                         (MimeObjectClass*) &mimeMultipartSignedClass) &&
-        !mime_subclass_p(obj->class,
+ 
+#ifdef MOZ_SECURITY
+	 if (!mime_subclass_p(obj->class,
+                         (MimeObjectClass*) &mimeMultipartSignedClass)
+		&& !mime_subclass_p(obj->class,
                          (MimeObjectClass*) &mimeFilterClass)) {
+#else
+	if (!mime_subclass_p(obj->class,
+                         (MimeObjectClass*) &mimeMultipartSignedClass)) {
+#endif
       return obj;
     }
   /* Our main thing is a signed or encrypted object.
