@@ -2983,7 +2983,10 @@ doUnary:
         MAKEBUILTINCLASS(functionClass, objectClass, false, true, true, engine->Function_StringAtom);
         MAKEBUILTINCLASS(prototypeClass, objectClass, true, true, true, &world.identifiers["prototype"]);
         MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, &world.identifiers["Package"]);
+
         
+
+
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new StaticMember(Member::Forbidden);
 
@@ -3061,6 +3064,30 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         v = new Variable(classClass, OBJECT_TO_JS2VAL(functionClass), true);
         defineStaticMember(env, &world.identifiers["Function"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         // XXX more here!
+
+/*** ECMA 3  Error Classes ***/
+        MAKEBUILTINCLASS(errorClass, objectClass, true, true, true, &world.identifiers["Error"]);
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(errorClass), true);
+        defineStaticMember(env, &world.identifiers["Error"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        MAKEBUILTINCLASS(evalErrorClass, objectClass, true, true, true, &world.identifiers["EvalError"]);
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(evalErrorClass), true);
+        defineStaticMember(env, &world.identifiers["EvalError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        MAKEBUILTINCLASS(rangeErrorClass, objectClass, true, true, true, &world.identifiers["RangeError"]);
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(rangeErrorClass), true);
+        defineStaticMember(env, &world.identifiers["RangeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        MAKEBUILTINCLASS(referenceErrorClass, objectClass, true, true, true, &world.identifiers["ReferenceError"]);
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(referenceErrorClass), true);
+        defineStaticMember(env, &world.identifiers["ReferenceError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        MAKEBUILTINCLASS(syntaxErrorClass, objectClass, true, true, true, &world.identifiers["SyntaxError"]);
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(syntaxErrorClass), true);
+        defineStaticMember(env, &world.identifiers["SyntaxError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        MAKEBUILTINCLASS(typeErrorClass, objectClass, true, true, true, &world.identifiers["TypeError"]);
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(typeErrorClass), true);
+        defineStaticMember(env, &world.identifiers["TypeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        MAKEBUILTINCLASS(uriErrorClass, objectClass, true, true, true, &world.identifiers["UriError"]);
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(uriErrorClass), true);
+        defineStaticMember(env, &world.identifiers["UriError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        initErrorObject(this);
 
     }
 
@@ -3913,6 +3940,13 @@ deleteClassProperty:
         GCMARKOBJECT(dateClass);
         GCMARKOBJECT(regexpClass);
         GCMARKOBJECT(mathClass);
+        GCMARKOBJECT(errorClass);
+        GCMARKOBJECT(evalErrorClass);
+        GCMARKOBJECT(rangeErrorClass);
+        GCMARKOBJECT(referenceErrorClass);
+        GCMARKOBJECT(syntaxErrorClass);
+        GCMARKOBJECT(typeErrorClass);
+        GCMARKOBJECT(uriErrorClass);
 
         for (BConListIterator i = bConList.begin(), end = bConList.end(); (i != end); i++)
             (*i)->mark();

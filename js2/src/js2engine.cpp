@@ -136,30 +136,28 @@ namespace MetaData {
                         if (jsx.hasKind(Exception::userException))
                             x = pop();
                     }
-    #if 0
                     // make sure there's a JS object for the catch clause to work with
                     if (!jsx.hasKind(Exception::userException)) {
                         js2val argv[1];
-                        argv[0] = JSValue::newString(new String(jsx.fullMessage()));
+                        argv[0] = allocString(new String(jsx.fullMessage()));
                         switch (jsx.kind) {
                         case Exception::syntaxError:
-                            x = SyntaxError_Constructor(this, kNullValue, argv, 1);
+                            x = SyntaxError_Constructor(meta, JS2VAL_NULL, argv, 1);
                             break;
                         case Exception::referenceError:
-                            x = ReferenceError_Constructor(this, kNullValue, argv, 1);
+                            x = ReferenceError_Constructor(meta, JS2VAL_NULL, argv, 1);
                             break;
                         case Exception::typeError:
-                            x = TypeError_Constructor(this, kNullValue, argv, 1);
+                            x = TypeError_Constructor(meta, JS2VAL_NULL, argv, 1);
                             break;
                         case Exception::rangeError:
-                            x = RangeError_Constructor(this, kNullValue, argv, 1);
+                            x = RangeError_Constructor(meta, JS2VAL_NULL, argv, 1);
                             break;
                         default:
-                            x = Error_Constructor(this, kNullValue, argv, 1);
+                            x = Error_Constructor(meta, JS2VAL_NULL, argv, 1);
                             break;
                         }
                     }
-    #endif                
                     sp = hndlr->mStackTop;
                     pc = hndlr->mPC;
                     push(x);

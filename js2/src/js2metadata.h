@@ -64,7 +64,15 @@ extern void initMathObject(JS2Metadata *meta);
 extern void initArrayObject(JS2Metadata *meta);
 extern void initRegExpObject(JS2Metadata *meta);
 extern void initNumberObject(JS2Metadata *meta);
+extern void initErrorObject(JS2Metadata *meta);
 
+extern js2val Error_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+extern js2val EvalError_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+extern js2val RangeError_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+extern js2val ReferenceError_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+extern js2val SyntaxError_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+extern js2val TypeError_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+extern js2val UriError_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val String_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val RegExp_exec(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
@@ -1106,6 +1114,13 @@ public:
     JS2Class *regexpClass;
     JS2Class *mathClass;
     JS2Class *arrayClass;
+    JS2Class *errorClass;
+    JS2Class *evalErrorClass;
+    JS2Class *rangeErrorClass;
+    JS2Class *referenceErrorClass;
+    JS2Class *syntaxErrorClass;
+    JS2Class *typeErrorClass;
+    JS2Class *uriErrorClass;
 
     BytecodeContainer *bCon;        // the current output container
 
