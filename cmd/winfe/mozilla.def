@@ -23,6 +23,9 @@ HEAPSIZE  1024
 EXPORTS
 ;    ===List your explicitly exported functions here===
         _GET_APPLICATION_PALETTE
+        SEC_GetHookTable
+        DISPT_GetDispatchTable
+        DISPT_NumDispatchPoints
 
 IMPORTS
 	CTL3DV2.CTL3DREGISTER
