@@ -1113,7 +1113,7 @@ nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
 
 #define FILE_PROTOCOL "file:///"
 
-static void convertFileToURL(nsString &aIn, nsString &aOut)
+static void convertFileToURL(const nsString &aIn, nsString &aOut)
 {
 #ifdef XP_PC
   char szFile[1000];

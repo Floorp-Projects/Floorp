@@ -60,9 +60,9 @@ public:
   AtomHashTable();
   ~AtomHashTable();
 
-  void* Get(nsIAtom* aKey);
-  void* Put(nsIAtom* aKey, void* aValue);
-  void* Remove(nsIAtom* aKey);
+  const void* Get(nsIAtom* aKey);
+  const void* Put(nsIAtom* aKey, const void* aValue);
+  const void* Remove(nsIAtom* aKey);
 
 protected:
   PLHashTable* mTable;
@@ -92,7 +92,7 @@ AtomHashTable::~AtomHashTable()
 /**
  * Get the data associated with a Atom.
  */
-void*
+const void*
 AtomHashTable::Get(nsIAtom* aKey)
 {
   PRInt32 hashCode = (PRInt32) aKey;
@@ -109,19 +109,19 @@ AtomHashTable::Get(nsIAtom* aKey)
  * returns an old association if there was one (or nsnull if there
  * wasn't).
  */
-void*
-AtomHashTable::Put(nsIAtom* aKey, void* aData)
+const void*
+AtomHashTable::Put(nsIAtom* aKey, const void* aData)
 {
   PRInt32 hashCode = (PRInt32) aKey;
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
   PLHashEntry* he = *hep;
   if (nsnull != he) {
-    void* oldValue = he->value;
-    he->value = aData;
+    const void* oldValue = he->value;
+    he->value = NS_CONST_CAST(void*, aData);
     return oldValue;
   }
   NS_ADDREF(aKey);
-  PL_HashTableRawAdd(mTable, hep, hashCode, aKey, aData);
+  PL_HashTableRawAdd(mTable, hep, hashCode, aKey, NS_CONST_CAST(void*, aData));
   return nsnull;
 }
 
@@ -129,7 +129,7 @@ AtomHashTable::Put(nsIAtom* aKey, void* aData)
  * Remove an association between a Atom and it's data. This returns
  * the old associated data.
  */
-void*
+const void*
 AtomHashTable::Remove(nsIAtom* aKey)
 {
   PRInt32 hashCode = (PRInt32) aKey;
