@@ -5901,9 +5901,8 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
 
     // Determine if this type of load should update history.
     if (aLoadType == LOAD_BYPASS_HISTORY ||
-         aLoadType & LOAD_CMD_HISTORY ||
-         aLoadType == LOAD_RELOAD_NORMAL ||
-         aLoadType == LOAD_RELOAD_CHARSET_CHANGE)         
+        aLoadType & LOAD_CMD_HISTORY ||
+        aLoadType & LOAD_CMD_RELOAD)
         updateHistory = PR_FALSE;
 
     // Check if the url to be loaded is the same as the one already loaded. 
