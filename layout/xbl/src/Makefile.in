@@ -30,6 +30,7 @@ MODULE		= layout
 LIBRARY_NAME	= raptorxbl_s
 
 CPPSRCS		= \
+    nsXBLBinding.cpp \
 		nsXBLService.cpp \
 		$(NULL)
 

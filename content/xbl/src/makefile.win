@@ -28,10 +28,12 @@ REQUIRES=xpcom raptor pref
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+  nsXBLBinding.cpp \
   nsXBLService.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
+  .\$(OBJDIR)\nsXBLBinding.obj \
   .\$(OBJDIR)\nsXBLService.obj \
 	$(NULL)
 

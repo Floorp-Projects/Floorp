@@ -29,7 +29,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 
 EXPORTS		= \
-                nsIXBLService.h \
+    nsIBindableContent.h \
+    nsIXBLBinding.h \
+    nsIXBLService.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
