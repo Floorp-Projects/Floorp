@@ -99,7 +99,22 @@ endif # WINNT
 ifeq ($(OS_ARCH),OpenVMS)
 DEFAULT_GMAKE_FLAGS += XCFLAGS="$(OS_CFLAGS)"
 endif
-
+ifdef CROSS_COMPILE
+DEFAULT_GMAKE_FLAGS += \
+	NSINSTALL="$(NSINSTALL)" \
+	NATIVE_CC="$(HOST_CC)" \
+	CC="$(CC)" \
+	CCC="$(CXX)" \
+	LINK="$(LD)" \
+	AS="$(AS)" \
+	AR='$(AR) $(AR_FLAGS:$@=$$@)' \
+	RANLIB="$(RANLIB)" \
+	RC="$(RC) $(RCFLAGS)" \
+	OS_ARCH="$(OS_ARCH)" \
+	CPU_ARCH="$(TARGET_CPU)" \
+	$(NULL)
+SKIP_CHK=1
+endif
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile
 
 include $(topsrcdir)/config/rules.mk
@@ -110,8 +125,10 @@ export:: .nss.cleaned
 .nss.cleaned: .nss.checkout
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
+ifndef SKIP_CHK
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
+endif
 	touch $@
 
 .nss.checkout:
@@ -132,11 +149,15 @@ else
 	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) $(LIB_PREFIX)dbm.$(LIB_SUFFIX); $(RANLIB) $(LIB_PREFIX)dbm.$(LIB_SUFFIX)
 endif
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
+ifndef SKIP_CHK
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS)
+endif
 ifndef DISABLE_DIST_GRE
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(GRE_DIST)
+ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(GRE_DIST)
+endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(GRE_DIST)
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(GRE_DIST)
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(GRE_DIST)
@@ -150,7 +171,9 @@ endif
 endif
 ifndef _SKIP_OLD_GRE_INSTALL
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
+ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DIST)/bin
+endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin
@@ -170,7 +193,9 @@ endif
 
 install::
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DESTDIR)$(mozappdir)
+ifndef SKIP_CHK
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DESTDIR)$(mozappdir)
+endif
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DESTDIR)$(mozappdir)
@@ -195,8 +220,10 @@ ifdef MOZ_XUL
 endif
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
+ifndef SKIP_CHK
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS) clean
+endif
 
 echo-requires-recursive::
 	$(MAKE) -C boot $@
