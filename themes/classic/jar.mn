@@ -22,6 +22,8 @@ skins/classic.jar:
     communicator/skin/bookmarks/bookmark-item.gif                (communicator/bookmarks/bookmark-item.gif)
     communicator/skin/bookmarks/bookmarks.css                    (communicator/bookmarks/bookmarks.css)
     communicator/skin/bookmarks/home.gif                         (communicator/bookmarks/home.gif)
+    communicator/skin/bookmarks/home-hover.gif                   (communicator/bookmarks/home-hover.gif)
+    communicator/skin/bookmarks/home-active.gif                  (communicator/bookmarks/home-active.gif)
     communicator/skin/bookmarks/iefavorite.gif                   (communicator/bookmarks/iefavorite.gif)
     communicator/skin/bookmarks/personal-folder-closed.gif       (communicator/bookmarks/personal-folder-closed.gif)
     communicator/skin/bookmarks/personal-folder-open.gif         (communicator/bookmarks/personal-folder-open.gif)
