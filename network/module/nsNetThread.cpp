@@ -36,6 +36,7 @@ extern "C" {
 #include "mktrace.h"
 #include "mkstream.h"
 #include "cvchunk.h"
+#include "cvunzip.h"
 
 #include "fileurl.h"
 #include "httpurl.h"
@@ -103,6 +104,15 @@ nsresult NS_InitNetlib(void)
                                      NET_NGLayoutConverter);
     NET_RegisterContentTypeConverter(APPLICATION_HTTP_INDEX, FO_NGLAYOUT,
                                     NULL, NET_HTTPIndexFormatToHTMLConverter);
+
+    NET_RegisterEncodingConverter(ENCODING_GZIP,
+                                  (void *) ENCODING_GZIP,
+                                  NET_UnZipConverter);
+    NET_RegisterEncodingConverter(ENCODING_GZIP2,
+                                  (void *) ENCODING_GZIP2,
+                                  NET_UnZipConverter);
+
+    NET_RegisterAllEncodingConverters("*", FO_NGLAYOUT);
 
     NET_RegisterUniversalEncodingConverter("chunked",
                                            NULL,
