@@ -164,7 +164,6 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
 nsIFrame* 
 nsMathMLmactionFrame::GetSelectedFrame()
 {
-  nsresult rv = NS_OK;
   nsAutoString value;
   PRInt32 selection; 
 
