@@ -29,6 +29,10 @@
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
+#include "nsISHistory.h"
+#include "nsISHEntry.h"
+#include "nsIURI.h"
+#include "nsXPIDLString.h"
 
 //
 //  History class implementation 
@@ -161,6 +165,60 @@ HistoryImpl::Forward()
 NS_IMETHODIMP    
 HistoryImpl::Go(JSContext* cx, jsval* argv, PRUint32 argc)
 {
+	  nsresult result = NS_OK;
+   nsCOMPtr<nsISHistory>  sHistory;
+   
+   //Get nsIWebNavigation from docshell
+   nsCOMPtr<nsIWebNavigation>   webNav(do_QueryInterface(mDocShell));
+   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+ 
+   //Get sHistory from nsIWebNavigation
+   webNav->GetSessionHistory(getter_AddRefs(sHistory));
+   NS_ENSURE_TRUE(sHistory, NS_ERROR_FAILURE);
+ 
+   if (argc > 0) {
+     if (JSVAL_IS_INT(argv[0])) {
+       PRInt32 delta = JSVAL_TO_INT(argv[0]);
+       PRInt32 curIndex=-1;
+ 
+       result = sHistory->GetIndex(&curIndex);
+       result = webNav->GotoIndex(curIndex + delta);     
+     }
+     else {
+       JSString* jsstr = JS_ValueToString(cx, argv[0]);
+       PRInt32 i, count;
+       
+       if (nsnull != jsstr) {
+         nsAutoString substr; substr.AssignWithConversion(JS_GetStringBytes(jsstr));
+ 
+         result = sHistory->GetCount(&count);
+         for (i = 0; (i < count) && NS_SUCCEEDED(result); i++) {
+ 		  nsCOMPtr<nsISHEntry>   shEntry;
+ 		  nsCOMPtr<nsIURI>   uri;
+ 		  
+           
+ 		  result = sHistory->GetEntryAtIndex(i, PR_FALSE, getter_AddRefs(shEntry));
+ 		  if (!shEntry)
+ 			  continue;
+ 		  result = shEntry->GetURI(getter_AddRefs(uri));
+ 		  if (!uri)
+ 			  continue;          
+           nsAutoString url;
+ 		  nsXPIDLCString   urlCString;
+ 		  result = uri->GetSpec(getter_Copies(urlCString));
+ 		  url.AssignWithConversion(urlCString);
+ 
+           if (-1 != url.Find(substr)) {
+             result = webNav->GotoIndex(i);
+             break;
+ 		  }
+ 		}   //for
+       }
+     }
+   }
+   return result;
+ 
+#if 0
   nsresult result = NS_OK;
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
   if (argc > 0) {
@@ -200,6 +258,7 @@ HistoryImpl::Go(JSContext* cx, jsval* argv, PRUint32 argc)
   }
   
   return result;
+#endif  /* 0 */
 }
 
 
