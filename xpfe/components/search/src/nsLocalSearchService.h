@@ -77,24 +77,24 @@ protected:
 
     // matching functions, based on type
 	PRBool doMatch(nsIRDFLiteral  *literal,
-                   const nsAReadableString& matchMethod,
+                   const nsAString& matchMethod,
                    const nsString& matchText);
     PRBool matchNode(nsIRDFNode *aNode,
-                     const nsAReadableString& matchMethod,
+                     const nsAString& matchMethod,
                      const nsString& matchText);
     
 	PRBool doDateMatch(nsIRDFDate *literal,
-                       const nsAReadableString& matchMethod,
-                       const nsAReadableString& matchText);
+                       const nsAString& matchMethod,
+                       const nsAString& matchText);
 	PRBool doIntMatch (nsIRDFInt  *literal,
-                       const nsAReadableString& matchMethod,
+                       const nsAString& matchMethod,
                        const nsString& matchText);
 
     PRBool dateMatches(nsIRDFDate *literal,
-                       const nsAReadableString& method,
+                       const nsAString& method,
                        const PRInt64& matchDate);
     
-    NS_METHOD   parseDate(const nsAReadableString& aDate, PRInt64* aResult);
+    NS_METHOD   parseDate(const nsAString& aDate, PRInt64* aResult);
     
 	NS_METHOD	parseFindURL(nsIRDFResource *u, nsISupportsArray *array);
 

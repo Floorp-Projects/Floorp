@@ -793,7 +793,7 @@ static nsresult DoOnShutdown()
   return rv;
 }
 
-static nsresult ConvertToUnicode(nsString& aCharset, const char* inString, nsAWritableString& outString)
+static nsresult ConvertToUnicode(nsString& aCharset, const char* inString, nsAString& outString)
 {
   nsresult rv;
 

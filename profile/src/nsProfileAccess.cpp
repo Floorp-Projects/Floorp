@@ -130,7 +130,7 @@ GetPlatformCharset(nsString& aCharset)
 
 // Apply a charset conversion from the given charset to Unicode for input C string.
 nsresult 
-ConvertStringToUnicode(nsString& aCharset, const char* inString, nsAWritableString& outString)
+ConvertStringToUnicode(nsString& aCharset, const char* inString, nsAString& outString)
 {
     nsresult rv;
     // convert result to unicode

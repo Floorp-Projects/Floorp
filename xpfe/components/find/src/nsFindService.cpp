@@ -63,25 +63,25 @@ nsFindService::~nsFindService()
 NS_IMPL_ISUPPORTS1(nsFindService, nsIFindService);
 
 /* attribute AString searchString; */
-NS_IMETHODIMP nsFindService::GetSearchString(nsAWritableString & aSearchString)
+NS_IMETHODIMP nsFindService::GetSearchString(nsAString & aSearchString)
 {
     aSearchString = mSearchString;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsFindService::SetSearchString(const nsAReadableString & aSearchString)
+NS_IMETHODIMP nsFindService::SetSearchString(const nsAString & aSearchString)
 {
     mSearchString = aSearchString;
     return NS_OK;
 }
 
 /* attribute AString replaceString; */
-NS_IMETHODIMP nsFindService::GetReplaceString(nsAWritableString & aReplaceString)
+NS_IMETHODIMP nsFindService::GetReplaceString(nsAString & aReplaceString)
 {
     aReplaceString = mReplaceString;
     return NS_OK;
 }
-NS_IMETHODIMP nsFindService::SetReplaceString(const nsAReadableString & aReplaceString)
+NS_IMETHODIMP nsFindService::SetReplaceString(const nsAString & aReplaceString)
 {
     mReplaceString = aReplaceString;
     return NS_OK;
