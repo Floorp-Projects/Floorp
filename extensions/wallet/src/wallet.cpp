@@ -444,13 +444,7 @@ char * wallet_GetString(char * szMessage) {
   }
   if (dialog) {
     const nsString message = szMessage;
-#ifdef xxx
     dialog->PromptPassword(message, password, &retval);
-#else
-    /* temporary until PromptPassword is implemented */
-    nsString username;
-    dialog->PromptUserAndPassword(message, username, password, &retval);
-#endif
   }
   nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
   if (retval) {
@@ -2197,7 +2191,9 @@ WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
   if (wallet_GetFormsCapturingPref() && (count>=3)) {
     char * message = Wallet_Localize("WantToCaptureForm?");
     char * checkMessage = Wallet_Localize("NeverSave");
-    PRBool checkValue = PR_FALSE;
+    PRBool checkValue;
+//    PRBool checkValue = PR_FALSE;
+//    *result = Wallet_Confirm(message);
     *result = Wallet_CheckConfirm(message, checkMessage, &checkValue);
     if (!(*result)) {
       if (checkValue) {
