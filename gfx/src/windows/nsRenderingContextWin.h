@@ -227,8 +227,9 @@ private:
 friend class nsNativeThemeWin;
 
 protected:
-  nscolor					  mCurrentColor;
-  nsIFontMetrics	  *mFontMetrics;
+  nscolor            mCurrentColor;
+  // current font-metrics set in this RC
+  nsIFontMetrics    *mFontMetrics;
   HDC               mDC;
   HDC               mMainDC;
   nsDrawingSurfaceWin *mSurface;
@@ -249,7 +250,10 @@ protected:
   nsVoidArray       *mStateCache;
   nscolor           mCurrBrushColor;
   HBRUSH            mCurrBrush;
-  nsIFontMetrics    *mCurrFontMetrics;
+  // mFontMetrics owns mCurrFontWin which is a thin wrapper
+  // around mCurrFont (the actual GDI font handle). These variables
+  // allow us to quickly tell the current selected font and to
+  // avoid the extra cost of a redundant setup of the same font.
   nsFontWin         *mCurrFontWin;
   HFONT             mCurrFont;
   nscolor           mCurrPenColor;
