@@ -269,6 +269,10 @@ done
 
 if [  "$O_TBX" = "ON" -o "$O_LOCAL" = "ON" ] ; then
 #FIXME - maybe it should be copied back to the networkdrive later (-ln)
+    if [ -n "${TMPFILES}" ] ; then #caused problems on tinderbox machines
+        Debug "rm -f ${TMPFILES}"
+        rm -f $TMPFILES 2>/dev/null
+    fi
     Debug "running qa_stat"
     . `dirname $0`/qa_stat
 fi
