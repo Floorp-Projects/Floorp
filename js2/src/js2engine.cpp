@@ -395,7 +395,7 @@ namespace MetaData {
         if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )
             return 0;
         d = fd::fmod(d, two32);
-        d = (d >= 0) ? d : d + two32;
+        d = (d >= 0) ? fd::floor(d) : fd::ceil(d) + two32;
         if (d >= two31)
             return (int32)(d - two32);
         else

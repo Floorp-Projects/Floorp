@@ -263,6 +263,18 @@ void printLocalBindings(LocalBindingMap *lMap, ValueList *frameSlots)
                     stdOut << " forbidden\n";
                 }
                 break;
+            case Member::GetterMember:
+                {
+                    Getter *g = checked_cast<Getter *>(m);
+                    stdOut << " get" << ":" << *g->type->name << "\n";
+                }
+                break;
+            case Member::SetterMember:
+                {
+                    Setter *s = checked_cast<Setter *>(m);
+                    stdOut << " set" << ":" << *s->type->name << "\n";
+                }
+                break;
             case Member::DynamicVariableMember:
                 {
                     DynamicVariable *dv = checked_cast<DynamicVariable *>(m);

@@ -110,10 +110,15 @@ namespace MetaData {
                 pb = fnDef->parameters;
                 while (pb) {
                     FrameVariable *v = new FrameVariable(compileFrame->allocateSlot(), FrameVariable::Parameter);
+                    if (pb->type)
+                        ValidateTypeExpression(cxt, env, pb->type);
+                    pb->member = v;
                     pb->mn = defineLocalMember(env, pb->name, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos, true);
                     pb = pb->next;
                 }
             }
+            if (fnDef->resultType)
+                ValidateTypeExpression(cxt, env, fnDef->resultType);
             createDynamicProperty(result, engine->length_StringAtom, INT_TO_JS2VAL(pCount), ReadAccess, true, false);
             result->fWrap->length = pCount;
             compileFrame->isConstructor = isConstructor;
@@ -150,7 +155,7 @@ namespace MetaData {
                 ASSERT(!(unchecked || hoisted));
                 // XXX shouldn't be using validateStaticFunction
                 fnInst = validateStaticFunction(cxt, env, fnDef, false, false, false, pos);
-                Getter *g = new Getter(fnInst);
+                Getter *g = new Getter(fnInst->fWrap->resultType, fnInst);
                 defineLocalMember(env, fnDef->name, &a->namespaces, a->overrideMod, a->xplicit, ReadAccess, g, pos, true);
             }
             break;
@@ -161,7 +166,7 @@ namespace MetaData {
                 ASSERT(!(unchecked || hoisted));
                 // XXX shouldn't be using validateStaticFunction
                 fnInst = validateStaticFunction(cxt, env, fnDef, false, false, false, pos);
-                Setter *s = new Setter(fnInst);
+                Setter *s = new Setter(fnInst->fWrap->resultType, fnInst);
                 defineLocalMember(env, fnDef->name, &a->namespaces, a->overrideMod, a->xplicit, WriteAccess, s, pos, true);
             }
             break;
@@ -1297,6 +1302,20 @@ namespace MetaData {
 #ifdef DEBUG
                     bCon->fName = *f->function.name;
 #endif
+                    VariableBinding *pb = f->function.parameters;
+                    while (pb) {
+                        FrameVariable *v = checked_cast<FrameVariable *>(pb->member);
+                        if (pb->type)
+                            v->type = EvalTypeExpression(env, CompilePhase, pb->type);
+                        else
+                            v->type = objectClass;
+                        pb = pb->next;
+                    }
+                    if (f->function.resultType)
+                        f->function.fWrap->resultType = EvalTypeExpression(env, CompilePhase, f->function.resultType);
+                    else
+                        f->function.fWrap->resultType = objectClass;
+
                     SetupStmt(env, phase, f->function.body);
                     // XXX need to make sure that all paths lead to an exit of some kind
                     bCon->emitOp(eReturnVoid, p->pos);
@@ -1369,7 +1388,6 @@ namespace MetaData {
                             }
                         }
                         else {
-                            ASSERT(vb->member->memberKind == Member::InstanceVariableMember);
                             InstanceVariable *v = checked_cast<InstanceVariable *>(vb->member);
                             JS2Class *t;
                             if (vb->type)
@@ -3960,7 +3978,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         initBooleanObject(this);
 
 /*** ECMA 3  Math Object ***/
-        SimpleInstance *mathObject = new SimpleInstance(this, objectClass->prototype, objectClass);
+        MAKEBUILTINCLASS(mathClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Math"]), JS2VAL_FALSE);
+        SimpleInstance *mathObject = new SimpleInstance(this, objectClass->prototype, mathClass);
         v = new Variable(objectClass, OBJECT_TO_JS2VAL(mathObject), true);
         defineLocalMember(env, &world.identifiers["Math"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initMathObject(this, mathObject);
@@ -4444,6 +4463,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         GCMARKOBJECT(generalNumberClass);
         GCMARKOBJECT(integerClass);
         GCMARKOBJECT(numberClass);
+        GCMARKOBJECT(mathClass);
         GCMARKOBJECT(characterClass);
         GCMARKOBJECT(stringClass);
         GCMARKOBJECT(namespaceClass);
@@ -4553,6 +4573,16 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             }
         }
     }
+
+    static js2val class_ProtoGetter(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
+    {
+        ASSERT(JS2VAL_IS_OBJECT(thisValue));
+        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
+        ASSERT(obj->kind == ClassKind);
+        JS2Class *c = checked_cast<JS2Class *>(obj);
+
+        return OBJECT_TO_JS2VAL(c->super);
+    }
  
     void JS2Metadata::initBuiltinClass(JS2Class *builtinClass, FunctionData *staticFunctions, NativeCode *construct, NativeCode *call)
     {
@@ -4567,10 +4597,17 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             Variable *v = new Variable(builtinClass, INT_TO_JS2VAL(1), true);
             defineLocalMember(env, engine->length_StringAtom, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
 
+            FunctionInstance *callInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+            callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), class_ProtoGetter, env);
+            callInst->fWrap->length = 0;
+            Getter *g = new Getter(objectClass, callInst);
+            defineLocalMember(env, &world.identifiers["__proto__"], NULL, Attribute::NoOverride, false, ReadAccess, g, 0, true);
+
+            
             pf = staticFunctions;
             if (pf) {
                 while (pf->name) {
-                    FunctionInstance *callInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+                    callInst = new FunctionInstance(this, functionClass->prototype, functionClass);
                     callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
                     callInst->fWrap->length = pf->length;
                     v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);

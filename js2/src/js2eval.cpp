@@ -477,6 +477,8 @@ namespace MetaData {
             d = stringToDouble(str1, strEnd, numEnd);
             if (numEnd == str1)
                 return nan;
+            if (skipWhiteSpace(numEnd, strEnd) != strEnd)
+                return nan;
         }
         return (neg) ? -d : d;
     }

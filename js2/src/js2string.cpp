@@ -756,7 +756,7 @@ static js2val String_substring(JS2Metadata *meta, const js2val thisValue, js2val
     if (argc > 1) {
         float64 farg1 = meta->toFloat64(argv[1]);
         if (JSDOUBLE_IS_NaN(farg1) || (farg1 < 0))
-            end = sourceLength;
+            end = 0;
         else {
             if (!JSDOUBLE_IS_FINITE(farg1))
                 end = sourceLength;
@@ -788,14 +788,14 @@ void initStringObject(JS2Metadata *meta)
         { "charAt",             1, String_charAt },
         { "charCodeAt",         1, String_charCodeAt },
         { "concat",             1, String_concat },
-        { "indexOf",            2, String_indexOf },   // XXX ECMA spec says 1, but tests want 2 XXX
-        { "lastIndexOf",        2, String_lastIndexOf },   // XXX ECMA spec says 1, but tests want 2 XXX
+        { "indexOf",            1, String_indexOf },
+        { "lastIndexOf",        1, String_lastIndexOf },
         { "localeCompare",      1, String_localeCompare },
         { "match",              1, String_match },
         { "replace",            2, String_replace },
         { "search",             1, String_search },
         { "slice",              2, String_slice },
-        { "split",              1, String_split },         // XXX ECMA spec says 2, but tests want 1 XXX
+        { "split",              2, String_split },
         { "substring",          2, String_substring },
         { "toSource",           0, String_toString },
         { "toLocaleUpperCase",  0, String_toUpperCase },  // (sic)

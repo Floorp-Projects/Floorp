@@ -488,10 +488,18 @@ public:
 
     typedef enum { Local, Package, Parameter } FrameVariableKind;
 
-    FrameVariable(uint16 frameSlot, FrameVariableKind kind) : LocalMember(Member::FrameVariableMember), frameSlot(frameSlot), kind(kind), sealed(false) { } 
+    FrameVariable(uint16 frameSlot, FrameVariableKind kind) 
+        : LocalMember(Member::FrameVariableMember), 
+            frameSlot(frameSlot), 
+            kind(kind), 
+            type(NULL), 
+            sealed(false) 
+        { } 
 
     uint16 frameSlot;
     FrameVariableKind kind;         // the kind of frame this variable is in
+
+    JS2Class *type;
 
     bool sealed;                    // true if this variable cannot be deleted using the delete operator
     virtual LocalMember *clone()       { return new FrameVariable(frameSlot, kind); }
@@ -509,7 +517,7 @@ public:
 
 class Getter : public LocalMember {
 public:
-    Getter(FunctionInstance *code) : LocalMember(Member::GetterMember), type(NULL), code(code) { }
+    Getter(JS2Class *type, FunctionInstance *code) : LocalMember(Member::GetterMember), type(type), code(code) { }
 
     JS2Class *type;             // The type of the value read from this getter
     FunctionInstance *code;     // calling this object does the read
@@ -519,7 +527,7 @@ public:
 
 class Setter : public LocalMember {
 public:
-    Setter(FunctionInstance *code) : LocalMember(Member::SetterMember), type(NULL), code(code) { }
+    Setter(JS2Class *type, FunctionInstance *code) : LocalMember(Member::SetterMember), type(type), code(code) { }
 
     JS2Class *type;             // The type of the value written into the setter
     FunctionInstance *code;     // calling this object does the write
@@ -836,9 +844,24 @@ class ParameterFrame;
 class FunctionWrapper {
 public:
     FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, Environment *env) 
-        : bCon(new BytecodeContainer()), code(NULL), unchecked(unchecked), compileFrame(compileFrame), env(new Environment(env)), length(0) { }
+        : bCon(new BytecodeContainer()), 
+            code(NULL), 
+            unchecked(unchecked), 
+            compileFrame(compileFrame), 
+            env(new Environment(env)), 
+            length(0),
+            resultType(NULL) 
+        { }
+
     FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, NativeCode *code, Environment *env) 
-        : bCon(NULL), code(code), unchecked(unchecked), compileFrame(compileFrame), env(new Environment(env)), length(0) { }
+        : bCon(NULL), 
+            code(code), 
+            unchecked(unchecked), 
+            compileFrame(compileFrame), 
+            env(new Environment(env)), 
+            length(0),
+            resultType(NULL)
+        { }
 
     virtual ~FunctionWrapper()  { if (bCon) delete bCon; }
 
@@ -848,6 +871,7 @@ public:
     ParameterFrame      *compileFrame;
     Environment         *env;
     uint32              length;
+    JS2Class            *resultType;
 };
 
 
@@ -1491,6 +1515,7 @@ public:
     JS2Class *booleanClass;
     JS2Class *generalNumberClass;
     JS2Class *numberClass;
+    JS2Class *mathClass;
     JS2Class *integerClass;
     JS2Class *characterClass;
     JS2Class *stringClass;
