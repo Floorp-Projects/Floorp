@@ -254,7 +254,7 @@ nsBaseURLParser::ParsePath(const char *path, PRInt32 pathLen,
     const char *p = 0;
     for (p = path; *p; ++p) {
         // only match the query string if it precedes the reference fragment
-        if (!ref_beg && *p == '?')
+        if (!ref_beg && !query_beg && *p == '?')
             query_beg = p + 1;
         else if (*p == '#') {
             ref_beg = p + 1;
