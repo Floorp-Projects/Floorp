@@ -23,23 +23,18 @@
 
 // These defines are for temporary use until we get a real dir manager.
 #define USER_DIR_TOK "%USER%"
-#define USER_DIR "e:\\projects\\ng"
 #define CACHE_DIR_TOK "%CACHE_D%"
-#define CACHE_DIR "e:\\projects\\ng\\cache"
+#define DEF_DIR_TOK "%DEF_D%"
+
 #define COOKIE_FILE_TOK "%COOKIE_F%"
-
-#define CACHE_DB_F_TOK "%CACHE_DB_F%"
-#define CACHE_DB_FILE "fat.db"
-
 #ifdef XP_PC
 #define COOKIE_FILE "cookies.txt"
 #else
 #define COOKIE_FILE "cookies"
 #endif
 
-#define DEF_DIR_TOK "%DEF_D%"
-#define DEF_DIR "e:\\projects\\ng"
-
+#define CACHE_DB_F_TOK "%CACHE_DB_F%"
+#define CACHE_DB_FILE "fat.db"
 
 // {9E04ADC2-2B1D-11d2-B6EB-00805F8A2676}
 #define NS_INETFILE_IID   \
