@@ -312,6 +312,10 @@ function Startup()
   if (!isPageCycling) {
     var uriToLoad;
 
+    // Check for window.arguments[0]. If present, use that for uriToLoad.
+    if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
+      uriToLoad = window.arguments[0];
+    
     if (!turboMode) {
       var cmdLineService =
         Components.classes["@mozilla.org/appshell/commandLineService;1"]
@@ -333,11 +337,6 @@ function Startup()
       }
     }
 
-    if (!uriToLoad) {
-      // Check for window.arguments[0]. If present, use that for uriToLoad.
-      if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
-        uriToLoad = window.arguments[0];
-    }
 
     if (uriToLoad && uriToLoad != "about:blank") {
       gURLBar.value = uriToLoad;
