@@ -82,6 +82,7 @@ protected:
   void FindScreen ( nsIScreen** outScreen ) ;
   void ComputeClientRectUsingScreen ( nsRect* outRect ) ;
   void ComputeFullAreaUsingScreen ( nsRect* outRect ) ;
+  nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont* aFont) const;
 
   PRBool mCachedClientRect;
   PRBool mCachedFullRect;
