@@ -918,12 +918,14 @@ JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv)
                 if(JS_IsArrayObject(cx, object)){
                     *sv = sv_newmortal();
                     sv_setref_pv(*sv, "JS::Object", (void*)object);
-                    sv_magic(SvRV(*sv), newSViv((IV)cx), '~', NULL, 0);
+                    sv_magic(SvRV(*sv), sv_2mortal(newSViv((IV)cx)), 
+                             '~', NULL, 0);
                     /* printf("===> JSVALToSV: ARRAY\n); */
                 }else{
                     *sv = sv_newmortal();
                     sv_setref_pv(*sv, "JS::Object", (void*)object);
-                    sv_magic(SvRV(*sv), newSViv((IV)cx), '~', NULL, 0);
+                    sv_magic(SvRV(*sv), sv_2mortal(newSViv((IV)cx)), 
+                             '~', NULL, 0);
                     //printf("===> JSVALToSV: JS OBJECT\n");
                 }
             }
