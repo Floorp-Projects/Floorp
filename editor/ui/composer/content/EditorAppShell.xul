@@ -65,8 +65,8 @@
     <menupopup>
       <menuitem id="compToolbarMenuitem"/>
       <menuitem id="formatToolbarMenuitem"/>
-      <menuseparator />
-      <menuitem id="viewSourceMenuitem"/>
+      <!-- menuseparator /> Put this back when it works.
+      <menuitem id="viewSourceMenuitem"/ -->
       <menuseparator />
       <menu id="charsetMenu"/>
     </menupopup>
@@ -178,7 +178,7 @@
     </toolbar>
     </toolbox>
 
-    <html:iframe id="content-frame" src="contentframe.xul" flex="100%" />
+    <html:iframe id="content-frame" src="chrome://navigator/content/contentframe.xul" flex="100%" />
 
     <!-- status bar, from editorOverlay.xul -->
     <box id="EditorStatusBar" />
