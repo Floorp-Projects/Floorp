@@ -3,6 +3,7 @@
 #include "nsHashtable.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
+#include "nsXPIDLString.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 // None
@@ -62,18 +63,18 @@ nsPresState::GetStateProperty(const nsAReadableString& aName,
 			      nsAWritableString& aResult)
 {
   // Retrieve from hashtable.
-  nsCOMPtr<nsISupportsWString> str;
+  nsCOMPtr<nsISupportsString> str;
   nsAutoString keyStr(aName);
   nsStringKey key(keyStr);
   if (mPropertyTable)
-    str = dont_AddRef(NS_STATIC_CAST(nsISupportsWString*, mPropertyTable->Get(&key)));
+    str = dont_AddRef(NS_STATIC_CAST(nsISupportsString*, mPropertyTable->Get(&key)));
    
   aResult.SetLength(0);
   if (str) {
-    PRUnichar* data = nsnull;
-    str->GetData(&data);
-    aResult.Append(data);
-    nsMemory::Free(data);
+    nsXPIDLCString data;
+    str->GetData(getter_Copies(data));
+
+    aResult.Append(NS_ConvertUTF8toUCS2(data));
   }
   return NS_OK;
 }
@@ -81,18 +82,20 @@ nsPresState::GetStateProperty(const nsAReadableString& aName,
 NS_IMETHODIMP
 nsPresState::SetStateProperty(const nsAReadableString& aName, const nsAReadableString& aValue)
 {
-  if (!mPropertyTable)
+  if (!mPropertyTable) {
     mPropertyTable = new nsSupportsHashtable(8);
+    NS_ENSURE_TRUE(mPropertyTable, NS_ERROR_OUT_OF_MEMORY);
+  }
 
   // Add to hashtable
   nsAutoString keyStr(aName);
   nsStringKey key(keyStr);
 
-  nsCOMPtr<nsISupportsWString> supportsStr;
-  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, nsnull, 
-                                                    NS_GET_IID(nsISupportsWString), getter_AddRefs(supportsStr));
+  nsCOMPtr<nsISupportsString> supportsStr(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  NS_ENSURE_TRUE(supportsStr, NS_ERROR_OUT_OF_MEMORY);
 
-  supportsStr->SetData(nsPromiseFlatString(aValue).get());
+  NS_ConvertUCS2toUTF8 string(aValue);
+  supportsStr->SetData(string.get());
 
   mPropertyTable->Put(&key, supportsStr);
   return NS_OK;
@@ -129,8 +132,10 @@ nsPresState::GetStatePropertyAsSupports(const nsAReadableString& aName, nsISuppo
 NS_IMETHODIMP
 nsPresState::SetStatePropertyAsSupports(const nsAReadableString& aName, nsISupports* aValue)
 {
-  if (!mPropertyTable)
+  if (!mPropertyTable) {
     mPropertyTable = new nsSupportsHashtable(8);
+    NS_ENSURE_TRUE(mPropertyTable, NS_ERROR_OUT_OF_MEMORY);
+  }
 
   // Add to hashtable
   nsAutoString keyStr(aName);
