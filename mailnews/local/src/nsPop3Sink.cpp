@@ -256,10 +256,15 @@ nsPop3Sink::EndMailDelivery()
       (void) filterList->FlushLogIfNecessary();
   }
 
+  // fix for bug #161999
+  // we should update the summary totals for the folder (inbox)
+  // in case it's not the open folder
+  m_folder->UpdateSummaryTotals(PR_TRUE);
+ 
 #ifdef DEBUG
-    printf("End mail message delivery.\n");
+  printf("End mail message delivery.\n");
 #endif 
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult 
