@@ -167,7 +167,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   //
   rv = compMgr->RegisterComponent(kLocaleFactoryCID,"nsLocale component",
                                   NS_LOCALE_PROGID,path,PR_TRUE,PR_TRUE);
-  NS_ASSERTION(rv==NS_OK,"nsLocaleTest: RegisterFactory failed.");
+  NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: RegisterFactory failed.");
   if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
   //
@@ -181,30 +181,30 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   // register the Posix factory
   //
   rv = compMgr->RegisterComponent(kPosixLocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
-  if (rv==NS_OK) printf("Registered Ok\n");
+  if (NS_SUCCEEDED(rv)) printf("Registered Ok\n");
 
-  NS_ASSERTION(rv==NS_OK,"nsLocale: Register Factory failed.");
+  NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocale: Register Factory failed.");
   if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS !=rv)) goto done;
 
   //
   // register the collation factory
   //
   rv = compMgr->RegisterComponent(kCollationFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-  NS_ASSERTION(rv==NS_OK,"nsLocale: Register CollationFactory failed.");
+  NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocale: Register CollationFactory failed.");
   if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
   
   //
   // register the collation interface
   //
   rv = compMgr->RegisterComponent(kCollationCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-  NS_ASSERTION(rv==NS_OK,"nsLocale: Register Collation failed.");
+  NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocale: Register Collation failed.");
   if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
   
   //
   // register the date time formatter
   //
   rv = compMgr->RegisterComponent(kDateTimeFormatCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-  NS_ASSERTION(rv==NS_OK,"nsLocale: Register DateTimeFormat failed.");
+  NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocale: Register DateTimeFormat failed.");
   if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
 	//
@@ -212,7 +212,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 	//
 	rv = compMgr->RegisterComponent(kScriptableDateFormatCID, "Scriptable Date Format", 
     NS_SCRIPTABLEDATEFORMAT_PROGID, path, PR_TRUE, PR_TRUE);
-	NS_ASSERTION(rv==NS_OK,"nsLocale: Register ScriptableDateFormat failed.");
+	NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocale: Register ScriptableDateFormat failed.");
   if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
   done:
