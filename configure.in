@@ -397,6 +397,174 @@ else
   AC_MSG_RESULT(no)
 fi
 
+dnl Checks for X libraries.
+dnl Ordering is important.
+dnl Xt is dependent upon SM as of X11R6
+dnl ========================================================
+if test "$no_x" != "yes"; then
+_SAVE_LDFLAGS="$LDFLAGS"
+LDFLAGS="$XLDFLAGS $LDFLAGS"
+AC_CHECK_LIB(X11, XDrawLines, [XLIBS="-lX11 $XLIBS"],
+	[MISSING_X="$MISSING_X -lX11"], $XLIBS)
+AC_CHECK_LIB(Xext, XextAddDisplay, [XLIBS="-lXext $XLIBS"],
+	[MISSING_X="$MISSING_X -lXext"], $XLIBS)
+AC_CHECK_LIB(ICE, IceFlush, [XLIBS="-lICE $XLIBS"],, $XLIBS)
+AC_CHECK_LIB(SM, SmcCloseConnection, [XLIBS="-lSM $XLIBS"],, $XLIBS)
+AC_CHECK_LIB(Xt, XtFree, [XLIBS="-lXt $XLIBS"],
+	[MISSING_X="$MISSING_X -lXt"], $XLIBS)
+AC_CHECK_LIB(Xmu, XmuLookupString, [XLIBS="-lXmu $XLIBS"],
+	[MISSING_X="$MISSING_X -lXmu"], $XLIBS)
+LDFLAGS="$_SAVE_LDFLAGS"
+
+dnl Check for toolkit libs
+dnl ========================================================
+useRhapsody=`echo $target_os | egrep "^Rhapsody"`
+MOZ_ARG_ENABLE_STRING(toolkit,
+[  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
+  [if test "$enableval" = "motif" \
+        -o "$enableval" = "gtk" \
+        -o "$useRhapsody" ; then
+     dnl nglayout only supports building with one toolkit,
+     dnl so ignore everything after the first comma (",").
+     MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
+   else
+     AC_MSG_ERROR(Toolkit must be either gtk or motif.)
+   fi], 
+  [if test "$useRhapsody" ; then
+     MOZ_TOOLKIT="rhapsody"
+   else
+     MOZ_TOOLKIT="gtk"
+   fi])
+
+if echo ":$MOZ_TOOLKIT" | grep "motif" >/dev/null; then
+if test "$no_x" != "yes"; then
+    if test "$x_includes"; then
+	MOTIF_XINCS="-xif -I$x_includes"
+    fi
+
+    $_detect_motif="${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS"
+    MOTIF_VERSION=`      $_detect_motif`
+    MOTIF_INCLUDES=`     $_detect_motif -if`
+    MOTIF_STATIC_FLAGS=` $_detect_motif -sf`
+    MOTIF_DYNAMIC_FLAGS=`$_detect_motif -df`
+    MOTIF_DYNAMIC_PATHS=`$_detect_motif -dp`
+    MOTIF_REQUIRES_XPM=` $_detect_motif -xpm`
+
+    ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
+fi
+
+    if test "$MOTIF_REQUIRES_XPM" = "True" -o "$MOTIF_VERSION" = "2.1"; then
+        _SAVE_LDFLAGS="$LDFLAGS"
+    	LDFLAGS="$XLDFLAGS $LDFLAGS"
+	if test "$MOTIF_REQUIRES_XPM" = "True"; then
+	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
+		TK_LIBS="-lXpm $TK_LIBS", 
+		[MISSING_MOTIF="-lXpm $MISSING_MOTIF"], $XLIBS)
+	fi
+	if test "$MOTIF_VERSION" = "2.1"; then
+	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
+		TK_LIBS="-lXp $TK_LIBS",
+		[MISSING_MOTIF="-lXp $MISSING_MOTIF"], $XLIBS)
+	fi
+	TK_LIBS="$XLDFLAGS $TK_LIBS"
+	LDFLAGS="$_SAVE_LDFLAGS"
+    fi
+
+    if test "$MOTIF_STATIC_LIB" = "unknown" \
+         -a "$MOTIF_DYNAMIC_LIB" = "unknown"; then
+	AC_ERROR("Cannot find neither dynamic nor static motif libraries.")
+    fi
+
+    # Get rid of offending error values
+    if test "$MOTIF_DYNAMIC_PATHS" = "unknown"; then 
+	MOTIF_DYNAMIC_PATHS=
+    fi
+
+    if test "$MOTIF_DYNAMIC_FLAGS" = "unknown"; then 
+	MOTIF_DYNAMIC_FLAGS=
+    fi
+
+    if test "$MOTIF_STATIC_FLAGS" = "unknown"; then 
+	MOTIF_STATIC_FLAGS=
+    fi
+
+    if test "$MOTIF_INCLUDE_DIR" = "unknown"; then
+	MOTIF_INCLUDE_DIR=
+    fi
+
+    AC_ARG_WITH(static-motif,
+    [  --with-static-motif     link motif statically if possible],
+	sysstaticmotif=$withval)
+
+    if test "$sysstaticmotif" != "yes"; then
+	_SAVE_LDFLAGS="$LDFLAGS"
+    	LDFLAGS="$MOTIF_DYNAMIC_PATHS $XLDFLAGS $LDFLAGS"
+    	AC_CHECK_LIB(Xm, XmStringCreate, 
+	    TK_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $TK_LIBS",
+	    [MISSING_MOTIF="$MOTIF_DYNAMIC_FLAGS $MISSING_MOTIF"], 
+	    $MOTIF_DYNAMIC_PATHS $TK_LIBS $XLIBS)
+	LDFLAGS="$_SAVE_LDFLAGS"
+    else
+    	AC_CHECK_LIB(Xm, XmStringCreate, 
+	    TK_LIBS="$MOTIF_STATIC_FLAGS $TK_LIBS",
+	    [MISSING_MOTIF="$MOTIF_STATIC_FLAGS $MISSING_MOTIF"], 
+	    $TK_LIBS $XLIBS)
+    fi
+
+    TK_CFLAGS="$MOTIF_INCLUDES"
+fi
+
+if echo ":$MOZ_TOOLKIT" | grep "gtk" >/dev/null; then
+    AM_PATH_GTK($GTK_VERSION,,
+      AC_MSG_ERROR(Test for GTK failed.))
+
+    AC_ARG_WITH(static-gtk,
+    [  --with-static-gtk       link gtk statically if possible],
+	sysstaticgtk=$withval)
+
+    if test "$sysstaticgtk" != "yes"; then
+       TK_LIBS=$GTK_LIBS
+    else
+       changequote(,)
+
+       GTK_LIBS_LOC=`echo $GTK_LIBS | sed 's/\(.*\)\(-lgtk.*\)/\1/'`
+
+       GTK_STATIC_LOC=`echo $GTK_LIBS | sed 's/^ *-L\([^ ]*\) .*$/\1/'`
+       GTK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gtk[^ ]*\) .*/\1/'`
+       GDK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gdk[^ ]*\) .*/\1/'`
+
+       GLIB_STATIC_LOC=`echo $GTK_LIBS | sed -e 's/^.*-lgdk[^ ]* *-L\([^ ]*\).*$/\1/' -e 's/^.* -lgdk[^ ]* .*$//'`
+       if test ! "$GLIB_STATIC_LOC" ; then
+         GLIB_STATIC_LOC=$GTK_STATIC_LOC
+       fi
+       GMODULE_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gmodule[^ ]*\) .*/\1/'`
+       GLIB_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(glib[^ ]*\) .*/\1/'`
+
+       GTK_OTHER_LIBS=`echo $GTK_LIBS | sed 's/^.*-lglib *\(.*\)/\1/'`
+
+       changequote([,])
+
+       TK_LIBS="$GTK_STATIC_LOC/lib${GTK_STATIC}.a"
+       TK_LIBS="$TK_LIBS $GTK_STATIC_LOC/lib${GDK_STATIC}.a"
+       TK_LIBS="$TK_LIBS $GLIB_STATIC_LOC/lib${GMODULE_STATIC}.a"
+       TK_LIBS="$TK_LIBS $GLIB_STATIC_LOC/lib${GLIB_STATIC}.a"
+       TK_LIBS="$TK_LIBS $GTK_LIBS_LOC $GTK_OTHER_LIBS"
+    fi
+    TK_CFLAGS=$GTK_CFLAGS
+fi
+
+fi # $no_x
+
+AC_SUBST(GTK_CONFIG)
+AC_SUBST(TK_CFLAGS)
+AC_SUBST(TK_LIBS)
+
+XCFLAGS="$X_CFLAGS"
+
+AC_SUBST(XCFLAGS)
+AC_SUBST(XLDFLAGS)
+AC_SUBST(XLIBS)
+
 dnl Checks for header files.
 dnl ========================================================
 AC_HEADER_DIRENT
@@ -746,24 +914,6 @@ MOZ_ARG_DISABLE_BOOL(brprof,
 [  --disable-brprof        Disable browsing profile cookie],
   [MOZ_BRPROF= ] )
 
-useRhapsody=`echo $target_os | egrep "^Rhapsody"`
-MOZ_ARG_ENABLE_STRING(toolkit,
-[  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
-  [if test "$enableval" = "motif" \
-        -o "$enableval" = "gtk" \
-        -o "$useRhapsody" ; then
-     dnl nglayout only supports building with one toolkit,
-     dnl so ignore everything after the first comma (",").
-     MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
-   else
-     AC_MSG_ERROR(Toolkit must be either gtk or motif.)
-   fi], 
-  [if test "$useRhapsody" ; then
-     MOZ_TOOLKIT="rhapsody"
-   else
-     MOZ_TOOLKIT="gtk"
-   fi])
-
 dnl ========================================================
 dnl =
 dnl = Compiler Options
@@ -966,157 +1116,6 @@ AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
 AC_SUBST(BUILD_XPIDL)
 AC_SUBST(BUILD_IDLC)
-
-
-dnl Checks for X libraries.
-dnl Ordering is important.
-dnl Xt is dependent upon SM as of X11R6
-dnl ========================================================
-if test "$no_x" != "yes"; then
-_SAVE_LDFLAGS="$LDFLAGS"
-LDFLAGS="$XLDFLAGS $LDFLAGS"
-AC_CHECK_LIB(X11, XDrawLines, [XLIBS="-lX11 $XLIBS"],
-	[MISSING_X="$MISSING_X -lX11"], $XLIBS)
-AC_CHECK_LIB(Xext, XextAddDisplay, [XLIBS="-lXext $XLIBS"],
-	[MISSING_X="$MISSING_X -lXext"], $XLIBS)
-AC_CHECK_LIB(ICE, IceFlush, [XLIBS="-lICE $XLIBS"],, $XLIBS)
-AC_CHECK_LIB(SM, SmcCloseConnection, [XLIBS="-lSM $XLIBS"],, $XLIBS)
-AC_CHECK_LIB(Xt, XtFree, [XLIBS="-lXt $XLIBS"],
-	[MISSING_X="$MISSING_X -lXt"], $XLIBS)
-AC_CHECK_LIB(Xmu, XmuLookupString, [XLIBS="-lXmu $XLIBS"],
-	[MISSING_X="$MISSING_X -lXmu"], $XLIBS)
-LDFLAGS="$_SAVE_LDFLAGS"
-
-dnl Check for toolkit libs
-dnl ========================================================
-if echo ":$MOZ_TOOLKIT" | grep "motif" >/dev/null; then
-if test "$no_x" != "yes"; then
-    if test "$x_includes"; then
-	MOTIF_XINCS="-xif -I$x_includes"
-    fi
-
-    $_detect_motif="${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS"
-    MOTIF_VERSION=`      $_detect_motif`
-    MOTIF_INCLUDES=`     $_detect_motif -if`
-    MOTIF_STATIC_FLAGS=` $_detect_motif -sf`
-    MOTIF_DYNAMIC_FLAGS=`$_detect_motif -df`
-    MOTIF_DYNAMIC_PATHS=`$_detect_motif -dp`
-    MOTIF_REQUIRES_XPM=` $_detect_motif -xpm`
-
-    ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
-fi
-
-    if test "$MOTIF_REQUIRES_XPM" = "True" -o "$MOTIF_VERSION" = "2.1"; then
-        _SAVE_LDFLAGS="$LDFLAGS"
-    	LDFLAGS="$XLDFLAGS $LDFLAGS"
-	if test "$MOTIF_REQUIRES_XPM" = "True"; then
-	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
-		TK_LIBS="-lXpm $TK_LIBS", 
-		[MISSING_MOTIF="-lXpm $MISSING_MOTIF"], $XLIBS)
-	fi
-	if test "$MOTIF_VERSION" = "2.1"; then
-	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
-		TK_LIBS="-lXp $TK_LIBS",
-		[MISSING_MOTIF="-lXp $MISSING_MOTIF"], $XLIBS)
-	fi
-	TK_LIBS="$XLDFLAGS $TK_LIBS"
-	LDFLAGS="$_SAVE_LDFLAGS"
-    fi
-
-    if test "$MOTIF_STATIC_LIB" = "unknown" \
-         -a "$MOTIF_DYNAMIC_LIB" = "unknown"; then
-	AC_ERROR("Cannot find neither dynamic nor static motif libraries.")
-    fi
-
-    # Get rid of offending error values
-    if test "$MOTIF_DYNAMIC_PATHS" = "unknown"; then 
-	MOTIF_DYNAMIC_PATHS=
-    fi
-
-    if test "$MOTIF_DYNAMIC_FLAGS" = "unknown"; then 
-	MOTIF_DYNAMIC_FLAGS=
-    fi
-
-    if test "$MOTIF_STATIC_FLAGS" = "unknown"; then 
-	MOTIF_STATIC_FLAGS=
-    fi
-
-    if test "$MOTIF_INCLUDE_DIR" = "unknown"; then
-	MOTIF_INCLUDE_DIR=
-    fi
-
-    AC_ARG_WITH(static-motif,
-    [  --with-static-motif     link motif statically if possible],
-	sysstaticmotif=$withval)
-
-    if test "$sysstaticmotif" != "yes"; then
-	_SAVE_LDFLAGS="$LDFLAGS"
-    	LDFLAGS="$MOTIF_DYNAMIC_PATHS $XLDFLAGS $LDFLAGS"
-    	AC_CHECK_LIB(Xm, XmStringCreate, 
-	    TK_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $TK_LIBS",
-	    [MISSING_MOTIF="$MOTIF_DYNAMIC_FLAGS $MISSING_MOTIF"], 
-	    $MOTIF_DYNAMIC_PATHS $TK_LIBS $XLIBS)
-	LDFLAGS="$_SAVE_LDFLAGS"
-    else
-    	AC_CHECK_LIB(Xm, XmStringCreate, 
-	    TK_LIBS="$MOTIF_STATIC_FLAGS $TK_LIBS",
-	    [MISSING_MOTIF="$MOTIF_STATIC_FLAGS $MISSING_MOTIF"], 
-	    $TK_LIBS $XLIBS)
-    fi
-
-    TK_CFLAGS="$MOTIF_INCLUDES"
-fi
-
-if echo ":$MOZ_TOOLKIT" | grep "gtk" >/dev/null; then
-    AM_PATH_GTK($GTK_VERSION,,
-      AC_MSG_ERROR(Test for GTK failed.))
-
-    AC_ARG_WITH(static-gtk,
-    [  --with-static-gtk       link gtk statically if possible],
-	sysstaticgtk=$withval)
-
-    if test "$sysstaticgtk" != "yes"; then
-       TK_LIBS=$GTK_LIBS
-    else
-       changequote(,)
-
-       GTK_LIBS_LOC=`echo $GTK_LIBS | sed 's/\(.*\)\(-lgtk.*\)/\1/'`
-
-       GTK_STATIC_LOC=`echo $GTK_LIBS | sed 's/^ *-L\([^ ]*\) .*$/\1/'`
-       GTK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gtk[^ ]*\) .*/\1/'`
-       GDK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gdk[^ ]*\) .*/\1/'`
-
-       GLIB_STATIC_LOC=`echo $GTK_LIBS | sed -e 's/^.*-lgdk[^ ]* *-L\([^ ]*\).*$/\1/' -e 's/^.* -lgdk[^ ]* .*$//'`
-       if test ! "$GLIB_STATIC_LOC" ; then
-         GLIB_STATIC_LOC=$GTK_STATIC_LOC
-       fi
-       GMODULE_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gmodule[^ ]*\) .*/\1/'`
-       GLIB_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(glib[^ ]*\) .*/\1/'`
-
-       GTK_OTHER_LIBS=`echo $GTK_LIBS | sed 's/^.*-lglib *\(.*\)/\1/'`
-
-       changequote([,])
-
-       TK_LIBS="$GTK_STATIC_LOC/lib${GTK_STATIC}.a"
-       TK_LIBS="$TK_LIBS $GTK_STATIC_LOC/lib${GDK_STATIC}.a"
-       TK_LIBS="$TK_LIBS $GLIB_STATIC_LOC/lib${GMODULE_STATIC}.a"
-       TK_LIBS="$TK_LIBS $GLIB_STATIC_LOC/lib${GLIB_STATIC}.a"
-       TK_LIBS="$TK_LIBS $GTK_LIBS_LOC $GTK_OTHER_LIBS"
-    fi
-    TK_CFLAGS=$GTK_CFLAGS
-fi
-
-fi # $no_x
-
-AC_SUBST(GTK_CONFIG)
-AC_SUBST(TK_CFLAGS)
-AC_SUBST(TK_LIBS)
-
-XCFLAGS="$X_CFLAGS"
-
-AC_SUBST(XCFLAGS)
-AC_SUBST(XLDFLAGS)
-AC_SUBST(XLIBS)
 
 dnl system JPEG support
 dnl ========================================================
