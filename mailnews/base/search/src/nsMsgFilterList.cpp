@@ -507,25 +507,28 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
 				m_curFilter->SetFilterScript(&value);
 			break;
 		case nsIMsgFilterList::attribAction:
-			m_curFilter->m_action.m_type = nsMsgFilter::GetActionForFilingStr(value);
-			break;
+            if (m_curFilter)
+              m_curFilter->m_action.m_type = nsMsgFilter::GetActionForFilingStr(value);
+            break;
 		case nsIMsgFilterList::attribActionValue:
-			if (m_curFilter->m_action.m_type == nsMsgFilterAction::MoveToFolder)
-				err = m_curFilter->ConvertMoveToFolderValue(value);
-			else if (m_curFilter->m_action.m_type == nsMsgFilterAction::ChangePriority)
-			{
-				nsMsgPriorityValue outPriority;
-				nsresult res = NS_MsgGetPriorityFromString(value.get(), &outPriority);
-				if (NS_SUCCEEDED(res))
-				{
-					m_curFilter->SetAction(m_curFilter->m_action.m_type);
-                    m_curFilter->SetActionPriority(outPriority);
-				}
-				else
-					NS_ASSERTION(PR_FALSE, "invalid priority in filter file");
-
-			}
-			break;
+            if (m_curFilter)
+            {
+              if (m_curFilter->m_action.m_type == nsMsgFilterAction::MoveToFolder)
+                err = m_curFilter->ConvertMoveToFolderValue(value);
+              else if (m_curFilter->m_action.m_type == nsMsgFilterAction::ChangePriority)
+              {
+                nsMsgPriorityValue outPriority;
+                nsresult res = NS_MsgGetPriorityFromString(value.get(), &outPriority);
+                if (NS_SUCCEEDED(res))
+                {
+                  m_curFilter->SetAction(m_curFilter->m_action.m_type);
+                  m_curFilter->SetActionPriority(outPriority);
+                }
+                else
+                  NS_ASSERTION(PR_FALSE, "invalid priority in filter file");
+              }
+            }
+            break;
 		case nsIMsgFilterList::attribCondition:
 			err = ParseCondition(value);
 			break;
