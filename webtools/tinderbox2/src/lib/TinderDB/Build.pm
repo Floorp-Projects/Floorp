@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:21:46 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/08/24 14:51:47 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -50,7 +50,7 @@
 #                      (including the hostname, and 
 #			OS of the buildmachine)
 #       status => The final status of the build 
-#       		(success, busted, testfailed, etc)
+#       		(success, build_failed, test_failed, etc)
 #       info => A string to be displayed to users interested in this build.
 #
 #       timenow => The time that the status was last reported
@@ -204,7 +204,7 @@ push @TinderDB::HTML_COLUMNS, TinderDB::Build->new();
                           'order'=>  1,
                          },
            
-           'busted' => {
+           'build_failed' => {
                         'html_color' => 'red',
                         'hdml_char'=> '!',
                         'handler' => \&main::null,
@@ -815,12 +815,10 @@ sub apply_db_updates {
 
   foreach $update_file (@sorted_files) {
 
-    # This require will set a variable called $record with all
-    # the info from this build update.
+    my ($record) = Persistence::load_structure("$dirname/$update_file");
 
-    require ("$dirname/$update_file") ||
-      die("Could not eval filename: ".
-          "'$dirname/$filename': $!\n");
+    ($record) ||
+      die("Error reading Build update file '$dirname/$update_file'.\n");
 
     my ($build) = $record->{'buildname'};
     my ($buildstatus) = $record->{'status'};
@@ -887,8 +885,11 @@ sub apply_db_updates {
       $info .= ("starttime: ".
                 &HTMLPopUp::timeHTML($record->{'starttime'}).
                 "<br>");
+
+      # round the division
+
       $info .= ("runtime: ".
-                ($record->{'runtime'}/60).
+                sprintf("%.2f", ($record->{'runtime'}/60)).
                 " (minutes)<br>");
       $info .= "buildstatus: $record->{'status'}<br>";
       $info .= "buildname: $record->{'buildname'}<br>";
