@@ -53,9 +53,10 @@ $build{common} 			= 0;
 $build{intl} 			= 0;
 $build{nglayout} 		= 0;
 $build{editor} 			= 0;
-$build{mailnews} 		= 0;
 $build{viewer} 			= 0;
 $build{xpapp} 			= 0;
+$build{mailnews} 		= 0;
+$build{apprunner}		= 0;
 
 #-----------------------------------------------
 # configuration variables that affect the manner
@@ -109,9 +110,10 @@ if ($build{most})
 #   $build{intl}		= 1; 
 #	$build{nglayout}	= 1;
 #	$build{editor}		= 1;
-#	$build{mailnews}	= 1;
 #	$build{viewer}		= 1;
-	$build{xpapp}		= 1;
+#	$build{xpapp}		= 1;
+#	$build{mailnews}	= 1;
+	$build{apprunner}	= 1;
 }
 
 # do the work
