@@ -463,6 +463,7 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::InitPrintSettingsFromPrinter(const PRUnich
 
   // Free them, we won't need them for a while
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
+  aPrintSettings->SetIsInitializedFromPrinter(PR_TRUE);
   return NS_OK;
 }
 
