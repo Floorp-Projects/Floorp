@@ -60,18 +60,23 @@ nsContentSupportMap::ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr)
 void
 nsContentSupportMap::Init()
 {
-    PL_DHashTableInit(&mMap, &gOps, nsnull, sizeof(Entry), PL_DHASH_MIN_SIZE);
+    if (!PL_DHashTableInit(&mMap, &gOps, nsnull, sizeof(Entry), PL_DHASH_MIN_SIZE))
+        mMap.ops = nsnull;
 }
 
 void
 nsContentSupportMap::Finish()
 {
-    PL_DHashTableFinish(&mMap);
+    if (mMap.ops)
+        PL_DHashTableFinish(&mMap);
 }
 
 nsresult
 nsContentSupportMap::Remove(nsIContent* aElement)
 {
+    if (!mMap.ops)
+        return NS_ERROR_NOT_INITIALIZED;
+
     PL_DHashTableOperate(&mMap, aElement, PL_DHASH_REMOVE);
 
     PRInt32 count;
