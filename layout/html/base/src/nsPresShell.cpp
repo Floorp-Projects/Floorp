@@ -122,7 +122,8 @@
 #include "nsWeakPtr.h"
 #include "plarena.h"
 #include "pldhash.h"
-#include "nsIObserverService.h" // for reflow observation
+#include "nsIObserverService.h"
+#include "nsIObserver.h"
 #include "nsIDocShell.h"        // for reflow observation
 #include "nsLayoutErrors.h"
 #include "nsLayoutUtils.h"
@@ -1058,7 +1059,7 @@ ReflowCommandHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   public nsStubDocumentObserver, public nsIFocusTracker,
-                  public nsISelectionController,
+                  public nsISelectionController, public nsIObserver,
                   public nsSupportsWeakReference
 {
 public:
@@ -1297,6 +1298,8 @@ public:
                                 nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule);
 
+  NS_DECL_NSIOBSERVER
+
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD DumpReflows();
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame);
@@ -1418,7 +1421,6 @@ protected:
   nsCOMPtr<nsIEventQueue>       mReflowEventQueue;
   FrameArena                    mFrameArena;
   StackArena*                   mStackArena;
-  nsCOMPtr<nsIObserverService>  mObserverService; // Observer service for reflow events
   nsCOMPtr<nsIDragService>      mDragService;
   PRInt32                       mRCCreatedDuringLoad; // Counter to keep track of reflow commands created during doc
   nsCOMPtr<nsIRequest>          mDummyLayoutRequest;
@@ -1625,51 +1627,9 @@ PresShell::PresShell():
   new (this) nsFrameManager();
 }
 
-NS_IMPL_ADDREF(PresShell)
-NS_IMPL_RELEASE(PresShell)
-
-nsresult
-PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  if (!aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIPresShell))) {
-    nsIPresShell* tmp = this;
-    *aInstancePtr = (void*) tmp;
-  } else if (aIID.Equals(NS_GET_IID(nsIDocumentObserver))) {
-    nsIDocumentObserver* tmp = this;
-    *aInstancePtr = (void*) tmp;
-  } else if (aIID.Equals(NS_GET_IID(nsIViewObserver))) {
-    nsIViewObserver* tmp = this;
-    *aInstancePtr = (void*) tmp;
-  } else if (aIID.Equals(NS_GET_IID(nsIFocusTracker))) {
-    nsIFocusTracker* tmp = this;
-    *aInstancePtr = (void*) tmp;
-  } else if (aIID.Equals(NS_GET_IID(nsISelectionController))) {
-    nsISelectionController* tmp = this;
-    *aInstancePtr = (void*) tmp;
-  } else if (aIID.Equals(NS_GET_IID(nsISelectionDisplay))) {
-    nsISelectionController* tmp = this;
-    *aInstancePtr = (void*) tmp;
-  } else if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
-    nsISupportsWeakReference* tmp = this;
-    *aInstancePtr = (void*) tmp;
-  } else if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    nsIPresShell* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
-  } else {
-    *aInstancePtr = nsnull;
-
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF_THIS();
-
-  return NS_OK;
-}
+NS_IMPL_ISUPPORTS8(PresShell, nsIPresShell, nsIDocumentObserver,
+                   nsIViewObserver, nsIFocusTracker, nsISelectionController,
+                   nsISelectionDisplay, nsIObserver, nsISupportsWeakReference)
 
 PresShell::~PresShell()
 {
@@ -1839,13 +1799,14 @@ PresShell::Init(nsIDocument* aDocument,
                                   PR_TRUE);
   }
 
-  // cache the observation service
-  mObserverService = do_GetService("@mozilla.org/observer-service;1",
-                                   &result);
-  if (NS_FAILED(result)) {
-    mStyleSet = nsnull;
-    return result;
+#ifdef MOZ_XUL
+  {
+    nsCOMPtr<nsIObserverService> os =
+      do_GetService("@mozilla.org/observer-service;1", &result);
+    if (os)
+      os->AddObserver(this, "chrome-flush-skin-caches", PR_FALSE);
   }
+#endif
 
   // cache the drag service so we can check it during reflows
   mDragService = do_GetService("@mozilla.org/widget/dragservice;1");
@@ -1887,6 +1848,15 @@ PresShell::Destroy()
 
   if (mHaveShutDown)
     return NS_OK;
+
+#ifdef MOZ_XUL
+  {
+    nsCOMPtr<nsIObserverService> os =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (os)
+      os->RemoveObserver(this, "chrome-flush-skin-caches");
+  }
+#endif
 
   // If our paint suppression timer is still active, kill it.
   if (mPaintSuppressionTimer) {
@@ -6547,6 +6517,91 @@ PresShell::RemoveDummyLayoutRequest(void)
     }
   }
   return rv;
+}
+
+#ifdef MOZ_XUL
+/*
+ * It's better to add stuff to the |DidSetStyleContext| method of the
+ * relevant frames than adding it here.  These methods should (ideally,
+ * anyway) go away.
+ */
+
+// Return value says whether to walk children.
+typedef PRBool (* PR_CALLBACK frameWalkerFn)(nsIFrame *aFrame, void *aClosure);
+   
+PR_STATIC_CALLBACK(PRBool)
+ReResolveMenusAndTrees(nsIFrame *aFrame, void *aClosure)
+{
+  // Trees have a special style cache that needs to be flushed when
+  // the theme changes.
+  nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(aFrame));
+  if (treeBox)
+    treeBox->ClearStyleAndImageCaches();
+
+  // We deliberately don't re-resolve style on a menu's popup
+  // sub-content, since doing so slows menus to a crawl.  That means we
+  // have to special-case them on a skin switch, and ensure that the
+  // popup frames just get destroyed completely.
+  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(aFrame));
+  if (menuFrame) {
+    menuFrame->UngenerateMenu();  
+    menuFrame->OpenMenu(PR_FALSE);
+  }
+  return PR_TRUE;
+}
+
+static void
+WalkFramesThroughPlaceholders(nsIPresContext *aPresContext, nsIFrame *aFrame,
+                              frameWalkerFn aFunc, void *aClosure)
+{
+  PRBool walkChildren = (*aFunc)(aFrame, aClosure);
+  if (!walkChildren)
+    return;
+
+  PRInt32 listIndex = 0;
+  nsIAtom* childList = nsnull;
+
+  do {
+    nsIFrame *child = aFrame->GetFirstChild(childList);
+    while (child) {
+      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+        // only do frames that are in flow
+        if (nsLayoutAtoms::placeholderFrame == child->GetType()) {
+          // get out of flow frame and recur there
+          nsIFrame* outOfFlowFrame =
+              NS_STATIC_CAST(nsPlaceholderFrame*, child)->GetOutOfFlowFrame();
+          NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+          WalkFramesThroughPlaceholders(aPresContext, outOfFlowFrame,
+                                        aFunc, aClosure);
+        }
+        else
+          WalkFramesThroughPlaceholders(aPresContext, child, aFunc, aClosure);
+      }
+      child = child->GetNextSibling();
+    }
+
+    childList = aFrame->GetAdditionalChildListName(listIndex++);
+  } while (childList);
+}
+#endif
+
+NS_IMETHODIMP
+PresShell::Observe(nsISupports* aSubject, 
+                   const char* aTopic,
+                   const PRUnichar* aData)
+{
+#ifdef MOZ_XUL
+  if (!nsCRT::strcmp(aTopic, "chrome-flush-skin-caches")) {
+    nsIFrame *rootFrame;
+    GetRootFrame(&rootFrame);
+    WalkFramesThroughPlaceholders(mPresContext, rootFrame,
+                                  &ReResolveMenusAndTrees, nsnull);
+    return NS_OK;
+  }
+#endif
+
+  NS_WARNING("unrecognized topic in PresShell::Observe");
+  return NS_ERROR_FAILURE;
 }
 
 //------------------------------------------------------
