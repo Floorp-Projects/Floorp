@@ -85,6 +85,7 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLParts.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsIEventStateManager.h"
@@ -671,23 +672,12 @@ nsGenericHTMLElement::GetTagName(nsAWritableString& aTagName)
 nsresult
 nsGenericHTMLElement::GetNodeName(nsAWritableString& aNodeName)
 {
-  mNodeInfo->GetPrefix(aNodeName);
-  if (aNodeName.Length()) {
-    aNodeName.Append(PRUnichar(':'));
-  }
+  nsresult rv = mNodeInfo->GetQualifiedName(aNodeName);
 
-  nsAutoString tmp;
-  mNodeInfo->GetName(tmp);
+  if (mNodeInfo->NamespaceEquals(kNameSpaceID_None))
+    ToUpperCase(aNodeName);
 
-  if (mNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
-    // Only fold to uppercase if the HTML element has no namespace, i.e.,
-    // it was created as part of an HTML document.
-    tmp.ToUpperCase();
-  }
-
-  aNodeName.Append(tmp);
-
-  return NS_OK;
+  return rv;
 }
 
 nsresult
