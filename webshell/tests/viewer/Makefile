@@ -31,16 +31,21 @@ DIRS	=
 OBJS	= $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = \
+	$(DIST)/bin/libraptorevents_s.so	\
+	$(DIST)/bin/libnglcsslay_s.so	\
 	$(DIST)/bin/libraptorbase.so	\
 	$(DIST)/bin/libpng.so \
 	$(DIST)/bin/libpref.so \
 	$(DIST)/bin/libraptorbase.so \
+	$(DIST)/bin/libraptorhtmlbase_s.so \
 	$(DIST)/bin/libwidgetunix.so \
 	$(DIST)/bin/libraptorgfx.so \
 	$(DIST)/bin/libgfxunix.so \
 	$(DIST)/bin/libraptorhtml.so \
+	$(DIST)/bin/libraptorlayout_s.so \
 	$(DIST)/bin/libgmbaseunix.so \
 	$(DIST)/bin/libraptorhtmlpars.so \
+	$(DIST)/bin/libraptorhtmlstyle_s.so \
 	$(DIST)/bin/libraptorview.so \
 	$(DIST)/bin/libreg.so \
 	$(DIST)/bin/libabouturl.so \
