@@ -85,8 +85,12 @@ sub find_scrape_data {
       # Strip off the TinderboxPrint: part of the line
       chomp;
       s/.*TinderboxPrint://;
+
+      # No longer use ; to create separate lines.
       #@line = split(';', $_);
-      push(@rv, $_);
+
+      $line[0] = $_;
+      push(@rv, @line);
     }
   }
   return @rv;
