@@ -17,8 +17,11 @@
  */
 
 #include "nsDrawingSurfaceXlib.h"
+#include "prlog.h"
 
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
+
+static PRLogModuleInfo *DrawingSurfaceXlibLM = PR_NewLogModule("DrawingSurfaceXlib");
 
 extern Display         *gDisplay;
 extern Screen          *gScreen;
@@ -47,7 +50,7 @@ extern PRUint8   gAlphaShift;      //number to shift value into alpha position
 nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
 {
   NS_INIT_REFCNT();
-  printf("nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()\n");
+  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()\n"));
   mDrawable = 0;
   mDestroyDrawable = PR_FALSE;
   mImage = nsnull;
@@ -80,7 +83,7 @@ nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
 
 nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()
 {
-  printf("nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()\n");
+  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()\n"));
   // if it's been labeled as destroy, it's a pixmap.
   if (mDestroyDrawable) {
     XFreePixmap(gDisplay, mDrawable);
@@ -96,7 +99,7 @@ NS_IMPL_RELEASE(nsDrawingSurfaceXlib)
 
 NS_IMETHODIMP
 nsDrawingSurfaceXlib::Init(Drawable aDrawable, GC aGC) {
-  printf("nsDrawingSurfaceXlib::Init()\n");
+  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::Init()\n"));
   mGC = aGC;
   mDrawable = aDrawable;
   mIsOffscreen = PR_FALSE;
@@ -124,7 +127,7 @@ nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
                            void **aBits, PRInt32 *aStride,
                            PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-  printf("nsDrawingSurfaceXlib::Lock()\n");
+  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::Lock()\n"));
   if (mLocked)
   {
     NS_ASSERTION(0, "nested lock attempt");
@@ -155,7 +158,7 @@ nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
 NS_IMETHODIMP
 nsDrawingSurfaceXlib::Unlock(void)
 {
-  printf("nsDrawingSurfaceXlib::UnLock()\n");
+  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::UnLock()\n"));
   if (!mLocked) {
     NS_ASSERTION(0, "attempting to unlock an DS that isn't locked");
     return NS_ERROR_FAILURE;

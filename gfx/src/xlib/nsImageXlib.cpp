@@ -19,12 +19,15 @@
 #include "nsImageXlib.h"
 #include "nsDrawingSurfaceXlib.h"
 #include "xlibrgb.h"
+#include "prlog.h"
 
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
+static PRLogModuleInfo *ImageXlibLM = PR_NewLogModule("ImageXlib");
+
 nsImageXlib::nsImageXlib()
 {
-  //  printf("nsImageXlib::nsImageXlib()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::nsImageXlib()\n"));
   NS_INIT_REFCNT();
   mImageBits = nsnull;
   mAlphaBits = nsnull;
@@ -46,7 +49,7 @@ nsImageXlib::nsImageXlib()
 
 nsImageXlib::~nsImageXlib()
 {
-  //printf("nsImageXlib::nsImageXlib()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG,("nsImageXlib::nsImageXlib()\n"));
   if (nsnull != mImageBits) {
     delete[] mImageBits;
     mImageBits = nsnull;
@@ -68,28 +71,28 @@ NS_IMPL_ISUPPORTS(nsImageXlib, kIImageIID);
 PRInt32
 nsImageXlib::GetHeight()
 {
-  //  printf("nsImageXlib::GetHeight()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::GetHeight()\n"));
   return mHeight;
 }
 
 PRInt32
 nsImageXlib::GetWidth()
 {
-  //  printf("nsImageXlib::GetWidth()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::GetWidth()\n"));
   return mWidth;
 }
 
 PRUint8*
 nsImageXlib::GetBits()
 {
-  //  printf("nsImageXlib::GetBits()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::GetBits()\n"));
   return mImageBits;
 }
 
 PRInt32
 nsImageXlib::GetLineStride()
 {
-  //  printf("nsImageXlib::GetLineStride()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::GetLineStride()\n"));
   return mRowBytes;
 }
 
@@ -99,7 +102,7 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
                   PRInt32 aX, PRInt32 aY,
                   PRInt32 aWidth, PRInt32 aHeight)
 {
-  printf("nsImageXlib::Draw()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::Draw()\n"));
   // XXX from gtk code: this is temporary until the
   // height/width args are removed from the draw method
   if ((aWidth != mWidth) || (aHeight != mHeight)) {
@@ -188,7 +191,7 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
                   PRInt32 aDX, PRInt32 aDY,
                   PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  printf("nsImageXlib::Draw()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::Draw()\n"));
   nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib *)aSurface;
   xlib_draw_rgb_image (drawing->GetDrawable(),
                        drawing->GetGC(),
@@ -203,7 +206,7 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
 nsColorMap*
 nsImageXlib::GetColorMap()
 {
-  printf("nsImageXlib::GetColorMap()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::GetColorMap()\n"));
   return 0;
 }
 
@@ -211,7 +214,7 @@ void
 nsImageXlib::ImageUpdated(nsIDeviceContext *aContext,
                           PRUint8 aFlags, nsRect *aUpdateRect)
 {
-  printf("nsImageXlib::ImageUpdated()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::ImageUpdated()\n"));
   if (nsImageUpdateFlags_kBitsChanged & aFlags) {
     if (mAlphaPixmap != 0) {
       XFreePixmap(gDisplay, mAlphaPixmap);
@@ -228,7 +231,7 @@ nsresult
 nsImageXlib::Init(PRInt32 aWidth, PRInt32 aHeight,
                   PRInt32 aDepth, nsMaskRequirements aMaskRequirements)
 {
-  printf("nsImageXlib::Init()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::Init()\n"));
   
   if (nsnull != mImageBits) {
     delete[] mImageBits;
@@ -295,49 +298,49 @@ nsImageXlib::Init(PRInt32 aWidth, PRInt32 aHeight,
 PRBool
 nsImageXlib::IsOptimized()
 {
-  //  printf("nsImageXlib::IsOptimized()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::IsOptimized()\n"));
   return PR_TRUE;
 }
 
 nsresult
 nsImageXlib::Optimize(nsIDeviceContext* aContext)
 {
-  //  printf("nsImageXlib::Optimize()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::Optimize()\n"));
   return 0;
 }
 
 PRUint8*
 nsImageXlib::GetAlphaBits()
 {
-  //  printf("nsImageXlib::GetAlphaBits()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::GetAlphaBits()\n"));
   return mAlphaBits;
 }
 
 PRInt32
 nsImageXlib::GetAlphaWidth()
 {
-  //  printf("nsImageXlib::GetAlphaWidth()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::GetAlphaWidth()\n"));
   return mAlphaWidth;
 }
 
 PRInt32
 nsImageXlib::GetAlphaHeight()
 {
-  //  printf("nsImageXlib::GetAlphaHeight()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::GetAlphaHeight()\n"));
   return mAlphaHeight;
 }
 
 PRInt32
 nsImageXlib::GetAlphaLineStride()
 {
-  //  printf("nsImageXlib::GetAlphaLineStride()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::GetAlphaLineStride()\n"));
   return mAlphaRowBytes;
 }
 
 PRInt32
 nsImageXlib::CalcBytesSpan(PRUint32  aWidth)
 {
-  //  printf("nsImageXlib::CalcBytesSpan()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::CalcBytesSpan()\n"));
   PRInt32 spanbytes;
 
   spanbytes = (aWidth * mDepth) >> 5;
@@ -351,13 +354,13 @@ nsImageXlib::CalcBytesSpan(PRUint32  aWidth)
 void
 nsImageXlib::SetAlphaLevel(PRInt32 aAlphaLevel)
 {
-  //  printf("nsImageXlib::SetAlphaLevel()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::SetAlphaLevel()\n"));
   return;
 }
 
 PRInt32 nsImageXlib::GetAlphaLevel()
 {
-  //  printf("nsImageXlib::GetAlphaLevel()\n");
+  PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::GetAlphaLevel()\n"));
   return 0;
 }
 
