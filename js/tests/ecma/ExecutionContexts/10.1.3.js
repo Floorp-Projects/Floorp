@@ -57,7 +57,7 @@ function getTestCases() {
         new TestCase(SECTION,
                      "var t; function t(){}; typeof(t)",
                      "function",
-                     eval("var t; "function t(){}; typeof(t)"));
+                     eval("var t; function t(){}; typeof(t)"));
 
 
     // formal parameter tests
