@@ -72,6 +72,7 @@
 #include "nsMsgPrompts.h"
 #include "nsMimeTypes.h"
 #include "nsICharsetConverterManager.h"
+#include "nsTextFormatter.h"
 #include "nsIEditor.h"
 #include "nsIPlaintextEditor.h"
 #include "nsEscape.h"
@@ -124,13 +125,47 @@ static PRInt32 GetReplyOnTop()
   return reply_on_top;
 }
 
-static PRInt32 GetReplyHeaderType()
+static nsresult GetReplyHeaderInfo(PRInt32* reply_header_type, 
+                                   PRUnichar** reply_header_locale,
+                                   PRUnichar** reply_header_authorwrote,
+                                   PRUnichar** reply_header_ondate,
+                                   PRUnichar** reply_header_separator,
+                                   PRUnichar** reply_header_colon,
+                                   PRUnichar** reply_header_originalmessage)
 {
-  PRInt32 reply_header_type = 1;  
+  nsresult rv = NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-  if (prefs)
-    prefs->GetIntPref("mailnews.reply_header_type", &reply_header_type); 
-  return reply_header_type;
+  if (prefs) {
+    rv = prefs->GetIntPref("mailnews.reply_header_type", reply_header_type);
+    if (NS_FAILED(rv))
+      *reply_header_type = 1;
+
+    rv = prefs->CopyUnicharPref("mailnews.reply_header_locale", reply_header_locale);
+    if (NS_FAILED(rv) || !*reply_header_locale)
+      *reply_header_locale = nsCRT::strdup(NS_LITERAL_STRING("").get());
+
+    rv = prefs->CopyUnicharPref("mailnews.reply_header_authorwrote", reply_header_authorwrote);
+    if (NS_FAILED(rv) || !*reply_header_authorwrote)
+      *reply_header_authorwrote = nsCRT::strdup(NS_LITERAL_STRING("%s wrote").get());
+
+    rv = prefs->CopyUnicharPref("mailnews.reply_header_ondate", reply_header_ondate);
+    if (NS_FAILED(rv) || !*reply_header_ondate)
+      *reply_header_ondate = nsCRT::strdup(NS_LITERAL_STRING("On %s").get());
+
+    rv = prefs->CopyUnicharPref("mailnews.reply_header_separator", reply_header_separator);
+    if (NS_FAILED(rv) || !*reply_header_separator)
+      *reply_header_separator = nsCRT::strdup(NS_LITERAL_STRING(", ").get());
+
+    rv = prefs->CopyUnicharPref("mailnews.reply_header_colon", reply_header_colon);
+    if (NS_FAILED(rv) || !*reply_header_colon)
+      *reply_header_colon = nsCRT::strdup(NS_LITERAL_STRING(":").get());
+
+    rv = prefs->CopyUnicharPref("mailnews.reply_header_originalmessage", reply_header_originalmessage);
+    if (NS_FAILED(rv) || !*reply_header_originalmessage)
+      *reply_header_originalmessage = nsCRT::strdup(NS_LITERAL_STRING("--- Original Message ---").get());
+  }
+  return rv;
 }
 
 static nsresult RemoveDuplicateAddresses(const char * addresses, const char * anothersAddresses, PRBool removeAliasesToMe, char** newAddress)
@@ -1426,6 +1461,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
 
   if (! mHeadersOnly)
   {
+    nsXPIDLString replyHeaderOriginalmessage;
    // For the built message body...
    nsCOMPtr <nsIMsgDBHdr> originalMsgHdr;
    rv = GetMsgDBHdrFromURI(originalMsgURI, getter_AddRefs(originalMsgHdr));
@@ -1456,26 +1492,45 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
 
       
       PRBool header, headerDate;
+      PRInt32 replyHeaderType;
+      nsXPIDLString replyHeaderLocale;
+      nsXPIDLString replyHeaderAuthorwrote;
+      nsXPIDLString replyHeaderOndate;
+      nsXPIDLString replyHeaderSeparator;
+      nsXPIDLString replyHeaderColon;
 
-      switch(GetReplyHeaderType())
+      // Get header type, locale and strings from pref.
+      rv = GetReplyHeaderInfo(&replyHeaderType, 
+                              getter_Copies(replyHeaderLocale),
+                              getter_Copies(replyHeaderAuthorwrote),
+                              getter_Copies(replyHeaderOndate),
+                              getter_Copies(replyHeaderSeparator),
+                              getter_Copies(replyHeaderColon),
+                              getter_Copies(replyHeaderOriginalmessage));
+
+      switch (replyHeaderType)
       {
         case 0: // No reply header at all
           header=PR_FALSE;
           headerDate=PR_FALSE;
           break;
 
-        case 2: // Insert both the original author and date in the reply header
+        case 2: // Insert both the original author and date in the reply header (date followed by author)
+        case 3: // Insert both the original author and date in the reply header (author followed by date)
           header=PR_TRUE;
           headerDate=PR_TRUE;
           break;
 
-        case 3: // XXX implement user specified header
+        case 4: // XXX implement user specified header
         case 1: // Default is to only view the author. We will reconsider this decision when bug 75377 is fixed.
         default:
           header=PR_TRUE;
           headerDate=PR_FALSE;
           break;
       }
+
+      nsAutoString citePrefixDate;
+      nsAutoString citePrefixAuthor;
 
       if (header)
       {
@@ -1494,22 +1549,32 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
               nsCOMPtr<nsILocale> locale;
               nsCOMPtr<nsILocaleService> localeService(do_GetService(NS_LOCALESERVICE_CONTRACTID));
 
-              // We can't have this date localizable since we don't know if the recipent understands
-              // the samelanguage as the sender, so we will have to fallback on en-US until bug 75377 
-              // is fixed - which will make this (and the other hard-coded strings) localizable!
-              localeService->NewLocale(NS_LITERAL_STRING("en-US").get(), getter_AddRefs(locale));
-                
-              rv = dateFormatter->FormatPRTime(locale,
-                                               kDateFormatShort,
-                                               kTimeFormatNoSeconds,
-                                               originalMsgDate,
-                                               formattedDateString);
-
-              if (NS_SUCCEEDED(rv)) 
+              // Format date using "mailnews.reply_header_locale", if empty then use application default locale.
+              if (replyHeaderLocale && *replyHeaderLocale)
+                rv = localeService->NewLocale(replyHeaderLocale.get(), getter_AddRefs(locale));
+              else
+                rv = localeService->GetApplicationLocale(getter_AddRefs(locale));
+              
+              if (NS_SUCCEEDED(rv))
               {
-                mCitePrefix += NS_LITERAL_STRING("On ") + // XXX see bug 75377 or read above, for why we hardcode this.
-                               formattedDateString + 
-                               NS_LITERAL_STRING(", ");
+                rv = dateFormatter->FormatPRTime(locale,
+                                                 kDateFormatShort,
+                                                 kTimeFormatNoSeconds,
+                                                 originalMsgDate,
+                                                 formattedDateString);
+
+                if (NS_SUCCEEDED(rv)) 
+                {
+                  // take care "On %s"
+                  PRUnichar *formatedString = nsnull;
+                  formatedString = nsTextFormatter::smprintf(replyHeaderOndate.get(), 
+                                                             NS_ConvertUCS2toUTF8(formattedDateString.get()).get());
+                  if (formatedString) 
+                  {
+                    citePrefixDate.Assign(formatedString);
+                    nsTextFormatter::smprintf_free(formatedString);
+                  }
+                }
               }
             }
           }
@@ -1520,38 +1585,70 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       rv = originalMsgHdr->GetMime2DecodedAuthor(getter_Copies(author));
       if (NS_SUCCEEDED(rv))
       {
-        char * authorName = nsnull;
         nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
 
         if (parser)
         {
-          nsCAutoString utf8Author;
-          utf8Author = NS_ConvertUCS2toUTF8(author);
-          nsAutoString authorStr; authorStr.Assign(author);
-
-          rv = parser->ExtractHeaderAddressName("UTF-8", utf8Author.get(),
-                                                &authorName);
-          if (NS_SUCCEEDED(rv))
-            authorStr = NS_ConvertUTF8toUCS2(authorName);
-
-          if (authorName)
-            PL_strfree(authorName);
-
-          if (NS_SUCCEEDED(rv) && !authorStr.IsEmpty())
-            mCitePrefix.Append(authorStr);
+          nsXPIDLCString authorName;
+          rv = parser->ExtractHeaderAddressName("UTF-8", NS_ConvertUCS2toUTF8(author).get(),
+                                                getter_Copies(authorName));
+          // take care "%s wrote"
+          PRUnichar *formatedString = nsnull;
+          if (NS_SUCCEEDED(rv) && authorName)
+            formatedString = nsTextFormatter::smprintf(replyHeaderAuthorwrote.get(), authorName.get());
           else
-            mCitePrefix.Append(author);
-          
-          mCitePrefix.Append(NS_LITERAL_STRING(" wrote:<br><html>"));// XXX see bug bug 75377 for why we hardcode this.
+            formatedString = nsTextFormatter::smprintf(replyHeaderAuthorwrote.get(), NS_ConvertUCS2toUTF8(author).get());
+          if (formatedString) 
+          {
+            citePrefixAuthor.Assign(formatedString);
+            nsTextFormatter::smprintf_free(formatedString);
+          }
         }
 
 
         }
+        if (replyHeaderType == 2)
+        {
+          mCitePrefix.Append(citePrefixDate);
+          mCitePrefix.Append(replyHeaderSeparator);
+          mCitePrefix.Append(citePrefixAuthor);
+        }
+        else if (replyHeaderType == 3) 
+        {
+          mCitePrefix.Append(citePrefixAuthor);
+          mCitePrefix.Append(replyHeaderSeparator);
+          mCitePrefix.Append(citePrefixDate);
+        }
+        else
+          mCitePrefix.Append(citePrefixAuthor);
+        mCitePrefix.Append(replyHeaderColon);
+        mCitePrefix.Append(NS_LITERAL_STRING("<br><html>"));
       }
     }
 
     if (mCitePrefix.IsEmpty())
-      mCitePrefix.Append(NS_LITERAL_STRING("<br><br>--- Original Message ---<br><html>"));
+    {
+      if (!replyHeaderOriginalmessage)
+      {
+        // This is not likely to happen but load the string if it's not done already.
+        PRInt32 replyHeaderType;
+        nsXPIDLString replyHeaderLocale;
+        nsXPIDLString replyHeaderAuthorwrote;
+        nsXPIDLString replyHeaderOndate;
+        nsXPIDLString replyHeaderSeparator;
+        nsXPIDLString replyHeaderColon;
+        rv = GetReplyHeaderInfo(&replyHeaderType, 
+                                getter_Copies(replyHeaderLocale),
+                                getter_Copies(replyHeaderAuthorwrote),
+                                getter_Copies(replyHeaderOndate),
+                                getter_Copies(replyHeaderSeparator),
+                                getter_Copies(replyHeaderColon),
+                                getter_Copies(replyHeaderOriginalmessage));
+      }
+      mCitePrefix.Append(NS_LITERAL_STRING("<br><br>"));
+      mCitePrefix.Append(replyHeaderOriginalmessage);
+      mCitePrefix.Append(NS_LITERAL_STRING("<br><html>"));
+    }
   }
   
   NS_INIT_REFCNT(); 

@@ -129,8 +129,16 @@ pref("mailnews.wraplength",                 72);
 
 pref("mailnews.reply_on_top",               0); // 0=bottom 1=top 2=select+bottom 3=select+top
 
-// 0=no header, 1="<author> wrote:", 2="On <date> <author> wrote:", 3=user specified
+// 0=no header, 1="<author> wrote:", 2="On <date> <author> wrote:", 3="<author> wrote On <date>:", 4=user specified
 pref("mailnews.reply_header_type",          1);
+// locale which affects date format, set empty string to use application default locale
+pref("mailnews.reply_header_locale",        "en-US");
+pref("mailnews.reply_header_authorwrote",   "%s wrote");
+pref("mailnews.reply_header_ondate",        "On %s");
+// separator to separate between date and author
+pref("mailnews.reply_header_separator",     ", ");
+pref("mailnews.reply_header_colon",         ":");
+pref("mailnews.reply_header_originalmessage",   "--- Original Message ---");
 
 pref("mail.purge_threshhold",                100);
 pref("mail.prompt_purge_threshhold",             false);   
