@@ -2150,6 +2150,14 @@ then
 			AC_DEFINE(_REENTRANT) 
 			;;
 
+	    *-aix4.3*)
+			AC_DEFINE(_REENTRANT) 
+			;;
+
+	    *-hpux11.*)
+			AC_DEFINE(_REENTRANT) 
+			;;
+
         *-*-os2*)
             USE_PTHREADS=
             _PTHREAD_LDFLAGS=
