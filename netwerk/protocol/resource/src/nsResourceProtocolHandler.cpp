@@ -25,6 +25,9 @@
 #include "nsIURL.h"
 #include "prmem.h"
 #include "prprf.h"
+#include "prenv.h"
+#include "xp_core.h"
+#include "xp_str.h"
 
 #ifdef XP_PC
 #include <windows.h>
