@@ -1283,12 +1283,10 @@ png_combine_row(png_structp png_ptr, png_bytep row, int mask)
          default:   // png_ptr->row_info.pixel_depth != 1,2,4,8,16,24,32,48,64
          {
             // this should never happen
-#ifdef DEBUG
             fprintf(stderr,
               "libpng internal error:  png_ptr->row_info.pixel_depth = %d\n",
               png_ptr->row_info.pixel_depth);
             fflush(stderr);
-#endif
             break;
          }
       } /* end switch (png_ptr->row_info.pixel_depth) */
@@ -3032,10 +3030,8 @@ png_read_filter_row_mmx_avg(png_row_infop row_info, png_bytep row,
       {
 
          // GRR:  PRINT ERROR HERE:  SHOULD NEVER BE REACHED
-#ifdef DEBUG
          fprintf(stderr,
            "libpng:  internal logic error (png_read_filter_row_mmx_avg())\n");
-#endif
 
 #if 0
         __asm__ __volatile__ (
