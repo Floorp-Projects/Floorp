@@ -24,7 +24,11 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = ps xlibrgb $(MOZ_GFX_TOOLKIT)
+ifneq (,$(filter gtk xlib motif,$(MOZ_WIDGET_TOOLKIT)))
+XLIB_RGB_DIRS = xlibrgb
+endif
+
+DIRS = ps $(XLIB_RGB_DIRS) $(MOZ_GFX_TOOLKIT)
 
 LIBRARY_NAME = raptorgfx
 
