@@ -163,8 +163,6 @@ nsHTMLButtonElement::nsHTMLButtonElement()
 
 nsHTMLButtonElement::~nsHTMLButtonElement()
 {
-  // Null out form's pointer to us - no ref counting here!
-  SetForm(nsnull);
 }
 
 // nsISupports
@@ -249,7 +247,7 @@ nsHTMLButtonElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-// nsIContent
+// nsIDOMHTMLButtonElement
 
 NS_IMETHODIMP
 nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
@@ -594,12 +592,9 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLButtonElement::GetType(PRInt32* aType)
 {
-  if (aType) {
-    *aType = mType;
-    return NS_OK;
-  } else {
-    return NS_FORM_NOTOK;
-  }
+  NS_ASSERTION(aType, "Null pointer bad!");
+  *aType = mType;
+  return NS_OK;
 }
 
 #ifdef DEBUG

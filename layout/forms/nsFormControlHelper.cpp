@@ -695,23 +695,45 @@ nsFormControlHelper::PaintCheckMark(nsIRenderingContext& aRenderingContext,
 nsresult
 nsFormControlHelper::GetName(nsIContent* aContent, nsAString* aResult)
 {
-  nsresult result = NS_FORM_NOTOK;
-  if (aContent) {
-    nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(aContent));
+  NS_PRECONDITION(aResult, "Null pointer bad!");
+  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(aContent));
+  if (!formControl)
+    return NS_ERROR_FAILURE;
 
-    if (formControl) {
-      nsHTMLValue value;
-      result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
-      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-        if (eHTMLUnit_String == value.GetUnit()) {
-          value.GetStringValue(*aResult);
-        }
-      }
-    }
+  nsHTMLValue value;
+  nsresult rv = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
+  if (NS_CONTENT_ATTR_HAS_VALUE == rv && eHTMLUnit_String == value.GetUnit()) {
+    value.GetStringValue(*aResult);
   }
-  return result;
+  return rv;
 }
 
+nsresult
+nsFormControlHelper::GetType(nsIContent* aContent, PRInt32* aType)
+{
+  NS_PRECONDITION(aType, "Null pointer bad!");
+  nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aContent));
+  if (!formControl)
+    return NS_ERROR_FAILURE;
+
+  return formControl->GetType(aType);
+}
+
+nsresult
+nsFormControlHelper::GetValueAttr(nsIContent* aContent, nsAString* aResult)
+{
+  NS_PRECONDITION(aResult, "Null pointer bad!");
+  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(aContent));
+  if (!formControl)
+    return NS_ERROR_FAILURE;
+
+  nsHTMLValue value;
+  nsresult rv = formControl->GetHTMLAttribute(nsHTMLAtoms::value, value);
+  if (NS_CONTENT_ATTR_HAS_VALUE == rv && eHTMLUnit_String == value.GetUnit()) {
+    value.GetStringValue(*aResult);
+  }
+  return rv;
+}
 
 //----------------------------------------------------------------------------------
 // Return localised string for resource string (e.g. "Submit" -> "Submit Query")

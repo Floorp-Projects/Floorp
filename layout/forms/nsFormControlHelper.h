@@ -168,9 +168,27 @@ public:
    * @param aResult the returned name of the form control [OUT]
    * @return NS_CONTENT_ATTR_HAS_VALUE if things go well
    * @return NS_CONTENT_ATTR_NOT_THERE if the name attribute is undefined
-   * @return NS_FORM_NOTOK if aContent is null or is not HTML content
+   * @return NS_ERROR_FAILURE if aContent is null or is not HTML content
    */
   static nsresult GetName(nsIContent* aContent, nsAString* aResult);
+  /**
+   * Get the type of the form control (if it's not obvious from the frame type)
+   * @param aContent the content to get the name of
+   * @param aType the returned type of the form control [OUT]
+   * @return NS_CONTENT_ATTR_HAS_VALUE if things go well
+   * @return NS_CONTENT_ATTR_NOT_THERE if the type attribute is undefined
+   * @return NS_ERROR_FAILURE if aContent is null or is not HTML content
+   */
+  static nsresult GetType(nsIContent* aContent, PRInt32* aType);
+  /**
+   * Get the value of the form control (if it's just living in an attr)
+   * @param aContent the content to get the name of
+   * @param aResult the returned value of the form control [OUT]
+   * @return NS_CONTENT_ATTR_HAS_VALUE if things go well
+   * @return NS_CONTENT_ATTR_NOT_THERE if the value attribute is undefined
+   * @return NS_ERROR_FAILURE if aContent is null or is not HTML content
+   */
+  static nsresult GetValueAttr(nsIContent* aContent, nsAString* aResult);
   /**
    * Cause the form control to reset its value
    * @param aFrame the frame who owns the form control

@@ -70,8 +70,6 @@ public:
   NS_DECL_NSIDOMHTMLOBJECTELEMENT
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
-                     PRBool aRemoveFromForm = PR_TRUE);
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
@@ -126,8 +124,6 @@ nsHTMLObjectElement::nsHTMLObjectElement()
 
 nsHTMLObjectElement::~nsHTMLObjectElement()
 {
-  // Null out form's pointer to us - no ref counting here!
-  SetForm(nsnull);
 }
 
 
@@ -141,6 +137,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLObjectElement,
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLObjectElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
+// nsIDOMHTMLObjectElement
 nsresult
 nsHTMLObjectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
@@ -175,12 +172,7 @@ nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return nsGenericHTMLContainerFormElement::GetForm(aForm);
 }
 
-NS_IMETHODIMP
-nsHTMLObjectElement::SetForm(nsIDOMHTMLFormElement* aForm,
-                            PRBool aRemoveFromForm)
-{
-  return nsGenericHTMLContainerFormElement::SetForm(aForm, aRemoveFromForm);
-}
+// nsIFormControl
 
 NS_IMETHODIMP
 nsHTMLObjectElement::GetType(PRInt32* aType)

@@ -1744,20 +1744,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 NS_IMETHODIMP
 nsComboboxControlFrame::GetName(nsAString* aResult)
 {
-  nsresult result = NS_FORM_NOTOK;
-
-  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
-
-  if (formControl) {
-    nsHTMLValue value;
-    result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
-    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-      if (eHTMLUnit_String == value.GetUnit()) {
-        value.GetStringValue(*aResult);
-      }
-    }
-  }
-  return result;
+  return nsFormControlHelper::GetName(mContent, aResult);
 }
 
 NS_IMETHODIMP

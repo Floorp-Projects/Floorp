@@ -200,8 +200,6 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement()
 
 nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
 {
-  // Null out form's pointer to us - no ref counting here!
-  SetForm(nsnull);
 }
 
 
@@ -768,12 +766,9 @@ nsHTMLTextAreaElement::DoneAddingChildren()
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetType(PRInt32* aType)
 {
-  if (aType) {
-    *aType = NS_FORM_TEXTAREA;
-    return NS_OK;
-  } else {
-    return NS_FORM_NOTOK;
-  }
+  NS_ASSERTION(aType, "Null pointer bad!");
+  *aType = NS_FORM_TEXTAREA;
+  return NS_OK;
 }
 
 nsresult

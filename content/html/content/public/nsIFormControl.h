@@ -70,9 +70,6 @@ class nsIFormSubmission;
 #define NS_FORM_TEXTAREA       20
 #define NS_FORM_OBJECT         21
 
-#define NS_FORM_NOTOK          0xFFFFFFF7
-#define NS_FORM_NOTSET         0xFFFFFFF7
-
 #define NS_IFORMCONTROL_IID   \
 { 0x282ff440, 0xcd7e, 0x11d1, \
   {0x89, 0xad, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }

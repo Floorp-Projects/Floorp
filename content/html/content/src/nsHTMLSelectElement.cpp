@@ -433,8 +433,6 @@ nsHTMLSelectElement::nsHTMLSelectElement(PRBool aFromParser)
 
 nsHTMLSelectElement::~nsHTMLSelectElement()
 {
-  // Null out form's pointer to us - no ref counting here!
-  SetForm(nsnull);
   if (mOptions) {
     mOptions->DropReference();
     NS_RELEASE(mOptions);
@@ -1896,12 +1894,9 @@ nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLSelectElement::GetType(PRInt32* aType)
 {
-  if (aType) {
-    *aType = NS_FORM_SELECT;
-    return NS_OK;
-  }
-
-  return NS_FORM_NOTOK;
+  NS_ASSERTION(aType, "Null pointer bad!");
+  *aType = NS_FORM_SELECT;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

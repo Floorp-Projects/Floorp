@@ -4225,7 +4225,8 @@ nsGenericHTMLContainerFormElement::nsGenericHTMLContainerFormElement()
 
 nsGenericHTMLContainerFormElement::~nsGenericHTMLContainerFormElement()
 {
-  // Do nothing
+  // Clean up.  Set the form to nsnull so it knows we went away.
+  SetForm(nsnull);
 }
 
 NS_IMETHODIMP
@@ -4471,7 +4472,8 @@ nsGenericHTMLLeafFormElement::nsGenericHTMLLeafFormElement()
 
 nsGenericHTMLLeafFormElement::~nsGenericHTMLLeafFormElement()
 {
-  // Do nothing
+  // Clean up.  Set the form to nsnull so it knows we went away.
+  SetForm(nsnull);
 }
 
 

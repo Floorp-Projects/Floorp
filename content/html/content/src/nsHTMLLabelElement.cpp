@@ -234,8 +234,6 @@ nsHTMLLabelElement::nsHTMLLabelElement()
 
 nsHTMLLabelElement::~nsHTMLLabelElement()
 {
-  // Null out form's pointer to us - no ref counting here!
-  SetForm(nsnull);
 }
 
 // nsISupports 
