@@ -19,6 +19,7 @@
  *   
  */
 
+#ifndef UNIX_MAKEFILE_NO_WORKY
 
 #include "nscore.h"
 #include "nsCRT.h"
@@ -36,13 +37,14 @@
 #define DEBUG_LOG1( x, y)
 #endif
 
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
 nsresult nsExternalProtocol::DefaultLaunch( nsIURI *pUri)
 {
-	nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_FAILURE;
 
     return( rv);
 }
