@@ -38,7 +38,6 @@
 #define nsIDocumentObserver_h___
 
 #include "nsISupports.h"
-#include "nsChangeHint.h"
 
 class nsIAtom;
 class nsIContent;
