@@ -268,17 +268,21 @@ void nsScrollingView :: ComputeContainerSize()
   {
     if (nsnull != mScrollBarView)
     {
-      nscoord       width, height;
-      nsIScrollbar  *scroll;
-      nsIWidget     *win;
-      PRUint32      oldsize = mSize;
-      nsRect        area(0, 0, 0, 0);
+      nsIPresContext  *px = mViewManager->GetPresContext();
+      nscoord         width, height;
+      nsIScrollbar    *scroll;
+      nsIWidget       *win;
+      PRUint32        oldsize = mSize;
+      nsRect          area(0, 0, 0, 0);
+      PRInt32         offx, offy, dy;
+      float           scale = px->GetTwipsToPixels();
 
       ComputeScrollArea(scrollview, area, 0, 0);
 
       mSize = area.YMost();
 
       mScrollBarView->GetDimensions(&width, &height);
+      mViewManager->GetWindowOffsets(&offx, &offy);
 
       win = mScrollBarView->GetWidget();
 
@@ -288,8 +292,6 @@ void nsScrollingView :: ComputeContainerSize()
       {
         if (mSize > mBounds.height)
         {
-          nsIPresContext  *px = mViewManager->GetPresContext();
-
           //we need to be able to scroll
 
           mScrollBarView->SetVisibility(nsViewVisibility_kShow);
@@ -297,19 +299,26 @@ void nsScrollingView :: ComputeContainerSize()
           //now update the scroller position for the new size
 
           PRUint32  newpos, oldpos = scroll->GetPosition();
-          PRInt32   offx, offy;
 
-          newpos = NS_TO_INT_ROUND(NS_TO_INT_ROUND((((float)oldpos * mSize) / oldsize) * px->GetTwipsToPixels()) * px->GetPixelsToTwips());
+          newpos = NS_TO_INT_ROUND(NS_TO_INT_ROUND((((float)oldpos * mSize) / oldsize) * scale) * px->GetPixelsToTwips());
 
-          mViewManager->GetWindowOffsets(&offx, &offy);
           mViewManager->SetWindowOffsets(offx, newpos);
+
+          dy = NS_TO_INT_ROUND(scale * (offy - newpos));
 
           scroll->SetParameters(mSize, mBounds.height, newpos, NS_POINTS_TO_TWIPS_INT(12));
 
           NS_RELEASE(px);
         }
         else
+        {
+          mViewManager->SetWindowOffsets(offx, 0);
+          dy = NS_TO_INT_ROUND(scale * offy);
           mScrollBarView->SetVisibility(nsViewVisibility_kHide);
+        }
+
+        if (dy != 0)
+          AdjustChildWidgets(0, dy);
 
         scroll->Release();
       }
