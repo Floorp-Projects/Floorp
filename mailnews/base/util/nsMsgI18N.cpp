@@ -319,7 +319,9 @@ nsresult ConvertToUnicode(const nsString& aCharset,
     }
   }
   if (NS_FAILED(res)) {
-    return res;
+    // ignore charset alias error and use fallback charset.
+    convCharset = NS_LITERAL_STRING("ISO-8859-1").get();
+    res = NS_OK;
   }
 
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
