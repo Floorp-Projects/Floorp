@@ -496,7 +496,8 @@ nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, const char *
 					PR_ExplodeTime(time, PR_LocalTimeParameters, &etime);
 					if (etime.tm_yday == mSessionTime.tm_yday)
 					{
-					    PR_FREEIF((char*)mCurrentFilePath);
+					    if (mCurrentFilePath)
+					        PR_Free((char*)mCurrentFilePath);
 					    mCurrentFilePath = PL_strdup(fileURL);
 					}
 				}
