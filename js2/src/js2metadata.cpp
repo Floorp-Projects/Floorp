@@ -351,7 +351,6 @@ namespace MetaData {
                     g->tgtID = NotALabel;
                     if (g->name) {
                         // need to find the closest 'breakable' statement covered by the named label
-                        LabelID tgt = NotALabel;
                         bool foundit = false;
                         for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
                                     ((g->tgtID == NotALabel) && (si != end) && !foundit); si++)
@@ -4068,19 +4067,19 @@ static const uint8 urlCharType[256] =
 
         MAKEBUILTINCLASS(objectClass, NULL, false, false, engine->Object_StringAtom, JS2VAL_VOID);
         MAKEBUILTINCLASS(undefinedClass, objectClass, false, true, engine->undefined_StringAtom, JS2VAL_VOID);
-        nullClass = new (this) JS2NullClass(objectClass, NULL, new (this) Namespace(engine->private_StringAtom), false, true, engine->null_StringAtom); nullClass->complete = true; nullClass->defaultValue = JS2VAL_NULL;
+        nullClass = new (this) JS2NullClass(objectClass, JS2VAL_NULL, new (this) Namespace(engine->private_StringAtom), false, true, engine->null_StringAtom); nullClass->complete = true; nullClass->defaultValue = JS2VAL_NULL;
         MAKEBUILTINCLASS(booleanClass, objectClass, false, true, world.identifiers["Boolean"], JS2VAL_FALSE);
         MAKEBUILTINCLASS(generalNumberClass, objectClass, false, false, world.identifiers["general number"], engine->nanValue);
         MAKEBUILTINCLASS(numberClass, generalNumberClass, false, true, world.identifiers["Number"], engine->nanValue);
-        integerClass = new (this) JS2IntegerClass(numberClass, NULL, new (this) Namespace(engine->private_StringAtom), false, true, world.identifiers["Integer"]); integerClass->complete = true; integerClass->defaultValue = JS2VAL_ZERO;
+        integerClass = new (this) JS2IntegerClass(numberClass, JS2VAL_NULL, new (this) Namespace(engine->private_StringAtom), false, true, world.identifiers["Integer"]); integerClass->complete = true; integerClass->defaultValue = JS2VAL_ZERO;
         MAKEBUILTINCLASS(characterClass, objectClass, false, true, world.identifiers["Character"], JS2VAL_ZERO);
-        stringClass = new (this) JS2StringClass(objectClass, NULL, new (this) Namespace(engine->private_StringAtom), false, true, world.identifiers["String"]); stringClass->complete = true; stringClass->defaultValue = JS2VAL_NULL;        
+        stringClass = new (this) JS2StringClass(objectClass, JS2VAL_NULL, new (this) Namespace(engine->private_StringAtom), false, true, world.identifiers["String"]); stringClass->complete = true; stringClass->defaultValue = JS2VAL_NULL;        
         MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, world.identifiers["namespace"], JS2VAL_NULL);
         MAKEBUILTINCLASS(attributeClass, objectClass, false, true, world.identifiers["attribute"], JS2VAL_NULL);
         MAKEBUILTINCLASS(classClass, objectClass, false, true, world.identifiers["Class"], JS2VAL_NULL);                
         MAKEBUILTINCLASS(functionClass, objectClass, true, true, engine->Function_StringAtom, JS2VAL_NULL);
         MAKEBUILTINCLASS(packageClass, objectClass, true, true, world.identifiers["Package"], JS2VAL_NULL);
-        argumentsClass = new (this) JS2ArgumentsClass(objectClass, NULL, new (this) Namespace(engine->private_StringAtom), false, true, world.identifiers["Object"]); argumentsClass->complete = true; argumentsClass->defaultValue = JS2VAL_NULL;
+        argumentsClass = new (this) JS2ArgumentsClass(objectClass, JS2VAL_NULL, new (this) Namespace(engine->private_StringAtom), false, true, world.identifiers["Object"]); argumentsClass->complete = true; argumentsClass->defaultValue = JS2VAL_NULL;
 
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new LocalMember(Member::ForbiddenMember, true);
@@ -4111,7 +4110,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         v = new Variable(classClass, OBJECT_TO_JS2VAL(objectClass), true);
         defineLocalMember(env, world.identifiers["Object"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         // Function properties of the Object prototype object
-        objectClass->prototype = OBJECT_TO_JS2VAL(new (this) SimpleInstance(this, NULL, objectClass));
+        objectClass->prototype = OBJECT_TO_JS2VAL(new (this) SimpleInstance(this, JS2VAL_NULL, objectClass));
         objectClass->construct = Object_Constructor;
         objectClass->call = Object_Constructor;
         // Adding "prototype" as a static member of the class - not a dynamic property
@@ -4218,7 +4217,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         initMathObject(this, mathObject);
 
 /*** ECMA 3  Array Class ***/
-        arrayClass = new (this) JS2ArrayClass(objectClass, NULL, new (this) Namespace(engine->private_StringAtom), true, true, world.identifiers["Array"]); arrayClass->complete = true; arrayClass->defaultValue = JS2VAL_NULL;        
+        arrayClass = new (this) JS2ArrayClass(objectClass, JS2VAL_NULL, new (this) Namespace(engine->private_StringAtom), true, true, world.identifiers["Array"]); arrayClass->complete = true; arrayClass->defaultValue = JS2VAL_NULL;        
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineLocalMember(env, world.identifiers["Array"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initArrayObject(this);
@@ -5092,8 +5091,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // initial value of all slots to uninitialized.
     SimpleInstance::SimpleInstance(JS2Metadata *meta, js2val parent, JS2Class *type) 
         : JS2Object(SimpleInstanceKind),
-            sealed(false),
             super(parent),
+            sealed(false),
             type(type), 
             fixedSlots(new Slot[type->slotCount])
     {
@@ -5156,7 +5155,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
  ************************************************************************************/
 
     FunctionInstance::FunctionInstance(JS2Metadata *meta, js2val parent, JS2Class *type)
-     : SimpleInstance(meta, parent, type), isMethodClosure(false), fWrap(NULL), thisObject(JS2VAL_VOID), sourceText(NULL)
+     : SimpleInstance(meta, parent, type), fWrap(NULL), isMethodClosure(false), thisObject(JS2VAL_VOID), sourceText(NULL)
     {
         // Add prototype property
         JS2Object *result = this;
