@@ -33,7 +33,7 @@ use Mac::Types;
 use File::Basename;
 
 use vars qw($VERSION);
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 my($app)  = 'CWIE';
 
@@ -163,8 +163,9 @@ sub activate () {
 	foreach $psi (values(%Process)) {
 		if ($psi->processSignature() eq $app) {
 			$appath = $psi->processAppSpec(), "\n";
+                        _save_appath($filepath, $appath);
+                        last;
 		}
-		_save_appath($filepath, $appath);
 	}
 
 	if ((!$appath || ! -x $appath) && open(F, $filepath)) {
@@ -186,9 +187,9 @@ sub activate () {
 			local(*D);
 			my $cwd = `pwd`;
 			$appath = _get_folder(
-				'Where is the folder containing CodeWarrior IDE?',
+                               'Where is the CW IDE folder?',
 				dirname($Application{$app})
-			) . ':';
+			);
 			die "CodeWarrior IDE not found.\n" if !$appath;
 			opendir(D, $appath) or die $!;
 			chdir($appath);
@@ -211,7 +212,10 @@ sub activate () {
 		launchAppSpec => $appath,
 		launchControlFlags => launchContinue() + launchNoFileFlags()
 	);
-	LaunchApplication($lp) or die $^E;
+        unless (LaunchApplication($lp)) {
+                unlink($filepath);
+                die $^E;
+        }
 }
 
 sub _build ($;$) {
@@ -331,6 +335,10 @@ sub _test ($) {
 =head1 HISTORY
 
 =over 4
+
+=item v1.02, September 23, 1998
+
+Made fixes in finding and saving location of CodeWarrior IDE.
 
 =item v1.01, June 1, 1998
 
