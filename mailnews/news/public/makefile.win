@@ -16,9 +16,6 @@
 # Reserved.
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
-
-MODULE=news
 
 XPIDLSRCS= \
 	.\nsIMsgOfflineNewsState.idl \
@@ -46,5 +43,7 @@ EXPORTS =							\
 		nsINntpIncomingServer.h			\
         $(NULL)
 
-include <$(DEPTH)\config\rules.mak>
+MODULE=news
 
+include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\config\config.mak>

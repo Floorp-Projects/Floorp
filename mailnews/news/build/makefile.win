@@ -26,7 +26,7 @@ DEPTH=..\..\..
 # New build system where zip dll is build indepenant of java stubs.
 #//
 #//------------------------------------------------------------------------
-MODULE  =mailnews
+MODULE  =news
 REQUIRES=xpcom js
 EXPORTS =      \
 		nsMsgNewsCID.h \
@@ -95,6 +95,7 @@ LINCS=$(LINCS) -I,							\
 			   -I$(PUBLIC)\xpcom			\
 			   -I$(PUBLIC)\js				\
 			   -I$(PUBLIC)\mailnews			\
+			   -I$(PUBLIC)\news				\
 			   -I$(PUBLIC)\pref				\
 			   -I$(PUBLIC)\raptor			\
 			   -I$(PUBLIC)\rdf				\
