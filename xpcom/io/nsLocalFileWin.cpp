@@ -2113,10 +2113,19 @@ nsLocalFile::Launch()
 
   // use the app registry name to launch a shell execute....
   LONG r = (LONG) ::ShellExecute( NULL, NULL, (const char *) path, NULL, NULL, SW_SHOWNORMAL);
+
+  // if the file has no association, we launch windows' "what do you want to do" dialog
+  if (r == SE_ERR_NOASSOC) {
+    nsCAutoString shellArg;
+    shellArg.Assign(NS_LITERAL_CSTRING("shell32.dll,OpenAs_RunDLL "));
+    shellArg.Append(path);
+    r = (LONG) ::ShellExecute(NULL, NULL, "RUNDLL32.EXE",  shellArg.get(),
+                              NULL, SW_SHOWNORMAL);
+  }
   if (r < 32) 
     rv = NS_ERROR_FAILURE;
 	else
-		rv = NS_OK;
+    rv = NS_OK;
 
   return rv;
 }
