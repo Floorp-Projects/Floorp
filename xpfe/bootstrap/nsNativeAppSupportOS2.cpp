@@ -1581,7 +1581,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
     nsCString taskURL;
     rv = GetStartupURL(args, taskURL);
     if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(nativeApp->EnsureProfile(args))) {
-      (void)OpenWindow(taskURL, "");
+      (void)OpenWindow(taskURL.get(), "");
       return;
     }
 
@@ -1632,7 +1632,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
     if (defaultArgs) {
       nsCAutoString url;
       url.AssignWithConversion( defaultArgs );
-      OpenBrowserWindow((const char*)url);
+      OpenBrowserWindow(url.get());
     } else {
       OpenBrowserWindow("about:blank");
     }
