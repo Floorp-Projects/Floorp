@@ -227,7 +227,8 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	// TODO create and register a drop target
 
 	// Control is ready
-	mBrowserReadyState = READYSTATE_LOADED;
+	mBrowserReadyState = READYSTATE_COMPLETE;
+	FireOnChanged(DISPID_READYSTATE);
 
 	// Load browser helpers
 	LoadBrowserHelpers();
@@ -844,6 +845,21 @@ HRESULT CMozillaBrowser::CreateBrowser()
 	mRootDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) mWebBrowserContainer);
 	mRootDocShellAsWin->SetVisibility(PR_TRUE);
 
+	// Subscribe to mouse events
+/*	nsIDOMDocument *pDOMDocument = nsnull;
+	GetDOMDocument(&pDOMDocument);
+	if (pDOMDocument)
+	{
+		nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
+		pDOMDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(eventReceiver));
+		if (eventReceiver)
+		{
+			nsIDOMMouseListener *pListener = (nsIDOMMouseListener *) mWebBrowserContainer;
+			eventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
+		}
+		NS_RELEASE(pDOMDocument);
+	}
+*/
 	mValidBrowserFlag = TRUE;
 
 	return S_OK;
