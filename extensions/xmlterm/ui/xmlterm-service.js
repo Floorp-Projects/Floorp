@@ -160,12 +160,6 @@ XMLTermProtocolHandler.prototype.URIType =
 XMLTermProtocolHandler.prototype.newURI =
 function (aSpec, aCharset, aBaseURI)
 {
-    if (aBaseURI)
-    {
-        debug("XMLTermProtocolHandler: aBaseURI passed to newURI, bailing.\n");
-        return null;
-    }
-    
     var uri = Components.classes[SIMPLEURI_CONTRACTID].createInstance(nsIURI);
     uri.spec = aSpec;
     
