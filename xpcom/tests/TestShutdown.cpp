@@ -71,6 +71,9 @@ void main(int argc, char* argv[])
         else {
             printf("Failed to create %s (%x)\n", cidStr, rv);
         }
+
+        nsComponentManager::FreeLibraries();
+        
     }
 
     rv = NS_ShutdownXPCOM(servMgr);
