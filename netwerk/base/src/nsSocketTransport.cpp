@@ -153,7 +153,6 @@ nsSocketTransport::nsSocketTransport()
   mSourceOffset   = 0;
   mService        = nsnull;
   mLoadAttributes = LOAD_NORMAL;
-  mEventQueue     = nsnull;
 
   //
   // Set up Internet defaults...
@@ -200,7 +199,6 @@ nsSocketTransport::~nsSocketTransport()
   NS_IF_RELEASE(mWriteContext);
   
   NS_IF_RELEASE(mService);
-  NS_IF_RELEASE(mEventQueue);
 
   if (mHostName) {
     nsCRT::free(mHostName);
@@ -1054,6 +1052,7 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 {
   // XXX deal with startPosition and readCount parameters
   nsresult rv = NS_OK;
+  nsCOMPtr<nsIEventQueue> eventQ;
 
   // Enter the socket transport lock...
   nsAutoLock lock(mLock);
@@ -1066,6 +1065,13 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
   // If a read is already in progress then fail...
   if (mReadListener) {
     rv = NS_ERROR_IN_PROGRESS;
+  }
+
+  // Get the event queue of the current thread...
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
+                                            getter_AddRefs(eventQ));
   }
 
   // Create a new non-blocking input stream for reading data into...
@@ -1084,15 +1090,8 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     mReadContext = aContext;
     NS_IF_ADDREF(mReadContext);
 
-    if (!mEventQueue) {
-        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-        if (NS_FAILED(rv)) return rv;
-        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
-        if (NS_FAILED(rv)) return rv;
-    }
-
     // Create a marshalling stream listener to receive notifications...
-    rv = NS_NewAsyncStreamListener(&mReadListener, mEventQueue, aListener);
+    rv = NS_NewAsyncStreamListener(&mReadListener, eventQ, aListener);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1142,13 +1141,17 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
     // Create a marshalling stream observer to receive notifications...
     NS_IF_RELEASE(mWriteObserver);
     if (aObserver) {
-        if (!mEventQueue) {
-            NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-            if (NS_FAILED(rv)) return rv;
-            rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
-            if (NS_FAILED(rv)) return rv;
-        }
-      rv = NS_NewAsyncStreamObserver(&mWriteObserver, mEventQueue, aObserver);
+      nsCOMPtr<nsIEventQueue> eventQ;
+
+      // Get the event queue of the current thread...
+      NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
+                                                getter_AddRefs(eventQ));
+      }
+      if (NS_SUCCEEDED(rv)) {
+        rv = NS_NewAsyncStreamObserver(&mWriteObserver, eventQ, aObserver);
+      }
     }
 
     mWriteCount = writeCount;
@@ -1284,6 +1287,7 @@ nsSocketTransport::SetLoadAttributes(PRUint32 aLoadAttributes)
 NS_IMETHODIMP
 nsSocketTransport::GetContentType(char * *aContentType)
 {
+  *aContentType = nsnull;
   return NS_ERROR_FAILURE;    // XXX doesn't make sense for transports
 }
 
