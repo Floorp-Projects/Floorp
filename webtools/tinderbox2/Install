@@ -219,7 +219,9 @@ hostname/modules exactly as you wrote it in VCData.  Then copy your
 must be the REAL home of the Tinderbox daemon, as listed in
 /etc/passwd/ and set in the $HOME environmental variable for
 tinder.cgi.  The file must not be world readable or writable or
-executable.
+executable. It is recommended that VC_CVS.pm is only used as an
+interim step in setting up VC_Bonsai. VC_Bonsai is not hard to setup
+and provided many useful features which are absent in VC_CVS.pm.
 
 
 *) Setup the build machines to mail their build logs (with tinderbox
@@ -234,6 +236,16 @@ look like.  There is an example mail in the test directory called
 samplelog.  The clientbin directory contains code which can be used on
 the buildmachine.  See the README to help setup your buildmachine.
 
+http://www.ntsendmail.com/ has a perl program which can be used to
+send mail on systems where there is no sendmail installed.
+
+There is nothing special about sending mail.  Any data transport layer
+would work including HTTP Post and SSH the only requirement is that
+the data is sent to the STDIN of the mail processing programs upon
+delivery and that the process which runs this is the same uid as the
+tinderbox server. I have not thought too much about how to set up
+these alternate delivery mechanisms so I have no practical advice but
+It should not be too hard to setup.
 
 *) Set up the bug tracking system to send mail to 'tinderbox_bugs' on
 the webserver machine whenever a Bug ticket changes state. It is not
@@ -248,7 +260,7 @@ machines that it will be received by someone who can act on it.
 
 
 
-I keep my email up to date in the source code.  If you have trouble
-with these instructions please drop me a line.  
+I keep my email up to date in the Contact file.  If you have trouble
+with these instructions please drop me a line.
 
 Ken Estes.

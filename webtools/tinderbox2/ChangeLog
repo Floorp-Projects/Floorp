@@ -1,3 +1,9 @@
+
+
+New Time columns for use in environments with multiple time zones.
+
+Spelling fixes 
+
 Add support for popup windows which work "on click"
 
 Add support for users who want to see tinderbox's notion of what was
