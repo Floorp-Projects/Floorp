@@ -33,7 +33,8 @@ EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxXprintModule
 
-EXTRA_DSO_LIBS	= gkgfx
+EXTRA_DSO_LIBS	= gkgfx gfxshared_s
+
 REQUIRES	= xpcom \
 		  string \
 		  widget \
@@ -88,7 +89,6 @@ EXPORTS		= \
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_XPRINT_LDFLAGS) \
-		-lgfxshared_s \
 		$(NULL)
 
 CXXFLAGS	 += $(MOZ_XPRINT_CFLAGS)
