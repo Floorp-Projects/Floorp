@@ -40,7 +40,10 @@ override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
+# Memory mapped files are not supported under QNX and Neutrino
+ifneq ($(OS_ARCH),QNX)
 DEFINES += -DUSE_MMAP_REGISTRY_IO
+endif
 
 # Override gtscc when building vreg on IRIX 5.3.
 ifeq ($(OS_ARCH)$(OS_RELEASE),IRIX5)
