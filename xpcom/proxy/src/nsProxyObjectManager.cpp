@@ -32,7 +32,6 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
-#include "nsAppShellCIDs.h"
 #include "nsIEventQueueService.h"
 #include "nsIThread.h"
 
