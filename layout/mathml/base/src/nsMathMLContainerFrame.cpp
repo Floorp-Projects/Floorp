@@ -171,9 +171,12 @@ Implementation here:
 
 // Adapted from nsCSSScanner.cpp & CSSParser.cpp
 PRBool
-nsMathMLContainerFrame::ParseNumericValue(const nsString& aString,
-                                          nsCSSValue&     aCSSValue)
+nsMathMLContainerFrame::ParseNumericValue(nsString&   aString,
+                                          nsCSSValue& aCSSValue)
 {
+  aCSSValue.Reset();
+  aString.CompressWhitespace(); //  aString is not a const in this code...
+
   PRInt32 stringLength = aString.Length();
 
   if (!stringLength) return PR_FALSE;
@@ -232,7 +235,7 @@ printf("String:%s,  Number:%s,  Unit:%s\n", s1, s2, s3);
   else if (unit == "pc") cssUnit = eCSSUnit_Pica;      
   else // unexpected unit
     return PR_FALSE;
-        
+
   aCSSValue.SetFloatValue(floatValue, cssUnit);
   return PR_TRUE;
 }
@@ -896,6 +899,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
  * =============================================================================
  */
 
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
 NS_IMETHODIMP
 nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
@@ -908,7 +912,6 @@ nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
                                    aRenderingContext,
                                    aDirtyRect,
                                    aWhichLayer);
-#ifdef SHOW_BOUNDING_BOX
   // for visual debug
   // ----------------
   // if you want to see your bounding box, make sure to properly fill
@@ -928,9 +931,9 @@ nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
 
     aRenderingContext.DrawRect(x,y,w,h);
   }
-#endif
   return rv;
 }
+#endif
 
 NS_IMETHODIMP
 nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,

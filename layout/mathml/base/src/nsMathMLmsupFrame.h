@@ -72,8 +72,7 @@ protected:
 private:
   nscoord mScriptSpace;  // scriptspace from TeX for extra spacing after sup/subscript
                          // = 0.5pt in plain TeX
-  float   mSupScriptShiftFactor;
-  PRBool  mUserSetFlag;
+  nscoord mSupScriptShift;
 };
 
 #endif /* nsMathMLmsupFrame_h___ */

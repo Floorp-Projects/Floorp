@@ -156,11 +156,13 @@ public:
     return nsHTMLContainerFrame::DidReflow(aPresContext, aStatus);
   }
 
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   NS_IMETHOD 
   Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer);
+#endif
 
   // helper function to reflow token elements
   static nsresult
@@ -271,8 +273,8 @@ public:
   // utilities to parse and retrieve numeric values in CSS units
   // All values are stored in twips.
   static PRBool
-  ParseNumericValue(const nsString& aString,
-                    nsCSSValue&     aCSSValue);
+  ParseNumericValue(nsString&   aString,
+                    nsCSSValue& aCSSValue);
 
   static nscoord 
   CalcLength(nsIPresContext*   aPresContext,

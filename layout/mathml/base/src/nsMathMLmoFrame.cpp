@@ -119,7 +119,7 @@ nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
     rv = mMathMLChar.Paint(aPresContext,
                            aRenderingContext,
                            mStyleContext);
-#ifdef SHOW_BOUNDING_BOX
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
     if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
         NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags))
@@ -159,7 +159,9 @@ nsMathMLmoFrame::Init(nsIPresContext*  aPresContext,
   mMinSize = float(NS_UNCONSTRAINEDSIZE);
   mMaxSize = float(NS_UNCONSTRAINEDSIZE);
 
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
   return rv;
 }
 
