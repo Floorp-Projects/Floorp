@@ -41,7 +41,7 @@
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/history/history.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
-
+  <stringbundle id="historyBundle" src="chrome://browser/locale/history/history.properties"/>
   <commandset id="selectEditMenuItems">
     <command id="cmd_delete"/>
     <command id="cmd_copy"/>
