@@ -818,7 +818,14 @@ void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresC
     mWhiteSpace = aParent->mWhiteSpace;
 
     mLetterSpacing = aParent->mLetterSpacing;
-    mLineHeight.SetInheritValue();
+    if ((eStyleUnit_Normal == aParent->mLineHeight.GetUnit()) ||
+        (eStyleUnit_Factor == aParent->mLineHeight.GetUnit()) ||
+        (eStyleUnit_Coord == aParent->mLineHeight.GetUnit())) {
+      mLineHeight = aParent->mLineHeight;
+    }
+    else {
+      mLineHeight.SetInheritValue();
+    }
     mTextIndent = aParent->mTextIndent;
     mWordSpacing = aParent->mWordSpacing;
   }
@@ -1419,8 +1426,6 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
   if (nsnull != mRules) {
     mRules->EnumerateForwards(HashStyleRule, &mRuleHash);
   }
-
-  RemapStyle(aPresContext);
 
 #ifdef DEBUG_REFS
   mInstance = ++gInstanceCount;
@@ -2066,5 +2071,7 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
   if (nsnull == context) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return context->QueryInterface(kIStyleContextIID, (void **) aInstancePtrResult);
+  nsresult result = context->QueryInterface(kIStyleContextIID, (void **) aInstancePtrResult);
+  context->RemapStyle(aPresContext);  // remap after initial ref-count is set
+  return result;
 }
