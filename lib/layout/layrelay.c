@@ -165,6 +165,13 @@ void LO_RelayoutOnResize(MWContext *context, int32 width, int32 height, int32 le
 
 	LO_LockLayout();
 
+	/* Abort if the document is currently being laid out */
+	if (LO_LayingOut( context ))
+	{
+		LO_UnlockLayout();
+		return;
+	}
+
 	if (top_state->the_grid) {
 	  /* the document doesn't have any elements.  It's a grid document */
 	  lo_RelayoutGridDocumentOnResize(context, top_state, width, height);
