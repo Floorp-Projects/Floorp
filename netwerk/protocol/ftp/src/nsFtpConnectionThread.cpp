@@ -758,10 +758,8 @@ nsFtpConnectionThread::Process() {
 
 nsresult
 nsFtpConnectionThread::SetOutputStream(nsIBufferOutputStream* aOutputStream) {
-    static PRBool outputStreamSet = PR_FALSE;
-    if (outputStreamSet) return NS_ERROR_FAILURE;
+    if (mCallerOutputStream) return NS_ERROR_FAILURE;
     mCallerOutputStream = aOutputStream;
-    outputStreamSet = PR_TRUE;
     return NS_OK;
 }
 
@@ -1241,8 +1239,6 @@ nsFtpConnectionThread::R_size() {
 
     } if (mResponseCode == 5) {
         // couldn't get the size of what we asked for, must be a dir.
-        mBin = PR_FALSE;
-        // if it's a dir, we need to reset the mode to ascii (we default to bin)
         mResetMode = PR_TRUE;
 
         rv = mFTPChannel->SetContentType("application/http-index-format");
@@ -1459,17 +1455,18 @@ nsFtpConnectionThread::S_retr() {
 FTP_STATE
 nsFtpConnectionThread::R_retr() {
     nsresult rv;
-    NS_ASSERTION(mListener, "FTP: conn thread listener DNE");
     // The only way we can get here is if we knew we were dealing with
     // a file and not a dir listing. This state assumes we're retrieving
     // a file!
     if (mResponseCode == 1) {
         // success.
 
-        rv = mListener->OnStartRequest(mChannel, mContext);
-        if (NS_FAILED(rv)) return FTP_ERROR;
-
-        mSentStart = PR_TRUE;
+        // we may not have a listener if we were OpenInputStream()ed.
+        if (mListener) {
+            rv = mListener->OnStartRequest(mChannel, mContext);
+            if (NS_FAILED(rv)) return FTP_ERROR;
+            mSentStart = PR_TRUE;
+        }
 
         rv = NS_NewPipe(getter_AddRefs(mBufInStream), getter_AddRefs(mBufOutStream));
         if (NS_FAILED(rv)) return FTP_ERROR;
@@ -1826,7 +1823,7 @@ nsFtpConnectionThread::Run() {
     } else {
         // we're already connected to this server.
         // skip login.
-        mState = FTP_S_PWD;
+        mState = FTP_S_PASV;
     }
 
     mConnected = PR_TRUE;
@@ -2005,23 +2002,6 @@ nsresult
 nsFtpConnectionThread::StopProcessing() {
     nsresult rv;
     PRUnichar* errorMsg = nsnull;
-
-    // close any streams we have open
-    // Command channel streams
-    if (mCOutStream)
-        mCOutStream->Close();
-    mCOutStream = 0;
-    if (mCInStream)
-        mCInStream->Close();
-    mCInStream  = 0;
-
-    // Data channel streams
-    // XXX uncomment these when we start doing FTP upload
-    // mDOutStream->Close();
-    // mDOutStream = 0;
-    if (mDInStream)
-        mDInStream->Close();
-    mDInStream = 0;
 
     // Release the transports
     mCPipe = 0;
