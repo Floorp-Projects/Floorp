@@ -260,7 +260,7 @@ nsHTMLImageElement::GetIntrinsicImageSize(nsSize& aSize)
     
     frame->GetFrameType(getter_AddRefs(type));
     
-    if (type == nsLayoutAtoms::imageFrame) {
+    if (type.get() == nsLayoutAtoms::imageFrame) {
       // XXX We could have created an interface for this, but Troy
       // preferred the ugliness of a static cast to the weight of
       // a new interface.
