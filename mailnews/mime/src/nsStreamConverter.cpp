@@ -110,6 +110,7 @@ nsresult
 bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
 {
   nsMIMESession *session = (nsMIMESession *)bridgeStream;
+  const char    **fixup_pointer = nsnull;
 
   if (session)
   {
@@ -128,6 +129,7 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
           default_charset = &(mdd->options->default_charset);
           override_charset = &(mdd->options->override_charset);
           url_name = &(mdd->url_name);
+          fixup_pointer = &(mdd->options->url);
         }
       }
       else
@@ -139,6 +141,7 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
           default_charset = &(msd->options->default_charset);
           override_charset = &(msd->options->override_charset);
           url_name = &(msd->url_name);
+          fixup_pointer = &(msd->options->url);
         }
       }
 
@@ -190,6 +193,8 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
             if (!(*url_name))
               return NS_ERROR_OUT_OF_MEMORY;
 
+            // rhp: Ugh, this is ugly...but it works.
+            *fixup_pointer = (const char *)*url_name;
             CRTFREEIF(urlString);
           }
         }

@@ -368,6 +368,10 @@ public:
   
   NS_IMETHOD OpenDiskFile(nsFileSpec fs);
   NS_IMETHOD PumpFileStream();
+  NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval) {return NS_OK;};
+  NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking) {return NS_OK;};
+  NS_IMETHOD GetObserver(nsIInputStreamObserver * *aObserver) {return NS_OK;};
+  NS_IMETHOD SetObserver(nsIInputStreamObserver * aObserver) {return NS_OK;};
 
 private:
   PRUint32        mBufLen;
