@@ -458,7 +458,7 @@
           <tree id="addressingWidgetTree" flex="1"/>
           <box autostretch="never">
             <text class="label" value="&subject.label;" accesskey="&subject.accesskey;"/>
-            <textfield id="msgSubject" type="text" flex="1" onkeyup="SetComposeWindowTitle(event.which);"
+            <textfield id="msgSubject" flex="1" onkeyup="SetComposeWindowTitle(event.which);"
                        onkeypress="subjectKeyPress(event);" onchange="contentChanged=true;"/>
           </box>
         </box>
