@@ -112,9 +112,6 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // default local charset name
-  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
-
   // default platform locale
   mLocale.Assign('C');
 
@@ -168,18 +165,11 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset = mappedCharset;
+        mCollation->SetCharset(mappedCharset);
         nsMemory::Free(mappedCharset);
       }
     }
   }
-
-#if defined(DEBUG_UNIX_COLLATION)
-  printf("nsCollationUnix::Initialize mLocale = %s\n" 
-         "nsCollationUnix::Initialize mCharset = %s\n",
-         mLocale.get(),
-         NS_LossyConvertUCS2toASCII(mCharset).get());
-#endif
 
   return NS_OK;
 };
@@ -203,7 +193,7 @@ nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength,
   // convert unicode to charset
   char *str;
 
-  res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
+  res = mCollation->UnicodeToChar(stringNormalized, &str);
   if (NS_SUCCEEDED(res) && str != NULL) {
     if (mUseCodePointOrder) {
       *outLen = strlen(str);
@@ -236,7 +226,7 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
   // convert unicode to charset
   char *str;
 
-  res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
+  res = mCollation->UnicodeToChar(stringNormalized, &str);
   if (NS_SUCCEEDED(res) && str != NULL) {
     if (mUseCodePointOrder) {
       *outLen = strlen(str);

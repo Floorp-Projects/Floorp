@@ -212,57 +212,61 @@ nsresult nsCollation::NormalizeString(const nsAString& stringIn, nsAString& stri
   return NS_OK;
 }
 
-nsresult nsCollation::UnicodeToChar(const nsAString& aSrc, char** dst, const nsAString& aCharset)
+nsresult nsCollation::SetCharset(const PRUnichar* aCharset)
+{
+  NS_ENSURE_ARG_POINTER(aCharset);
+
+  nsresult rv;
+  nsCOMPtr <nsICharsetConverterManager2> charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr <nsIAtom> charsetAtom;
+    rv = charsetConverterManager->GetCharsetAtom(aCharset, getter_AddRefs(charsetAtom));
+    if (NS_SUCCEEDED(rv))
+      rv = charsetConverterManager->GetUnicodeEncoder(charsetAtom, getter_AddRefs(mEncoder));
+  }
+  return rv;
+}
+
+nsresult nsCollation::UnicodeToChar(const nsAString& aSrc, char** dst)
 {
   NS_ENSURE_ARG_POINTER(dst);
 
   nsresult res = NS_OK;
-
-  if (!mCharsetConverterManager)
-    mCharsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+  if (!mEncoder)
+    res = SetCharset(NS_LITERAL_STRING("ISO-8859-1").get());
 
   if (NS_SUCCEEDED(res)) {
-    nsCOMPtr <nsIAtom>  charsetAtom;
-    res = mCharsetConverterManager->GetCharsetAtom(PromiseFlatString(aCharset).get(), getter_AddRefs(charsetAtom));
+    const nsPromiseFlatString& src = PromiseFlatString(aSrc);
+    const PRUnichar *unichars = src.get();
+    PRInt32 unicharLength = src.Length();
+    PRInt32 dstLength;
+    res = mEncoder->GetMaxLength(unichars, unicharLength, &dstLength);
     if (NS_SUCCEEDED(res)) {
-      if (charsetAtom != mEncoderCharsetAtom) {
-        mEncoderCharsetAtom = charsetAtom;
-        res = mCharsetConverterManager->GetUnicodeEncoder(mEncoderCharsetAtom, getter_AddRefs(mEncoder));
-      }
-      if (NS_SUCCEEDED(res)) {
-        const nsPromiseFlatString& src = PromiseFlatString(aSrc);
-        const PRUnichar *unichars = src.get();
-        PRInt32 unicharLength = src.Length();
-        PRInt32 dstLength;
-        res = mEncoder->GetMaxLength(unichars, unicharLength, &dstLength);
-        if (NS_SUCCEEDED(res)) {
-          PRInt32 bufLength = dstLength + 1 + 32; // extra 32 bytes for Finish() call
-          *dst = (char *) PR_Malloc(bufLength);
-          if (*dst) {
-            **dst = '\0';
-            res = mEncoder->Convert(unichars, &unicharLength, *dst, &dstLength);
+      PRInt32 bufLength = dstLength + 1 + 32; // extra 32 bytes for Finish() call
+      *dst = (char *) PR_Malloc(bufLength);
+      if (*dst) {
+        **dst = '\0';
+        res = mEncoder->Convert(unichars, &unicharLength, *dst, &dstLength);
 
-            if (NS_SUCCEEDED(res) || (NS_ERROR_UENC_NOMAPPING == res)) {
-              // Finishes the conversion. The converter has the possibility to write some 
-              // extra data and flush its final state.
-              PRInt32 finishLength = bufLength - dstLength; // remaining unused buffer length
-              if (finishLength > 0) {
-                res = mEncoder->Finish((*dst + dstLength), &finishLength);
-                if (NS_SUCCEEDED(res)) {
-                  (*dst)[dstLength + finishLength] = '\0';
-                }
-              }
+        if (NS_SUCCEEDED(res) || (NS_ERROR_UENC_NOMAPPING == res)) {
+          // Finishes the conversion. The converter has the possibility to write some 
+          // extra data and flush its final state.
+          PRInt32 finishLength = bufLength - dstLength; // remaining unused buffer length
+          if (finishLength > 0) {
+            res = mEncoder->Finish((*dst + dstLength), &finishLength);
+            if (NS_SUCCEEDED(res)) {
+              (*dst)[dstLength + finishLength] = '\0';
             }
-            if (NS_FAILED(res)) {
-              PR_Free(*dst);
-              *dst = nsnull;
-            }
-          }
-          else {
-            res = NS_ERROR_OUT_OF_MEMORY;
           }
         }
-      }    
+        if (NS_FAILED(res)) {
+          PR_Free(*dst);
+          *dst = nsnull;
+        }
+      }
+      else {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      }
     }
   }
 

@@ -69,14 +69,12 @@ public:
   nsresult NormalizeString(const nsAString& stringIn, nsAString& stringOut);
 
   // charset conversion util, C string buffer is allocate by PR_Malloc, caller should call PR_Free
-  nsresult UnicodeToChar(const nsAString& aSrc, char** dst, const nsAString& aCharset);
-
+  nsresult SetCharset(const PRUnichar* aCharset);
+  nsresult UnicodeToChar(const nsAString& aSrc, char** dst);
 
 protected:
   nsCOMPtr <nsICaseConversion>            mCaseConversion;
   nsCOMPtr <nsIUnicodeEncoder>            mEncoder;
-  nsCOMPtr <nsIAtom>                      mEncoderCharsetAtom;
-  nsCOMPtr <nsICharsetConverterManager2>  mCharsetConverterManager;
 };
 
 #endif  /* nsCollation_h__ */

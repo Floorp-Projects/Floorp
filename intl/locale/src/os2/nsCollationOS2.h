@@ -32,7 +32,6 @@ protected:
   nsCollation   *mCollation;
   nsString      mLocale;
   nsString      mSavedLocale;
-  nsString      mCharset;     
 
 public:
   NS_DECL_ISUPPORTS

@@ -149,7 +149,6 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
 
   // locale -> script code + charset name
   m_scriptcode = smRoman;
-  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
 
   PRUnichar *aLocaleUnichar; 
   nsAutoString aCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"));
@@ -188,7 +187,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset.Assign(mappedCharset);
+        res = mCollation->SetCharset(mappedCharset);
         nsMemory::Free(mappedCharset);
       }
     }
@@ -227,7 +226,7 @@ nsresult nsCollationMac::CreateRawSortKey(const nsCollationStrength strength,
   char *str;
   int str_len;
 
-  res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
+  res = mCollation->UnicodeToChar(stringNormalized, &str);
   if (NS_SUCCEEDED(res) && str != NULL) {
     str_len = strlen(str);
     NS_ASSERTION(str_len <= *outLen, "output buffer too small");

@@ -60,8 +60,6 @@ nsCollationOS2::~nsCollationOS2()
 
 nsresult nsCollationOS2::Initialize(nsILocale *locale)
 {
-#define kPlatformLocaleLength 64
-#define MAPPEDCHARSET_BUFFER_LEN 80
   NS_ASSERTION(mCollation == NULL, "Should only be initialized once");
 
   nsresult res;
@@ -70,82 +68,6 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
   if (mCollation == NULL) {
     NS_ASSERTION(0, "mCollation creation failed");
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // default local charset name
-  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
-
-  // default platform locale
-  mLocale.Assign(NS_LITERAL_STRING("C"));
-
-  PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory;
-  aCategory.Assign(NS_LITERAL_STRING("NSILOCALE_COLLATE"));
-
-  // get locale string, use app default if no locale specified
-  if (locale == nsnull) {
-    nsCOMPtr<nsILocaleService> localeService = 
-             do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
-    if (NS_SUCCEEDED(res)) {
-      nsILocale *appLocale;
-      res = localeService->GetApplicationLocale(&appLocale);
-      if (NS_SUCCEEDED(res)) {
-        res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
-        appLocale->Release();
-      }
-    }
-  }
-  else {
-    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
-  }
-
-  // Get platform locale and charset name from locale, if available
-  if (NS_SUCCEEDED(res)) {
-    nsString aLocale;
-    aLocale = aLocaleUnichar;
-    if (NULL != aLocaleUnichar) {
-      nsMemory::Free(aLocaleUnichar);
-    }
-
-    // keep the same behavior as 4.x as well as avoiding Linux collation key problem
-    if (aLocale.EqualsIgnoreCase("en-US")) {
-      aLocale.Assign(NS_LITERAL_STRING("C"));
-    }
-
-    nsCOMPtr <nsIOS2Locale> os2Locale = do_GetService(NS_OS2LOCALE_CONTRACTID, &res);
-    if (NS_SUCCEEDED(res)) {
-      PRUnichar platformLocale[kPlatformLocaleLength+1];
-      res = os2Locale->GetPlatformLocale(platformLocale, kPlatformLocaleLength+1);
-      if (NS_SUCCEEDED(res)) {
-        mLocale.Assign(platformLocale, kPlatformLocaleLength+1);
-      }
-    }
-
-    // Create a locale object and query for the code page
-    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
-    if (NS_SUCCEEDED(res)) {
-      PRUnichar mappedCharset[MAPPEDCHARSET_BUFFER_LEN] = { 0 };
-      LocaleObject locObj = NULL;
-      UniChar      *pmCodepage;
-
-      int  ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)mLocale.get(), &locObj);
-      if (ret != ULS_SUCCESS) 
-        return NS_ERROR_FAILURE;
-        
-      ret = UniQueryLocaleItem(locObj, LOCI_iCodepage, &pmCodepage);
-      if (ret != ULS_SUCCESS)
-        return NS_ERROR_FAILURE;
-
-      int cpLen = UniStrlen((UniChar*)pmCodepage);
-      UniStrncpy((UniChar *)mappedCharset, pmCodepage, cpLen);
-      UniFreeMem(pmCodepage);
-      UniFreeLocaleObject(locObj);
-      PRUint32  mpLen = UniStrlen(NS_REINTERPRET_CAST(const UniChar *, mappedCharset));
-
-      if (NS_SUCCEEDED(ret) && mappedCharset) {
-        mCharset.Assign((PRUnichar*)mappedCharset, mpLen);
-      }
-    }
   }
 
   return NS_OK;

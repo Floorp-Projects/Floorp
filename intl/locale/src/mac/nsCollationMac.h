@@ -33,7 +33,6 @@ class nsCollationMac : public nsICollation {
 
 protected:
   nsCollation   *mCollation;            // XP collation class
-  nsString      mCharset;               // Charset name, used for the conversion
   
   short         m_scriptcode;           // Macintosh platform script code
   unsigned char m_mac_sort_tbl[256];    // Mapping table from a character code to a collation key value.
