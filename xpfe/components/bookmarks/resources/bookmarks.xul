@@ -18,6 +18,8 @@
 
 -->
 
+<?xml-stylesheet href="xul.css" type="text/css"?>
+<?xml-stylesheet href="manage-bookmarks.css" type="text/css"?>
 <?xml-stylesheet href="bookmarks.css" type="text/css"?>
 
 <!DOCTYPE window
@@ -82,39 +84,44 @@
 
 <tree  id="bookmarksTree" 
        datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch"
-       ondblclick="return OpenURL(event,event.target.parentNode);"
+       ondblclick="return OpenURL(event,event.target.parentNode.parentNode);"
        flex="100%">
 
   <template>
-  	<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treebody" subcontainment="treechildren">
-  		<treeitem uri="...">
-  			<treecell>
-  				<html:hr width="75%" align="center" size="1" />
-  			</treecell>
-		</treeitem>  		
-  	</rule>
-  	
-  	<rule rootcontainment="treebody" subcontainment="treechildren">
-	  	<treeitem uri="...">
-			<treecell>
-				<treeindentation />
-				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
-			</treecell>
-			<treecell>
-				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
-			</treecell>
-			<treecell>
-				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right" style="list-style-image: none;" />
-			</treecell>
-	  	</treeitem>
-	</rule>
+    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
+       <treeitem uri="...">
+         <treerow>
+           <treecell>
+             <html:hr width="75%" align="center" size="1" />
+           </treecell>
+         </treerow>
+       </treeitem>  		
+     </rule>
+
+     <rule rootcontainment="treechildren" subcontainment="treechildren">
+       <treeitem uri="...">
+         <treerow>
+           <treecell>
+             <treeindentation />
+             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+           </treecell>
+           <treecell>
+             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+           </treecell>
+           <treecell>
+             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right" style="list-style-image: none;" />
+           </treecell>
+         </treerow>
+       </treeitem>
+     </rule>
   </template>
 
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
+
   <treehead>
-    <treeitem>
+    <treerow>
       <treecell onclick="return doSort('NameColumn');">
 	<xul:observes element="NameColumn" attribute="sortActive"/>
 	<xul:observes element="NameColumn" attribute="sortDirection"/>
@@ -127,10 +134,10 @@
 	<xul:observes element="ShortcutURLColumn" attribute="sortActive"/>
 	<xul:observes element="ShortcutURLColumn" attribute="sortDirection"/>
       &tree.header.shortcut.label;</treecell>
-    </treeitem>
+    </treerow>
   </treehead>
 
-  <treebody id="NC:BookmarksRoot" />
+  <treechildren id="NC:BookmarksRoot" />
 </tree>
 
 </xul:window>

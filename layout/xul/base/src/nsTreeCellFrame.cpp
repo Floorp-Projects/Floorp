@@ -96,13 +96,13 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
   // Determine if we're a column header or not.
   
   // Get row group frame
-  nsIFrame* pRowGroupFrame = nsnull;
-  aParent->GetParent(&pRowGroupFrame);
-  if (pRowGroupFrame != nsnull)
+  nsIFrame* rowGroupFrame = nsnull;
+  aParent->GetParent(&rowGroupFrame);
+  if (rowGroupFrame != nsnull)
   {
 		// Get the display type of the row group frame and see if it's a header or body
 		nsCOMPtr<nsIStyleContext> parentContext;
-		pRowGroupFrame->GetStyleContext(getter_AddRefs(parentContext));
+		rowGroupFrame->GetStyleContext(getter_AddRefs(parentContext));
 		if (parentContext)
 		{
 			const nsStyleDisplay* display = (const nsStyleDisplay*)
@@ -114,7 +114,12 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
 			else mIsHeader = PR_FALSE;
 
 			// Get the table frame.
-			pRowGroupFrame->GetParent((nsIFrame**) &mTreeFrame);
+      nsTableFrame* tableFrame = nsnull;
+      nsresult rv = nsTableFrame::GetTableFrame(rowGroupFrame, tableFrame);
+      if (NS_FAILED(rv) || (nsnull == tableFrame)) {
+        return rv;
+      }
+      mTreeFrame = (nsTreeFrame*)tableFrame;
 		}
   }
 
@@ -235,27 +240,30 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
   {
     // Perform an expand/collapse
 	  // Iterate up the chain to the row and then to the item.
-	  nsCOMPtr<nsIContent> pTreeItemContent;
-	  mContent->GetParent(*getter_AddRefs(pTreeItemContent));
-    nsCOMPtr<nsIDOMElement> pTreeItem( do_QueryInterface(pTreeItemContent) );
-    NS_ASSERTION(pTreeItem, "not a DOM element");
-    if (! pTreeItem)
+	  nsCOMPtr<nsIContent> treeItemContent;
+    nsCOMPtr<nsIContent> treeRowContent;
+	  mContent->GetParent(*getter_AddRefs(treeRowContent));
+    treeRowContent->GetParent(*getter_AddRefs(treeItemContent));
+
+    nsCOMPtr<nsIDOMElement> treeItem( do_QueryInterface(treeItemContent) );
+    NS_ASSERTION(treeItem, "not a DOM element");
+    if (! treeItem)
       return NS_ERROR_UNEXPECTED;
 	  
 	  // Take the tree item content and toggle the value of its open attribute.
 	  nsAutoString attrValue;
-    nsresult result = pTreeItem->GetAttribute("open", attrValue);
+    nsresult result = treeItem->GetAttribute("open", attrValue);
     attrValue.ToLowerCase();
     PRBool isExpanded = (attrValue=="true");
     if (isExpanded)
 	  {
 		  // We're collapsing and need to remove frames from the flow.
-		  pTreeItem->RemoveAttribute("open");
+		  treeItem->RemoveAttribute("open");
 	  }
 	  else
 	  {
 		  // We're expanding and need to add frames to the flow.
-		  pTreeItem->SetAttribute("open", "true");
+		  treeItem->SetAttribute("open", "true");
 	  }
   }
   return NS_OK;
@@ -265,74 +273,55 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 void nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected, PRBool notifyForReflow)
 {
 	nsCOMPtr<nsIAtom> kSelectedCellAtom(dont_AddRef(NS_NewAtom("selectedcell")));
+  nsCOMPtr<nsIAtom> kSelectedRowAtom(dont_AddRef(NS_NewAtom("selectedrow")));
   nsCOMPtr<nsIAtom> kSelectedAtom(dont_AddRef(NS_NewAtom("selected")));
 
-  nsIContent* pParentContent = nsnull;
-  mContent->GetParent(pParentContent);
+  nsCOMPtr<nsIContent> rowContent;
+  nsCOMPtr<nsIContent> itemContent;
+  mContent->GetParent(*getter_AddRefs(rowContent));
+  rowContent->GetParent(*getter_AddRefs(itemContent));
 
   if (isSelected)
 	{
 		// We're selecting the node.
 		mContent->SetAttribute(kNameSpaceID_None, kSelectedCellAtom, "true", notifyForReflow);
-    if(pParentContent) {
-      pParentContent->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", notifyForReflow);
-    }
+    rowContent->SetAttribute(kNameSpaceID_None, kSelectedRowAtom, "true", notifyForReflow);
+    itemContent->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", notifyForReflow);
 	}
 	else
 	{
 		// We're deselecting the node.
-		mContent->UnsetAttribute(kNameSpaceID_None, kSelectedCellAtom, notifyForReflow);
-    if(pParentContent) {
-      pParentContent->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, notifyForReflow);
-    }
+    mContent->UnsetAttribute(kNameSpaceID_None, kSelectedCellAtom, notifyForReflow);
+    rowContent->UnsetAttribute(kNameSpaceID_None, kSelectedRowAtom, notifyForReflow);
+    itemContent->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, notifyForReflow);
 	}
-
-  NS_IF_RELEASE(pParentContent);
 }
 
 void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool notifyForReflow)
 {
-	nsCOMPtr<nsIAtom> kHoverCellAtom(dont_AddRef(NS_NewAtom("hovercell")));
-  nsCOMPtr<nsIAtom> kHoverAtom(dont_AddRef(NS_NewAtom("hover")));
+	nsCOMPtr<nsIAtom> kHoverCellAtom(dont_AddRef(NS_NewAtom("Hovercell")));
+  nsCOMPtr<nsIAtom> kHoverRowAtom(dont_AddRef(NS_NewAtom("Hoverrow")));
+  nsCOMPtr<nsIAtom> kHoverAtom(dont_AddRef(NS_NewAtom("Hover")));
 
-  nsIContent* pParentContent = nsnull;
-  mContent->GetParent(pParentContent);
+  nsCOMPtr<nsIContent> rowContent;
+  nsCOMPtr<nsIContent> itemContent;
+  mContent->GetParent(*getter_AddRefs(rowContent));
+  rowContent->GetParent(*getter_AddRefs(itemContent));
 
   if (isHover)
 	{
-		// We're hovering over the node.
+		// We're selecting the node.
 		mContent->SetAttribute(kNameSpaceID_None, kHoverCellAtom, "true", notifyForReflow);
-    if(pParentContent) {
-      pParentContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
-    }
+    rowContent->SetAttribute(kNameSpaceID_None, kHoverRowAtom, "true", notifyForReflow);
+    itemContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
 	}
 	else
 	{
 		// We're deselecting the node.
-		mContent->UnsetAttribute(kNameSpaceID_None, kHoverCellAtom, notifyForReflow);
-    if(pParentContent) {
-      pParentContent->UnsetAttribute(kNameSpaceID_None, kHoverAtom, notifyForReflow);
-    }
-  }
-
-  NS_IF_RELEASE(pParentContent);
-}
-
-// XXX This method will go away.  I think it can
-// actually go away now... ?
-NS_IMETHODIMP
-nsTreeCellFrame::AttributeChanged(nsIPresContext* aPresContext,
-                                  nsIContent* aChild,
-                                  nsIAtom* aAttribute,
-                                  PRInt32 aHint)
-{
-  // redraw
-  nsRect frameRect;
-  GetRect(frameRect);
-  nsRect rect(0, 0, frameRect.width, frameRect.height);
-  Invalidate(rect, PR_TRUE);
-
-  return NS_OK;
+    mContent->UnsetAttribute(kNameSpaceID_None, kHoverCellAtom, notifyForReflow);
+    rowContent->UnsetAttribute(kNameSpaceID_None, kHoverRowAtom, notifyForReflow);
+    itemContent->UnsetAttribute(kNameSpaceID_None, kHoverAtom, notifyForReflow);
+	}
 }
 
 NS_IMETHODIMP

@@ -46,12 +46,6 @@ public:
 
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
-  NS_IMETHOD
-  AttributeChanged(nsIPresContext* aPresContext,
-                                  nsIContent* aChild,
-                                  nsIAtom* aAttribute,
-                                  PRInt32 aHint);
-
   void Select(nsIPresContext& presContext, PRBool isSelected, PRBool notifyForReflow = PR_TRUE);
   void Hover(nsIPresContext& presContext, PRBool isHover, PRBool notifyForReflow = PR_TRUE);
 

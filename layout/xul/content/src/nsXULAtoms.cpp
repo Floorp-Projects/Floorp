@@ -40,7 +40,7 @@ nsIAtom* nsXULAtoms::toolbox;
 nsIAtom* nsXULAtoms::tree;
 nsIAtom* nsXULAtoms::treecaption;
 nsIAtom* nsXULAtoms::treehead;
-nsIAtom* nsXULAtoms::treebody;
+nsIAtom* nsXULAtoms::treerow;
 nsIAtom* nsXULAtoms::treeitem;
 nsIAtom* nsXULAtoms::treecell;
 nsIAtom* nsXULAtoms::treechildren;
@@ -105,7 +105,7 @@ void nsXULAtoms::AddrefAtoms() {
     tree = NS_NewAtom("tree");
 	treecaption = NS_NewAtom("treecaption");
 	treehead = NS_NewAtom("treehead");
-	treebody = NS_NewAtom("treebody");
+	treerow = NS_NewAtom("treerow");
 	treecell = NS_NewAtom("treecell");
 	treeitem = NS_NewAtom("treeitem");
 	treechildren = NS_NewAtom("treechildren");
@@ -161,7 +161,7 @@ void nsXULAtoms::ReleaseAtoms() {
     NS_RELEASE(tree);
 	NS_RELEASE(treecaption);
 	NS_RELEASE(treehead);
-	NS_RELEASE(treebody);
+	NS_RELEASE(treerow);
 	NS_RELEASE(treecell);
 	NS_RELEASE(treeitem);
 	NS_RELEASE(treechildren);

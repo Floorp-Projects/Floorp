@@ -453,6 +453,9 @@ public:
                                nsReflowReason           aReason,
                                PRBool                   aDoSiblings);
 
+  NS_IMETHOD GetTableSpecifiedHeight(nscoord& aHeight, const nsHTMLReflowState& aReflowState);
+  virtual PRBool RowGroupsShouldBeConstrained() { return PR_FALSE; }
+  
 protected:
   /** second pass of ResizeReflow.
     * lays out all table content with aMaxSize(computed_table_width, given_table_height) 

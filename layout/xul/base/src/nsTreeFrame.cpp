@@ -48,7 +48,7 @@ NS_NewTreeFrame (nsIFrame** aNewFrame)
 
 // Constructor
 nsTreeFrame::nsTreeFrame()
-:nsTableFrame() { }
+:nsTableFrame(),mSlatedForReflow(PR_FALSE) { }
 
 // Destructor
 nsTreeFrame::~nsTreeFrame()
@@ -273,4 +273,14 @@ nsTreeFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   ClearSelection(aPresContext);
   return nsTableFrame::DeleteFrame(aPresContext);
+}
+
+NS_IMETHODIMP
+nsTreeFrame::Reflow(nsIPresContext&          aPresContext,
+							      nsHTMLReflowMetrics&     aMetrics,
+							      const nsHTMLReflowState& aReflowState,
+							      nsReflowStatus&          aStatus)
+{
+  mSlatedForReflow = PR_FALSE;
+  return nsTableFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
 }

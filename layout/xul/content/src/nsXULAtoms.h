@@ -58,7 +58,7 @@ public:
   static nsIAtom* tree; // The start of a tree view
   static nsIAtom* treecaption; // The caption of a tree view
   static nsIAtom* treehead; // The header of the tree view
-  static nsIAtom* treebody; // The body of the tree view
+  static nsIAtom* treerow; // A row in the tree view
   static nsIAtom* treeitem; // An item in the tree view
   static nsIAtom* treecell; // A cell in the tree view
   static nsIAtom* treechildren; // The children of an item in the tree viw

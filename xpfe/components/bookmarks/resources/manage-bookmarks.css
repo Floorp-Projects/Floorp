@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -18,10 +18,13 @@
 
 /*
 
-  Style rules specific to the related links panel
+  Style rules specific to the 'manage bookmarks' window.
 
 */
 
-treeitem[id="NC:SiteMapRoot"] > treerow > treecell > titledbutton {
-    list-style-image: url("resource:/res/samples/sitemap.gif");
-};
+treeitem > treerow > treecell > titledbutton
+{
+ border: none;
+ font: inherit;
+ list-style-image: url("resource:/res/rdf/document.gif");
+}
