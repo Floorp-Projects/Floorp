@@ -525,7 +525,6 @@ NS_IMETHODIMP nsDeviceContextOS2 :: GetSystemFont(nsSystemFontID aID, nsFont *aF
 NS_IMETHODIMP nsDeviceContextOS2 :: CheckFontExistence(const nsString& aFontName)
 {
   HPS     hps = NULL;
-  PRBool  isthere = PR_FALSE;
 
   if (NULL != mPrintDC){
     hps = mPrintPS;
@@ -533,14 +532,15 @@ NS_IMETHODIMP nsDeviceContextOS2 :: CheckFontExistence(const nsString& aFontName
     hps = ::WinGetPS((HWND)mWidget);
   }
 
-  char fontName[FACESIZE];
-
-  WideCharToMultiByte(0, aFontName.get(), aFontName.Length() + 1,
-    fontName, sizeof(fontName));
+  nsAutoCharBuffer fontName;
+  PRInt32 fontNameLength;
+  WideCharToMultiByte(0, aFontName.get(), aFontName.Length(),
+                      fontName, fontNameLength);
 
   long lWant = 0;
-  long lFonts = GFX (::GpiQueryFonts (hps, QF_PUBLIC | QF_PRIVATE,
-                     fontName, &lWant, 0, 0), GPI_ALTERROR);
+  long lFonts = GFX (::GpiQueryFonts(hps, QF_PUBLIC | QF_PRIVATE,
+                                     fontName.get(), &lWant, 0, 0),
+                     GPI_ALTERROR);
 
   if (NULL == mPrintDC)
     ::WinReleasePS(hps);
@@ -765,7 +765,7 @@ nsresult nsDeviceContextOS2::PrepareDocument(PRUnichar * aTitle, PRUnichar* aPri
       rv = NS_ERROR_GFX_PRINTER_STARTDOC;
 
     if (title != nsnull) {
-      delete [] title;
+      nsMemory::Free(title);
     }
   }
 
@@ -844,20 +844,14 @@ nsresult nsDeviceContextOS2::EndPage()
 char* 
 nsDeviceContextOS2::GetACPString(const nsString& aStr)
 {
-   int acplen = aStr.Length() * 3 + 1;
-   if (acplen == 1) {
+   if (aStr.Length() == 0) {
       return nsnull;
    }
-   char* acp = new char[acplen];
-   if(acp)
-   {
-      int outlen = ::WideCharToMultiByte( 0,
-                      aStr.get(), aStr.Length(),
-                      acp, acplen);
-      if ( outlen > 0)
-         acp[outlen] = '\0';  // null terminate
-   }
-   return acp;
+
+   nsAutoCharBuffer acp;
+   PRInt32 acpLength;
+   WideCharToMultiByte(0, aStr.get(), aStr.Length(), acp, acpLength);
+   return ToNewCString(nsDependentCString(acp.get()));
 }
 
 BOOL nsDeviceContextOS2::isPrintDC()

@@ -1630,28 +1630,19 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
       dev2twip = mContext->DevUnitsToTwips();
       app2twip = mContext->AppUnitsToDevUnits();
       app2twip *= dev2twip;
-   
       int points = NSTwipsToFloorIntPoints( nscoord( aFont.size * app2twip));
 
-      int length = aFont.name.Length() * 2 + 1;
-      char * fontname = new char[length];
-      if (fontname) {
-        int outlen = ::WideCharToMultiByte( 0, 
-                       aFont.name.get(), aFont.name.Length(),
-                       fontname, length);
-        if ( outlen >= 0) {
-          fontname[outlen] = '\0';
-        }
-   
-        char *buffer = new char [ strlen( fontname) + 6];
-        if (buffer) {
-          sprintf( buffer, "%d.%s", points, fontname);
-   
-          BOOL rc = WinSetPresParam( mWnd, PP_FONTNAMESIZE,
-                                     strlen( buffer) + 1, buffer);
-          delete [] buffer;
-        }
-        delete [] fontname;
+      nsAutoCharBuffer fontname;
+      PRInt32 fontnameLength;
+      WideCharToMultiByte(0, aFont.name.get(), aFont.name.Length(),
+                          fontname, fontnameLength);
+
+      char *buffer = new char[fontnameLength + 6];
+      if (buffer) {
+        sprintf(buffer, "%d.%s", points, fontname.get());
+        BOOL rc = ::WinSetPresParam(mWnd, PP_FONTNAMESIZE,
+                                    strlen(buffer) + 1, buffer);
+        delete [] buffer;
       }
    }
 
@@ -2267,14 +2258,14 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    if( usChar)
    {
       USHORT inbuf[2];
-      PRUnichar outbuf[4];
       inbuf[0] = usChar;
       inbuf[1] = '\0';
-      outbuf[0] = (PRUnichar)0;
 
-      MultiByteToWideChar(0, (const char*)inbuf, 2, outbuf, 4);
+      nsAutoChar16Buffer outbuf;
+      PRInt32 bufLength;
+      MultiByteToWideChar(0, (const char*)inbuf, 2, outbuf, bufLength);
 
-      pressEvent.charCode = outbuf[0];
+      pressEvent.charCode = outbuf.get()[0];
 
       if (pressEvent.isControl && !(fsFlags & (KC_VIRTUALKEY | KC_DEADKEY))) {
         if (!pressEvent.isShift && (pressEvent.charCode >= 'A' && pressEvent.charCode <= 'Z'))
@@ -3335,49 +3326,36 @@ NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
    }
    else if( mWnd)
    {
-     int length = aTitle.Length() * 2 + 1;
-     char * title = new char[length];
-     if (title)
-     {
-          
-       PRUnichar* uchtemp = ToNewUnicode(aTitle);
-       for (int i=0;i<aTitle.Length();i++) {
-         switch (uchtemp[i]) {
-           case 0x2018:
-           case 0x2019:
-             uchtemp[i] = 0x0027;
-             break;
-           case 0x201C:
-           case 0x201D:
-             uchtemp[i] = 0x0022;
-             break;
-           case 0x2014:
-             uchtemp[i] = 0x002D;
-             break;
-         }
+      PRUnichar* uchtemp = ToNewUnicode(aTitle);
+      for (int i=0;i<aTitle.Length();i++) {
+       switch (uchtemp[i]) {
+         case 0x2018:
+         case 0x2019:
+           uchtemp[i] = 0x0027;
+           break;
+         case 0x201C:
+         case 0x201D:
+           uchtemp[i] = 0x0022;
+           break;
+         case 0x2014:
+           uchtemp[i] = 0x002D;
+           break;
        }
+      }
 
-       int outlen = ::WideCharToMultiByte( 0, 
-                      uchtemp, aTitle.Length(),
-                      title, length);
-       if ( outlen >= 0) {
-         if (outlen > MAX_TITLEBAR_LENGTH) {
-           title[MAX_TITLEBAR_LENGTH] = '\0';
-         } else {
-           title[outlen] = '\0';
-         }
-       }
-       WinSetWindowText( GetMainWindow(), title );
-       if (mChromeHidden) {
+      nsAutoCharBuffer title;
+      PRInt32 titleLength;
+      WideCharToMultiByte(0, uchtemp, aTitle.Length(), title, titleLength);
+      ::WinSetWindowText(GetMainWindow(), title.get());
+      if (mChromeHidden) {
          /* If the chrome is hidden, set the text of the titlebar directly */
          if (mFrameWnd) {
-           HWND hwndTitleBar = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
-           WinSetWindowText( hwndTitleBar, title );
+            HWND hwndTitleBar = (HWND)::WinQueryProperty(mFrameWnd,
+                                                         "hwndTitleBar");
+            ::WinSetWindowText(hwndTitleBar, title.get());
          }
-       }
-       nsMemory::Free(uchtemp);
-       delete [] title;
-     }
+      }
+      nsMemory::Free(uchtemp);
    }
    return NS_OK;
 } 

@@ -1609,43 +1609,26 @@ void WriteTypeEA(PCSZ filename, PCSZ type)
 // to do:  this needs to take into account the current page's encoding
 // if it is different than the PM codepage
 
-int UnicodeToCodepage( const nsAString& inString, char **outText)
+int UnicodeToCodepage(const nsAString& aString, char **aResult)
 {
-
-  int outlen = 0;
-  int bufsize = inString.Length()*2 + 1;
-
-  *outText = (char*)nsMemory::Alloc(bufsize);
-  if (*outText) {
-    outlen = ::WideCharToMultiByte( 0, PromiseFlatString(inString).get(),
-                                    inString.Length(), *outText, bufsize);
-
-    if (outlen)
-      (*outText)[outlen] = '\0';
-    else
-      nsMemory::Free(*outText);
-  }
-  return outlen;
+  nsAutoCharBuffer buffer;
+  PRInt32 bufLength;
+  WideCharToMultiByte(0, PromiseFlatString(aString).get(), aString.Length(),
+                      buffer, bufLength);
+  *aResult = ToNewCString(nsDependentCString(buffer.get()));
+  return bufLength;
 }
 
 // --------------------------------------------------------------------------
 
-int CodepageToUnicode( const nsACString& inString, PRUnichar **outText)
+int CodepageToUnicode(const nsACString& aString, PRUnichar **aResult)
 {
-
-  int outlen = 0;
-  int bufsize = 2*(inString.Length()+1);
-
-  *outText = (PRUnichar*)nsMemory::Alloc(bufsize);
-  if (*outText) {
-    outlen = ::MultiByteToWideChar( 0, PromiseFlatCString(inString).get(),
-                                    inString.Length(), *outText, bufsize);
-    if (outlen)
-      (*outText)[outlen] = 0;
-    else
-      nsMemory::Free(*outText);
-  }
-  return outlen;
+  nsAutoChar16Buffer buffer;
+  PRInt32 bufLength;
+  nsresult rv = MultiByteToWideChar(0, PromiseFlatCString(aString).get(),
+                                    aString.Length(), buffer, bufLength);
+  *aResult = ToNewUnicode(nsDependentString(buffer.get()));
+  return bufLength;
 }
 
 // --------------------------------------------------------------------------

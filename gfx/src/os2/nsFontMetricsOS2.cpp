@@ -602,12 +602,14 @@ nsFontMetricsOS2::LoadFont(HPS aPS, const nsString& aFontname)
   // See if a font with that facename exists on system and fake any applied
   // effects
   long lFonts = 0;
-  char* fontname = ToNewCString(aFontname);
-  FONTMETRICS* pMetrics = getMetrics(lFonts, fontname, aPS);
+  nsAutoCharBuffer fontname;
+  PRInt32 len;
+  WideCharToMultiByte(0, aFontname.get(), aFontname.Length(), fontname, len);
+  FONTMETRICS* pMetrics = getMetrics(lFonts, fontname.get(), aPS);
 
   if (lFonts > 0) {
     font = new nsFontOS2();
-    strcpy(font->mFattrs.szFacename, fontname);
+    strcpy(font->mFattrs.szFacename, fontname.get());
     font->mFattrs.fsFontUse = FATTR_FONTUSE_OUTLINE |
                               FATTR_FONTUSE_TRANSFORMABLE;
 
@@ -1232,8 +1234,10 @@ PRBool
 nsFontMetricsOS2::GetVectorSubstitute(HPS aPS, const nsString& aFamilyname,
                                       char* alias)
 {
-  char* fontname = ToNewCString(aFamilyname);
-  return GetVectorSubstitute(aPS, fontname, alias);
+  nsAutoCharBuffer fontname;
+  PRInt32 len;
+  WideCharToMultiByte(0, aFamilyname.get(), aFamilyname.Length(), fontname, len);
+  return GetVectorSubstitute(aPS, fontname.get(), alias);
 }
 
 PRBool
@@ -1908,24 +1912,12 @@ nsFontOS2::GetWidth(HPS aPS, const char* aString, PRUint32 aLength)
 PRInt32
 nsFontOS2::GetWidth( HPS aPS, const PRUnichar* aString, PRUint32 aLength )
 {
-  char  str[CHAR_BUFFER_SIZE];
-  char* pstr = str;
-  int   destLength = aLength * 3 + 1;
-
-  if (destLength > CHAR_BUFFER_SIZE)
-    pstr = new char[destLength];
-  else
-    destLength = CHAR_BUFFER_SIZE;
-
-  int convertedLength = WideCharToMultiByte( mConvertCodePage, aString,
-                                             aLength, pstr, destLength );
+  nsAutoCharBuffer buffer;
+  PRInt32 destLength = aLength;
+  WideCharToMultiByte(mConvertCodePage, aString, aLength, buffer, destLength);
 
   SIZEL size;
-  GetTextExtentPoint32(aPS, pstr, convertedLength, &size);
-
-  if (pstr != str) {
-    delete[] pstr;
-  }
+  GetTextExtentPoint32(aPS, buffer.get(), destLength, &size);
 
   return size.cx;
 }
@@ -1946,26 +1938,14 @@ nsFontOS2::DrawString( HPS aPS, nsDrawingSurfaceOS2* aSurface,
                        PRInt32 aX, PRInt32 aY,
                        const PRUnichar* aString, PRUint32 aLength )
 {
-  char  str[CHAR_BUFFER_SIZE];
-  char* pstr = str;
-  int   destLength = aLength * 3 + 1;
-  
-  if (destLength > CHAR_BUFFER_SIZE)
-    pstr = new char[destLength];
-  else
-    destLength = CHAR_BUFFER_SIZE;
-
-  int convertedLength = WideCharToMultiByte( mConvertCodePage, aString,
-                                             aLength, pstr, destLength );
+  nsAutoCharBuffer buffer;
+  PRInt32 destLength = aLength;
+  WideCharToMultiByte(mConvertCodePage, aString, aLength, buffer, destLength);
 
   POINTL ptl = { aX, aY };
   aSurface->NS2PM (&ptl, 1);
 
-  ExtTextOut(aPS, ptl.x, ptl.y, 0, NULL, pstr, convertedLength, NULL);
-
-  if (pstr != str) {
-    delete[] pstr;
-  }
+  ExtTextOut(aPS, ptl.x, ptl.y, 0, NULL, buffer.get(), destLength, NULL);
 }
 
 

@@ -195,16 +195,11 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     for (i = 0; i < mTitles.Count(); i++)
     {
       const nsString& typeWide = *mTitles[i];
-      PRInt32 l = (typeWide.Length()+2)*2;
-      char *filterBuffer = (char*) nsMemory::Alloc(l);
-      int len = WideCharToMultiByte(0,
-                                    typeWide.get(),
-                                    typeWide.Length(),
-                                    filterBuffer,
-                                    l);
-      filterBuffer[len] = NULL;
-      filterBuffer[len+1] = NULL;
-      apszTypeList[i] = filterBuffer;
+      nsAutoCharBuffer buffer;
+      PRInt32 bufLength;
+      WideCharToMultiByte(0, typeWide.get(), typeWide.Length(),
+                          buffer, bufLength);
+      apszTypeList[i] = ToNewCString(nsDependentCString(buffer.get()));
     }
     apszTypeList[i] = 0;
     filedlg.papszITypeList = (PAPSZ)apszTypeList;
