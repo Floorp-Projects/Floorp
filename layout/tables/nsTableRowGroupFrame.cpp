@@ -115,6 +115,26 @@ NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount)
   return NS_OK;
 }
 
+PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
+{
+  PRInt32 result = -1;
+  nsIFrame *childFrame = mFirstChild;
+  while (PR_TRUE)
+  {
+    if (nsnull==childFrame)
+      break;
+    const nsStyleDisplay *childDisplay;
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+    {
+      result = ((nsTableRowFrame *)childFrame)->GetRowIndex();
+      break;
+    }
+    childFrame->GetNextSibling(childFrame);
+  }
+  return result;
+}
+
 NS_METHOD nsTableRowGroupFrame::GetMaxColumns(PRInt32 &aMaxColumns) const
 {
   aMaxColumns=0;

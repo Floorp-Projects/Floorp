@@ -94,6 +94,11 @@ public:
   /** set aCount to the number of child rows (not necessarily == number of child frames) */
   NS_METHOD GetRowCount(PRInt32 &aCount);
 
+  /** return the table-relative row index of the first row in this rowgroup.
+    * if there are no rows, -1 is returned.
+    */
+  PRInt32 GetStartRowIndex();
+
   /** get the maximum number of columns taken up by any row in this rowgroup */
   NS_METHOD GetMaxColumns(PRInt32 &aMaxColumns) const;
 

@@ -148,7 +148,8 @@ private:
 
   nscoord GetMargin(nsIFrame* aFrame, PRUint8 aEdge) const;
 
-  nscoord GetBorderWidth(nsIFrame* aFrame, PRUint8 aEdge) const;
+  //XXX: aTableFrame can be removed as soon as border-collapse inherits correctly
+  void GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFrame);
 
   PRUint8 GetOpposingEdge(PRUint8 aEdge);
 
@@ -200,7 +201,6 @@ protected:
 
   nsresult     mCalculated;
   nsMargin     mMargin;
-  nsIFrame*    mBorderFrame[4];  // the frame whose border is used
   PRBool       mIsContentEmpty;  // PR_TRUE if the cell's contents take up no space
   //XXX: mIsContentEmpty should get yanked in favor of using free a bit on the frame base class
   //     the FrameState slot (mState; GetFrameState/SetFrameState)
