@@ -122,6 +122,8 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 #include "nsIHTMLDocument.h"
 #include "nsHTMLAtoms.h"
 
+#include "nsIHttpChannel.h"
+#include "nsIPref.h"
 
 nsDOMStyleSheetList::nsDOMStyleSheetList(nsIDocument *aDocument)
 {
@@ -705,6 +707,29 @@ nsDocument::StartDocumentLoad(const char* aCommand,
   nsresult rv = NS_OK;
   if (aReset)
     rv = Reset(aChannel, aLoadGroup);
+
+  PRBool have_contentLanguage = PR_FALSE;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    nsXPIDLCString contentLanguage;
+    if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Content-Language",
+                                                    getter_Copies(contentLanguage)))) {
+      mContentLanguage.AssignWithConversion(contentLanguage);
+      have_contentLanguage = PR_TRUE;
+    }
+  }
+  if (!have_contentLanguage) {
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
+    if(pref) {
+      nsXPIDLCString prefLanguage;
+      if (NS_SUCCEEDED(pref->GetCharPref("intl.accept_languages",
+                                         getter_Copies(prefLanguage)))) {
+        mContentLanguage.AssignWithConversion(prefLanguage);
+        have_contentLanguage = PR_TRUE;
+      }
+    }
+  }
+
   return rv;
 }
 
@@ -770,6 +795,13 @@ nsDocument::GetContentType(nsAWritableString& aContentType) const
 {
   // Must be implemented by derived class.
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::GetContentLanguage(nsAWritableString& aContentLanguage) const
+{
+  aContentLanguage = mContentLanguage;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

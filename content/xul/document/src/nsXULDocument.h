@@ -164,6 +164,8 @@ public:
 
     NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString& aCharSetID);
 
+    NS_IMETHOD GetContentLanguage(nsAWritableString& aContentLanguage) const;
+
 #ifdef IBMBIDI
     /**
      *  Retrieve and get bidi state of the document 

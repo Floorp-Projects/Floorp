@@ -159,6 +159,11 @@ public:
    */
   NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver) = 0;
 
+  /**
+   * Return the language of this document.
+   */
+  NS_IMETHOD GetContentLanguage(nsAWritableString& aContentLanguage) const = 0;
+
 #ifdef IBMBIDI
   // The state BidiEnabled should persist across multiple views (screen, print)
   // of the same document.
