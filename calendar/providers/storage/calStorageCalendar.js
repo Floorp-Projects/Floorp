@@ -715,10 +715,13 @@ calStorageCalendar.prototype = {
     flushItem: function (item, olditem) {
         // for now, we just delete and insert
         // set up params before transaction
-        this.mDeleteItem.params.id = item.id;
-        this.mDeleteItem.params.cal_id = this.mCalId;
-        this.mDeleteAttendees.params.item_id = item.id;
-        this.mDeleteProperties.params.item_id = item.id;
+
+        if (olditem) {
+            this.mDeleteItem.params.id = olditem.id;
+            this.mDeleteItem.params.cal_id = this.mCalId;
+            this.mDeleteAttendees.params.item_id = olditem.id;
+            this.mDeleteProperties.params.item_id = olditem.id;
+        }
 
         var ip = this.mInsertItem.params;
         ip.cal_id = this.mCalId;
@@ -757,9 +760,15 @@ calStorageCalendar.prototype = {
         // start the transaction
         this.mDB.beginTransaction();
         try {
-            this.mDeleteAttendees.step();
-            this.mDeleteProperties.step();
-            this.mDeleteItem.step();
+            if (olditem) {
+                this.mDeleteAttendees.step();
+                this.mDeleteProperties.step();
+                this.mDeleteItem.step();
+
+                this.mDeleteAttendees.reset();
+                this.mDeleteProperties.reset();
+                this.mDeleteItem.reset();
+            }
 
             var attendees = item.getAttendees({});
             if (attendees && attendees.length > 0) {
@@ -809,6 +818,10 @@ calStorageCalendar.prototype = {
             dump (e);
             this.mDB.rollbackTransaction();
         }
+
+        this.mDeleteAttendees.reset();
+        this.mDeleteProperties.reset();
+        this.mDeleteItem.reset();
 
         delete this.mItemCache[aID];
     },
