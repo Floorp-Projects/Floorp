@@ -579,7 +579,7 @@ case "$target" in
 *-hpux*)
     DLL_SUFFIX="sl"
     if test ! "$GNU_CC"; then
-	DSO_LDOPTS='-b -E -L$(DIST)/bin'
+	DSO_LDOPTS='-b -E +s -L$(DIST)/bin'
 	DSO_CFLAGS=""
 	DSO_PIC_CFLAGS="+Z"
     else
@@ -1800,6 +1800,34 @@ elif test "$ac_cv_gettimeofday_args" = 2 ; then
   AC_MSG_RESULT(two arguments)
 else
   AC_MSG_RESULT(unknown)
+fi
+
+dnl Figure out how to 'allocate' paged memory areas (see xpcom/ds/nsPageMgr.cpp)
+dnl First see if /dev/zero is supported so that we
+dnl can mmap against it.  If not (hpux) then see if
+dnl if valloc is supported (which is hpux's malloc
+dnl on paged memory boundary
+dnl ========================================================
+
+AC_MSG_CHECKING(for /dev/zero)
+if test -f /dev/zero; then
+  AC_DEFINE(HAVE_DEV_ZERO)
+  AC_MSG_RESULT(yes)
+else
+        AC_MSG_RESULT(no)
+        AC_MSG_CHECKING(for valloc)
+        AC_CACHE_VAL(ac_cv_valloc,
+                     [AC_TRY_COMPILE([#include <stdlib.h>],
+                                     [void *ptr = valloc(1);],
+                                     [ac_cv_valloc=true],
+                                     [ac_cv_valloc=false])])
+
+	if test "$ac_cv_valloc" = true ; then
+	  AC_DEFINE(HAVE_VALLOC)
+	  AC_MSG_RESULT(yes)
+	else
+	  AC_MSG_RESULT(no)
+	fi
 fi
 
 dnl Check for dll-challenged libc's.
