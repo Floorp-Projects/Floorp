@@ -56,14 +56,11 @@
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsIWidget.h"
+#include "nsCarbonHelpers.h"
 
 #include "nsIXULContent.h"
 #include "nsIDOMElement.h"
 
-
-#if !TARGET_CARBON
-DragSendDataUPP nsDragService::sDragSendDataUPP = NewDragSendDataProc(DragSendDataProc);
-#endif
 
 // we need our own stuff for MacOS because of nsIDragSessionMac.
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
@@ -75,15 +72,19 @@ NS_IMPL_QUERY_INTERFACE3(nsDragService, nsIDragService, nsIDragSession, nsIDragS
 // DragService constructor
 //
 nsDragService::nsDragService()
-  : mDragRef(0), mDataItems(nsnull), mImageDraggingSupported(PR_FALSE)
+  : mDragRef(0), mDataItems(nsnull), mImageDraggingSupported(PR_FALSE), mDragSendDataUPP(nsnull)
 {
-  // rjc - check if the Drag Manager supports image dragging
+#if USE_TRANSLUCENT_DRAGS
+  // check if the Drag Manager supports image dragging
+  // however, it doesn't really work too well, so let's back off (pinkerton)
   long response;
   OSErr err = Gestalt(gestaltDragMgrAttr, &response); 
-  if (err == noErr && (response & (1L << gestaltDragMgrHasImageSupport)))
-  {
-      mImageDraggingSupported = PR_TRUE;
+  if (err == noErr && (response & (1L << gestaltDragMgrHasImageSupport))) {
+    mImageDraggingSupported = PR_TRUE;
   }
+#endif
+  
+  mDragSendDataUPP = NewDragSendDataUPP(DragSendDataProc);
 }
 
 
@@ -92,6 +93,8 @@ nsDragService::nsDragService()
 //
 nsDragService::~nsDragService()
 {
+  if ( mDragSendDataUPP )
+    ::DisposeDragSendDataUPP(mDragSendDataUPP);
 }
 
 
@@ -100,6 +103,10 @@ nsDragService :: ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outSc
 {
   NS_ASSERTION ( aDOMNode, "Oopps, no DOM node" );
 
+// this isn't so much of an issue as long as we're just dragging around outlines,
+// but it is when we are showing the text being drawn. Comment it out for now
+// but leave it around when we turn this all back on (pinkerton).
+#if USE_TRANSLUCENT_DRAGGING
   // until bug 41237 is fixed, only do translucent dragging if the drag is in
   // the chrome or it's a link.
   nsCOMPtr<nsIXULContent> xulContent ( do_QueryInterface(aDOMNode) );
@@ -116,6 +123,7 @@ nsDragService :: ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outSc
     else
       return FALSE;
   }
+#endif
   
   PRBool	haveRectFlag = PR_FALSE;
   outScreenRect.left = outScreenRect.right = outScreenRect.top = outScreenRect.bottom = 0;
@@ -191,11 +199,6 @@ nsDragService :: InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTr
   ::InitCursor();
   nsBaseDragService::InvokeDragSession ( aDOMNode, aTransferableArray, aDragRgn, aActionType );
   
-  Rect frameRect = { 0, 0, 0, 0 };
-  PRBool useRectFromFrame = PR_FALSE;
-  if ( aDOMNode )
-    useRectFromFrame = ComputeGlobalRectFromFrame ( aDOMNode, frameRect );
-    
   DragReference theDragRef;
   OSErr result = ::NewDrag(&theDragRef);
   if ( result != noErr )
@@ -208,7 +211,24 @@ printf("**** created drag ref %ld\n", theDragRef);
   // add the flavors from the transferables. Cache this array for the send data proc
   mDataItems = aTransferableArray;
   RegisterDragItemsAndFlavors ( aTransferableArray ) ;
-  
+    
+  Rect frameRect = { 0, 0, 0, 0 };
+  RgnHandle theDragRgn = ::NewRgn();
+  ::RectRgn(theDragRgn, &frameRect);
+
+  if ( mImageDraggingSupported ) {
+    Point	imgOffsetPt;
+    imgOffsetPt.v = imgOffsetPt.h = 0;
+
+    PRBool canUseRect = BuildDragRegion ( aDragRgn, aDOMNode, theDragRgn );
+    if ( canUseRect ) {
+      // passing in null for image's PixMapHandle to SetDragImage() means use bits on screen
+      ::SetDragImage (theDragRef, nsnull, theDragRgn, imgOffsetPt, kDragDarkerTranslucency);
+    }
+  }
+  else
+    BuildDragRegion ( aDragRgn, aDOMNode, theDragRgn );
+
   // we have to synthesize the native event because we may be called from JavaScript
   // through XPConnect. In that case, we only have a DOM event and no way to
   // get to the native event. As a consequence, we just always fake it.
@@ -216,42 +236,21 @@ printf("**** created drag ref %ld\n", theDragRef);
   theEvent.what = mouseDown;
   theEvent.message = 0L;
   theEvent.when = 0L;
-  if ( useRectFromFrame ) {
-    // since we don't have the original mouseDown location, just assume the drag
-    // started in the middle of the frame. This prevents us from having the mouse
-    // and the region we're dragging separated by a big gap (which could happen if
-    // we used the current mouse position). I know this isn't exactly right, and you can
-    // see it if you're paying attention, but who pays such close attention?
-    theEvent.where.v = round(frameRect.top + (frameRect.bottom - frameRect.top) / 2);
-    theEvent.where.h = round(frameRect.left + (frameRect.right - frameRect.left) / 2);
-  }
-  else {
-    Point globalMouseLoc;
-    ::GetMouse(&globalMouseLoc);
-    ::LocalToGlobal(&globalMouseLoc);
-    theEvent.where = globalMouseLoc;
-  }
   theEvent.modifiers = 0L;
-  
-  RgnHandle theDragRgn = ::NewRgn();
-  ::RectRgn(theDragRgn, &frameRect);		// rjc: set rect
 
-  if ( useRectFromFrame && mImageDraggingSupported ) {
-    Point	imgOffsetPt;
-    imgOffsetPt.v = imgOffsetPt.h = 0;
-
-    // rjc - note: passing in null for image's PixMapHandle
-    //       to SetDragImage() means use bits on screen
-    ::SetDragImage (theDragRef, nsnull, theDragRgn, imgOffsetPt, kDragDarkerTranslucency);
-  }
-  else
-    BuildDragRegion ( aDragRgn, theEvent.where, theDragRgn );
+  // since we don't have the original mouseDown location, just assume the drag
+  // started in the middle of the frame. This prevents us from having the mouse
+  // and the region we're dragging separated by a big gap (which could happen if
+  // we used the current mouse position). I know this isn't exactly right, and you can
+  // see it if you're paying attention, but who pays such close attention?
+  Rect dragRect;
+  ::GetRegionBounds(theDragRgn, &dragRect);
+  theEvent.where.v = round(dragRect.top + (dragRect.bottom - dragRect.top) / 2);
+  theEvent.where.h = round(dragRect.left + (dragRect.right - dragRect.left) / 2);
 
   // register drag send proc which will call us back when asked for the actual
   // flavor data (instead of placing it all into the drag manager)
-#if !TARGET_CARBON
-  ::SetDragSendProc ( theDragRef, sDragSendDataUPP, this );
-#endif
+  ::SetDragSendProc ( theDragRef, mDragSendDataUPP, this );
 
   // start the drag. Be careful, mDragRef will be invalid AFTER this call (it is
   // reset by the dragTrackingHandler).
@@ -280,11 +279,15 @@ printf("**** disposing drag ref %ld\n", theDragRef);
 // BuildDragRegion
 //
 // Given the XP region describing the drag rectangles, build up an appropriate drag region. If
-// the region we're given is null, create our own placeholder.
+// the region we're given is null, try the given DOM node. If that doesn't work fake it as 
+// best we can.
 //
-void
-nsDragService :: BuildDragRegion ( nsIScriptableRegion* inRegion, Point inGlobalMouseLoc, RgnHandle ioDragRgn )
+// Returns PR_TRUE if the region is something that can be used with SetDragImage()
+//
+PRBool
+nsDragService :: BuildDragRegion ( nsIScriptableRegion* inRegion, nsIDOMNode* inNode, RgnHandle ioDragRgn )
 {
+  PRBool retVal = PR_TRUE;
   nsCOMPtr<nsIRegion> geckoRegion ( do_QueryInterface(inRegion) );
     
   // create the drag region. Pull out the native mac region from the nsIRegion we're
@@ -307,24 +310,37 @@ nsDragService :: BuildDragRegion ( nsIScriptableRegion* inRegion, Point inGlobal
     }
   }
   else {
-    // no region provided, so we create a default one that is 50 x 50, with the topLeft
-    // being at the cursor location.
-    NS_WARNING ( "you MUST pass a drag region for MacOS. This is a warning" );    
+    PRBool useRectFromFrame = PR_FALSE;
+    
+    // no region provided, let's try to use the dom node to get the frame. Pick a 
+    // silly default in case we can't get it.
+    Point currMouse;
+    ::GetMouse(&currMouse);
+    Rect frameRect = { currMouse.v, currMouse.h, currMouse.v + 25, currMouse.h + 100 };
+    if ( inNode )
+      useRectFromFrame = ComputeGlobalRectFromFrame ( inNode, frameRect );
+    else
+      NS_WARNING ( "Can't find anything to get a drag rect from. I'm dyin' out here!" );
+
     if ( ioDragRgn ) {
-      Rect placeHolderRect = { inGlobalMouseLoc.v, inGlobalMouseLoc.h, inGlobalMouseLoc.v + 50, 
-                                inGlobalMouseLoc.h + 50 };
-      RgnHandle placeHolderRgn = ::NewRgn();
-      if ( placeHolderRgn ) {
-        ::RectRgn ( placeHolderRgn, &placeHolderRect );
-        ::CopyRgn ( placeHolderRgn, ioDragRgn );
+      RgnHandle frameRgn = ::NewRgn();
+      if ( frameRgn ) {
+        ::RectRgn ( frameRgn, &frameRect );
+        ::CopyRgn ( frameRgn, ioDragRgn );
         ::InsetRgn ( ioDragRgn, 1, 1 );
-        ::DiffRgn ( placeHolderRgn, ioDragRgn, ioDragRgn );
+        ::DiffRgn ( frameRgn, ioDragRgn, ioDragRgn );
         
-        ::DisposeRgn ( placeHolderRgn );
+        ::DisposeRgn ( frameRgn );
       }
     }
+    
+    // if we couldn't find the exact frame coordinates, then we need to alert people that
+    // they shouldn't use this as the basis of SetDragImage()
+    retVal = useRectFromFrame;
   }
 
+  return retVal;
+  
 } // BuildDragRegion
 
 
