@@ -47,12 +47,12 @@
 class nsIDocShell;
 
 // Script "History" object
-class HistoryImpl : public nsIDOMHistory,
-                    public nsIDOMNSHistory
+class nsHistory : public nsIDOMHistory,
+                  public nsIDOMNSHistory
 {
 public:
-  HistoryImpl(nsIDocShell* aDocShell);
-  virtual ~HistoryImpl();
+  nsHistory(nsIDocShell* aDocShell);
+  virtual ~nsHistory();
 
   // nsISupports
   NS_DECL_ISUPPORTS

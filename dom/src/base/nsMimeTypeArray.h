@@ -45,11 +45,11 @@
 
 class nsIDOMNavigator;
 
-class MimeTypeArrayImpl : public nsIDOMMimeTypeArray
+class nsMimeTypeArray : public nsIDOMMimeTypeArray
 {
 public:
-	MimeTypeArrayImpl(nsIDOMNavigator* navigator);
-	virtual ~MimeTypeArrayImpl();
+	nsMimeTypeArray(nsIDOMNavigator* navigator);
+	virtual ~nsMimeTypeArray();
 
 	NS_DECL_ISUPPORTS
 
@@ -68,11 +68,11 @@ protected:
 	nsIDOMMimeType** mMimeTypeArray;
 };
 
-class MimeTypeElementImpl : public nsIDOMMimeType
+class nsMimeType : public nsIDOMMimeType
 {
 public:
-	MimeTypeElementImpl(nsIDOMPlugin* aPlugin, nsIDOMMimeType* aMimeType);
-	virtual ~MimeTypeElementImpl();
+	nsMimeType(nsIDOMPlugin* aPlugin, nsIDOMMimeType* aMimeType);
+	virtual ~nsMimeType();
 
 	NS_DECL_ISUPPORTS
 
@@ -86,14 +86,17 @@ protected:
 	nsCOMPtr<nsIDOMMimeType> mMimeType;
 };
 
-class HelperMimeTypeImpl : public nsIDOMMimeType
+class nsHelperMimeType : public nsIDOMMimeType
 {
 public:
-	HelperMimeTypeImpl(const nsAString& aType)
+	nsHelperMimeType(const nsAString& aType)
 		: mType(aType)
-	{}
+	{
+  }
 
-	virtual ~HelperMimeTypeImpl() {}
+	virtual ~nsHelperMimeType()
+  {
+  }
 
 	NS_DECL_ISUPPORTS
 

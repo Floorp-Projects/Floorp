@@ -52,36 +52,37 @@
 //
 //  Screen class implementation
 //
-ScreenImpl::ScreenImpl(nsIDocShell* aDocShell)
+nsScreen::nsScreen(nsIDocShell* aDocShell)
   : mDocShell(aDocShell)
 {
 }
 
-ScreenImpl::~ScreenImpl()
+nsScreen::~nsScreen()
 {
 }
 
 
-// QueryInterface implementation for ScreenImpl
-NS_INTERFACE_MAP_BEGIN(ScreenImpl)
+// QueryInterface implementation for nsScreen
+NS_INTERFACE_MAP_BEGIN(nsScreen)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMScreen)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Screen)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(ScreenImpl)
-NS_IMPL_RELEASE(ScreenImpl)
+NS_IMPL_ADDREF(nsScreen)
+NS_IMPL_RELEASE(nsScreen)
 
 
-NS_IMETHODIMP ScreenImpl::SetDocShell(nsIDocShell* aDocShell)
+NS_IMETHODIMP
+nsScreen::SetDocShell(nsIDocShell* aDocShell)
 {
    mDocShell = aDocShell; // Weak Reference
    return NS_OK;
 }
 
 NS_IMETHODIMP
-ScreenImpl::GetTop(PRInt32* aTop)
+nsScreen::GetTop(PRInt32* aTop)
 {
   nsRect rect;
   nsresult rv = GetRect(rect);
@@ -93,7 +94,7 @@ ScreenImpl::GetTop(PRInt32* aTop)
 
 
 NS_IMETHODIMP
-ScreenImpl::GetLeft(PRInt32* aLeft)
+nsScreen::GetLeft(PRInt32* aLeft)
 {
   nsRect rect;
   nsresult rv = GetRect(rect);
@@ -105,7 +106,7 @@ ScreenImpl::GetLeft(PRInt32* aLeft)
 
 
 NS_IMETHODIMP
-ScreenImpl::GetWidth(PRInt32* aWidth)
+nsScreen::GetWidth(PRInt32* aWidth)
 {
   nsRect rect;
   nsresult rv = GetRect(rect);
@@ -116,7 +117,7 @@ ScreenImpl::GetWidth(PRInt32* aWidth)
 }
 
 NS_IMETHODIMP
-ScreenImpl::GetHeight(PRInt32* aHeight)
+nsScreen::GetHeight(PRInt32* aHeight)
 {
   nsRect rect;
   nsresult rv = GetRect(rect);
@@ -127,7 +128,7 @@ ScreenImpl::GetHeight(PRInt32* aHeight)
 }
 
 NS_IMETHODIMP
-ScreenImpl::GetPixelDepth(PRInt32* aPixelDepth)
+nsScreen::GetPixelDepth(PRInt32* aPixelDepth)
 {
   nsIDeviceContext* context = GetDeviceContext();
 
@@ -146,13 +147,13 @@ ScreenImpl::GetPixelDepth(PRInt32* aPixelDepth)
 }
 
 NS_IMETHODIMP
-ScreenImpl::GetColorDepth(PRInt32* aColorDepth)
+nsScreen::GetColorDepth(PRInt32* aColorDepth)
 {
   return GetPixelDepth(aColorDepth);
 }
 
 NS_IMETHODIMP
-ScreenImpl::GetAvailWidth(PRInt32* aAvailWidth)
+nsScreen::GetAvailWidth(PRInt32* aAvailWidth)
 {
   nsRect rect;
   nsresult rv = GetAvailRect(rect);
@@ -163,7 +164,7 @@ ScreenImpl::GetAvailWidth(PRInt32* aAvailWidth)
 }
 
 NS_IMETHODIMP
-ScreenImpl::GetAvailHeight(PRInt32* aAvailHeight)
+nsScreen::GetAvailHeight(PRInt32* aAvailHeight)
 {
   nsRect rect;
   nsresult rv = GetAvailRect(rect);
@@ -174,7 +175,7 @@ ScreenImpl::GetAvailHeight(PRInt32* aAvailHeight)
 }
 
 NS_IMETHODIMP
-ScreenImpl::GetAvailLeft(PRInt32* aAvailLeft)
+nsScreen::GetAvailLeft(PRInt32* aAvailLeft)
 {
   nsRect rect;
   nsresult rv = GetAvailRect(rect);
@@ -185,7 +186,7 @@ ScreenImpl::GetAvailLeft(PRInt32* aAvailLeft)
 }
 
 NS_IMETHODIMP
-ScreenImpl::GetAvailTop(PRInt32* aAvailTop)
+nsScreen::GetAvailTop(PRInt32* aAvailTop)
 {
   nsRect rect;
   nsresult rv = GetAvailRect(rect);
@@ -196,7 +197,7 @@ ScreenImpl::GetAvailTop(PRInt32* aAvailTop)
 }
 
 nsIDeviceContext*
-ScreenImpl::GetDeviceContext()
+nsScreen::GetDeviceContext()
 {
   if(!mDocShell)
     return nsnull;
@@ -219,7 +220,7 @@ ScreenImpl::GetDeviceContext()
 }
 
 nsresult
-ScreenImpl::GetRect(nsRect& aRect)
+nsScreen::GetRect(nsRect& aRect)
 {
   nsIDeviceContext *context = GetDeviceContext();
 
@@ -244,7 +245,7 @@ ScreenImpl::GetRect(nsRect& aRect)
 }
 
 nsresult
-ScreenImpl::GetAvailRect(nsRect& aRect)
+nsScreen::GetAvailRect(nsRect& aRect)
 {
   nsIDeviceContext *context = GetDeviceContext();
 

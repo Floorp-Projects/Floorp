@@ -51,16 +51,18 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDOMWindowUtils)
 NS_IMPL_RELEASE(nsDOMWindowUtils)
 
-nsDOMWindowUtils::nsDOMWindowUtils(GlobalWindowImpl *aWindow) :
-                    mWindow(aWindow) {
+nsDOMWindowUtils::nsDOMWindowUtils(nsGlobalWindow *aWindow)
+  : mWindow(aWindow)
+{
 }
 
-nsDOMWindowUtils::~nsDOMWindowUtils() {
+nsDOMWindowUtils::~nsDOMWindowUtils()
+{
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetImageAnimationMode(PRUint16 *aMode) {
-
+nsDOMWindowUtils::GetImageAnimationMode(PRUint16 *aMode)
+{
   NS_ENSURE_ARG_POINTER(aMode);
   *aMode = 0;
   if (mWindow) {
@@ -78,8 +80,8 @@ nsDOMWindowUtils::GetImageAnimationMode(PRUint16 *aMode) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SetImageAnimationMode(PRUint16 aMode) {
-
+nsDOMWindowUtils::SetImageAnimationMode(PRUint16 aMode)
+{
   if (mWindow) {
     nsIDocShell *docShell = mWindow->GetDocShell();
     if (docShell) {

@@ -107,18 +107,18 @@ GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
   return NS_OK;
 }
 
-LocationImpl::LocationImpl(nsIDocShell *aDocShell)
+nsLocation::nsLocation(nsIDocShell *aDocShell)
 {
   mDocShell = aDocShell; // Weak Reference
 }
 
-LocationImpl::~LocationImpl()
+nsLocation::~nsLocation()
 {
 }
 
 
-// QueryInterface implementation for LocationImpl
-NS_INTERFACE_MAP_BEGIN(LocationImpl)
+// QueryInterface implementation for nsLocation
+NS_INTERFACE_MAP_BEGIN(nsLocation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSLocation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLocation)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMLocation)
@@ -126,17 +126,17 @@ NS_INTERFACE_MAP_BEGIN(LocationImpl)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(LocationImpl)
-NS_IMPL_RELEASE(LocationImpl)
+NS_IMPL_ADDREF(nsLocation)
+NS_IMPL_RELEASE(nsLocation)
 
 void
-LocationImpl::SetDocShell(nsIDocShell *aDocShell)
+nsLocation::SetDocShell(nsIDocShell *aDocShell)
 {
    mDocShell = aDocShell; // Weak Reference
 }
 
 nsresult
-LocationImpl::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
+nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 {
   *aLoadInfo = nsnull;
 
@@ -206,19 +206,21 @@ LocationImpl::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 // anything that would allow a relative uri.
 
 nsresult
-LocationImpl::FindUsableBaseURI(nsIURI * aBaseURI, nsIDocShell * aParent, nsIURI ** aUsableURI)
+nsLocation::FindUsableBaseURI(nsIURI * aBaseURI, nsIDocShell * aParent,
+                              nsIURI ** aUsableURI)
 {
   if (!aBaseURI || !aParent)
     return NS_ERROR_FAILURE;
   NS_ENSURE_ARG_POINTER(aUsableURI);
-    
+
   *aUsableURI = nsnull;
   nsresult rv = NS_OK;    
   nsCOMPtr<nsIDocShell> parentDS = aParent;
   nsCOMPtr<nsIURI> baseURI = aBaseURI;
-  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIIOService> ioService =
+    do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
 
-  while(NS_SUCCEEDED(rv) && baseURI && ioService) {
+  while(NS_SUCCEEDED(rv) && baseURI) {
     // Check if the current base uri supports relative uris.
     // We make this check by looking at the protocol flags of
     // the protocol handler. If the protocol flags has URI_NORELATIVE,
@@ -260,7 +262,7 @@ LocationImpl::FindUsableBaseURI(nsIURI * aBaseURI, nsIDocShell * aParent, nsIURI
 
 
 nsresult
-LocationImpl::GetURI(nsIURI** aURI, PRBool aGetInnermostURI)
+nsLocation::GetURI(nsIURI** aURI, PRBool aGetInnermostURI)
 {
   *aURI = nsnull;
 
@@ -298,7 +300,7 @@ LocationImpl::GetURI(nsIURI** aURI, PRBool aGetInnermostURI)
 }
 
 nsresult
-LocationImpl::GetWritableURI(nsIURI** aURI)
+nsLocation::GetWritableURI(nsIURI** aURI)
 {
   *aURI = nsnull;
 
@@ -313,7 +315,7 @@ LocationImpl::GetWritableURI(nsIURI** aURI)
 }
 
 nsresult
-LocationImpl::SetURI(nsIURI* aURI)
+nsLocation::SetURI(nsIURI* aURI)
 {
   if (mDocShell) {
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
@@ -331,7 +333,7 @@ LocationImpl::SetURI(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetHash(nsAString& aHash)
+nsLocation::GetHash(nsAString& aHash)
 {
   aHash.SetLength(0);
 
@@ -374,7 +376,7 @@ LocationImpl::GetHash(nsAString& aHash)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetHash(const nsAString& aHash)
+nsLocation::SetHash(const nsAString& aHash)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
@@ -402,7 +404,7 @@ LocationImpl::SetHash(const nsAString& aHash)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetHost(nsAString& aHost)
+nsLocation::GetHost(nsAString& aHost)
 {
   aHost.Truncate();
 
@@ -425,7 +427,7 @@ LocationImpl::GetHost(nsAString& aHost)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetHost(const nsAString& aHost)
+nsLocation::SetHost(const nsAString& aHost)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result;
@@ -441,7 +443,7 @@ LocationImpl::SetHost(const nsAString& aHost)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetHostname(nsAString& aHostname)
+nsLocation::GetHostname(nsAString& aHostname)
 {
   aHostname.Truncate();
 
@@ -464,7 +466,7 @@ LocationImpl::GetHostname(nsAString& aHostname)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetHostname(const nsAString& aHostname)
+nsLocation::SetHostname(const nsAString& aHostname)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result;
@@ -480,7 +482,7 @@ LocationImpl::SetHostname(const nsAString& aHostname)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetHref(nsAString& aHref)
+nsLocation::GetHref(nsAString& aHref)
 {
   aHref.Truncate();
 
@@ -503,7 +505,7 @@ LocationImpl::GetHref(nsAString& aHref)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetHref(const nsAString& aHref)
+nsLocation::SetHref(const nsAString& aHref)
 {
   if (!aHref.IsEmpty() && aHref.First() == PRUnichar('#')) {
     // Special-case anchor loads so that we don't stop content
@@ -547,8 +549,8 @@ LocationImpl::SetHref(const nsAString& aHref)
 }
 
 nsresult
-LocationImpl::SetHrefWithContext(JSContext* cx, const nsAString& aHref,
-                                 PRBool aReplace)
+nsLocation::SetHrefWithContext(JSContext* cx, const nsAString& aHref,
+                               PRBool aReplace)
 {
   nsCOMPtr<nsIURI> base;
 
@@ -563,8 +565,8 @@ LocationImpl::SetHrefWithContext(JSContext* cx, const nsAString& aHref,
 }
 
 nsresult
-LocationImpl::SetHrefWithBase(const nsAString& aHref,
-                              nsIURI* aBase, PRBool aReplace)
+nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
+                            PRBool aReplace)
 {
   nsresult result;
   nsCOMPtr<nsIURI> newUri, baseURI;
@@ -638,7 +640,7 @@ LocationImpl::SetHrefWithBase(const nsAString& aHref,
 }
 
 NS_IMETHODIMP
-LocationImpl::GetPathname(nsAString& aPathname)
+nsLocation::GetPathname(nsAString& aPathname)
 {
   aPathname.Truncate();
 
@@ -662,7 +664,7 @@ LocationImpl::GetPathname(nsAString& aPathname)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetPathname(const nsAString& aPathname)
+nsLocation::SetPathname(const nsAString& aPathname)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
@@ -678,7 +680,7 @@ LocationImpl::SetPathname(const nsAString& aPathname)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetPort(nsAString& aPort)
+nsLocation::GetPort(nsAString& aPort)
 {
   aPort.SetLength(0);
 
@@ -702,7 +704,7 @@ LocationImpl::GetPort(nsAString& aPort)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetPort(const nsAString& aPort)
+nsLocation::SetPort(const nsAString& aPort)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
@@ -732,7 +734,7 @@ LocationImpl::SetPort(const nsAString& aPort)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetProtocol(nsAString& aProtocol)
+nsLocation::GetProtocol(nsAString& aProtocol)
 {
   aProtocol.SetLength(0);
 
@@ -756,7 +758,7 @@ LocationImpl::GetProtocol(nsAString& aProtocol)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetProtocol(const nsAString& aProtocol)
+nsLocation::SetProtocol(const nsAString& aProtocol)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
@@ -772,7 +774,7 @@ LocationImpl::SetProtocol(const nsAString& aProtocol)
 }
 
 NS_IMETHODIMP
-LocationImpl::GetSearch(nsAString& aSearch)
+nsLocation::GetSearch(nsAString& aSearch)
 {
   aSearch.SetLength(0);
 
@@ -798,7 +800,7 @@ LocationImpl::GetSearch(nsAString& aSearch)
 }
 
 NS_IMETHODIMP
-LocationImpl::SetSearch(const nsAString& aSearch)
+nsLocation::SetSearch(const nsAString& aSearch)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
@@ -815,7 +817,7 @@ LocationImpl::SetSearch(const nsAString& aSearch)
 }
 
 NS_IMETHODIMP
-LocationImpl::Reload(PRBool aForceget)
+nsLocation::Reload(PRBool aForceget)
 {
   nsresult rv;
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
@@ -843,7 +845,7 @@ LocationImpl::Reload(PRBool aForceget)
 }
 
 NS_IMETHODIMP
-LocationImpl::Reload()
+nsLocation::Reload()
 {
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
   nsresult rv = nsContentUtils::XPConnect()->
@@ -899,7 +901,7 @@ LocationImpl::Reload()
 }
 
 NS_IMETHODIMP
-LocationImpl::Replace(const nsAString& aUrl)
+nsLocation::Replace(const nsAString& aUrl)
 {
   nsresult rv = NS_OK;
 
@@ -931,7 +933,7 @@ LocationImpl::Replace(const nsAString& aUrl)
 }
 
 NS_IMETHODIMP
-LocationImpl::Assign(const nsAString& aUrl)
+nsLocation::Assign(const nsAString& aUrl)
 {
   nsAutoString oldHref;
   nsresult result = NS_OK;
@@ -952,13 +954,13 @@ LocationImpl::Assign(const nsAString& aUrl)
 }
 
 NS_IMETHODIMP
-LocationImpl::ToString(nsAString& aReturn)
+nsLocation::ToString(nsAString& aReturn)
 {
   return GetHref(aReturn);
 }
 
 nsresult
-LocationImpl::GetSourceDocument(JSContext* cx, nsIDocument** aDocument)
+nsLocation::GetSourceDocument(JSContext* cx, nsIDocument** aDocument)
 {
   // XXX Code duplicated from nsHTMLDocument
   // XXX Tom said this reminded him of the "Six Degrees of
@@ -991,7 +993,7 @@ LocationImpl::GetSourceDocument(JSContext* cx, nsIDocument** aDocument)
 }
 
 nsresult
-LocationImpl::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
+nsLocation::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
 {
   nsCOMPtr<nsIDocument> doc;
   nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));
@@ -1005,7 +1007,7 @@ LocationImpl::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
 }
 
 nsresult
-LocationImpl::GetSourceURL(JSContext* cx, nsIURI** sourceURL)
+nsLocation::GetSourceURL(JSContext* cx, nsIURI** sourceURL)
 {
   nsCOMPtr<nsIDocument> doc;
   nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));

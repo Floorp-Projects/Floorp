@@ -49,14 +49,15 @@
 #include "nsIDOMBarProp.h"
 #include "nsIWeakReference.h"
 
-class GlobalWindowImpl;
+class nsGlobalWindow;
 class nsIWebBrowserChrome;
 
 // Script "BarProp" object
-class BarPropImpl : public nsIDOMBarProp {
+class nsBarProp : public nsIDOMBarProp
+{
 public:
-  BarPropImpl();
-  virtual ~BarPropImpl();
+  nsBarProp();
+  virtual ~nsBarProp();
 
   NS_DECL_ISUPPORTS
 
@@ -71,60 +72,65 @@ protected:
 };
 
 // Script "menubar" object
-class MenubarPropImpl : public BarPropImpl {
+class nsMenubarProp : public nsBarProp
+{
 public:
-  MenubarPropImpl();
-  virtual ~MenubarPropImpl();
+  nsMenubarProp();
+  virtual ~nsMenubarProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "toolbar" object
-class ToolbarPropImpl : public BarPropImpl {
+class nsToolbarProp : public nsBarProp
+{
 public:
-  ToolbarPropImpl();
-  virtual ~ToolbarPropImpl();
+  nsToolbarProp();
+  virtual ~nsToolbarProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "locationbar" object
-class LocationbarPropImpl : public BarPropImpl {
+class nsLocationbarProp : public nsBarProp
+{
 public:
-  LocationbarPropImpl();
-  virtual ~LocationbarPropImpl();
+  nsLocationbarProp();
+  virtual ~nsLocationbarProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "personalbar" object
-class PersonalbarPropImpl : public BarPropImpl {
+class nsPersonalbarProp : public nsBarProp
+{
 public:
-  PersonalbarPropImpl();
-  virtual ~PersonalbarPropImpl();
+  nsPersonalbarProp();
+  virtual ~nsPersonalbarProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "statusbar" object
-class StatusbarPropImpl : public BarPropImpl {
+class nsStatusbarProp : public nsBarProp
+{
 public:
-  StatusbarPropImpl();
-  virtual ~StatusbarPropImpl();
+  nsStatusbarProp();
+  virtual ~nsStatusbarProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "scrollbars" object
-class ScrollbarsPropImpl : public BarPropImpl {
+class nsScrollbarsProp : public nsBarProp {
 public:
-  ScrollbarsPropImpl(GlobalWindowImpl *aWindow);
-  virtual ~ScrollbarsPropImpl();
+  nsScrollbarsProp(nsGlobalWindow *aWindow);
+  virtual ~nsScrollbarsProp();
 
   NS_DECL_NSIDOMBARPROP
 
 private:
-  GlobalWindowImpl           *mDOMWindow;
+  nsGlobalWindow           *mDOMWindow;
   nsCOMPtr<nsIWeakReference>  mDOMWindowWeakref;
   /* Note the odd double reference to the owning global window.
      Since the corresponding DOM window nominally owns this object,

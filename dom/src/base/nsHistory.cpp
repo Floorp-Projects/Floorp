@@ -62,17 +62,17 @@
 //
 //  History class implementation 
 //
-HistoryImpl::HistoryImpl(nsIDocShell* aDocShell) : mDocShell(aDocShell)
+nsHistory::nsHistory(nsIDocShell* aDocShell) : mDocShell(aDocShell)
 {
 }
 
-HistoryImpl::~HistoryImpl()
+nsHistory::~nsHistory()
 {
 }
 
 
-// QueryInterface implementation for HistoryImpl
-NS_INTERFACE_MAP_BEGIN(HistoryImpl)
+// QueryInterface implementation for nsHistory
+NS_INTERFACE_MAP_BEGIN(nsHistory)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMHistory)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHistory)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHistory)
@@ -80,18 +80,18 @@ NS_INTERFACE_MAP_BEGIN(HistoryImpl)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(HistoryImpl)
-NS_IMPL_RELEASE(HistoryImpl)
+NS_IMPL_ADDREF(nsHistory)
+NS_IMPL_RELEASE(nsHistory)
 
 
 void
-HistoryImpl::SetDocShell(nsIDocShell *aDocShell)
+nsHistory::SetDocShell(nsIDocShell *aDocShell)
 {
   mDocShell = aDocShell; // Weak Reference
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetLength(PRInt32* aLength)
+nsHistory::GetLength(PRInt32* aLength)
 {
   nsCOMPtr<nsISHistory>   sHistory;
 
@@ -102,7 +102,7 @@ HistoryImpl::GetLength(PRInt32* aLength)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetCurrent(nsAString& aCurrent)
+nsHistory::GetCurrent(nsAString& aCurrent)
 {
   PRInt32 curIndex=0;
   nsCAutoString curURL;
@@ -131,7 +131,7 @@ HistoryImpl::GetCurrent(nsAString& aCurrent)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetPrevious(nsAString& aPrevious)
+nsHistory::GetPrevious(nsAString& aPrevious)
 {
   PRInt32 curIndex;
   nsCAutoString prevURL;
@@ -160,7 +160,7 @@ HistoryImpl::GetPrevious(nsAString& aPrevious)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetNext(nsAString& aNext)
+nsHistory::GetNext(nsAString& aNext)
 {
   PRInt32 curIndex;
   nsCAutoString nextURL;
@@ -189,7 +189,7 @@ HistoryImpl::GetNext(nsAString& aNext)
 }
 
 NS_IMETHODIMP
-HistoryImpl::Back()
+nsHistory::Back()
 {
   nsCOMPtr<nsISHistory>  sHistory;
 
@@ -205,7 +205,7 @@ HistoryImpl::Back()
 }
 
 NS_IMETHODIMP
-HistoryImpl::Forward()
+nsHistory::Forward()
 {
   nsCOMPtr<nsISHistory>  sHistory;
 
@@ -221,7 +221,7 @@ HistoryImpl::Forward()
 }
 
 NS_IMETHODIMP
-HistoryImpl::Go(PRInt32 aDelta)
+nsHistory::Go(PRInt32 aDelta)
 {
   nsCOMPtr<nsISHistory> session_history;
 
@@ -247,7 +247,7 @@ HistoryImpl::Go(PRInt32 aDelta)
 }
 
 NS_IMETHODIMP
-HistoryImpl::Go()
+nsHistory::Go()
 {
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
   nsresult rv = nsContentUtils::XPConnect()->
@@ -307,7 +307,7 @@ HistoryImpl::Go()
 }
 
 NS_IMETHODIMP
-HistoryImpl::Item(PRUint32 aIndex, nsAString& aReturn)
+nsHistory::Item(PRUint32 aIndex, nsAString& aReturn)
 {
   aReturn.Truncate();
 
@@ -338,8 +338,8 @@ HistoryImpl::Item(PRUint32 aIndex, nsAString& aReturn)
 }
 
 nsresult
-HistoryImpl::GetSessionHistoryFromDocShell(nsIDocShell * aDocShell, 
-                                           nsISHistory ** aReturn)
+nsHistory::GetSessionHistoryFromDocShell(nsIDocShell * aDocShell, 
+                                         nsISHistory ** aReturn)
 {
 
   NS_ENSURE_TRUE(aDocShell, NS_ERROR_FAILURE);

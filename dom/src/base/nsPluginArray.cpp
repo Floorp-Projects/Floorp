@@ -53,8 +53,8 @@
 
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
-PluginArrayImpl::PluginArrayImpl(NavigatorImpl* navigator,
-                                 nsIDocShell *aDocShell)
+nsPluginArray::nsPluginArray(nsNavigator* navigator,
+                             nsIDocShell *aDocShell)
 {
   nsresult rv;
   mNavigator = navigator; // don't ADDREF here, needed for parent of script object.
@@ -64,7 +64,7 @@ PluginArrayImpl::PluginArrayImpl(NavigatorImpl* navigator,
   mDocShell = aDocShell;
 }
 
-PluginArrayImpl::~PluginArrayImpl()
+nsPluginArray::~nsPluginArray()
 {
   if (mPluginArray != nsnull) {
     for (PRUint32 i = 0; i < mPluginCount; i++) {
@@ -74,19 +74,19 @@ PluginArrayImpl::~PluginArrayImpl()
   }
 }
 
-// QueryInterface implementation for PluginArrayImpl
-NS_INTERFACE_MAP_BEGIN(PluginArrayImpl)
+// QueryInterface implementation for nsPluginArray
+NS_INTERFACE_MAP_BEGIN(nsPluginArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMPluginArray)
   NS_INTERFACE_MAP_ENTRY(nsIDOMPluginArray)
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSPluginArray)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PluginArray)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(PluginArrayImpl)
-NS_IMPL_RELEASE(PluginArrayImpl)
+NS_IMPL_ADDREF(nsPluginArray)
+NS_IMPL_RELEASE(nsPluginArray)
 
 NS_IMETHODIMP
-PluginArrayImpl::GetLength(PRUint32* aLength)
+nsPluginArray::GetLength(PRUint32* aLength)
 {
   if (mPluginHost && NS_SUCCEEDED(mPluginHost->GetPluginCount(aLength)))
     return NS_OK;
@@ -94,7 +94,7 @@ PluginArrayImpl::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-PluginArrayImpl::Item(PRUint32 aIndex, nsIDOMPlugin** aReturn)
+nsPluginArray::Item(PRUint32 aIndex, nsIDOMPlugin** aReturn)
 {
   NS_PRECONDITION(nsnull != aReturn, "null arg");
 
@@ -115,8 +115,7 @@ PluginArrayImpl::Item(PRUint32 aIndex, nsIDOMPlugin** aReturn)
 }
 
 NS_IMETHODIMP
-PluginArrayImpl::NamedItem(const nsAString& aName,
-                           nsIDOMPlugin** aReturn)
+nsPluginArray::NamedItem(const nsAString& aName, nsIDOMPlugin** aReturn)
 {
   NS_PRECONDITION(nsnull != aReturn, "null arg");
 
@@ -144,7 +143,7 @@ PluginArrayImpl::NamedItem(const nsAString& aName,
 }
 
 nsresult
-PluginArrayImpl::GetPluginHost(nsIPluginHost** aPluginHost)
+nsPluginArray::GetPluginHost(nsIPluginHost** aPluginHost)
 {
   NS_ENSURE_ARG_POINTER(aPluginHost);
 
@@ -165,13 +164,13 @@ PluginArrayImpl::GetPluginHost(nsIPluginHost** aPluginHost)
 }
 
 void
-PluginArrayImpl::SetDocShell(nsIDocShell* aDocShell)
+nsPluginArray::SetDocShell(nsIDocShell* aDocShell)
 {
   mDocShell = aDocShell;
 }
 
 NS_IMETHODIMP
-PluginArrayImpl::Refresh(PRBool aReloadDocuments)
+nsPluginArray::Refresh(PRBool aReloadDocuments)
 {
   nsresult res = NS_OK;
 
@@ -225,7 +224,7 @@ PluginArrayImpl::Refresh(PRBool aReloadDocuments)
 }
 
 NS_IMETHODIMP
-PluginArrayImpl::Refresh()
+nsPluginArray::Refresh()
 {
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
   nsresult rv = nsContentUtils::XPConnect()->
@@ -259,7 +258,7 @@ PluginArrayImpl::Refresh()
 }
 
 nsresult
-PluginArrayImpl::GetPlugins()
+nsPluginArray::GetPlugins()
 {
   nsresult rv = GetLength(&mPluginCount);
   if (rv == NS_OK) {
@@ -267,9 +266,10 @@ PluginArrayImpl::GetPlugins()
     if (mPluginArray != nsnull) {
       rv = mPluginHost->GetPlugins(mPluginCount, mPluginArray);
       if (rv == NS_OK) {
-        // need to wrap each of these with a PluginElementImpl, which is scriptable.
+        // need to wrap each of these with a nsPluginElement, which
+        // is scriptable.
         for (PRUint32 i = 0; i < mPluginCount; i++) {
-          nsIDOMPlugin* wrapper = new PluginElementImpl(mPluginArray[i]);
+          nsIDOMPlugin* wrapper = new nsPluginElement(mPluginArray[i]);
           NS_IF_ADDREF(wrapper);
           mPluginArray[i] = wrapper;
         }
@@ -283,14 +283,14 @@ PluginArrayImpl::GetPlugins()
 
 //
 
-PluginElementImpl::PluginElementImpl(nsIDOMPlugin* plugin)
+nsPluginElement::nsPluginElement(nsIDOMPlugin* plugin)
 {
-  mPlugin = plugin;  // don't AddRef, see PluginArrayImpl::Item.
+  mPlugin = plugin;  // don't AddRef, see nsPluginArray::Item.
   mMimeTypeCount = 0;
   mMimeTypeArray = nsnull;
 }
 
-PluginElementImpl::~PluginElementImpl()
+nsPluginElement::~nsPluginElement()
 {
   NS_IF_RELEASE(mPlugin);
 
@@ -302,44 +302,44 @@ PluginElementImpl::~PluginElementImpl()
 }
 
 
-// QueryInterface implementation for PluginElementImpl
-NS_INTERFACE_MAP_BEGIN(PluginElementImpl)
+// QueryInterface implementation for nsPluginElement
+NS_INTERFACE_MAP_BEGIN(nsPluginElement)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMPlugin)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Plugin)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(PluginElementImpl)
-NS_IMPL_RELEASE(PluginElementImpl)
+NS_IMPL_ADDREF(nsPluginElement)
+NS_IMPL_RELEASE(nsPluginElement)
 
 
 NS_IMETHODIMP
-PluginElementImpl::GetDescription(nsAString& aDescription)
+nsPluginElement::GetDescription(nsAString& aDescription)
 {
   return mPlugin->GetDescription(aDescription);
 }
 
 NS_IMETHODIMP
-PluginElementImpl::GetFilename(nsAString& aFilename)
+nsPluginElement::GetFilename(nsAString& aFilename)
 {
   return mPlugin->GetFilename(aFilename);
 }
 
 NS_IMETHODIMP
-PluginElementImpl::GetName(nsAString& aName)
+nsPluginElement::GetName(nsAString& aName)
 {
   return mPlugin->GetName(aName);
 }
 
 NS_IMETHODIMP
-PluginElementImpl::GetLength(PRUint32* aLength)
+nsPluginElement::GetLength(PRUint32* aLength)
 {
   return mPlugin->GetLength(aLength);
 }
 
 NS_IMETHODIMP
-PluginElementImpl::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
+nsPluginElement::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 {
   if (mMimeTypeArray == nsnull) {
     nsresult rv = GetMimeTypes();
@@ -356,8 +356,7 @@ PluginElementImpl::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 }
 
 NS_IMETHODIMP
-PluginElementImpl::NamedItem(const nsAString& aName,
-                             nsIDOMMimeType** aReturn)
+nsPluginElement::NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn)
 {
   if (mMimeTypeArray == nsnull) {
     nsresult rv = GetMimeTypes();
@@ -382,7 +381,7 @@ PluginElementImpl::NamedItem(const nsAString& aName,
 }
 
 nsresult
-PluginElementImpl::GetMimeTypes()
+nsPluginElement::GetMimeTypes()
 {
   nsresult rv = mPlugin->GetLength(&mMimeTypeCount);
   if (rv == NS_OK) {
@@ -394,7 +393,7 @@ PluginElementImpl::GetMimeTypes()
       rv = mPlugin->Item(i, getter_AddRefs(mimeType));
       if (rv != NS_OK)
         break;
-      mimeType = new MimeTypeElementImpl(this, mimeType);
+      mimeType = new nsMimeType(this, mimeType);
       NS_IF_ADDREF(mMimeTypeArray[i] = mimeType);
     }
   }
