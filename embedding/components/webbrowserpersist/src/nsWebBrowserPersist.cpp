@@ -633,13 +633,20 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         // Set the document base to ensure relative links still work
         SetDocumentBase(aDocument, mCurrentBaseURI);
 
+        // create a uri for aFile
+        char *urlString = nsnull;
+        nsresult rv = aFile->GetURL(&urlString);
+        nsCOMPtr<nsIURI> uri;
+        rv = NS_NewURI(getter_AddRefs(uri), urlString);
+        if (NS_FAILED(rv)) return rv;
+
         // Save the document
         nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(docAsNode);
         nsString contentType; contentType.AssignWithConversion("text/html"); // TODO
         nsString charType; // Empty
 
         rv = diskDoc->SaveFile(
-            aFile,
+            uri,
             PR_TRUE  /* replace existing file */,
             PR_TRUE, /* save as a copy */
             contentType.get(),
