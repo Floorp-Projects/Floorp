@@ -48,12 +48,13 @@ function initSmtpSettings(server) {
         gSmtpUsername.value = server.username;
         gSmtpAuthMethod.setAttribute("value", server.authMethod);
 
-        var elements = [];
-        if (server.trySSL != "")
-            elements = gSmtpTrySSL.getElementsByAttribute("data", server.trySSL);
+        var elements = gSmtpTrySSL.getElementsByAttribute("data", server.trySSL);
         if (elements.length == 0)
             elements = gSmtpTrySSL.getElementsByAttribute("data", "1");
         gSmtpTrySSL.selectedItem = elements[0];
+    } else {
+        gSmtpTrySSL.selectedItem =
+            gSmtpTrySSL.getElementsByAttribute("data", "1")[0];
     }
 
     if (gSmtpAuthMethod.getAttribute("value") == "1")
