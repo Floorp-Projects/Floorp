@@ -90,7 +90,6 @@ Element ReqTable[] = {
 	{"https://www.yahoo.com/",   1, 1, 1, 1, 0, 1, 1},
 	{" data:text/plain;charset=iso-8859-7,%be%fg%be",
 								1, 1, 1, 1, 0, 1, 1},
-//	{"mailto:name@netscape.com", 1, 1, 1, 1, 0, 1, 1},
 	{"file://C|/Program Files/", 1, 1, 1, 1, 0, 1, 1},
 	{"ftp://ftp.netscape.com/",  1, 1, 1, 1, 0, 1, 1},
 	{"ftp://ftp.mozilla.org/",   0, 0, 0, 0, 1, 0, 0},
@@ -99,9 +98,9 @@ Element ReqTable[] = {
 void CNsIRequest::OnStartTests(UINT nMenuID)
 {
 	if (nMenuID == ID_INTERFACES_NSIREQUEST_RUNALLTESTS)
-		RunAllTests(10);
+		RunAllTests(9);
 	else
-		RunIndividualTests(nMenuID, 10);
+		RunIndividualTests(nMenuID, 9);
 }
  
 void CNsIRequest::RunIndividualTests(UINT nMenuID, int reqTotal)
@@ -237,9 +236,9 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	   retURI = GetTheUri(theURI, 1);
 	   // simple string compare to see if input & output URLs match
 	   if (strcmp(ReqTable[i].theUrl, retURI.get()) == 0)
-		  QAOutput("The URIs MATCH. Compare test passed.", 1);
+		  QAOutput("The in/out URIs MATCH.", 1);
 	   else
-		  QAOutput("The URIs didn't MATCH. Compare test failed.", 1);
+		  QAOutput("The in/out URIs don't MATCH.", 1);
 	   RvTestResult(rv, "NS_NewURI", 1);
 	}
 
