@@ -3219,29 +3219,15 @@ nsGfxTextControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aS
   // Construct a pres state.
   NS_NewPresState(aState); // The addref happens here.
   
-  nsAutoString theString;
+  nsString theString;
   nsresult res = GetProperty(nsHTMLAtoms::value, theString);
-  if (NS_SUCCEEDED(res)) {
-    char* chars = theString.ToNewCString();
-    if (chars) {
+  if (NS_FAILED(res))
+    return res;
     
-      // GetProperty returns platform-native line breaks. We must convert
-      // these to content line breaks.
-      char* newChars = nsLinebreakConverter::ConvertLineBreaks(chars,
+  res = nsLinebreakConverter::ConvertStringLineBreaks(theString,
            nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakContent);
-      if (newChars) {
-        nsCRT::free(chars);
-        chars = newChars;
-      }
-      
-      (*aState)->SetStateProperty("value", nsAutoString(chars));
-
-      nsCRT::free(chars);
-    } else {
-      res = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
+  NS_ASSERTION(NS_SUCCEEDED(res), "Converting linebreaks failed!");  
+  
   (*aState)->SetStateProperty("value", theString);
   return res;
 }
