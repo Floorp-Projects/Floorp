@@ -27,6 +27,7 @@
 
 #include "nsIEditorShell.h"
 #include "nsIDocumentLoaderObserver.h"
+#include "nsIDOMSelectionListener.h"
 #ifdef NECKO
 #include "nsIPrompt.h"
 #else
@@ -85,6 +86,8 @@ class nsEditorShell :   public nsIEditorShell,
 
 	  NS_IMETHOD GetEditorDocument(nsIDOMDocument * *aEditorDocument);
 	  NS_IMETHOD GetEditorSelection(nsIDOMSelection * *aEditorSelection);
+
+    NS_IMETHOD GetDocumentStatus(PRInt32 *aDocumentStatus);
 
 	  NS_IMETHOD GetWrapColumn(PRInt32 *aWrapColumn);
 	  NS_IMETHOD SetWrapColumn(PRInt32 aWrapColumn);
@@ -253,6 +256,7 @@ class nsEditorShell :   public nsIEditorShell,
     PRInt32         mDictionaryIndex;
 
   	typedef enum {
+  	  eUninitializedEditorType = 0,
   		ePlainTextEditorType = 1,
   		eHTMLTextEditorType = 2
   	} EEditorType;
@@ -285,6 +289,10 @@ class nsEditorShell :   public nsIEditorShell,
     nsCOMPtr<nsISupports>	 	mEditor;						// this can be either an HTML or plain text (or other?) editor
 
     nsCOMPtr<nsISupports>   mSearchContext;		// context used for search and replace. Owned by the appshell.
+    
+#if 0
+    nsCOMPtr<nsIDOMSelectionListener> mStateMaintainer;
+#endif    
 
     PRInt32 mWrapColumn;      // can't actually set this 'til the editor is created, so we may have to hold on to it for a while
 };
