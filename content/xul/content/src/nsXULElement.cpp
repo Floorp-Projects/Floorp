@@ -4303,6 +4303,11 @@ nsXULElement::Blur()
 NS_IMETHODIMP
 nsXULElement::Click()
 {
+  nsAutoString disabled;
+  GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
+  if (disabled == NS_LITERAL_STRING("true"))
+    return NS_OK;
+
   nsCOMPtr<nsIDocument> doc; // Strong
   GetDocument(*getter_AddRefs(doc));
   if (doc) {
