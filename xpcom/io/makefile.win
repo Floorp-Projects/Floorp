@@ -29,6 +29,7 @@ MODULE = xpcom
 
 EXPORTS =                          \
         nsEscape.h                 \
+        nsLinebreakConverter.h     \
         nsFileSpec.h               \
         nsFileSpecStreaming.h      \
         nsFileStream.h             \
@@ -73,6 +74,7 @@ LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 CPP_OBJS =                                       \
         .\$(OBJDIR)\nsBinaryStream.obj           \
         .\$(OBJDIR)\nsEscape.obj                 \
+        .\$(OBJDIR)\nsLinebreakConverter.obj     \
         .\$(OBJDIR)\nsFileSpec.obj               \
         .\$(OBJDIR)\nsFileSpecImpl.obj           \
         .\$(OBJDIR)\nsFileSpecStreaming.obj      \
