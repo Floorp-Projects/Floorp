@@ -1340,12 +1340,19 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
 nsFreeTypeFace *
 nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce)
 {
-  // in this hash each ttc face has a unique key
-  nsCStringKey key(nsFT2FontCatalog::GetFamilyName(aFce));
+  // We need to have separate keys for the different faces in a ttc file.
+  // We append a slash and the face index to the file name to give us a 
+  // unique key for each ttc face.
+  nsCAutoString key_str(nsFT2FontCatalog::GetFileName(aFce));
+  key_str.Append('/');
+  key_str.AppendInt(nsFT2FontCatalog::GetFaceIndex(aFce));
+  nsCStringKey key(key_str);
   nsFreeTypeFace *face = (nsFreeTypeFace *)gFreeTypeFaces->Get(&key);
   if (!face) {
     face = new nsFreeTypeFace(aFce);
     NS_ASSERTION(face, "memory error while creating nsFreeTypeFace");
+    if (!face)
+      return nsnull;
     gFreeTypeFaces->Put(&key, face);
   }
   return face;
