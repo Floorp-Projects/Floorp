@@ -159,10 +159,11 @@ nsParser::nsParser() : mCommand("") {
  *  @return  
  */
 nsParser::~nsParser() {
+/* REMOVED until fix from rick -- gpk
   if(eOnStop!=mParserContext->mStreamListenerState) {
     NS_WARNING("OnStop may not have been called");
   }
-
+*/
   NS_IF_RELEASE(mObserver);
   NS_IF_RELEASE(mSink);
 
