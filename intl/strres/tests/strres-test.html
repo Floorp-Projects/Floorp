@@ -55,20 +55,45 @@ function write()
 /*
 	  dump("\n--** strBundleService.StrVal = " + strBundleService.StrVal + " **--\n");
 */
-      var strbundle = new Object();
-      strBundleService.CreateBundle("resource:/res/strres.properties", 
-                                    null, 
-                                    strbundle); 
+      var strbundle = strBundleService.CreateBundle("resource:/res/strres.properties", 
+									null); 
       
       if (strbundle) {
-        dump("\n--** strbundle  createInstance succeeded **--\n");
-	var ostr;
-	strbundle.GetStringFromID(123, ostr);
-        dump("\n--** strbundle GetStringFromID 123=" + ostr + " **--\n");
+        dump("\n--** JS strbundle  createInstance succeeded **--\n");
+		var	ostr1 = strbundle.GetStringFromName("file");
+        dump("\n--** strbundle GetStringFromName file=" + ostr1 + " **--\n");
+		var	ostr2 = strbundle.GetStringFromID(123);
+        dump("\n--** strbundle GetStringFromID 123=" + ostr2 + " **--\n");
+		var field = document.getElementById('writeBtn');
+		field.value = ostr2;
+		dump("\n--** writeBtn GetStringFromID 123=" + ostr2 + " **--\n");
+
       }
       else {
         dump("\n--** strbundle  createInstance failed **--\n");
       }
+
+      var strXPCbundle = strBundleService.CreateXPCBundle("resource:/res/strres.properties", 
+									"en-US"); 
+      
+      if (strXPCbundle) {
+        dump("\n--** JS strXPCbundle  createInstance succeeded **--\n");
+		var	ostr1 = strXPCbundle.GetStringFromName("back");
+        dump("\n--** strXPCbundle GetStringFromName back=" + ostr1 + " **--\n");
+		var field1 = document.getElementById('getBtn');
+		field1.value = ostr1;
+		dump("\n--** getBtn GetStringFromName back=" + ostr1 + " **--\n");
+		var	ostr2 = strXPCbundle.GetStringFromID(123);
+        dump("\n--** strXPCbundle GetStringFromID 123=" + ostr2 + " **--\n");
+		var field = document.getElementById('writeBtn');
+		field.value = ostr2;
+		dump("\n--** writeBtn GetStringFromID 123=" + ostr2 + " **--\n");
+
+      }
+      else {
+        dump("\n--** strXPCbundle  createInstance failed **--\n");
+      }
+
     }
     else {
       dump("\n--** strBundleService createInstance 2 **--\n");
@@ -83,11 +108,11 @@ function write()
 </script>
 
 <form name="form">
-<input type="button" value="Get" onclick="get();">
+<input type="button" id="getBtn" value="Get" onclick="get();">
 <input type="button" value="Set" onclick="set();">
 <input type="button" value="Poke" onclick="poke();">
 <input type="text" id="Value">
-<input type="button" value="Write" onclick="write();">
+<input type="button" id="writeBtn" value="Write" onclick="write();">
 <form>
 </body>
 </html>
