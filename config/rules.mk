@@ -303,10 +303,14 @@ endif
 endif
 
 ifeq ($(OS_ARCH),OpenVMS)
-GARBAGE			+= $(wildcard *.c*_defines) 
+GARBAGE			+= $(wildcard *.*_defines)
 ifdef SHARED_LIBRARY
 VMS_SYMVEC_FILE		= $(SHARED_LIBRARY:$(DLL_SUFFIX)=_symvec.opt)
-VMS_SYMVEC_FILE_MODULE	= $(topsrcdir)/build/unix/vms/$(notdir $(VMS_SYMVEC_FILE))
+ifdef MOZ_DEBUG
+VMS_SYMVEC_FILE_MODULE	= $(topsrcdir)/build/unix/vms/$(notdir $(SHARED_LIBRARY:$(DLL_SUFFIX)=_dbg_symvec.opt))
+else
+VMS_SYMVEC_FILE_MODULE	= $(topsrcdir)/build/unix/vms/$(notdir $(SHARED_LIBRARY:$(DLL_SUFFIX)=_symvec.opt))
+endif
 VMS_SYMVEC_FILE_COMP	= $(topsrcdir)/build/unix/vms/component_symvec.opt
 GARBAGE			+= $(VMS_SYMVEC_FILE)
 ifdef IS_COMPONENT
