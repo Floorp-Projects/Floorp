@@ -187,8 +187,8 @@ public:
                                      nsHTMLValue& aResult);
   static PRBool ParseAlignValue(const nsString& aString, nsHTMLValue& aResult);
 
-  static PRBool ParseDivAlignValue(const nsString& aString,
-                                   nsHTMLValue& aResult);
+  PRBool ParseDivAlignValue(const nsString& aString,
+                            nsHTMLValue& aResult) const;
 
   static PRBool ParseTableHAlignValue(const nsString& aString,
                                       nsHTMLValue& aResult);
@@ -205,8 +205,8 @@ public:
   static PRBool AlignValueToString(const nsHTMLValue& aValue,
                                    nsString& aResult);
 
-  static PRBool DivAlignValueToString(const nsHTMLValue& aValue,
-                                      nsString& aResult);
+  PRBool DivAlignValueToString(const nsHTMLValue& aValue,
+                               nsString& aResult) const;
 
   static PRBool ParseImageAttribute(nsIAtom* aAttribute,
                                     const nsString& aString,
@@ -276,6 +276,10 @@ public:
   static nsresult GetBaseURL(const nsHTMLValue& aBaseHref,
                              nsIDocument* aDocument,
                              nsIURI** aResult);
+
+  // See if the content object is in a document that has nav-quirks
+  // mode enabled.
+  PRBool InNavQuirksMode() const;
 
   nsIHTMLAttributes* mAttributes;
 };
