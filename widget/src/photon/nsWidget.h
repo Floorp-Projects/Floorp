@@ -137,6 +137,8 @@ class nsWidget : public nsBaseWidget
     PRBool     DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent);
   // are we a "top level" widget?
     PRBool     mIsToplevel;
+    void       EnableDamage( PtWidget_t *widget, PRBool enable );
+    PRBool     GetParentClippedArea( nsRect &rect );
 
  protected:
     virtual void InitCallbacks(char * aName = nsnull);
@@ -161,7 +163,6 @@ class nsWidget : public nsBaseWidget
     void              UpdateWidgetDamage();
     static int        WorkProc( void *data );
     void              InitDamageQueue();
-    void              GetParentClippedArea( nsRect &rect );
     static int        GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
     static int        LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
 

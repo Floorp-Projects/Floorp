@@ -200,7 +200,11 @@ NS_METHOD nsWidget::Show(PRBool bState)
   {
     if( !PtWidgetIsRealized( mWidget ))
     {
+      EnableDamage( mWidget, PR_FALSE );
       PtRealizeWidget(mWidget);
+      EnableDamage( mWidget, PR_TRUE );
+
+      Invalidate( PR_FALSE );
     }
   }
   else
@@ -249,6 +253,8 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
     PhPoint_t *oldpos;
     PhPoint_t pos = {aX, aY};
 
+    EnableDamage( mWidget, PR_FALSE );
+
     PtSetArg( &arg, Pt_ARG_POS, &oldpos, 0 );
     if( PtGetResources( mWidget, 1, &arg ) == 0 )
     {
@@ -258,6 +264,9 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
         PtSetResources( mWidget, 1, &arg );
       }
     }
+
+    EnableDamage( mWidget, PR_TRUE );
+    Invalidate( PR_FALSE );
   }
   else
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move - mWidget is NULL!\n" ));
@@ -287,6 +296,8 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
       dim.h -= 2*(*border);
     }
 
+    EnableDamage( mWidget, PR_FALSE );
+
     PtSetArg( &arg, Pt_ARG_DIM, &olddim, 0 );
     if( PtGetResources( mWidget, 1, &arg ) == 0 )
     {
@@ -301,6 +312,9 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
         }
       }
     }
+
+    EnableDamage( mWidget, PR_TRUE );
+    Invalidate( PR_FALSE );
   }
   else
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Resize - mWidget is NULL!\n" ));
@@ -735,7 +749,7 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 }
 
 
-void nsWidget::GetParentClippedArea( nsRect &rect )
+PRBool nsWidget::GetParentClippedArea( nsRect &rect )
 {
 // Traverse parent heirarchy and clip the passed-in rect bounds
 
@@ -827,6 +841,11 @@ void nsWidget::GetParentClippedArea( nsRect &rect )
   rect.y -= offset.y;
 
 //printf( "  final widget coords: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
+
+  if( rect.width && rect.height )
+    return PR_TRUE;
+  else
+    return PR_FALSE;
 }
 
 
@@ -1549,8 +1568,6 @@ int nsWidget::WorkProc( void *data )
 {
   DamageQueueEntry **dq = (DamageQueueEntry **) data;
 
-printf( "In work proc.\n" );
-
   if( dq && (*dq))
   {
     DamageQueueEntry *dqe = *dq;
@@ -1568,7 +1585,6 @@ printf( "In work proc.\n" );
       extent.lr.y = extent.ul.y + dqe->inst->mUpdateArea.height - 1;
 
       dqe->inst->mCreateHold = PR_FALSE;
-printf( "Damaged widget.\n" );
       PtDamageExtent( dqe->widget, &extent );
       dqe->inst->mUpdateArea.SetRect(0,0,0,0);
 
@@ -1579,12 +1595,10 @@ printf( "Damaged widget.\n" );
 
     *dq = nsnull;
     mDmgQueueInited = PR_FALSE;
-printf( "Done (END).\n" );
     PtFlush();
     return Pt_END;
   }
 
-printf( "Done (CONTINUE).\n" );
   return Pt_CONTINUE;
 }
 
@@ -1663,24 +1677,28 @@ void nsWidget::UpdateWidgetDamage()
     // Now damage the widget directly...
     if(( mUpdateArea.width && mUpdateArea.height ) || mCreateHold )
     {
+      PhRect_t extent;
+      PhArea_t area;
+
       if( mCreateHold )
-      {
         mCreateHold = PR_FALSE;
-        mUpdateArea.SetRect(0,0,1,1); // Just so the RawDrawFunc will work
-        PtDamageWidget( mWidget );
-      }
-      else
+
+      PtWidgetArea( mWidget, &area );
+
+      if( !mUpdateArea.width || !mUpdateArea.height )
       {
-        PhRect_t extent;
-        PhArea_t area;
+        mUpdateArea.x = area.pos.x;
+        mUpdateArea.y = area.pos.y;
+        mUpdateArea.width = area.size.w;
+        mUpdateArea.height = area.size.h;
+      }
 
-        PtWidgetArea( mWidget, &area );
-
+      if( GetParentClippedArea( mUpdateArea ))
+      {
         extent.ul.x = mUpdateArea.x + area.pos.x;
         extent.ul.y = mUpdateArea.y + area.pos.y;
         extent.lr.x = extent.ul.x + mUpdateArea.width - 1;
         extent.lr.y = extent.ul.y + mUpdateArea.height - 1;
-
         PtDamageExtent( mWidget, &extent );
       }
 
@@ -1708,5 +1726,18 @@ int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_
   pWidget->DispatchStandardEvent(NS_LOSTFOCUS);
 
   return Pt_CONTINUE;
+}
+
+void nsWidget::EnableDamage( PtWidget_t *widget, PRBool enable )
+{
+  PtWidget_t *top = PtFindDisjoint( widget );
+
+  if( top )
+  {
+    if( PR_TRUE == enable )
+      PtEndFlux( top );
+    else
+      PtStartFlux( top );
+  }
 }
 
