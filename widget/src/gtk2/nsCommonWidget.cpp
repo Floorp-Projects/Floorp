@@ -34,6 +34,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCommonWidget.h"
+#include "nsGtkKeyUtils.h"
 
 nsCommonWidget::nsCommonWidget()
 {
@@ -107,9 +108,12 @@ nsCommonWidget::InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
   aEvent.point.x = nscoord(aGdkEvent->x);
   aEvent.point.y = nscoord(aGdkEvent->y);
 
-  aEvent.isShift   = aGdkEvent->state & GDK_SHIFT_MASK;
-  aEvent.isControl = aGdkEvent->state & GDK_CONTROL_MASK;
-  aEvent.isAlt     = aGdkEvent->state & GDK_MOD1_MASK;
+  aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK)
+    ? PR_TRUE : PR_FALSE;
+  aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK)
+    ? PR_TRUE : PR_FALSE;
+  aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK)
+    ? PR_TRUE : PR_FALSE;
   aEvent.isMeta    = PR_FALSE; // Gtk+ doesn't have meta
 
   switch (aGdkEvent->type) {
@@ -133,6 +137,25 @@ nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent, PRUint32 aMsg)
   aEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
   aEvent.message = aMsg;
   aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
+}
+
+void
+nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent,
+			     PRUint32 aMsg)
+{
+  memset(&aEvent, 0, sizeof(nsKeyEvent));
+  aEvent.eventStructType = NS_KEY_EVENT;
+  aEvent.message   = aMsg;
+  aEvent.widget    = NS_STATIC_CAST(nsIWidget *, this);
+  aEvent.keyCode   = GdkKeyCodeToDOMKeyCode(aGdkEvent->keyval);
+  aEvent.charCode  = 0;
+  aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK)
+    ? PR_TRUE : PR_FALSE;
+  aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK)
+    ? PR_TRUE : PR_FALSE;
+  aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK)
+    ? PR_TRUE : PR_FALSE;
+  aEvent.isMeta    = PR_FALSE; // Gtk+ doesn't have meta
 }
 
 void

@@ -33,49 +33,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsCommonWidget_h__
-#define __nsCommonWidget_h__
+#ifndef __nsGdkKeyUtils_h__
+#define __nsGdkKeyUtils_h__
 
-#include "nsBaseWidget.h"
-#include "nsGUIEvent.h"
-#include <gdk/gdkevents.h>
+int      GdkKeyCodeToDOMKeyCode     (int aKeysym);
+PRUint32 nsConvertCharCodeToUnicode (GdkEventKey* aEvent);
 
-class nsCommonWidget : public nsBaseWidget {
- public:
-  nsCommonWidget();
-  virtual ~nsCommonWidget();
-
-  virtual nsIWidget *GetParent(void);
-
-  void CommonCreate(nsIWidget *aParent);
-
-  // event handling code
-  void InitPaintEvent(nsPaintEvent &aEvent);
-  void InitSizeEvent(nsSizeEvent &aEvent);
-  void InitGUIEvent(nsGUIEvent &aEvent, PRUint32 aMsg);
-  void InitMouseEvent(nsMouseEvent &aEvent, PRUint32 aMsg);
-  void InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
-		       GdkEventButton *aEvent);
-  void InitMouseScrollEvent(nsMouseScrollEvent &aEvent, PRUint32 aMsg);
-  void InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aEvent, PRUint32 aMsg);
-
-  void DispatchGotFocusEvent(void);
-  void DispatchLostFocusEvent(void);
-  void DispatchActivateEvent(void);
-  void DispatchDeactivateEvent(void);
-  
-  NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent,
-			   nsEventStatus &aStatus);
-
-  // called when we are destroyed
-  void OnDestroy(void);
-
-  // convert a key code into a DOM code
-  static int ConvertKeyCodeToDOMKeyCode(int aKeysym);
-
- protected:
-  nsCOMPtr<nsIWidget> mParent;
-  PRPackedBool        mOnDestroyCalled;
-};
-
-#endif /* __nsCommonWidget_h__ */
+#endif /* __nsGdkKeyUtils_h__ */

@@ -38,8 +38,11 @@
 #include "nsIRenderingContext.h"
 #include "nsIRegion.h"
 
+#include "nsGtkKeyUtils.h"
+
 #include <gtk/gtkwindow.h>
 #include <gdk/gdkx.h>
+#include <gdk/gdkkeysyms.h>
 
 static nsWindow *get_window_for_gtk_widget(GtkWidget *widget);
 static nsWindow *get_window_for_gdk_window(GdkWindow *window);
@@ -62,10 +65,14 @@ static gboolean button_press_event_cb     (GtkWidget *widget,
 					   GdkEventButton *event);
 static gboolean button_release_event_cb   (GtkWidget *widget,
 					   GdkEventButton *event);
-static gboolean container_focus_in_event  (GtkWidget *widget,
+static gboolean focus_in_event_cb         (GtkWidget *widget,
 					   GdkEventFocus *event);
-static gboolean container_focus_out_event (GtkWidget *widget,
+static gboolean focus_out_event_cb        (GtkWidget *widget,
 					   GdkEventFocus *event);
+static gboolean key_press_event_cb        (GtkWidget *widget,
+					   GdkEventKey *event);
+static gboolean key_release_event_cb      (GtkWidget *widget,
+					   GdkEventKey *event);
 
 nsWindow::nsWindow()
 {
@@ -82,6 +89,7 @@ nsWindow::nsWindow()
   mContainerBlockFocus = PR_FALSE;
   mHasFocus            = PR_FALSE;
   mFocusChild          = nsnull;
+  mInKeyRepeat         = PR_FALSE;
 }
 
 nsWindow::~nsWindow()
@@ -336,7 +344,7 @@ nsWindow::SetFocus(PRBool aRaise)
   // event from that widget and unset its got focus flag.
   if (owningWindow->mFocusChild) {
     printf("removing focus child %p\n", (void *)owningWindow->mFocusChild);
-    owningWindow->mFocusChild->mHasFocus = PR_FALSE;
+    owningWindow->mFocusChild->LoseFocus();
     owningWindow->mFocusChild->DispatchLostFocusEvent();
   }
 
@@ -668,6 +676,17 @@ nsWindow::GetAttention()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void
+nsWindow::LoseFocus(void)
+{
+  // we don't have focus
+  mHasFocus = PR_FALSE;
+
+  // make sure that we reset our repeat counter so the next keypress
+  // for this widget will get the down event
+  mInKeyRepeat = PR_FALSE;
+}
+
 gboolean
 nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 {
@@ -803,9 +822,12 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
   event.point.x = nscoord(aEvent->x);
   event.point.y = nscoord(aEvent->y);
 
-  event.isShift   = aEvent->state & GDK_SHIFT_MASK;
-  event.isControl = aEvent->state & GDK_CONTROL_MASK;
-  event.isAlt     = aEvent->state & GDK_MOD1_MASK;
+  event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
+    ? PR_TRUE : PR_FALSE;
+  event.isControl = (aEvent->state & GDK_CONTROL_MASK)
+    ? PR_TRUE : PR_FALSE;
+  event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
+    ? PR_TRUE : PR_FALSE;
 
   nsEventStatus status;
   DispatchEvent(&event, status);
@@ -835,9 +857,12 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     scrollEvent.point.x = nscoord(aEvent->x);
     scrollEvent.point.y = nscoord(aEvent->y);
 
-    scrollEvent.isShift   = aEvent->state & GDK_SHIFT_MASK;
-    scrollEvent.isControl = aEvent->state & GDK_CONTROL_MASK;
-    scrollEvent.isAlt     = aEvent->state & GDK_MOD1_MASK;
+    scrollEvent.isShift   = (aEvent->state & GDK_SHIFT_MASK)
+      ? PR_TRUE : PR_FALSE;
+    scrollEvent.isControl = (aEvent->state & GDK_CONTROL_MASK)
+      ? PR_TRUE : PR_FALSE;
+    scrollEvent.isAlt     = (aEvent->state & GDK_MOD1_MASK)
+      ? PR_TRUE : PR_FALSE;
     scrollEvent.isMeta    = PR_FALSE; // Gtk+ doesn't have meta
 
     DispatchEvent(&scrollEvent, status);
@@ -918,11 +943,87 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 {
   // send a lost focus event for the child window
   if (mFocusChild) {
-    mFocusChild->mHasFocus = PR_FALSE;
+    mFocusChild->LoseFocus();
     mFocusChild->DispatchLostFocusEvent();
     mFocusChild->DispatchDeactivateEvent();
     mFocusChild = nsnull;
   }
+}
+
+gboolean
+nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
+{
+  // work around for annoying things.
+  if (aEvent->keyval == GDK_Tab)
+    if (aEvent->state & GDK_CONTROL_MASK)
+      if (aEvent->state & GDK_MOD1_MASK)
+        return FALSE;
+
+  // Don't pass shift, control and alt as key press events
+  if (aEvent->keyval == GDK_Shift_L
+      || aEvent->keyval == GDK_Shift_R
+      || aEvent->keyval == GDK_Control_L
+      || aEvent->keyval == GDK_Control_R
+      || aEvent->keyval == GDK_Alt_L
+      || aEvent->keyval == GDK_Alt_R)
+    return TRUE;
+
+
+  // If the key repeat flag isn't set then set it so we don't send
+  // another key down event on the next key press -- DOM events are
+  // key down, key press and key up.  X only has key press and key
+  // release.  gtk2 already filters the extra key release events for
+  // us.
+  nsEventStatus status;
+  nsKeyEvent event;
+
+  if (!mInKeyRepeat) {
+    mInKeyRepeat = PR_TRUE;
+    // send the key down event
+    InitKeyEvent(event, aEvent, NS_KEY_DOWN);
+    DispatchEvent(&event, status);
+  }
+  
+  InitKeyEvent(event, aEvent, NS_KEY_PRESS);
+  event.charCode = nsConvertCharCodeToUnicode(aEvent);
+  if (event.charCode) {
+    event.keyCode = 0;
+    // if the control, meta, or alt key is down, then we should leave
+    // the isShift flag alone (probably not a printable character)
+    // if none of the other modifier keys are pressed then we need to
+    // clear isShift so the character can be inserted in the editor
+    if (!event.isControl && !event.isAlt && !event.isMeta)
+      event.isShift = PR_FALSE;
+  }
+
+  // send the key press event
+  DispatchEvent(&event, status);
+  return TRUE;
+}
+
+gboolean
+nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
+{
+  // unset the repeat flag
+  mInKeyRepeat = PR_FALSE;
+
+  // send the key event as a key up event
+  // Don't pass shift, control and alt as key press events
+  if (aEvent->keyval == GDK_Shift_L
+      || aEvent->keyval == GDK_Shift_R
+      || aEvent->keyval == GDK_Control_L
+      || aEvent->keyval == GDK_Control_R
+      || aEvent->keyval == GDK_Alt_L
+      || aEvent->keyval == GDK_Alt_R)
+    return TRUE;
+
+  nsKeyEvent event;
+  InitKeyEvent(event, aEvent, NS_KEY_UP);
+
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+
+  return TRUE;
 }
 
 void
@@ -1091,9 +1192,13 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     g_signal_connect(G_OBJECT(mContainer), "button_release_event",
 		     G_CALLBACK(button_release_event_cb), NULL);
     g_signal_connect(G_OBJECT(mContainer), "focus_in_event",
-		     G_CALLBACK(container_focus_in_event), NULL);
+		     G_CALLBACK(focus_in_event_cb), NULL);
     g_signal_connect(G_OBJECT(mContainer), "focus_out_event",
-		     G_CALLBACK(container_focus_out_event), NULL);
+		     G_CALLBACK(focus_out_event_cb), NULL);
+    g_signal_connect(G_OBJECT(mContainer), "key_press_event",
+		     G_CALLBACK(key_press_event_cb), NULL);
+    g_signal_connect(G_OBJECT(mContainer), "key_release_event",
+		     G_CALLBACK(key_release_event_cb), NULL);
   }
 
   printf("nsWindow [%p]\n", (void *)this);
@@ -1258,7 +1363,7 @@ button_release_event_cb (GtkWidget *widget, GdkEventButton *event)
 
 /* static */
 gboolean
-container_focus_in_event  (GtkWidget *widget, GdkEventFocus *event)
+focus_in_event_cb (GtkWidget *widget, GdkEventFocus *event)
 {
   nsWindow *window = get_window_for_gtk_widget(widget);
   if (!window)
@@ -1271,7 +1376,7 @@ container_focus_in_event  (GtkWidget *widget, GdkEventFocus *event)
 
 /* static */
 gboolean
-container_focus_out_event (GtkWidget *widget, GdkEventFocus *event)
+focus_out_event_cb (GtkWidget *widget, GdkEventFocus *event)
 {
   nsWindow *window = get_window_for_gtk_widget(widget);
   if (!window)
@@ -1280,6 +1385,39 @@ container_focus_out_event (GtkWidget *widget, GdkEventFocus *event)
   window->OnContainerFocusOutEvent(widget, event);
 
   return FALSE;
+}
+
+/* static */
+gboolean
+key_press_event_cb (GtkWidget *widget, GdkEventKey *event)
+{
+  printf("key_press_event_cb\n");
+  // find the window with focus and dispatch this event to that widget
+  nsWindow *window = get_window_for_gtk_widget(widget);
+  if (!window)
+    return FALSE;
+
+  nsWindow *focusWindow = window->mFocusChild;
+  if (!focusWindow)
+    focusWindow = window;
+
+  return focusWindow->OnKeyPressEvent(widget, event);
+}
+
+gboolean
+key_release_event_cb (GtkWidget *widget, GdkEventKey *event)
+{
+  printf("key_release_event_cb\n");
+  // find the window with focus and dispatch this event to that widget
+  nsWindow *window = get_window_for_gtk_widget(widget);
+  if (!window)
+    return FALSE;
+
+  nsWindow *focusWindow = window->mFocusChild;
+  if (!focusWindow)
+    focusWindow = window;
+
+  return focusWindow->OnKeyReleaseEvent(widget, event);
 }
 
 // nsChildWindow class

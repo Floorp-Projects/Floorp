@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 CSRCS		= \
 		mozcontainer.c \
 		mozdrawingarea.c \
+		keysym2ucs.c \
 		$(NULL)
 
 CPPSRCS		= \
@@ -49,6 +50,7 @@ CPPSRCS		= \
 		nsBidiKeyboard.cpp \
 		nsCommonWidget.cpp \
 		nsLookAndFeel.cpp \
+		nsGtkKeyUtils.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
