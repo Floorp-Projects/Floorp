@@ -105,7 +105,6 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsIUnkContentTypeHandler.h"
 
 // Stuff to implement file download dialog.
-#include "nsIXULWindowCallbacks.h"
 #include "nsIDocumentObserver.h"
 #include "nsIContent.h"
 #include "nsIContentViewerFile.h"

@@ -951,7 +951,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
 
    nsCOMPtr<nsIXULWindow> newWindow;
    appShell->CreateTopLevelWindow(parent, nsnull, PR_FALSE, PR_FALSE,
-      aChromeFlags, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+      aChromeFlags, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
       getter_AddRefs(newWindow));
 
    NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
@@ -995,7 +995,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
 
    nsCOMPtr<nsIXULWindow> newWindow;
    appShell->CreateTopLevelWindow(nsnull, uri, PR_FALSE, PR_FALSE,
-                                 aChromeFlags, nsnull, 615, 480,
+                                 aChromeFlags, 615, 480,
                                  getter_AddRefs(newWindow));
 
    NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);

@@ -326,7 +326,6 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
         nsCOMPtr<nsIXULWindow> profWindow;
         rv = profAppShell->CreateTopLevelWindow(nsnull, profileURL,
                                                 PR_TRUE, PR_TRUE, CHROME_STYLE,
-                                                nsnull, 
 						NS_SIZETOCONTENT,           // width 
 						NS_SIZETOCONTENT,           // height
                                                 getter_AddRefs(profWindow));
@@ -1741,7 +1740,6 @@ nsProfile::TriggerActivation(const char *profileName)
 
 			rv = pregAppShell->CreateTopLevelWindow(nsnull, registrationURL,
 													PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
-													nsnull, 
 							            NS_SIZETOCONTENT,           // width 
 							            NS_SIZETOCONTENT,           // height
 													getter_AddRefs(mPregWindow));

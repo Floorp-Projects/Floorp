@@ -37,7 +37,6 @@
 #include "nsIAppShellService.h"
 #include "prprf.h"
 
-#include "nsIXULWindowCallbacks.h"
 #include "nsIDocumentObserver.h"
 #include "nsString.h"
 #include "nsIURL.h"
