@@ -463,7 +463,7 @@ CLSID nsDataObj::GetClassID() const
 //-----------------------------------------------------
 // Registers a the DataFlavor/FE pair
 //-----------------------------------------------------
-void nsDataObj::AddDataFlavor(nsString & aDataFlavor, LPFORMATETC aFE)
+void nsDataObj::AddDataFlavor(const nsString & aDataFlavor, LPFORMATETC aFE)
 {
   // These two lists are the mapping to and from data flavors and FEs
   // Later, OLE will tell us it's needs a certain type of FORMATETC (text, unicode, etc)
