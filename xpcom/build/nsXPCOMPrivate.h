@@ -150,6 +150,7 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 
 #define GRE_CONF_NAME ".gre.config"
 #define GRE_CONF_PATH "/etc/gre.conf"
+#define GRE_CONF_DIR  "/etc/gre.d/"
 #endif
 
 
