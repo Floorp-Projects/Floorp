@@ -3023,7 +3023,7 @@ nsContextMenu.prototype = {
           var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance(Components.interfaces.nsIURI);
           uri.spec = this.imageURL;
 
-          var shortenedUriHost = uri.host
+          var shortenedUriHost = uri.host.replace(/^www\./i,"");
           if (shortenedUriHost.length > 15)
             shortenedUriHost = shortenedUriHost.substr(0,15) + "...";
           blockImage.label = gNavigatorBundle.getFormattedString ("blockImages", [shortenedUriHost]);
