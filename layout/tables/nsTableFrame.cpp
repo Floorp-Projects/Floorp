@@ -3379,6 +3379,10 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
   else
   {
     NS_ASSERTION(nsnull!=mColumnWidths, "illegal state");
+    // can't assert on IsColumnWidthsSet because we might want to call this
+    // while we're in the process of setting column widths, and we don't
+    // want to complicate IsColumnWidthsSet by making it a multiple state return value
+    // (like eNotSet, eSetting, eIsSet)
 #ifdef NS_DEBUG
     NS_ASSERTION(nsnull!=mCellMap, "no cell map");
     PRInt32 numCols = mCellMap->GetColCount();
@@ -3793,13 +3797,17 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
             }
             else
             {
-              if (nsnull!=((nsTableFrame*)(rs->frame))->mColumnWidths)
+              if (PR_TRUE==((nsTableFrame*)(rs->frame))->IsColumnWidthsSet())
               {
                 parentWidth=0;
                 PRInt32 colIndex = lastCellFrame->GetColIndex();
                 PRInt32 colSpan = ((nsTableFrame*)(rs->frame))->GetEffectiveColSpan(colIndex, lastCellFrame);
                 for (PRInt32 i = 0; i<colSpan; i++)
                   parentWidth += ((nsTableFrame*)(rs->frame))->GetColumnWidth(i+colIndex);
+                // factor in the cell
+                lastCellFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+                spacing->CalcBorderPaddingFor(lastCellFrame, borderPadding);
+                parentWidth -= (borderPadding.right + borderPadding.left);
               }
               else
               {
@@ -3838,7 +3846,6 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
 
     rs = rs->parentReflowState;
   }
-
   return parentWidth;
 }
 
