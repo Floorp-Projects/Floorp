@@ -346,7 +346,7 @@ oeICalImpl::Test(void)
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::Test()\n" );
 #endif
-    icalfileset *stream;
+    icalset *stream;
     icalcomponent *icalcalendar,*icalevent;
     struct icaltimetype start, end;
     char uidstr[10]="900000000";
@@ -716,7 +716,7 @@ oeICalImpl::SetServer( const char *str ) {
     } else
 	    strcpy( serveraddr, str );
 
-    icalfileset *stream;
+    icalset *stream;
     
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
@@ -886,7 +886,7 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::AddEvent()\n" );
 #endif
-    icalfileset *stream;
+    icalset *stream;
     icalcomponent *vcalendar,*fetchedcal;
 
     stream = icalfileset_new(serveraddr);
@@ -957,7 +957,7 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::ModifyEvent()\n" );
 #endif
-    icalfileset *stream;
+    icalset *stream;
     icalcomponent *vcalendar;
 
     stream = icalfileset_new(serveraddr);
@@ -1096,7 +1096,7 @@ oeICalImpl::DeleteEvent( const char *id )
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::DeleteEvent( %s )\n", id );
 #endif
-    icalfileset *stream;
+    icalset *stream;
     
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
@@ -1305,7 +1305,7 @@ oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
     // bump ref count
     return eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
 }
-
+/*
 NS_IMETHODIMP
 oeICalImpl::SearchBySQL( const char *sqlstr,  nsISimpleEnumerator **resultList )
 {
@@ -1313,7 +1313,7 @@ oeICalImpl::SearchBySQL( const char *sqlstr,  nsISimpleEnumerator **resultList )
     printf( "oeICalImpl::SearchBySQL()\n" );
 #endif
     icalgauge* gauge;
-    icalfileset *stream;
+    icalset *stream;
     
     nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
     
@@ -1368,7 +1368,7 @@ oeICalImpl::SearchBySQL( const char *sqlstr,  nsISimpleEnumerator **resultList )
     
     // bump ref count
     return eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
-}
+}*/
 
 NS_IMETHODIMP
 oeICalImpl::GetEventsForMonth( PRTime datems, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
@@ -1803,7 +1803,7 @@ void oeICalImpl::SetupAlarmManager() {
                     break;
                 if( icaltime_compare( alarmtime, now ) <= 0 ) {
 #ifdef ICAL_DEBUG
-                    printf( "ALARM WENT OFF: %s\n", icaltime_as_ctime( alarmtime ) );
+                    printf( "ALARM WENT OFF: %s\n", icaltime_as_ical_string( alarmtime ) );
 #endif
                     
                     for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
@@ -1835,7 +1835,7 @@ void oeICalImpl::SetupAlarmManager() {
     }
     if( !icaltime_is_null_time( nextalarm ) ) {
 #ifdef ICAL_DEBUG
-        printf( "NEXT ALARM IS: %s\n", icaltime_as_ctime( nextalarm ) );
+        printf( "NEXT ALARM IS: %s\n", icaltime_as_ical_string( nextalarm ) );
 #endif
         time_t timediff = icaltime_as_timet( nextalarm ) - icaltime_as_timet( now );
         
@@ -1865,7 +1865,7 @@ NS_IMETHODIMP oeICalImpl::AddTodo(oeIICalTodo *icaltodo,char **retid)
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::AddTodo()\n" );
 #endif
-    icalfileset *stream;
+    icalset *stream;
     icalcomponent *vcalendar,*fetchedcal;
 
     stream = icalfileset_new(serveraddr);
@@ -1924,7 +1924,7 @@ oeICalImpl::DeleteTodo( const char *id )
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::DeleteTodo( %s )\n", id );
 #endif
-    icalfileset *stream;
+    icalset *stream;
     
     stream = icalfileset_new(serveraddr);
     if ( !stream ) {
@@ -2024,7 +2024,7 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::ModifyEvent()\n" );
 #endif
-    icalfileset *stream;
+    icalset *stream;
     icalcomponent *vcalendar;
 
     stream = icalfileset_new(serveraddr);

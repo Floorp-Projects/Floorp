@@ -188,7 +188,7 @@ interface oeIICal : nsISupports
 	string modifyEvent( in oeIICalEvent icalevent );
 	void deleteEvent( in string id );
 	oeIICalEvent fetchEvent( in string id );
-	nsISimpleEnumerator searchBySQL( in string sqlstr );
+//	nsISimpleEnumerator searchBySQL( in string sqlstr );
 	nsISimpleEnumerator getAllEvents();
 	nsISimpleEnumerator getEventsForMonth(in PRTime date, out nsISimpleEnumerator datelist );
 	nsISimpleEnumerator getEventsForWeek(in PRTime date, out nsISimpleEnumerator datelist );
