@@ -266,7 +266,7 @@ class nsReporter : public nsICharsetDetectionObserver
 {
    NS_DECL_ISUPPORTS
  public:
-   nsReporter() { NS_INIT_REFCNT(); };
+   nsReporter() { NS_INIT_ISUPPORTS(); };
    virtual ~nsReporter() { };
 
    NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf)

@@ -201,7 +201,7 @@ class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
   nsGenericHTMLElementTearoff(nsGenericHTMLElement *aElement)
     : mElement(aElement)
   {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF(mElement);
   }
 

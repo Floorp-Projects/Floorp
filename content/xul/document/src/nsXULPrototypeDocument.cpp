@@ -227,7 +227,7 @@ nsXULPrototypeDocument::nsXULPrototypeDocument()
       mGlobalObject(nsnull),
       mLoaded(PR_FALSE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 
@@ -731,7 +731,7 @@ nsXULPDGlobalObject::nsXULPDGlobalObject()
     : mJSObject(nsnull),
       mGlobalObjectOwner(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 

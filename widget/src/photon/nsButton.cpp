@@ -63,7 +63,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsButton, nsWidget, nsIButton)
 //-------------------------------------------------------------------------
 nsButton::nsButton() : nsWidget(), nsIButton()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 //-------------------------------------------------------------------------

@@ -39,7 +39,7 @@ NS_IMPL_ISUPPORTS3(DeviceContextImpl, nsIDeviceContext, nsIObserver, nsISupports
 
 DeviceContextImpl::DeviceContextImpl()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mFontCache = nsnull;
   mDevUnitsToAppUnits = 1.0f;
   mAppUnitsToDevUnits = 1.0f;

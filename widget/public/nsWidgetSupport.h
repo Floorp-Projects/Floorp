@@ -39,6 +39,7 @@
 #define nsWidgetSupport_h__
 
 #include "nscore.h"
+#include "nsComObsolete.h"
 #include "nsISupports.h"
 #include "nsIWidget.h"
 

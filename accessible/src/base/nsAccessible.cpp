@@ -437,7 +437,7 @@ PRBool nsAccessibleTreeWalker::GetAccessible()
 //-----------------------------------------------------
 nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): mDOMNode(aNode), mPresShell(aShell), mSiblingIndex(eSiblingsUninitialized)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
 #ifdef NS_DEBUG_X
    {

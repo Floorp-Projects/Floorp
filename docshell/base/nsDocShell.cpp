@@ -220,7 +220,7 @@ nsDocShell::nsDocShell():
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 #ifdef PR_LOGGING
     if (! gDocShellLog)
         gDocShellLog = PR_NewLogModule("nsDocShell");
@@ -6565,7 +6565,7 @@ nsDocShell::IsBeingDestroyed(PRBool *aDoomed)
 nsRefreshTimer::nsRefreshTimer():mRepeat(PR_FALSE), mDelay(0),
 mMetaRefresh(PR_FALSE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsRefreshTimer::~nsRefreshTimer()
@@ -6677,7 +6677,7 @@ nsDocShellFocusController::ClosingDown(nsIDocShell* aDocShell)
 //*****************************************************************************  
 nsDocShell::InterfaceRequestorProxy::InterfaceRequestorProxy(nsIInterfaceRequestor* p)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     if (p) {
         mWeakPtr = getter_AddRefs(NS_GetWeakReference(p));
     }

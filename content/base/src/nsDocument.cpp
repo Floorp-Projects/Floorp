@@ -159,7 +159,7 @@ struct nsRadioGroupStruct
 
 nsDOMStyleSheetList::nsDOMStyleSheetList(nsIDocument *aDocument)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mLength = -1;
   // Not reference counted to avoid circular references.
   // The document will tell us when its going away.
@@ -337,7 +337,7 @@ NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
 
 nsDOMImplementation::nsDOMImplementation(nsIURI* aBaseURI)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mBaseURI = aBaseURI;
 }
 
@@ -516,7 +516,7 @@ nsDocument::nsDocument() : mSubDocuments(nsnull),
                            mCSSLoader(nsnull),
                            mXPathDocument(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mArena = nsnull;
   mDocumentURL = nsnull;

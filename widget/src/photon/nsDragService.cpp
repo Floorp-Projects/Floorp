@@ -61,7 +61,7 @@ NS_IMPL_QUERY_INTERFACE2(nsDragService, nsIDragService, nsIDragSession)
 //-------------------------------------------------------------------------
 nsDragService::nsDragService()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mDndWidget = nsnull;
   mDndEvent = nsnull;
 	mNativeCtrl = nsnull;

@@ -439,7 +439,7 @@ class TestTransaction : public nsITransaction
 {
 public:
 
-  TestTransaction() { NS_INIT_REFCNT(); }
+  TestTransaction() { NS_INIT_ISUPPORTS(); }
   virtual ~TestTransaction()     {}
 
   NS_DECL_ISUPPORTS

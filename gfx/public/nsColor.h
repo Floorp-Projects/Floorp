@@ -40,6 +40,7 @@
 #define nsColor_h___
 
 #include "nscore.h"
+#include "nsComObsolete.h"
 
 class nsString;
 class nsAString;

@@ -72,7 +72,7 @@ static PRBool gHaveDrag = PR_FALSE;
 //-------------------------------------------------------------------------
 nsDragService::nsDragService()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   // our hidden source widget
   mHiddenWidget = new QWidget(0,QWidget::tr("DragDrop"),0);

@@ -309,7 +309,7 @@ nsExpatDriver::nsExpatDriver()
    mSink(0), 
    mCatalogData(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsExpatDriver::~nsExpatDriver() 

@@ -56,7 +56,7 @@ NS_IMPL_ISUPPORTS1(nsCollationWin, nsICollation);
 
 nsCollationWin::nsCollationWin() 
 {
-  NS_INIT_REFCNT(); 
+  NS_INIT_ISUPPORTS(); 
   mCollation = NULL;
 }
 

@@ -146,7 +146,7 @@ private:
 XULPopupListenerImpl::XULPopupListenerImpl(void)
   : mElement(nsnull), mPopupContent(nsnull)
 {
-	NS_INIT_REFCNT();	
+	NS_INIT_ISUPPORTS();	
 }
 
 XULPopupListenerImpl::~XULPopupListenerImpl(void)

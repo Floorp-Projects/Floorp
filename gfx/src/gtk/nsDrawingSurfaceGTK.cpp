@@ -51,7 +51,7 @@ static PRTime mLockTime, mUnlockTime;
 
 nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   GdkVisual *v;
 
   mPixmap = nsnull;

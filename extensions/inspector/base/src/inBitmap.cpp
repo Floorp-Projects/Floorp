@@ -46,7 +46,7 @@
 
 inBitmap::inBitmap()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 inBitmap::~inBitmap()

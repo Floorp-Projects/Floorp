@@ -54,7 +54,7 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 nsChromeTreeOwner::nsChromeTreeOwner() : mXULWindow(nsnull)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 nsChromeTreeOwner::~nsChromeTreeOwner()

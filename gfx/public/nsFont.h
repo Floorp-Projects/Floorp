@@ -40,6 +40,7 @@
 #define nsFont_h___
 
 #include "nscore.h"
+#include "nsComObsolete.h"
 #include "nsCoord.h"
 #include "nsString.h"
 

@@ -57,7 +57,7 @@ nsTextContentChangeData::nsTextContentChangeData()
     mLength(0),
     mReplaceLength(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsTextContentChangeData::~nsTextContentChangeData()

@@ -322,7 +322,7 @@ NS_NewRangeUtils(nsIRangeUtils** aResult)
 
 nsRangeUtils::nsRangeUtils()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 } 
 
 nsRangeUtils::~nsRangeUtils() 
@@ -421,7 +421,7 @@ nsRange::nsRange() :
   mStartParent(),
   mEndParent()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 } 
 
 nsRange::~nsRange() 

@@ -138,7 +138,7 @@ public:
         , mStartTime(PR_IntervalNow())
 #endif
     {
-        NS_INIT_REFCNT(); 
+        NS_INIT_ISUPPORTS(); 
         PR_INIT_CLIST(this);
     }
 
@@ -530,7 +530,7 @@ nsDNSLookup::nsDNSLookup()
     , mFlags(eCacheableMask)
     , mExpires(0)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 	MOZ_COUNT_CTOR(nsDNSLookup);
 	PR_INIT_CLIST(this);
     PR_INIT_CLIST(&mRequestQ);
@@ -918,7 +918,7 @@ nsDNSService::nsDNSService()
     , mOut(nsnull)
 #endif
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     
     NS_ASSERTION(gService==nsnull,"multiple nsDNSServices allocated!");
     gService    = this;

@@ -173,7 +173,7 @@ nsEditor::nsEditor()
 ,  mDocWeak(nsnull)
 {
   //initialize member variables here
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   PR_AtomicIncrement(&gInstanceCount);
 

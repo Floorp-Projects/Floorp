@@ -64,7 +64,7 @@ MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2
 //-------------------------------------------------------------------------
 nsFilePicker::nsFilePicker()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mWnd = NULL;
   mUnicodeEncoder = nsnull;
   mUnicodeDecoder = nsnull;

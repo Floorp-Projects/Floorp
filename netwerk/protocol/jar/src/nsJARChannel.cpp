@@ -70,7 +70,7 @@ nsJARChannel::nsJARChannel()
     , mInitiator(nsnull)
 #endif
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 #if defined(PR_LOGGING)
     //

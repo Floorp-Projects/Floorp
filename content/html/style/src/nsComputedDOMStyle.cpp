@@ -295,7 +295,7 @@ NS_NewComputedDOMStyle(nsIComputedDOMStyle** aComputedStyle)
 nsComputedDOMStyle::nsComputedDOMStyle()
   : mPresShellWeak(nsnull), mT2P(0.0f)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 

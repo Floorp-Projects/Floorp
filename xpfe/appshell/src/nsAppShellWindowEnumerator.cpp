@@ -213,7 +213,7 @@ nsAppShellWindowEnumerator::nsAppShellWindowEnumerator (
     mWindowMediator(&aMediator), mType(aTypeString),
     mCurrentPosition(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mWindowMediator->AddEnumerator(this);
   NS_ADDREF(mWindowMediator);

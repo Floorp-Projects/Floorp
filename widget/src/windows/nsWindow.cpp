@@ -743,7 +743,7 @@ nsWindow::nsWindow() : nsBaseWidget(), mRootAccessible(NULL)
 nsWindow::nsWindow() : nsBaseWidget()
 #endif
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mWnd                = 0;
     mPrevWndProc        = NULL;
     mBackground         = ::GetSysColor(COLOR_BTNFACE);

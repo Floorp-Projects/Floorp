@@ -304,7 +304,7 @@ PRUint32 nsViewManager::gLastUserEventTime = 0;
 
 nsViewManager::nsViewManager()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   if (gViewManagers == nsnull) {
     NS_ASSERTION(mVMCount == 0, "View Manager count is incorrect");

@@ -580,7 +580,7 @@ DummyParserRequest::Create(nsIRequest** aResult, nsIHTMLContentSink* aSink)
 
 DummyParserRequest::DummyParserRequest(nsIHTMLContentSink* aSink)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   if (gRefCnt++ == 0) {
       nsresult rv;
@@ -928,7 +928,7 @@ NS_NewHTMLElementFactory(nsIElementFactory** aInstancePtrResult)
 
 nsHTMLElementFactory::nsHTMLElementFactory()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsHTMLElementFactory::~nsHTMLElementFactory()
@@ -2092,7 +2092,7 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
 
 // Note: operator new zeros our memory
 HTMLContentSink::HTMLContentSink() {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 #ifdef NS_DEBUG
   if (nsnull == gSinkLogModuleInfo) {
     gSinkLogModuleInfo = PR_NewLogModule("htmlcontentsink");

@@ -63,7 +63,7 @@ nsRDFDOMNodeList::nsRDFDOMNodeList(void)
     : //mInner(nsnull), Not being used?
       mElements(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsRDFDOMNodeList::~nsRDFDOMNodeList(void)

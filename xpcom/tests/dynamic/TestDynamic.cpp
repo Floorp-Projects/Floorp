@@ -49,7 +49,7 @@ class TestDynamicClassImpl: public ITestClass {
   NS_DECL_ISUPPORTS
 
   TestDynamicClassImpl() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
   }
   void Test();
 };

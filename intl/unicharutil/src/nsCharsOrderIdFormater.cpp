@@ -43,7 +43,7 @@
 
 nsCharsOrderIdFormater::nsCharsOrderIdFormater( nsCharsList* aList)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mList = aList;
   mBase = aList->Length();
 }
@@ -75,7 +75,7 @@ class nsCharsOrderIdFormaterFactory : public nsIFactory {
   NS_DECL_ISUPPORTS
 public:
   nsCharsOrderIdFormaterFactory(const nsCID &aCID) {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mCID = aCID;
   };
   virtual ~nsCharsOrderIdFormaterFactory() {

@@ -90,7 +90,7 @@ nsAppShell::nsAppShell()
 { 
   mEventQueue  = nsnull;
   mFD          = -1;
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 //-------------------------------------------------------------------------

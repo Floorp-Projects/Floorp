@@ -30,7 +30,7 @@
 
 nsSOCKS4SocketProvider::nsSOCKS4SocketProvider()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsresult

@@ -62,7 +62,7 @@ class nsTestCom: public nsITestCom {
 
 public:
   nsTestCom() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
   }
   virtual ~nsTestCom() {
     cout << "nsTestCom instance successfully deleted\n";
@@ -99,7 +99,7 @@ class nsTestComFactory: public nsIFactory {
   NS_DECL_ISUPPORTS
 public:
   nsTestComFactory() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
   }
   
   NS_IMETHOD CreateInstance(nsISupports *aOuter,

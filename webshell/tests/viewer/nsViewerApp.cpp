@@ -88,6 +88,7 @@
 
 #include "nsIDOMHTMLSelectElement.h"
 
+#include "nsISupportsObsolete.h"
 
 // new widget stuff
 #ifdef USE_LOCAL_WIDGETS
@@ -136,7 +137,7 @@ static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 
 nsViewerApp::nsViewerApp()
 {
-  NS_INIT_REFCNT(); 
+  NS_INIT_ISUPPORTS(); 
 
   char * text = PR_GetEnv("NGLAYOUT_HOME");
   mStartURL.AssignWithConversion(text ? text : "resource:/res/samples/test0.html");
@@ -225,7 +226,7 @@ NS_IMPL_ISUPPORTS1(nsTestFormProcessor, nsIFormProcessor);
 
 nsTestFormProcessor::nsTestFormProcessor()
 {
-   NS_INIT_REFCNT();
+   NS_INIT_ISUPPORTS();
 }
 
 NS_METHOD 

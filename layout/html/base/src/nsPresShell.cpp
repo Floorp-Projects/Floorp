@@ -768,7 +768,7 @@ nsDummyLayoutRequest::Create(nsIRequest** aResult, nsIPresShell* aPresShell)
 
 nsDummyLayoutRequest::nsDummyLayoutRequest(nsIPresShell* aPresShell)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   if (gRefCnt++ == 0) {
       nsresult rv;

@@ -78,14 +78,14 @@ nsCSSRule::nsCSSRule(void)
   : mSheet(nsnull),
     mParentRule(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsCSSRule::nsCSSRule(const nsCSSRule& aCopy)
   : mSheet(aCopy.mSheet),
     mParentRule(aCopy.mParentRule)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 

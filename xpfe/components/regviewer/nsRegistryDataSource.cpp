@@ -78,7 +78,7 @@ nsIRDFLiteral*  nsRegistryDataSource::kBinaryLiteral;
 
 nsRegistryDataSource::nsRegistryDataSource()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 
@@ -700,7 +700,7 @@ nsRegistryDataSource::SubkeyEnumerator::SubkeyEnumerator(nsRegistryDataSource* a
       mRootKey(aRootKey),
       mStarted(PR_FALSE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF(mViewer);
 }
 

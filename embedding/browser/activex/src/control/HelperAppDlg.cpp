@@ -265,7 +265,7 @@ public:
 
 ProgressDlg::ProgressDlg()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 ProgressDlg::~ProgressDlg() 
@@ -439,7 +439,7 @@ NS_IMPL_ISUPPORTS1(CHelperAppLauncherDlg, nsIHelperAppLauncherDialog)
 
 CHelperAppLauncherDlg::CHelperAppLauncherDlg()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 CHelperAppLauncherDlg::~CHelperAppLauncherDlg() 

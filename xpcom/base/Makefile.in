@@ -57,7 +57,6 @@ EXPORTS		= \
 		nsCom.h \
 		nsComObsolete.h \
 		nsCWeakReference.h \
-		nsError.h \
 		nsIID.h \
 		nsISupportsObsolete.h \
 		nsTraceRefcnt.h \
@@ -91,6 +90,7 @@ SDK_XPIDLSRCS   = \
 		nsrootidl.idl		   \
 
 SDK_HEADERS     = \
+		nsError.h \
 		nsISupportsBase.h \
 		nscore.h \
 		nsID.h \

@@ -69,7 +69,7 @@ nsProtocolProxyService::nsProtocolProxyService():
     mPAC(nsnull)
 
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsProtocolProxyService::~nsProtocolProxyService()

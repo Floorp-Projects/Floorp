@@ -69,7 +69,7 @@ public:
 
 StringUnicharInputStream::StringUnicharInputStream(nsString* aString)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mString = aString;
   mPos = 0;
   mLen = aString->Length();
@@ -167,7 +167,7 @@ UTF8InputStream::UTF8InputStream(nsIInputStream* aStream,
                                  PRUint32 aBufferSize) :
   mInput(aStream)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   if (aBufferSize == 0) {
     aBufferSize = 8192;
   }

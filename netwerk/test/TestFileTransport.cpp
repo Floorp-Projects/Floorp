@@ -152,7 +152,7 @@ public:
     }
 
     MyListener(PRUint32 stopCount = 1) : mTotal(0), mStopCount(stopCount) {
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
     }
 
     nsresult Init(const char* origFile) {
@@ -330,7 +330,7 @@ public:
         return NS_OK;
     }
 
-    MyOpenObserver() { NS_INIT_REFCNT(); }
+    MyOpenObserver() { NS_INIT_ISUPPORTS(); }
     virtual ~MyOpenObserver() {}
 };
 

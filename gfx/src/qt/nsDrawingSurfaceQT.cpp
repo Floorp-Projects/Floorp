@@ -58,7 +58,7 @@ nsDrawingSurfaceQT::nsDrawingSurfaceQT()
   printf("JCG: nsDrawingSurfaceQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gDSCount);
 #endif
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mPaintDevice = nsnull;
   mPixmap      = nsnull;
   mGC          = nsnull;

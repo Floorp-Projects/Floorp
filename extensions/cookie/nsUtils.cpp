@@ -44,6 +44,7 @@
 #include "nsILocalFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "prmem.h"
+#include "nsComObsolete.h"
 
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 

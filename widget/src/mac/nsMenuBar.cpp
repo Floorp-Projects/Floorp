@@ -113,7 +113,7 @@ nsMenuBar::nsMenuBar()
   
   nsPreviousMenuStackUnwind(nsnull, nsnull);
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mNumMenus       = 0;
   mParent         = nsnull;
   mIsMenuBarAdded = PR_FALSE;

@@ -94,7 +94,7 @@ nsIRDFResource		*LocalSearchDataSource::kRDF_type;
 
 LocalSearchDataSource::LocalSearchDataSource(void)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 	if (gRefCnt++ == 0)
 	{

@@ -83,7 +83,7 @@ class nsScriptableDateFormat : public nsIScriptableDateFormat {
                         {return FormatDateTime(locale, kDateFormatNone, timeFormatSelector, 
                                                1999, 1, 1, hour, minute, second, timeString);}
 
-  nsScriptableDateFormat() {NS_INIT_REFCNT();}
+  nsScriptableDateFormat() {NS_INIT_ISUPPORTS();}
   virtual ~nsScriptableDateFormat() {}
 private:
   nsString mStringOut;   

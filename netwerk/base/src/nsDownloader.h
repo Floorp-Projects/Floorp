@@ -53,7 +53,7 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  nsDownloader() { NS_INIT_REFCNT();} ;
+  nsDownloader() { NS_INIT_ISUPPORTS();} ;
   virtual ~nsDownloader() {};
 
   static NS_METHOD

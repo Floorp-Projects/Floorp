@@ -262,7 +262,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
 
         nsDirEnumerator() : mDir(nsnull) 
         {
-            NS_INIT_REFCNT();
+            NS_INIT_ISUPPORTS();
         }
 
         nsresult Init(nsILocalFile* parent) 
@@ -368,7 +368,7 @@ NS_IMPL_ISUPPORTS1(nsDirEnumerator, nsISimpleEnumerator);
 
 nsLocalFile::nsLocalFile()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mLastResolution = PR_FALSE;
     mFollowSymlinks = PR_FALSE;
     MakeDirty();

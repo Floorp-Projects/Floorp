@@ -33,7 +33,7 @@ PRUint32 gEntryID=0;
 
 nsSHEntry::nsSHEntry() 
 {
-   NS_INIT_REFCNT();
+   NS_INIT_ISUPPORTS();
    mParent = nsnull;
    mID = gEntryID++;
 }

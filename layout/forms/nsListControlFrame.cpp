@@ -3506,7 +3506,7 @@ NS_IMPL_RELEASE(nsListEventListener)
 
 nsListEventListener::nsListEventListener()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsListEventListener::~nsListEventListener()

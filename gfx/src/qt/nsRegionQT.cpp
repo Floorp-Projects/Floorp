@@ -56,7 +56,7 @@ nsRegionQT::nsRegionQT() : mRegion()
   mID = gRegionID++;
   printf("JCG: nsRegionQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gRegionCount);
 #endif
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsRegionQT::~nsRegionQT()

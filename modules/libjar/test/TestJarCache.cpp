@@ -107,7 +107,7 @@ PRUint32 TestThread::gCounter = 0;
 TestThread::TestThread()
     : mID(++gCounter)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 TestThread::~TestThread()

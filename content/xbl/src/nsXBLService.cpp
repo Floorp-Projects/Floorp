@@ -478,7 +478,7 @@ private:
 public:
   nsProxyStream(void) : mBuffer(nsnull)
   {
-      NS_INIT_REFCNT();
+      NS_INIT_ISUPPORTS();
   }
 
   virtual ~nsProxyStream(void) {
@@ -562,7 +562,7 @@ NS_IMPL_ISUPPORTS3(nsXBLService, nsIXBLService, nsIObserver, nsISupportsWeakRefe
 // Constructors/Destructors
 nsXBLService::nsXBLService(void)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mPool.Init("XBL Binding Requests", kBucketSizes, kNumBuckets, kInitialSize);
 
   gRefCnt++;

@@ -129,7 +129,7 @@ public:
 
 URLLoadInfo::URLLoadInfo(const char *aUrl) : mURLString(aUrl)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mBytesRead = 0;
   mConnectTime = mTotalTime = PR_Now();
@@ -158,7 +158,7 @@ public:
 
 TestHttpEventSink::TestHttpEventSink()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 TestHttpEventSink::~TestHttpEventSink()
@@ -201,7 +201,7 @@ public:
 
 InputTestConsumer::InputTestConsumer()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 InputTestConsumer::~InputTestConsumer()
@@ -402,7 +402,7 @@ public:
     NS_DECL_ISUPPORTS
 
     NotificationCallbacks() {
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
     }
 
     NS_IMETHOD GetInterface(const nsIID& eventSinkIID, void* *result) {

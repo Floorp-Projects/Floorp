@@ -184,7 +184,7 @@ NS_INTERFACE_MAP_END
 
 nsDocumentEncoder::nsDocumentEncoder()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mMimeType.Assign(NS_LITERAL_STRING("text/plain"));
 

@@ -28,7 +28,7 @@
 
 EmbedWindowCreator::EmbedWindowCreator(void)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 EmbedWindowCreator::~EmbedWindowCreator()

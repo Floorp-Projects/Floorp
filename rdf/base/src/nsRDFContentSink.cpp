@@ -326,7 +326,7 @@ RDFContentSinkImpl::RDFContentSinkImpl()
       mContextStack(nsnull),
       mDocumentURL(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     if (gRefCnt++ == 0) {
         nsresult rv;

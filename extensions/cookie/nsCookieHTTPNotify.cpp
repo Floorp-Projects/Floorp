@@ -128,7 +128,7 @@ nsCookieHTTPNotify::Init()
 
 nsCookieHTTPNotify::nsCookieHTTPNotify()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mCookieService = nsnull;
 #ifdef DEBUG_dp
     printf("CookieHTTPNotify Created.\n");

@@ -312,7 +312,7 @@ nsXPCWrappedJS::nsXPCWrappedJS(XPCCallContext& ccx,
         printf("//////// %d instances of nsXPCWrappedJS created\n", count);
 #endif
 
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     // intensionally do double addref - see Release().
     NS_ADDREF_THIS();
     NS_ADDREF_THIS();

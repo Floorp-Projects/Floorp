@@ -156,7 +156,7 @@ nsNetModRegEntry::nsNetModRegEntry(const char *aTopic,
                                    nsINetNotify *aNotify, 
                                    nsresult *result)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mTopic = new char [PL_strlen(aTopic) + 1];
     PL_strcpy(mTopic, aTopic);
    

@@ -199,7 +199,7 @@ NS_NewPluginContentViewer(const char* aCommand,
 // Note: operator new zeros our memory
 PluginViewerImpl::PluginViewerImpl(const char* aCommand)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mEnableRendering = PR_TRUE;
 }
 
@@ -964,7 +964,7 @@ PluginViewerImpl::CopyImageContents()
 
 PluginListener::PluginListener(PluginViewerImpl* aViewer)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mViewer = aViewer;
   NS_ADDREF(aViewer);
 }
@@ -1016,7 +1016,7 @@ PluginListener::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 
 pluginInstanceOwner :: pluginInstanceOwner()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   memset(&mPluginWindow, 0, sizeof(mPluginWindow));
   mInstance = nsnull;

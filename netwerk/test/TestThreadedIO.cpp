@@ -119,7 +119,7 @@ int TestListener::threadCount = 0;
 TestListener::TestListener()
     : mDone( PR_FALSE ), mThreadNo( ++threadCount ) {
     printf( "TestListener ctor called on thread %d\n", mThreadNo );
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 TestListener::~TestListener() {

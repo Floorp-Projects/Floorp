@@ -42,7 +42,6 @@
  */
 #include "prtypes.h"
 
-
 /* Core XPCOM declarations. */
 
 /**
@@ -154,6 +153,7 @@ typedef PRUint32 nsresult;
  */
 #define nsnull 0
 
+#include "nsError.h"
 
 /* ------------------------------------------------------------------------ */
 /* Casting macros for hiding C++ features from older compilers */
@@ -300,12 +300,6 @@ typedef PRUint32 nsresult;
 
 #define NS_PTR_TO_INT32(x) ((char *)(x) - (char *)0)
 #define NS_INT32_TO_PTR(x) ((void *)((char *)0 + (x)))
-
-/* Include deprecated APIs... */
-
-#ifndef nsComObsolete_h__
-#include "nsComObsolete.h"
-#endif
 
 #endif /* nscore_h___ */
 

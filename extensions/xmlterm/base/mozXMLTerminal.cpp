@@ -108,7 +108,7 @@ mozXMLTerminal::mozXMLTerminal() :
   mMouseListener(nsnull),
   mDragListener(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 

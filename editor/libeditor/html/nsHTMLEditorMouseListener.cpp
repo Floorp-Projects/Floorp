@@ -65,7 +65,7 @@
 
 nsHTMLEditorMouseListener::nsHTMLEditorMouseListener() 
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsHTMLEditorMouseListener::~nsHTMLEditorMouseListener() 

@@ -166,7 +166,7 @@ NS_IMPL_ISUPPORTS1(nsOverlayEnumerator, nsISimpleEnumerator)
 nsOverlayEnumerator::nsOverlayEnumerator(nsISimpleEnumerator *aInstallArcs,
                                          nsISimpleEnumerator *aProfileArcs)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mInstallArcs = aInstallArcs;
   mProfileArcs = aProfileArcs;
   mCurrentArcs = mInstallArcs;
@@ -254,7 +254,7 @@ nsChromeRegistry::nsChromeRegistry() : mRDFService(nsnull),
                                        mBatchInstallFlushes(PR_FALSE),
                                        mSearchedForOverride(PR_FALSE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID));
   if (prefService)

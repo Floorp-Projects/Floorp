@@ -810,7 +810,7 @@ IsValidSelectionPoint(nsSelection *aFrameSel, nsIContent *aContent)
 nsSelectionIterator::nsSelectionIterator(nsTypedSelection *aList)
 :mIndex(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   if (!aList)
   {
     NS_NOTREACHED("nsSelection");
@@ -967,7 +967,7 @@ nsSelectionIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 nsSelection::nsSelection()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   PRInt32 i;
   for (i = 0;i<nsISelectionController::NUM_SELECTIONTYPES;i++){
     mDomSelections[i] = nsnull;
@@ -4710,7 +4710,7 @@ nsTypedSelection::nsTypedSelection(nsSelection *aList)
   NS_NewISupportsArray(getter_AddRefs(mRangeArray));
   mAutoScrollTimer = nsnull;
   NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mScrollEventPosted = PR_FALSE;
 }
 
@@ -4723,7 +4723,7 @@ nsTypedSelection::nsTypedSelection()
   NS_NewISupportsArray(getter_AddRefs(mRangeArray));
   mAutoScrollTimer = nsnull;
   NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mScrollEventPosted = PR_FALSE;
 }
 

@@ -56,7 +56,7 @@ nsScreenQT::nsScreenQT()
   mID = gScreenID++;
   printf("JCG: nsScreenQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gScreenCount);
 #endif
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
   // has changed.

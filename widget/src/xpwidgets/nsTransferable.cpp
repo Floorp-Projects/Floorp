@@ -289,7 +289,7 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
 //-------------------------------------------------------------------------
 nsTransferable::nsTransferable()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mDataArray = new nsVoidArray();
 }
 

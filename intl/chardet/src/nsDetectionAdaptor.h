@@ -56,7 +56,7 @@ class nsMyObserver : public nsICharsetDetectionObserver
  public:
    nsMyObserver( void )
    {
-     NS_INIT_REFCNT();
+     NS_INIT_ISUPPORTS();
      mWebShellSvc = nsnull;
      mNotifyByReload = PR_FALSE;
      mWeakRefDocument = nsnull;

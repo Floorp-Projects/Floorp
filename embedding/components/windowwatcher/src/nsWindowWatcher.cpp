@@ -198,7 +198,7 @@ nsWatcherWindowEnumerator::nsWatcherWindowEnumerator(nsWindowWatcher *inWatcher)
   : mWindowWatcher(inWatcher),
     mCurrentPosition(inWatcher->mOldestWindow)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mWindowWatcher->AddEnumerator(this);
   mWindowWatcher->AddRef();
 }
@@ -418,7 +418,7 @@ nsWindowWatcher::nsWindowWatcher() :
         mActiveWindow(0),
         mListLock(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsWindowWatcher::~nsWindowWatcher()

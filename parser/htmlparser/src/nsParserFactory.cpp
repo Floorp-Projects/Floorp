@@ -73,7 +73,7 @@ class nsParserFactory : public nsIFactory
 
 nsParserFactory::nsParserFactory(const nsCID &aClass)   
 {   
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mClassID = aClass;
   nsHTMLTags::AddRefTable();
   nsHTMLEntities::AddRefTable();

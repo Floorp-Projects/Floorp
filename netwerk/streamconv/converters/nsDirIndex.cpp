@@ -38,6 +38,7 @@
 #include "nsDirIndex.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "nsISupportsObsolete.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDirIndex,
                               nsIDirIndex);
@@ -45,7 +46,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDirIndex,
 nsDirIndex::nsDirIndex() : mType(TYPE_UNKNOWN),
                            mSize((PRUint32)(-1)),
                            mLastModified(-1) {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 };
 
 nsDirIndex::~nsDirIndex() {};

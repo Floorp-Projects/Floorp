@@ -53,7 +53,7 @@ NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsIWidget)
 //-------------------------------------------------------------------------
 nsScrollbar::nsScrollbar (PRBool aIsVertical):nsWidget (), nsIScrollbar ()
 {
-  NS_INIT_REFCNT ();
+  NS_INIT_ISUPPORTS ();
 
   mOrientation = (aIsVertical) ?
     GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;

@@ -55,7 +55,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsInputStreamIO,
 nsInputStreamIO::nsInputStreamIO()
     : mContentLength(-1), mStatus(NS_OK)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsInputStreamIO::~nsInputStreamIO()
@@ -160,7 +160,7 @@ nsStreamIOChannel::nsStreamIOChannel()
       mBufferSegmentSize(0), mBufferMaxSize(0),
       mLoadFlags(LOAD_NORMAL), mStatus(NS_OK)
 {
-    NS_INIT_REFCNT(); 
+    NS_INIT_ISUPPORTS(); 
 }
 
 nsStreamIOChannel::~nsStreamIOChannel()

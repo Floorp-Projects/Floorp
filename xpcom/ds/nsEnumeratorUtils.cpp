@@ -42,7 +42,7 @@ nsArrayEnumerator::nsArrayEnumerator(nsISupportsArray* aValueArray)
     : mValueArray(aValueArray),
       mIndex(0)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_IF_ADDREF(mValueArray);
 }
 
@@ -111,7 +111,7 @@ NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
 nsSingletonEnumerator::nsSingletonEnumerator(nsISupports* aValue)
     : mValue(aValue)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_IF_ADDREF(mValue);
     mConsumed = (mValue ? PR_FALSE : PR_TRUE);
 }
@@ -170,7 +170,7 @@ NS_NewSingletonEnumerator(nsISimpleEnumerator* *result,
 nsAdapterEnumerator::nsAdapterEnumerator(nsIEnumerator* aEnum)
     : mEnum(aEnum), mCurrent(0), mStarted(PR_FALSE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF(mEnum);
 }
 

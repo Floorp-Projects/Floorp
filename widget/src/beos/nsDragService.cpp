@@ -63,7 +63,7 @@ NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
 //-------------------------------------------------------------------------
 nsDragService::nsDragService()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 //-------------------------------------------------------------------------

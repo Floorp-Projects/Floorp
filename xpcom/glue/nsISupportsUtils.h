@@ -61,10 +61,6 @@
 #include "nsISupportsImpl.h"
 #endif
 
-#ifndef nsISupportsObsolete_h__
-#include "nsISupportsObsolete.h"
-#endif
-
 /**
  * Macro for instantiating a new object that implements nsISupports.
  * Use this in your factory methods to allow for refcnt tracing.

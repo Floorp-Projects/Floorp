@@ -55,7 +55,7 @@ class TestClassImpl: public ITestClass {
   NS_DECL_ISUPPORTS
 public:
   TestClassImpl() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
   }
 
   void Test();
@@ -76,7 +76,7 @@ class TestFactory: public nsIFactory {
   
 public:
   TestFactory() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
   }
 
   NS_IMETHOD CreateInstance(nsISupports *aDelegate,

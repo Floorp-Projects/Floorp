@@ -121,7 +121,7 @@ GraphicsState :: ~GraphicsState()
 
 nsRenderingContextOS2::nsRenderingContextOS2()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mContext = nsnull;
   mSurface = nsnull;

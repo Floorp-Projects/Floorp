@@ -107,7 +107,7 @@ private:
 
 CSSGroupRuleRuleListImpl::CSSGroupRuleRuleListImpl(nsICSSGroupRule *aGroupRule)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   // Not reference counted to avoid circular references.
   // The rule will tell us when its going away.
   mGroupRule = aGroupRule;

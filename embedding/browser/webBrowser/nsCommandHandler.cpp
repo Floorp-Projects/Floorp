@@ -30,7 +30,7 @@
 nsCommandHandler::nsCommandHandler() :
     mWindow(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsCommandHandler::~nsCommandHandler()

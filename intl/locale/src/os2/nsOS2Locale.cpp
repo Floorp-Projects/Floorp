@@ -47,7 +47,7 @@ NS_IMPL_ISUPPORTS1(nsOS2Locale,nsIOS2Locale)
 
 nsOS2Locale::nsOS2Locale(void)
 {
-   NS_INIT_REFCNT();
+   NS_INIT_ISUPPORTS();
 }
 
 nsOS2Locale::~nsOS2Locale(void)

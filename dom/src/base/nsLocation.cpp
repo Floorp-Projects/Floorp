@@ -106,7 +106,7 @@ static nsresult GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString
 
 LocationImpl::LocationImpl(nsIDocShell *aDocShell)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mDocShell = aDocShell; // Weak Reference
 }
 

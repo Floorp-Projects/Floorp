@@ -150,7 +150,7 @@ nsUnicodeToX11Johab::nsUnicodeToX11Johab()
    l = 0x5f;
    v = 0;
    t = 0;
-   NS_INIT_REFCNT();
+   NS_INIT_ISUPPORTS();
 
 }
 nsUnicodeToX11Johab::~nsUnicodeToX11Johab()

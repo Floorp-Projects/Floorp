@@ -102,7 +102,7 @@ nsHashtableEnumerator::nsHashtableEnumerator (nsHashtable *aHash,
                                         void *aData)
         : mElements(nsnull), mCount(0), mDoneFlag(PR_TRUE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     Reset (aHash, aConverter, aData);
     
 }

@@ -56,7 +56,7 @@ NS_IMPL_QUERY_INTERFACE3(nsMenuDismissalListener, nsIDOMMouseListener, nsIMenuRo
 nsMenuDismissalListener::nsMenuDismissalListener() :
   mEnabled(PR_TRUE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mMenuParent = nsnull;
 }
 

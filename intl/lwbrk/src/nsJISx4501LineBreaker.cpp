@@ -331,7 +331,7 @@ nsJISx4501LineBreaker::nsJISx4501LineBreaker(
    const PRUnichar* aNoEnd, PRInt32 aNoEndLen
 )
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 nsJISx4501LineBreaker::~nsJISx4501LineBreaker()
 {

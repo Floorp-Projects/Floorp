@@ -60,7 +60,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS6(nsAutoConfig, nsIAutoConfig, nsITimerCallback, nsI
 
 nsAutoConfig::nsAutoConfig()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsresult nsAutoConfig::Init()

@@ -42,7 +42,7 @@
 
 nsEditorService::nsEditorService()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsEditorService::~nsEditorService()

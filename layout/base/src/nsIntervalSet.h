@@ -41,6 +41,7 @@
 
 #include "prtypes.h"
 #include "nsCoord.h"
+#include "nsDebug.h"
 
 typedef void *
 (* PR_CALLBACK IntervalSetAlloc)(size_t aBytes, void *aClosure);

@@ -78,7 +78,7 @@ nsSocketTransportService::nsSocketTransportService ()   :
 #endif
   LOG(("nsSocketTransportService::nsSocketTransportService"));
     
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   PR_INIT_CLIST(&mWorkQ);
 

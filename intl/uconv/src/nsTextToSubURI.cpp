@@ -54,7 +54,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 nsTextToSubURI::nsTextToSubURI()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 nsTextToSubURI::~nsTextToSubURI()
 {

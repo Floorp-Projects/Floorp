@@ -157,7 +157,7 @@ void nsToolkit::RunPump(void* arg)
 nsToolkit::nsToolkit()  
 {
   localthread = false;
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mGuiThread  = NULL;
 }
 

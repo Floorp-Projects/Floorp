@@ -160,7 +160,7 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,
       mDescriptors(nsnull)
 {
     NS_ADDREF(mInfo);
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 
     {   // scoped lock

@@ -81,7 +81,7 @@ nsRenderingContextMac::nsRenderingContextMac()
 , mRightToLeftText(PR_FALSE)
 #endif
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 	mFrontSurface				= new nsDrawingSurfaceMac();
 	NS_IF_ADDREF(mFrontSurface);

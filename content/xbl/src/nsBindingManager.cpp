@@ -411,7 +411,7 @@ NS_IMPL_ISUPPORTS3(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier, ns
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mBindingTable = nsnull;
   mContentListTable = nsnull;

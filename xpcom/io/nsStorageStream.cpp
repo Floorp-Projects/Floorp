@@ -57,7 +57,7 @@ nsStorageStream::nsStorageStream()
     : mSegmentedBuffer(0), mSegmentSize(0), mWriteInProgress(PR_FALSE),
       mLastSegmentNum(-1), mWriteCursor(0), mSegmentEnd(0), mLogicalLength(0)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 #if defined(PR_LOGGING)
     //
@@ -321,7 +321,7 @@ public:
           mSegmentSize(aSegmentSize), mLogicalCursor(0)
 	{
         NS_ADDREF(mStorageStream);
-	    NS_INIT_REFCNT();
+	    NS_INIT_ISUPPORTS();
 	}
 
     virtual ~nsStorageInputStream()

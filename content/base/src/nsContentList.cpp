@@ -60,7 +60,7 @@ static nsIContentList *gCachedContentList;
 
 nsBaseContentList::nsBaseContentList()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsBaseContentList::~nsBaseContentList()
@@ -223,7 +223,7 @@ nsFormContentList::nsFormContentList(nsIDOMHTMLFormElement *aForm,
                                      nsBaseContentList& aContentList)
   : nsBaseContentList()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   // move elements that belong to mForm into this content list
 

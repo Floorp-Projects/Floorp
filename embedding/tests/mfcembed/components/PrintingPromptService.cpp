@@ -124,7 +124,7 @@ CPrintingPromptService::CPrintingPromptService() :
   mWWatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID)),
   m_PPDlg(NULL)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 CPrintingPromptService::~CPrintingPromptService() {

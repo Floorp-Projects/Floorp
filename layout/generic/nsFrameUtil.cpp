@@ -510,7 +510,7 @@ NS_NewFrameUtil(nsIFrameUtil** aResult)
 
 nsFrameUtil::nsFrameUtil()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsFrameUtil::~nsFrameUtil()

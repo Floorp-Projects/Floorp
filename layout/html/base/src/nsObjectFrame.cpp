@@ -2039,7 +2039,7 @@ NS_NewObjectFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsPluginDOMContextMenuListener::nsPluginDOMContextMenuListener()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener()
@@ -2096,7 +2096,7 @@ nsresult nsPluginDOMContextMenuListener::Destroy(nsObjectFrame *aFrame)
 
 nsPluginInstanceOwner::nsPluginInstanceOwner()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   memset(&mPluginWindow, 0, sizeof(mPluginWindow));
   mInstance = nsnull;

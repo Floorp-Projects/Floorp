@@ -63,7 +63,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 nsFontMetricsBeOS::nsFontMetricsBeOS()
   :mEmulateBold(PR_FALSE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsFontMetricsBeOS::~nsFontMetricsBeOS()
@@ -460,7 +460,7 @@ nsFontMetricsBeOS::FamilyExists(const nsString& aName)
  
 nsFontEnumeratorBeOS::nsFontEnumeratorBeOS() 
 { 
-  NS_INIT_REFCNT(); 
+  NS_INIT_ISUPPORTS(); 
 } 
  
 NS_IMPL_ISUPPORTS1(nsFontEnumeratorBeOS, nsIFontEnumerator)

@@ -76,7 +76,7 @@ NS_IMPL_ISUPPORTS2(nsImgManager,
 
 nsImgManager::nsImgManager()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsImgManager::~nsImgManager(void)

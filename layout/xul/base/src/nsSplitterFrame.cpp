@@ -101,7 +101,7 @@ public:
 
   nsSplitterFrameInner(nsSplitterFrame* aSplitter)
   {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mOuter = aSplitter;
     mPressed = PR_FALSE;
   }

@@ -163,7 +163,7 @@ NS_IMPL_ISUPPORTS1(CHelperAppLauncherDialog, nsIHelperAppLauncherDialog)
 CHelperAppLauncherDialog::CHelperAppLauncherDialog() :
       mWWatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID))
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 CHelperAppLauncherDialog::~CHelperAppLauncherDialog() 
@@ -510,7 +510,7 @@ CProgressDlg::CProgressDlg(nsIHelperAppLauncher *aLauncher, int aHandleContentOp
                            CString& aFileName, CWnd* pParent /*=NULL*/)
 	: CDialog(CProgressDlg::IDD, pParent)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     m_HelperAppLauncher = aLauncher;
     m_HandleContentOp = aHandleContentOp;

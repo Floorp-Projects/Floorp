@@ -264,7 +264,7 @@ NS_IMETHODIMP nsExtProtocolChannel::Resume()
 
 nsExternalProtocolHandler::nsExternalProtocolHandler()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 	m_schemeName = "default";
 }
 

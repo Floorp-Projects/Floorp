@@ -277,7 +277,7 @@ nsFrameIterator::nsFrameIterator()
   mLast = nsnull;
   mCurrent = nsnull;
   mStart = nsnull;
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 

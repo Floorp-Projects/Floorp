@@ -111,7 +111,7 @@ nsRenderingContextQT::nsRenderingContextQT()
   mID = gRCID++;
   printf("JCG: nsRenderingContextQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gRCCount);
 #endif
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mFontMetrics        = nsnull;
   mContext            = nsnull;

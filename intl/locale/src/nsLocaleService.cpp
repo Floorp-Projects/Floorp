@@ -159,7 +159,7 @@ protected:
 nsLocaleService::nsLocaleService(void)
 :	mSystemLocale(nsnull), mApplicationLocale(nsnull)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 #if defined(XP_WIN)
     nsresult result;
 	nsCOMPtr<nsIWin32Locale> win32Converter
@@ -531,7 +531,7 @@ NS_IMPL_ISUPPORTS1(nsLocaleDefinition,nsILocaleDefinition)
 
 nsLocaleDefinition::nsLocaleDefinition(void)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 	mLocaleDefinition = new nsLocale;
 	if (mLocaleDefinition)

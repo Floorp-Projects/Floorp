@@ -129,7 +129,7 @@ static const PRInt32 kLinearThreshold = 16 * sizeof(nsISupports *);
 
 nsSupportsArray::nsSupportsArray()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mArray = mAutoArray;
   mArraySize = kAutoArraySize;
   mCount = 0;

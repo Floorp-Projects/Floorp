@@ -182,7 +182,7 @@ static HPEN   gStockWhitePen = (HPEN)::GetStockObject(WHITE_PEN);
 
 nsRenderingContextWin :: nsRenderingContextWin()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   // The first time in we initialize gIsWIN95 flag
   if (NOT_SETUP == gIsWIN95) {

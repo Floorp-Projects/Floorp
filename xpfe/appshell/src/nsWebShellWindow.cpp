@@ -200,7 +200,7 @@ struct nsWebShellInfo {
 
 nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mWebShell = nsnull;
   mWindow   = nsnull;

@@ -102,7 +102,7 @@ xpctestNoisy::xpctestNoisy()
     : mID(++sID)
 {
     sCount++;
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     printf("Noisy %d - Created, %d total\n", mID, sCount);
     NS_ADDREF_THIS();
 }

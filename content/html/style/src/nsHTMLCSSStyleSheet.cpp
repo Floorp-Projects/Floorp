@@ -84,7 +84,7 @@ public:
 CSSFirstLineRule::CSSFirstLineRule(nsIHTMLCSSStyleSheet* aSheet)
   : mSheet(aSheet)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 CSSFirstLineRule::~CSSFirstLineRule()

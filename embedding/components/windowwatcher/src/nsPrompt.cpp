@@ -103,7 +103,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsPrompt, nsIPrompt, nsIAuthPrompt)
 nsPrompt::nsPrompt(nsIDOMWindow *aParent)
   : mParent(aParent)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsresult

@@ -262,7 +262,7 @@ static PRTime gLastTick;
 
 nsBlinkTimer::nsBlinkTimer()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsBlinkTimer::~nsBlinkTimer()

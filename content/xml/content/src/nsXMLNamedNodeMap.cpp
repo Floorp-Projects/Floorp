@@ -93,7 +93,7 @@ NS_NewXMLNamedNodeMap(nsIDOMNamedNodeMap** aInstancePtrResult,
 
 nsXMLNamedNodeMap::nsXMLNamedNodeMap(nsISupportsArray *aArray)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mArray = aArray;
 

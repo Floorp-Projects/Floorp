@@ -140,7 +140,7 @@ protected:
 
 BodyRule::BodyRule(nsHTMLBodyElement* aPart, nsIHTMLStyleSheet* aSheet)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mPart = aPart;
   mSheet = aSheet;
 }

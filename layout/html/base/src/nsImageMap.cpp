@@ -817,7 +817,7 @@ void CircleArea::GetShapeName(nsString& aResult) const
 
 nsImageMap::nsImageMap()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mMap = nsnull;
   mDomMap = nsnull;
   mDocument = nsnull;

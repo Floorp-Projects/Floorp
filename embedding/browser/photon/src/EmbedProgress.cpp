@@ -47,7 +47,7 @@
 
 EmbedProgress::EmbedProgress(void)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mOwner = nsnull;
   mSkipOnState = mDownloadDocument = 0;
 }

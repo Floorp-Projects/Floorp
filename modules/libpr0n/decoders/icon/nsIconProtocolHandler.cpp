@@ -34,7 +34,7 @@
 
 nsIconProtocolHandler::nsIconProtocolHandler() 
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsIconProtocolHandler::~nsIconProtocolHandler() 

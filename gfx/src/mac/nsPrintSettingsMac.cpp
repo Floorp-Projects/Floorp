@@ -58,7 +58,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsMac,
 nsPrintSettingsMac::nsPrintSettingsMac() :
     mPrintRecord(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 /** ---------------------------------------------------
@@ -66,7 +66,7 @@ nsPrintSettingsMac::nsPrintSettingsMac() :
 nsPrintSettingsMac::nsPrintSettingsMac(const nsPrintSettingsMac& src) :
     mPrintRecord(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   *this = src;
 }
 

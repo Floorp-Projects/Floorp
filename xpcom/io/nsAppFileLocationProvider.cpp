@@ -442,7 +442,7 @@ class nsAppDirectoryEnumerator : public nsISimpleEnumerator
         mProvider(aProvider),
         mCurrentKey(aKeyList)
     {
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
     }
 
     NS_IMETHOD HasMoreElements(PRBool *result) 

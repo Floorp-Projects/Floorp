@@ -797,7 +797,7 @@ nsGenericElement::nsGenericElement()
   : mDocument(nsnull), mParent(nsnull), mNodeInfo(nsnull),
     mFlagsOrSlots(GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsGenericElement::~nsGenericElement()

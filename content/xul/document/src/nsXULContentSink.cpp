@@ -355,7 +355,7 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
       mState(eInProlog),
       mParser(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     if (gRefCnt++ == 0) {
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,

@@ -68,7 +68,7 @@ nsAccessProxy* nsAccessProxy::mInstance = nsnull;
 
 nsAccessProxy::nsAccessProxy()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsAccessProxy::~nsAccessProxy()

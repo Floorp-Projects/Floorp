@@ -50,7 +50,7 @@ nsRDFXMLParser::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 nsRDFXMLParser::nsRDFXMLParser()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     MOZ_COUNT_CTOR(nsRDFXMLParser);
 }
 

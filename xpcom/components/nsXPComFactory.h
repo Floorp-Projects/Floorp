@@ -89,7 +89,7 @@ class ns##_name##Factory : public nsIFactory                      \
 public:                                                           \
   NS_DECL_ISUPPORTS                                               \
                                                                   \
-  ns##_name##Factory() { NS_INIT_REFCNT(); }                      \
+  ns##_name##Factory() { NS_INIT_ISUPPORTS(); }                   \
                                                                   \
   NS_IMETHOD CreateInstance(nsISupports *aOuter,                  \
                             const nsIID &aIID,                    \

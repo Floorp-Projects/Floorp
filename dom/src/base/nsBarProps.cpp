@@ -56,7 +56,7 @@
 //
 BarPropImpl::BarPropImpl() : mBrowserChrome(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 BarPropImpl::~BarPropImpl()

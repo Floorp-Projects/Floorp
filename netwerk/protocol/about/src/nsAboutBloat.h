@@ -47,7 +47,7 @@ public:
 
     NS_DECL_NSIABOUTMODULE
 
-    nsAboutBloat() { NS_INIT_REFCNT(); }
+    nsAboutBloat() { NS_INIT_ISUPPORTS(); }
     virtual ~nsAboutBloat() {}
 
     static NS_METHOD

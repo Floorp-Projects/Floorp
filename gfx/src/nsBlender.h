@@ -24,6 +24,7 @@
 #define nsBlender_h___
 
 #include "nsIBlender.h"
+#include "nsComObsolete.h"
 
 typedef enum
 {

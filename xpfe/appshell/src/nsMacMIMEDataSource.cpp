@@ -87,7 +87,7 @@ static nsresult MakeMIMEInfo( ICMapEntry &entry, nsIMIMEInfo*& info )
 
 nsMacMIMEDataSource::nsMacMIMEDataSource()
 {
-	 NS_INIT_REFCNT();
+	 NS_INIT_ISUPPORTS();
 }
 
 nsMacMIMEDataSource::~nsMacMIMEDataSource()

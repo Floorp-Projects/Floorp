@@ -61,7 +61,7 @@ NS_NewRegressionTestFontMetrics(nsIFontMetrics** aMetrics)
 
 nsRegressionTestFontMetrics:: nsRegressionTestFontMetrics()
 {
-  NS_INIT_REFCNT(); 
+  NS_INIT_ISUPPORTS(); 
   mFont = nsnull; 
   mDeviceContext = nsnull;
   

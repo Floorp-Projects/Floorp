@@ -184,7 +184,7 @@ NS_IMPL_ISUPPORTS1(nsImagePh, nsIImage)
 // ----------------------------------------------------------------
 nsImagePh :: nsImagePh()
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 	mImageBits = nsnull;
 	mWidth = 0;
 	mHeight = 0;

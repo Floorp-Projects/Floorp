@@ -78,7 +78,7 @@ NS_DEFINE_IID(kIRDFXMLSourceIID,       NS_IRDFXMLSOURCE_IID);
 class ConsoleOutputStreamImpl : public nsIOutputStream
 {
 public:
-    ConsoleOutputStreamImpl(void) { NS_INIT_REFCNT(); }
+    ConsoleOutputStreamImpl(void) { NS_INIT_ISUPPORTS(); }
     virtual ~ConsoleOutputStreamImpl(void) {}
 
     // nsISupports interface

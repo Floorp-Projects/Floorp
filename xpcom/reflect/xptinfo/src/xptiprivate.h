@@ -787,7 +787,7 @@ public:
     xptiZipLoaderSink(xptiInterfaceInfoManager* aMgr,
                       xptiWorkingSet* aWorkingSet) :
         mManager(aMgr),
-        mWorkingSet(aWorkingSet) { NS_INIT_REFCNT(); }
+        mWorkingSet(aWorkingSet) { NS_INIT_ISUPPORTS(); }
     virtual ~xptiZipLoaderSink() {};
     
     NS_DECL_ISUPPORTS

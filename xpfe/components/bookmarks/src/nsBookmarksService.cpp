@@ -1699,7 +1699,7 @@ nsBookmarksService::nsBookmarksService()
 	,mIEFavoritesAvailable(PR_FALSE)
 #endif
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 

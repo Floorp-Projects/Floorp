@@ -57,7 +57,7 @@ NS_INTERFACE_MAP_END
 nsEditorParserObserver::nsEditorParserObserver()
 : mBadTagFound(PR_FALSE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsEditorParserObserver::~nsEditorParserObserver()

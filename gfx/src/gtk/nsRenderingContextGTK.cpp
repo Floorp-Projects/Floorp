@@ -73,7 +73,7 @@ static nsGCCache *gcCache = nsnull;
 
 nsRenderingContextGTK::nsRenderingContextGTK()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mFontMetrics = nsnull;
   mContext = nsnull;

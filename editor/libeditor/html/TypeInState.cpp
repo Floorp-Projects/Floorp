@@ -77,7 +77,7 @@ TypeInState::TypeInState() :
 ,mRelativeFontSize(0)
 ,mLastSelectionOffset(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   Reset();
 }
 

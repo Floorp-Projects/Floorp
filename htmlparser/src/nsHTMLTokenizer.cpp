@@ -135,7 +135,7 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
                                   eParserCommands aCommand) :
   nsITokenizer(), mTokenDeque(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   
   if (aParseMode==eDTDMode_full_standards ||
       aParseMode==eDTDMode_almost_standards) {

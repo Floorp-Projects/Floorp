@@ -110,7 +110,7 @@ NS_IMPL_ISUPPORTS1 ( nsMyObserver ,nsICharsetDetectionObserver);
 //--------------------------------------------------------------
 nsDetectionAdaptor::nsDetectionAdaptor( void ) 
 {
-     NS_INIT_REFCNT();
+     NS_INIT_ISUPPORTS();
      mDontFeedToDetector = PR_TRUE;
 }
 //--------------------------------------------------------------

@@ -62,7 +62,7 @@ NS_IMPL_RELEASE(nsEditorShellMouseListener)
 
 nsEditorShellMouseListener::nsEditorShellMouseListener() 
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsEditorShellMouseListener::~nsEditorShellMouseListener() 

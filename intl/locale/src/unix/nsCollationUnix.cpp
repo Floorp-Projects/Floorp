@@ -70,7 +70,7 @@ inline void nsCollationUnix::DoRestoreLocale()
 
 nsCollationUnix::nsCollationUnix() 
 {
-  NS_INIT_REFCNT(); 
+  NS_INIT_ISUPPORTS(); 
   mCollation = NULL;
   mUseCodePointOrder = PR_FALSE;
 }

@@ -54,6 +54,7 @@
 #include "nsNetCID.h"
 #include "nsTextFormatter.h"
 #include "nsIObserverService.h"
+#include "nsComObsolete.h"
 
 static const char *kCookiesPermFileName = "cookperm.txt";
 

@@ -63,7 +63,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsFileProtocolHandler::nsFileProtocolHandler()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mGenerateHTMLContent = PR_FALSE;
 }
 

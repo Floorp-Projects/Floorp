@@ -47,7 +47,7 @@ public:
 
     NS_DECL_NSIABOUTMODULE
 
-    nsAboutBlank() { NS_INIT_REFCNT(); }
+    nsAboutBlank() { NS_INIT_ISUPPORTS(); }
     virtual ~nsAboutBlank() {}
 
     static NS_METHOD

@@ -52,7 +52,7 @@
 #include <photon/PtWebClient.h>
 
 nsUnknownContentTypeHandler::nsUnknownContentTypeHandler( ) {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 	}
 
 nsUnknownContentTypeHandler::~nsUnknownContentTypeHandler( ) { }

@@ -49,7 +49,7 @@
 
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 	mPC = nsnull;
 }
 
@@ -118,7 +118,7 @@ void nsDeviceContextSpecPh :: SetPrintContext(PpPrintContext_t* pc)
 //***********************************************************
 nsPrinterEnumeratorPh::nsPrinterEnumeratorPh()
 {
-  	NS_INIT_REFCNT();
+  	NS_INIT_ISUPPORTS();
 }
 
 nsPrinterEnumeratorPh::~nsPrinterEnumeratorPh()

@@ -78,7 +78,7 @@ nsIRDFResource* nsXPINotifierImpl::kNC_Child = nsnull;
 nsXPINotifierImpl::nsXPINotifierImpl()
     : mRDF(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     mPendingRefreshes = 0;
 

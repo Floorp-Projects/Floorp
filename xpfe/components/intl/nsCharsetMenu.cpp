@@ -445,7 +445,7 @@ nsCharsetMenu::nsCharsetMenu()
   mAutoDetectInitialized(PR_FALSE),
   mOthersInitialized(PR_FALSE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   NS_TIMELINE_START_TIMER("nsCharsetMenu::nsCharsetMenu");
   nsresult res = NS_OK;
 

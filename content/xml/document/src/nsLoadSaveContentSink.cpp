@@ -62,7 +62,7 @@ NS_NewLoadSaveContentSink(nsILoadSaveContentSink** aResult,
 
 nsLoadSaveContentSink::nsLoadSaveContentSink()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsLoadSaveContentSink::~nsLoadSaveContentSink()

@@ -54,7 +54,7 @@ static NS_DEFINE_CID(kUnicodeDecodeHelperCID, NS_UNICODEDECODEHELPER_CID);
 
 nsBasicDecoderSupport::nsBasicDecoderSupport() 
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsBasicDecoderSupport::~nsBasicDecoderSupport() 
@@ -358,7 +358,7 @@ NS_IMETHODIMP nsOneByteDecoderSupport::Reset()
 // Class nsBasicEncoder [implementation]
 nsBasicEncoder::nsBasicEncoder() 
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsBasicEncoder::~nsBasicEncoder() 

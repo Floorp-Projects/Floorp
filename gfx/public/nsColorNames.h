@@ -40,6 +40,7 @@
 #define nsColorNames_h___
 
 #include "nsColor.h"
+#include "nsComObsolete.h"
 
 struct nsStr;
 class nsAFlatCString;

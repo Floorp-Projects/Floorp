@@ -178,7 +178,7 @@ NS_NewRelatedLinksStreamListener(nsIRDFDataSource* aDataSource,
 RelatedLinksStreamListener::RelatedLinksStreamListener(nsIRDFDataSource *aDataSource)
 	 : mDataSource(dont_QueryInterface(aDataSource))
 {
-	 NS_INIT_REFCNT();
+	 NS_INIT_ISUPPORTS();
 }
 
 
@@ -584,7 +584,7 @@ RelatedLinksStreamListener::Unescape(nsString &text)
 RelatedLinksHandlerImpl::RelatedLinksHandlerImpl()
 	: mRelatedLinksURL(nsnull)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 

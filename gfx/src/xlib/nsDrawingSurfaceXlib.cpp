@@ -70,7 +70,7 @@ nsDrawingSurfaceXlibImpl::nsDrawingSurfaceXlibImpl() :
   mHeight(0),
   mIsOffscreen(PR_FALSE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlibImpl::nsDrawingSurfaceXlibImpl()\n"));
 
 }

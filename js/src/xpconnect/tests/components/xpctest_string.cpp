@@ -49,7 +49,7 @@ public:
 
 xpcstringtest::xpcstringtest()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 

@@ -53,7 +53,7 @@
 #include "nsIURL.h"
 #include "nsIHttpChannel.h"
 #include "prnetdb.h"
-
+#include "nsComObsolete.h"
 #include <time.h>
 
 #define MAX_NUMBER_OF_COOKIES 300

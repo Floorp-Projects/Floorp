@@ -74,7 +74,7 @@ NS_IMPL_QUERY_INTERFACE1(nsHTMLFormatConverter, nsIFormatConverter)
 //-------------------------------------------------------------------------
 nsHTMLFormatConverter::nsHTMLFormatConverter()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 //-------------------------------------------------------------------------

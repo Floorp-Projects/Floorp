@@ -109,7 +109,7 @@ PRBool              nsWidget::sJustGotDeactivated = PR_FALSE;
 nsWidget::nsWidget()
 {
   // XXX Shouldn't this be done in nsBaseWidget?
-  // NS_INIT_REFCNT();
+  // NS_INIT_ISUPPORTS();
 
   if (!sLookAndFeel) {
     if (NS_OK != nsComponentManager::CreateInstance(kLookAndFeelCID,

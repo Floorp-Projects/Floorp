@@ -52,7 +52,7 @@ NS_IMPL_RELEASE(nsScrollbar)
 //-------------------------------------------------------------------------
 nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWindow(), nsIScrollbar()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mPositionFlag  = (aIsVertical) ? SBS_VERT : SBS_HORZ;
   mScaleFactor   = 1.0f;
   mLineIncrement = 0;
