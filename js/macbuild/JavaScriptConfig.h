@@ -20,4 +20,4 @@
  * Contributor(s): 
  */
 
-/* Nuthin' to do */
+#define EXPORT_JS_API
