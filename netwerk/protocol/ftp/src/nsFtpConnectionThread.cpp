@@ -36,11 +36,10 @@
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 #include "nsIDNSService.h" // for host error code
-#include "nsIWalletService.h"
+#include "nsIPasswordManagerUtils.h"
 #include "nsIProxy.h"
 #include "nsIMemory.h"
 
-static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -974,24 +973,25 @@ nsFtpConnectionThread::R_pass() {
         // kick back out to S_pass() and ask the user again.
         nsresult rv = NS_OK;
 
-        NS_WITH_SERVICE(nsIWalletService, walletService, kWalletServiceCID, &rv);
+        NS_WITH_SERVICE(nsIPasswordManager, passwordManager,
+                        PASSWORDMANAGER_PROGID, &rv);
         if (NS_FAILED(rv)) return FTP_ERROR;
 
         NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
                         kProxyObjectManagerCID, &rv);
         if (NS_FAILED(rv)) return FTP_ERROR;
 
-        nsCOMPtr<nsIWalletService> pWalletService;
+        nsCOMPtr<nsIPasswordManager> pPasswordManager;
         rv = pIProxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ, 
-                        NS_GET_IID(nsIWalletService), walletService, 
-                        PROXY_SYNC, getter_AddRefs(pWalletService));
+                        NS_GET_IID(nsIPasswordManager), passwordManager, 
+                        PROXY_SYNC, getter_AddRefs(pPasswordManager));
         if (NS_FAILED(rv)) return FTP_ERROR;
 
         nsXPIDLCString uri;
         rv = mURL->GetSpec(getter_Copies(uri));
         if (NS_FAILED(rv)) return FTP_ERROR;
 
-        rv = pWalletService->SI_RemoveUser(uri, nsnull);
+        rv = pPasswordManager->RemoveUser(uri, nsnull);
         if (NS_FAILED(rv)) return FTP_ERROR;
 
         mRetryPass = PR_TRUE;
