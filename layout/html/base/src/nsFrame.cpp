@@ -1576,9 +1576,10 @@ NS_IMETHODIMP nsFrame::GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const
 
 // Sibling pointer used to link together frames
 
-NS_IMETHODIMP nsFrame::GetNextSibling(nsIFrame*& aNextSibling) const
+NS_IMETHODIMP nsFrame::GetNextSibling(nsIFrame** aNextSibling) const
 {
-  aNextSibling = mNextSibling;
+  NS_PRECONDITION(nsnull != aNextSibling, "null OUT parameter pointer");
+  *aNextSibling = mNextSibling;
   return NS_OK;
 }
 
@@ -1777,7 +1778,7 @@ nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
       aIndent++;
       while (nsnull != kid) {
         kid->DumpRegressionData(out, aIndent);
-        kid->GetNextSibling(kid);
+        kid->GetNextSibling(&kid);
       }
       aIndent--;
       IndentBy(out, aIndent);
@@ -1833,7 +1834,7 @@ nsFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset
                                                aForceRedraw , aTracker, aActualSelected);
     if (NS_SUCCEEDED(result) && aActualSelected)
       return result; //done.
-    result |= child->GetNextSibling(child);
+    result |= child->GetNextSibling(&child);
   }
   return result;
 }
@@ -1956,7 +1957,7 @@ static void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
   aFrame->FirstChild(nsnull, &aFrame);
   while (aFrame) {
     RefreshAllContentFrames(aFrame, aContent);
-    aFrame->GetNextSibling(aFrame);
+    aFrame->GetNextSibling(&aFrame);
   }
 }
 

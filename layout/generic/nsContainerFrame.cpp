@@ -102,7 +102,7 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
         if (NS_SUCCEEDED(rv)) {
           htmlReflow->DidReflow(aPresContext, aStatus);
         }
-        kid->GetNextSibling(kid);
+        kid->GetNextSibling(&kid);
       }
       NS_IF_RELEASE(listName);
       GetAdditionalChildListName(listIndex++, &listName);
@@ -148,14 +148,14 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     result = FirstChild(nsnull, &child);
     while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
       result = child->ReResolveStyleContext(aPresContext, mStyleContext);
-      child->GetNextSibling(child);
+      child->GetNextSibling(&child);
     }
 
     // Update overflow list too
     child = mOverflowFrames.FirstChild();
     while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
       result = child->ReResolveStyleContext(aPresContext, mStyleContext);
-      child->GetNextSibling(child);
+      child->GetNextSibling(&child);
     }
 
     // And just to be complete, update our prev-in-flows overflow list
@@ -164,7 +164,7 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
       child = ((nsContainerFrame*)mPrevInFlow)->mOverflowFrames.FirstChild();
       while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
         result = child->ReResolveStyleContext(aPresContext, mStyleContext);
-        child->GetNextSibling(child);
+        child->GetNextSibling(&child);
       }
     }
   }
@@ -214,7 +214,7 @@ nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
   nsIFrame* kid = mFrames.FirstChild();
   while (nsnull != kid) {
     PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
   }
 
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
@@ -312,7 +312,7 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
       return kid->GetFrameForPoint(tmp, aFrame);
     }
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
   }
 
   FirstChild(aList, &kid);
@@ -326,7 +326,7 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
         return NS_OK;
       }
     }
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
   }
   *aFrame = this;
   return NS_ERROR_FAILURE;
@@ -419,7 +419,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   // Take the next-in-flow out of the parent's child list
   if (parent->mFrames.FirstChild() == nextInFlow) {
     nsIFrame* nextFrame;
-    nextInFlow->GetNextSibling(nextFrame);
+    nextInFlow->GetNextSibling(&nextFrame);
     parent->mFrames.SetFrames(nextFrame);
   } else {
     nsIFrame* nextSibling;
@@ -430,10 +430,10 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
     // next-in-flow is the last next-in-flow for aChild AND the
     // next-in-flow is not the last child in parent)
     NS_ASSERTION(((nsContainerFrame*)parent)->IsChild(aChild), "screwy flow");
-    aChild->GetNextSibling(nextSibling);
+    aChild->GetNextSibling(&nextSibling);
     NS_ASSERTION(nextSibling == nextInFlow, "unexpected sibling");
 
-    nextInFlow->GetNextSibling(nextSibling);
+    nextInFlow->GetNextSibling(&nextSibling);
     aChild->SetNextSibling(nextSibling);
   }
 
@@ -467,7 +467,7 @@ nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
   NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
 #ifdef NS_DEBUG
   nsIFrame* prevNextSibling;
-  aPrevSibling->GetNextSibling(prevNextSibling);
+  aPrevSibling->GetNextSibling(&prevNextSibling);
   NS_PRECONDITION(prevNextSibling == aFromChild, "bad prev sibling");
 #endif
 
@@ -620,7 +620,7 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
       fputs("<\n", out);
       while (nsnull != kid) {
         kid->List(out, aIndent + 1);
-        kid->GetNextSibling(kid);
+        kid->GetNextSibling(&kid);
       }
       IndentBy(out, aIndent);
       fputs(">\n", out);

@@ -148,7 +148,7 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
     nsresult result = frame->QueryInterface(kLegendFrameCID, (void**)&legendFrame);
     if ((NS_OK == result) && legendFrame) {
       nsIFrame* nextFrame;
-      frame->GetNextSibling(nextFrame);
+      frame->GetNextSibling(&nextFrame);
       if (lastFrame) {
         lastFrame->SetNextSibling(nextFrame);
       } else {
@@ -161,7 +161,7 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
       frame = nextFrame;
      } else {
       frame->SetParent(mFrames.FirstChild());
-      frame->GetNextSibling(frame);
+      frame->GetNextSibling(&frame);
     }
     lastFrame = frame;
   }

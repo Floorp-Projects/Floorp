@@ -239,7 +239,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
       maxSize.width  -= desiredSize.width;
       aDesiredSize.width  += desiredSize.width; 
       aDesiredSize.height = desiredSize.height;
-      childFrame->GetNextSibling(childFrame);
+      childFrame->GetNextSibling(&childFrame);
       offset.x += desiredSize.width + CONTROL_SPACING;
     }
   }

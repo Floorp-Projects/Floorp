@@ -1408,7 +1408,7 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
         NS_IF_RELEASE(listName);
         return result;
       }
-      kid->GetNextSibling(kid);
+      kid->GetNextSibling(&kid);
     }
     NS_IF_RELEASE(listName);
     aFrame->GetAdditionalChildListName(listIndex++, &listName);
@@ -1732,8 +1732,8 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
         CompareTrees(k1, k2);
 
         // Advance to next sibling
-        k1->GetNextSibling(k1);
-        k2->GetNextSibling(k2);
+        k1->GetNextSibling(&k1);
+        k2->GetNextSibling(&k2);
       }
       else {
         break;

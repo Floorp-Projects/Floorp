@@ -120,7 +120,7 @@ NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount)
     childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
       aCount++;
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
   return NS_OK;
 }
@@ -140,7 +140,7 @@ PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
       result = ((nsTableRowFrame *)childFrame)->GetRowIndex();
       break;
     }
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
   return result;
 }
@@ -161,7 +161,7 @@ NS_METHOD nsTableRowGroupFrame::GetMaxColumns(PRInt32 &aMaxColumns) const
       PRInt32 colCount = ((nsTableRowFrame *)childFrame)->GetMaxColumns();
       aMaxColumns = PR_MAX(aMaxColumns, colCount);
     }
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
   return NS_OK;
 }
@@ -239,7 +239,7 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
       }
       aRenderingContext.PopState(clipState);
     }
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
   }
 }
 
@@ -265,7 +265,7 @@ nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
         return kid->GetFrameForPoint(tmp, aFrame);
       }
     }
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
   }
   *aFrame = this;
   return NS_ERROR_FAILURE;
@@ -484,7 +484,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
       break;
 
     // Get the next child
-    kidFrame->GetNextSibling(kidFrame);
+    kidFrame->GetNextSibling(&kidFrame);
   }
 
   return rv;
@@ -661,7 +661,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
       rowIndex++;
     }
     // Get the next row
-    rowFrame->GetNextSibling(rowFrame);
+    rowFrame->GetNextSibling(&rowFrame);
     }
 
   /* Step 2:  Now account for cells that span rows.
@@ -777,21 +777,21 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
                                          i, rowFrameToBeResized, rowRect.y + delta, delta);
                   }
                   // Get the next row frame
-                  rowFrameToBeResized->GetNextSibling((nsIFrame*&)rowFrameToBeResized);
+                  rowFrameToBeResized->GetNextSibling((nsIFrame**)&rowFrameToBeResized);
                 }
                 delete []excessForRow;
               }
             }
           }
           // Get the next row child (cell frame)
-          cellFrame->GetNextSibling(cellFrame);
+          cellFrame->GetNextSibling(&cellFrame);
         }
         // Update the running row group height
         rowGroupHeight += rowHeights[rowIndex];
         rowIndex++;
       }
       // Get the next rowgroup child (row frame)
-      rowFrame->GetNextSibling(rowFrame);
+      rowFrame->GetNextSibling(&rowFrame);
     }
   }
 
@@ -806,7 +806,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
       ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
     }
     // Get the next row
-    rowFrame->GetNextSibling(rowFrame);
+    rowFrame->GetNextSibling(&rowFrame);
   }
 
   // Adjust our desired size
@@ -828,7 +828,7 @@ nsresult nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aP
     // Move the frames that follow aKidFrame by aDeltaY
     nsIFrame* kidFrame;
 
-    aKidFrame->GetNextSibling(kidFrame);
+    aKidFrame->GetNextSibling(&kidFrame);
     while (nsnull != kidFrame) {
       nsPoint origin;
   
@@ -845,7 +845,7 @@ nsresult nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aP
 
       // Get the next frame
       lastKidFrame = kidFrame;
-      kidFrame->GetNextSibling(kidFrame);
+      kidFrame->GetNextSibling(&kidFrame);
     }
 
   } else {
@@ -874,7 +874,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
 
   // Walk each of the row frames looking for the first row frame that
   // doesn't fit in the available space
-  for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+  for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
     nsRect  bounds;
 
     kidFrame->GetRect(bounds);
@@ -908,7 +908,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
           // Add it to the child list
           nsIFrame* nextSibling;
   
-          kidFrame->GetNextSibling(nextSibling);
+          kidFrame->GetNextSibling(&nextSibling);
           continuingFrame->SetNextSibling(nextSibling);
           kidFrame->SetNextSibling(continuingFrame);
   
@@ -1219,7 +1219,7 @@ PRBool nsTableRowGroupFrame::NoRowsFollow()
 {
   PRBool result = PR_TRUE;
   nsIFrame *nextSib=nsnull;
-  GetNextSibling(nextSib);
+  GetNextSibling(&nextSib);
   while (nsnull!=nextSib)
   {
     const nsStyleDisplay *sibDisplay;
@@ -1241,7 +1241,7 @@ PRBool nsTableRowGroupFrame::NoRowsFollow()
         }
       }
     }
-    nextSib->GetNextSibling(nextSib);
+    nextSib->GetNextSibling(&nextSib);
   }
   if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: NoRowsFollow returning %d\n", result);
   return result;

@@ -106,7 +106,7 @@ NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContex
   //XXX this should go through the child list looking for a displaytype==caption
   if (1 < mFrames.GetLength()) {
     nsIFrame *child;
-    nsresult result = aChildList->GetNextSibling(child);
+    nsresult result = aChildList->GetNextSibling(&child);
     while ((NS_SUCCEEDED(result)) && (nsnull!=child)) 
     {
       const nsStyleDisplay* childDisplay;
@@ -116,7 +116,7 @@ NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContex
         mCaptionFrame = child;
         break;
       }
-      result = child->GetNextSibling(child);
+      result = child->GetNextSibling(&child);
     }
   }
 
@@ -1159,7 +1159,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsI
   // Take the next-in-flow out of the parent's child list
   if (parent->mFrames.FirstChild() == nextInFlow) {
     nsIFrame* nextSibling;
-    nextInFlow->GetNextSibling(nextSibling);
+    nextInFlow->GetNextSibling(&nextSibling);
     parent->mFrames.SetFrames(nextSibling);
 
   } else {
@@ -1171,10 +1171,10 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsI
     // next-in-flow is the last next-in-flow for aChild AND the
     // next-in-flow is not the last child in parent)
     NS_ASSERTION(parent->IsChild(aChild), "screwy flow");
-    aChild->GetNextSibling(nextSibling);
+    aChild->GetNextSibling(&nextSibling);
     NS_ASSERTION(nextSibling == nextInFlow, "unexpected sibling");
 
-    nextInFlow->GetNextSibling(nextSibling);
+    nextInFlow->GetNextSibling(&nextSibling);
     aChild->SetNextSibling(nextSibling);
   }
 

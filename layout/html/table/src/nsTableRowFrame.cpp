@@ -124,7 +124,7 @@ nsTableRowFrame::InitChildren(PRInt32 aRowIndex)
       SetRowIndex(rowIndex);
       if (gsDebug) printf("Row InitChildren: set row index to %d\n", rowIndex);
       PRInt32   colIndex = 0;
-      for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
+      for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) 
       {
         const nsStyleDisplay *kidDisplay;
         kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
@@ -233,7 +233,7 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
       }
     }
       // Get the next cell
-    cellFrame->GetNextSibling(cellFrame);
+    cellFrame->GetNextSibling(&cellFrame);
   }
 
   // Let our base class do the usual work
@@ -329,7 +329,7 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
         aRenderingContext.PopState(clipState);
       }
     }
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
   }
 }
 
@@ -361,7 +361,7 @@ PRInt32 nsTableRowFrame::GetMaxColumns() const
     {
       sum += ((nsTableCellFrame *)cell)->GetColSpan();
     }
-    cell->GetNextSibling(cell);
+    cell->GetNextSibling(&cell);
   }
   return sum;
 }
@@ -385,7 +385,7 @@ void nsTableRowFrame::GetMinRowSpan(nsTableFrame *aTableFrame)
       else if (minRowSpan>rowSpan)
         minRowSpan = rowSpan;
     }
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
   mMinRowSpan = minRowSpan;
 }
@@ -408,7 +408,7 @@ void nsTableRowFrame::FixMinCellHeight(nsTableFrame *aTableFrame)
           mTallestCell = rect.height;
       }
     }
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
 }
 
@@ -473,7 +473,7 @@ nsIFrame * nsTableRowFrame::GetNextChildForDirection(PRUint8 aDir, nsIFrame *aCu
   NS_ASSERTION(nsnull!=aCurrentChild, "bad arg");
 
   nsIFrame *result=nsnull;
-  aCurrentChild->GetNextSibling(result);
+  aCurrentChild->GetNextSibling(&result);
   return result;
 }
 
@@ -747,7 +747,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
   else
     kidFrame = aStartFrame;
 
-  for ( ; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
+  for ( ; nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) 
   {
     const nsStyleDisplay *kidDisplay;
     kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
@@ -924,7 +924,7 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
       }
     }
 
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
 
   // Update the running x-offset based on the frame's current x-origin
@@ -1466,7 +1466,7 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   nsIFrame* newChildList;
   for (nsIFrame* kidFrame = mFrames.FirstChild();
        nsnull != kidFrame;
-       kidFrame->GetNextSibling(kidFrame)) {
+       kidFrame->GetNextSibling(&kidFrame)) {
 
     const nsStyleDisplay *kidDisplay;
     kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
@@ -1517,7 +1517,7 @@ PRBool nsTableRowFrame::Contains(const nsPoint& aPoint)
         result = PR_TRUE;
         break;
       }
-      kid->GetNextSibling(kid);
+      kid->GetNextSibling(&kid);
     }
   }
   return result;

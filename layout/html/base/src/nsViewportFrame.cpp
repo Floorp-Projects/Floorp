@@ -264,7 +264,7 @@ ViewportFrame::ReflowFixedFrames(nsIPresContext&          aPresContext,
   reflowState.computedHeight = height;
 
   nsIFrame* kidFrame;
-  for (kidFrame = mFixedFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+  for (kidFrame = mFixedFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
     // Reflow the frame using our reflow reason
     nsReflowStatus  kidStatus;
     ReflowFixedFrame(aPresContext, reflowState, kidFrame, PR_FALSE, kidStatus);
@@ -338,7 +338,7 @@ ViewportFrame::IncrementalReflow(nsIPresContext&          aPresContext,
 
       nsReflowStatus  status;
       ReflowFixedFrame(aPresContext, reflowState, newFrames, PR_TRUE, status);
-      newFrames->GetNextSibling(newFrames);
+      newFrames->GetNextSibling(&newFrames);
     }
   }
 

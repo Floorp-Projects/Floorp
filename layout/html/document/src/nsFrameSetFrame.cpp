@@ -417,7 +417,7 @@ void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
   // this assumption is used here
   int i = 0;
   for (nsIFrame* child = mFrames.FirstChild(); child;
-       child->GetNextSibling(child)) {
+       child->GetNextSibling(&child)) {
     if (aChild == child) {
       nsPoint ignore;
       GetSizeOfChildAt(i, aSize, ignore);
@@ -1150,7 +1150,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
     lastCol  = cellIndex.x;
     lastSize = size;
     offset.x += size.width;
-    child->GetNextSibling(child);
+    child->GetNextSibling(&child);
   }
 
   if (firstTime) {

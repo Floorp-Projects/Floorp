@@ -239,7 +239,7 @@ nsInlineFrame::SectionData::SectionData(nsIFrame* aFrameList)
       }
     }
     lastFrame = frame;
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
 }
 
@@ -264,7 +264,7 @@ nsInlineFrame::SectionData::SplitFrameList(nsFrameList& aSection1,
   if (lastFrame != lastBlock) {
     // There are inline frames that follow the last block. Setup section3.
     nsIFrame* remainder;
-    lastBlock->GetNextSibling(remainder);
+    lastBlock->GetNextSibling(&remainder);
     lastBlock->SetNextSibling(nsnull);
     aSection3.SetFrames(remainder);
   }
@@ -346,7 +346,7 @@ nsInlineFrame::MoveOutOfFlow(nsIPresContext& aPresContext,
       frame = placeholder;
     }
     prevFrame = frame;
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
   return NS_OK;
 }
@@ -367,7 +367,7 @@ nsInlineFrame::FindPrevAnonymousBlock(nsInlineFrame** aBlockParent)
         *aBlockParent = prevInFlow;
         return (nsAnonymousBlockFrame*) frame;
       }
-      frame->GetNextSibling(frame);
+      frame->GetNextSibling(&frame);
     }
     prevInFlow = (nsInlineFrame*) prevInFlow->mPrevInFlow;
   }
@@ -390,7 +390,7 @@ nsInlineFrame::FindAnonymousBlock(nsInlineFrame** aBlockParent)
         *aBlockParent = nextInFlow;
         return (nsAnonymousBlockFrame*) frame;
       }
-      frame->GetNextSibling(frame);
+      frame->GetNextSibling(&frame);
     }
     nextInFlow = (nsInlineFrame*) nextInFlow->mNextInFlow;
   }
@@ -421,7 +421,7 @@ nsInlineFrame::CreateAnonymousBlock(nsIPresContext& aPresContext,
       nsIFrame* frame = aInitialFrames;
       while (nsnull != frame) {
         frame->SetParent(bf);
-        frame->GetNextSibling(frame);
+        frame->GetNextSibling(&frame);
       }
       rv = bf->SetInitialChildList(aPresContext, nsnull, aInitialFrames);
     }
@@ -504,7 +504,7 @@ nsInlineFrame::AppendFrames(nsIPresContext& aPresContext,
       // this frame, stealing children from our continuation frames as
       // necessary.
       nsIFrame* inlineSiblings;
-      anonymousBlock->GetNextSibling(inlineSiblings);
+      anonymousBlock->GetNextSibling(&inlineSiblings);
       nsFrameList newBlockFrames;
       if (nsnull != inlineSiblings) {
         newBlockFrames.AppendFrames(anonymousBlock, inlineSiblings);
@@ -715,7 +715,7 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
       nsIFrame* frame = aFrameList;
       while (nsnull != frame) {
         frame->SetParent(prevFrameParent);
-        frame->GetNextSibling(frame);
+        frame->GetNextSibling(&frame);
       }
       nsAnonymousBlockFrame* anonymousBlock;
       anonymousBlock = (nsAnonymousBlockFrame*) prevFrameParent;
@@ -872,7 +872,7 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
       // frames into the anonymous block if they should be in
       // section3.
       nsIFrame* nextSibling;
-      aPrevFrame->GetNextSibling(nextSibling);
+      aPrevFrame->GetNextSibling(&nextSibling);
       nsIFrame* anonymousBlockNextInFlow;
       prevFrameParent->GetNextInFlow(anonymousBlockNextInFlow);
       if ((nsnull != nextSibling) || (nsnull != anonymousBlockNextInFlow)) {
@@ -881,7 +881,7 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
         nsIFrame* frame = aFrameList;
         while (nsnull != frame) {
           frame->SetParent(anonymousBlock);
-          frame->GetNextSibling(frame);
+          frame->GetNextSibling(&frame);
         }
         anonymousBlock->InsertFrames2(aPresContext, aPresShell, nsnull,
                                       aPrevFrame, aFrameList);
@@ -899,7 +899,7 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
         nsIFrame* frame = aFrameList;
         while (nsnull != frame) {
           frame->SetParent(anonymousBlockParent);
-          frame->GetNextSibling(frame);
+          frame->GetNextSibling(&frame);
         }
         anonymousBlockParent->mFrames.InsertFrames(nsnull, anonymousBlock,
                                                    aFrameList);
@@ -1001,7 +1001,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
           // last block in the anonymous block.
           anonymousBlock->GetNextInFlow(nextInFlow);
           nsIFrame* nextSib;
-          aOldFrame->GetNextSibling(nextSib);
+          aOldFrame->GetNextSibling(&nextSib);
           if ((nsnull != nextInFlow) || (nsnull != nextSib)) {
             // There is a block in the anonymous block after the block
             // that we are removing. This means that we can let the
@@ -1051,7 +1051,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
                 SectionData sd(kids);
                 if (sd.HasABlock()) {
                   kids = sd.lastBlock;
-                  kids->GetNextSibling(kids);
+                  kids->GetNextSibling(&kids);
                   if (nsnull != kids) {
                     // Take the frames that follow the last block
                     // (which are inline frames) and remove them from
@@ -1127,7 +1127,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
                 break;
               }
               nsIFrame* next;
-              kid->GetNextSibling(next);
+              kid->GetNextSibling(&next);
               anonymousBlock->RemoveFirstFrame();
               frames.AppendFrame(nsnull, kid);
               kid = next;
@@ -1354,7 +1354,7 @@ nsInlineFrame::ReflowInlineFrames(ReflowState& rs,
       break;
     }
     rs.prevFrame = frame;
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
 
   // Attempt to pull frames from our next-in-flow until we can't
@@ -1453,7 +1453,7 @@ nsInlineFrame::ReflowInlineFrame(ReflowState& rs,
         }
       }
       nsIFrame* nextFrame;
-      aFrame->GetNextSibling(nextFrame);
+      aFrame->GetNextSibling(&nextFrame);
       if (nsnull != nextFrame) {
         aStatus |= NS_FRAME_NOT_COMPLETE;
         PushFrames(nextFrame, aFrame);
@@ -1479,7 +1479,7 @@ nsInlineFrame::ReflowInlineFrame(ReflowState& rs,
       return rv;
     }
     nsIFrame* nextFrame;
-    aFrame->GetNextSibling(nextFrame);
+    aFrame->GetNextSibling(&nextFrame);
     if (nsnull != nextFrame) {
       PushFrames(nextFrame, aFrame);
     }
@@ -1559,7 +1559,7 @@ nsInlineFrame::PushFrames(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
   NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
 #ifdef NS_DEBUG
   nsIFrame* prevNextSibling;
-  aPrevSibling->GetNextSibling(prevNextSibling);
+  aPrevSibling->GetNextSibling(&prevNextSibling);
   NS_PRECONDITION(prevNextSibling == aFromChild, "bad prev sibling");
 #endif
 
@@ -1637,7 +1637,7 @@ nsInlineFrame::ReflowBlockFrame(ReflowState& rs,
       // inline frames. Make sure we reflect that in our reflow status
       // and push them to our next-in-flow.
       nsIFrame* nextFrame;
-      blockFrame->GetNextSibling(nextFrame);
+      blockFrame->GetNextSibling(&nextFrame);
       if (nsnull != nextFrame) {
         PushFrames(nextFrame, blockFrame);
         aStatus |= NS_FRAME_NOT_COMPLETE;

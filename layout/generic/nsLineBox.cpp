@@ -94,7 +94,7 @@ nsLineBox::List(FILE* out, PRInt32 aIndent) const
   PRInt32 n = ChildCount();
   while (--n >= 0) {
     frame->List(out, aIndent + 1);
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
 
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -112,7 +112,7 @@ nsLineBox::LastChild() const
   nsIFrame* frame = mFirstChild;
   PRInt32 n = ChildCount() - 1;
   while (--n >= 0) {
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
   return frame;
 }
@@ -133,7 +133,7 @@ nsLineBox::Contains(nsIFrame* aFrame) const
     if (frame == aFrame) {
       return PR_TRUE;
     }
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
   return PR_FALSE;
 }
@@ -223,7 +223,7 @@ nsLineBox::DeleteLineList(nsIPresContext& aPresContext, nsLineBox* aLine)
     // view.
     for (nsIFrame* child = aLine->mFirstChild; child; ) {
       nsIFrame* nextChild;
-      child->GetNextSibling(nextChild);
+      child->GetNextSibling(&nextChild);
       child->DeleteFrame(aPresContext);
       child = nextChild;
     }

@@ -208,7 +208,7 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
       //*aFrame = kid;
       //return NS_OK;
     }
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
   }
 
   mContentFrame->FirstChild(aList, &kid);
@@ -222,7 +222,7 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
         return NS_OK;
       }
     }
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
   }
   *aFrame = this;
   return NS_ERROR_FAILURE;
@@ -326,7 +326,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
       //??nsRect rect(offset.x, offset.y, desiredLineSize.width+lineEndPadding, desiredLineSize.height);
       nsRect rect(offset.x, offset.y, insideWidth, desiredLineSize.height);
       childFrame->SetRect(rect);
-      childFrame->GetNextSibling(childFrame);
+      childFrame->GetNextSibling(&childFrame);
       offset.x = 0;
       offset.y += desiredLineSize.height;
     }
@@ -378,7 +378,7 @@ nsListControlFrame::GetOptionFromChild(nsIFrame* aParentFrame)
     if (nsnull != frame) {
       return frame;
     }
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
   }
   return nsnull;
 }
@@ -438,7 +438,7 @@ PRInt32 nsListControlFrame::SetContentSelected(nsIFrame *    aHitFrame,
       aHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (aIsSelected?kSelectedFocus:kNormal), PR_TRUE);
       return index;
     }
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
     index++;
   }
   return -1;
@@ -460,7 +460,7 @@ void nsListControlFrame::ClearSelection()
       }
     }
     NS_RELEASE(content);
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
     i++;
   }
 }
@@ -503,7 +503,7 @@ void nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndInde
       startInverting = PR_FALSE;
     }
     NS_RELEASE(content);
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
     i++;
   }
 }
@@ -1046,7 +1046,7 @@ nsListControlFrame::AboutToDropDown()
       return NS_OK;
     }
     NS_RELEASE(content);
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
     i++;
   }
   return NS_OK;
@@ -1096,7 +1096,7 @@ nsListControlFrame::InitializeFromContent(PRBool aDoDisplay)
       NS_RELEASE(option);
     }
     NS_RELEASE(content);
-    kid->GetNextSibling(kid);
+    kid->GetNextSibling(&kid);
     i++;
   }
 

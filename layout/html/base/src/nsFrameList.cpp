@@ -25,7 +25,7 @@ nsFrameList::DeleteFrames(nsIPresContext& aPresContext)
   nsIFrame* frame = mFirstChild;
   while (nsnull != frame) {
     nsIFrame* next;
-    frame->GetNextSibling(next);
+    frame->GetNextSibling(&next);
     frame->DeleteFrame(aPresContext);
     mFirstChild = frame = next;
   }
@@ -47,7 +47,7 @@ nsFrameList::AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList)
       nsIFrame* frame = aFrameList;
       while (nsnull != frame) {
         frame->SetParent(aParent);
-        frame->GetNextSibling(frame);
+        frame->GetNextSibling(&frame);
       }
     }
   }
@@ -77,7 +77,7 @@ nsFrameList::RemoveFrame(nsIFrame* aFrame)
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
   if (nsnull != aFrame) {
     nsIFrame* nextFrame;
-    aFrame->GetNextSibling(nextFrame);
+    aFrame->GetNextSibling(&nextFrame);
     aFrame->SetNextSibling(nsnull);
     if (aFrame == mFirstChild) {
       mFirstChild = nextFrame;
@@ -99,7 +99,7 @@ nsFrameList::RemoveFirstChild()
 {
   if (nsnull != mFirstChild) {
     nsIFrame* nextFrame;
-    mFirstChild->GetNextSibling(nextFrame);
+    mFirstChild->GetNextSibling(&nextFrame);
     mFirstChild->SetNextSibling(nsnull);
     mFirstChild = nextFrame;
     return PR_TRUE;
@@ -131,7 +131,7 @@ nsFrameList::InsertFrame(nsIFrame* aParent,
     }
     else {
       nsIFrame* nextFrame;
-      aPrevSibling->GetNextSibling(nextFrame);
+      aPrevSibling->GetNextSibling(&nextFrame);
       aPrevSibling->SetNextSibling(aNewFrame);
       aNewFrame->SetNextSibling(nextFrame);
     }
@@ -152,7 +152,7 @@ nsFrameList::InsertFrames(nsIFrame* aParent,
       nsIFrame* frame = aFrameList;
       while (nsnull != frame) {
         frame->SetParent(aParent);
-        frame->GetNextSibling(frame);
+        frame->GetNextSibling(&frame);
       }
     }
 
@@ -164,7 +164,7 @@ nsFrameList::InsertFrames(nsIFrame* aParent,
     }
     else {
       nsIFrame* nextFrame;
-      aPrevSibling->GetNextSibling(nextFrame);
+      aPrevSibling->GetNextSibling(&nextFrame);
       aPrevSibling->SetNextSibling(aFrameList);
       lastNewFrame->SetNextSibling(nextFrame);
     }
@@ -180,7 +180,7 @@ nsFrameList::ReplaceFrame(nsIFrame* aParent,
   NS_PRECONDITION(nsnull != aNewFrame, "null ptr");
   if ((nsnull != aOldFrame) && (nsnull != aNewFrame)) {
     nsIFrame* nextFrame;
-    aOldFrame->GetNextSibling(nextFrame);
+    aOldFrame->GetNextSibling(&nextFrame);
     if (aOldFrame == mFirstChild) {
       mFirstChild = aNewFrame;
       aNewFrame->SetNextSibling(nextFrame);
@@ -224,7 +224,7 @@ nsFrameList::Split(nsIFrame* aAfterFrame, nsIFrame** aNextFrameResult)
 
   if ((nsnull != aNextFrameResult) && (nsnull != aAfterFrame)) {
     nsIFrame* nextFrame;
-    aAfterFrame->GetNextSibling(nextFrame);
+    aAfterFrame->GetNextSibling(&nextFrame);
     aAfterFrame->SetNextSibling(nsnull);
     *aNextFrameResult = nextFrame;
     return PR_TRUE;
@@ -266,7 +266,7 @@ nsFrameList::LastChild() const
   nsIFrame* frame = mFirstChild;
   while (nsnull != frame) {
     nsIFrame* next;
-    frame->GetNextSibling(next);
+    frame->GetNextSibling(&next);
     if (nsnull == next) {
       break;
     }
@@ -282,7 +282,7 @@ nsFrameList::FrameAt(PRInt32 aIndex) const
   if (aIndex < 0) return nsnull;
   nsIFrame* frame = mFirstChild;
   while ((aIndex-- > 0) && (nsnull != frame)) {
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
   return frame;
 }
@@ -296,7 +296,7 @@ nsFrameList::ContainsFrame(const nsIFrame* aFrame) const
     if (frame == aFrame) {
       return PR_TRUE;
     }
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
   return PR_FALSE;
 }
@@ -308,7 +308,7 @@ nsFrameList::GetLength() const
   nsIFrame* frame = mFirstChild;
   while (nsnull != frame) {
     count++;
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
   return count;
 }
@@ -323,7 +323,7 @@ nsFrameList::GetPrevSiblingFor(nsIFrame* aFrame) const
   nsIFrame* frame = mFirstChild;
   while (nsnull != frame) {
     nsIFrame* next;
-    frame->GetNextSibling(next);
+    frame->GetNextSibling(&next);
     if (next == aFrame) {
       break;
     }
@@ -341,7 +341,7 @@ nsFrameList::VerifyParent(nsIFrame* aParent) const
     nsIFrame* parent;
     frame->GetParent(&parent);
     NS_ASSERTION(parent == aParent, "bad parent");
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
 #endif
 }
@@ -355,7 +355,7 @@ nsFrameList::List(FILE* out) const
     frame->List(out, 1);
 //    nsFrame::ListTag(out, frame);
 //    fputs(" ", out);
-    frame->GetNextSibling(frame);
+    frame->GetNextSibling(&frame);
   }
   fputs("\n", out);
 }

@@ -362,7 +362,7 @@ nsTableFrame::SetInitialChildList(nsIPresContext& aPresContext,
       prevMainChild = childFrame;
     }
     nsIFrame *prevChild = childFrame;
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
     prevChild->SetNextSibling(nsnull);
   }
   if (nsnull!=prevMainChild)
@@ -381,7 +381,7 @@ NS_IMETHODIMP nsTableFrame::DidAppendRowGroup(nsTableRowGroupFrame *aRowGroupFra
   nsresult rv=NS_OK;
   nsIFrame *nextRow=nsnull;
   aRowGroupFrame->FirstChild(nsnull, &nextRow);
-  for ( ; nsnull!=nextRow; nextRow->GetNextSibling(nextRow))
+  for ( ; nsnull!=nextRow; nextRow->GetNextSibling(&nextRow))
   {
     const nsStyleDisplay *rowDisplay;
     nextRow->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
@@ -406,7 +406,7 @@ PRInt32 nsTableFrame::GetSpecifiedColumnCount ()
   while (nsnull!=childFrame)
   {
     mColCount += ((nsTableColGroupFrame *)childFrame)->GetColumnCount();
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }    
   if (PR_TRUE==gsDebug) printf("TIF GetSpecifiedColumnCount: returning %d\n", mColCount);
   return mColCount;
@@ -677,7 +677,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
         break;
       }
     }
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
 
   // count the number of column frames we already have
@@ -691,7 +691,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
     actualColumns += numCols;
     lastColGroupFrame = (nsTableColGroupFrame *)childFrame;
     if (PR_TRUE==gsDebug) printf("EC: found a col group %p\n", lastColGroupFrame);
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
 
   // if we have fewer column frames than we need, create some implicit column frames
@@ -915,7 +915,7 @@ NS_METHOD nsTableFrame::ReBuildCellMap()
   if (PR_TRUE==gsDebugIR) printf("TIF: ReBuildCellMap.\n");
   nsresult rv=NS_OK;
   nsIFrame *rowGroupFrame=mFrames.FirstChild();
-  for ( ; nsnull!=rowGroupFrame; rowGroupFrame->GetNextSibling(rowGroupFrame))
+  for ( ; nsnull!=rowGroupFrame; rowGroupFrame->GetNextSibling(&rowGroupFrame))
   {
     const nsStyleDisplay *rowGroupDisplay;
     rowGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowGroupDisplay);
@@ -923,7 +923,7 @@ NS_METHOD nsTableFrame::ReBuildCellMap()
     {
       nsIFrame *rowFrame;
       rowGroupFrame->FirstChild(nsnull, &rowFrame);
-      for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(rowFrame))
+      for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(&rowFrame))
       {
         const nsStyleDisplay *rowDisplay;
         rowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
@@ -2280,7 +2280,7 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext&        aPresCon
     // Move the frames that follow aKidFrame by aDeltaY
     nsIFrame* kidFrame;
 
-    aKidFrame->GetNextSibling(kidFrame);
+    aKidFrame->GetNextSibling(&kidFrame);
     while (nsnull != kidFrame) {
       nsPoint        origin;
       nsIHTMLReflow* htmlReflow;
@@ -2297,7 +2297,7 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext&        aPresCon
 
       // Get the next frame
       lastKidFrame = kidFrame;
-      kidFrame->GetNextSibling(kidFrame);
+      kidFrame->GetNextSibling(&kidFrame);
     }
 
   } else {
@@ -2498,7 +2498,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
     nsIFrame* kidFrame = aStartingFrame;
     if (nsnull==kidFrame)
       kidFrame=mFrames.FirstChild();   
-    for ( ; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
+    for ( ; nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) 
     {
       const nsStyleDisplay *childDisplay;
       kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
@@ -2553,7 +2553,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
     if (PR_TRUE==aDoSiblingFrames)
     {
       kidFrame=mColGroups.FirstChild();   
-      for ( ; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
+      for ( ; nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) 
       {
         nsSize maxKidElementSize(0,0);
         nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
@@ -2818,7 +2818,7 @@ NS_METHOD nsTableFrame::IR_ColGroupInserted(nsIPresContext&        aPresContext,
     if ((nsnull!=frameToInsertAfter) && (childFrame==frameToInsertAfter))
     {
       nsIFrame *nextSib=nsnull;
-      frameToInsertAfter->GetNextSibling(nextSib);
+      frameToInsertAfter->GetNextSibling(&nextSib);
       aInsertedFrame->SetNextSibling(nextSib);
       frameToInsertAfter->SetNextSibling(aInsertedFrame);
       // account for childFrame being a COLGROUP now
@@ -2834,7 +2834,7 @@ NS_METHOD nsTableFrame::IR_ColGroupInserted(nsIPresContext&        aPresContext,
     else // we've removed aDeletedFrame, now adjust the starting col index of all subsequent col groups
       startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
     prevSib=childFrame;
-    rv = childFrame->GetNextSibling(childFrame);
+    rv = childFrame->GetNextSibling(&childFrame);
   }
 
   InvalidateColumnCache();
@@ -2860,7 +2860,7 @@ NS_METHOD nsTableFrame::IR_ColGroupAppended(nsIPresContext&        aPresContext,
   {
     startingColIndex += ((nsTableColGroupFrame *)childFrame)->GetColumnCount();
     lastChild=childFrame;
-    rv = childFrame->GetNextSibling(childFrame);
+    rv = childFrame->GetNextSibling(&childFrame);
   }
 
   // append aAppendedFrame
@@ -2941,7 +2941,7 @@ NS_METHOD nsTableFrame::IR_ColGroupRemoved(nsIPresContext&        aPresContext,
     if (childFrame==aDeletedFrame)
     {
       nsIFrame *deleteFrameNextSib=nsnull;
-      aDeletedFrame->GetNextSibling(deleteFrameNextSib);
+      aDeletedFrame->GetNextSibling(&deleteFrameNextSib);
       if (nsnull!=prevSib)
         prevSib->SetNextSibling(deleteFrameNextSib);
       else
@@ -2961,7 +2961,7 @@ NS_METHOD nsTableFrame::IR_ColGroupRemoved(nsIPresContext&        aPresContext,
         startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
     }
     prevSib=childFrame;
-    rv = childFrame->GetNextSibling(childFrame);
+    rv = childFrame->GetNextSibling(&childFrame);
   }
 
   InvalidateColumnCache();
@@ -3326,7 +3326,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
           // Add the continuing frame to the sibling list
           nsIFrame* nextSib;
            
-          kidFrame->GetNextSibling(nextSib);
+          kidFrame->GetNextSibling(&nextSib);
           continuingFrame->SetNextSibling(nextSib);
           kidFrame->SetNextSibling(continuingFrame);
         }
@@ -3334,7 +3334,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
         // children to the next-in-flow
         nsIFrame* nextSibling;
          
-        kidFrame->GetNextSibling(nextSibling);
+        kidFrame->GetNextSibling(&nextSibling);
         if (nsnull != nextSibling) {
           PushChildren(nextSibling, kidFrame);
         }
@@ -3352,7 +3352,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
     }
 
     // Get the next child
-    kidFrame->GetNextSibling(kidFrame);
+    kidFrame->GetNextSibling(&kidFrame);
 
     // XXX talk with troy about checking for available space here
   }
@@ -3716,10 +3716,10 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
               rowFrame->GetRect(rowRect);
               sumOfRowHeights += rowRect.height;
             }
-            rowFrame->GetNextSibling(rowFrame);
+            rowFrame->GetNextSibling(&rowFrame);
           }
         }
-        rowGroupFrame->GetNextSibling(rowGroupFrame);
+        rowGroupFrame->GetNextSibling(&rowGroupFrame);
       }
       rowGroupFrame=mFrames.FirstChild();
       nscoord y=0;
@@ -3760,14 +3760,14 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
               y += excessForRow+rowRect.height;
               excessForRowGroup += excessForRow;
             }
-            rowFrame->GetNextSibling(rowFrame);
+            rowFrame->GetNextSibling(&rowFrame);
           }
           nsRect rowGroupRect;
           rowGroupFrame->GetRect(rowGroupRect);
           nsRect newRowGroupRect(rowGroupRect.x, rowGroupRect.y, rowGroupRect.width, excessForRowGroup+rowGroupRect.height);
           rowGroupFrame->SetRect(newRowGroupRect);
         }
-        rowGroupFrame->GetNextSibling(rowGroupFrame);
+        rowGroupFrame->GetNextSibling(&rowGroupFrame);
       }
     }
   }
@@ -3942,7 +3942,7 @@ NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aCol
           break;
         }
       }
-      childFrame->GetNextSibling(childFrame);
+      childFrame->GetNextSibling(&childFrame);
     }
   }
   NS_POSTCONDITION(nsnull!=aColFrame, "no column frame could be found.");
@@ -4013,14 +4013,14 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
               cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
               if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay)
                 SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
-              cellFrame->GetNextSibling(cellFrame);
+              cellFrame->GetNextSibling(&cellFrame);
             }
           }
-          rowFrame->GetNextSibling(rowFrame);
+          rowFrame->GetNextSibling(&rowFrame);
         }
       }
     }
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
 
   // second time through, set column cache info for each column
@@ -4046,9 +4046,9 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
           mColCache->AddColumnInfo(colPosition->mWidth.GetUnit(), colIndex+i);
         }
       }
-      colFrame->GetNextSibling((nsIFrame *&)colFrame);
+      colFrame->GetNextSibling((nsIFrame **)&colFrame);
     }
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
   if (PR_TRUE==gsDebugIR) printf("TIF BCC: mColumnCacheValid=PR_TRUE.\n");
   mColumnCacheValid=PR_TRUE;
@@ -4076,9 +4076,9 @@ void nsTableFrame::CacheColFramesInCellMap()
         }
         colIndex++;
       }
-      colFrame->GetNextSibling((nsIFrame *&)colFrame);
+      colFrame->GetNextSibling((nsIFrame **)&colFrame);
     }
-    childFrame->GetNextSibling(childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
 }
 
@@ -4141,7 +4141,7 @@ void nsTableFrame::InvalidateCellMap()
   firstInFlow->mCellMapValid=PR_FALSE;
   // reset the state in each row
   nsIFrame *rowGroupFrame=mFrames.FirstChild();
-  for ( ; nsnull!=rowGroupFrame; rowGroupFrame->GetNextSibling(rowGroupFrame))
+  for ( ; nsnull!=rowGroupFrame; rowGroupFrame->GetNextSibling(&rowGroupFrame))
   {
     const nsStyleDisplay *rowGroupDisplay;
     rowGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowGroupDisplay);
@@ -4149,7 +4149,7 @@ void nsTableFrame::InvalidateCellMap()
     {
       nsIFrame *rowFrame;
       rowGroupFrame->FirstChild(nsnull, &rowFrame);
-      for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(rowFrame))
+      for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(&rowFrame))
       {
         const nsStyleDisplay *rowDisplay;
         rowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
@@ -4221,7 +4221,7 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
     }
     NS_RELEASE(content);                                                 // content: REFCNT--
     // get the next row group
-    rg->GetNextSibling(rg);
+    rg->GetNextSibling(&rg);
   }
   aContinuingFrame = cf;
   return NS_OK;
