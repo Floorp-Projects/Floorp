@@ -195,7 +195,7 @@ endif
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 firefox:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
-                -e "s|%MOZ_USER_DIR%|.phoenix|" \
+                -e "s|%MOZ_USER_DIR%|.firefox|" \
 		-e "s|%MREDIR%|$(mredir)|" \
 		-e "s|%MOZILLA-BIN%|$(PROGRAM)|g" > $@
 	chmod +x $@
