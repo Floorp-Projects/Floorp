@@ -226,6 +226,8 @@ echo "<TABLE BORDER=1><TR><TH COLSPAN=3>S/MIME tests</TH></TR>" >> ${RESULTS}
 echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULTS}
 cd ${SMIMEDIR}
 cp ${CURDIR}/alice.txt ${SMIMEDIR}
+# hopefully fixes HP problem where crashes first time cmsutil is run
+cmsutil < alice.txt
 # Test basic signed and enveloped messages from 1 --> 2
 echo "cmsutil -S -N Alice -i alice.txt -d ${ALICEDIR} -p nss -o alice.sig"
 cmsutil -S -N Alice -i alice.txt -d ${ALICEDIR} -p nss -o alice.sig
@@ -271,7 +273,7 @@ fi
 
 #certs-only
 echo "cmsutil -O -r \"Alice,bob@bogus.com,dave@bogus.com\" -d ${ALICEDIR} > co.der"
-cmsutil -O -r "Alice,bob@bogus.com,dave@bogus.com" -d ${ALICEDIR} > co.der
+cmsutil -O -r "Alice,bob@bogus.com,dave@bogus.com" -d ${ALICEDIR} < alice.txt > co.der
 if [ $? -ne 0 ]; then
    CMSFAILED=${CMSFAILED-"Create Certs-Only Alice"}
 fi
