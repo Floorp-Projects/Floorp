@@ -21,6 +21,16 @@
 #include <unistd.h>
 #include <string.h>
 
+#if defined(__osf__) && defined(HAVE_USLEEP) && !defined(_XOPEN_SOURCE_EXTENDED)
+/*
+** DEC's compiler requires _XOPEN_SOURCE_EXTENDED to be defined in
+** order for it to see the prototype for usleep in unistd.h, but if
+** we define that the build breaks long before getting here.  So
+** put the prototype here explicitly.
+*/
+int usleep(useconds_t);
+#endif
+
 //////////////////////////////////////////////////////////////////
 /* static */ void
 nsXUtils::XFlashWindow(Display *       aDisplay,
