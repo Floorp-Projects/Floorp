@@ -597,6 +597,7 @@ init_crypto(PRBool create, PRBool readOnly)
 
 	/* Open/create key database */
 	RNG_RNGInit(); /* This is required before SECU_OpenKeyDB */
+	RNG_SystemInfoForRNG();
 	if(!nocertdb) {
 		if(create) PR_fprintf(PR_STDOUT, msgStrings[CREATING_DB_MSG],
 		  keydbname);
