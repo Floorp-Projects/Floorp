@@ -165,7 +165,7 @@ nsSyncLoader::~nsSyncLoader()
 NS_IMPL_ISUPPORTS3(nsSyncLoader, nsISyncLoader, nsIDOMLoadListener, nsISupportsWeakReference)
 
 NS_IMETHODIMP
-nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument **_retval)
+nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDOMDocument **_retval)
 {
     nsresult rv = NS_OK;
 
@@ -316,7 +316,7 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument **_retval)
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;      
     }
 
-    *_retval = document;
+    *_retval = DOMDocument;
     NS_ADDREF(*_retval);
     return rv;
 }

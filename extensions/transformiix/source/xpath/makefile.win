@@ -43,8 +43,9 @@ CPPSRCS=				\
 	IdentityExpr.cpp		\
 	LocationStep.cpp		\
 	MultiplicativeExpr.cpp		\
-        NodeSet.cpp			\
+	NodeSet.cpp			\
 	NodeSetFunctionCall.cpp		\
+	nsNodeSet.cpp			\
 	NumberExpr.cpp			\
 	NumberFunctionCall.cpp		\
 	NumberResult.cpp		\
@@ -86,6 +87,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\MultiplicativeExpr.obj		\
 	.\$(OBJDIR)\NodeSet.obj				\
 	.\$(OBJDIR)\NodeSetFunctionCall.obj		\
+	.\$(OBJDIR)\nsNodeSet.obj			\
 	.\$(OBJDIR)\NumberExpr.obj			\
 	.\$(OBJDIR)\NumberFunctionCall.obj		\
 	.\$(OBJDIR)\NumberResult.obj			\

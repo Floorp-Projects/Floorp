@@ -34,7 +34,7 @@
  *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
  *       were not working on Windows properly
  *
- * $Id: XMLParser.cpp,v 1.11 2001/01/12 20:06:26 axel%pike.org Exp $
+ * $Id: XMLParser.cpp,v 1.12 2001/01/19 21:24:39 axel%pike.org Exp $
  */
 
 #include "XMLParser.h"
@@ -96,12 +96,11 @@ Document* XMLParser::getDocumentFromURI
     nsCOMPtr<nsISyncLoader>aLoader = do_CreateInstance( TRANSFORMIIX_SYNCLOADER_CONTRACTID, &rv );
     if (NS_FAILED(rv)) return NULL;
 
-    nsCOMPtr <nsIDocument> theDocument;
-    aLoader->LoadDocument(documentURI, getter_AddRefs(theDocument));
-    nsCOMPtr<nsIDOMDocument> theDOMDocument = do_QueryInterface(theDocument, & rv);
+    nsCOMPtr <nsIDOMDocument> theDocument;
+    rv = aLoader->LoadDocument(documentURI, getter_AddRefs(theDocument));
     if (NS_FAILED(rv)) return NULL;
 
-    return new Document(theDOMDocument);
+    return new Document(theDocument);
 #else
     istream* xslInput = URIUtils::getInputStream(href, documentBase, errMsg);
 

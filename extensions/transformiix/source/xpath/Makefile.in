@@ -45,6 +45,7 @@ CPPSRCS = AdditiveExpr.cpp \
         MultiplicativeExpr.cpp \
         NodeSet.cpp \
         NodeSetFunctionCall.cpp \
+        nsNodeSet.cpp \
         NumberExpr.cpp \
         NumberFunctionCall.cpp \
         NumberResult.cpp \

@@ -27,6 +27,7 @@
 #include "dom.h"
 #include "ProcessorState.h"
 #include "Expr.h"
+#include "nsNodeSet.h"
 
 NS_IMPL_ISUPPORTS2(XPathProcessor,
                    nsIXPathNodeSelector,
@@ -53,24 +54,27 @@ NS_IMETHODIMP XPathProcessor::SelectNodes(nsIDOMNode *aContextNode, const char *
     aContextNode->GetOwnerDocument(getter_AddRefs(aOwnerDOMDocument));
     nsCOMPtr<nsIDocument> aOwnerDocument = do_QueryInterface(aOwnerDOMDocument);
     Document* aDocument = new Document(aOwnerDOMDocument);
-    Node* aNode = new Node(aContextNode, aDocument);
+    Node* aNode = aDocument->createWrapper(aContextNode);
 
-    ProcessorState*  aProcessorState = new ProcessorState(*aDocument, *aDocument);
-    ExprParser* aParser = new ExprParser;
+    ProcessorState*  aProcessorState = new ProcessorState();
+    ExprParser aParser;
 
-    Expr* aExpression = aParser->createExpr(aPattern);
+    Expr* aExpression = aParser.createExpr(aPattern);
     ExprResult* exprResult = aExpression->evaluate(aNode, aProcessorState);
+    nsNodeSet* resultSet;
     if ( exprResult->getResultType() == ExprResult::NODESET ) {
-        *_retval = (NodeSet*)exprResult;
+        resultSet = new nsNodeSet((NodeSet*)exprResult);
     }
     else {
         // Return an empty nodeset
-        *_retval = new NodeSet(0);
+        resultSet = new nsNodeSet(nsnull);
     }
+    *_retval = resultSet;
     NS_ADDREF(*_retval);
 
+    delete aProcessorState;
+    delete exprResult;
     delete aExpression;
-    delete aNode;
     delete aDocument;
 
     return NS_OK;

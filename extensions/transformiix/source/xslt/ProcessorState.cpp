@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.13 2001/01/12 20:06:42 axel%pike.org Exp $
+ * $Id: ProcessorState.cpp,v 1.14 2001/01/19 21:24:44 axel%pike.org Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.13 $ $Date: 2001/01/12 20:06:42 $
+ * @version $Revision: 1.14 $ $Date: 2001/01/19 21:24:44 $
 **/
 
 #include "ProcessorState.h"
@@ -42,6 +42,15 @@
 const String ProcessorState::wrapperNSPrefix  = "transformiix";
 const String ProcessorState::wrapperName      = "transformiix:result";
 const String ProcessorState::wrapperNS        = "http://www.mitre.org/TransforMiix";
+
+/**
+ * Creates a new ProcessorState
+**/
+ProcessorState::ProcessorState() {
+    this->xslDocument = NULL;
+    this->resultDocument = NULL;
+    initialize();
+} //-- ProcessorState
 
 /**
  * Creates a new ProcessorState for the given XSL document
@@ -57,8 +66,10 @@ ProcessorState::ProcessorState(Document& xslDocument, Document& resultDocument) 
  * Destroys this ProcessorState
 **/
 ProcessorState::~ProcessorState() {
-  delete dfWildCardTemplate;
-  delete dfTextTemplate;
+  if (dfWildCardTemplate)
+      delete dfWildCardTemplate;
+  if (dfTextTemplate)
+      delete dfTextTemplate;
   delete nodeStack;
 
   while ( ! variableSets.empty() ) {
@@ -788,6 +799,8 @@ ProcessorState::XMLSpaceMode ProcessorState::getXMLSpaceMode(Node* node) {
  * Initializes this ProcessorState
 **/
 void ProcessorState::initialize() {
+    dfWildCardTemplate = 0;
+    dfTextTemplate = 0;
 
     //-- initialize default-space
     defaultSpace = PRESERVE;
@@ -815,7 +828,9 @@ void ProcessorState::initialize() {
     setDefaultNameSpaceURI("");
 
     //-- determine xsl properties
-    Element* element = xslDocument->getDocumentElement();
+    Element* element = NULL;
+    if (xslDocument)
+        element = xslDocument->getDocumentElement();
     if ( element ) {
 	    //-- process namespace nodes
 	    NamedNodeMap* atts = element->getAttributes();
