@@ -750,6 +750,11 @@ PRBool nsIView::IsRoot() const
   return mViewManager->GetRootView() == this;
 }
 
+PRBool nsIView::ExternalIsRoot() const
+{
+  return nsIView::IsRoot();
+}
+
 PRBool nsView::PointIsInside(nsView& aView, nscoord x, nscoord y) const
 {
   nsRect clippedRect;
