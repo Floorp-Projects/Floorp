@@ -30,8 +30,14 @@ function openHelp(topic) {
     topWindow.focus();
     topWindow.displayTopic(topic);
   } else {
-      var encodedURI = encodeURIComponent(helpFileURI + "?" + ((topic)?topic:""));  
-      window.open(MOZ_HELP_URI + "?" + encodedURI, "_blank", "chrome,menubar,toolbar,dialog=no,resizable,scrollbars,alwaysRaised");
+    var params = Components.classes["@mozilla.org/embedcomp/dialogparam;1"]
+                           .createInstance(Components.interfaces.nsIDialogParamBlock);
+    params.SetNumberStrings(2);
+    params.SetString(0, helpFileURI);
+    params.SetString(1, topic);
+    var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                       .getService(Components.interfaces.nsIWindowWatcher);
+    ww.openWindow(null, MOZ_HELP_URI, "_blank", "chrome,all,dialog=no", params);
   }
 }
 

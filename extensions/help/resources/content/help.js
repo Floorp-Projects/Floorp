@@ -96,14 +96,13 @@ function init() {
   helpGlossaryPanel = document.getElementById("help-glossary-tree");
   helpBrowser = document.getElementById("help-content");
 
-  var URI = normalizeURI(decodeURIComponent(window.location.search));
-  helpFileURI = URI.helpFileURI;
-  var helpTopic = URI.topic;
+  var params = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+  helpFileURI = params.GetString(0);
   helpBaseURI = helpFileURI.substring(0, helpFileURI.lastIndexOf("/")+1); // trailing "/" included.
 
   loadHelpRDF();
 
-  displayTopic(helpTopic);  
+  displayTopic(params.GetString(1));
 
   // move to right end of screen
   var width = document.documentElement.getAttribute("width");
@@ -119,38 +118,6 @@ function init() {
   var interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
   webProgress.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-}
-
-function normalizeURI(uri) {
-  // uri in format [uri of help rdf file][?initial topic]
-  // if the whole uri or help file uri is omitted then the default help is assumed.
-  // unpack uri
-  var URI = {};
-  URI.helpFileURI = defaultHelpFile;
-  URI.topic = null;
-  // Case: No help uri at all.
-  if (uri) {
-    // remove leading ?
-    if (uri.substr(0,1) == "?") 
-      uri = uri.substr(1);
-    var i = uri.indexOf("?");
-    // Case: Full uri with topic.
-    if ( i != -1) {
-        URI.helpFileURI = uri.substr(0,i);
-        URI.topic = uri.substr(i+1);
-    }
-    else {
-      // Case: uri with no topic.
-      if (uri.substr(0,7) == "chrome:") 
-        URI.helpFileURI = uri;
-      else {
-        // Case: uri with topic only.
-        URI.topic = uri;
-      }  
-    }
-  }  
-  URI.uri = URI.helpFileURI + ((URI.topic)? "?" + URI.topic : "");
-  return URI;
 }
 
 function loadHelpRDF() {
