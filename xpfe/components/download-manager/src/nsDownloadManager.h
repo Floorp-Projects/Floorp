@@ -78,7 +78,7 @@ public:
 
 protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
-  nsresult GetProfileDownloadsFileURL(char** aDownloadsFileURL);
+  nsresult GetProfileDownloadsFileURL(nsCString& aDownloadsFileURL);
   nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
   nsresult GetDataSource(nsIRDFDataSource** aDataSource);
   nsresult AssertProgressInfo();
