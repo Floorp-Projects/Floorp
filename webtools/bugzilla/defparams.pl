@@ -213,7 +213,7 @@ sub check_netmask {
    desc => 'The URL that is the common initial leading part of all Bugzilla ' .
            'URLs.',
    type => 't',
-   default => 'http://cvs-mirror.mozilla.org/webtools/bugzilla/',
+   default => 'http://you-havent-visited-editparams.cgi-yet/',
    checker => \&check_urlbase
   },
 
