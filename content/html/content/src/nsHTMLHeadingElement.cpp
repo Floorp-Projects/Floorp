@@ -131,7 +131,7 @@ nsHTMLHeadingElement::StringToAttribute(nsIAtom* aAttribute,
                                         nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseDivAlignValue(aValue, aResult)) {
+    if (mInner.ParseDivAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -145,7 +145,7 @@ nsHTMLHeadingElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::DivAlignValueToString(aValue, aResult);
+      mInner.DivAlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
