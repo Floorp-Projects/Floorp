@@ -1661,8 +1661,9 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
 
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
-        /* XXX: Should we ignore the return value? */
-        (void) m_Observer->OnStartBinding(aURL, aContentType);
+        nsresult rv2 = m_Observer->OnStartBinding(aURL, aContentType);
+        if (rv == NS_OK)
+        	rv = rv2;
     }
 
 done:
