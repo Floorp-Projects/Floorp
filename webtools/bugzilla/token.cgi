@@ -229,7 +229,7 @@ sub changeEmail {
     my $quotednewemail = SqlQuote($new_email);
 
     # Check the user entered the correct old email address
-    if($::FORM{'email'} ne $old_email) {
+    if(lc($::FORM{'email'}) ne lc($old_email)) {
         ThrowUserError("email_confirmation_failed");
     }
     # The new email address should be available as this was 
