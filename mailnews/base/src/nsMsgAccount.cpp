@@ -152,11 +152,11 @@ nsMsgAccount::createIncomingServer()
   // get the server from the account manager
   NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
                   NS_MSGACCOUNTMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
     
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = accountManager->GetIncomingServer(serverKey, getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
 #ifdef DEBUG_alecf
   printf("%s loaded.\n", m_accountKey);

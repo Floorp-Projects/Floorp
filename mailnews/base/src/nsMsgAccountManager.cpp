@@ -339,7 +339,7 @@ nsresult
 nsMsgAccountManager::GetIncomingServer(const char* key,
                                        nsIMsgIncomingServer **_retval)
 {
-  if (!_retval) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(_retval);
 
   nsresult rv=NS_OK;
   
@@ -410,16 +410,15 @@ nsMsgAccountManager::createKeyedServer(const char* key,
 
   nsCOMPtr<nsIMsgIncomingServer> server;
   //construct the progid
-  const char* serverProgID =
-    PR_smprintf(NS_MSGINCOMINGSERVER_PROGID_PREFIX "%s", type);
+  nsCAutoString serverProgID(NS_MSGINCOMINGSERVER_PROGID_PREFIX);
+  serverProgID += type;
   
   // finally, create the server
   rv = nsComponentManager::CreateInstance(serverProgID,
                                           nsnull,
                                           NS_GET_IID(nsIMsgIncomingServer),
                                           getter_AddRefs(server));
-  PR_smprintf_free(NS_CONST_CAST(char*, serverProgID));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   server->SetKey(key);
   server->SetType(type);
