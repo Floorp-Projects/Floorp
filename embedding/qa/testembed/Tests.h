@@ -152,6 +152,7 @@ protected:
 	afx_msg void OnInterfacesNsieditingsession();
 	afx_msg void OnInterfacesNsicommandmgr();
 	afx_msg void OnInterfacesNsicmdparams();
+	afx_msg void OnInterfacesRunalltestcases();
 
 	//}}AFX_MSG
 
