@@ -663,6 +663,7 @@ case "$target" in
     _LINKER_PREFIX="-Wl,"      
 	USE_PTHREADS=1
 	PTHREAD_LDFLAGS=""
+	LIBS="$LIBS -lstdc++"
     ;;
 
 *-openbsd*)
