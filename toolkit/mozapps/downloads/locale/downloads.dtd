@@ -1,0 +1,58 @@
+<!ENTITY name.label                       "Name">
+<!ENTITY progress.label                   "Progress">
+<!ENTITY status.label                     "Status">
+<!ENTITY timeremaining.label              "Time Remaining">
+<!ENTITY transferred.label                "Transferred">
+<!ENTITY transferrate.label               "Speed">
+<!ENTITY timeelapsed.label                "Time Elapsed">
+<!ENTITY status.label                     "Status">
+<!--<!ENTITY progresstext.label           "&#37;">-->
+<!ENTITY source.label                     "Source">
+
+<!ENTITY done.label                       "Done">
+<!ENTITY cancel.label                     "Cancel">
+<!ENTITY canceled.label                   "Canceled">
+<!ENTITY launch.label                     "Launch">
+<!ENTITY divider.label                    "-">
+<!ENTITY show.label                       "Show">
+<!ENTITY open.label                       "Open">
+<!ENTITY retry.label                      "Retry">
+<!ENTITY remove.label                     "Remove">
+<!ENTITY pause.label                      "Pause">
+<!ENTITY resume.label                     "Resume">
+
+<!ENTITY starting.label                   "Starting...">
+<!ENTITY failed.label                     "Failed">
+
+<!ENTITY downloads.title                  "Downloads">
+
+<!ENTITY cmd.pause.label                  "Pause">
+<!ENTITY cmd.pause.accesskey              "p">
+<!ENTITY cmd.resume.label                 "Resume">
+<!ENTITY cmd.resume.accesskey             "r">
+<!ENTITY cmd.cancel.label                 "Cancel">
+<!ENTITY cmd.cancel.accesskey             "c">
+<!ENTITY cmd.show.label                   "Show">
+<!ENTITY cmd.show.accesskey               "s">
+<!ENTITY cmd.open.label                   "Open">
+<!ENTITY cmd.open.accesskey               "o">
+<!ENTITY cmd.openWith.label               "Open With...">
+<!ENTITY cmd.openWith.accesskey           "h">
+<!ENTITY cmd.retry.label                  "Retry">
+<!ENTITY cmd.retry.accesskey              "r">
+<!ENTITY cmd.remove.label                 "Remove">
+<!ENTITY cmd.remove.accesskey             "e">
+<!ENTITY cmd.properties.label             "Properties">
+<!ENTITY cmd.properties.accesskey         "i">
+
+<!ENTITY cmd.close.commandKey             "w">
+<!ENTITY cmd.cleanUp.label                "Clean Up">
+<!ENTITY cmd.cleanUp.tooltip              "Removes completed, canceled or failed downloads from the list">
+<!ENTITY cmd.cleanUp.accesskey            "a">
+
+<!ENTITY cmd.options.label                "Options">
+<!ENTITY cmd.options.accesskey            "o">
+
+<!ENTITY closeWhenDone.label              "Close when downloads complete">
+<!ENTITY closeWhenDone.tooltip            "Closes the Downloads window when all files are done downloading">
+

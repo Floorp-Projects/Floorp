@@ -20,15 +20,11 @@ REQUIRES = \
 	pref \
 	rdf \
 	intl \
-	downloads \
 	uriloader \
 	dom \
 	necko \
 	nkcache \
 	txmgr \
-	webbrowserpersist \
-	progressDlg \
-	mimetype \
 	bookmarks \
 	$(NULL)
 
@@ -42,12 +38,10 @@ OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
 endif
 
 LOCAL_INCLUDES = \
-	-I$(srcdir)/../downloads/src \
 	-I$(srcdir)/../bookmarks/src \
 	$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	$(NULL)
 

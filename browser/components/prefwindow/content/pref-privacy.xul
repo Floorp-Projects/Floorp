@@ -93,9 +93,9 @@
     <expander id="downloads" label="&downloads.label;" clearlabel="&clearDownloads.label;" persist="open">
       <description>&downloadsDescription.label;</description>     
 
-#      <hbox align="center" id="downloadsRetentionBox">                          
-#        <description>&downloadsRetentionPolicy.label;</description>             
-#      </hbox>                                                                         
+      <hbox align="center" id="downloadsRetentionBox">                          
+        <description>&downloadsRetentionPolicy.label;</description>             
+      </hbox>                                                                         
     </expander>
 
     <!-- Cookies -->
@@ -147,14 +147,14 @@
   </hbox>
 
 
-# <menulist id="downloadsRetentionPolicy" hidden="true"
-#           preftype="int" prefstring="browser.download.retention" prefdefval="0">
-#   <menupopup>
-#     <menuitem value="0" label="&downloadsRemoveImmediately.label;"/>
-#     <menuitem value="1" label="&downloadsRemoveExit.label;"/>
-#     <menuitem value="2" label="&downloadsRemoveManually.label;"/>
-#   </menupopup>
-# </menulist>
+  <menulist id="downloadsRetentionPolicy" hidden="true"
+            preftype="int" prefstring="browser.download.retention" prefdefval="0">
+    <menupopup>
+      <menuitem value="0" label="&downloadsRemoveImmediately.label;"/>
+      <menuitem value="1" label="&downloadsRemoveExit.label;"/>
+      <menuitem value="2" label="&downloadsRemoveManually.label;"/>
+    </menupopup>
+  </menulist>
 
 </page>
     

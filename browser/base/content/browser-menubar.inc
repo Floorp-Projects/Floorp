@@ -248,6 +248,8 @@
         
           <menu label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
             <menupopup id="menu_ToolsPopup">
+              <menuitem id="downloads" label="&downloads.label;" accesskey="&downloads.accesskey;"
+                        oncommand="toDownloads();"/>
               <menuitem id="javascriptConsole" label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
               <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
 #ifndef XP_MACOSX

@@ -39,14 +39,10 @@
 #include "nsIGenericFactory.h"
 
 #include "nsBrowserCompsCID.h"
-#include "nsDownloadManager.h"
-#include "nsDownloadProxy.h"
 #include "nsBookmarksService.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 
 /////////////////////////////////////////////////////////////////////////////
@@ -57,15 +53,7 @@ static const nsModuleComponentInfo components[] =
       nsBookmarksServiceConstructor },
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_DATASOURCE_CONTRACTID,
       nsBookmarksServiceConstructor },
-  { "Download Manager",
-    NS_DOWNLOADMANAGER_CID,
-    NS_DOWNLOADMANAGER_CONTRACTID,
-    nsDownloadManagerConstructor },
-
-  { "Download",
-    NS_DOWNLOAD_CID,
-    NS_DOWNLOAD_CONTRACTID,
-    nsDownloadProxyConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsBrowserCompsModule, components)
+

@@ -41,7 +41,8 @@
 
 var _elementIDs = ["histDay", "browserCacheDiskCache", "cookieBehavior", "enableCookies",
                    "enableCookiesForOriginatingSiteOnly", "enableCookiesForCurrentSessionOnly",
-                   "enableCookiesButAskFirst", "enableFormFill", "enablePasswords"];
+                   "enableCookiesButAskFirst", "enableFormFill", "enablePasswords", 
+                   "downloadsRetentionPolicy"];
 
 function Startup() {
 
@@ -97,11 +98,11 @@ function Startup() {
   // the bound element. dbaron is helping me with this with a reduced test case, but in 
   // the meantime, I'm working around this bug by placing the menulist outside the bound element
   // until it is completely initialized and then scooting it in, which is what this code does. 
-# var drb = document.getElementById("downloadsRetentionBox");
-# var drp = document.getElementById("downloadsRetentionPolicy");
-# drp.removeAttribute("hidden");
-# document.documentElement.removeChild(drp);
-# drb.appendChild(drp);
+  var drb = document.getElementById("downloadsRetentionBox");
+  var drp = document.getElementById("downloadsRetentionPolicy");
+  drp.removeAttribute("hidden");
+  document.documentElement.removeChild(drp);
+  drb.appendChild(drp);
 }
 
 function unload()

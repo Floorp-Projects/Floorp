@@ -44,6 +44,10 @@ REQUIRES = 	\
 		intl \
 		docshell \
 		autocomplete \
+		downloads \
+		mimetype \
+		webbrowserpersist \
+		progressDlg \
 		history \
 		satchel \
 		necko \
@@ -51,23 +55,37 @@ REQUIRES = 	\
 		uriloader \
 		$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+REQUIRES += alerts
+endif
+
 EXPORTS = nsToolkitCompsCID.h
 
 CPPSRCS = nsModule.cpp
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../autocomplete/src \
+	-I$(srcdir)/../downloads/src \
 	-I$(srcdir)/../history/src \
 	-I$(srcdir)/../satchel/src \
 	-I$(srcdir)/../passwordmgr/base \
 	$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES += -I$(srcdir)/../alerts/src
+endif
+
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)satchel_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)passwordmgr_s.$(LIB_SUFFIX) \
 		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
+endif
 
 EXTRA_DSO_LIBS = gkgfx
 

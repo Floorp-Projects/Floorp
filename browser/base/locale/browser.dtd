@@ -106,9 +106,10 @@
 <!ENTITY toolsMenu.label              "Tools">
 <!ENTITY toolsMenu.accesskey          "T"> 
 
-<!ENTITY downloadManagerCmd.label     "Download Manager">
-
-<!ENTITY downloadManagerCmd.accesskey "D">
+<!ENTITY downloads.label              "Downloads">
+<!ENTITY downloads.tooltip            "Displays the progress of ongoing downloads">
+<!ENTITY downloads.accesskey          "D">
+<!ENTITY downloads.commandkey         "E">
 
 <!ENTITY javaConsoleCmd.label         "Java Console">
 <!ENTITY javaConsoleCmd.accesskey     "J">
@@ -253,9 +254,6 @@
 <!ENTITY textZoomReduceCmd.commandkey   "-">
 <!ENTITY textZoomResetCmd.commandkey    "0">
 
-<!ENTITY downloadsButton.label          "Downloads">
-<!ENTITY downloadsButton.tooltip        "Displays the progress of ongoing downloads">
-
 <!ENTITY bookmarksButton.label          "Bookmarks">
 <!ENTITY bookmarksButton.tooltip        "Displays your bookmarks">
 
@@ -270,8 +268,6 @@
 <!ENTITY pasteButton.tooltip            "Paste">
 
 <!ENTITY findOnSearchBarCmd.label       "Find in this Page">
-<!ENTITY currentDownloads.label         "Current Downloads">
-<!ENTITY openDownloadsSidebar.commandkey "E">
 
 <!ENTITY quitApplicationCmdWin.label       "Exit"> 
 <!ENTITY quitApplicationCmdWin.accesskey   "x">
