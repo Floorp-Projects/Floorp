@@ -69,7 +69,8 @@ class nsHTMLScriptEventHandler : public nsIScriptEventHandler
 {
 public:
   nsHTMLScriptEventHandler(nsIDOMHTMLScriptElement *aOuter);
-
+  virtual ~nsHTMLScriptEventHandler();
+  
   // nsISupports
   NS_DECL_ISUPPORTS
 
@@ -117,7 +118,7 @@ NS_INTERFACE_MAP_END_AGGREGATED(mOuter)
 nsresult nsHTMLScriptEventHandler::ParseEventString(const nsAString &aValue)
 {
   nsAutoString eventSig(aValue);
-  nsReadingIterator<PRUnichar> start, next, end;
+  nsAutoString::const_iterator start, next, end;
 
   // Clear out the arguments array...
   mArgNames.Clear();
@@ -140,12 +141,12 @@ nsresult nsHTMLScriptEventHandler::ParseEventString(const nsAString &aValue)
   ++next;  // skip over the '('
   --end;   // Move back 1 character -- hopefully to the ')'
   if (*end != ')') {
-    // The arguments are not enclosed in parenthesis...
+    // The arguments are not enclosed in parentheses...
     return NS_ERROR_FAILURE;
   }
 
   // Javascript expects all argument names to be ASCII.
-  nsCAutoString sig(NS_LossyConvertUCS2toASCII(Substring(next, end)));
+  NS_LossyConvertUCS2toASCII sig(Substring(next, end));
 
   // Store each (comma separated) argument in mArgNames
   mArgNames.ParseString(sig.get(), ",");
