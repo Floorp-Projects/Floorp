@@ -77,6 +77,7 @@ sub run {
         $self->defaultOutput(undef);
     } while ($self->input->next());
     $self->input(undef); # shutdown the input service instance
+    $self->dump(5, 'PLIF application completed normally.');
 }
 
 # takes the first applicable input method.
