@@ -1676,7 +1676,7 @@ NS_BASE int fputs(const nsString2& aString, FILE* out)
   if(len>0)
     ::fwrite(cp, 1, len, out);
   if (cp != buf) {
-    delete cp;
+    delete[] cp;
   }
   return (int) len;
 }
