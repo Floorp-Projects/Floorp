@@ -90,7 +90,7 @@
       
       <property name="_selectDelay" 
                 onset="this.setAttribute('_selectDelay', val);"
-                onget="return this.getAttribute('_selectDelay') || 500;"/>
+                onget="return this.getAttribute('_selectDelay') || 50;"/>
       <field name="_columnsDirty">true</field>
       <field name="_handleMouseScroll">
       <![CDATA[
