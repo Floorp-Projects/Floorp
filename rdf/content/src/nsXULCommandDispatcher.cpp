@@ -53,7 +53,8 @@ static PRLogModuleInfo* gLog;
 ////////////////////////////////////////////////////////////////////////
 
 nsXULCommandDispatcher::nsXULCommandDispatcher(void)
-    : mScriptObject(nsnull), mUpdaters(nsnull), mSuppressFocus(PR_FALSE)
+    : mScriptObject(nsnull), mUpdaters(nsnull), mSuppressFocus(PR_FALSE), 
+	mActive(PR_FALSE), mFocusInitialized(PR_FALSE)
 {
 	NS_INIT_REFCNT();
 
@@ -573,5 +574,25 @@ NS_IMETHODIMP
 nsXULCommandDispatcher::SetSuppressFocus(PRBool aSuppressFocus)
 {
   mSuppressFocus = aSuppressFocus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULCommandDispatcher::GetActive(PRBool* aActive)
+{
+  //if(!mFocusInitialized)
+  //  return PR_TRUE;
+
+  *aActive = mActive;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULCommandDispatcher::SetActive(PRBool aActive)
+{
+  if(!mFocusInitialized)
+    mFocusInitialized = PR_TRUE;
+
+  mActive = aActive;
   return NS_OK;
 }
