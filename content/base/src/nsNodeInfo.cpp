@@ -47,6 +47,22 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 
+// static
+nsNodeInfo*
+nsNodeInfo::Create()
+{
+  if (sCachedNodeInfo) {
+    // We have cached unused instances of this class, return a cached
+    // instance instead of always creating a new one.
+    nsNodeInfo *nodeInfo = sCachedNodeInfo;
+    sCachedNodeInfo = nsnull;
+    return nodeInfo;
+  }
+
+  // Create a new one
+  return new nsNodeInfo();
+}
+
 nsNodeInfo::nsNodeInfo()
   : nsINodeInfo(), mOwnerManager(nsnull)
 {
@@ -54,6 +70,12 @@ nsNodeInfo::nsNodeInfo()
 
 
 nsNodeInfo::~nsNodeInfo()
+{
+  Clear();
+}
+
+void
+nsNodeInfo::Clear()
 {
   if (mOwnerManager) {
     mOwnerManager->RemoveNodeInfo(this);
@@ -91,8 +113,9 @@ nsNodeInfo::Init(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS1(nsNodeInfo, nsINodeInfo)
-
+NS_IMPL_ADDREF(nsNodeInfo)
+NS_IMPL_RELEASE_WITH_DESTROY(nsNodeInfo, LastRelease())
+NS_IMPL_QUERY_INTERFACE1(nsNodeInfo, nsINodeInfo)
 
 // nsINodeInfo
 
@@ -295,4 +318,38 @@ NS_IMETHODIMP
 nsNodeInfo::GetDocumentPrincipal(nsIPrincipal** aPrincipal) const
 {
   return mOwnerManager->GetDocumentPrincipal(aPrincipal);
+}
+
+// static
+nsNodeInfo *nsNodeInfo::sCachedNodeInfo = nsnull;
+
+// static
+void
+nsNodeInfo::ClearCache()
+{
+  // Clear our cache.
+  delete sCachedNodeInfo;
+  sCachedNodeInfo = nsnull;
+}
+
+void
+nsNodeInfo::LastRelease()
+{
+  if (sCachedNodeInfo) {
+    // No room in cache
+    delete this;
+    return;
+  }
+
+  // There's space in the cache for one instance. Put
+  // this instance in the cache instead of deleting it.
+  sCachedNodeInfo = this;
+
+  // Clear object so that we have no references to anything external
+  Clear();
+
+  // The refcount balancing and destructor re-entrancy protection
+  // code in Release() sets mRefCnt to 1 so we have to set it to 0
+  // here to prevent leaks
+  mRefCnt = 0;
 }

@@ -305,11 +305,10 @@ nsSVGElement::GetIDAttributeName() const
   return nsSVGAtoms::id;
 }
 
-NS_IMETHODIMP
-nsSVGElement::NormalizeAttrString(const nsAString& aStr,
-                                  nsINodeInfo** aNodeInfo)
+NS_IMETHODIMP_(already_AddRefed<nsINodeInfo>)
+nsSVGElement::GetExistingAttrNameFromQName(const nsAString& aStr)
 {
-  return mAttributes->NormalizeAttrString(aStr, aNodeInfo);
+  return mAttributes->GetExistingAttrNameFromQName(aStr);
 }
 
 NS_IMETHODIMP

@@ -1250,7 +1250,7 @@ nsGenericElement::HasAttributes(PRBool* aReturn)
 NS_IMETHODIMP
 nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-  NS_PRECONDITION(aAttributes, "null pointer argument");
+  NS_ENSURE_ARG_POINTER(aAttributes);
   nsDOMSlots *slots = GetDOMSlots();
 
   if (!slots->mAttributeMap) {
@@ -1275,18 +1275,17 @@ nsresult
 nsGenericElement::GetAttribute(const nsAString& aName,
                                nsAString& aReturn)
 {
-  nsCOMPtr<nsINodeInfo> ni;
-  NormalizeAttrString(aName, getter_AddRefs(ni));
-  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+  nsCOMPtr<nsINodeInfo> ni = GetExistingAttrNameFromQName(aName);
+  if (!ni) {
+    SetDOMStringToNull(aReturn);
+
+    return NS_OK;
+  }
 
   PRInt32 nsid = ni->GetNamespaceID();
   nsCOMPtr<nsIAtom> nameAtom = ni->GetNameAtom();
 
-  nsresult rv = GetAttr(nsid, nameAtom, aReturn);
-
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    SetDOMStringToNull(aReturn);
-  }
+  GetAttr(nsid, nameAtom, aReturn);
 
   return NS_OK;
 }
@@ -1295,8 +1294,16 @@ nsresult
 nsGenericElement::SetAttribute(const nsAString& aName,
                                const nsAString& aValue)
 {
-  nsCOMPtr<nsINodeInfo> ni;
-  NormalizeAttrString(aName, getter_AddRefs(ni));
+  nsCOMPtr<nsINodeInfo> ni = GetExistingAttrNameFromQName(aName);
+  if (!ni) {
+    nsCOMPtr<nsINodeInfoManager> nimgr;
+    mNodeInfo->GetNodeInfoManager(getter_AddRefs(nimgr));
+    NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+
+    nsresult rv = nimgr->GetNodeInfo(aName, nsnull, kNameSpaceID_None,
+                                     getter_AddRefs(ni));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return SetAttr(ni, aValue, PR_TRUE);
 }
@@ -1304,9 +1311,10 @@ nsGenericElement::SetAttribute(const nsAString& aName,
 nsresult
 nsGenericElement::RemoveAttribute(const nsAString& aName)
 {
-  nsCOMPtr<nsINodeInfo> ni;
-  NormalizeAttrString(aName, getter_AddRefs(ni));
-  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+  nsCOMPtr<nsINodeInfo> ni = GetExistingAttrNameFromQName(aName);
+  if (!ni) {
+    return NS_OK;
+  }
 
   PRInt32 nsid = ni->GetNamespaceID();
   nsCOMPtr<nsIAtom> tag = ni->GetNameAtom();
@@ -1547,14 +1555,9 @@ nsGenericElement::HasAttribute(const nsAString& aName, PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  nsCOMPtr<nsINodeInfo> ni;
-  NormalizeAttrString(aName, getter_AddRefs(ni));
-  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+  nsCOMPtr<nsINodeInfo> ni = GetExistingAttrNameFromQName(aName);
+  *aReturn = (ni != nsnull);
 
-  PRInt32 nsid = ni->GetNamespaceID();
-  nsCOMPtr<nsIAtom> nameAtom = ni->GetNameAtom();
-
-  *aReturn = HasAttr(nsid, nameAtom);
   return NS_OK;
 }
 
@@ -3175,9 +3178,8 @@ nsGenericContainerElement::~nsGenericContainerElement()
   }
 }
 
-nsresult
-nsGenericContainerElement::NormalizeAttrString(const nsAString& aStr,
-                                               nsINodeInfo** aNodeInfo)
+NS_IMETHODIMP_(already_AddRefed<nsINodeInfo>)
+nsGenericContainerElement::GetExistingAttrNameFromQName(const nsAString& aStr)
 {
   if (mAttributes) {
     NS_ConvertUCS2toUTF8 utf8String(aStr);
@@ -3187,19 +3189,16 @@ nsGenericContainerElement::NormalizeAttrString(const nsAString& aStr,
       nsGenericAttribute* attr =
         (nsGenericAttribute*)mAttributes->ElementAt(indx);
 
-      if (attr->mNodeInfo->QualifiedNameEquals(utf8String)) {
-        NS_ADDREF(*aNodeInfo = attr->mNodeInfo);
+      nsINodeInfo *ni = attr->mNodeInfo;
+      if (ni->QualifiedNameEquals(utf8String)) {
+        NS_ADDREF(ni);
 
-        return NS_OK;
+        return ni;
       }
     }
   }
 
-  nsCOMPtr<nsINodeInfoManager> nimgr;
-  mNodeInfo->GetNodeInfoManager(getter_AddRefs(nimgr));
-  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
-  return nimgr->GetNodeInfo(aStr, nsnull, kNameSpaceID_None, aNodeInfo);
+  return nsnull;
 }
 
 nsresult

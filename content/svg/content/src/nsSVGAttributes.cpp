@@ -772,30 +772,22 @@ nsSVGAttributes::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
   return PR_FALSE;
 }
 
-NS_IMETHODIMP
-nsSVGAttributes::NormalizeAttrString(const nsAString& aStr,
-                                     nsINodeInfo** aNodeInfo)
+NS_IMETHODIMP_(already_AddRefed<nsINodeInfo>)
+nsSVGAttributes::GetExistingAttrNameFromQName(const nsAString& aStr)
 {
   PRInt32 indx, count = Count();
   NS_ConvertUCS2toUTF8 utf8String(aStr);
   for (indx = 0; indx < count; indx++) {
     nsSVGAttribute* attr = ElementAt(indx);
-    if (attr->GetNodeInfo()->QualifiedNameEquals(utf8String)) {
-      *aNodeInfo = attr->GetNodeInfo();
-      NS_ADDREF(*aNodeInfo);
-      
-      return NS_OK;
+    nsINodeInfo* ni = attr->GetNodeInfo();
+    if (ni->QualifiedNameEquals(utf8String)) {
+      NS_ADDREF(ni);
+
+      return ni;
     }
   }
 
-  NS_ASSERTION(mContent,"no owner content");
-  if (!mContent) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsINodeInfoManager> nimgr;
-  mContent->GetNodeInfo()->GetNodeInfoManager(getter_AddRefs(nimgr));
-  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-  
-  return nimgr->GetNodeInfo(aStr, nsnull, kNameSpaceID_None, aNodeInfo);
+  return nsnull;
 }
 
 NS_IMETHODIMP
@@ -900,14 +892,14 @@ nsSVGAttributes::GetNamedItem(const nsAString& aName,
   if (! aReturn)
     return NS_ERROR_NULL_POINTER;
   
-  nsresult rv;
   *aReturn = nsnull;
   
-  nsCOMPtr<nsINodeInfo> inpNodeInfo;
-  
-  if (NS_FAILED(rv = mContent->NormalizeAttrString(aName, getter_AddRefs(inpNodeInfo))))
-    return rv;
-  
+  nsCOMPtr<nsINodeInfo> inpNodeInfo =
+    mContent->GetExistingAttrNameFromQName(aName);
+  if (!inpNodeInfo) {
+    return NS_OK;
+  }
+
   for (PRInt32 i = mAttributes.Count() - 1; i >= 0; --i) {
     nsSVGAttribute* attr = (nsSVGAttribute*) mAttributes[i];
     nsINodeInfo *ni = attr->GetNodeInfo();

@@ -378,6 +378,28 @@ nsGenericHTMLElement::GetTagName(nsAString& aTagName)
   return GetNodeName(aTagName);
 }
 
+NS_IMETHODIMP
+nsGenericHTMLElement::SetAttribute(const nsAString& aName,
+                                   const nsAString& aValue)
+{
+  nsCOMPtr<nsINodeInfo> ni = GetExistingAttrNameFromQName(aName);
+  if (ni) {
+    return SetAttr(ni, aValue, PR_TRUE);
+  }
+
+  nsCOMPtr<nsIAtom> nameAtom;
+  if (mNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
+    nsAutoString lower(aName);
+    ToLowerCase(lower);
+    nameAtom = do_GetAtom(lower);
+  }
+  else {
+    nameAtom = do_GetAtom(aName);
+  }
+
+  return SetAttr(kNameSpaceID_None, nameAtom, aValue, PR_TRUE);
+}
+
 nsresult
 nsGenericHTMLElement::GetNodeName(nsAString& aNodeName)
 {
@@ -1610,19 +1632,87 @@ nsGenericHTMLElement::GetNameSpaceID(PRInt32* aID) const
   return NS_OK;
 }
 
-nsresult
-nsGenericHTMLElement::NormalizeAttrString(const nsAString& aStr,
-                                          nsINodeInfo** aNodeInfo)
+// Based on nsNodeInfo::QualifiedNameEquals
+static PRBool
+QualifiedNameEquals(const nsACString& aQualifiedName, nsIAtom* aName,
+                    nsIAtom* aPrefix)
 {
-  // XXX need to validate/strip namespace prefix
-  nsAutoString lower(aStr);
-  ToLowerCase(lower);
+  if (!aPrefix) {
+    return aName->EqualsUTF8(aQualifiedName);
+  }
 
-  nsCOMPtr<nsINodeInfoManager> nimgr;
-  mNodeInfo->GetNodeInfoManager(getter_AddRefs(nimgr));
-  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+  nsACString::const_iterator start;
+  aQualifiedName.BeginReading(start);
 
-  return nimgr->GetNodeInfo(lower, nsnull, kNameSpaceID_None, aNodeInfo);
+  nsACString::const_iterator colon(start);
+
+  const char* prefix;
+  aPrefix->GetUTF8String(&prefix);
+
+  PRUint32 len = strlen(prefix);
+
+  if (len >= aQualifiedName.Length()) {
+    return PR_FALSE;
+  }
+
+  colon.advance(len);
+
+  // If the character at the prefix length index is not a colon,
+  // aQualifiedName is not equal to this string.
+  if (*colon != ':') {
+    return PR_FALSE;
+  }
+
+  // Compare the prefix to the string from the start to the colon
+  if (!aPrefix->EqualsUTF8(Substring(start, colon))) {
+    return PR_FALSE;
+  }
+
+  ++colon; // Skip the ':'
+
+  nsACString::const_iterator end;
+  aQualifiedName.EndReading(end);
+
+  // Compare the local name to the string between the colon and the
+  // end of aQualifiedName
+  return aName->EqualsUTF8(Substring(colon, end));
+}
+
+already_AddRefed<nsINodeInfo>
+nsGenericHTMLElement::GetExistingAttrNameFromQName(const nsAString& aStr)
+{
+  if (!mAttributes) {
+    return nsnull;
+  }
+  
+  NS_ConvertUCS2toUTF8 lower(aStr);
+  if (mNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
+    ToLowerCase(lower);
+  }
+
+  nsCOMPtr<nsIAtom> nameAtom, prefixAtom;
+  PRInt32 nameSpace;
+
+  PRInt32 indx, count;
+  mAttributes->GetAttributeCount(count);
+  for (indx = 0; indx < count; ++indx) {
+    mAttributes->GetAttributeNameAt(indx, &nameSpace,
+                                    getter_AddRefs(nameAtom),
+                                    getter_AddRefs(prefixAtom));
+
+    if (QualifiedNameEquals(lower, nameAtom, prefixAtom)) {
+      nsCOMPtr<nsINodeInfoManager> nimgr;
+      mNodeInfo->GetNodeInfoManager(getter_AddRefs(nimgr));
+      NS_ENSURE_TRUE(nimgr, nsnull);
+
+      nsINodeInfo* nodeInfo;
+      nimgr->GetNodeInfo(nameAtom, prefixAtom, nameSpace, &nodeInfo);
+
+      return nodeInfo;
+    }
+  }
+
+  return nsnull;
 }
 
 nsresult

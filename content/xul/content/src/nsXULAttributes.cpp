@@ -597,16 +597,16 @@ nsXULAttributes::GetNamedItem(const nsAString& aName,
     if (! aReturn)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv;
     *aReturn = nsnull;
 
     // XXX nameSpaceID only used in dead code (that was giving us a warning).
     // XXX I'd remove it completely, but maybe it is a useful reminder???
     // PRInt32 nameSpaceID;
-    nsCOMPtr<nsINodeInfo> inpNodeInfo;
-
-    if (NS_FAILED(rv = mContent->NormalizeAttrString(aName, getter_AddRefs(inpNodeInfo))))
-        return rv;
+    nsCOMPtr<nsINodeInfo> inpNodeInfo =
+      mContent->GetExistingAttrNameFromQName(aName);
+    if (!inpNodeInfo) {
+        return NS_OK;
+    }
 
     // if (kNameSpaceID_Unknown == nameSpaceID) {
     //   nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?

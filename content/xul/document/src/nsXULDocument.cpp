@@ -1527,12 +1527,20 @@ nsXULDocument::Persist(const nsAString& aID,
     if (! element)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsINodeInfo> ni;
-    rv = element->NormalizeAttrString(aAttr, getter_AddRefs(ni));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIAtom> tag;
+    PRInt32 nameSpaceID;
 
-    nsCOMPtr<nsIAtom> tag = ni->GetNameAtom();
-    PRInt32 nameSpaceID = ni->GetNamespaceID();
+    nsCOMPtr<nsINodeInfo> ni = element->GetExistingAttrNameFromQName(aAttr);
+    if (ni) {
+        tag = ni->GetNameAtom();
+        nameSpaceID = ni->GetNamespaceID();
+    }
+    else {
+        tag = do_GetAtom(aAttr);
+        NS_ENSURE_TRUE(tag, NS_ERROR_OUT_OF_MEMORY);
+
+        nameSpaceID = kNameSpaceID_None;
+    }
 
     rv = Persist(element, nameSpaceID, tag);
     if (NS_FAILED(rv)) return rv;

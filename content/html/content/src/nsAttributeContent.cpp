@@ -117,11 +117,9 @@ public:
     return nsnull;
   }
   
-  NS_IMETHOD NormalizeAttrString(const nsAString& aStr, 
-                                 nsINodeInfo** aNodeInfo)
+  NS_IMETHOD_(already_AddRefed<nsINodeInfo>) GetExistingAttrNameFromQName(const nsAString& aStr)
   {
-    *aNodeInfo = nsnull;
-    return NS_OK; 
+    return nsnull; 
   }
 
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext) { return NS_OK; }
@@ -450,7 +448,7 @@ nsAttributeContent::CopyText(nsAString& aResult)
   }
   else {
     const char *data = mText.Get1b();
-    CopyASCIItoUCS2(Substring(data, data + mText.GetLength()), aResult);
+    CopyASCIItoUTF16(Substring(data, data + mText.GetLength()), aResult);
   }
   return NS_OK;
 }
@@ -575,10 +573,8 @@ nsAttributeContent::AppendTextTo(nsAString& aResult)
     aResult.Append(mText.Get2b(), mText.GetLength());
   }
   else {
-    // XXX we would like to have a AppendASCIItoUCS2 here
-    aResult.Append(NS_ConvertASCIItoUCS2(mText.Get1b(),
-                                         mText.GetLength()).get(),
-                   mText.GetLength());
+    // XXX we would like to have a AppendASCIItoUTF16 here
+    AppendUTF8toUTF16(mText.Get1b(), aResult);
   }
 
   return NS_OK;
