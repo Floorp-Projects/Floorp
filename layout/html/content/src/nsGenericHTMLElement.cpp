@@ -735,6 +735,9 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
     // Remove our reference to the shared content delegate object.  If
     // the last reference just went away, null out gContentDelegate.
     nsrefcnt rc;
+    // XXX:  This is now wrong.  gContentDelegate will be null after the
+    //       first call to NS_RELEASE2(...)
+    PR_ASSERT(0);
     NS_RELEASE2(gContentDelegate, rc);
     if (0 == rc) {
       gContentDelegate = nsnull;
@@ -1171,7 +1174,9 @@ nsGenericHTMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
     // release here.
     if (nsnull != *aDOMEvent) {
       nsrefcnt rc;
-      NS_RELEASE2((*aDOMEvent), rc);
+      nsIDOMEvent* DOMEvent = *aDOMEvent;
+      // Release the copy since the macro will null the pointer 
+      NS_RELEASE2(DOMEvent, rc);
       if (0 != rc) {
         // Okay, so someone in the DOM loop (a listener, JS object)
         // still has a ref to the DOM Event but the internal data
@@ -2136,7 +2141,10 @@ nsGenericHTMLElement::AddRef()
 NS_IMETHODIMP_(nsrefcnt) 
 nsGenericHTMLElement::Release()
 {
-  return NS_RELEASE(mContent);
+  nsIHTMLContent* content = mContent;
+
+  // Release the copy since the macro will null the pointer.
+  return NS_RELEASE(content);
 }
 
 
