@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.3 2000/06/11 16:00:01 Peter.VanderBeken%pandora.be Exp $
+ * $Id: ProcessorState.h,v 1.4 2000/06/22 07:30:07 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -50,7 +50,7 @@
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2000/06/11 16:00:01 $
+ * @version $Revision: 1.4 $ $Date: 2000/06/22 07:30:07 $
 **/
 class ProcessorState : public ContextState
 {
@@ -360,7 +360,7 @@ private:
     ExprParser     exprParser;
     String         xsltNameSpace;
     NamedMap       nameSpaceMap;
-    HashTable      nameSpaceURITable;
+    StringList     nameSpaceURIList;
     Stack          defaultNameSpaceURIStack;
 
     //-- default templates
