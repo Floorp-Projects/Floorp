@@ -42,8 +42,11 @@ class nsIEventQueue : public nsISupports
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEVENTQUEUE_IID);
-
-    NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent) = 0;
+	
+	NS_IMETHOD InitEvent(PLEvent* aEvent, void* owner, 
+		                 PLHandleEventProc handler, PLDestroyEventProc destructor) = 0;
+    
+	NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent) = 0;
     NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent, void** aResult) = 0;
 	
     NS_IMETHOD ProcessPendingEvents() = 0;
