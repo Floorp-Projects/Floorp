@@ -106,7 +106,7 @@ Rights Reserved.
 <!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
 <!ENTITY spamFiltersCmd.accesskey "J">
 <!ENTITY filtersCmd.label "Message Filters...">
-<!ENTITY filtersCmd.accesskey "i">
+<!ENTITY filtersCmd.accesskey "F">
 <!ENTITY folderPropsCmd.label "Properties...">
 <!ENTITY folderPropsFolderCmd.label "Folder Properties...">
 <!ENTITY folderPropsNewsgroupCmd.label "Newsgroup Properties...">
