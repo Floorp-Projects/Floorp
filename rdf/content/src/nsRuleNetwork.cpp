@@ -377,7 +377,7 @@ MemoryElementSet::Add(MemoryElement* aElement)
 //----------------------------------------------------------------------
 
 nsresult
-BindingSet::Add(const Binding& aBinding)
+nsBindingSet::Add(const nsBinding& aBinding)
 {
     NS_PRECONDITION(! HasBindingFor(aBinding.mVariable), "variable already bound");
     if (HasBindingFor(aBinding.mVariable))
@@ -397,7 +397,7 @@ BindingSet::Add(const Binding& aBinding)
 }
 
 PRInt32
-BindingSet::Count() const
+nsBindingSet::Count() const
 {
     PRInt32 count = 0;
     for (ConstIterator binding = First(); binding != Last(); ++binding)
@@ -407,7 +407,7 @@ BindingSet::Count() const
 }
 
 PRBool
-BindingSet::HasBinding(PRInt32 aVariable, const Value& aValue) const
+nsBindingSet::HasBinding(PRInt32 aVariable, const Value& aValue) const
 {
     for (ConstIterator binding = First(); binding != Last(); ++binding) {
         if (binding->mVariable == aVariable && binding->mValue == aValue)
@@ -418,7 +418,7 @@ BindingSet::HasBinding(PRInt32 aVariable, const Value& aValue) const
 }
 
 PRBool
-BindingSet::HasBindingFor(PRInt32 aVariable) const
+nsBindingSet::HasBindingFor(PRInt32 aVariable) const
 {
     for (ConstIterator binding = First(); binding != Last(); ++binding) {
         if (binding->mVariable == aVariable)
@@ -429,7 +429,7 @@ BindingSet::HasBindingFor(PRInt32 aVariable) const
 }
 
 PRBool
-BindingSet::GetBindingFor(PRInt32 aVariable, Value* aValue) const
+nsBindingSet::GetBindingFor(PRInt32 aVariable, Value* aValue) const
 {
     for (ConstIterator binding = First(); binding != Last(); ++binding) {
         if (binding->mVariable == aVariable) {
@@ -442,7 +442,7 @@ BindingSet::GetBindingFor(PRInt32 aVariable, Value* aValue) const
 }
 
 PRBool
-BindingSet::Equals(const BindingSet& aSet) const
+nsBindingSet::Equals(const nsBindingSet& aSet) const
 {
     if (aSet.mBindings == mBindings)
         return PR_TRUE;
@@ -473,8 +473,8 @@ Instantiation::Hash(const void* aKey)
 
     PLHashNumber result = 0;
 
-    BindingSet::ConstIterator last = inst->mBindings.Last();
-    for (BindingSet::ConstIterator binding = inst->mBindings.First(); binding != last; ++binding)
+    nsBindingSet::ConstIterator last = inst->mBindings.Last();
+    for (nsBindingSet::ConstIterator binding = inst->mBindings.First(); binding != last; ++binding)
         result ^= binding->Hash();
 
     return result;
@@ -584,63 +584,15 @@ InstantiationSet::HasBindingFor(PRInt32 aVariable) const
 
 //----------------------------------------------------------------------
 //
-// InnerNode
-//
-//   An inner node that can contain children.
-//
-
-
-InnerNode::~InnerNode()
-{
-    delete[] mKids;
-}
-
-nsresult
-InnerNode::AddChild(ReteNode* aNode)
-{
-    NS_PRECONDITION(aNode != nsnull, "null ptr");
-    if (! aNode)
-        return NS_ERROR_NULL_POINTER;
-
-    if (mCount >= mCapacity) {
-        PRInt32 capacity = mCapacity + 4;
-        ReteNode** kids = new ReteNode*[capacity];
-        if (! kids)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        for (PRInt32 i = mCapacity - 1; i >= 0; --i)
-            kids[i] = mKids[i];
-
-        delete[] mKids;
-
-        mKids = kids;
-        mCapacity = capacity;
-    }
-
-    mKids[mCount++] = aNode;
-    return NS_OK;
-}
-
-nsresult
-InnerNode::RemoveAllChildren()
-{
-    delete[] mKids;
-    mKids = nsnull;
-    mCount = mCapacity = 0;
-    return NS_OK;
-}
-
-
-//----------------------------------------------------------------------
-//
 // RootNode
 //
 
 nsresult
 RootNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
 {
-    for (PRInt32 i = mCount - 1; i >= 0; --i)
-        mKids[i]->Propogate(aInstantiations, aClosure);
+    NodeSet::Iterator last = mKids.Last();
+    for (NodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
+        kid->Propogate(aInstantiations, aClosure);
 
     return NS_OK;
 }
@@ -727,8 +679,9 @@ JoinNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
         rv = test->Constrain(instantiations);
         if (NS_FAILED(rv)) return rv;
 
-        for (PRInt32 j = mCount - 1; j >= 0; --j)
-            mKids[j]->Propogate(instantiations, aClosure);
+        NodeSet::Iterator last = mKids.Last();
+        for (NodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
+            kid->Propogate(instantiations, aClosure);
     }
 
     return NS_OK;
@@ -916,8 +869,9 @@ TestNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
     if (NS_FAILED(rv)) return rv;
 
     if (! instantiations.Empty()) {
-        for (PRInt32 i = mCount - 1; i >= 0; --i)
-            mKids[i]->Propogate(instantiations, aClosure);
+        NodeSet::Iterator last = mKids.Last();
+        for (NodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
+            kid->Propogate(instantiations, aClosure);
     }
 
     return NS_OK;

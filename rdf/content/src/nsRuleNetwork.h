@@ -261,35 +261,35 @@ public:
 /**
  * An assignment of a value to a variable
  */
-class Binding {
+class nsBinding {
 public:
     PRInt32 mVariable;
     Value   mValue;
 
-    Binding() : mVariable(-1), mValue() {
-        MOZ_COUNT_CTOR(Binding); }
+    nsBinding() : mVariable(-1), mValue()
+        { MOZ_COUNT_CTOR(nsBinding); }
 
-    Binding(PRInt32 aVariable, const Value& aValue)
+    nsBinding(PRInt32 aVariable, const Value& aValue)
         : mVariable(aVariable),
-          mValue(aValue) {
-        MOZ_COUNT_CTOR(Binding); }
+          mValue(aValue)
+        { MOZ_COUNT_CTOR(nsBinding); }
 
-    Binding(const Binding& aBinding)
+    nsBinding(const nsBinding& aBinding)
         : mVariable(aBinding.mVariable),
-          mValue(aBinding.mValue) {
-        MOZ_COUNT_CTOR(Binding); }
+          mValue(aBinding.mValue)
+        { MOZ_COUNT_CTOR(nsBinding); }
 
-    ~Binding() { MOZ_COUNT_DTOR(Binding); }
+    ~nsBinding() { MOZ_COUNT_DTOR(nsBinding); }
 
-    Binding& operator=(const Binding& aBinding) {
+    nsBinding& operator=(const nsBinding& aBinding) {
         mVariable = aBinding.mVariable;
         mValue    = aBinding.mValue;
         return *this; }
 
-    PRBool operator==(const Binding& aBinding) const {
+    PRBool operator==(const nsBinding& aBinding) const {
         return mVariable == aBinding.mVariable && mValue == aBinding.mValue; }
 
-    PRBool operator!=(const Binding& aBinding) const {
+    PRBool operator!=(const nsBinding& aBinding) const {
         return mVariable != aBinding.mVariable || mValue != aBinding.mValue; }
 
     PLHashNumber Hash() const {
@@ -303,7 +303,7 @@ public:
 /**
  * A collection of value-to-variable assignments
  */
-class BindingSet {
+class nsBindingSet {
 public:
     class ConstIterator;
     friend class ConstIterator;
@@ -311,10 +311,10 @@ public:
 protected:
     class List {
     public:
-        List() { MOZ_COUNT_CTOR(BindingSet::List); }
+        List() { MOZ_COUNT_CTOR(nsBindingSet::List); }
 
         ~List() {
-            MOZ_COUNT_DTOR(BindingSet::List);
+            MOZ_COUNT_DTOR(nsBindingSet::List);
             NS_IF_RELEASE(mNext); }
 
         PRInt32 AddRef() { return ++mRefCnt; }
@@ -324,7 +324,7 @@ protected:
             if (refcnt == 0) delete this;
             return refcnt; }
 
-        Binding mBinding;
+        nsBinding mBinding;
         PRInt32 mRefCnt;
         List*   mNext;
     };
@@ -332,21 +332,21 @@ protected:
     List* mBindings;
 
 public:
-    BindingSet() : mBindings(nsnull) {
-        MOZ_COUNT_CTOR(BindingSet); }
+    nsBindingSet() : mBindings(nsnull) {
+        MOZ_COUNT_CTOR(nsBindingSet); }
 
-    BindingSet(const BindingSet& aSet) : mBindings(aSet.mBindings) {
-        MOZ_COUNT_CTOR(BindingSet);
+    nsBindingSet(const nsBindingSet& aSet) : mBindings(aSet.mBindings) {
+        MOZ_COUNT_CTOR(nsBindingSet);
         NS_IF_ADDREF(mBindings); }
 
-    BindingSet& operator=(const BindingSet& aSet) {
+    nsBindingSet& operator=(const nsBindingSet& aSet) {
         NS_IF_RELEASE(mBindings);
         mBindings = aSet.mBindings;
         NS_IF_ADDREF(mBindings);
         return *this; }
         
-    ~BindingSet() {
-        MOZ_COUNT_DTOR(BindingSet);
+    ~nsBindingSet() {
+        MOZ_COUNT_DTOR(nsBindingSet);
         NS_IF_RELEASE(mBindings); }
 
 public:
@@ -382,10 +382,10 @@ public:
             NS_IF_ADDREF(mCurrent);
             return result; }
 
-        const Binding& operator*() const {
+        const nsBinding& operator*() const {
             return mCurrent->mBinding; }
 
-        const Binding* operator->() const {
+        const nsBinding* operator->() const {
             return &mCurrent->mBinding; }
 
         PRBool operator==(const ConstIterator& aConstIterator) const {
@@ -402,7 +402,7 @@ public:
     ConstIterator Last() const { return ConstIterator(nsnull); }
 
 public:
-    nsresult Add(const Binding& aElement);
+    nsresult Add(const nsBinding& aElement);
 
     PRBool HasBinding(PRInt32 aVariable, const Value& aValue) const;
     PRBool HasBindingFor(PRInt32 aVariable) const;
@@ -410,9 +410,9 @@ public:
 
     PRInt32 Count() const;
 
-    PRBool Equals(const BindingSet& aSet) const;
-    PRBool operator==(const BindingSet& aSet) const { return Equals(aSet); }
-    PRBool operator!=(const BindingSet& aSet) const { return !Equals(aSet); }
+    PRBool Equals(const nsBindingSet& aSet) const;
+    PRBool operator==(const nsBindingSet& aSet) const { return Equals(aSet); }
+    PRBool operator!=(const nsBindingSet& aSet) const { return !Equals(aSet); }
 };
 
 
@@ -424,7 +424,7 @@ public:
 class Instantiation
 {
 public:
-    BindingSet       mBindings;
+    nsBindingSet       mBindings;
     MemoryElementSet mSupport;
 
     Instantiation() { MOZ_COUNT_CTOR(Instantiation); }
@@ -442,7 +442,7 @@ public:
     ~Instantiation() { MOZ_COUNT_DTOR(Instantiation); }
 
     nsresult AddBinding(PRInt32 aVariable, const Value& aValue) {
-        mBindings.Add(Binding(aVariable, aValue));
+        mBindings.Add(nsBinding(aVariable, aValue));
         return NS_OK; }
 
     nsresult AddSupportingElement(MemoryElement* aMemoryElement) {
@@ -621,18 +621,103 @@ public:
 //----------------------------------------------------------------------
 
 /**
+ * A collection of nodes in the rule network
+ */
+class NodeSet
+{
+public:
+    NodeSet();
+    ~NodeSet();
+
+    nsresult Add(ReteNode* aNode);
+    nsresult Clear();
+
+    class Iterator;
+
+    class ConstIterator {
+    public:
+        ConstIterator(ReteNode** aNode) : mCurrent(aNode) {}
+
+        ConstIterator(const ConstIterator& aConstIterator)
+            : mCurrent(aConstIterator.mCurrent) {}
+
+        ConstIterator& operator=(const ConstIterator& aConstIterator) {
+            mCurrent = aConstIterator.mCurrent;
+            return *this; }
+
+        ConstIterator& operator++() {
+            ++mCurrent;
+            return *this; }
+
+        ConstIterator operator++(int) {
+            ConstIterator result(*this);
+            ++mCurrent;
+            return result; }
+
+        const ReteNode* operator*() const {
+            return *mCurrent; }
+
+        const ReteNode* operator->() const {
+            return *mCurrent; }
+
+        PRBool operator==(const ConstIterator& aConstIterator) const {
+            return mCurrent == aConstIterator.mCurrent; }
+
+        PRBool operator!=(const ConstIterator& aConstIterator) const {
+            return mCurrent != aConstIterator.mCurrent; }
+
+    protected:
+        friend class Iterator; // XXXwaterson this is so wrong!
+        ReteNode** mCurrent;
+    };
+
+    ConstIterator First() const { return ConstIterator(mNodes); }
+    ConstIterator Last() const { return ConstIterator(mNodes + mCount); }
+
+    class Iterator : public ConstIterator {
+    public:
+        Iterator(ReteNode** aNode) : ConstIterator(aNode) {}
+
+        Iterator& operator++() {
+            ++mCurrent;
+            return *this; }
+
+        Iterator operator++(int) {
+            Iterator result(*this);
+            ++mCurrent;
+            return result; }
+
+        ReteNode* operator*() const {
+            return *mCurrent; }
+
+        ReteNode* operator->() const {
+            return *mCurrent; }
+
+        PRBool operator==(const ConstIterator& aConstIterator) const {
+            return mCurrent == aConstIterator.mCurrent; }
+
+        PRBool operator!=(const ConstIterator& aConstIterator) const {
+            return mCurrent != aConstIterator.mCurrent; }
+    };
+
+    Iterator First() { return Iterator(mNodes); }
+    Iterator Last() { return Iterator(mNodes + mCount); }
+
+protected:
+    ReteNode** mNodes;
+    PRInt32 mCount;
+    PRInt32 mCapacity;
+};
+
+//----------------------------------------------------------------------
+
+/**
  * An abstract base class for an "inner node" in the rule
  * network. Adds support for children and "upward" queries.
  */
 class InnerNode : public ReteNode
 {
 public:
-    InnerNode() : mKids(nsnull), mCount(0), mCapacity(0) {}
-    virtual ~InnerNode();
-
-    nsresult AddChild(ReteNode* aNode);
-    nsresult RemoveAllChildren();
-
     // "upward" propogations
     virtual nsresult Constrain(InstantiationSet& aInstantiations) = 0;
 
@@ -640,10 +725,11 @@ public:
 
     virtual PRBool HasAncestor(const ReteNode* aNode) const = 0;
 
+    nsresult AddChild(ReteNode* aNode) { return mKids.Add(aNode); }
+    nsresult RemoveAllChildren() { return mKids.Clear(); }
+
 protected:
-    ReteNode** mKids;
-    PRInt32 mCount;
-    PRInt32 mCapacity;
+    NodeSet mKids;
 };
 
 //----------------------------------------------------------------------
@@ -733,97 +819,6 @@ public:
 
 protected:
     InnerNode* mParent;
-};
-
-//----------------------------------------------------------------------
-
-/**
- * A collection of nodes in the rule network
- */
-class NodeSet
-{
-public:
-    NodeSet();
-    ~NodeSet();
-
-    nsresult Add(ReteNode* aNode);
-    nsresult Clear();
-
-    class Iterator;
-
-    class ConstIterator {
-    public:
-        ConstIterator(ReteNode** aNode) : mCurrent(aNode) {}
-
-        ConstIterator(const ConstIterator& aConstIterator)
-            : mCurrent(aConstIterator.mCurrent) {}
-
-        ConstIterator& operator=(const ConstIterator& aConstIterator) {
-            mCurrent = aConstIterator.mCurrent;
-            return *this; }
-
-        ConstIterator& operator++() {
-            ++mCurrent;
-            return *this; }
-
-        ConstIterator operator++(int) {
-            ConstIterator result(*this);
-            ++mCurrent;
-            return result; }
-
-        const ReteNode* operator*() const {
-            return *mCurrent; }
-
-        const ReteNode* operator->() const {
-            return *mCurrent; }
-
-        PRBool operator==(const ConstIterator& aConstIterator) const {
-            return mCurrent == aConstIterator.mCurrent; }
-
-        PRBool operator!=(const ConstIterator& aConstIterator) const {
-            return mCurrent != aConstIterator.mCurrent; }
-
-    protected:
-        friend class Iterator; // XXXwaterson this is so wrong!
-        ReteNode** mCurrent;
-    };
-
-    ConstIterator First() const { return ConstIterator(mNodes); }
-    ConstIterator Last() const { return ConstIterator(mNodes + mCount); }
-
-    class Iterator : public ConstIterator {
-    public:
-        Iterator(ReteNode** aNode) : ConstIterator(aNode) {}
-
-        Iterator& operator++() {
-            ++mCurrent;
-            return *this; }
-
-        Iterator operator++(int) {
-            Iterator result(*this);
-            ++mCurrent;
-            return result; }
-
-        ReteNode* operator*() const {
-            return *mCurrent; }
-
-        ReteNode* operator->() const {
-            return *mCurrent; }
-
-        PRBool operator==(const ConstIterator& aConstIterator) const {
-            return mCurrent == aConstIterator.mCurrent; }
-
-        PRBool operator!=(const ConstIterator& aConstIterator) const {
-            return mCurrent != aConstIterator.mCurrent; }
-    };
-
-    Iterator First() { return Iterator(mNodes); }
-    Iterator Last() { return Iterator(mNodes + mCount); }
-
-protected:
-    ReteNode** mNodes;
-    PRInt32 mCount;
-    PRInt32 mCapacity;
 };
 
 //----------------------------------------------------------------------
