@@ -279,6 +279,7 @@ sub BuildDist()
 #WEBSHELL
     [":mozilla:webshell:public:MANIFEST", "$distdirectory:webshell:"],
 #LAYOUT
+    [":mozilla:layout:build:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:base:public:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:html:style:public:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:html:base:src:MANIFEST", "$distdirectory:layout:"],
