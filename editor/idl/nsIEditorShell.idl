@@ -146,11 +146,75 @@ interface nsIEditorShell : nsISupports
   void Align(in wstring align);
   
   /** Element insert and property editing */
+
+  /** Return an element only if it is the only node selected,
+    *    such as an image, horizontal rule, etc.
+    * The exception is a link, which is more like a text attribute:
+    *    The Anchor tag is returned if the selection is within the textnode(s)
+    *    that are children of the "A" node.
+    *    This could be a collapsed selection, i.e., a caret within the link text.
+    *
+    * tagName:  The HTML tagname or and empty string 
+    *       to get any element (but only if it is the only element selected)
+    *    Special input values for Links and Named anchors:
+    *    Use "href" to get a link node
+    *      (an "A" tag with the "href" attribute set)
+    *    Use "anchor" or "namedanchor" to get a named anchor node
+    *      (an "A" tag with the "name" attribute set)
+    */
   nsIDOMElement GetSelectedElement(in wstring tagName);
-  /** returns the element conversion of supplied node or a parent of required type */
+
+  /** Return the input node or a parent matching the given aTagName,
+    *   starting the search at the supplied node.
+    * An example of use is for testing if a node is in a table cell
+    *   given a selection anchor node.
+    *
+    * tagName:  The HTML tagname
+    *    Special input values for Links and Named anchors:
+    *    Use "href" to get a link node 
+    *      (an "A" tag with the "href" attribute set)
+    *    Use "anchor" or "namedanchor" to get a named anchor node
+    *      (an "A" tag with the "name" attribute set)
+    *
+    * node:    The node in the document to start the search
+    *     If it is null, the anchor node of the current selection is used
+    */
   nsIDOMElement GetElementOrParentByTagName(in wstring tagName, in nsIDOMNode node);
+
+  /** Return a new element with default attribute values
+    * 
+    * This does not rely on the selection, and is not sensitive to context.
+    * 
+    * Used primarily to supply new element for various insert element dialogs
+    *  (Image, Link, NamedAnchor, Table, and HorizontalRule 
+    *   are the only returned elements as of 7/25/99)
+    *
+    * tagName:  The HTML tagname
+    *    Special input values for Links and Named anchors:
+    *    Use "href" to get a link node
+    *      (an "A" tag with the "href" attribute set)
+    *    Use "anchor" or "namedanchor" to get a named anchor node
+    *      (an "A" tag with the "name" attribute set)
+    */
   nsIDOMElement CreateElementWithDefaults(in wstring tagName);
+
+  /** Insert an element, which may have child nodes, at the selection
+    * Used primarily to insert a new element for various insert element dialogs,
+    *   but it enforces the HTML 4.0 DTD "CanContain" rules, so it should
+    *   be useful for other elements.
+    *
+    * element:           The element to insert
+    * deleteSelection:   Delete the selection before inserting
+    *     If deleteSelection is PR_FALSE, then the element is inserted 
+    *     after the end of the selection for all element except
+    *     Named Anchors, which insert before the selection
+    */  
   void InsertElement(in nsIDOMElement element, in boolean deleteSelection);
+
+  /** Insert an link element as the parent of the current selection
+    *
+    * element   An "A" element with a non-empty "href" attribute
+    */
   void InsertLinkAroundSelection(in nsIDOMElement anchorElement);
   void SelectElement(in nsIDOMElement element);
   void SetSelectionAfterElement(in nsIDOMElement element);
@@ -226,6 +290,12 @@ interface nsIEditorShell : nsISupports
 
   /* Utility */
   wstring GetLocalFileURL(in nsIDOMWindow parent, in wstring filterType);
+
+  /**
+   * Tests if a node is a BLOCK element according the the HTML 4.0 DTD
+   *   This does NOT consider CSS effect on display type
+   */
+  boolean IsNodeBlock(in nsIDOMNode node);
 
   void BeginBatchChanges();
   void EndBatchChanges();

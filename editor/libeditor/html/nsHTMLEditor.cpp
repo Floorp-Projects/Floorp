@@ -1330,7 +1330,9 @@ NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
 NS_IMETHODIMP 
 nsHTMLEditor::GetParagraphStyle(nsStringArray *aTagList)
 {
+#if 0
   if (gNoisy) { printf("---------- nsHTMLEditor::GetParagraphStyle ----------\n"); }
+#endif
   if (!aTagList) { return NS_ERROR_NULL_POINTER; }
 
   nsresult res;
@@ -2087,9 +2089,12 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   if (bNodeFound)
   {
     
-    *aReturn = selectedElement;  
-    // Getters must addref
-    NS_ADDREF(*aReturn);
+    *aReturn = selectedElement;
+    if (selectedElement)
+    {  
+      // Getters must addref
+      NS_ADDREF(*aReturn);
+    }
   }
   return res;
 }

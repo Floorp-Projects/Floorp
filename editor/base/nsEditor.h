@@ -411,6 +411,9 @@ public:
   /** set aIsBlock to PR_TRUE if aNode is inline as defined by HTML DTD */
   static nsresult IsNodeBlock(nsIDOMNode *aNode, PRBool &aIsBlock);
 
+  /** This version is for exposure to JavaScript */
+  NS_IMETHOD IsNodeBlock(nsIDOMNode *aNode, PRBool *aIsBlock);
+
   /** returns the closest block parent of aNode, not including aNode itself.
     * can return null, for example if aNode is in a document fragment.
     * @param aNode        The node whose parent we seek.
