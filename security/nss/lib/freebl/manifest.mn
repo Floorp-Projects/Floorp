@@ -48,12 +48,15 @@ endif
 # same version as rest of freebl
 LIBRARY_VERSION = _3
 
+DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\"
+
 REQUIRES = 
 
 EXPORTS = \
 	blapi.h \
 	blapit.h \
 	secrng.h \
+	shsign.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
@@ -108,6 +111,7 @@ ALL_HDRS =  \
 	secmpi.h \
 	sha.h \
 	sha_fast.h \
+	shsign.h \
 	vis_proto.h \
 	$(NULL)
 
