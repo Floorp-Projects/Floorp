@@ -116,7 +116,7 @@ LLIBS=                          \
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 
 clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\bin\components\$(DLLNAME).dll
