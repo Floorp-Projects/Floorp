@@ -976,14 +976,12 @@ nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
   nsCOMPtr<nsIDOMWindow> win(do_GetInterface(docShell));
   NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
 
-  {
-    nsCOMPtr<nsIDOMDocument> dom_doc;
+  nsCOMPtr<nsIDOMDocument> dom_doc;
 
-    // This will synchronously create a document if there is no
-    // document in the window yet.
+  // This will synchronously create a document if there is no
+  // document in the window yet.
 
-    win->GetDocument(getter_AddRefs(dom_doc));
-  }
+  win->GetDocument(getter_AddRefs(dom_doc));
 
   nsCOMPtr<nsIPresShell> presShell;
   docShell->GetPresShell(getter_AddRefs(presShell));
