@@ -6,7 +6,7 @@
 <!ENTITY subject.label  "Subject:">
 <!ENTITY subject.accesskey "S">
 <!ENTITY attachments.label "Attachments:">
-<!ENTITY attachments.accesskey "A">
+<!ENTITY attachments.accesskey "c">
 
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
 
