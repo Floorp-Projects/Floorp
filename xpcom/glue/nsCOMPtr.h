@@ -644,7 +644,7 @@ class nsCOMPtr<nsISupports>
 			nsCOMPtr( const nsCOMPtr_helper& helper )
 					: nsCOMPtr_base(0)
 				{
-					assign_from_helper(helper, NS_GET_IID(T));
+					assign_from_helper(helper, NS_GET_IID(nsISupports));
 				}
 
 			nsCOMPtr( const nsDontQueryInterface<nsISupports>& aSmartPtr )
@@ -677,7 +677,7 @@ class nsCOMPtr<nsISupports>
 			nsCOMPtr<nsISupports>&
 			operator=( const nsCOMPtr_helper& rhs )
 				{
-					assign_from_helper(rhs, NS_GET_IID(T));
+					assign_from_helper(rhs, NS_GET_IID(nsISupports));
 					return *this;
 				}
 
