@@ -1250,6 +1250,7 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
     (int)xul->mBoxOrient,
     (int)xul->mBoxPack,
     (int)xul->mBoxOrdinal);
+  fprintf(out, "\" />\n");
 #endif
 
   // SVG
