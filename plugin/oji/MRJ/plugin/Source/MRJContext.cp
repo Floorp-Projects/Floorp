@@ -919,12 +919,14 @@ void MRJContext::printApplet(nsPluginWindow* printingWindow)
 
 	do {
 		// try to use the printing API, if that fails, fall back on netscape.oji.AWTUtils.printContainer().
-		Point frameOrigin = { printingWindow->y, printingWindow->x };
-		status = ::JMDrawFrameInPort(mViewerFrame, printingPort, frameOrigin, printingPort->clipRgn, false);
-		if (status == noErr) break;
+		if (&::JMDrawFrameInPort != NULL) {
+			Point frameOrigin = { printingWindow->y, printingWindow->x };
+			status = ::JMDrawFrameInPort(mViewerFrame, printingPort, frameOrigin, printingPort->clipRgn, false);
+			if (status == noErr) break;
+		}
 
 		// get the frame object to print.
-		frameObject = JMGetAWTFrameJNIObject(mViewerFrame, env);
+		frameObject = ::JMGetAWTFrameJNIObject(mViewerFrame, env);
 		if (frameObject == NULL) break;
 
 		// call the print methods of the applet viewer's frame.
@@ -943,7 +945,7 @@ void MRJContext::printApplet(nsPluginWindow* printingWindow)
 		args[2].i = jint(printingWindow->x);
 		args[3].i = jint(printingWindow->y);
 		args[4].l = notifier.getObject();
-		OSStatus status = JMExecJNIStaticMethodInContext(mContext, env, utilsClass, printContainerMethod, 5, args);
+		OSStatus status = ::JMExecJNIStaticMethodInContext(mContext, env, utilsClass, printContainerMethod, 5, args);
 
 		// now, wait for the print method to complete.
 		if (status == noErr)
