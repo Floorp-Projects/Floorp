@@ -878,6 +878,23 @@ mail/components/Makefile
 mail/components/compose/Makefile
 "
 
+MAKEFILES_sql="
+extensions/sql/Makefile
+extensions/sql/base/Makefile
+extensions/sql/base/public/Makefile
+extensions/sql/base/src/Makefile
+extensions/sql/base/resources/Makefile
+extensions/sql/pgsql/public/Makefile
+extensions/sql/pgsql/src/Makefile
+extensions/sql/build/Makefile
+extensions/sql/build/src/Makefile
+extensions/sql/packager/Makefile
+extensions/sql/packager/mac/Makefile
+extensions/sql/packager/unix/Makefile
+extensions/sql/packager/win/Makefile
+extensions/sql/tests/Makefile
+"
+
 
 if [ "$MACOSX" ]; then
     MAKEFILES_macmorefiles="
@@ -1179,6 +1196,9 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/interfaceinfo/public/Makefile
             extensions/interfaceinfo/src/Makefile
             " ;;
+        sql ) MAKEFILES_extensions="$MAKEFILES_extensions
+            $MAKEFILES_sql"
+            ;;
     esac
 done
 
