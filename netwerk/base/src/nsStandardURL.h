@@ -100,6 +100,8 @@ public: /* internal -- HPUX compiler can't handle this being private */
     public:
         NS_DECL_ISUPPORTS
         NS_DECL_NSIOBSERVER
+
+        nsPrefObserver() { NS_INIT_ISUPPORTS(); }
     };
     friend class nsPrefObserver;
 
