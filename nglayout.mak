@@ -114,6 +114,9 @@ DIST_DIRS =			\
 # related libraries.
 
 RAPTOR_DIRS =			\
+!if defined(NGEDITOR)
+  editor \
+!endif
   htmlparser			\
   gfx				\
   dom				\
@@ -121,7 +124,7 @@ RAPTOR_DIRS =			\
   widget			\
   layout			\
   webshell			\
-  xpfe
+  xpfe			
 
 # Main rules
 
@@ -161,7 +164,10 @@ $(DIST_DIRS) $(RAPTOR_DIRS)::
 
 # Rules for pulling the source from the cvs repository
 
-pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout 
+pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout \
+!if defined(NGEDITOR)
+pull_editor
+!endif
 
 pull_lizard:
 	cd $(MOZ_SRC)\.
@@ -217,6 +223,11 @@ pull_nglayout:
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/widget
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/xpfe
 
+!if defined(NGEDITOR)
+pull_editor:
+	@cd $(MOZ_SRC)\.
+	$(CVSCO_RAPTOR) $(MOZ_TOP)/editor
+!endif
 ######################################################################
 
 # Build rules for the "dist" portion. The "dist" contains those things
