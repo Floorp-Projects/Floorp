@@ -229,7 +229,7 @@ libs:: $(PROGRAM)
 	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 	cp -RL $(srcdir)/macbuild/mach.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
-	echo -n APPLMOZZ > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 
 clean clobber::
 	rm -rf $(DIST)/$(APP_NAME).app
