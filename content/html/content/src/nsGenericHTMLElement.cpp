@@ -1677,7 +1677,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
     nsCOMPtr<nsIXBLBinding> binding;
     bindingManager->GetBinding(this, getter_AddRefs(binding));
     if (binding)
-      binding->AttributeChanged(aAttribute, aNameSpaceID, PR_FALSE);
+      binding->AttributeChanged(aAttribute, aNameSpaceID, PR_FALSE, aNotify);
 
     if (nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
       nsCOMPtr<nsIDOMEventTarget> node =
@@ -1774,7 +1774,7 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
     nsCOMPtr<nsIXBLBinding> binding;
     bindingManager->GetBinding(this, getter_AddRefs(binding));
     if (binding)
-      binding->AttributeChanged(localName, namespaceID, PR_FALSE);
+      binding->AttributeChanged(localName, namespaceID, PR_FALSE, aNotify);
 
     if (nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
       nsCOMPtr<nsIDOMEventTarget> node =
@@ -1952,7 +1952,8 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
     nsCOMPtr<nsIXBLBinding> binding;
     bindingManager->GetBinding(this, getter_AddRefs(binding));
     if (binding)
-      binding->AttributeChanged(aAttribute, kNameSpaceID_None, PR_TRUE);
+      binding->AttributeChanged(aAttribute, kNameSpaceID_None, PR_TRUE,
+                                aNotify);
 
     if (haveListeners) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
@@ -2088,7 +2089,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     nsCOMPtr<nsIXBLBinding> binding;
     bindingManager->GetBinding(this, getter_AddRefs(binding));
     if (binding)
-      binding->AttributeChanged(aAttribute, aNameSpaceID, PR_TRUE);
+      binding->AttributeChanged(aAttribute, aNameSpaceID, PR_TRUE, aNotify);
 
     if (aNotify) {
       mDocument->AttributeChanged(this, aNameSpaceID, aAttribute, nsIDOMMutationEvent::REMOVAL, impact);

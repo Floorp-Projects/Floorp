@@ -635,7 +635,7 @@ nsSVGAttributes::SetAttr(nsINodeInfo* aNodeInfo,
     nsCOMPtr<nsIXBLBinding> binding;
     bindingManager->GetBinding(mContent, getter_AddRefs(binding));
     if (binding)
-      binding->AttributeChanged(name, nameSpaceID, PR_FALSE);
+      binding->AttributeChanged(name, nameSpaceID, PR_FALSE, aNotify);
 
     if (nsGenericElement::HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(mContent));
@@ -734,7 +734,7 @@ nsSVGAttributes::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     nsCOMPtr<nsIXBLBinding> binding;
     bindingManager->GetBinding(mContent, getter_AddRefs(binding));
     if (binding)
-      binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE);
+      binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
     
     if (aNotify) {
       document->AttributeChanged(mContent, aNameSpaceID, aName,

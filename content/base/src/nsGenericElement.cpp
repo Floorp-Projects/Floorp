@@ -3237,7 +3237,7 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
     nsCOMPtr<nsIXBLBinding> binding;
     bindingManager->GetBinding(this, getter_AddRefs(binding));
     if (binding)
-      binding->AttributeChanged(name, nameSpaceID, PR_FALSE);
+      binding->AttributeChanged(name, nameSpaceID, PR_FALSE, aNotify);
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
@@ -3415,7 +3415,7 @@ nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
       nsCOMPtr<nsIXBLBinding> binding;
       bindingManager->GetBinding(this, getter_AddRefs(binding));
       if (binding)
-        binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE);
+        binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
 
       if (aNotify) {
         mDocument->AttributeChanged(this, aNameSpaceID, aName, nsIDOMMutationEvent::REMOVAL, 

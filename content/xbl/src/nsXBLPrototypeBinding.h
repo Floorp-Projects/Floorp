@@ -94,8 +94,9 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsSupportsWea
   NS_IMETHOD SetImplementation(nsXBLProtoImpl* aImpl) { mImplementation = aImpl; return NS_OK; };
   NS_IMETHOD InstallImplementation(nsIContent* aBoundElement);
 
-  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag, 
-                              nsIContent* aChangedElement, nsIContent* aAnonymousContent);
+  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
+                              PRBool aRemoveFlag, nsIContent* aChangedElement,
+                              nsIContent* aAnonymousContent, PRBool aNotify);
 
   NS_IMETHOD SetBasePrototype(nsIXBLPrototypeBinding* aBinding);
   NS_IMETHOD GetBasePrototype(nsIXBLPrototypeBinding** aResult);

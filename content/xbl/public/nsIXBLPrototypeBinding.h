@@ -96,8 +96,9 @@ public:
 
   NS_IMETHOD ConstructInterfaceTable(const nsAString& aImpls)=0;
   
-  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag, 
-                              nsIContent* aChangedElement, nsIContent* aAnonymousContent)=0;
+  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
+                              PRBool aRemoveFlag, nsIContent* aChangedElement,
+                              nsIContent* aAnonymousContent, PRBool aNotify)=0;
 
   NS_IMETHOD SetBasePrototype(nsIXBLPrototypeBinding* aBinding)=0;
   NS_IMETHOD GetBasePrototype(nsIXBLPrototypeBinding** aResult)=0;

@@ -2692,7 +2692,7 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
       bindingManager->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
 
       if (binding)
-        binding->AttributeChanged(attrName, attrns, PR_FALSE);
+        binding->AttributeChanged(attrName, attrns, PR_FALSE, aNotify);
 
       if (HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*, this), NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
         nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this)));
@@ -2993,7 +2993,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
         nsCOMPtr<nsIXBLBinding> binding;
         bindingManager->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
         if (binding)
-            binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE);
+            binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
 
         if (aNotify) {
             mDocument->AttributeChanged(this, aNameSpaceID, aName,

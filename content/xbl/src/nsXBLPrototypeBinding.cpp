@@ -550,8 +550,12 @@ nsXBLPrototypeBinding::InstallImplementation(nsIContent* aBoundElement)
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag, 
-                                        nsIContent* aChangedElement, nsIContent* aAnonymousContent)
+nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
+                                        PRInt32 aNameSpaceID,
+                                        PRBool aRemoveFlag, 
+                                        nsIContent* aChangedElement,
+                                        nsIContent* aAnonymousContent,
+                                        PRBool aNotify)
 {
   if (!mAttributeTable)
     return NS_OK;
@@ -579,7 +583,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
       xblAttr->GetDstAttribute(getter_AddRefs(dstAttr));
 
       if (aRemoveFlag)
-        realElement->UnsetAttr(aNameSpaceID, dstAttr, PR_TRUE);
+        realElement->UnsetAttr(aNameSpaceID, dstAttr, aNotify);
       else {
         PRBool attrPresent = PR_TRUE;
         nsAutoString value;
@@ -601,7 +605,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
         }
 
         if (attrPresent)
-          realElement->SetAttr(aNameSpaceID, dstAttr, value, PR_TRUE);
+          realElement->SetAttr(aNameSpaceID, dstAttr, value, aNotify);
       }
 
       // See if we're the <html> tag in XUL, and see if value is being
@@ -614,7 +618,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
         PRInt32 childCount;
         realElement->ChildCount(childCount);
         for (PRInt32 i = 0; i < childCount; i++)
-          realElement->RemoveChildAt(0, PR_TRUE);
+          realElement->RemoveChildAt(0, aNotify);
       
         if (!aRemoveFlag) {
           // Construct a new text node and insert it.
