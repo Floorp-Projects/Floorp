@@ -430,8 +430,8 @@ MimeInlineText_open_dam(char *line, PRInt32 length, MimeObject *obj)
 {
   MimeInlineText *text = (MimeInlineText *) obj;
   const char* detectedCharset = nsnull;
-  nsresult res;
-  int status;
+  nsresult res = NS_OK;
+  int status = 0;
   PRInt32 i;
 
   if (text->curDamOffset <= 0) {
@@ -441,11 +441,7 @@ MimeInlineText_open_dam(char *line, PRInt32 length, MimeObject *obj)
     }
   } else {
     //we have stuff in dam, use the one 
-    if (text->curDamOffset > length)
-      res = MIME_detect_charset(text->lineDamBuffer, text->curDamOffset, &detectedCharset);  
-    else 
-      res = MIME_detect_charset(text->lineDamBuffer, text->curDamOffset, &detectedCharset);  
-
+    res = MIME_detect_charset(text->lineDamBuffer, text->curDamOffset, &detectedCharset);  
   }
 
   //set the charset for this obj
