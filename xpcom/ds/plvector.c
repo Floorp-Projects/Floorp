@@ -102,18 +102,18 @@ PL_VectorSetSize(PLVector* v, PRUint32 newSize, PRInt32 growBy)
         /* otherwise, grow array */
         PRUint32 newMax;
         void** newData;
-        PRInt32 growBy = v->growBy;
-        if (growBy == 0) {
-            /* heuristically determine growth when growBy == 0
+        PRInt32 ngrowBy = v->growBy;
+        if (ngrowBy == 0) {
+            /* heuristically determine growth when ngrowBy == 0
                (this avoids heap fragmentation in many situations) */
-            growBy = PR_MIN(1024, PR_MAX(4, v->size / 8));
+            ngrowBy = PR_MIN(1024, PR_MAX(4, v->size / 8));
         }
 #ifdef MAX_ARR_ELEMS
-        if (v->size + growBy > MAX_ARR_ELEMS)
-            growBy = MAX_ARR_ELEMS - v->size;
+        if (v->size + ngrowBy > MAX_ARR_ELEMS)
+            ngrowBy = MAX_ARR_ELEMS - v->size;
 #endif
-        if (newSize < v->maxSize + growBy)
-            newMax = v->maxSize + growBy;  /* granularity */
+        if (newSize < v->maxSize + ngrowBy)
+            newMax = v->maxSize + ngrowBy;  /* granularity */
         else
             newMax = newSize;  /* no slush */
 
@@ -286,7 +286,7 @@ PR_IMPLEMENT(void)
 PL_VectorRemove(PLVector* v, PRUint32 index, PRUint32 count)
 {
     PRUint32 moveCount;
-    PR_ASSERT(count >= 0);
+    //PR_ASSERT(count >= 0);
     PR_ASSERT(index + count <= v->size);
 
     /* just remove a range */
@@ -308,8 +308,8 @@ PL_VectorAssertValid(PLVector* v)
         PR_ASSERT(v->maxSize == 0);
     }
     else {        
-        PR_ASSERT(v->size >= 0);
-        PR_ASSERT(v->maxSize >= 0);
+        //PR_ASSERT(v->size >= 0);
+        //PR_ASSERT(v->maxSize >= 0);
         PR_ASSERT(v->size <= v->maxSize);
     }
 }
