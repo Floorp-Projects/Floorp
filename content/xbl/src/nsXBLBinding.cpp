@@ -16,6 +16,8 @@
 #include "nsIXMLContentSink.h"
 #include "nsLayoutCID.h"
 #include "nsXMLDocument.h"
+#include "nsIDOMElement.h"
+#include "nsSupportsArray.h"
 
 #include "nsIXBLBinding.h"
 
@@ -43,13 +45,36 @@ public:
   nsXBLBinding();
   virtual ~nsXBLBinding();
 
+// Static members
+  static PRUint32 gRefCnt;
+  
+  static nsIAtom* nsXBLBinding::kContentAtom;
+  static nsIAtom* nsXBLBinding::kInterfaceAtom;
+  static nsIAtom* nsXBLBinding::kHandlersAtom;
+  static nsIAtom* nsXBLBinding::kExcludesAtom;
+  static nsIAtom* nsXBLBinding::kInheritsAtom;
+
+// Internal member functions
+protected:
+  void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
+  void BuildExcludesList(nsISupportsArray** aResult);
+  PRBool IsInExcludesArray(nsIAtom* aTag);
+
 // MEMBER VARIABLES
 protected:
-  nsCOMPtr<nsIContent> binding; // Strong. As long as we're around, the binding can't go away.
-  nsCOMPtr<nsIContent> content; // Strong. Our anonymous content stays around with us.
-  nsCOMPtr<nsIXBLBinding> nextBinding; // Strong. The derived binding owns the base class bindings.
+  nsCOMPtr<nsIContent> mBinding; // Strong. As long as we're around, the binding can't go away.
+  nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
+  nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
 };
 
+// Static initialization
+PRUint32 nsXBLBinding::gRefCnt = 0;
+  
+nsIAtom* nsXBLBinding::kContentAtom = nsnull;
+nsIAtom* nsXBLBinding::kInterfaceAtom = nsnull;
+nsIAtom* nsXBLBinding::kHandlersAtom = nsnull;
+nsIAtom* nsXBLBinding::kExcludesAtom = nsnull;
+nsIAtom* nsXBLBinding::kInheritsAtom = nsnull;
 
 // Implementation /////////////////////////////////////////////////////////////////
 
@@ -60,10 +85,26 @@ NS_IMPL_ISUPPORTS1(nsXBLBinding, nsIXBLBinding)
 nsXBLBinding::nsXBLBinding(void)
 {
   NS_INIT_REFCNT();
+  gRefCnt++;
+  if (gRefCnt == 1) {
+    kContentAtom = NS_NewAtom("content");
+    kInterfaceAtom = NS_NewAtom("interface");
+    kHandlersAtom = NS_NewAtom("handlers");
+    kExcludesAtom = NS_NewAtom("excludes");
+    kInheritsAtom = NS_NewAtom("inherits");
+  }
 }
 
 nsXBLBinding::~nsXBLBinding(void)
 {
+  gRefCnt--;
+  if (gRefCnt == 0) {
+    NS_RELEASE(kContentAtom);
+    NS_RELEASE(kInterfaceAtom);
+    NS_RELEASE(kHandlersAtom);
+    NS_RELEASE(kExcludesAtom);
+    NS_RELEASE(kInheritsAtom);
+  }
 }
 
 // nsIXBLBinding Interface ////////////////////////////////////////////////////////////////
@@ -71,7 +112,7 @@ nsXBLBinding::~nsXBLBinding(void)
 NS_IMETHODIMP
 nsXBLBinding::GetBaseBinding(nsIXBLBinding** aResult)
 {
-  *aResult = nextBinding;
+  *aResult = mNextBinding;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
@@ -79,14 +120,14 @@ nsXBLBinding::GetBaseBinding(nsIXBLBinding** aResult)
 NS_IMETHODIMP
 nsXBLBinding::SetBaseBinding(nsIXBLBinding* aBinding)
 {
-  nextBinding = aBinding; // Comptr handles rel/add
+  mNextBinding = aBinding; // Comptr handles rel/add
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXBLBinding::GetAnonymousContent(nsIContent** aResult)
 {
-  *aResult = content;
+  *aResult = mContent;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
@@ -94,14 +135,14 @@ nsXBLBinding::GetAnonymousContent(nsIContent** aResult)
 NS_IMETHODIMP
 nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
 {
-  content = aParent;
+  mContent = aParent;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXBLBinding::GetBindingElement(nsIContent** aResult)
 {
-  *aResult = binding;
+  *aResult = mBinding;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
@@ -109,13 +150,72 @@ nsXBLBinding::GetBindingElement(nsIContent** aResult)
 NS_IMETHODIMP
 nsXBLBinding::SetBindingElement(nsIContent* aElement)
 {
-  binding = aElement;
+  mBinding = aElement;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
 {
+  // Fetch the content element for this binding.
+  nsCOMPtr<nsIContent> content;
+  GetImmediateChild(kContentAtom, getter_AddRefs(content));
+
+  if (!content) {
+    // We have no anonymous content.
+    if (mNextBinding)
+      return mNextBinding->GenerateAnonymousContent(aBoundElement);
+    else return NS_OK;
+  }
+
+  // Plan to build the content by default.
+  PRBool buildContent = PR_TRUE;
+  PRInt32 childCount;
+  aBoundElement->ChildCount(childCount);
+  if (childCount > 0) {
+    // See if there's an excludes attribute.
+    // We'll only build content if all the explicit children are 
+    // in the excludes list.
+    nsAutoString excludes;
+    content->GetAttribute(kNameSpaceID_None, kExcludesAtom, excludes);
+    if (excludes == "true") {
+      // Build the excludes list.
+      nsCOMPtr<nsISupportsArray> atoms;
+      BuildExcludesList(getter_AddRefs(atoms));
+      if (!atoms)
+        buildContent = PR_FALSE;
+      else {
+        // Walk the children and ensure that all of them
+        // are in the excludes array.
+        for (PRInt32 i = 0; i < childCount; i++) {
+          nsCOMPtr<nsIContent> child;
+          aBoundElement->ChildAt(i, *getter_AddRefs(child));
+          nsCOMPtr<nsIAtom> tag;
+          child->GetTag(*getter_AddRefs(tag));
+          if (!IsInExcludesArray(tag)) {
+            buildContent = PR_FALSE;
+            break;
+          }
+        }
+      }
+    }
+    else buildContent = PR_FALSE;
+  }
+  
+  if (buildContent) {
+    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(content);
+
+    nsCOMPtr<nsIDOMNode> clonedNode;
+    domElement->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
+    
+    nsCOMPtr<nsIContent> clonedContent = do_QueryInterface(clonedNode);
+    SetAnonymousContent(clonedContent);
+  }
+  
+  if (mNextBinding) {
+    return mNextBinding->GenerateAnonymousContent(aBoundElement);
+  }
+
   return NS_OK;
 }
 
@@ -124,6 +224,27 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
 {
   // XXX Implement me!
   return NS_OK;
+}
+
+// Internal helper methods ////////////////////////////////////////////////////////////////
+
+void
+nsXBLBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult) 
+{
+  // XXX Implement me!
+}
+
+void 
+nsXBLBinding::BuildExcludesList(nsISupportsArray** aResult) 
+{
+  // XXX Implement me!
+}
+  
+PRBool
+nsXBLBinding::IsInExcludesArray(nsIAtom* aTag) 
+{ 
+  // XXX Implement me!
+  return PR_FALSE; 
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
