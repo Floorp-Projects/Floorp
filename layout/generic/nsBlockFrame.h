@@ -333,11 +333,12 @@ protected:
                       PRBool* aKeepReflowGoing,
                       PRBool aDamageDirtyArea = PR_FALSE);
 
-  nsresult PlaceLine(nsBlockReflowState& aState,
-                     nsLineLayout& aLineLayout,
-                     line_iterator aLine,
-                     PRBool* aKeepReflowGoing,
-                     PRBool aUpdateMaximumWidth);
+  // Return PR_TRUE if aLine gets pushed.
+  PRBool PlaceLine(nsBlockReflowState& aState,
+                   nsLineLayout&       aLineLayout,
+                   line_iterator       aLine,
+                   PRBool*             aKeepReflowGoing,
+                   PRBool              aUpdateMaximumWidth);
 
   /**
    * Mark |aLine| dirty, and, if necessary because of possible
