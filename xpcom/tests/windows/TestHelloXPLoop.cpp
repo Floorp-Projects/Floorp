@@ -46,65 +46,65 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prevInstance, LPSTR lpszCmdLine,
 	char* lpszAppName = "HelloWorld";
 	HWND wnd;
 	WNDCLASSEX wndclass;
+	int retCode;
 
 	nsresult rv;
-	nsCOMPtr<nsIServiceManager> servMgr;
-	rv = NS_InitXPCOM(getter_AddRefs(servMgr), NULL, NULL);
-    if (NS_FAILED(rv))
-    {
-		ErrorBox("Failed to initalize xpcom.");
-		return -1;
-    }
+	rv = NS_InitXPCOM(NULL, NULL, NULL);
+		{	//  Needed to scope all nsCOMPtr within XPCOM Init and Shutdown
+		if(NS_FAILED(rv))
+			{
+			ErrorBox("Failed to initalize xpcom.");
+			return -1;
+			}
       
-	nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+		nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
 
-	NS_WITH_SERVICE(nsINativeApp, nativeAppService, kNativeAppCID, &rv);
+		NS_WITH_SERVICE(nsINativeApp, nativeAppService, kNativeAppCID, &rv);
 
-	if(NS_FAILED(rv))
-		{
-		ErrorBox("Failed to get nativeAppService");
-		return -1;
+		if(NS_FAILED(rv))
+			{
+			ErrorBox("Failed to get nativeAppService");
+			return -1;
+			}
+		wndclass.cbSize        = sizeof(wndclass);
+		wndclass.style         = CS_HREDRAW | CS_VREDRAW;
+		wndclass.lpfnWndProc   = WndProc;
+		wndclass.cbClsExtra    = 0;
+		wndclass.cbWndExtra    = 0;
+		wndclass.hInstance     = inst;
+		wndclass.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
+		wndclass.hCursor       = LoadCursor(NULL, IDC_ARROW);
+		wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+		wndclass.lpszMenuName  = NULL;
+		wndclass.lpszClassName = lpszAppName;
+		wndclass.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
+
+		RegisterClassEx(&wndclass) ;
+
+		wnd = CreateWindow(lpszAppName, "The Hello World",
+							  WS_OVERLAPPEDWINDOW,
+							  CW_USEDEFAULT, CW_USEDEFAULT,
+							  CW_USEDEFAULT, CW_USEDEFAULT,
+							  NULL, NULL, inst, NULL);		     
+
+		ShowWindow(wnd, nShowCmd);
+		UpdateWindow(wnd);
+
+		nsCOMPtr<nsIEventLoop> eventLoop;
+
+		if(NS_FAILED(nativeAppService->CreateEventLoop(L"_MainLoop", 
+			nsEventLoopTypes::MainAppLoop, getter_AddRefs(eventLoop))))
+			{
+			ErrorBox("Failed to create event Loop");
+			return 0;
+			} 
+
+		eventLoop->Run(nsnull, nsnull, nsnull, &retCode);
+		eventLoop = nsnull; // Clear out before Shutting down XPCOM
+
+		InfoBox("Hello World app is out of loop");
 		}
-	wndclass.cbSize        = sizeof(wndclass);
-   wndclass.style         = CS_HREDRAW | CS_VREDRAW;
-   wndclass.lpfnWndProc   = WndProc;
-   wndclass.cbClsExtra    = 0;
-   wndclass.cbWndExtra    = 0;
-   wndclass.hInstance     = inst;
-   wndclass.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
-   wndclass.hCursor       = LoadCursor(NULL, IDC_ARROW);
-   wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-   wndclass.lpszMenuName  = NULL;
-   wndclass.lpszClassName = lpszAppName;
-   wndclass.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
-
-   RegisterClassEx(&wndclass) ;
-
-   wnd = CreateWindow(lpszAppName, "The Hello World",
-                    WS_OVERLAPPEDWINDOW,
-                    CW_USEDEFAULT, CW_USEDEFAULT,
-                    CW_USEDEFAULT, CW_USEDEFAULT,
-                    NULL, NULL, inst, NULL);		     
-
-	ShowWindow(wnd, nShowCmd);
-	UpdateWindow(wnd);
-
-	nsCOMPtr<nsIEventLoop> eventLoop;
-
-	if(NS_FAILED(nativeAppService->CreateEventLoop(L"_MainLoop", 
-		nsEventLoopTypes::MainAppLoop, getter_AddRefs(eventLoop))))
-		{
-		ErrorBox("Failed to create event Loop");
-		return 0;
-		} 
-
-
-	int retCode;
-	eventLoop->Run(nsnull, nsnull, nsnull, &retCode);
-
-	InfoBox("Hello World app is out of loop");
-
-	NS_ShutdownXPCOM(servMgr);
+	NS_ShutdownXPCOM(nsnull);
 	InfoBox("Hello World app is exiting");
 	return retCode;
 }
