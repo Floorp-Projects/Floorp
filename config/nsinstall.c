@@ -24,12 +24,16 @@
 **
 ** Brendan Eich, 7/20/95
 */
+#ifdef XP_OS2_VACPP
+#include "getopt.c"
+#include "dirent.c"
+#endif
 #include <stdio.h>  /* OSF/1 requires this before grp.h, so put it first */
 #include <assert.h>
 #include <fcntl.h>
 #include <errno.h>
 
-#ifndef XP_OS2
+#ifndef XP_OS2_VACPP
 #include <grp.h>
 #include <pwd.h>
 #endif
@@ -38,7 +42,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef XP_OS2
+#ifndef XP_OS2_VACPP
 #include <unistd.h>
 #include <utime.h>
 #endif
@@ -51,13 +55,12 @@
 #include <getopt.h>
 #endif
 
-#ifdef XP_OS2
+#ifdef XP_OS2_VACPP
 #include <dirent.h>
 #include <direct.h>
 #include <io.h>
 #include <sys\utime.h>
 #include <sys\types.h>
-#include "getopt.h" /*yes... we had to build this...*/
 #endif
 
 #ifdef SUNOS4
@@ -87,11 +90,13 @@ extern int fchmod(int fildes, mode_t mode);
 #define lstat stat
 /*looks reasonably safe based on OS/2's stat.h...*/
 #define S_ISLNK(mode)   0 /*no way in hell on a file system that doesn't support it*/
+#ifdef XP_OS2_VACPP
 typedef unsigned short mode_t;
 typedef unsigned short uid_t;
 typedef unsigned short gid_t;
 #define mkdir(path, mode) mkdir(path)
 #define W_OK 1
+#endif /* XP_OS2_VACPP */
 #define touid(spam) 0
 #define togid(spam) 0
 #define access(spam, spam2) 0
@@ -100,9 +105,11 @@ typedef unsigned short gid_t;
 #define fchown(spam1, spam2, spam3) 0
 #define readlink(spam1, spam2, spam3) -1
 #define symlink(spam1, spam2) -1
-unsigned long _System DosSetFileSize(int, int);
-#define ftruncate(spam1, spam2) DosSetFileSize(spam1, spam2)
-#endif
+#ifndef XP_OS2_VACPP
+unsigned long DosSetFileSize(int, int);
+#endif /* XP_OS2_VACPP */
+#define ftruncate(spam1, spam2) (DosSetFileSize(spam1, spam2)?-1:0)
+#endif /* XP_OS2 */
 
 static void
 usage(void)
@@ -337,11 +344,17 @@ main(int argc, char **argv)
 	    }
 
 	    /* Check for a pre-existing symlink with identical content. */
+#ifdef XP_OS2_VACPP
+#pragma info(nocnd)
+#endif
 	    if ((exists && (!S_ISLNK(tosb.st_mode) ||
 						readlink(toname, buf, sizeof buf) != len ||
 						strncmp(buf, name, (unsigned int)len) != 0)) || 
 			((stat(name, &fromsb) == 0) && 
 			 (fromsb.st_mtime > tosb.st_mtime))) {
+#ifdef XP_OS2_VACPP
+#pragma info(restore)
+#endif
 		(void) (S_ISDIR(tosb.st_mode) ? rmdir : unlink)(toname);
 		exists = 0;
 	    }
