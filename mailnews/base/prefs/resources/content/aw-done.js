@@ -26,7 +26,7 @@ function donePageInit() {
 
     if ("testingIspServices" in this) {
       if (testingIspServices()) {
-        if ("setOtherServices" in this) {
+        if ("setOtherISPServices" in this) {
           setOtherISPServices();
         }
 
