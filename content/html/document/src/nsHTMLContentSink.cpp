@@ -1947,6 +1947,8 @@ SinkContext::UpdateChildCounts()
     }
     stackPos--;
   }
+
+  mNotifyLevel = mStackPos-1;
 }
 
 /**
