@@ -1520,7 +1520,6 @@
 				F5247C3D0228B990013DD99A,
 				F5247C4C0228BBB2013DD99A,
 				F5247C4D0228BBB2013DD99A,
-				F5247C4E0228BBB2013DD99A,
 			);
 			isa = PBXGroup;
 			name = "Components Level";
@@ -1619,7 +1618,6 @@
 			files = (
 				F5247C520228BBB3013DD99A,
 				F5247C530228BBB3013DD99A,
-				F5247C540228BBB3013DD99A,
 				F5247C490228BA0B013DD99A,
 				F5247C4A0228BA0B013DD99A,
 			);
@@ -1650,12 +1648,6 @@
 			path = ../dist/Embed/components/pipnss.xpt;
 			refType = 2;
 		};
-		F5247C4E0228BBB2013DD99A = {
-			isa = PBXFileReference;
-			name = pippki.xpt;
-			path = ../dist/Embed/components/pippki.xpt;
-			refType = 2;
-		};
 		F5247C520228BBB3013DD99A = {
 			fileRef = F5247C4C0228BBB2013DD99A;
 			isa = PBXBuildFile;
@@ -1664,12 +1656,6 @@
 		};
 		F5247C530228BBB3013DD99A = {
 			fileRef = F5247C4D0228BBB2013DD99A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5247C540228BBB3013DD99A = {
-			fileRef = F5247C4E0228BBB2013DD99A;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -6603,7 +6589,6 @@
 			files = (
 				F5BAAC2E02AC6AA201A967F3,
 				F5BAAC2F02AC6AA201A967F3,
-				F5BAAC3002AC6AA201A967F3,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
@@ -6616,12 +6601,6 @@
 		};
 		F5BAAC2F02AC6AA201A967F3 = {
 			fileRef = F5247C4D0228BBB2013DD99A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAC3002AC6AA201A967F3 = {
-			fileRef = F5247C4E0228BBB2013DD99A;
 			isa = PBXBuildFile;
 			settings = {
 			};
