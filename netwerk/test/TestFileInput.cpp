@@ -32,7 +32,7 @@
 #include "nsIByteBufferInputStream.h"
 #include "nsIThread.h"
 #include "nsISupportsArray.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include <stdio.h>
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -151,6 +151,16 @@ public:
         if (NS_FAILED(rv)) return rv;
 
         return rv;
+    }
+
+    NS_IMETHOD OnStartRequest(nsISupports* context) {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD OnStopRequest(nsISupports* context,
+                             nsresult aStatus,
+                             nsIString* aMsg) {
+        return NS_ERROR_NOT_IMPLEMENTED;
     }
 
 protected:
@@ -334,11 +344,11 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         reader->QueryInterface(nsIStreamListener::GetIID(), (void**)&listener);
         NS_ASSERTION(listener, "QI failed");
     
-        nsITransport* trans;
+        nsIChannel* trans;
         rv = fts->CreateTransport(spec, &trans);
         NS_ASSERTION(NS_SUCCEEDED(rv), "create failed");
 
-        rv = trans->AsyncRead(nsnull, reader->GetEventQueue(), listener);
+        rv = trans->AsyncRead(0, -1, nsnull, reader->GetEventQueue(), listener);
         NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
 
         // the reader thread will hang on to these objects until it quits

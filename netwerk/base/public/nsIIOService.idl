@@ -1,0 +1,113 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+
+interface nsIProtocolHandler;
+interface nsIURI;
+interface nsIEventSinkGetter;
+interface nsIChannel;
+interface nsIString;
+
+[scriptable, uuid(01f0a170-1881-11d3-9337-00104ba0fd40)]
+interface nsIIOService : nsISupports
+{
+    /**
+     * Returns a protocol handler for a given URI scheme.
+     */
+    nsIProtocolHandler GetProtocolHandler(in string scheme);
+
+    /**
+     * Returns an absolute URI string from a relative specification and
+     * a base URI.
+     */
+    string MakeAbsolute(in string aRelativeSpec, in nsIURI aBaseURI);
+
+    /**
+     * This method constructs a new URI by first determining the scheme
+     * of the URI spec, and then delegating the construction of the URI
+     * to the protocol handler for that scheme. QueryInterface can be used
+     * on the resulting URI object to obtain a more specific type of URI.
+     */
+    nsIURI NewURI(in string aSpec, in nsIURI aBaseURI);
+
+    /**
+     * Creates a channel for a given URI. The eventSinkGetter is used to
+     * obtain the appropriate callbacks for the URI's protocol from the
+     * application.
+     */
+    nsIChannel NewChannelFromURI(in string verb,
+                                 in nsIURI aURI,
+                                 in nsIEventSinkGetter eventSinkGetter);
+
+    /**
+     * Convenience routine that first creates a URI by calling NewURI, and
+     * then passes the URI to NewChannelFromURI. 
+     */
+    nsIChannel NewChannel(in string verb,
+                          in string aSpec,
+                          in nsIURI aBaseURI,
+                          in nsIEventSinkGetter eventSinkGetter);
+
+    /**
+     * Get the application name string that will be used as part
+     * of a HTTP request.
+     */
+    readonly attribute nsIString AppCodeName;
+  
+    /**
+     * Get the application version string that will be used as part
+     * of a HTTP request.
+     */
+    readonly attribute nsIString AppVersion;
+
+    /**
+     * Get the application name.
+     */
+    readonly attribute nsIString AppName;
+
+    /**
+     * Get the translation of the application. The value for language
+     * is usually a 2-letter code such as "en" and occasionally a 
+     * five-character code to indicate a language subtype, such as "zh_CN". 
+     */
+    readonly attribute nsIString Language;
+
+    /**
+     * Get the current platform (machine type).
+     */
+    readonly attribute nsIString Platform;
+
+    /**
+     * Get the HTTP advertised user agent string.
+     */
+    readonly attribute nsIString UserAgent;
+
+};
+
+%{C++
+
+#define NS_IOSERVICE_CID                             \
+{ /* 9ac9e770-18bc-11d3-9337-00104ba0fd40 */         \
+    0x9ac9e770,                                      \
+    0x18bc,                                          \
+    0x11d3,                                          \
+    {0x93, 0x37, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+}
+
+%}

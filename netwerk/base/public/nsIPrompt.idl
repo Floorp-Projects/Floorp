@@ -16,20 +16,21 @@
  * Reserved.
  */
 
-#ifndef nsIFtpProtocolHandler_h___
-#define nsIFtpProtocolHandler_h___
+#include "nsISupports.idl"
 
-#include "nsIProtocolHandler.h"
+interface nsIString;
 
-// {AEF15D51-F132-11d2-9588-00805F369F95}
-#define NS_IFTPPROTOCOLHANDLER_IID                  \
-    { 0xaef15d51, 0xf132, 0x11d2, { 0x95, 0x88, 0x0, 0x80, 0x5f, 0x36, 0x9f, 0x95 } }
+[scriptable, uuid(a63f70c0-148b-11d3-9333-00104ba0fd40)]
+interface nsIPrompt : nsISupports
+{
+    boolean Confirm(in nsISupports ctxt, in nsIString text);
 
+    boolean Prompt(in nsISupports ctxt, in nsIString text,
+                   in nsIString defaultText, out nsIString result);
 
-class nsIFtpProtocolHandler : public nsIProtocolHandler {
-public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFTPPROTOCOLHANDLER_IID);
+    boolean PromptUsernameAndPassword(in nsISupports ctxt, in nsIString text,
+                                      out nsIString user, out nsIString pwd);
 
+    boolean PromptPassword(in nsISupports ctxt, in nsIString text, 
+                           out nsIString pwd);
 };
-
-#endif /* nsIIFtpProtocolHandler_h___ */

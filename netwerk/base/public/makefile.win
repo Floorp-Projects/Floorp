@@ -19,21 +19,25 @@ MODULE = netwerk
 
 DEPTH = ..\..\..
 
-EXPORTS =                         	\
-		netCore.h		  		  	\
-        nsICancelable.h           	\
-        nsIConnectionGroup.h      	\
-        nsIFileTransportService.h 	\
-        nsIHeader.h 				\
-        nsINetService.h           	\
-        nsIProtocolConnection.h   	\
-        nsIProtocolHandler.h     	\
-        nsIProxy.h      			\
+EXPORTS =                           \
+        netCore.h                   \
+        nsIFileTransportService.h   \
         nsISocketTransportService.h \
-        nsIStreamListener.h       	\
-        nsIStreamObserver.h       	\
-        nsITransport.h            	\
-        nsIUrl.h                  	\
+        nsIHeader.h                 \
+        nsIProxy.h                  \
+        $(NULL)
+
+XPIDLSRCS =                        \
+        .\nsIChannel.idl           \
+        .\nsIURI.idl               \
+        .\nsIURL.idl               \
+        .\nsIStreamObserver.idl    \
+        .\nsIStreamListener.idl    \
+        .\nsIIOService.idl         \
+        .\nsIEventSinkGetter.idl   \
+        .\nsIPrompt.idl            \
+        .\nsIProtocolHandler.idl   \
+        .\nsIProgressEventSink.idl \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>

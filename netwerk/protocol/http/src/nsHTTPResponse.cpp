@@ -18,7 +18,7 @@
 
 #include "nsHTTPResponse.h"
 #include "nsIUrl.h"
-#include "nsIHTTPConnection.h"
+#include "nsIHTTPChannel.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsHeaderPair.h"
@@ -26,7 +26,7 @@
 #include "kHTTPHeaders.h"
 #include "plstr.h"
 
-nsHTTPResponse::nsHTTPResponse(nsIHTTPConnection* i_pCon, nsIInputStream* i_InputStream):
+nsHTTPResponse::nsHTTPResponse(nsIHTTPChannel* i_pCon, nsIInputStream* i_InputStream):
     m_pConn(dont_QueryInterface(i_pCon)),
     m_pArray(new nsVoidArray()),
     mRefCnt(0),
@@ -88,7 +88,7 @@ nsHTTPResponse::SetAllow(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetAllow(const char* *o_Value) const
+nsHTTPResponse::GetAllow(char* *o_Value)
 {
     return GetHeader(kHH_ALLOW, o_Value);
 }
@@ -100,7 +100,7 @@ nsHTTPResponse::SetContentBase(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetContentBase(const char* *o_Value) const
+nsHTTPResponse::GetContentBase(char* *o_Value)
 {
 	return GetHeader(kHH_CONTENT_BASE, o_Value);
 }
@@ -112,7 +112,7 @@ nsHTTPResponse::SetContentEncoding(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetContentEncoding(const char* *o_Value) const
+nsHTTPResponse::GetContentEncoding(char* *o_Value)
 {
 	return GetHeader(kHH_CONTENT_ENCODING, o_Value);
 }
@@ -124,7 +124,7 @@ nsHTTPResponse::SetContentLanguage(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetContentLanguage(const char* *o_Value) const
+nsHTTPResponse::GetContentLanguage(char* *o_Value)
 {
 	return GetHeader(kHH_CONTENT_LANGUAGE, o_Value);
 }
@@ -136,7 +136,7 @@ nsHTTPResponse::SetContentLength(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetContentLength(const char* *o_Value) const
+nsHTTPResponse::GetContentLength(char* *o_Value)
 {
 	return GetHeader(kHH_CONTENT_LENGTH, o_Value);
 }
@@ -148,7 +148,7 @@ nsHTTPResponse::SetContentLocation(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetContentLocation(const char* *o_Value) const
+nsHTTPResponse::GetContentLocation(char* *o_Value)
 {
 	return GetHeader(kHH_CONTENT_LOCATION, o_Value);
 }
@@ -160,7 +160,7 @@ nsHTTPResponse::SetContentMD5(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetContentMD5(const char* *o_Value) const
+nsHTTPResponse::GetContentMD5(char* *o_Value)
 {
 	return GetHeader(kHH_CONTENT_MD5, o_Value);
 }
@@ -172,7 +172,7 @@ nsHTTPResponse::SetContentRange(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetContentRange(const char* *o_Value) const
+nsHTTPResponse::GetContentRange(char* *o_Value)
 {
 	return GetHeader(kHH_CONTENT_RANGE, o_Value);
 }
@@ -184,7 +184,7 @@ nsHTTPResponse::SetContentTransferEncoding(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetContentTransferEncoding(const char* *o_Value) const
+nsHTTPResponse::GetContentTransferEncoding(char* *o_Value)
 {
 	return GetHeader(kHH_CONTENT_TRANSFER_ENCODING, o_Value);
 }
@@ -196,7 +196,7 @@ nsHTTPResponse::SetContentType(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetContentType(const char* *o_Value) const
+nsHTTPResponse::GetContentType(char* *o_Value)
 {
 	return GetHeader(kHH_CONTENT_TYPE, o_Value);
 }
@@ -208,7 +208,7 @@ nsHTTPResponse::SetDerivedFrom(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetDerivedFrom(const char* *o_Value) const
+nsHTTPResponse::GetDerivedFrom(char* *o_Value)
 {
 	return GetHeader(kHH_DERIVED_FROM, o_Value);
 }
@@ -220,7 +220,7 @@ nsHTTPResponse::SetETag(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetETag(const char* *o_Value) const
+nsHTTPResponse::GetETag(char* *o_Value)
 {
 	return GetHeader(kHH_ETAG, o_Value);
 }
@@ -232,7 +232,7 @@ nsHTTPResponse::SetExpires(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetExpires(const char* *o_Value) const
+nsHTTPResponse::GetExpires(char* *o_Value)
 {
 	return GetHeader(kHH_EXPIRES, o_Value);
 }
@@ -244,7 +244,7 @@ nsHTTPResponse::SetLastModified(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetLastModified(const char* *o_Value) const
+nsHTTPResponse::GetLastModified(char* *o_Value)
 {
 	return GetHeader(kHH_LAST_MODIFIED, o_Value);
 }
@@ -256,7 +256,7 @@ nsHTTPResponse::SetLink(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetLink(const char* *o_Value) const
+nsHTTPResponse::GetLink(char* *o_Value)
 {
 	return GetHeader(kHH_LINK, o_Value);
 }
@@ -276,7 +276,7 @@ nsHTTPResponse::SetTitle(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetTitle(const char* *o_Value) const
+nsHTTPResponse::GetTitle(char* *o_Value)
 {
 	return GetHeader(kHH_TITLE, o_Value);
 }
@@ -288,7 +288,7 @@ nsHTTPResponse::SetURI(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetURI(const char* *o_Value) const
+nsHTTPResponse::GetURI(char* *o_Value)
 {
 	return GetHeader(kHH_URI, o_Value);
 }
@@ -300,7 +300,7 @@ nsHTTPResponse::SetVersion(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetVersion(const char* *o_Value) const
+nsHTTPResponse::GetVersion(char* *o_Value)
 {
 	return GetHeader(kHH_VERSION, o_Value);
 }
@@ -312,7 +312,7 @@ nsHTTPResponse::SetConnection(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetConnection(const char* *o_Value) const
+nsHTTPResponse::GetConnection(char* *o_Value)
 {
 	return GetHeader(kHH_CONNECTION, o_Value);
 }
@@ -324,7 +324,7 @@ nsHTTPResponse::SetDate(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetDate(const char* *o_Value) const
+nsHTTPResponse::GetDate(char* *o_Value)
 {
 	return GetHeader(kHH_DATE, o_Value);
 }
@@ -336,7 +336,7 @@ nsHTTPResponse::SetPragma(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetPragma(const char* *o_Value) const
+nsHTTPResponse::GetPragma(char* *o_Value)
 {
 	return GetHeader(kHH_PRAGMA,o_Value);
 }
@@ -348,7 +348,7 @@ nsHTTPResponse::SetForwarded(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetForwarded(const char* *o_Value) const
+nsHTTPResponse::GetForwarded(char* *o_Value)
 {
 	return GetHeader(kHH_FORWARDED,o_Value);
 }
@@ -360,7 +360,7 @@ nsHTTPResponse::SetMessageID(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetMessageID(const char* *o_Value) const
+nsHTTPResponse::GetMessageID(char* *o_Value)
 {
 	return GetHeader(kHH_MESSAGE_ID,o_Value);
 }
@@ -372,7 +372,7 @@ nsHTTPResponse::SetMIME(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetMIME(const char* *o_Value) const
+nsHTTPResponse::GetMIME(char* *o_Value)
 {
 	return GetHeader(kHH_MIME,o_Value);
 }
@@ -384,7 +384,7 @@ nsHTTPResponse::SetTrailer(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetTrailer(const char* *o_Value) const
+nsHTTPResponse::GetTrailer(char* *o_Value)
 {
 	return GetHeader(kHH_TRAILER,o_Value);
 }
@@ -396,7 +396,7 @@ nsHTTPResponse::SetTransfer(const char* i_Value)
 }
 
 NS_METHOD 
-nsHTTPResponse::GetTransfer(const char* *o_Value) const
+nsHTTPResponse::GetTransfer(char* *o_Value)
 {
 	return GetHeader(kHH_TRANSFER,o_Value);
 }
@@ -478,7 +478,7 @@ nsHTTPResponse::SetHeaderInternal(const char* i_Header, const char* i_Value)
 }
 
 NS_METHOD
-nsHTTPResponse::GetHeader(const char* i_Header, const char* *o_Value) const
+nsHTTPResponse::GetHeader(const char* i_Header, char* *o_Value)
 {
     NS_ASSERTION(m_pArray, "header array doesn't exist.");
 
@@ -505,8 +505,8 @@ nsHTTPResponse::GetHeader(const char* i_Header, const char* *o_Value) const
 
 NS_METHOD
 nsHTTPResponse::GetHeaderMultiple(const char* i_Header, 
-                    const char** *o_ValueArray,
-                    int o_Count) const
+                                  char** *o_ValueArray,
+                                  int *o_Count)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

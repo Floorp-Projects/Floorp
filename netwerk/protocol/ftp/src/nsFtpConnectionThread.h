@@ -21,7 +21,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
-#include "nsIUrl.h"
+#include "nsIURI.h"
 #include "nsIString.h"
 
 #include "nsString2.h"
@@ -106,25 +106,25 @@ typedef enum _FTP_ACTION {
 	DEL
 } FTP_ACTION;
 
-class nsFtpConnectionThread : public nsIRunnable, nsICancelable {
+class nsFtpConnectionThread : public nsIRunnable {
 public:
     NS_DECL_ISUPPORTS
 
-	nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamListener *aListener);
-	virtual ~nsFtpConnectionThread();
+    nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamListener *aListener);
+    virtual ~nsFtpConnectionThread();
 	
-	// nsIRunnable method
-	NS_IMETHOD Run();
-
+    // nsIRunnable method
+    NS_IMETHOD Run();
+#if 0
     // nsICancelable methods:
     NS_IMETHOD Cancel(void);
     NS_IMETHOD Suspend(void);
     NS_IMETHOD Resume(void);
-
+#endif
     nsresult Init(nsIThread* aThread,
-                  nsIUrl* aUrl);
+                  nsIURI* aUrl);
 
-	// user level setup
+    // user level setup
     nsresult SetAction(FTP_ACTION aAction);
     nsresult SetUsePasv(PRBool aUsePasv);
 
@@ -137,8 +137,8 @@ private:
 
     // Private members
 
-	nsIEventQueue*		mEventQueue;        // used to communicate outside this thread
-    nsIUrl*             mUrl;
+    nsIEventQueue*		mEventQueue;        // used to communicate outside this thread
+    nsIURI*             mUrl;
 
     FTP_STATE			mState;             // the current state
     FTP_STATE           mNextState;         // the next state
@@ -152,7 +152,7 @@ private:
     nsIOutputStream*    mDOutStream;        // data channel output
 
     PRInt32             mResponseCode;      // the last command response code.
-	nsString2			mResponseMsg;       // the last command response text
+    nsString2			mResponseMsg;       // the last command response text
     nsString2           mUsername;
     nsString2           mPassword;
     nsString2           mFilename;          // url filename (if any)
@@ -162,11 +162,11 @@ private:
 // these members should be hung off of a specific transport connection
     PRInt32             mServerType;
     PRBool              mPasv;
-	PRBool				mList;              // use LIST instead of NLST
+    PRBool				mList;              // use LIST instead of NLST
 // end "these ...."
 
     PRBool              mConnected;
-	PRBool			    mUseDefaultPath;    // use PWD to figure out path
+    PRBool			    mUseDefaultPath;    // use PWD to figure out path
     PRBool              mUsePasv;           // use a passive data connection.
     PRBool              mAscii;             // transfer mode (ascii or binary)
     PRBool              mDirectory;         // this url is a directory

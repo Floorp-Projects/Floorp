@@ -30,9 +30,9 @@ static NS_DEFINE_CID(kThisStandardUrlImplementationCID,
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsStandardUrl methods:
+// nsStandardURL methods:
 
-nsStandardUrl::nsStandardUrl(nsISupports* outer)
+nsStandardURL::nsStandardURL(nsISupports* outer)
     : mScheme(nsnull),
       mPreHost(nsnull),
       mHost(nsnull),
@@ -45,7 +45,7 @@ nsStandardUrl::nsStandardUrl(nsISupports* outer)
     NS_INIT_AGGREGATED(outer);
 }
 
-nsStandardUrl::~nsStandardUrl()
+nsStandardURL::~nsStandardURL()
 {
     if (mScheme)        delete[] mScheme;
     if (mPreHost)       delete[] mPreHost;
@@ -55,23 +55,16 @@ nsStandardUrl::~nsStandardUrl()
     if (mSpec)          delete[] mSpec;
 }
 
-NS_IMETHODIMP
-nsStandardUrl::Init(const char* aSpec,
-            nsIUrl* aBaseUrl)
-{
-    return Parse(aSpec, aBaseUrl);
-}
-
-NS_IMPL_AGGREGATED(nsStandardUrl);
+NS_IMPL_AGGREGATED(nsStandardURL);
 
 NS_IMETHODIMP
-nsStandardUrl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
+nsStandardURL::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
     if (aIID.Equals(kThisStandardUrlImplementationCID) ||        // used by Equals
-        aIID.Equals(nsIUrl::GetIID()) ||
+        aIID.Equals(nsIURI::GetIID()) ||
         aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = NS_STATIC_CAST(nsIUrl*, this);
+        *aInstancePtr = NS_STATIC_CAST(nsIURI*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -79,133 +72,10 @@ nsStandardUrl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIUrl methods:
+// nsIURI methods:
 
 NS_IMETHODIMP
-nsStandardUrl::GetScheme(const char* *result)
-{
-    *result = mScheme;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::SetScheme(const char* scheme)
-{
-    mScheme = nsCRT::strdup(scheme);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::GetPreHost(const char* *result)
-{
-    *result = mPreHost;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::SetPreHost(const char* preHost)
-{
-    mPreHost = nsCRT::strdup(preHost);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::GetHost(const char* *result)
-{
-    *result = mHost;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::SetHost(const char* host)
-{
-    mHost = nsCRT::strdup(host);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::GetPort(PRInt32 *result)
-{
-    *result = mPort;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::SetPort(PRInt32 port)
-{
-    mPort = port;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::GetPath(const char* *result)
-{
-    *result = mPath;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::SetPath(const char* path)
-{
-    mPath = nsCRT::strdup(path);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::Equals(nsIUrl* other)
-{
-    PRBool eq = PR_FALSE;
-    if (other) {
-//        NS_LOCK_INSTANCE();
-        nsStandardUrl* otherUrl;
-        nsresult rv =
-            other->QueryInterface(kThisStandardUrlImplementationCID,
-                                  (void**)&otherUrl);
-        if (NS_SUCCEEDED(rv)) {
-            eq = PRBool((0 == PL_strcmp(mScheme, otherUrl->mScheme)) && 
-                        (0 == PL_strcasecmp(mHost, otherUrl->mHost)) &&
-                        (mPort == otherUrl->mPort) &&
-                        (0 == PL_strcmp(mPath, otherUrl->mPath)));
-            NS_RELEASE(otherUrl);
-        }
-//        NS_UNLOCK_INSTANCE();
-    }
-    return eq;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::Clone(nsIUrl* *result)
-{
-    nsStandardUrl* url = new nsStandardUrl(nsnull);     // XXX outer?
-    if (url == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    url->mScheme = nsCRT::strdup(mScheme);
-    if (url->mScheme == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    url->mPreHost = nsCRT::strdup(mPreHost);
-    if (url->mPreHost == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    url->mHost = nsCRT::strdup(mHost);
-    if (url->mHost == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    url->mPort = mPort;
-    url->mPath = nsCRT::strdup(mPath);
-    if (url->mPath == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    url->mRef = nsCRT::strdup(mRef);
-    if (url->mRef == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    url->mQuery = nsCRT::strdup(mQuery);
-    if (url->mQuery == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    url->mSpec = nsCRT::strdup(mSpec);
-    if (url->mSpec == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardUrl::ToNewCString(char* *result)
+nsStandardURL::GetSpec(char* *result)
 {
     nsAutoString string;
 //    NS_LOCK_INSTANCE();
@@ -245,6 +115,143 @@ nsStandardUrl::ToNewCString(char* *result)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsStandardURL::SetSpec(char* aSpec)
+{
+    return Parse(aSpec, this);
+}
+
+NS_IMETHODIMP
+nsStandardURL::GetScheme(char* *result)
+{
+    *result = mScheme;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::SetScheme(char* scheme)
+{
+    mScheme = nsCRT::strdup(scheme);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::GetPreHost(char* *result)
+{
+    *result = mPreHost;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::SetPreHost(char* preHost)
+{
+    mPreHost = nsCRT::strdup(preHost);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::GetHost(char* *result)
+{
+    *result = mHost;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::SetHost(char* host)
+{
+    mHost = nsCRT::strdup(host);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::GetPort(PRInt32 *result)
+{
+    *result = mPort;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::SetPort(PRInt32 port)
+{
+    mPort = port;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::GetPath(char* *result)
+{
+    *result = mPath;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::SetPath(char* path)
+{
+    mPath = nsCRT::strdup(path);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::Equals(nsIURI* other, PRBool *result)
+{
+    PRBool eq = PR_FALSE;
+    if (other) {
+//        NS_LOCK_INSTANCE();
+        nsStandardURL* otherUrl;
+        nsresult rv =
+            other->QueryInterface(kThisStandardUrlImplementationCID,
+                                  (void**)&otherUrl);
+        if (NS_SUCCEEDED(rv)) {
+            eq = PRBool((0 == PL_strcmp(mScheme, otherUrl->mScheme)) && 
+                        (0 == PL_strcasecmp(mHost, otherUrl->mHost)) &&
+                        (mPort == otherUrl->mPort) &&
+                        (0 == PL_strcmp(mPath, otherUrl->mPath)));
+            NS_RELEASE(otherUrl);
+        }
+//        NS_UNLOCK_INSTANCE();
+    }
+    *result = eq;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::Clone(nsIURI* *result)
+{
+    nsStandardURL* url = new nsStandardURL(nsnull);     // XXX outer?
+    if (url == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mScheme = nsCRT::strdup(mScheme);
+    if (url->mScheme == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mPreHost = nsCRT::strdup(mPreHost);
+    if (url->mPreHost == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mHost = nsCRT::strdup(mHost);
+    if (url->mHost == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mPort = mPort;
+    url->mPath = nsCRT::strdup(mPath);
+    if (url->mPath == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mRef = nsCRT::strdup(mRef);
+    if (url->mRef == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mQuery = nsCRT::strdup(mQuery);
+    if (url->mQuery == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    url->mSpec = nsCRT::strdup(mSpec);
+    if (url->mSpec == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    *result = url;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStandardURL::MakeAbsolute(const char *relativePart, char **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // XXX recode to use nsString api's
@@ -252,14 +259,14 @@ nsStandardUrl::ToNewCString(char* *result)
 // XXX don't bother with ref's
 // XXX null pointer checks are incomplete
 nsresult
-nsStandardUrl::Parse(const char* spec, nsIUrl* aBaseUrl)
+nsStandardURL::Parse(const char* spec, nsIURI* aBaseUrl)
 {
     // XXX hack!
     nsString specStr(spec);
 
-    const char* uProtocol = nsnull;
-    const char* uHost = nsnull;
-    const char* uFile = nsnull;
+    char* uProtocol = nsnull;
+    char* uHost = nsnull;
+    char* uFile = nsnull;
     PRInt32 uPort;
     if (nsnull != aBaseUrl) {
         nsresult rslt = aBaseUrl->GetScheme(&uProtocol);
@@ -545,7 +552,7 @@ nsStandardUrl::Parse(const char* spec, nsIUrl* aBaseUrl)
 }
 
 void
-nsStandardUrl::ReconstructSpec()
+nsStandardURL::ReconstructSpec()
 {
     PR_FREEIF(mSpec);
 
@@ -586,3 +593,69 @@ nsStandardUrl::ReconstructSpec()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsIURI methods:
+
+NS_IMETHODIMP
+nsStandardURL::GetDirectory(char * *aDirectory)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsStandardURL::SetDirectory(char * aDirectory)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsStandardURL::GetFileName(char * *aFileName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsStandardURL::SetFileName(char * aFileName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsStandardURL::GetQuery(char * *aQuery)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsStandardURL::SetQuery(char * aQuery)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsStandardURL::GetRef(char * *aRef)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsStandardURL::SetRef(char * aRef)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_METHOD
+nsStandardURL::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsStandardURL* url = new nsStandardURL(aOuter);
+    if (url == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(url);
+    nsresult rv = url->QueryInterface(aIID, aResult);
+    NS_RELEASE(url);
+    return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

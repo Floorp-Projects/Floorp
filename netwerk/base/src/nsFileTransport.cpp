@@ -68,7 +68,7 @@ nsFileTransport::Init(const char* path,
 nsresult
 nsFileTransport::Init(nsISupports* context,
                       nsIStreamListener* listener,
-                      State state)
+                      State state, PRUint32 startPosition, PRInt32 count)
 {
     nsresult rv = NS_OK;
     if (!mMonitor)
@@ -85,6 +85,8 @@ nsFileTransport::Init(nsISupports* context,
         NS_ADDREF(mListener);
 
         mState = state;
+        mSourceOffset = startPosition;
+        mAmount = count;
     }
     PR_ExitMonitor(mMonitor);
     return rv;
@@ -99,10 +101,9 @@ nsFileTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
     if (NULL == aInstancePtr) {
         return NS_ERROR_NULL_POINTER; 
     } 
-    if (aIID.Equals(nsITransport::GetIID()) ||
-        aIID.Equals(nsICancelable::GetIID()) ||
+    if (aIID.Equals(nsIChannel::GetIID()) ||
         aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = NS_STATIC_CAST(nsITransport*, this); 
+        *aInstancePtr = NS_STATIC_CAST(nsIChannel*, this); 
         NS_ADDREF_THIS(); 
         return NS_OK; 
     } 
@@ -115,7 +116,6 @@ nsFileTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsICancelable methods:
 
 NS_IMETHODIMP
 nsFileTransport::Cancel(void)
@@ -166,20 +166,27 @@ nsFileTransport::Resume(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsITransport methods:
+// nsIChannel methods:
 
 NS_IMETHODIMP
-nsFileTransport::AsyncRead(nsISupports* context,
-                           nsIEventQueue* appEventQueue,
-                           nsIStreamListener* listener)
+nsFileTransport::GetURI(nsIURI* *aURL)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
+                           nsISupports *ctxt,
+                           nsIEventQueue *eventQueue,
+                           nsIStreamListener *listener)
 {
     nsresult rv;
 
     nsIStreamListener* asyncListener;
-    rv = NS_NewAsyncStreamListener(&asyncListener, appEventQueue, listener);
+    rv = NS_NewAsyncStreamListener(&asyncListener, eventQueue, listener);
     if (NS_FAILED(rv)) return rv;
 
-    rv = Init(context, asyncListener, START_READ);
+    rv = Init(ctxt, asyncListener, START_READ, startPosition, readCount);
     NS_RELEASE(asyncListener);
 
     rv = mService->DispatchRequest(this);
@@ -190,6 +197,8 @@ nsFileTransport::AsyncRead(nsISupports* context,
 
 NS_IMETHODIMP
 nsFileTransport::AsyncWrite(nsIInputStream* fromStream,
+                            PRUint32 startPosition,
+                            PRInt32 writeCount,
                             nsISupports* context,
                             nsIEventQueue* appEventQueue,
                             nsIStreamObserver* observer)
@@ -207,7 +216,7 @@ nsFileTransport::OpenInputStream(nsIInputStream* *result)
     rv = NS_NewSyncStreamListener(&syncListener, &inStr);
     if (NS_FAILED(rv)) return rv;
 
-    rv = Init(nsnull, syncListener, START_READ);
+    rv = Init(nsnull, syncListener, START_READ, 0, -1);
     NS_RELEASE(syncListener);
     if (NS_FAILED(rv)) {
         NS_RELEASE(inStr);
@@ -269,10 +278,12 @@ nsFileTransport::Process(void)
           if (NS_FAILED(mStatus)) goto error;
 
           PRUint32 amt;
-          mStatus = mBuffer->WriteFrom(
-		  		NS_STATIC_CAST(nsIInputStream*, mFileStream), 
-				0, 
-				&amt);
+          nsIInputStream* inStr = NS_STATIC_CAST(nsIInputStream*, mFileStream);
+          PRUint32 inLen;
+          mStatus = inStr->GetLength(&inLen);
+          if (NS_FAILED(mStatus)) goto error;
+
+          mStatus = mBuffer->WriteFrom(inStr, inLen, &amt);
           if (mStatus == NS_BASE_STREAM_EOF) goto error; 
           if (NS_FAILED(mStatus)) goto error;
 

@@ -23,7 +23,7 @@
 class nsITransport;
 class nsIString;
 class nsHTTPResponse;
-class nsIHTTPConnection;
+class nsIHTTPChannel;
 /* 
     The nsHTTPResponseListener class is the response reader listener that 
     receives notifications of OnStartBinding, OnDataAvailable and 
@@ -63,12 +63,14 @@ public:
     NS_IMETHOD OnStopBinding(nsISupports* context,
                             nsresult aStatus,
                             nsIString* aMsg);
+    NS_IMETHOD OnStartRequest(nsISupports *ctxt);
+    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, nsIString *errorMsg);
 
 protected:
     PRBool              m_bHeadersDone;
     PRBool              m_bFirstLineParsed;
     nsHTTPResponse*     m_pResponse;
-    nsIHTTPConnection*  m_pConnection;
+    nsIHTTPChannel*     m_pConnection;
 };
 
 #endif /* _nsHTTPResponseListener_h_ */

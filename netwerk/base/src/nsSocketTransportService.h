@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -36,7 +36,7 @@ public:
   // nsISocketTransportService methods:
   NS_IMETHOD CreateTransport(const char* aHost, 
                              PRInt32 aPort,
-                             nsITransport** aResult);
+                             nsIChannel** aResult);
 
   NS_IMETHOD Shutdown(void);
 
@@ -46,6 +46,9 @@ public:
   // nsSocketTransportService methods:
   nsSocketTransportService();
   virtual ~nsSocketTransportService();
+
+  static NS_METHOD
+  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   nsresult Init(void);
 

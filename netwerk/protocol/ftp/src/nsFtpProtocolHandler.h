@@ -31,24 +31,23 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIProtocolHandler methods:
-    NS_IMETHOD GetScheme(const char* *result) const;
-    NS_IMETHOD GetDefaultPort(PRInt32 *result) const ;    
-    NS_IMETHOD MakeAbsoluteUrl(const char* aSpec,
-                               nsIUrl* aBaseUrl,
-                               char* *result) const ;
-    NS_IMETHOD NewUrl(const char* aSpec,
-                      nsIUrl* *result,
-                      nsIUrl* aBaseUrl=0) const;
-    NS_IMETHOD NewConnection(nsIUrl* url,
-                             nsISupports* eventSink,
-                             nsIEventQueue* eventQueue,
-                             nsIProtocolConnection* *result);
+    NS_IMETHOD GetScheme(char * *aScheme);
+    NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort);
+    NS_IMETHOD MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI,
+                            char **_retval);
+    NS_IMETHOD NewURI(const char *aSpec, nsIURI *aBaseURI,
+                      nsIURI **_retval);
+    NS_IMETHOD NewChannel(const char* verb, nsIURI* url,
+                          nsIEventSinkGetter *eventSinkGetter,
+                          nsIEventQueue *eventQueue,
+                          nsIChannel **_retval);
 
     // nsFtpProtocolHandler methods:
     nsFtpProtocolHandler();
     virtual ~nsFtpProtocolHandler();
 
 protected:
+    nsISupports*        mEventSinkGetter;
 };
 
 #endif /* nsFtpProtocolHandler_h___ */

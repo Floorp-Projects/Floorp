@@ -19,9 +19,9 @@
 #include "nsFtpConnectionThread.h"
 #include "nsFtpStreamListenerEvent.h" // the various events we fire off to the
                                       // owning thread.
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsISocketTransportService.h"
-#include "nsIUrl.h"
+#include "nsIURI.h"
 
 #include "nsIByteBufferInputStream.h" // for our internal stream state
 #include "nsIInputStream.h"
@@ -79,7 +79,7 @@ nsFtpConnectionThread::~nsFtpConnectionThread() {
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsICancelable methods:
-
+#if 0
 NS_IMETHODIMP
 nsFtpConnectionThread::Cancel(void) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -94,8 +94,7 @@ NS_IMETHODIMP
 nsFtpConnectionThread::Resume(void) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRunnable method:
 
@@ -104,8 +103,8 @@ NS_IMETHODIMP
 nsFtpConnectionThread::Run() {
     nsresult rv;
     PRBool processing = PR_TRUE;
-    nsITransport* lCPipe = nsnull;
-    nsITransport* lDPipe = nsnull;
+    nsIChannel* lCPipe = nsnull;
+    nsIChannel* lDPipe = nsnull;
 
     mState = FTP_S_USER;
 
@@ -113,14 +112,15 @@ nsFtpConnectionThread::Run() {
     if(NS_FAILED(rv)) return rv;
 
     // Create the command channel transport
-    const char *host;
+    char *host;
     PRInt32 port = 0;
     rv = mUrl->GetHost(&host);
     if (NS_FAILED(rv)) return rv;
     rv = mUrl->GetPort(&port);
-	if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
 
     rv = sts->CreateTransport(host, port, &lCPipe); // the command channel
+    nsCRT::free(host);
     if (NS_FAILED(rv)) return rv;
 
     // get the output stream so we can write to the server
@@ -506,18 +506,19 @@ nsFtpConnectionThread::Run() {
 					    newPath = ptr;
 
 
-					    const char *initialPath = nsnull;
+					    char *initialPath = nsnull;
 					    rv = mUrl->GetPath(&initialPath);
 					    if (NS_FAILED(rv)) {
-                            mState = FTP_ERROR;
-                            break;
-                        }
+                  mState = FTP_ERROR;
+                  break;
+              }
 					    
 					    if (initialPath && *initialPath) {
-						    if (newPath.Last() == '/')
-							    newPath.Cut(newPath.Length()-1, 1);
-						    newPath.Append(initialPath);
+                  if (newPath.Last() == '/')
+                      newPath.Cut(newPath.Length()-1, 1);
+                  newPath.Append(initialPath);
 					    }
+              nsCRT::free(initialPath);
 
 					    char *p = newPath.ToNewCString();
 					    mUrl->SetPath(p);
@@ -582,7 +583,7 @@ nsFtpConnectionThread::Run() {
 
             case FTP_S_CWD:
                 {
-                const char * path = nsnull;
+                char * path = nsnull;
                 rv = mUrl->GetPath(&path);
                 if (NS_FAILED(rv)) {
                     mState = FTP_ERROR;
@@ -607,6 +608,7 @@ nsFtpConnectionThread::Run() {
                     // non VMS server
                     PR_smprintf(buffer, "CWD %.1024s\r\n", path);
                 }
+                nsCRT::free(path);
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
@@ -658,7 +660,7 @@ nsFtpConnectionThread::Run() {
 
             case FTP_S_SIZE:
                 {
-                const char *path = nsnull;
+                char *path = nsnull;
                 rv = mUrl->GetPath(&path);
                 if (NS_FAILED(rv)) {
                     mState = FTP_ERROR;
@@ -671,6 +673,7 @@ nsFtpConnectionThread::Run() {
                 }
 
                 PR_smprintf(buffer, "SIZE %.1024s\r\n", path);
+                nsCRT::free(path);
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
@@ -703,7 +706,7 @@ nsFtpConnectionThread::Run() {
 
             case FTP_S_MDTM:
                 {
-                const char *path = nsnull;
+                char *path = nsnull;
                 rv = mUrl->GetPath(&path);
                 if (NS_FAILED(rv)) {
                     mState = FTP_ERROR;
@@ -716,6 +719,7 @@ nsFtpConnectionThread::Run() {
                 }
 
                 PR_smprintf(buffer, "MDTM %.1024s\r\n", path);
+                nsCRT::free(path);
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
@@ -888,7 +892,7 @@ nsFtpConnectionThread::Run() {
 
             case FTP_S_RETR:
                 {
-                const char *path = nsnull;
+                char *path = nsnull;
                 rv = mUrl->GetPath(&path);
                 if (NS_FAILED(rv)) {
                     mState = FTP_ERROR;
@@ -901,6 +905,7 @@ nsFtpConnectionThread::Run() {
                     PR_smprintf(buffer, "RETR %.1024s\r\n", mFilename);
                 else
                     PR_smprintf(buffer, "RETR %.1024s\r\n", path);
+                nsCRT::free(path);
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
@@ -1131,7 +1136,7 @@ nsFtpConnectionThread::Run() {
 //////////////////////////////
             case FTP_S_DEL_FILE:
                 {
-                const char *filename = nsnull;
+                char *filename = nsnull;
                 nsresult rv;
                 rv = mUrl->GetPath(&filename); // XXX we should probably check to 
                                                // XXX make sure we have an actual filename.
@@ -1140,6 +1145,7 @@ nsFtpConnectionThread::Run() {
                     break;
                 }
                 PR_smprintf(buffer, "DELE %s\r\n", filename);
+                nsCRT::free(filename);
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
@@ -1174,7 +1180,7 @@ nsFtpConnectionThread::Run() {
 
             case FTP_S_DEL_DIR:
                 {
-                const char *dir = nsnull;
+                char *dir = nsnull;
                 nsresult rv;
                 rv = mUrl->GetPath(&dir);
                 if (NS_FAILED(rv)) {
@@ -1182,6 +1188,7 @@ nsFtpConnectionThread::Run() {
                     break;
                 }
                 PR_smprintf(buffer, "RMD %s\r\n", dir);
+                nsCRT::free(dir);
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
@@ -1217,7 +1224,7 @@ nsFtpConnectionThread::Run() {
 
             case FTP_S_MKDIR:
                 {
-                const char *dir = nsnull;
+                char *dir = nsnull;
                 nsresult rv;
                 rv = mUrl->GetPath(&dir);
                 if (NS_FAILED(rv)) {
@@ -1225,6 +1232,7 @@ nsFtpConnectionThread::Run() {
                     break;
                 }
                 PR_smprintf(buffer, "MKD %s\r\n", dir);
+                nsCRT::free(dir);
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
@@ -1270,7 +1278,7 @@ nsFtpConnectionThread::Run() {
 }
 
 nsresult
-nsFtpConnectionThread::Init(nsIThread* aThread, nsIUrl* aUrl) {
+nsFtpConnectionThread::Init(nsIThread* aThread, nsIURI* aUrl) {
 /*    mThread = aThread;
     NS_ADDREF(mThread);
 
@@ -1396,8 +1404,9 @@ nsFtpConnectionThread::FindActionState(void) {
 
 FTP_STATE
 nsFtpConnectionThread::FindGetState(void) {
-    const char *path = nsnull;
+    char *path = nsnull;
     nsresult rv;
+    FTP_STATE result = FTP_ERROR;
 
     rv = mUrl->GetPath(&path);
     if (NS_FAILED(rv)) return FTP_ERROR;
@@ -1406,24 +1415,24 @@ nsFtpConnectionThread::FindGetState(void) {
         // check for directory
         if (!path[0] || (path[0] == '/' && !path[1]) ) {
             mDirectory = PR_TRUE;
-            return FTP_S_LIST; 
+            result = FTP_S_LIST; 
         }
         else if (!PL_strchr(path, '/')) {
-            return FTP_S_RETR;
+            result = FTP_S_RETR;
         }
         else {
-            return FTP_S_CWD;
+            result = FTP_S_CWD;
         }
     } else {
         // XXX I've removed the check for "aleady tried RETR"
         if (path[PL_strlen(path) -1] == '/') {
-            return FTP_S_CWD;
+            result = FTP_S_CWD;
         } else {
-            return FTP_S_RETR;
+            result = FTP_S_RETR;
         }
     }
-
-    return FTP_ERROR;
+    nsCRT::free(path);
+    return result;
 }
 
 nsresult

@@ -22,10 +22,9 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-EXPORTS =                           \
-        nsIFtpEventSink.h          \
-        nsIFtpProtocolConnection.h \
-	ftpCore.h		\
+EXPORTS =		\
+        nsIFTPChannel.h	\
+	ftpCore.h	\
         $(NULL)
 
 include $(DEPTH)/config/autoconf.mk

@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "nsHTTPConnection.h"
+#include "nsHTTPChannel.h"
 #include "netCore.h"
 #include "nsIHttpEventSink.h"
 #include "nsIHTTPHandler.h"
@@ -24,12 +24,11 @@
 #include "nsHTTPResponse.h"
 #include "nsITransport.h"
 
-nsHTTPConnection::nsHTTPConnection(
-        nsIURL* i_URL, 
-        nsIEventQueue* i_EQ, 
-        nsIHTTPEventSink* i_HTTPEventSink,
-        nsIHTTPHandler* i_Handler): 
-    m_pURL( dont_QueryInterface(i_URL)),
+nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
+                             nsIEventQueue* i_EQ, 
+                             nsIHTTPEventSink* i_HTTPEventSink,
+                             nsIHTTPHandler* i_Handler): 
+    m_URI(dont_QueryInterface(i_URL)),
     m_bConnected(PR_FALSE),
     m_State(HS_IDLE),
     mRefCnt(0),
@@ -38,7 +37,12 @@ nsHTTPConnection::nsHTTPConnection(
     m_pResponse(nsnull),
     m_pEventQ(dont_QueryInterface(i_EQ)),
     m_pResponseDataListener(nsnull)
-    
+{
+    NS_INIT_REFCNT();
+}
+
+nsresult
+nsHTTPChannel::Init()
 {
     //TODO think if we need to make a copy of the URL and keep it here
     //since it might get deleted off the creators thread. And the
@@ -48,46 +52,59 @@ nsHTTPConnection::nsHTTPConnection(
         Set up a request object - later set to a clone of a default 
         request from the handler
     */
-    m_pRequest = new nsHTTPRequest(m_pURL);
-    if (m_pRequest) {
-        NS_ADDREF(m_pRequest);
-        m_pRequest->SetConnection(this);
-    } else {
-        NS_ERROR("unable to create new nsHTTPRequest!");
-    }
+    m_pRequest = new nsHTTPRequest(m_URI);
+    if (m_pRequest == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(m_pRequest);
+    m_pRequest->SetConnection(this);
+    return NS_OK;
 }
 
-nsHTTPConnection::~nsHTTPConnection()
+nsHTTPChannel::~nsHTTPChannel()
 {
-    //TODO if we keep our copy of m_pURL, then delete it too.
+    //TODO if we keep our copy of m_URI, then delete it too.
     NS_IF_RELEASE(m_pRequest);
     NS_IF_RELEASE(m_pResponse);
 
     NS_IF_RELEASE(m_pResponseDataListener);
 }
 
-NS_IMPL_ADDREF(nsHTTPConnection);
-
-NS_METHOD
-nsHTTPConnection::Cancel(void)
+NS_IMETHODIMP
+nsHTTPChannel::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (NULL == aInstancePtr)
+        return NS_ERROR_NULL_POINTER;
+
+    *aInstancePtr = NULL;
+    
+    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+    if (aIID.Equals(nsIHTTPChannel::GetIID()) ||
+        aIID.Equals(nsIChannel::GetIID()) ||
+        aIID.Equals(kISupportsIID)) {
+        *aInstancePtr = NS_STATIC_CAST(nsIHTTPChannel*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
+ 
+NS_IMPL_ADDREF(nsHTTPChannel);
+NS_IMPL_RELEASE(nsHTTPChannel);
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIChannel methods:
+
+NS_IMETHODIMP
+nsHTTPChannel::GetURI(nsIURI* *o_URL)
+{
+    if (o_URL)
+        *o_URL = m_URI;
+    return NS_OK;
 }
 
-NS_METHOD
-nsHTTPConnection::Suspend(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD
-nsHTTPConnection::Resume(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD
-nsHTTPConnection::GetInputStream(nsIInputStream* *o_Stream)
+NS_IMETHODIMP
+nsHTTPChannel::OpenInputStream(nsIInputStream* *o_Stream)
 {
 #if 0
     nsresult rv;
@@ -112,28 +129,69 @@ nsHTTPConnection::GetInputStream(nsIInputStream* *o_Stream)
 
 }
 
-NS_METHOD
-nsHTTPConnection::GetOutputStream(nsIOutputStream* *o_Stream)
+NS_IMETHODIMP
+nsHTTPChannel::OpenOutputStream(nsIOutputStream* *o_Stream)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD
-nsHTTPConnection::GetRequestHeader(const char* i_Header, const char* *o_Value) const
+NS_IMETHODIMP
+nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
+                         nsISupports *ctxt,
+                         nsIEventQueue *eventQueue,
+                         nsIStreamListener *listener)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::AsyncWrite(nsIInputStream *fromStream,
+                          PRUint32 startPosition,
+                          PRInt32 writeCount,
+                          nsISupports *ctxt,
+                          nsIEventQueue *eventQueue,
+                          nsIStreamObserver *observer)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::Cancel(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::Suspend(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::Resume(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIHTTPChannel methods:
+
+NS_IMETHODIMP
+nsHTTPChannel::GetRequestHeader(const char* i_Header, char* *o_Value)
 {
     NS_ASSERTION(m_pRequest, "The request object vanished from underneath the connection!");
     return m_pRequest->GetHeader(i_Header, o_Value);
 }
 
-NS_METHOD
-nsHTTPConnection::SetRequestHeader(const char* i_Header, const char* i_Value)
+NS_IMETHODIMP
+nsHTTPChannel::SetRequestHeader(const char* i_Header, const char* i_Value)
 {
     NS_ASSERTION(m_pRequest, "The request object vanished from underneath the connection!");
     return m_pRequest->SetHeader(i_Header, i_Value);
 }
 
-NS_METHOD
-nsHTTPConnection::SetResponse(nsHTTPResponse* i_pResp) 
+nsresult
+nsHTTPChannel::SetResponse(nsHTTPResponse* i_pResp)
 { 
   NS_IF_RELEASE(m_pResponse);
   m_pResponse = i_pResp;
@@ -142,8 +200,8 @@ nsHTTPConnection::SetResponse(nsHTTPResponse* i_pResp)
   return NS_OK;
 }
 
-NS_METHOD
-nsHTTPConnection::GetResponseHeader(const char* i_Header, const char* *o_Value)
+NS_IMETHODIMP
+nsHTTPChannel::GetResponseHeader(const char* i_Header, char* *o_Value)
 {
     if (!m_bConnected)
         Open();
@@ -160,8 +218,59 @@ static NS_DEFINE_IID(kINetModuleMgrIID, NS_INETMODULEMGR_IID);
 static NS_DEFINE_CID(kCookieModuleCID, NS_COOKIEMODULE_CID);
 #endif // jud
 
-NS_METHOD
-nsHTTPConnection::Open(void)
+NS_IMETHODIMP
+nsHTTPChannel::GetResponseStatus(nsresult *o_Status)
+{
+    PRInt32 status = -1;
+    if (!m_bConnected) 
+        Open();
+    *o_Status = status;
+
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetResponseString(char* *o_String) 
+{
+    if (!m_bConnected) 
+        Open();
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetEventSink(nsIHTTPEventSink* *o_EventSink) 
+{
+    *o_EventSink = m_pEventSink; 
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsHTTPChannel::SetRequestMethod(PRUint32/*HTTPMethod*/ i_Method)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
+{
+  nsresult rv = NS_OK;
+
+  if (aListener) {
+    *aListener = m_pResponseDataListener;
+    NS_IF_ADDREF(m_pResponseDataListener);
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+
+  return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTTPChannel methods:
+
+nsresult
+nsHTTPChannel::Open(void)
 {
     if (m_bConnected || (m_State > HS_IDLE))
         return NS_ERROR_ALREADY_CONNECTED;
@@ -169,14 +278,14 @@ nsHTTPConnection::Open(void)
     // Set up a new request observer and a response listener and pass to teh transport
     nsresult rv = NS_OK;
 
-    const char* host;
-    rv = m_pURL->GetHost(&host);
+    char* host;
+    rv = m_URI->GetHost(&host);
     if (NS_FAILED(rv)) return rv;
 
     PRInt32 port;
-    rv = m_pURL->GetPort(&port);
+    rv = m_URI->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
-    nsITransport* temp;
+    nsIChannel* temp;
 
     if (port == -1)
     {
@@ -243,6 +352,7 @@ nsHTTPConnection::Open(void)
 #endif // jud
 
     rv = m_pHandler->GetTransport(host, unsignedPort, &temp);
+    nsCRT::free(host);
     if (NS_SUCCEEDED(rv) && temp)
     {
         m_pRequest->SetTransport(temp);
@@ -251,7 +361,9 @@ nsHTTPConnection::Open(void)
         //Get the stream where it will read the request data from
         m_pRequest->GetInputStream(&stream);
 
-        rv = temp->AsyncWrite(stream, (nsISupports*)(nsIProtocolConnection*)this , m_pEventQ, m_pRequest);
+        PRUint32 count;
+        rv = stream->GetLength(&count);
+        rv = temp->AsyncWrite(stream, 0, count, this , m_pEventQ, m_pRequest);
 
         m_State = HS_WAITING_FOR_RESPONSE;
         m_bConnected = PR_TRUE;
@@ -263,77 +375,4 @@ nsHTTPConnection::Open(void)
     return rv;
 }
 
-NS_METHOD
-nsHTTPConnection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
-
-    *aInstancePtr = NULL;
-    
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-    if (aIID.Equals(nsIProtocolConnection::GetIID()) ||
-        aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = NS_STATIC_CAST(nsIProtocolConnection*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsIHTTPConnection::GetIID())) {
-        *aInstancePtr = NS_STATIC_CAST(nsIHTTPConnection*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
- 
-NS_IMPL_RELEASE(nsHTTPConnection);
-
-NS_METHOD
-nsHTTPConnection::GetResponseStatus(PRInt32* o_Status)
-{
-    PRInt32 status = -1;
-    if (!m_bConnected) 
-        Open();
-    *o_Status = status;
-
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD
-nsHTTPConnection::GetResponseString(const char* *o_String) 
-{
-    if (!m_bConnected) 
-        Open();
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD
-nsHTTPConnection::SetRequestMethod(HTTPMethod i_Method)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD
-nsHTTPConnection::GetURL(nsIURL* *o_URL) const
-{
-    if (o_URL)
-        *o_URL = m_pURL;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPConnection::GetResponseDataListener(nsIStreamListener* *aListener)
-{
-  nsresult rv = NS_OK;
-
-  if (aListener) {
-    *aListener = m_pResponseDataListener;
-    NS_IF_ADDREF(m_pResponseDataListener);
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-
-  return rv;
-}
-
+////////////////////////////////////////////////////////////////////////////////

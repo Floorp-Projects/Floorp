@@ -37,13 +37,14 @@
 
 #include "nsIHTTPHandler.h"
 #include "nsIProtocolHandler.h"
-#include "nsIProtocolConnection.h"
+#include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
+#include "nsCRT.h"
 
 //Forward decl.
 class nsHashtable;
-class nsITransport;
+class nsIChannel;
 
 class nsHTTPHandler : public nsIHTTPHandler
 		//, public nsIProxy 
@@ -59,7 +60,7 @@ public:
         GetDefaultPort returns the default port associated with this 
         protocol. 
     */
-    NS_IMETHOD               GetDefaultPort(PRInt32 *result) const 
+    NS_IMETHOD               GetDefaultPort(PRInt32 *result)
     {
         static const PRInt32 defaultPort = 80;
         *result = defaultPort;
@@ -70,25 +71,23 @@ public:
         The GetScheme function uniquely identifies the scheme this handler 
 		is associated with. 
     */
-    NS_IMETHOD               GetScheme(const char* *o_Scheme) const
+    NS_IMETHOD               GetScheme(char * *o_Scheme)
     {
         static const char* scheme = "http";
-        *o_Scheme = scheme;
+        *o_Scheme = nsCRT::strdup(scheme);
         return NS_OK;
     };
 
-    NS_IMETHOD               MakeAbsoluteUrl(const char* i_URL,
-                                nsIURL* i_BaseURL,
-                                char* *o_Result) const;
+    NS_IMETHOD               MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI,
+                                          char **_retval);
 
-    NS_IMETHOD               NewConnection(nsIURL* i_URL,
-                                nsISupports* i_eventSink,
-                                nsIEventQueue* i_eventQueue,
-                                nsIProtocolConnection* *o_Result);
+    NS_IMETHOD               NewChannel(const char* verb, nsIURI* url,
+                                        nsIEventSinkGetter *eventSinkGetter,
+                                        nsIEventQueue *eventQueue,
+                                        nsIChannel **_retval);
     
-    NS_IMETHOD               NewUrl(const char* i_URL,
-                                nsIURL* *o_Result,
-                                nsIURL* i_BaseUrl=0) const;
+    NS_IMETHOD               NewURI(const char *aSpec, nsIURI *aBaseURI,
+                                    nsIURI **_retval);
 
     //Functions from nsIHTTPHandler
 
@@ -124,11 +123,11 @@ public:
         Pull out an existing transport from the hashtable, or if none exists
         create one. 
     */
-    NS_IMETHOD       GetTransport(const char* i_Host, PRUint32& i_Port, nsITransport* *o_pTrans);
+    NS_IMETHOD       GetTransport(const char* i_Host, PRUint32& i_Port, nsIChannel* *o_pTrans);
     /*
         Remove this transport from the hashtable.
     */
-    NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32& i_Port, nsITransport* i_pTrans);
+    NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32& i_Port, nsIChannel* i_pTrans);
 
 protected:
     // None

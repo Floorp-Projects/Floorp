@@ -38,12 +38,15 @@ public:
 
     // nsIFileTransportService methods:
     NS_IMETHOD CreateTransport(const char* path, 
-                               nsITransport* *result);
+                               nsIChannel* *result);
     NS_IMETHOD ProcessPendingRequests(void);
 
     // nsFileTransportService methods:
     nsFileTransportService();
     virtual ~nsFileTransportService();
+
+    static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init();
     nsresult DispatchRequest(nsIRunnable* runnable);

@@ -1,0 +1,48 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/* The internal networking library http interface. External modules
+ * desiring to receive notification of internal http events implement this 
+ * interface, and pass it into the nsINetModuleMgr Register and Unregister
+ * methods.
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(8D9430E0-0FB4-11d3-9DE6-0010A4053FD0)]
+interface nsIHttpNotify : nsISupports, nsIObserver {
+    // Once all http headers have been downloaded and parsed out of the
+    // stream, this method is called. 
+    //
+    // ARGUMENTS:
+	// aContext: An nsIProtocolConnection pointer.
+    // aHeaders: All http headers (as defined in
+    // http://www.w3.org/Protocols/HTTP/1.0/spec.html#Message-Headers)
+    //
+    // RETURNS: nsresult
+    void OnHeaders(in nsISupports *aContext, in string aHeaders);
+
+	// Before an http request is sent to the server, this method is called
+	// to determine whether the external module wants to set any headers.
+	// ARGUMENTS:
+	// aContext: An nsIProtocolConnection pointer.
+	// aHeaders: Any headers the external module wants set for this request.
+	// 
+	// RETURNS: nsresult
+	void SetHeaders(in nsISupports *aContext, out string aHeaders);
+};

@@ -48,13 +48,31 @@ nsFileTransportService::~nsFileTransportService()
     NS_IF_RELEASE(mPool);
 }
 
+NS_METHOD
+nsFileTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+
+    nsFileTransportService* trans = new nsFileTransportService();
+    if (trans == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(trans);
+    nsresult rv = trans->Init();
+    if (NS_SUCCEEDED(rv)) {
+        rv = trans->QueryInterface(aIID, aResult);
+    }
+    NS_RELEASE(trans);
+    return rv;
+}
+
 NS_IMPL_ISUPPORTS(nsFileTransportService, nsIFileTransportService::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
 nsFileTransportService::CreateTransport(const char* path,
-                                        nsITransport* *result)
+                                        nsIChannel* *result)
 {
     nsresult rv;
     nsFileTransport* trans = new nsFileTransport();
@@ -92,7 +110,7 @@ nsFileTransportService::Suspend(nsFileTransport* request)
         rv = NS_NewISupportsArray(&mSuspended);
         if (NS_FAILED(rv)) return rv;
     }
-    return mSuspended->AppendElement(NS_STATIC_CAST(nsITransport*, request));
+    return mSuspended->AppendElement(NS_STATIC_CAST(nsIChannel*, request));
 }
 
 nsresult
@@ -102,7 +120,7 @@ nsFileTransportService::Resume(nsFileTransport* request)
     if (mSuspended == nsnull)
         return NS_ERROR_FAILURE;
     // XXX RemoveElement returns a bool instead of nsresult!
-    PRBool removed = mSuspended->RemoveElement(NS_STATIC_CAST(nsITransport*, request));
+    PRBool removed = mSuspended->RemoveElement(NS_STATIC_CAST(nsIChannel*, request));
     rv = removed ? NS_OK : NS_ERROR_FAILURE;
     if (NS_FAILED(rv)) return rv;
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -25,7 +25,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 
@@ -55,6 +55,17 @@ public:
   NS_IMETHOD OnStopBinding(nsISupports* context,
                            nsresult aStatus,
                            nsIString* aMsg);
+
+  NS_IMETHOD OnStartRequest(nsISupports* context) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD OnStopRequest(nsISupports* context,
+                           nsresult aStatus,
+                           nsIString* aMsg) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
 };
 
 
@@ -145,11 +156,11 @@ main(int argc, char* argv[])
   NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsITransport* transport;
+  nsIChannel* transport;
 
   rv = sts->CreateTransport(hostName, port, &transport);
   if (NS_SUCCEEDED(rv)) {
-    transport->AsyncRead(nsnull, eventQ, new InputTestConsumer);
+    transport->AsyncRead(0, -1, nsnull, eventQ, new InputTestConsumer);
 
     NS_RELEASE(transport);
   }

@@ -18,12 +18,13 @@
 
 // ftp implementation
 
-#include "nsFtpProtocolConnection.h"
+#include "nsFTPChannel.h"
 #include "nscore.h"
 #include "nsIServiceManager.h"
 #include "nsIByteBufferInputStream.h"
 #include "nsFtpConnectionThread.h"
 #include "nsIEventQueueService.h"
+#include "nsIProgressEventSink.h"
 
 #include "prprf.h" // PR_sscanf
 
@@ -38,7 +39,7 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 // initiated by the server (PORT command) or by the client (PASV command).
 // Client initiation is the most command case and is attempted first.
 
-nsFtpProtocolConnection::nsFtpProtocolConnection()
+nsFTPChannel::nsFTPChannel()
     : mUrl(nsnull), mConnected(PR_FALSE), mListener(nsnull) {
 
     nsresult rv;
@@ -53,22 +54,22 @@ nsFtpProtocolConnection::nsFtpProtocolConnection()
     NS_INIT_REFCNT();
 }
 
-nsFtpProtocolConnection::~nsFtpProtocolConnection() {
+nsFTPChannel::~nsFTPChannel() {
     NS_IF_RELEASE(mUrl);
     NS_IF_RELEASE(mListener);
     NS_IF_RELEASE(mEventQueue);
 }
 
-NS_IMPL_ADDREF(nsFtpProtocolConnection);
-NS_IMPL_RELEASE(nsFtpProtocolConnection);
+NS_IMPL_ADDREF(nsFTPChannel);
+NS_IMPL_RELEASE(nsFTPChannel);
 
 NS_IMETHODIMP
-nsFtpProtocolConnection::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
+nsFTPChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(nsIFtpProtocolConnection::GetIID()) ||
-        aIID.Equals(nsIProtocolConnection::GetIID()) ||
+    if (aIID.Equals(nsIFTPChannel::GetIID()) ||
+        aIID.Equals(nsIChannel::GetIID()) ||
         aIID.Equals(kISupportsIID) ) {
-        *aInstancePtr = NS_STATIC_CAST(nsIFtpProtocolConnection*, this);
+        *aInstancePtr = NS_STATIC_CAST(nsIFTPChannel*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -81,46 +82,98 @@ nsFtpProtocolConnection::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
     return NS_NOINTERFACE; 
 }
 
-nsresult 
-nsFtpProtocolConnection::Init(nsIUrl* aUrl, nsISupports* aEventSink, nsIEventQueue* aEventQueue) {
+nsresult
+nsFTPChannel::Init(nsIURI* aURL, nsIProgressEventSink* aEventSink, nsIEventQueue* aEventQueue) {
  
     if (mConnected)
         return NS_ERROR_NOT_IMPLEMENTED;
 
-    mUrl = aUrl;
+    mUrl = aURL;
     NS_ADDREF(mUrl);
 
     mEventQueue = aEventQueue;
-    NS_IF_ADDREF(mEventQueue);
+    NS_ADDREF(mEventQueue);
+
+    mEventSink = aEventSink;
+    NS_ADDREF(mEventSink);
 
     return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsICancelable methods:
+// nsIChannel methods:
 
 NS_IMETHODIMP
-nsFtpProtocolConnection::Cancel(void) {
+nsFTPChannel::GetURI(nsIURI * *aURL)
+{
+    NS_ADDREF(mUrl);
+    *aURL = mUrl;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::OpenInputStream(nsIInputStream* *result)
+{
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsFtpProtocolConnection::Suspend(void) {
+nsFTPChannel::OpenOutputStream(nsIOutputStream* *result)
+{
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsFtpProtocolConnection::Resume(void) {
+nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
+                        nsISupports *ctxt,
+                        nsIEventQueue *eventQueue,
+                        nsIStreamListener *listener)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
+                         PRUint32 startPosition,
+                         PRInt32 writeCount,
+                         nsISupports *ctxt,
+                         nsIEventQueue *eventQueue,
+                         nsIStreamObserver *observer)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::Cancel(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::Suspend(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::Resume(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetContentType(char* *contentType) {
+    
+    // XXX for ftp we need to do a file extension-to-type mapping lookup
+    // XXX in some hash table/registry of mime-types
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIProtocolConnection methods:
+// nsIFTPChannel methods:
 
-
-// establishes the connection and initiates the file transfer.
 NS_IMETHODIMP
-nsFtpProtocolConnection::Open(void) {
+nsFTPChannel::Get(void) {
     nsresult rv;
     nsIThread* workerThread = nsnull;
     nsFtpConnectionThread* protocolInterpreter = 
@@ -143,34 +196,7 @@ nsFtpProtocolConnection::Open(void) {
 }
 
 NS_IMETHODIMP
-nsFtpProtocolConnection::GetContentType(char* *contentType) {
-    
-    // XXX for ftp we need to do a file extension-to-type mapping lookup
-    // XXX in some hash table/registry of mime-types
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFtpProtocolConnection::GetInputStream(nsIInputStream* *result) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFtpProtocolConnection::GetOutputStream(nsIOutputStream* *result) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIFtpProtocolConnection methods:
-
-NS_IMETHODIMP
-nsFtpProtocolConnection::Get(void) {
-    return Open();
-}
-
-NS_IMETHODIMP
-nsFtpProtocolConnection::Put(void) {
+nsFTPChannel::Put(void) {
     nsresult rv;
     nsIThread* workerThread = nsnull;
     nsFtpConnectionThread* protocolInterpreter = 
@@ -193,18 +219,38 @@ nsFtpProtocolConnection::Put(void) {
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFTPChannel::SetStreamListener(nsIStreamListener *aListener) {
+    mListener = aListener;
+    NS_ADDREF(mListener);
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver methods:
 
 NS_IMETHODIMP
-nsFtpProtocolConnection::OnStartBinding(nsISupports* context) {
+nsFTPChannel::OnStartBinding(nsISupports* context) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
-                                        nsresult aStatus,
-                                        nsIString* aMsg) {
+nsFTPChannel::OnStopBinding(nsISupports* context,
+                            nsresult aStatus,
+                            nsIString* aMsg) {
+    // Release the lock so the user get's the data stream
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::OnStartRequest(nsISupports* context) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::OnStopRequest(nsISupports* context,
+                            nsresult aStatus,
+                            nsIString* aMsg) {
     // Release the lock so the user get's the data stream
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -213,20 +259,12 @@ nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
 // nsIStreamListener methods:
 
 NS_IMETHODIMP
-nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
+nsFTPChannel::OnDataAvailable(nsISupports* context,
                                          nsIInputStream *aIStream, 
                                          PRUint32 aSourceOffset,
                                          PRUint32 aLength) {
     // Fill in the buffer w/ the new data.
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-NS_IMETHODIMP
-nsFtpProtocolConnection::SetStreamListener(nsIStreamListener *aListener) {
-    mListener = aListener;
-    NS_ADDREF(mListener);
-    return NS_OK;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////

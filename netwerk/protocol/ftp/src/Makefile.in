@@ -27,7 +27,7 @@ include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS =                             \
         nsFtpProtocolHandler.cpp      \
-        nsFtpProtocolConnection.cpp   \
+        nsFTPChannel.cpp              \
         nsFtpStreamListenerEvent.cpp  \
         nsFtpConnectionThread.cpp     \
         nsFtpFactory.cpp              \
