@@ -720,6 +720,16 @@ class nsIWidget : public nsISupports {
    */
   NS_IMETHOD ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow) = 0;
 
+  /**
+   * Bring this window to the user's attention.  This is intended to be a more
+   * gentle notification than popping the window to the top or putting up an
+   * alert.  See, for example, Win32 FlashWindow or the NotificationManager on
+   * the Mac.  The notification should be suppressed if the window is already
+   * in the foreground and should be dismissed when the user brings this window
+   * to the foreground.
+   */
+  NS_IMETHOD Flash() = 0;
+
 };
 
 #endif // nsIWidget_h__

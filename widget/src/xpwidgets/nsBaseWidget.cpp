@@ -720,6 +720,11 @@ NS_METHOD nsBaseWidget::ModalEventFilter(PRBool aRealEvent, void *aEvent,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBaseWidget::Flash() {
+    return NS_OK;
+}
+
 #ifdef NS_DEBUG
 //////////////////////////////////////////////////////////////
 //

@@ -4312,3 +4312,34 @@ NS_IMETHODIMP nsWindow::PasswordFieldExit(PRUint32 aState)
 	return NS_OK;
 }
 
+// Pick some random timer ID.  Is there a better way?
+#define NS_FLASH_TIMER_ID 0x011231984
+
+// This function is called on a timer to do the flashing.  It simply toggles the flash
+// status until the window comes to the foreground.
+static VOID CALLBACK nsFlashTimerFunc( HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime ) {
+    // Flash the window until we're in the foreground.
+    if ( GetForegroundWindow() != hwnd ) {
+        // We're not in the foreground yet.
+        FlashWindow( hwnd, TRUE );
+    } else {
+        KillTimer( hwnd, idEvent );
+    }
+}
+
+// Draw user's attention to this window until it comes to foreground.
+NS_IMETHODIMP
+nsWindow::Flash() {
+    // Got window?
+    if ( !mWnd ) {
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    // If window is in foreground, no notification is necessary.
+    if ( GetForegroundWindow() != mWnd ) {
+        // Kick off timer that does single flash till window comes to foreground.
+        SetTimer( mWnd, NS_FLASH_TIMER_ID, GetCaretBlinkTime(), nsFlashTimerFunc );
+    }
+
+    return NS_OK;
+}
