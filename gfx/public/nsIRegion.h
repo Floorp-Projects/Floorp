@@ -23,10 +23,6 @@
 #include "nsISupports.h"
 #include "nsRect.h"
 
-// Function type passed into nsIRegion::forEachRect, invoked
-// for each rectangle in a region
-typedef void (*nsRectInRegionFunc)(void *closure, nsRect& rect);
-
 enum nsRegionComplexity
 {
   eRegionComplexity_empty = 0,
@@ -44,7 +40,8 @@ typedef struct
 
 typedef struct
 {
-  PRUint32      mNumRects;
+  PRUint32      mNumRects;    //number of actual rects in the mRects array
+  PRUint32      mRectsLen;    //length, in rects, of the mRects array
   nsRegionRect  mRects[1];
 } nsRegionRectSet;
 
@@ -207,16 +204,6 @@ public:
   **/
 
   virtual PRBool ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
-
-  /**
-  * invoke a function for each rectangle in the region
-  *
-  * @param  func    Function to invoke for each rectangle
-  * @param  closure Arbitrary data to pass to the function
-  * @return          void
-  *
-  **/
-  virtual PRBool ForEachRect(nsRectInRegionFunc *func, void *closure) = 0;
   
   /**
    * get the set of rects which make up this region. the aRects
