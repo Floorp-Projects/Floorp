@@ -80,6 +80,10 @@ function GetSelectedFolderURI()
 function MsgRenameFolder() 
 {
 	var preselectedURI = GetSelectedFolderURI();
+	var folderTree = GetFolderTree();
+
+	var name = GetFolderNameFromUri(preselectedURI, folderTree);
+
 	dump("preselectedURI = " + preselectedURI + "\n");
 	var windowTitle = Bundle.GetStringFromName("renameFolderDialogTitle");
 	var dialog = window.openDialog(
@@ -87,7 +91,7 @@ function MsgRenameFolder()
                     "newFolder",
                     "chrome,modal",
 	            {preselectedURI:preselectedURI, title:windowTitle,
-                    okCallback:RenameFolder});
+                    okCallback:RenameFolder, name:name});
 }
 
 function RenameFolder(name,uri)

@@ -93,6 +93,7 @@ Rights Reserved.
 	<broadcaster id="button_reply"/>
 	<broadcaster id="button_replyall"/>
 	<broadcaster id="button_forward"/>
+	<broadcaster id="cmd_renameFolder" oncommand="goDoCommand('cmd_renameFolder')" />
 
 	<broadcaster id="cmd_expandAllThreads" oncommand="goDoCommand('cmd_expandAllThreads')" disabled="true"/>
 	<broadcaster id="cmd_collapseAllThreads" oncommand="goDoCommand('cmd_collapseAllThreads')" disabled="true"/>
@@ -369,9 +370,9 @@ Rights Reserved.
 			 accesskey="&subscribeCmd.accesskey;"
 			 oncommand="MsgSubscribe();"/>
 			<menuseparator/>
-			<menuitem value="&renameFolder.label;"
+			<menuitem id="menu_renameFolder" value="&renameFolder.label;"
              accesskey="&renameFolder.accesskey;"
-             oncommand="MsgRenameFolder();"/>
+             observes="cmd_renameFolder"/>
 			<menuitem value="&compactFolder.label;" accesskey="&compactFolder.accesskey;" oncommand="MsgCompactFolder();"/>
 			<menuseparator/>
 			<menuitem value="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
@@ -510,18 +511,9 @@ Rights Reserved.
 			<menuitem value="&findCmd.label;" accesskey="&findCmd.accesskey;" oncommand="MsgFind();"/>
 			<menuitem value="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" oncommand="MsgFindAgain();"/>
 			<menuseparator/>
-			<!--
-			<menuitem value="&searchCurrentCmd.label;" accesskey="&searchCurrentCmd.accesskey;" disabled="true" oncommand="MsgSearchCurrent();"/>
-			<menuitem value="&searchParentCmd.label;" accesskey="&searchCurrentCmd.accesskey;" disabled="true" oncommand="MsgSearchParent();"/>
-			<menuitem value="&searchParentParentCmd.label;" accesskey="&searchParentParentCmd.accesskey;" disabled="true" oncommand="MsgSearchParentParent();"/>
-			<menuseparator/>
-			-->
-			<menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" disabled="true" oncommand="MsgSearchInternet();"/>
+			<menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://search.netscape.com/')"/>
 			<menuitem value="&searchMailCmd.label;" accesskey="&searchMailCmd.accesskey;" oncommand="MsgSearchMessages();"/>
-			<menuitem value="&searchBookmarksCmd.label;" accesskey="&searchBookmarksCmd.accesskey;" disabled="true" oncommand="MsgSearchBookmarks();"/>
-			<menuitem value="&searchPeopleCmd.label;" accesskey="&searchPeopleCmd.accesskey;" disabled="true" oncommand="MsgSearchPeople();"/>
-			<menuseparator/>
-			<menuitem value="&searchLocalCmd.label;" accesskey="&searchLocalCmd.accesskey;" disabled="true" oncommand="MsgSearchLocal();"/>
+			<menuitem value="&searchBookmarksCmd.label;" accesskey="&searchBookmarksCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'centerscreen,dialog=no,close,chrome,resizable');"/>
 		</menupopup>
 	</menu>
 	<menu value="&goMenu.label;" accesskey="&goMenu.accesskey;">

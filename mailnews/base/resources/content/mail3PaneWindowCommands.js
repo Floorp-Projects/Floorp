@@ -205,6 +205,7 @@ var DefaultController =
             case "cmd_redo":
 			case "cmd_expandAllThreads":
 			case "cmd_collapseAllThreads":
+			case "cmd_renameFolder":
 				return true;
 			default:
 				return false;
@@ -282,6 +283,8 @@ var DefaultController =
             case "cmd_undo":
             case "cmd_redo":
                 return SetupUndoRedoCommand(command);
+			case "cmd_renameFolder":
+				return IsRenameFolderEnabled();
 			default:
 				return false;
 		}
@@ -380,6 +383,9 @@ var DefaultController =
 			case "cmd_collapseAllThreads":
 				ExpandOrCollapseThreads(false);
 				break;
+			case "cmd_renameFolder":
+				MsgRenameFolder();
+				return;
 		}
 	},
 	
@@ -439,6 +445,7 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_viewUnreadMsgs');
 	goUpdateCommand('cmd_expandAllThreads');
 	goUpdateCommand('cmd_collapseAllThreads');
+	goUpdateCommand('cmd_renameFolder');
 }
 
 function SetupUndoRedoCommand(command)
@@ -542,6 +549,20 @@ function SetupCommandUpdateHandlers()
 	top.controllers.insertControllerAt(0, DefaultController);
 }
 
+function IsRenameFolderEnabled()
+{
+	var tree = GetFolderTree();
+	var folderList = tree.selectedItems;
+
+	if(folderList.length == 1)
+	{
+		var folderNode = folderList[0];
+		return(folderNode.getAttribute("CanRename") == "true");
+	}
+	else
+		return false;
+
+}
 function MsgDeleteFolder()
 {
 	//get the selected elements
@@ -647,25 +668,11 @@ function FillInFolderTooltip(cellNode)
 {
 	var folderNode = cellNode.parentNode.parentNode;
 	var uri = folderNode.getAttribute('id');
-	var folderResource = RDF.GetResource(uri);
-
 	var folderTree = GetFolderTree();
-	var db = folderTree.database;
 
-	var nameProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#Name');
+	var name = GetFolderNameFromUri(uri, folderTree);
 
-	var nameResult;
-	try {
-		nameResult = db.GetTarget(folderResource, nameProperty , true);
-	}
-	catch (ex) {
-		//dump("failed to get the name of the folder for the tooltip: "+ex+"\n");
-		return;
-	}
-
-	nameResult = nameResult.QueryInterface(Components.interfaces.nsIRDFLiteral);
-	var name = nameResult.Value;
-
+	var folderResource = RDF.GetResource(uri);
 	var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 	var unreadCount = msgFolder.getNumUnread(false);
 	if(unreadCount < 0)
@@ -683,6 +690,26 @@ function FillInFolderTooltip(cellNode)
 	return true;
 	
 
+}
+
+function GetFolderNameFromUri(uri, tree)
+{
+	var folderResource = RDF.GetResource(uri);
+
+	var db = tree.database;
+
+	var nameProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#Name');
+
+	var nameResult;
+	try {
+		nameResult = db.GetTarget(folderResource, nameProperty , true);
+	}
+	catch (ex) {
+		return "";
+	}
+
+	nameResult = nameResult.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	return nameResult.Value;
 }
 
 

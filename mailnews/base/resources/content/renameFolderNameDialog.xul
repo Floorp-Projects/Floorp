@@ -30,7 +30,7 @@ Rights Reserved.
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
         class="dialog"
-        onload="newFolderNameOnLoad('msgRenameFolderPicker');" >
+        onload="renameFolderNameOnLoad();" >
 
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script language="JavaScript" src="chrome://messenger/content/mailCommands.js"/>       
@@ -45,10 +45,6 @@ Rights Reserved.
 		<text value="&rename.label;" />
 		<textfield tabindex="0" id="name" />
 	
-		<box align="horizontal">
-			<menu id="msgRenameFolderPicker"/>
-        		<spring flex="100%"/>
-        	</box>
 		<spring flex="100%"/>
 		<box id="okCancelButtons"/>
 		
