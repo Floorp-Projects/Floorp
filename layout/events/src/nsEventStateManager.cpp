@@ -126,6 +126,7 @@ nsEventStateManager::nsEventStateManager()
   mFirstBlurEvent = nsnull;
   mFirstFocusEvent = nsnull;
   mAccessKeys = nsnull;
+  hHover = PR_FALSE;
   NS_INIT_REFCNT();
   
   ++mInstanceCount;
@@ -146,6 +147,11 @@ nsEventStateManager::Init()
   }
 
   rv = getPrefService();
+
+  if (NS_SUCCEEDED(rv)) {
+    mPrefService->GetBoolPref("nglayout.events.showHierarchicalHover", &hHover);
+  }
+
   return rv;
 }
 
@@ -2320,8 +2326,24 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
   if (aContent == mActiveContent) {
     aState |= NS_EVENT_STATE_ACTIVE;
   }
-  if (aContent == mHoverContent) {
-    aState |= NS_EVENT_STATE_HOVER;
+  if (hHover) {
+    //If using hierchical hover check the ancestor chain of mHoverContent
+    //to see if we are on it.
+    nsCOMPtr<nsIContent> parent = mHoverContent;
+    nsIContent* child;
+    while (parent) {
+	    if (aContent == parent) {
+	      aState |= NS_EVENT_STATE_HOVER;
+        break;
+	    }
+      child = parent;
+      child->GetParent(*getter_AddRefs(parent));
+    }
+  }
+  else {
+    if (aContent == mHoverContent) {
+      aState |= NS_EVENT_STATE_HOVER;
+    }
   }
   if (aContent == mCurrentFocus) {
     aState |= NS_EVENT_STATE_FOCUS;
@@ -2361,9 +2383,61 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     NS_IF_ADDREF(mActiveContent);
   }
 
+  nsCOMPtr<nsIContent> newHover = nsnull;
+  nsCOMPtr<nsIContent> oldHover = nsnull;
+  nsCOMPtr<nsIContent> commonHoverParent = nsnull;
   if ((aState & NS_EVENT_STATE_HOVER) && (aContent != mHoverContent)) {
-    //transferring ref to notifyContent from mHoverContent
-    notifyContent[1] = mHoverContent; // notify hover first, since more common case
+    if (hHover) {
+      newHover = aContent;
+      oldHover = mHoverContent;
+
+      //Find closest common parent
+      nsCOMPtr<nsIContent> parent1 = mHoverContent;
+      nsCOMPtr<nsIContent> parent2;
+      if (mHoverContent && aContent) {
+        while (parent1) {
+          parent2 = aContent;
+          while (parent2) {
+	          if (parent1 == parent2) {
+              commonHoverParent = parent1;
+              break;
+            }
+            nsIContent* child2 = parent2;
+            child2->GetParent(*getter_AddRefs(parent2));
+	        }
+          if (commonHoverParent) {
+            break;
+          }
+          nsIContent* child1 = parent1;
+          child1->GetParent(*getter_AddRefs(parent1));
+        }
+      }
+      //If new hover content is null we get the top parent of mHoverContent
+      else if (mHoverContent) {
+        nsCOMPtr<nsIContent> parent = mHoverContent;
+        nsIContent* child = nsnull;
+        while (parent) {
+          child = parent;
+          child->GetParent(*getter_AddRefs(parent));
+        }
+        commonHoverParent = child;
+      }
+      //Else if old hover content is null we get the top parent of aContent
+      else {
+        nsCOMPtr<nsIContent> parent = aContent;
+        nsIContent* child = nsnull;
+        while (parent) {
+          child = parent;
+          child->GetParent(*getter_AddRefs(parent));
+        }
+        commonHoverParent = child;
+      }
+      NS_IF_RELEASE(mHoverContent);
+    }
+    else {
+      //transferring ref to notifyContent from mHoverContent
+      notifyContent[1] = mHoverContent; // notify hover first, since more common case
+    }
     mHoverContent = aContent;
     NS_IF_ADDREF(mHoverContent);
   }
@@ -2436,11 +2510,53 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     }
   }
 
-  if (notifyContent[0]) { // have at least one to notify about
+  if (notifyContent[0] || newHover || oldHover) { // have at least one to notify about
     nsIDocument *document;  // this presumes content can't get/lose state if not connected to doc
-    notifyContent[0]->GetDocument(document);
+    if (notifyContent[0]) {
+      notifyContent[0]->GetDocument(document);
+    }
+    else if (newHover) {
+      newHover->GetDocument(document);
+    }
+    else {
+      oldHover->GetDocument(document);
+    }
     if (document) {
       document->BeginUpdate();
+
+      //Notify all content from newHover to the commonHoverParent
+      if (newHover) {
+        nsCOMPtr<nsIContent> parent;
+        newHover->GetParent(*getter_AddRefs(parent));
+        document->ContentStatesChanged(newHover, parent);
+        while (parent && parent != commonHoverParent) {
+          parent->GetParent(*getter_AddRefs(newHover));
+          if (newHover && newHover != commonHoverParent) {
+            newHover->GetParent(*getter_AddRefs(parent));
+            document->ContentStatesChanged(newHover, parent == commonHoverParent ? nsnull : parent);
+          }
+          else {
+            break;
+          }
+        }
+      }
+      //Notify all content from oldHover to the commonHoverParent
+      if (oldHover) {
+        nsCOMPtr<nsIContent> parent;
+        oldHover->GetParent(*getter_AddRefs(parent));
+        document->ContentStatesChanged(oldHover, parent);
+        while (parent && parent != commonHoverParent) {
+          parent->GetParent(*getter_AddRefs(oldHover));
+          if (oldHover && oldHover != commonHoverParent) {
+            oldHover->GetParent(*getter_AddRefs(parent));
+            document->ContentStatesChanged(oldHover, parent == commonHoverParent ? nsnull : parent);
+          }
+          else {
+            break;
+          }
+        }
+      }
+
       document->ContentStatesChanged(notifyContent[0], notifyContent[1]);
       if (notifyContent[2]) {  // more that two notifications are needed (should be rare)
         // XXX a further optimization here would be to group the notification pairs
