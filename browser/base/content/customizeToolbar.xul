@@ -21,18 +21,12 @@
   
   Contributor(s): 
     David Hyatt (hyatt@apple.com)
-
+    Blake Ross (blaker@netscape.com)
 -->
 
 <!DOCTYPE dialog [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
-  %brandDTD;
-<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
-%browserDTD;
-<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
-%globalRegionDTD;
-<!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charset.dtd" >
-%charsetDTD;
+<!ENTITY % customizeToolbarDTD SYSTEM "chrome://browser/locale/customizeToolbar.dtd">
+  %customizeToolbarDTD;
 ]>
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
@@ -53,7 +47,7 @@
 <separator class="groove"/>
 
 <description>
-Drag your favorite item into the toolbar above:
+&instructions.description;
 </description>
 
 <vbox flex="1" id="palette-box"/>
@@ -61,16 +55,16 @@ Drag your favorite item into the toolbar above:
 <separator class="groove"/>
 
 <box align="center">
-<label value="Show:"/>
+<label value="&show.label;"/>
 <menulist>
   <menupopup>
-     <menuitem label="Icons and Text"/>
-     <menuitem label="Icons"/>
-     <menuitem label="Text"/>
+     <menuitem label="&iconsAndText.label;"/>
+     <menuitem label="&icons.label;"/>
+     <menuitem label="&text.label;"/>
   </menupopup>
 </menulist>
-<checkbox label="Use Small Icons"/>
-<button label="Restore Default Set"/>
+<checkbox label="&useSmallIcons.label;"/>
+<button label="&restoreDefaultSet.label;"/>
 </box>
 
 <separator class="groove"/>
