@@ -2244,6 +2244,9 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     childWidget->ResetInternalVisibility();
   }
 
+  // Now invalidate the screen position cache, since things moved around.
+  InvalidateWindowPos();
+
   return NS_OK;
 }
 //-------------------------------------------------------------------------
