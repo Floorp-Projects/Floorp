@@ -3,24 +3,30 @@ debugger.o: debugger.cpp world.h utilities.h systemtypes.h hash.h \
  numerics.h jsclasses.h icode.h icodegenerator.h
 gc_allocator.o: gc_allocator.cpp gc_allocator.h gc_container.h
 hash.o: hash.cpp hash.h utilities.h systemtypes.h
+ica_test.o: ica_test.cpp icodeasm.h vmtypes.h numerics.h utilities.h \
+ systemtypes.h jstypes.h gc_allocator.h parser.h jsclasses.h world.h \
+ hash.h icode.h
+icodeasm.o: icodeasm.cpp icodeasm.h vmtypes.h numerics.h utilities.h \
+ systemtypes.h jstypes.h gc_allocator.h parser.h jsclasses.h world.h \
+ hash.h icode.h icodemap.h
 icodegenerator.o: icodegenerator.cpp numerics.h utilities.h \
  systemtypes.h world.h hash.h parser.h vmtypes.h jstypes.h \
  gc_allocator.h jsclasses.h icode.h icodegenerator.h interpreter.h
 interpreter.o: interpreter.cpp interpreter.h utilities.h systemtypes.h \
- jstypes.h gc_allocator.h vmtypes.h numerics.h jsclasses.h world.h \
- hash.h parser.h icode.h icodegenerator.h jsmath.h
+ jstypes.h gc_allocator.h parser.h vmtypes.h numerics.h jsclasses.h \
+ world.h hash.h icode.h icodegenerator.h jsmath.h
 js2.o: js2.cpp world.h utilities.h systemtypes.h hash.h parser.h \
  interpreter.h jstypes.h gc_allocator.h vmtypes.h numerics.h \
  jsclasses.h icode.h icodegenerator.h debugger.h
 jsmath.o: jsmath.cpp jsmath.h jstypes.h utilities.h systemtypes.h \
- gc_allocator.h
+ gc_allocator.h parser.h
 jstypes.o: jstypes.cpp jstypes.h utilities.h systemtypes.h \
- gc_allocator.h jsclasses.h numerics.h icodegenerator.h parser.h \
- vmtypes.h world.h hash.h icode.h
+ gc_allocator.h parser.h jsclasses.h numerics.h icodegenerator.h \
+ vmtypes.h world.h hash.h icode.h interpreter.h
 numerics.o: numerics.cpp numerics.h utilities.h systemtypes.h
 parser.o: parser.cpp numerics.h utilities.h systemtypes.h parser.h \
  world.h hash.h
 utilities.o: utilities.cpp utilities.h systemtypes.h
 vmtypes.o: vmtypes.cpp utilities.h systemtypes.h vmtypes.h numerics.h \
- jstypes.h gc_allocator.h jsclasses.h world.h hash.h parser.h icode.h
+ jstypes.h gc_allocator.h parser.h jsclasses.h world.h hash.h icode.h
 world.o: world.cpp world.h utilities.h systemtypes.h hash.h parser.h

@@ -31,6 +31,10 @@
  * file under either the NPL or the GPL.
  */
 
+#ifndef __icodeasm_h
+
+#define __icodeasm_h
+
 #include <string>
 #include <iterator>
 
@@ -43,16 +47,19 @@ namespace JavaScript {
 namespace ICodeASM {
     enum TokenEstimation {
         /* guess at tokentype, based on first character of token */
-        teEOF,
-        teUnknown,
-        teIllegal,
-        teComma,
-        teMinus,
-        teNumeric,
-        tePlus,
         teAlpha,
+        teCloseParen,
+        teComma,
+        teColon,
+        teEOF,
+        teIllegal,
+        teMinus,
+        teNotARegister,
+        teNumeric,
+        teOpenParen,
+        tePlus,
         teString,
-        teNotARegister
+        teUnknown,
     };
 
 /*
@@ -175,3 +182,5 @@ namespace ICodeASM {
     
 }
 }
+
+#endif /* #ifndef __icodeasm_h */
