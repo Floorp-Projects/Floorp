@@ -22,6 +22,7 @@
 #                 Chris Yeh      <cyeh@bluemartini.com>
 #                 Bradley Baetz  <bbaetz@acm.org>
 #                 Dave Miller    <justdave@bugzilla.org>
+#                 Max Kanat-Alexander <mkanat@kerio.com>
 
 package Bugzilla::Bug;
 
@@ -150,9 +151,10 @@ sub initBug  {
       bugs.bug_id, alias, products.classification_id, classifications.name,
       bugs.product_id, products.name, version,
       rep_platform, op_sys, bug_status, resolution, priority,
-      bug_severity, bugs.component_id, components.name, assigned_to,
-      reporter, bug_file_loc, short_desc, target_milestone,
-      qa_contact, status_whiteboard, " .
+      bug_severity, bugs.component_id, components.name, 
+      assigned_to AS assigned_to_id, reporter AS reporter_id,
+      bug_file_loc, short_desc, target_milestone,
+      qa_contact AS qa_contact_id, status_whiteboard, " .
       $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') . ",
       delta_ts, COALESCE(SUM(votes.vote_count), 0),
       reporter_accessible, cclist_accessible,
@@ -178,8 +180,9 @@ sub initBug  {
                        "product_id", "product", "version", 
                        "rep_platform", "op_sys", "bug_status", "resolution", 
                        "priority", "bug_severity", "component_id", "component",
-                       "assigned_to", "reporter", "bug_file_loc", "short_desc",
-                       "target_milestone", "qa_contact", "status_whiteboard", 
+                       "assigned_to_id", "reporter_id", 
+                       "bug_file_loc", "short_desc",
+                       "target_milestone", "qa_contact_id", "status_whiteboard",
                        "creation_ts", "delta_ts", "votes",
                        "reporter_accessible", "cclist_accessible",
                        "estimated_time", "remaining_time", "deadline")
@@ -200,89 +203,19 @@ sub initBug  {
       return $self;
   }
 
-  $self->{'assigned_to'} = new Bugzilla::User($self->{'assigned_to'});
-  $self->{'reporter'} = new Bugzilla::User($self->{'reporter'});
-
-  if (Param('useqacontact') && $self->{'qa_contact'} > 0) {
-      $self->{'qa_contact'} = new Bugzilla::User($self->{'qa_contact'});
-  } else {
-      $self->{'qa_contact'} = undef;
-  }
-
-  my $cc_ref = $dbh->selectcol_arrayref(
-      q{SELECT profiles.login_name FROM cc, profiles
-         WHERE bug_id = ?
-           AND cc.who = profiles.userid
-      ORDER BY profiles.login_name},
-      undef, $bug_id);
-  if (scalar(@$cc_ref)) {
-    $self->{'cc'} = $cc_ref;
-  }
-
-  if (@::legal_keywords) {
-    # Get all entries and make them an array.
-    my $list_ref = $dbh->selectcol_arrayref(
-           "SELECT keyworddefs.name
-              FROM keyworddefs, keywords
-             WHERE keywords.bug_id = ?
-               AND keyworddefs.id = keywords.keywordid
-          ORDER BY keyworddefs.name",
-        undef, ($bug_id));
-    if ($list_ref) {
-      $self->{'keywords'} = join(', ', @$list_ref);
-    }
-  }
-
-  $self->{'attachments'} = Bugzilla::Attachment::query($self->{bug_id});
-
-  # The types of flags that can be set on this bug.
-  # If none, no UI for setting flags will be displayed.
-  my $flag_types = 
-    Bugzilla::FlagType::match({ 'target_type'  => 'bug', 
-                                'product_id'   => $self->{'product_id'}, 
-                                'component_id' => $self->{'component_id'} });
-  foreach my $flag_type (@$flag_types) {
-      $flag_type->{'flags'} = 
-        Bugzilla::Flag::match({ 'bug_id'      => $self->{bug_id},
-                                'type_id'     => $flag_type->{'id'},
-                                'target_type' => 'bug',
-                                'is_active'   => 1 });
-  }
-  $self->{'flag_types'} = $flag_types;
-  $self->{'any_flags_requesteeble'} = grep($_->{'is_requesteeble'}, @$flag_types);
-
-  # The number of types of flags that can be set on attachments to this bug
-  # and the number of flags on those attachments.  One of these counts must be
-  # greater than zero in order for the "flags" column to appear in the table
-  # of attachments.
-  my $num_attachment_flag_types =
-    Bugzilla::FlagType::count({ 'target_type'  => 'attachment',
-                                'product_id'   => $self->{'product_id'},
-                                'component_id' => $self->{'component_id'} });
-  my $num_attachment_flags =
-    Bugzilla::Flag::count({ 'target_type'  => 'attachment',
-                            'bug_id'       => $self->{bug_id},
-                            'is_active'    => 1 });
-
-  $self->{'show_attachment_flags'}
-    = $num_attachment_flag_types || $num_attachment_flags;
-
-  $self->{'milestoneurl'} = $::milestoneurl{$self->{product}};
-
   $self->{'isunconfirmed'} = ($self->{bug_status} eq 'UNCONFIRMED');
   $self->{'isopened'} = &::IsOpenedState($self->{bug_status});
   
-  my @depends = EmitDependList("blocked", "dependson", $bug_id);
-  if (@depends) {
-      $self->{'dependson'} = \@depends;
-  }
-  my @blocked = EmitDependList("dependson", "blocked", $bug_id);
-  if (@blocked) {
-    $self->{'blocked'} = \@blocked;
-  }
-
   return $self;
 }
+
+#####################################################################
+# Accessors
+#####################################################################
+
+# These subs are in alphabetical order, as much as possible.
+# If you add a new sub, please try to keep it in alphabetical order
+# with the other ones.
 
 sub dup_id {
     my ($self) = @_;
@@ -317,6 +250,106 @@ sub actual_time {
     return $self->{'actual_time'};
 }
 
+sub any_flags_requesteeble () {
+    my ($self) = @_;
+    return $self->{'any_flags_requesteeble'} 
+        if exists $self->{'any_flags_requesteeble'};
+
+    $self->{'any_flags_requesteeble'} = 
+        grep($_->{'is_requesteeble'}, @{$self->flag_types});
+
+    return $self->{'any_flags_requesteeble'};
+}
+
+sub attachments () {
+    my ($self) = @_;
+    return $self->{'attachments'} if exists $self->{'attachments'};
+    $self->{'attachments'} = Bugzilla::Attachment::query($self->{bug_id});
+    return $self->{'attachments'};
+}
+
+sub assigned_to () {
+    my ($self) = @_;
+    return $self->{'assigned_to'} if exists $self->{'assigned_to'};
+    $self->{'assigned_to'} = new Bugzilla::User($self->{'assigned_to_id'});
+    return $self->{'assigned_to'};
+}
+
+sub blocked () {
+    my ($self) = @_;
+    return $self->{'blocked'} if exists $self->{'blocked'};
+    $self->{'blocked'} = EmitDependList("dependson", "blocked", $self->bug_id);
+    return $self->{'blocked'};
+}
+
+sub bug_id { $_[0]->{'bug_id'}; }
+
+sub cc () {
+    my ($self) = @_;
+    return $self->{'cc'} if exists $self->{'cc'};
+
+    my $dbh = Bugzilla->dbh;
+    $self->{'cc'} = $dbh->selectcol_arrayref(
+        q{SELECT profiles.login_name FROM cc, profiles
+           WHERE bug_id = ?
+             AND cc.who = profiles.userid
+        ORDER BY profiles.login_name},
+      undef, $self->bug_id);
+
+    $self->{'cc'} = undef if !scalar(@{$self->{'cc'}});
+
+    return $self->{'cc'};
+}
+
+sub dependson () {
+    my ($self) = @_;
+    return $self->{'dependson'} if exists $self->{'dependson'};
+    $self->{'dependson'} = 
+        EmitDependList("blocked", "dependson", $self->bug_id);
+    return $self->{'dependson'};
+}
+
+sub flag_types () {
+    my ($self) = @_;
+    return $self->{'flag_types'} if exists $self->{'flag_types'};
+
+    # The types of flags that can be set on this bug.
+    # If none, no UI for setting flags will be displayed.
+    my $flag_types = Bugzilla::FlagType::match(
+        {'target_type'  => 'bug',
+         'product_id'   => $self->{'product_id'}, 
+         'component_id' => $self->{'component_id'} });
+
+    foreach my $flag_type (@$flag_types) {
+        $flag_type->{'flags'} = Bugzilla::Flag::match(
+            { 'bug_id'      => $self->bug_id,
+              'type_id'     => $flag_type->{'id'},
+              'target_type' => 'bug',
+              'is_active'   => 1 });
+    }
+
+    $self->{'flag_types'} = $flag_types;
+
+    return $self->{'flag_types'};
+}
+
+sub keywords () {
+    my ($self) = @_;
+    return $self->{'keywords'} if exists $self->{'keywords'};
+
+    my $dbh = Bugzilla->dbh;
+    my $list_ref = $dbh->selectcol_arrayref(
+         "SELECT keyworddefs.name
+            FROM keyworddefs, keywords
+           WHERE keywords.bug_id = ?
+             AND keyworddefs.id = keywords.keywordid
+        ORDER BY keyworddefs.name",
+        undef, ($self->bug_id));
+
+    $self->{'keywords'} = join(', ', @$list_ref);
+    return $self->{'keywords'};
+}
+
 sub longdescs {
     my ($self) = @_;
 
@@ -326,6 +359,61 @@ sub longdescs {
 
     return $self->{'longdescs'};
 }
+
+sub milestoneurl () {
+    my ($self) = @_;
+    return $self->{'milestoneurl'} if exists $self->{'milestoneurl'};
+    $self->{'milestoneurl'} = $::milestoneurl{$self->{product}};
+    return $self->{'milestoneurl'};
+}
+
+sub qa_contact () {
+    my ($self) = @_;
+    return $self->{'qa_contact'} if exists $self->{'qa_contact'};
+
+    if (Param('useqacontact') && $self->{'qa_contact_id'} > 0) {
+        $self->{'qa_contact'} = new Bugzilla::User($self->{'qa_contact'});
+    } else {
+        # XXX - This is somewhat inconsistent with the assignee/reporter 
+        # methods, which will return an empty User if they get a 0. 
+        # However, we're keeping it this way now, for backwards-compatibility.
+        $self->{'qa_contact'} = undef;
+    }
+    return $self->{'qa_contact'};
+}
+
+sub reporter () {
+    my ($self) = @_;
+    return $self->{'reporter'} if exists $self->{'reporter'};
+    $self->{'reporter'} = new Bugzilla::User($self->{'reporter_id'});
+    return $self->{'reporter'};
+}
+
+
+sub show_attachment_flags () {
+    my ($self) = @_;
+    return $self->{'show_attachment_flags'} 
+        if exists $self->{'show_attachment_flags'};
+
+    # The number of types of flags that can be set on attachments to this bug
+    # and the number of flags on those attachments.  One of these counts must be
+    # greater than zero in order for the "flags" column to appear in the table
+    # of attachments.
+    my $num_attachment_flag_types = Bugzilla::FlagType::count(
+        { 'target_type'  => 'attachment',
+          'product_id'   => $self->{'product_id'},
+          'component_id' => $self->{'component_id'} });
+    my $num_attachment_flags = Bugzilla::Flag::count(
+        { 'target_type'  => 'attachment',
+          'bug_id'       => $self->bug_id,
+          'is_active'    => 1 });
+
+    $self->{'show_attachment_flags'} =
+        ($num_attachment_flag_types || $num_attachment_flags);
+
+    return $self->{'show_attachment_flags'};
+}
+
 
 sub use_keywords {
     return @::legal_keywords;
@@ -422,14 +510,14 @@ sub user {
     my $unknown_privileges = !Bugzilla->user->id
                              || Bugzilla->user->in_group("editbugs");
     my $canedit = $unknown_privileges
-                  || Bugzilla->user->id == $self->{'assigned_to'}{'id'}
+                  || Bugzilla->user->id == $self->{assigned_to_id}
                   || (Param('useqacontact')
-                      && $self->{'qa_contact'}
-                      && Bugzilla->user->id == $self->{'qa_contact'}{'id'});
+                      && $self->qa_contact
+                      && Bugzilla->user->id == $self->{qa_contact_id});
     my $canconfirm = $unknown_privileges
                      || Bugzilla->user->in_group("canconfirm");
     my $isreporter = Bugzilla->user->id
-                     && Bugzilla->user->id == $self->{'reporter'}{'id'};
+                     && Bugzilla->user->id == $self->{reporter_id};
 
     $self->{'user'} = {canmove    => $canmove,
                        canconfirm => $canconfirm,
@@ -511,6 +599,10 @@ sub bug_alias_to_id ($) {
         "SELECT bug_id FROM bugs WHERE alias = ?", undef, $alias);
 }
 
+#####################################################################
+# Subroutines
+#####################################################################
+
 sub EmitDependList {
     my ($myfield, $targetfield, $bug_id) = (@_);
     my $dbh = Bugzilla->dbh;
@@ -522,7 +614,7 @@ sub EmitDependList {
               AND bugs.bug_id = dependencies.$targetfield
          ORDER BY dependencies.$targetfield",
          undef, ($bug_id));
-    return @$list_ref;
+    return $list_ref;
 }
 
 sub ValidateTime {

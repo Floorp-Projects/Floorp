@@ -362,13 +362,13 @@ if ($cloned_bug_id) {
 
     $vars->{'short_desc'}     = $cloned_bug->{'short_desc'};
     $vars->{'bug_file_loc'}   = $cloned_bug->{'bug_file_loc'};
-    $vars->{'keywords'}       = $cloned_bug->{'keywords'};
+    $vars->{'keywords'}       = $cloned_bug->keywords;
     $vars->{'dependson'}      = $cloned_bug_id;
     $vars->{'blocked'}        = "";
     $vars->{'deadline'}       = $cloned_bug->{'deadline'};
 
-    if (exists $cloned_bug->{'cc'}) {
-        $vars->{'cc'}         = join (" ", @{$cloned_bug->{'cc'}});
+    if (defined $cloned_bug->cc) {
+        $vars->{'cc'}         = join (" ", @{$cloned_bug->cc});
     } else {
         $vars->{'cc'}         = formvalue('cc');
     }
