@@ -437,35 +437,35 @@ function MsgViewAllThreadMsgs()
 
 function MsgSortByDate()
 {
-	SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');
+	SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date', null);
 }
 
 function MsgSortBySender()
 {
-	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');
+	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender', 'http://home.netscape.com/NC-rdf#Date');
 }
 
 function MsgSortByStatus()
 {
-	SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');
+	SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status', 'http://home.netscape.com/NC-rdf#Date');
 }
 
 function MsgSortBySubject()
 {
-	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');
+	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject', 'http://home.netscape.com/NC-rdf#Date');
 }
 
 function MsgSortByFlagged() 
 {
-	SortThreadPane('FlaggedButtonColumn', 'http://home.netscape.com/NC-rdf#Flagged');
+	SortThreadPane('FlaggedButtonColumn', 'http://home.netscape.com/NC-rdf#Flagged', 'http://home.netscape.com/NC-rdf#Date');
 }
 function MsgSortByPriority()
 {
-	SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority');
+	SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority', 'http://home.netscape.com/NC-rdf#Date');
 }
 function MsgSortBySize() 
 {
-	SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size');
+	SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size', 'http://home.netscape.com/NC-rdf#Date');
 }
 function MsgSortByThread()
 {
@@ -473,7 +473,7 @@ function MsgSortByThread()
 }
 function MsgSortByUnread()
 {
-	SortThreadPane('UnreadButtonColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages');
+	SortThreadPane('UnreadButtonColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages','http://home.netscape.com/NC-rdf#Date');
 }
 function MsgSortByOrderReceived()
 {
@@ -494,7 +494,7 @@ function MsgSortByRead()
 
 function MsgSortByTotal()
 {
-	SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages');
+	SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages', 'http://home.netscape.com/NC-rdf#Date');
 }
 
 function MsgNewFolder()

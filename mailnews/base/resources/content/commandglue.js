@@ -294,13 +294,13 @@ function UpdateStatusMessageCounts(folder)
 
 }
 
-function SortThreadPane(column, sortKey)
+function SortThreadPane(column, sortKey, secondarySortKey)
 {
 	var node = document.getElementById(column);
 	if(!node)
 		return false;
 
-	return SortColumn(node, sortKey);
+	return SortColumn(node, sortKey, secondarySortKey);
 
 
 }
@@ -313,10 +313,10 @@ function SortFolderPane(column, sortKey)
 		dump('Couldnt find sort column\n');
 		return false;
 	}
-	return SortColumn(node, sortKey);
+	return SortColumn(node, sortKey, null);
 }
 
-function SortColumn(node, sortKey)
+function SortColumn(node, sortKey, secondarySortKey)
 {
 	dump('In sortColumn\n');
 	var xulSortService = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
@@ -337,6 +337,8 @@ function SortColumn(node, sortKey)
 
 			try
 			{
+				if(secondarySortKey)
+					node.setAttribute('rdf:resource2', secondarySortKey);
 				xulSortService.Sort(node, sortKey, sortDirection);
 			}
 			catch(e)
