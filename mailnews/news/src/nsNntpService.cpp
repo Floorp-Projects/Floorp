@@ -384,7 +384,7 @@ nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener,
 	return NS_ERROR_NULL_POINTER;
   }
 
-#if DEBUG_sspitzer
+#ifdef DEBUG_sspitzer
   printf("nsNntpService::GetNewNews(%s)\n", uri);
 #endif
   
