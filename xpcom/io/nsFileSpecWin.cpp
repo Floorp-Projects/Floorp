@@ -306,6 +306,10 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasSymlink)
 {
     wasSymlink = PR_FALSE;  // assume failure
 
+	if (Exists())
+		return NS_OK;
+
+
     HRESULT hres; 
     IShellLink* psl; 
 
