@@ -50,11 +50,14 @@
 
 /*
 ** OpenVMS doesn't have these in socket.h.
+** Does in later versions!
 */
+#if 0
 struct ip_mreq {
     struct in_addr  imr_multiaddr;      /* IP multicast address of group */
     struct in_addr  imr_interface;      /* local IP address of interface */
 };
+#endif
 
 /*
  * OSF1 needs the MAP_FIXED flag to ensure that mmap returns a pointer
