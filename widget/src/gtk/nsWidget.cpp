@@ -147,8 +147,8 @@ nsresult nsWidget::UpdateICSpot()
    compEvent.theReply.mCursorPosition.y=-1;
    this->OnComposition(compEvent);
    // set SpotLocation
-   if((compEvent.theReply.mCursorPosition.x <= 0) &&
-      (compEvent.theReply.mCursorPosition.y <= 0))
+   if((compEvent.theReply.mCursorPosition.x < 0) &&
+      (compEvent.theReply.mCursorPosition.y < 0))
      return NS_ERROR_FAILURE;
    if((compEvent.theReply.mCursorPosition.x != oldx)||
       (compEvent.theReply.mCursorPosition.y != oldy))
@@ -3004,8 +3004,8 @@ nsWidget::SetXICBaseFontSize(int height)
 void
 nsWidget::SetXICSpotLocation(nsPoint aPoint)
 {
-  NS_ASSERTION( (aPoint.x > 0) && (aPoint.y >0), "strange position for XIC");
-  if(! ( (aPoint.x > 0) && (aPoint.y >0)))
+  NS_ASSERTION( (aPoint.y >0), "strange position for XIC");
+  if(aPoint.y <= 0)
     return;
 
   if(mIMEEnable == PR_FALSE)
