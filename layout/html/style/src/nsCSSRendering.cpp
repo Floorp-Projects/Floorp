@@ -1372,10 +1372,16 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
 {
 PRIntn              cnt;
 nsMargin            border;
-const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
 nsStyleCoord        bordStyleRadius[4];
 PRInt16             borderRadii[4],i;
 float               percent;
+nsCompatibility     compatMode;
+aPresContext->GetCompatibilityMode(&compatMode);
+// in NavQuirks mode we want to use the parent's context as a starting point 
+// for determining the background color
+const nsStyleColor* bgColor = 
+  nsStyleUtil::FindNonTransparentBackground(aStyleContext, 
+                                            compatMode == eCompatibility_NavQuirks ? PR_TRUE : PR_FALSE); 
 
   if (aHardBorderSize > 0) {
     border.SizeTo(aHardBorderSize, aHardBorderSize, aHardBorderSize, aHardBorderSize);
@@ -1513,7 +1519,7 @@ void nsCSSRendering::PaintOutline(nsIPresContext* aPresContext,
 nsStyleCoord        bordStyleRadius[4];
 PRInt16             borderRadii[4],i;
 float               percent;
-const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
+const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext);
 nscoord width;
 
 
@@ -1637,7 +1643,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext* aPresContext,
                                       PRIntn aSkipSides,
                                       nsRect* aGap)
 {
-  const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
+  const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext);
   
   if (nsnull==aBorderEdges) {  // Empty border segments
     return;
