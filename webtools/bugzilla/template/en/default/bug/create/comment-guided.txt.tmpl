@@ -23,7 +23,8 @@
   #   fields on a template from enter_bug.cgi.) It can be used to pull out 
   #   various custom fields and format an initial Description entry from them. 
   #%]  
-User-Agent:       [%+ user_agent %]
+[% USE Bugzilla %]
+User-Agent:       [%+ Bugzilla.cgi.user_agent() %]
 Build Identifier: [%+ form.buildid %]
 
 [%+ form.comment IF form.comment %]
