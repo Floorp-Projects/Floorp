@@ -800,9 +800,7 @@ nsFormHistory::RowMatch(nsIMdbRow *aRow, const nsAString &aInputName, const nsAS
   if (name.Equals(aInputName)) {
     nsAutoString value;
     GetRowValue(aRow, kToken_ValueColumn, value);
-    if (value.Length() != aInputValue.Length() && // ignore exact matches
-        Compare(Substring(value, 0, aInputValue.Length()), aInputValue, nsCaseInsensitiveStringComparator()) == 0)
-    {
+    if (Compare(Substring(value, 0, aInputValue.Length()), aInputValue, nsCaseInsensitiveStringComparator()) == 0) {
       if (aValue)
         *aValue = ToNewUnicode(value);
       return PR_TRUE;
