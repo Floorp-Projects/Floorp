@@ -5,8 +5,8 @@
 # errors and creating links into the source code where the errors
 # occurred.
 
-# $Revision: 1.9 $ 
-# $Date: 2002/05/02 03:18:40 $ 
+# $Revision: 1.10 $ 
+# $Date: 2002/05/02 05:16:08 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/Error_Parse.pm,v $ 
 # $Name:  $ 
@@ -171,7 +171,7 @@ sub line_type {
                      0);
       
       if ($ignore) {
-          undefine $error;
+          undef $error;
       }
   }
 
@@ -312,7 +312,7 @@ sub line_type {
                      0);
       
       if ($ignore) {
-          undefine $error;
+          undef $error;
       }
   }
 
