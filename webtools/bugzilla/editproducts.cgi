@@ -1418,7 +1418,7 @@ if ($action eq 'editgroupcontrols') {
     print "<TD>Shown</TD>\n";
     print "<TD>NA</TD>\n";
     print "<TD>Bugs in this product are permitted to be restricted to this ";
-    print "group.  Users who are a member of this group will be able ";
+    print "group.  Users who are members of this group will be able ";
     print "to place bugs in this group.</TD>\n";
     print "</TR><TR>";
     print "<TD>Shown</TD>\n";
@@ -1437,7 +1437,7 @@ if ($action eq 'editgroupcontrols') {
     print "<TD>Shown</TD>\n";
     print "<TD>Mandatory</TD>\n";
     print "<TD>Bugs in this product are permitted to be restricted to this ";
-    print "group.  Users who are a member of this group will be able ";
+    print "group.  Users who are members of this group will be able ";
     print "to place bugs in this group.";
     print "Non-members will be forced to restrict bugs to this group ";
     print "when they initially enter a bug in this product.";
@@ -1447,14 +1447,14 @@ if ($action eq 'editgroupcontrols') {
     print "<TD>NA</TD>\n";
     print "<TD>Bugs in this product are permitted to be restricted to this ";
     print "group and are placed in this group by default.";
-    print "Users who are a member of this group will be able ";
+    print "Users who are members of this group will be able ";
     print "to place bugs in this group.</TD>\n";
     print "</TR><TR>";
     print "<TD>Default</TD>\n";
     print "<TD>Default</TD>\n";
     print "<TD>Bugs in this product are permitted to be restricted to this ";
     print "group and are placed in this group by default.";
-    print "Users who are a member of this group will be able ";
+    print "Users who are members of this group will be able ";
     print "to place bugs in this group. Non-members will be able to ";
     print "restrict bugs to this group on entry and will do so by default ";
     print "</TD>\n";
@@ -1463,7 +1463,7 @@ if ($action eq 'editgroupcontrols') {
     print "<TD>Mandatory</TD>\n";
     print "<TD>Bugs in this product are permitted to be restricted to this ";
     print "group and are placed in this group by default.";
-    print "Users who are a member of this group will be able ";
+    print "Users who are members of this group will be able ";
     print "to place bugs in this group. Non-members will be forced ";
     print "to place bugs in this group on entry.";
     print "</TR><TR>";
