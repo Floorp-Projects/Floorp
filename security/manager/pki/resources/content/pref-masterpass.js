@@ -76,6 +76,10 @@ function changePasswordSettings()
   case "2": 
     var timeoutField = document.getElementById("passwordTimeout");
     timeout = timeoutField.value;
+    var re = new RegExp("^[0-9]+$");
+    if (!re.test(timeout)) {
+      timeout = "0";
+    }
     askTimes = nsIPK11Token.ASK_EXPIRE_TIME;
     break;
   }
