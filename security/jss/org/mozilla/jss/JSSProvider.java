@@ -54,11 +54,13 @@ public final class JSSProvider extends java.security.Provider {
 
         put("Signature.MD5/RSA",
             "org.mozilla.jss.provider.java.security.JSSSignatureSpi$MD5RSA");
+        put("Alg.Alias.Signature.MD5withRSA", "MD5/RSA");
+
         put("Signature.MD2/RSA",
             "org.mozilla.jss.provider.java.security.JSSSignatureSpi$MD2RSA");
+
         put("Signature.SHA-1/RSA",
             "org.mozilla.jss.provider.java.security.JSSSignatureSpi$SHA1RSA");
-
         put("Alg.Alias.Signature.SHA1/RSA", "SHA-1/RSA");
         put("Alg.Alias.Signature.SHA1withRSA", "SHA-1/RSA");
 
