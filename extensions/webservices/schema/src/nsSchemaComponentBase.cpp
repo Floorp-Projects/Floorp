@@ -29,7 +29,7 @@
 //
 ////////////////////////////////////////////////////////////
 nsSchemaComponentBase::nsSchemaComponentBase(nsSchema* aSchema) 
-  : mSchema(aSchema), mIsResolving(PR_FALSE), mIsClearing(PR_FALSE)
+  : mSchema(aSchema), mIsResolved(PR_FALSE), mIsCleared(PR_FALSE)
 {
 }
 

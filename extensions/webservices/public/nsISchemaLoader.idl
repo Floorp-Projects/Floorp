@@ -24,22 +24,22 @@
 #include "nsISupports.idl"
 
 interface nsISchema;
-interface nsIURI;
 interface nsIDOMElement;
 interface nsISchemaLoadListener;
 
 [scriptable, uuid(3c14a032-6f4e-11d5-9b46-000064657374)]
 interface nsISchemaLoader : nsISupports {
-  nsISchema load(in nsIURI schemaURI);
-  void loadAsync(in nsIURI schemaURI, in nsISchemaLoadListener listener);
+  nsISchema load(in AString schemaURI);
+  void loadAsync(in AString schemaURI, 
+                 in nsISchemaLoadListener listener);
   nsISchema processSchemaElement(in nsIDOMElement element);
 };
 
-[scriptable, uuid(3c14a033-6f4e-11d5-9b46-000064657374)]
+[scriptable, function, uuid(3c14a033-6f4e-11d5-9b46-000064657374)]
 interface nsISchemaLoadListener : nsISupports {
+  void onLoad(in nsISchema schema);
   void onError(in PRInt32 status,
-	       in wstring statusMessage);
-  void onComplete(in nsISchema schema);
+               in AString statusMessage);
 };
 
 %{ C++
@@ -48,5 +48,5 @@ interface nsISchemaLoadListener : nsISupports {
  0x5adc10f0, 0x74e1, 0x11d5,                          \
 {0x9b, 0x49, 0x00, 0x10, 0x4b, 0xdf, 0x53, 0x39}}     
 
-#define NS_SCHEMALOADER_CONTRACTID "@mozilla.org/xmlextras/schemaloader;1"
+#define NS_SCHEMALOADER_CONTRACTID "@mozilla.org/xmlextras/schemas/schemaloader;1"
 %}

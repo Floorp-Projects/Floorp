@@ -42,20 +42,20 @@ nsSchemaComplexType::~nsSchemaComplexType()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSchemaComplexType, 
-                   nsISchemaComponent,
-                   nsISchemaType,
-                   nsISchemaComplexType)
+NS_IMPL_ISUPPORTS3_CI(nsSchemaComplexType, 
+                      nsISchemaComponent,
+                      nsISchemaType,
+                      nsISchemaComplexType)
 
 /* void resolve (); */
 NS_IMETHODIMP 
 nsSchemaComplexType::Resolve()
 {
-  if (mIsResolving) {
+  if (mIsResolved) {
     return NS_OK;
   }
 
-  mIsResolving = PR_TRUE;
+  mIsResolved = PR_TRUE;
   nsresult rv;
   PRUint32 i, count;
 
@@ -68,46 +68,50 @@ nsSchemaComplexType::Resolve()
     if (NS_SUCCEEDED(rv)) {
       rv = attribute->Resolve();
       if (NS_FAILED(rv)) {
-        mIsResolving = PR_FALSE;
         return rv;
       }
     }
   }
 
   if (!mSchema) {
-    mIsResolving = PR_FALSE;
     return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsISchemaType> type;
   if (mBaseType) {
-    rv = mSchema->ResolveTypePlaceholder(mBaseType, getter_AddRefs(mBaseType));
+    rv = mSchema->ResolveTypePlaceholder(mBaseType, getter_AddRefs(type));
     if (NS_FAILED(rv)) {
-      mIsResolving = PR_FALSE;
       return NS_ERROR_FAILURE;
     }
+    mBaseType = type;
     rv = mBaseType->Resolve();
     if (NS_FAILED(rv)) {
-      mIsResolving = PR_FALSE;
       return NS_ERROR_FAILURE;
     }
   }
     
   if (mSimpleBaseType) {
-    nsCOMPtr<nsISchemaType> type;
     rv = mSchema->ResolveTypePlaceholder(mSimpleBaseType, 
                                          getter_AddRefs(type));
     if (NS_FAILED(rv)) {
-      mIsResolving = PR_FALSE;
       return NS_ERROR_FAILURE;
     }
     mSimpleBaseType = do_QueryInterface(type);
     if (!mSimpleBaseType) {
-      mIsResolving = PR_FALSE;
       return NS_ERROR_FAILURE;
     }
     rv = mSimpleBaseType->Resolve();
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
   }
-  mIsResolving = PR_FALSE;
+
+  if (mModelGroup) {
+    rv = mModelGroup->Resolve();
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
 
   return NS_OK;
 }
@@ -116,11 +120,11 @@ nsSchemaComplexType::Resolve()
 NS_IMETHODIMP 
 nsSchemaComplexType::Clear()
 {
-  if (mIsClearing) {
+  if (mIsCleared) {
     return NS_OK;
   }
 
-  mIsClearing = PR_TRUE;
+  mIsCleared = PR_TRUE;
   if (mBaseType) {
     mBaseType->Clear();
     mBaseType = nsnull;
@@ -148,7 +152,6 @@ nsSchemaComplexType::Clear()
   }
   mAttributes.Clear();
   mAttributesHash.Reset();
-  mIsClearing = PR_FALSE;
 
   return NS_OK;
 }

@@ -39,37 +39,34 @@ nsSchemaAttribute::~nsSchemaAttribute()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSchemaAttribute,
-                   nsISchemaComponent,
-                   nsISchemaAttributeComponent,
-                   nsISchemaAttribute)
+NS_IMPL_ISUPPORTS3_CI(nsSchemaAttribute,
+                      nsISchemaComponent,
+                      nsISchemaAttributeComponent,
+                      nsISchemaAttribute)
 
 
 /* void resolve (); */
 NS_IMETHODIMP 
 nsSchemaAttribute::Resolve()
 {
-  if (mIsResolving) {
+  if (mIsResolved) {
     return NS_OK;
   }
 
-  mIsResolving = PR_TRUE;
+  mIsResolved = PR_TRUE;
   nsresult rv = NS_OK;
   if (mType && mSchema) {
     nsCOMPtr<nsISchemaType> type;
     rv = mSchema->ResolveTypePlaceholder(mType, getter_AddRefs(type));
     if (NS_FAILED(rv)) {
-      mIsResolving = PR_FALSE;
       return NS_ERROR_FAILURE;
     }
     mType = do_QueryInterface(type);
     if (!mType) {
-      mIsResolving = PR_FALSE;
       return NS_ERROR_FAILURE;
     }
     rv = mType->Resolve();
   }
-  mIsResolving = PR_FALSE;
 
   return rv;
 }
@@ -78,14 +75,15 @@ nsSchemaAttribute::Resolve()
 NS_IMETHODIMP 
 nsSchemaAttribute::Clear()
 {
-  if (mIsClearing) {
+  if (mIsCleared) {
     return NS_OK;
   }
 
-  mIsClearing = PR_TRUE;
-  mType->Clear();
-  mType = nsnull;
-  mIsClearing = PR_FALSE;
+  mIsCleared = PR_TRUE;
+  if (mType) {
+    mType->Clear();
+    mType = nsnull;
+  }
 
   return NS_OK;
 }
@@ -195,10 +193,10 @@ nsSchemaAttributeRef::~nsSchemaAttributeRef()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSchemaAttributeRef,
-                   nsISchemaComponent,
-                   nsISchemaAttributeComponent,
-                   nsISchemaAttribute)
+NS_IMPL_ISUPPORTS3_CI(nsSchemaAttributeRef,
+                      nsISchemaComponent,
+                      nsISchemaAttributeComponent,
+                      nsISchemaAttribute)
 
 
 /* void resolve (); */
@@ -206,11 +204,11 @@ NS_IMETHODIMP
 nsSchemaAttributeRef::Resolve()
 {
   nsresult rv = NS_OK;
-  if (mIsResolving) {
+  if (mIsResolved) {
     return NS_OK;
   }
   
-  mIsResolving = PR_TRUE;
+  mIsResolved = PR_TRUE;
   if (!mAttribute && mSchema) {
     mSchema->GetAttributeByName(mRef, getter_AddRefs(mAttribute));
   }
@@ -218,7 +216,6 @@ nsSchemaAttributeRef::Resolve()
   if (mAttribute) {
     rv = mAttribute->Resolve();
   }
-  mIsResolving = PR_FALSE;
 
   return rv;
 }
@@ -227,14 +224,15 @@ nsSchemaAttributeRef::Resolve()
 NS_IMETHODIMP 
 nsSchemaAttributeRef::Clear()
 {
-  if (mIsClearing) {
+  if (mIsCleared) {
     return NS_OK;
   }
 
-  mIsClearing = PR_TRUE;
-  mAttribute->Clear();
-  mAttribute = nsnull;
-  mIsClearing = PR_FALSE;
+  mIsCleared = PR_TRUE;
+  if (mAttribute) {
+    mAttribute->Clear();
+    mAttribute = nsnull;
+  }
 
   return NS_OK;
 }
@@ -337,20 +335,20 @@ nsSchemaAttributeGroup::~nsSchemaAttributeGroup()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSchemaAttributeGroup,
-                   nsISchemaComponent,
-                   nsISchemaAttributeComponent,
-                   nsISchemaAttributeGroup)
+NS_IMPL_ISUPPORTS3_CI(nsSchemaAttributeGroup,
+                      nsISchemaComponent,
+                      nsISchemaAttributeComponent,
+                      nsISchemaAttributeGroup)
 
 /* void resolve (); */
 NS_IMETHODIMP 
 nsSchemaAttributeGroup::Resolve()
 {
-  if (mIsResolving) {
+  if (mIsResolved) {
     return NS_OK;
   }
 
-  mIsResolving = PR_TRUE;
+  mIsResolved = PR_TRUE;
   nsresult rv;
   PRUint32 i, count;
 
@@ -363,12 +361,10 @@ nsSchemaAttributeGroup::Resolve()
     if (NS_SUCCEEDED(rv)) {
       rv = attribute->Resolve();
       if (NS_FAILED(rv)) {
-        mIsResolving = PR_FALSE;
         return rv;
       }
     }
   }
-  mIsResolving = PR_FALSE;
   
   return NS_OK;
 }
@@ -377,11 +373,11 @@ nsSchemaAttributeGroup::Resolve()
 NS_IMETHODIMP 
 nsSchemaAttributeGroup::Clear()
 {
-  if (mIsClearing) {
+  if (mIsCleared) {
     return NS_OK;
   }
 
-  mIsClearing = PR_TRUE;
+  mIsCleared = PR_TRUE;
   nsresult rv;
   PRUint32 i, count;
   mAttributes.Count(&count);
@@ -396,7 +392,6 @@ nsSchemaAttributeGroup::Clear()
   }
   mAttributes.Clear();
   mAttributesHash.Reset();
-  mIsClearing = PR_FALSE;
 
   return NS_OK;
 }
@@ -490,21 +485,21 @@ nsSchemaAttributeGroupRef::~nsSchemaAttributeGroupRef()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSchemaAttributeGroupRef,
-                   nsISchemaComponent,
-                   nsISchemaAttributeComponent,
-                   nsISchemaAttributeGroup)
+NS_IMPL_ISUPPORTS3_CI(nsSchemaAttributeGroupRef,
+                      nsISchemaComponent,
+                      nsISchemaAttributeComponent,
+                      nsISchemaAttributeGroup)
 
 /* void resolve (); */
 NS_IMETHODIMP 
 nsSchemaAttributeGroupRef::Resolve()
 {
   nsresult rv = NS_OK;
-  if (mIsResolving) {
+  if (mIsResolved) {
     return NS_OK;
   }
 
-  mIsResolving = PR_TRUE;
+  mIsResolved = PR_TRUE;
   if (!mAttributeGroup && mSchema) {
     mSchema->GetAttributeGroupByName(mRef, getter_AddRefs(mAttributeGroup));
   }
@@ -512,7 +507,6 @@ nsSchemaAttributeGroupRef::Resolve()
   if (mAttributeGroup) {
     rv = mAttributeGroup->Resolve();
   }
-  mIsResolving = PR_FALSE;
   
   return rv;
 }
@@ -521,14 +515,15 @@ nsSchemaAttributeGroupRef::Resolve()
 NS_IMETHODIMP 
 nsSchemaAttributeGroupRef::Clear()
 {
-  if (mIsClearing) {
+  if (mIsCleared) {
     return NS_OK;
   }
 
-  mIsClearing = PR_TRUE;
-  mAttributeGroup->Clear();
-  mAttributeGroup = nsnull;
-  mIsClearing = PR_FALSE;
+  mIsCleared = PR_TRUE;
+  if (mAttributeGroup) {
+    mAttributeGroup->Clear();
+    mAttributeGroup = nsnull;
+  }
 
   return NS_OK;
 }
@@ -611,10 +606,10 @@ nsSchemaAnyAttribute::~nsSchemaAnyAttribute()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSchemaAnyAttribute,
-                   nsISchemaComponent,
-                   nsISchemaAttributeComponent,
-                   nsISchemaAnyAttribute)
+NS_IMPL_ISUPPORTS3_CI(nsSchemaAnyAttribute,
+                      nsISchemaComponent,
+                      nsISchemaAttributeComponent,
+                      nsISchemaAnyAttribute)
 
 /* void resolve (); */
 NS_IMETHODIMP 

@@ -76,8 +76,8 @@ public:
 protected:
   nsSchema* mSchema;  // [WEAK] It owns me
   // Used to prevent infinite recursion for cycles in the object graph
-  PRPackedBool mIsResolving;
-  PRPackedBool mIsClearing;
+  PRPackedBool mIsResolved;
+  PRPackedBool mIsCleared;
 };
 
 #define NS_IMPL_NSISCHEMACOMPONENT_USING_BASE                           \
@@ -250,8 +250,7 @@ class nsSchemaModelGroup : public nsSchemaParticleBase,
 {
 public:
   nsSchemaModelGroup(nsSchema* aSchema, 
-                     const nsAReadableString& aName,
-                     PRUint16 aCompositor);
+                     const nsAReadableString& aName);
   virtual ~nsSchemaModelGroup();
 
   NS_DECL_ISUPPORTS
@@ -259,6 +258,7 @@ public:
   NS_IMPL_NSISCHEMAPARTICLE_USING_BASE
   NS_DECL_NSISCHEMAMODELGROUP
 
+  NS_IMETHOD SetCompositor(PRUint16 aCompositor);
   NS_IMETHOD AddParticle(nsISchemaParticle* aParticle);
 
 protected:
@@ -458,24 +458,171 @@ class nsSchemaFacet : public nsSchemaComponentBase,
                       public nsISchemaFacet
 {
 public:
-  nsSchemaFacet(nsSchema* aSchema, PRUint16 aFacetType, PRBool aIsFixed);
+  nsSchemaFacet(nsSchema* aSchema);
   virtual ~nsSchemaFacet();
 
   NS_DECL_ISUPPORTS
   NS_IMPL_NSISCHEMACOMPONENT_USING_BASE
   NS_DECL_NSISCHEMAFACET
 
+  NS_IMETHOD SetFacetType(PRUint16 aFacetType);
+  NS_IMETHOD SetIsFixed(PRBool aIsFixed);
   NS_IMETHOD SetValue(const nsAReadableString& aStrValue);
-  NS_IMETHOD SetDigitsValue(PRUint32 aDigitsValue);
+  NS_IMETHOD SetUintValue(PRUint32 aUintValue);
   NS_IMETHOD SetWhitespaceValue(PRUint16 aWhitespaceValue);
 
 protected:
   PRUint16 mFacetType;
   PRPackedBool mIsFixed;
   nsString mStrValue;
-  PRUint32 mDigitsValue;
+  PRUint32 mUintValue;
   PRUint16 mWhitespaceValue;
 };
+
+
+#define NS_SCHEMA_CID                              \
+{ /* 58870ef5-cb65-4220-8317-dbe236059c58 */       \
+ 0x58870ef5, 0xcb65, 0x4220,                       \
+ {0x83, 0x17, 0xdb, 0xe2, 0x36, 0x05, 0x9c, 0x58}}
+
+#define NS_SCHEMA_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schema;1"
+
+#define NS_SCHEMABUILTINTYPE_CID                   \
+{ /* c1db07bc-1095-4a44-9ed6-f4a00a116b4a */       \
+ 0xc1db07bc, 0x1095, 0x4a44,                       \
+ {0x9e, 0xd6, 0xf4, 0xa0, 0x0a, 0x11, 0x6b, 0x4a}}
+
+#define NS_SCHEMABUILTINTYPE_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemabuiltintype;1"
+
+#define NS_SCHEMALISTTYPE_CID                      \
+{ /* 2053b685-e541-45f9-bb00-9d8897b8887d */       \
+ 0x2053b685, 0xe541, 0x45f9,                       \
+ {0xbb, 0x00, 0x9d, 0x88, 0x97, 0xb8, 0x88, 0x7d}}
+
+#define NS_SCHEMALISTTYPE_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemalisttype;1"
+
+#define NS_SCHEMAUNIONTYPE_CID                     \
+{ /* ef8b74ae-da9a-4fa2-b6f1-b587b02b2262 */       \
+ 0xef8b74ae, 0xda9a, 0x4fa2,                       \
+ {0xb6, 0xf1, 0xb5, 0x87, 0xb0, 0x2b, 0x22, 0x62}}
+
+#define NS_SCHEMAUNIONTYPE_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemauniontype;1"
+
+#define NS_SCHEMARESTRICTIONTYPE_CID               \
+{ /* 38622f82-c10e-48cc-aea9-1a6ed31078e5 */       \
+ 0x38622f82, 0xc10e, 0x48cc,                       \
+ {0xae, 0xa9, 0x1a, 0x6e, 0xd3, 0x10, 0x78, 0xe5}}
+
+#define NS_SCHEMARESTRICTIONTYPE_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemarestrictiontype;1"
+
+#define NS_SCHEMACOMPLEXTYPE_CID                   \
+{ /* e8266b17-b5ed-4228-be18-473dbfe68f67 */       \
+ 0xe8266b17, 0xb5ed, 0x4228,                       \
+ {0xbe, 0x18, 0x47, 0x3d, 0xbf, 0xe6, 0x8f, 0x67}}
+
+#define NS_SCHEMACOMPLEXTYPE_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemacomplextype;1"
+
+#define NS_SCHEMATYPEPLACEHOLDER_CID               \
+{ /* 50e026ef-e0ef-408c-a5ed-8492d7f3604e */       \
+ 0x50e026ef, 0xe0ef, 0x408c,                       \
+ {0xa5, 0xed, 0x84, 0x92, 0xd7, 0xf3, 0x60, 0x4e}}
+
+#define NS_SCHEMATYPEPLACEHOLDER_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schematypeplaceholder;1"
+
+#define NS_SCHEMAMODELGROUP_CID                    \
+{ /* 8f75863d-a724-40d5-a271-72bb67ef2105 */       \
+ 0x8f75863d, 0xa724, 0x40d5,                       \
+ {0xa2, 0x71, 0x72, 0xbb, 0x67, 0xef, 0x21, 0x05}}
+
+#define NS_SCHEMAMODELGROUP_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemamodelgroup;1"
+
+#define NS_SCHEMAMODELGROUPREF_CID                 \
+{ /* 2e9dca3a-5684-44a1-99cb-94f8aef95c03 */       \
+ 0x2e9dca3a, 0x5684, 0x44a1,                       \
+ {0x99, 0xcb, 0x94, 0xf8, 0xae, 0xf9, 0x5c, 0x03}}
+
+#define NS_SCHEMAMODELGROUPREF_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemamodelgroupref;1"
+
+#define NS_SCHEMAANYPARTICLE_CID                   \
+{ /* ab78c787-a356-483a-9153-92c50ba8a80d */       \
+ 0xab78c787, 0xa356, 0x483a,                       \
+ {0x91, 0x53, 0x92, 0xc5, 0x0b, 0xa8, 0xa8, 0x0d}}
+
+#define NS_SCHEMAANYPARTICLE_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemaanyparticle;1"
+
+#define NS_SCHEMAELEMENT_CID                       \
+{ /* 9c3e5c69-2d47-475d-9cc8-1d6905d0f7dc */       \
+ 0x9c3e5c69, 0x2d47, 0x475d,                       \
+ {0x9c, 0xc8, 0x1d, 0x69, 0x05, 0xd0, 0xf7, 0xdc}}
+
+#define NS_SCHEMAELEMENT_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemaelement;1"
+
+#define NS_SCHEMAELEMENTREF_CID                    \
+{ /* a62b4292-5d30-4085-9dbb-3f478d639188 */       \
+ 0xa62b4292, 0x5d30, 0x4085,                       \
+ {0x9d, 0xbb, 0x3f, 0x47, 0x8d, 0x63, 0x91, 0x88}}
+
+#define NS_SCHEMAELEMENTREF_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemaelementref;1"
+
+#define NS_SCHEMAATTRIBUTE_CID                     \
+{ /* 7b3820e6-0fd9-4025-9ba8-73f3a1ab1ba6 */       \
+ 0x7b3820e6, 0x0fd9, 0x4025,                       \
+ {0x9b, 0xa8, 0x73, 0xf3, 0xa1, 0xab, 0x1b, 0xa6}}
+
+#define NS_SCHEMAATTRIBUTE_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemaattribute;1"
+
+#define NS_SCHEMAATTRIBUTEREF_CID                  \
+{ /* 53fe1960-e0df-487f-a26c-a3073a8e863a */       \
+ 0x53fe1960, 0xe0df, 0x487f,                       \
+ {0xa2, 0x6c, 0xa3, 0x07, 0x3a, 0x8e, 0x86, 0x3a}}
+
+#define NS_SCHEMAATTRIBUTEREF_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemaattributeref;1"
+
+#define NS_SCHEMAATTRIBUTEGROUP_CID                \
+{ /* 1f3d1ad4-2501-4097-9293-6e40890cf72a */       \
+ 0x1f3d1ad4, 0x2501, 0x4097,                       \
+ {0x92, 0x93, 0x6e, 0x40, 0x89, 0x0c, 0xf7, 0x2a}}
+
+#define NS_SCHEMAATTRIBUTEGROUP_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemaattributegroup;1"
+
+#define NS_SCHEMAATTRIBUTEGROUPREF_CID             \
+{ /* 99596213-d550-4b46-ae04-7dd38dd7abff */       \
+ 0x99596213, 0xd550, 0x4b46,                       \
+ {0xae, 0x04, 0x7d, 0xd3, 0x8d, 0xd7, 0xab, 0xff}}
+
+#define NS_SCHEMAATTRIBUTEGROUPREF_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemaattributegroupref;1"
+
+#define NS_SCHEMAANYATTRIBUTE_CID                  \
+{ /* 4e248fa3-79d7-4821-bc69-63e5275e879c */       \
+ 0x4e248fa3, 0x79d7, 0x4821,                       \
+ {0xbc, 0x69, 0x63, 0xe5, 0x27, 0x5e, 0x87, 0x9c}}
+
+#define NS_SCHEMAANYATTRIBUTE_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemaanyattribute;1"
+
+#define NS_SCHEMAFACET_CID                         \
+{ /* fbaa0537-f931-4160-86a0-de849de08635 */       \
+ 0xfbaa0537, 0xf931, 0x4160,                       \
+ {0x86, 0xa0, 0xde, 0x84, 0x9d, 0xe0, 0x86, 0x35}}
+
+#define NS_SCHEMAFACET_CONTRACTID    \
+"@mozilla.org/xmlextras/schemas/schemafacet;1"
 
 #endif // __nsSchemaPrivate_h__
 

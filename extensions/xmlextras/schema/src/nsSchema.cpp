@@ -36,9 +36,10 @@ nsSchema::nsSchema(const nsAReadableString& aTargetNamespace)
 
 nsSchema::~nsSchema()
 {
+  Clear();
 }
 
-NS_IMPL_ISUPPORTS2(nsSchema, nsISchema, nsISchemaComponent)
+NS_IMPL_ISUPPORTS2_CI(nsSchema, nsISchema, nsISchemaComponent)
 
 /* readonly attribute wstring targetNamespace; */
 NS_IMETHODIMP 
@@ -465,6 +466,7 @@ nsSchema::ResolveTypePlaceholder(nsISchemaType* aPlaceholder,
   }
   else {
     *aType = aPlaceholder;
+    NS_ADDREF(*aType);
   }
 
   return NS_OK;

@@ -98,7 +98,7 @@ interface nsISchemaSimpleType : nsISchemaType {
 
 [scriptable, uuid(3c14a024-6f4e-11d5-9b46-000064657374)]
 interface nsISchemaBuiltinType : nsISchemaSimpleType {
-  const unsigned short BUILTIN_TYPE_URTYPE = 1;
+  const unsigned short BUILTIN_TYPE_ANYTYPE = 1;
   const unsigned short BUILTIN_TYPE_STRING = 2;
   const unsigned short BUILTIN_TYPE_NORMALIZED_STRING = 3;
   const unsigned short BUILTIN_TYPE_TOKEN = 4;
@@ -162,7 +162,7 @@ interface nsISchemaUnionType : nsISchemaSimpleType {
 interface nsISchemaRestrictionType : nsISchemaSimpleType {
   readonly attribute nsISchemaSimpleType baseType;
   readonly attribute PRUint32 facetCount;
-  nsISchemaFacet getFacets(in PRUint32 index);
+  nsISchemaFacet getFacet(in PRUint32 index);
 };
 
 [scriptable, uuid(3c14a028-6f4e-11d5-9b46-000064657374)]
@@ -307,7 +307,8 @@ interface nsISchemaFacet : nsISchemaComponent {
 
   readonly attribute unsigned short facetType;
   readonly attribute AString value;
-  readonly attribute PRUint32 digitsValue;  // For totalDigits and fractionDigits only
+  readonly attribute PRUint32 lengthValue; // For length, minLength & maxLength
+  readonly attribute PRUint32 digitsValue; // For totalDigits & fractionDigits
   readonly attribute unsigned short whitespaceValue; // For whitespace only
   readonly attribute boolean isfixed;
 };

@@ -24,15 +24,30 @@
 #include "nsSchemaPrivate.h"
 #include "nsSchemaLoader.h"
 
-
-
 // content includes
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
+#include "nsIDOMDocument.h"
+
+// loading includes
+#include "nsIXMLHTTPRequest.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMEventTarget.h"
+#include "nsNetUtil.h"
 
 // string includes
 #include "nsReadableUtils.h"
+
+// XPConnect includes
+#include "nsIXPConnect.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsICodebasePrincipal.h"
+
+// XPCOM includes
+#include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 
 ////////////////////////////////////////////////////////////
 //
@@ -41,6 +56,7 @@
 ////////////////////////////////////////////////////////////
 
 // Statics
+nsIAtom* nsSchemaAtoms::sAnyType_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sString_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sNormalizedString_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sToken_atom = nsnull;
@@ -88,6 +104,7 @@ nsIAtom* nsSchemaAtoms::sNMTOKENS_atom = nsnull;
 
 nsIAtom* nsSchemaAtoms::sElement_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sModelGroup_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sAny_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sAttribute_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sAttributeGroup_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sSimpleType_atom = nsnull;
@@ -101,10 +118,26 @@ nsIAtom* nsSchemaAtoms::sAnyAttribute_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sRestriction_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sExtension_atom = nsnull;
 nsIAtom* nsSchemaAtoms::sAnnotation_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sList_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sUnion_atom = nsnull;
+
+nsIAtom* nsSchemaAtoms::sMinExclusive_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sMinInclusive_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sMaxExclusive_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sMaxInclusive_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sTotalDigits_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sFractionDigits_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sLength_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sMinLength_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sMaxLength_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sEnumeration_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sWhiteSpace_atom = nsnull;
+nsIAtom* nsSchemaAtoms::sPattern_atom = nsnull;
 
 void
 nsSchemaAtoms::CreateSchemaAtoms()
 {
+  sAnyType_atom = NS_NewAtom("anyType");
   sString_atom = NS_NewAtom("string");
   sNormalizedString_atom = NS_NewAtom("normalizedString");
   sToken_atom = NS_NewAtom("token");
@@ -115,8 +148,8 @@ nsSchemaAtoms::CreateSchemaAtoms()
   sInteger_atom = NS_NewAtom("integer");
   sPositiveInteger_atom = NS_NewAtom("positiveInteger");
   sNegativeInteger_atom = NS_NewAtom("negativeInteger");
-  sNonnegativeInteger_atom = NS_NewAtom("nonnegativeInteger");
-  sNonpositiveInteger_atom = NS_NewAtom("nonpositiveInteger");
+  sNonnegativeInteger_atom = NS_NewAtom("nonNegativeInteger");
+  sNonpositiveInteger_atom = NS_NewAtom("nonPositiveInteger");
   sInt_atom = NS_NewAtom("int");
   sUnsignedInt_atom = NS_NewAtom("unsignedInt");
   sLong_atom = NS_NewAtom("long");
@@ -152,6 +185,7 @@ nsSchemaAtoms::CreateSchemaAtoms()
 
   sElement_atom = NS_NewAtom("element");
   sModelGroup_atom = NS_NewAtom("group");
+  sAny_atom = NS_NewAtom("any");
   sAttribute_atom = NS_NewAtom("attribute");
   sAttributeGroup_atom = NS_NewAtom("attributeGroup");
   sSimpleType_atom = NS_NewAtom("simpleType");
@@ -165,72 +199,271 @@ nsSchemaAtoms::CreateSchemaAtoms()
   sRestriction_atom = NS_NewAtom("restriction");
   sExtension_atom = NS_NewAtom("extension");
   sAnnotation_atom = NS_NewAtom("annotation");
+  sList_atom = NS_NewAtom("list");
+  sUnion_atom = NS_NewAtom("union");
+
+  sMinExclusive_atom = NS_NewAtom("minExclusive");
+  sMinInclusive_atom = NS_NewAtom("minInclusive");
+  sMaxExclusive_atom = NS_NewAtom("maxExclusive");
+  sMaxInclusive_atom = NS_NewAtom("maxInclusive");
+  sTotalDigits_atom = NS_NewAtom("totalDigits");
+  sFractionDigits_atom = NS_NewAtom("fractionDigits");
+  sLength_atom = NS_NewAtom("length");
+  sMinLength_atom = NS_NewAtom("minLength");
+  sMaxLength_atom = NS_NewAtom("maxLength");
+  sEnumeration_atom = NS_NewAtom("enumeration");
+  sWhiteSpace_atom = NS_NewAtom("whiteSpace");
+  sPattern_atom = NS_NewAtom("pattern");
 }
 
 void
 nsSchemaAtoms::DestroySchemaAtoms()
 {
-  NS_RELEASE(sString_atom);
-  NS_RELEASE(sNormalizedString_atom);
-  NS_RELEASE(sToken_atom);
-  NS_RELEASE(sByte_atom);
-  NS_RELEASE(sUnsignedByte_atom);
-  NS_RELEASE(sBase64Binary_atom);
-  NS_RELEASE(sHexBinary_atom);
-  NS_RELEASE(sInteger_atom);
-  NS_RELEASE(sPositiveInteger_atom);
-  NS_RELEASE(sNegativeInteger_atom);
-  NS_RELEASE(sNonnegativeInteger_atom);
-  NS_RELEASE(sNonpositiveInteger_atom);
-  NS_RELEASE(sInt_atom);
-  NS_RELEASE(sUnsignedInt_atom);
-  NS_RELEASE(sLong_atom);
-  NS_RELEASE(sUnsignedLong_atom);
-  NS_RELEASE(sShort_atom);
-  NS_RELEASE(sUnsignedShort_atom);
-  NS_RELEASE(sDecimal_atom);
-  NS_RELEASE(sFloat_atom);
-  NS_RELEASE(sDouble_atom);
-  NS_RELEASE(sBoolean_atom);
-  NS_RELEASE(sTime_atom);
-  NS_RELEASE(sDateTime_atom);
-  NS_RELEASE(sDuration_atom);
-  NS_RELEASE(sDate_atom);
-  NS_RELEASE(sGMonth_atom);
-  NS_RELEASE(sGYear_atom);
-  NS_RELEASE(sGYearMonth_atom);
-  NS_RELEASE(sGDay_atom);
-  NS_RELEASE(sGMonthDay_atom);
-  NS_RELEASE(sName_atom);
-  NS_RELEASE(sQName_atom);
-  NS_RELEASE(sNCName_atom);
-  NS_RELEASE(sAnyUri_atom);
-  NS_RELEASE(sLanguage_atom);
-  NS_RELEASE(sID_atom);
-  NS_RELEASE(sIDREF_atom);
-  NS_RELEASE(sIDREFS_atom);
-  NS_RELEASE(sENTITY_atom);
-  NS_RELEASE(sENTITIES_atom);
-  NS_RELEASE(sNOTATION_atom);
-  NS_RELEASE(sNMTOKEN_atom);
-  NS_RELEASE(sNMTOKENS_atom);
-
-  NS_RELEASE(sElement_atom);
-  NS_RELEASE(sModelGroup_atom);
-  NS_RELEASE(sAttribute_atom);
-  NS_RELEASE(sAttributeGroup_atom);
-  NS_RELEASE(sSimpleType_atom);
-  NS_RELEASE(sComplexType_atom);
-  NS_RELEASE(sSimpleContent_atom);
-  NS_RELEASE(sComplexContent_atom);
-  NS_RELEASE(sAll_atom);
-  NS_RELEASE(sChoice_atom);
-  NS_RELEASE(sSequence_atom);
-  NS_RELEASE(sAnyAttribute_atom);
-  NS_RELEASE(sRestriction_atom);
-  NS_RELEASE(sExtension_atom);
-  NS_RELEASE(sAnnotation_atom);
+  if (sAnyType_atom) {
+    NS_RELEASE(sAnyType_atom);
+    NS_RELEASE(sString_atom);
+    NS_RELEASE(sNormalizedString_atom);
+    NS_RELEASE(sToken_atom);
+    NS_RELEASE(sByte_atom);
+    NS_RELEASE(sUnsignedByte_atom);
+    NS_RELEASE(sBase64Binary_atom);
+    NS_RELEASE(sHexBinary_atom);
+    NS_RELEASE(sInteger_atom);
+    NS_RELEASE(sPositiveInteger_atom);
+    NS_RELEASE(sNegativeInteger_atom);
+    NS_RELEASE(sNonnegativeInteger_atom);
+    NS_RELEASE(sNonpositiveInteger_atom);
+    NS_RELEASE(sInt_atom);
+    NS_RELEASE(sUnsignedInt_atom);
+    NS_RELEASE(sLong_atom);
+    NS_RELEASE(sUnsignedLong_atom);
+    NS_RELEASE(sShort_atom);
+    NS_RELEASE(sUnsignedShort_atom);
+    NS_RELEASE(sDecimal_atom);
+    NS_RELEASE(sFloat_atom);
+    NS_RELEASE(sDouble_atom);
+    NS_RELEASE(sBoolean_atom);
+    NS_RELEASE(sTime_atom);
+    NS_RELEASE(sDateTime_atom);
+    NS_RELEASE(sDuration_atom);
+    NS_RELEASE(sDate_atom);
+    NS_RELEASE(sGMonth_atom);
+    NS_RELEASE(sGYear_atom);
+    NS_RELEASE(sGYearMonth_atom);
+    NS_RELEASE(sGDay_atom);
+    NS_RELEASE(sGMonthDay_atom);
+    NS_RELEASE(sName_atom);
+    NS_RELEASE(sQName_atom);
+    NS_RELEASE(sNCName_atom);
+    NS_RELEASE(sAnyUri_atom);
+    NS_RELEASE(sLanguage_atom);
+    NS_RELEASE(sID_atom);
+    NS_RELEASE(sIDREF_atom);
+    NS_RELEASE(sIDREFS_atom);
+    NS_RELEASE(sENTITY_atom);
+    NS_RELEASE(sENTITIES_atom);
+    NS_RELEASE(sNOTATION_atom);
+    NS_RELEASE(sNMTOKEN_atom);
+    NS_RELEASE(sNMTOKENS_atom);
+    
+    NS_RELEASE(sElement_atom);
+    NS_RELEASE(sModelGroup_atom);
+    NS_RELEASE(sAny_atom);
+    NS_RELEASE(sAttribute_atom);
+    NS_RELEASE(sAttributeGroup_atom);
+    NS_RELEASE(sSimpleType_atom);
+    NS_RELEASE(sComplexType_atom);
+    NS_RELEASE(sSimpleContent_atom);
+    NS_RELEASE(sComplexContent_atom);
+    NS_RELEASE(sAll_atom);
+    NS_RELEASE(sChoice_atom);
+    NS_RELEASE(sSequence_atom);
+    NS_RELEASE(sAnyAttribute_atom);
+    NS_RELEASE(sRestriction_atom);
+    NS_RELEASE(sExtension_atom);
+    NS_RELEASE(sAnnotation_atom);
+    NS_RELEASE(sList_atom);
+    NS_RELEASE(sUnion_atom);
+    
+    NS_RELEASE(sMinExclusive_atom);
+    NS_RELEASE(sMinInclusive_atom);
+    NS_RELEASE(sMaxExclusive_atom);
+    NS_RELEASE(sMaxInclusive_atom);
+    NS_RELEASE(sTotalDigits_atom);
+    NS_RELEASE(sFractionDigits_atom);
+    NS_RELEASE(sLength_atom);
+    NS_RELEASE(sMinLength_atom);
+    NS_RELEASE(sMaxLength_atom);
+    NS_RELEASE(sEnumeration_atom);
+    NS_RELEASE(sWhiteSpace_atom);
+    NS_RELEASE(sPattern_atom);
+  }
 }
+
+////////////////////////////////////////////////////////////
+//
+// ChildIterator implementation
+//
+////////////////////////////////////////////////////////////
+
+class ChildIterator {
+private:
+  nsCOMPtr<nsIDOMNodeList> mNodeList;
+  PRUint32 mLength;
+  PRUint32 mIndex;
+
+public:
+  ChildIterator() : mIndex(0), mLength(0) {}
+  ChildIterator(nsIDOMElement* aParent) :
+    mIndex(0), mLength(0)
+  {
+    SetElement(aParent);
+  }
+
+  ~ChildIterator() {}
+
+  void SetElement(nsIDOMElement* aParent) 
+  {
+    aParent->GetChildNodes(getter_AddRefs(mNodeList));
+    if (mNodeList) {
+      mNodeList->GetLength(&mLength);
+    }    
+  }
+
+  PRBool HasChildNodes() { return mLength; }
+
+  nsresult GetNextChild(nsIDOMElement** aChildElement,
+                        nsIAtom** aElementName)
+  {
+    *aChildElement = nsnull;
+    
+    if (!mNodeList) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDOMNode> child; 
+    while (mIndex < mLength) {
+      mNodeList->Item(mIndex++, getter_AddRefs(child));
+      nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
+      if (!childElement) {
+        continue;
+      }
+      
+      // Confirm that the element is a schema element
+      nsAutoString namespaceURI;           
+      childElement->GetNamespaceURI(namespaceURI);  
+      if (!namespaceURI.Equals(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE))) {
+        continue;
+      }
+      
+      nsCOMPtr<nsIContent> content(do_QueryInterface(childElement));
+      NS_ASSERTION(content, "Element is not content");
+      if (!content) {
+        return NS_ERROR_FAILURE;
+      }
+      
+      nsCOMPtr<nsINodeInfo> nodeInfo;
+      content->GetNodeInfo(*getter_AddRefs(nodeInfo));
+      if (!nodeInfo) {
+        return NS_ERROR_FAILURE;
+      }
+      
+      nodeInfo->GetNameAtom(*aElementName);
+      *aChildElement = childElement;
+      NS_ADDREF(*aChildElement);
+      break;
+    }
+    
+    return NS_OK;
+  }
+};
+
+////////////////////////////////////////////////////////////
+//
+// LoadListener implementation
+//
+////////////////////////////////////////////////////////////
+
+class LoadListener : public nsIDOMEventListener {
+public:
+  LoadListener(nsSchemaLoader* aLoader,
+               nsISchemaLoadListener* aListener,
+               nsIXMLHttpRequest* aRequest);
+  ~LoadListener();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
+
+private:
+  nsSchemaLoader* mLoader;
+  nsCOMPtr<nsISchemaLoadListener> mListener;
+  nsCOMPtr<nsIXMLHttpRequest> mRequest;
+  nsString mURI;
+};
+
+LoadListener::LoadListener(nsSchemaLoader* aLoader,
+                           nsISchemaLoadListener* aListener,
+                           nsIXMLHttpRequest* aRequest) 
+{
+  NS_INIT_ISUPPORTS();
+  mLoader = aLoader;
+  NS_ADDREF(mLoader);
+  mListener = aListener;
+  mRequest = aRequest;
+}
+  
+LoadListener::~LoadListener() 
+{
+  NS_IF_RELEASE(mLoader);
+}
+
+NS_IMPL_ISUPPORTS1(LoadListener, nsIDOMEventListener)
+
+/* void handleEvent (in nsIDOMEvent event); */
+NS_IMETHODIMP 
+LoadListener::HandleEvent(nsIDOMEvent *event)
+{
+  nsresult rv;
+  nsAutoString eventType;
+  
+  event->GetType(eventType);
+  
+  if (eventType.Equals(NS_LITERAL_STRING("load"))) {
+    nsCOMPtr<nsIDOMDocument> document;
+    nsCOMPtr<nsISchema> schema;
+    
+    rv = mRequest->GetResponseXML(getter_AddRefs(document));
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIDOMElement> element;
+      
+      document->GetDocumentElement(getter_AddRefs(element));
+      if (element) {
+        rv = mLoader->ProcessSchemaElement(element, getter_AddRefs(schema));
+      }
+      else {
+        rv = NS_ERROR_FAILURE;
+      }
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+      mListener->OnLoad(schema);
+    }
+    else {
+      mListener->OnError(rv, NS_LITERAL_STRING("Failure processing schema document"));
+    }
+  }
+  else if (eventType.Equals(NS_LITERAL_STRING("error")) &&
+           mListener) {
+    mListener->OnError(NS_ERROR_FAILURE, 
+                       NS_LITERAL_STRING("Failure loading"));
+  }
+  NS_IF_RELEASE(mLoader);
+  mListener = nsnull;
+  mRequest = nsnull;
+
+  return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////
 //
@@ -241,6 +474,9 @@ nsSchemaAtoms::DestroySchemaAtoms()
 nsSchemaLoader::nsSchemaLoader()
 {
   NS_INIT_ISUPPORTS();
+  if (!nsSchemaAtoms::sAnyType_atom) {
+    nsSchemaAtoms::CreateSchemaAtoms();
+  }
 }
 
 nsSchemaLoader::~nsSchemaLoader()
@@ -248,20 +484,163 @@ nsSchemaLoader::~nsSchemaLoader()
   mBuiltinTypesHash.Reset();
 }
 
-NS_IMPL_ISUPPORTS1(nsSchemaLoader, nsISchemaLoader)
+NS_IMPL_ISUPPORTS1_CI(nsSchemaLoader, nsISchemaLoader)
 
-/* nsISchema load (in nsIURI schemaURI); */
-NS_IMETHODIMP 
-nsSchemaLoader::Load(nsIURI *schemaURI, nsISchema **_retval)
+nsresult
+nsSchemaLoader::GetResolvedURI(const nsAReadableString& aSchemaURI,
+                               const char* aMethod,
+                               nsIURI** aURI)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+  nsCOMPtr<nsIXPCNativeCallContext> cc;
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+  if(NS_SUCCEEDED(rv)) {
+    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+  }
+
+  if (NS_SUCCEEDED(rv) && cc) {
+    JSContext* cx;
+    rv = cc->GetJSContext(&cx);
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIScriptSecurityManager> secMan(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIURI> baseURI;
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+      if (codebase) {
+        codebase->GetURI(getter_AddRefs(baseURI));
+      }
+    }
+    
+    rv = NS_NewURI(aURI, aSchemaURI, baseURI);
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    
+    rv = secMan->CheckConnect(cx, *aURI, "nsSchemaLoader", aMethod);
+    if (NS_FAILED(rv))
+    {
+      // Security check failed. The above call set a JS exception. The
+      // following lines ensure that the exception is propagated.
+      cc->SetExceptionWasThrown(PR_TRUE);
+      return rv;
+    }
+  }
+  else {
+    rv = NS_NewURI(aURI, aSchemaURI, nsnull);
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
-/* void loadAsync (in nsIURI schemaURI, in nsISchemaLoadListener listener); */
+/* nsISchema load (in AString schemaURI); */
 NS_IMETHODIMP 
-nsSchemaLoader::LoadAsync(nsIURI *schemaURI, nsISchemaLoadListener *listener)
+nsSchemaLoader::Load(const nsAReadableString& schemaURI, 
+                     nsISchema **_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsCOMPtr<nsIURI> resolvedURI;
+  nsresult rv = GetResolvedURI(schemaURI, "load", getter_AddRefs(resolvedURI));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsXPIDLCString spec;
+  resolvedURI->GetSpec(getter_Copies(spec));
+  
+  nsCOMPtr<nsIXMLHttpRequest> request(do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv));
+  if (!request) {
+    return rv;
+  }
+
+  rv = request->OpenRequest("GET",
+                            spec.get(),
+                            PR_FALSE, nsnull, nsnull);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = request->Send(nsnull);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = request->GetResponseXML(getter_AddRefs(document));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIDOMElement> element;
+  document->GetDocumentElement(getter_AddRefs(element));
+  if (element) {
+    rv = ProcessSchemaElement(element, _retval);
+  }
+  else {
+    rv = NS_ERROR_FAILURE;
+  }
+  
+  return rv;
+}
+
+/* void loadAsync (in AString schemaURI, in nsISchemaLoadListener listener); */
+NS_IMETHODIMP 
+nsSchemaLoader::LoadAsync(const nsAReadableString& schemaURI, 
+                          nsISchemaLoadListener *aListener)
+{
+  NS_ENSURE_ARG(aListener);
+
+  nsCOMPtr<nsIURI> resolvedURI;
+  nsresult rv = GetResolvedURI(schemaURI, "loadAsync", getter_AddRefs(resolvedURI));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsXPIDLCString spec;
+  resolvedURI->GetSpec(getter_Copies(spec));
+
+  nsCOMPtr<nsIXMLHttpRequest> request(do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv));
+  if (!request) {
+    return rv;
+  }
+
+  rv = request->OpenRequest("GET",
+                            spec.get(),
+                            PR_TRUE, nsnull, nsnull);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIDOMEventListener> listener;
+  LoadListener* listenerInst = new LoadListener(this, aListener, request);
+  if (!listenerInst) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  listener = listenerInst;
+
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(request));
+  if (!target) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  rv = target->AddEventListener(NS_LITERAL_STRING("load"),
+                                listener, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = target->AddEventListener(NS_LITERAL_STRING("error"),
+                                listener, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // The listener keeps the request alive until its complete
+  rv = request->Send(nsnull);
+  
+  return rv;
 }
 
 /* nsISchema processSchemaElement (in nsIDOMElement element); */
@@ -284,102 +663,73 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement *element,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsSchemaLoadingContext context;
+  
+  context.PushNamespaceDecls(element);
 
-  // Iterate over the first level child elements of the schema
-  // element, processing them as we go
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  element->GetChildNodes(getter_AddRefs(childNodes));
+  ChildIterator iterator(element);
+  nsCOMPtr<nsIDOMElement> childElement;
+  nsCOMPtr<nsIAtom> tagName;
 
-  if (childNodes) {
-    PRUint32 i, count;   
-    childNodes->GetLength(&count);
-
-    for (i = 0; i < count; i++) {
-      nsCOMPtr<nsIDOMNode> child;     
-      childNodes->Item(i, getter_AddRefs(child));
-
-      nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child, &rv));
-      if (NS_SUCCEEDED(rv) && childElement) {
-        nsAutoString namespaceURI;
-        
-        childElement->GetNamespaceURI(namespaceURI);
-        if (namespaceURI.Equals(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE))) {
-
-          nsCOMPtr<nsIContent> content(do_QueryInterface(childElement));
-          NS_ASSERTION(content, "Element is not content");
-          if (!content) {
-            return NS_ERROR_FAILURE;
-          }
-          
-          nsCOMPtr<nsINodeInfo> nodeInfo;
-          content->GetNodeInfo(*getter_AddRefs(nodeInfo));
-          if (!nodeInfo) {
-            return NS_ERROR_FAILURE;
-          }
-
-          nsCOMPtr<nsIAtom> tagName;
-          nodeInfo->GetNameAtom(*getter_AddRefs(tagName));
-
-          if (tagName == nsSchemaAtoms::sElement_atom) {
-            nsCOMPtr<nsISchemaElement> schemaElement;
-            rv = ProcessElement(schemaInst, &context, childElement,  
-                                getter_AddRefs(schemaElement));
-            if (NS_SUCCEEDED(rv)) {
-              rv = schemaInst->AddElement(schemaElement);
-            }
-          }
-          else if (tagName == nsSchemaAtoms::sComplexType_atom) {
-            nsCOMPtr<nsISchemaComplexType> complexType;
-            rv = ProcessComplexType(schemaInst, &context, childElement,
-                                    getter_AddRefs(complexType));
-            if (NS_SUCCEEDED(rv)) {
-              rv = schemaInst->AddType(complexType);
-            }
-          }
-          else if (tagName == nsSchemaAtoms::sSimpleType_atom) {
-            nsCOMPtr<nsISchemaSimpleType> simpleType;
-            rv = ProcessSimpleType(schemaInst, &context, childElement,
-                                   getter_AddRefs(simpleType));
-            if (NS_SUCCEEDED(rv)) {
-              rv = schemaInst->AddType(simpleType);
-            }
-          }
-          else if (tagName == nsSchemaAtoms::sAttribute_atom) {
-            nsCOMPtr<nsISchemaAttribute> attribute;
-            rv = ProcessAttribute(schemaInst, &context, childElement,
-                                  getter_AddRefs(attribute));
-            if (NS_SUCCEEDED(rv)) {
-              rv = schemaInst->AddAttribute(attribute);
-            }
-          }
-          else if (tagName == nsSchemaAtoms::sAttributeGroup_atom) {
-            nsCOMPtr<nsISchemaAttributeGroup> attributeGroup;
-            rv = ProcessAttributeGroup(schemaInst, &context, childElement,
-                                       getter_AddRefs(attributeGroup));
-            if (NS_SUCCEEDED(rv)) {
-              rv = schemaInst->AddAttributeGroup(attributeGroup);
-            }
-          }
-          else if (tagName == nsSchemaAtoms::sModelGroup_atom) {
-            nsCOMPtr<nsISchemaModelGroup> modelGroup;
-            rv = ProcessModelGroup(schemaInst, &context, childElement,
-                                   getter_AddRefs(modelGroup));
-            if (NS_SUCCEEDED(rv)) {
-              rv = schemaInst->AddModelGroup(modelGroup);
-            }
-          }
-          // For now, ignore the following
-          // annotations
-          // include
-          // import
-          // redefine
-          // notation
-          // identity-constraint elements
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
-        }
+  while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                            getter_AddRefs(tagName))) &&
+         childElement) {
+    if (tagName == nsSchemaAtoms::sElement_atom) {
+      nsCOMPtr<nsISchemaElement> schemaElement;
+      rv = ProcessElement(schemaInst, &context, childElement,  
+                          getter_AddRefs(schemaElement));
+      if (NS_SUCCEEDED(rv)) {
+        rv = schemaInst->AddElement(schemaElement);
       }
+    }
+    else if (tagName == nsSchemaAtoms::sComplexType_atom) {
+      nsCOMPtr<nsISchemaComplexType> complexType;
+      rv = ProcessComplexType(schemaInst, &context, childElement,
+                              getter_AddRefs(complexType));
+      if (NS_SUCCEEDED(rv)) {
+        rv = schemaInst->AddType(complexType);
+      }
+    }
+    else if (tagName == nsSchemaAtoms::sSimpleType_atom) {
+      nsCOMPtr<nsISchemaSimpleType> simpleType;
+      rv = ProcessSimpleType(schemaInst, &context, childElement,
+                             getter_AddRefs(simpleType));
+      if (NS_SUCCEEDED(rv)) {
+        rv = schemaInst->AddType(simpleType);
+      }
+    }
+    else if (tagName == nsSchemaAtoms::sAttribute_atom) {
+      nsCOMPtr<nsISchemaAttribute> attribute;
+      rv = ProcessAttribute(schemaInst, &context, childElement,
+                            getter_AddRefs(attribute));
+      if (NS_SUCCEEDED(rv)) {
+        rv = schemaInst->AddAttribute(attribute);
+      }
+    }
+    else if (tagName == nsSchemaAtoms::sAttributeGroup_atom) {
+      nsCOMPtr<nsISchemaAttributeGroup> attributeGroup;
+      rv = ProcessAttributeGroup(schemaInst, &context, childElement,
+                                 getter_AddRefs(attributeGroup));
+      if (NS_SUCCEEDED(rv)) {
+        rv = schemaInst->AddAttributeGroup(attributeGroup);
+      }
+    }
+    else if (tagName == nsSchemaAtoms::sModelGroup_atom) {
+      nsCOMPtr<nsISchemaModelGroup> modelGroup;
+      rv = ProcessModelGroup(schemaInst, &context, childElement,
+                             tagName, nsnull, getter_AddRefs(modelGroup));
+      if (NS_SUCCEEDED(rv)) {
+        rv = schemaInst->AddModelGroup(modelGroup);
+      }
+    }
+    // For now, ignore the following
+    // annotations
+    // include
+    // import
+    // redefine
+    // notation
+    // identity-constraint elements
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
 
@@ -427,8 +777,11 @@ nsSchemaLoader::GetBuiltinType(const nsAReadableString& aName,
   }
   else {
     nsCOMPtr<nsIAtom> typeName = dont_AddRef(NS_NewAtom(aName));
-    PRUint16 typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_URTYPE;
-    if (typeName == nsSchemaAtoms::sString_atom) {
+    PRUint16 typeVal;
+    if (typeName == nsSchemaAtoms::sAnyType_atom) {
+      typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_ANYTYPE;
+    }
+    else if (typeName == nsSchemaAtoms::sString_atom) {
       typeVal = nsISchemaBuiltinType::BUILTIN_TYPE_STRING;
     }
     else if (typeName == nsSchemaAtoms::sNormalizedString_atom) {
@@ -588,39 +941,43 @@ nsSchemaLoader::GetNewOrUsedType(nsSchema* aSchema,
   nsresult rv = NS_OK;
   nsAutoString prefix, localName, namespaceURI;
 
-  // See if there's a prefix and, if so, get the
+  // See if there's a prefix and get the
   // namespace associated with the prefix
   SeparateNamespacePrefix(aTypeName, prefix, localName);
-  if ((prefix.Length() > 0) &&
-      !aContext->GetNamespaceURIForPrefix(prefix, namespaceURI)) {
+  PRBool resolvedPrefix = aContext->GetNamespaceURIForPrefix(prefix, 
+                                                             namespaceURI);
+  if ((prefix.Length() > 0) && !resolvedPrefix) {
     // Unknown prefix
     return NS_ERROR_FAILURE;
   }
   
   if (namespaceURI.Length() > 0) {
-    // XXX Currently we only understand the schema namespace. When
-    // we start dealing with includes and imports, we can search
-    // for types in other namespaces.
-    if (!namespaceURI.Equals(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE))) {
-      return NS_ERROR_FAILURE;
-    }  
-
-    rv = GetBuiltinType(localName, aType);
-  }
-  // We don't have a namespace, so get the local type 
-  else {
-    rv = aSchema->GetTypeByName(localName, aType);
-    
-    // If we didn't get a type, we need to create a placeholder
-    if (NS_SUCCEEDED(rv) && !*aType) {
-      nsSchemaTypePlaceholder* placeholder = new nsSchemaTypePlaceholder(aSchema,
-                                                                         localName);
-      if (!placeholder) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      *aType = placeholder;
-      NS_ADDREF(*aType);
+    if (namespaceURI.Equals(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE))) {
+      return GetBuiltinType(localName, aType);
     }
+
+    // XXX Currently we only understand the schema namespace or the
+    // target namspace. When we start dealing with includes and imports, 
+    // we can search for types in other namespaces.
+    nsAutoString targetNamespace;
+    aSchema->GetTargetNamespace(targetNamespace);
+    if (!namespaceURI.Equals(targetNamespace)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  
+  // We don't have a namespace, so get the local type 
+  rv = aSchema->GetTypeByName(localName, aType);
+  
+  // If we didn't get a type, we need to create a placeholder
+  if (NS_SUCCEEDED(rv) && !*aType) {
+    nsSchemaTypePlaceholder* placeholder = new nsSchemaTypePlaceholder(aSchema,
+                                                                       localName);
+    if (!placeholder) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    *aType = placeholder;
+    NS_ADDREF(*aType);
   }
 
   return rv;
@@ -633,10 +990,11 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
                                nsISchemaElement** aSchemaElement)
 {
   nsresult rv = NS_OK;
+  aContext->PushNamespaceDecls(aElement);
+
   nsCOMPtr<nsISchemaElement> schemaElement;
   PRUint32 minOccurs, maxOccurs;
-
-  aContext->PushNamespaceDecls(aElement);
+  GetMinAndMax(aElement, &minOccurs, &maxOccurs);
 
   // See if it's a reference or an actual element declaration
   nsAutoString ref;
@@ -650,7 +1008,6 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
     }
     schemaElement = elementRef;
 
-    GetMinAndMax(aElement, &minOccurs, &maxOccurs);
     elementRef->SetMinOccurs(minOccurs);
     elementRef->SetMaxOccurs(maxOccurs);
   }
@@ -665,13 +1022,12 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
     }
     schemaElement = elementInst;
 
-    GetMinAndMax(aElement, &minOccurs, &maxOccurs);
     elementInst->SetMinOccurs(minOccurs);
     elementInst->SetMaxOccurs(maxOccurs);
 
     nsAutoString defaultValue, fixedValue;
-    aElement->GetAttribute(NS_LITERAL_STRING("defaultValue"), defaultValue);
-    aElement->GetAttribute(NS_LITERAL_STRING("fixedValue"), fixedValue);
+    aElement->GetAttribute(NS_LITERAL_STRING("default"), defaultValue);
+    aElement->GetAttribute(NS_LITERAL_STRING("fixed"), fixedValue);
     elementInst->SetConstraints(defaultValue, fixedValue);
 
     nsAutoString nillable, abstract;
@@ -692,69 +1048,43 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
     }
     // Look for the type as a child of the element 
     else {
-      nsCOMPtr<nsIDOMNodeList> childNodes;
-      aElement->GetChildNodes(getter_AddRefs(childNodes));
-      
-      // An element must have a type
-      if (!childNodes) {
-        return NS_ERROR_FAILURE;
+      ChildIterator iterator(aElement);
+      nsCOMPtr<nsIDOMElement> childElement;
+      nsCOMPtr<nsIAtom> tagName;
+
+      while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                                getter_AddRefs(tagName))) &&
+             childElement) {
+        if (tagName == nsSchemaAtoms::sSimpleType_atom) {
+          nsCOMPtr<nsISchemaSimpleType> simpleType;
+          
+          rv = ProcessSimpleType(aSchema, aContext, childElement,
+                                 getter_AddRefs(simpleType));
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+          schemaType = simpleType;
+          break;
+        }
+        else if (tagName == nsSchemaAtoms::sComplexType_atom) {
+          nsCOMPtr<nsISchemaComplexType> complexType;
+          
+          rv = ProcessComplexType(aSchema, aContext, childElement,
+                                  getter_AddRefs(complexType));
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+          schemaType = complexType;
+          break;
+        }
       }
+    }
 
-      PRUint32 i, count;
-      
-      childNodes->GetLength(&count);
-      for (i = 0; i < count; i++) {
-        nsCOMPtr<nsIDOMNode> child;
-        
-        childNodes->Item(i, getter_AddRefs(child));
-        nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
-        if (!childElement) {
-          continue;
-        }
-
-        nsAutoString namespaceURI;           
-        childElement->GetNamespaceURI(namespaceURI);
-
-        if (namespaceURI.Equals(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE))) {
-
-          nsCOMPtr<nsIContent> content(do_QueryInterface(childElement));
-          NS_ASSERTION(content, "Element is not content");
-          if (!content) {
-            return NS_ERROR_FAILURE;
-          }
-          
-          nsCOMPtr<nsINodeInfo> nodeInfo;
-          content->GetNodeInfo(*getter_AddRefs(nodeInfo));
-          if (!nodeInfo) {
-            return NS_ERROR_FAILURE;
-          }
-
-          nsCOMPtr<nsIAtom> tagName;
-          nodeInfo->GetNameAtom(*getter_AddRefs(tagName));
-          
-          if (tagName == nsSchemaAtoms::sSimpleType_atom) {
-            nsCOMPtr<nsISchemaSimpleType> simpleType;
-            
-            rv = ProcessSimpleType(aSchema, aContext, childElement,
-                                   getter_AddRefs(simpleType));
-            if (NS_FAILED(rv)) {
-              return rv;
-            }
-            schemaType = simpleType;
-            break;
-          }
-          else if (tagName == nsSchemaAtoms::sComplexType_atom) {
-            nsCOMPtr<nsISchemaComplexType> complexType;
-            
-            rv = ProcessComplexType(aSchema, aContext, childElement,
-                                    getter_AddRefs(complexType));
-            if (NS_FAILED(rv)) {
-              return rv;
-            }
-            schemaType = complexType;
-            break;
-          }
-        }
+    if (!schemaType) {
+      rv = GetBuiltinType(NS_LITERAL_STRING("anyType"),
+                          getter_AddRefs(schemaType));
+      if (NS_FAILED(rv)) {
+        return rv;
       }
     }
 
@@ -795,68 +1125,38 @@ nsSchemaLoader::ProcessComplexType(nsSchema* aSchema,
   }
   complexType = typeInst;
 
+  ChildIterator iterator(aElement);
+  nsCOMPtr<nsIDOMElement> childElement;
+  nsCOMPtr<nsIAtom> tagName;
 
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  aElement->GetChildNodes(getter_AddRefs(childNodes));
-  
   PRUint16 contentModel = nsISchemaComplexType::CONTENT_MODEL_EMPTY;
   PRUint16 derivation = nsISchemaComplexType::DERIVATION_SELF_CONTAINED;
   nsCOMPtr<nsISchemaType> baseType;
   nsCOMPtr<nsISchemaModelGroup> modelGroup;
   
-  PRUint32 i, count; 
-  childNodes->GetLength(&count);
-
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIDOMNode> child;
-    
-    childNodes->Item(i, getter_AddRefs(child));
-    nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
-    if (!childElement) {
-      continue;
+  while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                            getter_AddRefs(tagName))) &&
+         childElement) {
+    if (tagName == nsSchemaAtoms::sSimpleContent_atom) {
+      contentModel = nsISchemaComplexType::CONTENT_MODEL_SIMPLE;
+      
+      rv = ProcessSimpleContent(aSchema, aContext,
+                                childElement, typeInst,
+                                &derivation, getter_AddRefs(baseType));
+      break;
     }
-
-    nsAutoString namespaceURI;           
-    childElement->GetNamespaceURI(namespaceURI);
-    
-    if (namespaceURI.Equals(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE))) {
-      
-      nsCOMPtr<nsIContent> content(do_QueryInterface(childElement));
-      NS_ASSERTION(content, "Element is not content");
-      if (!content) {
-        return NS_ERROR_FAILURE;
-      }
-      
-      nsCOMPtr<nsINodeInfo> nodeInfo;
-      content->GetNodeInfo(*getter_AddRefs(nodeInfo));
-      if (!nodeInfo) {
-        return NS_ERROR_FAILURE;
-      }
-
-      nsCOMPtr<nsIAtom> tagName;
-      nodeInfo->GetNameAtom(*getter_AddRefs(tagName));
-      
-      if (tagName == nsSchemaAtoms::sSimpleContent_atom) {
-        contentModel = nsISchemaComplexType::CONTENT_MODEL_SIMPLE;
-
-        rv = ProcessSimpleContent(aSchema, aContext,
-                                  childElement, typeInst,
-                                  &derivation, getter_AddRefs(baseType));
-        break;
-      }
-      else if (tagName == nsSchemaAtoms::sComplexContent_atom) {       
-        rv = ProcessComplexContent(aSchema, aContext,
-                                   childElement, typeInst, 
-                                   &contentModel, &derivation,
-                                   getter_AddRefs(baseType));
-        break;                                   
-      }
-      else if (tagName != nsSchemaAtoms::sAnnotation_atom) {
-        rv = ProcessComplexTypeBody(aSchema, aContext,
-                                    aElement, typeInst, nsnull,
-                                    &contentModel);
-        break;
-      }
+    else if (tagName == nsSchemaAtoms::sComplexContent_atom) {       
+      rv = ProcessComplexContent(aSchema, aContext,
+                                 childElement, typeInst, 
+                                 &contentModel, &derivation,
+                                 getter_AddRefs(baseType));
+      break;                                   
+    }
+    else if (tagName != nsSchemaAtoms::sAnnotation_atom) {
+      rv = ProcessComplexTypeBody(aSchema, aContext,
+                                  aElement, typeInst, nsnull,
+                                  &contentModel);
+      break;
     }
   }
 
@@ -873,6 +1173,9 @@ nsSchemaLoader::ProcessComplexType(nsSchema* aSchema,
   typeInst->SetContentModel(contentModel);
   typeInst->SetDerivation(derivation, baseType);
 
+  *aComplexType = complexType;
+  NS_ADDREF(*aComplexType);
+
   aContext->PopNamespaceDecls(aElement);
   return NS_OK;
 }
@@ -886,155 +1189,86 @@ nsSchemaLoader::ProcessComplexTypeBody(nsSchema* aSchema,
                                        PRUint16* aContentModel)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  aElement->GetChildNodes(getter_AddRefs(childNodes));
+  ChildIterator iterator(aElement);
+  nsCOMPtr<nsIDOMElement> childElement;
+  nsCOMPtr<nsIAtom> tagName;
 
   *aContentModel = nsISchemaComplexType::CONTENT_MODEL_EMPTY;
 
   nsCOMPtr<nsISchemaType> baseType;
   nsCOMPtr<nsISchemaModelGroup> modelGroup;
   
-  PRUint32 i, count; 
-  childNodes->GetLength(&count);
-
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIDOMNode> child;
-    
-    childNodes->Item(i, getter_AddRefs(child));
-    nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
-    if (!childElement) {
-      continue;
-    }
-
-    nsAutoString namespaceURI;           
-    childElement->GetNamespaceURI(namespaceURI);
-    
-    if (namespaceURI.Equals(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE))) {
-      
-      nsCOMPtr<nsIContent> content(do_QueryInterface(childElement));
-      NS_ASSERTION(content, "Element is not content");
-      if (!content) {
+  while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                            getter_AddRefs(tagName))) &&
+         childElement) {
+    if ((tagName == nsSchemaAtoms::sModelGroup_atom) ||
+        (tagName == nsSchemaAtoms::sAll_atom) ||
+        (tagName == nsSchemaAtoms::sChoice_atom) || 
+        (tagName == nsSchemaAtoms::sSequence_atom)) {
+      // We shouldn't already have a model group
+      if (modelGroup) {
         return NS_ERROR_FAILURE;
       }
       
-      nsCOMPtr<nsINodeInfo> nodeInfo;
-      content->GetNodeInfo(*getter_AddRefs(nodeInfo));
-      if (!nodeInfo) {
-        return NS_ERROR_FAILURE;
+      rv = ProcessModelGroup(aSchema, aContext,
+                             childElement, tagName,
+                             aSequence, getter_AddRefs(modelGroup));
+      if (NS_FAILED(rv)) {
+        return rv;
       }
 
-      nsCOMPtr<nsIAtom> tagName;
-      nodeInfo->GetNameAtom(*getter_AddRefs(tagName));
-      
-      if ((tagName == nsSchemaAtoms::sModelGroup_atom) ||
-          (tagName == nsSchemaAtoms::sAll_atom) ||
-          (tagName == nsSchemaAtoms::sChoice_atom) || 
-          (tagName == nsSchemaAtoms::sSequence_atom)) {
-        // We shouldn't already have a model group
-        if (modelGroup) {
-          return NS_ERROR_FAILURE;
-        }
-
-        rv = ProcessModelGroup(aSchema, aContext,
-                               childElement, 
-                               getter_AddRefs(modelGroup));
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
-        PRUint32 particleCount;
-        modelGroup->GetParticleCount(&particleCount);
-        if (particleCount) {
+      PRUint32 particleCount;
+      modelGroup->GetParticleCount(&particleCount);
+      if (particleCount) {
+        *aContentModel = nsISchemaComplexType::CONTENT_MODEL_ELEMENT_ONLY;
+      }
+      else {
+        PRUint16 compositor;
+        modelGroup->GetCompositor(&compositor);
+        
+        PRUint32 minOccurs;
+        modelGroup->GetMinOccurs(&minOccurs);
+        
+        if ((compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE) &&
+            (minOccurs > 0)) {
           *aContentModel = nsISchemaComplexType::CONTENT_MODEL_ELEMENT_ONLY;
         }
-        else {
-          PRUint16 compositor;
-          modelGroup->GetCompositor(&compositor);
-          
-          PRUint32 minOccurs;
-          modelGroup->GetMinOccurs(&minOccurs);
-
-          if ((compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE) &&
-              (minOccurs > 0)) {
-            *aContentModel = nsISchemaComplexType::CONTENT_MODEL_ELEMENT_ONLY;
-          }
-        }
-
-        if (aSequence) {
+      }
+      
+      if (aSequence) {
+        // Check if we were collapsed
+        if (modelGroup.get() != NS_STATIC_CAST(nsISchemaModelGroup*, 
+                                               aSequence)) {
           rv = aSequence->AddParticle(modelGroup);
         }
-        else {
-          rv = aComplexType->SetModelGroup(modelGroup);
-        }
-        if (NS_FAILED(rv)) {
-          return rv;
-        }        
       }
-      else if ((tagName == nsSchemaAtoms::sAttribute_atom) ||
-               (tagName == nsSchemaAtoms::sAttributeGroup_atom) ||
-               (tagName == nsSchemaAtoms::sAnyAttribute_atom)) {
-        nsCOMPtr<nsISchemaAttributeComponent> attribute;
-        
-        rv = ProcessAttributeComponent(aSchema, aContext,
-                                       childElement, 
-                                       getter_AddRefs(attribute));
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
+      else {
+        rv = aComplexType->SetModelGroup(modelGroup);
+      }
+      if (NS_FAILED(rv)) {
+        return rv;
+      }        
+    }
+    else if ((tagName == nsSchemaAtoms::sAttribute_atom) ||
+             (tagName == nsSchemaAtoms::sAttributeGroup_atom) ||
+             (tagName == nsSchemaAtoms::sAnyAttribute_atom)) {
+      nsCOMPtr<nsISchemaAttributeComponent> attribute;
+      
+      rv = ProcessAttributeComponent(aSchema, aContext,
+                                     childElement, tagName,
+                                     getter_AddRefs(attribute));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
 
-        rv = aComplexType->AddAttribute(attribute);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
+      rv = aComplexType->AddAttribute(attribute);
+      if (NS_FAILED(rv)) {
+        return rv;
       }
     }
   }
 
   return rv;
-}
-
-nsresult 
-nsSchemaLoader::ProcessSimpleType(nsSchema* aSchema, 
-                                  nsSchemaLoadingContext* aContext,
-                                  nsIDOMElement* aElement,
-                                  nsISchemaSimpleType** aSimpleType)
-{
-  aContext->PushNamespaceDecls(aElement);
-  aContext->PopNamespaceDecls(aElement);
-  return NS_OK;
-}
-
-nsresult 
-nsSchemaLoader::ProcessAttribute(nsSchema* aSchema, 
-                                 nsSchemaLoadingContext* aContext,
-                                 nsIDOMElement* aElement,
-                                 nsISchemaAttribute** aAttribute)
-{
-  aContext->PushNamespaceDecls(aElement);
-  aContext->PopNamespaceDecls(aElement);
-  return NS_OK;
-}
-
-nsresult 
-nsSchemaLoader::ProcessAttributeGroup(nsSchema* aSchema, 
-                                      nsSchemaLoadingContext* aContext,
-                                      nsIDOMElement* aElement,
-                                      nsISchemaAttributeGroup** aAttributeGroup)
-{
-  aContext->PushNamespaceDecls(aElement);
-  aContext->PopNamespaceDecls(aElement);
-  return NS_OK;
-}
-
-nsresult 
-nsSchemaLoader::ProcessModelGroup(nsSchema* aSchema, 
-                                  nsSchemaLoadingContext* aContext,
-                                  nsIDOMElement* aElement,
-                                  nsISchemaModelGroup** aModelGroup)
-{
-  aContext->PushNamespaceDecls(aElement);
-  aContext->PopNamespaceDecls(aElement);
-  return NS_OK;
 }
 
 nsresult 
@@ -1049,108 +1283,84 @@ nsSchemaLoader::ProcessSimpleContent(nsSchema* aSchema,
   aContext->PushNamespaceDecls(aElement);
 
   nsCOMPtr<nsISchemaType> baseType;
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  aElement->GetChildNodes(getter_AddRefs(childNodes));
+
+  ChildIterator iterator(aElement);
+  nsCOMPtr<nsIDOMElement> childElement;
+  nsCOMPtr<nsIAtom> tagName;
   
   // A simpleContent element must have children
-  if (!childNodes) {
+  if (!iterator.HasChildNodes()) {
     return NS_ERROR_FAILURE;
   }
 
-  PRUint32 i, count;
-      
-  childNodes->GetLength(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIDOMNode> child;
-    
-    childNodes->Item(i, getter_AddRefs(child));
-    nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
-    if (!childElement) {
-      continue;
-    }
-    
-    nsAutoString namespaceURI;           
-    childElement->GetNamespaceURI(namespaceURI);
-    
-    if (namespaceURI.Equals(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE))) {
-      
-      nsCOMPtr<nsIContent> content(do_QueryInterface(childElement));
-      NS_ASSERTION(content, "Element is not content");
-      if (!content) {
+  while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                            getter_AddRefs(tagName))) &&
+         childElement) {       
+    nsAutoString baseStr;
+    if ((tagName == nsSchemaAtoms::sRestriction_atom) ||
+        (tagName == nsSchemaAtoms::sExtension_atom)) {
+      childElement->GetAttribute(NS_LITERAL_STRING("base"), baseStr);
+      if (baseStr.Length() == 0) {
         return NS_ERROR_FAILURE;
       }
       
-      nsCOMPtr<nsINodeInfo> nodeInfo;
-      content->GetNodeInfo(*getter_AddRefs(nodeInfo));
-      if (!nodeInfo) {
-        return NS_ERROR_FAILURE;
+      rv = GetNewOrUsedType(aSchema, aContext, baseStr, 
+                            getter_AddRefs(baseType));
+      if (NS_FAILED(rv)) {
+        return rv;
       }
-      
-      nsCOMPtr<nsIAtom> tagName;
-      nodeInfo->GetNameAtom(*getter_AddRefs(tagName));
-        
-      nsAutoString baseStr;
-      if ((tagName == nsSchemaAtoms::sRestriction_atom) ||
-          (tagName == nsSchemaAtoms::sExtension_atom)) {
-        childElement->GetAttribute(NS_LITERAL_STRING("base"), baseStr);
-        if (baseStr.Length() == 0) {
-          return NS_ERROR_FAILURE;
-        }
-        
-        rv = GetNewOrUsedType(aSchema, aContext, baseStr, 
-                              getter_AddRefs(baseType));
+
+      nsCOMPtr<nsISchemaSimpleType> simpleBaseType;
+      if (tagName == nsSchemaAtoms::sRestriction_atom) {
+        *aDerivation = nsISchemaComplexType::DERIVATION_RESTRICTION_SIMPLE;
+        rv = ProcessSimpleContentRestriction(aSchema, aContext, childElement,
+                                             aComplexType, baseType,
+                                             getter_AddRefs(simpleBaseType));
         if (NS_FAILED(rv)) {
           return rv;
         }
+      }
+      else {
+        *aDerivation = nsISchemaComplexType::DERIVATION_EXTENSION_SIMPLE;
+        
+        nsCOMPtr<nsISchemaComplexType> complexBaseType(do_QueryInterface(baseType));
+        if (complexBaseType) {
+          // Copy over the attributes from the base type
+          // XXX Should really be cloning
+          PRUint32 attrIndex, attrCount;
+          complexBaseType->GetAttributeCount(&attrCount);
+          
+          for (attrIndex = 0; attrIndex < attrCount; attrIndex++) {
+            nsCOMPtr<nsISchemaAttributeComponent> attribute;
+            
+            rv = complexBaseType->GetAttributeByIndex(attrIndex,
+                                                      getter_AddRefs(attribute));
+            if (NS_FAILED(rv)) {
+              return rv;
+            }
 
-        nsCOMPtr<nsISchemaSimpleType> simpleBaseType;
-        if (tagName == nsSchemaAtoms::sRestriction_atom) {
-          *aDerivation = nsISchemaComplexType::DERIVATION_RESTRICTION_SIMPLE;
-          rv = ProcessSimpleContentRestriction(aSchema, aContext, childElement,
-                                               aComplexType, baseType,
-                                               getter_AddRefs(simpleBaseType));
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
-        }
-        else {
-          *aDerivation = nsISchemaComplexType::DERIVATION_EXTENSION_SIMPLE;
-
-          nsCOMPtr<nsISchemaComplexType> complexBaseType(do_QueryInterface(baseType));
-          if (complexBaseType) {
-            // Copy over the attributes from the base type
-            // XXX Should really be cloning
-            PRUint32 attrIndex, attrCount;
-            complexBaseType->GetAttributeCount(&attrCount);
-
-            for (attrIndex = 0; attrIndex < attrCount; attrIndex++) {
-              nsCOMPtr<nsISchemaAttributeComponent> attribute;
-              
-              rv = complexBaseType->GetAttributeByIndex(attrIndex,
-                                                        getter_AddRefs(attribute));
-              if (NS_FAILED(rv)) {
-                return rv;
-              }
-              aComplexType->AddAttribute(attribute);
+            rv = aComplexType->AddAttribute(attribute);
+            if (NS_FAILED(rv)) {
+              return rv;
             }
           }
-
-          rv = ProcessSimpleContentExtension(aSchema, aContext, childElement,
-                                             aComplexType, baseType,
-                                             getter_AddRefs(simpleBaseType));
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
         }
-
-        if (simpleBaseType) {
-          rv = aComplexType->SetSimpleBaseType(simpleBaseType);
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
+        
+        rv = ProcessSimpleContentExtension(aSchema, aContext, childElement,
+                                           aComplexType, baseType,
+                                           getter_AddRefs(simpleBaseType));
+        if (NS_FAILED(rv)) {
+          return rv;
         }
-        break;
       }
+
+      if (simpleBaseType) {
+        rv = aComplexType->SetSimpleBaseType(simpleBaseType);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+      }
+      break;
     }
   }
 
@@ -1169,7 +1379,104 @@ nsSchemaLoader::ProcessSimpleContentRestriction(nsSchema* aSchema,
                                                 nsISchemaType* aBaseType,
                                                 nsISchemaSimpleType** aSimpleBaseType)
 {
+  nsresult rv = NS_OK;
   aContext->PushNamespaceDecls(aElement);
+
+  ChildIterator iterator(aElement);
+  nsCOMPtr<nsIDOMElement> childElement;
+  nsCOMPtr<nsIAtom> tagName;
+  
+  nsSchemaRestrictionType* restrictionInst;
+  nsCOMPtr<nsISchemaSimpleType> simpleBase;
+ 
+  restrictionInst = new nsSchemaRestrictionType(aSchema, 
+                                                NS_LITERAL_STRING(""));
+  if (!restrictionInst) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  simpleBase = restrictionInst;
+  
+  // The base type must actually be a complex type (which itself must
+  // have a simple base type.
+  nsCOMPtr<nsISchemaComplexType> complexBase = do_QueryInterface(aBaseType);
+  if (!complexBase) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsISchemaSimpleType> parentSimpleBase;
+  complexBase->GetSimpleBaseType(getter_AddRefs(parentSimpleBase));
+  
+  if (parentSimpleBase) {
+    rv = restrictionInst->SetBaseType(parentSimpleBase);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                            getter_AddRefs(tagName))) &&
+         childElement) {       
+    if (tagName == nsSchemaAtoms::sSimpleType_atom) {
+      nsCOMPtr<nsISchemaSimpleType> simpleType;
+      
+      rv = ProcessSimpleType(aSchema, aContext, childElement, 
+                             getter_AddRefs(simpleType));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      rv = restrictionInst->SetBaseType(simpleType);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+    else if ((tagName == nsSchemaAtoms::sMinExclusive_atom) ||
+             (tagName == nsSchemaAtoms::sMinInclusive_atom) ||
+             (tagName == nsSchemaAtoms::sMaxExclusive_atom) ||
+             (tagName == nsSchemaAtoms::sMaxInclusive_atom) ||
+             (tagName == nsSchemaAtoms::sTotalDigits_atom) ||
+             (tagName == nsSchemaAtoms::sFractionDigits_atom) ||
+             (tagName == nsSchemaAtoms::sLength_atom) ||
+             (tagName == nsSchemaAtoms::sMinLength_atom) ||
+             (tagName == nsSchemaAtoms::sMaxLength_atom) ||
+             (tagName == nsSchemaAtoms::sEnumeration_atom) ||
+             (tagName == nsSchemaAtoms::sWhiteSpace_atom) ||
+             (tagName == nsSchemaAtoms::sPattern_atom)) {
+      nsCOMPtr<nsISchemaFacet> facet;
+      
+      rv = ProcessFacet(aSchema, aContext, childElement, 
+                        tagName, getter_AddRefs(facet));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      rv = restrictionInst->AddFacet(facet);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+    else if ((tagName == nsSchemaAtoms::sAttribute_atom) ||
+             (tagName == nsSchemaAtoms::sAttributeGroup_atom) ||
+             (tagName == nsSchemaAtoms::sAnyAttribute_atom)) {
+      nsCOMPtr<nsISchemaAttributeComponent> attribute;
+      
+      rv = ProcessAttributeComponent(aSchema, aContext,
+                                     childElement, tagName,
+                                     getter_AddRefs(attribute));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      rv = aComplexType->AddAttribute(attribute);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+  }
+  
+  *aSimpleBaseType = simpleBase;
+  NS_IF_ADDREF(*aSimpleBaseType);
+
   aContext->PopNamespaceDecls(aElement);
   return NS_OK;
 }
@@ -1182,7 +1489,46 @@ nsSchemaLoader::ProcessSimpleContentExtension(nsSchema* aSchema,
                                               nsISchemaType* aBaseType,
                                               nsISchemaSimpleType** aSimpleBaseType)
 {
+  nsresult rv = NS_OK;
   aContext->PushNamespaceDecls(aElement);
+
+  ChildIterator iterator(aElement);
+  nsCOMPtr<nsIDOMElement> childElement;
+  nsCOMPtr<nsIAtom> tagName;
+
+  // If the base type is a complex type, it must itself have a simple
+  // base type
+  nsCOMPtr<nsISchemaComplexType> complexBase = do_QueryInterface(aBaseType);
+  if (complexBase) {
+    complexBase->GetSimpleBaseType(aSimpleBaseType);
+  }
+  else {
+    aBaseType->QueryInterface(NS_GET_IID(nsISchemaSimpleType),
+                              (void**)aSimpleBaseType);
+  }
+
+  while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                            getter_AddRefs(tagName))) &&
+         childElement) {       
+    if ((tagName == nsSchemaAtoms::sAttribute_atom) ||
+        (tagName == nsSchemaAtoms::sAttributeGroup_atom) ||
+        (tagName == nsSchemaAtoms::sAnyAttribute_atom)) {
+      nsCOMPtr<nsISchemaAttributeComponent> attribute;
+      
+      rv = ProcessAttributeComponent(aSchema, aContext,
+                                     childElement, tagName,
+                                     getter_AddRefs(attribute));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      
+      rv = aComplexType->AddAttribute(attribute);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+  }
+  
   aContext->PopNamespaceDecls(aElement);
   return NS_OK;
 }
@@ -1200,128 +1546,135 @@ nsSchemaLoader::ProcessComplexContent(nsSchema* aSchema,
   aContext->PushNamespaceDecls(aElement);
 
   nsCOMPtr<nsISchemaType> baseType;
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  aElement->GetChildNodes(getter_AddRefs(childNodes));
+  ChildIterator iterator(aElement);
+  nsCOMPtr<nsIDOMElement> childElement;
+  nsCOMPtr<nsIAtom> tagName;
   
   // A complexContent element must have children
-  if (!childNodes) {
+  if (!iterator.HasChildNodes()) {
     return NS_ERROR_FAILURE;
   }
-
-  PRUint32 i, count;
-      
-  childNodes->GetLength(&count);
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIDOMNode> child;
-    
-    childNodes->Item(i, getter_AddRefs(child));
-    nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
-    if (!childElement) {
-      continue;
-    }
-    
-    nsAutoString namespaceURI;           
-    childElement->GetNamespaceURI(namespaceURI);
-    
-    if (namespaceURI.Equals(NS_LITERAL_STRING(NS_SCHEMA_NAMESPACE))) {
-      
-      nsCOMPtr<nsIContent> content(do_QueryInterface(childElement));
-      NS_ASSERTION(content, "Element is not content");
-      if (!content) {
+  
+  while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                            getter_AddRefs(tagName))) &&
+         childElement) {       
+    nsAutoString baseStr;
+    if ((tagName == nsSchemaAtoms::sRestriction_atom) ||
+        (tagName == nsSchemaAtoms::sExtension_atom)) {
+      childElement->GetAttribute(NS_LITERAL_STRING("base"), baseStr);
+      if (baseStr.Length() == 0) {
         return NS_ERROR_FAILURE;
       }
       
-      nsCOMPtr<nsINodeInfo> nodeInfo;
-      content->GetNodeInfo(*getter_AddRefs(nodeInfo));
-      if (!nodeInfo) {
-        return NS_ERROR_FAILURE;
+      rv = GetNewOrUsedType(aSchema, aContext, baseStr, 
+                            getter_AddRefs(baseType));
+      if (NS_FAILED(rv)) {
+        return rv;
       }
       
-      nsCOMPtr<nsIAtom> tagName;
-      nodeInfo->GetNameAtom(*getter_AddRefs(tagName));
+      if (tagName == nsSchemaAtoms::sRestriction_atom) {
+        *aDerivation = nsISchemaComplexType::DERIVATION_RESTRICTION_COMPLEX;
+        rv = ProcessComplexTypeBody(aSchema, aContext, childElement,
+                                    aComplexType, nsnull, aContentModel);
+      }
+      else {
+        *aDerivation = nsISchemaComplexType::DERIVATION_EXTENSION_COMPLEX;
         
-      nsAutoString baseStr;
-      if ((tagName == nsSchemaAtoms::sRestriction_atom) ||
-          (tagName == nsSchemaAtoms::sExtension_atom)) {
-        childElement->GetAttribute(NS_LITERAL_STRING("base"), baseStr);
-        if (baseStr.Length() == 0) {
-          return NS_ERROR_FAILURE;
-        }
-        
-        rv = GetNewOrUsedType(aSchema, aContext, baseStr, 
-                              getter_AddRefs(baseType));
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
+        nsCOMPtr<nsISchemaModelGroup> sequence;
+        nsSchemaModelGroup* sequenceInst = nsnull;
+        nsCOMPtr<nsISchemaComplexType> complexBaseType(do_QueryInterface(baseType));
+        if (complexBaseType) {
+          // XXX Should really be cloning
+          nsCOMPtr<nsISchemaModelGroup> baseGroup;
+          rv = complexBaseType->GetModelGroup(getter_AddRefs(baseGroup));
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+          
+          if (baseGroup) {
+            // Create a new model group that's going to be the a sequence
+            // of the base model group and the content below
+            sequenceInst = new nsSchemaModelGroup(aSchema,
+                                                  NS_LITERAL_STRING(""));
+            if (!sequenceInst) {
+              return NS_ERROR_OUT_OF_MEMORY;
+            }
+            sequence = sequenceInst;
 
-        if (tagName == nsSchemaAtoms::sRestriction_atom) {
-          *aDerivation = nsISchemaComplexType::DERIVATION_RESTRICTION_COMPLEX;
-          rv = ProcessComplexTypeBody(aSchema, aContext, childElement,
-                                      aComplexType, nsnull, aContentModel);
-        }
-        else {
-          *aDerivation = nsISchemaComplexType::DERIVATION_EXTENSION_COMPLEX;
+            PRUint16 compositor;
+            baseGroup->GetCompositor(&compositor);
 
-          nsCOMPtr<nsISchemaModelGroup> sequence;
-          nsSchemaModelGroup* sequenceInst = nsnull;
-          nsCOMPtr<nsISchemaComplexType> complexBaseType(do_QueryInterface(baseType));
-          if (complexBaseType) {
-            // XXX Should really be cloning
-            nsCOMPtr<nsISchemaModelGroup> baseGroup;
-            rv = complexBaseType->GetModelGroup(getter_AddRefs(baseGroup));
+            PRUint32 minOccurs, maxOccurs;
+            baseGroup->GetMinOccurs(&minOccurs);
+            baseGroup->GetMaxOccurs(&maxOccurs);
+
+            // If the base group also a sequence, we can collapse the 
+            // two sequences.
+            if ((compositor == nsISchemaModelGroup::COMPOSITOR_SEQUENCE) &&
+                (minOccurs == 1) && (maxOccurs == 1)) {
+              PRUint32 pIndex, pCount;
+              baseGroup->GetParticleCount(&pCount);
+              for (pIndex = 0; pIndex < pCount; pIndex++) {
+                nsCOMPtr<nsISchemaParticle> particle;
+                
+                rv = baseGroup->GetParticle(pIndex, getter_AddRefs(particle));
+                if (NS_FAILED(rv)) {
+                  return rv;
+                }
+                
+                rv = sequenceInst->AddParticle(particle);
+                if (NS_FAILED(rv)) {
+                  return rv;
+                }
+              }
+            }
+            else {
+              sequenceInst->AddParticle(baseGroup);
+            }
+            
+            aComplexType->SetModelGroup(sequence);
+          }            
+          
+          
+          // Copy over the attributes from the base type
+          // XXX Should really be cloning
+          PRUint32 attrIndex, attrCount;
+          complexBaseType->GetAttributeCount(&attrCount);
+          
+          for (attrIndex = 0; attrIndex < attrCount; attrIndex++) {
+            nsCOMPtr<nsISchemaAttributeComponent> attribute;
+            
+            rv = complexBaseType->GetAttributeByIndex(attrIndex,
+                                                      getter_AddRefs(attribute));
             if (NS_FAILED(rv)) {
               return rv;
             }
 
-            if (baseGroup) {
-              // Create a new model group that's going to be the a sequence
-              // of the base model group and the content below
-              sequenceInst = new nsSchemaModelGroup(aSchema,
-                                                    NS_LITERAL_STRING(""),
-                                                    nsISchemaModelGroup::COMPOSITOR_SEQUENCE);
-              if (!sequenceInst) {
-                return NS_ERROR_OUT_OF_MEMORY;
-              }
-              sequence = sequenceInst;
-              sequenceInst->AddParticle(baseGroup);
-
-              aComplexType->SetModelGroup(sequence);
-            }            
-
-            
-            // Copy over the attributes from the base type
-            // XXX Should really be cloning
-            PRUint32 attrIndex, attrCount;
-            complexBaseType->GetAttributeCount(&attrCount);
-
-            for (attrIndex = 0; attrIndex < attrCount; attrIndex++) {
-              nsCOMPtr<nsISchemaAttributeComponent> attribute;
-              
-              rv = complexBaseType->GetAttributeByIndex(attrIndex,
-                                                        getter_AddRefs(attribute));
-              if (NS_FAILED(rv)) {
-                return rv;
-              }
-              aComplexType->AddAttribute(attribute);
+            rv = aComplexType->AddAttribute(attribute);
+            if (NS_FAILED(rv)) {
+              return rv;
             }
           }
-
-          PRUint16 explicitContent;
-          rv = ProcessComplexTypeBody(aSchema, aContext, childElement,
-                                      aComplexType, sequenceInst,
-                                      &explicitContent);
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
-          // If the explicit content is empty, get the content type
-          // from the base
-          if ((explicitContent == nsISchemaComplexType::CONTENT_MODEL_EMPTY) &&
-              complexBaseType) {
-            complexBaseType->GetContentModel(aContentModel);
-          }
         }
-        break;
+        
+        PRUint16 explicitContent;
+        rv = ProcessComplexTypeBody(aSchema, aContext, childElement,
+                                    aComplexType, sequenceInst,
+                                    &explicitContent);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        // If the explicit content is empty, get the content type
+        // from the base
+        if ((explicitContent == nsISchemaComplexType::CONTENT_MODEL_EMPTY) &&
+            complexBaseType) {
+          complexBaseType->GetContentModel(aContentModel);
+        }
+        else {
+          *aContentModel = explicitContent;
+        }
       }
+      break;
     }
   }
 
@@ -1337,16 +1690,826 @@ nsSchemaLoader::ProcessComplexContent(nsSchema* aSchema,
   aContext->PopNamespaceDecls(aElement);
   return NS_OK;
 }
+
+nsresult 
+nsSchemaLoader::ProcessSimpleType(nsSchema* aSchema, 
+                                  nsSchemaLoadingContext* aContext,
+                                  nsIDOMElement* aElement,
+                                  nsISchemaSimpleType** aSimpleType)
+{
+  nsresult rv = NS_OK;
+  aContext->PushNamespaceDecls(aElement);
+
+  nsAutoString name;
+  aElement->GetAttribute(NS_LITERAL_STRING("name"), name);
+
+  ChildIterator iterator(aElement);
+  nsCOMPtr<nsIDOMElement> childElement;
+  nsCOMPtr<nsIAtom> tagName;
+
+  while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                            getter_AddRefs(tagName))) &&
+         childElement) {
+    if (tagName == nsSchemaAtoms::sRestriction_atom) {
+      rv = ProcessSimpleTypeRestriction(aSchema, aContext, childElement,
+                                        name, aSimpleType);
+      break;
+    }
+    else if (tagName == nsSchemaAtoms::sList_atom) {
+      rv = ProcessSimpleTypeList(aSchema, aContext, childElement,
+                                 name, aSimpleType);
+      break;
+    }
+    else if (tagName = nsSchemaAtoms::sUnion_atom) {
+      rv = ProcessSimpleTypeUnion(aSchema, aContext, childElement,
+                                  name, aSimpleType);
+      break;
+    }
+  }  
+  
+  aContext->PopNamespaceDecls(aElement);
+  return rv;
+}
+
+nsresult 
+nsSchemaLoader::ProcessSimpleTypeRestriction(nsSchema* aSchema, 
+                                             nsSchemaLoadingContext* aContext,
+                                             nsIDOMElement* aElement,
+                                             const nsAReadableString& aName,
+                                             nsISchemaSimpleType** aSimpleType)
+{
+  nsresult rv = NS_OK;
+  aContext->PushNamespaceDecls(aElement);
+
+  nsSchemaRestrictionType* restrictionInst;
+  nsCOMPtr<nsISchemaSimpleType> restriction;
  
+  restrictionInst = new nsSchemaRestrictionType(aSchema, aName);
+  if (!restrictionInst) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  restriction = restrictionInst;
+
+  nsCOMPtr<nsISchemaType> baseType;
+  nsAutoString baseStr;
+  aElement->GetAttribute(NS_LITERAL_STRING("base"), baseStr);
+  if (baseStr.Length() > 0) {
+    rv = GetNewOrUsedType(aSchema, aContext, baseStr, 
+                          getter_AddRefs(baseType));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    nsCOMPtr<nsISchemaSimpleType> simpleBase(do_QueryInterface(baseType));
+    if (!simpleBase) {
+      return NS_ERROR_FAILURE;
+    }
+    rv = restrictionInst->SetBaseType(simpleBase);
+  }
+
+  ChildIterator iterator(aElement);
+  nsCOMPtr<nsIDOMElement> childElement;
+  nsCOMPtr<nsIAtom> tagName;
+
+  while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                            getter_AddRefs(tagName))) &&
+         childElement) {
+    if ((tagName == nsSchemaAtoms::sSimpleType_atom) &&
+        !baseType) {
+      nsCOMPtr<nsISchemaSimpleType> simpleType;
+      
+      rv = ProcessSimpleType(aSchema, aContext, childElement, 
+                             getter_AddRefs(simpleType));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      rv = restrictionInst->SetBaseType(simpleType);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      baseType = simpleType;
+    }
+    else if ((tagName == nsSchemaAtoms::sMinExclusive_atom) ||
+             (tagName == nsSchemaAtoms::sMinInclusive_atom) ||
+             (tagName == nsSchemaAtoms::sMaxExclusive_atom) ||
+             (tagName == nsSchemaAtoms::sMaxInclusive_atom) ||
+             (tagName == nsSchemaAtoms::sTotalDigits_atom) ||
+             (tagName == nsSchemaAtoms::sFractionDigits_atom) ||
+             (tagName == nsSchemaAtoms::sLength_atom) ||
+             (tagName == nsSchemaAtoms::sMinLength_atom) ||
+             (tagName == nsSchemaAtoms::sMaxLength_atom) ||
+             (tagName == nsSchemaAtoms::sEnumeration_atom) ||
+             (tagName == nsSchemaAtoms::sWhiteSpace_atom) ||
+             (tagName == nsSchemaAtoms::sPattern_atom)) {
+      nsCOMPtr<nsISchemaFacet> facet;
+      
+      rv = ProcessFacet(aSchema, aContext, childElement, 
+                        tagName, getter_AddRefs(facet));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      rv = restrictionInst->AddFacet(facet);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+  }
+
+  *aSimpleType = restriction;
+  NS_ADDREF(*aSimpleType);
+
+  aContext->PopNamespaceDecls(aElement);
+  return NS_OK;
+}
+ 
+nsresult 
+nsSchemaLoader::ProcessSimpleTypeList(nsSchema* aSchema, 
+                                      nsSchemaLoadingContext* aContext,
+                                      nsIDOMElement* aElement,
+                                      const nsAReadableString& aName,
+                                      nsISchemaSimpleType** aSimpleType)
+{
+  nsresult rv = NS_OK;
+  aContext->PushNamespaceDecls(aElement);
+
+  nsSchemaListType* listInst;
+  nsCOMPtr<nsISchemaSimpleType> list;
+
+  listInst = new nsSchemaListType(aSchema, aName);
+  if (!listInst) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  list = listInst;
+
+  nsAutoString itemTypeStr;
+  aElement->GetAttribute(NS_LITERAL_STRING("itemType"), itemTypeStr);
+
+  nsCOMPtr<nsISchemaSimpleType> itemType;
+  if (itemTypeStr.Length() > 0) {
+    nsCOMPtr<nsISchemaType> type;
+    rv = GetNewOrUsedType(aSchema, aContext, itemTypeStr, 
+                          getter_AddRefs(type));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    itemType = do_QueryInterface(type);
+  }
+  else {
+    ChildIterator iterator(aElement);
+    nsCOMPtr<nsIDOMElement> childElement;
+    nsCOMPtr<nsIAtom> tagName;
+    
+    while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                              getter_AddRefs(tagName))) &&
+           childElement) {
+      if (tagName == nsSchemaAtoms::sSimpleType_atom) {
+        rv = ProcessSimpleType(aSchema, aContext, childElement,
+                               getter_AddRefs(itemType));
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        break;
+      }
+    }
+  }
+
+  if (!itemType) {
+    return NS_ERROR_FAILURE;
+  }
+  listInst->SetListType(itemType);
+
+  *aSimpleType = list;
+  NS_ADDREF(*aSimpleType);
+
+  aContext->PopNamespaceDecls(aElement);
+  return NS_OK;
+}
+
+nsresult 
+nsSchemaLoader::ProcessSimpleTypeUnion(nsSchema* aSchema, 
+                                       nsSchemaLoadingContext* aContext,
+                                       nsIDOMElement* aElement,
+                                       const nsAReadableString& aName,
+                                       nsISchemaSimpleType** aSimpleType)
+{
+  nsresult rv = NS_OK;
+  aContext->PushNamespaceDecls(aElement);
+
+  nsSchemaUnionType* unionInst;
+  nsCOMPtr<nsISchemaSimpleType> unionType;
+
+  unionInst = new nsSchemaUnionType(aSchema, aName);
+  if (!unionInst) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  unionType = unionInst;
+
+  nsCOMPtr<nsISchemaSimpleType> memberType;
+  nsAutoString memberTypes;
+  aElement->GetAttribute(NS_LITERAL_STRING("memberTypes"), memberTypes);
+  if (memberTypes.Length() > 0) {
+    nsReadingIterator<PRUnichar> begin, end, tokenEnd;
+
+    memberTypes.BeginReading(tokenEnd);
+    memberTypes.EndReading(end);
+
+    while (tokenEnd != end) {
+      nsAutoString typeStr;
+      begin = tokenEnd;
+      if (FindCharInReadable(PRUnichar(' '), tokenEnd, end)) {
+        CopyUnicodeTo(begin, tokenEnd, typeStr);
+        ++tokenEnd;
+      }
+      else {
+        CopyUnicodeTo(begin, end, typeStr);
+      }
+
+      nsCOMPtr<nsISchemaType> type;
+      rv = GetNewOrUsedType(aSchema, aContext, typeStr, 
+                            getter_AddRefs(type));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      
+      memberType = do_QueryInterface(type);
+      if (!memberType) {
+        return NS_ERROR_FAILURE;
+      }
+
+      rv = unionInst->AddUnionType(memberType);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }            
+    }
+  }
+  
+  ChildIterator iterator(aElement);
+  nsCOMPtr<nsIDOMElement> childElement;
+  nsCOMPtr<nsIAtom> tagName;
+  
+  while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                            getter_AddRefs(tagName))) &&
+         childElement) {
+    if (tagName == nsSchemaAtoms::sSimpleType_atom) {
+      rv = ProcessSimpleType(aSchema, aContext, childElement,
+                             getter_AddRefs(memberType));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      
+      rv = unionInst->AddUnionType(memberType);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }      
+    }
+  }
+
+  *aSimpleType = unionType;
+  NS_ADDREF(*aSimpleType);
+
+  aContext->PopNamespaceDecls(aElement);
+  return NS_OK;
+}
+
+nsresult 
+nsSchemaLoader::ProcessModelGroup(nsSchema* aSchema, 
+                                  nsSchemaLoadingContext* aContext,
+                                  nsIDOMElement* aElement,
+                                  nsIAtom* aTagName,
+                                  nsSchemaModelGroup* aParentSequence,
+                                  nsISchemaModelGroup** aModelGroup)
+{
+  nsresult rv = NS_OK;
+  aContext->PushNamespaceDecls(aElement);
+
+  nsCOMPtr<nsISchemaModelGroup> modelGroup;
+  PRUint32 minOccurs, maxOccurs;
+  GetMinAndMax(aElement, &minOccurs, &maxOccurs);
+
+  // Check for a ref attribute
+  nsAutoString ref;
+  aElement->GetAttribute(NS_LITERAL_STRING("ref"), ref);
+  
+  if ((aTagName == nsSchemaAtoms::sModelGroup_atom) &&
+      (ref.Length() > 0)) {
+    nsSchemaModelGroupRef* modelGroupRef = new nsSchemaModelGroupRef(aSchema, 
+                                                                     ref);
+    if (!modelGroupRef) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    modelGroup = modelGroupRef;
+    
+    modelGroupRef->SetMinOccurs(minOccurs);
+    modelGroupRef->SetMaxOccurs(maxOccurs);
+  }
+  else {
+    nsAutoString name;
+    aElement->GetAttribute(NS_LITERAL_STRING("name"), name);
+
+    ChildIterator iterator(aElement);
+    nsCOMPtr<nsIDOMElement> childElement;
+    nsCOMPtr<nsIAtom> tagName = aTagName;
+
+    // If this is a group element, find the first compositor
+    // child and continue with that.
+    if (aTagName == nsSchemaAtoms::sModelGroup_atom) {
+      while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                                getter_AddRefs(tagName))) &&
+             childElement) {
+        if ((tagName == nsSchemaAtoms::sAll_atom) ||
+            (tagName == nsSchemaAtoms::sChoice_atom) ||
+            (tagName == nsSchemaAtoms::sSequence_atom)) {
+          iterator.SetElement(childElement);
+          break;
+        }
+      }
+    }
+
+    nsSchemaModelGroup* modelGroupInst;
+
+    // If we have a parent sequence and we're a sequence that
+    // only appears once, then collapse us.
+    if (aParentSequence && 
+        (tagName == nsSchemaAtoms::sSequence_atom) &&
+        (minOccurs == 1) && (maxOccurs == 1)) {
+      modelGroupInst = aParentSequence;
+      modelGroup = modelGroupInst;
+    }
+    else {
+      modelGroupInst = new nsSchemaModelGroup(aSchema, name);
+      if (!modelGroupInst) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      modelGroup = modelGroupInst;
+      
+      modelGroupInst->SetMinOccurs(minOccurs);
+      modelGroupInst->SetMaxOccurs(maxOccurs);
+
+
+      if (tagName == nsSchemaAtoms::sAll_atom) {
+        modelGroupInst->SetCompositor(nsISchemaModelGroup::COMPOSITOR_ALL);
+      }
+      else if (tagName == nsSchemaAtoms::sChoice_atom) {
+        modelGroupInst->SetCompositor(nsISchemaModelGroup::COMPOSITOR_CHOICE);
+      }
+      else if (tagName == nsSchemaAtoms::sSequence_atom) {
+        modelGroupInst->SetCompositor(nsISchemaModelGroup::COMPOSITOR_SEQUENCE);
+      }
+    }
+    
+    while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                              getter_AddRefs(tagName))) &&
+           childElement) {
+      if (tagName != nsSchemaAtoms::sAnnotation_atom) {
+        nsCOMPtr<nsISchemaParticle> particle;
+
+        rv = ProcessParticle(aSchema, aContext, childElement,
+                             tagName, getter_AddRefs(particle));
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+
+        rv = modelGroupInst->AddParticle(particle);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+      }
+    }   
+  }
+
+  *aModelGroup = modelGroup;
+  NS_ADDREF(*aModelGroup);
+
+  aContext->PopNamespaceDecls(aElement);
+  return NS_OK;
+}
+
+nsresult 
+nsSchemaLoader::ProcessParticle(nsSchema* aSchema, 
+                                nsSchemaLoadingContext* aContext,
+                                nsIDOMElement* aElement,
+                                nsIAtom* aTagName,
+                                nsISchemaParticle** aParticle)
+{
+  nsresult rv;
+
+  if (aTagName == nsSchemaAtoms::sElement_atom) {
+    nsCOMPtr<nsISchemaElement> element;
+
+    rv = ProcessElement(aSchema, aContext, aElement, getter_AddRefs(element));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    *aParticle = element;
+    NS_IF_ADDREF(*aParticle);
+  }
+  else if ((aTagName == nsSchemaAtoms::sModelGroup_atom) ||
+           (aTagName == nsSchemaAtoms::sChoice_atom) ||
+           (aTagName == nsSchemaAtoms::sSequence_atom)) {
+    nsCOMPtr<nsISchemaModelGroup> modelGroup;
+    
+    rv = ProcessModelGroup(aSchema, aContext, aElement, 
+                           aTagName, nsnull, getter_AddRefs(modelGroup));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    *aParticle = modelGroup;
+    NS_IF_ADDREF(*aParticle);
+  }
+  else if (aTagName == nsSchemaAtoms::sAny_atom) {
+    aContext->PushNamespaceDecls(aElement);
+
+    nsCOMPtr<nsISchemaParticle> anyParticle;
+    nsSchemaAnyParticle* anyParticleInst = new nsSchemaAnyParticle(aSchema);
+    if (!anyParticleInst) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    anyParticle = anyParticleInst;
+
+    PRUint32 minOccurs, maxOccurs;
+    GetMinAndMax(aElement, &minOccurs, &maxOccurs);
+    anyParticleInst->SetMinOccurs(minOccurs);
+    anyParticleInst->SetMaxOccurs(maxOccurs);
+
+    PRUint16 process;
+    GetProcess(aElement, &process);
+    anyParticleInst->SetProcess(process);
+
+    nsAutoString namespaceStr;
+    aElement->GetAttribute(NS_LITERAL_STRING("namespace"), namespaceStr);
+    anyParticleInst->SetNamespace(namespaceStr);
+
+    *aParticle = anyParticle;
+    NS_ADDREF(*aParticle);
+  
+    aContext->PopNamespaceDecls(aElement);
+  }
+
+  return NS_OK;
+}
+
 nsresult 
 nsSchemaLoader::ProcessAttributeComponent(nsSchema* aSchema, 
                                           nsSchemaLoadingContext* aContext,
                                           nsIDOMElement* aElement,
+                                          nsIAtom* aTagName,
                                           nsISchemaAttributeComponent** aAttribute)
 {
+  nsresult rv;
+
+  if (aTagName == nsSchemaAtoms::sAttribute_atom) {
+    nsCOMPtr<nsISchemaAttribute> attribute;
+
+    rv = ProcessAttribute(aSchema, aContext, aElement, 
+                          getter_AddRefs(attribute));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    *aAttribute = attribute;
+    NS_IF_ADDREF(*aAttribute);
+  }
+  else if (aTagName == nsSchemaAtoms::sAttributeGroup_atom) {
+    nsCOMPtr<nsISchemaAttributeGroup> attributeGroup;
+
+    rv = ProcessAttributeGroup(aSchema, aContext, aElement, 
+                               getter_AddRefs(attributeGroup));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    *aAttribute = attributeGroup;
+    NS_IF_ADDREF(*aAttribute);
+  }
+  else if (aTagName == nsSchemaAtoms::sAnyAttribute_atom) {
+    aContext->PushNamespaceDecls(aElement);
+
+    nsCOMPtr<nsISchemaAttributeComponent> anyAttribute;
+    nsSchemaAnyAttribute* anyAttributeInst = new nsSchemaAnyAttribute(aSchema);
+    if (!anyAttributeInst) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    anyAttribute = anyAttributeInst;
+
+    PRUint16 process;
+    GetProcess(aElement, &process);
+    anyAttributeInst->SetProcess(process);
+
+    nsAutoString namespaceStr;
+    aElement->GetAttribute(NS_LITERAL_STRING("namespace"), namespaceStr);
+    anyAttributeInst->SetNamespace(namespaceStr);
+    
+    *aAttribute = anyAttribute;
+    NS_ADDREF(*aAttribute);
+
+    aContext->PopNamespaceDecls(aElement);
+  }
+
+  return NS_OK;
+}
+
+nsresult 
+nsSchemaLoader::ProcessAttribute(nsSchema* aSchema, 
+                                 nsSchemaLoadingContext* aContext,
+                                 nsIDOMElement* aElement,
+                                 nsISchemaAttribute** aAttribute)
+{
+  nsresult rv;
   aContext->PushNamespaceDecls(aElement);
+
+  nsCOMPtr<nsISchemaAttribute> attribute;
+
+  nsAutoString defaultValue, fixedValue;
+  aElement->GetAttribute(NS_LITERAL_STRING("default"), defaultValue);
+  aElement->GetAttribute(NS_LITERAL_STRING("fixed"), fixedValue);
+  
+  PRUint16 use;
+  GetUse(aElement, &use);
+
+  nsAutoString ref;
+  aElement->GetAttribute(NS_LITERAL_STRING("ref"), ref);
+  if (ref.Length() > 0) {
+    nsSchemaAttributeRef* attributeRef = new nsSchemaAttributeRef(aSchema,
+                                                                  ref);
+    if (!attributeRef) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    attribute = attributeRef;
+
+    attributeRef->SetConstraints(defaultValue, fixedValue);
+    attributeRef->SetUse(use);
+  }
+  else {
+    nsAutoString name;
+    aElement->GetAttribute(NS_LITERAL_STRING("name"), name);
+    
+    nsSchemaAttribute* attributeInst = new nsSchemaAttribute(aSchema,
+                                                             name);
+    if (!attributeInst) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    attribute = attributeInst;
+
+    attributeInst->SetConstraints(defaultValue, fixedValue);
+    attributeInst->SetUse(use);
+
+    nsCOMPtr<nsISchemaSimpleType> simpleType;
+
+    ChildIterator iterator(aElement);
+    nsCOMPtr<nsIDOMElement> childElement;
+    nsCOMPtr<nsIAtom> tagName;
+
+    while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                              getter_AddRefs(tagName))) &&
+           childElement) {
+      if (tagName == nsSchemaAtoms::sSimpleType_atom) {
+        rv = ProcessSimpleType(aSchema, aContext, childElement,
+                               getter_AddRefs(simpleType));
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        break;
+      }
+    }
+
+    if (!simpleType) {
+      nsAutoString typeStr;
+      aElement->GetAttribute(NS_LITERAL_STRING("type"), typeStr);
+
+      if (typeStr.Length() > 0) {
+        nsCOMPtr<nsISchemaType> schemaType;
+        rv = GetNewOrUsedType(aSchema, aContext, typeStr, 
+                              getter_AddRefs(schemaType));
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+
+        simpleType = do_QueryInterface(schemaType);
+        if (!simpleType) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+    }
+
+    attributeInst->SetType(simpleType);
+  }
+
+  *aAttribute = attribute;
+  NS_ADDREF(*aAttribute);
+
   aContext->PopNamespaceDecls(aElement);
   return NS_OK;
+}
+
+nsresult 
+nsSchemaLoader::ProcessAttributeGroup(nsSchema* aSchema, 
+                                      nsSchemaLoadingContext* aContext,
+                                      nsIDOMElement* aElement,
+                                      nsISchemaAttributeGroup** aAttributeGroup)
+{
+  nsresult rv;
+  aContext->PushNamespaceDecls(aElement);
+
+  nsCOMPtr<nsISchemaAttributeGroup> attributeGroup;
+
+  nsAutoString ref;
+  aElement->GetAttribute(NS_LITERAL_STRING("ref"), ref);
+
+  if (ref.Length() > 0) {
+    nsSchemaAttributeGroupRef* attrRef = new nsSchemaAttributeGroupRef(aSchema,
+                                                                       ref);
+    if (!attrRef) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    attributeGroup = attrRef;
+  }
+  else {
+    nsAutoString name;
+    aElement->GetAttribute(NS_LITERAL_STRING("name"), name);
+    
+    nsSchemaAttributeGroup* attrInst = new nsSchemaAttributeGroup(aSchema,
+                                                                  name);
+    if (!attrInst) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    attributeGroup = attrInst;
+
+    ChildIterator iterator(aElement);
+    nsCOMPtr<nsIDOMElement> childElement;
+    nsCOMPtr<nsIAtom> tagName;
+
+    while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
+                                              getter_AddRefs(tagName))) &&
+           childElement) {
+      if ((tagName == nsSchemaAtoms::sAttribute_atom) ||
+          (tagName == nsSchemaAtoms::sAttributeGroup_atom) ||
+          (tagName == nsSchemaAtoms::sAnyAttribute_atom)) {
+        nsCOMPtr<nsISchemaAttributeComponent> attribute;
+        
+        rv = ProcessAttributeComponent(aSchema, aContext,
+                                       childElement, tagName,
+                                       getter_AddRefs(attribute));
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        
+        rv = attrInst->AddAttribute(attribute);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+      }    
+    }
+  }
+
+  *aAttributeGroup = attributeGroup;
+  NS_ADDREF(*aAttributeGroup);
+
+  aContext->PopNamespaceDecls(aElement);
+  return NS_OK;
+}
+ 
+nsresult 
+nsSchemaLoader::ProcessFacet(nsSchema* aSchema, 
+                             nsSchemaLoadingContext* aContext, 
+                             nsIDOMElement* aElement,
+                             nsIAtom* aTagName,
+                             nsISchemaFacet** aFacet)
+{
+  PRInt32 rv;
+  aContext->PushNamespaceDecls(aElement);
+
+  nsCOMPtr<nsISchemaFacet> facet;
+  nsSchemaFacet* facetInst = new nsSchemaFacet(aSchema);
+  if (!facetInst) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  facet = facetInst;
+
+  PRUint16 facetType;
+  if (aTagName == nsSchemaAtoms::sLength_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_LENGTH;
+  }
+  else if (aTagName == nsSchemaAtoms::sMinLength_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_MINLENGTH;
+  }
+  else if (aTagName == nsSchemaAtoms::sMaxLength_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_MAXLENGTH;
+  }
+  else if (aTagName == nsSchemaAtoms::sPattern_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_PATTERN;
+  }
+  else if (aTagName == nsSchemaAtoms::sEnumeration_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_ENUMERATION;
+  }
+  else if (aTagName == nsSchemaAtoms::sWhiteSpace_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_WHITESPACE;
+  }
+  else if (aTagName == nsSchemaAtoms::sMaxInclusive_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_MAXINCLUSIVE;
+  }
+  else if (aTagName == nsSchemaAtoms::sMinInclusive_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_MININCLUSIVE;
+  }
+  else if (aTagName == nsSchemaAtoms::sMaxExclusive_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_MAXEXCLUSIVE;
+  }
+  else if (aTagName == nsSchemaAtoms::sMaxInclusive_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_MINEXCLUSIVE;
+  }
+  else if (aTagName == nsSchemaAtoms::sTotalDigits_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_TOTALDIGITS;
+  }
+  else if (aTagName == nsSchemaAtoms::sFractionDigits_atom) {
+    facetType = nsISchemaFacet::FACET_TYPE_FRACTIONDIGITS;
+  }
+  facetInst->SetFacetType(facetType);
+
+  nsAutoString valueStr;
+  aElement->GetAttribute(NS_LITERAL_STRING("value"), valueStr);
+  if (valueStr.Length() == 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if ((aTagName == nsSchemaAtoms::sLength_atom) ||
+      (aTagName == nsSchemaAtoms::sMinLength_atom) ||
+      (aTagName == nsSchemaAtoms::sMaxLength_atom) ||
+      (aTagName == nsSchemaAtoms::sTotalDigits_atom) ||
+      (aTagName == nsSchemaAtoms::sFractionDigits_atom)) {
+    PRInt32 intVal = valueStr.ToInteger(&rv);
+
+    if (NS_FAILED(rv) ||
+        (intVal < 0) ||
+        ((aTagName == nsSchemaAtoms::sTotalDigits_atom) && (intVal == 0))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    facetInst->SetUintValue((PRUint32)intVal);
+  }
+  else if (aTagName == nsSchemaAtoms::sWhiteSpace_atom) {
+    PRUint16 whiteSpaceVal;
+    if (valueStr.Equals(NS_LITERAL_STRING("collapse"))) {
+      whiteSpaceVal = nsSchemaFacet::WHITESPACE_COLLAPSE;
+    }
+    else if (valueStr.Equals(NS_LITERAL_STRING("preserve"))) {
+      whiteSpaceVal = nsSchemaFacet::WHITESPACE_PRESERVE;
+    }
+    else if (valueStr.Equals(NS_LITERAL_STRING("replace"))) {
+      whiteSpaceVal = nsSchemaFacet::WHITESPACE_REPLACE;
+    }
+    else {
+      return NS_ERROR_FAILURE;
+    }
+
+    facetInst->SetWhitespaceValue(whiteSpaceVal);
+  }
+  else {
+    facetInst->SetValue(valueStr);
+  }
+  
+  nsAutoString isFixed;
+  aElement->GetAttribute(NS_LITERAL_STRING("fixed"), isFixed);
+  facetInst->SetIsFixed(isFixed.Equals(NS_LITERAL_STRING("true")));
+
+  *aFacet = facet;
+  NS_ADDREF(*aFacet);
+
+  aContext->PopNamespaceDecls(aElement);
+  return NS_OK;
+}
+
+void
+nsSchemaLoader::GetUse(nsIDOMElement* aElement, 
+                       PRUint16* aUse)
+{
+  *aUse = nsISchemaAttribute::USE_OPTIONAL;
+
+  nsAutoString use;
+  aElement->GetAttribute(NS_LITERAL_STRING("use"), use);
+  
+  if (use.Equals(NS_LITERAL_STRING("prohibited"))) {
+    *aUse = nsISchemaAttribute::USE_PROHIBITED;
+  }
+  else if (use.Equals(NS_LITERAL_STRING("required"))) {
+    *aUse = nsISchemaAttribute::USE_REQUIRED;
+  }
+}
+
+void
+nsSchemaLoader::GetProcess(nsIDOMElement* aElement, 
+                           PRUint16* aProcess)
+{
+  *aProcess = nsISchemaAnyParticle::PROCESS_STRICT;
+
+  nsAutoString process;
+  aElement->GetAttribute(NS_LITERAL_STRING("process"), process);
+
+  if (process.Equals(NS_LITERAL_STRING("lax"))) {
+    *aProcess = nsISchemaAnyParticle::PROCESS_LAX;
+  }
+  else if (process.Equals(NS_LITERAL_STRING("skip"))) {
+    *aProcess = nsISchemaAnyParticle::PROCESS_SKIP;
+  }
 }
 
 void

@@ -87,9 +87,8 @@ nsSchemaParticleBase::SetMaxOccurs(PRUint32 aMaxOccurs)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaModelGroup::nsSchemaModelGroup(nsSchema* aSchema, 
-                                       const nsAReadableString& aName,
-                                       PRUint16 aCompositor)
-  : nsSchemaParticleBase(aSchema), mName(aName), mCompositor(aCompositor)
+                                       const nsAReadableString& aName)
+  : nsSchemaParticleBase(aSchema), mName(aName), mCompositor(COMPOSITOR_SEQUENCE)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -98,21 +97,21 @@ nsSchemaModelGroup::~nsSchemaModelGroup()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSchemaModelGroup, 
-                   nsISchemaComponent,
-                   nsISchemaParticle,
-                   nsISchemaModelGroup)
+NS_IMPL_ISUPPORTS3_CI(nsSchemaModelGroup, 
+                      nsISchemaComponent,
+                      nsISchemaParticle,
+                      nsISchemaModelGroup)
 
 
 /* void resolve (); */
 NS_IMETHODIMP 
 nsSchemaModelGroup::Resolve()
 {
-  if (mIsResolving) {
+  if (mIsResolved) {
     return NS_OK;
   }
 
-  mIsResolving = PR_TRUE;
+  mIsResolved = PR_TRUE;
   nsresult rv;
   PRUint32 i, count;
 
@@ -125,12 +124,10 @@ nsSchemaModelGroup::Resolve()
     if (NS_SUCCEEDED(rv)) {
       rv = particle->Resolve();
       if (NS_FAILED(rv)) {
-        mIsResolving = PR_FALSE;
         return rv;
       }
     }
   }
-  mIsResolving = PR_FALSE;
 
   return NS_OK;
 }
@@ -139,11 +136,11 @@ nsSchemaModelGroup::Resolve()
 NS_IMETHODIMP 
 nsSchemaModelGroup::Clear()
 {
-  if (mIsClearing) {
+  if (mIsCleared) {
     return NS_OK;
   }
 
-  mIsClearing = PR_TRUE;
+  mIsCleared = PR_TRUE;
   nsresult rv;
   PRUint32 i, count;
 
@@ -157,7 +154,6 @@ nsSchemaModelGroup::Clear()
       particle->Clear();
     }
   }
-  mIsClearing = PR_FALSE;
 
   return NS_OK;
 }
@@ -210,6 +206,14 @@ nsSchemaModelGroup::GetParticle(PRUint32 index, nsISchemaParticle **_retval)
                                    (void**)_retval);
 }
 
+NS_IMETHODIMP
+nsSchemaModelGroup::SetCompositor(PRUint16 aCompositor)
+{
+  mCompositor = aCompositor;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsSchemaModelGroup::AddParticle(nsISchemaParticle* aParticle)
 {
@@ -234,10 +238,10 @@ nsSchemaModelGroupRef::~nsSchemaModelGroupRef()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSchemaModelGroupRef, 
-                   nsISchemaComponent,
-                   nsISchemaParticle,
-                   nsISchemaModelGroup)
+NS_IMPL_ISUPPORTS3_CI(nsSchemaModelGroupRef, 
+                      nsISchemaComponent,
+                      nsISchemaParticle,
+                      nsISchemaModelGroup)
 
 /* void resolve (); */
 NS_IMETHODIMP 
@@ -245,11 +249,11 @@ nsSchemaModelGroupRef::Resolve()
 {
   nsresult rv = NS_OK;
 
-  if (mIsResolving) {
+  if (mIsResolved) {
     return NS_OK;
   }
 
-  mIsResolving = PR_TRUE;
+  mIsResolved = PR_TRUE;
   if (!mModelGroup && mSchema) {
     mSchema->GetModelGroupByName(mRef, getter_AddRefs(mModelGroup));
   }
@@ -257,7 +261,6 @@ nsSchemaModelGroupRef::Resolve()
   if (mModelGroup) {
     rv = mModelGroup->Resolve();
   }
-  mIsResolving = PR_FALSE;
 
   return rv;
 }
@@ -266,16 +269,15 @@ nsSchemaModelGroupRef::Resolve()
 NS_IMETHODIMP 
 nsSchemaModelGroupRef::Clear()
 {
-  if (mIsClearing) {
+  if (mIsCleared) {
     return NS_OK;
   }
 
-  mIsClearing = PR_TRUE;
+  mIsCleared = PR_TRUE;
   if (mModelGroup) {
     mModelGroup->Clear();
     mModelGroup = nsnull;
   }
-  mIsClearing = PR_FALSE;
 
   return NS_OK;
 }
@@ -355,10 +357,10 @@ nsSchemaAnyParticle::~nsSchemaAnyParticle()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSchemaAnyParticle, 
-                   nsISchemaComponent,
-                   nsISchemaParticle,
-                   nsISchemaAnyParticle)
+NS_IMPL_ISUPPORTS3_CI(nsSchemaAnyParticle, 
+                      nsISchemaComponent,
+                      nsISchemaParticle,
+                      nsISchemaAnyParticle)
 
 
 /* void resolve (); */
@@ -446,31 +448,31 @@ nsSchemaElement::~nsSchemaElement()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSchemaElement, 
-                   nsISchemaComponent,
-                   nsISchemaParticle,
-                   nsISchemaElement)
+NS_IMPL_ISUPPORTS3_CI(nsSchemaElement, 
+                      nsISchemaComponent,
+                      nsISchemaParticle,
+                      nsISchemaElement)
 
 /* void resolve (); */
 NS_IMETHODIMP 
 nsSchemaElement::Resolve()
 {
-  if (mIsResolving) {
+  if (mIsResolved) {
     return NS_OK;
   }
 
-  mIsResolving = PR_TRUE;
+  mIsResolved = PR_TRUE;
   nsresult rv = NS_OK;
   if (mType && mSchema) {
-    rv = mSchema->ResolveTypePlaceholder(mType, getter_AddRefs(mType));
+    nsCOMPtr<nsISchemaType> type;
+    rv = mSchema->ResolveTypePlaceholder(mType, getter_AddRefs(type));
     if (NS_FAILED(rv)) {
-      mIsResolving = PR_FALSE;
       return rv;
     }
-
+    
+    mType = type;
     rv = mType->Resolve();
   }
-  mIsResolving = PR_FALSE;
 
   return rv;
 }
@@ -479,14 +481,15 @@ nsSchemaElement::Resolve()
 NS_IMETHODIMP 
 nsSchemaElement::Clear()
 {
-  if (mIsClearing) {
+  if (mIsCleared) {
     return NS_OK;
   }
 
-  mIsClearing = PR_TRUE;
-  mType->Clear();
-  mType = nsnull;
-  mIsClearing = PR_FALSE;
+  mIsCleared = PR_TRUE;
+  if (mType) {
+    mType->Clear();
+    mType = nsnull;
+  }
 
   return NS_OK;
 }
@@ -606,21 +609,21 @@ nsSchemaElementRef::~nsSchemaElementRef()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsSchemaElementRef, 
-                   nsISchemaComponent,
-                   nsISchemaParticle,
-                   nsISchemaElement)
+NS_IMPL_ISUPPORTS3_CI(nsSchemaElementRef, 
+                      nsISchemaComponent,
+                      nsISchemaParticle,
+                      nsISchemaElement)
 
 /* void resolve (); */
 NS_IMETHODIMP 
 nsSchemaElementRef::Resolve()
 {
   nsresult rv = NS_OK;
-  if (mIsResolving) {
+  if (mIsResolved) {
     return NS_OK;
   }
 
-  mIsResolving = PR_TRUE;
+  mIsResolved = PR_TRUE;
   if (!mElement && mSchema) {
     mSchema->GetElementByName(mRef, getter_AddRefs(mElement));
   }
@@ -628,7 +631,6 @@ nsSchemaElementRef::Resolve()
   if (mElement) {
     rv = mElement->Resolve();
   }
-  mIsResolving = PR_FALSE;
 
   return rv;
 }
@@ -637,14 +639,15 @@ nsSchemaElementRef::Resolve()
 NS_IMETHODIMP 
 nsSchemaElementRef::Clear()
 {
-  if (mIsClearing) {
+  if (mIsCleared) {
     return NS_OK;
   }
 
-  mIsClearing = PR_TRUE;
-  mElement->Clear();
-  mElement = nsnull;
-  mIsClearing = PR_FALSE;
+  mIsCleared = PR_TRUE;
+  if (mElement) {
+    mElement->Clear();
+    mElement = nsnull;
+  }
 
   return NS_OK;
 }
