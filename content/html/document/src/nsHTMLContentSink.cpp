@@ -672,7 +672,6 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
                                void* aThis)
 {
   if (SINK_LOG_TEST(gSinkLogModuleInfo,aBit)) {
-    char cbuf[40];
     const char* cp;
     PRInt32 nt = aNode.GetNodeType();
     NS_ConvertUCS2toUTF8 flat(aNode.GetText());
@@ -680,7 +679,7 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
         (nt < PRInt32(eHTMLTag_text)) && mParser) {
       nsCOMPtr<nsIDTD> dtd;
       mParser->GetDTD(getter_AddRefs(dtd));
-      flat.Assign(dtd->IntTagToStringTag(nsHTMLTag(aNode.GetNodeType())));
+      flat.AssignWithConversion(dtd->IntTagToStringTag(nsHTMLTag(aNode.GetNodeType())));
     }
 
     cp = flat.get();
@@ -1458,10 +1457,9 @@ SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
 
 #ifdef NS_DEBUG
     // Tracing code
-    nsAutoString str;
     nsCOMPtr<nsIDTD> dtd;
     mSink->mParser->GetDTD(getter_AddRefs(dtd));
-    dtd->IntTagToStringTag(nsHTMLTag(mStack[mStackPos-1].mType), str);
+    nsDependentString str(dtd->IntTagToStringTag(nsHTMLTag(mStack[mStackPos-1].mType)));
       
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("SinkContext::DidAddContent: Insertion notification for parent=%s at position=%d and stackPos=%d", 
@@ -1639,10 +1637,9 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     if (mStack[mStackPos].mNumFlushed < childCount) {
 #ifdef NS_DEBUG
       // Tracing code
-      nsAutoString str;
       nsCOMPtr<nsIDTD> dtd;
       mSink->mParser->GetDTD(getter_AddRefs(dtd));
-      dtd->IntTagToStringTag(nsHTMLTag(nodeType), str);
+      nsDependentString str(dtd->IntTagToStringTag(nsHTMLTag(nodeType)));
 
       SINK_TRACE(SINK_TRACE_REFLOW,
                  ("SinkContext::CloseContainer: reflow on notifyImmediate tag=%s newIndex=%d stackPos=%d",
@@ -2217,10 +2214,9 @@ SinkContext::FlushTags(PRBool aNotify)
       if (!flushed && (mStack[stackPos].mNumFlushed < childCount)) {
 #ifdef NS_DEBUG
         // Tracing code
-        nsAutoString str;
         nsCOMPtr<nsIDTD> dtd;
         mSink->mParser->GetDTD(getter_AddRefs(dtd));
-        dtd->IntTagToStringTag(nsHTMLTag(mStack[stackPos].mType), str);
+        nsDependentString str(dtd->IntTagToStringTag(nsHTMLTag(mStack[stackPos].mType)));
         
         SINK_TRACE(SINK_TRACE_REFLOW,
                    ("SinkContext::FlushTags: tag=%s from newindex=%d at stackPos=%d", 
