@@ -24,6 +24,7 @@
 #include "nsWebBrowser.h"
 #include "nsDocShellTreeOwner.h"
 
+#include "nsIAllocator.h"
 #include "nsIScriptGlobalObject.h"
 
 nsCommandHandler::nsCommandHandler() :
@@ -55,15 +56,19 @@ nsresult nsCommandHandler::GetCommandHandler(nsICommandHandler **aCommandHandler
     nsCOMPtr<nsIDocShell> docShell;
     globalObj->GetDocShell(getter_AddRefs(docShell));
 
-    // Find the treeowner
+    // Get the document tree owner
+
     nsCOMPtr<nsIDocShellTreeItem> docShellAsTreeItem(do_QueryInterface(docShell));
     nsIWebBrowser *webBrowser = nsnull;
-
     nsIDocShellTreeOwner *treeOwner = nsnull;
     docShellAsTreeItem->GetTreeOwner(&treeOwner);
-    
-    // See if the client on the tree owner implements nsICommandHandler
-    if (treeOwner)
+
+    // Make sure the tree owner is an an nsDocShellTreeOwner object
+    // by QI'ing for a hidden interface. If it doesn't have the interface
+    // then it's not safe to do the casting.
+
+    nsCOMPtr<nsICDocShellTreeOwner> realTreeOwner(do_QueryInterface(treeOwner));
+    if (realTreeOwner)
     {
         nsDocShellTreeOwner *tree = NS_STATIC_CAST(nsDocShellTreeOwner *, treeOwner);
         if (tree->mTreeOwner)
@@ -73,12 +78,15 @@ nsresult nsCommandHandler::GetCommandHandler(nsICommandHandler **aCommandHandler
             NS_RELEASE(treeOwner);
             return rv;
         }
+     
         NS_RELEASE(treeOwner);
      }
+
     *aCommandHandler = nsnull;
 
     return NS_OK;
 }
+
 
 NS_IMPL_ADDREF(nsCommandHandler)
 NS_IMPL_RELEASE(nsCommandHandler)
@@ -115,9 +123,12 @@ NS_IMETHODIMP nsCommandHandler::SetWindow(nsIDOMWindow * aWindow)
 /* void do (in string aCommand, in string aStatus); */
 NS_IMETHODIMP nsCommandHandler::Exec(const char *aCommand, const char *aStatus)
 {
+    NS_ENSURE_ARG_POINTER(aCommand);
+
     nsCOMPtr<nsICommandHandler> commandHandler;
     GetCommandHandler(getter_AddRefs(commandHandler));
 
+    // Call the client's command handler to deal with this command
     if (commandHandler)
     {
         return commandHandler->Exec(aCommand, aStatus);
@@ -127,15 +138,24 @@ NS_IMETHODIMP nsCommandHandler::Exec(const char *aCommand, const char *aStatus)
 }
 
 /* void query (in string aCommand, in string aStatus); */
-NS_IMETHODIMP nsCommandHandler::Query(const char *aCommand, const char *aStatus)
+NS_IMETHODIMP nsCommandHandler::Query(const char *aCommand, const char *aStatus, char **aResult)
 {
+    NS_ENSURE_ARG_POINTER(aCommand);
+    NS_ENSURE_ARG_POINTER(aResult);
+
     nsCOMPtr<nsICommandHandler> commandHandler;
     GetCommandHandler(getter_AddRefs(commandHandler));
 
+    // Call the client's command handler to deal with this command
     if (commandHandler)
     {
-        return commandHandler->Query(aCommand, aStatus);
+        *aResult = nsnull;
+        return commandHandler->Query(aCommand, aStatus, aResult);
     }
+
+    // Return an empty string
+    const char szEmpty[] = "";
+    *aResult = (char *) nsAllocator::Clone(szEmpty, sizeof(szEmpty));
 
     return NS_OK;
 }
