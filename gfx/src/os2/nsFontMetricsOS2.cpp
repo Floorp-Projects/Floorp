@@ -844,13 +844,6 @@ HDC   ps = NULL;
 
    mAveCharWidth       = NSToCoordRound( fm.lAveCharWidth * dev2app);
 
-#ifdef MOZ_MATHML
-   PRInt32 Degrees     = fm.sCharSlope >> 7;    // 9 bits (-180 .. 180)
-   PRInt32 Minutes     = fm.sCharSlope & 0x7F;  // 7 bits (0 .. 59)
-   float   Angle       = (float)Degrees + ((float)Minutes / 60.0f);
-   mItalicSlope        = tanf (Angle * 3.141592 / 180.0);
-#endif
-
    // Cache the width of a single space.
   SIZEL  size;
   ::GetTextExtentPoint32(ps, " ", 1, &size);
@@ -872,14 +865,6 @@ nsresult nsFontMetricsOS2::GetSpaceWidth(nscoord &aSpaceWidth)
 }
 
 // Other metrics
-#ifdef MOZ_MATHML
-NS_IMETHODIMP nsFontMetricsOS2::GetItalicSlope(float& aResult)
-{
-  aResult = mItalicSlope;
-  return NS_OK;
-}
-#endif
-
 NS_IMETHODIMP nsFontMetricsOS2::GetXHeight( nscoord &aResult)
 {
    aResult = mXHeight;
