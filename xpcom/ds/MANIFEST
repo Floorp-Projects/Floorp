@@ -21,6 +21,7 @@ nsQuickSort.h
 nsStr.h
 nsString.h
 nsString2.h
+nsSupportsPrimitives.h
 nsTime.h
 nsUnitConversion.h
 nsVector.h

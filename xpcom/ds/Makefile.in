@@ -36,6 +36,7 @@ XPIDLSRCS =			\
     nsIObserver.idl        \
     nsIObserverService.idl \
 	nsISupportsArray.idl	\
+	nsISupportsPrimitives.idl	\
 	$(NULL)
 
 CPPSRCS =				\
@@ -63,6 +64,7 @@ CPPSRCS =				\
 	nsString2.cpp                 \
 	nsSupportsArray.cpp           \
 	nsSupportsArrayEnumerator.cpp \
+	nsSupportsPrimitives.cpp      \
 	nsUnicharBuffer.cpp           \
 	nsVariant.cpp                 \
 	nsVoidArray.cpp               \
@@ -94,6 +96,7 @@ EXPORTS = \
 	nsStr.h                    \
 	nsString.h                 \
 	nsString2.h                \
+	nsSupportsPrimitives.h     \
 	nsTime.h                   \
 	nsUnitConversion.h         \
 	nsVector.h                 \

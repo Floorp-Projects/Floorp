@@ -47,6 +47,7 @@ EXPORTS =                          \
         nsStr.h                    \
         nsString.h                 \
         nsString2.h                \
+        nsSupportsPrimitives.h     \
         nsTime.h                   \
         nsUnitConversion.h         \
         nsVector.h                 \
@@ -63,6 +64,7 @@ XPIDLSRCS =                 \
 		.\nsIObserver.idl   \
 		.\nsIObserverService.idl   \
 	.\nsISupportsArray.idl	\
+	.\nsISupportsPrimitives.idl	\
         $(NULL)
 
 ################################################################################
@@ -103,6 +105,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsString2.obj                 \
         .\$(OBJDIR)\nsSupportsArray.obj           \
         .\$(OBJDIR)\nsSupportsArrayEnumerator.obj \
+        .\$(OBJDIR)\nsSupportsPrimitives.obj      \
         .\$(OBJDIR)\nsUnicharBuffer.obj           \
         .\$(OBJDIR)\nsVariant.obj                 \
         .\$(OBJDIR)\nsVoidArray.obj               \
