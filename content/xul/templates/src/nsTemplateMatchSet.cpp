@@ -119,7 +119,10 @@ nsTemplateMatchRefSet::Finish()
             ? PRInt32(mStorageElements.mInlineMatches.mCount)
             : mStorageElements.mTable.entryCount;
 
-        PRInt32 count = PRInt32(gCountDistribution[entries]);
+        PRInt32 count = (entries < gCountDistribution.Count())
+            ? PRInt32(gCountDistribution[entries])
+            : 0;
+
         gCountDistribution.ReplaceElementAt((void*) ++count, entries);
 
         --gCount;
