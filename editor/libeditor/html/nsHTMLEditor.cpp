@@ -45,7 +45,7 @@
 #include "nsIFileWidget.h" // for GetLocalFileURL stuff
 #include "nsWidgetsCID.h"
 #include "nsIDocumentEncoder.h"
-
+#include "nsIPresShell.h"
 
 static NS_DEFINE_IID(kInsertHTMLTxnIID, NS_INSERT_HTML_TXN_IID);
 
@@ -56,6 +56,7 @@ static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
 static NS_DEFINE_IID(kFileWidgetCID,  NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kHTMLEncoderCID, NS_HTML_ENCODER_CID);
+static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -63,11 +64,13 @@ static PRBool gNoisy = PR_FALSE;
 static const PRBool gNoisy = PR_FALSE;
 #endif
 
+
+
 nsHTMLEditor::nsHTMLEditor()
 {
 // Done in nsEditor
 // NS_INIT_REFCNT();
-}
+} 
 
 nsHTMLEditor::~nsHTMLEditor()
 {
@@ -513,12 +516,97 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 
 NS_IMETHODIMP nsHTMLEditor::OutputTextToString(nsString& aOutputString)
 {
-  return nsTextEditor::OutputTextToString(aOutputString);
+  nsCOMPtr<nsITextEncoder> encoder;
+  nsresult rv = nsComponentManager::CreateInstance(kTextEncoderCID,
+                                                   nsnull,
+                                                   nsIDocumentEncoder::GetIID(),
+                                                   getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = GetDocument(getter_AddRefs(domdoc));
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  nsString mimetype ("text/plain");
+
+  nsCOMPtr<nsIPresShell> shell;
+
+ 	rv = GetPresShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv)) {
+    rv = encoder->Init(shell,doc, mimetype);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+    
+
+  return encoder->EncodeToString(aOutputString);
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputHTMLToString(nsString& aOutputString)
 {
-#if defined(DEBUG_kostello) || defined(DEBUG_akkana)
+  nsCOMPtr<nsIHTMLEncoder> encoder;
+  nsresult rv = nsComponentManager::CreateInstance(kHTMLEncoderCID,
+                                                   nsnull,
+                                                   nsIDocumentEncoder::GetIID(),
+                                                   getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
+ 
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = GetDocument(getter_AddRefs(domdoc));
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  nsString mimetype ("text/html");
+
+  nsCOMPtr<nsIPresShell> shell;
+
+ 	rv = GetPresShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv)) {
+    rv = encoder->Init(shell,doc, mimetype);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  return encoder->EncodeToString(aOutputString);
+}
+
+NS_IMETHODIMP nsHTMLEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharset)
+{
+  nsCOMPtr<nsITextEncoder> encoder;
+  nsresult rv = nsComponentManager::CreateInstance(kTextEncoderCID,
+                                                   nsnull,
+                                                   nsIDocumentEncoder::GetIID(),
+                                                   getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = GetDocument(getter_AddRefs(domdoc));
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  nsString mimetype ("text/plain");
+
+  if (aCharset && aCharset->Length() != 0 && aCharset->Equals("null")==PR_FALSE)
+    encoder->SetCharset(*aCharset);
+
+  nsCOMPtr<nsIPresShell> shell;
+
+ 	rv = GetPresShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv)) {
+    rv = encoder->Init(shell,doc, mimetype);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  return encoder->EncodeToStream(aOutputStream);
+}
+
+NS_IMETHODIMP nsHTMLEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharset)
+{
   nsCOMPtr<nsIHTMLEncoder> encoder;
   nsresult rv = nsComponentManager::CreateInstance(kHTMLEncoderCID,
                                                    nsnull,
@@ -534,24 +622,19 @@ NS_IMETHODIMP nsHTMLEditor::OutputHTMLToString(nsString& aOutputString)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
   nsString mimetype ("text/html");
 
-  rv = encoder->Init(doc, mimetype);
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsIPresShell> shell;
 
-  return encoder->EncodeToString(aOutputString);
-#else
-  return nsTextEditor::OutputHTMLToString(aOutputString);
-#endif
-}
+  if (aCharset && aCharset->Length() != 0 && aCharset->Equals("null")==PR_FALSE)
+    encoder->SetCharset(*aCharset);
 
-NS_IMETHODIMP nsHTMLEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride)
-{
-  return nsTextEditor::OutputTextToStream(aOutputStream,aCharsetOverride);
-}
+ 	rv = GetPresShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv)) {
+    rv = encoder->Init(shell,doc, mimetype);
+    if (NS_FAILED(rv))
+      return rv;
+  }
 
-NS_IMETHODIMP nsHTMLEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride)
-{
-  return nsTextEditor::OutputHTMLToStream(aOutputStream,aCharsetOverride);
+  return encoder->EncodeToStream(aOutputStream);
 }
 
 
@@ -1809,13 +1892,13 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
 
   if (aTagName == "" || !aReturn)
     return NS_ERROR_NULL_POINTER;
-
+    
   nsAutoString TagName = aTagName;
   TagName.ToLowerCase();
   nsAutoString realTagName;
 
-  PRBool isHREF = (TagName.Equals("href"));
-  PRBool isAnchor = (TagName.Equals("anchor"));
+  PRBool isHREF = (TagName == "href");
+  PRBool isAnchor = (TagName == "anchor");
   if (isHREF || isAnchor)
   {
     realTagName = "a";
@@ -1836,20 +1919,16 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   //  ATTRIBUTES SAVED IN PREFS?
   if (isAnchor)
   {
-
     // TODO: Get the text of the selection and build a suggested Name
     //  Replace spaces with "_" 
-  } else if (TagName.Equals("hr"))
-  {
-    
   }
-  
   // ADD OTHER DEFAULT ATTRIBUTES HERE
 
   if (NS_SUCCEEDED(res))
   {
     *aReturn = newElement;
   }
+
   return res;
 }
 
@@ -1880,12 +1959,15 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
     }
   }
 
-  res = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
+  DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
   if (NS_SUCCEEDED(res))
   {
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(aElement);
+
     res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
+
   }
+  
   return res;
 }
 
@@ -2165,19 +2247,8 @@ NS_IMETHODIMP nsHTMLEditor::GetLocalFileURL(nsIDOMWindow* aParent, const nsStrin
 
 
   nsCOMPtr<nsIFileWidget>  fileWidget;
-  nsAutoString title("");
-
-  // Get strings from editor resource bundle
-  nsString name;
-  if (htmlFilter)
-  {
-    name = "OpenHTMLFile";
-  } else if (imgFilter)
-  {
-    name = "SelectImageFile";
-  }
-  GetString(name, title);
-    
+  // TODO: WHERE TO WE PUT GLOBAL STRINGS TO BE LOCALIZED?
+  nsString title(htmlFilter ? "Open HTML file" : "Select Image File");
   nsFileSpec fileSpec;
   // TODO: GET THE DEFAULT DIRECTORY FOR DIFFERENT TYPES FROM PREFERENCES
   nsFileSpec aDisplayDirectory;
