@@ -66,6 +66,7 @@ class nsICalendarShell;
 #include "nsCalDayViewCanvas.h"
 #include "nsCalMonthViewCanvas.h"
 #include "nsCalMultiDayViewCanvas.h"
+#include "nsCalMultiUserViewCanvas.h"
 #include "nsCalTodoComponentCanvas.h"
 #include "nsCalTimebarHeading.h"
 #include "nsCalTimebarUserHeading.h"

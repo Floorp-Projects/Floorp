@@ -39,7 +39,7 @@ static NS_DEFINE_IID(kCalMultiDayViewCanvasCID, NS_CAL_MULTIDAYVIEWCANVAS_CID);
 static NS_DEFINE_IID(kIXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
 static NS_DEFINE_IID(kCalTimebarCanvasCID, NS_CAL_TIMEBARCANVAS_CID);
 
-nsCalMultiDayViewCanvas :: nsCalMultiDayViewCanvas(nsISupports* outer) : nsCalTimebarComponentCanvas(outer)
+nsCalMultiDayViewCanvas :: nsCalMultiDayViewCanvas(nsISupports* outer) : nsCalMultiViewCanvas(outer)
 {
   NS_INIT_REFCNT();
   mNumberViewableDays = 0; 
@@ -76,7 +76,7 @@ nsresult nsCalMultiDayViewCanvas::QueryInterface(REFNSIID aIID, void** aInstance
     AddRef();                                                            
     return NS_OK;                                                        
   }                                                                      
-  return (nsCalTimebarComponentCanvas::QueryInterface(aIID, aInstancePtr));
+  return (nsCalMultiViewCanvas::QueryInterface(aIID, aInstancePtr));
 }
 
 NS_IMPL_ADDREF(nsCalMultiDayViewCanvas)
@@ -88,19 +88,13 @@ NS_IMPL_RELEASE(nsCalMultiDayViewCanvas)
 
 nsresult nsCalMultiDayViewCanvas :: Init()
 {
-  /*
-   * Call the Init method of the standard canvas, since
-   * we'll be dealing with child canvas's
-   */
-
-  nsXPFCCanvas::Init();
 
   /*
    * We also need a context.  Maybe this should be specifically
    * done rather than a part of Init.
    */
 
-  nsCalTimebarComponentCanvas::Init();
+  nsCalMultiViewCanvas::Init();
 
   /*
    * Create the default number of viewable day canvas's as children
@@ -118,7 +112,7 @@ nsresult nsCalMultiDayViewCanvas :: Init()
 nsEventStatus nsCalMultiDayViewCanvas :: PaintBackground(nsIRenderingContext& aRenderingContext,
                                                          const nsRect& aDirtyRect)
 {
-  return (nsXPFCCanvas :: PaintBackground(aRenderingContext,aDirtyRect));  
+  return (nsCalMultiViewCanvas :: PaintBackground(aRenderingContext,aDirtyRect));  
 }
 
 nsresult nsCalMultiDayViewCanvas :: SetNumberViewableDays(PRUint32 aNumberViewableDays)
@@ -690,7 +684,7 @@ nsresult nsCalMultiDayViewCanvas::Action(nsIXPFCCommand * aCommand)
     }
   }
   
-  return (nsXPFCCanvas::Action(aCommand));
+  return (nsCalMultiViewCanvas::Action(aCommand));
 
 }
 
@@ -712,5 +706,5 @@ nsresult nsCalMultiDayViewCanvas :: SetParameter(nsString& aKey, nsString& aValu
 
   }
 
-  return (nsCalTimebarComponentCanvas::SetParameter(aKey, aValue));
+  return (nsCalMultiViewCanvas::SetParameter(aKey, aValue));
 }

@@ -73,7 +73,7 @@ nsresult nsCalTimebarCanvas :: Init()
 
   mTimeContext->Init();
 
-  return res;    
+  return (nsCalCanvas::Init());    
 }
 
 PRUint32 nsCalTimebarCanvas::GetVisibleMajorIntervals()

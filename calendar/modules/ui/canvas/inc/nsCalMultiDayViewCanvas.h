@@ -19,11 +19,12 @@
 #ifndef nsCalMultiDayViewCanvas_h___
 #define nsCalMultiDayViewCanvas_h___
 
+#include "nsCalMultiViewCanvas.h"
 #include "nsCalTimebarComponentCanvas.h"
 #include "nsCalTimebarCanvas.h"
 #include "nsDateTime.h"
 
-class nsCalMultiDayViewCanvas : public nsCalTimebarComponentCanvas
+class nsCalMultiDayViewCanvas : public nsCalMultiViewCanvas
 {
 
 public:

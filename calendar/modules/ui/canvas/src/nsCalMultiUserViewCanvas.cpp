@@ -16,32 +16,41 @@
  * Reserved.
  */
 
-#include "nsCalCanvas.h"
+#include "nsCalMultiUserViewCanvas.h"
+#include "nsCalTimebarTimeHeading.h"
+#include "nsBoxLayout.h"
 #include "nsCalUICIID.h"
+#include "nsIVector.h"
+#include "nsIIterator.h"
+#include "nsCalToolkit.h"
+#include "nsCalDayListCommand.h"
+#include "nsCalNewModelCommand.h"
+#include "nscalstrings.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kCalCanvasCID, NS_CAL_CANVAS_CID);
 
-nsCalCanvas :: nsCalCanvas(nsISupports* outer) : nsXPFCCanvas(outer)
+static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kCalMultiViewCanvasCID,  NS_CAL_MULTIVIEWCANVAS_CID);
+static NS_DEFINE_IID(kIXPFCCanvasIID,         NS_IXPFC_CANVAS_IID);
+static NS_DEFINE_IID(kCalTimebarCanvasCID,    NS_CAL_TIMEBARCANVAS_CID);
+
+nsCalMultiUserViewCanvas :: nsCalMultiUserViewCanvas(nsISupports* outer) : nsCalMultiViewCanvas(outer)
 {
   NS_INIT_REFCNT();
-  mUser = nsnull;
 }
 
-nsCalCanvas :: ~nsCalCanvas()
+nsCalMultiUserViewCanvas :: ~nsCalMultiUserViewCanvas()
 {
-  NS_IF_RELEASE(mUser);
 }
 
-nsresult nsCalCanvas::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+nsresult nsCalMultiUserViewCanvas::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  static NS_DEFINE_IID(kClassIID, kCalCanvasCID); 
+  static NS_DEFINE_IID(kClassIID, kCalMultiViewCanvasCID);                         
   if (aIID.Equals(kClassIID)) {                                          
-    *aInstancePtr = (void*) (nsCalCanvas *)this;                                        
+    *aInstancePtr = (void*) this;                                        
     AddRef();                                                            
     return NS_OK;                                                        
   }                                                                      
@@ -50,42 +59,23 @@ nsresult nsCalCanvas::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     AddRef();                                                            
     return NS_OK;                                                        
   }                                                                      
-  return (nsXPFCCanvas::QueryInterface(aIID, aInstancePtr));
+  if (aIID.Equals(kIXPFCCanvasIID)) {                                      
+    *aInstancePtr = (void*) (this);                        
+    AddRef();                                                            
+    return NS_OK;                                                        
+  }                                                                      
+  return (nsCalMultiViewCanvas::QueryInterface(aIID, aInstancePtr));
 }
 
-NS_IMPL_ADDREF(nsCalCanvas)
-NS_IMPL_RELEASE(nsCalCanvas)
+NS_IMPL_ADDREF(nsCalMultiUserViewCanvas)
+NS_IMPL_RELEASE(nsCalMultiUserViewCanvas)
 
-nsresult nsCalCanvas :: Init()
+/*
+ *
+ */
+
+nsresult nsCalMultiUserViewCanvas :: Init()
 {
-  return (nsXPFCCanvas::Init()); 
+  return (nsCalMultiViewCanvas::Init());
 }
 
-nsresult nsCalCanvas :: GetUser(nsICalendarUser *& aUser)
-{
-  aUser = mUser;
-  return NS_OK;    
-}
-
-nsresult nsCalCanvas :: SetUser(nsICalendarUser * aUser)
-{
-  mUser = aUser;
-  return NS_OK;    
-}
-
-
-nsIModel * nsCalCanvas :: GetModel()
-{
-  return (nsXPFCCanvas::GetModel());
-}
-
-nsresult nsCalCanvas :: GetModelInterface(const nsIID &aModelIID, nsISupports * aInterface)
-{
-  return (nsXPFCCanvas::GetModelInterface(aModelIID,aInterface));
-}
-
-
-nsresult nsCalCanvas :: SetModel(nsIModel * aModel)
-{
-  return (nsXPFCCanvas::SetModel(aModel));
-}

@@ -27,6 +27,7 @@
 #include "nsCalTodoComponentCanvas.h"
 #include "nsCalMonthContextController.h"
 #include "nsCalMultiDayViewCanvas.h"
+#include "nsCalMultiUserViewCanvas.h"
 #include "nsCalCommandCanvas.h"
 #include "nsXPFCHTMLCanvas.h"
 #include "nsICalendarShell.h"
@@ -47,6 +48,7 @@ static NS_DEFINE_IID(kCCalTimebarContextControllerCID, NS_CAL_TIMEBAR_CONTEXT_CO
 static NS_DEFINE_IID(kCCalMonthContextControllerCID, NS_CAL_MONTH_CONTEXT_CONTROLLER_CID);
 static NS_DEFINE_IID(kCCalTodoComponentCanvasCID, NS_CAL_TODOCOMPONENTCANVAS_CID);
 static NS_DEFINE_IID(kCCalMultiDayViewCanvasCID, NS_CAL_MULTIDAYVIEWCANVAS_CID);
+static NS_DEFINE_IID(kCCalMultiUserViewCanvasCID, NS_CAL_MULTIUSERVIEWCANVAS_CID);
 static NS_DEFINE_IID(kCalMonthViewCanvasCID, NS_CAL_MONTHVIEWCANVAS_CID);
 static NS_DEFINE_IID(kCCalCommandCanvasCID, NS_CAL_COMMANDCANVAS_CID);
 static NS_DEFINE_IID(kCalTimebarUserHeadingCID,     NS_CAL_TIMEBARUSERHEADING_CID);
@@ -54,6 +56,7 @@ static NS_DEFINE_IID(kCalTimebarScaleCID,     NS_CAL_TIMEBARSCALE_CID);
 static NS_DEFINE_IID(kCalTodoComponentCanvasCID,     NS_CAL_TODOCOMPONENTCANVAS_CID);
 static NS_DEFINE_IID(kCalCommandCanvasCID,     NS_CAL_COMMANDCANVAS_CID);
 static NS_DEFINE_IID(kCalMultiDayViewCanvasCID,     NS_CAL_MULTIDAYVIEWCANVAS_CID);
+static NS_DEFINE_IID(kCalMultiUserViewCanvasCID,     NS_CAL_MULTIUSERVIEWCANVAS_CID);
 static NS_DEFINE_IID(kCalTimebarCanvasCID, NS_CAL_TIMEBARCANVAS_CID);
 
 static NS_DEFINE_IID(kCalContextcontrollerIID, NS_ICAL_CONTEXT_CONTROLLER_IID);
@@ -392,6 +395,10 @@ NS_IMETHODIMP nsCalXMLContentSink::CIDFromTag(eCalXMLTags tag, nsCID &aClass)
       aClass = kCalMultiDayViewCanvasCID;
       break;
 
+    case eCalXMLTag_multiuserviewcanvas:
+      aClass = kCalMultiUserViewCanvasCID;
+      break;
+
     case eCalXMLTag_monthviewcanvas:
       aClass = kCalMonthViewCanvasCID;
       break;
@@ -521,8 +528,11 @@ NS_IMETHODIMP nsCalXMLContentSink::ApplyContext(nsIXPFCCanvas * aCanvas, nsICalT
     time_canvas->SetTimeContext(aContext);
 
     /*
+     * XXX: Should this be for all Multi Views?
+     *
      * If this is a MultiView Canvas, stop here
      */
+
     static NS_DEFINE_IID(kCalMultiDayViewCanvasCID, NS_CAL_MULTIDAYVIEWCANVAS_CID);
     nsCalMultiDayViewCanvas * multi;
     nsresult res = time_canvas->QueryInterface(kCalMultiDayViewCanvasCID,(void**)&multi);

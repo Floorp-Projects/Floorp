@@ -28,6 +28,8 @@ CPPSRCS = \
 	nsCalTimebarTimeHeading.cpp \
 	nsCalTimebarScale.cpp \
 	nsCalMultiDayViewCanvas.cpp \
+	nsCalMultiUserViewCanvas.cpp \
+	nsCalMultiViewCanvas.cpp \
 	nsCalDayViewCanvas.cpp \
 	nsCalMonthViewCanvas.cpp \
     nsCalCanvas.cpp \

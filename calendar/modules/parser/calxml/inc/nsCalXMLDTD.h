@@ -43,6 +43,7 @@ enum eCalXMLTags
   eCalXMLTag_mcc,
   eCalXMLTag_monthviewcanvas,
   eCalXMLTag_multidayviewcanvas,
+  eCalXMLTag_multiuserviewcanvas,
   eCalXMLTag_object,
   eCalXMLTag_panel,
   eCalXMLTag_rootpanel,

@@ -40,6 +40,7 @@
 #include "nsX400Parser.h"
 #include "nscal.h"
 #include "nsCalMultiDayViewCanvas.h"
+#include "nsCalMultiUserViewCanvas.h"
 #include "nsLayer.h"
 #include "nsCalTimebarCanvas.h"
 #include "nsCalUICIID.h"
@@ -779,6 +780,7 @@ nsresult nsCalendarContainer::RegisterFactories()
   nsRepository::RegisterFactory(kCCalDayViewCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalMonthViewCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalMultiDayViewCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalMultiUserViewCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCalTimebarHeadingCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCalTimebarUserHeadingCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCalTimebarTimeHeadingCID, CALUI_DLL, PR_FALSE, PR_FALSE);
