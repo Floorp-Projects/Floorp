@@ -94,6 +94,10 @@ extern void *sbrk(int);
 
 #elif defined(UNIXWARE)
 #undef JS_HAVE_LONG_LONG
+
+#elif defined(VMS) && defined(__ALPHA)
+#define JS_HAVE_LONG_LONG
+
 #endif
 
 #endif /* XP_UNIX */
