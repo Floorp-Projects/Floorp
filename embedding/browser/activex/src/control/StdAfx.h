@@ -117,7 +117,6 @@ extern CComModule _Module;
 #include <mshtml.h>
 #include <mshtmhst.h>
 #include <docobj.h>
-#include <winsock2.h>
 
 // STL headers
 #include <vector>
