@@ -218,7 +218,7 @@ PRBool nsRandomAccessInputStream::readline(char* s, PRInt32 n)
         TidyEndOfLine(tp);
         bytesRead = (tp - s);
     }
-    else if (!eof())
+    else if (!eof() && n-1 == bytesRead)
         bufferLargeEnough = PR_FALSE;
     position += bytesRead;
     seek(position);
