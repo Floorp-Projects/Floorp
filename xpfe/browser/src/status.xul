@@ -27,20 +27,20 @@
 <broadcaster id="Browser:LoadingProgress"/>
 
 <html:center>
-<html:table border cols=3 width="99%" style="color-background:rgb(192,192,192);">
+<html:table border="" cols="3" width="99%" style="color-background:rgb(192,192,192);">
 <html:tr>
-	<html:td width="3%"  nowrap style="border: 1px inset rgb(192,192,192);">
+	<html:td width="3%"  nowrap="" style="border: 1px inset rgb(192,192,192);">
 		<html:button onclick="kickProgressMeter()" height="12">
 			X
 		</html:button>
 	</html:td>
-	<html:td width="15%" nowrap style="border: 1px inset rgb(192,192,192);">
+	<html:td width="15%" nowrap="" style="border: 1px inset rgb(192,192,192);">
 		<progressmeter id="meter" mode="normal" value="61">
 			<observes element="Browser:LoadingProgress" attribute="value" />
             <observes element="Browser:LoadingProgress" attribute="mode" />                     
         </progressmeter>
 	</html:td>
-	<html:td width="82%" nowrap style="border: 1px inset rgb(192,192,192);">
+	<html:td width="82%" nowrap="" style="border: 1px inset rgb(192,192,192);">
 		Document: Done (even a stopped clock is right twice a day)
 	</html:td>
 </html:tr>

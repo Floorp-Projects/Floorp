@@ -215,7 +215,7 @@
 
 		dump("FindBookmarkShortcut: in='" + document.getElementById('urlbar').value + "'  out='" + shortcutURL + "'\n");
 
-		if ((shortcutURL != null) && (shortcutURL != ""))
+		if ((shortcutURL != null) &amp;&amp; (shortcutURL != ""))
 		{
 			document.getElementById('urlbar').value = shortcutURL;
 		}
@@ -658,7 +658,7 @@
         }
         function onStopBinding() {
             bindCount--;
-            if ( bindCount < 0 ) {
+            if ( bindCount &lt; 0 ) {
                 // Something unusual occurred (stop/back?).
                 bindCount = 0;
             }
@@ -675,7 +675,7 @@
         function onProgress() {
             var throbber = document.getElementById("Browser:Throbber");
             var meter    = document.getElementById("Browser:LoadingProgress");
-            if ( throbber && meter ) {
+            if ( throbber &amp;&amp; meter ) {
                 var busy = throbber.getAttribute("busy");
                 if ( busy == "true" ) {
                     mode = "undetermined";
