@@ -28,6 +28,7 @@ IS_COMPONENT =  1
 CPPSRCS =                       \
     nsEditor.cpp                \
     nsTextEditor.cpp            \
+    nsTextEditRules.cpp         \
     nsEditorEventListeners.cpp  \
     nsEditProperty.cpp          \
     nsEditFactory.cpp           \
