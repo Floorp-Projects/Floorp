@@ -52,13 +52,14 @@ public class IRFactory {
     /**
      * Script (for associating file/url names with toplevel scripts.)
      */
-    public Object createScript(Object body, String sourceName,
-                               int baseLineno, int endLineno, Object source)
+    public Object
+    createScript(Object body, VariableTable vars, String sourceName,
+                 int baseLineno, int endLineno, String source)
     {
         Node result = Node.newString(TokenStream.SCRIPT, sourceName);
         Node children = ((Node) body).getFirstChild();
-        if (children != null)
-            result.addChildrenToBack(children);
+        if (children != null) { result.addChildrenToBack(children); }
+        result.putProp(Node.VARS_PROP, vars);
         result.putProp(Node.SOURCENAME_PROP, sourceName);
         result.putIntProp(Node.BASE_LINENO_PROP, baseLineno);
         result.putIntProp(Node.END_LINENO_PROP, endLineno);
@@ -206,7 +207,7 @@ public class IRFactory {
         return new FunctionNode(name, (Node) statements);
     }
 
-    public Object createFunction(String name, ObjArray argNames,
+    public Object createFunction(String name, VariableTable vars,
                                  Object statements,
                                  String sourceName, int baseLineno,
                                  int endLineno, Object source,
@@ -216,7 +217,7 @@ public class IRFactory {
             name = "";
         }
         FunctionNode f = (FunctionNode) createFunctionNode(name, statements);
-        f.argNames = argNames;
+        f.itsVariableTable = vars;
         f.setFunctionType(functionType);
         f.putProp(Node.SOURCENAME_PROP, sourceName);
         f.putIntProp(Node.BASE_LINENO_PROP, baseLineno);

@@ -69,11 +69,7 @@ public class VariableTable {
     public void addParameter(String pName) {
         // Check addParameter is not called after addLocal
         if (varStart != itsVariables.size()) Context.codeBug();
-        int pIndex = itsVariableNames.get(pName, -1);
-        if (itsVariableNames.has(pName)) {
-            String message = Context.getMessage1("msg.dup.parms", pName);
-            Context.reportWarning(message, null, 0, null, 0);
-        }
+        // Allow non-unique parameter names: use the last occurrence
         int index = varStart++;
         itsVariables.add(pName);
         itsVariableNames.put(pName, index);

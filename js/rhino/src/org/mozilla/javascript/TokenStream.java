@@ -1352,7 +1352,7 @@ public class TokenStream {
         }
     }
 
-    private void reportSyntaxWarning(String messageProperty, Object[] args) {
+    void reportSyntaxWarning(String messageProperty, Object[] args) {
         String message = Context.getMessage(messageProperty, args);
         Context.reportWarning(message, getSourceName(),
                               getLineno(), getLine(), getOffset());

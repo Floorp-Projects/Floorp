@@ -104,6 +104,7 @@ class Parser {
         this.ok = true;
         fn_sourceTop = 0;
         fn_functionNumber = 0;
+        fn_vars = new VariableTable();
 
         int tt;          // last token from getToken();
         int baseLineno = ts.getLineno();  // line number where source starts
@@ -146,7 +147,7 @@ class Parser {
 
         String source = sourceToString(0);
         sourceBuffer = null; // To help GC
-        pn = nf.createScript(pn, ts.getSourceName(),
+        pn = nf.createScript(pn, fn_vars, ts.getSourceName(),
                              baseLineno, ts.getLineno(), source);
         return pn;
     }
@@ -240,11 +241,14 @@ class Parser {
         // function to parent source
         int saved_sourceTop = fn_sourceTop;
         int saved_functionNumber = fn_functionNumber;
-        ObjArray args = new ObjArray();
+        VariableTable saved_vars = fn_vars;
+        VariableTable new_vars = new VariableTable();
+
         Object body;
         String source;
         try {
             fn_functionNumber = 0;
+            fn_vars = new_vars;
 
             // FUNCTION as the first token in a Source means it's a function
             // definition, and not a reference.
@@ -260,7 +264,11 @@ class Parser {
                     first = false;
                     mustMatchToken(ts, ts.NAME, "msg.no.parm");
                     String s = ts.getString();
-                    args.add(s);
+                    if (new_vars.hasVariable(s)) {
+                        Object[] msgArgs = { s };
+                        ts.reportSyntaxWarning("msg.dup.parms", msgArgs);
+                    }
+                    new_vars.addParameter(s);
                     sourceAddString(ts.NAME, s);
                 } while (ts.matchToken(ts.COMMA));
 
@@ -282,11 +290,12 @@ class Parser {
         finally {
             fn_sourceTop = saved_sourceTop;
             fn_functionNumber = saved_functionNumber;
+            fn_vars = saved_vars;
         }
 
         Object pn;
         if (memberExprNode == null) {
-            pn = nf.createFunction(name, args, body,
+            pn = nf.createFunction(name, new_vars, body,
                                    ts.getSourceName(),
                                    baseLineno, ts.getLineno(),
                                    source,
@@ -304,7 +313,7 @@ class Parser {
                 checkWellTerminatedFunction(ts);
             }
         } else {
-            pn = nf.createFunction(name, args, body,
+            pn = nf.createFunction(name, new_vars, body,
                                    ts.getSourceName(),
                                    baseLineno, ts.getLineno(),
                                    source,
@@ -877,6 +886,7 @@ class Parser {
             first = false;
 
             sourceAddString(ts.NAME, s);
+            fn_vars.addLocal(s);
             name = nf.createName(s);
 
             // omitted check for argument hiding
@@ -2275,6 +2285,8 @@ class Parser {
 
 // Nested function number
     private int fn_functionNumber;
+
+    private VariableTable fn_vars;
 
     private static final int TOP_LEVEL_SCRIPT_OR_FUNCTION = 0;
     private static final int CONSTRUCTED_FUNCTION = 1;

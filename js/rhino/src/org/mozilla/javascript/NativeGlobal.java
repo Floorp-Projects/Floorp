@@ -505,40 +505,33 @@ public class NativeGlobal implements IdFunctionMaster {
         String sourceName = ScriptRuntime.
             makeUrlForGeneratedScript(true, filename, lineNumber);
 
+        // Compile the reader with opt level of -1 to force interpreter
+        // mode.
+        int oldOptLevel = cx.getOptimizationLevel();
+        cx.setOptimizationLevel(-1);
+        Script script;
         try {
-            StringReader in = new StringReader((String) x);
-
-            // Compile the reader with opt level of -1 to force interpreter
-            // mode.
-            int oldOptLevel = cx.getOptimizationLevel();
-            cx.setOptimizationLevel(-1);
-            Script script;
-            try {
-                script = cx.compileReader(scope, in, sourceName, 1, null);
-            } finally {
-                cx.setOptimizationLevel(oldOptLevel);
-            }
-
-            // if the compile fails, an error has been reported by the
-            // compiler, but we need to stop execution to avoid
-            // infinite looping on while(true) { eval('foo bar') } -
-            // so we throw an EvaluatorException.
-            if (script == null) {
-                String message = Context.getMessage0("msg.syntax");
-                throw new EvaluatorException(message);
-            }
-
-            InterpretedScript is = (InterpretedScript) script;
-            is.itsData.itsFromEvalCode = true;
-            Object result = is.call(cx, scope, (Scriptable) thisArg,
-                                    ScriptRuntime.emptyArgs);
-
-            return result;
+            script = cx.compileString(scope, (String)x, sourceName, 1,
+                                      null);
+        } finally {
+            cx.setOptimizationLevel(oldOptLevel);
         }
-        catch (IOException ioe) {
-            // should never happen since we just made the Reader from a String
-            throw new RuntimeException("unexpected io exception");
+
+        // if the compile fails, an error has been reported by the
+        // compiler, but we need to stop execution to avoid
+        // infinite looping on while(true) { eval('foo bar') } -
+        // so we throw an EvaluatorException.
+        if (script == null) {
+            String message = Context.getMessage0("msg.syntax");
+            throw new EvaluatorException(message);
         }
+
+        InterpretedScript is = (InterpretedScript) script;
+        is.itsData.itsFromEvalCode = true;
+        Object result = is.call(cx, scope, (Scriptable) thisArg,
+                                ScriptRuntime.emptyArgs);
+
+        return result;
     }
 
 

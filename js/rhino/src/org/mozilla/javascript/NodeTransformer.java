@@ -64,15 +64,15 @@ public class NodeTransformer {
         loops = new ObjArray();
         loopEnds = new ObjArray();
         inFunction = tree.getType() == TokenStream.FUNCTION;
-        VariableTable vars = new VariableTable();
+        VariableTable vars;
         if (!inFunction) {
-            addVariables(tree, vars);
-            tree.putProp(Node.VARS_PROP, vars);
+            vars = (VariableTable)tree.getProp(Node.VARS_PROP);
+            checkVariables(tree, vars);
         } else {
             FunctionNode fnNode = (FunctionNode)tree;
-            addParameters(fnNode, vars);
-            addVariables(tree, vars);
-            fnNode.setVariableTable(vars);
+            vars = fnNode.getVariableTable();
+            checkVariables(tree, vars);
+            fnNode.markVariableTableReady();
         }
         irFactory = createIRFactory(ts, scope);
 
@@ -488,11 +488,10 @@ public class NodeTransformer {
         return tree;
     }
 
-    protected void addVariables(Node tree, VariableTable vars) {
-        // OPT: a whole pass to collect variables seems expensive.
+    private void checkVariables(Node tree, VariableTable vars) {
+        // OPT: a whole pass to check variables seems expensive.
         // Could special case to go into statements only.
         boolean inFunction = (tree.getType() == TokenStream.FUNCTION);
-        ObjToIntMap fNames = null;
         PreorderNodeIterator iter = new PreorderNodeIterator();
         for (iter.start(tree); !iter.done(); iter.next()) {
             Node node = iter.getCurrent();
@@ -508,25 +507,13 @@ public class NodeTransformer {
                 if (name == null)
                     continue;
                 vars.removeLocal(name);
-                if (fNames == null)
-                    fNames = new ObjToIntMap();
-                fNames.put(name, 0);
-            }
-            if (nodeType != TokenStream.VAR)
-                continue;
-            for (Node cursor = node.getFirstChild(); cursor != null;
-                 cursor = cursor.getNext())
-            {
-                String name = cursor.getString();
-                if (fNames == null || !fNames.has(name))
-                    vars.addLocal(name);
             }
         }
         if (inFunction) {
             FunctionNode fn = (FunctionNode)tree;
             String name = fn.getFunctionName();
             if (fn.getFunctionType() == FunctionNode.FUNCTION_EXPRESSION
-                && name != null && name.length() > 0 && vars.hasVariable(name))
+                && name != null && name.length() > 0 && !vars.hasVariable(name))
             {
                 // A function expression needs to have its name as a variable
                 // (if it isn't already allocated as a variable). See
@@ -541,17 +528,6 @@ public class NodeTransformer {
                                     new Node(TokenStream.PRIMARY,
                                              TokenStream.THISFN)));
                 block.addChildrenToFront(setFn);
-            }
-        }
-    }
-
-    protected void addParameters(FunctionNode fnNode, VariableTable vars) {
-        if (vars.getParameterCount() == 0) {
-            ObjArray argNames = fnNode.argNames;
-            // Add parameters
-            for (int i = 0, N = argNames.size(); i != N; ++i) {
-                String arg = (String)argNames.get(i);
-                vars.addParameter(arg);
             }
         }
     }

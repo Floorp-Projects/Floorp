@@ -53,12 +53,7 @@ public class FunctionNode extends Node {
         return itsVariableTable;
     }
 
-    public void setVariableTable(VariableTable variableTable) {
-        // Can do it only once
-        if (variableTable == null) Context.codeBug();
-        if (itsVariableTable != null) Context.codeBug();
-        itsVariableTable = variableTable;
-    }
+    protected void markVariableTableReady() { }
 
     public boolean requiresActivation() {
         return itsNeedsActivation;
@@ -104,7 +99,7 @@ public class FunctionNode extends Node {
     }
 
     public int getParameterCount() {
-        return argNames.size();
+        return itsVariableTable.getParameterCount();
     }
 
     protected VariableTable itsVariableTable;
@@ -112,5 +107,4 @@ public class FunctionNode extends Node {
     protected boolean itsCheckThis;
     protected int itsFunctionType;
     private String functionName;
-    ObjArray argNames;
 }

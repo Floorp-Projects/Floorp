@@ -47,13 +47,13 @@ class OptFunctionNode extends FunctionNode {
         itsClassName = className;
     }
 
-    public void setVariableTable(VariableTable variableTable) {
-        super.setVariableTable(variableTable);
-        int N = variableTable.size();
-        int parameterCount = variableTable.getParameterCount();
+    protected void markVariableTableReady() {
+        super.markVariableTableReady();
+        int N = itsVariableTable.size();
+        int parameterCount = itsVariableTable.getParameterCount();
         optVars = new OptLocalVariable[N];
         for (int i = 0; i != N; ++i) {
-            String name = variableTable.getVariable(i);
+            String name = itsVariableTable.getVariable(i);
             optVars[i] = new OptLocalVariable(name, i < parameterCount);
         }
     }
