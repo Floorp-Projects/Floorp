@@ -1,0 +1,14 @@
+interface BaseAppCore
+{
+/* IID: { 0xbe5c13bd, 0xba9f, 0x11d2, \
+    {0x96, 0xc4, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}} */
+	
+	readonly attribute wstring id;
+	
+	void BaseAppCore();
+	void Init(in wstring id);
+
+
+};
+
+

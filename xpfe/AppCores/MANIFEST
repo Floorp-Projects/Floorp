@@ -1,0 +1,10 @@
+#
+# This is a list of local files which get copied to the mozilla:dist:appcores directory
+#
+
+nsIDOMAppCores.h
+nsIDOMBaseAppCore.h
+nsIDOMMailCore.h
+nsIDOMToolbarCore.h
+nsIDOMBrowserApprCore.h
+nsAppCoresCIDs.h
