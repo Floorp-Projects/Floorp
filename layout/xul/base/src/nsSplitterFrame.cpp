@@ -60,7 +60,7 @@ public:
     nscoord current;
     nscoord changed;
     nsIFrame* child;
-    float flex;
+    PRInt32 flex;
     PRInt32 index;
 };
 
@@ -300,12 +300,16 @@ nsSplitterFrame::GetCursor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor)
 {
+   return nsBoxFrame::GetCursor(aPresContext, aPoint, aCursor);
+
+   /*
    if (IsHorizontal())
       aCursor = NS_STYLE_CURSOR_N_RESIZE;
    else
       aCursor = NS_STYLE_CURSOR_W_RESIZE;
-
+   
    return NS_OK;
+   */
 }
 
 NS_IMETHODIMP
