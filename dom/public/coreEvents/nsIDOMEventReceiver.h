@@ -43,6 +43,7 @@ public:
 
   NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
   NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult) = 0;
   NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult) = 0;
 
 };
