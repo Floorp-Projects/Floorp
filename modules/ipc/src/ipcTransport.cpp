@@ -161,6 +161,49 @@ ipcTransport::SpawnDaemon()
 #endif
 }
 
+nsresult
+ipcTransport::OnConnectFailure()
+{
+    if (mTimer)
+        return NS_OK;
+
+    nsresult rv;
+
+    //
+    // spawn daemon on connection failure
+    //
+    rv = SpawnDaemon();
+    if (NS_FAILED(rv)) {
+        LOG(("  failed to spawn daemon [rv=%x]\n", rv));
+        return rv;
+    }
+    mSpawnedDaemon = PR_TRUE;
+
+    //
+    // re-initialize connection after timeout
+    //
+    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) {
+        LOG(("  failed to create timer [rv=%x]\n", rv));
+        return rv;
+    }
+
+    // use a simple exponential growth algorithm 2^(n-1)
+    PRUint32 ms = 500 * (1 << (mConnectionAttemptCount - 1));
+    if (ms > 10000)
+        ms = 10000;
+
+    LOG(("  waiting %u milliseconds\n", ms));
+
+    rv = mTimer->Init(this, ms, nsITimer::TYPE_ONE_SHOT);
+    if (NS_FAILED(rv)) {
+        LOG(("  failed to initialize timer [rv=%x]\n", rv));
+        return rv;
+    }
+
+    return NS_OK;
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS0(ipcTransport)
 
 NS_IMETHODIMP

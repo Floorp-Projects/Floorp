@@ -43,6 +43,10 @@
 #include "ipcStringList.h"
 #include "ipcIDList.h"
 
+#ifdef XP_WIN
+#include <windows.h>
+#endif
+
 //-----------------------------------------------------------------------------
 // ipcClient
 //
@@ -80,6 +84,14 @@ public:
     //
     PRBool EnqueueOutboundMsg(ipcMessage *msg);
 
+#ifdef XP_WIN
+    PRUint32 PID() const { return mPID; }
+    void SetPID(PRUint32 pid) { mPID = pid; }
+
+    HWND Hwnd() const { return mHwnd; }
+    void SetHwnd(HWND hwnd) { mHwnd = hwnd; }
+#endif
+
 #ifdef XP_UNIX
     //
     // called to process a client file descriptor.  the value of pollFlags
@@ -102,10 +114,21 @@ private:
     PRUint32      mID;
     ipcStringList mNames;
     ipcIDList     mTargets;
+
+#ifdef XP_WIN
+    // on windows, we store the PID of the client process to help us determine
+    // the client from which a message originated.  each message has the PID
+    // encoded in it.
+    PRUint32      mPID;
+    
+    // the hwnd of the client's message window.
+    HWND          mHwnd;
+#endif
+
+#ifdef XP_UNIX
     ipcMessage   *mInMsg;    // buffer for incoming message
     ipcMessageQ   mOutMsgQ;  // outgoing message queue
 
-#ifdef XP_UNIX
     // keep track of the amount of the first message sent
     PRUint32      mSendOffset;
 

@@ -38,6 +38,16 @@
 #ifdef XP_UNIX
 #include <sys/types.h>
 #include <unistd.h>
+#define GETPID() ((PRUint32) getpid())
+#endif
+
+#ifdef XP_WIN
+#include <windows.h>
+#define GETPID() ((PRUint32) GetCurrentProcessId())
+#endif
+
+#ifndef GETPID
+#define GETPID 0
 #endif
 
 #include "prenv.h"
@@ -62,17 +72,11 @@ IPC_Log(const char *fmt, ... )
 {
     va_list ap;
     va_start(ap, fmt);
-    PRUint32 nb;
+    PRUint32 nb = 0;
     char buf[512];
 
     if (ipcLogPrefix[0])
-#ifdef XP_UNIX
-        nb = PR_snprintf(buf, sizeof(buf), "[%u] %s ", getpid(), ipcLogPrefix);
-#else
-        nb = PR_snprintf(buf, sizeof(buf), "%s ", ipcLogPrefix);
-#endif
-    else
-        nb = 0;
+        nb = PR_snprintf(buf, sizeof(buf), "[%u] %s ", GETPID(), ipcLogPrefix);
 
     PR_vsnprintf(buf + nb, sizeof(buf) - nb, fmt, ap);
     buf[sizeof(buf) - 1] = '\0';

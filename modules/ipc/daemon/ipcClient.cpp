@@ -46,6 +46,10 @@
 #include "ipcdUnix.h"
 #endif
 
+#ifdef XP_WIN
+#include "ipcdWin.h"
+#endif
+
 PRUint32 ipcClient::gLastID = 0;
 
 //
@@ -58,10 +62,13 @@ void
 ipcClient::Init()
 {
     mID = ++gLastID;
-    mInMsg = new ipcMessage();
 
     // every client must be able to handle IPCM messages.
     mTargets.Append(IPCM_TARGET);
+
+#ifdef XP_UNIX
+    mInMsg = new ipcMessage();
+#endif
 }
 
 //
@@ -70,11 +77,14 @@ ipcClient::Init()
 void
 ipcClient::Finalize()
 {
+    mNames.DeleteAll();
+    mTargets.DeleteAll();
+
+#ifdef XP_UNIX 
     if (mInMsg)
         delete mInMsg;
     mOutMsgQ.DeleteAll();
-    mNames.DeleteAll();
-    mTargets.DeleteAll();
+#endif
 }
 
 void
@@ -130,9 +140,13 @@ ipcClient::EnqueueOutboundMsg(ipcMessage *msg)
         return PR_FALSE;
     }
 
-    mOutMsgQ.Append(msg);
+#ifdef XP_WIN
+    IPC_SendMessageNow(this, msg);
+    delete msg;
+#endif
 
 #ifdef XP_UNIX
+    mOutMsgQ.Append(msg);
     //
     // the message was successfully put on the queue...
     //
