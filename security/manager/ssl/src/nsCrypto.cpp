@@ -89,8 +89,6 @@ NSSCleanupAutoPtrClass(CERTCertNicknames, CERT_FreeNicknames)
  */
 
 #define JS_ERROR       "error:"
-#define JS_ERROR_USER_CANCEL JS_ERROR"userCancel"
-#define JS_ERROR_NOCERT      JS_ERROR"noMatchingCert"
 #define JS_ERROR_INTERNAL  JS_ERROR"internalError"
 
 #undef REPORT_INCORRECT_NUM_ARGS
@@ -2114,7 +2112,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
 {
   // XXX This code should return error codes, but we're keeping this
   //     backwards compatible with NS4.x and so we can't throw exceptions.
-  NS_NAMED_LITERAL_STRING(internalError, JS_ERROR_INTERNAL);
+  NS_NAMED_LITERAL_STRING(internalError, "error:internalError");
 
   aResult.Truncate();
 
@@ -2199,7 +2197,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
   }
 
   if (!certList || CERT_LIST_EMPTY(certList)) {
-    aResult.Append(NS_LITERAL_STRING(JS_ERROR_NOCERT));
+    aResult.Append(NS_LITERAL_STRING("error:noMatchingCert"));
 
     return NS_OK;
   }
@@ -2368,7 +2366,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
   }
 
   if (canceled) {
-    aResult.Append(NS_LITERAL_STRING(JS_ERROR_USER_CANCEL));
+    aResult.Append(NS_LITERAL_STRING("error:userCancel"));
 
     return NS_OK;
   }
