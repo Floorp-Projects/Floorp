@@ -114,8 +114,6 @@ NS_IMETHODIMP
 nsProperties::Set(const char* prop, nsISupports* value)
 {
     nsCStringKey key(prop);
-    if (!Exists(&key))
-        return NS_ERROR_FAILURE;
 
     nsISupports* prevValue = (nsISupports*)Put(&key, value);
     NS_RELEASE(prevValue);
