@@ -1135,20 +1135,14 @@ nsHTMLGenericContent::SetAttribute(nsIAtom* aAttribute,
     NS_RELEASE(css);
   }
   else {
-    if (nsnull != mDocument) {  // set attr via style sheet
-      nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-      result = sheet->SetAttributeFor(aAttribute, aValue, mTag, mAttributes);
+    nsHTMLValue val;
+    if (NS_CONTENT_ATTR_NOT_THERE !=
+        mContent->StringToAttribute(aAttribute, aValue, val)) {
     }
-    else {  // manage this ourselves and re-sync when we connect to doc
-      result = EnsureWritableAttributes(mAttributes, PR_TRUE);
-      if (nsnull != mAttributes) {
-        PRInt32   count;
-        result = mAttributes->SetAttribute(aAttribute, aValue, count);
-        if (0 == count) {
-          ReleaseAttributes(mAttributes);
-        }
-      }
+    else {
+      val.SetStringValue(aValue);
     }
+    result = SetAttribute(aAttribute, val, aNotify);
   }
   return result;
 }
