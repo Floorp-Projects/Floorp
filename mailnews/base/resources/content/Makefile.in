@@ -31,7 +31,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		widgetglue.js \
 		commandglue.js \
 		shareglue.js \
-		subscribe.xul \
+		subscribeDialog.xul \
 		sidebar-messenger.xul \
 		sidebar-messenger.rdf \
 		newFolderNameDialog.xul \

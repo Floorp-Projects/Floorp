@@ -343,18 +343,40 @@ function MsgSortBySubject()
 
 function MsgNewFolder()
 {
-    var folderTree = GetFolderTree(); 
-	var selectedFolderList = folderTree.selectedItems;
-	var selectedFolder = selectedFolderList[0];
-    if (selectedFolder)
-    {
-        var dialog = window.openDialog(
-            "chrome://messenger/content/newFolderNameDialog.xul",
-            "",
-            "chrome",
-            {title:"New Folder",
-                      okCallback:NewFolder});
-    }
+	MsgNewSubfolder("chrome://messenger/content/newFolderNameDialog.xul","New Folder");
+}
+
+function MsgSubscribe()
+{
+	MsgNewSubfolder("chrome://messenger/content/subscribeDialog.xul","Subscribe");
+}
+
+function MsgNewSubfolder(chromeWindowURL,windowTitle)
+{
+	try {
+		var folderTree = GetFolderTree(); 
+		var selectedFolderList = folderTree.selectedItems;
+	
+		if (selectedFolderList.length != 1) {
+			// dump("ERROR:  you can only select one folder / server to add new folder / subscribe to.\n");
+			return;
+		}
+		var selectedFolder = selectedFolderList[0];
+		if (selectedFolder)
+		{
+			preselectedURI = selectedFolder.getAttribute('id');
+			// dump("folder to preselect: " + preselectedURI + "\n");
+			var dialog = window.openDialog(
+				chromeWindowURL,
+				"",
+				"chrome",
+				{preselectedURI:preselectedURI, title:windowTitle,
+				okCallback:NewFolder});
+		}
+	}
+	catch (ex) {
+		// dump("ERROR:  perhaps nothing in the folder pane is selected?\n")
+	}
 }
 
 function NewFolder(name)
@@ -366,12 +388,6 @@ function NewFolder(name)
 	messenger.NewFolder(folderTree.database, selectedFolder, name);
 }
 
-
-function MsgSubscribe()
-{
-    dump('open subscribe window.\n');
-    window.openDialog("chrome://messenger/content/subscribe.xul", "subscribe", "chrome");
-}
 
 function MsgAccountManager()
 {

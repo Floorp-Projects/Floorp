@@ -27,7 +27,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/threadpane.dtd \
 		$(srcdir)/folderpane.dtd \
 		$(srcdir)/newFolderNameDialog.dtd \
-		$(srcdir)/subscribe.dtd \
+		$(srcdir)/subscribeDialog.dtd \
 		$(srcdir)/sidebar-messenger.dtd \
 		$(srcdir)/sidebar-messenger-rdf.dtd \
 		$(NULL)

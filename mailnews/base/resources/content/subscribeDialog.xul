@@ -21,7 +21,7 @@ Rights Reserved.
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/newFolderNameDialog.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/subscribeDialog.dtd">
 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -41,11 +41,11 @@ Rights Reserved.
 		
 		<html:input tabindex="0" type="text" id="name" style="width:100%"/>
 
-		<html:select id="selectedparentfolder" 
+		<html:select id="selectedparentfolder"
           datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
           ref="msgaccounts:/">
           <template>
-              <html:option uri="..." value="...">
+              <html:option uri="..." value="..." >
                 <text value="rdf:http://home.netscape.com/NC-rdf#Name"/>
               </html:option>
           </template>
