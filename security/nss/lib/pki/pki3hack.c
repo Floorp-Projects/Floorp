@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.14 $ $Date: 2001/12/18 16:04:52 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.15 $ $Date: 2001/12/18 19:54:44 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -375,7 +375,7 @@ get_nss3trust_from_cktrust(CK_TRUST t)
 	rt |= CERTDB_VALID_PEER | CERTDB_TRUSTED;
     }
     if (t == CKT_NETSCAPE_TRUSTED_DELEGATOR) {
-	rt |= CERTDB_VALID_CA | CERTDB_TRUSTED_CA | CERTDB_NS_TRUSTED_CA;
+	rt |= CERTDB_VALID_CA | CERTDB_TRUSTED_CA /*| CERTDB_NS_TRUSTED_CA*/;
     }
     if (t == CKT_NETSCAPE_VALID) {
 	rt |= CERTDB_VALID_PEER;
@@ -636,6 +636,12 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     NSSArena *arena;
     nssListIterator *tokens;
     PRBool moving_object;
+    if (cc->trust) {
+	/* no-op if the trust isn't changing (duh) */
+	if (memcmp(cc->trust, trust, sizeof (CERTCertTrust)) == 0) {
+	    return PR_SUCCESS;
+	}
+    } 
     /* Set the CERTCertificate's trust */
     cc->trust = trust;
     /* Set the NSSCerticate's trust */
