@@ -55,10 +55,13 @@
 extern nsIAtom *gUsersLocale;
 #define NS_IS_BOLD(weight) ((weight) > 400 ? 1 : 0)
 
+#ifdef MOZ_ENABLE_FREETYPE2
 static nsFontPS* CreateFontPS(nsITrueTypeFontCatalogEntry*, const nsFont&,
                               nsFontMetricsPS*);
 
 static NS_DEFINE_CID(kFCSCID, NS_FONTCATALOGSERVICE_CID);
+#endif
+
 /** ---------------------------------------------------
  *  See documentation in nsFontMetricsPS.h
  *	@update 2/26/99 dwc
