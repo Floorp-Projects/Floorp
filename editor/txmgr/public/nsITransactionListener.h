@@ -29,7 +29,7 @@ class nsITransactionManager;
 Transaction Listener interface to outside world
 */
 
-#define NS_TRANSACTION_LISTENER_IID \
+#define NS_ITRANSACTIONLISTENER_IID \
 { /* 58E330C4-7B48-11d2-98B9-00805F297D89 */ \
 0x58e330c4, 0x7b48, 0x11d2, \
 { 0x98, 0xb9, 0x0, 0x80, 0x5f, 0x29, 0x7d, 0x89 } }; 
