@@ -278,8 +278,9 @@ void nsScanner::RewindToMark(void){
  */
 void nsScanner::Mark() {
   if (mSlidingBuffer) {
+    mSlidingBuffer->DiscardPrefix(mCurrentPosition);
+    mSlidingBuffer->BeginReading(mCurrentPosition);
     mMarkPosition = mCurrentPosition;
-    mSlidingBuffer->DiscardPrefix(mMarkPosition);
   }
 }
  

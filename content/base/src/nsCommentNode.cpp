@@ -75,10 +75,6 @@ public:
 #endif
 
   // nsITextContent
-  NS_IMETHOD SetText(const PRUnichar* aBuffer, PRInt32 aLength,
-                     PRBool aNotify);
-  NS_IMETHOD SetText(const nsAReadableString& aStr, PRBool aNotify);
-  NS_IMETHOD SetText(const char* aBuffer, PRInt32 aLength, PRBool aNotify);
   NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone);
 };
 
@@ -185,75 +181,3 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 #endif
-
-// This would ideally be done by the parser, but for the sake
-// of "genericity" it's being done in the comment content code
-static void
-StripCommentDelimiters(nsString& aCommentString)
-{
-  PRInt32 offset;
-  static const char kCommentStart[] = "<!";
-  static const char kCommentEnd[] = "->";
-  static const char kCommentAlternateEnd[] = "--!>";
-  static const char kMinus = '-';
-
-  offset = aCommentString.Find(kCommentStart);
-  if (-1 != offset) {
-    // Take up to 2 '-' characters
-    offset += strlen(kCommentStart);
-    if (kMinus == aCommentString.CharAt(offset)) {
-      offset++;
-      if (kMinus == aCommentString.CharAt(offset)) {
-        offset++;
-      }
-    }
-    aCommentString.Cut(0, offset);
-  }
-
-  offset = aCommentString.RFind(kCommentEnd);
-  if (offset > 0) {
-    // Take up to 1 more '-'
-    if (kMinus == aCommentString.CharAt(offset-1)) {
-      offset--;
-    }
-    aCommentString.Cut(offset, aCommentString.Length()-offset);
-  }
-  else {
-    offset = aCommentString.RFind(kCommentAlternateEnd);
-    if (-1 != offset) {
-      aCommentString.Cut(offset, aCommentString.Length()-offset);
-    }
-  }
-}
-
-NS_IMETHODIMP
-nsCommentNode::SetText(const PRUnichar* aBuffer,
-                       PRInt32 aLength,
-                       PRBool aNotify)
-{
-  nsAutoString str(aBuffer);
-
-  StripCommentDelimiters(str);
-  return nsGenericDOMDataNode::SetText(str, aNotify);
-}
-
-NS_IMETHODIMP
-nsCommentNode::SetText(const nsAReadableString& aStr,
-                       PRBool aNotify)
-{
-  nsAutoString str(aStr);
-
-  StripCommentDelimiters(str);
-  return nsGenericDOMDataNode::SetText(str, aNotify);
-}
-
-NS_IMETHODIMP
-nsCommentNode::SetText(const char* aBuffer,
-                       PRInt32 aLength,
-                       PRBool aNotify)
-{
-  nsAutoString str; str.AssignWithConversion(aBuffer);
-
-  StripCommentDelimiters(str);
-  return nsGenericDOMDataNode::SetText(str, aNotify);
-}
