@@ -299,6 +299,7 @@ public:
                                       ,   mResult(NS_OK)
                                       {
                                       }
+    virtual                           ~nsFileClient() {}
     
     PRBool                            is_file() const
                                       {

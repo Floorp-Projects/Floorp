@@ -322,8 +322,8 @@ nsDirectoryIterator::nsDirectoryIterator(
 ,    int inIterateDirection)
 //----------------------------------------------------------------------------------------
     : mCurrent(inDirectory)
-    , mDir(nsnull)
     , mExists(PR_FALSE)
+    , mDir(nsnull)
 {
     mCurrent += "sysygy"; // prepare the path for SetLeafName
     mDir = opendir((const char*)nsFilePath(inDirectory));

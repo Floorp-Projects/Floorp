@@ -294,7 +294,7 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
 :    mURL(nsnull)
 {
     const nsAutoCString aString(inString);
-    char* aCString = (const char*) aString;
+    const char* aCString = (const char*) aString;
     if (!inString)
     	return;
     NS_ASSERTION(strstr(aCString, kFileURLPrefix) == inString, "Not a URL!");
@@ -584,7 +584,7 @@ void nsFileSpec::MakeUnique()
     }
     const int kMaxRootLength
         = nsFileSpecHelpers::kMaxCoreLeafNameLength - strlen(suffix) - 1;
-    if (strlen(leafName) > kMaxRootLength)
+    if ((int)strlen(leafName) > (int)kMaxRootLength)
         leafName[kMaxRootLength] = '\0';
     for (short index = 1; index < 1000 && Exists(); index++)
     {
@@ -722,19 +722,6 @@ void nsFileSpec::operator = (const char* inString)
 }
 #endif //XP_UNIX
 
-#if defined(XP_UNIX) || defined(XP_PC)
-//----------------------------------------------------------------------------------------
-void nsFileSpec::operator = (const nsString& inString)
-//----------------------------------------------------------------------------------------
-{
-    delete [] mPath;
-    mPath = inString.ToNewCString();
-    // Make canonical and absolute.
-    nsFileSpecHelpers::Canonify(mPath, PR_TRUE /* XXX? */);
-    mError = NS_OK;
-}
-#endif //XP_UNIX
-
 #if (defined(XP_UNIX) || defined(XP_PC))
 //----------------------------------------------------------------------------------------
 nsOutputStream& operator << (nsOutputStream& s, const nsFileSpec& spec)
@@ -862,11 +849,11 @@ nsInputStream& operator >> (nsInputStream& s, nsPersistentFileDescriptor& d)
 	PRInt32 bytesRead = 8;
 	bytesRead = s.read(bigBuffer, bytesRead);
 	if (bytesRead != 8)
-		return (nsInputFileStream&)s;
+		return s;
 	bigBuffer[8] = '\0';
 	sscanf(bigBuffer, "%lx", &bytesRead);
 	if (bytesRead > MAX_PERSISTENT_DATA_SIZE)
-		return (nsInputFileStream&)s; // preposterous.
+		return s; // preposterous.
 	// Now we know how many bytes to read, do it.
 	s.read(bigBuffer, bytesRead);
 	d.SetData(bigBuffer, bytesRead);
