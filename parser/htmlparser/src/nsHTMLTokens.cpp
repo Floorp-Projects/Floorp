@@ -34,7 +34,7 @@
 #include "nsEntityEx.cpp"
 #endif
 
-static nsString     gIdentChars("-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz");
+static nsString     gIdentChars("-0123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz");
 static nsAutoString gDigits("0123456789");
 static nsAutoString gWhitespace("\b\t ");
 static const char*  gUserdefined = "userdefined";

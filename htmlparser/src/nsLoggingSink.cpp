@@ -79,6 +79,8 @@ public:
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+  NS_IMETHOD AddComment(const nsIParserNode& aNode);
+  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
 
   // nsIHTMLContentSink
   NS_IMETHOD SetTitle(const nsString& aValue);
@@ -238,6 +240,46 @@ nsLoggingSink::AddLeaf(const nsIParserNode& aNode)
 {
   return LeafNode(aNode);
 }
+
+
+/**
+ *  This gets called by the parser when you want to add
+ *  a PI node to the current container in the content
+ *  model.
+ *  
+ *  @updated gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+NS_IMETHODIMP
+nsLoggingSink::AddProcessingInstruction(const nsIParserNode& aNode){
+
+#ifdef VERBOSE_DEBUG
+  DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
+#endif
+
+  return NS_OK;
+}
+
+/**
+ *  This gets called by the parser when you want to add
+ *  a comment node to the current container in the content
+ *  model.
+ *  
+ *  @updated gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+NS_IMETHODIMP
+nsLoggingSink::AddComment(const nsIParserNode& aNode){
+
+#ifdef VERBOSE_DEBUG
+  DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
+#endif
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsLoggingSink::SetTitle(const nsString& aValue)

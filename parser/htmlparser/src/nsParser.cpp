@@ -28,11 +28,11 @@
 #include <fstream.h>
 #include "nsIParserFilter.h"
 #include "nshtmlpars.h"
+#include "nsWellFormedDTD.h"
 
 #undef rickgdebug
 #ifdef  rickgdebug
 #include "CRtfDTD.h"
-#include "nsWellFormedDTD.h"
 #endif
 
 
@@ -86,6 +86,9 @@ class CSharedParserObjects {
 public:
 
   CSharedParserObjects() : mDeallocator(), mDTDDeque(mDeallocator) {
+    mWellFormedXMLDTD=0;
+    NS_NewWellFormed_DTD(&mWellFormedXMLDTD);
+    RegisterDTD(mWellFormedXMLDTD);
   }
 
   ~CSharedParserObjects() {
@@ -102,7 +105,8 @@ public:
   }
 
   CDTDDeallocator mDeallocator;
-  nsDeque         mDTDDeque;
+  nsDeque mDTDDeque;
+  nsIDTD* mWellFormedXMLDTD;
 };
 
 CSharedParserObjects gSharedParserObjects;

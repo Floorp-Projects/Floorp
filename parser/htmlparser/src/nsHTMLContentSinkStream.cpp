@@ -761,6 +761,45 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
 }
 
 
+
+/**
+ *  This gets called by the parser when you want to add
+ *  a PI node to the current container in the content
+ *  model.
+ *  
+ *  @updated gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+NS_IMETHODIMP
+nsHTMLContentSinkStream::AddProcessingInstruction(const nsIParserNode& aNode){
+
+#ifdef VERBOSE_DEBUG
+  DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
+#endif
+
+  return NS_OK;
+}
+
+/**
+ *  This gets called by the parser when you want to add
+ *  a comment node to the current container in the content
+ *  model.
+ *  
+ *  @updated gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+NS_IMETHODIMP
+nsHTMLContentSinkStream::AddComment(const nsIParserNode& aNode){
+
+#ifdef VERBOSE_DEBUG
+  DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
+#endif
+
+  return NS_OK;
+}
+
     
 /**
   * This method is used to a general container. 

@@ -48,7 +48,6 @@ static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID);
 static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kHTMLTextContentType = "text/html";
-static const char* kXMLTextContentType = "text/xml";
 static char* kVerificationDir = "c:/temp";
 
 static nsAutoString gEmpty;
@@ -92,124 +91,7 @@ static eHTMLTags gWhitespaceTags[]={
   eHTMLTag_newline, eHTMLTag_whitespace};
 
 
-/**************************************************************
-  Now define the token deallocator class...
- **************************************************************/
-class CNavTokenDeallocator: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* anObject) {
-    CToken* aToken = (CToken*)anObject;
-    delete aToken;
-    return 0;
-  }
-};
-static CNavTokenDeallocator gTokenKiller;
-
-
-/**************************************************************
-  Now define the tokenrecycler class...
- **************************************************************/
-
-/************************************************************************
-  CTokenRecycler class implementation.
-  This class is used to recycle tokens. 
-  By using this simple class, we cut WAY down on the number of tokens
-  that get created during the run of the system.
- ************************************************************************/
-class nsCTokenRecycler : public nsITokenRecycler {
-public:
-  
-//      enum {eCacheMaxSize=100}; 
-
-                  nsCTokenRecycler();
-  virtual         ~nsCTokenRecycler();
-  virtual void    RecycleToken(CToken* aToken);
-  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString);
-
-protected:
-    nsDeque*  mTokenCache[eToken_last-1];
-//    PRInt32   mTotals[eToken_last-1];
-};
-
-
-/**
- * 
- * @update  gess7/25/98
- * @param 
- */
-nsCTokenRecycler::nsCTokenRecycler() : nsITokenRecycler() {
-  int i=0;
-  for(i=0;i<eToken_last-1;i++) {
-    mTokenCache[i]=new nsDeque(gTokenKiller);
-//    mTotals[i]=0;
-  }
-}
-
-/**
- * Destructor for the token factory
- * @update  gess7/25/98
- */
-nsCTokenRecycler::~nsCTokenRecycler() {
-  //begin by deleting all the known (recycled) tokens...
-  //We're also deleting the cache-deques themselves.
-  int i;
-  for(i=0;i<eToken_last-1;i++) {
-    delete mTokenCache[i];
-  }
-}
-
-
-/**
- * This method gets called when someone wants to recycle a token
- * @update  gess7/24/98
- * @param   aToken -- token to be recycled.
- * @return  nada
- */
-void nsCTokenRecycler::RecycleToken(CToken* aToken) {
-  if(aToken) {
-    PRInt32 theType=aToken->GetTokenType();
-    mTokenCache[theType-1]->Push(aToken);
-  }
-}
-
-
-/**
- * 
- * @update	gess8/4/98
- * @param 
- * @return
- */
-CToken* nsCTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString) {
-
-  CToken* result=(CToken*)mTokenCache[aType-1]->Pop();
-
-  if(result) {
-    result->Reinitialize(aTag,aString);
-  }
-  else {
-//    mTotals[aType-1]++;
-    switch(aType){
-      case eToken_start:      result=new CStartToken(aTag); break;
-      case eToken_end:        result=new CEndToken(aTag); break;
-      case eToken_comment:    result=new CCommentToken(); break;
-      case eToken_attribute:  result=new CAttributeToken(); break;
-      case eToken_entity:     result=new CEntityToken(); break;
-      case eToken_whitespace: result=new CWhitespaceToken(); break;
-      case eToken_newline:    result=new CNewlineToken(); break;
-      case eToken_text:       result=new CTextToken(aString); break;
-      case eToken_script:     result=new CScriptToken(); break;
-      case eToken_style:      result=new CStyleToken(); break;
-      case eToken_skippedcontent: result=new CSkippedContentToken(aString); break;
-      case eToken_instruction:result=new CInstructionToken(); break;
-        default:
-          break;
-    }
-  }
-  return result;
-}
-
-
-nsCTokenRecycler gTokenRecycler;
+static CTokenRecycler gTokenRecycler;
 
 
 /************************************************************************
@@ -345,6 +227,8 @@ void CNavDTD::InitializeDefaultTokenHandlers() {
 }
 
 
+static CTokenDeallocator gTokenKiller;
+
 /**
  *  Default constructor
  *  
@@ -355,13 +239,14 @@ void CNavDTD::InitializeDefaultTokenHandlers() {
 CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   NS_INIT_REFCNT();
   mParser=0;
-  mSink = nsnull;
+  mSink = 0;
   mDTDDebug=0;
   mLineNumber=1;
   mParseMode=eParseMode_navigator;
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
+  mAllowUnknownTags=PR_FALSE;
   InitializeDefaultTokenHandlers(); 
   mHeadContext=new nsDTDContext();
   mBodyContext=new nsDTDContext();
@@ -425,9 +310,7 @@ PRBool CNavDTD::Verify(nsString& aURLRef){
     else mDTDDebug->SetVerificationDirectory(kVerificationDir);
   }
   if(mDTDDebug) {
-    mDTDDebug->Verify(this,mParser,
-      mBodyContext->mElements.mCount,
-      mBodyContext->mElements.mTags,aURLRef);
+    mDTDDebug->Verify(this,mParser,mBodyContext->mElements.mCount,mBodyContext->mElements.mTags,aURLRef);
   }
   return result;
 }
@@ -443,8 +326,6 @@ PRBool CNavDTD::Verify(nsString& aURLRef){
  */
 PRBool CNavDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
   PRBool result=aContentType.Equals(kHTMLTextContentType);
-  if(!result)
-    result=aContentType.Equals(kXMLTextContentType);
   return result;
 }
 
@@ -457,8 +338,6 @@ PRBool CNavDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
 eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
   eAutoDetectResult result=eUnknownDetect;
   if(PR_TRUE==aType.Equals(kHTMLTextContentType)) 
-    result=eValidDetect;
-  if(PR_TRUE==aType.Equals(kXMLTextContentType)) 
     result=eValidDetect;
   return result;
 }
@@ -842,7 +721,9 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
  */
 nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
-  return NS_OK;
+  nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
+  nsresult result=mSink->AddComment(aNode); 
+  return result;
 }
 
 /**
@@ -939,9 +820,9 @@ nsresult CNavDTD::HandleStyleToken(CToken* aToken){
  */
 nsresult CNavDTD::HandleProcessingInstructionToken(CToken* aToken){
   NS_PRECONDITION(0!=aToken,kNullToken);
-
-//  CStyleToken*  st = (CStyleToken*)(aToken);
-  return NS_OK;
+  nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
+  nsresult result=mSink->AddProcessingInstruction(aNode); 
+  return result;
 }
 
 /**
@@ -1193,25 +1074,6 @@ static eHTMLTags gTagSet3[]={
    The preceeding tables determine the set of elements each tag can contain...
   ***********************************************************************************/
 
-
-/**
- * This method quickly scans the given set of tags,
- * looking for the given tag.
- * @update	gess8/27/98
- * @param   aTag -- tag to be search for in set
- * @param   aTagSet -- set of tags to be searched
- * @return
- */
-inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount)  {
-  PRInt32 index;
-
-  for(index=0;index<aCount;index++)
-    if(aTag==aTagSet[index]) {
-      return PR_TRUE;
-    }
-  return PR_FALSE;
-}
-
 /**
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
@@ -1225,7 +1087,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
   PRBool result=!IsContainer(aParent);
 
-
+ 
     /***************************************************************************
      * Handle form elements here. Why? Because as long as a form is open, 
      * almost any form element is allowed. (Except <option> which must have a 
@@ -1461,7 +1323,9 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       case eHTMLTag_unknown:
         //the only thing that should ever have an unknown
         //parent is an HTML Tag. Everything else should propagate.
-        result=PRBool(eHTMLTag_html==aChild);
+        if((eHTMLTag_userdefined==aChild) && mAllowUnknownTags)
+          result=PR_TRUE;
+        else result=PRBool(eHTMLTag_html==aChild);
         break;
 
       case eHTMLTag_listing:
@@ -1867,6 +1731,9 @@ PRBool CNavDTD::RequiresAutomaticClosure(eHTMLTags aParentTag,eHTMLTags aChildTa
 PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
   PRBool result=PR_FALSE;
 
+  if((eHTMLTag_userdefined==aParent) && mAllowUnknownTags)
+    return result;
+
   //begin with some simple (and obvious) cases...
   switch(aParent) {
     case eHTMLTag_table:
@@ -2083,7 +1950,10 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
  *  @return  PR_TRUE if given tag can contain other tags
  */
 PRBool CNavDTD::IsContainer(PRInt32 aTag) const {
-  PRBool result=!FindTagInSet(aTag,gNonContainers,sizeof(gNonContainers)/sizeof(eHTMLTag_unknown));
+  PRBool result;
+  if((eHTMLTag_userdefined==aTag) && mAllowUnknownTags)
+    result=PR_TRUE;
+  else result=!FindTagInSet(aTag,gNonContainers,sizeof(gNonContainers)/sizeof(eHTMLTag_unknown));
   return result;
 }
 
@@ -2255,7 +2125,7 @@ PRBool CNavDTD::BackwardPropagate(nsTagStack& aStack,eHTMLTags aParentTag,eHTMLT
  *  This method allows the caller to determine if a form
  *  element is currently open.
  *  
- *  @update  gess 4/2/98
+ *  @update  gess 11/9/98
  *  @param   
  *  @return  
  */
@@ -2265,7 +2135,8 @@ PRBool CNavDTD::HasOpenContainer(eHTMLTags aContainer) const {
   switch(aContainer) {
     case eHTMLTag_form:
       result=mHasOpenForm; break;
-
+    case eHTMLTag_map: 
+      result=mHasOpenMap; break; 
     default:
       result=(kNotFound!=GetTopmostIndexOf(aContainer)); break;
   }
@@ -3274,7 +3145,7 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
       //any new tokens we've cued this round. Later we can get smarter about this.
       if(NS_OK!=result) {
         while(mTokenDeque.GetSize()>theDequeSize) {
-          delete mTokenDeque.PopBack();
+          delete (CToken*)mTokenDeque.PopBack();
         }
       }
 
@@ -3329,9 +3200,7 @@ CNavDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
  *  @return new token or null 
  */
 nsresult
-CNavDTD::ConsumeWhitespace(PRUnichar aChar,
-                           CScanner& aScanner,
-                           CToken*& aToken) {
+CNavDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   aToken = gTokenRecycler.CreateTokenOfType(eToken_whitespace,eHTMLTag_whitespace,gEmpty);
   nsresult result=kNoError;
   if(aToken) {
