@@ -86,6 +86,7 @@ see the nsICollection for more details*/
 /*BEGIN nsIDOMSelection interface implementations*/
   NS_IMETHOD DeleteFromDocument();
   NS_IMETHOD Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
+  NS_IMETHOD IsCollapsed(PRBool* aIsCollapsed);
   NS_IMETHOD Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD ClearSelection();
   NS_IMETHOD AddRange(nsIDOMRange* aRange);
@@ -103,11 +104,11 @@ private:
 
   void ResizeBuffer(PRUint32 aNewBufSize);
 
-  nsIDOMNode* getAnchorNode(); //where did the selection begin
-  PRInt32 getAnchorOffset();
+  nsIDOMNode* GetAnchorNode(); //where did the selection begin
+  PRInt32 GetAnchorOffset();
   void setAnchor(nsIDOMNode*, PRInt32);
-  nsIDOMNode* getFocusNode();  //where is the carret
-  PRInt32 getFocusOffset();
+  nsIDOMNode* GetFocusNode();  //where is the carret
+  PRInt32 GetFocusOffset();
   void setFocus(nsIDOMNode*, PRInt32);
 
   nsCOMPtr<nsISupportsArray> mRangeArray;
@@ -384,12 +385,12 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-nsIDOMNode* nsRangeList::getAnchorNode()
+nsIDOMNode* nsRangeList::GetAnchorNode()
 {
   return mAnchorNode;
 }
 
-PRInt32 nsRangeList::getAnchorOffset()
+PRInt32 nsRangeList::GetAnchorOffset()
 {
   return mAnchorOffset;
 }
@@ -400,12 +401,12 @@ void nsRangeList::setAnchor(nsIDOMNode* node, PRInt32 offset)
   mAnchorOffset = offset;
 }
 
-nsIDOMNode* nsRangeList::getFocusNode()
+nsIDOMNode* nsRangeList::GetFocusNode()
 {
   return mFocusNode;
 }
 
-PRInt32 nsRangeList::getFocusOffset()
+PRInt32 nsRangeList::GetFocusOffset()
 {
   return mFocusOffset;
 }
@@ -515,8 +516,8 @@ void nsRangeList::printSelection()
     printRange(range);
     iter.Next();
   }
-  printf("Anchor is 0x%x, %ld\n", getAnchorNode(), getAnchorOffset());
-  printf("Focus is 0x%x, %ld\n", getFocusNode(), getFocusOffset());
+  printf("Anchor is 0x%x, %ld\n", GetAnchorNode(), GetAnchorOffset());
+  printf("Focus is 0x%x, %ld\n", GetFocusNode(), GetFocusOffset());
   printf(" ... end of selection\n");
 }
 #endif /* DEBUG */
@@ -672,7 +673,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
           if (NS_SUCCEEDED(aFrame->GetSelected(&selected,&beginoffset,&endoffset, &begincontentoffset))){
             aFrame->SetSelected(PR_TRUE, beginoffset, aOffset,PR_FALSE);
 
-            //PR_ASSERT(beginoffset == getAnchorOffset());
+            //PR_ASSERT(beginoffset == GetAnchorOffset());
             aTracker->SetFocus(aFrame,anchor);
             direction = (PRBool)(beginoffset<=aOffset); //slecting "english" right if true
           }
@@ -682,11 +683,11 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
           nsCOMPtr<nsIContent>oldContent;
           if (NS_SUCCEEDED(frame->GetContent(*getter_AddRefs(oldContent))) && oldContent){
             nsCOMPtr<nsIDOMNode>oldDomNode(oldContent);
-            if (oldDomNode && oldDomNode == getFocusNode()) {
+            if (oldDomNode && oldDomNode == GetFocusNode()) {
               nsCOMPtr<nsIContent>anchorContent;
               if (NS_SUCCEEDED(anchor->GetContent(*getter_AddRefs(anchorContent))) && anchorContent){
                 nsCOMPtr<nsIDOMNode>anchorDomNode(anchorContent);
-                if (anchorDomNode && anchorDomNode == getAnchorNode()) {
+                if (anchorDomNode && anchorDomNode == GetAnchorNode()) {
 
 
                   //get offsets
@@ -711,12 +712,12 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
                   //compare old cursor to new cursor
                   PRInt32 result2 = compareFrames(frame,aFrame);
                   if (result2 == 0)
-                    result2 = ComparePoints(getFocusNode(), getFocusOffset(),
+                    result2 = ComparePoints(GetFocusNode(), GetFocusOffset(),
                                             domNode, aOffset );
                   //compare anchor to new cursor
                   PRInt32 result3 = compareFrames(anchor,aFrame);
                   if (result3 == 0)
-                    result3 = ComparePoints(getAnchorNode(), getAnchorOffset(),
+                    result3 = ComparePoints(GetAnchorNode(), GetAnchorOffset(),
                                             domNode , aOffset );
 
                   if (result1 == 0 && result3 < 0)
@@ -800,12 +801,12 @@ a  2  1 deselect from 2 to 1
         if (domNode){
           setFocus(domNode, aOffset + aContentOffset);
           if (direction){
-            range->SetStart(getAnchorNode(),getAnchorOffset());
-            range->SetEnd(getFocusNode(),getFocusOffset());
+            range->SetStart(GetAnchorNode(),GetAnchorOffset());
+            range->SetEnd(GetFocusNode(),GetFocusOffset());
           }
           else {
-            range->SetStart(getFocusNode(),getFocusOffset());
-            range->SetEnd(getAnchorNode(),getAnchorOffset());
+            range->SetStart(GetFocusNode(),GetFocusOffset());
+            range->SetEnd(GetAnchorNode(),GetAnchorOffset());
           }
           DEBUG_OUT_RANGE(range);
           nsCOMPtr<nsISupports> rangeISupports(range);
@@ -867,9 +868,9 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
   //reset the focus and anchor points.
   nsCOMPtr<nsIContent> anchorContent;
   nsCOMPtr<nsIContent> frameContent;
-  if (getAnchorNode() && getFocusNode()){
-    anchorContent =  getAnchorNode();
-    frameContent = getFocusNode();
+  if (GetAnchorNode() && GetFocusNode()){
+    anchorContent =  GetAnchorNode();
+    frameContent = GetFocusNode();
   }
   for (PRInt32 i =0; i<mRangeArray->Count(); i++){
     //end content and start content do NOT necessarily mean anchor and focus frame respectively
@@ -887,17 +888,17 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
       nsCOMPtr<nsIContent> endContent(endNode);
       if (endContent == startContent){
         if (startContent == frameContent)
-          frameOffset = getFocusOffset();
+          frameOffset = GetFocusOffset();
         if ( startContent == anchorContent ) 
-          anchorOffset = getAnchorOffset();
+          anchorOffset = GetAnchorOffset();
         result->SetSelectedContentOffsets(PR_TRUE, startOffset, endOffset, anchorOffset, frameOffset, PR_FALSE, 
                                           aTracker, &result);
       }
       else{
         if (startContent == frameContent)
-          frameOffset = getFocusOffset();
+          frameOffset = GetFocusOffset();
         if ( startContent == anchorContent ) 
-          anchorOffset = getAnchorOffset();
+          anchorOffset = GetAnchorOffset();
         result->SetSelectedContentOffsets(PR_TRUE, startOffset, -1 , anchorOffset, frameOffset, PR_FALSE, 
                                           aTracker, &result);//select from start to end
         //now we keep selecting until we hit the last content, or the end of the page.
@@ -908,9 +909,9 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
           result->GetContent(*getter_AddRefs(content));
           if (content == endContent){
             if (endContent == frameContent)
-              frameOffset = getFocusOffset();
+              frameOffset = GetFocusOffset();
             if ( endContent == anchorContent ) 
-              anchorOffset = getAnchorOffset();
+              anchorOffset = GetAnchorOffset();
             result->SetSelectedContentOffsets(PR_TRUE, 0, endOffset, anchorOffset, frameOffset, PR_FALSE, 
                                               aTracker, &result);//select from beginning to endOffset
             return NS_OK;
@@ -968,14 +969,14 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   nsCOMPtr<nsIDOMRange> range;
   if (mRangeArray->Count() < 1)
   {
-    if (!NS_SUCCEEDED(nsRepository::CreateInstance(kRangeCID, nsnull,
-                                                   kIDOMRangeIID,
-                                                   getter_AddRefs(range))))
-    {
-      res = AddItem(range);
-      if (!NS_SUCCEEDED(res))
-        return res;
-    }
+    res = nsRepository::CreateInstance(kRangeCID, nsnull,
+                                       kIDOMRangeIID,
+                                       getter_AddRefs(range));
+    if (!NS_SUCCEEDED(res))
+      return res;
+    res = AddItem(range);
+    if (!NS_SUCCEEDED(res))
+      return res;
   }
   nsCOMPtr<nsISupports> firstElement (mRangeArray->ElementAt(0));
   res = firstElement->QueryInterface(kIDOMRangeIID, getter_AddRefs(range));
@@ -993,6 +994,34 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 }
 
 /*
+ * IsCollapsed -- is the whole selection just one point, or unset?
+ */
+NS_IMETHODIMP
+nsRangeList::IsCollapsed(PRBool* aIsCollapsed)
+{
+  if (!mRangeArray)
+  {
+    *aIsCollapsed = PR_TRUE;
+    return NS_OK;
+  }
+  if (mRangeArray->Count() != 1)
+  {
+    *aIsCollapsed = PR_FALSE;
+    return NS_OK;
+  }
+  nsCOMPtr<nsISupports> nsisup (mRangeArray->ElementAt(0));
+  nsCOMPtr<nsIDOMRange> range;
+  if (!NS_SUCCEEDED(nsisup->QueryInterface(kIDOMRangeIID,
+                                           getter_AddRefs(range))))
+  {
+    *aIsCollapsed = PR_TRUE;
+    return NS_OK;
+  }
+                             
+  return (range->GetIsCollapsed(aIsCollapsed));
+}
+
+/*
  * Extend extends the selection away from the anchor.
  */
 NS_IMETHODIMP
@@ -1007,9 +1036,53 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 NS_IMETHODIMP
 nsRangeList::DeleteFromDocument()
 {
+  nsresult res;
+
+  // If we're already collapsed, then set ourselves to include the
+  // last item BEFORE the current range, rather than the range itself,
+  // before we do the delete.
+  PRBool isCollapsed;
+  IsCollapsed(&isCollapsed);
+  if (isCollapsed)
+  {
+    // If the offset is positive, then it's easy:
+    if (GetFocusOffset() > 0)
+    {
+      nsIDOMNode* focusNode = GetFocusNode();
+      if (!focusNode)
+        return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIDOMRange> range;
+      res = nsRepository::CreateInstance(kRangeCID, nsnull,
+                                         kIDOMRangeIID,
+                                         getter_AddRefs(range));
+      if (!NS_SUCCEEDED(res))
+        return res;
+
+      // For some reason, this doesn't leave the anchor in the
+      // right place after the delete happens; it's point too far right.
+      setAnchor(GetFocusNode(), GetFocusOffset()-1);
+      res = range->SetStart(GetAnchorNode(), GetAnchorOffset());
+      if (!NS_SUCCEEDED(res))
+        return res;
+      res = range->SetEnd(GetFocusNode(), GetFocusOffset());
+      if (!NS_SUCCEEDED(res))
+        return res;
+
+      res = AddItem(range);
+      if (!NS_SUCCEEDED(res))
+        return res;
+    }
+    else
+    {
+      // Otherwise it's harder, have to find the previous node
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+  }
+
   // Get an iterator
   nsRangeListIterator iter(this);
-  nsresult res = iter.First();
+  res = iter.First();
   if (!NS_SUCCEEDED(res))
     return res;
 
@@ -1022,15 +1095,12 @@ nsRangeList::DeleteFromDocument()
     res = range->DeleteContents();
     if (!NS_SUCCEEDED(res))
       return res;
-    //RemoveItem(range);
     iter.Next();
   }
 
   // HACK: We need to reset the anchor and offset,
   // in order for text insertion to work after a deletion.
-  // We need an algorithm for choosing which end of which range
-  // in the old selection should become the new caret (anchor+focus).
-  Collapse(getFocusNode(), getFocusOffset());
+  Collapse(GetAnchorNode(), GetAnchorOffset());
 
   return NS_OK;
 }

@@ -50,6 +50,11 @@ public:
   NS_IMETHOD Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset) = 0;
 
   /*
+   * IsCollapsed -- is the whole selection just one point, or unset?
+   */
+  NS_IMETHOD IsCollapsed(PRBool* aIsCollapsed) = 0;
+
+  /*
    * Extend extends the selection away from the anchor.
    */
   NS_IMETHOD Extend(nsIDOMNode* aParentNode, PRInt32 aOffset) = 0;
