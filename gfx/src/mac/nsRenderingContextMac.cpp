@@ -45,7 +45,6 @@
 #include "nsIEnumerator.h"
 #include "nsRegionMac.h"
 #include "nsGraphicState.h"
-#include "nsGraphicsImpl.h"
 
 #include "nsTransform2D.h"
 #include "nsVoidArray.h"
