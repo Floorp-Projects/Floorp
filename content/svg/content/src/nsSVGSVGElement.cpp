@@ -568,8 +568,7 @@ nsSVGSVGElement::ForceRedraw()
   NS_ASSERTION(presShell, "need presShell to unsuspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIViewManager> vm;
-  presShell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = presShell->GetViewManager();
   NS_ASSERTION(vm, "need viewmanager to unsuspend redraw");
   if (!vm) return NS_ERROR_FAILURE;
 
@@ -986,11 +985,11 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
   context->GetTwipsToPixels(&t2p);
 
   
-  nsCOMPtr<nsIWidget> widget;
+  nsIWidget* widget = nsnull;
         
   while (frame) {
     // Look for a widget so we can get screen coordinates
-    nsIView* view = frame->GetView(context);
+    nsIView* view = frame->GetView();
     if (view) {
       // handle scrolled views along the way:
       nsIScrollableView* scrollableView = nsnull;
@@ -1003,18 +1002,17 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
       }
 
       // if this is a widget we break and get screen coords from it:
-      view->GetWidget(*getter_AddRefs(widget));
+      widget = view->GetWidget();
       if (widget)
         break;
     }
           
     // No widget yet, so count up the coordinates of the frame 
-    nsPoint origin;
-    frame->GetOrigin(origin);
+    nsPoint origin = frame->GetPosition();
     x += origin.x;
     y += origin.y;
       
-    frame->GetParent(&frame);
+    frame = frame->GetParent();
   }
         
   

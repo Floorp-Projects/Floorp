@@ -524,7 +524,7 @@ nsPrintEngine::GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
   aSeqFrame->FirstChild(aPO->mPresContext, nsnull, &pageFrame);
   while (pageFrame != nsnull) {
     aCount++;
-    pageFrame->GetNextSibling(&pageFrame);
+    pageFrame = pageFrame->GetNextSibling();
   }
 
   return NS_OK;
@@ -2091,13 +2091,9 @@ void nsPrintEngine::CheckForHiddenFrameSetFrames()
     NS_ASSERTION(po, "nsPrintObject can't be null!");
     nsIFrame* frame;
     po->mDisplayPresShell->GetRootFrame(&frame);
-    if (frame) {
-      nsRect rect;
-      frame->GetRect(rect);
-      if (rect.height == 0) {
-        // set this PO and its children to not print and be hidden
-        SetPrintPO(po, PR_FALSE, PR_TRUE, eSetPrintFlag | eSetHiddenFlag);
-      }
+    if (frame && frame->GetSize().height == 0) {
+      // set this PO and its children to not print and be hidden
+      SetPrintPO(po, PR_FALSE, PR_TRUE, eSetPrintFlag | eSetHiddenFlag);
     }
   }
 }
@@ -2714,10 +2710,9 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
       }
 
       if (frame) {
-        nsIView* view = frame->GetView(aPO->mParent->mPresContext);
+        nsIView* view = frame->GetView();
         if (view) {
-          nsCOMPtr<nsIWidget> w2;
-          view->GetWidget(*getter_AddRefs(w2));
+          nsIWidget* w2 = view->GetWidget();
           if (w2) {
             widget = w2;
           }
@@ -2731,7 +2726,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
                                       widget->GetNativeData(NS_NATIVE_WIDGET),
                                       PR_TRUE, PR_TRUE, 
                                       eContentTypeContent);
-    aPO->mRootView->GetWidget(*getter_AddRefs(aPO->mWindow));
+    aPO->mWindow = aPO->mRootView->GetWidget();
     aPO->mPresContext->SetPaginatedScrolling(canCreateScrollbars);
   }
 #endif // NS_PRINT_PREVIEW
@@ -2866,7 +2861,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
         //DumpFrames(fd, aPO->mPresContext, renderingContext, theRootFrame, 0);
         fprintf(fd, "---------------------------------------\n\n");
         fprintf(fd, "--------------- Views From Root Frame----------------\n");
-        nsIView* v = theRootFrame->GetView(aPO->mPresContext);
+        nsIView* v = theRootFrame->GetView();
         if (v) {
           v->List(fd);
         } else {
@@ -2949,8 +2944,7 @@ nsPrintEngine::CalcPageFrameLocation(nsIPresShell * aPresShell,
 
     // Calc absolute position of the frame all the way up
     // to the SimpleSeq frame
-    nsRect rect;
-    frame->GetRect(rect);
+    nsRect rect = frame->GetRect();
     rect.Deflate(borderPadding);
 
     rect.x = 0;
@@ -2958,16 +2952,15 @@ nsPrintEngine::CalcPageFrameLocation(nsIPresShell * aPresShell,
     nsIFrame * parent    = frame;
     nsIFrame * pageFrame = nsnull;
     nsIFrame * seqFrame  = nsnull;
-    while (parent != nsnull) {
-      nsRect rr;
-      parent->GetRect(rr);
+    while (parent) {
+      nsRect rr = parent->GetRect();
       rect.x += rr.x;
       rect.y += rr.y;
       nsIFrame * temp = parent;
-      temp->GetParent(&parent);
+      parent = temp->GetParent();
       // Keep a pointer to the Seq and Page frames
       nsIPageSequenceFrame * sqf = nsnull;
-      if (parent != nsnull &&
+      if (parent &&
           NS_SUCCEEDED(CallQueryInterface(parent, &sqf)) && sqf) {
         pageFrame = temp;
         seqFrame  = parent;
@@ -2992,7 +2985,7 @@ nsPrintEngine::CalcPageFrameLocation(nsIPresShell * aPresShell,
         break;
       }
       pageNum++;
-      child->GetNextSibling(&child);
+      child = child->GetNextSibling();
     } // while
   }
   return NS_OK;
@@ -3023,7 +3016,7 @@ nsPrintEngine::CalcNumPrintableDocsAndPages(PRInt32& aNumDocs, PRInt32& aNumPage
           seqFrame->FirstChild(po->mPresContext, nsnull, &frame);
           while (frame) {
             aNumPages++;
-            frame->GetNextSibling(&frame);
+            frame = frame->GetNextSibling();
           }
         }
       }
@@ -3089,16 +3082,15 @@ static void GetIFramePosition(nsPrintObject * aPO, nscoord& aX, nscoord& aY)
         // and then traverse out ot the pageContentFrame
         frame->FirstChild(aPO->mParent->mPresContext, nsnull, &frame);
         while (frame) {
-          nsRect r;
-          frame->GetRect(r);
-          aX += r.x;
-          aY += r.y;
+          nsPoint pt = frame->GetPosition();
+          aX += pt.x;
+          aY += pt.y;
           nsCOMPtr<nsIAtom> frameType;
           frame->GetFrameType(getter_AddRefs(frameType));
           if (nsLayoutAtoms::pageContentFrame == frameType.get()) {
             break;
           }
-          frame->GetParent(&frame);
+          frame = frame->GetParent();
         }
       }
     }
@@ -3333,12 +3325,8 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
               nsRect areaRect;
               nsIFrame * areaFrame = FindFrameByType(poPresContext, startFrame, nsHTMLAtoms::body, rect, areaRect);
               if (areaFrame) {
-                nsRect areaRect;
-                areaFrame->GetRect(areaRect);
-                startRect.y -= margin.top+areaRect.y;
+                startRect.y -= margin.top + areaFrame->GetPosition().y;
                 endRect.y   -= margin.top;
-                areaRect.y -= startRect.y;
-                areaRect.x -= margin.left;
                 // XXX This is temporary fix for printing more than one page of a selection
                 pageSequence->SetSelectionHeight(startRect.y, endRect.y+endRect.height-startRect.y);
 
@@ -3366,19 +3354,17 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
         nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(poPresContext);
         if (!ppContext) {
 
-          nsRect srect;
-          seqFrame->GetRect(srect);
+          nscoord sheight = seqFrame->GetSize().height;
 
-          nsRect r;
-          poRootView->GetBounds(r);
+          nsRect r = poRootView->GetBounds();
           r.x = r.y = 0;
-          r.height = srect.height;
+          r.height = sheight;
           aPO->mViewManager->ResizeView(poRootView, r, PR_FALSE);
 
-          rootFrame->GetRect(r);
+          r = rootFrame->GetRect();
 
-          r.height = srect.height;
-          rootFrame->SetRect(poPresContext, r);
+          r.height = sheight;
+          rootFrame->SetRect(r);
 
           mPageSeqFrame = pageSequence;
           mPageSeqFrame->StartPrint(poPresContext, mPrt->mPrintSettings, docTitleStr, docURLStr);
@@ -3692,23 +3678,17 @@ nsPrintEngine::FindFrameByType(nsIPresContext* aPresContext,
   NS_ASSERTION(aType, "Pointer is null!");
 
   nsIFrame * child;
-  nsRect rect;
-  aParentFrame->GetRect(rect);
-  aRect.x += rect.x;
-  aRect.y += rect.y;
+  aRect += aParentFrame->GetPosition();
   aParentFrame->FirstChild(aPresContext, nsnull, &child);
-  while (child != nsnull) {
-    nsCOMPtr<nsIContent> content;
-    child->GetContent(getter_AddRefs(content));
+  while (child) {
+    nsIContent* content = child->GetContent();
     if (content) {
       nsCOMPtr<nsIAtom> type;
       content->GetTag(getter_AddRefs(type));
       if (type.get() == aType) {
-        nsRect r;
-        child->GetRect(r);
+        nsRect r = child->GetRect();
         aChildRect.SetRect(aRect.x + r.x, aRect.y + r.y, r.width, r.height);
-        aRect.x -= rect.x;
-        aRect.y -= rect.y;
+        aRect -= aParentFrame->GetPosition();
         return child;
       }
     }
@@ -3716,10 +3696,9 @@ nsPrintEngine::FindFrameByType(nsIPresContext* aPresContext,
     if (fndFrame != nsnull) {
       return fndFrame;
     }
-    child->GetNextSibling(&child);
+    child = child->GetNextSibling();
   }
-  aRect.x -= rect.x;
-  aRect.y -= rect.y;
+  aRect -= aParentFrame->GetPosition();
   return nsnull;
 }
 
@@ -3742,16 +3721,12 @@ nsPrintEngine::FindSelectionBoundsWithList(nsIPresContext* aPresContext,
 
   nsIFrame * child;
   aParentFrame->FirstChild(aPresContext, aList, &child);
-  nsRect rect;
-  aParentFrame->GetRect(rect);
-  aRect.x += rect.x;
-  aRect.y += rect.y;
-  while (child != nsnull) {
-    nsFrameState state;
-    child->GetFrameState(&state);
+  aRect += aParentFrame->GetPosition();
+  while (child) {
     // only leaf frames have this bit flipped
     // then check the hard way
-    PRBool isSelected = (state & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+    PRBool isSelected = (child->GetStateBits() & NS_FRAME_SELECTED_CONTENT)
+      == NS_FRAME_SELECTED_CONTENT;
     if (isSelected) {
       if (NS_FAILED(child->IsVisibleForPainting(aPresContext, aRC, PR_TRUE, &isSelected))) {
         return NS_ERROR_FAILURE;
@@ -3759,22 +3734,19 @@ nsPrintEngine::FindSelectionBoundsWithList(nsIPresContext* aPresContext,
     }
 
     if (isSelected) {
-      nsRect r;
-      child->GetRect(r);
+      nsRect r = child->GetRect();
       if (aStartFrame == nsnull) {
         aStartFrame = child;
         aStartRect.SetRect(aRect.x + r.x, aRect.y + r.y, r.width, r.height);
       } else {
-        child->GetRect(r);
         aEndFrame = child;
         aEndRect.SetRect(aRect.x + r.x, aRect.y + r.y, r.width, r.height);
       }
     }
     FindSelectionBounds(aPresContext, aRC, child, aRect, aStartFrame, aStartRect, aEndFrame, aEndRect);
-    child->GetNextSibling(&child);
+    child = child->GetNextSibling();
   }
-  aRect.x -= rect.x;
-  aRect.y -= rect.y;
+  aRect -= aParentFrame->GetPosition();
   return NS_OK;
 }
 
@@ -3838,13 +3810,13 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
 
   nsIFrame * startFrame = nsnull;
   nsIFrame * endFrame   = nsnull;
-  nsRect rect;
-  seqFrame->GetRect(rect);
 
   // start out with the sequence frame and search the entire frame tree
   // capturing the the starting and ending child frames of the selection
   // and their rects
-  FindSelectionBounds(aPresContext, aRC, seqFrame, rect, startFrame, aStartRect, endFrame, aEndRect);
+  nsRect r = seqFrame->GetRect();
+  FindSelectionBounds(aPresContext, aRC, seqFrame, r,
+                      startFrame, aStartRect, endFrame, aEndRect);
 
 #ifdef DEBUG_rodsX
   printf("Start Frame: %p\n", startFrame);
@@ -3894,7 +3866,7 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
   while (child != nsnull) {
     printf("Page: %d - %p\n", pageNum, child);
     pageNum++;
-    child->GetNextSibling(&child);
+    child = child->GetNextSibling();
   }
   }
 #endif
@@ -3912,7 +3884,7 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
       aEndPageNum = pageNum;
     }
     pageNum++;
-    page->GetNextSibling(&page);
+    page = page->GetNextSibling();
   }
 
 #ifdef DEBUG_rodsX
@@ -4785,19 +4757,15 @@ static void DumpFrames(FILE*                 out,
       frameDebug->GetFrameName(tmp);
     }
     fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
-    nsFrameState state;
-    child->GetFrameState(&state);
     PRBool isSelected;
     if (NS_SUCCEEDED(child->IsVisibleForPainting(aPresContext, *aRendContext, PR_TRUE, &isSelected))) {
       fprintf(out, " %p %s", child, isSelected?"VIS":"UVS");
-      nsRect rect;
-      child->GetRect(rect);
+      nsRect rect = child->GetRect();
       fprintf(out, "[%d,%d,%d,%d] ", rect.x, rect.y, rect.width, rect.height);
-      nsIView* view = child->GetView(aPresContext);
-      fprintf(out, "v: %p ", view);
+      fprintf(out, "v: %p ", (void*)child->GetView());
       fprintf(out, "\n");
       DumpFrames(out, aPresContext, aRendContext, child, aLevel+1);
-      child->GetNextSibling(&child);
+      child = child->GetNextSibling();
     }
   }
 }
@@ -4816,8 +4784,7 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
     fprintf(out, "docshell=%p \n", aDocShell);
     nsIPresShell* shell = nsPrintEngine::GetPresShellFor(aDocShell);
     if (nsnull != shell) {
-      nsCOMPtr<nsIViewManager> vm;
-      shell->GetViewManager(getter_AddRefs(vm));
+      nsIViewManager* vm = shell->GetViewManager();
       if (vm) {
         nsIView* root;
         vm->GetRootView(root);
@@ -4888,7 +4855,7 @@ void DumpLayoutData(char*              aTitleStr,
     //DumpFrames(fd, aPresContext, renderingContext, aRootFrame, 0);
     fprintf(fd, "---------------------------------------\n\n");
     fprintf(fd, "--------------- Views From Root Frame----------------\n");
-    nsIView* v = aRootFrame->GetView(aPresContext);
+    nsIView* v = aRootFrame->GetView();
     if (v) {
       v->List(fd);
     } else {

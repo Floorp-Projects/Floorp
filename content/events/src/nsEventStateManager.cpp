@@ -320,10 +320,7 @@ NS_IMPL_ISUPPORTS3(nsEventStateManager, nsIEventStateManager, nsIObserver, nsISu
 inline void
 SetFrameExternalReference(nsIFrame* aFrame)
 {
-  nsFrameState state;
-  aFrame->GetFrameState(&state);
-  state |= NS_FRAME_EXTERNAL_REFERENCE;
-  aFrame->SetFrameState(state);
+  aFrame->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
 }
 
 NS_IMETHODIMP
@@ -944,7 +941,7 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
 
         if (frame) {
           const nsStyleVisibility* vis = frame->GetStyleVisibility();
-          PRBool viewShown = frame->AreAncestorViewsVisible(mPresContext);
+          PRBool viewShown = frame->AreAncestorViewsVisible();
 
           // get the XUL element
           nsCOMPtr<nsIDOMXULElement> element = do_QueryInterface(content);
@@ -1115,9 +1112,8 @@ nsEventStateManager :: CreateClickHoldTimer ( nsIPresContext* inPresContext, nsG
     
   // if content clicked on has a popup, don't even start the timer
   // since we'll end up conflicting and both will show.
-  nsCOMPtr<nsIContent> clickedContent;
   if ( mGestureDownFrame ) {
-    mGestureDownFrame->GetContent(getter_AddRefs(clickedContent));
+    nsIContent* clickedContent = mGestureDownFrame->GetContent();
     if ( clickedContent ) {
       // check for the |popup| attribute
       nsAutoString popup;
@@ -1231,9 +1227,8 @@ nsEventStateManager :: FireContextClick ( )
   // when we're through because no one else is doing anything more with this
   // event and it will get reset on the very next event to the correct frame).
   mCurrentTarget = mGestureDownFrame;
-  nsCOMPtr<nsIContent> lastContent;
   if ( mGestureDownFrame ) {
-    mGestureDownFrame->GetContent(getter_AddRefs(lastContent));
+    nsIContent* lastContent = mGestureDownFrame->GetContent();
     
     if ( lastContent ) {
       // before dispatching, check that we're not on something that doesn't get a context menu
@@ -1576,8 +1571,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
                                    PRInt32 aNumLines, PRBool aScrollHorizontal, PRBool aScrollPage,
                                    PRBool aUseTargetFrame)
 {
-  nsCOMPtr<nsIContent> targetContent;
-  aTargetFrame->GetContent(getter_AddRefs(targetContent));
+  nsCOMPtr<nsIContent> targetContent = aTargetFrame->GetContent();
   if (!targetContent)
     GetFocusedContent(getter_AddRefs(targetContent));
   if (!targetContent) return NS_OK;
@@ -1672,7 +1666,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
     if (sv)
       CallQueryInterface(sv, &focusView);
   } else {
-    focusView = focusFrame->GetClosestView(aPresContext);
+    focusView = focusFrame->GetClosestView();
     if (!focusView)
       return NS_ERROR_FAILURE;
     
@@ -1698,8 +1692,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
       CallQueryInterface(sv, &portView);
       if (!portView)
         return NS_ERROR_FAILURE;
-      nsRect portRect;
-      portView->GetBounds(portRect);
+      nsRect portRect = portView->GetBounds();
 
       passToParent = aScrollHorizontal ? (xPos + portRect.width >= scrolledSize.width)
         : (yPos + portRect.height >= scrolledSize.height);
@@ -1830,9 +1823,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !mNormalLMouseEventInProcess) {
         //Our state is out of whack.  We got a mouseup while still processing
         //the mousedown.  Kill View-level mouse capture or it'll stay stuck
-        nsCOMPtr<nsIViewManager> viewMan;
         if (aView) {
-          aView->GetViewManager(*getter_AddRefs(viewMan));
+          nsIViewManager* viewMan = aView->GetViewManager();
           if (viewMan) {
             nsIView* grabbingView;
             viewMan->GetMouseEventGrabber(grabbingView);
@@ -1860,9 +1852,9 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         }
 
         nsIFrame* currFrame = mCurrentTarget;
-        nsCOMPtr<nsIContent> activeContent;
+        nsIContent* activeContent = nsnull;
         if (mCurrentTarget)
-          mCurrentTarget->GetContent(getter_AddRefs(activeContent));
+          activeContent = mCurrentTarget->GetContent();
 
         // Look for the nearest enclosing focusable frame.
         while (currFrame) {
@@ -1877,12 +1869,12 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           const nsStyleUserInterface* ui = currFrame->GetStyleUserInterface();
           if ((ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
               (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE)) {
-            currFrame->GetContent(getter_AddRefs(newFocus));
+            newFocus = currFrame->GetContent();
             nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocus));
             if (domElement)
               break;
           }
-          currFrame->GetParent(&currFrame);
+          currFrame = currFrame->GetParent();
         }
 
         if (newFocus && currFrame)
@@ -2030,8 +2022,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       case MOUSE_SCROLL_TEXTSIZE:
         {
           // Exclude form controls and XUL content.
-          nsCOMPtr<nsIContent> content;
-          aTargetFrame->GetContent(getter_AddRefs(content));
+          nsIContent* content = aTargetFrame->GetContent();
           if (content &&
               !content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL) &&
               !content->IsContentOfType(nsIContent::eXUL))
@@ -2119,12 +2110,11 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
               
                 // force the update to happen now, otherwise multiple scrolls can
                 // occur before the update is processed. (bug #7354)
-                nsIViewManager* vm = nsnull;
-                if (NS_SUCCEEDED (aView->GetViewManager(vm)) && nsnull != vm) {
+                nsIViewManager* vm = aView->GetViewManager();
+                if (vm) {
                   // I'd use Composite here, but it doesn't always work.
                   // vm->Composite();
                   vm->ForceUpdate();
-                  NS_RELEASE(vm);
                 }
               }
             }
@@ -2139,12 +2129,11 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
               
                 // force the update to happen now, otherwise multiple scrolls can
                 // occur before the update is processed. (bug #7354)
-                nsIViewManager* vm = nsnull;
-                if (NS_SUCCEEDED (aView->GetViewManager(vm)) && nsnull != vm) {
+                nsIViewManager* vm = aView->GetViewManager();
+                if (vm) {
                   // I'd use Composite here, but it doesn't always work.
                   // vm->Composite();
                   vm->ForceUpdate();
-                  NS_RELEASE(vm);
                 }
               }
             }
@@ -2275,7 +2264,7 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
   }
   if (aFrame == mCurrentTarget) {
     if (aFrame) {
-      aFrame->GetContent(getter_AddRefs(mCurrentTargetContent));
+      mCurrentTargetContent = aFrame->GetContent();
     }
     mCurrentTarget = nsnull;
   }
@@ -2336,9 +2325,9 @@ nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext,
   }
   //If not locked, look for correct cursor
   else {
-    nsCOMPtr<nsIContent> targetContent;
+    nsIContent* targetContent = nsnull;
     if (mCurrentTarget) {
-      mCurrentTarget->GetContent(getter_AddRefs(targetContent));
+      targetContent = mCurrentTarget->GetContent();
     }
 
     //Check if the current target is disabled.  If so use the default pointer.
@@ -3032,8 +3021,7 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
 
   nsCOMPtr<nsIWidget> widget;
-  nsCOMPtr<nsIViewManager> vm;
-  presShell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = presShell->GetViewManager();
   if (vm) {
     vm->GetWidget(getter_AddRefs(widget));
   }
@@ -3445,14 +3433,12 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
   nsIFrame* currentFrame = (nsIFrame*)currentItem;
 
   while (currentFrame) {
-    nsCOMPtr<nsIContent> child;
-    currentFrame->GetContent(getter_AddRefs(child));
-
     const nsStyleVisibility* vis = currentFrame->GetStyleVisibility();
     const nsStyleUserInterface* ui = currentFrame->GetStyleUserInterface();
 
-    PRBool viewShown = currentFrame->AreAncestorViewsVisible(mPresContext);
+    PRBool viewShown = currentFrame->AreAncestorViewsVisible();
 
+    nsIContent* child = currentFrame->GetContent();
     nsCOMPtr<nsIDOMElement> element(do_QueryInterface(child));
 
     // if collapsed or hidden, we don't get tabbed into.
@@ -4144,7 +4130,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
         nsCOMPtr<nsIPresShell> shell;
         doc->GetShellAt(0, getter_AddRefs(shell));
         if (shell) {
-          shell->GetViewManager(getter_AddRefs(kungFuDeathGrip));
+          kungFuDeathGrip = shell->GetViewManager();
 
           nsCOMPtr<nsIPresContext> oldPresContext;
           shell->GetPresContext(getter_AddRefs(oldPresContext));
@@ -4279,8 +4265,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     // This raises the window that has both content and scroll bars in it
     // instead of the child window just below it that contains only the content
     // That way we focus the same window that gets focused by a mouse click
-    nsCOMPtr<nsIViewManager> vm;
-    presShell->GetViewManager(getter_AddRefs(vm));
+    nsIViewManager* vm = presShell->GetViewManager();
     if (vm) {
       nsCOMPtr<nsIWidget> widget;
       vm->GetWidget(getter_AddRefs(widget));
@@ -4473,12 +4458,11 @@ void nsEventStateManager::ForceViewUpdate(nsIView* aView)
   // force the update to happen now, otherwise multiple scrolls can
   // occur before the update is processed. (bug #7354)
 
-  nsIViewManager* vm = nsnull;
-  if (NS_SUCCEEDED (aView->GetViewManager(vm)) && nsnull != vm) {
+  nsIViewManager* vm = aView->GetViewManager();
+  if (vm) {
     // I'd use Composite here, but it doesn't always work.
     // vm->Composite();
     vm->ForceUpdate();
-    NS_RELEASE(vm);
   }
 }
 
@@ -4566,8 +4550,7 @@ void nsEventStateManager::FlushPendingEvents(nsIPresContext* aPresContext) {
   aPresContext->GetShell(getter_AddRefs(shell));
   if (nsnull != shell) {
     shell->FlushPendingNotifications(PR_FALSE);
-    nsCOMPtr<nsIViewManager> viewManager;
-    shell->GetViewManager(getter_AddRefs(viewManager));
+    nsIViewManager* viewManager = shell->GetViewManager();
     if (viewManager) {
       viewManager->FlushPendingInvalidates();
     }
@@ -4701,7 +4684,7 @@ nsresult nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent
             startFrame = NS_STATIC_CAST(nsIFrame*, currentItem);
             if (startFrame) {
               PRBool endEqualsStart(startContent == endContent);
-              startFrame->GetContent(getter_AddRefs(startContent));
+              startContent = startFrame->GetContent();
               if (endEqualsStart)            
                 endContent = startContent;
             }

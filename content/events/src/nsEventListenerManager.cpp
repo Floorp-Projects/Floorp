@@ -2792,8 +2792,7 @@ void nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
     // menu away from the top left corner of the frame. If we always 
     // used the frame height, the context menu could end up far away,
     // for example when we're focused on linked images.
-    nsCOMPtr<nsIViewManager> vm;
-    aPresShell->GetViewManager(getter_AddRefs(vm));
+    nsIViewManager* vm = aPresShell->GetViewManager();
     if (vm) {
       nsIScrollableView* scrollableView = nsnull;
       vm->GetRootScrollableView(&scrollableView);
@@ -2803,9 +2802,7 @@ void nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
       }
       else {
         // No scrollable view, use height of frame as fallback
-        nsRect frameRect;
-        frame->GetRect(frameRect);
-        extraDistance = frameRect.height;
+        extraDistance = frame->GetSize().height;
       }
       aTargetPt.x += extraDistance;
       aTargetPt.y += extraDistance;

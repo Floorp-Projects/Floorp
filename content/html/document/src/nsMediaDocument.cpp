@@ -291,8 +291,7 @@ nsMediaDocument::StartLayout()
       shell->InitialReflow(visibleArea.width, visibleArea.height);
 
       // Now trigger a refresh.
-      nsCOMPtr<nsIViewManager> vm;
-      shell->GetViewManager(getter_AddRefs(vm));
+      nsIViewManager* vm = shell->GetViewManager();
       if (vm) {
         vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
       }

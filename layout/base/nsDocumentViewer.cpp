@@ -1816,14 +1816,11 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   if (containerView) {
     // see if the containerView has already been hooked into a foreign view manager hierarchy
     // if it has, then we have to hook into the hierarchy too otherwise bad things will happen.
-    nsCOMPtr<nsIViewManager> containerVM;
-    containerView->GetViewManager(*getter_AddRefs(containerVM));
-    nsCOMPtr<nsIViewManager> checkVM;
+    nsIViewManager* containerVM = containerView->GetViewManager();
     nsIView* pView = containerView;
     do {
-      pView->GetParent(pView);
-    } while (pView != nsnull
-             && NS_SUCCEEDED(pView->GetViewManager(*getter_AddRefs(checkVM))) && checkVM == containerVM);
+      pView = pView->GetParent();
+    } while (pView && pView->GetViewManager() == containerVM);
 
     if (!pView) {
       // OK, so the container is not already hooked up into a foreign view manager hierarchy.
@@ -1882,7 +1879,7 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   // Setup hierarchical relationship in view manager
   mViewManager->SetRootView(view);
 
-  view->GetWidget(*getter_AddRefs(mWindow));
+  mWindow = view->GetWidget();
 
   // This SetFocus is necessary so the Arrow Key and Page Key events
   // go to the scrolled view as soon as the Window is created instead of going to
@@ -3202,12 +3199,10 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
   nsIFrame * pageFrame;
   seqFrame->FirstChild(mPresContext, nsnull, &pageFrame);
   while (pageFrame != nsnull) {
-    nsRect pageRect;
-    pageFrame->GetRect(pageRect);
+    nsRect pageRect = pageFrame->GetRect();
     if (pageNum == 1) {
       gap = pageRect.y;
     }
-    pageRect.y -= gap;
     if (pageRect.Contains(pageRect.x, y)) {
       currentPage = pageFrame;
     }
@@ -3216,7 +3211,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
       break;
     }
     pageNum++;
-    pageFrame->GetNextSibling(&pageFrame);
+    pageFrame = pageFrame->GetNextSibling();
   }
 
   if (aType == nsIWebBrowserPrint::PRINTPREVIEW_PREV_PAGE) {
@@ -3244,9 +3239,6 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
   }
 
   if (fndPageFrame && scrollableView) {
-    // get the child rect
-    nsRect fRect;
-    fndPageFrame->GetRect(fRect);
     // find offset from view
     nsPoint pnt;
     nsIView * view;
@@ -3259,7 +3251,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
     }
 
     // scroll so that top of page (plus the gray area) is at the top of the scroll area
-    scrollableView->ScrollTo(0, fRect.y-deadSpaceGap, PR_TRUE);
+    scrollableView->ScrollTo(0, fndPageFrame->GetPosition().y-deadSpaceGap, PR_TRUE);
   }
   return NS_OK;
 #else

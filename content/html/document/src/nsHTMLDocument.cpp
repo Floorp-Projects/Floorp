@@ -2910,11 +2910,10 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
   rv = aShell->GetPrimaryFrameFor(body, &frame);
   if (NS_SUCCEEDED(rv) && frame) {
     nsSize                    size;
-    nsIView*                  view;
     nsCOMPtr<nsIPresContext>  presContext;
 
     aShell->GetPresContext(getter_AddRefs(presContext));
-    view = frame->GetView(presContext);
+    nsIView* view = frame->GetView();
 
     // If we have a view check if it's scrollable. If not,
     // just use the view size itself
@@ -2926,31 +2925,25 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
         scrollableView->GetScrolledView(view);
       }
 
-      nsRect r;
-      rv = view->GetBounds(r);
-      if (NS_SUCCEEDED(rv)) {
-        size.height = r.height;
-        size.width = r.width;
-      }
+      nsRect r = view->GetBounds();
+      size.height = r.height;
+      size.width = r.width;
     }
     // If we don't have a view, use the frame size
     else {
-      rv = frame->GetSize(size);
+      size = frame->GetSize();
     }
 
     // Convert from twips to pixels
+    nsCOMPtr<nsIPresContext> context;
+    rv = aShell->GetPresContext(getter_AddRefs(context));
+
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIPresContext> context;
+      float scale;
+      context->GetTwipsToPixels(&scale);
 
-      rv = aShell->GetPresContext(getter_AddRefs(context));
-
-      if (NS_SUCCEEDED(rv)) {
-        float scale;
-        context->GetTwipsToPixels(&scale);
-
-        *aWidth = NSTwipsToIntPixels(size.width, scale);
-        *aHeight = NSTwipsToIntPixels(size.height, scale);
-      }
+      *aWidth = NSTwipsToIntPixels(size.width, scale);
+      *aHeight = NSTwipsToIntPixels(size.height, scale);
     }
   }
 
