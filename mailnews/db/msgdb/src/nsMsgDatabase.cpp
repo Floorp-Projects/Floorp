@@ -103,7 +103,19 @@ nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, n
 
 	char* msgURI;
 
-	rv = nsBuildLocalMessageURI(path, key, &msgURI);
+	//Need to remove ".msf".
+	nsFileSpec folderPath = path;
+	char* leafName = folderPath.GetLeafName();
+	nsString folderName(leafName);
+	PL_strfree(leafName);
+	if(folderName.Find(".msf") != -1)
+	{
+		nsString realFolderName;
+		folderName.Left(realFolderName, folderName.Length() - 4);
+		folderPath.SetLeafName((const nsString)realFolderName);
+	}
+
+	rv = nsBuildLocalMessageURI(folderPath, key, &msgURI);
     if (NS_FAILED(rv)) return rv;
 
 
