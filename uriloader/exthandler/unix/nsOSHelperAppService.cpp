@@ -67,7 +67,7 @@ IsNetscapeFormat(const nsAString& aBuffer);
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
 #ifdef MOZ_WIDGET_GTK2
-  //  nsGNOMERegistry::Startup();
+  nsGNOMERegistry::Startup();
 #endif
 }
 
