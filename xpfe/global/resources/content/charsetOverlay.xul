@@ -13,7 +13,7 @@
 <html:script language="JavaScript" src="chrome://global/content/charsetOverlay.js"/>
 
 	<!-- Charset Menu -->
-	<menu id="charsetMenu" value="&charsetMenu.label;"  datasources="rdf:charset-menu" ref="NC:CharsetMenuRoot" open="true">
+	<menu id="charsetMenu" value="&charsetMenu.label;"  datasources="rdf:charset-menu" ref="NC:CharsetMenuRoot">
         <template>
           <rule>
 		    <menupopup>
