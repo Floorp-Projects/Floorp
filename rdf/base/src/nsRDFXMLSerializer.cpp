@@ -707,6 +707,9 @@ static const char kRDFLIResource2[] = "\"/>\n";
     else if ((literal = do_QueryInterface(aMember)) != nsnull) {
         const PRUnichar *value;
         literal->GetValueConst(&value);
+static const char kRDFLIOpenGT[] = ">";
+        // close the '<RDF:LI' before adding the literal
+        rdf_BlockingWrite(aStream, kRDFLIOpenGT, sizeof(kRDFLIOpenGT) - 1);
 
         nsAutoString s(value);
         rdf_EscapeAmpersandsAndAngleBrackets(s);
