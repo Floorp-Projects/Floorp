@@ -125,7 +125,6 @@ nsSocketTransport::nsSocketTransport():
     mOnStartReadFired     (PR_FALSE),
     mCancelStatus(NS_OK),
     mCloseConnectionOnceDone(PR_FALSE),
-    mLookupComplete(PR_FALSE),
     mCurrentState(eSocketState_Created),
     mHostName(nsnull),
     mLoadAttributes(LOAD_NORMAL),
@@ -141,7 +140,6 @@ nsSocketTransport::nsSocketTransport():
     mReadOffset (0),
     mWriteOffset(0),
     mStatus     (NS_OK),
-    mSyncStatus(NS_OK),
     mSuspendCount(0),
     mWriteCount (0),
     mBytesExpected(-1),
@@ -169,7 +167,7 @@ nsSocketTransport::nsSocketTransport():
     //
     memset(&mNetAddress, 0, sizeof(mNetAddress));
     PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, 0, &mNetAddress);
-                
+    
     //
     // Initialize the global connect timeout value if necessary...
     //
@@ -366,18 +364,14 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
     if (mCurrentState == eSocketState_WaitConnect)
         mStatus = NS_ERROR_CONNECTION_REFUSED;
     else
-        mSyncStatus = mStatus = NS_BINDING_FAILED;
+        mStatus = NS_BINDING_FAILED;
   }
 
   if (PR_POLL_HUP & aSelectFlags) {
     PR_LOG(gSocketLog, PR_LOG_ERROR, 
            ("Operation failed via PR_POLL_HUP. [%s:%d %x].\n", 
             mHostName, mPort, this));
-    if (mCurrentState == eSocketState_WaitConnect) {
-        mStatus = NS_ERROR_CONNECTION_REFUSED;
-    } else {
-        mStatus = NS_OK;
-    }
+    mStatus = NS_OK;
     mCurrentState = eSocketState_Error;
   }
 
@@ -609,7 +603,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         break;
 
       case eSocketState_Timeout:
-        mSyncStatus = mStatus = NS_ERROR_NET_TIMEOUT;
+        mStatus = NS_ERROR_NET_TIMEOUT;
         break;
 
       default:
@@ -1698,12 +1692,8 @@ nsSocketTransport::OnStopLookup(nsISupports *aContext,
 
   // If the lookup failed, set the status...
   if (NS_FAILED(aStatus)) {
-    mSyncStatus = mStatus = aStatus;
+    mStatus = aStatus;
   }
-
-  mLookupComplete = PR_TRUE;
-  nsresult rv = mon.Notify();
-  if (NS_FAILED(rv)) return rv;
 
   // Start processing the transport again - if necessary...
   if (GetFlag(eSocketDNS_Wait)) {
@@ -1977,11 +1967,7 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
           "rv = %x.\n",
           mHostName, mPort, this, rv));
 
-  if (!mLookupComplete) {
-    rv = mon.Wait();
-    if (NS_FAILED(rv)) return rv; // interrupted
-  }
-  return mSyncStatus;
+  return rv;
 }
 
 
@@ -2033,23 +2019,19 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
 
     SetWriteType(eSocketWrite_Sync);
   }
-  
+/*
   if (NS_SUCCEEDED(rv)) {
     mOperation = eSocketOperation_ReadWrite;
     // Start the crank.
     rv = mService->AddToWorkQ(this);
   }
-
+*/
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("--- Leaving nsSocketTransport::OpenOutputStream() [%s:%d %x].\t"
           "rv = %x.\n",
           mHostName, mPort, this, rv));
 
-  if (!mLookupComplete) {
-    rv = mon.Wait();
-    if (NS_FAILED(rv)) return rv; // interrupted
-  } 
-  return mSyncStatus;
+  return rv;
 }
 
 NS_IMETHODIMP
