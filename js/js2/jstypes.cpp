@@ -146,7 +146,7 @@ int JSValue::operator==(const JSValue& value) const
         CASE(i32); CASE(u32); CASE(f32);
         CASE(i64); CASE(u64); CASE(f64);
         CASE(object); CASE(array); CASE(function); CASE(string);
-        CASE(boolean);
+        CASE(type); CASE(boolean);
         #undef CASE
         case integer_tag : return (this->f64 == value.f64);
         // question:  are all undefined values equal to one another?
