@@ -3744,7 +3744,9 @@ void
 nsWebShellFactory::StartServices()
 {
   // XXX TEMPORARY Till we have real pluggable protocol handlers
+#ifndef NECKO
   NET_InitJavaScriptProtocol();
+#endif // NECKO
   mStartedServices = PR_TRUE;
 }
 
