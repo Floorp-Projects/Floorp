@@ -338,8 +338,8 @@ AADrawBox(XImage *aXImage,
 {
   PRInt32 i;
   blendPixel blendPixelFunc = nsX11AlphaBlend::GetBlendPixel();
-  aWidth  = MAX(1, aWidth);
-  aHeight = MAX(1, aHeight);
+  if (aWidth<=0 || aHeight<=0)
+    return;
   for (i=1; i<aWidth-1; i++) {
     if (i%16 == 0) continue; // let the underlaying color show
     (*blendPixelFunc)(aXImage, i+aX1, aY1, aColor, aAlpha);
@@ -475,6 +475,8 @@ nsBlendMonoImage0888(XImage *ximage, nsAntiAliasedGlyph * glyph,
 
   int xfer_width  = MIN((int)glyph->GetWidth(),  ximage->width-xOff);
   int xfer_height = MIN((int)glyph->GetHeight(), ximage->height-yOff);
+  NS_ASSERTION(xfer_width==(int)glyph->GetWidth(), "image not wide enough");
+  NS_ASSERTION(xfer_height==(int)glyph->GetHeight(), "image not tall enough");
   PRUint16 r = NS_GET_R(color);
   PRUint16 g = NS_GET_G(color);
   PRUint16 b = NS_GET_B(color);
@@ -521,6 +523,8 @@ nsBlendMonoImage0888_br(XImage *ximage, nsAntiAliasedGlyph * glyph,
 
   int xfer_width  = MIN((int)glyph->GetWidth(),  ximage->width-xOff);
   int xfer_height = MIN((int)glyph->GetHeight(), ximage->height-yOff);
+  NS_ASSERTION(xfer_width==(int)glyph->GetWidth(), "image not wide enough");
+  NS_ASSERTION(xfer_height==(int)glyph->GetHeight(), "image not tall enough");
   PRUint16 r = NS_GET_R(color);
   PRUint16 g = NS_GET_G(color);
   PRUint16 b = NS_GET_B(color);
@@ -565,6 +569,8 @@ nsBlendMonoImage555(XImage *ximage, nsAntiAliasedGlyph * glyph,
 
   int xfer_width  = MIN((int)glyph->GetWidth(),  ximage->width-xOff);
   int xfer_height = MIN((int)glyph->GetHeight(), ximage->height-yOff);
+  NS_ASSERTION(xfer_width==(int)glyph->GetWidth(), "image not wide enough");
+  NS_ASSERTION(xfer_height==(int)glyph->GetHeight(), "image not tall enough");
   PRUint16 r = NS_GET_R(color);
   PRUint16 g = NS_GET_G(color);
   PRUint16 b = NS_GET_B(color);
@@ -611,6 +617,8 @@ nsBlendMonoImage555_br(XImage *ximage, nsAntiAliasedGlyph * glyph,
 
   int xfer_width  = MIN((int)glyph->GetWidth(),  ximage->width-xOff);
   int xfer_height = MIN((int)glyph->GetHeight(), ximage->height-yOff);
+  NS_ASSERTION(xfer_width==(int)glyph->GetWidth(), "image not wide enough");
+  NS_ASSERTION(xfer_height==(int)glyph->GetHeight(), "image not tall enough");
   PRUint16 r = NS_GET_R(color);
   PRUint16 g = NS_GET_G(color);
   PRUint16 b = NS_GET_B(color);
@@ -665,6 +673,8 @@ nsBlendMonoImage565(XImage *ximage, nsAntiAliasedGlyph * glyph,
 
   int xfer_width  = MIN((int)glyph->GetWidth(),  ximage->width-xOff);
   int xfer_height = MIN((int)glyph->GetHeight(), ximage->height-yOff);
+  NS_ASSERTION(xfer_width==(int)glyph->GetWidth(), "image not wide enough");
+  NS_ASSERTION(xfer_height==(int)glyph->GetHeight(), "image not tall enough");
   PRUint16 r = NS_GET_R(color);
   PRUint16 g = NS_GET_G(color);
   PRUint16 b = NS_GET_B(color);
@@ -709,6 +719,8 @@ nsBlendMonoImage565_br(XImage *ximage, nsAntiAliasedGlyph * glyph,
 
   int xfer_width  = MIN((int)glyph->GetWidth(),  ximage->width-xOff);
   int xfer_height = MIN((int)glyph->GetHeight(), ximage->height-yOff);
+  NS_ASSERTION(xfer_width==(int)glyph->GetWidth(), "image not wide enough");
+  NS_ASSERTION(xfer_height==(int)glyph->GetHeight(), "image not tall enough");
   PRUint16 r = NS_GET_R(color);
   PRUint16 g = NS_GET_G(color);
   PRUint16 b = NS_GET_B(color);
@@ -762,6 +774,8 @@ nsBlendMonoImage888_lsb(XImage *ximage, nsAntiAliasedGlyph * glyph,
 
   int xfer_width  = MIN((int)glyph->GetWidth(),  ximage->width-xOff);
   int xfer_height = MIN((int)glyph->GetHeight(), ximage->height-yOff);
+  NS_ASSERTION(xfer_width==(int)glyph->GetWidth(), "image not wide enough");
+  NS_ASSERTION(xfer_height==(int)glyph->GetHeight(), "image not tall enough");
   PRUint16 r = NS_GET_R(color);
   PRUint16 g = NS_GET_G(color);
   PRUint16 b = NS_GET_B(color);
@@ -805,6 +819,8 @@ nsBlendMonoImage888_msb(XImage *ximage, nsAntiAliasedGlyph * glyph,
 
   int xfer_width  = MIN((int)glyph->GetWidth(),  ximage->width-xOff);
   int xfer_height = MIN((int)glyph->GetHeight(), ximage->height-yOff);
+  NS_ASSERTION(xfer_width==(int)glyph->GetWidth(), "image not wide enough");
+  NS_ASSERTION(xfer_height==(int)glyph->GetHeight(), "image not tall enough");
   PRUint16 r = NS_GET_R(color);
   PRUint16 g = NS_GET_G(color);
   PRUint16 b = NS_GET_B(color);

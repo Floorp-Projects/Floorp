@@ -212,10 +212,10 @@ nsXFontAAScaledBitmap::DrawText8or16(GdkDrawable *aDrawable, GdkGC *aGC,
     // complain if the requested area is not completely off screen
     int win_width = DisplayWidth(mDisplay, mScreen);
     int win_height = DisplayHeight(mDisplay, mScreen);
-    if (((int)(aX-mScaledMax.lbearing+image_width) > 0)   // not off to left
-        && ((int)(aX-mScaledMax.lbearing) < win_width)    // not off to right
-        && ((int)(aY-mScaledMax.ascent+image_height) > 0) // not off to top
-        && ((int)(aY-mScaledMax.ascent) < win_height))    // not off to bottom
+    if (((int)(aX-mScaledMax.lbearing+image_width) > 0)  // not hidden to left
+        && ((int)(aX-mScaledMax.lbearing) < win_width)   // not hidden to right
+        && ((int)(aY-mScaledMax.ascent+image_height) > 0)// not hidden to top
+        && ((int)(aY-mScaledMax.ascent) < win_height))   // not hidden to bottom
     {
       NS_ASSERTION(sub_image, "failed to get the image");
     }
@@ -315,7 +315,7 @@ PRBool
 nsXFontAAScaledBitmap::GetScaledGreyImage(const char *aChar,
                                          nsAntiAliasedGlyph **aGreyImage)
 {
-  XChar2b *aChar2b;
+  XChar2b *aChar2b = nsnull;
   PRUint32 antiJagPadding;
   XImage *ximage;
   nsAntiAliasedGlyph *scaled_image;
@@ -602,8 +602,14 @@ nsXFontAAScaledBitmap::LoadFont()
   if (!mGlyphHash)
     goto cleanup_and_return;
 
-  if (mGdkFont)
+  if (mGdkFont) {
+#ifdef NS_FONT_DEBUG_LOAD_FONT
+    if (gFontDebug & NS_FONT_DEBUG_LOAD_FONT) {
+      printf("loaded %s\n", mName);
+    }
+#endif
     return PR_TRUE;
+  }
   else
     return PR_FALSE;
 
