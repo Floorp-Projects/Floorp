@@ -165,6 +165,9 @@ struct nsHTMLReflowState : nsReflowState {
   // Run-in frame made available for reflow
   nsBlockFrame*         mRunInFrame;
 
+  // Compact margin available space
+  nscoord               mCompactMarginWidth;
+
   // Constructs an initial reflow state (no parent reflow state) for a
   // non-incremental reflow command. Sets reflowType to eReflowType_Block
   nsHTMLReflowState(nsIPresContext&      aPresContext,
@@ -227,6 +230,7 @@ protected:
   // constructors.
   void Init(nsIPresContext& aPresContext) {
     mRunInFrame = nsnull;
+    mCompactMarginWidth = 0;
     DetermineFrameType(aPresContext);
     InitConstraints(aPresContext);
   }

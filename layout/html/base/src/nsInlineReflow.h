@@ -55,6 +55,10 @@ public:
     mRunInFrame = aBlockFrame;
   }
 
+  void SetCompactMarginWidth(nscoord aWidth) {
+    mCompactMarginWidth = aWidth;
+  }
+
   void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                   PRBool aPlacedLeftFloater);
 
@@ -158,6 +162,7 @@ protected:
   PRBool mOuterIsBlock;
 
   nsBlockFrame* mRunInFrame;
+  nscoord mCompactMarginWidth;
 
   PRIntn mFrameNum;
 
