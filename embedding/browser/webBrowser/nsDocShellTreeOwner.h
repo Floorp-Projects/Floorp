@@ -95,6 +95,15 @@ protected:
 
     NS_IMETHOD AddChromeListeners();
 
+    nsresult   FindChildWithName(const PRUnichar *aName, 
+                 PRBool aRecurse, nsIDocShellTreeItem* aRequestor, 
+                 nsIDocShellTreeItem **aFoundItem);
+    nsresult   FindItemWithNameAcrossWindows(const PRUnichar* aName,
+                 nsIDocShellTreeItem **aFoundItem);
+
+    void AddToWatcher();
+    void RemoveFromWatcher();
+
 protected:
 
    // Weak References
