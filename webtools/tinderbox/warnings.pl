@@ -344,13 +344,13 @@ sub print_warning {
 
   # File link
   if ($file =~ /\[multiple\]/) {
-    $file =~ s/\[multiple\]//;
+    $file =~ s/\[multiple\]\///;
     print   "<a href='http://lxr.mozilla.org/seamonkey/find?string=$file'>";
     print   "$file:$linenum";
     print "</a> (multiple file matches)";
   } elsif ($file =~ /\[no_match\]/) {
-    $file =~ s/\[no_match\]//;
-    print   "$file:$linenum (no file match)";
+    $file =~ s/\[no_match\]\///;
+    print   "<b>$file:$linenum</b> (no file match)";
   } else {
     print "<a href='"
       .file_url($file,$linenum)."'>";
