@@ -1007,10 +1007,14 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
       }
     }
 
-    if (mNodeInfo->Equals(nsHTMLAtoms::body)) {
-      // The scroll info for the body element should map to the scroll
-      // info for the nearest scrollable frame above the body element
-      // (i.e. the root scrollable frame).
+    if ((InNavQuirksMode(doc) && mNodeInfo->Equals(nsHTMLAtoms::body)) ||
+        mNodeInfo->Equals(nsHTMLAtoms::html)) {
+      // In quirks mode, the scroll info for the body element should map to the
+      // scroll info for the nearest scrollable frame above the body element
+      // (i.e. the root scrollable frame).  This is what IE6 does in quirks
+      // mode.  In strict mode the root scrollable frame corresponds to the
+      // html element in IE6, so we map the scroll info for the html element to
+      // the root scrollable frame.
 
       do {
         frame->GetParent(&frame);
