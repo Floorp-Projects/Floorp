@@ -32,6 +32,14 @@
 	<key id="key_delete" command="true" key="&deleteCmd.key;" observes="cmd_delete"/>
 	<key id="key_selectAll" command="true" key="&selectAllCmd.key;" observes="cmd_selectAll"/>
 
+	<broadcaster id="cmd_undo" disabled="true"/>
+	<broadcaster id="cmd_redo" disabled="true"/>
+	<broadcaster id="cmd_cut" disabled="true"/>
+	<broadcaster id="cmd_copy" disabled="true"/>
+	<broadcaster id="cmd_paste" disabled="true"/>
+	<broadcaster id="cmd_delete" disabled="true"/>
+	<broadcaster id="cmd_selectAll" disabled="true"/>
+
 	<menuitem id="menu_preferences" value="&preferencesCmd.label;"/>
 		  
 	<!-- View Menu -->

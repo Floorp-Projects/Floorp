@@ -1,3 +1,4 @@
+var addressbook = 0;
 var composeWindow = 0;
 var msgCompFields = 0;
 
@@ -11,6 +12,9 @@ function OnLoadSelectAddress()
 	var toAddress="", ccAddress="", bccAddress="";
 
 	doSetOKCancel(SelectAddressOKButton, 0);
+
+	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
+	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
 
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0])

@@ -58,7 +58,12 @@ Rights Reserved.
 	<broadcaster id="cmd_cut" oncommand="AbEditCut()"/>
 	<broadcaster id="cmd_copy" oncommand="AbEditCopy()"/>
 	<broadcaster id="cmd_paste" oncommand="AbEditPaste()"/>
-	<broadcaster id="cmd_delete" oncommand="AbDelete()"/>
+	<broadcaster id="cmd_delete"
+				 oncommand="goDoCommand('cmd_delete')"
+				 onchange="goUpdateCommand('cmd_delete')"
+				 valueDefault="&deleteCmd.label;"
+				 valueAddressBook="&deleteAbCmd.label;"
+				 valueCard="&deleteCardCmd.label;"/>
 	<broadcaster id='cmd_selectAll' oncommand="goDoCommand('cmd_selectAll')" onchange="goUpdateCommand('cmd_selectAll')"/>
 </broadcasterset>
 
@@ -116,7 +121,6 @@ Rights Reserved.
 			<menuitem id="menu_paste"/>
 			<menuseparator/>
 			<menuitem id="menu_delete"/>
-			<menuitem value="&deleteAbCmd.label;" oncommand="AbDeleteDirectory();"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>

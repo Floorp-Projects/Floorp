@@ -38,7 +38,9 @@ Rights Reserved.
 <!ENTITY printAddressBook.label				".Print Address Book...">  
 
 <!-- Edit Menu -->
+<!ENTITY deleteCmd.label					"Delete">  
 <!ENTITY deleteAbCmd.label					"Delete Address Book">  
+<!ENTITY deleteCardCmd.label				"Delete Card">  
 <!ENTITY searchCmd.label					".Search..."> 
 <!ENTITY htmlDomainCmd.label				".HTML Domains...">  
 <!ENTITY abPropsCmd.label					"Properties">  

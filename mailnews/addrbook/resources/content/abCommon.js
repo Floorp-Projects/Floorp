@@ -10,6 +10,11 @@ var ResultsPaneController =
 		{
 			case "cmd_selectAll":
 				return true;
+			
+			case "cmd_delete":
+				goSetMenuValue(command, 'valueCard');
+				return true;
+			
 			default:
 				return false;
 		}
@@ -17,14 +22,23 @@ var ResultsPaneController =
 
 	DoCommand: function(command)
 	{
+		var resultsTree = document.getElementById('resultsTree');
+		
 		switch ( command )
 		{
 			case "cmd_selectAll":
-				var resultsTree = document.getElementById('resultsTree');
 				if ( resultsTree )
 				{
 					dump("select all now!!!!!!" + "\n");
 					resultsTree.selectAll();
+				}
+				break;
+			
+			case "cmd_delete":
+				if ( resultsTree )
+				{
+					var cardList = resultsTree.selectedItems;
+					top.addressbook.DeleteCards(resultsTree, resultsTree, cardList);
 				}
 				break;
 		}
@@ -42,6 +56,9 @@ var DirPaneController =
 		{
 			case "cmd_selectAll":
 				return true;
+			case "cmd_delete":
+				goSetMenuValue(command, 'valueAddressBook');
+				return true;
 			default:
 				return false;
 		}
@@ -49,15 +66,21 @@ var DirPaneController =
 
 	DoCommand: function(command)
 	{
+		var dirTree = document.getElementById('dirTree');
+
 		switch ( command )
 		{
 			case "cmd_selectAll":
-				var dirTree = document.getElementById('dirTree');
 				if ( dirTree )
 				{
 					dump("select all now!!!!!!" + "\n");
 					dirTree.selectAll();
 				}
+				break;
+
+			case "cmd_delete":
+				if ( dirTree )
+					top.addressbook.DeleteAddressBooks(tree.database, tree, tree.selectedItems);
 				break;
 		}
 	}

@@ -18,8 +18,10 @@ function OnLoadAddressBook()
 		dump("failed to set webshell window\n");
 	}
 
-	//document.commandDispatcher.addCommand(document.getElementById('CommandUpdate_AddressBook'));
+	// FIX ME! - can remove these as soon as waterson enables auto-registration
+	document.commandDispatcher.addCommand(document.getElementById('CommandUpdate_AddressBook'));
 	document.commandDispatcher.addCommand(document.getElementById('cmd_selectAll'));
+	document.commandDispatcher.addCommand(document.getElementById('cmd_delete'));
 	
 	SetupCommandUpdateHandlers();
 	SelectFirstAddressBook();
@@ -51,6 +53,39 @@ function CommandUpdate_AddressBook()
 }
 
 
+/*function UpdateCommand_Delete()
+{
+	var command = "cmd_delete";
+	
+	// set enabled/disabled
+	goUpdateCommand(command);
+	
+	var focusedElement = document.commandDispatcher.focusedElement;
+	var id = focusedElement.getAttribute('id');
+	var commandNode = document.getElementById(command);
+
+	dump("focusedElement = " + focusedElement + "\n");
+	dump("id = " + id + "\n");
+	dump("commandNode = " + commandNode + "\n");
+	if ( focusedElement && id && commandNode )
+	{
+		switch ( id )
+		{
+			case "dirTree":
+				commandNode.setAttribute('value', 'Delete Address Book');
+				break;
+			case "resultsTree":
+				commandNode.setAttribute('value', 'Delete Card');
+				break;
+			default:
+				commandNode.setAttribute('value', 'Delete');
+				break;
+		}
+	}
+}*/
+
+
+/*
 function AbDelete()
 {
 //	dump("\AbDelete from XUL\n");
@@ -65,8 +100,9 @@ function AbDelete()
 		top.addressbook.DeleteCards(tree, srcDirectory, cardList);
 	}
 }
+*/
 
-
+/*
 function AbDeleteDirectory()
 {
 //	dump("\AbDeleteDirectory from XUL\n");
@@ -76,6 +112,7 @@ function AbDeleteDirectory()
 	if ( tree )
 		top.addressbook.DeleteAddressBooks(tree.database, tree, tree.selectedItems);
 }
+*/
 
 
 function UpdateCardView()
