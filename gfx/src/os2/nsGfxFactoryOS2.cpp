@@ -426,13 +426,15 @@ BOOL ExtTextOut(HPS aPS, int X, int Y, UINT fuOptions, const RECTL* lprc,
    while( lLength)
    {
       ULONG thislen = min( lLength, 512);
-      GpiCharStringPos( aPS, nsnull,
-                        pDx == nsnull ? 0 : CHS_VECTOR,
+      GpiCharStringPos( aPS, 0,
+                        !pDx ? 0 : CHS_VECTOR,
                         thislen, (PCH)aStringTemp,
-                        pDx == nsnull ? nsnull : (PLONG) pDx);
+                        !pDx ? 0 : (PLONG) pDx);
       lLength -= thislen;
       aStringTemp += thislen;
-      pDx += thislen;
+      if (pDx) {
+        pDx += thislen;
+      } /* endif */
    }
    return TRUE;
 
