@@ -33,6 +33,7 @@
 #include "nsWidgetsCID.h"
 #include "nsClipboard.h"
 #include "nsIRegion.h"
+#include "nsVoidArray.h"
 
 
 //
@@ -50,6 +51,17 @@ nsDragService::nsDragService()
 nsDragService::~nsDragService()
 {
 }
+
+
+//
+// AddRef
+// Release
+// QueryInterface
+//
+// handle the QI for nsIDragSessionMac and farm off anything else to the parent
+// class.
+//
+NS_IMPL_ISUPPORTS_INHERITED(nsDragService,nsBaseDragService,nsIDragSessionMac);
 
 
 //
@@ -131,13 +143,108 @@ nsDragService :: InvokeDragSession (nsISupportsArray * anArrayTransferables, nsI
 //
 // GetData
 //
-// Pull data out of the OS drag items and stash it into the given transferable
+// Pull data out of the OS drag items and stash it into the given transferable.
+// Only put in the data with the highest fidelity asked for.
+//
+// NOTE: THIS API NEEDS TO CHANGE TO RETURN A LIST OF TRANSFERABLES. IT IS 
+// UNSUITABLE FOR MULTIPLE DRAG ITEMS. AS A HACK, THE INITIAL IMPLEMENTATION WILL
+// ONLY LOOK AT THE FIRST DRAG ITEM.
+//
+// NOTE: I ALSO NEED TO COME BACK IN AND DO BETTER ERROR CHECKING ON DRAGMANAGER ROUTINES
+// BUT NOT UNTIL THIS IS CLEANED UP TO WORK WITH MULTIPLE TRANSFERABLES.
 //
 NS_IMETHODIMP
 nsDragService :: GetData (nsITransferable * aTransferable)
 {
-  printf("nsDragService::GetData -- unimplemented on MacOS\n");
-  return NS_ERROR_FAILURE;
+printf("------nsDragService :: getData\n");
+  nsresult errCode = NS_ERROR_FAILURE;
+
+  // make sure we have a good transferable
+  if ( !aTransferable )
+    return NS_ERROR_INVALID_ARG;
+
+  // get flavor list that includes all acceptable flavors (including ones obtained through
+  // conversion)
+  nsVoidArray * flavorList;
+  errCode = aTransferable->FlavorsTransferableCanImport ( &flavorList );
+  if ( errCode != NS_OK )
+    return NS_ERROR_FAILURE;
+
+  // get the data for each drag item. Remember that GetDragItemReferenceNumber()
+  // is one-based NOT zero-based.
+  unsigned short numDragItems = 0;
+  ::CountDragItems ( mDragRef, &numDragItems );
+printf("CountDragItems says :: %ld\n", numDragItems);
+  for ( int item = 1; item <= numDragItems; ++item ) {
+  
+    ItemReference itemRef;
+    ::GetDragItemReferenceNumber ( mDragRef, item, &itemRef );
+printf("item ref = %ld\n", itemRef );
+ 
+	  // Now walk down the list of flavors. When we find one that is actually present,
+	  // copy out the data into the transferable in that format. SetTransferData()
+	  // implicitly handles conversions.
+	  PRUint32 cnt = flavorList->Count();
+	  for ( int i = 0; i < cnt; ++i ) {
+	    nsString * currentFlavor = (nsString *)flavorList->ElementAt(i);
+	    if ( nsnull != currentFlavor ) {
+	      // find MacOS flavor
+	      FlavorType macOSFlavor = nsMimeMapperMac::MapMimeTypeToMacOSType(*currentFlavor);
+printf("looking for data in type %s, mac flavor %ld\n", currentFlavor->ToNewCString(), macOSFlavor);
+	    
+	      // check if it is present in the current drag item.
+	      FlavorFlags unused;
+	      if ( ::GetFlavorFlags(mDragRef, itemRef, macOSFlavor, &unused) == noErr ) {
+	      
+printf("flavor found\n");
+	        // we have it, pull it out of the drag manager. Put it into memory that we allocate
+	        // with new[] so that the tranferable can own it (and then later use delete[]
+	        // on it).
+	        Size dataSize = 0;
+	        OSErr err = ::GetFlavorDataSize ( mDragRef, itemRef, macOSFlavor, &dataSize );
+printf("flavor data size is %ld, err is %ld\n", dataSize, err);
+	        if ( !err && dataSize > 0 ) {
+	          char* dataBuff = new char[dataSize];
+	          if ( !dataBuff )
+	            return NS_ERROR_OUT_OF_MEMORY;
+	          
+	          err = ::GetFlavorData ( mDragRef, itemRef, macOSFlavor, dataBuff, &dataSize, 0 );
+	          if ( err ) {
+	            #ifdef NS_DEBUG
+	               printf("nsClipboard: Error getting data off the clipboard, #%d\n", dataSize);
+	            #endif
+	            return NS_ERROR_FAILURE;
+	          }
+	          
+	          // put it into the transferable
+	          errCode = aTransferable->SetTransferData ( currentFlavor, dataBuff, dataSize );
+	          #ifdef NS_DEBUG
+	            if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
+	          #endif
+	        } 
+	        else {
+	           #ifdef NS_DEBUG
+	             printf("nsClipboard: Error getting data off the clipboard, #%d\n", dataSize);
+	           #endif
+	           errCode = NS_ERROR_FAILURE;
+	        }
+	        
+	        // we found one, get out of this loop!
+	        break;
+	        
+	      } // if a flavor found
+	    }
+	  } // foreach flavor
+  
+  	  // SMARMY HACK UNTIL API IS UPDATED. ONLY GET THE FIRST DRAG ITEM
+      break;
+      
+  } // foreach drag item
+  
+  delete flavorList;
+  
+printf("------nsDragService :: getData\n");
+  return errCode;
 }
 
 
@@ -173,4 +280,20 @@ nsDragService :: IsDataFlavorSupported(nsString * aDataFlavor)
   return flavorSupported;
 
 } // IsDataFlavorSupported
+
+
+//
+// SetDragReference
+//
+// An API to allow the drag manager callback functions to tell the session about the
+// current dragRef w/out resorting to knowing the internals of the implementation
+//
+NS_IMETHODIMP
+nsDragService :: SetDragReference ( DragReference aDragRef )
+{
+  mDragRef = aDragRef;
+  return NS_OK;
+  
+} // SetDragReference
+
 
