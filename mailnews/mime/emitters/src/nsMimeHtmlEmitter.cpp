@@ -75,7 +75,7 @@ PRBool nsMimeHtmlDisplayEmitter::BroadCastHeadersAndAttachments()
   // try to get a header sink if there is one....
   nsCOMPtr<nsIMsgHeaderSink> headerSink; 
   nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
-  if (headerSink && mDocHeader)
+  if (NS_SUCCEEDED(rv) && headerSink && mDocHeader)
     return PR_TRUE;
   else
     return PR_FALSE;

@@ -300,8 +300,8 @@ nsXULElement::nsXULElement()
       mParent(nsnull),
       mChildren(nsnull),
       mScriptObject(nsnull),
-      mIsAnonymous(PR_FALSE),
       mLazyState(0),
+      mIsAnonymous(PR_FALSE),
       mSlots(nsnull)
 {
     NS_INIT_REFCNT();
