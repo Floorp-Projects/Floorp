@@ -125,17 +125,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-real_all: all
-
-real_export: export
-
-real_libs: libs
-
-real_install: install
-
-real_clobber: clobber
-
-real_depend: depend
+GARBAGE += $(DIST) config-defs.h config.cache config.log config.status
 
 ifndef MOZ_MAIL_NEWS
 export::
