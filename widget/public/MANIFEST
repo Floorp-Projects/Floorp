@@ -5,12 +5,10 @@
 nsIFormatConverter.h
 nsIClipboardOwner.h
 nsIClipboard.h
-nsIDragTarget.h
-nsIDragSource.h
 nsIDataFlavor.h
 nsITransferable.h
+nsIGenericTransferable.h
 nsIDragService.h
-nsIDraggedObject.h
 nsui.h
 nsIWidget.h
 nsIButton.h
