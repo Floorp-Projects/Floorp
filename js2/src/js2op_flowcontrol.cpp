@@ -151,4 +151,10 @@
         }
         break;
 
+    case eStop:
+        {
 
+            return retval;
+        }
+        break;
+    

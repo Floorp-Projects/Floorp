@@ -620,7 +620,10 @@ namespace MetaData {
             p = p->next;
         }
         bCon->emitOp(eReturnVoid, lastPos);
+        uint8 *savePC = engine->pc;
+        engine->pc = NULL;
         js2val retval = engine->interpret(phase, bCon);
+        engine->pc = savePC;
         return retval;
     }
 
@@ -1543,7 +1546,7 @@ namespace MetaData {
         case ExprNode::parentheses:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                EvalExprNode(env, phase, u->op);
+                returnRef = EvalExprNode(env, phase, u->op);
             }
             break;
         case ExprNode::assignment:

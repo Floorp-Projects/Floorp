@@ -212,8 +212,17 @@ js2val print(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 ar
 
 js2val load(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
 {
-    if (argc)
-        return meta->readEvalFile(*meta->toString(argv[0]));
+    // Set the environment to global object and system frame so that the
+    // load happens into the top frame.
+    if (argc) {
+        Frame *curTop = meta->env.getTopFrame();
+        JS2Object::RootIterator ri = JS2Object::addRoot(&curTop);
+        meta->env.setTopFrame(meta->env.getPackageOrGlobalFrame());
+        js2val result = meta->readEvalFile(*meta->toString(argv[0]));
+        meta->env.setTopFrame(curTop);
+        JS2Object::removeRoot(ri);
+        return result;
+    }
     else
         return JS2VAL_UNDEFINED;
 }

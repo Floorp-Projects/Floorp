@@ -798,6 +798,9 @@ public:
     Frame *getRegionalFrame();
     Frame *getTopFrame()                { return firstFrame; }
     Frame *getPackageOrGlobalFrame();
+    Frame *getSystemFrame()             { return getPackageOrGlobalFrame()->nextFrame; }
+
+    void setTopFrame(Frame *f)          { firstFrame = f; }
 
     void addFrame(Frame *f)             { f->nextFrame = firstFrame; firstFrame = f; }
     void removeTopFrame()               { firstFrame = firstFrame->nextFrame; }

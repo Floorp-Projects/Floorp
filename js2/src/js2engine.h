@@ -108,6 +108,7 @@ enum JS2Op {
     eBracketWriteRef,
     eBracketDelete,
 
+    eStop,
     eReturn,
     eReturnVoid,
     ePushFrame,         // <frame index:u16>
