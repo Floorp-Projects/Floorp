@@ -19,7 +19,6 @@
   Rights Reserved.
  
    - Contributor(s): David Bienvenu          <bienvenu@netscape.com>
-
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
@@ -51,7 +50,7 @@
   	<box orient="vertical">
   		<box id="nameBox" orient="vertical">
   			<text class="label" value="&folderProps.name.label;" />
-  			<textfield id="name" />
+  			<textfield id="name" readonly="true" />
   		</box>
   
   	</box>
