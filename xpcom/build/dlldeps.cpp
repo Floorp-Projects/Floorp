@@ -43,6 +43,7 @@
 #include "nsIFileSpec.h"
 #include "nsIGenericFactory.h"
 #include "nsAVLTree.h"
+#include "nsHashtableEnumerator.h"
 
 class dummyComparitor: public nsAVLNodeComparitor {
 public:
@@ -90,4 +91,5 @@ void XXXNeverCalled()
     xptc_dummy2();
     XPTI_GetInterfaceInfoManager();
     NS_NewGenericFactory(NULL, NULL, NULL);
+    NS_NewHashtableEnumerator(NULL, NULL, NULL, NULL);
 }
