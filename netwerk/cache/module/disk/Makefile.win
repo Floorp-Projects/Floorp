@@ -1,0 +1,61 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+DEPTH=..\..\..\..
+include <$(DEPTH)/config/config.mak>
+
+MODULE=diskcache
+
+IS_COMPONENT=1
+MAKE_OBJ_TYPE=DLL
+DLLNAME=diskcache
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+LLIBS= $(LLIBS) \
+	$(LIBNSPR)		\
+	$(DIST)\lib\xpcom.lib	\
+	$(DIST)\lib\dbm32.lib	\
+	$(NULL)
+
+CPP_OBJS= 	                                 \
+	.\$(OBJDIR)\nsDiskModule.obj		 \
+	.\$(OBJDIR)\nsMonitorable.obj		 \
+	.\$(OBJDIR)\nsFileStream.obj		 \
+	.\$(OBJDIR)\nsDiskModuleFactory.obj      \
+	$(NULL)
+
+LOCAL_INCLUDES=	-I. \
+	  	-I..\..\public \
+		-I..\..\include \
+
+INCLUDES = $(LOCAL_INCLUDES)
+
+REQUIRES = nspr
+
+INCS = 	-I..\..\public \
+      	-I..\..\include \
+	$(INCS) \
+       -I$(DEPTH)\dist\include \
+        $(NULL)
+
+include <$(DEPTH)\config\rules.mak> 
+
+install:: $(DLL)
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
