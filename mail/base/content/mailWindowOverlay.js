@@ -1939,9 +1939,7 @@ function CoalesceGetMsgsForPop3ServersByDestFolder(currentServer, pop3DownloadSe
     if(inboxFolder) 
     {
       inboxFolder.biffState =  Components.interfaces.nsIMsgFolder.nsMsgBiffState_NoMail;
-
-      if (inboxFolder.hasNewMessages)
-        inboxFolder.clearNewMessages();
+      inboxFolder.clearNewMessages();
     }
     localFoldersToDownloadTo.AppendElement(inboxFolder);
     index = pop3DownloadServersArray.length

@@ -45,9 +45,7 @@ function GetNewMessages(selectedFolders, server, compositeDataSource)
 		{
 			var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
 			msgFolder.biffState = nsIMsgFolder.nsMsgBiffState_NoMail;
-
-			if (msgFolder.hasNewMessages)
-				msgFolder.clearNewMessages();
+			msgFolder.clearNewMessages();
 		}
 		
 		if(compositeDataSource)

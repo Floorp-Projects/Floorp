@@ -312,9 +312,7 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
   //Clear the new messages of the old folder
   var oldFolder = gPrevSelectedFolder;
   if (oldFolder) {
-    if (oldFolder.hasNewMessages) {
-      oldFolder.clearNewMessages();
-    }
+    oldFolder.clearNewMessages();
     oldFolder.hasNewMessages = false;
   }
 
