@@ -1,24 +1,48 @@
 # Run this on Win32 only!
 
+################################################
+# GLOBAL SETTINGS
+#
+# Paths'n'things. Change as appropriate!
+
 $dir_sep = '\\';
 $moz = "$ENV{'MOZ_SRC'}\\mozilla";
 $moz_dist = "$moz\\dist\\Embed";
+$moz_embedding_config = "$moz\\embedding\\config";
 $moz =~ s/\//$dir_sep/g;
 $moz_version = "v1.5";
 
+$makensis = "C:/Program Files/NSIS/makensis.exe";
+$control_nsi = "control.nsi";
+$local_nsh = "local.nsh";
+$files_nsh = "files.nsh";
+
+################################################
+
 @dirs = ();
 
-$local_nsh = "local.nsh";
+print "Mozilla ActiveX control builder\n\n";
 
-open(NSH, ">$local_nsh") or die("Can't write to local manifest $local_nsh");
+# Copy the client-win to embedding/config
+# cp client-win $moz_embedding_config
+
+# Run the make in embedding/config to ensure a dist
+# cd $moz_embedding_config
+# @make = ( "make" );
+# system(@make);
+
+# Generate local settings
+print "Opening $local_nsh for writing\n";
+open(NSH, ">$local_nsh") or die("Can't write local settings to $local_nsh");
 print NSH "!define DISTDIR \"$moz_dist\"\n";
 print NSH "!define VERSION \"$moz_version\"\n";
 close(NSH);
 
-open(FILES_NSH, ">files.nsh");
+# Generate file manifest
+print "Opening $files_nsh from $moz_dist for writing\n";
+open(FILES_NSH, ">$files_nsh") or die("Can't write files to $files_nsh");
 push @dirs, "";
 read_dir("$moz_dist", "");
-
 foreach (@dirs)
 {
 	if ($_ eq "")
@@ -36,6 +60,7 @@ foreach (@dirs)
 	@files = readdir(DIR);
 	foreach (@files)
 	{
+		# Everything except mfcembed / winembed / readme.html
 		next if (/.*mfcembed*/i ||
 				 /.*winembed*/i ||
 				 /readme.html/i);
@@ -47,8 +72,18 @@ foreach (@dirs)
 	}
 	closedir(DIR);
 }
-
 close(FILES_NSH);
+
+# Run NSIS
+
+print "Running makensis.exe to compile it all...\n";
+@nsis = ("$makensis", "$control_nsi");
+system(@nsis) == 0 or die "system @args failed: $?\n";
+
+# TODO - Run codesigning tool - if there is a cert to sign with
+
+
+print "Finished\n";
 
 exit;
 
