@@ -28,7 +28,6 @@ struct nsSize;
 // {CBA22C53-FCCE-11d2-96D4-0060B0FB9956}
 
 #define NS_IDRAGSESSION_IID      \
-
 { 0xcba22c53, 0xfcce, 0x11d2, { 0x96, 0xd4, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } };
 
 class nsIDragSession : public nsISupports {
