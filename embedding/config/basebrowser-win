@@ -56,6 +56,7 @@ components\xpcom_thread.xpt
 components\xpcom_xpti.xpt
 components\mozreg.dll
 ;components\mozreg.xpt
+components\xpcom_obsolete.xpt
 
 ; xpconnect
 components\xpc3250.dll

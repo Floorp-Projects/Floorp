@@ -36,7 +36,7 @@ components/libjsdom.dylib
 libxpcom.dylib 
 libxpcom_compat.dylib
 components/libxpcom_compat_c.dylib
-
+components/xpcom_obsolete.xpt
 
 ; 
 ; Components: (need to trim fat)
