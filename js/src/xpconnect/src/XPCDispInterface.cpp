@@ -189,7 +189,10 @@ PRBool XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo,
                 // property
                 else
                 {
-                    ConvertInvokeKind(pFuncDesc->invkind, *(pInfo - 1));
+                    XPCDispInterface::Member * lastInfo = pInfo - 1;
+                    ConvertInvokeKind(pFuncDesc->invkind, *lastInfo);
+                    lastInfo->SetGetterFuncDesc(pFuncDesc);
+                    release = PR_FALSE;
                 }
             }
             if(release)

@@ -772,6 +772,16 @@ public:
          */
         PRBool IsProperty() const;
         /**
+         * Is this a parameterized setter
+         * @return true if this is a parameterized property
+         */
+        PRBool IsParameterizedSetter() const;
+        /**
+         * Is this a parameterized getter
+         * @return true if this is a parameterized property
+         */
+        PRBool IsParameterizedGetter() const;
+        /**
          * Is this a parameterized property
          * @return true if this is a parameterized property
          */
@@ -802,15 +812,17 @@ public:
         PRUint32 GetDispID() const;
         /**
          * returns the number of parameters of the method
+         * @param Ask from getter instead of setter version of the function
          * @return the number of parameters of the method
          */
-        PRUint32 GetParamCount() const;
+        PRUint32 GetParamCount(PRBool getter = PR_FALSE) const;
         /**
          * Returns parameter information for the specified parameter
          * @param index the index of the parameter
+         * @param Ask from getter instead of setter version of the function
          * @return Parameter information
          */
-        ParamInfo GetParamInfo(PRUint32 index);
+        ParamInfo GetParamInfo(PRUint32 index, PRBool getter = PR_FALSE) const;
         // === Setup functions ===
         /**
          * Sets the name of the method
@@ -843,6 +855,12 @@ public:
          */ 
         void SetTypeInfo(DISPID dispID, ITypeInfo* pTypeInfo,
                          FUNCDESC* funcdesc);
+        /**
+         * Sets the function description for the getter version of the function.
+         * @param funcdesc function description
+         */
+        void SetGetterFuncDesc(FUNCDESC* funcdesc);
+
     private:
         /**
          * Our internal flags identify the type of member
@@ -860,7 +878,9 @@ public:
         jsval mVal;     // Mutable
         jsval mName;    // Mutable
         CComPtr<ITypeInfo> mTypeInfo;
-        FUNCDESC* mFuncDesc; // We keep hold on this so we don't have 
+        FUNCDESC* mFuncDesc;         // We own this, and must release it
+        FUNCDESC* mGetterFuncDesc;   // We own this, and must release it
+                                     // This may be the same as mFuncDesc
         /**
          * Helper function to return the parameter type
          * @param index index of the parameter to return the type of

@@ -108,7 +108,7 @@ VARTYPE XPCDispInterface::Member::ParamInfo::GetType() const
 
 inline
 XPCDispInterface::Member::Member() : 
-    mType(UNINITIALIZED), mFuncDesc(0),
+    mType(UNINITIALIZED), mFuncDesc(0), mGetterFuncDesc(0),
     mTypeInfo(0) 
 {
 }
@@ -116,8 +116,13 @@ XPCDispInterface::Member::Member() :
 inline
 XPCDispInterface::Member::~Member() 
 {
-    if(mTypeInfo && mFuncDesc) 
-        mTypeInfo->ReleaseFuncDesc(mFuncDesc);
+    if(mTypeInfo)
+    {
+        if (mFuncDesc) 
+            mTypeInfo->ReleaseFuncDesc(mFuncDesc);
+        if (mGetterFuncDesc)
+            mTypeInfo->ReleaseFuncDesc(mGetterFuncDesc);
+    }
 }
 
 inline
@@ -184,9 +189,22 @@ PRBool XPCDispInterface::Member::IsFunction() const
 }
 
 inline
+PRBool XPCDispInterface::Member::IsParameterizedSetter() const
+{
+    return IsSetter() && GetParamCount() > 1;
+}
+
+inline
+PRBool XPCDispInterface::Member::IsParameterizedGetter() const
+{
+    return IsGetter() && (GetParamCount(PR_TRUE) > 1 ||
+        (GetParamCount(PR_TRUE) == 1 && GetParamInfo(0, PR_TRUE).IsRetVal()));
+}
+
+inline
 PRBool XPCDispInterface::Member::IsParameterizedProperty() const
 {
-    return (IsSetter() && GetParamCount() > 1) || (IsGetter() && GetParamCount() > 0);
+    return IsParameterizedSetter() || IsParameterizedGetter();
 }
 
 inline
@@ -208,16 +226,16 @@ PRUint32 XPCDispInterface::Member::GetDispID() const
 }
 
 inline
-PRUint32 XPCDispInterface::Member::GetParamCount() const
+PRUint32 XPCDispInterface::Member::GetParamCount(PRBool getter) const
 {
-    return mFuncDesc->cParams;
+    return (getter && mGetterFuncDesc) ? mGetterFuncDesc->cParams : mFuncDesc->cParams;
 }
 
 inline
-XPCDispInterface::Member::ParamInfo XPCDispInterface::Member::GetParamInfo(PRUint32 index) 
+XPCDispInterface::Member::ParamInfo XPCDispInterface::Member::GetParamInfo(PRUint32 index, PRBool getter) const
 {
-    NS_ASSERTION(index < GetParamCount(), "Array bounds error");
-    return ParamInfo(mFuncDesc->lprgelemdescParam + index);
+    NS_ASSERTION(index < GetParamCount(getter), "Array bounds error");
+    return ParamInfo(((getter && mGetterFuncDesc) ? mGetterFuncDesc->lprgelemdescParam : mFuncDesc->lprgelemdescParam) + index);
 }
 
 inline
@@ -227,6 +245,12 @@ void XPCDispInterface::Member::SetTypeInfo(DISPID dispID,
 {
     mTypeInfo = pTypeInfo; 
     mFuncDesc = funcdesc;
+}
+
+inline
+void XPCDispInterface::Member::SetGetterFuncDesc(FUNCDESC* funcdesc)
+{
+    mGetterFuncDesc = funcdesc;
 }
 
 inline
