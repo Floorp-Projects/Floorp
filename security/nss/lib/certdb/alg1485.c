@@ -39,23 +39,37 @@
 #include "secerr.h"
 
 struct NameToKind {
-    char *name;
-    SECOidTag kind;
+    const char * name;
+    unsigned int maxLen; /* max bytes in UTF8 encoded string value */
+    SECOidTag    kind;
 };
 
-static struct NameToKind name2kinds[] = {
-    { "CN",   		SEC_OID_AVA_COMMON_NAME, 		},
-    { "ST",   		SEC_OID_AVA_STATE_OR_PROVINCE, 		},
-    { "OU",   		SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME,	},
-    { "DC",   		SEC_OID_AVA_DC,	},
-    { "C",    		SEC_OID_AVA_COUNTRY_NAME, 		},
-    { "O",    		SEC_OID_AVA_ORGANIZATION_NAME, 		},
-    { "L",    		SEC_OID_AVA_LOCALITY, 			},
-    { "dnQualifier",	SEC_OID_AVA_DN_QUALIFIER, 		},
-    { "E",    		SEC_OID_PKCS9_EMAIL_ADDRESS, 		},
-    { "UID",  		SEC_OID_RFC1274_UID, 			},
-    { "MAIL", 		SEC_OID_RFC1274_MAIL, 			},
-    { 0,      		SEC_OID_UNKNOWN 			},
+/* Add new entries to this table, and maybe to function CERT_ParseRFC1485AVA */
+static const struct NameToKind name2kinds[] = {
+    { "CN",             64, SEC_OID_AVA_COMMON_NAME              },
+    { "ST",            128, SEC_OID_AVA_STATE_OR_PROVINCE        },
+    { "OU",             64, SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME },
+    { "DC",            128, SEC_OID_AVA_DC                       },
+    { "C",               2, SEC_OID_AVA_COUNTRY_NAME             },
+    { "O",              64, SEC_OID_AVA_ORGANIZATION_NAME        },
+    { "L",             128, SEC_OID_AVA_LOCALITY                 },
+    { "dnQualifier", 32767, SEC_OID_AVA_DN_QUALIFIER             },
+    { "E",             128, SEC_OID_PKCS9_EMAIL_ADDRESS          },
+    { "UID",           256, SEC_OID_RFC1274_UID                  },
+    { "MAIL",          256, SEC_OID_RFC1274_MAIL                 },
+    { "SURNAME",        64, SEC_OID_AVA_SURNAME                  },
+    { "SERIAL",         64, SEC_OID_AVA_SERIAL_NUMBER            },
+    { "STREET",        128, SEC_OID_AVA_STREET_ADDRESS           },
+    { "TITLE",          64, SEC_OID_AVA_TITLE                    },
+    { "ADDRESS",       128, SEC_OID_AVA_POSTAL_ADDRESS           },
+    { "CODE",           40, SEC_OID_AVA_POSTAL_CODE              },
+    { "BOX",            40, SEC_OID_AVA_POST_OFFICE_BOX          },
+    { "GIVEN",          64, SEC_OID_AVA_GIVEN_NAME               },
+    { "INITIALS",       64, SEC_OID_AVA_INITIALS                 },
+    { "GENERATION",     64, SEC_OID_AVA_GENERATION_QUALIFIER     },
+    { "HOUSE",          64, SEC_OID_AVA_HOUSE_IDENTIFIER         },
+    { "AKA",            64, SEC_OID_AVA_PSEUDONYM                },
+    { 0,               256, SEC_OID_UNKNOWN                      }
 };
 
 #define C_DOUBLE_QUOTE '\042'
@@ -74,126 +88,6 @@ static struct NameToKind name2kinds[] = {
      ((c) == ';') || ((c) == C_BACKSLASH))
 
 
-
-
-
-
-
-#if 0
-/*
-** Find the start and end of a <string>. Strings can be wrapped in double
-** quotes to protect special characters.
-*/
-static int BracketThing(char **startp, char *end, char *result)
-{
-    char *start = *startp;
-    char c;
-
-    /* Skip leading white space */
-    while (start < end) {
-	c = *start++;
-	if (!OPTIONAL_SPACE(c)) {
-	    start--;
-	    break;
-	}
-    }
-    if (start == end) return 0;
-
-    switch (*start) {
-      case '#':
-	/* Process hex thing */
-	start++;
-	*startp = start;
-	while (start < end) {
-	    c = *start++;
-	    if (((c >= '0') && (c <= '9')) ||
-		((c >= 'a') && (c <= 'f')) ||
-		((c >= 'A') && (c <= 'F'))) {
-		continue;
-	    }
-	    break;
-	}
-	rv = IS_HEX;
-	break;
-
-      case C_DOUBLE_QUOTE:
-	start++;
-	*startp = start;
-	while (start < end) {
-	    c = *start++;
-	    if (c == C_DOUBLE_QUOTE) {
-		break;
-	    }
-	    *result++ = c;
-	}
-	rv = IS_STRING;
-	break;
-
-      default:
-	while (start < end) {
-	    c = *start++;
-	    if (SPECIAL_CHAR(c)) {
-		start--;
-		break;
-	    }
-	    *result++ = c;
-	}
-	rv = IS_STRING;
-	break;
-    }
-
-    /* Terminate result string */
-    *result = 0;
-    return start;
-}
-
-static char *BracketSomething(char **startp, char* end, int spacesOK)
-{
-    char *start = *startp;
-    char c;
-    int stopAtDQ;
-
-    /* Skip leading white space */
-    while (start < end) {
-	c = *start;
-	if (!OPTIONAL_SPACE(c)) {
-	    break;
-	}
-	start++;
-    }
-    if (start == end) return 0;
-    stopAtDQ = 0;
-    if (*start == C_DOUBLE_QUOTE) {
-	stopAtDQ = 1;
-    }
-
-    /*
-    ** Find the end of the something. The something is terminated most of
-    ** the time by a space. However, if spacesOK is true then it is
-    ** terminated by a special character only.
-    */
-    *startp = start;
-    while (start < end) {
-	c = *start;
-	if (stopAtDQ) {
-	    if (c == C_DOUBLE_QUOTE) {
-		*start = ' ';
-		break;
-	    }
-	} else {
-	if (SPECIAL_CHAR(c)) {
-	    break;
-	}
-	if (!spacesOK && OPTIONAL_SPACE(c)) {
-	    break;
-	}
-	}
-	start++;
-    }
-    return start;
-}
-#endif
-
 #define IS_PRINTABLE(c)						\
     ((((c) >= 'a') && ((c) <= 'z')) ||				\
      (((c) >= 'A') && ((c) <= 'Z')) ||				\
@@ -206,6 +100,17 @@ static char *BracketSomething(char **startp, char* end, int spacesOK)
      ((c) == ':') ||						\
      ((c) == '=') ||						\
      ((c) == '?'))
+
+int
+cert_AVAOidTagToMaxLen(SECOidTag tag)
+{
+    const struct NameToKind *n2k = name2kinds;
+
+    while (n2k->kind != tag && n2k->kind != SEC_OID_UNKNOWN) {
+	++n2k;
+    }
+    return (n2k->kind != SEC_OID_UNKNOWN) ? n2k->maxLen : -1;
+}
 
 static PRBool
 IsPrintable(unsigned char *data, unsigned len)
@@ -388,7 +293,7 @@ CERT_ParseRFC1485AVA(PRArenaPool *arena, char **pbp, char *endptr,
 		    PRBool singleAVA) 
 {
     CERTAVA *a;
-    struct NameToKind *n2k;
+    const struct NameToKind *n2k;
     int vt;
     int valLen;
     char *bp;
@@ -620,10 +525,7 @@ CERT_RFC1485_EscapeAndQuote(char *dst, int dstlen, char *src, int srclen)
 
 /* convert an OID to dotted-decimal representation */
 static char *
-get_oid_string
-(
-    SECItem *oid
-)
+get_oid_string(SECItem *oid)
 {
     PRUint8 *end;
     PRUint8 *d;
@@ -731,66 +633,26 @@ get_hex_string(SECItem *data)
 static SECStatus
 AppendAVA(stringBuf *bufp, CERTAVA *ava)
 {
-    char *tagName;
-    char tmpBuf[384];
+    const struct NameToKind *n2k = name2kinds;
+    const char *tagName;
     unsigned len, maxLen;
     int tag;
     SECStatus rv;
     SECItem *avaValue = NULL;
     char *unknownTag = NULL;
+    char tmpBuf[384];
 
     tag = CERT_GetAVATag(ava);
-    switch (tag) {
-      case SEC_OID_AVA_COUNTRY_NAME:
-	tagName = "C";
-	maxLen = 2;
-	break;
-      case SEC_OID_AVA_ORGANIZATION_NAME:
-	tagName = "O";
-	maxLen = 64;
-	break;
-      case SEC_OID_AVA_COMMON_NAME:
-	tagName = "CN";
-	maxLen = 64;
-	break;
-      case SEC_OID_AVA_LOCALITY:
-	tagName = "L";
-	maxLen = 128;
-	break;
-      case SEC_OID_AVA_STATE_OR_PROVINCE:
-	tagName = "ST";
-	maxLen = 128;
-	break;
-      case SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME:
-	tagName = "OU";
-	maxLen = 64;
-	break;
-      case SEC_OID_AVA_DC:
-	tagName = "DC";
-	maxLen = 128;
-	break;
-      case SEC_OID_AVA_DN_QUALIFIER:
-	tagName = "dnQualifier";
-	maxLen = 0x7fff;
-	break;
-      case SEC_OID_PKCS9_EMAIL_ADDRESS:
-	tagName = "E";
-	maxLen = 128;
-	break;
-      case SEC_OID_RFC1274_UID:
-	tagName = "UID";
-	maxLen = 256;
-	break;
-      case SEC_OID_RFC1274_MAIL:
-	tagName = "MAIL";
-	maxLen = 256;
-	break;
-      default:
+    while (n2k->kind != tag && n2k->kind != SEC_OID_UNKNOWN) {
+        ++n2k;
+    }
+    if (n2k->kind != SEC_OID_UNKNOWN) {
+        tagName = n2k->name;
+    } else {
 	/* handle unknown attribute types per RFC 2253 */
 	tagName = unknownTag = get_oid_string(&ava->type);
-	maxLen = 256;
-	break;
     }
+    maxLen = n2k->maxLen;
 
     avaValue = CERT_DecodeAVAValue(&ava->value);
     if(!avaValue) {
