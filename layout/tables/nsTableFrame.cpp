@@ -125,7 +125,7 @@ struct nsTableReflowState {
 
     availSize.height = aAvailHeight;
     if (NS_UNCONSTRAINEDSIZE != availSize.height) {
-      availSize.height -= borderPadding.top + borderPadding.bottom;
+      availSize.height -= borderPadding.top + borderPadding.bottom + (2 * table->GetCellSpacingY());
     }
 
     footerFrame      = nsnull;
@@ -1828,6 +1828,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
       haveReflowedColGroups = HaveReflowedColGroups();
     }
     // Constrain our reflow width to the computed table width (of the 1st in flow).
+    // and our reflow height to our avail height minus border, padding, cellspacing
     aDesiredSize.width = GetDesiredWidth();
     nsTableReflowState reflowState(aReflowState, *this, nextReason, 
                                    aDesiredSize.width, aReflowState.availableHeight);

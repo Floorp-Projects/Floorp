@@ -778,6 +778,8 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
   if (!tableFrame) return NS_ERROR_NULL_POINTER;
   nsIFrame* tablePrevInFlow;
   tableFrame->GetPrevInFlow(&tablePrevInFlow);
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
 
   nsresult rv = NS_OK;
 
@@ -837,13 +839,12 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
   
         // If the available width is the same as last time we reflowed the cell,then 
         // use the previous desired size and max element size (else clause). We can't 
-        // do this if our height is constrained or the cell frame has a next-in-flow
+        // do this in paganated mode or for a style change reflow.
         nsIFrame* kidNextInFlow;
         kidFrame->GetNextInFlow(&kidNextInFlow);
-        if ((aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) ||
-            (availWidth != cellFrame->GetPriorAvailWidth())        ||
-            (eReflowReason_StyleChange == aReflowState.reason)     ||
-            kidNextInFlow) {
+        if ((availWidth != cellFrame->GetPriorAvailWidth())    ||
+            (eReflowReason_StyleChange == aReflowState.reason) ||
+            isPaginated) {
           // Reflow the cell to fit the available width, height
           nsSize  kidAvailSize(availWidth, aReflowState.availableHeight);
           nsReflowReason reason = eReflowReason_Resize;
@@ -1228,7 +1229,7 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
 
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
-    rv = ReflowChildren(aPresContext, aDesiredSize, aReflowState, *tableFrame, aStatus, PR_TRUE);
+    rv = ReflowChildren(aPresContext, aDesiredSize, aReflowState, *tableFrame, aStatus, PR_FALSE);
 #ifdef WHY
     if (!tableFrame->IsAutoLayout()) {
       // this resize reflow is necessary to place the cells correctly in the case of rowspans and colspans.  
