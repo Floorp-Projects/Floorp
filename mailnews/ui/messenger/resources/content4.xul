@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="common.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<xul:window
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns="http://www.w3.org/TR/REC-html40">
+
+
+<script>
+function commit()
+{
+	var element;
+	var value;
+	var data;
+
+dump("GRRRRRR.....frame 4 commit called\n");
+	element = document.getElementById("smtp");
+	parent.SetValue("smtp", element.value);
+}
+</script>
+
+
+<table>
+	<tr>
+		<td >
+			Please Enter information about your mail servers
+		</td>
+	</tr>
+	
+	<tr>
+		<td >
+			Outgoing SMTP server
+		</td>
+	</tr>
+
+	<tr>
+		<td>
+			<input type="text" id="smtp" size="30"/>
+		</td>
+	</tr>
+
+	<tr>    
+		<td>
+			Please click Next to continue entering information
+		</td>
+	</tr>
+    
+	<tr>    
+		<td>
+			Click Finish if you want to start communicator and enter your mail preferences later
+		</td>
+	</tr>
+
+</table>
+
+</xul:window>

@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="common.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<xul:window
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns="http://www.w3.org/TR/REC-html40">
+
+
+<script>
+function commit()
+{
+	var element;
+	var value;
+	var data;
+
+	element = document.getElementById("name");
+	data = "ProfileName="+element.value+"%";
+	parent.SetValue("pname", element.value);
+
+	element = document.getElementById("email");
+	data += "ProfileDir="+element.value+"%";
+	parent.SetValue("setting", element.value);
+}
+</script>
+
+
+<table>
+	<tr>
+		<td >
+			Please Enter name and information for the profile
+		</td>
+	</tr>
+
+	<tr>
+		<td >
+			Full name
+		</td>
+	</tr>
+
+	<tr>
+		<td>
+			<input type="text" id="name" size="30"/>
+		</td>
+
+		<td>
+			(e.g. John Smith)
+		</td>
+	</tr>
+
+	<tr>
+		<td >
+			Email Address if available
+		</td>
+	</tr>
+
+	<tr>
+		<td>
+			<input type="text" id="email" size="30"/>
+		</td>
+
+		<td >
+			(e.g. jsmith@company.com)
+		</td>
+	</tr>
+
+	<tr>    
+		<td>
+			Please click Next to continue
+		</td>
+	</tr>
+</table>
+
+</xul:window>

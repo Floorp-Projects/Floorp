@@ -1,0 +1,75 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="common.css" type="text/css"?> 
+
+<!DOCTYPE window>
+
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+<html:script>
+	var count = 0;
+
+	pages = new Object();
+	pages[0] = "resource:/res/mailnews/messenger/content1.xul";
+	pages[1] = "resource:/res/mailnews/messenger/content2.xul";
+	pages[2] = "resource:/res/mailnews/messenger/content3.xul";
+	pages[3] = "resource:/res/mailnews/messenger/content4.xul";
+
+	function BrowserLoadURL(func)
+	{
+		if (func == "Prev") {
+			if (count > 0) {
+				count = count - 1;
+			}
+		}
+
+		if (func == "Next") {
+			if (count != 3) {
+				count = count + 1;
+			}
+		}
+
+		parent.frames[0].commit();
+		parent.frames[0].location.replace( pages[count] );
+	}
+
+
+	function SetValue(name, value)
+	{
+		dump("Set Value");
+		dump("name: "+name+"\n");
+		dump("value: "+value+"\n");
+	}
+
+
+	function ExitWizard() 
+	{
+		parent.frames[0].commit();
+		parent.Finish();
+		var toolkitCore = XPAppCoresManager.Find("toolkitCore");
+		if (!toolkitCore) {
+			toolkitCore = new ToolkitCore();
+		
+			if (toolkitCore) {
+				toolkitCore.Init("toolkitCore");
+			}
+		}
+
+		if (toolkitCore) {
+			toolkitCore.CloseWindow(parent);
+		}
+	}
+</html:script>
+
+
+<html:center>
+	<html:button onclick="BrowserLoadURL('Prev');"> Prev </html:button>
+	<html:button onclick="BrowserLoadURL('Next');"> Next </html:button>
+	<html:button onclick="ExitWizard();"> Exit </html:button>
+</html:center>
+
+</window>

@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="common.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<xul:window
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns="http://www.w3.org/TR/REC-html40">
+
+
+<script>
+function commit()
+{
+	var element;
+
+	element = document.getElementById("ProfileName");
+	parent.SetValue(element.id, element.value);
+
+	element = document.getElementById("ProfileDir");
+	data += "ProfileDir="+element.value+"%";
+	parent.SetValue(element.id, element.value);
+}
+</script>
+
+
+<table>
+	<tr>
+		<td >
+			If you create several profile you can tell them apart by the profile names
+		</td>
+	</tr>
+	
+	<tr>
+		<td >
+			Enter New Profile name
+		</td>
+	</tr>
+	
+	<tr>
+		<td>
+			<input type="text" id="ProfileName" size="30"/>
+		</td>
+	</tr>
+	
+	<tr>
+		<td >
+			Your user settings will be stored in the directory below
+		</td>
+	</tr>
+
+	<tr>
+		<td>
+			<input type="text" id="ProfileDir" size="30"/>
+		</td>
+	</tr>
+
+	<tr>    
+		<td>
+			Please click Next to continue
+		</td>
+	</tr>
+
+</table>
+
+</xul:window>
+

@@ -1,0 +1,90 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="common.css" type="text/css"?> 
+
+<!DOCTYPE window>
+
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  title="CreateProfile Wizard"> 
+
+
+<html:script>
+
+var toolkitCore;
+nameGlobal = new Array();
+count = 0;
+
+function Startup()
+{
+	dump("Doing Startup...\n");
+	toolkitCore = XPAppCoresManager.Find("toolkitCore");
+	if (!toolkitCore) {
+		toolkitCore = new ToolkitCore();
+		
+		if (toolkitCore) {
+			toolkitCore.Init("toolkitCore");
+		}
+	}
+}
+
+function SetValue(name, value)
+{
+	nameGlobal[count] = name+"="+value+"%";
+	count++;
+}
+
+function Finish()
+{
+	var data = "";
+	var i = 0;
+    dump("before for loop\n");
+	for (i = 0; i !=count; i++) {
+		data = data+nameGlobal[i];		
+	}
+    dump("DATA IS: "+data+"\n");
+
+
+    dump("calling javascript reflection\n");
+    var profileCore = XPAppCoresManager.Find("ProfileCore");
+    if (!profileCore)
+    {
+	    dump("!profileCore\n");
+		profileCore = new ProfileCore();
+		dump("!profileCore\n");
+
+		if (profileCore) {
+			dump("after ! yes profileCore in if loop\n");
+			profileCore.Init("ProfileCore");
+		}
+		else {
+			dump("profile not created\n");
+		}
+	}
+
+	if (profileCore) {
+	    dump("yes profileCore\n");
+		profileCore.CreateNewProfile(data);
+	}
+	
+	toolkitCore = XPAppCoresManager.Find("toolkitCore");
+	if (!toolkitCore) {
+		toolkitCore = new ToolkitCore();
+		
+		if (toolkitCore) {
+			toolkitCore.Init("toolkitCore");
+		}
+	}
+	if (toolkitCore) {
+		toolkitCore.CloseWindow(parent);
+	}
+}
+
+</html:script>
+
+<html:iframe src="content1.xul" name="frame1" width="100%" height="410px"> </html:iframe>
+<html:iframe src="navigation.xul" name="frame2" width="100%" height="90px"> </html:iframe>
+
+</window>

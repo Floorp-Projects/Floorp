@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="common.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<xul:window
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns="http://www.w3.org/TR/REC-html40">
+
+<script>
+function commit()
+{
+}
+</script>
+
+Communicator Profile Manager
+
+Start creating your profile
+
+</xul:window>
