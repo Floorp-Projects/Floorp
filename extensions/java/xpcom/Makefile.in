@@ -1,0 +1,169 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Java XPCOM Bindings.
+#
+# The Initial Developer of the Original Code is
+# IBM Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# IBM Corporation. All Rights Reserved.
+#
+# Contributor(s):
+#   Javier Pedemonte (jhpedemonte@gmail.com)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
+
+MODULE		= javaembed
+LIBRARY_NAME	= javaembed
+EXPORT_LIBRARY = 1
+
+EMBED_JAR = mozembed.jar
+EMBED_JAR_SRC = $(patsubst %.jar,%-src.jar,$(EMBED_JAR))
+
+REQUIRES	= xpcom \
+		  string \
+		  embed_base \
+		  nspr \
+		  gfx \
+		  $(NULL)
+
+CPPSRCS		= \
+		nsJavaInterfaces.cpp \
+		nsJavaWrapper.cpp \
+		nsJavaXPTCStub.cpp \
+		nsJavaXPCOMBindingUtils.cpp \
+		$(NULL)
+
+JAVA_LOC = /opt/IBMJava2-141
+
+LOCAL_INCLUDES	= \
+		-I$(JAVA_LOC)/include \
+		$(NULL)
+
+EXTRA_DSO_LIBS = \
+	embed_base_s \
+	xpcomglue_s \
+	xpcom \
+	$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+	$(LIBS_DIR) \
+	$(EXTRA_DSO_LIBS) \
+	$(NULL)
+
+IDL_FILES := $(filter-out nsrootidl.idl,$(wildcard $(DIST)/idl/*))
+
+JAVA_IFACES = $(addprefix $(XPIDL_GEN_DIR)/org/mozilla/xpcom/,$($(notdir $(IDL_FILES)):.idl=.java))
+JAVA_STUBS = $(patsubst %.idl,$(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/%_Stub.java,$(notdir $(IDL_FILES)))
+
+_JAVA_IFACE_CLASSES = $(patsubst %.idl,org/mozilla/xpcom/%.class,$(notdir $(IDL_FILES)))
+_JAVA_STUB_CLASSES = $(patsubst %.idl,org/mozilla/xpcom/stubs/%_Stub.class,$(notdir $(IDL_FILES)))
+
+_IGNORE_IFACES = domstubs
+IGNORE_IFACES = $(patsubst %,org/mozilla/xpcom/%.class,$(_IGNORE_IFACES))
+JAVA_IFACE_CLASSES = $(filter-out $(IGNORE_IFACES),$(_JAVA_IFACE_CLASSES))
+
+_IGNORE_STUBS = domstubs gfxIFormats
+IGNORE_STUBS = $(patsubst %,org/mozilla/xpcom/stubs/%_Stub.class,$(_IGNORE_STUBS))
+JAVA_STUB_CLASSES = $(filter-out $(IGNORE_STUBS),$(_JAVA_STUB_CLASSES))
+
+GARBAGE = $(EMBED_JAR) $(EMBED_JAR_SRC)
+GARBAGE_DIRS += $(XPIDL_GEN_DIR) org
+
+include $(topsrcdir)/config/rules.mk
+
+$(XPIDL_GEN_DIR)/.done:
+	@if test ! -d $(XPIDL_GEN_DIR); then echo Creating $(XPIDL_GEN_DIR)/.done; rm -rf $(XPIDL_GEN_DIR); mkdir $(XPIDL_GEN_DIR); fi
+	@touch $@
+
+$(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done: $(XPIDL_GEN_DIR)/.done
+	@if test ! -d $(XPIDL_GEN_DIR)/org/mozilla/xpcom; then echo Creating $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done; rm -rf $(XPIDL_GEN_DIR)/org; mkdir $(XPIDL_GEN_DIR)/org; mkdir $(XPIDL_GEN_DIR)/org/mozilla; mkdir $(XPIDL_GEN_DIR)/org/mozilla/xpcom; fi
+	@touch $@
+
+$(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.done: $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done
+	@if test ! -d $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs; then echo Creating $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.done; rm -rf $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs; mkdir $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs; fi
+	@touch $@
+
+org/mozilla/xpcom/.done:
+	@if test ! -d org/mozilla/xpcom; then echo Creating org/mozilla/xpcom/.done; rm -rf org; mkdir org; mkdir org/mozilla; mkdir org/mozilla/xpcom; fi
+	@touch $@
+
+org/mozilla/xpcom/stubs/.done: org/mozilla/xpcom/.done
+	@if test ! -d org/mozilla/xpcom/stubs; then echo Creating org/mozilla/xpcom/stubs/.done; rm -rf org/mozilla/xpcom/stubs; mkdir org/mozilla/xpcom/stubs; fi
+	@touch $@
+
+#$(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/%.java: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
+#	$(ELOG) $(XPIDL_COMPILE) -m javastub -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/$* $(_VPATH_SRCS)
+$(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.done
+	@echo Making Java stub files
+	@for idl in $(IDL_FILES); do \
+		$(XPIDL_COMPILE) -m javastub -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/`basename $$idl`_Stub $$idl; \
+	done
+	@touch $@
+
+#$(XPIDL_GEN_DIR)/org/mozilla/xpcom/%.java: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
+#	$(ELOG) $(XPIDL_COMPILE) -m java -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/$* $(_VPATH_SRCS)
+$(XPIDL_GEN_DIR)/org/mozilla/xpcom/.java_done: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done
+	@echo Making Java interface files
+	@for idl in $(IDL_FILES); do \
+		$(XPIDL_COMPILE) -m java -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/`basename $$idl` $$idl; \
+	done
+	@$(INSTALL) -m 644 $(srcdir)/GeckoEmbed.java $(XPIDL_GEN_DIR)/org/mozilla/xpcom
+	@touch $@
+
+#org/mozilla/xpcom/stubs/%.class: $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done org/mozilla/xpcom/stubs/.done
+#	@javac -classpath org/mozilla/xpcom:org/mozilla/xpcom/stubs -sourcepath $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs -d org/mozilla/xpcom/stubs $(XPIDL_GEN_DIR)/$(patsubst %.class,%.java,$@)
+
+#org/mozilla/xpcom/%.class: $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.java_done org/mozilla/xpcom/.done
+#	@javac -classpath org/mozilla/xpcom -sourcepath $(XPIDL_GEN_DIR)/org/mozilla/xpcom -d org/mozilla/xpcom $(XPIDL_GEN_DIR)/$(patsubst %.class,%.java,$@)
+
+org/mozilla/xpcom/.class_done: $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.java_done
+	@echo Compiling Java interface classes
+	@javac -classpath . -d . $(filter-out $(addprefix $(XPIDL_GEN_DIR)/,$(IGNORE_STUBS:.class=.java)),$(wildcard $(XPIDL_GEN_DIR)/org/mozilla/xpcom/*.java))
+	@touch $@
+
+org/mozilla/xpcom/stubs/.class_done: org/mozilla/xpcom/.class_done $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done
+	@echo Compiling Java stub classes
+	@javac -classpath . -d . $(filter-out $(addprefix $(XPIDL_GEN_DIR)/,$(IGNORE_STUBS:.class=.java)),$(wildcard $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/*.java))
+	@touch $@
+
+#$(EMBED_JAR): $(JAVA_IFACE_CLASSES) $(JAVA_STUB_CLASSES)
+$(EMBED_JAR): org/mozilla/xpcom/.class_done org/mozilla/xpcom/stubs/.class_done
+	$(ZIP) $(EMBED_JAR) -qq -r org
+
+$(EMBED_JAR_SRC): $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.java_done $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done
+	@cd $(XPIDL_GEN_DIR); $(ZIP) ../$(EMBED_JAR_SRC) -qq -r org
+
+jar:: $(EMBED_JAR) $(EMBED_JAR_SRC)
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
+
