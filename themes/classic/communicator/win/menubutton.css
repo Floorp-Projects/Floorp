@@ -6,12 +6,28 @@
     -moz-user-focus       : ignore !important;
   }
 
+.menubutton-dual.toolbar.left
+  {
+    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-ex-left");
+    border                : 1px solid transparent;
+    -moz-user-focus       : ignore !important;
+  }
+
 /* internal button */  
 .menubutton-dual-ex-button.top
   {
     -moz-binding          : url("chrome://global/skin/buttonBindings.xml#simplebutton");
-    border                : 1px solid transparent; 
+    border                : 1px solid transparent;
     min-width             : 47px;
+    margin                : 0px;
+    padding               : 2px 7px 2px 6px;
+    -moz-user-focus       : ignore !important;
+  }  
+
+.menubutton-dual-ex-button.left
+  {
+    -moz-binding          : url("chrome://global/skin/buttonBindings.xml#simplebutton");
+    border                : 1px solid transparent;
     margin                : 0px;
     padding               : 2px 7px 2px 6px;
     -moz-user-focus       : ignore !important;
@@ -30,7 +46,7 @@
   }
 
 /** disabled **/
-.menubutton-dual-ex-button.top[disabled="true"]
+.menubutton-dual-ex-button[disabled="true"]
   {
     color                 : graytext;
   }  
@@ -60,7 +76,41 @@
       color                 : graytext;
     }
     
-  .menubutton-dual.toolbar[disabled="true"]:hover > .menubutton-dual-ex-button
+/**
+ * XXX - this is a hack. :hover does not work to spec and so we're using a binding
+ *       with JS that lives in xpfe/global/resources/content/menulistBindings.xml
+ *       to set attributes on various parts of the button when mouse down/over 
+ *       events fire. When :hover works correctly, this can be removed (see
+ *       revision 1.21 of this file for details.
+ */
+
+  /* 2) menubutton gets black border */
+  .menubutton-dual.toolbar[buttonover="true"]
+    {
+      border                : 1px solid threeddarkshadow;
+    }
+    
+  .menubutton-dual.toolbar[buttonover="true"][disabled="true"]
+    {
+      border                : 1px solid transparent;
+    }
+    
+  .menubutton-dual.toolbar[disabled="true"]:hover > .menubutton-dual-ex-button,
+  .menubutton-dual.toolbar[disabled="true"][buttonover="true"] > .menubutton-dual-ex-button
+    {
+      border                : 1px solid transparent;
+    }
+
+  /* 3) dropmarker gets outset border */
+  .menubutton-dual.toolbar[buttonover="true"] > .menubutton-dual-dropmarker-box
+    {
+      border-left           : 1px solid threedhighlight;
+      border-top            : 1px solid threedhighlight;
+      border-right          : 1px solid threedshadow;
+      border-bottom         : 1px solid threedshadow;
+    }    
+    
+  .menubutton-dual.toolbar[buttonover="true"][disabled="true"] > .menubutton-dual-dropmarker-box
     {
       border                : 1px solid transparent;
     }
@@ -74,14 +124,30 @@
       border-top            : 1px solid threedshadow !important;
       border-right          : 1px solid threedhighlight !important;
       border-bottom         : 1px solid threedhighlight !important;
-      padding               : 3px 6px 1px 7px;
+      padding               : 3px 6px 1px 7px !important;
       color                 : #000080 !important;
     }
     
   .menubutton-dual-ex-button[disabled="true"]:hover:active
     {
       border                : 1px solid transparent !important;
-      padding               : 2px 7px 2px 6px;
+      padding               : 2px 7px 2px 6px !important;
+    }
+    
+  /* 2). dropmarker gets inset border */
+  .menubutton-dual.toolbar[buttondown="true"] > .menubutton-dual-dropmarker-box
+    {
+      border-left           : 1px solid threedshadow !important;
+      border-top            : 1px solid threedshadow !important;
+      border-right          : 1px solid threedhighlight !important;
+      border-bottom         : 1px solid threedhighlight !important;
+      padding               : 2px 0px 0px 0px !important;
+    }    
+    
+  .menubutton-dual.toolbar[buttondown="true"][disabled="true"] > .menubutton-dual-dropmarker-box
+    {
+      border                : 1px solid transparent !important;
+      padding               : 0px !important;
     }
     
 /* ACTION: mouse over the menu */
