@@ -32,25 +32,77 @@ $chrome_color    = '#F0A000';
 $ENV{CVSROOT}    = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 #$ENV{PATH}       = "$ENV{PATH}:/usr/bin/ccs"; # for m4
 
-print "Content-type: text/html\n\n\n";
 
 if ($query->param()) {
+  &parse_params;
+
   if ($query->param(preview) eq "yes") {
+    print "Content-type: text/html\n\n";
     &print_script_preview;
   } else {
+    print "Content-type: text/saveas\n\n";
     &print_script;
   }
 } else {
+  print "Content-type: text/html\n\n";
   &print_configure_form;
 }
 
+sub parse_params {
+  if ($query->param('nspr_option') eq 'userdefined') {
+    $query->param(-name=>'--with-nspr',
+		  -values=>[$query->param('nspr_dir')]);
+  }
+  if ($query->param('nspr_option') eq 'rpm') {
+    $query->param(-name=>'--with-nspr',
+		  -values=>['/usr']);
+  }
+  if ($query->param('debug_option') eq 'userdefined') {
+    $query->param(-name=>'--enable-debug',
+		  -values=>[$query->param('debug_dirs')]);
+  }
+  if ($query->param('debug_option') eq 'yes') {
+    $query->param(-name=>'--enable-debug',
+		  -values=>['yes']);
+  }
+}
+
 sub print_script_preview {
+  my ($saveoptions) = '';
+  foreach $param ($query->param()) {
+    if ($param =~ /^MOZ_/) {
+      next if $query->param($param) eq '';
+      $saveopts .= "$param=".$query->param($param)."&";
+    }
+    if ($param =~ /^--/) {
+      next if $query->param($param) eq '';
+      $saveopts .= "$param";
+      $saveopts .= "=".$query->param($param) if $query->param($param) ne "yes";
+      $saveopts .= "&";
+    }
+  }
+  chop($saveopts);
+
   print qq(    
     <HTML>
     <HEAD>
       <TITLE>myconfig.sh Preview</TITLE>
     </HEAD>
     <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+    <font size='+1' face='Helvetica,Arial'><b>
+    Configurator Script Preview</b></font><p>
+
+
+Check the script to make sure your options are correct. When you are done,<br>
+<a href="config.cgi?$saveopts">save this script</a> to <code><b>\$HOME/.mozmyconfig.sh</b></code>.*
+<p>
+Once you have saved the script, build the tree with,
+<ol>
+  <li><code>cd mozilla</code>
+  <li><code>gmake -f client.mk</code><br>
+      (default targets = "<code>checkout build</code>")
+</ol>
     <table bgcolor="#FF0000" cellspacing=0 cellpadding=0><tr><td>
     <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=10 width="500"><tr><td>
     <pre>);
@@ -60,6 +112,18 @@ sub print_script_preview {
   print qq(</pre>
 	   </td></tr></table>
 	   </td></tr></table>
+<P>
+* The build searches for this script in the following places,
+<ul>
+   If <code>\$MOZ_MYCONFIG</code> is set, use that file,<br>
+   else try <code>&lt;objdir&gt;/myconfig.sh</code></br>
+   else try <code>&lt;topsrcdir&gt/myconfig.sh</code><br>
+   else try <code>\$HOME/.mozmyconfig.sh</code><br>
+</ul>
+<hr>
+	   <p>
+           Send questions or comments to 
+           &lt;<a href="mailto:slamm\@netscape.com?subject=About the Build Configurator">slamm\@netcape.com</a>&gt;.
 	  );
 }
 
@@ -68,41 +132,20 @@ sub print_script {
   print "# sh\n";
   print "# Build configuration script\n";
   print "#\n";
-  print "# Save this script to $HOME/.mozmyconfig.sh,\n";
-  print "# or one of the places listed below.\n";
-  print "#\n";
-  print "# The build searches for this script in the following places:\n";
-  print "#   If \$MOZ_MYCONFIG is set, use that file,\n";
-  print "#   else try <objdir>/myconfig.sh\n";
-  print "#   else try <topsrcdir>/myconfig.sh\n";
-  print "#   else try $HOME/.mozmyconfig.sh\n";
+  print "# See http://www.mozilla.org/build/unix.html for build instructions.\n";
   print "#\n";
   print "\n";
   foreach $param ($query->param()) {
     if ($param =~ /^MOZ_/) {
-      if ($query->param($param) ne '') {
-	print "mk_add_options $param=".$query->param($param)."\n";
-	$need_blank_line = 1;
-      }
+      next if $query->param($param) eq '';
+      print "mk_add_options $param=".$query->param($param)."\n";
+      $need_blank_line = 1;
     }
   }
   print "\n" if $need_blank_line;
-  if ($query->param('nspr_option') eq 'userdefined') {
-    print "ac_add_options --with-nspr=".$query->param('nspr_dir')."\n";
-  }
-  if ($query->param('nspr_option') eq 'rpm') {
-    print "ac_add_options --with-nspr=/usr\n";
-  }
-  if ($query->param('debug_option') eq 'userdefined') {
-    print "ac_add_options --enable-debug=".$query->param('debug_dirs')."\n";
-  }
-  if ($query->param('debug_option') eq 'yes') {
-    print "ac_add_options --enable-debug\n";
-  }
-
   foreach $param ($query->param()) {
     if ($param =~ /^--/) {
-      next if $query->param($param) eq "";
+      next if $query->param($param) eq '';
       print "ac_add_options $param";
       print "=".$query->param($param) if $query->param($param) ne "yes";
       print "\n";
@@ -171,7 +214,7 @@ sub print_configure_form {
     Build nspr from the tip<br>
     <input type="radio" name="nspr_option" value="userdefined">
     NSPR is installed in
-    <input type="text" name="nspr_dir"><br>
+    <input type="text" name="nspr_dir"> (omit trailing '<code>/lib</code>')<br>
     <input type="radio" name="nspr_option" value="rpm">
     NSPR is installed in /usr/lib (NSPR RPM installation)
     </td></tr>
