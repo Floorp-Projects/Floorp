@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.32 $ ';
+$::UtilsVersion = '$Revision: 1.33 $ ';
 
 package TinderUtils;
 
@@ -650,9 +650,9 @@ sub BuildIt {
         if ($build_status ne 'busted' and BinaryExists($full_binary_name)) {
             print_log "$binary_basename binary exists, build successful.\n";
             if ($Settings::RunTest) {
-                $build_status = run_tests($full_binary_name, 
-										  $full_embed_binary_name,
-										  $build_dir);
+                $build_status = run_all_tests($full_binary_name, 
+											  $full_embed_binary_name,
+											  $build_dir);
             } else {
                 print_log "Skipping tests.\n";
                 $build_status = 'success';
@@ -672,9 +672,9 @@ sub BuildIt {
 
 
 #
-# Run tests.  Had to pass in both binary and embed_binary.
+# Run all tests.  Had to pass in both binary and embed_binary.
 #
-sub run_tests {
+sub run_all_tests {
     my ($binary, $embed_binary, $build_dir) = @_;
 
     my $binary_basename       = File::Basename::basename($binary);
@@ -702,26 +702,26 @@ sub run_tests {
     # debugging another part of the test sequence.  -mcafee
     #
     if ($Settings::AliveTest and $test_result eq 'success') {
-        print_log "Running AliveTest ...\n";
-        $test_result = AliveTest($build_dir, $binary, 45);
+        $test_result = AliveTest("MozillaAliveTest", $build_dir,
+								 $binary, 0, 45);
     }
 
     # Viewer alive test
     if ($Settings::ViewerTest and $test_result eq 'success') {
-        print_log "Running ViewerTest ...\n";
-        $test_result = AliveTest($build_dir, "$binary_dir/viewer", 45);
+        $test_result = AliveTest("ViewerAliveTest", $build_dir,
+								 "$binary_dir/viewer", 0, 45);
     }
 
 	# Embed test.  Test the embedded app.
     if ($Settings::EmbedTest and $test_result eq 'success') {
-	  print_log "Running  EmbedTest ...\n";
-      $test_result = AliveTest($build_dir, "$embed_binary_dir/$embed_binary_basename", 45);
+      $test_result = AliveTest("EmbedAliveTest", $build_dir, 
+							   "$embed_binary_dir/$embed_binary_basename",
+							   0, 45);
     }
 
     # Bloat test
     if (($Settings::BloatStats or $Settings::BloatTest)
         and $test_result eq 'success') {
-        print_log "Running BloatTest ...\n";
         $test_result = BloatTest($binary, $build_dir, $Settings::BloatTestTimeout);
     }
     
@@ -733,7 +733,6 @@ sub run_tests {
     # Only do pop3 test now.
     #
     if ($Settings::MailNewsTest and $test_result eq 'success') {
-        print_log "Running MailNewsTest ...\n";
 
 		my $mail_url = "http://www.mozilla.org/quality/mailnews/popTest.html";
 
@@ -756,7 +755,6 @@ sub run_tests {
     # DomToTextConversion test
     if (($Settings::EditorTest or $Settings::DomToTextConversionTest)
        and $test_result eq 'success') {
-        print_log "Running  DomToTextConversionTest ...\n";
         $test_result =
           FileBasedTest("DomToTextConversionTest", $build_dir, $binary_dir,
                         "perl TestOutSinks.pl", $Settings::DomTestTimeout,
@@ -764,9 +762,12 @@ sub run_tests {
                         0);  # Timeout means failure.
     }
 
-	# Page-loader performance test.
+	# Layout performance test.
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
       print_log "Page-loader performance test goes here.\n";
+	  print_log "Running LayoutPerformanceTest ...\n";
+	  $test_result = AliveTest("LayoutAliveTest", $build_dir,
+							   $binary, "http://www.apple.com", 45);
     }
 
 
@@ -949,14 +950,14 @@ sub wait_for_pid {
              dumped_core=>$dumped_core };
 }
 
-sub run_test {
-    my ($home_dir, $binary_dir, $binary, $logfile, $timeout_secs) = @_;
+sub run_cmd {
+    my ($home_dir, $binary_dir, $cmd, $logfile, $timeout_secs) = @_;
     my $now = localtime();
     
     print_log "Begin: $now\n";
-    print_log "$binary\n";
+    print_log "cmd = $cmd\n";
 
-    my $pid = fork_and_log($home_dir, $binary_dir, $binary, $logfile);
+    my $pid = fork_and_log($home_dir, $binary_dir, $cmd, $logfile);
     my $result = wait_for_pid($pid, $timeout_secs);
 
     $now = localtime();
@@ -996,7 +997,7 @@ sub CreateProfile {
     local $_;
 
     my $cmd = "$binary -CreateProfile $Settings::MozProfileName";
-    my $result = run_test($build_dir, $binary_dir, $cmd,
+    my $result = run_cmd($build_dir, $binary_dir, $cmd,
                           $binary_log, $timeout_secs);
 
     print_logfile($binary_log, "Create Profile");
@@ -1023,19 +1024,32 @@ sub CreateProfile {
 # after $timeout_secs (seconds).
 #
 sub AliveTest {
-    my ($build_dir, $binary, $timeout_secs) = @_;
+    my ($test_name, $build_dir, $binary, $args, $timeout_secs) = @_;
     my $binary_basename = File::Basename::basename($binary);
     my $binary_dir = File::Basename::dirname($binary);
-    my $binary_log = "$build_dir/runlog";
+    my $binary_log = "$build_dir/$test_name.log";
+	my $cmd = $binary_basename;
     local $_;
 
-    my $result = run_test($build_dir, $binary_dir, $binary_basename,
+	# Build up command string, if we have arguments
+	if($args) {
+	  print "\$args = $args\n";
+	  $cmd .= " " . $args;
+	}
+
+	# Print out testname
+	print_log "\n\nRunning $test_name test ...\n";
+
+	# Print out timeout.
+	print_log "Timeout = $timeout_secs seconds.\n";
+
+    my $result = run_cmd($build_dir, $binary_dir, $binary_basename,
                           $binary_log, $timeout_secs);
 
-    print_logfile($binary_log, "$binary_basename alive test");
+    print_logfile($binary_log, "$test_name");
     
     if ($result->{timed_out}) {
-        print_log "$binary_basename successfully stayed up"
+        print_log "$test_name: $binary_basename successfully stayed up"
                   ." for $timeout_secs seconds.\n";
         return 'success';
     } else {
@@ -1043,7 +1057,6 @@ sub AliveTest {
         return 'testfailed';
     }
 }
-
 
 
 # Run a generic test that writes output to stdout, save that output to a
@@ -1073,7 +1086,10 @@ sub FileBasedTest {
     my ($binary_basename) = (split /\s+/, $test_command)[0];
     my $binary_log = "$build_dir/$test_name.log";
 
-    my $result = run_test($build_dir, $binary_dir, $test_command,
+	# Print out test name
+	print_log "\n\nRunning $test_name ...\n";
+
+    my $result = run_cmd($build_dir, $binary_dir, $test_command,
                           $binary_log, $timeout_secs);
 
     print_logfile($binary_log, $test_name);
@@ -1121,7 +1137,7 @@ sub BloatTest {
 
     $ENV{XPCOM_MEM_BLOAT_LOG} = 1; # Turn on ref counting to track leaks.
     my $cmd = "$binary_basename -f bloaturls.txt";
-    my $result = run_test($build_dir, $binary_dir, $cmd, $binary_log,
+    my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
                           $timeout_secs);
     delete $ENV{XPCOM_MEM_BLOAT_LOG};
 
