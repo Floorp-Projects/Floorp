@@ -315,6 +315,16 @@ nsresult nsMsgCompFields::GetNewsgroups(PRUnichar **_retval)
 	return GetHeader(MSG_NEWSGROUPS_HEADER_MASK, _retval);
 }
 
+NS_IMETHODIMP nsMsgCompFields::SetNewshost(const PRUnichar *value)
+{
+	return SetHeader(MSG_NEWSPOSTURL_HEADER_MASK, value);
+}
+
+NS_IMETHODIMP nsMsgCompFields::GetNewshost(PRUnichar **_retval)
+{
+	return GetHeader(MSG_NEWSPOSTURL_HEADER_MASK, _retval);
+}
+
 nsresult nsMsgCompFields::SetFollowupTo(const PRUnichar *value)
 {
 	return SetHeader(MSG_FOLLOWUP_TO_HEADER_MASK, value);

@@ -69,7 +69,7 @@ protected:
                                          nsCString &newsgroupName,
                                          nsMsgKey *aKey);
   
-  nsresult SetUpNntpUrlForPosting(nsINntpUrl * nntpUrl, const char *newsgroupNames, char **newsUrlSpec);
+  nsresult SetUpNntpUrlForPosting(nsINntpUrl * nntpUrl, const char *newsgroupNames, const char *newshost, char **newsUrlSpec);
   nsresult FindHostFromGroup(nsCString &host, nsCString &groupName);
   void FindServerWithNewsgroup(nsCString &host, nsCString &groupName);
   

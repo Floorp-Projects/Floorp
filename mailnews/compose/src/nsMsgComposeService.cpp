@@ -140,9 +140,30 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 
 	if (originalMsgURI && *originalMsgURI)
 	{
-		if (type == nsIMsgCompType::NewsPost) {
+		if (type == nsIMsgCompType::NewsPost) 
+    {
+      nsAutoString newsURI;
+      nsAutoString group;
+      nsAutoString host;
+      
+      newsURI.Assign(originalMsgURI);
+      PRInt32 slashpos = newsURI.FindChar('/');
+      if (slashpos > 0 ) {
+        // uri is "host/group"
+        newsURI.Left(host, slashpos);
+        newsURI.Right(group, newsURI.Length() - slashpos - 1);
+      }
+      else
+        group.Assign(originalMsgURI);
+
+
 			args.AppendWithConversion(",newsgroups=");
-			args.Append(originalMsgURI);
+			args.Append(group);
+      if (host.Length() > 0)
+      {
+        args.AppendWithConversion(",newshost=");
+        args.Append(host);
+      }
 		}
 		else {
 			args.AppendWithConversion(",originalMsg='");

@@ -66,6 +66,9 @@ interface nsIMsgCompFields : nsISupports {
 	void SetNewsgroups(in wstring value);
 	wstring GetNewsgroups();
 
+	void SetNewshost(in wstring value);
+	wstring GetNewshost();
+
 	void SetFollowupTo(in wstring value);
 	wstring GetFollowupTo();
 

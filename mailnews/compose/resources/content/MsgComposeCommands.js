@@ -364,6 +364,9 @@ function ComposeStartup()
 	    			msgCompFields.SetSubject(args.subject);
 	    		if (args.attachment)
 	    			msgCompFields.SetAttachments(args.attachment);
+				dump("args newshost = " + args.newshost + "\n");
+				if (args.newshost)
+					msgCompFields.SetNewshost(args.newshost);
 			
 				var subjectValue = msgCompFields.GetSubject();
 				if (subjectValue != "") {

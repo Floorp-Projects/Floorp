@@ -2913,7 +2913,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 
 	if (!msgWindow) return NS_ERROR_FAILURE;
 
-    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mNewsPostListener, msgWindow, nsnull);
+    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mCompFields->GetNewshost(), mNewsPostListener, msgWindow, nsnull);
 	if (NS_FAILED(rv)) return rv;
   }
 

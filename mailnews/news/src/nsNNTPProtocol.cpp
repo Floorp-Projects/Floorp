@@ -628,6 +628,7 @@ nsNNTPProtocol::InitializeNewsFolderFromUri(const char *uri)
         if (NS_FAILED(rv)) return(rv);
 
         m_newsFolder = do_QueryInterface(resource, &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "uri is not for a news folder!"); 
         if (NS_FAILED(rv)) return rv;
 
         if (!m_newsFolder) return NS_ERROR_FAILURE;

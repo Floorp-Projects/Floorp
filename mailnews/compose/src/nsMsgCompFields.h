@@ -114,6 +114,10 @@ public:
 	NS_IMETHOD SetNewsgroups(const char *value) {return SetAsciiHeader(MSG_NEWSGROUPS_HEADER_MASK, value);}
 	const char* GetNewsgroups() {return GetHeader(MSG_NEWSGROUPS_HEADER_MASK);}
 
+  NS_IMETHOD SetNewshost(const PRUnichar *value);
+  NS_IMETHOD GetNewshost(PRUnichar **_retval);
+	const char* GetNewshost() {return GetHeader(MSG_NEWSPOSTURL_HEADER_MASK);}
+
 	NS_IMETHOD SetFollowupTo(const PRUnichar *value);
 	NS_IMETHOD GetFollowupTo(PRUnichar **_retval);
 	NS_IMETHOD SetFollowupTo(const char *value) {return SetAsciiHeader(MSG_FOLLOWUP_TO_HEADER_MASK, value);}

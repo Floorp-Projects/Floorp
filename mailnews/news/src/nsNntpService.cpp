@@ -456,7 +456,7 @@ nsresult nsNntpService::FindHostFromGroup(nsCString &host, nsCString &groupName)
 }
 
 nsresult 
-nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroupsNames, char **newsUrlSpec)
+nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroupsNames, const char *newshost, char **newsUrlSpec)
 {
   nsresult rv = NS_OK;
   nsCAutoString host;
@@ -532,6 +532,10 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
 #ifdef DEBUG_NEWS
         printf("currentHost == %s\n", currentHost.GetBuffer());
 #endif
+      }
+      else if (newshost && nsCRT::strlen(newshost) > 0)
+      {
+        currentHost.Assign(newshost);
       }
       else {
         // theRest is "group"
@@ -740,7 +744,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
 }
 
 NS_IMETHODIMP
-nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
+nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, const char *newshost, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
 #ifdef DEBUG_NEWS
   printf("nsNntpService::PostMessage(??,%s,??,??)\n",newsgroupsNames);
@@ -760,7 +764,7 @@ nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames,
   nntpUrl->SetNewsAction(nsINntpUrl::ActionPostArticle);
 
   nsXPIDLCString newsUrlSpec;
-  rv = SetUpNntpUrlForPosting(nntpUrl, newsgroupsNames, getter_Copies(newsUrlSpec));
+  rv = SetUpNntpUrlForPosting(nntpUrl, newsgroupsNames, newshost, getter_Copies(newsUrlSpec));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
