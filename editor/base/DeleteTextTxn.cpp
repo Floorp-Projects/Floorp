@@ -41,6 +41,8 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
                                   PRUint32 aNumCharsToDelete)
 {
   NS_ASSERTION(aEditor&&aElement, "bad arg");
+  if (!aEditor || !aElement) { return NS_ERROR_NULL_POINTER; }
+
   mEditor = aEditor;
   mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
@@ -57,22 +59,20 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
 NS_IMETHODIMP DeleteTextTxn::Do(void)
 {
   if (gNoisy) { printf("Do Delete Text\n"); }
-  nsresult result = NS_ERROR_NULL_POINTER;
-  if (mEditor && mElement)
+  NS_ASSERTION(mEditor && mElement, "bad state");
+  if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
+  // get the text that we're about to delete
+  nsresult result = mElement->SubstringData(mOffset, mNumCharsToDelete, mDeletedText);
+  NS_ASSERTION(NS_SUCCEEDED(result), "could not get text to delete.");
+  result = mElement->DeleteData(mOffset, mNumCharsToDelete);
+  if (NS_SUCCEEDED(result))
   {
-    // get the text that we're about to delete
-    result = mElement->SubstringData(mOffset, mNumCharsToDelete, mDeletedText);
-    NS_ASSERTION(NS_SUCCEEDED(result), "could not get text to delete.");
-    result = mElement->DeleteData(mOffset, mNumCharsToDelete);
-    if (NS_SUCCEEDED(result))
-    {
-      nsCOMPtr<nsIDOMSelection> selection;
-      nsresult selectionResult = mEditor->GetSelection(getter_AddRefs(selection));
-      if (NS_SUCCEEDED(selectionResult) && selection) {
-        selectionResult = selection->Collapse(mElement, mOffset);
-        NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after undo of insert.");
-      }
-    }
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mEditor->GetSelection(getter_AddRefs(selection));
+		if (NS_FAILED(result)) return result;
+		if (!selection) return NS_ERROR_NULL_POINTER;
+    result = selection->Collapse(mElement, mOffset);
+    NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of insert.");
   }
   return result;
 }
@@ -82,19 +82,19 @@ NS_IMETHODIMP DeleteTextTxn::Do(void)
 NS_IMETHODIMP DeleteTextTxn::Undo(void)
 {
   if (gNoisy) { printf("Undo Delete Text\n"); }
-  nsresult result = NS_ERROR_NULL_POINTER;
-  if (mEditor && mElement)
+  NS_ASSERTION(mEditor && mElement, "bad state");
+  if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsresult result;
+  result = mElement->InsertData(mOffset, mDeletedText);
+  if (NS_SUCCEEDED(result))
   {
-    result = mElement->InsertData(mOffset, mDeletedText);
-    if (NS_SUCCEEDED(result))
-    {
-      nsCOMPtr<nsIDOMSelection> selection;
-      nsresult selectionResult = mEditor->GetSelection(getter_AddRefs(selection));
-      if (NS_SUCCEEDED(selectionResult) && selection) {
-        selectionResult = selection->Collapse(mElement, mOffset);
-        NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after undo of insert.");
-      }
-    }
+    nsCOMPtr<nsIDOMSelection> selection;
+    nsresult selectionResult = mEditor->GetSelection(getter_AddRefs(selection));
+		if (NS_FAILED(result)) return result;
+		if (!selection) return NS_ERROR_NULL_POINTER;
+    result = selection->Collapse(mElement, mOffset);
+    NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of insert.");
   }
   return result;
 }

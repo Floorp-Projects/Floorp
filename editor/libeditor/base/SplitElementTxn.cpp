@@ -39,6 +39,9 @@ NS_IMETHODIMP SplitElementTxn::Init(nsIEditor  *aEditor,
                                     nsIDOMNode *aNode,
                                     PRInt32     aOffset)
 {
+	NS_ASSERTION(aEditor && aNode, "bad args");
+	if (!aEditor || !aNode) { return NS_ERROR_NOT_INITIALIZED; }
+
   mEditor = aEditor;
   mExistingRightNode = do_QueryInterface(aNode);
   mOffset = aOffset;
@@ -52,36 +55,33 @@ SplitElementTxn::~SplitElementTxn()
 NS_IMETHODIMP SplitElementTxn::Do(void)
 {
   if (gNoisy) { printf("%p Do Split of node %p offset %d\n", this, mExistingRightNode.get(), mOffset); }
-  NS_ASSERTION(mExistingRightNode, "bad state");
-  if (!mExistingRightNode) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ASSERTION(mExistingRightNode && mEditor, "bad state");
+  if (!mExistingRightNode || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
+
   // create a new node
   nsresult result = mExistingRightNode->CloneNode(PR_FALSE, getter_AddRefs(mNewLeftNode));
   NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewLeftNode)), "could not create element.");
+	if (NS_FAILED(result)) return result;
+	if (!mNewLeftNode) return NS_ERROR_NULL_POINTER;
 
-  if ((NS_SUCCEEDED(result)) && (mNewLeftNode))
+  if (gNoisy) { printf("  created left node = %p\n", mNewLeftNode.get()); }
+  // get the parent node
+  result = mExistingRightNode->GetParentNode(getter_AddRefs(mParent));
+	if (NS_FAILED(result)) return result;
+	if (!mParent) return NS_ERROR_NULL_POINTER;
+
+  // insert the new node
+  result = nsEditor::SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+  if (NS_SUCCEEDED(result) && mNewLeftNode)
   {
-    if (gNoisy) { printf("  created left node = %p\n", mNewLeftNode.get()); }
-    // get the parent node
-    result = mExistingRightNode->GetParentNode(getter_AddRefs(mParent));
-    // insert the new node
-    if ((NS_SUCCEEDED(result)) && (mParent))
-    {
-      result = nsEditor::SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
-      if (NS_SUCCEEDED(result) && mNewLeftNode)
-      {
-        nsCOMPtr<nsIDOMSelection>selection;
-        mEditor->GetSelection(getter_AddRefs(selection));
-        if (selection)
-        {
-          selection->Collapse(mNewLeftNode, mOffset);
-        }
-      }
-      else {
-        result = NS_ERROR_NOT_IMPLEMENTED;
-      }
-    }
+    nsCOMPtr<nsIDOMSelection>selection;
+    mEditor->GetSelection(getter_AddRefs(selection));
+		if (NS_FAILED(result)) return result;
+		if (!selection) return NS_ERROR_NULL_POINTER;
+    result = selection->Collapse(mNewLeftNode, mOffset);
+  }
+  else {
+    result = NS_ERROR_NOT_IMPLEMENTED;
   }
   return result;
 }
@@ -92,8 +92,8 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
     printf("%p Undo Split of existing node %p and new node %p offset %d\n", 
            this, mExistingRightNode.get(), mNewLeftNode.get(), mOffset); 
   }
-  NS_ASSERTION(mExistingRightNode && mNewLeftNode && mParent, "bad state");
-  if (!mExistingRightNode || !mNewLeftNode || !mParent) {
+  NS_ASSERTION(mEditor && mExistingRightNode && mNewLeftNode && mParent, "bad state");
+  if (!mEditor || !mExistingRightNode || !mNewLeftNode || !mParent) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -110,10 +110,9 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
     if (gNoisy) { printf("  left node = %p removed\n", mNewLeftNode.get()); }
     nsCOMPtr<nsIDOMSelection>selection;
     mEditor->GetSelection(getter_AddRefs(selection));
-    if (selection)
-    {
-      selection->Collapse(mExistingRightNode, mOffset);
-    }
+		if (NS_FAILED(result)) return result;
+		if (!selection) return NS_ERROR_NULL_POINTER;
+    result = selection->Collapse(mExistingRightNode, mOffset);
   }
   else {
     result = NS_ERROR_NOT_IMPLEMENTED;
@@ -126,8 +125,8 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
  */
 NS_IMETHODIMP SplitElementTxn::Redo(void)
 {
-  NS_ASSERTION(mExistingRightNode && mNewLeftNode && mParent, "bad state");
-  if (!mExistingRightNode || !mNewLeftNode || !mParent) {
+  NS_ASSERTION(mEditor && mExistingRightNode && mNewLeftNode && mParent, "bad state");
+  if (!mEditor || !mExistingRightNode || !mNewLeftNode || !mParent) {
     return NS_ERROR_NOT_INITIALIZED;
   }
   if (gNoisy) { 
@@ -146,7 +145,7 @@ NS_IMETHODIMP SplitElementTxn::Redo(void)
     if (gNoisy) 
     { 
       printf("** after delete of text in right text node %p offset %d\n", rightNodeAsText.get(), mOffset);
-      if (gNoisy) {mEditor->DebugDumpContent(); } // DEBUG
+      mEditor->DebugDumpContent();  // DEBUG
     }
   }
   else

@@ -192,7 +192,15 @@ protected:
 
   virtual void  InitRules();
 
-  NS_IMETHOD GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayoutObject);
+  /** returns the layout object (nsIFrame in the real world) for aNode
+    * @param aNode          the content to get a frame for
+    * @param aLayoutObject  the "primary frame" for aNode, if one exists.  May be null
+    * @return NS_OK whether a frame is found or not
+    *         an error if some serious error occurs
+    */
+  NS_IMETHOD GetLayoutObject(nsIDOMNode *aInNode, nsISupports **aOutLayoutObject);
+
+  NS_IMETHOD CollapseAdjacentTextNodes(nsIDOMSelection *aInSelection);
 
   NS_IMETHOD DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode);
 
@@ -382,10 +390,10 @@ protected:
                                        const nsString *aAttribute,
                                        const nsString *aValue);
 
-  void GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection, 
-                                       nsIDOMNode **aParent,
-                                       PRInt32     &aStartOffset, 
-                                       PRInt32     &aEndOffset);
+  NS_IMETHOD GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection, 
+                                             nsIDOMNode **aParent,
+                                             PRInt32     &aStartOffset, 
+                                             PRInt32     &aEndOffset);
 
   void ResetTextSelectionForRange(nsIDOMNode *aParent,
                                   PRInt32     aStartOffset,
