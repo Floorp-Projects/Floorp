@@ -98,7 +98,7 @@ class nsIArena;
 // for PostAttributeChanged
 enum nsAttributeChangeType {
   eChangeType_Set = 0,       // Set attribute
-  eChangeType_Remove = 1,    // Remove attribute
+  eChangeType_Remove = 1     // Remove attribute
 };
 
 /**
