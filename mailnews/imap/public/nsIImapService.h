@@ -44,6 +44,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 
 class nsIImapProtocol;
+class nsIImapMailfolder;
+class nsIUrlListener;
+class nsIURL;
 struct PLEventQueue;
 
 class nsIImapService : public nsISupports
@@ -60,9 +63,12 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////
 
 	NS_IMETHOD CreateImapConnection (PLEventQueue *aEventQueue, nsIImapProtocol ** aImapConnection) = 0;
-	
-	// Will we ever need to expose the host session list from the imap service
-	// to the client? I'm betting not.....
+
+	// As always, you can pass in null for the url listener and the url if you don't require either.....
+	// aClientEventQueue is the event queue of the event sinks. We post events into this queue.
+	// mscott -- eventually this function will take in the account (identity/incoming server) associated with 
+	// the request
+	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailfolder * aImapUrl, nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
 };
 
