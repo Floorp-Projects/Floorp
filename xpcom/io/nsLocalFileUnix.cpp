@@ -828,9 +828,13 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
     
 	/* XXX autoconf for and use stat64 if available */
     if( S_ISDIR(mCachedStat.st_mode) )
+        {
 		mLL_II2L(0, (PRUint32)0, *aFileSize);
+        }
     else	
+        {
 		mLL_II2L(0, (PRUint32)mCachedStat.st_size, *aFileSize);
+        }
     return NS_OK;
 }
 
