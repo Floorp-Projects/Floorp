@@ -210,7 +210,7 @@ protected:
 
   PRBool mUpdatedBand;
   PRBool mPlacedLeftFloater;
-  PRBool mInNBU;
+  PRBool mInWord;
 };
 
 inline nscoord
