@@ -335,9 +335,14 @@ gtk_xtbin_realize (GtkWidget *widget)
   
 
   /* this little trick seems to finish initializing the widget */
+#if XlibSpecificationRelease >= 6
   XtRegisterDrawable(xtbin->xtdisplay, 
                      GDK_WINDOW_XWINDOW(widget->window),
                      top_widget);
+#else
+  _XtRegisterWindow( GDK_WINDOW_XWINDOW(widget->window),
+                     top_widget);
+#endif
   
   XtRealizeWidget(embeded);
 #ifdef DEBUG_XTBIN
@@ -406,9 +411,14 @@ gtk_xtbin_shutdown (GtkObject *object)
 
   GTK_WIDGET_UNSET_FLAGS (widget, GTK_VISIBLE);
   if (GTK_WIDGET_REALIZED (widget)) {
+#if XlibSpecificationRelease >= 6
     XtUnregisterDrawable(xtbin->xtdisplay,
                          GDK_WINDOW_XWINDOW(GTK_WIDGET(object)->window));
-
+#else
+    _XtUnregisterWindow(GDK_WINDOW_XWINDOW(GTK_WIDGET(object)->window),
+                        XtWindowToWidget(xtbin->xtdisplay,
+                        GDK_WINDOW_XWINDOW(GTK_WIDGET(object)->window)));
+#endif
 
     xtbin->xtwidget->core.window = GPOINTER_TO_UINT(gtk_object_get_data(object, "oldwindow"));
     XtUnrealizeWidget(xtbin->xtwidget);
