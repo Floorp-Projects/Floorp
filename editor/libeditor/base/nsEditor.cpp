@@ -2247,25 +2247,23 @@ void nsEditor::HACKForceRedraw()
 // of an error in Gecko which is not rendering the
 // document after a change via the DOM - gpk 2/11/99
   // BEGIN HACK!!!
-  nsIPresShell* shell = nsnull;
+  nsCOMPtr<nsIPresShell> shell;
   
- 	GetPresShell(&shell);
-  if (nsnull != shell) {
-    nsIViewManager* viewmgr = nsnull;;
-    nsIView* view = nsnull;
+ 	GetPresShell(getter_AddRefs(shell));
+  if (shell) {
+    nsCOMPtr<nsIViewManager> viewmgr;
+    nsCOMPtr<nsIView> view;
 
-    shell->GetViewManager(&viewmgr);
-    if (nsnull != viewmgr) {
-      viewmgr->GetRootView(view);
-      if (nsnull != view) {
+    shell->GetViewManager(getter_AddRefs(viewmgr));
+    if (viewmgr) {
+      viewmgr->GetRootView(*getter_AddRefs(view));
+      if (view) {
         viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
       }
-      NS_RELEASE(viewmgr);
     }
   }
   // END HACK
 #endif
-
 }
 
 
