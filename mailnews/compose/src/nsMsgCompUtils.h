@@ -76,7 +76,8 @@ char        *mime_generate_attachment_headers (const char *type,
 											     PRBool digest_p,
 											     nsMsgAttachmentHandler *ma,
 											     const char *charset,
-                           const char *content_id);
+                           const char *content_id,
+                           PRBool     aBodyDocument);
 
 char        *msg_generate_message_id (nsIMsgIdentity*);
 

@@ -44,6 +44,7 @@
 #include "nsMsgPrompts.h"
 #include "nsMimeTypes.h"
 #include "nsICharsetConverterManager.h"
+#include "nsTextFormater.h" 
 
 // XXX temporary so we can use the current identity hack -alecf
 #include "nsIMsgMailSession.h"
@@ -111,46 +112,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 nsresult
 ConvertAndLoadComposeWindow(nsIEditorShell *aEditor, nsString aBuf, PRBool aQuoted, PRBool aHTMLEditor)
 {
-  nsresult            res;
-  nsString            inputCharset("UTF-8"); 
-  nsIUnicodeDecoder   *decoder = nsnull;
-  PRInt32             unicharLength = 0;
-  PRUnichar           *unicodeInputString = nsnull;   // Unicode version of input
-  char                *inputString = nsnull;          // original string...
-  PRInt32             inputStringLength;      
-
-  // Get the service for charset conversion...
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
-  if (NS_FAILED(res) || !ccm)
-    return NS_ERROR_FAILURE;
-
-  // Get the decoder to go from UTF-8 to Unicode...
-  ccm->GetUnicodeDecoder(&inputCharset, &decoder);
-  if (!decoder)
-    return NS_ERROR_FAILURE;
-
-  // This could go away if we could get the aBuf in oneByteChar format...
-  inputString = aBuf.ToNewCString();
-  inputStringLength = (PRInt32) nsCRT::strlen(inputString);
-
-  // Get the maximum output length and create the output buffer...
-  res = decoder->GetMaxLength(inputString, inputStringLength, &unicharLength); 
-  unicodeInputString = (PRUnichar *) PR_Malloc((unicharLength + 1) * sizeof(PRUnichar));
-  if (!unicodeInputString)
-  {
-    PR_FREEIF(inputString);
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCRT::memset(unicodeInputString, 0, ((unicharLength + 1) * sizeof(PRUnichar)));
-  res = decoder->Convert(inputString, &inputStringLength, unicodeInputString, &unicharLength); 
-  if (NS_FAILED(res))
-  {
-    PR_FREEIF(inputString);
-    PR_FREEIF(unicodeInputString);
-    return NS_ERROR_FAILURE;
-  }
-
   // Now, insert it into the editor...
   //
   // Akkana: There is a problem inserting converted unicode text into
@@ -163,18 +124,17 @@ ConvertAndLoadComposeWindow(nsIEditorShell *aEditor, nsString aBuf, PRBool aQuot
   //                    "if (aQuoted)" 
   //
   // RICHIE SHERRY  if (aQuoted)
+  //
   if ( (aQuoted) && (aHTMLEditor) )
-    aEditor->InsertAsQuotation(unicodeInputString);
+    aEditor->InsertAsQuotation(aBuf.GetUnicode());
   else
   {
     if (aHTMLEditor)
-      aEditor->InsertSource(unicodeInputString);
+      aEditor->InsertSource(aBuf.GetUnicode());
     else
-      aEditor->InsertText(unicodeInputString);
+      aEditor->InsertText(aBuf.GetUnicode());
   }
 
-  PR_FREEIF(inputString);
-  PR_FREEIF(unicodeInputString);
   return NS_OK;
 }
 
@@ -906,8 +866,8 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
 }
 
 NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChannel */, 
-							 nsISupports *ctxt, nsIInputStream *inStr, 
-                             PRUint32 sourceOffset, PRUint32 count)
+							                nsISupports *ctxt, nsIInputStream *inStr, 
+                              PRUint32 sourceOffset, PRUint32 count)
 {
 	nsresult rv = NS_OK;
 	if (!inStr)
@@ -924,7 +884,22 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChan
 	newBuf[count] = '\0';
 	if (NS_SUCCEEDED(rv) && numWritten > 0)
 	{
-		mMsgBody += newBuf;
+    // RICHIE SHERRY
+    // Going to try to change this from a simple append to converting the
+    // data to UCS-2 before appending to the mMsgBody
+    //
+		// USED TO BE THIS mMsgBody += newBuf;
+
+    PRUnichar       *u = nsnull; 
+    nsAutoString    fmt("%s"); 
+    u = nsTextFormater::smprintf(fmt.GetUnicode(), newBuf); // this converts UTF-8 to UCS-2 
+    if (u)
+    {
+      mMsgBody.Append(u);
+      PR_FREEIF(u);
+    }
+    else
+      mMsgBody += newBuf;
 	}
 
 	PR_FREEIF(newBuf);

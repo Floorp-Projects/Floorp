@@ -740,7 +740,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 											  m_digest_p,
 											  m_plaintext,
 											  mCompFields->GetCharacterSet(),
-                        nsnull);
+                        nsnull,
+                        PR_TRUE);
 		if (!hdrs)
 			goto FAILMEM;
 		status = plainpart->SetOtherHeaders(hdrs);
@@ -948,7 +949,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 											   m_digest_p,
 											   nsnull, /* no "ma"! */
 											   mCompFields->GetCharacterSet(),
-                         nsnull);
+                         nsnull,
+                         PR_TRUE);
 		if (!hdrs)
 			goto FAILMEM;
 		status = mainbody->AppendOtherHeaders(hdrs);
@@ -1169,7 +1171,8 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
                                                           // we determine from
                                                           // the file or none
                                                           // at all! 
-                                           ma->m_content_id);
+                                           ma->m_content_id,
+                                           PR_FALSE);
 	if (!hdrs)
 		return 0;
 

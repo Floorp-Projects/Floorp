@@ -751,7 +751,8 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
 								  PRBool /*digest_p*/,
 								  nsMsgAttachmentHandler * /*ma*/,
 								  const char *charset,
-                  const char *content_id)
+                  const char *content_id, 
+                  PRBool      aBodyDocument)
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
@@ -796,22 +797,23 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
     }
   }
 
-
-  // Add format=flowed as in RFC 2646 unless asked to not do that.
-  PRBool sendFlowed = PR_TRUE;   /* rhp - add this  */
-  if(type && !PL_strcasecmp(type, "text/plain") && prefs)
+  // Only do this if we are in the body of a message
+  if (aBodyDocument)
   {
-    prefs->GetBoolPref("mail.send_plaintext_flowed", &sendFlowed);
-    if (sendFlowed)
-			PUSH_STRING ("; format=flowed");
-		else
+    // Add format=flowed as in RFC 2646 unless asked to not do that.
+    PRBool sendFlowed = PR_TRUE;   /* rhp - add this  */
+    if(type && !PL_strcasecmp(type, "text/plain") && prefs)
     {
-      // This is the same as no format at all.
-			PUSH_STRING ("; format=fixed");
+      prefs->GetBoolPref("mail.send_plaintext_flowed", &sendFlowed);
+      if (sendFlowed)
+			  PUSH_STRING ("; format=flowed");
+		  else
+      {
+        // This is the same as no format at all.
+			  PUSH_STRING ("; format=fixed");
+      }
     }
-
-  }
-    
+  }    
 
 	if (x_mac_type && *x_mac_type) {
 		PUSH_STRING ("; x-mac-type=\"");
@@ -2138,6 +2140,7 @@ ERROR_OUT:
 #include "nsParserCIID.h"
 #include "nsHTMLToTXTSinkStream.h"
 #include "CNavDTD.h"
+#include "nsICharsetConverterManager.h"
 
 nsresult
 ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
@@ -2161,14 +2164,6 @@ ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
         sink->DoFragment(PR_TRUE);
         parser->SetContentSink(sink);
 
-        // Set the charset...
-        // 
-        if (charSet)
-        {
-          nsAutoString cSet(charSet);
-          parser->SetDocumentCharset(cSet, kCharsetFromMetaTag);
-        }
-        
         nsIDTD* dtd = nsnull;
         rv = NS_NewNavHTMLDTD(&dtd);
         if (NS_SUCCEEDED(rv)) 
@@ -2181,11 +2176,15 @@ ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
     }
 
     NS_RELEASE(parser);
+
     //
-    // Now assign the results if we worked!
+    // Now if we get here, we need to get from ASCII text to 
+    // UTF-8 format or there is a problem downstream...
     //
     if (NS_SUCCEEDED(rv))
+    {
       aConBuf = convertedText;
+    }
   }
 
   return rv;
