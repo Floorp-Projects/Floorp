@@ -84,6 +84,11 @@ CHROME_CONTENT= \
 		tabBindings.xml \
 		treeBindings.xml \
 		xulBindings.xml \
+		nsClipboard.js \
+		nsDragAndDrop.js \
+		nsJSSupportsUtils.js \
+		nsTransferable.js \
+		nsJSComponentManager.js\
 		xul.css \
 		$(NULL)
 

@@ -40,4 +40,9 @@ tabBindings.xml
 treeBindings.xml
 xulBindings.xml
 xul.css
+nsClipboard.js
+nsDragAndDrop.js
+nsJSSupportsUtils.js
+nsTransferable.js
+nsJSComponentManager.js
 
