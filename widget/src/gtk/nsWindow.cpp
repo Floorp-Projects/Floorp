@@ -69,6 +69,12 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 #include "nsIServiceManager.h"
+#include "nsIIOService.h"
+#include "nsIProtocolHandler.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
+#include "nsIResProtocolHandler.h"
+#include "nsIFileURL.h"
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
 
@@ -96,6 +102,7 @@ extern "C" int usleep(unsigned int);
 #undef DEBUG_DND_EVENTS
 #undef DEBUG_FOCUS
 #undef DEBUG_GRAB
+#undef DEBUG_ICONS
 #define MODAL_TIMERS_BROKEN
 
 #define CAPS_LOCK_IS_ON \
@@ -112,6 +119,27 @@ static PRBool gGlobalsInitialized   = PR_FALSE;
 static PRBool gRaiseWindows         = PR_TRUE;
 /* cursors cache */
 GdkCursor *nsWindow::gsGtkCursorCache[eCursor_count_up_down + 1];
+
+/* window icon cache */
+struct IconEntry : public PLDHashEntryHdr {
+  const char* string;
+  GdkPixmap* w_pixmap;
+  GdkBitmap* w_mask;
+  GdkPixmap* w_minipixmap;
+  GdkBitmap* w_minimask;
+};
+
+static PLDHashTableOps iconHashOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  PL_DHashGetKeyStub,
+  PL_DHashStringKey,
+  nsWindow::IconEntryMatches,
+  PL_DHashMoveEntryStub,
+  nsWindow::ClearIconEntry,
+  PL_DHashFinalizeStub,
+  NULL
+};
 
 gint handle_mozarea_focus_in (
     GtkWidget *      aWidget, 
@@ -143,6 +171,8 @@ GHashTable *nsWindow::mWindowLookupTable = NULL;
 
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
+
+PLDHashTable* nsWindow::sIconCache;
 
 PRBool gJustGotDeactivate = PR_FALSE;
 PRBool gJustGotActivate   = PR_FALSE;
@@ -272,6 +302,8 @@ nsWindow::nsWindow()
       nsXKBModeSwitch::ControlWorkaround(grab_during_popup,
                            ungrab_during_mode_switch);
     }
+
+    sIconCache = PL_NewDHashTable(&iconHashOps, nsnull, sizeof(IconEntry), 28);
   }
 }
 
@@ -2315,44 +2347,107 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   return NS_OK;
 }
 
-// Just give the window a default icon, Mozilla.
-nsresult nsWindow::SetIcon()
+NS_IMETHODIMP
+nsWindow::SetIcon(const nsAString& aIcon)
 {
-  static GdkPixmap *w_pixmap = nsnull;
-  static GdkBitmap *w_mask   = nsnull;
-  static GdkPixmap *w_minipixmap = nsnull;
-  static GdkBitmap *w_minimask = nsnull;
-  nsSpecialSystemDirectory sysDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+  // See if we have a cached icon set for this window type.
+  // Note that icon specs must be UTF8.
+  NS_ConvertUCS2toUTF8 iconKey(aIcon);
+  IconEntry* entry = NS_STATIC_CAST(IconEntry*,
+                                    PL_DHashTableOperate(sIconCache, iconKey.get(), PL_DHASH_LOOKUP));
+  if (!entry || PL_DHASH_ENTRY_IS_FREE(entry)) {
+    // We'll need to create the pixmaps.
 
-  GtkStyle         *w_style;
+    // Have necko resolve this to a file for us.
+    nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+    nsCOMPtr<nsIURI> iconURI;
+    NS_NewURI(getter_AddRefs(iconURI), aIcon);
+    nsCAutoString scheme;
+    iconURI->GetScheme(scheme);
+    nsCOMPtr<nsIProtocolHandler> handler;
+    ioService->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
+    nsCOMPtr<nsIResProtocolHandler> resHandler = do_QueryInterface(handler);
+    nsCAutoString fileURLSpec;
+    resHandler->ResolveURI(iconURI, fileURLSpec);
 
-  w_style = gtk_widget_get_style (mShell);
+    // We now have the file path as a file URL.  Resolve to a filesystem path.
+    NS_NewURI(getter_AddRefs(iconURI), fileURLSpec);
+    nsCOMPtr<nsIFileURL> iconFileURL = do_QueryInterface(iconURI);
+    NS_ENSURE_TRUE(iconFileURL, NS_ERROR_UNEXPECTED);
 
-  if (!w_pixmap) {
-    nsFileSpec bigIcon = sysDir + "/icons/" + "mozicon50.xpm";
-    if (bigIcon.Exists()) {
+    nsCOMPtr<nsIFile> fileTarget;
+    iconFileURL->GetFile(getter_AddRefs(fileTarget));
+    nsCAutoString fileTargetPath;
+    fileTarget->GetNativePath(fileTargetPath);
+
+    GtkStyle* w_style;
+    GdkPixmap* w_pixmap = NULL, *w_minipixmap = NULL;
+    GdkBitmap* w_mask = NULL, *w_minimask = NULL;
+
+    w_style = gtk_widget_get_style(mShell);
+
+    nsCAutoString largeIconPath(fileTargetPath);
+    largeIconPath.Append(".xpm");
+    nsCOMPtr<nsILocalFile> largeIconFile;
+    NS_NewNativeLocalFile(largeIconPath, PR_TRUE, getter_AddRefs(largeIconFile));
+#ifdef DEBUG_ICONS
+    printf("Looking for large icon file: %s\n", largeIconPath.get());
+#endif
+    PRBool exists;
+    if (NS_SUCCEEDED(largeIconFile->Exists(&exists)) && exists) {
+      nsCAutoString nativePath;
+      largeIconFile->GetNativePath(nativePath);
       w_pixmap = gdk_pixmap_create_from_xpm(mShell->window,
                                             &w_mask,
                                             &w_style->bg[GTK_STATE_NORMAL],
-                                            bigIcon.GetNativePathCString());
+                                            nativePath.get());
+#ifdef DEBUG_ICONS
+      printf("Loaded large icon file: %s\n", largeIconPath.get());
+#endif
     }
-  }
 
-  if (!w_minipixmap) {
-    nsFileSpec miniIcon = sysDir + "/icons/" + "mozicon16.xpm";
-    if (miniIcon.Exists()) {
+    nsCAutoString smallIconPath(fileTargetPath);
+    smallIconPath.Append("16.xpm");
+    nsCOMPtr<nsILocalFile> smallIconFile;
+    NS_NewNativeLocalFile(smallIconPath, PR_TRUE, getter_AddRefs(smallIconFile));
+#ifdef DEBUG_ICONS
+    printf("Looking for small icon file: %s\n", smallIconPath.get());
+#endif
+    if (NS_SUCCEEDED(smallIconFile->Exists(&exists)) && exists) {
+      nsCAutoString nativePath;
+      smallIconFile->GetNativePath(nativePath);
       w_minipixmap = gdk_pixmap_create_from_xpm(mShell->window,
                                                 &w_minimask,
                                                 &w_style->bg[GTK_STATE_NORMAL],
-                                                miniIcon.GetNativePathCString());
+                                                nativePath.get());
+#ifdef DEBUG_ICONS
+      printf("Loaded small icon file: %s\n", smallIconPath.get());
+#endif
     }
-  }
 
-  if (SetIcon(w_pixmap, w_mask) != NS_OK)
-        return NS_ERROR_FAILURE;
+    entry = NS_STATIC_CAST(IconEntry*, PL_DHashTableOperate(sIconCache, iconKey.get(),
+                                                            PL_DHASH_ADD));
+    if (!entry)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    entry->string = strdup(iconKey.get());
+    entry->w_pixmap = w_pixmap;
+    entry->w_mask = w_mask;
+    entry->w_minipixmap = w_minipixmap;
+    entry->w_minimask = w_minimask;
+  }
+#ifdef DEBUG_ICONS
+  else
+    printf("Loaded icon set for %s from cache\n", iconKey.get());
+#endif
+
+  if (entry->w_pixmap && SetIcon(entry->w_pixmap, entry->w_mask) != NS_OK)
+    return NS_ERROR_FAILURE;
 
   /* Now set the mini icon */
-  return SetMiniIcon (w_minipixmap, w_minimask);
+  if (entry->w_minipixmap)
+    return SetMiniIcon (entry->w_minipixmap, entry->w_minimask);
+  return NS_OK;
 }
 
 nsresult nsWindow::SetMiniIcon(GdkPixmap *pixmap,
@@ -2723,7 +2818,6 @@ NS_IMETHODIMP nsWindow::GetAttention(void)
 nsWindow::OnRealize(GtkWidget *aWidget)
 {
   if (aWidget == mShell) {
-    SetIcon();
     gint wmd = ConvertBorderStyles(mBorderStyle);
     if (wmd != -1)
       gdk_window_set_decorations(mShell->window, (GdkWMDecoration)wmd);
@@ -4106,4 +4200,39 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
   XSync(GDK_DISPLAY(), False);
 
   return NS_OK;
+}
+
+PRBool PR_CALLBACK
+nsWindow::IconEntryMatches(PLDHashTable* aTable,
+                           const PLDHashEntryHdr* aHdr,
+                           const void* aKey)
+{
+  const IconEntry* entry = NS_STATIC_CAST(const IconEntry*, aHdr);
+  const char* string = NS_REINTERPRET_CAST(const char*, aKey);
+
+  return strcmp(entry->string, string) == 0;
+}
+
+void PR_CALLBACK
+nsWindow::ClearIconEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr)
+{
+  IconEntry* entry = NS_STATIC_CAST(IconEntry*, aHdr);
+  if (entry->w_pixmap) {
+    gdk_pixmap_unref(entry->w_pixmap);
+    gdk_bitmap_unref(entry->w_mask);
+  }
+  if (entry->w_minipixmap) {
+    gdk_pixmap_unref(entry->w_minipixmap);
+    gdk_bitmap_unref(entry->w_minimask);
+  }
+  if (entry->string)
+    free((void*) entry->string);
+  PL_DHashClearEntryStub(aTable, aHdr);
+}
+
+void
+nsWindow::FreeIconCache()
+{
+  if (sIconCache)
+    PL_DHashTableDestroy(sIconCache);
 }

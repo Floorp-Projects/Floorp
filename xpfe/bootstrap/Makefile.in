@@ -176,30 +176,48 @@ RCFLAGS += -DMOZ_PHOENIX
 endif
 endif
 
+ifneq (,$(filter windows gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ICON_SUFFIX=.ico
+else
+ICON_SUFFIX=.xpm
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ICON_DIR=gtk
+else
+ICON_DIR=$(MOZ_WIDGET_TOOLKIT)
+endif
+
 DESKTOP_ICONS = \
-	abcardWindow.ico \
-	addressbookWindow.ico \
-	bmPropsWindow.ico \
-	bookmark-window.ico \
-	calendar-window.ico \
-	chatzilla-window.ico \
-	downloadManager.ico \
-	editorWindow.ico \
-	findBookmarkWindow.ico \
-	findHistoryWindow.ico \
-	history-window.ico \
-	jsconsoleWindow.ico \
-	main-window.ico \
-	messengerWindow.ico \
-	msgcomposeWindow.ico \
-	venkman-window.ico \
-	winInspectorMain.ico \
+	abcardWindow \
+	addressbookWindow \
+	bmPropsWindow \
+	bookmark-window \
+	calendar-window \
+	chatzilla-window \
+	downloadManager \
+	editorWindow \
+	findBookmarkWindow \
+	findHistoryWindow \
+	history-window \
+	jsconsoleWindow \
+	main-window \
+	messengerWindow \
+	msgcomposeWindow \
+	venkman-window \
+	winInspectorMain \
 	$(NULL) 
 
-GARBAGE	+= $(addprefix $(DIST)/bin/chrome/icons/default/,$(DESKTOP_ICONS))
+ifeq ($(ICON_DIR),gtk)
+DESKTOP_ICONS_SMALL=$(patsubst %,%16,$(DESKTOP_ICONS))
+endif
 
-libs:: $(DESKTOP_ICONS)
+DESKTOP_ICON_FILES = $(addsuffix $(ICON_SUFFIX), $(DESKTOP_ICONS) $(DESKTOP_ICONS_SMALL))
+
+GARBAGE	+= $(addprefix $(DIST)/bin/chrome/icons/default/,$(DESKTOP_ICON_FILES))
+
+libs:: $(addprefix icons/$(ICON_DIR)/,$(DESKTOP_ICON_FILES))
 	$(INSTALL) $^ $(DIST)/bin/chrome/icons/default
 endif
 
