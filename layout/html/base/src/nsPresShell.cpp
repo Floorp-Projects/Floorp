@@ -1373,12 +1373,18 @@ PresShell::CancelReflowCommand(nsIFrame* aTargetFrame)
 {
   PRInt32 i, n = mReflowCommands.Count();
   for (i = 0; i < n; i++) {
-    nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(0);
+    nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(i);
     if (rc) {
       nsIFrame* target;
       if (NS_SUCCEEDED(rc->GetTarget(target))) {
         if (target == aTargetFrame) {
+#if 0
+          printf("PresShell: removing rc=%p for frame ", rc);
+          nsFrame::ListTag(stdout, aTargetFrame);
+          printf("\n");
+#endif
           mReflowCommands.RemoveElementAt(i);
+          NS_RELEASE(rc);
           n--;
           i--;
           continue;
