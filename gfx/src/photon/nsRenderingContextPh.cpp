@@ -395,9 +395,9 @@ NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface(nsDrawingSur
 //  printf ("kedl2: select pixmap %p\n", ((nsDrawingSurfacePh *)mSurface)->mPixmap);
   mSurface->Select();
 
-//  PgSetClipping( 0, NULL );
-//  PgSetFillColor(Pg_RED);
-//  PgDrawIRect( 0, 0, 640,480, Pg_DRAW_FILL_STROKE );
+  PgSetClipping( 0, NULL );
+  PgSetFillColor(Pg_BLACK);
+  PgDrawIRect( 0, 0, 640,480, Pg_DRAW_FILL_STROKE );
 
   ApplyClipping(mSurface->GetGC()->rid);
   return NS_OK;
