@@ -52,7 +52,7 @@ toolbarbutton.bookmark-item {
   min-width: 0;
   max-width: 13em;
   padding: 2px 3px;
-  color: black !important;
+  color: -moz-DialogText !important;
 }
 
 toolbarbutton.bookmark-item:hover:active,
