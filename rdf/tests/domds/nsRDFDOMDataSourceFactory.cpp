@@ -40,10 +40,14 @@ NSGetFactory(nsISupports* aServMgr,
 {
   nsresult rv=NS_OK;
   nsIGenericFactory* fact;
-  if (aClass.Equals(kRDFDOMDataSourceCID))
+  if (aClass.Equals(kRDFDOMDataSourceCID)) {
     rv = NS_NewGenericFactory(&fact, NS_NewRDFDOMDataSource);
-  if (aClass.Equals(kRDFDOMDataSourceCID))
+    printf("Creating datasource: %s\n", NS_SUCCEEDED(rv) ? "succeed" : "failed");
+  } else
+  if (aClass.Equals(kRDFDOMResourceFactoryCID)) {
     rv = NS_NewGenericFactory(&fact, NS_NewRDFDOMResourceFactory);
+    printf("Creating resource: %s\n", NS_SUCCEEDED(rv) ? "succeed" : "failed");
+  }
   else
     rv = NS_ERROR_FAILURE;
 
