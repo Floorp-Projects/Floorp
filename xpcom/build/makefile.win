@@ -23,6 +23,11 @@ MODULE = xpcom
 LIBNAME = .\$(OBJDIR)\xpcom
 DLL = $(LIBNAME).dll
 
+# if we ever add a .def file for x86 we need to deal with this.
+!if "$(CPU)" == "ALPHA"
+DEFFILE = xpcom_alpha.def
+!endif
+
 LINCS =                          \
         -I$(PUBLIC)\xpcom        \
         -I..\base                \
