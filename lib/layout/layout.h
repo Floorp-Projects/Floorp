@@ -1028,6 +1028,7 @@ extern void lo_ConvertAllValues(MWContext *, char **, int32, uint);
 extern void lo_CloseOutLayout(MWContext *, lo_DocState *);
 extern void lo_CloseOutTable(MWContext *, lo_DocState *);
 extern void lo_CloseParagraph(MWContext *context, lo_DocState **state, PA_Tag *tag, intn blank_lines);
+extern void lo_ProcessHeader(MWContext *context, lo_DocState *state, LO_HeadingStruct *header, Bool in_relayout);
 extern void lo_CloseTable(MWContext *, lo_DocState *); /* from laytags.c */
 extern void lo_ShiftMarginsUp(MWContext *, lo_DocState *, int32);
 extern void lo_ClearToLeftMargin(MWContext *, lo_DocState *);
