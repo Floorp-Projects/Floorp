@@ -279,6 +279,10 @@ public:
 
   virtual nsresult GetContentOf(nsIContent** aContent);
 
+#ifdef ACCESSIBILITY
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#endif
+
 protected:
   nsHTMLScrollFrame(nsIPresShell* aShell, PRBool aIsRoot);
   virtual PRIntn GetSkipSides() const;

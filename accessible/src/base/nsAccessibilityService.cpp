@@ -521,13 +521,13 @@ nsAccessibilityService::CreateHTMLCheckboxAccessibleXBL(nsIDOMNode *aNode, nsIAc
 }
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateHTMLComboboxAccessible(nsIDOMNode* aDOMNode, nsISupports* aPresContext, nsIAccessible **_retval)
+nsAccessibilityService::CreateHTMLComboboxAccessible(nsIDOMNode* aDOMNode, nsISupports* aPresShell, nsIAccessible **_retval)
 {
-  nsCOMPtr<nsPresContext> presContext(do_QueryInterface(aPresContext));
-  NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
+  nsCOMPtr<nsIPresShell> presShell(do_QueryInterface(aPresShell));
+  NS_ASSERTION(presShell,"Error non prescontext passed to accessible factory!!!");
 
   nsCOMPtr<nsIWeakReference> weakShell =
-    do_GetWeakReference(presContext->PresShell());
+    do_GetWeakReference(presShell);
 
   *_retval = new nsHTMLComboboxAccessible(aDOMNode, weakShell);
   if (! *_retval)
@@ -562,6 +562,24 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFrame, nsIAccess
       *_retval = new nsHTMLImageAccessible(node, weakShell);
   }
 
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLGenericAccessible(nsISupports *aFrame, nsIAccessible **_retval)
+{
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
+  if (NS_FAILED(rv))
+    return rv;
+
+  *_retval = new nsGenericAccessible(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 

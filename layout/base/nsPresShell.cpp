@@ -3665,22 +3665,21 @@ nsIScrollableView*
 PresShell::GetViewToScroll()
 {
   nsCOMPtr<nsIEventStateManager> esm = mPresContext->EventStateManager();
-  nsIFrame* selectionFrame = nsnull;
   nsIScrollableView* scrollView = nsnull;
-  nsCOMPtr<nsIContent> selectionContent, endSelectionContent;  // NOT USED
-  PRUint32 selectionOffset; // NOT USED
-  esm->GetDocSelectionLocation(getter_AddRefs(selectionContent),
-                               getter_AddRefs(endSelectionContent),
-                               &selectionFrame,
-                               &selectionOffset);
-  if (selectionFrame) {
-    nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(selectionFrame);
-    if (svp) {
-      svp->GetScrollableView(mPresContext, &scrollView);
-    } else {
-      nsIView* selectionView = selectionFrame->GetClosestView();
-      if (selectionView)
-        scrollView = nsLayoutUtils::GetNearestScrollingView(selectionView);
+  nsCOMPtr<nsIContent> focusedContent;
+  esm->GetFocusedContent(getter_AddRefs(focusedContent));
+  if (focusedContent) {
+    nsIFrame* startFrame = nsnull;
+    GetPrimaryFrameFor(focusedContent, &startFrame);
+    if (startFrame) {
+      nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(startFrame);
+      if (svp) {
+        svp->GetScrollableView(mPresContext, &scrollView);
+      } else {
+        nsIView* startView = startFrame->GetClosestView();
+        if (startView)
+          scrollView = nsLayoutUtils::GetNearestScrollingView(startView);
+      }
     }
   }
   if (!scrollView) {
