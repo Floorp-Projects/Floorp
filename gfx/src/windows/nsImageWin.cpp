@@ -830,7 +830,12 @@ HBITMAP             maskBits,tileBits,oldBits,oldMaskBits;
     ::StretchDIBits(offDC, 0, 0, aWidth, aHeight,0, 0, aWidth, aHeight, mImageBits,
 		             (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS:DIB_RGB_COLORS, SRCCOPY);
   }else{
+    // need to select install this bitmap into this DC first
+   HBITMAP oldBits;
+
+    oldBits = (HBITMAP)::SelectObject(TheHDC, mHBitmap);
     ::BitBlt(offDC,0,0,aWidth,aHeight,TheHDC,0,0,SRCCOPY);
+    ::SelectObject(TheHDC, oldBits);
   }
 
   srcRect.SetRect(0,0,aWidth,aHeight);
