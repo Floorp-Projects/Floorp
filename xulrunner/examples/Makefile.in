@@ -36,19 +36,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = app examples
-
-#ifeq ($(OS_ARCH),WINNT)
-#ifdef MOZ_INSTALLER
-#DIRS += installer/windows
-#endif
-#endif
+DIRS = simple
 
 include $(topsrcdir)/config/rules.mk

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+
+  <RDF:Seq about="urn:mozilla:package:root">
+    <RDF:li resource="urn:mozilla:package:simple"/>
+  </RDF:Seq>
+
+  <RDF:Description about="urn:mozilla:package:simple"
+        chrome:displayName="Simple App"
+        chrome:author="Mozilla"
+        chrome:name="simple">
+  </RDF:Description>
+
+</RDF:RDF> 
