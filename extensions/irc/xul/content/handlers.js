@@ -957,7 +957,7 @@ function onInputCompleteLine(e, simulated)
     if (e.line[0] == client.COMMAND_CHAR)
     {
         var ary = e.line.substr(1, e.line.length).match (/(\S+)? ?(.*)/);
-        var command = ary[1];
+        var command = ary[1].toLowerCase();
         
         var ev = new CEvent ("client", "input-command", client,
                              "onInputCommand");
