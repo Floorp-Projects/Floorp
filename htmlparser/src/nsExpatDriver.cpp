@@ -269,7 +269,7 @@ IsLoadableDTD(const nsCatalogData* aCatalogData, nsCOMPtr<nsIURI>* aDTD)
   }
   
   nsCOMPtr<nsIFile> dtdPath;
-  NS_GetSpecialDirectory(NS_OS_CURRENT_PROCESS_DIR, 
+  NS_GetSpecialDirectory(NS_GRE_DIR, 
                          getter_AddRefs(dtdPath));
 
   if (!dtdPath)
