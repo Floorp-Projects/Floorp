@@ -42,14 +42,12 @@
 
 #appcontent
   {
-    border-left           : 1px solid #9D9D9D;
     border-top            : 1px solid #000000;
     border-right          : 1px solid #FFFFFF;
   }
 
 #ContentWindowDeck
   {
-    border-left           : 1px solid #000000;
     border-right          : 1px solid #DDDDDD;
   }
 
@@ -62,7 +60,6 @@
 
 #EditModeToolbar 
   {
-    border-left           : 1px solid #000000;
     border-right          : 1px solid #DDDDDD;
     border-bottom         : 1px solid #DDDDDD !important;
   }

@@ -7,13 +7,12 @@
 
 #content
   {
-    border-left           : 1px solid #000000;
-    border-bottom         : 1px solid #000000;
+    border-bottom         : 1px solid #000000; 
   }
 
 #browser
   {
-    border-left           : 1px solid #9D9D9D;
+  /** placeholder style ***/
   }  
   
 
