@@ -113,17 +113,12 @@ MacGetFileType(nsFileSpec   *fs,
       NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
       if (NS_SUCCEEDED(rv) && mimeFinder) 
       {
-        nsIMIMEInfo *mimeInfo = nsnull;
-        rv = mimeFinder->GetTypeFromURI(tURI, &mimeInfo);
-        if (NS_SUCCEEDED(rv) && mimeInfo) 
+        char *mimeType = nsnull;
+        rv = mimeFinder->GetTypeFromURI(tURI, &mimeType);
+        if (NS_SUCCEEDED(rv) && mimeType) 
         {
-          char *mimeType = nsnull;
-
-          if ( (NS_SUCCEEDED(mimeInfo->GetMIMEType(&mimeType))) && mimeType)
-          {
-            *fileType = mimeType;
-            return;
-          }
+          *fileType = mimeType;
+          return;
         }        
       }
     }
