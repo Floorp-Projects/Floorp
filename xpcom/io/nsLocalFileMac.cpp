@@ -655,6 +655,11 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
 	Boolean	targetIsFolder;	  
 	Boolean	wasAliased;	  
 	err = ::ResolveAliasFile(&spec, TRUE, &targetIsFolder, &wasAliased);
+	
+	// If we're going to create a file it's ok if it doesn't exist
+	if (err == fnfErr && (flags & PR_CREATE_FILE))
+		err = noErr;
+	
 	if (err != noErr)
 		return MacErrorMapper(err);
 	
