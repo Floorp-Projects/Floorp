@@ -47,36 +47,7 @@ namespace ICG {
     
     using namespace VM;
     
-    class ICodeGenerator; // forward declaration
     
-    enum StateKind {
-        While_state,
-        If_state,
-        Do_state,
-        Switch_state,
-        For_state,
-        Try_state
-    };
-
-    typedef std::vector<const StringAtom *> StatementLabels;
-    
-    class ICodeState {
-    public :
-        ICodeState(StateKind kind, ICodeGenerator *icg); // inline below
-        virtual ~ICodeState()   { }
-        
-        virtual Label *getBreakLabel(ICodeGenerator *) \
-        { ASSERT(false); return NULL; }
-        virtual Label *getContinueLabel(ICodeGenerator *) \
-        { ASSERT(false); return NULL;}
-        
-        StateKind stateKind;
-        uint32 statementLabelBase;
-        Label *breakLabel;
-        Label *continueLabel;
-        StatementLabels *labelSet;
-    };
-
     typedef std::map<String, Register, std::less<String> > VariableList;
     
 
@@ -104,6 +75,22 @@ namespace ICG {
         
     };
 
+    typedef std::vector<const StringAtom *> LabelSet;
+    class LabelEntry {
+    public:
+        LabelEntry(LabelSet *labelSet, Label *breakLabel) 
+            : labelSet(labelSet), breakLabel(breakLabel), continueLabel(NULL) { }
+        LabelEntry(LabelSet *labelSet, Label *breakLabel, Label *continueLabel) 
+            : labelSet(labelSet), breakLabel(breakLabel), continueLabel(continueLabel) { }
+
+        bool containsLabel(const StringAtom *label);
+
+        LabelSet *labelSet;
+        Label *breakLabel;
+        Label *continueLabel;
+    };
+    typedef std::vector<LabelEntry *> LabelStack;
+
     Formatter& operator<<(Formatter &f, ICodeModule &i);
 
     /****************************************************************/
@@ -118,8 +105,6 @@ namespace ICG {
         InstructionStream *iCode;
         bool iCodeOwner;
         LabelList labels;
-        std::vector<ICodeState *> stitcher;
-        StatementLabels *labelSet;
         
         Register topRegister;           // highest (currently) alloacated register
         Register registerBase;          // start of registers available for expression temps
@@ -134,7 +119,7 @@ namespace ICG {
 
         World *mWorld;                  // used to register strings
         
-        
+        LabelStack mLabelStack;
         
         void markMaxRegister() \
         { if (topRegister > maxRegister) maxRegister = topRegister; }
@@ -145,15 +130,11 @@ namespace ICG {
         void resetTopRegister() \
         { markMaxRegister(); topRegister = registerBase; }
         
-        void addStitcher(ICodeState *ics) \
-	    { stitcher.push_back(ics); }
-	
 	    ICodeOp getBranchOp() \
         { return (iCode->empty()) ? NOP : iCode->back()->getBranchOp(); }
 
 
         void setLabel(Label *label);
-        void setLabel(InstructionStream *stream, Label *label);
         
         void jsr(Label *label)  { iCode->push_back(new Jsr(label)); }
         void rts()              { iCode->push_back(new Rts()); }
@@ -168,8 +149,7 @@ namespace ICG {
         void endTry()
             { iCode->push_back(new Tryout()); }
         
-        void resetStatement()
-        { if (labelSet) { delete labelSet; labelSet = NULL; } resetTopRegister(); }
+        void resetStatement() { resetTopRegister(); }
 
         ICodeOp mapExprNodeToICodeOp(ExprNode::Kind kind);
     
@@ -183,14 +163,16 @@ namespace ICG {
             if (iCodeOwner)
                 delete iCode;
         }
-        
-        void mergeStream(InstructionStream *sideStream);
-        
+                
         ICodeModule *complete();
 
         Register genExpr(ExprNode *p, bool needBoolValueInBranch = false,
                     Label *trueBranch = NULL, 
                     Label *falseBranch = NULL);
+        Register genStmt(StmtNode *p, LabelSet *currentLabelSet = NULL);
+
+
+        void addInstruction(Instruction *i) { iCode->push_back(i); }
 
 
         Register allocateVariable(const StringAtom& name) 
@@ -199,7 +181,7 @@ namespace ICG {
 
         Register findVariable(const StringAtom& name)
         { VariableList::iterator i = variableList->find(name);
-          ASSERT(i != variableList->end()); return (*i).second; }
+        return (i == variableList->end()) ? NotARegister : (*i).second; }
         
         Register allocateParameter(const StringAtom& name) 
         { parameterCount++; return allocateVariable(name); }
@@ -214,8 +196,6 @@ namespace ICG {
         void move(Register destination, Register source);
         Register logicalNot(Register source);
         Register test(Register source);
-        
-        Register compare(ICodeOp op, Register source1, Register source2);
         
         Register loadValue(JSValue value);
         Register loadImmediate(double value);
@@ -241,85 +221,8 @@ namespace ICG {
        
         Register getRegisterBase()                  { return topRegister; }
         InstructionStream *get_iCode()              { return iCode; }
-        StatementLabels *getStatementLabels()       { return labelSet; labelSet = NULL; }
-
         
         Label *getLabel();
-        
-        
-        // Rather than have the ICG client maniplate labels and branches, it
-        // uses the following calls to describe the high level looping
-        // constructs being generated. The functions listed below are
-        // expected to be called in the order listed for each construct,
-        // (internal error otherwise).
-        // The ICG will enforce correct nesting and closing.
-        
-        // expression statements
-        void beginStatement(uint32 /*pos*/) { }
-        void endStatement() { resetStatement(); }
-        
-        void returnStatement() { iCode->push_back(new ReturnVoid()); }
-        void returnStatement(Register result) \
-            { if (result == NotARegister) returnStatement(); \
-              else iCode->push_back(new Return(result)); resetStatement(); }
-        
-        void beginWhileStatement(uint32 pos);
-        void endWhileExpression(Register condition);
-        void endWhileStatement();
-        
-        void beginDoStatement(uint32 pos);
-        void endDoStatement();
-        void endDoExpression(Register condition);
-        
-        void beginIfStatement(uint32 pos, Register condition);
-        void beginElseStatement(bool hasElse); // required, regardless of
-        // existence of else clause
-        void endIfStatement();
-        
-        // for ( ... in ...) statements get turned into generic for
-        // statements by the parser (ok?)
-        void beginForStatement(uint32 pos); // for initialization is
-        // emitted prior to this call
-        void forCondition(Register condition); // required
-        void forIncrement();                   // required
-        void endForStatement();
-        
-        void beginSwitchStatement(uint32 pos, Register expression);
-
-        void endCaseCondition(Register expression);
-    
-        void beginCaseStatement(uint32 pos);
-        void endCaseStatement();
-        
-        // optionally
-        void beginDefaultStatement(uint32 pos);
-        void endDefaultStatement();
-
-        void endSwitchStatement();
-
-        void beginLabelStatement(uint32 /* pos */, const StringAtom &label)
-        { labelSet->push_back(&label); }
-        void endLabelStatement() { if (labelSet) labelSet->pop_back(); }
-
-        void continueStatement(uint32 pos);
-        void breakStatement(uint32 pos);
-
-        void continueStatement(uint32 pos, const StringAtom &label);
-        void breakStatement(uint32 pos, const StringAtom &label);
-
-        void throwStatement(uint32 /* pos */, Register expression)
-            { iCode->push_back(new Throw(expression)); }
-
-        void beginTryStatement(uint32 pos, bool hasCatch, bool hasFinally);
-        void endTryBlock();
-        void endTryStatement();
-
-        void beginCatchStatement(uint32 pos);
-        void endCatchExpression(Register exceptionId);
-        void endCatchStatement();
-
-        void beginFinallyStatement(uint32 pos);
-        void endFinallyStatement();
 
     };
 
@@ -329,113 +232,6 @@ namespace ICG {
       std::ostream &operator<<(std::ostream &s, StringAtom &str);
     */
 
-    class WhileCodeState : public ICodeState {
-    public:
-        WhileCodeState(ICodeGenerator *icg); // inline below
-        InstructionStream *swapStream(InstructionStream *iCode) \
-        { InstructionStream *t = whileExpressionStream; \
-        whileExpressionStream = iCode; return t; }
-
-        virtual Label *getBreakLabel(ICodeGenerator *icg) \
-        { if (breakLabel == NULL) breakLabel = icg->getLabel(); \
-        return breakLabel; }
-        virtual Label *getContinueLabel(ICodeGenerator *) \
-        { return whileCondition; }
-
-        Label *whileCondition;
-        Label *whileBody;
-        InstructionStream *whileExpressionStream;
-    };
-
-    class ForCodeState : public ICodeState {
-    public:
-        ForCodeState(ICodeGenerator *icg); // inline below
-        InstructionStream *swapStream(InstructionStream *iCode) \
-        { InstructionStream *t = forConditionStream; \
-        forConditionStream = iCode; return t; }
-        InstructionStream *swapStream2(InstructionStream *iCode) \
-        { InstructionStream *t = forIncrementStream; \
-        forIncrementStream = iCode; return t; }
-        
-        virtual Label *getBreakLabel(ICodeGenerator *icg) \
-        { if (breakLabel == NULL) breakLabel = icg->getLabel(); \
-        return breakLabel; }
-        virtual Label *getContinueLabel(ICodeGenerator *) \
-        { ASSERT(continueLabel); return continueLabel; }
-
-        Label *forCondition;
-        Label *forBody;
-        InstructionStream *forConditionStream;
-        InstructionStream *forIncrementStream;
-    };
-
-    class IfCodeState : public ICodeState {
-    public:
-        IfCodeState(ICodeGenerator *icg) 
-            : ICodeState(If_state, icg), elseLabel(icg->getLabel()), beyondElse(NULL) { }
-        Label *elseLabel;
-        Label *beyondElse;
-    };
-
-    class DoCodeState : public ICodeState {
-    public:
-        DoCodeState(ICodeGenerator *icg) 
-            : ICodeState(Do_state, icg), doBody(icg->getLabel()),
-              doCondition(icg->getLabel()) { }
-
-        virtual Label *getBreakLabel(ICodeGenerator *icg) \
-        { if (breakLabel == NULL) breakLabel = icg->getLabel();
-        return breakLabel; }
-        virtual Label *getContinueLabel(ICodeGenerator *) \
-        { return doCondition; }
-
-        Label *doBody;
-        Label *doCondition;
-    };
-
-    class SwitchCodeState : public ICodeState {
-    public:
-        SwitchCodeState(Register control, ICodeGenerator *icg); // inline below
-        InstructionStream *swapStream(InstructionStream *iCode) \
-        { InstructionStream *t = caseStatementsStream; \
-        caseStatementsStream = iCode; return t; }
-        
-        virtual Label *getBreakLabel(ICodeGenerator *icg) \
-        { if (breakLabel == NULL) breakLabel = icg->getLabel(); 
-        return breakLabel; }
-
-        Register controlValue;
-        Label *defaultLabel;
-        InstructionStream *caseStatementsStream;
-    };
-
-    class TryCodeState : public ICodeState {
-    public:
-        TryCodeState(Label *catchLabel, Label *finallyLabel, ICodeGenerator *icg);
-        Label *catchHandler;
-        Label *finallyHandler;
-        Label *finallyInvoker;
-        Label *beyondCatch;
-    };
-
-    inline ICodeState::ICodeState(StateKind kind, ICodeGenerator *icg) 
-        : stateKind(kind),         
-          breakLabel(NULL), continueLabel(NULL), 
-          labelSet(icg->getStatementLabels()) { }
-
-    inline SwitchCodeState::SwitchCodeState(Register control,
-                                            ICodeGenerator *icg)
-        : ICodeState(Switch_state, icg), controlValue(control),
-          defaultLabel(NULL), caseStatementsStream(icg->get_iCode()) {}
-
-    inline WhileCodeState::WhileCodeState(ICodeGenerator *icg) 
-        : ICodeState(While_state, icg), whileCondition(icg->getLabel()),
-          whileBody(icg->getLabel()), whileExpressionStream(icg->get_iCode()) {}
-
-    inline ForCodeState::ForCodeState(ICodeGenerator *icg) 
-        : ICodeState(For_state, icg), forCondition(icg->getLabel()),
-          forBody(icg->getLabel()), forConditionStream(icg->get_iCode()),
-          forIncrementStream(icg->get_iCode()) {}
 
 
 } /* namespace IGC */
