@@ -44,7 +44,8 @@
 #include "nsMimeBaseEmitter.h"
 #include "nsMailHeaders.h"
 #include "nscore.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
 #include "prmem.h"
@@ -125,9 +126,9 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
     gMimeEmitterLogModule = PR_NewLogModule("MIME");
 
   // Do prefs last since we can live without this if it fails...
-  mPrefs = do_GetService(NS_PREF_CONTRACTID);
-  if (mPrefs)
-    mPrefs->GetIntPref("mail.show_headers", &mHeaderDisplayType);
+  nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pPrefBranch)
+    pPrefBranch->GetIntPref("mail.show_headers", &mHeaderDisplayType);
 }
 
 nsMimeBaseEmitter::~nsMimeBaseEmitter(void)

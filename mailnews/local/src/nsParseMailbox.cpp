@@ -62,7 +62,6 @@
 #include "nsIIOService.h"
 #include "nsNetCID.h"
 #include "nsRDFCID.h"
-#include "nsIPref.h"
 #include "nsIRDFService.h"
 #include "nsMsgI18N.h"
 #include "nsAppDirectoryServiceDefs.h"

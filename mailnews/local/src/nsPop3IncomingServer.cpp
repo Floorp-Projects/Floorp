@@ -40,7 +40,6 @@
 #include "prprf.h"
 
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
 
 #include "nsXPIDLString.h"
 #include "nsIStringBundle.h"

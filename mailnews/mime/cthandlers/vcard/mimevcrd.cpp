@@ -56,7 +56,6 @@
 #include "nsReadableUtils.h"
 
 #include "nsIStringBundle.h"
-#include "nsIPref.h"
 #include "nsVCardStringResources.h"
 
 #include "nsCRT.h"

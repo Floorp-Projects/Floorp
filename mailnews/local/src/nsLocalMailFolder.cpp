@@ -42,7 +42,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "prlog.h"
 
 #include "msgCore.h"    // precompiled header...
@@ -1219,9 +1220,9 @@ nsresult nsMsgLocalMailFolder::ConfirmFolderDeletion(nsIMsgWindow *aMsgWindow, P
   {
     PRBool confirmDeletion = PR_TRUE;
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv))
-       prefs->GetBoolPref("mailnews.confirm.moveFoldersToTrash", &confirmDeletion);
+    nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if (pPrefBranch)
+       pPrefBranch->GetBoolPref("mailnews.confirm.moveFoldersToTrash", &confirmDeletion);
     if (confirmDeletion)
     {
       if (!mMsgStringService)

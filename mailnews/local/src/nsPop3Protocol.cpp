@@ -53,7 +53,6 @@
 #include "nsLocalStringBundle.h"
 #include "nsTextFormatter.h"
 #include "nsCOMPtr.h"
-#include "nsIPref.h" 
 #include "nsIMsgWindow.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsIDocShell.h"

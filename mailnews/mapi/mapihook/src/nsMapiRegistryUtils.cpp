@@ -50,7 +50,6 @@
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIPref.h"
 
 #define EXE_EXTENSION ".exe" 
 #define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000

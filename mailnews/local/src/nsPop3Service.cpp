@@ -43,8 +43,6 @@
 #include "nsIPop3IncomingServer.h"
 #include "nsIMsgMailSession.h"
 
-#include "nsIPref.h"
-
 #include "nsPop3URL.h"
 #include "nsPop3Sink.h"
 #include "nsPop3Protocol.h"
@@ -69,7 +67,6 @@
 #define PREF_MAIL_ROOT_POP3 "mail.root.pop3"        // old - for backward compatibility only
 #define PREF_MAIL_ROOT_POP3_REL "mail.root.pop3-rel"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 

@@ -44,7 +44,6 @@
 #include "mimemoz2.h"
 #include "nsIMimeEmitter.h"
 #include "nsCRT.h"
-#include "nsIPref.h"
 #include "nsEscape.h"
 #include "nsMsgMessageFlags.h"
 #include "nsMimeAddress.h"

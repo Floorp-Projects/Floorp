@@ -49,7 +49,8 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 #include "nsEscape.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsMsgDeliveryListener.h"
 #include "nsMsgComposeStringBundle.h"
@@ -110,7 +111,6 @@
 #include "nsRDFCID.h"
 #include "nsIMsgAccountManager.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 #define PREF_MAIL_SEND_STRUCT "mail.send_struct"
@@ -1726,10 +1726,10 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     {
       PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
       PRBool enable_structs = PR_FALSE;
-      nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-      if (NS_SUCCEEDED(rv) && prefs)
+      nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+      if (pPrefBranch)
       {
-        rv = prefs->GetBoolPref(PREF_MAIL_SEND_STRUCT,&enable_structs);
+        rv = pPrefBranch->GetBoolPref(PREF_MAIL_SEND_STRUCT, &enable_structs);
         if (enable_structs)
           whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
       }
@@ -3171,11 +3171,11 @@ nsMsgComposeAndSend::Init(
   // Needed for mime encoding!
   //
   PRBool strictly_mime = PR_TRUE; 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-  if (NS_SUCCEEDED(rv) && prefs) 
+  nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pPrefBranch)
   {
-    rv = prefs->GetBoolPref(PREF_MAIL_STRICTLY_MIME, &strictly_mime);
-    rv = prefs->GetIntPref(PREF_MAIL_MESSAGE_WARNING_SIZE, (PRInt32 *) &mMessageWarningSize);
+    rv = pPrefBranch->GetBoolPref(PREF_MAIL_STRICTLY_MIME, &strictly_mime);
+    rv = pPrefBranch->GetIntPref(PREF_MAIL_MESSAGE_WARNING_SIZE, (PRInt32 *) &mMessageWarningSize);
   }
 
   nsMsgMIMESetConformToStandard(strictly_mime);
@@ -3381,11 +3381,9 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   nsresult rv;
 
   PRBool collectOutgoingAddresses = PR_TRUE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-  if (NS_SUCCEEDED(rv) && prefs)
-  {
-    prefs->GetBoolPref(PREF_MAIL_COLLECT_EMAIL_ADDRESS_OUTGOING,&collectOutgoingAddresses);
-  }
+  nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pPrefBranch)
+    pPrefBranch->GetBoolPref(PREF_MAIL_COLLECT_EMAIL_ADDRESS_OUTGOING, &collectOutgoingAddresses);
  
 
   nsCOMPtr<nsIAbAddressCollecter> addressCollecter = 

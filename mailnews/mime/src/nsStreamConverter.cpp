@@ -58,7 +58,8 @@
 #include "nsMemory.h"
 #include "nsIPipe.h"
 #include "nsMimeStringResources.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsNetUtil.h"
 #include "nsIMsgQuote.h"
 #include "nsIScriptSecurityManager.h"
@@ -75,8 +76,6 @@
 
 #define PREF_MAIL_DISPLAY_GLYPH "mail.display_glyph"
 #define PREF_MAIL_DISPLAY_STRUCT "mail.display_struct"
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 ////////////////////////////////////////////////////////////////
 // Bridge routines for new stream converter XP-COM interface 
@@ -221,11 +220,11 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
 
             // if the pref says always override and no manual override then set the folder charset to override
             if (!*override_charset) {
-              nsCOMPtr <nsIPref> prefs = do_GetService(kPrefCID, &rv);
-              if (NS_SUCCEEDED(rv) && prefs) 
+              nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+              if (pPrefBranch)
               {
                 PRBool  force_override;
-                rv = prefs->GetBoolPref("mailnews.force_charset_override", &force_override);
+                rv = pPrefBranch->GetBoolPref("mailnews.force_charset_override", &force_override);
                 if (NS_SUCCEEDED(rv) && force_override) 
                 {
                   *override_charset = PR_TRUE;
@@ -715,15 +714,15 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   PRBool enable_emoticons = PR_TRUE;
   PRBool enable_structs = PR_TRUE;
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-  if (NS_SUCCEEDED(rv) && prefs) 
+  nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (pPrefBranch)
   {
-    rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_GLYPH,&enable_emoticons);
+    rv = pPrefBranch->GetBoolPref(PREF_MAIL_DISPLAY_GLYPH,&enable_emoticons);
     if (NS_FAILED(rv) || enable_emoticons) 
     {
     	whattodo = whattodo | mozITXTToHTMLConv::kGlyphSubstitution;
     }
-    rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_STRUCT,&enable_structs);
+    rv = pPrefBranch->GetBoolPref(PREF_MAIL_DISPLAY_STRUCT,&enable_structs);
     if (NS_FAILED(rv) || enable_structs) 
     {
     	whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;

@@ -44,8 +44,6 @@
 #include "nsIMsgProtocolInfo.h"
 #include "nsIMsgMailSession.h"
 
-#include "nsIPref.h"
-
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
 #include "nsXPIDLString.h"
@@ -58,8 +56,6 @@
 
 #define PREF_MAIL_ROOT_NONE "mail.root.none"        // old - for backward compatibility only
 #define PREF_MAIL_ROOT_NONE_REL "mail.root.none-rel"
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsNoneService::nsNoneService()
 {

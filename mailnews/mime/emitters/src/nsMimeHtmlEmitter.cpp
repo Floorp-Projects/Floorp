@@ -43,6 +43,8 @@
 #include "nsMailHeaders.h"
 #include "nscore.h"
 #include "nsEmitterUtils.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsEscape.h"
 #include "nsIMimeStreamConverter.h"
 #include "nsIMsgWindow.h"
@@ -185,9 +187,9 @@ NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
   nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
 
   PRInt32 viewMode = 0;
-  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-  if (prefs)
-    rv = prefs->GetIntPref("mail.show_headers", &viewMode);
+  nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (pPrefBranch)
+    rv = pPrefBranch->GetIntPref("mail.show_headers", &viewMode);
 
   if (headerSink)
   {
@@ -211,8 +213,8 @@ NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
       if (nsCRT::strcasecmp("Date", headerInfo->name) == 0)
       {
         PRBool displayOriginalDate = PR_FALSE;
-        if (prefs)
-          prefs->GetBoolPref("mailnews.display.original_date", &displayOriginalDate);
+        if (pPrefBranch)
+          pPrefBranch->GetBoolPref("mailnews.display.original_date", &displayOriginalDate);
 
         if (displayOriginalDate)
           headerValues[numHeadersAdded] = ToNewUnicode(nsDependentCString(headerValue));

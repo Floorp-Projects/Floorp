@@ -38,7 +38,8 @@
 #include "nsMsgSendLater.h"
 #include "nsCOMPtr.h"
 #include "nsMsgCopy.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIEnumerator.h"
 #include "nsIFileSpec.h"
 #include "nsISmtpService.h"
@@ -71,7 +72,6 @@
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kISupportsArrayCID, NS_SUPPORTSARRAY_CID);
 
 NS_IMPL_ISUPPORTS2(nsMsgSendLater, nsIMsgSendLater, nsIStreamListener)
@@ -389,9 +389,9 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
       //
       // Now delete the message from the outbox folder.
       //
-      nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-      if (NS_SUCCEEDED(rv) && prefs)
-        prefs->GetBoolPref("mail.really_delete_draft", &deleteMsgs);
+      nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+      if (pPrefBranch)
+        pPrefBranch->GetBoolPref("mail.really_delete_draft", &deleteMsgs);
 
       mSendLater->SetOrigMsgDisposition();
       if (deleteMsgs)

@@ -42,7 +42,6 @@
 #include "prprf.h"
 
 #include "nsIFileSpec.h"
-#include "nsIPref.h"
 #include "nsXPIDLString.h"
 
 #include "nsNoIncomingServer.h"

@@ -40,7 +40,6 @@
 #include "nsMailHeaders.h"
 #include "nsIMimeEmitter.h"
 #include "nsIStringBundle.h"
-#include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"

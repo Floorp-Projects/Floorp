@@ -64,8 +64,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsMsgUtils.h"
 
-#include "nsIPref.h"
-
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
 #include "nsXPIDLString.h"
@@ -82,8 +80,6 @@ const char * gDefaultSpoolPaths[] = {
     "/usr/mail/"
 };
 #define NUM_DEFAULT_SPOOL_PATHS (sizeof(gDefaultSpoolPaths)/sizeof(gDefaultSpoolPaths[0]))
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsMovemailService::nsMovemailService()
 {

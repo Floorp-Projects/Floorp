@@ -60,7 +60,7 @@
 #include "nsMsgCompCID.h"
 #include "nsIPrompt.h"
 #include "nsIMsgCompUtils.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIPrefBranch.h"
 #include "nsIStringBundle.h"
@@ -923,27 +923,24 @@ nsresult nsMsgMdnGenerator::InitAndProcess()
             }
             else
             {
-                nsCOMPtr<nsIPref> prefs = 
-                    do_GetService(NS_PREF_CONTRACTID, &rv);
-                if (NS_FAILED(rv)) 
-                    return rv;
+                PRBool bVal = PR_FALSE;
 
-                nsCOMPtr<nsIPrefBranch> prefBranch;
-
-                rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+                nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
                 if (NS_FAILED(rv))
                     return rv;
 
-                PRBool bVal = PR_FALSE;
-                prefBranch->GetBoolPref("mail.mdn.report.enabled",
-                                        &bVal);
-                m_mdnEnabled = bVal;
-                prefBranch->GetIntPref("mail.mdn.report.not_in_to_cc",
-                                       &m_notInToCcOp);
-                prefBranch->GetIntPref("mail.mdn.report.outside_domain",
-                                       &m_outsideDomainOp);
-                prefBranch->GetIntPref("mail.mdn.report.other",
-                                       &m_otherOp);
+                if(prefBranch)
+                {
+                    prefBranch->GetBoolPref("mail.mdn.report.enabled",
+                                           &bVal);
+                    m_mdnEnabled = bVal;
+                    prefBranch->GetIntPref("mail.mdn.report.not_in_to_cc",
+                                           &m_notInToCcOp);
+                    prefBranch->GetIntPref("mail.mdn.report.outside_domain",
+                                           &m_outsideDomainOp);
+                    prefBranch->GetIntPref("mail.mdn.report.other",
+                                           &m_otherOp);
+                }
             }
         }
     }

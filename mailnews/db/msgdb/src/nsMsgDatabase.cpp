@@ -82,13 +82,13 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 #include "nsICollation.h"
 
 #include "nsCollationCID.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_MSGKEYSET 1
 #endif
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
 #define MSG_HASH_SIZE 512
@@ -3704,10 +3704,10 @@ nsresult nsMsgDatabase::GetBoolPref(const char *prefName, PRBool *result)
 {
   PRBool prefValue = PR_FALSE;
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-  if (NS_SUCCEEDED(rv) && prefs)
+  nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (pPrefBranch)
   {
-    rv = prefs->GetBoolPref(prefName, &prefValue);
+    rv = pPrefBranch->GetBoolPref(prefName, &prefValue);
     *result = prefValue;
   }
   return rv;
@@ -3717,10 +3717,10 @@ nsresult nsMsgDatabase::GetIntPref(const char *prefName, PRInt32 *result)
 {
   PRInt32 prefValue = 0;
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-  if (NS_SUCCEEDED(rv) && prefs)
+  nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (pPrefBranch)
   {
-    rv = prefs->GetIntPref(prefName, &prefValue);
+    rv = pPrefBranch->GetIntPref(prefName, &prefValue);
     *result = prefValue;
   }
   return rv;
