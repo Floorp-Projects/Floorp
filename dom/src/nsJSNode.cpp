@@ -460,12 +460,12 @@ Node(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 nsresult NS_InitNodeClass(JSContext *aContext, JSObject **aPrototype)
 {
   // look in the global object for this class prototype
-  jsval vp;
   static JSObject *proto = nsnull;
+  JSObject *global = JS_GetGlobalObject(aContext);
 
   if (nsnull == proto) {
     proto = JS_InitClass(aContext, // context
-                          JS_GetGlobalObject(aContext), // global object
+                          global, // global object
                           NULL, // parent proto 
                           &node, // JSClass
                           Node, // JSNative ctor
@@ -476,6 +476,24 @@ nsresult NS_InitNodeClass(JSContext *aContext, JSObject **aPrototype)
                           NULL); // ctor funcs (static)
     if (nsnull == proto) {
       return NS_ERROR_FAILURE;
+    }
+
+    jsval vp;
+    if (PR_TRUE == JS_GetProperty(aContext, global, node.name, &vp)) {
+      if (JSVAL_IS_OBJECT(vp)) {
+        jsval value = INT_TO_JSVAL(1);
+        JS_SetProperty(aContext, JSVAL_TO_OBJECT(vp), "DOCUMENT", &value);
+        value = INT_TO_JSVAL(2);
+        JS_SetProperty(aContext, JSVAL_TO_OBJECT(vp), "ELEMENT", &value);
+        value = INT_TO_JSVAL(3);
+        JS_SetProperty(aContext, JSVAL_TO_OBJECT(vp), "ATTRIBUTE", &value);
+        value = INT_TO_JSVAL(4);
+        JS_SetProperty(aContext, JSVAL_TO_OBJECT(vp), "PI", &value);
+        value = INT_TO_JSVAL(5);
+        JS_SetProperty(aContext, JSVAL_TO_OBJECT(vp), "COMMENT", &value);
+        value = INT_TO_JSVAL(6);
+        JS_SetProperty(aContext, JSVAL_TO_OBJECT(vp), "TEXT", &value);
+      }
     }
   }
 
