@@ -367,7 +367,10 @@ nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
       }
     }
     else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
-      return kid->GetFrameForPoint(aPoint, aFrame);
+      if (kidRect.Contains(aPoint)) {
+        tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+        return kid->GetFrameForPoint(tmp, aFrame);
+      }
     }
 
     kid->GetNextSibling(&kid);
