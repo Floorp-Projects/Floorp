@@ -60,6 +60,7 @@ typedef int PRInt32;
 #define FILE_INI_REDIRECT               "redirect.ini"
 #define WIZ_TEMP_DIR                    "ns_temp"
 #define FILE_INSTALL_LOG                "install_wizard.log"
+#define FILE_INSTALL_STATUS_LOG         "install_status.log"
 #define FILE_ALL_JS                     "all-proxy.js"
 #define VR_DEFAULT_PRODUCT_NAME         "Mozilla"
 
@@ -72,6 +73,22 @@ typedef int PRInt32;
 #define BAR_LIBXPNET_MARGIN             1
 #define BAR_LIBXPNET_SPACING            0
 #define BAR_LIBXPNET_WIDTH              1
+
+/* W: When for install status logging */
+#define W_START                         0
+#define W_END                           1
+
+/* W: When for crc check failed logging */
+#define W_STARTUP                       0
+#define W_DOWNLOAD                      1
+
+/* UP: Use Protocol */
+#define UP_FTP                          0
+#define UP_HTTP                         1
+
+/* LIS: Log Install Status */
+#define LIS_SUCCESS                     0
+#define LIS_FAILURE                     1
 
 /* UG: Upgrade */
 #define UG_NONE                         0
@@ -278,6 +295,8 @@ typedef struct dlgDownloadOptions
   LPSTR szMessage0;
   LPSTR szMessage1;
   BOOL  bSaveInstaller;
+  DWORD dwUseProtocol;
+  BOOL  bUseProtocolSettings;
 } diDO;
 
 typedef struct dlgAdvancedSettings
@@ -323,6 +342,7 @@ typedef struct setupStruct
   LPSTR     szProgramName;
   LPSTR     szCompanyName;
   LPSTR     szProductName;
+  LPSTR     szUninstallFilename;
   LPSTR     szUserAgent;
   LPSTR     szProgramFolderName;
   LPSTR     szProgramFolderPath;

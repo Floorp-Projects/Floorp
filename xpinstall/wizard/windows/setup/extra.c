@@ -28,6 +28,7 @@
 #include "ifuncns.h"
 #include "xpnetHook.h"
 #include "time.h"
+#include "xpi.h"
 #include <winnls.h>
 #include <winver.h>
 #include <tlhelp32.h>
@@ -40,6 +41,9 @@
 #define PN_PROCESS          TEXT("Process")
 #define PN_THREAD           TEXT("Thread")
 
+#define FTPSTR_LEN (sizeof(szFtp) - 1)
+#define HTTPSTR_LEN (sizeof(szHttp) - 1)
+
 ULONG  (PASCAL *NS_GetDiskFreeSpace)(LPCTSTR, LPDWORD, LPDWORD, LPDWORD, LPDWORD);
 ULONG  (PASCAL *NS_GetDiskFreeSpaceEx)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
 typedef BOOL   (WINAPI *NS_ProcessWalk)(HANDLE hSnapshot, LPPROCESSENTRY32 lppe);
@@ -50,6 +54,7 @@ typedef PERF_INSTANCE_DEFINITION    PERF_INSTANCE,  *PPERF_INSTANCE;
 TCHAR   INDEX_PROCTHRD_OBJ[2*INDEX_STR_LEN];
 DWORD   PX_PROCESS;
 DWORD   PX_THREAD;
+static dsN *gdsnComponentDSRequirement = NULL;
 
 char *FontColorMap[] = {"WHITE", "0x00EEEEEE",
                         "BLACK", "0x00000000",
@@ -230,6 +235,164 @@ BOOL CheckForPreviousUnfinishedDownload()
   return(bRv);
 }
 
+BOOL UpdateFile(char *szInFilename, char *szOutFilename, char *szIgnoreStr)
+{
+  FILE *ifp;
+  FILE *ofp;
+  char szLineRead[MAX_BUF];
+  char szLCIgnoreLongStr[MAX_BUF];
+  char szLCIgnoreShortStr[MAX_BUF];
+  char szLCLineRead[MAX_BUF];
+  BOOL bFoundIgnoreStr = FALSE;
+
+  if((ifp = fopen(szInFilename, "rt")) == NULL)
+    return(bFoundIgnoreStr);
+  if((ofp = fopen(szOutFilename, "w+t")) == NULL)
+  {
+    fclose(ifp);
+    return(bFoundIgnoreStr);
+  }
+
+  if(lstrlen(szIgnoreStr) < sizeof(szLCIgnoreLongStr))
+  {
+    lstrcpy(szLCIgnoreLongStr, szIgnoreStr);
+    CharLower(szLCIgnoreLongStr);
+  }
+  if(lstrlen(szIgnoreStr) < sizeof(szLCIgnoreShortStr))
+  {
+    GetShortPathName(szIgnoreStr, szLCIgnoreShortStr, sizeof(szLCIgnoreShortStr));
+    CharLower(szLCIgnoreShortStr);
+  }
+
+  // read the entire file into memory
+  while(fgets(szLineRead, sizeof(szLineRead), ifp) != NULL)
+  {
+    lstrcpy(szLCLineRead, szLineRead);
+    CharLower(szLCLineRead);
+    if(!strstr(szLCLineRead, szLCIgnoreLongStr) && !strstr(szLCLineRead, szLCIgnoreShortStr))
+      fputs(szLineRead, ofp);
+    else
+      bFoundIgnoreStr = TRUE;
+  }
+  fclose(ifp);
+  fclose(ofp);
+
+  return(bFoundIgnoreStr);
+}
+
+/* Looks for and removes the uninstaller from the Windows Registry
+ * that is set to delete the uninstaller at the next restart of
+ * Windows.  This key is set/created when the user does the following:
+ *
+ * 1) Runs the uninstaller from the previous version of the product.
+ * 2) User does not reboot the OS and starts the installation of
+ *    the next version of the product.
+ *
+ * This functions prevents the uninstaller from being deleted on a
+ * system reboot after the user performs 2).
+ */
+void ClearWinRegUninstallFileDeletion(void)
+{
+  char  *szPtrIn  = NULL;
+  char  *szPtrOut = NULL;
+  char  szInMultiStr[MAX_BUF];
+  char  szOutMultiStr[MAX_BUF];
+  char  szLCKeyBuf[MAX_BUF];
+  char  szLCUninstallFilenameLongBuf[MAX_BUF];
+  char  szLCUninstallFilenameShortBuf[MAX_BUF];
+  char  szWinInitFile[MAX_BUF];
+  char  szTempInitFile[MAX_BUF];
+  char  szWinDir[MAX_BUF];
+  DWORD dwOutMultiStrLen;
+  DWORD dwType;
+  BOOL  bFoundUninstaller = FALSE;
+
+  if(!GetWindowsDirectory(szWinDir, sizeof(szWinDir)))
+    return;
+
+  wsprintf(szLCUninstallFilenameLongBuf, "%s\\%s", szWinDir, sgProduct.szUninstallFilename);
+  GetShortPathName(szLCUninstallFilenameLongBuf, szLCUninstallFilenameShortBuf, sizeof(szLCUninstallFilenameShortBuf));
+  CharLower(szLCUninstallFilenameLongBuf);
+  CharLower(szLCUninstallFilenameShortBuf);
+
+  if(ulOSType & OS_NT)
+  {
+    ZeroMemory(szInMultiStr,  sizeof(szInMultiStr));
+    ZeroMemory(szOutMultiStr, sizeof(szOutMultiStr));
+
+    dwType = GetWinReg(HKEY_LOCAL_MACHINE,
+                       "System\\CurrentControlSet\\Control\\Session Manager",
+                       "PendingFileRenameOperations",
+                       szInMultiStr,
+                       sizeof(szInMultiStr));
+    if((dwType == REG_MULTI_SZ) && (szInMultiStr != '\0'))
+    {
+      szPtrIn          = szInMultiStr;
+      szPtrOut         = szOutMultiStr;
+      dwOutMultiStrLen = 0;
+      do
+      {
+        lstrcpy(szLCKeyBuf, szPtrIn);
+        CharLower(szLCKeyBuf);
+        if(!strstr(szLCKeyBuf, szLCUninstallFilenameLongBuf) && !strstr(szLCKeyBuf, szLCUninstallFilenameShortBuf))
+        {
+          if((dwOutMultiStrLen + lstrlen(szPtrIn) + 3) <= sizeof(szOutMultiStr))
+          {
+            /* uninstaller not found, so copy the szPtrIn string to szPtrOut buffer */
+            lstrcpy(szPtrOut, szPtrIn);
+            dwOutMultiStrLen += lstrlen(szPtrIn) + 2;            /* there are actually 2 NULL bytes between the strings */
+            szPtrOut          = &szPtrOut[lstrlen(szPtrIn) + 2]; /* there are actually 2 NULL bytes between the strings */
+          }
+          else
+          {
+            bFoundUninstaller = FALSE;
+            /* not enough memory; break out of while loop. */
+            break;
+          }
+        }
+        else
+          bFoundUninstaller = TRUE;
+
+        szPtrIn = &szPtrIn[lstrlen(szPtrIn) + 2];              /* there are actually 2 NULL bytes between the strings */
+      }while(*szPtrIn != '\0');
+    }
+
+    if(bFoundUninstaller)
+    {
+      if(dwOutMultiStrLen > 0)
+      {
+        /* take into account the 3rd NULL byte that signifies the end of the MULTI string */
+        ++dwOutMultiStrLen;
+        SetWinReg(HKEY_LOCAL_MACHINE,
+                  "System\\CurrentControlSet\\Control\\Session Manager",
+                  TRUE,
+                  "PendingFileRenameOperations",
+                  TRUE,
+                  REG_MULTI_SZ,
+                  szOutMultiStr,
+                  dwOutMultiStrLen);
+      }
+      else
+        DeleteWinRegValue(HKEY_LOCAL_MACHINE,
+                          "System\\CurrentControlSet\\Control\\Session Manager",
+                          "PendingFilerenameOperations");
+    }
+  }
+  else
+  {
+    /* OS type is win9x */
+    wsprintf(szWinInitFile, "%s\\wininit.ini", szWinDir);
+    wsprintf(szTempInitFile, "%s\\wininit.moz", szWinDir);
+    if(FileExists(szWinInitFile))
+    {
+      if(UpdateFile(szWinInitFile, szTempInitFile, szLCUninstallFilenameLongBuf))
+        CopyFile(szTempInitFile, szWinInitFile, FALSE);
+
+      DeleteFile(szTempInitFile);
+    }
+  }
+}
+
 HRESULT Initialize(HINSTANCE hInstance)
 {
   char szBuf[MAX_BUF];
@@ -237,7 +400,6 @@ HRESULT Initialize(HINSTANCE hInstance)
   bSDInit             = FALSE;
   bSDUserCanceled     = FALSE;
   hDlgMessage         = NULL;
-  DetermineOSVersion();
 
   /* load strings from setup.exe */
   if(NS_LoadStringAlloc(hInstance, IDS_ERROR_GLOBALALLOC, &szEGlobalAlloc, MAX_BUF))
@@ -265,6 +427,8 @@ HRESULT Initialize(HINSTANCE hInstance)
   bReboot               = FALSE;
   gdwUpgradeValue       = UG_NONE;
   gbILUseTemp           = TRUE;
+  gbIgnoreRunAppX        = FALSE;
+  gbIgnoreProgramFolderX = FALSE;
 
   if((szSetupDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -324,7 +488,10 @@ HRESULT Initialize(HINSTANCE hInstance)
   DeleteIdiGetConfigIni();
   bIdiArchivesExists = DeleteIdiGetArchives();
   DeleteIdiGetRedirect();
-  DeleteInstallLogFile();
+  DeleteInstallLogFile(FILE_INSTALL_LOG);
+  DeleteInstallLogFile(FILE_INSTALL_STATUS_LOG);
+  LogISTime(W_START);
+  DetermineOSVersionEx();
   return(0);
 }
 
@@ -896,14 +1063,49 @@ int LocateJar(siC *siCObject, LPSTR szPath, int dwPathSize, BOOL bIncludeTempDir
   return(bRet);
 }
 
+void SwapFTPAndHTTP(char *szInUrl, DWORD dwInUrlSize)
+{
+  char szTmpBuf[MAX_BUF];
+  char *ptr       = NULL;
+  char szFtp[]    = "ftp://";
+  char szHttp[]   = "http://";
+
+  if(!szInUrl)
+    return;
+
+  ZeroMemory(szTmpBuf, sizeof(szTmpBuf));
+  switch(diDownloadOptions.dwUseProtocol)
+  {
+    case UP_HTTP:
+      if((strncmp(szInUrl, szFtp, FTPSTR_LEN) == 0) &&
+         ((int)dwInUrlSize > lstrlen(szInUrl) + 1))
+      {
+        ptr = szInUrl + FTPSTR_LEN;
+        memmove(ptr + 1, ptr, lstrlen(ptr) + 1);
+        memcpy(szInUrl, szHttp, HTTPSTR_LEN);
+      }
+      break;
+
+    case UP_FTP:
+    default:
+      if((strncmp(szInUrl, szHttp, HTTPSTR_LEN) == 0) &&
+         ((int)dwInUrlSize > lstrlen(szInUrl) + 1))
+      {
+        ptr = szInUrl + HTTPSTR_LEN;
+        memmove(ptr - 1, ptr, lstrlen(ptr) + 1);
+        memcpy(szInUrl, szFtp, FTPSTR_LEN);
+      }
+      break;
+  }
+}
+
 HRESULT AddArchiveToIdiFile(siC *siCObject, char *szSFile, char *szFileIdiGetArchives)
 {
   char      szFile[MAX_BUF];
   char      szBuf[MAX_BUF];
   char      szBufTemp[MAX_BUF];
-  char      szBufUrl[MAX_BUF];
+  char      szUrl[MAX_BUF];
   char      szIdentifier[MAX_BUF];
-  char      szSection[MAX_BUF];
   char      szArchiveSize[MAX_ITOA];
   ssi       *ssiSiteSelectorTemp;
 
@@ -915,35 +1117,45 @@ HRESULT AddArchiveToIdiFile(siC *siCObject, char *szSFile, char *szFileIdiGetArc
   AppendBackSlash(szFile, sizeof(szFile));
   lstrcat(szFile, FILE_INI_REDIRECT);
 
-  ZeroMemory(szIdentifier, MAX_BUF);
-  if(FileExists(szFile))
+  ZeroMemory(szIdentifier, sizeof(szIdentifier));
+  ssiSiteSelectorTemp = SsiGetNode(szSiteSelectorDescription);
+
+  GetPrivateProfileString("Redirect", "Status", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "ENABLED") != 0)
   {
-    lstrcpy(szSection, "Site Selector");
-    ssiSiteSelectorTemp = SsiGetNode(szSiteSelectorDescription);
-    if(ssiSiteSelectorTemp != NULL)
-    {
-      if(ssiSiteSelectorTemp->szIdentifier != NULL)
-        lstrcpy(szIdentifier, ssiSiteSelectorTemp->szIdentifier);
-    }
+    /* redirect.ini is *not* enabled, so use the url from the
+     * config.ini's [Site Selector] section */
+    if(*ssiSiteSelectorTemp->szDomain != '\0')
+      lstrcpy(szUrl, ssiSiteSelectorTemp->szDomain);
+    else
+      /* else use the url from the config.ini's [General] section */
+      GetPrivateProfileString("General", "url", "", szUrl, sizeof(szUrl), szFileIniConfig);
+  }
+  else if(FileExists(szFile))
+  {
+    /* redirect.ini file is enabled *and* it exists */
+    GetPrivateProfileString("Site Selector", ssiSiteSelectorTemp->szIdentifier, "", szUrl, sizeof(szUrl), szFile);
+    if(*szUrl == '\0')
+      /* there was no info in the redirect.ini file,
+       * so fail over to the url from the config.ini's [General] section */
+      GetPrivateProfileString("General", "url", "", szUrl, sizeof(szUrl), szFileIniConfig);
   }
   else
-  {
-    lstrcpy(szSection, "General");
-    lstrcpy(szIdentifier, "url");
-    lstrcpy(szFile, szFileIniConfig);
-  }
+    /* redirect.ini is enabled, but the file does not exist,
+     * so fail over to the url from the config.ini's [General] section */
+    GetPrivateProfileString("General", "url", "", szUrl, sizeof(szUrl), szFileIniConfig);
 
-  GetPrivateProfileString(szSection, szIdentifier, "", szBufUrl, MAX_BUF, szFile);
-  AppendSlash(szBufUrl, sizeof(szBufUrl));
-  lstrcat(szBufUrl, siCObject->szArchiveName);
-
-  if(WritePrivateProfileString(szSFile, "url", szBufUrl, szFileIdiGetArchives) == 0)
+  SwapFTPAndHTTP(szUrl, sizeof(szUrl));
+  /* append a slash and the archive name to download */
+  AppendSlash(szUrl, sizeof(szUrl));
+  lstrcat(szUrl, siCObject->szArchiveName);
+  if(WritePrivateProfileString(szSFile, "url", szUrl, szFileIdiGetArchives) == 0)
   {
     char szEWPPS[MAX_BUF];
 
-    if(NS_LoadString(hSetupRscInst, IDS_ERROR_WRITEPRIVATEPROFILESTRING, szEWPPS, MAX_BUF) == WIZ_OK)
+    if(NS_LoadString(hSetupRscInst, IDS_ERROR_WRITEPRIVATEPROFILESTRING, szEWPPS, sizeof(szEWPPS)) == WIZ_OK)
     {
-      wsprintf(szBufTemp, "%s\n    [%s]\n    url=%s", szFileIdiGetArchives, szSFile, szBufUrl);
+      wsprintf(szBufTemp, "%s\n    [%s]\n    url=%s", szFileIdiGetArchives, szSFile, szUrl);
       wsprintf(szBuf, szEWPPS, szBufTemp);
       PrintError(szBuf, ERROR_CODE_SHOW);
     }
@@ -1030,6 +1242,7 @@ long RetrieveRedirectFile()
   GetPrivateProfileString("Redirect", "Server Path", "", szBuf, sizeof(szBuf), szFileIniConfig);
   AppendSlash(szBufUrl, sizeof(szBufUrl));
   lstrcat(szBufUrl, szBuf);
+  SwapFTPAndHTTP(szBufUrl, sizeof(szBufUrl));
   if(WritePrivateProfileString("File0", "url", szBufUrl, szFileIdiGetRedirect) == 0)
   {
     char szEWPPS[MAX_BUF];
@@ -1043,18 +1256,22 @@ long RetrieveRedirectFile()
     return(1);
   }
 
-  lResult = DownloadFiles(szFileIdiGetRedirect,
-                          szTempDir,
-                          diAdvancedSettings.szProxyServer,
-                          diAdvancedSettings.szProxyPort,
-                          diAdvancedSettings.szProxyUser,
-                          diAdvancedSettings.szProxyPasswd,
-                          FALSE,
-                          TRUE);
+  lResult = DownloadFiles(szFileIdiGetRedirect,               /* input idi file to parse                 */
+                          szTempDir,                          /* download directory                      */
+                          diAdvancedSettings.szProxyServer,   /* proxy server name                       */
+                          diAdvancedSettings.szProxyPort,     /* proxy server port                       */
+                          diAdvancedSettings.szProxyUser,     /* proxy server user (optional)            */
+                          diAdvancedSettings.szProxyPasswd,   /* proxy password (optional)               */
+                          FALSE,                              /* show retry message                      */
+                          TRUE,                               /* ignore network error                    */
+                          NULL,                               /* buffer to store the name of failed file */
+                          0);                                 /* size of failed file name buffer         */
   return(lResult);
 }
 
-int CRCCheckDownloadedArchives(char *szFileIdiGetArchives)
+int CRCCheckDownloadedArchives(char *szCorruptedArchiveList,
+                               DWORD dwCorruptedArchiveListSize,
+                               char *szFileIdiGetArchives)
 {
   DWORD dwIndex0;
   DWORD dwFileCounter;
@@ -1071,6 +1288,9 @@ int CRCCheckDownloadedArchives(char *szFileIdiGetArchives)
    * if there are any files that fails the CRC check */
   if(szFileIdiGetArchives)
     DeleteFile(szFileIdiGetArchives);
+
+  if(szCorruptedArchiveList != NULL)
+    ZeroMemory(szCorruptedArchiveList, dwCorruptedArchiveListSize);
 
   GetPrivateProfileString("Strings", "Message Verifying Archives", "", szMsgCRCCheck, sizeof(szMsgCRCCheck), szFileIniConfig);
   ShowMessage(szMsgCRCCheck, TRUE);
@@ -1128,6 +1348,16 @@ int CRCCheckDownloadedArchives(char *szFileIdiGetArchives)
             if(szFileIdiGetArchives)
               if((AddArchiveToIdiFile(siCObject, szSFile, szFileIdiGetArchives)) != 0)
                 return(WIZ_ERROR_UNDEFINED);
+
+            if(szCorruptedArchiveList != NULL)
+            {
+              if((DWORD)(lstrlen(szCorruptedArchiveList) + lstrlen(siCObject->szArchiveName + 1)) < dwCorruptedArchiveListSize)
+              {
+                lstrcat(szCorruptedArchiveList, "        ");
+                lstrcat(szCorruptedArchiveList, siCObject->szArchiveName);
+                lstrcat(szCorruptedArchiveList, "\n");
+              }
+            }
           }
           iResult = WIZ_CRC_FAIL;
         }
@@ -1146,12 +1376,15 @@ long RetrieveArchives()
   DWORD     dwIndex0;
   DWORD     dwFileCounter;
   BOOL      bDone;
+  BOOL      bDownloadTriggered;
   siC       *siCObject = NULL;
   long      lResult;
   char      szIndex0[MAX_BUF];
   char      szFileCounter[MAX_ITOA];
   char      szFileIdiGetArchives[MAX_BUF];
   char      szSFile[MAX_BUF];
+  char      szCorruptedArchiveList[MAX_BUF];
+  char      szFailedFile[MAX_BUF];
   int       iRetries;
   int       iRv;
 
@@ -1162,6 +1395,7 @@ long RetrieveArchives()
   AppendBackSlash(szFileIdiGetArchives, sizeof(szFileIdiGetArchives));
   lstrcat(szFileIdiGetArchives, FILE_IDI_GETARCHIVES);
 
+  bDownloadTriggered = FALSE;
   lResult   = WIZ_OK;
   dwIndex0  = 0;
   dwFileCounter = 0;
@@ -1206,20 +1440,25 @@ long RetrieveArchives()
        any archives needed to be downloaded */
     if(FileExists(szFileIdiGetArchives))
     {
-      lResult = DownloadFiles(szFileIdiGetArchives,
-                              szTempDir,
-                              diAdvancedSettings.szProxyServer,
-                              diAdvancedSettings.szProxyPort,
-                              diAdvancedSettings.szProxyUser,
-                              diAdvancedSettings.szProxyPasswd,
-                              iRetries,
-                              FALSE);
+      bDownloadTriggered = TRUE;
+      lResult = DownloadFiles(szFileIdiGetArchives,               /* input idi file to parse                 */
+                              szTempDir,                          /* download directory                      */
+                              diAdvancedSettings.szProxyServer,   /* proxy server name                       */
+                              diAdvancedSettings.szProxyPort,     /* proxy server port                       */
+                              diAdvancedSettings.szProxyUser,     /* proxy server user (optional)            */
+                              diAdvancedSettings.szProxyPasswd,   /* proxy password (optional)               */
+                              iRetries,                           /* show retry message                      */
+                              FALSE,                              /* ignore network error                    */
+                              szFailedFile,                       /* buffer to store the name of failed file */
+                              sizeof(szFailedFile));              /* size of failed file name buffer         */
       if(lResult == WIZ_OK)
       {
         /* CRC check only the archives that were downloaded.
          * It will regenerate the idi file with the list of files
          * that have not passed the CRC check. */
-        iRv = CRCCheckDownloadedArchives(szFileIdiGetArchives);
+        iRv = CRCCheckDownloadedArchives(szCorruptedArchiveList,
+                                         sizeof(szCorruptedArchiveList),
+                                         szFileIdiGetArchives);
         switch(iRv)
         {
           case WIZ_CRC_PASS:
@@ -1254,15 +1493,33 @@ long RetrieveArchives()
     /* too many retries from failed CRC checks */
     char szMsg[MAX_BUF];
 
+    LogISComponentsFailedCRC(szCorruptedArchiveList, W_DOWNLOAD);
     GetPrivateProfileString("Strings", "Error Too Many CRC Failures", "", szMsg, sizeof(szMsg), szFileIniConfig);
     if(*szMsg != '\0')
       PrintError(szMsg, ERROR_CODE_HIDE);
 
     lResult = WIZ_CRC_FAIL;
   }
+  else
+  {
+    if(bDownloadTriggered)
+      LogISComponentsFailedCRC(NULL, W_DOWNLOAD);
+  }
 
   if(lResult == WIZ_OK)
+  {
+    if(bDownloadTriggered)
+      LogISDownloadStatus("ok", NULL);
+
     UnsetDownloadState();
+  }
+  else if(bDownloadTriggered)
+  {
+    char szBuf[MAX_BUF_TINY];
+
+    wsprintf(szBuf, "failed: %d", lResult);
+    LogISDownloadStatus(szBuf, szFailedFile);
+  }
 
   return(lResult);
 }
@@ -1495,6 +1752,7 @@ HRESULT LaunchApps()
   char      szBuf[MAX_BUF];
   char      szMsg[MAX_BUF];
 
+  LogISLaunchApps(W_START);
   if(NS_LoadString(hSetupRscInst, IDS_MSG_CONFIGURING, szMsg, MAX_BUF) != WIZ_OK)
     return(1);
 
@@ -1530,6 +1788,7 @@ HRESULT LaunchApps()
       {
         char szParameterBuf[MAX_BUF];
 
+        LogISLaunchAppsComponent(siCObject->szDescriptionShort);
         wsprintf(szBuf, szMsg, siCObject->szDescriptionShort);
         ShowMessage(szBuf, TRUE);
         DecryptString(szParameterBuf, siCObject->szParameter);
@@ -1540,58 +1799,411 @@ HRESULT LaunchApps()
     ++dwIndex0;
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
+
+  LogISLaunchApps(W_END);
   return(0);
 }
 
-void DetermineOSVersion()
+/* Loging to install_status.log functions */
+void LogISTime(int iType)
 {
-  DWORD         dwVersion;
-  DWORD         dwWindowsMajorVersion;
-  DWORD         dwWindowsMinorVersion;
-  DWORD         dwWindowsVersion;
-  BOOL          bIsWin95Debute;
-  char          szESetupRequirement[MAX_BUF];
+  char       szBuf[MAX_BUF];
+  char       szTime[MAX_BUF_TINY];
+  char       szDate[MAX_BUF_TINY];
+  SYSTEMTIME stLocalTime;
 
-  ulOSType        = 0;
-  dwVersion       = GetVersion();
-  bIsWin95Debute  = IsWin95Debute();
+  GetLocalTime(&stLocalTime);
+  GetTimeFormat(LOCALE_NEUTRAL,
+                LOCALE_NOUSEROVERRIDE,
+                &stLocalTime,
+                NULL,
+                szTime,
+                sizeof(szTime));
+  GetDateFormat(LOCALE_NEUTRAL,
+                LOCALE_NOUSEROVERRIDE,
+                &stLocalTime,
+                NULL,
+                szDate,
+                sizeof(szDate));
 
-  // Get major and minor version numbers of Windows
-  dwWindowsMajorVersion =  (DWORD)(LOBYTE(LOWORD(dwVersion)));
-  dwWindowsMinorVersion =  (DWORD)(HIBYTE(LOWORD(dwVersion)));
-  dwWindowsVersion      =  (DWORD)(HIWORD(dwVersion));
+  if(iType == W_START)
+    wsprintf(szBuf, "Start Log: %s - %s\n", szDate, szTime);
+  else
+    wsprintf(szBuf, "End Log: %s - %s\n", szDate, szTime);
 
-  // Get build numbers for Windows NT or Win95/Win98
-  if(dwVersion < 0x80000000) // Windows NT
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISProductInfo(void)
+{
+  char szBuf[MAX_BUF];
+
+  wsprintf(szBuf, "\n    Product Info:\n");
+  UpdateInstallStatusLog(szBuf);
+
+  switch(sgProduct.dwMode)
   {
-    ulOSType |= OS_NT;
-    if(dwWindowsMajorVersion == 3)
-      ulOSType |= OS_NT3;
-    else if(dwWindowsMajorVersion == 4)
-      ulOSType |= OS_NT4;
-    else
-      ulOSType |= OS_NT5;
+    case SILENT:
+      wsprintf(szBuf, "        Install mode: Silent\n");
+      break;
+    case AUTO:
+      wsprintf(szBuf, "        Install mode: Auto\n");
+      break;
+    default:
+      wsprintf(szBuf, "        Install mode: Normal\n");
+      break;
   }
-  else if(dwWindowsMajorVersion == 4)
-  {
-    ulOSType |= OS_WIN9x;
-    if(dwWindowsMinorVersion == 0)
-    {
-      ulOSType |= OS_WIN95;
+  UpdateInstallStatusLog(szBuf);
 
-      if(bIsWin95Debute)
-        ulOSType |= OS_WIN95_DEBUTE;
+  wsprintf(szBuf, "        Company name: %s\n        Product name: %s\n        Uninstall Filename: %s\n        UserAgent: %s\n        Alternate search path: %s\n",
+           sgProduct.szCompanyName,
+           sgProduct.szProductName,
+           sgProduct.szUninstallFilename,
+           sgProduct.szUserAgent,
+           sgProduct.szAlternateArchiveSearchPath);
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISDestinationPath(void)
+{
+  char szBuf[MAX_BUF];
+
+  wsprintf(szBuf, "\n    Destination Path:\n        Main: %s\n        SubPath: %s\n", sgProduct.szPath, sgProduct.szSubPath);
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISSetupType(void)
+{
+  char szBuf[MAX_BUF_TINY];
+
+  switch(dwSetupType)
+  {
+    case ST_RADIO3:
+      wsprintf(szBuf, "\n    Setup Type: %s\n",
+               diSetupType.stSetupType3.szDescriptionShort);
+      break;
+
+    case ST_RADIO2:
+      wsprintf(szBuf, "\n    Setup Type: %s\n",
+               diSetupType.stSetupType2.szDescriptionShort);
+      break;
+
+    case ST_RADIO1:
+      wsprintf(szBuf, "\n    Setup Type: %s\n",
+               diSetupType.stSetupType1.szDescriptionShort);
+      break;
+
+    default:
+      wsprintf(szBuf, "\n    Setup Type: %s\n",
+               diSetupType.stSetupType0.szDescriptionShort);
+      break;
+  }
+
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISComponentsSelected(void)
+{
+  char szBuf[MAX_BUF_TINY];
+  siC  *siCNode;
+  BOOL bFoundComponentSelected;
+
+  wsprintf(szBuf, "\n    Components selected:\n");
+  UpdateInstallStatusLog(szBuf);
+
+  bFoundComponentSelected = FALSE;
+  siCNode = siComponents;
+  do
+  {
+    if(siCNode == NULL)
+      break;
+
+    if(siCNode->dwAttributes & SIC_SELECTED)
+    {
+      if(!siCNode->bForceUpgrade)
+        wsprintf(szBuf, "        %s\n", siCNode->szDescriptionShort);
+      else
+        wsprintf(szBuf, "        %s (Required)\n", siCNode->szDescriptionShort);
+
+      UpdateInstallStatusLog(szBuf);
+      bFoundComponentSelected = TRUE;
     }
+
+    siCNode = siCNode->Next;
+  } while((siCNode != NULL) && (siCNode != siComponents));
+
+  if(!bFoundComponentSelected)
+  {
+    wsprintf(szBuf, "        none\n");
+    UpdateInstallStatusLog(szBuf);
+  }
+}
+
+void LogISComponentsToDownload(void)
+{
+  char szBuf[MAX_BUF_TINY];
+  char szArchivePath[MAX_BUF_MEDIUM];
+  siC  *siCNode;
+  BOOL bFoundComponentSelected;
+  BOOL bFoundComponentsToDownload;
+
+  wsprintf(szBuf, "\n    Components to download:\n");
+  UpdateInstallStatusLog(szBuf);
+
+  bFoundComponentSelected = FALSE;
+  bFoundComponentsToDownload = FALSE;
+  siCNode = siComponents;
+  do
+  {
+    if(siCNode == NULL)
+      break;
+
+    if(siCNode->dwAttributes & SIC_SELECTED)
+    {
+
+      if(LocateJar(siCNode, szArchivePath, sizeof(szArchivePath), gbPreviousUnfinishedDownload) == AP_NOT_FOUND)
+      {
+        wsprintf(szBuf, "        %s will be downloaded\n", siCNode->szDescriptionShort);
+        bFoundComponentsToDownload = TRUE;
+      }
+      else
+        wsprintf(szBuf, "        %s found: %s\n", siCNode->szDescriptionShort, szArchivePath);
+
+      UpdateInstallStatusLog(szBuf);
+      bFoundComponentSelected = TRUE;
+    }
+
+    siCNode = siCNode->Next;
+  } while((siCNode != NULL) && (siCNode != siComponents));
+
+  if(!bFoundComponentSelected)
+  {
+    wsprintf(szBuf, "        none\n");
+    UpdateInstallStatusLog(szBuf);
+  }
+  if(!bFoundComponentsToDownload)
+  {
+    wsprintf(szBuf, "        **\n        ** All components have been found locally.  No components will be downloaded.\n        **\n");
+    UpdateInstallStatusLog(szBuf);
+  }
+}
+
+void LogISDownloadStatus(char *szStatus, char *szFailedFile)
+{
+  char szBuf[MAX_BUF];
+
+  if(szFailedFile)
+    wsprintf(szBuf, "\n    Download status:\n        %s\n          file: %s\n", szStatus, szFailedFile);
+  else
+    wsprintf(szBuf, "\n    Download status:\n        %s\n", szStatus);
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISComponentsFailedCRC(char *szList, int iWhen)
+{
+  char szBuf[MAX_BUF];
+
+  if(iWhen == W_STARTUP)
+  {
+    if(szList && (*szList != '\0'))
+      wsprintf(szBuf, "\n    Components corrupted (startup):\n%s", szList);
     else
-      ulOSType |= OS_WIN98;
+      wsprintf(szBuf, "\n    Components corrupted (startup):\n        none\n");
   }
   else
   {
-    if(NS_LoadString(hSetupRscInst, IDS_ERROR_SETUP_REQUIREMENT, szESetupRequirement, MAX_BUF) == WIZ_OK)
-      PrintError(szESetupRequirement, ERROR_CODE_HIDE);
-
-    exit(1);
+    if(szList && (*szList != '\0'))
+      wsprintf(szBuf, "\n    Components corrupted (download):\n%s", szList);
+    else
+      wsprintf(szBuf, "\n    Components corrupted (download):\n        none\n");
   }
+
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISXPInstall(int iWhen)
+{
+  char szBuf[MAX_BUF];
+
+  if(iWhen == W_START)
+    wsprintf(szBuf, "\n    XPInstall Start\n");
+  else
+    wsprintf(szBuf, "    XPInstall End\n");
+
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISXPInstallComponent(char *szComponentName)
+{
+  char szBuf[MAX_BUF];
+
+  wsprintf(szBuf, "        %s", szComponentName);
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISXPInstallComponentResult(DWORD dwErrorNumber)
+{
+  char szBuf[MAX_BUF];
+  char szErrorString[MAX_BUF];
+
+  GetErrorString(dwErrorNumber, szErrorString, sizeof(szErrorString));
+  wsprintf(szBuf, ": %d %s\n", dwErrorNumber, szErrorString);
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISLaunchApps(int iWhen)
+{
+  char szBuf[MAX_BUF];
+
+  if(iWhen == W_START)
+    wsprintf(szBuf, "\n    Launch Apps Start\n");
+  else
+    wsprintf(szBuf, "    Launch Apps End\n");
+
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISLaunchAppsComponent(char *szComponentName)
+{
+  char szBuf[MAX_BUF];
+
+  wsprintf(szBuf, "        %s\n", szComponentName);
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISProcessXpcomFile(int iStatus, int iResult)
+{
+  char szBuf[MAX_BUF];
+
+  if(iStatus == LIS_SUCCESS)
+    wsprintf(szBuf, "\n    Uncompressing Xpcom Succeeded: %d\n", iResult);
+  else
+    wsprintf(szBuf, "\n    Uncompressing Xpcom Failed: %d\n", iResult);
+
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISDiskSpace(void)
+{
+  ULONGLONG ullDSAvailable;
+  dsN       *dsnTemp = NULL;
+  char      szBuf[MAX_BUF];
+  char      szDSRequired[MAX_BUF_TINY];
+  char      szDSAvailable[MAX_BUF_TINY];
+
+  if(gdsnComponentDSRequirement != NULL)
+  {
+    wsprintf(szBuf, "\n    Disk Space Info:\n");
+    UpdateInstallStatusLog(szBuf);
+    dsnTemp = gdsnComponentDSRequirement;
+    do
+    {
+      if(!dsnTemp)
+        break;
+
+      ullDSAvailable = GetDiskSpaceAvailable(dsnTemp->szVDSPath);
+      _ui64toa(ullDSAvailable, szDSAvailable, 10);
+      _ui64toa(dsnTemp->ullSpaceRequired, szDSRequired, 10);
+      wsprintf(szBuf, "             Path: %s\n         Required: %sKB\n        Available: %sKB\n", dsnTemp->szVDSPath, szDSRequired, szDSAvailable);
+      UpdateInstallStatusLog(szBuf);
+
+      dsnTemp = dsnTemp->Next;
+    } while((dsnTemp != NULL) && (dsnTemp != gdsnComponentDSRequirement));
+  }
+}
+
+/* end of logging to install_status.log functions */
+
+void DetermineOSVersionEx()
+{
+  DWORD         dwBuildNumber;
+  BOOL          bIsWin95Debute;
+  char          szBuf[MAX_BUF];
+  char          szOsType[MAX_BUF];
+  char          szESetupRequirement[MAX_BUF];
+  OSVERSIONINFO osVersionInfo;
+  MEMORYSTATUS  msMemoryInfo;
+
+  ulOSType = 0;
+  osVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+  if(!GetVersionEx(&osVersionInfo))
+  {
+    /* GetVersionEx() failed for some reason.  It's not fatal, but could cause
+     * some complications during installation */
+    char szEMsg[MAX_BUF_TINY];
+
+    if(NS_LoadString(hSetupRscInst, IDS_ERROR_GETVERSION, szEMsg, sizeof(szEMsg)) == WIZ_OK)
+      PrintError(szEMsg, ERROR_CODE_SHOW);
+  }
+
+  bIsWin95Debute  = IsWin95Debute();
+  switch(osVersionInfo.dwPlatformId)
+  {
+    case VER_PLATFORM_WIN32_WINDOWS:
+      ulOSType |= OS_WIN9x;
+      if(osVersionInfo.dwMinorVersion == 0)
+      {
+        ulOSType |= OS_WIN95;
+        lstrcpy(szOsType, "Win95");
+        if(bIsWin95Debute)
+        {
+          ulOSType |= OS_WIN95_DEBUTE;
+          lstrcpy(szOsType, "Win95 debute");
+        }
+      }
+      else
+        ulOSType |= OS_WIN98;
+        lstrcpy(szOsType, "Win98");
+      break;
+
+    case VER_PLATFORM_WIN32_NT:
+      ulOSType |= OS_NT;
+      switch(osVersionInfo.dwMajorVersion)
+      {
+        case 3:
+          ulOSType |= OS_NT3;
+          lstrcpy(szOsType, "NT3");
+          break;
+
+        case 4:
+          ulOSType |= OS_NT4;
+          lstrcpy(szOsType, "NT4");
+          break;
+
+        default:
+          ulOSType |= OS_NT5;
+          lstrcpy(szOsType, "NT5");
+          break;
+      }
+      break;
+
+    default:
+      if(NS_LoadString(hSetupRscInst, IDS_ERROR_SETUP_REQUIREMENT, szESetupRequirement, sizeof(szESetupRequirement)) == WIZ_OK)
+        PrintError(szESetupRequirement, ERROR_CODE_HIDE);
+      break;
+  }
+
+  dwBuildNumber  = (DWORD)(LOWORD(osVersionInfo.dwBuildNumber));
+  msMemoryInfo.dwLength = sizeof(MEMORYSTATUS);
+  GlobalMemoryStatus(&msMemoryInfo);
+  wsprintf(szBuf,
+"    System Info:\n\
+        OS Type: %s\n\
+        Major Version: %d\n\
+        Minor Version: %d\n\
+        Build Number: %d\n\
+        Extra String: %s\n\
+        Total Physical Memory: %dKB\n\
+        Total Available Physical Memory: %dKB\n",
+           szOsType,
+           osVersionInfo.dwMajorVersion,
+           osVersionInfo.dwMinorVersion,
+           dwBuildNumber,
+           osVersionInfo.szCSDVersion,
+           msMemoryInfo.dwTotalPhys/1024,
+           msMemoryInfo.dwAvailPhys/1024);
+
+  UpdateInstallStatusLog(szBuf);
 }
 
 HRESULT WinSpawn(LPSTR szClientName, LPSTR szParameters, LPSTR szCurrentDir, int iShowCmd, BOOL bWait)
@@ -1830,13 +2442,15 @@ void DeInitDlgProgramFolder(diPF *diDialog)
 
 HRESULT InitDlgDownloadOptions(diDO *diDialog)
 {
-  diDialog->bShowDialog       = FALSE;
-  diDialog->bSaveInstaller    = FALSE;
-  if((diDialog->szTitle       = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  diDialog->bShowDialog           = FALSE;
+  diDialog->bSaveInstaller        = FALSE;
+  diDialog->dwUseProtocol         = UP_FTP;
+  diDialog->bUseProtocolSettings  = TRUE;
+  if((diDialog->szTitle           = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((diDialog->szMessage0    = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->szMessage0        = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((diDialog->szMessage1    = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->szMessage1        = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   return(0);
@@ -1950,6 +2564,8 @@ HRESULT InitSetupGeneral()
     return(1);
   if((sgProduct.szProductName                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((sgProduct.szUninstallFilename           = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((sgProduct.szUserAgent                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((sgProduct.szProgramFolderName           = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -1985,6 +2601,7 @@ void DeInitSetupGeneral()
   FreeMemory(&(sgProduct.szProgramName));
   FreeMemory(&(sgProduct.szCompanyName));
   FreeMemory(&(sgProduct.szProductName));
+  FreeMemory(&(sgProduct.szUninstallFilename));
   FreeMemory(&(sgProduct.szUserAgent));
   FreeMemory(&(sgProduct.szProgramFolderName));
   FreeMemory(&(sgProduct.szProgramFolderPath));
@@ -3214,13 +3831,13 @@ HRESULT VerifyDiskSpace()
 {
   ULONGLONG ullDSAvailable;
   HRESULT   hRetValue = FALSE;
-  dsN       *dsnComponentDSRequirement = NULL;
   dsN       *dsnTemp = NULL;
 
-  InitComponentDiskSpaceInfo(&dsnComponentDSRequirement);
-  if(dsnComponentDSRequirement != NULL)
+  DeInitDSNode(&gdsnComponentDSRequirement);
+  InitComponentDiskSpaceInfo(&gdsnComponentDSRequirement);
+  if(gdsnComponentDSRequirement != NULL)
   {
-    dsnTemp = dsnComponentDSRequirement;
+    dsnTemp = gdsnComponentDSRequirement;
 
     do
     {
@@ -3235,10 +3852,8 @@ HRESULT VerifyDiskSpace()
 
         dsnTemp = dsnTemp->Next;
       }
-    } while((dsnTemp != dsnComponentDSRequirement) && (dsnTemp != NULL));
+    } while((dsnTemp != NULL) && (dsnTemp != gdsnComponentDSRequirement));
   }
-
-  DeInitDSNode(&dsnComponentDSRequirement);
   return(hRetValue);
 }
 
@@ -4058,7 +4673,37 @@ void ResolveDependees(LPSTR szToggledReferenceName)
     ResolveDependees(szToggledReferenceName);
 }
 
-void ParseCommandLine(LPSTR lpszCmdLine)
+void PrintUsage(void)
+{
+  char szBuf[MAX_BUF];
+  char szUsageMsg[MAX_BUF];
+  char szProcessFilename[MAX_BUF];
+
+  /* -h: this help
+   * -a [path]: Alternate archive search path
+   * -n [filename]: setup's parent's process filename
+   * -ma: run setup in Auto mode
+   * -ms: run setup in Silent mode
+   * -ira: ignore the [RunAppX] sections
+   * -ispf: ignore the [Program FolderX] sections that show
+   *        the Start Menu shortcut folder at the end of installation.
+   */
+
+  if(*sgProduct.szParentProcessFilename != '\0')
+    lstrcpy(szProcessFilename, sgProduct.szParentProcessFilename);
+  else
+  {
+    GetModuleFileName(NULL, szBuf, sizeof(szBuf));
+    ParsePath(szBuf, szProcessFilename, sizeof(szProcessFilename), FALSE, PP_FILENAME_ONLY);
+  }
+
+  GetPrivateProfileString("Strings", "UsageMsg Usage", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  wsprintf(szUsageMsg, szBuf, szProcessFilename, "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n");
+
+  PrintError(szUsageMsg, ERROR_CODE_HIDE);
+}
+
+DWORD ParseCommandLine(LPSTR lpszCmdLine)
 {
   char  szArgVBuf[MAX_BUF];
   int   i;
@@ -4080,26 +4725,33 @@ void ParseCommandLine(LPSTR lpszCmdLine)
   {
     GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
 
-    if((lstrcmpi(szArgVBuf, "-a") == 0) || (lstrcmpi(szArgVBuf, "/a") == 0))
+    if(!lstrcmpi(szArgVBuf, "-h") || !lstrcmpi(szArgVBuf, "/h"))
+    {
+      PrintUsage();
+      return(WIZ_ERROR_UNDEFINED);
+    }
+    else if(!lstrcmpi(szArgVBuf, "-a") || !lstrcmpi(szArgVBuf, "/a"))
     {
       ++i;
       GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
       lstrcpy(sgProduct.szAlternateArchiveSearchPath, szArgVBuf);
     }
-    else if((lstrcmpi(szArgVBuf, "-n") == 0) || (lstrcmpi(szArgVBuf, "/n") == 0))
+    else if(!lstrcmpi(szArgVBuf, "-n") || !lstrcmpi(szArgVBuf, "/n"))
     {
       ++i;
       GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
       lstrcpy(sgProduct.szParentProcessFilename, szArgVBuf);
     }
-    else if((lstrcmpi(szArgVBuf, "-ma") == 0) || (lstrcmpi(szArgVBuf, "/ma") == 0))
-    {
+    else if(!lstrcmpi(szArgVBuf, "-ma") || !lstrcmpi(szArgVBuf, "/ma"))
       SetSetupRunMode("AUTO");
-    }
-    else if((lstrcmpi(szArgVBuf, "-ms") == 0) || (lstrcmpi(szArgVBuf, "/ms") == 0))
-    {
+    else if(!lstrcmpi(szArgVBuf, "-ms") || !lstrcmpi(szArgVBuf, "/ms"))
       SetSetupRunMode("SILENT");
-    }
+    else if(!lstrcmpi(szArgVBuf, "-ira") || !lstrcmpi(szArgVBuf, "/ira"))
+      /* ignore [RunAppX] sections */
+      gbIgnoreRunAppX = TRUE;
+    else if(!lstrcmpi(szArgVBuf, "-ispf") || !lstrcmpi(szArgVBuf, "/ispf"))
+      /* ignore [Program FolderX] sections */
+      gbIgnoreProgramFolderX = TRUE;
 
 #ifdef XXX_DEBUG
     itoa(i, szBuf, 10);
@@ -4116,6 +4768,7 @@ void ParseCommandLine(LPSTR lpszCmdLine)
 #ifdef XXX_DEBUG
   MessageBox(NULL, szOutputStr, "Output", MB_OK);
 #endif
+  return(WIZ_OK);
 }
 
 void GetAlternateArchiveSearchPath(LPSTR lpszCmdLine)
@@ -4539,6 +5192,8 @@ int StartupCheckArchives(void)
           ShowMessage(szBuf, FALSE);
           break;
       }
+
+      LogISComponentsFailedCRC(szCorruptedArchiveList, W_STARTUP);
       return(WIZ_CRC_FAIL);
 
     case WIZ_CRC_PASS:
@@ -4547,6 +5202,7 @@ int StartupCheckArchives(void)
     default:
       break;
   }
+  LogISComponentsFailedCRC(NULL, W_STARTUP);
   return(iRv);
 }
 
@@ -4733,7 +5389,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* get install Mode information */
   GetPrivateProfileString("General", "Run Mode", "", szBuf, MAX_BUF, szFileIniConfig);
   SetSetupRunMode(szBuf);
-  ParseCommandLine(lpszCmdLine);
+  if(ParseCommandLine(lpszCmdLine))
+    return(1);
 
   if(CheckInstances())
     return(1);
@@ -4744,6 +5401,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* get product name description */
   GetPrivateProfileString("General", "Company Name", "", sgProduct.szCompanyName, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Product Name", "", sgProduct.szProductName, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("General", "Uninstall Filename", "", sgProduct.szUninstallFilename, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "User Agent",   "", sgProduct.szUserAgent,   MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Sub Path",     "", sgProduct.szSubPath,     MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Program Name", "", sgProduct.szProgramName, MAX_BUF, szFileIniConfig);
@@ -4955,8 +5613,24 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Dialog Download Options",       "Message0",       "", diDownloadOptions.szMessage0,     MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Download Options",       "Message1",       "", diDownloadOptions.szMessage1,     MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Download Options",       "Save Installer", "", szBuf,                            MAX_BUF, szFileIniConfig);
+
   if(lstrcmpi(szBuf, "TRUE") == 0)
     diDownloadOptions.bSaveInstaller = TRUE;
+
+  GetPrivateProfileString("Dialog Download Options",       "Use Protocol",   "", szBuf,                            sizeof(szBuf), szFileIniConfig);
+
+  if(lstrcmpi(szBuf, "HTTP") == 0)
+    diDownloadOptions.dwUseProtocol = UP_HTTP;
+  else
+    diDownloadOptions.dwUseProtocol = UP_FTP;
+
+  GetPrivateProfileString("Dialog Download Options",       "Use Protocol Settings", "", szBuf,                     sizeof(szBuf), szFileIniConfig);
+
+  if(lstrcmpi(szBuf, "DISABLED") == 0)
+    diDownloadOptions.bUseProtocolSettings = FALSE;
+  else
+    diDownloadOptions.bUseProtocolSettings = TRUE;
+
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diDownloadOptions.bShowDialog = TRUE;
 
@@ -5131,6 +5805,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   else
     siCFXpcomFile.bCleanup = TRUE;
 
+  LogISProductInfo();
   CleanupXpcomFile();
   ShowMessage(szMsgInitSetup, FALSE);
 
@@ -5870,7 +6545,7 @@ int ExtractDirEntries(char* directory, void* vZip)
       err = ZIP_ERR_GENERAL;
 
     if ( err == ZIP_ERR_FNF )
-      return 1;   // found them all
+      return ZIP_OK;   // found them all
   }
 
   return ZIP_ERR_GENERAL;
@@ -5916,14 +6591,14 @@ BOOL DeleteIdiGetConfigIni()
   return(bFileExists);
 }
 
-BOOL DeleteInstallLogFile()
+BOOL DeleteInstallLogFile(char *szFile)
 {
   char  szInstallLogFile[MAX_BUF];
   BOOL  bFileExists = FALSE;
 
   lstrcpy(szInstallLogFile, szTempDir);
   AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
-  lstrcat(szInstallLogFile, FILE_INSTALL_LOG);
+  lstrcat(szInstallLogFile, szFile);
 
   if(FileExists(szInstallLogFile))
   {
@@ -6064,13 +6739,15 @@ void CleanTempFiles()
   */
   DeleteIdiFileIniConfig();
   DeleteArchives(DA_IGNORE_ARCHIVES_LST);
-  DeleteInstallLogFile();
+  DeleteInstallLogFile(FILE_INSTALL_LOG);
+  DeleteInstallLogFile(FILE_INSTALL_STATUS_LOG);
 }
 
 void DeInitialize()
 {
   char szBuf[MAX_BUF];
 
+  LogISTime(W_END);
   if(bCreateDestinationDir)
   {
     lstrcpy(szBuf, sgProduct.szPath);
@@ -6104,6 +6781,7 @@ void DeInitialize()
   DeInitDlgLicense(&diLicense);
   DeInitDlgWelcome(&diWelcome);
   DeInitSetupGeneral();
+  DeInitDSNode(&gdsnComponentDSRequirement);
 
   FreeMemory(&szTempDir);
   FreeMemory(&szOSTempDir);
@@ -6170,7 +6848,7 @@ void SaveInstallerFiles()
     lstrcpy(szSource, sgProduct.szAlternateArchiveSearchPath);
     AppendBackSlash(szSource, sizeof(szSource));
     lstrcat(szSource, sgProduct.szParentProcessFilename);
-    FileCopy(szSource, szDestination, FALSE);
+    FileCopy(szSource, szDestination, FALSE, FALSE);
   }
   else
   {
@@ -6183,7 +6861,7 @@ void SaveInstallerFiles()
     lstrcpy(szBuf, szSetupDir);
     AppendBackSlash(szBuf, sizeof(szBuf));
     lstrcat(szBuf, szMFN);
-    FileCopy(szBuf, szDestination, FALSE);
+    FileCopy(szBuf, szDestination, FALSE, FALSE);
 
     /* now copy the rest of the setup files */
     i = 0;
@@ -6195,7 +6873,7 @@ void SaveInstallerFiles()
       lstrcpy(szBuf, szSetupDir);
       AppendBackSlash(szBuf, sizeof(szBuf));
       lstrcat(szBuf, SetupFileList[i]);
-      FileCopy(szBuf, szDestination, FALSE);
+      FileCopy(szBuf, szDestination, FALSE, FALSE);
 
       ++i;
     }
@@ -6211,13 +6889,14 @@ void SaveInstallerFiles()
       lstrcpy(szBuf, szArchivePath);
       AppendBackSlash(szBuf, sizeof(szBuf));
       lstrcat(szBuf, siCObject->szArchiveName);
-      FileCopy(szBuf, szDestination, FALSE);
+      FileCopy(szBuf, szDestination, FALSE, FALSE);
     }
 
     ++dwIndex0;
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
 }
+
 
 
 

@@ -25,7 +25,8 @@
 #ifndef _XPERR_H_
 #define _XPERR_H_
 
-char *XpErrorList[] = {"-200",  "BAD_PACKAGE_NAME",
+char *XpErrorList[] = {"0"   ,  "OK",
+                       "-200",  "BAD_PACKAGE_NAME",
                        "-201",  "UNEXPECTED_ERROR",
                        "-202",  "ACCESS_DENIED",
                        "-203",  "TOO_MANY_CERTIFICATES",

@@ -107,7 +107,7 @@ BEGIN
     IDS_STATUS_EXTRACTING   "Extracting %s"
     IDS_STATUS_LAUNCHING_SETUP "Launching Setup..."
     IDS_ERROR_FILE_WRITE    "Unable to write file %s"
-    IDS_TITLE               "Netscape Communicator Installation"
+    IDS_TITLE               "Installation"
     IDS_ERROR_OUT_OF_MEMORY "Out of memory!"
 END
 

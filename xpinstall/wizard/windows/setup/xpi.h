@@ -25,10 +25,6 @@
 #ifndef _XPI_H_
 #define _XPI_H_
 
-typedef HRESULT (_cdecl *XpiInit)(const char *, const char *aLogName, pfnXPIProgress);
-typedef HRESULT (_cdecl *XpiInstall)(const char *, const char *, long);
-typedef void    (_cdecl *XpiExit)(void);
-
 HRESULT         InitializeXPIStub(void);
 HRESULT         DeInitializeXPIStub(void);
 HRESULT         SmartUpdateJars(void);
@@ -38,6 +34,7 @@ void            cbXPIFinal(const char *, PRInt32 finalStatus);
 void            InitProgressDlg(void);
 void            DeInitProgressDlg(void);
 void            GetTotalArchivesToInstall(void);
+char            *GetErrorString(DWORD dwError, char *szErrorString, DWORD dwErrorStringSize);
 
 #endif /* _XPI_H_ */
 

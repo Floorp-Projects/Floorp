@@ -110,6 +110,8 @@ print "\n Making $inComponentName.xpi...\n";
 
 $saveCwdir = cwd();
 
+copy("$inComponentName.js", "$inStagePath\\$inComponentName\\install.js");
+
 # change directory to where the files are, else zip will store
 # unwanted path information.
 chdir("$inStagePath\\$inComponentName");
@@ -119,12 +121,6 @@ if(system("zip -r $inDestPath\\$inComponentName.xpi *"))
   die "\n Error: zip -r $inDestPath\\$inComponentName.xpi *\n";
 }
 chdir("$saveCwdir");
-
-copy("$inComponentName.js", "install.js");
-if(system("zip -g $inDestPath\\$inComponentName.xpi install.js"))
-{
-  die "\n Error: zip -g $inDestPath\\$inComponentName.xpi install.js\n";
-}
 
 # delete install.js
 if(-e "install.js")

@@ -88,6 +88,7 @@ if(!(-d "$inStagePath"))
                    "browser",
                    "mail",
                    "psm",
+                   "talkback",
                    "chatzilla",
                    "deflenus",
                    "langenus",
@@ -172,6 +173,16 @@ if(system("copy $inDistPath\\setup.exe $inDistPath\\setup"))
 if(system("copy $inDistPath\\setuprsc.dll $inDistPath\\setup"))
 {
   die "\n Error: copy $inDistPath\\setuprsc.dll $inDistPath\\setup\n";
+}
+
+# copy license file for the installer
+if(system("copy $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\license.txt"))
+{
+  die "\n Error: copy $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\license.txt\n";
+}
+if(system("copy $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\setup\\license.txt"))
+{
+  die "\n Error: copy $ENV{MOZ_SRC}\\mozilla\\LICENSE $inDistPath\\setup\\license.txt\n";
 }
 
 # build the self-extracting .exe (installer) file.
@@ -481,10 +492,19 @@ sub CreateTmpStage()
     print " From: $inStagePath\\$mComponent\n";
     print "   To: $gLocalTmpStage\\$mComponent\n\n";
     mkdir("$gLocalTmpStage\\$mComponent", 775);
-    if(system("xcopy /s/e $inStagePath\\$mComponent $gLocalTmpStage\\$mComponent\\"))
+
+    # If it's not talkback then copy the component over to the local tmp stage.
+    # If it is, then skip the copy because there will be nothing at the source.
+    # Talkback is a dummy place holder .xpi right now.  Mozilla release team 
+    # replaces this place holder .xpi with a real talkback when delivering the
+    # build to mozilla.org.
+    if(!($mComponent =~ /talkback/i))
     {
-      print "\n Error: xcopy /s/e $inStagePath\\$mComponent $gLocalTmpStage\\$mComponent\\\n";
-      return(1);
+      if(system("xcopy /s/e $inStagePath\\$mComponent $gLocalTmpStage\\$mComponent\\"))
+      {
+        print "\n Error: xcopy /s/e $inStagePath\\$mComponent $gLocalTmpStage\\$mComponent\\\n";
+        return(1);
+      }
     }
 
     if(-d "$gLocalTmpStage\\$mComponent\\bin\\chrome")
@@ -516,13 +536,17 @@ sub VerifyComponents()
   print "\n Verifying existence of required components...\n";
   foreach $mComponent (@gComponentList)
   {
-    if(-d "$inStagePath\\$mComponent")
+    if($mComponent =~ /talkback/i)
     {
-      print "    ok: $inStagePath\\$mComponent\n";
+      print " place holder: $inStagePath\\$mComponent\n";
+    }
+    elsif(-d "$inStagePath\\$mComponent")
+    {
+      print "           ok: $inStagePath\\$mComponent\n";
     }
     else
     {
-      print " Error: $inStagePath\\$mComponent does not exist!\n";
+      print "        Error: $inStagePath\\$mComponent does not exist!\n";
       $mError = 1;
     }
   }

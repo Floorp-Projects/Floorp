@@ -72,6 +72,8 @@ BOOL            bCreateDestinationDir;
 BOOL            bReboot;
 BOOL            gbILUseTemp;
 BOOL            gbPreviousUnfinishedDownload;
+BOOL            gbIgnoreRunAppX;
+BOOL            gbIgnoreProgramFolderX;
 
 setupGen        sgProduct;
 diS             diSetup;
@@ -97,7 +99,6 @@ ssi             *ssiSiteSelector;
 char *SetupFileList[] = {"setuprsc.dll",
                          "config.ini",
                          "setup.ini",
-                         "sdinst.dll",
                          ""};
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)

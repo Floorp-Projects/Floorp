@@ -454,7 +454,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
                 lstrcpy(szBuf2, szBuf);
                 AppendBackSlash(szBuf2, sizeof(szBuf2));
                 lstrcat(szBuf2, sgProduct.szSubPath);
-                UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2);
+                UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2, FALSE);
               }
 
               bCreateDestinationDir = TRUE;
@@ -540,59 +540,57 @@ BOOL BrowseForDirectory(HWND hDlg, char *szCurrDir)
   return(bRet);
 }
 
-void TruncateString(HWND hWnd, LPSTR szInPath, DWORD dwInPathBufSize, LPSTR szOutPath, DWORD dwOutPathBufSize)
+void TruncateString(HWND hWnd, LPSTR szInURL, LPSTR szOutString, DWORD dwOutStringBufSize)
 {
   HDC           hdcWnd;
   LOGFONT       logFont;
-  HFONT         hfontTmp;
+  HFONT         hfontNew;
   HFONT         hfontOld;
   RECT          rWndRect;
   SIZE          sizeString;
-  BOOL          bChopped;
+  char          *ptr = NULL;
+  int           iHalfLen;
+  int           iOutStringLen;
 
-  ZeroMemory(szOutPath, dwOutPathBufSize);
-  if(dwInPathBufSize > dwOutPathBufSize)
+  if((DWORD)lstrlen(szInURL) > dwOutStringBufSize)
     return;
 
-  if(lstrlen(szInPath) == 0)
-    return;
-
-  lstrcpy(szOutPath, szInPath);
-  hdcWnd = GetWindowDC(hWnd);
+  ZeroMemory(szOutString, dwOutStringBufSize);
+  lstrcpy(szOutString, szInURL);
+  iOutStringLen = lstrlen(szOutString);
+  hdcWnd        = GetWindowDC(hWnd);
   GetClientRect(hWnd, &rWndRect);
   SystemParametersInfo(SPI_GETICONTITLELOGFONT,
                        sizeof(logFont),
                        (PVOID)&logFont,
                        0);
 
-  hfontTmp = CreateFontIndirect(&logFont);
-
-  if(hfontTmp)
-    hfontOld = SelectObject(hdcWnd, hfontTmp);
-
-  bChopped = FALSE;
-  GetTextExtentPoint32(hdcWnd, szOutPath, lstrlen(szOutPath), &sizeString);
-  while(sizeString.cx > rWndRect.right)
+  hfontNew = CreateFontIndirect(&logFont);
+  if(hfontNew)
   {
-    szOutPath[lstrlen(szOutPath) - 1] = '\0';
-    GetTextExtentPoint32(hdcWnd, szOutPath, lstrlen(szOutPath), &sizeString);
-    bChopped = TRUE;
-  }
+    hfontOld = (HFONT)SelectObject(hdcWnd, hfontNew);
 
-  if(bChopped)
-  {
-    DWORD dwLen = lstrlen(szOutPath);
+    GetTextExtentPoint32(hdcWnd, szOutString, iOutStringLen, &sizeString);
+    while(sizeString.cx > rWndRect.right)
+    {
+      iHalfLen = iOutStringLen / 2;
+      if(iHalfLen == 2)
+        break;
 
-    szOutPath[dwLen - 1] = '.';
-    szOutPath[dwLen - 2] = '.';
-    szOutPath[dwLen - 3] = '.';
+      ptr = szOutString + iHalfLen;
+      memmove(ptr - 1, ptr, lstrlen(ptr) + 1);
+      szOutString[iHalfLen - 2] = '.';
+      szOutString[iHalfLen - 1] = '.';
+      szOutString[iHalfLen]     = '.';
+      iOutStringLen = lstrlen(szOutString);
+      GetTextExtentPoint32(hdcWnd, szOutString, iOutStringLen, &sizeString);
+    }
   }
 
   SelectObject(hdcWnd, hfontOld);
-  DeleteObject(hfontTmp);
+  DeleteObject(hfontNew);
   ReleaseDC(hWnd, hdcWnd);
 }
-
 LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   HWND          hRadioSt0;
@@ -627,7 +625,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       SetWindowText(hDlg, diSetupType.szTitle);
 
       hDestinationPath = GetDlgItem(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
-      TruncateString(hDestinationPath, szTempSetupPath, MAX_BUF, szBuf, sizeof(szBuf));
+      TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
 
       SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
       SetDlgItemText(hDlg, IDC_STATIC_MSG0, diSetupType.szMessage0);
@@ -734,7 +732,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           BrowseForDirectory(hDlg, szTempSetupPath);
 
           hDestinationPath = GetDlgItem(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
-          TruncateString(hDestinationPath, szTempSetupPath, MAX_BUF, szBuf, sizeof(szBuf));
+          TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
           SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
           break;
 
@@ -805,7 +803,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
                 lstrcpy(szBuf2, szBuf);
                 AppendBackSlash(szBuf2, sizeof(szBuf2));
                 lstrcat(szBuf2, sgProduct.szSubPath);
-                UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2);
+                UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2, FALSE);
               }
 
               bCreateDestinationDir = TRUE;
@@ -1672,6 +1670,12 @@ void SaveDownloadOptions(HWND hDlg, HWND hwndCBSiteSelector)
     diDownloadOptions.bSaveInstaller = TRUE;
   else
     diDownloadOptions.bSaveInstaller = FALSE;
+
+  if(IsDlgButtonChecked(hDlg, IDC_USE_FTP) == BST_CHECKED)
+    diDownloadOptions.dwUseProtocol = UP_FTP;
+  else if(IsDlgButtonChecked(hDlg, IDC_USE_HTTP) == BST_CHECKED)
+    diDownloadOptions.dwUseProtocol = UP_HTTP;
+
 }
 
 LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
@@ -1692,6 +1696,13 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
       SetWindowText(hDlg, diDownloadOptions.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0, diDownloadOptions.szMessage0);
       SetDlgItemText(hDlg, IDC_MESSAGE1, diDownloadOptions.szMessage1);
+
+      GetPrivateProfileString("Strings", "IDC Use Ftp", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      SetDlgItemText(hDlg, IDC_USE_FTP, szBuf);
+      GetPrivateProfileString("Strings", "IDC Use Http", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      SetDlgItemText(hDlg, IDC_USE_HTTP, szBuf);
+      GetPrivateProfileString("Strings", "IDC Save Installer Files", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      SetDlgItemText(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, szBuf);
 
       GetSaveInstallerPath(szBuf, sizeof(szBuf));
       SetDlgItemText(hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, szBuf);
@@ -1726,6 +1737,33 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
         CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_CHECKED);
       else
         CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_UNCHECKED);
+
+      switch(diDownloadOptions.dwUseProtocol)
+      {
+        case UP_HTTP:
+          CheckDlgButton(hDlg, IDC_USE_FTP,  BST_UNCHECKED);
+          CheckDlgButton(hDlg, IDC_USE_HTTP, BST_CHECKED);
+          break;
+
+        case UP_FTP:
+        default:
+          CheckDlgButton(hDlg, IDC_USE_FTP,  BST_CHECKED);
+          CheckDlgButton(hDlg, IDC_USE_HTTP, BST_UNCHECKED);
+          break;
+
+      }
+
+      if(diDownloadOptions.bUseProtocolSettings)
+      {
+        ShowWindow(GetDlgItem(hDlg, IDC_USE_FTP),  SW_SHOW);
+        ShowWindow(GetDlgItem(hDlg, IDC_USE_HTTP), SW_SHOW);
+      }
+      else
+      {
+        ShowWindow(GetDlgItem(hDlg, IDC_USE_FTP),  SW_HIDE);
+        ShowWindow(GetDlgItem(hDlg, IDC_USE_HTTP), SW_HIDE);
+      }
+
       break;
 
     case WM_COMMAND:
@@ -2299,7 +2337,9 @@ void DlgSequenceNext()
 {
   HRESULT hrValue;
   HRESULT hrErr;
-  char    szBuf[MAX_PATH];
+  char    szDestPath[MAX_PATH];
+  char    szInstallLogFile[MAX_BUF];
+
   BOOL    bDone = FALSE;
 
   do
@@ -2452,31 +2492,61 @@ void DlgSequenceNext()
         dwWizardState = DLG_START_INSTALL;
         gbProcessingXpnstallFiles = TRUE;
 
+        LogISDestinationPath();
+        LogISSetupType();
+        LogISComponentsSelected();
+        LogISComponentsToDownload();
+        LogISDiskSpace();
+
+        lstrcpy(szDestPath, sgProduct.szPath);
+        if(*sgProduct.szSubPath != '\0')
+        {
+          AppendBackSlash(szDestPath, sizeof(szDestPath));
+          lstrcat(szDestPath, sgProduct.szSubPath);
+        }
+        AppendBackSlash(szDestPath, sizeof(szDestPath));
+
+        /* Set global var, that determines where the log file is to update, to
+         * not use the TEMP dir *before* the FileCopy() calls because we want
+         * to log the FileCopy() calls to where the log files were copied to.
+         * This is possible because the logging, that is done within the
+         * FileCopy() function, is done after the actual copy
+         */
+        gbILUseTemp = FALSE;
+
+        /* copy the install_wizard.log file from the temp\ns_temp dir to
+         * the destination dir and use the new destination file to continue
+         * logging.
+         */
+        lstrcpy(szInstallLogFile, szTempDir);
+        AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
+        lstrcat(szInstallLogFile, FILE_INSTALL_LOG);
+        FileCopy(szInstallLogFile, szDestPath, FALSE, FALSE);
+        DeleteFile(szInstallLogFile);
+
+        /* copy the install_status.log file from the temp\ns_temp dir to
+         * the destination dir and use the new destination file to continue
+         * logging.
+         */
+        lstrcpy(szInstallLogFile, szTempDir);
+        AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
+        lstrcat(szInstallLogFile, FILE_INSTALL_STATUS_LOG);
+        FileCopy(szInstallLogFile, szDestPath, FALSE, FALSE);
+        DeleteFile(szInstallLogFile);
+
         /* PRE_DOWNLOAD process file manipulation functions */
         ProcessFileOps(T_PRE_DOWNLOAD, NULL);
 
         if(RetrieveArchives() == WIZ_OK)
         {
-          char szInstallLogFile[MAX_BUF];
-
           /* POST_DOWNLOAD process file manipulation functions */
           ProcessFileOps(T_POST_DOWNLOAD, NULL);
           /* PRE_XPCOM process file manipulation functions */
           ProcessFileOps(T_PRE_XPCOM, NULL);
 
-          ProcessXpcomFile();
-
-          /* POST_XPCOM process file manipulation functions */
-          ProcessFileOps(T_POST_XPCOM, NULL);
-          /* PRE_SMARTUPDATE process file manipulation functions */
-          ProcessFileOps(T_PRE_SMARTUPDATE, NULL);
-
-          if(CheckInstances())
+          if(ProcessXpcomFile() != FO_SUCCESS)
           {
-            /* save the installer files in the local machine */
-            if(diDownloadOptions.bSaveInstaller)
-              SaveInstallerFiles();
-
+            bSDUserCanceled = TRUE;
             CleanupXpcomFile();
             PostQuitMessage(0);
 
@@ -2485,13 +2555,25 @@ void DlgSequenceNext()
             break;
           }
 
-          lstrcpy(szBuf, sgProduct.szPath);
-          if(*sgProduct.szSubPath != '\0')
+          /* POST_XPCOM process file manipulation functions */
+          ProcessFileOps(T_POST_XPCOM, NULL);
+          /* PRE_SMARTUPDATE process file manipulation functions */
+          ProcessFileOps(T_PRE_SMARTUPDATE, NULL);
+
+          /* save the installer files in the local machine */
+          if(diDownloadOptions.bSaveInstaller)
+            SaveInstallerFiles();
+
+          if(CheckInstances())
           {
-            AppendBackSlash(szBuf, sizeof(szBuf));
-            lstrcat(szBuf, sgProduct.szSubPath);
+            bSDUserCanceled = TRUE;
+            CleanupXpcomFile();
+            PostQuitMessage(0);
+
+            /* break out of switch statment */
+            bDone = TRUE;
+            break;
           }
-          AppendBackSlash(szBuf, sizeof(szBuf));
 
 #ifdef NUKE_FROM_ORBIT
           if(gdwUpgradeValue == UG_DELETE)
@@ -2500,25 +2582,14 @@ void DlgSequenceNext()
 
             NS_LoadString(hSetupRscInst, IDS_STR_DELETING_DESTINATION_DIR, szMessage, sizeof(szMessage));
             ShowMessage(szMessage, TRUE);
-            DirectoryRemove(szBuf, TRUE);
-            CreateDirectoriesAll(szBuf, TRUE);
+            DirectoryRemove(szDestPath, TRUE);
+            CreateDirectoriesAll(szDestPath, TRUE);
             ShowMessage(szMessage, FALSE);
           }
 #endif /* NUKE_FROM_ORBIT */
 
-          /* copy the install_wizard.log file from the temp\ns_temp dir to
-           * the destination dir and use the new destination file to continue
-           * logging.
-           */
-          lstrcpy(szInstallLogFile, szTempDir);
-          AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
-          lstrcat(szInstallLogFile, FILE_INSTALL_LOG);
-          FileCopy(szInstallLogFile, szBuf, FALSE);
-          DeleteFile(szInstallLogFile);
-          gbILUseTemp = FALSE;
-
-          lstrcat(szBuf, "uninstall\\");
-          CreateDirectoriesAll(szBuf, TRUE);
+          lstrcat(szDestPath, "uninstall\\");
+          CreateDirectoriesAll(szDestPath, TRUE);
 
           /* save the installer files in the local machine */
           if(diDownloadOptions.bSaveInstaller)
@@ -2540,7 +2611,9 @@ void DlgSequenceNext()
             ProcessFileOps(T_POST_LAUNCHAPP, NULL);
             /* DEPEND_REBOOT process file manipulation functions */
             ProcessFileOps(T_DEPEND_REBOOT, NULL);
-            ProcessProgramFolderShowCmd();
+            ClearWinRegUninstallFileDeletion();
+            if(!gbIgnoreProgramFolderX)
+              ProcessProgramFolderShowCmd();
 
             CleanupPreviousVersionRegKeys();
             if(NeedReboot())

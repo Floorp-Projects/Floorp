@@ -1,3 +1,152 @@
+function createShortcuts() 
+{
+  var subkey;
+  var valname;
+  var szStartMenuPrograms;
+  var szStartMenu;
+  var szFolderDesktop;
+  var szFolderQuickLaunch;
+  var szFolderSendTo;
+  var winreg;
+  var fWindows;
+  var fTemp;
+  var fProgram;
+  var fileExe;
+  var scExeDesc;
+  var scProfileDesc;
+  var scProfileDescParam;
+  var scFolderName;
+  var fFolderDesktop;
+  var fFolderPath;
+  var fFolderPathStr;
+  var is_winnt;
+  var szCurrentVersion;
+
+  winreg               = getWinRegistry();
+  fWindows             = getFolder("Windows");
+  fProgram             = getFolder("Program");
+  fTemp                = fProgram + "$MainExeFile$";
+  fileExe              = getFolder("file:///", fTemp);
+  scExeDesc            = "Mail";
+  scParam              = "-mail";
+  scFolderName         = "$ProductName$";
+  if(winreg != null) 
+  {
+    /* determine if the script is running under NT or not */
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+    subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+    valname             = "CurrentVersion";
+    szCurrentVersion    = winreg.getValueString(subkey, valname);
+    logComment("szCurrentVersion: " + szCurrentVersion);
+    if((szCurrentVersion == "") || (szCurrentVersion == null))
+    {
+      is_winnt = false;
+    }
+    else
+    {
+      is_winnt = true;
+    }
+
+    if(is_winnt == false)
+    {
+      logComment("is_winnt is false: " + is_winnt);
+
+      winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+      subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+      valname             = "Programs";
+      szStartMenuPrograms = winreg.getValueString(subkey, valname);
+      valname             = "Start Menu";
+      szStartMenu         = winreg.getValueString(subkey, valname);
+      valname             = "Desktop";
+      szFolderDesktop     = winreg.getValueString(subkey, valname);
+    }
+    else
+    {
+      logComment("is_winnt is true: " + is_winnt);
+
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+      valname             = "Common Programs";
+      szStartMenuPrograms = winreg.getValueString(subkey, valname);
+      valname             = "Common Start Menu";
+      szStartMenu         = winreg.getValueString(subkey, valname);
+      valname             = "Common Desktop";
+      szFolderDesktop     = winreg.getValueString(subkey, valname);
+    }
+
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+    valname             = "SendTo";
+    szFolderSendTo      = winreg.getValueString(subkey, valname);
+
+    subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups";
+    valname             = "Quick Launch";
+    szFolderQuickLaunch = winreg.getValueString(subkey, valname);
+
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+    subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+    valname             = "Program Folder Path";
+    fFolderPathStr      = winreg.getValueString(subkey, valname);
+    if((fFolderPathStr == "") || (fFolderPathStr == null))
+    {
+      fTemp       = szStartMenuPrograms + "\\" + scFolderName;
+      fFolderPath = getFolder("file:///", fTemp);
+    }
+    else
+    {
+      /* convert the path string to a path folder object */
+      fFolderPath = getFolder("file:///", fFolderPathStr);
+    }
+    /* convert the path string to a path folder object */
+    fFolderDesktop = getFolder("file:///", szFolderDesktop);
+
+    logComment("Folder StartMenuPrograms: " + szStartMenuPrograms);
+    logComment("Folder StartMenu        : " + szStartMenu);
+    logComment("Folder FolderDesktop    : " + szFolderDesktop);
+    logComment("Folder FolderSendTo     : " + szFolderSendTo);
+    logComment("Folder FolderQuickLaunch: " + szFolderQuickLaunch);
+    logComment("fileExe                 : " + fileExe);
+    logComment("fFolderPath             : " + fFolderPath);
+    logComment("scExeDesc               : " + scExeDesc);
+    logComment("fProgram                : " + fProgram);
+
+    /* explicitly create the fFolderPath even though the windowsShortcut function creates the folder.
+     * This is so that the folder creation gets logged for uninstall to remove it. */
+    File.dirCreate(fFolderPath);
+
+    /* create the shortcuts */
+    File.windowsShortcut(fileExe, fFolderPath, scExeDesc, fProgram, scParam, fileExe, 0);
+
+    /* set the Program Folder Path in the Mozilla key in the Windows Registry */
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+    subkey  = "SOFTWARE\\$CompanyName$";
+    winreg.createKey(subkey,"");
+
+    valname = "CurrentVersion";
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
+    winreg.createKey(subkey,"");
+
+    valname = "CurrentVersion";
+    value   = "$UserAgent$";
+    err     = winreg.setValueString(subkey, valname, value);
+
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
+    winreg.createKey(subkey,"");
+
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+    winreg.createKey(subkey,"");
+
+    valname = "Program Folder Path";
+    value   = fFolderPath;
+    err     = winreg.setValueString(subkey, valname, value);
+
+  }
+  else
+  {
+    logComment("winreg is null");
+  }
+}
+
 // main
 var srDest;
 var err;
@@ -26,20 +175,30 @@ if(verifyDiskSpace(fProgram, srDest))
                      true);              // Force Flag 
   logComment("addDirectory() returned: " + err);
 
-  // register chrome
-  err = registerChrome(CONTENT | DELAYED_CHROME, 
-                       getFolder("Chrome","messenger.jar"),
-                       "content/messenger/");
-  err = registerChrome(CONTENT | DELAYED_CHROME, 
-                       getFolder("Chrome","messenger.jar"),
-                       "content/messenger-region/");
-  logComment("registerChrome() returned: "+err);
-
   // check return value
-  if(err == SUCCESS)
+  if( err == SUCCESS )
   {
-    err = performInstall(); 
-    logComment("performInstall() returned: " + err);
+    createShortcuts();
+    // we don't want to fail on errors for the above
+    resetError();
+
+    // register chrome
+    registerChrome(CONTENT | DELAYED_CHROME, 
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger/");
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger-region/");
+
+    // check return value
+    err = getLastError();
+    if(err == SUCCESS)
+    {
+      err = performInstall(); 
+      logComment("performInstall() returned: " + err);
+    }
+    else
+      cancelInstall(err);
   }
   else
     cancelInstall(err);
