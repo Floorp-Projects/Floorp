@@ -592,10 +592,10 @@ NS_METHOD nsWidget::SetPreferredSize(PRInt32 aWidth,PRInt32 aHeight)
 NS_METHOD nsWidget::SetTitle(const nsString &aTitle)
 {
   if (mWidget) {
-    const char *title = ToNewCString(aTitle);
+    char *title = ToNewCString(aTitle);
 
     mWidget->SetTitle(title);
-    delete [] title;
+    nsMemory::Free(title);
   }
   return NS_OK;
 }
