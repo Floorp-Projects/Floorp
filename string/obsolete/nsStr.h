@@ -466,7 +466,6 @@ public:
 
 };
 
-char* GetSharedEmptyBuffer();
 nsIMemoryAgent* GetDefaultAgent(void);
 
 #endif
