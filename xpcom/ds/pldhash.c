@@ -124,7 +124,7 @@ PL_DHashFinalizeStub(PLDHashTable *table)
 {
 }
 
-const static PLDHashTableOps stub_ops = {
+static const PLDHashTableOps stub_ops = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     PL_DHashGetKeyStub,
@@ -380,16 +380,6 @@ SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash,
 
         entry = ADDRESS_ENTRY(table, hash1);
         if (PL_DHASH_ENTRY_IS_FREE(entry)) {
-#ifdef DEBUG_brendan
-            extern char *getenv(const char *);
-            static PRBool gotFirstRemovedEnvar = PR_FALSE;
-            static char *doFirstRemoved = NULL;
-            if (!gotFirstRemovedEnvar) {
-                doFirstRemoved = getenv("DHASH_DO_FIRST_REMOVED");
-                gotFirstRemovedEnvar = PR_TRUE;
-            }
-            if (!doFirstRemoved) return entry;
-#endif
             METER(table->stats.misses++);
             return (firstRemoved && op == PL_DHASH_ADD) ? firstRemoved : entry;
         }

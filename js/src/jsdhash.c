@@ -123,7 +123,7 @@ JS_DHashFinalizeStub(JSDHashTable *table)
 {
 }
 
-const static JSDHashTableOps stub_ops = {
+static const JSDHashTableOps stub_ops = {
     JS_DHashAllocTable,
     JS_DHashFreeTable,
     JS_DHashGetKeyStub,
@@ -379,16 +379,6 @@ SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash,
 
         entry = ADDRESS_ENTRY(table, hash1);
         if (JS_DHASH_ENTRY_IS_FREE(entry)) {
-#ifdef DEBUG_brendan
-            extern char *getenv(const char *);
-            static JSBool gotFirstRemovedEnvar = JS_FALSE;
-            static char *doFirstRemoved = NULL;
-            if (!gotFirstRemovedEnvar) {
-                doFirstRemoved = getenv("DHASH_DO_FIRST_REMOVED");
-                gotFirstRemovedEnvar = JS_TRUE;
-            }
-            if (!doFirstRemoved) return entry;
-#endif
             METER(table->stats.misses++);
             return (firstRemoved && op == JS_DHASH_ADD) ? firstRemoved : entry;
         }
