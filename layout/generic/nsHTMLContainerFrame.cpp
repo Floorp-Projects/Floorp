@@ -478,6 +478,21 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLContainerFrame::AttributeChanged(nsIPresShell* aShell,
+                                       nsIPresContext* aPresContext,
+                                       nsIContent* aChild,
+                                       nsIAtom* aAttribute)
+{
+  if (nsHTMLAtoms::style == aAttribute) {
+    ApplyStyleChangeToTree(*aPresContext, this);
+    ApplyReflowChangeToTree(*aPresContext, this);
+    ApplyRenderingChangeToTree(*aPresContext, this);
+  }
+
+  return NS_OK;
+}
+
 void
 nsHTMLContainerFrame::ApplyStyleChangeToTree(nsIPresContext& aPresContext,
                                              nsIFrame* aFrame)

@@ -25,6 +25,7 @@ class nsIStyleSheet;
 class nsIUnicharInputStream;
 class nsIURL;
 class nsString;
+class nsICSSDeclaration;
 
 #define NS_ICSS_PARSER_IID    \
 { 0xcc9c0610, 0x968c, 0x11d1, \
@@ -51,6 +52,11 @@ public:
   NS_IMETHOD ParseDeclarations(const nsString& aDeclaration,
                                nsIURL*         aBaseURL,
                                nsIStyleRule*&  aResult) = 0;
+
+  NS_IMETHOD ParseAndAppendDeclaration(const nsString& aBuffer,
+                                       nsIURL*         aBaseURL,
+                                       nsICSSDeclaration& aDeclaration) = 0;
+
 };
 
 // Values or'd in the GetInfoMask; other bits are reserved

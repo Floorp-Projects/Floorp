@@ -518,8 +518,8 @@ nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
     NS_ADDREF(mApplets);
   }
 
-  *aApplets = (nsIDOMHTMLCollection *)mImages;
-  NS_ADDREF(mImages);
+  *aApplets = (nsIDOMHTMLCollection *)mApplets;
+  NS_ADDREF(mApplets);
 
   return NS_OK;
 }
@@ -829,8 +829,18 @@ nsHTMLDocument::GetLastModified(nsString& aLastModified)
 NS_IMETHODIMP    
 nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (nsnull == mEmbeds) {
+    mEmbeds = new nsContentList(this, "EMBED");
+    if (nsnull == mEmbeds) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mEmbeds);
+  }
+
+  *aEmbeds = (nsIDOMHTMLCollection *)mEmbeds;
+  NS_ADDREF(mEmbeds);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP    

@@ -47,6 +47,20 @@ class nsIStyleRule;
 class nsISupportsArray;
 class nsIDOMScriptObjectFactory;
 class nsChildContentList;
+class nsDOMStyleDeclaration;
+
+
+// There are a set of DOM- and scripting-specific instance variables
+// that may only be instantiated when a content object is accessed
+// through the DOM. Rather than burn actual slots in the content
+// objects for each of these instance variables, we put them off
+// in a side structure that's only allocated when the content is
+// accessed through the DOM.
+typedef struct {
+  void *mScriptObject;
+  nsChildContentList *mChildNodes;
+  nsDOMStyleDeclaration *mStyle;
+} nsDOMSlots;
 
 class nsGenericHTMLElement : public nsIJSScriptObject {
 public:
@@ -89,6 +103,7 @@ public:
   nsresult    SetDir(const nsString& aDir);
   nsresult    GetClassName(nsString& aClassName);
   nsresult    SetClassName(const nsString& aClassName);
+  nsresult    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
 
   // nsIDOMEventReceiver interface
   nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -152,7 +167,10 @@ public:
   virtual void      Finalize(JSContext *aContext);
 
   // Implementation for nsISupports
-  NS_DECL_ISUPPORTS
+  NS_IMETHOD QueryInterface(REFNSIID aIID,
+                            void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
 
   //----------------------------------------
 
@@ -289,6 +307,8 @@ public:
 
   static nsIDOMScriptObjectFactory *gScriptObjectFactory;
 
+  nsDOMSlots *GetDOMSlots();
+
   // Up pointer to the real content object that we are
   // supporting. Sometimes there is work that we just can't do
   // ourselves, so this is needed to ask the real object to do the
@@ -299,8 +319,8 @@ public:
   nsIContent* mParent;
   nsIHTMLAttributes* mAttributes;
   nsIAtom* mTag;
-  void* mScriptObject;
   nsIEventListenerManager* mListenerManager;
+  nsDOMSlots *mDOMSlots;
 };
 
 //----------------------------------------------------------------------
@@ -315,10 +335,7 @@ public:
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
   nsresult    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);
-  nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes) {
-    *aChildNodes = nsnull;
-    return NS_OK;
-  }
+  nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);
   nsresult    GetHasChildNodes(PRBool* aHasChildNodes) {
     *aHasChildNodes = PR_FALSE;
     return NS_OK;
@@ -422,7 +439,7 @@ public:
   nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   nsresult RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
-  nsChildContentList *mChildren;
+  nsVoidArray mChildren;
 };
 
 //----------------------------------------------------------------------
@@ -562,6 +579,9 @@ public:
   }                                                     \
   NS_IMETHOD SetClassName(const nsString& aClassName) { \
     return _g.SetClassName(aClassName);                 \
+  }                                                     \
+  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { \
+    return _g.GetStyle(aStyle);                         \
   }
 
 /**

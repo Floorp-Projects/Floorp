@@ -202,6 +202,10 @@ public:
   NS_IMETHOD ParseDeclarations(const nsString& aDeclaration,
                                nsIURL*         aBaseURL,
                                nsIStyleRule*&  aResult);
+  
+  NS_IMETHOD ParseAndAppendDeclaration(const nsString& aBuffer,
+                                       nsIURL*         aBaseURL,
+                                       nsICSSDeclaration& aDeclaration);
 
 protected:
   PRBool GetToken(PRInt32* aErrorCode, PRBool aSkipWS);
@@ -440,6 +444,40 @@ CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
   else {
     aResult = nsnull;
   }
+
+  delete mScanner;
+  mScanner = nsnull;
+  NS_IF_RELEASE(mURL);
+
+  return NS_OK;
+}
+
+NS_METHOD
+CSSParserImpl::ParseAndAppendDeclaration(const nsString& aBuffer,
+                                         nsIURL*         aBaseURL,
+                                         nsICSSDeclaration&  aDeclaration)
+{
+  nsString* str = new nsString(aBuffer);
+  if (nsnull == str) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsIUnicharInputStream* input = nsnull;
+  nsresult rv = NS_NewStringUnicharInputStream(&input, str);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
+  mScanner = new nsCSSScanner();
+  mScanner->Init(input);
+  NS_RELEASE(input);
+
+  mURL = aBaseURL;
+  NS_IF_ADDREF(mURL);
+
+  mInHead = PR_FALSE;
+  PRInt32 errorCode = NS_OK;
+
+  ParseDeclaration(&errorCode, &aDeclaration, PR_FALSE);  
 
   delete mScanner;
   mScanner = nsnull;

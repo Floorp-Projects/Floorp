@@ -22,6 +22,7 @@ LIBRARY_NAME = nglhtmlcon_s
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS=				\
 	nsCommentNode.cpp		\
+	nsDOMStyleDeclaration.cpp	\
 	nsGenericDOMDataNode.cpp	\
 	nsGenericHTMLElement.cpp	\
 	nsHTMLAnchorElement.cpp		\
