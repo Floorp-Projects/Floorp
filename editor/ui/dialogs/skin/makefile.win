@@ -27,9 +27,31 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) EditorDialog.css  $(DIST)\bin\chrome\editor\skin\default
 	$(MAKE_INSTALL) EdImageMap.css    $(DIST)\bin\chrome\editor\skin\default
+	$(MAKE_INSTALL) EdImageMapPage.css  $(DIST)\bin\chrome\editor\skin\default
   $(MAKE_INSTALL) images\Map_checker.gif        $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\Map_circleTool.gif     $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\Map_contrast.gif       $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\Map_Copy.gif           $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\Map_Cut.gif            $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\Map_Paste.gif          $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\Map_pointerTool.gif    $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\Map_polygonTool.gif    $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\Map_rectangleTool.gif  $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\Map_zoomIn.gif         $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\Map_zoomOut.gif        $(DIST)\bin\chrome\editor\skin\default\images
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\EditorDialog.css
   rm -f $(DIST)\bin\chrome\editor\skin\default\EdImageMap.css
+  rm -f $(DIST)\bin\chrome\editor\skin\default\EdImageMapPage.css
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_checker.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_circleTool.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_contrast.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_Copy.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_Cut.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_Paste.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_pointerTool.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_polygonTool.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_rectangleTool.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_zoomIn.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_zoomOut.gif

@@ -24,4 +24,15 @@
 
 EditorDialog.css
 EdImageMap.css
+EdImageMapPage.css
 images:Map_checker.gif
+images:Map_circleTool.gif
+images:Map_contrast.gif
+images:Map_Copy.gif
+images:Map_Cut.gif
+images:Map_Paste.gif
+images:Map_pointerTool.gif
+images:Map_polygonTool.gif
+images:Map_rectangleTool.gif
+images:Map_zoomIn.gif
+images:Map_zoomOut.gif
