@@ -195,6 +195,7 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type);
 DEFINE_RDF_VOCAB(XUL_NAMESPACE_URI_PREFIX, XUL, element);
 
 static PRLogModuleInfo* gMapLog;
+static PRLogModuleInfo* gXULLog;
 
 ////////////////////////////////////////////////////////////////////////
 // nsElementMap
@@ -852,6 +853,9 @@ XULDocumentImpl::XULDocumentImpl(void)
 #ifdef PR_LOGGING
     if (! gMapLog)
         gMapLog = PR_NewLogModule("nsXULDocumentElementMap");
+
+    if (! gXULLog)
+        gXULLog = PR_NewLogModule("nsXULDocument");
 #endif
 }
 
@@ -2712,10 +2716,19 @@ XULDocumentImpl::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn
     nsCOMPtr<nsIAtom> name;
     PRInt32 nameSpaceID;
 
+    *aReturn = nsnull;
+
     // parse the user-provided string into a tag name and a namespace ID
     rv = ParseTagString(aTagName, *getter_AddRefs(name), nameSpaceID);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse tag name");
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+#ifdef PR_LOGGING
+        char* tagNameStr = aTagName.ToNewCString();
+        PR_LOG(gXULLog, PR_LOG_ERROR,
+               ("xul[CreateElement] unable to parse tag '%s'; no such namespace.", tagNameStr));
+        delete[] tagNameStr;
+#endif
+        return rv;
+    }
 
     nsCOMPtr<nsIContent> result;
     rv = mXULBuilder->CreateElement(nameSpaceID, name, nsnull, getter_AddRefs(result));
@@ -4125,8 +4138,7 @@ static char kNameSpaceSeparator[] = ":";
         nameSpaceAtom = getter_AddRefs(NS_NewAtom(prefix));
 
     rv = ns->FindNameSpaceID(nameSpaceAtom, aNameSpaceID);
-    if (NS_FAILED(rv))
-        aNameSpaceID = kNameSpaceID_None;
+    if (NS_FAILED(rv)) return rv;
 
     aName = NS_NewAtom(name);
     return NS_OK;
