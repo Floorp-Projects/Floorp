@@ -20,7 +20,7 @@
 
 #include "nsHTMLContainerFrame.h"
 
-// Pseudo frame created by the root content frame
+// Page frame class used by the simple page sequence frame
 class nsPageFrame : public nsContainerFrame {
 public:
   nsPageFrame(nsIContent* aContent, nsIFrame* aParent);

@@ -50,6 +50,7 @@ CPPSRCS=				\
 	nsPageFrame.cpp			\
 	nsPlaceholderFrame.cpp		\
 	nsPresShell.cpp			\
+	nsSimplePageSequence.cpp \
 	nsScrollFrame.cpp		\
 	nsSpacerFrame.cpp		\
 	nsSplittableFrame.cpp		\
