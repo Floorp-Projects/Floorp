@@ -33,10 +33,14 @@
 
 static pthread_condattr_t _pt_cvar_attr;
 
-#if defined(DEBUG) && defined(_PR_DCETHREADS)
+#if defined(DEBUG)
+extern PTDebug pt_debug;  /* this is shared between several modules */
+
+#if defined(_PR_DCETHREADS)
 static pthread_t pt_zero_tid;  /* a null pthread_t (pthread_t is a struct
                                 * in DCE threads) to compare with */
-#endif
+#endif  /* defined(_PR_DCETHREADS) */
+#endif  /* defined(DEBUG) */
 
 /**************************************************************/
 /**************************************************************/
@@ -83,21 +87,33 @@ static void pt_PostNotifies(PRLock *lock, PRBool unlock)
     {
         for (index = 0; index < notified->length; ++index)
         {
-            PR_ASSERT(NULL != notified->cv[index].cv);
+            PRCondVar *cv = notified->cv[index].cv;
+            PR_ASSERT(NULL != cv);
             PR_ASSERT(0 != notified->cv[index].times);
             if (-1 == notified->cv[index].times)
             {
-                rv = pthread_cond_broadcast(&notified->cv[index].cv->cv);
+                rv = pthread_cond_broadcast(&cv->cv);
                 PR_ASSERT(0 == rv);
             }
             else
             {
                 while (notified->cv[index].times-- > 0)
                 {
-                    rv = pthread_cond_signal(&notified->cv[index].cv->cv);
-                    PR_ASSERT(0 == rv);
+                    rv = pthread_cond_signal(&cv->cv);
+                    PR_ASSERT((0 == rv) || (EINVAL == rv));
                 }
             }
+#if defined(DEBUG)
+            pt_debug.cvars_notified += 1;
+            if (0 > PR_AtomicDecrement(&cv->notify_pending))
+            {
+                pt_debug.delayed_cv_deletes += 1;
+                PR_DestroyCondVar(cv);
+            }
+#else  /* defined(DEBUG) */
+            if (0 > PR_AtomicDecrement(&cv->notify_pending))
+                PR_DestroyCondVar(cv);
+#endif  /* defined(DEBUG) */
         }
         prev = notified;
         notified = notified->link;
@@ -123,6 +139,9 @@ PR_IMPLEMENT(PRLock*) PR_NewLock(void)
         rv = PTHREAD_MUTEXATTR_DESTROY(&mattr); 
         PR_ASSERT(0 == rv);
     }
+#if defined(DEBUG)
+    pt_debug.locks_created += 1;
+#endif
     return lock;
 }  /* PR_NewLock */
 
@@ -137,6 +156,7 @@ PR_IMPLEMENT(void) PR_DestroyLock(PRLock *lock)
     PR_ASSERT(0 == rv);
 #if defined(DEBUG)
     memset(lock, 0xaf, sizeof(PRLock));
+    pt_debug.locks_destroyed += 1;
 #endif
     PR_DELETE(lock);
 }  /* PR_DestroyLock */
@@ -151,6 +171,9 @@ PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
     PR_ASSERT(NULL == lock->notified.link);
     PR_ASSERT(PTHREAD_THR_HANDLE_IS_ZERO(lock->owner));
     PTHREAD_COPY_THR_HANDLE(pthread_self(), lock->owner);
+#if defined(DEBUG)
+    pt_debug.locks_acquired += 1;
+#endif
 }  /* PR_Lock */
 
 PR_IMPLEMENT(PRStatus) PR_Unlock(PRLock *lock)
@@ -172,6 +195,9 @@ PR_IMPLEMENT(PRStatus) PR_Unlock(PRLock *lock)
     }
     else pt_PostNotifies(lock, PR_TRUE);
 
+#if defined(DEBUG)
+    pt_debug.locks_released += 1;
+#endif
     return PR_SUCCESS;
 }  /* PR_Unlock */
 
@@ -262,6 +288,7 @@ static void pt_PostNotifyToCvar(PRCondVar *cvar, PRBool broadcast)
     }
 
     /* A brand new entry in the array */
+    (void)PR_AtomicIncrement(&cvar->notify_pending);
     notified->cv[index].times = (broadcast) ? -1 : 1;
     notified->cv[index].cv = cvar;
     notified->length += 1;
@@ -279,18 +306,25 @@ PR_IMPLEMENT(PRCondVar*) PR_NewCondVar(PRLock *lock)
         int rv = PTHREAD_COND_INIT(cv->cv, _pt_cvar_attr); 
         PR_ASSERT(0 == rv);
         cv->lock = lock;
+        cv->notify_pending = 0;
+#if defined(DEBUG)
+        pt_debug.cvars_created += 1;
+#endif
     }
     return cv;
 }  /* PR_NewCondVar */
 
 PR_IMPLEMENT(void) PR_DestroyCondVar(PRCondVar *cvar)
 {
-    int rv;
-    rv = pthread_cond_destroy(&cvar->cv); PR_ASSERT(0 == rv);
+    if (0 > PR_AtomicDecrement(&cvar->notify_pending))
+    {
+        PRIntn rv = pthread_cond_destroy(&cvar->cv); PR_ASSERT(0 == rv);
 #if defined(DEBUG)
         memset(cvar, 0xaf, sizeof(PRCondVar));
+        pt_debug.cvars_destroyed += 1;
 #endif
-    PR_DELETE(cvar);
+        PR_DELETE(cvar);
+    }
 }  /* PR_DestroyCondVar */
 
 PR_IMPLEMENT(PRStatus) PR_WaitCondVar(PRCondVar *cvar, PRIntervalTime timeout)

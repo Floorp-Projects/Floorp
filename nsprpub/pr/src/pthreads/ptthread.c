@@ -39,6 +39,7 @@
  */
 
 PRIntn pt_schedpriv;
+extern PRLock *_pr_sleeplock;
 
 struct _PT_Bookeeping pt_book = {0};
 
@@ -158,6 +159,8 @@ static void *_pt_root(void *arg)
     /* last chance to delete this puppy if the thread is detached */
     if (detached)
     {
+        if (NULL != thred->io_cv)
+            PR_DestroyCondVar(thred->io_cv);
     	PR_DELETE(thred->stack);
 #if defined(DEBUG)
         memset(thred, 0xaf, sizeof(PRThread));
@@ -448,11 +451,15 @@ PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thred)
     {
         pthread_t id = thred->id;
         rv = pthread_join(id, &result);
+        PR_ASSERT(rv == 0 && result == NULL);
         if (0 != rv)
             PR_SetError(PR_UNKNOWN_ERROR, errno);
+        if (NULL != thred->io_cv)
+            PR_DestroyCondVar(thred->io_cv);
     	PR_DELETE(thred->stack);
+#if defined(DEBUG)
         memset(thred, 0xaf, sizeof(PRThread));
-        PR_ASSERT(result == NULL);
+#endif
         PR_DELETE(thred);
     }
     return (0 == rv) ? PR_SUCCESS : PR_FAILURE;
@@ -481,10 +488,14 @@ PR_IMPLEMENT(void) PR_DetachThread()
             thred->next->prev = thred->prev;
         PR_Unlock(pt_book.ml);
 
+        if (NULL != thred->io_cv)
+            PR_DestroyCondVar(thred->io_cv);
         rv = pthread_setspecific(pt_book.key, NULL);
         PR_ASSERT(0 == rv);
     	PR_DELETE(thred->stack);
+#if defined(DEBUG)
         memset(thred, 0xaf, sizeof(PRThread));
+#endif
         PR_DELETE(thred);
     }    
 }  /* PR_DetachThread */
@@ -612,17 +623,27 @@ PR_IMPLEMENT(PRStatus) PR_Interrupt(PRThread *thred)
     ** I don't expect very many threads to be waiting on
     ** a single condition and I don't expect interrupt to
     ** be used very often.
+    **
+    ** I don't know why I thought this would work. Must have
+    ** been one of those weaker momements after I'd been
+    ** smelling the vapors.
+    **
+    ** Even with the followng changes it is possible that
+    ** the pointer to the condition variable is pointing
+    ** at a bogus value. Will the unerlying code detect
+    ** that?
     */
-    PRCondVar *victim;
-    PR_ASSERT(thred != NULL);
+    PRCondVar *cv;
+    PR_ASSERT(NULL != thred);
+    if (NULL == thred) return PR_FAILURE;
+
     thred->state |= PT_THREAD_ABORTED;
-    victim = thred->waiting;
-    if (NULL != victim)
+
+    cv = thred->waiting;
+    if (NULL != cv)
     {
-        PRIntn haveLock = pthread_equal(victim->lock->owner, pthread_self());
-        if (!haveLock) PR_Lock(victim->lock);
-        PR_NotifyAllCondVar(victim);
-        if (!haveLock) PR_Unlock(victim->lock);
+        PRIntn rv = pthread_cond_broadcast(&cv->cv);
+        PR_ASSERT(0 == rv);
     }
     return PR_SUCCESS;
 }  /* PR_Interrupt */
@@ -654,11 +675,11 @@ PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime ticks)
     }
     else
     {
-        PRCondVar *cv = PR_NewCondVar(pt_book.ml);
+        PRCondVar *cv = PR_NewCondVar(_pr_sleeplock);
         PR_ASSERT(cv != NULL);
-        PR_Lock(pt_book.ml);
+        PR_Lock(_pr_sleeplock);
         rv = PR_WaitCondVar(cv, ticks);
-        PR_Unlock(pt_book.ml);
+        PR_Unlock(_pr_sleeplock);
         PR_DestroyCondVar(cv);
     }
     return rv;
@@ -1252,7 +1273,9 @@ PR_IMPLEMENT(void) PR_SuspendAll()
 {
     PRIntn rv;
 
+#ifdef DEBUG
     suspendAllOn = PR_TRUE;
+#endif
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, ("Begin PR_SuspendAll\n"));
     /* 
      * turn off preemption - i.e add virtual alarm signal to the set of 
@@ -1275,7 +1298,9 @@ PR_IMPLEMENT(void) PR_ResumeAll()
 
     rv = sigprocmask(SIG_SETMASK, &javagc_intsoff_sigmask, (sigset_t *)NULL);
     PR_ASSERT(0 == rv);
+#ifdef DEBUG
     suspendAllOn = PR_FALSE;
+#endif
 
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, ("End PR_ResumeAll\n"));
 }  /* PR_ResumeAll */

@@ -27,7 +27,7 @@
 
 struct _MDLock               _pr_ioq_lock;
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _PR_MD_WAIT(PRThread *thread, PRIntervalTime ticks)
 {
     PRInt32 rv;
@@ -68,7 +68,7 @@ _PR_MD_WAIT(PRThread *thread, PRIntervalTime ticks)
     }
     return PR_FAILURE;
 }
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _PR_MD_WAKEUP_WAITER(PRThread *thread)
 {
     if ( _PR_IS_NATIVE_THREAD(thread) ) 
@@ -556,7 +556,7 @@ _PR_MD_RMDIR(const char *name)
     }
 }
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _PR_MD_LOCKFILE(PRInt32 f)
 {
 	PRInt32   rv;
@@ -586,14 +586,14 @@ _PR_MD_LOCKFILE(PRInt32 f)
     return PR_SUCCESS;
 } /* end _PR_MD_LOCKFILE() */
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _PR_MD_TLOCKFILE(PRInt32 f)
 {
     return _PR_MD_LOCKFILE(f);
 } /* end _PR_MD_TLOCKFILE() */
 
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 _PR_MD_UNLOCKFILE(PRInt32 f)
 {
 	PRInt32   rv;

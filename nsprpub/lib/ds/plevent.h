@@ -170,6 +170,13 @@ and to ensure that no more events will be delivered for that owner.
 #include "prthread.h"
 #include "prmon.h"
 
+/* For HWND */
+#ifdef _WIN32
+#include <windef.h>
+#elif defined(WIN16)
+#include <windows.h>
+#endif
+
 PR_BEGIN_EXTERN_C
 
 /* Typedefs */

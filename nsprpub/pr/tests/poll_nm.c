@@ -85,9 +85,9 @@ clientThreadFunc(void *arg)
     PRStatus sts;
     PRInt32 n;
 
-    addr.inet.family = AF_INET;
+    addr.inet.family = PR_AF_INET;
     addr.inet.port = PR_htons((PRUint16)port);
-    addr.inet.ip = PR_htonl(INADDR_LOOPBACK);
+    addr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
     memset(buf, 0, sizeof(buf));
     PR_snprintf(buf, sizeof(buf), "%hu", addr.inet.ip);
 
@@ -162,8 +162,8 @@ int main(int argc, char **argv)
 	failed_already=1;
 	goto exit_now;
     }
-    addr.inet.family = AF_INET;
-    addr.inet.ip = PR_htonl(INADDR_ANY);
+    addr.inet.family = PR_AF_INET;
+    addr.inet.ip = PR_htonl(PR_INADDR_ANY);
     addr.inet.port = PR_htons(0);
     if (PR_Bind(listenSock1, &addr) == PR_FAILURE) {
 	fprintf(stderr, "Can't bind socket\n");
@@ -188,8 +188,8 @@ int main(int argc, char **argv)
 	failed_already=1;	
 	goto exit_now;
     }
-    addr.inet.family = AF_INET;
-    addr.inet.ip = PR_htonl(INADDR_ANY);
+    addr.inet.family = PR_AF_INET;
+    addr.inet.ip = PR_htonl(PR_INADDR_ANY);
     addr.inet.port = PR_htons(0);
     if (PR_Bind(listenSock2, &addr) == PR_FAILURE) {
 	fprintf(stderr, "Can't bind socket\n");

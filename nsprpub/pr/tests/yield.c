@@ -18,8 +18,7 @@
 
 #include <stdio.h>
 #include "prthread.h"
-#include "private/pprmisc.h"
-#include <windows.h>
+#include "prinit.h"
 
 #define THREADS 10
 

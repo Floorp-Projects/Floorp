@@ -42,7 +42,7 @@ _PRInterruptTable       _pr_interruptTable[] = { { 0 } };
 #if defined(HAVE_WATCOM_BUG_2)
 PRTime __pascal __export __loadds
 #else
-PRTime
+PR_IMPLEMENT(PRTime)
 #endif
 PR_Now(void)
 {

@@ -26,7 +26,7 @@
 ** Notify one thread that it has finished waiting on a condition variable
 ** Caller must hold the _PR_CVAR_LOCK(cv)
 */
-PRBool NotifyThread (PRThread *thread, PRThread *me)
+PRBool _PR_NotifyThread (PRThread *thread, PRThread *me)
 {
     PRBool rv;
 
@@ -274,7 +274,7 @@ void _PR_NotifyCondVar(PRCondVar *cvar, PRThread *me)
         PR_LOG(_pr_cvar_lm, PR_LOG_MIN, ("_PR_NotifyCondVar: cvar=%p", cvar));
 #endif
         if (_PR_THREAD_CONDQ_PTR(q)->wait.cvar)  {
-            if (NotifyThread(_PR_THREAD_CONDQ_PTR(q), me) == PR_TRUE)
+            if (_PR_NotifyThread(_PR_THREAD_CONDQ_PTR(q), me) == PR_TRUE)
                 break;
         }
         q = q->next;
@@ -381,7 +381,7 @@ void _PR_ClockInterrupt(void)
             if (thread->wait.cvar) {
                 PRThreadPriority pri;
 
-                /* Do work very similar to what NotifyThread does */
+                /* Do work very similar to what _PR_NotifyThread does */
                 PR_ASSERT( !_PR_IS_NATIVE_THREAD(thread) );
 
                 /* Make thread runnable */
@@ -545,7 +545,7 @@ PR_IMPLEMENT(PRStatus) PR_NotifyAllCondVar(PRCondVar *cvar)
     q = cvar->condQ.next;
     while (q != &cvar->condQ) {
 		PR_LOG(_pr_cvar_lm, PR_LOG_MIN, ("PR_NotifyAll: cvar=%p", cvar));
-		NotifyThread(_PR_THREAD_CONDQ_PTR(q), me);
+		_PR_NotifyThread(_PR_THREAD_CONDQ_PTR(q), me);
 		q = q->next;
     }
     _PR_CVAR_UNLOCK(cvar);
@@ -623,7 +623,7 @@ PR_IMPLEMENT(PRStatus) PRP_NakedBroadcast(PRCondVar *cvar)
     q = cvar->condQ.next;
     while (q != &cvar->condQ) {
 		PR_LOG(_pr_cvar_lm, PR_LOG_MIN, ("PR_NotifyAll: cvar=%p", cvar));
-		NotifyThread(_PR_THREAD_CONDQ_PTR(q), me);
+		_PR_NotifyThread(_PR_THREAD_CONDQ_PTR(q), me);
 		q = q->next;
     }
 	_PR_MD_UNLOCK( &(cvar->ilock) );

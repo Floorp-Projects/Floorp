@@ -131,8 +131,8 @@ PR_EXTERN(struct PRThread*) _MD_get_attached_thread(void);
 		
 #define _MD_ATTACH_THREAD(threadp)
 
-#define _MD_SAVE_ERRNO(_thread)
-#define _MD_RESTORE_ERRNO(_thread)
+#define _MD_SAVE_ERRNO(_thread)			(_thread)->md.errcode = errno;
+#define _MD_RESTORE_ERRNO(_thread)		errno = (_thread)->md.errcode;
 
 extern struct _PRCPU  *_pr_primordialCPU;
 extern usema_t *_pr_irix_exit_sem;
@@ -216,6 +216,9 @@ struct _MDThread {
     PRInt32	id;
     PRInt32	suspending_id;
     int errcode;
+    PRStatus	*creation_status;	/* points to the variable in which
+					 * a newly created child thread is
+					 * to store its creation status */
 };
 
 struct _MDThreadStack {

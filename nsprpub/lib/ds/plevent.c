@@ -15,9 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#if defined(WIN16)
-#include <windows.h>
-#endif
 #include "plevent.h"
 #include "prmem.h"
 #include "prcmon.h"

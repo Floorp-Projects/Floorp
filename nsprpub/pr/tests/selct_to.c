@@ -103,8 +103,8 @@ int main(int argc, char **argv)
 	failed_already=1;
 	goto exit_now;
     }
-    addr.inet.family = AF_INET;
-    addr.inet.ip = PR_htonl(INADDR_ANY);
+    addr.inet.family = PR_AF_INET;
+    addr.inet.ip = PR_htonl(PR_INADDR_ANY);
     addr.inet.port = PR_htons(0);
     if (PR_Bind(listenSock1, &addr) == PR_FAILURE) {
 	fprintf(stderr, "Can't bind socket\n");
@@ -128,8 +128,8 @@ int main(int argc, char **argv)
 	failed_already=1;
 	goto exit_now;
     }
-    addr.inet.family = AF_INET;
-    addr.inet.ip = PR_htonl(INADDR_ANY);
+    addr.inet.family = PR_AF_INET;
+    addr.inet.ip = PR_htonl(PR_INADDR_ANY);
     addr.inet.port = PR_htons(0);
     if (PR_Bind(listenSock2, &addr) == PR_FAILURE) {
 	fprintf(stderr, "Can't bind socket\n");

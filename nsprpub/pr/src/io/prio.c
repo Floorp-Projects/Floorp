@@ -30,7 +30,7 @@ PRLock *_pr_filedesc_freelist_lock;
 
 void _PR_InitIO(void)
 {
-    PRIOMethods *methods = PR_GetFileMethods();
+    const PRIOMethods *methods = PR_GetFileMethods();
 
     _pr_filedesc_freelist = NULL;
     _pr_filedesc_freelist_lock = PR_NewLock();
@@ -75,7 +75,8 @@ PR_IMPLEMENT(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD osfd)
     return result;
 }
 
-PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(PRInt32 osfd, PRIOMethods *methods)
+PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
+    PRInt32 osfd, const PRIOMethods *methods)
 {
     PRFileDesc *fd;
 
@@ -147,7 +148,7 @@ PR_IMPLEMENT(PRInt32) PR_Poll(PRPollDesc *pds, PRIntn npds,
 	PRIntervalTime timeout)
 {
     PRPollDesc *pd, *epd;
-    PRInt32 n;
+    PRInt32 ready;
     PRThread *me = _PR_MD_CURRENT_THREAD();
 
     if (_PR_PENDING_INTERRUPT(me)) {
@@ -161,24 +162,24 @@ PR_IMPLEMENT(PRInt32) PR_Poll(PRPollDesc *pds, PRIntn npds,
     ** proc to check for data before blocking.
     */
     pd = pds;
-    n = 0;
+    ready = 0;
     for (pd = pds, epd = pd + npds; pd < epd; pd++) {
         PRFileDesc *fd = pd->fd;
-        PRInt16 in_flags;
-        if (NULL == fd) {
-            continue;
-        }
-        in_flags = pd->in_flags;
-        if (in_flags && fd->methods->poll) {
-            PRInt16 out_flags = (*fd->methods->poll)(fd, in_flags);
-            if (out_flags) {
-                pd->out_flags = out_flags;
-                n++;
+        PRInt16 in_flags = pd->in_flags;
+        if (NULL != fd)
+        {
+            if (in_flags && fd->methods->poll) {
+                PRInt16 out_flags;
+                in_flags = (*fd->methods->poll)(fd, in_flags, &out_flags);
+                if (0 != (in_flags & out_flags)) {
+                    pd->out_flags = out_flags;  /* ready already */
+                    ready++;
+                }
             }
         }
     }
-    if (n != 0) {
-        return n;
+    if (ready != 0) {
+        return ready;  /* don't need to block */
     }
 	return(_PR_MD_PR_POLL(pds, npds, timeout));
 }

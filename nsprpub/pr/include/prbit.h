@@ -49,18 +49,19 @@ PR_EXTERN(PRIntn) PR_FloorLog2(PRUint32 i);
 */
 #define PR_CEILING_LOG2(_log2,_n)   \
   PR_BEGIN_MACRO                    \
+    PRUint32 j_ = (PRUint32)(_n); 	\
     (_log2) = 0;                    \
-    if ((_n) & ((_n)-1))            \
+    if ((j_) & ((j_)-1))            \
 	(_log2) += 1;               \
-    if ((_n) >> 16)                 \
-	(_log2) += 16, (_n) >>= 16; \
-    if ((_n) >> 8)                  \
-	(_log2) += 8, (_n) >>= 8;   \
-    if ((_n) >> 4)                  \
-	(_log2) += 4, (_n) >>= 4;   \
-    if ((_n) >> 2)                  \
-	(_log2) += 2, (_n) >>= 2;   \
-    if ((_n) >> 1)                  \
+    if ((j_) >> 16)                 \
+	(_log2) += 16, (j_) >>= 16; \
+    if ((j_) >> 8)                  \
+	(_log2) += 8, (j_) >>= 8;   \
+    if ((j_) >> 4)                  \
+	(_log2) += 4, (j_) >>= 4;   \
+    if ((j_) >> 2)                  \
+	(_log2) += 2, (j_) >>= 2;   \
+    if ((j_) >> 1)                  \
 	(_log2) += 1;               \
   PR_END_MACRO
 
@@ -72,16 +73,17 @@ PR_EXTERN(PRIntn) PR_FloorLog2(PRUint32 i);
 */
 #define PR_FLOOR_LOG2(_log2,_n)   \
   PR_BEGIN_MACRO                    \
+    PRUint32 j_ = (PRUint32)(_n); 	\
     (_log2) = 0;                    \
-    if ((_n) >> 16)                 \
-	(_log2) += 16, (_n) >>= 16; \
-    if ((_n) >> 8)                  \
-	(_log2) += 8, (_n) >>= 8;   \
-    if ((_n) >> 4)                  \
-	(_log2) += 4, (_n) >>= 4;   \
-    if ((_n) >> 2)                  \
-	(_log2) += 2, (_n) >>= 2;   \
-    if ((_n) >> 1)                  \
+    if ((j_) >> 16)                 \
+	(_log2) += 16, (j_) >>= 16; \
+    if ((j_) >> 8)                  \
+	(_log2) += 8, (j_) >>= 8;   \
+    if ((j_) >> 4)                  \
+	(_log2) += 4, (j_) >>= 4;   \
+    if ((j_) >> 2)                  \
+	(_log2) += 2, (j_) >>= 2;   \
+    if ((j_) >> 1)                  \
 	(_log2) += 1;               \
   PR_END_MACRO
 

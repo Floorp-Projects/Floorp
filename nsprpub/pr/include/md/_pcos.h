@@ -69,15 +69,17 @@ typedef int PROSFD;
 /*
 ** Undo the macro define in the Microsoft header files...
 */
+#ifndef XP_OS2 /* Uh... this seems a bit insane in itself to we OS/2 folk */
 #ifdef _stat
 #undef _stat
 #endif
+#endif
 
 #ifdef OS2
-PR_EXTERN(PRStatus) _MD_OS2GetHostName(char *name, PRUint32 namelen);
+extern PRStatus _MD_OS2GetHostName(char *name, PRUint32 namelen);
 #define _MD_GETHOSTNAME _MD_OS2GetHostName
 #else
-PR_EXTERN(PRStatus) _MD_WindowsGetHostName(char *name, PRUint32 namelen);
+extern PRStatus _MD_WindowsGetHostName(char *name, PRUint32 namelen);
 #define _MD_GETHOSTNAME _MD_WindowsGetHostName
 #endif
 

@@ -169,10 +169,13 @@ struct _MDProcess {
 #define _MD_WRITE                     _PR_MD_WRITE
 #define _MD_WRITEV                    _PR_MD_WRITEV
 #define _MD_LSEEK                     _PR_MD_LSEEK
+#define _MD_LSEEK64                   _PR_MD_LSEEK64
 extern PRInt32 _MD_CloseFile(PRInt32 osfd);
 #define _MD_CLOSE_FILE                _MD_CloseFile
 #define _MD_GETFILEINFO               _PR_MD_GETFILEINFO
+#define _MD_GETFILEINFO64             _PR_MD_GETFILEINFO64
 #define _MD_GETOPENFILEINFO           _PR_MD_GETOPENFILEINFO
+#define _MD_GETOPENFILEINFO64         _PR_MD_GETOPENFILEINFO64
 #define _MD_STAT                      _PR_MD_STAT
 #define _MD_RENAME                    _PR_MD_RENAME     
 #define _MD_ACCESS                    _PR_MD_ACCESS     
@@ -224,8 +227,13 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_FSYNC                     _PR_MD_FSYNC
 
 #define _MD_INIT_ATOMIC()
+#if defined(_M_IX86) || defined(_X86_)
+#define _MD_ATOMIC_INCREMENT          _PR_MD_ATOMIC_INCREMENT
+#define _MD_ATOMIC_DECREMENT          _PR_MD_ATOMIC_DECREMENT
+#else /* non-x86 processors */
 #define _MD_ATOMIC_INCREMENT(x)       InterlockedIncrement((PLONG)x)
 #define _MD_ATOMIC_DECREMENT(x)       InterlockedDecrement((PLONG)x)
+#endif /* x86 */
 #define _MD_ATOMIC_SET(x,y)           InterlockedExchange((PLONG)x, (LONG)y)
 
 #define _MD_INIT_IO                   _PR_MD_INIT_IO
@@ -363,6 +371,7 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 
 /* --- Native-Thread Specific Definitions ------------------------------- */
 
+#ifdef _PR_USE_STATIC_TLS
 extern __declspec(thread) struct PRThread *_pr_currentThread;
 #define _MD_CURRENT_THREAD() _pr_currentThread
 #define _MD_SET_CURRENT_THREAD(_thread) (_pr_currentThread = (_thread))
@@ -374,6 +383,19 @@ extern __declspec(thread) struct PRThread *_pr_thread_last_run;
 extern __declspec(thread) struct _PRCPU *_pr_currentCPU;
 #define _MD_CURRENT_CPU() _pr_currentCPU
 #define _MD_SET_CURRENT_CPU(_cpu) (_pr_currentCPU = (0))
+#else /* _PR_USE_STATIC_TLS */
+extern DWORD _pr_currentThreadIndex;
+#define _MD_CURRENT_THREAD() ((PRThread *) TlsGetValue(_pr_currentThreadIndex))
+#define _MD_SET_CURRENT_THREAD(_thread) TlsSetValue(_pr_currentThreadIndex, _thread)
+
+extern DWORD _pr_lastThreadIndex;
+#define _MD_LAST_THREAD() ((PRThread *) TlsGetValue(_pr_lastThreadIndex))
+#define _MD_SET_LAST_THREAD(_thread) TlsSetValue(_pr_lastThreadIndex, 0)
+
+extern DWORD _pr_currentCPUIndex;
+#define _MD_CURRENT_CPU() ((struct _PRCPU *) TlsGetValue(_pr_currentCPUIndex))
+#define _MD_SET_CURRENT_CPU(_cpu) TlsSetValue(_pr_currentCPUIndex, 0)
+#endif /* _PR_USE_STATIC_TLS */
 
 // wtc. extern __declspec(thread) PRUintn _pr_ints_off;
 // lth. #define _MD_SET_INTSOFF(_val) (_pr_ints_off = (_val))

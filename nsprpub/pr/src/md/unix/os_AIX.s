@@ -15,6 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
+
 .set r0,0; .set SP,1; .set RTOC,2; .set r3,3; .set r4,4
 .set r5,5; .set r6,6; .set r7,7; .set r8,8; .set r9,9
 .set r10,10; .set r11,11; .set r12,12; .set r13,13; .set r14,14

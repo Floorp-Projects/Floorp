@@ -38,14 +38,14 @@
  */
 
 #define PR_LINKER_ARCH          "aix"
-#define _PR_SI_SYSNAME		"AIX"
-#define _PR_SI_ARCHITECTURE	"rs6000"
-#define PR_DLL_SUFFIX		".so"
+#define _PR_SI_SYSNAME		    "AIX"
+#define _PR_SI_ARCHITECTURE	    "rs6000"
+#define PR_DLL_SUFFIX		    ".so"
 
-#define _PR_VMBASE	 	0x30000000
-#define _PR_STACK_VMBASE	0x50000000
+#define _PR_VMBASE	 	        0x30000000
+#define _PR_STACK_VMBASE	    0x50000000
 #define _MD_DEFAULT_STACK_SIZE	65536L
-#define _MD_MMAP_FLAGS		MAP_PRIVATE
+#define _MD_MMAP_FLAGS		    MAP_PRIVATE
 
 #define NEED_TIME_R
 #undef  HAVE_STACK_GROWING_UP
@@ -53,11 +53,18 @@
 #undef	HAVE_WEAK_MALLOC_SYMBOLS
 #define	HAVE_DLL
 #define	USE_DLFCN
+#define _PR_HAVE_SOCKADDR_LEN
 
-#undef _PR_HAVE_ATOMIC_OPS
+#define _MD_GET_INTERVAL        _PR_UNIX_GetInterval
+#define _MD_INTERVAL_PER_SEC    _PR_UNIX_TicksPerSecond
 
-#define _MD_GET_INTERVAL                  _PR_UNIX_GetInterval
-#define _MD_INTERVAL_PER_SEC              _PR_UNIX_TicksPerSecond
+/* The atomic operations */
+#include <sys/atomic_op.h>
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+#define _MD_ATOMIC_INCREMENT(val)   ((PRInt32)fetch_and_add((atomic_p)val, 1) + 1)
+#define _MD_ATOMIC_DECREMENT(val)   ((PRInt32)fetch_and_add((atomic_p)val, -1) - 1)
+#define _MD_ATOMIC_SET(val, newval) _AIX_AtomicSet(val, newval)
 
 #define USE_SETJMP
 

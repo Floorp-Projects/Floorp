@@ -20,12 +20,13 @@
 
 /*
  * NSPR 2.0 overrides the system select() and poll() functions.
- * On AIX 4.2, we use dlopen("/unix", 0) and dlsym() to get to the
- * original system select() and poll() functions.
+ * On AIX 4.2, we use dlopen("/unix", RTLD_NOW) and dlsym() to get
+ * at the original system select() and poll() functions.
  */
 
 #ifndef AIX4_1
 
+#include <sys/atomic_op.h>
 #include <sys/select.h>
 #include <sys/poll.h>
 #include <dlfcn.h>
@@ -34,13 +35,25 @@ static void *aix_handle = NULL;
 static int (*aix_select_fcn)() = NULL;
 static int (*aix_poll_fcn)() = NULL;
 
+PRInt32 _AIX_AtomicSet(PRInt32 *val, PRInt32 newval)
+{
+    PRIntn oldval;
+    boolean_t stored;
+    oldval = fetch_and_add((atomic_p)val, 0);
+    do
+    {
+        stored = compare_and_swap((atomic_p)val, &oldval, newval);
+    } while (!stored);
+    return oldval;
+}  /* _AIX_AtomicSet */
+
 int _MD_SELECT(int width, fd_set *r, fd_set *w, fd_set *e, struct timeval *t)
 {
     int rv;
 
     if (!aix_select_fcn) {
 	if (!aix_handle) {
-	    aix_handle = dlopen("/unix",0);
+	    aix_handle = dlopen("/unix", RTLD_NOW);
 	    if (!aix_handle) {
 	        PR_SetError(PR_UNKNOWN_ERROR, 0);
 	        return -1;
@@ -62,7 +75,7 @@ int _MD_POLL(void *listptr, unsigned long nfds, long timeout)
 
     if (!aix_poll_fcn) {
 	if (!aix_handle) {
-	    aix_handle = dlopen("/unix",0);
+	    aix_handle = dlopen("/unix", RTLD_NOW);
 	    if (!aix_handle) {
 	        PR_SetError(PR_UNKNOWN_ERROR, 0);
 	        return -1;
@@ -95,9 +108,37 @@ void _pr_aix_dummy()
 
 #if !defined(PTHREADS_USER)
 
+#ifdef _PR_PTHREADS
+
+/*
+ * AIX 4.3 has sched_yield().  AIX 4.2 has pthread_yield().
+ * So we look up the appropriate function pointer at run time.
+ */
+
+int (*_PT_aix_yield_fcn)() = NULL;
+
+void _MD_EarlyInit(void)
+{
+    void *main_app_handle = NULL;
+
+    main_app_handle = dlopen(NULL, RTLD_NOW);
+    PR_ASSERT(NULL != main_app_handle);
+
+    _PT_aix_yield_fcn = (int(*)())dlsym(main_app_handle, "sched_yield");
+    if (!_PT_aix_yield_fcn) {
+        _PT_aix_yield_fcn = (int(*)())dlsym(main_app_handle,"pthread_yield");
+        PR_ASSERT(NULL != _PT_aix_yield_fcn);
+    }
+    dlclose(main_app_handle);
+}
+
+#else /* _PR_PTHREADS */
+
 void _MD_EarlyInit(void)
 {
 }
+
+#endif /* _PR_PTHREADS */
 
 PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 {

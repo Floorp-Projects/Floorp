@@ -153,10 +153,10 @@ _server_thread(void *arg_id)
 		goto done;
 	}
 
-	memset(&sa, 0 , PR_NETADDR_SIZE(&sa));
-	sa.inet.family = AF_INET;
+	memset(&sa, 0 , sizeof(sa));
+	sa.inet.family = PR_AF_INET;
 	sa.inet.port = PORT_BASE + *id;
-	sa.inet.ip = PR_htonl(INADDR_ANY);
+	sa.inet.ip = PR_htonl(PR_INADDR_ANY);
 
 	if ( PR_Bind(sock, &sa) < 0) {
 		fprintf(stderr, "Error binding socket in server thread %d errno = %d\n", *id, errno);
@@ -283,7 +283,7 @@ _client_thread(void *arg_id)
 		goto done;
 	}
 
-	memset(&sa, 0 , PR_NETADDR_SIZE(&sa));
+	memset(&sa, 0 , sizeof(sa));
 	rv = PR_InitializeNetAddr(PR_IpAddrLoopback, PORT_BASE + *id, &sa);
 	PR_ASSERT(PR_SUCCESS == rv);
 	

@@ -200,6 +200,13 @@ static PRStatus PR_CALLBACK FileClose(PRFileDesc *fd)
     }
 }
 
+static PRInt16 PR_CALLBACK FilePoll(
+    PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags)
+{
+    *out_flags = 0;
+    return in_flags;
+}  /* FilePoll */
+
 PRIOMethods _pr_fileMethods = {
     PR_DESC_FILE,
     FileClose,
@@ -222,7 +229,7 @@ PRIOMethods _pr_fileMethods = {
     (PRSendFN)_PR_InvalidInt,		
     (PRRecvfromFN)_PR_InvalidInt,	
     (PRSendtoFN)_PR_InvalidInt,		
-    (PRPollFN)0,         
+    FilePoll,         
     (PRAcceptreadFN)_PR_InvalidInt,   
     (PRTransmitfileFN)_PR_InvalidInt, 
     (PRGetsocknameFN)_PR_InvalidStatus,	
@@ -233,7 +240,7 @@ PRIOMethods _pr_fileMethods = {
     (PRSetsocketoptionFN)_PR_InvalidStatus,	
 };
 
-PR_IMPLEMENT(PRIOMethods*) PR_GetFileMethods(void)
+PR_IMPLEMENT(const PRIOMethods*) PR_GetFileMethods(void)
 {
     return &_pr_fileMethods;
 }

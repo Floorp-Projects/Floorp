@@ -194,10 +194,13 @@ PR_EXTERN(PRIntn) pt_hpux_privcheck(void);
 /* Needed for garbage collection -- Look at PR_Suspend/PR_Resume implementation */
 #if defined(OSF1)
 #define PTHREAD_YIELD()            	pthread_yield_np()
-#elif defined(HPUX10_30) || defined(HPUX11) || defined(AIX4_3)
+#elif defined(HPUX10_30) || defined(HPUX11)
 #define PTHREAD_YIELD()            	sched_yield()
-#elif (defined(AIX) && !defined(AIX4_3)) || defined(HPUX)
+#elif defined(HPUX)
 #define PTHREAD_YIELD()            	pthread_yield()
+#elif defined(AIX)
+extern int (*_PT_aix_yield_fcn)();
+#define PTHREAD_YIELD()			(*_PT_aix_yield_fcn)()
 #elif defined(IRIX)
 #include <time.h>
 #define PTHREAD_YIELD() \

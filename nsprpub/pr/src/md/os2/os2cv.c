@@ -147,7 +147,7 @@ md_UnlockAndPostNotifies(
     }
 
     /* Release the lock before notifying */
-        LeaveCriticalSection(&lock->mutex);
+        DosReleaseMutexSem(lock->mutex);
 
     notified = &post;  /* this is where we start */
     do {
@@ -254,14 +254,14 @@ _PR_MD_WAIT_CV(_MDCVar *cv, _MDLock *lock, PRIntervalTime timeout )
         md_UnlockAndPostNotifies(lock, thred, cv);
     } else {
         AddThreadToCVWaitQueueInternal(thred, cv);
-        LeaveCriticalSection(&lock->mutex); 
+        DosReleaseMutexSem(lock->mutex); 
     }
 
     /* Wait for notification or timeout; don't really care which */
     rv = DosWaitEventSem(thred->md.blocked_sema.sem, msecs);
     DosResetEventSem(thred->md.blocked_sema.sem, &count);
 
-    EnterCriticalSection(&(lock->mutex));
+    _MD_LOCK(lock);
 
     PR_ASSERT(rv == NO_ERROR || rv == ERROR_TIMEOUT);
 
@@ -326,7 +326,7 @@ _PR_MD_UNLOCK(_MDLock *lock)
     if (0 != lock->notified.length) {
         md_UnlockAndPostNotifies(lock, NULL, NULL);
     } else {
-        LeaveCriticalSection(&lock->mutex);
+        DosReleaseMutexSem(lock->mutex);
     }
     return;
 }

@@ -19,7 +19,7 @@
 #include "primpl.h"
 #include <process.h>  /* for _beginthread() */
 
-APIRET (* APIENTRY QueryThreadContext)(TID, ULONG, PCONTEXTRECORD);
+APIRET (* APIENTRY QueryThreadContext)(OS2TID, ULONG, PCONTEXTRECORD);
 
 /* --- globals ------------------------------------------------ */
 _NSPR_TLS*        pThreadLocalStorage = 0;
@@ -83,7 +83,7 @@ _PR_MD_CREATE_THREAD(PRThread *thread,
                   PRThreadState state, 
                   PRUint32 stackSize)
 {
-    thread->md.handle = thread->id = (TID) _beginthread(
+    thread->md.handle = thread->id = (OS2TID) _beginthread(
                     (void(* _Optlink)(void*))start,
                     NULL, 
                     thread->stack->stackSize,

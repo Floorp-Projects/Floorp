@@ -1449,7 +1449,7 @@ PR_IMPLEMENT(char *) inet_ntoa(struct in_addr addr)
 }
 
 
-PR_IMPLEMENT(PRStatus) _MD_gethostname(char *name, int namelen)
+PRStatus _MD_gethostname(char *name, int namelen)
 {
 	OSStatus err;
 	InetInterfaceInfo info;

@@ -60,7 +60,7 @@ PRIntn _PR_MD_PUT_ENV(const char *name)
  *-----------------------------------------------------------------------
  */
 
-PRTime
+PR_IMPLEMENT(PRTime)
 PR_Now(void)
 {
     PRInt64 s, ms, ms2us, s2us;
@@ -601,3 +601,51 @@ PRStatus _MD_CloseFileMap(PRFileMap *fmap)
     PR_DELETE(fmap);
     return PR_SUCCESS;
 }
+
+/*
+ ***********************************************************************
+ *
+ * Atomic increment and decrement operations for x86 processors
+ *
+ * We don't use InterlockedIncrement and InterlockedDecrement
+ * because on NT 3.51 and Win95, they return a number with
+ * the same sign as the incremented/decremented result, rather
+ * than the result itself.  On NT 4.0 these functions do return
+ * the incremented/decremented result.
+ *
+ * The result is returned in the eax register by the inline
+ * assembly code.  We disable the harmless "no return value"
+ * warning (4035) for these two functions.
+ *
+ ***********************************************************************
+ */
+
+#if defined(_M_IX86) || defined(_X86_)
+
+#pragma warning(disable: 4035)
+PRInt32 _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
+{
+    __asm
+    {
+        mov ecx, val
+        mov eax, 1
+        xadd dword ptr [ecx], eax
+        inc eax
+    }
+}
+#pragma warning(default: 4035)
+
+#pragma warning(disable: 4035)
+PRInt32 _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
+{
+    __asm
+    {
+        mov ecx, val
+        mov eax, 0ffffffffh
+        xadd dword ptr [ecx], eax
+        dec eax
+    }
+}
+#pragma warning(default: 4035)
+
+#endif /* x86 processors */

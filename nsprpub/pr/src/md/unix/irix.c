@@ -308,10 +308,11 @@ sigchld_handler(int sig)
         if (WIFSIGNALED(status) && ((WTERMSIG(status) == SIGSEGV) ||
             (WTERMSIG(status) == SIGBUS) ||
             (WTERMSIG(status) == SIGABRT) ||
-            (WTERMSIG(status) == SIGILL)))
+            (WTERMSIG(status) == SIGILL))) {
 
-			prctl(PR_SETEXITSIG, SIGKILL);
-			exit(status);
+				prctl(PR_SETEXITSIG, SIGKILL);
+				exit(status);
+			}
     }
 }
 
@@ -437,19 +438,32 @@ void _PR_IRIX_CHILD_PROCESS()
 
 static PRStatus pr_cvar_wait_sem(PRThread *thread, PRIntervalTime timeout)
 {
-    struct timeval tv, *tvp;
-    fd_set rd;
     int rv;
 
-    if(timeout == PR_INTERVAL_NO_TIMEOUT) tvp = NULL;
-    else {
-        tv.tv_sec = PR_IntervalToSeconds(timeout);
-        tv.tv_usec = PR_IntervalToMicroseconds(
-            timeout - PR_SecondsToInterval(tv.tv_sec));
-        tvp = &tv;
-    }
-    FD_ZERO(&rd);
-    FD_SET(thread->md.cvar_pollsemfd, &rd);
+#ifdef _PR_USE_POLL
+	struct pollfd pfd;
+	int msecs;
+
+	if (timeout == PR_INTERVAL_NO_TIMEOUT)
+		msecs = -1;
+	else
+		msecs  = PR_IntervalToMilliseconds(timeout);
+#else
+    struct timeval tv, *tvp;
+    fd_set rd;
+
+	if(timeout == PR_INTERVAL_NO_TIMEOUT)
+		tvp = NULL;
+	else {
+		tv.tv_sec = PR_IntervalToSeconds(timeout);
+		tv.tv_usec = PR_IntervalToMicroseconds(
+		timeout - PR_SecondsToInterval(tv.tv_sec));
+		tvp = &tv;
+	}
+	FD_ZERO(&rd);
+	FD_SET(thread->md.cvar_pollsemfd, &rd);
+#endif
+
     /*
      * call uspsema only if a previous select call on this semaphore
      * did not timeout
@@ -461,8 +475,13 @@ static PRStatus pr_cvar_wait_sem(PRThread *thread, PRIntervalTime timeout)
         rv = 0;
 again:
     if(!rv) {
-        rv = _MD_SELECT(thread->md.cvar_pollsemfd + 1, &rd,
-            NULL,NULL,tvp);
+#ifdef _PR_USE_POLL
+		pfd.events = POLLIN;
+		pfd.fd = thread->md.cvar_pollsemfd;
+		rv = _MD_POLL(&pfd, 1, msecs);
+#else
+		rv = _MD_SELECT(thread->md.cvar_pollsemfd + 1, &rd, NULL,NULL,tvp);
+#endif
         if ((rv == -1) && (errno == EINTR)) {
 			rv = 0;
 			goto again;
@@ -559,10 +578,12 @@ PRUint32 stackSize)
 	PRThread *me = _PR_MD_CURRENT_THREAD();	
 	PRInt32 pid;
 	PRStatus rv;
+    PRStatus creation_status;
 
 	if (!_PR_IS_NATIVE_THREAD(me))
 		_PR_INTSOFF(is);
     thread->md.cvar_pollsem_select = 0;
+    thread->md.creation_status = &creation_status;
     thread->flags |= _PR_GLOBAL_SCOPE;
     pid = sprocsp(
         			spentry,            /* startup func    */
@@ -579,7 +600,7 @@ PRUint32 stackSize)
 		    blockproc(me->cpu->md.id);
         else
             blockproc(me->md.id);
-    	if (thread->md.cvar_pollsemfd < 0) {
+    	if (creation_status == PR_FAILURE) {
 			/*
 			 * the sproc failed to create a polled semaphore and exited
 			 */
@@ -681,17 +702,21 @@ _MD_InitThread(PRThread *thread, PRBool wakeup_parent)
 		thread->md.id = getpid();
 		thread->md.cvar_pollsemfd = -1;
 		if (new_poll_sem(&thread->md,0) == PR_FAILURE) {
-			if (wakeup_parent == PR_TRUE)
+			if (wakeup_parent == PR_TRUE) {
+				*thread->md.creation_status = PR_FAILURE;
 		 		unblockproc(getppid());
-			rv = PR_FAILURE;
+			}
+			return PR_FAILURE;
 		}
 		thread->md.cvar_pollsemfd =
 			_PR_OPEN_POLL_SEM(thread->md.cvar_pollsem);
 		if ((thread->md.cvar_pollsemfd < 0)) {
 			free_poll_sem(&thread->md);
-			if (wakeup_parent == PR_TRUE)
+			if (wakeup_parent == PR_TRUE) {
+				*thread->md.creation_status = PR_FAILURE;
 		 		unblockproc(getppid());
-			rv = PR_FAILURE;
+			}
+			return PR_FAILURE;
 		}
         setblockproccnt(thread->md.id, 0);
 		_MD_SET_SPROC_PID(getpid());	
@@ -744,8 +769,10 @@ _MD_InitThread(PRThread *thread, PRBool wakeup_parent)
 		/*
 		 * unblock the parent sproc
 		 */
-		if (wakeup_parent == PR_TRUE)
+		if (wakeup_parent == PR_TRUE) {
+			*thread->md.creation_status = PR_SUCCESS;
 			unblockproc(getppid());
+		}
     }
 	return rv;
 }
@@ -769,7 +796,9 @@ _MD_InitRunningCPU(_PRCPU *cpu)
 	_MD_SET_SPROC_PID(getpid());	
 	if (_pr_md_pipefd[0] >= 0) {
     	_PR_IOQ_MAX_OSFD(cpu) = _pr_md_pipefd[0];
+#ifndef _PR_USE_POLL
     	FD_SET(_pr_md_pipefd[0], &_PR_FD_READ_SET(cpu));
+#endif
 	}
 }
 

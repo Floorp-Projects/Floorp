@@ -36,6 +36,7 @@
 #undef  HAVE_STACK_GROWING_UP
 #define HAVE_DLL
 #define USE_DLFCN
+#define _PR_HAVE_SOCKADDR_LEN
 
 #define USE_SETJMP
 
@@ -155,41 +156,6 @@ extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
  * unwrapped version.
  */
 #define _MD_SELECT(nfds,r,w,e,tv) syscall(SYS_select,nfds,r,w,e,tv)
-
-#if defined(_PR_NEED_FAKE_POLL)
-
-/*
- * XXX: FreeBSD2 doesn't have poll(), but our pthreads code calls poll().
- * As a temporary measure, I implemented a fake poll() using select().
- * Here are the struct and macro definitions copied from sys/poll.h
- * on Solaris 2.5.
- */
-
-struct pollfd {
-    int fd;
-    short events;
-    short revents;
-};
-
-/* poll events */
-
-#define	POLLIN		0x0001		/* fd is readable */
-#define	POLLPRI		0x0002		/* high priority info at fd */
-#define	POLLOUT		0x0004		/* fd is writeable (won't block) */
-#define	POLLRDNORM	0x0040		/* normal data is readable */
-#define	POLLWRNORM	POLLOUT
-#define	POLLRDBAND	0x0080		/* out-of-band data is readable */
-#define	POLLWRBAND	0x0100		/* out-of-band data is writeable */
-
-#define	POLLNORM	POLLRDNORM
-
-#define	POLLERR		0x0008		/* fd has error condition */
-#define	POLLHUP		0x0010		/* fd has been hung up on */
-#define	POLLNVAL	0x0020		/* invalid pollfd entry */
-
-extern int poll(struct pollfd *, unsigned long, int);
-
-#endif /* _PR_NEED_FAKE_POLL */
 
 /* freebsd has INADDR_LOOPBACK defined, but in /usr/include/rpc/types.h, and I didn't
    want to be including that.. */

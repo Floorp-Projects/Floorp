@@ -24,19 +24,10 @@
 
 #if defined(_PR_PTHREADS)
 
+#include <pthread.h>
 #include <string.h>  /* for memset() */
 #include <sys/types.h>
 #include <dirent.h>
-
-/*
- * XXX: On Linux 2.0.27 sched.h uses this _P macro that seems to be undefined.
- * I suspect that it is a typo (should be __P).
- */
-#if defined(LINUX)
-#define _P(x) __P(x)
-#endif
-#include <pthread.h>
-
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -49,7 +40,7 @@
 #endif
 /* Linux (except glibc) and FreeBSD don't have poll */
 #if !(defined(LINUX) && !(defined(__GLIBC__) && __GLIBC__ >= 2)) \
-	&& !defined(FREEBSD)
+    && !defined(FREEBSD)
 #include <poll.h>
 #endif
 #ifdef AIX
@@ -71,7 +62,7 @@
 #if defined(SOLARIS)
 #define _PRSockOptVal_t char *
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(HPUX) \
-	|| defined(LINUX) || defined(FREEBSD)
+    || defined(LINUX) || defined(FREEBSD)
 #define _PRSockOptVal_t void *
 #else
 #error "Cannot determine architecture"
@@ -90,7 +81,6 @@
 #error "Cannot determine architecture"
 #endif
 
-static PRStatus pt_InitIOContinuation(void);
 static PRFileDesc *pt_SetMethods(PRIntn osfd, PRDescType type);
 
 static pthread_condattr_t _pt_cvar_attr;
@@ -99,6 +89,40 @@ static PRLock *_pr_rename_lock;  /* For PR_Rename() */
 
 extern struct _PT_Bookeeping pt_book;  /* defined in ptthread.c */
 extern PRIntn pt_schedpriv;  /* defined in ptthread.c */
+
+/**************************************************************************/
+
+/* These two functions are only used in assertions. */
+#if defined(DEBUG)
+
+static PRBool IsValidNetAddr(const PRNetAddr *addr)
+{
+    if ((addr != NULL)
+            && (addr->raw.family != AF_UNIX)
+#ifdef _PR_INET6
+            && (addr->raw.family != AF_INET6)
+#endif
+            && (addr->raw.family != AF_INET)) {
+        return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
+static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
+{
+    /*
+     * The definition of the length of a Unix domain socket address
+     * is not uniform, so we don't check it.
+     */
+    if ((addr != NULL)
+            && (addr->raw.family != AF_UNIX)
+            && (PR_NETADDR_SIZE(addr) != addr_len)) {
+        return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
+#endif /* DEBUG */
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -198,7 +222,7 @@ static void pt_Putfd(PRFileDesc *fd)
  * size_t or int.
  */
 #if (defined(LINUX) && defined(__GLIBC__) && __GLIBC__ >= 2 \
-	&& !defined(__alpha))
+    && !defined(__alpha))
 typedef socklen_t pt_SockLen;
 #elif defined(AIX) || (defined(LINUX) && defined(__alpha))
 typedef PRSize pt_SockLen;
@@ -211,8 +235,8 @@ typedef PRBool (*ContinuationFn)(pt_Continuation *op, PRInt16 revents);
 
 typedef enum pr_ContuationStatus
 {
-    pt_continuation_sumbitted,
-    pt_continuation_inprogress,
+    pt_continuation_pending,
+    pt_continuation_recycle,
     pt_continuation_abort,
     pt_continuation_done
 } pr_ContuationStatus;
@@ -261,31 +285,65 @@ struct pt_Continuation
 
     PRIntn syserrno;                        /* in case it failed, why (errno) */
     pr_ContuationStatus status;             /* the status of the operation */
-    PRCondVar complete;                     /* to notify the initiating thread */
+    PRCondVar *complete;                    /* to notify the initiating thread */
 };
 
 static struct pt_TimedQueue
 {
-    PRCallOnceType once;                    /* controls the initialization
-                                             * of this structure */
     PRLock *ml;                             /* a little protection */
     PRThread *thread;                       /* internal thread's identification */
-    PRCondVar *new_op;                      /* new operation supplied */
     PRUintn op_count;                       /* number of operations in the list */
     pt_Continuation *head, *tail;           /* head/tail of list of operations */
 
     pt_Continuation *op;                    /* timed operation furthest in future */
-    PRBool exitFlag;                        /* a Boolean flag for signaling the
-                                             * continuation thread to exit */
 } pt_tq;
 
 #if defined(DEBUG)
-static struct pt_debug_s
+
+PTDebug pt_debug;  /* this is shared between several modules */
+
+PR_IMPLEMENT(PTDebug) PT_GetStats() { return pt_debug; }
+
+PR_IMPLEMENT(void) PT_FPrintStats(PRFileDesc *debug_out, const char *msg)
 {
-    PRUintn predictionsFoiled;
-    PRUintn pollingListMax;
-    PRUintn continuationsServed;
-} pt_debug;
+    char buffer[100];
+    PRExplodedTime tod;
+    PRInt64 elapsed, aMil;
+    PTDebug stats = PT_GetStats();  /* a copy */
+    PR_ExplodeTime(stats.timeStarted, PR_LocalTimeParameters, &tod);
+    (void)PR_FormatTime(buffer, sizeof(buffer), "%T", &tod);
+
+    LL_SUB(elapsed, PR_Now(), stats.timeStarted);
+    LL_I2L(aMil, 1000000);
+    LL_DIV(elapsed, elapsed, aMil);
+    
+    if (NULL != msg) PR_fprintf(debug_out, "%s", msg);
+    PR_fprintf(
+        debug_out, "\tstarted: %s[%lld]\n", buffer, elapsed);
+    PR_fprintf(
+        debug_out, "\tmissed predictions: %u\n", stats.predictionsFoiled);
+    PR_fprintf(
+        debug_out, "\tpollingList max: %u\n", stats.pollingListMax);
+    PR_fprintf(
+        debug_out, "\tcontinuations served: %u\n", stats.continuationsServed);
+    PR_fprintf(
+        debug_out, "\trecycles needed: %u\n", stats.recyclesNeeded);
+    PR_fprintf(
+        debug_out, "\tquiescent IO: %u\n", stats.quiescentIO);
+    PR_fprintf(
+        debug_out, "\tlocks [created: %u, destroyed: %u]\n",
+        stats.locks_created, stats.locks_destroyed);
+    PR_fprintf(
+        debug_out, "\tlocks [acquired: %u, released: %u]\n",
+        stats.locks_acquired, stats.locks_released);
+    PR_fprintf(
+        debug_out, "\tcvars [created: %u, destroyed: %u]\n",
+        stats.cvars_created, stats.cvars_destroyed);
+    PR_fprintf(
+        debug_out, "\tcvars [notified: %u, delayed_delete: %u]\n",
+        stats.cvars_notified, stats.delayed_cv_deletes);
+}  /* PT_FPrintStats */
+
 #endif  /* DEBUG */
 
 /*
@@ -300,6 +358,19 @@ static void pt_InsertTimedInternal(pt_Continuation *op)
 {
     pt_Continuation *t_op = NULL;
     PRIntervalTime now = PR_IntervalNow();
+
+#if defined(DEBUG)
+    {
+        PRIntn count;
+        pt_Continuation *tmp;
+        PR_ASSERT((pt_tq.head == NULL) == (pt_tq.tail == NULL));
+        PR_ASSERT((pt_tq.head == NULL) == (pt_tq.op_count == 0));
+        for (tmp = pt_tq.head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
+        PR_ASSERT(count == pt_tq.op_count);
+        for (tmp = pt_tq.tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
+        PR_ASSERT(count == pt_tq.op_count);
+    }
+#endif /* defined(DEBUG) */
 
     /*
      * If this element operation isn't timed, it gets queued at the
@@ -364,7 +435,7 @@ done:
      * pointers are linked up correctly at all times so that we can
      * traverse the queue by starting with pt_tq.head and following
      * the 'next' pointers, without having to acquire the pt_tq.ml lock.
-     * (We do that in ContinuationThread.)  We traverse the 'prev'
+     * (we do that in pt_ContinuationThreadInternal).  We traverse the 'prev'
      * pointers only in this function, which is called with the lock held.
      *
      * Similar care is taken in pt_FinishTimedInternal where we remove
@@ -392,6 +463,32 @@ done:
 
     pt_tq.op_count += 1;
 
+#if defined(DEBUG)
+    {
+        PRIntn count;
+        pt_Continuation *tmp;
+        PR_ASSERT(pt_tq.head != NULL);
+        PR_ASSERT(pt_tq.tail != NULL);
+        PR_ASSERT(pt_tq.op_count != 0);
+        PR_ASSERT(pt_tq.head->prev == NULL);
+        PR_ASSERT(pt_tq.tail->next == NULL);
+        if (pt_tq.op_count > 1)
+        {
+            PR_ASSERT(pt_tq.head->next != NULL);
+            PR_ASSERT(pt_tq.tail->prev != NULL);
+        }
+        else
+        {
+            PR_ASSERT(pt_tq.head->next == NULL);
+            PR_ASSERT(pt_tq.tail->prev == NULL);
+        }
+        for (tmp = pt_tq.head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
+        PR_ASSERT(count == pt_tq.op_count);
+        for (tmp = pt_tq.tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
+        PR_ASSERT(count == pt_tq.op_count);
+    }
+#endif /* defined(DEBUG) */
+
 }  /* pt_InsertTimedInternal */
 
 /*
@@ -405,6 +502,32 @@ done:
 static pt_Continuation *pt_FinishTimedInternal(pt_Continuation *op)
 {
     pt_Continuation *next;
+
+#if defined(DEBUG)
+    {
+        PRIntn count;
+        pt_Continuation *tmp;
+        PR_ASSERT(pt_tq.head != NULL);
+        PR_ASSERT(pt_tq.tail != NULL);
+        PR_ASSERT(pt_tq.op_count != 0);
+        PR_ASSERT(pt_tq.head->prev == NULL);
+        PR_ASSERT(pt_tq.tail->next == NULL);
+        if (pt_tq.op_count > 1)
+        {
+            PR_ASSERT(pt_tq.head->next != NULL);
+            PR_ASSERT(pt_tq.tail->prev != NULL);
+        }
+        else
+        {
+            PR_ASSERT(pt_tq.head->next == NULL);
+            PR_ASSERT(pt_tq.tail->prev == NULL);
+        }
+        for (tmp = pt_tq.head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
+        PR_ASSERT(count == pt_tq.op_count);
+        for (tmp = pt_tq.tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
+        PR_ASSERT(count == pt_tq.op_count);
+    }
+#endif /* defined(DEBUG) */
 
     /* remove this one from the list */
     if (NULL == op->prev) pt_tq.head = op->next;
@@ -424,20 +547,39 @@ static pt_Continuation *pt_FinishTimedInternal(pt_Continuation *op)
 #if defined(DEBUG)
     pt_debug.continuationsServed += 1;
 #endif
-    PR_NotifyCondVar(&op->complete);
+    PR_NotifyCondVar(op->complete);
+
+#if defined(DEBUG)
+    {
+        PRIntn count;
+        pt_Continuation *tmp;
+        PR_ASSERT((pt_tq.head == NULL) == (pt_tq.tail == NULL));
+        PR_ASSERT((pt_tq.head == NULL) == (pt_tq.op_count == 0));
+        for (tmp = pt_tq.head, count = 0; tmp != NULL; tmp = tmp->next) count += 1;
+        PR_ASSERT(count == pt_tq.op_count);
+        for (tmp = pt_tq.tail, count = 0; tmp != NULL; tmp = tmp->prev) count += 1;
+        PR_ASSERT(count == pt_tq.op_count);
+    }
+#endif /* defined(DEBUG) */
 
     return next;
 }  /* pt_FinishTimedInternal */
 
-static void ContinuationThread(void *arg)
+static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
 {
     /* initialization */
     PRInt32 msecs, mx_poll_ticks;
-    struct pollfd *pollingList = 0;         /* list built for polling */
+    PRThreadPriority priority;              /* used to save caller's prio */
     PRIntn pollingListUsed;                 /* # entries used in the list */
     PRIntn pollingListNeeded;               /* # entries needed this time */
-    PRIntn pollingSlotsAllocated = 0;       /* # entries available in list */
+    static struct pollfd *pollingList = 0;  /* list built for polling */
+    static PRIntn pollingSlotsAllocated = 0;/* # entries available in list */
     
+    PR_Unlock(pt_tq.ml);  /* don't need that silly lock for a bit */
+
+    priority = PR_GetThreadPriority(pt_tq.thread);
+    PR_SetThreadPriority(pt_tq.thread, PR_PRIORITY_HIGH);
+
     mx_poll_ticks = (PRInt32)PR_MillisecondsToInterval(PT_DEFAULT_POLL_MSEC);
 
     /* do some real work */
@@ -447,16 +589,11 @@ static void ContinuationThread(void *arg)
         PRInt32 timeout;
         PRIntn pollIndex;
         PRIntervalTime now;
-        pt_Continuation *op;
+        pt_Continuation *op, *next_op;
 
-        PR_Lock(pt_tq.ml);
-        while (!pt_tq.exitFlag && (NULL == pt_tq.head))
-            PR_WaitCondVar(pt_tq.new_op, PR_INTERVAL_NO_TIMEOUT);
+        PR_ASSERT(NULL != pt_tq.head);
+
         pollingListNeeded = pt_tq.op_count;
-        PR_Unlock(pt_tq.ml);
-
-        /* Okay. We're history */
-        if (pt_tq.exitFlag) break;
 
     /*
      * We are not holding the pt_tq.ml lock now, so more items may
@@ -467,7 +604,7 @@ static void ContinuationThread(void *arg)
         if (pollingListNeeded > pollingSlotsAllocated)
         {
             if (NULL != pollingList) PR_DELETE(pollingList);
-            pollingList = (struct pollfd*)PR_Malloc(
+            pollingList = (struct pollfd*)PR_MALLOC(
                 pollingListNeeded * sizeof(struct pollfd));
             PR_ASSERT(NULL != pollingList);
             pollingSlotsAllocated = pollingListNeeded;
@@ -477,6 +614,23 @@ static void ContinuationThread(void *arg)
         if (pollingListNeeded > pt_debug.pollingListMax)
             pt_debug.pollingListMax = pollingListNeeded;
 #endif
+
+        /*
+        ** This is interrupt processing. If this thread was interrupted,
+        ** the thread state will have the PT_THREAD_ABORTED bit set. This
+        ** overrides good completions as well as timeouts.
+        **
+        ** BTW, it does no good to hold the lock here. This lock doesn't
+        ** protect the thread structure in any way. Testing the bit and
+        ** (perhaps) resetting it are safe 'cause it's the only modifiable
+        ** bit in that word.
+        */
+        if (pt_tq.thread->state & PT_THREAD_ABORTED)
+        {
+            my_op->status = pt_continuation_abort;
+            pt_tq.thread->state &= ~PT_THREAD_ABORTED;
+        }
+
 
         /*
          * Build up a polling list.
@@ -493,13 +647,21 @@ static void ContinuationThread(void *arg)
             {
                 op->result.code = -1;
                 op->syserrno = EINTR;
-                op = pt_FinishTimedInternal(op);
+                next_op = pt_FinishTimedInternal(op);
+                if (op == my_op) goto recycle;
+                else op = next_op;
+                PR_ASSERT(NULL != pt_tq.head);
             }
             else
             {
-                if (pollingListUsed == pollingSlotsAllocated) break;
-                PR_ASSERT(pt_continuation_done != op->status);
-                op->status = pt_continuation_inprogress;
+                op->status = pt_continuation_pending;
+                if (pollingListUsed >= pollingSlotsAllocated)
+                {
+#if defined(DEBUG)
+                    pt_debug.predictionsFoiled += 1;
+#endif
+                    break;
+                }
                 pollingList[pollingListUsed].revents = 0;
                 pollingList[pollingListUsed].fd = op->arg1.osfd;
                 pollingList[pollingListUsed].events = op->event;
@@ -507,25 +669,6 @@ static void ContinuationThread(void *arg)
                 op = op->next;
             }
         }
-
-        PR_Unlock(pt_tq.ml);
-
-        /*
-         * If 'op' isn't NULL at this point, then we didn't get to
-         * the end of the list. That means that more items got added
-         * to the list than we anticipated. So, forget this iteration,
-         * go around the horn again.
-         * One would hope this doesn't happen all that often.
-         */
-        if (NULL != op)
-        {
-#if defined(DEBUG)
-            pt_debug.predictionsFoiled += 1;  /* keep track */
-#endif
-            continue;  /* make it rethink things */
-        }
-
-        if (NULL == pt_tq.head) continue;  /* did list evaporate? */
 
         /*
          * We don't want to wait forever on this poll. So keep
@@ -542,15 +685,27 @@ static void ContinuationThread(void *arg)
             if (timeout <= 0) msecs = 0;  /* already timed out */
             else if (timeout >= mx_poll_ticks) msecs = PT_DEFAULT_POLL_MSEC;
             else msecs = (PRInt32)PR_IntervalToMilliseconds(timeout);
-    }
+        }
+
+        PR_Unlock(pt_tq.ml);
+
+        /*
+         * If 'op' isn't NULL at this point, then we didn't get to
+         * the end of the list. That means that more items got added
+         * to the list than we anticipated. So, forget this iteration,
+         * go around the horn again.
+         * One would hope this doesn't happen all that often.
+         */
+        if (NULL != op) continue;  /* make it rethink things */
 
         rv = poll(pollingList, pollingListUsed, msecs);
         
         if ((-1 == rv) && ((errno == EINTR) || (errno == EAGAIN)))
             continue; /* go around the loop again */
 
-    if (rv > 0)
-    {
+        PR_Lock(pt_tq.ml);
+        if (rv > 0)
+        {
             /*
              * poll() says that something in our list is ready for some more
              * action. Find it, load up the operation and see what happens.
@@ -589,12 +744,12 @@ static void ContinuationThread(void *arg)
                      * the continuation function. If it reports completion,
                      * finish off the operation.
                      */
-                    if ((pt_continuation_inprogress == op->status)
+                    if ((pt_continuation_pending == op->status)
                     && (op->function(op, pollingList[pollIndex].revents)))
                     {
-                        PR_Lock(pt_tq.ml);
-                        op = pt_FinishTimedInternal(op);
-                        PR_Unlock(pt_tq.ml);
+                        next_op = pt_FinishTimedInternal(op);
+                        if (op == my_op) goto recycle;
+                        else op = next_op;
                     }
                     continue;
                 }
@@ -607,97 +762,135 @@ static void ContinuationThread(void *arg)
          * for good completions. Those that just made it under the
          * wire are lucky, but none the less, valid.
          */
-        if ((NULL != pt_tq.head)
+        now = PR_IntervalNow();
+        while ((NULL != pt_tq.head)
         && (PR_INTERVAL_NO_TIMEOUT != pt_tq.head->timeout))
         {
-            now = PR_IntervalNow();
-            while ((PRInt32)(pt_tq.head->absolute - now) <= 0)
-            {
-                /* 
-                 * The leading element of the timed queue has timed
-                 * out. Get rid of it. In any case go around the
-                 * loop again, computing the polling list, checking
-                 * for interrupted operations.
-                 */
+            op = pt_tq.head;  /* get a copy of this before finishing it */
+            if ((PRInt32)(op->absolute - now) > 0) break;
+            /* 
+             * The head element of the timed queue has timed out. Record
+             * the reason for completion and take it out of the list.
+             */
+            op->result.code = -1;
+            op->syserrno = ETIMEDOUT;
+            (void)pt_FinishTimedInternal(op);
 
-                PR_Lock(pt_tq.ml);
-                pt_tq.head->result.code = -1;
-                pt_tq.head->syserrno = ETIMEDOUT;
-                (void)pt_FinishTimedInternal(pt_tq.head);
-                PR_Unlock(pt_tq.ml);
-                if ((NULL == pt_tq.head)
-                || (PR_INTERVAL_NO_TIMEOUT == pt_tq.head->timeout))
-                    break;
-            }
+            /* 
+             * If it's 'my_op' then we have to switch threads. Exit w/o
+             * finishing the scan. The scan will be completed when another
+             * thread calls in acting as the continuation thread. 
+             */
+            if (op == my_op) goto recycle;  /* exit w/o unlocking */
         }
+        PR_Unlock(pt_tq.ml);  /* unlock and go back around again */
     }
-    if (NULL != pollingList) PR_DELETE(pollingList);
-}  /* ContinuationThread */
+
+recycle:
+    /*
+    ** Recycling the continuation thread.
+    **
+    ** The thread we were using for I/O continuations just completed 
+    ** the I/O it submitted. It has to return to it's caller. We need
+    ** another thread to act in the continuation role. We can do that
+    ** by taking any operation off the timed queue, setting its state
+    ** to 'recycle' and notifying the condition.
+    **
+    ** Selecting a likely thread seems like magic. I'm going to try
+    ** using one that has the longest (or no) timeout, pt_tq.tail.
+    ** If that slot's empty, then there's no outstanding I/O and we
+    ** don't need a thread at all.
+    **
+    ** BTW, we're locked right now, and we'll be returning with the
+    ** the lock held as well. Seems odd, doesn't it?
+    */
+
+    PR_SetThreadPriority(pt_tq.thread, priority);  /* reset back to caller's */
+
+    PR_ASSERT((NULL == pt_tq.head) == (0 == pt_tq.op_count));
+    PR_ASSERT((NULL == pt_tq.head) == (NULL == pt_tq.tail));
+    PR_ASSERT(pt_continuation_done == my_op->status);
+    
+    if (NULL != pt_tq.tail)
+    {
+        pt_tq.tail->status = pt_continuation_recycle;
+        PR_NotifyCondVar(pt_tq.tail->complete);
+#if defined(DEBUG)
+        pt_debug.recyclesNeeded += 1;
+#endif
+    }
+#if defined(DEBUG)
+     else pt_debug.quiescentIO += 1;
+#endif
+
+}  /* pt_ContinuationThreadInternal */
 
 static PRIntn pt_Continue(pt_Continuation *op)
 {
     PRIntn rc;
     PRStatus rv;
-#ifdef DEBUG
-    PRBool waitcv_interrupted = PR_FALSE;
-#endif /* DEBUG */
-
-    PR_CallOnce(&pt_tq.once, pt_InitIOContinuation);
-
+    PRThread *self = PR_GetCurrentThread();
+    /* lazy allocation of the thread's cv */
+    if (NULL == self->io_cv)
+        self->io_cv = PR_NewCondVar(pt_tq.ml);
     /* Finish filling in the blank slots */
-    /* op->complete = PR_NewCondVar(pt_tq.ml); */
-    op->complete.lock = pt_tq.ml;
-    rc = PTHREAD_COND_INIT(op->complete.cv, _pt_cvar_attr);  PR_ASSERT(0 == rc);
-    op->status = pt_continuation_sumbitted;
+    op->complete = self->io_cv;
+    op->status = pt_continuation_pending;  /* set default value */
     PR_Lock(pt_tq.ml);  /* we provide the locking */
 
     pt_InsertTimedInternal(op);  /* insert in the structure */
 
-    PR_NotifyCondVar(pt_tq.new_op);  /* notify the continuation thread */
-
-    while (pt_continuation_done != op->status)  /* wait for completion */
+    /*
+    ** At this point, we try to decide whether there is a continuation
+    ** thread, or whether we should assign this one to serve in that role.
+    */
+    do
     {
-        rv = PR_WaitCondVar(&op->complete, PR_INTERVAL_NO_TIMEOUT);
-        /*
-         * If we get interrupted, we set state the continuation thread will
-         * see and allow it to finish the I/O operation w/ error. That way
-         * the rule that only the continuation thread is removing elements
-         * from the list is still valid.
-         *
-         * Don't call interrupt on the continuation thread. That'll just
-         * irritate him. He's cycling around at least every mx_poll_ticks
-         * anyhow and should notice the request in there.
-         */
-        if ((PR_FAILURE == rv)
-        && (PR_PENDING_INTERRUPT_ERROR == PR_GetError()))
+        if (NULL == pt_tq.thread)
         {
-#ifdef DEBUG
-            waitcv_interrupted = PR_TRUE;
-#endif /* DEBUG */
-            if (pt_continuation_done != op->status)
-            {
-                /* tell the continuation thread to abort the operation */
-                op->status = pt_continuation_abort;
-            }
-            else
-            {
-                op->result.code = -1;
-                op->syserrno = EINTR;
-            }
+            /*
+            ** We're the one. Call the processing function with the lock
+            ** held. It will return with it held as well, though there
+            ** will certainly be times within the function when it gets
+            ** released.
+            */
+            pt_tq.thread = PR_GetCurrentThread();  /* I'm taking control */
+            pt_ContinuationThreadInternal(op); /* go slash and burn */
+            PR_ASSERT(pt_continuation_done == op->status);
+            pt_tq.thread = NULL;  /* I'm abdicating my rule */
         }
-    }
+        else
+        {
+            rv = PR_WaitCondVar(op->complete, PR_INTERVAL_NO_TIMEOUT);
+            /*
+             * If we get interrupted, we set state the continuation thread will
+             * see and allow it to finish the I/O operation w/ error. That way
+             * the rule that only the continuation thread is removing elements
+             * from the list is still valid.
+             *
+             * Don't call interrupt on the continuation thread. That'll just
+             * irritate him. He's cycling around at least every mx_poll_ticks
+             * anyhow and should notice the request in there. When he does
+             * notice, this operation will be finished and the op's status
+             * marked as pt_continuation_done.
+             */
+            if ((PR_FAILURE == rv)  /* the wait failed */
+            && (pt_continuation_pending == op->status)  /* but the op hasn't */
+            && (PR_PENDING_INTERRUPT_ERROR == PR_GetError()))  /* was interrupted */
+            {
+                op->status = pt_continuation_abort;  /* go around the loop again */
+            }
+            /*
+             * If we're to recycle, continue within this loop. This will
+             * cause this thread to be come the continuation thread.
+             */
 
-    PR_Unlock(pt_tq.ml);  /* we provide the locking */
-    rc = pthread_cond_destroy(&op->complete.cv); PR_ASSERT(0 == rc);
+        }
+    } while (pt_continuation_done != op->status);
 
-    /* make sure that the continuation thread did abort the operation */
-#ifdef DEBUG
-    if (PR_TRUE == waitcv_interrupted)
-    {
-        PR_ASSERT(-1 == op->result.code);
-        PR_ASSERT(EINTR == op->syserrno);
-    }
-#endif /* DEBUG */
+
+    PR_Unlock(pt_tq.ml);  /* we provided the locking */
+
     return op->result.code;  /* and the primary answer */
 }  /* pt_Continue */
 
@@ -820,14 +1013,13 @@ static PRBool pt_writev_cont(pt_Continuation *op, PRInt16 revents)
      * modify an individual vector parms or we might have to eliminate
      * a pair altogether.
      */
-    PRIntn bytes = writev(
-        op->arg1.osfd, (struct iovec*)op->arg2.buffer, op->arg3.amount);
+    struct iovec *iov = (struct iovec*)op->arg2.buffer;
+    PRIntn bytes = writev(op->arg1.osfd, iov, op->arg3.amount);
     op->syserrno = errno;
     if (bytes > 0)  /* this is progress */
     {
         PRIntn iov_index;
-        struct iovec *iov = (struct iovec*)op->arg2.buffer;
-    op->result.code += bytes;  /* accumulate the number sent */
+        op->result.code += bytes;  /* accumulate the number sent */
         for (iov_index = 0; iov_index < op->arg3.amount; ++iov_index)
         {
             /* how much progress did we make in the i/o vector? */
@@ -921,63 +1113,27 @@ static PRBool pt_hpux_transmitfile_cont(pt_Continuation *op, PRInt16 revents)
 }
 #endif  /* HPUX11 */
 
-#if !defined(PT_NO_ATFORK)
-
-static void pt_BeforeFork()
-{
-    PRStatus rv;
-    PRThread *thred = pt_tq.thread;
-
-    /*
-     * We shut down the continuation thread cleanly only if there are
-     * no other threads in the process when fork() is called.
-     * If there are other threads, they won't be duplicated in the child
-     * process.  Then the child process may already be unclean, so there
-     * is no point for us to try to be clean.
-     */
-
-    if ((NULL != thred) && (2 == pt_book.user + pt_book.system))
-    {
-        /* pt_tq should be empty */
-        PR_ASSERT((0 == pt_tq.op_count)
-            && (NULL == pt_tq.head)
-            && (NULL == pt_tq.tail)
-            && (NULL == pt_tq.op));
-        pt_tq.exitFlag = PR_TRUE;
-        rv = PR_Interrupt(thred);
-        PR_ASSERT(PR_SUCCESS == rv);
-        rv = PR_JoinThread(thred);
-        PR_ASSERT(PR_SUCCESS == rv);
-        pt_tq.exitFlag = PR_FALSE;
-        /* Indicates that the continuation thread is shut down cleanly */
-        pt_tq.thread = NULL;
-        memset(&pt_tq.once, 0, sizeof(pt_tq.once));
-        PR_ASSERT(1 == pt_book.user + pt_book.system);
-    }
-}  /* pt_BeforeFork */
-
-static void pt_AfterForkParent(void)
-{
-}  /* pt_AfterForkParent */
-
-static void pt_AfterForkChild(void)
-{
-    /*
-     * pt_tq may be in a corrupted state if the continuation thread
-     * existed and was not terminated cleanly before fork.  In this
-     * case, we expect the child process to call exec immediately.
-     */
-}  /* pt_AfterForkChild */
-
-#endif  /* PT_NO_ATFORK */
-
 void _PR_InitIO()
 {
+    PRIntn rv;
     _pr_stdin = pt_SetMethods(0, PR_DESC_FILE);
     _pr_stdout = pt_SetMethods(1, PR_DESC_FILE);
     _pr_stderr = pt_SetMethods(2, PR_DESC_FILE);
 
     PR_ASSERT(_pr_stdin && _pr_stdout && _pr_stderr);
+
+    pt_tq.ml = PR_NewLock();
+    PR_ASSERT(NULL != pt_tq.ml);
+
+#if defined(DEBUG)
+    memset(&pt_debug, 0, sizeof(PTDebug));
+    pt_debug.timeStarted = PR_Now();
+#endif
+
+    rv = PTHREAD_CONDATTR_INIT(&_pt_cvar_attr); 
+    PR_ASSERT(0 == rv);
+
+    pt_tq.thread = NULL;
 
     _pr_flock_lock = PR_NewLock();
     PR_ASSERT(NULL != _pr_flock_lock);
@@ -988,41 +1144,6 @@ void _PR_InitIO()
     PR_ASSERT(NULL != pt_fd_cache.ml);
     pt_fd_cache.limit = FD_SETSIZE;
 }  /* _PR_InitIO */
-
-static PRStatus pt_InitIOContinuation()
-{
-    PRIntn rv;
-
-    PR_ASSERT((0 == pt_tq.op_count)
-        && (NULL == pt_tq.head)
-        && (NULL == pt_tq.tail)
-        && (NULL == pt_tq.op)
-        && (PR_FALSE == pt_tq.exitFlag));
-
-    if (NULL == pt_tq.ml)
-    {
-        /* The very first time */
-        pt_tq.ml = PR_NewLock();
-        PR_ASSERT(NULL != pt_tq.ml);
-        pt_tq.new_op = PR_NewCondVar(pt_tq.ml);
-        PR_ASSERT(NULL != pt_tq.new_op);
-        rv = PTHREAD_CONDATTR_INIT(&_pt_cvar_attr);
-        PR_ASSERT(0 == rv);
-
-#if !defined(PT_NO_ATFORK)
-	rv = pthread_atfork(pt_BeforeFork,
-            pt_AfterForkParent, pt_AfterForkChild);
-        PR_ASSERT(0 == rv);
-#endif
-    }
-
-    pt_tq.thread = PR_CreateThread(
-        PR_SYSTEM_THREAD, ContinuationThread, NULL,
-        PR_PRIORITY_URGENT, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
-    PR_ASSERT(NULL != pt_tq.thread);
-
-    return PR_SUCCESS;
-}
 
 PR_IMPLEMENT(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD osfd)
 {
@@ -1074,7 +1195,8 @@ static void pt_MapError(void (*mapper)(PRIntn), PRIntn syserrno)
 static PRStatus pt_Close(PRFileDesc *fd)
 {
     PRIntn syserrno, rv = 0;
-    if ((NULL == fd) || (NULL == fd->secret))
+    if ((NULL == fd) || (NULL == fd->secret) ||
+				(_PR_FILEDESC_OPEN != fd->secret->state))
     {
         PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
         return PR_FAILURE;
@@ -1230,7 +1352,7 @@ static PRInt32 pt_Writev(
          */
         struct iovec *osiov = NULL, *tiov;
         PRIntn osiov_len = iov_len - iov_index;  /* recompute */
-        osiov = (struct iovec*)PR_Malloc(osiov_len * sizeof(struct iovec));
+        osiov = (struct iovec*)PR_MALLOC(osiov_len * sizeof(struct iovec));
         PR_ASSERT(NULL != osiov);
         for (tiov = osiov; iov_index < iov_len; ++iov_index)
         {
@@ -1413,10 +1535,14 @@ static PRStatus pt_Connect(
 
 PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
 {
-    PRInt32 osfd;
-    PRFileDesc *bottom = pd->fd;
     int err;
+    PRInt32 osfd;
+    PRFileDesc *bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
 
+    if (NULL == bottom) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
     if (pd->out_flags & PR_POLL_NVAL) {
         PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
         return PR_FAILURE;
@@ -1427,9 +1553,6 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
         return PR_FAILURE;
     }
 
-    while (bottom->lower != NULL) {
-        bottom = bottom->lower;
-    }
     osfd = bottom->secret->md.osfd;
 
     err = _MD_unix_get_nonblocking_connect_error(osfd);
@@ -1484,13 +1607,8 @@ static PRFileDesc* pt_Accept(
     if (newfd == NULL) close(osfd);  /* $$$ whoops! this doesn't work $$$ */
     else
     {
-        PR_ASSERT((NULL == addr) || (PR_NETADDR_SIZE(addr) == addr_len));
-#if defined(_PR_INET6)
-        PR_ASSERT((NULL == addr) || (addr->raw.family == AF_INET)
-                || (addr->raw.family == AF_INET6));
-#else
-        PR_ASSERT((NULL == addr) || (addr->raw.family == AF_INET));
-#endif
+        PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
+        PR_ASSERT(IsValidNetAddrLen(addr, addr_len) == PR_TRUE);
     }
     return newfd;
 
@@ -1506,18 +1624,27 @@ static PRStatus pt_Bind(PRFileDesc *fd, const PRNetAddr *addr)
 
     if (pt_TestAbort()) return PR_FAILURE;
 
-#if defined(_PR_INET6)
-    PR_ASSERT(addr->raw.family == AF_INET || addr->raw.family == AF_INET6);
-#else
-    PR_ASSERT(addr->raw.family == AF_INET);
-#endif
+    PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
 
-    rv = setsockopt(
-        fd->secret->md.osfd, SOL_SOCKET, SO_REUSEADDR,
-        (_PRSockOptVal_t) &one, sizeof(one));
-    if (rv == -1) {
-        pt_MapError(_PR_MD_MAP_SETSOCKOPT_ERROR, errno);
-        return PR_FAILURE;
+    if (addr->raw.family == AF_UNIX)
+    {
+        /* Disallow relative pathnames */
+        if (addr->local.path[0] != '/')
+        {
+            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+            return PR_FAILURE;
+        }
+    }
+    else
+    {
+        rv = setsockopt(
+            fd->secret->md.osfd, SOL_SOCKET, SO_REUSEADDR,
+            (_PRSockOptVal_t) &one, sizeof(one));
+        if (rv == -1)
+        {
+            pt_MapError(_PR_MD_MAP_SETSOCKOPT_ERROR, errno);
+            return PR_FAILURE;
+        }
     }
 
     rv = bind(fd->secret->md.osfd, (struct sockaddr*)addr, PR_NETADDR_SIZE(addr));
@@ -1556,6 +1683,12 @@ static PRStatus pt_Shutdown(PRFileDesc *fd, PRIntn how)
     }
     return PR_SUCCESS;
 }  /* pt_Shutdown */
+
+static PRInt16 pt_Poll(PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags)
+{
+    *out_flags = 0;
+    return in_flags;
+}  /* pt_Poll */
 
 static PRInt32 pt_Recv(
     PRFileDesc *fd, void *buf, PRInt32 amount,
@@ -1601,7 +1734,7 @@ static PRInt32 pt_Send(
     /*
      * Under HP-UX DCE threads, pthread.h includes dce/cma_ux.h,
      * which has the following:
-     *     #  define send		cma_send
+     *     #  define send        cma_send
      *     extern int  cma_send (int , void *, int, int );
      * So we need to cast away the 'const' of argument #2 for send().
      */
@@ -1670,11 +1803,7 @@ static PRInt32 pt_SendTo(
 
     if (pt_TestAbort()) return PR_FAILURE;
 
-#if defined(_PR_INET6)
-    PR_ASSERT(addr->raw.family == AF_INET || addr->raw.family == AF_INET6);
-#else
-    PR_ASSERT(addr->raw.family == AF_INET);
-#endif
+    PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
     bytes = sendto(
         fd->secret->md.osfd, buf, amount, flags,
         (struct sockaddr*)addr, PR_NETADDR_SIZE(addr));
@@ -1753,12 +1882,12 @@ static PRInt32 pt_RecvFrom(PRFileDesc *fd, void *buf, PRInt32 amount,
 /*
  * pt_HPUXTransmitFile
  *
- *	Send file fd across socket sd. If headers is non-NULL, 'hlen'
- *	bytes of headers is sent before sending the file.
+ *    Send file fd across socket sd. If headers is non-NULL, 'hlen'
+ *    bytes of headers is sent before sending the file.
  *
- *	PR_TRANSMITFILE_CLOSE_SOCKET flag - close socket after sending file
- *	
- *	return number of bytes sent or -1 on error
+ *    PR_TRANSMITFILE_CLOSE_SOCKET flag - close socket after sending file
+ *    
+ *    return number of bytes sent or -1 on error
  *
  *      This implementation takes advantage of the sendfile() system
  *      call available in HP-UX B.11.00.
@@ -1831,7 +1960,7 @@ static PRInt32 pt_HPUXTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
 
     if (count == -1) {
         _MD_hpux_map_sendfile_error(syserrno);
-	return -1;
+    return -1;
     }
     if (flags & PR_TRANSMITFILE_CLOSE_SOCKET) {
         PR_Close(sd);
@@ -1914,12 +2043,8 @@ static PRStatus pt_GetSockName(PRFileDesc *fd, PRNetAddr *addr)
         pt_MapError(_PR_MD_MAP_GETSOCKNAME_ERROR, errno);
         return PR_FAILURE;
     } else {
-        PR_ASSERT(addr_len == PR_NETADDR_SIZE(addr));
-#if defined(_PR_INET6)
-        PR_ASSERT(addr->raw.family == AF_INET || addr->raw.family == AF_INET6);
-#else
-	PR_ASSERT(addr->raw.family == AF_INET);
-#endif
+        PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
+        PR_ASSERT(IsValidNetAddrLen(addr, addr_len) == PR_TRUE);
         return PR_SUCCESS;
     }
 }  /* pt_GetSockName */
@@ -1942,12 +2067,8 @@ static PRStatus pt_GetPeerName(PRFileDesc *fd, PRNetAddr *addr)
         pt_MapError(_PR_MD_MAP_GETPEERNAME_ERROR, errno);
         return PR_FAILURE;
     } else {
-        PR_ASSERT(addr_len == PR_NETADDR_SIZE(addr));
-#if defined(_PR_INET6)
-        PR_ASSERT(addr->raw.family == AF_INET || addr->raw.family == AF_INET6);
-#else
-	PR_ASSERT(addr->raw.family == AF_INET);
-#endif
+        PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
+        PR_ASSERT(IsValidNetAddrLen(addr, addr_len) == PR_TRUE);
         return PR_SUCCESS;
     }
 }  /* pt_GetPeerName */
@@ -2101,13 +2222,13 @@ static PRStatus pt_GetSocketOption(PRFileDesc *fd, PRSocketOptionData *data)
             }
             case PR_SockOpt_McastLoopback:
             {
-                PRUint8 boolean;
-                length = sizeof(boolean);
+                PRUint8 xbool;
+                length = sizeof(xbool);
                 rv = getsockopt(
                     fd->secret->md.osfd, level, name,
-                    (char*)&boolean, &length);
-                PR_ASSERT((-1 == rv) || (sizeof(boolean) == length));
-                data->value.mcast_loopback = (0 == boolean) ? PR_FALSE : PR_TRUE;
+                    (char*)&xbool, &length);
+                PR_ASSERT((-1 == rv) || (sizeof(xbool) == length));
+                data->value.mcast_loopback = (0 == xbool) ? PR_FALSE : PR_TRUE;
                 break;
             }
             case PR_SockOpt_RecvBufferSize:
@@ -2179,7 +2300,7 @@ static PRStatus pt_GetSocketOption(PRFileDesc *fd, PRSocketOptionData *data)
 static PRStatus pt_SetSocketOption(PRFileDesc *fd, const PRSocketOptionData *data)
 {
     PRIntn rv;
-	PRInt32 level, name;
+    PRInt32 level, name;
 
     /*
      * PR_SockOpt_Nonblocking is a special case that does not
@@ -2217,10 +2338,10 @@ static PRStatus pt_SetSocketOption(PRFileDesc *fd, const PRSocketOptionData *dat
             }
             case PR_SockOpt_McastLoopback:
             {
-                PRUint8 boolean = data->value.mcast_loopback ? 1 : 0;
+                PRUint8 xbool = data->value.mcast_loopback ? 1 : 0;
                 rv = setsockopt(
                     fd->secret->md.osfd, level, name,
-                    (char*)&boolean, sizeof(boolean));
+                    (char*)&xbool, sizeof(xbool));
                 break;
             }
             case PR_SockOpt_RecvBufferSize:
@@ -2295,23 +2416,23 @@ static PRIOMethods _pr_file_methods = {
     pt_Seek64,
     pt_FileInfo,
     pt_FileInfo64,
-    (PRWritevFN)_PR_InvalidInt,		
-    (PRConnectFN)_PR_InvalidStatus,		
-    (PRAcceptFN)_PR_InvalidDesc,		
-    (PRBindFN)_PR_InvalidStatus,		
-    (PRListenFN)_PR_InvalidStatus,		
-    (PRShutdownFN)_PR_InvalidStatus,	
-    (PRRecvFN)_PR_InvalidInt,		
-    (PRSendFN)_PR_InvalidInt,		
-    (PRRecvfromFN)_PR_InvalidInt,	
-    (PRSendtoFN)_PR_InvalidInt,		
-    (PRPollFN)0,         
+    (PRWritevFN)_PR_InvalidInt,        
+    (PRConnectFN)_PR_InvalidStatus,        
+    (PRAcceptFN)_PR_InvalidDesc,        
+    (PRBindFN)_PR_InvalidStatus,        
+    (PRListenFN)_PR_InvalidStatus,        
+    (PRShutdownFN)_PR_InvalidStatus,    
+    (PRRecvFN)_PR_InvalidInt,        
+    (PRSendFN)_PR_InvalidInt,        
+    (PRRecvfromFN)_PR_InvalidInt,    
+    (PRSendtoFN)_PR_InvalidInt,        
+    pt_Poll,
     (PRAcceptreadFN)_PR_InvalidInt,   
     (PRTransmitfileFN)_PR_InvalidInt, 
-    (PRGetsocknameFN)_PR_InvalidStatus,	
-    (PRGetpeernameFN)_PR_InvalidStatus,	
-    (PRGetsockoptFN)_PR_InvalidStatus,	
-    (PRSetsockoptFN)_PR_InvalidStatus,	
+    (PRGetsocknameFN)_PR_InvalidStatus,    
+    (PRGetpeernameFN)_PR_InvalidStatus,    
+    (PRGetsockoptFN)_PR_InvalidStatus,    
+    (PRSetsockoptFN)_PR_InvalidStatus,    
 };
 
 static PRIOMethods _pr_tcp_methods = {
@@ -2322,10 +2443,10 @@ static PRIOMethods _pr_tcp_methods = {
     pt_Available,
     pt_Available64,
     pt_Synch,
-	(PRSeekFN)_PR_InvalidInt,
-	(PRSeek64FN)_PR_InvalidInt64,
-	(PRFileInfoFN)_PR_InvalidStatus,
-	(PRFileInfo64FN)_PR_InvalidStatus,
+    (PRSeekFN)_PR_InvalidInt,
+    (PRSeek64FN)_PR_InvalidInt64,
+    (PRFileInfoFN)_PR_InvalidStatus,
+    (PRFileInfo64FN)_PR_InvalidStatus,
     pt_Writev,
     pt_Connect,
     pt_Accept,
@@ -2334,9 +2455,9 @@ static PRIOMethods _pr_tcp_methods = {
     pt_Shutdown,
     pt_Recv,
     pt_Send,
-	(PRRecvfromFN)_PR_InvalidInt,
-	(PRSendtoFN)_PR_InvalidInt,
-	(PRPollFN)0,
+    (PRRecvfromFN)_PR_InvalidInt,
+    (PRSendtoFN)_PR_InvalidInt,
+    pt_Poll,
     pt_AcceptRead,
     pt_TransmitFile,
     pt_GetSockName,
@@ -2355,13 +2476,13 @@ static PRIOMethods _pr_udp_methods = {
     pt_Available,
     pt_Available64,
     pt_Synch,
-	(PRSeekFN)_PR_InvalidInt,
-	(PRSeek64FN)_PR_InvalidInt64,
-	(PRFileInfoFN)_PR_InvalidStatus,
-	(PRFileInfo64FN)_PR_InvalidStatus,
+    (PRSeekFN)_PR_InvalidInt,
+    (PRSeek64FN)_PR_InvalidInt64,
+    (PRFileInfoFN)_PR_InvalidStatus,
+    (PRFileInfo64FN)_PR_InvalidStatus,
     pt_Writev,
     pt_Connect,
-	(PRAcceptFN)_PR_InvalidDesc,
+    (PRAcceptFN)_PR_InvalidDesc,
     pt_Bind,
     pt_Listen,
     pt_Shutdown,
@@ -2369,9 +2490,9 @@ static PRIOMethods _pr_udp_methods = {
     pt_Send,
     pt_RecvFrom,
     pt_SendTo,
-	(PRPollFN)0,
-	(PRAcceptreadFN)_PR_InvalidInt,
-	(PRTransmitfileFN)_PR_InvalidInt,
+    pt_Poll,
+    (PRAcceptreadFN)_PR_InvalidInt,
+    (PRTransmitfileFN)_PR_InvalidInt,
     pt_GetSockName,
     pt_GetPeerName,
     pt_GetSockOpt,
@@ -2427,22 +2548,23 @@ static PRFileDesc *pt_SetMethods(PRIntn osfd, PRDescType type)
     return fd;
 }  /* pt_SetMethods */
 
-PR_IMPLEMENT(PRIOMethods*) PR_GetFileMethods()
+PR_IMPLEMENT(const PRIOMethods*) PR_GetFileMethods()
 {
     return &_pr_file_methods;
 }  /* PR_GetFileMethods */
 
-PR_IMPLEMENT(PRIOMethods*) PR_GetTCPMethods()
+PR_IMPLEMENT(const PRIOMethods*) PR_GetTCPMethods()
 {
     return &_pr_tcp_methods;
 }  /* PR_GetTCPMethods */
 
-PR_IMPLEMENT(PRIOMethods*) PR_GetUDPMethods()
+PR_IMPLEMENT(const PRIOMethods*) PR_GetUDPMethods()
 {
     return &_pr_udp_methods;
 }  /* PR_GetUDPMethods */
 
-PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(PRInt32 osfd, PRIOMethods *methods)
+PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
+    PRInt32 osfd, const PRIOMethods *methods)
 {
     PRFileDesc *fd = pt_Getfd();
 
@@ -2483,9 +2605,9 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 
     if (PF_INET != domain
 #if defined(_PR_INET6)
-	&& PF_INET6 != domain
+        && PF_INET6 != domain
 #endif
-	)
+        && PF_UNIX != domain)
     {
         PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, 0);
         return fd;
@@ -2746,34 +2868,54 @@ PR_IMPLEMENT(PRInt32) PR_Poll(
     {
         PRIntn index, msecs;
         struct pollfd *syspoll = NULL;
-        syspoll = (struct pollfd*)PR_Malloc(npds * sizeof(struct pollfd));
+        syspoll = (struct pollfd*)PR_MALLOC(npds * sizeof(struct pollfd));
+        if (NULL == syspoll)
+        {
+            PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+            return -1;
+        }
         for (index = 0; index < npds; ++index)
         {
             PRFileDesc *bottom = pds[index].fd;
+            PRInt16 polling_flags = pds[index].in_flags;
 
-            if (bottom == NULL)
+            /* 'bottom' is really 'top' until we make it the bottom */
+            if (NULL != bottom)
+            {
+                polling_flags = (bottom->methods->poll)(
+                    bottom, polling_flags, &pds[index].out_flags);
+
+                if (0 != (polling_flags & pds[index].out_flags))
+                    ready += 1;  /* this one is ready right now */
+                else
+                {
+                    /* now locate the NSPR layer at the bottom of the stack */
+                    bottom = PR_GetIdentitiesLayer(bottom, PR_NSPR_IO_LAYER);
+                    PR_ASSERT(NULL != bottom);  /* what to do about that? */
+                    if ((NULL != bottom)
+                    && (_PR_FILEDESC_OPEN == bottom->secret->state))
+                    {
+                        syspoll[index].fd = bottom->secret->md.osfd;
+                        pds[index].out_flags = 0;  /* init the result */
+                        syspoll[index].events = 0;
+                        if (polling_flags & PR_POLL_READ)
+                            syspoll[index].events |= POLLIN;
+                        if (polling_flags & PR_POLL_WRITE)
+                            syspoll[index].events |= POLLOUT;
+                        if (polling_flags & PR_POLL_EXCEPT)
+                            syspoll[index].events |= POLLPRI;
+                    }
+                    else
+                    {
+                        ready += 1;  /* this will cause an abrupt return */
+                        pds[index].out_flags = POLLNVAL;  /* bogii */
+                    }
+                }
+            }
+            else
             {
                 /* make poll() ignore this entry */
                 syspoll[index].fd = -1;
-                continue;
-            }
-
-            while (bottom->lower != NULL) bottom = bottom->lower;
-            syspoll[index].fd = bottom->secret->md.osfd;
-
-            syspoll[index].events = 0;
-            if (pds[index].in_flags & PR_POLL_READ)
-                syspoll[index].events |= POLLIN;
-            if (pds[index].in_flags & PR_POLL_WRITE)
-                syspoll[index].events |= POLLOUT;
-            if (pds[index].in_flags & PR_POLL_EXCEPT)
-                syspoll[index].events |= POLLPRI;
-            if (_PR_FILEDESC_OPEN == bottom->secret->state)
-                pds[index].out_flags = 0;  /* init the result */
-            else
-            {
-                ready += 1;  /* this will cause an abrupt return */
-                pds[index].out_flags = POLLNVAL;  /* bogii */
             }
         }
         if (0 == ready)
@@ -2792,41 +2934,30 @@ retry:
             if (-1 == ready)
             {
                 PRIntn oserror = errno;
-                PRErrorCode prerror;
 
-                switch (oserror) {
-                    case EAGAIN:
-                        prerror = PR_INSUFFICIENT_RESOURCES_ERROR;
-                        break;
-                    case EINTR:
-                        if (timeout == PR_INTERVAL_NO_TIMEOUT)
-                            goto retry;
-                        else if (timeout == PR_INTERVAL_NO_WAIT)
-                            ready = 0;  /* don't retry, just time out */
+                if (EINTR == oserror)
+                {
+                    if (timeout == PR_INTERVAL_NO_TIMEOUT)
+                        goto retry;
+                    else if (timeout == PR_INTERVAL_NO_WAIT)
+                        ready = 0;  /* don't retry, just time out */
+                    {
+                        elapsed = (PRIntervalTime) (PR_IntervalNow()
+                                - start);
+                        if (elapsed > timeout)
+                            ready = 0;  /* timed out */
+                        else
                         {
-                            elapsed = (PRIntervalTime) (PR_IntervalNow()
-                                    - start);
-                            if (elapsed > timeout)
-                                ready = 0;  /* timed out */
-                            else
-                            {
-                                remaining = timeout - elapsed;
-                                msecs = PR_IntervalToMilliseconds(remaining);
-                                goto retry;
-                            }
+                            remaining = timeout - elapsed;
+                            msecs = PR_IntervalToMilliseconds(remaining);
+                            goto retry;
                         }
-                        break;
-                case EINVAL:
-                        prerror = PR_INVALID_ARGUMENT_ERROR;
-                        break;
-                    case EFAULT:
-                        prerror = PR_ACCESS_FAULT_ERROR;
-                        break;
-                    default:
-                        prerror = PR_UNKNOWN_ERROR;
-                        break;
-                } 
-                PR_SetError(prerror, oserror);
+                    }
+                }
+                else
+                {
+                    _PR_MD_MAP_POLL_ERROR(oserror);
+                }
             }
             else if (ready > 0)
             {
@@ -2876,7 +3007,7 @@ PR_IMPLEMENT(PRDirEntry*) PR_ReadDir(PRDir *dir, PRDirFlags flags)
             && ('.' == dp->d_name[1])
             && (0 == dp->d_name[2])) continue;
         if ((flags & PR_SKIP_HIDDEN) && ('.' == dp->d_name[0]))
-			continue;
+            continue;
         break;
     }
     dir->d.name = dp->d_name;
@@ -2974,7 +3105,7 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
 
     if (pipe(pipefd) == -1)
     {
-	/* XXX map pipe error */
+    /* XXX map pipe error */
         PR_SetError(PR_UNKNOWN_ERROR, errno);
         return PR_FAILURE;
     }
@@ -3026,25 +3157,14 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportUDPSocket(PRInt32 osfd)
     return fd;
 }  /* PR_ImportUDPSocket */
 
-PR_IMPLEMENT(PRInt32) PR_FileDesc2NativeHandle(PRFileDesc *fd)
+PR_IMPLEMENT(PRInt32) PR_FileDesc2NativeHandle(PRFileDesc *bottom)
 {
-    if (fd)
-    {
-        /*
-         * The fd may be layered.  Chase the links to the
-         * bottom layer to get the osfd.
-         */
-        PRFileDesc *bottom = fd;
-        while (bottom->lower != NULL) {
-            bottom = bottom->lower;
-        }
-        return bottom->secret->md.osfd;
-    }
-    else
-    {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return -1;
-    }
+    PRInt32 osfd = -1;
+    bottom = (NULL == bottom) ?
+        NULL : PR_GetIdentitiesLayer(bottom, PR_NSPR_IO_LAYER);
+    if (NULL == bottom) PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+    else osfd = bottom->secret->md.osfd;
+    return osfd;
 }  /* PR_FileDesc2NativeHandle */
 
 PR_IMPLEMENT(void) PR_ChangeFileDescNativeHandle(PRFileDesc *fd,

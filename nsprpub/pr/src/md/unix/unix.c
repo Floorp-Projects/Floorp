@@ -28,6 +28,10 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
+#ifdef _PR_POLL_AVAILABLE
+#include <poll.h>
+#endif
+
 /* To get FIONREAD */
 #if defined(NCR) || defined(UNIXWARE) || defined(NEC) || defined(SNI) \
         || defined(SONY)
@@ -41,7 +45,7 @@
 #if defined(IRIX) || defined(HPUX) || defined(OSF1) || defined(SOLARIS) \
     || defined(AIX4_1) || defined(LINUX) || defined(SONY) \
     || defined(BSDI) || defined(SCO) || defined(NEC) || defined(SNI) \
-    || defined(SUNOS4)
+    || defined(SUNOS4) || defined(NCR)
 #define _PRSockLen_t int
 #elif (defined(AIX) && !defined(AIX4_1)) || defined(FREEBSD) \
     || defined(UNIXWARE)
@@ -89,7 +93,7 @@ static sigset_t empty_set;
 /*
  * _nspr_noclock - if set clock interrupts are disabled
  */
-int _nspr_noclock = 0;
+int _nspr_noclock = 1;
 
 #ifdef IRIX
 extern PRInt32 _nspr_terminate_on_error;
@@ -380,11 +384,20 @@ PRInt32 _MD_read(PRFileDesc *fd, void *buf, PRInt32 amount)
 {
 PRThread *me = _PR_MD_CURRENT_THREAD();
 PRInt32 rv, err;
+#ifndef _PR_USE_POLL
 fd_set rd;
+#else
+struct pollfd pfd;
+#endif /* _PR_USE_POLL */
 PRInt32 osfd = fd->secret->md.osfd;
 
+#ifndef _PR_USE_POLL
 	FD_ZERO(&rd);
 	FD_SET(osfd, &rd);
+#else
+	pfd.fd = osfd;
+	pfd.events = POLLIN;
+#endif /* _PR_USE_POLL */
 	while ((rv = read(osfd,buf,amount)) == -1) {
 		err = _MD_ERRNO();
 		if ((err == EAGAIN) || (err == EWOULDBLOCK)) {
@@ -394,10 +407,17 @@ PRInt32 osfd = fd->secret->md.osfd;
 			if (!_PR_IS_NATIVE_THREAD(me)) {
 				_PR_WaitForFD(osfd, PR_POLL_READ, PR_INTERVAL_NO_TIMEOUT);
 			} else {
+#ifndef _PR_USE_POLL
 				while ((rv = _MD_SELECT(osfd + 1, &rd, NULL, NULL, NULL))
 						== -1 && (err = _MD_ERRNO()) == EINTR) {
 					/* retry _MD_SELECT() if it is interrupted */
 				}
+#else /* _PR_USE_POLL */
+				while ((rv = _MD_POLL(&pfd, 1, -1))
+						== -1 && (err = _MD_ERRNO()) == EINTR) {
+					/* retry _MD_POLL() if it is interrupted */
+				}
+#endif /* _PR_USE_POLL */
 				if (rv == -1) {
 					break;
 				}
@@ -425,11 +445,20 @@ PRInt32 _MD_write(PRFileDesc *fd, const void *buf, PRInt32 amount)
 {
 PRThread *me = _PR_MD_CURRENT_THREAD();
 PRInt32 rv, err;
+#ifndef _PR_USE_POLL
 fd_set wd;
+#else
+struct pollfd pfd;
+#endif /* _PR_USE_POLL */
 PRInt32 osfd = fd->secret->md.osfd;
 
+#ifndef _PR_USE_POLL
 	FD_ZERO(&wd);
 	FD_SET(osfd, &wd);
+#else
+	pfd.fd = osfd;
+	pfd.events = POLLOUT;
+#endif /* _PR_USE_POLL */
 	while ((rv = write(osfd,buf,amount)) == -1) {
 		err = _MD_ERRNO();
 		if ((err == EAGAIN) || (err == EWOULDBLOCK)) {
@@ -439,10 +468,17 @@ PRInt32 osfd = fd->secret->md.osfd;
 			if (!_PR_IS_NATIVE_THREAD(me)) {
 				_PR_WaitForFD(osfd, PR_POLL_WRITE, PR_INTERVAL_NO_TIMEOUT);
 			} else {
+#ifndef _PR_USE_POLL
 				while ((rv = _MD_SELECT(osfd + 1, NULL, &wd, NULL, NULL))
 						== -1 && (err = _MD_ERRNO()) == EINTR) {
 					/* retry _MD_SELECT() if it is interrupted */
 				}
+#else /* _PR_USE_POLL */
+				while ((rv = _MD_POLL(&pfd, 1, -1))
+						== -1 && (err = _MD_ERRNO()) == EINTR) {
+					/* retry _MD_POLL() if it is interrupted */
+				}
+#endif /* _PR_USE_POLL */
 				if (rv == -1) {
 					break;
 				}
@@ -570,11 +606,18 @@ PRInt64 _MD_socketavailable64(PRFileDesc *fd)
 #define WRITE_FD	2
 
 /*
+ * socket_io_wait --
+ *
  * wait for socket i/o, periodically checking for interrupt
+ *
+ * The first implementation uses select(), for platforms without
+ * poll().  The second (preferred) implementation uses poll().
  */
 
+#ifndef _PR_USE_POLL
+
 static PRInt32 socket_io_wait(PRInt32 osfd, PRInt32 fd_type,
-										PRIntervalTime timeout)
+    PRIntervalTime timeout)
 {
 	PRInt32 rv = -1;
 	struct timeval tv, *tvp;
@@ -692,6 +735,114 @@ static PRInt32 socket_io_wait(PRInt32 osfd, PRInt32 fd_type,
 	return(rv);
 }
 
+#else /* _PR_USE_POLL */
+
+static PRInt32 socket_io_wait(PRInt32 osfd, PRInt32 fd_type,
+    PRIntervalTime timeout)
+{
+	PRInt32 rv = -1;
+	int msecs;
+	PRThread *me = _PR_MD_CURRENT_THREAD();
+	PRIntervalTime epoch, now, elapsed, remaining;
+	PRInt32 syserror;
+	struct pollfd pfd;
+
+	switch (timeout) {
+		case PR_INTERVAL_NO_WAIT:
+			PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+			break;
+		case PR_INTERVAL_NO_TIMEOUT:
+			/*
+			 * This is a special case of the 'default' case below.
+			 * Please see the comments there.
+			 */
+			msecs = _PR_INTERRUPT_CHECK_INTERVAL_SECS * 1000;
+			pfd.fd = osfd;
+			if (fd_type == READ_FD) {
+				pfd.events = POLLIN;
+			} else {
+				pfd.events = POLLOUT;
+			}
+			do {
+				rv = _MD_POLL(&pfd, 1, msecs);
+				if (rv == -1 && (syserror = _MD_ERRNO()) != EINTR) {
+					_PR_MD_MAP_POLL_ERROR(syserror);
+					break;
+				}
+				if (_PR_PENDING_INTERRUPT(me)) {
+					me->flags &= ~_PR_INTERRUPT;
+					PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+					rv = -1;
+					break;
+				}
+			} while (rv == 0 || (rv == -1 && syserror == EINTR));
+			break;
+		default:
+			now = epoch = PR_IntervalNow();
+			remaining = timeout;
+			pfd.fd = osfd;
+			if (fd_type == READ_FD) {
+				pfd.events = POLLIN;
+			} else {
+				pfd.events = POLLOUT;
+			}
+			do {
+				/*
+				 * We block in _MD_POLL for at most
+				 * _PR_INTERRUPT_CHECK_INTERVAL_SECS seconds,
+				 * so that there is an upper limit on the delay
+				 * before the interrupt bit is checked.
+				 */
+				msecs = PR_IntervalToMilliseconds(remaining);
+				if (msecs > _PR_INTERRUPT_CHECK_INTERVAL_SECS * 1000) {
+					msecs = _PR_INTERRUPT_CHECK_INTERVAL_SECS * 1000;
+				}
+				rv = _MD_POLL(&pfd, 1, msecs);
+				/*
+				 * we don't consider EINTR a real error
+				 */
+				if (rv == -1 && (syserror = _MD_ERRNO()) != EINTR) {
+					_PR_MD_MAP_POLL_ERROR(syserror);
+					break;
+				}
+				if (_PR_PENDING_INTERRUPT(me)) {
+					me->flags &= ~_PR_INTERRUPT;
+					PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+					rv = -1;
+					break;
+				}
+				/*
+				 * We loop again if _MD_POLL timed out or got interrupted
+				 * by a signal, and the timeout deadline has not passed yet.
+				 */
+				if (rv == 0 || (rv == -1 && syserror == EINTR)) {
+					/*
+					 * If _MD_POLL timed out, we know how much time
+					 * we spent in blocking, so we can avoid a
+					 * PR_IntervalNow() call.
+					 */
+					if (rv == 0) {
+						now += PR_MillisecondsToInterval(msecs);
+					} else {
+						now = PR_IntervalNow();
+					}
+					elapsed = (PRIntervalTime) (now - epoch);
+					if (elapsed >= timeout) {
+						PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+						rv = -1;
+						break;
+					} else {
+						remaining = timeout - elapsed;
+					}
+				}
+			} while (rv == 0 || (rv == -1 && syserror == EINTR));
+			break;
+	}
+	return(rv);
+}
+
+#endif /* _PR_USE_POLL */
+
 PRInt32 _MD_recv(PRFileDesc *fd, void *buf, PRInt32 amount,
 								PRInt32 flags, PRIntervalTime timeout)
 {
@@ -794,14 +945,17 @@ PRInt32 _MD_recvfrom(PRFileDesc *fd, void *buf, PRInt32 amount,
 		_PR_MD_MAP_RECVFROM_ERROR(err);
 	}
 done:
-#ifdef AIX
+#ifdef _PR_HAVE_SOCKADDR_LEN
     if (rv != -1) {
         /* mask off the first byte of struct sockaddr (the length field) */
         if (addr) {
-            addr->inet.family &= 0x00ff;
+            *((unsigned char *) addr) = 0;
+#ifdef IS_LITTLE_ENDIAN
+            addr->raw.family = ntohs(addr->raw.family);
+#endif
         }
     }
-#endif
+#endif /* _PR_HAVE_SOCKADDR_LEN */
 	return(rv);
 }
 
@@ -1043,14 +1197,17 @@ PRInt32 _MD_accept(PRFileDesc *fd, PRNetAddr *addr,
 		_PR_MD_MAP_ACCEPT_ERROR(err);
 	}
 done:
-#ifdef AIX
+#ifdef _PR_HAVE_SOCKADDR_LEN
     if (rv != -1) {
         /* mask off the first byte of struct sockaddr (the length field) */
         if (addr) {
-            addr->inet.family &= 0x00ff;
+            *((unsigned char *) addr) = 0;
+#ifdef IS_LITTLE_ENDIAN
+            addr->raw.family = ntohs(addr->raw.family);
+#endif
         }
     }
-#endif
+#endif /* _PR_HAVE_SOCKADDR_LEN */
 	return(rv);
 }
 
@@ -1198,14 +1355,17 @@ PRStatus _MD_getsockname(PRFileDesc *fd, PRNetAddr *addr,
 
     rv = getsockname(fd->secret->md.osfd,
             (struct sockaddr *) addr, (_PRSockLen_t *)addrlen);
-#ifdef AIX
+#ifdef _PR_HAVE_SOCKADDR_LEN
     if (rv == 0) {
         /* mask off the first byte of struct sockaddr (the length field) */
         if (addr) {
-            addr->inet.family &= 0x00ff;
+            *((unsigned char *) addr) = 0;
+#ifdef IS_LITTLE_ENDIAN
+            addr->raw.family = ntohs(addr->raw.family);
+#endif
         }
     }
-#endif
+#endif /* _PR_HAVE_SOCKADDR_LEN */
     if (rv < 0) {
         err = _MD_ERRNO();
         _PR_MD_MAP_GETSOCKNAME_ERROR(err);
@@ -1220,14 +1380,17 @@ PRStatus _MD_getpeername(PRFileDesc *fd, PRNetAddr *addr,
 
     rv = getpeername(fd->secret->md.osfd,
             (struct sockaddr *) addr, (_PRSockLen_t *)addrlen);
-#ifdef AIX
+#ifdef _PR_HAVE_SOCKADDR_LEN
     if (rv == 0) {
         /* mask off the first byte of struct sockaddr (the length field) */
         if (addr) {
-            addr->inet.family &= 0x00ff;
+            *((unsigned char *) addr) = 0;
+#ifdef IS_LITTLE_ENDIAN
+            addr->raw.family = ntohs(addr->raw.family);
+#endif
         }
     }
-#endif
+#endif /* _PR_HAVE_SOCKADDR_LEN */
     if (rv < 0) {
         err = _MD_ERRNO();
         _PR_MD_MAP_GETPEERNAME_ERROR(err);
@@ -1272,7 +1435,16 @@ PR_IMPLEMENT(PRInt32) _MD_pr_poll(PRPollDesc *pds, PRIntn npds,
 	_PRCPU *io_cpu;
     PRThread *me = _PR_MD_CURRENT_THREAD();
 
+    if (0 == npds) {
+        PR_Sleep(timeout);
+        return 0;
+    }
+
     if (_PR_IS_NATIVE_THREAD(me)) {
+#ifndef _PR_USE_POLL
+        /*
+         * On platforms that don't have poll(), we call select().
+         */
 		fd_set rd, wt, ex;
 		struct timeval tv, *tvp = NULL;
 		int maxfd = -1;
@@ -1398,6 +1570,105 @@ retry:
 		}
 
 		return n;
+#else /* _PR_USE_POLL */
+        /*
+         * For restarting _MD_POLL() if it is interrupted by a signal.
+         * We use these variables to figure out how much time has elapsed
+         * and how much of the timeout still remains.
+         */
+        PRIntervalTime start, elapsed, remaining;
+        int index, msecs;
+        struct pollfd *syspoll;
+
+        syspoll = (struct pollfd *) PR_MALLOC(npds * sizeof(struct pollfd));
+        if (NULL == syspoll) {
+            PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+            return -1;
+        }
+        for (index = 0; index < npds; index++) {
+            PRFileDesc *bottom = pds[index].fd;
+
+            if (NULL == bottom) {
+                /* make poll() ignore this entry */
+                syspoll[index].fd = -1;
+                continue;
+            }
+
+            while (bottom->lower != NULL) {
+                bottom = bottom->lower;
+            }
+            syspoll[index].fd = bottom->secret->md.osfd;
+
+            syspoll[index].events = 0;
+            if (pds[index].in_flags & PR_POLL_READ) {
+                syspoll[index].events |= POLLIN;
+            }
+            if (pds[index].in_flags & PR_POLL_WRITE) {
+                syspoll[index].events |= POLLOUT;
+            }
+            if (pds[index].in_flags & PR_POLL_EXCEPT) {
+                syspoll[index].events |= POLLPRI;
+            }
+            pds[index].out_flags = 0;  /* init the result */
+        }
+        if (timeout == PR_INTERVAL_NO_TIMEOUT) {
+            msecs = -1;
+        } else {
+            msecs = PR_IntervalToMilliseconds(timeout);
+            start = PR_IntervalNow();
+        }
+		
+retry:
+        n = _MD_POLL(syspoll, npds, msecs);
+        if (n == -1) {
+            err = _MD_ERRNO();
+            if (err == EINTR) {
+                if (timeout == PR_INTERVAL_NO_TIMEOUT) {
+                    goto retry;
+                } else if (timeout == PR_INTERVAL_NO_WAIT) {
+                    n = 0;  /* don't retry, just time out */
+                } else {
+                    elapsed = (PRIntervalTime) (PR_IntervalNow() - start);
+                    if (elapsed > timeout) {
+                        n = 0;  /* timed out */
+                    } else {
+                        remaining = timeout - elapsed;
+                        msecs = PR_IntervalToMilliseconds(remaining);
+                        goto retry;
+                    }
+                }
+            } else {
+                _PR_MD_MAP_POLL_ERROR(err);
+            }
+        } else if (n > 0) {
+            for (index = 0; index < npds; index++) {
+            	if (NULL == pds[index].fd) {
+                    continue;
+                }
+                PR_ASSERT(0 == pds[index].out_flags);
+                if (0 != syspoll[index].revents) {
+                    if (syspoll[index].revents & POLLIN)  {
+                        pds[index].out_flags |= PR_POLL_READ;
+                    }
+                    if (syspoll[index].revents & POLLOUT) {
+                        pds[index].out_flags |= PR_POLL_WRITE;
+                    }
+                    if (syspoll[index].revents & POLLPRI) {
+                        pds[index].out_flags |= PR_POLL_EXCEPT;
+                    }
+                    if (syspoll[index].revents & POLLERR) {
+                        pds[index].out_flags |= PR_POLL_ERR;
+                    }
+                    if (syspoll[index].revents & POLLNVAL) {
+                        pds[index].out_flags |= PR_POLL_NVAL;
+                    }
+                }
+            }
+        }
+
+        PR_DELETE(syspoll);
+        return n;
+#endif /* _PR_USE_POLL */
     }
 
 	/*
@@ -1455,6 +1726,7 @@ retry:
 		unixpd++;
 		pdcnt++;
 
+#ifndef _PR_USE_POLL
 		if (in_flags & PR_POLL_READ)  {
 			FD_SET(osfd, &_PR_FD_READ_SET(me->cpu));
 			_PR_FD_READ_CNT(me->cpu)[osfd]++;
@@ -1467,12 +1739,14 @@ retry:
 			FD_SET(osfd, &_PR_FD_EXCEPTION_SET(me->cpu));
 			(_PR_FD_EXCEPTION_CNT(me->cpu))[osfd]++;
 		}
+#endif	/* _PR_USE_POLL */
 		if (osfd > _PR_IOQ_MAX_OSFD(me->cpu))
 			_PR_IOQ_MAX_OSFD(me->cpu) = osfd;
 	}
 	if (timeout < _PR_IOQ_TIMEOUT(me->cpu))
 		_PR_IOQ_TIMEOUT(me->cpu) = timeout;
 
+	_PR_IOQ_OSFD_CNT(me->cpu) += pdcnt;
 
 	pq.pds = unixpds;
 	pq.npds = pdcnt;
@@ -1541,6 +1815,7 @@ retry:
 				}
 				osfd = bottom->secret->md.osfd;
 				PR_ASSERT(osfd >= 0 || in_flags == 0);
+#ifndef _PR_USE_POLL
 				if (in_flags & PR_POLL_READ)  {
 					if (--(_PR_FD_READ_CNT(me->cpu))[osfd] == 0)
 						FD_CLR(osfd, &_PR_FD_READ_SET(me->cpu));
@@ -1553,7 +1828,10 @@ retry:
 					if (--(_PR_FD_EXCEPTION_CNT(me->cpu))[osfd] == 0)
 							FD_CLR(osfd, &_PR_FD_EXCEPTION_SET(me->cpu));
 				}
+#endif
 			}
+			_PR_IOQ_OSFD_CNT(me->cpu) -= pdcnt;
+			PR_ASSERT(_PR_IOQ_OSFD_CNT(me->cpu) >= 0);
 		}
     	_PR_MD_IOQ_UNLOCK();
     }
@@ -1637,6 +1915,7 @@ static void FindBadFDs(void)
 				PRInt32 osfd = pds->osfd;
 				PRInt16 in_flags = pds->in_flags;
 				PR_ASSERT(osfd >= 0 || in_flags == 0);
+#ifndef _PR_USE_POLL
 				if (in_flags & PR_POLL_READ) {
 					if (--(_PR_FD_READ_CNT(me->cpu))[osfd] == 0)
 						FD_CLR(osfd, &_PR_FD_READ_SET(me->cpu));
@@ -1649,6 +1928,7 @@ static void FindBadFDs(void)
 					if (--(_PR_FD_EXCEPTION_CNT(me->cpu))[osfd] == 0)
 						FD_CLR(osfd, &_PR_FD_EXCEPTION_SET(me->cpu));
 				}
+#endif	/* !_PR_USE_POLL	*/
 			}
 
 			_PR_THREAD_LOCK(pq->thr);
@@ -1700,6 +1980,7 @@ void _MD_PauseCPU(PRIntervalTime ticks)
 	struct pollfd *pollfds;    /* an array of pollfd structures */
 	struct pollfd *pollfdPtr;    /* a pointer that steps through the array */
 	unsigned long npollfds;     /* number of pollfd structures in array */
+	unsigned long pollfds_size;
 	int nfd;                    /* to hold the return value of poll() */
 #else
 	struct timeval timeout, *tvp;
@@ -1723,12 +2004,9 @@ extern sigset_t ints_off;
 	/* Build up the pollfd structure array to wait on */
 
 	/* Find out how many pollfd structures are needed */
-	npollfds = 0;
-	for (q = _PR_IOQ(me->cpu).next; q != &_PR_IOQ(me->cpu); q = q->next) {
-		PRPollQueue *pq = _PR_POLLQUEUE_PTR(q);
+	npollfds = _PR_IOQ_OSFD_CNT(me->cpu);
+	PR_ASSERT(npollfds >= 0);
 
-		npollfds += pq->npds;
-	}
 	/*
      * We use a pipe to wake up a native thread.  An fd is needed
      * for the pipe and we poll it for reading.
@@ -1736,8 +2014,21 @@ extern sigset_t ints_off;
 	if (_PR_IS_NATIVE_THREAD_SUPPORTED())
 		npollfds++;
 
-	pollfds = (struct pollfd *) PR_MALLOC(npollfds * sizeof(struct pollfd));
-	pollfdPtr = pollfds;
+	/*
+	 * if the cpu's pollfd array is not big enough, release it and allocate a new one
+	 */
+	if (npollfds > _PR_IOQ_POLLFDS_SIZE(me->cpu)) {
+		if (_PR_IOQ_POLLFDS(me->cpu) != NULL)
+			PR_DELETE(pollfds);
+		pollfds_size =  PR_MAX(_PR_IOQ_MIN_POLLFDS_SIZE(me->cpu), npollfds);
+		pollfds = (struct pollfd *) PR_MALLOC(pollfds_size * sizeof(struct pollfd));
+		_PR_IOQ_POLLFDS(me->cpu) = pollfds;
+		_PR_IOQ_POLLFDS_SIZE(me->cpu) = pollfds_size;
+		pollfdPtr = pollfds;
+	} else {
+		pollfds = _PR_IOQ_POLLFDS(me->cpu);
+		pollfdPtr = pollfds;
+	}
 
 	/*
      * If we need to poll the pipe for waking up a native thread,
@@ -1769,6 +2060,7 @@ extern sigset_t ints_off;
 			pollfdPtr->events = pds->in_flags;
 		}
 	}
+	_PR_IOQ_TIMEOUT(me->cpu) = min_timeout;
 #else
 	/*
      * assigment of fd_sets
@@ -1897,16 +2189,16 @@ extern sigset_t ints_off;
 
 			for (; pds < epds; pds++, pollfdPtr++) {
 				/*
-		 * Assert that the pollfdPtr pointer does not go beyond
-		 * the end of the pollfds array.
-		 */
+		 		 * Assert that the pollfdPtr pointer does not go beyond
+		 		 * the end of the pollfds array.
+		 		 */
 				PR_ASSERT(pollfdPtr < pollfds + npollfds);
 				/*
-		 * Assert that the fd's in the pollfds array (stepped
-		 * through by pollfdPtr) are in the same order as
-		 * the fd's in _PR_IOQ() (stepped through by q and pds).
-		 * This is how the pollfds array was created earlier.
-		 */
+				 * Assert that the fd's in the pollfds array (stepped
+				 * through by pollfdPtr) are in the same order as
+				 * the fd's in _PR_IOQ() (stepped through by q and pds).
+				 * This is how the pollfds array was created earlier.
+				 */
 				PR_ASSERT(pollfdPtr->fd == pds->osfd);
 				pds->out_flags = pollfdPtr->revents;
 				/* Negative fd's are ignored by poll() */
@@ -1921,12 +2213,7 @@ extern sigset_t ints_off;
 				PR_REMOVE_LINK(&pq->links);
 				pq->on_ioq = PR_FALSE;
 
-				/*
-				 * Because this thread can run on a different cpu right
-				 * after being added to the run queue, do not dereference
-				 * pq
-				 */
-				 thred = pq->thr;
+				thred = pq->thr;
                 _PR_THREAD_LOCK(thred);
 				if (pq->thr->flags & (_PR_ON_PAUSEQ|_PR_ON_SLEEPQ)) {
 					_PRCPU *cpu = pq->thr->cpu;
@@ -1944,14 +2231,14 @@ extern sigset_t ints_off;
 						_PR_MD_WAKEUP_WAITER(thred);
 				}
 				_PR_THREAD_UNLOCK(thred);
+				_PR_IOQ_OSFD_CNT(me->cpu) -= pq->npds;
+				PR_ASSERT(_PR_IOQ_OSFD_CNT(me->cpu) >= 0);
 			}
 		}
 	} else if (nfd == -1) {
 		PR_LOG(_pr_io_lm, PR_LOG_MAX, ("poll() failed with errno %d", errno));
 	}
 
-	/* done with pollfds */
-	PR_DELETE(pollfds);
 #else
 	if (nfd > 0) {
 		q = _PR_IOQ(me->cpu).next;
@@ -2136,7 +2423,9 @@ void _MD_InitCPUS()
 	rv = pipe(_pr_md_pipefd);
 	PR_ASSERT(rv == 0);
 	_PR_IOQ_MAX_OSFD(me->cpu) = _pr_md_pipefd[0];
+#ifndef _PR_USE_POLL
 	FD_SET(_pr_md_pipefd[0], &_PR_FD_READ_SET(me->cpu));
+#endif
 
 	flags = fcntl(_pr_md_pipefd[0], F_GETFL, 0);
 	fcntl(_pr_md_pipefd[0], F_SETFL, flags | O_NONBLOCK);
@@ -2897,6 +3186,8 @@ PRInt32 _PR_WaitForFD(PRInt32 osfd, PRUintn how, PRIntervalTime timeout)
     pq.on_ioq = PR_TRUE;
     pq.timeout = timeout;
     _PR_ADD_TO_IOQ(pq, me->cpu);
+
+#ifndef _PR_USE_POLL
 	if (how == PR_POLL_READ) {
 		FD_SET(osfd, &_PR_FD_READ_SET(me->cpu));
 		(_PR_FD_READ_CNT(me->cpu))[osfd]++;
@@ -2907,12 +3198,15 @@ PRInt32 _PR_WaitForFD(PRInt32 osfd, PRUintn how, PRIntervalTime timeout)
 		FD_SET(osfd, &_PR_FD_EXCEPTION_SET(me->cpu));
 		(_PR_FD_EXCEPTION_CNT(me->cpu))[osfd]++;
 	}
+#endif	/* _PR_USE_POLL */
+
 	if (_PR_IOQ_MAX_OSFD(me->cpu) < osfd)
 		_PR_IOQ_MAX_OSFD(me->cpu) = osfd;
 	if (_PR_IOQ_TIMEOUT(me->cpu) > timeout)
 		_PR_IOQ_TIMEOUT(me->cpu) = timeout;
-		
 
+	_PR_IOQ_OSFD_CNT(me->cpu) += 1;
+		
     _PR_SLEEPQ_LOCK(me->cpu);
     _PR_ADD_SLEEPQ(me, timeout);
     me->state = _PR_IO_WAIT;
@@ -2944,17 +3238,21 @@ PRInt32 _PR_WaitForFD(PRInt32 osfd, PRUintn how, PRIntervalTime timeout)
 	 */
         if (pq.on_ioq) {
             	PR_REMOVE_LINK(&pq.links);
-		if (how == PR_POLL_READ) {
-			if ((--(_PR_FD_READ_CNT(me->cpu))[osfd]) == 0)
-				FD_CLR(osfd, &_PR_FD_READ_SET(me->cpu));
-		
-		} else if (how == PR_POLL_WRITE) {
-			if ((--(_PR_FD_WRITE_CNT(me->cpu))[osfd]) == 0)
-				FD_CLR(osfd, &_PR_FD_WRITE_SET(me->cpu));
-		} else {
-			if ((--(_PR_FD_EXCEPTION_CNT(me->cpu))[osfd]) == 0)
-				FD_CLR(osfd, &_PR_FD_EXCEPTION_SET(me->cpu));
-		}
+#ifndef _PR_USE_POLL
+				if (how == PR_POLL_READ) {
+					if ((--(_PR_FD_READ_CNT(me->cpu))[osfd]) == 0)
+						FD_CLR(osfd, &_PR_FD_READ_SET(me->cpu));
+				
+				} else if (how == PR_POLL_WRITE) {
+						if ((--(_PR_FD_WRITE_CNT(me->cpu))[osfd]) == 0)
+							FD_CLR(osfd, &_PR_FD_WRITE_SET(me->cpu));
+				} else {
+						if ((--(_PR_FD_EXCEPTION_CNT(me->cpu))[osfd]) == 0)
+							FD_CLR(osfd, &_PR_FD_EXCEPTION_SET(me->cpu));
+				}
+#endif	/* _PR_USE_POLL */
+    		PR_ASSERT(pq.npds == 1);
+			_PR_IOQ_OSFD_CNT(me->cpu) -= 1;
         }
     	_PR_MD_IOQ_UNLOCK();
 		rv = 0;
@@ -3238,3 +3536,140 @@ PRStatus _MD_CloseFileMap(PRFileMap *fmap)
     PR_DELETE(fmap);
     return PR_SUCCESS;
 }
+
+#if defined(_PR_NEED_FAKE_POLL)
+
+/*
+ * Some platforms don't have poll().  For easier porting of code
+ * that calls poll(), we emulate poll() using select().
+ */
+
+#include <fcntl.h>
+
+int poll(struct pollfd *filedes, unsigned long nfds, int timeout)
+{
+    int i;
+    int rv;
+    int maxfd;
+    fd_set rd, wr, ex;
+    struct timeval tv, *tvp;
+
+    if (timeout < 0 && timeout != -1) {
+	errno = EINVAL;
+	return -1;
+    }
+
+    if (timeout == -1) {
+        tvp = NULL;
+    } else {
+	tv.tv_sec = timeout / 1000;
+	tv.tv_usec = (timeout % 1000) * 1000;
+        tvp = &tv;
+    }
+
+    maxfd = -1;
+    FD_ZERO(&rd);
+    FD_ZERO(&wr);
+    FD_ZERO(&ex);
+
+    for (i = 0; i < nfds; i++) {
+	int osfd = filedes[i].fd;
+	int events = filedes[i].events;
+	PRBool fdHasEvent = PR_FALSE;
+
+	if (osfd < 0) {
+            continue;  /* Skip this osfd. */
+	}
+
+	/*
+	 * Map the native poll flags to nspr poll flags.
+	 *     POLLIN, POLLRDNORM  ===> PR_POLL_READ
+	 *     POLLOUT, POLLWRNORM ===> PR_POLL_WRITE
+	 *     POLLPRI, POLLRDBAND ===> PR_POLL_EXCEPTION
+	 *     POLLNORM, POLLWRBAND (and POLLMSG on some platforms)
+	 *     are ignored.
+	 *
+	 * The output events POLLERR and POLLHUP are never turned on.
+	 * POLLNVAL may be turned on.
+	 */
+
+	if (events & (POLLIN | POLLRDNORM)) {
+	    FD_SET(osfd, &rd);
+	    fdHasEvent = PR_TRUE;
+	}
+	if (events & (POLLOUT | POLLWRNORM)) {
+	    FD_SET(osfd, &wr);
+	    fdHasEvent = PR_TRUE;
+	}
+	if (events & (POLLPRI | POLLRDBAND)) {
+	    FD_SET(osfd, &ex);
+	    fdHasEvent = PR_TRUE;
+	}
+	if (fdHasEvent && osfd > maxfd) {
+	    maxfd = osfd;
+	}
+    }
+
+    rv = select(maxfd + 1, &rd, &wr, &ex, tvp);
+
+    /* Compute poll results */
+    if (rv > 0) {
+	rv = 0;
+        for (i = 0; i < nfds; i++) {
+	    PRBool fdHasEvent = PR_FALSE;
+
+	    filedes[i].revents = 0;
+            if (filedes[i].fd < 0) {
+                continue;
+            }
+	    if (FD_ISSET(filedes[i].fd, &rd)) {
+		if (filedes[i].events & POLLIN) {
+		    filedes[i].revents |= POLLIN;
+		}
+		if (filedes[i].events & POLLRDNORM) {
+		    filedes[i].revents |= POLLRDNORM;
+		}
+		fdHasEvent = PR_TRUE;
+	    }
+	    if (FD_ISSET(filedes[i].fd, &wr)) {
+		if (filedes[i].events & POLLOUT) {
+		    filedes[i].revents |= POLLOUT;
+		}
+		if (filedes[i].events & POLLWRNORM) {
+		    filedes[i].revents |= POLLWRNORM;
+		}
+		fdHasEvent = PR_TRUE;
+	    }
+	    if (FD_ISSET(filedes[i].fd, &ex)) {
+		if (filedes[i].events & POLLPRI) {
+		    filedes[i].revents |= POLLPRI;
+		}
+		if (filedes[i].events & POLLRDBAND) {
+		    filedes[i].revents |= POLLRDBAND;
+		}
+		fdHasEvent = PR_TRUE;
+	    }
+	    if (fdHasEvent) {
+		rv++;
+            }
+        }
+	PR_ASSERT(rv > 0);
+    } else if (rv == -1 && errno == EBADF) {
+	rv = 0;
+        for (i = 0; i < nfds; i++) {
+	    filedes[i].revents = 0;
+            if (filedes[i].fd < 0) {
+                continue;
+            }
+	    if (fcntl(filedes[i].fd, F_GETFL, 0) == -1) {
+		filedes[i].revents = POLLNVAL;
+		rv++;
+	    }
+        }
+	PR_ASSERT(rv > 0);
+    }
+    PR_ASSERT(-1 != timeout || rv != 0);
+
+    return rv;
+}
+#endif /* _PR_NEED_FAKE_POLL */

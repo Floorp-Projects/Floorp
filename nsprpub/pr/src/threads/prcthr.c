@@ -18,6 +18,7 @@
 
 #include "primpl.h"
 
+extern PRLock *_pr_sleeplock;  /* allocated and initialized in prinit */
 /* 
 ** Routines common to both native and user threads.
 **
@@ -85,8 +86,7 @@ PR_IMPLEMENT(PRStatus) PR_Yield()
 */
 PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime timeout)
 {
-    static PRLock *ml = NULL;
-    PRStatus rv = PR_SUCCESS;
+     PRStatus rv = PR_SUCCESS;
     if (PR_INTERVAL_NO_WAIT == timeout)
     {
         /*
@@ -129,27 +129,20 @@ PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime timeout)
         ** but the lock and cvar used are local to the implementation
         ** and not visible to the caller, therefore not notifiable.
         */
-        if (ml == NULL) ml = PR_NewLock();
+        PRIntervalTime timein = PR_IntervalNow();
+        PRCondVar *cv = PR_NewCondVar(_pr_sleeplock);
 
-        if (ml == NULL) rv = PR_FAILURE;
-        else
+        PR_Lock(_pr_sleeplock);
+        while (rv == PR_SUCCESS)
         {
-            PRCondVar *cv = PR_NewCondVar(ml);
-            PRIntervalTime timein = PR_IntervalNow();
-
-            PR_Lock(ml);
-            while (rv == PR_SUCCESS)
-            {
-                PRIntervalTime delta = PR_IntervalNow() - timein;
-                if (delta > timeout) break;
-                rv = PR_WaitCondVar(cv, timeout - delta);
-            }
-            PR_Unlock(ml);
-
-            PR_DestroyCondVar(cv);
+            PRIntervalTime delta = PR_IntervalNow() - timein;
+            if (delta > timeout) break;
+            rv = PR_WaitCondVar(cv, timeout - delta);
         }
+        PR_Unlock(_pr_sleeplock);
+        PR_DestroyCondVar(cv);
     }
-        return rv;
+    return rv;
 }
 
 PR_IMPLEMENT(PRUint32) PR_GetThreadID(PRThread *thread)

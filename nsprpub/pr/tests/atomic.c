@@ -59,12 +59,21 @@ PRIntn main(PRIntn argc, char **argv)
         output, "PR_AtomicDecrement(%d) == %d: %s\n",
         test, rv, (rv < 0) ? "PASSED" : "FAILED");
 
+    /* set to a different value */
     test = -2;
     rv = PR_AtomicSet(&test, 2);
     result = result | (((rv == -2) && (test == 2)) ? 0 : 1);
     PR_fprintf(
         output, "PR_AtomicSet(%d) == %d: %s\n",
         test, rv, ((rv == -2) && (test == 2)) ? "PASSED" : "FAILED");
+
+    /* set to the same value */
+    test = -2;
+    rv = PR_AtomicSet(&test, -2);
+    result = result | (((rv == -2) && (test == -2)) ? 0 : 1);
+    PR_fprintf(
+        output, "PR_AtomicSet(%d) == %d: %s\n",
+        test, rv, ((rv == -2) && (test == -2)) ? "PASSED" : "FAILED");
 
     PR_fprintf(
         output, "Atomic operations test %s\n",

@@ -349,8 +349,8 @@ int main(int argc, char **argv)
 	exit(1);
     }
 
-    addr.inet.family = AF_INET;
-    addr.inet.port = htons((short) atoi(port));
+    addr.inet.family = PR_AF_INET;
+    addr.inet.port = PR_htons((short) atoi(port));
     addr.inet.ip = *((PRUint32 *) hostentry.h_addr_list[0]);
 
     socket = PR_NewTCPSocket();

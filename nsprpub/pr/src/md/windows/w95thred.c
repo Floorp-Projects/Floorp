@@ -22,9 +22,15 @@
 extern void _PR_Win32InitTimeZone(void);  /* defined in ntmisc.c */
 
 /* --- globals ------------------------------------------------ */
+#ifdef _PR_USE_STATIC_TLS
 __declspec(thread) struct PRThread  *_pr_thread_last_run;
 __declspec(thread) struct PRThread  *_pr_currentThread;
 __declspec(thread) struct _PRCPU    *_pr_currentCPU;
+#else
+DWORD _pr_currentThreadIndex;
+DWORD _pr_lastThreadIndex;
+DWORD _pr_currentCPUIndex;
+#endif
 int                           _pr_intsOff = 0; 
 _PRInterruptTable             _pr_interruptTable[] = { { 0 } };
 
@@ -32,11 +38,23 @@ void
 _PR_MD_EARLY_INIT()
 {
     _PR_Win32InitTimeZone();
+
+#ifndef _PR_USE_STATIC_TLS
+    _pr_currentThreadIndex = TlsAlloc();
+    _pr_lastThreadIndex = TlsAlloc();
+    _pr_currentCPUIndex = TlsAlloc();
+#endif
 }
 
 void _PR_MD_CLEANUP_BEFORE_EXIT(void)
 {
     WSACleanup();
+
+#ifndef _PR_USE_STATIC_TLS
+    TlsFree(_pr_currentThreadIndex);
+    TlsFree(_pr_lastThreadIndex);
+    TlsFree(_pr_currentCPUIndex);
+#endif
 }
 
 void

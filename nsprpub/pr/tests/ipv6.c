@@ -65,6 +65,7 @@ static PRStatus PrintAddress(const PRNetAddr* address)
     else
     {
         PR_fprintf(err, "\t%s\n", buffer);
+        memset(&translation, 0, sizeof(translation));
         rv = PR_StringToNetAddr(buffer, &translation);
         if (PR_FAILURE == rv) PL_FPrintError(err, "PR_StringToNetAddr");
         else

@@ -100,12 +100,20 @@
 #define PR_CALLBACK_DECL
 #define PR_STATIC_CALLBACK(__x) static __x
 
-#else /* Unix or OS/2 */
+#elif defined(XP_OS2) 
 #define PR_EXTERN(__type) extern __type
 #define PR_IMPLEMENT(__type) __type
 #define PR_EXTERN_DATA(__type) extern __type
 #define PR_IMPLEMENT_DATA(__type) __type
+#define PR_CALLBACK
+#define PR_CALLBACK_DECL
+#define PR_STATIC_CALLBACK(__x) __x _Optlink
 
+#else /* Unix */
+#define PR_EXTERN(__type) extern __type
+#define PR_IMPLEMENT(__type) __type
+#define PR_EXTERN_DATA(__type) extern __type
+#define PR_IMPLEMENT_DATA(__type) __type
 #define PR_CALLBACK
 #define PR_CALLBACK_DECL
 #define PR_STATIC_CALLBACK(__x) static __x
@@ -227,9 +235,8 @@ typedef unsigned long PRUint64;
 typedef __int64 PRInt64;
 typedef unsigned __int64 PRUint64;
 #elif defined(WIN32)
-#include <windows.h>  /* For LONGLONG and DWORDLONG */
-typedef LONGLONG  PRInt64;
-typedef DWORDLONG PRUint64;
+typedef __int64  PRInt64;
+typedef unsigned __int64 PRUint64;
 #else
 typedef long long PRInt64;
 typedef unsigned long long PRUint64;
@@ -299,7 +306,9 @@ typedef unsigned long PRUptrdiff;
 **      'if (bool)', 'while (!bool)', '(bool) ? x : y' etc., to test booleans
 **      juast as you would C int-valued conditions. 
 ************************************************************************/
-typedef enum { PR_FALSE = 0, PR_TRUE = 1 } PRBool;
+typedef PRIntn PRBool;
+#define PR_TRUE (PRIntn)1
+#define PR_FALSE (PRIntn)0
 
 /************************************************************************
 ** TYPES:       PRPackedBool

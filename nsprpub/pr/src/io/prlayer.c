@@ -148,9 +148,10 @@ static PRStatus PR_CALLBACK pl_DefConnect (
     return (fd->lower->methods->connect)(fd->lower, addr, timeout);
 }
 
-static PRFileDesc * PR_CALLBACK pl_TopAccept (
+static PRFileDesc* PR_CALLBACK pl_TopAccept (
     PRFileDesc *fd, PRNetAddr *addr, PRIntervalTime timeout)
 {
+    PRStatus rv;
     PRFileDesc *newfd;
 
     PR_ASSERT(fd != NULL);
@@ -159,13 +160,16 @@ static PRFileDesc * PR_CALLBACK pl_TopAccept (
     newfd = (fd->lower->methods->accept)(fd->lower, addr, timeout);
     if (newfd != NULL)
     {
-        if (PR_FAILURE == PR_PushIOLayer(fd, fd->identity, newfd))
+        PRFileDesc *newstack = PR_NEW(PRFileDesc);
+        if (NULL != newstack)
         {
-            PR_Close(newfd);
-            newfd = NULL;
+            *newstack = *fd;  /* make a copy of the accepting layer */
+            rv = PR_PushIOLayer(newfd, PR_TOP_IO_LAYER, newstack);
+            if (PR_SUCCESS == rv) return newfd;  /* that's it */
         }
+        PR_Close(newfd);  /* we failed for local reasons */
     }
-    return newfd;
+    return NULL;
 }
 
 static PRStatus PR_CALLBACK pl_DefBind (PRFileDesc *fd, const PRNetAddr *addr)
@@ -235,12 +239,13 @@ static PRInt32 PR_CALLBACK pl_DefSendto (
         fd->lower, buf, amount, flags, addr, timeout);
 }
 
-static PRInt16 PR_CALLBACK pl_DefPoll (PRFileDesc *fd, PRInt16 how_flags)
+static PRInt16 PR_CALLBACK pl_DefPoll (
+    PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags)
 {
     PR_ASSERT(fd != NULL);
     PR_ASSERT(fd->lower != NULL);
 
-    return (fd->lower->methods->poll)(fd->lower, how_flags);
+    return (fd->lower->methods->poll)(fd->lower, in_flags, out_flags);
 }
 
 static PRInt32 PR_CALLBACK pl_DefAcceptread (
@@ -317,7 +322,7 @@ static PRStatus PR_CALLBACK pl_DefSetsocketoption (
 }
 
 /* Methods for the top of the stack.  Just call down to the next fd. */
-static struct PRIOMethods pl_methods = {
+static PRIOMethods pl_methods = {
     PR_DESC_LAYERED,
     pl_TopClose,
     pl_DefRead,
@@ -350,13 +355,13 @@ static struct PRIOMethods pl_methods = {
     pl_DefSetsocketoption
 };
 
-PR_IMPLEMENT(PRIOMethods const*) PR_GetDefaultIOMethods()
+PR_IMPLEMENT(const PRIOMethods*) PR_GetDefaultIOMethods()
 {
     return &pl_methods;
 }  /* PR_GetDefaultIOMethods */
 
 PR_IMPLEMENT(PRFileDesc*) PR_CreateIOLayerStub(
-    PRDescIdentity ident, PRIOMethods const *methods)
+    PRDescIdentity ident, const PRIOMethods *methods)
 {
     PRFileDesc *fd = NULL;
     PR_ASSERT((PR_NSPR_IO_LAYER != ident) && (PR_TOP_IO_LAYER != ident));
@@ -399,6 +404,7 @@ PR_IMPLEMENT(PRStatus) PR_PushIOLayer(
         *fd = copy;
         fd->higher = stack;
         stack->lower = fd;
+        stack->higher = NULL;
     }
     else
     {

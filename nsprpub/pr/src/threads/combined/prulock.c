@@ -260,18 +260,26 @@ PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
     add this thread thread in the right priority order so when the unlock
     occurs, the thread with the higher priority will get the lock.
     */
-    /* Sort thread into lock's waitQ at appropriate point */
     q = lock->waitQ.next;
-
-    /* Now scan the list for where to insert this entry */
-    while (q != &lock->waitQ) {
-        t = _PR_THREAD_CONDQ_PTR(lock->waitQ.next);
-        if (me->priority > t->priority) {
-            /* Found a lower priority thread to insert in front of */
-            break;
-        }
-        q = q->next;
-    }
+    if (q == &lock->waitQ || _PR_THREAD_CONDQ_PTR(q)->priority ==
+      	_PR_THREAD_CONDQ_PTR(lock->waitQ.prev)->priority) {
+		/*
+		 * If all the threads in the lock waitQ have the same priority,
+		 * then avoid scanning the list:  insert the element at the end.
+		 */
+		q = &lock->waitQ;
+    } else {
+		/* Sort thread into lock's waitQ at appropriate point */
+		/* Now scan the list for where to insert this entry */
+		while (q != &lock->waitQ) {
+			t = _PR_THREAD_CONDQ_PTR(lock->waitQ.next);
+			if (me->priority > t->priority) {
+				/* Found a lower priority thread to insert in front of */
+				break;
+			}
+			q = q->next;
+		}
+	}
     PR_INSERT_BEFORE(&me->waitQLinks, q);
 
 	/* 

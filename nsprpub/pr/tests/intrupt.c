@@ -194,8 +194,8 @@ void PR_CALLBACK Intrupt(void *arg)
     if (debug_mode) printf("Part III\n");
     listner = PR_NewTCPSocket();
     memset(&netaddr, 0, sizeof(netaddr));
-    netaddr.inet.ip = PR_htonl(INADDR_ANY);
-    netaddr.inet.family = AF_INET;
+    netaddr.inet.ip = PR_htonl(PR_INADDR_ANY);
+    netaddr.inet.family = PR_AF_INET;
     do
     {
         netaddr.inet.port = PR_htons(port);

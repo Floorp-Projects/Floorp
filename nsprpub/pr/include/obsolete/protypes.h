@@ -33,7 +33,7 @@ typedef PRUintn uint;
 
 typedef PRUintn uintn;
 typedef PRUint64 uint64;
-#if !defined(XP_MAC) && !defined(_WIN32)
+#if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
 typedef PRUint32 uint32;
 #else
 typedef unsigned long uint32;
@@ -59,7 +59,7 @@ typedef PRInt64 int64;
 /* /usr/include/model.h on HP-UX defines int8, int16, and int32 */
 #if !defined(HPUX) || !defined(_MODEL_INCLUDED)
 #if !defined(WIN32) || !defined(_WINSOCK2API_)  /* defines its own "int32" */
-#if !defined(XP_MAC) && !defined(_WIN32)
+#if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
 typedef PRInt32 int32;
 #else
 typedef long int32;

@@ -121,7 +121,10 @@ void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
     thread->flags |= _PR_PRIMORDIAL;
 #endif
 
-	/* Needs _PR_PRIMORDIAL flag set before calling _PR_MD_INIT_THREAD() */
+    /*
+     * Needs _PR_PRIMORDIAL flag set before calling
+     * _PR_MD_INIT_THREAD()
+     */
     if (_PR_MD_INIT_THREAD(thread) == PR_FAILURE) {
 		/*
 		 * XXX do what?
@@ -724,7 +727,7 @@ static void _PR_Resume(PRThread *thread)
 }
 
 #if !defined(_PR_LOCAL_THREADS_ONLY) && defined(XP_UNIX)
-static PRThread *get_thread(_PRCPU *cpu)
+static PRThread *get_thread(_PRCPU *cpu, PRBool *wakeup_cpus)
 {
     PRThread *thread;
     PRIntn pri;
@@ -755,16 +758,20 @@ static PRThread *get_thread(_PRCPU *cpu)
                 PR_ASSERT(!(thread->flags & _PR_IDLE_THREAD));
                 if (thread->no_sched){
                     thread = NULL;
-		    /*
-		     * Need to wakeup cpus to avoid missing a
-		     * runnable thread
-		     */
-		    _PR_MD_WAKEUP_CPUS();
+					/*
+					 * Need to wakeup cpus to avoid missing a
+					 * runnable thread
+					 * Waking up all CPU's need happen only once.
+					 */
+
+					*wakeup_cpus = PR_TRUE;
                     continue;
                 } else if (thread->io_pending == PR_TRUE) {
 					/*
 					 * A thread that is blocked for I/O needs to run
-					 * on the same cpu on which it was blocked
+					 * on the same cpu on which it was blocked. This is because
+					 * the cpu's ioq is accessed without lock protection and scheduling
+					 * the thread on a different cpu would preclude this optimization.
 					 */
                     thread = NULL;
 					continue;
@@ -772,7 +779,7 @@ static PRThread *get_thread(_PRCPU *cpu)
                     /* Pull thread off of its run queue */
                     _PR_DEL_RUNQ(thread);
                     _PR_RUNQ_UNLOCK(cpu);
-    		    return(thread);
+    		    	return(thread);
                 }
             }
         }
@@ -800,6 +807,9 @@ void _PR_Schedule(void)
     PRUint32 r;
     PRCList *qp;
     PRIntn priMin, priMax;
+#if !defined(_PR_LOCAL_THREADS_ONLY) && defined(XP_UNIX)
+    PRBool wakeup_cpus;
+#endif
 
     /* Interrupts must be disabled */
     PR_ASSERT(_PR_IS_NATIVE_THREAD(me) || _PR_MD_GET_INTSOFF() != 0);
@@ -869,17 +879,25 @@ void _PR_Schedule(void)
     _PR_RUNQ_UNLOCK(cpu);
 
 #if !defined(_PR_LOCAL_THREADS_ONLY) && defined(XP_UNIX)
+
+	wakeup_cpus = PR_FALSE;
     _PR_CPU_LIST_LOCK();
     for (qp = _PR_CPUQ().next; qp != &_PR_CPUQ(); qp = qp->next) {
 	    if (cpu != _PR_CPU_PTR(qp)) {
-		if ((thread = get_thread(_PR_CPU_PTR(qp))) != NULL) {
-		    thread->cpu = cpu;
-    		    _PR_CPU_LIST_UNLOCK();
-                    goto found_thread;
-		}
+			if ((thread = get_thread(_PR_CPU_PTR(qp), &wakeup_cpus))
+										!= NULL) {
+				thread->cpu = cpu;
+				_PR_CPU_LIST_UNLOCK();
+				if (wakeup_cpus == PR_TRUE)
+					_PR_MD_WAKEUP_CPUS();
+				goto found_thread;
+			}
 	    }
     }
     _PR_CPU_LIST_UNLOCK();
+	if (wakeup_cpus == PR_TRUE)
+		_PR_MD_WAKEUP_CPUS();
+
 #endif		/* _PR_LOCAL_THREADS_ONLY */
 
 idle_thread:

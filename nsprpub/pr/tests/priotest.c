@@ -21,6 +21,11 @@
  * Purpose:     testing priorities
  */
 
+#ifdef XP_MAC
+#error "This test does not run on Macintosh"
+#else
+
+
 #include "prcmon.h"
 #include "prinit.h"
 #include "prinrval.h"
@@ -37,22 +42,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef XP_MAC
-#include "prlog.h"
-unsigned int PR_fprintf(PRFileDesc *fd, const char *fmt, ...)
-{
-PR_LogPrint(fmt);
-return 0;
-}
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
 #define DEFAULT_DURATION 20
 
 static PRBool failed = PR_FALSE;
 static PRIntervalTime oneSecond;
 static PRFileDesc *debug_out = NULL;
+static PRBool debug_mode = PR_FALSE;
 
 static PRUint32 PerSecond(PRIntervalTime timein)
 {
@@ -96,21 +91,62 @@ static void Help(void)
         debug_out, "-d\tturn on debugging output (default: FALSE)\n");
 }  /* Help */
 
+static void RudimentaryTests(void)
+{
+    /*
+    ** Try some rudimentary tests like setting valid priority and
+    ** getting it back, or setting invalid priorities and getting
+    ** back a valid answer.
+    */
+    PRThreadPriority priority;
+    PR_SetThreadPriority(PR_GetCurrentThread(), PR_PRIORITY_URGENT);
+    priority = PR_GetThreadPriority(PR_GetCurrentThread());
+    failed = ((PR_TRUE == failed) || (PR_PRIORITY_URGENT != priority))
+        ? PR_TRUE : PR_FALSE;
+    if (debug_mode && (PR_PRIORITY_URGENT != priority))
+    {
+        PR_fprintf(debug_out, "PR_[S/G]etThreadPriority() failed\n");
+    }
+
+
+    PR_SetThreadPriority(
+        PR_GetCurrentThread(), (PRThreadPriority)(PR_PRIORITY_FIRST - 1));
+    priority = PR_GetThreadPriority(PR_GetCurrentThread());
+    failed = ((PR_TRUE == failed) || (PR_PRIORITY_FIRST != priority))
+        ? PR_TRUE : PR_FALSE;
+    if (debug_mode && (PR_PRIORITY_FIRST != priority))
+    {
+        PR_fprintf(debug_out, "PR_SetThreadPriority(-1) failed\n");
+    }
+
+    PR_SetThreadPriority(
+        PR_GetCurrentThread(), (PRThreadPriority)(PR_PRIORITY_LAST + 1));
+    priority = PR_GetThreadPriority(PR_GetCurrentThread());
+    failed = ((PR_TRUE == failed) || (PR_PRIORITY_LAST != priority))
+        ? PR_TRUE : PR_FALSE;
+    if (debug_mode && (PR_PRIORITY_LAST != priority))
+    {
+        PR_fprintf(debug_out, "PR_SetThreadPriority(+1) failed\n");
+    }
+
+}  /* RudimentataryTests */
+
+static void CreateThreads(PRInt32 *lowCount, PRInt32 *highCount)
+{
+    (void)PR_CreateThread(
+        PR_USER_THREAD, Low, lowCount, PR_PRIORITY_LOW,
+        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+    (void)PR_CreateThread(
+        PR_USER_THREAD, High, highCount, PR_PRIORITY_HIGH,
+        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+} /* CreateThreads */
+
 PRIntn main(PRIntn argc, char **argv)
 {
     PLOptStatus os;
-    PRThread *low, *high;
-    PRThreadPriority priority;
-    PRBool debug_mode = PR_FALSE;
     PRIntn duration = DEFAULT_DURATION;
     PRUint32 totalCount, highCount = 0, lowCount = 0;
 	PLOptState *opt = PL_CreateOptState(argc, argv, "hdc:");
-
-
-#ifdef XP_MAC
-	SetupMacPrintfLog("priotest.log");
-	debug_mode = PR_TRUE;
-#endif
 
     debug_out = PR_STDOUT;
     oneSecond = PR_SecondsToInterval(1);
@@ -137,52 +173,12 @@ PRIntn main(PRIntn argc, char **argv)
 
     if (duration == 0) duration = DEFAULT_DURATION;
 
+    RudimentaryTests();
+
     printf("Priority test: running for %d seconds\n\n", duration);
 
     (void)PerSecond(PR_IntervalNow());
     totalCount = PerSecond(PR_IntervalNow());
-
-    /*
-    ** Try some rudimentary tests like setting valid priority and
-    ** getting it back, or setting invalid priorities and getting
-    ** back a valid answer.
-    */
-    PR_SetThreadPriority(PR_GetCurrentThread(), PR_PRIORITY_URGENT);
-    priority = PR_GetThreadPriority(PR_GetCurrentThread());
-    failed = ((PR_TRUE == failed) || (PR_PRIORITY_URGENT != priority))
-        ? PR_TRUE : PR_FALSE;
-    if (debug_mode && (PR_PRIORITY_URGENT != priority))
-    {
-        PR_fprintf(debug_out, "PR_[S/G]etThreadPriority() failed\n");
-    }
-
-/*
-	The following test is bogus.  PRThreadPriority is enum and (PR_PRIORITY_FIRST - 1)
-	evaluates to 255 (at least on Mac).  This causes the pinning test in PR_SetThreadPriority
-	to fail.  That test in PR_SetThreadPriority should be looked at.
-*/
-#if 0
-    PR_SetThreadPriority(
-        PR_GetCurrentThread(), (PRThreadPriority)(PR_PRIORITY_FIRST - 1));
-    priority = PR_GetThreadPriority(PR_GetCurrentThread());
-    failed = ((PR_TRUE == failed) || (PR_PRIORITY_FIRST != priority))
-        ? PR_TRUE : PR_FALSE;
-    if (debug_mode && (PR_PRIORITY_FIRST != priority))
-    {
-        PR_fprintf(debug_out, "PR_SetThreadPriority(-1) failed\n");
-    }
-#endif
-
-    PR_SetThreadPriority(
-        PR_GetCurrentThread(), (PRThreadPriority)(PR_PRIORITY_LAST + 1));
-    priority = PR_GetThreadPriority(PR_GetCurrentThread());
-    failed = ((PR_TRUE == failed) || (PR_PRIORITY_LAST != priority))
-        ? PR_TRUE : PR_FALSE;
-    if (debug_mode && (PR_PRIORITY_LAST != priority))
-    {
-        PR_fprintf(debug_out, "PR_SetThreadPriority(+1) failed\n");
-    }
-
 
     PR_SetThreadPriority(PR_GetCurrentThread(), PR_PRIORITY_URGENT);
 
@@ -195,27 +191,8 @@ PRIntn main(PRIntn argc, char **argv)
         PR_fprintf( debug_out, "%d cycles are available.\n\n", totalCount);
     }
 
-#ifdef XP_MAC
-    if (debug_mode)
-    {
-        PR_fprintf(debug_out,
-		    "On Mac, this test should hang indefinitely \n");
-        PR_fprintf( debug_out,
-		    "because low priority task never gives up time \n");
-        PR_fprintf( debug_out, "and the program will hang there.\n");
-    }
-
-#endif
-
-    low = PR_CreateThread(
-        PR_USER_THREAD, Low, &lowCount, PR_PRIORITY_LOW,
-        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
-
-    high = PR_CreateThread(
-        PR_USER_THREAD, High, &highCount, PR_PRIORITY_HIGH,
-        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
-
     duration = (duration + 4) / 5;
+    CreateThreads(&lowCount, &highCount);
     while (duration--)
     {
         PRIntn loop = 5;
@@ -224,11 +201,14 @@ PRIntn main(PRIntn argc, char **argv)
             PR_fprintf(debug_out, "high : low :: %d : %d\n", highCount, lowCount);
     }
 
+
     PR_ProcessExit((failed) ? 1 : 0);
 
-	PR_ASSERT(!"Can't get here");
+	PR_ASSERT(!"You can't get here -- but you did!");
 	return 1;  /* or here */
 
 }  /* main */
+
+#endif  /* ifdef XP_MAC */
 
 /* priotest.c */

@@ -22,7 +22,7 @@
 /*
 ** Condition use of this header on platform.
 */
-#if (defined(XP_PC) && !defined(_WIN32) && defined(MOZILLA_CLIENT)) || defined(WIN16)
+#if (defined(XP_PC) && !defined(_WIN32) && !defined(XP_OS2) && defined(MOZILLA_CLIENT)) || defined(WIN16)
 #include <stdio.h>
 
 PR_BEGIN_EXTERN_C

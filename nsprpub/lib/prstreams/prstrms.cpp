@@ -21,9 +21,7 @@
  */
 
 #include "prstrms.h"
-#ifdef SVR4
 #include <string.h> // memmove
-#endif
 
 //
 // Definition of macros _PRSTR_BP, _PRSTR_DELBUF, and _PRSTR_DELBUF_C.

@@ -179,9 +179,12 @@ extern PRInt32 _PR_MD_CLOSE(PRInt32 osfd, PRBool socket);
 #define _MD_WRITE                     _PR_MD_WRITE
 #define _MD_WRITEV                    _PR_MD_WRITEV
 #define _MD_LSEEK                     _PR_MD_LSEEK
+#define _MD_LSEEK64                   _PR_MD_LSEEK64
 #define _MD_CLOSE_FILE(f)             _PR_MD_CLOSE(f, PR_FALSE)
 #define _MD_GETFILEINFO               _PR_MD_GETFILEINFO
+#define _MD_GETFILEINFO64             _PR_MD_GETFILEINFO64
 #define _MD_GETOPENFILEINFO           _PR_MD_GETOPENFILEINFO
+#define _MD_GETOPENFILEINFO64         _PR_MD_GETOPENFILEINFO64
 #define _MD_STAT                      _PR_MD_STAT
 #define _MD_RENAME                    _PR_MD_RENAME     
 #define _MD_ACCESS                    _PR_MD_ACCESS     
@@ -212,8 +215,13 @@ extern PRInt32 _PR_MD_CLOSE(PRInt32 osfd, PRBool socket);
 #define _MD_SOCKETAVAILABLE           _PR_MD_SOCKETAVAILABLE
 
 #define _MD_INIT_ATOMIC()
+#if defined(_M_IX86) || defined(_X86_)
+#define _MD_ATOMIC_INCREMENT          _PR_MD_ATOMIC_INCREMENT
+#define _MD_ATOMIC_DECREMENT          _PR_MD_ATOMIC_DECREMENT
+#else /* non-x86 processors */
 #define _MD_ATOMIC_INCREMENT(x)       InterlockedIncrement((PLONG)x)
 #define _MD_ATOMIC_DECREMENT(x)       InterlockedDecrement((PLONG)x)
+#endif /* x86 */
 #define _MD_ATOMIC_SET(x,y)           InterlockedExchange((PLONG)x, (LONG)y)
 
 #define _MD_INIT_IO                   _PR_MD_INIT_IO

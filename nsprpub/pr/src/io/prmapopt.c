@@ -40,106 +40,6 @@
 #include <netinet/tcp.h>  /* TCP_NODELAY, TCP_MAXSEG */
 #endif
 
-/*
- * Not every platform has all the socket options we want to
- * support.  Some older operating systems such as SunOS 4.1.3
- * don't have the IP multicast socket options.  Win32 doesn't
- * have TCP_MAXSEG.
- *
- * To deal with this problem, we define the missing socket
- * options as _PR_NO_SUCH_SOCKOPT.  _PR_MapOptionName() fails with
- * PR_OPERATION_NOT_SUPPORTED_ERROR if a socket option not
- * available on the platform is requested.
- */
-
-/*
- * Sanity check.  SO_LINGER and TCP_NODELAY should be available
- * on all platforms.  Just to make sure we have included the
- * appropriate header files.  Then any undefined socket options
- * are really missing.
- */
-
-#if !defined(SO_LINGER)
-#error "SO_LINGER is not defined"
-#endif
-
-#if !defined(TCP_NODELAY)
-#error "TCP_NODELAY is not defined"
-#endif
-
-/*
- * Make sure the value of _PR_NO_SUCH_SOCKOPT is not
- * a valid socket option.
- */
-#define _PR_NO_SUCH_SOCKOPT -1
-
-#ifndef IP_MULTICAST_IF                 /* set/get IP multicast interface   */
-#define IP_MULTICAST_IF     _PR_NO_SUCH_SOCKOPT
-#endif
-
-#ifndef IP_MULTICAST_TTL                /* set/get IP multicast timetolive  */
-#define IP_MULTICAST_TTL    _PR_NO_SUCH_SOCKOPT
-#endif
-
-#ifndef IP_MULTICAST_LOOP               /* set/get IP multicast loopback    */
-#define IP_MULTICAST_LOOP   _PR_NO_SUCH_SOCKOPT
-#endif
-
-#ifndef IP_ADD_MEMBERSHIP               /* add  an IP group membership      */
-#define IP_ADD_MEMBERSHIP   _PR_NO_SUCH_SOCKOPT
-#endif
-
-#ifndef IP_DROP_MEMBERSHIP              /* drop an IP group membership      */
-#define IP_DROP_MEMBERSHIP  _PR_NO_SUCH_SOCKOPT
-#endif
-
-#ifndef IP_TTL                          /* set/get IP Time To Live          */
-#define IP_TTL              _PR_NO_SUCH_SOCKOPT
-#endif
-
-#ifndef IP_TOS                          /* set/get IP Type Of Service       */
-#define IP_TOS              _PR_NO_SUCH_SOCKOPT
-#endif
-
-#ifndef TCP_MAXSEG                      /* maxumum segment size for tcp     */
-#define TCP_MAXSEG          _PR_NO_SUCH_SOCKOPT
-#endif
-
-PRStatus _PR_MapOptionName(
-    PRSockOption optname, PRInt32 *level, PRInt32 *name)
-{
-    static PRInt32 socketOptions[PR_SockOpt_Last] =
-    {
-        0, SO_LINGER, SO_REUSEADDR, SO_KEEPALIVE, SO_RCVBUF, SO_SNDBUF,
-        IP_TTL, IP_TOS, IP_ADD_MEMBERSHIP, IP_DROP_MEMBERSHIP,
-        IP_MULTICAST_IF, IP_MULTICAST_TTL, IP_MULTICAST_LOOP,
-        TCP_NODELAY, TCP_MAXSEG
-    };
-    static PRInt32 socketLevels[PR_SockOpt_Last] =
-    {
-        0, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET,
-        IPPROTO_IP, IPPROTO_IP, IPPROTO_IP, IPPROTO_IP,
-        IPPROTO_IP, IPPROTO_IP, IPPROTO_IP,
-        IPPROTO_TCP, IPPROTO_TCP
-    };
-
-    if ((optname < PR_SockOpt_Linger)
-    && (optname > PR_SockOpt_MaxSegment))
-    {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return PR_FAILURE;
-    }
-
-    if (socketOptions[optname] == _PR_NO_SUCH_SOCKOPT)
-    {
-        PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
-        return PR_FAILURE;
-    }
-    *name = socketOptions[optname];
-    *level = socketLevels[optname];
-    return PR_SUCCESS;
-}  /* _PR_MapOptionName */
-
 #ifndef _PR_PTHREADS
 
 PRStatus PR_CALLBACK _PR_SocketGetSocketOption(PRFileDesc *fd, PRSocketOptionData *data)
@@ -244,6 +144,7 @@ PRStatus PR_CALLBACK _PR_SocketGetSocketOption(PRFileDesc *fd, PRSocketOptionDat
                     data->value.mcast_ttl = ttl;
                 break;
             }
+#ifdef IP_ADD_MEMBERSHIP
             case PR_SockOpt_AddMember:
             case PR_SockOpt_DropMember:
             {
@@ -260,6 +161,7 @@ PRStatus PR_CALLBACK _PR_SocketGetSocketOption(PRFileDesc *fd, PRSocketOptionDat
                 }
                 break;
             }
+#endif /* IP_ADD_MEMBERSHIP */
             case PR_SockOpt_McastInterface:
             {
                 /* This option is a struct in_addr. */
@@ -377,6 +279,7 @@ PRStatus PR_CALLBACK _PR_SocketSetSocketOption(PRFileDesc *fd, const PRSocketOpt
                     fd, level, name, (char*)&ttl, sizeof(ttl));
                 break;
             }
+#ifdef IP_ADD_MEMBERSHIP
             case PR_SockOpt_AddMember:
             case PR_SockOpt_DropMember:
             {
@@ -389,6 +292,7 @@ PRStatus PR_CALLBACK _PR_SocketSetSocketOption(PRFileDesc *fd, const PRSocketOpt
                     fd, level, name, (char*)&mreq, sizeof(mreq));
                 break;
             }
+#endif /* IP_ADD_MEMBERSHIP */
             case PR_SockOpt_McastInterface:
             {
                 /* This option is a struct in_addr. */
@@ -406,3 +310,114 @@ PRStatus PR_CALLBACK _PR_SocketSetSocketOption(PRFileDesc *fd, const PRSocketOpt
 }  /* _PR_SocketSetSocketOption */
 
 #endif /* ! _PR_PTHREADS */
+
+/*
+ *********************************************************************
+ *********************************************************************
+ **
+ ** Make sure that the following is at the end of this file,
+ ** because we will be playing with macro redefines.
+ **
+ *********************************************************************
+ *********************************************************************
+ */
+
+/*
+ * Not every platform has all the socket options we want to
+ * support.  Some older operating systems such as SunOS 4.1.3
+ * don't have the IP multicast socket options.  Win32 doesn't
+ * have TCP_MAXSEG.
+ *
+ * To deal with this problem, we define the missing socket
+ * options as _PR_NO_SUCH_SOCKOPT.  _PR_MapOptionName() fails with
+ * PR_OPERATION_NOT_SUPPORTED_ERROR if a socket option not
+ * available on the platform is requested.
+ */
+
+/*
+ * Sanity check.  SO_LINGER and TCP_NODELAY should be available
+ * on all platforms.  Just to make sure we have included the
+ * appropriate header files.  Then any undefined socket options
+ * are really missing.
+ */
+
+#if !defined(SO_LINGER)
+#error "SO_LINGER is not defined"
+#endif
+
+#if !defined(TCP_NODELAY)
+#error "TCP_NODELAY is not defined"
+#endif
+
+/*
+ * Make sure the value of _PR_NO_SUCH_SOCKOPT is not
+ * a valid socket option.
+ */
+#define _PR_NO_SUCH_SOCKOPT -1
+
+#ifndef IP_MULTICAST_IF                 /* set/get IP multicast interface   */
+#define IP_MULTICAST_IF     _PR_NO_SUCH_SOCKOPT
+#endif
+
+#ifndef IP_MULTICAST_TTL                /* set/get IP multicast timetolive  */
+#define IP_MULTICAST_TTL    _PR_NO_SUCH_SOCKOPT
+#endif
+
+#ifndef IP_MULTICAST_LOOP               /* set/get IP multicast loopback    */
+#define IP_MULTICAST_LOOP   _PR_NO_SUCH_SOCKOPT
+#endif
+
+#ifndef IP_ADD_MEMBERSHIP               /* add  an IP group membership      */
+#define IP_ADD_MEMBERSHIP   _PR_NO_SUCH_SOCKOPT
+#endif
+
+#ifndef IP_DROP_MEMBERSHIP              /* drop an IP group membership      */
+#define IP_DROP_MEMBERSHIP  _PR_NO_SUCH_SOCKOPT
+#endif
+
+#ifndef IP_TTL                          /* set/get IP Time To Live          */
+#define IP_TTL              _PR_NO_SUCH_SOCKOPT
+#endif
+
+#ifndef IP_TOS                          /* set/get IP Type Of Service       */
+#define IP_TOS              _PR_NO_SUCH_SOCKOPT
+#endif
+
+#ifndef TCP_MAXSEG                      /* maxumum segment size for tcp     */
+#define TCP_MAXSEG          _PR_NO_SUCH_SOCKOPT
+#endif
+
+PRStatus _PR_MapOptionName(
+    PRSockOption optname, PRInt32 *level, PRInt32 *name)
+{
+    static PRInt32 socketOptions[PR_SockOpt_Last] =
+    {
+        0, SO_LINGER, SO_REUSEADDR, SO_KEEPALIVE, SO_RCVBUF, SO_SNDBUF,
+        IP_TTL, IP_TOS, IP_ADD_MEMBERSHIP, IP_DROP_MEMBERSHIP,
+        IP_MULTICAST_IF, IP_MULTICAST_TTL, IP_MULTICAST_LOOP,
+        TCP_NODELAY, TCP_MAXSEG
+    };
+    static PRInt32 socketLevels[PR_SockOpt_Last] =
+    {
+        0, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET,
+        IPPROTO_IP, IPPROTO_IP, IPPROTO_IP, IPPROTO_IP,
+        IPPROTO_IP, IPPROTO_IP, IPPROTO_IP,
+        IPPROTO_TCP, IPPROTO_TCP
+    };
+
+    if ((optname < PR_SockOpt_Linger)
+    && (optname > PR_SockOpt_MaxSegment))
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
+
+    if (socketOptions[optname] == _PR_NO_SUCH_SOCKOPT)
+    {
+        PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
+        return PR_FAILURE;
+    }
+    *name = socketOptions[optname];
+    *level = socketLevels[optname];
+    return PR_SUCCESS;
+}  /* _PR_MapOptionName */

@@ -22,6 +22,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 static int _debug_on = 0;
 

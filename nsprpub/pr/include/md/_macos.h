@@ -330,11 +330,11 @@ typedef enum IOOperation {
 
 #define	_MD_DELETE 			_MD_Delete
 
-PR_EXTERN(PRStatus) _MD_LockFile(PRInt32 osfd);
+extern PRStatus _MD_LockFile(PRInt32 osfd);
 #define	_MD_LOCKFILE 		_MD_LockFile
-PR_EXTERN(PRStatus) _MD_TLockFile(PRInt32 osfd);
+extern PRStatus _MD_TLockFile(PRInt32 osfd);
 #define	_MD_TLOCKFILE 		_MD_TLockFile
-PR_EXTERN(PRStatus) _MD_UnlockFile(PRInt32 osfd);
+extern PRStatus _MD_UnlockFile(PRInt32 osfd);
 #define	_MD_UNLOCKFILE		_MD_UnlockFile
 
 /* 
@@ -384,7 +384,7 @@ extern PRStatus _MD_setsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, c
 /*
 ** Netdb Related definitions
 */
-PR_EXTERN(PRStatus) _MD_gethostname(char *name, int namelen);
+extern PRStatus _MD_gethostname(char *name, int namelen);
 #define _MD_GETHOSTNAME		_MD_gethostname
 
 /* 

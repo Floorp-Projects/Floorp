@@ -61,7 +61,7 @@ static PRFileDesc *PushLayer(PRFileDesc *stack)
     if (verbosity > quiet)
         PR_fprintf(logFile, "Pushed layer(0x%x) onto stack(0x%x)\n", layer, stack);
     PR_ASSERT(PR_SUCCESS == rv);
-    return layer;
+    return stack;
 }  /* PushLayer */
 
 static PRFileDesc *PopLayer(PRFileDesc *stack)
@@ -149,19 +149,91 @@ static void PR_CALLBACK Server(void *arg)
 
 }  /* Server */
 
+static PRInt32 PR_CALLBACK MyRecv(
+    PRFileDesc *fd, void *buf, PRInt32 amount,
+    PRIntn flags, PRIntervalTime timeout)
+{
+    char *b = (char*)buf;
+    PRFileDesc *lo = fd->lower;
+    PRInt32 rv, readin = 0, request;
+    rv = lo->methods->recv(lo, &request, sizeof(request), flags, timeout);
+    if (verbosity > chatty) PR_fprintf(
+        logFile, "MyRecv sending permission for %d bytes\n", request);
+    if (0 < rv)
+    {
+        if (verbosity > chatty) PR_fprintf(
+            logFile, "MyRecv received permission request for %d bytes\n", request);
+        rv = lo->methods->send(
+            lo, &request, sizeof(request), flags, timeout);
+        if (0 < rv)
+        {
+            if (verbosity > chatty) PR_fprintf(
+                logFile, "MyRecv sending permission for %d bytes\n", request);
+            while (readin < request)
+            {
+                rv = lo->methods->recv(
+                    lo, b + readin, amount - readin, flags, timeout);
+                if (rv <= 0) break;
+                if (verbosity > chatty) PR_fprintf(
+                    logFile, "MyRecv received %d bytes\n", rv);
+                readin += rv;
+            }
+            rv = readin;
+        }
+    }
+    return rv;
+}  /* MyRecv */
+
+static PRInt32 PR_CALLBACK MySend(
+    PRFileDesc *fd, const void *buf, PRInt32 amount,
+    PRIntn flags, PRIntervalTime timeout)
+{
+    PRFileDesc *lo = fd->lower;
+    const char *b = (const char*)buf;
+    PRInt32 rv, wroteout = 0, request;
+    if (verbosity > chatty) PR_fprintf(
+        logFile, "MySend asking permission to send %d bytes\n", amount);
+    rv = lo->methods->send(lo, &amount, sizeof(amount), flags, timeout);
+    if (0 < rv)
+    {
+        rv = lo->methods->recv(
+            lo, &request, sizeof(request), flags, timeout);
+        if (0 < rv)
+        {
+            PR_ASSERT(request == amount);
+            if (verbosity > chatty) PR_fprintf(
+                logFile, "MySend got permission to send %d bytes\n", request);
+            while (wroteout < request)
+            {
+                rv = lo->methods->send(
+                    lo, b + wroteout, request - wroteout, flags, timeout);
+                if (rv <= 0) break;
+                if (verbosity > chatty) PR_fprintf(
+                    logFile, "MySend wrote %d bytes\n", rv);
+                wroteout += rv;
+            }
+            rv = amount;
+        }
+    }
+    return rv;
+}  /* MySend */
+
 static Verbosity ChangeVerbosity(Verbosity verbosity, PRIntn delta)
 {
-    PRIntn verbage = (PRIntn)verbosity;
-    return (Verbosity)(verbage + delta);
+    PRIntn verbage = (PRIntn)verbosity + delta;
+    if (verbage < (PRIntn)silent) verbage = (PRIntn)silent;
+    else if (verbage > (PRIntn)noisy) verbage = (PRIntn)noisy;
+    return (Verbosity)verbage;
 }  /* ChangeVerbosity */
 
 PRIntn main(PRIntn argc, char **argv)
 {
     PRStatus rv;
+    PRIntn mits;
     PLOptStatus os;
     PRFileDesc *client, *service;
     const char *server_name = NULL;
-    PRIOMethods const *stubMethods;
+    const PRIOMethods *stubMethods;
     PRThread *client_thread, *server_thread;
     PRThreadScope thread_scope = PR_LOCAL_THREAD;
     PLOptState *opt = PL_CreateOptState(argc, argv, "dqGC:c:p:");
@@ -206,11 +278,13 @@ PRIntn main(PRIntn argc, char **argv)
     stubMethods = PR_GetDefaultIOMethods();
 
     /*
-    ** Normally here one would pick and choose between the default
-    ** stub methods and local, unique implmentation. I'm not going
-    ** quite that far.
+    ** The protocol we're going to implement is one where in order to initiate
+    ** a send, the sender must first solicit permission. Therefore, every
+    ** send is really a send - receive - send sequence.
     */
-    myMethods = *stubMethods;
+    myMethods = *stubMethods;  /* first get the entire batch */
+    myMethods.recv = MyRecv;  /* then override the ones we care about */
+    myMethods.send = MySend;  /* then override the ones we care about */
 
     if (NULL == server_name)
         rv = PR_InitializeNetAddr(
@@ -226,6 +300,7 @@ PRIntn main(PRIntn argc, char **argv)
 
     /* one type w/o layering */
 
+    mits = minor_iterations;
     while (major_iterations-- > 0)
     {
         if (verbosity > silent)
@@ -233,6 +308,7 @@ PRIntn main(PRIntn argc, char **argv)
         client = PR_NewTCPSocket(); PR_ASSERT(NULL != client);
         service = PR_NewTCPSocket(); PR_ASSERT(NULL != service);
 
+        minor_iterations = mits;
         server_thread = PR_CreateThread(
             PR_USER_THREAD, Server, service,
             PR_PRIORITY_HIGH, thread_scope,
@@ -261,6 +337,7 @@ PRIntn main(PRIntn argc, char **argv)
         client = PR_NewTCPSocket(); PR_ASSERT(NULL != client);
         service = PR_NewTCPSocket(); PR_ASSERT(NULL != service);
 
+        minor_iterations = mits;
         server_thread = PR_CreateThread(
             PR_USER_THREAD, Server, PushLayer(service),
             PR_PRIORITY_HIGH, thread_scope,

@@ -82,8 +82,8 @@
 #define NUM_UDP_DATAGRAMS_PER_CLIENT    5
 #define UDP_SERVER_PORT         9050
 #define UDP_CLIENT_PORT         9053
-/* #define MY_INADDR               INADDR_ANY */
-#define MY_INADDR               INADDR_LOOPBACK
+#define MY_INADDR               PR_INADDR_ANY
+#define PEER_INADDR             PR_INADDR_LOOPBACK
 
 #define UDP_TIMEOUT             400000
 /* #define UDP_TIMEOUT             PR_INTERVAL_NO_TIMEOUT */
@@ -161,7 +161,7 @@ static void PR_CALLBACK UDP_Server( void *arg )
     
     /* --- Initialize the sockaddr_in structure --- */
     memset( &netaddr, 0, sizeof( netaddr )); 
-    netaddr.inet.family = AF_INET;
+    netaddr.inet.family = PR_AF_INET;
     netaddr.inet.port   = PR_htons( UDP_SERVER_PORT );
     netaddr.inet.ip     = PR_htonl( MY_INADDR );
     
@@ -290,7 +290,7 @@ static void PR_CALLBACK UDP_Client( void *arg )
     
     /* --- Initialize the sockaddr_in structure --- */
     memset( &netaddr, 0, sizeof( netaddr )); 
-    netaddr.inet.family = AF_INET;
+    netaddr.inet.family = PR_AF_INET;
     netaddr.inet.ip     = PR_htonl( MY_INADDR );
     netaddr.inet.port   = PR_htons( UDP_CLIENT_PORT );
     
@@ -327,8 +327,8 @@ static void PR_CALLBACK UDP_Client( void *arg )
     
     /* --- Initialize the sockaddr_in structure --- */
     memset( &netaddr, 0, sizeof( netaddr )); 
-    netaddr.inet.family = AF_INET;
-    netaddr.inet.ip     = PR_htonl( MY_INADDR );
+    netaddr.inet.family = PR_AF_INET;
+    netaddr.inet.ip     = PR_htonl( PEER_INADDR );
     netaddr.inet.port   = PR_htons( UDP_SERVER_PORT );
     
     /* --- send and receive packets until no more data left */    

@@ -30,29 +30,53 @@
 
 /************************************************************************/
 
+/* These two functions are only used in assertions. */
+#if defined(DEBUG)
+
+static PRBool IsValidNetAddr(const PRNetAddr *addr)
+{
+    if ((addr != NULL)
+#ifdef XP_UNIX
+	    && (addr->raw.family != AF_UNIX)
+#endif
+#ifdef _PR_INET6
+	    && (addr->raw.family != AF_INET6)
+#endif
+	    && (addr->raw.family != AF_INET)) {
+        return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
+static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
+{
+    /*
+     * The definition of the length of a Unix domain socket address
+     * is not uniform, so we don't check it.
+     */
+    if ((addr != NULL)
+#ifdef XP_UNIX
+            && (addr->raw.family != AF_UNIX)
+#endif
+            && (PR_NETADDR_SIZE(addr) != addr_len)) {
+        return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
+#endif /* DEBUG */
+
 static PRInt32 PR_CALLBACK SocketWritev(PRFileDesc *fd, PRIOVec *iov, PRInt32 iov_size,
 PRIntervalTime timeout)
 {
 	PRThread *me = _PR_MD_CURRENT_THREAD();
 	int w = 0;
 	PRIOVec *tmp_iov = NULL;
+#define LOCAL_MAXIOV    8
+	PRIOVec local_iov[LOCAL_MAXIOV];
 	int tmp_out;
 	int index, iov_cnt;
 	int count=0, sz = 0;    /* 'count' is the return value. */
-#if defined(XP_UNIX)
-	struct timeval tv, *tvp;
-	fd_set wd;
-
-	FD_ZERO(&wd);
-	if (timeout == PR_INTERVAL_NO_TIMEOUT)
-		tvp = NULL;
-	else if (timeout != PR_INTERVAL_NO_WAIT) {
-		tv.tv_sec = PR_IntervalToSeconds(timeout);
-		tv.tv_usec = PR_IntervalToMicroseconds(
-		    timeout - PR_SecondsToInterval(tv.tv_sec));
-		tvp = &tv;
-	}
-#endif
 
 	if (_PR_PENDING_INTERRUPT(me)) {
 		me->flags &= ~_PR_INTERRUPT;
@@ -64,25 +88,22 @@ PRIntervalTime timeout)
 		return -1;
 	}
 
-	tmp_iov = (PRIOVec *)PR_CALLOC(iov_size * sizeof(PRIOVec));
-	if (!tmp_iov) {
-		PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-		return -1;
-	}
+    /*
+     * Assume the first writev will succeed.  Copy iov's only on
+     * failure.
+     */
+    tmp_iov = iov;
+    for (index = 0; index < iov_size; index++)
+        sz += iov[index].iov_len;
 
-	for (index=0; index<iov_size; index++) {
-		sz += iov[index].iov_len;
-		tmp_iov[index].iov_base = iov[index].iov_base;
-		tmp_iov[index].iov_len = iov[index].iov_len;
-	}
 	iov_cnt = iov_size;
 
 	while (sz > 0) {
 
 		w = _PR_MD_WRITEV(fd, tmp_iov, iov_cnt, timeout);
 		if (w < 0) {
-					count = -1;
-					break;
+			count = -1;
+			break;
 		}
 		count += w;
 		if (fd->secret->nonblocking) {
@@ -93,9 +114,24 @@ PRIntervalTime timeout)
 		if (sz > 0) {
 			/* find the next unwritten vector */
 			for ( index = 0, tmp_out = count;
-			    tmp_out >= iov[index].iov_len;
-			    tmp_out -= iov[index].iov_len, index++){;} /* nothing to execute */
+				tmp_out >= iov[index].iov_len;
+				tmp_out -= iov[index].iov_len, index++){;} /* nothing to execute */
 
+			if (tmp_iov == iov) {
+				/*
+				 * The first writev failed so we
+				 * must copy iov's around.
+				 * Avoid calloc/free if there
+				 * are few enough iov's.
+				 */
+				if (iov_size - index <= LOCAL_MAXIOV)
+					tmp_iov = local_iov;
+				else if ((tmp_iov = (PRIOVec *) PR_CALLOC((iov_size - index) *
+					sizeof *tmp_iov)) == NULL) {
+					PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+					return -1;
+				}
+			}
 
 			/* fill in the first partial read */
 			tmp_iov[0].iov_base = &(((char *)iov[index].iov_base)[tmp_out]);
@@ -110,7 +146,7 @@ PRIntervalTime timeout)
 		}
 	}
 
-	if (tmp_iov)
+	if (tmp_iov != iov && tmp_iov != local_iov)
 		PR_DELETE(tmp_iov);
 	return count;
 }
@@ -307,13 +343,8 @@ PRIntervalTime timeout)
 	_PR_MD_MAKE_NONBLOCK(fd2);
 #endif
 
-	PR_ASSERT((NULL == addr) || (PR_NETADDR_SIZE(addr) == al));
-#if defined(_PR_INET6)
-	PR_ASSERT((NULL == addr) || (addr->raw.family == AF_INET)
-		|| (addr->raw.family == AF_INET6));
-#else
-	PR_ASSERT((NULL == addr) || (addr->raw.family == AF_INET));
-#endif
+	PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
+	PR_ASSERT(IsValidNetAddrLen(addr, al) == PR_TRUE);
 
 	return fd2;
 }
@@ -367,16 +398,26 @@ static PRStatus PR_CALLBACK SocketBind(PRFileDesc *fd, const PRNetAddr *addr)
 	PRInt32 result;
 	int one = 1;
 
-#if defined(_PR_INET6)
-	PR_ASSERT(addr->raw.family == AF_INET || addr->raw.family == AF_INET6);
-#else
-	PR_ASSERT(addr->raw.family == AF_INET);
+	PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
+
+#ifdef XP_UNIX
+	if (addr->raw.family == AF_UNIX) {
+		/* Disallow relative pathnames */
+		if (addr->local.path[0] != '/') {
+			PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+			return PR_FAILURE;
+		}
+	} else {
 #endif
 
 #ifdef HAVE_SOCKET_REUSEADDR
 	if ( setsockopt (fd->secret->md.osfd, (int)SOL_SOCKET, SO_REUSEADDR, 
 	    (const void *)&one, sizeof(one) ) < 0) {
 		return PR_FAILURE;
+	}
+#endif
+
+#ifdef XP_UNIX
 	}
 #endif
 
@@ -541,11 +582,7 @@ static PRInt32 PR_CALLBACK SocketSendTo(
 		return -1;
 	}
 
-#if defined(_PR_INET6)
-	PR_ASSERT(addr->raw.family == AF_INET || addr->raw.family == AF_INET6);
-#else
-	PR_ASSERT(addr->raw.family == AF_INET);
-#endif
+	PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
 
 	count = 0;
 	while (amount > 0) {
@@ -797,12 +834,8 @@ static PRStatus PR_CALLBACK SocketGetName(PRFileDesc *fd, PRNetAddr *addr)
 	if (result < 0) {
 		return PR_FAILURE;
 	}
-	PR_ASSERT(addrlen == PR_NETADDR_SIZE(addr));
-#if defined(_PR_INET6)
-	PR_ASSERT(addr->raw.family == AF_INET || addr->raw.family == AF_INET6);
-#else
-	PR_ASSERT(addr->raw.family == AF_INET);
-#endif
+	PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
+	PR_ASSERT(IsValidNetAddrLen(addr, addrlen) == PR_TRUE);
 	return PR_SUCCESS;
 }
 
@@ -816,12 +849,8 @@ static PRStatus PR_CALLBACK SocketGetPeerName(PRFileDesc *fd, PRNetAddr *addr)
 	if (result < 0) {
 		return PR_FAILURE;
 	}
-	PR_ASSERT(addrlen == PR_NETADDR_SIZE(addr));
-#if defined(_PR_INET6)
-	PR_ASSERT(addr->raw.family == AF_INET || addr->raw.family == AF_INET6);
-#else
-	PR_ASSERT(addr->raw.family == AF_INET);
-#endif
+	PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
+	PR_ASSERT(IsValidNetAddrLen(addr, addrlen) == PR_TRUE);
 	return PR_SUCCESS;
 }
 
@@ -925,6 +954,13 @@ static PRStatus PR_CALLBACK SocketSetSockOpt(
     return rv;
 }
 
+static PRInt16 PR_CALLBACK SocketPoll(
+    PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags)
+{
+    *out_flags = 0;
+    return in_flags;
+}  /* SocketPoll */
+
 static PRIOMethods tcpMethods = {
 	PR_DESC_SOCKET_TCP,
 	SocketClose,
@@ -947,7 +983,7 @@ static PRIOMethods tcpMethods = {
 	SocketSend,
 	(PRRecvfromFN)_PR_InvalidInt,
 	(PRSendtoFN)_PR_InvalidInt,
-	(PRPollFN)0,
+	SocketPoll,
 	SocketAcceptRead,
 	SocketTransmitFile,
 	SocketGetName,
@@ -980,7 +1016,7 @@ static PRIOMethods udpMethods = {
 	SocketSend,
 	SocketRecvFrom,
 	SocketSendTo,
-	(PRPollFN)0,
+	SocketPoll,
 	(PRAcceptreadFN)_PR_InvalidInt,
 	(PRTransmitfileFN)_PR_InvalidInt,
 	SocketGetName,
@@ -991,12 +1027,12 @@ static PRIOMethods udpMethods = {
 	_PR_SocketSetSocketOption
 };
 
-PR_IMPLEMENT(PRIOMethods*) PR_GetTCPMethods()
+PR_IMPLEMENT(const PRIOMethods*) PR_GetTCPMethods()
 {
 	return &tcpMethods;
 }
 
-PR_IMPLEMENT(PRIOMethods*) PR_GetUDPMethods()
+PR_IMPLEMENT(const PRIOMethods*) PR_GetUDPMethods()
 {
 	return &udpMethods;
 }
@@ -1011,6 +1047,9 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 	if (AF_INET != domain
 #if defined(_PR_INET6)
 			&& AF_INET6 != domain
+#endif
+#if defined(XP_UNIX)
+			&& AF_UNIX != domain
 #endif
 			) {
 		PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, 0);
@@ -1243,13 +1282,13 @@ PRNetAddr **raddr, void *buf, PRInt32 amount, PRIntervalTime timeout)
 {
 	PRInt32 rv;
 	PRFileDesc *newsockfd;
-	PRNetAddr remote;
 	PRIntervalTime start, elapsed;
 
 	if (PR_INTERVAL_NO_TIMEOUT != timeout) {
 		start = PR_IntervalNow();
 	}
-	if ((newsockfd = PR_Accept(sd, &remote, timeout)) == NULL) {
+	*raddr = (PRNetAddr *) ((char *) buf + amount);
+	if ((newsockfd = PR_Accept(sd, *raddr, timeout)) == NULL) {
 		return -1;
 	}
 
@@ -1266,8 +1305,6 @@ PRNetAddr **raddr, void *buf, PRInt32 amount, PRIntervalTime timeout)
 	rv = PR_Recv(newsockfd, buf, amount, 0, timeout);
 	if (rv >= 0) {
 		*nd = newsockfd;
-		*raddr = (PRNetAddr *)((char *) buf + amount);
-		memcpy(*raddr, &remote, PR_NETADDR_SIZE(&remote));
 		return rv;
 	}
 
