@@ -29,7 +29,6 @@ viewer:defaults:profile:panels.rdf
 viewer:defaults:profile:search.rdf
 
 [xpcom]
-viewer:Component Registry
 viewer:Components:libjar.shlb 
 viewer:Components:xpinstall.shlb 
 viewer:Components:unicharutil.shlb 
@@ -46,6 +45,7 @@ viewer:Essential Files:xpistub.shlb
 viewer:Essential Files:zlib.shlb 
 
 [browser] 
+viewer:Component Registry
 viewer:Mozilla 
 viewer:Mozilla Addressbook 
 viewer:Mozilla Editor 
