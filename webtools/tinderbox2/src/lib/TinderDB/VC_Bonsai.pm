@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.63 $ 
-# $Date: 2002/05/10 23:07:53 $ 
+# $Revision: 1.64 $ 
+# $Date: 2002/05/10 23:14:30 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -102,7 +102,7 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.63 $ )[1];
+$VERSION = ( qw $Revision: 1.64 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -489,6 +489,8 @@ sub render_authors {
 
             my $link_choices; 
             
+            $link_choices .= "<tt>$author</tt>";
+            $link_choices .= "<br>";
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
@@ -499,6 +501,7 @@ sub render_authors {
                                "linktxt" => "This check-in",
                                );
 
+            $link_choices .= "<br>";
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
@@ -509,6 +512,7 @@ sub render_authors {
                                "linktxt" => "Check-ins within 24 hours",
                                );
 
+            $link_choices .= "<br>";
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
@@ -519,12 +523,14 @@ sub render_authors {
                                "linktxt" => "Check-ins within 7 days",
                                );
 
+            $link_choices .= "<br>";
             $link_choices .= 
               HTMLPopUp::Link(
                               "href" => "mailto: $mailto_author",
                               "linktxt" => $display_author,
                               );
 
+            $link_choices .= "<br>";
 
 
             # This is a Netscape.com/Mozilla.org specific CVS/Bonsai
