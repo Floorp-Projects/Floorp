@@ -37,6 +37,13 @@ interface nsIFilePicker : nsISupports
   const short returnCancel    = 1;              // User hit Ok, process selection
   const short returnReplace   = 2;              // User acknowledged file already exists so ok to replace, process selection
 
+  const long filterAll        = 0x01;           // *.*
+  const long filterHTML       = 0x02;           // *.html; *.htm
+  const long filterText       = 0x04;           // *.txt
+  const long filterImages     = 0x08;           // *.png; *.gif; *.jpg; *.jpeg
+  const long filterXML        = 0x10;           // *.xml
+  const long filterXUL        = 0x20;           // *.xul
+
  /**
   * Create the file widget.
   *
@@ -48,24 +55,22 @@ interface nsIFilePicker : nsISupports
   void create(in nsIDOMWindow parent, in wstring title, in short mode);
 
  /**
-  * Set the list of file filters 
+  * Set filter list to something in the predefined list
   *
-  * @param      titles           array of filter titles
-  * @param      filters          array of filters to associate with titles 
-  * @param      numberOfFilters  number of filters.  
+  * @param      filters  mask of filters i.e. (filterAll | filterHTML)
   *
   */
-  void setFilterList(in PRUint32 numberOfFilters,
-                     [array, size_is(numberOfFilters)] in wstring titles,
-                     [array, size_is(numberOfFilters)] in wstring filters);
+  void setFilters(in long filterMask);
 
  /**
-  * Get the index into the filter list for the type of file the user wants to save
+  * Add a filter
   *
-  * @param      selectedFilter    the index of the selected item in the filter list
+  * @param      title    name of the filter
+  * @param      filter   extentions to filter -- semicolon and space seperated
   *
   */
-  readonly attribute long selectedFilter;
+  void appendFilter(in wstring title,
+                    in wstring filter);
 
   /* what is this? */
   attribute wstring defaultString;
