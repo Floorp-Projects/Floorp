@@ -307,10 +307,10 @@ li {
 }
 
 /* nested lists have no top/bottom margins */
-ul ul,   ul ol,   ul dir,   ul menu,   ul dl
-ol ul,   ol ol,   ol dir,   ol menu,   ol dl
-dir ul,  dir ol,  dir dir,  dir menu,  dir dl
-menu ul, menu ol, menu dir, menu menu, menu dl
+ul ul,   ul ol,   ul dir,   ul menu,   ul dl,
+ol ul,   ol ol,   ol dir,   ol menu,   ol dl,
+dir ul,  dir ol,  dir dir,  dir menu,  dir dl,
+menu ul, menu ol, menu dir, menu menu, menu dl,
 dl ul,   dl ol,   dl dir,   dl menu,   dl dl {
   margin-top: 0;
   margin-bottom: 0;
