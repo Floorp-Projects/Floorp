@@ -705,14 +705,10 @@ IsXMLName(const jschar *cp, size_t n)
 JSBool
 js_IsXMLName(JSContext *cx, jsval v)
 {
-    JSBool rv;
-    JSErrorReporter older;
     JSClass *clasp;
     JSXMLQName *qn;
     JSString *name;
-
-    rv = JS_FALSE;
-    older = JS_SetErrorReporter(cx, NULL);
+    JSErrorReporter older;
 
     /*
      * Inline specialization of the QName constructor called with v passed as
@@ -728,16 +724,16 @@ js_IsXMLName(JSContext *cx, jsval v)
         qn = (JSXMLQName *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(v));
         name = qn->localName;
     } else {
+        older = JS_SetErrorReporter(cx, NULL);
         name = js_ValueToString(cx, v);
-        if (!name)
+        JS_SetErrorReporter(cx, older);
+        if (!name) {
             JS_ClearPendingException(cx);
+            return JS_FALSE;
+        }
     }
 
-    if (name)
-        rv = IsXMLName(JSSTRING_CHARS(name), JSSTRING_LENGTH(name));
-
-    JS_SetErrorReporter(cx, older);
-    return rv;
+    return IsXMLName(JSSTRING_CHARS(name), JSSTRING_LENGTH(name));
 }
 
 static JSBool
