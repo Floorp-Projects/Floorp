@@ -936,6 +936,16 @@ nsMsgFolderDataSource::OnItemIntPropertyChanged(nsIRDFResource *resource,
     OnUnreadMessagePropertyChanged(resource, oldValue, newValue);
   else if (kFolderSizeAtom == property)
     OnFolderSizePropertyChanged(resource, oldValue, newValue);
+  else if (kBiffStateAtom == property) {
+    // be careful about skipping if oldValue == newValue
+    // see the comment in nsMsgFolder::SetBiffState() about filters
+
+    nsCOMPtr<nsIRDFNode> biffNode;
+    nsresult rv = createBiffStateNodeFromFlag(newValue, getter_AddRefs(biffNode));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NotifyPropertyChanged(resource, kNC_BiffState, biffNode);
+  }
   return NS_OK;
 }
 
@@ -992,34 +1002,6 @@ nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item,
                                                  PRUint32 oldFlag,
                                                  PRUint32 newFlag)
 {
-  nsresult rv = NS_OK;
-
-  if (kBiffStateAtom == property) {
-    // for Incoming biff (to turn it on) the item is of type nsIMsgFolder (see nsMsgFolder::SetBiffState)
-    // for clearing the biff the item is of type nsIMsgDBHdr (see nsMsgDBFolder::OnKeyChange)
-    // so check for both of these here
-    nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item));
-    if(!folder) {
-      nsCOMPtr<nsIMsgDBHdr> msgHdr  = do_QueryInterface(item);
-      if (msgHdr)
-        rv = msgHdr->GetFolder(getter_AddRefs(folder));
-      if(NS_FAILED(rv))
-        return rv;
-    }
-
-    nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(folder));
-    if(resource) {
-      // be careful about skipping if oldFlag == newFlag
-      // see the comment in nsMsgFolder::SetBiffState() about filters
-
-      nsCOMPtr<nsIRDFNode> biffNode;
-      rv = createBiffStateNodeFromFlag(newFlag, getter_AddRefs(biffNode));
-      NS_ENSURE_SUCCESS(rv,rv);
-
-      NotifyPropertyChanged(resource, kNC_BiffState, biffNode);
-    }
-  }
-
   return NS_OK;
 }
 

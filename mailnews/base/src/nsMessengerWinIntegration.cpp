@@ -542,7 +542,6 @@ void nsMessengerWinIntegration::FillToolTipInfo()
   nsXPIDLCString hostName; 
   nsAutoString toolTipText;
   nsAutoString animatedAlertText;
-  nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsIMsgFolder> folder;
   nsCOMPtr<nsIWeakReference> weakReference;
   PRInt32 numNewMessages = 0;
@@ -553,8 +552,7 @@ void nsMessengerWinIntegration::FillToolTipInfo()
 
   for (PRUint32 index = 0; index < count; index++)
   {
-    supports = getter_AddRefs(mFoldersWithNewMail->ElementAt(index));
-    weakReference = do_QueryInterface(supports);
+    weakReference = do_QueryElementAt(mFoldersWithNewMail, index);
     folder = do_QueryReferent(weakReference);
     if (folder)
     {
@@ -615,7 +613,6 @@ nsresult nsMessengerWinIntegration::GetFirstFolderWithNewMail(char ** aFolderURI
   nsresult rv;
   NS_ENSURE_TRUE(mFoldersWithNewMail, NS_ERROR_FAILURE); 
 
-  nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsIMsgFolder> folder;
   nsCOMPtr<nsIWeakReference> weakReference;
   PRInt32 numNewMessages = 0;
@@ -626,13 +623,11 @@ nsresult nsMessengerWinIntegration::GetFirstFolderWithNewMail(char ** aFolderURI
   if (!count)  // kick out if we don't have any folders with new mail
     return NS_OK;
 
-  supports = getter_AddRefs(mFoldersWithNewMail->ElementAt(0));
-  weakReference = do_QueryInterface(supports);
+  weakReference = do_QueryElementAt(mFoldersWithNewMail, 0);
   folder = do_QueryReferent(weakReference);
   
   if (folder)
   {
-    PRUint32 biffState = nsIMsgFolder::nsMsgBiffState_NoMail; 
     nsCOMPtr<nsIMsgFolder> msgFolder;
     // enumerate over the folders under this root folder till we find one with new mail....
     nsCOMPtr<nsISupportsArray> allFolders;
@@ -743,75 +738,6 @@ NS_IMETHODIMP
 nsMessengerWinIntegration::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
 {
   nsresult rv = NS_OK;
-
-  if (!mBiffIconInitialized)
-    InitializeBiffStatusIcon(); 
-    
-  // if we got new mail show a icon in the system tray
-	if (mBiffStateAtom == property && mFoldersWithNewMail)
-	{
-    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item);
-    NS_ENSURE_TRUE(folder, NS_OK);
-
-		if (newFlag == nsIMsgFolder::nsMsgBiffState_NewMail) 
-    {
-      // if the icon is not already visible, only show a system tray icon iff 
-      // we are performing biff (as opposed to the user getting new mail)
-      if (!mBiffIconVisible)
-      {
-        PRBool performingBiff = PR_FALSE;
-        nsCOMPtr<nsIMsgIncomingServer> server;
-        folder->GetServer(getter_AddRefs(server));
-        if (server)
-          server->GetPerformingBiff(&performingBiff);
-        if (!performingBiff) 
-          return NS_OK; // kick out right now...
-      }
-      nsCOMPtr<nsIWeakReference> weakFolder = do_GetWeakReference(folder); 
-
-      // remove the element if it is already in the array....
-      PRUint32 count = 0;
-      PRUint32 index = 0; 
-      mFoldersWithNewMail->Count(&count);
-      nsCOMPtr<nsISupports> supports;
-      nsCOMPtr<nsIMsgFolder> oldFolder;
-      nsCOMPtr<nsIWeakReference> weakReference;
-      for (index = 0; index < count; index++)
-      {
-        supports = getter_AddRefs(mFoldersWithNewMail->ElementAt(index));
-        weakReference = do_QueryInterface(supports);
-        oldFolder = do_QueryReferent(weakReference);
-        if (oldFolder == folder) // if they point to the same folder
-          break;
-        oldFolder = nsnull;
-      }
-
-      if (oldFolder)
-        mFoldersWithNewMail->ReplaceElementAt(weakFolder, index);
-      else
-        mFoldersWithNewMail->AppendElement(weakFolder);
-      // now regenerate the tooltip
-      FillToolTipInfo();    
-    }
-    else if (newFlag == nsIMsgFolder::nsMsgBiffState_NoMail)
-    {
-      // we are always going to remove the icon whenever we get our first no mail
-      // notification. 
-      
-      // avoid a race condition where we are told to remove the icon before we've actually
-      // added it to the system tray. This happens when the user reads a new message before
-      // the animated alert has gone away.
-      if (mAlertInProgress)
-        mSuppressBiffIcon = PR_TRUE;
-
-      mFoldersWithNewMail->Clear(); 
-      if (mBiffIconVisible) 
-      {
-        mBiffIconVisible = PR_FALSE;
-        GenericShellNotify(NIM_DELETE); 
-      }
-    }
-  } // if the biff property changed
   
   return NS_OK;
 }
@@ -861,12 +787,61 @@ nsMessengerWinIntegration::OnItemEvent(nsIMsgFolder *, nsIAtom *)
 NS_IMETHODIMP
 nsMessengerWinIntegration::OnItemIntPropertyChanged(nsIRDFResource *aItem, nsIAtom *aProperty, PRInt32 aOldValue, PRInt32 aNewValue)
 {
-  nsresult rv;
+  // if we got new mail show a icon in the system tray
+  if (mBiffStateAtom == aProperty && mFoldersWithNewMail)
+  {
+    if (!mBiffIconInitialized)
+      InitializeBiffStatusIcon(); 
+
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(aItem);
+    NS_ENSURE_TRUE(folder, NS_OK);
+
+    if (aNewValue == nsIMsgFolder::nsMsgBiffState_NewMail) 
+    {
+      // if the icon is not already visible, only show a system tray icon iff 
+      // we are performing biff (as opposed to the user getting new mail)
+      if (!mBiffIconVisible)
+      {
+        PRBool performingBiff = PR_FALSE;
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        folder->GetServer(getter_AddRefs(server));
+        if (server)
+          server->GetPerformingBiff(&performingBiff);
+        if (!performingBiff) 
+          return NS_OK; // kick out right now...
+      }
+      nsCOMPtr<nsIWeakReference> weakFolder = do_GetWeakReference(folder); 
+
+      if (mFoldersWithNewMail->IndexOf(weakFolder) == -1)
+        mFoldersWithNewMail->AppendElement(weakFolder);
+      // now regenerate the tooltip
+      FillToolTipInfo();    
+    }
+    else if (aNewValue == nsIMsgFolder::nsMsgBiffState_NoMail)
+    {
+      // we are always going to remove the icon whenever we get our first no mail
+      // notification. 
+      
+      // avoid a race condition where we are told to remove the icon before we've actually
+      // added it to the system tray. This happens when the user reads a new message before
+      // the animated alert has gone away.
+      if (mAlertInProgress)
+        mSuppressBiffIcon = PR_TRUE;
+
+      mFoldersWithNewMail->Clear(); 
+      if (mBiffIconVisible) 
+      {
+        mBiffIconVisible = PR_FALSE;
+        GenericShellNotify(NIM_DELETE); 
+      }
+    }
+  } // if the biff property changed
 
   if (!mStoreUnreadCounts) return NS_OK; // don't do anything here if we aren't storing unread counts...
 
   if (aProperty == mTotalUnreadMessagesAtom) {
     const char *itemURI = nsnull;
+    nsresult rv;
     rv = aItem->GetValueConst(&itemURI);
     NS_ENSURE_SUCCESS(rv,rv);
 

@@ -244,6 +244,13 @@ nsStatusBarBiffManager::OnItemPropertyChanged(nsIRDFResource *item, nsIAtom *pro
 NS_IMETHODIMP
 nsStatusBarBiffManager::OnItemIntPropertyChanged(nsIRDFResource *item, nsIAtom *property, PRInt32 oldValue, PRInt32 newValue)
 {
+  if (kBiffStateAtom == property)
+  {
+    if (mCurrentBiffState != newValue) {
+      PerformStatusBarBiff(newValue);
+      mCurrentBiffState = newValue;
+    }
+  }
   return NS_OK;
 }
 
@@ -262,13 +269,6 @@ nsStatusBarBiffManager::OnItemUnicharPropertyChanged(nsIRDFResource *item, nsIAt
 NS_IMETHODIMP 
 nsStatusBarBiffManager::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
 {
-  if (kBiffStateAtom == property)
-  {
-    if (mCurrentBiffState != newFlag) {
-      PerformStatusBarBiff(newFlag);
-      mCurrentBiffState = newFlag;
-    }
-  }
   return NS_OK;
 }
 

@@ -4075,7 +4075,7 @@ NS_IMETHODIMP nsMsgDBFolder::SetBiffState(PRUint32 aBiffState)
 
       if (server)
         server->SetBiffState(aBiffState);
-      NotifyPropertyFlagChanged((nsIRDFResource *)this, kBiffStateAtom, oldBiffState, aBiffState);
+      NotifyIntPropertyChanged(kBiffStateAtom, oldBiffState, aBiffState);
     }
   }
   else if (aBiffState == nsMsgBiffState_NoMail)

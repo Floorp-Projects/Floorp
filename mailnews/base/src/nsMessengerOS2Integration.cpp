@@ -96,13 +96,6 @@ nsMessengerOS2Integration::Init()
   rv = accountManager->AddRootFolderListener(this);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // because we care if the unread total count changes
-  rv = mailSession->AddFolderListener(this, nsIFolderListener::boolPropertyChanged | nsIFolderListener::intPropertyChanged);
-  NS_ENSURE_SUCCESS(rv,rv);
-
   return NS_OK;
 }
 
@@ -127,23 +120,6 @@ nsMessengerOS2Integration::OnItemRemoved(nsIRDFResource *, nsISupports *)
 NS_IMETHODIMP
 nsMessengerOS2Integration::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
 {
-  if (newFlag == nsIMsgFolder::nsMsgBiffState_NewMail) 
-  {
-     APIRET rc;
-     PULONG pUnreadCount = NULL;
-     printf("Change icon to newmail\n");
-     rc = DosGetNamedSharedMem((PVOID *)&pUnreadCount, "\\sharemem\\inbox.mem", PAG_READ | PAG_WRITE);
-     *pUnreadCount = 1;
-  }
-  else if (newFlag == nsIMsgFolder::nsMsgBiffState_NoMail)
-  {
-     APIRET rc;
-     PULONG pUnreadCount = NULL;
-     printf("Change icon to newmail\n");
-     rc = DosGetNamedSharedMem((PVOID *)&pUnreadCount, "\\sharemem\\inbox.mem", PAG_READ | PAG_WRITE);
-     *pUnreadCount = 0;
-     printf("Change icon to nomail\n");
-  }
   return NS_OK;
 }
 
@@ -171,6 +147,22 @@ nsMessengerOS2Integration::OnItemEvent(nsIMsgFolder *, nsIAtom *)
 NS_IMETHODIMP
 nsMessengerOS2Integration::OnItemIntPropertyChanged(nsIRDFResource *aItem, nsIAtom *aProperty, PRInt32 aOldValue, PRInt32 aNewValue)
 {
+  if (aNewValue == nsIMsgFolder::nsMsgBiffState_NewMail) 
+  {
+     APIRET rc;
+     PULONG pUnreadCount = NULL;
+     printf("Change icon to newmail\n");
+     rc = DosGetNamedSharedMem((PVOID *)&pUnreadCount, "\\sharemem\\inbox.mem", PAG_READ | PAG_WRITE);
+     *pUnreadCount = 1;
+  }
+  else if (aNewValue == nsIMsgFolder::nsMsgBiffState_NoMail)
+  {
+     APIRET rc;
+     PULONG pUnreadCount = NULL;
+     printf("Change icon to nomail\n");
+     rc = DosGetNamedSharedMem((PVOID *)&pUnreadCount, "\\sharemem\\inbox.mem", PAG_READ | PAG_WRITE);
+     *pUnreadCount = 0;
+  }
   return NS_OK;
 }
 
