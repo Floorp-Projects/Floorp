@@ -23,6 +23,10 @@
 #include "nsISupports.idl"
 #include "nsISOAPMessage.idl"
 
+%{ C++
+#include "nsAWritableString.h"
+%} 
+
 interface nsISOAPResponse;
 interface nsISOAPResponseListener;
 interface nsISOAPCallCompletion;

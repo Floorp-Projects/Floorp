@@ -22,6 +22,10 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+#include "nsAWritableString.h"
+%} 
+
 /**
  * This interface permits attachment of SOAP attachments.
  */

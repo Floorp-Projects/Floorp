@@ -22,6 +22,10 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+#include "nsAWritableString.h"
+%} 
+
 interface nsIDOMElement;
 
 /**

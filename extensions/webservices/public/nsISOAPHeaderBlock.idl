@@ -22,6 +22,10 @@
 
 #include "nsISOAPBlock.idl"
 
+%{ C++
+#include "nsAWritableString.h"
+%} 
+
 interface nsIDOMElement;
 interface nsIVariant;
 interface nsISOAPEncoding;
