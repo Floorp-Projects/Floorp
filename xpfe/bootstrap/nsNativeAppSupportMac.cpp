@@ -49,14 +49,14 @@ void NS_HideSplashScreen()
 	}
 }
 
-bool NS_CanRun() 
+PRBool NS_CanRun() 
 {
 	long response = 0;
 	OSErr err = ::Gestalt (gestaltSystemVersion, &response);
 	if ( err || response < 0x850)
 	{
 		::StopAlert (5000, NULL);
-		return false;
+		return PR_FALSE;
 	}
-	return true;
+	return PR_TRUE;
 }
