@@ -13,21 +13,23 @@
             try {
               var scrollbarStyle = this.boxObject.getLookAndFeelMetric("scrollbarStyle");
               var thumbStyle = this.boxObject.getLookAndFeelMetric("thumbStyle");
+              var downTop;
+              var upBottom;
               if ( scrollbarStyle == "double" ) {
-                var downTop = this.findNodeByAttribute("sbattr", "scrollbar-down-top");
-                var upBottom = this.findNodeByAttribute("sbattr", "scrollbar-up-bottom");
+                downTop = this.findNodeByAttribute("sbattr", "scrollbar-down-top");
+                upBottom = this.findNodeByAttribute("sbattr", "scrollbar-up-bottom");
                 downTop.removeAttribute("collapsed");
                 upBottom.removeAttribute("collapsed");
               }
               else if ( scrollbarStyle == "doubletop" ) {
-                var downTop = this.findNodeByAttribute("sbattr", "scrollbar-down-top");
+                downTop = this.findNodeByAttribute("sbattr", "scrollbar-down-top");
                 var downBottom = this.findNodeByAttribute("sbattr", "scrollbar-down-bottom");
                 downTop.removeAttribute("collapsed");
                 downBottom.setAttribute("collapsed","true");
               }
               else if ( scrollbarStyle == "doublebottom" ) {
                 var upTop = this.findNodeByAttribute("sbattr", "scrollbar-up-top");
-                var upBottom = this.findNodeByAttribute("sbattr", "scrollbar-up-bottom");
+                upBottom = this.findNodeByAttribute("sbattr", "scrollbar-up-bottom");
                 upTop.setAttribute("collapsed","true");
                 upBottom.removeAttribute("collapsed");
               }
