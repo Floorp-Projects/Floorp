@@ -23,6 +23,7 @@
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+	<html:script src="internetresults.js" />
 	<html:script src="shared.js" />
 
 	<box align="horizontal" style="width: 100%;" >
@@ -66,7 +67,7 @@
 	</tree>
 	</box>
 
-	<tree id="internetresultstree" style="height: 100%; width: 100%;" flex="100%" datasources="rdf:internetsearch" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
+	<tree id="internetresultstree" style="height: 75%; width: 100%;" flex="100%" datasources="rdf:internetsearch" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 		<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance" sortActive="true" sortDirection="descending" />
 		<treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"/>
@@ -89,7 +90,7 @@
                                 <treechildren>
 				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
 					<treerow>
-						<treecell>
+						<treecell onclick="doClick(this.parentNode.parentNode)">
 							<treeindentation />
 							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
 						</treecell>
@@ -134,4 +135,6 @@
 			</treerow>
 		</treehead>
 	</tree>
+
+	<html:iframe id="output" width="100%" height="25%" />
 </window>

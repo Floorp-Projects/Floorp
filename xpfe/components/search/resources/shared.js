@@ -1,11 +1,31 @@
 
 function OpenURL(event,node)
 {
+	var url = node.getAttribute('id');
+
 	if (node.getAttribute('container') == "true")
 	{
 		return(false);
 	}
-	url = node.getAttribute('id');
+
+	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+	if (rdf)
+	{
+		var fileSys = rdf.GetDataSource("rdf:internetsearch");
+		if (fileSys)
+		{
+			var src = rdf.GetResource(url, true);
+			var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+			var target = fileSys.GetTarget(src, prop, true);
+			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+			if (target)	target = target.Value;
+			if (target)	url = target;
+			
+		}
+	}
+
+	dump("OpenURL: double-clicked on '" + url + "'\n");
 
 	// Ignore "NC:" urls.
 	if (url.substring(0, 3) == "NC:")
