@@ -234,7 +234,7 @@ class basic_nsAWritableString
       EndWriting( PRUint32 aOffset = 0 )
         {
           nsWritableFragment<CharT> fragment;
-          CharT* startPos = GetWritableFragment(fragment, kFragmentAt, NS_MAX(0U, Length()-aOffset));
+          CharT* startPos = GetWritableFragment(fragment, kFragmentAt, NS_MAX(0U, this->Length()-aOffset));
           return nsWritingIterator<CharT>(fragment, startPos, *this);
         }
 
@@ -246,9 +246,9 @@ class basic_nsAWritableString
       void
       Truncate( PRUint32 aNewLength=0 )
         {
-          NS_ASSERTION(aNewLength<=Length(), "Can't use |Truncate()| to make a string longer.");
+          NS_ASSERTION(aNewLength<=this->Length(), "Can't use |Truncate()| to make a string longer.");
 
-          if ( aNewLength < Length() )
+          if ( aNewLength < this->Length() )
             SetLength(aNewLength);
         }
 
@@ -507,7 +507,7 @@ template <class CharT>
 void
 basic_nsAWritableString<CharT>::do_AppendFromReadable( const basic_nsAReadableString<CharT>& rhs )
   {
-    PRUint32 oldLength = Length();
+    PRUint32 oldLength = this->Length();
     SetLength(oldLength + rhs.Length());
     copy_string(rhs.BeginReading(), rhs.EndReading(), BeginWriting(oldLength));
   }
@@ -530,7 +530,7 @@ template <class CharT>
 void
 basic_nsAWritableString<CharT>::do_AppendFromIterators( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
   {
-    PRUint32 oldLength = Length();
+    PRUint32 oldLength = this->Length();
     SetLength(oldLength + distance(aStart, aEnd));
     copy_string(aStart, aEnd, BeginWriting(oldLength));
   }
@@ -555,7 +555,7 @@ inline
 void
 basic_nsAWritableString<CharT>::do_AppendFromElement( CharT aChar )
   {
-    PRUint32 oldLength = Length();
+    PRUint32 oldLength = this->Length();
     SetLength(oldLength+1);
     nsWritableFragment<CharT> fragment;
     *GetWritableFragment(fragment, kFragmentAt, oldLength) = aChar;
@@ -571,10 +571,10 @@ template <class CharT>
 void
 basic_nsAWritableString<CharT>::do_InsertFromReadable( const basic_nsAReadableString<CharT>& aReadable, PRUint32 atPosition )
   {
-    PRUint32 oldLength = Length();
+    PRUint32 oldLength = this->Length();
     SetLength(oldLength + aReadable.Length());
     if ( atPosition < oldLength )
-      copy_string_backward(BeginReading(atPosition), BeginReading(oldLength), EndWriting());
+      copy_string_backward(this->BeginReading(atPosition), this->BeginReading(oldLength), EndWriting());
     else
       atPosition = oldLength;
     copy_string(aReadable.BeginReading(), aReadable.EndReading(), BeginWriting(atPosition));
@@ -624,11 +624,11 @@ template <class CharT>
 void
 basic_nsAWritableString<CharT>::Cut( PRUint32 cutStart, PRUint32 cutLength )
   {
-    PRUint32 myLength = Length();
+    PRUint32 myLength = this->Length();
     cutLength = NS_MIN(cutLength, myLength-cutStart);
     PRUint32 cutEnd = cutStart + cutLength;
     if ( cutEnd < myLength )
-      copy_string(BeginReading(cutEnd), EndReading(), BeginWriting(cutStart));
+      copy_string(this->BeginReading(cutEnd), this->EndReading(), BeginWriting(cutStart));
     SetLength(myLength-cutLength);
   }
 
@@ -642,7 +642,7 @@ template <class CharT>
 void
 basic_nsAWritableString<CharT>::do_ReplaceFromReadable( PRUint32 cutStart, PRUint32 cutLength, const basic_nsAReadableString<CharT>& aReplacement )
   {
-    PRUint32 oldLength = Length();
+    PRUint32 oldLength = this->Length();
 
     cutStart = NS_MIN(cutStart, oldLength);
     cutLength = NS_MIN(cutLength, oldLength-cutStart);
@@ -654,10 +654,10 @@ basic_nsAWritableString<CharT>::do_ReplaceFromReadable( PRUint32 cutStart, PRUin
     PRUint32 newLength = oldLength - cutLength + replacementLength;
 
     if ( cutLength > replacementLength )
-      copy_string(BeginReading(cutEnd), EndReading(), BeginWriting(replacementEnd));
+      copy_string(this->BeginReading(cutEnd), this->EndReading(), BeginWriting(replacementEnd));
     SetLength(newLength);
     if ( cutLength < replacementLength )
-      copy_string_backward(BeginReading(cutEnd), BeginReading(oldLength), BeginWriting(replacementEnd));
+      copy_string_backward(this->BeginReading(cutEnd), this->BeginReading(oldLength), BeginWriting(replacementEnd));
 
     copy_string(aReplacement.BeginReading(), aReplacement.EndReading(), BeginWriting(cutStart));
   }
