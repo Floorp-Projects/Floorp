@@ -22,7 +22,7 @@
  * Contributor(s):
  *   Steve Clark <buster@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
- *   L. David Baron <dbaron@fas.harvard.edu>
+ *   L. David Baron <dbaron@dbaron.org>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of

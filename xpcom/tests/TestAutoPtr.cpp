@@ -18,7 +18,7 @@
  * Baron.  All Rights Reserved.
  * 
  * Contributor(s): 
- *   L. David Baron <dbaron@fas.harvard.edu> (original author)
+ *   L. David Baron <dbaron@dbaron.org> (original author)
  */
 
 #include "nsAutoPtr.h"

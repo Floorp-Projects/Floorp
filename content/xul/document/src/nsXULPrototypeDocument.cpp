@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
- *   L. David Baron <dbaron@fas.harvard.edu>
+ *   L. David Baron <dbaron@dbaron.org>
  *   Ben Goodger <ben@netscape.com>
  *
  *
