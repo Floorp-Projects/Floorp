@@ -272,25 +272,22 @@ nsLineBox::IndexOf(nsIFrame* aFrame) const
   return -1;
 }
 
-nsresult
-nsLineBox::IsEmpty(nsCompatibility aCompatMode, PRBool aParentIsPre,
-                   PRBool *aResult) const
+PRBool
+nsLineBox::IsEmpty() const
 {
   if (IsBlock())
-    return mFirstChild->IsEmpty(aCompatMode, aParentIsPre, aResult);
+    return mFirstChild->IsEmpty();
 
-  *aResult = PR_TRUE;
   PRInt32 n;
   nsIFrame *kid;
   for (n = GetChildCount(), kid = mFirstChild;
        n > 0;
        --n, kid = kid->GetNextSibling())
   {
-    kid->IsEmpty(aCompatMode, aParentIsPre, aResult);
-    if (! *aResult)
-      break;
+    if (!kid->IsEmpty())
+      return PR_FALSE;
   }
-  return NS_OK;
+  return PR_TRUE;
 }
 
 void

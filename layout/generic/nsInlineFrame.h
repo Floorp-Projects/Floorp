@@ -108,9 +108,7 @@ public:
 #endif
   virtual nsIAtom* GetType() const;
 
-  NS_IMETHOD IsEmpty(nsCompatibility aCompatMode,
-                     PRBool aIsPre,
-                     PRBool* aResult);
+  virtual PRBool IsEmpty();
 
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext* aPresContext,

@@ -136,16 +136,16 @@ IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
             (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
 }
 
-NS_IMETHODIMP
-nsInlineFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
-                       PRBool* aResult)
+/* virtual */ PRBool
+nsInlineFrame::IsEmpty()
 {
 #if 0
   // I used to think inline frames worked this way, but it seems they
   // don't.  At least not in our codebase.
-  if (aCompatMode == eCompatibility_FullStandards) {
-    *aResult = PR_FALSE;
-    return NS_OK;
+  nsCompatibility compatMode;
+  GetPresContext()->GetCompatibilityMode(&compatMode);
+  if (compatMode == eCompatibility_FullStandards) {
+    return PR_FALSE;
   }
 #endif
   const nsStyleMargin* margin = GetStyleMargin();
@@ -169,17 +169,14 @@ nsInlineFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
                     margin->mMargin.GetRight(coord)) ||
       !IsMarginZero(margin->mMargin.GetLeftUnit(),
                     margin->mMargin.GetLeft(coord))) {
-    *aResult = PR_FALSE;
-    return NS_OK;
+    return PR_FALSE;
   }
 
-  *aResult = PR_TRUE;
   for (nsIFrame *kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
-    kid->IsEmpty(aCompatMode, aIsPre, aResult);
-    if (! *aResult)
-      break;
+    if (!kid->IsEmpty())
+      return PR_FALSE;
   }
-  return NS_OK;
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP

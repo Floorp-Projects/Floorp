@@ -85,9 +85,7 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  NS_IMETHOD IsEmpty(nsCompatibility aCompatMode,
-                     PRBool aIsPre,
-                     PRBool *aResult);
+  virtual PRBool IsEmpty();
 
 protected:
   nsIFrame* mOutOfFlowFrame;

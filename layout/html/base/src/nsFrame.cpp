@@ -2848,11 +2848,10 @@ nsFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-nsFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre, PRBool *aResult)
+/* virtual */ PRBool
+nsFrame::IsEmpty()
 {
-  *aResult = PR_FALSE;
-  return NS_OK;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP

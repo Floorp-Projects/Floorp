@@ -1143,18 +1143,15 @@ public:
                                   PRBool*              aIsVisible) = 0;
 
   /**
-   * Determine whether the frame is logically empty, i.e., whether the
-   * layout would be the same whether or not the frame is present.
-   * Placeholder frames should return true.  Block frames should be
-   * considered empty whenever margins collapse through them, even
-   * though those margins are relevant.
-   *
-   * aIsPre should be ignored by frames to which the 'white-space'
-   * property applies.
+   * Determine whether the frame is logically empty, which is roughly
+   * whether the layout would be the same whether or not the frame is
+   * present.  Placeholder frames should return true.  Block frames
+   * should be considered empty whenever margins collapse through them,
+   * even though those margins are relevant.  Text frames containing
+   * only whitespace that does not contribute to the height of the line
+   * should return false.
    */
-  NS_IMETHOD IsEmpty(nsCompatibility aCompatMode,
-                     PRBool aIsPre,
-                     PRBool* aResult) = 0;
+  virtual PRBool IsEmpty() = 0;
 
   /**
    * IsGeneratedContentFrame returns whether a frame corresponds to

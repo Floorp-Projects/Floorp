@@ -149,9 +149,7 @@ public:
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible);
 
-  NS_IMETHOD IsEmpty(nsCompatibility aCompatMode,
-                     PRBool aIsPre,
-                     PRBool* aResult);
+  virtual PRBool IsEmpty();
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
@@ -270,10 +268,6 @@ protected:
 
   void ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
                            nsHTMLReflowMetrics& aMetrics);
-
-  // Calls |nsLineBox::IsEmpty| with the correct arguments.
-  PRBool IsLineEmpty(nsIPresContext* aPresContext,
-                     const nsLineBox* aLine) const;
 
   /** add the frames in aFrameList to this block after aPrevSibling
     * this block thinks in terms of lines, but the frame construction code
