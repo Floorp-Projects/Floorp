@@ -6,16 +6,35 @@
 #  a cvs checkout list, and building the resulting tree.
 #
 
+use strict;
+
+# For --option1, --option2, ...
+use Getopt::Long;
+Getopt::Long::Configure("bundling_override");
+Getopt::Long::Configure("auto_abbrev");
+
 use Cwd;
+
+my $debug = 1;
 
 sub PrintUsage {
   die <<END_USAGE
-  usage: $0
+  usage: $0 --modules=mod1,mod2,..
   (Assumes all.dot is in cwd, and you can check out a new cvs tree here)
 END_USAGE
 }
 
-my $debug = 1;
+my $root_modules;  # modules we want to build.
+
+sub parse_args() {
+  PrintUsage() if $#ARGV < 0;
+
+  # Stuff arguments into variables.
+  # Print usage if we get an unknown argument.
+  PrintUsage() if !GetOptions('modules=s' => \$root_modules);
+
+  print "root_modules = $root_modules\n";
+}
 
 sub get_system_cwd {
   my $a = Cwd::getcwd()||`pwd`;
@@ -26,19 +45,21 @@ sub get_system_cwd {
 
 # Run shell command, return output string.
 sub run_shell_command {
-  my ($shell_command) = @_;
+  my ($shell_command, $echo) = @_;
   local $_;
   
   my $status = 0;
   my $output = "";
 
   chomp($shell_command);
+
   print "cmd = $shell_command\n";
+
   open CMD, "$shell_command 2>&1|" or die "open: $!";
 
   while(<CMD>) {
 
-    if($debug) {
+    if($echo) {
       print $_;
     }
     chomp($_);
@@ -60,6 +81,9 @@ sub run_shell_command {
 {
   my $rv = 0;  # 0 = success.
   
+  # Get options.
+  parse_args();
+
   #
   # Assume all.dot is checked in somewhere.
   #
@@ -71,7 +95,9 @@ sub run_shell_command {
 
   # Pull core build stuff.
   print "\n\nPulling core build files...\n";
-  my $core_build_files = "mozilla/client.mk mozilla/config mozilla/configure mozilla/allmakefiles.sh mozilla/configure.in mozilla/Makefile.in mozilla/build mozilla/include mozilla/tools/module-deps";
+  
+  # mozilla/allmakefiles.sh 
+  my $core_build_files = "mozilla/client.mk mozilla/config mozilla/configure mozilla/configure.in mozilla/Makefile.in mozilla/allmakefiles.sh mozilla/build mozilla/include mozilla/tools/module-deps";
   $rv = run_shell_command("cvs co $core_build_files");
   
 
@@ -83,7 +109,7 @@ sub run_shell_command {
 
   #
   # Pull modules.
-  # Hard-coding this for xpcom to start off.
+  # Only one root/start module to start.
   #
   print "\n\nPulling modules...\n";
 
@@ -92,8 +118,8 @@ sub run_shell_command {
   my @modules;
   my $modules_string = "";
   my $num_modules = 0;
-  my $modules_cmd = "mozilla/tools/module-deps/module-graph\.pl --file all\.dot --start-module xpcom --list-only";
-  $modules_string = run_shell_command($modules_cmd);
+  my $modules_cmd = "mozilla/tools/module-deps/module-graph\.pl --file all\.dot --start-module $root_modules --list-only";
+  $modules_string = run_shell_command($modules_cmd, 0);
   @modules = split(' ', $modules_string);
   $num_modules = $#modules + 1;
   print "modules = $num_modules\n";
@@ -103,7 +129,7 @@ sub run_shell_command {
   my @dirs;
   my $dirs_string = "";
   my $dirs_cmd = "echo $modules_string | mozilla/config/module2dir\.pl --list-only";
-  $dirs_string = run_shell_command($dirs_cmd);
+  $dirs_string = run_shell_command($dirs_cmd, 0);
   #print "dirs_string = $dirs_string\n";
 
 
@@ -115,6 +141,12 @@ sub run_shell_command {
   # Try a build.
   my $base = get_system_cwd();
 
+  #
+  # Construct a allmakefiles.sh file
+  #
+  
+
+
   #print "Configuring nspr ... \n";
   #chdir("$base/mozilla/nsprpub");
   #my $nspr_configure_cmd = "./configure";
@@ -123,9 +155,13 @@ sub run_shell_command {
   print "Configuring ... \n";
   unlink("$base/mozilla/config.cache");
   chdir("$base/mozilla");
-  my $configure_cmd = "./configure --enable-standalone-modules=xpcom";
+  my $configure_cmd = "./configure --enable-standalone-modules=$root_modules";
   $rv = run_shell_command("$configure_cmd");
 
-  print "Building ... \n";
-  $rv = run_shell_command("gmake");
+  unless($rv) {
+    print "Building ... \n";
+    $rv = run_shell_command("gmake");
+  } else {
+    print "Error: skipping build.\n";
+  }
 }
