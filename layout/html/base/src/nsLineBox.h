@@ -30,6 +30,7 @@
 #define LINE_BOTTOM_MARGIN_IS_AUTO    0x20
 #define LINE_OUTSIDE_CHILDREN         0x40
 #define LINE_ISA_EMPTY_LINE           0x80
+#define LINE_IS_FIRST_LINE            0x100
 
 class nsISpaceManager;
 class nsLineBox;
@@ -103,6 +104,19 @@ public:
     }
     else {
       ClearIsBlock();
+    }
+  }
+
+  PRBool IsFirstLine() const {
+    return 0 != (LINE_IS_FIRST_LINE & mState);
+  }
+
+  void SetIsFirstLine(PRBool aValue) {
+    if (aValue) {
+      mState |= LINE_IS_FIRST_LINE;
+    }
+    else {
+      mState &= ~LINE_IS_FIRST_LINE;
     }
   }
 
