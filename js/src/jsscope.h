@@ -38,7 +38,6 @@
  * JS symbol tables.
  */
 #include "jstypes.h"
-#include "jshash.h" /* Added by JSIFY */
 #include "jsobj.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
