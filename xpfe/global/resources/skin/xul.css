@@ -161,6 +161,10 @@ menubutton {
   behavior: url("resource:/chrome/xulBindings.xml#menubutton");
 }
 
+autocomplete {
+  behavior: url("resource:/chrome/autocomplete.xml#autocomplete");
+}
+
 /******** Titled buttons **********/
 
 /******** Tree widget **********/
