@@ -18,6 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
+ *      Diego Biurrun   <diego@biurrun.de>
  */
 
 function Startup()
@@ -124,6 +125,8 @@ function doButtonEnabling()
     addDomainButton.disabled = true;
   if (parent.hPrefWindow.getPrefIsLocked(addDomain.getAttribute("prefstring")))
     addDomain.disabled = true;
+    
+  toggleAutoCompleteAdvancedButton();
 }  
 
 function moreInfo()
@@ -168,3 +171,10 @@ function receiveACPrefs(aAutoFill, aShowPopup, aShowSearch)
   document.getElementById("browserUrlbarShowSearch").setAttribute("value", aShowSearch);
 }
 
+ 
+function toggleAutoCompleteAdvancedButton()
+{
+  var browserAutoCompleteEnabled = document.getElementById("browserAutoCompleteEnabled");
+  var autoCompleteAdvancedButton = document.getElementById("autoCompleteAdvancedButton");
+  autoCompleteAdvancedButton.disabled = !browserAutoCompleteEnabled.checked;
+}
