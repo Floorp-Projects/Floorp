@@ -18,6 +18,7 @@
 
 #include "nsIRegistry.h"
 #include "nsIEnumerator.h"
+#include "nsSpecialSystemDirectory.h"
 #include "NSReg.h"
 #include "prmem.h"
 #include "prlock.h"
@@ -36,6 +37,7 @@ struct nsRegistry : public nsIRegistry {
 
     // This class implements the nsIRegistry interface functions.
     NS_IMETHOD Open( const char *regFile = 0 );
+    NS_IMETHOD OpenWellKnownRegistry( uint32 regid );
     NS_IMETHOD OpenDefault();
     NS_IMETHOD Close();
 
@@ -310,6 +312,18 @@ static void reginfo2Length( const REGINFO &in, uint32 &out ) {
     }
 }
 
+/*-------------------------------- PR_strdup -----------------------------------
+| Utility function that does PR_Malloc and copies argument string.  Caller     |
+| must do PR_Free.                                                             |
+------------------------------------------------------------------------------*/
+static char *PR_strdup( const char *in ) {
+    char *result = (char*)PR_Malloc( strlen( in ) + 1 );
+    if ( result ) {
+        strcpy( result, in );
+    }
+    return result;
+}
+
 /*----------------------------------- IIDs -------------------------------------
 | Static IID values for each imterface implemented here; required by the       |
 | NS_IMPL_ISUPPORTS macro.                                                     |
@@ -378,6 +392,51 @@ NS_IMETHODIMP nsRegistry::Open( const char *regFile ) {
     // Ensure existing registry is closed.
     Close();
     // Open specified registry.
+    PR_Lock(mregLock);
+    mErr = NR_RegOpen((char*)regFile, &mReg );
+    PR_Unlock(mregLock);
+    // Convert the result.
+    return regerr2nsresult( mErr );
+}
+
+/*----------------------------- nsRegistry::OpenWellKnownRegistry --------------
+| Takes a registry id and maps that to a file name for opening. We first check |
+| to see if a registry file is already open and close  it if so.               |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( uint32 regid ) {
+    // Ensure existing registry is closed.
+    Close();
+
+    nsSpecialSystemDirectory reg(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    PRBool foundReg = PR_FALSE;
+    
+    switch ( (WellKnownRegistry) regid ) {
+      case ApplicationComponentRegistry:
+#ifdef XP_MAC
+        reg += "Component Registry";
+#else
+        reg += "component.reg";
+#endif /* XP_MAC */
+        foundReg = PR_TRUE;
+        break;
+
+      default:
+        break;
+    }
+
+    if (foundReg == PR_FALSE) {
+        return NS_ERROR_REG_BADTYPE;
+    }
+
+    // WARNING:
+    // regNSPRPath and regFile need to have the same scope
+    // since the regFile will point to data in regNSPRPath
+    nsNSPRPath regNSPRPath(reg);
+    const char *regFile = (const char *) regNSPRPath;
+
+#ifdef DEBUG_dp
+    printf("nsRegistry: Opening std registry %s\n", regFile);
+#endif /* DEBUG_dp */
     PR_Lock(mregLock);
     mErr = NR_RegOpen((char*)regFile, &mReg );
     PR_Unlock(mregLock);
@@ -1119,18 +1178,6 @@ nsRegistryNode::nsRegistryNode( HREG hReg, RKEY key, REGENUM slot )
     return;
 }
 
-
-/*-------------------------------- PR_strdup -----------------------------------
-| Utility function that does PR_Malloc and copies argument string.  Caller     |
-| must do PR_Free.                                                             |
-------------------------------------------------------------------------------*/
-static char *PR_strdup( const char *in ) {
-    char *result = (char*)PR_Malloc( strlen( in ) + 1 );
-    if ( result ) {
-        strcpy( result, in );
-    }
-    return result;
-}
 
 /*-------------------------- nsRegistryNode::GetName ---------------------------
 | If we haven't fetched it yet, get the name of the corresponding subkey now,  |

@@ -138,14 +138,19 @@ struct nsIRegistry : public nsISupports {
     --------------------------------------------------------------------------*/
     typedef uint32 Key;
 
-    enum { Users = 1, Common = 2, CurrentUser = 3 };
+    enum WellKnownKeys { Users = 1, Common = 2, CurrentUser = 3 };
+
+    enum WellKnownRegistry {
+        ApplicationComponentRegistry = 1
+    };
 
     struct ValueInfo {
         DataType type;
         uint32   length;
     };
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IREGISTRY_IID; return iid; }
+
+    static const nsIID& GetIID() { static nsIID iid = NS_IREGISTRY_IID; return iid; }
 
     /*--------------------------- Opening/Closing ------------------------------
     | These functions open the specified registry file (Open() with a non-null |
@@ -160,6 +165,7 @@ struct nsIRegistry : public nsISupports {
     | Close() function.                                                        |
     --------------------------------------------------------------------------*/
     NS_IMETHOD Open( const char *regFile = 0 ) = 0;
+    NS_IMETHOD OpenWellKnownRegistry( uint32 regid ) = 0;
     NS_IMETHOD OpenDefault() = 0;
     NS_IMETHOD Close() = 0;
 
