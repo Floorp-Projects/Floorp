@@ -45,7 +45,7 @@
 *
 * This is what we are checking for in this testcase -
 */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = '(none)';
 var summary = 'Testing scope with nested functions';
@@ -66,7 +66,7 @@ function a()
     capture(this.toString());
   }
 
-  this.f = function()
+  this.c = function()
   {
     capture(this.toString());
     b();
@@ -77,7 +77,7 @@ function a()
 
 
 var obj = new a();  // captures actualvalues[0]
-obj.f();            // captures actualvalues[1], actualvalues[2]
+obj.c();            // captures actualvalues[1], actualvalues[2]
 
 
 // The values we expect - see introduction above -
@@ -87,9 +87,9 @@ expectedvalues[2] = cnGlobal;
 
 
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
 
