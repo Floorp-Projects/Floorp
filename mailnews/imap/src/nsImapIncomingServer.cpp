@@ -2021,8 +2021,22 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
 
 	nsXPIDLString progressString;
 	GetImapStringByID(IMAP_LOGIN_FAILED, getter_Copies(progressString));
+	
+  nsCOMPtr<nsIMsgWindow> msgWindow;
+  PRUint32 urlQueueCnt = 0;
+	// pull the url out of the queue so we can get the msg window, and try to rerun it.
+	m_urlQueue->Count(&urlQueueCnt);
 
-	FEAlert(progressString, nsnull);
+	if (urlQueueCnt > 0)
+	{
+		nsCOMPtr<nsISupports> supportCtxt(getter_AddRefs(m_urlQueue->ElementAt(0)));
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl(do_QueryInterface(supportCtxt, &rv));
+    if (mailnewsUrl)
+      mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+  }
+
+  FEAlert(progressString, msgWindow);
+
 
 	if (m_logonRedirector)
 	{
@@ -2035,10 +2049,7 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
 	if (badPassword)
 		SetPassword(nsnull);
 
-	PRUint32 urlQueueCnt = 0;
 
-	// pull the url out of the queue so we can get the msg window, and try to rerun it.
-	m_urlQueue->Count(&urlQueueCnt);
 	if (badPassword && ++m_redirectedLogonRetries <= 3)
 	{
 		// this will force a reprompt for the password.
