@@ -547,23 +547,15 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
 
         // if the last prompt got us a bad password then show a special dialog
         if (TestFlag(POP3_PASSWORD_FAILED))
-        {
+        { 
             rv = server->ForgetPassword();
             if (NS_FAILED(rv)) return rv;
 
             PRUnichar *passwordTemplate = nsnull;
             mStringService->GetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC, &passwordTemplate);
 
-            if (m_commandResponse.Length())
-                passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, m_commandResponse.get(), (const char *) userName, (const char *) hostName);
-            else
-            {
-                PRUnichar * noAnswerText = nsnull;
-                mStringService->GetStringByID(POP3_NO_ANSWER, &noAnswerText);
-                passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, noAnswerText, (const char *) userName, (const char *) hostName);
-                nsCRT::free(noAnswerText);
-            } 
-            nsCRT::free(passwordTemplate);
+            passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
+            nsCRT::free(passwordTemplate); 
         } // otherwise this is the first time we've asked about the server's password so show a first time prompt
         else
         {
@@ -833,20 +825,28 @@ nsPop3Protocol::Error(PRInt32 err_code)
             rv = msgWindow->GetPromptDialog(getter_AddRefs(dialog));
             if (NS_SUCCEEDED(rv))
             {
-                PRUnichar * alertString = nsnull;
-                mStringService->GetStringByID(err_code, &alertString);
-                if (alertString)
-                {
-                    dialog->Alert(nsnull, alertString); 
-                    nsCRT::free(alertString);
-                }
+              nsXPIDLString alertString;
+              mStringService->GetStringByID(err_code, getter_Copies(alertString));
+              if (m_pop3ConData->command_succeeded)  //not a server error message
+                dialog->Alert(nsnull, alertString.get()); 
+              else
+              {
+                nsAutoString message(alertString.get());
+                nsXPIDLString serverSaidPrefix;
+                mStringService->GetStringByID(POP3_SERVER_SAID,getter_Copies(serverSaidPrefix));
+                message.Append(NS_LITERAL_STRING(" ").get());
+                message.Append(serverSaidPrefix);
+                message.Append(NS_LITERAL_STRING(" ").get());
+                message.AppendWithConversion(m_commandResponse);
+                dialog->Alert(nsnull,message.GetUnicode()); 
+              }
             }
         }
     }
     m_pop3ConData->next_state = POP3_ERROR_DONE;
     m_pop3ConData->pause_for_read = PR_FALSE;
 
-	return -1;
+    return -1;
 }
 
 PRInt32 nsPop3Protocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging)
@@ -1068,11 +1068,8 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
            prompting the user for a password: just fail silently. */
         if (m_pop3ConData->only_check_for_new_mail)
             return MK_POP3_PASSWORD_UNDEFINED;
-        else       //suppress POP3_PASSWORD_FAILURE alert
-        {
-          	m_pop3ConData->next_state = POP3_ERROR_DONE;
-	        m_pop3ConData->pause_for_read = PR_FALSE;
-        }
+        else       
+            Error(POP3_PASSWORD_FAILURE);
         
 		SetFlag(POP3_PASSWORD_FAILED);
 
