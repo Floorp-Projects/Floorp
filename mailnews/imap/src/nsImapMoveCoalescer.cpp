@@ -45,8 +45,6 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
-static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
-
 NS_IMPL_ISUPPORTS1(nsImapMoveCoalescer, nsISupports)
 
 nsImapMoveCoalescer::nsImapMoveCoalescer(nsIMsgFolder *sourceFolder, nsIMsgWindow *msgWindow)
@@ -107,14 +105,17 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
   
   if (!m_destFolders)
     return NS_OK;	// nothing to do.
-  
+
   m_destFolders->Count(&numFolders);
   for (PRUint32 i = 0; i < numFolders; i++)
   {
+    // XXX todo
+    // is this the right place to make sure dest folder exists
+    // (and has proper flags?), before we start copying?
     nsCOMPtr <nsIMsgFolder> destFolder(do_QueryElementAt(m_destFolders, i));
     nsCOMPtr<nsIImapService> imapService = 
-      do_GetService(kCImapService, &rv);
-    if (NS_SUCCEEDED(rv) && imapService)
+      do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
     {
       nsMsgKeyArray *keysToAdd = (nsMsgKeyArray *) m_sourceKeyArrays.ElementAt(i);
       if (keysToAdd)
