@@ -1605,13 +1605,28 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
 #ifdef DEBUG
       else {
         // Dump an error message to the console
+        PRBool ignoreError = PR_FALSE;
         nsXPIDLCString url;
         aURL->GetSpec(getter_Copies(url));
-        nsCAutoString errorMessage(NS_LITERAL_CSTRING("CSSLoaderImpl::LoadAgentSheet: Load of URL '") +
-                                   nsDependentCString(url) +
-                                   NS_LITERAL_CSTRING("' failed.  Error code: "));
-        errorMessage.AppendInt(NS_ERROR_GET_CODE(result));
-        NS_WARNING(errorMessage.get());
+        // Ignore userChrome.css and userContent.css failures
+#define USERCHROMECSS "userChrome.css"
+#define USERCONTENTCSS "userContent.css"
+        if (url.Length() > sizeof(USERCHROMECSS) &&
+            Substring(url, url.Length()-sizeof(USERCHROMECSS)+1, sizeof(USERCHROMECSS)).Equals(NS_LITERAL_CSTRING(USERCHROMECSS)))
+          ignoreError = PR_TRUE;
+
+        if (!ignoreError &&
+            url.Length() > sizeof(USERCONTENTCSS) &&
+            Substring(url, url.Length()-sizeof(USERCONTENTCSS)+1, sizeof(USERCONTENTCSS)).Equals(NS_LITERAL_CSTRING(USERCONTENTCSS)))
+          ignoreError = PR_TRUE;
+
+        if (!ignoreError) {
+          nsCAutoString errorMessage(NS_LITERAL_CSTRING("CSSLoaderImpl::LoadAgentSheet: Load of URL '") +
+                                     nsDependentCString(url) +
+                                     NS_LITERAL_CSTRING("' failed.  Error code: "));
+          errorMessage.AppendInt(NS_ERROR_GET_CODE(result));
+          NS_WARNING(errorMessage.get());
+        }
       }
 #endif
     }
