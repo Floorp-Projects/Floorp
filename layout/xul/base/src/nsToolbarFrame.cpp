@@ -248,7 +248,7 @@ nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext,
 { 
 #ifdef TOOLBAR_DD
   mDragListener->SetPresContext(&aPresContext); // not ref counted
-#endif;
+#endif
 
   if ( !aEvent ) 
     return nsEventStatus_eIgnore; 
