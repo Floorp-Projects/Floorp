@@ -408,7 +408,7 @@ nsJSIID::HasInstance(JSContext *cx, JSObject *obj,
 
             nsIInterfaceInfo* cur;
             NS_ADDREF(prev);
-            while(NS_SUCCEEDED(prev->GetParent(&cur)))
+            while(NS_SUCCEEDED(prev->GetParent(&cur)) && cur)
             {
                 NS_RELEASE(prev);
                 prev = cur;
