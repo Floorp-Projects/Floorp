@@ -5,16 +5,16 @@
 
 <body>
 <script>
-var uri = Components.classes["component://netscape/uri"].createInstance();
+var uri = Components.classes["component://netscape/network/simple-uri"].createInstance();
 uri = uri.QueryInterface(Components.interfaces.nsIURI);
-uri = "resource:/res/samples/test.wav";
+uri.spec = "http://moocow.mcom.com/test.wav";
 
 var sample = Components.classes["component://netscape/sound"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISound);
 </script>
 
 <form name="form">
-<input type="button" value="Play Sound" onclick="sample.play(uri);">
+<input type="button" value="Play Sound" onclick="sample.Play(uri);">
 <form>
 </body>
 </html>
