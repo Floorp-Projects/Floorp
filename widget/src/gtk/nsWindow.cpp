@@ -55,6 +55,8 @@
 
 #include "nsSpecialSystemDirectory.h"
 
+#include <unistd.h>
+
 
 #undef DEBUG_DND_XLATE
 #define MODAL_TIMERS_BROKEN
@@ -280,6 +282,30 @@ nsWindow::DestroyNativeChildren(void)
     XFree(children_return);
 }
 
+void
+nsWindow::ShowCrossAtLocation(guint x, guint y)
+{
+  g_print("ShowCrossAtLocation %d, %d\n", x, y);
+  if (mSuperWin) {
+    GdkGC *gc = 0;
+    GdkColor white;
+    int i;
+    gc = gdk_gc_new(GDK_ROOT_PARENT());
+    white.pixel = WhitePixel(gdk_display, DefaultScreen(gdk_display));
+    gdk_gc_set_foreground(gc,&white);
+    gdk_gc_set_function(gc,GDK_XOR);
+    gdk_gc_set_subwindow(gc,GDK_INCLUDE_INFERIORS);
+    gdk_gc_set_line_attributes(gc, 4, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+    for (i=0; i < 2; i++) {
+      gdk_draw_line(mSuperWin->bin_window, gc, x - 20 , y, x + 20, y);
+      XSync(gdk_display, False);
+      usleep(200);
+      gdk_draw_line(mSuperWin->bin_window, gc, x, y - 20, x, y + 20);
+    }
+    gdk_gc_destroy(gc);
+  }
+}
+
 // This function will try to take a given native X window and try 
 // to find the nsWindow * class that has it corresponds to.
 
@@ -334,6 +360,7 @@ Window
 nsWindow::GetInnerMostWindow(Window aOriginWindow,
                              Window aWindow,
                              nscoord x, nscoord y,
+                             nscoord *retx, nscoord *rety,
                              int depth)
 {
 
@@ -426,11 +453,15 @@ nsWindow::GetInnerMostWindow(Window aOriginWindow,
       if ((dest_x_return > 0) && (dest_y_return > 0) &&
           (y_offset > 0) && (x_offset > 0))
       {
+        // set our return window to this dest
         returnWindow = dest_w;
+        // set the coords that we are going to return to the coords that we got above.
+        *retx = dest_x_return;
+        *rety = dest_y_return;
         // check to see if there's a more inner window that is
         // also within these coords
         Window tempWindow = None;
-        tempWindow = GetInnerMostWindow(aOriginWindow, dest_w, x, y, (depth + 1));
+        tempWindow = GetInnerMostWindow(aOriginWindow, dest_w, x, y, retx, rety, (depth + 1));
         if (tempWindow != None)
           returnWindow = tempWindow;
         goto finishedWalk;
@@ -1268,9 +1299,12 @@ nsWindow::OnToplevelDragMotion     (GtkWidget      *aWidget,
   DumpWindowTree();
 #endif
 
+  nscoord retx = 0;
+  nscoord rety = 0;
+
   Window thisWindow = GDK_WINDOW_XWINDOW(aWidget->window);
   Window returnWindow = None;
-  returnWindow = GetInnerMostWindow(thisWindow, thisWindow, x, y, 0);
+  returnWindow = GetInnerMostWindow(thisWindow, thisWindow, x, y, &retx, &rety, 0);
 
   nsWindow *innerMostWidget = NULL;
   innerMostWidget = GetnsWindowFromXWindow(returnWindow);
@@ -1307,8 +1341,8 @@ nsWindow::OnToplevelDragMotion     (GtkWidget      *aWidget,
 
   event.widget = innerMostWidget;
 
-  event.point.x = x;
-  event.point.y = y;
+  event.point.x = retx;
+  event.point.y = rety;
 
   innerMostWidget->AddRef();
 

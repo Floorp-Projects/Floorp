@@ -182,6 +182,7 @@ public:
   PRBool GrabInProgress(void);
   //  XXX Chris - fix these
   //  virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
+  void ShowCrossAtLocation(guint x, guint y);
 
 protected:
 
@@ -242,6 +243,7 @@ protected:
   static Window     GetInnerMostWindow(Window aOriginWindow,
                                        Window aWindow,
                                        nscoord x, nscoord y,
+                                       nscoord *retx, nscoord *rety,
                                        int depth);
   // given an X window this will find the nsWindow * for it.
   static nsWindow  *GetnsWindowFromXWindow(Window aWindow);
