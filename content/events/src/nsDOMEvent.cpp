@@ -1422,7 +1422,7 @@ NS_IMETHODIMP nsDOMEvent::GetRequestingWindowURI(nsIURI **aRequestingWindowURI)
     return NS_OK;
   }
   *aRequestingWindowURI = 0;
-  return NS_ERROR_FAILURE;
+  return NS_OK;  // Don't throw an exception
 }
 
 /* readonly attribute nsIURI popupWindowURI; */
@@ -1436,7 +1436,7 @@ NS_IMETHODIMP nsDOMEvent::GetPopupWindowURI(nsIURI **aPopupWindowURI)
     return NS_OK;
   }
   *aPopupWindowURI = 0;
-  return NS_ERROR_FAILURE;
+  return NS_OK;  // Don't throw an exception
 }
 
 NS_METHOD nsDOMEvent::DuplicatePrivateData()
