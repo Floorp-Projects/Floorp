@@ -273,6 +273,7 @@ nsSocketTransport::nsSocketTransport(PRUint32 aPortToUse, const char * aHostName
 
   // remember the port and host name
   NS_PRECONDITION(aPortToUse > 0 && aHostName, "Creating a socket transport with an invalid port or host name.");
+  m_fileName = nsnull;
   m_port = aPortToUse;
   if (aHostName)
 	m_hostName = PL_strdup(aHostName);
@@ -288,7 +289,7 @@ nsSocketTransport::nsSocketTransport(PRUint32 aPortToUse, const char * aHostName
 nsSocketTransport::nsSocketTransport(const char * fileName)
 {
     NS_INIT_REFCNT();
-
+	m_fileName = nsnull;
 	NS_PRECONDITION(fileName && *fileName, "Creating a socket with an invalid file name.");
 	if (fileName)
 	{
@@ -337,6 +338,8 @@ nsSocketTransport::~nsSocketTransport()
    */
 
   rv = CloseCurrentConnection();
+
+  PR_FREEIF(m_fileName);
 
   NS_IF_RELEASE(mEventQService);
   NS_IF_RELEASE(m_evQueue);
