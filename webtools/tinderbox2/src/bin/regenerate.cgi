@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2002/05/01 02:47:06 $ 
+# $Revision: 1.10 $ 
+# $Date: 2002/05/01 02:52:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -79,6 +79,7 @@ Content-type: text/html
 <TABLE BORDER=0 WIDTH="100%" HEIGHT="100%"><TR><TD ALIGN=CENTER VALIGN=CENTER>
 <FONT SIZE="+2">
 Regenerating HTML now.<br>
+Please refresh the page when the redirect is complete.<br>
 Sending you to the <A HREF="$url">default Tinderbox page</A>.
 </FONT>
 </TD></TR></TABLE>
