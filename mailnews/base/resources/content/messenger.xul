@@ -61,8 +61,8 @@ Rights Reserved.
 
 <!-- Edit Menu -->
 <!ENTITY editMenu.label "Edit"> 
-<!ENTITY undoCmd.label ".Undo">  
-<!ENTITY redoCmd.label ".Redo">  
+<!ENTITY undoCmd.label "Undo">  
+<!ENTITY redoCmd.label "Redo">  
 <!ENTITY cutCmd.label ".Cut">  
 <!ENTITY copyCmd.label ".Copy">  
 <!ENTITY pasteCmd.label ".Paste">  
