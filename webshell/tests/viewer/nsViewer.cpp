@@ -113,7 +113,9 @@ static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIChildWidgetIID, NS_IWIDGET_IID);
 
 #define VIEWER_UI
+#if !defined(XP_PC)
 #undef  VIEWER_UI
+#endif
 #undef INSET_WEBWIDGET
 
 #ifdef VIEWER_UI
