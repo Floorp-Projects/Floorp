@@ -75,6 +75,13 @@ public:
   static nsIAtom* box; 
   static nsIAtom* flex; 
 
+  static nsIAtom* deck; 
+  static nsIAtom* tabcontrol; 
+  static nsIAtom* tabbox; 
+  static nsIAtom* tab; 
+  static nsIAtom* tabpanel; 
+  static nsIAtom* tabpage; 
+
   static nsIAtom* widget;
   static nsIAtom* window;
 };

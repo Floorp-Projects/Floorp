@@ -15,6 +15,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#include "nsHTMLButtonControlFrame.h"
+
 #include "nsCOMPtr.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsFormControlHelper.h"
@@ -51,101 +54,6 @@ static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-
-class nsHTMLButtonControlFrame : public nsHTMLContainerFrame,
-                                 public nsIFormControlFrame 
-{
-public:
-  nsHTMLButtonControlFrame();
-
-
-
-  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
-
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
-                         nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
-
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
-
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
-                   nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIStyleContext* aContext,
-                   nsIFrame*        asPrevInFlow);
-
-  NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
-                                      nsIStyleContext* aParentContext,
-                                      PRInt32 aParentChange,
-                                      nsStyleChangeList* aChangeList,
-                                      PRInt32* aLocalChange) ;
-
- 
-
-  NS_IMETHOD GetFrameName(nsString& aResult) const {
-    return MakeFrameName("ButtonControl", aResult);
-  }
-
-  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
-
-
-  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
-  NS_IMETHOD GetType(PRInt32* aType) const;
-  NS_IMETHOD GetName(nsString* aName);
-  NS_IMETHOD GetValue(nsString* aName);
-  virtual PRInt32 GetMaxNumValues();
-  virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                 nsString* aValues, nsString* aNames);
-  virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual void Reset() {};
-  virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
-
-  void SetFocus(PRBool aOn, PRBool aRepaint);
-
-  NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
-                    nsFont&         aFont);
-
-  NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
-                                           nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerWidth,
-                                             nscoord aCharWidth) const;
-
-  void GetDefaultLabel(nsString& aLabel);
-
-       // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
-
-protected:
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-  void GetTranslatedRect(nsRect& aRect);
-
-  PRIntn GetSkipSides() const;
-  PRBool mInline;
-  nsFormFrame* mFormFrame;
-  nsCursor mPreviousCursor;
-  nsRect mTranslatedRect;
-  PRBool mDidInit;
-  nsButtonFrameRenderer mRenderer;
-};
 
 nsresult
 NS_NewHTMLButtonControlFrame(nsIFrame*& aResult)
@@ -587,8 +495,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
       nsIFrame* nextFrame;
 
       // Remove the next frame from the reflow path
-      aReflowState.reflowCommand->GetNext(nextFrame);
-      NS_ASSERTION(nextFrame == firstKid, "unexpected next frame");
+      aReflowState.reflowCommand->GetNext(nextFrame);  
     }
   }
 

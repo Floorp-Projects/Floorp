@@ -24,6 +24,8 @@ REQUIRES=xpcom raptor pref
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+        nsTabFrame.cpp        \
+        nsDeckFrame.cpp        \
         nsBoxFrame.cpp        \
         nsProgressMeterFrame.cpp        \
         nsTitledButtonFrame.cpp        \
@@ -41,6 +43,8 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
+        .\$(OBJDIR)\nsTabFrame.obj    \
+        .\$(OBJDIR)\nsDeckFrame.obj    \
         .\$(OBJDIR)\nsBoxFrame.obj    \
         .\$(OBJDIR)\nsProgressMeterFrame.obj    \
         .\$(OBJDIR)\nsTitledButtonFrame.obj    \
@@ -63,6 +67,7 @@ EXPORTS =					\
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\..\html\style\src -I..\..\..\html\base\src -I$(PUBLIC)\dom \
    -I..\..\..\html\document\src \
+   -I..\..\..\html\content\src \
    -I..\..\..\html\table\src \
    -I..\..\content\src \
    -I..\..\..\html\forms\src \
