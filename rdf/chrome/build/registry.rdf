@@ -1,91 +1,93 @@
-<r:RDF xmlns:r="http://www.w3.org/TR/WD-rdf-syntax#" 
+<!-- -*- Mode: SGML; tab-width: 4; indent-tabs-mode: nil -*- -->
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://chrome.mozilla.org/rdf#"> 
 
-	<chrome r:ID="chrome://global/">
+	<chrome ID="chrome://global/">
 	
     <skin> 
-      <r:Description r:ID="chrome://global/skin/">
+      <RDF:Description ID="chrome://global/skin/">
 	    <base>resource:/res/samples/</base>
         <main>xul.css</main> 
-      </r:Description> 
+      </RDF:Description> 
     </skin> 
 	
 	</chrome>
 	
 
-  <chrome r:ID="chrome://navigator/"> 
+  <chrome ID="chrome://navigator/"> 
 
     <skin> 
-      <r:Description r:ID="chrome://navigator/skin/">
+      <RDF:Description ID="chrome://navigator/skin/">
 	    <base>resource:/res/samples/</base>
         <main>navigator.css</main> 
-      </r:Description> 
+      </RDF:Description> 
     </skin> 
 
     <content> 
-      <r:Description r:ID="chrome://navigator/content/">
+      <RDF:Description ID="chrome://navigator/content/">
 	    <base>resource:/res/samples/</base>
         <main>navigator.xul</main> 
-      </r:Description> 
+      </RDF:Description> 
     </content> 
 
   </chrome> 
 
-  <chrome r:ID="chrome://messenger/"> 
+  <chrome ID="chrome://messenger/"> 
 
     <skin> 
-      <r:Description r:ID="chrome://messenger/skin/">
+      <RDF:Description ID="chrome://messenger/skin/">
 	    <base>resource:/res/mailnews/messenger/</base>
         <main>messenger.css</main> 
-      </r:Description> 
+      </RDF:Description> 
     </skin> 
 
     <content> 
-      <r:Description r:ID="chrome://messenger/content/">
+      <RDF:Description ID="chrome://messenger/content/">
 	    <base>resource:/res/mailnews/messenger/</base>
         <main>mailshell.xul</main> 
-      </r:Description> 
+      </RDF:Description> 
     </content> 
 
   </chrome> 
 
-  <chrome r:ID="chrome://messengercompose/"> 
+  <chrome ID="chrome://messengercompose/"> 
 
     <skin> 
-      <r:Description r:ID="chrome://messengercompose/skin/">
+      <RDF:Description ID="chrome://messengercompose/skin/">
 	    <base>resource:/res/mailnews/compose/</base>
         <main>messengercompose.css</main> 
-      </r:Description> 
+      </RDF:Description> 
     </skin> 
 
     <content> 
-      <r:Description r:ID="chrome://messengercompose/content/">
+      <RDF:Description ID="chrome://messengercompose/content/">
 	    <base>resource:/res/mailnews/compose/</base>
         <main>msgcompose.xul</main> 
-      </r:Description> 
+      </RDF:Description> 
     </content> 
 
   </chrome>
   
   
-  <chrome r:ID="chrome://editor/">
+  <chrome ID="chrome://editor/">
   
     <skin> 
-      <r:Description r:ID="chrome://editor/skin/">
+      <RDF:Description ID="chrome://editor/skin/">
 	    <base>resource:/res/editor/skin/</base>
         <main>editordialogs.css</main> 
-      </r:Description> 
+      </RDF:Description> 
     </skin> 
 
     <content> 
-      <r:Description r:ID="chrome://editor/content/">
+      <RDF:Description ID="chrome://editor/content/">
 	    <base>resource:/res/editor/content/</base>
         <main>EditorAppShell.xul</main> 
-      </r:Description> 
+      </RDF:Description> 
     </content> 
   
   </chrome>
   
-</r:RDF> 
+</RDF:RDF> 
 
 

@@ -1,1797 +1,1797 @@
-<r:RDF xmlns:r="http://www.w3.org/TR/WD-rdf-syntax#"
+<r:RDF xmlns:r="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:d="http://purl.org/dc/elements/1.0/"  
      xmlns="http://directory.mozilla.org/rdf#">
 
-<Topic r:about="Arts/Books">
+<Topic about="Arts/Books">
   <catid>1</catid>
-  <narrow r:resource="http://www.amazon.com/"/>
-  <narrow r:resource="http://www.barnesandnoble.com/"/>
-  <narrow r:resource="http://www.borders.com/"/>
-  <narrow r:resource="http://dir.yahoo.com/Arts/Humanities/Literature/"/>
-  <narrow r:resource="http://www.cnn.com/books/"/>
+  <narrow resource="http://www.amazon.com/"/>
+  <narrow resource="http://www.barnesandnoble.com/"/>
+  <narrow resource="http://www.borders.com/"/>
+  <narrow resource="http://dir.yahoo.com/Arts/Humanities/Literature/"/>
+  <narrow resource="http://www.cnn.com/books/"/>
 </Topic>
 
-<Topic r:about="Arts/Music">
+<Topic about="Arts/Music">
    <catid>2</catid>
-   <narrow r:resource="http://www.ubl.com"/>
-    <narrow r:resource="http://www.mtv.com/"/>
-    <narrow r:resource="http://www.rollingstone.com/"/>
-    <narrow r:resource="http://www.cdnow.com/"/>
-   <narrow r:resource="http://dir.yahoo.com/Entertainment/Music/"/>
-   <narrow r:resource="http://www.cnn.com/SHOWBIZ/Music/"/>
+   <narrow resource="http://www.ubl.com"/>
+    <narrow resource="http://www.mtv.com/"/>
+    <narrow resource="http://www.rollingstone.com/"/>
+    <narrow resource="http://www.cdnow.com/"/>
+   <narrow resource="http://dir.yahoo.com/Entertainment/Music/"/>
+   <narrow resource="http://www.cnn.com/SHOWBIZ/Music/"/>
 </Topic>
 
-<Topic r:about="Arts/Television">
+<Topic about="Arts/Television">
    <catid>3</catid>
-   <narrow r:resource="http://dir.yahoo.com/News_and_Media/Television/"/>
-   <narrow r:resource="http://www.ultimatetv.com/"/>
-    <narrow r:resource="http://tv.yahoo.com/"/>
-   <narrow r:resource="http://www.gist.com/"/>
-   <narrow r:resource="http://www.cnn.com/SHOWBIZ/TV/"/>
+   <narrow resource="http://dir.yahoo.com/News_and_Media/Television/"/>
+   <narrow resource="http://www.ultimatetv.com/"/>
+    <narrow resource="http://tv.yahoo.com/"/>
+   <narrow resource="http://www.gist.com/"/>
+   <narrow resource="http://www.cnn.com/SHOWBIZ/TV/"/>
 </Topic>
 
-<Topic r:about="Arts/Writing">
+<Topic about="Arts/Writing">
     <catid>4</catid>
-    <narrow r:resource="http://dir.yahoo.com/Social_Science/Communications/Writing/"/>
-    <narrow r:resource="http://www.writers-bbs.com/"/>
-    <narrow r:resource="http://www.pw.org/"/>
-    <narrow r:resource="http://www.bookwire.com/bbr/"/>
-    <narrow r:resource="http://www.authorsspeak.com/"/>
+    <narrow resource="http://dir.yahoo.com/Social_Science/Communications/Writing/"/>
+    <narrow resource="http://www.writers-bbs.com/"/>
+    <narrow resource="http://www.pw.org/"/>
+    <narrow resource="http://www.bookwire.com/bbr/"/>
+    <narrow resource="http://www.authorsspeak.com/"/>
 </Topic>
 
-<Topic r:about="Arts/Animation">
+<Topic about="Arts/Animation">
     <catid>5</catid>
-    <narrow r:resource="http://www.awn.com/"/>
-    <narrow r:resource="http://www.hotwired.com/animation/"/>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Animation/"/>
-    <narrow r:resource="http://www.aardman.com/"/>
-    <narrow r:resource="http://www.pixar.com/"/>
-    <narrow r:resource="http://www.3dcafe.com/"/>
+    <narrow resource="http://www.awn.com/"/>
+    <narrow resource="http://www.hotwired.com/animation/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Visual_Arts/Animation/"/>
+    <narrow resource="http://www.aardman.com/"/>
+    <narrow resource="http://www.pixar.com/"/>
+    <narrow resource="http://www.3dcafe.com/"/>
 </Topic>
 
-<Topic r:about="Arts/Anime">
+<Topic about="Arts/Anime">
     <catid>6</catid>
-    <narrow r:resource="http://events.yahoo.com/Net_Events/Entertainment/Comics_and_Animation/Anime/"/>
-    <narrow r:resource="http://dir.yahoo.com/Entertainment/Comics_and_Animation/Animation/Anime/"/>
-    <narrow r:resource="http://www.anime-int.com/"/>
-    <narrow r:resource="http://www.ex.org/"/>
+    <narrow resource="http://events.yahoo.com/Net_Events/Entertainment/Comics_and_Animation/Anime/"/>
+    <narrow resource="http://dir.yahoo.com/Entertainment/Comics_and_Animation/Animation/Anime/"/>
+    <narrow resource="http://www.anime-int.com/"/>
+    <narrow resource="http://www.ex.org/"/>
 </Topic>
 
-<Topic r:about="Arts/Bodyart">
+<Topic about="Arts/Bodyart">
     <catid>7</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Body_Art/"/>
-    <narrow r:resource="http://www.BME.FreeQ.com/"/>
-    <narrow r:resource="http://www.piercinglinks.com/"/>
-    <narrow r:resource="http://www.tattoosavage.com/"/>
-    <narrow r:resource="http://www.tattooed-planet.com/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Visual_Arts/Body_Art/"/>
+    <narrow resource="http://www.BME.FreeQ.com/"/>
+    <narrow resource="http://www.piercinglinks.com/"/>
+    <narrow resource="http://www.tattoosavage.com/"/>
+    <narrow resource="http://www.tattooed-planet.com/"/>
 </Topic>
 
-<Topic r:about="http://dmoz.org/Arts/Bonsai_and_Suiseki/">
+<Topic about="http://dmoz.org/Arts/Bonsai_and_Suiseki/">
     <catid>8</catid>
-    <narrow r:resource="http://www.bonsaiweb.com"/>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Home_and_Garden/Gardening/Bonsai/"/>
-    <narrow r:resource="http://www.bonsai-bci.com/"/>
-    <narrow r:resource="http://www.absbonsai.org/"/>
-    <narrow r:resource="http://www.stonelantern.com/"/>
+    <narrow resource="http://www.bonsaiweb.com"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Home_and_Garden/Gardening/Bonsai/"/>
+    <narrow resource="http://www.bonsai-bci.com/"/>
+    <narrow resource="http://www.absbonsai.org/"/>
+    <narrow resource="http://www.stonelantern.com/"/>
 </Topic>
 
-<Topic r:about="Arts/Comics">
+<Topic about="Arts/Comics">
     <catid>9</catid>
-    <narrow r:resource="http://dir.yahoo.com/Entertainment/Comics_and_Animation/"/>
-    <narrow r:resource="http://comics.com"/>
-    <narrow r:resource="http://www.unitedmedia.com/comics/"/>
-    <narrow r:resource="http://www.yeeeoww.com/lampoon/"/>
-    <narrow r:resource="http://www.comedybreak.com/"/>
+    <narrow resource="http://dir.yahoo.com/Entertainment/Comics_and_Animation/"/>
+    <narrow resource="http://comics.com"/>
+    <narrow resource="http://www.unitedmedia.com/comics/"/>
+    <narrow resource="http://www.yeeeoww.com/lampoon/"/>
+    <narrow resource="http://www.comedybreak.com/"/>
 </Topic>
 
-<Topic r:about="Arts/Dance">
+<Topic about="Arts/Dance">
     <catid>10</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Performing_Arts/Dance/"/>
-    <narrow r:resource="http://www.dancing.com/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Performing_Arts/Dance/"/>
+    <narrow resource="http://www.dancing.com/"/>
 </Topic>
 
-<Topic r:about="Arts/Muppets">
+<Topic about="Arts/Muppets">
     <catid>11</catid>
-    <narrow r:resource="http://dir.yahoo.com/Entertainment/Movies_and_Film/Genres/Children/Muppets/"/>
-    <narrow r:resource="http://www.muppets.com"/>
-    <narrow r:resource="http://www.henson.com/"/>
+    <narrow resource="http://dir.yahoo.com/Entertainment/Movies_and_Film/Genres/Children/Muppets/"/>
+    <narrow resource="http://www.muppets.com"/>
+    <narrow resource="http://www.henson.com/"/>
 </Topic>
 
-<Topic r:about="Arts/Movies">
+<Topic about="Arts/Movies">
     <catid>12</catid>
-    <narrow r:resource="http://movies.yahoo.com"/>
-    <narrow r:resource="http://movies.go.com/"/>
-    <narrow r:resource="http://www.hollywood.com/"/>
-    <narrow r:resource="http://www.cnn.com/SHOWBIZ/Movies/"/>
-    <narrow r:resource="http://cinemania.msn.com/"/>
-    <narrow r:resource="http://www.eonline.com/"/>
+    <narrow resource="http://movies.yahoo.com"/>
+    <narrow resource="http://movies.go.com/"/>
+    <narrow resource="http://www.hollywood.com/"/>
+    <narrow resource="http://www.cnn.com/SHOWBIZ/Movies/"/>
+    <narrow resource="http://cinemania.msn.com/"/>
+    <narrow resource="http://www.eonline.com/"/>
 http://www.imdb.com/"/>
 </Topic>
 
-<Topic r:about="Arts/Poetry">
+<Topic about="Arts/Poetry">
     <catid>13</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Humanities/Literature/Poetry/"/>
-    <narrow r:resource="http://www.poetry.com"/>
-    <narrow r:resource="http://www.poets.com/"/>
-    <narrow r:resource="http://www.poets.org/"/>
-    <narrow r:resource="http://www.poets.org/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Humanities/Literature/Poetry/"/>
+    <narrow resource="http://www.poetry.com"/>
+    <narrow resource="http://www.poets.com/"/>
+    <narrow resource="http://www.poets.org/"/>
+    <narrow resource="http://www.poets.org/"/>
 </Topic>
 
-<Topic r:about="Arts/Theatre">
+<Topic about="Arts/Theatre">
     <catid>14</catid>
-    <narrow r:resource="http://www.playbill.com/"/>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Performing_Arts/Theater/"/>
-    <narrow r:resource="http://www.tonys.org/"/>
-    <narrow r:resource="http://www.escape.com/%7Etheanet/AisleSay.html"/>
+    <narrow resource="http://www.playbill.com/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Performing_Arts/Theater/"/>
+    <narrow resource="http://www.tonys.org/"/>
+    <narrow resource="http://www.escape.com/%7Etheanet/AisleSay.html"/>
 </Topic>
 
-<Topic r:about="Arts/Photography">
+<Topic about="Arts/Photography">
     <catid>15</catid>
-    <narrow r:resource="http://www.ipix.com"/>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Photography/"/>
-    <narrow r:resource="http://www.natureworld.com/"/>
-    <narrow r:resource="http://www.eastman.org/"/>
-    <narrow r:resource="http://www.kodak.com/"/>
-    <narrow r:resource="http://photoweb.net/"/>
+    <narrow resource="http://www.ipix.com"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Visual_Arts/Photography/"/>
+    <narrow resource="http://www.natureworld.com/"/>
+    <narrow resource="http://www.eastman.org/"/>
+    <narrow resource="http://www.kodak.com/"/>
+    <narrow resource="http://photoweb.net/"/>
 </Topic>
 
-<Topic r:about="Arts/Design/">
+<Topic about="Arts/Design/">
     <catid>16</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Design_Arts/"/>
-    <narrow r:resource="http://www.mediadrone.com/"/>
-     <narrow r:resource="http://www.designarchitecture.com"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Design_Arts/"/>
+    <narrow resource="http://www.mediadrone.com/"/>
+     <narrow resource="http://www.designarchitecture.com"/>
 </Topic>
 
-<Topic r:about="Arts/Radio">
+<Topic about="Arts/Radio">
      <catid>17</catid>
-    <narrow r:resource="http://www.bbc.co.uk/"/>
-    <narrow r:resource="http://www.webactive.com/"/>
-    <narrow r:resource="http://www.real.com/"/>
-    <narrow r:resource="http://www.npr.org/"/>
+    <narrow resource="http://www.bbc.co.uk/"/>
+    <narrow resource="http://www.webactive.com/"/>
+    <narrow resource="http://www.real.com/"/>
+    <narrow resource="http://www.npr.org/"/>
 </Topic>
 
-<Topic r:about="Arts/Publishing">
+<Topic about="Arts/Publishing">
     <catid>18</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Publishing/"/>
-    <narrow r:resource="http://www.gutenberg.net/"/>
-    <narrow r:resource="http://www.harcourt-ap.com/"/>
-    <narrow r:resource="http://www.awl.com/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Companies/Publishing/"/>
+    <narrow resource="http://www.gutenberg.net/"/>
+    <narrow resource="http://www.harcourt-ap.com/"/>
+    <narrow resource="http://www.awl.com/"/>
 </Topic>
 
-<Topic r:about="Arts/Asian_Arts">
+<Topic about="Arts/Asian_Arts">
     <catid>19</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Cultures_and_Groups/Asian/"/>
-    <narrow r:resource="http://www.asianart.com/"/>
-    <narrow r:resource="http://www.artindex.com/"/>
-    <narrow r:resource="http://www.kiku.com/electric_samurai/"/>
-    <narrow r:resource="http://www.chica.com/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Cultures_and_Groups/Asian/"/>
+    <narrow resource="http://www.asianart.com/"/>
+    <narrow resource="http://www.artindex.com/"/>
+    <narrow resource="http://www.kiku.com/electric_samurai/"/>
+    <narrow resource="http://www.chica.com/"/>
 </Topic>
 
-<Topic r:about="Arts/Architecture">
+<Topic about="Arts/Architecture">
    <catid>20</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Design_Arts/Architecture/"/>
-    <narrow r:resource="http://www.greatbuildings.com/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Design_Arts/Architecture/"/>
+    <narrow resource="http://www.greatbuildings.com/"/>
 </Topic>
 
-<Topic r:about="Arts/Comedy">
+<Topic about="Arts/Comedy">
     <catid>21</catid>
-    <narrow r:resource="http://dir.yahoo.com/Entertainment/Humor__Jokes__and_Fun/"/>
-    <narrow r:resource="http://www.comedy.com/"/>
+    <narrow resource="http://dir.yahoo.com/Entertainment/Humor__Jokes__and_Fun/"/>
+    <narrow resource="http://www.comedy.com/"/>
 </Topic>
 
 
-<Topic r:about="Arts/Museums">
+<Topic about="Arts/Museums">
     <catid>22</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Museums__Galleries__and_Centers/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Museums__Galleries__and_Centers/"/>
 </Topic>
 
-<Topic r:about="Arts/Art_History">
+<Topic about="Arts/Art_History">
     <catid>23</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Art_History/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Art_History/"/>
 </Topic>
 
 
-<Topic r:about="Arts/Sculpture">
+<Topic about="Arts/Sculpture">
     <catid>24</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Sculpture/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Visual_Arts/Sculpture/"/>
 </Topic>
 
 
-<Topic r:about="Arts/Ceramics">
+<Topic about="Arts/Ceramics">
     <catid>25</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Ceramics/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Visual_Arts/Ceramics/"/>
 </Topic>
 
-<Topic r:about="Arts/Video">
+<Topic about="Arts/Video">
     <catid>26</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Video_Art/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Visual_Arts/Video_Art/"/>
 </Topic>
 
 
 
-<Topic r:about="Business/Consulting">
+<Topic about="Business/Consulting">
     <catid>127</catid>
-    <narrow r:resource="http://www.ac.com"/>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Corporate_Services/Consulting/Management_Consulting/"/>
+    <narrow resource="http://www.ac.com"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Companies/Corporate_Services/Consulting/Management_Consulting/"/>
 </Topic>
 
-<Topic r:about="Business/Marketing">
+<Topic about="Business/Marketing">
     <catid>128</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Marketing/"/>
-    <narrow r:resource="http://www.marketingsource.com"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Marketing/"/>
+    <narrow resource="http://www.marketingsource.com"/>
 </Topic>
 
 
-<Topic r:about="Business/Jobs">
+<Topic about="Business/Jobs">
 <catid>129</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Employment/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Employment/"/>
 </Topic>
 
-<Topic r:about="Business/Insurance">
+<Topic about="Business/Insurance">
     <catid>130</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Finance_and_Investment/Insurance/"/>
-    <narrow r:resource="http://www.insure.com/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Finance_and_Investment/Insurance/"/>
+    <narrow resource="http://www.insure.com/"/>
 </Topic>
 
 
-<Topic r:about="Business/Investing">
+<Topic about="Business/Investing">
     <catid>132</catid>
-    <narrow r:resource="http://dmoz.org/Business/Investing/"/>
-    <narrow r:resource="http://www.sec.gov"/>
-    <narrow r:resource="http://www.etrade.com"/>
-    <narrow r:resource="http://quote.yahoo.com"/>
-    <narrow r:resource="http://www.tradersresource.com/"/>
+    <narrow resource="http://dmoz.org/Business/Investing/"/>
+    <narrow resource="http://www.sec.gov"/>
+    <narrow resource="http://www.etrade.com"/>
+    <narrow resource="http://quote.yahoo.com"/>
+    <narrow resource="http://www.tradersresource.com/"/>
 </Topic>
 
-<Topic r:about="Business/Advertising">
+<Topic about="Business/Advertising">
     <catid>133</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Marketing/Advertising/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Companies/Marketing/Advertising/"/>
 </Topic>
 
-<Topic r:about="Business/Management">
+<Topic about="Business/Management">
     <catid>134</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Management_Science/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Management_Science/"/>
 </Topic>
 
-<Topic r:about="Business/Classifieds">
+<Topic about="Business/Classifieds">
     <catid>135</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Classifieds/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Classifieds/"/>
 </Topic>
 
-<Topic r:about="Business/Venture_Capital">
+<Topic about="Business/Venture_Capital">
     <catid>136</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Finance_and_Investment/Financing/Corporate_Financing/Venture_Capital/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Finance_and_Investment/Financing/Corporate_Financing/Venture_Capital/"/>
 </Topic>
 
-<Topic r:about="Business/Accounting">
+<Topic about="Business/Accounting">
     <catid>137</catid>
-    <narrow r:resource="http://dir.yahoo.com/Social_Science/Economics/Accounting_and_Auditing/"/>
+    <narrow resource="http://dir.yahoo.com/Social_Science/Economics/Accounting_and_Auditing/"/>
 </Topic>
 
-<Topic r:about="Business/Manufacturing">
+<Topic about="Business/Manufacturing">
     <catid>138</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Manufacturing/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Companies/Manufacturing/"/>
 </Topic>
 
-<Topic r:about="Business/Training_and_Schools">
+<Topic about="Business/Training_and_Schools">
     <catid>139</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Education/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Education/"/>
 </Topic>
 
-<Topic r:about="Business/International_Business_and_Trade">
+<Topic about="Business/International_Business_and_Trade">
     <catid>140</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/International_Economy/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/International_Economy/"/>
 </Topic>
 
-<Topic r:about="Business/Human_Resources">
+<Topic about="Business/Human_Resources">
     <catid>141</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Corporate_Services/Human_Resources/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Companies/Corporate_Services/Human_Resources/"/>
 </Topic>
 
-<Topic r:about="Business/Real_Estate">
+<Topic about="Business/Real_Estate">
     <catid>142</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Real_Estate/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Real_Estate/"/>
 </Topic>
 
 
 
-<Topic r:about="Computers/Hacking">
+<Topic about="Computers/Hacking">
     <catid>201</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Security_and_Encryption/Hacking/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Security_and_Encryption/Hacking/"/>
 </Topic>
 
-<Topic r:about="Computers/Graphics">
+<Topic about="Computers/Graphics">
     <catid>202</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Graphics/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Graphics/"/>
 </Topic>
 
 
-<Topic r:about="Computers/Internet">
+<Topic about="Computers/Internet">
     <catid>204</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Internet/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Internet/"/>
 </Topic>
 
-<Topic r:about="Computers/Security">
+<Topic about="Computers/Security">
     <catid>205</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Internet/World_Wide_Web/Security_and_Encryption/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Internet/World_Wide_Web/Security_and_Encryption/"/>
 </Topic>
 
-<Topic r:about="Computers/Software">
+<Topic about="Computers/Software">
     <catid>206</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Software/Internet/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Software/Internet/"/>
 </Topic>
 
-<Topic r:about="Computers/Hardware">
+<Topic about="Computers/Hardware">
     <catid>207</catid>
-    <narrow r:resource="http://shopping.yahoo.com/computers/"/>
+    <narrow resource="http://shopping.yahoo.com/computers/"/>
 </Topic>
 
-<Topic r:about="Computers/Operating_Systems">
+<Topic about="Computers/Operating_Systems">
     <catid>208</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Software/Operating_Systems/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Software/Operating_Systems/"/>
 </Topic>
 
-<Topic r:about="Computers/Benchmarking">
+<Topic about="Computers/Benchmarking">
     <catid>209</catid>
 </Topic>
 
-<Topic r:about="Computers/CAD">
+<Topic about="Computers/CAD">
     <catid>210</catid>
-    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Electronic_Computer_Aided_Design__ECAD_/"/>
+    <narrow resource="http://dir.yahoo.com/Science/Computer_Science/Electronic_Computer_Aided_Design__ECAD_/"/>
 </Topic>
 
-<Topic r:about="Computers/Algorithms">
+<Topic about="Computers/Algorithms">
     <catid>211</catid>
-    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Algorithms/"/>
+    <narrow resource="http://dir.yahoo.com/Science/Computer_Science/Algorithms/"/>
 </Topic>
 
 
 
-<Topic r:about="Computers/Databases">
+<Topic about="Computers/Databases">
     <catid>212</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Software/Databases/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Software/Databases/"/>
 </Topic>
 
-<Topic r:about="Computers/Data_Communications">
+<Topic about="Computers/Data_Communications">
     <catid>213</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/"/>
-    <narrow r:resource="http://www.cisco.com/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/"/>
+    <narrow resource="http://www.cisco.com/"/>
 </Topic>
 
-<Topic r:about="Computers/DSP">
+<Topic about="Computers/DSP">
     <catid>214</catid>
 </Topic>
 
-<Topic r:about="Computers/Emulators">
+<Topic about="Computers/Emulators">
     <catid>215</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Computers/Hardware/Emulators/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Companies/Computers/Hardware/Emulators/"/>
 </Topic>
 
-<Topic r:about="Computers/Fonts">
+<Topic about="Computers/Fonts">
     <catid>216</catid>
-    <narrow r:resource="http://dir.yahoo.com/Arts/Design_Arts/Graphic_Design/Typography/"/>
+    <narrow resource="http://dir.yahoo.com/Arts/Design_Arts/Graphic_Design/Typography/"/>
 </Topic>
 
-<Topic r:about="Computers/Groupware">
+<Topic about="Computers/Groupware">
     <catid>216</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/Software/Groupware/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/Software/Groupware/"/>
 </Topic>
 
-<Topic r:about="Computers/Home_Automation">
+<Topic about="Computers/Home_Automation">
     <catid>217</catid>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Home_and_Garden/Home_Automation/"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Home_and_Garden/Home_Automation/"/>
 </Topic>
 
-<Topic r:about="Computers/Human_Factors">
+<Topic about="Computers/Human_Factors">
     <catid>218</catid>
-    <narrow r:resource="http://dir.yahoo.com/Science/Engineering/Ergonomics/"/>
+    <narrow resource="http://dir.yahoo.com/Science/Engineering/Ergonomics/"/>
 </Topic>
 
-<Topic r:about="Computers/Multimedia">
+<Topic about="Computers/Multimedia">
     <catid>219</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Multimedia/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Multimedia/"/>
 </Topic>
 
-<Topic r:about="Computers/Programming">
+<Topic about="Computers/Programming">
     <catid>220</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Internet/World_Wide_Web/Programming/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Internet/World_Wide_Web/Programming/"/>
 </Topic>
 
-<Topic r:about="Computers/Robotics">
+<Topic about="Computers/Robotics">
     <catid>221</catid>
-    <narrow r:resource="http://dir.yahoo.com/Science/Engineering/Mechanical_Engineering/Robotics/"/>
+    <narrow resource="http://dir.yahoo.com/Science/Engineering/Mechanical_Engineering/Robotics/"/>
 </Topic>
 
-<Topic r:about="Computers/Systems">
+<Topic about="Computers/Systems">
     <catid>222</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Hardware/Systems/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Hardware/Systems/"/>
 </Topic>
 
-<Topic r:about="Computers/Desktop_Publishing">
+<Topic about="Computers/Desktop_Publishing">
     <catid>223</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Desktop_Publishing/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Desktop_Publishing/"/>
 </Topic>
 
-<Topic r:about="Computers/Supercomputing">
+<Topic about="Computers/Supercomputing">
     <catid>224</catid>
-    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Supercomputing_and_Parallel_Computing/"/>
+    <narrow resource="http://dir.yahoo.com/Science/Computer_Science/Supercomputing_and_Parallel_Computing/"/>
 </Topic>
 
-<Topic r:about="Computers/Jobs">
+<Topic about="Computers/Jobs">
     <catid>225</catid>
 </Topic>
 
-<Topic r:about="Computers/Parallel_Computing">
+<Topic about="Computers/Parallel_Computing">
     <catid>226</catid>
-    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Supercomputing_and_Parallel_Computing/"/>
+    <narrow resource="http://dir.yahoo.com/Science/Computer_Science/Supercomputing_and_Parallel_Computing/"/>
 </Topic>
 
-<Topic r:about="Computers/Bulletin_Board_Systems">
+<Topic about="Computers/Bulletin_Board_Systems">
     <catid>227</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/BBSs/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/BBSs/"/>
 </Topic>
 
-<Topic r:about="Computers/Consultants">
+<Topic about="Computers/Consultants">
     <catid>228</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Computers/Services/Consulting/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Companies/Computers/Services/Consulting/"/>
 </Topic>
 
-<Topic r:about="Computers/Vendors">
+<Topic about="Computers/Vendors">
     <catid>229</catid>
-    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/"/>
+    <narrow resource="http://dir.yahoo.com/Business_and_Economy/Companies/"/>
 </Topic>
 
-<Topic r:about="Computers/Mobile_Computing">
+<Topic about="Computers/Mobile_Computing">
     <catid>230</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Mobile_Computing/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Mobile_Computing/"/>
 </Topic>
 
 
-<Topic r:about="Computers/Learning">
+<Topic about="Computers/Learning">
     <catid>232</catid>
-    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/"/>
+    <narrow resource="http://dir.yahoo.com/Science/Computer_Science/"/>
 </Topic>
 
-<Topic r:about="Computers/News">
+<Topic about="Computers/News">
     <catid>233</catid>
 </Topic>
 
-<Topic r:about="Computers/Organizations">
+<Topic about="Computers/Organizations">
     <catid>234</catid>
-    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Organizations/"/>
+    <narrow resource="http://dir.yahoo.com/Science/Computer_Science/Organizations/"/>
 </Topic>
 
-<Topic r:about="Computers/Intranets">
+<Topic about="Computers/Intranets">
     <catid>235</catid>
-    <narrow r:resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/Intranet/"/>
+    <narrow resource="http://dir.yahoo.com/Computers_and_Internet/Communications_and_Networking/Intranet/"/>
 </Topic>
 
-<Topic r:about="Computers/Artificial_Intelligence">
+<Topic about="Computers/Artificial_Intelligence">
     <catid>236</catid>
-    <narrow r:resource="http://dir.yahoo.com/Science/Computer_Science/Artificial_Intelligence/"/>
+    <narrow resource="http://dir.yahoo.com/Science/Computer_Science/Artificial_Intelligence/"/>
 </Topic>
 
 
 
-<Topic r:about="Games/MUDs">
+<Topic about="Games/MUDs">
     <catid>301</catid>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Computer_Games/Internet_Games/MUDs__MUSHes__MOOs__etc_/"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Games/Computer_Games/Internet_Games/MUDs__MUSHes__MOOs__etc_/"/>
 </Topic>
 
-<Topic r:about="Games/Conventions">
+<Topic about="Games/Conventions">
     <catid>302</catid>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Computer_Games/Conventions_and_Conferences/"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Games/Computer_Games/Conventions_and_Conferences/"/>
 </Topic>
 
-<Topic r:about="Games/Gambling">
+<Topic about="Games/Gambling">
     <catid>303</catid>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Gambling/"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Gambling/"/>
 </Topic>
 
-<Topic r:about="Games/Video_Games">
+<Topic about="Games/Video_Games">
     <catid>305</catid>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Video_Games/"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Games/Video_Games/"/>
 </Topic>
 
-<Topic r:about="Games/Play_by_Mail">
+<Topic about="Games/Play_by_Mail">
     <catid>306</catid>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Play_by_Mail_Games/"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Games/Play_by_Mail_Games/"/>
 </Topic>
 
-<Topic r:about="Games/Corewar">
+<Topic about="Games/Corewar">
     <catid>307</catid>
 </Topic>
 
-<Topic r:about="Games/Game_Design">
+<Topic about="Games/Game_Design">
     <catid>308</catid>
 </Topic>
 
-<Topic r:about="Games/Miniatures">
+<Topic about="Games/Miniatures">
     <catid>309</catid>
 </Topic>
 
-<Topic r:about="Games/Netrek">
+<Topic about="Games/Netrek">
     <catid>310</catid>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Computer_Games/Internet_Games/Multi_User_Games/Titles/Netrek/"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Games/Computer_Games/Internet_Games/Multi_User_Games/Titles/Netrek/"/>
 </Topic>
 
-<Topic r:about="Games/Pinball">
+<Topic about="Games/Pinball">
     <catid>311</catid>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Pinball/"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Games/Pinball/"/>
 </Topic>
 
-<Topic r:about="Games/Trading_Cards">
+<Topic about="Games/Trading_Cards">
     <catid>312</catid>
 </Topic>
 
-<Topic r:about="Games/Puzzles">
+<Topic about="Games/Puzzles">
     <catid>313</catid>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Puzzles/"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Games/Puzzles/"/>
 </Topic>
 
-<Topic r:about="Games/Crossword_Puzzles">
+<Topic about="Games/Crossword_Puzzles">
     <catid>314</catid>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Games/Puzzles/Crossword_Puzzles/"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Games/Puzzles/Crossword_Puzzles/"/>
 </Topic>
 
-<Topic r:about="Games/Webgames">
+<Topic about="Games/Webgames">
     <catid>315</catid>
-    <narrow r:resource="http://games.yahoo.com/"/>
+    <narrow resource="http://games.yahoo.com/"/>
 </Topic>
 
-<Topic r:about="Games/IRC">
+<Topic about="Games/IRC">
     <catid>316</catid>
 </Topic>
 
-<Topic r:about="Games/Game_Creation_Systems">
+<Topic about="Games/Game_Creation_Systems">
     <catid>317</catid>
 </Topic>
 
-<Topic r:about="Games/Fantasy_Sports">
+<Topic about="Games/Fantasy_Sports">
     <catid>318</catid>
 </Topic>
 
-<Topic r:about="Games/Miscellaneous_Games">
+<Topic about="Games/Miscellaneous_Games">
     <catid>319</catid>
 </Topic>
 
-<Topic r:about="Games/Glass_Bead_Games">
+<Topic about="Games/Glass_Bead_Games">
     <catid>320</catid>
 </Topic>
 
-<Topic r:about="Games/Rogue-like">
+<Topic about="Games/Rogue-like">
     <catid>321</catid>
 </Topic>
 
-<Topic r:about="Games/Board_Games">
+<Topic about="Games/Board_Games">
     <catid>322</catid>
 </Topic>
 
-<Topic r:about="Games/Card_Games">
+<Topic about="Games/Card_Games">
     <catid>323</catid>
 </Topic>
 
-<Topic r:about="Games/Role-Playing_Games">
+<Topic about="Games/Role-Playing_Games">
     <catid>324</catid>
 </Topic>
 
 
-<Topic r:about="Health/Emergency_Services">
+<Topic about="Health/Emergency_Services">
     <catid>401</catid>
 </Topic>
 
-<Topic r:about="Health/Fitness">
+<Topic about="Health/Fitness">
     <catid>402</catid>
 </Topic>
 
-<Topic r:about="Health/Pharmacy">
+<Topic about="Health/Pharmacy">
     <catid>403</catid>
 </Topic>
 
-<Topic r:about="Health/Alternative">
+<Topic about="Health/Alternative">
     <catid>404</catid>
 </Topic>
 
-<Topic r:about="Health/Life_Extension">
+<Topic about="Health/Life_Extension">
     <catid>405</catid>
 </Topic>
 
-<Topic r:about="Health/Medicine">
+<Topic about="Health/Medicine">
     <catid>406</catid>
 </Topic>
 
-<Topic r:about="Health/Dentistry">
+<Topic about="Health/Dentistry">
     <catid>407</catid>
 </Topic>
 
-<Topic r:about="Health/Nursing">
+<Topic about="Health/Nursing">
     <catid>408</catid>
 </Topic>
 
-<Topic r:about="Health/Nutrition">
+<Topic about="Health/Nutrition">
     <catid>409</catid>
 </Topic>
 
-<Topic r:about="Health/Vision">
+<Topic about="Health/Vision">
     <catid>410</catid>
 </Topic>
 
-<Topic r:about="Health/Services">
+<Topic about="Health/Services">
     <catid>411</catid>
 </Topic>
 
-<Topic r:about="Health/Beauty">
+<Topic about="Health/Beauty">
     <catid>412</catid>
 </Topic>
 
-<Topic r:about="Health/Substance_Abuse">
+<Topic about="Health/Substance_Abuse">
     <catid>413</catid>
 </Topic>
 
-<Topic r:about="Health/Patient_Education">
+<Topic about="Health/Patient_Education">
     <catid>414</catid>
 </Topic>
 
-<Topic r:about="Health/Womens_Health">
+<Topic about="Health/Womens_Health">
     <catid>415</catid>
 </Topic>
 
-<Topic r:about="Health/Children">
+<Topic about="Health/Children">
     <catid>416</catid>
 </Topic>
 
-<Topic r:about="Health/Conditions">
+<Topic about="Health/Conditions">
     <catid>417</catid>
 </Topic>
 
-<Topic r:about="Health/Occupational_Health_and_Safety">
+<Topic about="Health/Occupational_Health_and_Safety">
     <catid>418</catid>
 </Topic>
 
-<Topic r:about="Health/Mental_Health">
+<Topic about="Health/Mental_Health">
     <catid>419</catid>
 </Topic>
 
-<Topic r:about="Health/Aging">
+<Topic about="Health/Aging">
     <catid>420</catid>
 </Topic>
 
-<Topic r:about="Health/Healthcare_Industry">
+<Topic about="Health/Healthcare_Industry">
     <catid>421</catid>
 </Topic>
 
-<Topic r:about="Health/Products">
+<Topic about="Health/Products">
     <catid>422</catid>
 </Topic>
 
-<Topic r:about="Health/Publications">
+<Topic about="Health/Publications">
     <catid>423</catid>
 </Topic>
 
-<Topic r:about="Health/Education">
+<Topic about="Health/Education">
     <catid>424</catid>
 </Topic>
 
-<Topic r:about="Health/Men's_Health">
+<Topic about="Health/Men's_Health">
     <catid>425</catid>
 </Topic>
 
-<Topic r:about="Health/Consumer_Support_Groups">
+<Topic about="Health/Consumer_Support_Groups">
     <catid>426</catid>
 </Topic>
 
-<Topic r:about="Health/Disabilities">
+<Topic about="Health/Disabilities">
     <catid>427</catid>
 </Topic>
 
-<Topic r:about="Health/Organizations">
+<Topic about="Health/Organizations">
     <catid>428</catid>
 </Topic>
 
-<Topic r:about="Health/Chat,_Discussion,_ICQ">
+<Topic about="Health/Chat,_Discussion,_ICQ">
     <catid>429</catid>
 </Topic>
 
-<Topic r:about="Health/References_and_Resources">
+<Topic about="Health/References_and_Resources">
     <catid>430</catid>
 </Topic>
 
-<Topic r:about="Health/Conditions_and_Diseases">
+<Topic about="Health/Conditions_and_Diseases">
     <catid>431</catid>
 </Topic>
 
 
-<Topic r:about="Home/Consumers">
+<Topic about="Home/Consumers">
     <catid>432</catid>
 </Topic>
 
-<Topic r:about="Home/Houses">
+<Topic about="Home/Houses">
     <catid>433</catid>
 </Topic>
 
-<Topic r:about="Home/Homeowners_Associations">
+<Topic about="Home/Homeowners_Associations">
     <catid>434</catid>
 </Topic>
 
-<Topic r:about="Home/Financial_Planning">
+<Topic about="Home/Financial_Planning">
     <catid>435</catid>
 </Topic>
 
-<Topic r:about="Home/Kids">
+<Topic about="Home/Kids">
     <catid>436</catid>
 </Topic>
 
-<Topic r:about="Home/Rural">
+<Topic about="Home/Rural">
     <catid>437</catid>
 </Topic>
 
-<Topic r:about="Home/Gardens">
+<Topic about="Home/Gardens">
     <catid>438</catid>
 </Topic>
 
-<Topic r:about="Home/Homemaking">
+<Topic about="Home/Homemaking">
     <catid>439</catid>
 </Topic>
 
-<Topic r:about="Home/Tax_Preparation">
+<Topic about="Home/Tax_Preparation">
     <catid>440</catid>
 </Topic>
 
-<Topic r:about="Home/Recipes">
+<Topic about="Home/Recipes">
     <catid>441</catid>
 </Topic>
 
-<Topic r:about="Home/Entertainment">
+<Topic about="Home/Entertainment">
     <catid>442</catid>
 </Topic>
 
 
 
-<Topic r:about="News/Internet">
+<Topic about="News/Internet">
     <catid>501</catid>
 </Topic>
 
-<Topic r:about="News/Online">
+<Topic about="News/Online">
     <catid>502</catid>
 </Topic>
 
-<Topic r:about="News/Media">
+<Topic about="News/Media">
     <catid>503</catid>
 </Topic>
 
-<Topic r:about="News/Newspapers">
+<Topic about="News/Newspapers">
     <catid>504</catid>
 </Topic>
 
-<Topic r:about="News/Colleges_and_Universities">
+<Topic about="News/Colleges_and_Universities">
     <catid>505</catid>
 </Topic>
 
-<Topic r:about="News/Magazines">
+<Topic about="News/Magazines">
     <catid>506</catid>
 </Topic>
 
-<Topic r:about="News/News_Indexes">
+<Topic about="News/News_Indexes">
     <catid>507</catid>
 </Topic>
 
-<Topic r:about="News/Weather">
+<Topic about="News/Weather">
     <catid>508</catid>
 </Topic>
 
-<Topic r:about="News/Filters">
+<Topic about="News/Filters">
     <catid>509</catid>
 </Topic>
 
-<Topic r:about="News/Columnists">
+<Topic about="News/Columnists">
     <catid>510</catid>
 </Topic>
 
-<Topic r:about="News/Regional">
+<Topic about="News/Regional">
     <catid>511</catid>
 </Topic>
 
-<Topic r:about="News/Services">
+<Topic about="News/Services">
     <catid>512</catid>
 </Topic>
 
-<Topic r:about="News/Tech_News">
+<Topic about="News/Tech_News">
     <catid>513</catid>
 </Topic>
 
 
-<Topic r:about="Recreation/Food">
+<Topic about="Recreation/Food">
     <catid>601</catid>
 </Topic>
 
-<Topic r:about="Recreation/Outdoors">
+<Topic about="Recreation/Outdoors">
     <catid>602</catid>
 </Topic>
 
-<Topic r:about="Recreation/Antiques">
+<Topic about="Recreation/Antiques">
     <catid>603</catid>
 </Topic>
 
-<Topic r:about="Recreation/Aquaria">
+<Topic about="Recreation/Aquaria">
     <catid>604</catid>
 </Topic>
 
-<Topic r:about="Recreation/Theme_Parks">
+<Topic about="Recreation/Theme_Parks">
     <catid>605</catid>
 </Topic>
 
-<Topic r:about="Recreation/Autos">
+<Topic about="Recreation/Autos">
     <catid>606</catid>
 </Topic>
 
-<Topic r:about="Recreation/Aviation">
+<Topic about="Recreation/Aviation">
     <catid>607</catid>
 </Topic>
 
-<Topic r:about="Recreation/Birdwatching">
+<Topic about="Recreation/Birdwatching">
     <catid>608</catid>
 </Topic>
 
-<Topic r:about="Recreation/Boating">
+<Topic about="Recreation/Boating">
     <catid>609</catid>
 </Topic>
 
-<Topic r:about="Recreation/Climbing">
+<Topic about="Recreation/Climbing">
     <catid>610</catid>
 </Topic>
 
-<Topic r:about="Recreation/Collecting">
+<Topic about="Recreation/Collecting">
     <catid>611</catid>
 </Topic>
 
-<Topic r:about="Recreation/Crafts">
+<Topic about="Recreation/Crafts">
     <catid>612</catid>
 </Topic>
 
-<Topic r:about="Recreation/Drugs">
+<Topic about="Recreation/Drugs">
     <catid>613</catid>
 </Topic>
 
-<Topic r:about="Recreation/Guns">
+<Topic about="Recreation/Guns">
     <catid>614</catid>
 </Topic>
 
-<Topic r:about="Recreation/Humor">
+<Topic about="Recreation/Humor">
     <catid>615</catid>
 </Topic>
 
-<Topic r:about="Recreation/Kites">
+<Topic about="Recreation/Kites">
     <catid>616</catid>
 </Topic>
 
-<Topic r:about="Recreation/Knives">
+<Topic about="Recreation/Knives">
     <catid>617</catid>
 </Topic>
 
-<Topic r:about="Recreation/Models">
+<Topic about="Recreation/Models">
     <catid>618</catid>
 </Topic>
 
-<Topic r:about="Recreation/Motorcycles">
+<Topic about="Recreation/Motorcycles">
     <catid>619</catid>
 </Topic>
 
-<Topic r:about="Recreation/Nudism">
+<Topic about="Recreation/Nudism">
     <catid>620</catid>
 </Topic>
 
-<Topic r:about="Recreation/Pets">
+<Topic about="Recreation/Pets">
     <catid>621</catid>
 </Topic>
 
-<Topic r:about="Recreation/Ponds">
+<Topic about="Recreation/Ponds">
     <catid>622</catid>
 </Topic>
 
-<Topic r:about="Recreation/Scouting">
+<Topic about="Recreation/Scouting">
     <catid>623</catid>
 </Topic>
 
-<Topic r:about="Recreation/Travel">
+<Topic about="Recreation/Travel">
     <catid>624</catid>
 </Topic>
 
-<Topic r:about="Recreation/Zoological">
+<Topic about="Recreation/Zoological">
     <catid>625</catid>
 </Topic>
 
-<Topic r:about="Recreation/Smoking">
+<Topic about="Recreation/Smoking">
     <catid>626</catid>
 </Topic>
 
-<Topic r:about="Recreation/Hot_Air_Ballooning">
+<Topic about="Recreation/Hot_Air_Ballooning">
     <catid>627</catid>
 </Topic>
 
-<Topic r:about="Recreation/Acrobatics">
+<Topic about="Recreation/Acrobatics">
     <catid>628</catid>
 </Topic>
 
-<Topic r:about="Recreation/Amateur_Radio">
+<Topic about="Recreation/Amateur_Radio">
     <catid>629</catid>
 </Topic>
 
-<Topic r:about="Recreation/Trains_and_Railroads">
+<Topic about="Recreation/Trains_and_Railroads">
     <catid>630</catid>
 </Topic>
 
 
-<Topic r:about="Reference/Education">
+<Topic about="Reference/Education">
     <catid>701</catid>
 </Topic>
 
-<Topic r:about="Reference/Libraries">
+<Topic about="Reference/Libraries">
     <catid>702</catid>
 </Topic>
 
-<Topic r:about="Reference/Maps">
+<Topic about="Reference/Maps">
     <catid>703</catid>
 </Topic>
 
-<Topic r:about="Reference/Archives">
+<Topic about="Reference/Archives">
     <catid>704</catid>
 </Topic>
 
-<Topic r:about="Reference/Lexicon">
+<Topic about="Reference/Lexicon">
     <catid>705</catid>
 </Topic>
 
-<Topic r:about="Reference/Dictionaries">
+<Topic about="Reference/Dictionaries">
     <catid>706</catid>
 </Topic>
 
-<Topic r:about="Reference/Style_Guides">
+<Topic about="Reference/Style_Guides">
     <catid>707</catid>
 </Topic>
 
-<Topic r:about="Reference/Directories">
+<Topic about="Reference/Directories">
     <catid>708</catid>
 </Topic>
 
-<Topic r:about="Reference/Encyclopedia">
+<Topic about="Reference/Encyclopedia">
     <catid>709</catid>
 </Topic>
 
-<Topic r:about="Reference/Quotations">
+<Topic about="Reference/Quotations">
     <catid>710</catid>
 </Topic>
 
-<Topic r:about="Reference/Thesauri">
+<Topic about="Reference/Thesauri">
     <catid>711</catid>
 </Topic>
 
-<Topic r:about="Reference/Bibliography">
+<Topic about="Reference/Bibliography">
     <catid>712</catid>
 </Topic>
 
-<Topic r:about="Reference/Knowledge_Management">
+<Topic about="Reference/Knowledge_Management">
     <catid>713</catid>
 </Topic>
 
-<Topic r:about="Reference/Handbooks">
+<Topic about="Reference/Handbooks">
     <catid>714</catid>
 </Topic>
 
-<Topic r:about="Reference/Parliamentary_Procedure">
+<Topic about="Reference/Parliamentary_Procedure">
     <catid>715</catid>
 </Topic>
 
 
 
 
-<Topic r:about="Science/Psychology">
+<Topic about="Science/Psychology">
     <catid>801</catid>
 </Topic>
 
-<Topic r:about="Science/Pyrotechnics">
+<Topic about="Science/Pyrotechnics">
     <catid>802</catid>
 </Topic>
 
-<Topic r:about="Science/Aeronautics">
+<Topic about="Science/Aeronautics">
     <catid>803</catid>
 </Topic>
 
-<Topic r:about="Science/Agriculture">
+<Topic about="Science/Agriculture">
     <catid> 804</catid>
 </Topic>
 
-<Topic r:about="Science/Archaeology">
+<Topic about="Science/Archaeology">
     <catid> 805</catid>
 </Topic>
 
-<Topic r:about="Science/Astronomy">
+<Topic about="Science/Astronomy">
     <catid>806</catid>
 </Topic>
 
-<Topic r:about="Science/Futurism">
+<Topic about="Science/Futurism">
     <catid>807</catid>
 </Topic>
 
-<Topic r:about="Science/Ecology">
+<Topic about="Science/Ecology">
     <catid>808</catid>
 </Topic>
 
-<Topic r:about="Science/Evolution">
+<Topic about="Science/Evolution">
     <catid>809</catid>
 </Topic>
 
-<Topic r:about="Science/Paleontology">
+<Topic about="Science/Paleontology">
     <catid>810</catid>
 </Topic>
 
-<Topic r:about="Science/Regional">
+<Topic about="Science/Regional">
     <catid>811</catid>
 </Topic>
 
-<Topic r:about="Science/Chemistry">
+<Topic about="Science/Chemistry">
     <catid>812</catid>
 </Topic>
 
-<Topic r:about="Science/Cognitive_Science">
+<Topic about="Science/Cognitive_Science">
     <catid>813</catid>
 </Topic>
 
-<Topic r:about="Science/Cryonics">
+<Topic about="Science/Cryonics">
     <catid>814</catid>
 </Topic>
 
-<Topic r:about="Science/Cryptography">
+<Topic about="Science/Cryptography">
     <catid>815</catid>
 </Topic>
 
-<Topic r:about="Science/Economics">
+<Topic about="Science/Economics">
     <catid>816</catid>
 </Topic>
 
-<Topic r:about="Science/Electronics">
+<Topic about="Science/Electronics">
     <catid>817</catid>
 </Topic>
 
-<Topic r:about="Science/Energy">
+<Topic about="Science/Energy">
     <catid>818</catid>
 </Topic>
 
-<Topic r:about="Science/Engineering">
+<Topic about="Science/Engineering">
     <catid>819</catid>
 </Topic>
 
-<Topic r:about="Science/Environment">
+<Topic about="Science/Environment">
     <catid>820</catid>
 </Topic>
 
-<Topic r:about="Science/Math">
+<Topic about="Science/Math">
     <catid>821</catid>
 </Topic>
 
-<Topic r:about="Science/Geology">
+<Topic about="Science/Geology">
     <catid>822</catid>
 </Topic>
 
-<Topic r:about="Science/Meteorology">
+<Topic about="Science/Meteorology">
     <catid>823</catid>
 </Topic>
 
-<Topic r:about="Science/Navigation">
+<Topic about="Science/Navigation">
     <catid>824</catid>
 </Topic>
 
-<Topic r:about="Science/Language_and_Linguistics">
+<Topic about="Science/Language_and_Linguistics">
     <catid>825</catid>
 </Topic>
 
-<Topic r:about="Science/Logic">
+<Topic about="Science/Logic">
     <catid>826</catid>
 </Topic>
 
-<Topic r:about="Science/Materials">
+<Topic about="Science/Materials">
     <catid>827</catid>
 </Topic>
 
-<Topic r:about="Science/Laboratory_Medicine">
+<Topic about="Science/Laboratory_Medicine">
     <catid>828</catid>
 </Topic>
 
-<Topic r:about="Science/Military">
+<Topic about="Science/Military">
     <catid>829</catid>
 </Topic>
 
-<Topic r:about="Science/Optics">
+<Topic about="Science/Optics">
     <catid>830</catid>
 </Topic>
 
-<Topic r:about="Science/Physics">
+<Topic about="Science/Physics">
     <catid>831</catid>
 </Topic>
 
-<Topic r:about="Science/Polymers">
+<Topic about="Science/Polymers">
     <catid>832</catid>
 </Topic>
 
-<Topic r:about="Science/Skeptics">
+<Topic about="Science/Skeptics">
     <catid>833</catid>
 </Topic>
 
-<Topic r:about="Science/Space">
+<Topic about="Science/Space">
     <catid>834</catid>
 </Topic>
 
-<Topic r:about="Science/Statistics">
+<Topic about="Science/Statistics">
     <catid>835</catid>
 </Topic>
 
-<Topic r:about="Science/Biology">
+<Topic about="Science/Biology">
     <catid> 836</catid>
 </Topic>
 
-<Topic r:about="Science/Physiology">
+<Topic about="Science/Physiology">
     <catid>837</catid>
 </Topic>
 
-<Topic r:about="Science/Software">
+<Topic about="Science/Software">
     <catid>838</catid>
 </Topic>
 
-<Topic r:about="Science/Geomatics">
+<Topic about="Science/Geomatics">
     <catid>839</catid>
 </Topic>
 
-<Topic r:about="Science/Ethnology">
+<Topic about="Science/Ethnology">
     <catid>840</catid>
 </Topic>
 
-<Topic r:about="Science/Molecular_Biology">
+<Topic about="Science/Molecular_Biology">
     <catid>841</catid>
 </Topic>
 
-<Topic r:about="Science/Immunology">
+<Topic about="Science/Immunology">
     <catid>842</catid>
 </Topic>
 
-<Topic r:about="Science/Food_Science">
+<Topic about="Science/Food_Science">
     <catid>843</catid>
 </Topic>
 
-<Topic r:about="Science/Forensic">
+<Topic about="Science/Forensic">
     <catid>844</catid>
 </Topic>
 
-<Topic r:about="Science/FAQs">
+<Topic about="Science/FAQs">
     <catid>845</catid>
 </Topic>
 
-<Topic r:about="Science/Sociology">
+<Topic about="Science/Sociology">
     <catid>846</catid>
 </Topic>
 
-<Topic r:about="Science/Biochemistry">
+<Topic about="Science/Biochemistry">
     <catid>847</catid>
 </Topic>
 
-<Topic r:about="Science/Anomalies">
+<Topic about="Science/Anomalies">
     <catid>848</catid>
 </Topic>
 
-<Topic r:about="Science/Cryptozoology">
+<Topic about="Science/Cryptozoology">
     <catid>849</catid>
 </Topic>
 
-<Topic r:about="Science/Acoustics,_Noise_and_Vibration">
+<Topic about="Science/Acoustics,_Noise_and_Vibration">
     <catid>850</catid>
 </Topic>
 
-<Topic r:about="Science/Oceanography">
+<Topic about="Science/Oceanography">
     <catid>851</catid>
 </Topic>
 
-<Topic r:about="Science/Nanotechnology">
+<Topic about="Science/Nanotechnology">
     <catid>852</catid>
 </Topic>
 
-<Topic r:about="Science/Crystallography">
+<Topic about="Science/Crystallography">
     <catid>853</catid>
 </Topic>
 
-<Topic r:about="Science/About_Science">
+<Topic about="Science/About_Science">
     <catid>854</catid>
 </Topic>
 
-<Topic r:about="Science/Instruments_and_Supplies">
+<Topic about="Science/Instruments_and_Supplies">
     <catid>855</catid>
 </Topic>
 
-<Topic r:about="Science/Political_Science">
+<Topic about="Science/Political_Science">
     <catid>856 </catid>
 </Topic>
 
-<Topic r:about="Science/Academia_and_Society">
+<Topic about="Science/Academia_and_Society">
     <catid>857</catid>
 </Topic>
 
-<Topic r:about="Science/About_Science_in_other_languages">
+<Topic about="Science/About_Science_in_other_languages">
     <catid>858</catid>
 </Topic>
 
-<Topic r:about="Science/Journals_and_Magazines">
+<Topic about="Science/Journals_and_Magazines">
     <catid>859</catid>
 </Topic>
 
-<Topic r:about="Science/Museums">
+<Topic about="Science/Museums">
     <catid>860</catid>
 </Topic>
 
-<Topic r:about="Science/Physical_Sciences">
+<Topic about="Science/Physical_Sciences">
     <catid>861</catid>
 </Topic>
 
-<Topic r:about="Science/Fluid_Mechanics_and_Dynamics">
+<Topic about="Science/Fluid_Mechanics_and_Dynamics">
     <catid>862</catid>
 </Topic>
 
-<Topic r:about="Science/Science-Technology_Policy">
+<Topic about="Science/Science-Technology_Policy">
     <catid>863</catid>
 </Topic>
 
 
-<Topic r:about="Shopping/Autos">
+<Topic about="Shopping/Autos">
     <catid>901</catid>
 </Topic>
 
-<Topic r:about="Shopping/Clothing">
+<Topic about="Shopping/Clothing">
     <catid>902</catid>
 </Topic>
 
-<Topic r:about="Shopping/Directories">
+<Topic about="Shopping/Directories">
     <catid>903</catid>
 </Topic>
 
-<Topic r:about="Shopping/Online_Auctions">
+<Topic about="Shopping/Online_Auctions">
     <catid>904</catid>
 </Topic>
 
-<Topic r:about="Shopping/Books">
+<Topic about="Shopping/Books">
     <catid>905</catid>
 </Topic>
 
-<Topic r:about="Shopping/Miscellaneous">
+<Topic about="Shopping/Miscellaneous">
     <catid>906</catid>
 </Topic>
 
-<Topic r:about="Shopping/Gifts">
+<Topic about="Shopping/Gifts">
     <catid>907</catid>
 </Topic>
 
-<Topic r:about="Shopping/Music">
+<Topic about="Shopping/Music">
     <catid>908</catid>
 </Topic>
 
-<Topic r:about="Shopping/Jewelry">
+<Topic about="Shopping/Jewelry">
     <catid>909</catid>
 </Topic>
 
-<Topic r:about="Shopping/Online_Malls">
+<Topic about="Shopping/Online_Malls">
     <catid>910</catid>
 </Topic>
 
-<Topic r:about="Shopping/Crafts">
+<Topic about="Shopping/Crafts">
     <catid>911</catid>
 </Topic>
 
-<Topic r:about="Shopping/Home_and_Garden">
+<Topic about="Shopping/Home_and_Garden">
     <catid>912</catid>
 </Topic>
 
-<Topic r:about="Shopping/International">
+<Topic about="Shopping/International">
     <catid>913</catid>
 </Topic>
 
-<Topic r:about="Shopping/Pets">
+<Topic about="Shopping/Pets">
     <catid>914</catid>
 </Topic>
 
-<Topic r:about="Shopping/Health_and_Beauty">
+<Topic about="Shopping/Health_and_Beauty">
     <catid>915</catid>
 </Topic>
 
-<Topic r:about="Shopping/Computers">
+<Topic about="Shopping/Computers">
     <catid>916</catid>
 </Topic>
 
-<Topic r:about="Shopping/Food">
+<Topic about="Shopping/Food">
     <catid>917</catid>
 </Topic>
 
-<Topic r:about="Shopping/Home_Electronics">
+<Topic about="Shopping/Home_Electronics">
     <catid>918</catid>
 </Topic>
 
-<Topic r:about="Shopping/Children">
+<Topic about="Shopping/Children">
     <catid>919</catid>
 </Topic>
 
-<Topic r:about="Shopping/Antiques_and_Collectables">
+<Topic about="Shopping/Antiques_and_Collectables">
     <catid>920</catid>
 </Topic>
 
-<Topic r:about="Shopping/Art_Galleries">
+<Topic about="Shopping/Art_Galleries">
     <catid>921</catid>
 </Topic>
 
-<Topic r:about="Shopping/Office_Supplies">
+<Topic about="Shopping/Office_Supplies">
     <catid>922</catid>
 </Topic>
 
-<Topic r:about="Shopping/Sporting_Goods">
+<Topic about="Shopping/Sporting_Goods">
     <catid>923</catid>
 </Topic>
 
-<Topic r:about="Shopping/Party_Supplies">
+<Topic about="Shopping/Party_Supplies">
     <catid>924</catid>
 </Topic>
 
-<Topic r:about="Shopping/Housewares">
+<Topic about="Shopping/Housewares">
     <catid>925</catid>
 </Topic>
 
-<Topic r:about="Shopping/Flowers">
+<Topic about="Shopping/Flowers">
     <catid>926</catid>
 </Topic>
 
-<Topic r:about="Shopping/Videos">
+<Topic about="Shopping/Videos">
     <catid>927</catid>
 </Topic>
 
-<Topic r:about="Shopping/Hardware_-_Home_Improvement">
+<Topic about="Shopping/Hardware_-_Home_Improvement">
     <catid>928</catid>
 </Topic>
 
-<Topic r:about="Shopping/General_Merchandise">
+<Topic about="Shopping/General_Merchandise">
     <catid>929</catid>
 </Topic>
 
 
-<Topic r:about="Society/Activism">
+<Topic about="Society/Activism">
     <catid>1001</catid>
 </Topic>
 
-<Topic r:about="Society/Heraldry">
+<Topic about="Society/Heraldry">
     <catid>1002</catid>
 </Topic>
 
-<Topic r:about="Society/Subcultures">
+<Topic about="Society/Subcultures">
     <catid>1003</catid>
 </Topic>
 
-<Topic r:about="Society/Death">
+<Topic about="Society/Death">
     <catid>1004</catid>
 </Topic>
 
-<Topic r:about="Society/Future">
+<Topic about="Society/Future">
     <catid>1005</catid>
 </Topic>
 
-<Topic r:about="Society/Genealogy">
+<Topic about="Society/Genealogy">
     <catid>1006</catid>
 </Topic>
 
-<Topic r:about="Society/History">
+<Topic about="Society/History">
     <catid>1007</catid>
 </Topic>
 
-<Topic r:about="Society/Men">
+<Topic about="Society/Men">
     <catid>1008</catid>
 </Topic>
 
-<Topic r:about="Society/Transgendered">
+<Topic about="Society/Transgendered">
     <catid>1009</catid>
 </Topic>
 
-<Topic r:about="Society/Advice">
+<Topic about="Society/Advice">
     <catid>1010</catid>
 </Topic>
 
-<Topic r:about="Society/Military">
+<Topic about="Society/Military">
     <catid>1011</catid>
 </Topic>
 
-<Topic r:about="Society/People">
+<Topic about="Society/People">
     <catid>1012</catid>
 </Topic>
 
-<Topic r:about="Society/Religion">
+<Topic about="Society/Religion">
     <catid>1013</catid>
 </Topic>
 
-<Topic r:about="Society/Human_Rights">
+<Topic about="Society/Human_Rights">
     <catid>1014</catid>
 </Topic>
 
-<Topic r:about="Society/Support_Groups">
+<Topic about="Society/Support_Groups">
     <catid>1015</catid>
 </Topic>
 
-<Topic r:about="Society/Women">
+<Topic about="Society/Women">
     <catid>1016</catid>
 </Topic>
 
-<Topic r:about="Society/Law">
+<Topic about="Society/Law">
     <catid>1017</catid>
 </Topic>
 
-<Topic r:about="Society/Paranormal">
+<Topic about="Society/Paranormal">
     <catid>1018</catid>
 </Topic>
 
-<Topic r:about="Society/Issues">
+<Topic about="Society/Issues">
     <catid>1019</catid>
 </Topic>
 
-<Topic r:about="Society/Politics">
+<Topic about="Society/Politics">
     <catid>1020</catid>
 </Topic>
 
-<Topic r:about="Society/Holidays">
+<Topic about="Society/Holidays">
     <catid>1021</catid>
 </Topic>
 
-<Topic r:about="Society/Sexuality">
+<Topic about="Society/Sexuality">
     <catid>1022</catid>
 </Topic>
 
-<Topic r:about="Society/Relationships">
+<Topic about="Society/Relationships">
     <catid>1022</catid>
 </Topic>
 
-<Topic r:about="Society/Disabled">
+<Topic about="Society/Disabled">
     <catid>1023</catid>
 </Topic>
 
-<Topic r:about="Society/Gay,_Lesbian,_and_Bisexual">
+<Topic about="Society/Gay,_Lesbian,_and_Bisexual">
     <catid>1024</catid>
 </Topic>
 
-<Topic r:about="Society/Organizations">
+<Topic about="Society/Organizations">
     <catid>1025</catid>
 </Topic>
 
-<Topic r:about="Society/Ethnicity">
+<Topic about="Society/Ethnicity">
     <catid>1026</catid>
 </Topic>
 
-<Topic r:about="Society/Indigenous_People">
+<Topic about="Society/Indigenous_People">
     <catid>1027</catid>
 </Topic>
 
-<Topic r:about="Society/Government">
+<Topic about="Society/Government">
     <catid>1028</catid>
 </Topic>
 
-<Topic r:about="Society/Philosophy">
+<Topic about="Society/Philosophy">
     <catid>1029</catid>
 </Topic>
 
-<Topic r:about="Society/Lifestyle_Choices">
+<Topic about="Society/Lifestyle_Choices">
     <catid>1030</catid>
 </Topic>
 
-<Topic r:about="Society/Seniors">
+<Topic about="Society/Seniors">
     <catid>1031</catid>
 </Topic>
 
-<Topic r:about="Society/Urban_Legends">
+<Topic about="Society/Urban_Legends">
     <catid>1032</catid>
 </Topic>
 
 
-<Topic r:about="Sports/Marching">
+<Topic about="Sports/Marching">
     <catid>2001</catid>
 </Topic>
 
-<Topic r:about="Sports/Auto_Racing">
+<Topic about="Sports/Auto_Racing">
     <catid>2002</catid>
 </Topic>
 
-<Topic r:about="Sports/Bicycling">
+<Topic about="Sports/Bicycling">
     <catid>2003</catid>
 </Topic>
 
-<Topic r:about="Sports/Equestrian">
+<Topic about="Sports/Equestrian">
     <catid>2004</catid>
 </Topic>
 
-<Topic r:about="Sports/Hunting">
+<Topic about="Sports/Hunting">
     <catid>2005</catid>
 </Topic>
 
-<Topic r:about="Sports/Juggling">
+<Topic about="Sports/Juggling">
     <catid>2006</catid>
 </Topic>
 
-<Topic r:about="Sports/Martial_Arts">
+<Topic about="Sports/Martial_Arts">
     <catid>2007</catid>
 </Topic>
 
-<Topic r:about="Sports/Motorcycle_Racing">
+<Topic about="Sports/Motorcycle_Racing">
     <catid>2008</catid>
 </Topic>
 
-<Topic r:about="Sports/Scuba_Diving">
+<Topic about="Sports/Scuba_Diving">
     <catid>2009</catid>
 </Topic>
 
-<Topic r:about="Sports/Skiing">
+<Topic about="Sports/Skiing">
     <catid>2010</catid>
 </Topic>
 
-<Topic r:about="Sports/Snowboarding">
+<Topic about="Sports/Snowboarding">
     <catid>2011</catid>
 </Topic>
 
-<Topic r:about="Sports/Skydiving">
+<Topic about="Sports/Skydiving">
     <catid>2012</catid>
 </Topic>
 
-<Topic r:about="Sports/Archery">
+<Topic about="Sports/Archery">
     <catid>2013</catid>
 </Topic>
 
-<Topic r:about="Sports/Baseball">
+<Topic about="Sports/Baseball">
     <catid>2014</catid>
 </Topic>
 
-<Topic r:about="Sports/Basketball">
+<Topic about="Sports/Basketball">
     <catid>2015</catid>
 </Topic>
 
-<Topic r:about="Sports/Billiards">
+<Topic about="Sports/Billiards">
     <catid>2016</catid>
 </Topic>
 
-<Topic r:about="Sports/Boxing">
+<Topic about="Sports/Boxing">
     <catid>2017</catid>
 </Topic>
 
-<Topic r:about="Sports/Cricket">
+<Topic about="Sports/Cricket">
     <catid>2018</catid>
 </Topic>
 
-<Topic r:about="Sports/Fencing">
+<Topic about="Sports/Fencing">
     <catid>2019</catid>
 </Topic>
 
-<Topic r:about="Sports/Football">
+<Topic about="Sports/Football">
     <catid>2020</catid>
 </Topic>
 
-<Topic r:about="Sports/Golf">
+<Topic about="Sports/Golf">
     <catid>2021</catid>
 </Topic>
 
-<Topic r:about="Sports/Hockey">
+<Topic about="Sports/Hockey">
     <catid>2022</catid>
 </Topic>
 
-<Topic r:about="Sports/Bowling">
+<Topic about="Sports/Bowling">
     <catid>2023</catid>
 </Topic>
 
-<Topic r:about="Sports/Officiating">
+<Topic about="Sports/Officiating">
     <catid>2024</catid>
 </Topic>
 
-<Topic r:about="Sports/Olympics">
+<Topic about="Sports/Olympics">
     <catid>2025</catid>
 </Topic>
 
-<Topic r:about="Sports/Paintball">
+<Topic about="Sports/Paintball">
     <catid>2026</catid>
 </Topic>
 
-<Topic r:about="Sports/Pro_Wrestling">
+<Topic about="Sports/Pro_Wrestling">
     <catid>2027</catid>
 </Topic>
 
-<Topic r:about="Sports/Rodeo">
+<Topic about="Sports/Rodeo">
     <catid>2028</catid>
-    <narrow r:resource="http://dir.yahoo.com/Recreation/Sports/Rodeo/"/>
-    <narrow r:resource="http://www.prorodeo.com/"/>
-    <narrow r:resource="http://www.npra.com/"/>
+    <narrow resource="http://dir.yahoo.com/Recreation/Sports/Rodeo/"/>
+    <narrow resource="http://www.prorodeo.com/"/>
+    <narrow resource="http://www.npra.com/"/>
 </Topic>
 
-<Topic r:about="Sports/Rowing">
+<Topic about="Sports/Rowing">
     <catid>2029</catid>
 </Topic>
 
-<Topic r:about="Sports/Rugby">
+<Topic about="Sports/Rugby">
     <catid>2030</catid>
 </Topic>
 
-<Topic r:about="Sports/Inline_Skating">
+<Topic about="Sports/Inline_Skating">
     <catid>2031</catid>
 </Topic>
 
-<Topic r:about="Sports/Snowmobiles">
+<Topic about="Sports/Snowmobiles">
     <catid>2032</catid>
 </Topic>
 
-<Topic r:about="Sports/Soccer">
+<Topic about="Sports/Soccer">
     <catid>2033</catid>
 </Topic>
 
-<Topic r:about="Sports/Softball">
+<Topic about="Sports/Softball">
     <catid>2034</catid>
 </Topic>
 
-<Topic r:about="Sports/Swimming">
+<Topic about="Sports/Swimming">
     <catid>2035</catid>
 </Topic>
 
-<Topic r:about="Sports/Table_Soccer">
+<Topic about="Sports/Table_Soccer">
     <catid>2036</catid>
 </Topic>
 
-<Topic r:about="Sports/Table_Tennis">
+<Topic about="Sports/Table_Tennis">
     <catid>2037</catid>
 </Topic>
 
-<Topic r:about="Sports/Tennis">
+<Topic about="Sports/Tennis">
     <catid>2038</catid>
 </Topic>
 
-<Topic r:about="Sports/Triathalon">
+<Topic about="Sports/Triathalon">
     <catid>2039</catid>
 </Topic>
 
-<Topic r:about="Sports/Volleyball">
+<Topic about="Sports/Volleyball">
     <catid>2040</catid>
 </Topic>
 
-<Topic r:about="Sports/Water_Skiing">
+<Topic about="Sports/Water_Skiing">
     <catid>2041</catid>
 </Topic>
 
-<Topic r:about="Sports/Windsurfing">
+<Topic about="Sports/Windsurfing">
     <catid>2042</catid>
 </Topic>
 
-<Topic r:about="Sports/Horse_Racing">
+<Topic about="Sports/Horse_Racing">
     <catid>2043</catid>
 </Topic>
 
-<Topic r:about="Sports/Wrestling">
+<Topic about="Sports/Wrestling">
     <catid>2044</catid>
 </Topic>
 
-<Topic r:about="Sports/Unicycling">
+<Topic about="Sports/Unicycling">
     <catid>2045</catid>
 </Topic>
 
-<Topic r:about="Sports/Running">
+<Topic about="Sports/Running">
     <catid>2046</catid>
 </Topic>
 
-<Topic r:about="Sports/Bocce">
+<Topic about="Sports/Bocce">
     <catid>2047</catid>
 </Topic>
 
-<Topic r:about="Sports/Kitesailing">
+<Topic about="Sports/Kitesailing">
     <catid>2048</catid>
 </Topic>
 
-<Topic r:about="Sports/Track_and_Field">
-    <catid>>2049</catid>
+<Topic about="Sports/Track_and_Field">
+    <catid>2049</catid>
 </Topic>
 
-<Topic r:about="Sports/Personal_Watercraft">
-    <catid>>2050</catid>
+<Topic about="Sports/Personal_Watercraft">
+    <catid>2050</catid>
 </Topic>
 
-<Topic r:about="Sports/Skateboarding">
-    <catid>>2051</catid>
+<Topic about="Sports/Skateboarding">
+    <catid>2051</catid>
 </Topic>
 
-<Topic r:about="Sports/Sailing">
-    <catid>>2052</catid>
+<Topic about="Sports/Sailing">
+    <catid>2052</catid>
 </Topic>
 
-<Topic r:about="Sports/Shooting">
-    <catid>>2053</catid>
+<Topic about="Sports/Shooting">
+    <catid>2053</catid>
 </Topic>
 
-<Topic r:about="Sports/Wakeboarding">
-    <catid>>2054</catid>
+<Topic about="Sports/Wakeboarding">
+    <catid>2054</catid>
 </Topic>
 
-<Topic r:about="Sports/Highland_Games">
-    <catid>>2055</catid>
+<Topic about="Sports/Highland_Games">
+    <catid>2055</catid>
 </Topic>
 
-<Topic r:about="Sports/Merchandise">
-    <catid>>2056</catid>
+<Topic about="Sports/Merchandise">
+    <catid>2056</catid>
 </Topic>
 
-<Topic r:about="Sports/Walking">
-    <catid>>2057</catid>
+<Topic about="Sports/Walking">
+    <catid>2057</catid>
 </Topic>
 
-<Topic r:about="Sports/Cheerleading">
-    <catid>>2058</catid>
+<Topic about="Sports/Cheerleading">
+    <catid>2058</catid>
 </Topic>
 
-<Topic r:about="Sports/Gambling">
-    <catid>>2059</catid>
+<Topic about="Sports/Gambling">
+    <catid>2059</catid>
 </Topic>
 
-<Topic r:about="Sports/Canoe_and_Kayaking">
-    <catid>>2060</catid>
+<Topic about="Sports/Canoe_and_Kayaking">
+    <catid>2060</catid>
 </Topic>
 
-<Topic r:about="Sports/Skating">
-    <catid>>2061</catid>
+<Topic about="Sports/Skating">
+    <catid>2061</catid>
 </Topic>
 
-<Topic r:about="Sports/Surfing">
-    <catid>>2062</catid>
+<Topic about="Sports/Surfing">
+    <catid>2062</catid>
 </Topic>
 
-<Topic r:about="Sports/Lacrosse">
-    <catid>>2063</catid>
+<Topic about="Sports/Lacrosse">
+    <catid>2063</catid>
 </Topic>
 
-<Topic r:about="Sports/Fishing">
-    <catid>>2064</catid>
+<Topic about="Sports/Fishing">
+    <catid>2064</catid>
 </Topic>
 
-<Topic r:about="Sports/Orienteering">
-    <catid>>2065</catid>
+<Topic about="Sports/Orienteering">
+    <catid>2065</catid>
 </Topic>
 
-<Topic r:about="Sports/Gymnastics">
-    <catid>>2066</catid>
+<Topic about="Sports/Gymnastics">
+    <catid>2066</catid>
 </Topic>
 
-<Topic r:about="Sports/Croquet">
-    <catid>>2067</catid>
+<Topic about="Sports/Croquet">
+    <catid>2067</catid>
 </Topic>
 
-<Topic r:about="Sports/Skibob">
-    <catid>>2068</catid>
+<Topic about="Sports/Skibob">
+    <catid>2068</catid>
 </Topic>
 
-<Topic r:about="Sports/Ultimate_Frisbee">
-    <catid>>2069</catid>
+<Topic about="Sports/Ultimate_Frisbee">
+    <catid>2069</catid>
 </Topic>
 
-<Topic r:about="Sports/Frisbee">
-    <catid>>2070</catid>
+<Topic about="Sports/Frisbee">
+    <catid>2070</catid>
 </Topic>
 
-<Topic r:about="Sports/Fantasy">
-    <catid>>2071 </catid>
+<Topic about="Sports/Fantasy">
+    <catid>2071 </catid>
 </Topic>
 
-<Topic r:about="Sports/College_and_University">
-    <catid>>2072</catid>
+<Topic about="Sports/College_and_University">
+    <catid>2072</catid>
 </Topic>
 
-<Topic r:about="Sports/Flying_Discs">
-    <catid>>2073</catid>
+<Topic about="Sports/Flying_Discs">
+    <catid>2073</catid>
 </Topic>
 
-<Topic r:about="Sports/News">
-    <catid>>2074</catid>
+<Topic about="Sports/News">
+    <catid>2074</catid>
 </Topic>
 
-<Topic r:about="Sports/Curling">
-    <catid>>2075</catid>
+<Topic about="Sports/Curling">
+    <catid>2075</catid>
 </Topic>
 
-<Topic r:about="Sports/Training">
-    <catid>>2076</catid>
+<Topic about="Sports/Training">
+    <catid>2076</catid>
 </Topic>
 
 </r:RDF>
