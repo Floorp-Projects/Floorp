@@ -238,6 +238,13 @@ NS_IMETHODIMP nsXULWindow::Create()
 
 NS_IMETHODIMP nsXULWindow::Destroy()
 {
+   if(mDocShell)
+      {
+      nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mDocShell));
+      shellAsWin->Destroy();
+      mDocShell = nsnull;
+      }
+
    // Remove our ref on the content shells
    PRInt32 count;
    count = mContentShells.Count();
@@ -248,12 +255,6 @@ NS_IMETHODIMP nsXULWindow::Destroy()
       }
    mContentShells.Clear();
 
-   if(mDocShell)
-      {
-      nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mDocShell));
-      shellAsWin->Destroy();
-      mDocShell = nsnull;
-      }
    if(mContentTreeOwner)   
       {
       mContentTreeOwner->XULWindow(nsnull);
