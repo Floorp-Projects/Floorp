@@ -302,6 +302,11 @@ static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
     // set its directory an aunt of the moz bin directory
     nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Win_Appdata);
 
+    // (some) Win95 machines are not returning anything back for Appdata
+    // Give them all the windows directory.
+    if (!(cwd.Exists()))
+        cwd = nsSpecialSystemDirectory::Win_WindowsDirectory;
+
     cwd += "Mozilla";
     if (!cwd.Exists())
         cwd.CreateDir();
