@@ -22,11 +22,15 @@ TEST_BASE=`cd $TEST_BASE;pwd`
 MOZ_TEST_BASE=$TEST_BASE/$DEPTH
 MOZCONF=$HOME/.mozconfig
 
+MOZ_OBJ=""
 if test -f $MOZCONF; then
   MOZ_OBJ=`grep -e "^mk_add_options MOZ_OBJDIR=" $MOZCONF | cut -d = -f 2`
+fi
+if [ -n "$MOZ_OBJ" ]
+then
   MOZ_OBJ=`echo $MOZ_OBJ | sed -e"s,@TOPSRCDIR@,$MOZ_TEST_BASE/mozilla,"`
 else
-  MOZ_OBJ=$MOZ_TEST_BASE/mozilla
+  MOZ_OBJ=$MOZ_TEST_BASE/mozilla/
 fi
 
 MOZ_TEST_VIEWER="${MOZ_OBJ}dist/bin/mozilla-viewer.sh -- -d 500"
