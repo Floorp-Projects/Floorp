@@ -19,6 +19,7 @@
 #define nsJSEnvironment_h___
 
 #include "nsIScriptContext.h"
+class nsIScriptSecurityManager;
 
 class nsJSContext : public nsIScriptContext {
 private:
@@ -42,6 +43,7 @@ public:
                                          const char *aName);
   virtual nsresult RemoveReference(void *aSlot, void *aScriptObject);
   virtual nsresult GC();
+  NS_IMETHOD GetSecurityManager(nsIScriptSecurityManager** aInstancePtr);
 };
 
 class nsJSEnvironment {

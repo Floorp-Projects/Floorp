@@ -23,7 +23,7 @@ DEFINES=-D_IMPL_NS_DOM
 EXPORTS=nsIScriptContext.h nsIJSScriptObject.h nsIScriptObjectOwner.h \
         nsIScriptGlobalObject.h nsIScriptContextOwner.h \
 	nsIScriptEventListener.h nsIDOMScriptObjectFactory.h \
-	nsIDOMNativeObjectRegistry.h nsDOMCID.h
+	nsIDOMNativeObjectRegistry.h nsDOMCID.h nsIScriptSecurityManager.h
 
 MODULE=dom 
 

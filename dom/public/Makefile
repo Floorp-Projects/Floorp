@@ -31,6 +31,7 @@ EXPORTS =			 \
 	nsIDOMScriptObjectFactory.h   \
 	nsIDOMNativeObjectRegistry.h  \
 	nsDOMCID.h		 \
+	nsIScriptSecurityManager.h \
 	$(NULL)
 
 MODULE = dom

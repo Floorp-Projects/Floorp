@@ -31,6 +31,7 @@ CPPSRCS =			 \
 	nsGlobalWindow.cpp       \
 	nsLocation.cpp		 \
 	nsFrameList.cpp		 \
+	nsJSSecurityManager.cpp \
 	$(NULL)
 
 MODULE=raptor 
@@ -46,6 +47,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSLocation.obj		\
 	.\$(OBJDIR)\nsFrameList.obj		\
 	.\$(OBJDIR)\nsJSWindowCollection.obj	\
+	.\$(OBJDIR)\nsJSSecurityManager.obj	\
 	$(NULL)
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
