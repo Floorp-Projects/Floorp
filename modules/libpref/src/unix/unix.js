@@ -117,6 +117,8 @@ pref("print.print_headerfooter_gap", 60); // twips
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 0); // twips
 
+pref("print.whileInPrintPreview", false);
+
 pref("font.allow_double_byte_special_chars", true);
 // font names
 

@@ -5160,6 +5160,18 @@ DocumentViewerImpl::Print(PRBool            aSilent,
 
   nsresult rv;
 
+  if (mIsDoingPrintPreview) {
+    PRBool okToPrint = PR_FALSE;
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    if (prefs) {
+      prefs->GetBoolPref("print.whileInPrintPreview", &okToPrint);
+    }
+    if (!okToPrint) {
+      ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW, PR_FALSE);
+      return NS_OK;
+    }
+  }
+
   // if we are printing another URL, then exit
   // the reason we check here is because this method can be called while 
   // another is still in here (the printing dialog is a good example).
@@ -5533,6 +5545,7 @@ DocumentViewerImpl::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrintin
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_ENDDOC)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_STARTPAGE)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_ENDPAGE)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW)
     default:
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_FAILURE)
 #undef NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG      
