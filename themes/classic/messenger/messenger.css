@@ -445,7 +445,7 @@ box#messagepanebox
   list-style-image: url("chrome://messenger/skin/readmail.gif");
 }
 
-.enabledcol[enabled="true"] {
+.enabledcol[value="true"] {
   list-style-image: url("chrome://messenger/skin/unreadmail.gif");
 }
 
