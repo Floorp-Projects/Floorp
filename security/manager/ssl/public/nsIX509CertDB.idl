@@ -61,7 +61,7 @@ interface nsIX509CertDB : nsISupports {
   const unsigned long TRUSTED_OBJSIGN = 1 << 2;
 
   nsIX509Cert getCertByNickname(in nsISupports aToken,
-                                in wstring aNickname);
+                                in AString aNickname);
 
   /*
    * getCertByDBKey
@@ -90,10 +90,10 @@ interface nsIX509CertDB : nsISupports {
                         [array, size_is(count)] out wstring certNameList);
 
   /* Get the user encryption cert */
-  nsIX509Cert getEmailEncryptionCert(in wstring aNickname);
+  nsIX509Cert getEmailEncryptionCert(in AString aNickname);
 
   /* Get the user signing cert */
-  nsIX509Cert getEmailSigningCert(in wstring aNickname);
+  nsIX509Cert getEmailSigningCert(in AString aNickname);
 
   /* Get a cert by email address */
   nsIX509Cert getCertByEmailAddress(in nsISupports aToken,
@@ -196,7 +196,7 @@ interface nsIX509CertDB : nsISupports {
                         in nsILocalFile aFile,
                         in unsigned long count,
                         [array, size_is(count)] in nsIX509Cert aCerts);
-                        //[array, size_is(count)] in wstring aCertNames);
+                        //[array, size_is(count)] in AString aCertNames);
   /*
    * getOCSPResponders
    *

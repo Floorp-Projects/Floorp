@@ -37,13 +37,13 @@
 
 [scriptable, uuid(c185d920-4a3e-11d5-ba27-00108303b117)]
 interface nsICRLInfo : nsISupports {
-  readonly attribute wstring org;
-  readonly attribute wstring orgUnit;
+  readonly attribute AString org;
+  readonly attribute AString orgUnit;
   readonly attribute PRTime  lastUpdate;
   readonly attribute PRTime  nextUpdate;
-  readonly attribute wstring lastUpdateLocale;
-  readonly attribute wstring nextUpdateLocale;
-  readonly attribute wstring nameInDb;
-  readonly attribute wstring lastFetchURL;
+  readonly attribute AString lastUpdateLocale;
+  readonly attribute AString nextUpdateLocale;
+  readonly attribute AString nameInDb;
+  readonly attribute AUTF8String lastFetchURL;
 };
 

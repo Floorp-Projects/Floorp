@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.30 2002/09/17 18:51:14 kaie%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.31 2002/09/23 20:17:13 kaie%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -425,7 +425,7 @@ finish:
 // a buffer of octets.  Must handle byte order correctly.
 // TODO: Is there a mozilla way to do this?  In the string lib?
 void
-nsPKCS12Blob::unicodeToItem(PRUnichar *uni, SECItem *item)
+nsPKCS12Blob::unicodeToItem(const PRUnichar *uni, SECItem *item)
 {
   int len = 0;
   int i = 0;
@@ -449,16 +449,16 @@ nsresult
 nsPKCS12Blob::newPKCS12FilePassword(SECItem *unicodePw)
 {
   nsresult rv = NS_OK;
-  PRUnichar *password;
+  nsAutoString password;
   PRBool canceled;
   nsCOMPtr<nsICertificateDialogs> certDialogs;
   rv = ::getNSSDialogs(getter_AddRefs(certDialogs), 
                        NS_GET_IID(nsICertificateDialogs),
                        NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
-  rv = certDialogs->SetPKCS12FilePassword(mUIContext, &password, &canceled);
+  rv = certDialogs->SetPKCS12FilePassword(mUIContext, password, &canceled);
   if (NS_FAILED(rv) || canceled) return rv;
-  unicodeToItem(password, unicodePw);
+  unicodeToItem(password.get(), unicodePw);
   return NS_OK;
 }
 
@@ -470,16 +470,16 @@ nsresult
 nsPKCS12Blob::getPKCS12FilePassword(SECItem *unicodePw)
 {
   nsresult rv = NS_OK;
-  PRUnichar *password;
+  nsAutoString password;
   PRBool canceled;
   nsCOMPtr<nsICertificateDialogs> certDialogs;
   rv = ::getNSSDialogs(getter_AddRefs(certDialogs), 
                        NS_GET_IID(nsICertificateDialogs),
                        NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
-  rv = certDialogs->GetPKCS12FilePassword(mUIContext, &password, &canceled);
+  rv = certDialogs->GetPKCS12FilePassword(mUIContext, password, &canceled);
   if (NS_FAILED(rv) || canceled) return rv;
-  unicodeToItem(password, unicodePw);
+  unicodeToItem(password.get(), unicodePw);
   return NS_OK;
 }
 

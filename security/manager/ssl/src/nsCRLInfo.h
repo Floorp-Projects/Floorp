@@ -68,7 +68,7 @@ private:
   PRTime mLastUpdate;
   PRTime mNextUpdate;
   nsString mNameInDb;
-  nsString mLastFetchURL;
+  nsCString mLastFetchURL;
   nsString mNextAutoUpdateDate;
 };
 

@@ -45,25 +45,25 @@ interface nsIX509Cert : nsISupports {
   /*
    * attributes for certs
    */
-  readonly attribute wstring nickname;
-  readonly attribute wstring emailAddress;
-  readonly attribute wstring commonName;
-  readonly attribute wstring organization;
-  readonly attribute wstring organizationalUnit;
-  readonly attribute wstring subjectName;
-  readonly attribute wstring issuerName;
-  readonly attribute wstring serialNumber;
-  readonly attribute wstring rsaPubModulus;
-  readonly attribute wstring sha1Fingerprint;
-  readonly attribute wstring md5Fingerprint;
-  readonly attribute wstring issuedDate;
-  readonly attribute wstring issuedDateSortable;
-  readonly attribute wstring expiresDate;
-  readonly attribute wstring expiresDateSortable;
-  readonly attribute wstring tokenName;
-  readonly attribute wstring issuerCommonName;
-  readonly attribute wstring issuerOrganization;
-  readonly attribute wstring issuerOrganizationUnit;
+  readonly attribute AString nickname;
+  readonly attribute AString emailAddress;
+  readonly attribute AString commonName;
+  readonly attribute AString organization;
+  readonly attribute AString organizationalUnit;
+  readonly attribute AString subjectName;
+  readonly attribute AString issuerName;
+  readonly attribute AString serialNumber;
+  readonly attribute AString rsaPubModulus;
+  readonly attribute AString sha1Fingerprint;
+  readonly attribute AString md5Fingerprint;
+  readonly attribute AString issuedDate;
+  readonly attribute AString issuedDateSortable;
+  readonly attribute AString expiresDate;
+  readonly attribute AString expiresDateSortable;
+  readonly attribute AString tokenName;
+  readonly attribute AString issuerCommonName;
+  readonly attribute AString issuerOrganization;
+  readonly attribute AString issuerOrganizationUnit;
   readonly attribute nsIX509Cert issuer;
 
   readonly attribute nsIX509CertValidity validity;
@@ -100,7 +100,7 @@ interface nsIX509Cert : nsISupports {
                  out unsigned long count, 
                  [array, size_is(count)] out wstring usages);
 
-  void getPurposes(out unsigned long verified, out wstring purposes);
+  void getPurposes(out unsigned long verified, out AString purposes);
 
 
   const unsigned long CERT_USAGE_SSLClient = 0;

@@ -232,7 +232,7 @@ nsNSSDialogs::UnknownIssuer(nsIInterfaceRequestor *socketInfo,
 
 NS_IMETHODIMP 
 nsNSSDialogs::MismatchDomain(nsIInterfaceRequestor *socketInfo, 
-                             const PRUnichar *targetURL, 
+                             const nsACString &targetURL, 
                              nsIX509Cert *cert, PRBool *_retval) 
 {
   nsresult rv;
@@ -245,7 +245,7 @@ nsNSSDialogs::MismatchDomain(nsIInterfaceRequestor *socketInfo,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDialogParamBlock> dialogBlock = do_QueryInterface(block);
-  rv = dialogBlock->SetString(1, targetURL);
+  rv = dialogBlock->SetString(1, NS_ConvertUTF8toUCS2(targetURL).get());
   if (NS_FAILED(rv))
     return rv;
 
@@ -311,10 +311,10 @@ nsNSSDialogs::CertExpired(nsIInterfaceRequestor *socketInfo,
 
   nsXPIDLString message1;
   nsXPIDLString title;
-  PRUnichar *commonName=nsnull;
-  nsString formattedDate;
+  nsAutoString commonName;
+  nsAutoString formattedDate;
 
-  rv = cert->GetCommonName(&commonName);
+  rv = cert->GetCommonName(commonName);
 
   nsIDateTimeFormat *aDateTimeFormat;
   rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
@@ -324,18 +324,14 @@ nsNSSDialogs::CertExpired(nsIInterfaceRequestor *socketInfo,
   aDateTimeFormat->FormatPRTime(nsnull, kDateFormatShort, 
                                 kTimeFormatNoSeconds, timeToUse, 
                                 formattedDate);
-  PRUnichar *formattedDatePR = ToNewUnicode(formattedDate);
-  const PRUnichar *formatStrings[2] = { commonName, formattedDatePR }; 
-  nsString keyString = NS_ConvertASCIItoUCS2(key);
-  nsString titleKeyString = NS_ConvertASCIItoUCS2(titleKey);
+  const PRUnichar *formatStrings[2] = { commonName.get(), formattedDate.get() }; 
+  NS_ConvertASCIItoUCS2 keyString(key);
+  NS_ConvertASCIItoUCS2 titleKeyString(titleKey);
   mPIPStringBundle->FormatStringFromName(keyString.get(), formatStrings, 
                                          2, getter_Copies(message1));
   mPIPStringBundle->FormatStringFromName(titleKeyString.get(), formatStrings,
                                          2, getter_Copies(title));
   
-  Recycle(commonName);
-  Recycle(formattedDatePR);
-
   nsCOMPtr<nsIDialogParamBlock> dialogBlock = do_QueryInterface(block);
   rv = dialogBlock->SetString(1,message1); 
   rv = dialogBlock->SetString(2,title);
@@ -363,14 +359,14 @@ nsNSSDialogs::CertExpired(nsIInterfaceRequestor *socketInfo,
 
 NS_IMETHODIMP 
 nsNSSDialogs::CrlNextupdate(nsIInterfaceRequestor *socketInfo, 
-                          const PRUnichar * targetURL, nsIX509Cert *cert)
+                          const nsACString &targetURL, nsIX509Cert *cert)
 {
   nsresult rv;
 
   nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kPKIParamBlockCID);
   nsCOMPtr<nsIDialogParamBlock> dialogBlock = do_QueryInterface(block);
 
-  rv = dialogBlock->SetString(1, targetURL);
+  rv = dialogBlock->SetString(1, NS_ConvertUTF8toUCS2(targetURL).get());
   if (NS_FAILED(rv))
     return rv;
 
@@ -661,7 +657,6 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
 
 NS_IMETHODIMP 
 nsNSSDialogs::CACertExists(nsIInterfaceRequestor *ctx,PRBool *_canceled)
-								
 {
   nsresult rv;
 
@@ -675,8 +670,8 @@ nsNSSDialogs::CACertExists(nsIInterfaceRequestor *ctx,PRBool *_canceled)
 
   
   rv = nsNSSDialogHelper::openDialog(parent, 
-                                   "chrome://pippki/content/cacertexists.xul",
-								    block);
+                                     "chrome://pippki/content/cacertexists.xul",
+                                     block);
 
   return rv;
 }
@@ -708,13 +703,13 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *cn,
   if (NS_FAILED(rv)) return rv;
 
   for (i = 0; i < count; i++) {
-	  rv = block->SetString(i+3, certNickList[i]);
-	  if (NS_FAILED(rv)) return rv;
+    rv = block->SetString(i+3, certNickList[i]);
+    if (NS_FAILED(rv)) return rv;
   }
 
   for (i = 0; i < count; i++) {
-	  rv = block->SetString(i+count+3, certDetailsList[i]);
-	  if (NS_FAILED(rv)) return rv;
+    rv = block->SetString(i+count+3, certDetailsList[i]);
+    if (NS_FAILED(rv)) return rv;
   }
 
   rv = block->SetInt(0, count);
@@ -761,13 +756,13 @@ nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx,
   block->SetNumberStrings(1+count*2);
 
   for (i = 0; i < count; i++) {
-	  rv = block->SetString(i, certNickList[i]);
-	  if (NS_FAILED(rv)) return rv;
+    rv = block->SetString(i, certNickList[i]);
+    if (NS_FAILED(rv)) return rv;
   }
 
   for (i = 0; i < count; i++) {
-	  rv = block->SetString(i+count, certDetailsList[i]);
-	  if (NS_FAILED(rv)) return rv;
+    rv = block->SetString(i+count, certDetailsList[i]);
+    if (NS_FAILED(rv)) return rv;
   }
 
   rv = block->SetInt(0, count);
@@ -794,14 +789,9 @@ nsNSSDialogs::PickCertificate(nsIInterfaceRequestor *ctx,
 }
 
 
-/*
- * void setPKCS12FilePassword(in nsIInterfaceRequestor ctx, 
- *                            out wstring password,
- *                            out boolean canceled);
- */
 NS_IMETHODIMP 
 nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, 
-                                    PRUnichar **_password,
+                                    nsAString &_password,
                                     PRBool *_canceled)
 {
   nsresult rv;
@@ -822,19 +812,19 @@ nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   *_canceled = (status == 0) ? PR_TRUE : PR_FALSE;
   if (!*_canceled) {
     // retrieve the password
-    rv = block->GetString(2, _password);
+    PRUnichar *pw;
+    rv = block->GetString(2, &pw);
+    if (NS_SUCCEEDED(rv)) {
+      _password = pw;
+      nsMemory::Free(pw);
+    }
   }
   return rv;
 }
 
-/*
- *  void getPKCS12FilePassword(in nsIInterfaceRequestor ctx, 
- *                             out wstring password,
- *                             out boolean canceled);
- */
 NS_IMETHODIMP 
 nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, 
-                                    PRUnichar **_password,
+                                    nsAString &_password,
                                     PRBool *_canceled)
 {
   nsresult rv;
@@ -855,7 +845,12 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   *_canceled = (status == 0) ? PR_TRUE : PR_FALSE;
   if (!*_canceled) {
     // retrieve the password
-    rv = block->GetString(2, _password);
+    PRUnichar *pw;
+    rv = block->GetString(2, &pw);
+    if (NS_SUCCEEDED(rv)) {
+      _password = pw;
+      nsMemory::Free(pw);
+    }
   }
   return rv;
 }
@@ -914,8 +909,8 @@ nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const PRUnichar **aTokenL
   block->SetNumberStrings(aCount);
 
   for (i = 0; i < aCount; i++) {
-	  rv = block->SetString(i, aTokenList[i]);
-	  if (NS_FAILED(rv)) return rv;
+    rv = block->SetString(i, aTokenList[i]);
+    if (NS_FAILED(rv)) return rv;
   }
 
   rv = block->SetInt(0, aCount);

@@ -73,7 +73,7 @@ ProcessVersion(SECItem         *versionItem,
  
   nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpVersion").get(),
                                       text);
-  rv = printableItem->SetDisplayName(text.get());
+  rv = printableItem->SetDisplayName(text);
   if (NS_FAILED(rv))
     return rv;
 
@@ -111,7 +111,7 @@ ProcessVersion(SECItem         *versionItem,
   if (NS_FAILED(rv))
     return rv;
 
-  rv = printableItem->SetDisplayValue(text.get());
+  rv = printableItem->SetDisplayValue(text);
   if (NS_FAILED(rv))
     return rv;
 
@@ -137,7 +137,7 @@ ProcessSerialNumberDER(SECItem         *serialItem,
   if (NS_FAILED(rv))
     return rv;
 
-  rv = printableItem->SetDisplayName(text.get());
+  rv = printableItem->SetDisplayName(text);
   if (NS_FAILED(rv))
     return rv;
 
@@ -146,7 +146,7 @@ ProcessSerialNumberDER(SECItem         *serialItem,
   if (serialNumber == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = printableItem->SetDisplayValue(NS_ConvertASCIItoUCS2(serialNumber).get());
+  rv = printableItem->SetDisplayValue(NS_ConvertASCIItoUCS2(serialNumber));
   *retItem = printableItem;
   NS_ADDREF(*retItem);
   return rv;
@@ -455,7 +455,7 @@ ProcessSingleExtension(CERTCertExtension *extension,
   if (extensionItem == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  extensionItem->SetDisplayName(text.get());
+  extensionItem->SetDisplayName(text);
   SECOidTag oidTag = SECOID_FindOIDTag(&extension->id);
   text.Truncate();
   if (extension->critical.data != nsnull) {
@@ -476,7 +476,7 @@ ProcessSingleExtension(CERTCertExtension *extension,
   if (NS_FAILED(rv))
     return rv;
 
-  extensionItem->SetDisplayValue(text.get());
+  extensionItem->SetDisplayValue(text);
   *retExtension = extensionItem;
   NS_ADDREF(*retExtension);
   return NS_OK;

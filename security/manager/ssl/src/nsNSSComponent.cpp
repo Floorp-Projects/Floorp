@@ -1237,23 +1237,19 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
       }
     }
     //-- Create a certificate principal with id and organization data
-    PRUnichar* fingerprint;
-    rv2 = pCert->GetSha1Fingerprint(&fingerprint);
-    nsCAutoString fingerprintStr;
-    fingerprintStr.AssignWithConversion(fingerprint);
-    PR_FREEIF(fingerprint);
+    nsAutoString fingerprint;
+    rv2 = pCert->GetSha1Fingerprint(fingerprint);
+    NS_LossyConvertUCS2toASCII fingerprintStr(fingerprint);
     if (NS_FAILED(rv2)) return rv2;
     rv2 = mScriptSecurityManager->GetCertificatePrincipal(fingerprintStr.get(), aPrincipal);
     if (NS_FAILED(rv2) || !*aPrincipal) return rv2;
 
     nsCOMPtr<nsICertificatePrincipal> certPrincipal = do_QueryInterface(*aPrincipal, &rv2);
     if (NS_FAILED(rv2)) return rv2;
-    PRUnichar* orgName;
-    rv2 = pCert->GetOrganization(&orgName);
+    nsAutoString orgName;
+    rv2 = pCert->GetOrganization(orgName);
     if (NS_FAILED(rv2)) return rv2;
-    nsCAutoString orgNameStr;
-    orgNameStr.AssignWithConversion(orgName);
-    PR_FREEIF(orgName);
+    NS_LossyConvertUCS2toASCII  orgNameStr(orgName);
     rv2 = certPrincipal->SetCommonName(orgNameStr.get());
     if (NS_FAILED(rv2)) return rv2;
   }

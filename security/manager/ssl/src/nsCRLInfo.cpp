@@ -74,7 +74,7 @@ nsCRLInfo::nsCRLInfo(CERTSignedCrl *signedCrl)
   nsAutoString nameInDb;
   nsAutoString nextUpdateLocale;
   nsAutoString lastUpdateLocale;
-  nsAutoString lastFetchURL;
+  nsCAutoString lastFetchURL;
   PRTime lastUpdate;
   PRTime nextUpdate;
   SECStatus sec_rv;
@@ -117,7 +117,7 @@ nsCRLInfo::nsCRLInfo(CERTSignedCrl *signedCrl)
 
   char * url = signedCrl->url;
   if(url) {
-    lastFetchURL =  NS_ConvertASCIItoUCS2(url);
+    lastFetchURL =  url;
   }
 
   mOrg.Assign(org.get());
@@ -127,8 +127,7 @@ nsCRLInfo::nsCRLInfo(CERTSignedCrl *signedCrl)
   mLastUpdate = lastUpdate;
   mNextUpdate = nextUpdate;
   mNameInDb.Assign(nameInDb.get());
-  mLastFetchURL.Assign(lastFetchURL.get());
-    
+  mLastFetchURL = lastFetchURL;
 }
 
 nsCRLInfo::~nsCRLInfo()
@@ -137,32 +136,28 @@ nsCRLInfo::~nsCRLInfo()
 }
 
 /* readonly attribute */
-NS_IMETHODIMP nsCRLInfo::GetOrg(PRUnichar** aOrg)
+NS_IMETHODIMP nsCRLInfo::GetOrg(nsAString & aOrg)
 {
-  NS_ENSURE_ARG(aOrg);
-  *aOrg = ToNewUnicode(mOrg);
+  aOrg = mOrg;
   return NS_OK;
 }
 
 /* readonly attribute */
-NS_IMETHODIMP nsCRLInfo::GetOrgUnit(PRUnichar** aOrgUnit)
+NS_IMETHODIMP nsCRLInfo::GetOrgUnit(nsAString & aOrgUnit)
 {
-  NS_ENSURE_ARG(aOrgUnit);
-  *aOrgUnit = ToNewUnicode(mOrgUnit);
+  aOrgUnit = mOrgUnit;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCRLInfo::GetLastUpdateLocale(PRUnichar** aLastUpdateLocale)
+NS_IMETHODIMP nsCRLInfo::GetLastUpdateLocale(nsAString & aLastUpdateLocale)
 {
-  NS_ENSURE_ARG(aLastUpdateLocale);
-  *aLastUpdateLocale = ToNewUnicode(mLastUpdateLocale);
+  aLastUpdateLocale = mLastUpdateLocale;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCRLInfo::GetNextUpdateLocale(PRUnichar** aNextUpdateLocale)
+NS_IMETHODIMP nsCRLInfo::GetNextUpdateLocale(nsAString & aNextUpdateLocale)
 {
-  NS_ENSURE_ARG(aNextUpdateLocale);
-  *aNextUpdateLocale = ToNewUnicode(mNextUpdateLocale);
+  aNextUpdateLocale = mNextUpdateLocale;
   return NS_OK;
 }
 
@@ -180,19 +175,14 @@ NS_IMETHODIMP nsCRLInfo::GetNextUpdate(PRTime* aNextUpdate)
   return NS_OK;
 }
 
-
-
-/* readonly attribute */
-NS_IMETHODIMP nsCRLInfo::GetNameInDb(PRUnichar** aNameInDb)
+NS_IMETHODIMP nsCRLInfo::GetNameInDb(nsAString & aNameInDb)
 {
-  NS_ENSURE_ARG(aNameInDb);
-  *aNameInDb = ToNewUnicode(mNameInDb);
+  aNameInDb = mNameInDb;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCRLInfo::GetLastFetchURL(PRUnichar** aLastFetchURL)
+NS_IMETHODIMP nsCRLInfo::GetLastFetchURL(nsACString & aLastFetchURL)
 {
-  NS_ENSURE_ARG(aLastFetchURL);
-  *aLastFetchURL = ToNewUnicode(mLastFetchURL);
+  aLastFetchURL = mLastFetchURL;
   return NS_OK;
 }

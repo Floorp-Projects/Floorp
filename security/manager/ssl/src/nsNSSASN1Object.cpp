@@ -296,35 +296,31 @@ nsNSSASN1Sequence::SetType(PRUint32 aType)
   return NS_OK;
 }
 
-/* attribute wstring displayName; */
 NS_IMETHODIMP 
-nsNSSASN1Sequence::GetDisplayName(PRUnichar * *aDisplayName)
+nsNSSASN1Sequence::GetDisplayName(nsAString &aDisplayName)
 {
-  NS_ENSURE_ARG_POINTER(aDisplayName);
-  *aDisplayName = ToNewUnicode(mDisplayName);
-  return (*aDisplayName) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP 
-nsNSSASN1Sequence::SetDisplayName(const PRUnichar * aDisplayName)
-{
-  mDisplayName.Assign(aDisplayName);
-  return NS_OK;
-}
-
-/* attribute wstring displayValue; */
-NS_IMETHODIMP 
-nsNSSASN1Sequence::GetDisplayValue(PRUnichar * *aDisplayValue)
-{
-  NS_ENSURE_ARG_POINTER(aDisplayValue);
-  *aDisplayValue = ToNewUnicode(mDisplayValue);
+  aDisplayName = mDisplayName;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNSSASN1Sequence::SetDisplayValue(const PRUnichar * aDisplayValue)
+nsNSSASN1Sequence::SetDisplayName(const nsAString &aDisplayName)
 {
-  mDisplayValue.Assign(aDisplayValue);
+  mDisplayName = aDisplayName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSASN1Sequence::GetDisplayValue(nsAString &aDisplayValue)
+{
+  aDisplayValue = mDisplayValue;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSASN1Sequence::SetDisplayValue(const nsAString &aDisplayValue)
+{
+  mDisplayValue = aDisplayValue;
   return NS_OK;
 }
 
@@ -378,16 +374,16 @@ nsNSSASN1PrintableItem::~nsNSSASN1PrintableItem()
 
 /* readonly attribute wstring value; */
 NS_IMETHODIMP 
-nsNSSASN1PrintableItem::GetDisplayValue(PRUnichar * *aValue)
+nsNSSASN1PrintableItem::GetDisplayValue(nsAString &aValue)
 {
-  *aValue = ToNewUnicode(mValue);
+  aValue = mValue;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNSSASN1PrintableItem::SetDisplayValue(const PRUnichar * aValue)
+nsNSSASN1PrintableItem::SetDisplayValue(const nsAString &aValue)
 {
-  mValue.Assign(aValue);
+  mValue = aValue;
   return NS_OK;
 }
 
@@ -459,17 +455,16 @@ nsNSSASN1PrintableItem::GetData(char **outData, PRUint32 *outLen)
 
 /* attribute wstring displayName; */
 NS_IMETHODIMP 
-nsNSSASN1PrintableItem::GetDisplayName(PRUnichar * *aDisplayName)
+nsNSSASN1PrintableItem::GetDisplayName(nsAString &aDisplayName)
 {
-  NS_ENSURE_ARG_POINTER(aDisplayName);
-  *aDisplayName = ToNewUnicode(mDisplayName);
-  return (*aDisplayName) ? NS_OK : NS_ERROR_FAILURE;
+  aDisplayName = mDisplayName;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNSSASN1PrintableItem::SetDisplayName(const PRUnichar * aDisplayName)
+nsNSSASN1PrintableItem::SetDisplayName(const nsAString &aDisplayName)
 {
-  mDisplayName.Assign(aDisplayName);
+  mDisplayName = aDisplayName;
   return NS_OK;
 }
 
