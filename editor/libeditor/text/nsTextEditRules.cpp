@@ -41,10 +41,10 @@
 #include "nsEditorUtils.h"
 #include "EditTxn.h"
 #include "nsIPref.h"
-#ifdef IBMBIDI
+
+// for IBMBIDI
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#endif // IBMBIDI
 
 static NS_DEFINE_CID(kContentIteratorCID,   NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);

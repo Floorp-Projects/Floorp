@@ -33,15 +33,17 @@
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsISupportsPrimitives.h"
-#ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
+#include "nsIDOMRange.h"
+
+// for IBMBIDI
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
-#include "nsIDOMRange.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIHTMLDocument.h"
 #include "nsHTMLAtoms.h"
+#ifdef IBMBIDI
+#include "nsIUBidiUtils.h"
 static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
 #endif
 

@@ -53,14 +53,13 @@
 #include "nsIIndependentSelection.h"
 #include "nsIPref.h"
 
-#ifdef IBMBIDI
+// for IBMBIDI
 #include "nsFrameTraversal.h"
 #include "nsILineIterator.h"
 #include "nsLayoutAtoms.h"
 #include "nsIFrameTraversal.h"
 #include "nsLayoutCID.h"
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
-#endif // IBMBIDI
 
 #include "nsIDOMText.h"
 
