@@ -219,7 +219,10 @@ nsRDFDOMNodeList::GetLength(PRUint32* aLength)
     if (! aLength)
         return NS_ERROR_NULL_POINTER;
 
-    *aLength = mElements->Count();
+    PRUint32 cnt;
+    nsresult rv = mElements->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    *aLength = cnt;
     return NS_OK;
 }
 
@@ -231,8 +234,11 @@ nsRDFDOMNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     if (! aReturn)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aIndex < (PRUint32) mElements->Count(), "invalid arg");
-    if (aIndex >= (PRUint32) mElements->Count())
+    PRUint32 cnt;
+    nsresult rv = mElements->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    NS_PRECONDITION(aIndex < cnt, "invalid arg");
+    if (aIndex >= (PRUint32) cnt)
         return NS_ERROR_INVALID_ARG;
 
     // Cast is okay because we're in a closed system.

@@ -1619,7 +1619,14 @@ CSSStyleSheetImpl::GetType(nsString& aType) const
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetMediumCount(PRInt32& aCount) const
 {
-  aCount = ((nsnull != mMedia) ? mMedia->Count() : 0);
+  if (mMedia) {
+    PRUint32 cnt;
+    nsresult rv = mMedia->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    aCount = cnt;
+  }
+  else
+    aCount = 0;
   return NS_OK;
 }
 
@@ -1757,7 +1764,10 @@ void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
     if (NS_OK != NS_NewISupportsArray(mOrderedRules.AssignPtr()))
       return;
   }
-  PRInt32 index = mWeightedRules->Count();
+  PRUint32 cnt;
+  nsresult rv = mWeightedRules->Count(&cnt);
+  if (NS_FAILED(rv)) return;    // XXX error?
+  PRInt32 index = cnt;
   while (0 <= --index) {
     nsICSSStyleRule* rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
     if (rule->GetWeight() >= weight) { // insert before rules with equal or lesser weight
@@ -1786,7 +1796,10 @@ void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
     if (NS_OK != NS_NewISupportsArray(mOrderedRules.AssignPtr()))
       return;
   }
-  PRInt32 count = mWeightedRules->Count();
+  PRUint32 cnt;
+  nsresult rv = mWeightedRules->Count(&cnt);
+  if (NS_FAILED(rv)) return;    // XXX error?
+  PRInt32 count = cnt;
   PRInt32 index = -1;
   while (++index < count) {
     nsICSSStyleRule* rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
@@ -1804,8 +1817,10 @@ void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
 PRInt32 CSSStyleSheetImpl::StyleRuleCount(void) const
 {
   if (mOrderedRules.IsNotNull()) {
-    // cast away const-ness
-    return ((nsISupportsArrayPtr)mOrderedRules)->Count();
+    PRUint32 cnt;
+    nsresult rv = ((CSSStyleSheetImpl*)this)->mOrderedRules->Count(&cnt);      // XXX bogus cast -- this method should not be const
+    if (NS_FAILED(rv)) return 0;        // XXX error?
+    return cnt;
   }
   return 0;
 }
@@ -1884,8 +1899,13 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
     child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
-  // cast away const-ness
-  PRInt32 count = (mWeightedRules.IsNotNull() ? ((nsISupportsArrayPtr)mWeightedRules)->Count() : 0);
+  PRInt32 count = 0;
+  if (mWeightedRules.IsNotNull()) {
+    PRUint32 cnt;
+    nsresult rv = ((CSSStyleSheetImpl*)this)->mWeightedRules->Count(&cnt);      // XXX bogus cast -- this method should not be const
+    if (NS_FAILED(rv)) return;  // XXX error?
+    count = cnt;
+  }
 
   for (index = 0; index < count; index++) {
     nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
@@ -2046,7 +2066,10 @@ CSSStyleSheetImpl::GetMedia(nsString& aMedia)
 {
   aMedia.Truncate();
   if (nsnull != mMedia) {
-    PRInt32 count = mMedia->Count();
+    PRUint32 cnt;
+    nsresult rv = mMedia->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    PRInt32 count = cnt;
     PRInt32 index = 0;
     nsAutoString buffer;
     while (index < count) {
@@ -2098,13 +2121,17 @@ CSSStyleSheetImpl::InsertRule(const nsString& aRule,
       NS_ASSERTION(tmp == this, "parser incorrectly created a new stylesheet");
       NS_RELEASE(tmp);
       NS_RELEASE(input);
-      *aReturn = mOrderedRules->Count();
-      if (nsnull != mDocument) {
-        nsICSSStyleRule* rule;
+      PRUint32 cnt;
+      nsresult rv = mOrderedRules->Count(&cnt);
+      if (NS_SUCCEEDED(rv)) {
+        *aReturn = cnt;
+        if (nsnull != mDocument) {
+          nsICSSStyleRule* rule;
 
-        rule = (nsICSSStyleRule*)mOrderedRules->ElementAt(aIndex);
-        mDocument->StyleRuleAdded(this, rule);
-        NS_IF_RELEASE(rule);
+          rule = (nsICSSStyleRule*)mOrderedRules->ElementAt(aIndex);
+          mDocument->StyleRuleAdded(this, rule);
+          NS_IF_RELEASE(rule);
+        }
       }
     }
 

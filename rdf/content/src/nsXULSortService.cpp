@@ -855,7 +855,10 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			}
 		}
 	}
-	unsigned long numElements = childArray->Count();
+	PRUint32 cnt = 0;
+    rv = childArray->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    unsigned long numElements = cnt;
 	if (numElements > 0)
 	{
 		nsIContent ** flatArray = new nsIContent*[numElements];
@@ -943,10 +946,12 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			flatArray = nsnull;
 		}
 	}
-        for (int i = childArray->Count() - 1; i >= 0; i--)
-        {
-        	childArray->RemoveElementAt(i);
-        }
+    rv = childArray->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (int i = cnt - 1; i >= 0; i--)
+    {
+        childArray->RemoveElementAt(i);
+    }
 	return(NS_OK);
 }
 

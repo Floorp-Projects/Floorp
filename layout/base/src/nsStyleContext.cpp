@@ -1488,7 +1488,10 @@ nsISupportsArray* StyleContextImpl::GetStyleRules(void) const
 PRInt32 StyleContextImpl::GetStyleRuleCount(void) const
 {
   if (nsnull != mRules) {
-    return mRules->Count();
+    PRUint32 cnt;
+    nsresult rv = mRules->Count(&cnt);
+    if (NS_FAILED(rv)) return 0;        // XXX error?
+    return cnt;
   }
   return 0;
 }
@@ -1510,8 +1513,15 @@ StyleContextImpl::FindChildWithRules(const nsIAtom* aPseudoTag,
 
   if ((nsnull != mChild) || (nsnull != mEmptyChild)) {
     StyleContextImpl* child;
-    // cast away const-ness
-    PRInt32 ruleCount = ((nsnull != aRules) ? ((nsISupportsArray*)aRules)->Count() : 0);
+    PRInt32 ruleCount;
+    if (aRules) {
+      PRUint32 cnt;
+      nsresult rv = ((nsISupportsArray*)aRules)->Count(&cnt);       // XXX bogus cast -- aRules should not be const
+      if (NS_FAILED(rv)) return rv;
+      ruleCount = cnt;
+    }
+    else
+      ruleCount = 0;
     if (0 == ruleCount) {
       if (nsnull != mEmptyChild) {
         child = mEmptyChild;
@@ -1530,11 +1540,13 @@ StyleContextImpl::FindChildWithRules(const nsIAtom* aPseudoTag,
       aRules->EnumerateForwards(HashStyleRule, &hash);
       child = mChild;
       do {
+        PRUint32 cnt;
         if ((0 == child->mDataCode) &&  // only look at children with un-twiddled data
             (child->mRuleHash == hash) &&
             (child->mPseudoTag == aPseudoTag) &&
             (nsnull != child->mRules) &&
-            ((PRInt32)child->mRules->Count() == ruleCount)) {
+            NS_SUCCEEDED(child->mRules->Count(&cnt)) && 
+            (PRInt32)cnt == ruleCount) {
           if (child->mRules->Equals(aRules)) {
             aResult = child;
             break;
@@ -1783,7 +1795,12 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
     mDisplay.ResetFrom(nsnull, aPresContext);
   }
 
-  if ((nsnull != mRules) && (0 < mRules->Count())) {
+  PRUint32 cnt = 0;
+  if (mRules) {
+    nsresult rv = mRules->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+  }
+  if (0 < cnt) {
     MapStyleData  data(this, aPresContext);
     mRules->EnumerateForwards(MapStyleRuleFont, &data);
     mRules->EnumerateForwards(MapStyleRule, &data);
@@ -1814,7 +1831,12 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
       mPosition.ResetFrom(nsnull, aPresContext);
       mDisplay.ResetFrom(nsnull, aPresContext);
 
-      if ((nsnull != mRules) && (0 < mRules->Count())) {
+      PRUint32 cnt = 0;
+      if (mRules) {
+        nsresult rv = mRules->Count(&cnt);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+      }
+      if (0 < cnt) {
         MapStyleData  data(this, aPresContext);
         mRules->EnumerateForwards(MapStyleRuleFont, &data);
         mRules->EnumerateForwards(MapStyleRule, &data);

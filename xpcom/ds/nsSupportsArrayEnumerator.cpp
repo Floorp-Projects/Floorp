@@ -55,7 +55,10 @@ NS_IMETHODIMP
 nsSupportsArrayEnumerator::First()
 {
   mCursor = 0;
-  PRInt32 end = (PRInt32)mArray->Count();
+  PRUint32 cnt;
+  nsresult rv = mArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  PRInt32 end = (PRInt32)cnt;
   if (mCursor < end)
     return NS_OK;
   else
@@ -65,7 +68,10 @@ nsSupportsArrayEnumerator::First()
 NS_IMETHODIMP
 nsSupportsArrayEnumerator::Next()
 {
-  PRInt32 end = (PRInt32)mArray->Count();
+  PRUint32 cnt;
+  nsresult rv = mArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  PRInt32 end = (PRInt32)cnt;
   if (mCursor < end)   // don't count upward forever
     mCursor++;
   if (mCursor < end)
@@ -78,7 +84,10 @@ NS_IMETHODIMP
 nsSupportsArrayEnumerator::CurrentItem(nsISupports **aItem)
 {
   NS_ASSERTION(aItem, "null out parameter");
-  if (mCursor >= 0 && mCursor < (PRInt32)mArray->Count()) {
+  PRUint32 cnt;
+  nsresult rv = mArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  if (mCursor >= 0 && mCursor < (PRInt32)cnt) {
     *aItem = (*mArray)[mCursor];
     return NS_OK;
   }
@@ -88,7 +97,10 @@ nsSupportsArrayEnumerator::CurrentItem(nsISupports **aItem)
 NS_IMETHODIMP
 nsSupportsArrayEnumerator::IsDone()
 {
-  return (mCursor >= 0 && mCursor < (PRInt32)mArray->Count())
+  PRUint32 cnt;
+  nsresult rv = mArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  return (mCursor >= 0 && mCursor < (PRInt32)cnt)
     ? NS_COMFALSE : NS_OK;
 }
 
@@ -97,7 +109,10 @@ nsSupportsArrayEnumerator::IsDone()
 NS_IMETHODIMP
 nsSupportsArrayEnumerator::Last()
 {
-  mCursor = mArray->Count() - 1;
+  PRUint32 cnt;
+  nsresult rv = mArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  mCursor = cnt - 1;
   return NS_OK;
 }
 

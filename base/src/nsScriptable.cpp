@@ -140,7 +140,9 @@ nsScriptable::Call(const char* methodName,
     nsresult rv;
     const nsXPTMethodInfo* methodInfo;
     PRUint16 vtblIndex;
-    PRUint8 paramCount = arguments->Count();
+    PRUint8 paramCount;
+    rv = arguments->Count(&paramCount);
+    if (NS_FAILED(rv)) return rv;
     nsXPTCVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCVariant* dispatchParams;
     PRUint8 requiredArgs;

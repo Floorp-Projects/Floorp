@@ -48,7 +48,17 @@ public:
 
   /** Return the count of elements in the collection.
    */
-  NS_IMETHOD_(PRUint32) Count(void) = 0;
+  NS_IMETHOD Count(PRUint32 *result) = 0;
+
+  /**
+   * Gets an element by index.
+   */
+  NS_IMETHOD GetElementAt(PRUint32 index, nsISupports* *result) = 0;
+
+  /**
+   * Sets an element by index. Any existing element will be released.
+   */
+  NS_IMETHOD SetElementAt(PRUint32 index, nsISupports* value) = 0;
 
   /**
    * AppendElement will take an ISupports and keep track of it 

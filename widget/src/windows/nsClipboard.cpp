@@ -169,7 +169,10 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
   // Walk through flavors that contain data and register them
   // into the DataObj as supported flavors
   PRUint32 i;
-  for (i=0;i<dfList->Count();i++) {
+  PRUint32 cnt = 0;
+  nsresult rv = dfList->Count(&cnt);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+  for (i=0;i<cnt;i++) {
     nsIDataFlavor * df;
     nsISupports * supports = dfList->ElementAt(i);
     if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
@@ -451,7 +454,10 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 
   // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
   PRUint32 i;
-  for (i=0;i<dfList->Count();i++) {
+  PRUint32 cnt = 0;
+  nsresult rv = dfList->Count(&cnt);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+  for (i=0;i<cnt;i++) {
     nsIDataFlavor * df;
     nsISupports * supports = dfList->ElementAt(i);
     if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
@@ -553,7 +559,10 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 
   // Walk through flavors and see which flavor is on the native clipboard,
   PRUint32 i;
-  for (i=0;i<dfList->Count();i++) {
+  PRUint32 cnt = 0;
+  nsresult rv = dfList->Count(&cnt);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+  for (i=0;i<cnt;i++) {
     nsIDataFlavor * df;
     nsISupports * supports = dfList->ElementAt(i);
     if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {

@@ -246,27 +246,35 @@ nsIWidget *  nsMenu::GetParentWidget()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
-  return InsertItemAt(mItems->Count(), (nsISupports *)aMenuItem);
+  PRUint32 cnt;
+  nsresult rv = mItems->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  return InsertItemAt(cnt, (nsISupports *)aMenuItem);
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
-  return InsertItemAt(mItems->Count(), (nsISupports *)aMenu);
+  PRUint32 cnt;
+  nsresult rv = mItems->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  return InsertItemAt(cnt, (nsISupports *)aMenu);
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddSeparator() 
 {
-  InsertSeparator(mItems->Count());
+  PRUint32 cnt;
+  nsresult rv = mItems->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  InsertSeparator(cnt);
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::GetItemCount(PRUint32 &aCount)
 {
-  aCount = mItems->Count();
-  return NS_OK;
+  return mItems->Count(&aCount);
 }
 
 //-------------------------------------------------------------------------
@@ -372,7 +380,12 @@ NS_METHOD nsMenu::RemoveItem(const PRUint32 aCount)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveAll()
 {
-  while (mItems->Count()) {
+  while (PR_TRUE) {
+    PRUint32 cnt;
+    nsresult rv = mItems->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    if (cnt == 0)
+      break;
     mItems->RemoveElementAt(0);
     ::RemoveMenu(mMenu, 0, MF_BYPOSITION);
   }
@@ -507,7 +520,12 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
   // We cannot call RemoveAll() yet because menu item selection may need it
   //RemoveAll();
   
-  while (mItems->Count()) {
+  while (PR_TRUE) {
+    PRUint32 cnt;
+    nsresult rv = mItems->Count(&cnt);
+    if (NS_FAILED(rv)) break;   // XXX error?
+    if (cnt == 0)
+      break;
     mItems->RemoveElementAt(0);
     ::RemoveMenu(mMenu, 0, MF_BYPOSITION);
   }

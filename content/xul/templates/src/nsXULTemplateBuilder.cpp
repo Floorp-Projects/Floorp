@@ -553,16 +553,19 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
         }
     }
 
-        unsigned long numElements = tempArray->Count();
-        if (numElements > 0)
+    PRUint32 cnt = 0;
+    rv = tempArray->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    unsigned long numElements = cnt;
+    if (numElements > 0)
+    {
+        nsIRDFResource ** flatArray = new nsIRDFResource *[numElements];
+        if (flatArray)
         {
-        	nsIRDFResource ** flatArray = new nsIRDFResource *[numElements];
-        	if (flatArray)
-        	{
 			// flatten array of resources, sort them, then add as item elements
 			unsigned long loop;
 
-        	        for (loop=0; loop<numElements; loop++)
+            for (loop=0; loop<numElements; loop++)
 				flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
 
 			if (nsnull != XULSortService)
@@ -570,26 +573,26 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
 				XULSortService->OpenContainer(mDB, aElement, flatArray, numElements/2, 2*sizeof(nsIRDFResource *));
 			}
 
-        		for (loop=0; loop<numElements; loop+=2)
-        		{
+            for (loop=0; loop<numElements; loop+=2)
+            {
 				if (NS_FAILED(rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1)))
 				{
 					NS_ERROR("unable to create widget item");
 				}
-        		}
+            }
 
-        		for (int i = numElements - 1; i >=0; i--)
-        		{
+            for (int i = numElements - 1; i >=0; i--)
+            {
 				NS_IF_RELEASE(flatArray[i]);
-        		}
+            }
 			delete [] flatArray;
-        	}
         }
-        for (int i = numElements - 1; i >= 0; i--)
-        {
-        	tempArray->RemoveElementAt(i);
-        }
-        NS_IF_RELEASE(tempArray);
+    }
+    for (int i = numElements - 1; i >= 0; i--)
+    {
+        tempArray->RemoveElementAt(i);
+    }
+    NS_IF_RELEASE(tempArray);
 
     return NS_OK;
 }
@@ -1053,7 +1056,10 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
         return rv;
     }
 
-    for (PRInt32 i = elements->Count() - 1; i >= 0; --i) {
+    PRUint32 cnt = 0;
+    rv = elements->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    for (PRInt32 i = cnt - 1; i >= 0; --i) {
         nsCOMPtr<nsIContent> element( do_QueryInterface(elements->ElementAt(i)) );
         
         // XXX somehow figure out if building XUL kids on this
@@ -1137,7 +1143,10 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
         return rv;
     }
 
-    for (PRInt32 i = elements->Count() - 1; i >= 0; --i) {
+    PRUint32 cnt = 0;
+    rv = elements->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    for (PRInt32 i = cnt - 1; i >= 0; --i) {
         nsCOMPtr<nsIContent> element( do_QueryInterface(elements->ElementAt(i)) );
         
         // XXX somehow figure out if building XUL kids on this

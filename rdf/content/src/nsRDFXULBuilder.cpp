@@ -785,7 +785,10 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
         return rv;
     }
 
-    for (PRInt32 i = elements->Count() - 1; i >= 0; --i) {
+    PRUint32 cnt = 0;
+    rv = elements->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    for (PRInt32 i = cnt - 1; i >= 0; --i) {
         nsCOMPtr<nsIContent> element( do_QueryInterface(elements->ElementAt(i)) );
 
         // XXX Make sure that the element we're looking at is really
@@ -894,7 +897,10 @@ RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSource,
         return rv;
     }
 
-    for (PRInt32 i = elements->Count() - 1; i >= 0; --i) {
+    PRUint32 cnt = 0;
+    rv = elements->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    for (PRInt32 i = cnt - 1; i >= 0; --i) {
         nsCOMPtr<nsIContent> element( do_QueryInterface(elements->ElementAt(i)) );
         
         // XXX somehow figure out if removing XUL kids from this
