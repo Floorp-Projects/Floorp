@@ -94,7 +94,7 @@
 <!ENTITY calendar.subscribe.label               "Prijať vzdialený kalendár...">
 <!ENTITY calendar.subscribe.accesskey           "j">
 
-<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.label            "Aktualizovať vzdialené kalendáre">
 <!ENTITY calendar.reloadserver.key              "R">
 <!ENTITY calendar.reloadserver.accesskey        "R">
 
