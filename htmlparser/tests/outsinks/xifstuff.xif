@@ -7,6 +7,8 @@
 </section_head>
 <section_body>
 <container isa="html">
+<content>
+</content>
 <container isa="head">
 <content>
 </content>
@@ -53,7 +55,8 @@
 </content>
 
 <container isa="body">
-
+<content>
+</content>
 <container isa="h2">
 <content>Here's the deal...</content>
 </container><!--h2-->
