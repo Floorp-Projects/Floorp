@@ -163,8 +163,8 @@ enum JS2Op {
 
 
 class Frame;
-
 class ParameterFrame;
+class Environment;
 
 class JS2Object;
 class JS2Metadata;
@@ -179,7 +179,7 @@ public:
 
     JS2Engine(World &world);
 
-    js2val interpret(Phase execPhase, BytecodeContainer *targetbCon);
+    js2val interpret(Phase execPhase, BytecodeContainer *targetbCon, Environment *env);
     js2val interpreterLoop();
 
     // Use the pc map in the current bytecode container to get a source offset
@@ -211,6 +211,7 @@ public:
     js2val allocString(const char *s)         { return STRING_TO_JS2VAL(allocStringPtr(s)); }
     String *allocStringPtr(const String *s);
     String *allocStringPtr(const char *s);
+    String *concatStrings(const String *s1, const String *s2);
 
     String *numberToString(float64 *number);    // non-static since they need access to meta
     String *numberToString(int32 i);
@@ -266,17 +267,18 @@ public:
     struct ActivationFrame {
         uint8 *pc;
         BytecodeContainer *bCon;
-        Frame *topFrame;
         Phase phase;
         js2val retval;
         uint32 execStackBase;
+        Environment *env;
     };
-    void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal);
+    void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal, Environment *env);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }
     void rts();
     ActivationFrame *activationStack;
     ActivationFrame *activationStackTop;
     
+    js2val typeofString(js2val a);
     
     // The execution stack for expression evaluation, should be empty
     // between statements.

@@ -64,9 +64,9 @@ namespace JavaScript {
 namespace MetaData {
 
     // Begin execution of a bytecodeContainer
-    js2val JS2Engine::interpret(Phase execPhase, BytecodeContainer *targetbCon)
+    js2val JS2Engine::interpret(Phase execPhase, BytecodeContainer *targetbCon, Environment *env)
     {
-        jsr(execPhase, targetbCon, sp - execStack, JS2VAL_VOID);
+        jsr(execPhase, targetbCon, sp - execStack, JS2VAL_VOID, env);
         ActivationFrame *f = activationStackTop;
         js2val result;
         try {
@@ -216,6 +216,14 @@ namespace MetaData {
     {
         String *p = (String *)(JS2Object::alloc(sizeof(String)));
         return new (p) String(*s);
+    }
+
+    String *JS2Engine::concatStrings(const String *s1, const String *s2)
+    {
+        String *p = (String *)(JS2Object::alloc(sizeof(String)));
+        String *result = new (p) String(*s1);
+        result->append(*s2);
+        return result;
     }
 
     // if the argument can be stored as an integer value, do so
@@ -830,15 +838,16 @@ namespace MetaData {
 
     // Save current engine state (pc, environment top) and
     // jump to start of new bytecodeContainer
-    void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon, uint32 stackBase, js2val returnVal)
+    void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon, uint32 stackBase, js2val returnVal, Environment *env)
     {
         ASSERT(activationStackTop < (activationStack + MAX_ACTIVATION_STACK));
         activationStackTop->bCon = bCon;
         activationStackTop->pc = pc;
         activationStackTop->phase = phase;
-        activationStackTop->topFrame = meta->env->getTopFrame();
+//        activationStackTop->topFrame = meta->env->getTopFrame();
         activationStackTop->execStackBase = stackBase;
         activationStackTop->retval = returnVal;
+        activationStackTop->env = meta->env;
         activationStackTop++;
         bCon = new_bCon;
         if ((int32)bCon->getMaxStack() >= (execStackLimit - sp)) {
@@ -852,7 +861,7 @@ namespace MetaData {
         }
         pc = new_bCon->getCodeStart();
         phase = execPhase;
-
+        meta->env = env;
     }
 
     // Return to previously saved execution state
@@ -864,8 +873,9 @@ namespace MetaData {
         bCon = activationStackTop->bCon;
         pc = activationStackTop->pc;
         phase = activationStackTop->phase;
-        while (meta->env->getTopFrame() != activationStackTop->topFrame)
-            meta->env->removeTopFrame();
+        meta->env = activationStackTop->env;
+//        while (meta->env->getTopFrame() != activationStackTop->topFrame)
+//            meta->env->removeTopFrame();
         sp = execStack + activationStackTop->execStackBase;
         if (!JS2VAL_IS_VOID(activationStackTop->retval))    // XXX might need an actual 'returnValue' flag instead
             retval = activationStackTop->retval;
@@ -878,7 +888,7 @@ namespace MetaData {
         if (bCon)
             bCon->mark();
         for (ActivationFrame *f = activationStack; (f < activationStackTop); f++) {
-            GCMARKOBJECT(f->topFrame);
+            GCMARKOBJECT(f->env);
             if (f->bCon)
                 f->bCon->mark();
         }
@@ -929,6 +939,57 @@ namespace MetaData {
         delete hndlr;
     }
 
+    js2val JS2Engine::typeofString(js2val a)
+    {
+        if (JS2VAL_IS_UNDEFINED(a))
+            a = STRING_TO_JS2VAL(undefined_StringAtom);
+        else
+        if (JS2VAL_IS_BOOLEAN(a))
+            a = allocString("boolean");
+        else
+        if (JS2VAL_IS_NUMBER(a))
+            a = allocString("number");
+        else
+        if (JS2VAL_IS_STRING(a))
+            a = allocString("string");
+        else {
+            ASSERT(JS2VAL_IS_OBJECT(a));
+            if (JS2VAL_IS_NULL(a))
+                a = STRING_TO_JS2VAL(object_StringAtom);
+            else {
+                JS2Object *obj = JS2VAL_TO_OBJECT(a);
+                switch (obj->kind) {
+                case MultinameKind:
+                    a = allocString("namespace"); 
+                    break;
+                case AttributeObjectKind:
+                    a = allocString("attribute"); 
+                    break;
+                case ClassKind:
+                case MethodClosureKind:
+                    a = STRING_TO_JS2VAL(Function_StringAtom); 
+                    break;
+                case PrototypeInstanceKind:
+                    if (checked_cast<PrototypeInstance *>(obj)->type == meta->functionClass)
+                        a = STRING_TO_JS2VAL(Function_StringAtom);
+                    else
+                        a = STRING_TO_JS2VAL(object_StringAtom);
+                    break;
+                case PackageKind:
+                case GlobalObjectKind:
+                    a = STRING_TO_JS2VAL(object_StringAtom);
+                    break;
+                case SimpleInstanceKind:
+                    a = STRING_TO_JS2VAL(checked_cast<SimpleInstance *>(obj)->type->getName());
+                    break;
+                default:
+                    ASSERT(false);
+                    break;
+                }
+            }
+        }
+        return a;
+    }
 
     //
     // XXX Only scanning dynamic properties

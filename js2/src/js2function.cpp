@@ -85,7 +85,7 @@ namespace MetaData {
         else {  // construct an empty function wrapper
             js2val thatValue = OBJECT_TO_JS2VAL(new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass));
             FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thatValue));
-            fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true));
+            fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), meta->env);
             fnInst->fWrap->bCon->emitOp(eReturnVoid, meta->engine->errorPos());
             fnInst->writeProperty(meta, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), DynamicPropertyValue::READONLY);
             return thatValue;

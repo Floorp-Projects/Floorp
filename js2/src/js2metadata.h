@@ -163,7 +163,7 @@ public:
     Pond *nextPond;
 };
 
-#define GCMARKOBJECT(n) if ((n) && !(n)->isMarked()) { (n)->mark(); (n)->markChildren(); }
+#define GCMARKOBJECT(n) if ((n) && !(n)->isMarked()) { (n)->markObject(); (n)->markChildren(); }
 #define GCMARKVALUE(v) JS2Object::markJS2Value(v)
 
 class JS2Object {
@@ -193,7 +193,7 @@ public:
 
     virtual void markChildren()     { }
     bool isMarked()                 { return ((PondScum *)this)[-1].isMarked(); }
-    void mark()                     { ((PondScum *)this)[-1].mark(); }
+    void markObject()               { ((PondScum *)this)[-1].mark(); }
 
     static void mark(const void *p)       { ((PondScum *)p)[-1].mark(); }
     static void markJS2Value(js2val v);
@@ -496,6 +496,16 @@ public:
 
 };
 
+class WithFrame : public Frame {
+public:
+    WithFrame(JS2Object *b) : Frame(WithFrameKind), obj(b) { }
+    virtual ~WithFrame()    { }
+
+    virtual void markChildren()     { GCMARKOBJECT(obj); }
+
+    JS2Object *obj;
+};
+
 class NonWithFrame : public Frame {
 public:
 
@@ -516,15 +526,56 @@ public:
     virtual ~NonWithFrame()                { }
 };
 
-class WithFrame : public Frame {
+// The top-level frame containing predefined constants, functions, and classes.
+class SystemFrame : public NonWithFrame {
 public:
-    WithFrame(JS2Object *b) : Frame(WithFrameKind), obj(b) { }
-    virtual ~WithFrame()    { }
-
-    virtual void markChildren()     { GCMARKOBJECT(obj); }
-
-    JS2Object *obj;
+    SystemFrame() : NonWithFrame(SystemKind) { }
+    virtual ~SystemFrame()            { }
 };
+
+
+// Environments contain the bindings that are visible from a given point in the source code. An ENVIRONMENT is 
+// a list of two or more frames. Each frame corresponds to a scope. More specific frames are listed first
+// -each frame's scope is directly contained in the following frame's scope. The last frame is always the
+// SYSTEMFRAME. The next-to-last frame is always a PACKAGE or GLOBAL frame.
+typedef std::deque<Frame *> FrameList;
+typedef FrameList::iterator FrameListIterator;
+
+// Deriving from JS2Object for gc sake only
+class Environment : public JS2Object {
+public:
+    Environment(SystemFrame *systemFrame, Frame *nextToLast) : JS2Object(EnvironmentKind) { frameList.push_back(nextToLast); frameList.push_back(systemFrame);  }
+    virtual ~Environment()                  { }
+
+    Environment(Environment *e) : JS2Object(EnvironmentKind), frameList(e->frameList) { }
+    
+    JS2Class *getEnclosingClass();
+    FrameListIterator getRegionalFrame();
+    Frame *getTopFrame()                    { return frameList.front(); }
+    FrameListIterator getBegin()            { return frameList.begin(); }
+    FrameListIterator getEnd()              { return frameList.end(); }
+    Frame *getPackageOrGlobalFrame();
+    SystemFrame *getSystemFrame()           { return checked_cast<SystemFrame *>(frameList.back()); }
+
+    void setTopFrame(Frame *f)              { while (frameList.front() != f) frameList.pop_front(); }
+
+    void addFrame(Frame *f)                 { frameList.push_front(f); }
+    void removeTopFrame()                   { frameList.pop_front(); }
+
+    js2val findThis(bool allowPrototypeThis);
+    js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
+    void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
+    void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue);
+    bool lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase);
+
+    void instantiateFrame(NonWithFrame *pluralFrame, NonWithFrame *singularFrame);
+
+    void markChildren();
+
+private:
+    FrameList frameList;
+};
+
 
 class JS2Class : public NonWithFrame {
 public:
@@ -591,15 +642,16 @@ class ParameterFrame;
 
 class FunctionWrapper {
 public:
-    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame) 
-        : bCon(new BytecodeContainer()), code(NULL), unchecked(unchecked), compileFrame(compileFrame) { }
-    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, NativeCode *code) 
-        : bCon(NULL), code(code), unchecked(unchecked), compileFrame(compileFrame) { }
+    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, Environment *env) 
+        : bCon(new BytecodeContainer()), code(NULL), unchecked(unchecked), compileFrame(compileFrame), env(new Environment(env)) { }
+    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, NativeCode *code, Environment *env) 
+        : bCon(NULL), code(code), unchecked(unchecked), compileFrame(compileFrame), env(new Environment(env)) { }
 
     BytecodeContainer   *bCon;
     NativeCode          *code;
     bool                unchecked;      // true if the function is untyped, non-method, normal
     ParameterFrame      *compileFrame;
+    Environment         *env;
 };
 
 
@@ -930,13 +982,6 @@ public:
 };
 
 
-// The top-level frame containing predefined constants, functions, and classes.
-class SystemFrame : public NonWithFrame {
-public:
-    SystemFrame() : NonWithFrame(SystemKind) { }
-    virtual ~SystemFrame()            { }
-};
-
 // Frames holding bindings for invoked functions
 class ParameterFrame : public NonWithFrame {
 public:
@@ -979,46 +1024,6 @@ public:
 
     bool isLexical;         // if isLexical, use the 'this' below. Otherwise it's a propertyLookup
     js2val thisObject;
-};
-
-// Environments contain the bindings that are visible from a given point in the source code. An ENVIRONMENT is 
-// a list of two or more frames. Each frame corresponds to a scope. More specific frames are listed first
-// -each frame's scope is directly contained in the following frame's scope. The last frame is always the
-// SYSTEMFRAME. The next-to-last frame is always a PACKAGE or GLOBAL frame.
-typedef std::deque<Frame *> FrameList;
-typedef FrameList::iterator FrameListIterator;
-
-// Deriving from JS2Object for gc sake only, these are supposed to be found as JS2 values
-class Environment : public JS2Object {
-public:
-    Environment(SystemFrame *systemFrame, Frame *nextToLast) : JS2Object(EnvironmentKind) { frameList.push_back(nextToLast); frameList.push_back(systemFrame);  }
-    virtual ~Environment()                  { }
-
-    JS2Class *getEnclosingClass();
-    FrameListIterator getRegionalFrame();
-    Frame *getTopFrame()                    { return frameList.front(); }
-    FrameListIterator getBegin()            { return frameList.begin(); }
-    FrameListIterator getEnd()              { return frameList.end(); }
-    Frame *getPackageOrGlobalFrame();
-    SystemFrame *getSystemFrame()           { return checked_cast<SystemFrame *>(frameList.back()); }
-
-    void setTopFrame(Frame *f)              { while (frameList.front() != f) frameList.pop_front(); }
-
-    void addFrame(Frame *f)                 { frameList.push_front(f); }
-    void removeTopFrame()                   { frameList.pop_front(); }
-
-    js2val findThis(bool allowPrototypeThis);
-    js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
-    void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
-    void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue);
-    bool lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase);
-
-    void instantiateFrame(NonWithFrame *pluralFrame, NonWithFrame *singularFrame);
-
-    void markChildren();
-
-private:
-    FrameList frameList;
 };
 
 

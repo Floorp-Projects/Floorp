@@ -153,7 +153,7 @@ void initErrorObject(JS2Metadata *meta)
     PrototypeFunction *pf = &errorProtos[0];
     while (pf->name) {
         SimpleInstance *fInst = new SimpleInstance(meta->functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, meta->env);
     
         InstanceMember *m = new InstanceMethod(fInst);
         meta->defineInstanceMember(meta->errorClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);

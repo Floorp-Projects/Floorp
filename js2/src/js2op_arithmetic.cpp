@@ -334,11 +334,7 @@
             if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
                 const String *astr = meta->toString(a);
                 const String *bstr = meta->toString(b);
-
-                String c = *astr;
-
-                c += *bstr;
-                push(STRING_TO_JS2VAL(allocStringPtr(&c)));
+                push(STRING_TO_JS2VAL(concatStrings(astr, bstr)));
             }
             else {
                 a = meta->toGeneralNumber(a);

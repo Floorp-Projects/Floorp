@@ -92,7 +92,7 @@
                             baseVal = OBJECT_TO_JS2VAL(pInst);
                             pFrame->thisObject = baseVal;
                             pFrame->assignArguments(meta, obj, base(argCount), argCount);
-                            jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal);   // seems out of order, but we need to catch the current top frame 
+                            jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);   // seems out of order, but we need to catch the current top frame 
                             meta->env->addFrame(pFrame);
                             pFrame = NULL;
                         }
@@ -114,9 +114,8 @@
             pc += sizeof(uint16);
             a = top(argCount + 2);                  // 'this'
             b = top(argCount + 1);                  // target function
-//            uint32 length = 0;
             if (JS2VAL_IS_PRIMITIVE(b))
-                meta->reportError(Exception::badValueError, "Can't call on primitive value", errorPos());
+                meta->reportError(Exception::badValueError, "{0} is not a function", errorPos(), JS2VAL_TO_STRING(typeofString(b)));
             JS2Object *fObj = JS2VAL_TO_OBJECT(b);
             FunctionWrapper *fWrap = NULL;
             if ((fObj->kind == SimpleInstanceKind)
@@ -127,7 +126,6 @@
                 if ((fObj->kind == PrototypeInstanceKind)
                         && ((checked_cast<PrototypeInstance *>(fObj))->type == meta->functionClass)) {
                     fWrap = (checked_cast<FunctionInstance *>(fObj))->fWrap;
-//                    length = getLength(meta, fObj);
                 }
             if (fWrap) {
                 if (fWrap->compileFrame->prototype) {
@@ -138,10 +136,6 @@
                     }
                 }
                 if (fWrap->code) {  // native code
-//                    while (length > argCount) {
-//                        push(JS2VAL_UNDEFINED);
-//                        argCount++;
-//                    }
                     a = fWrap->code(meta, a, base(argCount), argCount);
                     pop(argCount + 2);
                     push(a);
@@ -153,7 +147,7 @@
     //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                     // XXX
                     pFrame->assignArguments(meta, fObj, base(argCount), argCount);
-                    jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
+                    jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(pFrame);
                     pFrame = NULL;
                 }
@@ -175,7 +169,7 @@
                     pFrame->thisObject = mc->thisObject;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                     pFrame->assignArguments(meta, fObj, base(argCount), argCount);
-                    jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
+                    jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(meta->objectType(mc->thisObject));
                     meta->env->addFrame(pFrame);
                     pFrame = NULL;
@@ -192,7 +186,7 @@
                 push(a);
             }
             else
-                meta->reportError(Exception::badValueError, "Un-callable object", errorPos());
+                meta->reportError(Exception::badValueError, "{0} is not a function", errorPos(), JS2VAL_TO_STRING(typeofString(b)));
         }
         break;
 
@@ -340,51 +334,7 @@
     case eTypeof:
         {
             a = pop();
-            if (JS2VAL_IS_UNDEFINED(a))
-                a = STRING_TO_JS2VAL(undefined_StringAtom);
-            else
-            if (JS2VAL_IS_BOOLEAN(a))
-                a = allocString("boolean");
-            else
-            if (JS2VAL_IS_NUMBER(a))
-                a = allocString("number");
-            else
-            if (JS2VAL_IS_STRING(a))
-                a = allocString("string");
-            else {
-                ASSERT(JS2VAL_IS_OBJECT(a));
-                if (JS2VAL_IS_NULL(a))
-                    a = STRING_TO_JS2VAL(object_StringAtom);
-                else {
-                    JS2Object *obj = JS2VAL_TO_OBJECT(a);
-                    switch (obj->kind) {
-                    case MultinameKind:
-                        a = allocString("namespace"); 
-                        break;
-                    case AttributeObjectKind:
-                        a = allocString("attribute"); 
-                        break;
-                    case ClassKind:
-                    case MethodClosureKind:
-                        a = STRING_TO_JS2VAL(Function_StringAtom); 
-                        break;
-                    case PrototypeInstanceKind:
-                        if (checked_cast<PrototypeInstance *>(obj)->type == meta->functionClass)
-                            a = STRING_TO_JS2VAL(Function_StringAtom);
-                        else
-                            a = STRING_TO_JS2VAL(object_StringAtom);
-                        break;
-                    case PackageKind:
-                    case GlobalObjectKind:
-                        a = STRING_TO_JS2VAL(object_StringAtom);
-                        break;
-                    case SimpleInstanceKind:
-                        a = STRING_TO_JS2VAL(checked_cast<SimpleInstance *>(obj)->type->getName());
-                        break;
-                    }
-                }
-            }
-            push(a);
+            push(typeofString(a));
         }
         break;
 

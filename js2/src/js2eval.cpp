@@ -149,7 +149,7 @@ namespace MetaData {
         bCon->emitOp(eReturnVoid, lastPos);
         uint8 *savePC = engine->pc;
         engine->pc = NULL;
-        js2val retval = engine->interpret(phase, bCon);
+        js2val retval = engine->interpret(phase, bCon, env);
         engine->pc = savePC;
         return retval;
     }
@@ -170,7 +170,7 @@ namespace MetaData {
             bCon->emitOp(eReturn, p->pos);
             savePC = engine->pc;
             engine->pc = NULL;
-            retval = engine->interpret(phase, bCon);
+            retval = engine->interpret(phase, bCon, env);
         }
         catch (Exception &x) {
             engine->pc = savePC;
@@ -282,7 +282,7 @@ namespace MetaData {
             bCon->emitOp(eReturn, 0);
             savePC = engine->pc;
             engine->pc = NULL;
-            retval = engine->interpret(RunPhase, bCon);
+            retval = engine->interpret(RunPhase, bCon, env);
         }
         catch (Exception &x) {
             engine->pc = savePC;
@@ -333,7 +333,7 @@ namespace MetaData {
                 try {
                     savePC = engine->pc;
                     engine->pc = NULL;
-                    result = engine->interpret(RunPhase, bCon);
+                    result = engine->interpret(RunPhase, bCon, env);
                 }
                 catch (Exception &x) {
                     engine->pc = savePC;

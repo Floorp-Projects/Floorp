@@ -92,13 +92,13 @@ namespace MetaData {
         
         if (prototype) {
             FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-            fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
+            fInst->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
             fnDef->fWrap = fInst->fWrap;
             result = fInst;
         }
         else {
             SimpleInstance *sInst = new SimpleInstance(functionClass);
-            sInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
+            sInst->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
             fnDef->fWrap = sInst->fWrap;
             result = sInst;
         }
@@ -2272,7 +2272,12 @@ doUnary:
             {
                 InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
                 Reference *rVal = SetupExprNode(env, phase, i->op, exprType);
-                if (rVal) rVal->emitReadForInvokeBytecode(bCon, p->pos);
+                if (rVal) 
+                    rVal->emitReadForInvokeBytecode(bCon, p->pos);
+                else /* a call doesn't have to have an lValue to execute on, 
+                      * but we use the value as it's own 'this' in that case. 
+                      */
+                    bCon->emitOp(eDup, p->pos);
                 ExprPairList *args = i->pairs;
                 uint16 argCount = 0;
                 while (args) {
@@ -3162,7 +3167,7 @@ static const uint8 urlCharType[256] =
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code, uint32 length)
     {
         SimpleInstance *fInst = new SimpleInstance(functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), code);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), code, env);
         writeDynamicProperty(glob, new Multiname(&world.identifiers[name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
         fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(length), DynamicPropertyValue::READONLY);
     }
@@ -3284,7 +3289,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
         FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString, env);
         objectClass->prototype->writeProperty(this, engine->toString_StringAtom, OBJECT_TO_JS2VAL(fInst), 0);
         fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(0), DynamicPropertyValue::READONLY);
 
@@ -4331,7 +4336,7 @@ deleteClassProperty:
             if (pf) {
                 while (pf->name) {
                     SimpleInstance *callInst = new SimpleInstance(functionClass);
-                    callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
+                    callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
                     v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
                     defineLocalMember(env, &world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
                     writeDynamicProperty(callInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);
@@ -4344,14 +4349,14 @@ deleteClassProperty:
         // Add "constructor" as a dynamic property of the prototype
         FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         writeDynamicProperty(fInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(1), RunPhase);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), construct);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), construct, env);
         writeDynamicProperty(builtinClass->prototype, new Multiname(&world.identifiers["constructor"], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
     
         pf = protoFunctions;
         if (pf) {
             while (pf->name) {
                 SimpleInstance *callInst = new SimpleInstance(functionClass);
-                callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
+                callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
     /*
     XXX not prototype object function properties, like ECMA3
             writeDynamicProperty(dateClass->prototype, new Multiname(world.identifiers[pf->name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
@@ -4486,6 +4491,7 @@ deleteClassProperty:
         GCMARKOBJECT(type)
         if (fWrap) {
             GCMARKOBJECT(fWrap->compileFrame);
+            GCMARKOBJECT(fWrap->env);
             if (fWrap->bCon)
                 fWrap->bCon->mark();
         }
@@ -4580,6 +4586,7 @@ deleteClassProperty:
     {
         PrototypeInstance::markChildren();
         if (fWrap) {
+            GCMARKOBJECT(fWrap->env);
             GCMARKOBJECT(fWrap->compileFrame);
             if (fWrap->bCon)
                 fWrap->bCon->mark();
