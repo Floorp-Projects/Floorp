@@ -1699,22 +1699,6 @@ function PageProxyDragGesture(aEvent)
   return false;
 }
 
-function updateComponentBarBroadcaster()
-{ 
-  var compBarBroadcaster = document.getElementById('cmd_viewcomponentbar');
-  var taskBarBroadcaster = document.getElementById('cmd_viewtaskbar');
-  var compBar = document.getElementById('component-bar');
-  if (taskBarBroadcaster.getAttribute('checked') == 'true') {
-    compBarBroadcaster.removeAttribute('disabled');
-    if (compBar.getAttribute('hidden') != 'true')
-      compBarBroadcaster.setAttribute('checked', 'true');
-  }
-  else {
-    compBarBroadcaster.setAttribute('disabled', 'true');
-    compBarBroadcaster.removeAttribute('checked');
-  }
-}
-
 function updateToolbarStates(toolbarMenuElt)
 {
   if (!gHaveUpdatedToolbarState) {
@@ -1737,25 +1721,6 @@ function updateToolbarStates(toolbarMenuElt)
       mainWindow.removeAttribute("chromehidden");
     }
   }
-  updateComponentBarBroadcaster();
-
-  const tabbarMenuItem = document.getElementById("menuitem_showhide_tabbar");
-  // Make show/hide menu item reflect current state
-  const visibility = gBrowser.getStripVisibility();
-  tabbarMenuItem.setAttribute("checked", visibility);
-
-  // Don't allow the tab bar to be shown/hidden when more than one tab is open
-  // or when we have 1 tab and the autoHide pref is set
-  const disabled = gBrowser.browsers.length > 1 ||
-                   pref.getBoolPref("browser.tabs.autoHide");
-  tabbarMenuItem.setAttribute("disabled", disabled);
-}
-
-function showHideTabbar()
-{
-  const visibility = gBrowser.getStripVisibility();
-  pref.setBoolPref("browser.tabs.forceHide", visibility);
-  gBrowser.setStripVisibilityTo(!visibility);
 }
 
 // Fill in tooltips for personal toolbar
