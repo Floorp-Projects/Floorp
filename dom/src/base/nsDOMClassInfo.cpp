@@ -131,7 +131,8 @@ static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
   nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE |                          \
   nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE |                            \
   nsIXPCScriptable::DONT_ASK_INSTANCE_FOR_SCRIPTABLE |                        \
-  nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES
+  nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES |                            \
+  nsIXPCScriptable::WANT_CHECKACCESS
 
 #define DOM_DEFAULT_SCRIPTABLE_FLAGS                                          \
   DEFAULT_SCRIPTABLE_FLAGS |                                                  \
@@ -946,9 +947,35 @@ nsDOMClassInfo::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsval id, PRUint32 mode,
                             jsval *vp, PRBool *_retval)
 {
-  NS_ERROR("Don't call me!");
+  if (mode == JSACC_WATCH) {
+    JSString *str = ::JS_ValueToString(cx, id);
 
-  return NS_ERROR_UNEXPECTED;
+    if (!str)
+      return NS_ERROR_UNEXPECTED;
+
+    jsval dummy;
+
+    if (!::JS_GetUCProperty(cx, obj, ::JS_GetStringChars(str),
+                            ::JS_GetStringLength(str), &dummy)) {
+      // We were unable to access the property, this most likely means
+      // that the security manager denied access to the property that
+      // the user tried to access (i.e. set a getter or setter on)
+      nsCOMPtr<nsIXPCNativeCallContext> cnccx;
+
+      sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(cnccx));
+
+      if (cnccx) {
+        // Tell XPConnect that an exception was already thrown
+
+        cnccx->SetExceptionWasThrown(PR_TRUE);
+      }
+
+      // Let XPConnect know that the access was not granted.
+      *_retval = PR_FALSE;
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
