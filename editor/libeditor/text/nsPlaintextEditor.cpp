@@ -1009,6 +1009,8 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
 NS_IMETHODIMP
 nsPlaintextEditor::BeginComposition(nsTextEventReply* aReply)
 {
+  NS_ENSURE_TRUE(!mInIMEMode, NS_OK);
+
   if(mFlags & nsIPlaintextEditor::eEditorPasswordMask)  {
     if (mRules) {
       nsIEditRules *p = mRules.get();
