@@ -211,9 +211,9 @@ nsSliderFrame::ReflowThumb(nsIPresContext&   aPresContext,
     nsresult rv = thumbFrame->GetStyleData(eStyleStruct_Spacing,
                    (const nsStyleStruct*&) spacing);
 
-    nsMargin margin;
+    nsMargin margin(0,0,0,0);
     spacing->GetMargin(margin);
-    nsMargin border;
+    nsMargin border(0,0,0,0);
     spacing->GetBorderPadding(border);
     nsMargin total = margin + border;
 
@@ -553,7 +553,7 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
     nsresult rv = GetStyleData(eStyleStruct_Spacing,
                    (const nsStyleStruct*&) spacing);
 
-    nsMargin borderPadding;
+    nsMargin borderPadding(0,0,0,0);
     spacing->GetBorderPadding(borderPadding);
     
     // figure out the new rect

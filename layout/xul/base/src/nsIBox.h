@@ -42,8 +42,6 @@ public:
     nsSize prefSize;
     nsSize minSize;
     nsSize maxSize; 
-    PRBool prefWidthIntrinsic; 
-    PRBool prefHeightIntrinsic; 
 
     float flex;
 
@@ -61,9 +59,6 @@ public:
 
       maxSize.width = NS_INTRINSICSIZE;
       maxSize.height = NS_INTRINSICSIZE;
-
-      prefWidthIntrinsic = PR_FALSE;
-      prefHeightIntrinsic = PR_FALSE;
     }
   
 };
