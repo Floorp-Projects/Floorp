@@ -48,8 +48,36 @@ public:
 	// command ?                                                        //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
-    static XP_Bool        ht_IsFECommand        (HT_Resource  item);
-    static CommandType    ht_GetFECommand       (HT_Resource  item);
+    static XP_Bool			ht_IsFECommand			(HT_Resource  item);
+    static CommandType		ht_GetFECommand			(HT_Resource  item);
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// RDF folder and item utilities                                    //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	static HT_Resource		ht_FindFolderByName		(HT_Resource  root_entry,
+													 char *       folder_name);
+
+    static HT_Resource		ht_FindItemByAddress	(HT_Resource  root_entry,
+                                                    const char * entry_name);
+
+    static HT_Resource		ht_FindNextItem			(HT_Resource  item);
+    static HT_Resource		ht_FindPreviousItem		(HT_Resource  item);
+
+    static XP_Bool			ht_FolderHasFolderChildren	(HT_Resource  folder);
+  
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Guess the title for a url address                                //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+    static void		guessTitle		(MWContext *	context,
+									 const char *	address,
+									 XP_Bool		sameShell,
+									 char **		resolvedTitleOut,
+									 time_t *		resolvedLastDateOut);
+
 };
 
 #endif // _xfe_rdf_utils_h_

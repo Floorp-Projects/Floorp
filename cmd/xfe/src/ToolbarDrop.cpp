@@ -31,6 +31,7 @@
 #endif /*OLD_BOOKMARKS*/
 #include "BookmarkMenu.h"
 #include "htrdf.h"
+#include "RDFUtils.h"
 
 #include <Xfe/Cascade.h>
 #include <Xfe/Button.h>
@@ -213,11 +214,13 @@ XFE_PersonalDrop::addEntry(const char * address,const char * title)
 	// If no title is given, try to guess a decent one
 	if (!guessed_title)
 	{
-		XFE_BookmarkBase::guessTitle(_personalToolbar->getFrame(),
-									 address,
-									 isFromSameShell(),
-									 &guessed_title,
-									 &lastAccess);
+		MWContext * context = _personalToolbar->getFrame()->getContext();
+
+		XFE_RDFUtils::guessTitle(context,
+								 address,
+								 isFromSameShell(),
+								 &guessed_title,
+								 &lastAccess);
 	}
 
 	XP_ASSERT( guessed_title != NULL );
@@ -548,11 +551,13 @@ XFE_QuickfileDrop::addEntry(const char * address,const char * title)
 	// If no title is given, try to guess a decent one
 	if (!guessed_title)
 	{
-		XFE_RDFMenuToolbarBase::guessTitle(_quickfileMenu->getFrame(),
-                                           address,
-                                           isFromSameShell(),
-                                           &guessed_title,
-                                           &lastAccess);
+		MWContext * context = _quickfileMenu->getFrame()->getContext();
+
+		XFE_RDFUtils::guessTitle(context,
+								 address,
+								 isFromSameShell(),
+								 &guessed_title,
+								 &lastAccess);
 	}
 
 	XP_ASSERT( guessed_title != NULL );

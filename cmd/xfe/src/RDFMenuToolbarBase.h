@@ -54,23 +54,6 @@ public:
 
 	virtual ~XFE_RDFMenuToolbarBase	();
 
-	static HT_Resource  ht_FindFolderByName        (HT_Resource  root_entry,
-                                                    char *       folder_name);
-
-    static HT_Resource  ht_FindItemByAddress       (HT_Resource  root_entry,
-                                                    const char * entry_name);
-
-    static HT_Resource  ht_FindNextItem            (HT_Resource  item);
-    static HT_Resource  ht_FindPreviousItem        (HT_Resource  item);
-
-    static XP_Bool      ht_FolderHasFolderChildren (HT_Resource  folder);
-
-    static void     guessTitle           (XFE_Frame *  frame,
-                                          const char * address,
-                                          XP_Bool      sameShell,
-                                          char **      resolvedTitleOut,
-                                          time_t *     resolvedLastDateOut);
-
     void            addEntryAfter        (const char * address,
                                           const char * title,
                                           time_t       lastAccess,
