@@ -78,6 +78,10 @@ Contributor(s):
   <commandset id="globalEditMenuItems"/>
     <command id="cmd_newNavigator"/>
     <command id="cmd_newEditor"/>
+    <command id="cmd_newcard" oncommand="AbNewCard('dirTree')"/>
+    <command id="cmd_newlist" oncommand="AbNewList('dirTree')"/>
+    <command id="cmd_newmessage" oncommand="AbNewMessage()"/>
+    <command id="cmd_newim" oncommand="AbIMSelected()"/>
     <command id="cmd_printSetup" oncommand="NSPrintSetup()"/>
     <command id="cmd_printCard" oncommand="AbPrintCard()"/>
     <command id="cmd_printPreviewCard" oncommand="AbPrintPreviewCard()"/>
@@ -92,6 +96,7 @@ Contributor(s):
     <command id="cmd_paste"/>
     <command id="cmd_cut"/>
     <command id="cmd_selectAll"/>
+    <command id="button_delete" oncommand="goDoCommand('button_delete');"/>
     <command id="cmd_swapFirstNameLastName" oncommand="AbSwapFirstNameLastName()"/>
     <commandset id="tasksCommands"/>
 </commandset>
@@ -134,6 +139,48 @@ Contributor(s):
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);" modifiers="shift"/>
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);"/>
 </keyset>
+
+<popup id="dirTreeContext">
+  <menuitem id="dirTreeContext-properties"
+            label="&editButton.label;"
+            accesskey="&editButton.accesskey;"
+            command="cmd_properties"/>
+  <menuseparator/>
+  <menuitem id="dirTreeContext-newcard"
+            label="&newcardButton.label;"
+            accesskey="&newcardButton.accesskey;"
+            command="cmd_newcard"/>
+  <menuitem id="dirTreeContext-newlist"
+            label="&newlistButton.label;"
+            accesskey="&newlistButton.accesskey;"
+            command="cmd_newlist"/>
+  <menuseparator/>
+  <menuitem id="dirTreeContext-delete"
+            label="&deleteButton.label;"
+            accesskey="&deleteButton.accesskey;"
+            command="button_delete"/>
+</popup>
+
+<popup id="abResultsTreeContext">
+  <menuitem id="abResultsTreeContext-properties"
+            label="&editButton.label;"
+            accesskey="&editButton.accesskey;"
+            command="cmd_properties"/>
+  <menuseparator/>
+  <menuitem id="abResultsTreeContext-newmessage"
+            label="&newmsgButton.label;"
+            accesskey="&newmsgButton.accesskey;"
+            command="cmd_newmessage"/>
+  <menuitem id="abResultsTreeContext-newim"
+            label="&newimButton.label;"
+            accesskey="&newimButton.accesskey;"
+            command="cmd_newim"/>
+  <menuseparator/>
+  <menuitem id="abResultsTreeContext-delete"
+            label="&deleteButton.label;"
+            accesskey="&deleteButton.accesskey;"
+            command="button_delete"/>
+</popup>
 
 <toolbox class="toolbox-top">
     <menubar id="ab-menubar" grippytooltiptext="&menuBar.tooltip;">
@@ -318,13 +365,13 @@ Contributor(s):
     <!-- toolbar -->
         <toolbar class="chromeclass-toolbar toolbar-primary" id="abToolbar" persist="collapsed" grippytooltiptext="&addressbookToolbar.tooltip;">
             <hbox id="toolbar_button_box">
-        <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard('dirTree');"/>
-        <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList('dirTree');"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltiptext="&newcardButton.tooltip;" command="cmd_newcard"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltiptext="&newlistButton.tooltip;" command="cmd_newlist"/>
         <toolbarseparator class="toolbarseparator-primary"/>
-        <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltiptext="&editButton.tooltip;" oncommand="goDoCommand('button_edit');"/>
-        <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
-        <toolbarbutton class="toolbarbutton-1" id="button-newim" label="&newIM.label;" tooltiptext="&newIM.tooltip;" oncommand="AbIMSelected();"/>
-        <toolbarbutton class="toolbarbutton-1" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltiptext="&editButton.tooltip;" command="cmd_properties"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltiptext="&newmsgButton.tooltip;" command="cmd_newmessage"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newim" label="&newIM.label;" tooltiptext="&newIM.tooltip;" command="cmd_newim"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" command="button_delete"/>
 
         <vbox flex="1">
           <spacer flex="1"/> 
@@ -348,7 +395,8 @@ Contributor(s):
   <!-- The main address book three pane -->
   <hbox flex="1">
     <vbox id="dirTreeBox" persist="width collapsed">
-      <tree id="dirTree" style="min-width:150px" flex="1" persist="width"/>
+      <tree id="dirTree" context="dirTreeContext"
+            style="min-width:150px" flex="1" persist="width"/>
     </vbox>
 
     <splitter id="dirTree-splitter" collapse="before" persist="state">
@@ -376,7 +424,8 @@ Contributor(s):
       </hbox>
 
       <!-- results pane -->
-      <tree id="abResultsTree" flex="1" persist="height"/>
+      <tree id="abResultsTree" context="abResultsTreeContext"
+            flex="1" persist="height"/>
       
       <splitter id="results-splitter" collapse="after" persist="state">
         <grippy/>

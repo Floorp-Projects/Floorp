@@ -84,12 +84,19 @@ Rights Reserved.
 
 <!ENTITY stopSearchingCmd.label                         ".Stop Searching"> 
 
-<!-- Toolbar items -->  
+<!-- Toolbar and Popup items -->  
 <!ENTITY newcardButton.label                            "New Card">  
+<!ENTITY newcardButton.accesskey                        "C">  
 <!ENTITY newlistButton.label                            "New List">  
+<!ENTITY newlistButton.accesskey                        "L">  
 <!ENTITY editButton.label                               "Properties">  
+<!ENTITY editButton.accesskey                           "P">  
 <!ENTITY newmsgButton.label                             "Compose">  
+<!ENTITY newmsgButton.accesskey                         "C">  
 <!ENTITY deleteButton.label                             "Delete">  
+<!ENTITY deleteButton.accesskey                         "D">  
+<!ENTITY newimButton.label                              "Instant Message">  
+<!ENTITY newimButton.accesskey                          "I">  
 <!ENTITY stopButton.label                               ".Stop">  
 <!ENTITY searchButton.label                             ".Search">  
 <!ENTITY showNames.label                                "Show names containing:">  
