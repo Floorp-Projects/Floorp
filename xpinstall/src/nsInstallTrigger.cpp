@@ -163,8 +163,15 @@ NS_IMETHODIMP
 nsInstallTrigger::Install(nsXPITriggerInfo* aTrigger, PRBool* aReturn)
 {
     nsresult rv;
-
     *aReturn = PR_FALSE;
+
+    PRBool enabled;
+    UpdateEnabled(&enabled);
+    if (!enabled) 
+    {
+        delete aTrigger;
+        return NS_OK;
+    }
 
     nsXPInstallManager *mgr = new nsXPInstallManager();
     if (mgr)
@@ -175,7 +182,10 @@ nsInstallTrigger::Install(nsXPITriggerInfo* aTrigger, PRBool* aReturn)
             *aReturn = PR_TRUE;
     }
     else
+    {
+        delete aTrigger;
         rv = NS_ERROR_OUT_OF_MEMORY;
+    }
 
 
     return rv;
@@ -183,9 +193,15 @@ nsInstallTrigger::Install(nsXPITriggerInfo* aTrigger, PRBool* aReturn)
 
 
 NS_IMETHODIMP    
-nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn)
+nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRBool* aReturn)
 {
+    PRBool enabled;
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    *aReturn = PR_FALSE;
+
+    UpdateEnabled(&enabled);
+    if (!enabled)
+        return NS_OK;
 
     // The Install manager will delete itself when done, once we've called
     // InitManager. Before then **WE** must delete it
@@ -228,6 +244,12 @@ NS_IMETHODIMP
 nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn)
 {
     PRBool needJar = PR_FALSE;
+
+    PRBool enabled;
+
+    UpdateEnabled(&enabled);
+    if (!enabled)
+        return NS_OK;
 
     if (aURL == "" || aVersion == nsnull)
     {

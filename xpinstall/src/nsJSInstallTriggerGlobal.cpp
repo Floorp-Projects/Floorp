@@ -145,6 +145,12 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
     return JS_FALSE;
 
+  // make sure XPInstall is enabled, return false if not
+  PRBool enabled = PR_FALSE;
+  nativeThis->UpdateEnabled(&enabled);
+  if (!enabled)
+      return JS_TRUE;
+
   // parse associative array of installs
   if ( argc >= 1 && JSVAL_IS_OBJECT(argv[0]) )
   {
@@ -209,7 +215,7 @@ PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
-  PRInt32      nativeRet;
+  PRBool       nativeRet;
   nsAutoString b0;
   PRInt32      b1 = 0;
 
@@ -234,7 +240,7 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
     {
       return JS_FALSE;
     }
-    *rval = INT_TO_JSVAL(nativeRet);
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
   }
   else
   {
