@@ -985,8 +985,9 @@ do_octal:
                                         && cp[2] >= '0' && cp[2] <= '9') {
                     	        ren = NewRENode(state, REOP_FLAT1, NULL);
                                 c = 64 * (uintN)JS7_UNDEC(c) 
-                                            + 8 * (uintN)JS7_UNDEC(*++cp) 
-                                                + (uintN)JS7_UNDEC(*++cp);
+                                            + 8 * (uintN)JS7_UNDEC(cp[1]) 
+                                                + (uintN)JS7_UNDEC(cp[2]);
+				cp += 2;
                             }
                             else /*ZeroToThree OctalDigit lookahead != OctalDigit */
                                 goto twodigitescape;
