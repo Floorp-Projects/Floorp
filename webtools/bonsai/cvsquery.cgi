@@ -68,9 +68,10 @@ $query_module = $form{'module'};
 # allow ?file=/a/b/c/foo.c to be synonymous with ?dir=/a/b/c&file=foo.c
 #
 if ( $form{'dir'} eq '' ) {
-    my ( $d, $f ) = $form{'file'} =~ m@(.*?/)([^/]*)$@;
-    $form{'dir'} = $d;
-    $form{'file'} = $f;
+    if ($form{'file'} =~ m@(.*?/)([^/]*)$@) {
+        $form{'dir'} = $1;
+        $form{'file'} = $2;
+    }
 }
 
 #
@@ -81,9 +82,6 @@ if ( $form{'dir'} eq '' ) {
 $query_file = $form{'file'};
 $query_filetype = $form{'filetype'};
 $query_logexpr = $form{'logexpr'};
-
-
-
 
 #
 # date
