@@ -25,19 +25,20 @@ use strict;
 sub getContractID($);
 sub sum($);
 
+# Configuration parameters
+# Print all ?
+my $all = 0;
+
 # hash of cid -> contractid
 my %contractid;
 my %contractid_n;
 my %failedContractid_n;
 
 # count of instances of objects created
-my (%objs, %failedObjs) = ();
+my (%objs, %objs_contractid, %failedObjs) = ();
 
 # dlls loaded
 my @dlls;
-
-# Print all ?
-my $all = 0;
 
 # temporaries
 my ($cid, $n, $str);
@@ -70,13 +71,18 @@ while (<>) {
         next;
     }
 
+    # CreateInstanceByContractID()
+    if (/CreateInstanceByContractID\((.*)\) succeeded/) {
+        $objs_contractid{$1}++;
+        next;
+    }
+
     # FAILED CreateInstance()
     if (/CreateInstance\(\{(.*)\}\) FAILED/) {
         $failedObjs{$1}++;
         next;
     }
 }
-
 
 # if there is a file named reg.out in the current dir
 # then use that to fill in the ContractIDToClassID mapping.
@@ -105,11 +111,19 @@ for ($n = 0; $n < scalar @dlls; $n++) {
 print "\n";
 
 # Objects created
-print "Object creations [", sum(\%objs), "]\n";
+print "Object creations from CID [", sum(\%objs), "]\n";
 print "----------------------------------------------------------------------\n";
 foreach $cid (sort {$objs{$b} <=> $objs{$a} } keys %objs) {
     last if (!$all && $objs{$cid} < 50);
     printf "%5d. %s - %s\n", $objs{$cid}, $cid, getContractID($cid);
+}
+print "\n";
+
+print "Object creations from ContractID [", sum(\%objs_contractid), "]\n";
+print "----------------------------------------------------------------------\n";
+foreach $cid (sort {$objs_contractid{$b} <=> $objs_contractid{$a} } keys %objs_contractid) {
+    last if (!$all && $objs_contractid{$cid} < 50);
+    printf "%5d. %s - %s\n", $objs_contractid{$cid}, $cid, getContractID($cid);
 }
 print "\n";
 
