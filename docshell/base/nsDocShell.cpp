@@ -2555,7 +2555,7 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL, const PRUnichar *
     PR_FREEIF(escapedUrl);
     
     return LoadURI(errorPageUrl.get(), // URI string
-                   LOAD_FLAGS_BYPASS_HISTORY | LOAD_RELOAD_BYPASS_CACHE, 
+                   LOAD_FLAGS_BYPASS_HISTORY, 
                    nsnull,
                    nsnull,
                    nsnull);
