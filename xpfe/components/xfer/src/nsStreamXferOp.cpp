@@ -282,7 +282,7 @@ nsStreamXferOp::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
 #endif
 
 #ifdef USE_ASYNC_READ
-    if ( !mOutputStream ) {
+    if ( !mOutputStream && mOutputTransport ) {
         // Open output stream.
         rv = mOutputTransport->OpenOutputStream(0,-1,0,getter_AddRefs( mOutputStream ) );
 
@@ -500,6 +500,12 @@ nsStreamXferOp::OnStopRequest( nsIRequest      *request,
                 }
             }
         }
+    }
+
+    // A request has been redirected.  We ignore this "failure" and pick up with the
+    // subsequent OnStartRequest for the redirected URL.
+    if ( aStatus == NS_BINDING_REDIRECTED ) {
+        return NS_OK;
     }
 #endif // USE_ASYNC_READ
 
