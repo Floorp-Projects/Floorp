@@ -898,8 +898,12 @@ nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_LEFT_BUTTON_UP:
       if (mTag == nsHTMLAtoms::a) {
         nsAutoString base, href, target;
+        GetAttribute(nsString(NS_HTML_BASE_HREF), base);
         GetAttribute(nsString("href"), href);
         GetAttribute(nsString("target"), target);
+        if (target.Length() == 0) {
+          GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
+        }
         TriggerLink(aPresContext, base, href, target, PR_TRUE);
         aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
@@ -914,8 +918,12 @@ nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_MOVE:
       if (mTag == nsHTMLAtoms::a) {
         nsAutoString base, href, target;
+        GetAttribute(nsString(NS_HTML_BASE_HREF), base);
         GetAttribute(nsString("href"), href);
         GetAttribute(nsString("target"), target);
+        if (target.Length() == 0) {
+          GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
+        }
         TriggerLink(aPresContext, base, href, target, PR_FALSE);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
