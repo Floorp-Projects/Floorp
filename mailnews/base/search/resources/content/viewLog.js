@@ -21,7 +21,7 @@ function onLoad()
 
 function toggleLogFilters()
 {
-  gFilterList.enableLogging = gLogFilters.checked;
+  gFilterList.loggingEnabled =  gLogFilters.checked;
 }
 
 function clearLog()
@@ -32,3 +32,4 @@ function clearLog()
   // truncate file
   // reload blank log file in viewer
 }
+

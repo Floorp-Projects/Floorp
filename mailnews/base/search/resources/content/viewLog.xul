@@ -35,7 +35,7 @@ Rights Reserved.
   <vbox flex="1">
     <description>&viewLogInfo.text;</description>
     <hbox>
-      <checkbox id="logFilters" oncommand="toggleLogFiters()" label="&enableLog.label;" accesskey="&enableLog.accesskey;"/>
+      <checkbox id="logFilters" oncommand="toggleLogFilters()" label="&enableLog.label;" accesskey="&enableLog.accesskey;"/>
       <spacer flex="1"/>
       <button label="&clearLog.label;" accesskey="&clearLog.accesskey;" oncommand="clearLog()"/>
     </hbox>

@@ -254,7 +254,8 @@ function viewLog()
   var uri = gFilterTree.getAttribute("ref");
   var server = rdf.GetResource(uri).QueryInterface(Components.interfaces.nsIMsgFolder).server;
 
-  var args = {filterList: currentFilterList()};
+  var filterList = currentFilterList();
+  var args = {filterList: filterList};
 
   window.openDialog("chrome://messenger/content/viewLog.xul", "FilterLog", "chrome,modal,titlebar,resizable,centerscreen", args);
 }
