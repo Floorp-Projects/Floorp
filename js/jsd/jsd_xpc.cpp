@@ -3151,6 +3151,14 @@ jsdService::GetFunctionHook (jsdICallHook **aHook)
     return NS_OK;
 }
 
+/* virtual */
+jsdService::~jsdService()
+{
+    ClearFilters();
+    Off();
+    gJsds = nsnull;
+}
+
 jsdService *
 jsdService::GetService ()
 {
@@ -3187,7 +3195,10 @@ jsdASObserver::Observe (nsISupports *aSubject, const char *aTopic,
 {
     nsresult rv;
 
-    jsdService *jsds = jsdService::GetService();
+    // Hmm.  Why is the app-startup observer called multiple times?
+    //NS_ASSERTION(!gJsds, "app startup observer called twice");
+    nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
+
     PRBool on;
     rv = jsds->GetIsOn(&on);
     if (NS_FAILED(rv) || on)

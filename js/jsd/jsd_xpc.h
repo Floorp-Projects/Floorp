@@ -283,11 +283,7 @@ class jsdService : public jsdIDebuggerService
         NS_INIT_ISUPPORTS();
     }
 
-    virtual ~jsdService()
-    {
-        ClearFilters();
-        Off();
-    }
+    virtual ~jsdService();
     
     static jsdService *GetService ();
     
