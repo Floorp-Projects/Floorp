@@ -3946,7 +3946,7 @@ CNSToolTip*	CWinCX::CreateToolTip(LO_ImageStruct* pImage, CPoint& cpPoint, CL_La
 
 		m_ToolTip = new CNSToolTip();
 
-		m_ToolTip->Create(CWnd::FromHandle(GetPane()), TTS_ALWAYSTIP);
+		m_ToolTip->Create(CWnd::FromHandle(GetPane()), TTS_ALWAYSTIP|TTS_NOPREFIX);
 		if (::IsWindow(m_ToolTip->GetSafeHwnd())){
 			m_ToolTip->SetCSID( INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo( GetDocumentContext() )));
 			CRect rect(0, 0, 30, 10);
