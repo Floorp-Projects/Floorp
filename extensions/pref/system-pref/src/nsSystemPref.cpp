@@ -234,16 +234,16 @@ nsSystemPref::UseSystemPrefs()
     SYSPREF_LOG(("\n====Now Use system prefs==\n"));
     nsresult rv = NS_OK;
     if (!mSysPrefService) {
-            return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
 
-    PRInt16 sysPrefCount= sizeof(sSysPrefList) / sizeof(sSysPrefList[0]);
+    PRIntn sysPrefCount= sizeof(sSysPrefList) / sizeof(sSysPrefList[0]);
 
     if (!mSysPrefs) {
         mSysPrefs = new SysPrefItem[sysPrefCount];
         if (!mSysPrefs)
             return NS_ERROR_OUT_OF_MEMORY;
-        for (PRInt16 index = 0; index < sysPrefCount; ++index)
+        for (PRIntn index = 0; index < sysPrefCount; ++index)
             mSysPrefs[index].SetPrefName(sSysPrefList[index]);
     }
 
@@ -252,7 +252,7 @@ nsSystemPref::UseSystemPrefs()
     if (!sysPrefBranchInternal)
         return NS_ERROR_FAILURE;
 
-    for (PRInt16 index = 0; index < sysPrefCount; ++index) {
+    for (PRIntn index = 0; index < sysPrefCount; ++index) {
         // save mozilla prefs
         SaveMozDefaultPref(mSysPrefs[index].prefName,
                            &mSysPrefs[index].defaultValue,
@@ -345,8 +345,8 @@ nsSystemPref::UseMozillaPrefs()
     if (!sysPrefBranchInternal)
         return NS_ERROR_FAILURE;
 
-    PRInt16 sysPrefCount= sizeof(sSysPrefList) / sizeof(sSysPrefList[0]);
-    for (PRInt16 index = 0; index < sysPrefCount; ++index) {
+    PRIntn sysPrefCount= sizeof(sSysPrefList) / sizeof(sSysPrefList[0]);
+    for (PRIntn index = 0; index < sysPrefCount; ++index) {
         // restore mozilla default value and free string memory if needed
         RestoreMozDefaultPref(mSysPrefs[index].prefName,
                               &mSysPrefs[index].defaultValue,
