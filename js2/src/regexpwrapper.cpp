@@ -261,6 +261,8 @@ typedef struct CompilerState {
     } classCache[CLASS_CACHE_SIZE];
 } CompilerState;
 
+#define NO_MAX ((uint16)(-1))
+
 typedef struct REProgState {
     jsbytecode *continue_pc;        /* current continuation data */
     REOp continue_op;                  
@@ -939,7 +941,6 @@ parseTerm(CompilerState *state)
 {
     jschar c = *state->cp++;
     uintN nDigits;
-    uintN parenBaseCount = state->parenCount;
     uintN num, tmp, n, i;
     const jschar *termStart;
     JSBool foundCachedCopy;
@@ -1218,7 +1219,7 @@ parseQuantifier(CompilerState *state)
             if (!state->result) 
                 return JS_FALSE;
             state->result->u.range.min = 1;
-            state->result->u.range.max = -1;
+            state->result->u.range.max = NO_MAX;
             /* <PLUS>, <next> ... <ENDCHILD> */
             state->progLength += 4;
             goto quantifier;
@@ -1227,7 +1228,7 @@ parseQuantifier(CompilerState *state)
             if (!state->result) 
                 return JS_FALSE;
             state->result->u.range.min = 0;
-            state->result->u.range.max = -1;
+            state->result->u.range.max = NO_MAX;
             /* <STAR>, <next> ... <ENDCHILD> */
             state->progLength += 4;
             goto quantifier;
@@ -2445,11 +2446,11 @@ doAlt:
 
             case REOP_STAR:
                 curState->u.quantifier.min = 0;
-                curState->u.quantifier.max = -1;
+                curState->u.quantifier.max = NO_MAX;
                 goto quantcommon;
             case REOP_PLUS:
                 curState->u.quantifier.min = 1;
-                curState->u.quantifier.max = -1;
+                curState->u.quantifier.max = NO_MAX;
                 goto quantcommon;
             case REOP_OPT:
                 curState->u.quantifier.min = 0;
@@ -2576,11 +2577,11 @@ repeatDone:
 
             case REOP_MINIMALSTAR:
                 curState->u.quantifier.min = 0;
-                curState->u.quantifier.max = -1;
+                curState->u.quantifier.max = NO_MAX;
                 goto minimalquantcommon;
             case REOP_MINIMALPLUS:
                 curState->u.quantifier.min = 1;
-                curState->u.quantifier.max = -1;
+                curState->u.quantifier.max = NO_MAX;
                 goto minimalquantcommon;
             case REOP_MINIMALOPT:
                 curState->u.quantifier.min = 0;

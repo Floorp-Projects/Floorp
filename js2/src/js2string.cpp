@@ -123,8 +123,6 @@ static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *a
     DEFINE_ROOTKEEPER(meta, rk, str);
     str = meta->toString(thisValue);
 
-    js2val S = STRING_TO_JS2VAL(str);
-
     js2val regexp = argv[0];
     
     if ((argc == 0) || (meta->objectType(argv[0]) != meta->regexpClass)) {        
@@ -185,7 +183,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
         ArrayInstance *A = NULL;
         DEFINE_ROOTKEEPER(meta, rk2, A);
         int32 index = 0;
-        int32 lastIndex = 0;
+        uint32 lastIndex = 0;
         while (true) {
             REMatchResult *match = REExecute(meta, re, JS2VAL_TO_STRING(S)->begin(), lastIndex, toInt32(JS2VAL_TO_STRING(S)->length()), globalMultiline);
             if (match == NULL)
@@ -231,10 +229,10 @@ static const String interpretDollar(JS2Metadata *meta, const String *replaceStr,
     case '8':
     case '9':
         {
-            int32 num = (int32)(*dollarValue - '0');
+            uint32 num = (uint32)(*dollarValue - '0');
             if (num <= match->parenCount) {
                 if ((dollarPos < (replaceStr->length() - 2)) && (dollarValue[1] >= '0') && (dollarValue[1] <= '9')) {
-                    int32 tmp = (num * 10) + (dollarValue[1] - '0');
+                    uint32 tmp = (num * 10) + (dollarValue[1] - '0');
                     if (tmp <= match->parenCount) {
                         num = tmp;
                         skip = 3;
@@ -542,7 +540,7 @@ static js2val String_charCodeAt(JS2Metadata *meta, const js2val thisValue, js2va
     if ((posd < 0) || (posd >= str->size()))
         return meta->engine->nanValue;
     else
-        return meta->engine->allocNumber((float64)(*str)[toUInt32(posd)]);
+        return meta->engine->allocNumber((float64)(*str)[toUInt32((int32)posd)]);
 }
 
 static js2val String_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
@@ -628,7 +626,6 @@ static js2val String_toLowerCase(JS2Metadata *meta, const js2val thisValue, js2v
 {
     const String *str = meta->toString(thisValue);
     DEFINE_ROOTKEEPER(meta, rk1, str);
-    js2val S = STRING_TO_JS2VAL(str);
 
     String *result = meta->engine->allocStringPtr(str);
     DEFINE_ROOTKEEPER(meta, rk2, result);

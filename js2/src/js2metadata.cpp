@@ -3404,9 +3404,9 @@ doUnary:
             return NULL;
         JS2Class *s = c;
         while (s) {
-            InstanceBindingEntry **ibeP = c->instanceBindings[qname->name];
+            InstanceBindingEntry *ibeP = c->instanceBindings[qname->name];
             if (ibeP) {
-                for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+                for (InstanceBindingEntry::NS_Iterator i = ibeP->begin(), end = ibeP->end(); (i != end); i++) {
                     InstanceBindingEntry::NamespaceBinding &ns = *i;
                     if ((ns.second->accesses & access) && (ns.first == qname->nameSpace)) {
                         return ns.second->content;
@@ -3483,9 +3483,9 @@ doUnary:
             if (mOverridden->final || !goodKind)
                 reportError(Exception::definitionError, "Illegal override", pos);
         }
-        InstanceBindingEntry **ibeP = c->instanceBindings[id];
+        InstanceBindingEntry *ibeP = c->instanceBindings[id];
         if (ibeP) {
-            for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+            for (InstanceBindingEntry::NS_Iterator i = ibeP->begin(), end = ibeP->end(); (i != end); i++) {
                 InstanceBindingEntry::NamespaceBinding &ns = *i;
                 if ((access & ns.second->content->instanceMemberAccess()) && (definedMultiname->listContains(ns.first)))
                     reportError(Exception::definitionError, "Illegal override", pos);
@@ -3506,18 +3506,13 @@ doUnary:
             break;
         }
         m->multiname = new (this) Multiname(definedMultiname);
-        InstanceBindingEntry *ibe;
-        if (ibeP == NULL) {
-            ibe = new InstanceBindingEntry(id);
-            c->instanceBindings.insert(id, ibe);
-        }
-        else
-            ibe = *ibeP;
+        if (ibeP == NULL)
+            ibeP = &c->instanceBindings.insert(id);
         for (NamespaceListIterator nli = definedMultiname->nsList->begin(), nlend = definedMultiname->nsList->end(); (nli != nlend); nli++) {
             // XXX here and in defineLocal... why a new binding for each namespace?
             // (other than it would mess up the destructor sequence :-)
             InstanceBinding *ib = new InstanceBinding(access, m);
-            ibe->bindingList.push_back(InstanceBindingEntry::NamespaceBinding(*nli, ib));
+            ibeP->bindingList.push_back(InstanceBindingEntry::NamespaceBinding(*nli, ib));
         }
         return mOverridden;
     }
@@ -4325,9 +4320,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     InstanceMember *JS2Metadata::findLocalInstanceMember(JS2Class *limit, Multiname *multiname, Access access)
     {
         InstanceMember *result = NULL;
-        InstanceBindingEntry **ibeP = limit->instanceBindings[multiname->name];
+        InstanceBindingEntry *ibeP = limit->instanceBindings[multiname->name];
         if (ibeP) {
-            for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+            for (InstanceBindingEntry::NS_Iterator i = ibeP->begin(), end = ibeP->end(); (i != end); i++) {
                 InstanceBindingEntry::NamespaceBinding &ns = *i;
                 if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
                     if (result && (ns.second->content != result))
@@ -4357,9 +4352,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // in this case either the getter or the setter is returned at the implementation's discretion
     InstanceMember *JS2Metadata::getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Access access)
     {
-        InstanceBindingEntry **ibeP = c->instanceBindings[mBase->multiname->name];
+        InstanceBindingEntry *ibeP = c->instanceBindings[mBase->multiname->name];
         if (ibeP) {
-            for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+            for (InstanceBindingEntry::NS_Iterator i = ibeP->begin(), end = ibeP->end(); (i != end); i++) {
                 InstanceBindingEntry::NamespaceBinding &ns = *i;
                 if ((ns.second->accesses & access) && mBase->multiname->listContains(ns.first))
                     return ns.second->content;
@@ -4954,12 +4949,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     JS2Class::~JS2Class()            
     {
         for (InstanceBindingIterator rib = instanceBindings.begin(), riend = instanceBindings.end(); (rib != riend); rib++) {
-            InstanceBindingEntry *ibe = *rib;
-            for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
+            InstanceBindingEntry &ibe = *rib;
+            for (InstanceBindingEntry::NS_Iterator i = ibe.begin(), end = ibe.end(); (i != end); i++) {
                 InstanceBindingEntry::NamespaceBinding ns = *i;
                 delete ns.second;
             }
-            delete ibe;
         }
     }
 
@@ -4974,8 +4968,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         GCMARKOBJECT(init)
         GCMARKVALUE(defaultValue);
         for (InstanceBindingIterator rib = instanceBindings.begin(), riend = instanceBindings.end(); (rib != riend); rib++) {
-            InstanceBindingEntry *ibe = *rib;
-            for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
+            InstanceBindingEntry &ibe = *rib;
+            for (InstanceBindingEntry::NS_Iterator i = ibe.begin(), end = ibe.end(); (i != end); i++) {
                 InstanceBindingEntry::NamespaceBinding ns = *i;
                 ns.second->content->mark();
             }
@@ -5033,25 +5027,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
     }
 
-    // This version of 'clone' is used to construct a duplicate LocalBinding entry 
-    // with each LocalBinding content copied from the (perhaps previously) cloned member.
-    // See 'instantiateFrame'.
-    LocalBindingEntry *LocalBindingEntry::clone()
-    {
-        LocalBindingEntry *new_e = new LocalBindingEntry(name);
-        for (NS_Iterator i = bindingList.begin(), end = bindingList.end(); (i != end); i++) {
-            NamespaceBinding &ns = *i;
-            LocalBinding *m = ns.second;
-            if (m->content->cloneContent == NULL) {
-                m->content->cloneContent = m->content->clone();
-            }
-            LocalBinding *new_b = new LocalBinding(m->accesses, m->content->cloneContent, m->enumerable);
-            new_b->xplicit = m->xplicit;
-            new_e->bindingList.push_back(NamespaceBinding(ns.first, new_b));
-        }
-        return new_e;
-    }
-
 
 /************************************************************************************
  *
@@ -5065,8 +5040,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if (type->super)
             initializeSlots(type->super);
         for (InstanceBindingIterator rib = type->instanceBindings.begin(), riend = type->instanceBindings.end(); (rib != riend); rib++) {
-            InstanceBindingEntry *ibe = *rib;
-            for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
+            InstanceBindingEntry &ibe = *rib;
+            for (InstanceBindingEntry::NS_Iterator i = ibe.begin(), end = ibe.end(); (i != end); i++) {
                 InstanceBindingEntry::NamespaceBinding ns = *i;
                 InstanceMember *im = ns.second->content;
                 if (im->memberKind == Member::InstanceVariableMember) {

@@ -637,7 +637,6 @@ class LocalBindingEntry {
 public:
     LocalBindingEntry(const StringAtom &s) : name(s) { }
 
-    LocalBindingEntry *clone();
     void clear();
 
     typedef std::pair<Namespace *, LocalBinding *> NamespaceBinding;
@@ -680,8 +679,8 @@ public:
 
 
 
-typedef HashTable<InstanceBindingEntry *, const StringAtom &> InstanceBindingMap;
-typedef TableIterator<InstanceBindingEntry *, const StringAtom &> InstanceBindingIterator;
+typedef HashTable<InstanceBindingEntry, const StringAtom &> InstanceBindingMap;
+typedef TableIterator<InstanceBindingEntry, const StringAtom &> InstanceBindingIterator;
 
 
 // A frame contains bindings defined at a particular scope in a program. A frame is either the top-level system frame, 
@@ -1765,8 +1764,8 @@ public:
 inline bool operator==(MetaData::LocalBindingEntry &s1, const StringAtom &s2) { return s1.name == s2;}
 inline bool operator!=(MetaData::LocalBindingEntry &s1, const StringAtom &s2) { return s1.name != s2;}
 
-inline bool operator==(MetaData::InstanceBindingEntry *s1, const StringAtom &s2) { return s1->name == s2;}
-inline bool operator!=(MetaData::InstanceBindingEntry *s1, const StringAtom &s2) { return s1->name != s2;}
+inline bool operator==(MetaData::InstanceBindingEntry &s1, const StringAtom &s2) { return s1.name == s2;}
+inline bool operator!=(MetaData::InstanceBindingEntry &s1, const StringAtom &s2) { return s1.name != s2;}
 
 inline HashNumber hashString(const StringAtom &s) { return s.hash; }
 
