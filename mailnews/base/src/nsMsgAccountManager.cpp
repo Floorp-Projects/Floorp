@@ -610,6 +610,8 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
     rv = server->GetKey(getter_Copies(serverKey));
     NS_ENSURE_SUCCESS(rv,rv);
 
+    LogoutOfServer(server); // close cached connections and forget session password
+
     // invalidate the FindServer() cache if we are removing the cached server
     if (m_lastFindServerResult) {
         nsXPIDLCString cachedServerKey;
@@ -656,12 +658,12 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
     rv = server->RemoveFiles();
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove the files associated with server");
 
-    rv = server->ForgetPassword();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove the password associated with server");
     
     // now clear out the server once and for all.
     // watch out! could be scary
     server->ClearAllValues();
+
+    rootFolder->Shutdown(PR_TRUE);
   }
   nsCOMPtr<nsISupportsArray> identityArray;
   
@@ -908,18 +910,23 @@ nsMsgAccountManager::hashUnloadServer(nsHashKey *aKey, void *aData,
 
 }
 
-PRBool
+/* static */ void nsMsgAccountManager::LogoutOfServer(nsIMsgIncomingServer *aServer)
+{
+    nsresult rv = aServer->CloseCachedConnections();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "CloseCachedConnections failed");
+    rv = aServer->ForgetSessionPassword();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove the password associated with server");
+}
+
+/* static */ PRBool
 nsMsgAccountManager::hashLogoutOfServer(nsHashKey *aKey, void *aData,
                                                void *closure)
 {
     nsresult rv;
     nsCOMPtr<nsIMsgIncomingServer> server =
       do_QueryInterface((nsISupports*)aData, &rv);
-    if (NS_FAILED(rv)) return PR_TRUE;
-    
-    rv = server->CloseCachedConnections();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "CloseCachedConnections failed");
-    server->ForgetSessionPassword();
+    if (NS_SUCCEEDED(rv))
+      LogoutOfServer(server);
 
     return PR_TRUE;
 }

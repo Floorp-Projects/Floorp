@@ -112,6 +112,7 @@ private:
   nsresult notifyDefaultServerChange(nsIMsgAccount *aOldAccount,
                                      nsIMsgAccount *aNewAccount);
     
+  static void LogoutOfServer(nsIMsgIncomingServer *aServer);
   // hash table enumerators
 
   // add each member of a hash table to an nsISupports array
