@@ -274,7 +274,10 @@ nsresult nsFrameWindow::Show( PRBool bState)
       ULONG ulFlags;
       if( bState) {
          ULONG ulStyle = WinQueryWindowULong( GetMainWindow(), QWL_STYLE);
-         ulFlags = SWP_SHOW | SWP_ACTIVATE;
+         ulFlags = SWP_SHOW;
+         /* Don't activate the window unless the parent is visible */
+         if (WinIsWindowVisible(WinQueryWindow(GetMainWindow(), QW_PARENT)))
+           ulFlags |= SWP_ACTIVATE;
          if (!( ulStyle & WS_VISIBLE)) {
             PRInt32 sizeMode;
             GetSizeMode( &sizeMode);
