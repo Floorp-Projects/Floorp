@@ -108,6 +108,10 @@ nsComboboxControlFrame::nsComboboxControlFrame()
   mIgnoreFocus                 = PR_FALSE;
   mSelectedIndex               = -1;
 
+  mCacheSize.width             = -1;
+  mCacheSize.height            = -1;
+  mCachedMaxElementSize.width  = -1;
+  mCachedMaxElementSize.height = -1;
    //Shrink the area around it's contents
   //SetFlags(NS_BLOCK_SHRINK_WRAP);
 }
@@ -652,12 +656,51 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
                                nsReflowStatus&          aStatus)
 {
 #ifdef DEBUG_rodsXXX
-  printf("nsComboboxControlFrame::Reflow %d   Reason: ", myCounter++);
+  printf("****** nsComboboxControlFrame::Reflow %d   Reason: ", myCounter++);
   switch (aReflowState.reason) {
-    case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
-    case eReflowReason_Incremental:printf("eReflowReason_Incremental\n");break;
-    case eReflowReason_Resize:printf("eReflowReason_Resize\n");break;
+    case eReflowReason_Initial:
+      printf("eReflowReason_Initial\n");break;
+    case eReflowReason_Incremental:
+      printf("eReflowReason_Incremental\n");break;
+    case eReflowReason_Resize:
+      printf("eReflowReason_Resize\n");
+      break;
     case eReflowReason_StyleChange:printf("eReflowReason_StyleChange\n");break;
+  }
+#endif
+
+
+// XXX Temporary Fix for too many resize reflows
+#ifdef OPTIMIZE_RESIZE_RELOW
+  if (aReflowState.reason == eReflowReason_Resize) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth &&
+        NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) {
+
+      if (mCacheSize.width > -1 && mCacheSize.height > -1) {
+        aDesiredSize.width  = mCacheSize.width;
+        aDesiredSize.height = mCacheSize.height;
+        if (aDesiredSize.maxElementSize != nsnull) {
+          aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
+          aDesiredSize.maxElementSize->height = mCachedMaxElementSize.height;
+        }
+        aDesiredSize.ascent  = aDesiredSize.height;
+        aDesiredSize.descent = 0;
+        aStatus = NS_FRAME_COMPLETE;
+        return NS_OK;
+      }
+    } else {
+      if (mCacheSize.width == aReflowState.mComputedWidth && 
+          mCacheSize.height == aReflowState.mComputedHeight) {
+        if (aDesiredSize.maxElementSize != nsnull) {
+          aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
+          aDesiredSize.maxElementSize->height = mCachedMaxElementSize.height;
+        }
+        aDesiredSize.ascent  = aDesiredSize.height;
+        aDesiredSize.descent = 0;
+        aStatus = NS_FRAME_COMPLETE;
+       return NS_OK;
+      }
+    }
   }
 #endif
 
@@ -759,8 +802,19 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
      // Set width of display to match width of the drop down 
     SetChildFrameSize(displayFrame, dropdownRect.width, size.height);
 
-    // Size the button to be the same height as the displayFrame
-    SetChildFrameSize(buttonFrame, size.height, size.height);
+    // the default size of the of scrollbar
+    // that will be the default width of the dropdown button
+    // the height will be the height of the text
+    nsCOMPtr<nsIDeviceContext> dx;
+    aPresContext->GetDeviceContext(getter_AddRefs(dx));
+    if (dx) { 
+      float sbWidth;
+      float sbHeight;
+      dx->GetScrollBarDimensions(sbWidth, sbHeight);
+      size.width  = (nscoord)sbWidth;
+    }   
+    // Size the button 
+    SetChildFrameSize(buttonFrame, size.width, size.height);
 
      // Reflow display + button
     nsAreaFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
@@ -819,6 +873,17 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 #if 0
   COMPARE_QUIRK_SIZE("nsComboboxControlFrame", 56, 22) 
 #endif
+
+// XXX Temporary Fix for too many resize reflows
+#ifdef OPTIMIZE_RESIZE_RELOW
+  mCacheSize.width  = aDesiredSize.width;
+  mCacheSize.height = aDesiredSize.height;
+  if (aDesiredSize.maxElementSize != nsnull) {
+    mCachedMaxElementSize.width  = aDesiredSize.maxElementSize->width;
+    mCachedMaxElementSize.height = aDesiredSize.maxElementSize->height;
+  }
+#endif
+
   return rv;
 
 }
