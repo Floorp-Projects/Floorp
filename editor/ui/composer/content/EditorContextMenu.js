@@ -20,8 +20,11 @@
  *
  */
 
-function fillContentContextMenu(contextMenuNode)
+function fillContentContextMenu(event, contextMenuNode)
 {
+  if ( event.target != contextMenuNode )
+    return;
+   
 	contextMenu = new nsContextMenu(contextMenuNode);
 
   HideDisabledItem("menu_undo_cm");
@@ -40,8 +43,11 @@ function fillContentContextMenu(contextMenuNode)
   ShowMenuItem("tableMenu-separator", ShowTableMenuSeparator());
 }
 
-function cleanupContextMenu( contextMenuNode )
+function cleanupContextMenu( event, contextMenuNode )
 {
+  if ( event.target != contextMenuNode )
+    return;
+
   ShowHiddenItemOnCleanup("menu_undo_cm");
   ShowHiddenItemOnCleanup("menu_redo_cm");
   ShowHiddenItemOnCleanup("menu_cut_cm");
