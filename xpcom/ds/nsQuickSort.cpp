@@ -84,9 +84,9 @@ swapfunc(char *a, char *b, int n, int swaptype)
 		*(long *)(a) = *(long *)(b);		\
 		*(long *)(b) = t;			\
 	} else						\
-		swapfunc((char *)a, (char*)b, es, swaptype)
+		swapfunc((char *)a, (char*)b, (int)es, swaptype)
 
-#define vecswap(a, b, n) 	if ((n) > 0) swapfunc((char *)a, (char *)b, n, swaptype)
+#define vecswap(a, b, n) 	if ((n) > 0) swapfunc((char *)a, (char *)b, (int)n, swaptype)
 
 static INLINE char *
 med3(char *a, char *b, char *c, cmp_t* cmp, void *data)
@@ -98,8 +98,8 @@ med3(char *a, char *b, char *c, cmp_t* cmp, void *data)
 
 void nsQuickSort (
 	void *a,
-	unsigned n,
-    unsigned es,
+	unsigned int n,
+    unsigned int es,
 	cmp_t *cmp,
 	void *data
     )
