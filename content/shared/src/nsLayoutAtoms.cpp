@@ -52,6 +52,8 @@ nsIAtom* nsLayoutAtoms::pagePseudo;
 
 // frame types
 nsIAtom* nsLayoutAtoms::areaFrame;
+nsIAtom* nsLayoutAtoms::blockFrame;
+nsIAtom* nsLayoutAtoms::inlineFrame;
 nsIAtom* nsLayoutAtoms::pageFrame;
 nsIAtom* nsLayoutAtoms::rootFrame;
 nsIAtom* nsLayoutAtoms::scrollFrame;
@@ -96,6 +98,8 @@ void nsLayoutAtoms::AddrefAtoms()
     pagePseudo = NS_NewAtom(":-moz-page");
 
     areaFrame = NS_NewAtom("AreaFrame");
+    blockFrame = NS_NewAtom("BlockFrame");
+    inlineFrame = NS_NewAtom("InlineFrame");
     pageFrame = NS_NewAtom("PageFrame");
     rootFrame = NS_NewAtom("RootFrame");
     scrollFrame = NS_NewAtom("ScrollFrame");
@@ -142,6 +146,8 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(pagePseudo);
     
     NS_RELEASE(areaFrame);
+    NS_RELEASE(blockFrame);
+    NS_RELEASE(inlineFrame);
     NS_RELEASE(pageFrame);
     NS_RELEASE(rootFrame);
     NS_RELEASE(scrollFrame);
