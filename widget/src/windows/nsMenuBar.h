@@ -41,7 +41,7 @@ public:
   virtual ~nsMenuBar();
 
   // nsIMenuListener interface
-  nsEventStatus MenuSelected(const nsGUIEvent & aMenuEvent);
+  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   
   NS_DECL_ISUPPORTS
 
