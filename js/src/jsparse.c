@@ -3237,7 +3237,7 @@ XMLAtomNode(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
     pn = NewParseNode(cx, ts, PN_NULLARY, tc);
     if (!pn)
-        return JS_FALSE;
+        return NULL;
     tp = &CURRENT_TOKEN(ts);
     pn->pn_op = tp->t_op;
     pn->pn_atom = tp->t_atom;
