@@ -57,8 +57,9 @@ BM_CVS_NS_js 	= js js/src js/src/fdlibm
 #
 # string
 #
-BM_DIRS_string	= $(NSPRPUB_DIR) string
-BM_CVS_string	= $(NSPRPUB_DIR) string
+BM_DIRS_string	      = $(NSPRPUB_DIR) string
+BM_DEP_DIRS_string    = intl/unicharutil/public
+BM_CVS_string	      = $(NSPRPUB_DIR) string
 
 #
 # xpcom
@@ -72,6 +73,7 @@ BM_CVS_xpcom		= $(NSPRPUB_DIR) modules/libreg xpcom/typelib/xpt xpcom/base xpcom
 # xpconnect
 #
 BM_DIRS_xpconnect	= $(BM_DIRS_xpcom) $(BM_DIRS_js) js/src/xpconnect
+BM_DEP_DIRS_xpconnect   = $(BM_DEP_DIRS_xpcom)
 BM_CVS_xpconnect	= $(BM_CVS_xpcom) $(BM_CVS_js) js/src/xpconnect
 BM_CVS_NS_xpconnect	= $(BM_CVS_NS_xpcom) $(BM_CVS_NS_js) js/src/xpconnect
 
