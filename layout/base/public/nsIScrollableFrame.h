@@ -70,6 +70,7 @@ public:
     // NS_STYLE_OVERFLOW_AUTO
     PRUint8 mHorizontal, mVertical;
     ScrollbarStyles(PRUint8 h, PRUint8 v) : mHorizontal(h), mVertical(v) {}
+    ScrollbarStyles() {}
   };
 
   virtual ScrollbarStyles GetScrollbarStyles() const = 0;
