@@ -29,6 +29,10 @@
 #include "nsFileLocations.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgWindow.h"
+#include "nsIMsgMessageService.h"
+#include "nsMsgUtils.h"
+#include "nsIURI.h"
+#include "nsXPIDLString.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgMailSession, nsIMsgMailSession);
 
@@ -329,3 +333,31 @@ NS_IMETHODIMP nsMsgMailSession::IsFolderOpenInWindow(nsIMsgFolder *folder, PRBoo
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgMailSession::ConvertMsgURIToMsgURL(const char *aURI, char **aURL)
+{
+  if ((!aURI) || (!aURL))
+    return NS_ERROR_NULL_POINTER;
+
+  // convert the rdf msg uri into a url that represents the message...
+  nsIMsgMessageService  *msgService = nsnull;
+  nsresult rv = GetMessageServiceFromURI(aURI, &msgService);
+  if (NS_FAILED(rv)) 
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIURI> tURI;
+  rv = msgService->GetUrlForUri(aURI, getter_AddRefs(tURI));
+  if (NS_FAILED(rv)) 
+    return NS_ERROR_NULL_POINTER;
+
+  nsXPIDLCString urlString;
+  if (NS_SUCCEEDED(tURI->GetSpec(getter_Copies(urlString))))
+  {
+    *aURL = nsCRT::strdup(urlString);
+    if (!(aURL))
+      return NS_ERROR_NULL_POINTER;
+  }
+
+  ReleaseMessageServiceFromURI(aURI, msgService);
+  return rv;
+}

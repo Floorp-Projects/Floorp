@@ -77,5 +77,7 @@ interface nsIMsgMailSession : nsISupports {
   void RemoveMsgWindow(in nsIMsgWindow msgWindow);
   readonly attribute nsISupportsArray msgWindowsArray;
   boolean IsFolderOpenInWindow(in nsIMsgFolder folder);
+
+  string ConvertMsgURIToMsgURL(in string  aURI);
 };
 

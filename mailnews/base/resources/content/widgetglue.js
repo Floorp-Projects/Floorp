@@ -994,16 +994,44 @@ function MsgViewPageSource()
 {
 	dump("MsgViewPageSource(); \n ");
 	
-	var uri = window.frames["messagepane"].location+"?header=src";
-	dump('URI=' + uri);
-	
-  // Use a browser window to view source
-  window.openDialog( "chrome://navigator/content/",
-                     "_blank",
-                     "chrome,menubar,status,dialog=no,resizable",
-                     uri,
-                     "view-source" );
+	var tree = GetThreadTree();
+	var selectedItems = tree.selectedItems;
+	var numSelected = selectedItems.length;
+  var url;
+  var uri;
+  var mailSessionProgID      = "component://netscape/messenger/services/session";
 
+  if (numSelected == 0)
+  {
+    dump("MsgViewPageSource(): No messages selected.\n");
+    return false;
+  }
+
+  // First, get the mail session
+  var mailSession = Components.classes[mailSessionProgID].getService();
+  if (!mailSession)
+    return false;
+
+  mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
+  if (!mailSession)
+    return false;
+
+	for(var i = 0; i < numSelected; i++)
+	{
+    uri = selectedItems[i].getAttribute("id");
+  
+    // Now, we need to get a URL from a URI
+    url = mailSession.ConvertMsgURIToMsgURL(uri);
+    if (url)
+      url += "?header=src";
+
+    // Use a browser window to view source
+    window.openDialog( "chrome://navigator/content/",
+                       "_blank",
+                       "chrome,menubar,status,dialog=no,resizable",
+                       url,
+                       "view-source" );
+	}
 }
 
 function MsgViewPageInfo() {}

@@ -1826,6 +1826,8 @@ mime_bridge_create_draft_stream(
     }
   }
 
+  ReleaseMessageServiceFromURI(turl, msgService);
+
   newPluginObj2->GetForwardInline(&mdd->forwardInline);
   newPluginObj2->GetIdentity(getter_AddRefs(mdd->identity));
   mdd->format_out = format_out;

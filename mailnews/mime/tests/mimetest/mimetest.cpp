@@ -470,7 +470,11 @@ main(int argc, char** argv)
   // Do some sanity checking...
   if (argc < 2) 
   {
-    fprintf(stderr, "usage: %s <rfc822_disk_file> <output_format>\n\nwhere output_format is:\n\n19 - indentation formatting\n1 - nsMimeMessageBodyDisplay\n", argv[0]);
+    fprintf(stderr, "usage: %s <rfc822_disk_file> <output_format>\n\n", argv[0]);
+    fprintf(stderr, "where output_format is:\n\n19 - indentation formatting\n");
+    fprintf(stderr, "  1 - nsMimeMessagePrintOutput\n");
+    fprintf(stderr, "  2 - nsMimeMessageBodyDisplay\n");
+    fprintf(stderr, "  3 - nsMimeMessageQuoting\n");
     return 1;
   }
   
@@ -516,6 +520,8 @@ DoRFC822toHTMLConversion(char *filename, int numArgs, int outFormat)
   if (outFormat == 1)
     outFormat = nsMimeOutput::nsMimeMessagePrintOutput;
   else if (outFormat == 2)
+    outFormat = nsMimeOutput::nsMimeMessageBodyDisplay;
+  else if (outFormat == 3)
     outFormat = nsMimeOutput::nsMimeMessageBodyDisplay;
 
   char *opts = PL_strchr(filename, '?');
