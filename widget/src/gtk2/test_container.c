@@ -38,12 +38,12 @@ int main(int argc, char **argv)
   moz_container = moz_container_new();
   printf("moz_container is %p\n", moz_container);
   gtk_signal_connect(GTK_OBJECT(moz_container), "expose_event",
-		     GTK_SIGNAL_FUNC(expose_handler), NULL);
+                     GTK_SIGNAL_FUNC(expose_handler), NULL);
   gtk_signal_connect(GTK_OBJECT(moz_container), "size_allocate",
-		     GTK_SIGNAL_FUNC(size_allocate_handler), NULL);
+                     GTK_SIGNAL_FUNC(size_allocate_handler), NULL);
 
   gtk_container_add(GTK_CONTAINER(toplevel_window),
-		    moz_container);
+                    moz_container);
 
   gtk_widget_realize(moz_container);
 
@@ -74,12 +74,12 @@ gint
 expose_handler (GtkWidget *widget, GdkEventExpose *event)
 {
   printf("expose %p %p %d %d %d %d\n",
-	 widget,
-	 event->window,
-	 event->area.x,
-	 event->area.y,
-	 event->area.width,
-	 event->area.height);
+         widget,
+         event->window,
+         event->area.x,
+         event->area.y,
+         event->area.width,
+         event->area.height);
   return FALSE;
 }
 
@@ -87,6 +87,6 @@ void
 size_allocate_handler (GtkWidget *widget, GtkAllocation *allocation)
 {
   printf("size_allocate_handler %p %d %d %d %d\n", widget,
-	 allocation->x, allocation->y, allocation->width, allocation->height);
+         allocation->x, allocation->y, allocation->width, allocation->height);
   moz_drawingarea_resize(drawingarea1, allocation->width, allocation->height);
 }
