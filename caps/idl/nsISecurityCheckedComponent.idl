@@ -37,7 +37,7 @@
  * Return values of 'AllAccess' or 'NoAccess' unconditionally allow or deny
  * access to the operation.
  */
-[uuid(0dad9e8c-a12d-4dcb-9a6f-7d09839356e1)]
+[scriptable, uuid(0dad9e8c-a12d-4dcb-9a6f-7d09839356e1)]
 interface nsISecurityCheckedComponent : nsISupports {
   string canCreateWrapper(in nsIIDPtr iid);
   string canCallMethod(in nsIIDPtr iid, in wstring methodName);

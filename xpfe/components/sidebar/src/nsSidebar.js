@@ -49,6 +49,7 @@ const nsIRDFContainer  = Components.interfaces.nsIRDFContainer;
 const nsIFileLocator   = Components.interfaces.nsIFileLocator;
 const nsIRDFRemoteDataSource = Components.interfaces.nsIRDFRemoteDataSource;
 const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;
+const nsISecurityCheckedComponent = Components.interfaces.nsISecurityCheckedComponent;
 
 function nsSidebar()
 {
@@ -283,7 +284,45 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     }
 }
 
+// method of nsISecurityCheckedComponent
+nsSidebar.prototype.canCreateWrapper =
+function (iid) {
+    return "NoAccess";
+}
 
+// method of nsISecurityCheckedComponent
+nsSidebar.prototype.canCallMethod =
+function (iid, methodName) {
+    if (iid.equals(nsISidebar) &&
+        (methodName == "setWindow" ||
+         methodName == "addPanel" ||
+         methodName == "addSearchEngine")) {
+        return "AllAccess";
+    } else {
+        return "NoAccess";
+    }
+}
+
+// method of nsISecurityCheckedComponent
+nsSidebar.prototype.canGetProperty =
+function (iid, propertyName) {
+    return "NoAccess";
+}
+
+// method of nsISecurityCheckedComponent
+nsSidebar.prototype.canSetProperty =
+function (iid, propertyName) {
+    return "NoAccess";
+}
+
+nsSidebar.prototype.QueryInterface =
+function (iid) {
+    if (!iid.equals(nsISidebar) && 
+        !iid.equals(nsISecurityCheckedComponent) &&
+        !iid.equals(nsISupports))
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+}
 
 var sidebarModule = new Object();
 
@@ -323,10 +362,7 @@ function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
 
-    if (!iid.equals(nsISidebar) && !iid.equals(nsISupports))
-        throw Components.results.NS_ERROR_INVALID_ARG;
-
-    return new nsSidebar();
+    return (new nsSidebar()).QueryInterface(iid);
 }
 
 /* entrypoint */
