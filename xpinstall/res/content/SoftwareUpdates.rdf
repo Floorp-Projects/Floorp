@@ -25,6 +25,6 @@
          xmlns:NC="http://home.netscape.com/NC-rdf#">
 
   <RDF:Bag about="http://home.netscape.com/NC-rdf#SoftwareUpdateDataSources">
-    <RDF:li resource="chrome://xpinstall/content/SoftwareUpdate-Source-1.rdf" />
+    <RDF:li resource="chrome://communicator/content/xpinstall/SoftwareUpdate-Source-1.rdf" />
   </RDF:Bag>
 </RDF:RDF>

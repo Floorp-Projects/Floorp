@@ -25,7 +25,7 @@ Contributor(s): Stuart Parmenter <pavlov@netscape.com>
                 Ben Goodger <rgoodger@ihug.co.nz>
 -->
 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://navigator/skin/navigator.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 

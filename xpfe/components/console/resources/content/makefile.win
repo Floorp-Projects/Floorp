@@ -23,7 +23,7 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\content\default
+DISTBROWSER=$(DIST)\bin\chrome\global\content
 
 install::
 	$(MAKE_INSTALL) console.js $(DISTBROWSER)

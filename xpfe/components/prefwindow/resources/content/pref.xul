@@ -22,11 +22,11 @@ Rights Reserved.
 Contributor(s): ______________________________________. -->
 
 
-<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?> 
-<?xul-overlay href="chrome://pref/content/preftree.xul"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?> 
+<?xul-overlay href="chrome://communicator/content/pref/preftree.xul"?>
 <?xul-overlay href="chrome://global/content/platformDialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://pref/locale/pref.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref.dtd" >
 <window id="prefWindow" 
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -42,7 +42,7 @@ Contributor(s): ______________________________________. -->
   <script language="javascript" src="chrome://global/content/strres.js" />
   <script language="javascript" src="chrome://global/content/dialogOverlay.js" />
   <script language="javascript" src="chrome://global/content/widgetStateManager.js" />
-  <script language="javascript" src="chrome://pref/content/pref.js" />
+  <script language="javascript" src="chrome://communicator/content/pref/pref.js" />
 
   <keyset id="keyset"/>
 
@@ -60,7 +60,7 @@ Contributor(s): ______________________________________. -->
       }
       else {
         dump("*** window.arguments not found, defaulting to navigator panel \n");
-        document.getElementById("panelFrame").setAttribute("src", "chrome://pref/content/pref-navigator.xul" );
+        document.getElementById("panelFrame").setAttribute("src", "chrome://communicator/content/pref/pref-navigator.xul" );
       }
     ]]>
     </script>

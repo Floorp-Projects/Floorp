@@ -26,7 +26,10 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR = sidebar
+CHROME_DIR = communicator
+CHROME_CONTENT_DIR = content/sidebar
+CHROME_L10N_DIR = locale/sidebar
+CHROME_SKIN_DIR = skin/sidebar
 
 CHROME_CONTENT = \
 	customize-panel.js \
@@ -54,7 +57,7 @@ CHROME_SKIN = \
 	sidebar-topright-cap.gif \
 	$(NULL)
 
-CHROME_L10N = \
+EXPORT_RESOURCE_LOCALE = \
 	locale/en-US/customize.dtd \
 	locale/en-US/preview.dtd \
 	locale/en-US/local-panels.dtd \
@@ -62,4 +65,7 @@ CHROME_L10N = \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE_LOCALE) $(DIST)/bin/chrome/communicator/locale/sidebar
 

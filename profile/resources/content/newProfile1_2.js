@@ -21,7 +21,7 @@
  *   Ben Goodger (03/11/99)
  */
 
-var bundle = srGetStrBundle("chrome://profile/locale/newProfile1_2.properties");
+var bundle = srGetStrBundle("chrome://communicator/locale/profile/newProfile1_2.properties");
 
 // the getting procedure is unique to each page, since each page can different
 // types of elements (not necessarily form elements). So each page must provide

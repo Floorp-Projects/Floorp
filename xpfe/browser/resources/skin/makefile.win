@@ -23,7 +23,7 @@ DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\navigator\skin\default
+DISTBROWSER=$(DIST)\bin\chrome\navigator\skin
 
 install::
 	$(MAKE_INSTALL) .\alertl.gif $(DISTBROWSER)

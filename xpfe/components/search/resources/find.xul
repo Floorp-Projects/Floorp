@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://search/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://search/locale/find.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/search/find.dtd">
 
 <window title="&window.title.label;" 
     class="dialog"
@@ -10,7 +10,7 @@
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<html:script src="chrome://search/content/find.js" />
+	<html:script src="chrome://communicator/content/search/find.js" />
 
 	<spring align="horizontal" flex="100%" />
 	<box align="horizontal" style="width: 100%;" >

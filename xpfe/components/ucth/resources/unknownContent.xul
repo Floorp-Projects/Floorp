@@ -2,7 +2,7 @@
 
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/unknownContent.dtd">
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"

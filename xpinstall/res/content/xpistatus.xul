@@ -22,10 +22,10 @@
     Don Bragg (dbragg@netscape.com) 12/08/1999
  -->
 
-<?xml-stylesheet href="chrome://xpinstall/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://xpinstall/skin/xpinstall.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://xpinstall/locale/xpistatus.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/xpinstall/xpistatus.dtd" >
 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -37,7 +37,7 @@
         class = "dialog"
         > 
 
-    <html:script language="javascript" src="chrome://xpinstall/content/xpistatus.js"/>
+    <html:script language="javascript" src="chrome://communicator/content/xpinstall/xpistatus.js"/>
 
     <box align="vertical" id="mainBox">
         <box align="horizontal" id="interiorTitleBox">

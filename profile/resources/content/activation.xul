@@ -21,9 +21,9 @@
 
 -->
 
-<?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://profile/locale/activation.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/activation.dtd">
 
 <window title="&window.title;" xmlns:html="http://www.w3.org/TR/REC-html40"
       class="dialog"
@@ -75,6 +75,6 @@ intervalID = setInterval("VerifyURL()", 1000);
 ]]>
 </html:script>
 
-<html:iframe src="chrome://profile/content/activationFrame.xul" flex="1"/>
+<html:iframe src="chrome://communicator/content/profile/activationFrame.xul" flex="1"/>
   
 </window>

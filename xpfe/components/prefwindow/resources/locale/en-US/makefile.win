@@ -24,33 +24,33 @@ DEPTH=..\..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install::
-	$(MAKE_INSTALL) pref-advanced.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-appearance.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-applications.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-cache.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-charset.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-colors.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-cookies.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-themes.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-composer.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-download.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-debug.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-fonts.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-languages.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-navigator.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-offline.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-proxies.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-proxy-manual.dtd $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-publish.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-search.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-smart_browsing.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-smartupdate.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) PrefsWindow.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) prefutilities.properties  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) preftree.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-wallet.dtd  $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) pref-mousewheel.dtd  $(DIST)\bin\chrome\pref\locale\en-US
+	$(MAKE_INSTALL) pref-advanced.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-appearance.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-applications.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-cache.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-charset.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-colors.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-cookies.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-themes.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-composer.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-download.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-debug.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-fonts.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-languages.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-navigator.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-offline.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-proxies.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-proxy-manual.dtd $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-publish.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-search.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-smart_browsing.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-smartupdate.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) PrefsWindow.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) prefutilities.properties  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) preftree.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-wallet.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-mousewheel.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 
 clobber::
-  rm -f $(DIST)\bin\chrome\pref\locale\en-US\*.*
+  rm -f $(DIST)\bin\chrome\communicator\locale\pref\*.*

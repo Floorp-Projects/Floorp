@@ -71,7 +71,7 @@ static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define cookie_strictDomainsPref "network.cookie.strictDomains"
 #define cookie_lifetimePref "network.cookie.lifetimeOption"
 #define cookie_lifetimeValue "network.cookie.lifetimeLimit"
-#define cookie_localization "chrome://wallet/locale/cookie.properties"
+#define cookie_localization "chrome://communicator/locale/wallet/cookie.properties"
 #define COOKIE_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
 
 //#define GET_ALL_PARTS              127

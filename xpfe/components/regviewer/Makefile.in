@@ -34,7 +34,10 @@ XPIDLSRCS	= nsIRegistryDataSource.idl
 
 CPPSRCS		= nsRegistryDataSource.cpp
 
-CHROME_DIR	= regviewer
+CHROME_DIR	= communicator
+CHROME_CONTENT_DIR = content/regviewer
+CHROME_L10N_DIR = locale/regviewer
+CHROME_SKIN_DIR = skin/regviewer
 
 CHROME_CONTENT	= \
 		regviewer.xul \
@@ -43,7 +46,7 @@ CHROME_CONTENT	= \
 
 CHROME_SKIN	= regviewer.css
 
-CHROME_L10N	= locale/en-US/regviewer.dtd
+EXPORT_RESOURCE_LOCALE	= locale/en-US/regviewer.dtd
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
@@ -52,4 +55,7 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE_LOCALE) $(DIST)/bin/chrome/communicator/locale/regviewer
 

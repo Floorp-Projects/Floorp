@@ -29,4 +29,4 @@ install::
 	$(MAKE_INSTALL) platformHTMLBindings.xml $(DISTBROWSER)
 	
 clobber::
-  rm -f $(DIST)\bin\chrome\global\content\default\*.*
+  rm -f $(DIST)\bin\chrome\global\content\*.*

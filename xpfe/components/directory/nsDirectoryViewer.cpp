@@ -1438,7 +1438,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), "chrome://directory/content/");
+  rv = NS_NewURI(getter_AddRefs(uri), "chrome://communicator/content/directory/directory.xul");
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIChannel> channel;

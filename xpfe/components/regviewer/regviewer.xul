@@ -22,9 +22,9 @@
 
 -->
 
-<?xml-stylesheet type="text/css" href="chrome://regviewer/skin/" type="text/css"?>
+<?xml-stylesheet type="text/css" href="chrome://communicator/skin/regviewer/regviewer.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://regviewer/locale/regviewer.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/regviewer/regviewer.dtd">
 
 <window title="&regviewerWindowTitle.label;"
         xmlns:html="http://www.w3.org/TR/REC-html40"

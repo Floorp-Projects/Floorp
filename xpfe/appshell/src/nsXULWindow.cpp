@@ -1121,7 +1121,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    nsEventQueueStack queuePusher;
    NS_ENSURE_SUCCESS(queuePusher.Success(), NS_ERROR_FAILURE);
 
-   char * urlStr = "chrome://navigator/content/";
+   char * urlStr = "chrome://navigator/content/navigator.xul";
    nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID));
    NS_ENSURE_TRUE(service, NS_ERROR_FAILURE);
 

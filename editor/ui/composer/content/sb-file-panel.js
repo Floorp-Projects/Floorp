@@ -33,7 +33,7 @@ function FileProperties()
 	// don't bother showing properties on bookmark separators
 	var type = tree.selectedItems[0].getAttribute('type');
     if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator") {
-		var props = window.open("chrome://bookmarks/content/bm-props.xul",
+		var props = window.open("chrome://communicator/content/bookmarks/bm-props.xul",
                                 "BookmarkProperties", "chrome,menubar,resizable");
 		props.BookmarkURL = tree.selectedItems[0].getAttribute("id");
 	}

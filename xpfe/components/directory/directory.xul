@@ -22,9 +22,9 @@
 
 -->
 
-<?xml-stylesheet href="chrome://directory/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/directory/directory.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://directory/locale/directory.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/directory/directory.dtd">
 
 <window style="overflow: auto"
   title="&directoryWindowTitle.label;" 

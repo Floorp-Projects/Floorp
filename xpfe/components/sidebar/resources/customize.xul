@@ -18,11 +18,11 @@
 
 -->
 
-<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://sidebar/skin/customize.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://sidebar/locale/customize.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/customize.dtd" >
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -33,7 +33,7 @@
   windowtype="sidebar:customize"
   align="vertical">
 
-  <html:script src="chrome://sidebar/content/customize.js" />
+  <html:script src="chrome://communicator/content/sidebar/customize.js" />
 
   <box id="header" type="largeheader" value="&sidebar.customize.title.label;"/>
 

@@ -638,7 +638,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 			}
 			else
 			{
-				window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
+				window.openDialog("chrome://communicator/content/search/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
 			}
 		}
 		else 
@@ -831,7 +831,7 @@ function BrowserEditBookmarks()
     }
     gDisableBookmarks = true;
 
-    window.open("chrome://bookmarks/content/", "_blank", "chrome,menubar,resizable,scrollbars");
+    window.open("chrome://communicator/content/bookmarks/bookmarks.xul", "_blank", "chrome,menubar,resizable,scrollbars");
     setTimeout(enableBookmarks, 2000);
   }
 }
@@ -1069,17 +1069,17 @@ function BrowserEditBookmarks()
 
   function OpenMessenger()
   {
-	window.open("chrome://messenger/content/", "_blank", "chrome,menubar,toolbar,resizable");
+	window.open("chrome://messenger/content/messenger.xul", "_blank", "chrome,menubar,toolbar,resizable");
   }
 
   function OpenAddressbook()
   {
-	window.open("chrome://addressbook/content/", "_blank", "chrome,menubar,toolbar,resizable");
+	window.open("chrome://messenger/content/addressbook/addressbook.xul", "_blank", "chrome,menubar,toolbar,resizable");
   }
 
   function BrowserSendLink(pageUrl, pageTitle)
   {
-    window.openDialog( "chrome://messengercompose/content/", "_blank", 
+    window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
                        "chrome,all,dialog=no",
                        "body='" + pageUrl + "',subject='" + pageTitle +
                        "',bodyislink=true");
@@ -1087,7 +1087,7 @@ function BrowserEditBookmarks()
 
   function BrowserSendPage(pageUrl, pageTitle)
   {
-    window.openDialog( "chrome://messengercompose/content/", "_blank", 
+    window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
                        "chrome,all,dialog=no", 
                        "attachment='" + pageUrl + "',body='" + pageUrl +
                        "',subject='" + pageTitle + "',bodyislink=true");

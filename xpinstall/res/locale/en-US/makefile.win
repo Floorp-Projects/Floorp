@@ -26,14 +26,14 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install::
-	$(MAKE_INSTALL) progress.dtd   $(DIST)\bin\chrome\xpinstall\locale\en-US
-	$(MAKE_INSTALL) xpistatus.dtd  $(DIST)\bin\chrome\xpinstall\locale\en-US
-	$(MAKE_INSTALL) xpinstall.properties $(DIST)\bin\chrome\xpinstall\locale\en-US
-	$(MAKE_INSTALL) institems.dtd $(DIST)\bin\chrome\xpinstall\locale\en-US
+	$(MAKE_INSTALL) progress.dtd   $(DIST)\bin\chrome\communicator\locale\xpinstall
+	$(MAKE_INSTALL) xpistatus.dtd  $(DIST)\bin\chrome\communicator\locale\xpinstall
+	$(MAKE_INSTALL) xpinstall.properties $(DIST)\bin\chrome\communicator\locale\xpinstall
+	$(MAKE_INSTALL) institems.dtd $(DIST)\bin\chrome\communicator\locale\xpinstall
 	
 
 clobber::
-  rm -f $(DIST)\bin\chrome\xpinstall\locale\en-US\progress.dtd
-  rm -f $(DIST)\bin\chrome\xpinstall\locale\en-US\xpistatus.dtd
-  rm -f $(DIST)\bin\chrome\xpinstall\locale\en-US\xpinstall.properties
-  rm -f $(DIST)\bin\chrome\xpinstall\locale\en-US\institems.dtd
+  rm -f $(DIST)\bin\chrome\communicator\locale\xpinstall\progress.dtd
+  rm -f $(DIST)\bin\chrome\communicator\locale\xpinstall\xpistatus.dtd
+  rm -f $(DIST)\bin\chrome\communicator\locale\xpinstall\xpinstall.properties
+  rm -f $(DIST)\bin\chrome\communicator\locale\xpinstall\institems.dtd

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://profile/skin/profileManager.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/profile/profileManager.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://profile/locale/profileManagerMigrateAll.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/profileManagerMigrateAll.dtd" >
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"

@@ -21,10 +21,10 @@ Contributor(s):
    Don Bragg (dbragg@netscape.com)
 -->
 
-<?xml-stylesheet href="chrome://xpinstall/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://xpinstall/skin/xpinstall.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://xpinstall/locale/institems.dtd">
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/xpinstall/institems.dtd">
 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -35,7 +35,7 @@ Contributor(s):
         align = "vertical"
 > 
 
-    <html:script language="javascript" src="chrome://xpinstall/content/institems.js"/>
+    <html:script language="javascript" src="chrome://communicator/content/xpinstall/institems.js"/>
     
     <box align="vertical" id="mainBox">
         <box align="horizontal" id="interiorTitleBox">

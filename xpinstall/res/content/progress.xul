@@ -1,7 +1,7 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://xpinstall/locale/progress.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/xpinstall/progress.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

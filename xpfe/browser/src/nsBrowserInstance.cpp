@@ -797,7 +797,7 @@ nsBrowserInstance::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
    void* mark;
    jsval* argv;
 
-   argv = JS_PushArguments(jsContext, &mark, "sss", "chrome://wallet/content/WalletPreview.xul", "_blank", 
+   argv = JS_PushArguments(jsContext, &mark, "sss", "chrome://communicator/content/wallet/WalletPreview.xul", "_blank", 
                   //"chrome,dialog=yes,modal=yes,all");
                   "chrome,modal=yes,dialog=yes,all,width=504,height=436");
    NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
@@ -1930,7 +1930,7 @@ nsBrowserContentHandler::~nsBrowserContentHandler()
 {
 }
 
-CMDLINEHANDLER2_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","chrome://navigator/content/","Start with browser.",NS_BROWSERSTARTUPHANDLER_PROGID,"Browser Startup Handler", PR_TRUE, PR_FALSE)
+CMDLINEHANDLER2_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","chrome://navigator/content/navigator.xul","Start with browser.",NS_BROWSERSTARTUPHANDLER_PROGID,"Browser Startup Handler", PR_TRUE, PR_FALSE)
 
 NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs) 
 { 

@@ -44,7 +44,7 @@
 
 #define NS_XPI_UPDATE_NOTIFIER_PROGID "component://mozilla/xpinstall/notifier"
 
-#define BASE_DATASOURCE_URL "chrome://xpinstall/content/SoftwareUpdates.rdf"
+#define BASE_DATASOURCE_URL "chrome://communicator/content/xpinstall/SoftwareUpdates.rdf"
 
 
 

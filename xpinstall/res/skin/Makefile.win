@@ -25,8 +25,8 @@ DEPTH=..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-  $(MAKE_INSTALL) xpinstall.css $(DIST)\bin\chrome\xpinstall\skin\default
+  $(MAKE_INSTALL) xpinstall.css $(DIST)\bin\chrome\communicator\skin\xpinstall
 
 clobber::
-  rm -f $(DIST)\bin\chrome\xpinstall\skin\default\xpistall.css
+  rm -f $(DIST)\bin\chrome\communicator\skin\xpinstall\xpistall.css
 

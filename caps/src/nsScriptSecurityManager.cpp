@@ -790,7 +790,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
     return NS_OK;
 }
 
-#define PROPERTIES_URL "chrome://security/locale/security.properties"
+#define PROPERTIES_URL "chrome://communicator/locale/security/security.properties"
 
 nsresult
 Localize(char *genericString, nsString &result) 

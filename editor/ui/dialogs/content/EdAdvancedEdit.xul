@@ -25,7 +25,7 @@
 <!-- first checkin of the year 2000!      -->
 <!-- Ben Goodger, 12:50AM, 01/00/00 NZST  -->
 
-<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>

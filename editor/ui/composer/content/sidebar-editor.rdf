@@ -48,7 +48,7 @@
     <RDF:li>
        <RDF:Description ID="flash">
          <NC:title>&sidebar.flash.label;</NC:title>
-         <NC:content>chrome://sidebar/content/flash.xul</NC:content>
+         <NC:content>chrome://communicator/content/sidebar/flash.xul</NC:content>
          <NC:height>5em</NC:height>
        </RDF:Description>
     </RDF:li>

@@ -1,6 +1,6 @@
 function prefCacheSelectFolder()
 {
-  bundle = srGetStrBundle("chrome://pref/locale/prefutilities.properties");
+  bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
   var folderField = document.getElementById("browserCacheDirectory");
   var file = getFileOrFolderSpec( bundle.GetStringFromName("cachefolder"), true );
   if ( file && file != -1 )

@@ -63,7 +63,7 @@ static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-#define XPINSTALL_BUNDLE_URL "chrome://xpinstall/locale/xpinstall.properties"
+#define XPINSTALL_BUNDLE_URL "chrome://communicator/locale/xpinstall/xpinstall.properties"
 
 nsXPInstallManager::nsXPInstallManager()
   : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), 
@@ -181,7 +181,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
           jsval *argv = JS_PushArguments( jsContext,
                                           &stackPtr,
                                           "sss%ip",
-                                          "chrome://xpinstall/content/institems.xul",
+                                          "chrome://communicator/content/xpinstall/institems.xul",
                                           "_blank",
                                           "chrome,modal",
                                           (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),

@@ -49,5 +49,5 @@ EXPORT_RESOURCE_CONTENT := \
 EXPORT_RESOURCE_CONTENT := $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_CONTENT))
 
 install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/skin/default
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/skin
 

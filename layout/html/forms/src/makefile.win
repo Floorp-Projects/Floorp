@@ -97,7 +97,7 @@ install:: $(LIBRARY)
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-	rm -f $(DIST)\bin\chrome\layout\locale\en-US\HtmlForm.properties
+	rm -f $(DIST)\bin\chrome\communicator\locale\layout\HtmlForm.properties
 
 install:: $(DLL)
-	$(MAKE_INSTALL) HtmlForm.properties $(DIST)\bin\chrome\layout\locale\en-US
+	$(MAKE_INSTALL) HtmlForm.properties $(DIST)\bin\chrome\communicator\locale\layout

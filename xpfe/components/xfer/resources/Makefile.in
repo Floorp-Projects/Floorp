@@ -27,16 +27,22 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 CHROME_DIR	= global
+CHROME_CONTENT_DIR = content
+CHROME_L10N_DIR = locale
+CHROME_SKIN_DIR = skin
 
 CHROME_CONTENT	= \
 	downloadProgress.xul \
 	downloadProgress.js \
 	$(NULL)
 
-CHROME_L10N	= \
+EXPORT_RESOURCE_LOCALE	= \
 	locale/en-US/downloadProgress.dtd \
 	locale/en-US/downloadProgress.properties \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE_LOCALE) $(DIST)/bin/chrome/global/locale
 

@@ -24,8 +24,8 @@
   -->
 
 
-<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebar.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/sidebar-editor.dtd" >
 <window
@@ -35,7 +35,7 @@
   onload="Init('chrome://editor/content/sidebar-editor.rdf',
                'NC:EditorSidebarRoot');" align="vertical">
 
-<script src="chrome://sidebar/content/sidebar.js" />
+<script src="chrome://communicator/content/sidebar/sidebar.js" />
 <box id="sidebox" align="vertical" flex="100%">
  <box class="sidebartitle">
   <spring flex="100%"/>

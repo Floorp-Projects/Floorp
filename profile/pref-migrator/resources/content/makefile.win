@@ -30,4 +30,4 @@ FILES=\
         $(NULL)
 
 install::
-        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\chrome\profile\content\default
+        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\chrome\communicator\content\profile

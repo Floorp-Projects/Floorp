@@ -26,7 +26,7 @@
 
 */
 
-@import url(chrome://global/skin/);
+@import url(chrome://global/skin/global.css);
 
 treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > .tree-icon
 {
@@ -42,15 +42,15 @@ treeitem[container="true"] > treerow > treecell > .tree-icon {
 }
 
 treeitem[container="true"][id="NC:SiteMapRoot"] > treerow > treecell > .tree-icon {
-    list-style-image: url("chrome://related/skin/sitemap.gif");
+    list-style-image: url("chrome://communicator/skin/related/sitemap.gif");
 }
 
 treeitem[container="true"][open="true"][id="NC:SiteMapRoot"] > treerow > treecell > .tree-icon {
-    list-style-image: url("chrome://related/skin/sitemap.gif");
+    list-style-image: url("chrome://communicator/skin/related/sitemap.gif");
 }
 
 treeitem > treerow > treecell > .tree-icon {
-    list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
+    list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
 }
 
 treeitem > treerow > treecell > .tree-icon > .twisty {

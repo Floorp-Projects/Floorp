@@ -24,8 +24,8 @@ DEPTH=..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
  
 install::
-	$(MAKE_INSTALL) warn.xul        $(DIST)\bin\chrome\timebomb\content\default
-    $(MAKE_INSTALL) expireText.xul  $(DIST)\bin\chrome\timebomb\content\default
+	$(MAKE_INSTALL) warn.xul        $(DIST)\bin\chrome\communicator\content\timebomb
+    $(MAKE_INSTALL) expireText.xul  $(DIST)\bin\chrome\communicator\content\timebomb
 
 clobber::
-  rm -f $(DIST)\bin\chrome\timebomb\content\default\*.*
+  rm -f $(DIST)\bin\chrome\communicator\content\timebomb\*.*

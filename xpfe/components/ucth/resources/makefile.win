@@ -26,8 +26,10 @@ DEPTH=..\..\..\..
 DIRS=locale
 
 CHROME_DIR = global
+CHROME_CONTENT_DIR = content
+CHROME_L10N_DIR = locale
+CHROME_SKIN_DIR = skin
 
-CHROME_CONTENT_DIR = content\default
 
 CHROME_CONTENT=\
     .\unknownContent.xul \
@@ -36,9 +38,12 @@ CHROME_CONTENT=\
 
 CHROME_SKIN=
 
-CHROME_L10N=\
-    .\locale\en-US\unknownContent.dtd \
-    .\locale\en-US\unknownContent.properties \
-    $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
+
+install::
+	$(MAKE_INSTALL)	.\locale\en-US\unknownContent.dtd	$(DIST)\bin\chrome\global\locale
+	$(MAKE_INSTALL)	.\locale\en-US\unknownContent.properties	$(DIST)\bin\chrome\global\locale
+
+clobber::
+	rm -f $(DIST)\bin\chrome\global\locale\unknownContent.dtd
+	rm -f $(DIST)\bin\chrome\global\locale\unknownContent.properties

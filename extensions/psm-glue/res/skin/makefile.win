@@ -26,16 +26,16 @@ include <$(DEPTH)/config/config.mak>
 include <$(DEPTH)\config\rules.mak>
 
 install::
-    $(MAKE_INSTALL) broken.gif                 $(DIST)\bin\chrome\navigator\skin\default
-    $(MAKE_INSTALL) lock.gif                   $(DIST)\bin\chrome\navigator\skin\default
-    $(MAKE_INSTALL) unlock.gif                 $(DIST)\bin\chrome\navigator\skin\default
-    $(MAKE_INSTALL) NavSecurityOverlay.css     $(DIST)\bin\chrome\navigator\skin\default
+    $(MAKE_INSTALL) broken.gif                 $(DIST)\bin\chrome\navigator\skin
+    $(MAKE_INSTALL) lock.gif                   $(DIST)\bin\chrome\navigator\skin
+    $(MAKE_INSTALL) unlock.gif                 $(DIST)\bin\chrome\navigator\skin
+    $(MAKE_INSTALL) NavSecurityOverlay.css     $(DIST)\bin\chrome\navigator\skin
     
 clobber::
-    rm $(DIST)\bin\chrome\navigator\skin\default\broken.gif
-    rm $(DIST)\bin\chrome\navigator\skin\default\lock.gif
-    rm $(DIST)\bin\chrome\navigator\skin\default\unlock.gif
-    rm $(DIST)\bin\chrome\navigator\skin\default\NavSecurityOverlay.css
+    rm $(DIST)\bin\chrome\navigator\skin\broken.gif
+    rm $(DIST)\bin\chrome\navigator\skin\lock.gif
+    rm $(DIST)\bin\chrome\navigator\skin\unlock.gif
+    rm $(DIST)\bin\chrome\navigator\skin\NavSecurityOverlay.css
 
     
     

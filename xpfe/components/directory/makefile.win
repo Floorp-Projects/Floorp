@@ -23,9 +23,10 @@ DEPTH=..\..\..
 
 DIRS=locale
 
-CHROME_DIR         = directory
-CHROME_CONTENT_DIR = content\default
-CHROME_SKIN_DIR    = skin\default
+CHROME_DIR         = communicator
+CHROME_CONTENT_DIR = content\directory
+CHROME_L10N_DIR = locale\directory
+CHROME_SKIN_DIR = skin\directory
 
 CHROME_CONTENT = \
         .\directory.xul \
@@ -34,10 +35,6 @@ CHROME_CONTENT = \
 
 CHROME_SKIN = \
         .\directory.css \
-        $(NULL)
-
-CHROME_L10N = \
-        .\locale\en-US\directory.dtd    \
         $(NULL)
 
 MODULE=directory
@@ -74,4 +71,8 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+	$(MAKE_INSTALL)	.\locale\en-US\directory.dtd	$(DIST)\bin\chrome\communicator\locale\directory
+
+clobber::
+	rm -f $(DIST)\bin\chrome\communicator\locale\directory\directory.dtd
 

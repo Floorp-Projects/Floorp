@@ -652,7 +652,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     nsCOMPtr<nsIChannel> result;
 
     // Canonify the "chrome:" URL; e.g., so that we collapse
-    // "chrome://navigator/content/" and "chrome://navigator/content"
+    // "chrome://navigator/content/navigator.xul" and "chrome://navigator/content"
     // and "chrome://navigator/content/navigator.xul".
     NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
     if (NS_FAILED(rv)) return rv;

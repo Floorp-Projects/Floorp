@@ -23,7 +23,7 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\content\default
+DISTBROWSER=$(DIST)\bin\chrome\global\content
 
 
 install::
@@ -35,4 +35,4 @@ install::
 	$(MAKE_INSTALL) platformEditorBindings.xul $(DISTBROWSER)
 
 clobber::
-  rm -f $(DIST)\bin\chrome\global\content\default\*.*
+  rm -f $(DIST)\bin\chrome\global\content\*.*

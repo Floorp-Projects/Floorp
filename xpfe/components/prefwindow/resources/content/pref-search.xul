@@ -21,17 +21,17 @@
    Contributor(s): Robert John Churchill (rjc@netscape.com)
   -->
 
-<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-search.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-search.dtd" >
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
         class="dialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="if( parent.handle ) parent.handle.onpageload( 'pref-search' ); else parent.queuedTag = 'pref-search'; InitSingleEngineList(); "  title="&title.label;"
 	      orient="vertical">
 
-	<html:script language="javascript" src="chrome://pref/content/pref-search.js"/>
+	<html:script language="javascript" src="chrome://communicator/content/pref/pref-search.js"/>
 
   <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
 

@@ -309,7 +309,7 @@ function doDelete(promptFlag)
 
 	if (promptFlag == true)
 	{
-		var bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
+		var bundle = srGetStrBundle("chrome://communicator/locale/bookmarks/bookmark.properties");
 		var deleteStr = bundle.GetStringFromName("DeleteItems");
 		var ok = confirm(deleteStr);
 		if (!ok)	return(false);
@@ -414,7 +414,7 @@ function BookmarkProperties()
       var type = select_list[0].getAttribute('type');
       if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
         {
-          window.openDialog("chrome://bookmarks/content/bm-props.xul",
+          window.openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
                             "_blank", "centerscreen,chrome,menubar",
                             select_list[0].getAttribute("id"));
         }
@@ -426,7 +426,7 @@ function BookmarkProperties()
 
 function OpenBookmarksFind()
 {
-	window.openDialog("chrome://bookmarks/content/bm-find.xul", "FindBookmarksWindow", "centerscreen,dialog=no,close,chrome,resizable");
+	window.openDialog("chrome://communicator/content/bookmarks/bm-find.xul", "FindBookmarksWindow", "centerscreen,dialog=no,close,chrome,resizable");
 	return(true);
 }
 
@@ -714,7 +714,7 @@ function fillContextMenu(name)
 			}
 
 			// and then add a "Properties" menu items
-			var bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
+			var bundle = srGetStrBundle("chrome://communicator/locale/bookmarks/bookmark.properties");
 			var propMenuName = bundle.GetStringFromName("BookmarkProperties");
 			var menuItem = document.createElement("menuitem");
 			menuItem.setAttribute("value", propMenuName);
@@ -737,7 +737,7 @@ function doContextCmd(cmdName)
 {
 	debug("doContextCmd start: cmd='" + cmdName + "'");
 
-	var bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
+	var bundle = srGetStrBundle("chrome://communicator/locale/bookmarks/bookmark.properties");
 
 	// do some prompting/confirmation for various bookmark commands that we know about;
 	// if we have values to pass it, they are added to the arguments array

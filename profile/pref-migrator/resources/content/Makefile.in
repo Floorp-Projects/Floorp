@@ -35,4 +35,4 @@ FILES		= \
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/chrome/profile/content/default
+	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/chrome/communicator/content/profile

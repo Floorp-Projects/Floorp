@@ -24,7 +24,7 @@ DEPTH=..\..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install::
-	$(MAKE_INSTALL) timebomb.dtd  $(DIST)\bin\chrome\timebomb\locale\en-US
+	$(MAKE_INSTALL) timebomb.dtd  $(DIST)\bin\chrome\communicator\locale\timebomb
 
 clobber::
-  rm -f $(DIST)\bin\chrome\timebomb\locale\en-US\*.*
+  rm -f $(DIST)\bin\chrome\communicator\locale\timebomb\*.*

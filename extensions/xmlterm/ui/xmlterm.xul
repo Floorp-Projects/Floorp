@@ -21,7 +21,7 @@
 
 -->
 
-<?xml-stylesheet href="chrome://xmlterm/skin/xmlterm.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/xmlterm/xmlterm.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 <!DOCTYPE window>
@@ -30,9 +30,9 @@
         onload="StartupXMLTerm();"
         title="xmlterm" align="vertical" width="586" height="412">
   
-  <html:script src="chrome://xmlterm/content/XMLTermChrome.js"></html:script>
+  <html:script src="chrome://communicator/content/xmlterm/XMLTermChrome.js"></html:script>
 
   <html:iframe id="content-frame" type="content" html:name="content"
-               html:src="chrome://xmlterm/content/xmlterm.html" flex="100%"/>
+               html:src="chrome://communicator/content/xmlterm/xmlterm.html" flex="100%"/>
 
 </window>

@@ -51,7 +51,7 @@ function goOpenNewMessage()
 
 function goNewCardDialog(selectedAB)
 {
-	window.openDialog("chrome://addressbook/content/abNewCardDialog.xul",
+	window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
 					  "",
 					  "chrome,resizeable=no,modal",
 					  {selectedAB:selectedAB});
@@ -60,7 +60,7 @@ function goNewCardDialog(selectedAB)
 
 function goEditCardDialog(abURI, card, okCallback)
 {
-	window.openDialog("chrome://addressbook/content/abEditCardDialog.xul",
+	window.openDialog("chrome://messenger/content/addressbook/abEditCardDialog.xul",
 					  "",
 					  "chrome,resizeable=no,modal",
 					  {abURI:abURI, card:card, okCallback:okCallback});
@@ -82,7 +82,7 @@ function goPreferences(id, pane)
   }
   var modality = prefWindowModalityPref ? "yes" : "no";
   
-  var prefWindow = window.openDialog("chrome://pref/content/pref.xul","PrefWindow", "chrome,modal=" + modality + ",resizable=yes", pane);
+  var prefWindow = window.openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", "chrome,modal=" + modality + ",resizable=yes", pane);
 }
 
 
@@ -331,7 +331,7 @@ function SendPage()
 {
   var pageUrl = window.content.location.href;
   var pageTitle =  window.content.document.title;
-  window.openDialog( "chrome://messengercompose/content/", "_blank", 
+  window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
                      "chrome,all,dialog=no", 
                      "attachment='" + pageUrl + "',body='" + pageUrl +
                      "',subject='" + pageTitle + "',bodyislink=true");

@@ -147,7 +147,7 @@ function PrefCacheSelectFolder() {
 }
 
 function OpenProxyManualDialog() {
-	var dialog = window.openDialog("chrome://pref/content/pref-proxy-manual.xul", "", "chrome", {});
+	var dialog = window.openDialog("chrome://communicator/content/pref/pref-proxy-manual.xul", "", "chrome", {});
 }
 
 
@@ -168,7 +168,7 @@ function onOK()
 	}
 	if (prefwindow)
 	{
-		prefwindow.changePanel("chrome://prefs/content/pref-proxies.xul");
+		prefwindow.changePanel("chrome://communicator/content/prefs/pref-proxies.xul");
 	}
 	return true
 }

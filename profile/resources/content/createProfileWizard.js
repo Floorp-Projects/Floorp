@@ -47,7 +47,7 @@ function Startup( startPage, frame_id )
   
   // instantiate the Wizard Manager
   wizardManager                   = new WizardManager( frame_id, null, null, wizardMap );
-  wizardManager.URL_PagePrefix    = "chrome://profile/content/";
+  wizardManager.URL_PagePrefix    = "chrome://communicator/content/profile/profile.xul";
   wizardManager.URL_PagePostfix   = ".xul";
 
   // set the button handler functions
@@ -167,5 +167,5 @@ function ExitApp()
 }
 
 // load string bundle
-var bundle = srGetStrBundle("chrome://profile/locale/createProfileWizard.properties");
-var pmbundle = srGetStrBundle("chrome://profile/locale/profileManager.properties");
+var bundle = srGetStrBundle("chrome://communicator/locale/profile/createProfileWizard.properties");
+var pmbundle = srGetStrBundle("chrome://communicator/locale/profile/profileManager.properties");

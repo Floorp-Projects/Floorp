@@ -180,7 +180,7 @@
 /* and the winner is:  Windows */
 #define PREF_FILE_NAME_IN_5x "prefs.js"
 
-#define PREF_MIGRATION_PROGRESS_URL "chrome://profile/content/profileMigrationProgress.xul"
+#define PREF_MIGRATION_PROGRESS_URL "chrome://communicator/content/profile/profileMigrationProgress.xul"
 
 typedef struct
 {

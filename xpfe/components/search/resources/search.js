@@ -12,14 +12,14 @@ function loadPage(thePage, searchStr)
 	if (thePage == "find")
 	{
 		tabName="findTab";
-		content="chrome://search/content/find.xul";
-		results="chrome://search/content/findresults.xul";
+		content="chrome://communicator/content/search/find.xul";
+		results="chrome://communicator/content/search/findresults.xul";
 	}
 	else if (thePage == "internet")
 	{
 		tabName="internetTab";
-		content="chrome://search/content/internet.xul";
-		results="chrome://search/content/internetresults.xul";
+		content="chrome://communicator/content/search/internet.xul";
+		results="chrome://communicator/content/search/internetresults.xul";
 
 		if ((searchStr) && (searchStr != null))
 		{

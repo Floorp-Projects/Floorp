@@ -21,9 +21,10 @@
 
 DEPTH=..\..\..\..
 
-CHROME_DIR = sidebar
-CHROME_CONTENT_DIR = content\default
-CHROME_SKIN_DIR = skin\default
+CHROME_DIR = communicator
+CHROME_CONTENT_DIR = content\sidebar
+CHROME_L10N_DIR = locale\sidebar
+CHROME_SKIN_DIR = skin\sidebar
 
 CHROME_CONTENT = \
         .\customize-panel.js \
@@ -51,12 +52,16 @@ CHROME_SKIN = \
 	.\sidebar-topright-cap.gif \
         $(NULL)
 
-CHROME_L10N = \
-        .\locale\en-US\customize.dtd \
-	.\locale\en-US\preview.dtd \
-        .\locale\en-US\local-panels.dtd \
-        .\locale\en-US\sidebarOverlay.dtd \
-        $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
+install::
+	$(MAKE_INSTALL)	.\locale\en-US\customize.dtd	$(DIST)\bin\chrome\communicator\locale\sidebar
+	$(MAKE_INSTALL)	.\locale\en-US\preview.dtd	$(DIST)\bin\chrome\communicator\locale\sidebar
+	$(MAKE_INSTALL)	.\locale\en-US\local-panels.dtd	$(DIST)\bin\chrome\communicator\locale\sidebar
+	$(MAKE_INSTALL)	.\locale\en-US\sidebarOverlay.dtd	$(DIST)\bin\chrome\communicator\locale\sidebar
+
+clobber::
+	rm -f $(DIST)\bin\chrome\communicator\locale\sidebar\customize.dtd
+	rm -f $(DIST)\bin\chrome\communicator\locale\sidebar\preview.dtd
+	rm -f $(DIST)\bin\chrome\communicator\locale\sidebar\local-panels.dtd
+	rm -f $(DIST)\bin\chrome\communicator\locale\sidebar\sidebarOverlay.dtd

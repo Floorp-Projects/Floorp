@@ -22,7 +22,7 @@
  *   Ben Goodger <ben@netscape.com>
  */
 
-var bundle = srGetStrBundle("chrome://profile/locale/profileManager.properties");
+var bundle = srGetStrBundle("chrome://communicator/locale/profile/profileManager.properties");
 var profileManagerMode = "selection";
 var set = null;
 
@@ -30,7 +30,7 @@ var set = null;
 function CreateProfileWizard()
 {
   // Need to call CreateNewProfile xuls
-  window.openDialog('chrome://profile/content/createProfileWizard.xul', 'CPW', 'chrome,modal=yes');
+  window.openDialog('chrome://communicator/content/profile/createProfileWizard.xul', 'CPW', 'chrome,modal=yes');
 }
 
 // update the display to show the additional profile
@@ -132,7 +132,7 @@ function ConfirmDelete()
       return false;
   }
 
-  var win = window.openDialog('chrome://profile/content/deleteProfile.xul', 'Deleter', 'chrome,modal=yes');
+  var win = window.openDialog('chrome://communicator/content/profile/deleteProfile.xul', 'Deleter', 'chrome,modal=yes');
   return win;
 }
 

@@ -149,7 +149,7 @@ nsTimeBomb::CheckWithUI(PRBool *expired)
 #ifdef DEBUG
         printf("********  Expired version  ********\n");
 #endif
-        DisplayURI("chrome://timebomb/content/expireText.xul", PR_FALSE);
+        DisplayURI("chrome://communicator/content/timebomb/expireText.xul", PR_FALSE);
         *expired = PR_TRUE;
         return NS_OK;
     }
@@ -161,7 +161,7 @@ nsTimeBomb::CheckWithUI(PRBool *expired)
 #ifdef DEBUG
         printf("********  ABOUT TO EXPIRE  ********\n");
 #endif
-        DisplayURI("chrome://timebomb/content/warnText.xul", PR_FALSE);
+        DisplayURI("chrome://communicator/content/timebomb/warnText.xul", PR_FALSE);
     }
 
     return NS_OK;

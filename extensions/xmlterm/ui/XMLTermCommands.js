@@ -209,7 +209,7 @@ function SetPrompt(value) {
 
 // Create new XMLTerm window
 function NewXMLTerm(firstcommand) {
-  newwin = window.openDialog( "chrome://xmlterm/content/xmlterm.xul",
+  newwin = window.openDialog( "chrome://communicator/content/xmlterm/xmlterm.xul",
                               "xmlterm", "chrome,dialog=no,resizable",
                               firstcommand);
   dump("NewXMLTerm: "+newwin+"\n")

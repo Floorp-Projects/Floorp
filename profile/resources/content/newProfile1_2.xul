@@ -20,10 +20,10 @@
 
 <!-- this is PAGE TWO of the Profile Creation Wizard -->
 
-<?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://profile/skin/newProfile1_2.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/profile/newProfile1_2.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://profile/locale/newProfile1_2.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/newProfile1_2.dtd" >
 <window 
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog wizardPanel"
@@ -32,7 +32,7 @@
 	onload="initFields();parent.wizardManager.onPageLoad('newProfile1_2');"> 
 
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
-  <html:script language="JavaScript" src="chrome://profile/content/newProfile1_2.js"/>
+  <html:script language="JavaScript" src="chrome://communicator/content/profile/newProfile1_2.js"/>
 
   <html>&pnl2.intro.text;</html> 
   <html>&pnl2.pname.label;</html> 
