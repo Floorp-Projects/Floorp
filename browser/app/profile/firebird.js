@@ -574,11 +574,12 @@ pref("bidi.clipboardtextmode", 3);
 // ------------------
 //  Numeral Style
 // ------------------
-// 1 = regularcontextnumeralBidi *
+// 0 = nominalnumeralBidi *
+// 1 = regularcontextnumeralBidi
 // 2 = hindicontextnumeralBidi
 // 3 = arabicnumeralBidi
 // 4 = hindinumeralBidi
-pref("bidi.numeral", 1);
+pref("bidi.numeral", 0);
 // ------------------
 //  Support Mode
 // ------------------
