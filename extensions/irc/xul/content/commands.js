@@ -1540,7 +1540,7 @@ function cmdLeave(e)
             e.channelName = "#" + e.channelName;
 
         e.channelName = fromUnicode(e.channelName, e.network);
-        var key = e.channelName.toLowerCase();
+        var key = e.server.toLowerCase(e.channelName);
         if (key in e.server.channels)
             e.channel = e.server.channels[key];
         else
@@ -1921,7 +1921,8 @@ function cmdInvite(e)
     }
     else
     {
-        var encodeName = fromUnicode(e.channelName.toLowerCase(), e.network);
+        var encodeName = fromUnicode(e.server.toLowerCase(e.channelName), 
+                                     e.network);
         channel = e.server.channels[encodeName];
              
         if (!channel) 
@@ -1998,7 +1999,7 @@ function cmdNotify(e)
         
         for (var i in e.nicknameList)
         {
-            var nickname = e.nicknameList[i].toLowerCase();
+            var nickname = e.server.toLowerCase(e.nicknameList[i]);
             var idx = arrayIndexOf (net.prefs["notifyList"], nickname);
             if (idx == -1)
             {
@@ -2228,8 +2229,7 @@ function cmdIgnore(e)
 {
     if (("mask" in e) && e.mask)
     {
-        // FIXME: This is incorrect if CASEMAPPING is not ASCII, see bug 190749.
-        e.mask = e.mask.toLowerCase();
+        e.mask = e.server.toLowerCase(e.mask);
         
         if (e.command.name == "ignore")
         {

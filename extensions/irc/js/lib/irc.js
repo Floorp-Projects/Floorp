@@ -322,6 +322,49 @@ CIRCServer.prototype.DEFAULT_REASON = "no reason";
 
 CIRCServer.prototype.TYPE = "IRCServer";
 
+CIRCServer.prototype.toLowerCase =
+function serv_tolowercase(str)
+{
+    /* This is an implementation that lower-cases strings according to the 
+     * prevailing CASEMAPPING setting for the server. Values for this are:
+     *   
+     *   o  "ascii": The ASCII characters 97 to 122 (decimal) are defined as
+     *      the lower-case characters of ASCII 65 to 90 (decimal).  No other
+     *      character equivalency is defined.
+     *   o  "strict-rfc1459": The ASCII characters 97 to 125 (decimal) are
+     *      defined as the lower-case characters of ASCII 65 to 93 (decimal).
+     *      No other character equivalency is defined.
+     *   o  "rfc1459": The ASCII characters 97 to 126 (decimal) are defined as
+     *      the lower-case characters of ASCII 65 to 94 (decimal).  No other
+     *      character equivalency is defined.
+     * 
+     */
+     
+     function replaceFunction(chr)
+     {
+         return String.fromCharCode(chr.charCodeAt(0) + 32);
+     }
+     
+     var mapping = "rfc1459";
+     if (this.supports)
+         mapping = this.supports.casemapping;
+     
+     /* NOTE: There are NO breaks in this switch. This is CORRECT.
+      * Each mapping listed is a super-set of those below, thus we only
+      * transform the extra characters, and then fall through.
+      */
+     switch (mapping)
+     {
+         case "rfc1459":
+             str = str.replace(/\^/g, replaceFunction);
+         case "strict-rfc1459":
+             str = str.replace(/[\[\\\]]/g, replaceFunction);
+         case "ascii":
+             str = str.replace(/[A-Z]/g, replaceFunction);
+     }
+     return str;
+}
+
 CIRCServer.prototype.getURL =
 function serv_geturl(target)
 {
@@ -343,7 +386,7 @@ function serv_geturl(target)
 CIRCServer.prototype.getUser =
 function chan_getuser (nick) 
 {
-    nick = nick.toLowerCase();
+    nick = this.toLowerCase(nick);
 
     if (nick in this.users)
         return this.users[nick];
@@ -926,7 +969,7 @@ function serv_onRawData(e)
 CIRCServer.prototype.onParsedData = 
 function serv_onParsedData(e)
 {
-    e.type = e.code.toLowerCase();
+    e.type = this.toLowerCase(e.code);
     if (!e.code[0])
     {
         dd (dumpObjectTree (e));
@@ -984,7 +1027,7 @@ function serv_001 (e)
     if (e.params[1] != e.server.me.properNick)
     {
         renameProperty (e.server.users, e.server.me.nick,
-                        e.params[1].toLowerCase());
+                        this.toLowerCase(e.params[1]));
         e.server.me.changeNick(e.params[1]);
     }
     
@@ -1497,7 +1540,7 @@ CIRCServer.prototype.onNick =
 function serv_nick (e)
 {
     var newNick = e.params[1]; 
-    var newKey = newNick.toLowerCase();
+    var newKey = this.toLowerCase(newNick);
     var oldKey = e.user.nick;
     var ev;
     
@@ -1924,7 +1967,7 @@ function serv_dccsend (e)
 
 function CIRCChannel (parent, encodedName, unicodeName)
 {
-    this.normalizedName = encodedName.toLowerCase();
+    this.normalizedName = parent.toLowerCase(encodedName);
     this.name = this.normalizedName;
 
     if (this.normalizedName in parent.channels)
@@ -1982,7 +2025,7 @@ function chan_adduser (nick, modes)
 CIRCChannel.prototype.getUser =
 function chan_getuser (nick) 
 {
-    nick = nick.toLowerCase();
+    nick = this.parent.toLowerCase(nick);
 
     if (nick in this.users)
         return this.users[nick];
@@ -1993,7 +2036,7 @@ function chan_getuser (nick)
 CIRCChannel.prototype.removeUser =
 function chan_removeuser (nick)
 {
-    delete this.users[nick.toLowerCase()]; // see ya
+    delete this.users[this.parent.toLowerCase(nick)]; // see ya
 }
 
 CIRCChannel.prototype.getUsersLength = 
@@ -2265,7 +2308,7 @@ function chan_secret (f)
 function CIRCUser (parent, nick, name, host)
 {
     var properNick = nick;
-    nick = nick.toLowerCase();
+    nick = parent.toLowerCase(nick);
     if (nick in parent.users)
     {
         var existingUser = parent.users[nick];
@@ -2303,7 +2346,7 @@ CIRCUser.prototype.changeNick =
 function usr_changenick (nick)
 {
     this.properNick = nick;
-    this.nick = nick.toLowerCase();
+    this.nick = this.parent.toLowerCase(nick);
 }
 
 CIRCUser.prototype.getHostMask = 
@@ -2356,7 +2399,7 @@ function usr_whois ()
 function CIRCChanUser (parent, nick, modes)
 {
     var properNick = nick;
-    nick = nick.toLowerCase();    
+    nick = parent.parent.toLowerCase(nick);
 
     if (nick in parent.users)
     {

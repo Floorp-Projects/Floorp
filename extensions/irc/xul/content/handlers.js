@@ -350,9 +350,13 @@ function onTabCompleteRequest (e)
     if ("performTabMatch" in client.currentObject)
     {
         var word = line.substring (wordStart, wordEnd);
+        var wordLower = word.toLowerCase();
+        var d = getObjectDetails(client.currentObject);
+        if (d.server)
+            wordLower = d.server.toLowerCase(word);
         var matches = client.currentObject.performTabMatch (line, wordStart,
                                                             wordEnd,
-                                                            word.toLowerCase(),
+                                                            wordLower,
                                                             selStart);
         /* if we get null back, we're supposed to fail silently */
         if (!matches)
@@ -732,7 +736,7 @@ function my_303 (e)
     // split() gives an array of one item ("") when splitting "", which we
     // don't want, so only do the split if there's something to split.
     if (e.params[2])
-        onList = stringTrim(e.params[2].toLowerCase()).split(/\s+/);
+        onList = stringTrim(e.server.toLowerCase(e.params[2])).split(/\s+/);
     var offList = new Array();
     var newArrivals = new Array();
     var newDepartures = new Array();
@@ -896,7 +900,7 @@ function my_listrply (e)
 CIRCNetwork.prototype.on401 =
 function my_401 (e)
 {
-    var target = e.params[2].toLowerCase();
+    var target = e.server.toLowerCase(e.params[2]);
     if (target in this.users && "messages" in this.users[target])
     {
         this.users[target].displayHere(e.params[3]);
