@@ -12,30 +12,37 @@ function GetAddressBooksAndURIs(abArray, uriArray)
 {
 	var numAddressBooks = 0;
 	var selected = 0;
-	var body = document.getElementById('dirTreeBody')
-
-	if ( body )
+	var tree = document.getElementById('dirTree');
+	if ( tree )
 	{
-		var treeitems = body.getElementsByTagName('treeitem');
-		if ( treeitems )
+		var body = tree.getElementById('dirTreeBody')
+
+		if ( body )
 		{
-			var name, uri, item;
-			
-			for ( var index = 0; index < treeitems.length; index++ ) 
-			{ 
-				item = treeitems[index];
-				uri = item.getAttribute('id');
-				if ( item.getAttribute('selected') )
-					selected = numAddressBooks;
-				var buttons = item.getElementsByTagName('titledbutton');
-				if ( uri && buttons && buttons.length == 1 )
-				{
-					name = buttons[0].getAttribute('value');
-					if ( name )
+			var treeitems = body.getElementsByTagName('treeitem');
+			if ( treeitems )
+			{
+				var name, uri, item, selectedItem = 0;
+				
+				if ( tree.selectedItems && (tree.selectedItems.length == 1) )
+					selectedItem = tree.selectedItems[0];
+
+				for ( var index = 0; index < treeitems.length; index++ ) 
+				{ 
+					item = treeitems[index];
+					uri = item.getAttribute('id');
+					if ( item == selectedItem )
+						selected = numAddressBooks;
+					var buttons = item.getElementsByTagName('titledbutton');
+					if ( uri && buttons && buttons.length == 1 )
 					{
-						abArray[numAddressBooks] = name;
-						uriArray[numAddressBooks] = uri;
-						numAddressBooks++;
+						name = buttons[0].getAttribute('value');
+						if ( name )
+						{
+							abArray[numAddressBooks] = name;
+							uriArray[numAddressBooks] = uri;
+							numAddressBooks++;
+						}
 					}
 				}
 			}
@@ -61,11 +68,10 @@ function EditCard()
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
 	var resultsTree = document.getElementById('resultsTree');
-	var selArray = resultsTree.getElementsByAttribute('selected', 'true');
 
-	if ( selArray && selArray.length == 1 )
+	if ( resultsTree.selectedItems && resultsTree.selectedItems.length == 1 )
 	{
-		var uri = selArray[0].getAttribute('id');
+		var uri = resultsTree.selectedItems[0].getAttribute('id');
 		var card = rdf.GetResource(uri);
 		card = card.QueryInterface(Components.interfaces.nsIAbCard);
 		AbEditCardDialog(card, UpdateCardView);
@@ -91,12 +97,11 @@ function GetSelectedAddresses()
 	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
-	var selArray = resultsTree.getElementsByAttribute('selected', 'true');
-	if ( selArray && selArray.length )
+	if ( resultsTree.selectedItems && resultsTree.selectedItems.length )
 	{
-		for ( item = 0; item < selArray.length; item++ )
+		for ( item = 0; item < resultsTree.selectedItems.length; item++ )
 		{
-			uri = selArray[item].getAttribute('id');
+			uri = resultsTree.selectedItems[item].getAttribute('id');
 			cardResource = rdf.GetResource(uri);
 			card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
 			if ( selectedAddresses )
@@ -131,9 +136,8 @@ function ResultsPaneSelectionChange()
 	{
 		var tree = document.getElementById('resultsTree');
 		
-		var selArray = tree.selectedItems;
-		if ( selArray && (selArray.length == 1) )
-			DisplayCardViewPane(selArray[0]);
+		if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
+			DisplayCardViewPane(tree.selectedItems[0]);
 		else
 			ClearCardViewPane();
 	}

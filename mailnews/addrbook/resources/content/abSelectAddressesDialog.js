@@ -135,12 +135,13 @@ function AddSelectedAddressesIntoBucket(prefix)
 	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
-	var selArray = document.getElementById('resultsTree').getElementsByAttribute('selected', 'true');
-	if ( selArray && selArray.length )
+	var resultsTree = document.getElementById('resultsTree');
+	
+	if ( resultsTree && resultsTree.selectedItems && resultsTree.selectedItems.length )
 	{
-		for ( item = 0; item < selArray.length; item++ )
+		for ( item = 0; item < resultsTree.selectedItems.length; item++ )
 		{
-			uri = selArray[item].getAttribute('id');
+			uri = resultsTree.selectedItems[item].getAttribute('id');
 			cardResource = rdf.GetResource(uri);
 			card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
 			address = prefix + "\"" + card.DisplayName + "\" <" + card.PrimaryEmail + ">";
@@ -166,12 +167,15 @@ function AddAddressIntoBucket(address)
 
 function RemoveSelectedFromBucket()
 {
-	var body = document.getElementById("bucketBody");
-	
-	var selArray = body.getElementsByAttribute('selected', 'true');
-	if ( selArray && selArray.length )
+	var bucketTree = document.getElementById("addressBucket");
+	if ( bucketTree )
 	{
-		for ( var item = selArray.length - 1; item >= 0; item-- )
-			body.removeChild(selArray[item]);
+		var body = bucketTree.getElementById("bucketBody");
+		
+		if ( body && bucketTree.selectedItems && bucketTree.selectedItems.length )
+		{
+			for ( var item = bucketTree.selectedItems.length - 1; item >= 0; item-- )
+				body.removeChild(bucketTree.selectedItems[item]);
+		}	
 	}	
 }

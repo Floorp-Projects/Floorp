@@ -23,10 +23,10 @@ function AbDelete()
 {
 	dump("\AbDelete from XUL\n");
 	var tree = document.getElementById('resultsTree');
-	if( tree )
+	if ( tree )
 	{
 		//get the selected elements
-		var cardList = tree.getElementsByAttribute("selected", "true");
+		var cardList = tree.selectedItems;
 		//get the current folder
 		var srcDirectory = document.getElementById('resultsTree');
 		dump("srcDirectory = " + srcDirectory + "\n");
@@ -39,20 +39,18 @@ function AbDeleteDirectory()
 {
 	dump("\AbDeleteDirectory from XUL\n");
 	var tree = document.getElementById('dirTree');
-	var selArray = tree.getElementsByAttribute('selected', 'true');
-	if ( selArray && selArray.length )
-	{
-		top.addressbook.DeleteAddressBooks(tree.database, tree, selArray);
-	}
+	
+	if ( tree && tree.selectedItems && tree.selectedItems.length )
+		top.addressbook.DeleteAddressBooks(tree.database, tree, tree.selectedItems);
 }
 
 
 function UpdateCardView()
 {
-	var selArray = document.getElementById('resultsTree').getElementsByAttribute('selected', 'true');
+	var tree = document.getElementById('resultsTree');
 
-	if ( selArray && selArray.length == 1 )
-		DisplayCardViewPane(selArray[0]);
+	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
+		DisplayCardViewPane(tree.selectedItems[0]);
 }
 
 
