@@ -389,7 +389,7 @@ cmdEditEdit.prototype =
       var dummy = { value: false };
 
       var bundle = viewer.pane.panelset.stringBundle;
-      var msg = bundle.getString("enterAttrName.message");
+      var msg = bundle.getString("enterAttrValue.message");
       var title = bundle.getString("editAttribute.title");
 
       if (gPromptService.prompt(window, title, msg, attrValue, null, dummy)) {
