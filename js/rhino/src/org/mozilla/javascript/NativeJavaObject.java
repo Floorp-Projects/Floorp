@@ -188,20 +188,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         Class cls = obj.getClass();
         if (cls.isArray())
             return NativeJavaArray.wrap(scope, obj);
-        if (Context.useJSObject && jsObjectClass != null &&
-            staticType != jsObjectClass && jsObjectClass.isInstance(obj))
-        {
-            try {
-                return jsObjectGetScriptable.
-                        invoke(obj, ScriptRuntime.emptyArgs);
-            }
-            catch (InvocationTargetException e) {
-                // Just abandon conversion from JSObject
-            }
-            catch (IllegalAccessException e) {
-                // Just abandon conversion from JSObject
-            }
-        }
         return new NativeJavaObject(scope, obj, staticType);
     }
 
@@ -374,10 +360,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             if (to == ScriptRuntime.ClassClass) {
                 result = 1;
             }
-            else if (Context.useJSObject && jsObjectClass != null &&
-                jsObjectClass.isAssignableFrom(to)) {
-                result = 2;
-            }
             else if (to == ScriptRuntime.ObjectClass) {
                 result = 3;
             }
@@ -410,11 +392,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
 
         case JSTYPE_OBJECT:
             // Other objects takes #1-#3 spots
-            if (Context.useJSObject && jsObjectClass != null &&
-                jsObjectClass.isAssignableFrom(to)) {
-                result = 1;
-            }
-            else if (fromObj instanceof NativeArray && to.isArray()) {
+            if (fromObj instanceof NativeArray && to.isArray()) {
                 // This is a native array conversion to a java array
                 // Array conversions are all equal, and preferable to object
                 // and string conversion, per LC3.
@@ -612,26 +590,19 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             break;
 
         case JSTYPE_JAVA_CLASS:
-            if (Context.useJSObject && jsObjectClass != null &&
-                (type == ScriptRuntime.ObjectClass ||
-                 jsObjectClass.isAssignableFrom(type))) {
-                return coerceToJSObject(type, (Scriptable)value);
+            if (value instanceof Wrapper) {
+                value = ((Wrapper)value).unwrap();
+            }
+
+            if (type == ScriptRuntime.ClassClass ||
+                type == ScriptRuntime.ObjectClass) {
+                return value;
+            }
+            else if (type == ScriptRuntime.StringClass) {
+                return value.toString();
             }
             else {
-                if (value instanceof Wrapper) {
-                    value = ((Wrapper)value).unwrap();
-                }
-
-                if (type == ScriptRuntime.ClassClass ||
-                    type == ScriptRuntime.ObjectClass) {
-                    return value;
-                }
-                else if (type == ScriptRuntime.StringClass) {
-                    return value.toString();
-                }
-                else {
-                    reportConversionError(value, type, !useErrorHandler);
-                }
+                reportConversionError(value, type, !useErrorHandler);
             }
             break;
 
@@ -662,12 +633,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             break;
 
         case JSTYPE_OBJECT:
-            if (Context.useJSObject && jsObjectClass != null &&
-                (type == ScriptRuntime.ObjectClass ||
-                 jsObjectClass.isAssignableFrom(type))) {
-                return coerceToJSObject(type, (Scriptable)value);
-            }
-            else if (type == ScriptRuntime.StringClass) {
+            if (type == ScriptRuntime.StringClass) {
                 return ScriptRuntime.toString(value);
             }
             else if (type.isPrimitive()) {
@@ -712,28 +678,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         }
 
         return value;
-    }
-
-    static Object coerceToJSObject(Class type, Scriptable value) {
-        // If JSObject compatibility is enabled, and the method wants it,
-        // wrap the Scriptable value in a JSObject.
-
-        if (ScriptRuntime.ScriptableClass.isAssignableFrom(type))
-            return value;
-
-        try {
-            Object ctorArgs[] = { value };
-            return jsObjectCtor.newInstance(ctorArgs);
-        } catch (InstantiationException instEx) {
-            throw new EvaluatorException("error generating JSObject wrapper for " +
-                                         value);
-        } catch (IllegalArgumentException argEx) {
-            throw new EvaluatorException("JSObject constructor doesn't want [Scriptable]!");
-        } catch (InvocationTargetException e) {
-            throw WrappedException.wrapException(e.getTargetException());
-        } catch (IllegalAccessException accessEx) {
-            throw new EvaluatorException("JSObject constructor is protected/private!");
-        }
     }
 
     static Object coerceToNumber(Class type, Object value, boolean useErrorHandler) {
@@ -934,23 +878,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
              value.toString(), NativeJavaMethod.javaSignature(type));
     }
 
-    public static void initJSObject() {
-        // if netscape.javascript.JSObject is in the CLASSPATH, enable JSObject
-        // compatability wrappers
-        jsObjectClass = null;
-        try {
-            jsObjectClass = Class.forName("netscape.javascript.JSObject");
-            Class ctorParms[] = { ScriptRuntime.ScriptableClass };
-            jsObjectCtor = jsObjectClass.getConstructor(ctorParms);
-            jsObjectGetScriptable = jsObjectClass.getMethod("getScriptable",
-                                                            new Class[0]);
-        } catch (ClassNotFoundException classEx) {
-            // jsObjectClass already null
-        } catch (NoSuchMethodException methEx) {
-            // jsObjectClass already null
-        }
-    }
-
     /**
      * The prototype of this object.
      */
@@ -965,9 +892,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     protected JavaMembers members;
     protected Class staticType;
     private Hashtable fieldAndMethods;
-    static Class jsObjectClass;
-    static Constructor jsObjectCtor;
-    static Method jsObjectGetScriptable;
 
     public void writeExternal(ObjectOutput out)
         throws IOException

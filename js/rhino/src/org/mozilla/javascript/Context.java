@@ -2239,8 +2239,6 @@ public class Context {
 
     static final boolean check = true;
 
-    static final boolean useJSObject = false;
-
     static boolean isCachingEnabled = true;
 
     private static Hashtable threadContexts = new Hashtable(11);

@@ -320,35 +320,17 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         if (methodsOrCtors.length == 0)
             return null;
         boolean hasMethods = methodsOrCtors[0] instanceof Method;
-        if (Context.useJSObject &&
-            NativeJavaObject.jsObjectClass != null)
-        {
-            try {
-                for (int i = 0; i < args.length; i++) {
-                    if (NativeJavaObject.jsObjectClass.isInstance(args[i]))
-                        args[i] = NativeJavaObject.jsObjectGetScriptable.invoke(
-                                    args[i], ScriptRuntime.emptyArgs);
-                }
-            }
-            catch (InvocationTargetException e) {
-                // Just abandon conversion from JSObject
-            }
-            catch (IllegalAccessException e) {
-                // Just abandon conversion from JSObject
-            }
-        } else {
-            // Wrapper support
-            for (int i=0; i < args.length; i++) {
-                Object arg = args[i];
-                if (arg instanceof Wrapper) {
-                    arg = ((Wrapper)arg).unwrap();
-                    if (!(arg instanceof Number)) {
-                        // Since numbers are internally represented as
-                        // java.lang.Double, etc. then java.lang.Doubles are
-                        // distinquished by being wrapped. Thus don't unwrap
-                        // here or we'll get overloading wrong.
-                        args[i] = arg;
-                    }
+        // Wrapper support
+        for (int i=0; i < args.length; i++) {
+            Object arg = args[i];
+            if (arg instanceof Wrapper) {
+                arg = ((Wrapper)arg).unwrap();
+                if (!(arg instanceof Number)) {
+                    // Since numbers are internally represented as
+                    // java.lang.Double, etc. then java.lang.Doubles are
+                    // distinquished by being wrapped. Thus don't unwrap
+                    // here or we'll get overloading wrong.
+                    args[i] = arg;
                 }
             }
         }
