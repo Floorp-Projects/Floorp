@@ -4,8 +4,3 @@ browser.jar:
 *  content/browser/cookieviewer/CookieExceptions.xul (content/CookieExceptions.xul)
 *  content/browser/cookieviewer/CookieExceptions.js  (content/CookieExceptions.js)
 *  content/browser/cookieviewer/treeUtils.js         (content/treeUtils.js)
-
-en-US.jar:
-*  locale/en-US/browser/cookieviewer/CookieViewer.dtd (locale/CookieViewer.dtd)
-*  locale/en-US/browser/cookieviewer/CookieExceptions.dtd (locale/CookieExceptions.dtd)
-*  locale/en-US/browser/cookieviewer/CookieViewer.properties (locale/CookieViewer.properties)

@@ -34,9 +34,3 @@ browser.jar:
 *  content/browser/bookmarks/bookmarksManager.js              (content/bookmarksManager.js)
 *  content/browser/bookmarks/bookmarksPanel.xul               (content/bookmarksPanel.xul)
 *  content/browser/bookmarks/bookmarksPanel.js                (content/bookmarksPanel.js)
-
-en-US.jar:
-*  locale/en-US/browser/bookmarks/addBookmark.dtd         (locale/addBookmark.dtd)
-*  locale/en-US/browser/bookmarks/bookmarksProperties.dtd (locale/bookmarksProperties.dtd)
-*  locale/en-US/browser/bookmarks/bookmarks.dtd           (locale/bookmarks.dtd)
-*  locale/en-US/browser/bookmarks/bookmarks.properties    (locale/bookmarks.properties)

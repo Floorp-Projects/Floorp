@@ -1,4 +1,2 @@
 toolkit.jar:
     content/global/dummyWindow.xul (content/dummyWindow.xul)
-en-US.jar:
-    locale/en-US/browser/shellservice.properties (locale/shellservice.properties)

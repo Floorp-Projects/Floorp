@@ -14,12 +14,11 @@
 # The Original Code is the Mozilla Browser code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Benjamin Smedberg <bsmedberg@covad.net>
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,19 +34,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = base components locales extensions themes app
+# For the moment, just hardcode en-US... more automation coming later.
 
-ifeq ($(OS_ARCH),WINNT)
-ifdef MOZ_INSTALLER
-DIRS += installer/windows
-endif
-endif
+# We need a way to make a localized build and a langpack-extension from the
+# same jar.mn
+
+DEFINES += -DAB_CD=en-US
 
 include $(topsrcdir)/config/rules.mk
