@@ -1668,7 +1668,9 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
   
   nsCOMPtr<nsIFile> urlFile;
   rv = tempFileURL->GetFile(getter_AddRefs(urlFile));
-  if (NS_FAILED(rv)) return rv;
+  // We fail if inFileURL isn't a "file:" URL, but that's ok.
+  //TODO: When publishing is done, we should support checking remote URL as well
+  if (NS_FAILED(rv)) return NS_OK;
   
   nsCOMPtr<nsIDOMWindowInternal> contentWindow;
   inCheckWindow->Get_content(getter_AddRefs(contentWindow));
