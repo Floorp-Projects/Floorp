@@ -157,6 +157,7 @@ int main(int argc, char **argv)
     MSG msg;
 #endif
     nsString url_address;
+    char buf[256];
     nsIStreamListener *pConsumer;
     nsIURL *pURL;
     nsresult result;
@@ -179,7 +180,8 @@ int main(int argc, char **argv)
     }
 
     if (bTraceEnabled) {
-        printf("loading URL: %s...\n", url_address);
+        url_address.ToCString(buf, 256);
+        printf("loading URL: %s...\n", buf);
     }
 
     pConsumer = new TestConsumer;
