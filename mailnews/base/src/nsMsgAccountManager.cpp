@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "nsString2.h"
 
 #include "nsCRT.h"  // for nsCRT::strtok
 
@@ -413,26 +414,39 @@ nsMsgAccountManager::LoadAccounts()
 #endif
    
     nsIMsgAccount *account = nsnull;
-    char *accountKey = nsnull;
     char *token = nsnull;
     char *rest = accountList;
+    nsString2 str = "";
+    char *accountKey = nsnull;
 
     token = nsCRT::strtok(rest, ",", &rest);
     while (token && *token) {
-      accountKey = PL_strdup(token);
+      str = token;
+      str.StripWhitespace();
+      accountKey = str.ToNewCString();
+      
+      if (accountKey != nsnull) {
 #ifdef DEBUG_sspitzer
-      printf("accountKey = %s\n", accountKey);
+        printf("accountKey = %s\n", accountKey);
 #endif
-      account = LoadAccount(accountKey);
-      if (account) {
-        addAccount(account);
+        account = LoadAccount(accountKey);
+        if (account) {
+          addAccount(account);
+        }
+        else {
+          PR_Free(accountList);
+          delete [] accountKey;
+          return NS_ERROR_NULL_POINTER;
+        }
       }
       else {
+        PR_Free(accountList);
         return NS_ERROR_NULL_POINTER;
       }
       
-      PR_Free(accountKey);
+      delete [] accountKey;
       accountKey = nsnull;
+      str = "";
       account = nsnull;
       token = nsCRT::strtok(rest, ",", &rest);
     }
