@@ -65,12 +65,6 @@ public:
   //--------------------------------------------------------------------
   // Interface nsIUnicodeDecoder [declaration]
 
-  // XXX delete when interface change, this is already declared in the new one
-  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength, 
-      PRUnichar * aDest, PRInt32 * aDestLength) = 0;
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength) = 0;
-
   // XXX deprecated methods - to go away when interface change.
   NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
       PRInt32 * aDestLength, const char * aSrc, PRInt32 aSrcOffset, 
