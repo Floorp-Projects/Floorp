@@ -114,7 +114,20 @@ sub IssuePasswordToken {
     &::SendSQL("UNLOCK TABLES");
 
     # Mail the user the token along with instructions for using it.
-    MailPasswordToken($loginname, $token);
+    
+    my $template = $::template;
+    my $vars = $::vars;
+
+    $vars->{'token'} = $token;
+    $vars->{'emailaddress'} = $loginname . &::Param('emailsuffix');
+
+    my $message = "";
+    $template->process("account/email/password.txt.tmpl", $vars, \$message)
+      || &::ThrowTemplateError($template->error());
+
+    open SENDMAIL, "|/usr/lib/sendmail -t -i";
+    print SENDMAIL $message;
+    close SENDMAIL;
 
 }
 
@@ -153,34 +166,6 @@ sub GenerateUniqueToken {
 
 }
 
-sub MailPasswordToken {
-    # Emails a password token to a user along with instructions for its use.
-    # Called exclusively from &IssuePasswordToken.
-
-    my ($emailaddress, $token) = @_;
-
-    my $urlbase = &::Param("urlbase");
-    my $emailsuffix = &::Param('emailsuffix');
-    $token = &::url_quote($token);
-
-    open SENDMAIL, "|/usr/lib/sendmail -t -i";
-
-    print SENDMAIL qq|From: bugzilla-daemon
-To: $emailaddress$emailsuffix
-Subject: Bugzilla Change Password Request
-
-You or someone impersonating you has requested to change your Bugzilla
-password.  To change your password, visit the following link:
-
-${urlbase}token.cgi?a=cfmpw&t=$token
-
-If you are not the person who made this request, or you wish to cancel
-this request, visit the following link:
-
-${urlbase}token.cgi?a=cxlpw&t=$token
-|;
-    close SENDMAIL;
-}
 
 sub Cancel {
     # Cancels a previously issued token and notifies the system administrator.
