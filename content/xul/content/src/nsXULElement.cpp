@@ -3505,7 +3505,12 @@ nsXULElement::GetContentStyleRules(nsISupportsArray* aRules)
         nsCOMPtr<nsIAtom> widthAtom = dont_AddRef(NS_NewAtom("width"));
         nsAutoString width;
         GetAttribute(kNameSpaceID_None, widthAtom, width);
-        if (width != "") {
+
+        nsCOMPtr<nsIAtom> hiddenAtom = dont_AddRef(NS_NewAtom("hidden"));
+        nsAutoString hidden;
+        GetAttribute(kNameSpaceID_None, hiddenAtom, hidden);
+
+        if (width != "" || hidden != "") {
             // XXX This should ultimately be factored out if we find that
             // a bunch of XUL widgets are implementing attributes that need
             // to be mapped into style.  I'm hoping treecol will be the only
@@ -3547,7 +3552,8 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
         // Ok, we almost never map attributes to style. ;)
         // The width attribute of a treecol is an exception to this rule.
         nsCOMPtr<nsIAtom> widthAtom = dont_AddRef(NS_NewAtom("width"));
-        if (widthAtom == aAttribute)
+        nsCOMPtr<nsIAtom> hiddenAtom = dont_AddRef(NS_NewAtom("hidden"));
+        if (widthAtom == aAttribute || hiddenAtom == aAttribute)
             aHint = NS_STYLE_HINT_REFLOW;
     }
     return NS_OK;
@@ -3839,7 +3845,12 @@ nsXULElement::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPr
     if (Tag() == kTreeColAtom) {
         // Should only get called if we had a width attribute set. Retrieve it.
         nsAutoString widthVal;
+        nsAutoString hiddenVal;
         GetAttribute("width", widthVal);
+        GetAttribute("hidden", hiddenVal);
+        if (hiddenVal != "")
+          widthVal = "0*";
+
         if (widthVal != "") {
             PRInt32 intVal;
             float floatVal;
