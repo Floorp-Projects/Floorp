@@ -6036,7 +6036,7 @@ nsXULTemplateBuilder::CompileTripleCondition(Rule* aRule,
     nsAutoString object;
     aCondition->GetAttribute(kNameSpaceID_None, nsXULAtoms::object, object);
 
-    PRInt32 ovar;
+    PRInt32 ovar = 0;
     nsCOMPtr<nsIRDFNode> onode;
     if (object[0] == PRUnichar('?')) {
         ovar = aRule->LookupSymbol(object);
