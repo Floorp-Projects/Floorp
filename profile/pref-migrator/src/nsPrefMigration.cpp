@@ -914,9 +914,19 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       rv = newPOPMailPath->CreateDir();
       if (NS_FAILED(rv)) return rv;
     }
-    
-    rv = m_prefs->SetFilePref(PREF_MAIL_DIRECTORY, newPOPMailPath, PR_FALSE); 
-    if (NS_FAILED(rv)) return rv;
+
+    {
+      // temporarily go through nsFileSpec
+      nsFileSpec newPOPMailPathSpec;
+      newPOPMailPath->GetFileSpec(&newPOPMailPathSpec);
+      
+      nsCOMPtr<nsILocalFile> newPOPMailPathFile;
+      NS_FileSpecToIFile(&newPOPMailPathSpec,
+                         getter_AddRefs(newPOPMailPathFile));
+      
+      rv = m_prefs->SetFileXPref(PREF_MAIL_DIRECTORY, newPOPMailPathFile); 
+      if (NS_FAILED(rv)) return rv;
+    }
 
     m_prefs->CopyCharPref(PREF_NETWORK_HOSTS_POP_SERVER, &popServerName);
 
@@ -959,8 +969,19 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     if (!exists)  {
       newIMAPLocalMailPath->CreateDir();
     }
-    rv = m_prefs->SetFilePref(PREF_MAIL_DIRECTORY, newIMAPLocalMailPath, PR_FALSE); 
-    if (NS_FAILED(rv)) return rv;
+
+    {
+      // temporarily go through nsFileSpec
+      nsFileSpec newIMAPLocalMailPathSpec;
+      newIMAPLocalMailPath->GetFileSpec(&newIMAPLocalMailPathSpec);
+      
+      nsCOMPtr<nsILocalFile> newIMAPLocalMailPathFile;
+      NS_FileSpecToIFile(&newIMAPLocalMailPathSpec,
+                         getter_AddRefs(newIMAPLocalMailPathFile));
+      
+      rv = m_prefs->SetFileXPref(PREF_MAIL_DIRECTORY, newIMAPLocalMailPathFile); 
+      if (NS_FAILED(rv)) return rv;
+    }
 
     rv = newIMAPLocalMailPath->AppendRelativeUnixPath(NEW_LOCAL_MAIL_DIR_NAME);
     if (NS_FAILED(rv)) return rv;
@@ -989,8 +1010,18 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       if (NS_FAILED(rv)) return rv;
     }
 
-    rv = m_prefs->SetFilePref(PREF_MAIL_IMAP_ROOT_DIR, newIMAPMailPath, PR_FALSE); 
-    if (NS_FAILED(rv)) return rv;
+    {
+      // temporarily go through nsFileSpec
+      nsFileSpec newIMAPMailPathSpec;
+      newIMAPMailPath->GetFileSpec(&newIMAPMailPathSpec);
+      
+      nsCOMPtr<nsILocalFile> newIMAPMailPathFile;
+      NS_FileSpecToIFile(&newIMAPMailPathSpec,
+                         getter_AddRefs(newIMAPMailPathFile));
+      
+      rv = m_prefs->SetFileXPref(PREF_MAIL_IMAP_ROOT_DIR, newIMAPMailPathFile);
+      if (NS_FAILED(rv)) return rv;
+    }
   }
 
 #ifdef HAVE_MOVEMAIL
@@ -1014,8 +1045,18 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       if (NS_FAILED(rv)) return rv;
     }
 
-    rv = m_prefs->SetFilePref(PREF_MAIL_DIRECTORY, newMOVEMAILMailPath, PR_FALSE); 
-    if (NS_FAILED(rv)) return rv;
+    {
+      // temporarily go through nsFileSpec
+      nsFileSpec newMOVEMAILPathSpec;
+      newMOVEMAILMailPath->GetFileSpec(&newMOVEMAILPathSpec);
+      
+      nsCOMPtr<nsILocalFile> newMOVEMAILPathFile;
+      NS_FileSpecToIFile(&newMOVEMAILPathSpec,
+                         getter_AddRefs(newMOVEMAILPathFile));
+      
+      rv = m_prefs->SetFileXPref(PREF_MAIL_DIRECTORY, newMOVEMAILPathFile); 
+      if (NS_FAILED(rv)) return rv;
+    }
 
     rv = newMOVEMAILMailPath->AppendRelativeUnixPath(NEW_MOVEMAIL_DIR_NAME);
     if (NS_FAILED(rv)) return rv;
@@ -1055,9 +1096,18 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     if (NS_FAILED(rv)) return rv;
   }
 
-  rv = m_prefs->SetFilePref(PREF_NEWS_DIRECTORY, newNewsPath, PR_FALSE); 
-  if (NS_FAILED(rv)) return rv;
-  
+  {
+    // temporarily go through nsFileSpec
+    nsFileSpec newNewsPathSpec;
+    newNewsPath->GetFileSpec(&newNewsPathSpec);
+    
+    nsCOMPtr<nsILocalFile> newNewsPathFile;
+    NS_FileSpecToIFile(&newNewsPathSpec,
+                       getter_AddRefs(newNewsPathFile));
+    
+    rv = m_prefs->SetFileXPref(PREF_NEWS_DIRECTORY, newNewsPathFile); 
+    if (NS_FAILED(rv)) return rv;
+  }
 
   PRBool needToRenameFilterFiles;
   if (PL_strcmp(IMAP_MAIL_FILTER_FILE_NAME_IN_4x,IMAP_MAIL_FILTER_FILE_NAME_IN_5x)) {
@@ -1227,23 +1277,36 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
   if (NS_FAILED(rv)) return rv;  
   
   nsCOMPtr <nsIFileSpec> oldPrefPath;
-  char *oldPrefPathStr = nsnull;
-  rv = m_prefs->CopyCharPref(pref,&oldPrefPathStr);
+  nsXPIDLCString oldPrefPathStr;
+  rv = m_prefs->CopyCharPref(pref,getter_Copies(oldPrefPathStr));
   if (NS_FAILED(rv)) return rv;
   
-  // the default on the mac was "".  doing GetFilePref on that would return
+  // the default on the mac was "".  doing GetFileXPref on that would return
   // the current working directory, like viewer_debug.  yikes!
-  if (!oldPrefPathStr || (PL_strlen(oldPrefPathStr) == 0)) {
+  if (!(const char*)oldPrefPathStr || (PL_strlen(oldPrefPathStr) == 0)) {
   	rv = NS_ERROR_FAILURE;
   }
-  PR_FREEIF(oldPrefPathStr);
   if (NS_FAILED(rv)) return rv;
   
-  rv = m_prefs->GetFilePref(pref, getter_AddRefs(oldPrefPath));
+  nsCOMPtr <nsILocalFile> oldPrefPathFile;
+  rv = m_prefs->GetFileXPref(pref, getter_AddRefs(oldPrefPathFile));
   if (NS_FAILED(rv)) return rv;
- 
-  rv = oldPath->FromFileSpec(oldPrefPath);
+  
+  // convert nsILocalFile to nsIFileSpec
+  rv = oldPrefPathFile->GetPath(getter_Copies(oldPrefPathStr));
   if (NS_FAILED(rv)) return rv;
+
+  rv = NS_NewFileSpec(getter_AddRefs(oldPrefPath));
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = oldPrefPath->SetNativePath(oldPrefPathStr);
+  if (NS_FAILED(rv)) return rv;
+
+  // oldPath will also needs the conversion from nsILocalFile
+  // this is nasty, eventually we'll switch entirely over to nsILocalFile
+  rv = oldPath->SetNativePath(oldPrefPathStr);
+  if (NS_FAILED(rv)) return rv;
+
   
 #ifdef XP_UNIX
 	// what if they don't want to go to <profile>/<newDirName>?
@@ -1978,7 +2041,16 @@ nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsIFileSpec *path
 #ifdef DEBUG_seth
 	printf("setting %s (from a nsFileSpec) for later...\n", premigration_pref);
 #endif
-	rv = m_prefs->SetFilePref((const char *)premigration_pref, path, PR_FALSE /* set default */);
+
+  // need to convert nsIFileSpec->nsILocalFile
+  nsFileSpec pathSpec;
+  path->GetFileSpec(&pathSpec);
+  
+  nsCOMPtr<nsILocalFile> pathFile;
+  rv = NS_FileSpecToIFile(&pathSpec, getter_AddRefs(pathFile));
+  if (NS_FAILED(rv)) return rv;
+  
+	rv = m_prefs->SetFileXPref((const char *)premigration_pref, pathFile);
 	return rv;
 }
 
