@@ -32,6 +32,7 @@ CPPSRCS= \
 	nsDTDUtils.cpp 				\
 	nsHTMLTokenizer.cpp 		\
 	nsXMLTokenizer.cpp 			\
+	nsExpatTokenizer.cpp			\
 	nsElementTable.cpp 			\
 	CNavDTD.cpp					\
 	COtherDTD.cpp 				\
