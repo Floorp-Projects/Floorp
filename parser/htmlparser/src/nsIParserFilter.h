@@ -46,6 +46,9 @@ class nsIParserFilter : public nsISupports {
    NS_IMETHOD WillAddToken(CToken & token) = 0;
 
    NS_IMETHOD ProcessTokens( /* dont know what goes here yet */ void ) = 0;
+
+   NS_IMETHOD Finish() = 0;
+
 };
 
 

@@ -11,6 +11,7 @@ nsHTMLToTXTSinkStream.h
 nsITokenizer.h
 nsHTMLTokens.h
 nsIParserNode.h
+nsIParserFilter.h
 nsIParser.h
 nsToken.h
 nsIDTDDebug.h

@@ -1083,6 +1083,10 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
 nsresult nsParser::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg){
   mParserContext->mStreamListenerState=eOnStop;
   mStreamStatus=status;
+
+  if(mParserFilter)
+     mParserFilter->Finish();
+
   nsresult result=ResumeParse();
   // If the parser isn't enabled, we don't finish parsing till
   // it is reenabled.

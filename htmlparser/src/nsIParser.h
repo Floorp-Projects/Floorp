@@ -44,6 +44,7 @@
 
 class nsIContentSink;
 class nsIStreamObserver;
+class nsIParserFilter;
 class nsString;
 class nsIURL;
 
@@ -145,6 +146,8 @@ class nsIParser : public nsISupports {
      *  @return	 nada
      */
     virtual void SetDocumentCharset(nsString& aCharset, nsCharsetSource aSource)=0;
+
+    virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter) = 0;
 
     /**
      * Call this to get a newly constructed tagstack
