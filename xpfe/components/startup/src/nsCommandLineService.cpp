@@ -42,10 +42,10 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  nsresult Initialize(int argc, char** argv);
-  nsresult GetCmdLineValue(char* arg, char **value);
-  nsresult GetURLToLoad(char ** aResult);
-  nsresult GetProgramName(char ** aResult);
+  NS_IMETHOD Initialize(int argc, char** argv);
+  NS_IMETHOD GetCmdLineValue(char* arg, char **value);
+  NS_IMETHOD GetURLToLoad(char ** aResult);
+  NS_IMETHOD GetProgramName(char ** aResult);
 //  nsresult PrintCmdArgs();
 
 protected:
@@ -65,7 +65,8 @@ nsCmdLineService::nsCmdLineService()
 }
 
 
-nsresult nsCmdLineService::Initialize(int argc, char ** argv)
+NS_IMETHODIMP
+nsCmdLineService::Initialize(int argc, char ** argv)
 {
   NS_INIT_REFCNT();
   PRInt32   i=0;
