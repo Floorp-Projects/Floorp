@@ -1318,45 +1318,47 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   if (m_identity)
   {
       /* Setup reply-to field */
-      nsString replyToStr;
       nsXPIDLCString replyTo;
-      replyToStr.AssignWithConversion(m_compFields->GetReplyTo());
-
-      m_identity->GetReplyTo(getter_Copies(replyTo));                                      
+      m_identity->GetReplyTo(getter_Copies(replyTo));
       if (replyTo && *(const char *)replyTo)
       {
+        nsXPIDLCString replyToStr;
+        replyToStr.Assign(m_compFields->GetReplyTo());
+
         if (replyToStr.Length() > 0)
-          replyToStr.Append(PRUnichar(','));
-        replyToStr.AppendWithConversion(replyTo);
+          replyToStr.Append(',');
+        replyToStr.Append(replyTo);
+        m_compFields->SetReplyTo(replyToStr.get());
       }
-      
-      m_compFields->SetReplyTo(replyToStr.get());
-      
+
       /* Setup bcc field */
-      PRBool  aBool;
-      nsString bccStr;
-      bccStr.AssignWithConversion(m_compFields->GetBcc());
-      
-      m_identity->GetBccSelf(&aBool);
-      if (aBool)
+      PRBool  bccSelf, bccOthers;
+      m_identity->GetBccSelf(&bccSelf);
+      m_identity->GetBccOthers(&bccOthers);
+      if (bccSelf || bccOthers) 
       {
+        nsXPIDLCString bccStr;
+        bccStr.Assign(m_compFields->GetBcc());
+
+        if (bccSelf)
+        {
           nsXPIDLCString email;
           m_identity->GetEmail(getter_Copies(email));
           if (bccStr.Length() > 0)
-            bccStr.Append(PRUnichar(','));
-          bccStr.AppendWithConversion(email);
-      }
-      
-      m_identity->GetBccOthers(&aBool);
-      if (aBool)
-      {
+            bccStr.Append(',');
+          bccStr.Append(email);
+        }
+
+        if (bccOthers)
+        {
           nsXPIDLCString bccList;
           m_identity->GetBccList(getter_Copies(bccList));
           if (bccStr.Length() > 0)
-              bccStr.Append(PRUnichar(','));
-          bccStr.AppendWithConversion(bccList);
+            bccStr.Append(',');
+          bccStr.Append(bccList);
+        }
+        m_compFields->SetBcc(bccStr.get());
       }
-      m_compFields->SetBcc(bccStr.get());
   }
 
   // If we don't have an original message URI, nothing else to do...

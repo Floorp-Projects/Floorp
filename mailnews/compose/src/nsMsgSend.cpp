@@ -4218,7 +4218,12 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 #endif
     )
   {
-    PRInt32 L = PL_strlen(bcc_header) + 20;
+    char *convBcc;
+    convBcc = nsMsgI18NEncodeMimePartIIStr(bcc_header, PR_TRUE,
+                    mCompFields->GetCharacterSet(), 0,
+                    nsMsgMIMEGetConformToStandard());
+
+    PRInt32 L = strlen(convBcc ? convBcc : bcc_header) + 20;
     char *buf = (char *) PR_Malloc (L);
     if (!buf)
     {
@@ -4226,9 +4231,11 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
       goto FAIL;
     }
 
-    PR_snprintf(buf, L-1, "BCC: %s" CRLF, bcc_header);
-    PRInt32   len = PL_strlen(buf);
+    PR_snprintf(buf, L-1, "BCC: %s" CRLF, convBcc ? convBcc : bcc_header);
+    PRInt32   len = strlen(buf);
     n = tempOutfile.write(buf, len);
+    PR_Free(buf);
+    PR_FREEIF(convBcc);
     if (n != len)
     {
       status = NS_ERROR_FAILURE;
