@@ -270,6 +270,11 @@
                       key="key_selectAll"
                       accesskey="&selectAllCmd.accesskey;"
                       command="cmd_selectAll"/>
+
+            <menuseparator/>
+            <menuitem label="&searchAddressesCmd.label;" accesskey="&searchAddressesCmd.accesskey;"
+                          id="menu_search_addresses" oncommand="onAdvancedAbSearch();"/>
+
             <menuseparator/>
             <!-- LOCALIZATION NOTE: set "hideSwapFnLnUI" to false in .dtd to enable the UI -->
             <menuitem label="&swapFirstNameLastNameCmd.label;"
@@ -410,10 +415,6 @@
             <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
             <menuseparator />  
 #endif
-            <menuitem label="&searchAddressesCmd.label;" 
-                      accesskey="&searchAddressesCmd.accesskey;"
-                      id="menu_search_addresses" 
-                      oncommand="onAdvancedAbSearch();"/>
             <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
             <menuitem label="&exportCmd.label;" accesskey="&exportCmd.accesskey;" oncommand="AbExport()"/>
             <menuseparator />  
@@ -484,7 +485,7 @@
            fullscreentoolbar="true" mode="full"
            customizable="true"
            context="toolbar-context-menu"
-           defaultset="button-newcard,button-newlist,space,button-editcard,button-newmessage,button-newim,button-abdelete,spring,throbber-box">
+           defaultset="button-newcard,button-newlist,spacer,button-editcard,button-newmessage,spacer,button-abdelete,spring,throbber-box">
    </toolbar>
    <toolbarset id="customToolbars" context="toolbar-context-menu"/>
   </toolbox>
@@ -568,10 +569,13 @@
                 accesskey="&clearButton.accesskey;"
                 oncommand="onAbClearSearch();"
                 tooltiptext="&clearButton.tooltip;"/>
+
+<!-- Hide the advanced button like we do for the main 3-pane window...
         <button id="advancedButton" label="&advancedButton.label;" 
                 accesskey="&advancedButton.accesskey;"
                 tooltiptext="&advancedButton.tooltip;" 
                 oncommand="onAdvancedAbSearch();"/>
+-->
       </hbox>
 
       <!-- results pane -->
