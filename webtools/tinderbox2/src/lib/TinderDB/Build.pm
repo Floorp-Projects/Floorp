@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.30 $ 
-# $Date: 2002/04/26 01:57:52 $ 
+# $Revision: 1.31 $ 
+# $Date: 2002/04/26 02:11:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -1134,7 +1134,9 @@ sub status_table_row {
 
     # Error count (not a link, but hey)
 
-    if ($current_rec->{'errors'}) {
+    if ( (BuildStatus::get_display_number_errors) &&
+         ($current_rec->{'errors'}) 
+         ){
         $links .= (
                    "\t\t<br>errs: ". 
                    $current_rec->{'errors'}."\n".

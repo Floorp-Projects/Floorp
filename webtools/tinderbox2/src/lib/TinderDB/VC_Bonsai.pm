@@ -94,7 +94,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.14 $ )[1];
+$VERSION = ( qw $Revision: 1.15 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -469,7 +469,8 @@ sub status_table_row {
       }
       $table .= "</table>";
 
-      # Do not display the full mail address in the status column
+      # Do not display the full mail address in the status column, it
+      # takes up too much space.  Keep only the user name.
 
       my $display_author=$author;
       $display_author =~ s/\%.*//;

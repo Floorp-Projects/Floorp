@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.11 $ 
-# $Date: 2002/04/26 01:57:57 $ 
+# $Revision: 1.12 $ 
+# $Date: 2002/04/26 02:11:49 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -263,6 +263,13 @@ sub status2descriptions {
   return @out;
 }
 
+sub get_display_number_errors {
+
+# should the tinderbox build page show the number of errors found in
+# the log file?
+
+    return 0;
+}
 
 sub get_TinderboxPrint_separator{
 
