@@ -267,7 +267,7 @@ static void RomanToText(PRInt32 ordinal, nsString& result, const char* achars, c
     ordinal = 1;
   }
   nsAutoString addOn, decStr;
-  decStr.AppendWithConversion(ordinal, 10);
+  decStr.AppendInt(ordinal, 10);
   PRIntn len = decStr.Length();
   const PRUnichar* dp = decStr.GetUnicode();
   const PRUnichar* end = dp + len;
@@ -278,16 +278,16 @@ static void RomanToText(PRInt32 ordinal, nsString& result, const char* achars, c
     romanPos--;
     addOn.SetLength(0);
     switch(*dp) {
-      case '3':  addOn.Append(achars[romanPos]);
-      case '2':  addOn.Append(achars[romanPos]);
-      case '1':  addOn.Append(achars[romanPos]);
+      case '3':  addOn.AppendWithConversion(achars[romanPos]);
+      case '2':  addOn.AppendWithConversion(achars[romanPos]);
+      case '1':  addOn.AppendWithConversion(achars[romanPos]);
         break;
       case '4':
-        addOn.Append(achars[romanPos]);
+        addOn.AppendWithConversion(achars[romanPos]);
         // FALLTHROUGH
       case '5': case '6':
       case '7': case  '8':
-        addOn.Append(bchars[romanPos]);
+        addOn.AppendWithConversion(bchars[romanPos]);
         for(n=0;n<(*dp-'5');n++) {
           addOn.Append(achars[romanPos]);
         }

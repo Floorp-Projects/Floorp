@@ -529,7 +529,7 @@ nsHTMLFormElement::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* a
   // a different type of element (IMG, OBJECT, etc.)
   if ((nsnull == *aReturn) && (nsnull != mInner.mDocument) && (argc > 0)) {
     char* str = JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
-    nsAutoString name(str); 
+    nsAutoString name; name.AssignWithConversion(str); 
     nsCOMPtr<nsIScriptContext> scriptContext;
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     mInner.mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
@@ -614,7 +614,7 @@ nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
   PRBool ret;
   JSObject* obj;
   char* str = JS_GetStringBytes(JS_ValueToString(aContext, aID));
-  nsAutoString name(str); 
+  nsAutoString name; name.AssignWithConversion(str); 
   nsCOMPtr<nsIScriptContext> scriptContext;
   nsresult result = NS_OK;
 
@@ -858,7 +858,7 @@ nsFormControlList::GetNamedObject(JSContext* aContext, jsval aID, JSObject** aOb
   nsCOMPtr<nsIScriptContext> scriptContext;
   nsCOMPtr<nsIScriptObjectOwner> owner;
   char* str = JS_GetStringBytes(JS_ValueToString(aContext, aID));
-  nsAutoString name(str); 
+  nsAutoString name; name.AssignWithConversion(str); 
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIContent> form;
 
@@ -905,7 +905,7 @@ nsFormControlList::GetNamedObject(JSContext* aContext, jsval aID, JSObject** aOb
     }
 
     // If it is, then get all radio buttons or checkboxes with the same name
-    if (document && (type.Equals("Radio") || type.Equals("Checkbox"))) {
+    if (document && (type.EqualsWithConversion("Radio") || type.EqualsWithConversion("Checkbox"))) {
       nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(document);
       if (htmlDoc) {
         nsCOMPtr<nsIDOMNodeList> list;

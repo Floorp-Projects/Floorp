@@ -735,7 +735,7 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec,
       }
 
       // Translate value to an integer
-      nsString token("");
+      nsString token;
       aSpec.Mid(token, start, numberEnd - start);
 
       // Treat * as 1*

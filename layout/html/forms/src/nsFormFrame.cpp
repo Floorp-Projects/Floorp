@@ -696,7 +696,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   NS_WITH_SERVICE(nsIObserverService, service, NS_OBSERVERSERVICE_PROGID, &result);
   if (NS_FAILED(result)) return result;
 
-  nsString  theTopic(NS_FORMSUBMIT_SUBJECT);
+  nsString  theTopic; theTopic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
   nsIEnumerator* theEnum;
   result = service->EnumerateObserverList(theTopic.GetUnicode(), &theEnum);
   if (NS_SUCCEEDED(result) && theEnum){
@@ -750,7 +750,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       // XUL, do nothing. This prevents undesirable reloading of
       // a document inside XUL.
 
-    if (href.Equals("")) {
+    if (href.IsEmpty()) {
       nsCOMPtr<nsIHTMLDocument> htmlDoc;
       if (PR_FALSE == NS_SUCCEEDED(doc->QueryInterface(kIHTMLDocumentIID,
                                              getter_AddRefs(htmlDoc)))) {   
@@ -765,7 +765,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       docURL->GetSpec(&relPath);
       NS_ASSERTION(relPath, "Rel path couldn't be formed in form submit!\n");
       if (relPath) {
-        href.Append(relPath);
+        href.AppendWithConversion(relPath);
         nsCRT::free(relPath);
 
         // If re-using the same URL, chop off old query string (bug 25330)
@@ -816,15 +816,15 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href, docURL))) {
       result = actionURL->GetScheme(getter_Copies(scheme));
     }
-    nsAutoString theScheme(scheme);
+    nsAutoString theScheme; theScheme.AssignWithConversion( NS_STATIC_CAST(const char*, scheme) );
     // Append the URI encoded variable/value pairs for GET's
     if (!theScheme.EqualsIgnoreCase("javascript")) { // Not for JS URIs, see bug 26917
       if (!isPost) {
         if (href.FindChar('?', PR_FALSE, 0) == kNotFound) { // Add a ? if needed
-          href.Append('?');
+          href.AppendWithConversion('?');
         } else {                              // Adding to existing query string
           if (href.Last() != '&' && href.Last() != '?') {   // Add a & if needed
-            href.Append('&');
+            href.AppendWithConversion('&');
           }
         }
         href.Append(data);
@@ -937,7 +937,8 @@ nsFormFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder)
   delete [] inBuf;
   
   char* outBuf = nsEscape(convertedBuf, url_XPAlphas);
-  nsString* result = new nsString(outBuf);
+  nsString* result = new nsString;
+  result->AssignWithConversion(outBuf);
   nsCRT::free(outBuf);
   nsAllocator::Free(convertedBuf);
   return result;
@@ -945,7 +946,7 @@ nsFormFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder)
 
 void nsFormFrame::GetSubmitCharset(nsString& oCharset)
 {
-  oCharset = "UTF-8"; // default to utf-8
+  oCharset.AssignWithConversion("UTF-8"); // default to utf-8
   nsresult rv;
   // XXX
   // We may want to get it from the HTML 4 Accept-Charset attribute first
@@ -1008,7 +1009,7 @@ NS_IMETHODIMP nsFormFrame::GetPlatformEncoder(nsIUnicodeEncoder** encoder)
 
      if (NS_FAILED(rv)) {
        NS_ASSERTION(0, "error getting locale charset, using ISO-8859-1");
-       localeCharset.SetString("ISO-8859-1");
+       localeCharset.AssignWithConversion("ISO-8859-1");
        rv = NS_OK;
      }
 
@@ -1058,14 +1059,14 @@ nsresult nsFormFrame::ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBo
               if (PR_TRUE == firstTime) {
                 firstTime = PR_FALSE;
               } else {
-                buf += "&";
+                buf.AppendWithConversion("&");
               }
               nsString* convName = URLEncode(names[valueX], encoder);
               buf += *convName;
               delete convName;
-              buf += "=";
+              buf.AppendWithConversion("=");
               nsAutoString newValue;
-              newValue = values[valueX];
+              newValue.Append(values[valueX]);
               if (aFormProcessor) {
                 ProcessValue(*aFormProcessor, child, names[valueX], newValue);
               }
@@ -1084,23 +1085,23 @@ nsresult nsFormFrame::ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBo
     if (isPost) {
       char size[16];
       sprintf(size, "%d", buf.Length());
-      aData = "Content-type: application/x-www-form-urlencoded";
+      aData.AssignWithConversion("Content-type: application/x-www-form-urlencoded");
 #ifdef SPECIFY_CHARSET_IN_CONTENT_TYPE
       nsString charset;
       GetSubmitCharset(charset);
       aData += "; charset=";
       aData += charset;
 #endif
-      aData += CRLF;
-      aData += "Content-Length: ";
-      aData += size;
-      aData += CRLF;
-      aData += CRLF;
+      aData.AppendWithConversion(CRLF);
+      aData.AppendWithConversion("Content-Length: ");
+      aData.AppendWithConversion(size);
+      aData.AppendWithConversion(CRLF);
+      aData.AppendWithConversion(CRLF);
     } 
   aData += buf;
   // Need to append CRLF to end of stream for compatability with Nav and IE
   if (isPost) {
-    aData += CRLF;
+    aData.AppendWithConversion(CRLF);
   }
   NS_IF_RELEASE(encoder);
   return rv;

@@ -3458,7 +3458,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
     case eCSSProperty_size:
       if (HAS_VALUE(mPage,mSizeWidth) && HAS_VALUE(mPage,mSizeHeight)) {
         AppendValueToString(eCSSProperty_size_width, aValue);
-        aValue.Append(' ');
+        aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_size_height, aValue);
       }
       break;

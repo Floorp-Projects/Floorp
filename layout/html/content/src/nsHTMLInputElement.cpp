@@ -378,7 +378,7 @@ nsHTMLInputElement::GetValue(nsString& aValue)
       // Obtain the value property from the presentation state.
       if (presState) {
         nsAutoString value;
-        presState->GetStateProperty("value", aValue);
+        presState->GetStateProperty(NS_ConvertASCIItoUCS2("value"), aValue);
       }
     }
       
@@ -429,7 +429,7 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
 
       // Obtain the value property from the presentation state.
       if (presState) {
-        presState->SetStateProperty("value", aValue);
+        presState->SetStateProperty(NS_ConvertASCIItoUCS2("value"), aValue);
       }
     }
     return NS_OK;
@@ -442,7 +442,7 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetChecked(PRBool* aValue)
 {
-  nsAutoString value("0");
+  nsAutoString value; value.AssignWithConversion("0");
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
     if (nsnull != formControlFrame) {
@@ -460,11 +460,11 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
 
     // Obtain the value property from the presentation state.
     if (presState) {
-      presState->GetStateProperty("checked", value);
+      presState->GetStateProperty(NS_ConvertASCIItoUCS2("checked"), value);
     }
   }
   
-  if (value.Equals("1"))
+  if (value.EqualsWithConversion("1"))
     *aValue = PR_TRUE;
   else
     *aValue = PR_FALSE;
@@ -482,12 +482,8 @@ nsHTMLInputElement::SetPresStateChecked(nsIHTMLContent * aHTMLContent,
 
   // Obtain the value property from the presentation state.
   if (presState) {
-    nsAutoString value;
-    if (PR_TRUE == aValue)
-      value = "1";
-    else 
-      value = "0";
-    presState->SetStateProperty("checked", value);
+    nsAutoString value; value.AssignWithConversion( aValue ? "1" : "0" );
+    presState->SetStateProperty(NS_ConvertASCIItoUCS2("checked"), value);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -504,14 +500,14 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
     // if so, then return
     nsAutoString checkedStr;
     formControlFrame->GetProperty(nsHTMLAtoms::checked, checkedStr);
-    if ((checkedStr.Equals("1") && aValue) || (checkedStr.Equals("0") && !aValue)) {
+    if ((checkedStr.EqualsWithConversion("1") && aValue) || (checkedStr.EqualsWithConversion("0") && !aValue)) {
       return NS_OK;
     }
 
     // the value is being toggled
     nsIPresContext* presContext;
     nsGenericHTMLElement::GetPresContext(this, &presContext);
-    formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, PR_TRUE == aValue?"1":"0");
+    formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, NS_ConvertASCIItoUCS2(PR_TRUE == aValue?"1":"0"));
     NS_IF_RELEASE(presContext);
   }
   else {
@@ -671,7 +667,7 @@ nsHTMLInputElement::Select()
     {
       nsCOMPtr<nsIPresContext> presContext;
       nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
-      formControlFrame->SetProperty(presContext, nsHTMLAtoms::select, "");
+      formControlFrame->SetProperty(presContext, nsHTMLAtoms::select, nsAutoString());
       return NS_OK;
     }
   }

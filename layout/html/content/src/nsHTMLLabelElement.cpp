@@ -69,26 +69,26 @@ public:
   }
   NS_IMETHOD GetAttribute(const nsString& aName, nsString& aReturn) {
     if (aName.EqualsIgnoreCase("htmlfor")) {
-      return mInner.GetAttribute(nsAutoString("for"), aReturn);
+      return mInner.GetAttribute(NS_ConvertASCIItoUCS2("for"), aReturn);
     }
     return mInner.GetAttribute(aName, aReturn);
   }
   NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue) {
     if (aName.EqualsIgnoreCase("htmlfor")) {
-      return mInner.SetAttribute(nsAutoString("for"), aValue);
+      return mInner.SetAttribute(NS_ConvertASCIItoUCS2("for"), aValue);
     }
     return mInner.SetAttribute(aName, aValue);
   }
   NS_IMETHOD RemoveAttribute(const nsString& aName) {
     if (aName.EqualsIgnoreCase("htmlfor")) {
-      return mInner.RemoveAttribute(nsAutoString("for"));
+      return mInner.RemoveAttribute(NS_ConvertASCIItoUCS2("for"));
     }
     return mInner.RemoveAttribute(aName);
   }
   NS_IMETHOD GetAttributeNode(const nsString& aName,
                               nsIDOMAttr** aReturn) {
     if (aName.EqualsIgnoreCase("htmlfor")) {
-      return mInner.GetAttributeNode(nsAutoString("for"), aReturn);
+      return mInner.GetAttributeNode(NS_ConvertASCIItoUCS2("for"), aReturn);
     }
     return mInner.GetAttributeNode(aName, aReturn);
   }

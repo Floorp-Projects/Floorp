@@ -318,7 +318,7 @@ nsHTMLImageElement::GetHeight(nsString& aValue)
     if (NS_SUCCEEDED(result)) {
       nsSize size;
       imageFrame->GetIntrinsicImageSize(size);
-      aValue.Append(size.height);
+      aValue.AppendInt(size.height);
     }
   }
 
@@ -343,7 +343,7 @@ nsHTMLImageElement::GetWidth(nsString& aValue)
     if (NS_SUCCEEDED(result)) {
       nsSize size;
       imageFrame->GetIntrinsicImageSize(size);
-      aValue.Append(size.width);
+      aValue.AppendInt(size.width);
     }
   }
 
@@ -765,11 +765,11 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL, const nsString& aSrc)
           if (nsnull != aBaseURL) {
             result = NS_MakeAbsoluteURI(url, aSrc, aBaseURL);
             if (NS_FAILED(result)) {
-              url = aSrc;
+              url.Assign(aSrc);
             }
           }
           else {
-            url = aSrc;
+            url.Assign(aSrc);
           }
 
           nsSize* specifiedSize = nsnull;

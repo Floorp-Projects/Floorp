@@ -230,7 +230,7 @@ NS_IMETHODIMP
 nsXMLDocument::GetContentType(nsString& aContentType) const
 {
   // XXX Should get document type from incoming stream
-  aContentType.Assign("text/xml");
+  aContentType.AssignWithConversion("text/xml");
   return NS_OK;
 }
 
@@ -249,7 +249,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
-  nsAutoString charset("UTF-8");
+  nsAutoString charset; charset.AssignWithConversion("UTF-8");
   PRBool bIsHTML = PR_FALSE; 
   char* aContentType;
   nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
@@ -276,7 +276,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
      NS_RELEASE(contentTypeKey);
      if (NS_SUCCEEDED(rv)) {
 	nsAutoString contentType;
-	contentType.Assign(contenttypeheader);
+	contentType.AssignWithConversion( NS_STATIC_CAST(const char*, contenttypeheader) );
 	PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
 	if(kNotFound != start)
 	{

@@ -155,7 +155,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
           break;
 
         if (!base.IsEmpty()) {
-          str = base.GetUnicode();
+          str.AssignWithConversion(base.GetUnicode());
           rv = (*aURI)->SetRelativePath(str);
         }
         break;
@@ -167,12 +167,12 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
           } else {
             // We do not want to add double / delimiters (although the user is free to do so)
             if (value[value_len - 1] != '/')
-              value += '/';
-            base = value + base;
+              value.AppendWithConversion('/');
+            base.Insert(value, 0);
           }
         } else {
           if (value[value_len - 1] != '/')
-            value += '/'; // Add delimiter/make sure we treat this as dir
+            value.AppendWithConversion'/'; // Add delimiter/make sure we treat this as dir
           base = value;
         }
       }
@@ -212,7 +212,7 @@ nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   // to create an atom.
   if ((kNameSpaceID_XLink == aNameSpaceID) &&
       (kTypeAtom == aName)) { 
-    if (aValue.Equals(kSimpleAtom, PR_FALSE)) {
+    if (aValue.EqualsWithConversion(kSimpleAtom, PR_FALSE)) {
       // NOTE: This really is a link according to the XLink spec,
       //       we do not need to check other attributes. If there
       //       is no href attribute, then this link is simply
@@ -272,13 +272,13 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           }
           GetAttribute(kNameSpaceID_XLink, kShowAtom, show);
 	        // XXX Should probably do this using atoms 
-	        if (show.Equals("new")) {
+	        if (show.EqualsWithConversion("new")) {
 	          verb = eLinkVerb_New;
 	        }
-          else if (show.Equals("replace")) {
+          else if (show.EqualsWithConversion("replace")) {
             verb = eLinkVerb_Replace;
           }
-	        else if (show.Equals("embed")) {
+	        else if (show.EqualsWithConversion("embed")) {
 	          verb = eLinkVerb_Embed;
 	        }
           

@@ -340,7 +340,7 @@ nsHTMLTextAreaElement::Select()
     {
       nsCOMPtr<nsIPresContext> presContext;
       nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
-      formControlFrame->SetProperty(presContext, nsHTMLAtoms::select, "");
+      formControlFrame->SetProperty(presContext, nsHTMLAtoms::select, nsAutoString());
       return NS_OK;
     }
   }
@@ -359,7 +359,7 @@ NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, TabIndex, tabindex)
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::GetType(nsString& aType)
 {
-  aType.Assign("textarea");
+  aType.AssignWithConversion("textarea");
   return NS_OK;
 }
 

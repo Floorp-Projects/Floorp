@@ -258,12 +258,9 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
     PRInt32 indx;
     if (NS_OK == GetIndex(&indx)) {
       nsString value;
-      value.Append(indx, 10); // Save the index in base 10
+      value.AppendInt(indx, 10); // Save the index in base 10
       formControlFrame->GetProperty(nsHTMLAtoms::selected, value);
-      if (value.Equals("1"))
-        *aValue = PR_TRUE;
-      else
-        *aValue = PR_FALSE;
+      *aValue = value.EqualsWithConversion("1");
     }
   }
   return rv;      

@@ -105,7 +105,7 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   // create text field
   nsIAtom* tag = NS_NewAtom("input");
   if (NS_OK == NS_NewHTMLInputElement(&mTextContent, tag)) {
-    mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("text"), PR_FALSE);
+    mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("text"), PR_FALSE);
     if (nsFormFrame::GetDisabled(this)) {
       nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
       if (textControl) {
@@ -119,7 +119,7 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   nsIHTMLContent* browse = nsnull;
   tag = NS_NewAtom("input");
   if (NS_OK == NS_NewHTMLInputElement(&browse, tag)) {
-    browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
+    browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("button"), PR_FALSE);
     //browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("browse..."), PR_FALSE);
 
     aChildList.AppendElement(browse);
@@ -245,7 +245,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
  
   nsIFileWidget *fileWidget = nsnull;
   
-  nsString title("File Upload");
+  nsString title; title.AssignWithConversion("File Upload");
   nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
   
   if (fileWidget) {
@@ -607,7 +607,7 @@ nsFileControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aStat
   // This string will hold a single item, whether or not we're checked.
   nsAutoString stateString;
   GetProperty(nsHTMLAtoms::value, stateString);
-  (*aState)->SetStateProperty("checked", stateString);
+  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("checked"), stateString);
 
   return NS_OK;
 }
@@ -616,7 +616,7 @@ NS_IMETHODIMP
 nsFileControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
   nsAutoString string;
-  aState->GetStateProperty("checked", string);
+  aState->GetStateProperty(NS_ConvertASCIItoUCS2("checked"), string);
   SetProperty(aPresContext, nsHTMLAtoms::value, string);
   return NS_OK;
 

@@ -437,10 +437,10 @@ nsHTMLSelectElement::GetType(nsString& aType)
   result = GetMultiple(&isMultiple);
   if (NS_OK == result) {
     if (isMultiple) {
-      aType.Assign("select-multiple");
+      aType.AssignWithConversion("select-multiple");
     }
     else {
-      aType.Assign("select-one");
+      aType.AssignWithConversion("select-one");
     }
   }
   
@@ -509,7 +509,7 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
     nsresult res = GetPresState(getter_AddRefs(presState), getter_AddRefs(value));
     if (NS_SUCCEEDED(res) && presState) {
       nsCOMPtr<nsISupports> supp;
-      presState->GetStatePropertyAsSupports("selecteditems", getter_AddRefs(supp));
+      presState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), getter_AddRefs(supp));
 
       res = NS_ERROR_NULL_POINTER;
       if (supp) {
@@ -591,7 +591,7 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
     nsString value;
-    value.Append(aIndex, 10);
+    value.AppendInt(aIndex, 10);
     nsIPresContext* presContext;
     nsGenericHTMLElement::GetPresContext(this, &presContext);
     formControlFrame->SetProperty(presContext, nsHTMLAtoms::selectedindex, value);
@@ -659,7 +659,7 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
       // If it is a new nsISupportsArray then 
       // set it into the PresState
       if (!doesExist) {
-        presState->SetStatePropertyAsSupports("selecteditems", value);
+        presState->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), value);
       }
     } // if
   }
@@ -870,7 +870,7 @@ nsHTMLSelectElement::GetPresState(nsIPresState** aPresState, nsISupportsArray** 
 
   // check to see if there is already a supports
   nsISupports * supp;
-  nsresult res = presState->GetStatePropertyAsSupports("selecteditems", &supp);
+  nsresult res = presState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), &supp);
   if (NS_SUCCEEDED(res) && supp != nsnull) {
     if (NS_FAILED(supp->QueryInterface(NS_GET_IID(nsISupportsArray), (void**)aValueArray))) {
       // Be paranoid - make sure it is zeroed out

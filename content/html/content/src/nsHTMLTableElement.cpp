@@ -859,7 +859,7 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
 
   /* attributes that are either empty, or pixels */
   else if (aAttribute == nsHTMLAtoms::border) {
-    PRInt32 min = (aValue.Equals("")) ? 1 : 0;
+    PRInt32 min = (aValue.IsEmpty()) ? 1 : 0;
     if (nsGenericHTMLElement::ParseValue(aValue, min, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }

@@ -177,7 +177,7 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     if (value.GetUnit() == eHTMLUnit_Empty) {
       nsStyleFont* font = (nsStyleFont*)
         aContext->GetMutableStyleData(eStyleStruct_Font);
-      font->mFont.name = "serif";
+      font->mFont.name.AssignWithConversion("serif");
     }
   }
 }
