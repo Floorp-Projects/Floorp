@@ -26,7 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 
-#include "nsLocalFileWin.h"
+#include "nsLocalFile.h"
 #include "nsNativeCharsetUtils.h"
 
 #include "nsISimpleEnumerator.h"
@@ -1070,7 +1070,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const nsAC
             if (copyOK) 
             {
                 // remove the backup copy.
-                (void) remove(backup.get());
+                remove(backup.get());
             }
             else
             {
@@ -1405,11 +1405,11 @@ nsLocalFile::Remove(PRBool recursive)
                 iterator->HasMoreElements(&more);
             }
         }
-        rv = rmdir(filePath);  // todo: save return value?
+        rv = rmdir(filePath) == -1 ? NSRESULT_FOR_ERRNO() : NS_OK;
     }
     else
     {
-        rv = remove(filePath); // todo: save return value?
+        rv = remove(filePath) == -1 ? NSRESULT_FOR_ERRNO() : NS_OK;
     }
     
     MakeDirty();

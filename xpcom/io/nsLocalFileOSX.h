@@ -40,7 +40,6 @@
 #define nsLocalFileMac_h__
 
 #include "nsILocalFileMac.h"
-#include "nsLocalFile.h"
 #include "nsString.h"
 
 class nsDirEnumerator;

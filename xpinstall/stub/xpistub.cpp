@@ -29,7 +29,7 @@
 #include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "nsILocalFile.h"
+#include "nsLocalFile.h"
 
 #include "nscore.h"
 #include "nspr.h"
@@ -58,8 +58,6 @@
 #ifdef XP_MAC
 #define COMPONENT_REG "\pComponent Registry"
 #include "MoreFilesExtras.h"
-#include "nsLocalFileMac.h"
-#include "nsILocalFileMac.h"
 #endif
 
 #ifdef XP_UNIX

@@ -28,7 +28,7 @@
 #include "nsMemory.h"
 #include "nsXPIDLString.h" 
 
-#include "nsLocalFileMac.h"
+#include "nsLocalFile.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIComponentManager.h"
