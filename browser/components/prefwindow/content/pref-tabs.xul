@@ -22,8 +22,6 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <!DOCTYPE page [
-<!ENTITY % platformCommunicationDTD SYSTEM "chrome://communicator-platform/locale/pref/platformPrefOverlay.dtd">
-%platformCommunicationDTD;
 <!ENTITY % tabsDTD SYSTEM "chrome://browser/locale/pref/pref-tabs.dtd">
 %tabsDTD;
 ]>
