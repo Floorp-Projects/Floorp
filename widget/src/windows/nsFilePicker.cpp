@@ -112,7 +112,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     initialDir = mLastUsedUnicodeDirectory;
   }
 
-  mUnicodeFile.SetLength(0);
+  mUnicodeFile.Truncate();
 
   if (mMode == modeGetFolder) {
     PRUnichar dirBuffer[MAX_PATH+1];
@@ -134,7 +134,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     if (list != NULL) {
       result = nsToolkit::mSHGetPathFromIDList(list, (LPWSTR)fileBuffer);
       if (result) {
-          mUnicodeFile.Append(fileBuffer);
+          mUnicodeFile.Assign(fileBuffer);
       }
   
       // free PIDL
@@ -277,7 +277,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       else {
         // I think it also needs a conversion here (to unicode since appending to nsString) 
         // but doing that generates garbage file name, weird.
-        mUnicodeFile.Append(fileBuffer);
+        mUnicodeFile.Assign(fileBuffer);
       }
     }
 
@@ -488,8 +488,7 @@ NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
 {
   mParentWidget = aParent;
   NS_IF_ADDREF(mParentWidget);
-  mTitle.SetLength(0);
-  mTitle.Append(aTitle);
+  mTitle.Assign(aTitle);
   mMode = aMode;
   return NS_OK;
 }
