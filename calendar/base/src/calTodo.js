@@ -140,16 +140,16 @@ calTodo.prototype = {
         return icalcomp;
     },
 
-    set icalComponent(event) {
+    set icalComponent(todo) {
         this.modify();
-        if (event.componentType != "VTODO") {
-            event = event.getFirstSubcomponent("VTODO");
-            if (!event)
+        if (todo.componentType != "VTODO") {
+            todo = todo.getFirstSubcomponent("VTODO");
+            if (!todo)
                 throw Components.results.NS_ERROR_INVALID_ARG;
         }
 
-        this.setItemBaseFromICS(event);
-        this.mapPropsFromICS(event, this.icsEventPropMap);
+        this.setItemBaseFromICS(todo);
+        this.mapPropsFromICS(todo, this.icsEventPropMap);
         this.mIsAllDay = this.mStartDate && this.mStartDate.isDate;
 
         var promotedProps = {
@@ -161,7 +161,7 @@ calTodo.prototype = {
             "PERCENT-COMPLETE": true,
             __proto__: this.itemBasePromotedProps
         };
-        this.importUnpromotedProperties(event, promotedProps);
+        this.importUnpromotedProperties(todo, promotedProps);
         // Importing didn't really change anything
         this.mDirty = false;
     },
