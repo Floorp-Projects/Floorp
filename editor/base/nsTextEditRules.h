@@ -45,11 +45,11 @@ class nsTextEditRules : public nsEditRules
 {
 public:
 
-              nsTextEditRules(PRUint32 aFlags);
+              nsTextEditRules();
   virtual     ~nsTextEditRules();
 
   // nsEditRules methods
-  NS_IMETHOD Init(nsHTMLEditor *aEditor);
+  NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags);
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);

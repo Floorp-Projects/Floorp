@@ -30,7 +30,7 @@ class nsHTMLEditRules : public nsTextEditRules
 {
 public:
 
-            nsHTMLEditRules(PRUint32 aFlags);
+            nsHTMLEditRules();
   virtual   ~nsHTMLEditRules();
 
   // nsEditRules methods

@@ -390,11 +390,11 @@ void nsHTMLEditor::InitRules()
 // instantiate the rules for this text editor
 // XXX: we should be told which set of rules to instantiate
   if (mFlags & eEditorPlaintextMask)
-	  mRules =  new nsTextEditRules(mFlags);
+	  mRules =  new nsTextEditRules();
 	else
-	  mRules =  new nsHTMLEditRules(mFlags);
+	  mRules =  new nsHTMLEditRules();
 
-  mRules->Init(this);
+  mRules->Init(this, mFlags);
 }
 
 #ifdef XP_MAC
