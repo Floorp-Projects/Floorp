@@ -35,7 +35,7 @@ public:
     NS_INIT_REFCNT();
   }
 
-  ~RobotSinkObserver() {
+  virtual ~RobotSinkObserver() {
   }
 
   NS_DECL_ISUPPORTS
@@ -121,7 +121,7 @@ public:
 
   }
 
-  ~CStreamListener() {
+  virtual ~CStreamListener() {
   }
 
   NS_DECL_ISUPPORTS
