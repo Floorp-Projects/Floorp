@@ -89,7 +89,7 @@ sub getCustomisedString {
                 # XXX do we want to do an error here or something?
                 $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: $@");
             }
-            if (scalar(@results)) {
+            if (@results) {
                 $self->stringsCache->{$variant}->{$string} = \@results;
                 return @results;
             } else {
