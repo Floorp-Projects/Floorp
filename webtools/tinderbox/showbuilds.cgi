@@ -319,7 +319,9 @@ sub print_table_row {
     if (defined $bloat_by_log->{$logfile}) {
       my $leaks, $bloat;
       ($leaks, $bloat) = @{ $bloat_by_log->{$logfile} };
-      printf "<br>%+.2f<br>%+.2f", $leaks, $bloat;
+      # Percentage, or absolute?
+      # printf "<br>%+.2f<br>%+.2f", $leaks, $bloat;
+      printf "<br>%d<br>%d", $leaks, $bloat;
     }
 
     # Binary
