@@ -32,11 +32,6 @@
 #include "prcmon.h"
 #endif  /* NS_MT_SUPPORTED */
 
-#if defined(XPIDL_JS_STUBS)
-struct JSObject;
-struct JSContext;
-#endif
-
   // under Metrowerks (Mac), we don't have autoconf yet
 #ifdef __MWERKS__
   #define HAVE_CPP_SPECIALIZATION
