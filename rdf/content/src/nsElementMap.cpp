@@ -131,7 +131,7 @@ nsElementMap::ReleaseContentList(PLHashEntry* aHashEntry, PRIntn aIndex, void* a
     PRUnichar* id =
         NS_REINTERPRET_CAST(PRUnichar*, NS_CONST_CAST(void*, aHashEntry->key));
 
-    delete[] id;
+    nsMemory::Free(id);
         
     ContentListItem* head =
         NS_REINTERPRET_CAST(ContentListItem*, aHashEntry->value);
@@ -299,7 +299,7 @@ nsElementMap::Remove(const nsAReadableString& aID, nsIContent* aContent)
             // It was the last reference in the table
             PRUnichar* key = NS_REINTERPRET_CAST(PRUnichar*, NS_CONST_CAST(void*, (*hep)->key));
             PL_HashTableRawRemove(mMap, hep, *hep);
-            delete[] key;
+            nsMemory::Free(key);
         }
         delete head;
     }
@@ -403,7 +403,7 @@ nsElementMap::EnumerateImpl(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosu
                 // It's the last content node that was mapped to this
                 // ID. Unhash it.
                 PRUnichar* key = NS_CONST_CAST(PRUnichar*, id);
-                delete[] key;
+                nsMemory::Free(key);
                 return HT_ENUMERATE_REMOVE;
             }
         }
