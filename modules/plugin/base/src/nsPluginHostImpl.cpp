@@ -4251,28 +4251,27 @@ public:
 #endif
     }
 
-    const char *name;
-    nsCString leafName;
+    const char* spec;
     if (mPluginTag.mFullPath)
     {
 #if !(defined(XP_MAC) || defined(XP_MACOSX))
       NS_ERROR("Only MAC should be using nsPluginTag::mFullPath!");
 #endif
-      char* spec = mPluginTag.mFullPath;
-
-      nsCOMPtr<nsILocalFile> pluginPath;
-      NS_NewNativeLocalFile(nsDependentCString(spec), PR_TRUE,
-                            getter_AddRefs(pluginPath));
-
-      pluginPath->GetNativeLeafName(leafName);
-      name = leafName.get();
+      spec = mPluginTag.mFullPath;      
     }
     else
     {
-       name = mPluginTag.mFileName;
+      spec = mPluginTag.mFileName;
     }
 
-    nsresult rv = DoCharsetConversion(mUnicodeDecoder, name, aFilename);
+    nsCString leafName;
+    nsCOMPtr<nsILocalFile> pluginPath;
+    NS_NewNativeLocalFile(nsDependentCString(spec), PR_TRUE,
+                          getter_AddRefs(pluginPath));
+
+    pluginPath->GetNativeLeafName(leafName);
+ 
+    nsresult rv = DoCharsetConversion(mUnicodeDecoder, leafName.get(), aFilename);
     return rv;
   }
 
@@ -4802,6 +4801,11 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     nsCOMPtr<nsILocalFile> dirEntry(do_QueryInterface(supports, &rv));
     if (NS_FAILED(rv))
       continue;
+
+    // Sun's JRE 1.3.1 plugin must have symbolic links resolved or else it'll crash.
+    // See bug 197855.    
+    dirEntry->Normalize();
+
     nsCAutoString filePath;
     rv = dirEntry->GetNativePath(filePath);
     if (NS_FAILED(rv))

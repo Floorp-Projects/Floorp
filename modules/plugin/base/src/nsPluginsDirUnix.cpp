@@ -304,7 +304,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
         return rv;
 
     libSpec.value.pathname = path.get();
-
+ 
     pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
 
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
@@ -384,12 +384,12 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 	if (NS_FAILED(rv = ParsePluginMimeDescription(mimedescr, info)))
             return rv;
         nsCAutoString filename;
-        if (NS_FAILED(rv = mPlugin->GetNativeLeafName(filename)))
+        if (NS_FAILED(rv = mPlugin->GetNativePath(filename)))
             return rv;
         info.fFileName = PL_strdup(filename.get());
         plugin->GetValue(nsPluginVariable_NameString, &name);
         if (!name)
-            name = info.fFileName;
+            name = PL_strrchr(info.fFileName, '/') + 1;
         info.fName = PL_strdup(name);
 
         plugin->GetValue(nsPluginVariable_DescriptionString, &description);
