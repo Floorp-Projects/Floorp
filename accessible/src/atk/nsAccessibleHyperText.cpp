@@ -152,7 +152,7 @@ nsIDOMNode* nsAccessibleHyperText::FindTextNodeByOffset(PRInt32 aOffset, PRInt32
     nsAccessibleText accText(domNode);
     PRInt32 charCount;
     if (NS_SUCCEEDED(accText.GetCharacterCount(&charCount))) {
-      if (aOffset >= 0 && aOffset < charCount) {
+      if (aOffset >= 0 && aOffset <= charCount) {
         return domNode;
       }
       aOffset -= charCount;
