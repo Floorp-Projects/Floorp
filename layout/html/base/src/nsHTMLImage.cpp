@@ -165,7 +165,7 @@ nsHTMLImageLoader::SizeOf(nsISizeOfHandler* aHandler) const
 {
   aHandler->Add(sizeof(*this));
   if (!aHandler->HaveSeen(mURLSpec)) {
-    aHandler->Add(sizeof(*mURLSpec));/* XXX approximation */
+    mURLSpec->SizeOf(aHandler);
   }
   if (!aHandler->HaveSeen(mImageLoader)) {
     mImageLoader->SizeOf(aHandler);

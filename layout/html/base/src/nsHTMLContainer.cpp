@@ -85,7 +85,8 @@ nsHTMLContainer::SizeOf(nsISizeOfHandler* aHandler) const
 void
 nsHTMLContainer::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
 {
-  // XXX children array's array of pointers
+  aHandler->Add((size_t) (- (PRInt32)sizeof(mChildren) ) );
+  mChildren.SizeOf(aHandler);
 
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {

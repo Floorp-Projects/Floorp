@@ -22,7 +22,7 @@
 #include "nsColor.h"
 #include "nsString.h"
 #include "nsISupports.h"
-
+class nsISizeOfHandler;
 
 enum nsHTMLUnit {
   eHTMLUnit_Null          = 0,      // (n/a) null unit, value is not specified
@@ -72,6 +72,7 @@ public:
 
   void  AppendToString(nsString& aBuffer) const;
   void  ToString(nsString& aBuffer) const;
+  void  SizeOf(nsISizeOfHandler* aHandler) const;
 
 protected:
   nsHTMLUnit  mUnit;

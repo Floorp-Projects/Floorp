@@ -123,8 +123,12 @@ struct HTMLAttribute {
 void
 HTMLAttribute::SizeOf(nsISizeOfHandler* aHandler) const
 {
-  // XXX mAttribute
+  if (!aHandler->HaveSeen(mAttribute)) {
+    mAttribute->SizeOf(aHandler);
+  }
   aHandler->Add(sizeof(*this));
+  aHandler->Add((size_t) (- ((PRInt32) sizeof(mValue)) ) );
+  mValue.SizeOf(aHandler);
   if (!aHandler->HaveSeen(mNext)) {
     mNext->SizeOf(aHandler);
   }
