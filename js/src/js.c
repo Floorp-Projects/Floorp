@@ -997,7 +997,7 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JSFunction *fun = JS_ValueToFunction(cx, argv[i]);
             if (fun && (fun->flags & JSFUN_FLAGS_MASK)) {
                 uint8 flags = fun->flags;
-                fputs("flags:", stderr);
+                fputs("flags:", stdout);
 
 #define SHOW_FLAG(flag) if (flags & JSFUN_##flag) fputs(" " #flag, stdout);
 
@@ -1126,7 +1126,7 @@ Tracing(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 JS_GetStringBytes(str));
         return JS_TRUE;
     }
-    cx->tracefp = bval ? stdout : NULL;
+    cx->tracefp = bval ? stderr : NULL;
     return JS_TRUE;
 }
 
