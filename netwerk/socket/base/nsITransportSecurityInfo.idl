@@ -40,7 +40,7 @@
 
 #include "nsISupports.idl"
 
-[noscript, uuid(68e21b66-1dd2-11b2-aa67-e2b87175e792)]
+[scriptable, uuid(68e21b66-1dd2-11b2-aa67-e2b87175e792)]
 interface nsITransportSecurityInfo : nsISupports {
     readonly attribute unsigned long    securityState;
     readonly attribute wstring          shortSecurityDescription;
