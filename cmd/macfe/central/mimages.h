@@ -26,8 +26,28 @@
 
 class CBrowserContext;
 
-XP_BEGIN_PROTOS
 
+/*
+ * Our internal Pixmap structure.
+ */
+typedef struct NS_PixMap
+{
+	PixMap		pixmap;
+	Handle		buffer_handle;
+	void *		image_buffer;
+	int32		lock_count;
+	Boolean		tiled;
+} NS_PixMap;
+
+typedef struct DrawingState
+{
+	short		copyMode;
+	NS_PixMap *	pixmap;
+	NS_PixMap *	mask;
+} DrawingState;
+
+
+XP_BEGIN_PROTOS
 
 void	ImageGroupObserver(XP_Observable observable,
 			XP_ObservableMsg message,
@@ -84,6 +104,29 @@ cstring		GetURLFromImageElement(
 					CBrowserContext *		inOwningContext,
 					LO_ImageStruct *	inElement);
 
+
+/*
+ * These used to be private, but need to be public so we can start using more images and
+ * fewer icons (for things like toolbars, Aurora, etc.)
+ */
+
+	/* width and height are the width/height of the destination rectangle. The image
+	 * will be scaled to fit withing that rect. */
+void DrawScaledImage ( DrawingState * state, Point topLeft, jint x_offset,
+							jint y_offset, jint width, jint height );
+	/* width and height are the width/height of the area into which you want to tile
+	 * the image and have nothing to do with the size of the image itself */
+void DrawTiledImage ( DrawingState * state, Point topLeft, jint x_offset,
+							jint y_offset, jint width, jint height );
+
+OSErr PreparePixmapForDrawing ( IL_Pixmap * image, IL_Pixmap * mask, Boolean canCopyMask,
+									DrawingState * state );
+void DoneDrawingPixmap ( IL_Pixmap * image, IL_Pixmap * mask, DrawingState * state );
+
+void LockFEPixmapBuffer ( NS_PixMap* inPixmap ) ;
+void UnlockFEPixmapBuffer ( NS_PixMap* inPixmap ) ;
+
+void DestroyFEPixmap ( NS_PixMap* fe_pixmap ) ;
 
 /*
  * Inline Utilities
