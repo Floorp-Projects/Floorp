@@ -159,13 +159,14 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
   var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch("browser.download.");
 
   const nsILocalFile = Components.interfaces.nsILocalFile;
+  const lfContractID = "@mozilla.org/file/local;1";
+
   try {
     var dir = prefs.getComplexValue("dir", nsILocalFile);
   }
   catch (e) {
   }
 
-  const lfContractID = "@mozilla.org/file/local;1";
   var filterIndex = 0;
   var file;
   if (!aSkipPrompt) {
@@ -179,6 +180,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
                                 isDocument ? MODE_COMPLETE : MODE_FILEONLY);  
   
     fp.displayDirectory = dir;
+    
     if (isDocument) {
       try {
         fp.filterIndex = prefs.getIntPref("save_converter_index");
@@ -194,7 +196,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
       return;
   
     var directory = fp.file.parent.QueryInterface(nsILocalFile);
-    // prefs.setComplexValue("dir", nsILocalFile, directory);
+    prefs.setComplexValue("dir", nsILocalFile, directory);
     fp.file.leafName = validateFileName(fp.file.leafName);
     filterIndex = fp.filterIndex;
     file = fp.file;
@@ -240,7 +242,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     var filesFolder = null;
     if (persistArgs.contentType != "text/plain") {
       // Create the local directory into which to save associated files. 
-      filesFolder = Components .classes[lfContractID].createInstance(lfIID);
+      filesFolder = Components.classes[lfContractID].createInstance(nsILocalFile);
       filesFolder.initWithPath(persistArgs.target.path);
       
       var nameWithoutExtension = filesFolder.leafName;
