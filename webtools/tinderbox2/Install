@@ -22,7 +22,10 @@ that you have configured the program correctly.
 6) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
 	every five minutes
 
-7) set up $prefix/bin/processmail to recieve the incoming tinderbox mail
+7) set up $prefix/bin/processmail to receive the incoming tinderbox
+mail.  We use the mail address 'tinder-builds' for build information
+destined for the webserver.  The process id which receives and process
+the mail must be the the same id which runs the cron job.
 
 8) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
 for tinderbox to use.  Log into the CVS repository yourself, once for
@@ -33,5 +36,11 @@ This is the REAL home of the Tinderbox daemon, as listed in
 tinder.cgi.
 
 9) setup the build machines to mail their build logs 
-	(with tinderbox variables on the top) to the web server machine.
+	(with tinderbox variables on the top) to the web server machine. 
+   New builds must not start earlier then 6 minutes after the last build started.
+
+10) Check that the time on your webserver and your build machine is in
+sync.  Check that mail if build mail bounces either on the build
+machine or on the webserver machine, that it will be recieved by
+someone who can act on it.
 
