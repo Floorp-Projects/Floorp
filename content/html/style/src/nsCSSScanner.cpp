@@ -310,7 +310,7 @@ PRInt32 nsCSSScanner::Read(PRInt32& aErrorCode)
     }
     if (mOffset == mCount) {
       mOffset = 0;
-      aErrorCode = mInput->Read(mBuffer, 0, BUFFER_SIZE, (PRUint32*)&mCount);
+      aErrorCode = mInput->Read(mBuffer, BUFFER_SIZE, (PRUint32*)&mCount);
       if (NS_FAILED(aErrorCode) || mCount == 0) {
         mCount = 0;
         return -1;

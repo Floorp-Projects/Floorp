@@ -39,7 +39,6 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
-class nsIUnicharInputStream;
 
 #define NS_IUNICHARBUFFER_IID \
 { 0x14cf6970, 0x93b5, 0x11d1, \
@@ -55,8 +54,6 @@ public:
   NS_IMETHOD_(PRInt32) GetBufferSize() const = 0;
   NS_IMETHOD_(PRUnichar*) GetBuffer() const = 0;
   NS_IMETHOD_(PRBool) Grow(PRInt32 aNewSize) = 0;
-  NS_IMETHOD_(PRInt32) Fill(nsresult* aErrorCode, nsIUnicharInputStream* aStream,
-                            PRInt32 aKeep) = 0;
 };
 
 /// Factory method for nsIUnicharBuffer.

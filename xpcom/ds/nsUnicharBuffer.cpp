@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsUnicharBuffer.h"
-#include "nsIUnicharInputStream.h"
 #include "nsCRT.h"
 
 #define MIN_BUFFER_SIZE 32
@@ -120,40 +119,6 @@ UnicharBufferImpl::Grow(PRInt32 aNewSize)
     return PR_TRUE;
   }
   return PR_FALSE;
-}
-
-NS_IMETHODIMP_(PRInt32)
-UnicharBufferImpl::Fill(nsresult* aErrorCode,
-                        nsIUnicharInputStream* aStream,
-                        PRInt32 aKeep)
-{
-  NS_PRECONDITION(nsnull != aStream, "null stream");
-  NS_PRECONDITION(PRUint32(aKeep) < PRUint32(mLength), "illegal keep count");
-  if ((nsnull == aStream) || (PRUint32(aKeep) >= PRUint32(mLength))) {
-    // whoops
-    *aErrorCode = NS_BASE_STREAM_ILLEGAL_ARGS;
-    return -1;
-  }
-
-  if (0 != aKeep) {
-    // Slide over kept data
-    memmove(mBuffer, mBuffer + (mLength - aKeep),
-            aKeep * sizeof(PRUnichar));
-  }
-
-  // Read in some new data
-  mLength = aKeep;
-  PRInt32 amount = mSpace - aKeep;
-  PRUint32 nb;
-  NS_ASSERTION(aKeep >= 0, "unsigned madness");
-  NS_ASSERTION(amount >= 0, "unsigned madness");
-  *aErrorCode = aStream->Read(mBuffer, (PRUint32)aKeep, (PRUint32)amount, &nb);
-  if (NS_SUCCEEDED(*aErrorCode)) {
-    mLength += nb;
-  }
-  else
-    nb = 0;
-  return nb;
 }
 
 NS_COM nsresult

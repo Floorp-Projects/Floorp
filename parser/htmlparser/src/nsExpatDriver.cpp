@@ -609,7 +609,7 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
 
       mInExternalDTD = PR_TRUE;
 
-      while (NS_SUCCEEDED(uniIn->Read(uniBuff, 0, 1024, &readCount)) && result) {
+      while (NS_SUCCEEDED(uniIn->Read(uniBuff, 1024, &readCount)) && result) {
         if (readCount) {
           // Pass the buffer to expat for parsing
           result = XML_Parse(entParser, (char *)uniBuff,  readCount * sizeof(PRUnichar), 0);
