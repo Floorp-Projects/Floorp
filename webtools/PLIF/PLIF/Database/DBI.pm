@@ -276,7 +276,7 @@ sub setupConfigureDatabase {
         $self->handle(DBI->connect($self->connectString($helper->setupDatabaseName), $adminUsername, $adminPassword,
                                    {RaiseError => 0, PrintError => 1, AutoCommit => 1, Taint => 1}));
     };
-    $self->assert(not($@), 1, "Could not connect to database: $@");
+    $self->assert((not $@), 1, "Could not connect to database: $@");
     $self->assert($self->handle, 1, 'Failed to connect to database: '.(defined($DBI::errstr) ? $DBI::errstr : 'unknown error'));
 
     # get the helper to do its stuff
