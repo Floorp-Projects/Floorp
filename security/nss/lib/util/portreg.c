@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * 	Ken Key <key+mozilla@ksquared.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -277,7 +278,7 @@ port_RegExpMatch(const char *str, const char *xp, PRBool case_insensitive) {
             break;
         }
     }
-    if(_shexp_match(str,exp, PR_FALSE) == MATCH) {
+    if(_shexp_match(str,exp, case_insensitive) == MATCH) {
         PORT_Free(exp);
         return 0;
     }
@@ -312,7 +313,7 @@ PORT_RegExpCaseSearch(const char *str, const char *exp)
         case INVALID_SXP:
             return -1;
         case NON_SXP:
-            return (strcmp(exp,str) ? 1 : 0);
+            return (PORT_Strcasecmp(exp,str) ? 1 : 0);
         default:
             return port_RegExpMatch(str, exp, PR_TRUE);
       }
