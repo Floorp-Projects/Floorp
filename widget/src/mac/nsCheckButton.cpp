@@ -219,7 +219,7 @@ PRBool nsCheckButton::OnResize(nsSizeEvent &aEvent)
  *  @return  PR_TRUE if the pt is contained in the widget
  */
 PRBool
-nsCheckButton::PtInWindow(PRInt32 aX,PRInt32 aY)
+nsCheckButton::PtInWindow(PRInt32 aX,PRInt32  aY)
 {
 	PRBool	result = PR_FALSE;
 	nsPoint	hitPt(aX,aY);
