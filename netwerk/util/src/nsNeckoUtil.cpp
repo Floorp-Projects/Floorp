@@ -41,7 +41,11 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
     // XXX we need a strategy to deal w/ unicode specs (if there should
     // XXX even be such a thing)
     const char* specStr = spec.GetBuffer();
+    if (!specStr)
+        specStr = spec.ToNewCString(); // this forces a single byte char*
     nsresult rv = NS_NewURI(result, specStr, baseURI);
+    if (specStr)
+        nsCRT::free((char*)specStr);
     return rv;
 }
 
@@ -86,7 +90,8 @@ NS_OpenURI(nsIStreamListener* aConsumer, nsIURI* uri,
     rv = serv->NewChannelFromURI("load", uri, nsnull, &channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->AsyncRead(0, -1, uri, // uri used as context
+    rv = channel->AsyncRead(0, -1, 
+                            channel, // channel as the context (the nsDocLoader expects this)
                             aConsumer);
     if (NS_FAILED(rv)) goto done;
 
