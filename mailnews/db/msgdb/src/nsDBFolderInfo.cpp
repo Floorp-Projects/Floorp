@@ -786,7 +786,9 @@ class nsTransferDBFolderInfo : public nsDBFolderInfo
 public:
   nsTransferDBFolderInfo();
   virtual ~nsTransferDBFolderInfo();
-
+  NS_IMETHOD GetMailboxName(nsString *boxName);
+  NS_IMETHOD SetMailboxName(nsString *boxName);
+  nsString  m_boxName;
 };
 
 nsTransferDBFolderInfo::nsTransferDBFolderInfo() : nsDBFolderInfo(nsnull)
@@ -801,19 +803,44 @@ nsTransferDBFolderInfo::~nsTransferDBFolderInfo()
 NS_IMETHODIMP nsDBFolderInfo::GetTransferInfo(nsIDBFolderInfo **transferInfo)
 {
   NS_ENSURE_ARG_POINTER(transferInfo);
+  nsAutoString folderNameStr;
 
   nsTransferDBFolderInfo *newInfo = new nsTransferDBFolderInfo;
   *transferInfo = newInfo;
   NS_ADDREF(newInfo);
   newInfo->m_flags = m_flags;
+  GetMailboxName(&folderNameStr);
+  newInfo->SetMailboxName(&folderNameStr);
+  // ### add whatever other fields we want to copy here.
   return NS_OK;
 }
+
+NS_IMETHODIMP nsTransferDBFolderInfo::GetMailboxName(nsString *boxName)
+{
+  *boxName = m_boxName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTransferDBFolderInfo::SetMailboxName(nsString *boxName)
+{
+  m_boxName = *boxName;
+  return NS_OK;
+}
+
 
 /* void InitFromTransferInfo (in nsIDBFolderInfo transferInfo); */
 NS_IMETHODIMP nsDBFolderInfo::InitFromTransferInfo(nsIDBFolderInfo *transferInfo)
 {
   NS_ENSURE_ARG(transferInfo);
-  transferInfo->GetFlags(&m_flags);
+  PRInt32 flags;
+  nsAutoString folderNameStr;
+
+  transferInfo->GetFlags(&flags);
+  SetFlags(flags);
+  transferInfo->GetMailboxName(&folderNameStr);
+  SetMailboxName(&folderNameStr);
+  // ### add whatever other fields we want to copy here.
+
   return NS_OK;
 }
 
