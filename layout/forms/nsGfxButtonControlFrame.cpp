@@ -159,11 +159,12 @@ nsGfxButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetri
 
 NS_IMETHODIMP 
 nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext, 
-                             nsHTMLReflowMetrics&     aDesiredSize,
-                             const nsHTMLReflowState& aReflowState, 
-                             nsReflowStatus&          aStatus)
+                                nsHTMLReflowMetrics&     aDesiredSize,
+                                const nsHTMLReflowState& aReflowState, 
+                                nsReflowStatus&          aStatus)
 {
    // The mFormFrame is set in the initial reflow within nsHTMLButtonControlFrame
+  nsresult rv = NS_OK;
 
   if ((kSuggestedNotSet != mSuggestedWidth) || 
       (kSuggestedNotSet != mSuggestedHeight)) {
@@ -179,11 +180,15 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
       suggestedReflowState.mComputedHeight = mSuggestedHeight;
     }
 
-    return nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, suggestedReflowState, aStatus);
+    rv = nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, suggestedReflowState, aStatus);
 
   } else { // Normal reflow.
-    return nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+    rv = nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
+
+  COMPARE_QUIRK_SIZE("nsGfxButtonControlFrame", 36, 24) //with the text "one" in it
+
+  return rv;
 }
 
 NS_IMETHODIMP 

@@ -36,7 +36,13 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
-  
+#ifdef DEBUG_rods
+  NS_IMETHOD Reflow(nsIPresContext&          aCX,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
+#endif
+
 protected:
   virtual CheckState GetCheckboxState();
   virtual void SetCheckboxState(CheckState aValue);
