@@ -37,21 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsICharsetConverterManager.h"
-#include "nsICharsetAlias.h"
 
 #include "prmem.h"
 #include "prprf.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsICharsetConverterManager2.h"
 #include "nsSaveAsCharset.h"
-
-//
-// guids
-//
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 
 
 //
@@ -69,14 +61,11 @@ nsSaveAsCharset::nsSaveAsCharset()
 
   mAttribute = attr_htmlTextDefault;
   mEntityVersion = 0;
-  mEncoder = NULL;
-  mEntityConverter = NULL;
+  mCharsetListIndex = -1;
 }
 
 nsSaveAsCharset::~nsSaveAsCharset()
 {
-  NS_IF_RELEASE(mEncoder);
-  NS_IF_RELEASE(mEntityConverter);
 }
 
 NS_IMETHODIMP
@@ -84,27 +73,19 @@ nsSaveAsCharset::Init(const char *charset, PRUint32 attr, PRUint32 entityVersion
 {
   nsresult rv = NS_OK;
 
-  nsString aCharset; aCharset.AssignWithConversion(charset);
   mAttribute = attr;
   mEntityVersion = entityVersion;
 
-  // set up unicode encoder
-  nsCOMPtr<nsICharsetConverterManager> ccm = 
-           do_GetService(kCharsetConverterManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  rv = SetupCharsetList(charset);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = ccm->GetUnicodeEncoder(&aCharset, &mEncoder);
-  if (NS_FAILED(rv)) return rv;
-  if (NULL == mEncoder) return NS_ERROR_FAILURE;
+  // set up unicode encoder
+  rv = SetupUnicodeEncoder(GetNextCharset());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // set up entity converter
-  if (attr_EntityNone != MASK_ENTITY(mAttribute)) {
-    rv = nsComponentManager::CreateInstance(kEntityConverterCID, 
-                                            NULL,
-                                            NS_GET_IID(nsIEntityConverter), 
-                                            (void**)&mEntityConverter);
-    if (NULL == mEntityConverter) return NS_ERROR_FAILURE;
-  }
+  if (attr_EntityNone != MASK_ENTITY(mAttribute) && !mEntityConverter)
+    mEntityConverter = do_CreateInstance(NS_ENTITYCONVERTER_CONTRACTID, &rv);
 
   return rv;
 }
@@ -118,26 +99,66 @@ nsSaveAsCharset::Convert(const PRUnichar *inString, char **_retval)
     return NS_ERROR_NULL_POINTER;
   if (0 == *inString)
     return NS_ERROR_ILLEGAL_VALUE;
-  nsresult rv;
+  nsresult rv = NS_OK;
 
-  if (NULL == mEncoder) return NS_ERROR_FAILURE;  // need to call Init() before Convert()
+  NS_ASSERTION(mEncoder, "need to call Init() before Convert()");
+  NS_ENSURE_TRUE(mEncoder, NS_ERROR_FAILURE);
 
-  if (attr_EntityBeforeCharsetConv == MASK_ENTITY(mAttribute)) {
-    if (NULL == mEntityConverter) return NS_ERROR_FAILURE;
-    PRUnichar *entity = NULL;
-    // do the entity conversion first
-    rv = mEntityConverter->ConvertToEntities(inString, mEntityVersion, &entity);
-    if(NS_SUCCEEDED(rv)) {
-      if (NULL == entity) return NS_ERROR_OUT_OF_MEMORY;
-      rv = DoCharsetConversion(entity, _retval);
-      nsMemory::Free(entity);
+  *_retval = nsnull;
+
+  // make sure to start from the first charset in the list
+  if (mCharsetListIndex > 0) {
+    mCharsetListIndex = -1;
+    rv = SetupUnicodeEncoder(GetNextCharset());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  do {
+    // fallback to the next charset in the list if the last conversion failed by an unmapped character
+    if (MASK_CHARSET_FALLBACK(mAttribute) && NS_ERROR_UENC_NOMAPPING == rv) {
+      const char * charset = GetNextCharset();
+      if (!charset)
+        break;
+      rv = SetupUnicodeEncoder(charset);
+      NS_ENSURE_SUCCESS(rv, rv);
+      PR_FREEIF(*_retval);
     }
-  }
-  else {
-    rv = DoCharsetConversion(inString, _retval);
-  }
+
+    if (attr_EntityBeforeCharsetConv == MASK_ENTITY(mAttribute)) {
+      NS_ASSERTION(mEntityConverter, "need to call Init() before Convert()");
+      NS_ENSURE_TRUE(mEntityConverter, NS_ERROR_FAILURE);
+      PRUnichar *entity = nsnull;
+      // do the entity conversion first
+      rv = mEntityConverter->ConvertToEntities(inString, mEntityVersion, &entity);
+      if(NS_SUCCEEDED(rv)) {
+        rv = DoCharsetConversion(entity, _retval);
+        nsMemory::Free(entity);
+      }
+    }
+    else
+      rv = DoCharsetConversion(inString, _retval);
+
+  } while (MASK_CHARSET_FALLBACK(mAttribute) && NS_ERROR_UENC_NOMAPPING == rv);
 
   return rv;
+}
+
+NS_IMETHODIMP 
+nsSaveAsCharset::GetCharset(char * *aCharset)
+{
+  NS_ENSURE_ARG(aCharset);
+  NS_ASSERTION(mCharsetListIndex >= 0, "need to call Init() first");
+  NS_ENSURE_TRUE(mCharsetListIndex >= 0, NS_ERROR_FAILURE);
+
+  const char *charset = mCharsetList[mCharsetListIndex]->get();
+  if (!charset) {
+    *aCharset = nsnull;
+    NS_ASSERTION(charset, "make sure to call Init() with non empty charset list");
+    return NS_ERROR_FAILURE;
+  }
+
+  *aCharset = nsCRT::strdup(charset);
+  return (*aCharset) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -324,6 +345,48 @@ nsSaveAsCharset::DoConversionFallBack(PRUnichar inCharacter, char *outString, PR
 	return rv;
 }
 
+nsresult nsSaveAsCharset::SetupUnicodeEncoder(const char* charset)
+{
+  NS_ENSURE_ARG(charset);
+  nsresult rv;
+
+  // set up unicode encoder
+  nsCOMPtr <nsICharsetConverterManager2> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr <nsIAtom> charsetAtom;
+  rv = ccm->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).get(), getter_AddRefs(charsetAtom));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return ccm->GetUnicodeEncoder(charsetAtom, getter_AddRefs(mEncoder));
+}
+
+nsresult nsSaveAsCharset::SetupCharsetList(const char *charsetList)
+{
+  NS_ENSURE_ARG(charsetList);
+
+  NS_ASSERTION(charsetList[0], "charsetList should not be empty");
+  if (!charsetList[0])
+    return NS_ERROR_INVALID_ARG;
+
+  if (mCharsetListIndex >= 0) {
+    mCharsetList.Clear();
+    mCharsetListIndex = -1;
+  }
+
+  mCharsetList.ParseString(charsetList, ", ");
+
+  return NS_OK;
+}
+
+const char * nsSaveAsCharset::GetNextCharset()
+{
+  if ((mCharsetListIndex + 1) >= mCharsetList.Count())
+    return nsnull;
+
+  // bump the index and return the next charset
+  return mCharsetList[++mCharsetListIndex]->get();
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 

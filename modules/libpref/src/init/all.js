@@ -567,6 +567,10 @@ pref("intl.charset.detector",               "chrome://navigator/locale/navigator
 pref("intl.charset.default",                "chrome://navigator-platform/locale/navigator.properties");
 pref("intl.content.langcode",               "chrome://communicator-region/locale/region.properties");
 pref("intl.locale.matchOS",                 false);
+// fallback charset list for Unicode conversion (converting from Unicode)
+// currently used for mail send only to handle symbol characters (e.g Euro, trademark, smartquotes)
+// for ISO-8859-1
+pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
 pref("font.language.group",                 "chrome://navigator/locale/navigator.properties");
 
 // -- folders (Mac: these are binary aliases.)
