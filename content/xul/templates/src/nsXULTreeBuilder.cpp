@@ -1050,13 +1050,15 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
                                                  PR_TRUE,
                                                  &open);
 
-            if (open) {
+            // If it's open, make sure that we've got a subtree structure ready.
+            if (open)
                 parent = mRows.EnsureSubtreeFor(iter);
-            }
-            else if ((iter->mContainerType != nsOutlinerRows::eContainerType_Container) ||
-                     (iter->mContainerState != nsOutlinerRows::eContainerState_Nonempty)) {
-                // The container is closed, but we know something has
-                // just been inserted into it.
+
+            // We know something has just been inserted into the
+            // container, so whether its open or closed, make sure
+            // that we've got our outliner row's state correct.
+            if ((iter->mContainerType != nsOutlinerRows::eContainerType_Container) ||
+                (iter->mContainerState != nsOutlinerRows::eContainerState_Nonempty)) {
                 iter->mContainerType  = nsOutlinerRows::eContainerType_Container;
                 iter->mContainerState = nsOutlinerRows::eContainerState_Nonempty;
                 mBoxObject->InvalidateRow(iter.GetRowIndex());
