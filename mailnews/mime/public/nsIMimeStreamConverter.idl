@@ -93,7 +93,7 @@ interface nsIMimeStreamConverter : nsISupports {
     /*
      * This is used to extract headers while parsing a message
      */
-  	void SetMimeHeadersListener(in nsIMimeStreamConverterListener listener);
+  	void SetMimeHeadersListener(in nsIMimeStreamConverterListener listener, in nsMimeOutputType aType);
 
     /*
      * This is used for forward inline

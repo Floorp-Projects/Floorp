@@ -813,10 +813,10 @@ nsStreamConverter::SetStreamURI(nsIURI *aURI)
 }
 
 nsresult
-nsStreamConverter::SetMimeHeadersListener(nsIMimeStreamConverterListener *listener)
+nsStreamConverter::SetMimeHeadersListener(nsIMimeStreamConverterListener *listener, nsMimeOutputType aType)
 {
    mMimeStreamConverterListener = listener;
-   bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, listener, mOutputType);
+   bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, listener, aType);
    return NS_OK;
 }
 
@@ -1095,11 +1095,10 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, co
   
   if (aMsgQuote)
   {
-    SetMimeOutputType(nsMimeOutput::nsMimeMessageQuoting);
     nsCOMPtr<nsIMimeStreamConverterListener> quoteListener;
     rv = aMsgQuote->GetQuoteListener(getter_AddRefs(quoteListener));
     if (quoteListener)
-      SetMimeHeadersListener(quoteListener);
+      SetMimeHeadersListener(quoteListener, nsMimeOutput::nsMimeMessageQuoting);
     rv = aMsgQuote->GetQuoteChannel(getter_AddRefs(aChannel));
   }
   else
