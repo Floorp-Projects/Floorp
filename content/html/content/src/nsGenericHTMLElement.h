@@ -52,13 +52,14 @@ public:
   ~nsGenericHTMLElement();
 
   // Implementation for nsIDOMElement
-  nsresult    GetDOMAttribute(const nsString& aName, nsString& aReturn);
-  nsresult    SetDOMAttribute(const nsString& aName, const nsString& aValue);
-  nsresult    RemoveAttribute(const nsString& aName);
-  nsresult    GetAttributeNode(const nsString& aName,
-                               nsIDOMAttr** aReturn);
-  nsresult    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);
-  nsresult    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn);
+  nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 
+  {
+    return nsGenericElement::GetAttribute(aName, aReturn);
+  }
+  nsresult    SetAttribute(const nsString& aName, const nsString& aValue)
+  {
+    return nsGenericElement::SetAttribute(aName, aValue);
+  }
 
   // Implementation for nsIDOMHTMLElement
   nsresult    GetId(nsString& aId);
@@ -76,6 +77,11 @@ public:
   // Implementation for nsIContent
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep);
+  nsresult ParseAttributeString(const nsString& aStr, 
+                                nsIAtom*& aName,
+                                PRInt32& aNameSpaceID);
+  nsresult GetNameSpacePrefix(PRInt32 aNameSpaceID,
+                              nsIAtom*& aPrefix);
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
                         PRBool aNotify);
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;
@@ -386,21 +392,6 @@ public:
   NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { \
     return _g.GetStyle(aStyle);                         \
   }
-
-/**
- * Implement the nsIScriptObjectOwner API by forwarding the methods to a
- * generic content object (either nsGenericHTMLLeafElement or
- * nsGenericHTMLContainerContent)
- */
-#define NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(_g)     \
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, \
-                             void** aScriptObject) {     \
-    return _g.GetScriptObject(aContext, aScriptObject);  \
-  }                                                      \
-  NS_IMETHOD SetScriptObject(void *aScriptObject) {      \
-    return _g.SetScriptObject(aScriptObject);            \
-  }
-
 
 #define NS_IMPL_IHTMLCONTENT_USING_GENERIC(_g)                         \
   NS_IMETHOD Compact() {                                               \

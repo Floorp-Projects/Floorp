@@ -18,12 +18,11 @@
  */
 #include "nsGenericElement.h"
 
-
+#include "nsDOMAttribute.h"
+#include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
 #include "nsIDocument.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
@@ -72,382 +71,6 @@ static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
-
-//----------------------------------------------------------------------
-
-nsDOMAttribute::nsDOMAttribute(const nsString& aName, const nsString& aValue)
-  : mName(aName), mValue(aValue)
-{
-  mRefCnt = 1;
-  mScriptObject = nsnull;
-}
-
-nsDOMAttribute::~nsDOMAttribute()
-{
-}
-
-nsresult
-nsDOMAttribute::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMAttrIID)) {
-    nsIDOMAttr* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMAttr* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*)tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsDOMAttribute)
-
-NS_IMPL_RELEASE(nsDOMAttribute)
-
-nsresult
-nsDOMAttribute::GetScriptObject(nsIScriptContext *aContext,
-                                void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptAttr(aContext, 
-                           (nsISupports *)(nsIDOMAttr *)this, 
-                           nsnull,
-                           (void **)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-nsresult
-nsDOMAttribute::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-nsresult
-nsDOMAttribute::GetName(nsString& aName)
-{
-  aName = mName;
-  return NS_OK;
-}
-
-nsresult
-nsDOMAttribute::GetValue(nsString& aValue)
-{
-  aValue = mValue;
-  return NS_OK;
-}
-
-nsresult
-nsDOMAttribute::SetValue(const nsString& aValue)
-{
-  mValue = aValue;
-  return NS_OK;
-}
-
-nsresult
-nsDOMAttribute::GetSpecified(PRBool* aSpecified)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetNodeName(nsString& aNodeName)
-{
-  return GetName(aNodeName);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetNodeValue(nsString& aNodeValue)
-{
-  return GetValue(aNodeValue);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::SetNodeValue(const nsString& aNodeValue)
-{
-  // You can't actually do this, but we'll fail silently
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetNodeType(PRUint16* aNodeType)
-{
-  *aNodeType = (PRUint16)nsIDOMNode::ATTRIBUTE_NODE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetParentNode(nsIDOMNode** aParentNode)
-{
-  *aParentNode = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  *aChildNodes = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::HasChildNodes(PRBool* aHasChildNodes)
-{
-  *aHasChildNodes = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
-{
-  *aFirstChild = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetLastChild(nsIDOMNode** aLastChild)
-{
-  *aLastChild = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
-{
-  *aPreviousSibling = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetNextSibling(nsIDOMNode** aNextSibling)
-{
-  *aNextSibling = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
-{
-  *aAttributes = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  nsDOMAttribute* newAttr = new nsDOMAttribute(mName, mValue);
-  if (nsnull == newAttr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aReturn = newAttr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-{
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//----------------------------------------------------------------------
-
-nsDOMAttributeMap::nsDOMAttributeMap(nsIContent* aContent)
-  : mContent(aContent)
-{
-  mRefCnt = 1;
-  NS_ADDREF(mContent);
-  mScriptObject = nsnull;
-}
-
-nsDOMAttributeMap::~nsDOMAttributeMap()
-{
-  NS_RELEASE(mContent);
-}
-
-nsresult
-nsDOMAttributeMap::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMNamedNodeMapIID)) {
-    nsIDOMNamedNodeMap* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMNamedNodeMap* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*)tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsDOMAttributeMap)
-
-NS_IMPL_RELEASE(nsDOMAttributeMap)
-
-nsresult
-nsDOMAttributeMap::GetScriptObject(nsIScriptContext *aContext,
-                                   void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptNamedNodeMap(aContext, 
-                                   (nsISupports *)(nsIDOMNamedNodeMap *)this, 
-                                   nsnull,
-                                   (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-nsresult
-nsDOMAttributeMap::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-nsresult
-nsDOMAttributeMap::GetNamedItem(const nsString &aAttrName,
-                              nsIDOMNode** aAttribute)
-{
-  nsAutoString value;
-  // XXX need to parse namespace fom attribute name
-  // XXX need to uppercace name only if HTML namespace
-  nsAutoString upper;
-  aAttrName.ToUpperCase(upper);
-  nsIAtom* nameAtom = NS_NewAtom(upper);
-  mContent->GetAttribute(kNameSpaceID_HTML, nameAtom, value);
-  NS_RELEASE(nameAtom);
-  *aAttribute  = (nsIDOMNode *) new nsDOMAttribute(aAttrName, value);
-  return NS_OK;
-}
-
-nsresult
-nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
-{
-  nsIDOMAttr *attribute;
-  nsAutoString name, value;
-  nsresult err;
-
-  if (NS_OK != (err = aNode->QueryInterface(kIDOMAttrIID,
-                                            (void **)&attribute))) {
-    return err;
-  }
-
-  attribute->GetName(name);
-  attribute->GetValue(value);
-  NS_RELEASE(attribute);
-
-  // XXX need to parse namespace from attribute name
-  // XXX also need to uppercase name only if HTML namespace
-  name.ToUpperCase();
-  nsIAtom* nameAtom = NS_NewAtom(name);
-  mContent->SetAttribute(kNameSpaceID_HTML, nameAtom, value, PR_TRUE);
-  NS_RELEASE(nameAtom);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
-{
-  nsresult res = GetNamedItem(aName, aReturn);
-  if (NS_OK == res) {
-    // XXX need to parse namespace from attribute name
-    // XXX need to uppercase only if HTML namespace
-    nsAutoString upper;
-    aName.ToUpperCase(upper);
-    nsIAtom* attr = NS_NewAtom(upper);
-    mContent->UnsetAttribute(kNameSpaceID_HTML, attr, PR_TRUE);
-  }
-
-  return res;
-}
-
-nsresult
-nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
-{
-  nsresult res = NS_ERROR_FAILURE;
-
-  PRInt32 nameSpaceID;
-  nsIAtom*  nameAtom = nsnull;
-  if (NS_SUCCEEDED(mContent->GetAttributeNameAt(aIndex, nameSpaceID, nameAtom))) {
-    nsAutoString value;
-    if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttribute(nameSpaceID, nameAtom, value)) {
-      // XXX need to prefix namespace if present
-      nsAutoString name;
-      nameAtom->ToString(name);
-      *aReturn = (nsIDOMNode *)new nsDOMAttribute(name, value);
-      res = NS_OK;
-    }
-    NS_RELEASE(nameAtom);
-  }
-
-  return res;
-}
-
-nsresult
-nsDOMAttributeMap::GetLength(PRUint32 *aLength)
-{
-  PRInt32 n;
-  nsresult rv = mContent->GetAttributeCount(n);
-  *aLength = PRUint32(n);
-  return rv;
-}
 
 //----------------------------------------------------------------------
 
@@ -607,6 +230,10 @@ nsGenericElement::~nsGenericElement()
       mDOMSlots->mStyle->DropReference();
       NS_RELEASE(mDOMSlots->mStyle);
     } 
+    if (nsnull != mDOMSlots->mAttributeMap) {
+      mDOMSlots->mAttributeMap->DropReference();
+      NS_RELEASE(mDOMSlots->mAttributeMap);
+    }
     // XXX Should really be arena managed
     PR_DELETE(mDOMSlots);
   }
@@ -620,6 +247,7 @@ nsGenericElement::GetDOMSlots()
     mDOMSlots->mScriptObject = nsnull;
     mDOMSlots->mChildNodes = nsnull;
     mDOMSlots->mStyle = nsnull;
+    mDOMSlots->mAttributeMap = nsnull;
     mDOMSlots->mRangeList = nsnull;
   }
   
@@ -738,13 +366,18 @@ nsresult
 nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
   NS_PRECONDITION(nsnull != aAttributes, "null pointer argument");
-  // XXX Should we create a new one every time or should we
-  // cache one after we create it? If we find that this is
-  // something that's called often, we might need to do the
-  // latter.
-  *aAttributes = new nsDOMAttributeMap(mContent);
+  nsDOMSlots *slots = GetDOMSlots();
 
-  return NS_OK;
+  if (nsnull == slots->mAttributeMap) {
+    slots->mAttributeMap = new nsDOMAttributeMap(mContent);
+    if (nsnull == slots->mAttributeMap) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(slots->mAttributeMap);
+  }
+
+  return slots->mAttributeMap->QueryInterface(kIDOMNamedNodeMapIID, 
+                                              (void **)aAttributes);
 }
 
 nsresult
@@ -760,103 +393,126 @@ nsGenericElement::GetTagName(nsString& aTagName)
 }
 
 nsresult
-nsGenericElement::GetDOMAttribute(const nsString& aName, nsString& aReturn)
+nsGenericElement::GetAttribute(const nsString& aName, nsString& aReturn)
 {
-  // XXX need to parse namespace from name
-  // XXX need to uppercase name if HTML namespace
-  nsIAtom* nameAtom = NS_NewAtom(aName);
-  nsresult rv = mContent->GetAttribute(kNameSpaceID_None, nameAtom, aReturn);
+  nsIAtom* nameAtom;
+  PRInt32 nameSpaceID;
+
+  mContent->ParseAttributeString(aName, nameAtom, nameSpaceID);
+  mContent->GetAttribute(nameSpaceID, nameAtom, aReturn);
   NS_RELEASE(nameAtom);
-  return rv;
+
+  return NS_OK;
 }
 
 nsresult
-nsGenericElement::SetDOMAttribute(const nsString& aName,
-                                  const nsString& aValue)
+nsGenericElement::SetAttribute(const nsString& aName,
+                               const nsString& aValue)
 {
-  // XXX need to parse namespace from name
-  // XXX need to uppercase name if HTML namespace
-  nsIAtom* nameAtom = NS_NewAtom(aName);
-  nsresult rv = mContent->SetAttribute(kNameSpaceID_None, nameAtom, aValue, PR_TRUE);
+  nsIAtom* nameAtom;
+  PRInt32 nameSpaceID;
+  nsresult result = NS_OK;
+
+  mContent->ParseAttributeString(aName, nameAtom, nameSpaceID);
+  result = mContent->SetAttribute(nameSpaceID, nameAtom, aValue, PR_TRUE);
   NS_RELEASE(nameAtom);
-  return rv;
+
+  return result;
 }
 
 nsresult
 nsGenericElement::RemoveAttribute(const nsString& aName)
 {
-  // XXX need to parse namespace from name
-  // XXX need to uppercase name if HTML namespace
-  nsIAtom* nameAtom = NS_NewAtom(aName);
-  nsresult rv = mContent->UnsetAttribute(kNameSpaceID_None, nameAtom, PR_TRUE);
+  nsIAtom* nameAtom;
+  PRInt32 nameSpaceID;
+  nsresult result = NS_OK;
+
+  mContent->ParseAttributeString(aName, nameAtom, nameSpaceID);
+  result = mContent->UnsetAttribute(nameSpaceID, nameAtom, PR_TRUE);
   NS_RELEASE(nameAtom);
-  return rv;
+
+  return result;
 }
 
 nsresult
 nsGenericElement::GetAttributeNode(const nsString& aName,
                                    nsIDOMAttr** aReturn)
 {
-  // XXX need to parse namespace from name
-  // XXX need to uppercase name if HTML namespace
-  nsIAtom* nameAtom = NS_NewAtom(aName);
-  nsAutoString value;
-  if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttribute(kNameSpaceID_None, nameAtom, value)) {
-    *aReturn = new nsDOMAttribute(aName, value);
+  if (nsnull == aReturn) {
+    return NS_ERROR_NULL_POINTER;
   }
-  else {
-    *aReturn = nsnull;
+  nsIDOMNamedNodeMap* map;
+  nsresult result = GetAttributes(&map);
+ 
+  *aReturn = nsnull;
+  if (NS_OK == result) {
+    nsIDOMNode* node;
+    result = map->GetNamedItem(aName, &node);
+    if ((NS_OK == result) && (nsnull != node)) {
+      result = node->QueryInterface(kIDOMAttrIID, (void **)aReturn);
+      NS_IF_RELEASE(node);
+    }
+    NS_RELEASE(map);
   }
-  NS_RELEASE(nameAtom);
-  return NS_OK;
+
+  return result;
 }
 
 nsresult
 nsGenericElement::SetAttributeNode(nsIDOMAttr* aAttribute, 
-                                       nsIDOMAttr** aReturn)
+                                   nsIDOMAttr** aReturn)
 {
-  NS_PRECONDITION(nsnull != aAttribute, "null attribute");
-
-  nsresult res = NS_ERROR_FAILURE;
-
-  if (nsnull != aAttribute) {
-    nsAutoString name, value;
-    res = aAttribute->GetName(name);
-    if (NS_OK == res) {
-      res = aAttribute->GetValue(value);
-      if (NS_OK == res) {
-        // XXX need to parse namespace from name
-        // XXX need to uppercase name if HTML namespace
-        nsIAtom* nameAtom = NS_NewAtom(name);
-        mContent->SetAttribute(kNameSpaceID_None, nameAtom, value, PR_TRUE);
-        NS_RELEASE(nameAtom);
-      }
-    }
+  if ((nsnull == aReturn) || (nsnull == aAttribute))  {
+    return NS_ERROR_NULL_POINTER;
   }
-  return res;
+  nsIDOMNamedNodeMap* map;
+  nsresult result = GetAttributes(&map);
+ 
+  *aReturn = nsnull;
+  if (NS_OK == result) {
+    nsIDOMNode *node, *returnNode;
+    result = aAttribute->QueryInterface(kIDOMNodeIID, (void **)&node);
+    if (NS_OK == result) {
+      result = map->SetNamedItem(node, &returnNode);
+      if ((NS_OK == result) && (nsnull != returnNode)) {
+        result = returnNode->QueryInterface(kIDOMAttrIID, (void **)aReturn);
+        NS_IF_RELEASE(returnNode);
+      }
+      NS_RELEASE(node);
+    }
+    NS_RELEASE(map);
+  }
+
+  return result;
 }
 
 nsresult
 nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute, 
-                                          nsIDOMAttr** aReturn)
+                                      nsIDOMAttr** aReturn)
 {
-  NS_PRECONDITION(nsnull != aAttribute, "null attribute");
+  if ((nsnull == aReturn) || (nsnull == aAttribute))  {
+    return NS_ERROR_NULL_POINTER;
+  }  
+  nsIDOMNamedNodeMap* map;
+  nsresult result = GetAttributes(&map);
 
-  nsresult res = NS_ERROR_FAILURE;
-
-  if (nsnull != aAttribute) {
+  *aReturn = nsnull;
+  if (NS_OK == result) {
     nsAutoString name;
-    res = aAttribute->GetName(name);
-    if (NS_OK == res) {
-      // XXX need to parse namespace from name
-      // XXX need to uppercase name if HTML namespace
-      nsIAtom* nameAtom = NS_NewAtom(name);
-      mContent->UnsetAttribute(kNameSpaceID_None, nameAtom, PR_TRUE);
-      NS_RELEASE(nameAtom);
+    
+    result = aAttribute->GetName(name);
+    if (NS_OK == result) {
+      nsIDOMNode* node;
+      result = map->RemoveNamedItem(name, &node);
+      if ((NS_OK == result) && (nsnull != node)) {
+        result = node->QueryInterface(kIDOMAttrIID, (void **)aReturn);
+        NS_RELEASE(node);
+      }
     }
+    NS_RELEASE(map);
   }
 
-  return res;
+  return result;
 }
 
 nsresult
@@ -1482,6 +1138,23 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
   return ret;
 }
 
+static char kNameSpaceSeparator[] = ":";
+
+nsIAtom*  
+nsGenericElement::CutNameSpacePrefix(nsString& aString)
+{
+  nsAutoString  prefix;
+  PRInt32 nsoffset = aString.Find(kNameSpaceSeparator);
+  if (-1 != nsoffset) {
+    aString.Left(prefix, nsoffset);
+    aString.Cut(0, nsoffset+1);
+  }
+  if (0 < prefix.Length()) {
+    return NS_NewAtom(prefix);
+  }
+  return nsnull;
+}
+
 //----------------------------------------------------------------------
 
 struct nsGenericAttribute
@@ -1531,8 +1204,6 @@ nsresult
 nsGenericContainerElement::CopyInnerTo(nsIContent* aSrcContent,
                                        nsGenericContainerElement* aDst)
 {
-  aDst->mContent = aSrcContent;
-  // XXX should the node's document be set?
   // XXX copy attributes not yet impelemented
   // XXX deep copy?
   return NS_OK;

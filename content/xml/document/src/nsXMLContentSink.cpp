@@ -61,6 +61,7 @@ static char kXSLType[] = "text/xsl";
 
 
 static NS_DEFINE_IID(kIXMLContentSinkIID, NS_IXMLCONTENT_SINK_IID);
+static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
@@ -653,8 +654,9 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
     NS_RELEASE(tagAtom);
   }
 
+  nsIContent* content = nsnull;
   if (popContent) {
-    nsIContent* content = PopContent();
+    content = PopContent();
     if (nsnull != content) {
       if (mDocElement == content) {
         mState = eXMLContentSinkState_InEpilog;
@@ -667,7 +669,16 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
       PR_ASSERT(0);
     }
   }
-  PopNameSpaces();
+  nsINameSpace* nameSpace = PopNameSpaces();
+  if (nsnull != content) {
+    nsIXMLContent* xmlContent;
+    if (NS_OK == content->QueryInterface(kIXMLContentIID, 
+                                         (void **)&xmlContent)) {
+      xmlContent->SetContainingNameSpace(nameSpace);
+      NS_RELEASE(xmlContent);
+    }
+  }
+  NS_IF_RELEASE(nameSpace);
 
   return result;
 }
@@ -1245,15 +1256,17 @@ nsXMLContentSink::GetNameSpaceId(nsIAtom* aPrefix)
   return id;
 }
 
-void    
+nsINameSpace*    
 nsXMLContentSink::PopNameSpaces()
 {
   if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
     PRInt32 index = mNameSpaceStack->Count() - 1;
     nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
     mNameSpaceStack->RemoveElementAt(index);
-    NS_RELEASE(nameSpace);
+    return nameSpace;
   }
+
+  return nsnull;
 }
 
 PRBool  

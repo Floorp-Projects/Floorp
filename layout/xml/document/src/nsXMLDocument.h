@@ -52,7 +52,6 @@ public:
   NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
   NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn);
   NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn);
-  NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn);
   NS_IMETHOD    CreateElement(const nsString& aTagName, 
                               nsIDOMElement** aReturn);
   NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn);

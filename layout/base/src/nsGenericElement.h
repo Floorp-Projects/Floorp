@@ -45,78 +45,7 @@ class nsISupportsArray;
 class nsIDOMScriptObjectFactory;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
-
-// Attribute helper class used to wrap up an attribute with a dom
-// object that implements nsIDOMAttr and nsIDOMNode and
-// nsIScriptObjectOwner
-class nsDOMAttribute : public nsIDOMAttr, public nsIScriptObjectOwner {
-public:
-  nsDOMAttribute(const nsString &aName, const nsString &aValue);
-  ~nsDOMAttribute();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
-  // nsIDOMAttr interface
-  NS_IMETHOD GetSpecified(PRBool* aSpecified);
-  NS_IMETHOD GetName(nsString& aReturn);
-  NS_IMETHOD GetValue(nsString& aReturn);
-  NS_IMETHOD SetValue(const nsString& aValue);
-  
-  // nsIDOMNode interface
-  NS_IMETHOD GetNodeName(nsString& aNodeName);
-  NS_IMETHOD GetNodeValue(nsString& aNodeValue);
-  NS_IMETHOD SetNodeValue(const nsString& aNodeValue);
-  NS_IMETHOD GetNodeType(PRUint16* aNodeType);
-  NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode);
-  NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
-  NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes);
-  NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild);
-  NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild);
-  NS_IMETHOD GetPreviousSibling(nsIDOMNode** aPreviousSibling);
-  NS_IMETHOD GetNextSibling(nsIDOMNode** aNextSibling);
-  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes);
-  NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                          nsIDOMNode** aReturn);
-  NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                          nsIDOMNode** aReturn);
-  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-  NS_IMETHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
-  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
-  NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
-
-private:
-  nsString mName;
-  nsString mValue;
-  void* mScriptObject;
-};
-
-// Another helper class that implements the nsIDOMNamedNodeMap interface.
-class nsDOMAttributeMap : public nsIDOMNamedNodeMap,
-                          public nsIScriptObjectOwner
-{
-public:
-  nsDOMAttributeMap(nsIContent* aContent);
-  ~nsDOMAttributeMap();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
-  // nsIDOMNamedNodeMap interface
-  NS_IMETHOD GetLength(PRUint32* aSize);
-  NS_IMETHOD GetNamedItem(const nsString& aName, nsIDOMNode** aReturn);
-  NS_IMETHOD SetNamedItem(nsIDOMNode* aNode, nsIDOMNode** aReturn);
-  NS_IMETHOD RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn);
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-
-private:
-  nsIContent* mContent;
-  void* mScriptObject;
-};
+class nsDOMAttributeMap;
 
 
 // Class that holds the child list of a content element and also
@@ -153,6 +82,7 @@ typedef struct {
   void *mScriptObject;
   nsChildContentList *mChildNodes;
   nsDOMCSSDeclaration *mStyle;
+  nsDOMAttributeMap* mAttributeMap;
   nsVoidArray *mRangeList;
   PRBool mIsContainer;
 } nsDOMSlots;
@@ -177,8 +107,8 @@ public:
 
   // Implementation for nsIDOMElement
   nsresult    GetTagName(nsString& aTagName);
-  nsresult    GetDOMAttribute(const nsString& aName, nsString& aReturn);
-  nsresult    SetDOMAttribute(const nsString& aName, const nsString& aValue);
+  nsresult    GetAttribute(const nsString& aName, nsString& aReturn);
+  nsresult    SetAttribute(const nsString& aName, const nsString& aValue);
   nsresult    RemoveAttribute(const nsString& aName);
   nsresult    GetAttributeNode(const nsString& aName,
                                nsIDOMAttr** aReturn);
@@ -257,6 +187,8 @@ public:
 
   static nsIDOMScriptObjectFactory *gScriptObjectFactory;
 
+  static nsIAtom* CutNameSpacePrefix(nsString& aString);
+
   nsDOMSlots *GetDOMSlots();
 
   // Up pointer to the real content object that we are
@@ -272,8 +204,6 @@ public:
   nsDOMSlots *mDOMSlots;
 };
 
-//----------------------------------------------------------------------
-
 class nsGenericContainerElement : public nsGenericElement {
 public:
   nsGenericContainerElement();
@@ -283,6 +213,14 @@ public:
                        nsGenericContainerElement* aDest);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
+  nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 
+  {
+    return nsGenericElement::GetAttribute(aName, aReturn);
+  }
+  nsresult    SetAttribute(const nsString& aName, const nsString& aValue)
+  {
+    return nsGenericElement::SetAttribute(aName, aValue);
+  }
   nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);
   nsresult    HasChildNodes(PRBool* aHasChildNodes);
   nsresult    GetFirstChild(nsIDOMNode** aFirstChild);
@@ -326,6 +264,7 @@ public:
   nsVoidArray* mAttributes;
   nsVoidArray mChildren;
 };
+
 
 //----------------------------------------------------------------------
 
@@ -402,11 +341,11 @@ public:
   NS_IMETHOD GetTagName(nsString& aTagName) {                                 \
     return _g.GetTagName(aTagName);                                           \
   }                                                                           \
-  NS_IMETHOD GetDOMAttribute(const nsString& aName, nsString& aReturn) {      \
-    return _g.GetDOMAttribute(aName, aReturn);                                \
+  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aReturn) {         \
+    return _g.GetAttribute(aName, aReturn);                                   \
   }                                                                           \
-  NS_IMETHOD SetDOMAttribute(const nsString& aName, const nsString& aValue) { \
-    return _g.SetDOMAttribute(aName, aValue);                                 \
+  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue) {    \
+    return _g.SetAttribute(aName, aValue);                                    \
   }                                                                           \
   NS_IMETHOD RemoveAttribute(const nsString& aName) {                         \
     return _g.RemoveAttribute(aName);                                         \
@@ -498,6 +437,15 @@ public:
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \
   }                                                                        \
+  NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
+                                  nsIAtom*& aName,                         \
+                                  PRInt32& aNameSpaceID) {                 \
+    return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
+  }                                                                        \
+  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,                      \
+                                nsIAtom*& aPrefix) {                       \
+    return _g.GetNameSpacePrefix(aNameSpaceID, aPrefix);                   \
+  }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           const nsString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
@@ -548,6 +496,18 @@ public:
     return _g.GetRangeList(aResult);                                       \
   }                                                                        
   
+/**
+ * Implement the nsIScriptObjectOwner API by forwarding the methods to a
+ * generic content object
+ */
+#define NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(_g)     \
+  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, \
+                             void** aScriptObject) {     \
+    return _g.GetScriptObject(aContext, aScriptObject);  \
+  }                                                      \
+  NS_IMETHOD SetScriptObject(void *aScriptObject) {      \
+    return _g.SetScriptObject(aScriptObject);            \
+  }
 
 #define NS_IMPL_CONTENT_QUERY_INTERFACE(_id, _iptr, _this, _base) \
   if (_id.Equals(kISupportsIID)) {                              \

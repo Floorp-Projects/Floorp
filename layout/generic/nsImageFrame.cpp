@@ -182,7 +182,7 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
     // so transparent images are always rendered using a transparency mask
     rv = aPresContext->StartLoadImage(src, nsnull, aForFrame, aCallBack,
                                       aNeedSizeUpdate, mImageLoader);
-    if (NS_OK != rv) {
+    if ((NS_OK != rv) || (nsnull == mImageLoader)) {
       return rv;
     }
   }

@@ -39,6 +39,7 @@ INCLUDES += \
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
 	nsXMLElement.cpp		\
+	nsGenericXMLElement.cpp		\
 	$(NULL)
 
 EXPORTS = \

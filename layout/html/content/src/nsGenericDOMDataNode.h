@@ -137,6 +137,18 @@ struct nsGenericDOMDataNode {
     aResult = nsnull;
     return NS_OK;
   }
+  nsresult ParseAttributeString(const nsString& aStr, 
+                                nsIAtom*& aName,
+                                PRInt32& aNameSpaceID) { 
+    aName = nsnull;
+    aNameSpaceID = kNameSpaceID_None;
+    return NS_OK; 
+  }
+  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,
+                                nsIAtom*& aPrefix) {
+    aPrefix = nsnull;
+    return NS_OK;
+  }
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsString& aValue,
                         PRBool aNotify) {
     return NS_OK;
@@ -428,6 +440,15 @@ struct nsGenericDOMDataNode {
   }                                                                        \
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \
+  }                                                                        \
+  NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
+                                  nsIAtom*& aName,                         \
+                                  PRInt32& aNameSpaceID) {                 \
+    return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
+  }                                                                        \
+  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,                      \
+                                nsIAtom*& aPrefix) {                       \
+    return _g.GetNameSpacePrefix(aNameSpaceID, aPrefix);                   \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,       \
                           nsString &aResult) const {                       \

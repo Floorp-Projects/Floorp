@@ -25,7 +25,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIXMLContent.h"
 #include "nsIJSScriptObject.h"
-#include "nsGenericElement.h"
+#include "nsGenericXMLElement.h"
 
 class nsIDocument;
 class nsIAtom;
@@ -52,8 +52,7 @@ public:
   NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
 
   // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
+  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {
@@ -67,6 +66,9 @@ public:
   }
   NS_IMETHOD SetParent(nsIContent* aParent) {
     return mInner.SetParent(aParent);
+  }
+  NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpaceId) const {
+    return mInner.GetNameSpaceID(aNameSpaceId);
   }
   NS_IMETHOD CanContainChildren(PRBool& aResult) const {
     return mInner.CanContainChildren(aResult);
@@ -97,9 +99,17 @@ public:
   NS_IMETHOD IsSynthetic(PRBool& aResult) {
     return mInner.IsSynthetic(aResult);
   }
-  NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const;
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {
     return mInner.GetTag(aResult);
+  }
+  NS_IMETHOD ParseAttributeString(const nsString& aStr,
+                                  nsIAtom*& aName,
+                                  PRInt32& aNameSpaceID) {
+    return mInner.ParseAttributeString(aStr, aName, aNameSpaceID);
+  }
+  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,
+                                nsIAtom*& aPrefix) {
+    return mInner.GetNameSpacePrefix(aNameSpaceID, aPrefix);
   }
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
                           PRBool aNotify);
@@ -149,9 +159,21 @@ public:
   }                                                                        
 
   // nsIXMLContent
-  NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
-  NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
-  NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceId);
+  NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace)  {
+    return mInner.SetContainingNameSpace(aNameSpace);
+  }
+  NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const  {
+    return mInner.GetContainingNameSpace(aNameSpace);
+  }
+  NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace) {
+    return mInner.SetNameSpacePrefix(aNameSpace);
+  }
+  NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const {
+    return mInner.GetNameSpacePrefix(aNameSpace);
+  }
+  NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceId) {
+    return mInner.SetNameSpaceID(aNameSpaceId);
+  }
 
   // nsIDOMEventReceiver
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
@@ -183,11 +205,7 @@ public:
   }
 
 protected:
-  nsGenericContainerElement mInner;
-  
-  nsIAtom* mNameSpacePrefix;
-  PRInt32 mNameSpaceID;
-  void *mScriptObject;
+  nsGenericXMLElement mInner;
   PRBool mIsLink;
 };
 

@@ -27,8 +27,8 @@
 class nsIDocument;
 
 class nsDocumentFragment : public nsIContent,
-			   public nsIDOMDocumentFragment,
-			   public nsIScriptObjectOwner
+                           public nsIDOMDocumentFragment,
+                           public nsIScriptObjectOwner
 {
 public:
   nsDocumentFragment(nsIDocument* aOwnerDocument);
@@ -88,6 +88,19 @@ public:
   NS_IMETHOD SetScriptObject(void* aScriptObject);
 
   // interface nsIContent
+  NS_IMETHOD ParseAttributeString(const nsString& aStr, 
+                                  nsIAtom*& aName,
+                                  PRInt32& aNameSpaceID)
+    { aName = nsnull;
+      aNameSpaceID = kNameSpaceID_None;
+      return NS_OK; 
+    }
+  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,
+                                nsIAtom*& aPrefix)
+    {
+      aPrefix = nsnull;
+      return NS_OK;
+    }
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const
     { return mInner.GetDocument(aResult); }
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep)
