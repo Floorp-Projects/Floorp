@@ -389,6 +389,7 @@ void nsXtWidget_Expose_Callback(Widget w, XtPointer p, XtPointer call_data)
   nsXtWidget_InitNSEvent(event, p, pevent, NS_PAINT);
 
   pevent.rect = (nsRect *)&rect;
+#if 0
 printf("Count %d\n", event->xexpose.count);
   if (event->xexpose.count != 0)
     return ;
@@ -426,7 +427,7 @@ printf("Before %d %d %d %d\n", rect.x, rect.y, rect.width, rect.height);
     }
 printf("After %d %d %d %d\n", rect.x, rect.y, rect.width, rect.height);
   }
-
+#endif
   widgetWindow->OnPaint(pevent);
 
   if (DBG) fprintf(stderr, "Out nsXtWidget_ExposureMask_EventHandler\n");
