@@ -55,9 +55,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\install
-    $(MAKE_INSTALL) *.html $(DIST)\install
 
 clobber_all::
     $(RM) $(DIST)\install\$(MODULE).exe
-    $(RM) $(DIST)\install\*.html
 
