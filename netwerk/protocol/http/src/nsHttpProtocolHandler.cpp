@@ -145,14 +145,17 @@ nsresult
 nsHttpProtocolHandler::GetTransport(const char* host, PRInt32 port,
                                     nsIChannel* *result)
 {
+    nsresult rv;
     nsSocketTransportKey key(host, port);
-    nsIChannel* trans = (nsIChannel*)mConnectionPool->Get(&key);
+    nsIChannel* trans;
+    
+    trans = (nsIChannel*)mConnectionPool->Get(&key);
     if (trans) {
         *result = trans;
+        NS_ADDREF(trans);
         return NS_OK;
     }
     
-    nsresult rv;
     NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -162,8 +165,9 @@ nsHttpProtocolHandler::GetTransport(const char* host, PRInt32 port,
     void* oldValue = mConnectionPool->Put(&key, trans);
     NS_ASSERTION(oldValue == nsnull, "race?");
     NS_ADDREF(trans);   // released in ReleaseTransport
-    
-    return rv;
+    *result = trans;
+        
+    return NS_OK;
 }
 
 nsresult
@@ -172,9 +176,13 @@ nsHttpProtocolHandler::ReleaseTransport(const char* host, PRInt32 port,
 {
     nsSocketTransportKey key(host, port);
     nsIChannel* value = (nsIChannel*)mConnectionPool->Remove(&key);
-    if (value == nsnull)
-        return NS_ERROR_FAILURE;
+
     NS_ASSERTION(trans == value, "mConnectionPool out of sync");
+    if (!value) {
+        return NS_ERROR_FAILURE;
+    }
+
+    NS_RELEASE(value);
     return NS_OK;
 }
 
