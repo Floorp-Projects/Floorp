@@ -71,7 +71,7 @@
 <!ENTITY tanslateSpantoEngCmd.label "Spanish to English">
 <!ENTITY translateSpantoFrenCmd.label "Spanish to French">
 <!ENTITY translateSpantoGermCmd.label "Spanish to German">
-<!ENTITY dcharMenu.label "Default Character Set">
+<!ENTITY dcharMenu.label "Character Set">
 <!ENTITY dcharIso1Cmd.label "ISO Latin 1 (ISO-8859-1)">
 <!ENTITY dcharIso2Cmd.label "ISO Latin 2 (ISO-8859-2)">
 <!ENTITY dcharIso3Cmd.label "ISO Latin 3 (ISO-8859-3)">
