@@ -338,7 +338,9 @@ PL_GetEvent(PLEventQueue* self)
     return NULL;
 
     mon = self->monitor;
-    PR_EnterMonitor(mon);
+    if (mon) {
+      PR_EnterMonitor(mon);
+    }
 
     if ( self->type == EventQueueIsNative )
         err = _pl_AcknowledgeNativeNotify(self);
@@ -352,7 +354,9 @@ PL_GetEvent(PLEventQueue* self)
     }
 
   done:
-    PR_ExitMonitor(mon);
+    if (mon) {
+      PR_ExitMonitor(mon);
+    }
     return event;
 }
 
@@ -462,6 +466,7 @@ PL_ProcessPendingEvents(PLEventQueue* self)
   if (PR_FALSE != self->processingEvents) return;
 
     self->processingEvents = PR_TRUE;
+#if 0
     while (PR_TRUE) {
     PLEvent* event = PL_GetEvent(self);
         if (event == NULL) break;
@@ -470,6 +475,33 @@ PL_ProcessPendingEvents(PLEventQueue* self)
     PL_HandleEvent(event);
     PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
     }
+#else
+    /* Only process the events that are already in the queue, and
+     * not any new events that get added. Do this by making a copy of
+     * the queue
+     */
+    PR_EnterMonitor(self->monitor);
+    if (PR_CLIST_IS_EMPTY(&self->queue)) {
+      PR_ExitMonitor(self->monitor);
+    } else {
+      struct PLEventQueue  tmpQueue;
+      /* Copy the events to a temporary queue */
+      memcpy(&tmpQueue, self, sizeof(tmpQueue));
+      tmpQueue.queue.next->prev = &tmpQueue.queue;
+      tmpQueue.queue.prev->next = &tmpQueue.queue;
+      tmpQueue.monitor = 0; /* don't waste time locking this queue when getting events */
+      PR_INIT_CLIST(&self->queue);
+      PR_ExitMonitor(self->monitor);
+      /* Now process the existing events */
+      while (PR_TRUE) {
+      PLEvent* event = PL_GetEvent(&tmpQueue);
+          if (event == NULL) break;
+      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
+      PL_HandleEvent(event);
+      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
+      }
+    }
+#endif
     self->processingEvents = PR_FALSE;
 }
 
