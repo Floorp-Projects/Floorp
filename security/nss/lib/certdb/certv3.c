@@ -34,7 +34,7 @@
 /*
  * Code for dealing with X509.V3 extensions.
  *
- * $Id: certv3.c,v 1.6 2003/12/03 00:09:04 wchang0222%aol.com Exp $
+ * $Id: certv3.c,v 1.7 2004/02/03 07:10:04 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -370,7 +370,6 @@ CERT_FindAuthKeyIDExten (PRArenaPool *arena, CERTCertificate *cert)
 SECStatus
 CERT_CheckCertUsage(CERTCertificate *cert, unsigned char usage)
 {
-    PRBool critical;    
     SECItem keyUsage;
     SECStatus rv;
 
@@ -381,35 +380,18 @@ CERT_CheckCertUsage(CERTCertificate *cert, unsigned char usage)
     
     keyUsage.data = NULL;
 
-    do {
-	/* if the keyUsage extension exists and is critical, make sure that the
-	   CA certificate is used for certificate signing purpose only. If the
-	   extension does not exist, we will assum that it can be used for
-	   certificate signing purpose.
-	*/
-	rv = CERT_GetExtenCriticality(cert->extensions,
-				      SEC_OID_X509_KEY_USAGE,
-				      &critical);
-	if (rv == SECFailure) {
-	    rv = (PORT_GetError () == SEC_ERROR_EXTENSION_NOT_FOUND) ?
-		SECSuccess : SECFailure;
-	    break;
-	}
-
-	if (critical == PR_FALSE) {
-	    rv = SECSuccess;
-	    break;
-	}
-
-	rv = CERT_FindKeyUsageExtension(cert, &keyUsage);
-	if (rv != SECSuccess) {
-	    break;
-	}	
-	if (!(keyUsage.data[0] & usage)) {
-	    PORT_SetError (SEC_ERROR_CERT_USAGES_INVALID);
-	    rv = SECFailure;
-	}
-    }while (0);
+    /* This code formerly ignored the Key Usage extension if it was
+    ** marked non-critical.  That was wrong.  Since we do understand it,
+    ** we are obligated to honor it, whether or not it is critical.
+    */
+    rv = CERT_FindKeyUsageExtension(cert, &keyUsage);
+    if (rv == SECFailure) {
+        rv = (PORT_GetError () == SEC_ERROR_EXTENSION_NOT_FOUND) ?
+	    SECSuccess : SECFailure;
+    } else if (!(keyUsage.data[0] & usage)) {
+	PORT_SetError (SEC_ERROR_CERT_USAGES_INVALID);
+	rv = SECFailure;
+    }
     PORT_Free (keyUsage.data);
     return (rv);
 }
