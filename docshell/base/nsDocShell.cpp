@@ -2944,7 +2944,7 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
       SetReferrerURI(referrer);
 
       nsXPIDLCString refreshHeader;
-      nsCOMPtr<nsIAtom> refreshAtom = NS_NewAtom ("refresh");
+      nsCOMPtr<nsIAtom> refreshAtom ( dont_AddRef( NS_NewAtom("refresh") ) );
 
       httpChannel -> GetResponseHeader (refreshAtom, getter_Copies (refreshHeader));
 
