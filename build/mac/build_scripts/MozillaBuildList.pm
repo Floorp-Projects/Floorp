@@ -282,9 +282,6 @@ sub InstallComponentFiles()
     InstallResources(":mozilla:embedding:components:ui:helperAppDlg:MANIFEST",             "$components_dir");
     InstallResources(":mozilla:embedding:components:ui:progressDlg:MANIFEST",              "$components_dir");
 
-    # intl
-    InstallResources(":mozilla:embedding:components:intl:MANIFEST",                        "$components_dir");
-
     # resetPref
     InstallResources(":mozilla:xpfe:components:resetPref:MANIFEST",                        "$components_dir");
     
@@ -994,7 +991,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:xpinstall:cleanup:MANIFEST",                      "$distdirectory:xpinstall:");
 
     my $dir = '';
-    for $dir (qw(bookmarks find history related search shistory sidebar urlbarhistory xfer))
+    for $dir (qw(autocomplete bookmarks download-manager find history related search shistory sidebar urlbarhistory xfer))
     {
         InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",       "$distdirectory:idl:");
     }
@@ -1006,10 +1003,8 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",         "$distdirectory:idl:");
     # regviewer
     InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",     "$distdirectory:idl:");
-    # autocomplete
-    InstallFromManifest(":mozilla:xpfe:components:autocomplete:public:MANIFEST_IDL", "$distdirectory:idl:");
-    # download manager
-    InstallFromManifest(":mozilla:xpfe:components:download-manager:public:MANIFEST_IDL", "$distdirectory:idl:");
+
+    InstallFromManifest(":mozilla:xpfe:components:intl:MANIFEST",                  "$distdirectory:xpfe:");
 
     # XPAPPS
     InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",                  "$distdirectory:xpfe:");
@@ -1029,17 +1024,22 @@ sub BuildClientDist()
         my($header) = ":mozilla:directory:c-sdk:ldap:include:ldap-standard.h";
         my($header_modtime) = (-e $header ? GetFileModDate($header) : 0);
         if ($template_modtime > $header_modtime) {
-            open(STDIN, "<$template");
-            open(STDOUT, ">$header");
-            @ARGV = ("LDAP_VENDOR_NAME=mozilla.org", "LDAP_VENDOR_VERSION=500");
-            do ":mozilla:directory:c-sdk:ldap:build:replace.pl";
-            if ($@) {
-                close(STDOUT);
-                close(STDIN);
-                die "Error: can't create ldap-standard.h from ldap-standard-tmpl.h";
-            }
-            close(STDOUT);
-            close(STDIN);
+            # Make sure we add the config dir to search, to pick up GenerateManifest.pm
+            # Need to do this dynamically, because this module can be used before
+            # mozilla/directory/c-sdk has been checked out.
+            my($top_path) = $0;        # $0 is the path to the parent script
+            $top_path =~ s/:build:mac:build_scripts:.+$//;
+            my($inc_path) = $top_path . ":directory:c-sdk:ldap:build:";
+            push(@INC, $inc_path);
+            require replace;
+
+            local(*TEMPLATE);
+            open(TEMPLATE, "<$template") || die "couldn't open ldap header template";
+            local(*HEADER);
+            open(HEADER, ">$header") || die "couldn't create ldap header";
+            replace::GenerateHeader(*TEMPLATE, *HEADER, {"LDAP_VENDOR_NAME" => "mozilla.org", "LDAP_VENDOR_VERSION" => "500"});
+            close(TEMPLATE);
+            close(HEADER);
         }
 
         InstallFromManifest(":mozilla:directory:c-sdk:ldap:include:MANIFEST",      		"$distdirectory:directory:");
