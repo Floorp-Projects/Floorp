@@ -66,6 +66,59 @@
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
+
+NS_IMETHODIMP nsHTMLEditor::AddDefaultProperty(nsIAtom *aProperty, 
+                                            const nsAString & aAttribute, 
+                                            const nsAString & aValue)
+{
+  nsresult res = NS_OK;
+  nsString outValue;
+  PRInt32 index;
+  nsString attr(aAttribute);
+  if (TypeInState::FindPropInList(aProperty, attr, &outValue, mDefaultStyles, index))
+  {
+    PropItem *item = (PropItem*)mDefaultStyles[index];
+    item->value = aValue;
+  }
+  else
+  {
+    nsString value(aValue);
+    PropItem *propItem = new PropItem(aProperty, attr, value);
+    mDefaultStyles.AppendElement((void*)propItem);
+  }
+  return res;
+}
+
+NS_IMETHODIMP nsHTMLEditor::RemoveDefaultProperty(nsIAtom *aProperty, 
+                                   const nsAString & aAttribute, 
+                                   const nsAString & aValue)
+{
+  nsresult res = NS_OK;
+  nsString outValue;
+  PRInt32 index;
+  nsString attr(aAttribute);
+  if (TypeInState::FindPropInList(aProperty, attr, &outValue, mDefaultStyles, index))
+  {
+    PropItem *item = (PropItem*)mDefaultStyles[index];
+    if (item) delete item;
+    mDefaultStyles.RemoveElementAt(index);
+  }
+  return res;
+}
+
+NS_IMETHODIMP nsHTMLEditor::RemoveAllDefaultProperties()
+{
+  PRInt32 j, defcon = mDefaultStyles.Count();
+  for (j=0; j<defcon; j++)
+  {
+    PropItem *item = (PropItem*)mDefaultStyles[j];
+    if (item) delete item;
+  }
+  mDefaultStyles.Clear();
+  return NS_OK;
+}
+
+
 // Add the CSS style corresponding to the HTML inline style defined
 // by aProperty aAttribute and aValue to the selection
 NS_IMETHODIMP nsHTMLEditor::SetCSSInlineProperty(nsIAtom *aProperty, 
@@ -591,6 +644,21 @@ PRBool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
   return PR_TRUE;
 }
 
+nsresult nsHTMLEditor::ApplyDefaultProperties()
+{
+  nsresult res = NS_OK;
+  PRInt32 j, defcon = mDefaultStyles.Count();
+  for (j=0; j<defcon; j++)
+  {
+    PropItem *propItem = (PropItem*)mDefaultStyles[j];
+    if (!propItem) 
+      return NS_ERROR_NULL_POINTER;
+    res = SetInlineProperty(propItem->tag, propItem->attr, propItem->value);
+    if (NS_FAILED(res)) return res;
+  }
+  return res;
+}
+
 nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode, 
                                    nsIAtom *aProperty,   // null here means remove all properties
                                    const nsAString *aAttribute, 
@@ -915,7 +983,8 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
                              PRBool *aFirst, 
                              PRBool *aAny, 
                              PRBool *aAll,
-                             nsAString *outValue)
+                             nsAString *outValue,
+                             PRBool aCheckDefaults)
 {
   if (!aProperty)
     return NS_ERROR_NULL_POINTER;
@@ -981,6 +1050,19 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
         IsTextPropertySetByContent(collapsedNode, aProperty, aAttribute, aValue,
                                    isSet, getter_AddRefs(resultNode), outValue);
         *aFirst = *aAny = *aAll = isSet;
+        
+        if (!isSet && aCheckDefaults) 
+        {
+          // style not set, but if it is a default then it will appear if 
+          // content is inserted, so we should report it as set (analogous to TypeInState).
+          PRInt32 index;
+          if (TypeInState::FindPropInList(aProperty, *aAttribute, outValue, mDefaultStyles, index))
+          {
+            *aFirst = *aAny = *aAll = PR_TRUE;
+            if (outValue)
+              outValue->Assign(((PropItem*)mDefaultStyles[index])->value);
+          }
+        }
         return NS_OK;
       }
     }
@@ -1152,7 +1234,12 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
 
 NS_IMETHODIMP nsHTMLEditor::RemoveAllInlineProperties()
 {
-  return RemoveInlinePropertyImpl(nsnull, nsnull);
+  nsAutoEditBatch batchIt(this);
+  nsAutoRules beginRulesSniffing(this, kOpResetTextProperties, nsIEditor::eNext);
+
+  nsresult res = RemoveInlinePropertyImpl(nsnull, nsnull);
+  if (NS_FAILED(res)) return res;
+  return ApplyDefaultProperties();
 }
 
 NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsAString &aAttribute)
