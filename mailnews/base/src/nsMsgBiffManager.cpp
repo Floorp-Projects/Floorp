@@ -163,15 +163,16 @@ nsresult nsMsgBiffManager::SetupNextBiff()
 		nsTime biffDelay;
 
 		if(currentTime > biffEntry->nextBiffTime)
-			biffDelay = 0;
+			biffDelay = LL_ZERO;
 		else
 			biffDelay = biffEntry->nextBiffTime - currentTime;
 		mBiffTimer->Cancel();
 		//Convert biffDelay into milliseconds
 		PRInt64 timeInMS;
 		PRUint32 timeInMSUint32;
-
-		LL_DIV(timeInMS, biffDelay, 1000);
+		PRInt64 ms;
+		LL_I2L(ms, 1000); 
+		LL_DIV(timeInMS, biffDelay, ms);
 		LL_L2UI(timeInMSUint32, timeInMS);
 		mBiffTimer->Init(this, timeInMSUint32);
 	}
