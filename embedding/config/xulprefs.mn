@@ -52,7 +52,6 @@ content/communicator/pref/pref-offline.xul, comm/content/communicator/pref/pref-
 content/communicator/pref/pref-proxies.js, comm/content/communicator/pref/pref-proxies.js
 content/communicator/pref/pref-policies.xul, comm/content/communicator/pref/pref-policies.xul
 content/communicator/pref/pref-proxies.xul, comm/content/communicator/pref/pref-proxies.xul
-content/communicator/pref/pref-proxy-manual.xul, comm/content/communicator/pref/pref-proxy-manual.xul
 content/communicator/pref/pref-scripts.xul, comm/content/communicator/pref/pref-scripts.xul
 content/communicator/pref/pref-scripts.js, comm/content/communicator/pref/pref-scripts.js
 content/communicator/pref/pref-search.js, comm/content/communicator/pref/pref-search.js
@@ -96,7 +95,6 @@ locale/XXXX/communicator/pref/pref-navigator.dtd, XXXX/locale/XXXX/communicator/
 locale/XXXX/communicator/pref/pref-offline.dtd, XXXX/locale/XXXX/communicator/pref/pref-offline.dtd
 locale/XXXX/communicator/pref/pref-policies.dtd, XXXX/locale/XXXX/communicator/pref/pref-policies.dtd
 locale/XXXX/communicator/pref/pref-proxies.dtd, XXXX/locale/XXXX/communicator/pref/pref-proxies.dtd
-locale/XXXX/communicator/pref/pref-proxy-manual.dtd, XXXX/locale/XXXX/communicator/pref/pref-proxy-manual.dtd
 locale/XXXX/communicator/pref/pref-scripts.dtd, XXXX/locale/XXXX/communicator/pref/pref-scripts.dtd
 locale/XXXX/communicator/pref/pref-search.dtd, XXXX/locale/XXXX/communicator/pref/pref-search.dtd
 locale/XXXX/communicator/pref/pref-security.dtd, XXXX/locale/XXXX/communicator/pref/pref-security.dtd
