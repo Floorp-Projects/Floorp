@@ -119,7 +119,7 @@ pref("browser.search.mode", 0);
 pref("browser.search.powermode", 0);
 pref("browser.search.use_double_clicks", false);
 pref("browser.urlbar.autocomplete.enabled", true);
-pref("browser.urlbar.clickSelectsAll",true);
+pref("browser.urlbar.clickSelectsAll",false);
 
 localDefPref("browser.bookmark_location",       "");
 localDefPref("browser.addressbook_location",    "");
