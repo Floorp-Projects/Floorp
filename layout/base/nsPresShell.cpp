@@ -7102,7 +7102,7 @@ PresShell::VerifyIncrementalReflow()
   // Create a new presentation shell to view the document. Use the
   // exact same style information that this document has.
   nsAutoPtr<nsStyleSet> newSet;
-  rv = CloneStyleSet(mStyleSet, &newSet);
+  rv = CloneStyleSet(mStyleSet, getter_Transfers(newSet));
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clone style set");
   rv = mDocument->CreateShell(cx, vm, newSet, &sh);
   sh->SetVerifyReflowEnable(PR_FALSE); // turn off verify reflow while we're reflowing the test frame tree
