@@ -35,7 +35,6 @@ CPPSRCS		= \
 	gif.cpp \
 	nsGIFModule.cpp \
 	nsGIFDecoder.cpp \
-	nsGIFCallback.cpp \
 	dllcompat.cpp \
 	$(NULL)
 
