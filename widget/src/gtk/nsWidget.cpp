@@ -44,6 +44,25 @@
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
+// keeping track of a list of simultaneously modal widgets
+class ModalWidgetList {
+public:
+  ModalWidgetList(GtkWidget *aWidget);
+  ~ModalWidgetList();
+
+  static PRBool Find(GtkWidget *aWidget);
+  static void   Append(GtkWidget *aWidget);
+  static void   Remove(GtkWidget *aWidget);
+  static void   RemoveLast(void);
+  static void   Suppress(PRBool aSuppress);
+
+private:
+  GtkWidget       *mWidget;
+  ModalWidgetList *mNext,
+                  *mPrev,
+                  *mLast; // valid only for head of list
+};
+
 nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
 PRUint32 nsWidget::sWidgetCount = 0;
 
@@ -51,7 +70,6 @@ PRUint32 nsWidget::sWidgetCount = 0;
 static nsIRollupListener *gRollupListener = nsnull;
 static nsIWidget *gRollupWidget = nsnull;
 static PRBool gRollupConsumeRollupEvent = PR_FALSE;
-static GtkWidget *gModalWidget = nsnull;  // cringe
 
 //
 // Keep track of the last widget being "dragged"
@@ -153,7 +171,7 @@ nsWidget::~nsWidget()
     mIMECompositionUniString = nsnull;
   }
 
-  NS_ASSERTION(!gModalWidget || gModalWidget != mWidget, "destroying widget without first clearing modality.");
+  NS_ASSERTION(!ModalWidgetList::Find(mWidget), "destroying widget without first clearing modality.");
 }
 
 NS_IMETHODIMP nsWidget::GetAbsoluteBounds(nsRect &aRect)
@@ -288,16 +306,7 @@ nsWidget::DestroySignal(GtkWidget* aGtkWidget, nsWidget* aWidget)
 void
 nsWidget::SuppressModality(PRBool aSuppress)
 {
-  GtkWindow *topWindow;
-
-  // nothing to do?
-  if (!gModalWidget)
-    return;
-
-  topWindow = GTK_WINDOW(gtk_widget_get_toplevel(gModalWidget));
-  NS_ASSERTION(topWindow,"suppressing modality on non-window");
-
-  gtk_window_set_modal(topWindow, aSuppress ? FALSE : TRUE);
+  ModalWidgetList::Suppress(aSuppress);
 }
 
 void
@@ -417,9 +426,12 @@ NS_IMETHODIMP nsWidget::SetModal(PRBool aModal)
   GtkWindow *topWindow;
 
   if (!mWidget) {
-    if (!aModal) // assume we're being used correctly; clear modal global
-      gModalWidget = 0;
-    return NS_ERROR_FAILURE;
+    if (aModal)
+      return NS_ERROR_FAILURE;
+    else { // assume we're being used correctly, though we can't check
+      ModalWidgetList::RemoveLast();
+      return NS_OK;
+    }
   }
 
   topWidget = gtk_widget_get_toplevel(mWidget);
@@ -429,12 +441,11 @@ NS_IMETHODIMP nsWidget::SetModal(PRBool aModal)
     return NS_ERROR_FAILURE;
 
   if (aModal) {
-    NS_ASSERTION(!gModalWidget, "modal widget set without clearing old one");
+    ModalWidgetList::Append(mWidget);
     gtk_window_set_modal(topWindow, TRUE);
-    gModalWidget = topWidget;
   } else {
+    ModalWidgetList::Remove(mWidget);
     gtk_window_set_modal(topWindow, FALSE);
-    gModalWidget = 0;
   }
 
   return NS_OK;
@@ -2755,5 +2766,87 @@ nsWidget::SetXICSpotLocation(nsPoint aPoint)
     gdk_ic_attr_destroy(attr);
   }
   return;
+}
+
+/********************** class ModalWidgetList ***********************/
+/* This silly little thing is a linked list of widgets that have been
+   declared modal, in the order of their declaration. We do this only
+   so clients can stack modal dialogs on top of each other, as they
+   are wont to do. Yes, glib keeps its own list, but we need our own copy
+   so we can temporarily disable them all when a popup control window
+   makes an appearance within a modal dialog.
+*/
+static ModalWidgetList *gModalWidgets = nsnull;
+
+ModalWidgetList::ModalWidgetList(GtkWidget *aWidget) {
+  mWidget = aWidget;
+  mNext = 0;
+  mPrev = 0;
+  mLast = 0;
+}
+ModalWidgetList::~ModalWidgetList() {
+}
+PRBool ModalWidgetList::Find(GtkWidget *aWidget) {
+  ModalWidgetList *next;
+
+  for (next = gModalWidgets; next && next->mWidget != aWidget; next = next->mNext)
+    ;
+  return next ? PR_TRUE : PR_FALSE;
+}
+void ModalWidgetList::Append(GtkWidget *aWidget) {
+  ModalWidgetList *newElement = new ModalWidgetList(aWidget);
+
+  NS_ASSERTION(newElement, "out of memory in modal widget list creation");
+  if (!newElement)
+    return;
+
+  if (gModalWidgets) {
+    newElement->mPrev = gModalWidgets->mLast;
+    gModalWidgets->mLast->mNext = newElement;
+    gModalWidgets->mLast = newElement;
+  } else {
+    newElement->mLast = newElement;
+    gModalWidgets = newElement;
+  }
+}
+void ModalWidgetList::Remove(GtkWidget *aWidget) {
+  NS_ASSERTION(gModalWidgets && gModalWidgets->mLast->mWidget == aWidget,
+    "removing modal widgets out of order");
+  if (gModalWidgets && gModalWidgets->mLast->mWidget == aWidget)
+    ModalWidgetList::RemoveLast();
+}
+void ModalWidgetList::RemoveLast() {
+  NS_ASSERTION(gModalWidgets, "removing modal widgets from empty list");
+  if (!gModalWidgets)
+    return;
+
+  ModalWidgetList *deadElement = gModalWidgets->mLast;
+  if (deadElement->mPrev) {
+    deadElement->mPrev->mNext = 0;
+    gModalWidgets->mLast = deadElement->mPrev;
+  } else
+    gModalWidgets = 0;
+  delete deadElement;
+}
+void ModalWidgetList::Suppress(PRBool aSuppress) {
+
+  if (!gModalWidgets)
+    return;
+
+  GtkWindow       *window;
+  ModalWidgetList *widget;
+
+  if (aSuppress)
+    for (widget = gModalWidgets->mLast; widget; widget = widget->mPrev) {
+      window = GTK_WINDOW(gtk_widget_get_toplevel(widget->mWidget));
+      NS_ASSERTION(window, "non-window in modality suppression list");
+      gtk_window_set_modal(window, FALSE);
+    }
+  else
+    for (widget = gModalWidgets; widget; widget = widget->mNext) {
+      window = GTK_WINDOW(gtk_widget_get_toplevel(widget->mWidget));
+      NS_ASSERTION(window, "non-window in modality suppression list");
+      gtk_window_set_modal(window, TRUE);
+    }
 }
 
