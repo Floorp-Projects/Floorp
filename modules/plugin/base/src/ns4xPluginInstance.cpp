@@ -36,6 +36,9 @@ ns4xPluginInstance :: ns4xPluginInstance(NPPluginFuncs* callbacks)
     fNPP.ndata = this;
 
     fPeer = nsnull;
+
+    mWindowless = PR_FALSE;
+    mTransparent = PR_FALSE;
 }
 
 
@@ -140,6 +143,7 @@ NS_IMETHODIMP ns4xPluginInstance :: GetPeer(nsIPluginInstancePeer* *resultingPee
 {
   NS_ADDREF(fPeer);
   *resultingPeer = fPeer;
+
   return NS_OK;
 }
 
@@ -148,17 +152,30 @@ NS_IMETHODIMP ns4xPluginInstance::Start(void)
     // XXX At some point, we maybe should implement start and stop to
     // load/unload the 4.x plugin, just in case there are some plugins
     // that rely on that behavior...
+printf("instance start called\n");
     return NS_OK;
 }
 
 NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 {
+printf("instance stop called\n");
     return NS_OK;
 }
 
 NS_IMETHODIMP ns4xPluginInstance::Destroy(void)
 {
-    return NS_OK;
+    nsresult error;
+
+printf("instance destroy called\n");
+    if (fCallbacks->destroy == NULL)
+        return NS_ERROR_FAILURE; // XXX right error?
+
+    NPSavedData *sdata;
+
+    error = (nsresult)CallNPP_DestroyProc(fCallbacks->destroy,
+                                          &fNPP, &sdata); // saved data
+
+    return error;
 }
 
 NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
@@ -217,11 +234,13 @@ NS_IMETHODIMP ns4xPluginInstance::NewStream(nsIPluginStreamPeer* peer, nsIPlugin
 
 NS_IMETHODIMP ns4xPluginInstance::Print(nsPluginPrint* platformPrint)
 {
+printf("instance print called\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* handled)
 {
+printf("instance handleevent called\n");
     *handled = PR_FALSE;
 
     return NS_OK;
@@ -241,3 +260,37 @@ NS_IMETHODIMP ns4xPluginInstance::URLNotify(const char* url, const char* target,
 
     return NS_OK; //XXX this seems bad...
 }
+
+NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable, void *value)
+{
+  nsresult  rv = NS_OK;
+
+  switch (variable)
+  {
+    case nsPluginInstanceVariable_WindowlessBool:
+      *(PRBool *)value = mWindowless;
+      break;
+
+    case nsPluginInstanceVariable_TransparentBool:
+      *(PRBool *)value = mTransparent;
+      break;
+
+    default:
+      rv = NS_ERROR_FAILURE;    //XXX this is bad
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP ns4xPluginInstance :: SetWindowless(PRBool aWindowless)
+{
+  mWindowless = aWindowless;
+  return NS_OK;
+}
+
+NS_IMETHODIMP ns4xPluginInstance :: SetTransparent(PRBool aTransparent)
+{
+  mTransparent = aTransparent;
+  return NS_OK;
+}
+

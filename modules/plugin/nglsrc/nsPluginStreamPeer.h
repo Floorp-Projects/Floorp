@@ -56,13 +56,16 @@ public:
                       PRUint32 aLastMod, nsMIMEType aMIMEType,
                       void *aNotifyData);
 
+  nsresult SetReason(nsPluginReason aReason);
+
 private:
-  nsIURL      *mURL;
-  PRUint32    mLength;
-  PRUint32    mLastMod;
-  void        *mNotifyData;
-  nsMIMEType  mMIMEType;
-  char        *mURLSpec;
+  nsIURL          *mURL;
+  PRUint32        mLength;
+  PRUint32        mLastMod;
+  void            *mNotifyData;
+  nsMIMEType      mMIMEType;
+  char            *mURLSpec;
+  nsPluginReason  mReason;
 };
 
 #endif

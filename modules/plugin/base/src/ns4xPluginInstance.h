@@ -83,6 +83,9 @@ public:
     URLNotify(const char* url, const char* target,
               nsPluginReason reason, void* notifyData);
 
+    NS_IMETHOD
+    GetValue(nsPluginInstanceVariable variable, void *value);
+
     ////////////////////////////////////////////////////////////////////////
     // ns4xPluginInstance-specific methods
 
@@ -105,6 +108,12 @@ public:
         return NS_OK;
     };
 
+    NS_IMETHOD
+    SetWindowless(PRBool aWindowless);
+
+    NS_IMETHOD
+    SetTransparent(PRBool aTransparent);
+
 protected:
 
     /**
@@ -124,6 +133,12 @@ protected:
      * instance and the browser.
      */
     NPP_t fNPP;
+
+    //these are used to store the windowless properties
+    //which the browser will later query
+
+    PRBool  mWindowless;
+    PRBool  mTransparent;
 };
 
 

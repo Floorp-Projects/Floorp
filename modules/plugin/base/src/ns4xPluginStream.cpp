@@ -28,6 +28,9 @@ ns4xPluginStream::ns4xPluginStream(void)
 {
     NS_INIT_REFCNT();
 
+    fPeer = nsnull;
+    fInstance = nsnull;
+
     // Initialize the 4.x interface structure
     memset(&fNPStream, 0, sizeof(fNPStream));
 }
@@ -98,7 +101,7 @@ NS_IMETHODIMP ns4xPluginStream::Initialize(ns4xPluginInstance* instance,
 
     NS_ASSERTION(fInstance != NULL, "null instance");
 
-    fInstance->AddRef();
+    NS_ADDREF(fInstance);
 
     NS_ASSERTION(fPeer != NULL, "null peer");
 
@@ -225,7 +228,6 @@ NS_IMETHODIMP ns4xPluginStream :: Close(void)
 {
     const NPPluginFuncs *callbacks;
     NPP                 npp;
-    nsresult            rv;
     void                *notifydata;
 
     fInstance->GetCallbacks(&callbacks);
@@ -253,15 +255,7 @@ NS_IMETHODIMP ns4xPluginStream :: Close(void)
                             notifydata);
     }
 
-    if (callbacks->destroystream == NULL)
-        return NS_OK;
-
-    rv = (nsresult)CallNPP_DestroyStreamProc(callbacks->destroystream,
-                                             npp,
-                                             &fNPStream, 
-                                             (NPReason)reason);
-
-  return rv;
+   return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -47,7 +47,6 @@ public:
   char          **mExtensionsArray;
   PRLibrary     *mLibrary;
   nsIPlugin     *mEntryPoint;
-  ns4xPlugin    *mAdapter;
   PRUint32      mFlags;
 };
 
@@ -72,26 +71,23 @@ public:
   //nsIPluginManager interface
 
   NS_IMETHOD
+  GetValue(nsPluginManagerVariable variable, void *value);
+
+  NS_IMETHOD
   ReloadPlugins(PRBool reloadPages);
 
   NS_IMETHOD
   UserAgent(const char* *resultingAgentString);
 
-  NS_IMETHOD
-  GetValue(nsPluginManagerVariable variable, void *value);
-
-  NS_IMETHOD
-  SetValue(nsPluginManagerVariable variable, void *value);
-
   //nsINetworkManager interface
 
   NS_IMETHOD
-  GetURL(nsISupports* peer, const char* url, const char* target,
+  GetURL(nsISupports* inst, const char* url, const char* target,
          void* notifyData = NULL, const char* altHost = NULL,
          const char* referrer = NULL, PRBool forceJSEnabled = PR_FALSE);
 
   NS_IMETHOD
-  PostURL(nsISupports* peer, const char* url, const char* target,
+  PostURL(nsISupports* inst, const char* url, const char* target,
           PRUint32 postDataLen, const char* postData,
           PRBool isFile = PR_FALSE, void* notifyData = NULL,
           const char* altHost = NULL, const char* referrer = NULL,
@@ -107,20 +103,29 @@ public:
   Init(void);
 
   NS_IMETHOD
+  Destroy(void);
+
+  NS_IMETHOD
   LoadPlugins(void);
 
   NS_IMETHOD
-  InstantiatePlugin(const char *aMimeType, nsIURL *aURL, nsIPluginInstance ** aPluginInst);
+  InstantiatePlugin(const char *aMimeType, nsIURL *aURL, nsIPluginInstanceOwner *aOwner);
 
   NS_IMETHOD
-  InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst,
-                    nsPluginWindow *aWindow, nsString& aURL);
+  InstantiatePlugin(const char *aMimeType, nsString& aURLSpec, nsIPluginInstanceOwner *aOwner);
+
+  NS_IMETHOD
+  InstantiatePlugin(const char *aMimeType, nsString& aURLSpec,
+                    nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner);
 
   NS_IMETHOD
   NewPluginStream(const nsString& aURL, nsIPluginInstance *aInstance, void *aNotifyData);
 
   NS_IMETHOD
-  NewPluginStream(const nsString& aURL, nsIPluginInstance **aInstance, nsPluginWindow *aWindow);
+  NewPluginStream(const nsString& aURL, nsIPluginInstanceOwner *aOwner, void *aNotifyData);
+
+  NS_IMETHOD
+  NewPluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance, void *aNotifyData);
 
   //nsIFactory interface
 

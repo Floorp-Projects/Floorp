@@ -19,15 +19,29 @@
 #include "nscore.h"
 #include "nsPluginInstancePeer.h"
 #include "nsIPluginInstance.h"
+#include <stdio.h>
+#include "prmem.h"
+#include "plstr.h"
 
 nsPluginInstancePeerImpl :: nsPluginInstancePeerImpl()
 {
+  NS_INIT_REFCNT();
+
   mInstance = nsnull;
+  mOwner = nsnull;
+  mMIMEType = nsnull;
 }
 
 nsPluginInstancePeerImpl :: ~nsPluginInstancePeerImpl()
 {
   mInstance = nsnull;
+  mOwner = nsnull;
+
+  if (nsnull != mMIMEType)
+  {
+    PR_Free((void *)mMIMEType);
+    mMIMEType = nsnull;
+  }
 }
 
 NS_IMPL_ADDREF(nsPluginInstancePeerImpl);
@@ -44,14 +58,14 @@ nsresult nsPluginInstancePeerImpl :: QueryInterface(const nsIID& iid, void** ins
 
     if (iid.Equals(kIPluginInstancePeerIID))
     {
-        *instance = (void *)(nsISupports *)(nsIPluginInstancePeer *)this;
+        *instance = (void *)(nsIPluginInstancePeer *)this;
         AddRef();
         return NS_OK;
     }
 
     if (iid.Equals(kIPluginTagInfoIID))
     {
-        *instance = (void *)(nsISupports *)(nsIPluginTagInfo *)this;
+        *instance = (void *)(nsIPluginTagInfo *)this;
         AddRef();
         return NS_OK;
     }
@@ -68,54 +82,98 @@ nsresult nsPluginInstancePeerImpl :: QueryInterface(const nsIID& iid, void** ins
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: GetValue(nsPluginInstancePeerVariable variable, void *value)
 {
+printf("instance peer getvalue %d called\n", variable);
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsPluginInstancePeerImpl :: SetValue(nsPluginInstancePeerVariable variable, void *value)
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: GetMIMEType(nsMIMEType *result)
 {
-  *result = "model/vrml";
+  if (nsnull == mMIMEType)
+    *result = "";
+  else
+    *result = mMIMEType;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: GetMode(nsPluginMode *result)
 {
-  *result = nsPluginMode_Full;
-  return NS_OK;
+  if (nsnull != mOwner)
+    return mOwner->GetMode(result);
+  else
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: NewStream(nsMIMEType type, const char* target, nsIOutputStream* *result)
 {
+printf("instance peer newstream called\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: ShowStatus(const char* message)
 {
+printf("instance peer showstatus called\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: GetAttributes(PRUint16& n, const char*const*& names, const char*const*& values)
 {
-  n = 0;
-  names = nsnull;
-  values = nsnull;
-  return NS_OK;
+  if (nsnull != mOwner)
+    return mOwner->GetAttributes(n, names, values);
+  else
+  {
+    n = 0;
+    names = nsnull;
+    values = nsnull;
+    return NS_ERROR_FAILURE;
+  }
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: GetAttribute(const char* name, const char* *result)
 {
-  *result = 0;
+  if (nsnull != mOwner)
+    return mOwner->GetAttribute(name, result);
+  else
+  {
+    *result = "";
+    return NS_ERROR_FAILURE;
+  }
+}
+
+NS_IMETHODIMP nsPluginInstancePeerImpl :: SetWindowSize(PRUint32 width, PRUint32 height)
+{
+printf("instance peer setwindowsize called\n");
   return NS_OK;
 }
 
-nsresult nsPluginInstancePeerImpl :: Initialize(nsIPluginInstance *aInstance)
+nsresult nsPluginInstancePeerImpl :: Initialize(nsIPluginInstanceOwner *aOwner,
+                                                const nsMIMEType aMIMEType)
 {
   //don't add a ref to precent circular references... MMP
-  mInstance = aInstance;
+  mOwner = aOwner;
+
+  aOwner->GetInstance(mInstance);
+  //release this one too... MMP
+  NS_IF_RELEASE(mInstance);
+
+  if (nsnull != aMIMEType)
+  {
+    mMIMEType = (nsMIMEType)PR_Malloc(PL_strlen(aMIMEType) + 1);
+
+    if (nsnull != mMIMEType)
+      PL_strcpy((char *)mMIMEType, aMIMEType);
+  }
 
   return NS_OK;
+}
+
+nsresult nsPluginInstancePeerImpl :: GetOwner(nsIPluginInstanceOwner *&aOwner)
+{
+  aOwner = mOwner;
+  NS_IF_ADDREF(mOwner);
+
+  if (nsnull != mOwner)
+    return NS_OK;
+  else
+    return NS_ERROR_FAILURE;
 }

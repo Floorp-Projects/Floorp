@@ -23,6 +23,8 @@
 #include "nsplugindefs.h"
 #include "nsIFactory.h"
 #include "nsString.h"
+#include "nsIPluginInstanceOwner.h"
+#include "nsIStreamListener.h"
 
 class nsIURL;
 
@@ -38,20 +40,28 @@ public:
   Init(void) = 0;
 
   NS_IMETHOD
+  Destroy(void) = 0;
+
+  NS_IMETHOD
   LoadPlugins(void) = 0;
 
   NS_IMETHOD
-  InstantiatePlugin(const char *aMimeType, nsIURL *aURL, nsIPluginInstance ** aPluginInst) = 0;
+  InstantiatePlugin(const char *aMimeType, nsIURL *aURL, nsIPluginInstanceOwner *aOwner) = 0;
 
   NS_IMETHOD
-  InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst,
-                    nsPluginWindow *aWindow, nsString& aURL) = 0;
+  InstantiatePlugin(const char *aMimeType, nsString& aURLSpec, nsIPluginInstanceOwner *aOwner) = 0;
+
+  NS_IMETHOD
+  InstantiatePlugin(const char *aMimeType, nsString& aURLSpec, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner) = 0;
 
   NS_IMETHOD
   NewPluginStream(const nsString& aURL, nsIPluginInstance *aInstance, void *aNotifyData) = 0;
 
   NS_IMETHOD
-  NewPluginStream(const nsString& aURL, nsIPluginInstance **aInstance, nsPluginWindow *aWindow) = 0;
+  NewPluginStream(const nsString& aURL, nsIPluginInstanceOwner *aOwner, void *aNotifyData) = 0;
+
+  NS_IMETHOD
+  NewPluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance, void *aNotifyData) = 0;
 };
 
 #endif
