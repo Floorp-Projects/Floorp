@@ -45,7 +45,7 @@
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
 #include "nsGfxCIID.h"
-#include "nsReadableutils.h"
+#include "nsReadableUtils.h"
 
 #include "nsString.h"
 

@@ -98,8 +98,8 @@
 #include "nsIParser.h"          // for kCharsetFromBookmarks
 
 #ifdef XP_WIN
-#include <SHLOBJ.H>
-#include <INTSHCUT.H>
+#include <shlobj.h>
+#include <intshcut.h>
 #ifdef CompareString
 #undef CompareString
 #endif

@@ -40,11 +40,11 @@
 #include "nsVoidArray.h"
 #include "nsITransferable.h"
 #include "nsClipboard.h"
-#include "IENUMFE.h"
+#include "IENUMFE.H"
 
-#include "OLE2.h"
+#include <ole2.h>
 #ifndef __MINGW32__
-#include "URLMON.h"
+#include <urlmon.h>
 #endif
 
 #if 0

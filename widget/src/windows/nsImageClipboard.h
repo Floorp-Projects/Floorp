@@ -44,7 +44,7 @@ Any other render format? HTML?
 
 */
 
-#include "nserror.h"
+#include "nsError.h"
 #include <windows.h>
 
 #include "nsCOMPtr.h"

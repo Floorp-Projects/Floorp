@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ienumfe.h"
+#include "IENUMFE.H"
 #include <stdio.h>
 #include "nsISupports.h"
 

@@ -56,7 +56,7 @@ include $(topsrcdir)/config/rules.mk
 
 JS_SET_BROWSER_COMPONENT = nsSetDefaultBrowser.js
 JS_SET_MAIL_COMPONENT = nsSetDefaultMail.js
-JS_UNSET_MAIL_COMPONENT = nsUnSetDefaultMail.js
+JS_UNSET_MAIL_COMPONENT = nsUnsetDefaultMail.js
 
 libs::
 	$(INSTALL) $(srcdir)/$(JS_SET_BROWSER_COMPONENT) $(DIST)/bin/components

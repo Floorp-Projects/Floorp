@@ -59,7 +59,7 @@
 #endif
 
 #ifdef XP_WIN
-#include "nsIWin32LocaleImpl.h"
+#include "nsIwin32LocaleImpl.h"
 #include "nsCollationWin.h"
 #include "nsDateTimeFormatWin.h"
 #endif

@@ -53,8 +53,8 @@
 #include <sys/timeb.h>
 #endif
 #ifdef XP_WIN
-#include <WINDEF.H>
-#include <WINBASE.H>
+#include <windef.h>
+#include <winbase.h>
 #endif
 
 #ifdef XP_MAC

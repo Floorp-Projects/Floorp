@@ -41,10 +41,10 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsILocale.h"
-#include "nsIWin32LocaleImpl.h"
+#include "nsIwin32LocaleImpl.h"
 #include "nsLocaleCID.h"
 #include "prprf.h"
-#include <Windows.h>
+#include <windows.h>
 #include "nsCRT.h"
 
 #define USER_DEFINED_PRIMARYLANG	0x0200
