@@ -86,7 +86,7 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 // Enter a message handler loop
 //
 //-------------------------------------------------------------------------
-nsresult nsAppShell::Run()
+NS_IMETHODIMP nsAppShell::Run()
 {
 	if (!mMacPump.get())
 		return NS_ERROR_NOT_INITIALIZED;
