@@ -75,12 +75,7 @@ nsWebBrowserPersist::~nsWebBrowserPersist()
 }
 
 void nsWebBrowserPersist::CleanUp()
-{    if (mInputStream)
-    {
-        mInputStream->Close();
-        mInputStream = nsnull;
-    }
-    mInputChannel = nsnull;
+{
     if (mOutputStream)
     {
         mOutputStream->Close();
@@ -195,32 +190,8 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
     
     mOutputTransport = outputChannel;
     
-//dougt wtf?!  why both a async and sync read?
-
     // Read from the input channel
     rv = inputChannel->AsyncOpen(this, nsnull);
-    if (NS_FAILED(rv))
-    {
-        OnEndDownload();
-        return NS_ERROR_FAILURE;
-    }
-    
-    nsCOMPtr<nsIInputStream> inStream;
-    rv = inputChannel->Open(getter_AddRefs(inStream));
-    if (NS_FAILED(rv))
-    {
-        OnEndDownload();
-        return NS_ERROR_FAILURE;
-    }
-  
-    mInputChannel = inputChannel;
-    mInputStream = inStream;
-
-    // Get the output channel ready for writing
-    nsCOMPtr<nsIRequest> writeRequest;
-    rv = NS_AsyncWriteFromStream(getter_AddRefs(writeRequest),
-            outputChannel, inStream, 0, 0, 0,
-            NS_STATIC_CAST(nsIStreamObserver*, this), nsnull);
     if (NS_FAILED(rv))
     {
         OnEndDownload();

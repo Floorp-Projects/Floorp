@@ -93,8 +93,6 @@ private:
     static PRBool PR_CALLBACK CleanupURIMap(nsHashKey *aKey, void *aData, void* closure);
 
     nsCOMPtr<nsIMIMEService>  mMIMEService;
-    nsCOMPtr<nsIChannel>      mInputChannel;
-    nsCOMPtr<nsIInputStream>  mInputStream;
     nsCOMPtr<nsITransport>    mOutputTransport;
     nsCOMPtr<nsIOutputStream> mOutputStream;
     nsCOMPtr<nsIURI>          mBaseURI;
