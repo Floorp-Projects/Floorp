@@ -2316,14 +2316,45 @@ NS_IMETHODIMP
 nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
-  nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+  nsCOMPtr<nsIScriptGlobalObject> global;
 
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptHTMLDocument(aContext, (nsISupports *)(nsIDOMHTMLDocument *)this, (nsISupports *)global, (void**)&mScriptObject);
+    // XXX We make the (possibly erroneous) assumption that the first
+    // presentation shell represents the "primary view" of the document
+    // and that the JS parent chain should incorporate just that view.
+    // This is done for lack of a better model when we have multiple
+    // views.
+    nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+    if (shell) {
+      nsCOMPtr<nsIPresContext> cx;
+      shell->GetPresContext(getter_AddRefs(cx));
+      nsCOMPtr<nsISupports> container;
+      
+      res = cx->GetContainer(getter_AddRefs(container));
+      if (NS_SUCCEEDED(res) && container) {
+        nsCOMPtr<nsIScriptContextOwner> sco = do_QueryInterface(container);
+        if (sco) {
+          res = sco->GetScriptGlobalObject(getter_AddRefs(global));
+        }
+      }
+    }
+    // XXX If we can't find a view, parent to the calling context's
+    // global object. This may not be right either, but we need
+    // something.
+    else {
+      global = getter_AddRefs(aContext->GetGlobalObject());
+    }
+    
+    if (NS_SUCCEEDED(res)) {
+      res = NS_NewScriptHTMLDocument(aContext, 
+                                     (nsISupports *)(nsIDOMHTMLDocument *)this,
+                                     (nsISupports *)global, 
+                                     (void**)&mScriptObject);
+    }
   }
+  
   *aScriptObject = mScriptObject;
 
-  NS_RELEASE(global);
   return res;
 }
 
