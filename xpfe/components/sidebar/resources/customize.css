@@ -77,7 +77,3 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > .treecell-p
 box#reorder {
   text-align: center;
 }
-box#saveCancelButtons {
-  margin-bottom: 0.5em;
-  text-align: center;
-}
