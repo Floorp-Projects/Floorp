@@ -527,6 +527,8 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
     result=aScanner.GetChar(aChar); 
     if((NS_OK==result) && (kLessThan==aChar)) { 
       //we're reading a tag or a comment... 
+      //FYI: <STYLE> and <SCRIPT> should be treated as CDATA. So, 
+      //don't try to acknowledge "HTML COMMENTS"...just ignore 'em.
       result=aScanner.GetChar(theChar); 
       if((NS_OK==result) && (kExclamation==theChar) && (PR_FALSE==aIgnoreComments)) { 
         //read a comment... 
