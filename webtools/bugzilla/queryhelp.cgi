@@ -800,28 +800,51 @@ bugs numbered:
 <INPUT TYPE="text" NAME="bug_id" VALUE="" SIZE=15>
 </td>
 </tr>
+<tr><td>&nbsp;</td></tr>
 <tr>
-<td>
-Changed in the last <INPUT NAME=changedin SIZE=3 VALUE=""> days
+<td colspan=2>
+Only bugs changed between <INPUT NAME="chfieldfrom" SIZE="10" VALUE="">
+and <INPUT NAME="chfieldto" SIZE="10" VALUE="Now">
 </td>
 </tr>
+<tr valign="top">
+<td>
+Where one or more of the following changed:
+</td><td>
+<SELECT NAME="chfield" MULTIPLE SIZE=4>
+    <OPTION VALUE="[Bug creation]">[Bug creation]
+    <OPTION VALUE="assigned_to">assigned_to
+    <OPTION VALUE="bug_file_loc">bug_file_loc
+    <OPTION VALUE="bug_severity">bug_severity
+    <OPTION VALUE="bug_status">bug_status
+    <OPTION VALUE="component">component
+    <OPTION VALUE="everconfirmed">everconfirmed
+    <OPTION VALUE="groupset">groupset
+    <OPTION VALUE="keywords">keywords
+    <OPTION VALUE="op_sys">op_sys
+    <OPTION VALUE="priority">priority
+    <OPTION VALUE="product">product
+    <OPTION VALUE="qa_contact">qa_contact
+    <OPTION VALUE="rep_platform">rep_platform
+    <OPTION VALUE="reporter">reporter
+    <OPTION VALUE="resolution">resolution
+    <OPTION VALUE="short_desc">short_desc
+    <OPTION VALUE="status_whiteboard">status_whiteboard
+    <OPTION VALUE="target_milestone">target_milestone
+    <OPTION VALUE="version">version
+    <OPTION VALUE="votes">votes
+</SELECT>
+</td>
+</tr>
+<tr>
+<td>
+and the result was: <INPUT NAME="chfieldvalue" SIZE="10">
+</td>
+</tr>
+<tr><td>&nbsp;</td></tr>
 <tr>
 <td>
 Containing at least <INPUT NAME=votes SIZE=3 VALUE=""> votes
-</td>
-</tr>
-<tr>
-<td>
-Where the field(s)
-<SELECT NAME="chfield" MULTIPLE SIZE=4>
-<OPTION VALUE="[Bug creation]">[Bug creation]<OPTION VALUE="assigned_to">assigned_to<OPTION VALUE="bug_file_loc">bug_file_loc<OPTION VALUE="bug_severity">bug_severity<OPTION VALUE="bug_status">bug_status<OPTION VALUE="component">component<OPTION VALUE="everconfirmed">everconfirmed<OPTION VALUE="groupset">groupset<OPTION VALUE="keywords">keywords<OPTION VALUE="op_sys">op_sys<OPTION VALUE="priority">priority<OPTION VALUE="product">product<OPTION VALUE="qa_contact">qa_contact<OPTION VALUE="rep_platform">rep_platform<OPTION VALUE="reporter">reporter<OPTION VALUE="resolution">resolution<OPTION VALUE="short_desc">short_desc<OPTION VALUE="status_whiteboard">status_whiteboard<OPTION VALUE="target_milestone">target_milestone<OPTION VALUE="version">version<OPTION VALUE="votes">votes
-</SELECT> changed to <INPUT NAME="chfieldvalue" SIZE="10">
-</td>
-</tr>
-<tr>
-<td colspan=2>
-During dates <INPUT NAME="chfieldfrom" SIZE="10" VALUE="">
-to <INPUT NAME="chfieldto" SIZE="10" VALUE="Now">
 </td>
 </tr>
 <tr>
@@ -847,29 +870,23 @@ exclude bugs based on values you enter.
 of which you want to exclude. It would be nice in the future if you could type in ranges, i.e. [1-1000] for 1
 to 1000. Unfortunately, you cannot do that as of now.
 
-<p><b>Changed in the last [text] days</b>
-
-<p>Lets you specify how many days ago - at maximum - a bug could have changed state.
-
 <p><b>At least [text] votes</b>
 
 <p>With this, you can choose how many votes - at minimum - a bug has. 
 
-<p><b>Where the field(s) [fields] changed to [text]</b>
+<a name="changedbetween">
+<p><b>Only bugs changed between</b></p>
 
-<p>With this, you can specify values to search for in fields that exist in the bug If you choose 
-one or more fields, you have to fill out one of the fields to the right. It might 
-be difficult to figure out what these fields mean if you are a newbie to the query. 
-They match various fields within the bug information. Optionally, you can 
-also enter what value you want the field to have changed to if you only entered one field.
-For instance, if the bug changed who it was assigned to from jon\@netscape.com 
-to brian\@netscape.com , you could enter in
-assigned_to changed to brian\@netscape.com.
+<p>Here you can choose what dates the bugs changed. "Now" can be used as an
+entry. Other entries should be in yyyy-mm-dd format, or in relative dates such
+as 1d or 2w or 3m or 4y, which respectively mean 1 day, 2 weeks, 3 months, 4
+years ago. 0d is last midnight, and 0w, 0m, 0y is the beginning of this week,
+month, or year.</p>
 
-<p><b>During dates [text] to [text] </b>
+<p><b>Where one or more of the following changed, and the result was</b></p>
 
-<p>Here, you can choose what dates the fields changed. "Now" can be used as an entry. Other entries should be in
-mm/dd/yyyy or yyyy-mm-dd format.
+<p>With this you can specify which bug fields changed, and optionally to what
+value, between the dates specified above. Leaving blank will match any change.</p>
 
 
 };

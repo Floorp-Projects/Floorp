@@ -81,16 +81,21 @@
 { id => "votes", 
   html => "Some bugs can be voted for, and you can limit your search to bugs<br>
            with more than a certain number of votes." },   
-{ id => "changedin", 
-  html => "You can search by when bugs have changed - this field defines the<br>
-           timeframe for the search." },   
 { id => "chfield", 
   html => "You can search for specific types of change - this field define <br>
            which field you are interested in changes for." },   
 { id => "chfieldfrom", 
-  html => "The start time of the timeframe for the change." },   
+  html => "Specify the start and end dates either in YYYY-MM-DD format<br>
+           (optionally followed by HH:mm, in 24 hour clock), or in relative<br>
+           dates such as 1d, 2w, 3m, 4y, which respectively mean one day,<br>
+           two weeks, three months, or four years ago. 0d is last midnight,<br>
+           and 0w, 0m, 0y is the beginning of this week, month, or year." },
 { id => "chfieldto", 
-  html => "The end time of the timeframe for the change." },   
+  html => "Specify the start and end dates either in YYYY-MM-DD format<br>
+           (optionally followed by HH:mm, in 24 hour clock), or in relative<br>
+           dates such as 1d, 2w, 3m, 4y, which respectively mean one day,<br>
+           two weeks, three months, or four years ago. 0d is last midnight,<br>
+           and 0w, 0m, 0y is the beginning of this week, month, or year." },
 { id => "chfieldvalue", 
   html => "The value the field defined above changed to during that time." },   
 ] %]

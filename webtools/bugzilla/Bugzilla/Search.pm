@@ -213,64 +213,65 @@ sub init {
         }
     }
 
-
-    if (defined $params->param('changedin')) {
-        my $c = trim($params->param('changedin'));
-        if ($c ne "") {
-            if ($c !~ /^[0-9]*$/) {
-                ThrowUserError("illegal_changed_in_last_x_days",
-                                 { value => $c });
-            }
-            push(@specialchart, ["changedin",
-                                 "lessthan", $c + 1]);
+    # 2003-05-20: The 'changedin' field is no longer in the UI, but we continue
+    # to process it because it will appear in stored queries and bookmarks.
+    my $changedin = $params->param('changedin') || '';
+    $changedin = trim($changedin);
+    if ($changedin) {
+        if ($changedin !~ /^[0-9]*$/) {
+            ThrowUserError("illegal_changed_in_last_x_days",
+                              { value => $changedin });
         }
+        push(@specialchart, ["changedin", "lessthan", $changedin + 1]);
     }
 
+    my $chfieldfrom = $params->param('chfieldfrom') || '';
+    my $chfieldto = $params->param('chfieldto') || '';
     my @chfield = $params->param('chfield');
+    my $chvalue = $params->param('chfieldvalue') || '';
+    my $lcchfieldfrom = trim(lc($chfieldfrom));
+    my $lcchfieldto = trim(lc($chfieldto));
+    $chvalue = trim($chvalue);
 
-    if (@chfield) {
-        my $which = lsearch(\@chfield, "[Bug creation]");
-        if ($which >= 0) {
-            splice(@chfield, $which, 1);
-            push(@specialchart, ["creation_ts", "greaterthan",
-                                 SqlifyDate($params->param('chfieldfrom'))]);
-            my $to = $params->param('chfieldto');
-            if (defined $to) {
-                $to = trim($to);
-                if ($to ne "" && $to !~ /^now$/i) {
-                    push(@specialchart, ["creation_ts", "lessthan",
-                                         SqlifyDate($to)]);
+    $lcchfieldfrom = '' if ($lcchfieldfrom eq 'now');
+    $lcchfieldto = '' if ($lcchfieldto eq 'now');
+    if ($lcchfieldfrom ne '' || $lcchfieldto ne '') {
+        my $sql_chfrom = $lcchfieldfrom ? &::SqlQuote(SqlifyDate($lcchfieldfrom)):'';
+        my $sql_chto   = $lcchfieldto   ? &::SqlQuote(SqlifyDate($lcchfieldto))  :'';
+        my $sql_chvalue = $chvalue ne '' ? &::SqlQuote($chvalue) : '';
+        if(!@chfield) {
+            push(@wherepart, "bugs.delta_ts >= $sql_chfrom") if ($sql_chfrom);
+            push(@wherepart, "bugs.delta_ts <= $sql_chto") if ($sql_chto);
+        } else {
+            push(@supptables, "bugs_activity actcheck");
+            my $sql_bugschanged = '';
+            my @list;
+            foreach my $f (@chfield) {
+                if ($f eq "[Bug creation]") {
+                    my @l;
+                    push(@l, "creation_ts >= $sql_chfrom") if($sql_chfrom);
+                    push(@l, "creation_ts <= $sql_chto") if($sql_chto);
+                    $sql_bugschanged = "(" . join(' AND ', @l) . ")";
+                } else {
+                    push(@list, "\nactcheck.fieldid = " . &::GetFieldID($f));
                 }
             }
-        }
-    }
-
-    if (@chfield) {
-        push(@supptables, "bugs_activity actcheck");
-
-        my @list;
-        foreach my $f (@chfield) {
-            push(@list, "\nactcheck.fieldid = " . &::GetFieldID($f));
-        }
-        push(@wherepart, "actcheck.bug_id = bugs.bug_id");
-        push(@wherepart, "(" . join(' OR ', @list) . ")");
-        push(@wherepart, "actcheck.bug_when >= " .
-             &::SqlQuote(SqlifyDate($params->param('chfieldfrom'))));
-        my $to = $params->param('chfieldto');
-        if (defined $to) {
-            $to = trim($to);
-            if ($to ne "" && $to !~ /^now$/i) {
-                push(@wherepart, "actcheck.bug_when <= " .
-                     &::SqlQuote(SqlifyDate($to)));
+            if(@list) {
+                $sql_bugschanged .= ' OR ' if($sql_bugschanged ne '');
+                $sql_bugschanged .= "(actcheck.bug_id = bugs.bug_id AND " .
+                                       "(" . join(' OR ', @list) . ")";
+                if($sql_chfrom) {
+                    $sql_bugschanged .= " AND actcheck.bug_when >= $sql_chfrom";
+                }
+                if($sql_chto) {
+                    $sql_bugschanged .= " AND actcheck.bug_when <= $sql_chto";
+                }
+                if($sql_chvalue) {
+                    $sql_bugschanged .= " AND actcheck.added = $sql_chvalue";
+                }
+                $sql_bugschanged .= ')';
             }
-        }
-        my $value = $params->param('chfieldvalue');
-        if (defined $value) {
-            $value = trim($value);
-            if ($value ne "") {
-                push(@wherepart, "actcheck.added = " .
-                     &::SqlQuote($value))
-            }
+            push(@wherepart, "($sql_bugschanged)");
         }
     }
 
