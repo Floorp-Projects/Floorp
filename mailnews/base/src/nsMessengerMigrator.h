@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -121,11 +121,16 @@ private:
   nsresult SetSendLaterUriPref(nsIMsgIncomingServer *server);
 
   nsresult getPrefService();
+  nsresult initializeStrings();
 
   nsCOMPtr <nsIPref> m_prefs;
   PRBool m_haveShutdown;
   PRInt32 m_oldMailType;
   PRBool m_alreadySetNntpDefaultLocalPath;
   PRBool m_alreadySetImapDefaultLocalPath;
+
+  nsCString mLocalFoldersHostname;
+  nsString mLocalFoldersName;
+    
 };
 

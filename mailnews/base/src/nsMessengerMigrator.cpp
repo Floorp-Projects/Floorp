@@ -25,31 +25,35 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
-#include "nsMessengerMigrator.h"
-#include "nsMsgBaseCID.h"
-#include "nsMsgCompCID.h"
+
 #include "prmem.h"
 #include "plstr.h"
+#include "prprf.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nscore.h"
-#include "nsIProfile.h"
+
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsCRT.h"  // for nsCRT::strtok
-#include "prprf.h"
-#include "nsINetSupportDialogService.h"
-#include "nsIMsgFolderCache.h"
 #include "nsFileStream.h"
-#include "nsMsgUtils.h"
 #include "nsSpecialSystemDirectory.h"
-#include "nsIFileLocator.h" 
 #include "nsIFileSpec.h" 
-#include "nsFileLocations.h" 
 #include "nsIURL.h"
+#include "nsIStringBundle.h"
+
+#include "nsIProfile.h"
+#include "nsINetSupportDialogService.h"
+
+#include "nsMessengerMigrator.h"
+#include "nsMsgBaseCID.h"
+#include "nsMsgCompCID.h"
+
+#include "nsIMsgFolderCache.h"
+#include "nsMsgUtils.h"
 #include "nsISmtpService.h"
-#include "nsString.h"
 #include "nsIObserverService.h"
+
 #include "nsIMsgAccount.h"
 #include "nsIMsgAccountManager.h"
 
@@ -73,17 +77,15 @@
 #define DEBUG_MIGRATOR 1
 #endif
 
-static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
-static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);   
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
-static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kAB4xUpgraderServiceCID, NS_AB4xUPGRADER_CID);
 static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define IMAP_SCHEMA "imap:/"
 #define IMAP_SCHEMA_LENGTH 6
@@ -105,13 +107,7 @@ static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
 #define PREF_MAIL_DEFAULT_SENDLATER_URI "mail.default_sendlater_uri"
 
 #define LOCAL_MAIL_FAKE_USER_NAME "nobody"
-#define LOCAL_MAIL_FAKE_HOST_NAME "Local Folders"
 
-/* 
- * TODO:  this needs to be put into a string bundle
- * see bug #33852
- */
-#define LOCAL_MAIL_PRETTY_NAME "Local Folders" 
 
 #ifdef HAVE_MOVEMAIL
 #define MOVEMAIL_FAKE_HOST_NAME "movemail"
@@ -365,6 +361,8 @@ nsresult nsMessengerMigrator::Init()
     observerService->AddObserver(this, topic.GetUnicode());
   }    
 
+  initializeStrings();
+  
   rv = getPrefService();
   if (NS_FAILED(rv)) return rv;   
 
@@ -398,6 +396,39 @@ nsMessengerMigrator::getPrefService()
 
   return NS_OK;
 } 
+
+nsresult
+nsMessengerMigrator::initializeStrings()
+{
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(kStringBundleServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
+                                   nsnull,
+                                   getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // now retrieve strings
+  nsXPIDLString localFolders;
+  rv = bundle->GetStringFromName(NS_ConvertASCIItoUCS2("localFolders").GetUnicode(),
+                                 getter_Copies(localFolders));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // convert to unicode and ASCII
+
+  mLocalFoldersName.Assign(localFolders);
+  // should we use utf8 here? or maybe the system charset?
+  // or if we switch to nsIFile, it won't matter?
+  // this string is only visible to the user when creating the root
+  // folder on disk
+  mLocalFoldersHostname.AssignWithConversion(localFolders);
+
+  return NS_OK;
+}
+
+
 
 NS_IMETHODIMP nsMessengerMigrator::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
@@ -457,7 +488,6 @@ NS_IMETHODIMP
 nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 {
   nsresult rv;
-  
   NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -469,15 +499,13 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   // create the server
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = accountManager->CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
-                            LOCAL_MAIL_FAKE_HOST_NAME,
+                                            mLocalFoldersHostname,
                             "none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
   // we don't want "nobody at Local Folders" to show up in the
   // folder pane, so we set the pretty name to "Local Folders"
-  // TODO:  get this from a string bundle, see bug #33852
-  nsAutoString localMailPrettyName; localMailPrettyName.AssignWithConversion(LOCAL_MAIL_PRETTY_NAME);
-  server->SetPrettyName(localMailPrettyName.GetUnicode());
+  server->SetPrettyName(mLocalFoldersName.GetUnicode());
 
   // notice, no identity for local mail
   account->SetIncomingServer(server);
@@ -533,7 +561,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 	// the 4.x "Local Mail" (when using imap) got copied.
 	// it would be great to use the server key, but we don't know it
 	// when we are copying of the mail.
-	rv = mailDir->AppendRelativeUnixPath(LOCAL_MAIL_FAKE_HOST_NAME);
+	rv = mailDir->AppendRelativeUnixPath(mLocalFoldersHostname);
 	if (NS_FAILED(rv)) return rv; 
 	rv = server->SetLocalPath(mailDir);
 	if (NS_FAILED(rv)) return rv;
@@ -733,9 +761,9 @@ nsMessengerMigrator::SetNewsCopiesAndFolders(nsIMsgIdentity *identity)
   }
 
   if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, mLocalFoldersHostname, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, mLocalFoldersHostname, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, mLocalFoldersHostname, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
   }
   else if (m_oldMailType == POP_4X_MAIL_TYPE) {
     nsXPIDLCString pop_username;
@@ -948,7 +976,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
     usernameAtHostname = PR_smprintf("%s@%s",(const char *)escaped_pop_username, (const char *)pop_hostname);
   }
   else if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
-    usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME,LOCAL_MAIL_FAKE_HOST_NAME);
+    usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME,mLocalFoldersHostname);
   }
 #ifdef HAVE_MOVEMAIL
   else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
@@ -1034,7 +1062,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // "none" is the type we use for migrating 4.x "Local Mail"
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = accountManager->CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
-                            LOCAL_MAIL_FAKE_HOST_NAME,
+                            mLocalFoldersHostname,
                             "none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
@@ -1054,8 +1082,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
 
   // we don't want "nobody at Local Folders" to show up in the
   // folder pane, so we set the pretty name to "Local Folders"
-  nsAutoString localMailFakeHostName; localMailFakeHostName.AssignWithConversion(LOCAL_MAIL_FAKE_HOST_NAME);
-  server->SetPrettyName(localMailFakeHostName.GetUnicode());
+  server->SetPrettyName(mLocalFoldersName.GetUnicode());
   
   // create the directory structure for old 4.x "Local Mail"
   // under <profile dir>/Mail/Local Folders or
@@ -1091,7 +1118,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // the 4.x "Local Mail" (when using imap) got copied.
   // it would be great to use the server key, but we don't know it
   // when we are copying of the mail.
-  rv = mailDir->AppendRelativeUnixPath(LOCAL_MAIL_FAKE_HOST_NAME);
+  rv = mailDir->AppendRelativeUnixPath(mLocalFoldersHostname);
   if (NS_FAILED(rv)) return rv; 
   rv = server->SetLocalPath(mailDir);
   if (NS_FAILED(rv)) return rv;
