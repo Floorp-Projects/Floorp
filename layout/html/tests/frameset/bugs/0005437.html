@@ -1,0 +1,35 @@
+<html><head></head><body>
+<html> 
+     <head> 
+        <script> 
+           function show() { 
+              document.getElementById("div1").setAttribute("value","visible"); 
+           } 
+
+           function hide() { 
+              document.getElementById("div1").setAttribute("value","hidden"); 
+           } 
+        </script> 
+
+        <style> 
+           div[id="div1"][value="hidden"] { 
+              background-color: blue; 
+              visibility: hidden; 
+           } 
+
+           div[id="div1"][value="visible"] { 
+              background-color: red; 
+           } 
+        </style> 
+     </head> 
+
+     <body> 
+        <div id="div1" value="hidden"> 
+           this is text 
+           <button> foo </button> 
+           <iframe src="http://www.yahoo.com"> 
+        </div> 
+        <button onclick="show(this)">show</button> 
+        <button onclick="hide(this)">hide</button> 
+     </body> 
+  </html> 
