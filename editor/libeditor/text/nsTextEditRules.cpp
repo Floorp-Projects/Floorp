@@ -329,25 +329,27 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
         }
         if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTCOLOR))
         {
-          nsAutoString fontColor;
-          fontColor = aTypeInState.GetFontColor();
-          if (0!=fontColor.Length()) { 
-            result = InsertStyleNode(newTextNode, nsIEditProperty::font, aSelection, getter_AddRefs(newStyleNode));
-            if (NS_SUCCEEDED(result) && newStyleNode)
-            {
-              nsCOMPtr<nsIDOMElement>element = do_QueryInterface(newStyleNode);
-              if (element)
-              {
-                nsAutoString attr;
-                nsIEditProperty::color->ToString(attr);
-                result = mEditor->SetAttribute(element, attr, fontColor);
-              }
-            }
-          }
-          else
-          {
-            printf("not yet implemented, make not font in an font context\n");
-          }
+          nsAutoString value;
+          value = aTypeInState.GetFontColor();
+          nsAutoString attr;
+          nsIEditProperty::color->ToString(attr);
+          result = CreateFontStyleForInsertText(newTextNode, attr, value, aSelection);
+        }
+        if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTFACE))
+        {
+          nsAutoString value;
+          value = aTypeInState.GetFontFace();
+          nsAutoString attr;
+          nsIEditProperty::face->ToString(attr);
+          result = CreateFontStyleForInsertText(newTextNode, attr, value, aSelection); 
+        }
+        if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTSIZE))
+        {
+          nsAutoString value;
+          value = aTypeInState.GetFontSize();
+          nsAutoString attr;
+          nsIEditProperty::size->ToString(attr);
+          result = CreateFontStyleForInsertText(newTextNode, attr, value, aSelection);
         }
       }
     }
@@ -392,6 +394,32 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
         }
       }
     }
+  }
+  return result;
+}
+
+nsresult
+nsTextEditRules::CreateFontStyleForInsertText(nsIDOMNode      *aNewTextNode,
+                                              const nsString  &aAttr, 
+                                              const nsString  &aValue,
+                                              nsIDOMSelection *aSelection)
+{
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMNode>newStyleNode;
+  if (0!=aValue.Length()) 
+  { 
+    result = InsertStyleNode(aNewTextNode, nsIEditProperty::font, aSelection, getter_AddRefs(newStyleNode));
+    if (NS_SUCCEEDED(result) && newStyleNode)
+    {
+      nsCOMPtr<nsIDOMElement>element = do_QueryInterface(newStyleNode);
+      if (element) {
+        result = mEditor->SetAttribute(element, aAttr, aValue);
+      }
+    }
+  }
+  else
+  {
+    printf("not yet implemented, undo font in an font context\n");
   }
   return result;
 }
