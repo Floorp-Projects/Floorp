@@ -44,6 +44,7 @@ function Startup()
   var editor = GetCurrentEditor();
   if (!editor)
   {
+    dump("Failed to get active editor!\n");
     window.close();
     return;
   }
@@ -64,8 +65,10 @@ function Startup()
   };
 
   // Get a single selected text area element
-  var tagName = "textarea";
-  textareaElement = editor.getSelectedElement(tagName);
+  const kTagName = "textarea";
+  try {
+    textareaElement = editor.getSelectedElement(kTagName);
+  } catch (e) {}
 
   if (textareaElement) {
     // We found an element and don't need to insert one
@@ -79,8 +82,10 @@ function Startup()
 
     // We don't have an element selected,
     //  so create one with default attributes
+    try {
+      textareaElement = editor.createElementWithDefaults(kTagName);
+    } catch(e) {}
 
-    textareaElement = editor.createElementWithDefaults(tagName);
     if (!textareaElement)
     {
       dump("Failed to get selected element or create a new one!\n");
@@ -165,23 +170,25 @@ function onAccept()
   editor.beginTransaction();
 
   try {
+    editor.cloneAttributes(textareaElement, globalElement);
+
+    if (insertNew)
+      editor.insertElementAtSelection(textareaElement, true);
+
     // undoably set value
     var initialText = gDialog.textareaValue.value;
     if (initialText != textareaElement.value) {
+      editor.setShouldTxnSetSelection(false);
+
       while (textareaElement.hasChildNodes())
         editor.deleteNode(textareaElement.lastChild);
       if (initialText) {
         var textNode = editor.document.createTextNode(initialText);
         editor.insertNode(textNode, textareaElement, 0);
       }
+
+      editor.setShouldTxnSetSelection(true);
     }
-
-    if (insertNew)
-      editor.insertElementAtSelection(textareaElement, true);
-    else
-      editor.selectElement(textareaElement);
-
-    editor.cloneAttributes(textareaElement, globalElement);
   } finally {
     editor.endTransaction();
   }

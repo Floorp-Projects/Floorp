@@ -46,6 +46,7 @@ function Startup()
   var editor = GetCurrentEditor();
   if (!editor)
   {
+    dump("Failed to get active editor!\n");
     window.close();
     return;
   }
@@ -56,12 +57,15 @@ function Startup()
   gDialog.RemoveFieldSet = document.getElementById("RemoveFieldSet");
 
   // Get a single selected field set element
-  var tagName = "fieldset";
-  fieldsetElement = editor.getSelectedElement(tagName);
-  if (!fieldsetElement)
-    fieldsetElement = editor.getElementOrParentByTagName(tagName, editor.selection.anchorNode);
-  if (!fieldsetElement)
-    fieldsetElement = editor.getElementOrParentByTagName(tagName, editor.selection.focusNode);
+  const kTagName = "fieldset";
+  try {
+    // Find a selected fieldset, or if one is at start or end of selection.
+    fieldsetElement = editor.getSelectedElement(kTagName);
+    if (!fieldsetElement)
+      fieldsetElement = editor.getElementOrParentBykTagName(kTagName, editor.selection.anchorNode);
+    if (!fieldsetElement)
+      fieldsetElement = editor.getElementOrParentBykTagName(kTagName, editor.selection.focusNode);
+  } catch (e) {}
 
   if (fieldsetElement)
     // We found an element and don't need to insert one
@@ -72,8 +76,10 @@ function Startup()
 
     // We don't have an element selected,
     //  so create one with default attributes
+    try {
+      fieldsetElement = editor.createElementWithDefaults(kTagName);
+    } catch (e) {}
 
-    fieldsetElement = editor.createElementWithDefaults(tagName);
     if (!fieldsetElement)
     {
       dump("Failed to get selected element or create a new one!\n");
@@ -175,8 +181,15 @@ function onAccept()
   editor.beginTransaction();
 
   try {
+    editor.cloneAttributes(legendElement, globalElement);
+ 
+    if (insertNew)
+      InsertElementAroundSelection(fieldsetElement);
+
     if (gDialog.editText.checked)
     {
+      editor.setShouldTxnSetSelection(false);
+
       if (gDialog.legendText.value)
       {
         if (newLegend)
@@ -187,14 +200,9 @@ function onAccept()
       }
       else if (!newLegend)
         editor.DeleteNode(legendElement);
-    }
- 
-    if (insertNew)
-      InsertElementAroundSelection(fieldsetElement);
-    else
-      editor.selectElement(fieldsetElement);
 
-    editor.cloneAttributes(legendElement, globalElement);
+      editor.setShouldTxnSetSelection(true);
+    }
   }
   finally {
     editor.endTransaction();
