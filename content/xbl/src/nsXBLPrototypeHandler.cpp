@@ -150,10 +150,9 @@ nsXBLPrototypeHandler::AppendHandlerText(const nsAReadableString& aText)
 {
   if (mHandlerText) {
     // Append our text to the existing text.
-    nsAutoString currText(mHandlerText);
-    currText += aText;
-    nsMemory::Free(mHandlerText);
-    mHandlerText = ToNewUnicode(currText);
+    PRUnichar* temp = mHandlerText;
+    mHandlerText = ToNewUnicode(nsDependentString(temp) + aText);
+    nsMemory::Free(temp);
   }
   else
     mHandlerText = ToNewUnicode(aText);

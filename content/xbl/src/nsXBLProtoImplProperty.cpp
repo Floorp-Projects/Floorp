@@ -148,10 +148,9 @@ void
 nsXBLProtoImplProperty::AppendGetterText(const nsAReadableString& aText)
 {
   if (mGetterText) {
-    nsAutoString currText(mGetterText);
-    currText += aText;
-    nsMemory::Free(mGetterText);
-    mGetterText = ToNewUnicode(currText);
+    PRUnichar* temp = mGetterText;
+    mGetterText = ToNewUnicode(nsDependentString(temp) + aText);
+    nsMemory::Free(temp);
   }
   else
     mGetterText = ToNewUnicode(aText);
@@ -161,10 +160,9 @@ void
 nsXBLProtoImplProperty::AppendSetterText(const nsAReadableString& aText)
 {
   if (mSetterText) {
-    nsAutoString currText(mSetterText);
-    currText += aText;
-    nsMemory::Free(mSetterText);
-    mSetterText = ToNewUnicode(currText);
+    PRUnichar* temp = mSetterText;
+    mSetterText = ToNewUnicode(nsDependentString(temp) + aText);
+    nsMemory::Free(temp);
   }
   else
     mSetterText = ToNewUnicode(aText);
