@@ -53,8 +53,3 @@ override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
-
-# until we have a configure option
-ifdef MOZ_NEW_CACHE
-CXXFLAGS += -DMOZ_NEW_CACHE
-endif
