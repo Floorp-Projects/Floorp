@@ -24,13 +24,10 @@
 #ifndef __nsTimer_h
 #define __nsTimer_h
 
-#include <windows.h>
-
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
-#include "nsIWindowsTimerMap.h"
 
-#include "nsCOMPtr.h"
+#include <windows.h>
 
 /*
  * Implementation of timers lifted from Windows front-end file timer.cpp
@@ -87,8 +84,6 @@ private:
   UINT mTimerID;
 
   bool mTimerRunning;
-
-  nsCOMPtr<nsIWindowsTimerMap> mKungFuDeathGripTimerMap;
 };
 
 #endif // __nsTimer_h

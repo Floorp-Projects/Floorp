@@ -1582,6 +1582,8 @@ BookmarkParser::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *objType
 ////////////////////////////////////////////////////////////////////////
 // BookmarkDataSourceImpl
 
+nsCOMPtr<nsITimer>		nsBookmarksService::mTimer;
+
 nsBookmarksService::nsBookmarksService()
 	: mInner(nsnull), mBookmarksAvailable(PR_FALSE), mDirty(PR_FALSE), mUpdateBatchNest(0)
 
