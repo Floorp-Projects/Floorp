@@ -600,7 +600,7 @@ function BookmarkProperties()
 
 function OpenSearch(tabName)
 {
-	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName);
+	window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, "");
 	return(true);
 }
 
