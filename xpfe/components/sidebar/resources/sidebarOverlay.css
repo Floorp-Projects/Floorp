@@ -86,9 +86,14 @@ splitter#sidebar-splitter[hidden="true"] {
   display: none;
 }
 
-iframe.panel-frame[collapsed="true"] {
-  display: none;
+box#sidebar-box[hackforbug20546="true"] {
+  visibility: collapse;
 }
+
+box#sidebar-box[hackforbug20546="true"][hackforbug20546-applied="true"] {
+  visibility: inherit;
+}
+
 iframe.panel-frame {
   min-width: 1px;
 }
