@@ -369,9 +369,8 @@ nsXULAttributes::nsXULAttributes(nsIContent* aContent)
 nsXULAttributes::~nsXULAttributes()
 {
     PRInt32 count = mAttributes.Count();
-    PRInt32 index;
-    for (index = 0; index < count; index++) {
-        nsXULAttribute* attr = (nsXULAttribute*)mAttributes.ElementAt(index);
+    for (PRInt32 indx = 0; indx < count; indx++) {
+        nsXULAttribute* attr = (nsXULAttribute*)mAttributes.ElementAt(indx);
         NS_RELEASE(attr);
     }
 }
