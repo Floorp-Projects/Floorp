@@ -1037,6 +1037,9 @@ XP_Bool EDT_IsJavaScript(MWContext *pContext);
 */
 XP_Bool EDT_CanSetCharacterAttribute(MWContext *pContext);
 
+/* Test if current paragraph style (or any part of a selection) = PRE */
+XP_Bool EDT_IsPreformat(MWContext *pContext);
+
 /* Replace the current selection with supplied text */
 /* if bReplaceAll is true then pTextToLookFor and the 3 subsequent Boolean need to be set */
 void EDT_ReplaceText(MWContext *pContext, char * pReplaceText, XP_Bool bReplaceAll,
