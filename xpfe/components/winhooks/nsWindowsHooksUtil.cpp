@@ -335,7 +335,7 @@ static void setWindowsXP() {
     // are handled as best we can.
     HKEY key;
     nsCAutoString baseKey( NS_LITERAL_CSTRING( "Software\\Clients\\StartMenuInternet" ) );
-    LONG rc = ::RegOpenKey( HKEY_LOCAL_MACHINE, baseKey, &key );
+    LONG rc = ::RegOpenKey( HKEY_LOCAL_MACHINE, baseKey.get(), &key );
     if ( rc == ERROR_SUCCESS ) {
         // OK, this is WindowsXP (or equivalent).  Add this application to the
         // set registered as "Start Menu internet apps."  These entries go
@@ -351,33 +351,33 @@ static void setWindowsXP() {
             char buffer[ _MAX_PATH + 8 ]; // Path, plus '@', comma, minus, and digits (5)
             _snprintf( buffer, sizeof buffer, "@%s,-%d", thisApplication().get(), IDS_STARTMENU_APPNAME );
             RegistryEntry( HKEY_LOCAL_MACHINE, 
-                           subkey,
+                           subkey.get(),
                            "LocalizedString", 
                            buffer ).set();
             // Default icon (from .exe resource).
             RegistryEntry( HKEY_LOCAL_MACHINE, 
-                           nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\DefaultIcon" ) ),
+                           nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\DefaultIcon" ) ).get(),
                            "", 
-                           nsCAutoString( thisApplication() + NS_LITERAL_CSTRING( ",0" ) ) ).set();
+                           nsCAutoString( thisApplication() + NS_LITERAL_CSTRING( ",0" ) ).get() ).set();
             // Command to open.
             RegistryEntry( HKEY_LOCAL_MACHINE,
-                           nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\open\\command" ) ),
+                           nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\open\\command" ) ).get(),
                            "", 
-                           thisApplication() ).set();
+                           thisApplication().get() ).set();
 
             // Now we need to select our application as the default start menu internet application.
             // This is accomplished by first trying to store our subkey name in 
             // HKLM\Software\Clients\StartMenuInternet's default value.  See
             // http://support.microsoft.com/directory/article.asp?ID=KB;EN-US;Q297878 for detail.
-            SavedRegistryEntry hklmAppEntry( HKEY_LOCAL_MACHINE, baseKey, "", shortAppName() );
+            SavedRegistryEntry hklmAppEntry( HKEY_LOCAL_MACHINE, baseKey.get(), "", shortAppName().get() );
             hklmAppEntry.set();
             // That may or may not have worked (depending on whether we have sufficient access).
             if ( hklmAppEntry.currentSetting() == hklmAppEntry.setting ) {
                 // We've set the hklm entry, so we can delete the one under hkcu.
-                SavedRegistryEntry( HKEY_CURRENT_USER, baseKey, "", 0 ).set();
+                SavedRegistryEntry( HKEY_CURRENT_USER, baseKey.get(), "", 0 ).set();
             } else {
                 // All we can do is set the default start menu internet app for this user.
-                SavedRegistryEntry( HKEY_CURRENT_USER, baseKey, "", shortAppName() );
+                SavedRegistryEntry( HKEY_CURRENT_USER, baseKey.get(), "", shortAppName().get() );
             }
             // Notify the system of the changes.
             ::SendMessage( HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Software\\Clients\\StartMenuInternet" );
@@ -455,18 +455,18 @@ nsresult SavedRegistryEntry::reset() {
 // because the SaveRegistryEntry::reset calls will have no effect if there is no value at that
 // location (or, if that value has been changed by another application).
 static void resetWindowsXP() {
-    nsCAutoString baseKey( NS_LITERAL_CSTRING( "Software\\Clients\\StartMenuInternet" ) );
+    NS_NAMED_LITERAL_CSTRING( baseKey, "Software\\Clients\\StartMenuInternet" );
     // First, try to restore the HKLM setting.  This will fail if either we didn't
     // set that, or, if we don't have access).
-    SavedRegistryEntry( HKEY_LOCAL_MACHINE, baseKey, "", shortAppName() ).reset();
+    SavedRegistryEntry( HKEY_LOCAL_MACHINE, baseKey.get(), "", shortAppName().get() ).reset();
 
     // The HKCU setting is trickier.  We may have set it, but we may also have
     // removed it (see setWindowsXP(), above).  We first try to reverse the
     // setting.  If we had removed it, then this will fail.
-    SavedRegistryEntry( HKEY_CURRENT_USER, baseKey, "", shortAppName() ).reset();
+    SavedRegistryEntry( HKEY_CURRENT_USER, baseKey.get(), "", shortAppName().get() ).reset();
     // Now, try to reverse the removal of this key.  This will fail if there is a  current
     // setting, and will only work if this key is unset, and, we have a saved value.
-    SavedRegistryEntry( HKEY_CURRENT_USER, baseKey, "", 0 ).reset();
+    SavedRegistryEntry( HKEY_CURRENT_USER, baseKey.get(), "", 0 ).reset();
 
     // Notify the system of the changes.
     ::SendMessage( HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Software\\Clients\\StartMenuInternet" );
