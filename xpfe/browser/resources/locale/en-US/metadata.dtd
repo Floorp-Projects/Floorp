@@ -4,6 +4,9 @@
 <!ENTITY image-sec.label       "Image Properties">
 <!ENTITY image-url.label       "Location:">
 <!ENTITY image-desc.label      "Description:">
+<!ENTITY image-width.label     "Width:">
+<!ENTITY image-height.label    "Height:">
+<!ENTITY image-pixels.label    "pixels">
 <!ENTITY insdel-sec.label      "Insert/Delete Properties">
 <!ENTITY insdel-cite.label     "Info:">
 <!ENTITY insdel-date.label     "Date:">
@@ -16,7 +19,7 @@
 <!ENTITY link-rev.label        "Reversed relation:">
 <!ENTITY misc-sec.label        "Miscellaneous Properties">
 <!ENTITY misc-lang.label       "Text language:">
-<!ENTITY misc-title.label      "Text title:">
+<!ENTITY misc-title.label      "Title:">
 <!ENTITY misc-tblsummary.label "Table summary:">
 <!ENTITY quote-sec.label       "Quote Properties">
 <!ENTITY quote-cite.label      "Info:">

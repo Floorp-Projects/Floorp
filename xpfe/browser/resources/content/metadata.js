@@ -167,6 +167,15 @@ function checkForImage(elem, htmllocalname)
 
     if (img) {
         setInfo("image-url", img.src);
+        if ("width" in img) {
+            setInfo("image-width", img.width);
+            setInfo("image-height", img.height);
+        }
+	else {
+	    setInfo("image-width", "");
+	    setInfo("image-height", "");
+	}	
+	 
         if (imgType == "img") {
             setInfo("image-desc", getAbsoluteURL(img.longDesc, img));
         } else {
@@ -317,7 +326,6 @@ function setInfo(id, value)
             node.removeChild(node.firstChild);
         node.appendChild(node.ownerDocument.createTextNode(value));
     }
-
 }
 
 // Hide node with specified id
@@ -362,8 +370,8 @@ function getImageForMap(map)
         }
     }
 
-    var list = getHTMLElements(map.ownerDocument, "object");
-    for (var i=0; i < list.length; i++) {
+    list = getHTMLElements(map.ownerDocument, "object");
+    for (i = 0; i < list.length; i++) {
         if (list.item(i).getAttribute("usemap") == mapuri) {
             if (img) {
               multipleFound = true;
