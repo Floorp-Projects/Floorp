@@ -696,7 +696,8 @@ nsSocketTransportService::GetNeckoStringByName (const char *aName, PRUnichar **a
         NS_WITH_PROXIED_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, 
                                 NS_UI_THREAD_EVENTQ, &res);
         if (NS_SUCCEEDED (res) && (nsnull != sBundleService)) {
-            res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(m_stringBundle));
+            nsILocale   *locale = nsnull;
+            res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(m_stringBundle));
         }
     }
 
