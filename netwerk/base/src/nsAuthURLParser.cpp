@@ -277,21 +277,37 @@ nsAuthURLParser::ParseAtPort(const char* i_Spec, PRInt32 *o_Port,
     char* brk = PL_strpbrk(i_Spec, delimiters);
     if (!brk) // everything is a Port
     {
-        *o_Port = ExtractPortFrom(i_Spec);
-        if (*o_Port <= 0)
-            return NS_ERROR_MALFORMED_URI;
-        else
+        if (PL_strlen(i_Spec)==0) {
+            *o_Port = -1;
             return NS_OK;
+        } else {
+            *o_Port = ExtractPortFrom(i_Spec);
+            if (*o_Port <= 0)
+                return NS_ERROR_MALFORMED_URI;
+            else
+                return NS_OK;
+        }
     }
 
+    char* e_Port = nsnull;
     switch (*brk)
     {
     case '/' :
     case '?' :
         // Get the Port, the rest is Path
-        *o_Port = ExtractPortFrom(i_Spec);
-        if (*o_Port <= 0)
-            return NS_ERROR_MALFORMED_URI;
+        rv = ExtractString((char*)i_Spec, &e_Port, brk-i_Spec);
+        if (NS_FAILED(rv)) {
+            CRTFREEIF(e_Port);
+            return rv;
+        }
+        if (PL_strlen(e_Port)==0) {
+            *o_Port = -1;
+        } else {
+            *o_Port = ExtractPortFrom(e_Port);
+            if (*o_Port <= 0)
+                return NS_ERROR_MALFORMED_URI;
+        }
+        CRTFREEIF(e_Port);
         rv = ParseAtPath(brk, o_Path);
         return rv;
         break;
