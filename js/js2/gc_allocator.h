@@ -123,8 +123,6 @@ namespace JavaScript {
 		template<typename U, typename UTraits> gc_allocator(const gc_allocator<U, UTraits>&) {}
 		// ~gc_allocator() {}
 
-                template<typename U, typename UTraits> int operator==(const gc_allocator<U, UTraits>&) { return 1; }
-		
 		static pointer address(reference r) { return &r; }
 		static const_pointer address(const_reference r) { return &r; }
 				
@@ -146,6 +144,9 @@ namespace JavaScript {
 		// raw byte allocator used on some platforms (grrr).
 		typedef char _Char[1];
 		static char* _Charalloc(size_type n) { return (char*) rebind<_Char>::other::allocate(n); }
+
+        // funky operator required for calling basic_string<T> constructor (grrr).
+        template<typename U, typename UTraits> int operator==(const gc_allocator<U, UTraits>&) { return 0; }
 #endif
 
 		// void* deallocate used on some platforms (grrr).
