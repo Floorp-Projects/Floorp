@@ -38,7 +38,6 @@
 #include "prenv.h"
 
 // Needed for Dialog GUI
-#include "nsIDialog.h"
 #include "nsICheckButton.h"
 #include "nsILabel.h"
 #include "nsIButton.h"
@@ -715,7 +714,7 @@ static char    gVerifyDir[_MAX_PATH];
 static PRBool  gVisualDebug = PR_TRUE;
 
 // Robot
-static nsIDialog      * mRobotDialog = nsnull;
+static nsIBrowserWindow * mRobotDialog = nsnull;
 static nsIButton      * mCancelBtn;
 static nsIButton      * mStartBtn;
 static nsITextWidget  * mVerDirTxt;
@@ -723,7 +722,7 @@ static nsITextWidget  * mStopAfterTxt;
 static nsICheckButton * mUpdateChkBtn;
 
 // Site
-static nsIDialog      * mSiteDialog = nsnull;
+static nsIBrowserWindow * mSiteDialog = nsnull;
 static nsIButton      * mSiteCancelBtn;
 static nsIButton      * mSitePrevBtn;
 static nsIButton      * mSiteNextBtn;
@@ -740,7 +739,6 @@ static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
 static NS_DEFINE_IID(kITextWidgetIID,  NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIWidgetIID,      NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIDialogIID,      NS_IDIALOG_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID,       NS_ILABEL_IID);
 
@@ -857,7 +855,6 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
 static
 PRBool CreateRobotDialog(nsIWidget * aParent)
 {
-
   PRBool result = PR_TRUE;
 
   if (mRobotDialog != nsnull) {
@@ -886,8 +883,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   if (nsnull == mRobotDialog)
   	return PR_FALSE;
   
-  NS_CreateDialog(aParent, mRobotDialog,rect,HandleRobotEvent,&font);
-  mRobotDialog->SetLabel("Debug Robot Options");
+  //mRobotDialog->SetLabel("Debug Robot Options");
 
   nscoord txtHeight   = 24;
   nscolor textBGColor = NS_RGB(255,255,255);
@@ -1268,7 +1264,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     if (NS_OK == mSiteDialog->QueryInterface(kIWidgetIID,(void**)&widget))
     {
       widget->Create(aParent, rect, HandleSiteEvent, NULL);
-      mSiteDialog->SetLabel("Top 100 Site Walker");
+      //mSiteDialog->SetLabel("Top 100 Site Walker");
     }
     //mSiteDialog->SetClientData(this);
 
