@@ -26,6 +26,7 @@
 #include "nsObserverService.h"
 #include "nsObserver.h"
 #include "nsProperties.h"
+#include "nsPersistentProperties.h"
 #include "nsScriptableInputStream.h"
 
 #include "nsAllocator.h"

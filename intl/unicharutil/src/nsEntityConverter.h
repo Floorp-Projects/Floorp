@@ -22,7 +22,7 @@
 
 #include "nsIEntityConverter.h"
 #include "nsIFactory.h"
-#include "nsIProperties.h"
+#include "nsIPersistentProperties.h"
 
 
 nsresult NS_NewEntityConverter(nsISupports** oResult);

@@ -28,7 +28,7 @@
 #include "nsISaveAsCharset.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsUnicharUtilCIID.h"
-#include "nsIProperties.h"
+#include "nsIPersistentProperties.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"

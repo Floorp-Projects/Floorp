@@ -33,15 +33,8 @@ class nsProperties : public nsIProperties, public nsHashtable {
 public:
 
   NS_DECL_AGGREGATED
+  NS_DECL_NSIPROPERTIES
 
-  // nsIProperties methods:
-  NS_IMETHOD DefineProperty(const char* prop, nsISupports* initialValue);
-  NS_IMETHOD UndefineProperty(const char* prop);
-  NS_IMETHOD GetProperty(const char* prop, nsISupports* *result);
-  NS_IMETHOD SetProperty(const char* prop, nsISupports* value);
-  NS_IMETHOD HasProperty(const char* prop, nsISupports* value); 
-
-  // nsProperties methods:
   nsProperties(nsISupports* outer);
   virtual ~nsProperties();
 
@@ -50,68 +43,6 @@ public:
 
   static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
 
-};
-
-class nsPersistentProperties : public nsIPersistentProperties
-{
-public:
-  nsPersistentProperties();
-  virtual ~nsPersistentProperties();
-
-  NS_DECL_ISUPPORTS
-
-  static NS_METHOD
-  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-  // nsIProperties methods:
-  NS_IMETHOD DefineProperty(const char* prop, nsISupports* initialValue);
-  NS_IMETHOD UndefineProperty(const char* prop);
-  NS_IMETHOD GetProperty(const char* prop, nsISupports* *result);
-  NS_IMETHOD SetProperty(const char* prop, nsISupports* value);
-  NS_IMETHOD HasProperty(const char* prop, nsISupports* value); 
-
-  // nsIPersistentProperties methods:
-  NS_IMETHOD Load(nsIInputStream* aIn);
-  NS_IMETHOD Save(nsIOutputStream* aOut, const nsString& aHeader);
-  NS_IMETHOD Subclass(nsIPersistentProperties* aSubclass);
-  NS_IMETHOD EnumerateProperties(nsIBidirectionalEnumerator* *aResult);
-
-  // XXX these 2 methods will be subsumed by the ones from 
-  // nsIProperties once we figure this all out
-  NS_IMETHOD GetStringProperty(const nsString& aKey, nsString& aValue);
-  NS_IMETHOD SetStringProperty(const nsString& aKey, nsString& aNewValue,
-                         nsString& aOldValue);
-
-  // nsPersistentProperties methods:
-  PRInt32 Read();
-  PRInt32 SkipLine(PRInt32 c);
-  PRInt32 SkipWhiteSpace(PRInt32 c);
-
-  nsIUnicharInputStream* mIn;
-  nsIPersistentProperties* mSubclass;
-  struct PLHashTable*    mTable;
-};
-
-class nsPropertyElement : public nsIPropertyElement 
-{
-public:
-	nsPropertyElement();
-	virtual ~nsPropertyElement();
-
-	NS_DECL_ISUPPORTS
-
-	static NS_METHOD
-	Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-	// nsIPropertyElement methods:
-	NS_IMETHOD GetKey(nsString** aReturnKey);
-	NS_IMETHOD GetValue(nsString** aReturnValue);
-	NS_IMETHOD SetKey(nsString* aKey);
-	NS_IMETHOD SetValue(nsString* aValue);
-
-protected:
-	nsString* mKey;
-	nsString* mValue;
 };
 
 #endif /* nsProperties_h___ */
