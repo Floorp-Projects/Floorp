@@ -374,7 +374,7 @@ nsMacEventHandler::~nsMacEventHandler()
 	if (mTSMDocument)
 		(void)::DeleteTSMDocument(mTSMDocument);
 	if(nsnull != mIMECompositionStr) {
-		nsAutoString::Recycle(mIMECompositionStr);
+		delete mIMECompositionStr;
 		mIMECompositionStr = nsnull;
 	}
 	if ( mControlActionProc ) {
