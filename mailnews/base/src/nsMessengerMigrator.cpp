@@ -741,6 +741,8 @@ nsMessengerMigrator::UpgradePrefs()
     rv = MigrateAddressBooks();
     if (NS_FAILED(rv)) return rv;
 
+    m_prefs->ClearUserPref(PREF_4X_MAIL_POP_PASSWORD); // intentionally ignore the return value
+
     // we're done migrating, let's save the prefs
     nsCOMPtr<nsIPrefService> prefService(do_QueryInterface(m_prefs, &rv));
     if (NS_FAILED(rv)) return rv;
@@ -1599,12 +1601,9 @@ nsMessengerMigrator::MigrateOldMailPrefs(nsIMsgIncomingServer * server)
   rv = server->SetRememberPassword(PR_FALSE);
   if (NS_FAILED(rv)) return rv;
   
-#ifdef CAN_UPGRADE_4x_PASSWORDS
-  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_POP_PASSWORD,server,SetPassword)
-#else
   rv = server->SetPassword(nsnull);
   if (NS_FAILED(rv)) return rv;
-#endif /* CAN_UPGRADE_4x_PASSWORDS */
+
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_CHECK_NEW_MAIL,server,SetDoBiff)
   MIGRATE_SIMPLE_INT_PREF(PREF_4X_MAIL_CHECK_TIME,server,SetBiffMinutes)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_POP3_GETS_NEW_MAIL,server,SetDownloadOnBiff)
@@ -1864,12 +1863,10 @@ nsMessengerMigrator::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const cha
   //MIGRATE_BOOL_PREF("mail.imap.server.%s.remember_password",hostAndPort,server,SetRememberPassword)
   rv = server->SetRememberPassword(PR_FALSE);
   if (NS_FAILED(rv)) return rv;
-#ifdef CAN_UPGRADE_4x_PASSWORDS
-  MIGRATE_STR_PREF("mail.imap.server.%s.password",hostAndPort,server,SetPassword)
-#else 
+
   rv = server->SetPassword(nsnull);
   if (NS_FAILED(rv)) return rv;
-#endif /* CAN_UPGRADE_4x_PASSWORDS */
+
   // upgrade the imap incoming server specific prefs
   MIGRATE_BOOL_PREF("mail.imap.server.%s.check_new_mail",hostAndPort,server,SetDoBiff)
   MIGRATE_INT_PREF("mail.imap.server.%s.check_time",hostAndPort,server,SetBiffMinutes)
