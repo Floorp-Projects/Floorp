@@ -25,8 +25,6 @@
 #include "nsIDOMSelection.h"
 #include "nsTextServicesDocument.h"
 
-// #define HAVE_EDIT_ACTION_LISTENERS 1
-
 #define LOCK_DOC(doc)
 #define UNLOCK_DOC(doc)
 
@@ -147,10 +145,8 @@ nsTextServicesDocument::nsTextServicesDocument()
 
 nsTextServicesDocument::~nsTextServicesDocument()
 {
-#ifdef HAVE_EDIT_ACTION_LISTENERS
   if (mEditor && mNotifier)
     mEditor->RemoveEditActionListener(mNotifier);
-#endif // HAVE_EDIT_ACTION_LISTENERS
 
   ClearOffsetTable();
 
@@ -353,9 +349,7 @@ nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
 
   mNotifier = do_QueryInterface(notifier);
 
-#ifdef HAVE_EDIT_ACTION_LISTENERS
   result = mEditor->AddEditActionListener(mNotifier);
-#endif // HAVE_EDIT_ACTION_LISTENERS
 
   UNLOCK_DOC(this);
 
