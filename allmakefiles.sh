@@ -251,7 +251,6 @@ content/Makefile
 content/base/Makefile
 content/base/public/Makefile
 content/base/src/Makefile
-content/build/Makefile
 content/events/Makefile
 content/events/public/Makefile
 content/events/src/Makefile
