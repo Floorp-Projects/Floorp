@@ -3,6 +3,7 @@
   {
     behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-dual-ex");
     border                : 1px solid transparent;
+    user-focus            : none !important;
   }
 
 /* internal button */  
@@ -13,6 +14,7 @@
     min-width             : 47px;
     margin                : 0px;
     padding               : 2px 7px 2px 6px;
+    user-focus            : none !important;
   }  
 
 /* dropmarker */
