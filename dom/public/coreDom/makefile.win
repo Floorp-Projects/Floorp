@@ -25,7 +25,7 @@ EXPORTS=nsIDOMAttr.h nsIDOMCDATASection.h nsIDOMCharacterData.h \
 	nsIDOMEntity.h nsIDOMEntityReference.h nsIDOMNode.h \
 	nsIDOMNamedNodeMap.h nsIDOMNodeList.h nsIDOMProcessingInstruction.h \
 	nsIDOMText.h nsIDOMStyleSheet.h nsIDOMStyleSheetCollection.h \
-        nsIDOMNSDocument.h
+        nsIDOMNSDocument.h nsIDOMRange.h
 
 MODULE=dom 
 
