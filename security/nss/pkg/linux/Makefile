@@ -38,13 +38,13 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile,v 1.6 2005/03/11 23:06:41 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.7 2005/04/05 17:36:26 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
 
 NAME        = sun-nss
-RELEASE     = 2
+RELEASE     = 3
 VERSION     = `grep NSS_VERSION $(CORE_DEPTH)/../dist/public/nss/nss.h \
 		| sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//'`
 PWD         = `pwd`
