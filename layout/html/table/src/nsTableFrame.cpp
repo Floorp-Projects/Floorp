@@ -149,10 +149,6 @@ public:
     eColWidthType_Proportional = 3       // (int) value has proportional meaning
   };
 
-#ifdef DEBUG
-  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-
 private:
   PRInt32  mColCounts [4];
   PRInt32 *mColIndexes[4];
@@ -255,23 +251,6 @@ void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType,
       break;
   }
 }
-
-#ifdef DEBUG
-void ColumnInfoCache::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  NS_PRECONDITION(aResult, "null OUT parameter pointer");
-  PRUint32 sum = sizeof(*this);
-
-  // Now add in the space talen up by the arrays
-  for (int i = 0; i < 4; i++) {
-    if (mColIndexes[i]) {
-      sum += mNumColumns * sizeof(PRInt32);
-    }
-  }
-
-  *aResult = sum;
-}
-#endif
 
 NS_IMETHODIMP
 nsTableFrame::GetFrameType(nsIAtom** aType) const
@@ -1259,7 +1238,7 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
     widthToAdd = NSToCoordCeil(p2t);
   border->mWidth *= NSToCoordCeil(p2t);
   border->mLength = rowRect.height;
-  border->mInsideNeighbor = cellFrame->mBorderEdges;
+  border->mInsideNeighbor = &cellFrame->mBorderEdges;
   // we need to factor in the table's horizontal borders.
   // but we can't compute that length here because we don't know how thick top and bottom borders are
   // see DidComputeHorizontalCollapsingBorders
@@ -1393,7 +1372,7 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
     *tableBorder = border;
-    tableBorder->mInsideNeighbor = cellFrame->mBorderEdges;
+    tableBorder->mInsideNeighbor = &cellFrame->mBorderEdges;
     mBorderEdges->mMaxBorderWidth.right = PR_MAX(border.mWidth, mBorderEdges->mMaxBorderWidth.right);
     // since the table is our right neightbor, we need to factor in the table's horizontal borders.
     // can't compute that length here because we don't know how thick top and bottom borders are
@@ -1471,7 +1450,7 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
     widthToAdd = NSToCoordCeil(p2t);
   border->mWidth *= NSToCoordCeil(p2t);
   border->mLength = GetColumnWidth(aColIndex);
-  border->mInsideNeighbor = cellFrame->mBorderEdges;
+  border->mInsideNeighbor = &cellFrame->mBorderEdges;
   if (0==aColIndex)
   { // if we're the first column, factor in the thickness of the left table border
     nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(0));
@@ -1612,7 +1591,7 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_BOTTOM].ElementAt(aColIndex));
     *tableBorder = border;
-    tableBorder->mInsideNeighbor = cellFrame->mBorderEdges;
+    tableBorder->mInsideNeighbor = &cellFrame->mBorderEdges;
     mBorderEdges->mMaxBorderWidth.bottom = PR_MAX(border.mWidth, mBorderEdges->mMaxBorderWidth.bottom);
     // since the table is our bottom neightbor, we need to factor in the table's vertical borders.
     PRInt32 lastColIndex = mCellMap->GetColCount()-1;
@@ -5530,11 +5509,9 @@ nsTableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   // Add in the amount of space for the column width array
   sum += mColumnWidthsLength * sizeof(PRInt32);
 
-  // And in size of column info cache
+  // And the column info cache
   if (mColCache) {
-    PRUint32 colCacheSize;
-    mColCache->SizeOf(aHandler, &colCacheSize);
-    aHandler->AddSize(nsLayoutAtoms::tableColCache, colCacheSize);
+    sum += sizeof(*mColCache);
   }
 
   // Add in size of cell map
