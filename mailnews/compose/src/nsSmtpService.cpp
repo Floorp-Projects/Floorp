@@ -577,7 +577,7 @@ nsSmtpService::CreateSmtpServer(nsISmtpServer **aResult)
     
     do {
         key = "smtp";
-        key.Append(i);
+        key.Append(i++);
         
         entry.key = key;
         entry.server = nsnull;
