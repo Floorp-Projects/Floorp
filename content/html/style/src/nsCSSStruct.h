@@ -39,92 +39,27 @@
 #ifndef nsCSSStruct_h___
 #define nsCSSStruct_h___
 
-#include "nsISupports.h"
-#include "nsColor.h"
-#include <stdio.h>
-#include "nsString.h"
-#include "nsCoord.h"
 #include "nsCSSValue.h"
+#include <stdio.h>
 
 struct nsCSSStruct {
   // EMPTY on purpose.  ABSTRACT with no virtuals (typedef void nsCSSStruct?)
 };
 
-// Eventually we should stop using the nsCSS* structures for storing
-// nsCSSDeclaration's data, because they're extremely bloated.  However,
-// we'll still want to use them for nsRuleData.  So, for now, use
-// typedefs and inheritance (forwards, when the rule data needs extra
-// data) to make the rule data structs from the declaration structs.
+// We use the nsCSS* structures for storing nsCSSDeclaration's
+// *temporary* data during parsing and modification.  (They are too big
+// for permanent storage.)  We also use them for nsRuleData, with some
+// additions of things that the style system must cascade, but that
+// aren't CSS properties.  Thus we use typedefs and inheritance
+// (forwards, when the rule data needs extra data) to make the rule data
+// structs from the declaration structs.
 typedef nsCSSStruct nsRuleDataStruct;
 
-
-// SID for the nsCSSFont struct {f645dbf8-b48a-11d1-9ca5-0060088f9ff7}
-#define NS_CSS_FONT_SID   \
-{0xf645dbf8, 0xb48a, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
-
-// SID for the nsCSSColor struct {fd825f22-b48a-11d1-9ca5-0060088f9ff7}
-#define NS_CSS_COLOR_SID   \
-{0xfd825f22, 0xb48a, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
-
-// SID for the nsCSSText struct {fe13ce94-b48a-11d1-9ca5-0060088f9ff7}
-#define NS_CSS_TEXT_SID   \
-{0xfe13ce94, 0xb48a, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
-
-// SID for the nsCSSDisplay struct {fe13ce95-b48a-11d1-9ca5-0060088f9ff7}
-#define NS_CSS_DISPLAY_SID   \
-{0xfe13ce95, 0xb48a, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
-
-// SID for the nsCSSMargin struct {fe6019d4-b48a-11d1-9ca5-0060088f9ff7}
-#define NS_CSS_MARGIN_SID   \
-{0xfe6019d4, 0xb48a, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
-
-// SID for the nsCSSPosition struct {fee33b2a-b48a-11d1-9ca5-0060088f9ff7}
-#define NS_CSS_POSITION_SID   \
-{0xfee33b2a, 0xb48a, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
-
-// SID for the nsCSSList struct {603f8266-b48b-11d1-9ca5-0060088f9ff7}
-#define NS_CSS_LIST_SID   \
-{0x603f8266, 0xb48b, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
-
-// SID for the nsCSSTable struct {16aa4b30-5a3b-11d2-803b-006008159b5a}
-#define NS_CSS_TABLE_SID  \
-{0x16aa4b30, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-// SID for the nsCSSBreaks struct {15124c20-5a3b-11d2-803b-006008159b5a}
-#define NS_CSS_BREAKS_SID \
-{0x15124c20, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-// SID for the nsCSSPage struct {15dd8810-5a3b-11d2-803b-006008159b5a}
-#define NS_CSS_PAGE_SID  \
-{0x15dd8810, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-// SID for the nsCSSContent struct {1629ef70-5a3b-11d2-803b-006008159b5a}
-#define NS_CSS_CONTENT_SID  \
-{0x1629ef70, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-// SID for the nsCSSUserInterface struct {4397c3a0-3efe-11d3-8060-006008159b5a}
-#define NS_CSS_USER_INTERFACE_SID  \
-{0x4397c3a0, 0x3efe, 0x11d3, {0x80, 0x60, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-// SID for the nsCSSAural struct {166d2bb0-5a3b-11d2-803b-006008159b5a}
-#define NS_CSS_AURAL_SID  \
-{0x166d2bb0, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-// {FC075D62-B1CF-47a1-AF4E-CB40E11A4314}
-#define NS_CSS_XUL_SID  \
-{ 0xfc075d62, 0xb1cf, 0x47a1, { 0xaf, 0x4e, 0xcb, 0x40, 0xe1, 0x1a, 0x43, 0x14 } }
-
-#ifdef MOZ_SVG
-// {9A41A036-027B-45ef-89C9-6E32797839E7}
-#define NS_CSS_SVG_SID \
-{ 0x9a41a036, 0x27b, 0x45ef, { 0x89, 0xc9, 0x6e, 0x32, 0x79, 0x78, 0x39, 0xe7 } }
-#endif
 
 struct nsCSSFont : public nsCSSStruct {
   nsCSSFont(void);
   nsCSSFont(const nsCSSFont& aCopy);
   ~nsCSSFont(void);
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -155,7 +90,6 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSColor(void);
   nsCSSColor(const nsCSSColor& aCopy);
   ~nsCSSColor(void);
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -192,7 +126,6 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSText(const nsCSSText& aCopy);
   ~nsCSSText(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -213,6 +146,8 @@ struct nsCSSText : public nsCSSStruct  {
 struct nsRuleDataText : public nsCSSText {
 };
 
+#define FOR_CSS_SIDES(var_) for (PRInt32 var_ = 0; var_ < 4; ++var_)
+                             
 struct nsCSSRect {
   nsCSSRect(void);
   nsCSSRect(const nsCSSRect& aCopy);
@@ -222,10 +157,47 @@ struct nsCSSRect {
   void List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const;
 #endif
 
+  PRBool operator==(const nsCSSRect& aOther) const {
+    return mTop == aOther.mTop &&
+           mRight == aOther.mRight &&
+           mBottom == aOther.mBottom &&
+           mLeft == aOther.mLeft;
+  }
+
+  PRBool operator!=(const nsCSSRect& aOther) const {
+    return mTop != aOther.mTop ||
+           mRight != aOther.mRight ||
+           mBottom != aOther.mBottom ||
+           mLeft != aOther.mLeft;
+  }
+
+  void SetAllSidesTo(const nsCSSValue& aValue);
+
   nsCSSValue mTop;
   nsCSSValue mRight;
   nsCSSValue mBottom;
   nsCSSValue mLeft;
+
+  typedef nsCSSValue nsCSSRect::*side_type;
+  static const side_type sides[4];
+};
+
+struct nsCSSValueListRect {
+  nsCSSValueListRect(void);
+  nsCSSValueListRect(const nsCSSValueListRect& aCopy);
+  ~nsCSSValueListRect();
+#ifdef DEBUG
+  void List(FILE* out = 0, nsCSSProperty aPropID = eCSSProperty_UNKNOWN, PRInt32 aIndent = 0) const;
+  void List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const;
+#endif
+
+  nsCSSValueList* mTop;
+  nsCSSValueList* mRight;
+  nsCSSValueList* mBottom;
+  nsCSSValueList* mLeft;
+
+  typedef nsCSSValueList* nsCSSValueListRect::*side_type;
+  static const side_type sides[4];
 };
 
 struct nsCSSDisplay : public nsCSSStruct  {
@@ -233,7 +205,6 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSDisplay(const nsCSSDisplay& aCopy);
   ~nsCSSDisplay(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -245,7 +216,7 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mPosition;
   nsCSSValue mFloat;
   nsCSSValue mClear;
-  nsCSSRect* mClip;
+  nsCSSRect  mClip;
   nsCSSValue mOverflow;
   nsCSSValue mVisibility;
   nsCSSValue mOpacity;
@@ -265,24 +236,21 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSMargin(const nsCSSMargin& aCopy);
   ~nsCSSMargin(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  void EnsureBorderColors();
-
-  nsCSSRect*  mMargin;
-  nsCSSRect*  mPadding;
-  nsCSSRect*  mBorderWidth;
-  nsCSSRect*  mBorderColor;
-  nsCSSValueList** mBorderColors;
-  nsCSSRect*  mBorderStyle;
-  nsCSSRect*  mBorderRadius;  // (extension)
+  nsCSSRect   mMargin;
+  nsCSSRect   mPadding;
+  nsCSSRect   mBorderWidth;
+  nsCSSRect   mBorderColor;
+  nsCSSValueListRect mBorderColors;
+  nsCSSRect   mBorderStyle;
+  nsCSSRect   mBorderRadius;  // (extension)
   nsCSSValue  mOutlineWidth;
   nsCSSValue  mOutlineColor;
   nsCSSValue  mOutlineStyle;
-  nsCSSRect*  mOutlineRadius; // (extension)
+  nsCSSRect   mOutlineRadius; // (extension)
   nsCSSValue  mFloatEdge; // NEW
 };
 
@@ -294,7 +262,6 @@ struct nsCSSPosition : public nsCSSStruct  {
   nsCSSPosition(const nsCSSPosition& aCopy);
   ~nsCSSPosition(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -306,7 +273,7 @@ struct nsCSSPosition : public nsCSSStruct  {
   nsCSSValue  mMinHeight;
   nsCSSValue  mMaxHeight;
   nsCSSValue  mBoxSizing; // NEW
-  nsCSSRect*  mOffset;
+  nsCSSRect   mOffset;
   nsCSSValue  mZIndex;
 };
 
@@ -318,7 +285,6 @@ struct nsCSSList : public nsCSSStruct  {
   nsCSSList(const nsCSSList& aCopy);
   ~nsCSSList(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -326,7 +292,7 @@ struct nsCSSList : public nsCSSStruct  {
   nsCSSValue mType;
   nsCSSValue mImage;
   nsCSSValue mPosition;
-  nsCSSRect*  mImageRegion;
+  nsCSSRect  mImageRegion;
 };
 
 struct nsRuleDataList : public nsCSSList {
@@ -337,7 +303,6 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
   nsCSSTable(const nsCSSTable& aCopy);
   ~nsCSSTable(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -363,7 +328,6 @@ struct nsCSSBreaks : public nsCSSStruct  { // NEW
   nsCSSBreaks(const nsCSSBreaks& aCopy);
   ~nsCSSBreaks(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -371,8 +335,9 @@ struct nsCSSBreaks : public nsCSSStruct  { // NEW
   nsCSSValue mOrphans;
   nsCSSValue mWidows;
   nsCSSValue mPage;
-  nsCSSValue mPageBreakAfter;
-  nsCSSValue mPageBreakBefore;
+  // temp fix for bug 24000 
+  //nsCSSValue mPageBreakAfter;
+  //nsCSSValue mPageBreakBefore;
   nsCSSValue mPageBreakInside;
 };
 
@@ -384,7 +349,6 @@ struct nsCSSPage : public nsCSSStruct  { // NEW
   nsCSSPage(const nsCSSPage& aCopy);
   ~nsCSSPage(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -422,7 +386,6 @@ struct nsCSSContent : public nsCSSStruct  {
   nsCSSContent(const nsCSSContent& aCopy);
   ~nsCSSContent(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -442,7 +405,6 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSUserInterface(const nsCSSUserInterface& aCopy);
   ~nsCSSUserInterface(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -466,7 +428,6 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
   nsCSSAural(const nsCSSAural& aCopy);
   ~nsCSSAural(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -500,7 +461,6 @@ struct nsCSSXUL : public nsCSSStruct  {
   nsCSSXUL(const nsCSSXUL& aCopy);
   ~nsCSSXUL(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -522,7 +482,6 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSSVG(const nsCSSSVG& aCopy);
   ~nsCSSSVG(void);
 
-  const nsID& GetID(void);
 #ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
@@ -542,59 +501,6 @@ struct nsCSSSVG : public nsCSSStruct {
 
 struct nsRuleDataSVG : public nsCSSSVG {
 };
-#endif
-
-//
-// Some useful types.
-//
-typedef PRUint16 nsCSSBitField;
-typedef PRUint16 nsCSSDeclRefCount;
-struct nsCSSDeclContains
-{
-    nsCSSBitField mHasDisplay:1;          //  1
-    nsCSSBitField mHasText:1;             //  2
-    nsCSSBitField mHasColor:1;            //  3
-    nsCSSBitField mHasMargin:1;           //  4
-    nsCSSBitField mHasList:1;             //  4
-    nsCSSBitField mHasFont:1;             //  5
-    nsCSSBitField mHasPosition:1;         //  6
-    nsCSSBitField mHasUserInterface:1;    //  8
-    nsCSSBitField mHasTable:1;            //  9
-    nsCSSBitField mHasContent:1;          // 10
-    nsCSSBitField mHasXUL:1;              // 11
-    nsCSSBitField mHasBreaks:1;           // 12
-    nsCSSBitField mHasPage:1;             // 13
-    nsCSSBitField mHasAural:1;            // 14
-#if defined(MOZ_SVG)
-    nsCSSBitField mHasSVG:1;              // 15
-#endif
-};
-
-//
-// Macros used to figure out at what index the pointer to the object is.
-// These macros have been placed in the order of what is considered most
-//  created nsCSSStruct first, such that "less math for most likely" will
-//  lend itself to the speed of the index lookup calculation.
-// I have also ordered the bit fields, in case the compiler can come up
-//  with an optimization if the ordering would matter.
-// Presence (mContains.mHasWhatever) is NOT tested for, so do that yourself.
-//
-#define CSSDECLIDX_Display(decl)       ((decl).mContains.mHasDisplay - 1)
-#define CSSDECLIDX_Text(decl)          ((decl).mContains.mHasText + CSSDECLIDX_Display(decl))
-#define CSSDECLIDX_Color(decl)         ((decl).mContains.mHasColor + CSSDECLIDX_Text(decl))
-#define CSSDECLIDX_Margin(decl)        ((decl).mContains.mHasMargin + CSSDECLIDX_Color(decl))
-#define CSSDECLIDX_List(decl)          ((decl).mContains.mHasList + CSSDECLIDX_Margin(decl))
-#define CSSDECLIDX_Font(decl)          ((decl).mContains.mHasFont + CSSDECLIDX_List(decl))
-#define CSSDECLIDX_Position(decl)      ((decl).mContains.mHasPosition + CSSDECLIDX_Font(decl))
-#define CSSDECLIDX_UserInterface(decl) ((decl).mContains.mHasUserInterface + CSSDECLIDX_Position(decl))
-#define CSSDECLIDX_Table(decl)         ((decl).mContains.mHasTable + CSSDECLIDX_UserInterface(decl))
-#define CSSDECLIDX_Content(decl)       ((decl).mContains.mHasContent + CSSDECLIDX_Table(decl))
-#define CSSDECLIDX_XUL(decl)           ((decl).mContains.mHasXUL + CSSDECLIDX_Content(decl))
-#define CSSDECLIDX_Breaks(decl)        ((decl).mContains.mHasBreaks + CSSDECLIDX_XUL(decl))
-#define CSSDECLIDX_Page(decl)          ((decl).mContains.mHasPage + CSSDECLIDX_Breaks(decl))
-#define CSSDECLIDX_Aural(decl)         ((decl).mContains.mHasAural + CSSDECLIDX_Page(decl))
-#if defined(MOZ_SVG)
-#define CSSDECLIDX_SVG(decl)           ((decl).mContains.mHasSVG + CSSDECLIDX_Aural(decl))
 #endif
 
 #endif /* nsCSSStruct_h___ */

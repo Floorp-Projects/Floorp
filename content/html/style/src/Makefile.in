@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
+		nsCSSDataBlock.cpp \
 		nsCSSDeclaration.cpp \
 		nsCSSLoader.cpp \
 		nsCSSOMFactory.cpp \

@@ -52,25 +52,6 @@
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
 
-static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
-static NS_DEFINE_IID(kCSSColorSID, NS_CSS_COLOR_SID);
-static NS_DEFINE_IID(kCSSDisplaySID, NS_CSS_DISPLAY_SID);
-static NS_DEFINE_IID(kCSSTextSID, NS_CSS_TEXT_SID);
-static NS_DEFINE_IID(kCSSMarginSID, NS_CSS_MARGIN_SID);
-static NS_DEFINE_IID(kCSSPositionSID, NS_CSS_POSITION_SID);
-static NS_DEFINE_IID(kCSSListSID, NS_CSS_LIST_SID);
-static NS_DEFINE_IID(kCSSTableSID, NS_CSS_TABLE_SID);
-static NS_DEFINE_IID(kCSSBreaksSID, NS_CSS_BREAKS_SID);
-static NS_DEFINE_IID(kCSSPageSID, NS_CSS_PAGE_SID);
-static NS_DEFINE_IID(kCSSContentSID, NS_CSS_CONTENT_SID);
-static NS_DEFINE_IID(kCSSUserInterfaceSID, NS_CSS_USER_INTERFACE_SID);
-static NS_DEFINE_IID(kCSSAuralSID, NS_CSS_AURAL_SID);
-static NS_DEFINE_IID(kCSSXULSID, NS_CSS_XUL_SID);
-
-#ifdef MOZ_SVG
-static NS_DEFINE_IID(kCSSSVGSID, NS_CSS_SVG_SID);
-#endif
-
 #define CSS_IF_DELETE(ptr)  if (nsnull != ptr)  { delete ptr; ptr = nsnull; }
 
 // --- nsCSSFont -----------------
@@ -95,11 +76,6 @@ nsCSSFont::nsCSSFont(const nsCSSFont& aCopy)
 nsCSSFont::~nsCSSFont(void)
 {
   MOZ_COUNT_DTOR(nsCSSFont);
-}
-
-const nsID& nsCSSFont::GetID(void)
-{
-  return kCSSFontSID;
 }
 
 #ifdef DEBUG
@@ -172,11 +148,6 @@ nsCSSColor::nsCSSColor(const nsCSSColor& aCopy)
 nsCSSColor::~nsCSSColor(void)
 {
   MOZ_COUNT_DTOR(nsCSSColor);
-}
-
-const nsID& nsCSSColor::GetID(void)
-{
-  return kCSSColorSID;
 }
 
 #ifdef DEBUG
@@ -255,11 +226,6 @@ nsCSSText::~nsCSSText(void)
   CSS_IF_DELETE(mTextShadow);
 }
 
-const nsID& nsCSSText::GetID(void)
-{
-  return kCSSTextSID;
-}
-
 #ifdef DEBUG
 void nsCSSText::List(FILE* out, PRInt32 aIndent) const
 {
@@ -277,11 +243,12 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != mTextShadow) {
     if (mTextShadow->mXOffset.IsLengthUnit()) {
       nsCSSShadow*  shadow = mTextShadow;
+      // XXX This prints the property name many times, but nobody cares.
       while (nsnull != shadow) {
-        shadow->mColor.AppendToString(buffer, eCSSProperty_text_shadow_color);
-        shadow->mXOffset.AppendToString(buffer, eCSSProperty_text_shadow_x);
-        shadow->mYOffset.AppendToString(buffer, eCSSProperty_text_shadow_y);
-        shadow->mRadius.AppendToString(buffer, eCSSProperty_text_shadow_radius);
+        shadow->mColor.AppendToString(buffer, eCSSProperty_text_shadow);
+        shadow->mXOffset.AppendToString(buffer, eCSSProperty_text_shadow);
+        shadow->mYOffset.AppendToString(buffer, eCSSProperty_text_shadow);
+        shadow->mRadius.AppendToString(buffer, eCSSProperty_text_shadow);
         shadow = shadow->mNext;
       }
     }
@@ -317,6 +284,24 @@ nsCSSRect::~nsCSSRect()
   MOZ_COUNT_DTOR(nsCSSRect);
 }
 
+void nsCSSRect::SetAllSidesTo(const nsCSSValue& aValue)
+{
+  mTop = aValue;
+  mRight = aValue;
+  mBottom = aValue;
+  mLeft = aValue;
+}
+
+#if (NS_SIDE_TOP != 0) || (NS_SIDE_RIGHT != 1) || (NS_SIDE_BOTTOM != 2) || (NS_SIDE_LEFT != 3)
+#error "Somebody changed the side constants."
+#endif
+
+/* static */ const nsCSSRect::side_type nsCSSRect::sides[4] = {
+  &nsCSSRect::mTop,
+  &nsCSSRect::mRight,
+  &nsCSSRect::mBottom,
+  &nsCSSRect::mLeft,
+};
 
 #ifdef DEBUG
 void nsCSSRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent) const
@@ -368,10 +353,98 @@ void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) co
 }
 #endif
 
+// --- nsCSSValueListRect -----------------
+
+MOZ_DECL_CTOR_COUNTER(nsCSSValueListRect)
+
+nsCSSValueListRect::nsCSSValueListRect(void)
+  : mTop(nsnull),
+    mRight(nsnull),
+    mBottom(nsnull),
+    mLeft(nsnull)
+{
+  MOZ_COUNT_CTOR(nsCSSValueListRect);
+}
+
+nsCSSValueListRect::nsCSSValueListRect(const nsCSSValueListRect& aCopy)
+  : mTop(aCopy.mTop),
+    mRight(aCopy.mRight),
+    mBottom(aCopy.mBottom),
+    mLeft(aCopy.mLeft)
+{
+  MOZ_COUNT_CTOR(nsCSSValueListRect);
+}
+
+nsCSSValueListRect::~nsCSSValueListRect()
+{
+  MOZ_COUNT_DTOR(nsCSSValueListRect);
+}
+
+/* static */ const nsCSSValueListRect::side_type
+nsCSSValueListRect::sides[4] = {
+  &nsCSSValueListRect::mTop,
+  &nsCSSValueListRect::mRight,
+  &nsCSSValueListRect::mBottom,
+  &nsCSSValueListRect::mLeft,
+};
+
+#ifdef DEBUG
+void nsCSSValueListRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent) const
+{
+#if 0
+  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  nsAutoString buffer;
+
+  if (eCSSProperty_UNKNOWN < aPropID) {
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aPropID).get());
+    buffer.Append(NS_LITERAL_STRING(": "));
+  }
+
+  mTop.AppendToString(buffer);
+  mRight.AppendToString(buffer);
+  mBottom.AppendToString(buffer); 
+  mLeft.AppendToString(buffer);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+#endif
+}
+
+void nsCSSValueListRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const
+{
+#if 0
+  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  nsAutoString buffer;
+
+  if (eCSSUnit_Null != mTop.GetUnit()) {
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[0]).get());
+    buffer.Append(NS_LITERAL_STRING(": "));
+    mTop.AppendToString(buffer);
+  }
+  if (eCSSUnit_Null != mRight.GetUnit()) {
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[1]).get());
+    buffer.Append(NS_LITERAL_STRING(": "));
+    mRight.AppendToString(buffer);
+  }
+  if (eCSSUnit_Null != mBottom.GetUnit()) {
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[2]).get());
+    buffer.Append(NS_LITERAL_STRING(": "));
+    mBottom.AppendToString(buffer); 
+  }
+  if (eCSSUnit_Null != mLeft.GetUnit()) {
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[3]).get());
+    buffer.Append(NS_LITERAL_STRING(": "));
+    mLeft.AppendToString(buffer);
+  }
+
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+#endif
+}
+#endif
+
 // --- nsCSSDisplay -----------------
 
 nsCSSDisplay::nsCSSDisplay(void)
-  : mClip(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSDisplay);
 }
@@ -383,7 +456,7 @@ nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
     mPosition(aCopy.mPosition),
     mFloat(aCopy.mFloat),
     mClear(aCopy.mClear),
-    mClip(nsnull),
+    mClip(aCopy.mClip),
     mOverflow(aCopy.mOverflow),
     mVisibility(aCopy.mVisibility),
     mOpacity(aCopy.mOpacity),
@@ -393,18 +466,11 @@ nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
     // end temp
 {
   MOZ_COUNT_CTOR(nsCSSDisplay);
-  CSS_IF_COPY(mClip, nsCSSRect);
 }
 
 nsCSSDisplay::~nsCSSDisplay(void)
 {
   MOZ_COUNT_DTOR(nsCSSDisplay);
-  CSS_IF_DELETE(mClip);
-}
-
-const nsID& nsCSSDisplay::GetID(void)
-{
-  return kCSSDisplaySID;
 }
 
 #ifdef DEBUG
@@ -425,9 +491,7 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
   mOpacity.AppendToString(buffer, eCSSProperty_opacity);
 
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
-  if (nsnull != mClip) {
-    mClip->List(out, eCSSProperty_clip);
-  }
+  mClip.List(out, eCSSProperty_clip);
   buffer.SetLength(0);
   mOverflow.AppendToString(buffer, eCSSProperty_overflow);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
@@ -436,115 +500,73 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
 
 // --- nsCSSMargin -----------------
 
-void nsCSSMargin::EnsureBorderColors()
-{
-  if (!mBorderColors) {
-    PRInt32 i;
-    mBorderColors = new nsCSSValueList*[4];
-    for (i = 0; i < 4; i++)
-      mBorderColors[i] = nsnull;
-  }
-}
-
 nsCSSMargin::nsCSSMargin(void)
-  : mMargin(nsnull), mPadding(nsnull), 
-    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderColors(nsnull),
-    mBorderStyle(nsnull), mBorderRadius(nsnull), mOutlineRadius(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSMargin);
 }
 
 nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
-  : mMargin(nsnull), mPadding(nsnull), 
-    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderColors(nsnull),
-    mBorderStyle(nsnull), mBorderRadius(nsnull),
+  : mMargin(aCopy.mMargin),
+    mPadding(aCopy.mPadding), 
+    mBorderWidth(aCopy.mBorderWidth),
+    mBorderColor(aCopy.mBorderColor),
+    mBorderColors(aCopy.mBorderColors),
+    mBorderStyle(aCopy.mBorderStyle),
+    mBorderRadius(aCopy.mBorderRadius),
     mOutlineWidth(aCopy.mOutlineWidth),
     mOutlineColor(aCopy.mOutlineColor),
     mOutlineStyle(aCopy.mOutlineStyle),
-    mOutlineRadius(nsnull),
+    mOutlineRadius(aCopy.mOutlineRadius),
     mFloatEdge(aCopy.mFloatEdge)
 {
   MOZ_COUNT_CTOR(nsCSSMargin);
-  CSS_IF_COPY(mMargin, nsCSSRect);
-  CSS_IF_COPY(mPadding, nsCSSRect);
-  CSS_IF_COPY(mBorderWidth, nsCSSRect);
-  CSS_IF_COPY(mBorderColor, nsCSSRect);
-  CSS_IF_COPY(mBorderStyle, nsCSSRect);
-  CSS_IF_COPY(mBorderRadius, nsCSSRect);
-  CSS_IF_COPY(mOutlineRadius, nsCSSRect);
-  if (aCopy.mBorderColors) {
-    EnsureBorderColors();
-    for (PRInt32 i = 0; i < 4; i++)
-      CSS_IF_COPY(mBorderColors[i], nsCSSValueList);
-  }
 }
 
 nsCSSMargin::~nsCSSMargin(void)
 {
   MOZ_COUNT_DTOR(nsCSSMargin);
-  CSS_IF_DELETE(mMargin);
-  CSS_IF_DELETE(mPadding);
-  CSS_IF_DELETE(mBorderWidth);
-  CSS_IF_DELETE(mBorderColor);
-  CSS_IF_DELETE(mBorderStyle);
-  CSS_IF_DELETE(mBorderRadius);
-  CSS_IF_DELETE(mOutlineRadius);
-  if (mBorderColors) {
-    for (PRInt32 i = 0; i < 4; i++)
-      CSS_IF_DELETE(mBorderColors[i]);
-    delete []mBorderColors;
-  }
-}
-
-const nsID& nsCSSMargin::GetID(void)
-{
-  return kCSSMarginSID;
 }
 
 #ifdef DEBUG
 void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
 {
-  if (nsnull != mMargin) {
+  {
     static const nsCSSProperty trbl[] = {
       eCSSProperty_margin_top,
       eCSSProperty_margin_right,
       eCSSProperty_margin_bottom,
       eCSSProperty_margin_left
     };
-    mMargin->List(out, aIndent, trbl);
+    mMargin.List(out, aIndent, trbl);
   }
-  if (nsnull != mPadding) {
+  {
     static const nsCSSProperty trbl[] = {
       eCSSProperty_padding_top,
       eCSSProperty_padding_right,
       eCSSProperty_padding_bottom,
       eCSSProperty_padding_left
     };
-    mPadding->List(out, aIndent, trbl);
+    mPadding.List(out, aIndent, trbl);
   }
-  if (nsnull != mBorderWidth) {
+  {
     static const nsCSSProperty trbl[] = {
       eCSSProperty_border_top_width,
       eCSSProperty_border_right_width,
       eCSSProperty_border_bottom_width,
       eCSSProperty_border_left_width
     };
-    mBorderWidth->List(out, aIndent, trbl);
+    mBorderWidth.List(out, aIndent, trbl);
   }
-  if (nsnull != mBorderColor) {
-    mBorderColor->List(out, eCSSProperty_border_color, aIndent);
-  }
-  if (nsnull != mBorderStyle) {
-    mBorderStyle->List(out, eCSSProperty_border_style, aIndent);
-  }
-  if (nsnull != mBorderRadius) {
+  mBorderColor.List(out, eCSSProperty_border_color, aIndent);
+  mBorderStyle.List(out, eCSSProperty_border_style, aIndent);
+  {
     static const nsCSSProperty trbl[] = {
       eCSSProperty__moz_border_radius_topLeft,
       eCSSProperty__moz_border_radius_topRight,
       eCSSProperty__moz_border_radius_bottomRight,
       eCSSProperty__moz_border_radius_bottomLeft
     };
-    mBorderRadius->List(out, aIndent, trbl);
+    mBorderRadius.List(out, aIndent, trbl);
   }
 
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -553,14 +575,14 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   mOutlineWidth.AppendToString(buffer, eCSSProperty__moz_outline_width);
   mOutlineColor.AppendToString(buffer, eCSSProperty__moz_outline_color);
   mOutlineStyle.AppendToString(buffer, eCSSProperty__moz_outline_style);
-  if (nsnull != mOutlineRadius) {
+  {
     static const nsCSSProperty trbl[] = {
       eCSSProperty__moz_outline_radius_topLeft,
       eCSSProperty__moz_outline_radius_topRight,
       eCSSProperty__moz_outline_radius_bottomRight,
       eCSSProperty__moz_outline_radius_bottomLeft
     };
-    mOutlineRadius->List(out, aIndent, trbl);
+    mOutlineRadius.List(out, aIndent, trbl);
   }
   mFloatEdge.AppendToString(buffer, eCSSProperty_float_edge);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
@@ -570,7 +592,6 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
 // --- nsCSSPosition -----------------
 
 nsCSSPosition::nsCSSPosition(void)
-  : mOffset(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSPosition);
 }
@@ -583,22 +604,15 @@ nsCSSPosition::nsCSSPosition(const nsCSSPosition& aCopy)
     mMinHeight(aCopy.mMinHeight),
     mMaxHeight(aCopy.mMaxHeight),
     mBoxSizing(aCopy.mBoxSizing),
-    mOffset(nsnull),
+    mOffset(aCopy.mOffset),
     mZIndex(aCopy.mZIndex)
 {
   MOZ_COUNT_CTOR(nsCSSPosition);
-  CSS_IF_COPY(mOffset, nsCSSRect);
 }
 
 nsCSSPosition::~nsCSSPosition(void)
 {
   MOZ_COUNT_DTOR(nsCSSPosition);
-  CSS_IF_DELETE(mOffset);
-}
-
-const nsID& nsCSSPosition::GetID(void)
-{
-  return kCSSPositionSID;
 }
 
 #ifdef DEBUG
@@ -618,22 +632,19 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
   mZIndex.AppendToString(buffer, eCSSProperty_z_index);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 
-  if (nsnull != mOffset) {
-    static const nsCSSProperty trbl[] = {
-      eCSSProperty_top,
-      eCSSProperty_right,
-      eCSSProperty_bottom,
-      eCSSProperty_left
-    };
-    mOffset->List(out, aIndent, trbl);
-  }
+  static const nsCSSProperty trbl[] = {
+    eCSSProperty_top,
+    eCSSProperty_right,
+    eCSSProperty_bottom,
+    eCSSProperty_left
+  };
+  mOffset.List(out, aIndent, trbl);
 }
 #endif
 
 // --- nsCSSList -----------------
 
 nsCSSList::nsCSSList(void)
-:mImageRegion(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSList);
 }
@@ -642,21 +653,14 @@ nsCSSList::nsCSSList(const nsCSSList& aCopy)
   : mType(aCopy.mType),
     mImage(aCopy.mImage),
     mPosition(aCopy.mPosition),
-    mImageRegion(nsnull)
+    mImageRegion(aCopy.mImageRegion)
 {
   MOZ_COUNT_CTOR(nsCSSList);
-  CSS_IF_COPY(mImageRegion, nsCSSRect);
 }
 
 nsCSSList::~nsCSSList(void)
 {
   MOZ_COUNT_DTOR(nsCSSList);
-  CSS_IF_DELETE(mImageRegion);
-}
-
-const nsID& nsCSSList::GetID(void)
-{
-  return kCSSListSID;
 }
 
 #ifdef DEBUG
@@ -671,15 +675,13 @@ void nsCSSList::List(FILE* out, PRInt32 aIndent) const
   mPosition.AppendToString(buffer, eCSSProperty_list_style_position);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 
-  if (mImageRegion) {
-    static const nsCSSProperty trbl[] = {
-      eCSSProperty_top,
-      eCSSProperty_right,
-      eCSSProperty_bottom,
-      eCSSProperty_left
-    };
-    mImageRegion->List(out, aIndent, trbl);
-  }
+  static const nsCSSProperty trbl[] = {
+    eCSSProperty_top,
+    eCSSProperty_right,
+    eCSSProperty_bottom,
+    eCSSProperty_left
+  };
+  mImageRegion.List(out, aIndent, trbl);
 }
 #endif
 
@@ -704,11 +706,6 @@ nsCSSTable::nsCSSTable(const nsCSSTable& aCopy)
 nsCSSTable::~nsCSSTable(void)
 {
   MOZ_COUNT_DTOR(nsCSSTable);
-}
-
-const nsID& nsCSSTable::GetID(void)
-{
-  return kCSSTableSID;
 }
 
 #ifdef DEBUG
@@ -740,8 +737,9 @@ nsCSSBreaks::nsCSSBreaks(const nsCSSBreaks& aCopy)
   : mOrphans(aCopy.mOrphans),
     mWidows(aCopy.mWidows),
     mPage(aCopy.mPage),
-    mPageBreakAfter(aCopy.mPageBreakAfter),
-    mPageBreakBefore(aCopy.mPageBreakBefore),
+    // temp fix for bug 24000
+    //mPageBreakAfter(aCopy.mPageBreakAfter),
+    //mPageBreakBefore(aCopy.mPageBreakBefore),
     mPageBreakInside(aCopy.mPageBreakInside)
 {
   MOZ_COUNT_CTOR(nsCSSBreaks);
@@ -750,11 +748,6 @@ nsCSSBreaks::nsCSSBreaks(const nsCSSBreaks& aCopy)
 nsCSSBreaks::~nsCSSBreaks(void)
 {
   MOZ_COUNT_DTOR(nsCSSBreaks);
-}
-
-const nsID& nsCSSBreaks::GetID(void)
-{
-  return kCSSBreaksSID;
 }
 
 #ifdef DEBUG
@@ -767,8 +760,9 @@ void nsCSSBreaks::List(FILE* out, PRInt32 aIndent) const
   mOrphans.AppendToString(buffer, eCSSProperty_orphans);
   mWidows.AppendToString(buffer, eCSSProperty_widows);
   mPage.AppendToString(buffer, eCSSProperty_page);
-  mPageBreakAfter.AppendToString(buffer, eCSSProperty_page_break_after);
-  mPageBreakBefore.AppendToString(buffer, eCSSProperty_page_break_before);
+  // temp fix for bug 24000
+  //mPageBreakAfter.AppendToString(buffer, eCSSProperty_page_break_after);
+  //mPageBreakBefore.AppendToString(buffer, eCSSProperty_page_break_before);
   mPageBreakInside.AppendToString(buffer, eCSSProperty_page_break_inside);
 
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
@@ -793,11 +787,6 @@ nsCSSPage::nsCSSPage(const nsCSSPage& aCopy)
 nsCSSPage::~nsCSSPage(void)
 {
   MOZ_COUNT_DTOR(nsCSSPage);
-}
-
-const nsID& nsCSSPage::GetID(void)
-{
-  return kCSSPageSID;
 }
 
 #ifdef DEBUG
@@ -893,11 +882,6 @@ nsCSSContent::~nsCSSContent(void)
   CSS_IF_DELETE(mQuotes);
 }
 
-const nsID& nsCSSContent::GetID(void)
-{
-  return kCSSContentSID;
-}
-
 #ifdef DEBUG
 void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
 {
@@ -923,10 +907,11 @@ void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
     counter = counter->mNext;
   }
   mMarkerOffset.AppendToString(buffer, eCSSProperty_marker_offset);
+  // XXX This prints the property name many times, but nobody cares.
   nsCSSQuotes*  quotes = mQuotes;
   while (nsnull != quotes) {
-    quotes->mOpen.AppendToString(buffer, eCSSProperty_quotes_open);
-    quotes->mClose.AppendToString(buffer, eCSSProperty_quotes_close);
+    quotes->mOpen.AppendToString(buffer, eCSSProperty_quotes);
+    quotes->mClose.AppendToString(buffer, eCSSProperty_quotes);
     quotes = quotes->mNext;
   }
 
@@ -962,11 +947,6 @@ nsCSSUserInterface::~nsCSSUserInterface(void)
   MOZ_COUNT_DTOR(nsCSSUserInterface);
   CSS_IF_DELETE(mKeyEquivalent);
   CSS_IF_DELETE(mCursor);
-}
-
-const nsID& nsCSSUserInterface::GetID(void)
-{
-  return kCSSUserInterfaceSID;
 }
 
 #ifdef DEBUG
@@ -1035,11 +1015,6 @@ nsCSSAural::~nsCSSAural(void)
   MOZ_COUNT_DTOR(nsCSSAural);
 }
 
-const nsID& nsCSSAural::GetID(void)
-{
-  return kCSSAuralSID;
-}
-
 #ifdef DEBUG
 void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
 {
@@ -1091,11 +1066,6 @@ nsCSSXUL::~nsCSSXUL(void)
   MOZ_COUNT_DTOR(nsCSSXUL);
 }
 
-const nsID& nsCSSXUL::GetID(void)
-{
-  return kCSSXULSID;
-}
-
 #ifdef DEBUG
 void nsCSSXUL::List(FILE* out, PRInt32 aIndent) const
 {
@@ -1142,11 +1112,6 @@ nsCSSSVG::~nsCSSSVG(void)
   MOZ_COUNT_DTOR(nsCSSSVG);
 }
 
-const nsID& nsCSSSVG::GetID(void)
-{
-  return kCSSSVGSID;
-}
-
 #ifdef DEBUG
 void nsCSSSVG::List(FILE* out, PRInt32 aIndent) const
 {
@@ -1170,4 +1135,3 @@ void nsCSSSVG::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 #endif // MOZ_SVG
-

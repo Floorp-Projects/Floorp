@@ -74,25 +74,6 @@
 #include "nsContentUtils.h"
 #include "nsContentErrors.h"
 
-// #define DEBUG_REFS
- 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
-static NS_DEFINE_IID(kCSSColorSID, NS_CSS_COLOR_SID);
-static NS_DEFINE_IID(kCSSTextSID, NS_CSS_TEXT_SID);
-static NS_DEFINE_IID(kCSSMarginSID, NS_CSS_MARGIN_SID);
-static NS_DEFINE_IID(kCSSPositionSID, NS_CSS_POSITION_SID);
-static NS_DEFINE_IID(kCSSListSID, NS_CSS_LIST_SID);
-static NS_DEFINE_IID(kCSSDisplaySID, NS_CSS_DISPLAY_SID);
-static NS_DEFINE_IID(kCSSTableSID, NS_CSS_TABLE_SID);
-static NS_DEFINE_IID(kCSSContentSID, NS_CSS_CONTENT_SID);
-static NS_DEFINE_IID(kCSSUserInterfaceSID, NS_CSS_USER_INTERFACE_SID);
-static NS_DEFINE_IID(kCSSXULSID, NS_CSS_XUL_SID);
-#ifdef MOZ_SVG
-static NS_DEFINE_IID(kCSSSVGSID, NS_CSS_SVG_SID);
-#endif
-
 // -- nsCSSSelector -------------------------------
 
 #define NS_IF_COPY(dest,source,type)  \
@@ -213,10 +194,6 @@ PRBool nsAtomStringList::Equals(const nsAtomStringList* aOther) const
 
 MOZ_DECL_CTOR_COUNTER(nsAttrSelector)
 
-#ifdef DEBUG_REFS
-PRUint32 gAttrSelectorCount=0;
-#endif
-
 nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
   : mNameSpace(aNameSpace),
     mAttr(nsnull),
@@ -226,11 +203,6 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsAttrSelector);
-
-#ifdef DEBUG_REFS
-  gAttrSelectorCount++;
-  printf( "nsAttrSelector Instances (ctor): %ld\n", (long)gAttrSelectorCount);
-#endif
 
   mAttr = NS_NewAtom(aAttr);
 }
@@ -246,11 +218,6 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint
 {
   MOZ_COUNT_CTOR(nsAttrSelector);
 
-#ifdef DEBUG_REFS
-  gAttrSelectorCount++;
-  printf( "nsAttrSelector Instances (ctor): %ld\n", (long)gAttrSelectorCount);
-#endif
-
   mAttr = NS_NewAtom(aAttr);
 }
 
@@ -264,11 +231,6 @@ nsAttrSelector::nsAttrSelector(const nsAttrSelector& aCopy)
 {
   MOZ_COUNT_CTOR(nsAttrSelector);
 
-#ifdef DEBUG_REFS
-  gAttrSelectorCount++;
-  printf( "nsAttrSelector Instances (cp-ctor): %ld\n", (long)gAttrSelectorCount);
-#endif
-
   NS_IF_ADDREF(mAttr);
   NS_IF_COPY(mNext, aCopy.mNext, nsAttrSelector);
 }
@@ -276,11 +238,6 @@ nsAttrSelector::nsAttrSelector(const nsAttrSelector& aCopy)
 nsAttrSelector::~nsAttrSelector(void)
 {
   MOZ_COUNT_DTOR(nsAttrSelector);
-
-#ifdef DEBUG_REFS
-  gAttrSelectorCount--;
-  printf( "nsAttrSelector Instances (dtor): %ld\n", (long)gAttrSelectorCount);
-#endif
 
   NS_IF_RELEASE(mAttr);
   NS_IF_DELETE(mNext);
@@ -308,10 +265,6 @@ PRBool nsAttrSelector::Equals(const nsAttrSelector* aOther) const
 
 MOZ_DECL_CTOR_COUNTER(nsCSSSelector)
 
-#ifdef DEBUG_REFS
-PRUint32 gSelectorCount=0;
-#endif
-
 nsCSSSelector::nsCSSSelector(void)
   : mNameSpace(kNameSpaceID_Unknown), mTag(nsnull), 
     mIDList(nsnull), 
@@ -323,11 +276,6 @@ nsCSSSelector::nsCSSSelector(void)
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSSelector);
-
-#ifdef DEBUG_REFS
-  gSelectorCount++;
-  printf( "nsCSSSelector Instances (ctor): %ld\n", (long)gSelectorCount);
-#endif
 }
 
 nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy) 
@@ -346,22 +294,12 @@ nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy)
   NS_IF_COPY(mPseudoClassList, aCopy.mPseudoClassList, nsAtomStringList);
   NS_IF_COPY(mAttrList, aCopy.mAttrList, nsAttrSelector);
   NS_IF_COPY(mNegations, aCopy.mNegations, nsCSSSelector);
-  
-#ifdef DEBUG_REFS
-  gSelectorCount++;
-  printf( "nsCSSSelector Instances (cp-ctor): %ld\n", (long)gSelectorCount);
-#endif
 }
 
 nsCSSSelector::~nsCSSSelector(void)  
 {
   MOZ_COUNT_DTOR(nsCSSSelector);
   Reset();
-
-#ifdef DEBUG_REFS
-  gSelectorCount--;
-  printf( "nsCSSSelector Instances (dtor): %ld\n", (long)gSelectorCount);
-#endif
 }
 
 nsCSSSelector& nsCSSSelector::operator=(const nsCSSSelector& aCopy)
@@ -761,24 +699,6 @@ nsresult nsCSSSelector::ToString( nsAString& aString, nsICSSStyleSheet* aSheet, 
 
 // -- CSSImportantRule -------------------------------
 
-// New map helpers shared by both important and regular rules.
-static nsresult MapFontForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataFont& aFont);
-static nsresult MapDisplayForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataDisplay& aDisplay);
-static nsresult MapColorForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataColor& aColor);
-static nsresult MapMarginForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataMargin& aMargin); 
-static nsresult MapListForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataList& aList);
-static nsresult MapPositionForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataPosition& aPosition);
-static nsresult MapTableForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataTable& aTable);
-static nsresult MapContentForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataContent& aContent);
-static nsresult MapTextForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataText& aContent);
-static nsresult MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataUserInterface& aContent);
-
-static nsresult MapXULForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataXUL& aXUL);
-
-#ifdef MOZ_SVG
-static nsresult MapSVGForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataSVG& aSVG);
-#endif
-
 class CSSStyleRuleImpl;
 
 class CSSImportantRule : public nsIStyleRule {
@@ -829,37 +749,7 @@ CSSImportantRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 NS_IMETHODIMP
 CSSImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (!aRuleData)
-    return NS_OK;
-
-  if (aRuleData->mFontData)
-    return MapFontForDeclaration(mDeclaration, *aRuleData->mFontData);
-  else if (aRuleData->mDisplayData)
-    return MapDisplayForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mDisplayData);
-  else if (aRuleData->mColorData)
-    return MapColorForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mColorData);
-  else if (aRuleData->mMarginData)
-    return MapMarginForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mMarginData);
-  else if (aRuleData->mListData)
-    return MapListForDeclaration(mDeclaration, *aRuleData->mListData);
-  else if (aRuleData->mPositionData)
-    return MapPositionForDeclaration(mDeclaration, *aRuleData->mPositionData);
-  else if (aRuleData->mTableData)
-    return MapTableForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mTableData);
-  else if (aRuleData->mContentData)
-    return MapContentForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mContentData);
-  else if (aRuleData->mTextData)
-    return MapTextForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mTextData);
-  else if (aRuleData->mUIData)
-    return MapUIForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mUIData);
-  else if (aRuleData->mXULData)
-    return MapXULForDeclaration(mDeclaration, *aRuleData->mXULData);
-#ifdef MOZ_SVG
-  else if (aRuleData->mSVGData)
-    return MapSVGForDeclaration(mDeclaration, *aRuleData->mSVGData);
-#endif
-
-  return NS_OK;
+  return mDeclaration->MapImportantRuleInfoInto(aRuleData);
 }
 
 #ifdef DEBUG
@@ -953,14 +843,12 @@ DOMCSSDeclarationImpl::RemoveProperty(const nsAString& aPropertyName,
       owningDoc->BeginUpdate();
     }
     nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
-    nsCSSValue val;
 
-    rv = decl->RemoveProperty(prop, val);
+    decl->GetValue(prop, aReturn);
+
+    rv = decl->RemoveProperty(prop);
 
     if (NS_SUCCEEDED(rv)) {
-      // We pass in eCSSProperty_UNKNOWN here so that we don't get the
-      // property name in the return string.
-      val.ToString(aReturn, eCSSProperty_UNKNOWN);
       if (cssSheet) {
         cssSheet->SetModified(PR_TRUE);
       }
@@ -1112,26 +1000,10 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsAString& aDecl,
                                       getter_AddRefs(cssParser));
 
     if (NS_SUCCEEDED(result)) {
-      if (aClearOldDecl) {
-        // This should be done with decl->Clear() once such a method exists.
-        nsAutoString propName;
-        PRUint32 count, i;
-
-        count = decl->Count();
-
-        for (i = 0; i < count; i++) {
-          decl->GetNthProperty(0, propName);
-
-          nsCSSProperty prop = nsCSSProps::LookupProperty(propName);
-          nsCSSValue val;
- 
-          decl->RemoveProperty(prop, val);
-        }
-      }
-
       nsChangeHint hint;
       result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
-                                                    aParseOnlyOneDecl, &hint);
+                                                    aParseOnlyOneDecl, &hint,
+                                                    aClearOldDecl);
 
       if (NS_SUCCEEDED(result)) {
         if (cssSheet) {
@@ -1235,20 +1107,12 @@ protected:
   PRUint32                mLineNumber;
 };
 
-#ifdef DEBUG_REFS
-PRUint32 gStyleRuleCount=0;
-#endif
-
 CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
   : nsCSSRule(),
     mSelector(aSelector), mDeclaration(nsnull), 
     mWeight(0), mImportantRule(nsnull),
     mDOMDeclaration(nsnull)
 {
-#ifdef DEBUG_REFS
-  gStyleRuleCount++;
-  printf( "CSSStyleRuleImpl Instances (ctor): %ld\n", (long)gStyleRuleCount);
-#endif
 }
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
@@ -1259,11 +1123,6 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
     mImportantRule(nsnull),
     mDOMDeclaration(nsnull)
 {
-#ifdef DEBUG_REFS
-  gStyleRuleCount++;
-  printf( "CSSStyleRuleImpl Instances (cp-ctor): %ld\n", (long)gStyleRuleCount);
-#endif
-
   nsCSSSelector* copySel = aCopy.mSelector.mNext;
   nsCSSSelector* ourSel = &mSelector;
 
@@ -1285,11 +1144,6 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
 
 CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
 {
-#ifdef DEBUG_REFS
-  gStyleRuleCount--;
-  printf( "CSSStyleRuleImpl Instances (dtor): %ld\n", (long)gStyleRuleCount);
-#endif
-
   nsCSSSelector*  next = mSelector.mNext;
 
   while (nsnull != next) {
@@ -1425,9 +1279,8 @@ void CSSStyleRuleImpl::SetWeight(PRInt32 aWeight)
 already_AddRefed<nsIStyleRule> CSSStyleRuleImpl::GetImportantRule(void)
 {
   if (!mImportantRule && mDeclaration) {
-    nsCSSDeclaration*  important = mDeclaration->GetImportantValues();
-    if (important) {
-      mImportantRule = new CSSImportantRule(mSheet, important);
+    if (mDeclaration->HasImportantData()) {
+      mImportantRule = new CSSImportantRule(mSheet, mDeclaration);
       NS_ADDREF(mImportantRule);
     }
   }
@@ -1438,7 +1291,7 @@ already_AddRefed<nsIStyleRule> CSSStyleRuleImpl::GetImportantRule(void)
 nsresult
 CSSStyleRuleImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
 {
-  return mDeclaration->GetValue(aProperty, aValue);
+  return mDeclaration->GetValueOrImportantValue(aProperty, aValue);
 }
 
 NS_IMETHODIMP
@@ -1484,688 +1337,7 @@ CSSStyleRuleImpl::Clone(nsICSSRule*& aClone) const
 NS_IMETHODIMP
 CSSStyleRuleImpl::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (!aRuleData)
-    return NS_OK;
-
-  if (aRuleData->mFontData)
-    return MapFontForDeclaration(mDeclaration, *aRuleData->mFontData);
-  else if (aRuleData->mDisplayData)
-    return MapDisplayForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mDisplayData);
-  else if (aRuleData->mColorData)
-    return MapColorForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mColorData);
-  else if (aRuleData->mMarginData)
-    return MapMarginForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mMarginData);
-  else if (aRuleData->mListData)
-    return MapListForDeclaration(mDeclaration, *aRuleData->mListData);
-  else if (aRuleData->mPositionData)
-    return MapPositionForDeclaration(mDeclaration, *aRuleData->mPositionData);
-  else if (aRuleData->mTableData)
-    return MapTableForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mTableData);
-  else if (aRuleData->mContentData)
-    return MapContentForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mContentData);
-  else if (aRuleData->mTextData)
-    return MapTextForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mTextData);
-  else if (aRuleData->mUIData)
-    return MapUIForDeclaration(mDeclaration, aRuleData->mSID, *aRuleData->mUIData);
-  else if (aRuleData->mXULData)
-    return MapXULForDeclaration(mDeclaration, *aRuleData->mXULData);
-#ifdef MOZ_SVG
-  else if (aRuleData->mSVGData)
-    return MapSVGForDeclaration(mDeclaration, *aRuleData->mSVGData);
-#endif
-
-  return NS_OK;
-}
-
-static nsresult 
-MapFontForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataFont& aFont)
-{
-  if (!aDecl)
-    return NS_OK; // The rule must have a declaration.
-
-  nsCSSFont* ourFont = (nsCSSFont*)aDecl->GetData(kCSSFontSID);
-  if (!ourFont)
-    return NS_OK; // We don't have any rules for fonts.
-
-  if (eCSSUnit_Null == aFont.mFamily.GetUnit() && eCSSUnit_Null != ourFont->mFamily.GetUnit()) {
-    aFont.mFamily = ourFont->mFamily;
-    aFont.mFamilyFromHTML = PR_FALSE;
-  }
-
-  if (eCSSUnit_Null == aFont.mStyle.GetUnit() && eCSSUnit_Null != ourFont->mStyle.GetUnit())
-    aFont.mStyle = ourFont->mStyle;
-
-  if (eCSSUnit_Null == aFont.mVariant.GetUnit() && eCSSUnit_Null != ourFont->mVariant.GetUnit())
-    aFont.mVariant = ourFont->mVariant;
-
-  if (eCSSUnit_Null == aFont.mWeight.GetUnit() && eCSSUnit_Null != ourFont->mWeight.GetUnit())
-    aFont.mWeight = ourFont->mWeight;
-
-  if (eCSSUnit_Null == aFont.mSize.GetUnit() && eCSSUnit_Null != ourFont->mSize.GetUnit())
-    aFont.mSize = ourFont->mSize;
-
-  if (eCSSUnit_Null == aFont.mSizeAdjust.GetUnit() && eCSSUnit_Null != ourFont->mSizeAdjust.GetUnit())
-    aFont.mSizeAdjust = ourFont->mSizeAdjust;
-
-  return NS_OK;
-}
-
-static nsresult 
-MapXULForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataXUL& aXUL)
-{
-  if (!aDecl)
-    return NS_OK; // The rule must have a declaration.
-
-  nsCSSXUL* ourXUL = (nsCSSXUL*)aDecl->GetData(kCSSXULSID);
-  if (!ourXUL)
-    return NS_OK; // We don't have any rules for XUL.
-
-  // box-align: enum, inherit
-  if (aXUL.mBoxAlign.GetUnit() == eCSSUnit_Null && ourXUL->mBoxAlign.GetUnit() != eCSSUnit_Null)
-    aXUL.mBoxAlign = ourXUL->mBoxAlign;
-
-  // box-direction: enum, inherit
-  if (aXUL.mBoxDirection.GetUnit() == eCSSUnit_Null && ourXUL->mBoxDirection.GetUnit() != eCSSUnit_Null)
-    aXUL.mBoxDirection = ourXUL->mBoxDirection;
-
-  // box-flex: enum, inherit
-  if (aXUL.mBoxFlex.GetUnit() == eCSSUnit_Null && ourXUL->mBoxFlex.GetUnit() != eCSSUnit_Null)
-    aXUL.mBoxFlex = ourXUL->mBoxFlex;
-
-  // box-orient: enum, inherit
-  if (aXUL.mBoxOrient.GetUnit() == eCSSUnit_Null && ourXUL->mBoxOrient.GetUnit() != eCSSUnit_Null)
-    aXUL.mBoxOrient = ourXUL->mBoxOrient;
-
-  // box-pack: enum, inherit
-  if (aXUL.mBoxPack.GetUnit() == eCSSUnit_Null && ourXUL->mBoxPack.GetUnit() != eCSSUnit_Null)
-    aXUL.mBoxPack = ourXUL->mBoxPack;
-
-  // box-ordinal-group: number
-  if (aXUL.mBoxOrdinal.GetUnit() == eCSSUnit_Null && ourXUL->mBoxOrdinal.GetUnit() != eCSSUnit_Null)
-    aXUL.mBoxOrdinal = ourXUL->mBoxOrdinal;
-
-  return NS_OK;
-}
-
-#ifdef MOZ_SVG
-static nsresult 
-MapSVGForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataSVG& aSVG)
-{
-  if (!aDecl)
-    return NS_OK; // The rule must have a declaration.
-
-  nsCSSSVG* ourSVG = (nsCSSSVG*)aDecl->GetData(kCSSSVGSID);
-  if (!ourSVG)
-    return NS_OK; // We don't have any rules for SVG.
-
-  // fill:
-  if (aSVG.mFill.GetUnit() == eCSSUnit_Null && ourSVG->mFill.GetUnit() != eCSSUnit_Null)
-    aSVG.mFill = ourSVG->mFill;
-  // fill-opacity:
-  if (aSVG.mFillOpacity.GetUnit() == eCSSUnit_Null && ourSVG->mFillOpacity.GetUnit() != eCSSUnit_Null)
-    aSVG.mFillOpacity = ourSVG->mFillOpacity;
-  // fill-rule:
-  if (aSVG.mFillRule.GetUnit() == eCSSUnit_Null && ourSVG->mFillRule.GetUnit() != eCSSUnit_Null)
-    aSVG.mFillRule = ourSVG->mFillRule;
-  // stroke:
-  if (aSVG.mStroke.GetUnit() == eCSSUnit_Null && ourSVG->mStroke.GetUnit() != eCSSUnit_Null)
-    aSVG.mStroke = ourSVG->mStroke;
-  // stroke-dasharray:
-  if (aSVG.mStrokeDasharray.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeDasharray.GetUnit() != eCSSUnit_Null)
-    aSVG.mStrokeDasharray = ourSVG->mStrokeDasharray;
-  // stroke-dashoffset:
-  if (aSVG.mStrokeDashoffset.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeDashoffset.GetUnit() != eCSSUnit_Null)
-    aSVG.mStrokeDashoffset = ourSVG->mStrokeDashoffset;
-  // stroke-linecap: enum, inherit
-  if (aSVG.mStrokeLinecap.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeLinecap.GetUnit() != eCSSUnit_Null)
-    aSVG.mStrokeLinecap = ourSVG->mStrokeLinecap;
-  // stroke-linejoin
-  if (aSVG.mStrokeLinejoin.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeLinejoin.GetUnit() != eCSSUnit_Null)
-    aSVG.mStrokeLinejoin = ourSVG->mStrokeLinejoin;
-  // stroke-miterlimit:
-  if (aSVG.mStrokeMiterlimit.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeMiterlimit.GetUnit() != eCSSUnit_Null)
-    aSVG.mStrokeMiterlimit = ourSVG->mStrokeMiterlimit;
-  // stroke-opacity:
-  if (aSVG.mStrokeOpacity.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeOpacity.GetUnit() != eCSSUnit_Null)
-    aSVG.mStrokeOpacity = ourSVG->mStrokeOpacity;
-  // stroke-width:
-  if (aSVG.mStrokeWidth.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeWidth.GetUnit() != eCSSUnit_Null)
-    aSVG.mStrokeWidth = ourSVG->mStrokeWidth;
-  
-  return NS_OK;
-}
-#endif
-
-
-static nsresult 
-MapPositionForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataPosition& aPosition)
-{
-  if (!aDecl)
-    return NS_OK; // The rule must have a declaration.
-
-  nsCSSPosition* ourPosition = (nsCSSPosition*)aDecl->GetData(kCSSPositionSID);
-  if (!ourPosition)
-    return NS_OK; // We don't have any rules for position.
-
-  // box offsets: length, percent, auto, inherit
-  if (ourPosition->mOffset) {
-    if (aPosition.mOffset->mLeft.GetUnit() == eCSSUnit_Null && ourPosition->mOffset->mLeft.GetUnit() != eCSSUnit_Null)
-      aPosition.mOffset->mLeft = ourPosition->mOffset->mLeft;
-
-    if (aPosition.mOffset->mRight.GetUnit() == eCSSUnit_Null && ourPosition->mOffset->mRight.GetUnit() != eCSSUnit_Null)
-      aPosition.mOffset->mRight = ourPosition->mOffset->mRight;
-
-    if (aPosition.mOffset->mTop.GetUnit() == eCSSUnit_Null && ourPosition->mOffset->mTop.GetUnit() != eCSSUnit_Null)
-      aPosition.mOffset->mTop = ourPosition->mOffset->mTop;
-
-    if (aPosition.mOffset->mBottom.GetUnit() == eCSSUnit_Null && ourPosition->mOffset->mBottom.GetUnit() != eCSSUnit_Null)
-      aPosition.mOffset->mBottom = ourPosition->mOffset->mBottom;
-  }
-
-  // width/min-width/max-width
-  if (aPosition.mWidth.GetUnit() == eCSSUnit_Null && ourPosition->mWidth.GetUnit() != eCSSUnit_Null)
-    aPosition.mWidth = ourPosition->mWidth;
-  if (aPosition.mMinWidth.GetUnit() == eCSSUnit_Null && ourPosition->mMinWidth.GetUnit() != eCSSUnit_Null)
-    aPosition.mMinWidth = ourPosition->mMinWidth;
-  if (aPosition.mMaxWidth.GetUnit() == eCSSUnit_Null && ourPosition->mMaxWidth.GetUnit() != eCSSUnit_Null)
-    aPosition.mMaxWidth = ourPosition->mMaxWidth;
-
-  // height/min-height/max-height
-  if (aPosition.mHeight.GetUnit() == eCSSUnit_Null && ourPosition->mHeight.GetUnit() != eCSSUnit_Null)
-    aPosition.mHeight = ourPosition->mHeight;
-  if (aPosition.mMinHeight.GetUnit() == eCSSUnit_Null && ourPosition->mMinHeight.GetUnit() != eCSSUnit_Null)
-    aPosition.mMinHeight = ourPosition->mMinHeight;
-  if (aPosition.mMaxHeight.GetUnit() == eCSSUnit_Null && ourPosition->mMaxHeight.GetUnit() != eCSSUnit_Null)
-    aPosition.mMaxHeight = ourPosition->mMaxHeight;
-
-  // box-sizing: enum, inherit
-  if (aPosition.mBoxSizing.GetUnit() == eCSSUnit_Null && ourPosition->mBoxSizing.GetUnit() != eCSSUnit_Null)
-    aPosition.mBoxSizing = ourPosition->mBoxSizing;
-
-  // z-index
-  if (aPosition.mZIndex.GetUnit() == eCSSUnit_Null && ourPosition->mZIndex.GetUnit() != eCSSUnit_Null)
-    aPosition.mZIndex = ourPosition->mZIndex;
-
-  return NS_OK;
-}
-
-static nsresult 
-MapListForDeclaration(nsCSSDeclaration* aDecl, nsRuleDataList& aList)
-{
-  if (!aDecl)
-    return NS_OK; // The rule must have a declaration.
-
-  nsCSSList* ourList = (nsCSSList*)aDecl->GetData(kCSSListSID);
-  if (!ourList)
-    return NS_OK; // We don't have any rules for lists.
-
-  // list-style-type: enum, none, inherit
-  if (aList.mType.GetUnit() == eCSSUnit_Null && ourList->mType.GetUnit() != eCSSUnit_Null)
-    aList.mType = ourList->mType;
-
-  // list-style-image: url, none, inherit
-  if (aList.mImage.GetUnit() == eCSSUnit_Null && ourList->mImage.GetUnit() != eCSSUnit_Null)
-    aList.mImage = ourList->mImage;
-      
-  // list-style-position: enum, inherit
-  if (aList.mPosition.GetUnit() == eCSSUnit_Null && ourList->mPosition.GetUnit() != eCSSUnit_Null)
-    aList.mPosition = ourList->mPosition;
-
-  // image region: length, auto or inherit
-  if (ourList->mImageRegion) {
-    if (aList.mImageRegion->mLeft.GetUnit() == eCSSUnit_Null && 
-        ourList->mImageRegion->mLeft.GetUnit() != eCSSUnit_Null)
-      aList.mImageRegion->mLeft = ourList->mImageRegion->mLeft;
-
-    if (aList.mImageRegion->mRight.GetUnit() == eCSSUnit_Null && 
-        ourList->mImageRegion->mRight.GetUnit() != eCSSUnit_Null)
-      aList.mImageRegion->mRight = ourList->mImageRegion->mRight;
-
-    if (aList.mImageRegion->mTop.GetUnit() == eCSSUnit_Null && 
-        ourList->mImageRegion->mTop.GetUnit() != eCSSUnit_Null)
-      aList.mImageRegion->mTop = ourList->mImageRegion->mTop;
-
-    if (aList.mImageRegion->mBottom.GetUnit() == eCSSUnit_Null && 
-        ourList->mImageRegion->mBottom.GetUnit() != eCSSUnit_Null)
-      aList.mImageRegion->mBottom = ourList->mImageRegion->mBottom;
-  }
-
-  return NS_OK;
-}
-    
-static nsresult
-MapMarginForDeclaration(nsCSSDeclaration* aDeclaration, const nsStyleStructID& aSID, nsRuleDataMargin& aMargin)
-{
-  nsCSSMargin*  ourMargin = (nsCSSMargin*)aDeclaration->GetData(kCSSMarginSID);
-  if (!ourMargin)
-    return NS_OK;
-
-  // Margins
-  if (aSID == eStyleStruct_Margin && ourMargin->mMargin) {
-    if (eCSSUnit_Null == aMargin.mMargin->mLeft.GetUnit() && eCSSUnit_Null != ourMargin->mMargin->mLeft.GetUnit())
-      aMargin.mMargin->mLeft = ourMargin->mMargin->mLeft;
-
-    if (eCSSUnit_Null == aMargin.mMargin->mTop.GetUnit() && eCSSUnit_Null != ourMargin->mMargin->mTop.GetUnit())
-      aMargin.mMargin->mTop = ourMargin->mMargin->mTop;
-
-    if (eCSSUnit_Null == aMargin.mMargin->mRight.GetUnit() && eCSSUnit_Null != ourMargin->mMargin->mRight.GetUnit())
-      aMargin.mMargin->mRight = ourMargin->mMargin->mRight;
-
-    if (eCSSUnit_Null == aMargin.mMargin->mBottom.GetUnit() && eCSSUnit_Null != ourMargin->mMargin->mBottom.GetUnit())
-      aMargin.mMargin->mBottom = ourMargin->mMargin->mBottom;
-  }
-
-  // Padding
-  if (aSID == eStyleStruct_Padding && ourMargin->mPadding) {
-    if (eCSSUnit_Null == aMargin.mPadding->mLeft.GetUnit() && eCSSUnit_Null != ourMargin->mPadding->mLeft.GetUnit())
-      aMargin.mPadding->mLeft = ourMargin->mPadding->mLeft;
-
-    if (eCSSUnit_Null == aMargin.mPadding->mTop.GetUnit() && eCSSUnit_Null != ourMargin->mPadding->mTop.GetUnit())
-      aMargin.mPadding->mTop = ourMargin->mPadding->mTop;
-
-    if (eCSSUnit_Null == aMargin.mPadding->mRight.GetUnit() && eCSSUnit_Null != ourMargin->mPadding->mRight.GetUnit())
-      aMargin.mPadding->mRight = ourMargin->mPadding->mRight;
-
-    if (eCSSUnit_Null == aMargin.mPadding->mBottom.GetUnit() && eCSSUnit_Null != ourMargin->mPadding->mBottom.GetUnit())
-      aMargin.mPadding->mBottom = ourMargin->mPadding->mBottom;
-  }
-
-  // Borders
-  if (aSID == eStyleStruct_Border) {
-    // border-size
-    if (ourMargin->mBorderWidth) {
-      if (eCSSUnit_Null == aMargin.mBorderWidth->mLeft.GetUnit() && eCSSUnit_Null != ourMargin->mBorderWidth->mLeft.GetUnit())
-        aMargin.mBorderWidth->mLeft = ourMargin->mBorderWidth->mLeft;
-
-      if (eCSSUnit_Null == aMargin.mBorderWidth->mTop.GetUnit() && eCSSUnit_Null != ourMargin->mBorderWidth->mTop.GetUnit())
-        aMargin.mBorderWidth->mTop = ourMargin->mBorderWidth->mTop;
-
-      if (eCSSUnit_Null == aMargin.mBorderWidth->mRight.GetUnit() && eCSSUnit_Null != ourMargin->mBorderWidth->mRight.GetUnit())
-        aMargin.mBorderWidth->mRight = ourMargin->mBorderWidth->mRight;
-
-      if (eCSSUnit_Null == aMargin.mBorderWidth->mBottom.GetUnit() && eCSSUnit_Null != ourMargin->mBorderWidth->mBottom.GetUnit())
-        aMargin.mBorderWidth->mBottom = ourMargin->mBorderWidth->mBottom;
-    }
-
-    // border-style
-    if (ourMargin->mBorderStyle) {
-      if (eCSSUnit_Null == aMargin.mBorderStyle->mLeft.GetUnit() && eCSSUnit_Null != ourMargin->mBorderStyle->mLeft.GetUnit())
-        aMargin.mBorderStyle->mLeft = ourMargin->mBorderStyle->mLeft;
-
-      if (eCSSUnit_Null == aMargin.mBorderStyle->mTop.GetUnit() && eCSSUnit_Null != ourMargin->mBorderStyle->mTop.GetUnit())
-        aMargin.mBorderStyle->mTop = ourMargin->mBorderStyle->mTop;
-
-      if (eCSSUnit_Null == aMargin.mBorderStyle->mRight.GetUnit() && eCSSUnit_Null != ourMargin->mBorderStyle->mRight.GetUnit())
-        aMargin.mBorderStyle->mRight = ourMargin->mBorderStyle->mRight;
-
-      if (eCSSUnit_Null == aMargin.mBorderStyle->mBottom.GetUnit() && eCSSUnit_Null != ourMargin->mBorderStyle->mBottom.GetUnit())
-        aMargin.mBorderStyle->mBottom = ourMargin->mBorderStyle->mBottom;
-    }
-
-    // border-color
-    if (ourMargin->mBorderColor) {
-      if (eCSSUnit_Null == aMargin.mBorderColor->mLeft.GetUnit() && eCSSUnit_Null != ourMargin->mBorderColor->mLeft.GetUnit())
-        aMargin.mBorderColor->mLeft = ourMargin->mBorderColor->mLeft;
-
-      if (eCSSUnit_Null == aMargin.mBorderColor->mTop.GetUnit() && eCSSUnit_Null != ourMargin->mBorderColor->mTop.GetUnit())
-        aMargin.mBorderColor->mTop = ourMargin->mBorderColor->mTop;
-
-      if (eCSSUnit_Null == aMargin.mBorderColor->mRight.GetUnit() && eCSSUnit_Null != ourMargin->mBorderColor->mRight.GetUnit())
-        aMargin.mBorderColor->mRight = ourMargin->mBorderColor->mRight;
-
-      if (eCSSUnit_Null == aMargin.mBorderColor->mBottom.GetUnit() && eCSSUnit_Null != ourMargin->mBorderColor->mBottom.GetUnit())
-        aMargin.mBorderColor->mBottom = ourMargin->mBorderColor->mBottom;
-    }
-
-    // border-colors
-    if (ourMargin->mBorderColors) {
-      for (PRInt32 i = 0; i < 4; i++)
-        if (!aMargin.mBorderColors[i] && ourMargin->mBorderColors[i])
-          aMargin.mBorderColors[i] = ourMargin->mBorderColors[i];
-    }
-
-    // -moz-border-radius
-    if (ourMargin->mBorderRadius) {
-      if (eCSSUnit_Null == aMargin.mBorderRadius->mLeft.GetUnit() && eCSSUnit_Null != ourMargin->mBorderRadius->mLeft.GetUnit())
-        aMargin.mBorderRadius->mLeft = ourMargin->mBorderRadius->mLeft;
-
-      if (eCSSUnit_Null == aMargin.mBorderRadius->mTop.GetUnit() && eCSSUnit_Null != ourMargin->mBorderRadius->mTop.GetUnit())
-        aMargin.mBorderRadius->mTop = ourMargin->mBorderRadius->mTop;
-
-      if (eCSSUnit_Null == aMargin.mBorderRadius->mRight.GetUnit() && eCSSUnit_Null != ourMargin->mBorderRadius->mRight.GetUnit())
-        aMargin.mBorderRadius->mRight = ourMargin->mBorderRadius->mRight;
-
-      if (eCSSUnit_Null == aMargin.mBorderRadius->mBottom.GetUnit() && eCSSUnit_Null != ourMargin->mBorderRadius->mBottom.GetUnit())
-        aMargin.mBorderRadius->mBottom = ourMargin->mBorderRadius->mBottom;
-    }
-
-    // float-edge
-    if (eCSSUnit_Null == aMargin.mFloatEdge.GetUnit() && eCSSUnit_Null != ourMargin->mFloatEdge.GetUnit())
-      aMargin.mFloatEdge = ourMargin->mFloatEdge;
-  }
-
-  // Outline
-  if (aSID == eStyleStruct_Outline) {
-    // -moz-outline-radius
-    if (ourMargin->mOutlineRadius) {
-      if (eCSSUnit_Null == aMargin.mOutlineRadius->mLeft.GetUnit() && eCSSUnit_Null != ourMargin->mOutlineRadius->mLeft.GetUnit())
-        aMargin.mOutlineRadius->mLeft = ourMargin->mOutlineRadius->mLeft;
-
-      if (eCSSUnit_Null == aMargin.mOutlineRadius->mTop.GetUnit() && eCSSUnit_Null != ourMargin->mOutlineRadius->mTop.GetUnit())
-        aMargin.mOutlineRadius->mTop = ourMargin->mOutlineRadius->mTop;
-
-      if (eCSSUnit_Null == aMargin.mOutlineRadius->mRight.GetUnit() && eCSSUnit_Null != ourMargin->mOutlineRadius->mRight.GetUnit())
-        aMargin.mOutlineRadius->mRight = ourMargin->mOutlineRadius->mRight;
-
-      if (eCSSUnit_Null == aMargin.mOutlineRadius->mBottom.GetUnit() && eCSSUnit_Null != ourMargin->mOutlineRadius->mBottom.GetUnit())
-        aMargin.mOutlineRadius->mBottom = ourMargin->mOutlineRadius->mBottom;
-    }
-
-    // outline-width
-    if (eCSSUnit_Null == aMargin.mOutlineWidth.GetUnit() && eCSSUnit_Null != ourMargin->mOutlineWidth.GetUnit())
-      aMargin.mOutlineWidth = ourMargin->mOutlineWidth;
-
-    // outline-color
-    if (eCSSUnit_Null == aMargin.mOutlineColor.GetUnit() && eCSSUnit_Null != ourMargin->mOutlineColor.GetUnit())
-      aMargin.mOutlineColor = ourMargin->mOutlineColor;
-
-    // outline-style
-    if (eCSSUnit_Null == aMargin.mOutlineStyle.GetUnit() && eCSSUnit_Null != ourMargin->mOutlineStyle.GetUnit())
-      aMargin.mOutlineStyle = ourMargin->mOutlineStyle;
-  }
-
-  return NS_OK;
-}
-
-static nsresult
-MapColorForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataColor& aColor)
-{
-  if (!aDecl)
-    return NS_OK;
-
-  nsCSSColor* ourColor = (nsCSSColor*)aDecl->GetData(kCSSColorSID);
-  if (!ourColor)
-    return NS_OK; // No rules for color or background.
-
-  if (aID == eStyleStruct_Color) {
-    // color: color, string, inherit
-    if (aColor.mColor.GetUnit() == eCSSUnit_Null && ourColor->mColor.GetUnit() != eCSSUnit_Null)
-      aColor.mColor = ourColor->mColor;
-  }
-  else if (aID == eStyleStruct_Background) {
-    // background-color: color, string, enum (flags), inherit
-    if (aColor.mBackColor.GetUnit() == eCSSUnit_Null && ourColor->mBackColor.GetUnit() != eCSSUnit_Null)
-      aColor.mBackColor = ourColor->mBackColor;
-
-    // background-image: url, none, inherit
-    if (aColor.mBackImage.GetUnit() == eCSSUnit_Null && ourColor->mBackImage.GetUnit() != eCSSUnit_Null)
-      aColor.mBackImage = ourColor->mBackImage;
-
-    // background-repeat: enum, inherit
-    if (aColor.mBackRepeat.GetUnit() == eCSSUnit_Null && ourColor->mBackRepeat.GetUnit() != eCSSUnit_Null)
-      aColor.mBackRepeat = ourColor->mBackRepeat;
-
-    // background-attachment: enum, inherit
-    if (aColor.mBackAttachment.GetUnit() == eCSSUnit_Null && ourColor->mBackAttachment.GetUnit() != eCSSUnit_Null)
-      aColor.mBackAttachment = ourColor->mBackAttachment;
-      
-    // background-position: enum, length, percent (flags), inherit
-    if (aColor.mBackPositionX.GetUnit() == eCSSUnit_Null && ourColor->mBackPositionX.GetUnit() != eCSSUnit_Null)
-      aColor.mBackPositionX = ourColor->mBackPositionX;
-    if (aColor.mBackPositionY.GetUnit() == eCSSUnit_Null && ourColor->mBackPositionY.GetUnit() != eCSSUnit_Null)
-      aColor.mBackPositionY = ourColor->mBackPositionY;
-
-    // background-clip: enum, inherit
-    if (aColor.mBackClip.GetUnit() == eCSSUnit_Null && ourColor->mBackClip.GetUnit() != eCSSUnit_Null)
-      aColor.mBackClip = ourColor->mBackClip;
-
-    // background-inline-policy: enum, inherit
-    if (aColor.mBackInlinePolicy.GetUnit() == eCSSUnit_Null && ourColor->mBackInlinePolicy.GetUnit() != eCSSUnit_Null)
-      aColor.mBackInlinePolicy = ourColor->mBackInlinePolicy;
-
-    // background-origin: enum, inherit
-    if (aColor.mBackOrigin.GetUnit() == eCSSUnit_Null && ourColor->mBackOrigin.GetUnit() != eCSSUnit_Null)
-      aColor.mBackOrigin = ourColor->mBackOrigin;
-  }
-
-  return NS_OK;
-}
-
-static nsresult 
-MapTableForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataTable& aTable)
-{
-  if (!aDecl)
-    return NS_OK; // The rule must have a declaration.
-
-  nsCSSTable* ourTable = (nsCSSTable*)aDecl->GetData(kCSSTableSID);
-  if (!ourTable)
-    return NS_OK; // We don't have any rules for tables.
-
-  if (aID == eStyleStruct_TableBorder) {
-    // border-collapse: enum, inherit
-    if (aTable.mBorderCollapse.GetUnit() == eCSSUnit_Null && ourTable->mBorderCollapse.GetUnit() != eCSSUnit_Null)
-      aTable.mBorderCollapse = ourTable->mBorderCollapse;
-
-    // border-spacing-x: length, inherit
-    if (aTable.mBorderSpacingX.GetUnit() == eCSSUnit_Null && ourTable->mBorderSpacingX.GetUnit() != eCSSUnit_Null)
-      aTable.mBorderSpacingX = ourTable->mBorderSpacingX;
-
-    // border-spacing-y: length, inherit
-    if (aTable.mBorderSpacingY.GetUnit() == eCSSUnit_Null && ourTable->mBorderSpacingY.GetUnit() != eCSSUnit_Null)
-      aTable.mBorderSpacingY = ourTable->mBorderSpacingY;
-
-    // caption-side: enum, inherit
-    if (aTable.mCaptionSide.GetUnit() == eCSSUnit_Null && ourTable->mCaptionSide.GetUnit() != eCSSUnit_Null)
-      aTable.mCaptionSide = ourTable->mCaptionSide;
-
-    // empty-cells: enum, inherit
-    if (aTable.mEmptyCells.GetUnit() == eCSSUnit_Null && ourTable->mEmptyCells.GetUnit() != eCSSUnit_Null)
-      aTable.mEmptyCells = ourTable->mEmptyCells;
-  }
-  else if (aID == eStyleStruct_Table) {
-    // table-layout: auto, enum, inherit
-    if (aTable.mLayout.GetUnit() == eCSSUnit_Null && ourTable->mLayout.GetUnit() != eCSSUnit_Null)
-      aTable.mLayout = ourTable->mLayout;
-  }
-
-  return NS_OK;
-}
-
-static nsresult 
-MapContentForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataContent& aContent)
-{
-  if (!aDecl)
-    return NS_OK; // The rule must have a declaration.
-
-  nsCSSContent* ourContent = (nsCSSContent*)aDecl->GetData(kCSSContentSID);
-  if (!ourContent)
-    return NS_OK; // We don't have any rules for content.
-
-  if (aID == eStyleStruct_Content) {
-    if (!aContent.mContent && ourContent->mContent)
-      aContent.mContent = ourContent->mContent;
-
-    if (!aContent.mCounterIncrement && ourContent->mCounterIncrement)
-      aContent.mCounterIncrement = ourContent->mCounterIncrement;
-
-    if (!aContent.mCounterReset && ourContent->mCounterReset)
-      aContent.mCounterReset = ourContent->mCounterReset;
-    
-    if (aContent.mMarkerOffset.GetUnit() == eCSSUnit_Null && ourContent->mMarkerOffset.GetUnit() != eCSSUnit_Null)
-      aContent.mMarkerOffset = ourContent->mMarkerOffset;
-  }
-  else if (aID == eStyleStruct_Quotes) {
-    if (!aContent.mQuotes && ourContent->mQuotes)
-      aContent.mQuotes = ourContent->mQuotes;
-  }
-
-  return NS_OK;
-}
-
-static nsresult
-MapTextForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataText& aText)
-{
-  if (!aDecl)
-    return NS_OK; // The rule must have a declaration.
-
-  nsCSSText* ourText = (nsCSSText*)aDecl->GetData(kCSSTextSID);
-  if (!ourText)
-    return NS_OK; // We don't have any rules for text.
-
-  if (aID == eStyleStruct_Text) {
-    if (aText.mLetterSpacing.GetUnit() == eCSSUnit_Null && ourText->mLetterSpacing.GetUnit() != eCSSUnit_Null)
-      aText.mLetterSpacing = ourText->mLetterSpacing;
-
-    if (aText.mLineHeight.GetUnit() == eCSSUnit_Null && ourText->mLineHeight.GetUnit() != eCSSUnit_Null)
-      aText.mLineHeight = ourText->mLineHeight;
-
-    if (aText.mTextIndent.GetUnit() == eCSSUnit_Null && ourText->mTextIndent.GetUnit() != eCSSUnit_Null)
-      aText.mTextIndent = ourText->mTextIndent;
-
-    if (aText.mTextTransform.GetUnit() == eCSSUnit_Null && ourText->mTextTransform.GetUnit() != eCSSUnit_Null)
-      aText.mTextTransform = ourText->mTextTransform;
-
-    if (aText.mTextAlign.GetUnit() == eCSSUnit_Null && ourText->mTextAlign.GetUnit() != eCSSUnit_Null)
-      aText.mTextAlign = ourText->mTextAlign;
-
-    if (aText.mWhiteSpace.GetUnit() == eCSSUnit_Null && ourText->mWhiteSpace.GetUnit() != eCSSUnit_Null)
-      aText.mWhiteSpace = ourText->mWhiteSpace;
-
-    if (aText.mWordSpacing.GetUnit() == eCSSUnit_Null && ourText->mWordSpacing.GetUnit() != eCSSUnit_Null)
-      aText.mWordSpacing = ourText->mWordSpacing;
-  }
-  else if (aID == eStyleStruct_TextReset) {
-    if (aText.mVerticalAlign.GetUnit() == eCSSUnit_Null && ourText->mVerticalAlign.GetUnit() != eCSSUnit_Null)
-      aText.mVerticalAlign = ourText->mVerticalAlign;
-
-    if (aText.mDecoration.GetUnit() == eCSSUnit_Null && ourText->mDecoration.GetUnit() != eCSSUnit_Null)
-      aText.mDecoration = ourText->mDecoration;
-
-    if (aText.mUnicodeBidi.GetUnit() == eCSSUnit_Null && ourText->mUnicodeBidi.GetUnit() != eCSSUnit_Null)
-      aText.mUnicodeBidi = ourText->mUnicodeBidi;
-  }
-
-  return NS_OK;
-
-}
-
-static nsresult 
-MapDisplayForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataDisplay& aDisplay)
-{
-  if (!aDecl)
-    return NS_OK; // The rule must have a declaration.
-
-  nsCSSDisplay* ourDisplay = (nsCSSDisplay*)aDecl->GetData(kCSSDisplaySID);
-  if (!ourDisplay)
-    return NS_OK; // We don't have any rules for display.
-
-  if (aID == eStyleStruct_Display) {
-    // appearance: enum, none, inherit
-    if (aDisplay.mAppearance.GetUnit() == eCSSUnit_Null && 
-        ourDisplay->mAppearance.GetUnit() != eCSSUnit_Null)
-      aDisplay.mAppearance = ourDisplay->mAppearance;
-
-    // display: enum, none, inherit
-    if (aDisplay.mDisplay.GetUnit() == eCSSUnit_Null && ourDisplay->mDisplay.GetUnit() != eCSSUnit_Null)
-      aDisplay.mDisplay = ourDisplay->mDisplay;
-    
-    // binding: url, none, inherit
-    if (aDisplay.mBinding.GetUnit() == eCSSUnit_Null && ourDisplay->mBinding.GetUnit() != eCSSUnit_Null)
-      aDisplay.mBinding = ourDisplay->mBinding;
-
-    // position: enum, inherit
-    if (aDisplay.mPosition.GetUnit() == eCSSUnit_Null && ourDisplay->mPosition.GetUnit() != eCSSUnit_Null)
-      aDisplay.mPosition = ourDisplay->mPosition;
-
-    // clear: enum, none, inherit
-    if (aDisplay.mClear.GetUnit() == eCSSUnit_Null && ourDisplay->mClear.GetUnit() != eCSSUnit_Null)
-      aDisplay.mClear = ourDisplay->mClear;
-
-    // temp fix for bug 24000
-    if (aDisplay.mBreakBefore.GetUnit() == eCSSUnit_Null && ourDisplay->mBreakBefore.GetUnit() != eCSSUnit_Null)
-      aDisplay.mBreakBefore = ourDisplay->mBreakBefore;
-    if (aDisplay.mBreakAfter.GetUnit() == eCSSUnit_Null && ourDisplay->mBreakAfter.GetUnit() != eCSSUnit_Null)
-      aDisplay.mBreakAfter = ourDisplay->mBreakAfter;
-    // end temp fix
-
-    // float: enum, none, inherit
-    if (aDisplay.mFloat.GetUnit() == eCSSUnit_Null && ourDisplay->mFloat.GetUnit() != eCSSUnit_Null)
-      aDisplay.mFloat = ourDisplay->mFloat;
-
-    // overflow: enum, auto, inherit
-    if (aDisplay.mOverflow.GetUnit() == eCSSUnit_Null && ourDisplay->mOverflow.GetUnit() != eCSSUnit_Null)
-      aDisplay.mOverflow = ourDisplay->mOverflow;
-    
-    // clip property: length, auto, inherit
-    if (ourDisplay->mClip) {
-      if (aDisplay.mClip->mLeft.GetUnit() == eCSSUnit_Null && ourDisplay->mClip->mLeft.GetUnit() != eCSSUnit_Null)
-        aDisplay.mClip->mLeft = ourDisplay->mClip->mLeft;
-      if (aDisplay.mClip->mRight.GetUnit() == eCSSUnit_Null && ourDisplay->mClip->mRight.GetUnit() != eCSSUnit_Null)
-        aDisplay.mClip->mRight = ourDisplay->mClip->mRight;
-      if (aDisplay.mClip->mTop.GetUnit() == eCSSUnit_Null && ourDisplay->mClip->mTop.GetUnit() != eCSSUnit_Null)
-        aDisplay.mClip->mTop = ourDisplay->mClip->mTop;
-      if (aDisplay.mClip->mBottom.GetUnit() == eCSSUnit_Null && ourDisplay->mClip->mBottom.GetUnit() != eCSSUnit_Null)
-        aDisplay.mClip->mBottom = ourDisplay->mClip->mBottom;
-    }
-  }
-  else if (aID == eStyleStruct_Visibility) {
-    // opacity: factor, inherit
-    if (aDisplay.mOpacity.GetUnit() == eCSSUnit_Null && ourDisplay->mOpacity.GetUnit() != eCSSUnit_Null)
-      aDisplay.mOpacity = ourDisplay->mOpacity;
-
-    // direction: enum, inherit
-    if (aDisplay.mDirection.GetUnit() == eCSSUnit_Null && ourDisplay->mDirection.GetUnit() != eCSSUnit_Null)
-      aDisplay.mDirection = ourDisplay->mDirection;
-
-    // visibility: enum, inherit
-    if (aDisplay.mVisibility.GetUnit() == eCSSUnit_Null && ourDisplay->mVisibility.GetUnit() != eCSSUnit_Null)
-      aDisplay.mVisibility = ourDisplay->mVisibility; 
-  }
-
-  return NS_OK;
-}
-
-static nsresult
-MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRuleDataUserInterface& aUI)
-{
-  if (!aDecl)
-    return NS_OK; // The rule must have a declaration.
-
-  nsCSSUserInterface* ourUI = (nsCSSUserInterface*)aDecl->GetData(kCSSUserInterfaceSID);
-  if (!ourUI)
-    return NS_OK; // We don't have any rules for UI.
-
-  if (aID == eStyleStruct_UserInterface) {
-    if (aUI.mUserFocus.GetUnit() == eCSSUnit_Null && ourUI->mUserFocus.GetUnit() != eCSSUnit_Null)
-      aUI.mUserFocus = ourUI->mUserFocus;
-    
-    if (aUI.mUserInput.GetUnit() == eCSSUnit_Null && ourUI->mUserInput.GetUnit() != eCSSUnit_Null)
-      aUI.mUserInput = ourUI->mUserInput;
-
-    if (aUI.mUserModify.GetUnit() == eCSSUnit_Null && ourUI->mUserModify.GetUnit() != eCSSUnit_Null)
-      aUI.mUserModify = ourUI->mUserModify;
-
-    if (!aUI.mCursor && ourUI->mCursor)
-      aUI.mCursor = ourUI->mCursor;
-
-
-  }
-  else if (aID == eStyleStruct_UIReset) {
-    if (aUI.mUserSelect.GetUnit() == eCSSUnit_Null && ourUI->mUserSelect.GetUnit() != eCSSUnit_Null)
-      aUI.mUserSelect = ourUI->mUserSelect;
-   
-    if (!aUI.mKeyEquivalent && ourUI->mKeyEquivalent)
-      aUI.mKeyEquivalent = ourUI->mKeyEquivalent;
-
-    if (aUI.mResizer.GetUnit() == eCSSUnit_Null && ourUI->mResizer.GetUnit() != eCSSUnit_Null)
-      aUI.mResizer = ourUI->mResizer;
-
-    if (aUI.mForceBrokenImageIcon.GetUnit() == eCSSUnit_Null && ourUI->mForceBrokenImageIcon.GetUnit() == eCSSUnit_Integer)
-      aUI.mForceBrokenImageIcon = ourUI->mForceBrokenImageIcon;
-  }
-
-  return NS_OK;
-
+  return mDeclaration->MapRuleInfoInto(aRuleData);
 }
 
 #ifdef DEBUG

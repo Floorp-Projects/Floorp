@@ -274,7 +274,7 @@ NS_INTERFACE_MAP_END_AGGREGATED(fOuter)
 // nsIDOMCSS2Properties
 // nsIDOMNSCSS2Properties
 
-#define CSS_PROP(name_, id_, method_, hint_)                            \
+#define CSS_PROP(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) \
   NS_IMETHODIMP                                                         \
   CSS2PropertiesTearoff::Get##method_(nsAString& aValue)                \
   {                                                                     \
@@ -290,9 +290,13 @@ NS_INTERFACE_MAP_END_AGGREGATED(fOuter)
                   NS_LITERAL_STRING(""));                               \
   }
 
-#define CSS_PROP_INTERNAL(name_, id_, method_, hint_)  /* nothing */
+#define CSS_PROP_LIST_EXCLUDE_INTERNAL
 #define CSS_PROP_NOTIMPLEMENTED(name_, id_, method_, hint_)             \
-  CSS_PROP(name_, id_, method_, hint_)
+  CSS_PROP(name_, id_, method_, hint_, , , ,)
+#define CSS_PROP_SHORTHAND(name_, id_, method_, hint_)                  \
+  CSS_PROP(name_, id_, method_, hint_, , , ,)
 #include "nsCSSPropList.h"
-#undef CSS_PROP_INTERNAL
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP_NOTIMPLEMENTED
+#undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 #undef CSS_PROP

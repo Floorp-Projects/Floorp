@@ -72,14 +72,17 @@ NS_IMETHODIMP
 nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAString& aPropertyName,
                                              nsAString& aReturn)
 {
+  aReturn.Truncate();
+
   nsCSSDeclaration* decl;
   nsresult rv = GetCSSDeclaration(&decl, PR_FALSE);
 
   if (NS_SUCCEEDED(rv) && decl) {
     nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
-    nsCSSValue val;
 
-    rv = decl->RemoveProperty(prop, val);
+    decl->GetValue(prop, aReturn);
+
+    rv = decl->RemoveProperty(prop);
 
     if (NS_SUCCEEDED(rv)) {
       rv = SetCSSDeclaration(decl, PR_TRUE, PR_TRUE);
@@ -143,12 +146,16 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
       }
     }
     else if (aAllocate) {
-      result = NS_NewCSSDeclaration(aDecl);
+      nsCSSDeclaration *decl = new nsCSSDeclaration();
+      if (!decl)
+        return NS_ERROR_OUT_OF_MEMORY;
+      if (!decl->InitializeEmpty()) {
+        decl->RuleAbort();
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      result = SetCSSDeclaration(*aDecl, PR_FALSE, PR_FALSE);
       if (NS_SUCCEEDED(result)) {
-        result = SetCSSDeclaration(*aDecl, PR_FALSE, PR_FALSE);
-        if (NS_FAILED(result)) {
-          *aDecl = nsnull;
-        }
+        *aDecl = decl;
       }
     }
   }
@@ -270,27 +277,11 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAString& aDecl,
     return result;
   }
 
-  if (aClearOldDecl) {
-    // This should be done with decl->Clear() once such a method exists.
-    nsAutoString propName;
-    PRUint32 count, i;
-
-    count = decl->Count();
-
-    for (i = 0; i < count; i++) {
-      decl->GetNthProperty(0, propName);
-        
-      nsCSSProperty prop = nsCSSProps::LookupProperty(propName);
-      nsCSSValue val;
-
-      decl->RemoveProperty(prop, val);
-    }
-  }
-  
   nsChangeHint uselessHint = NS_STYLE_HINT_NONE;
   result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
                                                 aParseOnlyOneDecl,
-                                                &uselessHint);
+                                                &uselessHint,
+                                                aClearOldDecl);
   
   if (NS_SUCCEEDED(result)) {
     result = SetCSSDeclaration(decl, PR_TRUE, PR_TRUE);

@@ -44,6 +44,7 @@
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleRule.h"
+#include "nsCSSStruct.h"
 #include "nsCSSDeclaration.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
@@ -3289,11 +3290,11 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsIHTMLMappedAttributes*
     hval.SetPercentValue(value.GetPercentValue());
 
   if (hval.GetUnit() != eCSSUnit_Null) {
-    nsCSSRect* margin = aData->mMarginData->mMargin;
-    if (margin->mLeft.GetUnit() == eCSSUnit_Null)
-      margin->mLeft = hval;
-    if (margin->mRight.GetUnit() == eCSSUnit_Null)
-      margin->mRight = hval;
+    nsCSSRect& margin = aData->mMarginData->mMargin;
+    if (margin.mLeft.GetUnit() == eCSSUnit_Null)
+      margin.mLeft = hval;
+    if (margin.mRight.GetUnit() == eCSSUnit_Null)
+      margin.mRight = hval;
   }
 
   // vspace: value
@@ -3305,11 +3306,11 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsIHTMLMappedAttributes*
     vval.SetPercentValue(value.GetPercentValue());
 
   if (vval.GetUnit() != eCSSUnit_Null) {
-    nsCSSRect* margin = aData->mMarginData->mMargin;
-    if (margin->mTop.GetUnit() == eCSSUnit_Null)
-      margin->mTop = vval;
-    if (margin->mBottom.GetUnit() == eCSSUnit_Null)
-      margin->mBottom = vval;
+    nsCSSRect& margin = aData->mMarginData->mMargin;
+    if (margin.mTop.GetUnit() == eCSSUnit_Null)
+      margin.mTop = vval;
+    if (margin.mBottom.GetUnit() == eCSSUnit_Null)
+      margin.mBottom = vval;
   }
 }
 
@@ -3360,35 +3361,35 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsIHTMLMappedAttributes*
 
   nscoord val = value.GetPixelValue();
 
-  nsCSSRect* borderWidth = aData->mMarginData->mBorderWidth;
-  if (borderWidth->mLeft.GetUnit() == eCSSUnit_Null)
-    borderWidth->mLeft.SetFloatValue((float)val, eCSSUnit_Pixel);
-  if (borderWidth->mTop.GetUnit() == eCSSUnit_Null)
-    borderWidth->mTop.SetFloatValue((float)val, eCSSUnit_Pixel);
-  if (borderWidth->mRight.GetUnit() == eCSSUnit_Null)
-    borderWidth->mRight.SetFloatValue((float)val, eCSSUnit_Pixel);
-  if (borderWidth->mBottom.GetUnit() == eCSSUnit_Null)
-    borderWidth->mBottom.SetFloatValue((float)val, eCSSUnit_Pixel);
+  nsCSSRect& borderWidth = aData->mMarginData->mBorderWidth;
+  if (borderWidth.mLeft.GetUnit() == eCSSUnit_Null)
+    borderWidth.mLeft.SetFloatValue((float)val, eCSSUnit_Pixel);
+  if (borderWidth.mTop.GetUnit() == eCSSUnit_Null)
+    borderWidth.mTop.SetFloatValue((float)val, eCSSUnit_Pixel);
+  if (borderWidth.mRight.GetUnit() == eCSSUnit_Null)
+    borderWidth.mRight.SetFloatValue((float)val, eCSSUnit_Pixel);
+  if (borderWidth.mBottom.GetUnit() == eCSSUnit_Null)
+    borderWidth.mBottom.SetFloatValue((float)val, eCSSUnit_Pixel);
 
-  nsCSSRect* borderStyle = aData->mMarginData->mBorderStyle;
-  if (borderStyle->mLeft.GetUnit() == eCSSUnit_Null)
-    borderStyle->mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
-  if (borderStyle->mTop.GetUnit() == eCSSUnit_Null)
-    borderStyle->mTop.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
-  if (borderStyle->mRight.GetUnit() == eCSSUnit_Null)
-    borderStyle->mRight.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
-  if (borderStyle->mBottom.GetUnit() == eCSSUnit_Null)
-    borderStyle->mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
+  nsCSSRect& borderStyle = aData->mMarginData->mBorderStyle;
+  if (borderStyle.mLeft.GetUnit() == eCSSUnit_Null)
+    borderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
+  if (borderStyle.mTop.GetUnit() == eCSSUnit_Null)
+    borderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
+  if (borderStyle.mRight.GetUnit() == eCSSUnit_Null)
+    borderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
+  if (borderStyle.mBottom.GetUnit() == eCSSUnit_Null)
+    borderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_SOLID, eCSSUnit_Enumerated);
 
-  nsCSSRect* borderColor = aData->mMarginData->mBorderColor;
-  if (borderColor->mLeft.GetUnit() == eCSSUnit_Null)
-    borderColor->mLeft.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
-  if (borderColor->mTop.GetUnit() == eCSSUnit_Null)
-    borderColor->mTop.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
-  if (borderColor->mRight.GetUnit() == eCSSUnit_Null)
-    borderColor->mRight.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
-  if (borderColor->mBottom.GetUnit() == eCSSUnit_Null)
-    borderColor->mBottom.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+  nsCSSRect& borderColor = aData->mMarginData->mBorderColor;
+  if (borderColor.mLeft.GetUnit() == eCSSUnit_Null)
+    borderColor.mLeft.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+  if (borderColor.mTop.GetUnit() == eCSSUnit_Null)
+    borderColor.mTop.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+  if (borderColor.mRight.GetUnit() == eCSSUnit_Null)
+    borderColor.mRight.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
+  if (borderColor.mBottom.GetUnit() == eCSSUnit_Null)
+    borderColor.mBottom.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
 }
 
 void

@@ -76,6 +76,7 @@ public:
 
 
   virtual void DropReference() = 0;
+  // XXX DeCOMify this, so that |nsCSSDeclaration*| is the return type.
   virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate) = 0;
   virtual nsresult ParsePropertyValue(const nsAString& aPropName,

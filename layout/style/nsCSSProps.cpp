@@ -51,11 +51,14 @@
 extern const char* const kCSSRawProperties[];
 
 // define an array of all CSS properties
-#define CSS_PROP(_name, _id, _method, _hint) #_name,
 const char* const kCSSRawProperties[] = {
+#define CSS_PROP(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) #name_,
 #include "nsCSSPropList.h"
-};
 #undef CSS_PROP
+#define CSS_PROP_SHORTHAND(name_, id_, method_, hint_) #name_,
+#include "nsCSSPropList.h"
+#undef CSS_PROP_SHORTHAND
+};
 
 
 static PRInt32 gTableRefCount;
@@ -907,6 +910,9 @@ nsCSSProps::SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
   }
 }
 
+// XXX TODO These table names should be additional parameters of the
+// properties below in nsCSSPropList.h (and the two below should be like
+// the rest).
 const nsAFlatCString& 
 nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
 {
@@ -927,6 +933,15 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   switch (aProp)  {
 
   case eCSSProperty__moz_border_radius:
+  case eCSSProperty__moz_border_radius_topLeft:
+  case eCSSProperty__moz_border_radius_topRight:
+  case eCSSProperty__moz_border_radius_bottomLeft:
+  case eCSSProperty__moz_border_radius_bottomRight:
+  case eCSSProperty__moz_outline_radius:
+  case eCSSProperty__moz_outline_radius_topLeft:
+  case eCSSProperty__moz_outline_radius_topRight:
+  case eCSSProperty__moz_outline_radius_bottomLeft:
+  case eCSSProperty__moz_outline_radius_bottomRight:
     break;
 
   case eCSSProperty_appearance:
@@ -985,6 +1000,9 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
     return SearchKeywordTable(aValue, kBoxOrientKTable);
   case eCSSProperty_box_pack:
     return SearchKeywordTable(aValue, kBoxPackKTable);
+  case eCSSProperty_box_flex:
+  case eCSSProperty_box_ordinal_group:
+    break;
 
 #ifdef MOZ_SVG
   case eCSSProperty_fill:
@@ -1015,6 +1033,10 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   case eCSSProperty_border_left:
   case eCSSProperty_border_right:
   case eCSSProperty_border_top:
+  case eCSSProperty_border_bottom_colors:
+  case eCSSProperty_border_left_colors:
+  case eCSSProperty_border_right_colors:
+  case eCSSProperty_border_top_colors:
     break;
 
   case eCSSProperty_border_bottom_color:
@@ -1048,10 +1070,6 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
     return SearchKeywordTable(aValue, kClearKTable);  
     
   case eCSSProperty_clip:
-  case eCSSProperty_clip_bottom:
-  case eCSSProperty_clip_left:
-  case eCSSProperty_clip_right:
-  case eCSSProperty_clip_top:
   case eCSSProperty_color:
     break;
 
@@ -1110,12 +1128,9 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   case eCSSProperty_font_weight:
     return SearchKeywordTable(aValue, kFontWeightKTable);  
 
+  case eCSSProperty_force_broken_image_icon:
   case eCSSProperty_height:
   case eCSSProperty_image_region:
-  case eCSSProperty_image_region_top:
-  case eCSSProperty_image_region_left:
-  case eCSSProperty_image_region_bottom:
-  case eCSSProperty_image_region_right:
     break;
 
   case eCSSProperty_key_equivalent:
@@ -1202,8 +1217,6 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
     return SearchKeywordTable(aValue, kPositionKTable);
   
   case eCSSProperty_quotes:
-  case eCSSProperty_quotes_close:
-  case eCSSProperty_quotes_open:
     break;
 
   case eCSSProperty_resizer:
@@ -1249,10 +1262,6 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
 
   case eCSSProperty_text_indent:
   case eCSSProperty_text_shadow:
-  case eCSSProperty_text_shadow_color:
-  case eCSSProperty_text_shadow_radius:
-  case eCSSProperty_text_shadow_x:
-  case eCSSProperty_text_shadow_y:
     break;
   
   case eCSSProperty_text_transform:
@@ -1326,9 +1335,263 @@ PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
 }
 
 // define array of all CSS property hints
-#define CSS_PROP(_name, _id, _method, _hint) _hint,
 const nsChangeHint nsCSSProps::kHintTable[eCSSProperty_COUNT] = {
-#include "nsCSSPropList.h"
+    #define CSS_PROP(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) hint_,
+    #include "nsCSSPropList.h"
+    #undef CSS_PROP
+    #define CSS_PROP_SHORTHAND(name_, id_, method_, hint_) hint_,
+    #include "nsCSSPropList.h"
+    #undef CSS_PROP_SHORTHAND
 };
-#undef CSS_PROP
 
+// define array of all CSS property types
+const nsCSSType nsCSSProps::kTypeTable[eCSSProperty_COUNT_no_shorthands] = {
+    #define CSS_PROP(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) type_,
+    #include "nsCSSPropList.h"
+    #undef CSS_PROP
+};
+
+const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = {
+    #define CSS_PROP_FONT(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Font,
+    #define CSS_PROP_COLOR(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Color,
+    #define CSS_PROP_BACKGROUND(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Background,
+    #define CSS_PROP_LIST(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_List,
+    #define CSS_PROP_POSITION(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Position,
+    #define CSS_PROP_TEXT(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Text,
+    #define CSS_PROP_TEXTRESET(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_TextReset,
+    #define CSS_PROP_DISPLAY(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Display,
+    #define CSS_PROP_VISIBILITY(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Visibility,
+    #define CSS_PROP_CONTENT(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Content,
+    #define CSS_PROP_QUOTES(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Quotes,
+    #define CSS_PROP_USERINTERFACE(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_UserInterface,
+    #define CSS_PROP_UIRESET(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_UIReset,
+    #define CSS_PROP_TABLE(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Table,
+    #define CSS_PROP_TABLEBORDER(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_TableBorder,
+    #define CSS_PROP_MARGIN(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Margin,
+    #define CSS_PROP_PADDING(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Padding,
+    #define CSS_PROP_BORDER(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Border,
+    #define CSS_PROP_OUTLINE(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_Outline,
+    #define CSS_PROP_XUL(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_XUL,
+    #ifdef MOZ_SVG
+    #define CSS_PROP_SVG(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) eStyleStruct_SVG,
+    #endif /* defined(MOZ_SVG) */
+    // This shouldn't matter, but we need something to go here.
+    #define CSS_PROP_BACKENDONLY(name_, id_, method_, hint_, datastruct_, member_, type_, iscoord_) nsStyleStructID(-1),
+
+    #include "nsCSSPropList.h"
+
+    #undef CSS_PROP_FONT
+    #undef CSS_PROP_COLOR
+    #undef CSS_PROP_BACKGROUND
+    #undef CSS_PROP_LIST
+    #undef CSS_PROP_POSITION
+    #undef CSS_PROP_TEXT
+    #undef CSS_PROP_TEXTRESET
+    #undef CSS_PROP_DISPLAY
+    #undef CSS_PROP_VISIBILITY
+    #undef CSS_PROP_CONTENT
+    #undef CSS_PROP_QUOTES
+    #undef CSS_PROP_USERINTERFACE
+    #undef CSS_PROP_UIRESET
+    #undef CSS_PROP_TABLE
+    #undef CSS_PROP_TABLEBORDER
+    #undef CSS_PROP_MARGIN
+    #undef CSS_PROP_PADDING
+    #undef CSS_PROP_BORDER
+    #undef CSS_PROP_OUTLINE
+    #undef CSS_PROP_XUL
+    #ifdef MOZ_SVG
+    #undef CSS_PROP_SVG
+    #endif /* undefd(MOZ_SVG) */
+    #undef CSS_PROP_BACKENDONLY
+};
+
+static const nsCSSProperty gMozBorderRadiusSubpropTable[] = {
+  // Code relies on these being in topleft-topright-bottomright-bottomleft
+  // order.
+  eCSSProperty__moz_border_radius_topLeft,
+  eCSSProperty__moz_border_radius_topRight,
+  eCSSProperty__moz_border_radius_bottomRight,
+  eCSSProperty__moz_border_radius_bottomLeft,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozOutlineRadiusSubpropTable[] = {
+  // Code relies on these being in topleft-topright-bottomright-bottomleft
+  // order.
+  eCSSProperty__moz_outline_radius_topLeft,
+  eCSSProperty__moz_outline_radius_topRight,
+  eCSSProperty__moz_outline_radius_bottomRight,
+  eCSSProperty__moz_outline_radius_bottomLeft,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBackgroundSubpropTable[] = {
+  eCSSProperty_background_color,
+  eCSSProperty_background_image,
+  eCSSProperty_background_repeat,
+  eCSSProperty_background_attachment,
+  eCSSProperty_background_x_position,
+  eCSSProperty_background_y_position,
+  eCSSProperty__moz_background_clip, // XXX Added LDB.
+  eCSSProperty__moz_background_origin, // XXX Added LDB.
+  eCSSProperty__moz_background_inline_policy, // XXX Added LDB.
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBackgroundPositionSubpropTable[] = {
+  eCSSProperty_background_x_position,
+  eCSSProperty_background_y_position,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderSubpropTable[] = {
+  eCSSProperty_border_top_width,
+  eCSSProperty_border_right_width,
+  eCSSProperty_border_bottom_width,
+  eCSSProperty_border_left_width,
+  eCSSProperty_border_top_style,
+  eCSSProperty_border_right_style,
+  eCSSProperty_border_bottom_style,
+  eCSSProperty_border_left_style,
+  eCSSProperty_border_top_color,
+  eCSSProperty_border_right_color,
+  eCSSProperty_border_bottom_color,
+  eCSSProperty_border_left_color,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderBottomSubpropTable[] = {
+  // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  eCSSProperty_border_bottom_width,
+  eCSSProperty_border_bottom_style,
+  eCSSProperty_border_bottom_color,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderColorSubpropTable[] = {
+  // Code relies on these being in top-right-bottom-left order.
+  eCSSProperty_border_top_color,
+  eCSSProperty_border_right_color,
+  eCSSProperty_border_bottom_color,
+  eCSSProperty_border_left_color,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderLeftSubpropTable[] = {
+  // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  eCSSProperty_border_left_width,
+  eCSSProperty_border_left_style,
+  eCSSProperty_border_left_color,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderRightSubpropTable[] = {
+  // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  eCSSProperty_border_right_width,
+  eCSSProperty_border_right_style,
+  eCSSProperty_border_right_color,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderSpacingSubpropTable[] = {
+  eCSSProperty_border_x_spacing,
+  eCSSProperty_border_y_spacing,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderStyleSubpropTable[] = {
+  // Code relies on these being in top-right-bottom-left order.
+  eCSSProperty_border_top_style,
+  eCSSProperty_border_right_style,
+  eCSSProperty_border_bottom_style,
+  eCSSProperty_border_left_style,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderTopSubpropTable[] = {
+  // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  eCSSProperty_border_top_width,
+  eCSSProperty_border_top_style,
+  eCSSProperty_border_top_color,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderWidthSubpropTable[] = {
+  // Code relies on these being in top-right-bottom-left order.
+  eCSSProperty_border_top_width,
+  eCSSProperty_border_right_width,
+  eCSSProperty_border_bottom_width,
+  eCSSProperty_border_left_width,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gCueSubpropTable[] = {
+  eCSSProperty_cue_after,
+  eCSSProperty_cue_before,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gFontSubpropTable[] = {
+  eCSSProperty_font_family,
+  eCSSProperty_font_style,
+  eCSSProperty_font_variant,
+  eCSSProperty_font_weight,
+  eCSSProperty_font_size,
+  eCSSProperty_line_height,
+  eCSSProperty_font_size_adjust, // XXX Added LDB.
+  eCSSProperty_font_stretch, // XXX Added LDB.
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gListStyleSubpropTable[] = {
+  eCSSProperty_list_style_type,
+  eCSSProperty_list_style_image,
+  eCSSProperty_list_style_position,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMarginSubpropTable[] = {
+  // Code relies on these being in top-right-bottom-left order.
+  eCSSProperty_margin_top,
+  eCSSProperty_margin_right,
+  eCSSProperty_margin_bottom,
+  eCSSProperty_margin_left,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozOutlineSubpropTable[] = {
+  // nsCSSDeclaration.cpp outputs the subproperties in this order.
+  eCSSProperty__moz_outline_color,
+  eCSSProperty__moz_outline_style,
+  eCSSProperty__moz_outline_width,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gPaddingSubpropTable[] = {
+  // Code relies on these being in top-right-bottom-left order.
+  eCSSProperty_padding_top,
+  eCSSProperty_padding_right,
+  eCSSProperty_padding_bottom,
+  eCSSProperty_padding_left,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gPauseSubpropTable[] = {
+  eCSSProperty_pause_after,
+  eCSSProperty_pause_before,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gSizeSubpropTable[] = {
+  eCSSProperty_size_width,
+  eCSSProperty_size_height,
+  eCSSProperty_UNKNOWN
+};
+
+const nsCSSProperty *const
+nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands] = {
+    #define CSS_PROP_SHORTHAND(name_, id_, method_, hint_) g##method_##SubpropTable,
+    #include "nsCSSPropList.h"
+    #undef CSS_PROP_SHORTHAND
+};
