@@ -276,32 +276,6 @@ nsDownloadManager::GetDataSource(nsIRDFDataSource** aDataSource)
 }
 
 nsresult
-nsDownloadManager::AssertProgressInfo()
-{
-  nsCOMPtr<nsISupports> supports;
-  nsCOMPtr<nsIRDFResource> res;
-  const char* uri;
-  nsCOMPtr<nsIRDFInt> intLiteral;
-
-  gRDFService->GetIntLiteral(DOWNLOADING, getter_AddRefs(intLiteral));
-  nsCOMPtr<nsISimpleEnumerator> downloads;
-  nsresult rv = mDataSource->GetSources(gNC_DownloadState, intLiteral, PR_TRUE, getter_AddRefs(downloads));
-  if (NS_FAILED(rv)) return rv;
-  
-  PRBool hasMoreElements;
-  downloads->HasMoreElements(&hasMoreElements);
-
-  while (hasMoreElements) {
-    downloads->GetNext(getter_AddRefs(supports));
-    res = do_QueryInterface(supports);
-    res->GetValueConst(&uri);
-    AssertProgressInfoFor(uri);
-    downloads->HasMoreElements(&hasMoreElements);
-  }
-  return rv;
-}
-
-nsresult
 nsDownloadManager::AssertProgressInfoFor(const char* aPath)
 {
   nsCStringKey key(aPath);
