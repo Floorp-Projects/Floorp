@@ -1582,7 +1582,7 @@ void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruc
 	classid = getBuiltInAttribute(pBuiltin_struct, "classid"); //it is very possible to have NULL because of bad HTML
 	if (!classid)
 		TRACE("Bad object tag NULL\n");
-	if (classid && !XP_STRCMP(classid,"builtin:tree")){
+    if (!classid || XP_STRCMP(classid,"builtin:htmlarea")){ //left to default to tree here
 #endif //ENDER
 
 		char* url = getBuiltInAttribute(pBuiltin_struct, "data");
