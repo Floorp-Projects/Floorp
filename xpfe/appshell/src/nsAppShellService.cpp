@@ -71,6 +71,9 @@ static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
 static char *gEQActivatedNotification = "nsIEventQueueActivated";
 static char *gEQDestroyedNotification = "nsIEventQueueDestroyed";
 
+NS_NAMED_LITERAL_STRING(gSkinSelectedTopic, "skin-selected");
+NS_NAMED_LITERAL_STRING(gLocaleSelectedTopic, "locale-selected");
+
 nsAppShellService::nsAppShellService() : 
   mAppShell( nsnull ),
   mWindowList( nsnull ),
@@ -873,6 +876,10 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
       if (isNative)
         mAppShell->ListenToEventQueue(eq, PR_FALSE);
     }
+  } else if (topic.Equals(gSkinSelectedTopic) ||
+             topic.Equals(gLocaleSelectedTopic)) {
+    if (mNativeAppSupport)
+      mNativeAppSupport->SetIsServerMode(PR_FALSE);
   }
   return NS_OK;
 }
@@ -898,9 +905,13 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
     if (aRegister) {
       os->AddObserver(weObserve, topicA.get());
       os->AddObserver(weObserve, topicB.get());
+      os->AddObserver(weObserve, gSkinSelectedTopic.get());
+      os->AddObserver(weObserve, gLocaleSelectedTopic.get());
     } else {
       os->RemoveObserver(weObserve, topicA.get());
       os->RemoveObserver(weObserve, topicB.get());
+      os->RemoveObserver(weObserve, gSkinSelectedTopic.get());
+      os->RemoveObserver(weObserve, gLocaleSelectedTopic.get());
     }
     nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_CONTRACTID, glop);
   }
