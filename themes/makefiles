@@ -1,7 +1,5 @@
 themes/Makefile
 themes/modern/Makefile
-themes/modern/chatzilla/Makefile
-themes/modern/chatzilla/images/Makefile
 themes/modern/communicator/Makefile
 themes/modern/communicator/bookmarks/Makefile
 themes/modern/communicator/directory/Makefile
@@ -20,4 +18,3 @@ themes/modern/messenger/Makefile
 themes/modern/messenger/addressbook/Makefile
 themes/modern/messenger/messengercompose/Makefile
 themes/modern/navigator/Makefile
-themes/modern/xmlterm/Makefile
