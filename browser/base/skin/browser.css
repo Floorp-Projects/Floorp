@@ -707,6 +707,7 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
 #sidebar-header {
   height: 23px;
   background-color: -moz-Dialog;
+  -moz-appearance: toolbox;
   border-bottom: 1px solid ThreeDShadow;
   border-top: 1px solid ThreeDHighlight;
 }
