@@ -445,8 +445,8 @@
 
         <menu label="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
           <menupopup id="menu_HelpPopup">
-            <menuitem accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
-            <menuitem accesskey="&hintsAndTips.accesskey;" label="&hintsAndTips.label;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
+            <menuitem id="releaseNotes" accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
+            <menuitem id="hintsAndTips" accesskey="&hintsAndTips.accesskey;" label="&hintsAndTips.label;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
             <menuseparator id="menu_HelpAboutSeparator"/>
             <menuitem id="aboutName" accesskey="&aboutCmd.accesskey;"
                       label="&aboutCmd.label;"
