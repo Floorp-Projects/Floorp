@@ -140,9 +140,11 @@ function evaluateTypein()
 
 function displayResult()
 {
-  var result = Evaluator.document.documentElement.lastChild.firstChild;
-  if (result && result.data)
-    gConsole.mCService.logStringMessage(result.data);
+  var resultRange = Evaluator.document.createRange();
+  resultRange.selectNode(Evaluator.document.documentElement);
+  var result = resultRange.toString();
+  if (result)
+    gConsole.mCService.logStringMessage(result);
     // or could use appendMessage which doesn't persist
 }
 
