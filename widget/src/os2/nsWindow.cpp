@@ -1413,6 +1413,29 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 // Get this component dimension
 //
 //-------------------------------------------------------------------------
+NS_METHOD nsWindow::GetBounds(nsRect &aRect)
+{
+  if (mWnd) {
+    SWP swp;
+    WinQueryWindowPos(mWnd, &swp);
+    aRect.width = swp.cx;
+    aRect.height = swp.cy;
+// Need to add code to convert coordinate if parent exists - see Windows
+    aRect.x = swp.x;
+    aRect.y = swp.y;
+  } else {
+    aRect = mBounds;
+  }
+
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Get this component dimension
+//
+//-------------------------------------------------------------------------
 NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
 {
 
