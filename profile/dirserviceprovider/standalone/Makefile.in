@@ -53,15 +53,13 @@ REQUIRES	+= ipcd \
 		  profilesharingsetup \
 		  $(NULL)
 endif
-     
+
 CPPSRCS		= $(MODULES_PROFILEDIRSERVICE_SRC_LCSRCS)
 
 # we don't want the shared lib
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES += -DSTANDALONE_PROFILEDIRSERVICE
 
 LOCAL_INCLUDES = -I$(srcdir)/../src
 

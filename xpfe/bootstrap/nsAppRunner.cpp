@@ -826,7 +826,7 @@ static char kMatchOSLocalePref[] = "intl.locale.matchOS";
 nsresult
 getCountry(const nsAString& lc_name, nsAString& aCountry)
 {
-#ifdef MOZILLA_STRICT_API
+#ifndef MOZILLA_INTERNAL_API
   const PRUnichar *begin = lc_name.BeginReading();
   const PRUnichar *end   = lc_name.EndReading();
   while (begin != end) {

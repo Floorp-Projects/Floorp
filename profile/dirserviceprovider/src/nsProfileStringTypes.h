@@ -49,9 +49,8 @@
  * embed strings APIs.
  */
 
-#ifdef STANDALONE_PROFILEDIRSERVICE
+#ifndef MOZILLA_INTERNAL_API
 
-#define MOZILLA_STRICT_API
 #include "nsStringAPI.h"
 
 typedef nsCString nsPromiseFlatCString;

@@ -253,10 +253,10 @@
 #define NS_COM NS_IMPORT
 #endif
 
-#ifdef MOZILLA_STRICT_API
-#define NS_COM_GLUE
-#else
+#ifdef MOZILLA_INTERNAL_API
 #define NS_COM_GLUE NS_COM
+#else
+#define NS_COM_GLUE
 #endif
 
 

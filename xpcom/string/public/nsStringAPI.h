@@ -47,7 +47,7 @@
  */
 
 // Map frozen functions to private symbol names if not using strict API.
-#ifndef MOZILLA_STRICT_API
+#ifdef MOZILLA_INTERNAL_API
 # define NS_StringContainerInit           NS_StringContainerInit_P
 # define NS_StringContainerInit2          NS_StringContainerInit2_P
 # define NS_StringContainerFinish         NS_StringContainerFinish_P
@@ -753,14 +753,14 @@ NS_UTF16ToCString(const nsAString &aSource, nsCStringEncoding aDestEncoding,
  * internal definition of these classes from nsAString.h in the Mozilla tree.
  */
 
-#ifdef MOZILLA_STRICT_API
+#ifndef MOZILLA_INTERNAL_API
 #define nsAString_external nsAString
 #define nsACString_external nsACString
 #endif
 
 class nsAString_external
 {
-#ifdef MOZILLA_STRICT_API
+#ifndef MOZILLA_INTERNAL_API
 
 public:
   typedef PRUnichar             char_type;
@@ -839,7 +839,7 @@ public:
 
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
-#endif // MOZILLA_STRICT_API
+#endif // MOZILLA_INTERNAL_API
 
 private:
   void *v;
@@ -847,7 +847,7 @@ private:
 
 class nsACString_external
 {
-#ifdef MOZILLA_STRICT_API
+#ifndef MOZILLA_INTERNAL_API
 
 public:
   typedef char                  char_type;
@@ -926,7 +926,7 @@ public:
 
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
-#endif // MOZILLA_STRICT_API
+#endif // MOZILLA_INTERNAL_API
 
 private:
   void *v;
@@ -970,7 +970,7 @@ public:
  * string API easier to use.
  */
 
-#ifdef MOZILLA_STRICT_API
+#ifndef MOZILLA_INTERNAL_API
 #include "nsDebug.h"
 
 /**
@@ -1602,6 +1602,6 @@ StringTail( const nsACString& str, PRUint32 count )
 #define EmptyCString() nsCString()
 #define EmptyString() nsString()
 
-#endif // MOZILLA_STRICT_API
+#endif // MOZILLA_INTERNAL_API
 
 #endif // nsStringAPI_h__

@@ -35,7 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define MOZILLA_STRICT_API
+#ifdef MOZILLA_INTERNAL_API
+#undef MOZILLA_INTERNAL_API
+#endif
 
 #include <stdio.h>
 #include "nsStringAPI.h"

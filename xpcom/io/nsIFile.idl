@@ -337,7 +337,7 @@ interface nsIFile : nsISupports
 };
 
 %{C++
-#ifndef MOZILLA_STRICT_API
-#include "nsDirectoryServiceUtils.h" 
+#ifdef MOZILLA_INTERNAL_API
+#include "nsDirectoryServiceUtils.h"
 #endif
 %}

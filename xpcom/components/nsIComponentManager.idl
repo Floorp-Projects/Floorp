@@ -104,7 +104,7 @@ interface nsIComponentManager : nsISupports
 
 
 %{ C++
-#ifndef MOZILLA_STRICT_API
+#ifdef MOZILLA_INTERNAL_API
 #include "nsComponentManagerUtils.h"
 #endif
 %} C++

@@ -95,8 +95,8 @@ interface nsISupportsWeakReference : nsISupports
 
 
 %{C++
-#ifndef MOZILLA_STRICT_API
-#include "nsIWeakReferenceUtils.h" 
+#ifdef MOZILLA_INTERNAL_API
+#include "nsIWeakReferenceUtils.h"
 #endif
 %}
 

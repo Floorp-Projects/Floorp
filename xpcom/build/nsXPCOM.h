@@ -39,7 +39,7 @@
 #define nsXPCOM_h__
 
 // Map frozen functions to private symbol names if not using strict API.
-#ifndef MOZILLA_STRICT_API
+#ifdef MOZILLA_INTERNAL_API
 # define NS_InitXPCOM2               NS_InitXPCOM2_P
 # define NS_ShutdownXPCOM            NS_ShutdownXPCOM_P
 # define NS_GetServiceManager        NS_GetServiceManager_P

@@ -45,11 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 CPPSRCS		= regxpcom.cpp
 
-DEFINES		+= -DXPCOM_GLUE -DMOZILLA_STRICT_API
-
-REQUIRES	= \
-		  string \
-		  $(NULL)
+DEFINES		+= -DXPCOM_GLUE
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../build \

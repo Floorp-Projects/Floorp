@@ -84,5 +84,3 @@ include $(topsrcdir)/config/rules.mk
 # hack to work around objdir bustage
 export::
 	rm -f $(XPCOM_GLUE_SRC_CSRCS:.cpp=.$(OBJ_SUFFIX))
-
-DEFINES		+= -DMOZILLA_STRICT_API

@@ -37,7 +37,7 @@
 #ifndef nsStringSupport_h__
 #define nsStringSupport_h__
 
-#ifdef MOZILLA_STRICT_API
+#ifndef MOZILLA_INTERNAL_API
 
 #include "nsStringAPI.h"
 #include "nsMemory.h"
@@ -106,7 +106,7 @@ typedef nsString nsAutoString;
 typedef nsCString nsXPIDLCString;
 typedef nsString nsXPIDLString;
 
-#else // MOZILLA_STRICT_API
+#else // MOZILLA_INTERNAL_API
 
 #include "nsString.h"
 #include "nsNativeCharsetUtils.h"
@@ -136,6 +136,6 @@ FindInString(nsCString &str, const char *needle, PRBool ignoreCase = PR_FALSE)
   return str.Find(needle, ignoreCase);
 }
 
-#endif // MOZILLA_STRICT_API
+#endif // MOZILLA_INTERNAL_API
 
 #endif // !nsStringSupport_h__
