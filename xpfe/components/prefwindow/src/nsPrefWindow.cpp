@@ -48,6 +48,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIDOMWindow.h"
 #include "nsIWebShellWindow.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLSelectElement.h"
+#include "nsCOMPtr.h"
 
 #include "plstr.h"
 #include "prprf.h"
@@ -69,6 +71,9 @@ static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
+#define CHAR_VAL_BUF_LEN 32
+#define TEMP_PREF_NAME_MAX_LEN 256
+
 nsPrefWindow* nsPrefWindow::sPrefWindow = nsnull;
 
 static void DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow, nsCOMPtr<nsIWebShellWindow> *webWindow);
@@ -83,9 +88,9 @@ nsPrefWindow::nsPrefWindow()
 {
 	NS_INIT_REFCNT();
     
-    printf("Created nsPrefWindow\n");
-#ifdef NS_DEBUG
-    NS_ASSERTION(!sPrefWindow, "There can be only one");
+#ifdef DEBUG_PREFWINDOW
+  printf("Created nsPrefWindow\n");
+  NS_ASSERTION(!sPrefWindow, "There can be only one");
 #endif
 
     // initialize substrings to null
@@ -192,15 +197,13 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsIURI *uri = nsnull;
-    rv = service->NewURI(urlStr, nsnull, &uri);
+    nsCOMPtr <nsIURI> uri;
+    rv = service->NewURI(urlStr, nsnull, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
     rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
-    NS_RELEASE(uri);
 #endif // NECKO
-    if (NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
     if (NS_FAILED(rv))
@@ -238,7 +241,7 @@ static PRBool CheckAndStrip(
 }
 
 //----------------------------------------------------------------------------------------
-static PRInt16 CheckOrdinalAndStrip(nsString& ioString, PRInt16& outOrdinal)
+static PRBool CheckOrdinalAndStrip(nsString& ioString, PRInt16& outOrdinal)
 //----------------------------------------------------------------------------------------
 {
     PRInt32 colonPos = ioString.FindChar(':');
@@ -252,10 +255,8 @@ static PRInt16 CheckOrdinalAndStrip(nsString& ioString, PRInt16& outOrdinal)
         return PR_TRUE;
     }
     ioString.Cut(0, colonPos + 1);
-    short result = 0;
-    sscanf(intString, "%hd", &result);
+    PR_sscanf(intString, "%hd", &outOrdinal);
     delete [] intString;
-    outOrdinal = result;
     return PR_TRUE;
 }
 
@@ -297,7 +298,7 @@ static PRBool ParseElementIDString(
 } // ParseElementIDString
 
 //----------------------------------------------------------------------------------------
-nsresult nsPrefWindow::InitializeOneWidget(
+nsresult nsPrefWindow::InitializeOneInputWidget(
     nsIDOMHTMLInputElement* inElement,
     const nsString& inWidgetType,
     const char* inPrefName,
@@ -305,12 +306,11 @@ nsresult nsPrefWindow::InitializeOneWidget(
     PRInt16 inPrefOrdinal)
 //----------------------------------------------------------------------------------------
 {
-    // See comments in FinalizeOneWidget for an explanation of the subtree technique. When
+    // See comments in FinalizeOneInputWidget for an explanation of the subtree technique. When
     // initializing a widget, we have to check the subtree first, to see if the user has
     // visited that panel previously and changed the value.
-    char tempPrefName[256];
-    PL_strcpy(tempPrefName, "temp_tree.");
-    PL_strcat(tempPrefName, inPrefName);
+    char tempPrefName[TEMP_PREF_NAME_MAX_LEN];
+    PR_snprintf(tempPrefName, TEMP_PREF_NAME_MAX_LEN, "temp_tree.%s", inPrefName);
     switch (inPrefType)
     {
         case eBool:
@@ -362,8 +362,8 @@ nsresult nsPrefWindow::InitializeOneWidget(
                 }
                 else if (inWidgetType == "text")
                 {
-                    char charVal[32];
-                    sprintf(charVal, "%d", (int)intVal);
+                    char charVal[CHAR_VAL_BUF_LEN];
+                    PR_snprintf(charVal, CHAR_VAL_BUF_LEN, "%d", (int)intVal);
                     nsString newValue(charVal);
                     inElement->SetValue(newValue);
                 }
@@ -390,25 +390,82 @@ nsresult nsPrefWindow::InitializeOneWidget(
             // Check the subtree first, then the real tree.
             // If the preference value is not set at all, let the HTML
             // determine the setting.
-            nsIFileSpec *specVal;
-            nsresult rv = mPrefs->GetFilePref(tempPrefName, &specVal);
+            nsCOMPtr <nsIFileSpec> specVal;
+            nsresult rv = mPrefs->GetFilePref(tempPrefName, getter_AddRefs(specVal));
             if (NS_FAILED(rv))
-                rv = mPrefs->GetFilePref(inPrefName, &specVal);            
+                rv = mPrefs->GetFilePref(inPrefName, getter_AddRefs(specVal));            
             if (NS_FAILED(rv))
                 return rv;
             char* newValue;
             specVal->GetNativePath(&newValue);
             inElement->SetValue(newValue);
-            NS_RELEASE(specVal);
             break;
         }
-	case eNoType:
-	{
-		NS_ASSERTION(0, "eNoType not handled");
-	}
+    case eNoType:
+      {
+        NS_ASSERTION(0, "eNoType not handled");
+        break;
+      }
     }
     return NS_OK;
-} // nsPrefWindow::InitializeOneWidget
+} // nsPrefWindow::InitializeOneInputWidget
+
+//----------------------------------------------------------------------------------------
+nsresult nsPrefWindow::InitializeOneSelectWidget(
+    nsIDOMHTMLSelectElement* inElement,
+    const char* inPrefName,
+    TypeOfPref inPrefType,
+    PRInt16 inPrefOrdinal)
+//----------------------------------------------------------------------------------------
+{
+    // See comments in FinalizeOneSelectWidget for an explanation of the subtree technique. When
+    // initializing a widget, we have to check the subtree first, to see if the user has
+    // visited that panel previously and changed the value.
+    char tempPrefName[TEMP_PREF_NAME_MAX_LEN];
+    PR_snprintf(tempPrefName, TEMP_PREF_NAME_MAX_LEN, "temp_tree.%s", inPrefName);
+    switch (inPrefType)
+    {
+        case eBool:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+        case eInt:
+        {
+            PRInt32 intVal;
+            // Check the subtree first, then the real tree.
+            // If the preference value is not set at all, let the HTML
+            // determine the setting.
+            if (NS_SUCCEEDED(mPrefs->GetIntPref(tempPrefName, &intVal))
+            || NS_SUCCEEDED(mPrefs->GetIntPref(inPrefName, &intVal)))
+            {
+#ifdef DEBUG_PREFWINDOW
+              printf("set select to %d\n",intVal);
+#endif
+              nsAutoString strValue("");
+              strValue.Append(intVal);
+              inElement->SetValue(strValue);
+            }
+            break;
+        }
+        case eString:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+        case ePath:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+    case eNoType:
+      {
+        NS_ASSERTION(0, "eNoType not handled");
+        break;
+      }
+    }
+    return NS_OK;
+} // nsPrefWindow::InitializeOneSelectWidget
 
 //----------------------------------------------------------------------------------------
 nsresult nsPrefWindow::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
@@ -437,22 +494,37 @@ nsresult nsPrefWindow::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
     nsresult rv = inParentNode->GetNodeType(&aNodeType);
     if (NS_SUCCEEDED(rv) && aNodeType == nsIDOMNode::ELEMENT_NODE)
     {
-        nsCOMPtr<nsIDOMHTMLInputElement> element = do_QueryInterface(inParentNode);
-        if (element)
+        nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(inParentNode);
+        if (inputElement)
         {
             nsString prefName;
             TypeOfPref prefType;
             PRInt16 ordinal;
-            element->GetId( prefName);            
+            inputElement->GetId( prefName);            
             if (ParseElementIDString(prefName, prefType, ordinal))
             {
                 nsString widgetType;
-                element->GetType(widgetType);
+                inputElement->GetType(widgetType);
                 char* prefNameString = GetSubstitution(prefName);
-                InitializeOneWidget(element, widgetType, prefNameString,
+                InitializeOneInputWidget(inputElement, widgetType, prefNameString,
                                     prefType, ordinal);
                 PR_Free(prefNameString);
             }
+            return NS_OK;
+        }
+        nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(inParentNode);
+        if (selectElement) {
+          nsString prefName;
+          TypeOfPref prefType;
+          PRInt16 ordinal;
+          selectElement->GetId( prefName);            
+          if (ParseElementIDString(prefName, prefType, ordinal))
+            {
+              char* prefNameString = GetSubstitution(prefName);
+              InitializeOneSelectWidget(selectElement, prefNameString, prefType, ordinal);
+              PR_Free(prefNameString);
+            }
+          return NS_OK;
         }
     }
     return NS_OK;
@@ -488,7 +560,7 @@ nsresult nsPrefWindow::InitializePrefWidgets()
 } // nsPrefWindow::InitializePrefWidgets
 
 //----------------------------------------------------------------------------------------
-nsresult nsPrefWindow::FinalizeOneWidget(
+nsresult nsPrefWindow::FinalizeOneInputWidget(
     nsIDOMHTMLInputElement* inElement,
     const nsString& inWidgetType,
     const char* inPrefName,
@@ -502,9 +574,8 @@ nsresult nsPrefWindow::FinalizeOneWidget(
     // visits. If the user clicks "OK" at the end, then prefs in this subtree will be
     // copied back over to the real tree. This subtree will be deleted at the end
     // in either case (OK or Cancel).
-    char tempPrefName[256];
-    PL_strcpy(tempPrefName, "temp_tree.");
-    PL_strcat(tempPrefName, inPrefName);
+    char tempPrefName[TEMP_PREF_NAME_MAX_LEN];
+    PR_snprintf(tempPrefName, TEMP_PREF_NAME_MAX_LEN, "temp_tree.%s", inPrefName);
     switch (inPrefType)
     {
         case eBool:
@@ -512,11 +583,11 @@ nsresult nsPrefWindow::FinalizeOneWidget(
             PRBool boolVal;
             nsresult rv = inElement->GetChecked(&boolVal);
             if (NS_FAILED(rv))
-                return rv;
+              return rv;
             if (inWidgetType == "checkbox")
             {
-                       boolVal = (PRBool)(boolVal ^ inPrefOrdinal);            
-                    mPrefs->SetBoolPref(tempPrefName, boolVal);
+              boolVal = (PRBool)(boolVal ^ inPrefOrdinal);            
+              mPrefs->SetBoolPref(tempPrefName, boolVal);
             }
             else if (inWidgetType == "radio" && boolVal)
                 {
@@ -565,26 +636,80 @@ nsresult nsPrefWindow::FinalizeOneWidget(
             nsresult rv = inElement->GetValue(fieldValue);
             if (NS_FAILED(rv))
                 return rv;
-            nsIFileSpecWithUI* specValue = NS_CreateFileSpecWithUI();
+            nsCOMPtr <nsIFileSpecWithUI> specValue;
+            specValue = NS_CreateFileSpecWithUI();
             if (!specValue)
             	return NS_ERROR_FAILURE;
             nsCAutoString str(fieldValue);
             specValue->SetNativePath((char*)(const char*)str);
             mPrefs->SetFilePref(tempPrefName, specValue, PR_TRUE);
-            NS_RELEASE(specValue);
             break;
         }
-	case eNoType:
-	{
-		NS_ASSERTION(0, "eNoType not handled");
-	}
+    case eNoType:
+      {
+        NS_ASSERTION(0, "eNoType not handled");
+        break;
+      }
     }
-//    if (inWidgetType == "checkbox" || inWidgetType = "radio")
-//    {
-//        inElement->SetAttribute(attributeToSet, newValue);
-//    }
     return NS_OK;
-} // nsPrefWindow::FinalizeOneWidget
+} // nsPrefWindow::FinalizeOneInputWidget
+
+//----------------------------------------------------------------------------------------
+nsresult nsPrefWindow::FinalizeOneSelectWidget(
+    nsIDOMHTMLSelectElement* inElement,
+    const char* inPrefName,
+    TypeOfPref inPrefType,
+    PRInt16 inPrefOrdinal)
+//----------------------------------------------------------------------------------------
+{
+    // As each panel is replaced, the values of its widgets are written out to a subtree
+    // of the prefs tree with root at "temp_tree". This subtree is rather sparse, since it
+    // only contains prefs (if any) that are represented by widgets in panels that the user
+    // visits. If the user clicks "OK" at the end, then prefs in this subtree will be
+    // copied back over to the real tree. This subtree will be deleted at the end
+    // in either case (OK or Cancel).
+    char tempPrefName[TEMP_PREF_NAME_MAX_LEN];
+    PR_snprintf(tempPrefName, TEMP_PREF_NAME_MAX_LEN, "temp_tree.%s", inPrefName);
+    switch (inPrefType)
+    {
+        case eBool:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+            break;
+        }
+        case eInt:
+        {
+          nsString fieldValue;
+          nsresult rv = inElement->GetValue(fieldValue);
+          if (NS_FAILED(rv))
+            return rv;
+          char* s = fieldValue.ToNewCString();
+#ifdef DEBUG_PREFWINDOW
+          printf("set %s to %d\n",tempPrefName,atoi(s));
+#endif
+          mPrefs->SetIntPref(tempPrefName, atoi(s));
+          delete [] s;
+          
+          break;
+        }
+        case eString:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+        case ePath:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+    case eNoType:
+      {
+        NS_ASSERTION(0, "eNoType not handled");
+        break;
+      }
+    }
+    return NS_OK;
+} // nsPrefWindow::FinalizeOneSelectWidget
 
 //----------------------------------------------------------------------------------------
 nsresult nsPrefWindow::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)
@@ -613,21 +738,37 @@ nsresult nsPrefWindow::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)
     nsresult rv = inParentNode->GetNodeType(&aNodeType);
     if (NS_SUCCEEDED(rv) && aNodeType == nsIDOMNode::ELEMENT_NODE)
     {
-        nsCOMPtr<nsIDOMHTMLInputElement> element = do_QueryInterface(inParentNode);
-        if (element)
+        nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(inParentNode);
+        if (inputElement)
         {
             nsString prefName;
             TypeOfPref prefType;
             PRInt16 ordinal;
-            element->GetId( prefName);            
+            inputElement->GetId( prefName);            
             if (ParseElementIDString(prefName, prefType, ordinal))
             {
                 nsString widgetType;
-                element->GetType(widgetType);
+                inputElement->GetType(widgetType);
                 char* prefNameString = GetSubstitution(prefName);
-                FinalizeOneWidget(element, widgetType, prefNameString, prefType, ordinal);
+                FinalizeOneInputWidget(inputElement, widgetType, prefNameString, prefType, ordinal);
                 PR_Free(prefNameString);
             }
+            return NS_OK;
+        }
+        nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(inParentNode);
+        if (selectElement)
+        {
+            nsString prefName;
+            TypeOfPref prefType;
+            PRInt16 ordinal;
+            selectElement->GetId( prefName);            
+            if (ParseElementIDString(prefName, prefType, ordinal))
+            {
+                char* prefNameString = GetSubstitution(prefName);
+                FinalizeOneSelectWidget(selectElement, prefNameString, prefType, ordinal);
+                PR_Free(prefNameString);
+            }
+            return NS_OK;
         }
     }
     return NS_OK;

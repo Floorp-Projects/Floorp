@@ -10,8 +10,9 @@
 <!ENTITY  downUnread "Download only unread messages">
 <!ENTITY  downloadDate "Download by date">
 <!ENTITY  fromRadio.label "from">
-<!ENTITY  one.select "1 week ago">
-<!ENTITY  two.select "2 weeks ago">
+<!ENTITY  yesterday.select "yesterday">
+<!ENTITY  oneW.select "1 week ago">
+<!ENTITY  twoW.select "2 weeks ago">
 <!ENTITY  oneM.select "1 month ago">
 <!ENTITY  sixM.select "6 months ago">
 <!ENTITY  oneY.select "1 year ago">

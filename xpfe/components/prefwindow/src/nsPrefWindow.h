@@ -7,6 +7,7 @@
 
 class nsIDOMNode;
 class nsIDOMHTMLInputElement;
+class nsIDOMHTMLSelectElement;
 class nsIPref;
 class nsIWebShellWindow;
 
@@ -45,18 +46,28 @@ class nsPrefWindow
     
     nsresult             InitializePrefWidgets();
     nsresult             InitializeWidgetsRecursive(nsIDOMNode* inParentNode);
-    nsresult             InitializeOneWidget(
+    nsresult             InitializeOneInputWidget(
                              nsIDOMHTMLInputElement* inElement,
                              const nsString& inWidgetType,
                              const char* inPrefName,
                              TypeOfPref inPrefType,
                              PRInt16 inPrefOrdinal);
+    nsresult             InitializeOneSelectWidget(
+                             nsIDOMHTMLSelectElement* inElement,
+							 const char* inPrefName,
+                             TypeOfPref inPrefType,
+                             PRInt16 inPrefOrdinal);
     nsresult             FinalizePrefWidgets();
     nsresult             FinalizeWidgetsRecursive(nsIDOMNode* inParentNode);
-    nsresult             FinalizeOneWidget(
+    nsresult             FinalizeOneInputWidget(
                              nsIDOMHTMLInputElement* inElement,
                              const nsString& inWidgetType,
                              const char* inPrefName,
+                             TypeOfPref inPrefType,
+                             PRInt16 inPrefOrdinal);
+    nsresult             FinalizeOneSelectWidget(
+                             nsIDOMHTMLSelectElement* inElement,
+							 const char* inPrefName,
                              TypeOfPref inPrefType,
                              PRInt16 inPrefOrdinal);
     char*                GetSubstitution(nsString& formatstr);

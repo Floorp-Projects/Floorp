@@ -102,45 +102,6 @@
 					<titledbutton name="starts" type="button" value="&clearLoc;" />		
 		</html:fieldset>  
 	</box> 
-<!--
-	<html:div>
-		<html:input  type="radio" name="offline" id="pref:0:bool:offline.news.download.use_days" checked="true" />
-		<html:label for="pref:0:bool:offline.news.download.use_days" accesskey="f" tabindex="0">			
-		&fromRadio.label;
-		</html:label> 
-		<html:select  id="pref" idold="pref:1:int:offline.news.download.increments">
-		<html:option>&one.select;</html:option>
-	    <html:option>&two.select;</html:option>
-		<html:option>&oneM.select;</html:option>
-		<html:option>&sixM.select;</html:option>
-		<html:option>&oneY.select;</html:option>
-		</html:select> 
-	</html:div>  
-	<html:div>
-		<html:input  type="radio" name="offline" id="pref:1:bool:offline.news.download.use_days" />
-		<html:label for="pref:1:bool:offline.news.download.use_days" accesskey="s" tabindex="0">			
-		&sinceRadio.label;
-		</html:label>
-		<html:input type="text" size="5" id="pref:30:char:offline.news.download.days" />&daysAgo;
-	</html:div> 
-	</html:p>     
-	  </html:fieldset>  
-
-	</box> -->
-<!--
-	<box align="vertical" flex="100%" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
-			<html:legend align="left"> 
-			<html:div>&Allmsg;</html:div> 
-					</html:legend>
-        <html:div>&offlineMsgs;</html:div> 
-			<box flex="100%"><html:div>
-				<titledbutton value="&select;" align="left"/>
-			</html:div></box>
-		</html:fieldset>
-	</box>  -->
-
-
 </html:div>
 </window>
 

@@ -47,21 +47,21 @@
 			</html:div>
 			<html:div>
 				&varFont.select;
-				<html:select >
+				<html:select>
 					<html:option>&encod1.option;</html:option>
 				</html:select>
 				&size.select;
-				<html:select >
+				<html:select>
 						<html:option>&varFont.option;</html:option>
 				</html:select>
 			</html:div>
 			<html:div>
 				&fixedFont.Select;
-				<html:select >
+				<html:select>
 					<html:option>&encod1.option;</html:option>
 				</html:select>
 				&size.select;
-				<html:select >
+				<html:select>
 						<html:option>&varFont.option;</html:option>
 				</html:select>
 			</html:div>
