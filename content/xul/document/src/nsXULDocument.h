@@ -433,12 +433,6 @@ public:
     NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
     NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
 
-    static nsresult
-    GetElementsByTagName(nsIContent* aContent,
-                         const nsAString& aTagName,
-                         PRInt32 aNamespaceID,
-                         nsRDFDOMNodeList* aElements);
-
 protected:
     // Implementation methods
     friend nsresult

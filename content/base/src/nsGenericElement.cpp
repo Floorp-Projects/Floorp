@@ -1323,18 +1323,13 @@ nsresult
 nsGenericElement::GetElementsByTagName(const nsAString& aTagname,
                                        nsIDOMNodeList** aReturn)
 {
-  nsCOMPtr<nsIAtom> nameAtom;
-
-  nameAtom = do_GetAtom(aTagname);
+  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
   NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIContentList> list;
   NS_GetContentList(mDocument, nameAtom, kNameSpaceID_Unknown, this,
                     getter_AddRefs(list));
-
-  if (!list) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(list, aReturn);
 }
@@ -1452,9 +1447,6 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                          const nsAString& aLocalName,
                                          nsIDOMNodeList** aReturn)
 {
-  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
-  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
-
   PRInt32 nameSpaceId = kNameSpaceID_Unknown;
 
   nsCOMPtr<nsIContentList> list;
@@ -1472,6 +1464,9 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   }
 
   if (!list) {
+    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
+    NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
+
     NS_GetContentList(mDocument, nameAtom, nameSpaceId, this,
                       getter_AddRefs(list));
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
