@@ -311,7 +311,6 @@ public:
   virtual PRBool RowGroupDesiresExcessSpace() { return PR_TRUE; };
 
 private:
-  nsIAtom *mType;
   nsSize   mMaxElementSize;
 
 };
