@@ -3366,7 +3366,6 @@ if test "$MOZ_THUNDERBIRD"; then
 fi
 
 AC_SUBST(MOZ_THUNDERBIRD)
-AC_SUBST(MOZ_XUL_APP)
 
 dnl ========================================================
 dnl = Standalone Composer
@@ -3381,6 +3380,20 @@ if test "$MOZ_STANDALONE_COMPOSER"; then
 fi
 
 AC_SUBST(MOZ_STANDALONE_COMPOSER)
+
+dnl ========================================================
+dnl = Sunbird
+dnl ========================================================
+if test "$MOZ_SUNBIRD"; then
+   AC_DEFINE(MOZ_SUNBIRD)
+
+   MOZ_XUL_APP=1
+   AC_DEFINE(MOZ_XUL_APP)
+   MOZ_APP_NAME=sunbird
+   MOZ_APP_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
+fi
+
+AC_SUBST(MOZ_SUNBIRD)
 AC_SUBST(MOZ_XUL_APP)
 AC_DEFINE_UNQUOTED(MOZ_APP_NAME, "$MOZ_APP_NAME")
 

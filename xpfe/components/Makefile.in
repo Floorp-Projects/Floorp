@@ -49,6 +49,9 @@ endif
 ifdef MOZ_STANDALONE_COMPOSER
 MOZ_HAVE_BROWSER=
 endif
+ifdef MOZ_SUNBIRD
+MOZ_HAVE_BROWSER=
+endif
 ifdef MOZ_PHOENIX
 # Firefox uses this flag to stop the automatic processing of the jar.mn file
 # that lives parallel to this Makefile. The jar.mn is responsible for the 

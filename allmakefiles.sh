@@ -979,6 +979,12 @@ composer/base/Makefile
 xpfe/components/build2/Makefile
 "
 
+MAKEFILES_sunbird="
+calendar/sunbird/Makefile
+calendar/sunbird/app/Makefile
+calendar/sunbird/base/Makefile
+"
+
 MAKEFILES_sql="
 extensions/sql/Makefile
 extensions/sql/base/Makefile
@@ -1471,6 +1477,10 @@ fi
 
 if test -n "$MOZ_STANDALONE_COMPOSER"; then
     add_makefiles "$MAKEFILES_standalone_composer"
+fi
+
+if test -n "$MOZ_SUNBIRD"; then
+    add_makefiles "$MAKEFILES_sunbird"
 fi
 
 if test -n "$MOZ_IPCD"; then
