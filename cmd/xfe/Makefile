@@ -315,10 +315,12 @@ endif
 ifdef MOZ_MAIL_NEWS
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libmozmsg.a \
+		  $(NULL)
 ifdef MOZ_SECURITY
-		  $(DIST)/lib/libmsg.a \
+BASIC_LIBS	+= $(DIST)/lib/libmsg.a \
+		$(NULL)
 endif
-		  $(DIST)/lib/libmime.a \
+BASIC_LIBS	+= $(DIST)/lib/libmime.a \
 		  $(DIST)/lib/libaddr.a \
 		  $(DIST)/lib/libneo.a \
 		  $(DIST)/lib/libaddr.a \
