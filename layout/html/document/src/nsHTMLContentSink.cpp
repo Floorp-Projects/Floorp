@@ -1737,6 +1737,7 @@ nsresult HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("src")) {
       src = new nsString(aNode.GetValueAt(i));
+      src->Trim("\"", PR_TRUE, PR_TRUE); 
     }
   }
 
