@@ -935,8 +935,9 @@ nsXULOutlinerBuilder::Rebuild()
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-        const char* s;
-        root->GetValueConst(&s);
+        const char* s = "(null)";
+        if (root)
+            root->GetValueConst(&s);
 
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("xultemplate[%p] root=%s", this, s));
