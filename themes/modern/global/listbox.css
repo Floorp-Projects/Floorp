@@ -69,6 +69,17 @@ listcell {
   padding: 0 0 1px 2px;
 }
 
+/* ::::: listcell checkbox ::::: */
+
+.listcell-check {
+  margin: 0px 2px;
+  list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
+}
+
+.listcell-check[checked="true"] {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+
 /* ::::: listheader ::::: */
 
 listheader {
@@ -123,4 +134,8 @@ listheader[sortable="true"]:hover:active {
   margin: 0px !important;
   padding: 0px 0px 1px 4px;
   white-space: nowrap;
+}
+
+.listcell-icon {
+  margin-right: 2px;
 }

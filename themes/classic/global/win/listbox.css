@@ -121,3 +121,22 @@ listheader[sortable="true"]:hover:active {
   padding: 0px 0px 1px 4px;
   white-space: nowrap;
 }
+
+.listcell-icon {
+  margin-right: 2px;
+}
+
+/* ::::: listcell checkbox ::::: */
+
+.listcell-check {
+  -moz-appearance: checkbox;
+  margin: 0px 2px;
+  border: 1px solid -moz-DialogText;
+  padding: 2px;
+  width: 7px;
+}
+
+.listcell-check[checked="true"] {
+  width: 0px;
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
