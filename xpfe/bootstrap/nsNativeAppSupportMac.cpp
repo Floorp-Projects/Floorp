@@ -196,86 +196,8 @@ NS_IMETHODIMP nsNativeAppSupportMac::Start(PRBool *_retval)
   }
 #endif
 
-  // Check for running instances of Mozilla or Netscape. The real issue
-  // is having more than one app use the same profile directory. That would
-  // be REAL BAD!!!!!!!!
-
-  // The code below is a copy of nsLocalFile::FindRunningAppBySignature which is
-  // a non-static method. Sounds silly that I have to create an nsILocalFile
-  // just to call that method. At any rate, don't think we want to go through
-  // all that rigmarole during startup anyway.
-
-  ProcessInfoRec  info;
-  FSSpec          tempFSSpec;
-  ProcessSerialNumber psn, nextProcessPsn;
-
-  nextProcessPsn.highLongOfPSN = 0;
-  nextProcessPsn.lowLongOfPSN  = kNoProcess;
-
-  // first, get our psn so that we can exclude ourselves when searching
-  err = ::GetCurrentProcess(&psn);
-
-  if (err != noErr)
-  {
-    *_retval = PR_FALSE;
-    return NS_ERROR_FAILURE;
-  }
-
-  // We loop while err == noErr, which should mean all our calls are OK
-  // The ways of 'break'-ing out of the loop are:
-  //   GetNextProcess() fails (this includes getting procNotFound, meaning we're at the end of the process list),
-  //   GetProcessInformation() fails
-  // The ways we should fall out of the while loop are:
-  //   GetIndString() fails, err == resNotFound,
-  //   we found a running mozilla process or running Netscape > 4.x process, err == fnfErr
-  while (err == noErr)
-  {
-    err = ::GetNextProcess(&nextProcessPsn);
-    if (err != noErr)
-      break; // most likely, end of process list
-    info.processInfoLength = sizeof(ProcessInfoRec);
-    info.processName = nil;
-    info.processAppSpec = &tempFSSpec;
-    err = ::GetProcessInformation(&nextProcessPsn, &info);
-    if (err != noErr)
-      break; // aww crap, GetProcessInfo() failed, we're outta here
-
-    if (info.processSignature == kNSCreator || info.processSignature == kMozCreator)
-    {
-      // if the found process is us, obviously, it's okay if WE'RE running,
-      if (!(info.processNumber.lowLongOfPSN == psn.lowLongOfPSN &&
-            info.processNumber.highLongOfPSN == psn.highLongOfPSN))
-      {
-        // check to see if Netscape process is greater than Netscape 4.x or
-        // if process is Mozilla
-        if ((info.processSignature == kNSCreator && VersGreaterThan4(&tempFSSpec)) ||
-             info.processSignature == kMozCreator)
-        {
-          // put up error dialog
-          Str255 str;
-          ::GetIndString(str, kNSCanRunStrArrayID, kAnotherVersionStrIndex);
-          if (StrLength(str) == 0)
-            err = resNotFound; // set err to something so that we return false
-          else
-          {
-            SInt16 outItemHit;
-            if (str)
-              ::StandardAlert(kAlertStopAlert, str, nil, nil, &outItemHit);
-            err = fnfErr; // set err to something so that we return false
-          }
-        }
-      }
-    }
-  }
-
-  if (err == noErr || err == procNotFound)
-  {
-    *_retval = PR_TRUE;
-    return NS_OK;
-  }
-  
-  *_retval = PR_FALSE;
-  return NS_ERROR_FAILURE;
+  *_retval = PR_TRUE;
+  return NS_OK;
 }
 
 /* boolean stop (); */
