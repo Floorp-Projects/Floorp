@@ -708,6 +708,12 @@ nsHTMLEditor::CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
   return nsTextEditor::CopyAttributes(aDestNode, aSourceNode);
 }
 
+NS_IMETHODIMP
+nsHTMLEditor::ApplyStyleSheet(const nsString& aURL)
+{
+  return nsTextEditor::ApplyStyleSheet(aURL);
+}
+
 //================================================================
 // HTML Editor methods
 //

@@ -107,6 +107,8 @@ interface nsIEditorShell : nsISupports
   void GetTextProperty(in wstring prop, in wstring attr, in wstring value, out wstring firstHas, out wstring anyHas, out wstring allHas);
   void SetBodyAttribute(in wstring attr, in wstring value);
   void SetBackgroundColor(in wstring color);
+
+  void ApplyStyleSheet(in wstring url);
     
   /* Utility */
   wstring GetLocalFileURL(in nsIDOMWindow parent, in wstring filterType);

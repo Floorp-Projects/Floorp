@@ -90,7 +90,6 @@
 #include "nsITransferable.h"
 #include "nsISupportsArray.h"
 
-
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kEditorAppCoreCID,         NS_EDITORAPPCORE_CID);
@@ -609,6 +608,35 @@ NS_IMETHODIMP nsEditorShell::SetBackgroundColor(const PRUnichar *color)
         result = htmlEditor->SetBackgroundColor(aColor);
       break;
     }
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
+{
+  nsresult result = NS_NOINTERFACE;
+  
+  nsAutoString  aURL(url);
+
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+      {
+        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          result = textEditor->ApplyStyleSheet(aURL);
+      }
+      break;
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->ApplyStyleSheet(aURL);
+      }
+      break;
     default:
       result = NS_ERROR_NOT_IMPLEMENTED;
   }

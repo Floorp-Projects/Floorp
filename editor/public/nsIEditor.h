@@ -378,6 +378,12 @@ public:
     */
   NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText)=0;
 
+  /** load and apply the style sheet, specified by aURL, to
+    * the editor's document.
+    * @param aURL  The style sheet to be loaded and applied.
+    */
+  NS_IMETHOD ApplyStyleSheet(const nsString& aURL)=0;
+
   /** add an EditActionListener to the editors list of listeners. */
   NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener)=0;
 

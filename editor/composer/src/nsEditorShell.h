@@ -161,6 +161,8 @@ class nsEditorShell :   public nsIEditorShell,
 	  NS_IMETHOD SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value);
 	  NS_IMETHOD SetBackgroundColor(const PRUnichar *color);
 
+	  NS_IMETHOD ApplyStyleSheet(const PRUnichar *url);
+
 	  /* string GetLocalFileURL (in nsIDOMWindow parent, in string filterType); */
 	  NS_IMETHOD GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType, PRUnichar **_retval);
 

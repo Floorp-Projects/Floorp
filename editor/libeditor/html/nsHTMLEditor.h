@@ -113,6 +113,9 @@ public:
   NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride, PRBool aSelectionOnly);
   NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride, PRBool aSelectionOnly);
 
+// Miscellaneous
+  NS_IMETHOD ApplyStyleSheet(const nsString& aURL);
+
 // Logging methods
 
   NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);

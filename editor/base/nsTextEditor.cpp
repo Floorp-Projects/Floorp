@@ -1505,6 +1505,11 @@ NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   return res;
 }  
 
+NS_IMETHODIMP nsTextEditor::ApplyStyleSheet(const nsString& aURL)
+{
+  return nsEditor::ApplyStyleSheet(aURL);
+}
+
 NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly)
 {
   PRBool cancel;
@@ -1704,7 +1709,6 @@ NS_IMETHODIMP nsTextEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,ns
 
   return encoder->EncodeToStream(aOutputStream);
 }
-
 
 nsCOMPtr<nsIDOMElement>
 nsTextEditor::FindPreElement()

@@ -840,6 +840,18 @@ nsJSEditorLog::EndComposition(void)
 }
 
 NS_IMETHODIMP
+nsJSEditorLog::ApplyStyleSheet(const nsString& aURL)
+{
+  Write("window.editorShell.ApplyStyleSheet(\"");
+  PrintUnicode(aURL);
+  Write("\");\n");
+
+  Flush();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsJSEditorLog::StartLogging(nsIFileSpec *aLogFile)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
