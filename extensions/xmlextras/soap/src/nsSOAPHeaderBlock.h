@@ -33,16 +33,19 @@
 #include "nsIDOMElement.h"
 #include "nsISOAPAttachments.h"
 #include "nsCOMPtr.h"
+#include "nsSOAPBlock.h"
 
-class nsSOAPHeaderBlock : public nsISOAPHeaderBlock,
-                        public nsISecurityCheckedComponent,
-                        public nsIJSNativeInitializer
+class nsSOAPHeaderBlock : public nsSOAPBlock,
+                        public nsISOAPHeaderBlock
 {
 public:
   nsSOAPHeaderBlock();
+  nsSOAPHeaderBlock(nsISOAPAttachments* aAttachments);
   virtual ~nsSOAPHeaderBlock();
 
   NS_DECL_ISUPPORTS
+
+  NS_FORWARD_NSISOAPBLOCK(nsSOAPBlock::)
 
   // nsISOAPHeaderBlock
   NS_DECL_NSISOAPHEADERBLOCK
@@ -50,21 +53,9 @@ public:
   // nsISecurityCheckedComponent
   NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(JSContext *cx, JSObject *obj, 
-                        PRUint32 argc, jsval *argv);
-
 protected:
-  nsString mNamespaceURI;
-  nsString mName;
   nsString mActorURI;
-  nsCOMPtr<nsISOAPEncoding> mEncoding;
-  nsCOMPtr<nsISchemaType> mSchemaType;
-  nsCOMPtr<nsISOAPAttachments> mAttachments;
-  nsCOMPtr<nsIDOMElement> mElement;
-  nsCOMPtr<nsIVariant> mValue;
-  nsresult mStatus;
-  PRBool mComputeValue;
+  PRBool mMustUnderstand;
 };
 
 #endif

@@ -36,21 +36,11 @@ interface nsISOAPFault;
 [scriptable, uuid(99ec6691-535f-11d4-9a58-000064657374)]
 interface nsISOAPResponse : nsISOAPMessage {
   /**
-   * The message which generated this response.  There is no guarantee
-   *   that the message has not been modified since the original call
-   *   occurred.  This is set automatically when invoking a call that
-   *   returns this response.  This must also be set by a call processor
-   *   so that the transport can return a response to the correct caller.
-   */
-  attribute nsISOAPCall respondingTo;
-
-  /**
    * The fault returned in the response, if one was generated. NULL
    * if there was no fault.  This does not rely on the response
    * parameters having been deserialized.
    */
   readonly attribute nsISOAPFault fault;
-
 };
 
 %{ C++

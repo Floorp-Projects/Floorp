@@ -44,20 +44,6 @@ NS_IMPL_QUERY_CLASSINFO(nsSOAPResponse)
 NS_INTERFACE_MAP_END_INHERITING(nsSOAPMessage)
 
 
-/* attribute nsISOAPCall respondingTo; */
-NS_IMETHODIMP nsSOAPResponse::GetRespondingTo(nsISOAPCall * *aRespondingTo)
-{
-  NS_ENSURE_ARG_POINTER(aRespondingTo);
-  *aRespondingTo = mRespondingTo;
-  NS_IF_ADDREF(*aRespondingTo);
-  return NS_OK;
-}
-NS_IMETHODIMP nsSOAPResponse::SetRespondingTo(nsISOAPCall * aRespondingTo)
-{
-  mRespondingTo = aRespondingTo;
-  return NS_OK;
-}
-
 /* readonly attribute nsISOAPFault fault; */
 NS_IMETHODIMP nsSOAPResponse::GetFault(nsISOAPFault * *aFault)
 {

@@ -28,6 +28,7 @@
 #include "nsSOAPUtils.h"
 #include "nsSOAPCall.h"
 #include "nsSOAPResponse.h"
+#include "nsISOAPCallCompletion.h"
 #include "nsIDOMEventTarget.h"
 
 nsHTTPSOAPTransport::nsHTTPSOAPTransport()
@@ -82,7 +83,11 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse 
   rv = request->Send(variant);
   if (NS_FAILED(rv)) return rv;
 
-  request->GetStatus(&rv);
+  PRUint32 status;
+  rv = request->GetStatus(&status);
+  if (NS_SUCCEEDED(rv)
+    && (status < 200
+    || status >= 300)) rv = NS_ERROR_FAILURE;
   if (NS_FAILED(rv)) return rv;
 
   if (aResponse) {
@@ -96,26 +101,7 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse 
   return NS_OK;
 }
 
-class nsHTTPSOAPTransportCompletion : public nsIDOMEventListener
-{
-public:
-  nsHTTPSOAPTransportCompletion();
-  nsHTTPSOAPTransportCompletion(nsISOAPCall *call, nsISOAPResponse *response, nsIXMLHttpRequest *request, nsISOAPResponseListener *listener);
-  virtual ~nsHTTPSOAPTransportCompletion();
-
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-
-protected:
-  nsCOMPtr<nsISOAPCall> mCall;
-  nsCOMPtr<nsISOAPResponse> mResponse;
-  nsCOMPtr<nsIXMLHttpRequest> mRequest;
-  nsCOMPtr<nsISOAPResponseListener> mListener;
-};
-
-NS_IMPL_ISUPPORTS1(nsHTTPSOAPTransportCompletion, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS2_CI(nsHTTPSOAPTransportCompletion, nsIDOMEventListener, nsISOAPCallCompletion)
 
 nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion()
 {
@@ -131,25 +117,83 @@ nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion(
 nsHTTPSOAPTransportCompletion::~nsHTTPSOAPTransportCompletion()
 {
 }
+/* readonly attribute nsISOAPCall call; */
+NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetCall(nsISOAPCall * *aCall)
+{
+  *aCall = mCall;
+  NS_IF_ADDREF(*aCall);
+  return NS_OK;
+}
+
+/* readonly attribute nsISOAPResponse response; */
+NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetResponse(nsISOAPResponse * *aResponse)
+{
+  *aResponse = mRequest ? nsnull : mResponse;
+  NS_IF_ADDREF(*aResponse);
+  return NS_OK;
+}
+
+/* readonly attribute nsISOAPResponseListener listener; */
+NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetListener(nsISOAPResponseListener * *aListener)
+{
+  *aListener = mListener;
+  NS_IF_ADDREF(*aListener);
+  return NS_OK;
+}
+
+/* readonly attribute boolean isComplete; */
+NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetIsComplete(PRBool *aIsComplete)
+{
+  *aIsComplete = mRequest == nsnull;
+  return NS_OK;
+}
+
+/* boolean abort (); */
+NS_IMETHODIMP nsHTTPSOAPTransportCompletion::Abort(PRBool *_retval)
+{
+  if (mRequest) {
+    if (NS_SUCCEEDED(mRequest->Abort())) {
+      mRequest = nsnull;
+      *_retval = PR_TRUE;
+      return NS_OK;
+    }
+  }
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
 NS_IMETHODIMP
 nsHTTPSOAPTransportCompletion::HandleEvent(nsIDOMEvent* aEvent)
 {
+  PRUint32 status;
   nsresult rv;
-  mRequest->GetStatus(&rv);
-  if (mResponse && NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDOMDocument> document;
-    rv = mRequest->GetResponseXML(getter_AddRefs(document));
-    if (NS_SUCCEEDED(rv)) {
-      rv = mResponse->SetMessage(document);
+  if (mRequest) {  //  Avoid if it has been aborted.
+    rv = mRequest->GetStatus(&status);
+    if (NS_SUCCEEDED(rv)
+      && (status < 200
+      || status >= 300)) rv = NS_ERROR_FAILURE;
+    if (mResponse && NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIDOMDocument> document;
+      rv = mRequest->GetResponseXML(getter_AddRefs(document));
+      if (NS_SUCCEEDED(rv) && document) {
+        rv = mResponse->SetMessage(document);
+      }
+      else {
+        mResponse = nsnull;
+      }
     }
+    else {
+      mResponse = nsnull;
+    }
+    mRequest = nsnull;	//  Break cycle.
+    PRBool c;  //  In other transports, this may signal to stop returning if multiple returns
+    mListener->HandleResponse(mResponse, mCall, rv, PR_TRUE, &c);
   }
-  PRBool c;  //  In other transports, this may signal to stop returning if multiple returns
-  mListener->HandleResponse(mResponse, mCall, (PRInt32)rv, PR_TRUE, &c);
   return NS_OK;
 }
 
 /* void asyncCall (in nsISOAPCall aCall, in nsISOAPResponseListener aListener, in nsISOAPResponse aResponse); */
-NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponseListener *aListener, nsISOAPResponse *aResponse)
+NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponseListener *aListener, nsISOAPResponse *aResponse,
+		nsISOAPCallCompletion** aCompletion)
 {
   NS_ENSURE_ARG(aCall);
 
@@ -183,22 +227,22 @@ NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponse
     if (NS_FAILED(rv)) return rv;
   }
 
-  if (aListener) {
-    nsCOMPtr<nsIDOMEventListener> listener;
-    listener = new nsHTTPSOAPTransportCompletion(aCall, aResponse, request, aListener);
-    if (!listener) return NS_ERROR_OUT_OF_MEMORY;
-    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("load"), listener, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("error"), listener, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-  }
-
   nsCOMPtr<nsIWritableVariant> variant = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = variant->SetAsInterface(NS_GET_IID(nsIDOMDocument), messageDocument);
   if (NS_FAILED(rv)) return rv;
 
+  if (aListener) {
+    *aCompletion = new nsHTTPSOAPTransportCompletion(aCall, aResponse, request, aListener);
+    if (!*aCompletion) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(*aCompletion);
+    nsCOMPtr<nsIDOMEventListener> listener = do_QueryInterface(*aCompletion);
+    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("load"), listener, PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("error"), listener, PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+  }
   rv = request->Send(variant);
   if (NS_FAILED(rv)) return rv;
 

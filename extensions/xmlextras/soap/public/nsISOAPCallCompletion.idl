@@ -20,21 +20,47 @@
  * Contributor(s): 
  */
 
-#include "nsISOAPBlock.idl"
+#include "nsISupports.idl"
 
-interface nsIDOMElement;
-interface nsIVariant;
-interface nsISOAPEncoding;
-interface nsISchemaType;
+interface nsISOAPCall;
+interface nsISOAPResponse;
+interface nsISOAPResponseListener;
 
 /**
- * This interface encapsulates an arbitrary parameter to be used
- * by the soap serialization or protocol.  See the nsISOAPBlock
- * interface for particulars about how this interface works.
+ * This permits the invoker of an asynchronous call to
+ *   abort the call before it completes or to test to
+ *   see whether it is complete.
  */
 
-[scriptable, uuid(99ec6690-535f-11d4-9a58-000064657374)]
-interface nsISOAPParameter : nsISOAPBlock {
+[scriptable, uuid(86114dd8-1dd2-11b2-ab2b-91d0c995e03a)]
+interface nsISOAPCallCompletion : nsISupports {
+
+/**
+ * The call which was invoked (may have changed since
+ *   the call was made).
+ */
+readonly attribute nsISOAPCall call;
+/**
+ * The response, if any, to the call.
+ */
+readonly attribute nsISOAPResponse response;
+/**
+ * The listener to the call.
+ */
+readonly attribute nsISOAPResponseListener listener;
+/**
+ * Whether the call is complete.
+ */
+readonly attribute boolean isComplete;
+
+/**
+ * Cause the invoked method to abort, if it is not
+ * already complete.
+ * @return true if the state of isComplete became
+ *   true as a result.  False if it was already
+ *   true or reamined false.
+ */
+boolean abort();
 };
 
 %{ C++

@@ -25,6 +25,7 @@
 
 interface nsISOAPResponse;
 interface nsISOAPResponseListener;
+interface nsISOAPCallCompletion;
 
 /**
  * This interface is a convenience extension of the basic SOAP message,
@@ -77,7 +78,7 @@ interface nsISOAPCall : nsISOAPMessage {
    *  response is recieved.  Should be null if no response is
    *  expected.
    */
-  void asyncInvoke(in nsISOAPResponseListener aListener);
+  nsISOAPCallCompletion asyncInvoke(in nsISOAPResponseListener aListener);
 };
 
 %{ C++

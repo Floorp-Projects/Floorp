@@ -31,7 +31,9 @@ XPIDL_MODULE	= xmlsoap
 
 XPIDLSRCS	= \
 		nsISOAPAttachments.idl \
+		nsISOAPBlock.idl \
 		nsISOAPCall.idl \
+		nsISOAPCallCompletion.idl \
 		nsISOAPDecoder.idl \
 		nsISOAPEncoder.idl \
 		nsISOAPEncoding.idl \

@@ -39,6 +39,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 OBJS=	\
 	.\$(OBJDIR)\nsDefaultSOAPEncoder.obj \
 	.\$(OBJDIR)\nsHTTPSOAPTransport.obj  \
+	.\$(OBJDIR)\nsSOAPBlock.obj          \
 	.\$(OBJDIR)\nsSOAPCall.obj           \
 	.\$(OBJDIR)\nsSOAPEncoding.obj       \
 	.\$(OBJDIR)\nsSOAPFault.obj          \

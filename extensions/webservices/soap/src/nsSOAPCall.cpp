@@ -118,7 +118,7 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse **_retval)
 }
 
 /* void asyncInvoke (in nsISOAPResponseListener listener); */
-NS_IMETHODIMP nsSOAPCall::AsyncInvoke(nsISOAPResponseListener *listener)
+NS_IMETHODIMP nsSOAPCall::AsyncInvoke(nsISOAPResponseListener *listener, nsISOAPCallCompletion ** aCompletion)
 {
   nsresult rv;
   nsCOMPtr<nsISOAPTransport> transport;
@@ -136,7 +136,7 @@ NS_IMETHODIMP nsSOAPCall::AsyncInvoke(nsISOAPResponseListener *listener)
   rv = response->SetEncoding(mEncoding);
   if (NS_FAILED(rv)) return rv;
 
-  rv = transport->AsyncCall(this, listener, response);
+  rv = transport->AsyncCall(this, listener, response, aCompletion);
   return rv;
 }
 

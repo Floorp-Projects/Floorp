@@ -89,6 +89,10 @@ public:
   static nsDependentString kXMLNamespaceURI;
   static nsDependentString kXMLNamespacePrefix;
   static nsDependentString kXMLPrefix;
+  static nsDependentString kTrue;
+  static nsDependentString kTrueA;
+  static nsDependentString kFalse;
+  static nsDependentString kFalseA;
 };
 
 //  Used to support null strings.

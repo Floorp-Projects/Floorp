@@ -55,6 +55,12 @@ NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXMLNamespaceURI, "htp://www.w3.org/XML/199
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXMLPrefix, "xml:");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXMLNamespacePrefix, "xmlns:");
 
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kTrue, "true");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFalse, "false");
+
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kTrueA, "1");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFalseA, "0");
+
 void 
 nsSOAPUtils::GetSpecificChildElement(
   nsIDOMElement *aParent, 

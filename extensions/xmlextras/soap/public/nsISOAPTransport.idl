@@ -26,6 +26,7 @@ interface nsISOAPTransportListener;
 interface nsISOAPCall;
 interface nsISOAPResponse;
 interface nsISOAPResponseListener;
+interface nsISOAPCallCompletion;
 
 [scriptable, uuid(99ec6695-535f-11d4-9a58-000064657374)]
 interface nsISOAPTransport : nsISupports {
@@ -59,7 +60,7 @@ interface nsISOAPTransport : nsISupports {
  * @param response Message to recieve response and be handled by listener.  May be 
  *   null if listener is null.
  */
-  void asyncCall(in nsISOAPCall aCall,
+  nsISOAPCallCompletion asyncCall(in nsISOAPCall aCall,
                  in nsISOAPResponseListener aListener,
                  in nsISOAPResponse aResponse);
 

@@ -91,6 +91,7 @@ NS_DECL_CLASSINFO(nsSOAPEncoding)
 NS_DECL_CLASSINFO(nsSOAPHeaderBlock)
 NS_DECL_CLASSINFO(nsSOAPParameter)
 NS_DECL_CLASSINFO(nsHTTPSOAPTransport)
+NS_DECL_CLASSINFO(nsHTTPSOAPTransportCompletion)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSchemaLoader)
 NS_DECL_CLASSINFO(nsSchemaLoader)
@@ -315,6 +316,12 @@ static nsModuleComponentInfo components[] = {
     nsHTTPSOAPTransportConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsHTTPSOAPTransport), 
     nsnull, &NS_CLASSINFO_NAME(nsHTTPSOAPTransport), 
+    nsIClassInfo::DOM_OBJECT },
+  { "HTTP SOAP Transport Completion", NS_HTTPSOAPTRANSPORTCOMPLETION_CID,
+    NS_HTTPSOAPTRANSPORTCOMPLETION_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsHTTPSOAPTransportCompletion), 
+    nsnull, &NS_CLASSINFO_NAME(nsHTTPSOAPTransportCompletion), 
     nsIClassInfo::DOM_OBJECT },
   { "SchemaLoader", NS_SCHEMALOADER_CID, NS_SCHEMALOADER_CONTRACTID,
     nsSchemaLoaderConstructor, nsnull, nsnull, nsnull, 

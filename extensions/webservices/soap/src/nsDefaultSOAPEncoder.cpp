@@ -43,9 +43,6 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
 
-NS_NAMED_LITERAL_STRING(kOne,"1");
-NS_NAMED_LITERAL_STRING(kZero,"0");
-
 NS_NAMED_LITERAL_STRING(kEmpty,"");
 
 NS_NAMED_LITERAL_STRING(kSOAPArrayTypeAttribute,"arrayType");
@@ -99,12 +96,6 @@ NS_NAMED_LITERAL_STRING(kNonPositiveIntegerSchemaType, "nonPositiveInteger");
 NS_NAMED_LITERAL_STRING(kNegativeIntegerSchemaType, "negativeInteger");
 NS_NAMED_LITERAL_STRING(kNonNegativeIntegerSchemaType, "nonNegativeInteger");
 NS_NAMED_LITERAL_STRING(kPositiveIntegerSchemaType, "positiveInteger");
-
-NS_NAMED_LITERAL_STRING(kTrue, "true");
-NS_NAMED_LITERAL_STRING(kFalse, "false");
-
-NS_NAMED_LITERAL_STRING(kTrueA, "1");
-NS_NAMED_LITERAL_STRING(kFalseA, "0");
 
 #define DECLARE_ENCODER(name) \
 class ns##name##Encoder : \
@@ -584,13 +575,13 @@ NS_IMETHODIMP nsBooleanEncoder::Encode(nsISOAPEncoding* aEncoding,
   rc = aSource->GetAsBool(&b);
   if (NS_FAILED(rc)) return rc;
   if (aName.IsEmpty()) {
-    return EncodeSimpleValue(b ? kTrue : kFalse,
+    return EncodeSimpleValue(b ? nsSOAPUtils::kTrue : nsSOAPUtils::kFalse,
 		       nsSOAPUtils::kSOAPEncodingURI,
 		       kBooleanSchemaType,
 		       aDestination,
 		       aReturnValue);
   }
-  return EncodeSimpleValue(b ? kTrue : kFalse,
+  return EncodeSimpleValue(b ? nsSOAPUtils::kTrue : nsSOAPUtils::kFalse,
 		       aNamespaceURI,
 		       aName,
 		       aDestination,
@@ -1189,11 +1180,11 @@ NS_IMETHODIMP nsBooleanEncoder::Decode(nsISOAPEncoding* aEncoding,
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc)) return rc;
   bool b;
-  if (value.Equals(kTrue)
-    || value.Equals(kTrueA)) {
+  if (value.Equals(nsSOAPUtils::kTrue)
+    || value.Equals(nsSOAPUtils::kTrueA)) {
     b = PR_TRUE;
-  } else if (value.Equals(kFalse)
-    || value.Equals(kFalseA)) {
+  } else if (value.Equals(nsSOAPUtils::kFalse)
+    || value.Equals(nsSOAPUtils::kFalseA)) {
     b = PR_FALSE;
   } else return NS_ERROR_ILLEGAL_VALUE;
 

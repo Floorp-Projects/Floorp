@@ -1,0 +1,101 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+interface nsIVariant;
+interface nsISOAPEncoding;
+interface nsISchemaType;
+
+/**
+ * This interface encapsulates an arbitrary block to be used
+ * by the soap serialization or protocol.  It presents the
+ * namespaceURI, name, encoding, schemaType, and value of the
+ * block.  There are two different ways this may be used:
+ * <p>1.  When created by a user for serialization, a value is set
+ * which is then used to encode the message.  In this case, the
+ * user sets the value (or element in the case of a literal
+ * block) which is then encoded (unless it is the element) 
+ * and incorporated into the document as it is encoded.
+ * <p>2.  When requested by the user from a message that is to
+ * be decoded.  In this case, an element is set on the block
+ * which is automatically decoded whenever the value attribute is
+ * accessed (possibly after the user sets the encoding or schemaType,
+ * or for literal blocks, the user just accesses the element and
+ * no decoding is performed.  For SOAP which attachments, hidden 
+ * attachments may also be associated from the message to the block 
+ * so that later decoding which relies on the attachments is possible.
+ */
+
+[scriptable, uuid(843afaa8-1dd2-11b2-8b0d-9b5d16fe64ea)]
+interface nsISOAPBlock : nsISupports {
+    
+  /**
+   *  The namespace URI of the block.  Ignored if name is null.
+   *  If this is modified, element is set to null and all 
+   *  attributes computed from element revert to previous
+   *  uncomputed values.  If element is set, this becomes computed.
+   */
+  attribute AString namespaceURI;
+
+  /**
+   * The name of the block. If the block is left unnamed, it
+   * will be encoded using the element types defined in the SOAP-ENC
+   * schema. For example, <code>&lt;SOAP-ENC:int&gt;45&lt;/SOAP-ENC:int&gt;
+   * </code>.  If this is modified, element is set to null and all 
+   * attributes computed from element revert to previous uncomputed
+   * values.  If element is set, this becomes computed.
+   */
+  attribute AString name;
+
+  /**
+   * The encoding that was / will be applied to the
+   * block.
+   */
+  attribute nsISOAPEncoding encoding;
+
+  /**
+   * The schema type used to encode or decode the
+   *   block.
+   */
+  attribute nsISchemaType schemaType;
+
+  /**
+   *  The element which is the encoded value of this block.
+   *  If this is set, value, namespaceURI, and name becomes a 
+   *  computed attributes which are produced by decoding this 
+   *  element.
+   */
+  attribute nsIDOMElement element;
+
+  /**
+   *  The native value which is the decoded value of 
+   *  this block.  If this is modified, element is set
+   *  to null and all attributes computed from element 
+   *  revert to previous uncomputed values.  If element 
+   *  is set, this becomes computed, relying on the 
+   *  value of encoding and schemaType each time it is 
+   *  computed.
+   */
+  attribute nsIVariant value;
+};

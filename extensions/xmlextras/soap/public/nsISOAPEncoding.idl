@@ -32,9 +32,18 @@ interface nsISOAPAttachments;
 interface nsISchemaCollection;
 
 /**
- * This interface keeps track of all the known types and how
- *   each should be encoded (by type) or decoded (by 
- *   schema type)
+ * This interface keeps track of the current encoding style and
+ *   how objects should be encoded or decoded, as well as all
+ *   associated encodings.
+ *   <p>While two different nsSOAPCalls may have an encoding
+ *   for the same styleURI, by default the encoding object and all
+ *   associated encoding objects are local do not affect other
+ *   calls because the encodings are local and not associated, 
+ *   unless the same or associated encodings are explicitly set
+ *   on multiple calls.  When a call is invoked, the same encoding 
+ *   object is automatically set on the response message so that
+ *   decoders registered on the call encoding are automatically
+ *   applied to the response.
  */
 
 [scriptable, uuid(9ae49600-1dd1-11b2-877f-e62f620c5e92)]
@@ -46,18 +55,23 @@ interface nsISOAPEncoding : nsISupports {
   readonly attribute AString styleURI;
 
 /**
- * Get an alternative encoding.
+ * Get an associated encoding for a different encoding style.  If
+ *   there is no default associated encoding available for the
+ *   specified encoding style, then if aCreateIf is specified, one
+ *   is created, otherwise a null is returned.  Associated encodings
+ *   are the set of encodings that may be used and modified together
+ *   as a set.
  *
- * @param aStyleURI The style URI of the alternative encoding style.
+ * @param aStyleURI The style URI of the associated encoding.
  *
- * @param aCreateIf If true, then create the alternative style if it
+ * @param aCreateIf If true, then create the associated encoding if it
  *   does not already exist, otherwise return the existing encoding.
  *
- * @return The alternative encoding which corresponds to the
+ * @return The associated encoding which corresponds to the
  *   specified styleURI, or null if the spefied alternative encoding
  *   does not exist and it was not requested that it be created.
  */
-  nsISOAPEncoding getStyle(
+  nsISOAPEncoding getAssociatedEncoding(
     in AString aStyleURI,
     in boolean aCreateIf);
 
@@ -115,10 +129,25 @@ interface nsISOAPEncoding : nsISupports {
   */
   nsISOAPDecoder getDecoder(in AString aSchemaNamespaceURI, in AString aSchemaType);
 
+/**
+ * The default encoder invoked by all encoding calls. Appropriate calls
+ * to more-specific encoders, if any, must be dispatched by this default 
+ * encoder.  The default encoder typically looks up encoders by known 
+ * information such as explicit or implicit types.
+ */
   attribute nsISOAPEncoder defaultEncoder;
 
+/**
+ * The default decoder invoked by all encoding calls. Appropriate calls
+ * to more-specific decoders, if any, must be dispatched by this default 
+ * decoder.  The default decoder typically looks up encoders by known 
+ * information such as explicit or implicit types.
+ */
   attribute nsISOAPDecoder defaultDecoder;
 
+/**
+  * The schema collection used by this and all associated encodings.
+  */
   attribute nsISchemaCollection schemaCollection;
 
 /**

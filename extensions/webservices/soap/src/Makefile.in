@@ -33,6 +33,7 @@ REQUIRES	= xpcom string caps dom js widget xpconnect necko schema
 CPPSRCS	= 				\
 		nsDefaultSOAPEncoder.cpp\
 		nsHTTPSOAPTransport.cpp	\
+		nsSOAPBlock.cpp	        \
 		nsSOAPCall.cpp	        \
 		nsSOAPEncoding.cpp	\
 		nsSOAPFault.cpp	        \

@@ -20,67 +20,21 @@
  * Contributor(s): 
  */
 
-#include "nsISupports.idl"
+#include "nsISOAPBlock.idl"
 
 interface nsIDOMElement;
 interface nsIVariant;
 interface nsISOAPEncoding;
 interface nsISchemaType;
-interface nsISOAPAttachments;
 
 /**
  * This interface encapsulates an arbitrary parameter to be used
- * by the soap serialization or protocol.  It formalizes a type
- * string, a reference to the object, and a name.
+ * by the soap serialization or protocol.  See the nsISOAPBlock
+ * interface for particulars about how this interface works.
  */
 
 [scriptable, uuid(99ec6690-535f-11d4-9a58-000064657374)]
-interface nsISOAPParameter : nsISupports {
-    
-  /**
-   * The namespace URI of the parameter.  Ignored if name is null.
-   */
-  attribute AString namespaceURI;
-    
-  /**
-   * The name of the parameter. If the parameter is left unnamed, it
-   * will be encoded using the element types defined in the SOAP-ENC
-   * schema. For example, <code>&lt;SOAP-ENC:int&gt;45&lt;/SOAP-ENC:int&gt;
-   * </code>
-   */
-  attribute AString name;
-
-  /**
-   * The encoding that was / will be applied to the
-   * parameter.
-   */
-  attribute nsISOAPEncoding encoding;
-
-  /**
-   * The schema type used to encode or decode the
-   *   parameter.
-   */
-  attribute nsISchemaType schemaType;
-
-  /**
-   *  The element which is the encoded value of this parameter.
-   *  If this is set, value becomes a computed attribute
-   *  which may be produced by decoding this element.
-   */
-  attribute nsIDOMElement element;
-
-  /**
-   *  The native value which is the decoded value of 
-   *  this parameter.  If this is set, element becomes
-   *  null.
-   */
-  attribute nsIVariant value;
-
-  /**
-   * The attachments which were attached to the message
-   *   that may be needed to decode the parameter.
-   */
-  attribute nsISOAPAttachments attachments;
+interface nsISOAPParameter : nsISOAPBlock {
 };
 
 %{ C++

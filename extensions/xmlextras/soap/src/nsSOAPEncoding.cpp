@@ -55,7 +55,7 @@ nsSOAPEncodingRegistry::~nsSOAPEncodingRegistry()
   delete mEncodings;
 }
 
-nsresult nsSOAPEncodingRegistry::GetStyle(const nsAString& aStyleURI, PRBool aCreateIf, nsISOAPEncoding* * aEncoding)
+nsresult nsSOAPEncodingRegistry::GetAssociatedEncoding(const nsAString& aStyleURI, PRBool aCreateIf, nsISOAPEncoding* * aEncoding)
 {
   NS_SOAP_ENSURE_ARG_STRING(aStyleURI);
   NS_ENSURE_ARG_POINTER(aEncoding);
@@ -212,12 +212,12 @@ NS_IMETHODIMP nsSOAPEncoding::GetStyleURI(nsAString & aStyleURI)
   return NS_OK;
 }
 
-/* nsISOAPEncoding getStyle (in AString aStyleURI, in boolean aCreateIf); */
-NS_IMETHODIMP nsSOAPEncoding::GetStyle(const nsAString & aStyleURI, PRBool aCreateIf, nsISOAPEncoding **_retval)
+/* nsISOAPEncoding getAssociatedEncoding (in AString aStyleURI, in boolean aCreateIf); */
+NS_IMETHODIMP nsSOAPEncoding::GetAssociatedEncoding(const nsAString & aStyleURI, PRBool aCreateIf, nsISOAPEncoding **_retval)
 {
   NS_SOAP_ENSURE_ARG_STRING(aStyleURI);
   NS_ENSURE_ARG_POINTER(_retval);
-  return mRegistry->GetStyle(aStyleURI, aCreateIf, _retval);
+  return mRegistry->GetAssociatedEncoding(aStyleURI, aCreateIf, _retval);
 }
 
 /* nsISOAPEncoder setEncoder (in AString aSchemaNamespaceURI, in AString aSchemaType, in nsISOAPEncoder aEncoder); */

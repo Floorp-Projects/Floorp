@@ -7,9 +7,10 @@
 
 // Passed in as the response handler in the asynchronous case
 // and called directly (see below) in the synchronous case
-function handleResponse(resp, call, status, end) { 
-  if (resp == null) {
-	  return true;
+function oncompletion(resp, call, status) { 
+  if (status != 0) {
+    alert("Error completion: " + status);
+    return true;
   }
 
   // Was there a SOAP fault in the response?
@@ -78,10 +79,10 @@ function makeCall(syncCall, faultCall) {
 
   if (syncCall) {
     var r = s.invoke();
-    handleResponse(r, s, 0, true);
+    oncompletion(r, s, 0);
   }
   else {
-    s.asyncInvoke(handleResponse);
+    s.asyncInvoke(oncompletion);
   }
 }
 </SCRIPT>

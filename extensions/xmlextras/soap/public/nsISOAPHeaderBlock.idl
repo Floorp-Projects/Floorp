@@ -20,70 +20,38 @@
  * Contributor(s): 
  */
 
-#include "nsISupports.idl"
+#include "nsISOAPBlock.idl"
 
 interface nsIDOMElement;
 interface nsIVariant;
 interface nsISOAPEncoding;
 interface nsISchemaType;
-interface nsISOAPAttachments;
 
 /**
  * This interface encapsulates an arbitrary header block to be used
- * by the soap serialization or protocol.  It formalizes a type
- * string, a reference to the object, and a name.
+ * by the soap serialization or protocol.  See the description of the
+ * nsISOAPBlock interface for information on how the basics of this
+ * interface works.
  */
 
 [scriptable, uuid(063d4a4e-1dd2-11b2-a365-cbaf1651f140)]
-interface nsISOAPHeaderBlock : nsISupports {
-    
+interface nsISOAPHeaderBlock : nsISOAPBlock {
   /**
-   * The namespace URI of the header block.  Ignored if name is null.
-   */
-  attribute AString namespaceURI;
-    
-  /**
-   * The name of the header block. If the header block is left unnamed, it
-   * will be encoded using the element types defined in the SOAP-ENC
-   * schema. For example, <code>&lt;SOAP-ENC:int&gt;45&lt;/SOAP-ENC:int&gt;
-   * </code>
-   */
-  attribute AString name;
-
-  /**
-   * The actor URI of the header block.
+   * The actor URI of the header block.  If element is set,
+   *   then this is a computed value.  If this is modified,
+   *   then element  is set to null and all attributes computed 
+   *   from element revert to previous uncomputed values.
    */
   attribute AString actorURI;
 
   /**
-   * The encoding that was / will be applied to the
-   * header block.
+   * Flags that the processor must understand this header.
+   *   If element is set, then this is a computed value.
+   *   If this is modified, then element is set to null and 
+   *   all attributes computed from element revert to
+   *   previous uncomputed values.
    */
-  attribute nsISOAPEncoding encoding;
-
-  /**
-   * The schema type used to encode or decode the
-   *   header block.
-   */
-  attribute nsISchemaType schemaType;
-
-  /**
-   *  The element which is the encoded value of this header block.
-   *  If this is set, value becomes a computed attribute
-   *  which is produced by decoding this element.
-   */
-  attribute nsIDOMElement element;
-
-  /**
-   *  The native value which is the decoded value of 
-   *  this header block.  If this is set, element becomes null.
-   */
-  attribute nsIVariant value;
-
-  /**
-   * The attachments which were attached to the message.
-   */
-  attribute nsISOAPAttachments attachments;
+  attribute boolean mustUnderstand;
 };
 
 %{ C++

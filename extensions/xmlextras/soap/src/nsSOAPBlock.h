@@ -20,12 +20,12 @@
  * Contributor(s): 
  */
 
-#ifndef nsSOAPHeaderBlock_h__
-#define nsSOAPHeaderBlock_h__
+#ifndef nsSOAPBlock_h__
+#define nsSOAPBlock_h__
 
 #include "nsString.h"
 #include "nsIVariant.h"
-#include "nsISOAPHeaderBlock.h"
+#include "nsISOAPBlock.h"
 #include "nsISecurityCheckedComponent.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsISOAPEncoding.h"
@@ -33,29 +33,38 @@
 #include "nsIDOMElement.h"
 #include "nsISOAPAttachments.h"
 #include "nsCOMPtr.h"
-#include "nsSOAPBlock.h"
 
-class nsSOAPHeaderBlock : public nsSOAPBlock,
-                        public nsISOAPHeaderBlock
+class nsSOAPBlock : public nsISOAPBlock,
+                        public nsISecurityCheckedComponent,
+                        public nsIJSNativeInitializer
 {
 public:
-  nsSOAPHeaderBlock();
-  nsSOAPHeaderBlock(nsISOAPAttachments* aAttachments);
-  virtual ~nsSOAPHeaderBlock();
+  nsSOAPBlock();
+  nsSOAPBlock(nsISOAPAttachments* aAttachments);
+  virtual ~nsSOAPBlock();
 
   NS_DECL_ISUPPORTS
 
-  NS_FORWARD_NSISOAPBLOCK(nsSOAPBlock::)
-
-  // nsISOAPHeaderBlock
-  NS_DECL_NSISOAPHEADERBLOCK
+  // nsISOAPBlock
+  NS_DECL_NSISOAPBLOCK
 
   // nsISecurityCheckedComponent
   NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
+  // nsIJSNativeInitializer
+  NS_IMETHOD Initialize(JSContext *cx, JSObject *obj, 
+                        PRUint32 argc, jsval *argv);
+
 protected:
-  nsString mActorURI;
-  PRBool mMustUnderstand;
+  nsString mNamespaceURI;
+  nsString mName;
+  nsCOMPtr<nsISOAPEncoding> mEncoding;
+  nsCOMPtr<nsISchemaType> mSchemaType;
+  nsCOMPtr<nsISOAPAttachments> mAttachments;
+  nsCOMPtr<nsIDOMElement> mElement;
+  nsCOMPtr<nsIVariant> mValue;
+  nsresult mStatus;
+  PRBool mComputeValue;
 };
 
 #endif

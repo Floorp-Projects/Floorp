@@ -50,7 +50,6 @@ public:
   virtual ~nsSOAPResponse();
 
 protected:
-  nsCOMPtr<nsISOAPCall> mRespondingTo;
 };
 
 #endif
