@@ -44,6 +44,7 @@
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsXBLBinding.h"
+#include "nsIPrivateDOMEvent.h"
 
 PRUint32 nsXBLEventHandler::gRefCnt = 0;
 nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
@@ -554,6 +555,15 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
     // We are the default action for this command.
     // Stop any other default action from executing.
     aEvent->PreventDefault();
+
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aEvent);
+    if(privateEvent) 
+    {
+      PRBool dispatchStopped;
+      privateEvent->IsDispatchStopped(&dispatchStopped);
+      if(dispatchStopped)
+        return NS_OK;
+    }
 
     // Instead of executing JS, let's get the controller for the bound
     // element and call doCommand on it.
