@@ -1918,6 +1918,7 @@ class LoadFile implements Runnable
 class DebugGui extends JFrame implements GuiCallback
 {
     Main main;
+    Runnable exitAction;
     JDesktopPane desk;
     ContextWindow context;
     Menubar menubar;
@@ -2081,9 +2082,17 @@ class DebugGui extends JFrame implements GuiCallback
         dlg.addChoosableFileFilter(filter);
         addWindowListener(new WindowAdapter() {
                 public void windowClosing(WindowEvent e) {
-                    main.Exit();
+                    exit();
                 }
             });
+    }
+
+    void exit()
+    {
+        if (exitAction != null) {
+            SwingUtilities.invokeLater(exitAction);
+        }
+        main.setReturnValue(Main.EXIT);
     }
 
     FileWindow getFileWindow(String url) {
@@ -2407,7 +2416,7 @@ class DebugGui extends JFrame implements GuiCallback
         } else if (cmd.equals("Break")) {
             main.doBreak();
         } else if (cmd.equals("Exit")) {
-            main.Exit();
+            exit();
         } else if (cmd.equals("Open")) {
             String fileName = chooseFile("Select a file to compile");
             if (fileName != null) {

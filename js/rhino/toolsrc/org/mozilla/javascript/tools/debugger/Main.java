@@ -399,7 +399,6 @@ public class Main {
     boolean breakFlag = false;
 
     ScopeProvider scopeProvider;
-    Runnable exitAction;
 
     int frameIndex = -1;
 
@@ -731,11 +730,6 @@ public class Main {
         }
     }
 
-    static void swingInvokeLater(Runnable f)
-    {
-        SwingUtilities.invokeLater(f);
-    }
-
     void contextSwitch (int frameIndex) {
         this.frameIndex = frameIndex;
     }
@@ -1043,15 +1037,6 @@ public class Main {
         return resultString;
     }
 
-    void Exit() {
-        // stop handling events
-        this.returnValue = EXIT;
-        // call the exit handler if any
-        if (exitAction != null) {
-            swingInvokeLater(exitAction);
-        }
-    }
-
     private static java.awt.EventQueue awtEventQueue = null;
 
     private static void dispatchNextAwtEvent()
@@ -1149,7 +1134,7 @@ public class Main {
      * selects "Exit..." or closes the Debugger main window
      */
     public void setExitAction(Runnable r) {
-        exitAction = r;
+        debugGui.exitAction = r;
     }
 
     /**
