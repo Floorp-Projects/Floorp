@@ -82,7 +82,7 @@ void XXXNeverCalled()
     nsIThread::GetCurrent(NULL);
     nsDeque(NULL);
     NS_NewObserver(NULL, NULL);
-    nsTraceRefcnt::AddRef(NULL, 0, NULL, 0);
+    nsTraceRefcnt::DumpStatistics();
     nsXPIDLCString::Copy(NULL);
     NS_NewEmptyEnumerator(NULL);
     nsArrayEnumerator(NULL);
