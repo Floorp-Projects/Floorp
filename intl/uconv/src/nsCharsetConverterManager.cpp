@@ -46,6 +46,9 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID); 
 
+// Pattern of cached, commonly used, single byte encoder and decoder
+#define NS_1BYTE_CODER_PATTERN "ISO-8859"
+#define NS_1BYTE_CODER_PATTERN_LEN 8
 //----------------------------------------------------------------------------
 // Class nsCharsetConverterManager [declaration]
 
@@ -472,19 +475,33 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
                                          nsIUnicodeEncoder ** aResult)
 {
   *aResult= nsnull;
-  nsIComponentManager* comMgr;
-  nsresult res;
-  res = NS_GetGlobalComponentManager(&comMgr);
-  if(NS_FAILED(res))
-     return res;
-  PRInt32 baselen = nsCRT::strlen(NS_UNICODEENCODER_PROGID_BASE);
+  nsresult res = NS_OK;
+
+  static const char kUnicodeEncoderProgIDBase[] = NS_UNICODEENCODER_PROGID_BASE;
+  static PRInt32 baselen = sizeof(kUnicodeEncoderProgIDBase) - 1;
+
   char progid[256];
-  PL_strncpy(progid, NS_UNICODEENCODER_PROGID_BASE, 256);
+  PL_strncpy(progid, kUnicodeEncoderProgIDBase, 256);
   aDest->ToCString(progid + baselen, 256 - baselen);
-  res = comMgr->CreateInstanceByProgID(progid,NULL,
-                 NS_GET_IID(nsIUnicodeEncoder),(void**)aResult);
-  if(NS_FAILED(res))
+
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+  if (!strncmp(progid+baselen, NS_1BYTE_CODER_PATTERN, NS_1BYTE_CODER_PATTERN_LEN))
+  {
+    // Single byte encoders/decoders dont hold state. Optimize by using a service.
+    encoder = do_GetService(progid, &res);
+  }
+  else
+  {
+    encoder = do_CreateInstance(progid, &res);
+  }
+
+  if (NS_FAILED(res))
     res = NS_ERROR_UCONV_NOCONV;
+  else
+  {
+    *aResult = encoder.get();
+    NS_ADDREF(*aResult);
+  }
   return res;
 }
 
@@ -493,19 +510,32 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
                                          nsIUnicodeDecoder ** aResult)
 {
   *aResult= nsnull;
-  nsIComponentManager* comMgr;
-  nsresult res;
-  res = NS_GetGlobalComponentManager(&comMgr);
-  if(NS_FAILED(res))
-     return res;
-  PRInt32 baselen = nsCRT::strlen(NS_UNICODEDECODER_PROGID_BASE);
+  nsresult res = NS_OK;;
+
+  static const char kUnicodeDecoderProgIDBase[] = NS_UNICODEDECODER_PROGID_BASE;
+  static PRInt32 baselen = sizeof(kUnicodeDecoderProgIDBase) - 1;
+
   char progid[256];
-  PL_strncpy(progid, NS_UNICODEDECODER_PROGID_BASE, 256);
+  PL_strncpy(progid, kUnicodeDecoderProgIDBase, 256);
   aSrc->ToCString(progid + baselen, 256 - baselen);
-  res = comMgr->CreateInstanceByProgID(progid,NULL,
-                 NS_GET_IID(nsIUnicodeDecoder),(void**)aResult);
+
+  nsCOMPtr<nsIUnicodeDecoder> decoder;
+  if (!strncmp(progid+baselen, NS_1BYTE_CODER_PATTERN, NS_1BYTE_CODER_PATTERN_LEN))
+  {
+    // Single byte decoders dont hold state. Optimize by using a service.
+    decoder = do_GetService(progid, &res);
+  }
+  else
+  {
+    decoder = do_CreateInstance(progid, &res);
+  }
   if(NS_FAILED(res))
     res = NS_ERROR_UCONV_NOCONV;
+  else
+  {
+    *aResult = decoder.get();
+    NS_ADDREF(*aResult);
+  }
   return res;
 }
 
@@ -538,21 +568,10 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
   if (aResult == NULL) return NS_ERROR_NULL_POINTER;
   *aResult = NULL;
 
-  nsresult res = NS_OK;
-
-  const PRUnichar * name;
-  res = ((nsIAtom *) aCharset)->GetUnicode(&name);
-  if (NS_FAILED(res)) return res;
-
-  nsAutoString progID; progID.AssignWithConversion(NS_UNICODEDECODER_PROGID_BASE);
-  progID.Append(name);
-  char buff[256];
-  progID.ToCString(buff, 256);
-
-  res = nsComponentManager::CreateInstance(buff, NULL, 
-    NS_GET_IID(nsIUnicodeDecoder), (void **) aResult);
-
-  return res;
+  // XXX use nsImmutableString
+  nsAutoString name;
+  NS_CONST_CAST(nsIAtom*, aCharset)->ToString(name);
+  return GetUnicodeDecoder(&name, aResult);
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
@@ -563,21 +582,10 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
   if (aResult == NULL) return NS_ERROR_NULL_POINTER;
   *aResult = NULL;
 
-  nsresult res = NS_OK;
-
-  const PRUnichar * name;
-  res = ((nsIAtom *) aCharset)->GetUnicode(&name);
-  if (NS_FAILED(res)) return res;
-
-  nsAutoString progID; progID.AssignWithConversion(NS_UNICODEENCODER_PROGID_BASE);
-  progID.Append(name);
-  char buff[256];
-  progID.ToCString(buff, 256);
-
-  res = nsComponentManager::CreateInstance(buff, NULL, 
-    NS_GET_IID(nsIUnicodeEncoder), (void **) aResult);
-
-  return res;
+  // XXX use nsImmutableString
+  nsAutoString name;
+  NS_CONST_CAST(nsIAtom*, aCharset)->ToString(name);
+  return GetUnicodeEncoder(&name, aResult);
 }
 
 // XXX move this macro into the UnicodeDecoder/Encoder interface
