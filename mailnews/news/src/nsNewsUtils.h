@@ -45,3 +45,4 @@ nsBuildNewsMessageURI(const nsFileSpec& path, PRUint32 key, char **uri);
 
 
 #endif //NS_NEWSUTILS_H
+
