@@ -323,13 +323,8 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext* aPresContext,
     // into our lines child list.
     nsIFrame* nextFrame = aFrame->GetNextSibling();
 
-    nsIPresShell* presShell;
-    nsIStyleSet*  styleSet;
-    aPresContext->GetShell(&presShell);
-    presShell->GetStyleSet(&styleSet);
-    NS_RELEASE(presShell);
-    styleSet->CreateContinuingFrame(aPresContext, aFrame, aOuterFrame, &nextInFlow);
-    NS_RELEASE(styleSet);
+    aPresContext->PresShell()->GetStyleSet()->
+      CreateContinuingFrame(aPresContext, aFrame, aOuterFrame, &nextInFlow);
 
     if (nsnull == nextInFlow) {
       return NS_ERROR_OUT_OF_MEMORY;

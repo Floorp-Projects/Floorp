@@ -203,17 +203,9 @@ nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsIPresContext* aPresContex
                                                      nsIFrame*       aPageFrame,
                                                      nsIFrame**      aContinuingPage)
 {
-  nsIPresShell* presShell;
-  nsIStyleSet*  styleSet;
-  nsresult      rv;
-
   // Create the continuing frame
-  aPresContext->GetShell(&presShell);
-  presShell->GetStyleSet(&styleSet);
-  NS_RELEASE(presShell);
-  rv = styleSet->CreateContinuingFrame(aPresContext, aPageFrame, this, aContinuingPage);
-  NS_RELEASE(styleSet);
-  return rv;
+  return aPresContext->PresShell()->GetStyleSet()->
+    CreateContinuingFrame(aPresContext, aPageFrame, this, aContinuingPage);
 }
 
 void

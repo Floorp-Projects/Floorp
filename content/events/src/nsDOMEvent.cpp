@@ -347,9 +347,9 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
   }
   else {
     //Always want a target.  Use document if nothing else.
-    nsCOMPtr<nsIDocument> doc;
-    nsCOMPtr<nsIPresShell> presShell;
-    if (mPresContext && NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+    nsIPresShell *presShell;
+    if (mPresContext && (presShell = mPresContext->GetPresShell())) {
+      nsCOMPtr<nsIDocument> doc;
       if (NS_SUCCEEDED(presShell->GetDocument(getter_AddRefs(doc))) && doc) {
         mTarget = do_QueryInterface(doc);
         if (mTarget) {
@@ -729,9 +729,9 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
   }
 
   //My god, man, there *must* be a better way to do this.
-  nsCOMPtr<nsIPresShell> presShell;
   nsIWidget* rootWidget = nsnull;
-  if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+  nsIPresShell *presShell = mPresContext->GetPresShell();
+  if (presShell) {
     nsIViewManager* vm = presShell->GetViewManager();
     if (vm) {
       vm->GetWidget(&rootWidget);
@@ -783,9 +783,9 @@ NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
   }
 
   //My god, man, there *must* be a better way to do this.
-  nsCOMPtr<nsIPresShell> presShell;
   nsIWidget* rootWidget = nsnull;
-  if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+  nsIPresShell *presShell = mPresContext->GetPresShell();
+  if (presShell) {
     nsIViewManager* vm = presShell->GetViewManager();
 		if (vm) {
       vm->GetWidget(&rootWidget);
@@ -1001,8 +1001,8 @@ nsresult nsDOMEvent::GetScrollInfo(nsIScrollableView** aScrollableView,
   mPresContext->GetPixelsToTwips(aP2T);
   mPresContext->GetTwipsToPixels(aT2P);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+  nsIPresShell *presShell = mPresContext->GetPresShell();
+  if (presShell) {
     nsIViewManager* vm = presShell->GetViewManager();
     if(vm) {
       return vm->GetRootScrollableView(aScrollableView);

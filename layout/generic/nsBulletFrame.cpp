@@ -1692,9 +1692,8 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
 
     // Now that the size is available (or an error occurred), trigger
     // a reflow of the bullet frame.
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && shell) {
+    nsIPresShell *shell = mPresContext->GetPresShell();
+    if (shell) {
       NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
       if (mParent) {
         // Reflow the first child of the parent not the bullet frame.
@@ -1751,10 +1750,6 @@ NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest,
 #if 0
   NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED); // Why are we bothering?
   
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
-
-
   if (NS_FAILED(aStatus)) {
     // We failed to load the image. Notify the pres shell
     if (NS_FAILED(aStatus) && (mImageRequest == aRequest || !mImageRequest)) {
@@ -1794,8 +1789,7 @@ nsBulletFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGr
 
   NS_PRECONDITION(nsnull != aLoadGroup, "null OUT parameter pointer");
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->GetPresShell();
 
   if (!shell)
     return;

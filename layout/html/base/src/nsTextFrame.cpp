@@ -1335,7 +1335,7 @@ nsTextFrame::GetDocument(nsIPresContext* aPresContext)
     NS_IF_ADDREF(result = mContent->GetDocument());
   }
   if (!result && aPresContext) {
-    aPresContext->GetPresShell()->GetDocument(&result);
+    aPresContext->PresShell()->GetDocument(&result);
   }
   return result;
 }
@@ -1402,15 +1402,13 @@ nsTextFrame::ContentChanged(nsIPresContext* aPresContext,
   }
 
   // Ask the parent frame to reflow me.  
-  nsresult rv;                                                    
-  nsCOMPtr<nsIPresShell> shell;
-  rv = aPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell && mParent) {
+  nsIPresShell *shell = aPresContext->GetPresShell();
+  if (shell && mParent) {
     mParent->ReflowDirtyChild(shell, targetTextFrame);
   }
   
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2014,12 +2012,12 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsIPresContext*          aPresConte
   NS_ENSURE_ARG_POINTER(aLineBreaker);
 
   //get the presshell
-  nsresult rv = aPresContext->GetShell(aPresShell);
-  if (NS_FAILED(rv) || (*aPresShell) == nsnull)
+  NS_IF_ADDREF(*aPresShell = aPresContext->GetPresShell());
+  if (!*aPresShell)
     return NS_ERROR_FAILURE;
 
   //get the selection controller
-  rv = GetSelectionController(aPresContext, aSelectionController);
+  nsresult rv = GetSelectionController(aPresContext, aSelectionController);
   if (NS_FAILED(rv) || !(*aSelectionController))
     return NS_ERROR_FAILURE;
 
@@ -3376,11 +3374,10 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
   // initialize out param
   *aNewContent = nsnull;
 
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aCX->GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell) {
+  nsIPresShell *shell = aCX->GetPresShell();
+  if (shell) {
     nsCOMPtr<nsIRenderingContext> acx;      
-    rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
+    nsresult rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
     if (NS_SUCCEEDED(rv)) {
       TextStyle ts(aCX, *acx, mStyleContext);
       if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing || ts.mJustifying) {
@@ -3632,13 +3629,13 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
   else
   {//we need to see if any other selection available.
     SelectionDetails *details = nsnull;
-    nsCOMPtr<nsIPresShell> shell;
     nsCOMPtr<nsIFrameSelection> frameSelection;
 
-    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && shell){
+    nsIPresShell *shell = aPresContext->GetPresShell();
+    if (shell) {
       nsCOMPtr<nsISelectionController> selCon;
-      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+      nsresult rv = GetSelectionController(aPresContext,
+					   getter_AddRefs(selCon));
       if (NS_SUCCEEDED(rv) && selCon)
       {
         frameSelection = do_QueryInterface(selCon); //this MAY implement
@@ -4383,10 +4380,7 @@ nsTextFrame::CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRIn
   if (aStartIndex < (mContentOffset + mContentLength))
   {
   //get the presshell
-    nsCOMPtr<nsIPresShell> shell;
-    rv = aContext->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv))
-      return rv;
+    nsIPresShell *shell = aContext->GetPresShell();
     if (!shell) 
       return NS_ERROR_FAILURE;
 

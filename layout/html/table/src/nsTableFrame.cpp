@@ -382,18 +382,6 @@ nsTableFrame::PageBreakAfter(nsIFrame& aSourceFrame,
   return PR_FALSE;
 }
 
-nsIPresShell*
-nsTableFrame::GetPresShellNoAddref(nsIPresContext* aPresContext)
-{
-  nsIPresShell* tempShell;
-  nsIPresShell* presShell;
-  aPresContext->GetShell(&tempShell);
-  presShell = tempShell;
-  NS_RELEASE(tempShell); // presShell is needed because this sets tempShell to nsnull
-
-  return presShell;
-}
-
 // XXX this needs to be cleaned up so that the frame constructor breaks out col group
 // frames into a separate child list.
 NS_IMETHODIMP
@@ -490,7 +478,7 @@ void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext,
 
         // XXX This could probably be optimized with some effort
         SetNeedStrategyInit(PR_TRUE);
-        AppendDirtyReflowCommand(GetPresShellNoAddref(aPresContext), this);
+        AppendDirtyReflowCommand(aPresContext->PresShell(), this);
       }
     }
   }
@@ -837,9 +825,8 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsIPresContext&     aPresContext,
                                                             mStyleContext);
   // Create a col group frame
   nsIFrame* newFrame;
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext.GetShell(getter_AddRefs(presShell));
-  nsresult result = NS_NewTableColGroupFrame(presShell, &newFrame);
+  nsresult result = NS_NewTableColGroupFrame(aPresContext.PresShell(),
+                                             &newFrame);
   if (NS_SUCCEEDED(result) && newFrame) {
     ((nsTableColGroupFrame *)newFrame)->SetColType(aColGroupType);
     newFrame->Init(&aPresContext, colGroupContent, this, colGroupStyle, nsnull);
@@ -953,9 +940,7 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
 
     // create the new col frame
     nsIFrame* colFrame;
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext.GetShell(getter_AddRefs(presShell));
-    NS_NewTableColFrame(presShell, &colFrame);
+    NS_NewTableColFrame(aPresContext.PresShell(), &colFrame);
     ((nsTableColFrame *) colFrame)->SetColType(aColType);
     colFrame->Init(&aPresContext, iContent, &aColGroupFrame,
                    styleContext, nsnull);
@@ -2636,7 +2621,7 @@ nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
 
     // XXX This could probably be optimized with much effort
     SetNeedStrategyInit(PR_TRUE);
-    AppendDirtyReflowCommand(GetPresShellNoAddref(aPresContext), this);
+    AppendDirtyReflowCommand(aPresContext->PresShell(), this);
   } else {
     nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(aOldFrame);
     if (rgFrame) {
@@ -2665,7 +2650,7 @@ nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
 
       // XXX This could probably be optimized with much effort
       SetNeedStrategyInit(PR_TRUE);
-      AppendDirtyReflowCommand(GetPresShellNoAddref(aPresContext), this);
+      AppendDirtyReflowCommand(aPresContext->PresShell(), this);
     } else {
       // Just remove the frame
       mFrames.DestroyFrame(aPresContext, aOldFrame);
@@ -3283,14 +3268,10 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
             // The child doesn't have a next-in-flow so create a continuing
             // frame. This hooks the child into the flow
             nsIFrame*     continuingFrame;
-            nsIPresShell* presShell;
-            nsIStyleSet*  styleSet;
   
-            aPresContext->GetShell(&presShell);
-            presShell->GetStyleSet(&styleSet);
-            NS_RELEASE(presShell);
-            styleSet->CreateContinuingFrame(aPresContext, kidFrame, this, &continuingFrame);
-            NS_RELEASE(styleSet);
+            aPresContext->PresShell()->GetStyleSet()->
+              CreateContinuingFrame(aPresContext, kidFrame, this,
+                                    &continuingFrame);
   
             // Add the continuing frame to the sibling list
             continuingFrame->SetNextSibling(kidFrame->GetNextSibling());
@@ -7340,8 +7321,7 @@ nsTableFrame::GetProperty(nsIPresContext*      aPresContext,
                           nsIAtom*             aPropertyName,
                           PRBool               aCreateIfNecessary)
 {
-  nsCOMPtr<nsIPresShell>     presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->GetPresShell();
 
   if (presShell) {
     nsCOMPtr<nsIFrameManager>  frameManager;

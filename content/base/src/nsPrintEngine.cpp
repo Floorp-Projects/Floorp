@@ -1244,9 +1244,7 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   // end observing the document BEFORE we do any new reflows
   if (cacheOldPres && !HasCachedPres()) {
     SetCacheOldPres(PR_TRUE);
-    nsCOMPtr<nsIPresShell> shell;
-    mPresContext->GetShell(getter_AddRefs(shell));
-    shell->EndObservingDocument();
+    mPresContext->PresShell()->EndObservingDocument();
   }
 
   if (aWebProgressListener != nsnull) {
@@ -4690,8 +4688,7 @@ static void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aInde
   if (!aPresContext || !out)
     return;
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
     nsIFrame* frame;
     shell->GetRootFrame(&frame);

@@ -132,8 +132,13 @@ public:
   /**
    * Get the PresentationShell that this context is bound to.
    */
-  NS_IMETHOD GetShell(nsIPresShell** aResult) = 0;
-  nsIPresShell* GetPresShell() { return mShell; }
+  nsIPresShell* PresShell() const
+  {
+    NS_ASSERTION(mShell, "Null pres shell");
+    return mShell;
+  }
+
+  nsIPresShell* GetPresShell() const { return mShell; }
 
   nsIDocument* GetDocument() { return GetPresShell()->GetDocument(); } 
   nsIViewManager* GetViewManager() { return GetPresShell()->GetViewManager(); } 

@@ -477,10 +477,8 @@ nsTreeBodyFrame::CalcMaxRowWidth(nsBoxLayoutState& aState)
   nsTreeColumn* col;
   EnsureColumns();
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
   nsCOMPtr<nsIRenderingContext> rc;
-  presShell->CreateRenderingContext(this, getter_AddRefs(rc));
+  mPresContext->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
 
   for (PRInt32 row = 0; row < mRowCount; ++row) {
     rowWidth = 0;
@@ -506,9 +504,7 @@ nsTreeBodyFrame::Destroy(nsIPresContext* aPresContext)
 {
   // Make sure we cancel any posted callbacks. 
   if (mReflowCallbackPosted) {
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    shell->CancelReflowCallback(this);
+    aPresContext->PresShell()->CancelReflowCallback(this);
     mReflowCallbackPosted = PR_FALSE;
   }
 
@@ -636,9 +632,7 @@ nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRec
 {
   if (aRect != mRect && !mReflowCallbackPosted) {
     mReflowCallbackPosted = PR_TRUE;
-    nsCOMPtr<nsIPresShell> shell;
-    mPresContext->GetShell(getter_AddRefs(shell));
-    shell->PostReflowCallback(this);
+    mPresContext->PresShell()->PostReflowCallback(this);
   }
 
   return nsLeafBoxFrame::SetBounds(aBoxLayoutState, aRect);
@@ -1008,10 +1002,8 @@ nsTreeBodyFrame::EnsureScrollbar()
     // Try to find it.
     nsCOMPtr<nsIContent> parContent;
     GetBaseElement(getter_AddRefs(parContent));
-    nsCOMPtr<nsIPresShell> shell;
-    mPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame* treeFrame;
-    shell->GetPrimaryFrameFor(parContent, &treeFrame);
+    mPresContext->PresShell()->GetPrimaryFrameFor(parContent, &treeFrame);
     if (treeFrame)
       mScrollbar = InitScrollbarFrame(mPresContext, treeFrame, this);
   }
@@ -1398,10 +1390,9 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, con
     
     textRect.height = height + bp.top + bp.bottom;
 
-    nsCOMPtr<nsIPresShell> shell;
-    mPresContext->GetShell(getter_AddRefs(shell));
     nsCOMPtr<nsIRenderingContext> rc;
-    shell->CreateRenderingContext(this, getter_AddRefs(rc));
+    mPresContext->PresShell()->CreateRenderingContext(this,
+                                                      getter_AddRefs(rc));
     rc->SetFont(fm);
     nscoord width;
     rc->GetWidth(cellText, width);
@@ -1623,10 +1614,8 @@ NS_IMETHODIMP
 nsTreeBodyFrame::IsCellCropped(PRInt32 aRow, const nsAString& aColID, PRBool *_retval)
 {  
   nscoord currentSize, desiredSize;
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
   nsCOMPtr<nsIRenderingContext> rc;
-  presShell->CreateRenderingContext(this, getter_AddRefs(rc));
+  mPresContext->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
 
   GetCellWidth(aRow, aColID, rc, desiredSize, currentSize);
   *_retval = desiredSize > currentSize;
@@ -3423,8 +3412,7 @@ nsTreeBodyFrame::EnsureColumns()
     if (!parent)
       return;
 
-    nsCOMPtr<nsIPresShell> shell; 
-    mPresContext->GetShell(getter_AddRefs(shell));
+    nsIPresShell *shell = mPresContext->PresShell();
 
     // Note: this is dependent on the anonymous content for select
     // defined in select.xml

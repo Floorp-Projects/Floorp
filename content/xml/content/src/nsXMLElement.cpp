@@ -446,10 +446,11 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           event.isAlt = keyEvent->isAlt;
           event.isMeta = keyEvent->isMeta;
 
-          nsCOMPtr<nsIPresShell> presShell;
-          aPresContext->GetShell(getter_AddRefs(presShell));
+          nsIPresShell *presShell = aPresContext->GetPresShell();
           if (presShell) {
             ret = presShell->HandleDOMEventWithTarget(this, &event, &status);
+            // presShell may no longer be alive, don't use it here
+            // unless you keep a reference.
           }
         }
       }

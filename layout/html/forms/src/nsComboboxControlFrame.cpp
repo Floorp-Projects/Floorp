@@ -544,8 +544,7 @@ void
 nsComboboxControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 {
   if (aPresContext) {
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = aPresContext->GetPresShell();
     if (presShell) {
       presShell->ScrollFrameIntoView(this,
                    NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
@@ -587,10 +586,9 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
   event.clickCount = 0;
   event.widget = nsnull;
 
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell) 
-    rv = shell->HandleDOMEventWithTarget(mContent, &event, &status);
+  nsIPresShell *shell = mPresContext->GetPresShell();
+  if (shell) 
+    shell->HandleDOMEventWithTarget(mContent, &event, &status);
 }
 
 // Show the dropdown list
@@ -624,9 +622,7 @@ nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
     mDroppedDown = PR_FALSE;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  presShell->FlushPendingNotifications(PR_FALSE);
+  aPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
 
   if (widget)
     widget->CaptureRollupEvents((nsIRollupListener *)this, mDroppedDown, aShowList);
@@ -696,14 +692,12 @@ nsComboboxControlFrame::SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nsco
 nsresult 
 nsComboboxControlFrame::GetPrimaryComboFrame(nsIPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame)
 {
-  nsresult rv = NS_OK;
    // Get the primary frame from the presentation shell.
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = aPresContext->GetShell(getter_AddRefs(presShell));
-  if (NS_SUCCEEDED(rv) && presShell) {
+  nsIPresShell *presShell = aPresContext->GetPresShell();
+  if (presShell) {
     presShell->GetPrimaryFrameFor(aContent, aFrame);
   }
-  return rv;
+  return NS_OK;
 }
 
 nsresult 
@@ -1841,13 +1835,9 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
       rv = ActuallyDisplayText(textToDisplay, PR_TRUE);
       //mTextFrame->AddStateBits(NS_FRAME_IS_DIRTY);
       mDisplayFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-      nsCOMPtr<nsIPresShell> shell;
-      rv = mPresContext->GetShell(getter_AddRefs(shell));
-      ReflowDirtyChild(shell, (nsIFrame*) mDisplayFrame);
+      ReflowDirtyChild(mPresContext->PresShell(), mDisplayFrame);
 
-//      nsCOMPtr<nsIPresShell> presShell;
-//      mPresContext->GetShell(getter_AddRefs(presShell));
-//      presShell->FlushPendingNotifications(PR_FALSE);
+//      mPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
     }
   }
   return rv;
@@ -2049,8 +2039,7 @@ nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->PresShell();
   nsresult rv = NS_NewBlockFrame(shell, (nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
   if (NS_FAILED(rv)) { return rv; }
   if (!mDisplayFrame) { return NS_ERROR_NULL_POINTER; }
@@ -2072,9 +2061,7 @@ nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDisplayContent));
   mTextFrame->Init(aPresContext, content, mDisplayFrame, textStyleContext, nsnull);
   mTextFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = aPresContext->GetShell(getter_AddRefs(presShell));
-  if (NS_FAILED(rv)) { return rv; }
+  nsIPresShell *presShell = aPresContext->GetPresShell();
   if (!presShell) { return NS_ERROR_NULL_POINTER; }
   nsCOMPtr<nsIFrameManager> frameManager;
   rv = presShell->GetFrameManager(getter_AddRefs(frameManager));
@@ -2180,8 +2167,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDisplayContent));
   if (aContent == content.get()) {
     // Get PresShell
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
+    nsIPresShell *shell = aPresContext->PresShell();
 
     // Start by by creating a containing frame
     nsresult rv = NS_NewBlockFrame(shell, (nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);

@@ -90,12 +90,11 @@ nsImageLoader::Load(nsIURI *aURI)
   if (!aURI)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-  if ((NS_FAILED(rv)) || (!shell)) return NS_ERROR_FAILURE;
+  nsIPresShell *shell = mPresContext->GetPresShell();
+  if (!shell) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocument> doc;
-  rv = shell->GetDocument(getter_AddRefs(doc));
+  nsresult rv = shell->GetDocument(getter_AddRefs(doc));
   if (NS_FAILED(rv)) return rv;
 
   // Get the document's loadgroup

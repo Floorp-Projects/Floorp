@@ -220,8 +220,7 @@ nsIFrameDebug::RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aI
   if((nsnull == aPresContext) || (nsnull == out))
     return;
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->GetPresShell();
   if (nsnull != shell) {
     nsIFrame* frame;
     shell->GetRootFrame(&frame);
@@ -612,8 +611,7 @@ nsFrame::ReplaceFrame(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsFrame::Destroy(nsIPresContext* aPresContext)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->GetPresShell();
 
   // Get the view pointer now before the frame properties disappear
   // when we call NotifyDestroyingFrame()
@@ -826,10 +824,7 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
   
   nsresult result; 
-  nsCOMPtr<nsIPresShell> shell;
-  result = aPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_FAILED(result))
-    return result;
+  nsIPresShell *shell = aPresContext->PresShell();
 
   PRInt16 displaySelection = nsISelectionDisplay::DISPLAY_ALL;
   if (!(aFlags & nsISelectionDisplay::DISPLAY_IMAGES))
@@ -975,24 +970,19 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   switch (aEvent->message)
   {
   case NS_MOUSE_MOVE:
     {
-      if (NS_SUCCEEDED(rv))
-        rv = HandleDrag(aPresContext, aEvent, aEventStatus);
+      HandleDrag(aPresContext, aEvent, aEventStatus);
     }break;
   case NS_MOUSE_LEFT_BUTTON_DOWN:
     {
-      if (NS_SUCCEEDED(rv))
-        HandlePress(aPresContext, aEvent, aEventStatus);
+      HandlePress(aPresContext, aEvent, aEventStatus);
     }break;
   case NS_MOUSE_LEFT_BUTTON_UP:
     {
-      if (NS_SUCCEEDED(rv))
-        HandleRelease(aPresContext, aEvent, aEventStatus);
+      HandleRelease(aPresContext, aEvent, aEventStatus);
     } break;
   default:
     break;
@@ -1216,15 +1206,13 @@ ContentContainsPoint(nsIPresContext *aPresContext,
                      nsPoint *aPoint,
                      nsIView *aRelativeView)
 {
-  nsCOMPtr<nsIPresShell> presShell;
+  nsIPresShell *presShell = aPresContext->GetPresShell();
 
-  nsresult rv = aPresContext->GetShell(getter_AddRefs(presShell));
-
-  if (NS_FAILED(rv) || !presShell) return PR_FALSE;
+  if (!presShell) return PR_FALSE;
 
   nsIFrame *frame = nsnull;
 
-  rv = presShell->GetPrimaryFrameFor(aContent, &frame);
+  nsresult rv = presShell->GetPrimaryFrameFor(aContent, &frame);
 
   if (NS_FAILED(rv) || !frame) return PR_FALSE;
 
@@ -1312,8 +1300,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
     return NS_OK;
 
   nsresult rv;
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->GetPresShell();
   if (!shell)
     return NS_ERROR_FAILURE;
 
@@ -1688,12 +1675,11 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                                 nsIPresContext* aPresContext,
                                 PRBool aJumpLines)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   nsCOMPtr<nsISelectionController> selcon;
-  if (NS_SUCCEEDED(rv))
-    rv = GetSelectionController(aPresContext, getter_AddRefs(selcon));
+  nsresult rv = GetSelectionController(aPresContext, getter_AddRefs(selcon));
   if (NS_FAILED(rv)) return rv;
+
+  nsIPresShell *shell = aPresContext->GetPresShell();
   if (!shell || !selcon)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -1759,7 +1745,7 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   nsCOMPtr<nsIFrameSelection> frameselection = do_QueryInterface(selcon); //this MAY implement
   if (!frameselection)
   {
-    rv = aPresContext->GetPresShell()->GetFrameSelection(getter_AddRefs(frameselection));
+    rv = aPresContext->PresShell()->GetFrameSelection(getter_AddRefs(frameselection));
     if (NS_FAILED(rv) || !frameselection)
       return NS_OK;   // return NS_OK; we don't care if this fails
   }
@@ -1778,19 +1764,13 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
     return NS_OK;
   }
-  nsresult result;
-
-  nsCOMPtr<nsIPresShell> presShell;
-
-  result = aPresContext->GetShell(getter_AddRefs(presShell));
-
-  if (NS_FAILED(result))
-    return result;
+  nsIPresShell *presShell = aPresContext->PresShell();
 
   nsCOMPtr<nsIFrameSelection> frameselection;
   nsCOMPtr<nsISelectionController> selCon;
   
-  result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+  nsresult result = GetSelectionController(aPresContext,
+                                           getter_AddRefs(selCon));
   if (NS_SUCCEEDED(result) && selCon)
   {
     frameselection = do_QueryInterface(selCon); //this MAY implement
@@ -1845,14 +1825,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
   if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF)
     return NS_OK;
 
-  nsresult result;
-
-  nsCOMPtr<nsIPresShell> presShell;
-
-  result = aPresContext->GetShell(getter_AddRefs(presShell));
-
-  if (NS_FAILED(result))
-    return result;
+  nsIPresShell *presShell = aPresContext->GetPresShell();
 
   if (!presShell)
     return NS_ERROR_FAILURE;
@@ -1860,7 +1833,8 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
   nsCOMPtr<nsIFrameSelection> frameselection;
   nsCOMPtr<nsISelectionController> selCon;
   
-  result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+  nsresult result = GetSelectionController(aPresContext,
+                                           getter_AddRefs(selCon));
     
   if (NS_SUCCEEDED(result) && selCon)
     frameselection = do_QueryInterface(selCon); //this MAY implement
@@ -2262,12 +2236,12 @@ nsFrame::ContentChanged(nsIPresContext* aPresContext,
                         nsIContent*     aChild,
                         nsISupports*    aSubContent)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell) {
+  nsresult rv = NS_OK;
+  nsIPresShell *shell = aPresContext->GetPresShell();
+
+  if (shell) {
     nsHTMLReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                 eReflowType_ContentChanged);
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ContentChanged);
     if (NS_SUCCEEDED(rv))
       shell->AppendReflowCommand(reflowCmd);
   }
@@ -2546,8 +2520,7 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
   if (aPresContext) {
     // Don't allow invalidates to do anything when
     // painting is suppressed.
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
+    nsIPresShell *shell = aPresContext->GetPresShell();
     if (shell) {
       PRBool suppressed = PR_FALSE;
       shell->IsPaintingSuppressed(&suppressed);
@@ -2802,9 +2775,8 @@ nsFrame::GetSelectionForVisCheck(nsIPresContext * aPresContext, nsISelection** a
       // we could be a container so check to see if we are in the selection range
       // this is a expensive
       if (!isSelected) {
-        nsCOMPtr<nsIPresShell> shell;
-        rv = aPresContext->GetShell(getter_AddRefs(shell));
-        if (NS_SUCCEEDED(rv) && shell) {
+        nsIPresShell *shell = aPresContext->GetPresShell();
+        if (shell) {
           nsCOMPtr<nsISelectionController> selcon(do_QueryInterface(shell));
           if (selcon) {
             rv = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);
@@ -2872,8 +2844,8 @@ nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionContro
       tmp = tmp->GetParent();
     }
   }
-  nsCOMPtr<nsIPresShell> shell;
-  if (NS_SUCCEEDED(aPresContext->GetShell(getter_AddRefs(shell))) && shell)
+  nsIPresShell *shell = aPresContext->GetPresShell();
+  if (shell)
   {
     nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(shell);
     NS_IF_ADDREF(*aSelCon = selCon);
@@ -3257,8 +3229,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
         //special check. if we allow non-text selection then we can allow a hit location to fall before a table. 
         //otherwise there is no way to get and click signal to fall before a table (it being a line iterator itself)
         PRInt16 isEditor = 0;
-        nsCOMPtr<nsIPresShell> shell;
-        aPresContext->GetShell(getter_AddRefs(shell));
+        nsIPresShell *shell = aPresContext->GetPresShell();
         if (!shell)
           return NS_ERROR_FAILURE;
         shell->GetSelectionFlags ( &isEditor );
@@ -3709,8 +3680,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         {
           //if we are searching for a frame that is not in flow we will not find it. 
           //we must instead look for its placeholder
-          nsCOMPtr<nsIPresShell>     presShell;
-          aPresContext->GetShell(getter_AddRefs(presShell));
+          nsIPresShell *presShell = aPresContext->GetPresShell();
   
           if (presShell) 
           {
@@ -4265,8 +4235,7 @@ nsFrame::GetOverflowAreaProperty(nsIPresContext* aPresContext,
   if (!((GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) || aCreateIfNecessary)) {
     return nsnull;
   }
-  nsCOMPtr<nsIPresShell>     presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->GetPresShell();
 
   if (presShell) {
     nsCOMPtr<nsIFrameManager>  frameManager;
@@ -4313,8 +4282,7 @@ nsFrame::StoreOverflow(nsIPresContext*      aPresContext,
   else {
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
       // remove the previously stored overflow area 
-      nsCOMPtr<nsIPresShell>     presShell;
-      aPresContext->GetShell(getter_AddRefs(presShell));
+      nsIPresShell *presShell = aPresContext->GetPresShell();
       if (presShell) {
         nsCOMPtr<nsIFrameManager>  frameManager;
         presShell->GetFrameManager(getter_AddRefs(frameManager));
@@ -4381,10 +4349,8 @@ GetIBSpecialSibling(nsIPresContext* aPresContext,
    * property, which is only set on the anonymous block frames we're
    * interested in.
    */
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
   nsCOMPtr<nsIFrameManager> frameManager;
-  presShell->GetFrameManager(getter_AddRefs(frameManager));
+  aPresContext->PresShell()->GetFrameManager(getter_AddRefs(frameManager));
   nsIFrame *specialSibling;
   nsresult rv =
     frameManager->GetFrameProperty(aFrame,
@@ -4509,10 +4475,8 @@ nsFrame::DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
 
   // For out-of-flow frames, we must resolve underneath the
   // placeholder's parent.
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
   nsCOMPtr<nsIFrameManager> frameManager;
-  presShell->GetFrameManager(getter_AddRefs(frameManager));
+  aPresContext->PresShell()->GetFrameManager(getter_AddRefs(frameManager));
   nsIFrame *placeholder;
   frameManager->GetPlaceholderFrameFor(this, &placeholder);
   if (!placeholder) {
@@ -4640,10 +4604,9 @@ nsFrame::SetProperty(nsIPresContext*         aPresContext,
                      void*                   aPropValue,
                      NSFramePropertyDtorFunc aPropDtorFunc)
 {
-  nsCOMPtr<nsIPresShell> presShell;
   nsresult               rv = NS_ERROR_FAILURE;
 
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->GetPresShell();
   if (presShell) {
     nsCOMPtr<nsIFrameManager>  frameManager;
     presShell->GetFrameManager(getter_AddRefs(frameManager));
@@ -4662,8 +4625,7 @@ nsFrame::GetProperty(nsIPresContext* aPresContext,
 {
   void* value = nsnull;
 
-  nsCOMPtr<nsIPresShell>     presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->GetPresShell();
 
   if (presShell) {
     nsCOMPtr<nsIFrameManager> frameManager;
@@ -4710,8 +4672,7 @@ NS_IMETHODIMP nsFrame::GetBidiProperty(nsIPresContext* aPresContext,
   memset(aPropertyValue, 0, aSize);
   void* val = nsnull;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell) );
+  nsIPresShell *presShell = aPresContext->GetPresShell();
 
   if (presShell) {
     nsCOMPtr<nsIFrameManager> frameManager;
@@ -4738,8 +4699,7 @@ NS_IMETHODIMP nsFrame::SetBidiProperty(nsIPresContext* aPresContext,
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell) );
+  nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
     nsCOMPtr<nsIFrameManager> frameManager;
     shell->GetFrameManager(getter_AddRefs(frameManager) );

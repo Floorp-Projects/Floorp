@@ -1590,8 +1590,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                   nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
 
                   if (form) {
-                    nsCOMPtr<nsIPresShell> shell;
-                    aPresContext->GetShell(getter_AddRefs(shell));
+                    nsIPresShell *shell = aPresContext->GetPresShell();
                     if (shell) {
                       nsCOMPtr<nsIContent> formControl = this; // kungFuDeathGrip
 
@@ -1699,8 +1698,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
               }
               NS_ENSURE_SUCCESS(rv, rv);
             
-              nsCOMPtr<nsIPresShell> shell;
-              aPresContext->GetShell(getter_AddRefs(shell));
+              nsIPresShell *shell = aPresContext->GetPresShell();
               if (shell) {
                 if (submitControl) {
                  // Fire the button's onclick handler and let the button handle
@@ -1776,8 +1774,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                   event.originator      = this;
                   nsEventStatus status  = nsEventStatus_eIgnore;
 
-                  nsCOMPtr<nsIPresShell> presShell;
-                  aPresContext->GetShell(getter_AddRefs(presShell));
+                  nsIPresShell *presShell = aPresContext->GetPresShell();
+
                   // If |nsIPresShell::Destroy| has been called due to
                   // handling the event (base class HandleDOMEvent, above),
                   // the pres context will return a null pres shell.  See

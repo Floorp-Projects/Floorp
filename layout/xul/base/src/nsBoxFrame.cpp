@@ -217,13 +217,10 @@ nsBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
 {
   SanityCheck(mFrames);
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-
   nsresult r = nsContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   if (r == NS_OK) {
     // initialize our list of infos.
-    nsBoxLayoutState state(shell);
+    nsBoxLayoutState state(aPresContext->PresShell());
     InitChildren(state, aChildList);
     CheckFrameOrder();
   } else {
@@ -751,9 +748,8 @@ nsBoxFrame::IsInitialReflowForPrintPreview(nsBoxLayoutState& aState,
     // See if we are doing Print Preview
     nsCOMPtr<nsIPrintPreviewContext> ppContent(do_QueryInterface(aState.GetPresContext()));
     if (ppContent) {
-      // Now, get the current URI to see of we doing chrome
-      nsCOMPtr<nsIPresShell> presShell;
-      aState.GetPresContext()->GetShell(getter_AddRefs(presShell));
+      // Now, get the current URI to see if we doing chrome
+      nsIPresShell *presShell = aState.GetPresContext()->GetPresShell();
       if (!presShell) return PR_FALSE;
       nsCOMPtr<nsIDocument> doc;
       presShell->GetDocument(getter_AddRefs(doc));
@@ -1296,9 +1292,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
     }
   }
   else if (aAttribute == nsXULAtoms::ordinal) {
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    nsBoxLayoutState state(shell);
+    nsBoxLayoutState state(aPresContext->PresShell());
     
     nsIBox* parent;
     GetParentBox(&parent);
@@ -1316,8 +1310,6 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
     RegUnregAccessKey(aPresContext, PR_TRUE);
   }
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
   nsBoxLayoutState state(aPresContext);
   // XXX This causes us to reflow for any attribute change (e.g.,
   // flipping through menus).
@@ -1442,9 +1434,7 @@ nsBoxFrame::Paint(nsIPresContext*      aPresContext,
     // and frame construction.  If painting is locked down, then we
     // do not paint our children.  
     PRBool paintingSuppressed = PR_FALSE;
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    shell->IsPaintingSuppressed(&paintingSuppressed);
+    aPresContext->PresShell()->IsPaintingSuppressed(&paintingSuppressed);
     if (paintingSuppressed)
       return NS_OK;
   }

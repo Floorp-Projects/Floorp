@@ -1547,8 +1547,7 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
   NS_ASSERTION(aPresContext, "null params not allowed");
   PRBool result = PR_FALSE; // assume we did not find the HTML element
 
-  nsIPresShell* shell = nsnull;
-  aPresContext->GetShell(&shell);
+  nsIPresShell* shell = aPresContext->GetPresShell();
   if (shell) {
     nsIDocument *doc = nsnull;
     if (NS_SUCCEEDED(shell->GetDocument(&doc)) && doc) {
@@ -1582,7 +1581,6 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
       }// if content
       NS_RELEASE(doc);
     }// if doc
-    NS_RELEASE(shell);
   } // if shell
 
   return result;
@@ -2688,10 +2686,9 @@ FindCanvasBackground(nsIPresContext* aPresContext,
             // and thus |InitialReflow| on the pres shell.  See bug 119351
             // for the ugly details.
             if (bodyContent) {
-              nsCOMPtr<nsIPresShell> shell;
-              aPresContext->GetShell(getter_AddRefs(shell));
               nsIFrame *bodyFrame;
-              nsresult rv = shell->GetPrimaryFrameFor(bodyContent, &bodyFrame);
+              nsresult rv = aPresContext->PresShell()->
+                GetPrimaryFrameFor(bodyContent, &bodyFrame);
               if (NS_SUCCEEDED(rv) && bodyFrame)
                 result = bodyFrame->GetStyleBackground();
             }
@@ -3080,12 +3077,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     }
     else {
       // The viewport isn't scrollable, so use the root frame's view
-      nsCOMPtr<nsIPresShell> presShell;
-      aPresContext->GetShell(getter_AddRefs(presShell));
-      NS_ASSERTION(presShell, "no pres shell");
-
       nsIFrame* rootFrame;
-      presShell->GetRootFrame(&rootFrame);
+      aPresContext->PresShell()->GetRootFrame(&rootFrame);
       NS_ASSERTION(rootFrame, "no root frame");
 
       PRBool isPaginated = PR_FALSE;

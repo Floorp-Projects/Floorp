@@ -303,8 +303,7 @@ nsLineBox::DeleteLineList(nsIPresContext* aPresContext, nsLineList& aLines)
       child = nextChild;
     }
 
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
+    nsIPresShell *shell = aPresContext->PresShell();
 
     do {
       nsLineBox* line = aLines.front();

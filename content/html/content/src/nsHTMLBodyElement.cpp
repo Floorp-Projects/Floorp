@@ -439,12 +439,8 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
     GetPresContext(this, getter_AddRefs(context));
 
     if (context) {
-      nsCOMPtr<nsIPresShell> shell;
-      rv = context->GetShell(getter_AddRefs(shell));
-      NS_ENSURE_SUCCESS(rv, rv);
-    
       nsIFrame* frame;
-      rv = shell->GetPrimaryFrameFor(this, &frame);
+      rv = context->PresShell()->GetPrimaryFrameFor(this, &frame);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (frame) {
@@ -523,8 +519,7 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleDat
     // When display if first asked for, go ahead and get our colors set up.
     nsHTMLValue value;
     
-    nsCOMPtr<nsIPresShell> presShell;
-    aData->mPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = aData->mPresContext->GetPresShell();
     if (presShell) {
       nsCOMPtr<nsIDocument> doc;
       presShell->GetDocument(getter_AddRefs(doc));

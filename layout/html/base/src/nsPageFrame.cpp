@@ -163,12 +163,10 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       nsIFrame*           prevLastChild   = prevContentPage->mFrames.LastChild();
 
       // Create a continuing child of the previous page's last child
-      nsCOMPtr<nsIPresShell> presShell;
       nsCOMPtr<nsIStyleSet>  styleSet;
       nsIFrame*     newFrame;
 
-      aPresContext->GetShell(getter_AddRefs(presShell));
-      presShell->GetStyleSet(getter_AddRefs(styleSet));
+      aPresContext->PresShell()->GetStyleSet(getter_AddRefs(styleSet));
       styleSet->CreateContinuingFrame(aPresContext, prevLastChild, contentPage, &newFrame);
       // Make the new area frame the 1st child of the page content frame. There may already be
       // children placeholders which don't get reflowed but must not be destroyed until the 

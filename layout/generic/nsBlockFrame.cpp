@@ -921,8 +921,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   if (VERIFY_REFLOW_INCLUDE_SPACE_MANAGER & verifyReflowFlags)
   {
     // this is a leak of the space manager, but it's only in debug if verify reflow is enabled, so not a big deal
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
+    nsIPresShell *shell = aPresContext->GetPresShell();
     if (shell) {
       nsCOMPtr<nsIFrameManager>  frameManager;
       shell->GetFrameManager(getter_AddRefs(frameManager));  
@@ -2716,16 +2715,13 @@ nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
     // XXX Not sure if this is necessary anymore
     RenumberLists(aPresContext);
 
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    
     nsHTMLReflowCommand* reflowCmd;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
                                  eReflowType_ContentChanged,
                                  nsnull,
                                  aAttribute);
     if (NS_SUCCEEDED(rv))
-      shell->AppendReflowCommand(reflowCmd);
+      aPresContext->PresShell()->AppendReflowCommand(reflowCmd);
   }
   else if (nsHTMLAtoms::value == aAttribute) {
     const nsStyleDisplay* styleDisplay = GetStyleDisplay();
@@ -2751,16 +2747,13 @@ nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
         // XXX Not sure if this is necessary anymore
         blockParent->RenumberLists(aPresContext);
 
-        nsCOMPtr<nsIPresShell> shell;
-        aPresContext->GetShell(getter_AddRefs(shell));
-        
         nsHTMLReflowCommand* reflowCmd;
         rv = NS_NewHTMLReflowCommand(&reflowCmd, blockParent,
                                      eReflowType_ContentChanged,
                                      nsnull,
                                      aAttribute);
         if (NS_SUCCEEDED(rv))
-          shell->AppendReflowCommand(reflowCmd);
+          aPresContext->PresShell()->AppendReflowCommand(reflowCmd);
       }
     }
   }
@@ -4559,8 +4552,7 @@ nsBlockFrame::AddFrames(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->PresShell();
 
   // Attempt to find the line that contains the previous sibling
   nsLineList::iterator prevSibLine = end_lines();
@@ -4735,9 +4727,8 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIPresContext* aPresContext,
   nsBlockFrame* block = (nsBlockFrame*)parent;
   // Remove aFrame from the appropriate list. 
   if (display->IsAbsolutelyPositioned()) {
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
-    block->mAbsoluteContainer.RemoveFrame(block, aPresContext, *presShell,
+    block->mAbsoluteContainer.RemoveFrame(block, aPresContext,
+                                          *(aPresContext->PresShell()),
                                           block->mAbsoluteContainer.GetChildListName(), aFrame);
   }
   else {
@@ -4756,8 +4747,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->PresShell();
   
   // Find the line and the previous sibling that contains
   // deletedFrame; we also find the pointer to the line.
@@ -5285,9 +5275,7 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   PRBool paintingSuppressed = PR_FALSE;  
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  shell->IsPaintingSuppressed(&paintingSuppressed);
+  aPresContext->PresShell()->IsPaintingSuppressed(&paintingSuppressed);
   if (paintingSuppressed)
     return NS_OK;
 
@@ -5575,9 +5563,9 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
 {
 
   nsresult result;
-  nsCOMPtr<nsIPresShell> shell;
+  nsIPresShell *shell = nsnull;
   if (aEvent->message == NS_MOUSE_MOVE) {
-    aPresContext->GetShell(getter_AddRefs(shell));
+    shell = aPresContext->GetPresShell();
     if (!shell)
       return NS_OK;
     nsCOMPtr<nsIFrameSelection> frameSelection;
@@ -5605,7 +5593,7 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
     nsIFrame *resultFrame = nsnull;//this will be passed the handle event when we 
                                    //can tell who to pass it to
     nsIFrame *mainframe = this;
-    aPresContext->GetShell(getter_AddRefs(shell));
+    shell = aPresContext->GetPresShell();
     if (!shell)
       return NS_OK;
     nsCOMPtr<nsIFocusTracker> tracker( do_QueryInterface(shell, &result) );
@@ -5998,9 +5986,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
       nsRefPtr<nsStyleContext> kidSC = aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoElement, mStyleContext);
 
       // Create bullet frame
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
-      mBullet = new (shell.get()) nsBulletFrame;
+      mBullet = new (aPresContext->PresShell()) nsBulletFrame;
 
       if (nsnull == mBullet) {
         return NS_ERROR_OUT_OF_MEMORY;

@@ -576,8 +576,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     {
       // Hide the caret used in "browse with caret mode" 
       if (mBrowseWithCaret && mPresContext) {
-        nsCOMPtr<nsIPresShell> presShell;
-        mPresContext->GetShell(getter_AddRefs(presShell));
+        nsIPresShell *presShell = mPresContext->GetPresShell();
         if (presShell)
            SetContentCaretVisible(presShell, mCurrentFocus, PR_FALSE);
       }
@@ -902,11 +901,8 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
         if (!content)
           return;
 
-        nsCOMPtr<nsIPresShell> presShell;
-        aPresContext->GetShell(getter_AddRefs(presShell));
-
         nsIFrame* frame = nsnull;
-        presShell->GetPrimaryFrameFor(content, &frame);
+        aPresContext->PresShell()->GetPrimaryFrameFor(content, &frame);
 
         if (frame) {
           const nsStyleVisibility* vis = frame->GetStyleVisibility();
@@ -1343,11 +1339,9 @@ nsEventStateManager::GetSelection(nsIFrame* inFrame,
       frameSel = do_QueryInterface(selCon);
 
       if (! frameSel) {
-        nsCOMPtr<nsIPresShell> shell;
-        rv = inPresContext->GetShell(getter_AddRefs(shell));
-
-        if (NS_SUCCEEDED(rv) && shell)
-          rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
+        nsIPresShell *shell = inPresContext->GetPresShell();
+        if (shell)
+          shell->GetFrameSelection(getter_AddRefs(frameSel));
       }
       
       *outSelection = frameSel.get();
@@ -1607,8 +1601,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   // initialize nativeMsg field otherwise plugin code will crash when trying to access it
   mouseOutEvent.nativeMsg = nsnull;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->PresShell();
 
   // Otherwise, check for a focused content element
   nsCOMPtr<nsIContent> focusContent;
@@ -1734,14 +1727,7 @@ nsEventStateManager::GetParentScrollingView(nsMouseScrollEvent *aEvent,
   if (!aPresContext) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocument> doc;
-
-  {
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
-    NS_ASSERTION(presShell, "No presshell in prescontext!");
-
-    presShell->GetDocument(getter_AddRefs(doc));
-  }
+  aPresContext->PresShell()->GetDocument(getter_AddRefs(doc));
 
   NS_ASSERTION(doc, "No document in prescontext!");
 
@@ -1900,11 +1886,10 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         if (!targ) return NS_ERROR_FAILURE;
       }
       ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
-      nsCOMPtr<nsIPresShell> shell;
-      nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-      if (NS_SUCCEEDED(rv) && shell){
+      nsIPresShell *shell = aPresContext->GetPresShell();
+      if (shell) {
         nsCOMPtr<nsIFrameSelection> frameSel;
-        rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
+        nsresult rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
         if (NS_SUCCEEDED(rv) && frameSel){
             frameSel->SetMouseDownState(PR_FALSE);
         }
@@ -2491,8 +2476,7 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
                                    NS_EVENT_FLAG_INIT, &status); 
     // If frame refs were cleared, we need to re-resolve the frame
     if (mClearedFrameRefsDuringEvent) {
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
+      nsIPresShell *shell = aPresContext->GetPresShell();
       if (shell) {
         shell->GetPrimaryFrameFor(aTargetContent, &aTargetFrame);
       } else {
@@ -2907,8 +2891,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
     event.isAlt = aEvent->isAlt;
     event.isMeta = aEvent->isMeta;
 
-    nsCOMPtr<nsIPresShell> presShell;
-    mPresContext->GetShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
     if (presShell) {
       nsCOMPtr<nsIContent> mouseContent;
       GetEventTargetContent(aEvent, getter_AddRefs(mouseContent));
@@ -3079,8 +3062,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 
   // If in content, navigate from last cursor position rather than last focus
   // If we're in UI, selection location will return null
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = mPresContext->PresShell();
 
   // We might use the selection position, rather than mCurrentFocus, as our position to shift focus from
   PRInt32 itemType;
@@ -3358,10 +3340,10 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
 
   if (!aFrame) {
     //No frame means we need to start with the root content again.
-    nsCOMPtr<nsIPresShell> presShell;
     if (mPresContext) {
       nsIFrame* result = nsnull;
-      if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
+      nsIPresShell *presShell = mPresContext->GetPresShell();
+      if (presShell) {
         presShell->GetPrimaryFrameFor(aRootContent, &result);
       }
 
@@ -3720,8 +3702,8 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
   if (!mCurrentTarget && mCurrentTargetContent) {
     nsCOMPtr<nsIPresShell> shell;
     if (mPresContext) {
-      nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-      if (NS_SUCCEEDED(rv) && shell){
+      nsIPresShell *shell = mPresContext->GetPresShell();
+      if (shell) {
         shell->GetPrimaryFrameFor(mCurrentTargetContent, &mCurrentTarget);
 
         //This may be new frame that hasn't been through the ESM so we
@@ -3733,8 +3715,7 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
   }
 
   if (!mCurrentTarget) {
-    nsCOMPtr<nsIPresShell> presShell;
-    mPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = mPresContext->GetPresShell();
     if (presShell) {
       presShell->GetEventTargetFrame(&mCurrentTarget);
 
@@ -3769,8 +3750,7 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent,
 
   *aContent = nsnull;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = mPresContext->GetPresShell();
   if (presShell) {
     presShell->GetEventTargetContent(aEvent, aContent);
   }
@@ -4085,8 +4065,9 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
                                    nsIContent *aContent,
                                    PRBool aEnsureWindowHasFocus)
 {
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  // Keep a ref to presShell since dispatching the DOM event may cause
+  // the document to be destroyed.
+  nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
 
   nsCOMPtr<nsIContent> previousFocus = mCurrentFocus;
 
@@ -4521,11 +4502,8 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
 void
 nsEventStateManager::EnsureDocument(nsIPresContext* aPresContext)
 {
-  if (!mDocument) {
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
-    EnsureDocument(presShell);
-  }
+  if (!mDocument)
+    EnsureDocument(aPresContext->PresShell());
 }
 
 void
@@ -4539,9 +4517,8 @@ void
 nsEventStateManager::FlushPendingEvents(nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull != aPresContext, "nsnull ptr");
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  if (nsnull != shell) {
+  nsIPresShell *shell = aPresContext->GetPresShell();
+  if (shell) {
     shell->FlushPendingNotifications(PR_FALSE);
     nsIViewManager* viewManager = shell->GetViewManager();
     if (viewManager) {
@@ -4585,9 +4562,9 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
   
   if (!mDocument)
     return rv;
-  nsCOMPtr<nsIPresShell> shell;
+  nsIPresShell *shell = nsnull;
   if (mPresContext)
-    rv = mPresContext->GetShell(getter_AddRefs(shell));
+    shell = mPresContext->GetPresShell();
 
   nsCOMPtr<nsIFrameSelection> frameSelection;
   if (shell) 
@@ -4916,8 +4893,7 @@ nsEventStateManager::MoveCaretToFocus()
       selectionContent = parentContent; // Keep checking up chain of parents, focus may be in a link above us
     }
 
-    nsCOMPtr<nsIPresShell> shell;
-    mPresContext->GetShell(getter_AddRefs(shell));
+    nsIPresShell *shell = mPresContext->GetPresShell();
     if (shell) {
       // rangeDoc is a document interface we can create a range with
       nsCOMPtr<nsIDOMDocumentRange> rangeDoc(do_QueryInterface(mDocument));
@@ -5058,8 +5034,7 @@ nsEventStateManager::ResetBrowseWithCaret(PRBool *aBrowseWithCaret)
 
   mBrowseWithCaret = *aBrowseWithCaret;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = mPresContext->GetPresShell();
 
   // Make caret visible or not, depending on what's appropriate
   if (presShell) {

@@ -707,15 +707,6 @@ nsPresContext::SetShell(nsIPresShell* aShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPresContext::GetShell(nsIPresShell** aResult)
-{
-  NS_PRECONDITION(aResult, "null out param");
-  *aResult = mShell;
-  NS_IF_ADDREF(mShell);
-  return NS_OK;
-}
-
 void
 nsPresContext::UpdateCharSet(const char* aCharSet)
 {

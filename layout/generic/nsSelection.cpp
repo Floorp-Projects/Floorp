@@ -1043,10 +1043,7 @@ nsSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested by the
   if (!context)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIPresShell> shell;
-  result = context->GetShell(getter_AddRefs(shell));
-  if (NS_FAILED(result))
-    return result;
+  nsIPresShell *shell = context->GetPresShell();
   if (!shell)
     return NS_ERROR_NULL_POINTER;
 
@@ -1497,9 +1494,8 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   }
 
   nsCOMPtr<nsICaret> caret;
-  nsCOMPtr<nsIPresShell> shell;
-  result = context->GetShell(getter_AddRefs(shell));
-  if (NS_FAILED(result) || !shell)
+  nsIPresShell *shell = context->GetPresShell();
+  if (!shell)
     return 0;
   result = shell->GetCaret(getter_AddRefs(caret));
   if (NS_FAILED(result) || !caret)
@@ -2501,9 +2497,8 @@ void nsSelection::BidiLevelFromClick(nsIContent *aNode, PRUint32 aContentOffset)
   if (NS_FAILED(result) || !context)
     return;
 
-  nsCOMPtr<nsIPresShell> shell;
-  result = context->GetShell(getter_AddRefs(shell));
-  if (NS_FAILED(result) || !shell)
+  nsIPresShell *shell = context->GetPresShell();
+  if (!shell)
     return;
 
   nsIFrame* clickInFrame=nsnull;
@@ -2764,8 +2759,7 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
     if (NS_FAILED(result) || !presContext)
       return result?result:NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIPresShell> presShell;
-    presContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = presContext->GetPresShell();
     if (!presShell)
       return NS_ERROR_FAILURE;
 
@@ -3082,11 +3076,7 @@ nsSelection::CommonPageMove(PRBool aForward,
   if (!context)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIPresShell> shell;
-  result = context->GetShell(getter_AddRefs(shell));
-  
-  if (NS_FAILED(result))
-    return result;
+  nsIPresShell *shell = context->GetPresShell();
   
   if (!shell)
     return NS_ERROR_NULL_POINTER;
@@ -5067,10 +5057,7 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange
 
   if ((NS_SUCCEEDED(result)) && iter && inneriter)
   {
-    nsCOMPtr<nsIPresShell> presShell;
-    result = aPresContext->GetShell(getter_AddRefs(presShell));
-    if (NS_FAILED(result) && presShell)
-      presShell = 0;
+    nsIPresShell *presShell = aPresContext->GetPresShell();
 #ifdef USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
     nsCOMPtr<nsIGeneratedContentIterator> genericiter = do_QueryInterface(iter);
     if (genericiter && presShell)
@@ -6881,8 +6868,7 @@ nsTypedSelection::GetPresShell(nsIPresShell **aPresShell)
   if (!presContext)
     return NS_ERROR_NULL_POINTER;
   
-  nsCOMPtr<nsIPresShell> shell;
-  rv = presContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = presContext->GetPresShell();
   mPresShellWeak = do_GetWeakReference(shell);    // the presshell owns us, so no addref
   if (mPresShellWeak)
     NS_ADDREF(*aPresShell = shell);
@@ -7719,10 +7705,9 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
     mFrameSelection->GetPrevNextBidiLevels(context, focusContent, focusOffset, &frameBefore, &frameAfter, &levelBefore, &levelAfter);
   }
 
-  nsCOMPtr<nsIPresShell> shell;
-  result = context->GetShell(getter_AddRefs(shell));
-  if (NS_FAILED(result) || !shell)
-    return result?result:NS_ERROR_FAILURE;
+  nsIPresShell* shell = context->GetPresShell();
+  if (!shell)
+    return NS_ERROR_FAILURE;
 
   if ((levelBefore & 1) == (levelAfter & 1)) {
     // if cursor is between two characters with the same orientation, changing the keyboard language

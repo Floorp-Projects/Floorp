@@ -326,10 +326,9 @@ nsPopupSetFrame::RepositionPopup(nsPopupFrameList* aEntry, nsBoxLayoutState& aSt
   // Sync up the view.
   if (aEntry && aEntry->mElementContent) {
     nsIFrame* frameToSyncTo = nsnull;
-    nsCOMPtr<nsIPresShell> presShell;
     nsIPresContext* presContext = aState.GetPresContext();
-    presContext->GetShell(getter_AddRefs(presShell));
-    presShell->GetPrimaryFrameFor(aEntry->mElementContent, &frameToSyncTo );
+    presContext->PresShell()->GetPrimaryFrameFor(aEntry->mElementContent,
+                                                 &frameToSyncTo );
     ((nsMenuPopupFrame*)(aEntry->mPopupFrame))->SyncViewWithFrame(presContext, 
           aEntry->mPopupAnchor, aEntry->mPopupAlign, frameToSyncTo, aEntry->mXPos, aEntry->mYPos);
   }
@@ -365,9 +364,8 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
   entry->mYPos = aYPos;
 
   // If a frame exists already, go ahead and use it.
-  nsCOMPtr<nsIPresShell> shell;
-  mPresContext->GetShell(getter_AddRefs(shell));
-  shell->GetPrimaryFrameFor(aPopupContent, &entry->mPopupFrame);
+  mPresContext->PresShell()->GetPrimaryFrameFor(aPopupContent,
+                                                &entry->mPopupFrame);
 
 #ifdef DEBUG_PINK
   printf("X Pos: %d\n", mXPos);
@@ -414,9 +412,8 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
     // popup.
     if (entry->mElementContent->Tag() == nsXULAtoms::menupopup) {
       nsIFrame* popupFrame = nsnull;
-      nsCOMPtr<nsIPresShell> presShell;
-      mPresContext->GetShell(getter_AddRefs(presShell));
-      presShell->GetPrimaryFrameFor(entry->mElementContent, &popupFrame);
+      mPresContext->PresShell()->GetPrimaryFrameFor(entry->mElementContent,
+                                                    &popupFrame);
       if (popupFrame) {
         nsCOMPtr<nsIMenuParent> menuParent(do_QueryInterface(popupFrame));
         if (menuParent)
@@ -446,9 +443,8 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain)
       // menu popup.
       if (entry->mElementContent->Tag() == nsXULAtoms::menupopup) {
         nsIFrame* popupFrame = nsnull;
-        nsCOMPtr<nsIPresShell> presShell;
-        mPresContext->GetShell(getter_AddRefs(presShell));
-        presShell->GetPrimaryFrameFor(entry->mElementContent, &popupFrame);
+        mPresContext->PresShell()->GetPrimaryFrameFor(entry->mElementContent,
+                                                      &popupFrame);
         if (popupFrame) {
           nsCOMPtr<nsIMenuParent> menuParent(do_QueryInterface(popupFrame));
           if (menuParent)
@@ -592,14 +588,14 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
   event.point.y = aY;
 
   if (aPopupContent) {
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && shell) {
-      rv = shell->HandleDOMEventWithTarget(aPopupContent, &event, &status);
+    nsIPresShell *shell = mPresContext->GetPresShell();
+    if (shell) {
+      nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
+                                                    &status);
+      // shell may no longer be alive, don't use it here unless you keep a ref
+      if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+        return PR_FALSE;
     }
-
-    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
-      return PR_FALSE;
 
     // The menu is going to show, and the create handler has executed.
     // We should now walk all of our menu item children, checking to see if any
@@ -677,14 +673,14 @@ nsPopupSetFrame::OnCreated(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
   event.point.y = aY;
 
   if (aPopupContent) {
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && shell) {
-      rv = shell->HandleDOMEventWithTarget(aPopupContent, &event, &status);
+    nsIPresShell *shell = mPresContext->GetPresShell();
+    if (shell) {
+      nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
+                                                    &status);
+      // shell may no longer be alive, don't use it here unless you keep a ref
+      if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+        return PR_FALSE;
     }
-
-    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
-      return PR_FALSE;
   }
 
   return PR_TRUE;
@@ -705,13 +701,14 @@ nsPopupSetFrame::OnDestroy(nsIContent* aPopupContent)
   event.widget = nsnull;
  
   if (aPopupContent) {
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && shell) {
-      rv = shell->HandleDOMEventWithTarget(aPopupContent, &event, &status);
+    nsIPresShell *shell = mPresContext->GetPresShell();
+    if (shell) {
+      nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
+                                                    &status);
+      // shell may no longer be alive, don't use it here unless you keep a ref
+      if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+        return PR_FALSE;
     }
-    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
-      return PR_FALSE;
   }
   return PR_TRUE;
 }
@@ -731,13 +728,14 @@ nsPopupSetFrame::OnDestroyed(nsIContent* aPopupContent)
   event.widget = nsnull;
 
   if (aPopupContent) {
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && shell) {
-      rv = shell->HandleDOMEventWithTarget(aPopupContent, &event, &status);
+    nsIPresShell *shell = mPresContext->GetPresShell();
+    if (shell) {
+      nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
+                                                    &status);
+      // shell may no longer be alive, don't use it here unless you keep a ref
+      if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+        return PR_FALSE;
     }
-    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
-      return PR_FALSE;
   }
   return PR_TRUE;
 }

@@ -349,8 +349,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
   SetView(view);
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->PresShell();
   
   nsFrameborder  frameborder = GetFrameBorder();
   PRInt32 borderWidth = GetBorderWidth(aPresContext, PR_FALSE);
@@ -444,7 +443,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   for (int blankX = mChildCount; blankX < numCells; blankX++) {
     // XXX the blank frame is using the content of its parent - at some point it 
     // should just have null content, if we support that
-    nsHTMLFramesetBlankFrame* blankFrame = new (shell.get()) nsHTMLFramesetBlankFrame;
+    nsHTMLFramesetBlankFrame* blankFrame = new (shell) nsHTMLFramesetBlankFrame;
     nsRefPtr<nsStyleContext> pseudoStyleContext;
     pseudoStyleContext = aPresContext->ResolvePseudoStyleContextFor(nsnull,
                                                                     nsCSSAnonBoxes::framesetBlank,
@@ -979,9 +978,8 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsHTMLFramesetFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-            
+  nsIPresShell *shell = aPresContext->PresShell();
+
   //printf("FramesetFrame2::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
   // Always get the size so that the caller knows how big we are
   GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
@@ -1071,7 +1069,9 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
       offset.x = 0;
       offset.y += lastSize.height;
       if (firstTime) { // create horizontal border
-        borderFrame = new (shell.get()) nsHTMLFramesetBorderFrame(borderWidth, PR_FALSE, PR_FALSE);
+        borderFrame = new (shell) nsHTMLFramesetBorderFrame(borderWidth,
+                                                            PR_FALSE,
+                                                            PR_FALSE);
         nsRefPtr<nsStyleContext> pseudoStyleContext;
         pseudoStyleContext = aPresContext->ResolvePseudoStyleContextFor(mContent,
                                                                         nsCSSPseudoElements::horizontalFramesetBorder,
@@ -1098,7 +1098,9 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
       if (cellIndex.x > 0) {  // moved to next col in same row
         if (0 == cellIndex.y) { // in 1st row
           if (firstTime) { // create vertical border
-            borderFrame = new (shell.get()) nsHTMLFramesetBorderFrame(borderWidth, PR_TRUE, PR_FALSE);
+            borderFrame = new (shell) nsHTMLFramesetBorderFrame(borderWidth,
+                                                                PR_TRUE,
+                                                                PR_FALSE);
             nsRefPtr<nsStyleContext> pseudoStyleContext;
             pseudoStyleContext = aPresContext->ResolvePseudoStyleContextFor(mContent,
                                                                             nsCSSPseudoElements::verticalFramesetBorder,

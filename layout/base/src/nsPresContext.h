@@ -71,7 +71,6 @@ public:
   // nsIPresContext methods
   NS_IMETHOD Init(nsIDeviceContext* aDeviceContext);
   NS_IMETHOD SetShell(nsIPresShell* aShell);
-  NS_IMETHOD GetShell(nsIPresShell** aResult);
   NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult);
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
   NS_IMETHOD GetImageAnimationMode(PRUint16* aModeResult);

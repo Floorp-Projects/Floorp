@@ -462,10 +462,8 @@ nsAccessibilityService::CreateHTMLComboboxAccessible(nsIDOMNode* aDOMNode, nsISu
   nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
   NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
 
-  nsCOMPtr<nsIPresShell> presShell;
-  presContext->GetShell(getter_AddRefs(presShell)); 
-
-  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(presShell);
+  nsCOMPtr<nsIWeakReference> weakShell =
+    do_GetWeakReference(presContext->PresShell());
 
   *_retval = new nsHTMLComboboxAccessible(aDOMNode, weakShell);
   if (! *_retval)
@@ -531,10 +529,8 @@ nsAccessibilityService::CreateHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsISup
   nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
   NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
 
-  nsCOMPtr<nsIPresShell> presShell;
-  presContext->GetShell(getter_AddRefs(presShell)); 
-
-  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(presShell);
+  nsCOMPtr<nsIWeakReference> weakShell =
+    do_GetWeakReference(presContext->PresShell());
 
   *_retval = new nsHTMLSelectListAccessible(aDOMNode, weakShell);
   if (! *_retval) 
@@ -651,10 +647,8 @@ nsAccessibilityService::CreateHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode,
   nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
   NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
 
-  nsCOMPtr<nsIPresShell> presShell;
-  presContext->GetShell(getter_AddRefs(presShell)); 
-
-  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(presShell);
+  nsCOMPtr<nsIWeakReference> weakShell =
+    do_GetWeakReference(presContext->PresShell());
 
   *_retval = new nsHTMLSelectOptionAccessible(aDOMNode, weakShell);
   if (! *_retval) 

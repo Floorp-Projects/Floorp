@@ -1030,9 +1030,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
 
   // get the style set
   nsCOMPtr<nsIStyleSet>  styleSet;
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  presShell->GetStyleSet(getter_AddRefs(styleSet));
+  aPresContext->PresShell()->GetStyleSet(getter_AddRefs(styleSet));
 
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
   nscoord availWidth  = nsTableFrame::RoundToPixel(aReflowState.availableWidth, p2t);

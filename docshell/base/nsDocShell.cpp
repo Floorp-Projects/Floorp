@@ -1200,7 +1200,7 @@ nsDocShell::GetPresShell(nsIPresShell ** aPresShell)
     (void) GetPresContext(getter_AddRefs(presContext));
 
     if (presContext) {
-        rv = presContext->GetShell(aPresShell);
+        NS_IF_ADDREF(*aPresShell = presContext->GetPresShell());
     }
 
     return rv;
@@ -1218,7 +1218,7 @@ nsDocShell::GetEldestPresShell(nsIPresShell** aPresShell)
     (void) GetEldestPresContext(getter_AddRefs(presContext));
 
     if (presContext) {
-        rv = presContext->GetShell(aPresShell);
+        NS_IF_ADDREF(*aPresShell = presContext->GetPresShell());
     }
 
     return rv;

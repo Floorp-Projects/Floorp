@@ -466,7 +466,7 @@ GetPresShellFor(nsIDocShell* aDocShell)
         nsCOMPtr<nsIPresContext> cx;
         docv->GetPresContext(getter_AddRefs(cx));
         if (nsnull != cx) {
-          cx->GetShell(&shell);
+          NS_IF_ADDREF(shell = cx->GetPresShell());
         }
         NS_RELEASE(docv);
       }

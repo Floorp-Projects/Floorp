@@ -979,12 +979,6 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
           return;
       }
 
-      nsCOMPtr<nsIPresShell> presShell;
-      if (NS_FAILED(rv = presContext->GetShell(getter_AddRefs(presShell)))) {
-          NS_ERROR("Unable to retrieve the shell from the presentation context.");
-          return;
-      }
-
       nsRect rect;
 
       if (NS_FAILED(rv = mWindow->GetClientBounds(rect))) {

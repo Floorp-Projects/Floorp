@@ -698,8 +698,7 @@ nsImageBoxFrame::GetFrameName(nsAString& aResult) const
 void
 nsImageBoxFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->GetPresShell();
 
   if (!shell)
     return;

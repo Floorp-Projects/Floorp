@@ -116,8 +116,7 @@ GetValueAt(nsIPresContext* aPresContext,
   PRUnichar* result = nsnull;
   nsValueList* valueList = nsnull;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = aPresContext->GetPresShell();
   if (presShell) {
     nsCOMPtr<nsIFrameManager> frameManager;
     presShell->GetFrameManager(getter_AddRefs(frameManager));
@@ -280,8 +279,7 @@ MapAttributesInto(nsIPresContext* aPresContext,
 
   // now, re-resolve the style contexts in our subtree to pick up any changes
   if (hasChanged) {
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = aPresContext->GetPresShell();
     if (presShell) {
       nsCOMPtr<nsIFrameManager> fm;
       presShell->GetFrameManager(getter_AddRefs(fm));

@@ -241,8 +241,7 @@ nsHTMLAreaElement::SetFocus(nsIPresContext* aPresContext)
       mDocument->FlushPendingNotifications();
     }
 
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = aPresContext->GetPresShell();
 
     if (presShell) {
       nsIFrame* frame = nsnull;

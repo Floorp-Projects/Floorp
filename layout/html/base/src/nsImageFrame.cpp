@@ -323,14 +323,10 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
   }
 
   if (currentLoadStatus & imgIRequest::STATUS_ERROR) {
-    nsCOMPtr<nsIPresShell> presShell;
-    mPresContext->GetShell(getter_AddRefs(presShell));
-    NS_ASSERTION(presShell, "Must have a pres shell!");
-
     PRBool loadBlocked = PR_FALSE;
     imageLoader->GetImageBlocked(&loadBlocked);
     rv = HandleLoadError(loadBlocked ? NS_ERROR_IMAGE_BLOCKED : NS_ERROR_FAILURE,
-                         presShell);
+                         mPresContext->PresShell());
   }
   // If we already have an image container, OnStartContainer won't be called
   // Set the animation mode here
@@ -565,8 +561,7 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
   // Now we need to reflow if we have an unconstrained size and have
   // already gotten the initial reflow
   if (!(mState & IMAGE_SIZECONSTRAINED) && (mState & IMAGE_GOTINITIALREFLOW)) { 
-    nsCOMPtr<nsIPresShell> presShell;
-    mPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = mPresContext->GetPresShell();
     NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
     NS_ASSERTION(presShell, "No PresShell.");
     if (mParent && presShell) { 
@@ -639,8 +634,7 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
 {
   NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED);  // why are we bothering?
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
+  nsIPresShell *presShell = mPresContext->GetPresShell();
   NS_ASSERTION(presShell, "No PresShell.");
 
   // handle iconLoads first...
@@ -848,10 +842,8 @@ nsImageFrame::ContentChanged(nsIPresContext* aPresContext,
                              nsIContent*     aChild,
                              nsISupports*    aSubContent)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
   mState |= NS_FRAME_IS_DIRTY;
-  return mParent->ReflowDirtyChild(shell, this);
+  return mParent->ReflowDirtyChild(aPresContext->PresShell(), this);
 }
 
 // get the offset into the content area of the image where aImg starts if it is a continuation.
@@ -1234,9 +1226,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
     // If painting is suppressed, we need to stop image painting.  We
     // have to cover <img> here because of input image controls.
     PRBool paintingSuppressed = PR_FALSE;
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    shell->IsPaintingSuppressed(&paintingSuppressed);
+    aPresContext->PresShell()->IsPaintingSuppressed(&paintingSuppressed);
     if (paintingSuppressed) {
       return NS_OK;
     }
@@ -1399,11 +1389,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
   PRInt16 displaySelection = 0;
 
   nsresult result; 
-  nsCOMPtr<nsIPresShell> shell;
-  result = aPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_FAILED(result))
-    return result;
-  result = shell->GetSelectionFlags(&displaySelection);
+  result = aPresContext->PresShell()->GetSelectionFlags(&displaySelection);
   if (NS_FAILED(result))
     return result;
   if (!(displaySelection & nsISelectionDisplay::DISPLAY_IMAGES))
@@ -1479,13 +1465,10 @@ nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
 
     nsCOMPtr<nsIDOMHTMLMapElement> map;
     if (NS_SUCCEEDED(nsImageMapUtils::FindImageMap(doc,usemap,getter_AddRefs(map))) && map) {
-      nsCOMPtr<nsIPresShell> presShell;
-      aPresContext->GetShell(getter_AddRefs(presShell));
-
       mImageMap = new nsImageMap();
       if (mImageMap) {
         NS_ADDREF(mImageMap);
-        mImageMap->Init(presShell, this, map);
+        mImageMap->Init(aPresContext->PresShell(), this, map);
       }
     }
   }
@@ -1510,12 +1493,15 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
       nsCOMPtr<nsIScriptSecurityManager> securityManager = 
                do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
 
-      nsCOMPtr<nsIPresShell> ps;
-      if (NS_SUCCEEDED(rv)) 
-        rv = aPresContext->GetShell(getter_AddRefs(ps));
+      if (NS_FAILED(rv))
+        return;
+
+      nsIPresShell *ps = aPresContext->GetPresShell();
+      if (!ps)
+        return;
+
       nsCOMPtr<nsIDocument> doc;
-      if (NS_SUCCEEDED(rv) && ps) 
-        rv = ps->GetDocument(getter_AddRefs(doc));
+      rv = ps->GetDocument(getter_AddRefs(doc));
       
       if (NS_SUCCEEDED(rv)) {
         nsIURI *baseURI = doc ? doc->GetDocumentURL() : nsnull;
@@ -1778,10 +1764,8 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
   // XXXldb Shouldn't width and height be handled by attribute mapping?
   if (nsHTMLAtoms::width == aAttribute || nsHTMLAtoms::height == aAttribute  || nsHTMLAtoms::alt == aAttribute)
   { // XXX: could check for new width == old width, and make that a no-op
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
     mState |= NS_FRAME_IS_DIRTY;
-    mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
+    mParent->ReflowDirtyChild(aPresContext->PresShell(), (nsIFrame*) this);
   }
 
   return NS_OK;
@@ -1907,8 +1891,7 @@ nsImageFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGro
 
   NS_PRECONDITION(nsnull != aLoadGroup, "null OUT parameter pointer");
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIPresShell *shell = aPresContext->GetPresShell();
 
   if (!shell)
     return;

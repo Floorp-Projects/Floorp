@@ -136,10 +136,8 @@ nsHTMLButtonControlFrame::Init(nsIPresContext*  aPresContext,
     flags |= NS_BLOCK_SHRINK_WRAP;
   }
 
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
   nsIFrame* areaFrame;
-  NS_NewAreaFrame(shell, &areaFrame, flags);
+  NS_NewAreaFrame(aPresContext->PresShell(), &areaFrame, flags);
   mFrames.SetFrames(areaFrame);
 
   // Resolve style and initialize the frame
@@ -271,8 +269,7 @@ void
 nsHTMLButtonControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 {
   if (aPresContext) {
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
+    nsIPresShell *presShell = aPresContext->GetPresShell();
     if (presShell) {
      presShell->ScrollFrameIntoView(this,
                    NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);

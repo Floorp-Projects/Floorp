@@ -572,7 +572,6 @@ NS_IMETHODIMP nsXPBaseWindow::GetPresShell(nsIPresShell*& aPresShell)
 {
   aPresShell = nsnull;
 
-  nsIPresShell* shell = nsnull;
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   if (docShell) {
     nsIContentViewer* cv = nsnull;
@@ -584,8 +583,7 @@ NS_IMETHODIMP nsXPBaseWindow::GetPresShell(nsIPresShell*& aPresShell)
         nsCOMPtr<nsIPresContext> cx;
         docv->GetPresContext(getter_AddRefs(cx));
         if (nsnull != cx) {
-          cx->GetShell(&shell); // does an add ref
-          aPresShell = shell;
+          NS_IF_ADDREF(aPresShell = cx->GetPresShell());
         }
         NS_RELEASE(docv);
       }

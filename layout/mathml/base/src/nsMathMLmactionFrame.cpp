@@ -417,9 +417,7 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::selection_, value, notify);
 
       // Now trigger a content-changed reflow...
-      nsCOMPtr<nsIPresShell> presShell;
-      mPresContext->GetShell(getter_AddRefs(presShell));
-      ReflowDirtyChild(presShell, mSelectedFrame);
+      ReflowDirtyChild(mPresContext->PresShell(), mSelectedFrame);
     }
   }
   else if (NS_MATHML_ACTION_TYPE_RESTYLE == mActionType) {
@@ -438,8 +436,7 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
         // Cancel the reflow command that the change of attribute has
         // caused, and post a style changed reflow request that is instead
         // targeted at our selected frame
-        nsCOMPtr<nsIPresShell> presShell;
-        mPresContext->GetShell(getter_AddRefs(presShell));
+        nsIPresShell *presShell = mPresContext->PresShell();
         presShell->CancelReflowCommand(this, nsnull);
         nsFrame::CreateAndPostReflowCommand(presShell, mSelectedFrame, 
           eReflowType_StyleChanged, nsnull, nsnull, nsnull);

@@ -59,6 +59,7 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aP
                                                                  mLayoutFlags(0),
                                                                  mDisablePainting(PR_FALSE)
 {
+  NS_ASSERTION(mPresContext, "PresContext must be non-null");
 }
 
 nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
@@ -70,6 +71,8 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   mScrolledBlockSizeConstraint = aState.mScrolledBlockSizeConstraint;
   mLayoutFlags = aState.mLayoutFlags;
   mDisablePainting = aState.mDisablePainting;
+
+  NS_ASSERTION(mPresContext, "PresContext must be non-null");
 }
 
 nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull), 
@@ -81,6 +84,7 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull),
                                                          mDisablePainting(PR_FALSE)
 {
    aShell->GetPresContext(getter_AddRefs(mPresContext));
+   NS_ASSERTION(mPresContext, "PresContext must be non-null");
 }
 
 nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext, 
@@ -97,6 +101,7 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext,
 
 {
   mMaxElementWidth = &aDesiredSize.mMaxElementWidth;
+  NS_ASSERTION(mPresContext, "PresContext must be non-null");
 }
 
 nscoord*
@@ -372,37 +377,25 @@ nsBoxLayoutState::RecycleFreedMemory(nsIPresShell* aShell, void* aMem)
 nsresult
 nsBoxLayoutState::GetPresShell(nsIPresShell** aShell)
 {
-  if (mPresContext)
-     return mPresContext->GetShell(aShell); 
-  else {
-     *aShell = nsnull;
-     return NS_OK;
-  }
+  NS_IF_ADDREF(*aShell = mPresContext->GetPresShell());
+  return NS_OK;
 }
 
 nsresult
 nsBoxLayoutState::PushStackMemory()
 {
-  nsCOMPtr<nsIPresShell> shell;
-  mPresContext->GetShell(getter_AddRefs(shell));
-  return shell->PushStackMemory();
+  return mPresContext->PresShell()->PushStackMemory();
 }
 
 nsresult
 nsBoxLayoutState::PopStackMemory()
 {
-  nsCOMPtr<nsIPresShell> shell;
-  mPresContext->GetShell(getter_AddRefs(shell));
-
-  return shell->PopStackMemory();
+  return mPresContext->PresShell()->PopStackMemory();
 }
 
 nsresult
 nsBoxLayoutState::AllocateStackMemory(size_t aSize, void** aResult)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  mPresContext->GetShell(getter_AddRefs(shell));
-
-  return shell->AllocateStackMemory(aSize, aResult);
+  return mPresContext->PresShell()->AllocateStackMemory(aSize, aResult);
 }
 

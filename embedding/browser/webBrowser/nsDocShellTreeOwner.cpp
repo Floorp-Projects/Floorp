@@ -462,8 +462,7 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    mWebBrowser->mDocShell->GetPresContext(getter_AddRefs(presContext));
    NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIPresShell> presShell;
-   presContext->GetShell(getter_AddRefs(presShell));
+   nsIPresShell *presShell = presContext->GetPresShell();
    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE,
