@@ -185,7 +185,7 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 
 	if (file) {				 
 
-#if defined(_WIN32) || defined(_WINDOWS) || defined (macintosh)  || defined(XP_OS2_VACPP)
+#if defined(_WIN32) || defined(_WINDOWS) || defined (macintosh)  || defined(XP_OS2)
 		if ((hashp->fp = DBFILE_OPEN(file, flags | O_BINARY, mode)) == -1)
 			RETURN_ERROR(errno, error0);
 #else
