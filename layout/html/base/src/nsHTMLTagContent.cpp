@@ -61,7 +61,7 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
  * These methods must be called in the following order:
    
       BeginConvertToXIF
-        DoConvertToXIF
+      ConvertContentToXIF
       EndConvertToXIF
  */
 
@@ -78,6 +78,30 @@ void nsHTMLTagContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
       aConverter.BeginLeaf(name);    
     else
       aConverter.BeginContainer(name);
+  }
+
+  // Add all attributes to the convert
+  if (nsnull != mAttributes) 
+  {
+    nsISupportsArray* attrs;
+    nsresult rv = NS_NewISupportsArray(&attrs);
+    if (NS_OK == rv) 
+    {
+      mAttributes->GetAllAttributeNames(attrs);
+      PRInt32 i, n = attrs->Count();
+      nsAutoString name, value;
+      for (i = 0; i < n; i++) 
+      {
+        nsIAtom* atom = (nsIAtom*) attrs->ElementAt(i);
+        atom->ToString(name);
+
+        value.Truncate();
+        GetAttribute(name, value);
+        
+        aConverter.AddHTMLAttribute(name,value);
+      }
+      NS_RELEASE(attrs);
+    }
   }
 }
 
@@ -103,32 +127,9 @@ void nsHTMLTagContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
  * XIF is an intermediate form of the content model, the buffer
  * will then be parsed into any number of formats including HTML, TXT, etc.
  */
-void nsHTMLTagContent::DoConvertToXIF(nsXIFConverter& aConverter) const
+void nsHTMLTagContent::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
-
-  // Add all attributes to the convert
-  if (nsnull != mAttributes) 
-  {
-    nsISupportsArray* attrs;
-    nsresult rv = NS_NewISupportsArray(&attrs);
-    if (NS_OK == rv) 
-    {
-      mAttributes->GetAllAttributeNames(attrs);
-      PRInt32 i, n = attrs->Count();
-      nsAutoString name, value;
-      for (i = 0; i < n; i++) 
-      {
-        nsIAtom* atom = (nsIAtom*) attrs->ElementAt(i);
-        atom->ToString(name);
-
-        value.Truncate();
-        GetAttribute(name, value);
-        
-        aConverter.AddHTMLAttribute(name,value);
-      }
-      NS_RELEASE(attrs);
-    }
-  }
+  // Do nothing, all conversion is handled in the StartConvertToXIF and FinishConvertToXIF 
 }
 
 

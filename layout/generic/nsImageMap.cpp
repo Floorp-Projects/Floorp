@@ -51,7 +51,7 @@ public:
    * will then be parsed into any number of formats including HTML, TXT, etc.
    */
   virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  virtual void DoConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const;
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
 
 
@@ -314,16 +314,8 @@ void Area::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
   nsAutoString  tag("area");
   aConverter.BeginStartTag(tag);
-}
 
-void Area::FinishConvertToXIF(nsXIFConverter& aConverter) const
-{
-  nsAutoString  tag("area");
-  aConverter.FinishStartTag(tag,PR_TRUE);
-}
 
-void Area::DoConvertToXIF(nsXIFConverter& aConverter) const
-{
   nsAutoString name("shape");
   nsAutoString shape;
   GetShapeName(shape);
@@ -359,6 +351,19 @@ void Area::DoConvertToXIF(nsXIFConverter& aConverter) const
     name.SetString("suppress");
     aConverter.AddAttribute(name);
   }
+}
+
+void Area::FinishConvertToXIF(nsXIFConverter& aConverter) const
+{
+  nsAutoString  tag("area");
+  aConverter.FinishStartTag(tag,PR_TRUE);
+}
+
+void Area::ConvertContentToXIF(nsXIFConverter& aConverter) const
+{
+  // Nothing needs to be done here, all of the logic
+  // is handled in the start and finish methods
+
 }
 
 
