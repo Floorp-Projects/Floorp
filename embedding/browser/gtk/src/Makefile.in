@@ -28,8 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= gtkembedmoz
 REQUIRES	= xpcom string docshell webshell necko widget dom layout locale js uriloader webbrwsr shistory appshell embed_base xpconnect pref
 
-ifdef USE_NEW_GTK_WIDGET
-
 CPPSRCS		= \
 		gtkmozembed2.cpp \
 		EmbedPrivate.cpp \
@@ -40,14 +38,6 @@ CPPSRCS		= \
 		EmbedWindowCreator.cpp \
 		EmbedPrompter.cpp \
 		EmbedStream.cpp
-else
-
-CPPSRCS         = \
-	GtkMozEmbedChrome.cpp \
-	GtkMozEmbedStream.cpp \
-	gtkmozembed.cpp
-
-endif
 
 SHARED_LIBRARY_LIBS= \
 		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
