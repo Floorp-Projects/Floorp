@@ -95,28 +95,6 @@ XfeMenuItemPreviousItem			(Widget			item);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Public accent drawing functions.										*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-extern void
-XfeMenuItemDrawAccent			(Widget			item,
-								 unsigned char	accent_type,
-								 Dimension		offset_left,
-								 Dimension		offset_right,
-								 Dimension		shadow_thickness,
-								 Dimension		accent_thickness);
-/*----------------------------------------------------------------------*/
-extern void
-XfeMenuItemEraseAccent			(Widget			item,
-								 unsigned char	accent_type,
-								 Dimension		offset_left,
-								 Dimension		offset_right,
-								 Dimension		shadow_thickness,
-								 Dimension		accent_thickness);
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
 /* Display grabbed access.												*/
 /*																		*/
 /*----------------------------------------------------------------------*/

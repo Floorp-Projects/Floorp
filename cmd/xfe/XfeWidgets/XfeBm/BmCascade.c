@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/BmCascade.c>										*/
+/* Name:		<XfeBm/BmCascade.c>										*/
 /* Description:	XfeBmCascade widget source.								*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #include <Xfe/BmCascadeP.h>
 #include <Xfe/BmButtonP.h>
@@ -47,6 +47,7 @@
 /* Core Class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void				ClassInitialize	();
 static void				Initialize		(Widget,Widget,ArgList,Cardinal *);
 static void				Destroy			(Widget);
 static void				Resize			(Widget);
@@ -81,7 +82,10 @@ static void 	Motion					(Widget,XEvent *,char **,Cardinal *);
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void		DrawPixmap				(Widget,XEvent *,Region);
+
+#ifdef notused
 static Position	GetPointerY				(Widget);
+#endif
 
 static void		AccentUpdate			(Widget,Position);
 static void		AccentDraw				(Widget);
@@ -206,7 +210,7 @@ _XFE_WIDGET_CLASS_RECORD(bmcascade,BmCascade) =
 		(WidgetClass) &xmCascadeButtonClassRec,	/* superclass         	*/
 		"XfeBmCascade",							/* class_name			*/
 		sizeof(XfeBmCascadeRec),				/* widget_size        	*/
-		NULL,									/* class_initialize   	*/
+		ClassInitialize,						/* class_initialize		*/
 		NULL,									/* class_part_initialize*/
 		FALSE,                                  /* class_inited       	*/
 		Initialize,								/* initialize			*/
@@ -278,6 +282,13 @@ _XFE_WIDGET_CLASS(bmcascade,BmCascade);
 /*																		*/
 /* Core Class methods													*/
 /*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ClassInitialize()
+{
+	/* Register Bm Representation Types */
+	XfeBmRegisterRepresentationTypes();
+}
 /*----------------------------------------------------------------------*/
 static void
 Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
@@ -394,8 +405,8 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 {
 	Boolean					redisplay = False;
 	Boolean					resize = False;
- 	XmCascadeButtonPart *	old_cp = _XfeXmCascadeButtonPart(ow);
- 	XmCascadeButtonPart *	new_cp = _XfeXmCascadeButtonPart(nw);
+/*  	XmCascadeButtonPart *	old_cp = _XfeXmCascadeButtonPart(ow); */
+/*  	XmCascadeButtonPart *	new_cp = _XfeXmCascadeButtonPart(nw); */
 	XmLabelPart *			old_lp = _XfeXmLabelPart(ow);
 	XmLabelPart *			new_lp = _XfeXmLabelPart(nw);
     XfeBmCascadePart *		new_bmc = _XfeBmCascadePart(nw);
@@ -458,7 +469,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 static void
 BorderHighlight(Widget w)
 {
-    XfeBmCascadePart *			bmc = _XfeBmCascadePart(w);
+/*     XfeBmCascadePart *			bmc = _XfeBmCascadePart(w); */
 	XmCascadeButtonWidgetClass		cwc = 
 		(XmCascadeButtonWidgetClass) xmCascadeButtonWidgetClass;
 
@@ -477,7 +488,7 @@ BorderHighlight(Widget w)
 static void
 BorderUnhighlight(Widget w)
 {
-    XfeBmCascadePart *			bmc = _XfeBmCascadePart(w);
+/*     XfeBmCascadePart *			bmc = _XfeBmCascadePart(w); */
 	XmCascadeButtonWidgetClass		cwc = 
 		(XmCascadeButtonWidgetClass) xmCascadeButtonWidgetClass;
 
@@ -503,7 +514,7 @@ static void
 CheckDisarm(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
 	static XtActionProc		check_disarm_action = NULL;
-    XfeBmCascadePart *		bmc = _XfeBmCascadePart(w);
+/*     XfeBmCascadePart *		bmc = _XfeBmCascadePart(w); */
 
 	if (!check_disarm_action)
 	{
@@ -536,7 +547,7 @@ static void
 DelayedArm(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
 	static XtActionProc		delayed_arm_action = NULL;
-    XfeBmCascadePart *		bmc = _XfeBmCascadePart(w);
+/*     XfeBmCascadePart *		bmc = _XfeBmCascadePart(w); */
 
 	if (!delayed_arm_action)
 	{
@@ -608,7 +619,7 @@ DoSelect(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 static void
 Motion(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
-    XfeBmCascadePart *		bmc = _XfeBmCascadePart(w);
+/*     XfeBmCascadePart *		bmc = _XfeBmCascadePart(w); */
 
 	if (!XfeBmAccentIsEnabled())
 	{
@@ -681,6 +692,7 @@ DrawPixmap(Widget w,XEvent *event,Region region)
 
 }
 /*----------------------------------------------------------------------*/
+#ifdef notused
 static Position
 GetPointerY(Widget w)
 {
@@ -713,6 +725,7 @@ GetPointerY(Widget w)
 	return 0;
 }
 /*----------------------------------------------------------------------*/
+#endif
 static void
 AccentUpdate(Widget w,Position y)
 {

@@ -32,8 +32,11 @@ MODULE			= XfeWidgets/Xfe
 LIBRARY_NAME	= XfeBm
 
 CSRCS			= \
+				BmAccent.c \
 				BmButton.c \
 				BmCascade.c \
+				BmGlobal.c \
+				BmRepType.c \
 				$(NULL)
 
 REQUIRES		=\
@@ -45,6 +48,7 @@ EXPORTS			= \
 				BmButtonP.h \
 				BmCascade.h \
 				BmCascadeP.h \
+				XfeBm.h \
 				$(NULL)
 
 include $(DEPTH)/config/rules.mk

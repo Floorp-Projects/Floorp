@@ -17,7 +17,7 @@
  */
 /*-----------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/RepType.h>											*/
+/* Name:		<Xfe/RepType.c>											*/
 /* Description:	Xfe widgets representation types source.				*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
@@ -49,8 +49,8 @@ XfeRepTypeCheck(Widget				w,
 	return result;
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterBoxType()
+static void
+RegisterBoxType(void)
 {
     static String BoxNames[] = 
     { 
@@ -62,8 +62,8 @@ XfeRegisterBoxType()
     XmRepTypeRegister(XmRBoxType,BoxNames,NULL,XtNumber(BoxNames));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterButtonLayout()
+static void
+RegisterButtonLayout(void)
 {
     static String names[] = 
     { 
@@ -78,8 +78,8 @@ XfeRegisterButtonLayout()
     XmRepTypeRegister(XmRButtonLayout,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterButtonTrigger()
+static void
+RegisterButtonTrigger(void)
 {
     static String names[] = 
     { 
@@ -94,8 +94,8 @@ XfeRegisterButtonTrigger()
 }
 /*----------------------------------------------------------------------*/
 #ifdef notused
-/* extern */ void
-XfeRegisterArrowType()
+static void
+RegisterArrowType(void)
 {
     static String ArrowNames[] = 
     { 
@@ -109,8 +109,8 @@ XfeRegisterArrowType()
 }
 /*----------------------------------------------------------------------*/
 #endif
-/* extern */ void
-XfeRegisterBufferType()
+static void
+RegisterBufferType(void)
 {
     static String BufferNames[] = 
     { 
@@ -122,8 +122,8 @@ XfeRegisterBufferType()
     XmRepTypeRegister(XmRBufferType,BufferNames,NULL,XtNumber(BufferNames));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterButtonType()
+static void
+RegisterButtonType(void)
 {
     static String ButtonNames[] = 
     { 
@@ -135,21 +135,8 @@ XfeRegisterButtonType()
     XmRepTypeRegister(XmRButtonType,ButtonNames,NULL,XtNumber(ButtonNames));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterAccentType()
-{
-    static String AccentNames[] = 
-    { 
-		"accent_box",
-		"accent_none",
-		"accent_underline",
-    };
-    
-    XmRepTypeRegister(XmRAccentType,AccentNames,NULL,XtNumber(AccentNames));
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterRulesType()
+static void
+RegisterRulesType(void)
 {
     static String RulesNames[] = 
     { 
@@ -161,8 +148,8 @@ XfeRegisterRulesType()
     XmRepTypeRegister(XmRRulesType,RulesNames,NULL,XtNumber(RulesNames));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterLocationType()
+static void
+RegisterLocationType(void)
 {
     static String names[] = 
     { 
@@ -179,8 +166,8 @@ XfeRegisterLocationType()
     XmRepTypeRegister(XmRLocationType,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterComboBoxType()
+static void
+RegisterComboBoxType(void)
 {
     static String names[] = 
     { 
@@ -191,8 +178,8 @@ XfeRegisterComboBoxType()
     XmRepTypeRegister(XmRComboBoxType,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterToolScrollArrowPlacement()
+static void
+RegisterToolScrollArrowPlacement(void)
 {
     static String names[] = 
     { 
@@ -204,8 +191,8 @@ XfeRegisterToolScrollArrowPlacement()
     XmRepTypeRegister(XmRToolScrollArrowPlacement,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterPaneChildType()
+static void
+RegisterPaneChildType(void)
 {
     static String names[] = 
     { 
@@ -219,8 +206,8 @@ XfeRegisterPaneChildType()
     XmRepTypeRegister(XmRPaneChildType,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterPaneDragModeType()
+static void
+RegisterPaneDragModeType(void)
 {
     static String names[] = 
     { 
@@ -232,8 +219,8 @@ XfeRegisterPaneDragModeType()
     XmRepTypeRegister(XmRPaneDragMode,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterPaneChildAttachment()
+static void
+RegisterPaneChildAttachment(void)
 {
     static String names[] = 
     { 
@@ -247,8 +234,8 @@ XfeRegisterPaneChildAttachment()
     XmRepTypeRegister(XmRPaneChildAttachment,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterPaneSashType()
+static void
+RegisterPaneSashType(void)
 {
     static String names[] = 
     { 
@@ -262,8 +249,8 @@ XfeRegisterPaneSashType()
     XmRepTypeRegister(XmRPaneSashType,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterToolBarSelectionPolicy()
+static void
+RegisterToolBarSelectionPolicy(void)
 {
     static String names[] = 
     { 
@@ -275,8 +262,8 @@ XfeRegisterToolBarSelectionPolicy()
     XmRepTypeRegister(XmRToolBarSelectionPolicy,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterToolBarIndicatorLocation()
+static void
+RegisterToolBarIndicatorLocation(void)
 {
     static String names[] = 
     { 
@@ -289,8 +276,8 @@ XfeRegisterToolBarIndicatorLocation()
     XmRepTypeRegister(XmRToolBarIndicatorLocation,names,NULL,XtNumber(names));
 }
 /*----------------------------------------------------------------------*/
-/* extern */ void
-XfeRegisterChromeChildType()
+static void
+RegisterChromeChildType(void)
 {
     static String names[] = 
     { 
@@ -309,25 +296,24 @@ XfeRegisterChromeChildType()
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-XfeRegisterRepresentationTypes()
+XfeRegisterRepresentationTypes(void)
 {
-	XfeRegisterAccentType();
-	XfeRegisterBoxType();
-	XfeRegisterBufferType();
-	XfeRegisterButtonLayout();
-	XfeRegisterButtonTrigger();
-	XfeRegisterButtonType();
-	XfeRegisterChromeChildType();
-	XfeRegisterComboBoxType();
-	XfeRegisterLocationType();
-	XfeRegisterPaneChildAttachment();
-	XfeRegisterPaneChildType();
-	XfeRegisterPaneDragModeType();
-	XfeRegisterPaneSashType();
-	XfeRegisterRulesType();
-	XfeRegisterToolBarIndicatorLocation();
-	XfeRegisterToolBarSelectionPolicy();
-	XfeRegisterToolScrollArrowPlacement();
+	RegisterBoxType();
+	RegisterBufferType();
+	RegisterButtonLayout();
+	RegisterButtonTrigger();
+	RegisterButtonType();
+	RegisterChromeChildType();
+	RegisterComboBoxType();
+	RegisterLocationType();
+	RegisterPaneChildAttachment();
+	RegisterPaneChildType();
+	RegisterPaneDragModeType();
+	RegisterPaneSashType();
+	RegisterRulesType();
+	RegisterToolBarIndicatorLocation();
+	RegisterToolBarSelectionPolicy();
+	RegisterToolScrollArrowPlacement();
 
 /* 	XfeRegisterArrowType(); */
 }

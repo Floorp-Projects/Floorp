@@ -77,7 +77,6 @@
 /* Resource Names														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define XmNaccentType					"accentType"
 #define XmNactionButton					"actionButton"
 #define XmNactionCursor					"actionCursor"
 #define XmNactionPixmap					"actionPixmap"
@@ -93,7 +92,6 @@
 #define XmNanimationRunning				"animationRunning"
 #define XmNarmBackground				"armBackground"
 #define XmNarmOffset					"armOffset"
-#define XmNarmPixmapMask				"armPixmapMask"
 #define XmNarmed						"armed"
 #define XmNarmedPixmap					"armedPixmap"
 #define XmNarmedPixmapMask				"armedPixmapMask"
@@ -197,7 +195,6 @@
 #define XmNitemList						"itemList"
 #define XmNlabelAlignment				"labelAlignment"
 #define XmNlabelDirection				"labelDirection"
-#define XmNlabelPixmapMask				"labelPixmapMask"
 #define XmNlayableChildren				"layableChildren"
 #define XmNleftPixmap					"leftPixmap"
 #define XmNleftRaisedPixmap				"leftRaisedPixmap"
@@ -308,7 +305,6 @@
 /* Class Names															*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define XmCAccentType					"AccentType"
 #define XmCActionPixmap					"ActionPixmap"
 #define XmCActive						"Active"
 #define XmCActiveButton					"ActiveButton"
@@ -317,7 +313,6 @@
 #define XmCAnimationPixmaps				"AnimationPixmaps"
 #define XmCArmBackground				"ArmBackground"
 #define XmCArmOffset					"ArmOffset"
-#define XmCArmPixmapMask				"ArmPixmapMask"
 #define XmCArmed						"Armed"
 #define XmCArmedPixmap					"ArmedPixmap"
 #define XmCArmedPixmapMask				"ArmedPixmapMask"
@@ -401,7 +396,6 @@
 #define XmCItemForeground				"ItemForeground"
 #define XmCLabelAlignment				"LabelAlignment"
 #define XmCLabelDirection				"LabelDirection"
-#define XmCLabelPixmapMask				"LabelPixmapMask"
 #define XmCLayableChildren				"LayableChildren"
 #define XmCLeftPixmap					"LeftPixmap"
 #define XmCLeftRaisedPixmap				"LeftRaisedPixmap"
@@ -483,7 +477,6 @@
 /* Representation Types													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define XmRAccentType					"AccentType"
 #define XmRArrowDisplayPolicy			XmRScrollBarDisplayPolicy
 #define XmRBoxType						"BoxType"
 #define XmRBufferType					"BufferType"

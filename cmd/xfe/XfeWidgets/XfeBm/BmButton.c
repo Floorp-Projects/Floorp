@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/BmButton.c>										*/
+/* Name:		<XfeBm/BmButton.c>										*/
 /* Description:	XfeBmButton widget source.								*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #include <Xfe/BmButtonP.h>
 #include <Xfe/ManagerP.h>
@@ -43,6 +43,7 @@
 /* Core Class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void				ClassInitialize	();
 static void				Initialize		(Widget,Widget,ArgList,Cardinal *);
 static void				Destroy			(Widget);
 static void				Resize			(Widget);
@@ -194,7 +195,7 @@ _XFE_WIDGET_CLASS_RECORD(bmbutton,BmButton) =
 		(WidgetClass) &xmPushButtonClassRec,	/* superclass         	*/
 		"XfeBmButton",							/* class_name			*/
 		sizeof(XfeBmButtonRec),					/* widget_size        	*/
-		NULL,									/* class_initialize   	*/
+		ClassInitialize,						/* class_initialize		*/
 		NULL,									/* class_part_initialize*/
 		FALSE,                                  /* class_inited       	*/
 		Initialize,								/* initialize			*/
@@ -266,6 +267,13 @@ _XFE_WIDGET_CLASS(bmbutton,BmButton);
 /*																		*/
 /* Core Class methods													*/
 /*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ClassInitialize()
+{
+	/* Register Bm Representation Types */
+	XfeBmRegisterRepresentationTypes();
+}
 /*----------------------------------------------------------------------*/
 static void
 Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
@@ -446,7 +454,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 static void
 BorderHighlight(Widget w)
 {
-    XfeBmButtonPart *			bmp = _XfeBmButtonPart(w);
+/*     XfeBmButtonPart *			bmp = _XfeBmButtonPart(w); */
 	XmPushButtonWidgetClass		pwc = 
 		(XmPushButtonWidgetClass) xmPushButtonWidgetClass;
 
@@ -465,7 +473,7 @@ BorderHighlight(Widget w)
 static void
 BorderUnhighlight(Widget w)
 {
-    XfeBmButtonPart *			bmp = _XfeBmButtonPart(w);
+/*     XfeBmButtonPart *			bmp = _XfeBmButtonPart(w); */
 	XmPushButtonWidgetClass		pwc = 
 		(XmPushButtonWidgetClass) xmPushButtonWidgetClass;
 
@@ -492,7 +500,7 @@ static void
 Enter(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
 	static XtActionProc		enter_action = NULL;
-    XfeBmButtonPart *		bmp = _XfeBmButtonPart(w);
+/*     XfeBmButtonPart *		bmp = _XfeBmButtonPart(w); */
 
 	if (!enter_action)
 	{
@@ -523,7 +531,7 @@ Enter(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 static void
 Leave(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
-    XfeBmButtonPart *		bmp = _XfeBmButtonPart(w);
+/*     XfeBmButtonPart *		bmp = _XfeBmButtonPart(w); */
 	static XtActionProc		leave_action = NULL;
 
 	if (!leave_action)
@@ -555,7 +563,7 @@ Leave(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 static void
 Motion(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
-    XfeBmButtonPart *		bmp = _XfeBmButtonPart(w);
+/*     XfeBmButtonPart *		bmp = _XfeBmButtonPart(w); */
 
 	if (!XfeBmAccentIsEnabled())
 	{
@@ -569,7 +577,7 @@ static void
 BtnDown(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
 	static XtActionProc		btn_down_action = NULL;
-    XfeBmButtonPart *		bmp = _XfeBmButtonPart(w);
+/*     XfeBmButtonPart *		bmp = _XfeBmButtonPart(w); */
 
 	if (!btn_down_action)
 	{
@@ -592,7 +600,7 @@ static void
 BtnUp(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
 	static XtActionProc		btn_up_action = NULL;
-    XfeBmButtonPart *		bmp = _XfeBmButtonPart(w);
+/*     XfeBmButtonPart *		bmp = _XfeBmButtonPart(w); */
 
 	if (!btn_up_action)
 	{
@@ -814,130 +822,5 @@ _XfeBmProcWithoutDrawing(Widget w,XtWidgetProc proc)
 XfeCreateBmButton(Widget pw,char * name,Arg * av,Cardinal ac)
 {
     return XtCreateWidget(name,xfeBmButtonWidgetClass,pw,av,ac);
-}
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Accent enabled/disabled functions									*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static Boolean _accent_is_enabled = False;
-
-/* extern */ Boolean
-XfeBmAccentIsEnabled(void)
-{
-	return _accent_is_enabled;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
-XfeBmAccentDisable(void)
-{
-	_accent_is_enabled = False;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
-XfeBmAccentEnable(void)
-{
-	_accent_is_enabled = True;
-}
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Global BmButton/BmCascade accent offset values set/get functions		*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static Dimension	_accent_offset_left			= 4;
-static Dimension	_accent_offset_right		= 8;
-static Dimension	_accent_shadow_thickness	= 1;
-static Dimension	_accent_thickness			= 1;
-
-/* extern */ void
-XfeBmAccentSetOffsetLeft(Dimension offset_left)
-{
-	_accent_offset_left = offset_left;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
-XfeBmAccentSetOffsetRight(Dimension offset_right)
-{
-	_accent_offset_right = offset_right;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
-XfeBmAccentSetShadowThickness(Dimension shadow_thickness)
-{
-	_accent_shadow_thickness = shadow_thickness;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
-XfeBmAccentSetThickness(Dimension thickness)
-{
-	_accent_thickness = thickness;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ Dimension
-XfeBmAccentGetOffsetLeft(void)
-{
-	return _accent_offset_left;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ Dimension
-XfeBmAccentGetOffsetRight(void)
-{
-	return _accent_offset_right;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ Dimension
-XfeBmAccentGetShadowThickness(void)
-{
-	return _accent_shadow_thickness;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ Dimension
-XfeBmAccentGetThickness(void)
-{
-	return _accent_thickness;
-}
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Global BmButton/BmCascade accent filing mode.						*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static XfeAccentFileMode	_accent_file_mode = XmACCENT_FILE_ANYWHERE;
-
-/* extern */ void
-XfeBmAccentSetFileMode(XfeAccentFileMode file_mode)
-{
-	_accent_file_mode = file_mode;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ XfeAccentFileMode
-XfeBmAccentGetFileMode(void)
-{
-	return _accent_file_mode;
-}
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Global BmButton/BmCascade pixmap offset values set/get functions		*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static Dimension	_pixmap_offset = 4;
-
-/* extern */ void
-XfeBmPixmapSetOffset(Dimension offset)
-{
-	_pixmap_offset = offset;
-}
-/*----------------------------------------------------------------------*/
-/* extern */ Dimension
-XfeBmPixmapGetOffset(void)
-{
-	return _pixmap_offset;
 }
 /*----------------------------------------------------------------------*/

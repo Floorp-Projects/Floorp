@@ -27,37 +27,11 @@
 #ifndef _XfeBmButton_h_							/* start BmButton.h		*/
 #define _XfeBmButton_h_
 
-#include <Xfe/Xfe.h>
+#include <Xfe/XfeBm.h>
 
 #ifdef __cplusplus								/* start C++			*/
 extern "C" {
 #endif
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XmRAccentType														*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-enum
-{
-    XmACCENT_NONE,
-    XmACCENT_BOTTOM,
-	XmACCENT_TOP,
-    XmACCENT_ALL
-};
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Accent filing mode													*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-typedef enum
-{
-    XmACCENT_FILE_ANYWHERE,
-    XmACCENT_FILE_SELF
-} XfeAccentFileMode;
-/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -88,82 +62,8 @@ XfeCreateBmButton			(Widget			parent,
 							 Cardinal		count);
 /*----------------------------------------------------------------------*/
 
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Accent enabled/disabled functions									*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-extern void
-XfeBmAccentDisable			(void);
-/*----------------------------------------------------------------------*/
-extern void
-XfeBmAccentEnable			(void);
-/*----------------------------------------------------------------------*/
-extern Boolean
-XfeBmAccentIsEnabled		(void);
-/*----------------------------------------------------------------------*/
-
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Global BmButton/BmCascade accent offset values set/get functions		*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-extern void
-XfeBmAccentSetOffsetLeft		(Dimension		offset_left);
-/*----------------------------------------------------------------------*/
-extern void
-XfeBmAccentSetOffsetRight		(Dimension		offset_right);
-/*----------------------------------------------------------------------*/
-extern void
-XfeBmAccentSetShadowThickness	(Dimension		shadow_thickness);
-/*----------------------------------------------------------------------*/
-extern void
-XfeBmAccentSetThickness			(Dimension		thickness);
-/*----------------------------------------------------------------------*/
-extern Dimension
-XfeBmAccentGetOffsetLeft		(void);
-/*----------------------------------------------------------------------*/
-extern Dimension
-XfeBmAccentGetOffsetRight		(void);
-/*----------------------------------------------------------------------*/
-extern Dimension
-XfeBmAccentGetShadowThickness	(void);
-/*----------------------------------------------------------------------*/
-extern Dimension
-XfeBmAccentGetThickness			(void);
-/*----------------------------------------------------------------------*/
-
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Global BmButton/BmCascade accent filing mode.						*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-extern void
-XfeBmAccentSetFileMode			(XfeAccentFileMode	file_mode);
-/*----------------------------------------------------------------------*/
-extern XfeAccentFileMode
-XfeBmAccentGetFileMode			(void);
-/*----------------------------------------------------------------------*/
-
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Global BmButton/BmCascade pixmap offset values set/get functions		*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-extern void
-XfeBmPixmapSetOffset			(Dimension		offset_lefft);
-/*----------------------------------------------------------------------*/
-extern Dimension
-XfeBmPixmapGetOffset			(void);
-/*----------------------------------------------------------------------*/
-
-
 #ifdef __cplusplus								/* end C++				*/
 }
 #endif
 
-#endif											/* end BmPushB.h		*/
+#endif											/* end BmButton.h		*/

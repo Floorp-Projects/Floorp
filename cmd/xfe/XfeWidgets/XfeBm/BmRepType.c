@@ -15,41 +15,35 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/RepType.h>											*/
-/* Description:	Xfe widgets representation types public header.			*/
+/* Name:		<XfeBm/BmRepTyep.c>										*/
+/* Description:	Representation type(s) used by BmCascade and BmButton.	*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
-#ifndef _XfeRepType_h_							/* start RepType.h		*/
-#define _XfeRepType_h_
-
-#include <Xm/Xm.h>								/* Motif public defs	*/
-
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+#include <Xm/RepType.h>
+#include <Xfe/XfeBm.h>
 
 /*----------------------------------------------------------------------*/
-/*																		*/
-/* Representation types													*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-extern Boolean
-XfeRepTypeCheck						(Widget				w,
-									 String				rep_type,
-									 unsigned char *	address,
-									 unsigned char		fallback);
-/*----------------------------------------------------------------------*/
-extern void			
-XfeRegisterRepresentationTypes		(void);
-/*----------------------------------------------------------------------*/
-
-#ifdef __cplusplus								/* end C++				*/
+static void
+RegisterAccentType(void)
+{
+    static String AccentNames[] = 
+    { 
+		"accent_box",
+		"accent_none",
+		"accent_underline",
+    };
+    
+    XmRepTypeRegister(XmRAccentType,AccentNames,NULL,XtNumber(AccentNames));
 }
-#endif
-
-#endif											/* end RepType.h		*/
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeBmRegisterRepresentationTypes(void)
+{
+	RegisterAccentType();
+}
+/*----------------------------------------------------------------------*/
