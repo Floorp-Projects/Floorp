@@ -68,6 +68,7 @@ DIRS = lib  \
  ssltap  \
  strsclnt \
  swfort  \
+ symkeyutil \
  tstclnt  \
  vfyserv \
  modutil \
