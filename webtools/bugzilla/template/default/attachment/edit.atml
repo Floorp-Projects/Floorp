@@ -1,7 +1,12 @@
+[%# Define strings that will serve as the title and header of this page %]
+[% title = BLOCK %]Edit Attachment #[% attachid %] for Bug #[% bugid %][% END %]
+[% h1 = BLOCK %]Edit Attachment #[% attachid %] for <a href="show_bug.cgi?id=[% bugid %]">Bug #[% bugid %]</a>[% END %]
+[% h2 = BLOCK %][% bugsummary FILTER html %][% END %]
+
 [% INCLUDE global/header 
-  title = "Edit Attachment #$attachid for Bug #$bugid"
-  h1 = "Edit Attachment #$attachid for <a href=\"show_bug.cgi?id=$bugid\">Bug #$bugid</a>"
-  h2 = bugsummary
+  title = title
+  h1 = h1
+  h2 = h2
   style = "
     th { text-align: right; vertical-align: top; }
     td { text-align: left; vertical-align: top; }
