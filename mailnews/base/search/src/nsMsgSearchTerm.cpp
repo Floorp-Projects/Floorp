@@ -791,7 +791,7 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 		{
 			if (n_str[0])
 			{
-				if (n_str.Equals(*stringToMatch, PR_TRUE) != -1/* INTL_StrIs(csid, n_header, n_str)*/ )
+				if (n_str.Equals(*stringToMatch, PR_TRUE /*ignore case*/) /* INTL_StrIs(csid, n_header, n_str)*/ )
 					result = PR_TRUE;
 			}
 			else if (n_header[0] == '\0') // Special case for "is <the empty string>"
