@@ -23,7 +23,6 @@
  *
  * Contributor(s):
  *   John Bandhauer <jband@netscape.com> (original author)
- *   Nate Nielsen <nielsen@memberwebs.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -49,7 +48,6 @@
 #include "nsIInterfaceInfo.idl"
 #include "nsIInterfaceInfoManager.idl"
 #include "nsIExceptionService.idl"
-#include "nsIVariant.idl"
 
 %{ C++
 #include "jspubtd.h"
@@ -594,7 +592,4 @@ interface nsIXPConnect : nsISupports
     attribute PRBool deferReleasesUntilAfterGarbageCollection;
 
     void releaseJSContext(in JSContextPtr aJSContext, in PRBool noGC);
-
-    JSVal variantToJS(in JSContextPtr ctx, in JSObjectPtr scope, in nsIVariant value);
-    nsIVariant variantFromJS(in JSContextPtr ctx, in JSVal value);
 };
