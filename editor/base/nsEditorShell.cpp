@@ -5389,12 +5389,11 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
   {
     // In "All Tags" mode, use AdvancedProperties,
     //  in others use appriate object property dialog
-    nsAReadableString &commandName = (mDisplayMode != eDisplayModeAllTags) ? 
-                            NS_LITERAL_STRING("cmd_objectProperties") :
-                            NS_LITERAL_STRING("cmd_advancedProperties");
-                            
-    rv = DoControllerCommand(commandName);
-
+    if (mDisplayMode == eDisplayModeAllTags)
+        rv = DoControllerCommand(NS_LITERAL_STRING("cmd_advancedProperties"));
+    else
+        rv = DoControllerCommand(NS_LITERAL_STRING("cmd_objectProperties"));
+        
     if (NS_SUCCEEDED(rv))
       *_retval = PR_TRUE;
   }
