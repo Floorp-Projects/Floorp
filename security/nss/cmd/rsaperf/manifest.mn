@@ -37,6 +37,8 @@ CORE_DEPTH = ../../..
 # MODULE public and private header  directories are implicitly REQUIRED.
 MODULE = security
 
+INCLUDES += -I$(CORE_DEPTH)/nss/lib/softoken
+
 # This next line is used by .mk files
 # and gets translated into $LINCS in manifest.mnw
 REQUIRES = dbm seccmd 

@@ -38,6 +38,7 @@
 #include "nss.h"
 #include "blapi.h"
 #include "plgetopt.h"
+#include "keylow.h"
 
 
 #define MAX_RSA_MODULUS_BYTES (1024/8)
