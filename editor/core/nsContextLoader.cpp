@@ -26,8 +26,8 @@ struct nsCtxTupple
   PRUint32 mResult;
 };
 
-
-static nsCtxTupple *gCtxTable={{},{},{}};
+//this here line don't compile:
+//static nsCtxTupple *gCtxTable={{},{},{}};
 
 class nsEditorDefaultLoader  : public nsIContextLoader{
 public:
