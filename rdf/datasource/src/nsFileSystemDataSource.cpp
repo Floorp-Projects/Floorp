@@ -20,13 +20,6 @@
   Implementation for a file system RDF data store.
  */
 
-/*
-  To do:
-      1) build up volume list correctly (platform dependant).
-         Currently hardcoded, Windows only.
-      2) Encode/decode URLs appropriately (0x20 <-> %20, 0x2F <> '/', etc)
- */
-
 #include <ctype.h> // for toupper()
 #include <stdio.h>
 #include "nscore.h"
@@ -50,6 +43,8 @@
 #include "nsFileSpec.h"
 #include "nsIRDFFileSystem.h"
 #include "nsFileSystemDataSource.h"
+#include "nsFileSpec.h"
+
 
 #ifdef	XP_WIN
 #include "windef.h"
@@ -75,8 +70,8 @@ static NS_DEFINE_IID(kIRDFNodeIID,                 NS_IRDFNODE_IID);
 static const char kURINC_FileSystemRoot[] = "NC:FilesRoot";
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, name);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, url);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns);
 
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
@@ -105,15 +100,23 @@ peq(nsIRDFResource* r1, nsIRDFResource* r2)
 }
 
 
-
-nsIRDFResource	*FileSystemDataSource::kNC_FileSystemRoot;
-nsIRDFResource	*FileSystemDataSource::kNC_Child;
-nsIRDFResource	*FileSystemDataSource::kNC_Name;
-nsIRDFResource	*FileSystemDataSource::kNC_URL;
-nsIRDFResource	*FileSystemDataSource::kNC_Columns;
-
-nsIRDFResource	*FileSystemDataSource::kRDF_InstanceOf;
-nsIRDFResource	*FileSystemDataSource::kRDF_Bag;
+static PRBool
+isFileURI(nsIRDFResource *r)
+{
+	PRBool		isFileURI = PR_FALSE;
+	const char	*uri;
+	
+	r->GetValue(&uri);
+	if (!strncmp(uri, "file://", 7))
+	{
+		// XXX HACK HACK HACK
+		if (!strchr(uri, '#'))
+		{
+			isFileURI = PR_TRUE;
+		}
+	}
+	return(isFileURI);
+}
 
 
 
@@ -177,8 +180,8 @@ FileSystemDataSource::Init(const char *uri)
 
 	gRDFService->GetResource(kURINC_FileSystemRoot, &kNC_FileSystemRoot);
 	gRDFService->GetResource(kURINC_child, &kNC_Child);
-	gRDFService->GetResource(kURINC_name, &kNC_Name);
-	gRDFService->GetResource(kURINC_url, &kNC_URL);
+	gRDFService->GetResource(kURINC_Name, &kNC_Name);
+	gRDFService->GetResource(kURINC_URL, &kNC_URL);
 	gRDFService->GetResource(kURINC_Columns, &kNC_Columns);
 
 	gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_InstanceOf);
@@ -229,37 +232,52 @@ FileSystemDataSource::GetSources(nsIRDFResource *property,
 
 
 
+nsresult	GetVolumeList(nsVoidArray **array);
+nsresult	GetFolderList(nsIRDFResource *source, nsVoidArray **array /* out */);
+nsresult	GetName(nsIRDFResource *source, nsVoidArray **array);
+nsresult	GetURL(nsIRDFResource *source, nsVoidArray **array);
+
+
+
 NS_IMETHODIMP
 FileSystemDataSource::GetTarget(nsIRDFResource *source,
                           nsIRDFResource *property,
                           PRBool tv,
                           nsIRDFNode **target /* out */)
 {
-	nsIRDFFileSystem	*fs;
 	nsresult		rv = NS_ERROR_RDF_NO_VALUE;
 
 	// we only have positive assertions in the file system data source.
 	if (! tv)
 		return rv;
 
-	if (NS_SUCCEEDED(source->QueryInterface(kIRDFFileSystemIID, (void **) &fs)))
+	if (peq(source, kNC_FileSystemRoot) || isFileURI(source))
 	{
+		nsVoidArray		*array = nsnull;
+
 		if (peq(property, kNC_Name))
 		{
-		//	rv = fs->GetName((nsIRDFLiteral **)target);
+			rv = GetName(source, &array);
+		}
+		else if (peq(property, kNC_URL))
+		{
+			rv = GetURL(source, &array);
+		}
+
+		if (array != nsnull)
+		{
+			nsIRDFLiteral *literal = (nsIRDFLiteral *)(array->ElementAt(0));
+			*target = (nsIRDFNode *)literal;
+			delete array;
+			rv = NS_OK;
 		}
 		else
 		{
 			rv = NS_ERROR_RDF_NO_VALUE;
 		}
-		NS_IF_RELEASE(fs);
 	}
 	return(rv);
 }
-
-
-
-nsresult GetVolumeList(nsVoidArray **array);
 
 
 
@@ -269,7 +287,6 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
                            PRBool tv,
                            nsIRDFAssertionCursor **targets /* out */)
 {
-	nsIRDFFileSystem	*fs;
 	nsVoidArray		*array = nsnull;
 	nsresult		rv = NS_ERROR_FAILURE;
 
@@ -280,21 +297,20 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 			rv = GetVolumeList(&array);
 		}
 	}
-	else if (NS_OK == source->QueryInterface(kIRDFFileSystemIID, (void **)&fs))
+	else if (isFileURI(source))
 	{
 		if (peq(property, kNC_Child))
 		{
-			rv = fs->GetFolderList(source, &array);
+			rv = GetFolderList(source, &array);
 		}
 		else if (peq(property, kNC_Name))
 		{
-			rv = fs->GetName(&array);
+			rv = GetName(source, &array);
 		}
 		else if (peq(property, kNC_URL))
 		{
-			rv = fs->GetURL(&array);
+			rv = GetURL(source, &array);
 		}
-		NS_IF_RELEASE(fs);
 	}
 	if ((rv == NS_OK) && (nsnull != array))
 	{
@@ -336,12 +352,11 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
                              PRBool tv,
                              PRBool *hasAssertion /* out */)
 {
-	nsIRDFFileSystem	*fs = nsnull;
 	PRBool			retVal = PR_FALSE;
-	nsresult		rv = 0;				// xxx
+	nsresult		rv = NS_ERROR_FAILURE;
 
 	*hasAssertion = PR_FALSE;
-	if (NS_SUCCEEDED(source->QueryInterface(kIRDFFileSystemIID, (void**) &fs)))
+	if (isFileURI(source))
 	{
 		if (peq(property, kRDF_InstanceOf))
 		{
@@ -351,7 +366,6 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
 				rv = NS_OK;
 			}
 		}
-		NS_IF_RELEASE(fs);
 	}
 	return (rv);
 }
@@ -372,26 +386,40 @@ NS_IMETHODIMP
 FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
                              nsIRDFArcsOutCursor **labels /* out */)
 {
-	nsIRDFFileSystem	*fs;
 	nsresult		rv = NS_ERROR_RDF_NO_VALUE;
 
-	if (NS_SUCCEEDED(source->QueryInterface(kIRDFFileSystemIID, (void**) &fs)))
+	*labels = nsnull;
+
+	if (peq(source, kNC_FileSystemRoot))
 	{
 		nsVoidArray *temp = new nsVoidArray();
 		if (nsnull == temp)
 			return NS_ERROR_OUT_OF_MEMORY;
 
 		temp->AppendElement(kNC_Child);
-		temp->AppendElement(kNC_Name);
-		temp->AppendElement(kNC_URL);
-		temp->AppendElement(kNC_Columns);
 		*labels = new FileSystemCursor(source, kNC_Child, temp);
 		if (nsnull != *labels)
 		{
 			NS_ADDREF(*labels);
 			rv = NS_OK;
 		}
-		NS_RELEASE(fs);
+	}
+	else if (isFileURI(source))
+	{
+		nsVoidArray *temp = new nsVoidArray();
+		if (nsnull == temp)
+			return NS_ERROR_OUT_OF_MEMORY;
+
+		temp->AppendElement(kNC_Child);
+//		temp->AppendElement(kNC_Name);
+//		temp->AppendElement(kNC_URL);
+//		temp->AppendElement(kNC_Columns);
+		*labels = new FileSystemCursor(source, kNC_Child, temp);
+		if (nsnull != *labels)
+		{
+			NS_ADDREF(*labels);
+			rv = NS_OK;
+		}
 	}
 	return(rv);
 
@@ -485,16 +513,64 @@ NS_NewRDFFileSystemDataSource(nsIRDFDataSource **result)
 nsresult
 GetVolumeList(nsVoidArray **array)
 {
-	nsIRDFFileSystem	*vol;
-	nsVoidArray			*volumes = new nsVoidArray();
+	nsVoidArray		*volumes = new nsVoidArray();
 
-#if 1 
+	*array = volumes;
+	if (nsnull == *array)
+	{
+		return(NS_ERROR_OUT_OF_MEMORY);
+	}
+
+	nsIRDFResource		*vol;
+
+#ifdef	XP_MAC
+	FSSpec			fss;
+	OSErr			err;
+	ParamBlockRec		pb;
+	char			*url;
+	int16			volNum = 1;
+
+	do
+	{
+		pb.volumeParam.ioCompletion = NULL;
+		pb.volumeParam.ioVolIndex = volNum++;
+		pb.volumeParam.ioNamePtr = (StringPtr)fss.name;
+		if (!(err = PBGetVInfo(&pb,FALSE)))
+		{
+			fss.vRefNum = pb.volumeParam.ioVRefNum;
+			fss.parID = 2L;
+			fss.name[0] = '\0';
+
+			// even though we have the volume name, create a
+			// nativeFileSpec and then get name out of it so
+			// that if will be fully encoded
+
+			nsNativeFileSpec	nativeSpec(fss);
+			nsFilePath		filePath(nativeSpec);
+			char			*volURL = filePath;
+			if (volURL != nsnull)
+			{
+				nsAutoString	pathname("file://");
+				pathname += volURL;
+				if (nativeSpec.IsDirectory())
+				{
+					pathname += "/";
+				}
+				char		*filename = pathname.ToNewCString();
+				gRDFService->GetResource(filename, (nsIRDFResource **)&vol);
+				NS_ADDREF(vol);
+				volumes->AppendElement(vol);
+				delete filename;
+			}
+		}
+	} while (!err);
+#endif
+
 #ifdef	XP_WIN
-
-	PRInt32				driveType;
-	char				drive[32];
-	PRInt32				volNum;
-	char				*url;
+	PRInt32			driveType;
+	char			drive[32];
+	PRInt32			volNum;
+	char			*url;
 
 	for (volNum = 0; volNum < 26; volNum++)
 	{
@@ -511,25 +587,16 @@ GetVolumeList(nsVoidArray **array)
 			}
 		}
 	}
-	*array = volumes;
-	return NS_OK;
-#else
 #endif
 
-#else
-	gRDFService->GetResource("file:///c|/", (nsIRDFResource **)&vol);
+#ifdef	XP_UNIX
+	gRDFService->GetResource("file:///", (nsIRDFResource **)&vol);
+	NS_ADDREF(vol);
 	volumes->AppendElement(vol);
-//	NS_ADDREF(vol);
-	gRDFService->GetResource("file:///d|/", (nsIRDFResource **)&vol);
-	volumes->AppendElement(vol);
-//	NS_ADDREF(vol);
-	*array = volumes;
-	return NS_OK;
 #endif
+
+	return NS_OK;
 }
-
-
-
 
 
 
@@ -537,6 +604,8 @@ FileSystemCursor::FileSystemCursor(nsIRDFResource *source,
 				nsIRDFResource *property,
 				nsVoidArray *array)
 {
+	NS_INIT_REFCNT();
+
 	mSource = source;
 	mProperty = property;
 	mArray = array;
@@ -657,305 +726,146 @@ FileSystemCursor::QueryInterface(REFNSIID iid, void **result)
 		AddRef();
 		return NS_OK;
 	}
-	return NS_NOINTERFACE;
+	return(NS_NOINTERFACE);
 }
 
 
 
-/********************************** FileSystem **************************************
- ************************************************************************************/
-
-
-
-FileSystem::FileSystem(const char *uri)
+PRBool
+isVisible(nsNativeFileSpec file)
 {
-	NS_INIT_REFCNT();
-	mURI = PL_strdup(uri);
-}
+	PRBool		isVisible = PR_TRUE;
 
+#ifdef	XP_MAC
 
+	FInfo		fndrInfo;
+	FSSpec		fss = file;
+	OSErr		err;
 
-FileSystem::~FileSystem(void)
-{
-	gRDFService->UnCacheResource(this);
-	PL_strfree(mURI);
-}
+	CInfoPBRec	cInfo;
 
-
-
-NS_IMPL_IRDFRESOURCE(FileSystem);
-NS_IMPL_ADDREF(FileSystem);
-NS_IMPL_RELEASE(FileSystem);
-
-
-
-NS_IMETHODIMP
-FileSystem::QueryInterface(REFNSIID iid, void **result)
-{
-	if (! result)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = nsnull;
-	if (iid.Equals(kIRDFResourceIID) ||
-		iid.Equals(kIRDFNodeIID) ||
-		iid.Equals(kIRDFFileSystemIID) ||
-		iid.Equals(kISupportsIID))
+	cInfo.hFileInfo.ioCompletion = NULL;
+	cInfo.hFileInfo.ioVRefNum = fss.vRefNum;
+	cInfo.hFileInfo.ioDirID = fss.parID;
+	cInfo.hFileInfo.ioNamePtr = (StringPtr)fss.name;
+	cInfo.hFileInfo.ioFVersNum = 0;
+	if (!(err = PBGetCatInfoSync(&cInfo)))
 	{
-		*result = NS_STATIC_CAST(nsIRDFFileSystem *, this);
-		AddRef();
-		return NS_OK;
-	}
-	return NS_NOINTERFACE;
-}
-
-
-
-static PRBool
-isDirectory(const char *parent, const char *optFile)
-{
-	PRFileInfo	info;
-	PRStatus	err;
-	PRBool		isDirFlag = PR_FALSE;
-	char		*url;
-
-	nsAutoString	pathname(parent);
-	if (nsnull != optFile)
-	{
-		pathname += optFile;
-	}
-	url = pathname.ToNewCString();
-	if (nsnull != url)
-	{
-		if ((err = PR_GetFileInfo(url, &info)) == PR_SUCCESS)
+		if (cInfo.hFileInfo.ioFlFndrInfo.fdFlags & kIsInvisible)
 		{
-			if (info.type == PR_FILE_DIRECTORY)
-			{
-				isDirFlag = PR_TRUE;
-			}
+			isVisible = PR_FALSE;
 		}
 	}
-	return(isDirFlag);
-}
 
-
-
-NS_IMETHODIMP
-FileSystem::GetFolderList(nsIRDFResource *source, nsVoidArray **array /* out */) const
-{
-	nsAutoString		name(mURI);
-
-	*array = nsnull;
-
-	if (name.Find("file:///") == 0)
-	{
-#ifdef	XP_UNIX
-		name.Cut(0, strlen("file://"));
 #else
-		name.Cut(0, strlen("file:///"));
-#endif
-
-#ifdef	XP_WIN
-		// on Windows, replace pipe with colon
-		if (name.Length() > 2)
-		{
-			if (name.CharAt(1) == '|')
-			{
-				name.CharAt(1) = ':';
-			}
-		}
-#endif
-
-		PRDir			*dir;
-		PRDirEntry		*de;
-		PRInt32			n = PR_SKIP_BOTH;
-		nsIRDFFileSystem 	*file;
-
-		nsVoidArray	*nameArray = new nsVoidArray();
-
-		char		*dirName = name.ToNewCString();
-
-#define	DEPTH_LIMIT	2
-
-#ifdef	DEPTH_LIMIT
-		char		*p;
-		PRInt32		slashCount = 0;
-
-		char		*temp = name.ToNewCString();
-		p = strchr(temp, '/');
-		while (nsnull != p)
-		{
-			++ slashCount;
-			++p;
-			p = strchr(p, '/');
-		}
-		delete temp;
-		if (slashCount > DEPTH_LIMIT)
-		{
-			*array = nsnull;
-			delete dirName;
-			delete nameArray;
-			return NS_OK;
-		}
-#endif
-
-		if (nsnull != dirName)
-		{
-			if (nsnull != (dir = PR_OpenDir(dirName)))
-			{
-				while (nsnull != (de = PR_ReadDir(dir, (PRDirFlags)(n++))))
-				{
-					nsAutoString pathname(mURI);
-					pathname += de->name;
-
-					if (PR_TRUE == isDirectory(dirName, de->name))
-					{
-						pathname += "/";
-					}
-					char *filename = pathname.ToNewCString();
-					if (nsnull != filename)
-					{
-						gRDFService->GetResource(filename, (nsIRDFResource **)&file);
-						delete filename;
-						nameArray->AppendElement(file);
-					}
-				}
-				PR_CloseDir(dir);
-			}
-			delete dirName;
-		}
-
-		*array = nameArray;
-	}
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-FileSystem::GetName(nsVoidArray **array) const
-{
-	nsString		*basename = nsnull;
-	nsAutoString		name(mURI);
-
-	PRInt32			len = name.Length();
-	if (len > 0)
-	{
-		if (name.CharAt(len-1) == '/')
-		{
-			name.SetLength(--len);
-		}
-	}
-
-	PRInt32			slashIndex = name.RFind("/");
-	if (slashIndex > 0)
-	{
-		basename = new nsString;
-		name.Mid(*basename, slashIndex+1, len-slashIndex);
-
-#ifdef	XP_WIN
-		// on Windows, replace pipe with colon and uppercase drive letter
-		if (basename->Length() == 2)
-		{
-			if (basename->CharAt(1) == '|')
-			{
-				basename->CharAt(1) = ':';
-				basename->ToUpperCase();
-			}
-		}
-#endif
-	}
-
-	*array = nsnull;
+	char		*basename = file.GetLeafName();
 	if (nsnull != basename)
 	{
-		nsIRDFLiteral *literal;
-		gRDFService->GetLiteral(*basename, &literal);
-		// NS_ADDREF(literal);
-		delete basename;
-		nsVoidArray *nameArray = new nsVoidArray();
-		nameArray->AppendElement(literal);
-		*array = nameArray;
+		if ((!strcmp(basename, ".")) || (!strcmp(basename, "..")))
+		{
+			isVisible = PR_FALSE;
+		}
+		delete []basename;
 	}
-	return NS_OK;
-}
+#endif
 
-
-
-NS_IMETHODIMP
-FileSystem::GetURL(nsVoidArray **array) const
-{
-	nsVoidArray *urlArray = new nsVoidArray();
-	*array = urlArray;
-	if (nsnull != urlArray)
-	{
-		nsIRDFLiteral	*literal;
-
-		nsAutoString	url(mURI);
-
-		gRDFService->GetLiteral(url, &literal);
-		NS_ADDREF(literal);
-		urlArray->AppendElement(literal);
-	}
-	return NS_OK;
-}
-
-
-
-class FileSystemResourceFactoryImpl : public nsIRDFResourceFactory
-{
-public:
-			FileSystemResourceFactoryImpl(void);
-	virtual		~FileSystemResourceFactoryImpl(void);
-
-	NS_DECL_ISUPPORTS
-
-	NS_IMETHOD	CreateResource(const char* aURI, nsIRDFResource** aResult);
-};
-
-
-
-FileSystemResourceFactoryImpl::FileSystemResourceFactoryImpl(void)
-{
-	NS_INIT_REFCNT();
-}
-
-
-
-FileSystemResourceFactoryImpl::~FileSystemResourceFactoryImpl(void)
-{
-}
-
-
-
-NS_IMPL_ISUPPORTS(FileSystemResourceFactoryImpl, kIRDFResourceFactoryIID);
-
-
-
-NS_IMETHODIMP
-FileSystemResourceFactoryImpl::CreateResource(const char* aURI, nsIRDFResource** aResult)
-{
-	if (! aResult)
-		return NS_ERROR_NULL_POINTER;
-	FileSystem *fs = new FileSystem(aURI);
-	if (!fs)
-		return NS_ERROR_OUT_OF_MEMORY;
-	NS_ADDREF(fs);
-	*aResult = fs;
-	return NS_OK;
+	return(isVisible);
 }
 
 
 
 nsresult
-NS_NewRDFFileSystemResourceFactory(nsIRDFResourceFactory** aResult)
+GetFolderList(nsIRDFResource *source, nsVoidArray **array /* out */)
 {
-	if (! aResult)
-		return NS_ERROR_NULL_POINTER;
-	FileSystemResourceFactoryImpl *factory = new FileSystemResourceFactoryImpl();
-	if (! factory)
-		return NS_ERROR_OUT_OF_MEMORY;
-	NS_ADDREF(factory);
-	*aResult = factory;
-	return NS_OK;
+	nsVoidArray	*nameArray = new nsVoidArray();
+	*array = nameArray;
+	if (nsnull == nameArray)
+	{
+		return(NS_ERROR_OUT_OF_MEMORY);
+	}
+
+	const char		*uri;
+	source->GetValue(&uri);
+	if (nsnull == uri)
+	{
+		return(NS_ERROR_FAILURE);
+	}
+
+	nsFileURL 		parentDir(uri);
+	nsNativeFileSpec 	nativeDir(parentDir);
+	for (nsDirectoryIterator i(nativeDir); i; i++)
+	{
+		nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
+		if (!isVisible(nativeSpec))	continue;
+		nsFilePath		filePath(nativeSpec);
+		char			*childURL = filePath;
+		if (childURL != nsnull)
+		{
+			nsAutoString	pathname("file://");
+			pathname += childURL;
+			if (nativeSpec.IsDirectory())
+			{
+				pathname += "/";
+			}
+			char		*filename = pathname.ToNewCString();
+			nsIRDFResource	*file;
+			gRDFService->GetResource(filename, (nsIRDFResource **)&file);
+			nameArray->AppendElement(file);
+			delete filename;
+		}
+	}
+	return(NS_OK);
 }
 
+
+
+nsresult
+GetName(nsIRDFResource *source, nsVoidArray **array)
+{
+	nsVoidArray *nameArray = new nsVoidArray();
+	*array = nameArray;
+	if (nsnull == nameArray)
+	{
+		return(NS_ERROR_OUT_OF_MEMORY);
+	}
+
+	const char		*uri;
+	source->GetValue(&uri);
+	nsFileURL		url(uri);
+	nsNativeFileSpec	native(url);
+	char			*basename = native.GetLeafName();
+	if (basename)
+	{
+		nsString *name = new nsString(basename);
+		if (nsnull != name)
+		{
+			nsIRDFLiteral *literal;
+			gRDFService->GetLiteral(*name, &literal);
+			nameArray->AppendElement(literal);
+			delete name;
+		}
+	}
+	return(NS_OK);
+}
+
+
+
+nsresult
+GetURL(nsIRDFResource *source, nsVoidArray **array)
+{
+	nsVoidArray *urlArray = new nsVoidArray();
+	*array = urlArray;
+	if (nsnull == urlArray)
+	{
+		return(NS_ERROR_OUT_OF_MEMORY);
+	}
+
+	const char	*uri;
+	source->GetValue(&uri);
+	nsAutoString	url(uri);
+
+	nsIRDFLiteral	*literal;
+	gRDFService->GetLiteral(url, &literal);
+	urlArray->AppendElement(literal);
+	return(NS_OK);
+}
