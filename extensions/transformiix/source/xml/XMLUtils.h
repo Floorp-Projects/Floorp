@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -94,7 +94,7 @@ public:
     /**
      * Returns true if the given string is a valid XML QName
      */
-    static MBool isValidQName(const nsAFlatString& aName);
+    static MBool isValidQName(const nsAString& aName);
 
     /*
      * Returns true if the given character is whitespace.

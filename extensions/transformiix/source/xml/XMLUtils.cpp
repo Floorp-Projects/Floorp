@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -34,25 +34,108 @@
 #include "txAtoms.h"
 #include "txStringUtils.h"
 
+/**
+ * Helper class for checking and partioning of QNames
+ */
+class txQNameParser
+{
+public:
+    enum QResult {
+        eBrokenName,
+        eOneName,
+        eTwoNames
+    };
+    QResult parse(const nsAString::const_iterator& aStart,
+                  const nsAString::const_iterator& aEnd);
+    nsAString::const_iterator mColon;
+private:
+    enum {
+        eInitial,
+        ePrefixNC,
+        eColon,
+        eNameNC,
+        eBroken
+    } mState;
+};
+
+txQNameParser::QResult
+txQNameParser::parse(const nsAString::const_iterator& aStart,
+                     const nsAString::const_iterator& aEnd)
+{
+    nsAString::const_iterator chunk(aStart);
+    mState = eInitial;
+
+    PRUint32 size = 0, i = 0;
+    for ( ; chunk != aEnd; chunk.advance(size)) {
+        const PRUnichar* buf = chunk.get();
+        size = chunk.size_forward();
+
+        // fragment at 'buf' is 'size' characters long
+        for (i = 0; i < size; ++i) {
+            const PRUnichar ch = buf[i];
+            switch(mState) {
+                case eInitial:
+                    mState = XMLUtils::isLetter(ch) ? ePrefixNC : eBroken;
+                    break;
+                case ePrefixNC:
+                    if (ch == ':') {
+                        mState = eColon;
+                        mColon = chunk;
+                        mColon.advance(i);
+                    }
+                    else if (!XMLUtils::isNCNameChar(ch)) {
+                        mState = eBroken;
+                    }
+                    break;
+                case eColon:
+                    mState = XMLUtils::isLetter(ch) ? eNameNC : eBroken;
+                    break;
+                case eNameNC:
+                    if (!XMLUtils::isNCNameChar(ch)) {
+                        mState = eBroken;
+                    }
+                    break;
+                default:
+                    NS_WARNING("Should not happen");
+            }
+            if (mState == eBroken) {
+                return eBrokenName;
+            }
+        }
+    }
+    if (mState == eNameNC) {
+        return eTwoNames;
+    }
+    if (mState == ePrefixNC) {
+        return eOneName;
+    }
+    return eBrokenName;
+}
+
 nsresult txExpandedName::init(const nsAString& aQName,
                               Node* aResolver,
                               MBool aUseDefault)
 {
     NS_ASSERTION(aResolver, "missing resolve node");
-    if (!XMLUtils::isValidQName(PromiseFlatString(aQName)))
-        return NS_ERROR_FAILURE;
+    nsAString::const_iterator start, end;
+    aQName.BeginReading(start);
+    aQName.EndReading(end);
+    txQNameParser p;
+    txQNameParser::QResult qr = p.parse(start, end);
 
-    PRInt32 idx = aQName.FindChar(':');
-    if (idx != kNotFound) {
+    if (qr == txQNameParser::eBrokenName) {
+        return NS_ERROR_FAILURE;
+    }
+
+    if (qr == txQNameParser::eTwoNames) {
         nsCOMPtr<nsIAtom> prefix =
-            do_GetAtom(Substring(aQName, 0, (PRUint32)idx));
+            do_GetAtom(Substring(start, p.mColon));
         PRInt32 namespaceID = aResolver->lookupNamespaceID(prefix);
         if (namespaceID == kNameSpaceID_Unknown)
             return NS_ERROR_FAILURE;
         mNamespaceID = namespaceID;
 
-        mLocalName = do_GetAtom(Substring(aQName, (PRUint32)idx + 1,
-                                          aQName.Length() - (idx + 1)));
+        mLocalName = do_GetAtom(Substring(++p.mColon, end));
     }
     else {
         mLocalName = do_GetAtom(aQName);
@@ -98,44 +181,15 @@ void XMLUtils::getLocalPart(const nsAString& src, nsIAtom** dest)
     *dest = NS_NewAtom(getLocalPart(src));
 }
 
-MBool XMLUtils::isValidQName(const nsAFlatString& aName)
+MBool XMLUtils::isValidQName(const nsAString& aName)
 {
-    if (aName.IsEmpty()) {
-        return MB_FALSE;
-    }
+    nsAString::const_iterator start, end;
+    aName.BeginReading(start);
+    aName.EndReading(end);
+    txQNameParser p;
+    txQNameParser::QResult qr = p.parse(start, end);
 
-    if (!isLetter(aName.CharAt(0))) {
-        return MB_FALSE;
-    }
-
-    PRUint32 size = aName.Length();
-    PRUint32 i;
-    MBool foundColon = MB_FALSE;
-    for (i = 1; i < size; ++i) {
-        PRUnichar character = aName.CharAt(i);
-        if (character == ':') {
-            foundColon = MB_TRUE;
-            ++i;
-            break;
-        }
-        if (!isNCNameChar(character)) {
-            return MB_FALSE;
-        }
-    }
-    if (i == size) {
-        // If we found a colon as the last letter it is not
-        // a valid QName.
-        return !foundColon;
-    }
-    if (!isLetter(aName.CharAt(i))) {
-        return MB_FALSE;
-    }
-    for (++i; i < size; ++i) {
-        if (!isNCNameChar(aName.CharAt(i))) {
-            return MB_FALSE;
-        }
-    }
-    return MB_TRUE;
+    return qr != txQNameParser::eBrokenName;
 }
 
 /**
