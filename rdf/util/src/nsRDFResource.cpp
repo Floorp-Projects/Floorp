@@ -201,7 +201,15 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
     }
     
     entry->mKey      = aKey;
-    entry->mDelegate = do_QueryInterface(*NS_REINTERPRET_CAST(nsISupports**, aResult));
+    entry->mDelegate = do_QueryInterface(*NS_REINTERPRET_CAST(nsISupports**, aResult), &rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsRDFResource::GetDelegate(): can't QI to nsISupports!");
+
+        delete entry;
+        NS_RELEASE(*NS_REINTERPRET_CAST(nsISupports**, aResult));
+        return NS_ERROR_FAILURE;
+    }
+
     entry->mNext     = mDelegates;
 
     mDelegates = entry;
