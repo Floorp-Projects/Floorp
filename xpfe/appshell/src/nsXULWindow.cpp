@@ -189,43 +189,37 @@ NS_IMETHODIMP nsXULWindow::GetIntrinsicallySized(PRBool* aIntrinsicallySized)
 NS_IMETHODIMP nsXULWindow::GetPrimaryContentShell(nsIDocShellTreeItem** 
    aDocShellTreeItem)
 {
-   NS_ENSURE_ARG_POINTER(aDocShellTreeItem);
-   *aDocShellTreeItem = nsnull;
+  NS_ENSURE_ARG_POINTER(aDocShellTreeItem);
+  *aDocShellTreeItem = nsnull;
 
-   PRInt32 count = mContentShells.Count();
-   for(PRInt32 i = 0; i < count; i++)
-      {
-      nsContentShellInfo* shellInfo = (nsContentShellInfo*)mContentShells.ElementAt(i);
-      if(shellInfo->primary)
-         {
-         *aDocShellTreeItem = shellInfo->child;
-         NS_ADDREF(*aDocShellTreeItem);
-         return NS_OK;
-         }
-      }
-
-   return NS_ERROR_FAILURE;
+  PRInt32 count = mContentShells.Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsContentShellInfo* shellInfo = (nsContentShellInfo*)mContentShells.ElementAt(i);
+    if (shellInfo->primary) {
+      *aDocShellTreeItem = shellInfo->child;       
+      NS_IF_ADDREF(*aDocShellTreeItem);
+      return NS_OK;
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::GetContentShellById(const PRUnichar* aID, 
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
-   NS_ENSURE_ARG_POINTER(aDocShellTreeItem);
-   *aDocShellTreeItem = nsnull;
+  NS_ENSURE_ARG_POINTER(aDocShellTreeItem);
+  *aDocShellTreeItem = nsnull;
 
-   PRInt32 count = mContentShells.Count();
-   for(PRInt32 i = 0; i < count; i++)
-      {
-      nsContentShellInfo* shellInfo = (nsContentShellInfo*)mContentShells.ElementAt(i);
-      if(shellInfo->id.Equals(aID))
-         {
-         *aDocShellTreeItem = shellInfo->child;
-         NS_ADDREF(*aDocShellTreeItem);
-         return NS_OK;
-         }
-      }
-
-   return NS_ERROR_FAILURE;
+  PRInt32 count = mContentShells.Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsContentShellInfo* shellInfo = (nsContentShellInfo*)mContentShells.ElementAt(i);
+    if (shellInfo->id.Equals(aID)) {
+      *aDocShellTreeItem = shellInfo->child;
+      NS_IF_ADDREF(*aDocShellTreeItem);
+      return NS_OK;
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::AddChildWindow(nsIXULWindow *aChild)
