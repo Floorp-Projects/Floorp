@@ -26,26 +26,33 @@ int BuildComponentList(COMPONENT *comps, CString compString, int& compNum, CStri
 	CString configcompString[50];
 	compNum=0;
 
-	configcompString[0]="XPCOM";
-	configcompString[1]="Navigator";
-	configcompString[2]="Java";
-	configcompString[3]="MailNews";
-	configcompString[4]="Instant Messenger";
-	configcompString[5]="QFA";
-	configcompString[6]="PSM";
-	configcompString[7]="Spell Checker";
-	configcompString[8]="AOL Art";
-	configcompString[9]="Net2Phone";
-	configcompString[10]="Flash";
-	configcompString[11]="Uninstaller";
-	configcompString[12]="AOD";
-	configcompString[13]="RealPlayer";
-	configcompString[14]="US English Profile Defaults";
-	configcompString[15]="HP Printer Plugin";
-	configcompString[16]="Classic Skin";
-	configcompString[17]="En US lang pack";
-	configcompString[18]="US region pack";
-	configcompString[19]=" ";
+	configcompString[0]="Marker Recommended Start";
+	configcompString[1]="Marker Full Start";
+	configcompString[2]="Marker Custom Start";
+	configcompString[3]="XPCOM";
+	configcompString[4]="Navigator";
+	configcompString[5]="Java";
+	configcompString[6]="MailNews";
+	configcompString[7]="Instant Messenger";
+	configcompString[8]="QFA";
+	configcompString[9]="PSM";
+	configcompString[10]="Spell Checker";
+	configcompString[11]="AOL Art";
+	configcompString[12]="Net2Phone";
+	configcompString[13]="Flash";
+	configcompString[14]="Uninstaller";
+	configcompString[15]="AOD";
+	configcompString[16]="RealPlayer";
+	configcompString[17]="Winamp";
+	configcompString[18]="US English Profile Defaults";
+	configcompString[19]="HP Printer Plugin";
+	configcompString[20]="Classic Skin";
+	configcompString[21]="En US lang pack";
+	configcompString[22]="US region pack";
+	configcompString[23]="Marker Recommended";
+	configcompString[24]="Marker Full End";
+	configcompString[25]="Marker Custom End";
+	configcompString[26]=" ";
 
 	int arrayindex=compNum;
 	compString = configcompString[compNum];
@@ -78,6 +85,8 @@ int BuildComponentList(COMPONENT *comps, CString compString, int& compNum, CStri
 		comps[compNum].invisible = (strstr(attr, "INVISIBLE") != NULL);
 		comps[compNum].launchapp = (strstr(attr, "LAUNCHAPP") != NULL);
 		comps[compNum].additional = (strstr(attr, "ADDITIONAL") != NULL);
+		comps[compNum].disabled = (strstr(attr, "DISABLED") != NULL);
+		comps[compNum].forceupgrade = (strstr(attr, "FORCE_UPGRADE") != NULL);
 		
 		if (!(comps[compNum].selected && comps[compNum].invisible && invisibleCount))
 		{
