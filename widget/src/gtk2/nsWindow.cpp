@@ -541,14 +541,19 @@ nsWindow::SetZIndex(PRInt32 aZIndex)
 
     NS_ASSERTION(!mContainer, "Expected Mozilla child widget");
 
+    // We skip the nsWindows that don't have mDrawingareas.
+    // These are probably in the process of being destroyed.
+
     if (!GetNextSibling()) {
         // We're to be on top.
-        gdk_window_raise(mDrawingarea->clip_window);
+        if (mDrawingarea)
+            gdk_window_raise(mDrawingarea->clip_window);
     } else {
         // All the siblings before us need to be below our widget. 
         for (nsWindow* w = this; w;
              w = NS_STATIC_CAST(nsWindow*, w->GetPrevSibling())) {
-            gdk_window_lower(w->mDrawingarea->clip_window);
+            if (w->mDrawingarea)
+                gdk_window_lower(w->mDrawingarea->clip_window);
         }
     }
     return NS_OK;
