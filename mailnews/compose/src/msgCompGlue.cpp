@@ -22,7 +22,6 @@ int					NET_ScanForURLs(MSG_Pane*, const char *, PRInt32,char *, int, PRBool) {r
 void				NET_FreeURLStruct (URL_Struct *) {return;}
 URL_Struct *		NET_CreateURLStruct (const char *, NET_ReloadMethod) {return NULL;}
 char *				NET_UnEscape (char * ) {return NULL;}
-char *				NET_SACat  (char **, const char *) {return NULL;}
 char *				NET_EscapeHTML(const char * string) {return NULL;}
 char *				NET_ParseURL (const char *, int ) {return NULL;}
 int					NET_URL_Type (const char *) {return NULL;}
