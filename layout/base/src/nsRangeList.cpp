@@ -816,6 +816,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     pos.SetData(mTracker, desiredX, amount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE);
     switch (keyEvent->keyCode){
       case nsIDOMUIEvent::DOM_VK_RIGHT : 
+          InvalidateDesiredX();
           pos.mDirection = eDirNext;
           mHint = HINTLEFT;//stick to this line
         break;
@@ -831,11 +832,13 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
           pos.mAmount = eSelectLine;
         break;
       case nsIDOMUIEvent::DOM_VK_HOME :
+          InvalidateDesiredX();
           pos.mAmount = eSelectBeginLine;
           InvalidateDesiredX();
           mHint = HINTRIGHT;//stick to opposite of movement
         break;
       case nsIDOMUIEvent::DOM_VK_END :
+          InvalidateDesiredX();
           pos.mAmount = eSelectEndLine;
           InvalidateDesiredX();
           mHint = HINTLEFT;//stick to this line

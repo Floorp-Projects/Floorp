@@ -731,9 +731,12 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
     }
   }
 */
-  if (aEvent->message == NS_MOUSE_MOVE) {
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  switch (aEvent->message)
+  {
+  case NS_MOUSE_MOVE:
+    {
     if (NS_SUCCEEDED(rv)){
       nsCOMPtr<nsIFrameSelection> frameselection;
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
@@ -743,59 +746,56 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
 #if NORMAL_DRAG_HANDLING
             HandleDrag(aPresContext, aEvent, aEventStatus);
 #else
-  nsIDragService* dragService; 
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID, 
-                                             nsIDragService::GetIID(), 
-                                             (nsISupports **)&dragService); 
-  if (NS_OK == rv) { 
-    nsCOMPtr<nsITransferable> trans; 
-    rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                              nsITransferable::GetIID(), getter_AddRefs(trans)); 
-    nsCOMPtr<nsITransferable> trans2; 
-    rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                              nsITransferable::GetIID(), getter_AddRefs(trans2)); 
-    if ( trans && trans2 ) {
-      nsString textPlainFlavor ( "text/plain" );
-      trans->AddDataFlavor(&textPlainFlavor);
-      nsString dragText = "Drag Text";
-      PRUint32 len = 9; 
-      trans->SetTransferData(&textPlainFlavor, dragText.ToNewCString(), len);   // transferable consumes the data
+            nsIDragService* dragService; 
+            nsresult rv = nsServiceManager::GetService(kCDragServiceCID, 
+                                                       nsIDragService::GetIID(), 
+                                                       (nsISupports **)&dragService); 
+            if (NS_OK == rv) { 
+              nsCOMPtr<nsITransferable> trans; 
+              rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                                        nsITransferable::GetIID(), getter_AddRefs(trans)); 
+              nsCOMPtr<nsITransferable> trans2; 
+              rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                                        nsITransferable::GetIID(), getter_AddRefs(trans2)); 
+              if ( trans && trans2 ) {
+                nsString textPlainFlavor ( "text/plain" );
+                trans->AddDataFlavor(&textPlainFlavor);
+                nsString dragText = "Drag Text";
+                PRUint32 len = 9; 
+                trans->SetTransferData(&textPlainFlavor, dragText.ToNewCString(), len);   // transferable consumes the data
 
-      trans2->AddDataFlavor(&textPlainFlavor);
-      nsString dragText2 = "More Drag Text";
-      len = 14; 
-      trans2->SetTransferData(&textPlainFlavor, dragText2.ToNewCString(), len);   // transferable consumes the data
+                trans2->AddDataFlavor(&textPlainFlavor);
+                nsString dragText2 = "More Drag Text";
+                len = 14; 
+                trans2->SetTransferData(&textPlainFlavor, dragText2.ToNewCString(), len);   // transferable consumes the data
 
-      nsCOMPtr<nsISupportsArray> items;
-      NS_NewISupportsArray(getter_AddRefs(items));
-      if ( items ) {
-        items->AppendElement(trans);
-        items->AppendElement(trans2);
-        dragService->InvokeDragSession(items, nsnull, nsIDragService::DRAGDROP_ACTION_COPY | nsIDragService::DRAGDROP_ACTION_MOVE);
-      }
-    } 
-    nsServiceManager::ReleaseService(kCDragServiceCID, dragService); 
-  } 
-//--------------------------------------------------- 
+                nsCOMPtr<nsISupportsArray> items;
+                NS_NewISupportsArray(getter_AddRefs(items));
+                if ( items ) {
+                  items->AppendElement(trans);
+                  items->AppendElement(trans2);
+                  dragService->InvokeDragSession(items, nsnull, nsIDragService::DRAGDROP_ACTION_COPY | nsIDragService::DRAGDROP_ACTION_MOVE);
+                }
+              } 
+              nsServiceManager::ReleaseService(kCDragServiceCID, dragService); 
+            } 
+          //--------------------------------------------------- 
 #endif             
             
+          }
         }
       }
-    }
-  } 
-  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    if (((nsMouseEvent*)aEvent)->clickCount > 1) {
-      HandleMultiplePress(aPresContext, aEvent, aEventStatus);
-    }
-    else {
+    }break;
+  case NS_MOUSE_LEFT_BUTTON_DOWN:
+    {
+      nsCOMPtr<nsIFrameSelection> frameselection;
+      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection)
+        frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
       HandlePress(aPresContext, aEvent, aEventStatus);
-    }
-  }
-  else if (aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK) {
-    HandleMultiplePress(aPresContext, aEvent, aEventStatus);
-  }
-
-
+    }break;
+  default:
+    break;
+  }//end switch
   return NS_OK;
 }
 
@@ -811,8 +811,8 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
     return NS_OK;
   }
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
-  if (me->clickCount >2 )
-    return nsFrame::HandleMultiplePress(aPresContext,aEvent,aEventStatus);
+  if (me->clickCount >1 )
+    return HandleMultiplePress(aPresContext,aEvent,aEventStatus);
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
@@ -848,12 +848,13 @@ nsFrame::HandleMultiplePress(nsIPresContext& aPresContext,
    if (!DisplaySelection(aPresContext)) {
     return NS_OK;
   }
-
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
   if (me->clickCount <3 )
     return NS_OK;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+   
+
   if (NS_SUCCEEDED(rv) && shell) {
     nsCOMPtr<nsIRenderingContext> acx;      
     nsCOMPtr<nsIFocusTracker> tracker;
@@ -1027,7 +1028,7 @@ NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext& aCX,
     if (aXCoord > (rect.width + rect.x))
       aContentOffset++;
 #endif
-    aContentOffsetEnd = aContentOffset;
+    aContentOffsetEnd = aContentOffset+1;
   }
   return result;
 }
@@ -1900,6 +1901,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
       if (NS_FAILED(result))
         return result;
       nsISupports *isupports = nsnull;
+      PRInt32 contentOffsetEnd;//not used
       nsIFrame *storeOldResultFrame = resultFrame;
       while ( !found ){
         nsCOMPtr<nsIPresContext> context;
@@ -1908,7 +1910,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
         result = resultFrame->GetPosition(*(context.get()),aDesiredX,
                                           aResultContent,
                                           *aContentOffset,
-                                          *aContentOffset);
+                                          contentOffsetEnd);
         if (NS_SUCCEEDED(result))
           found = PR_TRUE;
         else {
@@ -1939,7 +1941,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
 
         result = resultFrame->GetPosition(*(context.get()),aDesiredX,
                                           aResultContent, *aContentOffset,
-                                          *aContentOffset);
+                                          contentOffsetEnd);
         if (NS_SUCCEEDED(result))
           found = PR_TRUE;
         else {
@@ -1979,7 +1981,19 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
   if (!aPos || !aPos->mTracker )
     return NS_ERROR_NULL_POINTER;
   nsresult result = NS_ERROR_FAILURE; 
+  PRInt32 endoffset;
   switch (aPos->mAmount){
+    case eSelectNoAmount:
+    {
+      nsCOMPtr<nsIPresContext> context;
+      result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
+      if (NS_FAILED(result) || !context)
+        return result;
+      result = GetPosition(*(context.get()),0,
+                             getter_AddRefs(aPos->mResultContent),
+                             aPos->mContentOffset,
+                             endoffset);
+    }break;
     case eSelectLine :
     {
       nsCOMPtr<nsILineIterator> it; 
@@ -2095,7 +2109,7 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
           result = firstFrame->GetPosition(*(context.get()),0,
                                            getter_AddRefs(aPos->mResultContent),
                                            aPos->mContentOffset,
-                                           aPos->mContentOffset);
+                                           endoffset);
         }
       }
       else
@@ -2119,7 +2133,7 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
                                             2*usedRect.width,//2* just to be sure we are off the edge
                                             getter_AddRefs(aPos->mResultContent),
                                             aPos->mContentOffset,
-                                            aPos->mContentOffset);
+                                            endoffset);
             if (NS_SUCCEEDED(result))
               found = PR_TRUE;
             else
@@ -2197,6 +2211,8 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
         }
 
       }
+      if (aPos->mAmount == eSelectDir)
+        aPos->mAmount = eSelectNoAmount;//just get to next frame.
       nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
       result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,this);
       if (NS_FAILED(result))

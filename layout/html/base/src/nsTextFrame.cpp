@@ -2088,8 +2088,29 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
   switch (aPos->mAmount){
     case eSelectNoAmount:
     {
-      aPos->mContentOffset = aPos->mStartOffset;
-      result = NS_OK;
+      // Transform text from content into renderable form
+      nsIDocument* doc;
+      result = mContent->GetDocument(doc);
+      if (NS_FAILED(result) || !doc) {
+        return result;
+      }
+      nsCOMPtr<nsILineBreaker> lb;
+      doc->GetLineBreaker(getter_AddRefs(lb));
+      NS_RELEASE(doc);
+
+      nsTextTransformer tx(lb, nsnull);
+      PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
+
+      if (textLength)//if no renderable length, you cant park here.
+      {
+        aPos->mContentOffset = aPos->mStartOffset;
+        result = NS_OK;
+      }
+      else
+      {
+        aPos->mAmount = eSelectDir;//go to "next" or previous frame based on direction not THIS frame
+        result = nsFrame::PeekOffset(aPos);
+      }
     }
     break;
 
