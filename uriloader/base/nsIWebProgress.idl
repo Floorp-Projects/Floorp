@@ -44,10 +44,23 @@ interface nsIDOMWindow;
 interface nsIWebProgressListener;
 
 /**
- * The nsIWebProgress interface is used to look at the progress of documents
- * loading in a particular DOM window and any descendent DOM windows.
+ * The nsIWebProgress interface is used to add or remove nsIWebProgressListener
+ * instances to observe the loading of asynchronous requests (usually in the
+ * context of a DOM window).
  *
- * @status UNDER_REVIEW
+ * nsIWebProgress instances may be arranged in a parent-child configuration,
+ * corresponding to the parent-child configuration of their respective DOM
+ * windows.  However, in some cases a nsIWebProgress instance may not have an
+ * associated DOM window.  The parent-child relationship of nsIWebProgress
+ * instances is not made explicit by this interface, but the relationship may
+ * exist in some implementations.
+ *
+ * A nsIWebProgressListener instance receives notifications for the
+ * nsIWebProgress instance to which it added itself, and it may also receive
+ * notifications from any nsIWebProgress instances that are children of that
+ * nsIWebProgress instance.
+ *
+ * @status FROZEN
  */
 [scriptable, uuid(570F39D0-EFD0-11d3-B093-00A024FFC08C)]
 interface nsIWebProgress : nsISupports
@@ -144,12 +157,16 @@ interface nsIWebProgress : nsISupports
   void removeProgressListener(in nsIWebProgressListener aListener);
 
   /**
-   * The nsIDOMWindow associated with this nsIWebProgress instance.
+   * The DOM window associated with this nsIWebProgress instance.
+   *
+   * @throw NS_ERROR_FAILURE
+   *        Indicates that there is no associated DOM window.
    */
   readonly attribute nsIDOMWindow DOMWindow;
   
   /**
-   * Indicates whether or not a document is currently being loaded.
+   * Indicates whether or not a document is currently being loaded
+   * in the context of this nsIWebProgress instance.
    */
   readonly attribute PRBool isLoadingDocument;
 };
