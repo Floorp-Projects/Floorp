@@ -161,3 +161,19 @@ EXE_LIBS=
 DLL_CFLAGS=
 DLL_LFLAGS=/SUBSYSTEM:WINDOWS
 DLL_LIBS=
+
+#//------------------------------------------------------------------------
+#// 
+#// rebase detection
+#//
+#//------------------------------------------------------------------------
+
+REBASE=rebase.exe
+!if [for %i in (. %PATH%) do @if exist %i\$(REBASE) echo %i\$(REBASE) > rebase.yes]
+!endif
+
+!if !exist(rebase.yes)
+REBASE=
+!if [del rebase.yes]
+!endif
+!endif
