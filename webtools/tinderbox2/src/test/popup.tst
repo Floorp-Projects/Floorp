@@ -1,11 +1,13 @@
 #!#perl# -w --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
 
 # generate static html pages for use in testing the popup libraries.
 # Output is written to the directory $TinderConfig::TINDERBOX_HTML_DIR/popup
 
 
-# $Revision: 1.4 $ 
-# $Date: 2003/02/03 13:46:07 $ 
+# $Revision: 1.5 $ 
+# $Date: 2003/02/11 00:26:02 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/popup.tst,v $ 
 # $Name:  $ 
