@@ -82,6 +82,7 @@ typedef struct _reginfo
 #define REGTYPE_ENTRY_STRING_UTF      (REGTYPE_ENTRY + 1)
 #define REGTYPE_ENTRY_INT32_ARRAY     (REGTYPE_ENTRY + 2)
 #define REGTYPE_ENTRY_BYTES           (REGTYPE_ENTRY + 3)
+#define REGTYPE_ENTRY_FILE            (REGTYPE_ENTRY + 4)
 
 #define REG_DELETE_LIST_KEY  "Netscape/Communicator/SoftwareUpdate/Delete List"
 #define REG_REPLACE_LIST_KEY "Netscape/Communicator/SoftwareUpdate/Replace List"
@@ -95,7 +96,13 @@ typedef struct _reginfo
 /* Platform-dependent declspec for library interface */
 #if defined(XP_PC)
   #if defined(WIN32)
-  #define VR_INTERFACE(type)     __declspec(dllexport) type __stdcall
+
+    #if defined (STANDALONE_REGISTRY)
+       #define VR_INTERFACE(type)     __declspec(dllexport) type __cdecl
+    #else
+       #define VR_INTERFACE(type)     __declspec(dllexport) type __stdcall
+    #endif
+
   #elif defined(XP_OS2)
   #define VR_INTERFACE(type)     type _Optlink
   #else
@@ -229,10 +236,10 @@ VR_INTERFACE(REGERR) NR_RegEnumEntries(
          REGINFO *info        /* optional; returns info about entry */
        );
 
-#ifndef STANDALONE_REGISTRY
+
 VR_INTERFACE(void) NR_ShutdownRegistry(void);
 VR_INTERFACE(void) NR_StartupRegistry(void);
-#endif /* STANDALONE_REGISTRY */
+
 
 XP_END_PROTOS
 

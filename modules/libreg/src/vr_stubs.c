@@ -21,6 +21,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #ifndef STANDALONE_REGISTRY
 #include "prtypes.h"
@@ -29,11 +30,6 @@
 #include "vr_stubs.h"
 
 #ifdef XP_MAC
-#ifndef theRegistry
-#define	theRegistry	33	/* Duplicated from uprefd.h.  I know this is a bad thing to do but you */
-						/* don't even want to know what including that would do since it's a */
-						/* header for a C++ file */
-#endif /* theRegistry */						
 #include <Folders.h>
 #include <Script.h>
 #include <stdlib.h>
@@ -156,14 +152,32 @@ extern XP_File vr_fileOpen (const char *name, const char * mode)
 {
     XP_File fh = NULL;
     struct stat st;
-
+	OSErr	anErr;
+	FSSpec	newFSSpec;
+	
+	anErr = FSpLocationFromFullPath(strlen(name), name, &newFSSpec);
+	
+	if (anErr == -43)
+	{ 
+		/* if file doesn't exist */
+		anErr = FSpCreate(&newFSSpec, 'MOSS', 'REGS', smSystemScript);
+	}
+	else
+	{
+		/* there is not much to do here.  if we got noErr, the file exists.  If we did not get
+		   noErr or -43, we are pretty hosed.
+		*/
+	}
+		
     if ( name != NULL ) {
         if ( stat( name, &st ) == 0 )
             fh = fopen( name, XP_FILE_UPDATE_BIN ); /* If/when we switch to MSL C Lib (gromit uses this), we might have to take out the Macro per bug #62382 */
 	    else 
+	    {
+	       	/* should never get here! */
             fh = fopen( name, XP_FILE_WRITE_BIN );
-     }
-
+     	}
+	}
     return fh;
 }
 
@@ -177,18 +191,15 @@ extern void vr_findGlobalRegName ()
     Handle	thePath;
     int     bCreate = 0;
 	Ptr		finalPath;
-	Str255	registryName;
 	
 	err = FindFolder(kOnSystemDisk,'pref', false, &foundVRefNum, &foundDirID);
 
 	if (!err) {
-	
-		GetIndString(registryName, 300, theRegistry);
 
-		err = FSMakeFSSpec(foundVRefNum, foundDirID, registryName, &regSpec);
+		err = FSMakeFSSpec(foundVRefNum, foundDirID, "\pNetscape Registry", &regSpec);
 
 		if (err == -43) { /* if file doesn't exist */
-			err = FSpCreate(&regSpec, '    ', '    ', smSystemScript);
+			err = FSpCreate(&regSpec, 'MOSS', 'REGS', smSystemScript);
             bCreate = 1;
 		}
 
@@ -246,7 +257,7 @@ extern int nr_RenameFile(char *from, char *to)
 }
 
 
-#if 0
+#if 1
 /* Uncomment the following for older Mac build environments
  * that don't support these functions
  */
@@ -263,7 +274,6 @@ char *strdup(const char *source)
         BlockMoveData(source, newAllocation, stringLength);
         return newAllocation;
 }
-
 
 int strcasecmp(const char *str1, const char *str2)
 {
@@ -355,6 +365,7 @@ long BUILDNUM =
 #include "../../../build/build_number"
 ;
 #endif
+
 
 REGERR vr_ParseVersion(char *verstr, VERSION *result);
 int main(int argc, char *argv[]);
@@ -452,10 +463,16 @@ int main(int argc, char *argv[])
     }
     strcat(buff, "/");
 
+
+    NR_StartupRegistry();
+    VR_SetRegDirectory(buff);
+
+
 	if ( -1 == (access( TheRegistry, W_OK )) ) {
-        sprintf(ver,"4.1.0.%ld",BUILDNUM);
+        sprintf(ver,"4.50.0.%ld",BUILDNUM);
 		VR_CreateRegistry("Communicator", buff, ver);
     }
+
 
 	if ( !(fh = fopen( Flist, "r" )) )
 	{
@@ -490,3 +507,5 @@ int main(int argc, char *argv[])
 #endif /* STANDALONE_REGISTRY */
 
 #endif /* XP_UNIX || XP_OS2 */
+
+

@@ -88,7 +88,7 @@
  * Types and Objects
  * --------------------------------------------------------------------
  */
-
+#undef REGOFF
 typedef int32 REGOFF;   /* offset into registry file */
 
 typedef struct _desc

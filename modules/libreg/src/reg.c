@@ -41,11 +41,17 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
+#include <errno.h>
 
 #ifdef SUNOS4
   #include <unistd.h>  /* for SEEK_SET */
 #endif /* SUNOS4 */
+
+#ifdef XP_MAC
+#include "prmacos.h"
+#endif
 
 #include "reg.h"
 #include "NSReg.h"
@@ -103,6 +109,120 @@ static PRMonitor *reglist_monitor;
 #endif
 char *globalRegName = NULL;
 static char *user_name = NULL;
+
+
+
+
+#ifdef XP_MAC
+
+void nr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length);
+char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength);
+
+#include <Aliases.h>
+#include <TextUtils.h>
+#include <Memory.h>
+#include <Folders.h>
+#include "FullPath.h"
+
+/* returns an alias as a malloc'd pointer.
+ * On failure, *alias is NULL
+ */
+void nr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length)
+{
+	OSErr err;
+	FSSpec fs;
+	AliasHandle macAlias;
+	*alias = NULL;
+	*length = 0;
+	c2pstr((char*)fileName);
+	err = FSMakeFSSpec(0, 0, (unsigned char *)fileName, &fs);
+	p2cstr((unsigned char *)fileName);
+	if ( err != noErr )
+		return;
+	err = NewAlias(NULL, &fs, &macAlias);
+	if ( (err != noErr) || ( macAlias == NULL ))
+		return;
+	*length = GetHandleSize( (Handle) macAlias );
+	*alias = XP_ALLOC( *length );
+	if ( *alias == NULL )
+	{
+		DisposeHandle((Handle)macAlias);
+		return;
+	}
+	HLock( (Handle) macAlias );
+	XP_MEMCPY(*alias, *macAlias , *length);
+	HUnlock( (Handle) macAlias );
+	DisposeHandle( (Handle) macAlias);
+	return;
+}
+
+/* resolves an alias, and returns a full path to the Mac file
+ * If the alias changed, it would be nice to update our alias pointers
+ */
+char * nr_PathFromMacAlias(const void * alias, uint32 aliasLength)
+{
+	OSErr 			err;
+	short 			vRefNum;
+	long 			dirID;
+	AliasHandle 	h 			= NULL;
+	Handle 			fullPath 	= NULL;
+	short 			fullPathLength;
+	char * 			cpath 		= NULL;
+	FSSpec 			fs;
+	Boolean 		ignore;	/* Change flag, it would be nice to change the alias on disk 
+						if the file location changed */
+	
+	
+	XP_MEMSET( &fs, '\0', sizeof(FSSpec) );
+	
+	
+	/* Copy the alias to a handle and resolve it */
+	h = (AliasHandle) NewHandle(aliasLength);
+	if ( h == NULL)
+		goto fail;
+		
+		
+	HLock( (Handle) h);
+	XP_MEMCPY( *h, alias, aliasLength );
+	HUnlock( (Handle) h);
+	
+	
+	err = ResolveAlias(NULL, h, &fs, &ignore);
+	if (err != noErr)
+		goto fail;
+	
+	/* if the file is inside the trash, assume that user has deleted
+	 	it and that we do not want to look at it */
+	err = FindFolder(fs.vRefNum, kTrashFolderType, false, &vRefNum, &dirID);
+	if (err == noErr)
+		if (dirID == fs.parID)	/* File is inside the trash */
+			goto fail;
+	
+	/* Get the full path and create a char * out of it */
+
+	err = GetFullPath(fs.vRefNum, fs.parID,fs.name, &fullPathLength, &fullPath);
+	if ( (err != noErr) || (fullPath == NULL) )
+		goto fail;
+	
+	cpath = (char*) XP_ALLOC(fullPathLength + 1);
+	if ( cpath == NULL)
+		goto fail;
+	
+	HLock( fullPath );
+	XP_MEMCPY(cpath, *fullPath, fullPathLength);
+	cpath[fullPathLength] = 0;
+	HUnlock( fullPath );
+	
+	/* Drop through */
+fail:
+	if (h != NULL)
+		DisposeHandle( (Handle) h);
+	if (fullPath != NULL)
+		DisposeHandle( fullPath);
+	return cpath;
+}
+
+#endif
 
 
 /* --------------------------------------------------------------------
@@ -207,8 +327,7 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
                 return REGERR_READONLY;
             else
                 return REGERR_FAIL;
-                
-#ifdef EMFILE  /* Mac doesn't have EMFILE. */
+#ifdef EMFILE   /* Mac Does not have EMFILE  */               
 		case EMFILE:	/* too many files open */
 #endif
 		default:
@@ -869,7 +988,7 @@ static REGERR nr_WriteString(REGFILE *reg, char *string, REGDESC *desc)
         return REGERR_BADUTF8;
     if (reg->readOnly)
         return REGERR_READONLY;
-	len = XP_STRLEN(string) + 1;
+    len = XP_STRLEN(string) + 1;
 
     return nr_WriteData( reg, string, len, desc );
 
@@ -1107,6 +1226,7 @@ static REGERR nr_NextName(char *pPath, char *buf, uint32 bufsize, char **newPath
 
 
 
+
 static REGERR nr_CatName(REGFILE *reg, REGOFF node, char *path, uint32 bufsize, REGDESC *desc)
 {
     REGERR err = REGERR_OK;
@@ -1169,7 +1289,7 @@ static REGERR nr_ReplaceName(REGFILE *reg, REGOFF node, char *path, uint32 bufsi
             --len;
         }
         if ( *p == PATHDEL ) {
-            p++;
+            p++; 
             len++;
         }
     }
@@ -1233,7 +1353,7 @@ static REGERR nr_FindAtLevel(REGFILE *reg, REGOFF offFirst, char *pName,
 	REGDESC *pDesc, REGOFF *pOffPrev);
 
 static REGERR nr_CreateSubKey(REGFILE *reg, REGDESC *pParent, char *name);
-static REGERR nr_CreateEntryString(REGFILE *reg, REGDESC *pParent,
+static REGERR nr_CreateEntryString(REGFILE *reg, REGDESC *pParent, 
     char *name, char *value);
 static REGERR nr_CreateEntry(REGFILE *reg, REGDESC *pParent, char *name,
     uint16 type, char *buffer, uint32 length);
@@ -1705,7 +1825,7 @@ static void   nr_InitStdRkeys( REGFILE *reg )
     }
 
     /* ROOTKEY_CURRENT_USER */
-    /* delay until first use -- see nr_TranslateKey */
+	/* delay until first use -- see nr_TranslateKey */
 
     /* ROOTKEY_PRIVATE */
     err = nr_RegAddKey( reg, reg->hdr.root, ROOTKEY_PRIVATE_STR, &key );
@@ -1855,7 +1975,6 @@ static void nr_Upgrade_1_1(REGFILE *reg)
 
 }
 
-
 static char *nr_GetUsername()
 {
   if (NULL == user_name) {
@@ -1950,16 +2069,14 @@ VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
     REGFILE   *pReg;
     REGHANDLE *pHandle;
 
-    filename = nr_GetRegName( filename );
-
-    XP_ASSERT(bRegStarted);
-
     /* initialize output handle in case of error */
     *hReg = NULL;
 
     XP_ASSERT(bRegStarted); /* you must call NR_StartupRegistry() */
     if ( !bRegStarted )
         return REGERR_FAIL;
+
+    filename = nr_GetRegName( filename );
 
 #if !defined(STANDALONE_REGISTRY)
     PR_EnterMonitor(reglist_monitor);
@@ -2102,7 +2219,7 @@ VR_INTERFACE(REGERR) NR_RegClose( HREG hReg )
     PR_ExitMonitor(reglist_monitor);
 #endif
 
-    reghnd->magic = 0;    /* prevent accidental re-use */
+    reghnd->magic = 0;    /* prevent accidental re-use */  
     XP_FREE( reghnd );
 
     return REGERR_OK;
@@ -2120,7 +2237,6 @@ VR_INTERFACE(REGERR) NR_RegClose( HREG hReg )
 static REGERR nr_createTempRegName( char *filename, uint32 filesize );
 static REGERR nr_addNodesToNewReg( HREG hReg, RKEY rootkey, HREG hRegNew, void *userData, nr_RegPackCallbackFunc fn );
 /* -------------------------------------------------------------------- */
-
 static REGERR nr_createTempRegName( char *filename, uint32 filesize )
 {
     struct stat statbuf;
@@ -2131,9 +2247,18 @@ static REGERR nr_createTempRegName( char *filename, uint32 filesize )
 
     XP_STRCPY( tmpname, filename );
     len = XP_STRLEN(tmpname);
+    if (len < filesize) {
+        tmpname[len-1] = '~';
+        tmpname[len] = '\0';
+        remove(tmpname);
+        if ( stat(tmpname, &statbuf) != 0 )
+            nameFound = TRUE;
+    }
+    len++;
     while (!nameFound && len < filesize ) {
         tmpname[len-1] = '~';
         tmpname[len] = '\0';
+        remove(tmpname);
         if ( stat(tmpname, &statbuf) != 0 )
             nameFound = TRUE;
         else
@@ -2252,6 +2377,10 @@ VR_INTERFACE(REGERR) NR_RegPack( HREG hReg, void *userData, nr_RegPackCallbackFu
 	int err = REGERR_OK;
     int status = REGERR_OK;
    	RKEY key;
+
+    XP_ASSERT(bRegStarted);
+    if ( !bRegStarted )
+        return REGERR_FAIL;
 
     reg = ((REGHANDLE*)hReg)->pReg;
 
@@ -2720,7 +2849,6 @@ VR_INTERFACE(REGERR) NR_RegGetEntry( HREG hReg, RKEY key, char *name,
 
                     break;
 
-
                 case REGTYPE_ENTRY_STRING_UTF:
                     tmpbuf = (char*)buffer;
                     err = nr_ReadData( reg, &desc, *size, tmpbuf );
@@ -2728,7 +2856,37 @@ VR_INTERFACE(REGERR) NR_RegGetEntry( HREG hReg, RKEY key, char *name,
                     tmpbuf[(*size)-1] = '\0';
                     break;
 
+                case REGTYPE_ENTRY_FILE:
 
+					err = nr_ReadData( reg, &desc, *size, (char*)buffer );                
+#ifdef XP_MAC
+					if (err == 0)
+					{
+						tmpbuf = nr_PathFromMacAlias(buffer, *size);
+						if (tmpbuf == NULL) 
+						{
+	                        buffer = NULL;
+	                        err = REGERR_NOFIND;
+	                    }
+			            else 
+			            {
+			            	needFree = TRUE;
+			            	
+							if (XP_STRLEN(tmpbuf) > *size)
+							{
+								err = REGERR_BUFTOOSMALL;
+							}
+							else
+							{
+								XP_STRCPY(buffer, tmpbuf);
+							}
+						}
+					}
+#endif					
+					            
+                
+                	break;
+                
                 case REGTYPE_ENTRY_BYTES:
                 default:              /* return raw data for unknown types */
                     err = nr_ReadData( reg, &desc, *size, (char*)buffer );
@@ -2836,12 +2994,13 @@ VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 typ
     REGFILE*    reg;
     REGDESC     desc;
     REGDESC     parent;
-    char        *data;
+    char        *data = NULL;
     uint32      nInt;
     uint32      *pIDest;
     uint32      *pISrc;
     XP_Bool     needFree = FALSE;
-
+	int32  		datalen = size;
+	
     XP_ASSERT(bRegStarted);
 
     /* verify parameters */
@@ -2860,7 +3019,18 @@ VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 typ
         case REGTYPE_ENTRY_BYTES:
             data = (char*)buffer;
             break;
+		
+		case REGTYPE_ENTRY_FILE:
 
+#ifdef XP_MAC
+            nr_MacAliasFromPath(buffer, &data, &datalen);
+            if (data)
+                needFree = TRUE;
+#else
+            data = (char*)buffer;	
+#endif			
+			break;
+			
 
         case REGTYPE_ENTRY_STRING_UTF:
             data = (char*)buffer;
@@ -2910,7 +3080,7 @@ VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 typ
             if ( err == REGERR_OK ) 
             {
                 /* then update the existing one */
-                err = nr_WriteData( reg, data, size, &desc );
+                err = nr_WriteData( reg, data, datalen, &desc );
                 if ( err == REGERR_OK ) 
                 {
                     desc.type = type;
@@ -2920,7 +3090,7 @@ VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 typ
             else if ( err == REGERR_NOFIND ) 
             {
                 /* otherwise create a new entry */
-                err = nr_CreateEntry( reg, &parent, name, type, data, size );
+                err = nr_CreateEntry( reg, &parent, name, type, data, datalen );
             }
             else {
                 /* other errors fall through */
@@ -3293,10 +3463,6 @@ VR_INTERFACE(REGERR) NR_RegEnumEntries( HREG hReg, RKEY key, REGENUM *state,
 
 
 
-
-#ifndef STANDALONE_REGISTRY
-#include "VerReg.h"
-
 /* ---------------------------------------------------------------------
  * ---------------------------------------------------------------------
  * Registry initialization and shut-down
@@ -3304,7 +3470,14 @@ VR_INTERFACE(REGERR) NR_RegEnumEntries( HREG hReg, RKEY key, REGENUM *state,
  * ---------------------------------------------------------------------
  */
 
+#include "VerReg.h"
+
+#ifndef STANDALONE_REGISTRY
 extern PRMonitor *vr_monitor;
+#endif 
+
+
+
 #ifdef XP_UNIX
 extern XP_Bool bGlobalRegistry;
 #endif
@@ -3323,11 +3496,14 @@ VR_INTERFACE(void) NR_StartupRegistry(void)
 
     if (bRegStarted)
         return;
-
+        
+#ifndef STANDALONE_REGISTRY
     vr_monitor = PR_NewMonitor();
     XP_ASSERT( vr_monitor != NULL );
     reglist_monitor = PR_NewMonitor();
     XP_ASSERT( reglist_monitor != NULL );
+#endif 
+
 #ifdef XP_UNIX
     bGlobalRegistry = ( getenv(UNIX_GLOBAL_FLAG) != NULL );
 #endif
@@ -3337,7 +3513,8 @@ VR_INTERFACE(void) NR_StartupRegistry(void)
     vr_findGlobalRegName();
 
     /* check to see that we have a valid registry */
-    if (REGERR_OK == NR_RegOpen("", &reg)) {
+    if (REGERR_OK == NR_RegOpen("", &reg))
+    {
         NR_RegClose(reg);
     }
     else {
@@ -3346,7 +3523,6 @@ VR_INTERFACE(void) NR_StartupRegistry(void)
         VR_InRegistry("/Netscape");
         VR_Close();
     }
-
 }
 
 VR_INTERFACE(void) NR_ShutdownRegistry(void)
@@ -3355,12 +3531,14 @@ VR_INTERFACE(void) NR_ShutdownRegistry(void)
 
     if (!bRegStarted)
         return;
-
+        
+#ifndef STANDALONE_REGISTRY
     if ( vr_monitor != NULL ) {
         VR_Close();
         PR_DestroyMonitor(vr_monitor);
         vr_monitor = NULL;
     }
+#endif 
 
     /* close any forgotten open registries */
     while ( RegList != NULL ) {
@@ -3372,10 +3550,14 @@ VR_INTERFACE(void) NR_ShutdownRegistry(void)
         nr_DeleteNode( pReg );
     }
     
+
+#ifndef STANDALONE_REGISTRY    
     if ( reglist_monitor != NULL ) {
         PR_DestroyMonitor( reglist_monitor );
         reglist_monitor = NULL;
     }
+#endif 
+
 
     XP_FREEIF(user_name);
 
@@ -3387,7 +3569,5 @@ VR_INTERFACE(void) NR_ShutdownRegistry(void)
 #ifdef XP_MAC
 #pragma export reset
 #endif
-
-#endif /* STANDALONE_REGISTRY */
 
 /* EOF: reg.c */
