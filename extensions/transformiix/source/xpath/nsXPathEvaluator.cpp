@@ -75,7 +75,7 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
                                    nsIDOMXPathExpression **aResult)
 {
-    nsCOMPtr<nsIHTMLDocument> html = do_QueryInterface(mDocument);
+    nsCOMPtr<nsIHTMLDocument> html = do_QueryReferent(mDocument);
     ParseContextImpl pContext(aResolver, !!html);
     Expr* expression = ExprParser::createExpr(PromiseFlatString(aExpression),
                                               &pContext);
@@ -130,7 +130,7 @@ nsXPathEvaluator::Evaluate(const nsAString & aExpression,
 NS_IMETHODIMP
 nsXPathEvaluator::SetDocument(nsIDOMDocument* aDocument)
 {
-    mDocument = aDocument;
+    mDocument = do_GetWeakReference(aDocument);
     return NS_OK;
 }
 
