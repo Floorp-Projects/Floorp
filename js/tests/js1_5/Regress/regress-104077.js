@@ -552,7 +552,21 @@ function a120571()
   }
 }
 
-print(a120571); // this caused a crash !
+// this caused a crash! Test to see that it doesn't now.
+print(a120571);
+
+// Now test that we have a non-null value for a120571.toString()
+status = inSection(13);
+try
+{
+  actual = a120571.toString().match(/continue/)[0];
+}
+catch(e)
+{
+  actual = 'FAILED! Did not find "continue" in function body';
+}
+expect = 'continue';
+captureThis();
 
 
 
@@ -571,7 +585,21 @@ function b()
   }
 }
 
-print(b); // this caused a crash !
+// this caused a crash!!! Test to see that it doesn't now.
+print(b);
+
+// Now test that we have a non-null value for b.toString()
+status = inSection(14);
+try
+{
+  actual = b.toString().match(/continue/)[0];
+}
+catch(e)
+{
+  actual = 'FAILED! Did not find "continue" in function body';
+}
+expect = 'continue';
+captureThis();
 
 
 
