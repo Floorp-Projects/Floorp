@@ -67,6 +67,7 @@
 #include "nsIMimeContentTypeHandler.h"
 #include "nsIComponentManager.h"
 #include "nsVoidArray.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIMimeContentTypeHandlerIID, NS_IMIME_CONTENT_TYPE_HANDLER_IID);
@@ -180,21 +181,23 @@ mime_locate_external_content_handler(const char *content_type,
                                      contentTypeHandlerInitStruct  *ctHandlerInfo)
 {
   MimeObjectClass               *newObj = NULL;
-	nsCID                         classID = {0};
+  nsCID                         classID = {0};
   char                          lookupID[256];
-  nsIMimeContentTypeHandler     *ctHandler = NULL;
+  nsCOMPtr<nsIMimeContentTypeHandler>     ctHandler;
+  nsresult rv = NS_OK;
 
   PR_snprintf(lookupID, sizeof(lookupID), "mimecth:%s", content_type);
 	if (nsComponentManager::ProgIDToCLSID(lookupID, &classID) != NS_OK)
     return NULL;
   
-  nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, kIMimeContentTypeHandlerIID, 
-                                     (void **)&ctHandler);
-  if (ctHandler == NULL)
-    return NULL;
+  rv  = nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, kIMimeContentTypeHandlerIID, 
+                                     (void **) getter_AddRefs(ctHandler));
+  if (NS_FAILED(rv) || !ctHandler)
+    return nsnull;
   
-  if (NS_OK != ctHandler->CreateContentTypeHandlerClass(content_type, ctHandlerInfo, &newObj))
-    return NULL;
+  rv = ctHandler->CreateContentTypeHandlerClass(content_type, ctHandlerInfo, &newObj);
+  if (NS_FAILED(rv))
+    return nsnull;
 
   add_content_type_attribs(content_type, ctHandlerInfo);
   return newObj;
