@@ -1507,7 +1507,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         if (newFocus && currFrame)
           ChangeFocus(newFocus, currFrame, PR_TRUE);
         else if (!suppressBlur) {
-          SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+          if(gLastFocusedDocument != mDocument)
+            SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
         }
 
         // The rest is left button-specific.
