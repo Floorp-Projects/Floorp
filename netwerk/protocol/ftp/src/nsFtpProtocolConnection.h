@@ -25,6 +25,8 @@
 #include "nsIStreamListener.h"
 #include "nsITransport.h"
 
+#include "nsString.h"
+
 class nsIConnectionGroup;
 class nsIFtpEventSink;
 
@@ -45,6 +47,12 @@ class nsIFtpEventSink;
 // ftp states
 typedef enum _FTP_STATE {
     FTP_CONNECT,
+    FTP_S_USER,
+    FTP_R_USER,
+    FTP_S_PASS,
+    FTP_R_PASS,
+    FTP_S_ACCT,
+    FTP_R_ACCT,
     FTP_S_PASV,
     FTP_R_PASV,
     FTP_S_PORT,
@@ -88,7 +96,7 @@ public:
     nsFtpProtocolConnection();
     virtual ~nsFtpProtocolConnection();
 
-    nsresult Init(nsIUrl* url, nsISupports* eventSink, PLEventQueue* eventQueue);
+    nsresult Init(nsIUrl* aUrl, nsISupports* aEventSink, PLEventQueue* aEventQueue);
 
 protected:
     nsIUrl*                 mUrl;
@@ -98,8 +106,11 @@ protected:
     PRBool                  mPasv;
     PRBool                  mConnected;
     FTP_STATE               mState;
-    nsITransport*           mCPipe; // the command channel
-    nsITransport*           mDPipe; // the data channel
+    nsITransport*           mCPipe;                 // the command channel
+    nsITransport*           mDPipe;                 // the data channel
+    PRInt32                 mResponseCode;          // the last command channel response code.
+    nsString                mUsername;
+    nsString                mPassword;
 };
 
 #endif /* nsFtpProtocolConnection_h___ */
