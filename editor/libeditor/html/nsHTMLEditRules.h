@@ -128,6 +128,14 @@ protected:
                         PRBool *outIsEmptyBlock, 
                         PRBool aMozBRDoesntCount = PR_FALSE,
                         PRBool aListItemsNotEmpty = PR_FALSE);
+  nsresult CheckForEmptyBlock(nsIDOMNode *aStartNode, 
+                              nsIDOMNode *aBodyNode,
+                              nsISelection *aSelection,
+                              PRBool *aHandled);
+  nsresult CheckForWhitespaceDeletion(nsCOMPtr<nsIDOMNode> *ioStartNode,
+                                      PRInt32 *ioStartOffset,
+                                      PRInt32 aAction,
+                                      PRBool *aHandled);
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
   PRBool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);

@@ -1320,8 +1320,6 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   // initialize out param
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
-  nsCOMPtr<nsISelection> selection(aSelection);
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
   
   // if there is only bogus content, cancel the operation
   if (mBogusNode) 
@@ -1342,13 +1340,15 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   
   // first check for table selection mode.  If so,
   // hand off to table editor.
-  nsCOMPtr<nsIDOMElement> cell;
-  res = mHTMLEditor->GetFirstSelectedCell(getter_AddRefs(cell), nsnull);
-  if (NS_SUCCEEDED(res) && cell)
   {
-    res = mHTMLEditor->DeleteTableCellContents();
-    *aHandled = PR_TRUE;
-    return res;
+    nsCOMPtr<nsIDOMElement> cell;
+    res = mHTMLEditor->GetFirstSelectedCell(getter_AddRefs(cell), nsnull);
+    if (NS_SUCCEEDED(res) && cell)
+    {
+      res = mHTMLEditor->DeleteTableCellContents();
+      *aHandled = PR_TRUE;
+      return res;
+    }
   }
   
   res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(startNode), &startOffset);
@@ -1356,43 +1356,22 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   if (!startNode) return NS_ERROR_FAILURE;
     
   // get the root element  
-  nsCOMPtr<nsIDOMElement> bodyElement;   
   nsCOMPtr<nsIDOMNode> bodyNode; 
-  res = mHTMLEditor->GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(res)) return res;
-  if (!bodyElement) return NS_ERROR_UNEXPECTED;
-  bodyNode = do_QueryInterface(bodyElement);
+  {
+    nsCOMPtr<nsIDOMElement> bodyElement;   
+    res = mHTMLEditor->GetRootElement(getter_AddRefs(bodyElement));
+    if (NS_FAILED(res)) return res;
+    if (!bodyElement) return NS_ERROR_UNEXPECTED;
+    bodyNode = do_QueryInterface(bodyElement);
+  }
 
   if (bCollapsed)
   {
     // if we are inside an empty block, delete it.
-    // Note: do NOT delete table elements this way.
-    nsCOMPtr<nsIDOMNode> block;
-    if (IsBlockNode(startNode)) 
-      block = startNode;
-    else
-      block = mHTMLEditor->GetBlockNodeParent(startNode);
-    PRBool bIsEmptyNode;
-    if (block != bodyNode)
-    {
-      res = mHTMLEditor->IsEmptyNode(block, &bIsEmptyNode, PR_TRUE, PR_FALSE);
-      if (NS_FAILED(res)) return res;
-      if (bIsEmptyNode && !nsHTMLEditUtils::IsTableElement(startNode))
-      {
-        // adjust selection to be right after it
-        nsCOMPtr<nsIDOMNode> blockParent;
-        PRInt32 offset;
-        res = nsEditor::GetNodeLocation(block, address_of(blockParent), &offset);
-        if (NS_FAILED(res)) return res;
-        if (!blockParent || offset < 0) return NS_ERROR_FAILURE;
-        res = aSelection->Collapse(blockParent, offset+1);
-        if (NS_FAILED(res)) return res;
-        res = mHTMLEditor->DeleteNode(block);
-        *aHandled = PR_TRUE;
-        return res;
-      }
-    }
-
+    res = CheckForEmptyBlock(startNode, bodyNode, aSelection, aHandled);
+    if (NS_FAILED(res)) return res;
+    if (*aHandled) return NS_OK;
+    
 #ifdef IBMBIDI
     // Test for distance between caret and text that will be deleted
     res = CheckBidiLevelForDeletion(startNode, startOffset, aAction, aCancel);
@@ -1402,40 +1381,12 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
 
     if (!bPlaintext)
     {
-      // gather up ws data here.  We may be next to non-significant ws.
-      nsWSRunObject wsObj(mHTMLEditor, startNode, startOffset);
-      nsCOMPtr<nsIDOMNode> visNode;
-      PRInt32 visOffset;
-      PRInt16 wsType;
-      if (aAction == nsIEditor::ePrevious)
-      {
-        res = wsObj.PriorVisibleNode(startNode, startOffset, address_of(visNode), &visOffset, &wsType);
-        // note that visOffset is _after_ what we are about to delete.
-      }
-      else if (aAction == nsIEditor::eNext)
-      {
-        res = wsObj.NextVisibleNode(startNode, startOffset, address_of(visNode), &visOffset, &wsType);
-        // note that visOffset is _before_ what we are about to delete.
-      }
-      if (NS_SUCCEEDED(res))
-      {
-        if (wsType==nsWSRunObject::eNormalWS)
-        {
-          // we found some visible ws to delete.  Let ws code handle it.
-          if (aAction == nsIEditor::ePrevious)
-            res = wsObj.DeleteWSBackward();
-          else if (aAction == nsIEditor::eNext)
-            res = wsObj.DeleteWSForward();
-          *aHandled = PR_TRUE;
-          return res;
-        } 
-        else if (visNode)
-        {
-          // reposition startNode and startOffset so that we skip over any non-significant ws
-          startNode = visNode;
-          startOffset = visOffset;
-        }
-      }
+      // Check for needed whitespace adjustments.  If we need to delete
+      // just whitespace, that is handled here.
+      res = CheckForWhitespaceDeletion(address_of(startNode), &startOffset, 
+                                       aAction, aHandled);
+      if (NS_FAILED(res)) return res;
+      if (*aHandled) return NS_OK;
     }
     // in a text node:
     if (mHTMLEditor->IsTextNode(startNode))
@@ -1949,6 +1900,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
     // table elements.
     *aHandled = PR_TRUE;
     nsCOMPtr<nsIEnumerator> enumerator;
+    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
     res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_FAILED(res)) return res;
     if (!enumerator) return NS_ERROR_UNEXPECTED;
@@ -3289,7 +3241,95 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *
   return res;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// CheckForEmptyBlock: Called by WillDeleteSelection to detect and handle
+//                     case of deleting from inside an empty block.
+//                  
+nsresult
+nsHTMLEditRules::CheckForEmptyBlock(nsIDOMNode *aStartNode, 
+                                    nsIDOMNode *aBodyNode,
+                                    nsISelection *aSelection,
+                                    PRBool *aHandled)
+{
+  // if we are inside an empty block, delete it.
+  // Note: do NOT delete table elements this way.
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> block;
+  if (IsBlockNode(aStartNode)) 
+    block = aStartNode;
+  else
+    block = mHTMLEditor->GetBlockNodeParent(aStartNode);
+  PRBool bIsEmptyNode;
+  if (block != aBodyNode)
+  {
+    res = mHTMLEditor->IsEmptyNode(block, &bIsEmptyNode, PR_TRUE, PR_FALSE);
+    if (NS_FAILED(res)) return res;
+    if (bIsEmptyNode && !nsHTMLEditUtils::IsTableElement(aStartNode))
+    {
+      // adjust selection to be right after it
+      nsCOMPtr<nsIDOMNode> blockParent;
+      PRInt32 offset;
+      res = nsEditor::GetNodeLocation(block, address_of(blockParent), &offset);
+      if (NS_FAILED(res)) return res;
+      if (!blockParent || offset < 0) return NS_ERROR_FAILURE;
+      res = aSelection->Collapse(blockParent, offset+1);
+      if (NS_FAILED(res)) return res;
+      res = mHTMLEditor->DeleteNode(block);
+      *aHandled = PR_TRUE;
+    }
+  }
+  return res;
+}
 
+///////////////////////////////////////////////////////////////////////////
+// CheckForWhitespaceDeletion: Called by WillDeleteSelection to detect and handle
+//                     case of deleting whitespace.  If we need to skip over
+//                     whitespace, visNode and visOffset are updated to new
+//                     location to handle deletion.
+//                  
+nsresult
+nsHTMLEditRules::CheckForWhitespaceDeletion(nsCOMPtr<nsIDOMNode> *ioStartNode,
+                                            PRInt32 *ioStartOffset,
+                                            PRInt32 aAction,
+                                            PRBool *aHandled)
+{
+  nsresult res = NS_OK;
+  // gather up ws data here.  We may be next to non-significant ws.
+  nsWSRunObject wsObj(mHTMLEditor, *ioStartNode, *ioStartOffset);
+  nsCOMPtr<nsIDOMNode> visNode;
+  PRInt32 visOffset;
+  PRInt16 wsType;
+  if (aAction == nsIEditor::ePrevious)
+  {
+    res = wsObj.PriorVisibleNode(*ioStartNode, *ioStartOffset, address_of(visNode), &visOffset, &wsType);
+    // note that visOffset is _after_ what we are about to delete.
+  }
+  else if (aAction == nsIEditor::eNext)
+  {
+    res = wsObj.NextVisibleNode(*ioStartNode, *ioStartOffset, address_of(visNode), &visOffset, &wsType);
+    // note that visOffset is _before_ what we are about to delete.
+  }
+  if (NS_SUCCEEDED(res))
+  {
+    if (wsType==nsWSRunObject::eNormalWS)
+    {
+      // we found some visible ws to delete.  Let ws code handle it.
+      if (aAction == nsIEditor::ePrevious)
+        res = wsObj.DeleteWSBackward();
+      else if (aAction == nsIEditor::eNext)
+        res = wsObj.DeleteWSForward();
+      *aHandled = PR_TRUE;
+      return res;
+    } 
+    else if (visNode)
+    {
+      // reposition startNode and startOffset so that we skip over any non-significant ws
+      *ioStartNode = visNode;
+      *ioStartOffset = visOffset;
+    }
+  }
+  return res;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // GetInnerContent: aList and aTbl allow the caller to specify what kind 
