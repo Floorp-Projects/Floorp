@@ -210,6 +210,7 @@ protected:
   PRTime mLastUpdateTime;
   PRTime mUpdateDelta;
   PRBool mLayoutStarted;
+  PRInt32 mInMonolithicContainer;
 };
 
 // Note: operator new zeros our memory
@@ -281,14 +282,6 @@ PRInt32 HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
   NS_ASSERTION(mStackPos > 0, "bad bad");
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
 
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = mDocument->GetShellAt(i);
-    if (nsnull != shell) {
-      shell->BeginObservingDocument();
-      NS_RELEASE(shell);
-    }
-  }
   NS_IF_RELEASE(mCurrentForm);
 
   return 0; 
@@ -333,7 +326,7 @@ PRInt32 HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     nsIAtom* atom = NS_NewAtom("BODY");
     nsresult rv = NS_NewBodyPart(&mBody, atom);
     if (NS_OK == rv) {
-      mRoot->AppendChild(mBody);
+      mRoot->AppendChild(mBody, PR_FALSE);
       startLayout = PR_TRUE;
     }
     NS_RELEASE(atom);
@@ -369,7 +362,6 @@ PRInt32 HTMLContentSink::CloseBody(const nsIParserNode& aNode)
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
 
   // Reflow any lingering content
-  ReflowNewContent();
 
   return 0;
 }
@@ -514,6 +506,7 @@ PRInt32 HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
     case eHTMLTag_table:
       rv = NS_NewTablePart(&container, atom);
+      mInMonolithicContainer++;
       break;
 
     case eHTMLTag_caption:
@@ -598,44 +591,41 @@ PRInt32 HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
   switch (aNode.GetNodeType()) {
   case eHTMLTag_option:
     ProcessCloseOPTIONTag(aNode);
-
-    eHTMLTags parentType;
-    parent = GetCurrentContainer(&parentType);
-    container->Compact();
-
-    if(parent) {
-      parent->AppendChild(container);
-    }
     break;
 
   case eHTMLTag_select:
     ProcessCloseSELECTTag(aNode); // add fall through
-
-  default:
-    if (nsnull != container) {
-      // Now that this container is complete, append it to it's parent
-      eHTMLTags parentType;
-      parent = GetCurrentContainer(&parentType);
-      container->Compact();
-
-      if(parent) {
-        parent->AppendChild(container);
-        if (parent == mBody) {
-          // We just closed a child of the body off. Trigger a
-          // content-appended reflow if enough time has elapsed
-          PRTime now = PR_Now();
-          /* XXX this expression doesn't compile on the Mac
-             kipp said it had to do with a type issue.
-          if (now - mLastUpdateTime >= mUpdateDelta) {
-            mLastUpdateTime = now;
-            mUpdateDelta += mUpdateDelta;
-            ReflowNewContent();
-          }*/
-        }
-      }
-      NS_RELEASE(container);
-    }
     break;
+
+  case eHTMLTag_table:
+    mInMonolithicContainer--;
+    break;
+  }
+
+  if (nsnull != container) {
+    // Now that this container is complete, append it to it's parent
+    eHTMLTags parentType;
+    parent = GetCurrentContainer(&parentType);
+    container->Compact();
+
+    if (nsnull != parent) {
+      parent->AppendChild(container, parent == mBody ? PR_TRUE : PR_FALSE);
+#if XXX
+      if (parent == mBody) {
+        // We just closed a child of the body off. Trigger a
+        // content-appended reflow if enough time has elapsed
+        PRTime now = PR_Now();
+        /* XXX this expression doesn't compile on the Mac
+           kipp said it had to do with a type issue.
+           if (now - mLastUpdateTime >= mUpdateDelta) {
+           mLastUpdateTime = now;
+           mUpdateDelta += mUpdateDelta;
+           ReflowNewContent();
+           }*/
+      }
+#endif
+    }
+    NS_RELEASE(container);
   }
 
   return 0;
@@ -662,6 +652,19 @@ void HTMLContentSink::StartLayout()
 
 void HTMLContentSink::ReflowNewContent()
 {
+    PRInt32 i, ns = mDocument->GetNumberOfShells();
+    for (i = 0; i < ns; i++) {
+      nsIPresShell* shell = mDocument->GetShellAt(i);
+      if (nsnull != shell) {
+        nsIPresContext* cx = shell->GetPresContext();
+        nsRect r;
+        cx->GetVisibleArea(r);
+        shell->ResizeReflow(r.width, r.height);
+        NS_RELEASE(cx);
+        NS_RELEASE(shell);
+      }
+    }
+#if XXX
   printf("reflow body\n");
 
   // Trigger reflows in each of the presentation shells
@@ -673,6 +676,7 @@ void HTMLContentSink::ReflowNewContent()
       NS_RELEASE(shell);
     }
   }
+#endif
 }
 
 PRBool HTMLContentSink::CloseTopmostContainer()
@@ -805,7 +809,7 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   if (NS_OK == rv) {
     if (nsnull != leaf) {
       if (nsnull != parent) {
-        parent->AppendChild(leaf);
+        parent->AppendChild(leaf, parent == mBody ? PR_TRUE : PR_FALSE);
       } else {
         // XXX drop stuff on the floor that doesn't have a container!
         // Bad parser!
@@ -1301,22 +1305,43 @@ nsresult HTMLContentSink::ProcessWBRTag(nsIHTMLContent** aInstancePtrResult,
   return rv;
 }
 
- /**
-  * This method gets called when the parser begins the process
-  * of building the content model via the content sink.
-  *
-  * @update 5/7/98 gess
+/**
+ * This method gets called when the parser begins the process
+ * of building the content model via the content sink.
+ *
+ * @update 5/7/98 gess
  */     
-void HTMLContentSink::WillBuildModel(void){
+void
+HTMLContentSink::WillBuildModel(void)
+{
+  PR_LogPrint("WillBuildModel");
+  mDocument->BeginLoad();
+
+  // XXX temporary
+  PRInt32 i, ns = mDocument->GetNumberOfShells();
+  for (i = 0; i < ns; i++) {
+    nsIPresShell* shell = mDocument->GetShellAt(i);
+    if (nsnull != shell) {
+      shell->BeginObservingDocument();
+      NS_RELEASE(shell);
+    }
+  }
+
+  StartLayout();
 }
 
- /**
-  * This method gets called when the parser concludes the process
-  * of building the content model via the content sink.
-  *
-  * @update 5/7/98 gess
+/**
+ * This method gets called when the parser concludes the process
+ * of building the content model via the content sink.
+ *
+ * @update 5/7/98 gess
  */     
-void HTMLContentSink::DidBuildModel(void){
+void
+HTMLContentSink::DidBuildModel(void)
+{
+  PR_LogPrint("DidBuildModel");
+  ReflowNewContent();
+  mDocument->EndLoad();
 }
 
 /**
@@ -1326,7 +1351,9 @@ void HTMLContentSink::DidBuildModel(void){
  *
  * @update 5/7/98 gess
  */     
-void HTMLContentSink::WillInterrupt(void) {
+void
+HTMLContentSink::WillInterrupt(void)
+{
 }
 
 /**
@@ -1335,7 +1362,9 @@ void HTMLContentSink::WillInterrupt(void) {
  *
  * @update 5/7/98 gess
  */     
-void HTMLContentSink::WillResume(void) {
+void
+HTMLContentSink::WillResume(void)
+{
 }
 
 //----------------------------------------------------------------------
