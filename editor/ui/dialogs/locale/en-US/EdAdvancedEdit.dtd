@@ -34,4 +34,4 @@
 <!ENTITY tabJSE.label                   "JavaScript Events">
 
 <!ENTITY editAttribute.label    "Click on an item above to edit its value">
-<!ENTITY removeAttribute.label  "Remove Attribute">
+<!ENTITY removeAttribute.label  "Remove">
