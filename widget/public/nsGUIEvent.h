@@ -595,6 +595,7 @@ struct nsPopupBlockedEvent : public nsEvent
 
   nsIURI* mRequestingWindowURI; // owning reference
   nsIURI* mPopupWindowURI;      // owning reference
+  nsString mPopupWindowFeatures;
 };
 
 /**

@@ -1347,7 +1347,8 @@ nsDOMEvent::InitKeyEvent(const nsAString& aTypeArg, PRBool aCanBubbleArg, PRBool
 NS_IMETHODIMP nsDOMEvent::InitPopupBlockedEvent(const nsAString & aTypeArg,
                             PRBool aCanBubbleArg, PRBool aCancelableArg,
                             nsIURI *aRequestingWindowURI,
-                            nsIURI *aPopupWindowURI)
+                            nsIURI *aPopupWindowURI,
+                            const nsAString & aPopupWindowFeatures)
 {
   NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
   mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
@@ -1361,6 +1362,7 @@ NS_IMETHODIMP nsDOMEvent::InitPopupBlockedEvent(const nsAString & aTypeArg,
     event->mPopupWindowURI = aPopupWindowURI;
     NS_IF_ADDREF(event->mRequestingWindowURI);
     NS_IF_ADDREF(event->mPopupWindowURI);
+    event->mPopupWindowFeatures = aPopupWindowFeatures;
     return NS_OK;
   }
 
@@ -1392,6 +1394,18 @@ NS_IMETHODIMP nsDOMEvent::GetPopupWindowURI(nsIURI **aPopupWindowURI)
     return NS_OK;
   }
   *aPopupWindowURI = 0;
+  return NS_OK;  // Don't throw an exception
+}
+
+/* readonly attribute DOMString popupFeatures; */
+NS_IMETHODIMP nsDOMEvent::GetPopupWindowFeatures(nsAString &aPopupWindowFeatures)
+{
+  if (mEvent->eventStructType == NS_POPUPBLOCKED_EVENT) {
+    nsPopupBlockedEvent* event = NS_STATIC_CAST(nsPopupBlockedEvent*, mEvent);
+    aPopupWindowFeatures = event->mPopupWindowFeatures;
+    return NS_OK;
+  }
+  aPopupWindowFeatures.Truncate();
   return NS_OK;  // Don't throw an exception
 }
 
