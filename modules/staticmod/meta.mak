@@ -52,7 +52,8 @@ LLIBS           = $(DIST)\lib\gkgfx.lib         \
                   $(LIBNSPR)
 
 WIN_LIBS        = rpcrt4.lib    \
-                  ole32.lib
+                  ole32.lib     \
+                  shell32.lib
 
 
 !ifdef MOZ_GECKO_DLL
