@@ -55,6 +55,7 @@ nsTimerXlib::nsTimerXlib()
   mCallback = NULL;
   mNext = NULL;
   mClosure = NULL;
+  mType = NS_TYPE_ONE_SHOT;
 }
 
 nsTimerXlib::~nsTimerXlib()
@@ -77,6 +78,7 @@ nsTimerXlib::Init(nsTimerCallbackFunc aFunc,
 {
   mFunc = aFunc;
   mClosure = aClosure;
+  mType = aType;
   return Init(aDelay);
 }
 
@@ -87,10 +89,11 @@ nsTimerXlib::Init(nsITimerCallback *aCallback,
                 PRUint32 aType
                 )
 {
-    mCallback = aCallback;
-    NS_ADDREF(mCallback);
-
-    return Init(aDelay);
+  mType = aType;
+  mCallback = aCallback;
+  NS_ADDREF(mCallback);
+  
+  return Init(aDelay);
 }
 
 nsresult
@@ -100,6 +103,7 @@ nsTimerXlib::Init(PRUint32 aDelay)
   //  printf("nsTimerXlib::Init (%p) called with delay %d\n",
   //this, aDelay);
   // get the cuurent time
+  mDelay = aDelay;
   gettimeofday(&Now, NULL);
   mFireTime.tv_sec = Now.tv_sec + (aDelay / 1000);
   mFireTime.tv_usec = Now.tv_usec + ((aDelay%1000) * 1000);
@@ -147,9 +151,10 @@ nsTimerXlib::Init(PRUint32 aDelay)
   return NS_OK;
 }
 
-void
+PRBool
 nsTimerXlib::Fire(struct timeval *aNow)
 {
+  nsCOMPtr<nsITimer> kungFuDeathGrip = this;
   //  printf("nsTimerXlib::Fire (%p) called at %ld / %ld\n",
   //         this,
   //aNow->tv_sec, aNow->tv_usec);
@@ -159,6 +164,8 @@ nsTimerXlib::Fire(struct timeval *aNow)
   else if (mCallback != NULL) {
     mCallback->Notify(this);
   }
+
+  return ((mType == NS_TYPE_REPEATING_SLACK) || (mType == NS_TYPE_REPEATING_PRECISE));
 }
 
 void
@@ -195,6 +202,10 @@ void
 nsTimerXlib::ProcessTimeouts(struct timeval *aNow)
 {
   nsTimerXlib *p = gTimerList;
+  nsTimerXlib *tmp;
+  struct timeval ntv;
+  int res;
+
   if (aNow->tv_sec == 0 &&
       aNow->tv_usec == 0) {
     gettimeofday(aNow, NULL);
@@ -211,15 +222,21 @@ nsTimerXlib::ProcessTimeouts(struct timeval *aNow)
       //printf("Firing timeout for (%p)\n",
       //           p);
       NS_ADDREF(p);
-      p->Fire(aNow);
-      //  Clear the timer.
-      //  Period synced.
-      p->Cancel();
-      NS_RELEASE(p);
-      //  Reset the loop (can't look at p->pNext now, and called
-      //      code may have added/cleared timers).
-      //  (could do this by going recursive and returning).
-      p = gTimerList;
+      res = p->Fire(aNow);      
+      if (res == 0) {
+        p->Cancel();
+        NS_RELEASE(p);
+        p = gTimerList;
+      } else {
+
+        gettimeofday(&ntv, NULL);
+        p->mFireTime.tv_sec = ntv.tv_sec + (p->mDelay / 1000);
+        p->mFireTime.tv_usec = ntv.tv_usec + ((p->mDelay%1000) * 1000);
+        tmp = p;
+        p = p->mNext;
+        NS_RELEASE(tmp);
+
+      }
     }
     else {
       p = p->mNext;

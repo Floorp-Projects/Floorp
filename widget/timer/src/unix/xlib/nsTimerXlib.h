@@ -54,7 +54,7 @@ public:
   NS_DECL_ISUPPORTS
 
   virtual void Cancel();
-  void Fire(struct timeval *aNow);
+  PRBool Fire(struct timeval *aNow);
   
   virtual PRUint32 GetDelay() { return 0; };
   virtual void SetDelay(PRUint32 aDelay) {};
@@ -76,6 +76,7 @@ private:
   nsresult Init(PRUint32 aDelay);
   nsresult EnsureWindowService();
 
+  PRUint32             mType;
   nsTimerCallbackFunc  mFunc;
   void *               mClosure;
   PRUint32             mDelay;
