@@ -459,9 +459,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
   nsresult rv = GetPath(path);
   if (NS_FAILED(rv)) return rv;
   nsAutoString tmpPath((nsFilePath)path);
-  const char *pathName = tmpPath.ToNewCString();
-  *url = PR_smprintf("%s%s", urlScheme, pathName);
-  delete [] pathName;
+  *url = PR_smprintf("%s%s", urlScheme, nsAutoCString(tmpPath));
   return NS_OK;
 
 }
