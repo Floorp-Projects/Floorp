@@ -338,9 +338,11 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
 
         // If the frame has a fixed background attachment, then indicate that the
         // view's contents should repainted and not bitblt'd
-        PRUint32  viewFlags;
-        view->GetViewFlags(&viewFlags);
-        view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
+        if (fixedBackgroundAttachment) {
+          PRUint32  viewFlags;
+          view->GetViewFlags(&viewFlags);
+          view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
+        }
         
         // Insert the view into the view hierarchy. If the parent view is a
         // scrolling view we need to do this differently
