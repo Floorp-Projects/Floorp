@@ -146,13 +146,8 @@ nsSystemPref::Observe(nsISupports *aSubject,
     if (!nsCRT::strcmp(aTopic, NS_PREFSERVICE_READ_TOPIC_ID)) {
         SYSPREF_LOG(("Observed: %s\n", aTopic));
 
-        nsCOMPtr<nsIPrefBranch> prefBranch;
-        nsCOMPtr<nsIPrefService> prefService = 
+        nsCOMPtr<nsIPrefBranch2> prefBranch =
             do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv))
-            return rv;
-
-        rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
         if (NS_FAILED(rv))
             return rv;
 
@@ -170,9 +165,7 @@ nsSystemPref::Observe(nsISupports *aSubject,
         }
 
         // listen on its changes
-        nsCOMPtr<nsIPrefBranchInternal>
-            prefBranchInternal(do_QueryInterface(prefBranch));
-        rv = prefBranchInternal->AddObserver(sSysPrefString, this, PR_TRUE);
+        rv = prefBranch->AddObserver(sSysPrefString, this, PR_TRUE);
         if (NS_FAILED(rv)) {
             SYSPREF_LOG(("...FAil to add observer for %s\n", sSysPrefString));
             return rv;
@@ -192,13 +185,8 @@ nsSystemPref::Observe(nsISupports *aSubject,
         SYSPREF_LOG(("++++++ Notify: topic=%s data=%s\n",
                      aTopic, NS_ConvertUCS2toUTF8(aData).get()));
 
-        nsCOMPtr<nsIPrefBranch> prefBranch;
-        nsCOMPtr<nsIPrefService> prefService =
+        nsCOMPtr<nsIPrefBranch> prefBranch =
             do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv))
-            return rv;
-
-        rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
         if (NS_FAILED(rv))
             return rv;
 
@@ -255,11 +243,6 @@ nsSystemPref::UseSystemPrefs()
             mSysPrefs[index].SetPrefName(sSysPrefList[index]);
     }
 
-    nsCOMPtr<nsIPrefBranchInternal>
-        sysPrefBranchInternal(do_QueryInterface(mSysPrefService));
-    if (!sysPrefBranchInternal)
-        return NS_ERROR_FAILURE;
-
     for (PRIntn index = 0; index < sysPrefCount; ++index) {
         // save mozilla prefs
         SaveMozDefaultPref(mSysPrefs[index].prefName,
@@ -269,8 +252,8 @@ nsSystemPref::UseSystemPrefs()
         // get the system prefs
         ReadSystemPref(mSysPrefs[index].prefName);
         SYSPREF_LOG(("Add Listener on %s\n", mSysPrefs[index].prefName));
-        sysPrefBranchInternal->AddObserver(mSysPrefs[index].prefName,
-                                           this, PR_TRUE);
+        mSysPrefService->AddObserver(mSysPrefs[index].prefName,
+                                     this, PR_TRUE);
     }
     return rv;
 }
@@ -285,13 +268,9 @@ nsSystemPref::ReadSystemPref(const char *aPrefName)
     if (!mSysPrefService)
         return NS_ERROR_FAILURE;
     nsresult rv;
-    nsCOMPtr<nsIPrefService> prefService =
-        do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
 
     nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = prefService->GetDefaultBranch(nsnull, getter_AddRefs(prefBranch));
+        do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
         return rv;
 
@@ -348,11 +327,6 @@ nsSystemPref::UseMozillaPrefs()
     if (!mSysPrefService)
         return NS_OK;
 
-    nsCOMPtr<nsIPrefBranchInternal>
-        sysPrefBranchInternal(do_QueryInterface(mSysPrefService));
-    if (!sysPrefBranchInternal)
-        return NS_ERROR_FAILURE;
-
     PRIntn sysPrefCount= sizeof(sSysPrefList) / sizeof(sSysPrefList[0]);
     for (PRIntn index = 0; index < sysPrefCount; ++index) {
         // restore mozilla default value and free string memory if needed
@@ -360,8 +334,8 @@ nsSystemPref::UseMozillaPrefs()
                               &mSysPrefs[index].defaultValue,
                               mSysPrefs[index].isLocked);
         SYSPREF_LOG(("stop listening on %s\n", mSysPrefs[index].prefName));
-        sysPrefBranchInternal->RemoveObserver(mSysPrefs[index].prefName,
-                                              this);
+        mSysPrefService->RemoveObserver(mSysPrefs[index].prefName,
+                                        this);
     }
     return rv;
 }
@@ -382,13 +356,9 @@ nsSystemPref::SaveMozDefaultPref(const char *aPrefName,
     NS_ENSURE_ARG_POINTER(aLocked);
 
     nsresult rv;
-    nsCOMPtr<nsIPrefService> prefService =
-        do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
 
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = prefService->GetDefaultBranch(nsnull, getter_AddRefs(prefBranch));
+    nsCOMPtr<nsIPrefBranch> prefBranch =
+        do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
         return rv;
 
@@ -444,13 +414,9 @@ nsSystemPref::RestoreMozDefaultPref(const char *aPrefName,
     NS_ENSURE_ARG_POINTER(aPrefName);
 
     nsresult rv;
-    nsCOMPtr<nsIPrefService> prefService =
-        do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
 
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = prefService->GetDefaultBranch(nsnull, getter_AddRefs(prefBranch));
+    nsCOMPtr<nsIPrefBranch> prefBranch =
+        do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
         return rv;
 

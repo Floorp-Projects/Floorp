@@ -214,7 +214,7 @@ sysPrefDeleteObserver(void *aElement, void *aData) {
     return PR_TRUE;
 }
 
-NS_IMPL_ISUPPORTS2(nsSystemPrefService, nsIPrefBranch, nsIPrefBranchInternal)
+NS_IMPL_ISUPPORTS2(nsSystemPrefService, nsIPrefBranch, nsIPrefBranch2)
 
 /* public */
 nsSystemPrefService::nsSystemPrefService()

@@ -50,7 +50,7 @@
 #include "nsIServiceManager.h"
 #include "nsWeakReference.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
+#include "nsIPrefBranch2.h"
 
 #include <nsIObserver.h>
 
@@ -97,7 +97,7 @@ private:
                                    MozPrefValue *aPrefVal,
                                    PRBool aLocked);
 
-    nsCOMPtr<nsIPrefBranch>  mSysPrefService;
+    nsCOMPtr<nsIPrefBranch2>  mSysPrefService;
     PRBool mEnabled;  // system pref is enabled or not
     SysPrefItem *mSysPrefs;
 };
