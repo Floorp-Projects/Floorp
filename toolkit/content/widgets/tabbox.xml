@@ -11,7 +11,7 @@
     </resources>
   </binding>
 
-  <binding id="tabbox"
+  <binding id="tabbox" display="xul:box"
            extends="chrome://global/content/widgets/tabbox.xml#tab-base">
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
@@ -109,44 +109,72 @@
         ]]>
         </setter>
       </property>
+
+      <field name="_keyEventHandler" readonly="true">
+      <![CDATA[({
+        tabbox: this,
+        handleEvent: function handleEvent(event) {
+          switch (event.keyCode) {
+            case event.DOM_VK_TAB:
+              if (event.ctrlKey && !event.altKey && !event.metaKey)
+                if (this.tabbox._tabs && this.tabbox.handleCtrlTab) {
+                  this.tabbox._tabs.advanceSelectedTab(event.shiftKey ? -1 : 1);
+                  event.stopPropagation();
+                  event.preventDefault();
+                }
+              break;
+            case event.DOM_VK_PAGE_UP:
+              if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
+                if (this.tabbox._tabs && this.tabbox.handleCtrlPageUpDown) {
+                  this.tabbox._tabs.advanceSelectedTab(-1);
+                  event.stopPropagation();
+                  event.preventDefault();
+                }
+              break;
+            case event.DOM_VK_PAGE_DOWN:
+              if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
+                if (this.tabbox._tabs && this.tabbox.handleCtrlPageUpDown) {
+                  this.tabbox._tabs.advanceSelectedTab(1);
+                  event.stopPropagation();
+                  event.preventDefault();
+                }
+              break;
+          }
+        }
+      })]]>
+      </field>
+
+      <field name="_eventNode">
+        var eventNode = this;
+        switch (this.getAttribute("eventnode")) {
+          case "parent": eventNode = this.parentNode; break;
+          case "window": eventNode = window; break;
+          case "document": eventNode = document; break;
+        }
+        eventNode;
+      </field>
+
+      <property name="eventNode" onget="return this._eventNode;">
+        <setter>
+          <![CDATA[
+            if (val != this._eventNode) {
+              val.addEventListener("keypress", this._keyEventHandler, false);
+              this._eventNode.removeEventListener("keypress", this._keyEventHandler, false);
+              this._eventNode = val;
+            }
+            return val;
+          ]]>
+        </setter>
+      </property>
+
+      <constructor>
+        this._eventNode.addEventListener("keypress", this._keyEventHandler, false);
+      </constructor>
+
+      <destructor>
+        this._eventNode.removeEventListener("keypress", this._keyEventHandler, false);
+      </destructor>
     </implementation>
-    
-    <handlers>
-      <handler event="keypress" keycode="vk_tab" modifiers="control">
-        <![CDATA[
-         if (this._tabs && this.handleCtrlTab) {
-           this._tabs.advanceSelectedTab(1);
-           event.preventDefault();
-         }
-         ]]>
-      </handler>
-      
-      <handler event="keypress" keycode="vk_tab" modifiers="control,shift">
-        <![CDATA[
-         if (this._tabs && this.handleCtrlTab) {
-           this._tabs.advanceSelectedTab(-1);
-           event.preventDefault();
-         }
-         ]]>
-      </handler>
-
-      <handler event="keypress" keycode="vk_page_up" modifiers="control">
-        <![CDATA[
-         if (this._tabs && this.handleCtrlPageUpDown) {
-           this._tabs.advanceSelectedTab(-1);
-         }
-         ]]>
-      </handler>
-
-      <handler event="keypress" keycode="vk_page_down" modifiers="control">
-        <![CDATA[
-         if (this._tabs && this.handleCtrlPageUpDown) {
-           this._tabs.advanceSelectedTab(1);
-         }
-         ]]>
-      </handler>
-
-    </handlers>
   </binding>
 
   <binding id="tabs" display="xul:box"
@@ -162,18 +190,11 @@
       <![CDATA[
         // first and last tabs need to be able to have unique styles
         // and also need to select first tab on startup.
-        var tabs = this.getElementsByTagNameNS(
-                      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                      "tab");
-        if (tabs.length) {
-          if (tabs.length > 1) {
-          tabs[0].setAttribute("first-tab", "true");
-          tabs[tabs.length - 1].setAttribute("last-tab", "true");
-          }
-          else if (tabs.length == 1)
-          tabs[0].setAttribute("first-tab", "true");
-        }
-        this.selectedItem = tabs[0];
+        if (this.firstChild)
+          this.firstChild.setAttribute("first-tab", "true");
+        if (this.lastChild)
+          this.lastChild.setAttribute("last-tab", "true");
+        this.selectedIndex = 0;
         var o = this.getAttribute("orient");
         if (!o)
           this.setAttribute("orient", "horizontal");
@@ -192,73 +213,70 @@
       <property name="selectedIndex">
         <getter>
         <![CDATA[
-          for (var i = 0; i < this.childNodes.length; i++) {
-            if (this.childNodes[i].selected)
+          const tabs = this.childNodes;
+          for (var i = 0; i < tabs.length; i++) {
+            if (tabs.selected)
               return i;
-          }
-          // throw an exception when no tab is selected (we shouldn't get here)
-          throw Components.results.NS_ERROR_FAILURE;
-        ]]></getter>
-        
-        <setter>
-        <![CDATA[
-          var tabs = this.getElementsByTagNameNS(
-                         "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                         "tab");
-          var tab = tabs.length >= val ? null : tabs[val];
-          if (tab)
-            this.selectedItem = tab;
-          return tab;
-        ]]></setter>
-      </property>
-
-      <property name="selectedItem">
-        <getter>
-        <![CDATA[
-          for (var i = 0; i < this.childNodes.length; i++) {
-            if (this.childNodes[i].selected)
-              return this.childNodes[i];
           }
           // throw an exception when no tab is selected (we shouldn't get here)
           throw Components.results.NS_ERROR_FAILURE;
         ]]>
         </getter>
+        
+        <setter>
+        <![CDATA[
+          const tabs = this.childNodes;
+          if (0 <= val && val < tabs.length && !tabs[val].selected) {
+
+            for (var i = 0; i < tabs.length; i++)
+              if (i != val && tabs[i].selected)
+                tabs[i].selected = false;
+
+            tabs[val].selected = true;
+  
+            for (var parent = this.parentNode; parent; parent = parent.parentNode) {
+              if (parent.localName == 'tabbox') {
+                var tabpanels = parent._tabpanels;
+                // This will cause an onselect event to fire for the tabpanel element.
+                if (tabpanels)
+                  tabpanels.selectedIndex = val;
+                break;
+              }
+            }
+            
+            // Fire an onselect event for the tabs element.
+            var event = document.createEvent('Events');
+            event.initEvent('select', false, true);
+            this.dispatchEvent(event);
+          }
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="selectedItem">
+        <getter>
+        <![CDATA[
+          const tabs = this.childNodes;
+          for (var i = 0; i < tabs.length; i++) {
+            if (tabs[i].selected)
+              return tabs[i];
+          }
+          // throw an exception when no tab is selected (we shouldn't get here)
+          throw Components.results.NS_ERROR_FAILURE;
+        ]]>
+        </getter>
+        
         <setter>
         <![CDATA[
           if (!val)
             throw Components.results.NS_ERROR_NULL_POINTER;
-            
-          if (!val.selected)
-            val.selected = true;
-          var selectedIndex = 0;
-          for (var i = 0; i < this.childNodes.length; i++) {
-            if (this.childNodes[i].selected) {
-              if (this.childNodes[i] != val)
-                this.childNodes[i].selected = false;
-              else 
-                selectedIndex = i;
-            }
+          if (!val.selected) {
+            const tabs = this.childNodes;
+            for (var i = 0; i < tabs.length; i++)
+              if (tabs[i] == val)
+                this.selectedIndex = i;
           }
-          
-          // Fire an onselect event for the tabs element.
-          var event = document.createEvent('Events');
-          event.initEvent('select', false, true);
-          this.dispatchEvent(event);
-
-          var parent = this.parentNode;
-          while (parent && parent.localName != 'tabbox')
-            parent = parent.parentNode;
-
-          if (!parent)
-            return val;
-
-          var tabpanels = parent.getElementsByTagNameNS(
-                               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                               "tabpanels");
-          tabpanels = tabpanels.length ? tabpanels[0] : null;
-          // This will cause an onselect event to fire for the tabpanel element.
-          if (tabpanels)
-            tabpanels.selectedIndex = selectedIndex; 
           return val;
         ]]>
         </setter>
