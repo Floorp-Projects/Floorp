@@ -996,8 +996,45 @@ NS_IMETHODIMP nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, n
 
 NS_IMETHODIMP nsRenderingContextWin :: GetClipRegion(nsIRegion **aRegion)
 {
-  //XXX wow, needs to do something.
-  return NS_OK;
+  nsRegionWin *rgn = new nsRegionWin();
+  nsresult  rv;
+
+  if (nsnull == rgn)
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  else
+  {
+    NS_ADDREF(rgn);
+
+    rv = rgn->Init();
+
+    if (NS_OK != rv)
+    {
+      NS_RELEASE(rgn);
+      return rv;
+    }
+
+    int rstat = ::GetClipRgn(mDC, rgn->mRegion);
+
+    if (rstat == -1)
+    {
+      NS_RELEASE(rgn);
+      return rv;
+    }
+    else if (rstat == 1)
+    {
+      //i can't find a way to get the actual complexity
+      //of the region without actually messing with it, so
+      //if the region is non-empty, we'll call it complex. MMP
+
+      rgn->mRegionType = eRegionComplexity_complex;
+    }
+
+    *aRegion = rgn;
+
+    rv = NS_OK;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: SetColor(nscolor aColor)
