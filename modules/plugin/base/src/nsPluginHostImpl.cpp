@@ -66,6 +66,9 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsFileSpec.h"
 
+#include "nsIDocumentLoaderFactory.h"
+#include "nsLayoutCID.h"
+
 //uncomment this to use netlib to determine what the
 //user agent string is. we really *want* to do this,
 //can't today since netlib returns 4.05, but this
@@ -93,6 +96,9 @@ static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 // for the dialog
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
 
 #define PLUGIN_PROPERTIES_URL "chrome://global/locale/downloadProgress.properties"
 void DisplayNoDefaultPluginDialog(void);
@@ -1922,6 +1928,27 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance,
   nsCRT::free(url);
 }
 
+nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * pluginTag, 
+                                                             nsIComponentManager * compManager, 
+                                                             nsIFile * layoutPath)
+{
+  NS_ENSURE_ARG_POINTER(pluginTag);
+  NS_ENSURE_ARG_POINTER(pluginTag->mMimeTypeArray);
+  NS_ENSURE_ARG_POINTER(compManager);
+
+  nsresult rv = NS_OK;
+
+  for(int i = 0; i < pluginTag->mVariants; i++)
+  {
+    char progid[512];
+    char * contentType = pluginTag->mMimeTypeArray[i];
+    PR_snprintf(progid, sizeof(progid), NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s", "view", contentType);
+    rv = compManager->RegisterComponentSpec(kDocumentFactoryImplCID, "Layout", progid, layoutPath, PR_TRUE, PR_TRUE);
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType, 
 													nsIURI *aURL,
 													nsIPluginInstanceOwner *aOwner)
@@ -2439,13 +2466,18 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
-	do {
+  do {
 		// 1. scan the plugins directory (where is it?) for eligible plugin libraries.
 		nsPluginsDir pluginsDir;
 		if (! pluginsDir.Valid())
 			break;
 
-		for (nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) {
+    // retrieve a path for layout module. Needed for plugin mime types registration
+    nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID);
+    nsCOMPtr<nsIFile> path;
+    nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation("rel:gkhtml.dll", getter_AddRefs(path));
+
+    for (nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) {
 			const nsFileSpec& file = iter;
 			if (pluginsDir.IsPluginFile(file)) {
 				nsPluginFile pluginFile(file);
@@ -2469,7 +2501,10 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 
 				  pluginTag->mNext = mPlugins;
 				  mPlugins = pluginTag;
-				  
+
+          if(NS_SUCCEEDED(rvIsLayoutPath))
+            RegisterPluginMimeTypesWithLayout(pluginTag, compManager, path);
+
           pluginTag->mLibrary = pluginLibrary;
 
 #ifndef XP_WIN
@@ -2560,7 +2595,12 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   if(!pluginsDir4x.Valid() && !pluginsDirMoz.Valid())
   	return NS_ERROR_FAILURE;
 
-	// first, make a list from MOZ_LOCAL installation
+  // retrieve a path for layout module. Needed for plugin mime types registration
+  nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID);
+  nsCOMPtr<nsIFile> path;
+  nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation("rel:gkhtml.dll", getter_AddRefs(path));
+
+  // first, make a list from MOZ_LOCAL installation
   for (nsDirectoryIterator iter(pluginsDirMoz, PR_TRUE); iter.Exists(); iter++) 
   {
 		const nsFileSpec& file = iter;
@@ -2588,6 +2628,9 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 				pluginTag->mNext = mPlugins;
 				mPlugins = pluginTag;
 				
+        if(NS_SUCCEEDED(rvIsLayoutPath))
+          RegisterPluginMimeTypesWithLayout(pluginTag, compManager, path);
+
         pluginTag->mLibrary = pluginLibrary;
 
 #ifndef XP_WIN
@@ -2647,6 +2690,9 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
         {
 				  pluginTag->mNext = mPlugins;
 				  mPlugins = pluginTag;
+  
+          if(NS_SUCCEEDED(rvIsLayoutPath))
+            RegisterPluginMimeTypesWithLayout(pluginTag, compManager, path);
         }
         else
           delete pluginTag;

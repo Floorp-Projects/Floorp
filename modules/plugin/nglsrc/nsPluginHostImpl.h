@@ -283,6 +283,9 @@ private:
   void
   AddInstanceToActiveList(nsIPluginInstance* aInstance, nsIURI* aURL);
 
+  nsresult 
+  RegisterPluginMimeTypesWithLayout(nsPluginTag *pluginTag, nsIComponentManager * compManager, nsIFile * layoutPath);
+
   char        *mPluginPath;
   nsPluginTag *mPlugins;
   PRBool      mPluginsLoaded;
