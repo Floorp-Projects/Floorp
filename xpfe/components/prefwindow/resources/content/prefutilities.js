@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -22,43 +22,51 @@
  */
 
 var bundle = srGetStrBundle("chrome://pref/locale/prefutilities.properties");
+const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
 function getFileOrFolderSpec( aTitle, aFolder )
 {
   try {
-    var fileSpecWithUI = Components.classes["component://netscape/filespecwithui"].createInstance();
-    if( fileSpecWithUI )
-      fileSpecWithUI = fileSpecWithUI.QueryInterface( Components.interfaces.nsIFileSpecWithUI );
+    var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
   }
   catch(e) {
     dump("*** failed to create fileSpecWithUI or fileSpec objects\n");
     return false;
   }
+
   try {
-    var value;
-    if( aFolder ) 
-      value = fileSpecWithUI.chooseDirectory( aTitle );
-    else 
-      value = fileSpecWithUI.chooseFile( aTitle );
-    dump("filespecWithUI.path = " + value + "\n");
-    fileSpecWithUI.URLString = value;
+    var mode;
+    if (aFolder)
+      mode = nsIFilePicker.modeGetFolder;
+    else
+      mode = nsIFilePicker.modeOpen;
+
+    fp.init(window, aTitle, mode);
+    fp.setFilters(nsIFilePicker.filterAll);
+    fp.show();
   }
   catch(e) {
     dump("Error: " + e + "\n");
     return -1;
   }
-  return fileSpecWithUI;
+
+  return fp.file;
 }
 
 function prefNavSelectFile(folderFieldId, stringId, useNative)
 {
   var folderField = document.getElementById(folderFieldId);
-  var spec = getFileOrFolderSpec( bundle.GetStringFromName(stringId), false );
-  if( spec != -1 ) {
+  var file = getFileOrFolderSpec( bundle.GetStringFromName(stringId), false );
+  if( file != -1 ) {
+
+    /* XXX nsILocalFile doesn't have a URL string */
+    /*
       if (useNative)
-          folderField.value = spec.nativePath;
+          folderField.value = file.nativePath;
       else
-          folderField.value = spec.URLString;
+          folderField.value = file.URLString;
+    */
+    folderField.value = file.path;
   }
 }
 
