@@ -1330,7 +1330,7 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset)
 
 nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset)
 {
-  // for now, same as child deleted
-  return OwnerChildRemoved(aParentNode, aOffset);
+  // for now, do nothing
+  return NS_OK;
 }
   
