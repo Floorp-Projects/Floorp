@@ -1133,6 +1133,35 @@ function cli_iscommand (e)
     }
 }
 
+client.onInputSquery =
+function cli_isquery (e)
+{
+    var o = getObjectDetails(client.currentObject);
+    
+    if ("server" in o)
+    {
+        var ary = e.inputData.match (/(\S+)? ?(.*)/);
+        if (ary == null)
+            return false;
+
+        if (ary.length == 1)
+        {
+            o.server.sendData ("SQUERY " + ary[1] + "\n");
+        }
+        else
+        {
+            o.server.sendData ("SQUERY " + ary[1] + " :" + ary[2] + "\n");
+        }
+        return true;
+    }
+    else
+    {
+        client.currentObject.display (getMsg("onInputSimpleCommandMsg",
+                                             e.command),"WARNING");
+        return false;
+    }
+}
+
 client.onInputStatus =
 function cli_istatus (e)
 {    

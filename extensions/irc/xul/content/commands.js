@@ -77,6 +77,7 @@ function addCommands(commandObject)
     add ("quit", "onInputExit");
     add ("quote", "onInputQuote");
     add ("server", "onInputServer");
+    add ("squery", "onInputSquery");
     add ("stalk", "onInputStalk");
     add ("status", "onInputStatus");
     add ("statusbar", "onInputStatusbar");

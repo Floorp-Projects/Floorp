@@ -36,7 +36,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg( "defaultNick" );
 
-client.version = "0.8.7";
+client.version = "0.8.8";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -2194,7 +2194,7 @@ function __display(message, msgtype, sourceObj, destObj)
     if      (fromUser && sourceObj == me)  fromAttr = me.nick + " ME!";
     else if (fromUser)                     fromAttr = sourceObj.nick;
     else if (typeof sourceObj == "object") fromAttr = sourceObj.name;
-        
+
     var toType = (destObj) ? destObj.TYPE : "unk";
     var toAttr;
     
@@ -2247,8 +2247,11 @@ function __display(message, msgtype, sourceObj, destObj)
         if (sourceObj != me)
         {
             nick = sourceObj.properNick;
-            if ("getURL" in sourceObj)
+            if (!nick)
+                nick = sourceObj.name + "@" + sourceObj.host;
+            else if ("getURL" in sourceObj)
                 nickURL = sourceObj.getURL();
+            
             if (toType == "IRCUser") /* msg from user to me */
             {
                 getAttention = true;
