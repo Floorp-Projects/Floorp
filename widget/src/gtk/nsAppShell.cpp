@@ -479,5 +479,6 @@ PRBool processQueue(void *aElement, void *aData)
 void
 nsAppShell::ProcessBeforeID(unsigned long aID)
 {
-  sEventQueueList->EnumerateForwards(processQueue, (void *)aID);
+  if (sEventQueueList)
+    sEventQueueList->EnumerateForwards(processQueue, (void *)aID);
 }
