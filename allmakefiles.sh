@@ -925,6 +925,7 @@ browser/components/security/Makefile
 browser/components/sidebar/Makefile
 browser/components/sidebar/public/Makefile
 browser/components/sidebar/src/Makefile
+browser/extensions/inspector/content/contents.rdf
 "
 
 MAKEFILES_xulapp="
