@@ -1568,40 +1568,40 @@ billingphonesuffix
 BillTo.Phone.Number.Suffix
 
 bzip
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 billzip
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 billtozip
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 billingzip
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 bzipcode
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 billzipcode
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 billtozipcode
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 billingzipcode
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 bpostalcode
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 billpostalcode
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 billtopostalcode
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 billingpostalcode
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 bzipfour
 BillTo.PostalCode.Suffix
@@ -2000,13 +2000,13 @@ businessphonesuffix
 Business.Phone.Number.Suffix
 
 businesszip
-Business.PostalCode
+Business.PostalCode.Prefix
 
 businesszipcode
-Business.PostalCode
+Business.PostalCode.Prefix
 
 businesspostalcode
-Business.PostalCode
+Business.PostalCode.Prefix
 
 businesszipfour
 Business.PostalCode.Suffix
@@ -2276,13 +2276,13 @@ phonesuffix
 Home.Phone.Number.Suffix
 
 zip
-Home.PostalCode
+Home.PostalCode.Prefix
 
 zipcode
-Home.PostalCode
+Home.PostalCode.Prefix
 
 postalcode
-Home.PostalCode
+Home.PostalCode.Prefix
 
 zipfour
 Home.PostalCode.Suffix
@@ -2933,40 +2933,40 @@ shippingphonesuffix
 ShipTo.Phone.Number.Suffix
 
 szip
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 shipzip
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 shiptozip
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 shippingzip
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 szipcode
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 shipzipcode
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 shiptozipcode
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 shippingzipcode
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 spostalcode
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 shippostalcode
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 shiptopostalcode
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 shippingpostalcode
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 szipfour
 ShipTo.PostalCode.Suffix

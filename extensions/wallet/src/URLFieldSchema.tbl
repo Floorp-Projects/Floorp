@@ -53,7 +53,7 @@ Home.City
 Home.State
 
 /atg/bmg/enroll/USCustomerAddressEditor.postalCode
-Home.PostalCode
+Home.PostalCode.Prefix
 
 /atg/bmg/enroll/USCustomerAddressEditor.areaCode
 Home.Phone.LocCode
@@ -86,6 +86,9 @@ Name.First
 
 ln
 Name.Last
+
+zip
+Home.PostalCode
 
 birthmonth
 Bdate.Month
@@ -135,14 +138,14 @@ www.keokee.com/litehouse/coupons.html
 realname
 Name.First
 
+ZIP:
+Home.PostalCode
+
 PHONE:
 Home.Phone.Number
 
 
 www.netmarket.com/SHP/scripts/secure/Checkout2.asp
-bill_zip
-BillTo.PostalCode.Prefix
-
 bill_day_phone_area_code
 BillTo.Phone.LocCode
 
@@ -318,17 +321,11 @@ BillTo.PostalCode
 
 
 commerce.us.dell.com:443/dellstore/chkout2_ship.asp
-ship_to_zip
-ShipTo.PostalCode.Prefix
-
 ship_to_zip_4
 ShipTo.PostalCode.Suffix
 
 
 commerce.us.dell.com:443/dellstore/chkout3_bill.asp
-bill_to_zip
-BillTo.PostalCode.Prefix
-
 bill_to_zip_4
 BillTo.PostalCode.Suffix
 
@@ -379,7 +376,7 @@ sastate
 BillTo.State
 
 sazipc
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 saaddr3
 BillTo.Country
@@ -444,7 +441,7 @@ sastate
 ShipTo.State
 
 sazipc
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 saphone1_1
 ShipTo.Phone.LocCode
@@ -486,6 +483,9 @@ Card.ExpDate.Year
 
 
 www.amazon.com/exec/obidos/checkout-sign-in/104-8955518-5944760
+zip
+Home.PostalCode
+
 phone-number
 Home.Phone
 
@@ -623,6 +623,101 @@ Business.Fax
 
 email
 Business.Email
+
+
+www.avnetmarshall.com/dynamic/register
+salutation
+Name.Prefix
+
+email_addr
+Business.Email
+
+phone
+Business.Phone
+
+phonefax
+Business.Fax
+
+addr1
+Business.CompanyName
+
+addr2
+Business.Street.Line1
+
+addr3
+Business.Street.Line2
+
+addr4
+Business.Street.Line3
+
+city
+Business.City
+
+state
+Business.State
+
+zip
+Business.PostalCode.Prefix
+
+zip_plus
+Business.PostalCode.Suffix
+
+country
+Business.Country
+
+bt_addr1
+BillTo.CompanyName
+
+bt_addr2
+BillTo.Street.Line1
+
+bt_addr3
+BillTo.Street.Line2
+
+bt_addr4
+BillTo.Street.Line3
+
+bt_city
+BillTo.City
+
+bt_state
+BillTo.State
+
+bt_zip
+BillTo.PostalCode.Prefix
+
+bt_zip_plus
+BillTo.PostalCode.Suffix
+
+bt_country
+BillTo.Country
+
+st_addr1
+ShipTo.CompanyName
+
+st_addr2
+ShipTo.Street.Line1
+
+st_addr3
+ShipTo.Street.Line2
+
+st_addr4
+ShipTo.Street.Line3
+
+st_city
+ShipTo.City
+
+st_state
+ShipTo.State
+
+st_zip
+ShipTo.PostalCode.Prefix
+
+st_zip_plus
+ShipTo.PostalCode.Suffix
+
+st_country
+ShipTo.Country
 
 
 order.3com.com/tms-ts/bin/order-form.cgi
@@ -795,7 +890,7 @@ _Primary_StateHome
 Home.State
 
 _Primary_ZipHome
-Home.PostalCode
+Home.PostalCode.Prefix
 
 _Primary_PhoneHomeAreaCode
 Home.Phone.LocCode
@@ -819,7 +914,7 @@ _Primary_StateBusiness
 Business.State
 
 _Primary_ZipBusiness
-Business.PostalCode
+Business.PostalCode.Prefix
 
 _Primary_PhoneBusinessAreaCode
 Business.Phone.LocCode
@@ -894,7 +989,7 @@ _Secondary_StateHome
 Joint.Home.State
 
 _Secondary_ZipHome
-Joint.Home.PostalCode
+Joint.Home.PostalCode.Prefix
 
 _Secondary_PhoneHomeAreaCode
 Joint.Home.Phone.LocCode
@@ -918,7 +1013,7 @@ _Secondary_StateBusiness
 Joint.Business.State
 
 _Secondary_ZipBusiness
-Joint.Business.PostalCode
+Joint.Business.PostalCode.Prefix
 
 _Secondary_PhoneBusinessAreaCode
 Joint.Business.Phone.LocCode
@@ -967,6 +1062,9 @@ Joint.Home.Country
 
 
 scgi.ebay.com/saw-cgi/eBayISAPI.dll
+zip
+Home.PostalCode
+
 dayphone1
 Home.Phone.LocCode
 
@@ -993,6 +1091,9 @@ Home.AltPhone.Extension
 
 
 cgi4.ebay.com/aw-cgi/eBayISAPI.dll
+zip
+Home.PostalCode
+
 dayphone1
 Home.Phone.LocCode
 
@@ -1116,7 +1217,7 @@ stateProv
 ShipTo.State
 
 postalCode
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 sacntry
 ShipTo.Country
@@ -1154,7 +1255,7 @@ sastate
 BillTo.State
 
 sazipc
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 sacntry
 BillTo.Country
@@ -1174,7 +1275,7 @@ ADDR_STATE
 Home.State
 
 ADDR_ZIP
-Home.PostalCode
+Home.PostalCode.Prefix
 
 ADDR_COUNTRY
 Home.Country
@@ -1271,6 +1372,12 @@ Card.ExpDate
 
 
 www.ubid.com/app/sgnon/default.asp
+BillToZip
+BillTo.PostalCode
+
+ShipToZip
+ShipTo.PostalCode
+
 DayNumber
 Business.Phone
 
@@ -1287,6 +1394,9 @@ Name.First
 
 ln
 Name.Last
+
+zip
+Home.PostalCode
 
 birthmonth
 Bdate.Month
@@ -1318,7 +1428,7 @@ iwp_birthday.xYear
 Bdate.Year
 
 ad_zip
-Home.PostalCode
+Home.PostalCode.Prefix
 
 ad_country
 Home.Country
@@ -1383,6 +1493,9 @@ Name.Middle
 
 createlastname
 Name.Last
+
+zipcode
+Home.PostalCode
 
 netemail
 Home.Email
@@ -1471,8 +1584,14 @@ BillTo.CompanyName
 bill_state_province_name
 BillTo.State
 
+bill_postal_code
+BillTo.PostalCode
+
 
 www.us.buy.com/basket/shopper.asp
+bill_to_zip
+BillTo.PostalCode
+
 bill_to_company_phone_ac
 BillTo.Phone.LocCode
 
@@ -1484,6 +1603,9 @@ BillTo.Phone.Number.Suffix
 
 bill_to_company_phone_ext
 BillTo.Phone.Extension
+
+ship_to_zip
+ShipTo.PostalCode
 
 ship_to_company_phone_ac
 ShipTo.Phone.LocCode
@@ -1794,6 +1916,9 @@ qnes1.tdwaterhouse.com/account/openAccount.jsp
 title
 Name.Prefix
 
+zip
+Home.PostalCode
+
 dayPhoneNumber
 Business.Phone
 
@@ -1831,6 +1956,9 @@ qnes1.tdwaterhouse.com/account/joint/step2.jsp
 title
 Name.Prefix
 
+zip
+Home.PostalCode
+
 socialSecurityNumber
 SocSec
 
@@ -1847,7 +1975,7 @@ employerState
 Business.State
 
 employerZip
-Business.PostalCode
+Business.PostalCode.Prefix
 
 dayPhoneNumber
 Business.Phone
@@ -1901,6 +2029,9 @@ BillTo.Email
 
 EmailAddress2
 BillTo.Email
+
+ShipToZip
+ShipTo.PostalCode
 
 
 www.shopintuit.com/qstore/CCInfo.asp
@@ -1997,15 +2128,24 @@ Card.ExpDate.Year
 
 
 www.home.com/signup-us.html
+zipcode
+Home.PostalCode
+
 
 www.home.com/cgi-bin/sacheck.cgi/athm/vstart
 
 www.egghead.com/custserv/register.htm
+BZip
+BillTo.PostalCode
+
 Fax
 BillTo.Fax
 
 Email
 BillTo.Email
+
+SZip
+ShipTo.PostalCode
 
 NUsername
 ShipTo.AltPhone
@@ -2066,6 +2206,9 @@ Home.AltPhone
 
 
 twbooker.thisco.com/cgi-bin/bldbk.cgi
+zip
+Home.PostalCode
+
 
 secure.valueamerica.com:443/signin.asp
 nnn1reg_firstname
@@ -2179,7 +2322,7 @@ st
 BillTo.State
 
 z
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 bp1
 BillTo.Phone.LocCode
@@ -2232,7 +2375,7 @@ sst
 ShipTo.State
 
 sz
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 
 www.insight.com/cgi-bin/bp/1603555969/web/myaccount_payment.html
@@ -2247,6 +2390,9 @@ Card.ExpDate.Year
 
 
 custos.earthlink.net/cgi/SELF_tc.cgi
+ZIP
+Home.PostalCode
+
 CNTRYCODE
 Home.Country
 
@@ -2353,6 +2499,9 @@ SocSec.Suffix
 
 identifier
 MothersMaidenName
+
+zip
+Home.PostalCode
 
 address1_alt
 BillTo.Street.Line1
@@ -2523,6 +2672,9 @@ Joint.Business.Country
 
 
 athome.compaq.com/cart/orderform.asp
+ship_to_zip
+ShipTo.PostalCode
+
 ship_to_day_phone_area
 ShipTo.Phone.LocCode
 
@@ -2543,6 +2695,9 @@ ShipTo.AltPhone.Number.Suffix
 
 
 athome.compaq.com/cart/OrderForm2.asp
+bill_to_zip
+BillTo.PostalCode
+
 bill_to_day_phone_area
 BillTo.Phone.LocCode
 
@@ -2568,6 +2723,9 @@ st6.yahoo.com/cgi-bin/shipping-form
 ship-name
 ShipTo.Name.Last
 
+ship-zip
+ShipTo.PostalCode
+
 vwcf-natsemi-Business-Name-
 Business.CompanyName
 
@@ -2578,6 +2736,9 @@ Business.JobTitle
 st6.yahoo.com/cgi-bin/billing-form
 bill-name
 BillTo.Name.Last
+
+bill-zip
+BillTo.PostalCode
 
 card
 Card.Type
@@ -2677,6 +2838,9 @@ BillTo.Name.Last
 BillTostatecode
 BillTo.State
 
+BillTozip
+BillTo.PostalCode
+
 BillTofullphone
 BillTo.Phone
 
@@ -2685,6 +2849,9 @@ ShipTo.Name.Last
 
 shiptostatecode
 ShipTo.State
+
+shiptozip
+ShipTo.PostalCode
 
 shiptofullphone
 ShipTo.Phone
@@ -2703,12 +2870,12 @@ Shipping_State_Province
 ShipTo.State
 
 Shipping_Zip_Postalcode
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 Billing_State_Province
 BillTo.State
 
-Billing_Zip_Postalcode
+Billing_Zip_Postalcode.Prefix
 BillTo.PostalCode
 
 Payment_Value
@@ -2897,6 +3064,9 @@ Home.Phone.Number
 
 
 www.zones.com/cgi-bin/zones.exe/zones/scripts/profile/login.jsp
+s_zip
+ShipTo.PostalCode
+
 sp_areaCode
 ShipTo.Phone.LocCode
 
@@ -2947,13 +3117,22 @@ BillTo.Phone.Number.Suffix
 bp_extention
 BillTo.Phone.Extension
 
+b_zip
+BillTo.PostalCode
+
 
 catalog.robertsonmarketing.com/psinet/shipping.asp
 ship_to_name
 ShipTo.CompanyName
 
+ship_to_zip
+ShipTo.PostalCode
+
 
 catalog.robertsonmarketing.com/psinet/purchase.asp
+bill_to_zip
+BillTo.PostalCode
+
 
 wcorp.itn.net/cgi/res
 first_name.0
@@ -2994,14 +3173,23 @@ Card.Name
 
 
 www.1800flowers.com/flowers/shipping.asp
+ship_to_zip
+ShipTo.PostalCode
+
 
 www.1800flowers.com/flowers/billingform.asp
+bill_to_zip
+BillTo.PostalCode
+
 
 www.1800flowers.com/flowers/review.asp
 
 www.auctionuniverse.com/au/join.asp
 VerifyEmail
 Home.Email
+
+postal_code
+Home.PostalCode
 
 alternate_mail
 Home.Pager.Number
@@ -3074,13 +3262,16 @@ service_area
 Home.State
 
 service_zip
-Home.PostalCode
+Home.PostalCode.Prefix
 
 service_email
 Home.Email
 
 
 www2.gte.com/StoreTools/SCPages/billing.cfm
+bill_zip
+BillTo.PostalCode
+
 
 www2.gte.com/StoreTools/SCPages/other.cfm
 ssn
@@ -3173,11 +3364,17 @@ BillTo.Email
 
 
 www.egghead.com/custserv/register.htm
+BZip
+BillTo.PostalCode
+
 Fax
 BillTo.Fax
 
 Email
 BillTo.Email
+
+SZip
+ShipTo.PostalCode
 
 CardNo
 Card.Number
@@ -3198,6 +3395,9 @@ BillTo.Street.Line1
 
 BillAddressTwo
 BillTo.Street.Line2
+
+BillZip
+BillTo.PostalCode
 
 BillPhoneNum1
 BillTo.Phone
@@ -3343,6 +3543,9 @@ BillTo.Country
 
 
 shop.barnesandnoble.com/Shop/shipping.asp
+ship_to_zip
+ShipTo.PostalCode
+
 
 shop.barnesandnoble.com/shop/payment.asp
 cc_expire_yr
@@ -3422,7 +3625,7 @@ BillTo.City
 BillTo.State
 
 3.0.3.27.1.1.31.11.16.9.11
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 3.0.3.27.1.1.31.11.32.1
 BillTo.Phone.LocCode
@@ -3458,7 +3661,7 @@ ShipTo.City
 ShipTo.State
 
 3.0.3.27.1.1.31.13.1.16.9.11
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 3.0.3.27.1.1.31.13.1.32.1
 ShipTo.Phone.LocCode
@@ -3499,7 +3702,7 @@ BillTo.City
 BillTo.State
 
 3.0.3.27.1.1.93.16.9.11
-BillTo.PostalCode
+BillTo.PostalCode.Prefix
 
 3.0.3.27.1.1.93.32.1
 BillTo.Phone.LocCode
@@ -3538,7 +3741,7 @@ ShipTo.City
 ShipTo.State
 
 3.0.3.27.1.1.95.16.9.11
-ShipTo.PostalCode
+ShipTo.PostalCode.Prefix
 
 3.0.3.27.1.1.95.32.1
 ShipTo.Phone.LocCode
@@ -3613,7 +3816,7 @@ mstate
 Home.State
 
 mzip
-Home.PostalCode
+Home.PostalCode.Prefix
 
 mhomePhone
 Home.Phone
@@ -3798,6 +4001,9 @@ Home.Email
 
 
 www.mozilla.org/wallet/samples/ebay.html
+zip
+Home.PostalCode
+
 dayphone1
 Home.Phone.LocCode
 
@@ -3859,14 +4065,14 @@ Home.Phone
 
 
 www.mozilla.org/wallet/samples/musicblvd.html
+bill.zip
+BillTo.PostalCode
+
 bill.contact_phone
 BillTo.Phone
 
 
 www.mozilla.org/wallet/samples/netmarket.html
-ship_zip
-ShipTo.PostalCode.Prefix
-
 
 www.mozilla.org/wallet/samples/outpost.html
 checkout%bill.first_name
