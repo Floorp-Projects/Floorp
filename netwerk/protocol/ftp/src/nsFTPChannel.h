@@ -25,7 +25,7 @@
 #ifndef nsFTPChannel_h___
 #define nsFTPChannel_h___
 
-#include "nsIFTPChannel.h"
+#include "nsPIFTPChannel.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 #include "nsString2.h"
@@ -38,16 +38,16 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIThreadPool.h"
 #include "nsIRequest.h"
+#include "nsAutoLock.h"
+#include "nsFtpConnectionThread.h"
+#include "netCore.h"
 
-class nsFTPChannel : public nsIFTPChannel,
-                     public nsIStreamListener {
+class nsFTPChannel : public nsPIFTPChannel {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
-    NS_DECL_NSIFTPCHANNEL
-    NS_DECL_NSISTREAMOBSERVER
-    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSPIFTPCHANNEL
 
     // nsFTPChannel methods:
     nsFTPChannel();
@@ -72,13 +72,11 @@ public:
 protected:
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsIURI>                mURL;
-    nsCOMPtr<nsIEventQueue>         mEventQueue;
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
     PRBool                          mConnected;
-    nsCOMPtr<nsIStreamListener>     mListener;
-    nsCOMPtr<nsISupports>           mContext;
+    PRBool                          mAsyncOpen; // was AsyncOpen called
     PRUint32                        mLoadAttributes;
 
     PRUint32                        mSourceOffset;
@@ -92,10 +90,7 @@ protected:
     nsCOMPtr<nsIRequest>            mProxiedThreadRequest;
     nsCOMPtr<nsIProtocolHandler>    mHandler;
     nsCOMPtr<nsIThreadPool>         mPool; // the thread pool we want to use to fire off connections.
+    nsFtpConnectionThread           *mConnThread; // the raw pointer to the thread object.
 };
-
-#define NS_FTP_SEGMENT_SIZE   (4*1024)
-#define NS_FTP_BUFFER_SIZE    (8*1024)
-
 
 #endif /* nsFTPChannel_h___ */

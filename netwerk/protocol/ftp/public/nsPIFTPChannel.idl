@@ -24,11 +24,16 @@
 
 interface nsIEventQueue;
 
+// this interface provides a way for the FTP connection to 
+// synchronize with the owning channel.
+
 [scriptable, uuid(64718e40-18c2-11d3-9337-00104ba0fd40)]
-interface nsIFTPChannel : nsIChannel
+interface nsPIFTPChannel : nsIChannel
 {
     void SetConnectionQueue(in nsIEventQueue aEventQ);
 	void SetContentLength(in long aLength);
+    void SetContentType(in string aContentType);
+    void Stopped(in nsresult aStatus, in wstring aMsg);
 };
 
 
