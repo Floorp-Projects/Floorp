@@ -358,7 +358,7 @@
       switch( which ) {
         case "walletsites":
           window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
-                            "_blank","chrome,resizable=no","W"); 
+                            "_blank","chrome,resizable","W"); 
           break;
         case "wallet":
         default:
