@@ -312,9 +312,24 @@ pref("mail.server.default.canFileMessages", true);
 pref("mail.smtpserver.default.auth_method", 1); // auth any
 pref("mail.smtpserver.default.try_ssl", 0);
 
-pref("mail.display_glyph", true);   // see <http://www.bucksch.org/1/projects/mozilla/16507>
-pref("mail.display_struct", true);  // ditto
-pref("mail.send_struct", false);   // ditto
+// For the next 3 prefs, see <http://www.bucksch.org/1/projects/mozilla/16507>
+pref("mail.display_glyph", true);   // TXT->HTML :-) etc. in viewer
+pref("mail.display_struct", true);  // TXT->HTML *bold* etc. in viewer; ditto
+pref("mail.send_struct", false);   // HTML->HTML *bold* etc. during Send; ditto
+// For the next 4 prefs, see <http://www.bucksch.org/1/projects/mozilla/108153>
+pref("mailnews.display.prefer_plaintext", false);  // Ignore HTML parts in multipart/alternative
+pref("mailnews.display.html_as", 0);  // How to display HTML parts. 0 = Render the sender's HTML; 1 = HTML->TXT->HTML; 2 = Show HTML source; 3 = Sanitize HTML
+pref("mailnews.display.html_sanitizer.allowed_tags", "html head title body p br div(lang,title) h1 h2 h3 h4 h5 h6 ul ol li(value,start,compact) dl dt dd blockquote(type,cite) pre noscript noframes strong em sub sup span(lang,title) acronym(title) abbr(title) del(title,cite,datetime) ins(title,cite,datetime) q(cite) a(href,name,title) img(alt,title,longdesc) base(href) area(alt) applet(alt) object(alt) var samp dfn address kbd code cite s strike tt b i table(align) caption tr(align,valign) td(rowspan,colspan,align,valign) th(rowspan,colspan,align,valign)");
+pref("mailnews.display.disallow_mime_handlers", 0);  /* Let only a few classes process incoming data. This protects from bugs (e.g. buffer overflows) and from security loopholes (e.g. allowing unchecked HTML in some obscure classes, although the user has html_as > 0).
+This option is mainly for the UI of html_as.
+0 = allow all available classes
+1 = Use hardcoded blacklist to avoid rendering (incoming) HTML
+2 = ... and inline images
+3 = ... and some other uncommon content types
+100 = Use hardcoded whitelist to avoid even more bugs(buffer overflows).
+      This mode will limit the features available (e.g. uncommon
+      attachment types and inline images) and is for paranoid users.
+*/
 
 pref("mail.forward_message_mode", 0); // 0=default as attachment 2=forward as inline with attachments, (obsolete 4.x value)1=forward as quoted (mapped to 2 in mozilla)
 
