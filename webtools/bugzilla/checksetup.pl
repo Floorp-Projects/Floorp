@@ -22,6 +22,7 @@
 #                 Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Dave Miller <justdave@syndicomm.com>
+#                 Zach Lipton  <zach@zachlipton.com>
 #
 #
 # Direct any questions on this source code to
@@ -265,6 +266,24 @@ if (@missing > 0) {
 
 print "Checking user setup ...\n";
 do 'localconfig';
+if ($@ ne "") { # capture errors in localconfig, bug 97290
+   print STDERR <<EOT;
+An error has occurred while reading your 
+'localconfig' file.  The text of the error message is:
+
+$@
+
+Please fix the error in your 'localconfig' file.  
+Alternately rename your 'localconfig' file, rerun 
+checksetup.pl, and re-enter your answers.
+
+  $ mv -f localconfig localconfig.old
+  $ ./checksetup.pl
+
+
+EOT
+die "Syntax error in localconfig";
+}
 my $newstuff = "";
 sub LocalVar ($$)
 {
