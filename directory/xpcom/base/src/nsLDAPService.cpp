@@ -31,9 +31,8 @@
  * GPL.
  */
 
-#include "nsLDAP.h"
+#include "nsLDAPInternal.h"
 #include "nsLDAPService.h"
-
 
 // constructor
 //
