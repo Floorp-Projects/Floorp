@@ -74,7 +74,6 @@ SOURCES =						\
 	$(PATH_PREFIX)/NativeArray.java			\
 	$(PATH_PREFIX)/NativeBoolean.java		\
 	$(PATH_PREFIX)/NativeCall.java			\
-	$(PATH_PREFIX)/NativeClosure.java		\
 	$(PATH_PREFIX)/NativeDate.java			\
 	$(PATH_PREFIX)/NativeFunction.java		\
 	$(PATH_PREFIX)/NativeGlobal.java		\
