@@ -42,15 +42,10 @@ LLIBS = \
 	$(DIST)\lib\xpcom.lib \
 	$(DIST)\lib\raptorgfxwin.lib \
 	$(DIST)\lib\nsreg.lib \
-	$(DIST)\lib\netlib.lib \
 	$(DIST)\lib\nspr3.lib \
 	$(DIST)\lib\plds3.lib \
 	$(DEPTH)\xpfe\bootstrap\$(OBJDIR)\nsSetupRegistry.obj \
 	$(NULL)  
-
-	# $(DIST)\lib\raptorbase.lib \
-	# $(DIST)\lib\xpcom32.lib\
-	# $(DIST)\lib\xpcomds_s.lib\
 
 WIN_LIBS = \
   version.lib
