@@ -17,6 +17,7 @@
  * 
  * Contributor(s):
  *   Christopher Blizzard <blizzard@mozilla.org>
+ *   Brian Edmond <briane@qnx.com>
  */
 
 #ifndef __nsIPhEmbed_h__
@@ -24,6 +25,9 @@
 
 #include <Pt.h>
 #include "nsIWebBrowser.h"
+#include "nsIWebProgress.h"
+#include "nsIRequest.h"
+#include "nsIDocShellTreeItem.h"
 
 #define NS_IGTKEMBED_IID_STR "ebe19ea4-1dd1-11b2-bc20-8e8105516b2f"
 
@@ -31,17 +35,24 @@
  {0xebe19ea4, 0x1dd1, 0x11b2, \
    { 0xbc, 0x20, 0x8e, 0x81, 0x05, 0x51, 0x6b, 0x2f }}
 
-typedef nsresult (MozEmbedChromeCB)          (PRUint32 chromeMask, nsIWebBrowser **_retval, void *aData);
-typedef void     (MozEmbedDestroyCB)         (void *aData);
-typedef void     (MozEmbedVisibilityCB)      (PRBool aVisibility, void *aData);
-typedef void     (MozEmbedLinkCB)            (void *aData);
-typedef void     (MozEmbedJSStatusCB)        (void *aData);
-typedef void     (MozEmbedLocationCB)        (void *aData);
-typedef void     (MozEmbedTitleCB)           (void *aData);
-typedef void     (MozEmbedProgressCB)        (void *aData, PRInt32 aProgressTotal,
-						 PRInt32 aProgressCurrent);
-typedef void     (MozEmbedNetCB)             (void *aData, PRInt32 aFlags, nsresult aStatus);
-typedef PRBool   (MozEmbedStartOpenCB)       (const char *aURI, void *aData);
+class PhEmbedListener
+{
+ public:
+  enum PhEmbedListenerMessageType
+  {
+    MessageLink = 0,
+    MessageJSStatus,
+    MessageTitle
+  };
+  virtual nsresult NewBrowser(PRUint32 aChromeFlags,
+			      nsIDocShellTreeItem **_retval) = 0;
+  virtual void     Destroy(void) = 0;
+  virtual void     Visibility(PRBool aVisibility) = 0;
+  virtual void     Message(PhEmbedListenerMessageType aType,
+			   const char *aMessage) = 0;
+  virtual PRBool   StartOpen(const char *aURI) = 0;
+  virtual void     SizeTo(PRInt32 width, PRInt32 height) = 0;
+};
 
 class nsIPhEmbed : public nsISupports
 {
@@ -50,19 +61,9 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGTKEMBED_IID)
   
   NS_IMETHOD Init                         (PtWidget_t *aOwningWidget) = 0;
-  NS_IMETHOD SetNewBrowserCallback        (MozEmbedChromeCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetDestroyCallback           (MozEmbedDestroyCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetVisibilityCallback        (MozEmbedVisibilityCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetLinkChangeCallback        (MozEmbedLinkCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetJSStatusChangeCallback    (MozEmbedJSStatusCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetLocationChangeCallback    (MozEmbedLocationCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetTitleChangeCallback       (MozEmbedTitleCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetProgressCallback          (MozEmbedProgressCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetNetCallback               (MozEmbedNetCB *aCallback, void *aData) = 0;
-  NS_IMETHOD SetStartOpenCallback         (MozEmbedStartOpenCB *aCallback, void *aData) = 0;
+  NS_IMETHOD SetEmbedListener             (PhEmbedListener *aListener) = 0;
   NS_IMETHOD GetLinkMessage               (char **retval) = 0;
   NS_IMETHOD GetJSStatus                  (char **retval) = 0;
-  NS_IMETHOD GetLocation                  (char **retval) = 0;
   NS_IMETHOD GetTitleChar                 (char **retval) = 0;
   NS_IMETHOD OpenStream                   (const char *aBaseURI, const char *aContentType) = 0;
   NS_IMETHOD AppendToStream               (const char *aData, int32 aLen) = 0;

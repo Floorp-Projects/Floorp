@@ -17,10 +17,11 @@
  * 
  * Contributor(s):
  *   Christopher Blizzard <blizzard@mozilla.org>
+ *	 Brian Edmond <briane@qnx.com>
  */
 
-#ifndef __MozEmbedChrome_h
-#define __MozEmbedChrome_h
+#ifndef __PhMozEmbedChrome_h
+#define __PhMozEmbedChrome_h
 
 // needed for the ever helpful nsCOMPtr
 #include <nsCOMPtr.h>
@@ -38,43 +39,35 @@
 #include "nsIChannel.h"
 #include "nsIContentViewer.h"
 #include "nsIStreamListener.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIDocShellTreeItem.h"
 
 // utility classes
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 
-class MozEmbedChrome : public nsIPhEmbed,
+class PhMozEmbedChrome : public nsIPhEmbed,
                           public nsIWebBrowserChrome,
                           public nsIBaseWindow,
                           public nsIURIContentListener,
-                          public nsIWebProgressListener,
+                          public nsIDocShellTreeOwner,
                           public nsIInterfaceRequestor
 {
 public:
 
-  MozEmbedChrome();
-  virtual ~MozEmbedChrome();
+  PhMozEmbedChrome();
+  virtual ~PhMozEmbedChrome();
 
   // nsIPhEmbed
 
   NS_IMETHOD Init                         (PtWidget_t *aOwningWidget);
-  NS_IMETHOD SetNewBrowserCallback        (MozEmbedChromeCB *aCallback, void *aData);
-  NS_IMETHOD SetDestroyCallback           (MozEmbedDestroyCB *aCallback, void *aData);
-  NS_IMETHOD SetVisibilityCallback        (MozEmbedVisibilityCB *aCallback, void *aData);
-  NS_IMETHOD SetLinkChangeCallback        (MozEmbedLinkCB *aCallback, void *aData);
-  NS_IMETHOD SetJSStatusChangeCallback    (MozEmbedJSStatusCB *aCallback, void *aData);
-  NS_IMETHOD SetLocationChangeCallback    (MozEmbedLocationCB *aCallback, void *aData);
-  NS_IMETHOD SetTitleChangeCallback       (MozEmbedTitleCB *aCallback, void *aData);
-  NS_IMETHOD SetProgressCallback          (MozEmbedProgressCB *aCallback, void *aData);
-  NS_IMETHOD SetNetCallback               (MozEmbedNetCB *aCallback, void *aData);
-  NS_IMETHOD SetStartOpenCallback         (MozEmbedStartOpenCB *aCallback, void *aData);
+  NS_IMETHOD SetEmbedListener             (PhEmbedListener *aListener);
   NS_IMETHOD GetLinkMessage               (char **retval);
   NS_IMETHOD GetJSStatus                  (char **retval);
-  NS_IMETHOD GetLocation                  (char **retval);
   NS_IMETHOD GetTitleChar                 (char **retval);
   NS_IMETHOD OpenStream                   (const char *aBaseURI, const char *aContentType);
-  NS_IMETHOD AppendToStream               (const char *aData,int32 aLen);
+  NS_IMETHOD AppendToStream               (const char *aData, int32 aLen);
   NS_IMETHOD CloseStream                  (void);
 
   NS_DECL_ISUPPORTS
@@ -85,38 +78,17 @@ public:
 
   NS_DECL_NSIURICONTENTLISTENER
 
-  NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIDOCSHELLTREEOWNER
 
   NS_DECL_NSIBASEWINDOW
 
 private:
-  PtWidget_t                 *mOwningWidget;
+  PtWidget_t                 *mOwningPhWidget;
   nsCOMPtr<nsIWebBrowser>    mWebBrowser;
-  MozEmbedChromeCB       *mNewBrowserCB;
-  void                      *mNewBrowserCBData;
-  MozEmbedDestroyCB      *mDestroyCB;
-  void                      *mDestroyCBData;
-  MozEmbedVisibilityCB   *mVisibilityCB;
-  void                      *mVisibilityCBData;
-  MozEmbedLinkCB         *mLinkCB;
-  void                      *mLinkCBData;
-  MozEmbedJSStatusCB     *mJSStatusCB;
-  void                      *mJSStatusCBData;
-  MozEmbedLocationCB     *mLocationCB;
-  void                      *mLocationCBData;
-  MozEmbedTitleCB        *mTitleCB;
-  void                      *mTitleCBData;
-  MozEmbedProgressCB     *mProgressCB;
-  void                      *mProgressCBData;
-  MozEmbedNetCB          *mNetCB;
-  void                      *mNetCBData;
-  MozEmbedStartOpenCB    *mOpenCB;
-  void                      *mOpenCBData;
   nsRect                     mBounds;
   PRBool                     mVisibility;
   nsXPIDLCString             mLinkMessage;
   nsXPIDLCString             mJSStatus;
-  nsXPIDLCString             mLocation;
   nsXPIDLCString             mTitle;
   nsString                   mTitleUnicode;
   PRUint32                   mChromeMask;
@@ -128,7 +100,9 @@ private:
   nsCOMPtr<nsIStreamListener> mStreamListener;
   PRUint32                   mOffset;
   PRBool                     mDoingStream;
+  PhEmbedListener          *mChromeListener;
+  nsIDocShellTreeItem       *mContentShell;
 };
 
-#endif /* __MozEmbedChrome_h */
+#endif /* __PhMozEmbedChrome_h */
 
