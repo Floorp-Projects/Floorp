@@ -43,6 +43,9 @@
 #ifdef XP_UNIX
 #include "prenv.h"
 #endif
+#ifdef XP_MACOSX
+#include "nsILocalFileMac.h"
+#endif
 
 // WARNING: These hard coded names need to go away. They need to
 // come from localizable resources
@@ -118,12 +121,20 @@ nsXREDirProvider::GetProductDirectory(nsILocalFile** aFile)
   nsCOMPtr<nsIProperties> directoryService =  do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC)
   OSErr err;
   long response;
   err = ::Gestalt(gestaltSystemVersion, &response);
   const char *prop = (!err && response >= 0x00001000) ? NS_MAC_USER_LIB_DIR : NS_MAC_DOCUMENTS_DIR;
   rv = directoryService->Get(prop, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
+#elif defined(XP_MACOSX)
+  FSRef fsRef;
+  OSErr err = ::FSFindFolder(kUserDomain, kDomainLibraryFolderType, kCreateFolder, &fsRef);
+  if (err) return NS_ERROR_FAILURE;
+  NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localDir));
+  if (!localDir) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsILocalFileMac> localDirMac(do_QueryInterface(localDir));
+  rv = localDirMac->InitWithFSRef(&fsRef);
 #elif defined(XP_OS2)
   rv = directoryService->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
 #elif defined(XP_WIN)
