@@ -356,7 +356,8 @@ nsStreamListenerProxy::Init(nsIStreamListener *aListener,
                              PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    SetReceiver(aListener);
+    nsCOMPtr<nsIStreamObserver> observer = do_QueryInterface(aListener);
+    SetReceiver(observer);
     return SetEventQueue(aEventQ);
 }
 

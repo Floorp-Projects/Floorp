@@ -280,6 +280,7 @@ nsStreamProviderProxy::Init(nsIStreamProvider *aProvider,
                              PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    SetReceiver(aProvider);
+    nsCOMPtr<nsIStreamObserver> observer = do_QueryInterface(aProvider);
+    SetReceiver(observer);
     return SetEventQueue(aEventQ);
 }
