@@ -537,6 +537,9 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 %.h: %.idl
 	$(IDL_COMPILE) -h -w -I $(DIST)/idl $<
 
+Makefile: $(srcdir)/Makefile.in
+	$(topsrcdir)/build/autoconf/update-makefile.sh
+
 ifdef DIRS
 $(DIRS)::
 	@if test -d $@; then				\
