@@ -62,8 +62,6 @@ function Startup()
   // Set initial enable state on character input and "collapse" checkbox
   SelectCharacter(gIndex);
 
-  SetTextboxFocus(gDialog.sepRadioGroup);
-
   SetWindowLocation();
 }
 
