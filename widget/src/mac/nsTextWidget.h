@@ -75,7 +75,6 @@ protected:
 
 	PRBool		mIsPassword;
 	PRBool		mIsReadOnly;
-	TEHandle	mTE;
 };
 
 #endif // nsTextWidget_h__
