@@ -162,19 +162,23 @@ nsHTMLButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
-    if (accService) {
-      nsIAccessible* acc = nsnull;
-      accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), &acc);
-      *aInstancePtr = acc;
-      return NS_OK;
-    }
   }
 
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
+
+NS_IMETHODIMP nsHTMLButtonControlFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    nsIAccessible* acc = nsnull;
+    return accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 
 void
 nsHTMLButtonControlFrame::GetDefaultLabel(nsString& aString) 

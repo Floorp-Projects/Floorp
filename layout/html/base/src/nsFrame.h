@@ -279,6 +279,8 @@ public:
                                   nsIReflowCommand* aRC,
                                   PRBool            aCommandAdded);
 
+  NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
+
   NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
                                            nsIFrame** aProviderFrame, 
                                            nsContextProviderRelationship& aRelationship);

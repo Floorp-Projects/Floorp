@@ -30,6 +30,8 @@
 #include "nsITextContent.h"
 #include "nsIStatefulFrame.h"
 
+class nsIAccessible;
+
 // Class which implements the input[type=button, reset, submit] and
 // browse button for input[type=file].
 // The label for button is specified through generated content
@@ -57,6 +59,8 @@ public:
                          nsEventStatus* aEventStatus);
 
  
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+
    // nsFormControlFrame
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 #ifdef DEBUG

@@ -454,6 +454,8 @@ public:
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible);
 
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
@@ -762,6 +764,20 @@ private:
 #endif
 };
 
+NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  if (mRect.width > 0 || mRect.height > 0) {
+
+    nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+    if (accService) {
+      nsIAccessible* acc = nsnull;
+      return accService->CreateHTMLTextAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsTextFrame::QueryInterface(const nsIID& aIID,
                                      void** aInstancePtrResult)
@@ -771,28 +787,13 @@ NS_IMETHODIMP nsTextFrame::QueryInterface(const nsIID& aIID,
   if (!aInstancePtrResult)
   return NS_ERROR_NULL_POINTER;
 
-  // create a new accessible only if we have a size.
-  if (aIID.Equals(NS_GET_IID(nsIAccessible)) && (mRect.width > 0 || mRect.height > 0)) {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
-    if (accService) {
-       nsIAccessible* acc = nsnull;
-       accService->CreateHTMLTextAccessible(NS_STATIC_CAST(nsIFrame*, this),&acc);
-       *aInstancePtrResult = acc;
-       return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
 #ifdef IBMBIDI
-  }
   if (aIID.Equals(NS_GET_IID(nsITextFrame))) {
     *aInstancePtrResult = NS_STATIC_CAST(nsITextFrame*, this);
     return NS_OK;
   }
-  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
-#else
-  } else
-    return nsFrame::QueryInterface(aIID, aInstancePtrResult);
 #endif
+  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
 class nsContinuingTextFrame : public nsTextFrame {

@@ -96,6 +96,9 @@ public:
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
+
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+
   NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);
 

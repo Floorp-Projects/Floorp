@@ -62,13 +62,19 @@ static gnsAccessibles = 0;
 
 static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
+/*
+ * This class is used to get the bounds of a DOM node.
+ * This is harder that it looks. Many frames point to
+ * the same DOM node. Some good examples are links and wrapping text.
+ */
 class nsFrameTreeWalker {
 public:
   nsFrameTreeWalker(nsIPresContext* aPresContext, nsIDOMNode* aNode);
   PRBool GetNextSibling();
   PRBool GetParent();
   PRBool GetFirstChild();
-  void GetBounds(nsRect& aBounds);
+  void GetBounds(nsRect& aBounds, nsIFrame** aParent);
+  void GetCommonParent(nsIFrame* aStartParent, nsIFrame* aChild, nsIFrame** aCommonParent);
 
   PRBool IsSameContent();
 
@@ -84,11 +90,15 @@ private:
   PRInt32 mDepthToFind;
 };
 
+/**
+ * This class uses a nsFrameTreeWalker to get the frames of a DOM node
+ * and then unions them all together into 1 rect.
+ */
 class nsDOMNodeBoundsFinder
 {
 public:
   nsDOMNodeBoundsFinder(nsIPresContext* aPresContext, nsIDOMNode* aNode);
-  virtual void GetBounds(nsRect& aBounds);
+  virtual void GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame);
 
 private:
   nsCOMPtr<nsIDOMNode> mDOMNode;
@@ -102,18 +112,32 @@ nsDOMNodeBoundsFinder::nsDOMNodeBoundsFinder(nsIPresContext* aPresContext, nsIDO
 {
 };
 
-void nsDOMNodeBoundsFinder::GetBounds(nsRect& aBounds)
+void nsDOMNodeBoundsFinder::GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame)
 {
-  // sum up all the child rectangles
+/*
+ * This method is used to determine the bounds of a content node.
+ * Because HTML wraps and links are not always rectangular, this
+ * method uses the following algorithm:
+ *
+ * 1) get the primary from for the DOM node.
+ * 2) Get its depth in the frame tree.
+ * 3) Find the next frame at the same depth.
+ * 4) If that frame has the same DOM node union it with the old bounds and continue.
+ * 5) If not stop.
+ */
+
   nsCOMPtr<nsIDOMNode> node(mDOMNode);
  
   mWalker.SetNode(mDOMNode);
-  mWalker.GetBounds(aBounds);
+  mWalker.mFrame->GetParent(aRelativeFrame);  
+
+  mWalker.GetBounds(aBounds, aRelativeFrame);
+
 
   while(mWalker.GetNextSibling()) 
   {
      nsRect rect;
-     mWalker.GetBounds(rect);
+     mWalker.GetBounds(rect, aRelativeFrame);
      aBounds.UnionRect(aBounds,rect);
   }
 }
@@ -155,9 +179,52 @@ void nsFrameTreeWalker::InitDepth()
   }
 }
 
-void nsFrameTreeWalker::GetBounds(nsRect& aBounds)
+void nsFrameTreeWalker::GetCommonParent(nsIFrame* aStartParent, nsIFrame* aChild, nsIFrame** aCommonParent)
 {
+  // go up our parent chain until we hit the common parent
+  nsIFrame* parent = nsnull;
+  aChild->GetParent(&parent);
+  while(parent)
+  {
+    // if we find one return.
+    if (parent == aStartParent) {
+      *aCommonParent = aStartParent;
+      return;
+    }
+
+    parent->GetParent(&parent);
+  }
+
+  // if we don't find a common parent recursively call this with 
+  // the starts parent.
+  aStartParent->GetParent(&aStartParent);
+
+  if (aStartParent) 
+    GetCommonParent(aStartParent, aChild, aCommonParent);
+  else
+    aCommonParent = nsnull;
+}
+
+void nsFrameTreeWalker::GetBounds(nsRect& aBounds, nsIFrame** aParent)
+{
+  GetCommonParent(*aParent, mFrame, aParent);
+
+  nsIFrame* parent = nsnull;
+  mFrame->GetParent(&parent);  
+
   mFrame->GetRect(aBounds);
+  nsRect rect;
+
+  while(parent)
+  {
+    parent->GetRect(rect);
+    aBounds.x += rect.x;
+    aBounds.y += rect.y;
+    if (parent == *aParent)
+      return;
+
+    parent->GetParent(&parent);
+  }
 }
 
 PRBool nsFrameTreeWalker::GetParent()
@@ -309,6 +376,10 @@ PRBool nsFrameTreeWalker::IsSameContent()
 
 //--------------
 
+/** This class is used to walk the DOM tree. It skips
+  * everything but nodes that either implement nsIAccessible
+  * or have primary frames that implement "GetAccessible"
+  */
 class nsDOMTreeWalker {
 public:
   nsDOMTreeWalker(nsIWeakReference* aShell, nsIDOMNode* aContent);
@@ -370,9 +441,9 @@ PRBool nsDOMTreeWalker::GetParent()
   {
     nsCOMPtr<nsIAccessible> acc;
     nsresult rv = mAccessible->GetAccParent(getter_AddRefs(acc));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && acc) {
       mAccessible = acc;
-      mDOMNode = do_QueryInterface(acc);
+      acc->AccGetDOMNode(getter_AddRefs(mDOMNode));
       return PR_TRUE;
     }
   }
@@ -393,21 +464,25 @@ PRBool nsDOMTreeWalker::GetParent()
                                                     getter_AddRefs(content)))) {
         nsIFrame* frame;
         parentPresShell->GetPrimaryFrameFor(content, &frame);
-        nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(frame));
-        if (!accessible)
-          accessible = do_QueryInterface(content);
-        if (accessible) {
-          nsCOMPtr<nsIWeakReference> wr = getter_AddRefs(NS_GetWeakReference(parentPresShell));
-          nsCOMPtr<nsIDOMNode> node(do_QueryInterface(accessible));
-          mAccessible = accessible;
-          mDOMNode = node;
-          mPresShell = wr;
-          return PR_TRUE;
+        if (frame) {
+          nsCOMPtr<nsIAccessible> accessible;
+
+          frame->GetAccessible(getter_AddRefs(accessible));
+
+          if (!accessible)
+            accessible = do_QueryInterface(content);
+          if (accessible) {
+            nsCOMPtr<nsIWeakReference> wr (getter_AddRefs(NS_GetWeakReference(parentPresShell)));
+            accessible->AccGetDOMNode(getter_AddRefs(mDOMNode));
+            mAccessible = accessible;
+            mPresShell = wr;
+            return PR_TRUE;
+          }
         }
       }
 
       mAccessible = new nsRootAccessible(mPresShell);
-      mDOMNode = do_QueryInterface(mAccessible);
+      mAccessible->AccGetDOMNode(getter_AddRefs(mDOMNode));
       return PR_TRUE;
     }    
 
@@ -439,9 +514,9 @@ PRBool nsDOMTreeWalker::GetNextSibling()
   {
     nsCOMPtr<nsIAccessible> acc;
     nsresult rv = mAccessible->GetAccNextSibling(getter_AddRefs(acc));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && acc) {
       mAccessible = acc;
-      mDOMNode = do_QueryInterface(acc);
+      acc->AccGetDOMNode(getter_AddRefs(mDOMNode));
       return PR_TRUE;
     }
   }
@@ -523,9 +598,9 @@ PRBool nsDOMTreeWalker::GetFirstChild()
   {
     nsCOMPtr<nsIAccessible> acc;
     nsresult rv = mAccessible->GetAccFirstChild(getter_AddRefs(acc));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && acc) {
       mAccessible = acc;
-      mDOMNode = do_QueryInterface(acc);
+      acc->AccGetDOMNode(getter_AddRefs(mDOMNode));
       return PR_TRUE;
     }
   }
@@ -638,6 +713,10 @@ PRInt32 nsDOMTreeWalker::GetCount()
   return count;
 }
 
+/**
+ * If the DOM node's frame has and accessible or the DOMNode
+ * itself implements nsIAccessible return it.
+ */
 PRBool nsDOMTreeWalker::GetAccessible()
 {
   mAccessible = nsnull;
@@ -655,7 +734,8 @@ PRBool nsDOMTreeWalker::GetAccessible()
   if (!frame)
     return PR_FALSE;
 
-  mAccessible = do_QueryInterface(frame);
+  frame->GetAccessible(getter_AddRefs(mAccessible));
+
   if (!mAccessible)
     mAccessible = do_QueryInterface(mDOMNode);
 
@@ -735,20 +815,7 @@ nsAccessible::~nsAccessible()
 #endif
 }
 
-NS_IMPL_ADDREF(nsAccessible);
-NS_IMPL_RELEASE(nsAccessible);
-
-//NS_IMPL_ISUPPORTS1(nsAccessible, nsIAccessible);
-NS_INTERFACE_MAP_BEGIN(nsAccessible)
-  NS_INTERFACE_MAP_ENTRY(nsIAccessible)
-  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
-    nsIDOMNode* node = mDOMNode;
-    *aInstancePtr = (void*) node;
-    NS_ADDREF(node);
-    return NS_OK;
-  } else
-NS_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS1(nsAccessible, nsIAccessible);
 
 nsresult nsAccessible::GetAccParent(nsIAccessible **  aAccParent)
 {
@@ -959,7 +1026,7 @@ NS_IMETHODIMP nsAccessible::GetAccActionName(PRUint8 index, PRUnichar **_retval)
   *_retval = 0;
   if (mAccessible && NS_SUCCEEDED(GetAccNumActions(&numActions)) && index<numActions) {
     nsresult rv = mAccessible->GetAccActionName(index, _retval);
-    if (**_retval && NS_SUCCEEDED(rv)) {
+    if (*_retval && NS_SUCCEEDED(rv)) {
       nsAutoString newString;
       rv = GetTranslatedString(*_retval, &newString);
       if (NS_SUCCEEDED(rv)) {
@@ -1223,7 +1290,12 @@ NS_IMETHODIMP nsAccessible::AccTakeFocus(void)
   return NS_ERROR_FAILURE;  
 }
 
-
+NS_IMETHODIMP nsAccessible::AccGetDOMNode(nsIDOMNode **_retval)
+{
+    *_retval = mDOMNode;
+    NS_IF_ADDREF(*_retval);
+    return NS_OK;
+}
 
 nsresult nsAccessible::GetDocShellFromPS(nsIPresShell* aPresShell, nsIDocShell** aDocShell)
 {
@@ -1513,13 +1585,13 @@ nsAccessible::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
 }
 
 
-void nsAccessible::GetBounds(nsRect& aBounds)
+void nsAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRelativeParent)
 {
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(presContext);
 
   nsDOMNodeBoundsFinder finder(presContext, mDOMNode);
-  finder.GetBounds(aBounds);
+  finder.GetBounds(aBounds, aRelativeParent);
 }
 
 
@@ -1551,7 +1623,8 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
   presContext->GetTwipsToPixels(&t2p);   // Get pixels to twips conversion factor
 
   nsRect unionRectTwips;
-  GetBounds(unionRectTwips);   // Unions up all primary frames for this node and all siblings after it
+  nsIFrame* aRelativeFrame = nsnull;
+  GetBounds(unionRectTwips, &aRelativeFrame);   // Unions up all primary frames for this node and all siblings after it
 
   *x      = NSTwipsToIntPixels(unionRectTwips.x, t2p); 
   *y      = NSTwipsToIntPixels(unionRectTwips.y, t2p);
@@ -1565,8 +1638,8 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
     nsRect orgRectTwips, frameRectTwips, orgRectPixels;
 
     // Get the offset of this frame in screen coordinates
-    if (frame && NS_SUCCEEDED(GetAbsoluteFramePosition(presContext, frame, orgRectTwips, orgRectPixels))) {
-      frame->GetRect(frameRectTwips);   // Usually just the primary frame, but can be the choice list frame for an nsSelectAccessible
+    if (frame && NS_SUCCEEDED(GetAbsoluteFramePosition(presContext, aRelativeFrame, orgRectTwips, orgRectPixels))) {
+      aRelativeFrame->GetRect(frameRectTwips);   // Usually just the primary frame, but can be the choice list frame for an nsSelectAccessible
       // Add in the absolute coorinates.
       // Since these absolute coordinates are for the primary frame, 
       // also subtract the difference between our primary frame and our bounds frame

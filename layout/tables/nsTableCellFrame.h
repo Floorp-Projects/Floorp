@@ -65,6 +65,9 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+
+
   NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,

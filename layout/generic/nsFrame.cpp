@@ -270,16 +270,7 @@ nsresult nsFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (aIID.Equals(kClassIID) || aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)this;
     return NS_OK;
-  } /* else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
-    if (accService) {
-      nsIAccessible* acc = nsnull;
-      accService->CreateHTMLFrameAccessible(NS_STATIC_CAST(nsIFrame*, this),&acc);
-      *aInstancePtr = acc;
-      return NS_OK;
-    }
-  } */
+  }
 
   return NS_NOINTERFACE;
 }
@@ -3828,6 +3819,12 @@ nsFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
   return NS_ERROR_NOT_IMPLEMENTED;    
 }
 
+
+NS_IMETHODIMP
+nsFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 nsFrame::ReflowCommandNotify(nsIPresShell*     aShell,

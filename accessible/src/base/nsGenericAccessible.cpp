@@ -236,6 +236,11 @@ NS_IMETHODIMP nsGenericAccessible::GetAccExtState(PRUint32 *_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsGenericAccessible::AccGetDOMNode(nsIDOMNode **_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //-------------
 // nsDOMAccessible
 //-------------
@@ -262,6 +267,12 @@ nsDOMAccessible::nsDOMAccessible(nsIPresShell* aShell, nsIDOMNode* aNode)
   mNode = aNode;
 }
 
+NS_IMETHODIMP nsDOMAccessible::AccGetDOMNode(nsIDOMNode **_retval)
+{
+    *_retval = mNode;
+    NS_IF_ADDREF(*_retval);
+    return NS_OK;
+}
 
 /* void accRemoveSelection (); */
 NS_IMETHODIMP nsDOMAccessible::AccRemoveSelection()

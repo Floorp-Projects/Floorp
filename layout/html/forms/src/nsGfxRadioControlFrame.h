@@ -27,6 +27,8 @@
 #include "nsIStatefulFrame.h"
 #include "nsIRadioControlFrame.h"
 
+class nsIAccessible;
+
 // nsGfxRadioControlFrame
 
 #define NS_GFX_RADIO_CONTROL_FRAME_FACE_CONTEXT_INDEX   0 // for additional style contexts
@@ -47,6 +49,7 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext);
   NS_IMETHOD GetRadioGroupSelectedContent(nsIContent ** aRadioBtn);
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 
   virtual PRBool GetChecked();
   virtual PRBool GetDefaultChecked();

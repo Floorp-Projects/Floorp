@@ -89,10 +89,10 @@ nsIFrame* nsRootAccessible::GetFrame()
   return root;
 }
 
-void nsRootAccessible::GetBounds(nsRect& aBounds)
+void nsRootAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame)
 {
-  nsIFrame* frame = GetFrame();
-  frame->GetRect(aBounds);
+  *aRelativeFrame = GetFrame();
+  (*aRelativeFrame)->GetRect(aBounds);
 }
 
 nsIAccessible* nsRootAccessible::CreateNewAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell)

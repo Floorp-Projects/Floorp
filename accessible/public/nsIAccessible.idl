@@ -25,6 +25,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIDOMNode.idl"
 
 [scriptable, uuid(B26FBE47-9A5F-42a1-822B-082461AE4D6D)]
 interface nsIAccessible : nsISupports
@@ -70,6 +71,8 @@ interface nsIAccessible : nsISupports
   PRUint8 getAccNumActions();
   wstring getAccActionName(in PRUint8 index);
   void accDoAction(in PRUint8 index);   // Action number 0 is the default action
+
+  nsIDOMNode accGetDOMNode();
 
  // MSAA State flags - used for bitfield. More than 1 allowed.
   const unsigned long  STATE_UNAVAILABLE        = 0x00000001;  // Disabled, maps to opposite of Java ENABLED, Gnome/ATK SENSITIVE?

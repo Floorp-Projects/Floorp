@@ -47,6 +47,7 @@ class nsTextInputSelectionImpl;
 class nsTextInputListener;
 class nsIDOMCharacterData;
 class nsIScrollableView;
+class nsIAccessible;
 
 
 class nsGfxTextControlFrame2 : public nsStackFrame,
@@ -77,6 +78,7 @@ public:
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
