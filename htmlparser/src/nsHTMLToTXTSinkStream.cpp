@@ -53,7 +53,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 const  PRInt32 gTabSize=4;
 const  PRInt32 gOLNumberWidth = 3;
-const  PRInt32 gIndentSizeList = (gTabSize<gOLNumberWidth+3) ? gTabSize: gOLNumberWidth+3;
+const  PRInt32 gIndentSizeList = (gTabSize > gOLNumberWidth+3) ? gTabSize: gOLNumberWidth+3;
                                // Indention of non-first lines of ul and ol
 
 static PRBool IsInline(eHTMLTags aTag);
