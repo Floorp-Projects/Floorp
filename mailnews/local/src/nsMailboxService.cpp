@@ -100,12 +100,13 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
                               nsIStreamListener * aMailboxCopyHandler,
                               PRBool moveMessage,
                               nsIUrlListener * aUrlListener,
+                              nsIMsgWindow *aMsgWindow,
                               nsIURI **aURL)
 {
     nsMailboxAction mailboxAction = nsIMailboxUrl::ActionMoveMessage;
     if (!moveMessage)
         mailboxAction = nsIMailboxUrl::ActionCopyMessage;
-  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, nsnull, aUrlListener, nsnull, mailboxAction, nsnull, aURL);
+  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, aMsgWindow, aUrlListener, nsnull, mailboxAction, nsnull, aURL);
 }
 
 nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
@@ -113,6 +114,7 @@ nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
                               nsIStreamListener * aMailboxCopyHandler,
                               PRBool moveMessage,
                               nsIUrlListener * aUrlListener,
+                              nsIMsgWindow *aMsgWindow,
                               nsIURI **aURL)
 {
 	NS_ASSERTION(PR_FALSE, "not implemented yet");

@@ -347,20 +347,20 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
 
 NS_IMETHODIMP
 nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURI **aURL)
+						   nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **aURL)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     nsCOMPtr<nsISupports> streamSupport;
     if (!aSrcMailboxURI || !aMailboxCopyHandler) return rv;
     streamSupport = do_QueryInterface(aMailboxCopyHandler, &rv);
     if (NS_SUCCEEDED(rv))
-        rv = DisplayMessage(aSrcMailboxURI, streamSupport, nsnull, aUrlListener, nsnull, aURL);
+        rv = DisplayMessage(aSrcMailboxURI, streamSupport, aMsgWindow, aUrlListener, nsnull, aURL);
 	return rv;
 }
 
 NS_IMETHODIMP
 nsNntpService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURI **aURL)
+						   nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **aURL)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }

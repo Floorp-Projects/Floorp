@@ -64,6 +64,7 @@ interface nsIImapService : nsISupports
                     in nsImapState aImapAction,
                     in nsIMsgFolder aImapMailFolder,
                     in nsIImapMessageSink aImapMessageSink,
+					in nsIMsgWindow aMsgWindow, 
                     out nsIURI aOutURL,
                     in nsISupports aConsumer,
                     in string aMessageIdnetifierList,

@@ -162,17 +162,17 @@ protected:
                          PRBool deleteStorage);
   // copy message helper
 	nsresult CopyMessageTo(nsIMessage *message, nsIMsgFolder *dstFolder,
-                         PRBool isMove);
+                         nsIMsgWindow *msgWindow, PRBool isMove);
 
 	// copy multiple messages at a time from this folder
-	nsresult CopyMessagesTo(nsISupportsArray *messages, 
+	nsresult CopyMessagesTo(nsISupportsArray *messages, nsIMsgWindow *aMsgWindow,
                                              nsIMsgFolder *dstFolder,
                                              PRBool isMove);
 
 	virtual const char* GetIncomingServerType();
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
-                         PRBool isMove, nsIMsgCopyServiceListener* listener);
+                         PRBool isMove, nsIMsgCopyServiceListener* listener, nsIMsgWindow *msgWindow);
   void ClearCopyState();
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
 

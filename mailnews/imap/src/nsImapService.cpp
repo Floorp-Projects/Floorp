@@ -472,7 +472,7 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
       }
       PRBool msgLoadingFromCache = PR_FALSE;
       rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
-                        aURL, aDisplayConsumer, msgKey, PR_TRUE);
+                        aMsgWindow, aURL, aDisplayConsumer, msgKey, PR_TRUE);
       if (NS_SUCCEEDED(rv))
       {
         imapUrl->GetMsgLoadingFromCache(&msgLoadingFromCache);
@@ -671,7 +671,7 @@ NS_IMETHODIMP nsImapService::DisplayMessageForPrinting(const char* aMessageURI,
 NS_IMETHODIMP
 nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
                            aMailboxCopy, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURI **aURL)
+						   nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **aURL)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     nsCOMPtr<nsISupports> streamSupport;
@@ -696,7 +696,7 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
             nsImapAction imapAction = nsIImapUrl::nsImapOnlineToOfflineCopy;
             if (moveMessage)
                 imapAction = nsIImapUrl::nsImapOnlineToOfflineMove; 
-			      rv = FetchMessage(imapUrl,imapAction, folder, imapMessageSink,aURL, streamSupport, msgKey, PR_TRUE);
+			      rv = FetchMessage(imapUrl,imapAction, folder, imapMessageSink,aMsgWindow, aURL, streamSupport, msgKey, PR_TRUE);
         } // if we got an imap message sink
     } // if we decomposed the imap message 
     return rv;
@@ -704,7 +704,7 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
 
 NS_IMETHODIMP
 nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStreamListener *aMailboxCopy, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURI **aURL)
+						   nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **aURL)
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsISupports> streamSupport;
@@ -735,7 +735,7 @@ nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStr
 			imapUrl->SetCopyState(aMailboxCopy);
             // now try to display the message
 			rv = FetchMessage(imapUrl, action, folder, imapMessageSink,
-                              aURL, streamSupport, messageIds.GetBuffer(), PR_TRUE);
+                              aMsgWindow, aURL, streamSupport, messageIds.GetBuffer(), PR_TRUE);
 			// ### end of copy operation should know how to do the delete.if this is a move
 
      } // if we got an imap message sink
@@ -848,7 +848,7 @@ NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI,
         msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
         msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
 
-        return FetchMessage(imapUrl, nsIImapUrl::nsImapSaveMessageToDisk, folder, imapMessageSink, aURL, imapMessageSink, msgKey, PR_TRUE);
+        return FetchMessage(imapUrl, nsIImapUrl::nsImapSaveMessageToDisk, folder, imapMessageSink, aMsgWindow, aURL, imapMessageSink, msgKey, PR_TRUE);
     }
 
 	return rv;
@@ -864,6 +864,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
                             nsImapAction aImapAction,
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
+                            nsIMsgWindow *aMsgWindow,
                             nsIURI ** aURL,
 							              nsISupports * aDisplayConsumer, 
                             const char *messageIdentifierList,
@@ -944,7 +945,11 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
           nsCOMPtr<nsILoadGroup> aLoadGroup;
           nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
           if (NS_SUCCEEDED(rv) && mailnewsUrl)
-              mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
+          {
+            if (aMsgWindow)
+              mailnewsUrl->SetMsgWindow(aMsgWindow);
+            mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
+          }
           rv = NewChannel(url, getter_AddRefs(aChannel));
           if (NS_FAILED(rv)) return rv;
 

@@ -77,6 +77,7 @@ public:
     nsCOMPtr<nsIMsgCopyServiceListener> m_listener; // listener of this copy
                                                     // operation 
     nsCOMPtr<nsIFileSpec> m_tmpFileSpec; // temp file spec for copy operation
+    nsCOMPtr<nsIMsgWindow> m_msgWindow; // msg window for copy operation
 
     nsIMsgMessageService* m_msgService; // source folder message service; can
                                         // be Nntp, Mailbox, or Imap
@@ -301,12 +302,13 @@ protected:
                          nsIMsgWindow *msgWindow,
                          nsIMsgCopyServiceListener* listener);
   nsresult CopyStreamMessage(nsIMessage* message, nsIMsgFolder* dstFolder,
-                             PRBool isMove);
+                             nsIMsgWindow *msgWindow, PRBool isMove);
   nsresult InitCopyState(nsISupports* srcSupport, 
                          nsISupportsArray* messages,
                          PRBool isMove,
                          PRBool selectedState,
-                         nsIMsgCopyServiceListener* listener);
+                         nsIMsgCopyServiceListener* listener,
+                         nsIMsgWindow *msgWindow);
   void ClearCopyState(nsresult exitCode);
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,

@@ -315,7 +315,7 @@ nsFolderCompactState::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
                                 m_messageUri);
     if (NS_FAILED(rv)) goto done;
     rv = m_messageService->CopyMessage(m_messageUri, this, PR_FALSE, nsnull,
-                                       nsnull);
+                                       /* ### should get msg window! */ nsnull, nsnull);
     
   }
 
@@ -1107,7 +1107,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact()
         if (NS_SUCCEEDED(rv))
           rv = compactState->m_messageService->CopyMessage(
             compactState->m_messageUri, compactState, PR_FALSE, nsnull,
-            nsnull);
+            /* ### should get msg window! */ nsnull, nsnull);
       }
       else
       { // no messages to copy with
@@ -1739,7 +1739,8 @@ nsresult
 nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport, 
                                     nsISupportsArray* messages,
                                     PRBool isMove,
-                                    nsIMsgCopyServiceListener* listener)
+                                    nsIMsgCopyServiceListener* listener, 
+                                    nsIMsgWindow *msgWindow)
 {
   nsresult rv = NS_OK;
 	nsFileSpec path;
@@ -1834,7 +1835,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   nsCOMPtr<nsISupports> aSupport(do_QueryInterface(srcFolder, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  rv = InitCopyState(aSupport, messages, isMove, listener);
+  rv = InitCopyState(aSupport, messages, isMove, listener, msgWindow);
   if (NS_FAILED(rv)) return rv;
   char *uri = nsnull;
   rv = srcFolder->GetURI(&uri);
@@ -1891,7 +1892,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 	if (numMsgs > 1 && protocolType.EqualsIgnoreCase("imap"))
 	{
 		mCopyState->m_copyingMultipleMessages = PR_TRUE;
-		rv = CopyMessagesTo(messages, this, isMove);
+		rv = CopyMessagesTo(messages, msgWindow, this, isMove);
 	}
 	else
 	{
@@ -1901,7 +1902,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 		{
 		  nsCOMPtr<nsIMessage> aMessage = do_QueryInterface(msgSupport, &rv);
 		  if(NS_SUCCEEDED(rv))
-			rv = CopyMessageTo(aMessage, this, isMove);
+			rv = CopyMessageTo(aMessage, this, msgWindow, isMove);
 		  else
 			ClearCopyState();
 		}
@@ -1937,7 +1938,7 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
   }
 
   rv = InitCopyState(fileSupport, messages, msgToReplace ? PR_TRUE:PR_FALSE,
-                     listener);
+                     listener, msgWindow);
   if (NS_FAILED(rv)) goto done;
 
   parseMsgState = new nsParseMailMessageState();
@@ -2373,7 +2374,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
                      (mCopyState->m_curCopyIndex));
     nsCOMPtr<nsIMessage>aMessage = do_QueryInterface(aSupport, &rv);
     if (NS_SUCCEEDED(rv))
-      rv = CopyMessageTo(aMessage, this, mCopyState->m_isMove);
+      rv = CopyMessageTo(aMessage, this, msgWindow, mCopyState->m_isMove);
   }
   else
   { // both CopyMessages() & CopyFileMessage() go here if they have
@@ -2507,7 +2508,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
 
 
 nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages, 
-                                             nsIMsgFolder *dstFolder,
+                                             nsIMsgWindow *aMsgWindow, nsIMsgFolder *dstFolder,
                                              PRBool isMove)
 {
   if (!mCopyState) return NS_ERROR_OUT_OF_MEMORY;
@@ -2564,7 +2565,7 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
 			return NS_ERROR_NO_INTERFACE;
 		mCopyState->m_curCopyIndex = 0; 
 		mCopyState->m_messageService->CopyMessages(&keyArray, srcFolder, streamListener, isMove,
-                                            nsnull, &url);
+                                            nsnull, aMsgWindow, &url);
 	}
 
 	return rv;
@@ -2572,6 +2573,7 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
 
 nsresult nsMsgLocalMailFolder::CopyMessageTo(nsIMessage *message, 
                                              nsIMsgFolder *dstFolder,
+                                             nsIMsgWindow *aMsgWindow,
                                              PRBool isMove)
 {
   if (!mCopyState) return NS_ERROR_OUT_OF_MEMORY;
@@ -2619,7 +2621,7 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsIMessage *message,
 		if(!streamListener)
 			return NS_ERROR_NO_INTERFACE;
 		mCopyState->m_messageService->CopyMessage(uri, streamListener, isMove,
-                                            nsnull, &url);
+                                            nsnull, aMsgWindow, &url);
 	}
 
 	return rv;

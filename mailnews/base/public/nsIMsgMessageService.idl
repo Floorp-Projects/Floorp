@@ -58,11 +58,11 @@ interface nsIMsgMessageService : nsISupports {
      ///////////////////////////////////////////////////////////////
   
 	void CopyMessage(in string aSrcURI, in nsIStreamListener aCopyListener, in boolean aMoveMessage,
-						   in nsIUrlListener aUrlListener, out nsIURI aURL);
+						   in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow, out nsIURI aURL);
 
     /* copy multiple messages at a time */
 	[noscript] void CopyMessages(in nsMsgKeyArrayPtr keys, in nsIMsgFolder srcFolder, in nsIStreamListener aCopyListener, in boolean aMoveMessage,
-						   in nsIUrlListener aUrlListener, out nsIURI aURL);
+						   in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow, out nsIURI aURL);
 
     /////////////////////////////////////////////////////////////////////
     //  DisplayMessage: When you want a message displayed....

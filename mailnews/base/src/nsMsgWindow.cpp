@@ -318,6 +318,12 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
 
 NS_IMETHODIMP nsMsgWindow::StopUrls()
 {
+    nsCOMPtr<nsIDocShell> docShell;
+    GetRootDocShell(getter_AddRefs(docShell));
+    if (docShell)
+    {
+      return docShell->StopLoad();
+    }
     nsCOMPtr <nsIWebShell> rootWebShell(do_QueryInterface(mRootDocShell));
 	if (rootWebShell)
 	{
