@@ -793,7 +793,7 @@ private:
   void InsertWithConversion( char, PRUint32 );
 };
 
-#if 0//def NEW_STRING_APIS
+#ifdef NEW_STRING_APIS
 NS_DEF_STRING_COMPARISON_OPERATORS(nsCString, char)
 #endif
 

@@ -887,7 +887,7 @@ private:
   void InsertWithConversion( const PRUnichar*, PRUint32, PRInt32=-1 );
 };
 
-#if 0//def NEW_STRING_APIS
+#ifdef NEW_STRING_APIS
 NS_DEF_STRING_COMPARISON_OPERATORS(nsString, PRUnichar)
 #endif
 
