@@ -96,6 +96,18 @@ INTL_CharSetIDToName(int16 csid, char  *charset)
 	}
 }
 
+PUBLIC const char*
+INTL_CharsetCorrection(const char* charsetname)
+{
+    int16 csid = INTL_CharSetNameToID(charsetname);
+    if((CS_GB2312_11 == csid) || (CS_GB2312 == csid))
+        return  (char*) INTL_CsidToCharsetNamePt(CS_GB_8BIT);
+    if((CS_KSC5601 == csid) || (CS_KSC5601_11 == csid))
+        return  (char*) INTL_CsidToCharsetNamePt(CS_KSC_8BIT);
+    if(CS_X_BIG5 == csid)
+        return  (char*) INTL_CsidToCharsetNamePt(CS_BIG5);
+    return NULL;
+}
 PUBLIC void 
 INTL_CharSetIDToJavaName(int16 csid, char  *charset)
 {
