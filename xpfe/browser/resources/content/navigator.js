@@ -63,10 +63,27 @@ var appCore = null;
 
 //cached elements
 var gBrowser = null;
+var gOpenerOrgURI = null; // opener's URI at time of opening
 
 // focused frame URL
 var gFocusedURL = null;
 var gFocusedDocument = null;
+
+const gPopupPermListener = {
+
+  observe: function(subject, topic, data) {
+    if (topic != "popup perm change")
+      return;
+
+    if (!gOpenerOrgURI)
+      return;
+
+    var pm = Components.classes["@mozilla.org/PopupWindowManager;1"]
+               .getService(Components.interfaces.nsIPopupWindowManager);
+    var checkbox = document.getElementById("popup-checkbox");
+    checkbox.checked = pm.testPermission(gOpenerOrgURI) != Components.interfaces.nsIPopupWindowManager.eDisallow;
+  }
+};
 
 // Pref listener constants
 const gButtonPrefListener =
@@ -152,6 +169,26 @@ function removePrefListener(observer)
     pbi.removeObserver(observer.domain, observer);
   } catch(ex) {
     dump("Failed to remove pref observer: " + ex + "\n");
+  }
+}
+
+function addPopupPermListener(observer)
+{
+  try {
+    var pm = Components.classes["@mozilla.org/PopupWindowManager;1"]
+              .getService(Components.interfaces.nsIPopupWindowManager);
+    pm.addObserver(observer);
+  } catch(e) {
+  }
+}
+
+function removePopupPermListener(observer)
+{
+  try {
+    var pm = Components.classes["@mozilla.org/PopupWindowManager;1"]
+              .getService(Components.interfaces.nsIPopupWindowManager);
+    pm.removeObserver(observer);
+  } catch(e) {
   }
 }
 
@@ -378,6 +415,7 @@ function Startup()
   addPrefListener(gButtonPrefListener); 
   addPrefListener(gTabStripPrefListener);
   addPrefListener(gHomepagePrefListener);
+  addPopupPermListener(gPopupPermListener);
 
   window.browserContentListener =
     new nsBrowserContentListener(window, getBrowser());
@@ -502,6 +540,9 @@ function Startup()
 
   // now load bookmarks after a delay
   setTimeout(LoadBookmarksCallback, 0);
+
+  // initialize this checkbox after the rest of the onload sequence has completed
+  setTimeout(initPopupCheckbox, 0);
 }
 
 function LoadBookmarksCallback()
@@ -576,6 +617,7 @@ function Shutdown()
   removePrefListener(gButtonPrefListener);
   removePrefListener(gTabStripPrefListener);
   removePrefListener(gHomepagePrefListener);
+  removePopupPermListener(gPopupPermListener);
 
   window.browserContentListener.close();
   // Close the app core.
@@ -1952,4 +1994,48 @@ function checkTheme()
       }
     }
   } 
+}
+
+function popupCheckboxClick(aCheckbox)
+{
+  if (!gOpenerOrgURI)
+    return;
+
+  try {
+    var pm = Components.classes["@mozilla.org/PopupWindowManager;1"]
+              .getService(Components.interfaces.nsIPopupWindowManager);
+    pm.add(gOpenerOrgURI, aCheckbox.checked);
+  } catch(e) {
+  }
+}
+
+function initPopupCheckbox()
+{
+  if (!window.content || !window.content.opener)
+    return;
+
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                    .getService(Components.interfaces.nsIIOService);
+  var spec = Components.lookupMethod(window.content.opener, "location").call(location);
+  gOpenerOrgURI = ioService.newURI(spec, null, null);
+
+  var valid = false;
+  var hostname = window.content.opener.location.hostname;
+
+  if (hostname) {
+    try {
+      var pm = Components.classes["@mozilla.org/PopupWindowManager;1"]
+                .getService(Components.interfaces.nsIPopupWindowManager);
+      valid = pm.testSuitability(gOpenerOrgURI);
+    } catch(e) {
+    }
+  }
+
+  var checkbox = document.getElementById("popup-checkbox");
+  if (valid)
+    checkbox.setAttribute("tooltiptext", hostname);
+  else {
+    checkbox.setAttribute("tooltiptext", gNavigatorBundle.getString("noPopupControl"));
+    checkbox.setAttribute("disabled", true);
+  }
 }
