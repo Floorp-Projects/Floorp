@@ -28,9 +28,10 @@
 
 // { %%%%% begin disable unused param warnings %%%%%
 #define MORK_USED_1(x) (void)(&x)
-#define MORK_USED_2(x,y) (void)(&x,&y)
-#define MORK_USED_3(x,y,z) (void)(&x,&y,&z)
-#define MORK_USED_4(w,x,y,z) (void)(&w,&x,&y,&z)
+#define MORK_USED_2(x,y) (void)(&x);(void)(&y);
+#define MORK_USED_3(x,y,z) (void)(&x);(void)(&y);(void)(&z);
+#define MORK_USED_4(w,x,y,z) (void)(&w);(void)(&x);(void)(&y);(void)(&z);
+
 // } %%%%% end disable unused param warnings %%%%%
 
 // { %%%%% begin macro for finding class member offset %%%%%

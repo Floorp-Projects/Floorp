@@ -330,7 +330,7 @@ orkinFactory::MakeHeap(nsIMdbEnv* mev, nsIMdbHeap** acqHeap)
     /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    nsIMdbHeap* outHeap = new orkinHeap();
+    outHeap = new orkinHeap();
     if ( !outHeap )
       ev->OutOfMemoryError();
   }

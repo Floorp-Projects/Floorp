@@ -577,8 +577,8 @@ morkBuilder::AddBuilderCell(morkEnv* ev,
     {
       if ( mBuilder_CellsVecFill < morkBuilder_kCellsVecSize )
       {
-        mork_fill index = mBuilder_CellsVecFill++;
-        outCell = mBuilder_CellsVec + index;
+        mork_fill indx = mBuilder_CellsVecFill++;
+        outCell = mBuilder_CellsVec + indx;
         outCell->SetColumnAndChange(column, inChange);
         outCell->mCell_Atom = 0;
       }
@@ -647,8 +647,8 @@ morkBuilder::OnNewCell(morkEnv* ev, const morkPlace& inPlace,
       {
         if ( mBuilder_CellsVecFill < morkBuilder_kCellsVecSize )
         {
-          mork_fill index = mBuilder_CellsVecFill++;
-          morkCell* cell =  mBuilder_CellsVec + index;
+          mork_fill indx = mBuilder_CellsVecFill++;
+          morkCell* cell =  mBuilder_CellsVec + indx;
           cell->SetColumnAndChange(column, inChange);
           cell->mCell_Atom = 0;
           mBuilder_Cell = cell;

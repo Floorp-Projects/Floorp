@@ -315,7 +315,8 @@ orkinTable::BecomeContent(nsIMdbEnv* mev,
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    morkTable* table = (morkTable*) mHandle_Object;
+    morkTable* table;
+    table = (morkTable*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -332,7 +333,8 @@ orkinTable::DropActivity( // tell collection usage no longer expected
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    morkTable* table = (morkTable*) mHandle_Object;
+    morkTable* table;
+    table = (morkTable*) mHandle_Object;
     // ev->StubMethodOnlyError(); // okay to do nothing
     outErr = ev->AsErr();
   }
