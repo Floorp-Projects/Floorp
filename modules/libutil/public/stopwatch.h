@@ -6,6 +6,10 @@
 
 const double gTicks = 1.0e-7;
 
+#ifdef XP_MAC
+#define R__MAC
+#endif
+
 #ifdef RAPTOR_PERF_METRICS
 #  define NS_RESET_AND_START_STOPWATCH(_sw)          \
     _sw.Start(PR_TRUE);

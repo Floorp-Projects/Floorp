@@ -1,6 +1,7 @@
 #include "windows.h"
 #include <stdio.h>
 #include "stopwatch.h"
+#include <time.h>
 
 Stopwatch::Stopwatch() {
 
