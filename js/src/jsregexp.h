@@ -74,10 +74,10 @@ struct JSRegExp {
 };
 
 extern JSRegExp *
-js_NewRegExp(JSContext *cx, JSString *str, uintN flags);
+js_NewRegExp(JSContext *cx, JSString *str, uintN flags, JSBool flat);
 
 extern JSRegExp *
-js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt);
+js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt, JSBool flat);
 
 extern void
 js_DestroyRegExp(JSContext *cx, JSRegExp *re);

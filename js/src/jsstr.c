@@ -255,10 +255,10 @@ str_uneval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 
 static JSFunctionSpec string_functions[] = {
-    {"escape",          str_escape,             1,0,0},
-    {"unescape",        str_unescape,           1,0,0},
+    {"escape",              str_escape,                 1,0,0},
+    {"unescape",            str_unescape,               1,0,0},
 #if JS_HAS_UNEVAL
-    {"uneval",          str_uneval,             1,0,0},
+    {"uneval",              str_uneval,                 1,0,0},
 #endif
     {0,0,0,0,0}
 };
@@ -808,7 +808,7 @@ typedef struct GlobData {
 static JSBool
 match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 		 JSBool (*glob)(JSContext *cx, jsint count, GlobData *data),
-		 GlobData *data, jsval *rval)
+		 GlobData *data, jsval *rval, JSBool forceFlat)
 {
     JSString *str, *src, *opt;
     JSObject *reobj;
@@ -828,7 +828,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	re = JS_GetPrivate(cx, reobj);
     } else {
         if (JSVAL_IS_VOID(argv[0]))
-            re = js_NewRegExp(cx, cx->runtime->emptyString, 0);
+            re = js_NewRegExp(cx, cx->runtime->emptyString, 0, JS_FALSE);
         else {
 	    src = js_ValueToString(cx, argv[0]);
 	    if (!src)
@@ -841,7 +841,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	    } else {
 	        opt = NULL;
 	    }
-	    re = js_NewRegExpOpt(cx, src, opt);
+	    re = js_NewRegExpOpt(cx, src, opt, forceFlat);
         }
 	if (!re)
 	    return JS_FALSE;
@@ -933,7 +933,7 @@ str_match(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     mdata.arrayobj = NULL;
     if (!js_AddRoot(cx, &mdata.arrayobj, "mdata.arrayobj"))
 	return JS_FALSE;
-    ok = match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval);
+    ok = match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval, JS_FALSE);
     if (ok && mdata.arrayobj)
 	*rval = OBJECT_TO_JSVAL(mdata.arrayobj);
     js_RemoveRoot(cx->runtime, &mdata.arrayobj);
@@ -951,7 +951,7 @@ str_search(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     mdata.base.optarg = 1;
     mdata.base.mode = GLOB_SEARCH;
-    return match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval);
+    return match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval, JS_FALSE);
 #else
     return str_nyi(cx, "search");
 #endif
@@ -968,6 +968,8 @@ typedef struct ReplaceData {
     jsint       index;          /* index in result of next replacement */
     jsint       leftIndex;      /* left context index in base.str->chars */
 } ReplaceData;
+
+static JSSubString dollarStr;
 
 static JSSubString *
 interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
@@ -986,19 +988,31 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
     res = &cx->regExpStatics;
     dc = dp[1];
     if (JS7_ISDEC(dc)) {
-	if (dc == '0')
-	    return NULL;
+	if (cx->version != JSVERSION_DEFAULT &&
+		cx->version <= JSVERSION_1_4) {
+	    if (dc == '0')
+	        return NULL;
 
-	/* Check for overflow to avoid gobbling arbitrary decimal digits. */
-	num = 0;
-	cp = dp;
-	while ((dc = *++cp) != 0 && JS7_ISDEC(dc)) {
-	    tmp = 10 * num + JS7_UNDEC(dc);
-	    if (tmp < num)
-		break;
-	    num = tmp;
-	}
-
+	    /* Check for overflow to avoid gobbling arbitrary decimal digits. */
+	    num = 0;
+	    cp = dp;
+	    while ((dc = *++cp) != 0 && JS7_ISDEC(dc)) {
+	        tmp = 10 * num + JS7_UNDEC(dc);
+	        if (tmp < num)
+		    break;
+	        num = tmp;
+	    }
+        }
+        else { /* ECMA 3, 1-9 or 01-99 */
+            num = JS7_UNDEC(dc);
+            cp = dp + 2;
+            dc = dp[2];
+            if ((dc != 0) && JS7_ISDEC(dc)) {
+                num = 10 * num + JS7_UNDEC(dc);
+                cp++;
+            }
+            if (num == 0) return NULL;
+        }
 	/* Adjust num from 1 $n-origin to 0 array-index-origin. */
 	num--;
 	*skip = cp - dp;
@@ -1007,6 +1021,10 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
 
     *skip = 2;
     switch (dc) {
+      case '$':
+        dollarStr.chars = dp;
+        dollarStr.length = 1;
+        return &dollarStr;
       case '&':
 	return &res->lastMatch;
       case '+':
@@ -1131,10 +1149,14 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 
     repstr = rdata->repstr;
     replen = repstr->length;
-    for (dp = rdata->dollar; dp; dp = js_strchr(dp + 1, '$')) {
+    for (dp = rdata->dollar; dp; dp = js_strchr(dp, '$')) {
 	sub = interpret_dollar(cx, dp, rdata, &skip);
-	if (sub)
+        if (sub) {
 	    replen += sub->length - skip;
+            dp += skip;
+        }
+        else
+            dp++;
     }
     *sizep = replen;
     return JS_TRUE;
@@ -1162,8 +1184,11 @@ do_replace(JSContext *cx, ReplaceData *rdata, jschar *chars)
 	    js_strncpy(chars, sub->chars, len);
 	    chars += len;
 	    cp += skip;
+            dp += skip;
 	}
-	dp = js_strchr(dp + 1, '$');
+        else
+            dp++;
+	dp = js_strchr(dp, '$');
     }
     js_strncpy(chars, cp, repstr->length - (cp - repstr->chars));
 }
@@ -1239,7 +1264,10 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     rdata.length = 0;
     rdata.index = 0;
     rdata.leftIndex = 0;
-    if (!match_or_replace(cx, obj, argc, argv, replace_glob, &rdata.base, rval))
+    /* for ECMA 3, the first argument is to be treated as a string 
+       (i.e. converted to one if necessary) UNLESS it's a reg.exp object */
+    if (!match_or_replace(cx, obj, argc, argv, replace_glob, &rdata.base, rval,
+                (cx->version == JSVERSION_DEFAULT || cx->version > JSVERSION_1_4)))
 	return JS_FALSE;
 
     if (!rdata.chars) {
