@@ -34,7 +34,7 @@
  *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
  *       were not working on Windows properly
  *
- * $Id: XMLParser.cpp,v 1.4 2000/04/20 10:09:42 kvisco%ziplink.net Exp $
+ * $Id: XMLParser.cpp,v 1.5 2000/05/02 21:57:19 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "XMLParser.h"
@@ -164,7 +164,7 @@ void charData(void* userData, const XML_Char* s, int len)
 {
     ParserState* ps = (ParserState*)userData;
     DOMString data;
-    data.append(s, len);
+    data.append((UNICODE_CHAR*)s, len);
     ps->currentNode->appendChild(ps->document->createTextNode(data));
 } //-- charData
 
