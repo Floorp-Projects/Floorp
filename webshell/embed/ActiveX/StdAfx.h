@@ -29,7 +29,6 @@
 
 #define STRICT
 
-
 #define _WIN32_WINNT 0x0400
 #define _ATL_APARTMENT_THREADED
 #define _ATL_STATIC_REGISTRY
