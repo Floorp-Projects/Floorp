@@ -595,7 +595,6 @@
           <hbox id="repeat-extensions-week"
                 disabled="true"
                 disable-controller="repeat"
-                collapsed="false"
                 align="center">
             <checkbox disable-controller="repeat"
                       class="repeat-day-class"
@@ -642,7 +641,7 @@
           </hbox>
           <hbox id="repeat-extensions-month"
                 disabled="true"
-                collapsed="true"
+                hidden="true"
                 align="center">
             <vbox align="center">
               <radiogroup id="advanced-repeat-month"

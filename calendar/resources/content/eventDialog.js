@@ -309,6 +309,11 @@ function loadCalendarEventDialog()
 
 
     // RECURRENCE --------------------------------------------------------
+    // Set up widgets so they're not empty. Event values will override.
+    document.getElementById("repeat-end-date-picker").value = new Date();
+    document.getElementById("exceptions-date-picker").value = new Date();
+    setFieldValue("repeat-forever-radio", true, "selected");
+
     if (event.recurrenceInfo) {
         // we can only display at most one rule and one set of exceptions;
         // nothing else.
@@ -338,9 +343,32 @@ function loadCalendarEventDialog()
         }
 
         if (theRule) {
+            debugVar(theRule.type);
             setFieldValue("repeat-checkbox", true, "checked");
             setFieldValue("repeat-length-field", theRule.interval);
             menuListSelectItem("repeat-length-units", theRule.type);
+
+            switch(theRule.type) {
+            case "WEEKLY":
+                var recurWeekdays = theRule.getComponent("BYDAY", {});
+                for (i = 0; i < 7; i++ ) {
+                    setFieldValue( "advanced-repeat-week-"+i, false, "checked" );
+                    setFieldValue( "advanced-repeat-week-"+i, false, "today" );
+                    for (var j = 0; j < recurWeekdays.length; j++) {
+                        if ((i + 1) == recurWeekdays[j]) {
+                            setFieldValue( "advanced-repeat-week-"+i, true, "checked" );
+                        }
+                    }
+                }
+
+                //get day number for event's start date, and check and disable it
+                var dayNumber = document.getElementById( "start-datetime" ).value.getDay();
+                debugVar(dayNumber);
+                setFieldValue( "advanced-repeat-week-"+dayNumber, true, "checked" );
+                setFieldValue( "advanced-repeat-week-"+dayNumber, true, "disabled" );
+                setFieldValue( "advanced-repeat-week-"+dayNumber, true, "today" );
+                break;
+            }
 
             if (theRule.count == -1) {
                 setFieldValue("repeat-forever-radio", true, "selected");
@@ -356,6 +384,7 @@ function loadCalendarEventDialog()
         } else {
             menuListSelectItem("repeat-length-units", "DAILY");
         }
+        updateRepeatUnitExtensions()
 
         if (theExceptions.length > 0) {
             for (i in theExceptions) {
@@ -364,8 +393,12 @@ function loadCalendarEventDialog()
             }
         }
     }
-    // Put today's date in the recurrence exceptions datepicker
-    document.getElementById("exceptions-date-picker").value = gStartDate;
+
+    /* Old crap:
+    setFieldValue("advanced-repeat-dayofmonth", (gEvent.recurWeekNumber == 0 || gEvent.recurWeekNumber == undefined), "selected");
+    setFieldValue("advanced-repeat-dayofweek", (gEvent.recurWeekNumber > 0 && gEvent.recurWeekNumber != 5), "selected");
+    setFieldValue("advanced-repeat-dayofweek-last", (gEvent.recurWeekNumber == 5), "selected");
+    */
 
 
     // INVITEES ----------------------------------------------------------
@@ -415,11 +448,13 @@ function loadCalendarEventDialog()
     for (i = 0; i < categoriesList.length ; i++) {
         document.getElementById( "categories-field" ).appendItem(categoriesList[i], categoriesList[i]);
     }
-    document.getElementById( "categories-field" ).selectedIndex = -1;
-    menuListSelectItem("categories-field", event.getProperty("categories") );
+    if (categories) {
+        menuListSelectItem("categories-field", categories );
+    } else {
+        document.getElementById( "categories-field" ).selectedIndex = -1;
+    }
 
     /* XXX
-
     // Server stuff
     document.getElementById( "server-menulist-menupopup" ).database.AddDataSource( opener.gCalendarWindow.calendarManager.rdf.getDatasource() );
     document.getElementById( "server-menulist-menupopup" ).builder.rebuild();
@@ -449,14 +484,6 @@ function loadCalendarEventDialog()
     updateAddExceptionButton();
 
     //set the advanced weekly repeating stuff
-    setAdvancedWeekRepeat();
-
-    /*
-    setFieldValue("advanced-repeat-dayofmonth", (gEvent.recurWeekNumber == 0 || gEvent.recurWeekNumber == undefined), "selected");
-    setFieldValue("advanced-repeat-dayofweek", (gEvent.recurWeekNumber > 0 && gEvent.recurWeekNumber != 5), "selected");
-    setFieldValue("advanced-repeat-dayofweek-last", (gEvent.recurWeekNumber == 5), "selected");
-    */
-
 
     // enable/disable subordinate buttons of textboxes
     /*  these are listboxes, not textboxes
@@ -594,13 +621,28 @@ function onOKCommand()
         // XXX need to do extra work for weeks here and for months incase 
         // extra things are checked
 
+
+        switch(recRule.type) {
+        case "WEEKLY":
+            var checkedState;
+            var byDay = new Array();
+            for (var i = 0; i < 7; i++) {
+                checkedState = getFieldValue( "advanced-repeat-week-"+i, "checked" );
+                if (checkedState) {
+                    byDay.push(i+1);
+                }
+            }
+            recRule.setComponent("BYDAY", byDay.length, byDay);
+            break;
+        }
+
         recurrenceInfo.appendRecurrenceItem(recRule);
 
         // Exceptions
         var listbox = document.getElementById("exception-dates-listbox");
 
         var exceptionArray = new Array();
-        for (var i = 0; i < listbox.childNodes.length; i++) {
+        for (i = 0; i < listbox.childNodes.length; i++) {
             dump ("valuestr '" + listbox.childNodes[i].value + "'\n");
             var dateObj = new Date(parseInt(listbox.childNodes[i].value));
             var dt = jsDateToDateTime(dateObj);
@@ -1027,11 +1069,9 @@ function updateUntilItemEnabled()
 }
 
 
-function updateRepeatUnitExtensions( )
+function updateRepeatUnitExtensions()
 {
     var repeatMenu = document.getElementById( "repeat-length-units" );
-
-    // XXX FIX ME! WHEN THE WINDOW LOADS, THIS DOESN'T EXIST
     if( repeatMenu.selectedItem ) {
         switch( repeatMenu.selectedItem.value ) {
         case "DAILY":
@@ -1054,7 +1094,6 @@ function updateRepeatUnitExtensions( )
             hideElement("repeat-extensions-month");
             break;
         }
-        //sizeToContent();
     }
 }
 
@@ -1099,47 +1138,6 @@ function alarmLengthKeyDown( repeatField )
 function repeatUnitCommand( repeatMenu )
 {
     updateRepeatUnitExtensions();
-}
-
-
-/*
- * Functions for advanced repeating elements
- */
-
-function setAdvancedWeekRepeat()
-{
-   var checked = false;
-
-   if( gEvent.recurWeekdays > 0 ) {
-      for( var i = 0; i < 7; i++ ) {
-         checked = ( ( gEvent.recurWeekdays | eval( "kRepeatDay_"+i ) ) == eval( gEvent.recurWeekdays ) );
-         setFieldValue( "advanced-repeat-week-"+i, checked, "checked" );
-         setFieldValue( "advanced-repeat-week-"+i, false, "today" );
-      }
-   }
-
-   //get the day number for today.
-   var dayNumber = document.getElementById( "start-datetime" ).value.getDay();
-
-   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "checked" );
-   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "disabled" );
-   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "today" );
-}
-
-
-/*
- * Functions for advanced repeating elements
- */
-
-function getAdvancedWeekRepeat()
-{
-   var Total = 0;
-
-   for( var i = 0; i < 7; i++ ) {
-      if( getFieldValue( "advanced-repeat-week-"+i, "checked" ) == true )
-         Total += eval( "kRepeatDay_"+i );
-   }
-   return( Total );
 }
 
 
