@@ -54,7 +54,7 @@
   
   <binding id="autocomplete-result-popup" extends="chrome://global/content/autocomplete.xml#autocomplete-result-popup">
     <content>
-      <xul:outliner anonid="outliner" class="autocomplete-outliner" flex="1">
+      <xul:outliner anonid="outliner" class="autocomplete-outliner plain" flex="1">
         <xul:outlinercols anonid="outlinercols"/>
         <xul:outlinerchildren anonid="outlinerbody" class="autocomplete-outlinerbody" flex="1"/>
       </xul:outliner>
