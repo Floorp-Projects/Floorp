@@ -499,7 +499,7 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
     if (!m_accountKey.IsEmpty())
     {
       nsCAutoString outputString(NS_LITERAL_CSTRING(HEADER_X_MOZILLA_ACCOUNT_KEY ": ") + m_accountKey
-        + NS_LITERAL_CSTRING(CRLF));
+        + NS_LITERAL_CSTRING(MSG_LINEBREAK));
       WriteLineToMailbox(outputString.get());
     }
     if (uidlString)
