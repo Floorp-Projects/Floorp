@@ -24,12 +24,12 @@
 
 # Purpose:
 #   This script produces data for the operator dictionary
-#   RBS - Aug 28, 1999.
+#   RBS - Aug 28, 1999 - updated: 22 March, 2000.
 
 # Output: the file $operator_file contains the dictionary in suitable
 # format for inclusion with C++ macros.
 
-# $operator_file = '..\content\src\nsMathMLOperatorList.h';
+#$operator_file = '..\content\src\nsMathMLOperatorList.h';
 $operator_file = 'operator.list';
 $unicode_file = "byalpha.txt";
 
@@ -81,27 +81,24 @@ MATHML_OPERATOR(_rank,
 HEADER_DATA
 
 
-# There are three global variables available here:
-# $MACRO_LIST_UNICHAR  - list of unicode that make the operator names
-# $MACRO_LIST_UNIDATA  - dictionary with the name of the operator as unicode
-# $MACRO_LIST_ENTDATA  - dictionary with the name of the operator as entity
+# $MATHML_OPERATOR_LIST is global variable that contains all the
+# operators in the dictionary with their attributes
 
 print OUTPUT_FILE <<CONTENT;
-#ifdef WANT_MATHML_OPERATOR_COUNT
-#define NS_MATHML_OPERATOR_COUNT $count
+#if defined(WANT_MATHML_OPERATOR_COUNT)
+  #define NS_MATHML_OPERATOR_COUNT $rank
 #else
-#ifdef WANT_MATHML_OPERATOR_UNICHAR
-//Unicode(s),\\0// group symbol form
-$MACRO_LIST_UNICHAR
-#else
-$MACRO_LIST_ENTDATA
+  #define _ , // dirty trick to make the macro handle a variable number of arguments
+
+$MATHML_OPERATOR_LIST
+  #undef _
 #endif
-#endif
+
 CONTENT
 
 close(OUTPUT_FILE);
 
-print "Done $count operators.\n";
+print "Done $rank operators.\n";
 
 exit(0);
 
@@ -165,9 +162,7 @@ sub getUnicode {
 #Make the MathML Operator dictionary
 # INPUT:
 # OUTPUT:
-#   $MACRO_LIST_UNICHAR  - list of unicode that make the operator names
-#   $MACRO_LIST_UNIDATA  - dictionary with the name of the operator as unicode
-#   $MACRO_LIST_ENTDATA  - dictionary with the name of the operator as entity
+#   $MATHML_OPERATOR_LIST - all operators in the dictionary
 
 sub getMathMLOperators {
 	
@@ -654,14 +649,14 @@ $NUMFLAGS  = 7;
 
   print "\n\nBuilding the operator list...\n";
 
-  $MACRO_LIST_UNICHAR = $MACRO_LIST_UNIDATA = $MACRO_LIST_ENTDATA = "";
+  $MATHML_OPERATOR_LIST = "";
 
-  $count = 0;
+  $rank = 0;
   @OPERATOR = split("\n",$DATA);
 
   $group = 0;
-  for ($rank=0; $rank<=$#OPERATOR; ++$rank) {
-    $data = $OPERATOR[$rank];
+  for ($count=0; $count<=$#OPERATOR; ++$count) {
+    $data = $OPERATOR[$count];
     $data =~ s#^\s+##;
     if ($data eq "") {
        ++$group;
@@ -723,7 +718,7 @@ $VALUE{'accent'} = 'false';
         $unicode = $UNICODE{$entity};
         $unicodemissed = 1 if $unicode eq "";
         $unichar .= '\x' . $unicode;
-        $unistring .= '0x' . $unicode . ',';
+        $unistring = ($unistring)? "$unistring _ 0x$unicode" : "0x$unicode";
         
         $PUA{$unicode} = $entity if ($unicode ge "E000" && $unicode le "F8FF");
       }
@@ -732,12 +727,12 @@ $VALUE{'accent'} = 'false';
         $string =~ s#\S##;
         $entity =~ s/([\x00-\xFF])/$escapes{$1}/g;
         $unichar .= '\x' . $entity;
-        $unistring .= '0x' . $entity . ',';
+        $unistring = ($unistring)? "$unistring _ 0x$entity" : "0x$entity";
       }
 
       ++$i;
     }
-    
+
     #some operators do not have unicode points, skip them !
     if ($unicodemissed) {
       print "Missing unicode for $operator... removing it from the dictionary...\n";
@@ -746,24 +741,15 @@ $VALUE{'accent'} = 'false';
 
 #global outputs:
 
-    #UNICHAR is zero-separated list of unicode points
-    $unistring .= '0x0000';
-    $MACRO_LIST_UNICHAR .= $unistring . ', // ' . "$group $operator $VALUE{'form'}\n";
+    $r = sprintf("%3d", $rank);
+    $MATHML_OPERATOR_LIST .= 'MATHML_OPERATOR(' 
+                          .  $r . ',' 
+                          .  $unistring . ','
+#                         .  '"' . $unichar . '",' 
+                          .  "$flags,$lspace,$rspace" . ') // '
+                          .  "$operator $VALUE{'form'}\n";
 
-    #UNIDATA is the table based on unicode points
-    $MACRO_LIST_UNIDATA .= 'MATHML_OPERATOR(' . $count . ',"' . $unichar . '",';
-    $MACRO_LIST_UNIDATA .= "$flags,$lspace,$rspace" . ') // ' . "$operator $VALUE{'form'}\n";
- 
-
-    #ENTDATA is the table based on &entity; names
-    #little swap here  to get a listing based on the entity
-    $string = $operator;
-    $operator = $unichar; $operator =~ s#\\x# #g;
-    $unichar = $string;
-    $MACRO_LIST_ENTDATA .= 'MATHML_OPERATOR(' . $count . ',"' . $unichar . '",';
-    $MACRO_LIST_ENTDATA .= "$flags,$lspace,$rspace" . ') // ' . "$operator $VALUE{'form'}\n";
- 
-    ++$count;
+    ++$rank;
   }
 
 #  $puacount = 0;
