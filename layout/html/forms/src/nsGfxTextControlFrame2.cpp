@@ -131,7 +131,6 @@ static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 
-
 static nsresult GetElementFactoryService(nsIElementFactory **aFactory)
 {
   nsresult rv(NS_OK);
@@ -1359,6 +1358,7 @@ nsGfxTextControlFrame2::nsGfxTextControlFrame2(nsIPresShell* aShell):nsStackFram
   mSuggestedWidth = NS_FORMSIZE_NOTSET;
   mSuggestedHeight = NS_FORMSIZE_NOTSET;
   mScrollableView = nsnull;
+  mDidPreDestroy = PR_FALSE;
 }
 
 nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
@@ -1367,8 +1367,8 @@ nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
   //delete mTextSelImpl; dont delete this since mSelCon will release it.
 }
 
-NS_IMETHODIMP
-nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
+void
+nsGfxTextControlFrame2::PreDestroy(nsIPresContext* aPresContext)
 {
   // notify the editor that we are going away
   if (mEditor)
@@ -1443,7 +1443,26 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
       erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*,mTextListener), NS_GET_IID(nsIDOMKeyListener));
     }
   }
+
+  mDidPreDestroy = PR_TRUE; 
+}
+
+NS_IMETHODIMP 
+nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
+{
+  if (!mDidPreDestroy) {
+    PreDestroy(aPresContext);
+  }
   return nsBoxFrame::Destroy(aPresContext);
+}
+
+void 
+nsGfxTextControlFrame2::RemovedAsPrimaryFrame(nsIPresContext* aPresContext)
+{
+  if (!mDidPreDestroy) {
+    PreDestroy(aPresContext);
+  }
+  else NS_ASSERTION(PR_FALSE, "RemovedAsPrimaryFrame called after PreDestroy");
 }
 
 NS_IMETHODIMP 

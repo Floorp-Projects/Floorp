@@ -76,7 +76,9 @@ public:
   nsGfxTextControlFrame2(nsIPresShell* aShell);
   virtual ~nsGfxTextControlFrame2();
 
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);//remove yourself as a form control
+  virtual void RemovedAsPrimaryFrame(nsIPresContext* aPresContext); 
+
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -192,6 +194,7 @@ protected:
   void RemoveNewlines(nsString &aString);
   NS_IMETHOD GetMaxLength(PRInt32* aSize);
   NS_IMETHOD DoesAttributeExist(nsIAtom *aAtt);
+  void PreDestroy(nsIPresContext* aPresContext); // remove yourself as a form control
 
 //helper methods
   nsresult GetSizeFromContent(PRInt32* aSize) const;
@@ -252,9 +255,11 @@ private:
   nscoord      mSuggestedHeight;
   nsSize       mSize;
 
+  // these packed bools could instead use the high order bits on mState, saving 4 bytes 
   PRPackedBool mUseEditor;
   PRPackedBool mIsProcessing;
   PRPackedBool mNotifyOnInput;//default this to off to stop any notifications until setup is complete
+  PRPackedBool mDidPreDestroy; // has PreDestroy been called        
 
   nsFormFrame *mFormFrame;
   nsTextInputSelectionImpl *mTextSelImpl;
