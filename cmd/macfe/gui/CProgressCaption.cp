@@ -84,7 +84,7 @@ CProgressCaption::SetDescriptor(ConstStringPtr inDescriptor)
 {
 	// don't do anything if the new text is the same as the old
 	Str255 oldText;
-	if ( ::RelString(GetDescriptor(oldText), inDescriptor, true, true) != 0 ) {
+	if ( ::IdenticalString(GetDescriptor(oldText), inDescriptor, nil) != 0 ) {
 		mStatusText->SetDescriptor ( inDescriptor );	
 		if (FocusExposed())
 			Draw(NULL);
@@ -97,7 +97,7 @@ CProgressCaption::SetDescriptor(const char* inCDescriptor)
 	// don't do anything if the new text is the same as the old
 	Str255 oldText;
 	LStr255 newText(inCDescriptor);
-	if ( ::RelString(GetDescriptor(oldText), newText, true, true) != 0 ) {
+	if ( ::IdenticalString(GetDescriptor(oldText), newText, nil) != 0 ) {
 		mStatusText->SetDescriptor ( newText );
 		if (FocusExposed())
 			Draw(NULL);
