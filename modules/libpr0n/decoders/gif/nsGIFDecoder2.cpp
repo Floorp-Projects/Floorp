@@ -457,33 +457,25 @@ int nsGIFDecoder2::HaveDecodedRow(
       
       switch (format) {
         case gfxIFormats::RGB:
+        case gfxIFormats::BGR:
         {
           while (rowBufIndex != decoder->mGIFStruct->rowend) {
-            PRUint32 colorIndex = *rowBufIndex * 3;
+            PRUint32 colorIndex = (*rowBufIndex < cmapsize) ? (*rowBufIndex * 3) : 0;
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+            *rgbRowIndex++ = cmap[colorIndex + 2]; // blue
+            *rgbRowIndex++ = cmap[colorIndex + 1]; // green
+            *rgbRowIndex++ = cmap[colorIndex];     // red
+#else
 #if defined(XP_MAC) || defined(XP_MACOSX)
             *rgbRowIndex++ = 0; // Mac is always 32bits per pixel, this is pad
 #endif
             *rgbRowIndex++ = cmap[colorIndex];     // red
             *rgbRowIndex++ = cmap[colorIndex + 1]; // green
             *rgbRowIndex++ = cmap[colorIndex + 2]; // blue
+#endif
             ++rowBufIndex;
           }  
           for (int i=0; i<aDuplicateCount; i++) {
-            decoder->mImageFrame->SetImageData(decoder->mRGBLine,
-                                               bpr, (aRowNumber+i)*bpr);
-          }
-          break;
-        }
-        case gfxIFormats::BGR:
-        {
-          while (rowBufIndex != decoder->mGIFStruct->rowend) {
-            PRUint32 colorIndex = *rowBufIndex * 3;
-            *rgbRowIndex++ = cmap[colorIndex + 2]; // blue
-            *rgbRowIndex++ = cmap[colorIndex + 1]; // green
-            *rgbRowIndex++ = cmap[colorIndex];     // red
-            ++rowBufIndex;
-          }
-          for (int i = 0; i < aDuplicateCount; ++i) {
             decoder->mImageFrame->SetImageData(decoder->mRGBLine,
                                                bpr, (aRowNumber+i)*bpr);
           }
@@ -496,7 +488,7 @@ int nsGIFDecoder2::HaveDecodedRow(
           memset(decoder->mAlphaLine, 0, abpr);
           for (PRUint32 x = 0; x < (PRUint32)width; ++x) {
             if (*rowBufIndex != decoder->mGIFStruct->tpixel) {
-              PRUint32 colorIndex = *rowBufIndex * 3;
+              PRUint32 colorIndex = (*rowBufIndex < cmapsize) ? (*rowBufIndex * 3) : 0;
 #if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
               *rgbRowIndex++ = cmap[colorIndex + 2]; // blue
               *rgbRowIndex++ = cmap[colorIndex + 1]; // green
