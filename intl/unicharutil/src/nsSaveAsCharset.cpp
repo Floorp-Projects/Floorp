@@ -37,10 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
-#undef NS_IMPL_IDS
 
 #include "prmem.h"
 #include "prprf.h"

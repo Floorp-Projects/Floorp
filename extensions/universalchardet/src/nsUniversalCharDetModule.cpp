@@ -36,9 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
 #include "nsICharsetAlias.h"
-#undef NS_IMPL_IDS
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 

@@ -59,49 +59,24 @@
 
 //------------------------------------------------------------------------------
 
-nsIEventQueueService *gEventQService = nsnull;
-
 nsIWidget         *gWindow = NULL;
 
 #ifdef XP_PC
-#define XPCOM_DLL "xpcom32.dll"
-#define WIDGET_DLL "gkwidget.dll"
-#define GFXWIN_DLL "gkgfxwin.dll"
 #define TEXT_HEIGHT 25
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
-#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
-#ifndef WIDGET_DLL
-#define WIDGET_DLL "libwidget_gtk"MOZ_DLL_SUFFIX
-#endif
-#ifndef GFXWIN_DLL
-#define GFXWIN_DLL "libgfx_gtk"MOZ_DLL_SUFFIX
-#endif
 #define TEXT_HEIGHT 30
 #endif
 
 #ifdef XP_MAC
-#define XPCOM_DLL "XPCOM_DLL"
-#define WIDGET_DLL "WIDGET_DLL"
-#define GFXWIN_DLL "GFXWIN_DLL"
 #define TEXT_HEIGHT 30
 #endif
 
 // class ids
-static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
-static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
-static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
-
-// interface ids
-static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWidgetIID,         NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kIAppShellIID,       NS_IAPPSHELL_IID);
+static NS_DEFINE_CID(kCWindowCID, NS_WINDOW_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kCAppShellCID, NS_APPSHELL_CID);
 
 // Scroll offsets
 nscoord gOffsetX = 0;
@@ -333,7 +308,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
             break;
         
         case NS_DESTROY:
-			      exit(0); // for now
+            exit(0); // for now
             break;
 
         default:
@@ -350,60 +325,28 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
  */
 nsresult CoverageTest(int *argc, char **argv)
 {
-    // register xpcom classes
-    nsComponentManager::RegisterComponentLib(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponentLib(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-    
-    // register widget classes
-    nsComponentManager::RegisterComponentLib(kLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponentLib(kCWindowCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    
-    nsComponentManager::RegisterComponentLib(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponentLib(kCToolkitCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID); 
-    static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID); 
-    static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID); 
-    static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID); 
-
-
-    static NS_DEFINE_CID(kScreenManagerCID, NS_SCREENMANAGER_CID);
-    static NS_DEFINE_IID(kCRenderingContextCID, NS_RENDERING_CONTEXT_CID); 
-    static NS_DEFINE_IID(kCDeviceContextCID, NS_DEVICE_CONTEXT_CID); 
-    static NS_DEFINE_IID(kCFontMetricsCID, NS_FONT_METRICS_CID); 
-    static NS_DEFINE_IID(kCImageCID, NS_IMAGE_CID); 
-    static NS_DEFINE_IID(kCTimerCID, NS_TIMER_CID);
-    static NS_DEFINE_IID(kCTimerManagerCID, NS_TIMERMANAGER_CID);
-    nsComponentManager::RegisterComponentLib(kScreenManagerCID, "Screen Manager", "@mozilla.org/gfx/screenmanager;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponentLib(kCRenderingContextCID, "Rendering Context", "@mozilla.org/gfx/renderingcontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponentLib(kCDeviceContextCID, "Device Context", "@mozilla.org/gfx/devicecontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponentLib(kCFontMetricsCID, "Font Metrics", "@mozilla.org/gfx/fontmetrics;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponentLib(kCImageCID, "Image", "@mozilla.org/gfx/image;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
-#ifdef XP_PC
-  nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "@mozilla.org/timer;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-#endif
-
-    nsresult  res;
+    nsresult res = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    if (NS_FAILED(res))
+        return res;
 
     // Create the Event Queue for the UI thread...
-    res = nsServiceManager::GetService(kEventQueueServiceCID,
-                                       kIEventQueueServiceIID,
-                                       (nsISupports **)&gEventQService);
+    nsCOMPtr<nsIEventQueueService> eventQService =
+        do_GetService(kEventQueueServiceCID, &res);
 
     if (NS_OK != res) {
         NS_ASSERTION(PR_FALSE, "Could not obtain the event queue service");
         return res;
     }
 
-    res = gEventQService->CreateThreadEventQueue();
+    res = eventQService->CreateThreadEventQueue();
     if (NS_OK != res) {
         NS_ASSERTION(PR_FALSE, "Could not create the event queue for the thread");
-	      return res;
+        return res;
     }
 
       // Create a application shell
     nsIAppShell *appShell;
-    nsComponentManager::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&appShell);
+    CallCreateInstance(kCAppShellCID, &appShell);
     if (appShell != nsnull) {
       fputs("Created AppShell\n", stderr);
       appShell->Create(argc, argv);
@@ -421,7 +364,7 @@ nsresult CoverageTest(int *argc, char **argv)
     //
     // create the main window
     //
-    nsComponentManager::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void**)&gWindow);
+    CallCreateInstance(kCWindowCID, &gWindow);
     nsRect rect(100, 100, 600, 700);
     gWindow->Create((nsIWidget*) nsnull, rect, HandleEvent, 
                    (nsIDeviceContext *) nsnull,

@@ -48,7 +48,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#define NS_IMPL_IDS
 
 #include <string.h>
 #include <stdio.h>

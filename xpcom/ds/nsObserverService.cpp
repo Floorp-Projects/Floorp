@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
 #include "prlog.h"
 #include "prlock.h"
 #include "nsIFactory.h"

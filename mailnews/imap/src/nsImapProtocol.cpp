@@ -43,7 +43,6 @@
 #endif
 
 // as does this
-#define NS_IMPL_IDS
 #include "msgCore.h"  // for pre-compiled headers
 
 #include "nsIServiceManager.h"

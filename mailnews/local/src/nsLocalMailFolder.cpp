@@ -42,7 +42,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
 #include "nsIPref.h"
 #include "prlog.h"
 

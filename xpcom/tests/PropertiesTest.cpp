@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef XPCOM_STANDALONE
-#define NS_IMPL_IDS
 
 #include "nsXPCOM.h"
 #include "nsIEventQueueService.h"

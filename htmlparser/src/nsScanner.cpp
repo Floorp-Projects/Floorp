@@ -38,7 +38,6 @@
 
 //#define __INCREMENTAL 1
 
-#define NS_IMPL_IDS
 #include "nsScanner.h"
 #include "nsDebug.h"
 #include "nsIServiceManager.h"

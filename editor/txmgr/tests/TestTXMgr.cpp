@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdlib.h>
+#include "nsXPCOM.h"
 #include "nsITransactionManager.h"
 #include "nsIComponentManager.h"
 
@@ -431,21 +432,6 @@ PRInt32 sAggregateBatchTestRedoOrderArr[] = {
         281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294,
         295, 296, 297, 298, 299, 300, 301, 448, 449, 450, 451, 452, 453, 454,
         455, 456, 457, 458 };
-
-#ifdef MUST_REGISTER_TXMGR_DLL
-#include "nsTransactionManagerCID.h"
-static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
-
-#ifdef XP_PC
-#define TRANSACTION_MANAGER_DLL "txmgr.dll"
-#else
-#ifdef XP_MAC
-#define TRANSACTION_MANAGER_DLL "TRANSACTION_MANAGER_DLL"
-#else // XP_UNIX || XP_BEOS
-#define TRANSACTION_MANAGER_DLL "libtxmgr"MOZ_DLL_SUFFIX
-#endif
-#endif
-#endif /* MUST_REGISTER_TXMGR_DLL */
 
 #define TEST_TXMGR_IF_RELEASE(tx) if (tx) tx->Release(); // Release but don't clear pointer!
 
@@ -4704,13 +4690,9 @@ aggregation_batch_stress_test()
 int
 main (int argc, char *argv[])
 {
-  nsresult result;
-
-#ifdef MUST_REGISTER_TXMGR_DLL
-  nsComponentManager::RegisterComponent(kCTransactionManagerCID,
-                                NULL, NS_TRANSACTIONMANAGER_CONTRACTID,
-                                TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
-#endif /* MUST_REGISTER_TXMGR_DLL */
+  nsresult result = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  if (NS_FAILED(result))
+    return result;
 
   result = simple_test();
 

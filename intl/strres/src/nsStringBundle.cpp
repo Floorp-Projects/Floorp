@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
 #include "nsID.h"
 #include "nsFileSpec.h"
 #include "nsString.h"

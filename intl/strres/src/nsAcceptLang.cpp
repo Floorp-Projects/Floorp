@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
-
 #include "prmem.h"
 #include "nsIMemory.h"
 #include "nsIServiceManager.h"

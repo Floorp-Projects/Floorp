@@ -37,11 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
-#undef NS_IMPL_IDS
 #include "nsICharsetConverterManager2.h"
 
 #include "nsCRT.h"

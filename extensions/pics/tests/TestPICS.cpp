@@ -1,56 +1,16 @@
-#define NS_IMPL_IDS
+#include "nsXPCOM.h"
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIPICS.h"
-#include "nsIPref.h"
-#include "nsIParser.h"
-#include "nsParserCIID.h"
-
-#include "nsIIOService.h"
-
-#include "nsIObserverService.h"
-#include "nsString.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "nspics.h"
 
-#define PICS_DLL   "pics.dll"
-#define PREF_DLL   "xppref32.dll"
-#define BASE_DLL   "raptorbase.dll"
-#define RAPTORHTMLPARS_DLL "gkparser.dll"
-#define NETLIB_DLL "netlib.dll"
-
-
-
-
-static NS_DEFINE_IID(kIPICSIID, NS_IPICS_IID);
 static NS_DEFINE_IID(kPICSCID, NS_PICS_CID);
-
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
-static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
-
-static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
-
 
 PRInt32 main(PRInt32 argc, char *argv[])
 {
-
-	nsIPICS *pics = NULL;
-
-  nsresult res;
-
-  nsIObserverService* anObserverService;
-  nsString  aTopic("tagobserver");
-
-	
-	res = nsRepository::CreateInstance(kPICSCID,
-												NULL,
-												kIPICSIID,
-												(void **) &pics);
 
 	char *fileBuf2;
 
@@ -81,24 +41,17 @@ PRInt32 main(PRInt32 argc, char *argv[])
   char fileBuf10[1000] = "\"(PICS-1.1)";
 
   char fileBuf11[1000] =   "(PICS-1.1 \"http://www.rsac.org/ratingsv01.html\" l gen true comment \"RSACi North America Server\" by \"philipd@w3.org\" for \"http://www.w3.org\" on \"1996.04.16T08:15-0500\" r (n 0 s 0 v 0 l 0))";
-	if (res == NS_OK) {
-    // Load preferences
-    nsComponentManager::RegisterComponent(kPrefCID, NULL, NULL, PREF_DLL, PR_FALSE, PR_FALSE);
-
-    nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-
-    nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, RAPTORHTMLPARS_DLL, PR_FALSE, PR_FALSE);
-
-    res = nsServiceManager::GetService("@mozilla.org/observer-service;1", 
-                                NS_GET_IID(nsIObserverService), 
-                                (nsISupports **)&anObserverService);
-    
 
 
+  nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  if (NS_FAILED(rv))
+    return 1;
 
+  nsCOMPtr<nsIPICS> pics = do_CreateInstance(kPICSCID);
+
+  if (pics)
     pics->ProcessPICSLabel(fileBuf11);
-	}
-     
+
 	PR_Free(fileBuf2);
 	return 0;
 }

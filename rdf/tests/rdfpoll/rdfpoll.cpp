@@ -48,6 +48,7 @@
  */
 
 #include <stdlib.h>
+#include "nsXPCOM.h"
 #include "nsCOMPtr.h"
 #include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
@@ -61,43 +62,15 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-#include "nsDOMCID.h"    // for NS_SCRIPT_NAMESET_REGISTRY_CID
-#include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID
-#include "nsRDFCID.h"
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
 #include "prthread.h"
 #include "plevent.h"
 #include "plstr.h"
-#include "nsParserCIID.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsNetCID.h"
-
-#if defined(XP_PC)
-#define DOM_DLL    "jsdom.dll"
-#define LAYOUT_DLL "gkhtml.dll"
-#define NETLIB_DLL "netlib.dll"
-#define PARSER_DLL "gkparser.dll"
-#define RDF_DLL    "rdf.dll"
-#define XPCOM_DLL  "xpcom32.dll"
-#elif defined(XP_UNIX) || defined(XP_BEOS)
-#define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
-#define LAYOUT_DLL "libgklayout"MOZ_DLL_SUFFIX
-#define NETLIB_DLL "libnecko"MOZ_DLL_SUFFIX
-#define PARSER_DLL "libhtmlpars"MOZ_DLL_SUFFIX
-#define RDF_DLL    "librdf"MOZ_DLL_SUFFIX
-#define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
-#elif defined(XP_MAC)
-#define DOM_DLL    "DOM_DLL"
-#define LAYOUT_DLL "LAYOUT_DLL"
-#define NETLIB_DLL "NETLIB_DLL"
-#define PARSER_DLL "PARSER_DLL"
-#define RDF_DLL    "RDF_DLL"
-#define XPCOM_DLL  "XPCOM_DLL"
-#endif
-
 
 ////////////////////////////////////////////////////////////////////////
 // CIDs
@@ -116,36 +89,6 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 
 #include "nsIMemory.h" // for the CID
-
-static nsresult
-SetupRegistry(void)
-{
-    // netlib
-    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-
-    // parser
-    static NS_DEFINE_CID(kParserCID,       NS_PARSER_CID);
-    static NS_DEFINE_IID(kExpatDriverCID,  NS_EXPAT_DRIVER_CID);
-
-    nsComponentManager::RegisterComponent(kParserCID,      NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kExpatDriverCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
-
-    // layout
-    static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
-
-    nsComponentManager::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-
-    // xpcom
-    static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
-    static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
-    nsComponentManager::RegisterComponent(kEventQueueServiceCID,     NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kEventQueueCID,            NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kGenericFactoryCID,        NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kMemoryCID,                NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
-
-    return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -321,7 +264,11 @@ main(int argc, char** argv)
         return 1;
     }
 
-    SetupRegistry();
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    if (NS_FAILED(rv)) {
+        fprintf(stderr, "NS_InitXPCOM2 failed\n");
+        return 1;
+    }
 
     // Get netlib off the floor...
     nsCOMPtr<nsIEventQueueService> theEventQueueService = 

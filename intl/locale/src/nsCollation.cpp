@@ -37,9 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
 #include "nsIPlatformCharset.h"
-#undef NS_IMPL_IDS
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsCollation.h"

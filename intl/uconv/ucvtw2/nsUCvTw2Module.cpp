@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
-
 #include "nspr.h"
 #include "nsString.h"
 #include "pratom.h"

@@ -30,9 +30,7 @@
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsIServiceManager.h"
-#define NS_IMPL_IDS
 #include "nsIPlatformCharset.h"
-#undef NS_IMPL_IDS
 #include "nsWidgetDefs.h"
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"

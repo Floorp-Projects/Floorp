@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
 #include "pratom.h"
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"

@@ -39,11 +39,9 @@
 
 
 
-#define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
-#undef NS_IMPL_IDS 
 
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"

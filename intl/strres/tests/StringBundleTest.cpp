@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
-
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsIPersistentProperties2.h"
@@ -45,12 +43,12 @@
 #include "nsIEventQueueService.h"
 #include <iostream.h>
 
-#include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsNetCID.h"
 
+#include "nsXPCOM.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 //
@@ -58,30 +56,8 @@
 
 #define TEST_URL "resource:/res/strres.properties"
 
-#ifdef XP_PC
-#define NETLIB_DLL "netlib.dll"
-#define RAPTORBASE_DLL "raptorbase.dll"
-#define XPCOM_DLL "xpcom32.dll"
-#else /* else XP_PC */
-#ifdef XP_MAC
-#define NETLIB_DLL "NETLIB_DLL"
-#define RAPTORBASE_DLL "base.shlb"
-#define XPCOM_DLL "XPCOM_DLL"
-#else /* else XP_MAC */
-#define NETLIB_DLL "libnecko"MOZ_DLL_SUFFIX
-#define RAPTORBASE_DLL "libgklayout"MOZ_DLL_SUFFIX
-#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
-#endif /* XP_MAC */
-#endif /* XP_PC */
-
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-
-static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -148,10 +124,9 @@ main(int argc, char *argv[])
   NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
   registrar->AutoRegister(nsnull);
   
-  nsIStringBundleService* service = nsnull;
-  ret = nsServiceManager::GetService(kStringBundleServiceCID,
-                                     kIStringBundleServiceIID, (nsISupports**) &service);
-  if (NS_FAILED(ret)) {
+  nsCOMPtr<nsIStringBundleService> service =
+      do_GetService(kStringBundleServiceCID);
+  if (!service) {
     printf("cannot create service\n");
     return 1;
   }

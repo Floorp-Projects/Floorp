@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
-
 #include "nsPersistentProperties.h"
 #include "nsID.h"
 #include "nsCRT.h"

@@ -27,9 +27,7 @@
 #include "nsIFileChannel.h"
 #include "nsILocalFile.h"
 
-#define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
-#undef NS_IMPL_IDS
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsdefs.h"
