@@ -2072,7 +2072,7 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
     if (NS_FAILED(rv))
         return rv;
 
-    rv = m_compFields->SplitRecipients(recipientStr.GetUnicode(), true, getter_AddRefs(array));
+    rv = m_compFields->SplitRecipients(recipientStr.GetUnicode(), PR_TRUE, getter_AddRefs(array));
     if (NS_SUCCEEDED(rv))
     {
     	nsCOMPtr<nsIAddrDatabase> abDataBase;
