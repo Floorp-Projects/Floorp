@@ -932,7 +932,8 @@ fe_EditorCleanup(MWContext* context)
 	 *    If they have autosave on, try to do a save. Don't do it
 	 *    for a new doc, as that'll mean dialogs, and .....
 	 */
-	if (!EDT_IS_NEW_DOCUMENT(context) &&
+	if (context->type != MWContextMessageComposition &&
+		!EDT_IS_NEW_DOCUMENT(context) &&
 		(!EDT_IsBlocked(context) && EDT_DirtyFlag(context))) {
 		fe_EditorPreferencesGetAutoSave(context, &as_enabled, &as_time);
 		if (as_enabled)
