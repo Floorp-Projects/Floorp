@@ -35,7 +35,7 @@
 
 package org.mozilla.javascript;
 
-final class Continuation extends IdScriptableObject implements Function
+public final class Continuation extends IdScriptableObject implements Function
 {
     private static final Object FTAG = new Object();
 
