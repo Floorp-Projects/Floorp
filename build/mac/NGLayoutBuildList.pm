@@ -511,23 +511,33 @@ sub BuildClientDist()
 	# MAILNEWS
    InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
-#   BuildOneProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp", 				"headers", "", 0, 0, 0);
+   InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
+   BuildOneProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp", 				"headers", "", 0, 0, 0);
+   BuildOneProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp",				"mailnews.xpt", "", 1, 0, 1);
    InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",					"$distdirectory:mailnews:");
+   BuildOneProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp", 			"headers", "", 0, 0, 0);
+   BuildOneProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp",			"MsgCompose.xpt", "", 1, 0, 1);
    InstallFromManifest(":mozilla:mailnews:compose:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:mdb:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",					"$distdirectory:mailnews:");
+   BuildOneProject(":mozilla:mailnews:local:macbuild:msglocalIDL.mcp", 				"headers", "", 0, 0, 0);
+   BuildOneProject(":mozilla:mailnews:local:macbuild:msglocalIDL.mcp",				"MsgLocal.xpt", "", 1, 0, 1);
    InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
+   BuildOneProject(":mozilla:mailnews:news:macbuild:msgnewsIDL.mcp", 				"headers", "", 0, 0, 0);
+   BuildOneProject(":mozilla:mailnews:news:macbuild:msgnewsIDL.mcp",				"MsgNews.xpt", "", 1, 0, 1);
    InstallFromManifest(":mozilla:mailnews:news:build:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
+   BuildOneProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbookIDL.mcp", 		"headers", "", 0, 0, 0);
+   BuildOneProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbookIDL.mcp",		"MsgAddrbook.xpt", "", 1, 0, 1);
    InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",					"$distdirectory:mailnews:");
 
 	print("--- Client Dist export complete ----\n")
@@ -939,20 +949,20 @@ sub MakeResourceAliases()
         InstallResources(":mozilla:mailnews:base:prefs:resources:content:MANIFEST",     "$messenger_chrome_dir:content:default:", 0);
         InstallResources(":mozilla:mailnews:base:prefs:resources:skin:MANIFEST",        "$messenger_chrome_dir:skin:default:", 0);
         InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",    "$messenger_chrome_dir:content:default:", 0);
-        InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",                      "$messenger_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
         InstallResources(":mozilla:mailnews:mime:emitters:resources:skin:MANIFEST",     "$messenger_chrome_dir:skin:default:", 0);
-        InstallResources(":mozilla:mailnews:local:resources:skin:MANIFEST",                     "$messenger_chrome_dir:skin:default:", 0);
-        InstallResources(":mozilla:mailnews:news:resources:skin:MANIFEST",                      "$messenger_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:local:resources:skin:MANIFEST",             "$messenger_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:news:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
 
-        InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",                           "$mailnews_dir:messenger:", 0); 
-		InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",	"$mailnews_dir:messenger:", 0);	
+        InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",                   "$mailnews_dir:messenger:", 0); 
+		InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",		"$mailnews_dir:messenger:", 0);	
 
-        InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",                "$messengercomposer_chrome_dir:content:default:", 0);
-        InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",                   "$messengercomposer_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",        "$messengercomposer_chrome_dir:content:default:", 0);
+        InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",           "$messengercomposer_chrome_dir:skin:default:", 0);
         InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",  "$messengercomposer_chrome_dir:content:default:", 0);
 
-        InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",               "$addressbook_chrome_dir:content:default:", 0);
-        InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",                  "$addressbook_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",       "$addressbook_chrome_dir:content:default:", 0);
+        InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",          "$addressbook_chrome_dir:skin:default:", 0);
         InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_chrome_dir:content:default:", 0);
     }
 	
