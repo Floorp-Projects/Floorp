@@ -181,7 +181,7 @@ nsExtensionManager.prototype = {
       
       // Now update the last app version so we don't do this checking 
       // again.
-      // pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
+      pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
     }
   },
   
