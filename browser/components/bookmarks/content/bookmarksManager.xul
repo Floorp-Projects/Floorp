@@ -197,7 +197,13 @@
     </toolbar>
   </toolbox>
 
-  <bookmarks-tree id="bookmarks-view" flex="1"/>
+  <hbox flex="1">
+    <bookmarks-tree id="bookmark-folders-view" type="folders" flex="1" persist="width"/>
+    <splitter id="bookmark-views-splitter" collapse="before" persist="state">
+      <grippy/>
+    </splitter>
+    <bookmarks-tree id="bookmarks-view" flex="4" persist="width"/>
+  </hbox>
 
 </window>
 
