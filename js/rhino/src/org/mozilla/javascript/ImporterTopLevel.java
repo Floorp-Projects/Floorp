@@ -116,7 +116,8 @@ public class ImporterTopLevel extends ScriptableObject {
         }
         String s = ((NativeJavaClass) cl).getClassObject().getName();
         String n = s.substring(s.lastIndexOf('.')+1);
-        if (this.has(n, this)) {
+        Object val = this.get(n, this);
+        if (val != NOT_FOUND && val != cl) {
             String[] args = { n };
             throw Context.reportRuntimeError(
                 Context.getMessage("msg.prop.defined", args));
