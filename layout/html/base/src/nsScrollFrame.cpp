@@ -94,19 +94,20 @@ nsScrollViewFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Allow the child frame to be as wide as our max width (minus scrollbar
   // width and padding), and as high as it wants to be.
-  nsSize            maxSize;
-  nsIDeviceContext* dc = aPresContext.GetDeviceContext();
-  float             sbWidth, sbHeight;
+  nsSize  kidMaxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
 
-  dc->GetScrollBarDimensions(sbWidth, sbHeight);
-  maxSize.width = aReflowState.maxSize.width - NSToCoordRound(sbWidth) -
-                  (padding.left + padding.right);
-  NS_RELEASE(dc);
-  maxSize.height = NS_UNCONSTRAINEDSIZE;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.maxSize.width) {
+    nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+    float             sbWidth, sbHeight;
+  
+    dc->GetScrollBarDimensions(sbWidth, sbHeight);
+    kidMaxSize.width -= NSToCoordRound(sbWidth) + padding.left + padding.right;
+    NS_RELEASE(dc);
+  }
   
   // Reflow the child
   nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
-  nsHTMLReflowState   kidReflowState(aPresContext, mFirstChild, aReflowState, maxSize);
+  nsHTMLReflowState   kidReflowState(aPresContext, mFirstChild, aReflowState, kidMaxSize);
 
   ReflowChild(mFirstChild, aPresContext, kidMetrics, kidReflowState, aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
@@ -115,16 +116,9 @@ nsScrollViewFrame::Reflow(nsIPresContext&          aPresContext,
   nsRect  rect(padding.left, padding.top, kidMetrics.width, kidMetrics.height);
   mFirstChild->SetRect(rect);
 
-  // Determine our size. Our width is our maxWidth and our height is the max
-  // of our child's height plus padding and our maxHeight (if our maxHeight is
-  // constrained).
-  aDesiredSize.width = aReflowState.maxSize.width;
-  if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.height) {
-    aDesiredSize.height  = kidMetrics.height + padding.top + padding.bottom;
-  }
-  else {
-    aDesiredSize.height  = aReflowState.maxSize.height;
-  }
+  // Determine our size
+  aDesiredSize.width = kidMetrics.width + padding.left + padding.right;
+  aDesiredSize.height = kidMetrics.height + padding.top + padding.bottom;
 
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
     ("exit nsScrollViewFrame::Reflow: status=%d width=%d height=%d",
@@ -271,6 +265,15 @@ nsScrollingViewFrame::Reflow(nsIPresContext&          aPresContext,
   ReflowChild(mFirstChild, aPresContext, aDesiredSize, kidReflowState, aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
+  // If our height is constrained then make sure the scroll view is at least as
+  // high as we're going to be
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.maxSize.height) {
+    // Make sure we're at least as tall as the max height we were given
+    if (aDesiredSize.height < aReflowState.maxSize.height) {
+      aDesiredSize.height = aReflowState.maxSize.height;
+    }
+  }
+
   // Place and size the child
   nsRect rect(0, 0, aDesiredSize.width, aDesiredSize.height);
   mFirstChild->SetRect(rect);
@@ -327,8 +330,8 @@ nsScrollingViewFrame::ListTag(FILE* out) const
 
 /**
  * The scroll frame basically acts as a border frame. It leaves room for and
- * renders the border. It creates a nsScrollingViewFrame which creates and
- * manages the scrollable view.
+ * renders the border. It creates a nsScrollingViewFrame as its only child
+ * frame
  */
 class nsScrollFrame : public nsHTMLContainerFrame {
 public:
@@ -424,7 +427,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     kidMaxSize.height = aReflowState.minHeight;
   }
   else {
-    kidMaxSize.height = NS_UNCONSTRAINEDSIZE;
+    kidMaxSize.height = aReflowState.maxSize.height;
     if (NS_UNCONSTRAINEDSIZE != kidMaxSize.height) {
       kidMaxSize.height -= tb;
     }
