@@ -42,9 +42,9 @@ REQUIRES = dom js netlib rdf raptor xpcom
 
 # XXX Note dependencies on implementation headers for factory functions
 
-INCLUDES += -I$(srcdir)/../rdf/base/src       \
-	    -I$(srcdir)/../rdf/content/src    \
-	    -I$(srcdir)/../rdf/datasource/src \
+INCLUDES += -I$(srcdir)/../base/src       \
+	    -I$(srcdir)/../content/src    \
+	    -I$(srcdir)/../datasource/src \
 	    $(NULL)
 
 EXTRA_DSO_LDOPTS = \
