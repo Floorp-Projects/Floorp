@@ -22,7 +22,6 @@
   -->
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://editor/content/EditorCommandsOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
@@ -68,13 +67,6 @@
     <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;"      observes="cmd_bold"/>
     <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;"    observes="cmd_italic"/>
     <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" observes="cmd_underline"/>
-    
-    <!-- these should come from tasksOverlay.xul -->
-    <key id="navigatortaskkb" xulkey="true" key="1" onkeypress="Navigator()" />
-    <key id="messengerkb"     xulkey="true" key="2" onkeypress="Messenger()" />
-    <key id="composerkb"      xulkey="true" key="3" onkeypress="Composer()" />
-    <key id="calendarkb"      xulkey="true" key="4" onkeypress="Calendar()" />
-
 
     <key id="increaseindentkb" xulkey="true" key="&formatindent.keybinding;"  observes="cmd_indent" />
     <key id="decreaseindentkb" xulkey="true" key="&formatoutdent.keybinding;" observes="cmd_outdent" />
@@ -141,13 +133,13 @@
 					events="create"
 					oncommandupdate="goUpdateComposerMenuItems(this)"
 	>
-    <command id="cmd_undo"/>
-    <command id="cmd_redo"/>
-    <command id="cmd_cut"/>
-    <command id="cmd_copy"/>
-    <command id="cmd_paste"/>  
-    <command id="cmd_delete"/>
-    <command id="cmd_selectAll"/>
+    <command id="cmd_undo" value="&undoCmd.label;"/>
+    <command id="cmd_redo" value="&redoCmd.label;"/>
+    <command id="cmd_cut" value="&cutCmd.label;"/>
+    <command id="cmd_copy" value="&copyCmd.label;"/>
+    <command id="cmd_paste" value="&pasteCmd.label;"/>  
+    <command id="cmd_delete" value="&clearCmd.label;"/>
+    <command id="cmd_selectAll" value="&selectAllCmd.label;"/>
 
     <command id="cmd_preferences"   oncommand="goDoCommand('cmd_preferences')"/>
 
@@ -198,6 +190,31 @@
     <command id="cmd_decreaseFont"                    oncommand="goDoCommand('cmd_decreaseFont')"/>
     
     <command id="cmd_removeStyles"                    oncommand="goDoCommand('cmd_removeStyles')"/>
+  </commandset>
+
+  <!-- commands updated when the table menu gets created -->
+  <commandset id="composerTableMenuItems" oncommandupdate="goUpdateTableMenuItems(this)">
+    <command id="cmd_SelectTable"         oncommand="goDoCommand('cmd_SelectTable')"/>
+    <command id="cmd_SelectRow"           oncommand="goDoCommand('cmd_SelectRow')"/>
+    <command id="cmd_SelectColumn"        oncommand="goDoCommand('cmd_SelectColumn')"/>
+    <command id="cmd_SelectCell"          oncommand="goDoCommand('cmd_SelectCell')"/>
+    <command id="cmd_SelectAllCells"      oncommand="goDoCommand('cmd_SelectAllCells')"/>
+    <command id="cmd_InsertTable"         oncommand="goDoCommand('cmd_InsertTable')"/>
+    <command id="cmd_InsertRowAbove"      oncommand="goDoCommand('cmd_InsertRowAbove')"/>
+    <command id="cmd_InsertRowBelow"      oncommand="goDoCommand('cmd_InsertRowBelow')"/>
+    <command id="cmd_InsertColumnBefore"  oncommand="goDoCommand('cmd_InsertColumnBefore')"/>
+    <command id="cmd_InsertColumnAfter"   oncommand="goDoCommand('cmd_InsertColumnAfter')"/>
+    <command id="cmd_InsertCellBefore"    oncommand="goDoCommand('cmd_InsertCellBefore')"/>
+    <command id="cmd_InsertCellAfter"     oncommand="goDoCommand('cmd_InsertCellAfter')"/>
+    <command id="cmd_DeleteTable"         oncommand="goDoCommand('cmd_DeleteTable')"/>
+    <command id="cmd_DeleteRow"           oncommand="goDoCommand('cmd_DeleteRow')"/>
+    <command id="cmd_DeleteColumn"        oncommand="goDoCommand('cmd_DeleteColumn')"/>
+    <command id="cmd_DeleteCell"          oncommand="goDoCommand('cmd_DeleteCell')"/>
+    <command id="cmd_DeleteCellContents"  oncommand="goDoCommand('cmd_DeleteCellContents')"/>
+    <command id="cmd_NormalizeTable"      oncommand="goDoCommand('cmd_NormalizeTable')"/>
+    <command id="cmd_tableJoinCells"      oncommand="goDoCommand('cmd_tableJoinCells')"/>
+    <command id="cmd_tableSplitCell"      oncommand="goDoCommand('cmd_tableSplitCell')"/>
+    <command id="cmd_editTable"           oncommand="goDoCommand('cmd_editTable')"/>
   </commandset>
 
 
@@ -258,7 +275,7 @@
       <menuseparator />
       <!-- FRAME, LINK should go here, but nav must put them in global files -->
       <menuitem id="menu_sendPage" observes="cmd_sendPage"/>
-      <menuitem id="menu_preview"/>
+      <menuitem id="menu_preview" value="&previewCmd.label;" accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
       <menuseparator />
       <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="cmd_printSetup" />
       <menuitem accesskey="&fileprintpreview.accesskey;"                         observes="cmd_printPreview"/>
@@ -531,7 +548,9 @@
     <menuitem id="removeAllStylesMenuitem" value="&removeAllStylesCmd.label;"
                 accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
                 oncommand="goDoCommand('cmd_removeStyles')" position="6"/>
-    <menuitem id="removeLinksMenuitem" position="7"/>
+    <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
+                accesskey="&formatremovelinks.accesskey;"
+                oncommand="EditorRemoveLinks()" position="7"/>
     <menuseparator position="8"/>
 
     <!-- Heading submenu -->
@@ -587,7 +606,7 @@
   </menupopup>
 
   <!-- Items to append at the bottom of the formatMenuPopup -->
-  <menuitem id="objectProperties"/>
+  <menuitem id="objectProperties" value="&properties.label;" accesskey="&properties.accesskey;" oncommand="EditorObjectProperties()"/>
   <menuitem id="pageProperties" value="&pageProperties.label;"
             accesskey="&pageproperties.accesskey;"
             oncommand="goDoCommand('cmd_pageProperties')"/>
@@ -595,7 +614,50 @@
             accesskey="&colorsandbackground.accesskey;"
             oncommand="goDoCommand('cmd_colorProperties')"/>
 
-  <menu id="tableMenu"/>
+  <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
+    <menupopup  oncreate="EditorInitTableMenu()">
+      <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
+              accesskey="&tableselectmenu.accesskey;">
+        <menupopup>
+            <menuitem id="menu_SelectTable"    value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    observes="cmd_SelectTable"    />
+            <menuitem id="menu_SelectRow"      value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      observes="cmd_SelectRow"      />
+            <menuitem id="menu_SelectColumn"   value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   observes="cmd_SelectColumn"   />
+            <menuitem id="menu_SelectCell"     value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     observes="cmd_SelectCell"     />
+            <menuitem id="menu_SelectAllCells" value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" observes="cmd_SelectAllCells" />
+        </menupopup>
+      </menu>
+      <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
+        <menupopup>
+          <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"        observes="cmd_InsertTable"/>
+          <menuseparator />
+          <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"          observes="cmd_InsertRowAbove"/>
+          <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"     observes="cmd_InsertRowBelow"/>
+          <menuseparator />
+          <menuitem value="&tableColumnBefore.label;" accesskey="&tablecolumn.accesskey;"       observes="cmd_InsertColumnBefore"/>
+          <menuitem value="&tableColumnAfter.label;"  accesskey="&tablecolumnafter.accesskey;"  observes="cmd_InsertColumnAfter"/>
+          <menuseparator />
+          <menuitem value="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"         observes="cmd_InsertCellBefore"/>
+          <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"    observes="cmd_InsertCellAfter"/>
+        </menupopup>
+      </menu>
+      <menu id="tableDeleteMenu" value="&tableDeleteMenu.label;" accesskey="&tabledeletemenu.accesskey;">
+        <menupopup>
+          <menuitem                               value="&tableTable.label;"        accesskey="&tabletable.accesskey;"           observes="cmd_DeleteTable"/>
+          <menuitem                               value="&tableRow.label;"          accesskey="&tablerow.accesskey;"             observes="cmd_DeleteRow"/>
+          <menuitem                               value="&tableColumn.label;"       accesskey="&tablecolumn.accesskey;"          observes="cmd_DeleteColumn"/>
+          <menuitem id="menu_DeleteCell"          value="&tableCell.label;"         accesskey="&tablecell.accesskey;"            observes="cmd_DeleteCell"/>
+          <menuitem id="menu_DeleteCellContents"  value="&tableCellContents.label;" accesskey="&tablecellcontents.accesskey;"    observes="cmd_DeleteCellContents"/>
+        </menupopup>
+      </menu>
+      <menuseparator />
+      <menuitem id="menu_NormalizeTable"  value="&tableFix.label;"        accesskey="&tablefix.accesskey;"       observes="cmd_NormalizeTable"/>
+      <!-- menu value is set in InitTableMenu -->
+      <menuitem id="menu_tableJoinCells"                                  accesskey="&tablejoincells.accesskey;" observes="cmd_tableJoinCells"/>
+      <menuitem id="menu_tableSlitCell"   value="&tableSplitCell.label;"  accesskey="&tablesplitcell.accesskey;" observes="cmd_tableSplitCell"/>
+      <!-- this is shared with Format Menu -->
+      <menuitem id="menu_tableProperties" value="&tableProperties.label;" accesskey="&properties.accesskey;"     observes="cmd_editTable"/>
+    </menupopup>
+  </menu>
 
   <popup id="TextColorPopup"  popupanchor="bottomleft" tooltip="aTooltip" ignorekeys="true">
     <text class="ColorPickerLabel" id="TextColorCaption" value="&textColorCaption.label;" flex="1"/>
