@@ -55,7 +55,6 @@ static PRUnichar space (' ');
 static PRUnichar nbsp (0xa0);
 static PRUnichar nl ('\n');
 static PRUnichar cr('\r');
-static PRUnichar hyphen ('-');
 
 /** Mail citations using the Internet style: > This is a citation
   */
