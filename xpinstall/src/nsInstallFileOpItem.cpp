@@ -20,6 +20,7 @@
 #include "nsInstall.h"
 #include "nsInstallFileOpEnums.h"
 #include "nsInstallFileOpItem.h"
+#include "nsWinShortcut.h"
 
 /* Public Methods */
 
@@ -128,6 +129,51 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
     }
 }
 
+nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
+                                         PRInt32        aCommand,
+                                         nsFileSpec&    aTarget,
+                                         nsFileSpec&    aShortcutPath,
+                                         nsString&      aDescription,
+                                         nsFileSpec&    aWorkingPath,
+                                         nsString&      aParams,
+                                         nsFileSpec&    aIcon,
+                                         PRInt32        aIconId,
+                                         PRInt32*       aReturn)
+:nsInstallObject(aInstallObj)
+{
+	*aReturn    = NS_OK;
+  mIObj       = aInstallObj;
+  mCommand    = aCommand;
+  mIconId     = aIconId;
+  mFlags      = 0;
+  mSrc        = nsnull;
+  mStrTarget  = nsnull;
+
+  mTarget = new nsFileSpec(aTarget);
+  if(mTarget == nsnull)
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+
+  mShortcutPath = new nsFileSpec(aShortcutPath);
+  if(mShortcutPath == nsnull)
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+
+  mDescription = new nsString(aDescription);
+  if(mDescription == nsnull)
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+
+  mWorkingPath = new nsFileSpec(aWorkingPath);
+  if(mWorkingPath == nsnull)
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+
+  mParams = new nsString(aParams);
+  if(mParams == nsnull)
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+
+  mIcon = new nsFileSpec(aIcon);
+  if(mIcon == nsnull)
+    *aReturn = nsInstall::OUT_OF_MEMORY;
+}
+
 nsInstallFileOpItem::~nsInstallFileOpItem()
 {
   if(mSrc)
@@ -138,6 +184,14 @@ nsInstallFileOpItem::~nsInstallFileOpItem()
     delete mStrTarget;
   if(mParams)
     delete mParams;
+  if(mShortcutPath)
+    delete mShortcutPath;
+  if(mDescription)
+    delete mDescription;
+  if(mWorkingPath)
+    delete mWorkingPath;
+  if(mIcon)
+    delete mIcon;
 }
 
 PRInt32 nsInstallFileOpItem::Complete()
@@ -170,14 +224,14 @@ PRInt32 nsInstallFileOpItem::Complete()
     case NS_FOP_FILE_RENAME:
       NativeFileOpFileRename(mSrc, mStrTarget);
       break;
-    case NS_FOP_WIN_SHORTCUT_CREATE:
-      NativeFileOpWinShortcutCreate();
+    case NS_FOP_WIN_SHORTCUT:
+      NativeFileOpWindowsShortcut(mTarget, mShortcutPath, mDescription, mWorkingPath, mParams, mIcon, mIconId);
       break;
-    case NS_FOP_MAC_ALIAS_CREATE:
-      NativeFileOpMacAliasCreate();
+    case NS_FOP_MAC_ALIAS:
+      NativeFileOpMacAlias();
       break;
-    case NS_FOP_UNIX_LINK_CREATE:
-      NativeFileOpUnixLinkCreate();
+    case NS_FOP_UNIX_LINK:
+      NativeFileOpUnixLink();
       break;
   }
 	return aReturn;
@@ -229,11 +283,16 @@ char* nsInstallFileOpItem::toString()
       result.Append(*mStrTarget);
       resultCString = result.ToNewCString();
       break;
-    case NS_FOP_WIN_SHORTCUT_CREATE:
+    case NS_FOP_WIN_SHORTCUT:
+      result = "Windows Shortcut: ";
+      result.Append(*mShortcutPath);
+      result.Append("\\");
+      result.Append(*mDescription);
+      resultCString = result.ToNewCString();
       break;
-    case NS_FOP_MAC_ALIAS_CREATE:
+    case NS_FOP_MAC_ALIAS:
       break;
-    case NS_FOP_UNIX_LINK_CREATE:
+    case NS_FOP_UNIX_LINK:
       break;
     default:
       result = "Unkown file operation command!";
@@ -347,19 +406,40 @@ nsInstallFileOpItem::NativeFileOpFileRename(nsFileSpec* aSrc, nsString* aTarget)
 }
 
 PRInt32
-nsInstallFileOpItem::NativeFileOpWinShortcutCreate()
+nsInstallFileOpItem::NativeFileOpWindowsShortcut(nsFileSpec* mTarget, nsFileSpec* mShortcutPath, nsString* mDescription, nsFileSpec * mWorkingPath, nsString* mParams, nsFileSpec* mIcon, PRInt32 mIconId)
+{
+#ifdef _WINDOWS
+  char *cDescription  = mDescription->ToNewCString();
+  char *cParams       = mParams->ToNewCString();
+
+  if((cDescription == nsnull) || (cParams == nsnull))
+    return nsInstall::OUT_OF_MEMORY;
+
+  CreateALink(mTarget->GetNativePathCString(),
+              mShortcutPath->GetNativePathCString(),
+              cDescription,
+              mWorkingPath->GetNativePathCString(),
+              cParams,
+              mIcon->GetNativePathCString(),
+              mIconId);
+
+  if(cDescription)
+    delete(cDescription);
+  if(cParams)
+    delete(cParams);
+#endif
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstallFileOpItem::NativeFileOpMacAlias()
 {
   return NS_OK;
 }
 
 PRInt32
-nsInstallFileOpItem::NativeFileOpMacAliasCreate()
-{
-  return NS_OK;
-}
-
-PRInt32
-nsInstallFileOpItem::NativeFileOpUnixLinkCreate()
+nsInstallFileOpItem::NativeFileOpUnixLink()
 {
   return NS_OK;
 }

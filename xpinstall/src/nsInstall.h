@@ -217,9 +217,9 @@ class nsInstall
         PRInt32    FileOpFileModDateChanged(nsFileSpec& aTarget, nsFileSpec::TimeStamp& aOldStamp, PRBool* aReturn);
         PRInt32    FileOpFileMove(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn);
         PRInt32    FileOpFileRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aReturn);
-        PRInt32    FileOpFileWinShortcutCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
-        PRInt32    FileOpFileMacAliasCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
-        PRInt32    FileOpFileUnixLinkCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    FileOpFileWindowsShortcut(nsFileSpec& aTarget, nsFileSpec& aShortcutPath, nsString& aDescription, nsFileSpec& aWorkingPath, nsString& aParams, nsFileSpec& aIcon, PRInt32 aIconId, PRInt32* aReturn);
+        PRInt32    FileOpFileMacAlias(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    FileOpFileUnixLink(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
 
         void       LogComment(nsString& aComment);
 
