@@ -1,6 +1,16 @@
 function Startup()
 {
   PlaySoundCheck();
+
+  // if we can't get the alert service, hide the pref UI for using alerts to notify on new mail
+  // see bug #158711
+  try {
+    var alertService = Components.classes["@mozilla.org/alerts-service;1"].getService(Components.interfaces.nsIAlertsService);
+  }
+  catch(ex) {
+    var newMailNotificationAlertUI = document.getElementById("newMailNotificationAlert");
+    newMailNotificationAlertUI.setAttribute("hidden","true");
+  }
 }
 
 function PlaySoundCheck()
