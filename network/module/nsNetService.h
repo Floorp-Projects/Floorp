@@ -22,6 +22,7 @@
 
 #include "nspr.h"
 #include "nsIPref.h"
+#include "nsITransport.h"
 #include "nsIEventQueueService.h"
 #include "nsINetService.h"
 #include "nsNetThread.h"
@@ -96,6 +97,8 @@ public:
                          nsISupports* aContainer = nsnull,
                          nsIURLGroup* aGroup = nsnull);
     NS_IMETHOD AreThereActiveConnections(void);
+
+	NS_IMETHOD CreateSocketTransport(nsITransport **aTransport, PRUint32 aPortToUse, const char * aHostName);
 
 protected:
     virtual ~nsNetlibService();
