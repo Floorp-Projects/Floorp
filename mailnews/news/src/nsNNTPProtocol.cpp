@@ -2057,6 +2057,31 @@ PRInt32 nsNNTPProtocol::BeginArticle()
           NS_NewIOFileStream(getter_AddRefs(supports), fileSpec,
                          PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
           m_tempArticleStream = do_QueryInterface(supports);
+          PRBool needDummyHeaders = PR_FALSE;
+          msgurl->GetAddDummyEnvelope(&needDummyHeaders);
+          if (needDummyHeaders)
+          {
+              nsCString result;
+              char *ct;
+              PRUint32 writeCount;
+              time_t now = time ((time_t*) 0);
+              ct = ctime(&now);
+              ct[24] = 0;
+              result = "From - ";
+              result += ct;
+              result += MSG_LINEBREAK;
+
+              m_tempArticleStream->Write(result.GetBuffer(), result.Length(),
+                                         &writeCount);
+              result = "X-Mozilla-Status: 0001";
+              result += MSG_LINEBREAK;
+              m_tempArticleStream->Write(result.GetBuffer(), result.Length(),
+                                         &writeCount);
+              result =  "X-Mozilla-Status2: 00000000";
+              result += MSG_LINEBREAK;
+              m_tempArticleStream->Write(result.GetBuffer(), result.Length(),
+                                         &writeCount);
+          }
       }
   }
   m_nextState = NNTP_READ_ARTICLE;

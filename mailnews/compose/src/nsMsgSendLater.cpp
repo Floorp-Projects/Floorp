@@ -473,7 +473,13 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   // Since we have already parsed all of the headers, we are simply going to
   // set the composition fields and move on.
   //
+  nsString author;
+  mMessage->GetAuthor(&author);
+
   nsMsgCompFields * fields = (nsMsgCompFields *)compFields.get();
+
+  fields->SetFrom(author.ToNewUnicode());
+
   if (m_to)
   	fields->SetTo(m_to);
 

@@ -2259,6 +2259,29 @@ nsImapMailFolder::SetupMsgWriteStream(const char * aNativeString, PRBool addDumm
 	nsCOMPtr<nsISupports>  supports;
 	NS_NewIOFileStream(getter_AddRefs(supports), fileSpec, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
 	m_tempMessageStream = do_QueryInterface(supports);
+    if (m_tempMessageStream && addDummyEnvelope)
+    {
+        nsCString result;
+        char *ct;
+        PRUint32 writeCount;
+        time_t now = time ((time_t*) 0);
+        ct = ctime(&now);
+        ct[24] = 0;
+        result = "From - ";
+        result += ct;
+        result += MSG_LINEBREAK;
+        
+        m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+                                   &writeCount);
+        result = "X-Mozilla-Status: 0001";
+        result += MSG_LINEBREAK;
+        m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+                                   &writeCount);
+        result =  "X-Mozilla-Status2: 00000000";
+        result += MSG_LINEBREAK;
+        m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+                                   &writeCount);
+    }
     return NS_OK;
 }
 

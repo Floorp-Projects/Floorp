@@ -668,24 +668,36 @@ nsMessenger::SaveAs(const char* url, PRBool asFile)
           }
           else
           { 
-            // ** save as Template
-            nsSaveAsListener *aListener = new nsSaveAsListener(aSpec);
-            if (aListener)
-            {
-              rv = aListener->QueryInterface(
-                nsCOMTypeInfo<nsIUrlListener>::GetIID(),
-                getter_AddRefs(urlListener));
-              if (NS_FAILED(rv))
+              // ** save as Template
+              PRBool needDummyHeader = PR_TRUE;
+              char * templateUri = nsnull;
+              NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+              if (NS_FAILED(rv)) goto done;
+              prefs->CopyCharPref("mail.default_templates_uri", &templateUri);
+              if (!templateUri || !*templateUri) 
+                  return NS_ERROR_FAILURE;
+              needDummyHeader =
+                  PL_strcasestr(templateUri, "mailbox") != nsnull;
+              nsCRT::free(templateUri);
+              nsSaveAsListener *aListener = new nsSaveAsListener(aSpec);
+              if (aListener)
               {
-                delete aListener;
-                return rv;
+                  rv = aListener->QueryInterface(
+                      nsCOMTypeInfo<nsIUrlListener>::GetIID(),
+                      getter_AddRefs(urlListener));
+                  if (NS_FAILED(rv))
+                  {
+                      delete aListener;
+                      return rv;
+                  }
+                  NS_ADDREF(aListener); 
+                  // nsUrlListenerManager uses nsVoidArray
+                  // to keep trach of all listeners we have
+                  // to manually add refs ourself
+                  messageService->SaveMessageToDisk(url, aSpec, 
+                                                    needDummyHeader,
+                                                    urlListener, nsnull);
               }
-              NS_ADDREF(aListener); // nsUrlListenerManager uses nsVoidArray
-              // to keep trach of all listeners we have
-              // to manually add refs ourself
-              messageService->SaveMessageToDisk(url, aSpec, PR_TRUE,
-                                                urlListener, nsnull);
-            }
           }
         }
       }
