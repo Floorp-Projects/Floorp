@@ -57,20 +57,12 @@ public:
   NS_IMETHOD CreateRawSortKey(const nsCollationStrength strength, 
                               const nsString& stringIn, PRUint8* key, PRUint32* outLen);
 
-  // create a sort key (nsString)
-  NS_IMETHOD CreateSortKey(const nsCollationStrength strength, 
-                           const nsString& stringIn, nsString& key)
-                           {return mCollation->CreateSortKey(this, strength, stringIn, key);}
   // compare two sort keys
   // length is character length not byte length, result is same as strcmp
   NS_IMETHOD CompareRawSortKey(const PRUint8* key1, const PRUint32 len1, 
                                const PRUint8* key2, const PRUint32 len2, 
                                PRInt32* result) 
                                {*result = mCollation->CompareRawSortKey(key1, len1, key2, len2);return NS_OK;}
-
-  // compare two sort keys (nsString)
-  NS_IMETHOD CompareSortKey(const nsString& key1, const nsString& key2, PRInt32* result)
-                            {*result = mCollation->CompareSortKey(key1, key2);return NS_OK;}
 
   // init this interface to a specified locale (should only be called by collation factory)
   //
