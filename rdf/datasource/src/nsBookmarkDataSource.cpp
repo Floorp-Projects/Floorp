@@ -62,6 +62,7 @@ static const char kURINC_PersonalToolbarFolder[] = "NC:PersonalToolbarFolder"; /
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Bookmark);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkAddDate);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Description);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
@@ -84,6 +85,7 @@ static const char kPersonalToolbarFolder[]  = "Personal Toolbar Folder";
 PRInt32 gRefCnt;
 nsIRDFService* gRDFService;
 nsIRDFResource* kNC_Bookmark;
+nsIRDFResource* kNC_BookmarkSeparator;
 nsIRDFResource* kNC_BookmarkAddDate;
 nsIRDFResource* kNC_BookmarksRoot;
 nsIRDFResource* kNC_Description;
@@ -110,6 +112,7 @@ bm_AddRefGlobals()
         }
 
         gRDFService->GetResource(kURINC_Bookmark,          &kNC_Bookmark);
+        gRDFService->GetResource(kURINC_BookmarkSeparator, &kNC_BookmarkSeparator);
         gRDFService->GetResource(kURINC_BookmarkAddDate,   &kNC_BookmarkAddDate);
         gRDFService->GetResource(kURINC_BookmarksRoot,     &kNC_BookmarksRoot);
         gRDFService->GetResource(kURINC_Description,       &kNC_Description);
@@ -134,6 +137,7 @@ bm_ReleaseGlobals()
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
 
         NS_IF_RELEASE(kNC_Bookmark);
+        NS_IF_RELEASE(kNC_BookmarkSeparator);
         NS_IF_RELEASE(kNC_BookmarkAddDate);
         NS_IF_RELEASE(kNC_BookmarksRoot);
         NS_IF_RELEASE(kNC_Description);
@@ -168,7 +172,7 @@ protected:
 
     nsresult ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer);
     nsresult ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aContainer);
-    nsresult ParseBookmarkSeparator(const nsString& aLine);
+    nsresult ParseBookmarkSeparator(const nsString& aLine, nsIRDFResource* aContainer);
     nsresult ParseHeaderBegin(const nsString& aLine, nsIRDFResource* aContainer);
     nsresult ParseHeaderEnd(const nsString& aLine);
     nsresult ParseAttribute(const nsString& aLine,
@@ -256,7 +260,7 @@ BookmarkParser::Parse(nsIRDFResource* aContainer)
                 rv = ParseBookmarkHeader(line, aContainer);
         }
         else if ((offset = line.Find(kSeparator)) >= 0) {
-            rv = ParseBookmarkSeparator(line);
+            rv = ParseBookmarkSeparator(line, aContainer);
         }
         else if ((offset = line.Find(kCloseUL)) >= 0 ||
                  (offset = line.Find(kCloseMenu)) >= 0 ||
@@ -585,10 +589,21 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aCont
 
 
 nsresult
-BookmarkParser::ParseBookmarkSeparator(const nsString& aLine)
+BookmarkParser::ParseBookmarkSeparator(const nsString& aLine, nsIRDFResource* aContainer)
 {
-    // XXX Not implemented
-    return NS_OK;
+	nsresult			rv;
+	nsCOMPtr<nsIRDFResource>	separator;
+
+	if (NS_SUCCEEDED(rv = rdf_CreateAnonymousResource(kURINC_BookmarksRoot, getter_AddRefs(separator))))
+	{
+		if (NS_SUCCEEDED(rv = mDataSource->Assert(separator, kRDF_type, kNC_BookmarkSeparator, PR_TRUE)))
+		{
+			if (NS_SUCCEEDED(rv = rdf_ContainerAppendElement(mDataSource, aContainer, separator)))
+			{
+			}
+		}
+	}
+	return(rv);
 }
 
 nsresult
