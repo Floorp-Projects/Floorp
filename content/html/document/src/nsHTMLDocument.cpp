@@ -1034,8 +1034,43 @@ nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
 NS_IMETHODIMP    
 nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result = NS_OK;
+  nsIDOMElement * root = nsnull;
+  result = GetDocumentElement(&root);
+  if (NS_OK != result) {  
+    return result;
+  }
+
+  nsAutoString bodyStr("BODY");
+  nsIDOMNode * child;
+  root->GetFirstChild(&child);
+
+  while (child != nsnull) {
+    nsIDOMElement* domElement;
+    result = child->QueryInterface(kIDOMElementIID,(void **)&domElement);
+    if (NS_OK == result) {
+      nsString tagName;
+      domElement->GetTagName(tagName);
+      if (bodyStr.EqualsIgnoreCase(tagName)) {
+        nsIDOMNode* ret;
+       
+        result = root->ReplaceChild(aBody, child, &ret);
+        NS_IF_RELEASE(ret);
+        NS_IF_RELEASE(mBodyContent);
+
+        NS_RELEASE(child);
+        NS_RELEASE(root);
+        NS_RELEASE(domElement);
+        return result;
+      }
+      NS_RELEASE(domElement);
+    }
+    nsIDOMNode * node = child;
+    NS_RELEASE(child);
+    node->GetNextSibling(&child);
+  }
+  NS_RELEASE(root);
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP    
