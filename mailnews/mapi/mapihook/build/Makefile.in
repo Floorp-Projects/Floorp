@@ -13,7 +13,7 @@
 # 
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are 
-# Copyright (C) 2001 Netscape Communications Corporation.  All
+# Copyright (C) 2002 Netscape Communications Corporation.  All
 # Rights Reserved.
 # 
 # Contributor(s):
@@ -26,7 +26,24 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= MapiProxy
+LIBRARY_NAME	= $(MODULE)
+META_COMPONENT	= mail
+DEFFILE		= $(srcdir)/MapiProxy.def
+
+EXPORTS		= msgMapi.h
+
+CSRCS		= \
+		dlldata.c \
+		msgMapi_p.c \
+		msgMapi_i.c \
+		$(NULL)
+
+OS_LIBS		+= rpcrt4.lib
+
 include $(topsrcdir)/config/rules.mk
 
-libs chrome::
-	$(REGCHROME) content messenger-mapi messenger.jar
+DEFINES += -DREGISTER_PROXY_DLL -DUNICODE -D_UNICODE
+
+msgMapi.h msgMapi_p.c msgMapi_i.c dlldata.c : msgMapi.idl
+	midl $(UNICODE_FLAGS) $<

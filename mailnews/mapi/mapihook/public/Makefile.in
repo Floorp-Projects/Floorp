@@ -13,7 +13,7 @@
 # 
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are 
-# Copyright (C) 2001 Netscape Communications Corporation.  All
+# Copyright (C) 2002 Netscape Communications Corporation.  All
 # Rights Reserved.
 # 
 # Contributor(s):
@@ -26,7 +26,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/rules.mk
+MODULE		= msgMapi
+XPIDL_MODULE	= mapihook
 
-libs chrome::
-	$(REGCHROME) content messenger-mapi messenger.jar
+XPIDLSRCS	= \
+		nsIMapiRegistry.idl \
+		nsIMapiSupport.idl \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk

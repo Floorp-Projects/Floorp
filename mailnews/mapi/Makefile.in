@@ -26,6 +26,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= resources
+DIRS	= resources mapiDll mapihook
 
 include $(topsrcdir)/config/rules.mk
