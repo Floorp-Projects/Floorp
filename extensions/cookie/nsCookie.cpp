@@ -1943,7 +1943,7 @@ cookie_LoadCookies() {
       delete buffer;
       continue;
     }
-    nsString host, isDomain, path, xxx, expires, name, cookie;
+    nsAutoString host, isDomain, path, xxx, expires, name, cookie;
     buffer->Mid(host, hostIndex, isDomainIndex-hostIndex-1);
     buffer->Mid(isDomain, isDomainIndex, pathIndex-isDomainIndex-1);
     buffer->Mid(path, pathIndex, xxxIndex-pathIndex-1);
