@@ -325,6 +325,8 @@ int main(int argc, char **argv)
 	  case 'x': useExportPolicy = 1; 		break;
 	}
     }
+    if (optstatus == PL_OPT_BAD)
+	Usage(progName);
 
     if (!host || !port) Usage(progName);
 
