@@ -844,6 +844,8 @@ pk11_FindSMIMEAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_NETSCAPE_EMAIL:
 	return pk11_NewTokenAttribute(type,object->dbKey.data,
 						object->dbKey.len, PR_FALSE);
+    case CKA_SENSITIVE:
+	return NULL;
     default:
 	break;
     }
@@ -881,6 +883,8 @@ pk11_FindTrustAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return (PK11Attribute *) &pk11_StaticFalseAttr;
     case CKA_MODIFIABLE:
 	return (PK11Attribute *) &pk11_StaticTrueAttr;
+    case CKA_SENSITIVE:
+	return NULL;
     default:
 	break;
     }
@@ -982,9 +986,11 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return (PK11Attribute *) &pk11_StaticFalseAttr;
     case CKA_MODIFIABLE:
 	return (PK11Attribute *) &pk11_StaticTrueAttr;
-   case CKA_CERTIFICATE_TYPE:
+    case CKA_CERTIFICATE_TYPE:
         /* hardcoding X.509 into here */
         return (PK11Attribute *)&pk11_StaticX509Attr;
+    case CKA_SENSITIVE:
+	return NULL;
     default:
 	break;
     }

@@ -1018,6 +1018,12 @@ pk11_handlePublicKeyObject(PK11Session *session, PK11Object *object,
 	    PORT_Free(pubKey.data);
 	    return CKR_TOKEN_WRITE_PROTECTED;
 	}
+	if (slot->keyDB->version != 3) {
+	    unsigned char buf[SHA1_LENGTH];
+	    SHA1_HashBuf(buf,pubKey.data,pubKey.len);
+	    PORT_Memcpy(pubKey.data,buf,sizeof(buf));
+	    pubKey.len = sizeof(buf);
+	}
 	/* make sure the associated private key already exists */
 	/* only works if we are logged in */
 	priv = nsslowkey_FindKeyByPublicKey(slot->keyDB, &pubKey,
@@ -1152,6 +1158,12 @@ pk11_handlePrivateKeyObject(PK11Session *session,PK11Object *object,CK_KEY_TYPE 
 	    if (label) PORT_Free(label);
 	    nsslowkey_DestroyPrivateKey(privKey);
 	    return CKR_TEMPLATE_INCOMPLETE;
+	}
+	if (slot->keyDB->version != 3) {
+	    unsigned char buf[SHA1_LENGTH];
+	    SHA1_HashBuf(buf,pubKey.data,pubKey.len);
+	    PORT_Memcpy(pubKey.data,buf,sizeof(buf));
+	    pubKey.len = sizeof(buf);
 	}
 	rv = nsslowkey_StoreKeyByPublicKey(object->slot->keyDB,
 			privKey, &pubKey, label, object->slot->password);
@@ -2183,7 +2195,7 @@ CK_RV NSC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
     /* ok we really should read it out of the keydb file. */
     /* pInfo->hardwareVersion.major = NSSLOWKEY_DB_FILE_VERSION; */
     pInfo->hardwareVersion.major = 3;
-    pInfo->hardwareVersion.minor = 2;
+    pInfo->hardwareVersion.minor = 4;
     return CKR_OK;
 }
 
@@ -2247,7 +2259,7 @@ CK_RV NSC_GetTokenInfo(CK_SLOT_ID slotID,CK_TOKEN_INFO_PTR pInfo)
 	pInfo->ulTotalPrivateMemory = 1;
 	pInfo->ulFreePrivateMemory = 1;
 	pInfo->hardwareVersion.major = CERT_DB_FILE_VERSION;
-	pInfo->hardwareVersion.minor = 0;
+	pInfo->hardwareVersion.minor = handle->version;
     }
     return CKR_OK;
 }
@@ -3255,14 +3267,25 @@ pk11_searchKeys(PK11Slot *slot, SECItem *key_id, PRBool isLoggedIn,
 	return;
     }
 
-    if (key_id->data && (classFlags & NSC_KEY)) {
-	privKey = nsslowkey_FindKeyByPublicKey(keyHandle,key_id, slot->password);
+    if (key_id->data) {
+	privKey = nsslowkey_FindKeyByPublicKey(keyHandle, key_id, slot->password);
 	if (privKey) {
-    	    pk11_addHandle(search,pk11_mkHandle(slot,key_id,PK11_TOKEN_TYPE_KEY));
+	    if (classFlags & NSC_KEY) {
+    	        pk11_addHandle(search,
+			pk11_mkHandle(slot,key_id,PK11_TOKEN_TYPE_KEY));
+	    }
+	    if (classFlags & NSC_PRIVATE) {
+    	        pk11_addHandle(search,
+			pk11_mkHandle(slot,key_id,PK11_TOKEN_TYPE_PRIV));
+	    }
+	    if (classFlags & NSC_PUBLIC) {
+    	        pk11_addHandle(search,
+			pk11_mkHandle(slot,key_id,PK11_TOKEN_TYPE_PUB));
+	    }
     	    nsslowkey_DestroyPrivateKey(privKey);
 	}
-	if ( !(classFlags & (NSC_PRIVATE|NSC_PUBLIC)) ) {
-	    /* skip the traverse, nothing new to find */
+	/* don't do the traversal if we have an up to date db */
+	if (keyHandle->version != 3) {
 	    return;
 	}
     }
