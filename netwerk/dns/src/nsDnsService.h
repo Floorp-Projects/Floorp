@@ -93,7 +93,7 @@ protected:
     void       FreeMsgID(PRUint32 msgID);
 
     friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    LRESULT LookupComplete(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    LRESULT ProcessLookup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HWND                mDNSWindow;
     PRUint32            mMsgIDBitVector[4];
 #endif /* XP_PC */
