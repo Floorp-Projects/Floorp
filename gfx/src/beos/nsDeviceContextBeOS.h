@@ -81,7 +81,6 @@ public:
 private:
   PRUint32      mDepth;
   PRBool        mWriteable;
-  nsPaletteInfo mPaletteInfo;
   PRUint32 mNumCells;
   PRInt16       mScrollbarHeight; 
   PRInt16       mScrollbarWidth; 
