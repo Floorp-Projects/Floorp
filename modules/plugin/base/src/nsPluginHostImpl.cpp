@@ -151,6 +151,10 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 #define _NS_PREF_COMMON_PLUGIN_REG_KEY_ "browser.plugins.registry_plugins_folder_key_location"
 #define _NS_COMMON_PLUGIN_KEY_NAME_ "Plugins Folders"
 
+// #defines for plugin cache and prefs
+#define NS_PREF_MAX_NUM_CACHED_PLUGINS "browser.plugins.max_num_cached_plugins"
+#define DEFAULT_NUMBER_OF_STOPPED_PLUGINS 10
+
 void DisplayNoDefaultPluginDialog(const char *mimeType);
 
 /**
@@ -3965,7 +3969,14 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
     }
     else
     {
-      if(mActivePluginList.getStoppedCount() >= MAX_NUMBER_OF_STOPPED_PLUGINS)
+      // try to get the max cached plugins from a pref or use default
+      PRUint32 max_num;
+      nsresult rv;
+      nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+      if (prefs) rv = prefs->GetIntPref(NS_PREF_MAX_NUM_CACHED_PLUGINS,(int *)&max_num);
+      if (!NS_SUCCEEDED(rv)) max_num = DEFAULT_NUMBER_OF_STOPPED_PLUGINS;
+
+      if(mActivePluginList.getStoppedCount() >= max_num)
       {
         nsActivePlugin * oldest = mActivePluginList.findOldestStopped();
         if(oldest != nsnull)
