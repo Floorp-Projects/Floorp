@@ -19,7 +19,7 @@ DEPTH=..
 IGNORE_MANIFEST=1
 
 !if defined(MOZ_EDITOR)
-DIRS= public core guimgr txmgr
+DIRS= public base guimgr txmgr
 !else
 DIRS= public
 !endif
