@@ -263,7 +263,7 @@ protected:
   // Focus used global variable
   static nsWidget* sFocusWidget; //Current Focus Widget
   static PRBool    sJustGotDeactivated;
-  static PRBool    sWidgetCreating; //For getting rid of the ASSERT ERROR due to reducing suppressing of focus.
+  static PRBool    sJustGotActivated; //For getting rid of the ASSERT ERROR due to reducing suppressing of focus.
   
   /* this is the rollup listener variables */
   /* These variables help us close the Menu when the clicks outside the application */
@@ -272,9 +272,6 @@ protected:
 
   static nsILookAndFeel *sLookAndFeel;
   static PRUint32 sWidgetCount;
-
-  static PhRid_t          gLastUnrealizedRegion;
-  static PhRid_t          gLastUnrealizedRegionsParent;
 };
 
 #endif /* nsWidget_h__ */

@@ -36,6 +36,7 @@
 #include "nsDragService.h"
 #include "nsFileSpecWithUIImpl.h"
 #include "nsScrollbar.h"
+#include "nsSound.h"
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
@@ -54,6 +55,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
@@ -165,6 +167,10 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/widget/dragservice/ph;1",
     "@mozilla.org/widget/dragservice;1",
     nsDragServiceConstructor },
+{ "Ph Sound",
+  NS_SOUND_CID,
+  "@mozilla.org/sound;1",
+  nsSoundConstructor },
 #ifdef IBMBIDI
     { "Gtk Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
@@ -179,6 +185,4 @@ static nsModuleComponentInfo components[] =
     nsFileSpecWithUIImplConstructor }
 };
 
-
 NS_IMPL_NSGETMODULE("nsWidgetPhModule", components)
-

@@ -58,8 +58,7 @@ our_photon_input_add (int               fd,
                       PtFdProc_t        event_processor_callback,
                       void		         *data)
 {
-  int err = PtAppAddFd(NULL, fd, (Pt_FD_READ | Pt_FD_NOPOLL | Pt_FD_DRAIN ),
-                       event_processor_callback,data);
+  int err = PtAppAddFdPri( NULL, fd, (Pt_FD_READ | Pt_FD_NOPOLL | Pt_FD_DRAIN ), event_processor_callback, data, getprio( 0 ) + 1 );
   if (err != 0)
   {
     NS_ASSERTION(0,"nsAppShell::our_photon_input_add Error calling PtAppAddFD\n");

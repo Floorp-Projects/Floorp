@@ -65,8 +65,6 @@ nsIWidget         *nsWidget::gRollupWidget = nsnull;
 
 /* These are used to keep Popup Menus from drawing twice when they are put away */
 /* because of extra EXPOSE events from Photon */
-PhRid_t          nsWidget::gLastUnrealizedRegion = -1;
-PhRid_t          nsWidget::gLastUnrealizedRegionsParent = -1;
 
 //
 // Keep track of the last widget being "dragged"
@@ -79,7 +77,7 @@ PRBool              nsWidget::mDmgQueueInited = PR_FALSE;
 nsILookAndFeel     *nsWidget::sLookAndFeel = nsnull;
 PRUint32            nsWidget::sWidgetCount = 0;
 nsWidget           *nsWidget::sFocusWidget = nsnull;
-PRBool              nsWidget::sWidgetCreating = PR_FALSE;
+PRBool              nsWidget::sJustGotActivated = PR_FALSE;
 PRBool              nsWidget::sJustGotDeactivated = PR_TRUE;
 
 /* Enable this to queue widget damage, this should be ON by default */
@@ -266,65 +264,60 @@ NS_METHOD nsWidget::Show( PRBool bState ) {
 
   if( !mWidget ) return NS_OK; // Will be null durring printing
 
-/* Note: Calling  PtWidgetIsRealized(mWidget) is not valid because usually
-the parent window has not been realized yet when we get into this code. Also
-calling PtRealizeWidget() returns an error when the parent has not been
-realized. So you must just blindly bash on both the DELAY_REALIZE flags and
-the PtRealizeWidget functions */
-
   PtArg_t   arg;
 
   if( bState ) {
-	  if (PtWidgetIsRealized(mWidget)) {
-		  mShown = PR_TRUE; 
-		  return NS_OK;
-	  }
-	  EnableDamage( mWidget, PR_FALSE );
-	  PtRealizeWidget(mWidget);
 
-	  if( mWidget->rid == -1 ) {
+		if( mWindowType != eWindowType_child ) {
+		  if (PtWidgetIsRealized(mWidget)) {
+			  mShown = PR_TRUE; 
+			  return NS_OK;
+		  	}
+		  EnableDamage( mWidget, PR_FALSE );
+		  PtRealizeWidget(mWidget);
+
+
+		  if( mWidget->rid == -1 ) {
+			  EnableDamage( mWidget, PR_TRUE );
+			  NS_ASSERTION(0,"nsWidget::Show mWidget's rid == -1\n");
+			  mShown = PR_FALSE; 
+			  return NS_ERROR_FAILURE;
+		  	}
+		  PtSetArg(&arg, Pt_ARG_FLAGS, 0, Pt_DELAY_REALIZE);
+		  PtSetResources(mWidget, 1, &arg);
 		  EnableDamage( mWidget, PR_TRUE );
-		  NS_ASSERTION(0,"nsWidget::Show mWidget's rid == -1\n");
-		  mShown = PR_FALSE; 
-		  return NS_ERROR_FAILURE;
-	  }
-	  PtSetArg(&arg, Pt_ARG_FLAGS, 0, Pt_DELAY_REALIZE);
-	  PtSetResources(mWidget, 1, &arg);
-	  EnableDamage( mWidget, PR_TRUE );
-		/* Always add it to the Widget Damage Queue when it gets realized */
-	  PtDamageWidget(mWidget);
-#if 0
-	  QueueWidgetDamage();
-#endif
-  }
+		  PtDamageWidget(mWidget);
+			}
+		else {
+			EnableDamage( mWidget, PR_FALSE );
+			PtWidgetToFront( mWidget );
+			if( !mShown || !( mWidget->flags & Pt_REALIZED ) ) PtRealizeWidget( mWidget );
+			EnableDamage( mWidget, PR_TRUE );
+			}
+  	}
   else {
+		if( mWindowType != eWindowType_child ) {
       EnableDamage( mWidget, PR_FALSE );
-
-      if( PtWidgetIsClass( mWidget, PtRegion ) ) {
-        PtWidget_t *w=nsnull, *w1=nsnull;
-
-         gLastUnrealizedRegion = PtWidgetRid(mWidget);
-         w = mWidget;
-         while( 1 ) {
-           w1 = PtWidgetParent(w);
-           if( w1 == 0 ) {
-             gLastUnrealizedRegionsParent = PtWidgetRid(w);
-             break;
-           	}
-           w = w1;
-         	}
-      }
-
       PtUnrealizeWidget(mWidget);
+
+
       EnableDamage( mWidget, PR_TRUE );
 
       PtSetArg(&arg, Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_DELAY_REALIZE);
       PtSetResources(mWidget, 1, &arg);
+			}
+		else {
+			EnableDamage( mWidget, PR_FALSE );
+			PtWidgetToBack( mWidget );
+			if( mShown ) PtUnrealizeWidget( mWidget );
+			EnableDamage( mWidget, PR_TRUE );
+			}
   	}
 
   mShown = bState;
   return NS_OK;
 	}
+
 
 /* This got moved to nsWindow.cpp */
 NS_IMETHODIMP nsWidget::CaptureRollupEvents( nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent ) {
@@ -399,22 +392,20 @@ NS_METHOD nsWidget::Resize( PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint ) {
 
     if( mWidget ) {
 		PtArg_t arg;
-		int     *border;
-		
-		PtSetArg( &arg, Pt_ARG_BORDER_WIDTH, &border, 0 );
-		PtGetResources( mWidget, 1, &arg );
 		
 		/* Add the border to the size of the widget */
-		PhDim_t dim = {aWidth - 2*(*border), aHeight - 2*(*border)};
-//		EnableDamage( mWidget, PR_FALSE );
+		PhDim_t dim = { aWidth, aHeight };
+
+		EnableDamage( mWidget, PR_FALSE );
 		
 		PtSetArg( &arg, Pt_ARG_DIM, &dim, 0 );
 		PtSetResources( mWidget, 1, &arg );
 
-//		EnableDamage( mWidget, PR_TRUE );
+		EnableDamage( mWidget, PR_TRUE );
 	}
 	return NS_OK;
 }
+
 
 
 NS_METHOD nsWidget::Resize( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint ) {
@@ -733,54 +724,26 @@ NS_METHOD nsWidget::Invalidate( const nsRect & aRect, PRBool aIsSynchronous ) {
   if( !mWidget ) return NS_OK; // mWidget will be null during printing
   if( !PtWidgetIsRealized( mWidget ) ) return NS_OK;
   
-	nsRect   rect = aRect;
-
-	/* convert to parent coords */
-	rect.x += mBounds.x;
-	rect.y += mBounds.y;
-
-	if( GetParentClippedArea( rect ) == PR_TRUE ) {
-		/* convert back widget coords */
-		rect.x -= mBounds.x;
-		rect.y -= mBounds.y;
-#if 0
-		mUpdateArea->Union(aRect.x, aRect.y, aRect.width, aRect.height);
-		if( PtWidgetIsRealized( mWidget ) ) QueueWidgetDamage( );
-#else
-		PhRect_t prect;
-		prect.ul.x = rect.x + mWidget->extent.ul.x;
-		prect.ul.y = rect.y + mWidget->extent.ul.y;
-		prect.lr.x = prect.ul.x + rect.width - 1;
-		prect.lr.y = prect.ul.y + rect.height - 1;
-		PtDamageExtent(mWidget, &prect);
-		if (aIsSynchronous)
-		   PtFlush();
-#endif		
-	}
+	PhRect_t prect;
+	prect.ul.x = aRect.x;
+	prect.ul.y = aRect.y;
+	prect.lr.x = prect.ul.x + aRect.width - 1;
+	prect.lr.y = prect.ul.y + aRect.height - 1;
+	if( ! ( mWidget->class_rec->flags & Pt_DISJOINT ) )
+		PhTranslateRect( &prect, &mWidget->area.pos );
+	PtDamageExtent( mWidget, &prect );
+	if( aIsSynchronous ) PtFlush( );
 	return NS_OK;
 	}
 
 NS_IMETHODIMP nsWidget::InvalidateRegion( const nsIRegion *aRegion, PRBool aIsSynchronous ) {
-
-#if 0	
-	mUpdateArea->Union( *aRegion );
-	if( aIsSynchronous ) UpdateWidgetDamage();
-	else QueueWidgetDamage();
-#else
-    nsresult rv = NS_OK;
 	PhTile_t *tiles = NULL;
-	rv = aRegion->GetNativeRegion( ( void*& ) tiles );
-	if (tiles) {
-		if (NS_SUCCEEDED(rv)) {
-			tiles = PhCopyTiles(tiles);
-			PhTranslateTiles(tiles, &mWidget->extent.ul);
-			PtDamageTiles(mWidget, tiles);
-			if (aIsSynchronous)
-			   PtFlush();
-			PhFreeTiles(tiles);
+	aRegion->GetNativeRegion( ( void*& ) tiles );
+	if( tiles ) {
+		PhTranslateTiles( tiles, &mWidget->area.pos );
+		PtDamageTiles( mWidget, tiles );
+		if( aIsSynchronous ) PtFlush( );
 		}
-	}
-#endif
   return NS_OK;
 	}
 
@@ -963,8 +926,8 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   PtWidget_t *parentWidget = nsnull;
 
-  sWidgetCreating = PR_TRUE;
-	
+	sJustGotActivated = PR_TRUE;
+
   nsIWidget *baseParent = aInitData && (aInitData->mWindowType == eWindowType_dialog ||
     	aInitData->mWindowType == eWindowType_toplevel ) ?  nsnull : aParent;
 
@@ -1561,6 +1524,12 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
 						InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MIDDLE_BUTTON_DOWN );
 
 		  		result = DispatchMouseEvent(theMouseEvent);
+
+					// if we're a right-button-up we're trying to popup a context menu. send that event to gecko also
+					if( ptrev->buttons & Ph_BUTTON_MENU ) {
+						InitMouseEvent( ptrev, this, theMouseEvent, NS_CONTEXTMENU );
+						result = DispatchMouseEvent( theMouseEvent );
+						}
       	  }
       	 }
 		break;		
@@ -1640,14 +1609,10 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
 
       case Ph_EV_BOUNDARY:
         switch( event->subtype ) {
-          case Ph_EV_PTR_ENTER: {
-						PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
-						nsMouseEvent MouseEvent;
-						ScreenToWidget( ptrev->pos );
-						InitMouseEvent( ptrev, this, MouseEvent, NS_MOUSE_MOVE );
-						DispatchMouseEvent( MouseEvent );
-						}
+          case Ph_EV_PTR_ENTER:
+						result = DispatchStandardEvent( NS_MOUSE_ENTER );
             break;
+					case Ph_EV_PTR_LEAVE_TO_CHILD:
           case Ph_EV_PTR_LEAVE:
 						result = DispatchStandardEvent( NS_MOUSE_EXIT );
             break;
@@ -1655,19 +1620,6 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
             break;
         	}
         break;
-
-      case Ph_EV_EXPOSE:
-      	{
-        int reg;
-        int parreg;
-
-         reg = event->emitter.rid;
-         parreg = PtWidgetRid(mWidget);
-
-         if (reg == gLastUnrealizedRegion && parreg == gLastUnrealizedRegionsParent) result = PR_TRUE;
-         else result = PR_FALSE;
-       	}
-       	break;
     	}
 
   return result;
@@ -1845,8 +1797,6 @@ int nsWidget::WorkProc( void *data )
 {
   DamageQueueEntry **dq = (DamageQueueEntry **) data;
 
-  sWidgetCreating = PR_FALSE;	
-	
   if( dq && (*dq) ) {
     DamageQueueEntry *dqe = *dq;
     DamageQueueEntry *last_dqe;
@@ -1931,11 +1881,13 @@ int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t
 
   pWidget->DispatchStandardEvent(NS_GOTFOCUS);
 
-  if(!sWidgetCreating)
+  if( !sJustGotActivated )
   {
-    pWidget->DispatchStandardEvent(NS_ACTIVATE);
+		sJustGotActivated = PR_TRUE;
     sJustGotDeactivated = PR_FALSE;
+    pWidget->DispatchStandardEvent(NS_ACTIVATE);
   }
+	else sJustGotActivated = PR_FALSE;
 
   return Pt_CONTINUE;
 }
@@ -1959,6 +1911,8 @@ int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_
   if (!widget->parent || PtIsFocused(widget) != 2) return Pt_CONTINUE;
 
 //  pWidget->DispatchStandardEvent(NS_LOSTFOCUS);
+
+	sJustGotActivated = PR_FALSE;
 
   return Pt_CONTINUE;
 }
