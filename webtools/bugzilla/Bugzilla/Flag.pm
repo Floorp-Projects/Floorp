@@ -31,8 +31,12 @@ package Bugzilla::Flag;
 
 use Bugzilla::FlagType;
 use Bugzilla::User;
+use Bugzilla::Config;
+
 use Attachment;
 
+# Note that this line doesn't actually import these variables for some reason,
+# so I have to use them as $::template and $::vars in the package code.
 use vars qw($template $vars); 
 
 # Note!  This module requires that its caller have said "require CGI.pl" 
@@ -402,14 +406,14 @@ sub FormToNewFlags {
     }
 
     if ($verify_requestees) {
-        $vars->{'target'} = $target;
-        $vars->{'flags'} = \@flags;
-        $vars->{'form'} = $data;
-        $vars->{'mform'} = \%::MFORM || \%::MFORM;
+        $::vars->{'target'} = $target;
+        $::vars->{'flags'} = \@flags;
+        $::vars->{'form'} = $data;
+        $::vars->{'mform'} = \%::MFORM || \%::MFORM;
         
-        print "Content-Type: text/html\n\n" unless $vars->{'header_done'};
-        $::template->process("request/verify.html.tmpl", $vars)
-          || &::ThrowTemplateError($template->error());
+        print "Content-Type: text/html\n\n" unless $::vars->{'header_done'};
+        $::template->process("request/verify.html.tmpl", $::vars)
+          || &::ThrowTemplateError($::template->error());
         exit;
     }
     
@@ -427,7 +431,7 @@ sub MatchRequestees {
     # automatically appends an email suffix to each user's login name,
     # in which case we can't guarantee their names are at least three
     # characters long.
-    if (!&Param('emailsuffix') && length($requestee_str) < 3) {
+    if (!Param('emailsuffix') && length($requestee_str) < 3) {
         &::ThrowUserError("requestee_too_short");
     }
 
@@ -510,22 +514,17 @@ sub notify {
     
     my ($flag, $template_file) = @_;
     
-    # Work around the intricacies of globals.pl not being templatized
-    # by defining local variables for the $::template and $::vars globals.
-    my $template = $::template;
-    my $vars = $::vars;
-    
-    $vars->{'flag'} = $flag;
+    $::vars->{'flag'} = $flag;
     
     my $message;
     my $rv = 
-      $template->process($template_file, $vars, \$message);
+      $::template->process($template_file, $::vars, \$message);
     if (!$rv) {
-        print "Content-Type: text/html\n\n" unless $vars->{'header_done'};
-        &::ThrowTemplateError($template->error());
+        print "Content-Type: text/html\n\n" unless $::vars->{'header_done'};
+        &::ThrowTemplateError($::template->error());
     }
     
-    my $delivery_mode = &::Param("sendmailnow") ? "" : "-ODeliveryMode=deferred";
+    my $delivery_mode = Param("sendmailnow") ? "" : "-ODeliveryMode=deferred";
     open(SENDMAIL, "|/usr/lib/sendmail $delivery_mode -t -i") 
       || die "Can't open sendmail";
     print SENDMAIL $message;
