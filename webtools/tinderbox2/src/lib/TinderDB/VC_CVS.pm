@@ -126,7 +126,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.7 $ )[1];
+$VERSION = ( qw $Revision: 1.8 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -175,7 +175,13 @@ sub apply_db_updates {
 
     # Purge duplicate 'treestate' entries to keep the DB size down.  
     # Data::Dumper takes a long time and this really helps speed things up.
-    
+
+    # If we delete too many duplicates then we loose information when
+    # the database is trimmed. We need to keep some duplicates arround
+    # for debuging and for "redundancy". Only delete duplicates during
+    # the list hour.  Notice we are still removing 90% of the duplicates.
+
+    ( ($main::$TIME - $time) < $SECONDS_PER_HOUR ) &&
     ($DATABASE{$tree}{$time}{'treestate'}) &&
     ($DATABASE{$tree}{$time}{'treestate'} eq $tree_state) &&
       delete $DATABASE{$tree}{$time}{'treestate'};
@@ -246,7 +252,7 @@ sub apply_db_updates {
   my @cvs_output = <CVS>;
   
   close(CVS) || 
-    die("Could not close exec: '@cmd': $!\n");
+    die("Could not close exec: '@cmd': \$?: $? : \$\!: $!\n");
 
   ($?) &&
     die("Could not cmd: '@cmd' exited with error: $?\n");
