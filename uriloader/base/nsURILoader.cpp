@@ -506,7 +506,7 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel * aChannel,
   return OpenURIVia(aChannel, aCommand, aWindowTarget, aWindowContext, 0 /* ip address */); 
 }
 
-NS_IMETHODIMP nsURILoader::GetTarget(const char * aWindowTarget, 
+NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel * aChannel, const char * aWindowTarget, 
                                      nsISupports * aWindowContext,
                                      nsISupports ** aRetargetedWindowContext)
 {
@@ -549,11 +549,25 @@ NS_IMETHODIMP nsURILoader::GetTarget(const char * aWindowTarget,
   else
   {
     windowCtxtAsTreeItem->FindItemWithName(name.GetUnicode(), nsnull, getter_AddRefs(treeItem));
+    // this is a bit hokey.....if we retargted this content to a different window
+    // during GetTarget, then tweak the load attributes on the channel to set the
+    // LOAD_RETARGETED_DOCUMENT_URI flag...
+    nsCOMPtr<nsISupports> retargetedWindowCtxt = do_QueryInterface(treeItem);
+    if (retargetedWindowCtxt && (aWindowContext != retargetedWindowCtxt))
+    {
+       // we must be retargeting...so set an appropriate flag on the channel
+      nsLoadFlags loadAttribs = 0;
+      aChannel->GetLoadAttributes(&loadAttribs);
+      loadAttribs |= nsIChannel::LOAD_RETARGETED_DOCUMENT_URI;
+      aChannel->SetLoadAttributes(loadAttribs);
+    }
   }
 
   nsCOMPtr<nsISupports> treeItemCtxt (do_QueryInterface(treeItem));
   if (!*aRetargetedWindowContext)  
+  {
     *aRetargetedWindowContext = treeItemCtxt;
+  }
 
   NS_IF_ADDREF(*aRetargetedWindowContext);
   return NS_OK;
@@ -591,7 +605,7 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
     }
 
   nsCOMPtr<nsISupports> retargetedWindowContext;
-  NS_ENSURE_SUCCESS(GetTarget(aWindowTarget, aOriginalWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(GetTarget(aChannel, aWindowTarget, aOriginalWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
 
   NS_NEWXPCOM(loader, nsDocumentOpenInfo);
   if (!loader) return NS_ERROR_OUT_OF_MEMORY;
