@@ -23,6 +23,7 @@
 <p><a href="cert_dialog_help.html#Certificate_Backup">Certificate Backup</a>
 <p><a href="#User_Identification_Request">User Identification Request</a></p>
 <p><a href="#New_Certificate_Authority">New Certificate Authority</a></p>
+<p><a href="#old_next_update_crl">Browser Won't Accept CRL</a></p>
 <p><a href="#Web_Site_Certificates">Web Site Certificates</a></p>
 </td>
 </tr>
@@ -166,6 +167,21 @@
 </ul>
 
 <p>&nbsp;</p>
+<a NAME="old_next_update_crl"></a>
+<h2>Browser Won't Accept CRL</h2>
+
+<p>A certificate revocation list (CRL) is list of revoked certificates. The browser uses the CRLs it has available to check the validity of certificates issued by the corresponding <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. If a certificate is listed as revoked, the browser won't accept it as evidence of identity.
+
+<p>A CA typically publishes an updated CRL at regular intervals. Every CRL includes a date, specified in the Next Update field, by which the CA will publish the next update of that CRL. If the date in the Next Update field is earlier than the current date, you should obtain the most recent version of the CRL.
+
+<p>Although the absence of the most recent CRL does not by itself invalidate a certificate, the browser can't accept a server certificate unless the corresponding CRL is the most recent available. In some situations, you may want to delete CRLs with Next Update dates earlier than the present. Speak to your system administrator for guidance on CRL management.
+
+<p>For more information on CRLs and instructions for viewing or deleting them, see <a href="using_certs_help.html#Managing_CRLs">Managing CRLs</a>.
+
+
+
+
+<p>&nbsp;</p>
 <a NAME="Web_Site_Certificates"></a>
 <h2>Web Site Certificates</h2>
 
@@ -209,7 +225,9 @@
 
 </ul>
 
-<p>Selecting "Remember this certifidate permanently" solves the problem for this web site certificate, but you'll see the same alert for any other web site whose certificate was issued by the same CA. To ensure that the Certificate Manager will trust all certificates issued by a given CA, you must edit the trust settings for the the corresponding CA certificate. To do so, follow these steps:
+<p>Selecting "Remember this certifidate permanently" solves the problem for this web site certificate, but you'll see the same alert for any other web site whose certificate was issued by the same CA. 
+
+<p>To ensure that the Certificate Manager will trust all certificates issued by a given CA, you must edit the trust settings for the the corresponding CA certificate. To do so, follow these steps:
 
 <ol>
    <li>Open the Edit menu and choose Preferences.
@@ -220,7 +238,7 @@
    <li>Click the Edit button and select the appropriate trust settings.
 </ol>
 
-<p>For help deciding which trust settings you should select, click the Help button in the Edit dialog box or see <a href="certs_help.html#Edit_CA_Certificate_Settings">Edit CA Certificate Settings.
+<p>For help deciding which trust settings you should select, click the Help button in the Edit dialog box or see <a href="certs_help.html#Edit_CA_Certificate_Settings">Edit CA Certificate Settings</a>.
 
 
 <p>&nbsp;</p>
@@ -272,7 +290,7 @@
 
 
 <hr>
-<p><i>8/20/2001</i></p>
+<p><i>8/21/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
