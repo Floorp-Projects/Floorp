@@ -126,7 +126,7 @@ sub match {
         my $query  = "SELECT userid, realname, login_name " .
                      "FROM profiles " .
                      "WHERE login_name = $sqlstr ";
-        $query    .= "AND disabledtext = '' " if $exclude_disabled;
+        # Exact matches don't care if a user is disabled.
 
         &::PushGlobalSQLState();
         &::SendSQL($query);
