@@ -458,79 +458,81 @@ NS_IMETHODIMP DocumentViewerImpl :: Print(void)
 
     factory->CreateDeviceContextSpec(nsnull, devspec, PR_FALSE);
 
-    dx = mPresContext->GetDeviceContext();
+    if (nsnull != devspec) {
+      dx = mPresContext->GetDeviceContext();
 
-    if (NS_OK == dx->GetDeviceContextFor(devspec, newdx))
-    {
-      nsIPresShell *ps;
-      nsIPresContext *cx;
-      nsIStyleSet *ss;
-      nsIPref *prefs;
-      nsIViewManager *vm;
-      PRInt32 width, height;
-      nsIView *view;
-
-      NS_RELEASE(devspec);
-
-      newdx->GetDeviceSurfaceDimensions(width, height);
-
-      NS_NewGalleyContext(&cx);
-      mPresContext->GetPrefs(prefs);
-      cx->Init(newdx, prefs);
-
-      CreateStyleSet(mDocument, &ss);
-
-      NS_NewPresShell(&ps);
-
+      if (NS_OK == dx->GetDeviceContextFor(devspec, newdx))
       {
-        nsresult rv;
+        nsIPresShell *ps;
+        nsIPresContext *cx;
+        nsIStyleSet *ss;
+        nsIPref *prefs;
+        nsIViewManager *vm;
+        PRInt32 width, height;
+        nsIView *view;
 
-        rv = nsRepository::CreateInstance(kViewManagerCID, 
-                                          nsnull, 
-                                          kIViewManagerIID, 
-                                          (void **)&vm);
+        NS_RELEASE(devspec);
 
-        if ((NS_OK != rv) || (NS_OK != vm->Init(newdx))) {
-          NS_ASSERTION(PR_FALSE, "can't get good VM");
+        newdx->GetDeviceSurfaceDimensions(width, height);
+
+        NS_NewGalleyContext(&cx);
+        mPresContext->GetPrefs(prefs);
+        cx->Init(newdx, prefs);
+
+        CreateStyleSet(mDocument, &ss);
+
+        NS_NewPresShell(&ps);
+
+        {
+          nsresult rv;
+
+          rv = nsRepository::CreateInstance(kViewManagerCID, 
+                                            nsnull, 
+                                            kIViewManagerIID, 
+                                            (void **)&vm);
+
+          if ((NS_OK != rv) || (NS_OK != vm->Init(newdx))) {
+            NS_ASSERTION(PR_FALSE, "can't get good VM");
+          }
+
+          nsRect tbounds = nsRect(0, 0, width, height);
+
+          // Create a child window of the parent that is our "root view/window"
+          // Create a view
+          rv = nsRepository::CreateInstance(kViewCID, 
+                                            nsnull, 
+                                            kIViewIID, 
+                                            (void **)&view);
+          if ((NS_OK != rv) || (NS_OK != view->Init(vm, 
+                                                    tbounds,
+                                                    nsnull))) {
+            NS_ASSERTION(PR_FALSE, "can't get good view");
+          }
+
+          // Setup hierarchical relationship in view manager
+          vm->SetRootView(view);
         }
 
-        nsRect tbounds = nsRect(0, 0, width, height);
+        ps->Init(mDocument, cx, vm, ss);
 
-        // Create a child window of the parent that is our "root view/window"
-        // Create a view
-        rv = nsRepository::CreateInstance(kViewCID, 
-                                          nsnull, 
-                                          kIViewIID, 
-                                          (void **)&view);
-        if ((NS_OK != rv) || (NS_OK != view->Init(vm, 
-                                                  tbounds,
-                                                  nsnull))) {
-          NS_ASSERTION(PR_FALSE, "can't get good view");
-        }
+        //lay it out...
+        ps->InitialReflow(width, height);
 
-        // Setup hierarchical relationship in view manager
-        vm->SetRootView(view);
+        newdx->BeginDocument();
+        newdx->BeginPage();
+        vm->Display();
+        newdx->EndPage();
+        newdx->EndDocument();
+
+        NS_RELEASE(ps);
+        NS_RELEASE(vm);
+        NS_RELEASE(ss);
+        NS_RELEASE(newdx);
+        NS_RELEASE(prefs);
       }
 
-      ps->Init(mDocument, cx, vm, ss);
-
-      //lay it out...
-      ps->InitialReflow(width, height);
-
-      newdx->BeginDocument();
-      newdx->BeginPage();
-      vm->Display();
-      newdx->EndPage();
-      newdx->EndDocument();
-
-      NS_RELEASE(ps);
-      NS_RELEASE(vm);
-      NS_RELEASE(ss);
-      NS_RELEASE(newdx);
-      NS_RELEASE(prefs);
+      NS_RELEASE(dx);
     }
-
-    NS_RELEASE(dx);
     NS_RELEASE(factory);
   }
 
