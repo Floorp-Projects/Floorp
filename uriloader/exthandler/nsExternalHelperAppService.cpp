@@ -417,8 +417,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
 {
   NS_ENSURE_ARG(aChannel);
 
+#ifdef XP_MAC
+ // create a temp file for the data...and open it for writing.
+  NS_GetSpecialDirectory("system.DesktopDirectory", getter_AddRefs(mTempFile));
+#else
   // create a temp file for the data...and open it for writing.
   NS_GetSpecialDirectory("system.OS_TemporaryDirectory", getter_AddRefs(mTempFile));
+#endif
 
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));

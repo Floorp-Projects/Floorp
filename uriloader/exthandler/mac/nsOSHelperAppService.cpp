@@ -26,8 +26,7 @@
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsILocalFile.h"
-
-#include <InternetConfig.h>
+#include "nsILocalFileMac.h"
 
 // this is a platform specific class that abstracts an application.
 // we treat this object as a cookie when we pass it to an external app handler..
@@ -41,17 +40,20 @@ public:
   nsExternalApplication();
   virtual ~nsExternalApplication();
 
-  // FIX ME!!!!!!!!
-  // Change aAppRegistryName to some object that is Mac specific and represents the application
+  // the app registry name is the key we got from the registry for the
+  // application. We should be able to just call ::ShellExecute on this name
+  // in order to launch the application.
   void SetAppRegistryName(const char * aAppRegistryName);
+
+  void SetLocalFile(nsIFile * aApplicationToUse);
 
   // used to launch the application passing in the location of the temp file
   // to be associated with this app.
   nsresult LaunchApplication(nsIFile * aTempFile);
 
 protected:
-  // FIX ME: change this type to match the argument for SetAppRegistryName
   nsCString mAppRegistryName;
+  nsCOMPtr<nsIFile> mApplicationToUse;
 };
 
 
@@ -70,27 +72,44 @@ nsExternalApplication::nsExternalApplication()
 nsExternalApplication::~nsExternalApplication()
 {}
 
-// FIX ME for the Mac
 void nsExternalApplication::SetAppRegistryName(const char * aAppRegistryName)
 {
   mAppRegistryName = aAppRegistryName;
 }
 
-// FIX ME for the mac
+void nsExternalApplication::SetLocalFile(nsIFile * aApplicationToUse)
+{
+  mApplicationToUse = aApplicationToUse;
+}
+
 nsresult nsExternalApplication::LaunchApplication(nsIFile * aTempFile)
 {
   nsresult rv = NS_OK;
 
-  // add code that will launch the application using aTempFile as the 
-  // location of the temp file to be associated with the app
+  // if we were given an application to use then use it....otherwise
+  if (mApplicationToUse)
+  {
+  	nsCOMPtr <nsILocalFileMac> app = do_QueryInterface(mApplicationToUse, &rv);
+  	if (NS_FAILED(rv)) return rv;
+  	
+  	nsCOMPtr <nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
+  	if (NS_FAILED(rv)) return rv;
+  	
+  	rv = app->LaunchAppWithDoc(docToLoad, PR_FALSE); 
+  }
+  else if (!mAppRegistryName.IsEmpty() && aTempFile)
+  {
+	printf("fix me!\n");
+	rv = NS_OK;
+  }
+
   return rv;
 }
 
-/////////////////////////////////////////////////////////////////////
-// Begin Mac Implementation of nsOSHelperAppService
-/////////////////////////////////////////////////////////////////////
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
-{}
+{
+ 	nsExternalHelperAppService::Init();
+}
 
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
@@ -109,20 +128,21 @@ NS_IMETHODIMP nsOSHelperAppService::CanHandleContent(const char *aMimeContentTyp
   return NS_OK;
 }
 
-// FIX ME --> implement this for the Mac
 NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
                                                     PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
-  // look up the content type and get a platform specific handle to the app we want to use for this 
-  // download...create a nsExternalAppHandler, bind the application token to it (as a nsIFile??) and return this
-  // as the stream listener to use...
-
-  // eventually when we start trying to hook up some UI we may need to insert code here to throw up a dialog
-  // and ask the user if they wish to use this app to open this content type...
-
-  // now bind the handler to the application we want to launch when we the handler is done
-  // receiving all the data...
-
+   nsresult rv = NS_OK;
+  
+  // see if we have user specified information for handling this content type by giving the base class
+  // first crack at it...
+  
+  rv = nsExternalHelperAppService::DoContent(aMimeContentType, aURI, aWindowContext, aAbortProcess, aStreamListener);
+  
+  // this is important!! if do content for the base class returned any success code, then assume we are done
+  // and don't even play around with 
+  if (NS_SUCCEEDED(rv)) return NS_OK;
+  
+  // there is no registry on linux (like there is on win32)
   *aStreamListener = nsnull;
   return NS_OK;
 }
@@ -138,8 +158,6 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIFile * aTempFile, n
     return NS_ERROR_FAILURE;
 }
 
-
-// FIX ME --> implement
 NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
   // look up the protocol scheme in the windows registry....if we find a match then we have a handler for it...
@@ -147,56 +165,34 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
   return NS_OK;
 }
 
-// FIX ME --> implement
 NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 {
-	nsresult rv = NS_OK;
-#if 0
-  // use internet config to launch the uri
-	nsXPIDLCString	uriStr;
-	aURL->GetSpec( getter_Copies( uriStr));
-
-	OSStatus err;
-	ICInstance inst;
-	long startSel;
-	long endSel = nsCRT::strlen( (const char *)uriStr);
-
-	err = ICStart(&inst, 'MOSS');
-	if (err == noErr) 
-  {
-		err = ICFindConfigFile( inst, 0, nil);
-		if (err == noErr) 
-    {
-			startSel = 0;
-			err = ICLaunchURL(inst, "\p", (char *)((const char *) uriStr), endSel, &startSel, &endSel);
-			if (err == noErr)
-				rv = NS_OK;
-		}
- 		(void) ICStop(inst);
- 	}
-  #endif
-  return rv;
+  return NS_ERROR_FAILURE;
 }
 
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
 {
-  // FIX ME....the incoming path is a mac specific path...create an nsIFile that represents this mac file spec and
-  // return it.
+  nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_PROGID));
+  nsresult rv = NS_OK;
 
-  return NS_ERROR_FAILURE;
+  if (localFile)
+  {
+    if (localFile)
+      localFile->InitWithUnicodePath(platformAppPath);
+    *aFile = localFile;
+    NS_IF_ADDREF(*aFile);
+  }
+  else
+    rv = NS_ERROR_FAILURE;
+
+  return rv;
 }
 
 nsresult nsOSHelperAppService::CreateStreamListenerWithApp(nsIFile * aApplicationToUse, const char * aFileExtension, nsIStreamListener ** aStreamListener)
 {
   nsresult rv = NS_OK;
-  // FIX ME.....create an nsExternalApplication instance given aApplicationToUse as the application the user
-  // has told us he wants to use for this content type.
-  // return that external application 
   
   // create an application that represents this app name...
-
-  // here's the windows code to be used as an example
-#if 0
   nsExternalApplication * application = nsnull;
   NS_NEWXPCOM(application, nsExternalApplication);
   NS_IF_ADDREF(application);
@@ -211,7 +207,6 @@ nsresult nsOSHelperAppService::CreateStreamListenerWithApp(nsIFile * aApplicatio
   }
 
   NS_IF_RELEASE(application);
-#endif
   
   return rv;
 }
