@@ -364,7 +364,8 @@ static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *a
 
 NS_IMETHODIMP DeviceContextImpl::FirstExistingFont(const nsFont& aFont, nsString& aFaceName)
 {
-  if (aFont.EnumerateFamilies(FontEnumCallback, &FontEnumData(this, aFaceName))) {
+  FontEnumData  data(this, aFaceName);
+  if (aFont.EnumerateFamilies(FontEnumCallback, &data)) {
     return NS_ERROR_FAILURE;  // ran out
   }
   return NS_OK;
@@ -441,7 +442,8 @@ nsresult DeviceContextImpl::AliasFont(const nsString& aFont,
       if (NS_OK == CheckFontExistence(aAlias)) {
         nsString* entry = aAlias.ToNewString();
         if (nsnull != entry) {
-          mFontAliasTable->Put(&StringKey(aFont), entry);
+          StringKey key(aFont);
+          mFontAliasTable->Put(&key, entry);
         }
         else {
           result = NS_ERROR_OUT_OF_MEMORY;
@@ -450,7 +452,8 @@ nsresult DeviceContextImpl::AliasFont(const nsString& aFont,
       else if ((aAltAlias.Length() > 0) && (NS_OK == CheckFontExistence(aAltAlias))) {
         nsString* entry = aAltAlias.ToNewString();
         if (nsnull != entry) {
-          mFontAliasTable->Put(&StringKey(aFont), entry);
+          StringKey key(aFont);
+          mFontAliasTable->Put(&key, entry);
         }
         else {
           result = NS_ERROR_OUT_OF_MEMORY;
@@ -474,7 +477,8 @@ NS_IMETHODIMP DeviceContextImpl::GetLocalFontName(const nsString& aFaceName, nsS
   }
 
   if (nsnull != mFontAliasTable) {
-    const nsString* alias = (const nsString*)mFontAliasTable->Get(&StringKey(aFaceName));
+    StringKey key(aFaceName);
+    const nsString* alias = (const nsString*)mFontAliasTable->Get(&key);
     if (nsnull != alias) {
       aLocalName = *alias;
       aAliased = PR_TRUE;

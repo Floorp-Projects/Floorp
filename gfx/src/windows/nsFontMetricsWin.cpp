@@ -183,7 +183,8 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
   logFont.lfHeight = - LONG(rounded * app2dev);  // this floor rounding is to make ours compatible with Nav 4.0
 
   logFont.lfFaceName[0] = '\0';
-  mFont->EnumerateFamilies(FontEnumCallback, &FontEnumData(aContext, logFont.lfFaceName)); 
+  FontEnumData  data(aContext, logFont.lfFaceName);
+  mFont->EnumerateFamilies(FontEnumCallback, &data); 
 
   // Create font handle from font spec
   mFontHandle = ::CreateFontIndirect(&logFont);
