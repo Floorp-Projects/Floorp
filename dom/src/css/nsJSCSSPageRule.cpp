@@ -48,7 +48,7 @@ static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 // CSSPageRule property ids
 //
 enum CSSPageRule_slots {
-  CSSPAGERULE_NAME = -1,
+  CSSPAGERULE_SELECTORTEXT = -1,
   CSSPAGERULE_STYLE = -2
 };
 
@@ -72,12 +72,12 @@ GetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case CSSPAGERULE_NAME:
+      case CSSPAGERULE_SELECTORTEXT:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_NAME, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_SELECTORTEXT, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
           nsAutoString prop;
-          rv = a->GetName(prop);
+          rv = a->GetSelectorText(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
           }
@@ -130,31 +130,15 @@ SetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case CSSPAGERULE_NAME:
+      case CSSPAGERULE_SELECTORTEXT:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_NAME, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_SELECTORTEXT, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           nsAutoString prop;
           nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-          rv = a->SetName(prop);
+          rv = a->SetSelectorText(prop);
           
-        }
-        break;
-      }
-      case CSSPAGERULE_STYLE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSPAGERULE_STYLE, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMCSSStyleDeclaration* prop;
-          if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kICSSStyleDeclarationIID, NS_ConvertASCIItoUCS2("CSSStyleDeclaration"),
-                                                  cx, *vp)) {
-            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
-          }
-      
-          rv = a->SetStyle(prop);
-          NS_IF_RELEASE(prop);
         }
         break;
       }
@@ -227,8 +211,8 @@ JSClass CSSPageRuleClass = {
 //
 static JSPropertySpec CSSPageRuleProperties[] =
 {
-  {"name",    CSSPAGERULE_NAME,    JSPROP_ENUMERATE},
-  {"style",    CSSPAGERULE_STYLE,    JSPROP_ENUMERATE},
+  {"selectorText",    CSSPAGERULE_SELECTORTEXT,    JSPROP_ENUMERATE},
+  {"style",    CSSPAGERULE_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

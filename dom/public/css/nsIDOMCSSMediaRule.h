@@ -29,7 +29,8 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMCSSRule.h"
 
-class nsIDOMCSSStyleRuleCollection;
+class nsIDOMMediaList;
+class nsIDOMCSSRuleList;
 
 #define NS_IDOMCSSMEDIARULE_IID \
  { 0xa6cf90bc, 0x15b3, 0x11d2, \
@@ -39,10 +40,9 @@ class nsIDOMCSSMediaRule : public nsIDOMCSSRule {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSMEDIARULE_IID; return iid; }
 
-  NS_IMETHOD    GetMediaTypes(nsString& aMediaTypes)=0;
-  NS_IMETHOD    SetMediaTypes(const nsString& aMediaTypes)=0;
+  NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia)=0;
 
-  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules)=0;
+  NS_IMETHOD    GetCssRules(nsIDOMCSSRuleList** aCssRules)=0;
 
   NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn)=0;
 
@@ -51,18 +51,16 @@ public:
 
 
 #define NS_DECL_IDOMCSSMEDIARULE   \
-  NS_IMETHOD    GetMediaTypes(nsString& aMediaTypes);  \
-  NS_IMETHOD    SetMediaTypes(const nsString& aMediaTypes);  \
-  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules);  \
+  NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia);  \
+  NS_IMETHOD    GetCssRules(nsIDOMCSSRuleList** aCssRules);  \
   NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn);  \
   NS_IMETHOD    DeleteRule(PRUint32 aIndex);  \
 
 
 
 #define NS_FORWARD_IDOMCSSMEDIARULE(_to)  \
-  NS_IMETHOD    GetMediaTypes(nsString& aMediaTypes) { return _to GetMediaTypes(aMediaTypes); } \
-  NS_IMETHOD    SetMediaTypes(const nsString& aMediaTypes) { return _to SetMediaTypes(aMediaTypes); } \
-  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules) { return _to GetCssRules(aCssRules); } \
+  NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia) { return _to GetMedia(aMedia); } \
+  NS_IMETHOD    GetCssRules(nsIDOMCSSRuleList** aCssRules) { return _to GetCssRules(aCssRules); } \
   NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn) { return _to InsertRule(aRule, aIndex, aReturn); }  \
   NS_IMETHOD    DeleteRule(PRUint32 aIndex) { return _to DeleteRule(aIndex); }  \
 

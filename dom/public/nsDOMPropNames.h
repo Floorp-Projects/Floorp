@@ -30,6 +30,7 @@
 #define nsDOMPropNames_h__
 
 #define NS_DOM_PROP_NAMES \
+    "abstractview.document", \
     "appcoresmanager.add", \
     "appcoresmanager.find", \
     "appcoresmanager.remove", \
@@ -181,12 +182,15 @@
     "cssmediarule.cssrules", \
     "cssmediarule.deleterule", \
     "cssmediarule.insertrule", \
-    "cssmediarule.mediatypes", \
-    "csspagerule.name", \
+    "cssmediarule.media", \
+    "csspagerule.selectortext", \
     "csspagerule.style", \
     "cssrule.csstext", \
-    "cssrule.sheet", \
+    "cssrule.parentrule", \
+    "cssrule.parentstylesheet", \
     "cssrule.type", \
+    "cssrulelist.item", \
+    "cssrulelist.length", \
     "cssstyledeclaration.csstext", \
     "cssstyledeclaration.getpropertycssvalue", \
     "cssstyledeclaration.getpropertypriority", \
@@ -198,16 +202,10 @@
     "cssstyledeclaration.setproperty", \
     "cssstylerule.selectortext", \
     "cssstylerule.style", \
-    "cssstylerulecollection.item", \
-    "cssstylerulecollection.length", \
     "cssstylesheet.cssrules", \
     "cssstylesheet.deleterule", \
-    "cssstylesheet.href", \
     "cssstylesheet.insertrule", \
-    "cssstylesheet.media", \
-    "cssstylesheet.owningnode", \
-    "cssstylesheet.parentstylesheet", \
-    "cssstylesheet.title", \
+    "cssstylesheet.ownerrule", \
     "cssvalue.csstext", \
     "cssvalue.valuetype", \
     "document.createattribute", \
@@ -227,12 +225,14 @@
     "document.getelementsbytagnamens", \
     "document.implementation", \
     "document.importnode", \
+    "documentstyle.stylesheets", \
     "documenttype.entities", \
     "documenttype.internalsubset", \
     "documenttype.name", \
     "documenttype.notations", \
     "documenttype.publicid", \
     "documenttype.systemid", \
+    "documentview.defaultview", \
     "domexception.code", \
     "domexception.message", \
     "domexception.name", \
@@ -630,6 +630,7 @@
     "keyevent.keycode", \
     "keyevent.metakey", \
     "keyevent.shiftkey", \
+    "linkstyle.sheet", \
     "location.hash", \
     "location.host", \
     "location.hostname", \
@@ -639,6 +640,11 @@
     "location.protocol", \
     "location.search", \
     "location.tostring", \
+    "medialist.append", \
+    "medialist.delete", \
+    "medialist.item", \
+    "medialist.length", \
+    "medialist.mediatext", \
     "mimetype.description", \
     "mimetype.enabledplugin", \
     "mimetype.suffixes", \
@@ -710,7 +716,6 @@
     "nsdocument.createelementwithnamespace", \
     "nsdocument.createrange", \
     "nsdocument.height", \
-    "nsdocument.stylesheets", \
     "nsdocument.width", \
     "nshtmlanchorelement.hash", \
     "nshtmlanchorelement.host", \
@@ -846,10 +851,14 @@
     "selection.tostring", \
     "selectionlistener.notifyselectionchanged", \
     "stylesheet.disabled", \
-    "stylesheet.readonly", \
+    "stylesheet.href", \
+    "stylesheet.media", \
+    "stylesheet.ownernode", \
+    "stylesheet.parentstylesheet", \
+    "stylesheet.title", \
     "stylesheet.type", \
-    "stylesheetcollection.item", \
-    "stylesheetcollection.length", \
+    "stylesheetlist.item", \
+    "stylesheetlist.length", \
     "text.splittext", \
     "textrange.rangeend", \
     "textrange.rangestart", \

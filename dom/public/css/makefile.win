@@ -33,7 +33,6 @@ EXPORTS= \
   nsIDOMCSSRuleList.h \
   nsIDOMCSSStyleDeclaration.h \
   nsIDOMCSSStyleRule.h \
-  nsIDOMCSSStyleRuleCollection.h \
   nsIDOMCSSStyleSheet.h \
   nsIDOMCSSUnknownRule.h \
   nsIDOMCSSValue.h

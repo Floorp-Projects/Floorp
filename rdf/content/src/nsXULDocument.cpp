@@ -66,9 +66,10 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMScriptObjectFactory.h"
-#include "nsIDOMStyleSheetCollection.h"
+#include "nsIDOMStyleSheetList.h"
 #include "nsIDOMText.h"
 #include "nsIDOMXULElement.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIDTD.h"
 #include "nsIDocumentObserver.h"
 #include "nsIFormControl.h"
@@ -584,6 +585,9 @@ nsXULDocument::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(NS_GET_IID(nsIDOMNSDocument))) {
         *result = NS_STATIC_CAST(nsIDOMNSDocument*, this);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIDOMDocumentView))) {
+        *result = NS_STATIC_CAST(nsIDOMDocumentView*, this);
     }
     else if (iid.Equals(NS_GET_IID(nsIJSScriptObject))) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
@@ -2597,7 +2601,7 @@ nsXULDocument::DestroyForwardReferences()
 //
 
 NS_IMETHODIMP
-nsXULDocument::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
+nsXULDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
 {
     NS_NOTREACHED("nsXULDocument::GetStyleSheets");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -2659,6 +2663,13 @@ NS_IMETHODIMP
 nsXULDocument::CreateRange(nsIDOMRange** aRange)
 {
     NS_NOTREACHED("nsXULDocument::CreateRange");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
+{
+    NS_NOTREACHED("nsXULDocument::GetDefaultView");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -124,11 +124,11 @@
 #include "nsIDOMNSHTMLFormElement.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMLocation.h"
-#include "nsIDOMStyleSheetCollection.h"
+#include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSS2Properties.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSStyleRule.h"
-#include "nsIDOMCSSStyleRuleCollection.h"
+#include "nsIDOMCSSRuleList.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMSelectionListener.h"
@@ -722,9 +722,9 @@ void XXXDomNeverCalled()
     NS_NewJSEventListener(0, 0, 0);
     NS_NewScriptCSS2Properties(0, 0, 0, 0);
     NS_NewScriptCSSStyleSheet(0, 0, 0, 0);
-    NS_NewScriptStyleSheetCollection(0, 0, 0, 0);
+    NS_NewScriptStyleSheetList(0, 0, 0, 0);
     NS_NewScriptCSSStyleRule(0, 0, 0, 0);
-    NS_NewScriptCSSStyleRuleCollection(0, 0, 0, 0);
+    NS_NewScriptCSSRuleList(0, 0, 0, 0);
     NS_NewScriptRange(0, 0, 0, 0);
     NS_NewScriptSelection(0, 0, 0, 0);
     NS_NewScriptSelectionListener(0, 0, 0, 0);

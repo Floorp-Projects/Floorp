@@ -35,6 +35,7 @@
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
 #include "nsIDOMNavigator.h"
+#include "nsIDOMDocumentView.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMBarProp.h"
 #include "nsIDOMAbstractView.h"
@@ -53,6 +54,7 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
+static NS_DEFINE_IID(kIDocumentViewIID, NS_IDOMDOCUMENTVIEW_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIBarPropIID, NS_IDOMBARPROP_IID);
 static NS_DEFINE_IID(kIAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
@@ -103,7 +105,8 @@ enum Window_slots {
   WINDOW_PAGEXOFFSET = -31,
   WINDOW_PAGEYOFFSET = -32,
   WINDOW_SCROLLX = -33,
-  WINDOW_SCROLLY = -34
+  WINDOW_SCROLLY = -34,
+  ABSTRACTVIEW_DOCUMENT = -35
 };
 
 /***********************************************************************/
@@ -511,6 +514,26 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           rv = a->GetScrollY(&prop);
           if (NS_SUCCEEDED(rv)) {
             *vp = INT_TO_JSVAL(prop);
+          }
+        }
+        break;
+      }
+      case ABSTRACTVIEW_DOCUMENT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ABSTRACTVIEW_DOCUMENT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMDocumentView* prop;
+          nsIDOMAbstractView* b;
+          if (NS_OK == a->QueryInterface(kIAbstractViewIID, (void **)&b)) {
+            rv = b->GetDocument(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
         }
         break;
@@ -2570,6 +2593,7 @@ static JSPropertySpec WindowProperties[] =
   {"pageYOffset",    WINDOW_PAGEYOFFSET,    JSPROP_ENUMERATE},
   {"scrollX",    WINDOW_SCROLLX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"scrollY",    WINDOW_SCROLLY,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"document",    ABSTRACTVIEW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

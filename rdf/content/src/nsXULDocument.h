@@ -35,6 +35,7 @@
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMDocumentView.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
@@ -67,6 +68,7 @@
 
 class nsIAtom;
 class nsIElementFactory;
+class nsIDOMStyleSheetList;
 class nsILoadGroup;
 class nsIRDFResource;
 class nsIRDFService;
@@ -89,6 +91,7 @@ class nsXULDocument : public nsIDocument,
                       public nsIXULDocument,
                       public nsIStreamLoadableDocument,
                       public nsIDOMXULDocument,
+                      public nsIDOMDocumentView,
                       public nsIDOMNSDocument,
                       public nsIDOMEventCapturer,
                       public nsIJSScriptObject,
@@ -330,8 +333,11 @@ public:
     // nsIDOMDocument interface
     NS_DECL_IDOMDOCUMENT
 
+    // nsIDOMDocumentView interface
+    NS_DECL_IDOMDOCUMENTVIEW
+
     // nsIDOMNSDocument interface
-    NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets);
+    NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets);
     NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet);
     NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aResult);
     NS_IMETHOD    CreateRange(nsIDOMRange** aRange);

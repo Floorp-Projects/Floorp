@@ -58,6 +58,7 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentView.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMKeyListener.h"
@@ -1646,9 +1647,7 @@ GlobalWindowImpl::UpdateCommands(const nsString& anAction)
   else
   {
     // See if we contain a XUL document.
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    GetDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(domDoc);
+    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(mDocument);
     if (xulDoc) {
       // Retrieve the command dispatcher and call updateCommands on it.
       nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher;
@@ -2380,8 +2379,21 @@ NS_IMETHODIMP GlobalWindowImpl::Deactivate()
 // GlobalWindowImpl::nsIDOMAbstractView
 //*****************************************************************************   
 
-//NS_IMETHODIMP GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
-// implemented by nsIDOMWindow
+NS_IMETHODIMP GlobalWindowImpl::GetDocument(nsIDOMDocumentView** aDocumentView)
+{
+   NS_ENSURE_ARG_POINTER(aDocumentView);
+
+   nsresult rv = NS_OK;
+
+   if (mDocument) {
+      rv = mDocument->QueryInterface(NS_GET_IID(nsIDOMDocumentView),
+                                     (void **)aDocumentView);
+   } else {
+      *aDocumentView = nsnull;
+   }
+
+   return rv;
+}
 
 //*****************************************************************************
 // GlobalWindowImpl: Window Control Functions

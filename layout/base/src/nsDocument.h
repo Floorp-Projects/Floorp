@@ -27,7 +27,9 @@
 #include "nsWeakPtr.h"
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentView.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMDocumentStyle.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDiskDocument.h"
 #include "nsIScriptObjectOwner.h"
@@ -40,7 +42,7 @@
 #include "nsIPrincipal.h"
 
 class nsIEventListenerManager;
-class nsDOMStyleSheetCollection;
+class nsDOMStyleSheetList;
 class nsIOutputStream;
 class nsDocument;
 
@@ -109,6 +111,8 @@ protected:
 class nsDocument : public nsIDocument, 
                    public nsIDOMDocument, 
                    public nsIDOMNSDocument,
+                   public nsIDOMDocumentStyle,
+                   public nsIDOMDocumentView,
                    public nsIDiskDocument,
                    public nsIJSScriptObject,
                    public nsSupportsWeakReference,
@@ -345,7 +349,7 @@ public:
   NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn);
   NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
   NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);
-  NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets);
+  NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets);
   NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet);
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, 
                                            const nsString& aNameSpace, 
@@ -356,6 +360,9 @@ public:
                      
   // nsIDOMNode interface
   NS_DECL_IDOMNODE
+
+  // nsIDOMDocumentView
+  NS_DECL_IDOMDOCUMENTVIEW
 
   // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -448,7 +455,7 @@ protected:
   nsIEventListenerManager* mListenerManager;
   PRInt8 mDisplaySelection;
   PRBool mInDestructor;
-  nsDOMStyleSheetCollection *mDOMStyleSheets;
+  nsDOMStyleSheetList *mDOMStyleSheets;
   nsINameSpaceManager* mNameSpaceManager;
   nsDocHeaderData* mHeaderData;
   nsILineBreaker* mLineBreaker;

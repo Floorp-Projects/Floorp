@@ -34,30 +34,24 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMStyleSheet.h"
-#include "nsIDOMCSSStyleRuleCollection.h"
+#include "nsIDOMCSSRule.h"
+#include "nsIDOMCSSRuleList.h"
 #include "nsIDOMCSSStyleSheet.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIStyleSheetIID, NS_IDOMSTYLESHEET_IID);
-static NS_DEFINE_IID(kICSSStyleRuleCollectionIID, NS_IDOMCSSSTYLERULECOLLECTION_IID);
+static NS_DEFINE_IID(kICSSRuleIID, NS_IDOMCSSRULE_IID);
+static NS_DEFINE_IID(kICSSRuleListIID, NS_IDOMCSSRULELIST_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
 
 //
 // CSSStyleSheet property ids
 //
 enum CSSStyleSheet_slots {
-  CSSSTYLESHEET_OWNINGNODE = -1,
-  CSSSTYLESHEET_PARENTSTYLESHEET = -2,
-  CSSSTYLESHEET_HREF = -3,
-  CSSSTYLESHEET_TITLE = -4,
-  CSSSTYLESHEET_MEDIA = -5,
-  CSSSTYLESHEET_CSSRULES = -6
+  CSSSTYLESHEET_OWNERRULE = -1,
+  CSSSTYLESHEET_CSSRULES = -2
 };
 
 /***********************************************************************/
@@ -80,64 +74,15 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case CSSSTYLESHEET_OWNINGNODE:
+      case CSSSTYLESHEET_OWNERRULE:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_OWNINGNODE, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_OWNERRULE, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          nsIDOMNode* prop;
-          rv = a->GetOwningNode(&prop);
+          nsIDOMCSSRule* prop;
+          rv = a->GetOwnerRule(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case CSSSTYLESHEET_PARENTSTYLESHEET:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_PARENTSTYLESHEET, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMStyleSheet* prop;
-          rv = a->GetParentStyleSheet(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case CSSSTYLESHEET_HREF:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_HREF, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetHref(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
-      case CSSSTYLESHEET_TITLE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_TITLE, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetTitle(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
-      case CSSSTYLESHEET_MEDIA:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_MEDIA, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetMedia(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
           }
         }
         break;
@@ -146,7 +91,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLESHEET_CSSRULES, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          nsIDOMCSSStyleRuleCollection* prop;
+          nsIDOMCSSRuleList* prop;
           rv = a->GetCssRules(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
@@ -347,11 +292,7 @@ JSClass CSSStyleSheetClass = {
 //
 static JSPropertySpec CSSStyleSheetProperties[] =
 {
-  {"owningNode",    CSSSTYLESHEET_OWNINGNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"parentStyleSheet",    CSSSTYLESHEET_PARENTSTYLESHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"href",    CSSSTYLESHEET_HREF,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"title",    CSSSTYLESHEET_TITLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"media",    CSSSTYLESHEET_MEDIA,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"ownerRule",    CSSSTYLESHEET_OWNERRULE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"cssRules",    CSSSTYLESHEET_CSSRULES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };

@@ -29,6 +29,7 @@ DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 CPPSRCS =			 \
 	nsBarProps.cpp           \
 	nsDOMException.cpp 	 \
+	nsJSAbstractView.cpp	 \
 	nsJSBarProp.cpp          \
 	nsJSDOMException.cpp	\
 	nsJSEnvironment.cpp	 \

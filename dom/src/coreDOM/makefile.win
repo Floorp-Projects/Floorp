@@ -35,18 +35,21 @@ CPPSRCS =				\
 	nsJSCharacterData.cpp		\
 	nsJSDocument.cpp		\
 	nsJSDocumentFragment.cpp	\
+	nsJSDocumentStyle.cpp		\
 	nsJSDocumentType.cpp		\
+	nsJSDocumentView.cpp		\
 	nsJSElement.cpp			\
 	nsJSEntity.cpp			\
 	nsJSEntityReference.cpp		\
+	nsJSMediaList.cpp		\
 	nsJSNamedNodeMap.cpp		\
 	nsJSNode.cpp			\
 	nsJSNodeList.cpp		\
 	nsJSNotation.cpp		\
 	nsJSProcessingInstruction.cpp	\
-	nsJSText.cpp			\
 	nsJSStyleSheet.cpp		\
-	nsJSStyleSheetCollection.cpp	\
+	nsJSStyleSheetList.cpp		\
+	nsJSText.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -57,18 +60,21 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsJSCharacterData.obj		\
 	.\$(OBJDIR)\nsJSDocument.obj			\
 	.\$(OBJDIR)\nsJSDocumentFragment.obj		\
+	.\$(OBJDIR)\nsJSDocumentStyle.obj		\
 	.\$(OBJDIR)\nsJSDocumentType.obj		\
+	.\$(OBJDIR)\nsJSDocumentView.obj		\
 	.\$(OBJDIR)\nsJSElement.obj			\
 	.\$(OBJDIR)\nsJSEntity.obj			\
 	.\$(OBJDIR)\nsJSEntityReference.obj		\
+	.\$(OBJDIR)\nsJSMediaList.obj			\
 	.\$(OBJDIR)\nsJSNamedNodeMap.obj		\
 	.\$(OBJDIR)\nsJSNode.obj			\
 	.\$(OBJDIR)\nsJSNodeList.obj			\
 	.\$(OBJDIR)\nsJSNotation.obj			\
 	.\$(OBJDIR)\nsJSProcessingInstruction.obj	\
-	.\$(OBJDIR)\nsJSText.obj			\
 	.\$(OBJDIR)\nsJSStyleSheet.obj			\
-	.\$(OBJDIR)\nsJSStyleSheetCollection.obj	\
+	.\$(OBJDIR)\nsJSStyleSheetList.obj		\
+	.\$(OBJDIR)\nsJSText.obj			\
 	$(NULL)
 
 

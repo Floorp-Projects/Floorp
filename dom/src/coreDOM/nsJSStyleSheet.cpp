@@ -34,13 +34,17 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMStyleSheet.h"
+#include "nsIDOMMediaList.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_IDOMSTYLESHEET_IID);
+static NS_DEFINE_IID(kIMediaListIID, NS_IDOMMEDIALIST_IID);
 
 //
 // StyleSheet property ids
@@ -48,7 +52,11 @@ static NS_DEFINE_IID(kIStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 enum StyleSheet_slots {
   STYLESHEET_TYPE = -1,
   STYLESHEET_DISABLED = -2,
-  STYLESHEET_READONLY = -3
+  STYLESHEET_OWNERNODE = -3,
+  STYLESHEET_PARENTSTYLESHEET = -4,
+  STYLESHEET_HREF = -5,
+  STYLESHEET_TITLE = -6,
+  STYLESHEET_MEDIA = -7
 };
 
 /***********************************************************************/
@@ -95,14 +103,65 @@ GetStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case STYLESHEET_READONLY:
+      case STYLESHEET_OWNERNODE:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_STYLESHEET_READONLY, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_STYLESHEET_OWNERNODE, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          PRBool prop;
-          rv = a->GetReadOnly(&prop);
+          nsIDOMNode* prop;
+          rv = a->GetOwnerNode(&prop);
           if (NS_SUCCEEDED(rv)) {
-            *vp = BOOLEAN_TO_JSVAL(prop);
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case STYLESHEET_PARENTSTYLESHEET:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_STYLESHEET_PARENTSTYLESHEET, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMStyleSheet* prop;
+          rv = a->GetParentStyleSheet(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case STYLESHEET_HREF:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_STYLESHEET_HREF, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetHref(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case STYLESHEET_TITLE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_STYLESHEET_TITLE, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetTitle(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case STYLESHEET_MEDIA:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_STYLESHEET_MEDIA, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMMediaList* prop;
+          rv = a->GetMedia(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
           }
         }
         break;
@@ -225,7 +284,11 @@ static JSPropertySpec StyleSheetProperties[] =
 {
   {"type",    STYLESHEET_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"disabled",    STYLESHEET_DISABLED,    JSPROP_ENUMERATE},
-  {"readOnly",    STYLESHEET_READONLY,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"ownerNode",    STYLESHEET_OWNERNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"parentStyleSheet",    STYLESHEET_PARENTSTYLESHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"href",    STYLESHEET_HREF,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"title",    STYLESHEET_TITLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"media",    STYLESHEET_MEDIA,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

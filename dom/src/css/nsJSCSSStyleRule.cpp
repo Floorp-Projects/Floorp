@@ -142,22 +142,6 @@ SetCSSStyleRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case CSSSTYLERULE_STYLE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLERULE_STYLE, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMCSSStyleDeclaration* prop;
-          if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kICSSStyleDeclarationIID, NS_ConvertASCIItoUCS2("CSSStyleDeclaration"),
-                                                  cx, *vp)) {
-            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
-          }
-      
-          rv = a->SetStyle(prop);
-          NS_IF_RELEASE(prop);
-        }
-        break;
-      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -228,7 +212,7 @@ JSClass CSSStyleRuleClass = {
 static JSPropertySpec CSSStyleRuleProperties[] =
 {
   {"selectorText",    CSSSTYLERULE_SELECTORTEXT,    JSPROP_ENUMERATE},
-  {"style",    CSSSTYLERULE_STYLE,    JSPROP_ENUMERATE},
+  {"style",    CSSSTYLERULE_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

@@ -2,7 +2,7 @@ interface CSSStyleDeclaration {
  /* IID: { 0xa6cf90be, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-  attribute DOMString        cssText;
+           attribute DOMString        cssText;
                                         // raises(DOMException) on setting
 
   DOMString          getPropertyValue(in DOMString propertyName);

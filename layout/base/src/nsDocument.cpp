@@ -46,11 +46,13 @@
 #include "nsContentList.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMStyleSheet.h"
-#include "nsIDOMStyleSheetCollection.h"
+#include "nsIDOMStyleSheetList.h"
 #include "nsDOMAttribute.h"
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMDOMImplementation.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
 #include "nsGenericElement.h"
 
 #include "nsICSSStyleSheet.h"
@@ -104,7 +106,6 @@ static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIPostDataIID, NS_IPOSTDATA_IID);
-static NS_DEFINE_IID(kIDOMStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_IID);
 static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 static NS_DEFINE_IID(kIDOMDOMImplementationIID, NS_IDOMDOMIMPLEMENTATION_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
@@ -126,16 +127,16 @@ static NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
 #include "nsIHTMLDocument.h"
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
-class nsDOMStyleSheetCollection : public nsIDOMStyleSheetCollection,
-                                  public nsIScriptObjectOwner,
-                                  public nsIDocumentObserver
+class nsDOMStyleSheetList : public nsIDOMStyleSheetList,
+                            public nsIScriptObjectOwner,
+                            public nsIDocumentObserver
 {
 public:
-  nsDOMStyleSheetCollection(nsIDocument *aDocument);
-  virtual ~nsDOMStyleSheetCollection();
+  nsDOMStyleSheetList(nsIDocument *aDocument);
+  virtual ~nsDOMStyleSheetList();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IDOMSTYLESHEETCOLLECTION
+  NS_DECL_IDOMSTYLESHEETLIST
   
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD EndUpdate(nsIDocument *aDocument) { return NS_OK; }
@@ -202,7 +203,7 @@ protected:
   void*         mScriptObject;
 };
 
-nsDOMStyleSheetCollection::nsDOMStyleSheetCollection(nsIDocument *aDocument)
+nsDOMStyleSheetList::nsDOMStyleSheetList(nsIDocument *aDocument)
 {
   NS_INIT_REFCNT();
   mLength = -1;
@@ -213,7 +214,7 @@ nsDOMStyleSheetCollection::nsDOMStyleSheetCollection(nsIDocument *aDocument)
   mScriptObject = nsnull;
 }
 
-nsDOMStyleSheetCollection::~nsDOMStyleSheetCollection()
+nsDOMStyleSheetList::~nsDOMStyleSheetList()
 {
   if (nsnull != mDocument) {
     mDocument->RemoveObserver(this);
@@ -221,46 +222,18 @@ nsDOMStyleSheetCollection::~nsDOMStyleSheetCollection()
   mDocument = nsnull;
 }
 
-NS_IMPL_ADDREF(nsDOMStyleSheetCollection)
-NS_IMPL_RELEASE(nsDOMStyleSheetCollection)
+NS_IMPL_ADDREF(nsDOMStyleSheetList)
+NS_IMPL_RELEASE(nsDOMStyleSheetList)
 
-nsresult 
-nsDOMStyleSheetCollection::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  if (NULL == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(kIDOMStyleSheetCollectionIID)) {
-    nsIDOMStyleSheetCollection *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    nsIScriptObjectOwner *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDocumentObserverIID)) {
-    nsIDocumentObserver *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMStyleSheetCollection *tmp = this;
-    nsISupports *tmp2 = tmp;
-    *aInstancePtrResult = (void*) tmp2;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsDOMStyleSheetList)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheetList)
+   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
+   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStyleSheetList)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP    
-nsDOMStyleSheetCollection::GetLength(PRUint32* aLength)
+nsDOMStyleSheetList::GetLength(PRUint32* aLength)
 {
   if (nsnull != mDocument) {
     // XXX Find the number and then cache it. We'll use the 
@@ -293,7 +266,7 @@ nsDOMStyleSheetCollection::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP    
-nsDOMStyleSheetCollection::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
+nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
 {
   *aReturn = nsnull;
   if (nsnull != mDocument) {
@@ -321,19 +294,19 @@ nsDOMStyleSheetCollection::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
 }
 
 NS_IMETHODIMP 
-nsDOMStyleSheetCollection::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+nsDOMStyleSheetList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
 
   if (nsnull == mScriptObject) {
-    nsISupports *supports = (nsISupports *)(nsIDOMStyleSheetCollection *)this;
+    nsISupports *supports = (nsISupports *)(nsIDOMStyleSheetList *)this;
     nsISupports *parent = (nsISupports *)mDocument;
 
     // XXX Should be done through factory
-    res = NS_NewScriptStyleSheetCollection(aContext, 
-                                           supports,
-                                           parent,
-                                           (void**)&mScriptObject);
+    res = NS_NewScriptStyleSheetList(aContext, 
+                                     supports,
+                                     parent,
+                                     (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
 
@@ -341,15 +314,15 @@ nsDOMStyleSheetCollection::GetScriptObject(nsIScriptContext *aContext, void** aS
 }
 
 NS_IMETHODIMP 
-nsDOMStyleSheetCollection::SetScriptObject(void* aScriptObject)
+nsDOMStyleSheetList::SetScriptObject(void* aScriptObject)
 {
   mScriptObject = aScriptObject;
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsDOMStyleSheetCollection::StyleSheetAdded(nsIDocument *aDocument,
-                                           nsIStyleSheet* aStyleSheet)
+nsDOMStyleSheetList::StyleSheetAdded(nsIDocument *aDocument,
+                                     nsIStyleSheet* aStyleSheet)
 {
   if (-1 != mLength) {
     nsIDOMStyleSheet *domss;
@@ -363,8 +336,8 @@ nsDOMStyleSheetCollection::StyleSheetAdded(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP 
-nsDOMStyleSheetCollection::StyleSheetRemoved(nsIDocument *aDocument,
-                                             nsIStyleSheet* aStyleSheet)
+nsDOMStyleSheetList::StyleSheetRemoved(nsIDocument *aDocument,
+                                       nsIStyleSheet* aStyleSheet)
 {
   if (-1 != mLength) {
     nsIDOMStyleSheet *domss;
@@ -378,7 +351,7 @@ nsDOMStyleSheetCollection::StyleSheetRemoved(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsDOMStyleSheetCollection::DocumentWillBeDestroyed(nsIDocument *aDocument)
+nsDOMStyleSheetList::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
   if (nsnull != mDocument) {
     aDocument->RemoveObserver(this);
@@ -735,6 +708,18 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDOMNSDocumentIID)) {
     nsIDOMNSDocument* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMDocumentStyle))) {
+    nsIDOMDocumentStyle* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMDocumentView))) {
+    nsIDOMDocumentView* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -2048,10 +2033,10 @@ nsDocument::GetElementsByTagName(const nsString& aTagname,
 }
 
 NS_IMETHODIMP    
-nsDocument::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
+nsDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
 {
   if (nsnull == mDOMStyleSheets) {
-    mDOMStyleSheets = new nsDOMStyleSheetCollection(this);
+    mDOMStyleSheets = new nsDOMStyleSheetList(this);
     if (nsnull == mDOMStyleSheets) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2083,6 +2068,17 @@ NS_IMETHODIMP
 nsDocument::CreateRange(nsIDOMRange** aReturn)
 {
   return NS_NewRange(aReturn);
+}
+
+
+NS_IMETHODIMP
+nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultView);
+
+  *aDefaultView = nsnull;
+
+  return NS_OK;
 }
 
 

@@ -1,4 +1,4 @@
-      interface Window {
+interface Window {
 /* IID: { 0xa6cf906b, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
         
@@ -80,19 +80,21 @@
 
 				DOMString escape(in DOMString str);
         DOMString unescape(in DOMString str);
-      };
+};
 
-     interface EventTarget {
+interface EventTarget {
  /* IID: { 0x1c773b30, 0xd1cf, 0x11d2, \
   { 0xbd, 0x95, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4 } } */
 
 	   void	addEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
 	   void	removeEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
-	 };
+};
 
-     interface AbstractView {
+// Introduced in DOM Level 2:
+interface AbstractView {
  /* IID: { 0xf51ebade, 0x8b1a, 0x11d3, \
   { 0xaa, 0xe7, 0x00, 0x10, 0x83, 0x01, 0x23, 0xb4 } } */
 
-      noscript readonly attribute  Document document;
-   };
+  readonly attribute DocumentView     document;
+};
+

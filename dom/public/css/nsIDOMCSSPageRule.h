@@ -39,27 +39,24 @@ class nsIDOMCSSPageRule : public nsIDOMCSSRule {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSPAGERULE_IID; return iid; }
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
+  NS_IMETHOD    GetSelectorText(nsString& aSelectorText)=0;
+  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText)=0;
 
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle)=0;
 };
 
 
 #define NS_DECL_IDOMCSSPAGERULE   \
-  NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetSelectorText(nsString& aSelectorText);  \
+  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText);  \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle);  \
 
 
 
 #define NS_FORWARD_IDOMCSSPAGERULE(_to)  \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetSelectorText(nsString& aSelectorText) { return _to GetSelectorText(aSelectorText); } \
+  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText) { return _to SetSelectorText(aSelectorText); } \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to GetStyle(aStyle); } \
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle) { return _to SetStyle(aStyle); } \
 
 
 extern "C" NS_DOM nsresult NS_InitCSSPageRuleClass(nsIScriptContext *aContext, void **aPrototype);

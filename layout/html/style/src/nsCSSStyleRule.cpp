@@ -990,16 +990,10 @@ public:
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 
   // nsIDOMCSSRule interface
-  NS_IMETHOD    GetType(PRUint16* aType);
-  NS_IMETHOD    GetCssText(nsString& aCssText);
-  NS_IMETHOD    SetCssText(const nsString& aCssText);
-  NS_IMETHOD    GetSheet(nsIDOMCSSStyleSheet** aSheet);
+  NS_DECL_IDOMCSSRULE
 
   // nsIDOMCSSStyleRule interface
-  NS_IMETHOD    GetSelectorText(nsString& aSelectorText);
-  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText);
-  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
-  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle);
+  NS_DECL_IDOMCSSSTYLERULE
 
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
@@ -3230,13 +3224,19 @@ CSSStyleRuleImpl::SetCssText(const nsString& aCssText)
 }
 
 NS_IMETHODIMP    
-CSSStyleRuleImpl::GetSheet(nsIDOMCSSStyleSheet** aSheet)
+CSSStyleRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
   if (nsnull != mSheet) {
     return mSheet->QueryInterface(kIDOMCSSStyleSheetIID, (void**)aSheet);
   }
   *aSheet = nsnull;
   return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
@@ -3270,13 +3270,6 @@ CSSStyleRuleImpl::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   *aStyle = mDOMDeclaration;
   NS_ADDREF(mDOMDeclaration);
   
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CSSStyleRuleImpl::SetStyle(nsIDOMCSSStyleDeclaration* aStyle)
-{
-  // XXX TBI
   return NS_OK;
 }
 

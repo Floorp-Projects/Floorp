@@ -28,6 +28,9 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
+class nsIDOMNode;
+class nsIDOMStyleSheet;
+class nsIDOMMediaList;
 
 #define NS_IDOMSTYLESHEET_IID \
  { 0xa6cf9080, 0x15b3, 0x11d2, \
@@ -42,7 +45,15 @@ public:
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;
 
-  NS_IMETHOD    GetReadOnly(PRBool* aReadOnly)=0;
+  NS_IMETHOD    GetOwnerNode(nsIDOMNode** aOwnerNode)=0;
+
+  NS_IMETHOD    GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)=0;
+
+  NS_IMETHOD    GetHref(nsString& aHref)=0;
+
+  NS_IMETHOD    GetTitle(nsString& aTitle)=0;
+
+  NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia)=0;
 };
 
 
@@ -50,7 +61,11 @@ public:
   NS_IMETHOD    GetType(nsString& aType);  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
-  NS_IMETHOD    GetReadOnly(PRBool* aReadOnly);  \
+  NS_IMETHOD    GetOwnerNode(nsIDOMNode** aOwnerNode);  \
+  NS_IMETHOD    GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet);  \
+  NS_IMETHOD    GetHref(nsString& aHref);  \
+  NS_IMETHOD    GetTitle(nsString& aTitle);  \
+  NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia);  \
 
 
 
@@ -58,7 +73,11 @@ public:
   NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
-  NS_IMETHOD    GetReadOnly(PRBool* aReadOnly) { return _to GetReadOnly(aReadOnly); } \
+  NS_IMETHOD    GetOwnerNode(nsIDOMNode** aOwnerNode) { return _to GetOwnerNode(aOwnerNode); } \
+  NS_IMETHOD    GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet) { return _to GetParentStyleSheet(aParentStyleSheet); } \
+  NS_IMETHOD    GetHref(nsString& aHref) { return _to GetHref(aHref); } \
+  NS_IMETHOD    GetTitle(nsString& aTitle) { return _to GetTitle(aTitle); } \
+  NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia) { return _to GetMedia(aMedia); } \
 
 
 extern "C" NS_DOM nsresult NS_InitStyleSheetClass(nsIScriptContext *aContext, void **aPrototype);

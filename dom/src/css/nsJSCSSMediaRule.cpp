@@ -34,21 +34,23 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
-#include "nsIDOMCSSStyleRuleCollection.h"
+#include "nsIDOMMediaList.h"
+#include "nsIDOMCSSRuleList.h"
 #include "nsIDOMCSSMediaRule.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kICSSStyleRuleCollectionIID, NS_IDOMCSSSTYLERULECOLLECTION_IID);
+static NS_DEFINE_IID(kIMediaListIID, NS_IDOMMEDIALIST_IID);
+static NS_DEFINE_IID(kICSSRuleListIID, NS_IDOMCSSRULELIST_IID);
 static NS_DEFINE_IID(kICSSMediaRuleIID, NS_IDOMCSSMEDIARULE_IID);
 
 //
 // CSSMediaRule property ids
 //
 enum CSSMediaRule_slots {
-  CSSMEDIARULE_MEDIATYPES = -1,
+  CSSMEDIARULE_MEDIA = -1,
   CSSMEDIARULE_CSSRULES = -2
 };
 
@@ -72,14 +74,15 @@ GetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case CSSMEDIARULE_MEDIATYPES:
+      case CSSMEDIARULE_MEDIA:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSMEDIARULE_MEDIATYPES, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSMEDIARULE_MEDIA, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetMediaTypes(prop);
+          nsIDOMMediaList* prop;
+          rv = a->GetMedia(&prop);
           if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
           }
         }
         break;
@@ -88,7 +91,7 @@ GetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSMEDIARULE_CSSRULES, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          nsIDOMCSSStyleRuleCollection* prop;
+          nsIDOMCSSRuleList* prop;
           rv = a->GetCssRules(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
@@ -130,18 +133,7 @@ SetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case CSSMEDIARULE_MEDIATYPES:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSMEDIARULE_MEDIATYPES, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-          rv = a->SetMediaTypes(prop);
-          
-        }
-        break;
-      }
+      case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -300,7 +292,7 @@ JSClass CSSMediaRuleClass = {
 //
 static JSPropertySpec CSSMediaRuleProperties[] =
 {
-  {"mediaTypes",    CSSMEDIARULE_MEDIATYPES,    JSPROP_ENUMERATE},
+  {"media",    CSSMEDIARULE_MEDIA,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"cssRules",    CSSMEDIARULE_CSSRULES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
