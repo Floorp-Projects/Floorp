@@ -27,8 +27,9 @@
 #include "nsIFileTransportService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsISupportsArray.h"
-
-static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
+#include "nsXPIDLString.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
@@ -58,7 +59,7 @@ static int PR_CALLBACK cacheDirectoryChanged(const char *pref, void *closure)
     return NS_OK;
 }
 
-static nsresult InstallPrefListeners(nsDiskCacheDevice* device)
+static nsresult installPrefListeners(nsDiskCacheDevice* device)
 {
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
@@ -69,30 +70,37 @@ static nsresult InstallPrefListeners(nsDiskCacheDevice* device)
 		return rv;
 
 	nsCOMPtr<nsILocalFile> cacheDirectory;
-    rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs( cacheDirectory ));
+    rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs(cacheDirectory));
     if (NS_FAILED(rv)) {
+#if DEBUG
+        // XXX use current process directory during development only.
         nsCOMPtr<nsIFile> currentProcessDir;
         rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
                                     getter_AddRefs(currentProcessDir));
     	if (NS_FAILED(rv))
     		return rv;
 
-        // XXX use current process directory during development only.
         cacheDirectory = do_QueryInterface(currentProcessDir, &rv);
+    	if (NS_FAILED(rv))
+    		return rv;
+        rv = cacheDirectory->Append("Cache");
     	if (NS_FAILED(rv))
     		return rv;
         rv = prefs->SetFileXPref(CACHE_DIR_PREF, cacheDirectory);
     	if (NS_FAILED(rv))
     		return rv;
+#else
+        return rv;
+#endif
+    } else {
+        // cause the preference to be set up initially.
+        device->setCacheDirectory(cacheDirectory);
     }
-    
-    // cause the preference to be set up initially.
-    device->setCacheDirectory(cacheDirectory);
     
     return NS_OK;
 }
 
-static nsresult RemovePrefListeners(nsDiskCacheDevice* device)
+static nsresult removePrefListeners(nsDiskCacheDevice* device)
 {
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
@@ -108,23 +116,76 @@ static nsresult RemovePrefListeners(nsDiskCacheDevice* device)
 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
+class DiskCacheEntry : public nsISupports {
+public:
+    NS_DECL_ISUPPORTS
+
+    DiskCacheEntry()
+        :   mDirty(PR_FALSE)
+    {
+    }
+
+    nsCOMPtr<nsITransport>& getTransport(nsCacheAccessMode mode)
+    {
+        return mTransports[mode - 1];
+    }
+    
+    PRBool isDirty()
+    {
+        return mDirty;
+    }
+    
+    void setDirty(PRBool dirty)
+    {
+        mDirty = dirty;
+    }
+
+private:
+    nsCOMPtr<nsITransport> mTransports[3];
+    PRBool mDirty;
+};
+NS_IMPL_ISUPPORTS0(DiskCacheEntry);
+
+static DiskCacheEntry*
+getDiskCacheEntry(nsCacheEntry * entry)
+{
+    nsCOMPtr<nsISupports> data;
+    entry->GetData(getter_AddRefs(data));
+    return (DiskCacheEntry*) data.get();
+}
+
+static DiskCacheEntry*
+ensureDiskCacheEntry(nsCacheEntry * entry)
+{
+    nsCOMPtr<nsISupports> data;
+    nsresult rv = entry->GetData(getter_AddRefs(data));
+    if (NS_SUCCEEDED(rv) && !data) {
+        data = new DiskCacheEntry();
+        if (NS_SUCCEEDED(rv) && data)
+            entry->SetData(data.get());
+    }
+    return (DiskCacheEntry*) data.get();
+}
+
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
 nsDiskCacheDevice::nsDiskCacheDevice()
-    :   mTotalCachedDataSize(LL_ZERO)
+    :   mScannedEntries(PR_FALSE), mTotalCachedDataSize(LL_ZERO)
 {
 }
 
 nsDiskCacheDevice::~nsDiskCacheDevice()
 {
-    RemovePrefListeners(this);
+    removePrefListeners(this);
 }
 
 nsresult
 nsDiskCacheDevice::Init()
 {
-    nsresult rv = InstallPrefListeners(this);
+    nsresult rv = installPrefListeners(this);
     if (NS_FAILED(rv)) return rv;
     
-    rv = mInactiveEntries.Init();
+    rv = mCachedEntries.Init();
     if (NS_FAILED(rv)) return rv;
     
     return  NS_OK;
@@ -156,7 +217,17 @@ nsDiskCacheDevice::GetDeviceID()
 nsCacheEntry *
 nsDiskCacheDevice::FindEntry(nsCString * key)
 {
-    nsCacheEntry * entry = mInactiveEntries.GetEntry(key);
+#if 0
+    // XXX eager scanning of entries is probably not necessary.
+    if (!mScannedEntries) {
+        scanEntries();
+        mScannedEntries = PR_TRUE;
+    }
+#endif
+
+    // XXX look in entry hashtable first, if not found, then look on
+    // disk, to see if we have a disk cache entry that maches.
+    nsCacheEntry * entry = mCachedEntries.GetEntry(key);
     if (!entry)  return nsnull;
 
     //** need nsCacheService::CreateEntry();
@@ -170,23 +241,46 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
 nsresult
 nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
-    nsCString * key = entry->Key();
-
-    nsCacheEntry * ourEntry = mInactiveEntries.GetEntry(key);
+    nsCString* key = entry->Key();
+    nsCacheEntry * ourEntry = mCachedEntries.GetEntry(key);
     NS_ASSERTION(ourEntry, "DeactivateEntry called for an entry we don't have!");
     if (!ourEntry)
         return NS_ERROR_INVALID_POINTER;
 
     //** update disk entry from nsCacheEntry
     //** MarkInactive(); // to make it evictable again
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // XXX how do we know if the entry has been updated since opening the entry?
+    DiskCacheEntry* diskEntry = getDiskCacheEntry(entry);
+    if (diskEntry && diskEntry->isDirty()) {
+        nsCOMPtr<nsIFile> file;
+        nsresult rv = getFileForEntry(entry, PR_TRUE, getter_AddRefs(file));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsITransport> transport;
+        rv = getTransportForFile(file, nsICache::ACCESS_WRITE, getter_AddRefs(transport));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIOutputStream> output;
+        rv = transport->OpenOutputStream(0, -1, 0, getter_AddRefs(output));
+        if (NS_FAILED(rv)) return rv;
+        
+        // write the key to the file.
+        PRUint32 count = nsCRT::strlen(key->get());
+        rv = output->Write(key->get(), count, &count);
+        output->Close();
+        
+        // mark the disk entry as being consistent with meta data file.
+        diskEntry->setDirty(PR_FALSE);
+    }
+    entry->MarkInactive();
+    return NS_OK;
 }
 
 
 nsresult
 nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
 {
-    nsresult  rv = mInactiveEntries.AddEntry(entry);
+    nsresult  rv = mCachedEntries.AddEntry(entry);
     if (NS_FAILED(rv))
         return rv;
 
@@ -200,34 +294,6 @@ nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-class PlaceHolder : public nsISupports {
-public:
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-    NS_IMETHOD_(nsrefcnt) AddRef(void) { return 1; }
-    NS_IMETHOD_(nsrefcnt) Release(void) { return 1; }
-};
-NS_IMPL_QUERY_INTERFACE0(PlaceHolder)
-static PlaceHolder gPlaceHolder;
-
-static nsresult
-getTransportArray(nsCacheEntry * entry, nsCOMPtr<nsISupportsArray>& array)
-{
-    nsCOMPtr<nsISupports> data;
-    nsresult rv = entry->GetData(getter_AddRefs(data));
-    if (NS_SUCCEEDED(rv) && data) {
-        array = do_QueryInterface(data, &rv);
-    } else {
-        rv = NS_NewISupportsArray(getter_AddRefs(array));
-        if (NS_SUCCEEDED(rv) && array) {
-            entry->SetData(array.get());
-            array->AppendElement(&gPlaceHolder);
-            array->AppendElement(&gPlaceHolder);
-            array->AppendElement(&gPlaceHolder);
-        }
-    }
-    return rv;
-}
-
 nsresult
 nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
                                         nsCacheAccessMode mode, 
@@ -236,45 +302,24 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
     NS_ENSURE_ARG_POINTER(entry);
     NS_ENSURE_ARG_POINTER(result);
 
-    // Could keep an array of the 3 distinct access modes cached.
-    nsCOMPtr<nsISupportsArray> array;
-    nsresult rv = getTransportArray(entry, array);
-    if (NS_FAILED(rv))
-        return rv;
+    DiskCacheEntry* diskEntry = ensureDiskCacheEntry(entry);
+    if (!diskEntry) return NS_ERROR_OUT_OF_MEMORY;
 
-    PRUint32 transportIndex = (mode - 1);
-    rv = array->QueryElementAt(transportIndex, NS_GET_IID(nsITransport), (void**)result);
-    if (NS_FAILED(rv)) {
-        NS_WITH_SERVICE(nsIFileTransportService, service, kFileTransportServiceCID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            // XXX generate the name of the cache entry from the hash code of its key,
-            // modulo the number of files we're willing to keep cached.
-            nsCOMPtr<nsIFile> entryFile;
-            rv = getFileForEntry(entry, getter_AddRefs(entryFile));
-            if (NS_SUCCEEDED(rv)) {
-                PRInt32 ioFlags;
-                switch (mode) {
-                case nsICache::ACCESS_READ:
-                    ioFlags = PR_RDONLY;
-                    break;
-                case nsICache::ACCESS_WRITE:
-                    ioFlags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
-                    break;
-                case nsICache::ACCESS_READ_WRITE:
-                    ioFlags = PR_RDWR | PR_CREATE_FILE;
-                    break;
-                }
-                nsCOMPtr<nsITransport> transport;
-                rv = service->CreateTransport(entryFile, ioFlags, PR_IRUSR | PR_IWUSR,
-                                              getter_AddRefs(transport));
-                if (NS_SUCCEEDED(rv)) {
-                    array->SetElementAt(transportIndex, transport.get());
-                    NS_ADDREF(*result = transport);
-                }
-            }
-        }
+    nsCOMPtr<nsITransport>& transport = diskEntry->getTransport(mode);
+    if (transport) {
+        NS_ADDREF(*result = transport);
+        return NS_OK;
     }
-    
+       
+    // XXX generate the name of the cache entry from the hash code of its key,
+    // modulo the number of files we're willing to keep cached.
+    nsCOMPtr<nsIFile> entryFile;
+    nsresult rv = getFileForEntry(entry, PR_FALSE, getter_AddRefs(entryFile));
+    if (NS_SUCCEEDED(rv)) {
+        rv = getTransportForFile(entryFile, mode, getter_AddRefs(transport));
+        if (NS_SUCCEEDED(rv))
+            NS_ADDREF(*result = transport);
+    }
     return rv;
 }
 
@@ -287,6 +332,8 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
     PRInt64 deltaSize64;
     LL_I2L(deltaSize64, deltaSize);
     LL_ADD(mTotalCachedDataSize, mTotalCachedDataSize, deltaSize64);
+    DiskCacheEntry* diskEntry = getDiskCacheEntry(entry);
+    if (diskEntry) diskEntry->setDirty(PR_TRUE);
     return NS_OK;
 }
 
@@ -295,7 +342,7 @@ void nsDiskCacheDevice::setCacheDirectory(nsILocalFile* cacheDirectory)
     mCacheDirectory = cacheDirectory;
 }
 
-nsresult nsDiskCacheDevice::getFileForEntry(nsCacheEntry * entry, nsIFile ** result)
+nsresult nsDiskCacheDevice::getFileForEntry(nsCacheEntry * entry, PRBool meta, nsIFile ** result)
 {
     if (mCacheDirectory) {
         nsCOMPtr<nsIFile> entryFile;
@@ -305,12 +352,76 @@ nsresult nsDiskCacheDevice::getFileForEntry(nsCacheEntry * entry, nsIFile ** res
         // generate the hash code for this entry, and use that as a file name.
         PLDHashNumber hash = ::PL_DHashStringKey(NULL, entry->Key()->get());
         char name[32];
-        ::sprintf(name, "%08X", hash);
+        ::sprintf(name, "%08X%c", hash, (meta ? '.' : '\0'));
         entryFile->Append(name);
         NS_ADDREF(*result = entryFile);
         return NS_OK;
     }
     return NS_ERROR_NOT_AVAILABLE;
+}
+
+nsresult nsDiskCacheDevice::getTransportForFile(nsIFile* file, nsCacheAccessMode mode, nsITransport ** result)
+{
+    nsresult rv;
+    static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
+    NS_WITH_SERVICE(nsIFileTransportService, service, kFileTransportServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    PRInt32 ioFlags;
+    switch (mode) {
+    case nsICache::ACCESS_READ:
+        ioFlags = PR_RDONLY;
+        break;
+    case nsICache::ACCESS_WRITE:
+        ioFlags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
+        break;
+    case nsICache::ACCESS_READ_WRITE:
+        ioFlags = PR_RDWR | PR_CREATE_FILE;
+        break;
+    }
+    return service->CreateTransport(file, ioFlags, PR_IRUSR | PR_IWUSR, result);
+}
+
+/**
+ * Search the cache directory for already cached entries, and add them to mCachedEntries?
+ */
+nsresult nsDiskCacheDevice::scanEntries()
+{
+    nsCOMPtr<nsISimpleEnumerator> entries;
+    nsresult rv = mCacheDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+    if (NS_FAILED(rv)) return rv;
+    
+    for (PRBool more; NS_SUCCEEDED(entries->HasMoreElements(&more)) && more;) {
+        nsCOMPtr<nsISupports> next;
+        rv = entries->GetNext(getter_AddRefs(next));
+        if (NS_FAILED(rv)) break;
+        nsCOMPtr<nsIFile> file(do_QueryInterface(next, &rv));
+        if (NS_FAILED(rv)) break;
+        nsXPIDLCString name;
+        rv = file->GetLeafName(getter_Copies(name));
+        if (nsCRT::strlen(name) > 8) {
+            // this must be a metadata file, read the key in, and create an inactive entry for it.
+            nsCOMPtr<nsITransport> transport;
+            rv = getTransportForFile(file, nsICache::ACCESS_READ, getter_AddRefs(transport));
+            if (NS_FAILED(rv)) continue;
+            nsCOMPtr<nsIInputStream> input;
+            rv = transport->OpenInputStream(0, -1, 0, getter_AddRefs(input));
+            if (NS_FAILED(rv)) continue;
+            PRUint32 count;
+            rv = input->Available(&count);
+            if (NS_FAILED(rv)) continue;
+            char* buffer = new char[count + 1];
+            nsXPIDLCString owner;
+            *getter_Copies(owner) = buffer;
+            rv = input->Read(buffer, count, &count);
+            if (NS_FAILED(rv)) continue;
+            buffer[count] = '\0';
+            nsCString* key = new nsCString(buffer);
+            nsCacheEntry* cacheEntry = new nsCacheEntry(key, PR_TRUE, nsICache::STORE_ON_DISK);
+            rv = BindEntry(cacheEntry);
+        }
+    }
+
+    return NS_OK;
 }
 
 //** need methods for enumerating entries
