@@ -366,7 +366,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gInHTML,	&gInHTML,
     /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kHTMLContent,(kFlowEntity|kSelf), kNone,	
-    /*special props, prop-range*/       kOmitEndTag|kLegalOpen, kBodyPropRange,
+    /*special props, prop-range*/       kOmitEndTag, kBodyPropRange,
     /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_br,
@@ -927,7 +927,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          (kSpecial|kHeadMisc), kPCDATA, kNone,	
-    /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
+    /*special props, prop-range*/       kNoStyleLeaksIn|kLegalOpen, kNoPropRange,
     /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_script},
 
   { /*tag*/                             eHTMLTag_select,
@@ -1680,6 +1680,11 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsEntryStack& aTagStack,PRInt32
 PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
 
   if(IsContainer(mTagID)){
+
+    if(gHTMLElements[aChild].HasSpecialProperty(kLegalOpen)) {
+      // Some tags could be opened anywhere, in the document, as they please.
+      return PR_TRUE;
+    }
 
     if(mTagID==aChild) {
       return CanContainSelf();  //not many tags can contain themselves...
