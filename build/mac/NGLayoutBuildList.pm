@@ -657,7 +657,7 @@ sub MakeResourceAliases()
 	#//
 	my($chrome_dir) = "$dist_dir" . "Chrome:";
 	my($resource_dir) = "$dist_dir" . "res:";
-
+	my($samples_dir) = "$resource_dir" . "samples:";
 
 	#//
 	#// Make aliases of resource files
@@ -669,16 +669,11 @@ sub MakeResourceAliases()
 	MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",							"$html_dir");
 
 	my($throbber_dir) = "$resource_dir" . "throbber:";
-#	BuildFolderResourceAliases(":mozilla:xpfe:xpviewer:src:resources:throbber:",		"$throbber_dir");
 	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:throbber:",				"$throbber_dir");
 	
-	my($samples_dir) = "$resource_dir" . "samples:";
 	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:samples:",				"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:resources:",				"$samples_dir");
 	
-	my($toolbar_dir) = "$resource_dir" . "toolbar:";
-#	BuildFolderResourceAliases(":mozilla:xpfe:xpviewer:src:resources:toolbar:",			"$toolbar_dir");
-
 	my($rdf_dir) = "$resource_dir" . "rdf:";
 	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
 	
@@ -688,6 +683,8 @@ sub MakeResourceAliases()
 	BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:", 						"$samples_dir");
 	MakeAlias(":mozilla:xpfe:browser:samples:sampleimages:", 							"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:",							"$samples_dir");
+
+	my($toolbar_dir) = "$resource_dir" . "toolbar:";
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
 	MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
 	
@@ -715,7 +712,11 @@ sub MakeResourceAliases()
 		BuildFolderResourceAliases(":mozilla:mailnews:ui:preference:resources:",			"$msgpref_dir");
 	}	
 
-	MakeAlias(":mozilla:rdf:chrome:build:registry.rdf",								"$chrome_dir");
+	MakeAlias(":mozilla:rdf:chrome:build:registry.rdf",										"$chrome_dir");
+	
+	# Install XPFE component resources
+	InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",					"$samples_dir");
+
 }
 
 
@@ -838,6 +839,11 @@ sub BuildXPAppProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
+	# Components
+	BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp",	"FindComponent$D.shlb", "FindComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	
+	
+	# Applications
 	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:xpfe:AppCores:macbuild:AppCores.mcp",				"AppCores$D.shlb", "AppCores.toc", 1, $main::ALIAS_SYM_FILES, 0);
