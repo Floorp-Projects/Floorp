@@ -2670,15 +2670,20 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
     // 2) Iterate the entire set of namespace prefixes to see if the
     //    specified property's URI has any of them as a substring.
     //
+    nsresult rv;
 
-    nsXPIDLCString p;
-    aProperty->GetValue( getter_Copies(p) );
+    const char* p;
+    rv = aProperty->GetValueConst(&p);
+    if (NS_FAILED(rv)) return rv;
+
+    if (! p)
+        return NS_ERROR_UNEXPECTED;
+
     nsAutoString uri(p);
-
-    PRInt32 i;
 
     // First try to split the namespace using the rightmost '#' or '/'
     // character.
+    PRInt32 i;
     if ((i = uri.RFindChar('#')) < 0) {
         if ((i = uri.RFindChar('/')) < 0) {
             *aNameSpaceID = kNameSpaceID_None;
@@ -2698,8 +2703,6 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
     // XXX XUL atoms seem to all be in lower case. HTML atoms are in
     // upper case. This sucks.
     //tag.ToUpperCase();  // All XML is case sensitive even HTML in XML
- 
-    nsresult rv;
     PRInt32 nameSpaceID;
     rv = mNameSpaceManager->GetNameSpaceID(uri, nameSpaceID);
 
@@ -3251,14 +3254,8 @@ XULDocumentImpl::AddElementToMap(nsIContent* aElement, PRBool aDeep)
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                nsCAutoString uri;
-                rv = nsRDFContentUtils::MakeElementURI(NS_STATIC_CAST(nsIDocument*, this), value, uri);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create element URI");
-                if (NS_FAILED(rv)) return rv;
-            
                 nsCOMPtr<nsIRDFResource> resource;
-                rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
-                if (NS_FAILED(rv)) return rv;
+                rv = nsRDFContentUtils::MakeElementResource(this, value, getter_AddRefs(resource));
 
                 rv = mResources.Add(resource, aElement);
                 if (NS_FAILED(rv)) return rv;
@@ -3303,14 +3300,8 @@ XULDocumentImpl::RemoveElementFromMap(nsIContent* aElement, PRBool aDeep)
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                nsCAutoString uri;
-                rv = nsRDFContentUtils::MakeElementURI(NS_STATIC_CAST(nsIDocument*, this), value, uri);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create element URI");
-                if (NS_FAILED(rv)) return rv;
-            
                 nsCOMPtr<nsIRDFResource> resource;
-                rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
-                if (NS_FAILED(rv)) return rv;
+                rv = nsRDFContentUtils::MakeElementResource(this, value, getter_AddRefs(resource));
 
                 rv = mResources.Remove(resource, aElement);
                 if (NS_FAILED(rv)) return rv;
@@ -3511,17 +3502,11 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
     nsCOMPtr<nsIDOMElement> domRoot = do_QueryInterface(aPopupElement);
     domRoot->GetAttribute("id", idValue);
 
-    nsCAutoString uri;
-    rv = nsRDFContentUtils::MakeElementURI(this, idValue, uri);
-    if (NS_FAILED(rv)) return rv;
-
     // Use the absolute URL to retrieve a resource from the RDF
     // service that corresponds to the root content.
     nsCOMPtr<nsIRDFResource> rootResource;
-    if (NS_FAILED(rv = gRDFService->GetResource(uri, getter_AddRefs(rootResource)))) {
-      NS_ERROR("Uh-oh. Couldn't obtain the resource for the popup doc root.");
-      return rv;
-    }
+    rv = nsRDFContentUtils::MakeElementResource(this, idValue, getter_AddRefs(rootResource));
+    if (NS_FAILED(rv)) return rv;
 
     // Tell the builder to create its root from this resrouce.
     popupDoc->mXULBuilder->CreateRootContent(rootResource);
