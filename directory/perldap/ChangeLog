@@ -1,5 +1,7 @@
 1998-08-13  Leif Hedstrom  <leif@netscape.com>
 
+	* Makefile.PL: Fixed so that automated installs works.
+
 	* Conn.pm (update): Fixed narly bug with ldap_modify()...
 
 	* All: Cleaned up some hash indexes, to make sure they are

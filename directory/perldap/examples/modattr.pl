@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: modattr.pl,v 1.6 1998/08/13 09:12:51 leif Exp $
+# $Id: modattr.pl,v 1.7 1998/08/13 23:32:28 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -301,14 +301,12 @@ sufficient, e.g. I<CN>, I<UID> and I<MAIL>.
 
 =head1 AVAILABILITY
 
-The latest version of this script, and other related packages, are
-available from
+This package can be retrieved from a number of places, including:
 
-  http://www.mozilla.org/
+    http://www.mozilla.org/directory/
+    Your local CPAN server
 
-or your nearest CPAN archive.
-
-=head1 AUTHOR INFORMATION
+=head1 CREDITS
 
 This little tool was developed internally at Netscape, by Leif Hedstrom.
 
