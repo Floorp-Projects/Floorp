@@ -1485,7 +1485,12 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 NS_IMETHODIMP
 DocumentViewerImpl::SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet)
 {
-  mUAStyleSheet = dont_QueryInterface(aUAStyleSheet);
+  if (aUAStyleSheet) {
+    nsCOMPtr<nsICSSStyleSheet> sheet(do_QueryInterface(aUAStyleSheet));
+    nsCOMPtr<nsICSSStyleSheet> newSheet;
+    sheet->Clone(*getter_AddRefs(newSheet));
+    mUAStyleSheet = newSheet;
+  }
   return NS_OK;
 }
   
