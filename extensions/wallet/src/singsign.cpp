@@ -2566,6 +2566,7 @@ SI_FindValueInArgs(const nsAReadableString& results, const nsAReadableString& na
   }
   start.advance(name.Length()); /* get past the |name| part */
   barPos = start;
+  results.EndReading(end);
   FindCharInReadable(PRUnichar('|'), barPos, end);
   value = Substring(start, barPos);
 }
