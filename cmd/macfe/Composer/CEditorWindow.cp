@@ -25,6 +25,7 @@
 #include "CPatternButtonPopupText.h"
 #include "COpenRecentlyEditedPopup.h"
 #include "CColorPopup.h"
+#include "CColorCaption.h"
 
 #include "CEditDictionary.h"
 
