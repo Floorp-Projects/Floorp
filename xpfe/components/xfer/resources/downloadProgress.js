@@ -23,6 +23,7 @@
  */
 var data;   // nsIStreamTransferOperation object
 var dialog;
+var bundle = srGetStrBundle("chrome://global/locale/downloadProgress.properties");
 
 function loadDialog() {
     dialog.location.setAttribute( "value", data.source.URI.spec );
@@ -317,11 +318,11 @@ function onCompletion( status ) {
         // Close the window in 2 seconds (to ensure user sees we're done).
         window.setTimeout( "window.close();", 2000 );
     } catch ( exception ) {
-        dump( "Error setting close timeout\n" );
+        dump( "Error setting close timeout\n"); 
         // OK, try to just close the window immediately.
         window.close();
         // If that's not working either, change button text to give user a clue.
-        dialog.cancel.childNodes[0].nodeValue = "Close";
+        dialog.cancel.childNodes[0].nodeValue = bundle.GetStringFromName("close");
     }
 }
 
@@ -347,6 +348,6 @@ function onError( errorCode ) {
     } catch ( exception ) {
     }
     dump( "Error closing dialog\n" );  
-    onStatus( "Error.  Press Close button to close dialog." );
-    dialog.cancel.childNodes[0].nodeValue = "Close";
+    onStatus( bundle.GetStringFromName("error"));
+    dialog.cancel.childNodes[0].nodeValue = bundle.GetStringFromName("close");
 }
