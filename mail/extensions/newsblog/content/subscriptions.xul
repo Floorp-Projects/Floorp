@@ -56,6 +56,8 @@
   <script type="application/x-javascript" src="Feed.js" />
   <script type="application/x-javascript" src="FeedItem.js" />
 
+  <stringbundle id="bundle_newsblog" src="chrome://messenger-newsblog/locale/newsblog.properties"/>
+
   <!-- The global Mozilla scripts that implement drag-and-drop support -->
   <!--
   <script src="chrome://global/content/nsDragAndDrop.js"/>
@@ -67,43 +69,64 @@
   <separator class="thin"/>
 
   <hbox flex="1">
-    <tree id="subscriptions" flex="1" seltype="single" hidecolumnpicker="true"
-            datasources="rdf:null"
-            style="width: 100%"
-            ref="urn:forumzilla:root"
-            onselect="this.treeBoxObject.view.selectionChanged();"
-            ondraggesture="//nsDragAndDrop.startDrag(event, subscriptionsDragDropObserver);"
-            ondragover="//nsDragAndDrop.dragOver(event, subscriptionsDragDropObserver);"
-            ondragdrop="//nsDragAndDrop.drop(event, subscriptionsDragDropObserver);">
-        <template>
-            <rule>
-                <conditions>
-                    <content uri="?root"/>
-                    <triple subject="?root" predicate="urn:forumzilla:feeds" object="?feeds"/>
-                    <member container="?feeds" child="?feed"/>
-                </conditions>
-                <bindings>
-                    <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/title" object="?title"/>
-                    <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/identifier" object="?url"/>
-                </bindings>
-                <action>
-                    <treechildren flex="1">
-                        <treeitem uri="?feed">
-                            <treerow>
-                                <treecell src="" label="?title"/>
-                                <treecell src="" label="?url"/>
-                            </treerow>
-                        </treeitem>
-                    </treechildren>
-                </action>
-            </rule>
-        </template>
-        <treecols>
-            <treecol id="subs-name-column" flex="1" label="&feedNameTreeCol.label;" primary="true"/> 
-            <splitter class="tree-splitter"/>
-            <treecol id="subs-url-column" flex="3" label="&locationTreeCol.label;" hidden="false"/>
-        </treecols>
-    </tree>
+  <grid flex="1">
+    <columns>
+      <column flex="1"/>
+    </columns>
+
+    <rows>
+
+    <row flex="1">
+      <tree id="subscriptions" flex="1" seltype="single" hidecolumnpicker="true"
+              datasources="rdf:null"
+              style="width: 100%"
+              ref="urn:forumzilla:root"
+              onselect="this.treeBoxObject.view.selectionChanged();"
+              ondraggesture="//nsDragAndDrop.startDrag(event, subscriptionsDragDropObserver);"
+              ondragover="//nsDragAndDrop.dragOver(event, subscriptionsDragDropObserver);"
+              ondragdrop="//nsDragAndDrop.drop(event, subscriptionsDragDropObserver);">
+          <template>
+              <rule>
+                  <conditions>
+                      <content uri="?root"/>
+                      <triple subject="?root" predicate="urn:forumzilla:feeds" object="?feeds"/>
+                      <member container="?feeds" child="?feed"/>
+                  </conditions>
+                  <bindings>
+                      <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/title" object="?title"/>
+                      <binding subject="?feed" predicate="http://purl.org/dc/elements/1.1/identifier" object="?url"/>
+                  </bindings>
+                  <action>
+                      <treechildren flex="1">
+                          <treeitem uri="?feed">
+                              <treerow>
+                                  <treecell src="" label="?title"/>
+                                  <treecell src="" label="?url"/>
+                              </treerow>
+                          </treeitem>
+                      </treechildren>
+                  </action>
+              </rule>
+          </template>
+          <treecols>
+              <treecol id="subs-name-column" flex="1" label="&feedNameTreeCol.label;" primary="true"/> 
+              <splitter class="tree-splitter"/>
+              <treecol id="subs-url-column" flex="3" label="&locationTreeCol.label;" hidden="false"/>
+          </treecols>
+      </tree>
+    </row>
+      
+      <row>
+        <vbox>
+          <separator class="thin"/>
+          <hbox id="statusContainerBox" align="center">
+            <label id="statusText" class="statusbarpanel-text" crop="right" flex="1"/> 
+            <progressmeter id="progressMeter" collapsed="true" class="progressmeter-statusbar" style="margin-right: 5px;" mode="normal" value="0"/>
+          </hbox>
+        </vbox>
+      </row>
+    </rows>
+  </grid>
 
     <vbox>
         <button label="&addButton.label;" accesskey="&addButton.accesskey;" oncommand="doAdd();"/>

@@ -86,11 +86,6 @@ function addFeed(url, title, quickMode, destFolder) {
 		ds.Assert(id, FZ_DESTFOLDER, destFolder, true);
     ds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
     ds.Flush();
-    // Create a new feed object for the feed.
-    feed = new Feed(id);
-
-    // Downloading the feed synchronously will pick up the title.
-    feed.download(false, false);
 }
 
 

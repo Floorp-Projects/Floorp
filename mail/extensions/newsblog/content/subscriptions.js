@@ -1,18 +1,38 @@
-/*
- * Global Constants and Variables
- */
-
-// forumzilla.js gets loaded by the main mail window, which provides this,
-// but this script runs in its own window, which doesn't, so we need
-// to provide it ourselves.
-var accountManager =
-  Components
-    .classes["@mozilla.org/messenger/account-manager;1"]
-      .getService();
-
-/*
- * Event Handlers
- */
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the RSS Subscription UI
+ *
+ *
+ * Contributor(s):
+ *  Myk Melez <myk@mozilla.org) (Original Author)
+ *  David Bienvenu <bienvenu@nventure.com> 
+ *  Scott MacGregor <mscott@mozilla.org>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 function doLoad() {
     // Display the list of feed subscriptions.
@@ -31,37 +51,70 @@ function openFeedEditor(feedProperties)
     return feedProperties;
 } 
 
-function finishedDownloadingFeed(feed)
+
+// status helper routines
+
+function updateStatusItem(aID, aValue)
 {
-  // feed is null if our attempt to parse the feed failed
-  if (feed)
+  var el = document.getElementById(aID);
+  if (el.getAttribute('collapsed'))
+    el.removeAttribute('collapsed');
+
+  el.value = aValue;
+}
+
+function clearStatusInfo()
+{
+  document.getElementById('statusText').value = "";
+  document.getElementById('progressMeter').collapsed = true;
+}
+
+var feedDownloadCallback = {
+  downloaded: function(feed)
   {
-    debug("after download, feed name = " + feed.name + "\n");
+    // feed is null if our attempt to parse the feed failed
+    if (feed)
+    {
+      debug("after download, feed name = " + feed.name + "\n");
 
-    var server = getIncomingServer();
-    var folder;
-    try {
-        var folder = server.rootMsgFolder.getChildNamed(feed.name);
+      updateStatusItem('progressMeter', 100);
+      updateStatusItem('statusText', document.getElementById("bundle_newsblog").getString('subscribe-validFeedFound'));
+      updateStatusItem('statusText', 'Valid Feed Found!');
+
+      var server = getIncomingServer();
+      var folder;
+      try {
+          var folder = server.rootMsgFolder.getChildNamed(feed.name);
+      }
+      catch(e) {
+          // If we're here, it's probably because the folder doesn't exist yet,
+          // so create it.
+          debug("folder for new feed " + feed.name + " doesn't exist; creating");
+			    debug("creating " + feed.name + "as child of " + server.rootMsgFolder + "\n");
+          server.rootMsgFolder.createSubfolder(feed.name, getMessageWindow());
+          folder = server.rootMsgFolder.FindSubFolder(feed.name);
+          var msgdb = folder.getMsgDatabase(null);
+          var folderInfo = msgdb.dBFolderInfo;
+          folderInfo.setCharPtrProperty("feedUrl", feed.url);
+      }
+
+      // add feed just adds the feed we have validated and downloaded to the subscription UI. 
+      // it also flushes the subscription database
+      addFeed(feed.url, feed.name, null, folder); 
+    } 
+    else 
+    {
+      // Add some code to alert the user that the feed was not something we could understand...  
     }
-    catch(e) {
-        // If we're here, it's probably because the folder doesn't exist yet,
-        // so create it.
-        debug("folder for new feed " + feed.name + " doesn't exist; creating");
-			  debug("creating " + feed.name + "as child of " + server.rootMsgFolder + "\n");
-        server.rootMsgFolder.createSubfolder(feed.name, getMessageWindow());
-        folder = server.rootMsgFolder.FindSubFolder(feed.name);
-        var msgdb = folder.getMsgDatabase(null);
-        var folderInfo = msgdb.dBFolderInfo;
-        folderInfo.setCharPtrProperty("feedUrl", feed.url);
-    }
 
-    // XXX This should be something like "subscribe to feed".
-	  debug ("feed name = " + feed.name + "\n");
-    addFeed(feed.url, feed.name, null, folder); // add feed flushes the subscription database
+    // our operation is done...clear out the status text and progressmeter
+    setTimeout(clearStatusInfo, 1000);
+  },
 
-    // download the feed items now that we have a folder
-    feed.download();
-  }
+  onProgress: function(aProgress, aProgressMax)
+  {
+      updateStatusItem('progressMeter', (aProgress * 100) / aProgressMax);
+  },
 }
 
 function doAdd() {
@@ -85,7 +138,17 @@ function doAdd() {
 
     var itemResource = rdf.GetResource(feedProperties.feedLocation);
     feed = new Feed(itemResource);
-    feed.download(false, finishedDownloadingFeed);
+
+    // update status text
+    updateStatusItem('statusText', document.getElementById("bundle_newsblog").getString('subscribe-validating'));
+    updateStatusItem('progressMeter', 0);
+
+    // validate the feed and download the articles
+    // we used to pass false which caused us to skip parsing then we'd 
+    // turn around and download the feed again so we could actually parse the items...
+    // But now that this operation is asynch, just kick it off once...if we change this back
+    // modify feedDownloadCallback.downloaded to parse the feed...
+    feed.download(true, feedDownloadCallback);
 }
 
 function doEdit() {

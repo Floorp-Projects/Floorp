@@ -59,6 +59,7 @@ Feed.prototype.download = function(parseItems, aCallback) {
   this.parseItems = parseItems == null ? true : parseItems ? true : false;
 
   this.request = new XMLHttpRequest();
+  this.request.onprogress = Feed.onProgress; // must be set before calling .open
   this.request.open("GET", this.url, true);
 
   this.downloadCallback = aCallback; // may be null
@@ -81,7 +82,16 @@ Feed.onDownloaded = function(event) {
   feed.parse();
 
   if (feed.downloadCallback)
-    feed.downloadCallback(feed);
+    feed.downloadCallback.downloaded(feed);
+}
+
+Feed.onProgress = function(event) {
+  var request = event.target;
+  var url = request.channel.originalURI.spec;
+  var feed = gFzFeedCache[url];
+
+  if (feed.downloadCallback)
+    feed.downloadCallback.onProgress(event.position, event.totalSize);
 }
 
 Feed.onDownloadError = function(event) {
@@ -93,7 +103,7 @@ Feed.onDownloadError = function(event) {
   {
     debug(feed.title + " download failed");
     if (feed.downloadCallback)
-      feed.downloadCallback(nsnull);
+      feed.downloaded(nsnull);
   }
   throw("error downloading feed " + url);
 }

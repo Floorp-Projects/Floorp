@@ -18,6 +18,7 @@ newsblog.jar:
 
 newsblog.jar:
    locale/en-US/messenger-newsblog/newsblog.dtd                 (locale/newsblog.dtd)
+   locale/en-US/messenger-newsblog/newsblog.properties          (locale/newsblog.properties)
    locale/en-US/messenger-newsblog/feed-properties.dtd          (locale/feed-properties.dtd)
    locale/en-US/messenger-newsblog/am-newsblog.properties       (locale/am-newsblog.properties)
    locale/en-US/messenger-newsblog/am-newsblog.dtd              (locale/am-newsblog.dtd)
