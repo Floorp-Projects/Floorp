@@ -359,7 +359,6 @@ protected:
     static nsIAtom*             kWindowAtom;
     static nsIAtom*             kMenuButtonAtom;
     static nsIAtom*             kMenuListAtom;
-    static nsIAtom*             kTextAreaAtom;
     static nsIAtom*             kTextFieldAtom;
 
 public:
@@ -546,6 +545,8 @@ protected:
     // Helper routine that crawls a parent chain looking for a tree element.
     NS_IMETHOD GetParentTree(nsIDOMXULTreeElement** aTreeElement);
 
+    // XXX Both of these methods must die.
+    static PRBool IsFocusable(nsIAtom* aTag);
     PRBool IsFocusableContent();
 
     nsresult AddPopupListener(nsIAtom* aName);

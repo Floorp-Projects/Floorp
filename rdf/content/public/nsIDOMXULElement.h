@@ -33,8 +33,8 @@ class nsIDOMElement;
 class nsIDOMCSSStyleDeclaration;
 class nsIRDFCompositeDataSource;
 class nsIRDFResource;
-class nsIControllers;
 class nsIDOMNodeList;
+class nsIControllers;
 
 #define NS_IDOMXULELEMENT_IID \
  { 0x574ed81, 0xc088, 0x11d2, \
@@ -58,6 +58,8 @@ public:
   NS_IMETHOD    GetResource(nsIRDFResource** aResource)=0;
 
   NS_IMETHOD    GetControllers(nsIControllers** aControllers)=0;
+
+  NS_IMETHOD    GetAnonymousContent(nsIDOMNodeList** aAnonymousContent)=0;
 
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement)=0;
 
@@ -85,6 +87,7 @@ public:
   NS_IMETHOD    SetDatabase(nsIRDFCompositeDataSource* aDatabase);  \
   NS_IMETHOD    GetResource(nsIRDFResource** aResource);  \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers);  \
+  NS_IMETHOD    GetAnonymousContent(nsIDOMNodeList** aAnonymousContent);  \
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    DoCommand();  \
@@ -105,6 +108,7 @@ public:
   NS_IMETHOD    SetDatabase(nsIRDFCompositeDataSource* aDatabase) { return _to SetDatabase(aDatabase); } \
   NS_IMETHOD    GetResource(nsIRDFResource** aResource) { return _to GetResource(aResource); } \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers) { return _to GetControllers(aControllers); } \
+  NS_IMETHOD    GetAnonymousContent(nsIDOMNodeList** aAnonymousContent) { return _to GetAnonymousContent(aAnonymousContent); } \
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to AddBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to RemoveBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    DoCommand() { return _to DoCommand(); }  \

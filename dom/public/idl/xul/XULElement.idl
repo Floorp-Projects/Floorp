@@ -8,6 +8,7 @@ interface XULElement : Element {
                  attribute xpidl nsIRDFCompositeDataSource database;
         readonly attribute xpidl nsIRDFResource            resource;
         readonly attribute xpidl nsIControllers            controllers;
+        readonly attribute NodeList                        anonymousContent;
 
         void addBroadcastListener(in DOMString attr, in Element element);
         void removeBroadcastListener(in DOMString attr, in Element element);
