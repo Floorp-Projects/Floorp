@@ -175,7 +175,8 @@ nsIsIndexFrame::GetInputFrame(nsIPresContext* aPresContext,
 {
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
-  if (presShell) {
+  if (!mInputContent) NS_WARNING("null content - cannot restore state");
+  if (presShell && mInputContent) {
     nsIFrame *frame;
     presShell->GetPrimaryFrameFor(mInputContent, &frame);
     if (frame) {
