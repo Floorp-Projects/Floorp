@@ -54,7 +54,16 @@ public final class NativeCall extends IdScriptable {
     NativeCall(Context cx, Scriptable scope, NativeFunction funObj, 
                Scriptable thisObj, Object[] args)
     {
-        this(cx, scope, funObj, thisObj);
+        this.funObj = funObj;
+        this.thisObj = thisObj;
+        
+        setParentScope(scope);
+        // leave prototype null
+        
+        // save current activation
+        this.caller = cx.currentActivation;
+        cx.currentActivation = this;
+
         this.originalArgs = (args == null) ? ScriptRuntime.emptyArgs : args;
         
         // initialize values of arguments
@@ -71,21 +80,7 @@ public final class NativeCall extends IdScriptable {
         super.put("arguments", this, new Arguments(this));
     }
     
-    NativeCall(Context cx, Scriptable scope, NativeFunction funObj, 
-               Scriptable thisObj)
-    {
-        this.funObj = funObj;
-        this.thisObj = thisObj;
-        
-        setParentScope(scope);
-        // leave prototype null
-        
-        // save current activation
-        this.caller = cx.currentActivation;
-        cx.currentActivation = this;
-    }
-    
-    NativeCall() {
+    private NativeCall() {
     }
 
     public String getClassName() {

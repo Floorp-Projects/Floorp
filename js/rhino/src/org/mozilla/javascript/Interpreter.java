@@ -786,8 +786,8 @@ public class Interpreter extends LabelTable {
                             iCodeTop = addByte((byte) TokenStream.ONE, iCodeTop);
                         else {
                             iCodeTop = addByte((byte) TokenStream.NUMBER, iCodeTop);
-                       	    iCodeTop = addNumber(num, iCodeTop);
-                       	}
+                            iCodeTop = addNumber(num, iCodeTop);
+                        }
                 }
                 itsStackDepth++;
                 if (itsStackDepth > itsData.itsMaxStack)
@@ -1722,9 +1722,6 @@ public class Interpreter extends LabelTable {
                         stack[stackTop] = ScriptRuntime.call(cx, lhs, rhs, 
                                                              outArgs, 
                                                              calleeScope);
-                        if (theData.itsNeedsActivation) {
-                            ScriptRuntime.popActivation(cx);
-                        }
                         pc += 4;                                                            
                         break;
                     case TokenStream.NEW :

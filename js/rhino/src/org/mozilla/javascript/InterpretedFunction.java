@@ -81,9 +81,19 @@ class InterpretedFunction extends NativeFunction implements DebuggableScript {
             scope = itsClosure;
         else if (!itsData.itsUseDynamicScope)
             scope = getParentScope();
-        if (itsData.itsNeedsActivation)
+        
+        if (itsData.itsNeedsActivation) {
             scope = ScriptRuntime.initVarObj(cx, scope, this, thisObj, args);
-        return Interpreter.interpret(cx, scope, thisObj, args, this, itsData);
+        }
+        try {
+            return Interpreter.interpret(cx, scope, thisObj, args, this,
+                                         itsData);
+        }
+        finally {
+            if (itsData.itsNeedsActivation) {
+                ScriptRuntime.popActivation(cx);
+            }
+        }
     }
     
     public boolean isFunction() {
