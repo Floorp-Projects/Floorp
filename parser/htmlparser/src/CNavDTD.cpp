@@ -25,7 +25,6 @@
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h" 
 #include "nsScanner.h"
-//#include "nsVoidArray.h"
 #include "nsTokenHandler.h"
 #include "nsIDTDDebug.h"
 #include "prenv.h"  //this is here for debug reasons...
@@ -43,6 +42,11 @@
 #include <iostream.h>
 #endif
 #include "prmem.h"
+
+#define RICKG_DEBUG 0
+#ifdef  RICKG_DEBUG
+#include  <fstream.h>  
+#endif
 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -477,6 +481,7 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
   return result;
 }
 
+
 /**
   * This is called when it's time to read as many tokens from the tokenizer
   * as you can. Not all tokens may make sense, so you may not be able to
@@ -614,12 +619,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       PRBool isHeadChild=gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag);
       if((!isHeadChild) && (mHasOpenScript || (!FindTagInSet(theTag,docElements,sizeof(docElements)/sizeof(eHTMLTag_unknown))))){
           //really we want to push the token and all its skipped content and attributes...
-        if(0==mMisplacedContent.GetSize()){
-
-          CTokenRecycler* theRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
-          CToken* theBodyToken=theRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body);
-          mMisplacedContent.Push(theBodyToken);
-        }
         mMisplacedContent.Push(theToken);
         theToken=0; //force us to fall to bottom of this method...
         result=NS_ERROR_HTMLPARSER_MISPLACED;
@@ -627,6 +626,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
     } 
     
     if(theToken){
+
       CITokenHandler* theHandler=GetTokenHandler(theType);
       if(theHandler) {
         mParser=(nsParser*)aParser;
@@ -988,6 +988,15 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
   return result;
 }
 
+
+#ifdef  RICKG_DEBUG
+void WriteTokenToLog(CToken* aToken) {
+
+  static fstream outputStream("c:/temp/tokenlog.html",ios::out);
+  aToken->DebugDumpSource(outputStream); //write token without close bracket...
+}
+#endif
+
 /**
  * This gets called before we've handled a given start tag.
  * It's a generic hook to let us do pre processing.
@@ -1104,7 +1113,6 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
   return result;
 }
 
-
 /**
  *  This method gets called when a start token has been 
  *  encountered in the parse process. If the current container
@@ -1121,6 +1129,10 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
  */      
 nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
+
+  #ifdef  RICKG_DEBUG
+    WriteTokenToLog(aToken);
+  #endif
 
   //Begin by gathering up attributes...
   eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
@@ -1304,8 +1316,12 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
   nsresult    result=NS_OK;
   eHTMLTags   theChildTag=(eHTMLTags)aToken->GetTypeID();
-
   nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
+
+  #ifdef  RICKG_DEBUG
+    WriteTokenToLog(aToken);
+  #endif
+
   switch(theChildTag) {
 
     case eHTMLTag_script:
@@ -1358,6 +1374,11 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
 
   if(PR_FALSE==CanOmit(mBodyContext->Last(),eHTMLTag_entity)) {
     nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
+
+  #ifdef  RICKG_DEBUG
+    WriteTokenToLog(aToken);
+  #endif
+
     result=AddLeaf(aNode);
   }
   return result;
@@ -1376,6 +1397,10 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
 nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
   nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
+
+  #ifdef  RICKG_DEBUG
+    WriteTokenToLog(aToken);
+  #endif
 
   // You may find this hard to beleive, but this has to be here
   // so that the TBODY doesnt die when it sees a comment.
@@ -1480,6 +1505,11 @@ nsresult CNavDTD::HandleStyleToken(CToken* aToken){
 nsresult CNavDTD::HandleProcessingInstructionToken(CToken* aToken){
   NS_PRECONDITION(0!=aToken,kNullToken);
   nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
+
+  #ifdef  RICKG_DEBUG
+    WriteTokenToLog(aToken);
+  #endif
+
   nsresult result=(mSink) ? mSink->AddProcessingInstruction(aNode) : NS_OK; 
   return result;
 }
@@ -1501,6 +1531,11 @@ nsresult CNavDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
     for(attr=0;attr<aCount;attr++){
       CToken* theToken=mTokenizer->PopToken();
       if(theToken)  {
+
+  #ifdef  RICKG_DEBUG
+    WriteTokenToLog(theToken);
+  #endif
+
         aNode.AddAttribute(theToken);
       }
     }
@@ -1529,6 +1564,11 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
   if(theToken) {
     theType=eHTMLTokenTypes(theToken->GetTokenType());
     if(eToken_skippedcontent==theType) {
+
+  #ifdef  RICKG_DEBUG
+    WriteTokenToLog(theToken);
+  #endif
+
       aNode.SetSkippedContent(theToken);
       aCount++;
     } 
@@ -1566,6 +1606,29 @@ CITokenHandler* CNavDTD::GetTokenHandler(eHTMLTokenTypes aType) const {
  */
 void CNavDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
   if(aTokenizer){
+    if(!mHadBodyOrFrameset){
+      int index=0;
+      int max=mMisplacedContent.GetSize();
+      PRBool isBodyContent=PR_TRUE;
+      for(index=0;index<max;index++){
+        CToken* theToken=(CToken*)mMisplacedContent.ObjectAt(index);
+        if(theToken){
+          eHTMLTags theTag=(eHTMLTags)theToken->GetTypeID();
+        
+          static eHTMLTags frameTags[]={eHTMLTag_frame,eHTMLTag_noframes,eHTMLTag_frameset};
+          if(FindTagInSet(theTag,frameTags,sizeof(frameTags)/sizeof(eHTMLTag_unknown))) {
+            isBodyContent=PR_FALSE;
+            break;
+          }
+        }
+      } //for
+      if(isBodyContent){
+        CTokenRecycler* theRecycler=(CTokenRecycler*)aTokenizer->GetTokenRecycler();
+        CToken* theBodyToken=theRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body);
+        mMisplacedContent.PushFront(theBodyToken);
+        //mMisplacedContent.PushFront(theBodyToken);
+      }
+    }
     aTokenizer->PrependTokens(mMisplacedContent);
   }
 }
