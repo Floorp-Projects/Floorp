@@ -22,7 +22,7 @@
 DEPTH           = ../../../../..
 topsrcdir       = @top_srcdir@
 srcdir          = @srcdir@
-VPATH           = @srcdir@:@srcdir@/xmltok:@srcdir@/xmlparse
+VPATH           = @srcdir@ @srcdir@/xmltok @srcdir@/xmlparse
 
 include $(DEPTH)/config/autoconf.mk
 
