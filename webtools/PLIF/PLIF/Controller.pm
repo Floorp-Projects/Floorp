@@ -230,9 +230,6 @@ sub getServiceInstance {
 # instances are services that are NOT intended to be kept in either of
 # the controller's lists, they are created by the controller, and they
 # are never asked for as normal services.
-#
-# It is a serious (and as yet undetected) error for a service to be
-# created from both 'getService' and 'getServiceInstance'.
 
 
 sub dispatchMethod {
