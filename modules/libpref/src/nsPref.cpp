@@ -42,7 +42,7 @@ class nsPref: public nsIPref {
 
 private:
   nsPref();
-  ~nsPref();
+  virtual ~nsPref();
 
   static void useDefaultPrefFile(nsPref *aPrefInst);
   static nsPref *mInstance;
@@ -596,7 +596,7 @@ class nsPrefFactory: public nsIFactory {
     PR_AtomicIncrement(&g_InstanceCount);
   }
 
-  ~nsPrefFactory() {
+  virtual ~nsPrefFactory() {
     PR_AtomicDecrement(&g_InstanceCount);
   }
 
