@@ -340,7 +340,6 @@ AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
 	if ( emailcert )
 	    CERT_SaveSMimeProfile(tempCert, NULL, NULL);
 #else
-	cert->trust = trust;
 	rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
 	if (rv != SECSuccess) {
 	    SECU_PrintError(progName, "could authenticate to token or database");
