@@ -23,6 +23,7 @@
 # Double-Colon rules for utilizing the binary release model.          #
 #######################################################################
 
+
 all:: export private_export libs program install
 
 ifeq ($(AUTOCLEAN),1)
@@ -111,6 +112,9 @@ clean clobber::
 
 realclean clobber_all::
 	rm -rf $(wildcard *.OBJ) dist $(ALL_TRASH)
+	+$(LOOP_OVER_DIRS)
+
+depend::
 	+$(LOOP_OVER_DIRS)
 
 #ifdef ALL_PLATFORMS
@@ -780,6 +784,13 @@ dependclean::
 
 else
 depend::
+ifdef DODEPEND
+	@$(MAKE_OBJDIR)
+	$(GDEPTH)/gconfig/makedep.exe -s -O $(OBJDIR)/make.dp $(INCLUDES) $(OBJS)
+endif
+
+-include $(OBJDIR)/make.dp
+
 endif
 
 ################################################################################

@@ -139,6 +139,8 @@ ifdef PROGRAM
 	PROGRAM := $(addprefix $(OBJDIR)/, $(PROGRAM)$(PROG_SUFFIX))
 endif
 
+MAKEDEPFILE := $(addprefix $(OBJDIR)/, make.dep)
+
 #ifdef RCFILE
 #	RCFILE := $(addprefix $(OBJDIR)/, $(RCFILE)$(RC_SUFFIX))
 #	endif
@@ -195,6 +197,15 @@ ifndef TARGETS
 		endif
 		TARGETS += $(PROGRAM)
 	endif
+endif
+
+ifdef CSRCS
+DEPENDFILES += $(OBJS)
+DODEPEND=1
+endif
+ifdef CPPSRCS
+DEPENDFILES += $(OBJS)
+DODEPEND=1
 endif
 
 ifndef OBJS
