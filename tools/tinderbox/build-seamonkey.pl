@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.49 $ ';
+$Version = '$Revision: 1.50 $ ';
 
 
 sub PrintUsage {
@@ -109,54 +109,57 @@ sub ConditionalArgs {
   $RelBinaryName  = "dist/bin/$mozillaBinary";
   #$FullBinaryName  = "$BaseDir/$DirName/$TopLevel/$Topsrcdir/$RelBinaryName";
   $ENV{CVSROOT} = ":pserver:$cvsuser%netscape.com\@cvs.mozilla.org:/cvsroot";
-  print "build-seamonkey.pl: CVSROOT = $ENV{CVSROOT}\n";
   $CVSCO      .= " -r $BuildTag" unless $BuildTag eq '';
 }
 
 
 sub BuildIt {
-  my $EarlyExit, $LastTime, $SaveCVSCO, $comptmp;
 
   die "\$BuildName is the empty string ('')\n" if $BuildName eq '';
 
-  $comptmp = '';
-  $jflag   = '';
-  
   mkdir $DirName, 0777;
   chdir $DirName or die "Couldn't enter $DirName";
   
-  $StartDir  = getcwd();
-  $LastTime  = 0;
-  $EarlyExit = 0;
-  $SaveCVSCO = $CVSCO;
+  my ($StartDir) = getcwd();
+  my ($LastStartTime) = 0;
+  my ($EarlyExit) = 0;
+  my ($SaveCVSCO) = $CVSCO;
   
   # Bypass profile at startup.
-  $ENV{MOZ_BYPASS_PROFILE_AT_STARTUP} = "1";
+  $ENV{MOZ_BYPASS_PROFILE_AT_STARTUP} = 1;
 
   print "Starting dir is : $StartDir\n";
   
   while (not $EarlyExit) {
     chdir $StartDir;
 
-    if (not $TestOnly and (time - $LastTime < (60 * $BuildSleep))) {
-      $SleepTime = (60 * $BuildSleep) - (time - $LastTime);
+    if (not $TestOnly and (time - $LastStartTime < (60 * $BuildSleep))) {
+      my ($SleepTime) = (60 * $BuildSleep) - (time - $LastStartTime);
       print "\n\nSleeping $SleepTime seconds ...\n";
       sleep $SleepTime;
     }
-    $LastTime = time;
     
+    $StartTime = time();
+    $LastStartTime = $StartTime;
+
+    if ($UseCVSMirror) {
+      # Compute time of last completed update on mirror.
+      $cycle = 5 * 60; # Updates every 5 minutes.
+      $offset = 2 * 60; # Starting 2 minutes after the hour.
+      $update_duration = 1 * 60; # Takes 1 minute to update.
+      $StartTime = int(($StartTime + $offset) / $cycle) * $cycle;
+      $StartTime -= $offset + $update_duration;
+      $UseTimeStamp = 1;
+      $ENV{MOZ_CO_USE_MIRROR} = 1;
+    }
+
     if ($UseTimeStamp) {
-      $CVSCO = $SaveCVSCO;
+      $BuildStart = strftime("%m/%d/%Y %H:%M", localtime($StartTime));
+      $CVSCO = "$SaveCVSCO -D '$BuildStart'";
     } else {
-      $CVSCO = $SaveCVSCO . ' -A';
+      $CVSCO = "$SaveCVSCO -A";
     }
-    $StartTime = time;
-    
-    if ($UseTimeStamp) {
-      $BuildStart = `date '+%m/%d/%Y %H:%M'`;
-      chomp($BuildStart);
-      $CVSCO .= " -D '$BuildStart'";
-    }
+
 
     &MailStartBuildMessage if $ReportStatus;
 
@@ -179,9 +182,9 @@ sub BuildIt {
     if ($Compiler ne '') {
       print LOG "===============================\n";
       if ($Compiler eq 'gcc' or $Compiler eq 'egcc') {
-        $comptmp = `$Compiler --version`;
+        my $comptmp = `$Compiler --version`;
         chomp($comptmp);
-        print LOG "Compiler is -- $Compiler \($comptmp\)\n";
+        print LOG "Compiler is -- $Compiler ($comptmp)\n";
       } else {
         print LOG "Compiler is -- $Compiler\n";
       }
@@ -825,6 +828,7 @@ $ReportFinalStatus = 1;  # Finer control over $ReportStatus.
 $BuildOnce         = 0;  # Build once, don't send results to server
 $RunTest           = 1;  # Run the smoke tests on successful build, or not
 $UseTimeStamp      = 1;  # Use the CVS 'pull-by-timestamp' option, or not
+$UseCVSMirror      = 1;  # Use the CVS mirror to pull
 $TestOnly          = 0;  # Only run tests, don't pull/build
 
 #- Set these to what makes sense for your system
