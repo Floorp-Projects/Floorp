@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Garrett Arch Blythe, 03/04/2002  Added interval hit counting.
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -51,6 +52,29 @@
 
 #include "pldhash.h"
 
+//
+//  HIT_INTERVAL
+//
+//  Interval for which we will count hits, in milliseconds.
+//  This tends to sample the need for a particular function over time.
+//
+//  Decreasing the interval makes the code act more like call count
+//      ordering.
+//  Increasing the interval makes the code act more like no ordering
+//      at all.
+//  Some middle ground in between is best.  Tweak away....
+//
+//  We all know that not ordering the link order at all is not an
+//      optimal scenario.
+//  The folly of call count sorting is that you may group together
+//      methods which are rarely used but often called with rountines that
+//      are actually needed during the entire run of the application.
+//      If you can apply a time filter to smooth out the "page level" or
+//      "working set" needs to have a function in memory, then you should
+//      get a much better real world ordering.
+//
+#define HIT_INTERVAL 1000
+
 class Reporter {
 public:
     ~Reporter();
@@ -68,6 +92,8 @@ struct CallEntry {
     struct PLDHashEntryHdr hdr;
     const void*            addr;
     unsigned               count;
+    unsigned               hits; // interval hits.
+    DWORD                  tick; // last valid tick, used to count hits.
 };
 
 static PLDHashTableOps Ops = {
@@ -83,9 +109,10 @@ static PLDHashTableOps Ops = {
 
 class Node {
 public:
-    Node() {function = 0; count = 0; next = 0;};
+    Node() {function = 0; count = 0; hits = 0; next = 0;};
     char* function;
-    int   count;
+    unsigned   count;
+    unsigned   hits;
     Node* next;
 };
 
@@ -146,9 +173,28 @@ static int initialized = 0;
         entry = (CallEntry*) PL_DHashTableOperate(&Calls, addr, PL_DHASH_ADD);
         entry->addr = addr;
         entry->count = 0;
+        entry->hits = 0;
+        entry->tick = 0;
     }
 
+    //
+    //  Another call recorded.
+    //
     ++entry->count;
+
+    //
+    // Only record a hit if the appropriate amount of time has passed.
+    //
+    DWORD curtick = GetTickCount();
+    if(curtick >= (entry->tick + HIT_INTERVAL))
+    {
+        //
+        //  Record the interval hit.
+        //  Update the tick.
+        //
+        entry->hits++;
+        entry->tick = curtick;
+    }
 }
 
 /*
@@ -198,9 +244,9 @@ DumpFiles(PLDHashTable* table, PLDHashEntryHdr* hdr,
     
     while (cur) {
         if (cur->function[0] == '_')  // demangle "C" style function names
-            fprintf(orderFile,"%s ; %d\n", cur->function+1, cur->count );
+            fprintf(orderFile,"%s ; %d %d\n", cur->function+1, cur->hits, cur->count );
         else
-            fprintf(orderFile,"%s ; %d\n", cur->function, cur->count );
+            fprintf(orderFile,"%s ; %d %d\n", cur->function, cur->hits, cur->count );
         cur = cur->next;
     }
 
@@ -262,14 +308,22 @@ ListCounts(PLDHashTable* table, PLDHashEntryHdr* hdr,
             mod->byCount = new Node();
             mod->byCount->function = strdup(symbol->Name);
             mod->byCount->count = entry->count;
+            mod->byCount->hits = entry->hits;
         } else {
             // insertion sort.
             Node* cur = mod->byCount;
             Node* foo = new Node();
             foo->function = strdup(symbol->Name);
             foo->count = entry->count;
+            foo->hits = entry->hits;
 
-            if (cur->count < entry->count) {
+            if
+#if defined(SORT_BY_CALL_COUNT)
+                (cur->count < entry->count)
+#else
+                ((cur->hits < entry->hits) || (cur->hits == entry->hits && cur->count < entry->count))
+#endif
+            {
                 if (!strcmp(cur->function,symbol->Name)) 
                     return PL_DHASH_NEXT;
                 foo->next = mod->byCount;
@@ -278,7 +332,13 @@ ListCounts(PLDHashTable* table, PLDHashEntryHdr* hdr,
                 while (cur->next) {
                     if (!strcmp(cur->function,symbol->Name)) 
                         return PL_DHASH_NEXT;
-                    if (cur->next->count > entry->count) { cur = cur->next; }
+                    if
+#if defined(SORT_BY_CALL_COUNT)
+                        (cur->next->count > entry->count)
+#else
+                        ((cur->next->hits > entry->hits) || (cur->next->hits == entry->hits && cur->next->count > entry->count))
+#endif
+                    { cur = cur->next; }
                     else { break; }
                 }
                 foo->next = cur->next;  
