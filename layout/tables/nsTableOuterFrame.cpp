@@ -1470,7 +1470,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
   aPresContext->IsPaginated(&isPaginated);
   PRBool needUpdateMetrics = PR_TRUE;
 
-  if (((eReflowReason_Initial == aOuterRS.reason) || (eReflowReason_Resize == aOuterRS.reason)) && 
+  if ((eReflowReason_Resize    == aOuterRS.reason)  &&
       (aOuterRS.availableWidth == mPriorAvailWidth) &&
       !isPaginated) {
     // don't do much if we are resize reflowed exactly like last time
