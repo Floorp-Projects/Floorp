@@ -71,7 +71,7 @@ PCK4BITS(eError,eStart,eStart,eStart,eStart,eStart,eStart,eStart) //10-17
 
 
 static nsVerifier nsBIG5Verifier = {
-     "BIG5",
+     "Big5",
     {
        eIdxSft4bits, 
        eSftMsk4bits, 

@@ -31,7 +31,7 @@ package genverifier;
 );
 
 
-$big5_ver = genverifier::GenVerifier("BIG5", "BIG5", \@big5_cls, 5,     \@big5_st);
+$big5_ver = genverifier::GenVerifier("BIG5", "Big5", \@big5_cls, 5,     \@big5_st);
 print $big5_ver;
 
 
