@@ -7392,6 +7392,13 @@ htmlparser/Makefile
 htmlparser/robot/Makefile
 htmlparser/src/Makefile
 include/Makefile
+intl/Makefile
+intl/uconv/Makefile
+intl/uconv/public/Makefile
+intl/uconv/src/Makefile
+intl/uconv/tests/Makefile
+intl/uconv/ucvja/Makefile
+intl/uconv/ucvlatin/Makefile
 jpeg/Makefile
 js/Makefile
 js/jsd/Makefile
