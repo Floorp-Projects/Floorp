@@ -301,7 +301,7 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
 
   // Now do the reverse calculation of the 
   // NavQuirks button to get the size of the text
-  nscoord textWidth  = (2 * aDesiredSize.width) / 3;
+  //nscoord textWidth  = (2 * aDesiredSize.width) / 3;
   nscoord textHeight = (2 * aDesiredSize.height) / 3;
 
   // Center the child and add back in the border and badding
