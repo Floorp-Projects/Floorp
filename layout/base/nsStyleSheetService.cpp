@@ -37,8 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsStyleSheetService.h"
+#include "nsIStyleSheet.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIURI.h"
 #include "nsContentCID.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
@@ -52,6 +54,7 @@ nsStyleSheetService *nsStyleSheetService::gInstance = nsnull;
 
 nsStyleSheetService::nsStyleSheetService()
 {
+  NS_ASSERTION(0 == AGENT_SHEET && 1 == USER_SHEET, "Invalid value for USER_SHEET or AGENT_SHEET");
   NS_ASSERTION(!gInstance, "Someone is using CreateInstance instead of GetService");
   gInstance = this;
 }
@@ -95,6 +98,24 @@ nsStyleSheetService::RegisterFromEnumerator(nsICategoryManager  *aManager,
   }
 }
 
+PRInt32
+nsStyleSheetService::FindSheetByURI(const nsCOMArray<nsIStyleSheet> &sheets,
+                                    nsIURI *sheetURI)
+{
+  for (PRInt32 i = sheets.Count() - 1; i >= 0; i-- ) {
+    PRBool bEqual;
+    nsCOMPtr<nsIURI> uri;
+    if (NS_SUCCEEDED(sheets[i]->GetSheetURI(getter_AddRefs(uri)))
+        && uri
+        && NS_SUCCEEDED(uri->Equals(sheetURI, &bEqual))
+        && bEqual) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
 nsresult
 nsStyleSheetService::Init()
 {
@@ -120,21 +141,40 @@ NS_IMETHODIMP
 nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
                                           PRUint32 aSheetType)
 {
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+
   nsCOMPtr<nsICSSLoader> loader = do_CreateInstance(kCSSLoaderCID);
   nsCOMPtr<nsICSSStyleSheet> sheet;
   nsresult rv = loader->LoadAgentSheet(aSheetURI, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  switch (aSheetType) {
-  case AGENT_SHEET:
-    mAgentSheets.AppendObject(sheet);
-    break;
-  case USER_SHEET:
-    mUserSheets.AppendObject(sheet);
-    break;
-  default:
-    NS_ERROR("Unknown sheet type");
-  }
+  mSheets[aSheetType].AppendObject(sheet);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStyleSheetService::SheetRegistered(nsIURI *sheetURI,
+                                     PRUint32 aSheetType, PRBool *_retval)
+{
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+  NS_ENSURE_ARG_POINTER(sheetURI);
+  NS_PRECONDITION(_retval, "Null out param");
+
+  *_retval = (FindSheetByURI(mSheets[aSheetType], sheetURI) >= 0);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStyleSheetService::UnregisterSheet(nsIURI *sheetURI, PRUint32 aSheetType)
+{
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+  NS_ENSURE_ARG_POINTER(sheetURI);
+
+  PRInt32 foundIndex = FindSheetByURI(mSheets[aSheetType], sheetURI);
+  NS_ENSURE_TRUE(foundIndex >= 0, NS_ERROR_INVALID_ARG);
+  mSheets[aSheetType].RemoveObjectAt(foundIndex);
 
   return NS_OK;
 }
