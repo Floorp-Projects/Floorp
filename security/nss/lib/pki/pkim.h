@@ -38,7 +38,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.25 $ $Date: 2005/01/20 02:25:49 $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.26 $ $Date: 2005/03/04 04:32:04 $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -345,7 +345,7 @@ nssCertificateArray_FindBestCertificate
 (
   NSSCertificate **certs, 
   NSSTime *timeOpt,
-  NSSUsage *usage,
+  const NSSUsage *usage,
   NSSPolicies *policiesOpt
 );
 

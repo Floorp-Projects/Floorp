@@ -601,7 +601,7 @@ PK11_FindCertFromNickname(char *nickname, void *wincx)
     CERTCertificate *rvCert = NULL;
     NSSCertificate *cert = NULL;
     NSSCertificate **certs = NULL;
-    NSSUsage usage;
+    static const NSSUsage usage = {PR_TRUE /* ... */ };
     NSSToken *token;
     NSSTrustDomain *defaultTD = STAN_GetDefaultTrustDomain();
     PK11SlotInfo *slot = NULL;
@@ -610,7 +610,6 @@ PK11_FindCertFromNickname(char *nickname, void *wincx)
     char *delimit = NULL;
     char *tokenName;
 
-    usage.anyUsage = PR_TRUE;
     nickCopy = PORT_Strdup(nickname);
     if ((delimit = PORT_Strchr(nickCopy,':')) != NULL) {
 	tokenName = nickCopy;
