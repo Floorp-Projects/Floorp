@@ -32,8 +32,6 @@ REQUIRES=util img xpcom raptor netlib
 
 DEFINES += -D_IMPL_NS_WIDGET 
 
-CXXFLAGS += $(TK_CFLAGS)
-
 DEFINES += \
 		-I$(srcdir)/../xpwidgets \
 		-I$(srcdir)/.
@@ -83,6 +81,8 @@ CPPSRCS = \
 CSRCS = tabctrl.c
 
 include $(topsrcdir)/config/config.mk
+
+CXXFLAGS += $(TK_CFLAGS)
 
 SHARED_LIBRARY_LIBS =			    \
 	$(DIST)/lib/libraptorbasewidget_s.a \
