@@ -48,6 +48,7 @@ REQUIRES	= xpcom \
 			docshell \
 			layout \
 			xuldoc \
+			view \
 			$(NULL)
 
 CPPSRCS		= \
