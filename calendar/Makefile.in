@@ -87,7 +87,11 @@ openvmsxpi::
 ifeq ($(OS_ARCH),WINNT)
 calplatform=windows
 else
+ifeq ($(OS_ARCH),OS2)
+calplatform=os2
+else
 calplatform=linux
+endif
 endif
 
 xpi::
@@ -96,7 +100,7 @@ xpi::
 
 	echo "Building xpi..."
 
-	$(srcdir)/createBuildId.pl $(srcdir)/resources/content/about.html
+	$(PERL) $(srcdir)/createBuildId.pl $(srcdir)/resources/content/about.html
 	make
 	mkdir -p ./xpi/bin/components
 	mkdir -p ./xpi/bin/chrome
