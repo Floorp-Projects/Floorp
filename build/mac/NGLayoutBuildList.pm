@@ -465,7 +465,13 @@ sub BuildDist()
 	# XPFE COMPONENTS
    InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",					"$distdirectory:xpfe:components");
    # find
-   InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST",				"$distdirectory:xpfe:components:find");
+   InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST",				"$distdirectory:xpfe:components");
+   # sample
+   InstallFromManifest(":mozilla:xpfe:components:sample:public:MANIFEST",			"$distdirectory:xpfe:components");
+   # ucth
+   InstallFromManifest(":mozilla:xpfe:components:ucth:public:MANIFEST",				"$distdirectory:xpfe:components");
+   # xfer
+   InstallFromManifest(":mozilla:xpfe:components:xfer:public:MANIFEST",				"$distdirectory:xpfe:components");
 	
 	# XPAPPS
    InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
@@ -826,6 +832,8 @@ sub MakeResourceAliases()
 		
 	# Install XPFE component resources
 	InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",					"$samples_dir");
+	InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",					"$samples_dir");
+	InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",					"$samples_dir");
 
 	print("--- Resource copying complete ----\n")
 }
