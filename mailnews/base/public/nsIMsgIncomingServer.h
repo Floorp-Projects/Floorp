@@ -28,6 +28,10 @@ class nsIMsgIncomingServer : public nsISupports {
     return iid;
   }
 
+  /* attribute string key; */
+  NS_IMETHOD GetKey(char * *aKey) = 0;
+  NS_IMETHOD SetKey(char * aKey) = 0;
+
   /* attribute string prettyName; */
   NS_IMETHOD GetPrettyName(char * *aPrettyName) = 0;
   NS_IMETHOD SetPrettyName(char * aPrettyName) = 0;
@@ -51,9 +55,6 @@ class nsIMsgIncomingServer : public nsISupports {
   /* attribute long biffMinutes; */
   NS_IMETHOD GetBiffMinutes(PRInt32 *aBiffMinutes) = 0;
   NS_IMETHOD SetBiffMinutes(PRInt32 aBiffMinutes) = 0;
-
-  /* void LoadPreferences (in nsIPref prefs, in string identityKey); */
-  NS_IMETHOD LoadPreferences(nsIPref *prefs, const char *identityKey) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

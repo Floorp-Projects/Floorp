@@ -8,7 +8,6 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgSignature.h" /* interface nsIMsgSignature */
 #include "nsIMsgVCard.h" /* interface nsIMsgVCard */
-#include "nsIPref.h" /* interface nsIPref */
 #include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
@@ -29,6 +28,10 @@ class nsIMsgIdentity : public nsISupports {
     static nsIID iid = NS_IMSGIDENTITY_IID;
     return iid;
   }
+
+  /* attribute string key; */
+  NS_IMETHOD GetKey(char * *aKey) = 0;
+  NS_IMETHOD SetKey(char * aKey) = 0;
 
   /* attribute string identityName; */
   NS_IMETHOD GetIdentityName(char * *aIdentityName) = 0;
@@ -69,13 +72,6 @@ class nsIMsgIdentity : public nsISupports {
   /* attribute string smtpUsername; */
   NS_IMETHOD GetSmtpUsername(char * *aSmtpUsername) = 0;
   NS_IMETHOD SetSmtpUsername(char * aSmtpUsername) = 0;
-
-  /* attribute string key; */
-  NS_IMETHOD GetKey(char * *aKey) = 0;
-  NS_IMETHOD SetKey(char * aKey) = 0;
-
-  /* void LoadPreferences (in nsIPref prefs, in string identityKey); */
-  NS_IMETHOD LoadPreferences(nsIPref *prefs, const char *identityKey) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

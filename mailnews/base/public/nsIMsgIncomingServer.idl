@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -24,6 +24,8 @@
 [object, uuid(60dcb100-e3f2-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgIncomingServer : nsISupports {
 
+  attribute string key;
+  
   attribute string prettyName;
   attribute string hostName;
   attribute string userName;
@@ -31,6 +33,4 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute boolean doBiff;
   attribute long biffMinutes;
   
-  void LoadPreferences(in nsIPref prefs, in string identityKey);
-
 };

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -19,11 +19,12 @@
 #include "nsISupports.idl"
 #include "nsIMsgSignature.idl"
 #include "nsIMsgVCard.idl"
-#include "nsIPref.idl"
 
 [object, uuid(D3B4A420-D5AC-11d2-806A-006008128C4E)]
 interface nsIMsgIdentity : nsISupports {
-
+  /* internal ID */
+  attribute string key;
+  
   attribute string identityName;
   attribute string fullName;
   attribute string email;
@@ -34,7 +35,5 @@ interface nsIMsgIdentity : nsISupports {
   attribute nsIMsgVCard vCard;
   attribute string smtpHostname;
   attribute string smtpUsername;
-  attribute string key;
 
-  void LoadPreferences(in nsIPref prefs, in string identityKey);
 };
