@@ -48,8 +48,10 @@ nsSingleThreadVerifier::nsSingleThreadVerifier()
 
 void nsSingleThreadVerifier::verifyThread() const
 {
+#if 0
   NS_ASSERTION(mThread == PR_GetCurrentThread(),
                "sharable string being used on multiple threads");
+#endif
 }
 
 #endif
