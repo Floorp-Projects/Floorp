@@ -30,6 +30,7 @@
 #include "stdhdrs.h"
 #include "nsIContextMenuListener.h"
 #include "nsIEmbeddingSiteWindow.h"
+#include "nsIWebBrowserChromeFocus.h"
 #include "nsICommandHandler.h"
 #include "nsWeakReference.h"
 #include "nsIInputStream.h"
@@ -41,12 +42,17 @@
 #include "nsIContentViewerContainer.h"
 #include "nsNetUtil.h"
 #include "nsIDocShell.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIChromeEventHandler.h"
+#include "nsIURIContentListener.h"
 
 // This is the class that handles the XPCOM side of things, callback
 // interfaces into the web shell and so forth.
 
 class CWebBrowserContainer :
 		public nsIWebBrowserChrome,
+		public nsIWebBrowserChromeFocus,
 		public nsIWebProgressListener,
 		public nsIEmbeddingSiteWindow,
 		public nsIRequestObserver,
@@ -70,6 +76,9 @@ public:
 	NS_IMETHOD CloseStream( void );
 	NS_IMETHOD IsStreaming( void );
 
+	// this will get the PIDOMWindow for this widget
+	nsresult GetPIDOMWindow( nsPIDOMWindow **aPIWin );
+
 	virtual ~CWebBrowserContainer();
 
 	PtWidget_t *m_pOwner;
@@ -84,6 +93,7 @@ protected:
 public:
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIWEBBROWSERCHROME
+	NS_DECL_NSIWEBBROWSERCHROMEFOCUS
 	NS_DECL_NSIEMBEDDINGSITEWINDOW
 	NS_DECL_NSIDOCSHELLTREEOWNER
 	NS_DECL_NSIURICONTENTLISTENER

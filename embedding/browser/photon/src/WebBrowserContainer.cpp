@@ -39,6 +39,7 @@ CWebBrowserContainer::CWebBrowserContainer(PtWidget_t *pOwner)
 	m_pCurrentURI = nsnull;
 	mDoingStream = PR_FALSE;
 	mOffset = 0;
+	mSkipOnState = 0;
 }
 
 
@@ -107,6 +108,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
 	NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
@@ -986,7 +988,10 @@ NS_IMETHODIMP CWebBrowserContainer::GetDimensions(PRUint32 flags, PRInt32 *x, PR
 /* void setFocus (); */
 NS_IMETHODIMP CWebBrowserContainer::SetFocus()
 {
-		return NS_ERROR_NOT_IMPLEMENTED;
+	PtMozillaWidget_t *moz = (PtMozillaWidget_t *) m_pOwner;
+	nsCOMPtr<nsIBaseWindow> browserBaseWindow = do_QueryInterface( moz->MyBrowser->WebBrowser );
+/* ATENTIE */ printf( "CWebBrowserContainer::SetFocus\n" );
+	return browserBaseWindow->SetFocus();
 }
 
 /* attribute boolean visibility; */
@@ -1224,3 +1229,40 @@ NS_IMETHODIMP CWebBrowserContainer::OnEndPrinting(PRUint32 aStatus)
 	InvokePrintCallback(Pt_MOZ_PRINT_COMPLETE, 0, 0);
     return NS_OK;
 }
+
+/* see the gtk version */
+nsresult CWebBrowserContainer::GetPIDOMWindow( nsPIDOMWindow **aPIWin ) {
+  PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) m_pOwner;
+  *aPIWin = nsnull;
+
+  // get the content DOM window for that web browser
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  moz->MyBrowser->WebBrowser->GetContentDOMWindow( getter_AddRefs( domWindow ) );
+  if( !domWindow ) return NS_ERROR_FAILURE;
+
+  // get the private DOM window
+  nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
+  // and the root window for that DOM window
+  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+  domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
+
+  nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
+
+  *aPIWin = piWin.get();
+
+  if (*aPIWin) {
+    NS_ADDREF(*aPIWin);
+    return NS_OK;
+    }
+
+  return NS_ERROR_FAILURE;
+  }
+
+// nsIWebBrowserChromeFocus
+NS_IMETHODIMP CWebBrowserContainer::FocusNextElement() {
+  return NS_ERROR_NOT_IMPLEMENTED;
+  }
+NS_IMETHODIMP CWebBrowserContainer::FocusPrevElement() {
+  return NS_ERROR_NOT_IMPLEMENTED;
+  }
