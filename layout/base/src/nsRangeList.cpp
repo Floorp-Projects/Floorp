@@ -20,8 +20,9 @@ static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
 //PROTOTYPES
-void selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEndOffset, PRBool aSelect);
+void selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEndOffset, PRBool aSelect, PRBool aForwards);
 PRInt32 compareFrames(nsIFrame *aBegin, nsIFrame *aEnd);
+nsIFrame * getNextFrame(nsIFrame *aStart);
 
 
 class nsRangeListIterator;
@@ -410,12 +411,34 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame)
 }
 
 
+//recursive-oid method to get next frame
+nsIFrame *
+getNextFrame(nsIFrame *aStart)
+{
+  PRBool found(PR_FALSE);
+  nsIFrame *result;
+  nsIFrame *parent = aStart;
+  while(!found){
+    if (NS_SUCCEEDED(parent->GetNextSibling(result)) && result){
+      parent = result;
+      while (NS_SUCCEEDED(parent->FirstChild(nsnull, parent)) && parent)
+        result = parent;//eventually will have no children
+      return result;
+    }
+    else
+      if (NS_FAILED(parent->GetParent(parent)) || !parent)
+        return nsnull;
+  }
+  return nsnull;
+}
 
 //compare the 2 passed in frames -1 first is smaller 1 second is smaller 0 they are the same
 PRInt32
 compareFrames(nsIFrame *aBegin, nsIFrame *aEnd)
 {
   if (!aBegin || !aEnd)
+    return 0;
+  if (aBegin == aEnd)
     return 0;
   nsCOMPtr<nsIContent> beginContent;
   if (NS_SUCCEEDED(aBegin->GetContent(*getter_AddRefs(beginContent)))){
@@ -440,7 +463,7 @@ compareFrames(nsIFrame *aBegin, nsIFrame *aEnd)
 
 //the idea of this helper method is to select, deselect "top to bootom" traversing through the frames
 void
-selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEndOffset, PRBool aSelect)
+selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEndOffset, PRBool aSelect, PRBool aForward)
 {
   if (!aBegin || !aEnd)
     return;
@@ -449,14 +472,22 @@ selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEn
   {
     if (aBegin == aEnd)
     {
-      aBegin->SetSelected(aSelect, aBeginOffset, aEndOffset, PR_TRUE);
+      if (aForward)
+        aBegin->SetSelected(aSelect, aBeginOffset, aEndOffset, PR_TRUE);
+      else
+        aBegin->SetSelected(aSelect, aEndOffset, aBeginOffset, PR_TRUE);
       done = PR_TRUE;
     }
     else {
       //else we neeed to select from begin to end 
-      aBegin->SetSelected(aSelect, aBeginOffset, -1, PR_TRUE);
-      aBeginOffset = -1;
-      if (NS_FAILED(aBegin->GetNextSibling(aBegin)) || !aBegin)
+      if (aForward){
+        aBegin->SetSelected(aSelect, aBeginOffset, -1, PR_TRUE);
+      }
+      else{
+        aBegin->SetSelected(aSelect, -1, aBeginOffset, PR_TRUE);
+      }
+      aBeginOffset = 0;
+      if (!(aBegin = getNextFrame(aBegin)))
       {
         done = PR_TRUE;
       }
@@ -473,6 +504,13 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
 {
   if (!aTracker || !aFrame)
     return NS_ERROR_NULL_POINTER;
+  //HACKHACKHACK
+  nsIFrame *parent = aFrame;
+  for (int i=0; i <3; i++){
+    if (NS_FAILED(parent->GetParent(parent)) || !parent)
+      return NS_ERROR_NULL_POINTER;
+  }
+  //END HACK
   nsIFrame *frame;
   nsIFrame *anchor;
   nsCOMPtr<nsIContent> content;
@@ -485,14 +523,17 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
         if (anchor && frame && anchor != frame ){//selected across frames, must "deselect" frames between in correct order
           PRInt32 compareResult = compareFrames(anchor,frame);
           if ( compareResult < 0 )
-            selectFrames(anchor,0,frame,-1,PR_FALSE); //unselect all between
+            selectFrames(anchor,0,frame, -1, PR_FALSE, PR_TRUE); //unselect all between
           else if (compareResult > 0 )
-            selectFrames(frame,0,anchor,-1,PR_FALSE); //unselect all between
+            selectFrames(frame,0,anchor, -1, PR_FALSE, PR_FALSE); //unselect all between
 //          else real bad put in assert here
+        }
+        else if (frame && frame != aFrame){
+          frame->SetSelected(PR_FALSE, 0, -1, PR_TRUE);//just turn off selection if the previous frame
         }
 
 //DEBUG CRAP
-#if 1
+#if 0
         nsCOMPtr<nsIContent>oldContent;
         if (frame && NS_SUCCEEDED(frame->GetContent(*getter_AddRefs(oldContent)))){
           nsCOMPtr<nsIDOMNode>oldDomNode(oldContent);
@@ -530,27 +571,21 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
           PRInt32 endoffset;
           PRBool selected;
           if (NS_SUCCEEDED(aFrame->GetSelected(&selected,&beginoffset,&endoffset, &begincontentoffset))){
-            aFrame->SetSelected(PR_TRUE,beginoffset,aOffset,PR_FALSE);
+            aFrame->SetSelected(PR_TRUE, beginoffset, aOffset,PR_FALSE);
             aTracker->SetFocus(aFrame,anchor);
           }
   
-          nsCOMPtr<nsIContent>anchorContent;
-          if (anchor && NS_SUCCEEDED(anchor->GetContent(*getter_AddRefs(anchorContent)))){
-            nsCOMPtr<nsIDOMNode>anchorDomNode (anchorContent);
-            if (anchorDomNode && anchorDomNode == mAnchorNode) {
-              nsCOMPtr<nsIDOMRange> range;
-              if (NS_SUCCEEDED(nsRepository::CreateInstance(kRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
-                if (domNode){
-                  mFocusNode = domNode;
-                  mFocusOffset = aOffset + aContentOffset;
-                  range->SetStart(anchorDomNode,mAnchorOffset);
-                  range->SetEnd(domNode,aOffset + aContentOffset);
-                  nsCOMPtr<nsISupports> rangeISupports(range);
-                  if (rangeISupports) {
-                    AddItem(rangeISupports);
-                    return NS_OK;
-                  }
-                }
+          nsCOMPtr<nsIDOMRange> range;
+          if (NS_SUCCEEDED(nsRepository::CreateInstance(kRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
+            if (domNode){
+              mFocusNode = domNode;
+              mFocusOffset = aOffset + aContentOffset;
+              range->SetStart(mAnchorNode,mAnchorOffset);
+              range->SetEnd(domNode,aOffset + aContentOffset);
+              nsCOMPtr<nsISupports> rangeISupports(range);
+              if (rangeISupports) {
+                AddItem(rangeISupports);
+                return NS_OK;
               }
             }
           }
@@ -584,56 +619,65 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
                     return NS_ERROR_FAILURE;
 
                   //compare anchor to old cursor.
-                  PRInt32 result1 = ComparePoints(mAnchorNode, mAnchorOffset, mFocusNode, mFocusOffset);
-                  printf("result1 = %i\n",result1);
+                  PRInt32 result1 = compareFrames(anchor,frame); //nothing else matters. if they are the same frame.
                   //compare old cursor to new cursor
-                  PRInt32 result2 = ComparePoints(mFocusNode, mFocusOffset, domNode, aOffset + aContentOffset);
-                  printf("result2 = %i\n",result2);
+                  PRInt32 result2 = compareFrames(frame,aFrame);
+                  if (result2 == 0)
+                    result2 = ComparePoints(mFocusNode, mFocusOffset, domNode, aOffset + aContentOffset);
                   //compare anchor to new cursor
-                  PRInt32 result3 = ComparePoints(mAnchorNode, mAnchorOffset ,domNode , aOffset + aContentOffset);
-                  printf("result3 = %i\n",result3);
+                  PRInt32 result3 = compareFrames(anchor,aFrame);
+                  if (result3 == 0)
+                    result3 = ComparePoints(mAnchorNode, mAnchorOffset ,domNode , aOffset + aContentOffset);
 
-                  //heuristic babble
-                  if (result1 <= 0 && result2 <= 0) {//a,1,2 or a1,2 or a,12 or a12
+                  if (result1 == 0 && result3 < 0)
+                  {
+                    selectFrames(anchor,anchorFrameOffsetBegin, aFrame, aOffset + aContentOffset, PR_TRUE, PR_TRUE); //last true is forwards
+                  }
+                  else if (result1 == 0 && result3 > 0)
+                  {
+                    selectFrames(aFrame, aOffset , anchor,anchorFrameOffsetBegin, PR_TRUE, PR_FALSE);//last true is backwards
+                  }
+                  else if (result1 <= 0 && result2 <= 0) {//a,1,2 or a1,2 or a,12 or a12
                     //continue selection from 1 to 2
-                    printf("continue selection from OLD FOCUS point to NEW FOCUS (growth)\n");
-                    selectFrames(frame,focusFrameOffsetEnd, aFrame, aOffset, PR_TRUE);
+                    selectFrames(frame,PR_MIN(focusFrameOffsetEnd,focusFrameOffsetBegin), aFrame, aOffset, PR_TRUE, PR_TRUE);
                   }
                   else if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
                     //deselect from 2 to 1
-                    printf("deselect from NEW FOCUS point to OLD FOCUS ( shrinkage) \n");
-                    selectFrames(aFrame, aOffset, frame,focusFrameOffsetEnd, PR_FALSE);
+                    selectFrames(aFrame, aOffset, frame,focusFrameOffsetEnd, PR_FALSE, PR_TRUE);
+                    if (anchor != aFrame)
+                      selectFrames(aFrame, 0, aFrame,aOffset, PR_TRUE, PR_TRUE);
+                    else
+                      selectFrames(anchor, anchorFrameOffsetBegin, aFrame, aOffset, PR_TRUE ,PR_TRUE);
                   }
                   else if (result1 >= 0 && result3 <= 0) {//1,a,2 or 1a,2 or 1,a2 or 1a2
                     //deselect from 1 to a
-                    printf("deselect from OLD FOCUS to ANCHOR\n");
-                    selectFrames(frame, focusFrameOffsetEnd, anchor, anchorFrameOffsetBegin, PR_FALSE);
+                    selectFrames(frame, focusFrameOffsetEnd, anchor, anchorFrameOffsetBegin, PR_FALSE, PR_FALSE);
                     //select from a to 2
-                    printf("select from ANCHOR to NEW FOCUS point \n");
-                    selectFrames(anchor, anchorFrameOffsetBegin, aFrame, aOffset, PR_TRUE);
+                    selectFrames(anchor, anchorFrameOffsetBegin, aFrame, aOffset, PR_TRUE, PR_TRUE);
                   }
                   else if (result2 <= 0 && result3 >= 0) {//1,2,a or 12,a or 1,2a or 12a
                     //deselect from 1 to 2
-                    printf("deselect from OLD FOCUS to NEW FOCUS (shrinkage)\n");
-                    selectFrames(frame, focusFrameOffsetEnd, aFrame, aOffset, PR_FALSE);
+                    selectFrames(frame, focusFrameOffsetEnd, aFrame, aOffset, PR_FALSE, PR_FALSE);
+                    if (anchor != aFrame)
+                      selectFrames(aFrame, aOffset, aFrame, -1, PR_TRUE, PR_FALSE);
+                    else
+                      selectFrames(aFrame, aOffset, anchor, anchorFrameOffsetBegin, PR_TRUE ,PR_FALSE);
+
                   }
                   else if (result3 >= 0 && result1 <= 0) {//2,a,1 or 2a,1 or 2,a1 or 2a1
                     //deselect from a to 1
-                    printf("deselect from ANCHOR to OLD FOCUS \n");
-                    selectFrames(anchor, anchorFrameOffsetBegin, frame, focusFrameOffsetEnd, PR_FALSE);
+                    selectFrames(anchor, anchorFrameOffsetBegin, frame, focusFrameOffsetEnd, PR_FALSE, PR_TRUE);
                     //select from 2 to a
-                    printf("select from NEW FOCUS to ANCHOR \n");
-                    selectFrames(aFrame, aOffset, anchor, anchorFrameOffsetBegin, PR_TRUE);
+                    selectFrames(aFrame, aOffset, anchor, anchorFrameOffsetBegin, PR_TRUE, PR_FALSE);
                   }
                   else if (result2 <= 0 && result1 >= 0) {//2,1,a or 21,a or 2,1a or 21a
                     //continue selection from 2 to 1
-                    printf("select from NEW FOCUS to OLD FOCUS (growth)\n");
-                    selectFrames(aFrame, aOffset, frame,focusFrameOffsetEnd, PR_TRUE);
+                    selectFrames(aFrame, aOffset, frame,focusFrameOffsetEnd, PR_TRUE, PR_FALSE);
                   }
-                  mFocusNode = domNode;
-                  mFocusOffset = aOffset + aContentOffset;
-                  aTracker->SetFocus(aFrame,anchor);
                 }
+                mFocusNode = domNode;
+                mFocusOffset = aOffset + aContentOffset;
+                aTracker->SetFocus(aFrame,anchor);
               }
             }
           }

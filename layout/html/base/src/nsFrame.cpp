@@ -1746,10 +1746,10 @@ nsFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset,
 {
   if (mSelected != aSelected || aForceRedraw)
   {
+    mSelected = aSelected;
     nsRect  damageRect;
     GetRect(damageRect);
     ForceDrawFrame(this);
-    mSelected = aSelected;
   }
   return NS_OK;
 }
