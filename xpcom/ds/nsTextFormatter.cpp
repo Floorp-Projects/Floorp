@@ -65,8 +65,7 @@ struct SprintfStateStr {
     PRUnichar *cur;
     PRUint32 maxlen;
 
-    int (*func)(void *arg, const PRUnichar *sp, PRUint32 len);
-    void *arg;
+    void *stuffclosure;
 };
 
 /*
@@ -646,8 +645,7 @@ static int cvt_S(SprintfState *ss, const PRUnichar *s, int width,
     }
 
     /* and away we go */
-    nsAutoString nullstr;
-    nullstr.Assign(NS_LITERAL_STRING("(null)"));
+    NS_NAMED_LITERAL_STRING(nullstr, "(null)");
 
     return fill2(ss, s ? s : nullstr.get(), slen, width, flags);
 }
@@ -1298,45 +1296,18 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 
 /************************************************************************/
 
-#if 0
-static int FuncStuff(SprintfState *ss, const PRUnichar *sp, PRUint32 len)
+static int
+StringStuff(SprintfState* ss, const PRUnichar* sp, PRUint32 len)
 {
-    int rv;
+    ptrdiff_t off = ss->cur - ss->base;
+    
+    nsAFlatString* str = NS_STATIC_CAST(nsAFlatString*,ss->stuffclosure);
+    str->Append(sp, len);
+    ss->base = NS_CONST_CAST(PRUnichar*,str->get());
+    ss->cur = ss->base + off;
 
-    rv = (*ss->func)(ss->arg, sp, len);
-    if (rv < 0) {
-	return rv;
-    }
-    ss->maxlen += len;
     return 0;
 }
-
-PRUint32 nsTextFormatter::sxprintf(PRStuffFunc func, void *arg,
-                                   const PRUnichar *fmt, ...)
-{
-    va_list ap;
-    int rv;
-
-    va_start(ap, fmt);
-    rv = nsTextFormatter::vsxprintf(func, arg, fmt, ap);
-    va_end(ap);
-    return rv;
-}
-
-PRUint32 vsxprintf(PRStuffFunc func, void *arg,
-                   const PRUnichar *fmt, va_list ap)
-{
-    SprintfState ss;
-    int rv;
-    
-    ss.stuff = FuncStuff;
-    ss.func = func;
-    ss.arg = arg;
-    ss.maxlen = 0;
-    rv = dosprintf(&ss, fmt, ap);
-    return (rv < 0) ? (PRUint32)-1 : ss.maxlen;
-}
-#endif 
 
 /*
 ** Stuff routine that automatically grows the malloc'd output buffer
@@ -1389,12 +1360,50 @@ PRUnichar * nsTextFormatter::smprintf(const PRUnichar *fmt, ...)
     return rv;
 }
 
+PRUint32 nsTextFormatter::ssprintf(nsAString& out, const PRUnichar* fmt, ...)
+{
+    va_list ap;
+    PRUint32 rv;
+
+    va_start(ap, fmt);
+    rv = nsTextFormatter::vssprintf(out, fmt, ap);
+    va_end(ap);
+    return rv;
+}
+
 /*
 ** Free memory allocated, for the caller, by smprintf
 */
 void nsTextFormatter::smprintf_free(PRUnichar *mem)
 {
     PR_DELETE(mem);
+}
+
+PRUint32 nsTextFormatter::vssprintf(nsAString& out, const PRUnichar* fmt, va_list ap)
+{
+    SprintfState ss;
+    ss.stuff = StringStuff;
+    ss.base = 0;
+    ss.cur = 0;
+    ss.maxlen = 0;
+    ss.stuffclosure = &out;
+
+    int n;
+    if (out.GetFlatBufferHandle()) {
+        nsAFlatString *flattenedString = NS_STATIC_CAST(nsAFlatString*, &out);
+        out.Truncate();
+        ss.stuffclosure = NS_STATIC_CAST(void*, flattenedString);
+        n = dosprintf(&ss, fmt, ap);
+    } else {
+        // stack based, instantiated only in the non-flat case
+        nsAutoString flattenedString;
+        ss.stuffclosure = NS_STATIC_CAST(void*, &flattenedString);
+        n=dosprintf(&ss, fmt, ap);
+        out = flattenedString;
+    }
+
+
+    return n ? n - 1 : n;
 }
 
 PRUnichar * nsTextFormatter::vsmprintf(const PRUnichar *fmt, va_list ap)
@@ -1440,7 +1449,7 @@ static int LimitStuff(SprintfState *ss, const PRUnichar *sp, PRUint32 len)
 PRUint32 nsTextFormatter::snprintf(PRUnichar *out, PRUint32 outlen, const PRUnichar *fmt, ...)
 {
     va_list ap;
-    int rv;
+    PRUint32 rv;
 
     PR_ASSERT((PRInt32)outlen > 0);
     if ((PRInt32)outlen <= 0) {
