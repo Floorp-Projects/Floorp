@@ -1971,6 +1971,9 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
     // If we don't find one, we return NS_OK and a null result
     *_retval = nsnull;
 
+    if (!*aName)
+        return NS_OK;
+
     if (!aRequestor)
     {
         nsCOMPtr<nsIDocShellTreeItem> foundItem;
@@ -1980,7 +1983,7 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
         // for a null aRequestor.
 
         nsDependentString name(aName);
-        if (name.IsEmpty() || name.LowerCaseEqualsLiteral("_self")) {
+        if (name.LowerCaseEqualsLiteral("_self")) {
             foundItem = this;
         }
         else if (name.LowerCaseEqualsLiteral("_blank") ||
@@ -2423,6 +2426,9 @@ nsDocShell::FindChildWithName(const PRUnichar * aName,
     NS_ENSURE_ARG_POINTER(_retval);
 
     *_retval = nsnull;          // if we don't find one, we return NS_OK and a null result 
+
+    if (!*aName)
+        return NS_OK;
 
     nsXPIDLString childName;
     PRInt32 i, n = mChildList.Count();
