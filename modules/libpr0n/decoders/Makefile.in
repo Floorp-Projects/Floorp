@@ -35,7 +35,7 @@ endif
 ifeq ($(OS_ARCH),OS2)
 DIRS		:= icon/os2 $(DIRS)
 endif
-ifeq ($(OS_ARCH),Darwin)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		:= icon/mac $(DIRS)
 endif
 endif # icon

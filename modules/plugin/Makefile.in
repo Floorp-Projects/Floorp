@@ -55,7 +55,7 @@ DIRS		+= tools/tester/common tools/tester/os2
 endif
 endif
 
-ifeq ($(OS_ARCH),Darwin)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= samples/default/mac
 endif
 
