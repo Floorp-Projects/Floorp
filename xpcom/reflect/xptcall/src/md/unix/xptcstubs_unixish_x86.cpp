@@ -122,8 +122,7 @@ nsresult nsXPTCStubBase::Stub##n() \
 	"\n\t movl   0x08(%ebp), %ecx\t / this" \
 	"\n\t pushl  %ecx" \
 	"\n\t call   __1cSPrepareAndDispatch6FpnOnsXPTCStubBase_IpI_I_\t / PrepareAndDispatch" \
-	"\n\t leave" \
-	"\n\t ret\n" \
+	"\n\t addl  $12, %esp" \
  ); \
 /* result == %eax */ \
   if(0) /* supress "*** is expected to return a value." error */ \

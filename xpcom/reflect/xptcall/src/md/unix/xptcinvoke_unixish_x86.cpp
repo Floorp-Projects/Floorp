@@ -172,8 +172,6 @@ asm(
 	"\n\t mov   %ebx, %esp"
 	"\n\t popl  %esi"
 	"\n\t popl  %ebx"
-	"\n\t leave"
-	"\n\t ret\n"
 );
 
 /* result == %eax */
