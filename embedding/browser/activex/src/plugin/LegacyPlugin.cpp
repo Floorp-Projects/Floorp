@@ -1091,7 +1091,13 @@ _GetIDispatchFromJRI(JRIEnv *env, struct MozAxPlugin* self, IDispatch **pdisp)
 {
     *pdisp = NULL;
 
-    NPP npp = (NPP) self->getPeer(env);
+    // Note: You get a nasty crash calling self->getPeer(env), this obscure cast fixes
+    //       it. More details in the link:
+    //
+    // http://groups.google.com/groups?selm=385D9543.4087F1C6%40ermapper.com.au&output=gplain
+
+    NPP npp = (NPP) netscape_plugin_Plugin_getPeer(env,
+            reinterpret_cast<netscape_plugin_Plugin*> (self));
     PluginInstanceData *pData = (PluginInstanceData *) npp->pdata;
     if (pData == NULL)
     { 
