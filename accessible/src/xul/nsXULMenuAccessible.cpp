@@ -44,10 +44,9 @@
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 // ------------------------ Menu Item -----------------------------
 
@@ -134,12 +133,12 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccKeyboardShortcut(nsAString& _retval
       if (role == ROLE_MENUBAR) {
         // If top level menu item, add Alt+ or whatever modifier text to string
         // No need to cache pref service, this happens rarely
-        if (gMenuAccesskeyModifier == -1) {  // Need to initialize cached global accesskey pref
+        if (gMenuAccesskeyModifier == -1) {
+          // Need to initialize cached global accesskey pref
           gMenuAccesskeyModifier = 0;
-          nsresult result;
-          nsCOMPtr<nsIPref> prefService(do_GetService(kPrefCID, &result));
-          if (NS_SUCCEEDED(result) && prefService)
-            prefService->GetIntPref("ui.key.menuAccessKey", &gMenuAccesskeyModifier);
+          nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+          if (prefBranch)
+            prefBranch->GetIntPref("ui.key.menuAccessKey", &gMenuAccesskeyModifier);
         }
         nsAutoString propertyKey;
         switch (gMenuAccesskeyModifier) {
