@@ -233,7 +233,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getAttributes
     return NULL;
   }
 
-  env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) nodeMap);
+  env->SetLongField(jret, JavaDOMGlobals::namedNodeMapPtrFID, (jlong) nodeMap);
   if (env->ExceptionOccurred()) {
     JavaDOMGlobals::ThrowException(env,
       "Node.getAttributes: failed to set node ptr");

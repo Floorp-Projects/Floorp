@@ -60,6 +60,7 @@ class JavaDOMGlobals {
   static jfieldID nodePtrFID;
   static jfieldID nodeListPtrFID;
   static jfieldID domImplementationPtrFID;
+  static jfieldID namedNodeMapPtrFID;
 
   static jfieldID nodeTypeAttributeFID;
   static jfieldID nodeTypeCDataSectionFID;

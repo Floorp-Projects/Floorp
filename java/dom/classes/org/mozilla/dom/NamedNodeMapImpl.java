@@ -27,6 +27,7 @@ import org.w3c.dom.DOMException;
 
 public class NamedNodeMapImpl implements NamedNodeMap {
 
+    private long p_nsIDOMNamedNodeMap = 0;
     // instantiated from JNI only
     private NamedNodeMapImpl() {}
 

@@ -46,6 +46,7 @@ jclass JavaDOMGlobals::textClass = NULL;
 jfieldID JavaDOMGlobals::nodePtrFID = NULL;
 jfieldID JavaDOMGlobals::nodeListPtrFID = NULL;
 jfieldID JavaDOMGlobals::domImplementationPtrFID = NULL;
+jfieldID JavaDOMGlobals::namedNodeMapPtrFID = NULL;
 
 jfieldID JavaDOMGlobals::nodeTypeAttributeFID = NULL;
 jfieldID JavaDOMGlobals::nodeTypeCDataSectionFID = NULL;
@@ -167,6 +168,9 @@ void JavaDOMGlobals::Initialize(JNIEnv *env)
 
   namedNodeMapClass = env->FindClass("org/mozilla/dom/NamedNodeMapImpl");
   if (!namedNodeMapClass) return;
+  namedNodeMapPtrFID = 
+    env->GetFieldID(namedNodeMapClass, "p_nsIDOMNamedNodeMap", "J");
+  if (!namedNodeMapPtrFID) return;
   namedNodeMapClass = (jclass) env->NewGlobalRef(namedNodeMapClass);
   if (!namedNodeMapClass) return;
 

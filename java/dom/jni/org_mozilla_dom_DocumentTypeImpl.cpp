@@ -57,7 +57,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentTypeImpl_getEntities
     return NULL;
   }
 
-  env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) nodeMap);
+  env->SetLongField(jret, JavaDOMGlobals::namedNodeMapPtrFID, (jlong) nodeMap);
   if (env->ExceptionOccurred()) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("DocumentType.getEntities: failed to set node ptr: %x\n", nodeMap));
@@ -132,7 +132,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentTypeImpl_getNotations
     return NULL;
   }
 
-  env->SetLongField(jret, JavaDOMGlobals::nodePtrFID, (jlong) nodeMap);
+  env->SetLongField(jret, JavaDOMGlobals::namedNodeMapPtrFID, (jlong) nodeMap);
   if (env->ExceptionOccurred()) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("DocumentType.getNotations: failed to set node ptr: %x\n", nodeMap));
