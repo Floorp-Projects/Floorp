@@ -27,6 +27,14 @@
 ##
 ##############################################################################
 
+# Allow the user to override the default host identity
+if [ -n "$MOZILLA_HOSTIDENT" ]
+then
+	echo $MOZILLA_HOSTIDENT
+
+	exit
+fi
+
 HOSTIDENT_ARCH=`uname -s`
 
 # Determine the host name
