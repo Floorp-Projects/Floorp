@@ -1189,7 +1189,8 @@ function MsgFilters(emailAddress)
     var args;
     if (emailAddress)
     {
-      /* we have to do prefill filter so we are going to launch the filterEditor dialog
+      /* we have to do prefill filter so we are going to 
+         launch the filterEditor dialog
          and prefill that with the emailAddress */
          
       var curFilterList = preselectedFolder.getFilterList(msgWindow);
@@ -1198,21 +1199,19 @@ function MsgFilters(emailAddress)
       window.openDialog("chrome://messenger/content/FilterEditor.xul", "", 
                         "chrome, modal, resizable,centerscreen,dialog=yes", args);
 
-      /* if the user hits ok in the filterEditor dialog we set args.refresh=true there
+      /* if the user hits ok in the filterEditor dialog we set 
+         args.refresh=true there
          we check this here in args to show filterList dialog */
-
       if ("refresh" in args && args.refresh)
       {
-         args = { folder: preselectedFolder };
-         window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
-                        "chrome,modal,resizable,centerscreen,dialog=yes", args);
+         args = { refresh: true, folder: preselectedFolder };
+         MsgFilterList(args);
       }
     }
-    else  //just launch filterList dialog
+    else  // just launch filterList dialog
     {
-      args = { folder: preselectedFolder };
-      window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
-                       "chrome,modal,resizable,centerscreen,dialog=yes", args);
+      args = { refresh: false, folder: preselectedFolder };
+      MsgFilterList(args);
     }
 }
 
@@ -1809,27 +1808,33 @@ function MsgSearchMessages()
     var preselectedFolder = null;
     if ("GetFirstSelectedMsgFolder" in window)
       preselectedFolder = GetFirstSelectedMsgFolder();
-    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-    var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-    var searchWindow = windowManagerInterface.getMostRecentWindow("mailnews:search");
 
-    if (searchWindow)
-        searchWindow.focus();
-    else
-        window.openDialog("chrome://messenger/content/SearchDialog.xul", "", 
-                          "chrome,resizable,status,centerscreen,dialog=no", { folder: preselectedFolder });
+    var args = { folder: preselectedFolder };
+    OpenOrFocusWindow(args, "mailnews:search", "chrome://messenger/content/SearchDialog.xul");
 }
 
 function MsgSearchAddresses()
 {
-    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-    var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-    var abSearchWindow = windowManagerInterface.getMostRecentWindow("mailnews:absearch");
-
-    if (abSearchWindow)
-        abSearchWindow.focus();
-    else
-        window.openDialog("chrome://messenger/content/ABSearchDialog.xul", "", 
-                          "chrome,resizable,status,centerscreen,dialog=no", {directory: null});
+  var args = { directory: null };
+  OpenOrFocusWindow(args, "mailnews:absearch", "chrome://messenger/content/ABSearchDialog.xul");
 }
  
+function MsgFilterList(args)
+{
+  OpenOrFocusWindow(args, "mailnews:filterlist", "chrome://messenger/content/FilterListDialog.xul");
+}
+
+function OpenOrFocusWindow(args, windowType, chromeURL)
+{
+  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService(Components.interfaces.nsIWindowMediator);
+  var desiredWindow = windowManager.getMostRecentWindow(windowType);
+
+  if (desiredWindow) {
+    desiredWindow.focus();
+    if ("refresh" in args && args.refresh)
+      desiredWindow.refresh();
+  }
+  else
+    window.openDialog(chromeURL, "", "chrome,resizable,status,centerscreen,dialog=no", args);
+}
+

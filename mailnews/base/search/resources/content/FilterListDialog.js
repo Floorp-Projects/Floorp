@@ -180,7 +180,7 @@ function toggleFilter(aFilterURI)
     var filter = filterResource.GetDelegate("filter",
                                             Components.interfaces.nsIMsgFilter);
     filter.enabled = !filter.enabled;
-    refreshFilterList();
+    refresh();
 }
 
 // sets up the menulist and the gFilterTree
@@ -229,14 +229,15 @@ function onFilterSelect(event)
     updateButtons();
 }
 
-function onEditFilter() {
-    var selectedFilter = currentFilter();
-    var args = {filter: selectedFilter};
+function onEditFilter() 
+{
+  var selectedFilter = currentFilter();
+  var args = {filter: selectedFilter};
 
-    window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable,centerscreen", args);
+  window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable,centerscreen", args);
 
-    if ("refresh" in args && args.refresh)
-        refreshFilterList();
+  if ("refresh" in args && args.refresh)
+    refresh();
 }
 
 function onNewFilter(emailAddress)
@@ -247,7 +248,7 @@ function onNewFilter(emailAddress)
   window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable,centerscreen", args);
 
   if ("refresh" in args && args.refresh)
-    refreshFilterList();
+    refresh();
 }
 
 function onDeleteFilter()
@@ -263,7 +264,7 @@ function onDeleteFilter()
       return;
 
     filterList.removeFilter(filter);
-    refreshFilterList();
+    refresh();
 }
 
 function onUp(event)
@@ -361,7 +362,7 @@ function moveCurrentFilter(motion)
       return;
 
     filterList.moveFilter(filter, motion);
-    refreshFilterList();
+    refresh();
 }
 
 function rebuildFilterTree(uri)
@@ -371,13 +372,21 @@ function rebuildFilterTree(uri)
   gFilterTree.setAttribute("ref", uri);
 }
 
-function refreshFilterList() 
+function refresh() 
 {
     if (!gFilterTree) 
       return;
 
+    var selectedRes;
+
     // store the selected resource before we rebuild the tree
-    var selectedRes = gFilterTree.currentIndex >= 0 ? gFilterTree.builderView.getResourceAtIndex(gFilterTree.currentIndex) : null;
+    try {
+      selectedRes = gFilterTree.currentIndex >= 0 ? gFilterTree.builderView.getResourceAtIndex(gFilterTree.currentIndex) : null;
+    }
+    catch (ex) {
+      dump("ex = " + ex + "\n");
+      selectedRes = null;
+    }
 
     rebuildFilterTree(gCurrentServerURI);
 
@@ -535,4 +544,3 @@ function doHelpButton()
   openHelp("mail-filters");
 }
 
-  
