@@ -62,95 +62,7 @@
 
 #include "TxString.h"
 
-#ifndef TX_EXE
 #include "nsIAtom.h"
-#else
-#include "NamedMap.h"
-#endif
-
-#ifdef TX_EXE
-
-class txAtom : public TxObject
-{
-public:
-    txAtom(const String& aString)
-    {
-        mString = aString;
-    }
-    MBool getString(String& aString)
-    {
-        aString = mString;
-        return MB_TRUE;
-    }
-    friend ostream& operator << (ostream& aOutput, const txAtom& aSource)
-    {
-        aOutput << aSource.mString;
-        return aOutput;
-    }
-private:
-    String mString;
-};
-
-class txAtomService
-{
-public:
-    static txAtom* getAtom(const String& aString)
-    {
-        if (!mAtoms && !Init())
-            return NULL;
-        txAtom* atom = (txAtom*)mAtoms->get(aString);
-        if (!atom) {
-            atom = new txAtom(aString);
-            if (!atom)
-                return 0;
-            mAtoms->put(aString, atom);
-        }
-        return atom;
-    }
-    
-    static MBool Init()
-    {
-        NS_ASSERTION(!mAtoms, "called without matching Shutdown()");
-        if (mAtoms)
-            return MB_TRUE;
-        mAtoms = new NamedMap();
-        if (!mAtoms)
-            return MB_FALSE;
-        mAtoms->setObjectDeletion(MB_TRUE);
-        return MB_TRUE;
-    }
-
-    static void Shutdown()
-    {
-        NS_ASSERTION(mAtoms, "called without matching Init()");
-        if (!mAtoms)
-            return;
-        delete mAtoms;
-        mAtoms = NULL;
-    }
-
-private:
-    static NamedMap* mAtoms;
-};
-
-#define TX_GET_ATOM(str) \
-    (txAtomService::getAtom(str))
-
-#define TX_ADDREF_ATOM(atom) {}
-
-#define TX_IF_ADDREF_ATOM(atom) {}
-
-#define TX_RELEASE_ATOM(atom) {}
-
-#define TX_IF_RELEASE_ATOM(atom) {}
-
-#define TX_GET_ATOM_STRING(atom, str) \
-    ((atom)->getString(str))
-
-#define TX_IMPL_ATOM_STATICS \
-      NamedMap* txAtomService::mAtoms = 0
-
-#else
 
 typedef nsIAtom txAtom;
 
@@ -167,7 +79,5 @@ typedef nsIAtom txAtom;
 
 #define TX_GET_ATOM_STRING(atom, string) \
     NS_SUCCEEDED((atom)->ToString(string))
-
-#endif  // TX_EXE
 
 #endif  // TRANSFRMX_ATOM_H

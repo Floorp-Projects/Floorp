@@ -71,7 +71,6 @@ Expr* txXSLTProcessor::gNodeExpr = 0;
  * Implement static variables for atomservice and dom.
  */
 #ifdef TX_EXE
-TX_IMPL_ATOM_STATICS;
 TX_IMPL_DOM_STATICS;
 #endif
 
