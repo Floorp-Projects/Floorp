@@ -98,6 +98,12 @@ private:
     int m_iWheelDelta;
 #endif
 
+public:
+	OutlinerColumn_t ** m_pColumn;
+
+	int m_iNumColumns;
+	int m_iVisColumns;
+
 protected:
     LPUNKNOWN m_pUnkImage;
     LPIMAGEMAP m_pIImage;
@@ -138,10 +144,6 @@ protected:
 	BOOL m_bClearOnRelease;
 	BOOL m_bSelectOnRelease;
 
-	OutlinerColumn_t ** m_pColumn;
-
-	int m_iNumColumns;
-	int m_iVisColumns;
 	int m_iTotalWidth;
 
     BOOL m_bDraggingData;
@@ -174,6 +176,8 @@ protected:
 						 CropType_t cropping, AlignType_t alignment );
 
 // Basic Overrideables
+	virtual void AdjustTipSize(int& left, int& top, int& hor, int& vert) {};
+	virtual int GetIndentationWidth();
 
 	virtual COutlinerDropTarget* CreateDropTarget();
 
@@ -256,7 +260,7 @@ protected:
 	virtual void OnSelDblClk();
 
 public:
-    COutliner ( );
+    COutliner (BOOL bUseTriggerAndLineBitmaps = TRUE);
     ~COutliner ( );
 
 	STDMETHODIMP QueryInterface(REFIID,LPVOID *);

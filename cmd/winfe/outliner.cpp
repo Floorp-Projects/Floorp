@@ -142,7 +142,7 @@ STDMETHODIMP CNSOutlinerFactory::CreateInstance(
 
 DECLARE_FACTORY(CNSOutlinerFactory);
 
-COutliner::COutliner ( )
+COutliner::COutliner ( BOOL bUseTriggerAndLineBitmaps )
 {
 #ifdef _WIN32
     m_iWheelDelta = 0;
@@ -179,13 +179,18 @@ COutliner::COutliner ( )
 	m_hItalFont = NULL;
 
 	m_pUnkImage = NULL;
-	ApiApiPtr(api);
-	m_pUnkImage = api->CreateClassInstance(
-		APICLASS_IMAGEMAP,NULL,(APISIGNATURE)GetOutlinerBitmap());
-	m_pUnkImage->QueryInterface(IID_IImageMap,(LPVOID*)&m_pIImage);
-	ASSERT(m_pIImage);
-	if (!m_pIImage->GetResourceID())
-		m_pIImage->Initialize(GetOutlinerBitmap(),16,16);
+	m_pIImage = NULL;
+
+	if (bUseTriggerAndLineBitmaps)
+	{
+		ApiApiPtr(api);
+		m_pUnkImage = api->CreateClassInstance(
+			APICLASS_IMAGEMAP,NULL,(APISIGNATURE)GetOutlinerBitmap());
+		m_pUnkImage->QueryInterface(IID_IImageMap,(LPVOID*)&m_pIImage);
+		ASSERT(m_pIImage);
+		if (!m_pIImage->GetResourceID())
+			m_pIImage->Initialize(GetOutlinerBitmap(),16,16);
+	}
 }
 
 COutliner::~COutliner ( )
@@ -310,6 +315,13 @@ UINT COutliner::GetOutlinerBitmap(void)
 BOOL COutliner::OnEraseBkgnd( CDC * )
 {
     return TRUE;
+}
+
+int COutliner::GetIndentationWidth()
+{
+	if (m_pIImage)
+		return m_pIImage->GetImageWidth();
+	return m_itemHeight;
 }
 
 int COutliner::GetColumnSize ( UINT idCol )
@@ -936,7 +948,7 @@ void COutliner::OnLButtonDown ( UINT nFlags, CPoint point )
 				GetTreeInfo ( iRow, NULL, &iDepth, NULL );
 				ReleaseLineData ( pLineData );
 
-				int iImageWidth = m_pIImage->GetImageWidth ( );
+				int iImageWidth = GetIndentationWidth();
 				RECT rcToggle = m_rcHit;
 				rcToggle.left += iDepth * iImageWidth;
 				rcToggle.right = rcToggle.left + iImageWidth;
@@ -970,7 +982,7 @@ void COutliner::OnLButtonDblClk ( UINT nFlags, CPoint point )
 				GetTreeInfo ( iRow, NULL, &iDepth, NULL );
 				ReleaseLineData ( pLineData );
 
-				int iImageWidth = m_pIImage->GetImageWidth ( );
+				int iImageWidth = GetIndentationWidth();
 				RECT rcToggle = m_rcHit;
 				rcToggle.left += iDepth * iImageWidth;
 				rcToggle.right = rcToggle.left + iImageWidth;
@@ -1260,7 +1272,7 @@ void COutliner::OnTimer( UINT timer)
 						int x = 0;
 						if ( m_pColumn[ m_iTipCol ]->iCommand == m_idImageCol ) {
 							 int iDepth = 0;
-							 int iImageWidth = m_pIImage->GetImageWidth ( );
+							 int iImageWidth = GetIndentationWidth();
 							 if ( m_bHasPipes ) {
 								 GetTreeInfo ( m_iTipRow, NULL, &iDepth, NULL );
 								 x += (iDepth + 1) * iImageWidth;
@@ -1278,9 +1290,15 @@ void COutliner::OnTimer( UINT timer)
 							}
 							dwStyle |= m_pColumn[ m_iTipCol ]->alignment == AlignRight ? NSTTS_RIGHT : 0;
 
+							int left = m_rcHit.left + x;
+							int top = m_rcHit.top;
+							int horExtent = m_pColumn[m_iTipCol]->iCol - x;
+							int vertExtent = m_itemHeight;
+							
+							AdjustTipSize(left, top, horExtent, vertExtent);
+
 							m_pTip->Show( this->GetSafeHwnd(),
-										  m_rcHit.left + x, m_rcHit.top, 
-										  m_pColumn[ m_iTipCol ]->iCol - x, m_itemHeight,
+										  left, top, horExtent, vertExtent,
 										  lpszTipText,dwStyle, hTipFont);
 							m_iTipState = TIP_SHOWING;
 							if ( !(m_iTipTimer = SetTimer( ID_OUTLINER_HEARTBEAT, 100, NULL )) )
@@ -1854,7 +1872,7 @@ void COutliner::EraseLine ( int iLineNo, HDC hdc, LPRECT lpWinRect )
 
 int COutliner::DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void * pLineData )
 {
-	int iImageWidth = m_pIImage->GetImageWidth ( );
+	int iImageWidth = GetIndentationWidth();
 	int iMaxX = offset + m_pColumn[ iColNo ]->iCol;
 	int idx;
 
@@ -1967,7 +1985,7 @@ void COutliner::PaintColumn ( int iLineNo, int iColumn, LPRECT lpColumnRect,
 void COutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect )
 {
     void * pLineData;
-    int iImageWidth = m_pIImage->GetImageWidth ( );
+    int iImageWidth = GetIndentationWidth();
     CRect WinRect;
     GetClientRect(&WinRect);
 
@@ -2172,6 +2190,7 @@ void COutliner::SetCSID(int csid)
     m_itemHeight = m_cyChar;
     if ( m_pIImage )
         InitializeItemHeight(max(m_pIImage->GetImageHeight(),m_itemHeight));
+	else InitializeItemHeight(m_itemHeight);
 
 	Invalidate();
 
