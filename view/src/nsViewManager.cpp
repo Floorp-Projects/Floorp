@@ -3486,7 +3486,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     
     // Add POP first because the z-tree is in reverse order
     retval = AddToDisplayList(aView, aResult, bounds, bounds,
-                              POP_FILTER, aX - aOriginX, aY - aOriginY, PR_FALSE);
+                              POP_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE);
     if (retval)
       return retval;
     
@@ -3503,7 +3503,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
 
       // Add POP first because the z-tree is in reverse order
       retval = AddToDisplayList(aView, aResult, bounds, bounds,
-                                POP_CLIP, aX - aOriginX, aY - aOriginY, PR_FALSE);
+                                POP_CLIP, aX - aOriginX, aY - aOriginY, PR_TRUE);
 
       if (retval)
         return retval;
@@ -3566,7 +3566,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     bounds.y -= aOriginY;
 
     if (AddToDisplayList(aView, aResult, bounds, bounds, PUSH_CLIP,
-                         aX - aOriginX, aY - aOriginY, PR_FALSE)) {
+                         aX - aOriginX, aY - aOriginY, PR_TRUE)) {
       retval = PR_TRUE;
     }
     
@@ -3581,7 +3581,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     bounds.y -= aOriginY;
     
     retval = AddToDisplayList(aView, aResult, bounds, bounds,
-                              PUSH_FILTER, aX - aOriginX, aY - aOriginY, PR_FALSE);
+                              PUSH_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE);
     if (retval)
       return retval;
     
