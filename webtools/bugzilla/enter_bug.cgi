@@ -53,6 +53,11 @@ use vars qw(
   %versions
 );
 
+# We have to connect to the database, even though we don't use it in this code,
+# because we might occasionally rebuild the version cache, which causes tokens
+# to get deleted from the database, which needs a database connection.
+ConnectToDatabase();
+
 # If we're using bug groups to restrict bug entry, we need to know who the 
 # user is right from the start. 
 confirm_login() if (Param("usebuggroupsentry"));
