@@ -22,16 +22,16 @@
           </rule>
         </template>
 
-       <menupopup id="taskPopup">
+       <menupopup id="taskPopup" oncreate="CheckForMarketingKhakis()">
 		<menuitem value="&navigatorCmd.label;" oncommand="toNavigator()"/>
 		<menuitem value="&messengerCmd.label;" oncommand="toMessengerWindow()"/>
-    <menuitem value="&editorCmd.label;"    oncommand="toEditor();" />
+		<menuitem value="&editorCmd.label;"    oncommand="toEditor();" />
 		<menuseparator/>
 		<menuitem value="&addressBookCmd.label;" oncommand="toAddressBook()"/>
 		<menuitem value="&newsgroupsCmd.label;" disabled="true" oncommand="toNewsgroups()"/>
-		<menuitem value="&ircCmd.label;" oncommand="toIRC()"/>
+		<menuitem id="ircMenuItem" value="&ircCmd.label;" oncommand="toIRC()"/>
 		<menuseparator/>
-    <menu value="&walletMenu.label;" id="walletMenu">
+		<menu value="&walletMenu.label;" id="walletMenu">
       <menupopup oncreate="CheckForWallet()"> 
         <menuitem value="&walletSafeFillCmd.label;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
         <menuitem value="&walletQuickFillCmd.label;" id="walletQuickFill" oncommand="WalletAction('quickfill');"/> 

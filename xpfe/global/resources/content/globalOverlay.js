@@ -272,3 +272,15 @@ function NewEditorFromDraft()
   dump("NOT IMPLEMENTED: Write NewEditorFromDraft()!\n")
 }
 
+// Turn off menus for marketing.
+function CheckForMarketingKhakis()
+{
+  try {
+	if (this.pref.GetBoolPref("browser.marketing.khakis")) {
+	  element = document.getElementById("ircMenuItem");
+	  element.setAttribute("style","display: none;" );
+	}
+  } catch(e) {
+    dump("browser.marketing.khakis pref missing in all.js\n");
+  }
+}
