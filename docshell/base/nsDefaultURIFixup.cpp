@@ -79,7 +79,7 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
     if (uriString.EqualsIgnoreCase("view-source:", 12))
     {
         nsCOMPtr<nsIURI> uri;
-	PRUint32 newFixupFlags = aFixupFlags & ~FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+        PRUint32 newFixupFlags = aFixupFlags & ~FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
         nsresult rv =  CreateFixupURI(
             PromiseFlatString(Substring(uriString, 
                                         12, 
