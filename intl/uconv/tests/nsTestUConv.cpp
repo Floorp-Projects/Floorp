@@ -1131,11 +1131,6 @@ nsresult testAll()
 
 nsresult testFromArgs(int argc, char **argv)
 {
-  if (NS_FAILED(res)) {
-    printf("ERROR at GetService() code=0x%x.\n",res);
-    return res;
-  }
-
   if ((argc == 5) && (!strcmp(argv[1], "-tdec"))) {
     res = testDecoderFromFiles(argv[2], argv[3], argv[4]);
   } else if ((argc == 5) && (!strcmp(argv[1], "-tenc"))) {
