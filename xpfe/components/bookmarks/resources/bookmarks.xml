@@ -787,6 +787,7 @@
           var column = document.getAnonymousElementByAttribute(aContext, "sortDirection", "*");
           if (column)
             aContext.outlinerBoxObject.view.cycleHeader(column.id, column);
+          aContext = null;
         ]]></body>
       </method>
 
