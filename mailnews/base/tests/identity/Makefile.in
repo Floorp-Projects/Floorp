@@ -35,6 +35,7 @@ LIBS =	\
 		-lreg					\
 		-lmozjs					\
 		-lsecfree				\
+		$(TIMER_LIBS)			\
 		$(NSPR_LIBS)			\
 		$(NULL)
 
