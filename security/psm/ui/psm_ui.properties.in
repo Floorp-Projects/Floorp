@@ -5802,7 +5802,7 @@ adv_modules_module_list_content:
 <link REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvcontentstyle">
 {disable_right_click_js}
 </HEAD><BODY bgcolor=#FFFFFF>
-<p class=bu>Select Module</p>
+<p class=bu>{select_module}</p>
 <script language="JavaScript1.2">
 <!-- data here comes from PSM -->
 {_pk11modules pk11_newmodulewrap}
