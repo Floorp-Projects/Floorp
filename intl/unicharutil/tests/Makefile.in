@@ -30,13 +30,8 @@ PROGRAM		= UnicharSelfTest$(BIN_SUFFIX)
 
 CPPSRCS		= UnicharSelfTest.cpp 
 
-ifdef NO_LD_ARCHIVE_FLAGS
-LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo -lmozreg_s
-endif
-
 LIBS		= \
 		$(XPCOM_LIBS) \
-		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
