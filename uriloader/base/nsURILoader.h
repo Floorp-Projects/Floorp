@@ -26,6 +26,7 @@
 #include "nsCURILoader.h"
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
+#include "nsIInterfaceRequestor.h"
 
 class nsVoidArray;
 
@@ -45,7 +46,7 @@ protected:
   nsVoidArray * m_listeners;
 
   // prepare the load cookie for the window context
-  nsresult SetupLoadCookie(nsISupports * aWindowContext, nsISupports ** aLoadCookie);
+  nsresult SetupLoadCookie(nsISupports * aWindowContext, nsIInterfaceRequestor ** aLoadCookie);
 
   // a small helper function
   PRBool ShouldHandleContent(nsIURIContentListener * aCntListener, 

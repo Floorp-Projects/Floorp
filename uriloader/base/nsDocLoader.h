@@ -37,6 +37,7 @@
 #include "nsString.h"
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
 
 
@@ -48,7 +49,8 @@ class nsDocLoaderImpl : public nsIDocumentLoader,
                         public nsIStreamObserver,
                         public nsSupportsWeakReference,
                         public nsIProgressEventSink,
-                        public nsIWebProgress
+                        public nsIWebProgress,
+                        public nsIInterfaceRequestor
 {
 public:
 
@@ -68,6 +70,8 @@ public:
     // nsIStreamObserver methods: (for observing the load group)
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSIWEBPROGRESS
+
+    NS_DECL_NSIINTERFACEREQUESTOR
 
     // Implementation specific methods...
 protected:
