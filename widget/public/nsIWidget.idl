@@ -27,9 +27,10 @@
 
 #include "nsISupports.idl"
 #include "nsIScriptableRegion.idl"
-#include "nsIRollupListner.idl"
+#include "nsIRollupListener.idl"
 #include "nsIToolkit.idl"
 #include "nsIAppShell.idl"
+#include "nsIEnumerator.idl"
 
 %{ C++
 #include "nsRect.h"
@@ -57,24 +58,20 @@ class   nsIRollupListener;
 %}
 
 [ptr] native nsWidgetInitData(nsWidgetInitData);
-[ptr] native nsIEnumerator(nsIEnumerator);
 
-[ptr] native nsRect(nsRect);
-native nsRectRef(nsRect &);
-[ptr] native nsIDeviceContext(nsIDeviceContext);
-
-[ptr] native nsFont(nsFont);
+[ptr] native nsGUIEvent(nsGUIEvent);
+[ptr] native nsIMenuBar(nsIMenuBar);
 [ptr] native nsIMouseListener(nsIMouseListener);
 [ptr] native nsIEventListener(nsIEventListener);
 [ptr] native nsIMenuListener(nsIMenuListener);
 
+[ptr] native nsRect(nsRect);
+[ref] native nsRectRef(nsRect);
+[ptr] native nsFont(nsFont);
 [ptr] native nsColorMap(nsColorMap);
-[ptr] native nsIMenuBar(nsIMenuBar);
-
-[ptr] native nsGUIEvent(nsGUIEvent);
 
 [ptr] native nsIRenderingContext(nsIRenderingContext);
-
+[ptr] native nsIDeviceContext(nsIDeviceContext);
 
 native nscolor(nscolor);
 native nscoord(nscoord);
@@ -106,7 +103,7 @@ typedef voidStar nsNativeWidget;
 struct nsWidgetInitData {
   nsWidgetInitData()
   : clipChildren(PR_FALSE), clipSiblings(PR_FALSE),
-      mWindowType(4),
+      mWindowType(3),
       mBorderStyle(-1)
   {
   }
@@ -247,13 +244,13 @@ interface nsIWidget : nsISupports
    * @param     aInitData data that is used for widget initialization
    *
    */
-  void Create(in nsIWidget aParent,
+  void Create(in nsIWidget         aParent,
               [const] in nsRectRef aRect,
-              in EVENT_CALLBACK   aHandleEventFunction,
-              in nsIDeviceContext aContext,
-              in nsIAppShell      aAppShell,
-              in nsIToolkit       aToolkit,
-              in nsWidgetInitData aInitData);
+              in EVENT_CALLBACK    aHandleEventFunction,
+              in nsIDeviceContext  aContext,
+              in nsIAppShell       aAppShell,
+              in nsIToolkit        aToolkit,
+              in nsWidgetInitData  aInitData);
 
   /**
    * Create and initialize a widget with a native window parent
@@ -274,13 +271,24 @@ interface nsIWidget : nsISupports
    * @param     aRect     the widget dimension
    * @param     aHandleEventFunction the event handler callback function
    */
-  void CreateFromNativeWidget(in nsNativeWidget  aParent,
+  void CreateWithNativeParent(in nsNativeWidget    aParent,
                               [const] in nsRectRef aRect,
-                              in EVENT_CALLBACK   aHandleEventFunction,
-                              in nsIDeviceContext aContext,
-                              in nsIAppShell      aAppShell,
-                              in nsIToolkit       aToolkit,
-                              in nsWidgetInitData aInitData);
+                              in EVENT_CALLBACK    aHandleEventFunction,
+                              in nsIDeviceContext  aContext,
+                              in nsIAppShell       aAppShell,
+                              in nsIToolkit        aToolkit,
+                              in nsWidgetInitData  aInitData);
+
+
+  /**
+   * Get the window type which was set in nsWidgetInitData during Create()
+   */
+  readonly attribute nsWindowType WindowType;
+
+  /**
+   * Get the border style which was set in nsWidgetInitData during Create()
+   */
+  readonly attribute nsBorderStyle BorderStyle;
 
   /**
    * Accessor functions to get and set the client data associated with the
@@ -296,16 +304,6 @@ interface nsIWidget : nsISupports
    *
    */
   void GetParent(out nsIWidget aParent);
-
-  /**
-   * Return an nsEnumerator over the children of this widget.
-   *
-   * @return an enumerator over the list of children or nsnull if it does not
-   * have any children
-   *
-   */
-  void GetChildren(out nsIEnumerator aChildren);
-
   
   /**
    * Show or hide this widget
@@ -345,7 +343,7 @@ interface nsIWidget : nsISupports
               in PRBool  aRepaint);
 
   /**
-   * Move or resize this widget.
+   * Move and resize this widget.
    *
    * @param aX       the new x position expressed in the parent's coordinate system
    * @param aY       the new y position expressed in the parent's coordinate system
@@ -461,7 +459,7 @@ interface nsIWidget : nsISupports
    * @param aIsSynchronouse PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
    * @see #Update()
    */
-  void InvalidateRect([const] in nsIScriptableRegion aRegion, in PRBool aIsSynchronous);
+  void InvalidateRegion([const] in nsIScriptableRegion aRegion, in PRBool aIsSynchronous);
 
   /**
    * Force a synchronous repaint of the window if there are dirty rects.
@@ -501,7 +499,6 @@ interface nsIWidget : nsISupports
    *
    */
   attribute nsColorMap ColorMap;
-  //  SetColorMap(in nsColorMap aColorMap);
 
   /**
    * Scroll this widget.
@@ -512,21 +509,6 @@ interface nsIWidget : nsISupports
    *
    */
   void Scroll(in PRInt32 aDx, in PRInt32 aDy, in nsRect aClipRect);
-
-  /** 
-   * Internal methods
-   */
-  void AddChild(in nsIWidget aChild);
-  void RemoveChild(in nsIWidget aChild);
-  void GetNativeData(out voidStar aData, in PRUint32 aDataType);
-  void FreeNativeData(in voidStar aData, in PRUint32 aDataType);
-
-  /**
-   * Set border style
-   * Must be called before Create.
-   * @param aBorderStyle @see nsBorderStyle
-   */
-  void SetBorderStyle(in nsBorderStyle aBorderStyle);
 
   /**
    * Set the widget's title.
@@ -557,7 +539,6 @@ interface nsIWidget : nsISupports
    * @param  aOldRect  widget coordinates stored in the x,y members
    * @param  aNewRect  screen coordinates stored in the x,y members
    */
-
   void WidgetToScreen([const] in nsRect aOldRect, out nsRect aNewRect);
 
   /**
@@ -575,7 +556,6 @@ interface nsIWidget : nsISupports
    * adjusted.
    *
    */
-
   void BeginResizingChildren();
 
   /**
@@ -605,13 +585,6 @@ interface nsIWidget : nsISupports
    */
   void DispatchEvent(in nsGUIEvent event, in nsEventStatus aStatus);
 
-
-  /**
-   * FSets the vertical scrollbar widget
-   *
-   */
-  void SetVerticalScrollbar(in nsIWidget aScrollbar);
-   
   /**
    * For printing and lightweight widgets
    *
@@ -644,4 +617,19 @@ interface nsIWidget : nsISupports
 	 */
   void CaptureRollupEvents(in nsIRollupListener aListener, in PRBool aDoCapture, in PRBool aConsumeRollupEvent);
 
+
+  /** 
+   * Internal methods
+   */
+  void AddChild(in nsIWidget aChild);
+  void RemoveChild(in nsIWidget aChild);
+
+  /**
+   * Return an nsEnumerator over the children of this widget.
+   *
+   * @return an enumerator over the list of children or nsnull if it does not
+   * have any children
+   *
+   */
+  void GetChildren(out nsIEnumerator aChildren);
 };
