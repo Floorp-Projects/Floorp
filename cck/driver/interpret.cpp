@@ -658,6 +658,17 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						}
 					}
 				}
+				else if (strcmp(pcmd, "IsSamedomain") == 0)
+				{
+					CString ispDomainName = GetGlobal("DomainName");
+					CString newsDomainName;
+					newsDomainName = CWizardUI::GetScreenValue(curWidget);
+					if (newsDomainName == ispDomainName)
+					{
+						AfxMessageBox("The domain name for News must be different from the domain name used for Mail", MB_OK);
+						return FALSE;
+					}
+				}
 				else if(strcmp(pcmd, "IsNumeric") ==0)
 				{
 					WIDGET *wid;
