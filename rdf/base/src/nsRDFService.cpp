@@ -189,8 +189,8 @@ static PLHashAllocOps dataSourceHashAllocOps = {
 //
 class LiteralImpl : public nsIRDFLiteral {
 public:
-    LiteralImpl(const PRUnichar* s);
-    virtual ~LiteralImpl();
+    static nsresult
+    Create(const PRUnichar* aValue, nsIRDFLiteral** aResult);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -201,13 +201,38 @@ public:
     // nsIRDFLiteral
     NS_DECL_NSIRDFLITERAL
 
-private:
-    nsAutoString mValue;
+protected:
+    LiteralImpl(const PRUnichar* s);
+    virtual ~LiteralImpl();
+
+    const PRUnichar* GetValue() const {
+        size_t objectSize = ((sizeof(LiteralImpl) + sizeof(PRUnichar) - 1) / sizeof(PRUnichar)) * sizeof(PRUnichar);
+        return NS_REINTERPRET_CAST(const PRUnichar*, NS_REINTERPRET_CAST(const unsigned char*, this) + objectSize);
+    }
 };
 
 
+nsresult
+LiteralImpl::Create(const PRUnichar* aValue, nsIRDFLiteral** aResult)
+{
+    // Goofy math to get alignment right. Copied from nsSharedString.h.
+    size_t objectSize = ((sizeof(LiteralImpl) + sizeof(PRUnichar) - 1) / sizeof(PRUnichar)) * sizeof(PRUnichar);
+    size_t stringLen = nsCharTraits<PRUnichar>::length(aValue);
+    size_t stringSize = (stringLen + 1) * sizeof(PRUnichar);
+
+    void* objectPtr = operator new(objectSize + stringSize);
+    if (! objectPtr)
+        return NS_ERROR_NULL_POINTER;
+
+    PRUnichar* buf = NS_REINTERPRET_CAST(PRUnichar*, NS_STATIC_CAST(unsigned char*, objectPtr) + objectSize);
+    nsCharTraits<PRUnichar>::copy(buf, aValue, stringLen + 1);
+
+    NS_ADDREF(*aResult = new (objectPtr) LiteralImpl(buf));
+    return NS_OK;
+}
+
+
 LiteralImpl::LiteralImpl(const PRUnichar* s)
-    : mValue(s)
 {
     NS_INIT_REFCNT();
     gRDFService->RegisterLiteral(this);
@@ -277,7 +302,7 @@ LiteralImpl::GetValue(PRUnichar* *value)
     if (! value)
         return NS_ERROR_NULL_POINTER;
 
-    *value = nsXPIDLString::Copy(mValue.GetUnicode());
+    *value = nsXPIDLString::Copy(GetValue());
     return NS_OK;
 }
 
@@ -285,7 +310,7 @@ LiteralImpl::GetValue(PRUnichar* *value)
 NS_IMETHODIMP
 LiteralImpl::GetValueConst(const PRUnichar** aValue)
 {
-    *aValue = mValue.GetUnicode();
+    *aValue = GetValue();
     return NS_OK;
 }
 
@@ -840,13 +865,7 @@ RDFServiceImpl::GetLiteral(const PRUnichar* aValue, nsIRDFLiteral** aLiteral)
     }
 
     // Nope. Create a new one
-    literal = new LiteralImpl(aValue);
-    if (! literal)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *aLiteral = literal;
-    NS_ADDREF(literal);
-    return NS_OK;
+    return LiteralImpl::Create(aValue, aLiteral);
 }
 
 NS_IMETHODIMP
