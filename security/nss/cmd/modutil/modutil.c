@@ -31,6 +31,10 @@
  * GPL.
  */
 
+/* To edit this file, set TABSTOPS to 4 spaces. 
+ * This is not the normal NSS convention. 
+ */
+
 #include "modutil.h"
 #include "install.h"
 #include <plstr.h>
@@ -407,7 +411,7 @@ parse_args(int argc, char *argv[])
 			command = LIST_COMMAND;
 			/* This option may or may not have an argument */
 			if( (i+1 < argc) && (argv[i+1][0] != '-') ) {
-					moduleName = argv[++i];
+				moduleName = argv[++i];
 			}
 			break;
 		case RAW_LIST_ARG:
@@ -418,7 +422,7 @@ parse_args(int argc, char *argv[])
 			command = RAW_LIST_COMMAND;
 			/* This option may or may not have an argument */
 			if( (i+1 < argc) && (argv[i+1][0] != '-') ) {
-					moduleName = argv[++i];
+				moduleName = argv[++i];
 			}
 			break;
 		case RAW_ADD_ARG:
@@ -743,6 +747,8 @@ usage()
 "-changepw TOKEN                  Change the password on the named token\n"
 "   [-pwfile FILE]                The old password is in this file\n"
 "   [-newpwfile FILE]             The new password is in this file\n"
+"-chkfips [ true | false ]        If true, verify  FIPS mode.  If false,\n"
+"                                 verify not FIPS mode\n"
 "-create                          Create a new set of security databases\n"
 "-default MODULE                  Make the given module a default provider\n"
 "   -mechanisms MECHANISM_LIST    of the given mechanisms\n"
@@ -765,8 +771,9 @@ usage()
 "                                 directory is used\n"
 "-list [MODULE]                   Lists information about the specified module\n"
 "                                 or about all modules if none is specified\n"
-"-chkfips [ true | false ]        If true, verify  FIPS mode.  If false,\n"
-"                                 verify not FIPS mode\n"
+"-rawadd MODULESPEC               Add module spec string to secmod DB\n"
+"-rawlist [MODULE]                Display module spec(s) for one or all\n"
+"                                 loadable modules\n"
 "-undefault MODULE                The given module is NOT a default provider\n"
 "   -mechanisms MECHANISM_LIST    of the listed mechanisms\n"
 "   [-slot SLOT]                  limit change to only the given slot\n"
@@ -829,25 +836,28 @@ main(int argc, char *argv[])
 		goto loser;
 	}
 
-        if ((command == RAW_LIST_COMMAND) || (command == RAW_ADD_COMMAND)) {
-	    if(!moduleName) {
-		char *readOnlyStr, *noCertDBStr, *sep;
-		if (!secmodName) secmodName="secmod.db";
-		if (!dbprefix) dbprefix = "";
-		sep = ((command == RAW_LIST_COMMAND) && nocertdb) ? "," : " ";
-		readOnlyStr = (command == RAW_LIST_COMMAND) ? "readOnly" : "" ;
-		noCertDBStr = nocertdb ? "noCertDB" : "";
-		SECU_ConfigDirectory(dbdir);
+	if ((command == RAW_LIST_COMMAND) || (command == RAW_ADD_COMMAND)) {
+		if(!moduleName) {
+			char *readOnlyStr, *noCertDBStr, *sep;
+			if (!secmodName) secmodName="secmod.db";
+			if (!dbprefix) dbprefix = "";
+			sep = ((command == RAW_LIST_COMMAND) && nocertdb) ? "," : " ";
+			readOnlyStr = (command == RAW_LIST_COMMAND) ? "readOnly" : "" ;
+			noCertDBStr = nocertdb ? "noCertDB" : "";
+			SECU_ConfigDirectory(dbdir);
 
-		moduleName=PR_smprintf("name=\"NSS default Module DB\" parameters=\"configdir=%s certPrefix=%s keyPrefix=%s secmod=%s flags=%s%s%s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
-			SECU_ConfigDirectory(NULL),dbprefix, dbprefix,
-				secmodName,  readOnlyStr,sep,  noCertDBStr);
-	    }
+			moduleName=PR_smprintf(
+	"name=\"NSS default Module DB\" parameters=\"configdir=%s certPrefix=%s "
+	"keyPrefix=%s secmod=%s flags=%s%s%s\" NSS=\"flags=internal,moduleDB,"
+	"moduleDBOnly,critical\"",
+			                      SECU_ConfigDirectory(NULL),dbprefix,dbprefix,
+			                      secmodName, readOnlyStr,sep, noCertDBStr);
+		}
 	    if (command == RAW_LIST_COMMAND) {
-		errcode = RawListModule(moduleName);
+			errcode = RawListModule(moduleName);
 	    } else {
-		PORT_Assert(moduleSpec);
-		errcode = RawAddModule(moduleName,moduleSpec);
+			PORT_Assert(moduleSpec);
+			errcode = RawAddModule(moduleName,moduleSpec);
 	    }
 	    goto loser;
 	}

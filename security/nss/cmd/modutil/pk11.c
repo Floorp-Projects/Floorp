@@ -31,6 +31,10 @@
  * GPL.
  */
 
+/* To edit this file, set TABSTOPS to 4 spaces. 
+ * This is not the normal NSS convention. 
+ */
+
 #include "modutil.h"
 /* #include "secmodti.h"  */
 #include "pk11func.h"
