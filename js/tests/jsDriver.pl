@@ -538,7 +538,7 @@ sub get_sm_engine_command {
             }
         }
         
-        if (!$object_dir) {
+        if (!$object_dir && $os_type ne "WIN") {
             die ("Could not locate an object directory in $retval " .
                  "matching the pattern *$pattern.  Have you built the " .
                  "engine?\n");
@@ -546,7 +546,7 @@ sub get_sm_engine_command {
         
         $retval .= $object_dir . "/";
 
-        if (!(-x $retval . "js") && ($os_type eq "WIN")) {
+        if (!(-x $retval . "js.exe") && ($os_type eq "WIN")) {
             # On windows, you can build with js.mak as well as Makefile.ref
             # (Can you say WTF boys and girls?  I knew you could.)
             # So, if the exe the would have been built by Makefile.ref isn't 
