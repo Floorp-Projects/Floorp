@@ -27,25 +27,11 @@
 #include "nsHashtable.h"
 
 class nsIEventQueue;
-class EventQueueEntry;
-
-// because available enumerators can't handle deletions during enumeration
-class EventQueueEntryEnumerator {
-public:
-  EventQueueEntryEnumerator();
-  virtual ~EventQueueEntryEnumerator();
-  void             Reset(EventQueueEntry *aStart);
-  EventQueueEntry *Get(void);
-  void             Skip(EventQueueEntry *aSkip);
-private:
-  EventQueueEntry *mCurrent;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsEventQueueServiceImpl : public nsIEventQueueService
 {
-friend class EventQueueEntry;
 public:
   nsEventQueueServiceImpl();
   virtual ~nsEventQueueServiceImpl();
@@ -76,13 +62,11 @@ private:
                 Addref the descriptor in any case. parameter aNative is
                 ignored if the queue already exists. */
   NS_IMETHOD CreateEventQueue(PRThread *aThread, PRBool aNative);
-  void       AddEventQueueEntry(EventQueueEntry *aEntry);
-  void       RemoveEventQueueEntry(EventQueueEntry *aEntry);
+  NS_IMETHOD MakeNewQueue(PRThread* thread, PRBool aNative, nsIEventQueue **aQueue);
+  inline nsresult GetYoungestEventQueue(nsIEventQueue *queue, nsIEventQueue **aResult);
 
-  nsHashtable     *mEventQTable;
-  EventQueueEntry *mBaseEntry;
-  PRMonitor       *mEventQMonitor;
-  EventQueueEntryEnumerator mEnumerator;
+  nsSupportsHashtable mEventQTable;
+  PRMonitor           *mEventQMonitor;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

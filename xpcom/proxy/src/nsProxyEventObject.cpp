@@ -162,9 +162,10 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
     // this will be our key in the hash table.  
     // this must not be a nsCOMPtr since we need to make sure that we do a QI.
     nsCOMPtr<nsISupports> destQRoot;
-	if(NS_FAILED(destQueue->QueryInterface(NS_GET_IID(nsISupports), (void**)&destQueue)))
-    return nsnull;
-
+    nsresult rv;
+    destQRoot = do_QueryInterface(destQueue, &rv);
+    if (NS_FAILED(rv))
+        return nsnull;
 
     char* rootKeyString = PR_sprintf_append(nsnull, "%p.%p.%d", (PRUint32)rootObject.get(), (PRUint32)destQRoot.get(), proxyType);
     nsStringKey rootkey(rootKeyString);

@@ -137,7 +137,7 @@ public:
 
 protected:
    nsCOMPtr<nsIEventQueueService>   mService;
-   nsIEventQueue                    *mQueue;
+   nsCOMPtr<nsIEventQueue>          mQueue;
 };
 
 #endif /* nsXULWindow_h__ */

@@ -37,9 +37,10 @@ public:
 
   // nsIEventQueue interface...
     NS_IMETHOD InitEvent(PLEvent* aEvent, void* owner, 
-		                 PLHandleEventProc handler, PLDestroyEventProc destructor);
+                         PLHandleEventProc handler,
+                         PLDestroyEventProc destructor);
     
-	NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent);
+    NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent);
     NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent, void** aResult);
 
     NS_IMETHOD ProcessPendingEvents();
@@ -80,22 +81,24 @@ public:
     NS_IMETHOD GetYoungest(nsIEventQueue **aQueue);
     NS_IMETHOD GetYoungestActive(nsIEventQueue **aQueue);
     NS_IMETHOD SetYounger(nsPIEventQueueChain *aQueue);
+    NS_IMETHOD GetYounger(nsIEventQueue **aQueue);
     NS_IMETHOD SetElder(nsPIEventQueueChain *aQueue);
+    NS_IMETHOD GetElder(nsIEventQueue **aQueue);
 
 private:
   PLEventQueue  *mEventQueue;
   PRBool        mAcceptingEvents, // accept new events or pass them on?
                 mCouldHaveEvents; // accepting new ones, or still have old ones?
-  nsPIEventQueueChain *mYoungerQueue,
-                      *mElderQueue;
+  nsCOMPtr<nsPIEventQueueChain> mElderQueue; // younger can hold on to elder
+  nsPIEventQueueChain *mYoungerQueue; // but elder can't hold on to younger
 
   void NotifyObservers(const char *aTopic);
 
   void CheckForDeactivation() {
-         if (mCouldHaveEvents && !mAcceptingEvents && !PL_EventAvailable(mEventQueue)) {
-            mCouldHaveEvents = PR_FALSE;
-            Release();
-         }
-       }
+    if (mCouldHaveEvents && !mAcceptingEvents && !PL_EventAvailable(mEventQueue)) {
+      mCouldHaveEvents = PR_FALSE;
+      NS_RELEASE_THIS(); // balance ADDREF from the constructor
+    }
+  }
 };
 

@@ -189,8 +189,8 @@ public:
   ~stEventQueueStack();
   nsresult Success() const { return mPushedStack; }
 private:
-  nsIEventQueueService *mService;
-  nsIEventQueue        *mQueue;
+  nsCOMPtr<nsIEventQueueService> mService;
+  nsCOMPtr<nsIEventQueue>        mQueue;
   nsresult             mGotService,
                        mPushedStack;
 };
@@ -198,20 +198,16 @@ stEventQueueStack::stEventQueueStack() {
 
   // ick! this makes bad assumptions about the structure of the service, but
   // the service manager seems to need to work this way...
-  mGotService = nsServiceManager::GetService(kEventQueueServiceCID,
-                                  NS_GET_IID(nsIEventQueueService),
-                                  (nsISupports **) &mService);
+  mService = do_GetService(kEventQueueServiceCID, &mGotService);
+
   mPushedStack = mGotService;
   if (NS_SUCCEEDED(mGotService))
-    mService->PushThreadEventQueue(&mQueue);
+    mService->PushThreadEventQueue(getter_AddRefs(mQueue));
 }
 stEventQueueStack::~stEventQueueStack() {
   if (NS_SUCCEEDED(mPushedStack))
     mService->PopThreadEventQueue(mQueue);
     // more ick!
-  if (NS_SUCCEEDED(mGotService))
-    nsServiceManager::ReleaseService(kEventQueueServiceCID,
-                        NS_STATIC_CAST(nsISupports *, mService));
 }
 
 nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
