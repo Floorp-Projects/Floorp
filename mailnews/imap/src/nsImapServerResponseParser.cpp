@@ -31,6 +31,8 @@ extern PRLogModuleInfo* IMAP;
 
 nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProtocolConnection) :
 	nsIMAPGenericParser(),
+    fReportingErrors(PR_TRUE),
+    fCurrentLineContainedFlagInfo(PR_FALSE),
 	fServerConnection(imapProtocolConnection),
 	fCurrentCommandTag(nil),
 	fCurrentFolderReadOnly(PR_FALSE),
@@ -42,8 +44,6 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
 	fIMAPstate(kNonAuthenticated),
 	fSelectedMailboxName(nil),
 	fFlagState(nil),
-	fCurrentLineContainedFlagInfo(PR_FALSE),
-	fReportingErrors(PR_TRUE),
 	fLastChunk(PR_FALSE),
 	fServerIsNetscape3xServer(PR_FALSE),
 	m_shell(nsnull),
@@ -313,7 +313,8 @@ void nsImapServerResponseParser::PreProcessCommandToken(const char *commandToken
 			char *tagToken           = Imapstrtok_r(copyCurrentCommand, WHITESPACE,&placeInTokenString);
 			char *uidToken           = Imapstrtok_r(nil, WHITESPACE,&placeInTokenString);
 			char *fetchToken         = Imapstrtok_r(nil, WHITESPACE,&placeInTokenString);
-			
+			uidToken = nsnull; // use variable to quiet compiler warning
+            tagToken = nsnull; // use variable to quiet compiler warning
 			if (!PL_strcasecmp(fetchToken, "FETCH") )
 			{
 				char *uidStringToken = Imapstrtok_r(nil, WHITESPACE, &placeInTokenString);
@@ -697,9 +698,6 @@ This production was changed to accomodate predictive parsing
 */
 void nsImapServerResponseParser::mailbox_data()
 {
-	PRBool userDefined = PR_FALSE;
-	PRBool perm = PR_FALSE;
-	
 	if (!PL_strcasecmp(fNextToken, "FLAGS")) {
 		skip_to_CRLF();
 	}
@@ -1583,13 +1581,12 @@ PRBool nsImapServerResponseParser::msg_fetch_quoted(PRBool chunk, PRInt32 origin
 	if (q)
 	{
 		fServerConnection.HandleMessageDownLoadLine(q, PR_FALSE);
-		PRUint32 numberOfCharsInThisChunk = nsCRT::strlen(q);
 		PR_Free(q);
 	}
 
 	fNextToken = GetNextToken();
 
-	PRBool lastChunk = !chunk || ((origin + numberOfCharsInThisChunk) >= (unsigned int) fTotalDownloadSize);
+	PRBool lastChunk = !chunk || ((origin + numberOfCharsInThisChunk) >= fTotalDownloadSize);
 	return lastChunk;
 }
 /* msg_obsolete    ::= "COPY" / ("STORE" SPACE msg_fetch)
