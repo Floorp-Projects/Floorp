@@ -242,8 +242,14 @@ function ComposeStartup()
 
 function MsgAccountWizard()
 {
+    var result = {refresh: false};
+
     window.openDialog("chrome://messenger/content/AccountWizard.xul",
                       "AccountWizard", "chrome,modal", result);
+
+    if (result.refresh)	{
+	dump("anything to refresh here?\n");
+    }
 }
 
 function MigratePrefsIfNecessary()
