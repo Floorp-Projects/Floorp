@@ -512,8 +512,6 @@ sub BuildCommonProjects()
 
 	BuildOneProject(":mozilla:base:macbuild:base.mcp",							"base$D.shlb", "base.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
-	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",							"wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 0);
-
 	# International projects
 	BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.mcp",					"uconv$D.shlb", "uconv.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
@@ -552,6 +550,8 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:modules:libimg:macbuild:libimg.mcp",				"libimg$D.shlb", "libimg.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES, 0);
+
+	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",							"wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 #// XXX moved this TEMPORARILY to layout while we sort out a dependency
 #	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 0);
