@@ -1501,6 +1501,13 @@ NS_IMETHODIMP nsFrame::GetWindow(nsIWidget*& aWindow) const
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrame::GetFrameType(nsIAtom*& aType) const
+{
+  aType = nsnull;
+  return NS_OK;
+}
+
 void
 nsFrame::Invalidate(const nsRect& aDamageRect,
                     PRBool aImmediate) const
