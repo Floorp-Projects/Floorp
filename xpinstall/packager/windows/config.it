@@ -294,7 +294,7 @@ Server Path0=$ServerPath$
 
 [Component2]
 Description Short=Mail & News
-Description Long=Seamonkey Mail && News
+Description Long=Seamonkey Mail & News
 Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
