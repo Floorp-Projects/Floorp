@@ -462,6 +462,8 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
         delete [] name;
     }
     mContentAreaWebShell->SetURLListener(this);
+    // Break link to chrome.
+    mContentAreaWebShell->SetParent(0);
   }
 
   return NS_OK;
