@@ -1322,21 +1322,19 @@ Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	length = 0;
 	vector = NULL;
     } else if (cx->version == JSVERSION_1_2) {
-        if (argc == 1 && ValueIsLength(cx, argv[0], &length))
-            vector = NULL;
-        else {
-	    length = (jsuint) argc;
-	    vector = argv;
-        }
+	length = (jsuint) argc;
+	vector = argv;
     } else {
         if (argc > 1) {
 	    length = (jsuint) argc;
 	    vector = argv;
-	} else if (!ValueIsLength(cx, argv[0], &length)) {
+        } else if (!JSVAL_IS_NUMBER(argv[0])) {
 	    length = 1;
 	    vector = argv;
-	} else {
+        } else if (ValueIsLength(cx, argv[0], &length)) {
 	    vector = NULL;
+	} else {
+	    return JS_FALSE;
 	}
     }
     return InitArrayObject(cx, obj, length, vector);
