@@ -23,11 +23,15 @@ DEFINES = -D_IMPL_NS_WEB
 
 CPPSRCS=				\
  nsLinkHandler.cpp			\
+ nsShellInstance.cpp			\
+ nsApplicationManager.cpp			\
  nsWebWidget.cpp			\
  $(NULL)
 
 CPP_OBJS=				\
  ./$(OBJDIR)/nsLinkHandler.o		\
+ ./$(OBJDIR)/nsShellInstance.o		\
+ ./$(OBJDIR)/nsApplicationManager.o		\
  ./$(OBJDIR)/nsWebWidget.o		\
  $(NULL)
 
