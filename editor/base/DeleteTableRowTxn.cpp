@@ -143,20 +143,20 @@ NS_IMETHODIMP DeleteTableRowTxn::Write(nsIOutputStream *aOutputStream)
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteTableRowTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP DeleteTableRowTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Remove Table";
+    *aString="Remove Table";
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteTableRowTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP DeleteTableRowTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Insert Table";
+    *aString="Insert Table";
   }
   return NS_OK;
 }

@@ -209,20 +209,20 @@ NS_IMETHODIMP DeleteRangeTxn::Write(nsIOutputStream *aOutputStream)
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteRangeTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP DeleteRangeTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Insert Range: ";
+    *aString="Insert Range: ";
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteRangeTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP DeleteRangeTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Remove Range: ";
+    *aString="Remove Range: ";
   }
   return NS_OK;
 }

@@ -69,17 +69,17 @@ NS_IMETHODIMP EditTxn::Write(nsIOutputStream *aOutputStream)
   return NS_OK;
 }
 
-NS_IMETHODIMP EditTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP EditTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
-    *aString=nsnull;
+    *aString="";
   return NS_OK;
 }
 
-NS_IMETHODIMP EditTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP EditTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
-    *aString=nsnull;
+    *aString="";
   return NS_OK;
 }
 

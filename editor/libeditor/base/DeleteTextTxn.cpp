@@ -111,22 +111,22 @@ NS_IMETHODIMP DeleteTextTxn::Write(nsIOutputStream *aOutputStream)
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteTextTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP DeleteTextTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Insert Text: ";
-    **aString += mDeletedText;
+    *aString="Insert Text: ";
+    *aString += mDeletedText;
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteTextTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP DeleteTextTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Remove Text: ";
-    **aString += mDeletedText;
+    *aString="Remove Text: ";
+    *aString += mDeletedText;
   }
   return NS_OK;
 }

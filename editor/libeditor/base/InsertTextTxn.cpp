@@ -160,22 +160,22 @@ NS_IMETHODIMP InsertTextTxn::Write(nsIOutputStream *aOutputStream)
   return NS_OK;
 }
 
-NS_IMETHODIMP InsertTextTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP InsertTextTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Remove Text: ";
-    **aString += mStringToInsert;
+    *aString="Remove Text: ";
+    *aString += mStringToInsert;
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP InsertTextTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP InsertTextTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Insert Text: ";
-    **aString += mStringToInsert;
+    *aString="Insert Text: ";
+    *aString += mStringToInsert;
   }
   return NS_OK;
 }

@@ -203,22 +203,22 @@ NS_IMETHODIMP CreateElementTxn::Write(nsIOutputStream *aOutputStream)
   return NS_OK;
 }
 
-NS_IMETHODIMP CreateElementTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP CreateElementTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Remove Element: ";
-    **aString += mTag;
+    *aString="Remove Element: ";
+    *aString += mTag;
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP CreateElementTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP CreateElementTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Create Element: ";
-    **aString += mTag;
+    *aString="Create Element: ";
+    *aString += mTag;
   }
   return NS_OK;
 }

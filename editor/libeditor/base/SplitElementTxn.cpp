@@ -196,20 +196,20 @@ NS_IMETHODIMP SplitElementTxn::Write(nsIOutputStream *aOutputStream)
   return NS_OK;
 }
 
-NS_IMETHODIMP SplitElementTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP SplitElementTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Join Element";
+    *aString="Join Element";
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP SplitElementTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP SplitElementTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Split Element";
+    *aString="Split Element";
   }
   return NS_OK;
 }
