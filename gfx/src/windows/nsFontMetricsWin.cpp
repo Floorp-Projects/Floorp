@@ -29,6 +29,7 @@
 #include "nsFontMetricsWin.h"
 #include "nsQuickSort.h"
 #include "nsTextFormatter.h"
+#include "nsIFontPackageProxy.h"
 #include "prmem.h"
 #include "plhash.h"
 #include "prprf.h"
@@ -109,6 +110,23 @@ static nsIPref* gPref = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
 
 static nsIAtom* gUserDefined = nsnull;
+static nsIAtom* gJA = nsnull;
+static nsIAtom* gKO = nsnull;
+static nsIAtom* gZHTW = nsnull;
+static nsIAtom* gZHCN = nsnull;
+static BOOL gCheckJAFont = PR_FALSE;
+static BOOL gHaveJAFont = PR_FALSE;
+static BOOL gHitJACase = PR_FALSE;
+static BOOL gCheckKOFont = PR_FALSE;
+static BOOL gHaveKOFont = PR_FALSE;
+static BOOL gHitKOCase = PR_FALSE;
+static BOOL gCheckZHTWFont = PR_FALSE;
+static BOOL gHaveZHTWFont = PR_FALSE;
+static BOOL gHitZHTWCase = PR_FALSE;
+static BOOL gCheckZHCNFont = PR_FALSE;
+static BOOL gHaveZHCNFont = PR_FALSE;
+static BOOL gHitZHCNCase = PR_FALSE;
+
 
 static int gFontMetricsWinCount = 0;
 static int gInitialized = 0;
@@ -145,6 +163,10 @@ FreeGlobals(void)
   NS_IF_RELEASE(gPref);
   NS_IF_RELEASE(gUserDefined);
   NS_IF_RELEASE(gUserDefinedConverter);
+  NS_IF_RELEASE(gJA);
+  NS_IF_RELEASE(gKO);
+  NS_IF_RELEASE(gZHTW);
+  NS_IF_RELEASE(gZHCN);
 }
 
 static nsresult
@@ -168,10 +190,59 @@ InitGlobals(void)
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  gJA = NS_NewAtom("ja");
+  if (!gJA) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  gKO = NS_NewAtom("ko");
+  if (!gKO) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  gZHCN = NS_NewAtom("zh-CN");
+  if (!gZHCN) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  gZHTW = NS_NewAtom("zh-TW");
+  if (!gZHTW) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   gInitialized = 1;
 
   return NS_OK;
+}
+
+static void CheckFontLangGroup(
+     nsIAtom* lang1, nsIAtom* lang2, const char* lang3, PRBool& hit,
+     PRBool& check, PRBool& have)
+{
+  if( (!have) && (!hit) && (lang1 == lang2))
+  {
+     hit = PR_TRUE; // so next time we don't bother to ask
+     if(!check)
+     {
+       nsFontEnumeratorWin enumerator ;
+
+     if(NS_SUCCEEDED( enumerator.HaveFontFor(lang3, &have)))
+         check = PR_TRUE; // so next time we don't bother to check.
+     }
+     if(!have) {
+       nsresult res =NS_OK;
+       nsCOMPtr<nsIFontPackageProxy> proxy = do_GetService("@mozilla.org/intl/fontpackageservice;1", &res);
+       NS_ASSERTION(NS_SUCCEEDED(res), "cannot get the font package proxy");
+       NS_ASSERTION(proxy, "cannot get the font package proxy");
+       if(proxy) {
+          char fontpackageid[256];
+          sprintf(fontpackageid, "lang:%s", lang3);
+          res = proxy->NeedFontPackage(fontpackageid);
+          NS_ASSERTION(NS_SUCCEEDED(res), "cannot notify missing font package ");
+       }
+     }
+  }
 }
 
 nsFontMetricsWin :: nsFontMetricsWin()
@@ -247,6 +318,13 @@ nsFontMetricsWin :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
   }
   mFont = new nsFont(aFont);
   mLangGroup = aLangGroup;
+
+  // do special checking for the following lang group
+  CheckFontLangGroup(mLangGroup, gJA,   "ja",    gHitJACase,   gCheckJAFont,   gHaveJAFont);
+  CheckFontLangGroup(mLangGroup, gKO,   "ko",    gHitKOCase,   gCheckKOFont,   gHaveKOFont);
+  CheckFontLangGroup(mLangGroup, gZHTW, "zh-TW", gHitZHTWCase, gCheckZHTWFont, gHaveZHTWFont);
+  CheckFontLangGroup(mLangGroup, gZHCN, "zh-CN", gHitZHCNCase, gCheckZHCNFont, gHaveZHCNFont);
+
   mIndexOfSubstituteFont = -1;
   //don't addref this to avoid circular refs
   mDeviceContext = (nsDeviceContextWin *)aContext;
@@ -4378,5 +4456,37 @@ nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
   *aCount = j;
   *aResult = array;
 
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsFontEnumeratorWin::HaveFontFor(const char* aLangGroup, PRBool* aResult)
+{
+  if (aResult) {
+    *aResult = PR_FALSE;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if ((!aLangGroup)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if ((!strcmp(aLangGroup, "x-unicode")) ||
+      (!strcmp(aLangGroup, "x-user-def"))) {
+    *aResult = PR_TRUE;
+    return NS_OK;
+  }
+  if (!gInitializedFontEnumerator) {
+    if (!InitializeFontEnumerator()) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
+    if (SignatureMatchesLangGroup(&nsFontMetricsWin::gGlobalFonts[i].signature,
+                                  aLangGroup))
+    {
+       *aResult = PR_TRUE;
+       return NS_OK;
+    }
+  }
   return NS_OK;
 }
