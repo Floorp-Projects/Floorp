@@ -45,6 +45,7 @@ CPPSRCS		= \
 		nsUConvDll.cpp \
 		nsURLProperties.cpp \
 		nsMappingCache.cpp \
+    	nsCharsetMenu.cpp \
 		$(NULL)
 
 EXPORT_RESOURCE	= \

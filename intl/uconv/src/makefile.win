@@ -38,6 +38,7 @@ CPPSRCS =				\
 	nsUConvDll.cpp			\
 	nsMappingCache.cpp		\
 	nsURLProperties.cpp		\
+	nsCharsetMenu.cpp		\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -49,8 +50,9 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsWinCharset.obj 			\
 	.\$(OBJDIR)\nsCharsetAliasImp.obj 		\
 	.\$(OBJDIR)\nsUConvDll.obj 			\
-	.\$(OBJDIR)\nsMappingCache.obj 		\
+	.\$(OBJDIR)\nsMappingCache.obj 			\
 	.\$(OBJDIR)\nsURLProperties.obj 		\
+	.\$(OBJDIR)\nsCharsetMenu.obj 			\
 	$(NULL)
 
 CSRCS =		\
