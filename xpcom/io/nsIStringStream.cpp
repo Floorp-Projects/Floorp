@@ -35,85 +35,22 @@ class BasicStringImpl
 //========================================================================================
 {
     public:
-                                        BasicStringImpl()
-                                            : mOffset(0)
-                                            , mLastResult(NS_OK)
-                                            , mEOF(PR_FALSE)
-                                        {
-                                            NS_INIT_REFCNT();
-                                        }
-        virtual                         ~BasicStringImpl()
-                                        {
-                                        }
+                                        BasicStringImpl();
+        virtual                         ~BasicStringImpl();
+
         NS_IMETHOD                      Seek(PRSeekWhence whence, PRInt32 offset);
+        NS_IMETHOD                      Tell(PRIntn* outWhere);
+        NS_IMETHOD                      GetAtEOF(PRBool* outAtEOF);
+        NS_IMETHOD                      SetAtEOF(PRBool inAtEOF);
+        NS_IMETHOD                      Available(PRUint32 *aLength);
+        NS_IMETHOD                      Read(char* aBuf,
+                                            PRUint32 aCount,
+                                            PRUint32 *aReadCount);
 
-        NS_IMETHOD                      Tell(PRIntn* outWhere)
-                                        {
-                                            *outWhere = mOffset;
-                                            return NS_OK;
-                                        }
-
-        NS_IMETHOD                      GetAtEOF(PRBool* outAtEOF)
-        						        {
-        						            *outAtEOF = mEOF;
-        						            return NS_OK;
-        						        }
-        NS_IMETHOD                      SetAtEOF(PRBool inAtEOF)
-        						        {
-        						            mEOF = inAtEOF;
-        						            return NS_OK;
-        						        }
-
-        NS_IMETHOD                      Available(PRUint32 *aLength)
-                                        {
-                                            NS_PRECONDITION(aLength != nsnull, "null ptr");
-                                            if (!aLength)
-                                                return NS_ERROR_NULL_POINTER;
-                                            *aLength = length();
-                                            return NS_OK;
-                                        }
-		NS_IMETHOD                      Read(char* aBuf,
-			                                PRUint32 aCount,
-					                        PRUint32 *aReadCount)
-								        {
-								            NS_PRECONDITION(aBuf != nsnull, "null ptr");
-								            if (!aBuf)
-								                return NS_ERROR_NULL_POINTER;
-								            NS_PRECONDITION(aReadCount != nsnull, "null ptr");
-								            if (!aReadCount)
-								                return NS_ERROR_NULL_POINTER;
-								            if (NS_FAILED(mLastResult))
-								                return mLastResult;
-								            PRInt32 bytesRead = read(aBuf, aCount);
-								            if (NS_FAILED(mLastResult))
-								            {
-								                *aReadCount = 0;
-								                return mLastResult;
-								            }
-								            *aReadCount = bytesRead;
-								            if (bytesRead < (PRInt32)aCount)
-								                SetAtEOF(PR_TRUE);
-								            return NS_OK;
-								        }
-		// nsIOutputStream interface
-		NS_IMETHOD                      Write(const char* aBuf,
-			                                PRUint32 aCount,
-					                        PRUint32 *aWriteCount)
-								        {
-								            NS_PRECONDITION(aBuf != nsnull, "null ptr");
-								            NS_PRECONDITION(aWriteCount != nsnull, "null ptr");
-
-								            if (NS_FAILED(mLastResult))
-								                return mLastResult;
-								            PRInt32 bytesWrit = write(aBuf, aCount);
-								            if (NS_FAILED(mLastResult))
-								            {
-								                *aWriteCount = 0;
-								                return mLastResult;
-								            }
-								            *aWriteCount = bytesWrit;
-								            return NS_OK;
-								        }
+        // nsIOutputStream interface
+        NS_IMETHOD                      Write(const char* aBuf,
+                                            PRUint32 aCount,
+                                            PRUint32 *aWriteCount);
     public:
         
         // nsISupports interface
@@ -121,7 +58,7 @@ class BasicStringImpl
 
         NS_IMETHOD                      Close() { return NS_OK; }
 
-		// nsIInputStream interface
+        // nsIInputStream interface
         NS_IMETHOD                      Flush() { return NS_OK; }
 
     
@@ -132,19 +69,153 @@ class BasicStringImpl
     
         virtual PRInt32                 length() const = 0;
         virtual PRInt32                 read(char* buf, PRUint32 count) = 0;
-        virtual PRInt32                 write(const char*, PRUint32)
-                                        {
-                                            NS_ASSERTION(PR_FALSE, "Write to a const string");
-                                            mLastResult = NS_FILE_RESULT(PR_ILLEGAL_ACCESS_ERROR);
-                                            return -1;
-                                        }
-        
+        virtual PRInt32                 write(const char*, PRUint32);
+
     protected:
  
         PRUint32                        mOffset;
         nsresult                        mLastResult;
         PRBool                          mEOF;
+        
 }; // class BasicStringImpl
+
+
+//----------------------------------------------------------------------------------------
+BasicStringImpl::BasicStringImpl()
+//----------------------------------------------------------------------------------------
+: mOffset(0)
+, mLastResult(NS_OK)
+, mEOF(PR_FALSE)
+{
+  NS_INIT_REFCNT();
+}
+
+//----------------------------------------------------------------------------------------
+BasicStringImpl::~BasicStringImpl()
+//----------------------------------------------------------------------------------------
+{
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP BasicStringImpl::Seek(PRSeekWhence whence, PRInt32 offset)
+//----------------------------------------------------------------------------------------
+{
+    mLastResult = NS_OK; // reset on a seek.
+    mEOF = PR_FALSE; // reset on a seek.
+    PRInt32 fileSize = length();
+    PRInt32 newPosition=-1;
+    switch (whence)
+    {
+        case PR_SEEK_CUR: newPosition = mOffset + offset; break;
+        case PR_SEEK_SET: newPosition = offset; break;
+        case PR_SEEK_END: newPosition = fileSize + offset; break;
+    }
+    if (newPosition < 0)
+    {
+        newPosition = 0;
+        mLastResult = NS_FILE_RESULT(PR_FILE_SEEK_ERROR);
+    }
+    if (newPosition >= fileSize)
+    {
+        newPosition = fileSize;
+        mEOF = PR_TRUE;
+    }
+    mOffset = newPosition;
+    return NS_OK;
+} // StringImpl::Seek
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP BasicStringImpl::Tell(PRIntn* outWhere)
+//----------------------------------------------------------------------------------------
+{
+  *outWhere = mOffset;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP BasicStringImpl::GetAtEOF(PRBool* outAtEOF)
+//----------------------------------------------------------------------------------------
+{
+  *outAtEOF = mEOF;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP BasicStringImpl::SetAtEOF(PRBool inAtEOF)
+//----------------------------------------------------------------------------------------
+{
+  mEOF = inAtEOF;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP BasicStringImpl::Available(PRUint32 *aLength)
+//----------------------------------------------------------------------------------------
+{
+  NS_PRECONDITION(aLength != nsnull, "null ptr");
+  if (!aLength)
+    return NS_ERROR_NULL_POINTER;
+  *aLength = length();
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP BasicStringImpl::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
+//----------------------------------------------------------------------------------------
+{
+  NS_PRECONDITION(aBuf != nsnull, "null ptr");
+  if (!aBuf)
+    return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aReadCount != nsnull, "null ptr");
+  if (!aReadCount)
+    return NS_ERROR_NULL_POINTER;
+  if (NS_FAILED(mLastResult))
+   return mLastResult;
+  PRInt32 bytesRead = read(aBuf, aCount);
+  if (NS_FAILED(mLastResult))
+  {
+    *aReadCount = 0;
+    return mLastResult;
+  }
+  *aReadCount = bytesRead;
+  if (bytesRead < (PRInt32)aCount)
+    SetAtEOF(PR_TRUE);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP BasicStringImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
+//----------------------------------------------------------------------------------------
+{
+  NS_PRECONDITION(aBuf != nsnull, "null ptr");
+  NS_PRECONDITION(aWriteCount != nsnull, "null ptr");
+
+  if (NS_FAILED(mLastResult))
+  return mLastResult;
+  PRInt32 bytesWrit = write(aBuf, aCount);
+  if (NS_FAILED(mLastResult))
+  {
+    *aWriteCount = 0;
+    return mLastResult;
+  }
+  *aWriteCount = bytesWrit;
+  return NS_OK;
+}
+    
+
+//----------------------------------------------------------------------------------------
+PRInt32 BasicStringImpl::write(const char*, PRUint32)
+//----------------------------------------------------------------------------------------
+{
+  NS_ASSERTION(PR_FALSE, "Write to a const string");
+  mLastResult = NS_FILE_RESULT(PR_ILLEGAL_ACCESS_ERROR);
+  return -1;
+}
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 //========================================================================================
 class ConstCharImpl
@@ -200,14 +271,14 @@ class CharImpl
                                             {
                                                 mAllocLength = kAllocQuantum;
                                                 mString = new char[mAllocLength];
-	                                            if (!mString)
-	                                            {
-	                                                mLastResult = NS_ERROR_OUT_OF_MEMORY;
-	                                                return;
-	                                            }
-	                                            mConstString = mString;
-	                                            *mString = '\0';
-	                                            
+                                                if (!mString)
+                                                {
+                                                    mLastResult = NS_ERROR_OUT_OF_MEMORY;
+                                                    return;
+                                                }
+                                                mConstString = mString;
+                                                *mString = '\0';
+                                                
                                             }
                                         }
                                         
@@ -222,17 +293,17 @@ class CharImpl
         virtual PRInt32                 write(const char* buf, PRUint32 aCount)
                                         {
                                             if (!buf)
-                                            	return 0;
+                                                return 0;
                                             PRInt32 maxCount = mAllocLength - 1 - mOffset;
                                             if ((PRInt32)aCount > maxCount)
                                             {
                                                 mAllocLength = aCount + 1 + mOffset + kAllocQuantum;
                                                 char* newString = new char[mAllocLength];
-	                                            if (!newString)
-	                                            {
-	                                                mLastResult = NS_ERROR_OUT_OF_MEMORY;
-	                                                return 0;
-	                                            }
+                                                if (!newString)
+                                                {
+                                                    mLastResult = NS_ERROR_OUT_OF_MEMORY;
+                                                    return 0;
+                                                }
                                                 memcpy(newString, mString, mLength);
                                                 delete [] mString;
                                                 mString = newString;
@@ -337,34 +408,6 @@ NS_IMPL_QUERY_HEAD(BasicStringImpl)
     foundInterface = NS_STATIC_CAST(nsIBaseStream*, NS_STATIC_CAST(nsIOutputStream*, this));
   else
 NS_IMPL_QUERY_TAIL(nsIOutputStream)
-
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP BasicStringImpl::Seek(PRSeekWhence whence, PRInt32 offset)
-//----------------------------------------------------------------------------------------
-{
-    mLastResult = NS_OK; // reset on a seek.
-    mEOF = PR_FALSE; // reset on a seek.
-    PRInt32 fileSize = length();
-    PRInt32 newPosition=-1;
-    switch (whence)
-    {
-        case PR_SEEK_CUR: newPosition = mOffset + offset; break;
-        case PR_SEEK_SET: newPosition = offset; break;
-        case PR_SEEK_END: newPosition = fileSize + offset; break;
-    }
-    if (newPosition < 0)
-    {
-        newPosition = 0;
-        mLastResult = NS_FILE_RESULT(PR_FILE_SEEK_ERROR);
-    }
-    if (newPosition >= fileSize)
-    {
-        newPosition = fileSize;
-        mEOF = PR_TRUE;
-    }
-    mOffset = newPosition;
-    return NS_OK;
-} // StringImpl::Seek
 
 //----------------------------------------------------------------------------------------
 extern "C" NS_COM nsresult NS_NewStringInputStream(
