@@ -91,6 +91,11 @@
 
 #include "fdlibm.h"
 
+#if defined(_MSC_VER)
+/* Microsoft Compiler */
+#pragma warning( disable : 4723 ) /* disables potential divide by 0 warning */
+#endif
+
 #ifdef __STDC__
 static const double 
 #else
