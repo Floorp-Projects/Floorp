@@ -1066,7 +1066,7 @@ HRESULT CMozillaBrowser::Initialize()
 
         // Attach it via the watcher service
         nsCOMPtr<nsIWindowWatcher> watcher =
-            do_GetService("@mozilla.org/embedcomp/window-watcher;1");
+            do_GetService(NS_WINDOWWATCHER_CONTRACTID);
         if (watcher)
             watcher->SetWindowCreator(windowCreator);
     }

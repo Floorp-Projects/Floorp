@@ -130,7 +130,7 @@ static CFPlugInRef LoadPDEPlugIn()
 NS_IMPL_ISUPPORTS2(nsPrintingPromptService, nsIPrintingPromptService, nsIWebProgressListener)
 
 nsPrintingPromptService::nsPrintingPromptService() :
-    mWatcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"))
+    mWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID))
 {
     NS_INIT_REFCNT();
 }

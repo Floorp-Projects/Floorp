@@ -81,8 +81,6 @@
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
-static const char sWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
-
 nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
 nsIPref     *EmbedPrivate::sPrefs       = nsnull;
 nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
@@ -173,7 +171,7 @@ EmbedPrivate::Init(PtWidget_t *aOwningWidget)
 		windowCreator = NS_STATIC_CAST(nsIWindowCreator *, creator);
 
 		// Attach it via the watcher service
-		nsCOMPtr<nsIWindowWatcher> watcher = do_GetService(sWatcherContractID);
+		nsCOMPtr<nsIWindowWatcher> watcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
 		if (watcher)
       		watcher->SetWindowCreator(windowCreator);
   }
