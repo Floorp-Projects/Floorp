@@ -47,23 +47,22 @@
 class nsStatusBarBiffManager : public nsIFolderListener
 {
 public:
-	NS_DECL_ISUPPORTS
-	NS_DECL_NSIFOLDERLISTENER
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFOLDERLISTENER
 
-	nsStatusBarBiffManager(); 
-	virtual ~nsStatusBarBiffManager();
-
-	nsresult Init();
-	nsresult Shutdown();
-	nsresult PerformStatusBarBiff(PRUint32 newBiffFlag);
-
+  nsStatusBarBiffManager(); 
+  virtual ~nsStatusBarBiffManager();
+  nsresult Init();
 
 private:
-	PRBool   mInitialized;
-	PRUint32 mCurrentBiffState;
+  PRBool   mInitialized;
+  PRUint32 mCurrentBiffState;
   nsCOMPtr<nsISound> mSound;
+  nsresult PerformStatusBarBiff(PRUint32 newBiffFlag);
+  nsresult PlayBiffSound();
+
 protected:
-	  static nsIAtom* kBiffStateAtom;
+  static nsIAtom* kBiffStateAtom;
 };
 
 

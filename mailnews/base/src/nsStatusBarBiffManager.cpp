@@ -68,7 +68,7 @@ nsIAtom * nsStatusBarBiffManager::kBiffStateAtom = nsnull;
 nsStatusBarBiffManager::nsStatusBarBiffManager()
 : mInitialized(PR_FALSE), mCurrentBiffState(nsIMsgFolder::nsMsgBiffState_NoMail)
 {
-	NS_INIT_ISUPPORTS();
+  NS_INIT_ISUPPORTS();
 }
 
 nsStatusBarBiffManager::~nsStatusBarBiffManager()
@@ -77,7 +77,11 @@ nsStatusBarBiffManager::~nsStatusBarBiffManager()
 }
 
 #define PREF_PLAY_SOUND_ON_NEW_MAIL      "mail.biff.play_sound"
-#define PREF_NEW_MAIL_URL                "mail.biff.play_sound.url"
+#define PREF_NEW_MAIL_SOUND_URL          "mail.biff.play_sound.url"
+#define PREF_NEW_MAIL_SOUND_TYPE         "mail.biff.play_sound.type"
+#define SYSTEM_SOUND_TYPE 0
+#define CUSTOM_SOUND_TYPE 1
+#define DEFAULT_SYSTEM_SOUND "_moz_mailbeep"
 
 nsresult nsStatusBarBiffManager::Init()
 {
@@ -97,11 +101,60 @@ nsresult nsStatusBarBiffManager::Init()
   return NS_OK;
 }
 
-nsresult nsStatusBarBiffManager::Shutdown()
+nsresult nsStatusBarBiffManager::PlayBiffSound()
 {
-	return NS_OK;
-}
+  nsresult rv;
+  nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PRBool playSoundOnBiff = PR_FALSE;
+  rv = pref->GetBoolPref(PREF_PLAY_SOUND_ON_NEW_MAIL, &playSoundOnBiff);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  if (!playSoundOnBiff)
+    return NS_OK;
 
+  // lazily create the sound instance
+  if (!mSound)
+    mSound = do_CreateInstance("@mozilla.org/sound;1");
+      
+  PRInt32 newMailSoundType = SYSTEM_SOUND_TYPE;
+  rv = pref->GetIntPref(PREF_NEW_MAIL_SOUND_TYPE, &newMailSoundType);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  PRBool customSoundPlayed = PR_FALSE;
+
+  if (newMailSoundType == CUSTOM_SOUND_TYPE) {
+    nsXPIDLCString soundURLSpec;
+    rv = pref->GetCharPref(PREF_NEW_MAIL_SOUND_URL, getter_Copies(soundURLSpec));
+    if (NS_SUCCEEDED(rv) && !soundURLSpec.IsEmpty()) {
+      nsCOMPtr<nsIFileURL> soundURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      rv = soundURL->SetSpec(soundURLSpec);                                       
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIFile> soundFile;
+        rv = soundURL->GetFile(getter_AddRefs(soundFile));
+        if (NS_SUCCEEDED(rv)) {
+          PRBool soundFileExists = PR_FALSE;
+          rv = soundFile->Exists(&soundFileExists);
+          if (NS_SUCCEEDED(rv) && soundFileExists) {
+            rv = mSound->Play(soundURL);
+            if (NS_SUCCEEDED(rv))
+              customSoundPlayed = PR_TRUE;
+          }
+        }
+      }
+    }
+  }    
+  
+  // if nothing played, play the default system sound
+  if (!customSoundPlayed) {
+    rv = mSound->PlaySystemSound(DEFAULT_SYSTEM_SOUND);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  return rv;
+}
 
 nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
 {
@@ -112,50 +165,8 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
   // if we fail along the way, don't return.
   // we still need to update the UI.    
   if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NewMail) {
-    nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-    
-    PRBool playSoundOnBiff = PR_FALSE;
-    rv = pref->GetBoolPref(PREF_PLAY_SOUND_ON_NEW_MAIL, &playSoundOnBiff);
-    if (NS_SUCCEEDED(rv) && playSoundOnBiff) {
-      PRBool customSoundPlayed = PR_FALSE;
-      if (!mSound)
-        mSound = do_CreateInstance("@mozilla.org/sound;1");
-      
-      nsXPIDLCString soundURLSpec;
-      rv = pref->GetCharPref(PREF_NEW_MAIL_URL, getter_Copies(soundURLSpec));
-
-      // if this is a file url, try to play it.
-      // otherwise, treat it as a system sound.
-      if (NS_SUCCEEDED(rv) && !strncmp(soundURLSpec.get(), "file://", 7)) {
-        nsCOMPtr<nsIFileURL> soundURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID);
-        rv = soundURL->SetSpec(soundURLSpec);                                       
-        NS_ENSURE_SUCCESS(rv,rv);
-        
-        nsCOMPtr<nsIFile> soundFile;
-        rv = soundURL->GetFile(getter_AddRefs(soundFile));
-        NS_ENSURE_SUCCESS(rv,rv);
-
-        PRBool soundFileExists = PR_FALSE;
-        rv = soundFile->Exists(&soundFileExists);
-        if (NS_SUCCEEDED(rv) && soundFileExists) {
-          rv = mSound->Play(soundURL);
-          if (NS_SUCCEEDED(rv))
-            customSoundPlayed = PR_TRUE;
-        }
-      }
-      else if (!soundURLSpec.IsEmpty()) {
-        rv = mSound->PlaySystemSound(soundURLSpec.get());
-        if (NS_SUCCEEDED(rv))
-          customSoundPlayed = PR_TRUE;
-      }
-      
-      // if nothing played, play the default
-      if (!customSoundPlayed) {
-        rv = mSound->PlaySystemSound("_moz_mailbeep");
-        NS_ENSURE_SUCCESS(rv,rv);
-      }
-    }
+    // if we fail to play the biff sound, keep going.
+    (void)PlayBiffSound();
   }
   
   nsCOMPtr<nsIWindowMediator> windowMediator = 
@@ -200,63 +211,62 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
     }
   }
 
-	return NS_OK;
+  return NS_OK;
 }
 
 // nsIFolderListener methods....
 NS_IMETHODIMP 
 nsStatusBarBiffManager::OnItemAdded(nsISupports *parentItem, nsISupports *item, const char *viewString)
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsStatusBarBiffManager::OnItemRemoved(nsISupports *parentItem, nsISupports *item, const char *viewString)
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsStatusBarBiffManager::OnItemPropertyChanged(nsISupports *item, nsIAtom *property, const char *oldValue, const char *newValue)
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsStatusBarBiffManager::OnItemIntPropertyChanged(nsISupports *item, nsIAtom *property, PRInt32 oldValue, PRInt32 newValue)
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsStatusBarBiffManager::OnItemBoolPropertyChanged(nsISupports *item, nsIAtom *property, PRBool oldValue, PRBool newValue)
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsStatusBarBiffManager::OnItemUnicharPropertyChanged(nsISupports *item, nsIAtom *property, const PRUnichar *oldValue, const PRUnichar *newValue)
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsStatusBarBiffManager::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
 {
-	if (kBiffStateAtom == property)
-	{
-		if (mCurrentBiffState != newFlag) {
-			PerformStatusBarBiff(newFlag);
-			mCurrentBiffState = newFlag;
-		}
-	}
-
-	return NS_OK;
+  if (kBiffStateAtom == property)
+  {
+    if (mCurrentBiffState != newFlag) {
+      PerformStatusBarBiff(newFlag);
+      mCurrentBiffState = newFlag;
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsStatusBarBiffManager::OnItemEvent(nsIFolder *item, nsIAtom *event)
 {
-	return NS_OK;
+  return NS_OK;
 }
  
