@@ -258,7 +258,6 @@ function GetDefaultBrowserColors()
 
   var useSysColors = false;
   try { useSysColors = gPrefs.GetBoolPref("browser.display.use_system_colors"); } catch (e) {}
-  }
 
   if (!useSysColors)
   {
