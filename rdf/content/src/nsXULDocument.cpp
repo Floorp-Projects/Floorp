@@ -1166,7 +1166,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
         // XXX This needs to be cloned across windows, and the final
         // instance needs to be flushed to disk. It may be that this is
         // really an RDFXML data source...
-#if 0
+#ifdef USE_LOCAL_STORE
         rv = gRDFService->GetDataSource("rdf:local-store", &mLocalDataSource);
 
         if (NS_FAILED(rv)) {
