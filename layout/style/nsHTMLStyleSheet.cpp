@@ -395,6 +395,13 @@ protected:
                                nsAbsoluteItems& aAboluteItems,
                                nsIFrame*&       aNewFrame);
 
+  nsresult ConstructTableRowGroupFrame(nsIPresContext*  aPresContext,
+                                       nsIContent*      aContent,
+                                       nsIFrame*        aParent,
+                                       nsIStyleContext* aStyleContext,
+                                       nsIFrame*&       aNewScrollFrame,
+                                       nsIFrame*&       aNewFrame);
+
   nsresult ConstructTableCellFrame(nsIPresContext*  aPresContext,
                                    nsIContent*      aContent,
                                    nsIFrame*        aParentFrame,
@@ -1100,6 +1107,50 @@ HTMLStyleSheetImpl::CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame)
 }
 
 nsresult
+HTMLStyleSheetImpl::ConstructTableRowGroupFrame(nsIPresContext*  aPresContext,
+                                                nsIContent*      aContent,
+                                                nsIFrame*        aParent,
+                                                nsIStyleContext* aStyleContext,
+                                                nsIFrame*&       aNewScrollFrame,
+                                                nsIFrame*&       aNewFrame)
+{
+  const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
+    aStyleContext->GetStyleData(eStyleStruct_Display);
+
+  if (IsScrollable(aPresContext, styleDisplay)) {
+    // Create a scroll frame
+    NS_NewScrollFrame(aNewScrollFrame);
+ 
+
+    // Initialize it
+    aNewScrollFrame->Init(*aPresContext, aContent, aParent, aStyleContext);
+
+    // The scroll frame gets the original style context, and the scrolled
+    // frame gets a SCROLLED-CONTENT pseudo element style context that
+    // inherits the background properties
+    nsIStyleContext*  scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                        (aContent, nsHTMLAtoms::scrolledContentPseudo, aStyleContext);
+
+    // Create an area container for the frame
+    NS_NewTableRowGroupFrame(aNewFrame);
+
+    // Initialize the frame and force it to have a view
+    aNewFrame->Init(*aPresContext, aContent, aNewScrollFrame, scrolledPseudoStyle);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+                                             scrolledPseudoStyle, PR_TRUE);
+    NS_RELEASE(scrolledPseudoStyle);
+
+    aNewScrollFrame->SetInitialChildList(*aPresContext, nsnull, aNewFrame);
+  } else {
+    NS_NewTableRowGroupFrame(aNewFrame);
+    aNewFrame->Init(*aPresContext, aContent, aParent, aStyleContext);
+    aNewScrollFrame = nsnull;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
                                         nsIContent*      aContent,
                                         nsIFrame*        aParent,
@@ -1146,7 +1197,8 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
     aContent->ChildAt(i, childContent);
 
     if (nsnull != childContent) {
-      nsIFrame*         frame = nsnull;
+      nsIFrame*         frame       = nsnull;
+      nsIFrame*         scrollFrame = nsnull;
       nsIStyleContext*  childStyleContext;
 
       // Resolve the style context
@@ -1176,8 +1228,8 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
       case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
       case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
       case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
-        NS_NewTableRowGroupFrame(frame);
-        frame->Init(*aPresContext, childContent, innerFrame, childStyleContext);
+        ConstructTableRowGroupFrame(aPresContext, childContent, innerFrame, 
+                                    childStyleContext, scrollFrame, frame);
         break;
 
       case NS_STYLE_DISPLAY_TABLE_ROW:
@@ -1284,12 +1336,13 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
         frame->SetInitialChildList(*aPresContext, nsnull, grandChildList);
   
         // Link the frame into the child list
+        nsIFrame* outerMostFrame = (nsnull == scrollFrame) ? frame : scrollFrame;
         if (nsnull == lastChildFrame) {
-          innerChildList = frame;
+          innerChildList = outerMostFrame;
         } else {
-          lastChildFrame->SetNextSibling(frame);
+          lastChildFrame->SetNextSibling(outerMostFrame);
         }
-        lastChildFrame = frame;
+        lastChildFrame = outerMostFrame;
       }
 
       NS_RELEASE(childStyleContext);

@@ -42,6 +42,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsIReflowCommand.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDeviceContext.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -266,7 +267,8 @@ nsTableFrame::nsTableFrame()
     mColumnWidthsValid(PR_FALSE),
     mColumnCacheValid(PR_FALSE),
     mCellMapValid(PR_TRUE),
-    mIsInvariantWidth(PR_FALSE)
+    mIsInvariantWidth(PR_FALSE),
+	mHasScrollableRowGroup(PR_FALSE)
 {
   mEffectiveColCount = -1;  // -1 means uninitialized
   mColumnWidthsSet=PR_FALSE;
@@ -338,7 +340,7 @@ nsTableFrame::SetInitialChildList(nsIPresContext& aPresContext,
         mFrames.SetFrames(childFrame);
       else
         prevMainChild->SetNextSibling(childFrame);
-      rv = DidAppendRowGroup((nsTableRowGroupFrame*)childFrame);
+      rv = DidAppendRowGroup(GetRowGroupFrameFor(childFrame, childDisplay));
       prevMainChild = childFrame;
     }
     else if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
@@ -2705,7 +2707,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     else if (IsRowGroup(childDisplay->mDisplay))
     {
       rv = IR_RowGroupInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                               (nsTableRowGroupFrame*)objectFrame, PR_FALSE);
+                               GetRowGroupFrameFor(objectFrame, childDisplay), PR_FALSE);
     }
     else
     {
@@ -2724,7 +2726,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     else if (IsRowGroup(childDisplay->mDisplay))
     {
       rv = IR_RowGroupAppended(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                              (nsTableRowGroupFrame*)objectFrame);
+                              GetRowGroupFrameFor(objectFrame, childDisplay));
     }
     else
     { // no optimization to be done for Unknown frame types, so just reuse the Inserted method
@@ -2750,7 +2752,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     else if (IsRowGroup(childDisplay->mDisplay))
     {
       rv = IR_RowGroupRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                              (nsTableRowGroupFrame*)objectFrame);
+                              GetRowGroupFrameFor(objectFrame, childDisplay));
     }
     else
     {
@@ -3015,7 +3017,7 @@ NS_METHOD nsTableFrame::IR_RowGroupAppended(nsIPresContext&        aPresContext,
 
   // account for the cells in the rows that are children of aAppendedFrame
   // this will add the content of the rowgroup to the cell map
-  rv = DidAppendRowGroup((nsTableRowGroupFrame*)aAppendedFrame);
+  rv = DidAppendRowGroup(aAppendedFrame);
   if (NS_FAILED(rv))
     return rv;
 
@@ -3596,6 +3598,15 @@ void nsTableFrame::SetTableWidth(nsIPresContext& aPresContext)
   {
     printf ("%p: setting table rect to %d, %d after adding insets %d, %d\n", 
             this, tableSize.width, tableSize.height, rightInset, leftInset);
+  }
+    
+  // account for scroll bars. XXX needs optimization/caching
+  if (mHasScrollableRowGroup) {
+    float sbWidth, sbHeight;
+    nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+    dc->GetScrollBarDimensions(sbWidth, sbHeight);
+    NS_RELEASE(dc);
+    tableSize.width += NSToCoordRound(sbWidth);
   }
   SetRect(tableSize);
 }
@@ -4911,3 +4922,19 @@ nsTableFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Table", aResult);
 }
+
+// XXX make this a macro if it becomes an issue
+nsTableRowGroupFrame*
+nsTableFrame::GetRowGroupFrameFor(nsIFrame* aFrame, const nsStyleDisplay* aDisplay) 
+{
+  if ((NS_STYLE_OVERFLOW_SCROLL == aDisplay->mOverflow) ||
+      (NS_STYLE_OVERFLOW_AUTO == aDisplay->mOverflow)) {
+    mHasScrollableRowGroup = PR_TRUE;
+    nsIFrame* child = nsnull;
+    aFrame->FirstChild(nsnull, child);
+    return (nsTableRowGroupFrame*)child;
+  } else {
+    return (nsTableRowGroupFrame*)aFrame;
+  }
+}
+

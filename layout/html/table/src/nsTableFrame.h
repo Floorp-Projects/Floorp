@@ -599,6 +599,11 @@ protected:
     */
   virtual PRInt32 GetSpecifiedColumnCount ();
 
+	/** 
+	  * Return aFrame's child if aFrame is an nsScrollFrame, otherwise return aFrame
+	  */
+  nsTableRowGroupFrame* GetRowGroupFrameFor(nsIFrame* aFrame, const nsStyleDisplay* aDisplay);
+
 public: /* ----- Cell Map public methods ----- */
 
   /** returns the number of rows in this table.
@@ -681,6 +686,7 @@ private:
   PRBool       mColumnCacheValid;   // PR_TRUE if column cache info is still legit, PR_FALSE if it needs to be recalculated
   PRBool       mCellMapValid;       // PR_TRUE if cell map data is still legit, PR_FALSE if it needs to be recalculated
   PRBool       mIsInvariantWidth;   // PR_TRUE if table width cannot change
+  PRBool       mHasScrollableRowGroup; // PR_TRUE if any section has overflow == "auto" or "scroll"
   PRInt32      mColCount;           // the number of columns in this table
   PRInt32      mEffectiveColCount;  // the number of columns in this table adjusted for weird table attributes
   nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells

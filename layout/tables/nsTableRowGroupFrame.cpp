@@ -28,6 +28,8 @@
 #include "nsIPtr.h"
 #include "nsIReflowCommand.h"
 #include "nsHTMLIIDs.h"
+#include "nsIDeviceContext.h"
+#include "nsHTMLAtoms.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -83,7 +85,6 @@ struct RowGroupReflowState {
   ~RowGroupReflowState() {
   }
 };
-
 
 
 
@@ -487,6 +488,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
                                                RowGroupReflowState& aReflowState,
                                                nsReflowStatus&      aStatus)
 {
+// XXX if this code is activated then fix the nsRowGroupFrame cast, it might be an nsScrollFrame
   nsTableRowGroupFrame* nextInFlow = (nsTableRowGroupFrame*)mNextInFlow;
   nsSize         kidMaxElementSize;
   nsSize*        pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ? &kidMaxElementSize : nsnull;
@@ -962,6 +964,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
   
     // XXX We need to figure out what to do about this...
 #if 0
+    // XXX if this code is activated then fix PullUpChildren to not case nsRowGroupFrame, it might be an nsScrollFrame
     // Did we successfully reflow our mapped children?
     if (NS_FRAME_COMPLETE==aStatus) {
       // Try and pull-up some children from a next-in-flow
@@ -972,6 +975,33 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     // Return our desired rect
     aDesiredSize.width = aReflowState.availableWidth;
     aDesiredSize.height = state.y;
+
+    // account for scroll bars. XXX needs optimization/caching
+    if (nsnull != aDesiredSize.maxElementSize) {
+      nsIAtom* pseudoTag;
+ 
+      mStyleContext->GetPseudoType(pseudoTag);
+      if (pseudoTag == nsHTMLAtoms::scrolledContentPseudo) {
+        nsIFrame* scrollFrame;
+        GetParent(scrollFrame);
+        const nsStyleDisplay *display;
+        scrollFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+        if ((NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) ||
+            (NS_STYLE_OVERFLOW_AUTO   == display->mOverflow)) {
+          float sbWidth, sbHeight;
+          nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+
+          dc->GetScrollBarDimensions(sbWidth, sbHeight);
+          NS_RELEASE(dc);
+          aDesiredSize.maxElementSize->width += NSToCoordRound(sbWidth);
+          // If scrollbars are always visible then add in the hor sb height 
+          if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {
+            aDesiredSize.maxElementSize->height += NSToCoordRound(sbHeight);
+          }
+        }
+      }
+      NS_IF_RELEASE(pseudoTag);
+    }
 
     // shrink wrap rows to height of tallest cell in that row
     if (eReflowReason_Initial != aReflowState.reason) {
@@ -1319,6 +1349,7 @@ NS_METHOD nsTableRowGroupFrame::IR_StyleChanged(nsIPresContext&      aPresContex
   return rv;
 }
 
+// XXX this doesn't handle scrolling, it that is even possible in this context
 NS_METHOD
 nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                             nsIFrame*        aParent,
