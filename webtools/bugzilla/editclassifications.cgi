@@ -16,6 +16,7 @@
 # The Initial Developer of the Original Code is Albert Ting
 #
 # Contributor(s): Albert Ting <alt@sonic.net>
+#                 Max Kanat-Alexander <mkanat@kerio.com>
 #
 # Direct any questions on this source code to mozilla.org
 
@@ -24,19 +25,21 @@ use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
-require "CGI.pl";
-require "globals.pl";
+use Bugzilla::Util;
+use Bugzilla::Error;
+use Bugzilla::Config;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $template = Bugzilla->template;
+my $vars = {};
 
-use vars qw ($template $vars);
-
-# TestClassification:  just returns if the specified classification does exists
+# TestClassification:  just returns if the specified classification does exist
 # CheckClassification: same check, optionally  emit an error text
 
 sub TestClassification ($) {
     my $cl = shift;
+    my $dbh = Bugzilla->dbh;
 
     trick_taint($cl);
     # does the classification exist?
@@ -78,7 +81,7 @@ Bugzilla->login(LOGIN_REQUIRED);
 
 print $cgi->header();
 
-UserInGroup("editclassifications")
+exists Bugzilla->user->groups->{'editclassifications'}
   || ThrowUserError("auth_failure", {group  => "editclassifications",
                                      action => "edit",
                                      object => "classifications"});
