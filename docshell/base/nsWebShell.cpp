@@ -515,14 +515,14 @@ nsWebShell::GetReferrer(nsIURI **aReferrer)
 void
 nsWebShell::SetReferrer(const PRUnichar* aReferrer)
 {
-   NS_NewURI(getter_AddRefs(mReferrerURI), aReferrer, nsnull);
+   NS_NewURI(getter_AddRefs(mReferrerURI), nsAutoString(aReferrer), nsnull);
 }
 
 NS_IMETHODIMP
 nsWebShell::SetURL(const PRUnichar* aURL)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), aURL, nsnull), 
+  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), nsAutoString(aURL), nsnull), 
                     NS_ERROR_FAILURE);
   SetCurrentURI(uri);
   return NS_OK;
@@ -828,7 +828,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         // and down in the load document code we'll detect this and
         // set the correct uri loader command
         nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), aURLSpec, nsnull);
+        NS_NewURI(getter_AddRefs(uri), nsAutoString(aURLSpec), nsnull);
 
         nsCOMPtr<nsISupports> owner;
         GetCurrentDocumentOwner(getter_AddRefs(owner));

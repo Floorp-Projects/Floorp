@@ -2828,7 +2828,7 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
    uriString.Trim(" ");  // Cleanup the empty spaces that might be on each end.
 
    // Just try to create an URL out of it
-   NS_NewURI(aURI, uriString.GetUnicode(), nsnull);
+   NS_NewURI(aURI, uriString, nsnull);
    if(*aURI)
       return NS_OK;
 
@@ -2861,7 +2861,7 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
       else 
          uriString.InsertWithConversion("http://", 0, 7);
    } // end if checkprotocol
-   return NS_NewURI(aURI, uriString.GetUnicode(), nsnull);
+   return NS_NewURI(aURI, uriString, nsnull);
 }
 
 NS_IMETHODIMP nsDocShell::FileURIFixup(const PRUnichar* aStringURI, 
@@ -3460,7 +3460,7 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
         if (!uriAttrib) {
             uri = baseURI;
         } else {
-            NS_NewURI(getter_AddRefs(uri), uriAttrib, baseURI);
+            NS_NewURI(getter_AddRefs(uri), nsAutoString(uriAttrib), baseURI);
             nsMemory::Free(uriAttrib);
         }
 
