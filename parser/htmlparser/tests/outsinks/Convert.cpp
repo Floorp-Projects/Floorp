@@ -62,12 +62,12 @@ Compare(nsString& str, nsString& aFileName)
 
   // Inefficiently read from the file:
   nsString inString;
-  char c;
+  int c;
   int index = 0;
   int different = 0;
   while ((c = getc(file)) != EOF)
   {
-    inString.AppendWithConversion(c);
+    inString.AppendWithConversion((char)c);
     // CVS isn't doing newline comparisons on these files for some reason.
     // So compensate for possible newline problems in the CVS file:
     if (c == '\n' && str[index] == '\r')
@@ -302,9 +302,9 @@ Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] 
 
   // Read in the string: very inefficient, but who cares?
   nsString inString;
-  char c;
+  int c;
   while ((c = getc(file)) != EOF)
-    inString.AppendWithConversion(c);
+    inString.AppendWithConversion((char)c);
 
   if (file != stdin)
     fclose(file);
