@@ -122,7 +122,15 @@ EXTRA_EXPORTS=					\
 	nsHTMLTags.h				\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\uconv -I$(PUBLIC)\expat
+LINCS=  -I$(PUBLIC)\xpcom  \
+        -I$(PUBLIC)\raptor \
+!ifdef NECKO
+        -I$(PUBLIC)\necko  \
+!else
+        -I$(PUBLIC)\netlib \
+!endif
+        -I$(PUBLIC)\uconv  \
+        -I$(PUBLIC)\expat
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorhtmlpars
@@ -138,6 +146,9 @@ LLIBS=        \
  $(DIST)\lib\xpcom.lib  \
  $(DIST)\lib\plc3.lib       \
  $(DIST)\lib\expat.lib			\
+!ifdef NECKO
+ $(DIST)\lib\neckoutil_s.lib			\
+!endif
  $(LIBNSPR)  
 
 !ifdef MOZ_NO_DEBUG_RTL
