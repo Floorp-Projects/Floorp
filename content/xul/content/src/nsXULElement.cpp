@@ -2143,8 +2143,10 @@ NS_IMETHODIMP
 nsXULElement::ChildCount(PRInt32& aResult) const
 {
     nsresult rv;
-    if (NS_FAILED(rv = EnsureContentsGenerated()))
+    if (NS_FAILED(rv = EnsureContentsGenerated())) {
+        aResult = 0;
         return rv;
+    }
 
     return PeekChildCount(aResult);
 }
@@ -2153,8 +2155,10 @@ NS_IMETHODIMP
 nsXULElement::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
     nsresult rv;
-    if (NS_FAILED(rv = EnsureContentsGenerated()))
+    if (NS_FAILED(rv = EnsureContentsGenerated())) {
+        aResult = nsnull;
         return rv;
+    }
 
     aResult = nsnull;
     if (! mChildren)
@@ -2176,8 +2180,10 @@ NS_IMETHODIMP
 nsXULElement::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const
 {
     nsresult rv;
-    if (NS_FAILED(rv = EnsureContentsGenerated()))
+    if (NS_FAILED(rv = EnsureContentsGenerated())) {
+        aResult = -1;
         return rv;
+    }
 
     aResult = (mChildren) ? (mChildren->IndexOf(aPossibleChild)) : (-1);
     return NS_OK;
