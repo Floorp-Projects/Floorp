@@ -99,12 +99,15 @@ private:
 };
 
 inline void* SetAsXPTCStub(nsJavaXPTCStub* ptr)
-  { return (void*) (((unsigned long) ptr) | 0x1); }
-
-inline PRBool IsXPTCStub(void* ptr)
-  { return ((unsigned long) ptr) & 0x1; }
-
-inline nsJavaXPTCStub* GetXPTCStubAddr(void* ptr)
-  { return (nsJavaXPTCStub*) (((unsigned long) ptr) & ~0x1); }
+  { NS_PRECONDITION(ptr, "null pointer");
+    return (void*) (((unsigned long) ptr) | 0x1); }
+ 
+ inline PRBool IsXPTCStub(void* ptr)
+  { NS_PRECONDITION(ptr, "null pointer");
+    return ((unsigned long) ptr) & 0x1; }
+ 
+ inline nsJavaXPTCStub* GetXPTCStubAddr(void* ptr)
+  { NS_PRECONDITION(ptr, "null pointer");
+    return (nsJavaXPTCStub*) (((unsigned long) ptr) & ~0x1); }
 
 #endif // _nsJavaXPTCStub_h_

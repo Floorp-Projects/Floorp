@@ -157,8 +157,8 @@ AddJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
                                         PL_DHASH_ADD));
   entry->mJavaObject = aJavaObject;
 
-//  LOG("+ Adding Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-//         hash, (int) aXPCOMObject);
+  LOG("+ Adding Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
+         hash, (int) aXPCOMObject);
 }
 
 nsISupports*
@@ -171,6 +171,9 @@ RemoveXPCOMBinding(JNIEnv* env, jobject aJavaObject)
   PL_DHashTableOperate(gJAVAtoXPCOMBindings, NS_INT32_TO_PTR(hash),
                        PL_DHASH_REMOVE);
   PL_DHashTableOperate(gXPCOMtoJAVABindings, xpcomObj, PL_DHASH_REMOVE);
+
+  LOG("- Removing Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
+      hash, (int) xpcomObj);
 
   if (IsXPTCStub(xpcomObj)) {
     return (nsISupports*) GetXPTCStubAddr(xpcomObj);
@@ -185,6 +188,19 @@ RemoveXPCOMBinding(JNIEnv* env, jobject aJavaObject)
   }
 }
 
+void
+RemoveJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
+{
+  // Remove both instances from stores
+  jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
+  PL_DHashTableOperate(gJAVAtoXPCOMBindings, NS_INT32_TO_PTR(hash),
+                       PL_DHASH_REMOVE);
+  PL_DHashTableOperate(gXPCOMtoJAVABindings, aXPCOMObject, PL_DHASH_REMOVE);
+
+  LOG("- Removing Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
+      hash, (int) aXPCOMObject);
+}
+
 void*
 GetMatchingXPCOMObject(JNIEnv* env, jobject aJavaObject)
 {
@@ -197,8 +213,8 @@ GetMatchingXPCOMObject(JNIEnv* env, jobject aJavaObject)
                                         PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-//    LOG("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-//           (int) aJavaObject, (int) entry->mXPCOMInstance);
+    LOG("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
+           hash, (int) entry->mXPCOMInstance);
     return entry->mXPCOMInstance;
   }
 
@@ -206,7 +222,7 @@ GetMatchingXPCOMObject(JNIEnv* env, jobject aJavaObject)
 }
 
 jobject
-GetMatchingJavaObject(void* aXPCOMObject)
+GetMatchingJavaObject(JNIEnv* env, void* aXPCOMObject)
 {
   JavaXPCOMBindingEntry *entry =
     NS_STATIC_CAST(JavaXPCOMBindingEntry*,
@@ -214,8 +230,8 @@ GetMatchingJavaObject(void* aXPCOMObject)
                                         PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-//    LOG("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-//           (int) entry->mJavaObject, (int) aXPCOMObject);
+    LOG("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
+        env->CallIntMethod(entry->mJavaObject, hashCodeMID), (int) aXPCOMObject);
     return entry->mJavaObject;
   }
 

@@ -61,7 +61,8 @@ nsJavaXPTCStub::~nsJavaXPTCStub()
   jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
   jstring name = (jstring) mJavaEnv->CallObjectMethod(clazz, getNameMID);
   const char* javaObjectName = mJavaEnv->GetStringUTFChars(name, &isCopy);
-  fprintf(stderr, "*** ~nsJavaXPTCStub(java_obj=%s)\n", javaObjectName);
+  LOG("*** ~nsJavaXPTCStub(this=0x%08x java_obj=0x%08x %s)\n", (int) this,
+      mJavaEnv->CallIntMethod(mJavaObject, hashCodeMID), javaObjectName);
   if (isCopy)
     mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
 #endif
@@ -72,6 +73,8 @@ nsJavaXPTCStub::~nsJavaXPTCStub()
       delete (nsJavaXPTCStub*) mChildren[i];
     }
   }
+
+  RemoveJavaXPCOMBinding(mJavaEnv, mJavaObject, this);
 
   mJavaEnv->DeleteGlobalRef(mJavaObject);
 }
@@ -573,7 +576,7 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
     {
       jobject java_stub;
       if (aVariant.val.p) {
-        java_stub = GetMatchingJavaObject(aVariant.val.p);
+        java_stub = GetMatchingJavaObject(mJavaEnv, aVariant.val.p);
 
         if (java_stub == nsnull) {
           // wrap xpcom instance
@@ -1051,7 +1054,6 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
             // Create XPCOM stub
             nsJavaXPTCStub* xpcomStub = new nsJavaXPTCStub(mJavaEnv, java_obj,
                                                            iinfo);
-            NS_ADDREF(xpcomStub);
             inst = SetAsXPTCStub(xpcomStub);
             AddJavaXPCOMBinding(mJavaEnv, java_obj, inst);
           }
@@ -1083,9 +1085,11 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
           }
 #endif
 
-          if (IsXPTCStub(inst))
-            *((void **) aVariant.val.p) = (void*) GetXPTCStubAddr(inst);
-          else {
+          if (IsXPTCStub(inst)) {
+            nsJavaXPTCStub* xpcomStub = GetXPTCStubAddr(inst);
+            NS_ADDREF(xpcomStub);
+            *((void **) aVariant.val.p) = (void*) xpcomStub;
+          } else {
             JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) inst;
             *((void **) aVariant.val.p) = (void*) xpcomInst->GetInstance();
           }
