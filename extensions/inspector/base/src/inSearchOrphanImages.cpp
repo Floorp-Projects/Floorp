@@ -252,7 +252,7 @@ inSearchOrphanImages::CacheAllDirectories()
   mDirectories = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
   
   nsCOMPtr<nsILocalFile> file;
-  NS_NewLocalFile(mSearchPath.ToNewCString(), false, getter_AddRefs(file));
+  NS_NewLocalFile(mSearchPath.ToNewCString(), PR_FALSE, getter_AddRefs(file));
   
   CacheDirectory(file);
   
@@ -357,7 +357,7 @@ nsresult
 inSearchOrphanImages::BuildRemoteURLHash()
 {
   // XXX dunno if I have to addref here and release the old one.. Scripting habits be damned!
-  mFileHash = new nsHashtable(3000, true);
+  mFileHash = new nsHashtable(3000, PR_TRUE);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
   if (doc) {
@@ -437,7 +437,7 @@ nsresult
 inSearchOrphanImages::EqualizeRemoteURL(nsAutoString* aURL)
 {
   if (mIsSkin) {
-    if (aURL->Find("chrome://", false, 0, 1) >= 0) {
+    if (aURL->Find("chrome://", PR_FALSE, 0, 1) >= 0) {
       PRUint32 len = aURL->Length();
       char* result = new char[len-8];
       char* buffer = aURL->ToNewCString();
@@ -470,7 +470,7 @@ nsAutoString
 inSearchOrphanImages::EqualizeLocalURL(nsAutoString* aURL)
 {
   nsAutoString result;
-  PRInt32 found = aURL->Find(mSearchPath, false, 0, 1);
+  PRInt32 found = aURL->Find(mSearchPath, PR_FALSE, 0, 1);
   if (found == 0) {
     PRUint32 len = mSearchPath.Length();
     aURL->Mid(result, len, aURL->Length()-len);
@@ -538,7 +538,7 @@ inSearchOrphanImages::InitDataSource()
   nsCOMPtr<nsIRDFResource> res;
   mRDF->GetAnonymousResource(getter_AddRefs(res));
 
-  mDataSource->Assert(kINS_SearchRoot, kINS_results, res, true);
+  mDataSource->Assert(kINS_SearchRoot, kINS_results, res, PR_TRUE);
   
   mRDFCU->MakeSeq(mDataSource, res, getter_AddRefs(mResultSeq));
 
@@ -559,7 +559,7 @@ inSearchOrphanImages::CreateResourceFromFile(nsIFile* aFile, nsIRDFResource** aR
   nsCOMPtr<nsIRDFLiteral> literal;
   mRDF->GetLiteral(theURL.ToNewUnicode(), getter_AddRefs(literal));
 
-  mDataSource->Assert(res, kINS_url, literal, true);
+  mDataSource->Assert(res, kINS_url, literal, PR_TRUE);
 
   mResultSeq->AppendElement(res);
 

@@ -331,7 +331,7 @@ nsresult
 inCSSValueSearch::EqualizeURL(nsAutoString* aURL)
 {
   if (mNormalizeChromeURLs) {
-    if (aURL->Find("chrome://", false, 0, 1) >= 0) {
+    if (aURL->Find("chrome://", PR_FALSE, 0, 1) >= 0) {
       PRUint32 len = aURL->Length();
       char* result = new char[len-8];
       char* buffer = aURL->ToNewCString();

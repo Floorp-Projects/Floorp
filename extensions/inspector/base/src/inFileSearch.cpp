@@ -461,7 +461,7 @@ inFileSearch::GetNextSubDirectory(nsIFile** aDir)
   nsCOMPtr<nsISimpleEnumerator> nextDirs;
   PRUint32 count;
 
-  while (true) {
+  while (PR_TRUE) {
     mDirStack->Count(&count);
     // the stack is empty, so our search must be complete
     if (count == 0) return PR_FALSE;
@@ -504,7 +504,7 @@ inFileSearch::GetNextDirectory(nsISimpleEnumerator* aEnum)
   PRBool isDir;
   PRBool hasMoreElements;
 
-  while (true) {
+  while (PR_TRUE) {
     aEnum->HasMoreElements(&hasMoreElements);
     if (!hasMoreElements) 
       break;
@@ -549,7 +549,7 @@ PRBool
 inFileSearch::MatchPattern(PRUnichar* aPattern, PRUnichar* aString)
 {
   PRInt32 index = 0;
-  PRBool matching = true;
+  PRBool matching = PR_TRUE;
   char wildcard = '*';
   
   PRUnichar* patternPtr = aPattern;
@@ -562,7 +562,7 @@ inFileSearch::MatchPattern(PRUnichar* aPattern, PRUnichar* aString)
       matching = *patternPtr == *stringPtr;
       ++stringPtr;
     }
-    if (!matching) return false;
+    if (!matching) return PR_FALSE;
     ++patternPtr;
     ++index;
   }
@@ -579,9 +579,9 @@ inFileSearch::AdvanceWildcard(PRUnichar** aString, PRUnichar* aNextChar)
     if (*stringPtr == *aNextChar) {
       // we have found the next char after the wildcard, so return with success
       *aString = stringPtr;
-      return true;
+      return PR_TRUE;
     } else if (*stringPtr == 0)
-      return false;
+      return PR_FALSE;
     ++stringPtr;
   }
 }
@@ -600,7 +600,7 @@ inFileSearch::MakePathRelative(nsAutoString* aPath)
   nsAutoString searchPath;
   searchPath.AssignWithConversion(temp);
 
-  PRInt32 found = aPath->Find(searchPath, false, 0, 1);
+  PRInt32 found = aPath->Find(searchPath, PR_FALSE, 0, 1);
   if (found == 0) {
     PRUint32 len = searchPath.Length();
     aPath->Mid(result, len+1, aPath->Length()-len);
