@@ -522,7 +522,15 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     GetTarget(&target);
 
     if (!isPost) {
-      href.Append(data);
+      if (href.Last() == '?') {
+        // Already specifies a '?' in the href so don't add another one
+        href.Append(data);
+      }
+      else {
+         // Doesn't have a ? in the href so add one
+        href.Append('?');
+        href.Append(data);
+      }
     }
     nsAutoString absURLSpec;
 #ifndef NECKO
@@ -724,7 +732,7 @@ nsresult nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFor
         delete [] names;
       }
     }
-
+  }
     aData.SetLength(0);
     if (isPost) {
       char size[16];
@@ -740,10 +748,7 @@ nsresult nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFor
       aData += size;
       aData += CRLF;
       aData += CRLF;
-    } else {
-      aData += '?';
-    }
-  }
+    } 
   aData += buf;
   NS_IF_RELEASE(encoder);
   return rv;
