@@ -205,8 +205,8 @@ namespace MetaData {
         if (JSDOUBLE_IS_INT(x, i) && INT_FITS_IN_JS2VAL(i))
             retval = INT_TO_JS2VAL(i);
         else {
-            if (x != x)
-                return nanValue;
+            if (JSDOUBLE_IS_NaN(x))
+                return nan;
             retval = DOUBLE_TO_JS2VAL(newDoubleValue(x));
         }
         return retval;
@@ -361,7 +361,9 @@ namespace MetaData {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
 
-        nanValue = DOUBLE_TO_JS2VAL(allocNumber(nan));
+        float64 *p = (float64 *)JS2Object::alloc(sizeof(float64));
+        *p = nan;
+        nanValue = DOUBLE_TO_JS2VAL(p);
         posInfValue = DOUBLE_TO_JS2VAL(allocNumber(positiveInfinity));
         negInfValue = DOUBLE_TO_JS2VAL(allocNumber(negativeInfinity));
 
