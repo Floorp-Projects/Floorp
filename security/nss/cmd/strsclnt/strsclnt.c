@@ -247,19 +247,17 @@ myBadCertHandler( void *arg, PRFileDesc *fd)
 void 
 printSecurityInfo(PRFileDesc *fd)
 {
-    CERTCertificate * cert;
+    CERTCertificate * cert = NULL;
     SSL3Statistics * ssl3stats = SSL_GetStatistics();
     SECStatus result;
     SSLChannelInfo    channel;
     SSLCipherSuiteInfo suite;
 
-#ifndef DEBUG_nelsonb
     static int only_once;
 
-    if (only_once)
+    if (only_once && verbose < 2)
     	return;
     only_once = 1;
-#endif
 
     result = SSL_GetChannelInfo(fd, &channel, sizeof channel);
     if (result == SECSuccess && 
@@ -279,13 +277,16 @@ printSecurityInfo(PRFileDesc *fd)
 	       channel.keaKeyBits,  suite.keaTypeName);
     	}
     }
-#if 0
-    cert = SSL_RevealCert(fd);
-    if (cert) {
+
+    cert = SSL_LocalCertificate(fd);
+    if (!cert)
+	cert = SSL_PeerCertificate(fd);
+
+    if (verbose && cert) {
 	char * ip = CERT_NameToAscii(&cert->issuer);
 	char * sp = CERT_NameToAscii(&cert->subject);
         if (sp) {
-	    fprintf(stderr, "strsclnt: ubject DN: %s\n", sp);
+	    fprintf(stderr, "strsclnt: subject DN: %s\n", sp);
 	    PR_Free(sp);
 	}
         if (ip) {
@@ -295,7 +296,6 @@ printSecurityInfo(PRFileDesc *fd)
 	CERT_DestroyCertificate(cert);
 	cert = NULL;
     }
-#endif
     fprintf(stderr,
     	"strsclnt: %ld cache hits; %ld cache misses, %ld cache not reusable\n",
     	ssl3stats->hsh_sid_cache_hits, 
@@ -1071,7 +1071,7 @@ main(int argc, char **argv)
     }
     ssl3stats = SSL_GetStatistics();
 
-    if (nickName) {
+    if (nickName  && strcmp(nickName, "none")) {
 
 	cert[kt_rsa] = PK11_FindCertFromNickname(nickName, passwd);
 	if (cert[kt_rsa] == NULL) {
