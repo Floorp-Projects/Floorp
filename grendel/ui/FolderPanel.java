@@ -52,7 +52,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JToolBar;
+//import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ToolTipManager;
 import javax.swing.event.ChangeEvent;
@@ -83,6 +83,7 @@ import grendel.widgets.ColumnModel;
 import grendel.widgets.ColumnModelEvent;
 import grendel.widgets.ColumnModelListener;
 import grendel.widgets.DefaultCellRenderer;
+import grendel.widgets.GrendelToolBar;
 import grendel.widgets.SelectionEvent;
 import grendel.widgets.SelectionListener;
 import grendel.widgets.SelectionManager;
@@ -403,7 +404,7 @@ public class FolderPanel extends GeneralPanel {
    * Returns the toolbar associated with this panel.
    */
 
-  public JToolBar getToolBar() {
+  public GrendelToolBar getToolBar() {
     return buildToolBar("folderToolBar", getActions());
   }
 
