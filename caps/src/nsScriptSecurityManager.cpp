@@ -83,10 +83,10 @@ enum {
     SCRIPT_SECURITY_NO_ACCESS = 7
 };
 
-enum {
-    CLASS_POLICY_DEFAULT = 1,
-    CLASS_POLICY_SITE
-};
+#define  CLASS_HAS_DEFAULT_POLICY 1 << 0
+#define  CLASS_HAS_SITE_POLICY    1 << 1
+#define  CLASS_HAS_ACCESSTYPE     1 << 2
+         
 
 // Result of this function should not be freed.
 static const PRUnichar *
@@ -430,7 +430,7 @@ nsScriptSecurityManager::CheckSameOrigin(JSContext *aCx, nsIPrincipal* aSubject,
         return NS_OK;
 
     // Allow access to about:blank
-    nsCOMPtr<nsICodebasePrincipal> objectCodebase = do_QueryInterface(aObject);
+    nsCOMPtr<nsICodebasePrincipal> objectCodebase(do_QueryInterface(aObject));
     if (objectCodebase)
     {
         nsXPIDLCString origin;
@@ -478,76 +478,67 @@ nsScriptSecurityManager::GetSecurityLevel(nsIPrincipal *principal,
                                           nsCString &capability,
                                           void** aPolicy)
 {
-    nsresult rv;
+    nsresult rv = NS_ERROR_FAILURE;
     PRInt32 secLevel = SCRIPT_SECURITY_NO_ACCESS;
-    //-- See if we have a security policy for this class, otherwise use the default
-    void* classPolicy = nsnull;
+
+    nsXPIDLCString propertyPolicy;
+    PRInt32 classPolicy = 0;
     if(mClassPolicies)
     {
         nsCStringKey classKey(aClassName);
-        classPolicy = mClassPolicies->Get(&classKey);
-    }
-    if (classPolicy)
-    {
-        //-- Look up the security policy for this property
-        nsCAutoString prefName;
-        if (NS_FAILED(GetPrefName(principal, aClassName, aPropertyName,
-                                  classPolicy, prefName)))
-            return SCRIPT_SECURITY_NO_ACCESS;
-
-        nsCOMPtr<nsISecurityPref> securityPref = do_QueryReferent(mPrefBranchWeakRef);
-        if (!securityPref)
-            return SCRIPT_SECURITY_NO_ACCESS;
-        char *secLevelString;
-        rv = securityPref->SecurityGetCharPref(prefName, &secLevelString);
+        classPolicy = NS_PTR_TO_INT32(mClassPolicies->Get(&classKey));
+        if (classPolicy != 0)
+        {
+            //-- Look up the security policy for this property
+            rv = GetPolicy(principal, aClassName, aPropertyName,
+                           classPolicy, aAction, getter_Copies(propertyPolicy));
+        }
         if (NS_FAILED(rv))
-        {
-            prefName += (aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY ? ".set" : ".get");
-            rv = securityPref->SecurityGetCharPref(prefName, &secLevelString);
-        }
-        if (NS_FAILED(rv)) //-- No site policy for this property; look for a default policy
-        {
-            if (NS_FAILED(GetPrefName(principal, aClassName, aPropertyName,
-                                      (void*)CLASS_POLICY_DEFAULT, prefName)))
-                return SCRIPT_SECURITY_NO_ACCESS;
-            rv = securityPref->SecurityGetCharPref(prefName, &secLevelString);
-            if (NS_FAILED(rv))
+        { //-- Look for a wildcard policy for this property
+            nsCAutoString wildcardName("*.");
+            wildcardName += aPropertyName;
+            nsCStringKey wildcardKey(wildcardName);
+            PRInt32 wcPolicy = NS_PTR_TO_INT32(mClassPolicies->Get(&wildcardKey));
+            if (wcPolicy != 0)
             {
-                prefName += (aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY ? ".set" : ".get");
-                rv = securityPref->SecurityGetCharPref(prefName, &secLevelString);
+                //-- Look up the security policy for this property
+                rv = GetPolicy(principal, "*", aPropertyName,
+                               wcPolicy, aAction, getter_Copies(propertyPolicy));
             }
         }
-        if (NS_SUCCEEDED(rv) && secLevelString)
+    }   
+    if (NS_SUCCEEDED(rv) && propertyPolicy)
+    {
+        if (PL_strcmp(propertyPolicy, "sameOrigin") == 0)
+            secLevel = SCRIPT_SECURITY_SAME_ORIGIN_ACCESS;
+        else if (PL_strcmp(propertyPolicy, "allAccess") == 0)
+            secLevel = SCRIPT_SECURITY_ALL_ACCESS;
+        else if (PL_strcmp(propertyPolicy, "noAccess") == 0)
+            secLevel = SCRIPT_SECURITY_NO_ACCESS;
+        else
         {
-            if (PL_strcmp(secLevelString, "sameOrigin") == 0)
-                secLevel = SCRIPT_SECURITY_SAME_ORIGIN_ACCESS;
-            else if (PL_strcmp(secLevelString, "allAccess") == 0)
-                secLevel = SCRIPT_SECURITY_ALL_ACCESS;
-            else if (PL_strcmp(secLevelString, "noAccess") == 0)
-                secLevel = SCRIPT_SECURITY_NO_ACCESS;
-            else
-            {
-                // string should be the name of a capability
-                capability = secLevelString;
-                secLevelString = nsnull;
-                secLevel = SCRIPT_SECURITY_CAPABILITY_ONLY;
-            }
-            if (secLevelString)
-                PR_Free(secLevelString);
-            return secLevel;
+            // string should be the name of a capability
+            capability = PL_strdup(propertyPolicy);
+            if (!capability)
+                return NS_ERROR_OUT_OF_MEMORY;
+            secLevel = SCRIPT_SECURITY_CAPABILITY_ONLY;
         }
     }
-    //-- No policy for this property.
-    //   Use the default policy: sameOrigin for DOM, noAccess for everything else
-    if(aIsDOM)
-        secLevel = SCRIPT_SECURITY_SAME_ORIGIN_ACCESS;
-    if (!classPolicy && aPolicy)
-        //-- If there's no stored policy for this property,
-        //   we can annotate the class's aPolicy field and avoid checking
-        //   policy prefs next time.
-        *aPolicy = (void*)secLevel;
+    else
+    {
+        //-- No policy for this property.
+        //   Use the default policy: sameOrigin for DOM, noAccess for everything else
+        if(aIsDOM)
+            secLevel = SCRIPT_SECURITY_SAME_ORIGIN_ACCESS;
+        if ((classPolicy == 0) && aPolicy)
+        {
+            //-- If there's no stored policy for this property,
+            //   we can annotate the class's aPolicy field and avoid checking
+            //   policy prefs next time.
+            *aPolicy = (void*)secLevel;
+        }
+    }
     return secLevel;
-    return SCRIPT_SECURITY_UNDEFINED_ACCESS;
 }
 
 struct nsDomainEntry
@@ -580,79 +571,119 @@ struct nsDomainEntry
 };
 
 nsresult
-nsScriptSecurityManager::GetPrefName(nsIPrincipal* principal,
-                                     const char* aClassName, const char* aPropertyName,
-                                     void* aClassPolicy, nsCString &result)
+nsScriptSecurityManager::TryToGetPref(nsISecurityPref* aSecurityPref,
+                                      nsCString &aPrefName,
+                                      const char* aClassName,
+                                      const char* aPropertyName,
+                                      PRInt32 aClassPolicy,
+                                      PRUint32 aAction, char** result)
 {
-    static const char *defaultStr = "default";
-    result = "capability.policy.";
-    if (aClassPolicy != (void*)CLASS_POLICY_SITE)
-        //-- No per-site policy; use the policy named "default"
-        result += defaultStr;
-    else //-- Look up the name of the relevant per-site policy
+    //-- Add the class and property names to the pref
+    aPrefName += aClassName;
+    aPrefName += '.';
+    aPrefName += aPropertyName;
+
+    //-- Try to look up the pref
+    if (NS_SUCCEEDED(aSecurityPref->SecurityGetCharPref(aPrefName, result)))
+        return NS_OK;
+
+    //-- If appropriate, try adding .get or .set and looking up again
+    if (aClassPolicy & CLASS_HAS_ACCESSTYPE)
     {
-        PRBool equals = PR_TRUE;
-        if (principal && NS_FAILED(principal->Equals(mSystemPrincipal, &equals)))
+        aPrefName += 
+            (aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY ? ".set" : ".get");
+        return aSecurityPref->SecurityGetCharPref(aPrefName, result);
+    }
+    
+    //-- Couldn't find a pref
+    return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsScriptSecurityManager::GetPolicy(nsIPrincipal* principal,
+                                   const char* aClassName, const char* aPropertyName,
+                                   PRInt32 aClassPolicy, PRUint32 aAction, char** result)
+{
+    nsresult rv;
+    *result = nsnull;
+
+    nsCOMPtr<nsISecurityPref> securityPref(do_QueryReferent(mPrefBranchWeakRef));
+    if (!securityPref)
+        return NS_ERROR_FAILURE;
+
+    if ((aClassPolicy & CLASS_HAS_SITE_POLICY) && mOriginToPolicyMap)
+    {   //-- Look up the name of the relevant per-site policy
+        nsCOMPtr<nsICodebasePrincipal> codebase(do_QueryInterface(principal));
+        if (!codebase)
             return NS_ERROR_FAILURE;
-        if (equals)
-            result += defaultStr;
-        else
+
+        nsXPIDLCString origin;
+        if (NS_FAILED(rv = codebase->GetOrigin(getter_Copies(origin))))
+            return rv;
+        
+        const char *s = origin;
+        const char *nextToLastDot = nsnull;
+        const char *lastDot = nsnull;
+        const char *colon = nsnull;
+        const char *p = s;
+        while (*p)
         {
-            nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-            if (!codebase)
-                return NS_ERROR_FAILURE;
-            nsresult rv;
-            nsXPIDLCString origin;
-            if (NS_FAILED(rv = codebase->GetOrigin(getter_Copies(origin))))
-                return rv;
-            nsCString *policy = nsnull;
-            if (mOriginToPolicyMap)
+            if (*p == '.')
             {
-                const char *s = origin;
-                const char *nextToLastDot = nsnull;
-                const char *lastDot = nsnull;
-                const char *colon = nsnull;
-                const char *p = s;
-                while (*p)
-                {
-                    if (*p == '.')
-                    {
-                        nextToLastDot = lastDot;
-                        lastDot = p;
-                    }
-                    if (!colon && *p == ':')
-                        colon = p;
-                    p++;
-                }
-                nsCStringKey key(nextToLastDot ? nextToLastDot+1 : s);
-                nsDomainEntry *de = (nsDomainEntry *) mOriginToPolicyMap->Get(&key);
-                if (!de)
-                {
-                    nsCAutoString scheme(s, colon-s+1);
-                    nsCStringKey schemeKey(scheme);
-                    de = (nsDomainEntry *) mOriginToPolicyMap->Get(&schemeKey);
-                }
-                while (de)
-                {
-                    if (de->Matches(s))
-                    {
-                        policy = &de->mPolicy;
-                        break;
-                    }
-                    de = de->mNext;
-                }
+                nextToLastDot = lastDot;
+                lastDot = p;
             }
-            if (policy)
-                result += *policy;
-            else
-                result += defaultStr;
+            if (!colon && *p == ':')
+                colon = p;
+            p++;
+        }
+
+        nsCStringKey key(nextToLastDot ? nextToLastDot+1 : s);
+        nsDomainEntry *de = (nsDomainEntry *) mOriginToPolicyMap->Get(&key);
+        if (!de)
+        {
+            nsCAutoString scheme(s, colon-s+1);
+            nsCStringKey schemeKey(scheme);
+            de = (nsDomainEntry *) mOriginToPolicyMap->Get(&schemeKey);
+        }
+
+        nsCString *policy = nsnull;
+        while (de)
+        {
+            if (de->Matches(s))
+            {
+                policy = &de->mPolicy;
+                break;
+            }
+            de = de->mNext;
+        }
+
+        if (policy)
+        {
+            //-- build the pref name and look it up
+            //-- the form is "capability.policy.policyname.class.property"
+            nsCAutoString prefName("capability.policy.");
+            prefName += *policy;
+            prefName += '.';
+            rv = TryToGetPref(securityPref, prefName, aClassName, aPropertyName,
+                              aClassPolicy, aAction, result);
+            if (NS_SUCCEEDED(rv))
+                return NS_OK;
         }
     }
-    result += '.';
-    result += aClassName;
-    result += '.';
-    result += aPropertyName;
-    return NS_OK;
+    //-- Now try looking up a default policy, if one exists
+    //-- the form is "capability.policy.default.class.property"
+    if (aClassPolicy & CLASS_HAS_DEFAULT_POLICY)
+    {
+        nsCAutoString prefName("capability.policy.default.");
+        rv = TryToGetPref(securityPref, prefName, aClassName, aPropertyName,
+                          aClassPolicy, aAction, result);
+        if (NS_SUCCEEDED(rv))
+            return NS_OK;
+    }
+
+    //-- Couldn't find a policy
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -676,7 +707,7 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
 
     // Otherwise, principal should have a codebase that we can use to
     // do the remaining tests.
-    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+    nsCOMPtr<nsICodebasePrincipal> codebase(do_QueryInterface(principal));
     if (!codebase)
         return NS_ERROR_FAILURE;
     nsCOMPtr<nsIURI> uri;
@@ -976,7 +1007,7 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
         return NS_OK;
 
     // Allow access to about:blank
-    nsCOMPtr<nsICodebasePrincipal> objectCodebase = do_QueryInterface(object);
+    nsCOMPtr<nsICodebasePrincipal> objectCodebase(do_QueryInterface(object));
     if (objectCodebase)
     {
         nsXPIDLCString origin;
@@ -1005,7 +1036,7 @@ nsScriptSecurityManager::GetRootDocShell(JSContext *cx, nsIDocShell **result)
     if (!globalObject)  return NS_ERROR_FAILURE;
     rv = globalObject->GetDocShell(getter_AddRefs(docshell));
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem = do_QueryInterface(docshell, &rv);
+    nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem(do_QueryInterface(docshell, &rv));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIDocShellTreeItem> rootItem;
     rv = docshellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
@@ -1054,32 +1085,17 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
 
     //-- Check for a per-site policy
     static const char jsPrefGroupName[] = "javascript";
-    static const char jsEnabledName[] = "enabled";
     nsCStringKey jsKey(jsPrefGroupName);
-    void* policy = mClassPolicies ? mClassPolicies->Get(&jsKey) : nsnull;
-    if(policy)
+    PRInt32 classPolicy = mClassPolicies ? NS_PTR_TO_INT32(mClassPolicies->Get(&jsKey)) : 0;
+    if(classPolicy)
     {
-        nsCAutoString prefName;
-        rv = GetPrefName(principal, jsPrefGroupName, jsEnabledName, policy, prefName);
-        //-- early return?
-        nsCOMPtr<nsISecurityPref> securityPref = do_QueryReferent(mPrefBranchWeakRef);
-        if (NS_SUCCEEDED(rv) && securityPref)
+        nsXPIDLCString policy;
+        rv = GetPolicy(principal, jsPrefGroupName, "enabled", classPolicy, 0,
+                       getter_Copies(policy));
+        if (NS_SUCCEEDED(rv) && (PL_strcmp("noAccess", policy) == 0))
         {
-            PRBool jsEnabledForSite;
-            rv = securityPref->SecurityGetBoolPref(prefName, &jsEnabledForSite);
-            if (NS_FAILED(rv) && (policy == (void*)CLASS_POLICY_SITE))
-                //-- No site policy for this property; look for a default policy
-            {
-                rv = GetPrefName(principal, jsPrefGroupName, jsEnabledName,
-                                 (void*)CLASS_POLICY_DEFAULT, prefName);
-                if (NS_SUCCEEDED(rv))
-                    rv = securityPref->SecurityGetBoolPref(prefName, &jsEnabledForSite);
-            }
-            if (NS_SUCCEEDED(rv) && !jsEnabledForSite)
-            {
-                *result = PR_FALSE;
-                return NS_OK;
-            }
+            *result = PR_FALSE;
+            return NS_OK;
         }
     }
 
@@ -1131,7 +1147,7 @@ nsScriptSecurityManager::GetCertificatePrincipal(const char* aCertID,
         NS_RELEASE(certificate);
         return NS_ERROR_FAILURE;
     }
-    nsCOMPtr<nsIPrincipal> principal = do_QueryInterface((nsBasePrincipal*)certificate, &rv);
+    nsCOMPtr<nsIPrincipal> principal(do_QueryInterface((nsBasePrincipal*)certificate, &rv));
     NS_RELEASE(certificate);
     if (NS_FAILED(rv)) return rv;
 
@@ -1193,7 +1209,7 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
             principal = fromTable;
 		else //-- Check to see if we have a more general principal
 		{
-			nsCOMPtr<nsICodebasePrincipal> codebasePrin = do_QueryInterface(principal);
+			nsCOMPtr<nsICodebasePrincipal> codebasePrin(do_QueryInterface(principal));
 			nsXPIDLCString originUrl;
 			rv = codebasePrin->GetOrigin(getter_Copies(originUrl));
 			if (NS_FAILED(rv)) return rv;
@@ -1318,7 +1334,7 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
             nsCOMPtr<nsIScriptGlobalObject> global;
             scriptContext->GetGlobalObject(getter_AddRefs(global));
             NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-            nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
+            nsCOMPtr<nsIScriptObjectPrincipal> globalData(do_QueryInterface(global));
             NS_ENSURE_TRUE(globalData, NS_ERROR_FAILURE);
             globalData->GetPrincipal(result);
             if (*result)
@@ -1386,7 +1402,7 @@ nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
 {
     nsresult rv;
     nsCOMPtr<nsIPrincipal> persistent = aToSave;
-    nsCOMPtr<nsIAggregatePrincipal> aggregate = do_QueryInterface(aToSave, &rv);
+    nsCOMPtr<nsIAggregatePrincipal> aggregate(do_QueryInterface(aToSave, &rv));
     if (NS_SUCCEEDED(rv))
         if (NS_FAILED(aggregate->GetPrimaryChild(getter_AddRefs(persistent))))
             return NS_ERROR_FAILURE;
@@ -1419,7 +1435,7 @@ nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
                              getter_Copies(deniedPrefName)  );
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsISecurityPref> securityPref = do_QueryReferent(mPrefBranchWeakRef);
+    nsCOMPtr<nsISecurityPref> securityPref(do_QueryReferent(mPrefBranchWeakRef));
     if (!securityPref)
         return NS_ERROR_FAILURE;
     mIsWritingPrefs = PR_TRUE;
@@ -1588,7 +1604,7 @@ CheckConfirmDialog(JSContext* cx, const PRUnichar *szMessage, const PRUnichar *s
         nsCOMPtr<nsIScriptGlobalObject> globalObject;
         scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
         NS_ASSERTION(globalObject, "script context has no global object");
-        nsCOMPtr<nsIDOMWindowInternal> domWin = do_QueryInterface(globalObject);
+        nsCOMPtr<nsIDOMWindowInternal> domWin(do_QueryInterface(globalObject));
         if (domWin)
             domWin->GetPrompter(getter_AddRefs(prompter));
     }
@@ -1768,7 +1784,7 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
         rv = systemCertZip->Open();
         if (NS_SUCCEEDED(rv))
         {
-            nsCOMPtr<nsIJAR> systemCertJar = do_QueryInterface(systemCertZip, &rv);
+            nsCOMPtr<nsIJAR> systemCertJar(do_QueryInterface(systemCertZip, &rv));
             if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
             rv = systemCertJar->GetCertificatePrincipal(nsnull,
                                                         getter_AddRefs(mSystemCertificate));
@@ -1945,14 +1961,14 @@ nsScriptSecurityManager::CheckXPCPermissions(nsISupports* aObj,
     if(aObj)
     {
         nsresult rv;
-        nsCOMPtr<nsIPluginInstance> plugin = do_QueryInterface(aObj, &rv);
+        nsCOMPtr<nsIPluginInstance> plugin(do_QueryInterface(aObj, &rv));
         if (NS_SUCCEEDED(rv))
         {
             static PRBool prefSet = PR_FALSE;
             static PRBool allowPluginAccess = PR_FALSE;
             if (!prefSet)
             {
-                nsCOMPtr<nsISecurityPref> securityPref = do_QueryReferent(mPrefBranchWeakRef);
+                nsCOMPtr<nsISecurityPref> securityPref(do_QueryReferent(mPrefBranchWeakRef));
                 if (!securityPref)
                     return NS_ERROR_FAILURE;
                 rv = securityPref->SecurityGetBoolPref("security.xpconnect.plugin.unrestricted",
@@ -1981,7 +1997,7 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const PRUnichar* aAction,
     char* prefName = prefNameStr.ToNewCString();
     if (!prefName)
         return NS_ERROR_OUT_OF_MEMORY;
-    nsCOMPtr<nsISecurityPref> securityPref = do_QueryReferent(mPrefBranchWeakRef);
+    nsCOMPtr<nsISecurityPref> securityPref(do_QueryReferent(mPrefBranchWeakRef));
     if (!securityPref)
         return NS_ERROR_FAILURE;
 
@@ -2196,21 +2212,34 @@ nsScriptSecurityManager::InitPolicies(PRUint32 aPrefCount, const char** aPrefNam
             }
         }
         else if (count > 3)
-        { // capability.policy.<policyname>.<class>.<property>[.(get|set)]
-          // Store the class name so we know this class has a policy set on it
-          // Shoving a null into the pref name string is unorthodox
-          // but it saves a malloc & copy - hash keys require null-terminated strings
-            *(char*)dots[3] = '\0';
-            nsCStringKey classNameKey(dots[2] + 1);
+        {   // capability.policy.<policyname>.<class>.<property>[.(get|set)]
+            // Store a notation for this class name in the classes hashtable.
+            // The stored value contains several bits of information.
             if (!(mClassPolicies))
                 mClassPolicies = new nsHashtable(31);
-            // We don't actually have to store the class name as data in the hashtable,
-            // since all we check for is whether the key exists.
-            void* classPolicy = mClassPolicies->Get(&classNameKey);
-            if (isDefault && !classPolicy)
-                mClassPolicies->Put(&classNameKey, (void*)CLASS_POLICY_DEFAULT);
-            else if (!isDefault && classPolicy != (void*)CLASS_POLICY_SITE)
-                mClassPolicies->Put(&classNameKey, (void*)CLASS_POLICY_SITE);
+
+            // In most cases, we hash on the class name at dots[2]+1,
+            // unless the class name is '*' (wildcard), in which case we hash on
+            // '*.propertyname'
+            // Shoving nulls into the pref name string is unorthodox
+            // but it saves a malloc & copy - hash keys require null-terminated strings
+            if (!( (dots[2][1] == '*') && (dots[2][2] == '.') ))
+                *(char*)dots[3] = '\0';
+            else if (count > 4)
+            {
+                // There's a .get or .set at the end
+                *(char*)dots[4] = '\0';
+            }
+
+            nsCStringKey classNameKey(dots[2] + 1);
+            PRInt16 classPolicy = (PRInt16)mClassPolicies->Get(&classNameKey);
+            if (isDefault)
+                classPolicy |= CLASS_HAS_DEFAULT_POLICY;
+            else
+                classPolicy |= CLASS_HAS_SITE_POLICY;
+            if (count > 4)
+                classPolicy |= CLASS_HAS_ACCESSTYPE;
+            mClassPolicies->Put(&classNameKey, (void*)classPolicy);
         }
     }
     return NS_OK;
@@ -2366,9 +2395,9 @@ nsScriptSecurityManager::InitPrefs()
     rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
     NS_ENSURE_SUCCESS(rv, rv);
     mPrefBranchWeakRef = getter_AddRefs(NS_GetWeakReference(prefBranch));
-    nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal = do_QueryInterface(prefBranch, &rv);
+    nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal(do_QueryInterface(prefBranch, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsISecurityPref> securityPref = do_QueryInterface(prefBranch);
+    nsCOMPtr<nsISecurityPref> securityPref(do_QueryInterface(prefBranch));
 
     // Set the initial value of the "javascript.enabled" prefs
     JSEnabledPrefChanged(securityPref);
