@@ -19,6 +19,7 @@
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Peter Annema <disttsc@bart.nl>
  */
 
 #include "nsIComponentManager.h"
@@ -3833,92 +3834,198 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, PRUint32 aLoadType)
    return NS_OK;
 }
 
+nsresult
+nsDocShell::RefreshURIFromHeader(nsIURI* aBaseURI, const nsAReadableString& aHeader)
+{
+  // Refresh headers are parsed with the following format in mind
+  // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
+  // By the time we are here, the following is true:
+  // header = "REFRESH"
+  // content = "5; URL=http://uri" // note the URL attribute is
+  // optional, if it is absent, the currently loaded url is used.
+  // Also note that the seconds and URL separator can be either
+  // a ';' or a ','. The ',' separator should be illegal but CNN
+  // is using it.
+  // 
+  // We need to handle the following strings, where
+  //  - X is a set of digits
+  //  - URI is either a relative or absolute URI
+  //
+  // Note that URI should start with "url=" but we allow omission
+  //
+  // "" || ";" || "," 
+  //  empty string. use the currently loaded URI
+  //  and refresh immediately.
+  // "X" || "X;" || "X,"
+  //  Refresh the currently loaded URI in X seconds.
+  // "X; URI" || "X, URI"
+  //  Refresh using URI as the destination in X seconds.
+  // "URI" || "; URI" || ", URI"
+  //  Refresh immediately using URI as the destination.
+  // 
+  // Currently, anything immediately following the URI, if
+  // seperated by any char in the set "'\"\t\r\n " will be
+  // ignored. So "10; url=go.html ; foo=bar" will work,
+  // and so will "10; url='go.html'; foo=bar". However,
+  // "10; url=go.html; foo=bar" will result in the uri
+  // "go.html;" since ';' and ',' are valid uri characters.
+  // 
+  // Note that we need to remove any tokens wrapping the URI.
+  // These tokens currently include spaces, double and single
+  // quotes.
+
+  // when done, seconds is 0 or the given number of seconds
+  //            uriAttrib is empty or the URI specified
+  nsAutoString uriAttrib;
+  PRInt32 seconds = 0;
+
+  nsReadingIterator<PRUnichar> iter, tokenStart, doneIterating;
+
+  aHeader.BeginReading(iter);
+  aHeader.EndReading(doneIterating);
+
+  // skip leading whitespace
+  while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter))
+    ++iter;
+
+  tokenStart = iter;
+
+  // skip leading + and -
+  if (iter != doneIterating && (*iter == '-' || *iter == '+'))
+    ++iter;
+
+  // parse number
+  while (iter != doneIterating && (*iter >= '0' && *iter <= '9')) {
+    seconds = seconds * 10 + (*iter - '0');
+    ++iter;
+  }
+
+  // bug 22886, part 2: allow X to start with or contain a '.'
+  if (iter != doneIterating && *iter == '.') {
+    ++iter;
+    // throw away any digits following it
+    while (iter != doneIterating && (*iter >= '0' && *iter <= '9'))
+      ++iter;
+  }
+
+  if (iter != doneIterating) {
+    // if this isn't whitespace, a ';' or a ',', we just parsed part of a URI
+    if (!(nsCRT::IsAsciiSpace(*iter) || *iter == ';' || *iter == ',')) {
+      // back to square 1
+      iter = tokenStart;
+      seconds = 0;
+    } else {
+      // if we started with a '-', number is negative
+      if (*tokenStart == '-')
+        seconds = -seconds;
+
+      // skip whitespace
+      while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter))
+        ++iter;
+
+      // skip ';' or ','
+      if (iter != doneIterating && (*iter == ';' || *iter == ',')) {
+        ++iter;
+
+        // skip whitespace
+        while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter))
+          ++iter;
+      }
+    }
+  }
+
+  // possible start of URI
+  tokenStart = iter;
+
+  // skip "url = " to real start of URI
+  if (iter != doneIterating && (*iter == 'u' || *iter == 'U')) {
+    ++iter;
+    if (iter != doneIterating && (*iter == 'r' || *iter == 'R')) {
+      ++iter;
+      if (iter != doneIterating && (*iter == 'l' || *iter == 'L')) {
+        ++iter;
+
+        // skip whitespace
+        while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter))
+          ++iter;
+
+        if (iter != doneIterating && *iter == '=') {
+          ++iter;
+
+          // skip whitespace
+          while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter))
+            ++iter;
+
+          // found real start of URI
+          tokenStart = iter;
+        }
+      }
+    }
+  }
+
+  // skip a leading '"' (believe it or not, '\'' is a valid URI char)
+  if (tokenStart != doneIterating && *tokenStart == '"')
+    ++tokenStart;
+
+  // set iter to start of URI
+  iter = tokenStart;
+
+  // tokenStart here points to the beginning of URI
+
+  // skip anything which isn't whitespace or '"')
+  while (iter != doneIterating && !(nsCRT::IsAsciiSpace(*iter) || *iter == '"'))
+    ++iter;
+
+  // URI is whatever's contained from tokenStart to iter.
+  // note: if tokenStart == doneIterating, so is iter.
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIURI> uri;
+  if (tokenStart == iter) {
+    uri = aBaseURI;
+  } else {
+    uriAttrib = Substring(tokenStart, iter);
+    rv = NS_NewURI(getter_AddRefs(uri), uriAttrib, aBaseURI);
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIScriptSecurityManager> securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv)) {
+      rv = securityManager->CheckLoadURI(aBaseURI, uri, nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
+      if (NS_SUCCEEDED(rv)) {
+        // since we can't travel back in time yet, just pretend it was meant figuratively
+        if (seconds < 0)
+          seconds = 0;
+
+        rv = RefreshURI(uri, seconds * 1000, PR_FALSE, PR_TRUE);
+      }
+    }
+  }
+  return rv;
+}
+
 NS_IMETHODIMP 
 nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
 {
-   nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
-   if(httpChannel)
-   {
-      nsCOMPtr<nsIURI> referrer;
-      httpChannel->GetReferrer(getter_AddRefs(referrer));
+  nsresult rv;
+  nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIURI> referrer;
+    rv = httpChannel->GetReferrer(getter_AddRefs(referrer));
+
+    if (NS_SUCCEEDED(rv)) {
       SetReferrerURI(referrer);
 
+      nsCOMPtr<nsIAtom> refreshAtom(dont_AddRef(NS_NewAtom("refresh")));
       nsXPIDLCString refreshHeader;
-      nsCOMPtr<nsIAtom> refreshAtom ( dont_AddRef( NS_NewAtom("refresh") ) );
-
-      httpChannel -> GetResponseHeader (refreshAtom, getter_Copies (refreshHeader));
+      rv = httpChannel->GetResponseHeader(refreshAtom, getter_Copies(refreshHeader));
 
       if (refreshHeader)
-      {
-        nsCOMPtr<nsIURI> baseURI = mCurrentURI;
-
-        PRInt32 millis = -1;
-        nsAutoString uriAttrib;
-        nsString result; result.AssignWithConversion (refreshHeader);
-
-        PRInt32 semiColon = result.FindCharInSet(";,");
-        nsAutoString token;
-        if (semiColon > -1)
-            result.Left(token, semiColon);
-        else
-            token = result;
-  
-        PRBool done = PR_FALSE;
-        while (!done && !token.IsEmpty()) {
-            token.CompressWhitespace();
-            if (millis == -1 && nsCRT::IsAsciiDigit(token.First())) {
-                PRInt32 i = 0;
-                PRUnichar value = nsnull;
-                for ( ; i < (PRInt32) token.Length (); i++)
-                {
-                    value = token[i];
-                    if (!nsCRT::IsAsciiDigit(value)) {
-                        i = -1;
-                        break;
-                     }
-                }
-            
-                if (i > -1) {
-                    PRInt32 err;
-                    millis = token.ToInteger(&err) * 1000;
-                } else {
-                    done = PR_TRUE;
-                }
-            } else {
-                   done = PR_TRUE;
-            }
-            if (done) {
-                PRInt32 loc = token.FindChar('=');
-                    if (loc > -1)
-                        token.Cut(0, loc+1);
-                     token.Trim(" \"'");
-                     uriAttrib = token;
-            } else {
-                // Increment to the next token.
-                    if (semiColon > -1) {
-                        semiColon++;
-                        PRInt32 semiColon2 = result.FindCharInSet(";,", semiColon);
-                        if (semiColon2 == -1) semiColon2 = result.Length();
-                        result.Mid(token, semiColon, semiColon2 - semiColon);
-                        semiColon = semiColon2;
-                     } else {
-                         done = PR_TRUE;
-                    }
-            }
-        } // end while
-
-        nsCOMPtr<nsIURI> uri;
-        if (!uriAttrib.Length()) {
-            uri = baseURI;
-        } else {
-            NS_NewURI(getter_AddRefs(uri), uriAttrib, baseURI);
-        }
-
-        RefreshURI (uri, millis, PR_FALSE, PR_TRUE);
-      }
-   }
-
-   return NS_OK;
+        rv = RefreshURIFromHeader(mCurrentURI, NS_ConvertUTF8toUCS2(refreshHeader));
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
@@ -4096,8 +4203,6 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
    nsCOMPtr<nsIInputStream> postData;
    nsCOMPtr<nsIURI> referrerURI;
 
-   PRBool repost = PR_TRUE;
-
    NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
    nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(aEntry));
    NS_ENSURE_TRUE(hEntry, NS_ERROR_FAILURE);
@@ -4108,6 +4213,8 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
       NS_ERROR_FAILURE);
 
 #if 0
+   PRBool repost = PR_TRUE;
+
    /* Ask whether to repost form post data */
    if (postData) {
        nsCOMPtr<nsIPrompt> prompter;
