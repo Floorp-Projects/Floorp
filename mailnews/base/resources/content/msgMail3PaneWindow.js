@@ -49,6 +49,8 @@ var gStartFolderUri = null;
 //If we've loaded a message, set to true.  Helps us keep the start page around.
 var gHaveLoadedMessage;
 
+var gBatching = false;
+
 // the folderListener object
 var folderListener = {
     OnItemAdded: function(parentItem, item, view) {},
@@ -95,7 +97,9 @@ var folderListener = {
 	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
     OnItemEvent: function(folder, event) {
-        if (event.GetUnicode() == "FolderLoaded") {
+        var eventType = event.GetUnicode();
+
+        if (eventType == "FolderLoaded") {
             
 		if(folder)
 		{
@@ -155,10 +159,10 @@ var folderListener = {
 			}
 
 		}
-        } else if (event.GetUnicode() == "DeleteOrMoveMsgCompleted") {
+        } else if (eventType == "DeleteOrMoveMsgCompleted") {
 			HandleDeleteOrMoveMsgCompleted(folder);
         }     
-          else if (event.GetUnicode() == "DeleteOrMoveMsgFailed") {
+          else if (eventType == "DeleteOrMoveMsgFailed") {
                         HandleDeleteOrMoveMsgFailed(folder);
         }
 
@@ -167,30 +171,35 @@ var folderListener = {
 
 function HandleDeleteOrMoveMsgFailed(folder)
 {
+  if(IsCurrentLoadedFolder(folder)) {
+    if(gNextMessageAfterDelete) {
+      gNextMessageAfterDelete = null;
+    }
+  }
 
-        if(IsCurrentLoadedFolder(folder))
-        {
-                if(gNextMessageAfterDelete)
-                {
-                        gNextMessageAfterDelete = null;
-		}
-        }
+  if (gBatching) {
+    gBatching = false;
+    var threadTree = GetThreadTree();
+    //threadTree.treeBoxObject.endBatch();
+    dump("XXX end tree batch (delete or move failed)\n");
+  }
 
+  ThreadPaneSelectionChange(true);
 }
 
 
 function HandleDeleteOrMoveMsgCompleted(folder)
 {
+	var threadTree = GetThreadTree();
 
 	if(IsCurrentLoadedFolder(folder))
 	{
 		msgNavigationService.EnsureDocumentIsLoaded(document);
 		if(gNextMessageAfterDelete)
 		{
-			var nextMessage = document.getElementById(gNextMessageAfterDelete);
+            var nextMessage = document.getElementById(gNextMessageAfterDelete);
 			gNextMessageAfterDelete = null;
 			SelectNextMessage(nextMessage);
-			var threadTree = GetThreadTree();
 			if(threadTree)
 				threadTree.ensureElementIsVisible(nextMessage);
 		}
@@ -205,6 +214,13 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 		}
 	}
 
+    if (gBatching) {
+      gBatching = false;
+      //threadTree.treeBoxObject.endBatch();
+      dump("XXX end tree batch (delete or move succeeded)\n");
+    }
+
+    ThreadPaneSelectionChange(true);
 }
 
 
@@ -229,6 +245,7 @@ function IsCurrentLoadedFolder(folder)
 /* Functions related to startup */
 function OnLoadMessenger()
 {
+  showPerformance = pref.GetBoolPref('mail.showMessengerPerformance');
   var beforeLoadMessenger;
   if(showPerformance) {
       beforeLoadMessenger = new Date();
@@ -324,11 +341,8 @@ function OnUnloadMessenger()
 
 function Create3PaneGlobals()
 {
-	showPerformance = pref.GetBoolPref('mail.showMessengerPerformance');
-
 	msgNavigationService = Components.classes['@mozilla.org/messenger/msgviewnavigationservice;1'].getService();
 	msgNavigationService= msgNavigationService.QueryInterface(Components.interfaces.nsIMsgViewNavigationService);
-
 }
 
 
@@ -938,20 +952,22 @@ function GetCompositeDataSource(command)
 
 }
 
-//Sets the next message after a delete.  If useSelection is true then use the
-//current selection to determine this.  Otherwise use messagesToCheck which will
-//be an array of nsIMessage's.
-function SetNextMessageAfterDelete(messagesToCheck, useSelection)
+function SetNextMessageAfterDelete()
 {
-	if(useSelection)
-	{
-		var tree = GetThreadTree();
-		var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
-		if(nextMessage)
-			gNextMessageAfterDelete = nextMessage.getAttribute('id');
-		else
-			gNextMessageAfterDelete = null;
-	}
+	var tree = GetThreadTree();
+
+	var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
+	if(nextMessage)
+        gNextMessageAfterDelete = nextMessage.getAttribute('id');
+	else
+		gNextMessageAfterDelete = null;
+
+   // use the magic number of 3 to determine if we want to batch or not.
+   if (!gBatching && (GetNumSelectedMessages() > 3)) {
+     gBatching = true;
+     //tree.treeBoxObject.beginBatch();
+     dump("XXX begin tree batch\n");
+   }
 }
 
 function SelectFolder(folderUri)
@@ -964,7 +980,6 @@ function SelectFolder(folderUri)
 
 function SelectMessage(messageUri)
 {
-    dump("SelectMessage: " + messageUri + "\n");
 	var tree = GetThreadTree();
 	var treeitem = document.getElementById(messageUri);
 	if(tree && treeitem)

@@ -18,7 +18,8 @@
  * Rights Reserved.
  */
 
-var gOldNumSelected = 0;
+var gLastMessageUriToLoad = null;
+
 function ThreadPaneOnClick(event)
 {
     var t = event.originalTarget;
@@ -223,29 +224,51 @@ function IsSpecialFolderSelected(folderName)
 }
 
 //Called when selection changes in the thread pane.
-function ThreadPaneSelectionChange()
+function ThreadPaneSelectionChange(fromDeleteOrMoveHandler)
 {
+    // we are batching.  bail out, we'll be back when the batch is over
+    if (gBatching) return;
+
 	var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
 
-	if(!collapsed)
-	{
-		LoadSelectionIntoMessagePane();
-		
-	}
-
-	var tree = GetThreadTree();
+    var tree = GetThreadTree();
 	var selectedMessages = tree.selectedItems;
 	var numSelected = selectedMessages.length;
-	//If the current selected is 1 or 0 then we know that a change has taken place that might
-	//cause us to send out threadTree update notifications. We also care about this if the previous
-	//numSelected was 0 or 1 because we might be involved in something like a SelectAll where we won't
-	//get notified about the change from 0 to 1.
-	if(numSelected == 0 || numSelected == 1 || gOldNumSelected == 0 || gOldNumSelected == 1)
-	{
-		document.commandDispatcher.updateCommands('threadTree-select');
+    var messageUriToLoad = null;
+
+    if (!gNextMessageAfterDelete && selectedMessages && (numSelected == 1) ) {
+        messageUriToLoad = selectedMessages[0].getAttribute('id');
+    }
+
+    // if the message pane isn't collapsed, and we have a message to load
+    // go ahead and load the message
+	if (!collapsed && messageUriToLoad) {
+        LoadMessageByUri(messageUriToLoad);
 	}
-	//Store the current number selected.
-	gOldNumSelected = numSelected;
+
+    // if gNextMessageAfterDelete is true, we can skip updating the commands because
+    // we'll be coming back to load that message, and we'll update the commands then
+    //
+    // if fromDeleteOrMoveHandler is true, we are calling ThreadPaneSelectionChange after handling
+    // a message delete or message move, so we might need to update the commands.  (see below)
+    //
+    // if gCurrentLoadingFolderURI is non null, we are loading a folder, so we need to update the commands
+    //
+    // if messageUriToLoad is non null, we are loading a message, so we might need to update commmands.  (see below)
+	if (!gNextMessageAfterDelete && (gCurrentLoadingFolderURI || fromDeleteOrMoveHandler || messageUriToLoad)) {
+        // if we are moving or deleting, we'll come in here twice.  once to load the message and once when
+        // we are done moving or deleting.  when we loaded the message the first time, we called updateCommands().
+        // there is no need to do it again.
+        if (fromDeleteOrMoveHandler && messageUriToLoad && (messageUriToLoad == gLastMessageUriToLoad)) {
+            // skip the call to updateCommands()
+        }
+        else {
+		    document.commandDispatcher.updateCommands('threadTree-select');
+        }
+	}
+
+	//remember the last message we loaded
+    gLastMessageUriToLoad = messageUriToLoad;
 }
 
 function GetThreadTree()

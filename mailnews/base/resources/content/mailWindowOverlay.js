@@ -309,7 +309,7 @@ function MsgDeleteMessage(reallyDelete, fromToolbar)
     var compositeDataSource = GetCompositeDataSource("DeleteMessages");
     var messages = GetSelectedMessages();
 
-    SetNextMessageAfterDelete(null, true);
+    SetNextMessageAfterDelete();
     DeleteMessages(compositeDataSource, srcFolder, messages, reallyDelete);
 }
 
@@ -351,8 +351,7 @@ function MsgMoveMessage(destFolder)
         }
         else
         {
-            SetNextMessageAfterDelete(null, true);
-
+            SetNextMessageAfterDelete();
             CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, true);
         }
     }    

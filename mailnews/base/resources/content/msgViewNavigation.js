@@ -197,7 +197,6 @@ function GoPreviousMessage(type, startFromEnd)
 // gotoNextInThread is true if once we find an unrad thread we should select the first message in that thread that fits criteria
 function GoNextThread(type, startFromBeginning, gotoNextInThread)
 {
-
 	if(messageView.showThreads)
 	{
 		var tree = GetThreadTree();

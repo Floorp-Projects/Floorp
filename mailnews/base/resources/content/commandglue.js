@@ -30,7 +30,7 @@ var gBeforeFolderLoadTime;
 var gRDFNamespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 function OpenURL(url)
 {
-  dump("\n\nOpenURL from XUL\n\n\n");
+  //dump("\n\nOpenURL from XUL\n\n\n");
   messenger.SetWindow(window, msgWindow);
   messenger.OpenURL(url);
 }
@@ -61,10 +61,7 @@ function GetMsgFolderFromURI(folderURI)
 function LoadMessage(messageNode)
 {
 	var uri = messageNode.getAttribute('id');
-	dump(uri + "\n");
-
 	LoadMessageByUri(uri);
-
 }
 
 function LoadMessageByUri(uri)
@@ -759,8 +756,9 @@ function LoadSelectionIntoMessagePane()
 	var tree = GetThreadTree();
 	
 	var selArray = tree.selectedItems;
-	if (!gNextMessageAfterDelete && selArray && (selArray.length == 1) )
+	if (!gNextMessageAfterDelete && selArray && (selArray.length == 1) ) {
 		LoadMessage(selArray[0]);
+    }
 	else
   {
     // don't necessarily clear the message pane...if you uncomment this,
@@ -957,7 +955,6 @@ function SelectNextMessage(nextMessage)
 {
 	var tree = GetThreadTree();
 	ChangeSelection(tree, nextMessage);
-
 }
 
 function GetSelectTrashUri(folder)

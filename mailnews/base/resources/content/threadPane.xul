@@ -36,7 +36,7 @@ Rights Reserved.
               onclick="ThreadPaneOnClick(event);"
               ondraggesture="return BeginDragThreadTree(event);"
               ondragdrop="return DropOnThreadTree(event);" 
-	  		  onselect="top.ThreadPaneSelectionChange();"
+	  		  onselect="top.ThreadPaneSelectionChange(false);"
 			  onkeypress="ThreadPaneKeyPress(event);"
               onblur="goOnEvent(this,'blur')"
               containment="http://home.netscape.com/NC-rdf#MessageChild"

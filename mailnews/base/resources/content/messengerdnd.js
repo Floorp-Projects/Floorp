@@ -291,7 +291,7 @@ function DropOnFolderTree(event)
 				messageTree = GetThreadTree();
 				nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
 				if(nextMessage)
-					gNextMessageAfterDelete = nextMessage.getAttribute('id');
+                    gNextMessageAfterDelete = nextMessage.getAttribute('id');
 				else
 					gNextMessageAfterDelete = null;
 			}
