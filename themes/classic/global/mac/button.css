@@ -42,7 +42,10 @@ button {
 }
 
 .button-text {
-  margin: 0px !important;
+  margin-left: 5px !important; 
+  margin-right: 5px !important;
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
   text-align: center;
 }
 
