@@ -402,6 +402,12 @@ sub BuildDist()
 		}
 	}
 
+
+	# XPFE COMPONENTS
+   InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",					"$distdirectory:xpfe:components");
+   # find
+   InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST",				"$distdirectory:xpfe:components:find");
+	
 	# XPAPPS
    InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
    InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
