@@ -150,7 +150,7 @@ Rights Reserved.
 					</menupopup>
 				</menu>
 				<menuseparator/>
-				<menu value="&menu_ShowNameAs.label;" accesskey="&menu_ShowNameAs.accesskey;">
+				<menu label="&menu_ShowNameAs.label;" accesskey="&menu_ShowNameAs.accesskey;">
 					<menupopup>
 						<menuitem type="radio" name="shownameas"
 								  id="firstLastCmd"
@@ -186,7 +186,7 @@ Rights Reserved.
 								  disabled="true"
 								  accesskey="&SortByWorkPhone.accesskey;"
 								  oncommand="top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone')" name="sortas" type="radio"/>
-						<menuitem value="&sortByOrganizationCmd.label;"
+						<menuitem label="&sortByOrganizationCmd.label;"
 								  id="cmd_SortByOrganization"
 								  disabled="true"
 								  accesskey="&SortByOrganization.accesskey;"
@@ -209,7 +209,7 @@ Rights Reserved.
             	<toolbarseparator class="toolbarseparator-primary"/>
         <button class="button-toolbar-2 top" orient="vertical" id="button-editcard" label="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" oncommand="AbEditCard();"/>
         <button class="button-toolbar-2 top" orient="vertical" id="button-newmessage" label="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button-delete" disabled="true" observes="button_delete" value="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-delete" disabled="true" observes="button_delete" label="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
 				<box orient="vertical" flex="100%">
 					<spring flex="1"/> 
@@ -221,10 +221,6 @@ Rights Reserved.
         <!--button id="button_stop" class="other28" align="top" label="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" disabled="true" oncommand="AbStop()"/>
         <button id="button_search" class="other28" align="top" label="&searchButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&searchButton.tooltip;" oncommand="AbSearch()"/-->
 			</box>
-
-        <!--button id="button_stop" class="other28" align="top" label="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" disabled="true" oncommand="AbStop()"/>
-        <button id="button_search" class="other28" align="top" label="&searchButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&searchButton.tooltip;" oncommand="AbSearch()"/-->
-      </box>
 
       <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("addressbook.throbber.url")'>
         <observes element="broadcaster_throbber" attribute="busy"/>
