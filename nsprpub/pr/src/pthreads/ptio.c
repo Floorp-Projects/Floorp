@@ -3370,6 +3370,9 @@ failed:
 PR_EXTERN(PRStatus) _pr_push_ipv6toipv4_layer(PRFileDesc *fd);
 #if defined(_PR_INET6_PROBE)
 PR_EXTERN(PRBool) _pr_ipv6_is_present;
+#ifdef DARWIN
+static PRBool _pr_ipv6_v6only_on_by_default;
+#endif
 PR_IMPLEMENT(PRBool) _pr_test_ipv6_socket()
 {
 PRInt32 osfd;
@@ -3380,12 +3383,27 @@ PRInt32 osfd;
      * whether IPv6 APIs and the IPv6 stack are on the system.
      * Our portable test below seems to work fine, so I am using it.
      */
-	osfd = socket(AF_INET6, SOCK_STREAM, 0);
-	if (osfd != -1) {
-		close(osfd);
-		return PR_TRUE;
-	}
-	return PR_FALSE;
+    osfd = socket(AF_INET6, SOCK_STREAM, 0);
+    if (osfd != -1) {
+#ifdef DARWIN
+        /* In Mac OS X v10.3 Panther Beta the IPV6_V6ONLY socket option
+         * is turned on by default, contrary to what RFC 3493, Section
+         * 5.3 says.  So we have to turn it off.  Find out whether we
+         * are running on such a system.
+         */
+        {
+            int on;
+            int optlen = sizeof(on);
+            if (getsockopt(osfd, IPPROTO_IPV6, IPV6_V6ONLY,
+                    &on, &optlen) == 0) {
+                _pr_ipv6_v6only_on_by_default = on;
+            }
+        }
+#endif
+        close(osfd);
+        return PR_TRUE;
+    }
+    return PR_FALSE;
 }
 #endif	/* _PR_INET6_PROBE */
 #endif
@@ -3434,6 +3452,14 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
     if (osfd == -1) pt_MapError(_PR_MD_MAP_SOCKET_ERROR, errno);
     else
     {
+#ifdef DARWIN
+        if ((domain == AF_INET6) && _pr_ipv6_v6only_on_by_default)
+        {
+            int on = 0;
+            (void)setsockopt(osfd, IPPROTO_IPV6, IPV6_V6ONLY,
+                    &on, sizeof(on));
+        }
+#endif
         fd = pt_SetMethods(osfd, ftype, PR_FALSE, PR_FALSE);
         if (fd == NULL) close(osfd);
     }
