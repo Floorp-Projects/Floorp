@@ -29,9 +29,9 @@
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 #include "nsVoidArray.h"
+#include "prefapi.h"
 
 extern "C" {
-#include "prefapi.h"
 #include "prmon.h"
 #ifdef XP_MAC
 #include "prpriv.h"             /* for NewNamedMonitor */
