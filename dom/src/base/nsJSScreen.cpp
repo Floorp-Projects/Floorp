@@ -58,7 +58,7 @@ enum Screen_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMScreen *a = (nsIDOMScreen*)JS_GetPrivate(cx, obj);
+  nsIDOMScreen *a = (nsIDOMScreen*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -220,7 +220,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMScreen *a = (nsIDOMScreen*)JS_GetPrivate(cx, obj);
+  nsIDOMScreen *a = (nsIDOMScreen*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

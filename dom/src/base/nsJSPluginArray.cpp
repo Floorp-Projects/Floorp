@@ -54,7 +54,7 @@ enum PluginArray_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMPluginArray *a = (nsIDOMPluginArray*)JS_GetPrivate(cx, obj);
+  nsIDOMPluginArray *a = (nsIDOMPluginArray*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -140,7 +140,7 @@ GetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMPluginArray *a = (nsIDOMPluginArray*)JS_GetPrivate(cx, obj);
+  nsIDOMPluginArray *a = (nsIDOMPluginArray*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -207,7 +207,7 @@ ResolvePluginArray(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 PluginArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMPluginArray *nativeThis = (nsIDOMPluginArray*)JS_GetPrivate(cx, obj);
+  nsIDOMPluginArray *nativeThis = (nsIDOMPluginArray*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMPlugin* nativeRet;
   PRUint32 b0;
@@ -262,7 +262,7 @@ PluginArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 PR_STATIC_CALLBACK(JSBool)
 PluginArrayNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMPluginArray *nativeThis = (nsIDOMPluginArray*)JS_GetPrivate(cx, obj);
+  nsIDOMPluginArray *nativeThis = (nsIDOMPluginArray*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMPlugin* nativeRet;
   nsAutoString b0;
@@ -314,7 +314,7 @@ PluginArrayNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 PR_STATIC_CALLBACK(JSBool)
 PluginArrayRefresh(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMPluginArray *nativeThis = (nsIDOMPluginArray*)JS_GetPrivate(cx, obj);
+  nsIDOMPluginArray *nativeThis = (nsIDOMPluginArray*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRBool b0;
 

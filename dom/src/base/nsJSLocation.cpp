@@ -58,7 +58,7 @@ enum Location_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMLocation *a = (nsIDOMLocation*)JS_GetPrivate(cx, obj);
+  nsIDOMLocation *a = (nsIDOMLocation*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -220,7 +220,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMLocation *a = (nsIDOMLocation*)JS_GetPrivate(cx, obj);
+  nsIDOMLocation *a = (nsIDOMLocation*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -396,7 +396,7 @@ ResolveLocation(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 LocationReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMLocation *nativeThis = (nsIDOMLocation*)JS_GetPrivate(cx, obj);
+  nsIDOMLocation *nativeThis = (nsIDOMLocation*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -444,7 +444,7 @@ LocationReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 PR_STATIC_CALLBACK(JSBool)
 LocationReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMLocation *nativeThis = (nsIDOMLocation*)JS_GetPrivate(cx, obj);
+  nsIDOMLocation *nativeThis = (nsIDOMLocation*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
@@ -495,7 +495,7 @@ LocationReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 PR_STATIC_CALLBACK(JSBool)
 LocationToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMLocation *nativeThis = (nsIDOMLocation*)JS_GetPrivate(cx, obj);
+  nsIDOMLocation *nativeThis = (nsIDOMLocation*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString nativeRet;
 

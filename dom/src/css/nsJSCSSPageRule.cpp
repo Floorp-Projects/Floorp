@@ -55,7 +55,7 @@ enum CSSPageRule_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSPageRule *a = (nsIDOMCSSPageRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSPageRule *a = (nsIDOMCSSPageRule*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -122,7 +122,7 @@ GetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSPageRule *a = (nsIDOMCSSPageRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSPageRule *a = (nsIDOMCSSPageRule*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -51,7 +51,7 @@ enum HTMLMenuElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLMenuElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLMenuElement *a = (nsIDOMHTMLMenuElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLMenuElement *a = (nsIDOMHTMLMenuElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,7 +101,7 @@ GetHTMLMenuElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLMenuElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLMenuElement *a = (nsIDOMHTMLMenuElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLMenuElement *a = (nsIDOMHTMLMenuElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

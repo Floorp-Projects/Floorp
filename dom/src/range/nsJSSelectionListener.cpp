@@ -45,7 +45,7 @@ NS_DEF_PTR(nsIDOMSelectionListener);
 PR_STATIC_CALLBACK(JSBool)
 GetSelectionListenerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMSelectionListener *a = (nsIDOMSelectionListener*)JS_GetPrivate(cx, obj);
+  nsIDOMSelectionListener *a = (nsIDOMSelectionListener*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -80,7 +80,7 @@ GetSelectionListenerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetSelectionListenerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMSelectionListener *a = (nsIDOMSelectionListener*)JS_GetPrivate(cx, obj);
+  nsIDOMSelectionListener *a = (nsIDOMSelectionListener*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -145,7 +145,7 @@ ResolveSelectionListener(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMSelectionListener *nativeThis = (nsIDOMSelectionListener*)JS_GetPrivate(cx, obj);
+  nsIDOMSelectionListener *nativeThis = (nsIDOMSelectionListener*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;

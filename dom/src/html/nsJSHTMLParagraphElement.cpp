@@ -51,7 +51,7 @@ enum HTMLParagraphElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLParagraphElement *a = (nsIDOMHTMLParagraphElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLParagraphElement *a = (nsIDOMHTMLParagraphElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,7 +101,7 @@ GetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLParagraphElement *a = (nsIDOMHTMLParagraphElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLParagraphElement *a = (nsIDOMHTMLParagraphElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -51,7 +51,7 @@ enum HTMLDivElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLDivElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLDivElement *a = (nsIDOMHTMLDivElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDivElement *a = (nsIDOMHTMLDivElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,7 +101,7 @@ GetHTMLDivElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLDivElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLDivElement *a = (nsIDOMHTMLDivElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDivElement *a = (nsIDOMHTMLDivElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

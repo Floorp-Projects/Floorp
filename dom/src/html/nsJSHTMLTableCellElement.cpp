@@ -65,7 +65,7 @@ enum HTMLTableCellElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTableCellElement *a = (nsIDOMHTMLTableCellElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableCellElement *a = (nsIDOMHTMLTableCellElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -339,7 +339,7 @@ GetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTableCellElement *a = (nsIDOMHTMLTableCellElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableCellElement *a = (nsIDOMHTMLTableCellElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

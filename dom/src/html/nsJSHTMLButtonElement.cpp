@@ -63,7 +63,7 @@ enum HTMLButtonElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLButtonElement *a = (nsIDOMHTMLButtonElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLButtonElement *a = (nsIDOMHTMLButtonElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -210,7 +210,7 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLButtonElement *a = (nsIDOMHTMLButtonElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLButtonElement *a = (nsIDOMHTMLButtonElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -353,7 +353,7 @@ ResolveHTMLButtonElement(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLButtonElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLButtonElement *privateThis = (nsIDOMHTMLButtonElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLButtonElement *privateThis = (nsIDOMHTMLButtonElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLButtonElement *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLButtonElementIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLButtonElement");
@@ -407,7 +407,7 @@ NSHTMLButtonElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLButtonElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLButtonElement *privateThis = (nsIDOMHTMLButtonElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLButtonElement *privateThis = (nsIDOMHTMLButtonElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLButtonElement *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLButtonElementIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLButtonElement");

@@ -62,7 +62,7 @@ enum HTMLAnchorElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLAnchorElement *a = (nsIDOMHTMLAnchorElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLAnchorElement *a = (nsIDOMHTMLAnchorElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -288,7 +288,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLAnchorElement *a = (nsIDOMHTMLAnchorElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLAnchorElement *a = (nsIDOMHTMLAnchorElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -527,7 +527,7 @@ ResolveHTMLAnchorElement(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 HTMLAnchorElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLAnchorElement *nativeThis = (nsIDOMHTMLAnchorElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLAnchorElement *nativeThis = (nsIDOMHTMLAnchorElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -575,7 +575,7 @@ HTMLAnchorElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 HTMLAnchorElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLAnchorElement *nativeThis = (nsIDOMHTMLAnchorElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLAnchorElement *nativeThis = (nsIDOMHTMLAnchorElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;

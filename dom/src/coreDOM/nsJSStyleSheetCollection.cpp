@@ -54,7 +54,7 @@ enum StyleSheetCollection_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetStyleSheetCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMStyleSheetCollection *a = (nsIDOMStyleSheetCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMStyleSheetCollection *a = (nsIDOMStyleSheetCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -112,7 +112,7 @@ GetStyleSheetCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
 PR_STATIC_CALLBACK(JSBool)
 SetStyleSheetCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMStyleSheetCollection *a = (nsIDOMStyleSheetCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMStyleSheetCollection *a = (nsIDOMStyleSheetCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -177,7 +177,7 @@ ResolveStyleSheetCollection(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 StyleSheetCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMStyleSheetCollection *nativeThis = (nsIDOMStyleSheetCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMStyleSheetCollection *nativeThis = (nsIDOMStyleSheetCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMStyleSheet* nativeRet;
   PRUint32 b0;

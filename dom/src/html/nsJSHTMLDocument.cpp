@@ -85,7 +85,7 @@ enum HTMLDocument_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLDocument *a = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDocument *a = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -566,7 +566,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLDocument *a = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDocument *a = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -793,7 +793,7 @@ ResolveHTMLDocument(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -841,7 +841,7 @@ HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 PR_STATIC_CALLBACK(JSBool)
 HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMElement* nativeRet;
   nsAutoString b0;
@@ -893,7 +893,7 @@ HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 PR_STATIC_CALLBACK(JSBool)
 HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodeList* nativeRet;
   nsAutoString b0;
@@ -945,7 +945,7 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLDocument");
@@ -1000,7 +1000,7 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLDocument");
@@ -1058,7 +1058,7 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLDocument");
@@ -1112,7 +1112,7 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLDocument");
@@ -1166,7 +1166,7 @@ NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLDocument");

@@ -56,7 +56,7 @@ enum DocumentType_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMDocumentType *a = (nsIDOMDocumentType*)JS_GetPrivate(cx, obj);
+  nsIDOMDocumentType *a = (nsIDOMDocumentType*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -140,7 +140,7 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMDocumentType *a = (nsIDOMDocumentType*)JS_GetPrivate(cx, obj);
+  nsIDOMDocumentType *a = (nsIDOMDocumentType*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -76,7 +76,7 @@ enum HTMLTableElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTableElement *a = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableElement *a = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -339,7 +339,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTableElement *a = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableElement *a = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -583,7 +583,7 @@ ResolveHTMLTableElement(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementCreateTHead(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMHTMLElement* nativeRet;
 
@@ -632,7 +632,7 @@ HTMLTableElementCreateTHead(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementDeleteTHead(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -680,7 +680,7 @@ HTMLTableElementDeleteTHead(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementCreateTFoot(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMHTMLElement* nativeRet;
 
@@ -729,7 +729,7 @@ HTMLTableElementCreateTFoot(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementDeleteTFoot(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -777,7 +777,7 @@ HTMLTableElementDeleteTFoot(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementCreateCaption(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMHTMLElement* nativeRet;
 
@@ -826,7 +826,7 @@ HTMLTableElementCreateCaption(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementDeleteCaption(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -874,7 +874,7 @@ HTMLTableElementDeleteCaption(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementInsertRow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMHTMLElement* nativeRet;
   PRInt32 b0;
@@ -929,7 +929,7 @@ HTMLTableElementInsertRow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 PR_STATIC_CALLBACK(JSBool)
 HTMLTableElementDeleteRow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableElement *nativeThis = (nsIDOMHTMLTableElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRInt32 b0;
 

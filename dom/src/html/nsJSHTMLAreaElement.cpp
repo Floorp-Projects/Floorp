@@ -58,7 +58,7 @@ enum HTMLAreaElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLAreaElement *a = (nsIDOMHTMLAreaElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLAreaElement *a = (nsIDOMHTMLAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -220,7 +220,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLAreaElement *a = (nsIDOMHTMLAreaElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLAreaElement *a = (nsIDOMHTMLAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -52,7 +52,7 @@ enum CharacterData_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCharacterData *a = (nsIDOMCharacterData*)JS_GetPrivate(cx, obj);
+  nsIDOMCharacterData *a = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -118,7 +118,7 @@ GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCharacterData *a = (nsIDOMCharacterData*)JS_GetPrivate(cx, obj);
+  nsIDOMCharacterData *a = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -196,7 +196,7 @@ ResolveCharacterData(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 CharacterDataSubstringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)JS_GetPrivate(cx, obj);
+  nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString nativeRet;
   PRUint32 b0;
@@ -257,7 +257,7 @@ CharacterDataSubstringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 PR_STATIC_CALLBACK(JSBool)
 CharacterDataAppendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)JS_GetPrivate(cx, obj);
+  nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
@@ -308,7 +308,7 @@ CharacterDataAppendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 CharacterDataInsertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)JS_GetPrivate(cx, obj);
+  nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRUint32 b0;
   nsAutoString b1;
@@ -365,7 +365,7 @@ CharacterDataInsertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 CharacterDataDeleteData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)JS_GetPrivate(cx, obj);
+  nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRUint32 b0;
   PRUint32 b1;
@@ -425,7 +425,7 @@ CharacterDataDeleteData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 CharacterDataReplaceData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)JS_GetPrivate(cx, obj);
+  nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRUint32 b0;
   PRUint32 b1;

@@ -51,7 +51,7 @@ enum HTMLQuoteElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLQuoteElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLQuoteElement *a = (nsIDOMHTMLQuoteElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLQuoteElement *a = (nsIDOMHTMLQuoteElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,7 +101,7 @@ GetHTMLQuoteElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLQuoteElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLQuoteElement *a = (nsIDOMHTMLQuoteElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLQuoteElement *a = (nsIDOMHTMLQuoteElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

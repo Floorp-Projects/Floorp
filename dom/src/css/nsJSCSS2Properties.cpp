@@ -173,7 +173,7 @@ enum CSS2Properties_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSS2Properties *a = (nsIDOMCSS2Properties*)JS_GetPrivate(cx, obj);
+  nsIDOMCSS2Properties *a = (nsIDOMCSS2Properties*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -2175,7 +2175,7 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSS2Properties *a = (nsIDOMCSS2Properties*)JS_GetPrivate(cx, obj);
+  nsIDOMCSS2Properties *a = (nsIDOMCSS2Properties*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -51,7 +51,7 @@ enum HTMLTableCaptionElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLTableCaptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTableCaptionElement *a = (nsIDOMHTMLTableCaptionElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableCaptionElement *a = (nsIDOMHTMLTableCaptionElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,7 +101,7 @@ GetHTMLTableCaptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLTableCaptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTableCaptionElement *a = (nsIDOMHTMLTableCaptionElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableCaptionElement *a = (nsIDOMHTMLTableCaptionElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

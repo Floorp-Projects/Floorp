@@ -56,7 +56,7 @@ enum CSSImportRule_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSImportRule *a = (nsIDOMCSSImportRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSImportRule *a = (nsIDOMCSSImportRule*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -139,7 +139,7 @@ GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSImportRule *a = (nsIDOMCSSImportRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSImportRule *a = (nsIDOMCSSImportRule*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -57,7 +57,7 @@ enum Element_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMElement *a = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  nsIDOMElement *a = (nsIDOMElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -107,7 +107,7 @@ GetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMElement *a = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  nsIDOMElement *a = (nsIDOMElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -172,7 +172,7 @@ ResolveElement(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 ElementGetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  nsIDOMElement *nativeThis = (nsIDOMElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString nativeRet;
   nsAutoString b0;
@@ -224,7 +224,7 @@ ElementGetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 ElementSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  nsIDOMElement *nativeThis = (nsIDOMElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsAutoString b1;
@@ -278,7 +278,7 @@ ElementSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 ElementRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  nsIDOMElement *nativeThis = (nsIDOMElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
@@ -329,7 +329,7 @@ ElementRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 PR_STATIC_CALLBACK(JSBool)
 ElementGetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  nsIDOMElement *nativeThis = (nsIDOMElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMAttr* nativeRet;
   nsAutoString b0;
@@ -381,7 +381,7 @@ ElementGetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  nsIDOMElement *nativeThis = (nsIDOMElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMAttr* nativeRet;
   nsIDOMAttrPtr b0;
@@ -439,7 +439,7 @@ ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  nsIDOMElement *nativeThis = (nsIDOMElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMAttr* nativeRet;
   nsIDOMAttrPtr b0;
@@ -497,7 +497,7 @@ ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 PR_STATIC_CALLBACK(JSBool)
 ElementGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  nsIDOMElement *nativeThis = (nsIDOMElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodeList* nativeRet;
   nsAutoString b0;
@@ -549,7 +549,7 @@ ElementGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 PR_STATIC_CALLBACK(JSBool)
 ElementNormalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  nsIDOMElement *nativeThis = (nsIDOMElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;

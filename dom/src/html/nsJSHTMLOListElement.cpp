@@ -53,7 +53,7 @@ enum HTMLOListElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLOListElement *a = (nsIDOMHTMLOListElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLOListElement *a = (nsIDOMHTMLOListElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -135,7 +135,7 @@ GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLOListElement *a = (nsIDOMHTMLOListElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLOListElement *a = (nsIDOMHTMLOListElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

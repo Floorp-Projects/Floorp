@@ -57,7 +57,7 @@ enum Event_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMEvent *a = (nsIDOMEvent*)JS_GetPrivate(cx, obj);
+  nsIDOMEvent *a = (nsIDOMEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -157,7 +157,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMEvent *a = (nsIDOMEvent*)JS_GetPrivate(cx, obj);
+  nsIDOMEvent *a = (nsIDOMEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -222,7 +222,7 @@ ResolveEvent(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 EventPreventBubble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMEvent *nativeThis = (nsIDOMEvent*)JS_GetPrivate(cx, obj);
+  nsIDOMEvent *nativeThis = (nsIDOMEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -270,7 +270,7 @@ EventPreventBubble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 EventPreventCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMEvent *nativeThis = (nsIDOMEvent*)JS_GetPrivate(cx, obj);
+  nsIDOMEvent *nativeThis = (nsIDOMEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -318,7 +318,7 @@ EventPreventCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 EventPreventDefault(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMEvent *nativeThis = (nsIDOMEvent*)JS_GetPrivate(cx, obj);
+  nsIDOMEvent *nativeThis = (nsIDOMEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;

@@ -70,7 +70,7 @@ enum HTMLImageElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLImageElement *a = (nsIDOMHTMLImageElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLImageElement *a = (nsIDOMHTMLImageElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -312,7 +312,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLImageElement *a = (nsIDOMHTMLImageElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLImageElement *a = (nsIDOMHTMLImageElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -53,7 +53,7 @@ enum HTMLStyleElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLStyleElement *a = (nsIDOMHTMLStyleElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLStyleElement *a = (nsIDOMHTMLStyleElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -135,7 +135,7 @@ GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLStyleElement *a = (nsIDOMHTMLStyleElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLStyleElement *a = (nsIDOMHTMLStyleElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -52,7 +52,7 @@ enum Notation_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetNotationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNotation *a = (nsIDOMNotation*)JS_GetPrivate(cx, obj);
+  nsIDOMNotation *a = (nsIDOMNotation*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -118,7 +118,7 @@ GetNotationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetNotationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNotation *a = (nsIDOMNotation*)JS_GetPrivate(cx, obj);
+  nsIDOMNotation *a = (nsIDOMNotation*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

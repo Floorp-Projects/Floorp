@@ -54,7 +54,7 @@ enum CSSStyleRuleCollection_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetCSSStyleRuleCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSStyleRuleCollection *a = (nsIDOMCSSStyleRuleCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSStyleRuleCollection *a = (nsIDOMCSSStyleRuleCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -112,7 +112,7 @@ GetCSSStyleRuleCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval 
 PR_STATIC_CALLBACK(JSBool)
 SetCSSStyleRuleCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSStyleRuleCollection *a = (nsIDOMCSSStyleRuleCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSStyleRuleCollection *a = (nsIDOMCSSStyleRuleCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -177,7 +177,7 @@ ResolveCSSStyleRuleCollection(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 CSSStyleRuleCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMCSSStyleRuleCollection *nativeThis = (nsIDOMCSSStyleRuleCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSStyleRuleCollection *nativeThis = (nsIDOMCSSStyleRuleCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMCSSStyleRule* nativeRet;
   PRUint32 b0;

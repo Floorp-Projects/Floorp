@@ -54,7 +54,7 @@ enum HTMLFieldSetElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLFieldSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLFieldSetElement *a = (nsIDOMHTMLFieldSetElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLFieldSetElement *a = (nsIDOMHTMLFieldSetElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -105,7 +105,7 @@ GetHTMLFieldSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLFieldSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLFieldSetElement *a = (nsIDOMHTMLFieldSetElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLFieldSetElement *a = (nsIDOMHTMLFieldSetElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

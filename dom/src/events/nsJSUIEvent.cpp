@@ -80,7 +80,7 @@ enum UIEvent_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMUIEvent *a = (nsIDOMUIEvent*)JS_GetPrivate(cx, obj);
+  nsIDOMUIEvent *a = (nsIDOMUIEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -524,7 +524,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMUIEvent *a = (nsIDOMUIEvent*)JS_GetPrivate(cx, obj);
+  nsIDOMUIEvent *a = (nsIDOMUIEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

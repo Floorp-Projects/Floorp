@@ -56,7 +56,7 @@ enum HTMLLegendElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLLegendElement *a = (nsIDOMHTMLLegendElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLLegendElement *a = (nsIDOMHTMLLegendElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -139,7 +139,7 @@ GetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLLegendElement *a = (nsIDOMHTMLLegendElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLLegendElement *a = (nsIDOMHTMLLegendElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

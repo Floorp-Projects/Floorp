@@ -56,7 +56,7 @@ enum HTMLLabelElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLLabelElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLLabelElement *a = (nsIDOMHTMLLabelElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLLabelElement *a = (nsIDOMHTMLLabelElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -139,7 +139,7 @@ GetHTMLLabelElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLLabelElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLLabelElement *a = (nsIDOMHTMLLabelElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLLabelElement *a = (nsIDOMHTMLLabelElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

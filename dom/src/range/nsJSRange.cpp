@@ -65,7 +65,7 @@ enum Range_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMRange *a = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *a = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -198,7 +198,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMRange *a = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *a = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -263,7 +263,7 @@ ResolveRange(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 RangeSetStart(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
   PRInt32 b1;
@@ -326,7 +326,7 @@ RangeSetStart(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 PR_STATIC_CALLBACK(JSBool)
 RangeSetStartBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
 
@@ -383,7 +383,7 @@ RangeSetStartBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 RangeSetStartAfter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
 
@@ -440,7 +440,7 @@ RangeSetStartAfter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 RangeSetEnd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
   PRInt32 b1;
@@ -503,7 +503,7 @@ RangeSetEnd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 PR_STATIC_CALLBACK(JSBool)
 RangeSetEndBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
 
@@ -560,7 +560,7 @@ RangeSetEndBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 PR_STATIC_CALLBACK(JSBool)
 RangeSetEndAfter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
 
@@ -617,7 +617,7 @@ RangeSetEndAfter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 PR_STATIC_CALLBACK(JSBool)
 RangeCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRBool b0;
 
@@ -670,7 +670,7 @@ RangeCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 PR_STATIC_CALLBACK(JSBool)
 RangeSelectNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
 
@@ -727,7 +727,7 @@ RangeSelectNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 PR_STATIC_CALLBACK(JSBool)
 RangeSelectNodeContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
 
@@ -784,7 +784,7 @@ RangeSelectNodeContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 RangeCompareEndPoints(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRInt32 nativeRet;
   PRUint32 b0;
@@ -848,7 +848,7 @@ RangeCompareEndPoints(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 RangeDeleteContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -896,7 +896,7 @@ RangeDeleteContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 RangeExtractContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMDocumentFragment* nativeRet;
 
@@ -945,7 +945,7 @@ RangeExtractContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 PR_STATIC_CALLBACK(JSBool)
 RangeCloneContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMDocumentFragment* nativeRet;
 
@@ -994,7 +994,7 @@ RangeCloneContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 RangeInsertNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
 
@@ -1051,7 +1051,7 @@ RangeInsertNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 PR_STATIC_CALLBACK(JSBool)
 RangeSurroundContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
 
@@ -1108,7 +1108,7 @@ RangeSurroundContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 RangeClone(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMRange* nativeRet;
 
@@ -1157,7 +1157,7 @@ RangeClone(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 PR_STATIC_CALLBACK(JSBool)
 RangeToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *nativeThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString nativeRet;
 
@@ -1206,7 +1206,7 @@ RangeToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 PR_STATIC_CALLBACK(JSBool)
 NSRangeCreateContextualFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *privateThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *privateThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSRange *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSRangeIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSRange");
@@ -1264,7 +1264,7 @@ NSRangeCreateContextualFragment(JSContext *cx, JSObject *obj, uintN argc, jsval 
 PR_STATIC_CALLBACK(JSBool)
 NSRangeIsValidFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMRange *privateThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMRange *privateThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSRange *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSRangeIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSRange");
