@@ -11,7 +11,7 @@
 <a NAME="ssl_first"></a>
 <a NAME="SSLIDX"></a>
 <h2>Privacy and Security Preferences - SSL</h2>
-<p>This section describes how to use the SSL Settings panel. If you are not already viewing the panel, follow these steps:
+<p>This section describes how to use the SSL preferences panel. If you are not already viewing the panel, follow these steps:
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
@@ -26,14 +26,18 @@
 
 
 <p>The Secure Sockets Layer (SSL) protocol defines rules governing mutual authentication 
-between a web site and browser software and the encryption  of information that flows 
+between a web site and browser software and the encryption of information that flows 
 between them. The Transport Layer Security (TLS) protocol is an IETF standard based on 
 SSL. TLS 1.0 can be thought of as SSL 3.1.
 
-<p>You should normally leave both SSL checkboxes and the TLS checkbox in the Options panel 
-selected to ensure that both older and newer web servers can work with Certificate Manager.
+<p>You should normally leave both SSL checkboxes and the TLS checkbox selected in the SSL Preferences panel  to ensure that both older and newer web servers can work with the browser.
 
-<p>Some servers that do not implement SSL correctly cannot negotiate the SSL handshake with client software (such as Certificate Manager) that supports TLS. To allow Certificate Manager to use SSL with such TLS-intolerant servers, click the "Enable TLS" checkbox to deselect it.
+<p><b>Important note re TLS:</b> Some servers that do not implement SSL correctly cannot negotiate the SSL handshake with client software (such as the browser) that supports TLS. Such servers are known as "TLS intolerant."
+
+<p>When the "Enable TLS" option in the SSL preferences panel is selected, the browser attempts to use the TLS protocol when making secure connections with a server. If that connection fails because the server is TLS intolerant, the browser will fall back to using SSL 3.0.
+
+<p>There is currently one important exception to this behavior: If you are using a proxy for SSL connections, the browser will not attempt to use TLS at all. Instead, it will attempt to use SSL 3.0.
+
 
 <p>&nbsp;</p>
 <a NAME="SSL_Warnings"></a>
@@ -45,23 +49,21 @@ window is locked. If the connection is not encrypted, the lock icon is unlocked.
 
 <p>For many people, the lock icon provides sufficient information about a page's 
 encryption status. If you want additional warnings, you can select one or more of 
-the warning checkboxes in SSL Settings preferences panel. Think 
+the warning checkboxes in the SSL preferences panel. Think 
 carefully about whether you want such warnings, since they can be annoying.
 
-<p>These are the choices you can make about Navigator warnings:</P>
+<p>To activate any of these Navigator warnings, select the corresponding checkbox:
+</P>
 
 <ul>
-	<LI>If you want to be reminded whenever you are entering or leaving a web site 
-that supports encryption, select one or both of "Entering a site that supports 
-encryption" and "Leaving a site that supports encryption." 
-	<LI>If you want to be warned when you are viewing pages containing a mix 
-of encrypted and unencrypted material (a situation in which the lock icon is unlocked), 
-select "Viewing a page with an encrypted/unencrypted mix"
-	<LI>If you want some assurance that you won't inadvertently send sensitive 
-information to a web site that doesn't provide an encrypted connection, select 
-"Sending form data from an insecure page to an insecure page." You may want to select this option 
-even if you don't want any of the others.
+	<LI><b>Entering a site that supports encryption.</b> Select this warning if you want to be reminded whenever you are entering a web site that supports encryption.
+	<LI><b>Entering a site that uses low-grade encryption.</b> Select this warning if you want to be reminded whenever you are entering a web site that supports low-grade encryption. (Low-grade encryption is the weakest encryption available, using 40-bit keys.) 
+	<LI><b>Sending form data from an insecure page to an insecure page.</b> Select this warning if you want to be reminded whenever you are submitting data over an unencrypted connetion. <b>You may want to select this option even if you don't want any of the others, so you don't inadvertently send sensitive 
+information that isn't encrypted. </b>If you send unencrypted information over the Internet, it can easily be intercepted by other people.
+	<LI><b>Viewing a page with an encrypted/unencrypted mix.</b> Select this warning if you want to be alerted whenever you are viewing a page that includes any information that's not encrypted. 
 </ul>
+
+<p>For short definitions, click <a href="glossary.html#authentication">authentication</a>, <a href="glossary.html#encryption">encryption</a>, or <a href="glossary.html#certificate">certificate</a>.</P>
 
 
 <p>
@@ -69,7 +71,7 @@ even if you don't want any of the others.
 </p>
 
 <hr>
-<p><i>6/19</body>
+<p><i>7/2/2001</body>
 </html>
 
 
