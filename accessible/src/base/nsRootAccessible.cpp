@@ -466,11 +466,12 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       FireAccessibleFocusEvent(accessible, targetNode);
   }
   else if (eventType.EqualsIgnoreCase("select")) {
-    if (treeBox && treeIndex >= 0) // it's a XUL <tree>
+    if (treeBox && treeIndex >= 0) { // it's a XUL <tree>
       // use EVENT_FOCUS instead of EVENT_ATK_SELECTION_CHANGE
       privAcc = do_QueryInterface(treeItemAccessible);
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
                                 treeItemAccessible, nsnull);
+      }
   }
   else if (eventType.EqualsIgnoreCase("CheckboxStateChange") || // it's a XUL <checkbox>
            eventType.EqualsIgnoreCase("RadioStateChange")) { // it's a XUL <radio>
