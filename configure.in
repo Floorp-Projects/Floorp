@@ -3856,7 +3856,9 @@ dnl turn off with the --disable-ldap option. We also added the
 dnl ldap-experimental flag, which is for experimental LDAP code,
 dnl not currently turned on in the default build.
 dnl
-MOZ_LDAP_XPCOM=1
+if test "$BUILD_MODULES" = "all" || test `echo "$BUILD_MODULES" | grep -c ldap` -ne 0; then
+    MOZ_LDAP_XPCOM=1
+fi
 
 dnl
 dnl --disable-ldap
@@ -4613,6 +4615,9 @@ if test "$MOZ_LDAP_XPCOM"; then
   # these subdirs may not yet have been created in the build tree.
   # don't use the "-p" switch to mkdir, since not all platforms have it
   #
+  if test ! -d "directory"; then
+    mkdir "directory"
+  fi
   if test ! -d "directory/c-sdk"; then
     mkdir "directory/c-sdk"    
   fi
