@@ -58,8 +58,7 @@ public class DigestTest {
         byte[] nsdigestOut;
         byte[] sundigestOut;
 
-        CryptoManager.initialize(dbdir+"/secmod.db", dbdir+"/key3.db",
-            dbdir+"/cert7.db");
+        CryptoManager.initialize(dbdir);
 
         /////////////////////////////////////////////////////////////
         // Install SUN provider

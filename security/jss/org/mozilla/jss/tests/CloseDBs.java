@@ -51,9 +51,7 @@ public final class CloseDBs extends org.mozilla.jss.DatabaseCloser {
             System.exit(0);
         }
 
-        CryptoManager.initialize( args[0] +"/secmod.db",
-                                  args[0] +"/key3.db",
-                                  args[0] +"/cert7.db" );
+        CryptoManager.initialize( args[0] );
 
         CryptoManager manager = CryptoManager.getInstance();
 

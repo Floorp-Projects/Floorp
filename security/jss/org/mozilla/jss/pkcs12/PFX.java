@@ -337,8 +337,7 @@ public class PFX implements ASN1Value {
             FileInputStream fis = new FileInputStream(args[1]);
             int certfile = 0;
 
-            CryptoManager.initialize( args[0]+"secmod.db",
-                args[0]+"key3.db", args[0]+"cert7.db");
+            CryptoManager.initialize( args[0] );
 
             // Decode the P12 file
             PFX.Template pfxt = new PFX.Template();

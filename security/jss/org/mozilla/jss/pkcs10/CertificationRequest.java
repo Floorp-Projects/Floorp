@@ -275,8 +275,7 @@ public class CertificationRequest implements ASN1Value {
             System.exit(0);
         }
 
-        CryptoManager.initialize( argv[0]+"/secmod.db", argv[0]+"/key3.db",
-                argv[0]+"/cert7.db");
+        CryptoManager.initialize( argv[0] );
         CryptoManager cm = CryptoManager.getInstance();
 
         // read in a cert

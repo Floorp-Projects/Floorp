@@ -45,7 +45,7 @@ public class SymKeyGen {
 
       try {
 
-        CryptoManager.initialize("secmod.db", "key3.db", "cert7.db");
+        CryptoManager.initialize(".");
         CryptoManager cm = CryptoManager.getInstance();
         CryptoToken token = cm.getInternalCryptoToken();
         byte[] keyData;

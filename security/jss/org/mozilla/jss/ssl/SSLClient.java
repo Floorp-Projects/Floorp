@@ -144,7 +144,7 @@ public class SSLClient
 	  results.println(htmlHeader);
 	results.println("SSL Client Tester");
 	results.println(
-			"$Id: SSLClient.java,v 1.2 2001/02/09 11:26:09 nicolson%netscape.com Exp $ " + 
+			"$Id: SSLClient.java,v 1.3 2001/07/06 01:18:30 nicolson%netscape.com Exp $ " + 
 			versionStr );
 	
 	SSLSocket s;
@@ -406,8 +406,7 @@ public class SSLClient
 
       try {
 	CryptoManager.InitializationValues vals =
-		new CryptoManager.InitializationValues
-                    ("secmod.db", "key3.db", "cert7.db");
+		new CryptoManager.InitializationValues(".");
 	CryptoManager.initialize(vals);
 
         try {

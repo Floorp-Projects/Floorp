@@ -330,7 +330,7 @@ public class SSLServer
         System.out.println("SSLServer started\n");
 
 	try {
-		CryptoManager.initialize("secmod.db", "key3.db", "cert7.db");
+		CryptoManager.initialize(".");
 	}
 	catch (KeyDatabaseException kdbe) {
           System.out.println("Couldn't open the key database\n");

@@ -47,8 +47,7 @@ public class ListCerts {
         String dbdir = args[0];
         String nickname = args[1];
 
-        CryptoManager.initialize(dbdir+"/secmod.db", dbdir+"/key3.db",
-                    dbdir+"/cert7.db");
+        CryptoManager.initialize(dbdir);
 
         CryptoManager cm = CryptoManager.getInstance();
 

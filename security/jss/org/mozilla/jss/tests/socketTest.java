@@ -40,7 +40,7 @@ public class socketTest {
         try {
 
         // initialize CryptoManager.
-        CryptoManager.initialize("secmod.db", "key3.db", "cert7.db");
+        CryptoManager.initialize(".");
 
         SSLSocket sslSocket = new SSLSocket("www.verisign.com", 443);
 

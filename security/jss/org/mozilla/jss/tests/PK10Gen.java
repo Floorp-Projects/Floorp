@@ -52,7 +52,7 @@ public class PK10Gen {
         }
 
 		try {
-			CryptoManager.initialize(args[0]+"/secmod.db", args[0]+"/key3.db", args[0]+"/cert7.db");
+			CryptoManager.initialize(args[0]);
 			/*
 			CryptoManager.initialize("secmod.db", "key3.db", "cert7.db");
 			CryptoManager cm = CryptoManager.getInstance();
