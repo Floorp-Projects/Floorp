@@ -31,8 +31,11 @@ INCLUDES += -I../public -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/dom -I$
 DEFINES = -D_IMPL_NS_WEB
 
 CPPSRCS=				\
+ nsBrowserWindow.cpp			\
+ nsDLLFactory.cpp			\
  nsDocumentViewer.cpp			\
  nsDocLoader.cpp			\
+ nsThrobber.cpp				\
  nsWebShell.cpp				\
  $(NULL)
 
