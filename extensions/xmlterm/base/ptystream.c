@@ -51,7 +51,7 @@
 #include <sys/types.h>
 #include <sys/fcntl.h>
 
-#if defined(LINUX) || defined(BSDFAMILY)
+#if defined(LINUX) || defined(BSDFAMILY) || defined(HPUX11)
 #include <sys/ioctl.h>
 #endif
 
@@ -438,6 +438,7 @@ static int setTTYAttr(int ttyFD, int noecho)
     pty_error("setTTYattr: Failed to get TTY attributes", NULL);
     return -1;
   }
+  memset(&tios, 0, sizeof(struct termios));
 
   /* TERMIOS settings for TTY */
   tios.c_cc[VINTR]    = C_CTL_C;
@@ -453,8 +454,10 @@ static int setTTYAttr(int ttyFD, int noecho)
   tios.c_cc[VSTART]   = C_CTL_Q;
   tios.c_cc[VSTOP]    = C_CTL_S;
   tios.c_cc[VSUSP]    = C_CTL_Z;
+#ifndef HPUX11
   tios.c_cc[VREPRINT] = C_CTL_R;
   tios.c_cc[VDISCARD] = C_CTL_O;
+#endif /* !HPUX11 */
   tios.c_cc[VWERASE]  = C_CTL_W;
   tios.c_cc[VLNEXT]   = C_CTL_V;
 
