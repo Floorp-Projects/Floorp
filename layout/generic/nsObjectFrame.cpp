@@ -469,7 +469,8 @@ nsObjectFrame::GetSkipSides() const
 
 // #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
 
-PRBool nsObjectFrame::IsSupportedImage(nsIContent* aContent)
+/* static */ PRBool
+nsObjectFrame::IsSupportedImage(nsIContent* aContent)
 {
   if (!aContent)
     return PR_FALSE;
@@ -517,7 +518,8 @@ PRBool nsObjectFrame::IsSupportedImage(nsIContent* aContent)
   return NS_SUCCEEDED(rv) && supported;
 }
 
-PRBool nsObjectFrame::IsSupportedDocument(nsIContent* aContent)
+/* static */ PRBool
+nsObjectFrame::IsSupportedDocument(nsIContent* aContent)
 {
   nsresult rv;
   
@@ -534,7 +536,13 @@ PRBool nsObjectFrame::IsSupportedDocument(nsIContent* aContent)
   {
     // if we don't have a TYPE= try getting the mime-type via the DATA= url
     nsAutoString data;
-    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
+    // If this is an OBJECT tag, we should look for a DATA attribute.
+    // If not, it's an EMBED tag, and so we should look for a SRC attribute.
+    if (aContent->Tag() == nsHTMLAtoms::object)
+      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
+    else
+      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
+
     if (rv != NS_CONTENT_ATTR_HAS_VALUE || data.IsEmpty()) {
       return PR_FALSE;
     }
@@ -553,6 +561,13 @@ PRBool nsObjectFrame::IsSupportedDocument(nsIContent* aContent)
   } else {
     CopyUTF16toUTF8(type, typeStr);
   }
+
+  // only allow browser to handle content of <embed> for svg (bug 240408)
+  if (aContent->Tag() == nsHTMLAtoms::embed)
+#ifdef MOZ_SVG
+    if (!typeStr.LowerCaseEqualsLiteral("image/svg+xml"))
+#endif
+      return PR_FALSE;
     
   nsXPIDLCString value;
   rv = catman->GetCategoryEntry("Gecko-Content-Viewers", typeStr.get(), getter_Copies(value));
@@ -629,11 +644,6 @@ nsObjectFrame::Init(nsPresContext*  aPresContext,
 
     return rv; // bail at this point
   }
-
-  
-  // only do the following for the object tag
-  if (aContent->Tag() != nsHTMLAtoms::object)
-    return rv;
 
   // for now, we should try to do the same for "document" types and create
   // and IFrame-like sub-frame

@@ -118,8 +118,8 @@ public:
                         PRBool aViewOnly);
   nsIURI* GetFullURL() { return mFullURL; }
   
-  PRBool IsSupportedImage(nsIContent* aContent);
-  PRBool IsSupportedDocument(nsIContent* aContent);
+  static PRBool IsSupportedImage(nsIContent* aContent);
+  static PRBool IsSupportedDocument(nsIContent* aContent);
 
   // for a given aRoot, this walks the frame tree looking for the next outFrame
   static nsIObjectFrame* GetNextObjectFrame(nsPresContext* aPresContext,
