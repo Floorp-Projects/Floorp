@@ -1772,7 +1772,14 @@ binmode(STDOUT);
           <note>
             <para>
               According to <ulink
-				  url="http://bugzilla.mozilla.org/show_bug.cgi?id=62000">bug 62000</ulink>, the perl documentation says that you should always use <function>binmode()</function> when dealing with binary files, but never when dealing with text files.  That seems to suggest that rather than aribtrarily putting <function>binmode()</function> at the begining of the attachment files, there should be logic to determine if <function>binmode()</function> is needed or not.
+		  url="http://bugzilla.mozilla.org/show_bug.cgi?id=62000">bug 62000</ulink>,
+              the perl documentation says that you should always use
+              <function>binmode()</function> when dealing with binary
+              files, but never when dealing with text files.  That seems
+              to suggest that rather than arbitrarily putting
+              <function>binmode()</function> at the beginning of the
+              attachment files, there should be logic to determine if
+              <function>binmode()</function> is needed or not.
             </para>
           </note>
         </step>

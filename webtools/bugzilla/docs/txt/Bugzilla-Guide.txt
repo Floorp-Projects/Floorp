@@ -2171,7 +2171,7 @@ binmode(STDOUT);
    According to bug 62000, the perl documentation says that you should
    always use binmode() when dealing with binary files, but never when
    dealing with text files. That seems to suggest that rather than
-   aribtrarily putting binmode() at the beginning of the attachment files,
+   arbitrarily putting binmode() at the beginning of the attachment files,
    there should be logic to determine if binmode() is needed or not.
 
    Tip
