@@ -124,9 +124,9 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
       nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
       if( urlObject )
       {
-        nsAutoString urlInfo;
+        nsXPIDLString urlInfo;
         nsAutoString linkName, url, holder;
-        urlObject->GetData ( urlInfo );
+        urlObject->GetData ( getter_Copies(urlInfo) );
         holder = urlInfo;
         PRInt32 lineIndex = holder.FindChar ('\n');
         if ( lineIndex != -1 )
@@ -204,8 +204,8 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable, PRUint32 aI
     nsCOMPtr<nsISupportsCString> currentFlavor;
     currentFlavor = do_QueryInterface(genericWrapper);
     if (currentFlavor) {
-      nsCAutoString flavorStr;
-      currentFlavor->GetData(flavorStr);
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString(getter_Copies(flavorStr));
   
       nsCOMPtr<nsISupports> genericItem;
   
@@ -214,9 +214,9 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable, PRUint32 aI
       if (item) {
         nsCOMPtr<nsISupports> data;
         PRUint32 tmpDataLen = 0;
-        rv = item->GetTransferData(flavorStr.get(), getter_AddRefs(data), &tmpDataLen);
+        rv = item->GetTransferData(flavorStr, getter_AddRefs(data), &tmpDataLen);
         if (NS_SUCCEEDED(rv)) {
-          rv = aTransferable->SetTransferData(flavorStr.get(), data, tmpDataLen);
+          rv = aTransferable->SetTransferData(flavorStr, data, tmpDataLen);
           break;
         }
       }
@@ -255,9 +255,9 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
           nsCOMPtr<nsISupportsCString> currentFlavor;
           currentFlavor = do_QueryInterface(genericWrapper);
           if (currentFlavor) {
-            nsCAutoString flavorStr;
-            currentFlavor->GetData ( flavorStr );
-            if (flavorStr.Equals(aDataFlavor)) {
+            nsXPIDLCString flavorStr;
+            currentFlavor->ToString ( getter_Copies(flavorStr) );
+            if (strcmp(flavorStr, aDataFlavor) == 0) {
               *_retval = PR_TRUE;
             }
           }
