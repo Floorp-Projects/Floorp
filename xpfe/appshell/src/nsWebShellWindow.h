@@ -246,8 +246,8 @@ public:
   NS_IMETHOD GetWindowBounds(nsRect& aResult);
   NS_IMETHOD IsIntrinsicallySized(PRBool& aResult);
   NS_IMETHOD ShowAfterCreation() { mCreatedVisible = PR_TRUE; return NS_OK; }
-  NS_IMETHOD Show() { Show(PR_TRUE); return NS_OK; }
-  NS_IMETHOD Hide() { Show(PR_FALSE); return NS_OK; }
+  NS_IMETHOD Show() { return Show(PR_TRUE); }
+  NS_IMETHOD Hide() { return Show(PR_FALSE); }
   NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
   NS_IMETHOD SetTitle(const PRUnichar* aTitle);
@@ -284,6 +284,7 @@ protected:
 
   nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
   void                     ExecuteStartupCode();
+  void                     SetSizeFromXUL();
   void                     SetTitleFromXUL();
   void                     ShowAppropriateChrome();
   void                     LoadContentAreas();
@@ -304,7 +305,8 @@ protected:
   PRBool                  mLockedUntilChromeLoad;
   PRBool                  mChromeInitialized;
   PRUint32                mChromeMask;
-  PRBool                  mCreatedVisible;
+  PRBool                  mCreatedVisible; // requested visible at creation
+  PRBool                  mDebuting;       // being made visible right now
   PRBool                  mLoadDefaultPage;
 
   nsVoidArray mMenuDelegates;

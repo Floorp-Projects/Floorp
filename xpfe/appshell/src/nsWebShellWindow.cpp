@@ -251,6 +251,7 @@ nsWebShellWindow::nsWebShellWindow()
   mChromeMask = NS_CHROME_ALL_CHROME;
   mIntrinsicallySized = PR_FALSE;
   mCreatedVisible = PR_TRUE;
+  mDebuting = PR_FALSE;
   mLoadDefaultPage = PR_TRUE;
 }
 
@@ -1743,15 +1744,35 @@ nsWebShellWindow::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTa
 NS_IMETHODIMP
 nsWebShellWindow::Show(PRBool aShow)
 {
+  if (mDebuting)
+    return NS_OK;
+  mDebuting = PR_TRUE; // (Show/Focus is recursive)
   mWebShell->Show(); // crimminy -- it doesn't take a parameter!
   mWindow->Show(aShow);
   
+  // this may cause problems, focusing the content webshell on every show.
+  // still, this code's previous position, in OnEndDocumentLoad, was
+  // forcing the window visible too early. this made the window flash,
+  // as it was resized, and aggravated a gtk bug in which windows cannot
+  // be resized after they're made visible. yes, that wants fixing.
+  // repercussions were myriad. focusing here, instead.
+  nsCOMPtr<nsIWebShell> contentShell;
+  GetContentWebShell(getter_AddRefs(contentShell));
+  if (contentShell) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    if (NS_SUCCEEDED(ConvertWebShellToDOMWindow(contentShell, 
+                                                getter_AddRefs(domWindow)))) {
+      domWindow->Focus();
+    }
+  }
+
   nsresult rv;
   NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
   if ( NS_SUCCEEDED(rv) )
   {
    	windowMediator->UpdateWindowTimeStamp( this ); 
   } 
+  mDebuting = PR_FALSE;
   return NS_OK;
 }
 
@@ -1990,19 +2011,14 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   ShowAppropriateChrome();
   LoadContentAreas();
   
+  if (mIntrinsicallySized)
+    mWebShell->SizeToContent();
+  else
+    SetSizeFromXUL();
+
   // Here's where we service the "show" request initially given in Initialize()
   if (mCreatedVisible)
     Show(PR_TRUE);
-
-  nsCOMPtr<nsIWebShell> contentShell;
-  GetContentWebShell(getter_AddRefs(contentShell));
-  if (contentShell) {
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    if (NS_SUCCEEDED(ConvertWebShellToDOMWindow(contentShell, 
-                                                getter_AddRefs(domWindow)))) {
-      domWindow->Focus();
-    }
-  }
 
   return NS_OK;
 }
@@ -2244,6 +2260,47 @@ void nsWebShellWindow::ExecuteStartupCode()
     mCallbacks->ConstructAfterJavaScript(mWebShell);
 }
 
+/* This simply reads attributes from the window tag and blindly sets the size
+   to whatever it finds within.
+*/
+void nsWebShellWindow::SetSizeFromXUL()
+{
+  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
+  nsIWidget *windowWidget = GetWidget();
+  nsCOMPtr<nsIDOMElement> webshellElement;
+  nsString sizeString;
+  PRInt32 errorCode,
+          specWidth, specHeight,
+          specSize;
+  nsRect  currentSize;
+
+  if (webshellNode)
+    webshellElement = do_QueryInterface(webshellNode);
+  if (!webshellElement || !windowWidget) // it's hopeless
+    return;
+
+  // first guess: use current size
+  mWindow->GetBounds(currentSize);
+  specWidth = currentSize.width;
+  specHeight = currentSize.height;
+
+  // read "height" attribute
+  if (NS_SUCCEEDED(webshellElement->GetAttribute("height", sizeString))) {
+    specSize = sizeString.ToInteger(&errorCode);
+    if (NS_SUCCEEDED(errorCode) && specSize > 0)
+      specHeight = specSize;
+  }
+
+  // read "width" attribute
+  if (NS_SUCCEEDED(webshellElement->GetAttribute("width", sizeString))) {
+    specSize = sizeString.ToInteger(&errorCode);
+    if (NS_SUCCEEDED(errorCode) || specSize > 0)
+      specWidth = specSize;
+  }
+
+  if (specWidth != currentSize.width || specHeight != currentSize.height)
+    windowWidget->Resize(specWidth, specHeight, PR_TRUE);
+} // SetSizeFromXUL
 
 
 void nsWebShellWindow::SetTitleFromXUL()
