@@ -78,18 +78,18 @@ EXPORTS		= \
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-RESOURCES =				\
-		broken-image.gif	\
-		empty_doc.html		\
-		gopher-audio.gif	\
-		gopher-binary.gif	\
-		gopher-find.gif		\
-		gopher-image.gif	\
-		gopher-menu.gif		\
-		gopher-movie.gif	\
-		gopher-telnet.gif	\
-		gopher-text.gif		\
-		gopher-unknown.gif	\
+RESOURCES =					\
+		$(srcdir)/broken-image.gif	\
+		$(srcdir)/empty_doc.html	\
+		$(srcdir)/gopher-audio.gif	\
+		$(srcdir)/gopher-binary.gif	\
+		$(srcdir)/gopher-find.gif	\
+		$(srcdir)/gopher-image.gif	\
+		$(srcdir)/gopher-menu.gif	\
+		$(srcdir)/gopher-movie.gif	\
+		$(srcdir)/gopher-telnet.gif	\
+		$(srcdir)/gopher-text.gif	\
+		$(srcdir)/gopher-unknown.gif	\
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -111,5 +111,5 @@ INCLUDES	+= \
 		$(NULL)
 
 install::
-	$(INSTALL) $(srcdir)/$(RESOURCES) $(DIST)/bin/res/html
+	$(INSTALL) $(RESOURCES) $(DIST)/bin/res/html
 
