@@ -23,9 +23,25 @@
     var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
     controller.doCommand('cmd_paste');"/>
 
+<key id="key_leftcontrol" keycode="VK_LEFT" shift="false" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_wordPrevious');
+    controller.doCommand('cmd_wordPrevious');"/>
+<key id="key_rightcontrol" keycode="VK_RIGHT" shift="false" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_wordNext');
+    controller.doCommand('cmd_wordNext');"/>
+<key id="key_leftshiftcontrol" keycode="VK_LEFT" shift="true" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordPrevious');
+    controller.doCommand('cmd_selectWordPrevious');"/>
+<key id="key_rightshiftcontrol" keycode="VK_RIGHT" shift="true" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordNext');
+    controller.doCommand('cmd_selectWordNext');"/>
 </keyset>
 
-<!-- End Unix-specific keybindings -->
+<!-- End Windows-specific keybindings -->
 
 </keybinding>
 
