@@ -99,7 +99,7 @@
 
   if (!group.IsEmpty()) {
     mIsFolder = NO;
-    [self setImage: [NSImage imageNamed: @"smallbookmark"]];
+    [self setImage: [NSImage imageNamed: @"groupbookmark"]];
     [self setAction: @selector(openBookmark:)];
     [self setTarget: self];
   }

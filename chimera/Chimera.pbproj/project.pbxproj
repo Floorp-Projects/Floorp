@@ -446,6 +446,8 @@
 				F5DAB15602698D5401A80166,
 				F5DAB15702698D5401A80166,
 				F51B70B5026EC8A601A80166,
+				F541496402714F9A01A80166,
+				F541496502714F9A01A80166,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -1639,6 +1641,28 @@
 			settings = {
 			};
 		};
+		F541496202714F9A01A80166 = {
+			isa = PBXFileReference;
+			path = groupbookmark.tif;
+			refType = 4;
+		};
+		F541496302714F9A01A80166 = {
+			isa = PBXFileReference;
+			path = separator_on.tif;
+			refType = 4;
+		};
+		F541496402714F9A01A80166 = {
+			fileRef = F541496202714F9A01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F541496502714F9A01A80166 = {
+			fileRef = F541496302714F9A01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F54EF7ED022A2F9C01A80165 = {
 			isa = PBXFileReference;
 			name = pipnss.jar;
@@ -1872,6 +1896,8 @@
 				F5DAB15202698D5401A80166,
 				F5DAB15302698D5401A80166,
 				F5DAB15402698D5401A80166,
+				F541496202714F9A01A80166,
+				F541496302714F9A01A80166,
 			);
 			isa = PBXGroup;
 			name = Sidebar;
