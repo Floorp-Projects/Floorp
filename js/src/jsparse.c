@@ -128,6 +128,69 @@ static uint32 maxparsenodes = 0;
 static uint32 recyclednodes = 0;
 #endif
 
+static void
+RecycleTree(JSParseNode *pn, JSTreeContext *tc)
+{
+    if (!pn)
+        return;
+    JS_ASSERT(pn != tc->nodeList);      /* catch back-to-back dup recycles */
+    pn->pn_next = tc->nodeList;
+    tc->nodeList = pn;
+#ifdef METER_PARSENODES
+    recyclednodes++;
+#endif
+}
+
+static JSParseNode *
+NewOrRecycledNode(JSContext *cx, JSTreeContext *tc)
+{
+    JSParseNode *pn;
+
+    pn = tc->nodeList;
+    if (!pn) {
+        JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
+        if (!pn)
+            JS_ReportOutOfMemory(cx);
+    } else {
+        tc->nodeList = pn->pn_next;
+
+        /* Recycle immediate descendents only, to save work and working set. */
+        switch (pn->pn_arity) {
+          case PN_FUNC:
+            RecycleTree(pn->pn_body, tc);
+            break;
+          case PN_LIST:
+            if (pn->pn_head) {
+                /* XXX check for dup recycles in the list */
+                *pn->pn_tail = tc->nodeList;
+                tc->nodeList = pn->pn_head;
+#ifdef METER_PARSENODES
+                recyclednodes += pn->pn_count;
+#endif
+            }
+            break;
+          case PN_TERNARY:
+            RecycleTree(pn->pn_kid1, tc);
+            RecycleTree(pn->pn_kid2, tc);
+            RecycleTree(pn->pn_kid3, tc);
+            break;
+          case PN_BINARY:
+            RecycleTree(pn->pn_left, tc);
+            RecycleTree(pn->pn_right, tc);
+            break;
+          case PN_UNARY:
+            RecycleTree(pn->pn_kid, tc);
+            break;
+          case PN_NAME:
+            RecycleTree(pn->pn_expr, tc);
+            break;
+          case PN_NULLARY:
+            break;
+        }
+    }
+    return pn;
+}
+
 /*
  * Allocate a JSParseNode from cx's temporary arena.
  */
@@ -137,16 +200,9 @@ NewParseNode(JSContext *cx, JSToken *tok, JSParseNodeArity arity,
 {
     JSParseNode *pn;
 
-    pn = tc->nodeList;
-    if (pn) {
-        tc->nodeList = pn->pn_next;
-    } else {
-        JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
-        if (!pn) {
-            JS_ReportOutOfMemory(cx);
-            return NULL;
-        }
-    }
+    pn = NewOrRecycledNode(cx, tc);
+    if (!pn)
+        return NULL;
     pn->pn_type = tok->type;
     pn->pn_pos = tok->pos;
     pn->pn_op = JSOP_NOP;
@@ -193,16 +249,9 @@ NewBinary(JSContext *cx, JSTokenType tt,
         return left;
     }
 
-    pn = tc->nodeList;
-    if (pn) {
-        tc->nodeList = pn->pn_next;
-    } else {
-        JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
-        if (!pn) {
-            JS_ReportOutOfMemory(cx);
-            return NULL;
-        }
-    }
+    pn = NewOrRecycledNode(cx, tc);
+    if (!pn)
+        return NULL;
     pn->pn_type = tt;
     pn->pn_pos.begin = left->pn_pos.begin;
     pn->pn_pos.end = right->pn_pos.end;
@@ -217,49 +266,6 @@ NewBinary(JSContext *cx, JSTokenType tt,
         maxparsenodes = parsenodes - recyclednodes;
 #endif
     return pn;
-}
-
-static void
-RecycleTree(JSParseNode *pn, JSTreeContext *tc)
-{
-    JSParseNode *pn2;
-
-    if (!pn)
-        return;
-    JS_ASSERT(pn != tc->nodeList);      /* catch back-to-back dup recycles */
-    switch (pn->pn_arity) {
-      case PN_FUNC:
-        RecycleTree(pn->pn_body, tc);
-        break;
-      case PN_LIST:
-        while ((pn2 = pn->pn_head) != NULL) {
-            pn->pn_head = pn2->pn_next;
-            RecycleTree(pn2, tc);
-        }
-        break;
-      case PN_TERNARY:
-        RecycleTree(pn->pn_kid1, tc);
-        RecycleTree(pn->pn_kid2, tc);
-        RecycleTree(pn->pn_kid3, tc);
-        break;
-      case PN_BINARY:
-        RecycleTree(pn->pn_left, tc);
-        RecycleTree(pn->pn_right, tc);
-        break;
-      case PN_UNARY:
-        RecycleTree(pn->pn_kid, tc);
-        break;
-      case PN_NAME:
-        RecycleTree(pn->pn_expr, tc);
-        break;
-      case PN_NULLARY:
-        break;
-    }
-    pn->pn_next = tc->nodeList;
-    tc->nodeList = pn;
-#ifdef METER_PARSENODES
-    recyclednodes++;
-#endif
 }
 
 static JSBool
@@ -441,6 +447,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
          * that the tc can be downcast to a cg and used to emit code during
          * parsing, rather than at the end of the parse phase.
          */
+        JS_ASSERT(cg->treeContext.flags & TCF_COMPILING);
         ok = JS_TRUE;
     }
 
