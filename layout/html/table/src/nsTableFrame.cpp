@@ -1612,7 +1612,6 @@ nsTableFrame::SetColumnDimensions(nscoord         aHeight,
   PRInt32 colX = 0;
   nsPoint colGroupOrigin(aBorderPadding.left + cellSpacingX,
                          aBorderPadding.top + cellSpacingY);
-  PRInt32 numCols = GetColCount();
   while (nsnull != colGroupFrame) {
     nscoord colGroupWidth = 0;
     nsIFrame* colFrame = colGroupFrame->GetFirstChild(nsnull);
@@ -1620,7 +1619,7 @@ nsTableFrame::SetColumnDimensions(nscoord         aHeight,
     while (nsnull != colFrame) {
       if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
           colFrame->GetStyleDisplay()->mDisplay) {
-        NS_ASSERTION(colX < numCols, "invalid number of columns");
+        NS_ASSERTION(colX < GetColCount(), "invalid number of columns");
         nscoord colWidth = GetColumnWidth(colX);
         nsRect colRect(colOrigin.x, colOrigin.y, colWidth, colHeight);
         colFrame->SetRect(colRect);
@@ -2496,13 +2495,18 @@ nsTableFrame::AppendFrames(nsPresContext* aPresContext,
     const nsStyleDisplay* display = f->GetStyleDisplay();
 
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
-      nsTableColGroupFrame* lastColGroup = (nsTableColGroupFrame *)mColGroups.LastChild();
+      nsTableColGroupFrame* lastColGroup;
+      PRBool doAppend = nsTableColGroupFrame::GetLastRealColGroup(this, (nsIFrame**) &lastColGroup);
       PRInt32 startColIndex = (lastColGroup) 
         ? lastColGroup->GetStartColumnIndex() + lastColGroup->GetColCount() : 0;
-      
-      // Append the new col group frame
-      mColGroups.AppendFrame(nsnull, f);
-
+      if (doAppend) {
+        // Append the new col group frame
+        mColGroups.AppendFrame(nsnull, f);
+      }
+      else {
+        // there is a colgroup after the last real one
+          mColGroups.InsertFrame(nsnull, lastColGroup, f);
+      }
       // Insert the colgroup and its cols into the table
       InsertColGroups(*aPresContext, startColIndex, f);
     } else if (IsRowGroup(display->mDisplay)) {
@@ -2634,7 +2638,7 @@ nsTableFrame::RemoveFrame(nsPresContext* aPresContext,
       if (numColsInCache > numColsInMap) {
         PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(*aPresContext, numColsInCache - numColsInMap);
         // if the cell map has fewer cols than the cache, correct it
-        if (numColsNotRemoved > 0) {
+        if (numColsNotRemoved > 0 && cellMap) {
           cellMap->AddColsAtEnd(numColsNotRemoved);
         }
       }
@@ -6887,8 +6891,8 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
     PRUint32 temp;
     startColX = mRect.width - childAreaOffset.right;
     temp = startColIndex; startColIndex = endColIndex; endColIndex = temp;
-    for (colX = 0; colX < startColIndex; colX++) {
-      nsTableColFrame* colFrame = firstInFlow->GetColFrame(colX);
+    for (PRUint32 column = 0; column < startColIndex; column++) {
+      nsTableColFrame* colFrame = firstInFlow->GetColFrame(column);
       if (!colFrame) ABORT0();
       nsSize size = colFrame->GetSize();
       startColX += colInc * size.width;
@@ -7570,10 +7574,10 @@ nsTableFrame::GetProperty(nsPresContext*       aPresContext,
   void *value = propTable->GetProperty(aFrame, aPropertyName);
   if (value) {
     return (nsPoint*)value;  // the property already exists
-  } else if (aCreateIfNecessary) {
+  } 
+  if (aCreateIfNecessary) {
     // The property isn't set yet, so allocate a new value, set the property,
     // and return the newly allocated value
-    void* value = nsnull;
     NSPropertyDtorFunc dtorFunc = nsnull;
     if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
       value = new nsPoint(0, 0);
@@ -7588,11 +7592,9 @@ nsTableFrame::GetProperty(nsPresContext*       aPresContext,
       dtorFunc = DestroyBCPropertyDataFunc;
     }
     if (!value) return nsnull;
-
     propTable->SetProperty(aFrame, aPropertyName, value, dtorFunc, nsnull);
     return value;
   }
-
   return nsnull;
 }
 
@@ -7605,6 +7607,7 @@ void DumpTableFramesRecur(nsIFrame*       aFrame,
                           PRUint32        aIndent)
 {
   char indent[MAX_SIZE + 1];
+  aIndent = PR_MIN(aIndent, MAX_SIZE - MIN_INDENT);
   memset (indent, ' ', aIndent + MIN_INDENT);
   indent[aIndent + MIN_INDENT] = 0;
 

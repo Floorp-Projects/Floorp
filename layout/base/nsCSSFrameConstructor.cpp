@@ -7882,7 +7882,6 @@ nsCSSFrameConstructor::AppendFrames(nsPresContext*  aPresContext,
 
   nsresult rv = NS_OK;
 
-  // a col group or col appended to a table may result in an insert rather than an append
   if (nsLayoutAtoms::tableFrame == aParentFrame->GetType()) { 
     nsTableFrame* tableFrame = NS_REINTERPRET_CAST(nsTableFrame*, aParentFrame);
     nsIAtom* childType = aFrameList->GetType();
@@ -7891,19 +7890,6 @@ nsCSSFrameConstructor::AppendFrames(nsPresContext*  aPresContext,
       nsIFrame* parentFrame = aFrameList->GetParent();
       rv = aFrameManager->AppendFrames(parentFrame,
                                        nsLayoutAtoms::colGroupList, aFrameList);
-    }
-    else if (nsLayoutAtoms::tableColGroupFrame == childType) {
-      // table col group
-      nsIFrame* prevSibling;
-      PRBool doAppend = nsTableColGroupFrame::GetLastRealColGroup(tableFrame, &prevSibling);
-      if (doAppend) {
-        rv = aFrameManager->AppendFrames(aParentFrame,
-                                         nsLayoutAtoms::colGroupList, aFrameList);
-      }
-      else {
-        rv = aFrameManager->InsertFrames(aParentFrame, 
-                                         nsLayoutAtoms::colGroupList, prevSibling, aFrameList);
-      }
     }
     else if (nsLayoutAtoms::tableCaptionFrame == childType) {
       // table caption
