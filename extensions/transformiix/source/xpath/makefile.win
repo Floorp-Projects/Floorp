@@ -45,7 +45,6 @@ CPPSRCS=				\
 	MultiplicativeExpr.cpp		\
 	NodeSet.cpp			\
 	NodeSetFunctionCall.cpp		\
-	nsNodeSet.cpp			\
 	NumberExpr.cpp			\
 	NumberFunctionCall.cpp		\
 	NumberResult.cpp		\
@@ -63,6 +62,7 @@ CPPSRCS=				\
 	WildCardExpr.cpp		\
 	XPathNames.cpp			\
 !if defined(MOZ_XSL)
+	nsNodeSet.cpp			\
 	XPathProcessor.cpp		\
 !endif
 	$(NULL)
@@ -87,7 +87,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\MultiplicativeExpr.obj		\
 	.\$(OBJDIR)\NodeSet.obj				\
 	.\$(OBJDIR)\NodeSetFunctionCall.obj		\
-	.\$(OBJDIR)\nsNodeSet.obj			\
 	.\$(OBJDIR)\NumberExpr.obj			\
 	.\$(OBJDIR)\NumberFunctionCall.obj		\
 	.\$(OBJDIR)\NumberResult.obj			\
@@ -105,6 +104,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\WildCardExpr.obj			\
 	.\$(OBJDIR)\XPathNames.obj			\
 !if defined(MOZ_XSL)
+	.\$(OBJDIR)\nsNodeSet.obj			\
 	.\$(OBJDIR)\XPathProcessor.obj		\
 !endif
 	$(NULL)
