@@ -416,7 +416,7 @@ nsUnknownContentTypeDialog.prototype = {
             // On other platforms, default is Ok if there is a default app.
             // Note that nsIMIMEInfo providers need to ensure that this holds true
             // on each platform.
-            result = this.mLauncher.MIMEInfo.defaultApplicationHandler;
+            result = this.mLauncher.MIMEInfo.hasDefaultHandler;
         }
         return result;
     },
