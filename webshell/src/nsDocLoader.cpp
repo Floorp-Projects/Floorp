@@ -1203,7 +1203,7 @@ nsresult nsDocumentBindInfo::Bind(nsIURL* aURL, nsIStreamListener* aListener)
                                       (nsISupports **)&inet);
     if (NS_OK == rv) {
       rv = inet->OpenStream(m_Url, this);
-      NS_RELEASE(inet);
+      nsServiceManager::ReleaseService(kNetServiceCID, inet);
     }
 
     return rv;
@@ -1212,9 +1212,28 @@ nsresult nsDocumentBindInfo::Bind(nsIURL* aURL, nsIStreamListener* aListener)
 
 nsresult nsDocumentBindInfo::Stop(void)
 {
-    mStatus = NS_BINDING_ABORTED;
+  nsresult rv;
+  nsINetService* inet;
 
-    return NS_OK;
+  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+         ("DocLoader - Stop(...) called for %s.\n", m_Url->GetSpec()));
+
+  /* 
+   * Mark the IStreamListener as being aborted...  If more data is pushed
+   * down the stream, the connection will be aborted...
+   */
+  mStatus = NS_BINDING_ABORTED;
+
+  /* Stop the URL binding process... */
+  rv = nsServiceManager::GetService(kNetServiceCID,
+                                    kINetServiceIID,
+                                    (nsISupports **)&inet);
+  if (NS_SUCCEEDED(rv)) {
+    rv = inet->InterruptStream(m_Url);
+    nsServiceManager::ReleaseService(kNetServiceCID, inet);
+  }
+
+  return rv;
 }
 
 
