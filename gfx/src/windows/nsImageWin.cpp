@@ -210,7 +210,142 @@ nsImageWin::CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation)
 {
 
   
+  // call the correct sub routine for each blend
+  if( mNumBytesPixel==3 && ((nsImageWin*)aTheImage)->mNumBytesPixel==3)
+    this->Comp24to24((nsImageWin*)aTheImage,aULLocation);
 
+}
+
+//------------------------------------------------------------
+
+// lets build an alpha mask from this image
+PRBool  
+nsImageWin::SetAlphaMask(nsIImage *aTheMask)
+{
+PRInt32 num;
+LPBYTE  srcbits;
+
+  if(aTheMask && ((nsImageWin*)aTheMask)->mNumBytesPixel == 1)
+    {
+    mLocation.x = 0;
+    mLocation.y = 0;
+    mlphaDepth = 8;
+    mAlphaWidth = aTheMask->GetWidth();
+    mAlphaHeight = aTheMask->GetWidth();
+    num = mAlphaWidth*mAlphaHeight;
+    mARowBytes = aTheMask->GetLineStride();
+    mAlphaBits = new unsigned char[mARowBytes * mAlphaHeight];
+
+    srcbits = aTheMask->GetBits();
+    memcpy(mAlphaBits,srcbits,num); 
+    return(PR_TRUE);
+    }
+
+  return(PR_FALSE);
+}
+
+//------------------------------------------------------------
+
+// this routine has to flip the y, since the bits are in bottom scan
+// line to top.
+void 
+nsImageWin::Comp24to24(nsImageWin *aTheImage,nsPoint *aULLocation)
+{
+nsRect  arect,srect,drect,irect;
+PRInt32 dlinespan,slinespan,mlinespan,startx,starty,numbytes,numlines,x,y;
+LPBYTE  d1,d2,s1,s2,m1,m2;
+double  a1,a2;
+
+  if(mAlphaBits)
+    {
+    x = mLocation.x;
+    y = mLocation.y;
+    arect.SetRect(0,0,this->GetWidth(),this->GetHeight());
+    srect.SetRect(mLocation.x,mLocation.y,mAlphaWidth,mAlphaHeight);
+    arect.IntersectRect(arect,srect);
+    }
+  else
+    {
+    arect.SetRect(0,0,this->GetWidth(),this->GetHeight());
+    x = y = 0;
+    }
+
+  srect.SetRect(aULLocation->x,aULLocation->y,aTheImage->GetWidth(),aTheImage->GetHeight());
+  drect = arect;
+
+  if(irect.IntersectRect(srect,drect))
+    {
+    // calculate destination information
+    dlinespan = this->GetLineStride();
+    numbytes = this->CalcBytesSpan(irect.width);
+    numlines = irect.height;
+    startx = irect.x;
+    starty = this->GetHeight()-(irect.y+irect.height);
+    d1 = mImageBits +(starty*dlinespan)+(3*startx);
+
+    // get the intersection relative to the source rectangle
+    srect.SetRect(0,0,aTheImage->GetWidth(),aTheImage->GetHeight());
+    drect = irect;
+    drect.MoveBy(-aULLocation->x,-aULLocation->y);
+
+    drect.IntersectRect(drect,srect);
+    slinespan = aTheImage->GetLineStride();
+    startx = drect.x;
+    starty = aTheImage->GetHeight() - (drect.y+drect.height);
+    s1 = aTheImage->GetBits() + (starty*slinespan)+(3*startx);
+
+    if(mAlphaBits)
+      {
+      mlinespan = this->GetAlphaLineStride();
+      m1 = mAlphaBits;
+      numbytes/=3;
+
+      // now go thru the image and blend (remember, its bottom upwards)
+      for(y=0;y<numlines;y++)
+        {
+        s2 = s1;
+        d2 = d1;
+        m2 = m1;
+        for(x=0;x<numbytes;x++)
+          {
+          a1 = (*m2)/256.0;
+          a2 = 1.0-a1;
+          *d2 = (*d2)*a1 + (*s2)*a2;
+          d2++;
+          s2++;
+          
+          *d2 = (*d2)*a1 + (*s2)*a2;
+          d2++;
+          s2++;
+
+          *d2 = (*d2)*a1 + (*s2)*a2;
+          d2++;
+          s2++;
+          m2++;
+        }
+        s1 += slinespan;
+        d1 += dlinespan;
+        m1 += mlinespan;
+        }
+      }
+    else
+      {
+      // now go thru the image and blend (remember, its bottom upwards)
+      for(y=0;y<numlines;y++)
+        {
+        s2 = s1;
+        d2 = d1;
+        for(x=0;x<numbytes;x++)
+          {
+          *d2 = (*d2+*s2)/2;
+          d2++;
+          s2++;
+          }
+        s1 += slinespan;
+        d1 += dlinespan;
+        }
+      }
+    }
 
 }
 
@@ -309,19 +444,35 @@ void nsImageWin :: ComputePaletteSize(PRIntn nBitCount)
   {
 		case 8:
 			mNumPalleteColors = 256;
-      mNumBytesColor = 1;
+      mNumBytesPixel = 1;
       break;
 
 		case 24:
 			mNumPalleteColors = 0;
-      mNumBytesColor = 3;
+      mNumBytesPixel = 3;
       break;
 
 		default:
 			mNumPalleteColors = -1;
-      mNumBytesColor = 0;
+      mNumBytesPixel = 0;
       break;
   }
+}
+
+//------------------------------------------------------------
+
+PRInt32  nsImageWin :: CalcBytesSpan(PRUint32  aWidth)
+{
+PRInt32 spanbytes;
+
+  spanbytes = (aWidth * mBHead->biBitCount) / 32; 
+
+	if (((PRUint32)mBHead->biWidth * mBHead->biBitCount) % 32) 
+		spanbytes++;
+
+	spanbytes *= 4;
+
+  return(spanbytes);
 }
 
 //------------------------------------------------------------
@@ -333,12 +484,7 @@ void nsImageWin :: ComputeMetrics()
 
 	if (mSizeImage == 0) 
     {
-		mRowBytes = ((PRUint32) mBHead->biWidth * mBHead->biBitCount) / 32;
-
-		if (((PRUint32)mBHead->biWidth * mBHead->biBitCount) % 32) 
-			mRowBytes++;
-
-		mRowBytes *= 4;
+    mRowBytes = CalcBytesSpan(mBHead->biWidth);
 		mSizeImage = mRowBytes * mBHead->biHeight; // no compression
     }
 
@@ -388,7 +534,7 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
 
 	mColorTable = nsnull;
 	mNumPalleteColors = -1;
-  mNumBytesColor = 0;
+  mNumBytesPixel = 0;
 	mSizeImage = 0;
 	mHPalette = nsnull;
   mImageBits = nsnull;

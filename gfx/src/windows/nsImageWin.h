@@ -36,7 +36,7 @@ public:
   virtual PRInt32     GetHeight()         { return mBHead->biHeight; }
   virtual PRInt32     GetWidth()          { return mBHead->biWidth; }
   virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
-  virtual PRInt32     GetAlphaLineStride(){ return mBHead->biWidth; }
+  virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
   virtual PRUint8*    GetBits()           { return mImageBits; }
   virtual PRInt32     GetLineStride()     {return mRowBytes; }
   virtual PRBool      Draw(nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
@@ -83,6 +83,18 @@ public:
    */
   PRUintn     UsePalette(HDC* aHdc, PRBool bBackground = PR_FALSE);
 
+
+  /** 
+   * Calculate the number of bytes spaned for this image for a given width
+   * @param aWidth is the width to calculate the number of bytes for
+   * @return the number of bytes in this span
+   */
+  PRInt32  CalcBytesSpan(PRUint32  aWidth);
+
+  PRBool  SetAlphaMask(nsIImage *aTheMask);
+
+  void MoveAlphaMask(PRInt32 aX, PRInt32 aY){mLocation.x=aX;mLocation.y=aY;}
+
 private:
   /** 
    * Clean up the memory used nsImageWin.
@@ -94,20 +106,33 @@ private:
    * Calculate the amount of memory needed for the palette
    * @param  aBitCount is the number of bits per pixel
    */
-
   void ComputePaletteSize(PRIntn aBitCount);
+
+  /**
+   * Composite a 24 bit image into another 24 bit image
+   * @param aTheImage The image to blend into this image
+   * @param aULLocation The upper left coordinate to place the passed in image
+   */
+  void Comp24to24(nsImageWin *aTheImage,nsPoint *aULLocation);
+
+
   /** 
    * Calculate the amount of memory needed for the initialization of the pixelmap
    */
   void ComputeMetrics();
 
-  PRInt8              mNumBytesColor;     // number of bytes per color
+  PRInt8              mNumBytesPixel;     // number of bytes per pixel
   PRInt16             mNumPalleteColors;  // either 8 or 0
   PRInt32             mSizeImage;         // number of bytes
   PRInt32             mRowBytes;          // number of bytes per row
   PRUint8             *mColorTable;       // color table for the bitmap
   LPBYTE              mImageBits;         // starting address of DIB bits
   LPBYTE              mAlphaBits;         // alpha layer if we made one
+  PRInt8              mlphaDepth;         // alpha layer depth
+  PRInt16             mARowBytes;
+  PRInt16             mAlphaWidth;        // alpha layer width
+  PRInt16             mAlphaHeight;       // alpha layer height
+  nsPoint             mLocation;          // alpha mask location
   PRBool              mIsOptimized;       // Have we turned our DIB into a GDI?
   nsColorMap          *mColorMap;         // Redundant with mColorTable, but necessary
                                           // for Set/GetColorMap
@@ -117,12 +142,4 @@ private:
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
 };
 
-
-/* TODO
-===================================
-1.)  Share teh offscreen DC between other nsImageWin objects if nessasary
-
-
-
-*/
 #endif
