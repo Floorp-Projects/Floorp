@@ -121,19 +121,16 @@ struct nsStyleList : public nsStyleStruct {
 {0x05fb99f0, 0xca9c, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
 struct nsStyleMolecule : public nsStyleStruct {
-  PRUint8 borderSizeFlags[4];
-  nsMargin border;
-  PRUint8 borderStyle[4];
-  nscolor borderColor[4];
+  nsMargin border;              // in table (cell layout data)
   PRUint8 clear;
   PRUint8 clipFlags;
   PRUint8 cursor;
   PRUint8 display;
   PRUint8 direction;
   PRUint8 floats;
-  nsMargin margin;
-  nsMargin padding;
-  nsMargin borderPadding;
+  nsMargin margin;              //
+  nsMargin padding;             // in table (cell layout data)
+  nsMargin borderPadding;       //
   PRUint32 textDecoration;
   PRUint8 textAlign;
   PRInt32 whiteSpace;
