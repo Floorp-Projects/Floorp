@@ -89,7 +89,7 @@ bin2rc.exe:: bin2rc.c
 makedep.exe:: makedep.cpp
     $(CC) -MT /O2 /GB $**
 
-export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number INSTALL_FILES
+export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number
 
 !ifdef MOZ_FULLCIRCLE
 
