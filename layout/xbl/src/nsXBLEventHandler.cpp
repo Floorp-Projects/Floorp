@@ -611,15 +611,15 @@ nsXBLEventHandler::RemoveEventHandlers()
   handlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kEventAtom, type);
  
   // Figure out our type.
-  PRBool mouse = nsXBLBinding::IsMouseHandler(type);
-  if (mouse) {
-    mEventReceiver->RemoveEventListener(type, (nsIDOMMouseListener*)this, useCapture);
-    return;
-  }
-
   PRBool key = nsXBLBinding::IsKeyHandler(type);
   if (key) {
     mEventReceiver->RemoveEventListener(type, (nsIDOMKeyListener*)this, useCapture);
+    return;
+  }
+
+  PRBool mouse = nsXBLBinding::IsMouseHandler(type);
+  if (mouse) {
+    mEventReceiver->RemoveEventListener(type, (nsIDOMMouseListener*)this, useCapture);
     return;
   }
 
