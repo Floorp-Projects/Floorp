@@ -39,6 +39,7 @@
 #include "nsIJSContextStack.h"
 
 class nsIDocShell;
+class nsString;
 
 /////////////////////
 // nsIPrincipalKey //
@@ -91,12 +92,15 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCRIPTSECURITYMANAGER
     NS_DECL_NSIXPCSECURITYMANAGER
-    
+
     static nsScriptSecurityManager *
     GetScriptSecurityManager();
 
     JSContext * GetCurrentContextQuick();
+
 private:
+    static nsresult 
+    ReportErrorToConsole(nsIURI* aTarget);
 
 	nsresult
 	GetRootDocShell(JSContext *cx, nsIDocShell **result);

@@ -112,16 +112,22 @@ interface nsIScriptSecurityManager : nsISupports
     void checkLoadURI(in nsIURI from, in nsIURI uri, 
 	                  in unsigned long flags);
 
-  /**
-   * Check that the function 'funObj' is allowed to run on 'targetObj'
-   *
-   * Will return error code NS_ERROR_DOM_SECURITY_ERR if the function
-   * should not run
-   *
-   * @param cx The current active JavaScript context.
-   * @param funObj The function trying to run..
-   * @param targetObj The object the function will run on.
-   */
+	/**
+	 * Same as CheckLoadURI but takes string arguments for ease of use by scripts
+	 */
+    void checkLoadURIStr(in string from, in string uri, 
+	                     in unsigned long flags);
+
+    /**
+     * Check that the function 'funObj' is allowed to run on 'targetObj'
+     *
+     * Will return error code NS_ERROR_DOM_SECURITY_ERR if the function
+     * should not run
+     *
+     * @param cx The current active JavaScript context.
+     * @param funObj The function trying to run..
+     * @param targetObj The object the function will run on.
+     */
     [noscript] void checkFunctionAccess(in JSContextPtr cx, in voidPtr funObj,
                                         in voidPtr targetObj);
 

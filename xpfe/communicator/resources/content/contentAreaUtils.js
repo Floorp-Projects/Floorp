@@ -39,24 +39,18 @@
 
   function openNewWindowWith(url) {
 
- // URL Loading Security Check
-    const nsIStandardURL = Components.interfaces.nsIStandardURL;
-    const nsIURI = Components.interfaces.nsIURI;
-    const stdURL = Components.classes["@mozilla.org/network/standard-url;1"];
-
-    var sourceURL = stdURL.createInstance(nsIStandardURL);
-    var focusedWindow = document.commandDispatcher.focusedWindow;
+    // URL Loading Security Check
+	var focusedWindow = document.commandDispatcher.focusedWindow;
     var sourceWin = isDocumentFrame(focusedWindow) ? focusedWindow.location.href : window._content.location.href;
-    sourceURL.init(nsIStandardURL.URLTYPE_STANDARD, 80, sourceWin, null);
-
-    var targetURL = stdURL.createInstance(nsIStandardURL);
-    targetURL.init(nsIStandardURL.URLTYPE_STANDARD, 80, url, null);
 
     const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
     var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
                  QueryInterface(nsIScriptSecurityManager);
-    secMan.checkLoadURI(sourceURL, targetURL, nsIScriptSecurityManager.STANDARD);
-
+	try {
+      secMan.checkLoadURIStr(sourceWin, url, nsIScriptSecurityManager.STANDARD);
+    } catch (e) {
+	  throw "Load of " + url + " denied.";
+    }
     var newWin;
     var wintype = document.firstChild.getAttribute('windowtype');
      
