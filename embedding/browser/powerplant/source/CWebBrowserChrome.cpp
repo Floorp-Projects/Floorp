@@ -34,6 +34,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIRequest.h"
 #include "nsIChannel.h"
+#include "nsIDOMWindow.h"
 #include "nsIWalletService.h"
 
 #include "UMacUnicode.h"
@@ -146,8 +147,17 @@ NS_IMETHODIMP CWebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstanc
       NS_ENSURE_TRUE(mPrompter, NS_ERROR_FAILURE);
       return mPrompter->QueryInterface(aIID, aInstancePtr);
    }
-   else
-      return QueryInterface(aIID, aInstancePtr);
+
+   if (aIID.Equals(NS_GET_IID(nsIDOMWindow)))
+   {
+      nsCOMPtr<nsIWebBrowser> browser;
+      GetWebBrowser(getter_AddRefs(browser));
+      if (browser)
+         return browser->GetContentDOMWindow((nsIDOMWindow **) aInstancePtr);
+      return NS_ERROR_NOT_INITIALIZED;
+   }
+
+   return QueryInterface(aIID, aInstancePtr);
 }
 
 //*****************************************************************************
@@ -207,6 +217,13 @@ NS_IMETHODIMP CWebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt3
    {
       // CreateWindow can throw an we're being called from mozilla, so we need to catch
       theWindow = CBrowserWindow::CreateWindow(chromeMask, aCX, aCY);
+
+      // HACK Alert: Because nsIWebBrowserSiteWindow does not have a visibility attribute,
+      // our window will never be told to show itself. If we want it ever to show, we have
+      // to do it here. Once <http://bugzilla.mozilla.org/show_bug.cgi?id=68581> is fixed,
+      // remove this.
+
+      theWindow->SetVisibility(PR_TRUE);
    }
    catch (...)
    {
