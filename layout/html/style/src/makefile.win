@@ -19,7 +19,7 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=raptorhtmlstyle_s 
 MODULE=raptor 
-REQUIRES=xpcom raptor js
+REQUIRES=xpcom raptor dom js
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -38,7 +38,7 @@ CPP_OBJS=.\$(OBJDIR)\nsCSSKeywords.obj .\$(OBJDIR)\nsCSSLayout.obj \
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \
   -I..\..\..\base\src \
-  -I..\..\base\src -I$(PUBLIC)\js
+  -I..\..\base\src -I$(PUBLIC)\js -I$(PUBLIC)\dom
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -26,6 +26,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsEventListenerManager.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptContextOwner.h"
 
 #include "nsSelection.h"
 #include "nsIDOMText.h"
@@ -77,6 +78,7 @@ nsDocument::nsDocument()
   mParentDocument = nsnull;
   mRootContent = nsnull;
   mScriptObject = nsnull;
+  mScriptContextOwner = nsnull;
   mListenerManager = nsnull;
  
   if (NS_OK != NS_NewSelection(&mSelection)) {
@@ -113,6 +115,7 @@ nsDocument::~nsDocument()
 
   NS_IF_RELEASE(mArena);
   NS_IF_RELEASE(mSelection);
+  NS_IF_RELEASE(mScriptContextOwner);
 }
 
 nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -333,6 +336,28 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
   for (index = 0; index < count; index++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
     observer->StyleSheetAdded(aSheet);
+  }
+}
+
+nsIScriptContextOwner *nsDocument::GetScriptContextOwner()
+{
+  if (nsnull != mScriptContextOwner) {
+    NS_ADDREF(mScriptContextOwner);
+  }
+  
+  return mScriptContextOwner;
+}
+
+void nsDocument::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner)
+{
+  if (nsnull != mScriptContextOwner) {
+    NS_RELEASE(mScriptContextOwner);
+  }
+  
+  mScriptContextOwner = aScriptContextOwner;
+  
+  if (nsnull != mScriptContextOwner) {
+    NS_ADDREF(mScriptContextOwner);
   }
 }
 

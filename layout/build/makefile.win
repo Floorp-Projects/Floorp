@@ -20,7 +20,7 @@ DEPTH=..\..
 DEFINES=-D_IMPL_NS_HTML 
 
 MODULE=raptor 
-REQUIRES=xpcom raptor 
+REQUIRES=xpcom raptor dom
 
 CPPSRCS=dlldeps.cpp 
 
