@@ -299,7 +299,7 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
   // get the (collapsed) selection location
   res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
   if (NS_FAILED(res)) return res;
-  // get next node
+  // get prior node
   res = GetPriorHTMLNode(selNode, selOffset, &priorNode);
   if (NS_SUCCEEDED(res) && priorNode && IsMozBR(priorNode))    
   {
@@ -1014,8 +1014,6 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
   PRBool isCollapsed;
   aSelection->GetIsCollapsed(&isCollapsed);
   NS_ASSERTION(PR_TRUE==isCollapsed, "selection not collapsed after delete selection.");
-  // if the delete selection resulted in no content 
-  // insert a special bogus text node with a &nbsp; character in it.
   if (NS_SUCCEEDED(res)) // only do this work if DeleteSelection completed successfully
   {
     // if we don't have an empty document, check the selection to see if any collapsing is necessary
@@ -1047,7 +1045,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
       {
         nsCOMPtr<nsIDOMCharacterData>selectedNodeAsText;
         selectedNodeAsText = do_QueryInterface(selectedNode);
-        if (selectedNodeAsText)
+        if (selectedNodeAsText && mEditor->IsEditable(selectedNode))
         {
           nsCOMPtr<nsIDOMNode> siblingNode;
           selectedNode->GetPreviousSibling(getter_AddRefs(siblingNode));
@@ -1055,7 +1053,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
           {
             nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
             siblingNodeAsText = do_QueryInterface(siblingNode);
-            if (siblingNodeAsText)
+            if (siblingNodeAsText && mEditor->IsEditable(siblingNode))
             {
               PRUint32 siblingLength; // the length of siblingNode before the join
               siblingNodeAsText->GetLength(&siblingLength);
@@ -1072,7 +1070,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
           {
             nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
             siblingNodeAsText = do_QueryInterface(siblingNode);
-            if (siblingNodeAsText)
+            if (siblingNodeAsText && mEditor->IsEditable(siblingNode))
             {
               PRUint32 selectedNodeLength; // the length of siblingNode before the join
               selectedNodeAsText->GetLength(&selectedNodeLength);

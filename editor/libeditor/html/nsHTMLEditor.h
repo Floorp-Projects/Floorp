@@ -244,6 +244,8 @@ public:
   /* ------------ nsICSSLoaderObserver -------------- */
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
 
+  /* ------------ nsEditor overrides ---------------- */
+
   /** All editor operations which alter the doc should be prefaced
    *  with a call to StartOperation, naming the action and direction */
   NS_IMETHOD StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
@@ -252,6 +254,9 @@ public:
    *  with a call to EndOperation, naming the action and direction */
   NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
 
+  /** returns PR_TRUE if aParent can contain a child of type aTag */
+  PRBool CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
+  
   /* ------------ Utility Routines, not part of public API -------------- */
   NS_IMETHOD GetBodyStyleContext(nsIStyleContext** aStyleContext);
 

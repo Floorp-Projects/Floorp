@@ -128,6 +128,12 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   if (!mActionNesting)
   {
     mDocChangeRange = nsnull;  // clear out our accounting of what changed
+    // turn off caret
+    nsCOMPtr<nsIPresShell> pres;
+    mEditor->GetPresShell(getter_AddRefs(pres));
+    if (pres) pres->SetCaretEnabled(PR_FALSE);
+    // check that selection is in subtree defined by body node
+    ConfirmSelectionInBody();
   }
   mActionNesting++;
   return NS_OK;
@@ -145,6 +151,7 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   nsresult res = NS_OK;
   if (!--mActionNesting)
   {
+    ConfirmSelectionInBody();
     if (action == nsEditor::kOpIgnore) return NS_OK;
     
     nsCOMPtr<nsIDOMSelection>selection;
@@ -180,7 +187,13 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     if (NS_FAILED(res)) return res;
     // detect empty doc
     res = CreateBogusNodeIfNeeded(selection);
+
+    // turn on caret
+    nsCOMPtr<nsIPresShell> pres;
+    mEditor->GetPresShell(getter_AddRefs(pres));
+    if (pres) pres->SetCaretEnabled(PR_TRUE);
   }
+
   return res;
 }
 
@@ -306,6 +319,11 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
   res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
   if (NS_FAILED(res)) return res;
 
+  // dont put text in places that cant have it
+  nsAutoString textTag = "__moz_text";
+  if (!mEditor->IsTextNode(selNode) && !mEditor->CanContainTag(selNode, textTag))
+    return NS_ERROR_FAILURE;
+
   // split any mailcites in the way
   if (mFlags & nsIHTMLEditor::eEditorMailMask)
   {
@@ -362,44 +380,17 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         if (NS_FAILED(res)) return res;
       }
     }
-  
-/*    // if we are right after a moz br, delete it and make a new moz div
-    PRBool needMozDiv = PR_FALSE;
-    if (priorNode && IsBreak(priorNode) && HasMozAttr(priorNode)  
-         && (blockParent == mEditor->GetBlockNodeParent(priorNode)))
-    {
-      res = mEditor->DeleteNode(priorNode);
-      if (NS_FAILED(res)) return res;
-      // but we only need to make a moz div if we weren't in a listitem
-      if (!IsListItem(blockParent)) 
-        needMozDiv = PR_TRUE;
-    }
-  
-    // if we are directly in a body or (non-moz) div, create a moz-div.
-    // Also creat one if we detected a prior moz br (see above).
-    res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
-    if (NS_FAILED(res)) return res;
-    if (needMozDiv || IsBody(selNode) || IsNormalDiv(selNode))
-    {
-      // wrap things up in a moz-div
-      nsCOMPtr<nsIDOMNode> mozDiv;
-      res = CreateMozDiv(selNode, selOffset, &mozDiv);
-      if (NS_FAILED(res)) return res;
-      // put selection in it
-      res = aSelection->Collapse(mozDiv, 0);
-      if (NS_FAILED(res)) return res;
-    }
-*/}
+  }
   
   char nbspStr[2] = {nbsp, 0};
   PRBool bCancel;  
   nsString theString(*inString);  // copy instring for now
   if(aAction == kInsertTextIME) 
   { 
-	 // special case for IME. We need this to :
-	 // a) handle null strings, which are meaningful for IME
-	 // b) prevent the string from being broken into substrings,
-	 //    which can happen in non-IME processing below.
+     // special case for IME. We need this to :
+     // a) handle null strings, which are meaningful for IME
+     // b) prevent the string from being broken into substrings,
+     //    which can happen in non-IME processing below.
      // I should probably convert runs of spaces and tabs here as well
      res = DoTextInsertion(aSelection, &bCancel, &theString, typeInState);
   }
@@ -421,6 +412,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         if (NS_FAILED(res)) return res;
         res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
       }
+#if 0
       // is it a solo space?
       else if (partialString == " ")
       {
@@ -435,6 +427,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         if (NS_FAILED(res)) return res;
         res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
       }
+#endif
       // is it a solo return?
       else if (partialString == "\n")
       {
@@ -528,41 +521,6 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
     
   if (!blockParent) return NS_ERROR_FAILURE;
   
-/*  // break action depends on type of block
-  PRBool bIsMozDiv = IsMozDiv(blockParent);
-  PRBool bIsNormalDiv = IsNormalDiv(blockParent);
-  
-  // body or normal div: insert a normal br
-  if (IsBody(blockParent) || bIsNormalDiv)
-  {
-    nsCOMPtr<nsIDOMNode> brNode;
-    res = mEditor->InsertBR(&brNode);  
-    if (NS_FAILED(res)) return res;
-    *aHandled = PR_TRUE;
-  }
-  else if (bIsMozDiv)
-  {
-    // split it
-    PRInt32 newOffset;
-    res = mEditor->SplitNodeDeep( blockParent, node, offset, &newOffset);
-    if (NS_FAILED(res)) return res;
-    nsCOMPtr<nsIDOMNode> parent;
-    blockParent->GetParentNode(getter_AddRefs(parent));
-    nsCOMPtr <nsIDOMNode> rightDiv = nsEditor::GetChildAt(parent, newOffset);
-    if (!rightDiv || !IsMozDiv(rightDiv)) return NS_ERROR_FAILURE;
-    // put the trailer br at the end of the lefthand mozdiv
-    nsCOMPtr <nsIDOMNode> leftDiv;
-    res = GetPriorHTMLSibling(rightDiv, &leftDiv);
-    if (NS_FAILED(res)) return res;
-    if (!leftDiv || !IsMozDiv(leftDiv)) return NS_ERROR_FAILURE;
-    res = AddTrailerBR(leftDiv);
-    if (NS_FAILED(res)) return res;
-    // put selection at beginning of righthand mozdiv
-    res = aSelection->Collapse(rightDiv, 0);
-    if (NS_FAILED(res)) return res;
-    *aHandled = PR_TRUE;
-  }
-*/  
   // headers: close (or split) header
   else if (IsHeader(blockParent))
   {
@@ -677,14 +635,14 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
               if (mEditor->NodesSameType(node, priorNode))
               {
                 // if so, join them!
-	            nsCOMPtr<nsIDOMNode> topParent;
-	            priorNode->GetParentNode(getter_AddRefs(topParent));
-	            *aHandled = PR_TRUE;
-	            res = JoinNodesSmart(priorNode,node,&selNode,&selOffset);
-	            if (NS_FAILED(res)) return res;
-	            // fix up selection
-	            res = aSelection->Collapse(selNode,selOffset);
-	            return res;
+                nsCOMPtr<nsIDOMNode> topParent;
+                priorNode->GetParentNode(getter_AddRefs(topParent));
+                *aHandled = PR_TRUE;
+                res = JoinNodesSmart(priorNode,node,&selNode,&selOffset);
+                if (NS_FAILED(res)) return res;
+                // fix up selection
+                res = aSelection->Collapse(selNode,selOffset);
+                return res;
               }
             }
           }
@@ -775,14 +733,14 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
               if (mEditor->NodesSameType(node, nextNode))
               {
                 // if so, join them!
-	            nsCOMPtr<nsIDOMNode> topParent;
-	            nextNode->GetParentNode(getter_AddRefs(topParent));
-	            *aHandled = PR_TRUE;
-	            res = JoinNodesSmart(nextNode,node,&selNode,&selOffset);
-	            if (NS_FAILED(res)) return res;
-	            // fix up selection
-	            res = aSelection->Collapse(selNode,selOffset);
-	            return res;
+                nsCOMPtr<nsIDOMNode> topParent;
+                nextNode->GetParentNode(getter_AddRefs(topParent));
+                *aHandled = PR_TRUE;
+                res = JoinNodesSmart(nextNode,node,&selNode,&selOffset);
+                if (NS_FAILED(res)) return res;
+                // fix up selection
+                res = aSelection->Collapse(selNode,selOffset);
+                return res;
               }
             }
           }
@@ -881,18 +839,18 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
           res = GetPriorHTMLNode(nodeToDelete, &brNode);
           if (IsBreak(brNode))
           {
-			// is brNode also a descendant of same block?
-			nsCOMPtr<nsIDOMNode> block, brBlock;
-			block = mEditor->GetBlockNodeParent(nodeToDelete);
-			brBlock = mEditor->GetBlockNodeParent(brNode);
-			if (block == brBlock)
-			{
-			  // delete both breaks
-			  res = mEditor->DeleteNode(brNode);
-			  if (NS_FAILED(res)) return res;
-			  res = mEditor->DeleteNode(nodeToDelete);
+            // is brNode also a descendant of same block?
+            nsCOMPtr<nsIDOMNode> block, brBlock;
+            block = mEditor->GetBlockNodeParent(nodeToDelete);
+            brBlock = mEditor->GetBlockNodeParent(brNode);
+            if (block == brBlock)
+            {
+              // delete both breaks
+              res = mEditor->DeleteNode(brNode);
+              if (NS_FAILED(res)) return res;
+              res = mEditor->DeleteNode(nodeToDelete);
               *aHandled = PR_TRUE;
-			  return res;
+              return res;
             }
             // else fall through
           }
@@ -901,8 +859,8 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
         // adjust selection to be right after it
         res = aSelection->Collapse(node, offset+1);
         if (NS_FAILED(res)) return res;
-		res = mEditor->DeleteNode(nodeToDelete);
-		*aHandled = PR_TRUE;
+        res = mEditor->DeleteNode(nodeToDelete);
+        *aHandled = PR_TRUE;
         return res;
       }
     }
@@ -2951,13 +2909,13 @@ nsHTMLEditRules::ReturnInHeader(nsIDOMSelection *aSelection,
 //                       
 nsresult 
 nsHTMLEditRules::ReturnInParagraph(nsIDOMSelection *aSelection, 
-                                   nsIDOMNode *aHeader, 
+                                   nsIDOMNode *aPara, 
                                    nsIDOMNode *aNode, 
                                    PRInt32 aOffset,
                                    PRBool *aCancel,
                                    PRBool *aHandled)
 {
-  if (!aSelection || !aHeader || !aNode || !aCancel || !aHandled) 
+  if (!aSelection || !aPara || !aNode || !aCancel || !aHandled) 
     { return NS_ERROR_NULL_POINTER; }
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
@@ -2984,18 +2942,18 @@ nsHTMLEditRules::ReturnInParagraph(nsIDOMSelection *aSelection,
         // just fall out to default of inserting a BR
         return res;
       }
-      if (IsBreak(sibling))
+      if (IsBreak(sibling) && !HasMozAttr(sibling))
       {
         PRInt32 newOffset;
         *aCancel = PR_TRUE;
+        // split the paragraph
+        res = mEditor->SplitNodeDeep( aPara, aNode, aOffset, &newOffset);
+        if (NS_FAILED(res)) return res;
         // get rid of the break
         res = mEditor->DeleteNode(sibling);  
         if (NS_FAILED(res)) return res;
-        // split the paragraph
-        res = mEditor->SplitNodeDeep( aHeader, aNode, aOffset, &newOffset);
-        if (NS_FAILED(res)) return res;
-        // position selection inside textnode
-        res = aSelection->Collapse(aNode,0);
+        // position selection inside right hand para
+        res = aSelection->Collapse(aPara,0);
       }
       // else just fall out to default of inserting a BR
       return res;
@@ -3011,18 +2969,18 @@ nsHTMLEditRules::ReturnInParagraph(nsIDOMSelection *aSelection,
         // just fall out to default of inserting a BR
         return res;
       }
-      if (IsBreak(sibling))
+      if (IsBreak(sibling) && !HasMozAttr(sibling))
       {
         PRInt32 newOffset;
         *aCancel = PR_TRUE;
+        // split the paragraph
+        res = mEditor->SplitNodeDeep(aPara, aNode, aOffset, &newOffset);
+        if (NS_FAILED(res)) return res;
         // get rid of the break
         res = mEditor->DeleteNode(sibling);  
         if (NS_FAILED(res)) return res;
-        // split the paragraph
-        res = mEditor->SplitNodeDeep( aHeader, aNode, aOffset, &newOffset);
-        if (NS_FAILED(res)) return res;
-        // position selection inside textnode
-        res = aSelection->Collapse(aNode,0);
+        // position selection inside right hand para
+        res = aSelection->Collapse(aPara,0);
       }
       // else just fall out to default of inserting a BR
       return res;
@@ -3031,9 +2989,36 @@ nsHTMLEditRules::ReturnInParagraph(nsIDOMSelection *aSelection,
     // just fall out to default of inserting a BR
     return res;
   }
-  
-  // not in a text node.  are we next to BR's?
-  // moose XXX 
+  else
+  {
+    // not in a text node.  
+    // is there a BR prior to it?
+    nsCOMPtr<nsIDOMNode> nearNode;
+    res = GetPriorHTMLNode(aNode, aOffset, &nearNode);
+    if (NS_FAILED(res)) return res;
+    if (!nearNode || !IsBreak(nearNode) || HasMozAttr(nearNode)) 
+    {
+      // is there a BR after to it?
+      res = GetNextHTMLNode(aNode, aOffset, &nearNode);
+      if (NS_FAILED(res)) return res;
+      if (!nearNode || !IsBreak(nearNode) || HasMozAttr(nearNode)) 
+      {
+        // just fall out to default of inserting a BR
+        return res;
+      }
+    }
+    // else remove sibling br and split para
+    PRInt32 newOffset;
+    *aCancel = PR_TRUE;
+    // split the paragraph
+    res = mEditor->SplitNodeDeep( aPara, aNode, aOffset, &newOffset);
+    if (NS_FAILED(res)) return res;
+    // get rid of the break
+    res = mEditor->DeleteNode(nearNode);  
+    if (NS_FAILED(res)) return res;
+    // selection to beginning of right hand para
+    aSelection->Collapse(aPara,0);
+  }
   
   return res;
 }
@@ -3103,18 +3088,18 @@ nsHTMLEditRules::ReturnInListItem(nsIDOMSelection *aSelection,
       // if we fail, then that means we need toinsert a break
       res = AdjustSelection(aSelection, nsIEditor::eNext);
       if (NS_FAILED(res)) return res;
-	  // get the selection location
-	  nsCOMPtr<nsIDOMNode> selNode;
-	  PRInt32 selOffset;
-	  res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
-	  if (NS_FAILED(res)) return res;
+      // get the selection location
+      nsCOMPtr<nsIDOMNode> selNode;
+      PRInt32 selOffset;
+      res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+      if (NS_FAILED(res)) return res;
 
-	  // are we in a text node? 
-	  nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(selNode);
-	  if (!textNode) 
-	  {
-	    // time to insert a break
-	    nsCOMPtr<nsIDOMNode> brNode;
+      // are we in a text node? 
+      nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(selNode);
+      if (!textNode) 
+      {
+        // time to insert a break
+        nsCOMPtr<nsIDOMNode> brNode;
         res = CreateMozBR(selNode, selOffset, &brNode);
         if (NS_FAILED(res)) return res;
         res = nsEditor::GetNodeLocation(brNode, &selNode, &selOffset);
@@ -3131,18 +3116,6 @@ nsHTMLEditRules::ReturnInListItem(nsIDOMSelection *aSelection,
   res = mEditor->SplitNodeDeep( aListItem, aNode, aOffset, &newOffset);
   if (NS_FAILED(res)) return res;
   res = aSelection->Collapse(aListItem,0);
-#if 0
-  // insert a moz-br if new list item is empty
-  PRBool isEmptyNode;
-  nsCOMPtr<nsIDOMNode> brNode;
-  res = IsEmptyNode( aListItem, &isEmptyNode);
-  if (NS_FAILED(res)) return res;
-  if (isEmptyNode)
-  {
-    res = CreateMozBR(aListItem, 0, &brNode);
-    if (NS_FAILED(res)) return res;
-  }
-#endif
   return res;
 }
 
@@ -3666,7 +3639,7 @@ nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirect
   if (!aSelection) return NS_ERROR_NULL_POINTER;
   
   // if the selection isn't collapsed, do nothing.
-  // moose: one thing to do instead ischeck for the case of
+  // moose: one thing to do instead is check for the case of
   // only a single break selected, and collapse it.  Good thing?  Beats me.
   PRBool bCollapsed;
   nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
@@ -3674,14 +3647,26 @@ nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirect
   if (!bCollapsed) return res;
 
   // get the (collapsed) selection location
-  nsCOMPtr<nsIDOMNode> selNode;
+  nsCOMPtr<nsIDOMNode> selNode, temp;
   PRInt32 selOffset;
   res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
   if (NS_FAILED(res)) return res;
-
+  temp = selNode;
+  
+  // are we in an editable node?
+  while (!mEditor->IsEditable(selNode))
+  {
+    // scan up the tree until we find an editable place to be
+    res = nsEditor::GetNodeLocation(temp, &selNode, &selOffset);
+    if (NS_FAILED(res)) return res;
+    if (!selNode) return NS_ERROR_FAILURE;
+    temp = selNode;
+  }
+  
   // are we in a text node? 
   nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(selNode);
-  if (textNode) return NS_OK; // we LIKE it when we are in a text node.  that RULZ
+  if (textNode) 
+    return NS_OK; // we LIKE it when we are in a text node.  that RULZ
   
   // do we need to insert a special mozBR?  We do if we are:
   // 1) in a collapsed selection AND
@@ -3698,11 +3683,11 @@ nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirect
     if (NS_FAILED(res)) return res;
     if (bIsLast)
     {
-	  // is nearNode also a descendant of same block?
-	  nsCOMPtr<nsIDOMNode> block, nearBlock;
-	  if (mEditor->IsBlockNode(selNode)) block = selNode;
-	  else block = mEditor->GetBlockNodeParent(selNode);
-	  nearBlock = mEditor->GetBlockNodeParent(nearNode);
+      // is nearNode also a descendant of same block?
+      nsCOMPtr<nsIDOMNode> block, nearBlock;
+      if (mEditor->IsBlockNode(selNode)) block = selNode;
+      else block = mEditor->GetBlockNodeParent(selNode);
+      nearBlock = mEditor->GetBlockNodeParent(nearNode);
       if (block == nearBlock)
       {
         // need to insert special moz BR. Why?  Because if we don't
@@ -3711,10 +3696,10 @@ nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirect
         nsCOMPtr<nsIDOMNode> brNode;
         res = CreateMozBR(selNode, selOffset, &brNode);
         if (NS_FAILED(res)) return res;
-		res = nsEditor::GetNodeLocation(brNode, &selNode, &selOffset);
-		if (NS_FAILED(res)) return res;
-		res = aSelection->Collapse(selNode,selOffset+1);
-		if (NS_FAILED(res)) return res;
+        res = nsEditor::GetNodeLocation(brNode, &selNode, &selOffset);
+        if (NS_FAILED(res)) return res;
+        res = aSelection->Collapse(selNode,selOffset+1);
+        if (NS_FAILED(res)) return res;
       }
     }
     else
@@ -3723,16 +3708,37 @@ nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirect
       // with a mozBR already exiting after it.  In this case we have to
       // move the selection to after the mozBR so it will show up on the
       // empty line.
-	  nsCOMPtr<nsIDOMNode> nextNode;
-	  res = GetNextHTMLNode(nearNode, &nextNode);
-	  if (NS_FAILED(res)) return res;
-	  if (IsMozBR(nextNode))
-	  {
-		res = nsEditor::GetNodeLocation(nextNode, &selNode, &selOffset);
-		if (NS_FAILED(res)) return res;
-		res = aSelection->Collapse(selNode,selOffset+1);
-		if (NS_FAILED(res)) return res;
-	  }
+      nsCOMPtr<nsIDOMNode> nextNode;
+      res = GetNextHTMLNode(nearNode, &nextNode);
+      if (NS_FAILED(res)) return res;
+      if (nextNode && IsMozBR(nextNode))
+      {
+        res = nsEditor::GetNodeLocation(nextNode, &selNode, &selOffset);
+        if (NS_FAILED(res)) return res;
+        res = aSelection->Collapse(selNode,selOffset+1);
+        if (NS_FAILED(res)) return res;
+      }
+      else
+      {
+        // alright, not that either.  But there's one more squirrel to feed:
+        // the br might be right in front of a new block (ie,:
+        // <body> text<br> <ol><li>list item</li></ol></body>  )
+        // in this case we also need moz-br.
+        res = GetNextHTMLSibling(nearNode, &nextNode);
+        if (NS_FAILED(res)) return res;
+        if (nextNode && mEditor->IsBlockNode(nextNode))
+        {
+          // need to insert special moz BR. Why?  Because if we don't
+          // the user will see no new line for the break.  
+          nsCOMPtr<nsIDOMNode> brNode;
+          res = CreateMozBR(selNode, selOffset, &brNode);
+          if (NS_FAILED(res)) return res;
+          res = nsEditor::GetNodeLocation(brNode, &selNode, &selOffset);
+          if (NS_FAILED(res)) return res;
+          res = aSelection->Collapse(selNode,selOffset+1);
+          if (NS_FAILED(res)) return res;
+        }
+      }
     }
   }
   
@@ -3755,6 +3761,7 @@ nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirect
     dir = aAction;
   }
   // is the nearnode a text node?
+  if (!nearNode) return NS_OK; // couldn't find a near text node
   textNode = do_QueryInterface(nearNode);
   if (!textNode) return NS_ERROR_UNEXPECTED;
   PRInt32 offset = 0;
@@ -3931,21 +3938,21 @@ nsHTMLEditRules::DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aS
       if (runStr != newStr)
       {
         // delete the original whitespace run
-	    EditTxn *txn;
+        EditTxn *txn;
         // note 1: we are not telling edit listeners about these because they don't care
         // note 2: we are not wrapping these in a placeholder because we know they already are
         res = mEditor->CreateTxnForDeleteText(aTextNode, aStart+runStart, runEnd-runStart, (DeleteTextTxn**)&txn);
         if (NS_FAILED(res))  return res; 
-	    if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
+        if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
         res = mEditor->Do(txn); 
         if (NS_FAILED(res))  return res; 
         // The transaction system (if any) has taken ownwership of txn
         NS_IF_RELEASE(txn);
         
         // insert the new run
-	    res = mEditor->CreateTxnForInsertText(newStr, aTextNode, aStart+runStart, (InsertTextTxn**)&txn);
+        res = mEditor->CreateTxnForInsertText(newStr, aTextNode, aStart+runStart, (InsertTextTxn**)&txn);
         if (NS_FAILED(res))  return res; 
-	    if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
+        if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
         res = mEditor->Do(txn);
         // The transaction system (if any) has taken ownwership of txns.
         NS_IF_RELEASE(txn);
@@ -4078,36 +4085,68 @@ nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList)
 }
 
 
-// not needed for now - leaving around in case we go back to it
-#if 0
 nsresult 
-nsHTMLEditRules::AddTrailerBR(nsIDOMNode *aNode)
+nsHTMLEditRules::ConfirmSelectionInBody()
 {
-  // check parms
-  if (!aNode) return NS_ERROR_NULL_POINTER;
-  
   nsresult res = NS_OK;
-  // comfirm that this node is a type that we add trailer br's to:
-  // td, th, li
-  if (IsListItem(aNode)) // add more types later
+  nsCOMPtr<nsIDOMElement> bodyElement;   
+  nsCOMPtr<nsIDOMNode> bodyNode; 
+  
+  // get the body  
+  res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
+  if (NS_FAILED(res)) return res;
+  if (!bodyElement) return NS_ERROR_UNEXPECTED;
+  bodyNode = do_QueryInterface(bodyElement);
+
+  // get the selection
+  nsCOMPtr<nsIDOMSelection>selection;
+  res = mEditor->GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  
+  // get the selection start location
+  nsCOMPtr<nsIDOMNode> selNode, temp, parent;
+  PRInt32 selOffset;
+  res = mEditor->GetStartNodeAndOffset(selection, &selNode, &selOffset);
+  if (NS_FAILED(res)) return res;
+  temp = selNode;
+  
+  // check that selNode is inside body
+  while (temp && !IsBody(temp))
   {
-    PRUint32 count;
-    nsCOMPtr<nsIDOMNode> brNode;
-    res = mEditor->GetLengthOfDOMNode(aNode, count); 
-    if (NS_FAILED(res)) return res;
-    res = mEditor->CreateBR(aNode, count, &brNode);
-    if (NS_FAILED(res)) return res;
-    // give it special trailer attr
-    nsCOMPtr<nsIDOMElement> brElem = do_QueryInterface(brNode);
-    res = mEditor->SetAttribute(brElem, "type", "_moz_trailer");    
+    res = temp->GetParentNode(getter_AddRefs(parent));
+    temp = parent;
   }
-  else
+  
+  // if we aren't in the body, force the issue
+  if (!temp) 
   {
-    NS_NOTREACHED("editor error: nsHTMLEditRules::AddTrailerBR() called on bad node type");
+//    uncomment this to see when we get bad selections
+//    NS_NOTREACHED("selection not in body");
+    selection->Collapse(bodyNode,0);
   }
-  return res;
+  
+  // get the selection end location
+  res = mEditor->GetEndNodeAndOffset(selection, &selNode, &selOffset);
+  if (NS_FAILED(res)) return res;
+  temp = selNode;
+  
+  // check that selNode is inside body
+  while (temp && !IsBody(temp))
+  {
+    res = temp->GetParentNode(getter_AddRefs(parent));
+    temp = parent;
+  }
+  
+  // if we aren't in the body, force the issue
+  if (!temp) 
+  {
+//    uncomment this to see when we get bad selections
+//    NS_NOTREACHED("selection not in body");
+    selection->Collapse(bodyNode,0);
+  }
+  
 }
-#endif
+
 
 nsresult 
 nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
