@@ -107,7 +107,72 @@ static const char NEVER_ASK_FOR_OPEN_FILE_PREF[]    = "openFile";
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
-// The following static table lists all of the "default" content type mappings we are going to use.                 
+// Helper functions for Content-Disposition headers
+
+/** Gets the content-disposition header from a channel, using nsIHttpChannel
+ * or nsIMultipartChannel if available
+ * @param aChannel The channel to extract the disposition header from
+ * @param aDisposition Reference to a string where the header is to be stored
+ */
+static void ExtractDisposition(nsIChannel* aChannel, nsACString& aDisposition)
+{
+  aDisposition.Truncate();
+  // First see whether this is an http channel
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+  if (httpChannel) 
+  {
+    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"), aDisposition);
+  }
+  if (aDisposition.IsEmpty())
+  {
+    nsCOMPtr<nsIMultiPartChannel> multipartChannel(do_QueryInterface(aChannel));
+    if (multipartChannel)
+    {
+      multipartChannel->GetContentDisposition(aDisposition);
+    }
+  }
+
+}
+
+/** Extracts the filename out of a content-disposition header
+ * @param aFilename [out] The filename. Can be empty on error.
+ * @param aDisposition Value of a Content-Disposition header
+ * @param aURI Optional. Will be used to get a fallback charset for the
+ *        filename, if it is QI'able to nsIURL
+ * @param aMIMEHeaderParam Optional. Pointer to a nsIMIMEHeaderParam class, so
+ *        that it doesn't need to be fetched by this function.
+ */
+static void GetFilenameFromDisposition(nsAString& aFilename,
+                                       const nsACString& aDisposition,
+                                       nsIURI* aURI = nsnull,
+                                       nsIMIMEHeaderParam* aMIMEHeaderParam = nsnull)
+{
+  aFilename.Truncate();
+  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar(aMIMEHeaderParam);
+  if (!mimehdrpar) {
+    mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID);
+    if (!mimehdrpar)
+      return;
+  }
+
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+
+  nsCAutoString fallbackCharset;
+  if (url)
+    url->GetOriginCharset(fallbackCharset);
+  // Get the value of 'filename' parameter
+  nsresult rv = mimehdrpar->GetParameter(aDisposition, "filename", fallbackCharset, 
+                                         PR_TRUE, nsnull, aFilename);
+  if (NS_FAILED(rv) || aFilename.IsEmpty())
+    // Try 'name' parameter, instead.
+    rv = mimehdrpar->GetParameter(aDisposition, "name", fallbackCharset, PR_TRUE, 
+                                  nsnull, aFilename);
+
+  return;
+}
+
+
+// The following static table lists all of the "default" content type mappings we are going to use
 struct nsDefaultMimeTypeEntry {
   const char* mMimeType;
   const char* mFileExtension;
@@ -314,9 +379,29 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
 
+    // Firstly, get the content-disposition header
+    nsCAutoString disp;
+    ExtractDisposition(channel, disp);
+    if (!disp.IsEmpty()) {
+      nsAutoString filename;
+      GetFilenameFromDisposition(filename, disp, uri);
+      if (!filename.IsEmpty()) {
+        LOG(("Getting filename from disposition: Disp='%s', filename='%s'\n",
+             disp.get(), NS_ConvertUTF16toUTF8(filename).get()));
+        PRInt32 pointPos = filename.RFindChar('.');
+        if (pointPos != kNotFound) {
+          const nsAString & ext = Substring(filename, pointPos + 1, filename.Length() - pointPos);
+          CopyUTF16toUTF8(ext, fileExtension);
+          LOG(("...found extension '%s'\n", fileExtension.get()));
+        }
+      }
+    }
+    
+
     // If the method is post, don't bother getting the file extension;
     // it will belong to a CGI script anyway
-    if (uri && !methodIsPost) {
+    // Also, if we already have an extension, don't bother
+    if (uri && !methodIsPost && fileExtension.IsEmpty()) {
       url = do_QueryInterface(uri);
 
       if (url) {
@@ -915,25 +1000,12 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
    * permission...o.t. just use our temp file
    */
   nsCAutoString disp;
-  nsresult rv = NS_OK;
-  // First see whether this is an http channel
-  nsCOMPtr<nsIHttpChannel> httpChannel( do_QueryInterface( aChannel ) );
-  if ( httpChannel ) 
-  {
-    rv = httpChannel->GetResponseHeader( NS_LITERAL_CSTRING("content-disposition"), disp );
-  }
-  if ( NS_FAILED(rv) || disp.IsEmpty() )
-  {
-    nsCOMPtr<nsIMultiPartChannel> multipartChannel( do_QueryInterface( aChannel ) );
-    if ( multipartChannel )
-    {
-      rv = multipartChannel->GetContentDisposition( disp );
-    }
-  }
+  ExtractDisposition(aChannel, disp);
   // content-disposition: has format:
   // disposition-type < ; name=value >* < ; filename=value > < ; name=value >*
-  if ( NS_SUCCEEDED( rv ) && !disp.IsEmpty() ) 
+  if (!disp.IsEmpty()) 
   {
+    nsresult rv;
     nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
     if (NS_FAILED(rv))
       return;
@@ -956,25 +1028,7 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
 
     // We may not have a disposition type listed; some servers suck.
     // But they could have listed a filename anyway.
-    nsCOMPtr<nsIURI> srcUri;
-    GetSource(getter_AddRefs(srcUri));
-    nsCOMPtr<nsIURL> url = do_QueryInterface(srcUri);
-
-    nsCAutoString fallbackCharset;
-    nsAutoString fileName;
-    if (url)
-      url->GetOriginCharset(fallbackCharset);
-    // Get the value of 'filename' parameter
-    rv = mimehdrpar->GetParameter(disp, "filename", fallbackCharset, 
-                                  PR_TRUE, nsnull, fileName);
-    if (NS_FAILED(rv) || fileName.IsEmpty())
-      // Try 'name' parameter, instead.
-      rv = mimehdrpar->GetParameter(disp, "name",fallbackCharset, PR_TRUE, 
-                                    nsnull, fileName);
-    if (NS_FAILED(rv) || fileName.IsEmpty())
-      return;
-
-    mSuggestedFileName = fileName;
+    GetFilenameFromDisposition(mSuggestedFileName, disp, mSourceUrl, mimehdrpar);
 
 #ifdef XP_WIN
     // Make sure extension is still correct.
@@ -1207,7 +1261,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   // ignore failure...
   ExtractSuggestedFileNameFromChannel(aChannel); 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface( aChannel );
-  if ( httpChannel ) 
+  if (httpChannel) 
   {
     // Turn off content encoding conversions if needed
     PRBool applyConversion = PR_TRUE;
