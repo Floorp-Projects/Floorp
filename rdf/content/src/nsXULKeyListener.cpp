@@ -201,6 +201,7 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 
 nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventType)
 {
+#ifdef XP_MAC
   if(aKeyEvent && mDOMDocument) {
     // Get DOMEvent target
     nsIDOMNode* target = nsnull;
@@ -400,7 +401,9 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 	} // end while(keysetNode)
   } // end if(aKeyEvent && mDOMDocument) 
   return NS_ERROR_BASE;
-  
+#else
+  return NS_OK;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////
