@@ -92,7 +92,6 @@ EXPORTS		= \
 		nsFrameManager.h \
 		nsFrameManagerBase.h \
 		nsFrameTraversal.h \
-		nsIAutoCopy.h \
 		nsICaret.h \
 		nsIDocumentViewer.h \
 		nsIFrameSelection.h \
@@ -114,7 +113,6 @@ EXPORTS		= \
 		$(NULL)
 
 CPPSRCS		= \
-		nsAutoCopy.cpp \
 		nsBidiUtils.cpp \
 		nsCSSColorUtils.cpp \
 		nsCSSFrameConstructor.cpp \

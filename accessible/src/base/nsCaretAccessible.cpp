@@ -127,7 +127,7 @@ NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrent
   return selPrivate->AddSelectionListener(this);
 }
 
-NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason)
+NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, PRInt16 aReason)
 {
 #ifdef MOZ_ACCESSIBILITY_ATK
   if (nsAccessibleText::gSuppressedNotifySelectionChanged)

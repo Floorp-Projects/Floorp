@@ -93,7 +93,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIDeviceContext.h"
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
-#include "nsIAutoCopy.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 
@@ -103,6 +102,9 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #include "nsISelectionController.h"//for the enums
 #include "nsHTMLAtoms.h"
+#include "nsAutoCopyListener.h"
+#include "nsCopySupport.h"
+#include "nsIClipboard.h"
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mShell) return NS_ERROR_FAILURE;}
 
@@ -915,14 +917,13 @@ nsSelection::nsSelection()
   // Check to see if the autocopy pref is enabled
   //   and add the autocopy listener if it is
   if (nsContentUtils::GetBoolPref("clipboard.autocopy")) {
-    nsCOMPtr<nsIAutoCopyService> autoCopyService = 
-      do_GetService("@mozilla.org/autocopy;1");
+    nsAutoCopyListener *autoCopy = nsAutoCopyListener::GetInstance();
 
-    if (autoCopyService) {
+    if (autoCopy) {
       PRInt8 index =
         GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
       if (mDomSelections[index]) {
-        autoCopyService->Listen(mDomSelections[index]);
+        autoCopy->Listen(mDomSelections[index]);
       }
     }
   }
@@ -7384,4 +7385,64 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
       shell->SetCaretBidiLevel(levelAfter);
   }
   return NS_OK;
+}
+
+
+// nsAutoCopyListener
+
+nsAutoCopyListener* nsAutoCopyListener::sInstance = nsnull;
+
+NS_IMPL_ISUPPORTS1(nsAutoCopyListener, nsISelectionListener)
+
+/*
+ * What we do now:
+ * On every selection change, we copy to the clipboard anew, creating a
+ * HTML buffer, a transferable, an nsISupportsString and
+ * a huge mess every time.  This is basically what nsPresShell::DoCopy does
+ * to move the selection into the clipboard for Edit->Copy.
+ * 
+ * What we should do, to make our end of the deal faster:
+ * Create a singleton transferable with our own magic converter.  When selection
+ * changes (use a quick cache to detect ``real'' changes), we put the new
+ * nsISelection in the transferable.  Our magic converter will take care of
+ * transferable->whatever-other-format when the time comes to actually
+ * hand over the clipboard contents.
+ *
+ * Other issues:
+ * - which X clipboard should we populate?
+ * - should we use a different one than Edit->Copy, so that inadvertant
+ *   selections (or simple clicks, which currently cause a selection
+ *   notification, regardless of if they're in the document which currently has
+ *   selection!) don't lose the contents of the ``application''?  Or should we
+ *   just put some intelligence in the ``is this a real selection?'' code to
+ *   protect our selection against clicks in other documents that don't create
+ *   selections?
+ * - maybe we should just never clear the X clipboard?  That would make this 
+ *   problem just go away, which is very tempting.
+ */
+
+NS_IMETHODIMP
+nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
+                                           nsISelection *aSel, PRInt16 aReason)
+{
+  if (!(aReason & nsISelectionListener::MOUSEUP_REASON   || 
+        aReason & nsISelectionListener::SELECTALL_REASON ||
+        aReason & nsISelectionListener::KEYPRESS_REASON))
+    return NS_OK; //dont care if we are still dragging
+
+  PRBool collapsed;
+  if (!aDoc || !aSel ||
+      NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed) {
+#ifdef DEBUG_CLIPBOARD
+    fprintf(stderr, "CLIPBOARD: no selection/collapsed selection\n");
+#endif
+    /* clear X clipboard? */
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  // call the copy code
+  return nsCopySupport::HTMLCopy(aSel, doc, nsIClipboard::kSelectionClipboard);
 }

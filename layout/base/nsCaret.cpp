@@ -423,7 +423,7 @@ NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
 #endif
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aDomSel, short aReason)
+NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aDomSel, PRInt16 aReason)
 {
   if (aReason & nsISelectionListener::MOUSEUP_REASON)//this wont do
     return NS_OK;

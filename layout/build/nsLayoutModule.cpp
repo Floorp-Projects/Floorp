@@ -120,7 +120,6 @@
 #include "nsTextTransformer.h"
 #include "nsIFrameTraversal.h"
 #include "nsISelectionImageService.h"
-#include "nsIAutoCopy.h"
 #include "nsCSSLoader.h"
 #include "nsXULAtoms.h"
 #include "nsLayoutCID.h"
@@ -148,6 +147,7 @@
 #include "nsScriptNameSpaceManager.h"
 #include "nsIControllerContext.h"
 #include "nsDOMScriptObjectFactory.h"
+#include "nsAutoCopyListener.h"
 
 class nsIDocumentLoaderFactory;
 
@@ -436,6 +436,7 @@ Shutdown()
   nsDOMClassInfo::ShutDown();
   nsTextControlFrame::ShutDown();
   nsXBLWindowKeyHandler::ShutDown();
+  nsAutoCopyListener::Shutdown();
 }
 
 #ifdef NS_DEBUG
@@ -460,7 +461,6 @@ nsresult NS_NewCanvasRenderingContext2D(nsICanvasRenderingContext2D** aResult);
 #endif
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
-nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
 nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult);
 
 nsresult NS_NewSelection(nsIFrameSelection** aResult);
@@ -535,7 +535,6 @@ MAKE_CTOR(CreateNewCanvasBoxObject,     nsIBoxObject,           NS_NewCanvasBoxO
 MAKE_CTOR(CreateNewCanvasRenderingContext2D, nsICanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
 #endif
 #endif
-MAKE_CTOR(CreateNewAutoCopyService,     nsIAutoCopyService,     NS_NewAutoCopyService)
 MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
 #ifdef MOZ_SVG
 #ifdef MOZ_SVG_RENDERER_GDIPLUS
@@ -908,11 +907,6 @@ static const nsModuleComponentInfo gComponents[] = {
 #endif /* MOZ_ENABLE_CAIRO */
 
 #endif
-
-  { "AutoCopy Service",
-    NS_AUTOCOPYSERVICE_CID,
-    "@mozilla.org/autocopy;1",
-    CreateNewAutoCopyService },
 
   { "Namespace manager",
     NS_NAMESPACEMANAGER_CID,

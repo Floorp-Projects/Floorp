@@ -35,30 +35,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsAutoCopyListener_h_
+#define nsAutoCopyListener_h_
 
-#include "nsISupports.h"
+#include "nsISelectionListener.h"
+#include "nsISelectionPrivate.h"
 
-
-#ifndef nsIAutoCopyService_h__
-#define nsIAutoCopyService_h__
-
-// {558B93CD-95C1-417d-A66E-F9CA66DC98A8}
-#define NS_IAUTOCOPYSERVICE_IID \
-{ 0x558b93cd, 0x95c1, 0x417d, { 0xa6, 0x6e, 0xf9, 0xca, 0x66, 0xdc, 0x98, 0xa8 } }
-
-
-class nsISelection;
-
-class nsIAutoCopyService : public nsISupports
+class nsAutoCopyListener : public nsISelectionListener
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IAUTOCOPYSERVICE_IID)
-  
-  //This will add this service as a selection listener.
-  NS_IMETHOD Listen(nsISelection *aDomSelection)=0;
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISELECTIONLISTENER
 
+  void Listen(nsISelectionPrivate *aSelection)
+  {
+      NS_ASSERTION(aSelection, "Null selection passed to Listen()");
+      aSelection->AddSelectionListener(this);
+  }
+
+  static nsAutoCopyListener* GetInstance()
+  {
+    if (!sInstance) {
+      sInstance = new nsAutoCopyListener();
+      if (!sInstance)
+        return nsnull;
+
+      NS_ADDREF(sInstance);
+    }
+
+    return sInstance;
+  }
+
+  static void Shutdown()
+  {
+    NS_IF_RELEASE(sInstance);
+  }
+
+private:
+  static nsAutoCopyListener* sInstance;
 };
 
-
-#endif //nsIAutoCopyService_h__
-
+#endif
