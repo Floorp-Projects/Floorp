@@ -78,6 +78,8 @@ protected:
 private:
   CImageList m_imageList;             // padlocks to show which prefs are locked
   CString m_strXMLFile;               // the XML file used to load the m_pPrefXMLTree, and hence the tree control
+  CString m_strXMLVersion;            // the client version for the XML file
+  CString m_strXMLSubVersion;         // minor version inside the XML file
 
   // Stuff for Find and FindNext.
   HTREEITEM m_hNextFind;

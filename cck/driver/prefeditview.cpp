@@ -261,6 +261,25 @@ void CPrefEditView::startElement(const char *name, const char **atts)
     m_pParsingPrefElement = new CPrefElement;
   }
 
+  else if (stricmp(name, "METAPREFS") == 0)
+  {
+    ASSERT(atts[2]);  // there must be a clientversion and subversion attribute
+
+    // Process the list of attribute/value pairs.
+    int i = 0;
+    while(atts[i])
+    {
+      const char* attrName = atts[i++];
+      const char* attrVal = atts[i++];
+
+      if (stricmp(attrName, "clientversion") == 0)
+        m_strXMLVersion = attrVal;
+      else if (stricmp(attrName, "subversion") == 0)
+        m_strXMLSubVersion = attrVal;
+    }
+
+  }
+
   // Pass on all subelements to the pref element object to handle.
   if (m_pParsingPrefElement)
     m_pParsingPrefElement->startElement(name, atts);
@@ -554,9 +573,19 @@ BOOL CPrefEditView::DoSavePrefsTree(CString strFile)
     return FALSE;
   }
 
+  // start the outermost tag 
+  CString strOuter;
+  strOuter.Format("<METAPREFS clientversion=\"%s\" subversion=\"%s\">\n\n", m_strXMLVersion, m_strXMLSubVersion);
+  fwrite(strOuter, strOuter.GetLength(), 1, fp);
+
+
   CTreeCtrl &treeCtrl = GetTreeCtrl();
   HTREEITEM hRoot = treeCtrl.GetRootItem();
   WriteXMLItem(fp, 1, hRoot);
+
+  // close the outermost tag
+  strOuter = "</METAPREFS>";
+  fwrite(strOuter, strOuter.GetLength(), 1, fp);
 
   fclose(fp);
   return TRUE;
