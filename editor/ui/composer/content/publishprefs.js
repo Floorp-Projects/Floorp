@@ -48,7 +48,8 @@ const gDirListIndex = 5;
 function GetPublishPrefsBranch()
 {
   var prefsService = GetPrefsService();
-  if (!prefsService) return;
+  if (!prefsService)
+    return null;
 
   return prefsService.getBranch("editor.publish.");
 }
