@@ -5,9 +5,6 @@
 <!ENTITY enbJavaCheck.label           "Enable Java">
 <!ENTITY enbJavaCheck.accesskey       "j">
 
-<!ENTITY useProgressDialogs.label     "Display a progress window when starting a download">
-<!ENTITY useProgressDialogs.accesskey "D">
-
 <!ENTITY sendAddFtpCheck.label        "Send this email address as anonymous FTP password:">
 <!ENTITY sendAddFtpCheck.accesskey    "e">
 <!ENTITY general.label "General">

@@ -13,7 +13,7 @@
       onload="Startup();" onunload="Shutdown();">
       
   <script type="application/x-javascript" src="chrome://browser/content/downloads/downloadPanel.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
