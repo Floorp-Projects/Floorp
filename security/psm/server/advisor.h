@@ -135,7 +135,8 @@ SSMStatus SSMSecurityAdvisorContext_Print(SSMResource *res,
                                          char *fmt, PRIntn numParam,
                                          char **value, char **resultStr);
 
-SSMStatus SSMSecurityAdvisorContext_DoPKCS12Response(HTTPRequest *req,
+SSMStatus SSMSecurityAdvisorContext_DoPKCS12Response(SSMSecurityAdvisorContext *cx,
+                                                     HTTPRequest *req,
                                            			const char  *responseKey);
 
 SSMStatus SSMSecurityAdvisorContext_DoPKCS12Restore(SSMSecurityAdvisorContext *res,

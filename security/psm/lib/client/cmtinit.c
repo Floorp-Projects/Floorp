@@ -108,7 +108,9 @@ setWorkingDir(char *path)
 static CMTStatus
 launch_psm(char *executable)
 {
+#ifndef XP_MAC
     char command[MAX_PATH_LEN];
+#endif
 #ifdef WIN32
     STARTUPINFO sui;
     PROCESS_INFORMATION pi;
@@ -161,12 +163,14 @@ PCMT_CONTROL CMT_EstablishControlConnection(char            *inPath,
                                             CMT_MUTEX       *mutex)
 {
     PCMT_CONTROL control;
+#ifndef XP_MAC
     char *executable;
     char *newWorkingDir;
     char oldWorkingDir[MAX_PATH_LEN];
+    size_t stringLen;
+#endif    
     int i;
     char *path = NULL;
-    size_t stringLen;
 
     /*	On the Mac, we do special magic in the Seamonkey PSM component, so
     	if PSM isn't launched by the time we reach this point, we're not doing well. */

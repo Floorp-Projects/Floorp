@@ -823,8 +823,11 @@ ssm_certdb_name_cb(void *arg, int dbVersion)
 
 #ifdef XP_MAC
 	/* on Mac, :: means parent directory. does non-Mac get // with Seamonkey? */
-    PR_ASSERT(configdir[strlen(configdir) - 1] == ':');
-    return PR_smprintf("%sCertificates%s", configdir, dbver);
+    if(configdir[PL_strlen(configdir) - 1] == ':') {
+    	return PR_smprintf("%sCertificates%s", configdir, dbver);
+    } else {
+    	return PR_smprintf("%s:Certificates%s", configdir, dbver);
+    }
 #else
     return PR_smprintf("%s/cert%s.db", configdir, dbver);
 #endif
@@ -845,8 +848,11 @@ static char *ssm_keydb_name_cb(void *arg, int dbVersion)
       break;
     }
 #ifdef XP_MAC
-    PR_ASSERT(configdir[strlen(configdir) - 1] == ':');
-    return PR_smprintf("%sKey Database%s", configdir, dbver);
+    if (configdir[PL_strlen(configdir) - 1] == ':') {
+    	return PR_smprintf("%sKey Database%s", configdir, dbver);
+    } else {
+    	return PR_smprintf("%s:Key Database%s", configdir, dbver);
+    }
 #else
     return PR_smprintf("%s/key%s.db", configdir, dbver);
 #endif
@@ -926,8 +932,11 @@ ssm_OpenSecModDB(const char * configdir)
 #ifdef XP_UNIX
     secmodname = PR_smprintf("%s/secmodule.db", configdir);
 #elif defined(XP_MAC)
-    PR_ASSERT(configdir[strlen(configdir) - 1] == ':');
-    secmodname = PR_smprintf("%sSecurity Modules", configdir);
+    if (configdir[PL_strlen(configdir) - 1] == ':') {
+    	secmodname = PR_smprintf("%sSecurity Modules", configdir);
+    } else {
+    	secmodname = PR_smprintf("%s:Security Modules", configdir);
+    }
 #else
     secmodname = PR_smprintf("%s/secmod.db", configdir);
 #endif
