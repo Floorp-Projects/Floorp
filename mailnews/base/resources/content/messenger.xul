@@ -39,6 +39,7 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/widgetglue.js"/>
 <html:script src="chrome://messenger/content/commandglue.js"/>
 <html:script src="chrome://messenger/content/shareglue.js"/>
+<html:script src="chrome://messenger/content/msgViewNavigation.js"/>
 
   <broadcaster id="Messenger:Throbber" busy="false"/>
   <broadcaster id="Messenger:Status"/>
