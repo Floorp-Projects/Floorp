@@ -47,6 +47,11 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+#mailContent {
+  -moz-appearance: toolbox;
+  background-color: -moz-Dialog;
+}
+
 /* ::::: Folder Pane ::::: */
 
 treechildren::-moz-tree-image(folderNameCol) {
@@ -999,13 +1004,19 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 /* ..... folder pane adjustments ..... */
 
 #folderPaneHeaderContainer {
-  border-top: 1px solid ThreeDHighlight; 
+  background-color: transparent;
 }
 
 #folderPaneHeader {
   height: 29px;
   border-bottom: none;
   border-top: none;
+  background-color: transparent;
+  border-top: 1px solid ThreeDHighlight;
+}
+
+#folderpane-title {
+  padding-left: 4px;
 }
 
 /* ::::: border adjustments for focus ring and joined splitters ::::: */
@@ -1017,6 +1028,7 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
   border-left: none;
   border-right: none;
   border-bottom: none;
+  background-color: transparent;
 }
 
 #gray_vertical_splitter,
@@ -1049,4 +1061,5 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 #searchBox {
   border-top: 1px solid ThreeDHighlight;
   height: 30px;
+  background-color: transparent;
 }
