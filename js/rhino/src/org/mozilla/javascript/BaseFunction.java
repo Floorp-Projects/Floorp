@@ -262,7 +262,7 @@ public class BaseFunction extends IdScriptable implements Function {
      * {@link #construct} will set scope and prototype on the result
      * {@link #call} unless they are already set.
      */
-    protected Scriptable createObject(Context cx, Scriptable scope)
+    public Scriptable createObject(Context cx, Scriptable scope)
     {
         Scriptable newInstance = new NativeObject();
         newInstance.setPrototype(getClassPrototype());

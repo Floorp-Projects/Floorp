@@ -93,7 +93,7 @@ public class IdFunction extends BaseFunction
         return master.execMethod(methodId, this, cx, scope, thisObj, args);
     }
 
-    protected Scriptable createObject(Context cx, Scriptable scope)
+    public Scriptable createObject(Context cx, Scriptable scope)
     {
         if (useCallAsConstructor) {
             return null;

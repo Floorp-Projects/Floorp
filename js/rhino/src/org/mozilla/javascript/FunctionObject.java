@@ -448,7 +448,7 @@ public class FunctionObject extends BaseFunction
      * Return null to indicate that the call method should be used to create
      * new objects.
      */
-    protected Scriptable createObject(Context cx, Scriptable scope) {
+    public Scriptable createObject(Context cx, Scriptable scope) {
         if (method == null || parmsLength == VARARGS_CTOR) {
             return null;
         }

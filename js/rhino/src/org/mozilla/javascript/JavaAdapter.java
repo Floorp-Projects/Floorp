@@ -886,7 +886,7 @@ final class JavaAdapterConstructor extends JIFunction
         super("JavaAdapter", 1);
     }
 
-    protected Scriptable createObject(Context cx, Scriptable scope)
+    public Scriptable createObject(Context cx, Scriptable scope)
     {
         return null;
     }
