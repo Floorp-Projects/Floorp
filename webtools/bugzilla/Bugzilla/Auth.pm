@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Bradley Baetz <bbaetz@acm.org>
+#                 Erik Stambaugh <erik@dasbistro.com>
 
 package Bugzilla::Auth;
 
@@ -26,22 +27,33 @@ use strict;
 use Bugzilla::Config;
 use Bugzilla::Constants;
 
-# 'inherit' from the main loginmethod
-BEGIN {
-    my $loginmethod = Param("loginmethod");
-    if ($loginmethod =~ /^([A-Za-z0-9_\.\-]+)$/) {
-        $loginmethod = $1;
-    }
-    else {
-        die "Badly-named loginmethod '$loginmethod'";
-    }
-    require "Bugzilla/Auth/" . $loginmethod . ".pm";
+# The verification method that was successfully used upon login, if any
+my $current_verify_class = undef;
 
-    our @ISA;
-    push (@ISA, "Bugzilla::Auth::" . $loginmethod);
+# 'inherit' from the main verify method
+BEGIN {
+    for my $verifyclass (split /,\s*/, Param("user_verify_class")) {
+        if ($verifyclass =~ /^([A-Za-z0-9_\.\-]+)$/) {
+            $verifyclass = $1;
+        } else {
+            die "Badly-named user_verify_class '$verifyclass'";
+        }
+        require "Bugzilla/Auth/Verify/" . $verifyclass . ".pm";
+    }
 }
 
 # PRIVATE
+
+# A number of features, like password change requests, require the DB
+# verification method to be on the list.
+sub has_db {
+    for (split (/[\s,]+/, Param("user_verify_class"))) {
+        if (/^DB$/) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 # Returns the network address for a given ip
 sub get_netaddr {
@@ -61,6 +73,53 @@ sub get_netaddr {
     return join(".", unpack("CCCC", pack("N", $addr)));
 }
 
+# This is a replacement for the inherited authenticate function
+# go through each of the available methods for each function
+sub authenticate {
+    my $class = shift;
+    my @args   = @_;
+    my @firstresult = ();
+    my @result = ();
+    for my $method (split /,\s*/, Param("user_verify_class")) {
+        $method = "Bugzilla::Auth::Verify::" . $method;
+        @result = $method->authenticate(@args);
+        @firstresult = @result unless @firstresult;
+
+        if (($result[0] != AUTH_NODATA)&&($result[0] != AUTH_LOGINFAILED)) {
+            $current_verify_class = $method;
+            return @result;
+        }
+    }
+    @result = @firstresult;
+    # no auth match
+
+    # see if we can set $current to the first verify method that
+    # will allow a new login
+
+    for my $method (split /,\s*/, Param("user_verify_class")) {
+        $method = "Bugzilla::Auth::Verify::" . $method;
+        if ($method->can_edit('new')) {
+            $current_verify_class = $method;
+        }
+    }
+
+    return @result;
+}
+
+sub can_edit {
+    my ($class, $type) = @_;
+    if ($current_verify_class) {
+        return $current_verify_class->can_edit($type);
+    }
+    # $current_verify_class will not be set if the user isn't logged in.  That
+    # happens when the user is trying to create a new account, which (for now)
+    # is hard-coded to work with DB.
+    elsif (has_db) {
+        return Bugzilla::Auth::Verify::DB->can_edit($type);
+    }
+    return 0;
+}
+
 1;
 
 __END__
@@ -78,16 +137,8 @@ used to obtain the data (from CGI, email, etc), and the other set uses
 this data to authenticate against the datasource (the Bugzilla DB, LDAP,
 cookies, etc).
 
-The handlers for the various types of authentication
-(DB/LDAP/cookies/etc) provide the actual code for each specific method
-of authentication.
-
-The source modules (currently, only
-L<Bugzilla::Auth::CGI|Bugzilla::Auth::CGI>) then use those methods to do
-the authentication.
-
-I<Bugzilla::Auth> itself inherits from the default authentication handler,
-identified by the I<loginmethod> param.
+Modules for obtaining the data are located under L<Bugzilla::Auth::Login>, and
+modules for authenticating are located in L<Bugzilla::Auth::Verify>.
 
 =head1 METHODS
 
@@ -108,7 +159,9 @@ only some addresses.
 =head1 AUTHENTICATION
 
 Authentication modules check a user's credentials (username, password,
-etc) to verify who the user is.
+etc) to verify who the user is.  The methods that C<Bugzilla::Auth> uses for
+authentication are wrappers that check all configured modules (via the
+C<Param('user_info_class')> and C<Param('user_verify_class')>) in sequence.
 
 =head2 METHODS
 
@@ -175,19 +228,36 @@ Note that this argument is a string, not a tag.
 
 =back
 
+=item C<current_verify_class>
+
+This scalar gets populated with the full name (eg.,
+C<Bugzilla::Auth::Verify::DB>) of the verification method being used by the
+current user.  If no user is logged in, it will contain the name of the first
+method that allows new users, if any.  Otherwise, it carries an undefined
+value.
+
 =item C<can_edit>
 
-This determines if the user's account details can be modified. If this
-method returns a C<true> value, then accounts can be created and
-modified through the Bugzilla user interface. Forgotten passwords can
-also be retrieved through the L<Token interface|Bugzilla::Token>.
+This determines if the user's account details can be modified.  It returns a
+reference to a hash with the keys C<userid>, C<login_name>, and C<realname>,
+which determine whether their respective profile values may be altered, and
+C<new>, which determines if new accounts may be created.
+
+Each user verification method (chosen with C<Param('user_verify_class')> has
+its own set of can_edit values.  Calls to can_edit return the appropriate
+values for the current user's login method.
+
+If a user is not logged in, C<can_edit> will contain the values of the first
+verify method that allows new users to be created, if available.  Otherwise it
+returns an empty hash.
 
 =back
 
 =head1 LOGINS
 
 A login module can be used to try to log in a Bugzilla user in a
-particular way. For example, L<Bugzilla::Auth::CGI|Bugzilla::Auth::CGI>
+particular way. For example,
+L<Bugzilla::Auth::Login::WWW::CGI|Bugzilla::Auth::Login::WWW::CGI>
 logs in users from CGI scripts, first by using form variables, and then
 by trying cookies as a fallback.
 
@@ -250,5 +320,5 @@ user-performed password changes.
 
 =head1 SEE ALSO
 
-L<Bugzilla::Auth::CGI>, L<Bugzilla::Auth::Cookie>, L<Bugzilla::Auth::DB>
+L<Bugzilla::Auth::Login::WWW::CGI>, L<Bugzilla::Auth::Login::WWW::CGI::Cookie>, L<Bugzilla::Auth::Verify::DB>
 

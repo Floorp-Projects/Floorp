@@ -37,7 +37,7 @@ use vars qw(
 );
 
 # If we're using LDAP for login, then we can't create a new account here.
-unless (Bugzilla::Auth->can_edit) {
+unless (Bugzilla::Auth->can_edit('new')) {
   # Just in case someone already has an account, let them get the correct
   # footer on the error message
   Bugzilla->login();

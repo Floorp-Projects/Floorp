@@ -1,0 +1,109 @@
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Bugzilla Bug Tracking System.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): Erik Stambaugh <erik@dasbistro.com>
+
+package Bugzilla::Auth::Login::WWW;
+
+use strict;
+
+use Bugzilla::Constants;
+use Bugzilla::Config;
+
+# $current_login_class stores the name of the login style that succeeded.
+my $current_login_class = undef;
+sub login_class {
+    my ($class, $type) = @_;
+    if ($type) {
+        $current_login_class = $type;
+    }
+    return $current_login_class;
+}
+
+sub login {
+    my ($class, $type) = @_;
+
+    my $user = Bugzilla->user;
+
+    # Avoid double-logins, which may confuse the auth code
+    # (double cookies, odd compat code settings, etc)
+    # This is particularly important given the munging for
+    # $::COOKIE{'Bugzilla_login'} from a userid to a loginname
+    # (for backwards compat)
+    if (defined $user) {
+        return $user;
+    }
+
+    $type = LOGIN_NORMAL unless defined $type;
+
+    # Log in using whatever methods are defined in user_info_class.
+    # Please note the particularly strange way require() and the function
+    # calls are being done, because we're calling a module that's named in
+    # a string. I assure you it works, and it avoids the need for an eval().
+    my $userid;
+    for my $login_class (split(/,\s*/, Param('user_info_class'))) {
+        require "Bugzilla/Auth/Login/WWW/" . $login_class . ".pm";
+        $userid = "Bugzilla::Auth::Login::WWW::$login_class"->login($type);
+        if ($userid) {
+            $class->login_class("Bugzilla::Auth::Login::WWW::$login_class");
+            last;
+        }
+    }
+
+    if ($userid) {
+        $user = new Bugzilla::User($userid);
+
+        # Compat stuff
+        $::userid = $userid;
+
+        # Evil compat hack. The cookie stores the id now, not the name, but
+        # old code still looks at this to get the current user's email
+        # so it needs to be set.
+        $::COOKIE{'Bugzilla_login'} = $user->login;
+    } else {
+        Bugzilla->logout_request();
+    }
+    return $user;
+}
+
+sub logout {
+    my ($class, $user, $option) = @_;
+    if ($class->login_class) {
+        $class->login_class->logout($user, $option);
+    }
+}
+
+1;
+
+
+__END__
+
+=head1 NAME
+
+Bugzilla::Auth::Login::WWW - WWW login information gathering module
+
+=head1 METHODS
+
+=item C<login>
+
+Passes C<login> calls to each class defined in the param C<user_info_class>
+and returns a C<Bugzilla::User> object from the first one that successfully
+gathers user login information.
+
+

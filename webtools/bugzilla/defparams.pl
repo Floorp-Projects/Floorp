@@ -25,6 +25,7 @@
 #                 J. Paul Reed <preed@sigkill.com>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Joseph Heenan <joseph@heenan.me.uk>
+#                 Erik Stambaugh <erik@dasbistro.com>
 #
 
 # This file defines all the parameters that we have a GUI to edit within
@@ -127,7 +128,7 @@ sub check_netmask {
     return "";
 }
 
-sub check_loginmethod {
+sub check_user_verify_class {
     # doeditparams traverses the list of params, and for each one it checks,
     # then updates. This means that if one param checker wants to look at 
     # other params, it must be below that other one. So you can't have two 
@@ -136,18 +137,20 @@ sub check_loginmethod {
     # the login method as LDAP, we won't notice, but all logins will fail.
     # So don't do that.
 
-    my ($method, $entry) = @_;
-    my $res = check_multi($method, $entry);
-    return $res if $res;
-    if ($method eq 'DB') {
-        # No params
-    } elsif ($method eq 'LDAP') {
-        eval "require Net::LDAP";
-        return "Error requiring Net::LDAP: '$@'" if $@;
-        return "LDAP servername is missing" unless Param("LDAPserver");
-        return "LDAPBaseDN is empty" unless Param("LDAPBaseDN");
-    } else {
-        return "Unknown loginmethod '$method' in check_loginmethod";
+    my ($list, $entry) = @_;
+    for my $class (split /,\s*/, $list) {
+        my $res = check_multi($class, $entry);
+        return $res if $res;
+        if ($class eq 'DB') {
+            # No params
+        } elsif ($class eq 'LDAP') {
+            eval "require Net::LDAP";
+            return "Error requiring Net::LDAP: '$@'" if $@;
+            return "LDAP servername is missing" unless Param("LDAPserver");
+            return "LDAPBaseDN is empty" unless Param("LDAPBaseDN");
+        } else {
+                return "Unknown user_verify_class '$class' in check_user_verify_class";
+        }
     }
     return "";
 }
@@ -432,9 +435,40 @@ sub find_languages {
    default => '',
   },
 
+  # XXX in the future:
+  #
+  # user_verify_class and user_info_class should have choices gathered from
+  # whatever sits in their respective directories
+  #
+  # rather than comma-separated lists, these two should eventually become
+  # arrays, but that requires alterations to editparams first
+
   {
-   name => 'loginmethod',
-   desc => 'The type of login authentication to use:
+   name => 'user_info_class',
+   desc => 'Mechanism(s) to be used for gathering a user\'s login information.
+              <add>
+            More than one may be selected. If the first one returns nothing,
+            the second is tried, and so on.<br />
+            The types are:
+            <dl>
+              <dt>CGI</dt>
+              <dd>
+                Asks for username and password via CGI form interface.
+              </dd>
+             </dl>',
+   type => 's',
+   choices => [ 'CGI' ],
+   default => 'CGI',
+   checker => \&check_multi
+  },
+
+  {
+   name => 'user_verify_class',
+   desc => 'Mechanism(s) to be used for verifying (authenticating) information
+            gathered by user_info_class.
+            More than one may be selected. If the first one cannot find the
+            user, the second is tried, and so on.<br />
+            The types are:
             <dl>
               <dt>DB</dt>
               <dd>
@@ -450,9 +484,9 @@ sub find_languages {
               </dd>
              </dl>',
    type => 's',
-   choices => [ 'DB', 'LDAP' ],
+   choices => [ 'DB', 'LDAP', 'DB,LDAP', 'LDAP,DB' ],
    default => 'DB',
-   checker => \&check_loginmethod
+   checker => \&check_user_verify_class
   },
 
   {

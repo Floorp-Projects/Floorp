@@ -25,14 +25,27 @@
 #                 Gervase Markham <gerv@gerv.net>
 #                 Christian Reis <kiko@async.com.br>
 #                 Bradley Baetz <bbaetz@acm.org>
+#                 Erik Stambaugh <erik@dasbistro.com>
 
-package Bugzilla::Auth::DB;
+package Bugzilla::Auth::Verify::DB;
 
 use strict;
 
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Util;
+
+my $edit_options = {
+    'new' => 1,
+    'userid' => 0,
+    'login_name' => 1,
+    'realname' => 1,
+};
+
+sub can_edit {
+    my ($class, $type) = @_;
+    return $edit_options->{$type};
+}
 
 sub authenticate {
     my ($class, $username, $passwd) = @_;
@@ -60,8 +73,6 @@ sub authenticate {
 
     return (AUTH_OK, $userid);
 }
-
-sub can_edit { return 1; }
 
 sub get_id_from_username {
     my ($class, $username) = @_;
@@ -111,7 +122,7 @@ __END__
 
 =head1 NAME
 
-Bugzilla::Auth::DB - database authentication for Bugzilla
+Bugzilla::Auth::Verify::DB - database authentication for Bugzilla
 
 =head1 SUMMARY
 

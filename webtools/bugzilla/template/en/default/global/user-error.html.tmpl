@@ -613,6 +613,10 @@
     [% title = "Old Password Required" %]
     You must enter your old password to change your email address.
 
+  [% ELSIF error == "password_change_requests_not_allowed" %]
+    [% title = "Password Change Requests Not Allowed" %]
+    The system is not configured to allow password change requests.
+
   [% ELSIF error == "passwords_dont_match" %]
     [% title = "Passwords Don't Match" %]
     The two passwords you entered did not match.

@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
+#                 Erik Stambaugh <erik@dasbistro.com>
 #
 
 package Bugzilla;
@@ -25,6 +26,7 @@ package Bugzilla;
 use strict;
 
 use Bugzilla::Auth;
+use Bugzilla::Auth::Login::WWW;
 use Bugzilla::CGI;
 use Bugzilla::Config;
 use Bugzilla::Constants;
@@ -54,39 +56,7 @@ sub user {
 
 sub login {
     my ($class, $type) = @_;
-
-    # Avoid double-logins, which may confuse the auth code
-    # (double cookies, odd compat code settings, etc)
-    # This is particularly important given the munging for
-    # $::COOKIE{'Bugzilla_login'} from a userid to a loginname
-    # (for backwards compat)
-    if (defined $_user) {
-        return $_user;
-    }
-
-    $type = LOGIN_NORMAL unless defined $type;
-
-    # For now, we can only log in from a cgi
-    # One day, we'll be able to log in via apache auth, an email message's
-    # PGP signature, and so on
-
-    use Bugzilla::Auth::CGI;
-    my $userid = Bugzilla::Auth::CGI->login($type);
-    if ($userid) {
-        $_user = new Bugzilla::User($userid);
-
-        # Compat stuff
-        $::userid = $userid;
-
-        # Evil compat hack. The cookie stores the id now, not the name, but
-        # old code still looks at this to get the current user's email
-        # so it needs to be set.
-        $::COOKIE{'Bugzilla_login'} = $_user->login;
-    } else {
-        logout_request();
-    }
-
-    return $_user;
+    $_user = Bugzilla::Auth::Login::WWW->login($type);
 }
 
 sub logout {
@@ -97,20 +67,14 @@ sub logout {
     }
     $option = LOGOUT_CURRENT unless defined $option;
 
-    use Bugzilla::Auth::CGI;
-    Bugzilla::Auth::CGI->logout($_user, $option);
-    if ($option != LOGOUT_KEEP_CURRENT) {
-        Bugzilla::Auth::CGI->clear_browser_cookies();
-        logout_request();
-    }
+    Bugzilla::Auth::Login::WWW->logout($_user, $option);
 }
 
 sub logout_user {
     my ($class, $user) = @_;
     # When we're logging out another user we leave cookies alone, and
-    # therefore avoid calling logout() directly.
-    use Bugzilla::Auth::CGI;
-    Bugzilla::Auth::CGI->logout($user, LOGOUT_ALL);
+    # therefore avoid calling Bugzilla->logout() directly.
+    Bugzilla::Auth::Login::WWW->logout($user, LOGOUT_ALL);
 }
 
 # just a compatibility front-end to logout_user that gets a user by id
@@ -290,7 +254,7 @@ or if the login code has not yet been run.
 =item C<login>
 
 Logs in a user, returning a C<Bugzilla::User> object, or C<undef> if there is
-no logged in user. See L<Bugzilla::Auth|Bugzilla::Auth> and
+no logged in user. See L<Bugzilla::Auth|Bugzilla::Auth>, and
 L<Bugzilla::User|Bugzilla::User>.
 
 =item C<logout($option)>
@@ -315,7 +279,7 @@ Bugzilla::User instance.
 
 Essentially, causes calls to C<Bugzilla->user> to return C<undef>. This has the
 effect of logging out a user for the current request only; cookies and
-database sessions are left intact. 
+database sessions are left intact.
 
 =item C<dbh>
 

@@ -25,8 +25,9 @@
 #                 Gervase Markham <gerv@gerv.net>
 #                 Christian Reis <kiko@async.com.br>
 #                 Bradley Baetz <bbaetz@acm.org>
+#                 Erik Stambaugh <erik@dasbistro.com>
 
-package Bugzilla::Auth::CGI;
+package Bugzilla::Auth::Login::WWW::CGI;
 
 use strict;
 
@@ -49,7 +50,7 @@ sub login {
     my $username = $cgi->param("Bugzilla_login");
     my $passwd = $cgi->param("Bugzilla_password");
 
-    my $authmethod = Param("loginmethod");
+    my $authmethod = Param("user_verify_class");
     my ($authres, $userid, $extra, $info) =
       Bugzilla::Auth->authenticate($username, $passwd);
 
@@ -98,11 +99,11 @@ sub login {
         $username = $cgi->cookie("Bugzilla_login");
         $passwd = $cgi->cookie("Bugzilla_logincookie");
 
-        require Bugzilla::Auth::Cookie;
+        require Bugzilla::Auth::Login::WWW::CGI::Cookie;
         my $authmethod = "Cookie";
 
         ($authres, $userid, $extra) =
-          Bugzilla::Auth::Cookie->authenticate($username, $passwd);
+          Bugzilla::Auth::Login::WWW::CGI::Cookie->authenticate($username, $passwd);
 
         # If the data for the cookie was incorrect, then treat that as
         # NODATA. This could occur if the user's IP changed, for example.
@@ -143,7 +144,8 @@ sub login {
                            { 'target' => $cgi->url(-relative=>1),
                              'form' => \%::FORM,
                              'mform' => \%::MFORM,
-                             'caneditaccount' => Bugzilla::Auth->can_edit,
+                             'caneditaccount' => Bugzilla::Auth->can_edit('new'),
+                             'has_db' => Bugzilla::Auth->has_db,
                            }
                           )
           || ThrowTemplateError($template->error());
@@ -216,7 +218,12 @@ sub logout {
                  undef, $cookie, $user->id);
     } else {
         die("Invalid option $option supplied to logout()");
-  }
+    }
+
+    if ($option != LOGOUT_KEEP_CURRENT) {
+        clear_browser_cookies();
+        Bugzilla->logout_request();
+    }
 }
 
 sub clear_browser_cookies {
@@ -233,7 +240,7 @@ __END__
 
 =head1 NAME
 
-Bugzilla::Auth::CGI - CGI-based logins for Bugzilla
+Bugzilla::Auth::Login::WWW::CGI - CGI-based logins for Bugzilla
 
 =head1 SUMMARY
 
@@ -246,7 +253,7 @@ Users are first authenticated against the default authentication handler,
 using the CGI parameters I<Bugzilla_login> and I<Bugzilla_password>.
 
 If no data is present for that, then cookies are tried, using
-L<Bugzilla::Auth::Cookie>.
+L<Bugzilla::Auth::Login::WWW::CGI::Cookie>.
 
 =head1 SEE ALSO
 

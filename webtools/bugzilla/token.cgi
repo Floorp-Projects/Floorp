@@ -95,11 +95,18 @@ if ($cgi->param('t')) {
   }
 }
 
+
 # If the user is requesting a password change, make sure they submitted
-# their login name and it exists in the database.
+# their login name and it exists in the database, and that the DB module is in
+# the list of allowed verification methids.
 if ( $::action eq 'reqpw' ) {
     defined $cgi->param('loginname')
       || ThrowUserError("login_needed_for_password_change");
+
+    # check verification methods
+    unless (Bugzilla::Auth->has_db) {
+        ThrowUserError("password_change_requests_not_allowed");
+    }
 
     # Make sure the login name looks like an email address.  This function
     # displays its own error and stops execution if the login name looks wrong.

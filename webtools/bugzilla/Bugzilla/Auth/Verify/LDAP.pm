@@ -25,8 +25,9 @@
 #                 Gervase Markham <gerv@gerv.net>
 #                 Christian Reis <kiko@async.com.br>
 #                 Bradley Baetz <bbaetz@acm.org>
+#                 Erik Stambaugh <erik@dasbistro.com>
 
-package Bugzilla::Auth::LDAP;
+package Bugzilla::Auth::Verify::LDAP;
 
 use strict;
 
@@ -34,6 +35,18 @@ use Bugzilla::Config;
 use Bugzilla::Constants;
 
 use Net::LDAP;
+
+my $edit_options = {
+    'new' => 0,
+    'userid' => 0,
+    'login_name' => 0,
+    'realname' => 0,
+};
+
+sub can_edit {
+    my ($class, $type) = @_;
+    return $edit_options->{$type};
+}
 
 sub authenticate {
     my ($class, $username, $passwd) = @_;
@@ -156,15 +169,13 @@ sub authenticate {
     return (AUTH_OK, $userid);
 }
 
-sub can_edit { return 0; }
-
 1;
 
 __END__
 
 =head1 NAME
 
-Bugzilla::Auth::LDAP - LDAP based authentication for Bugzilla
+Bugzilla::Auth::Verify::LDAP - LDAP based authentication for Bugzilla
 
 This is an L<authentication module|Bugzilla::Auth/"AUTHENTICATION"> for
 Bugzilla, which logs the user in using an LDAP directory.
