@@ -233,7 +233,8 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (!frame)
       return NS_OK;
 
-    nsCOMPtr<nsIAccessible> a(do_QueryInterface(frame));
+    nsCOMPtr<nsIAccessible> a;
+    frame->GetAccessible(getter_AddRefs(a));
     if (!a)
       a = do_QueryInterface(content);
 
