@@ -97,6 +97,14 @@ nsStreamLoader::GetNumBytesRead(PRUint32* aNumBytes)
 }
 
 NS_IMETHODIMP 
+nsStreamLoader::GetOwner(nsISupports** aOwner)
+{
+  *aOwner = mOwner.get();
+  NS_IF_ADDREF(*aOwner);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
 nsStreamLoader::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 {
   return NS_OK;
@@ -106,6 +114,7 @@ NS_IMETHODIMP
 nsStreamLoader::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
                               nsresult status, const PRUnichar *errorMsg)
 {
+  (void)channel->GetOwner(getter_AddRefs(mOwner));
   nsresult rv = mObserver->OnStreamComplete(this, mContext, status, 
                                             mData.Length(), 
                                             mData.GetBuffer());
