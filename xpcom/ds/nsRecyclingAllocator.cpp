@@ -332,11 +332,10 @@ nsRecyclingAllocator::FindFreeBlock(PRUint32 bytes)
 PRInt32
 nsRecyclingAllocator::AddToFreeList(Block* block)
 {
-    // Make sure we arent keeping more than mMaxBlocks
+    nsAutoLock lock(mLock);
+
     if (!mNotUsedList)
         return PR_FALSE;
-
-    nsAutoLock lock(mLock);
 
     // Pick a node from the not used list
     BlockStoreNode *node = mNotUsedList;
