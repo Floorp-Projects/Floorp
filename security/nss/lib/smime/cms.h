@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.4 2000/06/20 16:28:56 chrisk%netscape.com Exp $
+ * $Id: cms.h,v 1.5 2000/09/15 06:38:32 mcgreer%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -531,6 +531,14 @@ NSS_CMSSignedData_HasDigests(NSSCMSSignedData *sigd);
 extern SECStatus
 NSS_CMSSignedData_VerifySignerInfo(NSSCMSSignedData *sigd, int i, CERTCertDBHandle *certdb,
 				    SECCertUsage certusage);
+
+/*
+ * NSS_CMSSignedData_VerifyCertsOnly - verify the certs in a certs-only message
+*/
+extern SECStatus
+NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd, 
+                                  CERTCertDBHandle *certdb, 
+                                  SECCertUsage usage);
 
 extern SECStatus
 NSS_CMSSignedData_AddCertList(NSSCMSSignedData *sigd, CERTCertificateList *certlist);

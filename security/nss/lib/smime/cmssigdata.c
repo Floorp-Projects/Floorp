@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.7 2000/09/14 17:14:44 mcgreer%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.8 2000/09/15 06:38:33 mcgreer%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -514,6 +514,32 @@ NSS_CMSSignedData_VerifySignerInfo(NSSCMSSignedData *sigd, int i,
 
     /* now verify signature */
     return NSS_CMSSignerInfo_Verify(signerinfo, digest, contentType);
+}
+
+/*
+ * NSS_CMSSignedData_VerifyCertsOnly - verify the certs in a certs-only message
+ */
+SECStatus
+NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd, 
+                                  CERTCertDBHandle *certdb, 
+                                  SECCertUsage usage)
+{
+    CERTCertificate *cert;
+    SECStatus rv = SECSuccess;
+    int i;
+
+    if (!sigd || !certdb) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+
+    for (i=0; i < NSS_CMSArray_Count((void**)sigd->certs); i++) {
+	cert = sigd->certs[i];
+	rv |= CERT_VerifyCert(certdb, cert, PR_TRUE, usage, PR_Now(), 
+                              NULL, NULL);
+    }
+
+    return rv;
 }
 
 /*
