@@ -264,7 +264,7 @@ nsHttpHandler::StartPruneDeadConnectionsTimer()
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
     NS_ASSERTION(mTimer, "no timer");
     // failure to create a timer is not a fatal error, but idle connections
-    // may not be cleaned up as aggressively.
+    // will not be cleaned up until we try to use them.
     if (mTimer)
         mTimer->Init(this, 15*1000, // every 15 seconds
                      nsITimer::TYPE_REPEATING_SLACK);

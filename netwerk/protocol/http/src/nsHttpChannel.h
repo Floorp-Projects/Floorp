@@ -180,7 +180,7 @@ private:
     PRUint32                          mLoadFlags;
     PRUint32                          mStatus;
     PRUint32                          mLogicalOffset;
-    PRUint8                           mCapabilities;
+    PRUint8                           mCaps;
 
     // cache specific data
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;

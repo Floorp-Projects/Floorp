@@ -98,6 +98,7 @@ public:
     void     GetConnectionInfo(nsHttpConnectionInfo **ci) { NS_IF_ADDREF(*ci = mConnInfo); }
     void     GetSecurityInfo(nsISupports **);
     PRBool   IsPersistent() { return IsKeepAlive(); }
+    PRBool   IsReused() { return mIsReused; }
     nsresult PushBack(const char *data, PRUint32 length) { NS_NOTREACHED("PushBack"); return NS_ERROR_UNEXPECTED; }
     nsresult ResumeSend();
     nsresult ResumeRecv();
@@ -152,6 +153,7 @@ private:
     PRPackedBool                    mKeepAlive;
     PRPackedBool                    mKeepAliveMask;
     PRPackedBool                    mSupportsPipelining;
+    PRPackedBool                    mIsReused;
 };
 
 #endif // nsHttpConnection_h__

@@ -121,7 +121,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mResponseIsComplete(PR_FALSE)
     , mDidContentStart(PR_FALSE)
     , mNoContent(PR_FALSE)
-    , mPrematureEOF(PR_FALSE)
+    , mReceivedData(PR_FALSE)
     , mDestroying(PR_FALSE)
 {
     LOG(("Creating nsHttpTransaction @%x\n", this));
@@ -359,6 +359,7 @@ nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
     if (NS_FAILED(rv)) return rv; // caller didn't want to write anything
 
     NS_ASSERTION(*countWritten > 0, "bad writer");
+    trans->mReceivedData = PR_TRUE;
 
     // now let the transaction "play" with the buffer.  it is free to modify
     // the contents of the buffer and/or modify countWritten.
@@ -403,21 +404,26 @@ nsHttpTransaction::Close(nsresult reason)
         return;
     }
 
-    // we must no longer reference the connection!
-    NS_IF_RELEASE(mConnection);
+    // we must no longer reference the connection!  find out if the 
+    // connection was being reused before letting it go.
+    PRBool connReused = PR_FALSE;
+    if (mConnection) {
+        connReused = mConnection->IsReused();
+        NS_RELEASE(mConnection);
+    }
     mConnected = PR_FALSE;
 
-    // if the connection was reset before we read any part of the response,
-    // then we must try to restart the transaction.
-    if (reason == NS_ERROR_NET_RESET) {
-        // if some data was read, then mask the reset error, so our listener
-        // will treat this as a normal failure.  XXX we might want to map
-        // this error to a special error code to indicate that the transfer
-        // was abnormally interrupted.
-        if (mContentRead > 0)
-            reason = NS_ERROR_ABORT; // XXX NS_ERROR_NET_INTERRUPT??
-        // if restarting fails, then we must notify our listener.
-        else if (NS_SUCCEEDED(Restart()))
+    //
+    // if the connection was reset or closed before we read any part of the
+    // response, and if the connection was being reused, then we can assume
+    // that we wrote to a stale connection and we must therefore repeat the
+    // request over a new connection.
+    //
+    if (!mReceivedData && connReused && (reason == NS_ERROR_NET_RESET ||
+                                         reason == NS_OK)) {
+        // if restarting fails, then we must proceed to close the pipe,
+        // which will notify the channel that the transaction failed.
+        if (NS_SUCCEEDED(Restart()))
             return;
     }
 

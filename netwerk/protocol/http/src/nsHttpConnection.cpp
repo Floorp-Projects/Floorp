@@ -59,9 +59,8 @@ nsHttpConnection::nsHttpConnection()
     , mTransactionDone(PR_TRUE)
     , mKeepAlive(PR_TRUE) // assume to keep-alive by default
     , mKeepAliveMask(PR_TRUE)
-    //, mWriteDone(0)
-    //, mReadDone(0)
     , mSupportsPipelining(PR_FALSE) // assume low-grade server
+    , mIsReused(PR_FALSE)
 {
     LOG(("Creating nsHttpConnection @%x\n", this));
 
@@ -203,6 +202,14 @@ nsHttpConnection::IsAlive()
     nsresult rv = mSocketTransport->IsAlive(&alive);
     if (NS_FAILED(rv))
         alive = PR_FALSE;
+
+//#define TEST_RESTART_LOGIC
+#ifdef TEST_RESTART_LOGIC
+    if (!alive) {
+        LOG(("pretending socket is still alive to test restart logic\n"));
+        alive = PR_TRUE;
+    }
+#endif
 
     return alive;
 }
@@ -454,6 +461,10 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
 
     if (NS_FAILED(reason))
         Close(reason);
+
+    // flag the connection as reused here for convenience sake.  certainly
+    // it might be going away instead ;-)
+    mIsReused = PR_TRUE;
 
     gHttpHandler->ReclaimConnection(this);
 }

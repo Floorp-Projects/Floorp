@@ -63,7 +63,7 @@ nsHttpChannel::nsHttpChannel()
     , mLoadFlags(LOAD_NORMAL)
     , mStatus(NS_OK)
     , mLogicalOffset(0)
-    , mCapabilities(0)
+    , mCaps(0)
     , mCachedResponseHead(nsnull)
     , mCacheAccess(0)
     , mPostID(0)
@@ -121,7 +121,7 @@ nsHttpChannel::Init(nsIURI *uri,
     mURI = uri;
     mOriginalURI = uri;
     mDocumentURI = nsnull;
-    mCapabilities = caps;
+    mCaps = caps;
 
     //
     // Construct connection info object
@@ -416,25 +416,29 @@ nsHttpChannel::HandleAsyncNotModified()
 nsresult
 nsHttpChannel::SetupTransaction()
 {
+    LOG(("nsHttpChannel::SetupTransaction [this=%x]\n", this));
+
     NS_ENSURE_TRUE(!mTransaction, NS_ERROR_ALREADY_INITIALIZED);
 
     nsresult rv;
 
-    // figure out if we should disallow pipelining.  disallow if 
-    // the method is not GET or HEAD.  we also disallow pipelining
-    // if this channel corresponds to a toplevel document.
-    // XXX does the toplevel document check really belong here?
-    // XXX or, should we push it out entirely to necko consumers?
-    PRUint8 caps = mCapabilities;
-    if (!mAllowPipelining || (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) ||
-        !(mRequestHead.Method() == nsHttp::Get ||
-          mRequestHead.Method() == nsHttp::Head)) {
-        LOG(("nsHttpChannel::SetupTransaction [this=%x] pipelining disallowed\n", this));
-        caps &= ~NS_HTTP_ALLOW_PIPELINING;
+    if (mCaps & NS_HTTP_ALLOW_PIPELINING) {
+        //
+        // disable pipelining if:
+        //   (1) pipelining has been explicitly disabled
+        //   (2) request corresponds to a top-level document load (link click)
+        //   (3) request method is non-idempotent
+        //
+        // XXX does the toplevel document check really belong here?  or, should
+        //     we push it out entirely to necko consumers?
+        //
+        if (!mAllowPipelining || (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) ||
+            !(mRequestHead.Method() == nsHttp::Get ||
+              mRequestHead.Method() == nsHttp::Head)) {
+            LOG(("  pipelining disallowed\n"));
+            mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
+        }
     }
-    
-    if (mLoadFlags & nsIRequest::LOAD_BACKGROUND)
-        caps |= NS_HTTP_DONT_REPORT_PROGRESS;
 
     // use the URI path if not proxying (transparent proxying such as SSL proxy
     // does not count here). also, figure out what version we should be speaking.
@@ -516,10 +520,10 @@ nsHttpChannel::SetupTransaction()
     NS_ADDREF(mTransaction);
 
     nsCOMPtr<nsIAsyncInputStream> responseStream;
-    rv = mTransaction->Init(caps, mConnectionInfo, &mRequestHead,
-                              mUploadStream, mUploadStreamHasHeaders,
-                              mEventQ, mCallbacks, this,
-                              getter_AddRefs(responseStream));
+    rv = mTransaction->Init(mCaps, mConnectionInfo, &mRequestHead,
+                            mUploadStream, mUploadStreamHasHeaders,
+                            mEventQ, mCallbacks, this,
+                            getter_AddRefs(responseStream));
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewInputStreamPump(getter_AddRefs(mTransactionPump),

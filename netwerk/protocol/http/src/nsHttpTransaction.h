@@ -203,7 +203,7 @@ private:
     PRPackedBool                    mResponseIsComplete;  // == mTransactionDone && NS_SUCCEEDED(mStatus) ?
     PRPackedBool                    mDidContentStart;
     PRPackedBool                    mNoContent;           // expecting an empty entity body?
-    PRPackedBool                    mPrematureEOF;
+    PRPackedBool                    mReceivedData;
     PRPackedBool                    mDestroying;
 };
 

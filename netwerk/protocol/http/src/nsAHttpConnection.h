@@ -95,13 +95,12 @@ public:
     // called by a transaction to get the security info from the socket.
     virtual void GetSecurityInfo(nsISupports **) = 0;
 
-    // called by a transaction to remove itself from the connection (eg. when
-    // it reads premature EOF and must restart itself).
-    //virtual void DropTransaction(nsAHttpTransaction *) = 0;
-
     // called by a transaction to determine whether or not the connection is
     // persistent... important in determining the end of a response.
     virtual PRBool IsPersistent() = 0;
+
+    // called to determine if a connection has been reused.
+    virtual PRBool IsReused() = 0;
     
     // called by a transaction when the transaction reads more from the socket
     // than it should have (eg. containing part of the next pipelined response).
