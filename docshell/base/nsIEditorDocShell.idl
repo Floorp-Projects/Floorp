@@ -17,7 +17,8 @@
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
+ *   Simon Fraser   <sfraser@netscape.com>
+ *   Charles Manske <cmanske@netscape.com>
  */
 
 #include "nsISupports.idl"
@@ -45,7 +46,6 @@ interface nsIEditorDocShell : nsISupports
      *      @param  inWaitForUriLoad    true to wait for a URI before
      *                                  creating the editor.
      */     
-    void        makeEditable(in boolean inWaitForUriLoad);
-    
+    void makeEditable(in boolean inWaitForUriLoad);
 };
 
