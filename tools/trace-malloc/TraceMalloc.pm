@@ -60,12 +60,22 @@ sub infer_type($) {
 
     my $link = \%::Fingerprints;
     my $last;
+    my $type = 'void*';
   FRAME: foreach my $frame (@$stack) {
       last FRAME unless $link;
 
       $frame =~ s/\[.*\]$//; # ignore exact addresses, as they'll drift
 
       $last = $link;
+
+      #
+      # Remember this type, but keep going.  We use the longest match
+      # we find, but substacks of longer matches will also match.
+      #
+      if ($last->{'#type#'}) {
+          $type = $last->{'#type#'};
+      }
+
       $link = $link->{$frame};
 
       if (! $link) {
@@ -82,12 +92,7 @@ sub infer_type($) {
       }
   }
 
-    if ($last && $last->{'#type#'}) {
-        return $last->{'#type#'};
-    }
-    else {
-        return 'void*';
-    }
+    return $type;
 }
 
 
