@@ -2171,13 +2171,17 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
   if ((nsnull == mDrawingSurface) ||
       (mDSBounds.width < aBounds.width) || (mDSBounds.height < aBounds.height))
   {
+	if (aBounds.width < mDSBounds.width)
+		aBounds.width = mDSBounds.width;
+	if (aBounds.height < mDSBounds.height)
+		aBounds.height = mDSBounds.height;
+
     if (nsnull != mDrawingSurface)
     {
       //destroy existing DS
       aContext.DestroyDrawingSurface(mDrawingSurface);
       mDrawingSurface = nsnull;
     }
-
     aContext.CreateDrawingSurface(&aBounds, 0, mDrawingSurface);
     mDSBounds = aBounds;
   }
