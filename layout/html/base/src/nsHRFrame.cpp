@@ -242,7 +242,7 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
         aDesiredSize.maxElementSize->width = onePixel;
       }
       else {
-        aDesiredSize.maxElementSize->width = aReflowState.minWidth;
+        aDesiredSize.maxElementSize->width = aReflowState.computedWidth;
       }
       aDesiredSize.maxElementSize->height = onePixel;
     }
@@ -265,7 +265,7 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aPresContext->GetScaledPixelsToTwips(p2t);
 
   if (aReflowState.HaveFixedContentWidth()) {
-    aDesiredSize.width = aReflowState.minWidth;
+    aDesiredSize.width = aReflowState.computedWidth;
   }
   else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.width) {

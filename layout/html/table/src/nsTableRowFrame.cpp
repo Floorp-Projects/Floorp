@@ -1280,7 +1280,6 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     kidReflowState.reason = eReflowReason_Resize;
     kidReflowState.reflowCommand = nsnull;
     kidReflowState.maxSize.width = NS_UNCONSTRAINEDSIZE;
-    kidReflowState.widthConstraint = eHTMLFrameConstraint_Unconstrained;
     rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
     if (gsDebug) 
         printf ("TR %p for cell %p Incremental Reflow: desired=%d, MES=%d\n", 
@@ -1298,7 +1297,6 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     // Now reflow the cell again this time constraining the width
     // XXX Ignore for now the possibility that the column width has changed...
     kidReflowState.maxSize.width = availWidth;
-    kidReflowState.widthConstraint = eHTMLFrameConstraint_Constrained;
     rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
   
     // Place the child after taking into account it's margin and attributes

@@ -3698,10 +3698,9 @@ nscoord nsTableFrame::GetEffectiveContainerHeight(const nsHTMLReflowState& aRefl
         break;
       }
     }
-    if (eHTMLFrameConstraint_Fixed==rs->heightConstraint ||
-        eHTMLFrameConstraint_FixedContent==rs->heightConstraint)
+    if (NS_AUTOHEIGHT != rs->computedHeight)
     {
-      result = rs->maxSize.height;
+      result = rs->computedHeight;
       break;
     }
     // XXX: evil cast!

@@ -306,11 +306,11 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
 
   if (aReflowState.HaveFixedContentWidth()) {
-    aMetrics.width = aReflowState.minWidth;
+    aMetrics.width = aReflowState.computedWidth;
     haveWidth = PR_TRUE;
   }
   if (aReflowState.HaveFixedContentHeight()) {
-    aMetrics.height = aReflowState.minHeight;
+    aMetrics.height = aReflowState.computedHeight;
     haveHeight = PR_TRUE;
   }
 

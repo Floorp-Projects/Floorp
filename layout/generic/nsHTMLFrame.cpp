@@ -185,15 +185,15 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       kidReflowState.reflowCommand = nsnull;
     }
 
-    // For a width or height that's 'auto', make the frame as big as the
-    // available space
-    if (eHTMLFrameConstraint_FixedContent != kidReflowState.widthConstraint) {
-      kidReflowState.widthConstraint = eHTMLFrameConstraint_Fixed;
-      kidReflowState.minWidth = kidMaxSize.width;
-    }
-    if (eHTMLFrameConstraint_FixedContent != kidReflowState.heightConstraint) {
-      kidReflowState.heightConstraint = eHTMLFrameConstraint_Fixed;
-      kidReflowState.minHeight = kidMaxSize.height;
+    // For a height that's 'auto', make the frame as big as the available space
+    if (!kidReflowState.HaveFixedContentHeight()) {
+      kidReflowState.computedHeight = kidMaxSize.height;
+
+      // Computed height is for the content area so reduce it by the amount of
+      // space taken up by border and padding
+      nsMargin  borderPadding;
+      kidReflowState.ComputeBorderPaddingFor(mFirstChild, &aReflowState, borderPadding);
+      kidReflowState.computedHeight -= borderPadding.top + borderPadding.bottom;
     }
 
     // Reflow the frame
@@ -201,16 +201,6 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       ReflowChild(mFirstChild, aPresContext, desiredSize, kidReflowState, aStatus);
     
-      // Place and size the child. Because we told the child it was
-      // fixed make sure it's at least as big as we told it. This
-      // handles the case where the child ignores the reflow state
-      // constraints
-      if (desiredSize.width < kidReflowState.minWidth) {
-        desiredSize.width = kidReflowState.minWidth;
-      }
-      if (desiredSize.height < kidReflowState.minHeight) {
-        desiredSize.height = kidReflowState.minHeight;
-      }
       nsRect  rect(childMargin.left, childMargin.top, desiredSize.width, desiredSize.height);
       mFirstChild->SetRect(rect);
 
