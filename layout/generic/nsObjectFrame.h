@@ -186,6 +186,8 @@ protected:
                        nsReflowStatus& aStatus,
                        nsIFrame* child);
  
+  PRBool IsFocusable(PRInt32 *aTabIndex = nsnull, PRBool aWithMouse = PR_FALSE);
+
   // check attributes and optionally CSS to see if we should display anything
   PRBool IsHidden(PRBool aCheckVisibilityStyle = PR_TRUE) const;
 

@@ -949,9 +949,9 @@ nsObjectFrame::MakeAbsoluteURL(nsIURI* *aFullURI,
 }
 
 static void
-SizeDiv(nsIContent *aDiv, PRInt32 aWidth, PRInt32 aHeight)
+SizeAnchor(nsIContent *aAnchor, PRInt32 aWidth, PRInt32 aHeight)
 {
-  nsCOMPtr<nsIDOMElementCSSInlineStyle> element(do_QueryInterface(aDiv));
+  nsCOMPtr<nsIDOMElementCSSInlineStyle> element(do_QueryInterface(aAnchor));
 
   if (!element)
     return;
@@ -1010,9 +1010,9 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
       PRInt32 width = NSTwipsToIntPixels(aMetrics.width, t2p);
       PRInt32 height = NSTwipsToIntPixels(aMetrics.height, t2p);
 
-      SizeDiv(child->GetContent(), width, height);
+      SizeAnchor(child->GetContent(), width, height);
 
-      // SizeDiv() is seriously evil as it ends up setting an
+      // SizeAnchor() is seriously evil as it ends up setting an
       // attribute (through the style changes that it does) while
       // we're in reflow. This is also seriously evil, as it pulls
       // that reflow command out of the reflow queue, as leaving it
@@ -1436,6 +1436,18 @@ nsObjectFrame::HandleChild(nsPresContext*           aPresContext,
 }
 
 PRBool
+nsObjectFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
+{
+  *aTabIndex = -1;
+  if (IsBroken()) {
+    // Inner anchor for "click to install plugin" is focusable,
+    // but not the object frame itself
+    return PR_FALSE;
+  }
+  return nsObjectFrameSuper::IsFocusable(aTabIndex, aWithMouse);
+}
+
+PRBool
 nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
 {
   if (aCheckVisibilityStyle) {
@@ -1524,9 +1536,9 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
   nsIPresShell *shell = aPresContext->GetPresShell();
   nsStyleSet *styleSet = shell->StyleSet();
 
-  nsCOMPtr<nsIContent> div;
-  nsresult rv = doc->CreateElem(nsHTMLAtoms::div, nsnull, kNameSpaceID_XHTML,
-                                PR_TRUE, getter_AddRefs(div));
+  nsCOMPtr<nsIContent> anchor;
+  nsresult rv = doc->CreateElem(nsHTMLAtoms::a, nsnull, kNameSpaceID_XHTML,
+                                PR_TRUE, getter_AddRefs(anchor));
 
   nsCOMPtr<nsIContent> img;
   rv |= doc->CreateElem(nsHTMLAtoms::img, nsnull, kNameSpaceID_XHTML, PR_TRUE,
@@ -1539,16 +1551,16 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
     return;
 
   // Mark the nodes anonymous
-  div->SetNativeAnonymous(PR_TRUE);
+  anchor->SetNativeAnonymous(PR_TRUE);
   img->SetNativeAnonymous(PR_TRUE);
   text->SetNativeAnonymous(PR_TRUE);
 
   // Set up the anonymous tree
-  div->SetParent(mContent);
-  div->SetDocument(doc, PR_TRUE, PR_TRUE);
+  anchor->SetParent(mContent);
+  anchor->SetDocument(doc, PR_TRUE, PR_TRUE);
 
-  div->AppendChildTo(img, PR_FALSE, PR_TRUE);
-  div->AppendChildTo(text, PR_FALSE, PR_TRUE);
+  anchor->AppendChildTo(img, PR_FALSE, PR_TRUE);
+  anchor->AppendChildTo(text, PR_FALSE, PR_TRUE);
 
   nsAutoString style;
   CopyASCIItoUTF16("text-align: -moz-center;"
@@ -1559,19 +1571,20 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
                    "font-size: 12px;"
                    "font-family: sans-serif;"
                    "background: white;"
-                   "cursor: pointer;"
                    "-moz-user-select: none;"
+                   "text-decoration: none;"
                    "color: black;", style);
 
   // Style things and load the image
-  div->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style, style, PR_TRUE);
+  anchor->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style, style, PR_TRUE);
+  anchor->SetAttr(kNameSpaceID_None, nsHTMLAtoms::href, NS_LITERAL_STRING("#"), PR_TRUE);
 
   NS_NAMED_LITERAL_STRING(src,
                           "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
   img->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src, PR_FALSE);
-  img->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
-               NS_LITERAL_STRING("display: block; width: 32px; height: 32px;"),
-               PR_FALSE);
+  NS_NAMED_LITERAL_STRING(imgStyle,
+                          "display: block; border: 0px; width: 32px; height: 32px;");
+  img->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style, imgStyle, PR_FALSE);
 
   // Kick off the image load.
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(img);
@@ -1599,64 +1612,64 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
 
   text->SetText(missingPluginLabel, PR_FALSE);
 
-  // Resolve style for the div, img, and text nodes.
-  nsRefPtr<nsStyleContext> divStyleContext =
-    styleSet->ResolveStyleFor(div, mStyleContext);
+  // Resolve style for the anchor, img, and text nodes.
+  nsRefPtr<nsStyleContext> anchorStyleContext =
+    styleSet->ResolveStyleFor(anchor, mStyleContext);
   nsRefPtr<nsStyleContext> imgStyleContext =
-    styleSet->ResolveStyleFor(img, divStyleContext);
+    styleSet->ResolveStyleFor(img, anchorStyleContext);
   nsRefPtr<nsStyleContext> textStyleContext =
-    shell->StyleSet()->ResolveStyleForNonElement(divStyleContext);
+    shell->StyleSet()->ResolveStyleForNonElement(anchorStyleContext);
 
-  if (!divStyleContext || !imgStyleContext || !textStyleContext)
+  if (!anchorStyleContext || !imgStyleContext || !textStyleContext)
     return;
 
-  nsIFrame *divFrame = nsnull;
+  nsIFrame *anchorFrame = nsnull;
   nsIFrame *imgFrame = nsnull;
   nsIFrame *textFrame = nsnull;
 
   do {
-    rv = NS_NewBlockFrame(shell, &divFrame);
+    rv = NS_NewBlockFrame(shell, &anchorFrame);
     if (NS_FAILED(rv))
       break;
 
-    rv = divFrame->Init(aPresContext, div, this, divStyleContext, PR_FALSE);
+    rv = anchorFrame->Init(aPresContext, anchor, this, anchorStyleContext, PR_FALSE);
     if (NS_FAILED(rv))
       break;
 
     // Give it a space manager, so it won't crash of ancestors don't have one
-    divFrame->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+    anchorFrame->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
     
-    nsHTMLContainerFrame::CreateViewForFrame(divFrame, this, PR_FALSE);
-    mFrames.AppendFrame(this, divFrame);
+    nsHTMLContainerFrame::CreateViewForFrame(anchorFrame, this, PR_FALSE);
+    mFrames.AppendFrame(this, anchorFrame);
 
     rv = NS_NewImageFrame(shell, &imgFrame);
     if (NS_FAILED(rv))
       return;
 
-    rv = imgFrame->Init(aPresContext, img, divFrame, imgStyleContext, PR_FALSE);
+    rv = imgFrame->Init(aPresContext, img, anchorFrame, imgStyleContext, PR_FALSE);
     if (NS_FAILED(rv))
       break;
 
-    nsHTMLContainerFrame::CreateViewForFrame(imgFrame, divFrame, PR_FALSE);
-    divFrame->AppendFrames(nsnull, imgFrame);
+    nsHTMLContainerFrame::CreateViewForFrame(imgFrame, anchorFrame, PR_FALSE);
+    anchorFrame->AppendFrames(nsnull, imgFrame);
 
     rv = NS_NewTextFrame(shell, &textFrame);
     if (NS_FAILED(rv))
       break;
 
-    rv = textFrame->Init(aPresContext, text, divFrame, textStyleContext,
+    rv = textFrame->Init(aPresContext, text, anchorFrame, textStyleContext,
                          PR_FALSE);
     if (NS_FAILED(rv))
       break;
 
     textFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
 
-    divFrame->AppendFrames(nsnull, textFrame);
+    anchorFrame->AppendFrames(nsnull, textFrame);
   } while (0);
 
   if (NS_FAILED(rv)) {
-    if (divFrame)
-      divFrame->Destroy(aPresContext);
+    if (anchorFrame)
+      anchorFrame->Destroy(aPresContext);
 
     if (imgFrame)
       imgFrame->Destroy(aPresContext);
@@ -1669,7 +1682,7 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
   NS_NewISupportsArray(getter_AddRefs(array));
 
   if (array) {
-    array->AppendElement(div);
+    array->AppendElement(anchor);
     array->AppendElement(img);
     array->AppendElement(text);
 
