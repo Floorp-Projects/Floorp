@@ -177,6 +177,15 @@ dbtest_main()
     cp -r ${CLIENTDIR}/* $RONLY_DIR
     chmod -w $RONLY_DIR $RONLY_DIR/*
 
+    # On Mac OS X 10.1, if we do a "chmod -w" on files in an
+    # NFS-mounted directory, it takes several seconds for the
+    # first open to see the files are readonly, but subsequent
+    # opens immediately see the files are readonly.  As a
+    # workaround we open the files once first.  (Bug 185074)
+    if [ "${OS_ARCH}" = "Darwin" ]; then
+        cat $RONLY_DIR/* > /dev/null
+    fi
+
     dbtest -d $RONLY_DIR
     ret=$?
     if [ $ret -ne 46 ]; then
