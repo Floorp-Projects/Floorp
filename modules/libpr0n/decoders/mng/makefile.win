@@ -21,7 +21,8 @@
 
 DEPTH=..\..\..\..
 MODULE		= imgmng
-REQUIRES	= xpcom \
+REQUIRES	= string \
+                  xpcom \
 		  gfx \
 		  gfx2 \
 		  imglib2 \

@@ -58,6 +58,7 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsGenericFactory.obj \
         .\$(OBJDIR)\nsMemory.obj      \
         .\$(OBJDIR)\nsWeakReference.obj \
+        .\$(OBJDIR)\nsComponentManagerUtils.obj \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

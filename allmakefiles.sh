@@ -545,6 +545,7 @@ xpcom/build/Makefile
 xpcom/components/Makefile
 xpcom/ds/Makefile
 xpcom/glue/Makefile
+xpcom/glue/standalone/Makefile
 xpcom/io/Makefile
 xpcom/typelib/Makefile
 xpcom/reflect/Makefile

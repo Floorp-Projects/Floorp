@@ -42,6 +42,7 @@
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
+#include "nsCategoryManagerUtils.h"
 #include "nsIComponentLoader.h"
 #include "nsIEnumerator.h"
 #include "nsIInterfaceInfoManager.h"
@@ -130,38 +131,9 @@ extern PRBool gXPCOMShuttingDown;
 #define USE_REGISTRY
 #endif /* USE_NSREG */
 
-nsresult
-nsCreateInstanceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
-    {
-        nsresult status = nsComponentManager::CreateInstance(mCID, mOuter, aIID, aInstancePtr);
-        if ( NS_FAILED(status) )
-            *aInstancePtr = 0;
-
-        if ( mErrorPtr )
-            *mErrorPtr = status;
-        return status;
-    }
 
 nsresult
-nsCreateInstanceByContractID::operator()( const nsIID& aIID, void** aInstancePtr ) const
-    {
-        nsresult status;
-        if ( mContractID )
-            {
-              if ( NS_FAILED(status = nsComponentManager::CreateInstance(mContractID, mOuter, aIID, aInstancePtr)) )
-                  *aInstancePtr = 0;
-          }
-        else
-          status = NS_ERROR_NULL_POINTER;
-
-        if ( mErrorPtr )
-            *mErrorPtr = status;
-        return status;
-    }
-
-nsresult
-nsCreateInstanceFromCategory::operator()( const nsIID& aIID,
-                                          void** aInstancePtr ) const
+nsCreateInstanceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr) const
 {
     /*
      * If I were a real man, I would consolidate this with
@@ -169,11 +141,12 @@ nsCreateInstanceFromCategory::operator()( const nsIID& aIID,
      */
     nsresult status;
     nsXPIDLCString value;
+    nsCOMPtr<nsIComponentManager> compMgr;
     nsCOMPtr<nsICategoryManager> catman =
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &status);
-
+    
     if (NS_FAILED(status)) goto error;
-
+    
     if (!mCategory || !mEntry) {
         // when categories have defaults, use that for null mEntry
         status = NS_ERROR_NULL_POINTER;
@@ -188,104 +161,60 @@ nsCreateInstanceFromCategory::operator()( const nsIID& aIID,
         status = NS_ERROR_SERVICE_NOT_FOUND;
         goto error;
     }
-
-    status = nsComponentManager::CreateInstance(value, mOuter, aIID,
-                                                aInstancePtr);
-    error:
+    NS_GetComponentManager(getter_AddRefs(compMgr));
+    if (!compMgr)
+        return NS_ERROR_FAILURE;
+    compMgr->CreateInstanceByContractID(value, 
+                                        mOuter, 
+                                        aIID, 
+                                        aInstancePtr);
+ error:
     if (NS_FAILED(status)) {
         *aInstancePtr = 0;
     }
-
+    
     *mErrorPtr = status;
     return status;
 }
 
 
 nsresult
-nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
-  {
-    nsresult status = NS_ERROR_FAILURE;
-    if ( mServiceManager ) {
-        status = mServiceManager->GetService(mCID, aIID, (void**)aInstancePtr);
-    } else {
-        nsCOMPtr<nsIServiceManager> mgr;
-        NS_GetServiceManager(getter_AddRefs(mgr));
-        if (mgr)
-            status = mgr->GetService(mCID, aIID, (void**)aInstancePtr);
-    }
-    if ( NS_FAILED(status) )
-        *aInstancePtr = 0;
-
-    if ( mErrorPtr )
-      *mErrorPtr = status;
-    return status;
-  }
-
-nsresult
-nsGetServiceByContractID::operator()( const nsIID& aIID, void** aInstancePtr ) const
-  {
-    nsresult status = NS_ERROR_FAILURE;
-    if ( mServiceManager ) {
-        status = mServiceManager->GetServiceByContractID(mContractID, aIID, (void**)aInstancePtr);
-    } else {
-        nsCOMPtr<nsIServiceManager> mgr;
-        NS_GetServiceManager(getter_AddRefs(mgr));
-        if (mgr)
-            status = mgr->GetServiceByContractID(mContractID, aIID, (void**)aInstancePtr);
-    }
- 
-    if ( NS_FAILED(status) )
-        *aInstancePtr = 0;
-
-    if ( mErrorPtr )
-      *mErrorPtr = status;
-    return status;
-}
-
-nsresult
-nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr)
-  const
+nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr) const
 {
-  nsresult status;
-  nsXPIDLCString value;
-  nsCOMPtr<nsICategoryManager> catman = 
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &status);
-  
-  if (NS_FAILED(status)) goto error;
-  
-  if (!mCategory || !mEntry) {
-    // when categories have defaults, use that for null mEntry
-    status = NS_ERROR_NULL_POINTER;
-    goto error;
-  }
-  
-  /* find the contractID for category.entry */
-  status = catman->GetCategoryEntry(mCategory, mEntry,
-                                    getter_Copies(value));
-  if (NS_FAILED(status)) goto error;
-  if (!value) {
-    status = NS_ERROR_SERVICE_NOT_FOUND;
-    goto error;
-  }
-  
-  if ( mServiceManager ) {
-    status = mServiceManager->GetServiceByContractID(value, aIID, (void**)aInstancePtr);
-  } else {
-    nsCOMPtr<nsIServiceManager> mgr;
-    NS_GetServiceManager(getter_AddRefs(mgr));
-    if (mgr)
-        status = mgr->GetServiceByContractID(value, aIID, (void**)aInstancePtr);
+    nsresult status;
+    nsXPIDLCString value;
+    nsCOMPtr<nsICategoryManager> catman = 
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &status);
+    if (NS_FAILED(status)) goto error;
+    if (!mCategory || !mEntry) {
+        // when categories have defaults, use that for null mEntry
+        status = NS_ERROR_NULL_POINTER;
+        goto error;
     }
-
-  if (NS_FAILED(status)) {
-  error:
-    *aInstancePtr = 0;
-  }
-
-  *mErrorPtr = status;
-  return status;
+    /* find the contractID for category.entry */
+    status = catman->GetCategoryEntry(mCategory, mEntry,
+                                      getter_Copies(value));
+    if (NS_FAILED(status)) goto error;
+    if (!value) {
+        status = NS_ERROR_SERVICE_NOT_FOUND;
+        goto error;
+    }
+    if ( mServiceManager ) {
+        status = mServiceManager->GetServiceByContractID(value, aIID, (void**)aInstancePtr);
+    } else {
+        nsCOMPtr<nsIServiceManager> mgr;
+        NS_GetServiceManager(getter_AddRefs(mgr));
+        if (mgr)
+            status = mgr->GetServiceByContractID(value, aIID, (void**)aInstancePtr);
+    }
+    if (NS_FAILED(status)) {
+    error:
+        *aInstancePtr = 0;
+    }
+    *mErrorPtr = status;
+    return status;
 }
-
+ 
 ////////////////////////////////////////////////////////////////////////////////
 // Hashtable Callbacks
 ////////////////////////////////////////////////////////////////////////////////

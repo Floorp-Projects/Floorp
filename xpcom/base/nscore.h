@@ -119,6 +119,8 @@
 
 #ifdef _IMPL_NS_COM
 #define NS_COM NS_EXPORT
+#elif  _IMPL_NS_COM_OFF
+#define NS_COM
 #else
 #define NS_COM NS_IMPORT
 #endif

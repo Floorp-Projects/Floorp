@@ -64,7 +64,7 @@ CallQueryReferent( T* aSource, DestinationType** aDestination )
   }
 
 
-class NS_EXPORT nsQueryReferent : public nsCOMPtr_helper
+class NS_COM nsQueryReferent : public nsCOMPtr_helper
   {
     public:
       nsQueryReferent( nsIWeakReference* aWeakPtr, nsresult* error )
