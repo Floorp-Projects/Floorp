@@ -61,15 +61,6 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 #define WORD_BUF_SIZE 100
 #define TEXT_BUF_SIZE 1000
 
-// XXX these are a copy of nsTextTransformer's version and they aren't I18N'd!
-#define XP_IS_LOWERCASE(_ch) \
-  (((_ch) >= 'a') && ((_ch) <= 'z'))
-
-#define XP_TO_UPPER(_ch) ((_ch) & ~32)
-
-#define XP_IS_SPACE(_ch) \
-  (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
-
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 class TextFrame;
@@ -680,8 +671,6 @@ TextFrame::ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
   NS_RELEASE(selection);
 }
 #endif //0
-
-#define XP_IS_SPACE_W XP_IS_SPACE
 
 /**
  * Prepare the text in the content for rendering. If aIndexes is not nsnull

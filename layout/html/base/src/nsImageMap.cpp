@@ -24,6 +24,7 @@
 #include "nsIURL.h"
 #include "nsXIFConverter.h"
 #include "nsISizeOfHandler.h"
+#include "nsTextFragment.h"
 
 class Area {
 public:
@@ -96,10 +97,6 @@ Area::SizeOf(nsISizeOfHandler* aHandler) const
   mAltText.SizeOf(aHandler);
   aHandler->Add(mNumCoords * sizeof(nscoord));
 }
-
-// XXX move into nsCRT
-#define XP_IS_SPACE(_ch) \
- (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\r') || ((_ch) == '\n'))
 
 #include <stdlib.h>
 #define XP_ATOI(_s) ::atoi(_s)

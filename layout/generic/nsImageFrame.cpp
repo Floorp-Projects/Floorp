@@ -45,16 +45,13 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDeviceContext.h"
 #include "nsINameSpaceManager.h"
+#include "nsTextFragment.h"
 
 #ifndef _WIN32
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
 #endif
 
-#define XP_IS_SPACE(_ch) \
-  (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
-
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-
 
 // Value's for mSuppress
 #define SUPPRESS_UNSET   0
