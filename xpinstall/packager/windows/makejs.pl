@@ -71,7 +71,7 @@ $outTempFile      = $inJstFileSplit[0];
 $outTempFile     .= ".template";
 
 system("copy ..\\common\\share.t $outTempFile");
-system("cat $inJstFile >> $outTempFile");
+system("type $inJstFile >> $outTempFile");
 
 # Open the input .template file
 open(fpInTemplate, $outTempFile) || die "\ncould not open $outTempFile: $!\n";
