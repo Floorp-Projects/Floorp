@@ -56,6 +56,9 @@ static ipcClient ipcClientArray[IPC_MAX_CLIENTS];
 
 static HWND ipcHwnd;
 
+#define IPC_PURGE_TIMER_ID 1
+#define IPC_WM_SHUTDOWN (WM_USER + 1)
+
 //-----------------------------------------------------------------------------
 // client array manipulation
 //-----------------------------------------------------------------------------
@@ -81,11 +84,20 @@ RemoveClient(ipcClient *client)
 
     --ipcClientCount;
     LOG(("  num clients = %u\n", ipcClientCount));
+
+    if (ipcClientCount == 0) {
+        LOG(("  shutting down...\n"));
+        KillTimer(ipcHwnd, IPC_PURGE_TIMER_ID);
+        PostMessage(ipcHwnd, IPC_WM_SHUTDOWN, 0, 0);
+    }
 }
 
 static void
 PurgeStaleClients()
 {
+    if (ipcClientCount == 0)
+        return;
+
     LOG(("PurgeStaleClients [num-clients=%u]\n", ipcClientCount));
     //
     // walk the list of supposedly active clients, and verify the existance of
@@ -117,8 +129,7 @@ AddClient(HWND hwnd, PRUint32 pid)
     // before adding a new client, verify that all existing clients are
     // still up and running.  remove any stale clients.
     //
-    if (ipcClientCount > 0)
-        PurgeStaleClients();
+    PurgeStaleClients();
 
     if (ipcClientCount == IPC_MAX_CLIENTS) {
         LOG(("  reached maximum client count!\n"));
@@ -132,6 +143,10 @@ AddClient(HWND hwnd, PRUint32 pid)
 
     ++ipcClientCount;
     LOG(("  num clients = %u\n", ipcClientCount));
+
+    if (ipcClientCount == 1)
+        SetTimer(ipcHwnd, IPC_PURGE_TIMER_ID, 1000, NULL);
+
     return client;
 }
 
@@ -189,8 +204,7 @@ IPC_PlatformSendMsg(ipcClient *client, const ipcMessage *msg)
     cd.lpData = (PVOID) msg->MsgBuf();
 
     LOG(("calling SendMessage...\n"));
-    SendMessageA(client->Hwnd(), WM_COPYDATA, 0, (LPARAM) &cd);
-   // SendMessageA(hwnd, WM_COPYDATA, (WPARAM) ipcHwnd, (LPARAM) &cd);
+    SendMessage(client->Hwnd(), WM_COPYDATA, 0, (LPARAM) &cd);
     LOG(("  done.\n"));
 
     return PR_SUCCESS;
@@ -217,15 +231,24 @@ WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 //
                 // grab client PID and hwnd.
                 //
-                DWORD pid = cd->dwData;
-                HWND hwnd = (HWND) wParam;
-
-                ProcessMsg(hwnd, pid, &msg);
+                ProcessMsg((HWND) wParam, cd->dwData, &msg);
             }
             else
                 LOG(("ignoring malformed message\n"));
         }
         return TRUE;
+    }
+
+    if (uMsg == WM_TIMER && wParam == IPC_PURGE_TIMER_ID) {
+        PurgeStaleClients();
+        return 0;
+    }
+
+    if (uMsg == IPC_WM_SHUTDOWN) {
+        DestroyWindow(hWnd);
+        ipcHwnd = NULL;
+        PostQuitMessage(0);
+        return 0;
     }
 
     return DefWindowProc(hWnd, uMsg, wParam, lParam);

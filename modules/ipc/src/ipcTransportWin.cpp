@@ -165,6 +165,7 @@ ipcThreadWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     if (uMsg == IPC_WM_SHUTDOWN) {
         DestroyWindow(hWnd);
+        ipcHwnd = NULL;
         PostQuitMessage(0);
         return 0;
     }
