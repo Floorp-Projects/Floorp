@@ -598,8 +598,14 @@ nsOptionList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsOptionList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  *aReturn = (nsIDOMNode*)mElements.ElementAt(aIndex);
-  NS_ADDREF(*aReturn);
+  PRUint32 length = 0;
+  GetLength(&length);
+  if (aIndex >= length) {
+    *aReturn = nsnull;
+  } else {
+    *aReturn = (nsIDOMNode*)mElements.ElementAt(aIndex);
+    NS_ADDREF(*aReturn);
+  }
   return NS_OK;
 }
 
