@@ -449,7 +449,7 @@ nsresult nsTextEditor::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, P
         result = childNodes->Item(i, getter_AddRefs(childNode));
         if ((NS_SUCCEEDED(result)) && (childNode))
         {
-          if (childNode==aChild)
+          if (childNode.get()==aChild)
           {
             aOffset = i;
             break;
