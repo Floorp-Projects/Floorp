@@ -37,6 +37,11 @@
 #include "FullPath.h"
 #include "FileCopy.h"		//in MoreFiles
 
+#include "AERegistry.h"
+#include "Processes.h"
+#include "LArrayIterator.h"
+#include "UMemoryMgr.h"
+
 // XP
 #ifndef _XP_H_
 #include "xp.h"
