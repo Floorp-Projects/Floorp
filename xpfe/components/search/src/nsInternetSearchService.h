@@ -149,14 +149,15 @@ friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosur
   nsresult  updateAtom(nsIRDFDataSource *db, nsIRDFResource *src, nsIRDFResource *prop, nsIRDFNode *newValue, PRBool *dirtyFlag);
   nsresult  validateEngine(nsIRDFResource *engine);
   nsresult  DoSearch(nsIRDFResource *source, nsIRDFResource *engine, const nsString &fullURL, const nsString &text);
-  nsresult  MapEncoding(const nsString &numericEncoding, nsString &stringEncoding);
-  const PRUnichar * MapScriptCodeToCharsetName(PRInt32 aScriptCode);
+  nsresult  MapEncoding(const nsString &numericEncoding, 
+                        nsString &stringEncoding);
+  const char * const MapScriptCodeToCharsetName(PRUint32 aScriptCode);
   nsresult  SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon, const PRUnichar *hint, const PRUnichar *data, PRBool isSystemSearchFile, PRBool checkMacFileType);
   nsresult  GetSearchEngineList(nsIFile *spec, PRBool isSystemSearchFile, PRBool checkMacFileType);
   nsresult  GetCategoryList();
   nsresult  GetSearchFolder(nsIFile **spec);
   nsresult  ReadFileContents(const nsFileSpec &baseFilename, nsString & sourceContents);
-  nsresult  DecodeData(const PRUnichar *aCharset, const PRUnichar *aInString, PRUnichar **aOutString);
+  nsresult  DecodeData(const char *aCharset, const PRUnichar *aInString, PRUnichar **aOutString);
   nsresult  GetData(const PRUnichar *data, const char *sectionToFind, PRUint32 sectionNum, const char *attribToFind, nsString &value);
   nsresult  GetNumInterpretSections(const PRUnichar *data, PRUint32 &numInterpretSections);
   nsresult  GetInputs(const PRUnichar *data, nsString &userVar, const nsString &text, nsString &input, PRInt16 direction, PRUint16 pageNumber, PRUint16 *whichButtons);

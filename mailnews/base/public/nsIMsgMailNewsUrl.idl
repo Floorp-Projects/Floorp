@@ -141,9 +141,9 @@ interface nsIMsgMessageUrl : nsISupports {
 [scriptable, uuid(D71E0785-2862-11d4-98C1-001083010E9B)]
 interface nsIMsgI18NUrl : nsISupports {
 	// the charset associated with a folder for this url.....
-	readonly attribute wstring folderCharset;
+	readonly attribute string folderCharset;
 	readonly attribute boolean folderCharsetOverride;
 	// the charsetOverRide is a charset the user may have specified via the menu for
 	// a particular message
-	attribute wstring charsetOverRide;
+	attribute string charsetOverRide;
 };

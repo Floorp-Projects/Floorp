@@ -45,12 +45,14 @@
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
+#include "nsEncoderDecoderUtils.h"
 #include "nsIStringBundle.h"
 #include "nsILocaleService.h"
 #include "nsUConvDll.h"
 #include "prmem.h"
 #include "nsCRT.h"
+#include "nsVoidArray.h"
+#include "nsStringEnumerator.h"
 
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -64,7 +66,6 @@
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
-static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID); 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 // Pattern of cached, commonly used, single byte decoder
@@ -73,9 +74,8 @@ static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 // Class nsCharsetConverterManager [implementation]
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsCharsetConverterManager,
-                              nsICharsetConverterManager, 
-                              nsICharsetConverterManager2);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsCharsetConverterManager,
+                              nsICharsetConverterManager)
 
 nsCharsetConverterManager::nsCharsetConverterManager() 
   :mDataBundle(NULL), mTitleBundle(NULL)
@@ -132,15 +132,13 @@ nsresult nsCharsetConverterManager::LoadExtensibleBundle(
 }
 
 nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle, 
-                                                   const nsIAtom * aName, 
+                                                   const char * aName, 
                                                    const nsAFlatString& aProp, 
                                                    PRUnichar ** aResult)
 {
   nsresult res = NS_OK;
 
-  nsAutoString key;
-  res = ((nsIAtom *) aName)->ToString(key);
-  if (NS_FAILED(res)) return res;
+  nsAutoString key; key.AssignWithConversion(aName);
 
   ToLowerCase(key); // we lowercase the main comparison key
   if (!aProp.IsEmpty()) key.Append(aProp.get()); // yes, this param may be NULL
@@ -150,31 +148,44 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
 }
 
 nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle, 
-                                                   const nsIAtom * aName, 
+                                                   const char * aName, 
                                                    const nsAFlatString& aProp, 
-                                                   nsIAtom ** aResult)
+                                                   nsAString& aResult)
 {
   nsresult res = NS_OK;
 
-  PRUnichar * value;
-  res = GetBundleValue(aBundle, aName, aProp, &value);
+  nsXPIDLString value;
+  res = GetBundleValue(aBundle, aName, aProp, getter_Copies(value));
   if (NS_FAILED(res)) return res;
 
-  *aResult =  NS_NewAtom(value);
-  PR_Free(value);
+  aResult = value;
 
   return NS_OK;
 }
 
 
-//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------//----------------------------------------------------------------------------
 // Interface nsICharsetConverterManager [implementation]
 
-NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
-                                         const nsString * aDest, 
-                                         nsIUnicodeEncoder ** aResult)
+NS_IMETHODIMP
+nsCharsetConverterManager::GetUnicodeEncoder(const char * aDest, 
+                                             nsIUnicodeEncoder ** aResult)
 {
+  // resolve the charset first
+  nsCAutoString charset;
+  
+  // fully qualify to possibly avoid vtable call
+  nsCharsetConverterManager::GetCharsetAlias(aDest, charset);
 
+  return nsCharsetConverterManager::GetUnicodeEncoderRaw(charset.get(),
+                                                         aResult);
+}
+
+
+NS_IMETHODIMP
+nsCharsetConverterManager::GetUnicodeEncoderRaw(const char * aDest, 
+                                                nsIUnicodeEncoder ** aResult)
+{
   *aResult= nsnull;
   nsCOMPtr<nsIUnicodeEncoder> encoder;
 
@@ -182,7 +193,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
   if (mNativeUC) {
     nsCOMPtr<nsISupports> supports;
     mNativeUC->GetNativeConverter("UCS-2", 
-                                  NS_LossyConvertUCS2toASCII(*aDest).get(),
+                                  aDest,
                                   getter_AddRefs(supports));
 
     encoder = do_QueryInterface(supports);
@@ -195,9 +206,9 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
 #endif  
   nsresult res = NS_OK;
 
-  nsCAutoString contractid(
-                    NS_LITERAL_CSTRING(NS_UNICODEENCODER_CONTRACTID_BASE) +
-                    NS_LossyConvertUCS2toASCII(*aDest));
+  nsCAutoString
+    contractid(NS_LITERAL_CSTRING(NS_UNICODEENCODER_CONTRACTID_BASE) +
+               nsDependentCString(aDest));
 
   // Always create an instance since encoders hold state.
   encoder = do_CreateInstance(contractid.get(), &res);
@@ -212,9 +223,23 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
   return res;
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
-                                         const nsString * aSrc, 
-                                         nsIUnicodeDecoder ** aResult)
+NS_IMETHODIMP
+nsCharsetConverterManager::GetUnicodeDecoder(const char * aSrc, 
+                                             nsIUnicodeDecoder ** aResult)
+{
+  // resolve the charset first
+  nsCAutoString charset;
+  
+  // fully qualify to possibly avoid vtable call
+  nsCharsetConverterManager::GetCharsetAlias(aSrc, charset);
+
+  return nsCharsetConverterManager::GetUnicodeDecoderRaw(charset.get(),
+                                                         aResult);
+}
+
+NS_IMETHODIMP
+nsCharsetConverterManager::GetUnicodeDecoderRaw(const char * aSrc, 
+                                                nsIUnicodeDecoder ** aResult)
 {
   *aResult= nsnull;
   nsCOMPtr<nsIUnicodeDecoder> decoder;
@@ -222,7 +247,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
 #ifdef MOZ_USE_NATIVE_UCONV
   if (mNativeUC) {
     nsCOMPtr<nsISupports> supports;
-    mNativeUC->GetNativeConverter(NS_LossyConvertUCS2toASCII(*aSrc).get(),
+    mNativeUC->GetNativeConverter(aSrc,
                                   "UCS-2", 
                                   getter_AddRefs(supports));
     
@@ -240,9 +265,9 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
                            NS_UNICODEDECODER_CONTRACTID_BASE);
 
   nsCAutoString contractid(kUnicodeDecoderContractIDBase +
-                           NS_LossyConvertUCS2toASCII(*aSrc));
+                           nsDependentCString(aSrc));
 
-  if (!strncmp(contractid.get()+kUnicodeDecoderContractIDBase.Length(),
+  if (!strncmp(aSrc,
                NS_1BYTE_CODER_PATTERN,
                NS_1BYTE_CODER_PATTERN_LEN))
   {
@@ -263,64 +288,21 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
   return res;
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
-                                         nsString * aCharset, 
-                                         nsIAtom ** aResult)
-{
-  if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
-
-  nsCOMPtr<nsIAtom> atom;
-  nsresult res = GetCharsetAtom(aCharset->get(), getter_AddRefs(atom));
-  if (NS_FAILED(res)) return res;
-
-  res = GetCharsetLangGroup(atom, aResult);
-  return res;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
-                                         const nsIAtom * aCharset, 
-                                         nsIUnicodeDecoder ** aResult)
-{
-  if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
-
-  // XXX use nsImmutableString
-  nsAutoString name;
-  NS_CONST_CAST(nsIAtom*, aCharset)->ToString(name);
-  return GetUnicodeDecoder(&name, aResult);
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
-                                         const nsIAtom * aCharset, 
-                                         nsIUnicodeEncoder ** aResult)
-{
-  if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
-
-  // XXX use nsImmutableString
-  nsAutoString name;
-  NS_CONST_CAST(nsIAtom*, aCharset)->ToString(name);
-  return GetUnicodeEncoder(&name, aResult);
-}
-
 nsresult 
 nsCharsetConverterManager::GetList(const nsACString& aCategory,
                                    const nsACString& aPrefix,
-                                   nsISupportsArray** aResult)
+                                   nsIUTF8StringEnumerator** aResult)
 {
   if (aResult == NULL) 
     return NS_ERROR_NULL_POINTER;
   *aResult = NULL;
 
   nsresult rv;
-  nsCOMPtr<nsIAtom> atom;
- 
-  nsCOMPtr<nsISupportsArray> array = do_CreateInstance(kSupportsArrayCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCAutoString alias;
+
+  nsCStringArray* array = new nsCStringArray;
+  if (!array)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -346,89 +328,73 @@ nsCharsetConverterManager::GetList(const nsACString& aCategory,
       continue;
 
     fullName += name;
-    rv = GetCharsetAtom2(fullName.get(), getter_AddRefs(atom));
+    rv = GetCharsetAlias(fullName.get(), alias);
     if (NS_FAILED(rv)) 
       continue;
-    
-    rv = array->AppendElement(atom);
+
+    rv = array->AppendCString(alias);
   }
     
-  NS_ADDREF(*aResult = array);
-  return NS_OK;
+  return NS_NewAdoptingUTF8StringEnumerator(aResult, array);
 }
 
 // we should change the interface so that we can just pass back a enumerator!
-NS_IMETHODIMP nsCharsetConverterManager::GetDecoderList(nsISupportsArray ** aResult)
+NS_IMETHODIMP
+nsCharsetConverterManager::GetDecoderList(nsIUTF8StringEnumerator ** aResult)
 {
   return GetList(NS_LITERAL_CSTRING(NS_UNICODEDECODER_NAME),
                  NS_LITERAL_CSTRING(""), aResult);
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetEncoderList(
-                                         nsISupportsArray ** aResult)
+NS_IMETHODIMP
+nsCharsetConverterManager::GetEncoderList(nsIUTF8StringEnumerator ** aResult)
 {
   return GetList(NS_LITERAL_CSTRING(NS_UNICODEENCODER_NAME),
                  NS_LITERAL_CSTRING(""), aResult);
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetDetectorList(
-                                         nsISupportsArray ** aResult)
+NS_IMETHODIMP
+nsCharsetConverterManager::GetCharsetDetectorList(nsIUTF8StringEnumerator** aResult)
 {
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
-
   return GetList(NS_LITERAL_CSTRING(NS_CHARSET_DETECTOR_CATEGORY),
                  NS_LITERAL_CSTRING("chardet."), aResult);
 }
 
 // XXX Improve the implementation of this method. Right now, it is build on 
-// top of two things: the nsCharsetAlias service and the Atom engine. We can 
-// improve on both. First, make the nsCharsetAlias better, with its own hash 
-// table (not the StringBundle anymore) and a nicer file format. Second, 
-// reimplement the Atom engine for the specific Charset case - more optimal.
-// Finally, unify the two for even better performance.
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetAtom(
-                                         const PRUnichar * aCharset, 
-                                         nsIAtom ** aResult)
+// top of the nsCharsetAlias service. We can make the nsCharsetAlias
+// better, with its own hash table (not the StringBundle anymore) and
+// a nicer file format.
+NS_IMETHODIMP
+nsCharsetConverterManager::GetCharsetAlias(const char * aCharset, 
+                                           nsACString& aResult)
 {
-  NS_PRECONDITION(aCharset && aResult, "null param");
+  NS_PRECONDITION(aCharset, "null param");
   if (!aCharset)
     return NS_ERROR_NULL_POINTER;
 
   // We try to obtain the preferred name for this charset from the charset 
   // aliases. If we don't get it from there, we just use the original string
-  nsDependentString charset(aCharset);
+  nsDependentCString charset(aCharset);
   nsCOMPtr<nsICharsetAlias> csAlias( do_GetService(kCharsetAliasCID) );
   NS_ASSERTION(csAlias, "failed to get the CharsetAlias service");
   if (csAlias) {
     nsAutoString pref;
-    nsresult res = csAlias->GetPreferred(charset, pref);
+    nsresult res = csAlias->GetPreferred(charset, aResult);
     if (NS_SUCCEEDED(res)) {
-      *aResult = NS_NewAtom(pref);
-      return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+      return (!aResult.IsEmpty()) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
-  *aResult = NS_NewAtom(charset);
-  return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  aResult = charset;
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetAtom2(
-                                         const char * aCharset, 
-                                         nsIAtom ** aResult)
-{
-  nsAutoString str;
-  str.AssignWithConversion(aCharset);
-  return GetCharsetAtom(str.get(), aResult);
-}
 
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(
-                                         const nsIAtom * aCharset, 
-                                         PRUnichar ** aResult)
+NS_IMETHODIMP
+nsCharsetConverterManager::GetCharsetTitle(const char * aCharset, 
+                                           nsAString& aResult)
 {
   if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
 
   nsresult res = NS_OK;
 
@@ -441,32 +407,13 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(
   return res;
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle2(
-                                         const nsIAtom * aCharset, 
-                                         nsString * aResult)
-{
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-
-  nsresult res = NS_OK;
-
-  PRUnichar * title;
-  res = GetCharsetTitle(aCharset, &title);
-  if (NS_FAILED(res)) return res;
-
-  aResult->Assign(title);
-  PR_Free(title);
-  return res;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetData(
-                                         const nsIAtom * aCharset, 
-                                         const PRUnichar * aProp,
-                                         PRUnichar ** aResult)
+NS_IMETHODIMP
+nsCharsetConverterManager::GetCharsetData(const char * aCharset, 
+                                          const PRUnichar * aProp,
+                                          nsAString& aResult)
 {
   if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
   // aProp can be NULL
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
 
   nsresult res = NS_OK;
 
@@ -479,31 +426,25 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetData(
   return res;
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetData2(
-                                         const nsIAtom * aCharset, 
-                                         const PRUnichar * aProp,
-                                         nsString * aResult)
+NS_IMETHODIMP
+nsCharsetConverterManager::GetCharsetLangGroup(const char * aCharset, 
+                                               nsIAtom** aResult)
 {
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
+  // resolve the charset first
+  nsCAutoString charset;
+  GetCharsetAlias(aCharset, charset);
 
-  nsresult res = NS_OK;
-
-  PRUnichar * data;
-  res = GetCharsetData(aCharset, aProp, &data);
-  if (NS_FAILED(res)) return res;
-
-  aResult->Assign(data);
-  PR_Free(data);
-  return res;
+  // fully qualify to possibly avoid vtable call
+  return nsCharsetConverterManager::GetCharsetLangGroupRaw(charset.get(),
+                                                           aResult);
 }
 
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
-                                         const nsIAtom * aCharset, 
-                                         nsIAtom ** aResult)
+NS_IMETHODIMP
+nsCharsetConverterManager::GetCharsetLangGroupRaw(const char * aCharset, 
+                                                  nsIAtom** aResult)
 {
+
   if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
 
   nsresult res = NS_OK;
 
@@ -512,6 +453,17 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
     if (NS_FAILED(res)) return res;
   }
 
-  res = GetBundleValue(mDataBundle, aCharset, NS_LITERAL_STRING(".LangGroup"), aResult);
+  nsCAutoString alias;
+  res = GetCharsetAlias(aCharset, alias);
+
+  if (NS_FAILED(res)) return res;
+
+  nsAutoString langGroup;
+  res = GetBundleValue(mDataBundle, alias.get(), NS_LITERAL_STRING(".LangGroup"), langGroup);
+
+  nsCOMPtr<nsIAtom> langGroupAtom = NS_NewAtom(langGroup);
+
+  NS_ADDREF(*aResult = langGroupAtom);
+  
   return res;
 }

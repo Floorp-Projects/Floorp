@@ -38,9 +38,10 @@
 
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsUCSupport.h"
 #include "nsString.h"
+#include "nsIStringEnumerator.h"
+#include "nsVoidArray.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -133,7 +134,7 @@ private:
   nsresult TestTempBug();
 
   nsresult Encode(PRUnichar ** aSrc, PRUnichar * aSrcEnd, char ** aDest, 
-    char * aDestEnd, nsString * aCharset);
+    char * aDestEnd, const nsAFlatCString& aCharset);
 
   /**
    * Bridge methods between the new argument style (poiters) and the old one 
@@ -152,8 +153,6 @@ private:
     nsIUnicodeEncoder * aEncoder);
 
   void PrintSpaces(int aCount);
-
-  nsresult AddArray(nsISupportsArray * aDest, nsISupportsArray * aSrc);
 
 public:
 
@@ -212,17 +211,25 @@ nsresult nsTestUConv::TestEncoders()
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsICharsetConverterManager2> ccMan = 
+  nsCOMPtr<nsICharsetConverterManager> ccMan = 
            do_GetService(kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) return res;
   
-  nsCOMPtr<nsISupportsArray> encoders;
+  nsCOMPtr<nsIUTF8StringEnumerator> encoders;
   res = ccMan->GetEncoderList(getter_AddRefs(encoders));
   if (NS_FAILED(res)) return res;
 
-  PRUint32 encoderCount;
-  encoders->Count(&encoderCount);
-  printf("There are %d encoders\n", encoderCount);
+  PRUint32 encoderCount=0;
+
+  PRBool hasMore;
+  encoders->HasMore(&hasMore);
+  
+  nsCAutoString charset;
+  while (hasMore) {
+    encoders->GetNext(charset);
+
+    encoders->HasMore(&hasMore);
+  }
   
   mLog.DelTrace(trace);
   return res;
@@ -248,46 +255,11 @@ nsresult nsTestUConv::TestCharsetManager()
   nsAutoString name;
   nsCOMPtr<nsIAtom> csAtom;
 
-  nsCOMPtr<nsICharsetConverterManager2> ccMan = 
+  nsCOMPtr<nsICharsetConverterManager> ccMan = 
            do_GetService(kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) {
     mLog.PrintError("NS_WITH_SERVICE", res);
     return res;
-  }
-
-  // test alias resolving capability
-  nsAutoString csAlias(NS_LITERAL_STRING("iso-10646-ucs-basic"));
-  nsAutoString csName(NS_LITERAL_STRING("UTF-16BE"));
-  res = ccMan->GetCharsetAtom(csAlias.get(), getter_AddRefs(csAtom));
-  if (NS_FAILED(res)) {
-    mLog.PrintError("GetCharsetAtom()", res);
-    return res;
-  }
-  res = csAtom->ToString(name);
-  if (NS_FAILED(res)) {
-    mLog.PrintError("get()", res);
-    return res;
-  }
-  if (!csName.Equals(name)) {
-    mLog.PrintError("Equals()", "unexpected charset name");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // test self returning if alias was not found
-  nsAutoString csAlias2(NS_LITERAL_STRING("Totally_dummy_charset_name"));
-  res = ccMan->GetCharsetAtom(csAlias2.get(), getter_AddRefs(csAtom));
-  if (NS_FAILED(res)) {
-    mLog.PrintError("GetCharsetAtom()", res);
-    return res;
-  }
-  res = csAtom->ToString(name);
-  if (NS_FAILED(res)) {
-    mLog.PrintError("get()", res);
-    return res;
-  }
-  if (!csAlias2.Equals(name)) {
-    mLog.PrintError("Equals()", "unexpected charset name");
-    return NS_ERROR_UNEXPECTED;
   }
 
   mLog.DelTrace(trace);
@@ -300,7 +272,7 @@ nsresult nsTestUConv::DisplayDetectors()
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsICharsetConverterManager2> ccMan = 
+  nsCOMPtr<nsICharsetConverterManager> ccMan = 
            do_GetService(kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) {
     mLog.PrintError("NS_WITH_SERVICE", res);
@@ -308,48 +280,33 @@ nsresult nsTestUConv::DisplayDetectors()
   }
 
   // charset detectors
-  nsCOMPtr<nsISupportsArray> array;
+  nsCOMPtr<nsIUTF8StringEnumerator> detectors;
 
-  res = ccMan->GetCharsetDetectorList(getter_AddRefs(array));
+  res = ccMan->GetCharsetDetectorList(getter_AddRefs(detectors));
   if (NS_FAILED(res)) {
     mLog.PrintError("GetCharsetDetectorList()", res);
     return res;
   }
 
-  PRUint32 count;
-  res = array->Count(&count);
-  if (NS_FAILED(res)) {
-    mLog.PrintError("Count()", res);
-    return res;
-  }
+  printf("***** Character Set Detectors *****\n");
 
-  printf("***** Character Set Detectors [%d] *****\n", count);
-
-  for (PRUint32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIAtom> cs;
-    nsAutoString str;
-
-    res = array->GetElementAt(i, getter_AddRefs(cs));
+  PRBool hasMore;
+  detectors->HasMore(&hasMore);
+  while (hasMore) {
+    nsCAutoString detectorName;
+    res = detectors->GetNext(detectorName);
     if (NS_FAILED(res)) {
-      mLog.PrintError("GetElementAt()", res);
+      mLog.PrintError("GetNext()", res);
       return res;
     }
 
-    nsAutoString name;
-    res = cs->ToString(name);
-    if (NS_FAILED(res)) {
-      mLog.PrintError("get()", res);
-      return res;
-    }
+    printf("%s", detectorName.get());
+    PrintSpaces(36 - detectorName.Length()); // align to hard coded column number
 
-    str.Assign(name);
-    NS_LossyConvertUCS2toASCII buff(str);
-    printf("%s", buff.get());
-    PrintSpaces(36 - buff.Length());  // align to hard coded column number
-
-    res = ccMan->GetCharsetTitle2(cs, &str);
-    if (NS_FAILED(res)) str.SetLength(0);
-    printf("\"%s\"\n", NS_LossyConvertUCS2toASCII(str).get());
+    nsAutoString title;
+    res = ccMan->GetCharsetTitle(detectorName.get(), title);
+    if (NS_FAILED(res)) title.SetLength(0);
+    printf("\"%s\"\n", NS_LossyConvertUCS2toASCII(title).get());
   }
   
   mLog.DelTrace(trace);
@@ -362,69 +319,58 @@ nsresult nsTestUConv::DisplayCharsets()
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
-  nsCOMPtr<nsICharsetConverterManager2> ccMan = 
+  nsCOMPtr<nsICharsetConverterManager> ccMan = 
            do_GetService(kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) {
     mLog.PrintError("NS_WITH_SERVICE", res);
     return res;
   }
 
-  nsCOMPtr<nsISupportsArray> array;
-  nsCOMPtr<nsISupportsArray> encArray;
+  nsCOMPtr<nsIUTF8StringEnumerator> decoders;
+  nsCOMPtr<nsIUTF8StringEnumerator> encoders;
 
-  res = ccMan->GetDecoderList(getter_AddRefs(array));
+  res = ccMan->GetDecoderList(getter_AddRefs(decoders));
   if (NS_FAILED(res)) {
     mLog.PrintError("GetDecoderList()", res);
     return res;
   }
 
-  res = ccMan->GetEncoderList(getter_AddRefs(encArray));
+  res = ccMan->GetEncoderList(getter_AddRefs(encoders));
   if (NS_FAILED(res)) {
     mLog.PrintError("GetEncoderList()", res);
     return res;
   }
 
-  res = AddArray(array, encArray);
-  if (NS_FAILED(res)) return res;
 
-  PRUint32 count;
-  res = array->Count(&count);
-  if (NS_FAILED(res)) {
-    mLog.PrintError("Count()", res);
-    return res;
-  }
-
-  printf("***** Character Sets [%d] *****\n", count);
+  printf("***** Character Sets *****\n");
 
   PRUint32 encCount = 0, decCount = 0;
   PRUint32 basicEncCount = 0, basicDecCount = 0;
+
+  nsCStringArray allCharsets;
   
+  nsCAutoString charset;
+  PRBool hasMore;
+  encoders->HasMore(&hasMore);
+  while (hasMore) {
+    res = encoders->GetNext(charset);
+    if (NS_SUCCEEDED(res))
+      allCharsets.AppendCString(charset);
+
+    encoders->HasMore(&hasMore);
+  }
+
+  nsAutoString prop, str;
+  PRUint32 count = allCharsets.Count();
   for (PRUint32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIAtom> cs;
-    nsAutoString str;
-    nsAutoString prop;
 
-    res = array->GetElementAt(i, getter_AddRefs(cs));
-    if (NS_FAILED(res)) {
-      mLog.PrintError("GetElementAt()", res);
-      return res;
-    }
-
-    nsAutoString name;
-    res = cs->ToString(name);
-    if (NS_FAILED(res)) {
-      mLog.PrintError("get()", res);
-      return res;
-    }
-
-    str.Assign(name);
-    NS_LossyConvertUCS2toASCII buff(str);
-    printf("%s", buff.get());
-    PrintSpaces(24 - buff.Length());  // align to hard coded column number
+    const nsCString* charset = allCharsets[i];
+    printf("%s", charset->get());
+    PrintSpaces(24 - charset->Length());  // align to hard coded column number
 
 
     nsCOMPtr<nsIUnicodeDecoder> dec = NULL;
-    res = ccMan->GetUnicodeDecoder(cs, getter_AddRefs(dec));
+    res = ccMan->GetUnicodeDecoder(charset->get(), getter_AddRefs(dec));
     if (NS_FAILED(res)) printf (" "); 
     else {
       printf("D");
@@ -444,7 +390,7 @@ nsresult nsTestUConv::DisplayCharsets()
 #endif
 
     nsCOMPtr<nsIUnicodeEncoder> enc = NULL;
-    res = ccMan->GetUnicodeEncoder(cs, getter_AddRefs(enc));
+    res = ccMan->GetUnicodeEncoder(charset->get(), getter_AddRefs(enc));
     if (NS_FAILED(res)) printf (" "); 
     else {
       printf("E");
@@ -466,27 +412,27 @@ nsresult nsTestUConv::DisplayCharsets()
     printf(" ");
 
     prop.Assign(NS_LITERAL_STRING(".notForBrowser"));
-    res = ccMan->GetCharsetData2(cs, prop.get(), &str);
+    res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
     if ((dec != NULL) && (NS_FAILED(res))) printf ("B"); 
     else printf("X");
 
     prop.Assign(NS_LITERAL_STRING(".notForComposer"));
-    res = ccMan->GetCharsetData2(cs, prop.get(), &str);
+    res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
     if ((enc != NULL) && (NS_FAILED(res))) printf ("C"); 
     else printf("X");
 
     prop.Assign(NS_LITERAL_STRING(".notForMailView"));
-    res = ccMan->GetCharsetData2(cs, prop.get(), &str);
+    res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
     if ((dec != NULL) && (NS_FAILED(res))) printf ("V"); 
     else printf("X");
 
     prop.Assign(NS_LITERAL_STRING(".notForMailEdit"));
-    res = ccMan->GetCharsetData2(cs, prop.get(), &str);
+    res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
     if ((enc != NULL) && (NS_FAILED(res))) printf ("E"); 
     else printf("X");
 
     printf("(%3d, %3d) ", encCount, decCount);
-    res = ccMan->GetCharsetTitle2(cs, &str);
+    res = ccMan->GetCharsetTitle(charset->get(), str);
     if (NS_FAILED(res)) str.SetLength(0);
     NS_LossyConvertUCS2toASCII buff2(str);
     printf(" \"%s\"\n", buff2.get());
@@ -507,7 +453,7 @@ nsresult nsTestUConv::TestTempBug()
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
-  nsAutoString charset(NS_LITERAL_STRING("ISO-2022-JP"));
+  NS_NAMED_LITERAL_CSTRING(charset, "ISO-2022-JP");
   PRUnichar src[] = {0x0043, 0x004e, 0x0045, 0x0054, 0x0020, 0x004A, 0x0061, 
     0x0070, 0x0061, 0x006E, 0x0020, 0x7DE8, 0x96C6, 0x5C40};
   PRUnichar * srcEnd = src + ARRAY_SIZE(src);
@@ -516,7 +462,7 @@ nsresult nsTestUConv::TestTempBug()
 
   PRUnichar * p = src;
   char * q = dest;
-  res = Encode(&p, srcEnd, &q, destEnd, &charset);
+  res = Encode(&p, srcEnd, &q, destEnd, charset);
 
   mLog.DelTrace(trace);
   return res;
@@ -524,7 +470,7 @@ nsresult nsTestUConv::TestTempBug()
 
 nsresult nsTestUConv::Encode(PRUnichar ** aSrc, PRUnichar * aSrcEnd, 
                              char ** aDest, char * aDestEnd, 
-                             nsString * aCharset)
+                             const nsAFlatCString& aCharset)
 {
   char * trace = "Encode";
   mLog.AddTrace(trace);
@@ -538,7 +484,7 @@ nsresult nsTestUConv::Encode(PRUnichar ** aSrc, PRUnichar * aSrcEnd,
   }
 
   nsCOMPtr<nsIUnicodeEncoder> enc;
-  res = ccMan->GetUnicodeEncoder(aCharset, getter_AddRefs(enc));
+  res = ccMan->GetUnicodeEncoder(aCharset.get(), getter_AddRefs(enc));
   if (NS_FAILED(res)) {
     mLog.PrintError("GetUnicodeEncoder()", res);
     return res;
@@ -591,30 +537,6 @@ nsresult nsTestUConv::FinishEncode(char ** aDest, char * aDestEnd,
 void nsTestUConv::PrintSpaces(int aCount)
 {
   for (int i = 0; i < aCount; i++) printf(" ");
-}
-
-nsresult nsTestUConv::AddArray(nsISupportsArray * aDest, 
-                               nsISupportsArray * aSrc)
-{
-  nsresult res = NS_OK;
-  PRUint32 count, i;
-
-  res = aSrc->Count(&count);
-  if (NS_FAILED(res)) return res;
-
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISupports> elem;
-    res = aSrc->GetElementAt(i, getter_AddRefs(elem));
-    if (NS_FAILED(res)) return res;
-
-    PRInt32 index;
-    res = aDest->GetIndexOf(elem, &index);
-    if (NS_FAILED(res)) return res;
-
-    if (index < 0) res = aDest->AppendElement(elem);
-  }
-
-  return NS_OK;
 }
 
 nsresult nsTestUConv::Main(int aArgC, char ** aArgV)

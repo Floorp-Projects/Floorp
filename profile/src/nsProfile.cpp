@@ -742,7 +742,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             }
             else {
                 // get a platform charset
-                nsAutoString charSet;
+                nsCAutoString charSet;
                 rv = GetPlatformCharset(charSet);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get a platform charset");
 
@@ -811,7 +811,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             }
             else {
                 // get a platform charset
-                nsAutoString charSet;
+                nsCAutoString charSet;
                 rv = GetPlatformCharset(charSet);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get a platform charset");
 

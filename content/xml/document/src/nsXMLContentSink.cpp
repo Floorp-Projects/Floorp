@@ -93,7 +93,6 @@
 #include "nsIImageLoadingContent.h"
 #include "nsEscape.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsICookieService.h"
@@ -319,7 +318,9 @@ nsXMLContentSink::WillBuildModel(void)
 }
 
 // This function's implementation is in nsHTMLContentSink.cpp
-nsresult CharsetConvRef(const nsString& aDocCharset, const nsCString& aRefInDocCharset, nsString& aRefInUnicode);
+nsresult
+CharsetConvRef(const nsCString& aDocCharset, const nsCString& aRefInDocCharset,
+               nsString& aRefInUnicode);
 
 void
 nsXMLContentSink::ScrollToRef(PRBool aReallyScroll)
@@ -338,7 +339,7 @@ nsXMLContentSink::ScrollToRef(PRBool aReallyScroll)
     nsresult rv = NS_ERROR_FAILURE;
     // We assume that the bytes are in UTF-8, as it says in the spec:
     // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
-    nsAutoString ref = NS_ConvertUTF8toUCS2(unescapedRef);
+    NS_ConvertUTF8toUCS2 ref(unescapedRef);
 
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
@@ -364,7 +365,8 @@ nsXMLContentSink::ScrollToRef(PRBool aReallyScroll)
           rv = mDocument->GetDocumentCharacterSet(docCharset);
 
           if (NS_SUCCEEDED(rv)) {
-            rv = CharsetConvRef(docCharset, unescapedRef, ref);
+            rv = CharsetConvRef(NS_LossyConvertUCS2toASCII(docCharset),
+                                unescapedRef, ref);
 
             if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
               rv = shell->GoToAnchor(ref, aReallyScroll);

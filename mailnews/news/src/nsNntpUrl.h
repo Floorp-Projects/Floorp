@@ -73,7 +73,7 @@ private:
 	nsNewsAction m_newsAction; // the action this url represents...parse mailbox, display messages, etc.
  
   nsCString mURI; // the RDF URI associated with this url.
-  nsString mCharsetOverride; // used by nsIMsgI18NUrl...
+  nsCString mCharsetOverride; // used by nsIMsgI18NUrl...
 
   nsCString mOriginalSpec;
   nsFileSpec	*m_filePath; 

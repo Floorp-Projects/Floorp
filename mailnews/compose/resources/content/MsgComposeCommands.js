@@ -130,7 +130,7 @@ function InitializeGlobalVariables()
   gCurrentMailSendCharset = null;
   gSendDefaultCharset = null;
   gCharsetTitle = null;
-  gCharsetConvertManager = Components.classes['@mozilla.org/charset-converter-manager;1'].getService(Components.interfaces.nsICharsetConverterManager2);
+  gCharsetConvertManager = Components.classes['@mozilla.org/charset-converter-manager;1'].getService(Components.interfaces.nsICharsetConverterManager);
   gMailSession = Components.classes["@mozilla.org/messenger/services/session;1"].getService(Components.interfaces.nsIMsgMailSession);
   gHideMenus = false;
   // We are storing the value of the bool logComposePerformance inorder to avoid logging unnecessarily.
@@ -1449,8 +1449,8 @@ function UpdateMailEditCharset()
 //  dump("gMsgCompose.compFields is " + compFieldsCharset + "\n");
 
   if (gCharsetConvertManager) {
-    var charsetAtom = gCharsetConvertManager.GetCharsetAtom(compFieldsCharset);
-    if (charsetAtom && (charsetAtom.equals("us-ascii")))
+    var charsetAlias = gCharsetConvertManager.getCharsetAlias(compFieldsCharset);
+    if (charsetAlias == "us-ascii")
       compFieldsCharset = "ISO-8859-1";   // no menu item for "us-ascii"
   }
 
@@ -1499,17 +1499,14 @@ function GetCharsetUIString()
     if (gCharsetTitle == null) {
       try {
         // check if we have a converter for this charset
-        var charsetAtom = gCharsetConvertManager.GetCharsetAtom(charset);
+        var charsetAlias = gCharsetConvertManager.GetCharsetAlias(charset);
         var encoderList = gCharsetConvertManager.GetEncoderList();
-        var n = encoderList.Count();
         var found = false;
-        for (var i = 0; i < n; i++)
-        {
-          if (charsetAtom == encoderList.GetElementAt(i))
-          {
-            found = true;
-            break;
-          }
+        while (encoderList.hasMore()) {
+            if (charsetAlias == encoderList.getNext()) {
+                found = true;
+                break;
+            }
         }
         if (!found)
         {
@@ -1520,7 +1517,7 @@ function GetCharsetUIString()
         }
 
         // get a localized string
-        gCharsetTitle = gCharsetConvertManager.GetCharsetTitle(charsetAtom);
+        gCharsetTitle = gCharsetConvertManager.getCharsetTitle(charsetAlias);
       }
       catch (ex) {
         dump("failed to get a charset title of " + charset + "!\n");

@@ -187,7 +187,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        res = mCollation->SetCharset(mappedCharset);
+        res = mCollation->SetCharset(NS_LossyConvertUCS2toASCII(mappedCharset).get());
         nsMemory::Free(mappedCharset);
       }
     }
@@ -229,7 +229,7 @@ nsresult nsCollationMac::CreateRawSortKey(const nsCollationStrength strength,
   res = mCollation->UnicodeToChar(stringNormalized, &str);
   if (NS_SUCCEEDED(res) && str != NULL) {
     str_len = strlen(str);
-    NS_ASSERTION(str_len <= *outLen, "output buffer too small");
+    NS_ASSERTION(str_len <= int(*outLen), "output buffer too small");
     
     // If no CJK then generate a collation key
     if (smJapanese != m_scriptcode && smKorean != m_scriptcode && 

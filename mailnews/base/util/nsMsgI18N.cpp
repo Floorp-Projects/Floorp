@@ -41,7 +41,7 @@
 #include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
 #include "nsIServiceManager.h"
-#include "nsICharsetConverterManager2.h"
+#include "nsICharsetConverterManager.h"
 
 #include "nsISupports.h"
 #include "nsIPrefBranch.h"
@@ -95,15 +95,14 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
     Recycle(s);
     return NS_OK;
   }
-  nsAutoString convCharset(NS_LITERAL_STRING("ISO-8859-1"));
+  nsCAutoString convCharset(NS_LITERAL_CSTRING("ISO-8859-1"));
   nsresult res;
 
   // Resolve charset alias
   nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
-    nsAutoString aAlias; aAlias.AssignWithConversion(aCharset.get());
-    if (!aAlias.IsEmpty()) {
-      res = calias->GetPreferred(aAlias, convCharset);
+    if (!aCharset.IsEmpty()) {
+      res = calias->GetPreferred(aCharset, convCharset);
     }
   }
 
@@ -112,7 +111,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
     nsCOMPtr <nsIUnicodeEncoder> encoder;
 
     // get an unicode converter
-    res = ccm->GetUnicodeEncoder(&convCharset, getter_AddRefs(encoder));
+    res = ccm->GetUnicodeEncoderRaw(convCharset.get(), getter_AddRefs(encoder));
     if(NS_SUCCEEDED(res)) {
       res = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
       if (NS_SUCCEEDED(res)) {
@@ -163,15 +162,14 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
     return NS_OK;
   }
 
-  nsAutoString convCharset;
+  nsCAutoString convCharset;
   nsresult res;
 
   // Resolve charset alias
   nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
-    nsAutoString aAlias; aAlias.AssignWithConversion(aCharset.get());
-    if (!aAlias.IsEmpty()) {
-      res = calias->GetPreferred(aAlias, convCharset);
+    if (!aCharset.IsEmpty()) {
+      res = calias->GetPreferred(aCharset, convCharset);
     }
   }
   if (NS_FAILED(res)) {
@@ -183,7 +181,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
     nsCOMPtr <nsIUnicodeDecoder> decoder;
 
     // get an unicode converter
-    res = ccm->GetUnicodeDecoder(&convCharset, getter_AddRefs(decoder));
+    res = ccm->GetUnicodeDecoderRaw(convCharset.get(), getter_AddRefs(decoder));
     if(NS_SUCCEEDED(res)) {
 
       const char *originalSrcPtr = inString.get();
@@ -242,16 +240,12 @@ nsresult ConvertFromUnicode(const char* aCharset,
 
   nsresult res;
 
-  nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-  NS_ENSURE_SUCCESS(res, res);
-
-  nsCOMPtr <nsIAtom> charsetAtom;
-  res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(aCharset).get(), getter_AddRefs(charsetAtom));
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   NS_ENSURE_SUCCESS(res, res);
 
   // get an unicode converter
   nsCOMPtr<nsIUnicodeEncoder> encoder;
-  res = ccm2->GetUnicodeEncoder(charsetAtom, getter_AddRefs(encoder));
+  res = ccm->GetUnicodeEncoder(aCharset, getter_AddRefs(encoder));
   NS_ENSURE_SUCCESS(res, res);
 
 
@@ -306,16 +300,12 @@ nsresult ConvertToUnicode(const char* aCharset,
 
   nsresult res;
 
-  nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-  NS_ENSURE_SUCCESS(res, res);
-
-  nsCOMPtr <nsIAtom> charsetAtom;
-  res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(aCharset).get(), getter_AddRefs(charsetAtom));
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   NS_ENSURE_SUCCESS(res, res);
 
   // get an unicode converter
   nsCOMPtr<nsIUnicodeDecoder> decoder;
-  res = ccm2->GetUnicodeDecoder(charsetAtom, getter_AddRefs(decoder));
+  res = ccm->GetUnicodeDecoder(aCharset, getter_AddRefs(decoder));
   NS_ENSURE_SUCCESS(res, res);
 
   PRUnichar *unichars;
@@ -369,11 +359,10 @@ const char * nsMsgI18NFileSystemCharset()
 	{
 		nsresult rv;
 		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString charset;
-      rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, charset);
-      fileSystemCharset.AssignWithConversion(charset);
-    }
+        if (NS_SUCCEEDED(rv)) {
+          rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName,
+                                           fileSystemCharset);
+        }
 
 		if (NS_FAILED(rv)) 
 			fileSystemCharset.Assign("ISO-8859-1");
@@ -412,19 +401,14 @@ PRBool nsMsgI18Nstateful_charset(const char *charset)
 PRBool nsMsgI18Nmultibyte_charset(const char *charset)
 {
   nsresult res;
-  nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(kCharsetConverterManagerCID, &res);
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &res);
   PRBool result = PR_FALSE;
 
   if (NS_SUCCEEDED(res)) {
-    nsCOMPtr <nsIAtom> charsetAtom;
     nsAutoString charsetData;
-    res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).get(), getter_AddRefs(charsetAtom));
+    res = ccm->GetCharsetData(charset, NS_LITERAL_STRING(".isMultibyte").get(), charsetData);
     if (NS_SUCCEEDED(res)) {
-      res = ccm2->GetCharsetData2(charsetAtom, NS_LITERAL_STRING(".isMultibyte").get(), &charsetData);
-      if (NS_SUCCEEDED(res)) {
-        result = charsetData.Equals(NS_LITERAL_STRING("true"),
-                                    nsCaseInsensitiveStringComparator());
-      }
+      result = charsetData.EqualsIgnoreCase("true");
     }
   }
 
@@ -437,7 +421,6 @@ PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar
   if (!charset || !*charset || !inString || !*inString)
     return PR_TRUE;
 
-  nsAutoString aCharset; aCharset.AssignWithConversion(charset);
   nsresult res;
   PRBool result = PR_TRUE;
   
@@ -447,7 +430,7 @@ PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar
     nsCOMPtr <nsIUnicodeEncoder> encoder;
 
     // get an unicode converter
-    res = ccm->GetUnicodeEncoder(&aCharset, getter_AddRefs(encoder));
+    res = ccm->GetUnicodeEncoderRaw(charset, getter_AddRefs(encoder));
     if(NS_SUCCEEDED(res)) {
       const PRUnichar *originalPtr = inString;
       PRInt32 originalLen = nsCRT::strlen(inString);
@@ -600,15 +583,13 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
     return NS_ERROR_ILLEGAL_VALUE;  // not supported type
   }
 
-  nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+  nsCOMPtr <nsICharsetAlias> calias =
+    do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
   NS_ENSURE_SUCCESS(res, res);
 
-  nsCOMPtr <nsIAtom> charsetAtom;
-  res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).get(), getter_AddRefs(charsetAtom));
-  NS_ENSURE_SUCCESS(res, res);
-
-  const char *charsetName;
-  res = charsetAtom->GetUTF8String(&charsetName);
+  nsCAutoString charsetName;
+  res = calias->GetPreferred(nsDependentCString(charset),
+                             charsetName);
   NS_ENSURE_SUCCESS(res, res);
 
   // charset converter plus entity, NCR generation
@@ -620,14 +601,14 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
   // plain text - charset conv then fallback to '?'
   if (bTEXT_HTML)
     // For ISO-8859-1 only, convert to entity first (always generate entites like &nbsp;).
-    res = conv->Init(charsetName,
-                     !nsCRT::strcmp(charsetName, "ISO-8859-1") ?
+    res = conv->Init(charsetName.get(),
+                     charsetName.Equals(NS_LITERAL_CSTRING("ISO-8859-1")) ?
                      nsISaveAsCharset::attr_htmlTextDefault :
                      nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackDecimalNCR, 
                      nsIEntityConverter::html32);
   else
     // fallback for text/plain: first try transliterate then '?'
-    res = conv->Init(charsetName, 
+    res = conv->Init(charsetName.get(), 
                      nsISaveAsCharset::attr_FallbackQuestionMark + nsISaveAsCharset::attr_EntityAfterCharsetConv, 
                      nsIEntityConverter::transliterate);
   NS_ENSURE_SUCCESS(res, res);
@@ -636,7 +617,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
 
   // Mapping characters in a certain range (required for Japanese only)
   nsAutoString mapped;
-  if (!nsCRT::strcmp(charsetName, "ISO-2022-JP")) {
+  if (charsetName.Equals(NS_LITERAL_CSTRING("ISO-2022-JP"))) {
     static PRInt32 sSendHankakuKana = -1;
     if (sSendHankakuKana < 0) {
       nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
@@ -697,7 +678,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
   // In case of HTML, non ASCII may be encoded as CER, NCR.
   // Exclude stateful charset which is 7 bit but not ASCII only.
   else if (isAsciiOnly && bTEXT_HTML && *outString &&
-           !nsMsgI18Nstateful_charset(charsetName))
+           !nsMsgI18Nstateful_charset(charsetName.get()))
     *isAsciiOnly = nsCRT::IsAscii(*outString);
 
   return res;

@@ -459,7 +459,7 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
                                             nsISupports * aDisplayConsumer,  
                                             nsIMsgWindow * aMsgWindow,
                                             nsIUrlListener * aUrlListener,
-                                            const PRUnichar * aCharsetOverride,
+                                            const char * aCharsetOverride,
                                             nsIURI ** aURL)
 {
   nsresult rv = NS_OK;

@@ -25,7 +25,6 @@
 
 
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsCOMPtr.h"
 #include "nsIDateTimeFormat.h"
 
@@ -72,8 +71,8 @@ private:
 
   nsString    mLocale;
   nsString    mAppLocale;
-  nsString    mCharset;
-  nsString    mSystemCharset;
+  nsCString   mCharset;
+  nsCString   mSystemCharset;
   short       mScriptcode;
   short       mLangcode;
   short       mRegioncode;

@@ -118,6 +118,6 @@ public:
     nsresult ShowProfileWizard(void);
 };
 
-extern nsresult ConvertStringToUnicode(nsString& aCharset, const char* inString, nsAString& outString);
-extern nsresult GetPlatformCharset(nsString& aCharset);
+extern nsresult ConvertStringToUnicode(nsCString& aCharset, const char* inString, nsAString& outString);
+extern nsresult GetPlatformCharset(nsCString& aCharset);
 

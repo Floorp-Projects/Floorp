@@ -232,10 +232,10 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         // reset parser's charset to platform's default if this is file url
         nsCOMPtr<nsIPlatformCharset> platformCharset(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
         NS_ENSURE_SUCCESS(rv, rv);
-        nsAutoString charset;
+        nsCAutoString charset;
         rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, charset);
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = mParser->SetEncoding(NS_LossyConvertUCS2toASCII(charset).get());
+        rv = mParser->SetEncoding(charset.get());
         NS_ENSURE_SUCCESS(rv, rv);
 
     } else if (NS_SUCCEEDED(uri->SchemeIs("gopher", &isScheme)) && isScheme) {
@@ -383,17 +383,13 @@ nsIndexedToHTML::FormatInputStream(nsIRequest* aRequest, nsISupports *aContext, 
       nsXPIDLCString encoding;
       rv = mParser->GetEncoding(getter_Copies(encoding));
       if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsICharsetConverterManager2> charsetConverterManager;
+        nsCOMPtr<nsICharsetConverterManager> charsetConverterManager;
         charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-        nsCOMPtr<nsIAtom> charsetAtom;
-        rv = charsetConverterManager->GetCharsetAtom2(encoding.get(), getter_AddRefs(charsetAtom));
-        if (NS_SUCCEEDED(rv)) {
-          rv = charsetConverterManager->GetUnicodeEncoder(charsetAtom, 
+        rv = charsetConverterManager->GetUnicodeEncoder(encoding.get(), 
                                                           getter_AddRefs(mUnicodeEncoder));
-          if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv))
             rv = mUnicodeEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, 
                                                        nsnull, (PRUnichar)'?');
-        }
       }
     }
 

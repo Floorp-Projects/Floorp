@@ -222,7 +222,7 @@ nsMsgDBFolder::GetExpungedBytes(PRUint32 *count)
 }
 
 
-NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
+NS_IMETHODIMP nsMsgDBFolder::GetCharset(char * *aCharset)
 {
 	nsresult rv = NS_OK;
 	if(!aCharset)
@@ -232,18 +232,12 @@ NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
   nsCOMPtr<nsIMsgDatabase> db; 
   rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
   if(NS_SUCCEEDED(rv))
-  {
-    nsXPIDLCString  charset;
-    rv = folderInfo->GetCharPtrCharacterSet(getter_Copies(charset));
-    if(NS_SUCCEEDED(rv))
-    {
-      *aCharset = ToNewUnicode(charset);
-    }
-  }
+    return folderInfo->GetCharPtrCharacterSet(aCharset);
+
   return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::SetCharset(const PRUnichar * aCharset)
+NS_IMETHODIMP nsMsgDBFolder::SetCharset(const char * aCharset)
 {
 	nsresult rv;
 
@@ -252,9 +246,9 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharset(const PRUnichar * aCharset)
 	rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = folderInfo->SetCharacterSet(aCharset);
+		rv = folderInfo->SetCharacterSet(NS_ConvertASCIItoUCS2(aCharset).get());
 		db->Commit(nsMsgDBCommitType::kLargeCommit);
-		mCharset.Assign(aCharset);  // synchronize member variable
+		mCharset.AssignWithConversion(aCharset);  // synchronize member variable
 	}
 	return rv;
 }

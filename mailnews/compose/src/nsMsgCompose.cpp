@@ -54,7 +54,6 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsMsgI18N.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsMsgCompCID.h"
 #include "nsMsgQuote.h"
 #include "nsIPref.h"
@@ -216,7 +215,7 @@ static void TranslateLineEnding(nsString& data)
   data.SetLength(wPtr - sPtr);
 }
 
-static void GetTopmostMsgWindowCharacterSet(nsXPIDLString& charset, PRBool* charsetOverride)
+static void GetTopmostMsgWindowCharacterSet(nsXPIDLCString& charset, PRBool* charsetOverride)
 {
   // HACK: if we are replying to a message and that message used a charset over ride
   // (as specified in the top most window (assuming the reply originated from that window)
@@ -1454,12 +1453,12 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
   nsXPIDLCString charset;
   // use a charset of the original message
-  nsXPIDLString mailCharset;
+  nsXPIDLCString mailCharset;
   PRBool charsetOverride = PR_FALSE;
   GetTopmostMsgWindowCharacterSet(mailCharset, &mCharsetOverride);
   if (!mailCharset.IsEmpty())
   {
-    charset.Adopt(ToNewUTF8String(nsDependentString(mailCharset)));
+    charset = mailCharset;
     charsetOverride = PR_TRUE;
   }
 
@@ -2195,18 +2194,12 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIRequest *request,
     // Create unicode decoder.
     if (!mUnicodeDecoder)
     {
-      nsCOMPtr<nsICharsetConverterManager2> ccm2 = 
+      nsCOMPtr<nsICharsetConverterManager> ccm = 
                do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv); 
       if (NS_SUCCEEDED(rv))
       {
-        nsCOMPtr <nsIAtom> charsetAtom = getter_AddRefs(NS_NewAtom("UTF-8"));
-
-        if (!charsetAtom)
-        {
-          PR_Free(newBuf);
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-        rv = ccm2->GetUnicodeDecoder(charsetAtom, getter_AddRefs(mUnicodeDecoder));
+        rv = ccm->GetUnicodeDecoderRaw("UTF-8",
+                                       getter_AddRefs(mUnicodeDecoder));
       }
     }
 

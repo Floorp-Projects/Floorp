@@ -99,7 +99,7 @@ private:
     nsCOMPtr<nsIOutputStream> m_outputStream;
     nsCOMPtr<nsIFileSpec> m_fileSpec;
     nsCOMPtr<nsIMsgIdentity> m_identity;
-    nsXPIDLString m_charset;
+    nsXPIDLCString m_charset;
     nsXPIDLCString m_email;
     nsXPIDLCString m_mimeSeparator;
     nsXPIDLCString m_messageId;

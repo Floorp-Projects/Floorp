@@ -65,12 +65,13 @@ nsCharsetAlias2::~nsCharsetAlias2()
      delete mDelegate;
 }
 //--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAString& aAlias, nsAString& oResult)
+NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
+                                            nsACString& oResult)
 {
    if (aAlias.IsEmpty()) return NS_ERROR_NULL_POINTER;
    NS_TIMELINE_START_TIMER("nsCharsetAlias2:GetPreferred");
 
-   nsAutoString aKey(aAlias);
+   nsCAutoString aKey(aAlias);
    ToLowerCase(aKey);
    oResult.Truncate();
 
@@ -79,19 +80,19 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAString& aAlias, nsAString& 
    // function *while loading* charsetalias.properties (see bug 190951),
    // so we might have an |mDelegate| already that isn't valid yet, but
    // the load is guaranteed to be "UTF-8" so things will be OK.
-   if(aKey.Equals(NS_LITERAL_STRING("utf-8"))) {
-     oResult = NS_LITERAL_STRING("UTF-8");
+   if(aKey.Equals(NS_LITERAL_CSTRING("utf-8"))) {
+     oResult = NS_LITERAL_CSTRING("UTF-8");
      NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
      return NS_OK;
    } 
-   if(aKey.Equals(NS_LITERAL_STRING("iso-8859-1"))) {
-     oResult = NS_LITERAL_STRING("ISO-8859-1");
+   if(aKey.Equals(NS_LITERAL_CSTRING("iso-8859-1"))) {
+     oResult = NS_LITERAL_CSTRING("ISO-8859-1");
      NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
      return NS_OK;
    } 
-   if(aKey.Equals(NS_LITERAL_STRING("x-sjis")) ||
-      aKey.Equals(NS_LITERAL_STRING("shift_jis"))) {
-     oResult = NS_LITERAL_STRING("Shift_JIS");
+   if(aKey.Equals(NS_LITERAL_CSTRING("x-sjis")) ||
+      aKey.Equals(NS_LITERAL_CSTRING("shift_jis"))) {
+     oResult = NS_LITERAL_CSTRING("Shift_JIS");
      NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
      return NS_OK;
    } 
@@ -109,26 +110,22 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAString& aAlias, nsAString& 
    NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
    NS_TIMELINE_MARK_TIMER("nsCharsetAlias2:GetPreferred");
 
-   return mDelegate->Get(aKey, oResult);
+   // hack for now, have to fix nsURLProperties, but we can't until
+   // string bundles use UTF8 keys
+   nsAutoString result;
+   nsresult rv = mDelegate->Get(NS_ConvertASCIItoUCS2(aKey), result);
+   oResult = NS_LossyConvertUCS2toASCII(result);
+   return rv;
 }
+
 //--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const PRUnichar* aAlias, const PRUnichar** oResult)
-{
-   // this method should be obsoleted
-   return NS_ERROR_NOT_IMPLEMENTED;
-}
-//--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const char* aAlias, char* oResult, PRInt32 aBufLength) 
-{
-   // this method should be obsoleted
-   return NS_ERROR_NOT_IMPLEMENTED;
-}
-//--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::Equals(const nsAString& aCharset1, const nsAString& aCharset2, PRBool* oResult)
+NS_IMETHODIMP
+nsCharsetAlias2::Equals(const nsACString& aCharset1,
+                        const nsACString& aCharset2, PRBool* oResult)
 {
    nsresult res = NS_OK;
 
-   if(aCharset1.Equals(aCharset2, nsCaseInsensitiveStringComparator())) {
+   if(aCharset1.Equals(aCharset2, nsCaseInsensitiveCStringComparator())) {
       *oResult = PR_TRUE;
       return res;
    }
@@ -139,29 +136,16 @@ NS_IMETHODIMP nsCharsetAlias2::Equals(const nsAString& aCharset1, const nsAStrin
    }
 
    *oResult = PR_FALSE;
-   nsString name1;
-   nsString name2;
+   nsCAutoString name1;
+   nsCAutoString name2;
    res = this->GetPreferred(aCharset1, name1);
    if(NS_SUCCEEDED(res)) {
       res = this->GetPreferred(aCharset2, name2);
       if(NS_SUCCEEDED(res)) {
-        *oResult = name1.Equals(name2, nsCaseInsensitiveStringComparator());
+        *oResult = name1.Equals(name2, nsCaseInsensitiveCStringComparator());
       }
    }
    
    return res;
 }
-//--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::Equals(const PRUnichar* aCharset1, const PRUnichar* aCharset2, PRBool* oResult)
-{
-   // this method should be obsoleted
-   return NS_ERROR_NOT_IMPLEMENTED;
-}
-//--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::Equals(const char* aCharset1, const char* aCharset2, PRBool* oResult)
-{
-   // this method should be obsoleted
-   return NS_ERROR_NOT_IMPLEMENTED;
-}
- 
 

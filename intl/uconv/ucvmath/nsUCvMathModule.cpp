@@ -46,6 +46,8 @@
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICategoryManager.h"
+#include "nsEncoderDecoderUtils.h"
 #include "nsIModule.h"
 #include "nsUCvMathCID.h"
 #include "nsUCvMathDll.h"

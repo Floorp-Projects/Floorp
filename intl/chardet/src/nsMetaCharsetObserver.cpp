@@ -54,6 +54,7 @@
 #include "nsIParserService.h"
 #include "nsParserCIID.h"
 #include "nsMetaCharsetCID.h"
+#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
@@ -258,7 +259,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
         )
       {
 
-         nsAutoString newCharset;
+         nsCAutoString newCharset;
 
          if (nsnull == charsetValue) 
          {
@@ -271,39 +272,39 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 				 if(kNotFound == end ) 
 					 end = contentPart1.Length();
 				 NS_ASSERTION(end>=start, "wrong index");
-				 contentPart1.Mid(newCharset, start, end - start);
+                 CopyUCS2toASCII(Substring(contentPart1, start, end-start), newCharset);
               } 
          }
          else   
          {
-             newCharset = charsetValue;
+             CopyUCS2toASCII(nsDependentString(charsetValue), newCharset);
          } 
-       
-         nsDependentString charsetString(charset);
+
+         nsCAutoString charsetString; charsetString.AssignWithConversion(charset);
          
          if (!newCharset.IsEmpty())
          {    
-             if(! newCharset.Equals(charsetString, nsCaseInsensitiveStringComparator()))
+             if(! newCharset.Equals(charsetString, nsCaseInsensitiveCStringComparator()))
              {
                  PRBool same = PR_FALSE;
                  nsresult res2 = mAlias->Equals( newCharset, charsetString , &same);
                  if(NS_SUCCEEDED(res2) && (! same))
                  {
-                     nsAutoString preferred;
+                     nsCAutoString preferred;
                      res2 = mAlias->GetPreferred(newCharset, preferred);
                      if(NS_SUCCEEDED(res2))
                      {
                         // following charset should have been detected by parser
-                        if (!preferred.Equals(NS_LITERAL_STRING("UTF-16")) &&
-                            !preferred.Equals(NS_LITERAL_STRING("UTF-16BE")) &&
-                            !preferred.Equals(NS_LITERAL_STRING("UTF-16LE")) &&
-                            !preferred.Equals(NS_LITERAL_STRING("UTF-32BE")) &&
-                            !preferred.Equals(NS_LITERAL_STRING("UTF-32LE"))) {
+                        if (!preferred.Equals(NS_LITERAL_CSTRING("UTF-16")) &&
+                            !preferred.Equals(NS_LITERAL_CSTRING("UTF-16BE")) &&
+                            !preferred.Equals(NS_LITERAL_CSTRING("UTF-16LE")) &&
+                            !preferred.Equals(NS_LITERAL_CSTRING("UTF-32BE")) &&
+                            !preferred.Equals(NS_LITERAL_CSTRING("UTF-32LE"))) {
                           // Propagate the error message so that the parser can
                           // shutdown correctly. - Ref. Bug 96440
                           res = NotifyWebShell(aWebShell,
                                                aChannel,
-                                               NS_ConvertUCS2toUTF8(preferred).get(),
+                                               preferred.get(),
                                                kCharsetFromMetaTag);
                         }
                      } // if(NS_SUCCEEDED(res)
@@ -358,21 +359,25 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
       // current charset have a lower priority
       if (kCharsetFromMetaTag > src)
       {
-          // need nsString for GetPreferred
-          nsAutoString newCharset((values->StringAt(0))->get());
-          nsAutoString preferred;
-          res = mAlias->GetPreferred(newCharset, preferred);
+          nsCAutoString newCharset;
+          newCharset.AssignWithConversion(values->StringAt(0)->get());
+          
+          nsCAutoString preferred;
+          res = mAlias->GetPreferred(newCharset,
+                                     preferred);
           if (NS_SUCCEEDED(res))
           {
               // compare against the current charset, 
-              // also some charsets which should have been found in the BOM detection.
-              if (!preferred.Equals((values->StringAt(numOfAttributes-3))->get()) &&
-                  !preferred.Equals(NS_LITERAL_STRING("UTF-16")) &&
-                  !preferred.Equals(NS_LITERAL_STRING("UTF-16BE")) &&
-                  !preferred.Equals(NS_LITERAL_STRING("UTF-16LE")) &&
-                  !preferred.Equals(NS_LITERAL_STRING("UTF-32BE")) &&
-                  !preferred.Equals(NS_LITERAL_STRING("UTF-32LE")))
-                  aCharset = preferred;
+              // also some charsets which should have been found in
+              // the BOM detection.
+              nsString* currentCharset = values->StringAt(numOfAttributes-3);
+              if (!preferred.Equals(NS_LossyConvertUCS2toASCII(*currentCharset)) &&
+                  !preferred.Equals(NS_LITERAL_CSTRING("UTF-16")) &&
+                  !preferred.Equals(NS_LITERAL_CSTRING("UTF-16BE")) &&
+                  !preferred.Equals(NS_LITERAL_CSTRING("UTF-16LE")) &&
+                  !preferred.Equals(NS_LITERAL_CSTRING("UTF-32BE")) &&
+                  !preferred.Equals(NS_LITERAL_CSTRING("UTF-32LE")))
+                  aCharset = NS_ConvertASCIItoUCS2(preferred);
           }
       }
     }

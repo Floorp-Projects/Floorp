@@ -43,8 +43,6 @@
 #include "mimebuf.h"
 #include "mimemoz2.h"
 #include "nsIMimeEmitter.h"
-#include "nsICharsetConverterManager2.h"
-#include "nsICharsetConverterManager.h"
 #include "nsCRT.h"
 #include "nsIPref.h"
 #include "nsEscape.h"

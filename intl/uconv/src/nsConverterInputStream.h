@@ -61,7 +61,7 @@ class nsConverterInputStream : nsIConverterInputStream {
                     PRUint32 aCount,
                     PRUint32 *aReadCount);
     NS_IMETHOD Close();
-    NS_IMETHOD Init(nsIInputStream* aStream, const PRUnichar *aCharset,
+    NS_IMETHOD Init(nsIInputStream* aStream, const char *aCharset,
                     PRInt32 aBufferSize, PRBool aRecoverFromErrors);
     NS_IMETHOD ReadSegments(nsWriteUnicharSegmentFun aWriter,
                             void* aClosure,

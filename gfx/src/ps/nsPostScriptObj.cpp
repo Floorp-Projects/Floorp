@@ -3076,21 +3076,11 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
 
     if (psnativecode) {
       nsAutoString str;
-      nsICharsetConverterManager *ccMain = nsnull;
-      nsICharsetAlias *aliasmgr = nsnull;
-      res = nsServiceManager::GetService(kCharsetConverterManagerCID,
-	   kICharsetConverterManagerIID, (nsISupports **) & ccMain);
-      if (NS_SUCCEEDED(res) && ccMain) {
-        res = nsServiceManager::GetService(NS_CHARSETALIAS_CONTRACTID,
-	  NS_GET_IID(nsICharsetAlias), (nsISupports **) & aliasmgr);
-	if (NS_SUCCEEDED(res) && aliasmgr) {
-	  res = aliasmgr->GetPreferred(NS_ConvertASCIItoUCS2(psnativecode), str);
-	  if (NS_SUCCEEDED(res)) {
-	    res = ccMain->GetUnicodeEncoder(&str, &linfo->mEncoder);
-	  }
-          nsServiceManager::ReleaseService(NS_CHARSETALIAS_CONTRACTID, aliasmgr);
-	}
-        nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccMain);
+      nsCOMPtr<nsICharsetConverterManager> ccMain =
+        do_GetService(kCharsetConverterManagerCID, &res);
+      
+      if (NS_SUCCEEDED(res)) {
+        res = ccMain->GetUnicodeEncoder(psnativecode.get(), &linfo->mEncoder);
       }
     }
 

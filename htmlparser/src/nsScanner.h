@@ -394,7 +394,7 @@ class nsScanner {
       PRUint32        mTotalRead;
       PRPackedBool    mIncremental;
       PRInt32         mCharsetSource;
-      nsString        mCharset;
+      nsCString       mCharset;
       nsIUnicodeDecoder *mUnicodeDecoder;
 };
 

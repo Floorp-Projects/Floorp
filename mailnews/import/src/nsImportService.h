@@ -40,7 +40,6 @@
 #define nsImportService_h__
 
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 
 #include "nsCRT.h"
 #include "nsString.h"
@@ -72,7 +71,7 @@ private:
 private:
 	nsImportModuleList *	m_pModules;
 	PRBool					m_didDiscovery;	
-	nsString				m_sysCharset;
+	nsCString				m_sysCharset;
 	nsIUnicodeDecoder *		m_pDecoder;
 	nsIUnicodeEncoder *		m_pEncoder;
 };

@@ -4604,14 +4604,13 @@ nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 currentPr
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
-    nsAutoString aCharset(NS_LITERAL_STRING("x-imap4-modified-utf7"));
     PRUnichar *unichars = nsnull;
     PRInt32 unicharLength;
 
     // convert utf7 to unicode
     nsIUnicodeDecoder* decoder = nsnull;
 
-    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+    res = ccm->GetUnicodeDecoderRaw("x-imap4-modified-utf7", &decoder);
     if(NS_SUCCEEDED(res) && (nsnull != decoder)) 
     {
       PRInt32 srcLen = PL_strlen(aSourceString);

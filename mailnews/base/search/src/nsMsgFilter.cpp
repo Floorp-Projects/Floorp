@@ -438,10 +438,10 @@ NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, n
     nsMsgSearchScopeTerm* scope = new nsMsgSearchScopeTerm(nsnull, nsMsgSearchScope::offlineMail, folder);
     if (!scope) return NS_ERROR_OUT_OF_MEMORY;
 
-    nsXPIDLString folderCharset;
+    nsXPIDLCString folderCharset;
     folder->GetCharset(getter_Copies(folderCharset));
     nsresult rv = nsMsgSearchOfflineMail::MatchTermsForFilter(msgHdr, m_termList,
-                                                           NS_ConvertUCS2toUTF8(folderCharset).get(),
+                                                           folderCharset.get(),
                                                            scope,
                                                            db, 
                                                            headers,

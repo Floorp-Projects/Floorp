@@ -58,7 +58,7 @@ nsPosixLocale::~nsPosixLocale(void)
 }
 
 NS_IMETHODIMP 
-nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_t length)
+nsPosixLocale::GetPlatformLocale(const nsString* locale, nsACString& posixLocale)
 {
   char  country_code[MAX_COUNTRY_CODE_LEN+1];
   char  lang_code[MAX_LANGUAGE_CODE_LEN+1];
@@ -69,7 +69,7 @@ nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_
   if (xp_locale.get()) {
     if (!ParseLocaleString(xp_locale.get(),lang_code,country_code,extra,'-')) {
 //      strncpy(posixLocale,"C",length);
-      PL_strncpyz(posixLocale,xp_locale.get(),length);  // use xp locale if parse failed
+      posixLocale = xp_locale;  // use xp locale if parse failed
       return NS_OK;
     }
 
@@ -90,7 +90,7 @@ nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_
       }
     }
 
-    strncpy(posixLocale,posix_locale,length);
+    posixLocale = posix_locale;
     return NS_OK;
   }
 

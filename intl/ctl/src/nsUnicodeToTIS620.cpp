@@ -27,7 +27,6 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsILanguageAtomService.h"
 #include "nsCtlCIID.h"
 #include "nsILE.h"
@@ -170,11 +169,11 @@ NS_IMETHODIMP nsUnicodeToTIS620::Convert(const PRUnichar* input,
 #endif
   
   if (mCtlObj == nsnull) {
-    nsICharsetConverterManager2* gCharSetManager = nsnull;
+    nsICharsetConverterManager*  gCharSetManager = nsnull;
     nsIUnicodeEncoder*           gDefaultTISConverter = nsnull;
     nsresult                     res;
     nsServiceManager::GetService(kCharSetManagerCID,
-      NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharSetManager);
+      NS_GET_IID(nsICharsetConverterManager), (nsISupports**) &gCharSetManager);
 
 #ifdef DEBUG_prabhath
     printf("ERROR: No CTL IMPLEMENTATION - Default Thai Conversion");
@@ -185,13 +184,7 @@ NS_IMETHODIMP nsUnicodeToTIS620::Convert(const PRUnichar* input,
     if (!gCharSetManager)
       return NS_ERROR_FAILURE;
     
-    nsCOMPtr<nsIAtom> charset = getter_AddRefs(NS_NewAtom("TIS-620"));   
-    if (charset)
-      res = gCharSetManager->GetUnicodeEncoder(charset, &gDefaultTISConverter);
-    else {
-      NS_IF_RELEASE(gCharSetManager);
-      return NS_ERROR_FAILURE;
-    }
+    res = gCharSetManager->GetUnicodeEncoderRaw("TIS-620", &gDefaultTISConverter);
     
     if (!gDefaultTISConverter) {
       NS_WARNING("cannot get default converter for tis-620");

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsICharsetConverterManager2.h"
+#include "nsICharsetConverterManager.h"
 #include "nsILanguageAtomService.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
@@ -58,7 +58,7 @@ public:
   NS_IMETHOD InitLangGroupTable();
 
 protected:
-  nsCOMPtr<nsICharsetConverterManager2> mCharSets;
+  nsCOMPtr<nsICharsetConverterManager> mCharSets;
   nsCOMPtr<nsISupportsArray> mLangs;
   nsCOMPtr<nsIStringBundle> mLangGroups;
   nsCOMPtr<nsIAtom> mLocaleLangGroup;

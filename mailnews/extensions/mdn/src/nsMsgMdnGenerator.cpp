@@ -499,7 +499,7 @@ nsresult nsMsgMdnGenerator::CreateFirstPart()
       compUtils->GetMsgMimeConformToStandard(&conformToStandard);
 
     convbuf = nsMsgI18NEncodeMimePartIIStr(
-        m_email.get(), PR_TRUE, NS_LossyConvertUCS2toASCII(m_charset).get(), 0,
+        m_email.get(), PR_TRUE, m_charset.get(), 0,
         conformToStandard);
     parm = PR_smprintf("From: %s" CRLF, convbuf ? convbuf : m_email.get());
 
@@ -564,7 +564,7 @@ nsresult nsMsgMdnGenerator::CreateFirstPart()
     m_headers->ExtractHeader(HEADER_SUBJECT, PR_FALSE, getter_Copies(subject));
     convbuf = nsMsgI18NEncodeMimePartIIStr(
         subject.Length() ? subject.get() : "[no subject]", 
-        PR_TRUE, NS_LossyConvertUCS2toASCII(m_charset).get(), 0,
+        PR_TRUE, m_charset.get(), 0,
         conformToStandard);
     tmpBuffer = PR_smprintf("Subject: %s - %s" CRLF, 
                             (receipt_string ? 
@@ -578,7 +578,7 @@ nsresult nsMsgMdnGenerator::CreateFirstPart()
     PR_Free(convbuf);
 
     convbuf = nsMsgI18NEncodeMimePartIIStr(
-        m_dntRrt, PR_TRUE, NS_LossyConvertUCS2toASCII(m_charset).get(), 0,
+        m_dntRrt, PR_TRUE, m_charset.get(), 0,
         conformToStandard);
 
     tmpBuffer = PR_smprintf("To: %s" CRLF, convbuf ? convbuf :
@@ -610,7 +610,7 @@ report-type=disposition-notification;\r\n\tboundary=\"%s\"" CRLF CRLF,
     PUSH_N_FREE_STRING(tmpBuffer);
 
     tmpBuffer = PR_smprintf("Content-Type: text/plain; charset=%s" CRLF,
-                            NS_LossyConvertUCS2toASCII(m_charset).get());
+                            m_charset.get());
     PUSH_N_FREE_STRING(tmpBuffer);
 
     tmpBuffer = PR_smprintf("Content-Transfer-Encoding: %s" CRLF CRLF,
@@ -727,7 +727,7 @@ nsresult nsMsgMdnGenerator::CreateSecondPart()
       compUtils->GetMsgMimeConformToStandard(&conformToStandard);
 
     convbuf = nsMsgI18NEncodeMimePartIIStr(
-        m_email.get(), PR_TRUE, NS_LossyConvertUCS2toASCII(m_charset).get(), 0,
+        m_email.get(), PR_TRUE, m_charset.get(), 0,
         conformToStandard);
     tmpBuffer = PR_smprintf("Final-Recipient: rfc822;%s" CRLF, convbuf ?
                             convbuf : m_email.get()); 

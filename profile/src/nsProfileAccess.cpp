@@ -137,7 +137,7 @@ nsProfileAccess::~nsProfileAccess()
 
 // A wrapper function to call the interface to get a platform file charset.
 nsresult
-GetPlatformCharset(nsString& aCharset)
+GetPlatformCharset(nsCString& aCharset)
 {
     nsresult rv;
 
@@ -147,14 +147,14 @@ GetPlatformCharset(nsString& aCharset)
         rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
     }
     if (NS_FAILED(rv)) {
-        aCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));  // use ISO-8859-1 in case of any error
+        aCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));  // use ISO-8859-1 in case of any error
     }
     return rv;
 }
 
 // Apply a charset conversion from the given charset to Unicode for input C string.
 nsresult
-ConvertStringToUnicode(nsString& aCharset, const char* inString, nsAString& outString)
+ConvertStringToUnicode(nsCString& aCharset, const char* inString, nsAString& outString)
 {
     nsresult rv;
     // convert result to unicode
@@ -163,7 +163,7 @@ ConvertStringToUnicode(nsString& aCharset, const char* inString, nsAString& outS
 
     if(NS_SUCCEEDED(rv)) {
         nsCOMPtr <nsIUnicodeDecoder> decoder; // this may be cached
-        rv = ccm->GetUnicodeDecoder(&aCharset, getter_AddRefs(decoder));
+        rv = ccm->GetUnicodeDecoderRaw(aCharset.get(), getter_AddRefs(decoder));
 
         if(NS_SUCCEEDED(rv) && decoder) {
             PRInt32 uniLength = 0;
@@ -1059,7 +1059,7 @@ nsProfileAccess::Get4xProfileInfo(nsIFile *registryFile, PRBool fromImport)
     if (fromImport && m4xProfilesAdded)
         return rv;
 
-    nsAutoString charSet;
+    nsCAutoString charSet;
     rv = GetPlatformCharset(charSet);
     if (NS_FAILED(rv)) return rv;
 
@@ -1407,7 +1407,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         nsCAutoString profileLocation(nsUnescape( NS_CONST_CAST(char*, tempLoc.get())));
         nsAutoString convertedProfLoc(NS_ConvertUTF8toUCS2(profileLocation).get());
 #else
-        nsAutoString charSet;
+        nsCAutoString charSet;
         rv = GetPlatformCharset(charSet);
         if (NS_FAILED(rv)) return rv;
 

@@ -221,8 +221,8 @@ nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
 }
 
 NS_IMETHODIMP
-nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
-  nsILanguageAtom** aResult)
+nsLanguageAtomService::LookupCharSet(const char* aCharSet,
+                                     nsILanguageAtom** aResult)
 {
   nsresult res;
   NS_ENSURE_ARG_POINTER(aResult);
@@ -239,10 +239,10 @@ nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
   if (!mUnicode) {
     mUnicode = getter_AddRefs(NS_NewAtom("x-unicode"));
   }
-  nsCOMPtr<nsIAtom> charset;
-  mCharSets->GetCharsetAtom(aCharSet, getter_AddRefs(charset));
+
   nsCOMPtr<nsIAtom> langGroup;
-  mCharSets->GetCharsetLangGroup(charset, getter_AddRefs(langGroup));
+  mCharSets->GetCharsetLangGroup(aCharSet,
+                                 getter_AddRefs(langGroup));
   if (!langGroup) {
     return NS_ERROR_FAILURE;
   }

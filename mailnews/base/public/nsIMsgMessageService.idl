@@ -95,7 +95,7 @@ interface nsIMsgMessageService : nsISupports {
 						in nsISupports aDisplayConsumer, 
 						in nsIMsgWindow aMsgWindow,
 						in nsIUrlListener aUrlListener, 
-						in wstring aCharsetOverride, 
+						in string aCharsetOverride, 
 						out nsIURI aURL);
 
      /////////////////////////////////////////////////////////////////////

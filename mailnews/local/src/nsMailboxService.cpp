@@ -176,7 +176,7 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
 										                    nsIUrlListener * aUrlListener,
                                         const char * aFileName, /* only used by open attachment... */
                                         nsMailboxAction mailboxAction,
-                                        const PRUnichar * aCharsetOverride,
+                                        const char * aCharsetOverride,
                                         nsIURI ** aURL)
 {
   nsresult rv = NS_OK;
@@ -239,7 +239,7 @@ NS_IMETHODIMP nsMailboxService::DisplayMessage(const char* aMessageURI,
                                           nsISupports * aDisplayConsumer,
                                           nsIMsgWindow * aMsgWindow,
 										                      nsIUrlListener * aUrlListener,
-                                          const PRUnichar * aCharsetOveride,
+                                          const char * aCharsetOveride,
                                           nsIURI ** aURL)
 {
   return FetchMessage(aMessageURI, aDisplayConsumer,

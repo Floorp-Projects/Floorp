@@ -25,7 +25,7 @@
 #include "nsSpellCheckUtils.h"
 
 #include "nsReadableUtils.h"
-#include "nsICharsetConverterManager2.h"
+#include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 #include "nsIServiceManager.h"
 
@@ -112,17 +112,15 @@ nsSpellCheckUtils::CreateUnicodeConverters(const PRUnichar*    aCharset,
 
   nsresult rv;
 
-  nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr <nsIAtom> charsetAtom;
-  rv = ccm2->GetCharsetAtom(aCharset, getter_AddRefs(charsetAtom));
+  NS_LossyConvertUCS2toASCII charset(aCharset);
+
+  rv = ccm->GetUnicodeDecoder(charset.get(), aUnicodeDecoder);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = ccm2->GetUnicodeDecoder(charsetAtom, aUnicodeDecoder);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = ccm2->GetUnicodeEncoder(charsetAtom, aUnicodeEncoder);
+  rv = ccm->GetUnicodeEncoder(charset.get(), aUnicodeEncoder);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the error behavior, in case a character cannot be mapped.

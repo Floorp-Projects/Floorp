@@ -174,20 +174,17 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
         nsCOMPtr<nsIMsgI18NUrl> i18nUrl (do_QueryInterface(aURI));
         if (i18nUrl)
         {
-          nsXPIDLString uniCharset;
-          nsAutoString charset;
+          nsXPIDLCString charset;
 
           // check to see if we have a charset override...and if we do, set that field appropriately too...
-          nsresult rv = i18nUrl->GetCharsetOverRide(getter_Copies(uniCharset));
-          charset = uniCharset;
+          nsresult rv = i18nUrl->GetCharsetOverRide(getter_Copies(charset));
           if (NS_SUCCEEDED(rv) && !charset.IsEmpty() ) {
             *override_charset = PR_TRUE;
             *default_charset = ToNewCString(charset);
           }
           else
           {
-            i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
-            charset = uniCharset;
+            i18nUrl->GetFolderCharset(getter_Copies(charset));
             if (!charset.IsEmpty())
               *default_charset = ToNewCString(charset);
           }
@@ -216,7 +213,7 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
               msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
               if (msgWindow)
               {
-                msgWindow->SetMailCharacterSet(NS_ConvertASCIItoUCS2(*default_charset).get());
+                msgWindow->SetMailCharacterSet(*default_charset);
                 msgWindow->SetCharsetOverride(*override_charset);
                 }
               }

@@ -357,7 +357,6 @@ ConvertWStringToStream(const PRUnichar* aStr,
 {
   nsresult rv;
   nsCOMPtr<nsIUnicodeEncoder> encoder;
-  nsAutoString charsetStr;
   char* charBuf;
 
   // We want to encode the string as utf-8, so get the right encoder
@@ -365,8 +364,7 @@ ConvertWStringToStream(const PRUnichar* aStr,
            do_GetService(kCharsetConverterManagerCID, &rv);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   
-  charsetStr.Assign(NS_LITERAL_STRING("UTF-8"));
-  rv = charsetConv->GetUnicodeEncoder(&charsetStr,
+  rv = charsetConv->GetUnicodeEncoderRaw("UTF-8",
                                       getter_AddRefs(encoder));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   

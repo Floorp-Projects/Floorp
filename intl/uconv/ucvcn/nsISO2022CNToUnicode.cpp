@@ -48,16 +48,12 @@ NS_IMETHODIMP nsISO2022CNToUnicode::GB2312_To_Unicode(unsigned char *aSrc, PRInt
 
     if(!mGB2312_Decoder) {
        // creating a delegate converter (GB2312)
-       nsAutoString tmpCharset;
-
        nsCOMPtr<nsICharsetConverterManager> ccm =
               do_GetService(kCharsetConverterManagerCID, &rv);
        if(NS_FAILED(rv))
           return NS_ERROR_UNEXPECTED;
 
-       tmpCharset.Assign(NS_LITERAL_STRING("GB2312"));
-
-       rv = ccm->GetUnicodeDecoder(&tmpCharset, getter_AddRefs(mGB2312_Decoder));
+       rv = ccm->GetUnicodeDecoderRaw("GB2312", getter_AddRefs(mGB2312_Decoder));
        if(NS_FAILED(rv))
           return NS_ERROR_UNEXPECTED;
     }
@@ -75,16 +71,12 @@ NS_IMETHODIMP nsISO2022CNToUnicode::EUCTW_To_Unicode(unsigned char *aSrc, PRInt3
 
     if(!mEUCTW_Decoder) {
        // creating a delegate converter (x-euc-tw)
-       nsAutoString tmpCharset;
-
        nsCOMPtr<nsICharsetConverterManager> ccm =
               do_GetService(kCharsetConverterManagerCID, &rv);
        if(NS_FAILED(rv))
           return NS_ERROR_UNEXPECTED;
 
-       tmpCharset.Assign(NS_LITERAL_STRING("x-euc-tw"));
-
-       rv = ccm->GetUnicodeDecoder(&tmpCharset, getter_AddRefs(mEUCTW_Decoder));
+       rv = ccm->GetUnicodeDecoderRaw("x-euc-tw", getter_AddRefs(mEUCTW_Decoder));
        if(NS_FAILED(rv))
           return NS_ERROR_UNEXPECTED;
     }

@@ -55,7 +55,7 @@
 class nsIBinaryInputStream;
 class nsIBinaryOutputStream;
 class nsIIDNService;
-class nsICharsetConverterManager2;
+class nsICharsetConverterManager;
 
 //-----------------------------------------------------------------------------
 // standard URL implementation
@@ -242,7 +242,7 @@ private:
     // global objects.  don't use COMPtr as its destructor will cause a
     // coredump if we leak it.
     static nsIIDNService               *gIDNService;
-    static nsICharsetConverterManager2 *gCharsetMgr;
+    static nsICharsetConverterManager *gCharsetMgr;
     static PRBool                       gInitialized;
     static PRBool                       gEscapeUTF8;
 };

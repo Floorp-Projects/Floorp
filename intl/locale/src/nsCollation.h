@@ -27,7 +27,6 @@
 #include "nsICollation.h"
 #include "nsICaseConversion.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsCOMPtr.h"
 
 
@@ -69,7 +68,7 @@ public:
   nsresult NormalizeString(const nsAString& stringIn, nsAString& stringOut);
 
   // charset conversion util, C string buffer is allocate by PR_Malloc, caller should call PR_Free
-  nsresult SetCharset(const PRUnichar* aCharset);
+  nsresult SetCharset(const char* aCharset);
   nsresult UnicodeToChar(const nsAString& aSrc, char** dst);
 
 protected:

@@ -1521,7 +1521,7 @@ nsMessenger::GetTransactionManager(nsITransactionManager* *aTxnMgr)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
+NS_IMETHODIMP nsMessenger::SetDocumentCharset(const char *characterSet)
 {
 	// We want to redisplay the currently selected message (if any) but forcing the 
   // redisplay to use characterSet

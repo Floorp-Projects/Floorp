@@ -68,8 +68,8 @@ public:
   
   NS_IMETHOD StartFolderLoading(void);
   NS_IMETHOD EndFolderLoading(void);
-  NS_IMETHOD GetCharset(PRUnichar * *aCharset);
-  NS_IMETHOD SetCharset(const PRUnichar * aCharset);
+  NS_IMETHOD GetCharset(char * *aCharset);
+  NS_IMETHOD SetCharset(const char * aCharset);
   NS_IMETHOD GetCharsetOverride(PRBool *aCharsetOverride);
   NS_IMETHOD SetCharsetOverride(PRBool aCharsetOverride);
   NS_IMETHOD GetFirstNewMessage(nsIMsgDBHdr **firstNewMessage);

@@ -347,9 +347,9 @@ nsMsgSearchAdapter::GetSearchCharsets(PRUnichar **srcCharset, PRUnichar **dstCha
 		// Ask the newsgroup/folder for its csid.
 		if (NS_SUCCEEDED(rv) && folder)
         {
-            nsXPIDLString folderCharset;
+            nsXPIDLCString folderCharset;
             folder->GetCharset(getter_Copies(folderCharset));
-            *dstCharset = nsCRT::strdup(folderCharset);
+            *dstCharset = ToNewUnicode(folderCharset);
         }
 	}
 

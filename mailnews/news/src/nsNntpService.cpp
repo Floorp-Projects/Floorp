@@ -234,7 +234,7 @@ nsNntpService::CreateMessageIDURL(nsIMsgFolder *folder, nsMsgKey key, char **url
 
 NS_IMETHODIMP 
 nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-                                       nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener, const PRUnichar * aCharsetOverride, nsIURI ** aURL)
+                                       nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener, const char * aCharsetOverride, nsIURI ** aURL)
 {
   nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(aMessageURI);

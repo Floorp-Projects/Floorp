@@ -43,6 +43,7 @@
 #include "nsIServiceManagerUtils.h"
 #include "nsXPIDLString.h"
 #include "nsICharsetConverterManager.h"
+#include "nsEncoderDecoderUtils.h"
 #include "nsCRT.h"
 #include "prprf.h"
 

@@ -68,7 +68,7 @@ ConvertHTMLtoUCS2          (guchar             *data,
                             PRInt32            &outUnicodeLen);
 
 static void
-GetHTMLCharset             (guchar * data, PRInt32 dataLength, nsAString& str);
+GetHTMLCharset             (guchar * data, PRInt32 dataLength, nsCString& str);
 
 nsClipboard::nsClipboard()
 {
@@ -584,9 +584,9 @@ selection_clear_event_cb   (GtkWidget          *aWidget,
 void ConvertHTMLtoUCS2(guchar * data, PRInt32 dataLength,
                        PRUnichar** unicodeData, PRInt32& outUnicodeLen)
 {
-    nsAutoString charset;
+    nsCAutoString charset;
     GetHTMLCharset(data, dataLength, charset);// get charset of HTML
-    if (charset.Equals(NS_LITERAL_STRING("UTF-16"))) {//current mozilla
+    if (charset.Equals(NS_LITERAL_CSTRING("UTF-16"))) {//current mozilla
         outUnicodeLen = (dataLength / 2) - 1;
         *unicodeData = NS_REINTERPRET_CAST(PRUnichar*,
                        nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
@@ -596,7 +596,7 @@ void ConvertHTMLtoUCS2(guchar * data, PRInt32 dataLength,
                    outUnicodeLen * sizeof(PRUnichar));
             (*unicodeData)[outUnicodeLen] = '\0';
         }
-    } else if (charset.Equals(NS_LITERAL_STRING("UNKNOWN"))) {
+    } else if (charset.Equals(NS_LITERAL_CSTRING("UNKNOWN"))) {
         outUnicodeLen = 0;
         return;
     } else {
@@ -613,7 +613,7 @@ void ConvertHTMLtoUCS2(guchar * data, PRInt32 dataLength,
             outUnicodeLen = 0;
             return;
         }
-        rv = ccm->GetUnicodeDecoder(&charset, getter_AddRefs(decoder));
+        rv = ccm->GetUnicodeDecoder(charset.get(), getter_AddRefs(decoder));
         if (NS_FAILED(rv)) {
 #ifdef DEBUG_CLIPBOARD
             g_print("        get unicode decoder error\n");
@@ -650,12 +650,12 @@ void ConvertHTMLtoUCS2(guchar * data, PRInt32 dataLength,
  *  2. "UNKNOWN":     mozilla can't detect what encode it use
  *  3. other:         "text/html" with other charset than utf-16
  */
-void GetHTMLCharset(guchar * data, PRInt32 dataLength, nsAString& str)
+void GetHTMLCharset(guchar * data, PRInt32 dataLength, nsCString& str)
 {
     // if detect "FFFE" or "FEFF", assume UTF-16
     PRUnichar* beginChar =  (PRUnichar*)data;
     if ((beginChar[0] == 0xFFFE) || (beginChar[0] == 0xFEFF)) {
-        str.Assign(NS_LITERAL_STRING("UTF-16"));
+        str.Assign(NS_LITERAL_CSTRING("UTF-16"));
         return;
     }
     // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
@@ -685,17 +685,13 @@ void GetHTMLCharset(guchar * data, PRInt32 dataLength, nsAString& str)
     }
     // find "charset" in HTML
     if (valueStart != valueEnd) {
-        const nsACString & charsetStr = Substring(valueStart, valueEnd);
-        if (!charsetStr.IsEmpty()) {
-            nsCString charsetUpperStr;
-            ToUpperCase(charsetStr, charsetUpperStr);
+        str = Substring(valueStart, valueEnd);
+        ToUpperCase(str);
 #ifdef DEBUG_CLIPBOARD
-            printf("Charset of HTML = %s\n", charsetUpperStr.get());
+        printf("Charset of HTML = %s\n", charsetUpperStr.get());
 #endif
-            str.Assign(NS_ConvertUTF8toUCS2(charsetUpperStr));
-            return;
-        }
+        return;
     }
-    str.Assign(NS_LITERAL_STRING("UNKNOWN"));
+    str.Assign(NS_LITERAL_CSTRING("UNKNOWN"));
 }
 

@@ -53,7 +53,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   virtual ~nsHTMLContentSerializer();
 
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
-                  nsIAtom* aCharSet, PRBool aIsCopying);
+                  const char* aCharSet, PRBool aIsCopying);
 
   NS_IMETHOD AppendText(nsIDOMText* aText, 
                         PRInt32 aStartOffset,
@@ -156,7 +156,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   PRInt32   mMaxColumn;
   nsString  mLineBreak;
 
-  nsCOMPtr<nsIAtom> mCharSet;
+  nsCString mCharSet;
 
  // To keep track of startvalue of OL and first list item for nested lists
   struct olState {

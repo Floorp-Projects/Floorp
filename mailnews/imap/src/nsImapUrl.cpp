@@ -1593,7 +1593,7 @@ nsresult nsImapUrl::GetMsgFolder(nsIMsgFolder **msgFolder)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
+NS_IMETHODIMP nsImapUrl::GetFolderCharset(char ** aCharacterSet)
 {
   nsCOMPtr<nsIMsgFolder> folder;
   nsresult rv = GetMsgFolder(getter_AddRefs(folder));
@@ -1613,16 +1613,16 @@ NS_IMETHODIMP nsImapUrl::GetFolderCharsetOverride(PRBool * aCharacterSetOverride
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::GetCharsetOverRide(PRUnichar ** aCharacterSet)
+NS_IMETHODIMP nsImapUrl::GetCharsetOverRide(char ** aCharacterSet)
 {
   if (!mCharsetOverride.IsEmpty())
-    *aCharacterSet = ToNewUnicode(mCharsetOverride); 
+    *aCharacterSet = ToNewCString(mCharsetOverride); 
   else
     *aCharacterSet = nsnull;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::SetCharsetOverRide(const PRUnichar * aCharacterSet)
+NS_IMETHODIMP nsImapUrl::SetCharsetOverRide(const char * aCharacterSet)
 {
   mCharsetOverride = aCharacterSet;
   return NS_OK;

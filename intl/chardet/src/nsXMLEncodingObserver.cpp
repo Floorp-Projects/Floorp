@@ -129,23 +129,23 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
       PRBool bGotCurrentCharsetSource = PR_FALSE;
       PRBool bGotEncoding = PR_FALSE;
 
-      nsAutoString currentCharset(NS_LITERAL_STRING("unknown"));
+      nsCAutoString currentCharset(NS_LITERAL_CSTRING("unknown"));
       nsAutoString charsetSourceStr(NS_LITERAL_STRING("unknown"));
-      nsAutoString encoding(NS_LITERAL_STRING("unknown"));
+      nsCAutoString encoding(NS_LITERAL_CSTRING("unknown"));
 
       for(i=0; i < numOfAttributes; i++) 
       {
          if(0==nsCRT::strcmp(nameArray[i], NS_LITERAL_STRING("charset").get())) 
          {
            bGotCurrentCharset = PR_TRUE;
-           currentCharset = valueArray[i];
+           CopyUCS2toASCII(nsDependentString(valueArray[i]), currentCharset);
          } else if(0==nsCRT::strcmp(nameArray[i], NS_LITERAL_STRING("charsetSource").get())) {
            bGotCurrentCharsetSource = PR_TRUE;
            charsetSourceStr = valueArray[i];
          } else if(nsDependentString(nameArray[i]).Equals(NS_LITERAL_STRING("encoding"),
                                                           nsCaseInsensitiveStringComparator())) { 
            bGotEncoding = PR_TRUE;
-           encoding = valueArray[i];
+           CopyUCS2toASCII(nsDependentString(valueArray[i]), encoding);
          }
       }
 
@@ -176,16 +176,13 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
                     res = calias->Equals( encoding, currentCharset, &same);
                     if(NS_SUCCEEDED(res) && (! same))
                     {
-                          nsAutoString preferred;
-                          res = calias->GetPreferred(encoding, preferred);
+                          nsCAutoString preferred;
+                          res = calias->GetPreferred(encoding,
+                                                     preferred);
                           if(NS_SUCCEEDED(res))
                           {
-                              const char* charsetInCStr = ToNewCString(preferred);
-                              if(nsnull != charsetInCStr) {
-                                 res = NotifyWebShell(0,0, charsetInCStr, kCharsetFromMetaTag );
-                                 delete [] (char*)charsetInCStr;
-                                 return res;
-                              }
+                            res = NotifyWebShell(0,0, preferred.get(), kCharsetFromMetaTag );
+                            return res;
                           } // if check for GetPreferred
                     } // if check res for Equals
                 } // if check res for GetService

@@ -85,6 +85,8 @@
 #include "nsIPlatformCharset.h"
 #include "nsIPref.h"
 
+#include "nsIParser.h"          // for kCharsetFromBookmarks
+
 // for sorting
 #include "nsCollationCID.h"
 #include "nsILocaleService.h"
@@ -637,7 +639,7 @@ BookmarkParser::Init(nsIFile *aFile, nsIRDFDataSource *aDataSource,
         do_GetService(kPlatformCharsetCID, &rv);
     if (NS_SUCCEEDED(rv) && (platformCharset))
     {
-        nsAutoString    defaultCharset;
+        nsCAutoString    defaultCharset;
         if (NS_SUCCEEDED(rv = platformCharset->GetCharset(kPlatformCharsetSel_4xBookmarkFile, defaultCharset)))
         {
             // found the default platform charset, now try and get a decoder from it to Unicode
@@ -645,7 +647,8 @@ BookmarkParser::Init(nsIFile *aFile, nsIRDFDataSource *aDataSource,
                 do_GetService(kCharsetConverterManagerCID, &rv);
             if (NS_SUCCEEDED(rv) && (charsetConv))
             {
-                rv = charsetConv->GetUnicodeDecoder(&defaultCharset, getter_AddRefs(mUnicodeDecoder));
+                rv = charsetConv->GetUnicodeDecoderRaw(defaultCharset.get(),
+                                                       getter_AddRefs(mUnicodeDecoder));
             }
         }
     }
@@ -1069,21 +1072,9 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
     NS_ASSERTION(start >= 0, "no 'charset=' string: how'd we get here?");
     if (start < 0)  return NS_ERROR_UNEXPECTED;
     start += (sizeof(kCharsetEquals)-1);
-    nsAutoString    charset;
-    content.Mid(charset, start, content.Length() - start);
+    nsCAutoString    charset;
+    charset.AssignWithConversion(Substring(content, start, content.Length() - start));
     if (charset.Length() < 1)   return NS_ERROR_UNEXPECTED;
-
-    if (gCharsetAlias)
-    {
-        nsAutoString    charsetName;
-        if (NS_SUCCEEDED(rv = gCharsetAlias->GetPreferred(charset, charsetName)))
-        {
-            if (!charsetName.IsEmpty())
-            {
-                charset = charsetName;
-            }
-        }
-    }
 
     // found a charset, now try and get a decoder from it to Unicode
     nsICharsetConverterManager  *charsetConv = nsnull;
@@ -1092,7 +1083,7 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
             (nsISupports**)&charsetConv);
     if (NS_SUCCEEDED(rv) && (charsetConv))
     {
-        rv = charsetConv->GetUnicodeDecoder(&charset, decoder);
+        rv = charsetConv->GetUnicodeDecoderRaw(charset.get(), decoder);
         NS_RELEASE(charsetConv);
     }
     return rv;
@@ -1409,7 +1400,9 @@ BookmarkParser::ParseLiteral(nsIRDFResource *arc, nsString& aValue, nsIRDFNode**
     {
         if (gCharsetAlias)
         {
-            gCharsetAlias->GetPreferred(aValue, aValue);
+            nsCAutoString charset; charset.AssignWithConversion(aValue);
+            gCharsetAlias->GetPreferred(charset, charset);
+            aValue.AssignWithConversion(charset.get());
         }
     }
     else if (arc == kWEB_LastPingETag)

@@ -39,7 +39,6 @@
 #include "nsString.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsReadableUtils.h"
 #include "nsITextToSubURI.h"
 #include "nsIServiceManager.h"
@@ -67,7 +66,6 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   if(nsnull == _retval)
     return NS_ERROR_NULL_POINTER;
   *_retval = nsnull;
-  nsAutoString charsetStr; charsetStr.AssignWithConversion(charset);
   nsIUnicodeEncoder *encoder = nsnull;
   nsresult rv = NS_OK;
   
@@ -77,7 +75,7 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
                                     NS_GET_IID(nsICharsetConverterManager),
                                     (nsISupports**)&ccm);
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
-     rv = ccm->GetUnicodeEncoder(&charsetStr, &encoder);
+     rv = ccm->GetUnicodeEncoder(charset, &encoder);
      nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
      if (NS_SUCCEEDED(rv)) {
        rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
@@ -139,9 +137,8 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
   nsCOMPtr<nsICharsetConverterManager> ccm = 
            do_GetService(kCharsetConverterManagerCID, &rv); 
   if (NS_SUCCEEDED(rv)) {
-    nsAutoString charsetStr; charsetStr.AssignWithConversion(charset);
     nsIUnicodeDecoder *decoder;
-    rv = ccm->GetUnicodeDecoder(&charsetStr, &decoder);
+    rv = ccm->GetUnicodeDecoder(charset, &decoder);
     if (NS_SUCCEEDED(rv)) {
       PRUnichar *pBuf = nsnull;
       PRInt32 len = strlen(unescaped);
@@ -200,17 +197,13 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
   // empty charset could indicate UTF-8, but aURI turns out not to be UTF-8.
   NS_ENSURE_FALSE(aCharset.IsEmpty(), NS_ERROR_INVALID_ARG);
 
-  nsCOMPtr<nsICharsetConverterManager2> charsetConverterManager;
+  nsCOMPtr<nsICharsetConverterManager> charsetConverterManager;
 
   charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAtom> charsetAtom;
-  rv = charsetConverterManager->GetCharsetAtom2(aCharset.get(), getter_AddRefs(charsetAtom));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
-  rv = charsetConverterManager->GetUnicodeDecoder(charsetAtom, 
+  rv = charsetConverterManager->GetUnicodeDecoder(aCharset.get(), 
                                                   getter_AddRefs(unicodeDecoder));
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -490,9 +490,9 @@ NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
 
 
 //-------------------------------------------------------------------------
-void nsFilePicker::GetFileSystemCharset(nsString & fileSystemCharset)
+void nsFilePicker::GetFileSystemCharset(nsCString & fileSystemCharset)
 {
-  static nsAutoString aCharset;
+  static nsCAutoString aCharset;
   nsresult rv;
 
   if (aCharset.Length() < 1) {
@@ -502,7 +502,7 @@ void nsFilePicker::GetFileSystemCharset(nsString & fileSystemCharset)
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
 	  if (NS_FAILED(rv)) 
-		  aCharset.Assign(NS_LITERAL_STRING("windows-1252"));
+		  aCharset.Assign(NS_LITERAL_CSTRING("IBM850"));
   }
   fileSystemCharset = aCharset;
 }
@@ -515,13 +515,13 @@ char * nsFilePicker::ConvertToFileSystemCharset(const PRUnichar *inString)
 
   // get file system charset and create a unicode encoder
   if (nsnull == mUnicodeEncoder) {
-    nsAutoString fileSystemCharset;
+    nsCAutoString fileSystemCharset;
     GetFileSystemCharset(fileSystemCharset);
 
     nsCOMPtr<nsICharsetConverterManager> ccm = 
              do_GetService(kCharsetConverterManagerCID, &rv); 
     if (NS_SUCCEEDED(rv)) {
-      rv = ccm->GetUnicodeEncoder(&fileSystemCharset, &mUnicodeEncoder);
+      rv = ccm->GetUnicodeEncoderRaw(fileSystemCharset.get(), &mUnicodeEncoder);
     }
   }
 
@@ -553,13 +553,13 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
 
   // get file system charset and create a unicode encoder
   if (nsnull == mUnicodeDecoder) {
-    nsAutoString fileSystemCharset;
+    nsCAutoString fileSystemCharset;
     GetFileSystemCharset(fileSystemCharset);
 
     nsCOMPtr<nsICharsetConverterManager> ccm = 
              do_GetService(kCharsetConverterManagerCID, &rv); 
     if (NS_SUCCEEDED(rv)) {
-      rv = ccm->GetUnicodeDecoder(&fileSystemCharset, &mUnicodeDecoder);
+      rv = ccm->GetUnicodeDecoderRaw(fileSystemCharset.get(), &mUnicodeDecoder);
     }
   }
 

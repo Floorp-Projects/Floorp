@@ -182,7 +182,7 @@ nsUnicharStreamLoader::OnStopRequest(nsIRequest *request,
     }
 
     rv = uin->Init(mInputStream,
-                   NS_ConvertASCIItoUCS2(mCharset).get(),
+                   mCharset.get(),
                    mSegmentSize,
                    PR_TRUE);
     

@@ -204,11 +204,9 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   // if we were given a non empty charset, then use it
   if (aMsgCharSet && *aMsgCharSet)
   {
-    //Fix this, SetCharsetOverRide should take a char*
-    nsAutoString tempStr; tempStr.AssignWithConversion(aMsgCharSet);
     nsCOMPtr<nsIMsgI18NUrl> i18nUrl (do_QueryInterface(aURL));
     if (i18nUrl)
-      i18nUrl->SetCharsetOverRide(tempStr.get());
+      i18nUrl->SetCharsetOverRide(aMsgCharSet);
   }
 
   mQuoteListener = do_CreateInstance(NS_MSGQUOTELISTENER_CONTRACTID, &rv);

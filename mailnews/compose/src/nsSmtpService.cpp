@@ -61,7 +61,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsMsgSimulateError.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 
 #define SERVER_DELIMITER ","
 #define APPEND_SERVERS_VERSION_PREF_NAME "append_preconfig_smtpservers.version"
@@ -109,17 +108,13 @@ EnsureUTF8Spec(const nsACString &aSpec, const char *aCharset,
 
 
   nsresult rv;
-  nsCOMPtr<nsICharsetConverterManager2> charsetConverterManager;
+  nsCOMPtr<nsICharsetConverterManager> charsetConverterManager;
 
   charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAtom> charsetAtom;
-  rv = charsetConverterManager->GetCharsetAtom2(aCharset, getter_AddRefs(charsetAtom));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
-  rv = charsetConverterManager->GetUnicodeDecoder(charsetAtom, 
+  rv = charsetConverterManager->GetUnicodeDecoder(aCharset, 
                                                   getter_AddRefs(unicodeDecoder));
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -153,7 +153,7 @@ protected:
   PRBool                m_canonicalLineEnding; // CRLF
   
   nsCString mURI; // the RDF URI associated with this url.
-  nsString mCharsetOverride; // used by nsIMsgI18NUrl...
+  nsCString mCharsetOverride; // used by nsIMsgI18NUrl...
 };
 
 #endif /* nsImapUrl_h___ */

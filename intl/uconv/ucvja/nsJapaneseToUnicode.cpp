@@ -704,12 +704,10 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
               if (!mGB2312Decoder) {
                 // creating a delegate converter (GB2312)
                 nsresult rv;
-                nsString tmpCharset;
                 nsCOMPtr<nsICharsetConverterManager> ccm = 
                          do_GetService(kCharsetConverterManagerCID, &rv);
                 if (NS_SUCCEEDED(rv)) {
-                  tmpCharset.Assign(NS_LITERAL_STRING("GB2312"));
-                  rv = ccm->GetUnicodeDecoder(&tmpCharset, &mGB2312Decoder);
+                  rv = ccm->GetUnicodeDecoderRaw("GB2312", &mGB2312Decoder);
                 }
               }
               if (!mGB2312Decoder) {// failed creating a delegate converter
@@ -758,12 +756,10 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
               if (!mEUCKRDecoder) {
                 // creating a delegate converter (EUC-KR)
                 nsresult rv;
-                nsString tmpCharset;
                 nsCOMPtr<nsICharsetConverterManager> ccm = 
                          do_GetService(kCharsetConverterManagerCID, &rv);
                 if (NS_SUCCEEDED(rv)) {
-                  tmpCharset.Assign(NS_LITERAL_STRING("EUC-KR"));
-                  rv = ccm->GetUnicodeDecoder(&tmpCharset, &mEUCKRDecoder);
+                  rv = ccm->GetUnicodeDecoderRaw("EUC-KR", &mEUCKRDecoder);
                 }
               }
               if (!mEUCKRDecoder) {// failed creating a delegate converter
@@ -833,12 +829,10 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                 if (!mISO88597Decoder) {
                   // creating a delegate converter (ISO-8859-7)
                   nsresult rv;
-                  nsString tmpCharset;
                   nsCOMPtr<nsICharsetConverterManager> ccm = 
                            do_GetService(kCharsetConverterManagerCID, &rv);
                   if (NS_SUCCEEDED(rv)) {
-                    tmpCharset.Assign(NS_LITERAL_STRING("ISO-8859-7"));
-                    rv = ccm->GetUnicodeDecoder(&tmpCharset, &mISO88597Decoder);
+                    rv = ccm->GetUnicodeDecoderRaw("ISO-8859-7", &mISO88597Decoder);
                   }
                 }
                 if (!mISO88597Decoder) {// failed creating a delegate converter

@@ -272,7 +272,7 @@ txStylesheetSink::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
 NS_IMETHODIMP
 txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
-    nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
+    nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
     PRInt32 charsetSource = kCharsetFromDocTypeDefault;
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
@@ -285,8 +285,8 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
             do_GetService(NS_CHARSETALIAS_CONTRACTID);
 
         if (calias) {
-            nsAutoString preferred;
-            rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetVal),
+            nsCAutoString preferred;
+            rv = calias->GetPreferred(charsetVal,
                                       preferred);
             if (NS_SUCCEEDED(rv)) {            
                 charset = preferred;
@@ -296,7 +296,7 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     }
 
     nsCOMPtr<nsIParser> parser = do_QueryInterface(aContext);
-    parser->SetDocumentCharset(charset, charsetSource);
+    parser->SetDocumentCharset(NS_ConvertASCIItoUCS2(charset), charsetSource);
 
     nsCAutoString contentType;
     channel->GetContentType(contentType);

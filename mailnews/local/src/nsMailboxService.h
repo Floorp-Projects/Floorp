@@ -81,7 +81,7 @@ protected:
 										    nsIUrlListener * aUrlListener,
                         const char * aFileName, /* only used by open attachment */
                         nsMailboxAction mailboxAction,
-                        const PRUnichar * aCharsetOverride,
+                        const char * aCharsetOverride,
                         nsIURI ** aURL);
 
   nsresult DecomposeMailboxURI(const char * aMessageURI, nsIMsgFolder ** aFolder, nsMsgKey *aMsgKey);

@@ -112,11 +112,11 @@ int main(int argc, const char** argv)
       if(strcmp(argv[i], "-f") == 0)
       {
         // User has specified the charset to convert from
-        nsAutoString str;
+        nsCAutoString str;
 
         // First check if a charset alias was given, 
         // and convert to the canonical name
-        res = aliasmgr->GetPreferred(NS_ConvertASCIItoUCS2(argv[i+1]), str);
+        res = aliasmgr->GetPreferred(nsDependentCString(argv[i+1]), str);
         if (NS_FAILED(res))
         {
           fprintf(stderr, "Cannot get charset alias for %s %x\n",
@@ -125,7 +125,7 @@ int main(int argc, const char** argv)
         }
 
         // Finally create the decoder
-        res = ccMain->GetUnicodeDecoder(&str, &decoder);
+        res = ccMain->GetUnicodeDecoder(str.get(), &decoder);
         if(NS_FAILED(res)) {
           fprintf(stderr, "Cannot get Unicode decoder %s %x\n", 
                   argv[i+1],res);
@@ -137,11 +137,11 @@ int main(int argc, const char** argv)
       if(strcmp(argv[i], "-t") == 0)
       {
         // User has specified which charset to convert to
-        nsAutoString str;
+        nsCAutoString str;
 
         // First check if a charset alias was given, 
         // and convert to the canonical name
-        res = aliasmgr->GetPreferred(NS_ConvertASCIItoUCS2(argv[i+1]), str);
+        res = aliasmgr->GetPreferred(nsDependentCString(argv[i+1]), str);
         if (NS_FAILED(res))
         {
           fprintf(stderr, "Cannot get charset alias for %s %x\n",
@@ -150,7 +150,7 @@ int main(int argc, const char** argv)
         }
 
         // Finally create the encoder 
-        res = ccMain->GetUnicodeEncoder(&str, &encoder);
+        res = ccMain->GetUnicodeEncoderRaw(str.get(), &encoder);
         if(NS_FAILED(res)) {
           fprintf(stderr, "Cannot get Unicode encoder %s %x\n", 
                   argv[i+1],res);

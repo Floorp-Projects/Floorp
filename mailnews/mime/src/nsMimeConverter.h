@@ -39,7 +39,6 @@
 #include "prtypes.h"
 #include "nsIMimeConverter.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsCOMPtr.h"
 
 class nsMimeConverter : public nsIMimeConverter {

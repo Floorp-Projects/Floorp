@@ -212,17 +212,15 @@ nsresult nsCollation::NormalizeString(const nsAString& stringIn, nsAString& stri
   return NS_OK;
 }
 
-nsresult nsCollation::SetCharset(const PRUnichar* aCharset)
+nsresult nsCollation::SetCharset(const char* aCharset)
 {
   NS_ENSURE_ARG_POINTER(aCharset);
 
   nsresult rv;
-  nsCOMPtr <nsICharsetConverterManager2> charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  nsCOMPtr <nsICharsetConverterManager> charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr <nsIAtom> charsetAtom;
-    rv = charsetConverterManager->GetCharsetAtom(aCharset, getter_AddRefs(charsetAtom));
-    if (NS_SUCCEEDED(rv))
-      rv = charsetConverterManager->GetUnicodeEncoder(charsetAtom, getter_AddRefs(mEncoder));
+    rv = charsetConverterManager->GetUnicodeEncoder(aCharset,
+                                                    getter_AddRefs(mEncoder));
   }
   return rv;
 }
@@ -233,7 +231,7 @@ nsresult nsCollation::UnicodeToChar(const nsAString& aSrc, char** dst)
 
   nsresult res = NS_OK;
   if (!mEncoder)
-    res = SetCharset(NS_LITERAL_STRING("ISO-8859-1").get());
+    res = SetCharset(NS_LITERAL_CSTRING("ISO-8859-1").get());
 
   if (NS_SUCCEEDED(res)) {
     const nsPromiseFlatString& src = PromiseFlatString(aSrc);

@@ -56,7 +56,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIAbDirectory.h"
 #include "nsIMimeConverter.h"
-#include "nsICharsetConverterManager2.h"
+#include "nsIUnicodeDecoder.h"
 #include "nsIEditor.h"
 
 // Forward declares

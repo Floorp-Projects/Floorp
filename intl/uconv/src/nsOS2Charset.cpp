@@ -25,72 +25,106 @@
 #include "nsIPlatformCharset.h"
 #include "nsURLProperties.h"
 #include "pratom.h"
-#define INCL_PM
+#define INCL_WIN
 #include <os2.h>
 #include "nsUConvDll.h"
 #include "nsIOS2Locale.h"
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
+#include "nsITimelineService.h"
 #include "nsPlatformCharset.h"
 
 static nsURLProperties *gInfo = nsnull;
 static PRInt32 gCnt= 0;
 
-NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
+NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 
 nsPlatformCharset::nsPlatformCharset()
 {
-  PR_AtomicIncrement(&gCnt); // count for gInfo
+  NS_TIMELINE_START_TIMER("nsPlatformCharset()");
 
-  // XXX We should make the following block critical section
-  if(nsnull == gInfo)
-  {
-    nsURLProperties *info = new nsURLProperties(NS_LITERAL_CSTRING("resource:/res/os2charset.properties"));
-    NS_ASSERTION( info , " cannot create nsURLProperties");
-    gInfo = info;
-  }
-  NS_ASSERTION(gInfo, "Cannot open property file");
-  if( gInfo ) 
-  {
-    UINT acp = ::WinQueryCp(HMQ_CURRENT);
-    PRInt32 acpint = (PRInt32)(acp & 0x00FFFF);
-    nsAutoString acpKey(NS_LITERAL_STRING("os2."));
-    acpKey.AppendInt(acpint, 10);
+  UINT acp = ::WinQueryCp(HMQ_CURRENT);
+  PRInt32 acpint = (PRInt32)(acp & 0x00FFFF);
+  nsAutoString acpKey(NS_LITERAL_STRING("os2."));
+  acpKey.AppendInt(acpint, 10);
+  nsresult res = MapToCharset(acpKey, mCharset);
 
-    nsresult res = gInfo->Get(acpKey, mCharset);
-    if(NS_FAILED(res)) {
-      mCharset.Assign(NS_LITERAL_STRING("IBM850"));
-    }
-
-  } else {
-    mCharset.Assign(NS_LITERAL_STRING("IBM850"));
-  }
-}
-
+  NS_TIMELINE_STOP_TIMER("nsPlatformCharset()");
+  NS_TIMELINE_MARK_TIMER("nsPlatformCharset()");
+          }
 nsPlatformCharset::~nsPlatformCharset()
 {
   PR_AtomicDecrement(&gCnt);
-  if(0 == gCnt) {
+  if ((0 == gCnt) && (nsnull != gInfo)) {
     delete gInfo;
     gInfo = nsnull;
   }
 }
 
-NS_IMETHODIMP
-nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAString& oResult)
+nsresult 
+nsPlatformCharset::InitInfo()
+{  
+  PR_AtomicIncrement(&gCnt); // count for gInfo
+
+  if (gInfo == nsnull) {
+    nsURLProperties *info = new nsURLProperties(NS_LITERAL_CSTRING("resource:/res/os2charset.properties"));
+
+    NS_ASSERTION(info , "cannot open properties file");
+    NS_ENSURE_TRUE(info, NS_ERROR_FAILURE);
+    gInfo = info;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharset)
+{
+  //delay loading os2charset.properties bundle if possible
+  if (inANSICodePage.Equals(NS_LITERAL_STRING("os2.850"))) {
+    outCharset = NS_LITERAL_CSTRING("IBM850");
+    return NS_OK;
+  } 
+
+  if (inANSICodePage.Equals(NS_LITERAL_STRING("os2.932"))) {
+    outCharset = NS_LITERAL_CSTRING("Shift_JIS");
+    return NS_OK;
+  } 
+
+  // ensure the .property file is loaded
+  nsresult rv = InitInfo();
+  if (NS_FAILED(rv)) {
+    outCharset.Assign(NS_LITERAL_CSTRING("IBM850"));
+    return rv;
+  }
+
+  nsAutoString charset;
+  rv = gInfo->Get(inANSICodePage, charset);
+  if (NS_FAILED(rv)) {
+    outCharset.Assign(NS_LITERAL_CSTRING("IBM850"));
+    return rv;
+  }
+
+  CopyUCS2toASCII(charset, outCharset);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector,
+                              nsACString& oResult)
 {
   if ((selector == kPlatformCharsetSel_4xBookmarkFile) || (selector == kPlatformCharsetSel_4xPrefsJS)) {
     if ((mCharset.Find("IBM850", IGNORE_CASE) != -1) || (mCharset.Find("IBM437", IGNORE_CASE) != -1)) 
-      oResult.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+      oResult.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
     else if (mCharset.Find("IBM852", IGNORE_CASE) != -1)
-      oResult.Assign(NS_LITERAL_STRING("windows-1250"));
+      oResult.Assign(NS_LITERAL_CSTRING("windows-1250"));
     else if ((mCharset.Find("IBM855", IGNORE_CASE) != -1) || (mCharset.Find("IBM866", IGNORE_CASE) != -1))
-      oResult.Assign(NS_LITERAL_STRING("windows-1251"));
+      oResult.Assign(NS_LITERAL_CSTRING("windows-1251"));
     else if ((mCharset.Find("IBM869", IGNORE_CASE) != -1) || (mCharset.Find("IBM813", IGNORE_CASE) != -1))
-      oResult.Assign(NS_LITERAL_STRING("windows-1253"));
+      oResult.Assign(NS_LITERAL_CSTRING("windows-1253"));
     else if (mCharset.Find("IBM857", IGNORE_CASE) != -1)
-      oResult.Assign(NS_LITERAL_STRING("windows-1254"));
+      oResult.Assign(NS_LITERAL_CSTRING("windows-1254"));
     else
       oResult = mCharset;
   } else {
@@ -110,20 +144,15 @@ nsPlatformCharset::Init()
 {
   return NS_OK;
 }
-nsresult 
-nsPlatformCharset::MapToCharset(short script, short region, nsAString& outCharset)
-{
-  return NS_OK;
-}
 
 nsresult 
-nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsAString& outCharset)
+nsPlatformCharset::MapToCharset(short script, short region, nsACString& outCharset)
 {
   return NS_OK;
 }
 
 nsresult
-nsPlatformCharset::InitGetCharset(nsAString &oString)
+nsPlatformCharset::InitGetCharset(nsACString &oString)
 {
   return NS_OK;
 }
@@ -135,13 +164,7 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& loc
 }
 
 nsresult
-nsPlatformCharset::VerifyCharset(nsString &aCharset)
+nsPlatformCharset::VerifyCharset(nsCString &aCharset)
 {
-  return NS_OK;
-}
-
-nsresult 
-nsPlatformCharset::InitInfo()
-{  
   return NS_OK;
 }

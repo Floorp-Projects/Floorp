@@ -29,7 +29,7 @@
 
 #include "nspr.h"
 #include "nsHashtable.h"
-#include "nsICharsetConverterManager2.h"
+#include "nsICharsetConverterManager.h"
 #include "nsIFontCatalogService.h"
 #include "nsIFreeType2.h"
 #include <ft2build.h>
@@ -190,7 +190,7 @@ protected:
   void UnloadSharedLib();
 
   // this belongs in nsFT2FontCatalog
-  static nsICharsetConverterManager2* GetCharSetManager();
+  static nsICharsetConverterManager* GetCharSetManager();
 
   PRLibrary      *mSharedLib;
   FT_Library      mFreeTypeLibrary;
@@ -200,7 +200,7 @@ protected:
   static nsHashtable   *sFontFamilies;
   static nsHashtable   *sRange1CharSetNames;
   static nsHashtable   *sRange2CharSetNames;
-  static nsICharsetConverterManager2* sCharSetManager;
+  static nsICharsetConverterManager* sCharSetManager;
 };
 
 /* this simple record is used to model a given `installed' face */

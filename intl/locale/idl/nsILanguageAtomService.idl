@@ -34,7 +34,7 @@
 interface nsILanguageAtomService : nsISupports
 {
   nsILanguageAtom LookupLanguage(in wstring aLanguage);
-  nsILanguageAtom LookupCharSet(in wstring aCharSet);
+  nsILanguageAtom LookupCharSet(in string aCharSet);
 
   nsIAtom GetLocaleLanguageGroup();
 };

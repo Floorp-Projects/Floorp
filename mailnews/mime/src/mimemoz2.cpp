@@ -705,8 +705,8 @@ SetMailCharacterSetToMsgWindow(MimeObject *obj, const char *aCharacterSet)
             msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
             if (msgWindow)
               rv = msgWindow->SetMailCharacterSet(!nsCRT::strcasecmp(aCharacterSet, "us-ascii") ?
-                                                  NS_LITERAL_STRING("ISO-8859-1").get() :
-                                                  NS_ConvertASCIItoUCS2(aCharacterSet).get());
+                                                  NS_LITERAL_CSTRING("ISO-8859-1").get() :
+                                                  aCharacterSet);
           }
         }
       }
@@ -2069,8 +2069,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed,  PRInt32 *fontPixel
     else
       charset.Assign(text->charset);
 
-    nsCOMPtr<nsICharsetConverterManager2> charSetConverterManager2;
-    nsCOMPtr <nsIAtom> charsetAtom;
+    nsCOMPtr<nsICharsetConverterManager> charSetConverterManager2;
     nsCOMPtr<nsIAtom> langGroupAtom;
     nsCAutoString prefStr;
 
@@ -2081,10 +2080,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed,  PRInt32 *fontPixel
       return rv;
 
     // get a language, e.g. x-western, ja
-    rv = charSetConverterManager2->GetCharsetAtom2(charset.get(),getter_AddRefs(charsetAtom));
-    if (NS_FAILED(rv))
-      return rv;
-    rv = charSetConverterManager2->GetCharsetLangGroup(charsetAtom,getter_AddRefs(langGroupAtom));
+    rv = charSetConverterManager2->GetCharsetLangGroup(charset.get(), getter_AddRefs(langGroupAtom));
     if (NS_FAILED(rv))
       return rv;
     rv = langGroupAtom->ToUTF8String(fontLang);

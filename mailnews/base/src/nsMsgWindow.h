@@ -76,7 +76,7 @@ protected:
   nsWeakPtr mRootDocShellWeak;
   nsWeakPtr mMessageWindowDocShellWeak;
 
-  nsString mMailCharacterSet;
+  nsCString mMailCharacterSet;
   PRBool    mCharsetOverride;
   PRBool    m_stopped;
   // small helper function used to optimize our use of a weak reference

@@ -149,7 +149,7 @@ NS_IMPL_ISUPPORTS4(nsPlainTextSerializer,
 
 NS_IMETHODIMP 
 nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
-                            nsIAtom* aCharSet, PRBool aIsCopying)
+                            const char* aCharSet, PRBool aIsCopying)
 {
 #ifdef DEBUG
   // Check if the major control flags are set correctly.

@@ -57,7 +57,7 @@
 #include "mimebuf.h"
 #include "nsMsgI18N.h"
 #include "nsMimeTypes.h"
-#include "nsICharsetConverterManager2.h"
+#include "nsICharsetConverterManager.h"
 #include "nsISaveAsCharset.h"
 #include "nsHankakuToZenkakuCID.h"
 #include "nsReadableUtils.h"
@@ -282,7 +282,8 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
   nsCOMPtr <nsISaveAsCharset> conv;
   PRUnichar *_pUCS2 = nsnull, *pUCS2 = nsnull, *pUCS2Head = nsnull, cUCS2Tmp = 0;
   char  *ibuf, *o = output;
-  char  encodedword_head[kMAX_CSNAME+4+1], _charset[kMAX_CSNAME];
+  char  encodedword_head[kMAX_CSNAME+4+1];
+  nsCAutoString _charset;
   char  *pUTF8Head = nsnull, cUTF8Tmp = 0;
   PRInt32   olen = 0, offset, linelen = output_carryoverlen, convlen = 0;
   PRInt32   encodedword_headlen = 0, encodedword_taillen = foldingonly ? 0 : 2; // "?="
@@ -299,21 +300,19 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
 
     // Resolve charset alias
     {
-      nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+      nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv);
       nsCOMPtr <nsIAtom> charsetAtom;
       charset = !nsCRT::strcasecmp(charset, "us-ascii") ? "ISO-8859-1" : charset;
-      rv = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).get(), getter_AddRefs(charsetAtom));
+      rv = calias->GetPreferred(nsDependentCString(charset),
+                                _charset);
       if (NS_FAILED(rv)) {
         if (_pUCS2)
           nsMemory::Free(_pUCS2);
         return -1;
       }
-      const char *charsetName;
-      charsetAtom->GetUTF8String(&charsetName);
-      strncpy(_charset, charsetName, sizeof(_charset)-1);
-      _charset[sizeof(_charset)-1] = '\0';
-      if (_charset[0])
-        charset = _charset;
+
+      // this is so nasty, but _charset won't be going away..
+      charset = _charset.get();
     }
 
     // Prepare MIME encoded-word head with official charset name
@@ -1212,17 +1211,15 @@ MIME_get_unicode_decoder(const char* aInputCharset, nsIUnicodeDecoder **aDecoder
   nsresult res;
 
   // get charset converters.
-  nsCOMPtr<nsICharsetConverterManager2> ccm2 = 
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
            do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res); 
   if (NS_SUCCEEDED(res)) {
-    nsCOMPtr <nsIAtom> charsetAtom;
-    if (!*aInputCharset || !nsCRT::strcasecmp("us-ascii", aInputCharset))
-      res = ccm2->GetCharsetAtom(NS_LITERAL_STRING("ISO-8859-1").get(), getter_AddRefs(charsetAtom));
-    else
-      res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(aInputCharset).get(), getter_AddRefs(charsetAtom));
+
     // create a decoder (conv to unicode), ok if failed if we do auto detection
-    if (NS_SUCCEEDED(res))
-      res = ccm2->GetUnicodeDecoder(charsetAtom, aDecoder);
+    if (!*aInputCharset || !nsCRT::strcasecmp("us-ascii", aInputCharset))
+      res = ccm->GetUnicodeDecoderRaw("ISO-8859-1", aDecoder);
+    else
+      res = ccm->GetUnicodeDecoder(aInputCharset, aDecoder);
   }
    
   return res;
@@ -1235,17 +1232,11 @@ MIME_get_unicode_encoder(const char* aOutputCharset, nsIUnicodeEncoder **aEncode
   nsresult res;
 
   // get charset converters.
-  nsCOMPtr<nsICharsetConverterManager2> ccm2 = 
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
            do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res); 
-  if (NS_SUCCEEDED(res)) {
-    nsCOMPtr <nsIAtom> charsetAtom;
-    if (*aOutputCharset) {
-      res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(aOutputCharset).get(), getter_AddRefs(charsetAtom));
-
+  if (NS_SUCCEEDED(res) && *aOutputCharset) {
       // create a encoder (conv from unicode)
-      if (NS_SUCCEEDED(res))
-        res = ccm2->GetUnicodeEncoder(charsetAtom, aEncoder);
-    }
+      res = ccm->GetUnicodeEncoder(aOutputCharset, aEncoder);
   }
    
   return res;

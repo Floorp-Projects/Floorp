@@ -57,8 +57,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
-#include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
+#include "nsICharsetAlias.h"
 #include "nsIChannel.h"
 #include "nsIRequestObserver.h"
 #include "netCore.h"
@@ -300,33 +299,31 @@ NS_IMETHODIMP nsMsgWindow::SetRootDocShell(nsIDocShell * aDocShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgWindow::GetMailCharacterSet(PRUnichar * *aMailCharacterSet)
+NS_IMETHODIMP nsMsgWindow::GetMailCharacterSet(char * *aMailCharacterSet)
 {
   if(!aMailCharacterSet)
     return NS_ERROR_NULL_POINTER;
 
-  *aMailCharacterSet = ToNewUnicode(mMailCharacterSet);
+  *aMailCharacterSet = ToNewCString(mMailCharacterSet);
   if (!(*aMailCharacterSet))
     return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgWindow::SetMailCharacterSet(const PRUnichar * aMailCharacterSet)
+NS_IMETHODIMP nsMsgWindow::SetMailCharacterSet(const char * aMailCharacterSet)
 {
   mMailCharacterSet.Assign(aMailCharacterSet);
 
   // Convert to a canonical charset name instead of using the charset name from the message header as is.
   // This is needed for charset menu item to have a check mark correctly.
   nsresult rv;
-  nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsICharsetAlias> calias =
+      do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv);
+  
   if (NS_SUCCEEDED(rv)) 
-  {
-    nsCOMPtr <nsIAtom> charsetAtom;
-    rv = ccm2->GetCharsetAtom(mMailCharacterSet.get(), getter_AddRefs(charsetAtom));
-    if (NS_SUCCEEDED(rv)) 
-      rv = charsetAtom->ToString(mMailCharacterSet);
-  }
+      calias->GetPreferred(nsDependentCString(aMailCharacterSet),
+                           mMailCharacterSet);
 
   return NS_OK;
 }

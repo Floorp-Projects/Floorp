@@ -43,11 +43,13 @@
 #endif
 
 #include "prtypes.h"
+#include "nsString.h"
 #include "nsMailHeaders.h"
 #include "nsIMimeStreamConverter.h"
+#include "nsIUnicodeDecoder.h"
+#include "nsIUnicodeEncoder.h"
 #include "nsIPref.h"
 #include "mozITXTToHTMLConv.h"
-#include "nsICharsetConverterManager2.h"
 
 #define MIME_DRAFTS
 

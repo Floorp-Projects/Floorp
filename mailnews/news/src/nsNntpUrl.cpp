@@ -343,7 +343,7 @@ NS_IMETHODIMP nsNntpUrl::GetFolder(nsIMsgFolder **msgFolder)
 }
 
 NS_IMETHODIMP 
-nsNntpUrl::GetFolderCharset(PRUnichar **aCharacterSet)
+nsNntpUrl::GetFolderCharset(char **aCharacterSet)
 {
   nsCOMPtr<nsIMsgFolder> folder;
   nsresult rv = GetFolder(getter_AddRefs(folder));
@@ -368,16 +368,16 @@ NS_IMETHODIMP nsNntpUrl::GetFolderCharsetOverride(PRBool * aCharacterSetOverride
   return rv;
 }
 
-NS_IMETHODIMP nsNntpUrl::GetCharsetOverRide(PRUnichar ** aCharacterSet)
+NS_IMETHODIMP nsNntpUrl::GetCharsetOverRide(char ** aCharacterSet)
 {
   if (!mCharsetOverride.IsEmpty())
-    *aCharacterSet = ToNewUnicode(mCharsetOverride); 
+    *aCharacterSet = ToNewCString(mCharsetOverride); 
   else
     *aCharacterSet = nsnull;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNntpUrl::SetCharsetOverRide(const PRUnichar * aCharacterSet)
+NS_IMETHODIMP nsNntpUrl::SetCharsetOverRide(const char * aCharacterSet)
 {
   mCharsetOverride = aCharacterSet;
   return NS_OK;

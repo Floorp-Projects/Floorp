@@ -1596,10 +1596,10 @@ nsMsgFolderDataSource::createFolderSizeNode(nsIMsgFolder *folder, nsIRDFNode **t
 nsresult
 nsMsgFolderDataSource::createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target)
 {
-  nsXPIDLString charset;
+  nsXPIDLCString charset;
   nsresult rv = folder->GetCharset(getter_Copies(charset));
   if (NS_SUCCEEDED(rv))
-    createNode(charset.get(), target, getRDFService());
+    createNode(NS_ConvertASCIItoUCS2(charset).get(), target, getRDFService());
   else
     createNode(NS_LITERAL_STRING("").get(), target, getRDFService());
   return NS_OK;
@@ -2128,11 +2128,11 @@ nsresult nsMsgFolderDataSource::DoFolderAssert(nsIMsgFolder *folder, nsIRDFResou
     nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(target));
     if(literal)
     {
-      nsXPIDLString value;
-      rv = literal->GetValue(getter_Copies(value));
+      const PRUnichar* value;
+      rv = literal->GetValueConst(&value);
       if(NS_SUCCEEDED(rv))
       {
-        rv = folder->SetCharset(value.get());
+        rv = folder->SetCharset(NS_LossyConvertUCS2toASCII(value).get());
       }
     }
     else

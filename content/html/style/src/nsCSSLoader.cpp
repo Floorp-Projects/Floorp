@@ -363,8 +363,8 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
 
 // XXX We call this function a good bit.  Consider caching the service
 // in a static global or something?
-static nsresult ResolveCharset(const nsAString& aCharsetAlias,
-                               nsAString& aCharset)
+static nsresult ResolveCharset(const nsACString& aCharsetAlias,
+                               nsACString& aCharset)
 {
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
   if (! aCharsetAlias.IsEmpty()) {
@@ -382,7 +382,7 @@ static const char kCharsetSym[] = "@charset";
 
 static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
                                    PRUint32 aDataLength,
-                                   nsAString& aCharset)
+                                   nsACString& aCharset)
 {
   aCharset.Truncate();
   if (aDataLength <= sizeof(kCharsetSym) - 1)
@@ -544,7 +544,8 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
       break;
     }
     
-    aCharset.Append(PRUnichar(aStyleSheetData[pos]));
+    // casting to avoid ambiguities
+    aCharset.Append(char(aStyleSheetData[pos]));
     pos += step;
   }
 
@@ -584,18 +585,15 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
    * default (document charset or ISO-8859-1 if we have no document
    * charset)
    */
-  nsAutoString charset;
-  nsAutoString charsetCandidate;
+  nsCAutoString charset, charsetCandidate;
   if (channel) {
-    nsCAutoString charsetVal;
-    channel->GetContentCharset(charsetVal);
-    CopyASCIItoUCS2(charsetVal, charsetCandidate);
+    channel->GetContentCharset(charsetCandidate);
   }
 
   result = NS_ERROR_NOT_AVAILABLE;
   if (! charsetCandidate.IsEmpty()) {
 #ifdef DEBUG_bzbarsky
-    fprintf(stderr, "Setting from HTTP to: %s\n", NS_ConvertUCS2toUTF8(charsetCandidate).get());
+    fprintf(stderr, "Setting from HTTP to: %s\n", charsetCandidate.get());
 #endif
     result = ResolveCharset(charsetCandidate, charset);
   }
@@ -608,7 +606,7 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
     if (NS_SUCCEEDED(result)) {
 #ifdef DEBUG_bzbarsky
       fprintf(stderr, "Setting from @charset rule: %s\n",
-              NS_ConvertUCS2toUTF8(charsetCandidate).get());
+              charsetCandidate.get());
 #endif
       result = ResolveCharset(charsetCandidate, charset);
     }
@@ -618,11 +616,13 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
     // Now try the charset on the <link> or processing instruction
     // that loaded us
     if (mOwningElement) {
-      mOwningElement->GetCharset(charsetCandidate);
+      nsAutoString elementCharset;
+      mOwningElement->GetCharset(elementCharset);
+      CopyUCS2toASCII(elementCharset, charsetCandidate);
       if (! charsetCandidate.IsEmpty()) {
 #ifdef DEBUG_bzbarsky
         fprintf(stderr, "Setting from property on element: %s\n",
-                NS_ConvertUCS2toUTF8(charsetCandidate).get());
+                charsetCandidate.get());
 #endif
         result = ResolveCharset(charsetCandidate, charset);
       }
@@ -632,19 +632,21 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
   if (NS_FAILED(result) && mLoader->mDocument) {
     // no useful data on charset.  Try the document charset.
     // That needs no resolution, since it's already fully resolved
-    mLoader->mDocument->GetDocumentCharacterSet(charset);
+    nsAutoString docCharset;
+    mLoader->mDocument->GetDocumentCharacterSet(docCharset);
+    CopyUCS2toASCII(docCharset, charset);
 #ifdef DEBUG_bzbarsky
     fprintf(stderr, "Set from document: %s\n",
-            NS_ConvertUCS2toUTF8(charset).get());
+            charset.get());
 #endif
   }      
 
   if (charset.IsEmpty()) {
     NS_WARNING("Unable to determine charset for sheet, using ISO-8859-1!");
-    charset = NS_LITERAL_STRING("ISO-8859-1");
+    charset = NS_LITERAL_CSTRING("ISO-8859-1");
   }
   
-  aCharset = NS_ConvertUCS2toUTF8(charset);
+  aCharset = charset;
   return NS_OK;
 }
 
@@ -1284,7 +1286,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
 
     // 8192 is a nice magic number that happens to be what a lot of
     // other things use for buffer sizes.
-    rv = converterStream->Init(stream, NS_LITERAL_STRING("UTF-8").get(),
+    rv = converterStream->Init(stream, "UTF-8",
                                8192, PR_TRUE);
     
     if (NS_FAILED(rv)) {

@@ -73,7 +73,7 @@ interface nsIMsgWindow : nsISupports {
 
     readonly attribute nsIPrompt promptDialog;
     readonly attribute nsIAuthPrompt authPromptDialog;
-    attribute wstring mailCharacterSet;
+    attribute string mailCharacterSet;
 	// Remember the message's charaset was overridden, so it can be inherited (e.g for quoting). 
     attribute boolean charsetOverride;
 

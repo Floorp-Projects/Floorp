@@ -47,7 +47,7 @@ class nsIConverterInputStream : public nsIUnicharInputStream {
  public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONVERTERSTREAM_IID)
 
-    NS_IMETHOD Init(nsIInputStream *aStream, const PRUnichar *aCharset,
+    NS_IMETHOD Init(nsIInputStream *aStream, const char *aCharset,
                     PRInt32 aBufferSize, PRBool aRecoverFromErrors) = 0;
 };
 
