@@ -69,17 +69,15 @@ nsDocShellTreeOwner::nsDocShellTreeOwner() :
    mWebBrowserChrome(nsnull),
    mOwnerWin(nsnull),
    mOwnerRequestor(nsnull),
-   mChromeListener(nsnull)
+   mChromeTooltipListener(nsnull),
+   mChromeContextMenuListener(nsnull)
 {
   NS_INIT_REFCNT();
 }
 
 nsDocShellTreeOwner::~nsDocShellTreeOwner()
 {
-  if ( mChromeListener ) {
-    mChromeListener->RemoveChromeListeners();
-    NS_RELEASE(mChromeListener);
-  }
+  RemoveChromeListeners();
 }
 
 //*****************************************************************************
@@ -651,12 +649,9 @@ nsDocShellTreeOwner::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 void nsDocShellTreeOwner::WebBrowser(nsWebBrowser* aWebBrowser)
 {
-  if ( !aWebBrowser ) {
-    if ( mChromeListener ) {
-      mChromeListener->RemoveChromeListeners();
-      NS_RELEASE(mChromeListener);
-    }
-  }
+  if ( !aWebBrowser )
+    RemoveChromeListeners();
+
   mWebBrowser = aWebBrowser;
 }
 
@@ -715,14 +710,28 @@ nsDocShellTreeOwner :: AddChromeListeners ( )
 {
   nsresult rv = NS_OK;
   
-  if ( !mChromeListener ) {
-    nsCOMPtr<nsIContextMenuListener> contextListener ( do_QueryInterface(mWebBrowserChrome) );
+  // install tooltips
+  if ( !mChromeTooltipListener ) { 
     nsCOMPtr<nsITooltipListener> tooltipListener ( do_QueryInterface(mWebBrowserChrome) );
-    if ( contextListener || tooltipListener ) {
-      mChromeListener = new ChromeListener ( mWebBrowser, mWebBrowserChrome );
-      if ( mChromeListener ) {
-        NS_ADDREF(mChromeListener);
-        rv = mChromeListener->AddChromeListeners();
+    if ( tooltipListener ) {
+      mChromeTooltipListener = new ChromeTooltipListener ( mWebBrowser, mWebBrowserChrome );
+      if ( mChromeTooltipListener ) {
+        NS_ADDREF(mChromeTooltipListener);
+        rv = mChromeTooltipListener->AddChromeListeners();
+      }
+      else
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  
+  // install context menus
+  if ( !mChromeContextMenuListener ) {
+    nsCOMPtr<nsIContextMenuListener> contextListener ( do_QueryInterface(mWebBrowserChrome) );
+    if ( contextListener ) {
+      mChromeContextMenuListener = new ChromeContextMenuListener ( mWebBrowser, mWebBrowserChrome );
+      if ( mChromeContextMenuListener ) {
+        NS_ADDREF(mChromeContextMenuListener);
+        rv = mChromeContextMenuListener->AddChromeListeners();
       }
       else
         rv = NS_ERROR_OUT_OF_MEMORY;
@@ -734,15 +743,31 @@ nsDocShellTreeOwner :: AddChromeListeners ( )
 } // AddChromeListeners
 
 
+NS_IMETHODIMP
+nsDocShellTreeOwner :: RemoveChromeListeners ( )
+{
+  if ( mChromeTooltipListener ) {
+    mChromeTooltipListener->RemoveChromeListeners();
+    NS_RELEASE(mChromeTooltipListener);
+  }
+  if ( mChromeContextMenuListener ) {
+    mChromeContextMenuListener->RemoveChromeListeners();
+    NS_RELEASE(mChromeContextMenuListener);
+  }
+  
+  return NS_OK;
+}
+
+
 #ifdef XP_MAC
 #pragma mark -
 #endif
 
 
-NS_IMPL_ADDREF(ChromeListener)
-NS_IMPL_RELEASE(ChromeListener)
+NS_IMPL_ADDREF(ChromeTooltipListener)
+NS_IMPL_RELEASE(ChromeTooltipListener)
 
-NS_INTERFACE_MAP_BEGIN(ChromeListener)
+NS_INTERFACE_MAP_BEGIN(ChromeTooltipListener)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMouseListener)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)
     NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
@@ -752,23 +777,23 @@ NS_INTERFACE_MAP_END
 
 
 //
-// ChromeListener ctor
+// ChromeTooltipListener ctor
 //
-ChromeListener :: ChromeListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) 
+ChromeTooltipListener :: ChromeTooltipListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) 
   : mWebBrowser(inBrowser), mWebBrowserChrome(inChrome),
-     mContextMenuListenerInstalled(PR_FALSE), mTooltipListenerInstalled(PR_FALSE),
+     mTooltipListenerInstalled(PR_FALSE),
      mShowingTooltip(PR_FALSE), mMouseClientX(0), mMouseClientY(0)
 {
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 } // ctor
 
 
 //
-// ChromeListener dtor
+// ChromeTooltipListener dtor
 //
-ChromeListener :: ~ChromeListener ( )
+ChromeTooltipListener :: ~ChromeTooltipListener ( )
 {
-  
+
 } // dtor
 
 
@@ -779,7 +804,7 @@ ChromeListener :: ~ChromeListener ( )
 // has implemented the right interfaces.
 //
 NS_IMETHODIMP
-ChromeListener :: AddChromeListeners ( )
+ChromeTooltipListener :: AddChromeListeners ( )
 {  
   if ( !mEventReceiver ) {
     nsCOMPtr<nsIDOMWindow> domWindow;
@@ -799,18 +824,9 @@ ChromeListener :: AddChromeListeners ( )
     mEventReceiver = do_QueryInterface(chromeHandler);
   }
   
-  // Register the appropriate events for context menus, but only if
-  // the embedding chrome cares.
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIContextMenuListener> contextListener ( do_QueryInterface(mWebBrowserChrome) );
-  if ( contextListener && !mContextMenuListenerInstalled ) {
-    rv = AddContextMenuListener();
-    if ( NS_FAILED(rv) )
-      return rv;
-  }
-    
   // Register the appropriate events for tooltips, but only if
   // the embedding chrome cares.
+  nsresult rv = NS_OK;
   nsCOMPtr<nsITooltipListener> tooltipListener ( do_QueryInterface(mWebBrowserChrome) );
   if ( tooltipListener && !mTooltipListenerInstalled ) {
     rv = AddTooltipListener();
@@ -824,26 +840,6 @@ ChromeListener :: AddChromeListeners ( )
 
 
 //
-// AddContextMenuListener
-//
-// Subscribe to the events that will allow us to track context menus. Bascially, this
-// is just the mouseDown event.
-//
-NS_IMETHODIMP
-ChromeListener :: AddContextMenuListener()
-{
-  if (mEventReceiver) {
-    nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
-    nsresult rv = mEventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
-    if (NS_SUCCEEDED(rv))
-      mContextMenuListenerInstalled = PR_TRUE;
-  }
-
-  return NS_OK;
-}
-
-
-//
 // AddTooltipListener
 //
 // Subscribe to the events that will allow us to track tooltips. We need "mouse" for mouseExit,
@@ -851,7 +847,7 @@ ChromeListener :: AddContextMenuListener()
 // of how many succeed so we can clean up correctly in Release().
 //
 NS_IMETHODIMP
-ChromeListener :: AddTooltipListener()
+ChromeTooltipListener :: AddTooltipListener()
 {
   if (mEventReceiver) {
     nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
@@ -871,17 +867,13 @@ ChromeListener :: AddTooltipListener()
 //
 // RemoveChromeListeners
 //
-// Unsubscribe from the various things we've hooked up to the window root, including
-// context menus and tooltips for starters.
+// Unsubscribe from the various things we've hooked up to the window root.
 //
 NS_IMETHODIMP
-ChromeListener :: RemoveChromeListeners ( )
+ChromeTooltipListener :: RemoveChromeListeners ( )
 {
   HideTooltip();
 
-  if ( mContextMenuListenerInstalled )
-    RemoveContextMenuListener();
-    
   if ( mTooltipListenerInstalled )
     RemoveTooltipListener();
   
@@ -890,27 +882,8 @@ ChromeListener :: RemoveChromeListeners ( )
   // it really doesn't matter if these fail...
   return NS_OK;
   
-} // RemoveChromeListeners
+} // RemoveChromeTooltipListeners
 
-
-//
-// RemoveContextMenuListener
-//
-// Unsubscribe from all the various context menu events that we were listening to. 
-// Bascially, this is just the mouseDown event.
-//
-NS_IMETHODIMP 
-ChromeListener :: RemoveContextMenuListener()
-{
-  if (mEventReceiver) {
-    nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
-    nsresult rv = mEventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
-    if (NS_SUCCEEDED(rv))
-      mContextMenuListenerInstalled = PR_FALSE;
-  }
-
-  return NS_OK;
-}
 
 
 //
@@ -919,7 +892,7 @@ ChromeListener :: RemoveContextMenuListener()
 // Unsubscribe from all the various tooltip events that we were listening to
 //
 NS_IMETHODIMP 
-ChromeListener :: RemoveTooltipListener()
+ChromeTooltipListener :: RemoveTooltipListener()
 {
   if (mEventReceiver) {
     nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
@@ -941,12 +914,8 @@ ChromeListener :: RemoveTooltipListener()
 // builup. Hide the tooltip.
 //
 nsresult
-ChromeListener::KeyDown(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::KeyDown(nsIDOMEvent* aMouseEvent)
 {
-  // make sure we're a tooltip. if not, bail. Just to be safe.
-  if ( ! mTooltipListenerInstalled )
-    return NS_OK;
-  
   return HideTooltip();
     
 } // KeyDown
@@ -959,14 +928,14 @@ ChromeListener::KeyDown(nsIDOMEvent* aMouseEvent)
 // We can ignore these as they are already handled by KeyDown
 //
 nsresult
-ChromeListener::KeyUp(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::KeyUp(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK;
     
 } // KeyUp
 
 nsresult
-ChromeListener::KeyPress(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::KeyPress(nsIDOMEvent* aMouseEvent)
 {
   return NS_OK;
     
@@ -976,141 +945,36 @@ ChromeListener::KeyPress(nsIDOMEvent* aMouseEvent)
 //
 // MouseDown
 //
-// Do the processing for context menus, if this is a right-mouse click
+// On a click, hide the tooltip
 //
 nsresult 
-ChromeListener::MouseDown(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-    nsCOMPtr<nsIDOMMouseEvent> mouseEvent (do_QueryInterface(aMouseEvent));
-    if (!mouseEvent)
-        return NS_OK;
- 
-    // if the mouse goes down for any reason when a tooltip is showing,
-    // we want to hide it, but continue processing the event.
-    if ( mShowingTooltip ) 
-      HideTooltip();
-     
-    // Test for right mouse button click
-    PRUint16 buttonNumber;
-    nsresult res = mouseEvent->GetButton(&buttonNumber);
-    if (NS_FAILED(res))
-        return res;
-    if (buttonNumber != 2) // 2 is the magic number
-        return NS_OK;
-
-    nsCOMPtr<nsIDOMEventTarget> targetNode;
-    res = aMouseEvent->GetTarget(getter_AddRefs(targetNode));
-    if (NS_FAILED(res))
-        return res;
-    if (!targetNode)
-        return NS_ERROR_NULL_POINTER;
-
-    nsCOMPtr<nsIDOMNode> targetDOMnode;
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(targetNode);
-    if (!node)
-        return NS_OK;
-
-    // Find the first node to be an element starting with this node and
-    // working up through its parents.
-
-    PRUint32 flags = nsIContextMenuListener::CONTEXT_NONE;
-    nsCOMPtr<nsIDOMHTMLElement> element;
-    do {
-        //PRUint16 type;
-        //node->GetNodeType(&type);
-
-        // XXX test for selected text
-        element = do_QueryInterface(node);
-        if (element)
-        {
-            nsAutoString tag;
-            element->GetTagName(tag);
-
-            // Test what kind of element we're dealing with here
-            if (tag.EqualsWithConversion("img", PR_TRUE))
-            {
-                flags |= nsIContextMenuListener::CONTEXT_IMAGE;
-                targetDOMnode = node;
-                // if we see an image, keep searching for a possible anchor
-            }
-            else if (tag.EqualsWithConversion("input", PR_TRUE))
-            {
-                // INPUT element - button, combo, checkbox, text etc.
-                flags |= nsIContextMenuListener::CONTEXT_INPUT;
-                targetDOMnode = node;
-                break; // exit do-while
-            }
-            else if (tag.EqualsWithConversion("textarea", PR_TRUE))
-            {
-                // text area
-                flags |= nsIContextMenuListener::CONTEXT_TEXT;
-                targetDOMnode = node;
-                break; // exit do-while
-            }
-            else if (tag.EqualsWithConversion("html", PR_TRUE))
-            {
-                // only care about this if no other context was found.
-                if (!flags) {
-                    flags |= nsIContextMenuListener::CONTEXT_DOCUMENT;
-                    targetDOMnode = node;
-                }
-                break; // exit do-while
-            }
-
-            // Test if the element has an associated link
-            nsCOMPtr<nsIDOMNamedNodeMap> attributes;
-            node->GetAttributes(getter_AddRefs(attributes));
-            if (attributes)
-            {
-                nsCOMPtr<nsIDOMNode> hrefNode;
-                nsAutoString href; href.AssignWithConversion("href");
-                attributes->GetNamedItem(href, getter_AddRefs(hrefNode));
-                if (hrefNode)
-                {
-                    flags |= nsIContextMenuListener::CONTEXT_LINK;
-                    if (!targetDOMnode)
-                        targetDOMnode = node;
-                    break; // exit do-while
-                }
-            }
-        }
-
-        // walk-up-the-tree
-        nsCOMPtr<nsIDOMNode> parentNode;
-        node->GetParentNode(getter_AddRefs(parentNode));
-        node = parentNode;
-    } while (node);
-
-    // Tell the listener all about the event
-    nsCOMPtr<nsIContextMenuListener> menuListener(do_QueryInterface(mWebBrowserChrome));
-    if ( menuListener )
-      menuListener->OnShowContextMenu(flags, aMouseEvent, targetDOMnode);
-
-    return NS_OK;
+  return HideTooltip();
 
 } // MouseDown
 
 
 nsresult 
-ChromeListener::MouseUp(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
     return NS_OK; 
 }
 
 nsresult 
-ChromeListener::MouseClick(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
     return NS_OK; 
 }
 
 nsresult 
-ChromeListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
     return NS_OK; 
 }
 
 nsresult 
-ChromeListener::MouseOver(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::MouseOver(nsIDOMEvent* aMouseEvent)
 {
     return NS_OK; 
 }
@@ -1122,12 +986,8 @@ ChromeListener::MouseOver(nsIDOMEvent* aMouseEvent)
 // If we're responding to tooltips, hide the tip whenever the mouse leaves
 // the area it was in.
 nsresult 
-ChromeListener::MouseOut(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::MouseOut(nsIDOMEvent* aMouseEvent)
 {
-  // make sure we're a tooltip. if not, bail. Just to be safe.
-  if ( ! mTooltipListenerInstalled )
-    return NS_OK;
-  
   return HideTooltip();
 }
 
@@ -1139,12 +999,8 @@ ChromeListener::MouseOut(nsIDOMEvent* aMouseEvent)
 // timer fires, we cache the node in |mPossibleTooltipNode|.
 //
 nsresult
-ChromeListener::MouseMove(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
 {
-  // make sure we're a tooltip. if not, bail. Just to be safe.
-  if ( ! mTooltipListenerInstalled )
-    return NS_OK;
-  
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
   if (!mouseEvent)
     return NS_OK;
@@ -1195,7 +1051,7 @@ ChromeListener::MouseMove(nsIDOMEvent* aMouseEvent)
 // Tell the registered chrome that they should show the tooltip
 //
 NS_IMETHODIMP
-ChromeListener :: ShowTooltip ( PRInt32 inXCoords, PRInt32 inYCoords, const nsAReadableString & inTipText )
+ChromeTooltipListener :: ShowTooltip ( PRInt32 inXCoords, PRInt32 inYCoords, const nsAReadableString & inTipText )
 {
   nsresult rv = NS_OK;
   
@@ -1219,7 +1075,7 @@ ChromeListener :: ShowTooltip ( PRInt32 inXCoords, PRInt32 inYCoords, const nsAR
 // NOTE: This routine is safe to call even if the popup is already closed.
 //
 NS_IMETHODIMP
-ChromeListener :: HideTooltip ( )
+ChromeTooltipListener :: HideTooltip ( )
 {
   nsresult rv = NS_OK;
   
@@ -1257,7 +1113,7 @@ ChromeListener :: HideTooltip ( )
 // namespace. Returns |PR_TRUE| if there is, and sets the text in |outText|.
 //
 PRBool
-ChromeListener :: FindTitleText ( nsIDOMNode* inNode, nsAWritableString & outText )
+ChromeTooltipListener :: FindTitleText ( nsIDOMNode* inNode, nsAWritableString & outText )
 {
   PRBool found = PR_FALSE;
 
@@ -1296,15 +1152,15 @@ ChromeListener :: FindTitleText ( nsIDOMNode* inNode, nsAWritableString & outTex
 // appropriate amount of time. Getting to this point means that we should show the
 // tooltip, but only after we determine there is an appropriate TITLE element.
 //
-// This relies on certain things being cached into the |aChromeListener| object passed to
+// This relies on certain things being cached into the |aChromeTooltipListener| object passed to
 // us by the timer:
 //   -- the x/y coordinates of the mouse      (mMouseClientY, mMouseClientX)
 //   -- the dom node the user hovered over    (mPossibleTooltipNode)
 //
 void
-ChromeListener :: sTooltipCallback (nsITimer *aTimer, void *aChromeListener)
+ChromeTooltipListener :: sTooltipCallback (nsITimer *aTimer, void *aChromeTooltipListener)
 {
-  ChromeListener* self = NS_STATIC_CAST(ChromeListener*, aChromeListener);
+  ChromeTooltipListener* self = NS_STATIC_CAST(ChromeTooltipListener*, aChromeTooltipListener);
   if ( self && self->mPossibleTooltipNode ) {
     // if there is a TITLE tag, show the tip and fire off a timer to auto-hide it
     nsAutoString tooltipText;
@@ -1326,7 +1182,7 @@ ChromeListener :: sTooltipCallback (nsITimer *aTimer, void *aChromeListener)
 // Create a new timer to see if we should auto-hide. It's ok if this fails.
 //
 void
-ChromeListener :: CreateAutoHideTimer ( )
+ChromeTooltipListener :: CreateAutoHideTimer ( )
 {
   // just to be anal (er, safe)
   if ( mAutoHideTimer ) {
@@ -1349,9 +1205,9 @@ ChromeListener :: CreateAutoHideTimer ( )
 // be called multiple times, even if the tip has already been closed.
 //
 void
-ChromeListener :: sAutoHideCallback ( nsITimer *aTimer, void* aListener )
+ChromeTooltipListener :: sAutoHideCallback ( nsITimer *aTimer, void* aListener )
 {
-  ChromeListener* self = NS_STATIC_CAST(ChromeListener*, aListener);
+  ChromeTooltipListener* self = NS_STATIC_CAST(ChromeTooltipListener*, aListener);
   if ( self )
     self->HideTooltip();
 
@@ -1360,3 +1216,237 @@ ChromeListener :: sAutoHideCallback ( nsITimer *aTimer, void* aListener )
 } // sAutoHideCallback
 
 
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+
+NS_IMPL_ADDREF(ChromeContextMenuListener)
+NS_IMPL_RELEASE(ChromeContextMenuListener)
+
+NS_INTERFACE_MAP_BEGIN(ChromeContextMenuListener)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMContextMenuListener)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMContextMenuListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMContextMenuListener)
+NS_INTERFACE_MAP_END
+
+
+//
+// ChromeTooltipListener ctor
+//
+ChromeContextMenuListener :: ChromeContextMenuListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) 
+  : mWebBrowser(inBrowser), mWebBrowserChrome(inChrome), mContextMenuListenerInstalled(PR_FALSE)
+{
+  NS_INIT_REFCNT();
+} // ctor
+
+
+//
+// ChromeTooltipListener dtor
+//
+ChromeContextMenuListener :: ~ChromeContextMenuListener ( )
+{
+  
+} // dtor
+
+
+//
+// AddContextMenuListener
+//
+// Subscribe to the events that will allow us to track context menus. Bascially, this
+// is just the context-menu DOM event.
+//
+NS_IMETHODIMP
+ChromeContextMenuListener :: AddContextMenuListener()
+{
+  if (mEventReceiver) {
+    nsIDOMContextMenuListener *pListener = NS_STATIC_CAST(nsIDOMContextMenuListener *, this);
+    nsresult rv = mEventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMContextMenuListener));
+    if (NS_SUCCEEDED(rv))
+      mContextMenuListenerInstalled = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
+
+//
+// RemoveContextMenuListener
+//
+// Unsubscribe from all the various context menu events that we were listening to. 
+//
+NS_IMETHODIMP 
+ChromeContextMenuListener :: RemoveContextMenuListener()
+{
+  if (mEventReceiver) {
+    nsIDOMContextMenuListener *pListener = NS_STATIC_CAST(nsIDOMContextMenuListener *, this);
+    nsresult rv = mEventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMContextMenuListener));
+    if (NS_SUCCEEDED(rv))
+      mContextMenuListenerInstalled = PR_FALSE;
+  }
+
+  return NS_OK;
+}
+
+
+//
+// AddChromeListeners
+//
+// Hook up things to the chrome like context menus and tooltips, if the chrome
+// has implemented the right interfaces.
+//
+NS_IMETHODIMP
+ChromeContextMenuListener :: AddChromeListeners ( )
+{  
+  if ( !mEventReceiver ) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
+    NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+    domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
+    NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
+    piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+    NS_ENSURE_TRUE(chromeHandler, NS_ERROR_FAILURE);
+
+    mEventReceiver = do_QueryInterface(chromeHandler);
+  }
+  
+  // Register the appropriate events for context menus, but only if
+  // the embedding chrome cares.
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIContextMenuListener> contextListener ( do_QueryInterface(mWebBrowserChrome) );
+  if ( contextListener && !mContextMenuListenerInstalled ) {
+    rv = AddContextMenuListener();
+    if ( NS_FAILED(rv) )
+      return rv;
+  }
+    
+  return rv;
+  
+} // AddChromeListeners
+
+
+//
+// RemoveChromeListeners
+//
+// Unsubscribe from the various things we've hooked up to the window root.
+//
+NS_IMETHODIMP
+ChromeContextMenuListener :: RemoveChromeListeners ( )
+{
+  if ( mContextMenuListenerInstalled )
+    RemoveContextMenuListener();
+  
+  mEventReceiver = nsnull;
+  
+  // it really doesn't matter if these fail...
+  return NS_OK;
+  
+} // RemoveChromeTooltipListeners
+
+
+
+//
+// ContextMenu
+//
+// We're on call to show the context menu. Dig around in the DOM to
+// find the type of object we're dealing with and notify the front
+// end chrome.
+//
+nsresult 
+ChromeContextMenuListener :: ContextMenu ( nsIDOMEvent* aMouseEvent )
+{     
+  nsCOMPtr<nsIDOMEventTarget> targetNode;
+  nsresult res = aMouseEvent->GetTarget(getter_AddRefs(targetNode));
+  if (NS_FAILED(res))
+    return res;
+  if (!targetNode)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMNode> targetDOMnode;
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(targetNode);
+  if (!node)
+    return NS_OK;
+
+  // Find the first node to be an element starting with this node and
+  // working up through its parents.
+
+  PRUint32 flags = nsIContextMenuListener::CONTEXT_NONE;
+  nsCOMPtr<nsIDOMHTMLElement> element;
+  do {
+    // XXX test for selected text
+    element = do_QueryInterface(node);
+    if (element)
+    {
+      nsAutoString tag;
+      element->GetTagName(tag);
+
+      // Test what kind of element we're dealing with here
+      if (tag.EqualsWithConversion("img", PR_TRUE))
+      {
+        flags |= nsIContextMenuListener::CONTEXT_IMAGE;
+        targetDOMnode = node;
+        // if we see an image, keep searching for a possible anchor
+      }
+      else if (tag.EqualsWithConversion("input", PR_TRUE))
+      {
+        // INPUT element - button, combo, checkbox, text etc.
+        flags |= nsIContextMenuListener::CONTEXT_INPUT;
+        targetDOMnode = node;
+        break; // exit do-while
+      }
+      else if (tag.EqualsWithConversion("textarea", PR_TRUE))
+      {
+        // text area
+        flags |= nsIContextMenuListener::CONTEXT_TEXT;
+        targetDOMnode = node;
+        break; // exit do-while
+      }
+      else if (tag.EqualsWithConversion("html", PR_TRUE))
+      {
+        // only care about this if no other context was found.
+        if (!flags) {
+            flags |= nsIContextMenuListener::CONTEXT_DOCUMENT;
+            targetDOMnode = node;
+        }
+        break; // exit do-while
+      }
+
+      // Test if the element has an associated link
+      nsCOMPtr<nsIDOMNamedNodeMap> attributes;
+      node->GetAttributes(getter_AddRefs(attributes));
+      if (attributes)
+      {
+        nsCOMPtr<nsIDOMNode> hrefNode;
+        nsAutoString href; href.AssignWithConversion("href");
+        attributes->GetNamedItem(href, getter_AddRefs(hrefNode));
+        if (hrefNode)
+        {
+          flags |= nsIContextMenuListener::CONTEXT_LINK;
+          if (!targetDOMnode)
+            targetDOMnode = node;
+          break; // exit do-while
+        }
+      }
+    }
+
+    // walk-up-the-tree
+    nsCOMPtr<nsIDOMNode> parentNode;
+    node->GetParentNode(getter_AddRefs(parentNode));
+    node = parentNode;
+  } while (node);
+
+  // Tell the listener all about the event
+  nsCOMPtr<nsIContextMenuListener> menuListener(do_QueryInterface(mWebBrowserChrome));
+  if ( menuListener )
+    menuListener->OnShowContextMenu(flags, aMouseEvent, targetDOMnode);
+
+  return NS_OK;
+
+} // MouseDown

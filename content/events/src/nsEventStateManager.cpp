@@ -83,7 +83,12 @@
 
 #include "nsIFrameTraversal.h"
 #include "nsLayoutCID.h"
+#include "nsHTMLAtoms.h"
+#include "nsXULAtoms.h"
+#include "nsIDOMHTMLFormElement.h"
+
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
+
 
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0
@@ -141,6 +146,10 @@ nsEventStateManager::nsEventStateManager()
   mBrowseWithCaret = PR_FALSE;
   hHover = PR_FALSE;
   NS_INIT_REFCNT();
+
+#ifdef CLICK_HOLD_CONTEXT_MENUS
+  mEventDownWidget = nsnull;
+#endif
   
   ++mInstanceCount;
 }
@@ -288,7 +297,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
-    BeginTrackingDragGesture ( (nsGUIEvent*)aEvent, aTargetFrame );
+    BeginTrackingDragGesture ( aPresContext, (nsGUIEvent*)aEvent, aTargetFrame );
     mLClickCount = ((nsMouseEvent*)aEvent)->clickCount;
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     break;
@@ -301,6 +310,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     break;
   case NS_MOUSE_LEFT_BUTTON_UP:
+#ifdef CLICK_HOLD_CONTEXT_MENUS
+    KillClickHoldTimer();
+#endif
     StopTrackingDragGesture();
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_UP:
@@ -642,18 +654,188 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 }
 
 
+#ifdef CLICK_HOLD_CONTEXT_MENUS
+
+
+//
+// CreateClickHoldTimer
+//
+// Fire off a timer for determining if the user wants click-hold. This timer
+// is a one-shot that will be cancelled when the user moves enough to fire
+// a drag.
+//
+void
+nsEventStateManager :: CreateClickHoldTimer ( nsIPresContext* inPresContext, nsGUIEvent* inMouseDownEvent )
+{
+  // just to be anal (er, safe)
+  if ( mClickHoldTimer ) {
+    mClickHoldTimer->Cancel();
+    mClickHoldTimer = nsnull;
+  }
+  
+  mClickHoldTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if ( mClickHoldTimer )
+    mClickHoldTimer->Init(sClickHoldCallback, this, kClickHoldDelay, NS_PRIORITY_HIGH);
+
+  mEventPoint = inMouseDownEvent->point;
+  mEventRefPoint = inMouseDownEvent->refPoint;
+  mEventDownWidget = inMouseDownEvent->widget;
+  
+  mEventPresContext = inPresContext;
+  
+} // CreateClickHoldTimer
+
+
+//
+// KillClickHoldTimer
+//
+// Stop the timer that would show the context menu dead in its tracks
+//
+void
+nsEventStateManager :: KillClickHoldTimer ( )
+{
+  if ( mClickHoldTimer ) {
+    mClickHoldTimer->Cancel();
+    mClickHoldTimer = nsnull;
+  }
+
+  mEventDownWidget = nsnull;
+  mEventPresContext = nsnull;
+
+} // KillTooltipTimer
+
+
+//
+// sClickHoldCallback
+//
+// This fires after the mouse has been down for a certain length of time. 
+//
+void
+nsEventStateManager :: sClickHoldCallback ( nsITimer *aTimer, void* aESM )
+{
+  nsEventStateManager* self = NS_STATIC_CAST(nsEventStateManager*, aESM);
+  if ( self )
+    self->FireContextClick();
+
+  // NOTE: |aTimer| and |self->mAutoHideTimer| are invalid after calling ClosePopup();
+  
+} // sAutoHideCallback
+
+
+//
+// FireContextClick
+//
+// If we're this far, our timer has fired, which means the mouse has been down
+// for a certain period of time and has not moved enough to generate a dragGesture.
+// We can be certain the user wants a context-click at this stage, so generate
+// a dom event and fire it in.
+//
+// After the event fires, check if PreventDefault() has been set on the event which
+// means that someone either ate the event or put up a context menu. This is our cue
+// to stop tracking the drag gesture. If we always did this, draggable items w/out
+// a context menu wouldn't be draggable after a certain length of time, which is
+// _not_ what we want.
+//
+void
+nsEventStateManager :: FireContextClick ( )
+{
+  if ( !mEventDownWidget || !mEventPresContext )
+    return;
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_MOUSE_EVENT;
+  event.message = NS_CONTEXTMENU;
+  event.widget = mEventDownWidget;
+  event.clickCount = 1;
+  event.point = mEventPoint;
+  event.refPoint = mEventRefPoint;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
+
+  // Dispatch to the DOM. We have to fake out the ESM and tell it that the
+  // current target frame is actually where the mouseDown occurred, otherwise it
+  // will use the frame the mouse is currently over which may or may not be
+  // the same. (Note: saari and I have decided that we don't have to reset |mCurrentTarget|
+  // when we're through because no one else is doing anything more with this
+  // event and it will get reset on the very next event to the correct frame).
+  mCurrentTarget = mGestureDownFrame;
+  nsCOMPtr<nsIContent> lastContent;
+  if ( mGestureDownFrame ) {
+    mGestureDownFrame->GetContent(getter_AddRefs(lastContent));
+    
+    if ( lastContent ) {
+      // before dispatching, check that we're not on something that doesn't get a context menu
+      PRBool allowedToDispatch = PR_TRUE;
+
+      nsCOMPtr<nsIAtom> tag;
+      lastContent->GetTag ( *getter_AddRefs(tag) );
+      nsCOMPtr<nsIFormControl> formElm ( do_QueryInterface(lastContent) );
+      if ( formElm ) {
+        // of all form elements, onlyt <input> and <textarea> are allowed to have context menus
+        if ( tag != nsHTMLAtoms::input && tag != nsHTMLAtoms::textarea )
+          allowedToDispatch = PR_FALSE;
+      }
+      if ( tag == nsXULAtoms::scrollbar || tag == nsXULAtoms::scrollbarbutton || tag == nsXULAtoms::button )
+        allowedToDispatch = PR_FALSE;
+    
+      if ( allowedToDispatch ) {
+        // stop selection tracking, we're in control now
+        nsCOMPtr<nsIFrameSelection> frameSel;
+        GetSelection ( mGestureDownFrame, mEventPresContext, getter_AddRefs(frameSel) );
+        if ( frameSel ) {
+          PRBool mouseDownState = PR_TRUE;
+          frameSel->GetMouseDownState(&mouseDownState);
+          if (mouseDownState)
+            frameSel->SetMouseDownState(PR_FALSE);
+        }
+        
+        // dispatch to DOM
+        lastContent->HandleDOMEvent(mEventPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+        
+        // dispatch to the frame
+        mGestureDownFrame->HandleEvent(mEventPresContext, &event, &status);   
+      }
+    }
+  }
+  
+  // now check if the event has been handled. If so, stop tracking a drag
+  if ( status == nsEventStatus_eConsumeNoDefault )
+    StopTrackingDragGesture();
+
+  KillClickHoldTimer();
+  
+} // FireContextClick
+
+#endif
+
+
 // 
 // BeginTrackingDragGesture
 //
 // Record that the mouse has gone down and that we should move to TRACKING state
 // of d&d gesture tracker.
 //
+// We also use this to track click-hold context menus on mac. When the mouse goes down,
+// fire off a short timer. If the timer goes off and we have yet to fire the
+// drag gesture (ie, the mouse hasn't moved a certain distance), then we can
+// assume the user wants a click-hold, so fire a context-click event. We only
+// want to cancel the drag gesture if the context-click event is handled.
+//
 void
-nsEventStateManager :: BeginTrackingDragGesture ( nsGUIEvent* inDownEvent, nsIFrame* inDownFrame )
+nsEventStateManager :: BeginTrackingDragGesture ( nsIPresContext* aPresContext, nsGUIEvent* inDownEvent, nsIFrame* inDownFrame )
 {
   mIsTrackingDragGesture = PR_TRUE;
   mGestureDownPoint = inDownEvent->point;
   mGestureDownFrame = inDownFrame;
+  
+#ifdef CLICK_HOLD_CONTEXT_MENUS
+  // fire off a timer to track click-hold
+  CreateClickHoldTimer ( aPresContext, inDownEvent );
+#endif
+
 }
 
 
@@ -670,6 +852,38 @@ nsEventStateManager :: StopTrackingDragGesture ( )
   mGestureDownPoint = nsPoint(0,0);
   mGestureDownFrame = nsnull;
 }
+
+
+//
+// GetSelection
+//
+// Helper routine to get an nsIFrameSelection from the given frame
+//
+void
+nsEventStateManager :: GetSelection ( nsIFrame* inFrame, nsIPresContext* inPresContext, nsIFrameSelection** outSelection )
+{
+  *outSelection = nsnull;
+  
+  if (inFrame) {
+    nsCOMPtr<nsISelectionController> selCon;
+    nsresult rv = inFrame->GetSelectionController(inPresContext, getter_AddRefs(selCon));
+
+    if (NS_SUCCEEDED(rv) && selCon) {
+      nsCOMPtr<nsIFrameSelection> frameSel;
+
+      frameSel = do_QueryInterface(selCon);
+
+      if (! frameSel) {
+        nsCOMPtr<nsIPresShell> shell;
+        rv = inPresContext->GetShell(getter_AddRefs(shell));
+
+        if (NS_SUCCEEDED(rv) && shell)
+          rv = shell->GetFrameSelection(outSelection);
+      }
+    }
+  }
+
+} // GetSelection
 
 
 //
@@ -694,32 +908,14 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
 
     // Check if selection is tracking drag gestures, if so
     // don't interfere!
-
-    if (mGestureDownFrame) {
-      nsCOMPtr<nsISelectionController> selCon;
-      nsresult rv = mGestureDownFrame->GetSelectionController(aPresContext, getter_AddRefs(selCon));
-
-      if (NS_SUCCEEDED(rv) && selCon) {
-        nsCOMPtr<nsIFrameSelection> frameSel;
-
-        frameSel = do_QueryInterface(selCon);
-
-        if (! frameSel) {
-          nsCOMPtr<nsIPresShell> shell;
-          rv = aPresContext->GetShell(getter_AddRefs(shell));
-
-          if (NS_SUCCEEDED(rv) && shell)
-            rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
-        }
-
-        if (NS_SUCCEEDED(rv) && frameSel) {
-          PRBool mouseDownState = PR_TRUE;
-          frameSel->GetMouseDownState(&mouseDownState);
-          if (mouseDownState) {
-            StopTrackingDragGesture();
-            return;
-          }
-        }
+    nsCOMPtr<nsIFrameSelection> frameSel;
+    GetSelection ( mGestureDownFrame, aPresContext, getter_AddRefs(frameSel) );
+    if ( frameSel ) {
+      PRBool mouseDownState = PR_TRUE;
+      frameSel->GetMouseDownState(&mouseDownState);
+      if (mouseDownState) {
+        StopTrackingDragGesture();
+        return;
       }
     }
 
@@ -739,6 +935,12 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
     // fire drag gesture if mouse has moved enough
     if ( abs(aEvent->point.x - mGestureDownPoint.x) > twipDeltaToStartDrag ||
           abs(aEvent->point.y - mGestureDownPoint.y) > twipDeltaToStartDrag ) {
+#ifdef CLICK_HOLD_CONTEXT_MENUS
+      // stop the click-hold before we fire off the drag gesture, in case
+      // it takes a long time
+      KillClickHoldTimer();
+#endif
+
       nsEventStatus status = nsEventStatus_eIgnore;
       nsMouseEvent event;
       event.eventStructType = NS_DRAGDROP_EVENT;
@@ -1432,14 +1634,21 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
     mLastMouseOverFrame = nsnull;
   if (aFrame == mLastDragOverFrame)
     mLastDragOverFrame = nsnull;
-  if (aFrame == mGestureDownFrame)
+  if (aFrame == mGestureDownFrame) {
     mGestureDownFrame = nsnull;
+ #if CLICK_HOLD_CONTEXT_MENUS
+    mEventDownWidget = nsnull;
+    mEventPresContext = nsnull;
+#endif
+  }
   if (aFrame == mCurrentTarget) {
     if (aFrame) {
       aFrame->GetContent(&mCurrentTargetContent);
     }
     mCurrentTarget = nsnull;
   }
+  
+
   return NS_OK;
 }
 
