@@ -4,8 +4,8 @@
 
 interface nsIRDFResource : nsIRDFNode {
     readonly attribute string Value;
-    boolean EqualsResource(in nsIRDFResource resource);
-    boolean EqualsString(in string uri);
+    boolean EqualsResource(in nsIRDFResource aResource);
+    boolean EqualsString(in string aURI);
 };
 
 

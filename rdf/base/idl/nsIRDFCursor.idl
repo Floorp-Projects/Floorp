@@ -1,13 +1,12 @@
 #include "nsISupports.idl"
-#include "nsIRDFNode.idl"
-#include "nsIRDFDataSource.idl"
+interface nsIRDFDataSource;
+interface nsIRDFNode;
 
 interface nsIRDFDataSource;
 
 [uuid(1C2ABDB0-4CEF-11D2-BC16-00805F912FE7)]
-
 interface nsIRDFCursor : nsISupports {
     void Advance();
     readonly attribute nsIRDFDataSource DataSource;
-    readonly attribute nsIRDFNode Value;
+    readonly attribute nsIRDFNode       Value;
 };

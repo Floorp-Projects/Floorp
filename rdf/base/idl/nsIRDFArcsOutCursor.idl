@@ -3,8 +3,7 @@
 #include "nsIRDFNode.idl"
 
 [uuid(1ED57101-9904-11d2-8EBA-00805F29F370)]
-
 interface nsIRDFArcsOutCursor : nsIRDFCursor {
-    readonly attribute nsIRDFResource Subject;
-    readonly attribute nsIRDFResource Predicate;
+    readonly attribute nsIRDFResource Source;
+    readonly attribute nsIRDFResource Label;
 };
