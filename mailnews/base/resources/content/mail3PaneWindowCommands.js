@@ -55,9 +55,9 @@ var FolderPaneController =
 			case "cmd_selectAll":
                                 // the folder pane (currently)
                                 // only handles single selection
-                                // so we forward select all to the thread pane
-                                // if there is no DBView
-                                // don't bother sending to the thread pane
+                                // so we forward cmd_selectAll to the thread pane
+                                // if there is no gDBView,
+                                // don't bother sending the command to the thread pane
                                 // this can happen when we've selected a server
                                 // and account central is displayed
                                 return (gDBView != null);
