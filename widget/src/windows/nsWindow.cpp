@@ -25,6 +25,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Mark Hammond <markh@activestate.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -206,10 +207,6 @@ static PRBool is_vk_down(int vk)
 #define IS_VK_DOWN(a) (PRBool)(((GetKeyState(a) & 0x80)) ? (PR_TRUE) : (PR_FALSE))
 #endif
 
-
-// Global variable 
-//     g_hinst - handle of the application instance 
-extern HINSTANCE g_hinst; 
 
 //
 // input method offsets
@@ -492,6 +489,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mBorderStyle        = eBorderStyle_default;
     mBorderlessParent   = 0;
     mIsInMouseCapture   = PR_FALSE;
+    mIsInMouseWheelProcessing = PR_FALSE;
     mLastSize.width = 0;
     mLastSize.height = 0;
 
@@ -3709,11 +3707,46 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           
           LONG proc = ::GetWindowLong(destWnd, GWL_WNDPROC);
           if (proc != (LONG)&nsWindow::WindowProc)  {
-            // Some other app
-            break;
+            // Some other app, or a plugin window.
+            // Windows directs WM_MOUSEWHEEL to the focused window.
+            // However, Mozilla does not like plugins having focus, so a 
+            // Mozilla window (ie, the plugin's parent (us!) has focus.)
+            // Therefore, plugins etc _should_ get first grab at the 
+            // message, but this focus vaguary means the plugin misses 
+            // out. If the window is a child of ours, forward it on.
+            // Determine if a child by walking the parent list until
+            // we find a parent matching our wndproc.
+            HWND parentWnd = ::GetParent(destWnd);
+            while (parentWnd) {
+              LONG parentWndProc = ::GetClassLong(parentWnd, GCL_WNDPROC);
+              if (parentWndProc == (LONG)&nsWindow::DefaultWindowProc || parentWndProc == (LONG)&nsWindow::WindowProc) {
+                // We have a child window - quite possibly a plugin window.
+                // However, not all plugins are created equal - some will handle this message themselves,
+                // some will forward directly back to us, while others will call DefWndProc, which
+                // itself still forwards back to us.
+                // So if we have sent it once, we need to handle it ourself.
+                if (mIsInMouseWheelProcessing) {
+                    destWnd = parentWnd;
+                } else {
+                    // First time we have seen this message.
+                    // Call the child - either it will consume it, or
+                    // it will wind it's way back to us, triggering the destWnd case above.
+                    // either way, when the call returns, we are all done with the message,
+                    mIsInMouseWheelProcessing = PR_TRUE;
+                    if (0==SendMessage(destWnd, msg, wParam, lParam)) {
+                        result = PR_TRUE; // consumed - don't call DefWndProc
+                    }
+                    destWnd = nsnull;
+                    mIsInMouseWheelProcessing = PR_FALSE;
+                }
+                break; // stop parent search
+              }
+              parentWnd = ::GetParent(parentWnd);
+            } // while parentWnd
           }
-          
-          else if (destWnd != mWnd) {
+          if (destWnd == nsnull)
+              break; // done with this message.
+          if (destWnd != mWnd) {
             nsWindow* destWindow = GetNSWindowPtr(destWnd);
             if (destWindow) {
               return destWindow->ProcessMessage(msg, wParam, lParam,
