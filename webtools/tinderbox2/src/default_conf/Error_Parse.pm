@@ -1,12 +1,12 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# Error_Parser.pm - Used by processmail to turn the build logs into
+# Error_Parse.pm - Used by processmail to turn the build logs into
 # HTML.  Contains the parsing functions for highlighting the build
 # errors and creating links into the source code where the errors
 # occurred.
 
-# $Revision: 1.2 $ 
-# $Date: 2001/01/04 00:24:25 $ 
+# $Revision: 1.3 $ 
+# $Date: 2001/01/06 01:33:22 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/Error_Parse.pm,v $ 
 # $Name:  $ 
