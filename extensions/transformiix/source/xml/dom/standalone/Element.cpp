@@ -174,8 +174,7 @@ void Element::setAttributeNS(const nsAString& aNamespaceURI,
   // Check to see if an attribute with this name already exists. If it does
   // overwrite its value, if not, add it.
   PRInt32 namespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
-  nsCOMPtr<nsIAtom> localName;
-  XMLUtils::getLocalPart(aName, getter_AddRefs(localName));
+  nsCOMPtr<nsIAtom> localName = do_GetAtom(XMLUtils::getLocalPart(aName));
 
   Attr* foundNode = 0;
   AttrMap::ListItem* item = mAttributes.firstItem;

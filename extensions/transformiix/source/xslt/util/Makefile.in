@@ -37,6 +37,7 @@ REQUIRES +=	  dom \
 		  locale \
 		  unicharutil \
 		  necko \
+		  htmlparser \
 		  $(NULL)
 endif
 

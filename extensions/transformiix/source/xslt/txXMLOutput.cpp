@@ -74,8 +74,7 @@ void txXMLOutput::attribute(const nsAString& aName,
         return;
 
     txListIterator iter(&mAttributes);
-    nsCOMPtr<nsIAtom> localName;
-    XMLUtils::getLocalPart(aName, getter_AddRefs(localName));
+    nsCOMPtr<nsIAtom> localName = do_GetAtom(XMLUtils::getLocalPart(aName));
     txExpandedName att(aNsID, localName);
 
     txOutAttr* setAtt = 0;
