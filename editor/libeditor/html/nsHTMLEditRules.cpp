@@ -561,6 +561,8 @@ nsHTMLEditRules::DidDoAction(nsISelection *aSelection,
   {
     case kInsertBreak:
       return DidInsertBreak(aSelection, aResult);
+    case kDeleteSelection:
+      return DidDeleteSelection(aSelection, info->collapsedAction, aResult);
     case kMakeBasicBlock:
     case kIndent:
     case kOutdent:
@@ -2490,6 +2492,49 @@ nsHTMLEditRules::DeleteNonTableElements(nsIDOMNode *aNode)
     if (NS_FAILED(res)) return res;
   }
   return res;
+}
+
+nsresult
+nsHTMLEditRules::DidDeleteSelection(nsISelection *aSelection, 
+                                    nsIEditor::EDirection aDir, 
+                                    nsresult aResult)
+{
+  if (!aSelection) { return NS_ERROR_NULL_POINTER; }
+  
+  // find where we are
+  nsCOMPtr<nsIDOMNode> startNode;
+  PRInt32 startOffset;
+  nsresult res = mEditor->GetStartNodeAndOffset(aSelection, address_of(startNode), &startOffset);
+  if (NS_FAILED(res)) return res;
+  if (!startNode) return NS_ERROR_FAILURE;
+  
+  // find any enclosing mailcite
+  nsCOMPtr<nsIDOMNode> citeNode;
+  res = GetTopEnclosingMailCite(startNode, address_of(citeNode), 
+                                mFlags & nsIPlaintextEditor::eEditorPlaintextMask);
+  if (NS_FAILED(res)) return res;
+  if (citeNode)
+  {
+    PRBool isEmpty = PR_TRUE, seenBR = PR_FALSE;
+    mHTMLEditor->IsEmptyNodeImpl(citeNode, &isEmpty, PR_TRUE, PR_TRUE, PR_FALSE, &seenBR);
+    if (isEmpty)
+    {
+      nsCOMPtr<nsIDOMNode> parent, brNode;
+      PRInt32 offset;
+      nsEditor::GetNodeLocation(citeNode, address_of(parent), &offset);
+      res = mHTMLEditor->DeleteNode(citeNode);
+      if (NS_FAILED(res)) return res;
+      if (parent && seenBR)
+      {
+        res = mHTMLEditor->CreateBR(parent, offset, address_of(brNode));
+        if (NS_FAILED(res)) return res;
+        aSelection->Collapse(parent, offset);
+      }
+    }
+  }
+  
+  // call through to base class
+  return nsTextEditRules::DidDeleteSelection(aSelection, aDir, aResult);
 }
 
 nsresult
