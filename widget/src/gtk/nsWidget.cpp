@@ -431,16 +431,12 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   nRect.x = aRect.x;
   nRect.y = aRect.y;
 
-#ifdef GTK_HAVE_FEATURES_1_1_14
   if ( aIsSynchronous)
-#endif
       ::gtk_widget_draw(mWidget, &nRect);
-#ifdef GTK_HAVE_FEATURES_1_1_14
   else
       ::gtk_widget_queue_draw_area(mWidget,
                                    aRect.x, aRect.y,
                                    aRect.width, aRect.height);
-#endif
 
   return NS_OK;
 }
