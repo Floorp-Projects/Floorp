@@ -2855,6 +2855,10 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 
    nsCOMPtr<nsIWidget> widget;
    NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(widget)), NS_ERROR_FAILURE);
+   if (!widget) {
+     NS_ERROR("GetMainWidget coughed up a null widget");
+     return NS_ERROR_FAILURE;
+   }
 
    nsRect bounds(x, y, cx, cy);
    NS_ENSURE_SUCCESS(EnsureDeviceContext(), NS_ERROR_FAILURE);
