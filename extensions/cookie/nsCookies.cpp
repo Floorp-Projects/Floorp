@@ -1526,7 +1526,7 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
     PRBool modify = prev_cookie != nsnull;
 
     // put the cookie information into the cookie structure.
-    nsICookie *thisCookie =
+    nsCOMPtr<nsICookie> thisCookie = 
       new nsCookie(nsDependentCString(name_from_header),
                    nsDependentCString(cookie_from_header),
                    isDomain,
