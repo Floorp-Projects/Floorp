@@ -251,7 +251,7 @@ static void displayValues( nsIRegistry *reg, nsRegistryKey root ) {
                             switch ( type ) {
                                 case nsIRegistry::String: {
                                         char *strValue;
-                                        rv = reg->GetString( root, name, &strValue );
+                                        rv = reg->GetStringUTF8( root, name, &strValue );
                                         if ( rv == NS_OK ) {
                                             printString( strValue, strlen(name) );
                                             nsAllocator::Free( strValue );
