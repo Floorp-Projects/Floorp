@@ -21,8 +21,9 @@
  */
 
 #include "InstallCleanup.h"
+#include "InstallCleanupDefines.h"
 #include <windows.h>
-
+#include <string.h>
 //----------------------------------------------------------------------------
 // Native Windows file deletion function
 //----------------------------------------------------------------------------
@@ -75,19 +76,33 @@ int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int)
     HREG  reg;
     HKEY  hkRunOnceHandle;
     DWORD dwDisp;
+    bool foundSpecialFile = FALSE;
 
     int status = DONE;
 
     if ( REGERR_OK == NR_StartupRegistry())
     {
-        if ( REGERR_OK == NR_RegOpen("", &reg) )
+        DWORD charsWritten;
+        char appPath[_MAX_PATH];
+        charsWritten = GetModuleFileName(NULL, appPath, _MAX_PATH);
+        if (charsWritten > 0)
         {
-            LPTSTR cwd = new char[_MAX_PATH];
-            if (cwd)
-            {
-                GetCurrentDirectory(_MAX_PATH, cwd);
-                strcat(cwd, "\\xpicleanup.exe");
+            char regFilePath[_MAX_PATH];
+            
+            strcpy(regFilePath, appPath);
+            char* lastSlash = strrchr(regFilePath, '\\');
+            lastSlash++; 
+            *lastSlash = 0;//strip of the executable name
+            strcat(regFilePath, "res\\");
+            strcat(regFilePath, CLEANUP_REGISTRY); //append reg file name
+    
+            if ( GetFileAttributes(regFilePath) == 0xFFFFFFFF ) // file doesn't exist
+              strcpy(regFilePath, ""); // an empty reg file tells RegOpen to get the "default"
+            else
+              foundSpecialFile = TRUE;
 
+            if ( REGERR_OK == NR_RegOpen(regFilePath, &reg) )
+            {
                 RegCreateKeyEx(HKEY_CURRENT_USER,
                                "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
                                0,
@@ -99,13 +114,13 @@ int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int)
                                &dwDisp);
                 
                 LPCTSTR cleanupKeyName = "mozilla_cleanup";
-                
+            
                 RegSetValueEx(hkRunOnceHandle,
                               cleanupKeyName,
                               0,
                               REG_SZ,
-                              (const unsigned char*)cwd,
-                              strlen(cwd));
+                              (const unsigned char*)appPath,
+                              strlen(appPath));
 
                 do 
                 {
@@ -115,10 +130,10 @@ int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int)
                 } while (status == TRY_LATER);
 
                 RegDeleteValue(hkRunOnceHandle, cleanupKeyName);
-                delete[] cwd;
+                NR_RegClose(&reg);
             }
+            DeleteFile(regFilePath);
         }
-        NR_ShutdownRegistry();
     }
     return(0);
 }
