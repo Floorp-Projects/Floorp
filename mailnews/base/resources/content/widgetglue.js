@@ -230,9 +230,24 @@ function MsgNewFolder()
     var folderTree = GetFolderTree(); 
 	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
 	var selectedFolder = selectedFolderList[0];
+    if (selectedFolder)
+    {
+        var dialog = window.openDialog(
+            "chrome://messenger/content/newFolderNameDialog.xul",
+            "",
+            "chrome",
+            {title:"New Folder",
+                      okCallback:NewFolder});
+    }
+}
 
-	//Note this is temporary hardcoding until I can get this from a dialog
-	messenger.NewFolder(folderTree.database, selectedFolder, "New Folder");
+function NewFolder(name)
+{
+    var folderTree = GetFolderTree(); 
+	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
+	var selectedFolder = selectedFolderList[0];
+
+	messenger.NewFolder(folderTree.database, selectedFolder, name);
 }
 
 
@@ -265,7 +280,44 @@ function MsgLoadFirstDraft()
 	messenger.LoadFirstDraft();
 }
 function MsgUpdateMsgCount() {}
-function MsgRenameFolder() {}
+
+function MsgRenameFolder() 
+{
+    var tree = GetFolderTree();
+    if (tree)
+    {
+        var folderList = tree.getElementsByAttribute("selected", "true");
+        if (folderList && folderList.length == 1)
+        {
+            var folder = folderList[0];
+            if (folder)
+            {
+                var dialog = window.openDialog(
+                    "chrome://messenger/content/newFolderNameDialog.xul",
+                    "",
+                    "chrome",
+                    {title:"Rename Folder",
+                              okCallback:RenameFolder});
+            }
+        }
+    }
+}
+
+function RenameFolder(name)
+{
+    var tree = GetFolderTree();
+    if (tree)
+    {
+        var folderList = tree.getElementsByAttribute("selected", "true");
+        if (folderList && folderList.length == 1)
+        {
+            var folder = folderList[0];
+            if (folder)
+                messenger.RenameFolder(tree.database, folder, name);
+        }
+    }
+}
+
 function MsgEmptyTrash() 
 {
     var tree = GetFolderTree();
@@ -287,7 +339,7 @@ function MsgEmptyTrash()
         }
     }
 }
-function MsgRenameFolder() {}
+
 function MsgCompactFolder() 
 {
 	//get the selected elements
