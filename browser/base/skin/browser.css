@@ -75,7 +75,7 @@ toolbarbutton.bookmark-item[open="true"] {
   display: none;
 }
 
-#wrapper-personal-bookmarks .toolbarpaletteitem-box[place="palette"] {
+.toolbarpaletteitem-box[type="bookmarks-toolbar"][place="palette"] {
   width: 32px;
   height: 32px;
   background: url("chrome://browser/skin/Bookmarks-folder.png") no-repeat;
@@ -186,164 +186,164 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 #back-button {
   -moz-binding: url("chrome://browser/skin/browser.xml#toolbar-menu-button");
-  -moz-image-region: rect(0px 32px 32px 0px);
+  -moz-image-region: rect(0px 30px 30px 0px);
 }
 #back-button[buttonover="true"] {
-  -moz-image-region: rect(32px 32px 64px 0px);
+  -moz-image-region: rect(30px 30px 60px 0px);
 }
 #back-button[disabled="true"] {
-  -moz-image-region: rect(64px 32px 96px 0px);
+  -moz-image-region: rect(60px 30px 90px 0px);
 }
 
 #forward-button {
   -moz-binding: url("chrome://browser/skin/browser.xml#toolbar-menu-button");
-  -moz-image-region: rect(0px 64px 32px 32px);
+  -moz-image-region: rect(0px 60px 30px 30px);
 }
 #forward-button[buttonover="true"] {
-  -moz-image-region: rect(32px 64px 64px 32px);
+  -moz-image-region: rect(30px 60px 60px 30px);
 }
 #forward-button[disabled="true"] {
-  -moz-image-region: rect(64px 64px 96px 32px) !important;
+  -moz-image-region: rect(60px 60px 90px 30px) !important;
 }
 
 #reload-button {
-  -moz-image-region: rect(0px 128px 32px 96px);
+  -moz-image-region: rect(0px 120px 30px 90px);
 }
 #reload-button:hover {
-  -moz-image-region: rect(32px 128px 64px 96px);
+  -moz-image-region: rect(30px 120px 60px 90px);
 }
 #reload-button[disabled="true"] {
-  -moz-image-region: rect(64px 128px 96px 96px) !important;
+  -moz-image-region: rect(60px 120px 90px 90px) !important;
 }
 
 
 #stop-button {
-  -moz-image-region: rect(0px 96px 32px 64px);
+  -moz-image-region: rect(0px 90px 30px 60px);
 }
 #stop-button:hover {
-  -moz-image-region: rect(32px 96px 64px 64px);
+  -moz-image-region: rect(30px 90px 60px 60px);
 }
 #stop-button[disabled="true"] {
-  -moz-image-region: rect(64px 96px 96px 64px) !important;
+  -moz-image-region: rect(60px 90px 90px 60px) !important;
 }
 
 #home-button {
-  -moz-image-region: rect(0px 160px 32px 128px);
+  -moz-image-region: rect(0px 150px 30px 120px);
 }
 #home-button:hover {
-  -moz-image-region: rect(32px 160px 64px 128px);
+  -moz-image-region: rect(30px 150px 60px 120px);
 }
 #home-button[disabled="true"] {
-  -moz-image-region: rect(64px 160px 96px 128px) !important;
+  -moz-image-region: rect(60px 150px 90px 120px) !important;
 }
 
 #print-button {
-  -moz-image-region: rect(0px 288px 32px 256px);
+  -moz-image-region: rect(0px 270px 30px 240px);
 }
 #print-button:hover {
-  -moz-image-region: rect(32px 288px 64px 256px);
+  -moz-image-region: rect(30px 270px 60px 240px);
 }
 #print-button[disabled="true"] {
-  -moz-image-region: rect(64px 288px 96px 256px);
+  -moz-image-region: rect(60px 270px 90px 240px);
 }
 
 #new-tab-button {
-  -moz-image-region: rect(0px 320px 32px 288px);
+  -moz-image-region: rect(0px 300px 30px 270px);
 }
 #new-tab-button:hover,
 #new-tab-button[checked="true"] {
-  -moz-image-region: rect(32px 320px 64px 288px);
+  -moz-image-region: rect(30px 300px 60px 270px);
 }
 #new-tab-button[disabled="true"] {
-  -moz-image-region: rect(64px 320px 96px 288px);
+  -moz-image-region: rect(60px 300px 90px 270px);
 }
 
 #new-window-button {
-  -moz-image-region: rect(0px 352px 32px 320px);
+  -moz-image-region: rect(0px 330px 30px 300px);
 }
 #new-window-button:hover,
 #new-window-button[checked="true"] {
-  -moz-image-region: rect(32px 352px 64px 320px);
+  -moz-image-region: rect(30px 330px 60px 300px);
 }
 #new-window-button[disabled="true"] {
-  -moz-image-region: rect(64px 352px 96px 320px);
+  -moz-image-region: rect(60px 330px 90px 300px);
 }
 
 #downloads-button {
-  -moz-image-region: rect(0px 192px 32px 160px);
+  -moz-image-region: rect(0px 180px 30px 150px);
 }
 #downloads-button:hover,
 #downloads-button[checked="true"] {
-  -moz-image-region: rect(32px 192px 64px 160px);
+  -moz-image-region: rect(30px 180px 60px 150px);
 }
 #downloads-button[disabled="true"] {
-  -moz-image-region: rect(64px 192px 96px 160px);
+  -moz-image-region: rect(60px 180px 90px 150px);
 }
 
 #bookmarks-button {
-  -moz-image-region: rect(0px 256px 32px 224px);
+  -moz-image-region: rect(0px 240px 30px 210px);
 }
 #bookmarks-button:hover,
 #bookmarks-button[checked="true"] {
-  -moz-image-region: rect(32px 256px 64px 224px);
+  -moz-image-region: rect(30px 240px 60px 210px);
 }
 #bookmarks-button[disabled="true"] {
-  -moz-image-region: rect(64px 256px 96px 224px);
+  -moz-image-region: rect(60px 240px 90px 210px);
 }
 
 #history-button {
-  -moz-image-region: rect(0px 224px 32px 192px);
+  -moz-image-region: rect(0px 210px 30px 180px);
 }
 #history-button:hover,
 #history-button[checked="true"] {
-  -moz-image-region: rect(32px 224px 64px 192px);
+  -moz-image-region: rect(30px 210px 60px 180px);
 }
 #history-button[disabled="true"] {
-  -moz-image-region: rect(64px 224px 96px 192px);
-}
-
-#mail-button {
-  -moz-image-region: rect(0px 224px 32px 192px);
-}
-#mail-button:hover,
-#mail-button[checked="true"] {
-  -moz-image-region: rect(32px 224px 64px 192px);
-}
-#mail-button[disabled="true"] {
-  -moz-image-region: rect(64px 224px 96px 192px);
+  -moz-image-region: rect(60px 210px 90px 180px);
 }
 
 #cut-button {
-  -moz-image-region: rect(0px 384px 32px 352px);
+  -moz-image-region: rect(0px 360px 30px 330px);
 }
 #cut-button:hover,
 #cut-button[checked="true"] {
-  -moz-image-region: rect(32px 384px 64px 352px);
+  -moz-image-region: rect(30px 360px 60px 330px);
 }
 #cut-button[disabled="true"] {
-  -moz-image-region: rect(64px 384px 96px 352px);
+  -moz-image-region: rect(60px 360px 90px 330px);
 }
 
 #copy-button {
-  -moz-image-region: rect(0px 416px 32px 384px);
+  -moz-image-region: rect(0px 390px 30px 360px);
 }
 #copy-button:hover,
 #copy-button[checked="true"] {
-  -moz-image-region: rect(32px 416px 64px 384px);
+  -moz-image-region: rect(30px 390px 60px 360px);
 }
 #copy-button[disabled="true"] {
-  -moz-image-region: rect(64px 416px 96px 384px);
+  -moz-image-region: rect(60px 390px 90px 360px);
 }
 
 #paste-button {
-  -moz-image-region: rect(0px 448px 32px 416px);
+  -moz-image-region: rect(0px 420px 30px 390px);
 }
 #paste-button:hover,
 #paste-button[checked="true"] {
-  -moz-image-region: rect(32px 448px 64px 416px);
+  -moz-image-region: rect(30px 420px 60px 390px);
 }
 #paste-button[disabled="true"] {
-  -moz-image-region: rect(64px 448px 96px 416px);
+  -moz-image-region: rect(60px 420px 90px 390px);
+}
+
+#mail-button {
+  -moz-image-region: rect(0px 450px 30px 420px);
+}
+#mail-button:hover,
+#mail-button[checked="true"] {
+  -moz-image-region: rect(30px 450px 60px 420px);
+}
+#mail-button[disabled="true"] {
+  -moz-image-region: rect(60px 450px 90px 420px);
 }
 
 /* ::::: small primary toolbar buttons ::::: */
@@ -464,17 +464,6 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
   -moz-image-region: rect(40px 140px 60px 120px) !important;
 }
 
-toolbar[iconsize="small"] #mail-button {
-  -moz-image-region: rect(0px 140px 20px 120px);
-}
-toolbar[iconsize="small"] #mail-button:hover,
-toolbar[iconsize="small"] #mail-button[checked="true"] {
-  -moz-image-region: rect(20px 140px 40px 120px);
-}
-toolbar[iconsize="small"] #mail-button[disabled="true"] {
-  -moz-image-region: rect(40px 140px 60px 120px) !important;
-}
-
 toolbar[iconsize="small"] #cut-button {
   -moz-image-region: rect(0px 240px 20px 220px);
 }
@@ -508,37 +497,15 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   -moz-image-region: rect(40px 280px 60px 260px) !important;
 }
 
-
-/* Smaller padding on small toolbar buttons */
-
-toolbar[iconsize="small"] .toolbarbutton-1 {
-  padding: 2px;
+toolbar[iconsize="small"] #mail-button {
+  -moz-image-region: rect(0px 300px 20px 280px);
 }
-
-toolbar[iconsize="small"] .toolbarbutton-1:hover:active,
-toolbar[iconsize="small"] .toolbarbutton-1[open="true"] {
-  padding: 3px 1px 1px 3px;
+toolbar[iconsize="small"] #mail-button:hover,
+toolbar[iconsize="small"] #mail-button[checked="true"] {
+  -moz-image-region: rect(20px 300px 40px 280px);
 }
-
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"],
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"]:hover,
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"]:hover:active,
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"][open="true"] {
-  padding: 2px;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1[checked="true"] {
-  padding: 3px 1px 1px 3px !important;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"],
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"]:hover,
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"]:hover:active,
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][open="true"],
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"],
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:hover,
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:hover:active {
-  padding: 0;
+toolbar[iconsize="small"] #mail-button[disabled="true"] {
+  -moz-image-region: rect(40px 300px 60px 280px) !important;
 }
 
 /* ::::: fullscreen window controls ::::: */
@@ -594,7 +561,7 @@ toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:
 
 #page-proxy-button[pageproxystate="invalid"] {
   cursor: default;
-  -moz-image-region: rect(32px, 16px, 48px, 0px) !important;
+  -moz-image-region: rect(16px, 16px, 32px, 0px) !important;
 }
 
 
@@ -716,7 +683,7 @@ statusbarpanel#statusbar-display {
 
 #page-report-button[blocked] {
   display: -moz-box;
-  list-style-image: url("chrome://browser/skin/Info.png");
+  list-style-image: url("chrome://browser/skin/Popup-blocked.png");
   padding: 0px 3px 0px 3px;
 }
 
@@ -743,16 +710,7 @@ statusbarpanel#statusbar-display {
   list-style-image: url("chrome://browser/skin/Throbber.png");
 }
 #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://browser/skin/Throbber.gif");
-}
-
-toolbar[iconsize="small"] #navigator-throbber,
-toolbar[mode="text"] #navigator-throbber {
-  list-style-image: url("chrome://browser/skin/Throbber-small.png");
-}
-toolbar[iconsize="small"] #navigator-throbber[busy="true"],
-toolbar[mode="text"] #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://browser/skin/Throbber-small.gif");
+  list-style-image: url("chrome://global/skin/icons/Loading.gif");
 }
 
 .tabs-closebutton {
@@ -761,11 +719,11 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 
 #content .tabs-closebutton {
   list-style-image: url("chrome://browser/skin/Close-tab.png");
-  -moz-image-region: rect(0px, 18px, 14px, 0px);
+  -moz-image-region: rect(0px, 14px, 14px, 0px);
 }
 
 #content .tabs-closebutton:hover {
-  -moz-image-region: rect(0px, 36px, 14px, 18px);
+  -moz-image-region: rect(0px, 28px, 14px, 14px);
 }
 
 toolbarbutton.chevron {
