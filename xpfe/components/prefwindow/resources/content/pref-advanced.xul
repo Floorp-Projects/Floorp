@@ -59,8 +59,8 @@
 				</html:label>
 			</html:div>
 			<html:div>
-			<html:input type="checkbox" id="pref:0:bool:javascript.allow" />
-				<html:label for="pref:0:bool:javascript.allow" accesskey="r" tabindex="0">	
+			<html:input type="checkbox" id="pref:0:bool:javascript.enabled" />
+				<html:label for="pref:0:bool:javascript.enabled" accesskey="r" tabindex="0">	
 					&enbJsCheck.label;
 				</html:label>
 			</html:div>
