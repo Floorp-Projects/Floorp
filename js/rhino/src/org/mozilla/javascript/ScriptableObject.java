@@ -180,7 +180,7 @@ public abstract class ScriptableObject implements Scriptable {
             return Scriptable.NOT_FOUND;
         return slots[slotIndex].value;
     }
-
+    
     /**
      * Sets the value of the named property, creating it if need be.
      *
@@ -212,10 +212,14 @@ public abstract class ScriptableObject implements Scriptable {
         if ((slot.flags & Slot.HAS_SETTER) != 0) {
             GetterSlot getterSlot = (GetterSlot) slot;
             try {
+                Class pTypes[] = getterSlot.setter.getParameterTypes();
+                Class desired = pTypes[pTypes.length - 1];
+                Object actualArg
+                        = FunctionObject.convertArg(start, value, desired);
                 if (getterSlot.delegateTo == null) {
                     // Walk the prototype chain to find an appropriate
                     // object to invoke the setter on.
-                    Object[] arg = { value };
+                    Object[] arg = { actualArg };
                     Class clazz = getterSlot.setter.getDeclaringClass();
                     while (!clazz.isInstance(start)) {
                         start = start.getPrototype();
@@ -227,7 +231,7 @@ public abstract class ScriptableObject implements Scriptable {
                     getterSlot.setter.invoke(start, arg);
                     return;
                 }
-                Object[] args = { this, value };
+                Object[] args = { this, actualArg };
                 getterSlot.setter.invoke(getterSlot.delegateTo, args);
                 return;
             }
@@ -1062,23 +1066,28 @@ public abstract class ScriptableObject implements Scriptable {
      * If <code>setter</code> is null, the attribute READONLY is added to
      * the given attributes.<p>
      *
-     * Several forms of getters or setters are allowed. The first are
-     * nonstatic methods of the class referred to by 'this':
+     * Several forms of getters or setters are allowed. In all cases the
+     * type of the value parameter can be any one of the following types: 
+     * Object, String, boolean, Scriptable, byte, short, int, long, float,
+     * or double. The runtime will perform appropriate conversions based
+     * upon the type of the parameter (see description in FunctionObject).
+     * The first forms are nonstatic methods of the class referred to
+     * by 'this':
      * <pre>
      * Object getFoo();
-     * void setFoo(Object value);</pre>
+     * void setFoo(SomeType value);</pre>
      * Next are static methods that may be of any class; the object whose
      * property is being accessed is passed in as an extra argument:
      * <pre>
      * static Object getFoo(ScriptableObject obj);
-     * static void setFoo(ScriptableObject obj, Object value);</pre>
+     * static void setFoo(ScriptableObject obj, SomeType value);</pre>
      * Finally, it is possible to delegate to another object entirely using
      * the <code>delegateTo</code> parameter. In this case the methods are
      * nonstatic methods of the class delegated to, and the object whose
      * property is being accessed is passed in as an extra argument:
      * <pre>
      * Object getFoo(ScriptableObject obj);
-     * void setFoo(ScriptableObject obj, Object value);</pre>
+     * void setFoo(ScriptableObject obj, SomeType value);</pre>
      *
      * @param propertyName the name of the property to define.
      * @param delegateTo an object to call the getter and setter methods on,
