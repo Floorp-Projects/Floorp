@@ -131,6 +131,9 @@ class nsWindow : public nsCommonWidget {
 				      PRBool *aForWindow);
   NS_IMETHOD         GetAttention();
 
+  // utility methods
+  void               LoseFocus();
+
   // event callbacks
   gboolean           OnExposeEvent(GtkWidget *aWidget,
 				   GdkEventExpose *aEvent);
@@ -154,6 +157,10 @@ class nsWindow : public nsCommonWidget {
 					     GdkEventFocus *aEvent);
   void               OnContainerFocusOutEvent(GtkWidget *aWidget,
 					      GdkEventFocus *aEvent);
+  gboolean           OnKeyPressEvent(GtkWidget *aWidget,
+				     GdkEventKey *aEvent);
+  gboolean           OnKeyReleaseEvent(GtkWidget *aWidget,
+				       GdkEventKey *aEvent);
   void               SendResizeEvent(nsRect &aRect,
 				     nsEventStatus &aStatus);
 
@@ -180,9 +187,12 @@ class nsWindow : public nsCommonWidget {
   PRPackedBool        mContainerBlockFocus;
   PRPackedBool        mHasFocus;
 
+  PRPackedBool        mInKeyRepeat;
+
   PRUint32            mPreferredWidth;
   PRUint32            mPreferredHeight;
 
+ public:
   nsWindow           *mFocusChild;
 
 };
