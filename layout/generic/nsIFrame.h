@@ -98,6 +98,13 @@ typedef PRUint32 nsFrameState;
 // created the view) to position and size its associated view
 #define NS_FRAME_SYNC_FRAME_AND_VIEW 0x00000004
 
+// If this bit is set then there is a child frame in the frame that
+// extends outside this frame's bounding box. The implication is that
+// the frames rect does not completely cover its children and
+// therefore operations like rendering and hit testing (for example)
+// must operate differently.
+#define NS_FRAME_OUTSIDE_CHILDREN 0x00000008
+
 //----------------------------------------------------------------------
 
 /**
