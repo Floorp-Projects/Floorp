@@ -28,7 +28,7 @@ Rights Reserved.
 <script language="JavaScript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>
 
   <!-- Addressing Widget -->
-  <tree id="addressingWidgetTree" style="height: 60px; width: 0px;"
+  <tree id="addressingWidgetTree"
     class="addressingWidget inset" multiple="true"
     onkeypress="awKeyPress(event, this);"
     onclick="awClickEmptySpace(event.target, true)"
@@ -46,7 +46,7 @@ Rights Reserved.
     			<treecell class="treecell-addressingWidget" allowevents="true">
             <menulist id="msgRecipientType#1" class="aw-menulist menulist-compact"
                       onclick="awNotAnEmptyArea(event)" 
-                      oncommand="awDisableAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">
+                      oncommand="awSetAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">
               <menupopup>
                 <menuitem data="addr_to" value="&toAddr.label;"/>
                 <menuitem data="addr_cc" value="&ccAddr.label;"/>

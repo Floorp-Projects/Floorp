@@ -43,6 +43,11 @@ box.padded {
 
 /* addressing widget */
 
+#addressingWidgetTree {
+  height : 80px;
+  width : 0px;
+}  
+
 tree[class="addressingWidget"] treeitem > treerow  > treecell > box > image {
 	vertical-align: middle;
 	padding:2px;

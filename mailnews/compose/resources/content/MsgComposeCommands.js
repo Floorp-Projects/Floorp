@@ -520,7 +520,7 @@ function GetArgs()
 	var pairs = data.split(separator);
 //	dump("Compose: argument: {" + data + "}\n");
 
-	for (var i = pairs.length - 1; i >= 0; i--)
+	for (i = pairs.length - 1; i >= 0; i--)
 	{
 		var pos = pairs[i].indexOf('=');
 		if (pos == -1)
@@ -588,7 +588,7 @@ function ComposeStartup()
     	  identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
     	else
     	{
-        var identities = GetIdentities();
+        identities = GetIdentities();
         identity = identities[0];
       }	  
     }
@@ -951,15 +951,15 @@ function GenericSendMessage( msgType )
                     recommAction = convert == msgCompConvertible.No
                                    ? msgCompSendFormat.AskUser
                                    : msgCompSendFormat.PlainText;
-                    var result = {action:recommAction,
+                    var result2 = {action:recommAction,
                                   convertible:convert,
                                   abort:false};
                     window.openDialog("chrome://messenger/content/messengercompose/askSendFormat.xul",
                                       "askSendFormatDialog", "chrome,modal,titlebar,centerscreen",
-                                      result);
-					if (result.abort)
+                                      result2);
+					if (result2.abort)
 						return;
-					action = result.action;
+					action = result2.action;
 				}
 				switch (action)
 				{
@@ -1257,7 +1257,7 @@ function SetComposeWindowTitle(event)
 		return;
 	}
 
-	newTitle = document.getElementById('msgSubject').value;
+	var newTitle = document.getElementById('msgSubject').value;
 
 	/* dump("newTitle = " + newTitle + "\n"); */
 
@@ -1361,6 +1361,7 @@ function AddAttachment(attachment)
 		var row = document.createElement("treerow");
 		var cell = document.createElement("treecell");
 		
+		var prettyName = attachment;
 		if (msgCompose)
 			prettyName = msgCompose.AttachmentPrettyName(attachment);
 		cell.setAttribute("value", prettyName);				//use for display only
@@ -1524,17 +1525,17 @@ function DetermineConvertibility()
         return msgCompose.bodyConvertible(
              window.editorShell.contentWindow.document.childNodes[1]);
     } catch(ex) {}
+    return msgCompConvertible.No;
 }
 
 function LoadIdentity(startup)
 {
-    var identityElement = document.getElementById("msgIdentity");
-    
-    prevIdentity = currentIdentity;
+    var identityElement = document.getElementById("msgIdentity");    
+    var prevIdentity = currentIdentity;
     
     if (identityElement) {
         var item = identityElement.selectedItem;
-        idKey = item.getAttribute('id');
+        var idKey = item.getAttribute('id');
         currentIdentity = accountManager.getIdentity(idKey);
 
         if (!startup && prevIdentity && idKey != prevIdentity.key)
@@ -1636,7 +1637,7 @@ function AttachmentBucketClicked(event)
 var attachmentBucketObserver = {
   onDrop: function (aEvent, aData, aDragSession)
     {
-      var aData = aData.length ? aData[0] : aData;
+      aData = aData.length ? aData[0] : aData;
       if (aData.flavour != "application/x-moz-file") 
         return;
     
@@ -1644,8 +1645,7 @@ var attachmentBucketObserver = {
       if (!dataObj) 
         return;
         
-      var fileURL = nsJSComponentManager.createInstance("component://netscape/network/standard-url",
-                                                        "nsIFileURL");
+      var fileURL = nsJSComponentManager.createInstance("component://netscape/network/standard-url", "nsIFileURL");
       fileURL.file = dataObj;
 	    AddAttachment(fileURL.spec);
     },
@@ -1669,5 +1669,5 @@ var attachmentBucketObserver = {
       var flavourList = { };
       flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
       return flavourList;
-    },  
+    }  
 };

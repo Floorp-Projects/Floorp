@@ -216,6 +216,8 @@
   
 #addressingWidgetTree
   {
+    height: 61px;
+    width: 0px;
     -moz-user-focus       : none;
   }  
   

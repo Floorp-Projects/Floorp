@@ -44,10 +44,10 @@ function awGetSelectItemIndex(itemData)
     if (selectElementIndexTable == null)
     {
 	    selectElementIndexTable = new Object();
-	    selectElem = document.getElementById("msgRecipientType#1");
+	    var selectElem = document.getElementById("msgRecipientType#1");
         for (var i = 0; i < selectElem.childNodes[0].childNodes.length; i ++)
     {
-            aData = selectElem.childNodes[0].childNodes[i].getAttribute("data");
+            var aData = selectElem.childNodes[0].childNodes[i].getAttribute("data");
             selectElementIndexTable[aData] = i;
         }
     }
@@ -338,7 +338,7 @@ function awAppendNewRow(setFocus)
 	{
 	    var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).selectedItem.getAttribute("data");
 
-		newNode = awCopyNode(treeitem1, body, 0);
+		var newNode = awCopyNode(treeitem1, body, 0);
 		top.MAX_RECIPIENTS++;
 
         var input = newNode.getElementsByTagName(awInputElementName());
@@ -474,11 +474,21 @@ function _awSetFocus()
 	var tree = document.getElementById('addressingWidgetTree');
 	try
 	{
-		theNewRow = awGetTreeRow(top.awRow);
+		var theNewRow = awGetTreeRow(top.awRow);
 		//temporary patch for bug 26344
 		awFinishCopyNode(theNewRow);
 
-		tree.ensureElementIsVisible(theNewRow);
+    //Warning: firstVisibleRow is zero base but top.awRow is one base!
+    var firstVisibleRow = tree.getIndexOfFirstVisibleRow();
+    var numOfVisibleRows = tree.getNumberOfVisibleRows();
+  
+    //Do we need to scroll in order to see the selected row?
+    if (top.awRow <= firstVisibleRow)
+      tree.scrollToIndex(top.awRow - 1);
+    else
+      if (top.awRow - 1 >= (firstVisibleRow + numOfVisibleRows))
+        tree.scrollToIndex(top.awRow - numOfVisibleRows);
+
 		top.awInputElement.focus();
 	}
 	catch(ex)
@@ -615,8 +625,8 @@ function _awSetAutoComplete(selectElem, inputElem)
 
 function awSetAutoComplete(rowNumber)
 {
-    inputElem = awGetInputElement(rowNumber);
-    selectElem = awGetPopupElement(rowNumber);
+    var inputElem = awGetInputElement(rowNumber);
+    var selectElem = awGetPopupElement(rowNumber);
     _awSetAutoComplete(selectElem, inputElem)
 }
 
