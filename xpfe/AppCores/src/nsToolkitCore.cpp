@@ -43,7 +43,6 @@
 class nsIScriptContext;
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
@@ -142,7 +141,6 @@ NS_IMETHODIMP
 nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsresult           rv;
-  nsIAppShellService *appShell;
   nsIWebShellWindow  *window;
 
   window = nsnull;
@@ -152,8 +150,7 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   if (NS_FAILED(rv))
     return rv;
 
-  rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
-                                    (nsISupports**) &appShell);
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
@@ -161,7 +158,6 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   DOMWindowToWebShellWindow(aParent, &parent);
   appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
                                nsnull, nsnull, 615, 480);
-  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
   if (window != nsnull)
     window->Show(PR_TRUE);
@@ -173,7 +169,6 @@ NS_IMETHODIMP
 nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsresult           rv;
-  nsIAppShellService *appShell;
   nsIWebShellWindow  *window;
 
   window = nsnull;
@@ -183,8 +178,7 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   if (NS_FAILED(rv))
     return rv;
 
-  rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
-                                    (nsISupports**) &appShell);
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
@@ -192,7 +186,6 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   DOMWindowToWebShellWindow(aParent, &parent);
   appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, window,
                                nsnull, nsnull, 615, 480);
-  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
   if (window != nsnull)
     window->Show(PR_TRUE);
@@ -284,7 +277,6 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
                                   const nsString& aArgs) {
 
   nsresult           rv;
-  nsIAppShellService *appShell;
   nsIWebShellWindow  *window;
 
   window = nsnull;
@@ -294,8 +286,7 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   if (NS_FAILED(rv))
     return rv;
 
-  rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
-                                    (nsISupports**) &appShell);
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
@@ -305,7 +296,6 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   cb = nsDontQueryInterface<nsArgCallbacks>( new nsArgCallbacks( aArgs ) );
   appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, window,
                                nsnull, cb, 615, 650);
-  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
   if (window != nsnull)
     window->Show(PR_TRUE);
@@ -317,7 +307,6 @@ NS_IMETHODIMP
 nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsresult           rv;
-  nsIAppShellService *appShell;
   nsIWebShellWindow  *window;
 
   window = nsnull;
@@ -327,50 +316,13 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   if (NS_FAILED(rv))
     return rv;
 
-  rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
-                                    (nsISupports**) &appShell);
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
-	// First push a nested event queue for event processing from netlib
-	// onto our UI thread queue stack.
-	nsIEventQueueService *eQueueService;
-	nsCOMPtr<nsIEventQueue> innerQueue;
-  if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    kIEventQueueServiceIID,
-                                    (nsISupports **)&eQueueService))) {
-		NS_ERROR("Unable to obtain queue service.");
-		return rv;
-	}
-
-#ifdef XP_WIN32 // XXX: Won't work with any other platforms yet.
-	eQueueService->PushThreadEventQueue();
-#endif // XP_WIN32
-
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
-  appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
-                               nsnull, nsnull, 615, 480);
-  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-
-  if (window != nsnull) {
-    nsCOMPtr<nsIWidget> parentWindowWidgetThing;
-    nsresult gotParent;
-    gotParent = parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
-                         NS_ERROR_FAILURE;
-    // Windows OS is the only one that needs the parent disabled, or cares
-    // arguably this should be done by the new window, within ShowModal...
-    if (NS_SUCCEEDED(gotParent))
-      parentWindowWidgetThing->Enable(PR_FALSE);
-    window->ShowModal(); // XXX This method pops the queue itself. Ugh. There should really be one
-												 // call for all of this.
-    if (NS_SUCCEEDED(gotParent))
-      parentWindowWidgetThing->Enable(PR_TRUE);
-  }
-
-	// Release the event queue 
-	nsServiceManager::ReleaseService(kEventQueueServiceCID, eQueueService);
-
+  rv = appShell->RunModalDialog(parent, urlObj, window, nsnull, nsnull, 615, 480);
   return rv;
 }
 
@@ -390,8 +342,9 @@ void nsToolkitCore::DOMWindowToWebShellWindow(
                       nsIDOMWindow *DOMWindow,
                       nsCOMPtr<nsIWebShellWindow> *webWindow) const {
 
+  *webWindow = 0;
   if (!DOMWindow)
-    return; // with webWindow unchanged -- its constructor gives it a null ptr
+    return;
 
   nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
   nsCOMPtr<nsIWebShell> webshell, rootWebshell;

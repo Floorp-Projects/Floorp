@@ -899,45 +899,37 @@ NS_IMETHODIMP
 nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
                               nsIWebShell *&aNewWebShell)
 {
-#ifdef XP_WIN32 // XXX: Won't work on any other platforms yet. Sigh.
-	// We need to create a new top level window and then enter a nested
-	// loop. Eventually the new window will be told that it has loaded,
-	// at which time we know it is safe to spin out of the nested loop
-	// and allow the opening code to proceed.
+#ifdef XP_PC // XXX: Won't work on any other platforms yet. Sigh.
+  // We need to create a new top level window and then enter a nested
+  // loop. Eventually the new window will be told that it has loaded,
+  // at which time we know it is safe to spin out of the nested loop
+  // and allow the opening code to proceed.
 
-	// First push a nested event queue for event processing from netlib
-	// onto our UI thread queue stack.
-	nsresult           rv;
-  nsIAppShellService *appShell;
-	nsIEventQueueService *eQueueService;
-	nsCOMPtr<nsIEventQueue> outerQueue;
-	nsCOMPtr<nsIEventQueue> innerQueue;
-  if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    kIEventQueueServiceIID,
-                                    (nsISupports **)&eQueueService))) {
-		NS_ERROR("Unable to obtain queue service.");
-		return rv;
-	}
-	
-	eQueueService->PushThreadEventQueue();
+  // First push a nested event queue for event processing from netlib
+  // onto our UI thread queue stack.
+  nsresult           rv;
+  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain queue service.");
+    return rv;
+  }
+  eQueueService->PushThreadEventQueue();
 
   nsCOMPtr<nsIURL> urlObj;
   rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://navigator/content/");
   if (NS_FAILED(rv))
     return rv;
 
-  rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
-                                    (nsISupports**) &appShell);
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
-	nsCOMPtr<nsIWebShellWindow> newWindow;
+  nsCOMPtr<nsIWebShellWindow> newWindow;
   appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, *getter_AddRefs(newWindow),
                                  nsnull, nsnull, 615, 480);
-  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
-	// Spin into the modal loop.
-	nsIAppShell *subshell;
+  // Spin into the modal loop.
+  nsIAppShell *subshell;
   rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
   if (NS_FAILED(rv))
     return rv;
@@ -946,10 +938,10 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
   subshell->Spinup(); // Spin up 
 
   // Specify that we want the window to remain locked until the chrome has loaded.
-	newWindow->LockUntilChromeLoad();
+  newWindow->LockUntilChromeLoad();
 
-	PRBool locked = PR_FALSE;
-	newWindow->GetLockedState(locked);
+  PRBool locked = PR_FALSE;
+  newWindow->GetLockedState(locked);
   while (NS_SUCCEEDED(rv) && locked) {
     void      *data;
     PRBool    isRealEvent;
@@ -957,25 +949,24 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
     rv = subshell->GetNativeEvent(isRealEvent, data);
     subshell->DispatchNativeEvent(isRealEvent, data);
 
-		newWindow->GetLockedState(locked);
+    newWindow->GetLockedState(locked);
   }
 
-	// Get rid of the nested UI thread queue used for netlib, and release the event queue service.
-	eQueueService->PopThreadEventQueue();
-	nsServiceManager::ReleaseService(kEventQueueServiceCID, eQueueService);
+  // Get rid of the nested UI thread queue used for netlib, and release the event queue service.
+  eQueueService->PopThreadEventQueue();
 
   subshell->Spindown();
   NS_RELEASE(subshell);
 
-	// We're out of the nested loop.
+  // We're out of the nested loop.
   // During the layout of the new window, all content shells were located and placed
-	// into the new window's content shell array.  Locate the "content area" content
-	// shell.
-	if (NS_FAILED(rv = newWindow->GetContentShellById("content", &aNewWebShell))) {
-		NS_ERROR("Unable to obtain a browser content shell.");
-		return rv;
-	}
-#endif // XP_WIN32
+  // into the new window's content shell array.  Locate the "content area" content
+  // shell.
+  if (NS_FAILED(rv = newWindow->GetContentShellById("content", &aNewWebShell))) {
+    NS_ERROR("Unable to obtain a browser content shell.");
+    return rv;
+  }
+#endif // XP_PC
 
   return NS_OK;
 }
@@ -1031,9 +1022,6 @@ nsWebShellWindow::ShowModal()
 NS_IMETHODIMP
 nsWebShellWindow::ShowModalInternal()
 {
-	// XXX This sucks right now.  The pushing of an event queue has to happen outside of this function
-	// before the CreateTopLevelWindow, and the popping has to happen here.  This really needs to all be
-	// pulled out into a new function so that the flow can be cleaner.
   nsresult    rv;
   nsIAppShell *subshell;
 
@@ -1041,14 +1029,6 @@ nsWebShellWindow::ShowModalInternal()
   rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
   if (NS_FAILED(rv))
     return rv;
-
-	nsIEventQueueService *eQueueService;
-	if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    kIEventQueueServiceIID,
-                                    (nsISupports **)&eQueueService))) {
-		NS_ERROR("Unable to obtain queue service.");
-		return rv;
-	}
 
   subshell->Create(0, nsnull);
   subshell->Spinup();
@@ -1069,15 +1049,9 @@ nsWebShellWindow::ShowModalInternal()
     }
   }
 
-#ifdef XP_WIN32 // XXX Won't work on other platforms yet
-	eQueueService->PopThreadEventQueue();
-#endif // XP_WIN32
-	
   subshell->Spindown();
   NS_RELEASE(window);
   NS_RELEASE(subshell);
-
-	nsServiceManager::ReleaseService(kEventQueueServiceCID, eQueueService);
 
   return rv;
 }

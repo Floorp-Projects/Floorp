@@ -1787,14 +1787,11 @@ nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aSc
 
 
 
-
 NS_IMETHODIMP    
 nsBrowserAppCore::DoDialog()
 {
-  /* (adapted from nsToolkitCore. No one's using this function, are they!?)
-  */
+  // (adapted from nsToolkitCore)
   nsresult           rv;
-  nsIAppShellService *appShell;
   nsIWebShellWindow  *window;
 
   window = nsnull;
@@ -1804,19 +1801,11 @@ nsBrowserAppCore::DoDialog()
   if (NS_FAILED(rv))
     return rv;
 
-  rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
-                                    (nsISupports**) &appShell);
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
-  appShell->CreateDialogWindow(mWebShellWin, urlObj, PR_TRUE, window,
-                               nsnull, nsnull, 615, 480);
-  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-//  window->Resize(300, 200, PR_TRUE); (until Resize gets moved into nsIWebShellWindow)
-
-  if (window != nsnull)
-    window->ShowModal();
-
+  rv = appShell->RunModalDialog(mWebShellWin, urlObj, window, nsnull, nsnull, 300, 200);
   return rv;
 }
 
