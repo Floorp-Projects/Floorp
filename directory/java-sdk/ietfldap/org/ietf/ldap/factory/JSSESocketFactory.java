@@ -22,9 +22,14 @@
 
 package org.ietf.ldap.factory;
 
-import java.net.*; 
-import java.io.*; 
-import javax.net.ssl.*; 
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
 import org.ietf.ldap.*;
 
 /**
