@@ -153,8 +153,12 @@ ipcTransport::SpawnDaemon()
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 pid;
+#ifdef XP_UNIX
     const char *args[] = { mSocketPath.get() };
     return proc->Run(PR_FALSE, args, 1, &pid);
+#else
+    return proc->Run(PR_FALSE, NULL, 0, &pid);
+#endif
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS0(ipcTransport)
