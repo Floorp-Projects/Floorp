@@ -16,6 +16,7 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+require 'get_line.pl';
 
 $NOT_LOCAL = 1;
 $IS_LOCAL = 2;
@@ -26,7 +27,7 @@ if( $CVS_ROOT eq "" ){
     $CVS_ROOT = pickDefaultRepository();
 }
 
-if( $ENV{"OS"} eq "Windows_NT" ){
+if( defined($ENV{"OS"}) && $ENV{"OS"} eq "Windows_NT" ){
     $CVS_MODULES='modules';
 }
 else {
@@ -139,32 +140,4 @@ sub build_map {
         }
     }
     return $bFound;
-}
-
-
-
-sub get_line {
-    local($l, $save);
-    
-    $bContinue = 1;
-
-    while( $bContinue && ($l = <MOD>) ){
-        chop($l);
-        if( $l =~ /^[ \t]*\#/ 
-                || $l =~ /^[ \t]*$/ ){
-            $l='';              # Starts with a "#", or is only whitespace.
-        }
-        if( $l =~ /\\[ \t]*$/ ){
-            # Ends with a slash, so append it to the last line.
-            chop ($l);
-            $save .= $l . ' ';
-        }
-        elsif( $l eq '' && $save eq ''){
-            # ignore blank lines
-        }
-        else {
-            $bContinue = 0;
-        }
-    }
-    return $save . $l;
 }

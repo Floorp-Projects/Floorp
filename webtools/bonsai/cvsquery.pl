@@ -17,6 +17,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 
 require 'globals.pl';
+require 'get_line.pl';
 
 #
 # Constants
@@ -435,32 +436,5 @@ sub build_map {
         }
     }
     return $bFound;
-}
-
-
-
-sub get_line {
-    local($l, $save);
-    
-    $bContinue = 1;
-
-    while( $bContinue && ($l = <MOD>) ){
-        chop($l);
-        if( $l =~ /^[ \t]*\#/ 
-                || $l =~ /^[ \t]*$/ ){
-            $l='';
-        }
-        elsif( $l =~ /\\[ \t]*$/ ){
-            chop ($l);
-            $save .= $l . ' ';
-        }
-        elsif( $l eq '' && $save eq ''){
-            # ignore blank lines
-        }
-        else {
-            $bContinue = 0;
-        }
-    }
-    return $save . $l;
 }
 

@@ -46,6 +46,10 @@ $dir =~ s/([^:]*)\/$/$1/;
 
 $rev = $::FORM{"rev"};
 
+if(!defined($rev)) {
+    $rev='';
+}
+
 print "Content-type: text/html\n\n";
 
 
@@ -187,7 +191,8 @@ $script_str =<<'ENDJS';
 var event = new Object;
 
 function js_who_menu(n,extra,d) {
-    if( parseInt(navigator.appVersion) < 4 ){
+    if( parseInt(navigator.appVersion) < 4 ||
+        navigator.userAgent.toLowerCase().indexOf("msie") != -1 ){
         return true;
     }
     l = document.layers['popup'];
@@ -209,7 +214,8 @@ function js_who_menu(n,extra,d) {
 }
 
 function js_file_menu(dir,file,rev,root,d) {
-    if( parseInt(navigator.appVersion) < 4 ){
+    if( parseInt(navigator.appVersion) < 4 ||
+        navigator.userAgent.toLowerCase().indexOf("msie") != -1 ){
         return true;
     }
     l = document.layers['popup'];

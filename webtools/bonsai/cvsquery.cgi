@@ -478,7 +478,8 @@ $script_str =<<'ENDJS';
 var event = 0;	// Nav3.0 compatibility
 
 function js_who_menu(n,extra,d) {
-    if( parseInt(navigator.appVersion) < 4 ){
+    if( parseInt(navigator.appVersion) < 4 ||
+        navigator.userAgent.toLowerCase().indexOf("msie") != -1 ){
         return true;
     }
     l = document.layers['popup'];
@@ -497,7 +498,8 @@ function js_who_menu(n,extra,d) {
 
 function js_file_menu(repos,dir,file,rev,branch,d) {
     var fileName="";
-    if( parseInt(navigator.appVersion) < 4 ){
+    if( parseInt(navigator.appVersion) < 4 ||
+        navigator.userAgent.toLowerCase().indexOf("msie") != -1 ){
         return true;
     }
     for (var i=0;i<d.target.text.length;i++)

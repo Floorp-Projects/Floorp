@@ -415,7 +415,8 @@ var event = 0;	// Nav3.0 compatibility
 document.loaded = false;
 
 function finishedLoad() {
-    if (parseInt(navigator.appVersion) < 4) {
+    if (parseInt(navigator.appVersion) < 4 ||
+        navigator.userAgent.toLowerCase().indexOf("msie") != -1) {
         return true;
     }
     document.loaded = true;
@@ -431,7 +432,8 @@ function revToName (rev) {
 }
 
 function log(event, prev_rev, rev) {
-    if (parseInt(navigator.appVersion) < 4) {
+    if (parseInt(navigator.appVersion) < 4 ||
+        navigator.userAgent.toLowerCase().indexOf("msie") != -1) {
         return true;
     }
 

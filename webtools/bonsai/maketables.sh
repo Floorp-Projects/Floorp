@@ -34,7 +34,7 @@ read dummy
 
 echo Dropping old tables
 
-$MYSQL > /dev/null 2>/dev/null << OK_ALL_DONE
+$MYSQL << OK_ALL_DONE
 
 use bonsai;
 

@@ -124,9 +124,9 @@ sub SendSQL {
     my ($rows);
 
     $::currentquery = $::db->prepare($str)
-	|| die "'$str': $::db->errstr";
+	|| die "'$str': ". $::db->errstr;
     $rows = $::currentquery->execute
-        || die "'$str': Can't execute the query: $::currentquery->errstr";
+        || die "'$str': Can't execute the query: " . $::currentquery->errstr;
 }
 
 sub MoreSQLData {
