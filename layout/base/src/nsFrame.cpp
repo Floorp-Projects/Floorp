@@ -26,7 +26,6 @@
 #include "nsCRT.h"
 #include "nsGUIEvent.h"
 #include "nsStyleConsts.h"
-#include "nsReflowCommand.h"
 #include "nsIPresShell.h"
 #include "prlog.h"
 #include "prprf.h"
@@ -1118,10 +1117,6 @@ NS_METHOD nsFrame::ContentChanged(nsIPresShell*   aShell,
                                   nsIContent*     aChild,
                                   nsISupports*    aSubContent)
 {
-  // Generate a reflow command with this frame as the target frame
-  nsReflowCommand* cmd = new nsReflowCommand(aPresContext, this,
-                                             nsReflowCommand::ContentChanged);
-  aShell->AppendReflowCommand(cmd);
   return NS_OK;
 }
 

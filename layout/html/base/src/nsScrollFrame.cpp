@@ -19,7 +19,7 @@
 #include "nsIPresContext.h"
 #include "nsIContentDelegate.h"
 #include "nsIStyleContext.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsIDeviceContext.h"
 #include "nsPageFrame.h"
 #include "nsViewsCID.h"
@@ -113,11 +113,15 @@ nsScrollBodyFrame::Reflow(nsIPresContext*      aPresContext,
   if (eReflowReason_Incremental == aReflowState.reason) {
     // We don't expect the target of the reflow command to be the root
     // content frame
-    NS_ASSERTION(aReflowState.reflowCommand->GetTarget() != this,
-                 "root content frame is reflow command target");
+#ifdef NS_DEBUG
+    nsIFrame* target;
+    aReflowState.reflowCommand->GetTarget(target);
+    NS_ASSERTION(target != this, "root content frame is reflow command target");
+#endif
   
     // Verify the next frame in the reflow chain is our child frame
-    nsIFrame* next = aReflowState.reflowCommand->GetNext();
+    nsIFrame* next;
+    aReflowState.reflowCommand->GetNext(next);
     NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
 
     nsSize        maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);

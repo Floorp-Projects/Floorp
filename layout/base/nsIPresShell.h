@@ -28,7 +28,7 @@ class nsIFrame;
 class nsIPresContext;
 class nsIStyleSet;
 class nsIViewManager;
-class nsReflowCommand;
+class nsIReflowCommand;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -80,7 +80,7 @@ public:
 
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent) = 0;
 
-  virtual void AppendReflowCommand(nsReflowCommand* aReflowCommand) = 0;
+  virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
 
   virtual void ProcessReflowCommands() = 0;
 

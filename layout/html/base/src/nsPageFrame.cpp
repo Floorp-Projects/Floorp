@@ -20,7 +20,7 @@
 #include "nsIContentDelegate.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsIRenderingContext.h"
 
 nsPageFrame::nsPageFrame(nsIContent* aContent, nsIFrame* aParent)
@@ -67,12 +67,17 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext*      aPresContext,
   // XXX Do something sensible in page mode...
   if (eReflowReason_Incremental == aReflowState.reason) {
     // We don't expect the target of the reflow command to be page frame
+#ifdef NS_DEUG
     NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
-    NS_ASSERTION(aReflowState.reflowCommand->GetTarget() != this,
-                 "page frame is reflow command target");
+
+    nsIFrame* target;
+    aReflowState.reflowCommand->GetTarget(target);
+    NS_ASSERTION(target != this, "page frame is reflow command target");
+#endif
   
     // Verify the next reflow command frame is our one and only child frame
-    nsIFrame* next = aReflowState.reflowCommand->GetNext();
+    nsIFrame* next;
+    aReflowState.reflowCommand->GetNext(next);
     NS_ASSERTION(next == mFirstChild, "bad reflow frame");
 
     // Dispatch the reflow command to our content child. Allow it to be as high

@@ -28,7 +28,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsCSSLayout.h"
 #include "nsCRT.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsIFontMetrics.h"
 #include "nsHTMLFrame.h"
 #include "nsScrollFrame.h"
@@ -595,7 +595,7 @@ nsLineLayout::ReflowMappedChild()
 // Return values: <0 for error
 // 0 == NS_LINE_LAYOUT
 nsresult
-nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand,
+nsLineLayout::ReflowChild(nsIReflowCommand* aReflowCommand,
                           PRBool aNewChild)
 {
   nsIFrame* kidFrame = mState.mKidFrame;
@@ -1016,8 +1016,8 @@ nsLineLayout::PlaceChild(nsRect& kidRect,
 }
 
 nsresult
-nsLineLayout::IncrementalReflowFromChild(nsReflowCommand* aReflowCommand,
-                                         nsIFrame*        aChildFrame)
+nsLineLayout::IncrementalReflowFromChild(nsIReflowCommand* aReflowCommand,
+                                         nsIFrame*         aChildFrame)
 {
   nsresult reflowStatus = NS_LINE_LAYOUT_COMPLETE;
 

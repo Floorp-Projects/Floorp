@@ -19,7 +19,7 @@
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
 #include "nsBlockFrame.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
@@ -164,9 +164,12 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
   if (eReflowReason_Incremental == aReflowState.reason) {
   
     // The reflow command should never be target for us
+#ifdef NS_DEBUG
     NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
-    NS_ASSERTION(aReflowState.reflowCommand->GetTarget() != this,
-                 "bad reflow command target");
+    nsIFrame* target;
+    aReflowState.reflowCommand->GetTarget(target);
+    NS_ASSERTION(target != this, "bad reflow command target");
+#endif
 
     // Is the next frame in the reflow chain the pseudo block-frame or a
     // floating frame?
@@ -176,7 +179,8 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
     // is that the placeholder frame was changed to return the floating frame
     // as a child frame. That's wrong, because the floating frame now appears
     // to be both a geometric child of the body and of the placeholder. Yuck...
-    nsIFrame* next = aReflowState.reflowCommand->GetNext();
+    nsIFrame* next;
+    aReflowState.reflowCommand->GetNext(next);
     if (mFirstChild != next) {
       // It's a floating frame that's the target. Reflow the body making it
       // look like a resize occured. This will reflow the placeholder which will

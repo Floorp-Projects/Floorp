@@ -18,6 +18,8 @@
 #include "nsLeafFrame.h"
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
+#include "nsHTMLParts.h"
+#include "nsIPresShell.h"
 
 nsLeafFrame::nsLeafFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsFrame(aContent, aParentFrame)
@@ -98,11 +100,21 @@ void nsLeafFrame::GetInnerArea(nsIPresContext* aPresContext,
     (borderPadding.top + borderPadding.bottom);
 }
 
-NS_METHOD nsLeafFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                             nsIFrame*       aParent,
-                                             nsIFrame*&      aContinuingFrame)
+NS_METHOD nsLeafFrame::ContentChanged(nsIPresShell*   aShell,
+                                      nsIPresContext* aPresContext,
+                                      nsIContent*     aChild,
+                                      nsISupports*    aSubContent)
 {
-  NS_NOTREACHED("Attempt to split the unsplittable");
-  aContinuingFrame = nsnull;
-  return NS_OK;
+  // Generate a reflow command with this frame as the target frame
+  nsIReflowCommand* cmd;
+  nsresult          result;
+                                                
+  result = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
+  if (NS_OK == result) {
+    aShell->AppendReflowCommand(cmd);
+    NS_RELEASE(cmd);
+  }
+
+  return result;
 }
+

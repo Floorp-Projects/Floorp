@@ -20,6 +20,7 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "nsIReflowCommand.h"
 class nsIArena;
 class nsIAtom;
 class nsIContent;
@@ -136,5 +137,12 @@ NS_NewTableCaptionPart(nsIHTMLContent** aInstancePtrResult,
 extern nsresult
 NS_NewHTMLImage(nsIHTMLContent** aInstancePtrResult,
                 nsIAtom* aTag);
+
+/** Create a new HTML reflow command */
+extern nsresult
+NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
+                        nsIFrame*                    aTargetFrame,
+                        nsIReflowCommand::ReflowType aReflowType,
+                        nsIFrame*                    aChildFrame = nsnull);
 
 #endif /* nsHTMLParts_h___ */

@@ -21,7 +21,7 @@
 #include "nsITableContent.h"
 #include "nsTableContent.h"
 #include "nsBodyFrame.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
@@ -31,7 +31,7 @@
 #include "nsIContentDelegate.h"
 #include "nsCSSLayout.h"
 #include "nsVoidArray.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsIPtr.h"
 
 #ifdef NS_DEBUG

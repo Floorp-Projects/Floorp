@@ -37,9 +37,10 @@ public:
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
-                                   nsIFrame*       aParent,
-                                   nsIFrame*&      aContinuingFrame);
+  NS_IMETHOD ContentChanged(nsIPresShell*   aShell,
+                            nsIPresContext* aPresContext,
+                            nsIContent*     aChild,
+                            nsISupports*    aSubContent);
 
 protected:
   nsLeafFrame(nsIContent* aContent, nsIFrame* aParentFrame);

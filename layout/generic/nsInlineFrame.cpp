@@ -26,7 +26,7 @@
 #include "nsIPresShell.h"
 #include "nsCSSLayout.h"
 #include "nsPlaceholderFrame.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsHTMLAtoms.h"
 #include "nsAbsoluteFrame.h"
 #include "nsLeafFrame.h"
@@ -896,9 +896,15 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
 
   if (eReflowReason_Incremental == aReflowState.reason) {
     NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
-    if (aReflowState.reflowCommand->GetTarget() == this) {
-      switch (aReflowState.reflowCommand->GetType()) {
-      case nsReflowCommand::FrameAppended:
+    nsIFrame* target;
+    aReflowState.reflowCommand->GetTarget(target);
+
+    if (target == this) {
+      nsIReflowCommand::ReflowType  type;
+      aReflowState.reflowCommand->GetType(type);
+
+      switch (type) {
+      case nsIReflowCommand::FrameAppended:
         // Recover our state
         RecoverState(aPresContext, state, nsnull);
         aStatus = ReflowUnmappedChildren(aPresContext, state);
@@ -911,7 +917,9 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
   
     } else {
       // The command is passing through us. Get the next frame in the reflow chain
-      nsIFrame*       kidFrame = aReflowState.reflowCommand->GetNext();
+      nsIFrame*       kidFrame;
+      aReflowState.reflowCommand->GetNext(kidFrame);
+
       nsReflowMetrics kidSize(aDesiredSize.maxElementSize);
       nsReflowState   kidReflowState(kidFrame, aReflowState, state.availSize);
   

@@ -24,11 +24,12 @@
 #include "nsIStyleSet.h"
 #include "nsIStyleContext.h"
 #include "nsFrame.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsIViewManager.h"
 #include "nsCRT.h"
 #include "plhash.h"
 #include "prlog.h"
+#include "nsVoidArray.h"
 
 #undef NOISY
 
@@ -187,7 +188,7 @@ public:
   virtual void ResizeReflow(nscoord aWidth, nscoord aHeight);
   virtual nsIFrame* GetRootFrame();
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent);
-  virtual void AppendReflowCommand(nsReflowCommand* aReflowCommand);
+  virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   virtual void ProcessReflowCommands();
   virtual void PutCachedData(nsIFrame* aKeyFrame, void* aData);
   virtual void* GetCachedData(nsIFrame* aKeyFrame);
@@ -514,9 +515,10 @@ PresShell::EndReflow(nsIPresShell* aShell)
 }
 
 void
-PresShell::AppendReflowCommand(nsReflowCommand* aReflowCommand)
+PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 {
   mReflowCommands.AppendElement(aReflowCommand);
+  NS_ADDREF(aReflowCommand);
 }
 
 void
@@ -526,18 +528,22 @@ PresShell::ProcessReflowCommands()
     nsReflowMetrics desiredSize(nsnull);
 
     while (0 != mReflowCommands.Count()) {
-      nsReflowCommand* rc = (nsReflowCommand*) mReflowCommands.ElementAt(0);
+      nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(0);
       mReflowCommands.RemoveElementAt(0);
 
       // Dispatch the reflow command
       nsSize          maxSize;
       
       mRootFrame->GetSize(maxSize);
+#ifdef NS_DEBUG
+      nsIReflowCommand::ReflowType  type;
+
+      rc->GetType(type);
       PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
-             ("PresShell::ProcessReflowCommands: reflow command type=%d",
-              rc->GetType()));
-      rc->Dispatch(desiredSize, maxSize);
-      delete rc;
+             ("PresShell::ProcessReflowCommands: reflow command type=%d", type));
+#endif
+      rc->Dispatch(*mPresContext, desiredSize, maxSize);
+      NS_RELEASE(rc);
     }
 
     // Place and size the root frame

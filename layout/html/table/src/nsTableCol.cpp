@@ -22,7 +22,7 @@
 #include "nsHTMLParts.h"
 #include "nsHTMLContainer.h"
 #include "nsContainerFrame.h"
-#include "nsReflowCommand.h"
+#include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"

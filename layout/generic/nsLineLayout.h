@@ -100,8 +100,8 @@ struct nsLineLayout {
 
   nsresult ReflowLine();
 
-  nsresult IncrementalReflowFromChild(nsReflowCommand* aReflowCommand,
-                                      nsIFrame*        aChildFrame);
+  nsresult IncrementalReflowFromChild(nsIReflowCommand* aReflowCommand,
+                                      nsIFrame*         aChildFrame);
                                       
   void AtSpace();
 
@@ -183,7 +183,7 @@ protected:
 
   nsresult ReflowMappedChild();
 
-  nsresult ReflowChild(nsReflowCommand* aReflowCommand, PRBool aNewChild);
+  nsresult ReflowChild(nsIReflowCommand* aReflowCommand, PRBool aNewChild);
 
   nsresult PlaceChild(nsRect& kidRect,
                       const nsReflowMetrics& kidMetrics,

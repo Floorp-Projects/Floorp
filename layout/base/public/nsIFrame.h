@@ -35,7 +35,7 @@ class nsISpaceManager;
 class nsIStyleContext;
 class nsIView;
 class nsIWidget;
-class nsReflowCommand;
+class nsIReflowCommand;
 
 struct nsPoint;
 struct nsRect;
@@ -87,7 +87,7 @@ enum nsReflowReason {
  */
 struct nsReflowState {
   nsReflowReason       reason;            // the reason for the reflow
-  nsReflowCommand*     reflowCommand;     // only used for incremental changes
+  nsIReflowCommand*    reflowCommand;     // only used for incremental changes
   nsSize               maxSize;           // the available space in which to reflow
   const nsReflowState* parentReflowState; // pointer to parent's reflow state
   nsIFrame*            frame;             // the frame being reflowed
@@ -100,9 +100,9 @@ struct nsReflowState {
 
   // Constructs an initial reflow state (no parent reflow state) for an
   // incremental reflow command
-  nsReflowState(nsIFrame*        aFrame,
-                nsReflowCommand& aReflowCommand,
-                const nsSize&    aMaxSize);
+  nsReflowState(nsIFrame*         aFrame,
+                nsIReflowCommand& aReflowCommand,
+                const nsSize&     aMaxSize);
 
   // Construct a reflow state for the given frame, parent reflow state, and
   // max size. Uses the reflow reason and reflow command from the parent's
@@ -617,9 +617,9 @@ inline nsReflowState::nsReflowState(nsIFrame*      aFrame,
 
 // Constructs an initial reflow state (no parent reflow state) for an
 // incremental reflow command
-inline nsReflowState::nsReflowState(nsIFrame*        aFrame,
-                                    nsReflowCommand& aReflowCommand,
-                                    const nsSize&    aMaxSize)
+inline nsReflowState::nsReflowState(nsIFrame*         aFrame,
+                                    nsIReflowCommand& aReflowCommand,
+                                    const nsSize&     aMaxSize)
 {
 #ifdef NS_DEBUG
   nsIFrame* parent;
