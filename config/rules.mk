@@ -1,3 +1,4 @@
+# vim:set ts=8 sw=8 sts=8 noet:
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -1283,7 +1284,11 @@ PREF_DIST_DIR    = $(GRE_DIST)
 PREF_DIR = greprefs
 else
 PREF_DIST_DIR    = $(FINAL_TARGET)
+ifdef XPI_NAME
+PREF_DIR = defaults/preferences
+else
 PREF_DIR = defaults/pref
+endif
 endif
 
 $(FINAL_TARGET)/$(PREF_DIR) $(GRE_DIST)/$(PREF_DIR) $(DESTDIR)$(mozappdir)/$(PREF_DIR):
@@ -1662,6 +1667,26 @@ libs realchrome::
 	else									\
 		echo "$(INSTALL_RDF) not found; not packaging $(XPI_PKGNAME).xpi";	\
 	fi
+endif
+
+ifneq ($(DIST_FILES),)
+libs:: $(DIST_FILES)
+	@$(EXIT_ON_ERROR) \
+	for f in $(DIST_FILES); do \
+		$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl \
+			$(XULAPP_DEFINES) $(DEFINES) $(ACDEFINES) \
+			$(srcdir)/$$f > $(FINAL_TARGET)/`basename $$f`; \
+	done
+endif
+
+ifneq ($(DIST_CHROME_FILES),)
+libs:: $(DIST_CHROME_FILES)
+	@$(EXIT_ON_ERROR) \
+	for f in $(DIST_CHROME_FILES); do \
+		$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl \
+			$(XULAPP_DEFINES) $(DEFINES) $(ACDEFINES) \
+			$(srcdir)/$$f > $(FINAL_TARGET)/chrome/`basename $$f`; \
+	done
 endif
 
 REGCHROME = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl \

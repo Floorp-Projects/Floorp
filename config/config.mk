@@ -814,3 +814,8 @@ EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/$(1)/en-US,$(t
 ifdef relativesrcdir
 LOCALE_SRCDIR = $(call EXPAND_LOCALE_SRCDIR,$(relativesrcdir))
 endif
+
+#
+# Add BUILD_ID to set of DEFINES
+#
+DEFINES += -DBUILD_ID=$(shell cat $(DEPTH)/config/build_number)

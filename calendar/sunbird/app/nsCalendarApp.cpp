@@ -49,7 +49,7 @@ static const nsXREAppData kAppData = {
   "Mozilla",
   "Sunbird",
   APP_VERSION,
-  BUILD_ID,
+  NS_STRINGIFY(BUILD_ID),
   // {718e30fb-e89b-41dd-9da7-e25a45638b28}
   { 0x718e30fb, 0xe89b, 0x41dd, { 0x9d, 0xa7, 0xe2, 0x5a, 0x45, 0x63, 0x8b, 0x28 } },
   "Copyright (c) 2004 mozilla.org",

@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
 
   if (argc == 2 && (IsArg(argv[1], "v") || IsArg(argv[1], "version")))
   {
-    printf("Mozilla XULRunner %s %s\n", MOZILLA_VERSION, BUILD_ID);
+    printf("Mozilla XULRunner %s %d\n", MOZILLA_VERSION, BUILD_ID);
     return 0;
   }
 

@@ -45,32 +45,20 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= simple
 export XPI_NAME	= simple
 
-ifneq (,$(filter os2 windows,$(MOZ_WIDGET_TOOLKIT)))
+PREF_JS_EXPORTS	= $(srcdir)/simple-prefs.js
+DIST_FILES	= application.ini
+DIST_CHROME_FILES = chrome.manifest
+
+ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 ICONS		= icons/simple.ico
 endif
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 ICONS		= icons/simple.xpm icons/simple16.xpm
 endif
 
-PREFS		= simple-prefs.js
-
 include $(topsrcdir)/config/rules.mk
 
-# generate various fields for simple.xulapp
-BUILD_ID	:= `date +%Y%m%d%H`
-GECKO_VERSION	:= `echo $(MOZILLA_VERSION) | sed 's|\(^[0-9]*\.[0-9]*\).*|\1|'`
-
-libs:: simple.manifest
-	$(INSTALL) $^ $(FINAL_TARGET)/chrome
-
+ifneq (,$(ICONS))
 libs:: $(ICONS)
 	$(INSTALL) $^ $(FINAL_TARGET)/chrome/icons/default
-
-libs:: $(PREFS)
-	$(INSTALL) $^ $(FINAL_TARGET)/defaults/preferences
-
-libs:: simple.xulapp
-	$(EXIT_ON_ERROR) \
-	cat $< | sed 's|BUILD_ID|'$(BUILD_ID)'|' \
-	       | sed 's|GECKO_VERSION|'$(GECKO_VERSION)'|' \
-	       > $(FINAL_TARGET)/simple.xulapp
+endif

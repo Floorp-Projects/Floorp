@@ -474,7 +474,7 @@ nsXULAppInfo::GetAppBuildID(nsACString& aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetGeckoBuildID(nsACString& aResult)
 {
-  aResult.Assign(BUILD_ID);
+  aResult.Assign(NS_STRINGIFY(BUILD_ID));
 
   return NS_OK;
 }

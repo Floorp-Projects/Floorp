@@ -922,6 +922,14 @@ dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 
+dnl Get the major and minor versions from the MOZILLA_VERSION
+changequote(,)
+MOZILLA_VERSION_MAJOR=`echo $MOZILLA_VERSION | sed 's|^\([0-9]*\).*|\1|'`
+MOZILLA_VERSION_MINOR=`echo $MOZILLA_VERSION | sed 's|^[0-9]*\.\([0-9]*\).*|\1|'`
+changequote([,])
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION_MAJOR,$MOZILLA_VERSION_MAJOR)
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION_MINOR,$MOZILLA_VERSION_MINOR)
+
 dnl ========================================================
 dnl System overrides of the defaults for target
 dnl ========================================================
@@ -6241,6 +6249,8 @@ esac
 AC_SUBST(CYGDRIVE_MOUNT)
 
 AC_SUBST(MOZILLA_VERSION)
+AC_SUBST(MOZILLA_VERSION_MAJOR)
+AC_SUBST(MOZILLA_VERSION_MINOR)
 
 . ${srcdir}/config/chrome-versions.sh
 AC_SUBST(MOZILLA_LOCALE_VERSION)
