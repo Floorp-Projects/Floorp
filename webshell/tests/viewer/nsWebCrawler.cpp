@@ -779,6 +779,7 @@ OpenRegressionFile(const nsString& aBaseName, const nsString& aOutputName)
   return fp;
 }
 
+#define BUF_SIZE 1024
 // Load up both data files (original and the one we just output) into
 // two independent xml content trees. Then compare them.
 void
@@ -806,5 +807,10 @@ nsWebCrawler::PerformRegressionTest(const nsString& aOutputName)
   rv = fu->CompareRegressionData(f1, f2);
   NS_RELEASE(fu);
 
-  printf("regression test %s\n", NS_SUCCEEDED(rv) ? "passed" : "failed");
+  char dirName[BUF_SIZE];
+  char fileName[BUF_SIZE];
+  mOutputDir.ToCString(dirName, BUF_SIZE-1);
+  aOutputName.ToCString(fileName, BUF_SIZE-1);
+
+  printf("regression test %s%s %s\n", dirName, fileName, NS_SUCCEEDED(rv) ? "passed" : "failed");
 }
