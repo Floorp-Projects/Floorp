@@ -422,22 +422,22 @@ CViewSourceHTML::CanParse(CParserContext& aParserContext,
   eAutoDetectResult result=eUnknownDetect;
 
   if(eViewSource==aParserContext.mParserCommand) {
-    if(aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType) ||
-       aParserContext.mMimeType.EqualsWithConversion(kTextCSSContentType) ||
-       aParserContext.mMimeType.EqualsWithConversion(kTextJSContentType) ||
-       aParserContext.mMimeType.EqualsWithConversion(kApplicationJSContentType)) {
+    if(aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kPlainTextContentType)) ||
+       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kTextCSSContentType)) ||
+       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kTextJSContentType)) ||
+       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kApplicationJSContentType))) {
       result=eValidDetect;
     }
-    if(aParserContext.mMimeType.EqualsWithConversion(kXMLTextContentType) ||
-       aParserContext.mMimeType.EqualsWithConversion(kXMLApplicationContentType) ||
-       aParserContext.mMimeType.EqualsWithConversion(kXHTMLApplicationContentType) ||
-       aParserContext.mMimeType.EqualsWithConversion(kRDFTextContentType) ||
-       aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType) ||
-       aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType) ||
+    if(aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXMLTextContentType)) ||
+       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXMLApplicationContentType)) ||
+       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXHTMLApplicationContentType)) ||
+       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kRDFTextContentType)) ||
+       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType)) ||
+       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXULTextContentType)) ||
 #ifdef MOZ_SVG
-       aParserContext.mMimeType.Equals(NS_LITERAL_STRING(kSVGTextContentType)) ||
+       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kSVGTextContentType)) ||
 #endif
-       aParserContext.mMimeType.EqualsWithConversion(kSGMLTextContentType)) {
+       aParserContext.mMimeType.Equals(kSGMLTextContentType)) {
       result=ePrimaryDetect;
     }
   }
