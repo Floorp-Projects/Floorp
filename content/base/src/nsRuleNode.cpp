@@ -3548,9 +3548,16 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
       parentBorder->GetBorderColor(NS_SIDE_TOP, borderColor, transparent, foreground);      
       if (transparent)
         border->SetBorderTransparent(NS_SIDE_TOP);
-      else if (foreground)
-        border->SetBorderToForeground(NS_SIDE_TOP);
-      else
+      else if (foreground) {
+        // We want to inherit the color from the parent, not use the
+        // color on the element where this chunk of style data will be
+        // used.  We can ensure that the data for the parent are fully
+        // computed (unlike for the element where this will be used, for
+        // which the color could be specified on a more specific rule).
+        const nsStyleColor *parentColor;
+        ::GetStyleData(parentContext.get(), &parentColor);
+        border->SetBorderColor(NS_SIDE_TOP, parentColor->mColor);
+      } else
         border->SetBorderColor(NS_SIDE_TOP, borderColor);
     }
     else if (SetColor(ourBorderColor->mTop, unused, mPresContext, borderColor, inherited)) {
@@ -3572,9 +3579,16 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
       parentBorder->GetBorderColor(NS_SIDE_RIGHT, borderColor, transparent, foreground);      
       if (transparent)
         border->SetBorderTransparent(NS_SIDE_RIGHT);
-      else if (foreground)
-        border->SetBorderToForeground(NS_SIDE_RIGHT);
-      else
+      else if (foreground) {
+        // We want to inherit the color from the parent, not use the
+        // color on the element where this chunk of style data will be
+        // used.  We can ensure that the data for the parent are fully
+        // computed (unlike for the element where this will be used, for
+        // which the color could be specified on a more specific rule).
+        const nsStyleColor *parentColor;
+        ::GetStyleData(parentContext.get(), &parentColor);
+        border->SetBorderColor(NS_SIDE_RIGHT, parentColor->mColor);
+      } else
         border->SetBorderColor(NS_SIDE_RIGHT, borderColor);
     }
     else if (SetColor(ourBorderColor->mRight, unused, mPresContext, borderColor, inherited)) {
@@ -3596,9 +3610,16 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
       parentBorder->GetBorderColor(NS_SIDE_BOTTOM, borderColor, transparent, foreground);      
       if (transparent)
         border->SetBorderTransparent(NS_SIDE_BOTTOM);
-      else if (foreground)
-        border->SetBorderToForeground(NS_SIDE_BOTTOM);
-      else
+      else if (foreground) {
+        // We want to inherit the color from the parent, not use the
+        // color on the element where this chunk of style data will be
+        // used.  We can ensure that the data for the parent are fully
+        // computed (unlike for the element where this will be used, for
+        // which the color could be specified on a more specific rule).
+        const nsStyleColor *parentColor;
+        ::GetStyleData(parentContext.get(), &parentColor);
+        border->SetBorderColor(NS_SIDE_BOTTOM, parentColor->mColor);
+      } else
         border->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
     }
     else if (SetColor(ourBorderColor->mBottom, unused, mPresContext, borderColor, inherited)) {
@@ -3620,9 +3641,16 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
       parentBorder->GetBorderColor(NS_SIDE_LEFT, borderColor, transparent, foreground);      
       if (transparent)
         border->SetBorderTransparent(NS_SIDE_LEFT);
-      else if (foreground)
-        border->SetBorderToForeground(NS_SIDE_LEFT);
-      else
+      else if (foreground) {
+        // We want to inherit the color from the parent, not use the
+        // color on the element where this chunk of style data will be
+        // used.  We can ensure that the data for the parent are fully
+        // computed (unlike for the element where this will be used, for
+        // which the color could be specified on a more specific rule).
+        const nsStyleColor *parentColor;
+        ::GetStyleData(parentContext.get(), &parentColor);
+        border->SetBorderColor(NS_SIDE_LEFT, parentColor->mColor);
+      } else
         border->SetBorderColor(NS_SIDE_LEFT, borderColor);
     }
     else if (SetColor(ourBorderColor->mLeft, unused, mPresContext, borderColor, inherited)) {
