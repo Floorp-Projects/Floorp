@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.71 2004/04/03 18:12:08 jocuri%softhome.net Exp $ -->
+<!-- $Id: installation.xml,v 1.72 2004/07/06 23:30:03 jocuri%softhome.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -672,21 +672,26 @@
         Modify it to reflect your setup if you will be connecting from
         another machine or as a different user.</para>
         
-        <para>Run the <filename>mysql</filename> command-line client and
-        enter:</para>
+        <para>Run the <filename>mysql</filename> command-line client.</para>
+        <para>If you are using MySQL 4.0 or newer, enter:</para>
 
-        <screen>  <prompt>mysql&gt;</prompt> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,
-         DROP,REFERENCES ON bugs.* TO bugs@localhost
-         IDENTIFIED BY '<replaceable>$db_pass</replaceable>';
+        <screen>  <prompt>mysql&gt;</prompt> GRANT SELECT, INSERT,
+         UPDATE, DELETE, INDEX, ALTER, CREATE, LOCK TABLES,
+         CREATE TEMPORARY TABLES, DROP, REFERENCES ON bugs.*
+         TO bugs@localhost IDENTIFIED BY '<replaceable>$db_pass</replaceable>';
   <prompt>mysql&gt;</prompt> FLUSH PRIVILEGES;</screen>
 
-        <note>
-          <para>If you are using MySQL 4, you need to add
+        <para>If you are using an older version of MySQL,
           the <computeroutput>LOCK TABLES</computeroutput> and 
-          <computeroutput>CREATE TEMPORARY TABLES</computeroutput> permissions
-          to the list.
-          </para>
-        </note>
+          <computeroutput>CREATE TEMPORARY TABLES</computeroutput>
+          permissions will be unavailable and should be removed from the permissions
+          list. In this case, the following command line can be used:</para>
+
+        <screen>  <prompt>mysql&gt;</prompt> GRANT SELECT, INSERT,
+         UPDATE, DELETE, INDEX, ALTER, CREATE, DROP,
+         REFERENCES ON bugs.* TO bugs@localhost IDENTIFIED BY
+         '<replaceable>$db_pass</replaceable>';
+  <prompt>mysql&gt;</prompt> FLUSH PRIVILEGES;</screen>
       </section>      
     </section>
 
