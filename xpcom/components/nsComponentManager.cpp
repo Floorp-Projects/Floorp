@@ -178,7 +178,7 @@ nsCreateInstanceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr)
                                   getter_Copies(value));
     if (NS_FAILED(rv)) goto error;
     if (!value) {
-        rv = NS_ERROR_SERVICE_NOT_FOUND;
+        rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
         goto error;
     }
     NS_GetComponentManager(getter_AddRefs(compMgr));
@@ -216,7 +216,7 @@ nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) con
                                   getter_Copies(value));
     if (NS_FAILED(rv)) goto error;
     if (!value) {
-        rv = NS_ERROR_SERVICE_NOT_FOUND;
+        rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
         goto error;
     }
     if (mServiceManager) {
@@ -2198,7 +2198,7 @@ nsComponentManagerImpl::UnregisterService(const nsCID& aClass)
     }
 
     if (!entry || !entry->mServiceObject)
-        return NS_ERROR_SERVICE_NOT_FOUND;
+        return NS_ERROR_SERVICE_NOT_AVAILABLE;
 
     entry->mServiceObject = nsnull;
     return rv;
@@ -2277,7 +2277,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
         return NS_ERROR_UNEXPECTED;
     }
 
-    nsresult rv = NS_ERROR_SERVICE_NOT_FOUND;
+    nsresult rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
     nsFactoryEntry* entry = nsnull;
     nsFactoryTableEntry* factoryTableEntry =
         NS_STATIC_CAST(nsFactoryTableEntry*,
@@ -2318,7 +2318,7 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
         return NS_ERROR_UNEXPECTED;
     }
 
-    nsresult rv = NS_ERROR_SERVICE_NOT_FOUND;
+    nsresult rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
     nsFactoryEntry *entry = nsnull;
     {
         nsAutoMonitor mon(mMon);
@@ -2360,7 +2360,7 @@ nsComponentManagerImpl::UnregisterService(const char* aContractID)
    }
 
    if (entry == nsnull || entry == kNonExistentContractID || entry->mServiceObject == nsnull)
-        return NS_ERROR_SERVICE_NOT_FOUND;
+        return NS_ERROR_SERVICE_NOT_AVAILABLE;
 
    entry->mServiceObject = nsnull;
    return rv;
