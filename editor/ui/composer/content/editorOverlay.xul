@@ -19,6 +19,7 @@
    - Rights Reserved.
    - 
    - Contributor(s):
+   -   Ryan Cassin (rcassin@supernova.org)
   -->
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
@@ -108,8 +109,7 @@
     <command id="cmd_printSetup"   value="&printSetupCmd.label;"    oncommand="goDoCommand('cmd_printSetup')"/>
     <command id="cmd_printPreview" value="&printPreviewCmd.label;"  oncommand="goDoCommand('cmd_printPreview')"/>
     <command id="cmd_print"                                         oncommand="goDoCommand('cmd_print')"/>
-    <command id="cmd_print_button"                                  buttonaction="goDoCommand('cmd_print')"/>
-
+    
     <command id="cmd_quit"         value="&exitCmd.label;"          oncommand="goDoCommand('cmd_quit')"/>
   </commandset>
 
@@ -714,7 +714,7 @@
           tooltip="aTooltip"              tooltiptext="&previewToolbarCmd.tooltip;"/>
 
   <menubutton class="menubutton-dual toolbar" id="printButton" value="&printToolbarCmd.label;" 
-              observes="cmd_print_button" tooltip="aTooltip" tooltiptext="&printToolbarCmd.tooltip;"
+              observes="cmd_print" tooltip="aTooltip" tooltiptext="&printToolbarCmd.tooltip;"
               crop="right">  
  	  <menupopup id="printMenu">
       <menuitem accesskey="&fileprint.accesskey;" key="printkb" observes="cmd_print" value="&printCmd.label;" default="true"/>
