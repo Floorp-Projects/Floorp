@@ -1866,6 +1866,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
                                                 ".reg",
                                                 ".wsf",
                                                 ".hta",
+                                                ".scr",
                                                 0 };
         for ( int i = 0; executableExts[i]; i++ ) {
             if ( ::strcmp( executableExts[i], ext ) == 0 ) {
