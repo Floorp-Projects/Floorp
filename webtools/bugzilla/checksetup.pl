@@ -2094,12 +2094,14 @@ sub AddFDef ($$$) {
     my ($fieldid) = ($sth->fetchrow_array());
     if (!$fieldid) {
         $fieldid = 'NULL';
-    }
-
-    $dbh->do("REPLACE INTO fielddefs " .
+        $dbh->do("INSERT INTO fielddefs " .
              "(fieldid, name, description, mailhead, sortkey) VALUES " .
              "($fieldid, $name, $description, $mailhead, $headernum)");
-    $headernum++;
+        $headernum++;
+    } else {
+        $dbh->do("UPDATE fielddefs SET name = $name, description = $description, " .
+                 "mailhead = $mailhead WHERE fieldid = $fieldid");
+    }
 }
 
 

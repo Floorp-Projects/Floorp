@@ -84,14 +84,16 @@ if ($user) {
             my ($name, $cookiename, $value) = (@$ref);
             if ($value) {
                 my $qname = SqlQuote($name);
+                SendSQL("LOCK TABLES namedqueries WRITE");
                 SendSQL("SELECT query FROM namedqueries " .
                         "WHERE userid = $userid AND name = $qname");
                 my $query = FetchOneColumn();
                 if (!$query) {
-                    SendSQL("REPLACE INTO namedqueries " .
+                    SendSQL("INSERT INTO namedqueries " .
                             "(userid, name, query) VALUES " .
                             "($userid, $qname, " . SqlQuote($value) . ")");
                 }
+                SendSQL("UNLOCK TABLES");
             }
             $cgi->send_cookie(-name => $cookiename,
                               -expires => "Fri, 01-Jan-2038 00:00:00 GMT");

@@ -341,9 +341,22 @@ elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         my $qname = SqlQuote($::defaultqueryname);
         my $qbuffer = SqlQuote($::buffer);
-        SendSQL("REPLACE INTO namedqueries (userid, name, query)
-                 VALUES ($userid, $qname, $qbuffer)");
-                 
+
+        SendSQL("LOCK TABLES namedqueries WRITE");
+
+        SendSQL("SELECT userid FROM namedqueries WHERE userid = $userid " .
+        "AND name = $qname");
+        my $result = FetchOneColumn();
+        if ($result) {
+            SendSQL("UPDATE namedqueries SET query = $qbuffer " .
+                    "WHERE userid = $userid AND name = $qname");
+        } else {
+            SendSQL("INSERT INTO namedqueries (userid, name, query, linkinfooter) VALUES " .
+                    "($userid, $qname, $qbuffer, 0)");
+        }
+
+        SendSQL("UNLOCK TABLES");
+
         $vars->{'message'} = "buglist_new_default_query";
     }
     elsif ($::FORM{'remtype'} eq "asnamed") {
@@ -369,6 +382,8 @@ elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
             $vars->{'message'} = "buglist_updated_named_query";
         }
 
+        SendSQL("LOCK TABLES namedqueries WRITE");
+
         SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
         if (FetchOneColumn()) {
             SendSQL("UPDATE  namedqueries
@@ -376,9 +391,11 @@ elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
                       WHERE  userid = $userid AND name = $qname");
         }
         else {
-            SendSQL("REPLACE INTO namedqueries (userid, name, query, linkinfooter)
+            SendSQL("INSERT INTO namedqueries (userid, name, query, linkinfooter)
                      VALUES ($userid, $qname, $qbuffer, $tofooter)");
         }
+
+        SendSQL("UNLOCK TABLES");
 
         # Make sure to invalidate any cached query data, so that the footer is
         # correctly displayed
