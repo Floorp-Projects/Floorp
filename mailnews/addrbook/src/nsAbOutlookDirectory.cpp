@@ -1064,12 +1064,6 @@ nsresult nsAbOutlookDirectory::ExecuteQuery(nsIAbDirectoryQueryArguments *aArgum
     nsCOMPtr<nsIAbDirectoryQueryResult> result ;
     nsAbDirectoryQueryResult *newResult = nsnull ;
 
-    newResult = new nsAbDirectoryQueryResult(0, aArguments,
-                                             nsIAbDirectoryQueryResult::queryResultComplete, 
-                                             0) ;
-    result = newResult ;
-    aListener->OnQueryItem(result) ;
-
     if (aResultLimit > 0 && nbResults > NS_STATIC_CAST(PRUint32, aResultLimit)) { 
         nbResults = NS_STATIC_CAST(PRUint32, aResultLimit) ; 
     }
@@ -1094,6 +1088,11 @@ nsresult nsAbOutlookDirectory::ExecuteQuery(nsIAbDirectoryQueryArguments *aArgum
     nsIntegerKey hashKey(aThreadId) ;
     
     mQueryThreads.Remove(&hashKey) ;
+    newResult = new nsAbDirectoryQueryResult(0, aArguments,
+                                             nsIAbDirectoryQueryResult::queryResultComplete, 
+                                             0) ;
+    result = newResult ;
+    aListener->OnQueryItem(result) ;
     return retCode ;
 }
 nsresult nsAbOutlookDirectory::GetChildCards(nsISupportsArray **aCards, 
