@@ -5,8 +5,8 @@
 #ifndef __gen_nsIMsgFolder_h__
 #define __gen_nsIMsgFolder_h__
 
-#include "nsISupports.h" /* interface nsISupports */
 #include "nsISupportsArray.h" /* interface nsISupportsArray */
+#include "nsIMsg.h"
 
 enum FolderType {
   FOLDER_MAIL,
@@ -59,13 +59,13 @@ class nsIMsgFolder : public nsISupports {
   NS_IMETHOD HasSubFolders(PRBool *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetNumSubFolders(PRInt32 *_retval) = 0;
+  NS_IMETHOD GetNumSubFolders(PRUint32 *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetNumSubFoldersToDisplay(PRInt32 *_retval) = 0;
+  NS_IMETHOD GetNumSubFoldersToDisplay(PRUint32 *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetSubFolder(PRInt32 which, nsIMsgFolder **_retval) = 0;
+  NS_IMETHOD GetSubFolder(PRUint32 which, nsIMsgFolder **_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetSubFolders(nsISupportsArray **_retval) = 0;
@@ -75,6 +75,27 @@ class nsIMsgFolder : public nsISupports {
 
   /*  <IDL>  */
   NS_IMETHOD RemoveSubFolder(const nsIMsgFolder *folder) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD HasMessages(PRBool *_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetNumMessages(PRUint32 *_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetNumMessagesToDisplay(PRUint32 *_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetMessage(PRUint32 which, nsIMsg **_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetMessages(nsISupportsArray **_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD AddMessage(const nsIMsg *msg) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD RemoveMessage(const nsIMsg *msg) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetDeleteIsMoveToTrash(PRBool *aDeleteIsMoveToTrash) = 0;
@@ -95,13 +116,13 @@ class nsIMsgFolder : public nsISupports {
   NS_IMETHOD RecursiveDelete(PRBool deleteStorage) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD CreateSubfolder(const char *leafNameFromUser, nsIMsgFolder **outFolder, PRInt32 *outPos) = 0;
+  NS_IMETHOD CreateSubfolder(const char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD Rename(const char *name) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD Adopt(const nsIMsgFolder *srcFolder, PRInt32 *outPos) = 0;
+  NS_IMETHOD Adopt(const nsIMsgFolder *srcFolder, PRUint32 *outPos) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD ContainsChildNamed(const char *name, PRBool *_retval) = 0;
@@ -119,8 +140,8 @@ class nsIMsgFolder : public nsISupports {
   NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, const nsIMsgFolder *otherFolder, char **_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetDepth(PRInt32 *aDepth) = 0;
-  NS_IMETHOD SetDepth(PRInt32 aDepth) = 0;
+  NS_IMETHOD GetDepth(PRUint32 *aDepth) = 0;
+  NS_IMETHOD SetDepth(PRUint32 aDepth) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD UpdateSummaryTotals() = 0;
@@ -129,13 +150,13 @@ class nsIMsgFolder : public nsISupports {
   NS_IMETHOD SummaryChanged() = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetNumUnread(PRBool deep, PRInt32 *_retval) = 0;
+  NS_IMETHOD GetNumUnread(PRBool deep, PRUint32 *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetTotalMessages(PRBool deep, PRInt32 *_retval) = 0;
+  NS_IMETHOD GetTotalMessages(PRBool deep, PRUint32 *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetExpungedBytesCount(PRInt32 *aExpungedBytesCount) = 0;
+  NS_IMETHOD GetExpungedBytesCount(PRUint32 *aExpungedBytesCount) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetDeletable(PRBool *aDeletable) = 0;
@@ -165,7 +186,7 @@ class nsIMsgFolder : public nsISupports {
   NS_IMETHOD GetRelativePathName(char * *aRelativePathName) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetSizeOnDisk(PRInt32 *aSizeOnDisk) = 0;
+  NS_IMETHOD GetSizeOnDisk(PRUint32 *aSizeOnDisk) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD RememberPassword(const char *password) = 0;
@@ -189,25 +210,25 @@ class nsIMsgFolder : public nsISupports {
   NS_IMETHOD ReplaceSubfolder(const nsIMsgFolder *oldFolder, const nsIMsgFolder *newFolder) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD SetFlag(PRInt32 flag) = 0;
+  NS_IMETHOD SetFlag(PRUint32 flag) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD ClearFlag(PRInt32 flag) = 0;
+  NS_IMETHOD ClearFlag(PRUint32 flag) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetFlag(PRInt32 flag, PRBool *_retval) = 0;
+  NS_IMETHOD GetFlag(PRUint32 flag, PRBool *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD ToggleFlag(PRInt32 flag) = 0;
+  NS_IMETHOD ToggleFlag(PRUint32 flag) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD OnFlagChange(PRInt32 flag) = 0;
+  NS_IMETHOD OnFlagChange(PRUint32 flag) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetFlags(PRInt32 *_retval) = 0;
+  NS_IMETHOD GetFlags(PRUint32 *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetFoldersWithFlag(PRInt32 flags, nsIMsgFolder **result, PRInt32 resultsize, PRInt32 *numFolders) = 0;
+  NS_IMETHOD GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **result, PRUint32 resultsize, PRUint32 *numFolders) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetExpansionArray(const nsISupportsArray *expansionArray) = 0;

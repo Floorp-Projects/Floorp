@@ -767,7 +767,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 		}
 	}
 	else {
-        int depth;
+        PRUint32 depth;
         rv = m_hostinfo->GetDepth(&depth);
         
         if (NS_SUCCEEDED(rv))

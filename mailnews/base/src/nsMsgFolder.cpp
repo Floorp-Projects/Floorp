@@ -70,7 +70,7 @@ nsMsgFolder::~nsMsgFolder()
 {
 	if(mSubFolders)
 	{
-		PRInt32 count = mSubFolders->Count();
+		PRUint32 count = mSubFolders->Count();
 
 		for (int i = count - 1; i >= 0; i--)
 			mSubFolders->RemoveElementAt(i);
@@ -401,7 +401,7 @@ NS_IMETHODIMP nsMsgFolder::HasSubFolders(PRBool *hasSubFolders)
 	else return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetNumSubFolders(PRInt32 *numSubFolders)
+NS_IMETHODIMP nsMsgFolder::GetNumSubFolders(PRUint32 *numSubFolders)
 {
 	if(numSubFolders)
 	{
@@ -413,7 +413,7 @@ NS_IMETHODIMP nsMsgFolder::GetNumSubFolders(PRInt32 *numSubFolders)
 
 }
 
-NS_IMETHODIMP nsMsgFolder::GetNumSubFoldersToDisplay(PRInt32 *numSubFolders)
+NS_IMETHODIMP nsMsgFolder::GetNumSubFoldersToDisplay(PRUint32 *numSubFolders)
 {
 	if(numSubFolders)
 	{
@@ -423,9 +423,9 @@ NS_IMETHODIMP nsMsgFolder::GetNumSubFoldersToDisplay(PRInt32 *numSubFolders)
 		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetSubFolder(int which, nsIMsgFolder **aFolder)
+NS_IMETHODIMP nsMsgFolder::GetSubFolder(PRUint32 which, nsIMsgFolder **aFolder)
 {
-  PR_ASSERT(which >= 0 && which < mSubFolders->Count());
+  PR_ASSERT(which >= 0 && which < (PRUint32)mSubFolders->Count());      // XXX fix Count return type
 	if(aFolder)
 	{
 		*aFolder = nsnull;
@@ -609,7 +609,7 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete (nsIMsgFolder **folder, PRBool delete
 				}
 				else
 				{
-					PRInt32 folderDepth, childDepth;
+					PRUint32 folderDepth, childDepth;
 
 					if(NS_SUCCEEDED((*folder)->GetDepth(&folderDepth)) &&
 					   NS_SUCCEEDED(child->GetDepth(&childDepth)) &&
@@ -663,7 +663,7 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete (PRBool deleteStorage)
 	return status;
 }
 
-NS_IMETHODIMP nsMsgFolder::CreateSubfolder (const char *, nsIMsgFolder**, PRInt32*)
+NS_IMETHODIMP nsMsgFolder::CreateSubfolder (const char *, nsIMsgFolder**, PRUint32*)
 {
 	return NS_OK;
 
@@ -684,7 +684,7 @@ NS_IMETHODIMP nsMsgFolder::Rename (const char *name)
 
 }
 
-NS_IMETHODIMP nsMsgFolder::Adopt (const nsIMsgFolder *srcFolder, PRInt32* outPos)
+NS_IMETHODIMP nsMsgFolder::Adopt (const nsIMsgFolder *srcFolder, PRUint32* outPos)
 {
 	return NS_OK;
 
@@ -719,9 +719,9 @@ NS_IMETHODIMP nsMsgFolder::FindChildNamed (const char *name, nsIMsgFolder ** aCh
 
     nsIMsgFolder *folder = nsnull;
 
-	PRInt32 count = mSubFolders->Count();
+	PRUint32 count = mSubFolders->Count();
 
-    for (int i = 0; i < count; i++)
+    for (PRUint32 i = 0; i < count; i++)
     {
 		nsISupports *supports;
         supports = mSubFolders->ElementAt(i);
@@ -777,9 +777,9 @@ NS_IMETHODIMP nsMsgFolder::FindParentOf (const nsIMsgFolder * aFolder, nsIMsgFol
 
 	*aParent = nsnull;
 
-	PRInt32 count = mSubFolders->Count();
+	PRUint32 count = mSubFolders->Count();
 
-	for (int i = 0; i < count && *aParent == NULL; i++)
+	for (PRUint32 i = 0; i < count && *aParent == NULL; i++)
   {
 		nsISupports *supports = mSubFolders->ElementAt(i);
 		nsIMsgFolder *child = nsnull;
@@ -796,7 +796,7 @@ NS_IMETHODIMP nsMsgFolder::FindParentOf (const nsIMsgFolder * aFolder, nsIMsgFol
 		NS_RELEASE(supports);
 	}
 
-  for (int j = 0; j < count && *aParent == NULL; j++)
+  for (PRUint32 j = 0; j < count && *aParent == NULL; j++)
   {
 
    	nsISupports *supports = mSubFolders->ElementAt(j);
@@ -819,9 +819,9 @@ NS_IMETHODIMP nsMsgFolder::IsParentOf (const nsIMsgFolder *child, PRBool deep, P
 	if(!isParent)
 		return NS_ERROR_NULL_POINTER;
 
-	PRInt32 count = mSubFolders->Count();
+	PRUint32 count = mSubFolders->Count();
 
-  for (int i = 0; i < count; i++)
+  for (PRUint32 i = 0; i < count; i++)
   {
 		nsISupports *supports = mSubFolders->ElementAt(i);
 		nsIMsgFolder *folder;
@@ -857,7 +857,7 @@ NS_IMETHODIMP nsMsgFolder::GenerateUniqueSubfolderName(const char *prefix, const
 }
 
 
-NS_IMETHODIMP nsMsgFolder::GetDepth(PRInt32 *depth)
+NS_IMETHODIMP nsMsgFolder::GetDepth(PRUint32 *depth)
 {
 	if(!depth)
 		return NS_ERROR_NULL_POINTER;
@@ -866,7 +866,7 @@ NS_IMETHODIMP nsMsgFolder::GetDepth(PRInt32 *depth)
 	
 }
 
-NS_IMETHODIMP nsMsgFolder::SetDepth(PRInt32 depth)
+NS_IMETHODIMP nsMsgFolder::SetDepth(PRUint32 depth)
 {
 	mDepth = depth;
 	return NS_OK;
@@ -888,18 +888,18 @@ NS_IMETHODIMP nsMsgFolder::SummaryChanged()
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRInt32 *numUnread)
+NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRUint32 *numUnread)
 {
 	if(!numUnread)
 		return NS_ERROR_NULL_POINTER;
 
-	PRInt32 total = mNumUnreadMessages;
+	PRUint32 total = mNumUnreadMessages;
   if (deep)
   {
 		nsIMsgFolder *folder;
-		PRInt32 count = mSubFolders->Count();
+		PRUint32 count = mSubFolders->Count();
 
-    for (int i = 0; i < count; i++)
+    for (PRUint32 i = 0; i < count; i++)
     {
 			nsISupports *supports = mSubFolders->ElementAt(i);
 
@@ -907,7 +907,7 @@ NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRInt32 *numUnread)
 			{
 				if (folder)
 				{
-					PRInt32 num;
+					PRUint32 num;
 					folder->GetNumUnread(deep, &num);
 					if (num >= 0) // it's legal for counts to be negative if we don't know
 						total += num;
@@ -922,18 +922,18 @@ NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRInt32 *numUnread)
 
 }
 
-NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
+NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRUint32 *totalMessages)
 {
 	if(!totalMessages)
 		return NS_ERROR_NULL_POINTER;
 
-	PRInt32 total = mNumTotalMessages;
+	PRUint32 total = mNumTotalMessages;
   if (deep)
   {
     nsIMsgFolder *folder;
-		PRInt32 count = mSubFolders->Count();
+		PRUint32 count = mSubFolders->Count();
 
-    for (int i = 0; i < count; i++)
+    for (PRUint32 i = 0; i < count; i++)
     {
 			nsISupports *supports = mSubFolders->ElementAt(i);
 
@@ -941,7 +941,7 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
 			{
 				if (folder)
 				{
-					PRInt32 num;
+					PRUint32 num;
 					folder->GetTotalMessages (deep, &num);
           if (num >= 0) // it's legal for counts to be negative if we don't know
 						total += num;
@@ -956,7 +956,7 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
 }
 
 #ifdef HAVE_DB
-	NS_IMETHOD GetTotalMessagesInDB(PRInt32 *totalMessages) const;					// How many messages in database.
+	NS_IMETHOD GetTotalMessagesInDB(PRUint32 *totalMessages) const;					// How many messages in database.
 #endif
 	
 #ifdef HAVE_PANE
@@ -976,12 +976,12 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
 	void			ChangeNumPendingTotalMessages(int32 delta);
 
 
-NS_IMETHODIMP nsMsgFolder::SetFolderPrefFlags(PRInt32 flags)
+NS_IMETHODIMP nsMsgFolder::SetFolderPrefFlags(PRUint32 flags)
 {
 
 }
 
-NS_IMETHODIMP nsMsgFolder::GetFolderPrefFlags(PRInt32 *flags)
+NS_IMETHODIMP nsMsgFolder::GetFolderPrefFlags(PRUint32 *flags)
 {
 
 }
@@ -1008,7 +1008,7 @@ NS_IMETHODIMP nsMsgFolder::GetLastMessageLoaded()
 
 #endif
 
-NS_IMETHODIMP nsMsgFolder::SetFlag(PRInt32 flag)
+NS_IMETHODIMP nsMsgFolder::SetFlag(PRUint32 flag)
 {
 	// OnFlagChange can be expensive, so don't call it if we don't need to
 	PRBool flagSet;
@@ -1026,7 +1026,7 @@ NS_IMETHODIMP nsMsgFolder::SetFlag(PRInt32 flag)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::ClearFlag(PRInt32 flag)
+NS_IMETHODIMP nsMsgFolder::ClearFlag(PRUint32 flag)
 {
 	// OnFlagChange can be expensive, so don't call it if we don't need to
 	PRBool flagSet;
@@ -1044,13 +1044,13 @@ NS_IMETHODIMP nsMsgFolder::ClearFlag(PRInt32 flag)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetFlag(PRInt32 flag, PRBool *_retval)
+NS_IMETHODIMP nsMsgFolder::GetFlag(PRUint32 flag, PRBool *_retval)
 {
 	*_retval = ((mFlags & flag) != 0);
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::ToggleFlag(PRInt32 flag)
+NS_IMETHODIMP nsMsgFolder::ToggleFlag(PRUint32 flag)
 {
   mFlags ^= flag;
 	OnFlagChange (flag);
@@ -1058,22 +1058,22 @@ NS_IMETHODIMP nsMsgFolder::ToggleFlag(PRInt32 flag)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRInt32 flag)
+NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRUint32 flag)
 {
 	//Still need to implement
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetFlags(PRInt32 *_retval)
+NS_IMETHODIMP nsMsgFolder::GetFlags(PRUint32 *_retval)
 {
 	*_retval = mFlags;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRInt32 flags, nsIMsgFolder **result,
-																							PRInt32 resultsize,	PRInt32 *numFolders)
+NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **result,
+																							PRUint32 resultsize,	PRUint32 *numFolders)
 {
-	int num = 0;
+	PRUint32 num = 0;
 	if ((flags & mFlags) == flags) {
 		if (result && (num < resultsize)) {
 			result[num] = this;
@@ -1082,14 +1082,14 @@ NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRInt32 flags, nsIMsgFolder **resu
   }
 
 	nsIMsgFolder *folder = nsnull;
-	for (int i=0; i < mSubFolders->Count(); i++) {
+	for (PRUint32 i=0; i < (PRUint32)mSubFolders->Count(); i++) {
 		nsISupports *supports = mSubFolders->ElementAt(i);
 		if(NS_SUCCEEDED(supports->QueryInterface(kIMsgFolderIID, (void**)&folder)))
 		{
 			// CAREFUL! if NULL ise passed in for result then the caller
 			// still wants the full count!  Otherwise, the result should be at most the
 			// number that the caller asked for.
-			int numSubFolders;
+			PRUint32 numSubFolders;
 
 			if (!result)
 			{
@@ -1129,7 +1129,7 @@ NS_IMETHODIMP nsMsgFolder::GetExpansionArray(const nsISupportsArray *expansionAr
 		if(NS_SUCCEEDED(supports->QueryInterface(kIMsgFolderIID, (void**)&folder)))
 		{
 			((nsISupportsArray*)expansionArray)->InsertElementAt(folder, expansionArray->Count());
-			PRInt32 flags;
+			PRUint32 flags;
 			folder->GetFlags(&flags);
 			if (!(flags & MSG_FOLDER_FLAG_ELIDED))
 				folder->GetExpansionArray(expansionArray);
@@ -1154,7 +1154,7 @@ NS_IMETHODIMP nsMsgFolder::EscapeMessageId(const char *messageId, const char **e
 }
 #endif
 
-NS_IMETHODIMP nsMsgFolder::GetExpungedBytesCount(PRInt32 *count)
+NS_IMETHODIMP nsMsgFolder::GetExpungedBytesCount(PRUint32 *count)
 {
 	if(!count)
 		return NS_ERROR_NULL_POINTER;
@@ -1328,7 +1328,7 @@ NS_IMETHODIMP nsMsgFolder::GetRelativePathName (char **pathName)
 }
 
 
-NS_IMETHODIMP nsMsgFolder::GetSizeOnDisk(PRInt32 *size)
+NS_IMETHODIMP nsMsgFolder::GetSizeOnDisk(PRUint32 *size)
 {
 	if(!size)
 		return NS_ERROR_NULL_POINTER;
@@ -1456,7 +1456,7 @@ NS_IMETHODIMP nsMsgMailFolder::BuildFolderURL(char **url)
 
 }
 
-NS_IMETHODIMP nsMsgMailFolder::CreateSubfolder(const char *leafNameFromUser, nsIMsgFolder **outFolder, PRInt32 *outPos)
+NS_IMETHODIMP nsMsgMailFolder::CreateSubfolder(const char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos)
 {
 #ifdef HAVE_PORT
 	MsgERR status = 0;
@@ -1687,7 +1687,7 @@ NS_IMETHODIMP nsMsgMailFolder::Rename (const char *newName)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgMailFolder::Adopt(const nsIMsgFolder *srcFolder, PRInt32 *outPos)
+NS_IMETHODIMP nsMsgMailFolder::Adopt(const nsIMsgFolder *srcFolder, PRUint32 *outPos)
 {
 #ifdef HAVE_PORT
 		MsgERR err = eSUCCESS;
@@ -1788,7 +1788,7 @@ NS_IMETHODIMP nsMsgMailFolder::GenerateUniqueSubfolderName(const char *prefix,
 	/* only try 256 times */
 	for (int count = 0; (count < 256); count++)
 	{
-		PRInt32 prefixSize = PL_strlen(prefix);
+		PRUint32 prefixSize = PL_strlen(prefix);
 
 		//allocate string big enough for prefix, 256, and '\0'
 		char *uniqueName = (char*)PR_MALLOC(prefixSize + 4);
@@ -1825,7 +1825,7 @@ NS_IMETHODIMP nsMsgMailFolder::UpdateSummaryTotals()
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgMailFolder::GetExpungedBytesCount(PRInt32 *count)
+NS_IMETHODIMP nsMsgMailFolder::GetExpungedBytesCount(PRUint32 *count)
 {
 	if(!count)
 		return NS_ERROR_NULL_POINTER;
@@ -1919,7 +1919,7 @@ NS_IMETHODIMP nsMsgMailFolder::GetRelativePathName (char **pathName)
 }
 
 
-NS_IMETHODIMP nsMsgMailFolder::GetSizeOnDisk(PRInt32 size)
+NS_IMETHODIMP nsMsgMailFolder::GetSizeOnDisk(PRUint32 size)
 {
 #ifdef HAVE_PORT
 	int32 ret = 0;
@@ -2117,4 +2117,49 @@ NS_NewRDFMsgFolderResourceFactory(nsIRDFResourceFactory** aResult)
   return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Accessing Messages:
 
+NS_IMETHODIMP 
+nsMsgFolder::HasMessages(PRBool *_retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetNumMessages(PRUint32 *_retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetNumMessagesToDisplay(PRUint32 *_retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetMessage(PRUint32 which, nsIMsg **_retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetMessages(nsISupportsArray **_retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::AddMessage(const nsIMsg *msg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::RemoveMessage(const nsIMsg *msg)
+{
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
