@@ -168,6 +168,9 @@ private:
   PRInt32 GetTypeIndex(const char *aTypeString,
                        PRBool      aAdd);
 
+  nsHostEntry *GetHostEntry(const nsAFlatCString &aHost,
+                            PRUint32              aType);
+
   nsresult Read();
   nsresult Write();
   void     NotifyObserversWithPermission(const nsACString &aHost,

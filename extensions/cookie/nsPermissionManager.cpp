@@ -321,7 +321,7 @@ nsPermissionManager::Remove(const nsACString &aHost,
   // so just return NS_OK
   if (typeIndex == -1) return NS_OK;
 
-  nsHostEntry* entry = mHostTable.GetEntry(PromiseFlatCString(aHost).get());
+  nsHostEntry *entry = GetHostEntry(PromiseFlatCString(aHost), typeIndex);
   if (entry) {
     // cache the old permission before we delete it, to notify observers
     PRUint32 oldPermission = entry->GetPermission(typeIndex);
@@ -377,23 +377,37 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
   // so just return NS_OK
   if (typeIndex == -1) return NS_OK;
 
+  nsHostEntry *entry = GetHostEntry(host, typeIndex);
+  if (entry)
+    *aPermission = entry->GetPermission(typeIndex);
+
+  return NS_OK;
+}
+
+// Get hostentry for given host string and permission type.
+// walk up the domain if needed.
+// return null if nothing found.
+nsHostEntry *
+nsPermissionManager::GetHostEntry(const nsAFlatCString &aHost,
+                                  PRUint32              aType)
+{
   PRUint32 offset = 0;
+  nsHostEntry *entry;
   do {
-    nsHostEntry *entry = mHostTable.GetEntry(host.get() + offset);
+    entry = mHostTable.GetEntry(aHost.get() + offset);
     if (entry) {
-      *aPermission = entry->GetPermission(typeIndex);
-      if (*aPermission != nsIPermissionManager::UNKNOWN_ACTION)
+      if (entry->GetPermission(aType) != nsIPermissionManager::UNKNOWN_ACTION)
         break;
+
+      // reset entry, to be able to return null on failure
+      entry = nsnull;
     }
-    offset = host.FindChar('.', offset) + 1;
+    offset = aHost.FindChar('.', offset) + 1;
 
   // walk up the domaintree (we stop as soon as we find a match,
   // which will be the most specific domain we have an entry for).
-  // this is new behavior; we only used to do this for popups.
-  // see bug 176950.
   } while (offset > 0);
-
-  return NS_OK;
+  return entry;
 }
 
 // A little helper function to add the hostname to the list.
