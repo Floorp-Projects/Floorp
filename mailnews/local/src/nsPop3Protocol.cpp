@@ -665,12 +665,9 @@ nsPop3Protocol::WaitForStartOfConnectionResponse(nsIInputStream* aInputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(aInputStream, line_length, pauseForMoreData);
 
-    if(line_length == 0)
+    if(pauseForMoreData)
     {
-        /* this shouldn't really happen, but...
-         */
-        m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
-        m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
+		m_pop3ConData->pause_for_read = PR_TRUE;
         return(0);
     }
     else if(line_length < 0)
@@ -706,12 +703,9 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(ln == 0)
+    if(pauseForMoreData)
     {
-        /* this shouldn't really happen, but...
-         */
-//        m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
-        m_pop3ConData->pause_for_read = PR_TRUE; /* don't pause */
+	    m_pop3ConData->pause_for_read = PR_TRUE; /* don't pause */
         return(0);
     }
     else if(ln < 0)
@@ -839,12 +833,9 @@ nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(ln == 0) 
+    if(pauseForMoreData) 
     {
-        /* this shouldn't really happen, but...
-         */
-        m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
-        m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
+		m_pop3ConData->pause_for_read = PR_TRUE; /* don't pause */
         return(0);
     }
     else if (ln < 0) 
@@ -1227,12 +1218,9 @@ nsPop3Protocol::GetList(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(ln== 0)
+    if(pauseForMoreData)
     {
-        /* this shouldn't really happen, but...
-         */
-        m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
-        m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
+		m_pop3ConData->pause_for_read = PR_TRUE;
         return(0);
     }
     else if(ln < 0)
@@ -1341,12 +1329,9 @@ nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(ln == 0)
+    if(pauseForMoreData)
     {
-        /* this shouldn't really happen, but...
-         */
-        m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
-        m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
+		m_pop3ConData->pause_for_read = PR_TRUE;
         return 0;
     }
     else if(ln < 0)
@@ -1515,12 +1500,9 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(ln == 0)
+    if(pauseForMoreData)
     {
-        /* this shouldn't really happen, but...
-         */
-        m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
-        m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
+		m_pop3ConData->pause_for_read = PR_TRUE;
         return 0;
     }
     else if(ln < 0)
@@ -1634,12 +1616,9 @@ nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
     PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(ln == 0)
+    if(pauseForMoreData)
     {
-        /* this shouldn't really happen, but...
-         */
-        m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
-        m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
+		m_pop3ConData->pause_for_read = PR_TRUE;
         return 0;
     }
     else if(ln < 0)
