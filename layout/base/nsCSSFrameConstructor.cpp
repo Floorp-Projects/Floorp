@@ -2661,10 +2661,13 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
     if (!frameHasBeenInitialized) {
       nsIFrame* geometricParent = aParentFrame;
        
-      if (canBePositioned) {
-        if (isFloating) {
-          geometricParent = aState.mFloatedItems.containingBlock;
-        } else if (isAbsolutelyPositioned) {
+      // Makes sure we use the correct parent frame pointer when initializing
+      // the frame
+      if (isFloating) {
+        geometricParent = aState.mFloatedItems.containingBlock;
+
+      } else if (canBePositioned) {
+        if (isAbsolutelyPositioned) {
           geometricParent = aState.mAbsoluteItems.containingBlock;
         } else if (isFixedPositioned) {
           geometricParent = aState.mFixedItems.containingBlock;
@@ -2705,7 +2708,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
     }
 
     // If the frame is positioned, then create a placeholder frame
-    if (isAbsolutelyPositioned || isFixedPositioned) {
+    if (canBePositioned && (isAbsolutelyPositioned || isFixedPositioned)) {
       nsIFrame* placeholderFrame;
 
       CreatePlaceholderFrameFor(aPresContext, aContent, newFrame,
