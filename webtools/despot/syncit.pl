@@ -363,9 +363,13 @@ Documents:</TH><TD>";
 
         close OWNERS;
 
-        system ( "$cvs -q commit -m 'Pseudo-automatic update of changes" . 
-                 " made by $usertoblame.'" ) == 0
-          or die "cvs commit failed";
+        if ($dontcommit) {
+            system "$cvs diff -c";
+        } else {
+            system ( "$cvs -q commit -m 'Pseudo-automatic update of changes" . 
+                     " made by $usertoblame.'" ) == 0
+              or die "cvs commit failed";
+        }
     }
 
     chdir "/";
