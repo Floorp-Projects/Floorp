@@ -73,7 +73,7 @@
                      oncreate="createUBHistoryMenu(event.target);"
                      oncommand="useUBHistoryItem(event.target)"/>
         </textbox>
-        <button label="&chooseFile.label;" onclick="onChooseFile();"/>
+        <button label="&chooseFile.label;" oncommand="onChooseFile();"/>
       </box>
       <box autostretch="never" valign="center">
         <text class="label" value="&openWhere.label;"/>
