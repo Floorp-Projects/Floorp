@@ -147,8 +147,8 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   nsSize availSpace(aSpace.width, aSpace.height);
   nsHTMLReflowState reflowState(*mPresContext, mOuterReflowState, aFrame,
                                 availSpace, reason);
-  aComputedOffsets = reflowState.computedOffsets;
-  reflowState.lineLayout = nsnull;
+  aComputedOffsets = reflowState.mComputedOffsets;
+  reflowState.mLineLayout = nsnull;
   if (!aIsAdjacentWithTop) {
     reflowState.isTopOfPage = PR_FALSE;  // make sure this is cleared
   }

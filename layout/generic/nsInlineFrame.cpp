@@ -1225,7 +1225,7 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
 {
-  if (nsnull == aReflowState.lineLayout) {
+  if (nsnull == aReflowState.mLineLayout) {
     return NS_ERROR_INVALID_ARG;
   }
   DrainOverflow(&aPresContext);
@@ -1254,7 +1254,7 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   if (HaveAnonymousBlock()) {
-    if (!aReflowState.lineLayout->LineIsEmpty()) {
+    if (!aReflowState.mLineLayout->LineIsEmpty()) {
       // This inline frame cannot be placed on the current line
       // because there already is an inline frame on this line (and we
       // contain an anonymous block).
@@ -1346,7 +1346,7 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
   nsresult rv = NS_OK;
   aStatus = NS_FRAME_COMPLETE;
 
-  nsLineLayout* lineLayout = aReflowState.lineLayout;
+  nsLineLayout* lineLayout = aReflowState.mLineLayout;
   nscoord leftEdge = 0;
   if (nsnull == mPrevInFlow) {
     leftEdge = aReflowState.mComputedBorderPadding.left;
@@ -1533,7 +1533,7 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsLineLayout* lineLayout = aReflowState.lineLayout;
+  nsLineLayout* lineLayout = aReflowState.mLineLayout;
   PRBool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
   nsresult rv = lineLayout->ReflowFrame(aFrame, &irs.mNextRCFrame, aStatus);
   if (NS_FAILED(rv)) {
@@ -1998,7 +1998,7 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus& aStatus)
 {
-  if (nsnull == aReflowState.lineLayout) {
+  if (nsnull == aReflowState.mLineLayout) {
     return NS_ERROR_INVALID_ARG;
   }
   DrainOverflow(&aPresContext);
@@ -2028,7 +2028,7 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
   }
 
   if (HaveAnonymousBlock()) {
-    if (!aReflowState.lineLayout->LineIsEmpty()) {
+    if (!aReflowState.mLineLayout->LineIsEmpty()) {
       // This inline frame cannot be placed on the current line
       // because there already is an inline frame on this line (and we
       // contain an anonymous block).

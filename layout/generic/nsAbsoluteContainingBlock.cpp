@@ -229,9 +229,9 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIPresContext&          aPresCon
           (NS_AUTOMARGIN == kidReflowState.mComputedMargin.right)) {
         // Calculate the amount of space for margins
         nscoord availMarginSpace = containingBlockWidth -
-          kidReflowState.computedOffsets.left - kidReflowState.mComputedBorderPadding.left -
+          kidReflowState.mComputedOffsets.left - kidReflowState.mComputedBorderPadding.left -
           kidDesiredSize.width - kidReflowState.mComputedBorderPadding.right -
-          kidReflowState.computedOffsets.right;
+          kidReflowState.mComputedOffsets.right;
 
         if (NS_AUTOMARGIN == kidReflowState.mComputedMargin.left) {
           if (NS_AUTOMARGIN == kidReflowState.mComputedMargin.right) {
@@ -255,9 +255,9 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIPresContext&          aPresCon
           (NS_AUTOMARGIN == kidReflowState.mComputedMargin.bottom)) {
         // Calculate the amount of space for margins
         nscoord availMarginSpace = containingBlockHeight -
-          kidReflowState.computedOffsets.top - kidReflowState.mComputedBorderPadding.top -
+          kidReflowState.mComputedOffsets.top - kidReflowState.mComputedBorderPadding.top -
           kidDesiredSize.height - kidReflowState.mComputedBorderPadding.bottom -
-          kidReflowState.computedOffsets.bottom;
+          kidReflowState.mComputedOffsets.bottom;
 
         if (NS_AUTOMARGIN == kidReflowState.mComputedMargin.top) {
           if (NS_AUTOMARGIN == kidReflowState.mComputedMargin.bottom) {
@@ -289,8 +289,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIPresContext&          aPresCon
     }
     
     // Position the child relative to our padding edge
-    nsRect  rect(border.left + kidReflowState.computedOffsets.left + kidReflowState.mComputedMargin.left,
-                 border.top + kidReflowState.computedOffsets.top + kidReflowState.mComputedMargin.top,
+    nsRect  rect(border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
+                 border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
                  kidDesiredSize.width, kidDesiredSize.height);
     aKidFrame->SetRect(rect);
   }

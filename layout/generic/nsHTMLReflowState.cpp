@@ -52,7 +52,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
   availableHeight = aAvailableSpace.height;
   rendContext = aRenderingContext;
   mSpaceManager = nsnull;
-  lineLayout = nsnull;
+  mLineLayout = nsnull;
   isTopOfPage = PR_FALSE;
   Init(aPresContext);
 }
@@ -75,7 +75,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
   availableHeight = aAvailableSpace.height;
   rendContext = aRenderingContext;
   mSpaceManager = nsnull;
-  lineLayout = nsnull;
+  mLineLayout = nsnull;
   isTopOfPage = PR_FALSE;
   Init(aPresContext);
 }
@@ -100,7 +100,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
 
   rendContext = aParentReflowState.rendContext;
   mSpaceManager = aParentReflowState.mSpaceManager;
-  lineLayout = aParentReflowState.lineLayout;
+  mLineLayout = aParentReflowState.mLineLayout;
   isTopOfPage = aParentReflowState.isTopOfPage;
 
   Init(aPresContext);
@@ -122,7 +122,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
 
   rendContext = aParentReflowState.rendContext;
   mSpaceManager = aParentReflowState.mSpaceManager;
-  lineLayout = aParentReflowState.lineLayout;
+  mLineLayout = aParentReflowState.mLineLayout;
   isTopOfPage = aParentReflowState.isTopOfPage;
 
   Init(aPresContext);
@@ -297,19 +297,19 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   if (leftIsAuto) {
     if (rightIsAuto) {
       // If both are 'auto' (their initial values), the computed values are 0
-      computedOffsets.left = computedOffsets.right = 0;
+      mComputedOffsets.left = mComputedOffsets.right = 0;
     } else {
       // 'Right' isn't 'auto' so compute its value
       if (eStyleUnit_Inherit == mStylePosition->mOffset.GetRightUnit()) {
-        computedOffsets.right = cbrs->computedOffsets.right;
+        mComputedOffsets.right = cbrs->mComputedOffsets.right;
       } else {
         ComputeHorizontalValue(aContainingBlockWidth, mStylePosition->mOffset.GetRightUnit(),
                                mStylePosition->mOffset.GetRight(coord),
-                               computedOffsets.right);
+                               mComputedOffsets.right);
       }
       
       // Computed value for 'left' is minus the value of 'right'
-      computedOffsets.left = -computedOffsets.right;
+      mComputedOffsets.left = -mComputedOffsets.right;
     }
 
   } else {
@@ -317,15 +317,15 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
     
     // 'Left' isn't 'auto' so compute its value
     if (eStyleUnit_Inherit == mStylePosition->mOffset.GetLeftUnit()) {
-      computedOffsets.left = cbrs->computedOffsets.left;
+      mComputedOffsets.left = cbrs->mComputedOffsets.left;
     } else {
       ComputeHorizontalValue(aContainingBlockWidth, mStylePosition->mOffset.GetLeftUnit(),
                              mStylePosition->mOffset.GetLeft(coord),
-                             computedOffsets.left);
+                             mComputedOffsets.left);
     }
 
     // Computed value for 'right' is minus the value of 'left'
-    computedOffsets.right = -computedOffsets.left;
+    mComputedOffsets.right = -mComputedOffsets.left;
   }
 
   // Compute the 'top' and 'bottom' values. The 'top' and 'bottom' properties
@@ -353,19 +353,19 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   if (topIsAuto) {
     if (bottomIsAuto) {
       // If both are 'auto' (their initial values), the computed values are 0
-      computedOffsets.top = computedOffsets.bottom = 0;
+      mComputedOffsets.top = mComputedOffsets.bottom = 0;
     } else {
       // 'Bottom' isn't 'auto' so compute its value
       if (eStyleUnit_Inherit == mStylePosition->mOffset.GetBottomUnit()) {
-        computedOffsets.bottom = cbrs->computedOffsets.bottom;
+        mComputedOffsets.bottom = cbrs->mComputedOffsets.bottom;
       } else {
         ComputeVerticalValue(aContainingBlockHeight, mStylePosition->mOffset.GetBottomUnit(),
                                mStylePosition->mOffset.GetBottom(coord),
-                               computedOffsets.bottom);
+                               mComputedOffsets.bottom);
       }
       
       // Computed value for 'top' is minus the value of 'bottom'
-      computedOffsets.top = -computedOffsets.bottom;
+      mComputedOffsets.top = -mComputedOffsets.bottom;
     }
 
   } else {
@@ -373,15 +373,15 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
     
     // 'Top' isn't 'auto' so compute its value
     if (eStyleUnit_Inherit == mStylePosition->mOffset.GetTopUnit()) {
-      computedOffsets.top = cbrs->computedOffsets.top;
+      mComputedOffsets.top = cbrs->mComputedOffsets.top;
     } else {
       ComputeVerticalValue(aContainingBlockHeight, mStylePosition->mOffset.GetTopUnit(),
                              mStylePosition->mOffset.GetTop(coord),
-                             computedOffsets.top);
+                             mComputedOffsets.top);
     }
 
     // Computed value for 'bottom' is minus the value of 'top'
-    computedOffsets.bottom = -computedOffsets.top;
+    mComputedOffsets.bottom = -mComputedOffsets.top;
   }
 }
 
@@ -438,32 +438,32 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
   PRBool        leftIsAuto = PR_FALSE, rightIsAuto = PR_FALSE;
   nsStyleCoord  coord;
   if (eStyleUnit_Inherit == mStylePosition->mOffset.GetLeftUnit()) {
-    computedOffsets.left = cbrs->computedOffsets.left;
+    mComputedOffsets.left = cbrs->mComputedOffsets.left;
   } else if (eStyleUnit_Auto == mStylePosition->mOffset.GetLeftUnit()) {
     if (NS_STYLE_DIRECTION_LTR == mStyleDisplay->mDirection) {
-      computedOffsets.left = placeholderOffset.x;
+      mComputedOffsets.left = placeholderOffset.x;
     } else {
-      computedOffsets.left = 0;
+      mComputedOffsets.left = 0;
       leftIsAuto = PR_TRUE;
     }
   } else {
     ComputeHorizontalValue(containingBlockWidth, mStylePosition->mOffset.GetLeftUnit(),
                            mStylePosition->mOffset.GetLeft(coord),
-                           computedOffsets.left);
+                           mComputedOffsets.left);
   }
   if (eStyleUnit_Inherit == mStylePosition->mOffset.GetRightUnit()) {
-    computedOffsets.right = cbrs->computedOffsets.right;
+    mComputedOffsets.right = cbrs->mComputedOffsets.right;
   } else if (eStyleUnit_Auto == mStylePosition->mOffset.GetRightUnit()) {
     if (NS_STYLE_DIRECTION_RTL == mStyleDisplay->mDirection) {
-      computedOffsets.right = placeholderOffset.x;
+      mComputedOffsets.right = placeholderOffset.x;
     } else {
-      computedOffsets.right = 0;
+      mComputedOffsets.right = 0;
       rightIsAuto = PR_TRUE;
     }
   } else {
     ComputeHorizontalValue(containingBlockWidth, mStylePosition->mOffset.GetRightUnit(),
                            mStylePosition->mOffset.GetRight(coord),
-                           computedOffsets.right);
+                           mComputedOffsets.right);
   }
 
   // Calculate the computed width
@@ -484,10 +484,10 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       marginLeftIsAuto = PR_FALSE;
       marginRightIsAuto = PR_FALSE;
 
-      mComputedWidth = containingBlockWidth - computedOffsets.left -
+      mComputedWidth = containingBlockWidth - mComputedOffsets.left -
         mComputedMargin.left - mComputedBorderPadding.left -
         mComputedBorderPadding.right -
-        mComputedMargin.right - computedOffsets.right;
+        mComputedMargin.right - mComputedOffsets.right;
     }
 
     // Factor in any minimum and maximum size information
@@ -518,15 +518,15 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
   if (leftIsAuto) {
     // Any 'auto' on 'margin-left' or 'margin-right' are replaced with 0
     // (their default value)
-    computedOffsets.left = containingBlockWidth - mComputedMargin.left -
+    mComputedOffsets.left = containingBlockWidth - mComputedMargin.left -
       mComputedBorderPadding.left - mComputedWidth -
       mComputedBorderPadding.right -
-      mComputedMargin.right - computedOffsets.right;
+      mComputedMargin.right - mComputedOffsets.right;
 
   } else if (rightIsAuto) {
     // Any 'auto' on 'margin-left' or 'margin-right' are replaced with 0
     // (their default value)
-    computedOffsets.right = containingBlockWidth - computedOffsets.left -
+    mComputedOffsets.right = containingBlockWidth - mComputedOffsets.left -
       mComputedMargin.left - mComputedBorderPadding.left - mComputedWidth -
       mComputedBorderPadding.right - mComputedMargin.right;
 
@@ -545,9 +545,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     } else {
       // Calculate the amount of space for margins
       nscoord availMarginSpace = containingBlockWidth -
-        computedOffsets.left - mComputedBorderPadding.left -
+        mComputedOffsets.left - mComputedBorderPadding.left -
         mComputedWidth - mComputedBorderPadding.right -
-        computedOffsets.right;
+        mComputedOffsets.right;
   
       if (marginLeftIsAuto) {
         if (marginRightIsAuto) {
@@ -569,26 +569,26 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
   // Initialize the 'top' and 'bottom' computed offsets
   PRBool  bottomIsAuto = PR_FALSE;
   if (eStyleUnit_Inherit == mStylePosition->mOffset.GetTopUnit()) {
-    computedOffsets.top = cbrs->computedOffsets.top;
+    mComputedOffsets.top = cbrs->mComputedOffsets.top;
   } else if ((eStyleUnit_Auto == mStylePosition->mOffset.GetTopUnit()) ||
       ((NS_AUTOHEIGHT == containingBlockHeight) &&
        (eStyleUnit_Percent == mStylePosition->mOffset.GetTopUnit()))) {
     // Use the placeholder position
-    computedOffsets.top = placeholderOffset.y;
+    mComputedOffsets.top = placeholderOffset.y;
   } else {
     nsStyleCoord c;
     ComputeVerticalValue(containingBlockHeight,
                          mStylePosition->mOffset.GetTopUnit(),
                          mStylePosition->mOffset.GetTop(c),
-                         computedOffsets.top);
+                         mComputedOffsets.top);
   }
   if (eStyleUnit_Inherit == mStylePosition->mOffset.GetBottomUnit()) {
-    computedOffsets.bottom = cbrs->computedOffsets.bottom;
+    mComputedOffsets.bottom = cbrs->mComputedOffsets.bottom;
   } else if ((eStyleUnit_Auto == mStylePosition->mOffset.GetBottomUnit()) ||
       ((NS_AUTOHEIGHT == containingBlockHeight) &&
        (eStyleUnit_Percent == mStylePosition->mOffset.GetBottomUnit()))) {
     if (eStyleUnit_Auto == heightUnit) {
-      computedOffsets.bottom = 0;        
+      mComputedOffsets.bottom = 0;        
     } else {
       bottomIsAuto = PR_TRUE;
     }
@@ -597,7 +597,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     ComputeVerticalValue(containingBlockHeight,
                          mStylePosition->mOffset.GetBottomUnit(),
                          mStylePosition->mOffset.GetBottom(c),
-                         computedOffsets.bottom);
+                         mComputedOffsets.bottom);
   }
 
   // Check for a percentage based height and a containing block height
@@ -632,10 +632,10 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
         mComputedHeight = NS_AUTOHEIGHT;
 
       } else {
-        mComputedHeight = containingBlockHeight - computedOffsets.top - 
+        mComputedHeight = containingBlockHeight - mComputedOffsets.top - 
           mComputedMargin.top - mComputedBorderPadding.top -
           mComputedBorderPadding.bottom -
-          mComputedMargin.bottom - computedOffsets.bottom;
+          mComputedMargin.bottom - mComputedOffsets.bottom;
         
         // Factor in any minimum and maximum size information
         if (mComputedHeight > mComputedMaxHeight) {
@@ -667,7 +667,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
   if (NS_AUTOHEIGHT != containingBlockHeight) {
     if (bottomIsAuto) {
       // Any 'auto' on 'margin-top' or 'margin-bottom' are replaced with 0
-      computedOffsets.bottom = containingBlockHeight - computedOffsets.top -
+      mComputedOffsets.bottom = containingBlockHeight - mComputedOffsets.top -
         mComputedMargin.top - mComputedBorderPadding.top - mComputedHeight -
         mComputedBorderPadding.bottom - mComputedMargin.bottom;
 
@@ -685,9 +685,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
         }
       } else {
         // Calculate the amount of space for margins
-        nscoord availMarginSpace = containingBlockHeight - computedOffsets.top -
+        nscoord availMarginSpace = containingBlockHeight - mComputedOffsets.top -
           mComputedBorderPadding.top - mComputedHeight - mComputedBorderPadding.bottom -
-          computedOffsets.bottom;
+          mComputedOffsets.bottom;
 
         if (marginTopIsAuto) {
           if (marginBottomIsAuto) {
@@ -779,7 +779,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     mComputedMargin.SizeTo(0, 0, 0, 0);
     mComputedPadding.SizeTo(0, 0, 0, 0);
     mComputedBorderPadding.SizeTo(0, 0, 0, 0);
-    computedOffsets.SizeTo(0, 0, 0, 0);
+    mComputedOffsets.SizeTo(0, 0, 0, 0);
     mComputedMinWidth = mComputedMinHeight = 0;
     mComputedMaxWidth = mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;
   } else {
@@ -798,7 +798,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       ComputeRelativeOffsets(cbrs, containingBlockWidth, containingBlockHeight);
     } else {
       // Initialize offsets to 0
-      computedOffsets.SizeTo(0, 0, 0, 0);
+      mComputedOffsets.SizeTo(0, 0, 0, 0);
     }
 
 #if 0
