@@ -22,6 +22,7 @@
 #include "gtkmozembed.h"
 #include <gtk/gtk.h>
 #include <string.h>
+#include "stdlib.h"
 
 // mozilla specific headers
 #include "nsIDOMKeyEvent.h"
