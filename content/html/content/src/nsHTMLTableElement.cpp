@@ -1487,9 +1487,6 @@ nsHTMLTableElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
     
     { &nsHTMLAtoms::bordercolor },
     
-    // Changing to rules will force border-collapse. Unfortunately, if
-    // border-collapse was already in effect, then a frame change is
-    // not necessary.
     { &nsHTMLAtoms::align },
     { &nsHTMLAtoms::rules },
     { nsnull }
