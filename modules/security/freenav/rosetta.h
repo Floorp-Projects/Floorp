@@ -498,7 +498,7 @@
 #define HG47991
 #define HG27367
 #define HG72671
-#define HG72729 ss = XP_GetString(XFE_SECURITY_DISABLED);
+#define HG72729 ss = XP_STRDUP(XP_GetString(XFE_SECURITY_DISABLED));
 #define HG78268
 #define HG78261
 #define HG12675
