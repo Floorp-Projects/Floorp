@@ -175,9 +175,10 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   }
   
   // DOM event handling happens in two passes, the client pass and the system
-  // pass.  We do all of our processing in the system pass, to allow client handlers
-  // the opporunity to cancel events and prevent typing in the editor.  If the client
-  // pass cancelled the event, defaultPrevented will be true below.
+  // pass.  We do all of our processing in the system pass, to allow client
+  // handlers the opporunity to cancel events and prevent typing in the editor.
+  // If the client pass cancelled the event, defaultPrevented will be true
+  // below.
 
   nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent = do_QueryInterface(aKeyEvent);
   if(nsUIEvent) 
