@@ -326,7 +326,7 @@ int
 nsMemoryCacheDevice::EvictionList(nsCacheEntry * entry, PRUint32  deltaSize)
 {
     PRUint32  size = entry->Size() + deltaSize;
-    if ((size > mEvictionThreshold) || (entry->ExpirationTime() != 0))
+    if ((size > mEvictionThreshold) || (entry->ExpirationTime() != NO_EXPIRATION_TIME))
         return mostLikelyToEvict;
     
     return leastLikelyToEvict;

@@ -743,7 +743,7 @@ nsHttpChannel::UpdateExpirationTime()
 {
     NS_ENSURE_TRUE(mResponseHead, NS_ERROR_FAILURE);
 
-    PRUint32 expirationTime = 1; // this can't be 0 unless bug 120833 is fixed
+    PRUint32 expirationTime = 0;
     if (!mResponseHead->MustValidate()) {
         PRUint32 freshnessLifetime = 0;
         nsresult rv;

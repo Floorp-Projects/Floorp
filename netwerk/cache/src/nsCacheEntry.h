@@ -40,6 +40,8 @@ class nsCacheMetaData;
 class nsCacheRequest;
 class nsCacheEntryDescriptor;
 
+#define NO_EXPIRATION_TIME  0xFFFFFFFF
+
 /******************************************************************************
 * nsCacheEntry
 *******************************************************************************/
