@@ -39,13 +39,16 @@
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
+#include "nsIObserver.h"
 
 #include <gtk/gtkwidget.h>
 #include "gtkdrawing.h"
 
-class nsNativeThemeGTK: public nsITheme {
+class nsNativeThemeGTK: public nsITheme, public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIOBSERVER
 
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(nsIRenderingContext* aContext,
