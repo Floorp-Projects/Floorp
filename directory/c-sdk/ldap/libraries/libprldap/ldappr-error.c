@@ -32,7 +32,7 @@
 void
 prldap_set_system_errno( int oserrno )
 {
-    PR_SetError( PR_UNKNOWN_ERROR, oserrno );
+    PR_SetError( PR_GetError(), oserrno );
 }
 
 
