@@ -50,7 +50,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
 
 <stringbundle id="ConsoleBundle" src="chrome://global/locale/console.properties"/>
 <commandset id="tasksCommands"/>
-<command id="cmd_copy"/>
+<command id="cmd_copy" oncommand="copyItemToClipboard()"/>
 <command id="cmd_close" oncommand="window.close()"/>
 <command id="cmd_quit"/>
 
