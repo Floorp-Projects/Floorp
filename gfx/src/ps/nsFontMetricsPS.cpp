@@ -58,6 +58,8 @@
 #endif
 #include "nsAutoBuffer.h"
 
+const PRUint16 nsPSFontGenerator::kSubFontSize = 255; 
+
 extern nsIAtom *gUsersLocale;
 #define NS_IS_BOLD(weight) ((weight) > 400 ? 1 : 0)
 
