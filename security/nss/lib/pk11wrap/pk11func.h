@@ -376,6 +376,11 @@ SECKEYPQGParams *PK11_GetPQGParamsFromPrivateKey(SECKEYPrivateKey *privKey);
 /* depricated */
 SECKEYPrivateKeyList* PK11_ListPrivateKeysInSlot(PK11SlotInfo *slot);
 
+PK11SymKey *PK11_ConvertSessionSymKeyToTokenSymKey(PK11SymKey *symk,
+	void *wincx);
+SECKEYPrivateKey *PK11_ConvertSessionPrivKeyToTokenPrivKey(
+	SECKEYPrivateKey *privk, void* wincx);
+
 /**********************************************************************
  *                   Certs
  **********************************************************************/

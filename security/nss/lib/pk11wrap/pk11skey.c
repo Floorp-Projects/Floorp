@@ -5096,3 +5096,62 @@ PK11_GetNextSymKey(PK11SymKey *symKey)
 {
     return symKey ? symKey->next : NULL;
 }
+
+
+SECKEYPrivateKey*
+PK11_ConvertSessionPrivKeyToTokenPrivKey(SECKEYPrivateKey *privk, void* wincx)
+{
+    PK11SlotInfo* slot = privk->pkcs11Slot;
+    CK_ATTRIBUTE template[1];
+    CK_ATTRIBUTE *attrs = template;
+    CK_BBOOL cktrue = CK_TRUE;
+    CK_RV crv;
+    CK_OBJECT_HANDLE newKeyID;
+    SECKEYPrivateKey *newKey=NULL;
+    CK_SESSION_HANDLE rwsession;
+
+    PK11_SETATTRS(attrs, CKA_TOKEN, &cktrue, sizeof(cktrue)); attrs++;
+
+    PK11_Authenticate(slot, PR_TRUE, wincx);
+    rwsession = PK11_GetRWSession(slot);
+    crv = PK11_GETTAB(slot)->C_CopyObject(rwsession, privk->pkcs11ID,
+        template, 1, &newKeyID);
+    PK11_RestoreROSession(slot, rwsession);
+
+    if (crv != CKR_OK) {
+        PORT_SetError( PK11_MapError(crv) );
+        return NULL;
+    }
+
+    return PK11_MakePrivKey(slot, nullKey /*KeyType*/, PR_FALSE /*isTemp*/,
+        newKeyID, NULL /*wincx*/);
+}
+
+PK11SymKey*
+PK11_ConvertSessionSymKeyToTokenSymKey(PK11SymKey *symk, void *wincx)
+{
+    PK11SlotInfo* slot = symk->slot;
+    CK_ATTRIBUTE template[1];
+    CK_ATTRIBUTE *attrs = template;
+    CK_BBOOL cktrue = CK_TRUE;
+    CK_RV crv;
+    CK_OBJECT_HANDLE newKeyID;
+    PK11SymKey *newKey=NULL;
+    CK_SESSION_HANDLE rwsession;
+
+    PK11_SETATTRS(attrs, CKA_TOKEN, &cktrue, sizeof(cktrue)); attrs++;
+
+    PK11_Authenticate(slot, PR_TRUE, wincx);
+    rwsession = PK11_GetRWSession(slot);
+    crv = PK11_GETTAB(slot)->C_CopyObject(rwsession, symk->objectID,
+        template, 1, &newKeyID);
+    PK11_RestoreROSession(slot, rwsession);
+
+    if (crv != CKR_OK) {
+        PORT_SetError( PK11_MapError(crv) );
+        return NULL;
+    }
+
+    return PK11_SymKeyFromHandle(slot, NULL /*parent*/, symk->origin,
+        symk->type, newKeyID, PR_FALSE /*owner*/, NULL /*wincx*/);
+}
