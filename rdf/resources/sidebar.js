@@ -20,29 +20,6 @@
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
-// the current profile directory
-// XXX obviously, this shouldn't be hard-coded
-var profiledir = 'resource:/res/rdf/';
-
-// the location of the flash registry.
-var sidebardb = profiledir + 'sidebar-browser.rdf';
-var sidebar_resource = 'NC:BrowserSidebarRoot';
-
-function dumpTree(node, depth) {
-  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
-  var kids = node.childNodes;
-  dump(indent.substr(indent.length - depth*2));
-
-  // Print your favorite attributes here
-  dump(node.nodeName)
-  dump(" "+node.getAttribute('id'));
-  dump("\n");
-
-  for (var ii=0; ii < kids.length; ii++) {
-    dumpTree(kids[ii], depth + 1);
-  }
-}
-
 function Init(sidebardb, sidebar_resource)
 {
   // Initialize the Sidebar
@@ -175,48 +152,23 @@ function getAttr(registry,service,attr_name) {
   return attr;
 }
 
-function Reload(url, pollInterval)
-{
-    // Reload the specified datasource and reschedule.
-    dump('Reload(' + url + ', ' + pollInterval + ')\n');
-
-    var datasource = RDF.GetDataSource(url);
-    datasource = datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-
-    // Reload, asynchronously.
-    datasource.Refresh(false);
-
-    // Reschedule
-    Schedule(url, pollInterval);
-}
-
-function Schedule(url, pollInterval)
-{
-    setTimeout('Reload("' + url + '", ' + pollInterval + ')', pollInterval * 1000);
-}
-
-function OpenURL(url)
-{
-  window.frames[0].frames[1].location.href = url;
-  dump("window.frames[0].frames[1].location.href = "+window.frames[0].frames[1].location.href+"\n");
-  dump("OpenURL("+url+")\n");
-}
-
 function makeDialog() {
 	var newWin = window.openDialog('resource://res/rdf/dialogFrame.html','New','chrome');
 	return newWin;
 }
 
-// To get around "window.onload" not working in viewer.
-function Boot()
-{
-    var root = document.documentElement;
-    if (root == null) {
-        setTimeout(Boot, 1);
-    }
-    else {
-        Init(sidebardb, sidebar_resource);
-    }
+function dumpTree(node, depth) {
+  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
+  var kids = node.childNodes;
+  dump(indent.substr(indent.length - depth*2));
+
+  // Print your favorite attributes here
+  dump(node.nodeName)
+  dump(" "+node.getAttribute('id'));
+  dump("\n");
+
+  for (var ii=0; ii < kids.length; ii++) {
+    dumpTree(kids[ii], depth + 1);
+  }
 }
 
-setTimeout('Boot()', 1);
