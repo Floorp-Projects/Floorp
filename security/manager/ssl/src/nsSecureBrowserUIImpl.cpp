@@ -595,8 +595,9 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
   }
     
   // posting to insecure webpage from a secure webpage.
-  // NOTE: This test is inconsistant with the one above
-  if (!secure && IS_SECURE(mSecurityState)) {
+  if (!secure && 
+      (IS_SECURE(mSecurityState) ||
+       mSecurityState == STATE_IS_BROKEN)) {
     *okayToPost = ConfirmPostToInsecureFromSecure();
   } else {
     *okayToPost = ConfirmPostToInsecure();
