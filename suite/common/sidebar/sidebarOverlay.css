@@ -44,11 +44,15 @@ splitter#sidebar-splitter grippy:active {
 box#sidebar-box {
   margin-top: 2px;
   width: 162px;
-  min-height: 0px;
+  min-height: 1px;
   min-width: 10px;
   max-width: 400px;
   border: none;
   border-bottom: 8px solid #003366;
+}
+
+box#sidebar-panels {
+  min-height: 1px;
 }
 
 box#sidebar-box[hidden="true"] {
