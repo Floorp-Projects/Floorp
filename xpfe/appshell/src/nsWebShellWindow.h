@@ -233,7 +233,7 @@ protected:
 
   nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
   void                     ExecuteStartupCode();
-  void                     StoreBoundsToXUL(PRBool aPosition, PRBool aSize);
+  void                     StoreBoundsToXUL(PRBool aPosition, PRBool aSize, PRBool aSizeMode);
   void                     KillPersistentSize();
   void                     LoadContentAreas();
   PRBool                   ExecuteCloseHandler();

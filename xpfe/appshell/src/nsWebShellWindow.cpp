@@ -432,6 +432,22 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         result = nsEventStatus_eConsumeNoDefault;
         break;
       }
+      case NS_SIZEMODE: {
+        void* data;
+        nsWebShellWindow *win;
+        nsSizeModeEvent* modeEvent = (nsSizeModeEvent*)aEvent;
+        aEvent->widget->SetSizeMode(modeEvent->mSizeMode);
+        aEvent->widget->GetClientData(data);
+        win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
+        win->StoreBoundsToXUL(PR_FALSE, PR_FALSE, PR_TRUE);
+        result = nsEventStatus_eConsumeDoDefault;
+        // Note the current implementation of SetSizeMode just stores
+        // the new state; it doesn't actually resize. So here we store
+        // the state and pass the event on to the OS. The day is coming
+        // when we'll handle the event here, and the return result will
+        // then need to be different.
+        break;
+      }
       case NS_XUL_CLOSE: {
         void* data;
         nsWebShellWindow *win;
@@ -1209,7 +1225,7 @@ nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
   PR_Lock(win->mSPTimerLock);
   win->mSPTimer = nsnull;
   PR_Unlock(win->mSPTimerLock);
-  win->StoreBoundsToXUL(win->mSPTimerPosition, win->mSPTimerSize);
+  win->StoreBoundsToXUL(win->mSPTimerPosition, win->mSPTimerSize, PR_FALSE);
 }
 
 
@@ -1434,9 +1450,9 @@ void nsWebShellWindow::ExecuteStartupCode()
 }
 
 /* copy the window's size and position to the window tag */
-void nsWebShellWindow::StoreBoundsToXUL(PRBool aPosition, PRBool aSize)
+void nsWebShellWindow::StoreBoundsToXUL(PRBool aPosition, PRBool aSize, PRBool aSizeMode)
 {
-   PersistPositionAndSize(aPosition, aSize);
+   PersistPositionAndSize(aPosition, aSize, aSizeMode);
 } // StoreBoundsToXUL
 
 
@@ -1444,8 +1460,8 @@ void nsWebShellWindow::KillPersistentSize()
 {
    PRBool persistX, persistY;
 
-   GetPersistence(&persistX, &persistY, nsnull, nsnull);
-   SetPersistence(persistX, persistY, PR_FALSE, PR_FALSE);
+   GetPersistence(&persistX, &persistY, nsnull, nsnull, nsnull);
+   SetPersistence(persistX, persistY, PR_FALSE, PR_FALSE, PR_FALSE);
 }
 
 
@@ -1774,7 +1790,7 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
 NS_IMETHODIMP nsWebShellWindow::MoveTo(PRInt32 aX, PRInt32 aY)
 {
   mWindow->Move(aX, aY);
-  StoreBoundsToXUL(PR_TRUE, PR_FALSE);
+  StoreBoundsToXUL(PR_TRUE, PR_FALSE, PR_FALSE);
   return NS_OK;
 }
  
@@ -1785,7 +1801,7 @@ NS_IMETHODIMP nsWebShellWindow::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight,
   if (aWidthTransient || aHeightTransient)
     KillPersistentSize();
   mWindow->Resize(aWidth, aHeight, PR_TRUE);
-  StoreBoundsToXUL(PR_FALSE, PR_TRUE);
+  StoreBoundsToXUL(PR_FALSE, PR_TRUE, PR_FALSE);
   return NS_OK;
 }
  
@@ -1810,7 +1826,7 @@ NS_IMETHODIMP nsWebShellWindow::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
        mWindow->Resize(windowBounds.width + widthDelta, 
                        windowBounds.height + heightDelta,
                        PR_TRUE);
-       StoreBoundsToXUL(PR_FALSE, PR_TRUE);
+       StoreBoundsToXUL(PR_FALSE, PR_TRUE, PR_FALSE);
      }
    }
    return NS_OK;
