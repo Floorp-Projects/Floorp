@@ -32,6 +32,7 @@
 
 #include "nsString.h"
 #include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 #include "nsSpecialSystemDirectory.h"
 
 #include "nsFileLocations.h"
@@ -313,24 +314,14 @@ nsInstallFolder::MapNameToEnum(const nsString& name)
 	return -1;
 }
 
-
-static NS_DEFINE_IID(kFileLocatorIID, NS_IFILELOCATOR_IID);
-static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
-
 void
 nsInstallFolder::SetAppShellDirectory(PRUint32 value)
 {
-    nsIFileLocator * appShellLocator;
-    
-    nsresult rv = nsComponentManager::CreateInstance(kFileLocatorCID, 
-                                                     nsnull,
-                                                     kFileLocatorIID,
-                                                     (void**) &appShellLocator);
-
-    if ( NS_SUCCEEDED(rv) )
+    nsIFileSpec* fs = NS_LocateFileOrDirectory(value);
+    if ( fs )
     {
         mFileSpec = new nsFileSpec();
-        appShellLocator->GetFileLocation(value, mFileSpec);
-        NS_RELEASE(appShellLocator);
+        fs->GetFileSpec(mFileSpec);
+	    NS_RELEASE(fs);
     }
 }

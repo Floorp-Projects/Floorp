@@ -22,7 +22,7 @@
 #include "jsapi.h"
 
 
-typedef int (*PrefChangedFunc) (const char *, void *);
+typedef int (*PrefChangedFunc)(const char *, void *);
  
 #define NS_PREF_CID                                    \
   { /* {dc26e0e0-ca94-11d1-a9a4-00805f8a7ac4} */       \
@@ -31,37 +31,37 @@ typedef int (*PrefChangedFunc) (const char *, void *);
     0x11d1,                                            \
     { 0xa9, 0xa4, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xc4 } \
   }
-
-class nsFileSpec; 
  
 #define NS_PREF_VALUE_CHANGED 1 
 %}
 [ptr] native JSContext(JSContext);
 [ptr] native JSObject(JSObject);
 native PrefChangedFunc(PrefChangedFunc);
-[ptr] native nsFileSpec(nsFileSpec);
+
+interface nsIFileSpec; 
 
 [scriptable, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
 interface nsIPref : nsISupports {
 
   void StartUp();
-  void StartUpWith(in nsFileSpec spec);
+  void ReadUserPrefs();
+  void ReadUserPrefsFrom(in nsIFileSpec spec);
   void ShutDown();
 
-  void ReadUserJSFile(in nsFileSpec filename);
-  void ReadLIJSFile(in nsFileSpec filename);
+  void ReadUserJSFile(in nsIFileSpec filename);
+  void ReadLIJSFile(in nsIFileSpec filename);
 
   void EvaluateConfigScript(in string js_buffer, in PRUint32 length,
                             in boolean bGlobalContext,
                             in boolean bCallbacks);
 
   void EvaluateConfigScriptFile(in string js_buffer, in PRUint32 length,
-                                in nsFileSpec filename,
+                                in nsIFileSpec filename,
                                 in boolean bGlobalContext,
                                 in boolean bCallbacks);
   
-  void SavePrefFileAs(in nsFileSpec filename);
-  void SaveLIPrefFile(in nsFileSpec filename);
+  void SavePrefFileAs(in nsIFileSpec filename);
+  void SaveLIPrefFile(in nsIFileSpec filename);
   
   /* JS Stuff - don't allow this to be scriptable */
   [noscript] readonly attribute JSContext configContext;
@@ -123,8 +123,8 @@ interface nsIPref : nsISupports {
   string CopyDefaultCharPref(in string pref);
   voidStar CopyDefaultBinaryPref(in string pref, out long size);
 
-  nsFileSpec GetFilePref(in string pref);
-  void SetFilePref(in string pref, in nsFileSpec value, in boolean setDefault);
+  nsIFileSpec GetFilePref(in string pref);
+  void SetFilePref(in string pref, in nsIFileSpec value, in boolean setDefault);
   
   /* pref attributes */
   boolean PrefIsLocked(in string pref);
@@ -145,5 +145,3 @@ interface nsIPref : nsISupports {
   string NextChild(in string child_list, out short index);
 
 };
-
-  
