@@ -158,7 +158,7 @@ public:
     bool isMarked()                 { return ((PondScum *)this)[-1].isMarked(); }
     void mark()                     { ((PondScum *)this)[-1].mark(); }
 
-    static void mark(void *p)       { ((PondScum *)p)[-1].mark(); }
+    static void mark(const void *p)       { ((PondScum *)p)[-1].mark(); }
     static void markJS2Value(js2val v);
 
 };
@@ -183,11 +183,11 @@ public:
 // A Namespace (is also an attribute)
 class Namespace : public Attribute {
 public:
-    Namespace(const StringAtom &name) : Attribute(NamespaceAttr), name(name) { }
+    Namespace(const String *name) : Attribute(NamespaceAttr), name(name) { }
 
     virtual CompoundAttribute *toCompoundAttribute();
 
-    const StringAtom &name;       // The namespace's name used by toString
+    const String *name;       // The namespace's name used by toString
 };
 
 // A QualifiedName is the combination of an identifier and a namespace
@@ -208,18 +208,18 @@ typedef std::vector<Namespace *> NamespaceList;
 typedef NamespaceList::iterator NamespaceListIterator;
 class Multiname : public JS2Object {
 public:    
-    Multiname(const StringAtom &name) : JS2Object(MultinameKind), name(name) { }
-    Multiname(const StringAtom &name, Namespace *ns) : JS2Object(MultinameKind), name(name) { addNamespace(ns); }
+    Multiname(const String *name) : JS2Object(MultinameKind), name(name) { }
+    Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name) { addNamespace(ns); }
 
     void addNamespace(Namespace *ns)                { nsList.push_back(ns); }
     void addNamespace(NamespaceList *ns);
     void addNamespace(Context &cxt);
 
-    bool matches(QualifiedName &q)                  { return (name == q.id) && onList(q.nameSpace); }
+    bool matches(QualifiedName &q)                  { return (*name == q.id) && onList(q.nameSpace); }
     bool onList(Namespace *nameSpace);
 
     NamespaceList nsList;
-    const StringAtom &name;
+    const String *name;
 
     virtual void markChildren();
 };
@@ -388,7 +388,7 @@ public:
 #define POTENTIAL_CONFLICT ((InstanceMember *)(-1))
 class OverrideStatus {
 public:
-    OverrideStatus(InstanceMember *overriddenMember, const StringAtom &name)
+    OverrideStatus(InstanceMember *overriddenMember, const StringAtom *name)
         : overriddenMember(overriddenMember), multiname(name) { }
     
     InstanceMember *overriddenMember;   // NULL for none
@@ -432,9 +432,9 @@ public:
 
 class JS2Class : public Frame {
 public:
-    JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool allowNull, bool final, const StringAtom &name);
+    JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool allowNull, bool final, const String *name);
 
-    const StringAtom &getName()                 { return name; }
+    const String *getName()                 { return name; }
         
     InstanceBindingMap instanceReadBindings;    // Map of qualified names to readable instance members defined in this class    
     InstanceBindingMap instanceWriteBindings;   // Map of qualified names to writable instance members defined in this class    
@@ -457,7 +457,7 @@ public:
 
     uint32 slotCount;
 
-    const StringAtom &name;
+    const String *name;
 
     virtual void instantiate(Environment * /* env */)  { }      // nothing to do
     virtual void markChildren();
@@ -466,7 +466,7 @@ public:
 
 class GlobalObject : public Frame {
 public:
-    GlobalObject(World &world) : Frame(GlobalObjectKind), internalNamespace(new Namespace(world.identifiers["internal"])) { }
+    GlobalObject(World &world) : Frame(GlobalObjectKind), internalNamespace(new Namespace(&world.identifiers["internal"])) { }
 
     Namespace *internalNamespace;               // This global object's internal namespace
     DynamicPropertyMap dynamicProperties;       // A set of this global object's dynamic properties
@@ -492,7 +492,7 @@ public:
     Invokable   *call;          // A procedure to call when this instance is used in a call expression
     Invokable   *construct;     // A procedure to call when this instance is used in a new expression
     Environment *env;           // The environment to pass to the call or construct procedure
-    const StringAtom  &typeofString;  // A string to return if typeof is invoked on this instance
+    const String  *typeofString;  // A string to return if typeof is invoked on this instance
     Slot        *slots;         // A set of slots that hold this instance's fixed property values
     virtual void markChildren();
 };
@@ -506,7 +506,7 @@ public:
     Invokable   *call;          // A procedure to call when this instance is used in a call expression
     Invokable   *construct;     // A procedure to call when this instance is used in a new expression
     Environment *env;           // The environment to pass to the call or construct procedure
-    const StringAtom  &typeofString;  // A string to return if typeof is invoked on this instance
+    const String  *typeofString;  // A string to return if typeof is invoked on this instance
     Slot        *slots;         // A set of slots that hold this instance's fixed property values
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
     virtual void markChildren();
@@ -604,8 +604,8 @@ class LexicalReference : public Reference {
 // of a given set of qualified names. LEXICALREFERENCE tuples arise from evaluating identifiers a and qualified identifiers
 // q::a.
 public:
-    LexicalReference(const StringAtom &name, bool strict) : variableMultiname(new Multiname(name)), env(NULL), strict(strict) { }
-    LexicalReference(const StringAtom &name, Namespace *nameSpace, bool strict) : variableMultiname(new Multiname(name, nameSpace)), env(NULL), strict(strict) { }
+    LexicalReference(const StringAtom *name, bool strict) : variableMultiname(new Multiname(name)), env(NULL), strict(strict) { }
+    LexicalReference(const StringAtom *name, Namespace *nameSpace, bool strict) : variableMultiname(new Multiname(name, nameSpace)), env(NULL), strict(strict) { }
 
     
     Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
@@ -634,7 +634,7 @@ class DotReference : public Reference {
 // object with one of a given set of qualified names. DOTREFERENCE tuples arise from evaluating subexpressions such as a.b or
 // a.q::b.
 public:
-    DotReference(const StringAtom &name) : propertyMultiname(new Multiname(name)) { }
+    DotReference(const StringAtom *name) : propertyMultiname(new Multiname(name)) { }
     DotReference(Multiname *mn) : propertyMultiname(mn) { }
 
     // In this implementation, the base is established by the execution of the preceding expression and
@@ -883,11 +883,11 @@ public:
     StaticMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase);
 
-    void defineHoistedVar(Environment *env, const StringAtom &id, StmtNode *p);
-    Multiname *defineStaticMember(Environment *env, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos);
-    OverrideStatusPair *defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
-    OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
-    OverrideStatus *searchForOverrides(JS2Class *c, const StringAtom &id, NamespaceList *namespaces, Access access, size_t pos);
+    void defineHoistedVar(Environment *env, const StringAtom *id, StmtNode *p);
+    Multiname *defineStaticMember(Environment *env, const StringAtom *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos);
+    OverrideStatusPair *defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
+    OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const StringAtom *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
+    OverrideStatus *searchForOverrides(JS2Class *c, const StringAtom *id, NamespaceList *namespaces, Access access, size_t pos);
     InstanceMember *findInstanceMember(JS2Class *c, QualifiedName *qname, Access access);
     Slot *findSlot(js2val thisObjVal, InstanceVariable *id);
     bool findStaticMember(JS2Class *c, Multiname *multiname, Access access, Phase phase, MemberDescriptor *result);
@@ -913,7 +913,8 @@ public:
     bool deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result);
 
     void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
-    void reportError(Exception::Kind kind, const char *message, size_t pos, const String& name);
+    void reportError(Exception::Kind kind, const char *message, size_t pos, const String &name);
+    void reportError(Exception::Kind kind, const char *message, size_t pos, const String *name);
 
 
     // Used for interning strings

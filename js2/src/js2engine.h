@@ -152,14 +152,14 @@ public:
     uint16 toUInt16(float64 f);
 
 
-    String *convertValueToString(js2val x);
+    const String *convertValueToString(js2val x);
     js2val convertValueToPrimitive(js2val x);
     float64 convertValueToDouble(js2val x);
     bool convertValueToBoolean(js2val x);
     int32 convertValueToInteger(js2val x);
     js2val convertValueToGeneralNumber(js2val x);
 
-    String *toString(js2val x)      { if (JS2VAL_IS_STRING(x)) return JS2VAL_TO_STRING(x); else return convertValueToString(x); }
+    const String *toString(js2val x){ if (JS2VAL_IS_STRING(x)) return JS2VAL_TO_STRING(x); else return convertValueToString(x); }
     js2val toPrimitive(js2val x)    { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
     float64 toFloat64(js2val x);
     js2val toGeneralNumber(js2val x){ if (JS2VAL_IS_NUMBER(x)) return x; else return convertValueToGeneralNumber(x); }
@@ -181,6 +181,12 @@ public:
     js2val nanValue;
     js2val posInfValue;
     js2val negInfValue;
+
+    js2val allocString(const String *s)       { return STRING_TO_JS2VAL(allocStringPtr(s)); }
+    js2val allocString(const String &s)       { return allocString(&s); }
+    js2val allocString(const char *s)         { return STRING_TO_JS2VAL(allocStringPtr(s)); }
+    String *allocStringPtr(const String *s);
+    String *allocStringPtr(const char *s)     { return allocStringPtr(&widenCString(s)); }
 
     js2val allocFloat(float32 x); 
     js2val pushFloat(float32 x)         { js2val retval = allocFloat(x); push(retval); return retval; }
@@ -208,16 +214,16 @@ public:
 
 
     // Cached StringAtoms for handy access
-    StringAtom &true_StringAtom;
-    StringAtom &false_StringAtom;
-    StringAtom &null_StringAtom;
-    StringAtom &undefined_StringAtom;
-    StringAtom &public_StringAtom;
-    StringAtom &private_StringAtom;
-    StringAtom &function_StringAtom;
-    StringAtom &object_StringAtom;
-    StringAtom &Empty_StringAtom;
-    StringAtom &Dollar_StringAtom;
+    const String *true_StringAtom;
+    const String *false_StringAtom;
+    const String *null_StringAtom;
+    const String *undefined_StringAtom;
+    const String *public_StringAtom;
+    const String *private_StringAtom;
+    const String *function_StringAtom;
+    const String *object_StringAtom;
+    const String *Empty_StringAtom;
+    const String *Dollar_StringAtom;
 
     // The activation stack, when it's empty and a return is executed, the
     // interpreter quits

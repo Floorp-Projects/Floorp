@@ -63,15 +63,15 @@ js2val String_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *arg
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thatValue));
 
     if (argc > 0)
-        strInst->mValue = new String(*meta->engine->toString(argv[0]));
+        strInst->mValue = meta->engine->allocStringPtr(meta->engine->toString(argv[0]));
     else
-        strInst->mValue = &meta->engine->Empty_StringAtom;
+        strInst->mValue = meta->engine->allocStringPtr((String *)NULL);
     return thatValue;
 }
 
 js2val String_fromCharCode(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
-    String *resultStr = new String();   // can't use Empty_StringAtom; because we're modifying this below
+    String *resultStr = meta->engine->allocStringPtr((String *)NULL);   // can't use Empty_StringAtom; because we're modifying this below
     resultStr->reserve(argc);
     for (uint32 i = 0; i < argc; i++)
         *resultStr += (char16)(meta->engine->toUInt16(argv[i]));
@@ -167,10 +167,10 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
                 lastIndex++;
             else
                 lastIndex = match->endIndex;
-            String *matchStr = new String(JS2VAL_TO_STRING(S)->substr(toUInt32(match->startIndex), toUInt32(match->endIndex) - match->startIndex));
-            Multiname mname(meta->world.identifiers[*numberToString(index)], meta->publicNamespace);
+            js2val matchStr = meta->engine->allocString(JS2VAL_TO_STRING(S)->substr(toUInt32(match->startIndex), toUInt32(match->endIndex) - match->startIndex));
+            Multiname mname(&meta->world.identifiers[*numberToString(index)], meta->publicNamespace);
             index++;
-            meta->writeDynamicProperty(A, &mname, true, STRING_TO_JS2VAL(matchStr), RunPhase);
+            meta->writeDynamicProperty(A, &mname, true, matchStr, RunPhase);
         }
         thisInst->setLastIndex(meta, meta->engine->allocNumber((float64)lastIndex));
         return OBJECT_TO_JS2VAL(A);
@@ -303,7 +303,7 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
         newString += S->substr(toUInt32(lastIndex), toUInt32(S->length()) - lastIndex);
 	if ((pState->flags & RE_GLOBAL) == 0)
             JS2VAL_TO_OBJECT(searchValue)->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue::newNumber((float64)lastIndex));
-        return STRING_TO_JS2VAL(new String(newString));
+        return meta->engine->allocString(newString);
     }
     else {
         const String *searchStr = JSValue::string(JSValue::toString(cx, searchValue));
@@ -334,7 +334,7 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
 	newString += insertString;
 	uint32 index = (uint32)match.endIndex;
 	newString += S->substr(index, S->length() - index);
-        return STRING_TO_JS2VAL(new String(newString));
+        return meta->engine->allocString(newString);
     }
 }
 
@@ -377,11 +377,9 @@ static void regexpSplitMatch(const String *S, uint32 q, REState *RE, MatchResult
         if (match->parenCount) {
             result.captures = new js2val[match->parenCount];
             for (int32 i = 0; i < match->parenCount; i++) {
-                if (match->parens[i].index != -1) {
-                    String *parenStr = new String(S->substr((uint32)(match->parens[i].index + q), 
-                                                    (uint32)(match->parens[i].length)));
-                    result.captures[i] = STRING_TO_JS2VAL(parenStr);
-                }
+                if (match->parens[i].index != -1)
+                    result.captures[i] = meta->engine->allocString(S->substr((uint32)(match->parens[i].index + q), 
+                                                                    (uint32)(match->parens[i].length)));
 		else
                     result.captures[i] = JS2VAL_UNDEFINED;
             }
@@ -441,7 +439,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
         uint32 q = p;
 step11:
         if (q == s) {
-            String *T = new String(*S, p, (s - p));
+            String *T = meta->engine->allocString(*S, p, (s - p));
             js2val v = STRING_TO_JS2VAL(T);
             A->setProperty(cx, *numberToString(A->mLength), NULL, v);
             return result;
@@ -460,7 +458,7 @@ step11:
             q = q + 1;
             goto step11;
         }
-        String *T = new String(*S, p, (q - p));
+        String *T = meta->engine->allocStringPtr(new String(*S, p, (q - p)));   // XXX
         js2val v = STRING_TO_JS2VAL(T);
         A->setProperty(cx, *numberToString(A->mLength), NULL, v);
         if (A->mLength == lim)
@@ -485,9 +483,9 @@ static js2val String_charAt(JS2Metadata *meta, const js2val thisValue, js2val *a
         pos = toUInt32(meta->engine->toInteger(argv[0]));
 
     if ((pos < 0) || (pos >= str->size()))
-        return STRING_TO_JS2VAL(&meta->engine->Empty_StringAtom);
+        return STRING_TO_JS2VAL(meta->engine->Empty_StringAtom);
     else
-        return STRING_TO_JS2VAL(new String(1, (*str)[pos]));
+        return meta->engine->allocString(new String(1, (*str)[pos]));   // XXX
     
 }
 
@@ -508,7 +506,7 @@ static js2val String_charCodeAt(JS2Metadata *meta, const js2val thisValue, js2va
 static js2val String_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
     const String *str = meta->engine->toString(thisValue);
-    String *result = new String(*str);
+    String *result = meta->engine->allocStringPtr(str);
 
     for (uint32 i = 0; i < argc; i++) {
         *result += *meta->engine->toString(argv[i]);
@@ -582,7 +580,7 @@ static js2val String_toLowerCase(JS2Metadata *meta, const js2val thisValue, js2v
 {
     js2val S = STRING_TO_JS2VAL(meta->engine->toString(thisValue));
 
-    String *result = new String(*JS2VAL_TO_STRING(S));
+    String *result = meta->engine->allocStringPtr(JS2VAL_TO_STRING(S));
     for (String::iterator i = result->begin(), end = result->end(); i != end; i++)
         *i = toLower(*i);
 
@@ -593,7 +591,7 @@ static js2val String_toUpperCase(JS2Metadata *meta, const js2val thisValue, js2v
 {
     js2val S = STRING_TO_JS2VAL(meta->engine->toString(thisValue));
 
-    String *result = new String(*JS2VAL_TO_STRING(S));
+    String *result = meta->engine->allocStringPtr(JS2VAL_TO_STRING(S));
     for (String::iterator i = result->begin(), end = result->end(); i != end; i++)
         *i = toUpper(*i);
 
@@ -667,8 +665,8 @@ static js2val String_slice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         end = sourceLength;
 
     if (start > end)
-        return STRING_TO_JS2VAL(&meta->engine->Empty_StringAtom);
-    return STRING_TO_JS2VAL(new String(sourceString->substr(start, end - start)));
+        return STRING_TO_JS2VAL(meta->engine->Empty_StringAtom);
+    return meta->engine->allocString(sourceString->substr(start, end - start));
 }
 
 /*
@@ -740,7 +738,7 @@ static js2val String_substring(JS2Metadata *meta, const js2val thisValue, js2val
         end = t;
     }
         
-    return STRING_TO_JS2VAL(new String(sourceString->substr(start, end - start)));
+    return meta->engine->allocString(sourceString->substr(start, end - start));
 }
 
 void initStringObject(JS2Metadata *meta)
@@ -792,7 +790,7 @@ XXX not prototype object function properties, like ECMA3, but members of the Str
         meta->writeDynamicProperty(meta->stringClass->prototype, new Multiname(meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 */
         InstanceMember *m = new InstanceMethod(fInst);
-        meta->defineInstanceMember(meta->stringClass, &meta->cxt, meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+        meta->defineInstanceMember(meta->stringClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
         pf++;
     }
 

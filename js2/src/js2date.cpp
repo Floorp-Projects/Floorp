@@ -745,7 +745,7 @@ static void new_explode(float64 timeval, PRMJTime *split, bool findEquivalent)
 }
 
 /* helper function */
-static js2val Date_format(float64 date, formatspec format)
+static js2val Date_format(JS2Metadata *meta, float64 date, formatspec format)
 {
     StringFormatter outf;
     char tzbuf[100];
@@ -848,7 +848,7 @@ static js2val Date_format(float64 date, formatspec format)
         }
     }
 
-    return STRING_TO_JS2VAL(new String(outf.getString()));
+    return meta->engine->allocString(outf.getString());
 }
 
 
@@ -983,7 +983,7 @@ static js2val Date_toGMTString(JS2Metadata *meta, const js2val thisValue, js2val
 		    MinFromTime(temp),
 		    SecFromTime(temp));
     }
-    return STRING_TO_JS2VAL(new String(buf.getString()));
+    return meta->engine->allocString(buf.getString());
 }
 
 static js2val Date_toLocaleHelper(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/, char *format)
@@ -1006,7 +1006,7 @@ static js2val Date_toLocaleHelper(JS2Metadata *meta, const js2val thisValue, js2
 
 	/* If it failed, default to toString. */
 	if (result_len == 0)
-	    return Date_format(*date, FORMATSPEC_FULL);
+	    return Date_format(meta, *date, FORMATSPEC_FULL);
 
         /* Hacked check against undesired 2-digit year 00/00/00 form. */
         if ((buf[result_len - 3] == '/')
@@ -1018,7 +1018,7 @@ static js2val Date_toLocaleHelper(JS2Metadata *meta, const js2val thisValue, js2
             outf << buf;
     }
 
-    return STRING_TO_JS2VAL(new String(outf.getString()));
+    return meta->engine->allocString(outf.getString());
 }
 
 static js2val Date_toLocaleString(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
@@ -1059,19 +1059,19 @@ static js2val Date_toLocaleTimeString(JS2Metadata *meta, const js2val thisValue,
 static js2val Date_toTimeString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     float64 *date = Date_getProlog(meta, thisValue);
-    return Date_format(*date, FORMATSPEC_TIME);
+    return Date_format(meta, *date, FORMATSPEC_TIME);
 }
 
 static js2val Date_toDateString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     float64 *date = Date_getProlog(meta, thisValue);
-    return Date_format(*date, FORMATSPEC_DATE);
+    return Date_format(meta, *date, FORMATSPEC_DATE);
 }
 
 static js2val Date_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     float64 *date = Date_getProlog(meta, thisValue);
-    return Date_format(*date, FORMATSPEC_FULL);
+    return Date_format(meta, *date, FORMATSPEC_FULL);
 }
 
 static js2val Date_toSource(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
@@ -1079,7 +1079,7 @@ static js2val Date_toSource(JS2Metadata *meta, const js2val thisValue, js2val * 
     StringFormatter buf;
     float64 *date = Date_getProlog(meta, thisValue);
     buf << "(new Date(" << *numberToString(date) << "))";
-    return STRING_TO_JS2VAL(new String(buf.getString()));
+    return meta->engine->allocString(buf.getString());
 }
 
 static js2val Date_getTime(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
@@ -1479,7 +1479,7 @@ XXX not prototype object function properties, like ECMA3, but members of the Dat
         meta->writeDynamicProperty(meta->dateClass->prototype, new Multiname(meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 */
         InstanceMember *m = new InstanceMethod(fInst);
-        meta->defineInstanceMember(meta->dateClass, &meta->cxt, meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+        meta->defineInstanceMember(meta->dateClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
         pf++;
     }
 

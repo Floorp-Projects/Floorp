@@ -123,6 +123,12 @@ namespace MetaData {
         }
     }
 
+    String *JS2Engine::allocStringPtr(const String *s)
+    {
+        String *p = (String *)(JS2Object::alloc(sizeof(String)));
+        return new (p) String(*s);
+    }
+
     // if the argument can be stored as an integer value, do so
     // otherwise get a double value
     js2val JS2Engine::allocNumber(float64 x)
@@ -181,14 +187,14 @@ namespace MetaData {
     }
 
     // x is not a String
-    String *JS2Engine::convertValueToString(js2val x)
+    const String *JS2Engine::convertValueToString(js2val x)
     {
         if (JS2VAL_IS_UNDEFINED(x))
-            return &undefined_StringAtom;
+            return undefined_StringAtom;
         if (JS2VAL_IS_NULL(x))
-            return &null_StringAtom;
+            return null_StringAtom;
         if (JS2VAL_IS_BOOLEAN(x))
-            return (JS2VAL_TO_BOOLEAN(x)) ? &true_StringAtom : &false_StringAtom;
+            return (JS2VAL_TO_BOOLEAN(x)) ? true_StringAtom : false_StringAtom;
         if (JS2VAL_IS_INT(x))
             return numberToString(JS2VAL_TO_INT(x));
         if (JS2VAL_IS_LONG(x)) {
@@ -217,7 +223,7 @@ namespace MetaData {
         // if not available or result is not primitive then try property 'valueOf'
         // if that's not available or returns a non primitive, throw a TypeError
 
-        return STRING_TO_JS2VAL(&object_StringAtom);
+        return STRING_TO_JS2VAL(object_StringAtom);
     
         ASSERT(false);
         return JS2VAL_VOID;
@@ -397,7 +403,7 @@ namespace MetaData {
 
 
 
-    #define INIT_STRINGATOM(n) n##_StringAtom(world.identifiers[#n])
+    #define INIT_STRINGATOM(n) n##_StringAtom(allocStringPtr(#n))
 
     JS2Engine::JS2Engine(World &world)
                 : pc(NULL),
@@ -412,8 +418,8 @@ namespace MetaData {
                   INIT_STRINGATOM(private),
                   INIT_STRINGATOM(function),
                   INIT_STRINGATOM(object),
-                  Empty_StringAtom(world.identifiers[""]),
-                  Dollar_StringAtom(world.identifiers["$"])
+                  Empty_StringAtom(&world.identifiers[""]),
+                  Dollar_StringAtom(&world.identifiers["$"])
     {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
@@ -640,6 +646,16 @@ namespace MetaData {
         GCMARKVALUE(b);
         GCMARKVALUE(baseVal);
         GCMARKVALUE(indexVal);
+        JS2Object::mark(true_StringAtom);
+        JS2Object::mark(false_StringAtom);
+        JS2Object::mark(null_StringAtom);
+        JS2Object::mark(undefined_StringAtom);
+        JS2Object::mark(public_StringAtom);
+        JS2Object::mark(private_StringAtom);
+        JS2Object::mark(function_StringAtom);
+        JS2Object::mark(object_StringAtom);
+        JS2Object::mark(Empty_StringAtom);
+        JS2Object::mark(Dollar_StringAtom);
     }
 
 }

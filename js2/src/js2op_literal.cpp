@@ -68,7 +68,7 @@
 
         case eString: 
             {
-                push(STRING_TO_JS2VAL(BytecodeContainer::getString(pc)));
+                push(STRING_TO_JS2VAL(allocString(BytecodeContainer::getString(pc))));
                 pc += sizeof(String *);
             }
             break;

@@ -146,15 +146,14 @@ namespace MetaData {
             if (match) {
                 PrototypeInstance *A = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
                 result = OBJECT_TO_JS2VAL(A);
-                String *matchStr = new String(str->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex));
-                Multiname mname(meta->world.identifiers[*numberToString((long)0)], meta->publicNamespace);
-                meta->writeDynamicProperty(A, &mname, true, STRING_TO_JS2VAL(matchStr), RunPhase);
-                String *parenStr = &meta->engine->Empty_StringAtom;
+                js2val matchStr = meta->engine->allocString(str->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex));
+                Multiname mname(&meta->world.identifiers[*numberToString((long)0)], meta->publicNamespace);
+                meta->writeDynamicProperty(A, &mname, true, matchStr, RunPhase);
                 for (int32 i = 0; i < match->parenCount; i++) {
-                    Multiname mname(meta->world.identifiers[*numberToString(i + 1)], meta->publicNamespace);
+                    Multiname mname(&meta->world.identifiers[*numberToString(i + 1)], meta->publicNamespace);
                     if (match->parens[i].index != -1) {
-                        String *parenStr = new String(str->substr((uint32)(match->parens[i].index), (uint32)(match->parens[i].length)));
-                        meta->writeDynamicProperty(A, &mname, true, STRING_TO_JS2VAL(parenStr), RunPhase);
+                        js2val parenStr = meta->engine->allocString(str->substr((uint32)(match->parens[i].index), (uint32)(match->parens[i].length)));
+                        meta->writeDynamicProperty(A, &mname, true, parenStr, RunPhase);
                     }
 		    else
                         meta->writeDynamicProperty(A, &mname, true, JS2VAL_UNDEFINED, RunPhase);

@@ -140,7 +140,7 @@ public:
     void setOffset(uint32 index, int32 v)   { *((int32 *)(mBuffer.begin() + index)) = v; }
     static int32 getOffset(void *pc)        { return *((int32 *)pc); }
     
-    void addString(const StringAtom &x, size_t pos)     { emitOp(eString, pos); addPointer(&x); }
+    void addString(const StringAtom *x, size_t pos)     { emitOp(eString, pos); addPointer(x); }
     void addString(String &x, size_t pos)               { emitOp(eString, pos); addPointer(&x); }
     void addString(String *x, size_t pos)               { emitOp(eString, pos); addPointer(x); }
     static String *getString(void *pc)      { return (String *)getPointer(pc); }

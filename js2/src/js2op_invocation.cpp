@@ -163,42 +163,42 @@
         {
             a = pop();
             if (JS2VAL_IS_UNDEFINED(a))
-                a = STRING_TO_JS2VAL(&undefined_StringAtom);
+                a = STRING_TO_JS2VAL(undefined_StringAtom);
             else
             if (JS2VAL_IS_BOOLEAN(a))
-                a = STRING_TO_JS2VAL(&meta->world.identifiers["boolean"]);
+                a = allocString("boolean");
             else
             if (JS2VAL_IS_NUMBER(a))
-                a = STRING_TO_JS2VAL(&meta->world.identifiers["number"]);
+                a = allocString("number");
             else
             if (JS2VAL_IS_STRING(a))
-                a = STRING_TO_JS2VAL(&meta->world.identifiers["string"]);
+                a = allocString("string");
             else {
                 ASSERT(JS2VAL_IS_OBJECT(a));
                 if (JS2VAL_IS_NULL(a))
-                    a = STRING_TO_JS2VAL(&object_StringAtom);
+                    a = STRING_TO_JS2VAL(object_StringAtom);
                 JS2Object *obj = JS2VAL_TO_OBJECT(a);
                 switch (obj->kind) {
                 case MultinameKind:
-                    a = STRING_TO_JS2VAL(&meta->world.identifiers["namespace"]); 
+                    a = allocString("namespace"); 
                     break;
                 case AttributeObjectKind:
-                    a = STRING_TO_JS2VAL(&meta->world.identifiers["attribute"]); 
+                    a = allocString("attribute"); 
                     break;
                 case ClassKind:
                 case MethodClosureKind:
-                    a = STRING_TO_JS2VAL(&function_StringAtom); 
+                    a = STRING_TO_JS2VAL(function_StringAtom); 
                     break;
                 case PrototypeInstanceKind:
                 case PackageKind:
                 case GlobalObjectKind:
-                    a = STRING_TO_JS2VAL(&object_StringAtom);
+                    a = STRING_TO_JS2VAL(object_StringAtom);
                     break;
                 case FixedInstanceKind:
-                    a = STRING_TO_JS2VAL(&checked_cast<FixedInstance *>(obj)->typeofString);
+                    a = STRING_TO_JS2VAL(checked_cast<FixedInstance *>(obj)->typeofString);
                     break;
                 case DynamicInstanceKind:
-                    a = STRING_TO_JS2VAL(&checked_cast<DynamicInstance *>(obj)->typeofString);
+                    a = STRING_TO_JS2VAL(checked_cast<DynamicInstance *>(obj)->typeofString);
                     break;
                 }
             }

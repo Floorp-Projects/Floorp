@@ -182,9 +182,9 @@
 	    a = toPrimitive(a);
 	    b = toPrimitive(b);
 	    if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
-	        String *astr = toString(a);
-	        String *bstr = toString(b);
-                String *c = new String(*astr);
+	        const String *astr = toString(a);
+	        const String *bstr = toString(b);
+                String *c = allocStringPtr(astr);
                 *c += *bstr;
 	        push(STRING_TO_JS2VAL(c));
 	    }
@@ -461,9 +461,9 @@
 	            a = toPrimitive(a);
 	            b = toPrimitive(b);
 	            if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
-	                String *astr = toString(a);
-	                String *bstr = toString(b);
-                        String *c = new String(*astr);
+	                const String *astr = toString(a);
+	                const String *bstr = toString(b);
+                        String *c = allocStringPtr(astr);
                         *c += *bstr;
 	                a = STRING_TO_JS2VAL(c);
 	            }
@@ -612,9 +612,9 @@
 	            a = toPrimitive(a);
 	            b = toPrimitive(b);
 	            if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
-	                String *astr = toString(a);
-	                String *bstr = toString(b);
-                        String *c = new String(*astr);
+	                const String *astr = toString(a);
+	                const String *bstr = toString(b);
+                        String *c = allocStringPtr(astr);
                         *c += *bstr;
 	                a = STRING_TO_JS2VAL(c);
 	            }
@@ -771,8 +771,8 @@
 	    b = pop();
             indexVal = pop();
             baseVal = pop();
-            String *indexStr = toString(indexVal);
-            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
+            const String *indexStr = toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             switch (op) {
@@ -781,9 +781,9 @@
 	            a = toPrimitive(a);
 	            b = toPrimitive(b);
 	            if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
-	                String *astr = toString(a);
-	                String *bstr = toString(b);
-                        String *c = new String(*astr);
+	                const String *astr = toString(a);
+	                const String *bstr = toString(b);
+                        String *c = allocStringPtr(astr);
                         *c += *bstr;
 	                a = STRING_TO_JS2VAL(c);
 	            }
@@ -882,8 +882,8 @@ case eBracketPostInc:
             LookupKind lookup(false, NULL);
             indexVal = pop();
             baseVal = pop();
-            String *indexStr = toString(indexVal);
-            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
+            const String *indexStr = toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = toFloat64(a);
@@ -898,8 +898,8 @@ case eBracketPostInc:
             LookupKind lookup(false, NULL);
             indexVal = pop();
             baseVal = pop();
-            String *indexStr = toString(indexVal);
-            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
+            const String *indexStr = toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = toFloat64(a);
@@ -914,8 +914,8 @@ case eBracketPostInc:
             LookupKind lookup(false, NULL);
             indexVal = pop();
             baseVal = pop();
-            String *indexStr = toString(indexVal);
-            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
+            const String *indexStr = toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = toFloat64(a);
@@ -930,8 +930,8 @@ case eBracketPostInc:
             LookupKind lookup(false, NULL);
             indexVal = pop();
             baseVal = pop();
-            String *indexStr = toString(indexVal);
-            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
+            const String *indexStr = toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = toFloat64(a);

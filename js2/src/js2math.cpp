@@ -312,7 +312,7 @@ void initMathObject(JS2Metadata *meta)
     for (i = 0; i < M_CONSTANTS_COUNT; i++)
     {
         Variable *v = new Variable(meta->numberClass, meta->engine->allocNumber(MathObjectConstants[i].value), true);
-        meta->defineStaticMember(&meta->env, meta->world.identifiers[MathObjectConstants[i].name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        meta->defineStaticMember(&meta->env, &meta->world.identifiers[MathObjectConstants[i].name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
     }
     meta->env.removeTopFrame();
 
@@ -351,7 +351,7 @@ void initMathObject(JS2Metadata *meta)
         FixedInstance *fInst = new FixedInstance(meta->functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
         Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(fInst), true);
-        meta->defineStaticMember(&meta->env, meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        meta->defineStaticMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         pf++;
     }
     meta->env.removeTopFrame();
