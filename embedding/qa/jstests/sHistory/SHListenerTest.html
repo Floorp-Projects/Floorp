@@ -1,0 +1,228 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+<title>SessionHistory.html</title>
+<!-- Descrpt: test Sesion History interfaces
+     Author: radha@netscape.com
+     Revs: 06.27.01 - Created
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+   		depstein@netscape.com
+
+    This script executes web navigation events to trigger nsIHistoryListener callbacks.
+  -->
+
+<script TYPE="text/javascript" SRC="nsISHistoryTestLib.js">
+</script>
+
+<script TYPE="text/javascript" SRC="nsISHListenerTestLib.js">
+</script>
+<script TYPE="text/javascript">
+
+// *** Variables ***
+var results = null;
+var SHListener=null;
+var debug = 1;
+var testWin=null;
+var updateInfo="<p>Creating New window ....<br>";
+
+var cnt = 0;
+var urlList = ["http://www.aol.com",
+               "http://www.yahoo.com",
+               "http://www.mozilla.org",
+               "http://www.mozilla.org/newsbot",
+               "file://D|/Embed-info/scripts/nsISHistory/loadHistoryPage.html",
+               "http://www.cisco.com"
+               ];
+// Variables to verify if the callbacks are invoked properly
+var backCallback = false;
+var forwardCallback = false;
+var reloadCallback = false;
+var gotoCallback = false;
+var purgeCallback = false;
+var histLenInChild = 0;
+
+
+
+function ddump(s)
+{
+   if (debug==1)
+     dump(s);
+   else
+     alert(s);
+}
+
+function startTestcase()
+{
+   results = "<p> About to create new child window ...<br></p>";
+   loadPages();
+}
+
+function loadPages()
+{
+  alert("In loadPages\n");
+  alert("cnt = " + cnt);
+
+  /* Load pages sequentially in the child window
+   * The first url will set up the listener
+   * The last url will test nsISHistory
+   */
+
+   if (cnt == 0)
+      testWin = window.open(urlList[cnt], "testWin");
+   else
+      testWin.location = urlList[cnt];
+
+   alert("the uri = " + urlList[cnt]);
+   uriTotal = urlList.length;
+   if (cnt == (uriTotal - 1)) {
+     SetListenerInChild();
+     DoWebNavigationInChild();
+   }
+   else if (cnt < (uriTotal - 1)) {
+     ddump("calling SetTimeOut again\n");
+     cnt++;
+     setTimeout("loadPages()", 6000);
+   }
+}
+
+
+
+function DoWebNavigationInChild()
+{
+   // Trigger History operaions
+   setTimeout("GoBackInChild()", 5000);
+}
+
+function GoBackInChild()
+{
+   alert("Inside GoBackInChild");
+   if (testWin) {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      testWin.history.back();
+      setTimeout("GoForwardInChild()", 6000);
+   }
+}
+
+function GoForwardInChild()
+{
+   alert("Inside GoForwardInChild\n");
+   if (testWin) {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      testWin.history.forward();
+      setTimeout("DoReloadInChild()", 6000);
+   }
+
+}
+
+function DoReloadInChild()
+{
+   alert("Inside DoReloadInChild\n");
+   if (testWin) {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
+ 	  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+      testWin.location.reload();
+      setTimeout("GotoIndexInChild(-1)", 6000);
+   }
+}
+
+
+function GotoIndexInChild(index)
+{
+   alert("Inside GotoIndexInChild; index = " + index);
+   if (testWin) {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      testWin.history.go(index);
+ //     if (index == -1)
+ //       setTimeout("GotoIndexInChild(1)", 6000);
+ //     else if (index == 1)
+        setTimeout("LoadLastPageInChild()", 5000);
+   }
+}
+
+function LoadLastPageInChild()
+{
+   alert("Inside LoadLastPageInChild\n");
+   if (testWin) {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      // Load the last page in the child window
+      //testWin.location.href = urlList[cnt];
+      testWin.location.href = "file://D|/Embed-info/scripts/nsISHistory/lastURL.html";
+      setTimeout("PurgeHistoryInChild()", 6000);
+   }
+
+}
+
+function PurgeHistoryInChild()
+{
+    alert("Inside PurgeHistoryInChild");
+    if (testWin) {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      histLenInChild = testWin.history.length;
+
+      // Purge all history entries in the child window.
+      if (histLenInChild >0) {
+         netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
+         testWin.purgeTheEntries(histLenInChild);
+      }
+    }
+       alert("End of script.");
+}
+
+
+// Called back by the child to set listener object in it.
+function SetListenerInChild()
+{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    sHListener = new sessionHistoryListener();
+    alert("sHistoryListener object = " + sHListener);
+    testWin.SetListener(sHListener);
+}
+
+</script>
+</head>
+
+<body>
+<form name="results" action="/ngdriver/cgi-bin/writeresults.cgi" method="post">
+
+<textarea cols=60 rows=10 name="textarea">
+</TEXTAREA>
+</form>
+
+<script TYPE="text/javascript">
+   setTimeout("startTestcase()", 3000);
+</script>
+
+<p>
+ This is test case for Session History Listener. <br>
+
+
+</body>
+</html>
+
