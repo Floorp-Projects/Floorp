@@ -342,11 +342,26 @@ sub BuildCommonProjects()
 	#//
 	#// Static libraries
 	#//
-	BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",								"xpcom$D.o");
-	BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
-	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",							"png$D.o");
-	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",							"libimg$D.o (standalone)");
-	BuildProject(":mozilla:network:macbuild:network.mcp",								"NetworkModular$D.o");
+	if ($main::SHARED)
+	{
+		BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",								"xpcom$D.shlb");
+		$main::DEBUG ? MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb.xSYM",				"$dist_dir") : 0;
+
+		BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
+		BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",							"png$D.o");
+		BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",							"libimg$D.o (standalone)");
+
+		BuildProject(":mozilla:network:macbuild:network.mcp",								"network$D.shlb");
+		$main::DEBUG ? MakeAlias(":mozilla:network:macbuild:network$D.shlb.xSYM",			"$dist_dir") : 0;
+	}
+	else
+	{
+		BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",								"xpcom$D.o");
+		BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
+		BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",							"png$D.o");
+		BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",							"libimg$D.o (standalone)");
+		BuildProject(":mozilla:network:macbuild:network.mcp",								"NetworkModular$D.o");
+	}
 }
 
 
@@ -407,14 +422,45 @@ sub BuildLayoutProjects()
 	#//
 	#// Build Layout projects
 	#//
-	BuildProject(":mozilla:base:macbuild:base.mcp",						"base$D.o");
-	BuildProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",			"htmlparser$D.o");
-	BuildProject(":mozilla:dom:macbuild:dom.mcp",						"dom$D.o");
-	BuildProject(":mozilla:gfx:macbuild:gfx.mcp",						"gfx$D.o");
-	BuildProject(":mozilla:layout:macbuild:layout.mcp",					"layout$D.o");
-	BuildProject(":mozilla:view:macbuild:view.mcp",						"view$D.o");
-	BuildProject(":mozilla:widget:macbuild:widget.mcp",					"widget$D.o");
-	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",				"webshell$D.o");
+	if ($main::SHARED)
+	{
+		BuildProject(":mozilla:base:macbuild:base.mcp",						"base$D.o");
+		#BuildProject(":mozilla:base:macbuild:base.mcp",									"base$D.shlb");
+		#$main::DEBUG ? MakeAlias(":mozilla:base:macbuild:base$D.shlb.xSYM",				"$dist_dir") : 0;
+
+		BuildProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",						"htmlparser$D.shlb");
+		$main::DEBUG ? MakeAlias(":mozilla:htmlparser:macbuild:htmlparser$D.shlb.xSYM",	"$dist_dir") : 0;
+		
+		BuildProject(":mozilla:dom:macbuild:dom.mcp",									"dom$D.shlb");
+		$main::DEBUG ? MakeAlias(":mozilla:dom:macbuild:dom$D.shlb.xSYM",				"$dist_dir") : 0;
+
+		BuildProject(":mozilla:gfx:macbuild:gfx.mcp",									"gfx$D.shlb");
+		$main::DEBUG ? MakeAlias(":mozilla:gfx:macbuild:gfx$D.shlb.xSYM",				"$dist_dir") : 0;
+
+		BuildProject(":mozilla:layout:macbuild:layout.mcp",								"layout$D.shlb");
+		$main::DEBUG ? MakeAlias(":mozilla:layout:macbuild:layout$D.shlb.xSYM",			"$dist_dir") : 0;
+
+		BuildProject(":mozilla:view:macbuild:view.mcp",									"view$D.shlb");
+		$main::DEBUG ? MakeAlias(":mozilla:view:macbuild:view$D.shlb.xSYM",				"$dist_dir") : 0;
+
+		BuildProject(":mozilla:widget:macbuild:widget.mcp",								"widget$D.shlb");
+		$main::DEBUG ? MakeAlias(":mozilla:widget:macbuild:widget$D.shlb.xSYM",			"$dist_dir") : 0;
+
+		BuildProject(":mozilla:webshell:macbuild:webshell.mcp",							"webshell$D.shlb");
+		$main::DEBUG ? MakeAlias(":mozilla:webshell:macbuild:webshell$D.shlb.xSYM",		"$dist_dir") : 0;
+	}
+	else
+	{
+		BuildProject(":mozilla:base:macbuild:base.mcp",						"base$D.o");
+		BuildProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",			"htmlparser$D.o");
+		BuildProject(":mozilla:dom:macbuild:dom.mcp",						"dom$D.o");
+		BuildProject(":mozilla:gfx:macbuild:gfx.mcp",						"gfx$D.o");
+		BuildProject(":mozilla:layout:macbuild:layout.mcp",					"layout$D.o");
+		BuildProject(":mozilla:view:macbuild:view.mcp",						"view$D.o");
+		BuildProject(":mozilla:widget:macbuild:widget.mcp",					"widget$D.o");
+		BuildProject(":mozilla:webshell:macbuild:webshell.mcp",				"webshell$D.o");
+	}
+
 	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",		"viewer$D");
 	BuildProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",				"xpfeViewer$D");
 }
