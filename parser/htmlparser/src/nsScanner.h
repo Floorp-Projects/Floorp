@@ -259,7 +259,6 @@ class CScanner {
       nsString        mBuffer;
       nsString        mFilename;
       PRInt32         mOffset;
-      PRInt32         mMarkPos;
       PRInt32         mTotalRead;
       PRBool          mOwnsStream;
       PRBool          mIncremental;

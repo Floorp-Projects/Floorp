@@ -63,7 +63,6 @@ CScanner::CScanner(nsString& aFilename,PRBool aCreateStream) :
 {
   mIncremental=PR_TRUE;
   mOffset=0;
-  mMarkPos=-1;
   mTotalRead=0;
   mOwnsStream=aCreateStream;
   mFileStream=0;
@@ -93,7 +92,6 @@ CScanner::CScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership) 
 {    
   mIncremental=PR_TRUE;
   mOffset=0;
-  mMarkPos=-1;
   mTotalRead=0;
   mOwnsStream=assumeOwnership;
   mFileStream=&aStream;
@@ -127,9 +125,10 @@ CScanner::~CScanner() {
  *  @return  
  */
 PRInt32 CScanner::RewindToMark(void){
-  mOffset=mMarkPos;
+  mOffset=0;
   return mOffset;
 }
+
 
 /**
  *  Records current offset position in input stream. This allows us
@@ -141,32 +140,10 @@ PRInt32 CScanner::RewindToMark(void){
  *  @return  
  */
 PRInt32 CScanner::Mark(void){
-  mMarkPos=mOffset;
-  return mMarkPos;
-}
-
-
-/**
- *  
- *  @update  gess 5/12/98
- */
-void _PreCompressBuffer(nsString& aBuffer,PRInt32& anOffset,PRInt32& aMarkPos){
-  //To determine how much of our internal buffer to truncate, 
-  //we should check mMarkPos. That represents the point at which
-  //we've guaranteed the client we can back up to, so make sure
-  //you don't lose any of the data beyond that point.
-
-  PRInt32 len=aBuffer.Length();
-  if((aMarkPos<len) && (aMarkPos>0)) {
-    aBuffer.Cut(0,aMarkPos);
-    anOffset-=aMarkPos;
-    aMarkPos=0;
-  }
-  else if((anOffset==aMarkPos) && (0<aMarkPos)) {
-    aBuffer.Truncate();
-    anOffset=0;
-  }
-//  aMarkPos=0;
+  if(mOffset>0)
+    mBuffer.Cut(0,mOffset);   //delete chars up to mark position
+  mOffset=0;
+  return 0;
 }
 
 
@@ -178,7 +155,6 @@ void _PreCompressBuffer(nsString& aBuffer,PRInt32& anOffset,PRInt32& aMarkPos){
  * @return  error code
  */
 PRBool CScanner::Append(nsString& aBuffer) {
-  _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
   mBuffer.Append(aBuffer);
   mTotalRead+=aBuffer.Length();
   return PR_TRUE;
@@ -192,7 +168,6 @@ PRBool CScanner::Append(nsString& aBuffer) {
  *  @return  
  */
 PRBool CScanner::Append(const char* aBuffer, PRInt32 aLen){
-  _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
   mBuffer.Append(aBuffer,aLen);
   mTotalRead+=aLen;
   return PR_TRUE;
@@ -206,8 +181,6 @@ PRBool CScanner::Append(const char* aBuffer, PRInt32 aLen){
  */
 nsresult CScanner::FillBuffer(void) {
   nsresult anError=NS_OK;
-
-  _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
 
   if(!mFileStream) {
     //This is DEBUG code!!!!!!  XXX DEBUG XXX
