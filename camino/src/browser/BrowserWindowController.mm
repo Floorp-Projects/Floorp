@@ -494,6 +494,14 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 
 - (IBAction)viewSource:(id)aSender
 {
+  NSString* urlStr = [[mBrowserView getBrowserView] getFocusedURLString];
+  NSString* viewSource = [@"view-source:" stringByAppendingString: urlStr];
+  NSURL* urlToLoad = [NSURL URLWithString: viewSource];
+
+  PRBool loadInBackground;
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+  pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+  [self openNewTabWithURL: urlToLoad loadInBackground: loadInBackground];
 }
 
 - (void)printDocument
