@@ -198,15 +198,11 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsISimpleEnumerator **_retva
   
   nsCOMPtr<nsIXBLBinding> tempBinding;
   while (binding) {
-    nsCString id;
-    binding->GetID(id);
-    nsCString uri;
-    binding->GetDocURI(uri);
-    uri += "#";
-    uri += id;
-  
-    nsCOMPtr<nsIAtom> a = NS_NewAtom(uri.get());
-    urls->AppendElement(a);
+    nsCAutoString uri;
+    binding->GetBindingURI(uri);
+
+    nsCOMPtr<nsIAtom> atom = do_GetAtom(uri.get());
+    urls->AppendElement(atom);
     
     binding->GetBaseBinding(getter_AddRefs(tempBinding));
     binding = tempBinding;
