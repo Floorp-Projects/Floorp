@@ -42,7 +42,7 @@ box.header-part3           { background-color: #CCCCCC; border: none; }
 [hideNonBox] { display: none;}
 
 #addToAddressBookButton {
-	list-style-image:url("chrome://messenger/skin/addcard.gif");
+	list-style-image:url("chrome://messenger/skin/addtoab.gif");
   min-height: 20px;
 }
 
@@ -68,7 +68,8 @@ titledbutton.showFewerAddressesButton {
   list-style-image:url("chrome://messenger/skin/less.gif");
 }
 
-html|div.subjectvalue {font-weight: bold;}
-html|div.headerdisplayname       { font-weight: bold; margin-right: .5em; margin-left: .5em; min-height: 18px }
-html|div.headerValue             { white-space: normal; min-width: 50px; }
+html|div.headerValue   { white-space: normal; min-width: 50px; }
+html|div.subjectvalue      {font-weight: bold;}
 
+text.headerdisplayname { font-weight: bold; margin-right: .5em; margin-left: .5em; min-height: 18px }
+text.headerValue { white-space: normal; min-width: 50px; }

@@ -99,6 +99,8 @@ EXPORT_RESOURCE_SAMPLES = \
 		server-remote.gif \
 		server-news-lock.gif \
 		server-remote-lock.gif \
+    attach.gif  \
+    addtoab.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

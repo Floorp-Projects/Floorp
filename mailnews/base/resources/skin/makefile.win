@@ -94,6 +94,8 @@ install::
 	$(MAKE_INSTALL) server-news-lock.gif				$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) server-remote.gif				$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) server-remote-lock.gif				$(DIST)\bin\chrome\messenger\skin\default
+  $(MAKE_INSTALL) attach.gif		                $(DIST)\bin\chrome\messenger\skin\default
+  $(MAKE_INSTALL) addtoab.gif		                $(DIST)\bin\chrome\messenger\skin\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\messenger.css
@@ -129,6 +131,8 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\server-remote.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\server-remote-lock.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\server-news-lock.gif
+  rm -f $(DIST)\chrome\messenger\skin\default\attach.gif
+  rm -f $(DIST)\chrome\messenger\skin\default\addtoab.gif
 
 
 
