@@ -210,7 +210,6 @@ protected:
   PRBool WidgetVisible  (nsRect   &aBounds);
 
   PRBool         mIsShown;
-  PRBool mShown;
   int            mVisibility; // this is an int because that's the way X likes it
   PRUint32       mPreferredWidth;
   PRUint32       mPreferredHeight;
