@@ -77,11 +77,40 @@ actualmatch = string.match(pattern);
 expectedmatch = Array('');
 addThis();
 
+pattern = /(a|)/;
+status = inSection(4);
+string = 'a';
+actualmatch = string.match(pattern);
+expectedmatch = Array('a', 'a');
+addThis();
+
+pattern = /(a||)/;
+status = inSection(5);
+string = 'a';
+actualmatch = string.match(pattern);
+expectedmatch = Array('a', 'a');
+addThis();
+
+pattern = /(|a)/;
+status = inSection(6);
+string = 'a';
+actualmatch = string.match(pattern);
+expectedmatch = Array('', '');
+addThis();
+
+pattern = /(|a|)/;
+status = inSection(7);
+string = 'a';
+actualmatch = string.match(pattern);
+expectedmatch = Array('', '');
+addThis();
+
 
 
 //-------------------------------------------------------------------------------------------------
 test();
 //-------------------------------------------------------------------------------------------------
+
 
 
 function addThis()
