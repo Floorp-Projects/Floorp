@@ -327,7 +327,7 @@ function selectProduct(f) {
   { value => "regexp", description => "matches the regexp" },
   { value => "notregexp", description => "doesn't match the regexp" } ] %]
 
-[% PROCESS "global/field-descs.html.tmpl" %]
+[% PROCESS "global/field-descs.none.tmpl" %]
 
 [%# If we resubmit to ourselves, we need to know if we are using a format. %]
 <input type="hidden" name="query_format" value="[% format %]">
