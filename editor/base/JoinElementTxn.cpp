@@ -140,7 +140,7 @@ NS_IMETHODIMP JoinElementTxn::Undo(void)
       if (NS_FAILED(result)) {return result;}
       if (!child) {return NS_ERROR_NULL_POINTER;}
       child->GetNextSibling(getter_AddRefs(nextSibling));
-      result = mRightNode->RemoveChild(child, getter_AddRefs(resultNode));
+      result = mLeftNode->AppendChild(child, getter_AddRefs(resultNode));
       child = do_QueryInterface(nextSibling);
     }
   }
