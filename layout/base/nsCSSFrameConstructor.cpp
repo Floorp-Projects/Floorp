@@ -2778,7 +2778,7 @@ nsCSSFrameConstructor::GetPseudoCellFrame(nsIPresShell*            aPresShell,
   nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
   nsIAtom* parentFrameType = aParentFrameIn.GetType();
 
-  if (pseudoFrames.IsEmpty()) {
+  if (!pseudoFrames.mLowestType) {
     PRBool created = PR_FALSE;
     if (nsLayoutAtoms::tableFrame == parentFrameType) { // table parent
       rv = CreatePseudoRowGroupFrame(aPresShell, aPresContext, aTableCreator, aState, &aParentFrameIn);
@@ -3426,9 +3426,10 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsIPresShell*            aPres
                                aStyleContext)) {
     // this frame may have a pseudo parent, use block frame type to
     // trigger foreign
-    GetParentFrame(aPresShell, aPresContext, aTableCreator, *aParentFrameIn, 
-                   nsLayoutAtoms::blockFrame, aState, parentFrame,
-                   hasPseudoParent);
+    rv = GetParentFrame(aPresShell, aPresContext, aTableCreator,
+                        *aParentFrameIn, nsLayoutAtoms::blockFrame,
+                        aState, parentFrame, hasPseudoParent);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "GetParentFrame failed!");
     if (!hasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aChildItems);
     }
