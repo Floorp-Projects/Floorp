@@ -267,8 +267,12 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
   if (uiEvent) {
     // See if a letter was pressed.
     PRUint32 charCode;
-    uiEvent->GetKeyCode(&charCode);
-    if ((active || mAltKeyDown) && (charCode >= NS_VK_A && charCode <= NS_VK_Z)) {
+    uiEvent->GetCharCode(&charCode);
+    
+    if ((active || mAltKeyDown) && 
+        ((charCode >= 'a' && charCode <= 'z') ||
+         (charCode >= 'A' && charCode <= 'Z')))
+    {
       // Do shortcut navigation.
       mAltKeyDown = PR_FALSE; // Clear this. ALT presses are irrelevant now.
       
