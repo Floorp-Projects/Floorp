@@ -154,8 +154,9 @@ function UpdateCharsetDetector()
     }
  
     if (pref) {
-        prefvalue = pref.CopyCharPref("intl.charset.detector");
+        prefvalue = pref.getLocalizedUnicharPref("intl.charset.detector");
         if (prefvalue == "") prefvalue = "off";
+dump("intl.charset.detector = "+ prefvalue + "\n");
     }
 
     var prefvalue = 'chardet.' + prefvalue;

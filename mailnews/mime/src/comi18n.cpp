@@ -1264,17 +1264,17 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
 
   if (mAutoDetect) {
     char detector_progid[128];
-    char* detector_name = nsnull;
+    PRUnichar* detector_name = nsnull;
     PL_strcpy(detector_progid, NS_STRCDETECTOR_PROGID_BASE);
 
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
     if (NS_SUCCEEDED(res)) {
-      if (NS_SUCCEEDED(prefs->CopyCharPref("mail.charset.detector", &detector_name))) {
-        PL_strcat(detector_progid, detector_name);
+      if (NS_SUCCEEDED(prefs->CopyUnicharPref("mail.charset.detector", &detector_name))) {
+        PL_strcat(detector_progid, NS_ConvertUCS2toUTF8(detector_name));
         PR_FREEIF(detector_name);
       }
-      else if (NS_SUCCEEDED(prefs->CopyCharPref("intl.charset.detector", &detector_name))) {
-        PL_strcat(detector_progid, detector_name);
+      else if (NS_SUCCEEDED(prefs->GetLocalizedUnicharPref("intl.charset.detector", &detector_name))) {
+        PL_strcat(detector_progid, NS_ConvertUCS2toUTF8(detector_name));
         PR_FREEIF(detector_name);
       }
     }
