@@ -63,6 +63,7 @@
 #include "nsMimeTypes.h"
 // used for header disposition information.
 #include "nsIHttpChannel.h"
+#include "nsIEncodedChannel.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIAtom.h"
 #include "nsIObserverService.h" // so we can be an xpcom shutdown observer
@@ -1200,7 +1201,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
       }
     }
     
-    httpChannel->SetApplyConversion( applyConversion );
+    nsCOMPtr<nsIEncodedChannel> encodedChannel(do_QueryInterface(httpChannel));
+    NS_ENSURE_TRUE(encodedChannel, NS_ERROR_UNEXPECTED);
+    encodedChannel->SetApplyConversion( applyConversion );
   }
 
   mTimeDownloadStarted = PR_Now();

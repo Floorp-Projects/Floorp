@@ -447,6 +447,24 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                        \
   NS_INTERFACE_MAP_END
 
+#define NS_IMPL_QUERY_INTERFACE11(_class, _i1, _i2, _i3, _i4, _i5, _i6,       \
+                                  _i7, _i8, _i9, _i10)                        \
+  NS_INTERFACE_MAP_BEGIN(_class)                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i7)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i8)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i9)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i10)                                              \
+    NS_INTERFACE_MAP_ENTRY(_i11)                                              \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                        \
+  NS_INTERFACE_MAP_END
+
+
 #define NS_IMPL_THREADSAFE_QUERY_INTERFACE0  NS_IMPL_QUERY_INTERFACE0
 #define NS_IMPL_THREADSAFE_QUERY_INTERFACE1  NS_IMPL_QUERY_INTERFACE1
 #define NS_IMPL_THREADSAFE_QUERY_INTERFACE2  NS_IMPL_QUERY_INTERFACE2
@@ -458,6 +476,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 #define NS_IMPL_THREADSAFE_QUERY_INTERFACE8  NS_IMPL_QUERY_INTERFACE8
 #define NS_IMPL_THREADSAFE_QUERY_INTERFACE9  NS_IMPL_QUERY_INTERFACE9
 #define NS_IMPL_THREADSAFE_QUERY_INTERFACE10  NS_IMPL_QUERY_INTERFACE10
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE11  NS_IMPL_QUERY_INTERFACE11
 
 /**
  * Declare that you're going to inherit from something that already
@@ -612,6 +631,13 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                 \
   NS_IMPL_RELEASE(_class)                                                     \
   NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
                             _i9, _i10)
+
+#define NS_IMPL_ISUPPORTS11(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
+                            _i9, _i10, _i11)                                  \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
+                            _i9, _i10, _i11)
 
 #define NS_IMPL_ISUPPORTS_INHERITED0(Class, Super)                            \
     NS_IMPL_QUERY_INTERFACE_INHERITED0(Class, Super)                          \
@@ -772,6 +798,13 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
   NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
   NS_IMPL_THREADSAFE_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6,  \
                                        _i7, _i8, _i9, _i10)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS11(_class, _i1, _i2, _i3, _i4, _i5, _i6,  \
+                                       _i7, _i8, _i9, _i10, _i11)             \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6,  \
+                                       _i7, _i8, _i9, _i10, _i11)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Macros for implementing nsIClassInfo-related stuff.
@@ -1070,6 +1103,22 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
      NS_CLASSINFO_HELPER_ENTRY(9, _i10)                                       \
    NS_CLASSINFO_HELPER_END
 
+#define NS_IMPL_CI_INTERFACE_GETTER11(_class, _i1, _i2, _i3, _i4, _i5, _i6,   \
+                                      _i7, _i8, _i9, _i10, _i11)              \
+   NS_CLASSINFO_HELPER_BEGIN(_class, 10)                                      \
+     NS_CLASSINFO_HELPER_ENTRY(0, _i1)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(1, _i2)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(2, _i3)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(3, _i4)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(4, _i5)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(5, _i6)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(6, _i7)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(7, _i8)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(8, _i9)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(9, _i10)                                       \
+     NS_CLASSINFO_HELPER_ENTRY(10, _i11)                                      \
+   NS_CLASSINFO_HELPER_END
+
 #define NS_IMPL_QUERY_INTERFACE10_CI(_class, _i1, _i2, _i3, _i4, _i5, _i6,    \
                                      _i7, _i8, _i9, _i10)                     \
   NS_INTERFACE_MAP_BEGIN(_class)                                              \
@@ -1087,6 +1136,24 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
     NS_IMPL_QUERY_CLASSINFO(_class)                                           \
   NS_INTERFACE_MAP_END
 
+#define NS_IMPL_QUERY_INTERFACE11_CI(_class, _i1, _i2, _i3, _i4, _i5, _i6,    \
+                                     _i7, _i8, _i9, _i10, _i11)               \
+  NS_INTERFACE_MAP_BEGIN(_class)                                              \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i4)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i5)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i6)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i7)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i8)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i9)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i10)                                              \
+    NS_INTERFACE_MAP_ENTRY(_i11)                                              \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                        \
+    NS_IMPL_QUERY_CLASSINFO(_class)                                           \
+  NS_INTERFACE_MAP_END
+
 #define NS_IMPL_ISUPPORTS10_CI(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7,     \
                                _i8, _i9, _i10)                                \
   NS_IMPL_ADDREF(_class)                                                      \
@@ -1095,6 +1162,15 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
                                _i8, _i9, _i10)                                \
   NS_IMPL_CI_INTERFACE_GETTER10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7,    \
                                 _i8, _i9, _i10)
+
+#define NS_IMPL_ISUPPORTS11_CI(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7,     \
+                               _i8, _i9, _i10, _i11)                          \
+  NS_IMPL_ADDREF(_class)                                                      \
+  NS_IMPL_RELEASE(_class)                                                     \
+  NS_IMPL_QUERY_INTERFACE11_CI(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7,     \
+                               _i8, _i9, _i10, _i11)                          \
+  NS_IMPL_CI_INTERFACE_GETTER11(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7,    \
+                                _i8, _i9, _i10, _i11)
 
 #define NS_INTERFACE_MAP_END_THREADSAFE NS_IMPL_QUERY_TAIL_GUTS
 
