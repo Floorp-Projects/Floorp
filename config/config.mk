@@ -698,10 +698,6 @@ endif
 DEFINES		+= -DOSTYPE=\"$(OS_CONFIG)\"
 DEFINES		+= -DOSARCH=\"$(OS_ARCH)\"
 
-ifdef MOZ_OJI
-DEFINES		+= -DOJI
-endif
-
 # For profiling
 ifdef ENABLE_EAZEL_PROFILER
 ifndef INTERNAL_TOOLS

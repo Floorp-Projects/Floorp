@@ -46,7 +46,9 @@
 #include "prprf.h"
 #include "nsIFile.h"
 #include "nsCOMPtr.h"
+#ifdef OJI
 #include "nsIJVMManager.h"
+#endif
 #include "nsIServiceManager.h"
 
 #include "nsIDocument.h"
@@ -82,7 +84,8 @@ nsPluginInstancePeerImpl::~nsPluginInstancePeerImpl()
 
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
-static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID); 
+#ifdef OJI
+static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID);
 
 NS_IMPL_ISUPPORTS7(nsPluginInstancePeerImpl,
                    nsIPluginInstancePeer,
@@ -92,6 +95,15 @@ NS_IMPL_ISUPPORTS7(nsPluginInstancePeerImpl,
                    nsIPluginTagInfo2,
                    nsIJVMPluginTagInfo,
                    nsPIPluginInstancePeer);
+#else
+NS_IMPL_ISUPPORTS6(nsPluginInstancePeerImpl,
+                   nsIPluginInstancePeer,
+                   nsIPluginInstancePeer2,
+                   nsIWindowlessPluginInstancePeer,
+                   nsIPluginTagInfo,
+                   nsIPluginTagInfo2,
+                   nsPIPluginInstancePeer);
+#endif
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetValue(nsPluginInstancePeerVariable variable, void *value)
 {
@@ -596,6 +608,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetUniqueID(PRUint32 *result)
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetCode(const char* *result)
 {
+#ifdef OJI
   if (nsnull != mOwner) {
     nsIJVMPluginTagInfo *tinfo;
     nsresult            rv;
@@ -610,13 +623,17 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetCode(const char* *result)
     return rv;
   }
   else {
+#endif
     *result = 0;
     return NS_ERROR_FAILURE;
+#ifdef OJI
   }
+#endif
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetCodeBase(const char* *result)
 {
+#ifdef OJI
   if (nsnull != mOwner) {
     nsIJVMPluginTagInfo *tinfo;
     nsresult            rv;
@@ -631,13 +648,17 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetCodeBase(const char* *result)
     return rv;
   }
   else {
+#endif
     *result = 0;
     return NS_ERROR_FAILURE;
+#ifdef OJI
   }
+#endif
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetArchive(const char* *result)
 {
+#ifdef OJI
   if (nsnull != mOwner) {
     nsIJVMPluginTagInfo *tinfo;
     nsresult            rv;
@@ -652,13 +673,17 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetArchive(const char* *result)
     return rv;
   }
   else {
+#endif
     *result = 0;
     return NS_ERROR_FAILURE;
+#ifdef OJI
   }
+#endif
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetName(const char* *result)
 {
+#ifdef OJI
   if (nsnull != mOwner) {
     nsIJVMPluginTagInfo *tinfo;
     nsresult            rv;
@@ -673,13 +698,17 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetName(const char* *result)
     return rv;
   }
   else {
+#endif
     *result = 0;
     return NS_ERROR_FAILURE;
+#ifdef OJI
   }
+#endif
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetMayScript(PRBool *result)
 {
+#ifdef OJI
   if (nsnull != mOwner) {
     nsIJVMPluginTagInfo *tinfo;
     nsresult            rv;
@@ -694,9 +723,12 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetMayScript(PRBool *result)
     return rv;
   }
   else {
+#endif
     *result = 0;
     return NS_ERROR_FAILURE;
+#ifdef OJI
   }
+#endif
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::SetWindowSize(PRUint32 width, PRUint32 height)

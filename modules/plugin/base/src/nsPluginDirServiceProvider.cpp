@@ -255,8 +255,10 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
   } else if (nsCRT::strcmp(prop, NS_WIN_JRE_SCAN_KEY) == 0) {
     PRBool isJavaEnabled;
     nsXPIDLCString strVer;
+#ifdef OJI
     if ((NS_FAILED(prefs->GetBoolPref("security.enable_java", &isJavaEnabled)) || !isJavaEnabled) ||
         NS_FAILED(prefs->GetCharPref(prop, getter_Copies(strVer))))
+#endif /* OJI */
       return NS_ERROR_FAILURE;
     verBlock minVer;
     TranslateVersionStr(strVer.get(), &minVer);

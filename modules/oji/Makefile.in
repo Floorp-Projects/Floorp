@@ -26,7 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src
+DIRS		= public 
+
+ifdef MOZ_OJI
+DIRS		+= src
+endif
 
 include $(topsrcdir)/config/rules.mk
 

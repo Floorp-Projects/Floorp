@@ -37,6 +37,7 @@
 
 #include <windows.h>
 #include <windowsx.h>
+#include <assert.h>
 
 #include "resource.h"
 
@@ -474,12 +475,16 @@ void CPlugin::showGetPluginDialog()
 
   m_bOnline = !bOffline;
 
+#ifdef OJI
   if(m_bOnline && m_bJavaScript && m_bSmartUpdate && useDefaultURL_P())
   {
     JRIEnv *penv = NPN_GetJavaEnv();
     m_bJava = (penv != NULL);
   }
-  
+#else
+  m_bJava = FALSE;
+#endif
+
   dbgOut1("Environment:");
   dbgOut2("%s", m_bOnline ? "On-line" : "Off-line");
   dbgOut2("Java %s", m_bJava ? "Enabled" : "Disabled");

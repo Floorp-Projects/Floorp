@@ -84,8 +84,10 @@
 #include "prlog.h"
 #include "prthread.h"
 
+#ifdef OJI
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
+#endif
 
 const size_t gStackSize = 8192;
 
@@ -1250,6 +1252,7 @@ nsJSContext::InitializeLiveConnectClasses()
 {
   nsresult rv = NS_OK;
 
+#ifdef OJI
   nsCOMPtr<nsIJVMManager> jvmManager =
     do_GetService(nsIJVMManager::GetCID(), &rv);
 
@@ -1267,6 +1270,7 @@ nsJSContext::InitializeLiveConnectClasses()
       }
     }
   }
+#endif /* OJI */
 
   // return all is well until things are stable.
   return NS_OK;
@@ -1713,6 +1717,7 @@ nsresult nsJSEnvironment::Init()
     NS_WARNING("Failed to get XPConnect service!");
   }
 
+#ifdef OJI
   // Initialize LiveConnect.  XXXbe use contractid rather than GetCID
   // NOTE: LiveConnect is optional so initialisation will still succeed
   //       even if the service is not present.
@@ -1725,6 +1730,7 @@ nsresult nsJSEnvironment::Init()
     PRBool started = PR_FALSE;
     rv = manager->StartupLiveConnect(sRuntime, started);
   }
+#endif /* OJI */
 
   isInitialized = NS_SUCCEEDED(rv);
 

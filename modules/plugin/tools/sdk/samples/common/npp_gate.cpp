@@ -257,10 +257,12 @@ int16	NPP_HandleEvent(NPP instance, void* event)
   return rv;
 }
 
+#ifdef OJI
 jref NPP_GetJavaClass (void)
 {
   return NULL;
 }
+#endif
 
 /**************************************************/
 /*                                                */

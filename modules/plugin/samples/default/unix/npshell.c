@@ -83,11 +83,13 @@ NPP_Initialize(void)
     return NPERR_NO_ERROR;
 }
 
+#ifdef OJI
 jref
 NPP_GetJavaClass()
 {
     return NULL;
 }
+#endif
 
 void
 NPP_Shutdown(void)
