@@ -64,8 +64,9 @@ Element::~Element()
  * @param aName the name of the attribute you want to set
  * @param aValue the value you want to set the attribute to
  */
-void Element::setAttributeNS(const String& aNamespaceURI, const String& aName,
-                             const String& aValue)
+void Element::setAttributeNS(const nsAString& aNamespaceURI,
+                             const nsAString& aName,
+                             const nsAString& aValue)
 {
     NSI_FROM_TX(Element);
     nsElement->SetAttributeNS(aNamespaceURI, aName, aValue);
@@ -75,7 +76,7 @@ void Element::setAttributeNS(const String& aNamespaceURI, const String& aName,
  * Call nsIContent::GetAttr for the localname and nsID.
  */
 MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
-                       String& aValue)
+                       nsAString& aValue)
 {
     nsCOMPtr<nsIContent> cont(do_QueryInterface(mMozObject));
     NS_ASSERTION(cont, "Element doesn't implement nsIContent");

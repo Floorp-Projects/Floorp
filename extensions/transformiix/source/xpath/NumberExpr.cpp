@@ -56,7 +56,7 @@ ExprResult* NumberExpr::evaluate(txIEvalContext* aContext)
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
 **/
-void NumberExpr::toString(String& str) {
+void NumberExpr::toString(nsAString& str) {
     Double::toString(_value, str);
 } //-- toString
 

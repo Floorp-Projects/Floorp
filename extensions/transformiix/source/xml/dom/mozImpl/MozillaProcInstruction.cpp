@@ -31,6 +31,7 @@
 
 #include "mozilladom.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsString.h"
 
 /**
  * Construct a wrapper with the specified Mozilla object and document owner.

@@ -40,9 +40,5 @@ typedef PRBool MBool;
 #define MB_TRUE  PR_TRUE
 #define MB_FALSE PR_FALSE
 
-#ifndef NULL
- #define NULL 0
-#endif
-
 #endif
 

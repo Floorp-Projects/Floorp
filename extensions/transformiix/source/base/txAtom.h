@@ -60,8 +60,6 @@
 #ifndef TRANSFRMX_ATOM_H
 #define TRANSFRMX_ATOM_H
 
-#include "TxString.h"
-
 #include "nsIAtom.h"
 
 typedef nsIAtom txAtom;

@@ -83,13 +83,13 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     txListIterator iter(&params);
 
     double value;
-    String formatStr;
+    nsAutoString formatStr;
     txExpandedName formatName;
 
     value = evaluateToNumber((Expr*)iter.next(), aContext);
     evaluateToString((Expr*)iter.next(), aContext, formatStr);
     if (iter.hasNext()) {
-        String formatQName;
+        nsAutoString formatQName;
         evaluateToString((Expr*)iter.next(), aContext, formatQName);
         rv = formatName.init(formatQName, mQNameResolveNode, MB_FALSE);
         if (NS_FAILED(rv))
@@ -98,7 +98,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
 
     txDecimalFormat* format = mPs->getDecimalFormat(formatName);
     if (!format) {
-        String err(NS_LITERAL_STRING("unknown decimal format for: "));
+        nsAutoString err(NS_LITERAL_STRING("unknown decimal format for: "));
         toString(err);
         aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
         return new StringResult(err);
@@ -112,15 +112,15 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         return new StringResult(format->mInfinity);
 
     if (value == Double::NEGATIVE_INFINITY) {
-        String res;
+        nsAutoString res;
         res.Append(format->mMinusSign);
         res.Append(format->mInfinity);
         return new StringResult(res);
     }
     
     // Value is a normal finite number
-    String prefix;
-    String suffix;
+    nsAutoString prefix;
+    nsAutoString suffix;
     int minIntegerSize=0;
     int minFractionSize=0;
     int maxFractionSize=0;
@@ -167,7 +167,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
                     if (multiplier == 1)
                         multiplier = 100;
                     else {
-                        String err(INVALID_PARAM_VALUE);
+                        nsAutoString err(INVALID_PARAM_VALUE);
                         toString(err);
                         aContext->receiveError(err,
                                                NS_ERROR_XPATH_EVAL_FAILED);
@@ -178,7 +178,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
                     if (multiplier == 1)
                         multiplier = 1000;
                     else {
-                        String err(INVALID_PARAM_VALUE);
+                        nsAutoString err(INVALID_PARAM_VALUE);
                         toString(err);
                         aContext->receiveError(err,
                                                NS_ERROR_XPATH_EVAL_FAILED);
@@ -263,7 +263,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     if ((c != format->mPatternSeparator && pos < formatLen) ||
         inQuote ||
         groupSize == 0) {
-        String err(INVALID_PARAM_VALUE);
+        nsAutoString err(INVALID_PARAM_VALUE);
         toString(err);
         aContext->receiveError(err,
                                NS_ERROR_XPATH_EVAL_FAILED);
@@ -279,7 +279,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     value = fabs(value) * multiplier;
 
     // Prefix
-    String res(prefix);
+    nsAutoString res(prefix);
 
 #ifdef TX_EXE
 
@@ -386,11 +386,11 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         groupSize = intDigits + 10; //to simplify grouping
 
     // XXX We shouldn't use SetLength.
-    res.getNSString().SetLength(res.Length() +
-                                intDigits +               // integer digits
-                                1 +                       // decimal separator
-                                maxFractionSize +         // fractions
-                                (intDigits-1)/groupSize); // group separators
+    res.SetLength(res.Length() +
+                  intDigits +               // integer digits
+                  1 +                       // decimal separator
+                  maxFractionSize +         // fractions
+                  (intDigits-1)/groupSize); // group separators
 
     PRInt32 i = bufIntDigits + maxFractionSize - 1;
     MBool carry = (i+1 < buflen) && (buf[i+1] >= '5');
@@ -415,8 +415,8 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
 
         if (hasFraction || digit != 0 || i < bufIntDigits+minFractionSize) {
             hasFraction = MB_TRUE;
-            res.replace(resPos--,
-                        (PRUnichar)(digit + format->mZeroDigit));
+            res.SetCharAt((PRUnichar)(digit + format->mZeroDigit),
+                          resPos--);
         }
         else {
             res.Truncate(resPos--);
@@ -425,7 +425,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
 
     // Decimal separator
     if (hasFraction) {
-        res.replace(resPos--, format->mDecimalSeparator);
+        res.SetCharAt(format->mDecimalSeparator, resPos--);
     }
     else {
         res.Truncate(resPos--);
@@ -447,17 +447,17 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         }
 
         if (i != 0 && i%groupSize == 0) {
-            res.replace(resPos--, format->mGroupingSeparator);
+            res.SetCharAt(format->mGroupingSeparator, resPos--);
         }
 
-        res.replace(resPos--, (PRUnichar)(digit + format->mZeroDigit));
+        res.SetCharAt((PRUnichar)(digit + format->mZeroDigit), resPos--);
     }
 
     if (carry) {
         if (i%groupSize == 0) {
-            res.insert(resPos + 1, format->mGroupingSeparator);
+            res.Insert(format->mGroupingSeparator, resPos + 1);
         }
-        res.insert(resPos + 1, (PRUnichar)(1 + format->mZeroDigit));
+        res.Insert((PRUnichar)(1 + format->mZeroDigit), resPos + 1);
     }
     
     if (!hasFraction && !intDigits && !carry) {

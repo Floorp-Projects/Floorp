@@ -53,14 +53,12 @@ MODULE_NAME	= TransformiixModule
 
 
 CPPSRCS = XSLTProcessorModule.cpp
-LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
-  ../source/base/Double.$(OBJ_SUFFIX) \
+LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/base/List.$(OBJ_SUFFIX) \
   ../source/base/Map.$(OBJ_SUFFIX) \
   ../source/base/NamedMap.$(OBJ_SUFFIX) \
   ../source/base/SimpleErrorObserver.$(OBJ_SUFFIX) \
   ../source/base/Stack.$(OBJ_SUFFIX) \
-  ../source/base/StringList.$(OBJ_SUFFIX) \
   ../source/base/Tokenizer.$(OBJ_SUFFIX) \
   ../source/base/txAtoms.$(OBJ_SUFFIX) \
   ../source/base/txExpandedNameMap.$(OBJ_SUFFIX) \
@@ -110,7 +108,6 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xml/XMLDOMUtils.$(OBJ_SUFFIX) \
   ../source/xml/parser/XMLParser.$(OBJ_SUFFIX) \
   ../source/xslt/txOutputFormat.$(OBJ_SUFFIX) \
-  ../source/xslt/Names.$(OBJ_SUFFIX) \
   ../source/xslt/ProcessorState.$(OBJ_SUFFIX) \
   ../source/xslt/txMozillaTextOutput.$(OBJ_SUFFIX) \
   ../source/xslt/txMozillaXSLTProcessor.$(OBJ_SUFFIX) \

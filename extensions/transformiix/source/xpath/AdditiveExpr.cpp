@@ -94,7 +94,7 @@ ExprResult* AdditiveExpr::evaluate(txIEvalContext* aContext)
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
 **/
-void AdditiveExpr::toString(String& str) {
+void AdditiveExpr::toString(nsAString& str) {
 
     if ( leftExpr ) leftExpr->toString(str);
     else str.Append(NS_LITERAL_STRING("null"));

@@ -41,10 +41,8 @@
 #include "List.h"
 #include "txAtom.h"
 #include "baseutils.h"
-
-#ifndef NULL
-typedef 0 NULL;
-#endif
+#include "nsString.h"
+#include "nsVoidArray.h"
 
 #define kTxNsNodeIndexOffset 0x00000000;
 #define kTxAttrIndexOffset 0x40000000;
@@ -55,13 +53,6 @@ class Document;
 class Element;
 class Attr;
 class ProcessingInstruction;
-
-/*
- * NULL string for use by Element::getAttribute() for when the attribute
- * specified by "name" does not exist, and therefore shoud be "NULL".
- * Used in txNamespaceManager as well.
- */
-const String NULL_STRING;
 
 #define kNameSpaceID_Unknown -1
 #define kNameSpaceID_None     0
@@ -98,8 +89,8 @@ class Node : public TxObject
     virtual ~Node() {}
 
     //Read functions
-    virtual const String& getNodeName() const = 0;
-    virtual const String& getNodeValue() = 0;
+    virtual nsresult getNodeName(nsAString& aName) const = 0;
+    virtual nsresult getNodeValue(nsAString& aValue) = 0;
     virtual unsigned short getNodeType() const = 0;
     virtual Node* getParentNode() const = 0;
     virtual Node* getFirstChild() const = 0;
@@ -110,7 +101,7 @@ class Node : public TxObject
     virtual Document* getOwnerDocument() const = 0;
 
     //Write functions
-    virtual void setNodeValue(const String& nodeValue) = 0;
+    virtual void setNodeValue(const nsAString& nodeValue) = 0;
 
     //Node manipulation functions
     virtual Node* appendChild(Node* newChild) = 0;
@@ -118,10 +109,10 @@ class Node : public TxObject
     virtual MBool hasChildNodes() const = 0;
     
     //From DOM3 26-Jan-2001 WD
-    virtual String getBaseURI() = 0;
+    virtual nsresult getBaseURI(nsAString& aURI) = 0;
 
     //Introduced in DOM2
-    virtual const String& getNamespaceURI() = 0;
+    virtual nsresult getNamespaceURI(nsAString& aNSURI) = 0;
 
     //txXPathNode functions
     virtual MBool getLocalName(txAtom** aLocalName) = 0;
@@ -190,12 +181,12 @@ class NamedNodeMap : public NodeListDefinition
     NamedNodeMap();
     virtual ~NamedNodeMap();
 
-    Node* getNamedItem(const String& name);
+    Node* getNamedItem(const nsAString& name);
     virtual Node* setNamedItem(Node* arg);
-    virtual Node* removeNamedItem(const String& name);
+    virtual Node* removeNamedItem(const nsAString& name);
 
   private:
-    NodeListDefinition::ListItem* findListItemByName(const String& name);
+    NodeListDefinition::ListItem* findListItemByName(const nsAString& name);
 };
 
 //
@@ -213,7 +204,7 @@ class AttrMap : public NamedNodeMap
     virtual ~AttrMap();
 
     Node* setNamedItem(Node* arg);
-    Node* removeNamedItem(const String& name);
+    Node* removeNamedItem(const nsAString& name);
     void clear();
 
   private:
@@ -232,8 +223,8 @@ class NodeDefinition : public Node, public NodeList
     virtual ~NodeDefinition();      //Destructor, delete all children of node
 
     //Read functions
-    const String& getNodeName() const;
-    virtual const String& getNodeValue();
+    nsresult getNodeName(nsAString& aName) const;
+    nsresult getNodeValue(nsAString& aValue);
     unsigned short getNodeType() const;
     Node* getParentNode() const;
     Node* getFirstChild() const;
@@ -244,7 +235,7 @@ class NodeDefinition : public Node, public NodeList
     Document* getOwnerDocument() const;
 
     //Write functions
-    virtual void setNodeValue(const String& nodeValue);
+    virtual void setNodeValue(const nsAString& nodeValue);
 
     //Child node manipulation functions
     virtual Node* appendChild(Node* newChild);
@@ -252,10 +243,10 @@ class NodeDefinition : public Node, public NodeList
     MBool hasChildNodes() const;
     
     //From DOM3 26-Jan-2001 WD
-    virtual String getBaseURI();
+    virtual nsresult getBaseURI(nsAString& aURI);
 
     //Introduced in DOM2
-    const String& getNamespaceURI();
+    nsresult getNamespaceURI(nsAString& aNSURI);
 
     //txXPathNode functions
     virtual MBool getLocalName(txAtom** aLocalName);
@@ -269,23 +260,23 @@ class NodeDefinition : public Node, public NodeList
     PRUint32 getLength();
 
     //Only to be used from XMLParser
-    void appendData(PRUnichar* aData, int aLength)
+    void appendData(const PRUnichar* aData, int aLength)
     {
       nodeValue.Append(aData, aLength);
     };
 
   protected:
     friend class Document;
-    NodeDefinition(NodeType type, const String& name,
-                   const String& value, Document* owner);
-    NodeDefinition(NodeType aType, const String& aValue,
+    NodeDefinition(NodeType type, const nsAString& name,
+                   const nsAString& value, Document* owner);
+    NodeDefinition(NodeType aType, const nsAString& aValue,
                    Document* aOwner);
 
     //Name, value, and attributes for this node.  Available to derrived
     //classes, since those derrived classes have a better idea how to use them,
     //than the generic node does.
-    String nodeName;
-    String nodeValue;
+    nsString nodeName;
+    nsString nodeValue;
 
     NodeDefinition* implAppendChild(NodeDefinition* newChild);
     NodeDefinition* implRemoveChild(NodeDefinition* oldChild);
@@ -293,7 +284,7 @@ class NodeDefinition : public Node, public NodeList
     void DeleteChildren();
 
   private:
-    void Init(NodeType aType, const String& aValue, Document* aOwner);
+    void Init(NodeType aType, const nsAString& aValue, Document* aOwner);
 
     //Type of node this is
     NodeType nodeType;
@@ -360,7 +351,7 @@ class DocumentFragment : public NodeDefinition
   private:
     friend class Document;
     DocumentFragment(Document* aOwner) :
-      NodeDefinition(Node::DOCUMENT_FRAGMENT_NODE, NULL_STRING, aOwner)
+      NodeDefinition(Node::DOCUMENT_FRAGMENT_NODE, nsString(), aOwner)
     {
     };
 };
@@ -376,37 +367,37 @@ class Document : public NodeDefinition
     Element* getDocumentElement();
 
     //Factory functions for various node types
-    Node* createComment(const String& aData);
+    Node* createComment(const nsAString& aData);
     Node* createDocumentFragment();
-    ProcessingInstruction* createProcessingInstruction(const String& aTarget,
-                                                       const String& aData);
-    Node* createTextNode(const String& theData);
+    ProcessingInstruction* createProcessingInstruction(const nsAString& aTarget,
+                                                       const nsAString& aData);
+    Node* createTextNode(const nsAString& theData);
 
-    Element* createElement(const String& tagName);
-    Attr* createAttribute(const String& name);
+    Element* createElement(const nsAString& tagName);
+    Attr* createAttribute(const nsAString& name);
 
     // Introduced in DOM Level 2
-    Element* createElementNS(const String& aNamespaceURI,
-                             const String& aTagName);
-    Attr* createAttributeNS(const String& aNamespaceURI,
-                            const String& aName);
-    Element* getElementById(const String aID);
+    Element* createElementNS(const nsAString& aNamespaceURI,
+                             const nsAString& aTagName);
+    Attr* createAttributeNS(const nsAString& aNamespaceURI,
+                            const nsAString& aName);
+    Element* getElementById(const nsAString& aID);
 
     // Node manipulation functions
     Node* appendChild(Node* newChild);
 
     //Override to return documentBaseURI
-    String getBaseURI();
+    nsresult getBaseURI(nsAString& aURI);
 
-    PRInt32 namespaceURIToID(const String& aNamespaceURI);
-    void namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI);
+    PRInt32 namespaceURIToID(const nsAString& aNamespaceURI);
+    void namespaceIDToURI(PRInt32 aNamespaceID, nsAString& aNamespaceURI);
 
   private:
     Element* documentElement;
 
     // This class is friend to be able to set the documentBaseURI
     friend class XMLParser;
-    String documentBaseURI;
+    nsString documentBaseURI;
 };
 
 //
@@ -418,11 +409,11 @@ class Element : public NodeDefinition
     virtual ~Element();
 
     NamedNodeMap* getAttributes();
-    void setAttribute(const String& name, const String& value);
-    void setAttributeNS(const String& aNamespaceURI,
-                        const String& aName,
-                        const String& aValue);
-    Attr* getAttributeNode(const String& name);
+    void setAttribute(const nsAString& name, const nsAString& value);
+    void setAttributeNS(const nsAString& aNamespaceURI,
+                        const nsAString& aName,
+                        const nsAString& aValue);
+    Attr* getAttributeNode(const nsAString& name);
 
     // Node manipulation functions
     Node* appendChild(Node* newChild);
@@ -430,13 +421,13 @@ class Element : public NodeDefinition
     //txXPathNode functions override
     MBool getLocalName(txAtom** aLocalName);
     PRInt32 getNamespaceID();
-    MBool getAttr(txAtom* aLocalName, PRInt32 aNSID, String& aValue);
+    MBool getAttr(txAtom* aLocalName, PRInt32 aNSID, nsAString& aValue);
     MBool hasAttr(txAtom* aLocalName, PRInt32 aNSID);
 
   private:
     friend class Document;
-    Element(const String& tagName, Document* owner);
-    Element(const String& aNamespaceURI, const String& aTagName,
+    Element(const nsAString& tagName, Document* owner);
+    Element(const nsAString& aNamespaceURI, const nsAString& aTagName,
             Document* aOwner);
 
     AttrMap mAttributes;
@@ -454,13 +445,10 @@ class Attr : public NodeDefinition
   public:
     virtual ~Attr();
 
-    const String& getValue();
-    void setValue(const String& newValue);
-
     //Override the set and get member functions for a node's value to create a
     //new TEXT node when set, and to interpret its children when read.
-    void setNodeValue(const String& nodeValue);
-    const String& getNodeValue();
+    void setNodeValue(const nsAString& aValue);
+    nsresult getNodeValue(nsAString& aValue);
 
     // Node manipulation functions
     Node* appendChild(Node* newChild);
@@ -472,8 +460,8 @@ class Attr : public NodeDefinition
 
   private:
     friend class Document;
-    Attr(const String& name, Document* owner);
-    Attr(const String& aNamespaceURI, const String& aName,
+    Attr(const nsAString& name, Document* owner);
+    Attr(const nsAString& aNamespaceURI, const nsAString& aName,
          Document* aOwner);
 
     // These need to be friend to be able to update the ownerElement
@@ -504,7 +492,7 @@ class ProcessingInstruction : public NodeDefinition
 
   private:
     friend class Document;
-    ProcessingInstruction(const String& theTarget, const String& theData,
+    ProcessingInstruction(const nsAString& theTarget, const nsAString& theData,
                           Document* owner);
 
     txAtom* mLocalName;
@@ -513,40 +501,35 @@ class ProcessingInstruction : public NodeDefinition
 class txNamespaceManager
 {
 public:
-    static PRInt32 getNamespaceID(const String& aURI)
+    static PRInt32 getNamespaceID(const nsAString& aURI)
     {
         if (!mNamespaces && !init())
             return kNameSpaceID_Unknown;
-        txListIterator nameIter(mNamespaces);
-        PRInt32 id=0;
-        String* uri;
-        while (nameIter.hasNext()) {
-            uri = (String*)nameIter.next();
-            id++;
-            if (uri->Equals(aURI))
-                return id;
+
+        PRInt32 id = mNamespaces->IndexOf(aURI);
+        if (id != -1) {
+            return id + 1;
         }
-        uri = new String(aURI);
-        NS_ASSERTION(uri, "Out of memory, namespaces are getting lost");
-        if (!uri)
+
+        if (!mNamespaces->AppendString(aURI)) {
+            NS_ASSERTION(0, "Out of memory, namespaces are getting lost");
             return kNameSpaceID_Unknown;
-        mNamespaces->add(uri);
-        id++;
-        return id;
+        }
+
+        return mNamespaces->Count();
     }
 
-    static const String& getNamespaceURI(const PRInt32 aID)
+    static nsresult getNamespaceURI(const PRInt32 aID, nsAString& aNSURI)
     {
         // empty namespace, and errors
-        if (aID <= 0)
-            return NULL_STRING;
-        if (!mNamespaces && !init())
-            return NULL_STRING;
-        txListIterator nameIter(mNamespaces);
-        String* aURI = (String*)nameIter.advance(aID);
-        if (aURI)
-            return *aURI;
-        return NULL_STRING;
+        aNSURI.Truncate();
+        if (aID <= 0 || (!mNamespaces && !init()) ||
+            aID > mNamespaces->Count()) {
+            return NS_OK;
+        }
+
+        aNSURI = *mNamespaces->StringAt(aID - 1);
+        return NS_OK;
     }
 
     static MBool init()
@@ -555,7 +538,7 @@ public:
                      "called without matching shutdown()");
         if (mNamespaces)
             return MB_TRUE;
-        mNamespaces = new txList();
+        mNamespaces = new nsStringArray();
         if (!mNamespaces)
             return MB_FALSE;
         /*
@@ -564,27 +547,14 @@ public:
          * xmlns prefix is 1, mapped to http://www.w3.org/2000/xmlns/
          * xml prefix is 2, mapped to http://www.w3.org/XML/1998/namespace
          */
-        String* XMLNSUri = new String(NS_LITERAL_STRING("http://www.w3.org/2000/xmlns/"));
-        if (!XMLNSUri) {
+        if (!mNamespaces->AppendString(NS_LITERAL_STRING("http://www.w3.org/2000/xmlns/")) ||
+            !mNamespaces->AppendString(NS_LITERAL_STRING("http://www.w3.org/XML/1998/namespace")) ||
+            !mNamespaces->AppendString(NS_LITERAL_STRING("http://www.w3.org/1999/XSL/Transform"))) {
             delete mNamespaces;
             mNamespaces = 0;
             return MB_FALSE;
         }
-        mNamespaces->add(XMLNSUri);
-        String* XMLUri = new String(NS_LITERAL_STRING("http://www.w3.org/XML/1998/namespace"));
-        if (!XMLUri) {
-            delete mNamespaces;
-            mNamespaces = 0;
-            return MB_FALSE;
-        }
-        mNamespaces->add(XMLUri);
-        String* XSLTUri = new String(NS_LITERAL_STRING("http://www.w3.org/1999/XSL/Transform"));
-        if (!XSLTUri) {
-            delete mNamespaces;
-            mNamespaces = 0;
-            return MB_FALSE;
-        }
-        mNamespaces->add(XSLTUri);
+
         return MB_TRUE;
     }
 
@@ -593,18 +563,15 @@ public:
         NS_ASSERTION(mNamespaces, "called without matching init()");
         if (!mNamespaces)
             return;
-        txListIterator iter(mNamespaces);
-        while (iter.hasNext())
-            delete (String*)iter.next();
         delete mNamespaces;
-        mNamespaces = NULL;
+        mNamespaces = nsnull;
     }
 
 private:
-    static txList* mNamespaces;
+    static nsStringArray* mNamespaces;
 };
 
 #define TX_IMPL_DOM_STATICS \
-    txList* txNamespaceManager::mNamespaces = 0
+    nsStringArray* txNamespaceManager::mNamespaces = 0
 
 #endif

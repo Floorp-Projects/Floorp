@@ -250,7 +250,7 @@ void LocationStep::fromDescendantsRev(Node* node, txIMatchContext* cs,
  * @param str the destination String to append to
  * @see Expr
 **/
-void LocationStep::toString(String& str) {
+void LocationStep::toString(nsAString& str) {
     switch (mAxisIdentifier) {
         case ANCESTOR_AXIS :
             str.Append(NS_LITERAL_STRING("ancestor::"));

@@ -30,7 +30,7 @@
 
 #include "primitives.h"
 #include "TxObject.h"
-#include "TxString.h"
+#include "nsString.h"
 
 /*
  * ExprResult
@@ -72,7 +72,7 @@ public:
      * Creates a String representation of this ExprResult
      * @param str the destination string to append the String representation to.
     **/
-    virtual void stringValue(String& str) = 0;
+    virtual void stringValue(nsAString& str) = 0;
 
     /**
      * Converts this ExprResult to a Boolean (MBool) value
@@ -97,7 +97,7 @@ public:
 
     virtual ExprResult* clone();
     virtual short  getResultType();
-    virtual void   stringValue(String& str);
+    virtual void   stringValue(nsAString& str);
     virtual MBool  booleanValue();
     virtual double numberValue();
 
@@ -114,7 +114,7 @@ public:
 
     virtual ExprResult* clone();
     virtual short  getResultType();
-    virtual void   stringValue(String& str);
+    virtual void   stringValue(nsAString& str);
     virtual MBool  booleanValue();
     virtual double numberValue();
 
@@ -125,21 +125,17 @@ private:
 
 
 class StringResult : public ExprResult {
-
 public:
-
     StringResult();
     StringResult(const nsAString& str);
 
     virtual ExprResult* clone();
     virtual short  getResultType();
-    virtual void   stringValue(String& str);
+    virtual void   stringValue(nsAString& str);
     virtual MBool  booleanValue();
     virtual double numberValue();
 
-
-private:
-    String value;
+    nsString mValue;
 };
 
 #endif

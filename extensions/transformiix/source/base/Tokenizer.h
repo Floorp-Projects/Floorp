@@ -38,7 +38,7 @@
 #define MITRE_TOKENIZER_H
 
 #include "baseutils.h"
-#include "TxString.h"
+#include "nsString.h"
 
 class txTokenizer
 {
@@ -47,7 +47,7 @@ public:
     /*
      * Creates a new txTokenizer using the given source string
      */
-    txTokenizer(const String& aSource);
+    txTokenizer(const nsAString& aSource);
 
     /*
      * Checks if any more tokens are avalible
@@ -57,13 +57,13 @@ public:
     /*
      * Sets aBuffer to value of next token
      */
-    void nextToken(String& aBuffer);
+    void nextToken(nsAString& aBuffer);
 
 private:
 
     PRUint32 mCurrentPos;
     PRUint32 mSize;
-    String mSource;
+    nsString mSource;
 
 };
 #endif

@@ -32,15 +32,13 @@
 
 #include "baseutils.h"
 #include "dom.h"
+#include "nsDependentSubstring.h"
 #include "txAtom.h"
 #include "txError.h"
 
-class String;
-
 class txExpandedName {
 public:
-    txExpandedName() : mNamespaceID(kNameSpaceID_None),
-                       mLocalName(0)
+    txExpandedName() : mNamespaceID(kNameSpaceID_None)
     {
     }
 
@@ -48,29 +46,24 @@ public:
                    txAtom* aLocalName) : mNamespaceID(aNsID),
                                          mLocalName(aLocalName)
     {
-        TX_IF_ADDREF_ATOM(mLocalName);
     }
 
     txExpandedName(const txExpandedName& aOther) :
         mNamespaceID(aOther.mNamespaceID),
         mLocalName(aOther.mLocalName)
     {
-        TX_IF_ADDREF_ATOM(mLocalName);
     }
 
     ~txExpandedName()
     {
-        TX_IF_RELEASE_ATOM(mLocalName);
     }
     
-    nsresult init(const String& aQName, Node* aResolver, MBool aUseDefault);
+    nsresult init(const nsAString& aQName, Node* aResolver, MBool aUseDefault);
 
     txExpandedName& operator = (const txExpandedName& rhs)
     {
         mNamespaceID = rhs.mNamespaceID;
-        TX_IF_RELEASE_ATOM(mLocalName);
         mLocalName = rhs.mLocalName;
-        TX_IF_ADDREF_ATOM(mLocalName);
         return *this;
     }
 
@@ -87,21 +80,21 @@ public:
     }
 
     PRInt32 mNamespaceID;
-    txAtom* mLocalName;
+    nsCOMPtr<nsIAtom> mLocalName;
 };
 
 class XMLUtils {
 
 public:
 
-    static void getPrefix(const String& src, String& dest);
-    static void getLocalPart(const String& src, String& dest);
-
+    static void getPrefix(const nsAString& src, txAtom** dest);
+    static const nsDependentSubstring getLocalPart(const nsAString& src);
+    static void getLocalPart(const nsAString& src, txAtom** dest);
 
     /**
-     * Returns true if the given String is a valid XML QName
+     * Returns true if the given string is a valid XML QName
      */
-    static MBool isValidQName(const String& aName);
+    static MBool isValidQName(const nsAFlatString& aName);
 
     /*
      * Returns true if the given character is whitespace.
@@ -115,13 +108,19 @@ public:
 
     /**
      * Returns true if the given string has only whitespace characters
-    **/
-    static MBool isWhitespace(const String& aText);
+     */
+    static PRBool isWhitespace(const nsAFlatString& aText);
+
+    /**
+     * Returns true if the given node's DOM nodevalue has only whitespace
+     * characters
+     */
+    static PRBool isWhitespace(Node* aNode);
 
     /**
      * Normalizes the value of a XML processingInstruction
     **/
-    static void normalizePIValue(String& attValue);
+    static void normalizePIValue(nsAString& attValue);
 
     /*
      * Returns true if the given character represents a numeric letter (digit).

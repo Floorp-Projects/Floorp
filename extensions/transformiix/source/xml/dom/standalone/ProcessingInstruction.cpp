@@ -35,8 +35,8 @@
 //
 //Construct a text object with the specified document owner and data
 //
-ProcessingInstruction::ProcessingInstruction(const String& theTarget,
-                                             const String& theData,
+ProcessingInstruction::ProcessingInstruction(const nsAString& theTarget,
+                                             const nsAString& theData,
                                              Document* owner) :
                        NodeDefinition(Node::PROCESSING_INSTRUCTION_NODE,
                                       theTarget, theData, owner)

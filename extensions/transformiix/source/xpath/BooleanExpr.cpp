@@ -92,7 +92,7 @@ ExprResult* BooleanExpr::evaluate(txIEvalContext* aContext)
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
 **/
-void BooleanExpr::toString(String& str) {
+void BooleanExpr::toString(nsAString& str) {
 
     if ( leftExpr ) leftExpr->toString(str);
     else str.Append(NS_LITERAL_STRING("null"));

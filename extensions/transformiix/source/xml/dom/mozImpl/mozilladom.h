@@ -49,11 +49,6 @@
 #include "pldhash.h"
 #include "txAtom.h"
 #include "TxObject.h"
-#include "TxString.h"
-
-#ifndef NULL
-typedef 0 NULL;
-#endif
 
 #define kTxNsNodeIndexOffset 0x00000000;
 #define kTxAttrIndexOffset 0x40000000;
@@ -169,8 +164,8 @@ public:
     virtual ~Node();
 
     // Read functions
-    virtual const String& getNodeName();
-    virtual const String& getNodeValue();
+    virtual nsresult getNodeName(nsAString& aName);
+    virtual nsresult getNodeValue(nsAString& aValue);
     virtual unsigned short getNodeType() const;
     virtual Node* getParentNode();
     virtual Node* getFirstChild();
@@ -186,10 +181,10 @@ public:
     virtual MBool hasChildNodes() const;
 
     // Introduced in DOM2
-    virtual String getNamespaceURI();
+    virtual nsresult getNamespaceURI(nsAString& aNSURI);
 
     // From DOM3 26-Jan-2001 WD
-    virtual String getBaseURI();
+    virtual nsresult getBaseURI(nsAString& aURI);
 
     // txXPathNode functions
     virtual MBool getLocalName(txAtom** aLocalName);
@@ -199,8 +194,6 @@ public:
     virtual PRInt32 compareDocumentPosition(Node* aOther);
 
 protected:
-    String mNodeName;
-    String mNodeValue;
     PRInt32 mNamespaceID;
     
 private:
@@ -227,7 +220,7 @@ public:
     NamedNodeMap(nsIDOMNamedNodeMap* aNamedNodeMap, Document* aOwner);
     ~NamedNodeMap();
 
-    Node* getNamedItem(const String& aName);
+    Node* getNamedItem(const nsAString& aName);
     Node* item(PRUint32 aIndex);
     PRUint32 getLength();
 };
@@ -259,20 +252,20 @@ public:
     ProcessingInstruction* createProcessingInstruction(
                 nsIDOMProcessingInstruction* aPi);
 
-    Node* createComment(const String& aData);
+    Node* createComment(const nsAString& aData);
     Node* createDocumentFragment();
-    ProcessingInstruction* createProcessingInstruction(const String& aTarget,
-                                                       const String& aData);
-    Node* createTextNode(const String& aData);
+    ProcessingInstruction* createProcessingInstruction(const nsAString& aTarget,
+                                                       const nsAString& aData);
+    Node* createTextNode(const nsAString& aData);
 
     // Introduced in DOM Level 2
-    Element* createElementNS(const String& aNamespaceURI,
-                             const String& aTagName);
+    Element* createElementNS(const nsAString& aNamespaceURI,
+                             const nsAString& aTagName);
 
-    Element* getElementById(const String aID);
+    Element* getElementById(const nsAString& aID);
 
-    PRInt32 namespaceURIToID(const String& aNamespaceURI);
-    void namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI);
+    PRInt32 namespaceURIToID(const nsAString& aNamespaceURI);
+    void namespaceIDToURI(PRInt32 aNamespaceID, nsAString& aNamespaceURI);
 
 private:
     PLDHashTable mWrapperHashTable;
@@ -294,13 +287,13 @@ public:
     Element(nsIDOMElement* aElement, Document* aOwner);
     ~Element();
 
-    void setAttributeNS(const String& aNamespaceURI,
-                        const String& aName,
-                        const String& aValue);
+    void setAttributeNS(const nsAString& aNamespaceURI,
+                        const nsAString& aName,
+                        const nsAString& aValue);
 
     // txXPathNode functions
     MBool getLocalName(txAtom** aLocalName);
-    MBool getAttr(txAtom* aLocalName, PRInt32 aNSID, String& aValue);
+    MBool getAttr(txAtom* aLocalName, PRInt32 aNSID, nsAString& aValue);
     MBool hasAttr(txAtom* aLocalName, PRInt32 aNSID);
 };
 

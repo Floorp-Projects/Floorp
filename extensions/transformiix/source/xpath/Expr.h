@@ -38,9 +38,9 @@
 #include "baseutils.h"
 #include "dom.h"
 #include "List.h"
+#include "nsString.h"
 #include "txAtom.h"
 #include "TxObject.h"
-#include "TxString.h"
 
 /*
   XPath class definitions.
@@ -84,7 +84,7 @@ public:
      * other #toString() methods for Expressions.
      * @return the String representation of this Expr.
     **/
-    virtual void toString(String& str) = 0;
+    virtual void toString(nsAString& str) = 0;
 
 }; //-- Expr
 
@@ -93,7 +93,7 @@ public:
 
 #define TX_DECL_EXPR \
     TX_DECL_EVALUATE; \
-    void toString(String& aDest)
+    void toString(nsAString& aDest)
 
 #define TX_DECL_FUNCTION \
     TX_DECL_EVALUATE; \
@@ -107,8 +107,8 @@ class FunctionCall : public Expr {
 
 public:
 
-    static const String INVALID_PARAM_COUNT;
-    static const String INVALID_PARAM_VALUE;
+    static const nsString INVALID_PARAM_COUNT;
+    static const nsString INVALID_PARAM_VALUE;
 
     virtual ~FunctionCall();
 
@@ -116,7 +116,7 @@ public:
      * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(txIEvalContext* aContext) = 0;
-    void toString(String& aDest);
+    void toString(nsAString& aDest);
 
     /**
      * Adds the given parameter to this FunctionCall's parameter list
@@ -143,7 +143,7 @@ protected:
      * The value is appended to the given destination String
      */
     void evaluateToString(Expr* aExpr, txIEvalContext* aContext,
-                          String& aDest);
+                          nsAString& aDest);
 
     /*
      * Evaluates the given Expression and converts its result to a number.
@@ -206,13 +206,13 @@ public:
      */
     virtual MBool matches(Node* aNode, txIMatchContext* aContext) = 0;
     virtual double getDefaultPriority() = 0;
-    virtual void toString(String& aDest) = 0;
+    virtual void toString(nsAString& aDest) = 0;
 };
 
 #define TX_DECL_NODE_TEST \
     MBool matches(Node* aNode, txIMatchContext* aContext); \
     double getDefaultPriority(); \
-    void toString(String& aDest)
+    void toString(nsAString& aDest)
 
 /*
  * This class represents a NameTest as defined by the XPath spec
@@ -261,7 +261,7 @@ public:
     /*
      * Sets the name of the node to match. Only availible for pi nodes
      */
-    void setNodeName(const String& aName);
+    void setNodeName(const nsAString& aName);
 
     TX_DECL_NODE_TEST;
 
@@ -309,7 +309,7 @@ public:
      * other #toString() methods for Expressions.
      * @return the String representation of this PredicateList.
     **/
-    virtual void toString(String& dest);
+    virtual void toString(nsAString& dest);
 
 protected:
     //-- list of predicates
@@ -408,13 +408,13 @@ class StringExpr : public Expr {
 
 public:
 
-    StringExpr(const String& value);
+    StringExpr(const nsAString& value);
 
     TX_DECL_EXPR;
 
 private:
 
-    String value;
+    nsString value;
 }; //-- StringExpr
 
 
@@ -596,8 +596,6 @@ public:
     TX_DECL_EXPR;
 
 private:
-    static const String RTF_INVALID_OP;
-    static const String NODESET_EXPECTED;
     struct PathExprItem {
         Expr* expr;
         PathOperator pathOp;

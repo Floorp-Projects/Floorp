@@ -32,9 +32,7 @@
 
 #include "baseutils.h"
 #include "TxObject.h"
-#include "TxString.h"
-
-class StringList;
+#include "nsString.h"
 
 class NamedMap : public TxObject {
 
@@ -61,24 +59,16 @@ public:
     **/
     virtual ~NamedMap();
 
-
-    /**
-     * Returns a list of all the keys of this NamedMap.
-     *
-     * You will need to delete this List when you are done with it.
-    **/
-    StringList* keys();
-
     /**
      *  Returns the object reference in this Map associated with the given name
      * @return the object reference in this Map associated with the given name
     **/
-    TxObject* get(const String& name);
+    TxObject* get(const nsAString& name);
 
     /**
      *  Adds the Object reference to the map and associates it with the given name
     **/
-    void  put(const String& name, TxObject* obj);
+    void  put(const nsAString& name, TxObject* obj);
 
     /**
      * Removes all elements from the Map table
@@ -98,7 +88,7 @@ public:
      * @param index the position in the NodeSet to remove the Node from
      * @return the Node that was removed from the list
     **/
-    TxObject* remove(const String& key);
+    TxObject* remove(const nsAString& key);
 
     /**
      * Sets the object deletion flag. If set to true, objects in
@@ -126,7 +116,7 @@ public:
 private:
 
     struct BucketItem {
-        String key;
+        nsString key;
         TxObject* item;
         BucketItem* next;
         BucketItem* prev;
@@ -145,11 +135,9 @@ private:
      //- Private Methods -/
     //-------------------/
 
-    BucketItem* createBucketItem(const String& key, TxObject* objPtr);
+    BucketItem* createBucketItem(const nsAString& key, TxObject* objPtr);
 
-    BucketItem* getBucketItem(const String& key);
-
-    unsigned long hashKey(const String& key);
+    BucketItem* getBucketItem(const nsAString& key);
 
     /**
      * Helper method for constructors

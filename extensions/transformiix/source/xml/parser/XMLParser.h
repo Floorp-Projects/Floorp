@@ -49,13 +49,14 @@ class XMLParser
     XMLParser();
    ~XMLParser();
 
-    Document* getDocumentFromURI(const String& href, Document* aLoader, String& errMsg);
+    Document* getDocumentFromURI(const nsAString& href, Document* aLoader,
+                                 nsAString& errMsg);
 #ifdef TX_EXE
-    Document* parse(istream& inputStream, const String& uri);
-    const String& getErrorString();
+    Document* parse(istream& inputStream, const nsAString& uri);
+    const nsAString& getErrorString();
 
   protected:
-    String  errorString;
+    nsString  errorString;
 #endif
 };
 

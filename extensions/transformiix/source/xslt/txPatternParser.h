@@ -45,7 +45,7 @@
 class txPatternParser : public ExprParser
 {
 public:
-    static txPattern* createPattern(const String& aPattern,
+    static txPattern* createPattern(const nsAFlatString& aPattern,
                                     txIParseContext* aContext,
                                     ProcessorState* aPs);
 protected:

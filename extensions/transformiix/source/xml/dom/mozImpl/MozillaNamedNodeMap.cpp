@@ -58,7 +58,7 @@ NamedNodeMap::~NamedNodeMap()
  *
  * @return the node with the specified name
  */
-Node* NamedNodeMap::getNamedItem(const String& aName)
+Node* NamedNodeMap::getNamedItem(const nsAString& aName)
 {
     NSI_FROM_TX(NamedNodeMap);
     nsCOMPtr<nsIDOMNode> node;

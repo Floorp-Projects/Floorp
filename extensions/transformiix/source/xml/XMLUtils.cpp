@@ -30,33 +30,31 @@
  */
 
 #include "XMLUtils.h"
+#include "nsString.h"
 #include "txAtoms.h"
 
-nsresult txExpandedName::init(const String& aQName,
+nsresult txExpandedName::init(const nsAString& aQName,
                               Node* aResolver,
                               MBool aUseDefault)
 {
     NS_ASSERTION(aResolver, "missing resolve node");
-    if (!XMLUtils::isValidQName(aQName))
+    if (!XMLUtils::isValidQName(PromiseFlatString(aQName)))
         return NS_ERROR_FAILURE;
 
-    PRInt32 idx = aQName.indexOf(':');
+    PRInt32 idx = aQName.FindChar(':');
     if (idx != kNotFound) {
-        String localName, prefixStr;
-        aQName.subString(0, (PRUint32)idx, prefixStr);
-        txAtom* prefix = TX_GET_ATOM(prefixStr);
+        nsCOMPtr<nsIAtom> prefix =
+            do_GetAtom(Substring(aQName, 0, (PRUint32)idx));
         PRInt32 namespaceID = aResolver->lookupNamespaceID(prefix);
         if (namespaceID == kNameSpaceID_Unknown)
             return NS_ERROR_FAILURE;
         mNamespaceID = namespaceID;
 
-        aQName.subString((PRUint32)idx + 1, localName);
-        TX_IF_RELEASE_ATOM(mLocalName);
-        mLocalName = TX_GET_ATOM(localName);
+        mLocalName = do_GetAtom(Substring(aQName, (PRUint32)idx + 1,
+                                          aQName.Length() - (idx + 1)));
     }
     else {
-        TX_IF_RELEASE_ATOM(mLocalName);
-        mLocalName = TX_GET_ATOM(aQName);
+        mLocalName = do_GetAtom(aQName);
         if (aUseDefault)
             mNamespaceID = aResolver->lookupNamespaceID(0);
         else
@@ -69,38 +67,37 @@ nsresult txExpandedName::init(const String& aQName,
  //- Implementation of XMLUtils -/
 //------------------------------/
 
-void XMLUtils::getPrefix(const String& src, String& dest)
+void XMLUtils::getPrefix(const nsAString& src, nsIAtom** dest)
 {
     // Anything preceding ':' is the namespace part of the name
-    PRInt32 idx = src.indexOf(':');
+    PRInt32 idx = src.FindChar(':');
     if (idx == kNotFound) {
+        *dest = nsnull;
         return;
     }
-    // Use a temporary String to prevent any chars in dest
-    // from being lost.
+
     NS_ASSERTION(idx > 0, "This QName looks invalid.");
-    String tmp;
-    src.subString(0, (PRUint32)idx, tmp);
-    dest.Append(tmp);
+    *dest = NS_NewAtom(Substring(src, 0, idx));
 }
 
-void XMLUtils::getLocalPart(const String& src, String& dest)
+const nsDependentSubstring XMLUtils::getLocalPart(const nsAString& src)
 {
     // Anything after ':' is the local part of the name
-    PRInt32 idx = src.indexOf(':');
+    PRInt32 idx = src.FindChar(':');
     if (idx == kNotFound) {
-        dest.Append(src);
-        return;
+        return Substring(src, 0, src.Length());
     }
-    // Use a temporary String to prevent any chars in dest
-    // from being lost.
+
     NS_ASSERTION(idx > 0, "This QName looks invalid.");
-    String tmp;
-    src.subString((PRUint32)idx + 1, tmp);
-    dest.Append(tmp);
+    return Substring(src, idx + 1, src.Length() - (idx + 1));
 }
 
-MBool XMLUtils::isValidQName(const String& aName)
+void XMLUtils::getLocalPart(const nsAString& src, nsIAtom** dest)
+{
+    *dest = NS_NewAtom(getLocalPart(src));
+}
+
+MBool XMLUtils::isValidQName(const nsAFlatString& aName)
 {
     if (aName.IsEmpty()) {
         return MB_FALSE;
@@ -142,27 +139,36 @@ MBool XMLUtils::isValidQName(const String& aName)
 
 /**
  * Returns true if the given string has only whitespace characters
-**/
-MBool XMLUtils::isWhitespace(const String& aText)
+ */
+PRBool XMLUtils::isWhitespace(const nsAFlatString& aText)
 {
-    const nsAFlatString& text = aText.getConstNSString();
     nsAFlatString::const_char_iterator start, end;
-    text.BeginReading(start);
-    text.EndReading(end);
+    aText.BeginReading(start);
+    aText.EndReading(end);
     for ( ; start != end; ++start) {
         if (!isWhitespace(*start)) {
-            return MB_FALSE;
+            return PR_FALSE;
         }
     }
-    return MB_TRUE;
+    return PR_TRUE;
+}
+
+/**
+ * Returns true if the given node's value has only whitespace characters
+ */
+PRBool XMLUtils::isWhitespace(Node* aNode)
+{
+    nsAutoString text;
+    aNode->getNodeValue(text);
+    return isWhitespace(text);
 }
 
 /**
  * Normalizes the value of a XML processing instruction
 **/
-void XMLUtils::normalizePIValue(String& piValue)
+void XMLUtils::normalizePIValue(nsAString& piValue)
 {
-    String origValue(piValue);
+    nsAutoString origValue(piValue);
     PRUint32 origLength = origValue.Length();
     PRUint32 conversionLoop = 0;
     PRUnichar prevCh = 0;
@@ -198,7 +204,7 @@ MBool XMLUtils::getXMLSpacePreserve(Node* aNode)
 {
     NS_ASSERTION(aNode, "Calling preserveXMLSpace with NULL node!");
 
-    String value;
+    nsAutoString value;
     Node* parent = aNode;
     while (parent) {
         if (parent->getNodeType() == Node::ELEMENT_NODE) {

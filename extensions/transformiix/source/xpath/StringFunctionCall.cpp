@@ -60,7 +60,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             if (!requireParams(2, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
                 
-            String resultStr;
+            nsAutoString resultStr;
             while (iter.hasNext()) {
                 evaluateToString((Expr*)iter.next(), aContext, resultStr);
             }
@@ -71,17 +71,17 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             if (!requireParams(2, 2, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
 
-            String arg1, arg2;
+            nsAutoString arg1, arg2;
             evaluateToString((Expr*)iter.next(), aContext, arg1);
             evaluateToString((Expr*)iter.next(), aContext, arg2);
-            return new BooleanResult(arg1.indexOf(arg2) >= 0);
+            return new BooleanResult(arg1.Find(arg2) >= 0);
         }
         case NORMALIZE_SPACE:
         {
             if (!requireParams(0, 1, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
 
-            String resultStr;
+            nsAutoString resultStr;
             if (iter.hasNext())
                 evaluateToString((Expr*)iter.next(), aContext, resultStr);
             else
@@ -90,8 +90,8 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
 
             MBool addSpace = MB_FALSE;
             MBool first = MB_TRUE;
-            String normed;
-            normed.getNSString().SetCapacity(resultStr.Length());
+            nsAutoString normed;
+            normed.SetCapacity(resultStr.Length());
             PRUnichar c;
             PRUint32 src;
             for (src = 0; src < resultStr.Length(); src++) {
@@ -115,17 +115,17 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             if (!requireParams(2, 2, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
 
-            String arg1, arg2;
+            nsAutoString arg1, arg2;
             evaluateToString((Expr*)iter.next(), aContext, arg1);
             evaluateToString((Expr*)iter.next(), aContext, arg2);
-            return new BooleanResult(arg1.indexOf(arg2) == 0);
+            return new BooleanResult(arg1.Find(arg2) == 0);
         }
         case STRING_LENGTH:
         {
             if (!requireParams(0, 1, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
 
-            String resultStr;
+            nsAutoString resultStr;
             if (iter.hasNext())
                 evaluateToString((Expr*)iter.next(), aContext, resultStr);
             else
@@ -138,7 +138,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             if (!requireParams(2, 3, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
 
-            String src;
+            nsAutoString src;
             double start, end;
             evaluateToString((Expr*)iter.next(), aContext, src);
             start = evaluateToNumber((Expr*)iter.next(), aContext);
@@ -171,23 +171,22 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             if (start > end)
                 return new StringResult();
             
-            String resultStr;
-            src.subString((PRUint32)start, (PRUint32)end, resultStr);
-            return new StringResult(resultStr);
+            return new StringResult(Substring(src, (PRUint32)start,
+                                              (PRUint32)end - (PRUint32)start));
         }
         case SUBSTRING_AFTER:
         {
             if (!requireParams(2, 2, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
 
-            String arg1, arg2;
+            nsAutoString arg1, arg2;
             evaluateToString((Expr*)iter.next(), aContext, arg1);
             evaluateToString((Expr*)iter.next(), aContext, arg2);
-            PRInt32 idx = arg1.indexOf(arg2);
+            PRInt32 idx = arg1.Find(arg2);
             if (idx != kNotFound) {
                 PRUint32 len = arg2.Length();
-                arg1.subString(idx + len, arg2);
-                return new StringResult(arg2);
+                return new StringResult(Substring(arg1, idx + len,
+                                                  arg1.Length() - (idx + len)));
             }
             return new StringResult();
         }
@@ -196,14 +195,12 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             if (!requireParams(2, 2, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
 
-            String arg1, arg2;
+            nsAutoString arg1, arg2;
             evaluateToString((Expr*)iter.next(), aContext, arg1);
             evaluateToString((Expr*)iter.next(), aContext, arg2);
-            PRInt32 idx = arg1.indexOf(arg2);
+            PRInt32 idx = arg1.Find(arg2);
             if (idx != kNotFound) {
-                arg2.Truncate();
-                arg1.subString(0, idx, arg2);
-                return new StringResult(arg2);
+                return new StringResult(Substring(arg1, 0, idx));
             }
             return new StringResult();
         }
@@ -212,18 +209,18 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             if (!requireParams(3, 3, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
 
-            String src;
+            nsAutoString src;
             evaluateToString((Expr*)iter.next(), aContext, src);
             if (src.IsEmpty())
                 return new StringResult();
             
-            String oldChars, newChars, dest;
+            nsAutoString oldChars, newChars, dest;
             evaluateToString((Expr*)iter.next(), aContext, oldChars);
             evaluateToString((Expr*)iter.next(), aContext, newChars);
             PRUint32 i;
             PRInt32 newCharsLength = (PRInt32)newChars.Length();
             for (i = 0; i < src.Length(); i++) {
-                PRInt32 idx = oldChars.indexOf(src.CharAt(i));
+                PRInt32 idx = oldChars.FindChar(src.CharAt(i));
                 if (idx != kNotFound) {
                     if (idx < newCharsLength)
                         dest.Append(newChars.CharAt((PRUint32)idx));
@@ -239,7 +236,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             if (!requireParams(0, 1, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
 
-            String resultStr;
+            nsAutoString resultStr;
             if (iter.hasNext())
                 evaluateToString((Expr*)iter.next(), aContext, resultStr);
             else
@@ -249,8 +246,8 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
         }
     }
 
-    String err(NS_LITERAL_STRING("Internal error"));
-    aContext->receiveError(err, NS_ERROR_UNEXPECTED);
+    aContext->receiveError(NS_LITERAL_STRING("Internal error"),
+                           NS_ERROR_UNEXPECTED);
     return new StringResult(NS_LITERAL_STRING("error"));
 }
 
