@@ -46,7 +46,7 @@
 <!ENTITY filesave.accesskey "s">
 <!ENTITY filesave.keybinding "s">
 <!ENTITY saveAsCmd.label "Save As...">
-<!ENTITY filesaveas.accesskey "a">
+<!ENTITY filesaveas.accesskey "A">
 <!ENTITY exportToTextCmd.label "Export to Text...">
 <!ENTITY fileexporttotext.accesskey "t">
 <!ENTITY saveAsCharsetCmd.label "Save As Charset...">
@@ -123,7 +123,7 @@
 <!ENTITY editmodeToolbarCmd.label "Edit Mode Toolbar">
 <!ENTITY editmodetb.accesskey "e">
 <!ENTITY taskbarCmd.label "Status Bar">  
-<!ENTITY taskbarCmd.accesskey "s"> 
+<!ENTITY taskbarCmd.accesskey "S"> 
 <!ENTITY viewPageSource.label "Page Source">
 <!ENTITY viewpagesource.accesskey "s">
 <!ENTITY viewParagraphMarks.label "Paragraph Marks">

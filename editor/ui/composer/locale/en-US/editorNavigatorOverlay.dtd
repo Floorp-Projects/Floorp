@@ -3,5 +3,5 @@
 <!ENTITY editPageCmd.accesskey            "e">
 
 <!ENTITY editLinkCmd.label                "Edit Link in Composer">
-<!ENTITY editLinkCmd.accesskey            "e">
+<!ENTITY editLinkCmd.accesskey            "E">
 
