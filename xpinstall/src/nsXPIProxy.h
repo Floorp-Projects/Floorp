@@ -35,8 +35,8 @@ class nsXPIProxy : public nsPIXPIProxy
         nsXPIProxy();
         virtual ~nsXPIProxy();
 
-        NS_DECL_ISUPPORTS;
-        NS_DECL_NSPIXPIPROXY;
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSPIXPIPROXY
 };
 
 #endif /* nsXPIProxy_h__ */
