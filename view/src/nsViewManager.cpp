@@ -2175,6 +2175,7 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
 
   nsPoint displayRootOrigin(0, 0);
   ComputeViewOffset(displayRoot, &displayRootOrigin);
+  displayRoot->ConvertFromParentCoords(&displayRootOrigin.x, &displayRootOrigin.y);
     
   // Determine, for each view, whether it is or contains a ZPlaceholderView
   ComputePlaceholderContainment(displayRoot);
@@ -3370,6 +3371,24 @@ static nsresult EnsureZTreeNodeCreated(nsView* aView, DisplayZTreeNode* &aNode) 
   return NS_OK;
 }
 
+/**
+ * XXX this needs major simplification and cleanup
+ * @param aView the view are visiting to create display list element(s) for
+ * @param aReparentedViewsPresent unused, always PR_FALSE
+ * @param aResult insert display list elements under here
+ * @param aOriginX/aOriginY the offset from the origin of aTopView
+ * to the origin of the view that is being painted (aRealView)
+ * @param aRealView the view that is being painted
+ * @param aDamageRect the rect that needs to be painted, relative to the origin
+ * of aRealView
+ * @param aTopView the displayRoot, the root of the collection of views
+ * to be painted
+ * @param aX/aY the offset from aTopView to the origin of the parent of aView
+ * @param aPaintFloats PR_TRUE if we should paint floating views, PR_FALSE
+ * if we should avoid descending into any floating views
+ * @param aEventProcessing PR_TRUE if we intend to do event processing with
+ * this display list
+ */
 PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPresent,
                                         DisplayZTreeNode* &aResult,
                                         nscoord aOriginX, nscoord aOriginY, nsView *aRealView,
@@ -3394,10 +3413,6 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
   nsRect bounds = aView->GetBounds();
   nsPoint pos = aView->GetPosition();
 
-  if (aView == aTopView) {
-    aView->ConvertFromParentCoords(&bounds.x, &bounds.y);
-    pos = nsPoint(0, 0);
-  }
 
   // -> to global coordinates (relative to aTopView)
   bounds.x += aX;
