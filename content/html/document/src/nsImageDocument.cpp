@@ -118,7 +118,7 @@ public:
 protected:
   nsresult CreateSyntheticDocument();
 
-  nsresult CheckOverflowing();
+  nsresult CheckOverflowing(PRBool changeState);
 
   void UpdateTitleAndCharset();
 
@@ -136,7 +136,12 @@ protected:
 
   PRPackedBool                  mImageResizingEnabled;
   PRPackedBool                  mImageIsOverflowing;
+  // mImageIsResized is true if the image is currently resized
   PRPackedBool                  mImageIsResized;
+  // mShouldResize is true if the image should be resized when it doesn't fit
+  // mImageIsResized cannot be true when this is false, but mImageIsResized
+  // can be false when this is true
+  PRPackedBool                  mShouldResize;
 };
 
 NS_IMPL_ADDREF_INHERITED(ImageListener, nsMediaDocumentStreamListener)
@@ -252,6 +257,7 @@ nsImageDocument::Init()
 
   mImageResizingEnabled =
     nsContentUtils::GetBoolPref(AUTOMATIC_IMAGE_RESIZING_PREF);
+  mShouldResize = mImageResizingEnabled;
 
   return NS_OK;
 }
@@ -428,7 +434,9 @@ NS_IMETHODIMP
 nsImageDocument::ToggleImageSize()
 {
   if (mImageResizingEnabled) {
+    mShouldResize = PR_TRUE;
     if (mImageIsResized) {
+      mShouldResize = PR_FALSE;
       RestoreImage();
     }
     else if (mImageIsOverflowing) {
@@ -451,7 +459,7 @@ nsImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
   aImage->GetWidth(&mImageWidth);
   aImage->GetHeight(&mImageHeight);
   if (mImageResizingEnabled) {
-    CheckOverflowing();
+    CheckOverflowing(PR_TRUE);
   }
   UpdateTitleAndCharset();
 
@@ -509,9 +517,10 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
   nsAutoString eventType;
   aEvent->GetType(eventType);
   if (eventType.EqualsLiteral("resize")) {
-    CheckOverflowing();
+    CheckOverflowing(PR_FALSE);
   }
   else if (eventType.EqualsLiteral("click")) {
+    mShouldResize = PR_TRUE;
     if (mImageIsResized) {
       PRInt32 x = 0, y = 0;
       nsCOMPtr<nsIDOMMouseEvent> event(do_QueryInterface(aEvent));
@@ -525,6 +534,7 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
         x -= left;
         y -= top;
       }
+      mShouldResize = PR_FALSE;
       RestoreImageTo(x, y);
     }
     else if (mImageIsOverflowing) {
@@ -537,12 +547,14 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
     keyEvent->GetCharCode(&charCode);
     // plus key
     if (charCode == 0x2B) {
+      mShouldResize = PR_FALSE;
       if (mImageIsResized) {
         RestoreImage();
       }
     }
     // minus key
     else if (charCode == 0x2D) {
+      mShouldResize = PR_TRUE;
       if (mImageIsOverflowing) {
         ShrinkToFit();
       }
@@ -604,7 +616,7 @@ nsImageDocument::CreateSyntheticDocument()
 }
 
 nsresult
-nsImageDocument::CheckOverflowing()
+nsImageDocument::CheckOverflowing(PRBool changeState)
 {
   nsIPresShell *shell = GetShellAt(0);
   if (!shell) {
@@ -636,11 +648,13 @@ nsImageDocument::CheckOverflowing()
   mImageIsOverflowing =
     mImageWidth > mVisibleWidth || mImageHeight > mVisibleHeight;
 
-  if (mImageIsOverflowing) {
-    ShrinkToFit();
-  }
-  else if (mImageIsResized) {
-    RestoreImage();
+  if (changeState || mShouldResize) {
+    if (mImageIsOverflowing) {
+      ShrinkToFit();
+    }
+    else if (mImageIsResized) {
+      RestoreImage();
+    }
   }
 
   return NS_OK;
