@@ -321,7 +321,7 @@ function WaitUntilDocumentIsLoaded()
 {
   // FIX ME - we should really have this function available in a global place that does not
   // require that we have access to mailnews code (msgNavigationService) from address book.
-  var msgNavigationService = omponents.classes["@mozilla.org/messenger/msgviewnavigationservice;1"].getService();
+  var msgNavigationService = Components.classes["@mozilla.org/messenger/msgviewnavigationservice;1"].getService();
   msgNavigationService= msgNavigationService.QueryInterface(Components.interfaces.nsIMsgViewNavigationService);
   msgNavigationService.EnsureDocumentIsLoaded(document);
 }
