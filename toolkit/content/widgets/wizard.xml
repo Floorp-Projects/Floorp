@@ -153,7 +153,7 @@
         var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
                               .getService(Components.interfaces.nsILocaleService);
         var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
-        var bundleURL = "chrome://global/locale/widgets/wizard.properties";
+        var bundleURL = "chrome://global/locale/wizard.properties";
         this._bundle = stringBundleService.createBundle(bundleURL, localeService.GetApplicationLocale());
         
         // get anonymous content references
