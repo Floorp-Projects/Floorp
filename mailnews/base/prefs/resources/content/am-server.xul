@@ -98,6 +98,10 @@ Contributors:
             label="&isSecure.label;" oncommand="secureSelect();"
             prefattribute="value"
             prefstring="mail.server.%serverkey%.isSecure"/>
+  <checkbox iscontrolcontainer="true" wsm_persist="true" id="server.useSecAuth"
+            label="&useSecAuth.label;" hidable="true" hidefor="nntp,movemail"
+            prefattribute="value"
+            prefstring="mail.server.%serverkey%.useSecAuth"/>
   <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true"
             id="server.loginAtStartUp" hidefor="nntp"
             label="&loginAtStartup.label;"

@@ -21,6 +21,7 @@
 <!ENTITY biffStart.label "Check for new messages every ">
 <!ENTITY biffEnd.label "minutes">
 <!ENTITY isSecure.label "Use secure connection (SSL)">
+<!ENTITY useSecAuth.label "Use secure authentication">
 <!ENTITY leaveOnServer.label "Leave messages on server">
 <!ENTITY deleteOnServer.label "Delete messages on server when they are deleted or moved from Inbox">
 <!ENTITY downloadOnBiff.label "Automatically download new messages">
