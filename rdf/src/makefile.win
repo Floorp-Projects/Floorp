@@ -1,0 +1,58 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+
+DEPTH	= ..\..\..
+LIBRARY_SUFFIX=$(MOZ_BITS)
+MAKE_OBJ_TYPE=DLL
+MAKE_OBJ_TYPE = DLL
+DLLNAME = rdf
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE=rdf 
+REQUIRES=nspr rdf xpcom netlib
+
+C_OBJS=.\$(OBJDIR)\vocab.obj \
+       .\$(OBJDIR)\core.obj \
+       .\$(OBJDIR)\remstore.obj \
+       .\$(OBJDIR)\utils.obj \
+       .\$(OBJDIR)\rdfparse.obj \
+       .\$(OBJDIR)\bmk2rdf.obj \
+       .\$(OBJDIR)\columns.obj \
+       .\$(OBJDIR)\ht.obj \
+	.\$(OBJDIR)\netglue.obj \
+       .\$(OBJDIR)\rdfht.obj \
+       $(NULL)
+
+CPP_OBJS=\
+	.\$(OBJDIR)\comwrap.obj \
+	$(NULL)
+
+LLIBS=				\
+ $(DIST)\lib\xpcom32.lib	\
+ $(DIST)\lib\libplc21.lib    \
+ $(LIBNSPR)  
+
+LINCS= -I$(PUBLIC)\rdf -I$(LIBNSPR) -I$(XPDIST)\public\xpcom -I$(PUBLIC)\netlib -I$(PUBLIC)\raptor
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+
+
+
