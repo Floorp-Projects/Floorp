@@ -59,7 +59,7 @@ JS_BEGIN_EXTERN_C
 #define CPU_IS_ARM
 #endif
 
-#if (__GNUC__ == 2 && __GNUC_MINOR > 95) || __GNUC__ > 2
+#if (__GNUC__ == 2 && __GNUC_MINOR__ > 95) || __GNUC__ > 2
 /*
  * This version of the macros is safe for the alias optimizations that gcc
  * does, but uses gcc-specific extensions.
