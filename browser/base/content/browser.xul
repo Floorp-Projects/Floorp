@@ -26,7 +26,6 @@ Contributor(s):
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 
 <?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/viewZoomOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
 <?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
 
@@ -71,7 +70,8 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/charset.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/securityUI.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/securityUI.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsContextMenu.js"/>
@@ -83,7 +83,6 @@ Contributor(s):
     <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
     <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
     <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
-    <stringbundle id="bundle_viewZoom"/>
   </stringbundleset>
   
   <commandset id="globalEditMenuItems"
@@ -159,7 +158,8 @@ Contributor(s):
   <command id="Browser:Home"    oncommand="BrowserHome();"/>
   <command id="Browser:Back"    oncommand="BrowserBack();"    observes="canGoBack"/>
   <command id="Browser:Forward" oncommand="BrowserForward();" observes="canGoForward"/>
-  <commandset id="viewZoomCommands"/>
+  <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
+  <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     
   <broadcaster id="canGoBack"    disabled="true"/>
   <broadcaster id="canGoForward" disabled="true"/>
@@ -214,7 +214,8 @@ Contributor(s):
 
     <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
     <key id="key_gotoHistory"  key="&history.commandKey;"        oncommand="toHistory();" modifiers="accel"/>
-    <keyset id="viewZoomKeys"/>
+    <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
+    <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
     <keyset id="navigationKeys"/>  
   </keyset>
   
@@ -481,10 +482,11 @@ Contributor(s):
             <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" disabled="true" oncommand="BrowserStop();" key="key_stop"/>
             <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
             <menuseparator/>
-      
-            <!-- overlayed from viewZoomOverlay.xul -->
-            <menu id="menu_textZoom" observes="isImage"/>
-    
+            <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
+                      command="cmd_textZoomEnlarge" observes="isImage"/>
+            <menuitem key="key_textZoomReduce"  label="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;"
+                      command="cmd_textZoomReduce" observes="isImage"/>
+            <menuseparator/>
             <menu observes="isImage"
                   label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;"
                   datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot"
