@@ -1240,7 +1240,7 @@ NSPR_API(PRStatus) PR_Connect(
  *         PR_Poll()
  * RETURN: PRStatus
  *     If the nonblocking connect has successfully completed,
- *     PR_GetConnectStatus returns PR_SUCCESS.  If PR_GetConnectStatus()
+ *     PR_ConnectContinue returns PR_SUCCESS.  If PR_ConnectContinue()
  *     returns PR_FAILURE, call PR_GetError():
  *     - PR_IN_PROGRESS_ERROR: the nonblocking connect is still in
  *       progress and has not completed yet.  The caller should poll
