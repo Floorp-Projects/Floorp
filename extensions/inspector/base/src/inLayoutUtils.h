@@ -61,7 +61,6 @@ public:
   static nsIBindingManager* GetBindingManagerFor(nsIDOMNode* aNode);
   static nsIDOMDocument* GetSubDocumentFor(nsIDOMNode* aNode);
   static nsIDOMNode* GetContainerFor(nsIDOMDocument* aDoc);
-  static PRBool IsDocumentElement(nsIDOMNode* aNode);
   /**
    * This function returns the offset of a frame with respect to the
    * root view of the aPresContext's viewmanager (for use by
