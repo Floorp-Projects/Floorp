@@ -732,8 +732,7 @@ optgroup {
 }
 
 optgroup > option {
-  position:relative;
-  left:20px;
+  padding-left:20px;
   font-style:normal;
   font-weight:normal;
 }

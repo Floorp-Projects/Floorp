@@ -89,12 +89,6 @@ public:
  
   NS_METHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
 
-// XXX the following methods are not referenced. They should be removed when it is
-//  confirmed that they are not needed 
-  virtual nsresult GetSizeFromContent(PRInt32* aSize) const;
-  NS_IMETHOD GetMaxLength(PRInt32* aSize);
-// XXX: End of the unreferenced methods
-
   virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
                                            nscoord aInnerHeight) const;
   virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
@@ -153,6 +147,7 @@ public:
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
   static nsIDOMHTMLCollection*    GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect = nsnull);
   static nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLCollection& aOptions, PRUint32 aIndex);
+  static nsIContent* GetOptionAsContent(nsIDOMHTMLCollection* aCollection,PRUint32 aIndex);
   static PRBool                   GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRUint32 aIndex, nsString& aValue);
 
   nsIContent*                 GetOptionContent(PRUint32 aIndex);
@@ -178,12 +173,8 @@ protected:
   nsIFrame *GetSelectableFrame(nsIFrame *aFrame);
   void DisplaySelected(nsIContent* aContent); 
   void DisplayDeselected(nsIContent* aContent); 
-  void UpdateItem(nsIContent* aContent, PRBool aSelected);
   void ForceRedraw(nsIContent* aContent);
   PRBool IsOptionGroup(nsIFrame* aFrame);
-  void ConstructSelectableList(nsIFrame* aFrame, nsVoidArray *aList);
-  nsIFrame* GetFirstSelectableFrame(nsVoidArray *aList, PRInt32& aPos);
-  nsIFrame* GetNextSelectableFrame(nsVoidArray *aList, PRInt32& aPos);
   void SingleSelection();
   void MultipleSelection(PRBool aIsShift, PRBool aIsControl);
   void SelectIndex(PRInt32 aIndex); 
@@ -194,7 +185,7 @@ protected:
   // nsHTMLContainerFrame overrides
  
   void ClearSelection();
-  void InitializeFromContent(PRBool aDoDisplay = PR_FALSE);
+  void InitializeFromContent(PRBool aDoDisplay);
 
   void ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aDoInvert, PRBool aSetValue);
 
@@ -204,9 +195,7 @@ protected:
   NS_IMETHOD HandleLikeListEvent(nsIPresContext& aPresContext, 
                                  nsGUIEvent*     aEvent,
                                  nsEventStatus&  aEventStatus);
-  PRInt32 SetContentSelected(nsIFrame *    aHitFrame, 
-                             nsIContent *& aHitContent,
-                             PRBool        aDisplaySelected);
+  PRInt32 GetSelectedIndex(nsIFrame *aHitFrame);
 
   // Data Members
   nscoord      mBorderOffsetY;
@@ -220,17 +209,11 @@ protected:
   PRInt32      mEndExtendedIndex;
   nsIFrame   * mHitFrame;
   nsIContent * mHitContent;
-  nsIFrame   * mCurrentHitFrame;
-  nsIContent * mCurrentHitContent;
-  nsIContent * mSelectedContent;
-  nsIFrame   * mSelectedFrame;
   PRBool       mIsInitializedFromContent;
   nsIFrame *   mContentFrame;
   PRBool       mInDropDownMode;
   nsIComboboxControlFrame * mComboboxFrame;
   nsString     mSelectionStr;
-  nsVoidArray* mSelectableFrames;
-
 };
 
 #endif /* nsListControlFrame_h___ */
