@@ -30,28 +30,28 @@ TOOLKIT_GFX_LIB		= $(addprefix -lgfx, $(MOZ_TOOLKIT))
 TOOLKIT_WIDGET_LIB	= $(addprefix -lwidget, $(MOZ_TOOLKIT))
 TOOLKIT_BASE_LIB	= $(addprefix -lgmbase, $(MOZ_TOOLKIT))
 
-ifneq (,$(filter gtk,$(MOZ_TOOLKIT)))
+
+#
+# Hardcoding dlopen()'s?  This needs to get fixed.
+#
 TOOLKIT_CFLAGS = \
-	-DWIDGET_DLL=\"libwidgetgtk.so\" \
-	-DGFXWIN_DLL=\"libgfxgtk.so\"
+-DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+-DGFXWIN_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\"
+
+ifneq (,$(filter gtk,$(MOZ_TOOLKIT)))
 
 TOOLKIT_CPPSRCS = \
 	nsGTKMain.cpp \
 	nsGTKMenu.cpp
 
-INCLUDES += -I$(topsrcdir)/widget/src/gtk
-
 TOOLKIT_CFLAGS += $(TK_GTK_CFLAGS)
 TOOLKIT_LIBS   = $(TK_GTK_LIBS)
 else
 ifneq (,$(filter motif,$(MOZ_TOOLKIT)))
-TOOLKIT_CFLAGS = \
-	-DWIDGET_DLL=\"libwidgetmotif.so\" \
-	-DGFXWIN_DLL=\"libgfxmotif.so\"
 
 TOOLKIT_CPPSRCS = \
 	nsMotifMenu.cpp \
-	nsUnixMain.cpp
+	nsMotifMain.cpp
 
 TOOLKIT_CFLAGS += $(TK_MOTIF_CFLAGS)
 TOOLKIT_LIBS   = $(TK_MOTIF_LIBS)
