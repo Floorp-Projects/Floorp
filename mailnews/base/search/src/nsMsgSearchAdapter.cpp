@@ -1228,8 +1228,12 @@ nsresult nsMsgSearchValidityManager::InitLocalABTable()
   rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Mobile);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::ScreenName);
-  NS_ENSURE_SUCCESS(rv,rv);
+  //this needs to be handled in a generic way.
+  //we need to get the string generically, and then map it to _AimScreenName
+  //I think we're going to have to add custom headers to AB search as a pref
+  //and let the ns tree define one for screen name.
+  //rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::ScreenName);
+  //NS_ENSURE_SUCCESS(rv,rv);
 
   rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Title);
   NS_ENSURE_SUCCESS(rv,rv);
