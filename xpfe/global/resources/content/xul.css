@@ -252,23 +252,26 @@ titlebar {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#titlebar");  
 }  
 
-resizer[direction="right"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#r-resizer");
+resizer[resizerdirection="right"] {
+  -moz-binding: url("chrome://global/content/bindings/popup.xml#ew-resizer");
 }  
 
-resizer[direction="bottom"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#b-resizer");
+resizer[resizerdirection="bottom"] {
+  -moz-binding: url("chrome://global/content/bindings/popup.xml#ns-resizer");
 }  
 
-resizer[direction="bottomright"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#rb-resizer");  
+resizer[resizerdirection="bottomright"] {
+  -moz-binding: url("chrome://global/content/bindings/popup.xml#diag-resizer");  
 }  
 
-popup[type="floater"] {
+floatingwindow {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#floater-normal");
+  -moz-box-orient: vertical;
+  display: none;
+  z-index: 2147483647; 
 }
 
-popup[type="floater"][docked="left"] {
+floatingwindow[docked="left"] {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#floater-dock-left");
 }
 
@@ -359,19 +362,6 @@ treeitem[container="true"] > treerow > .treecell-indent {
 .treecell-text { 
  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-text");
 } 
-
-/* Inline Editable Treecell */
-.treecell-editable {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-inline-edit");
-}
-
-.treecell-indent.treecell-editable {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-indented-leaf-inline-edit");
-}
-
-treeitem[container="true"] > treerow > .treecell-indent.treecell-editable {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-indented-folder-inline-edit");
-}
 
 /******** outliner ******/
 
