@@ -150,7 +150,6 @@ PR_STATIC_CALLBACK(JSBool)
 ElementObserverOnSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMElementPtr b0;
   nsAutoString b1;
   nsAutoString b2;
@@ -213,7 +212,6 @@ PR_STATIC_CALLBACK(JSBool)
 ElementObserverOnRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMElementPtr b0;
   nsAutoString b1;
 
@@ -273,7 +271,6 @@ PR_STATIC_CALLBACK(JSBool)
 ElementObserverOnSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMElementPtr b0;
   nsIDOMAttrPtr b1;
 
@@ -339,7 +336,6 @@ PR_STATIC_CALLBACK(JSBool)
 ElementObserverOnRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMElementObserver *nativeThis = (nsIDOMElementObserver*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMElementPtr b0;
   nsIDOMAttrPtr b1;
 
