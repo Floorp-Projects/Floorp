@@ -144,7 +144,13 @@ sub methodMissing {
     my $self = shift;
     my($method, @arguments) = @_;
     if (not $self->app->dispatchMethod('dispatcher.output.'.$self->actualProtocol, 'output', $method, $self, @arguments)) {
-        $self->SUPER::methodMissing(@_); # this does the same, but for 'dispatcher.output.generic' handlers, since that is our $self->protocol
+        # ok, no generic output dispatcher for the actual protocol, let's try the generic protocol
+        if (not $self->app->dispatchMethod('dispatcher.output.'.$self->protocol, 'output', $method, $self, @arguments)) {
+            # nope, so let's do our own.
+            # this assumes the string will be the same as the output
+            # method and that the arguments will be all in 'data'.
+            $self->output($method, { 'data' => \@arguments });
+        }
     }
 }
 
