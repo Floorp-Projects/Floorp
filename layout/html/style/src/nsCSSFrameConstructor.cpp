@@ -2950,9 +2950,7 @@ nsCSSFrameConstructor::MustGeneratePseudoParent(nsIPresContext*  aPresContext,
   }
 
   // exclude tags
-  // XXX Now that form does not have a special frame, can we remove this?
-  if ( (nsLayoutAtoms::commentTagName == aTag) ||
-       (nsHTMLAtoms::form             == aTag) ) {
+  if ( nsLayoutAtoms::commentTagName == aTag) {
     return PR_FALSE;
   }
 
@@ -3184,21 +3182,25 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
 
   default:
     {
-      nsCOMPtr<nsIAtom> tag;
-      aChildContent->GetTag(*getter_AddRefs(tag));
-      // A form doesn't get a psuedo frame parent, but it needs a frame, so just use the current parent
-      // XXX now that form is a normal frame, do we need to do this?
-      if (tag == nsHTMLAtoms::form) {
-        nsFrameItems items;
-        rv = ConstructFrame(aPresShell, aPresContext, aState, aChildContent,         
-                            aParentFrame, items);
-        childFrame = items.childList;
+
+      // if <form>'s parent is <tr>/<table>/<tbody>/<thead>/<tfoot> in html,
+      // NOT create psuedoframe for it.
+      // see bug 159359
+      nsCOMPtr<nsINodeInfo> parentNodeInfo, childNodeInfo;
+      aParentContent->GetNodeInfo(*getter_AddRefs(parentNodeInfo));
+      aChildContent->GetNodeInfo(*getter_AddRefs(childNodeInfo));
+      if (childNodeInfo->Equals(nsHTMLAtoms::form, kNameSpaceID_None) &&
+          (parentNodeInfo->Equals(nsHTMLAtoms::table, kNameSpaceID_None) ||
+           parentNodeInfo->Equals(nsHTMLAtoms::tr, kNameSpaceID_None) ||
+           parentNodeInfo->Equals(nsHTMLAtoms::tbody, kNameSpaceID_None) ||
+           parentNodeInfo->Equals(nsHTMLAtoms::thead, kNameSpaceID_None) ||
+           parentNodeInfo->Equals(nsHTMLAtoms::tfoot, kNameSpaceID_None))) {
+        break;
       }
-      else {
-        rv = ConstructTableForeignFrame(aPresShell, aPresContext, aState, aChildContent, 
-                                        aParentFrame, childStyleContext, aTableCreator, 
-                                        aChildItems, childFrame, isPseudoParent);
-      }
+
+      rv = ConstructTableForeignFrame(aPresShell, aPresContext, aState, aChildContent, 
+                                      aParentFrame, childStyleContext, aTableCreator, 
+                                      aChildItems, childFrame, isPseudoParent);
     }
     break;
   }
