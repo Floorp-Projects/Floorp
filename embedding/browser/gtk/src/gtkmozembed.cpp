@@ -570,19 +570,22 @@ GtkMozEmbedPrivate::Destroy(void)
   nsCOMPtr<nsIDocShellTreeItem> contentItem;
   treeOwner->GetPrimaryContentShell(getter_AddRefs(contentItem));
   NS_ASSERTION(contentItem, "failed to get content item");
+  // get the nsIWebProgress object for that docshell
+  webProgress = do_GetInterface(contentItem);
+  // remove the mContentProgress object from the content item
+  webProgress->RemoveProgressListener(mContentProgress);
   // remove our chrome object as the tree owner for the content
   // docShell.
   contentItem->SetTreeOwner(nsnull);
-  // get the nsIWebProgress object for that docshell
-  webProgress = do_GetInterface(docShell);
-  // remove the mContentProgress object from that docshell
-  webProgress->RemoveProgressListener(mContentProgress);
   
   // now that we have removed ourselves as the tree owner for the
   // content item, remove ourselves as the tree owner for the
   // browser
   browserAsItem = do_QueryInterface(mWebBrowser);
   browserAsItem->SetTreeOwner(nsnull);
+
+  // remove the browser chrome as the container window
+  mWebBrowser->SetContainerWindow(nsnull);
   
   // destroy the native windows
   nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow = 
