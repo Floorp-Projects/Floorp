@@ -121,13 +121,13 @@ nsresult CToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
  *  @update gess 3/25/98
  *  @param  ostream -- output stream to accept output data
  */
-void CToken::DebugDumpToken(ostream& anOutputStream) {
+void CToken::DebugDumpToken(nsOutputStream& anOutputStream) {
   anOutputStream << "[" << GetClassName() << "] ";
   int i=0;
   for(i=0;i<mTextValue.Length();i++){
     anOutputStream << char(mTextValue.CharAt(i));
   }
-  anOutputStream << " TypeID: " << mTypeID << " AttrCount: " << mAttrCount << endl;
+  anOutputStream << " TypeID: " << mTypeID << " AttrCount: " << mAttrCount << nsEndl;
 }
 
 /**
@@ -137,7 +137,7 @@ void CToken::DebugDumpToken(ostream& anOutputStream) {
  *  @update gess 3/25/98
  *  @param  ostream -- output stream to accept output data
  */
-void CToken::DebugDumpSource(ostream& anOutputStream) {
+void CToken::DebugDumpSource(nsOutputStream& anOutputStream) {
   char buf[256];
   mTextValue.ToCString(buf,sizeof(buf));
   anOutputStream << buf;

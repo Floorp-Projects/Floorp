@@ -39,6 +39,7 @@
 #include "nsString.h"
 #include <iostream.h>
 #include "nsError.h"
+#include "nsFileSpec.h"
 
 
 class nsScanner;
@@ -166,14 +167,14 @@ class CToken {
      * @update	gess5/11/98
      * @param   out is the output stream where token should write itself
      */
-    virtual void DebugDumpToken(ostream& out);
+    virtual void DebugDumpToken(nsOutputStream& out);
 
     /**
      * Causes token to dump itself in source form to given output stream
      * @update	gess5/11/98
      * @param   out is the output stream where token should write itself
      */
-    virtual void DebugDumpSource(ostream& out);
+    virtual void DebugDumpSource(nsOutputStream& out);
 
     /**
      * Getter which retrieves type of token

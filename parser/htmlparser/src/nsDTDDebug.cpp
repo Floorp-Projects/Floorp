@@ -537,10 +537,19 @@ PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsIParser * aParser, int aContextStackP
             if (debugFile) {
                // dump the html source into the newly created file.
 
+               /******************************************************
+                * RICKG, DO WE REALLY NEED A FILE DESCRIPTOR HERE?   *
+                ******************************************************/
+
                PRofstream ps;
                ps.attach(debugFile);
-               if (theParser)
-                  theParser->DebugDumpSource(ps);
+               if (theParser) {
+                 // XXX Hack Remove file descriptors 
+                 nsFileSpec fileSpec(filename);
+                 nsOutputFileStream out(fileSpec);
+                 theParser->DebugDumpSource(out);
+                  //theParser->DebugDumpSource(ps);
+               }
                PR_Close(debugFile);
             }
          }

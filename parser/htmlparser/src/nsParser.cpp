@@ -1437,7 +1437,7 @@ PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
   return result;
 }
 
-void nsParser::DebugDumpSource(ostream& aStream) {
+void nsParser::DebugDumpSource(nsOutputStream& aStream) {
   PRInt32 theIndex=-1;
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
   if(theTokenizer){

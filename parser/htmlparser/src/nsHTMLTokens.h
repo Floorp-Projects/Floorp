@@ -43,7 +43,6 @@
 #include "nsHTMLTags.h"
 #include "nsParserError.h"
 #include "nsString.h"
-#include <iostream.h>
 
 class nsScanner;
 
@@ -121,7 +120,7 @@ class CStartToken: public CHTMLToken {
             void        SetAttributed(PRBool aValue);
             PRBool      IsEmpty(void);
             void        SetEmpty(PRBool aValue);
-    virtual void        DebugDumpSource(ostream& out);
+    virtual void        DebugDumpSource(nsOutputStream& out);
     virtual void        GetSource(nsString& anOutputString);
 
     virtual void        Reinitialize(PRInt32 aTag, const nsString& aString);
@@ -147,7 +146,7 @@ class CEndToken: public CHTMLToken {
     virtual PRInt32     GetTypeID(void);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
-    virtual void        DebugDumpSource(ostream& out);
+    virtual void        DebugDumpSource(nsOutputStream& out);
     virtual void        GetSource(nsString& anOutputString);
 };
 
@@ -188,7 +187,7 @@ class CEntityToken : public CHTMLToken {
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner);
     static  PRInt32     ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
     static  PRInt32     TranslateToUnicodeStr(PRInt32 aValue,nsString& aString);
-    virtual  void       DebugDumpSource(ostream& out);
+    virtual  void       DebugDumpSource(nsOutputStream& out);
     virtual void        GetSource(nsString& anOutputString);
 };
 
@@ -263,9 +262,9 @@ class CAttributeToken: public CHTMLToken {
     virtual PRInt32       GetTokenType(void);
     virtual nsString&     GetKey(void) {return mTextKey;}
     virtual void          SanitizeKey();
-    virtual void          DebugDumpToken(ostream& out);
+    virtual void          DebugDumpToken(nsOutputStream& out);
     virtual void          GetSource(nsString& anOutputString);
-    virtual void          DebugDumpSource(ostream& out);
+    virtual void          DebugDumpSource(nsOutputStream& out);
             PRBool        mLastAttribute;
     virtual void          Reinitialize(PRInt32 aTag, const nsString& aString);
 
@@ -340,7 +339,7 @@ class CSkippedContentToken: public CAttributeToken {
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
-    virtual void        DebugDumpSource(ostream& out);
+    virtual void        DebugDumpSource(nsOutputStream& out);
     virtual void        GetSource(nsString& anOutputString);
   protected:
 };
@@ -389,6 +388,7 @@ protected:
 class CDoctypeDeclToken: public CHTMLToken {
 public:
                         CDoctypeDeclToken();
+    virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
 };
