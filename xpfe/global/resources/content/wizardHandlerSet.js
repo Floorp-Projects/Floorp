@@ -153,11 +153,13 @@ function DEF_onPageLoad( tag )
 
     // set the focus to the first focusable element
     var doc = window.frames[0].document;
-    var controls = doc.controls;
-    for (var i=0; i< controls.length; i++) {
-      if (controls[i].focus) {
-        controls[i].focus();
-        break;                  // stop when focus has been set
+    if ("controls" in doc && doc.controls.length > 0) {
+      var controls = doc.controls;
+      for (var i=0; i< controls.length; i++) {
+        if (controls[i].focus) {
+          controls[i].focus();
+          break;                  // stop when focus has been set
+        }
       }
     }
   }
