@@ -101,6 +101,12 @@ x86-win32.nad.burg.cpp: x86-win32.nad $(BURG) $(DEPTH)/Compiler/PrimitiveGraph/P
 	cp $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations.h $(LOCAL_EXPORT_DIR)
 endif
 
+# special rule so that successive make's don't try to build
+# $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations from
+# $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations.cpp
+#
+$(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations:
+	@echo
 #
 # Extra cleaning
 #
