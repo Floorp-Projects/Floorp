@@ -496,8 +496,6 @@
       <method name="startLookup">
         <body><![CDATA[
           var str = this.value;
-          this.lastSearchString = this.currentSearchString;
-          this.currentSearchString = str;
           
           this.isSearching = true;
           this.mSessionReturns = this.sessionCount;
@@ -701,7 +699,6 @@
           }
           
           this.mNeedToComplete = false;
-          this.currentSearchString = "";
           this.clearTimer();
 
           if (aFireTextCommand)
@@ -754,7 +751,7 @@
 
           this.userAction = "typing";
 
-          this.currentSearchString = "";
+          this.currentSearchString = this.value;
           this.mNeedToComplete = false;
         ]]></body>
       </method>
@@ -796,11 +793,12 @@
           this.mNeedToFinish = true;
           this.mTransientValue = false;
           this.mNeedToComplete = true;
-
+          var str = this.value;
+          this.currentSearchString = str;
           this.resultsPopup.selectedIndex = null;
           
           // We want to autocomplete only if the user is editing at the end of the text
-          if (this.mInputElt.selectionEnd >= this.value.length)
+          if (this.mInputElt.selectionEnd >= str.length)
             this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
           else
             this.noMatch = true;
