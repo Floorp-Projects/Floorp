@@ -892,6 +892,7 @@
     "xuleditorelement.editorshell", \
     "xulelement.addbroadcastlistener", \
     "xulelement.blur", \
+    "xulelement.click", \
     "xulelement.classname", \
     "xulelement.controllers", \
     "xulelement.database", \
