@@ -51,6 +51,8 @@ Rights Reserved.
 
   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
+  <!-- added for Thunderbird 0.7.1 support -->
+  <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
   <script src="chrome://calendar/content/calPrintEngine.js"/>
   <script type="application/x-javascript" >
      var ArrayOfDayNames = new Array();
