@@ -162,6 +162,12 @@ NSPR_LINK_LIBS = $(NSPR_LIBS)
 XPCOM_LINK_LIBS	= $(XPCOM_LIBS)
 endif
 
+ifndef MOZ_DIST
+MOZ_DIST=$(DIST)
+endif
+
+PROTOCOL_LIBS = -L$(MOZ_DIST)/lib -lprotocol
+
 # Adding HP-UX Specific Fixes
 ifeq ($(OS_ARCH), HP-UX)
 NSPR_LINK_LIBS = -L$(DIST)/lib -shared -lnspr4 -lplc4 -lplds4
@@ -182,16 +188,14 @@ EXTRA_LIBS += \
         $(DIST)/lib/libpk11wrap.a \
         $(DIST)/lib/libsoftoken.a \
         $(DIST)/lib/libcertdb.a \
-        $(DIST)/lib/libcrypto.a \
         $(DIST)/lib/libfreebl.a \
         $(DIST)/lib/libsecutil.a \
-        $(DIST)/lib/libcrypto.a \
         $(DIST)/lib/libdbm.a \
-        $(DIST)/lib/libprotocol.a \
 	$(DIST)/lib/libnlslayer.a \
 	$(NSPR_LINK_LIBS) \
 	$(XPCOM_LINK_LIBS) \
 	$(CPLUSPLUSRUNTIME) \
+	$(PROTOCOL_LIBS) \
 	$(NULL)
 
 endif
@@ -205,10 +209,14 @@ ifneq ($(OS_ARCH), WINNT)
 endif
 
 
+ifndef UI_DIST
+UI_DIST = ../ui/$(PLATFORM)
+endif
+
 install::
-	$(NSINSTALL) -m 644 ../ui/$(PLATFORM)/psm*.properties $(DIST)/bin/psmdata/ui
+	$(NSINSTALL) -m 644 $(UI_DIST)/psm*.properties $(DIST)/bin/psmdata/ui
 	$(NSINSTALL) -m 644 ../doc/*.gif ../doc/*.html ../doc/*.htm $(DIST)/bin/psmdata/doc
-	$(NSINSTALL) -m 644 $(DIST)/lib/nssckbi.$(DLL_SUFFIX) $(DIST)/bin
+	$(NSINSTALL) -m 644 $(DIST)/lib/$(DLL_PREFIX)nssckbi.$(DLL_SUFFIX) $(DIST)/bin
 ifneq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -m 775 start-psm $(DIST)/bin
 endif
