@@ -272,6 +272,10 @@ void InitializeEmbedEventHandling(LApplication* theApplication)
     CEmbedRepeater *embedRepeater = new CEmbedRepeater;
     ThrowIfNil_(embedRepeater);
     embedRepeater->StartRepeating();
+    
+#if TARGET_CARBON
     InitializeTextInputEventHandling();
+#endif
+
 }
    
