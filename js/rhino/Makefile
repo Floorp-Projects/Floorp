@@ -98,21 +98,6 @@ helpmessage : FORCE
 
 all : jars examples
 
-	$(PATH_PREFIX)/optimizer/Block.java		\
-	$(PATH_PREFIX)/optimizer/Codegen.java		\
-	$(PATH_PREFIX)/optimizer/DataFlowBitSet.java	\
-	$(PATH_PREFIX)/optimizer/FatBlock.java		\
-	$(PATH_PREFIX)/optimizer/JavaScriptClassLoader.java\
-	$(PATH_PREFIX)/optimizer/OptClassNameHelper.java\
-	$(PATH_PREFIX)/optimizer/OptFunctionNode.java	\
-	$(PATH_PREFIX)/optimizer/OptIRFactory.java	\
-	$(PATH_PREFIX)/optimizer/OptLocalVariable.java	\
-	$(PATH_PREFIX)/optimizer/OptRuntime.java	\
-	$(PATH_PREFIX)/optimizer/OptTransformer.java	\
-	$(PATH_PREFIX)/optimizer/OptVariableTable.java	\
-	$(PATH_PREFIX)/optimizer/Optimizer.java		\
-	$(PATH_PREFIX)/optimizer/StmtNodeIterator.java	\
-	$(PATH_PREFIX)/optimizer/TypeEvent.java		\
 jars : $(JARS)
 
 fast : fast_$(JS_JAR) $(JSTOOLS_JAR)

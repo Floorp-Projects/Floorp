@@ -24,7 +24,7 @@
 # creeping in.
 SOURCES = $(PATH_PREFIX)/*.java \
 	$(PATH_PREFIX)/shell/*.java \
- 	$(PATH_PREFIX)/jsc/*.java
+	$(PATH_PREFIX)/jsc/*.java
 
 RESOURCEDIR = $(PATH_PREFIX)/resources
 RESOURCES = $(RESOURCEDIR)/*.properties
@@ -34,7 +34,7 @@ RESOURCES = $(RESOURCEDIR)/*.properties
 # .java file may produce more than one .class file.
 CLASSES = $(PATH_PREFIX)/*.class \
 	$(PATH_PREFIX)/shell/*.class \
- 	$(PATH_PREFIX)/jsc/*.class
+	$(PATH_PREFIX)/jsc/*.class
 
 # A class or set of classes as visible from the top level.  For want
 # of ${subst ,,}.  This variable is only used to trigger dependency
@@ -57,8 +57,8 @@ $(CLASSDIR)/$(RESOURCES) : $(RESOURCES)
 	cp $(RESOURCES) $(CLASSDIR)/$(RESOURCEDIR)
 
 clean : 
- 	- cd $(CLASSDIR)
- 	- rm $(CLASSES)
+	- cd $(CLASSDIR)
+	- rm $(CLASSES)
 	- rm $(PATH_PREFIX)/message.ids \
 		$(PATH_PREFIX)/property.ids \
 		$(PATH_PREFIX)/MANIFEST
