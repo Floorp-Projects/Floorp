@@ -257,10 +257,9 @@ sub HasEmailChangeToken {
     
     my ($userid) = @_;
     
-    &::SendSQL("SELECT token FROM tokens 
-                 WHERE userid = $userid 
-                   AND tokentype = 'emailnew' 
-                    OR tokentype = 'emailold' LIMIT 1");
+    &::SendSQL("SELECT token FROM tokens WHERE userid = $userid " . 
+               "AND (tokentype = 'emailnew' OR tokentype = 'emailold') " . 
+               "LIMIT 1");
     my ($token) = &::FetchSQLData();
     
     return $token;
