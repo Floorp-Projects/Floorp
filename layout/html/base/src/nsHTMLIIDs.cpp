@@ -22,6 +22,7 @@
 #include "nsIPageSequenceFrame.h"
 
 const nsIID kIHTMLContentIID = NS_IHTMLCONTENT_IID;
+const nsIID kIStyledContentIID = NS_ISTYLEDCONTENT_IID;
 const nsIID kIHTMLReflowIID = NS_IHTMLREFLOW_IID;
 const nsIID kIPageSequenceFrameIID = NS_IPAGESEQUENCEFRAME_IID;
 
