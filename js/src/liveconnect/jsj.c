@@ -466,7 +466,7 @@ JSJ_ConnectToJavaVM(SystemJavaVM *java_vm_arg, void* initargs)
         thread_list_monitor =
             (struct PRMonitor *) PR_NewMonitor();
     }
-#endif JSJ_THREADSAFE
+#endif	/* JSJ_THREADSAFE */
 
     /* Put this VM on the list of all created VMs */
     jsjava_vm->next = jsjava_vm_list;
@@ -580,7 +580,7 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
         PR_DestroyMonitor(thread_list_monitor);
         thread_list_monitor = NULL;
     }
-#endif JSJ_THREADSAFE
+#endif	/* JSJ_THREADSAFE */
     
     free(jsjava_vm);
 }
@@ -600,14 +600,14 @@ new_jsjava_thread_state(JSJavaVM *jsjava_vm, const char *thread_name, JNIEnv *jE
     if (thread_name)
         jsj_env->name = strdup(thread_name);
 
-#ifdef JSJ_THREAD_SAFE
+#ifdef JSJ_THREADSAFE
     PR_EnterMonitor(thread_list_monitor);
 #endif
 
     jsj_env->next = thread_list;
     thread_list = jsj_env;
 
-#ifdef JSJ_THREAD_SAFE
+#ifdef JSJ_THREADSAFE
     PR_ExitMonitor(thread_list_monitor);
 #endif
 
@@ -620,6 +620,10 @@ find_jsjava_thread(JNIEnv *jEnv)
     JSJavaThreadState *e, **p, *jsj_env;
     jsj_env = NULL;
 
+#ifdef JSJ_THREADSAFE
+        PR_EnterMonitor(thread_list_monitor);
+#endif
+
     /* Search for the thread state among the list of all created
        LiveConnect threads */
     for (p = &thread_list; (e = *p) != NULL; p = &(e->next)) {
@@ -631,19 +635,15 @@ find_jsjava_thread(JNIEnv *jEnv)
 
     /* Move a found thread to head of list for faster search next time. */
     if (jsj_env && p != &thread_list) {
-#ifdef JSJ_THREAD_SAFE
-        PR_EnterMonitor(thread_list_monitor);
-#endif
-        /* First, check to make sure list hasn't mutated since we searched */
-        if (*p == jsj_env) {
-            *p = jsj_env->next;
-            thread_list = jsj_env;
-        }
-#ifdef JSJ_THREAD_SAFE
-        PR_ExitMonitor(thread_list_monitor);
-#endif
+        *p = jsj_env->next;
+        jsj_env->next = thread_list;
+        thread_list = jsj_env;
     }
     
+#ifdef JSJ_THREADSAFE
+        PR_ExitMonitor(thread_list_monitor);
+#endif
+
     return jsj_env;
 }
 
@@ -744,6 +744,9 @@ JSJ_SetDefaultJSContextForJavaThread(JSContext *cx, JSJavaThreadState *jsj_env)
     JSContext *old_context;
     old_context = jsj_env->cx;
     jsj_env->cx = cx;
+
+    /* The following line prevents clearing of jsj_env->cx by jsj_ExitJava() */
+    jsj_env->recursion_depth++;
     return old_context;
 }
 
@@ -757,15 +760,22 @@ JSJ_DetachCurrentThreadFromJava(JSJavaThreadState *jsj_env)
     /* Disassociate the current native thread from its corresponding Java thread */
     java_vm = jsj_env->jsjava_vm->java_vm;
     jEnv = jsj_env->jEnv;
-    if (!JSJ_callbacks->detach_current_thread(java_vm, jEnv))
-        return JS_FALSE;
-
-    /* Destroy the LiveConnect execution environment passed in */
-    jsj_ClearPendingJSErrors(jsj_env);
 
 #ifdef JSJ_THREADSAFE
     PR_EnterMonitor(thread_list_monitor);
-#endif JSJ_THREADSAFE
+#endif	/* JSJ_THREADSAFE */
+
+    if (!JSJ_callbacks->detach_current_thread(java_vm, jEnv)) {
+
+#ifdef JSJ_THREADSAFE
+        PR_ExitMonitor(thread_list_monitor);
+#endif	/* JSJ_THREADSAFE */
+
+        return JS_FALSE;
+    }
+
+    /* Destroy the LiveConnect execution environment passed in */
+    jsj_ClearPendingJSErrors(jsj_env);
 
     for (p = &thread_list; (e = *p) != NULL; p = &(e->next)) {
         if (e == jsj_env) {
@@ -774,9 +784,11 @@ JSJ_DetachCurrentThreadFromJava(JSJavaThreadState *jsj_env)
         }
     }
 
+    JS_ASSERT(e);
+
 #ifdef JSJ_THREADSAFE
     PR_ExitMonitor(thread_list_monitor);
-#endif JSJ_THREADSAFE
+#endif	/* JSJ_THREADSAFE */
 
     free(jsj_env);
     return JS_TRUE;
@@ -788,13 +800,17 @@ JSBool
 JSJ_ConvertJavaObjectToJSValue(JSContext *cx, jobject java_obj, jsval *vp)
 {
     JNIEnv *jEnv;
+    JSBool result;
+    JSJavaThreadState *jsj_env;
             
     /* Get the Java per-thread environment pointer for this JSContext */
-    jsj_MapJSContextToJSJThread(cx, &jEnv);
+    jsj_env = jsj_EnterJava(cx, &jEnv);
     if (!jEnv)
         return JS_FALSE;
 
-    return jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_obj, vp);
+    result = jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_obj, vp);
+    jsj_ExitJava(jsj_env);
+    return result;
 }
 
 
