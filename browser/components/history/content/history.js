@@ -63,8 +63,6 @@ function HistoryCommonInit()
     // XXXBlake we should persist the last search value
     // If it's empty, this will do the right thing and just group by the old grouping.
     searchHistory(gSearchBox.value);
-    
-    gSearchBox.focus();
 }
 
 function historyOnSelect()

@@ -36,16 +36,6 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-
-////////////////////////////////////////////////////////////////////////////////
-// Get the two bookmarks utility libraries running, attach controllers, focus
-// search box, etc. 
-function Startup() 
-{
-  var searchBox = document.getElementById("search-box");
-  searchBox.focus();
-}
-
 function manageBookmarks() {
   openDialog("chrome://browser/content/bookmarks/bookmarksManager.xul", "", "chrome,dialog=no,resizable=yes");
 }
