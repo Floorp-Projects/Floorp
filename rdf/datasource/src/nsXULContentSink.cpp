@@ -59,6 +59,7 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "rdfutil.h"
+#include "nsIXULChildDocument.h"
 
 #include "nsHTMLTokens.h" // XXX so we can use nsIParserNode::GetTokenType()
 
@@ -237,6 +238,9 @@ protected:
 
     nsIDocument* mDocument;
     nsIParser*   mParser;
+    
+    nsIContent*  mFragmentRoot;
+
 };
 
 nsrefcnt             XULContentSinkImpl::gRefCnt = 0;
@@ -260,7 +264,8 @@ XULContentSinkImpl::XULContentSinkImpl()
       mConstrainSize(PR_TRUE),
       mHaveSetRootResource(PR_FALSE),
       mDocument(nsnull),
-      mParser(nsnull)
+      mParser(nsnull),
+      mFragmentRoot(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -295,6 +300,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
     NS_IF_RELEASE(mDataSource);
     NS_IF_RELEASE(mDocument);
     NS_IF_RELEASE(mParser);
+    NS_IF_RELEASE(mFragmentRoot);
 
     if (mNameSpaceStack) {
         NS_PRECONDITION(0 == mNameSpaceStack->Count(), "namespace stack not empty");
@@ -855,7 +861,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFD
     mDataSource = aDataSource;
     NS_ADDREF(aDataSource);
 
-	nsresult rv;
+	  nsresult rv;
 
     if (NS_FAILED(rv = mDocument->GetNameSpaceManager(mNameSpaceManager))) {
         NS_ERROR("unable to get document namespace manager");
@@ -866,6 +872,17 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFD
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
     
     mState = eXULContentSinkState_InProlog;
+
+    nsCOMPtr<nsIXULChildDocument> childDocument;
+    childDocument = do_QueryInterface(mDocument);
+    if (childDocument != nsnull) {
+        childDocument->GetFragmentRoot(&mFragmentRoot);
+        if (mFragmentRoot) {
+            // We're totally a subdocument. Find the root document's
+            // data source and make assertions there.
+        }
+    }
+
     return NS_OK;
 }
 
