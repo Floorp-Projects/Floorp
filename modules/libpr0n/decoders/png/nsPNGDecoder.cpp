@@ -308,8 +308,11 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->alphaLine = (PRUint8 *)nsMemory::Alloc(abpr);
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
-    decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels*width*height);
-    decoder->ibpr = channels*width;
+    if (channels > 3)
+      decoder->ibpr = channels*width;
+    else
+      decoder->ibpr = bpr;
+    decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(decoder->ibpr*height);
     if (!decoder->interlacebuf) {
       longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
     }            
