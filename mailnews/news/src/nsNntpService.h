@@ -56,14 +56,7 @@ public:
   nsNntpService();
   virtual ~nsNntpService();
 
-  static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr,
-                                nsIFile *aPath,
-                                const char *registryLocation,
-                                const char *componentType);
-
-  static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr,
-                                  nsIFile *aPath,
-                                  const char *registryLocation);
+  CMDLINEHANDLER_REGISTERPROC_DECLS
 
 protected:
   nsresult ConvertNewsMessageURI2NewsURI(const char *messageURI,

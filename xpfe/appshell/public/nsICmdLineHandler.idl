@@ -25,7 +25,63 @@
 
 
 %{C++
+
 #define COMMAND_LINE_ARGUMENT_HANDLERS "command-line-argument-handlers"
+
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
+#include "nsICategoryManager.h"
+#include "nsIFileSpec.h"
+#include "nsXPIDLString.h"
+
+#define CMDLINEHANDLER_REGISTERPROC_DECLS \
+static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType);  \
+static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation);
+
+#define CMDLINEHANDLER_IMPL(macro_class,macro_cmd_line_arg,macro_pref_name,macro_chrome_url,macro_help_text, macro_progid, macro_pretty_name) \
+NS_IMETHODIMP macro_class::GetCommandLineArgument(char **aCommandLineArgument) \
+{ \
+    if (!aCommandLineArgument) return NS_ERROR_FAILURE; \
+    *aCommandLineArgument = PL_strdup(macro_cmd_line_arg); \
+    return NS_OK; \
+} \
+NS_IMETHODIMP macro_class::GetPrefNameForStartup(char **aPrefNameForStartup) \
+{ \
+    if (!aPrefNameForStartup) return NS_ERROR_FAILURE; \
+    *aPrefNameForStartup = PL_strdup(macro_pref_name); \
+    return NS_OK; \
+} \
+NS_IMETHODIMP macro_class::GetChromeUrlForTask(char **aChromeUrlForTask) \
+{ \
+    if (!aChromeUrlForTask) return NS_ERROR_FAILURE; \
+    *aChromeUrlForTask = PL_strdup(macro_chrome_url); \
+    return NS_OK; \
+} \
+NS_IMETHODIMP macro_class::GetHelpText(char **aHelpText) \
+{ \
+    if (!aHelpText) return NS_ERROR_FAILURE; \
+    *aHelpText = PL_strdup(macro_help_text); \
+    return NS_OK; \
+} \
+NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType) \
+{ \
+    nsresult rv; \
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv); \
+    if (NS_FAILED(rv)) return rv; \
+    nsXPIDLCString prevEntry; \
+    rv = catman->AddCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_progid, macro_pretty_name, PR_TRUE, PR_TRUE, getter_Copies(prevEntry)); \
+	return NS_OK; \
+} \
+NS_METHOD macro_class::UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation) \
+{ \
+    nsresult rv; \
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv); \
+    if (NS_FAILED(rv)) return rv; \
+    nsXPIDLCString prevEntry; \
+    rv = catman->DeleteCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_progid, PR_TRUE, getter_Copies(prevEntry)); \
+    return NS_OK; \
+}
+
 %}
 
 [scriptable, uuid(ae12670a-1dd1-11b2-80cd-82ec93559deb)]

@@ -49,15 +49,8 @@ public:
  	NS_DECL_NSIADDRESSBOOK
 	NS_DECL_NSICMDLINEHANDLER
 
-  static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr,
-                                nsIFile *aPath,
-                                const char *registryLocation,
-                                const char *componentType);
-
-  static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr,
-                                  nsIFile *aPath,
-                                  const char *registryLocation);
-
+    CMDLINEHANDLER_REGISTERPROC_DECLS
+    
 protected:
 	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
 					   nsISupportsArray *arguments);
