@@ -74,13 +74,8 @@ EXPORTS =     \
   CRtfDTD.h \
   nsXIFDTD.h \
   nsParserCIID.h \
+  nsHTMLTags.h \
   $(NULL)
-
-EXTRA_EXPORTS = \
-	nsHTMLTags.h \
-	$(NULL)
-
-EXPORTS += $(EXTRA_EXPORTS)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
