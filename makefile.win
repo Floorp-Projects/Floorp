@@ -38,10 +38,10 @@ DEPTH=.
 #// to netscape.netcast.* - spider
 #//------------------------------------------------------------------------
 
-!ifdef NO_SECURITY
-SECDIR=
-!else
+!ifdef MOZ_SECURITY
 SECDIR=security
+!else
+SECDIR=
 !endif
 
 DISTDIRS=$(NSPRDIR) dbm $(SECDIR) xpcom base caps
@@ -55,7 +55,7 @@ DIRS_JSD = js\jsd
 XTRADIRS = $(DISTDIRS)
 !endif
 
-!ifndef NO_SECURITY
+!ifdef MOZ_SECURITY
 CORECONF=coreconf
 !else
 CORECONF=
