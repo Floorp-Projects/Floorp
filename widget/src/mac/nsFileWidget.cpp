@@ -20,6 +20,8 @@
 #include "nsStringUtil.h"
 #include <StandardFile.h>
 
+#include "nsFileSpec.h"
+
 #define DBG 0
 
 NS_IMPL_ADDREF(nsFileWidget)
@@ -164,10 +166,17 @@ PRBool nsFileWidget::Show()
    // Clean up filter buffers
   delete filterBuffer;
 
+	if (!reply.sfGood) return PR_FALSE;
+
+	nsNativeFileSpec		fileSpec(reply.sfFile);
+	nsFilePath					filePath(fileSpec);
+	
+	mFile = filePath;
+	
    // Set user-selected location of file or directory
-  Str255ToString(reply.sfFile.name,mFile);  
+  //Str255ToString(reply.sfFile.name, mFile);  
   
-  return reply.sfGood;
+  return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
