@@ -90,6 +90,26 @@ function OpenURL(event,node)
   <xul:treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
   <xul:treecol id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
 
+  <xul:template xul:containment="treeitem" xul:subcontainment="treechildren">
+  	<xul:treeitem>
+		<xul:treecell>
+			<xul:treeindentation />
+			<xul:titledbutton>
+			</xul:titledbutton>
+			<xul:text rdf:resource="http://home.netscape.com/NC-rdf#Name" />
+		</xul:treecell>
+		<xul:treecell>
+			<xul:text rdf:resource="http://home.netscape.com/NC-rdf#URL" />
+		</xul:treecell>
+		<xul:treecell>
+			<xul:text rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL" />
+		</xul:treecell>
+		<xul:treecell>
+			<xul:text rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate" />
+		</xul:treecell>
+  	</xul:treeitem>
+  </xul:template>
+
   <xul:treehead>
     <xul:treeitem>
       <xul:treecell resource='http://home.netscape.com/NC-rdf#Name' onclick="return doSort('NameColumn');">
