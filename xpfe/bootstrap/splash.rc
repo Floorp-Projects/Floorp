@@ -39,6 +39,8 @@
 #include "nsNativeAppSupportWin.h"
 #include "nsINativeAppSupportWin.h"
 
+1 24 "mozilla.manifest"
+
 // Program icon.
 IDI_APPLICATION ICON
 	"mozilla.ico"
