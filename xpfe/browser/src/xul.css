@@ -8,8 +8,7 @@ toolbar {
         font: 10pt sans-serif;
 }
 toolbox { 
-  background-color:rgb(192,192,192);
-        background-color:green;
+        background-color:darkgray;
 }
 
 toolbar.Foo {
