@@ -57,7 +57,8 @@ public:
 	NS_IMETHOD ContentShellAdded(nsIWebShell* aWebShell, nsIContent* frameNode);
   NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                          PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& aPopupAlignment);
+                         const nsString& aPopupType, const nsString& aPopupAlignment,
+                         nsIDOMWindow* aWindow);
 
 	// nsIStreamObserver
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);

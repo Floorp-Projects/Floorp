@@ -266,7 +266,8 @@ CWebShellContainer::ContentShellAdded(nsIWebShell* aWebShell, nsIContent* frameN
 NS_IMETHODIMP
 CWebShellContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                          PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& aPopupAlignment)
+                         const nsString& aPopupType, const nsString& aPopupAlignment,
+                         nsIDOMWindow* aWindow)
 {
   return NS_OK;
 }
