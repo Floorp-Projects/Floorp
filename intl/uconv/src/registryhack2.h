@@ -90,7 +90,7 @@
   mDecArray[i++].mCID  = &kObsEUCJPToUnicodeCID;
   mDecArray[i++].mCID  = &kObsISO2022JPToUnicodeCID;
 
-  mEncSize           = 74;
+  mEncSize           = 75;
   mEncArray          = new ConverterInfo [mEncSize];
 
   i = 0;
@@ -152,6 +152,7 @@
   mEncArray[i++].mCID  = &kUnicodeToUTF7CID;
   mEncArray[i++].mCID  = &kUnicodeToUTF16BECID;
   mEncArray[i++].mCID  = &kUnicodeToUTF16LECID;
+  mEncArray[i++].mCID  = &kUnicodeToUTF16CID;
   mEncArray[i++].mCID  = &kUnicodeToUTF32BECID;
   mEncArray[i++].mCID  = &kUnicodeToUTF32LECID;
   mEncArray[i++].mCID  = &kUnicodeToT61CID;
