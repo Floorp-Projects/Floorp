@@ -30,6 +30,7 @@ $DEBUG = 0;
 $ALIAS_SYM_FILES = $DEBUG;
 $CLOBBER_LIBS = 1;
 $MOZ_FULLCIRCLE = 0;
+$CARBON = 0;				# turn on to build with TARGET_CARBON
 
 # The following two options will delete all files, but leave the directory structure intact.
 $CLOBBER_DIST_ALL = 0;      # turn on to clobber all files inside dist (headers, xsym and libs)
