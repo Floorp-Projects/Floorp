@@ -94,15 +94,6 @@ const int kOpenNewWindowOnAE = 0;
 const int kOpenNewTabOnAE = 1;
 const int kReuseWindowOnAE = 2;
 
-// Because of bug #2751274, on Mac OS X 10.1.x the sender for this action method when called from
-// a dock menu item is always the NSApplication object, not the actual menu item.  This ordinarily 
-// makes it impossible to take action based on which menu item was selected, because we don't know
-// which menu item called our action method. We have a workaround
-// in this sample for the bug (using NSInvocations), but we set up a #define here for the AppKit
-// version that is fixed (in a future release of Mac OS X) so that the code can automatically switch
-// over to doing things the right way when the time comes.
-#define kFixedDockMenuAppKitVersion 632
-
 @interface MainController(Private)<NetworkServicesClient>
 
 - (void)setupStartpage;
@@ -114,12 +105,11 @@ const int kReuseWindowOnAE = 2;
 
 -(id)init
 {
-  if ( (self = [super init]) )
-  {
-    // ensure that we're at least on 10.1.5 for some OS crash fixes wrt Java
+  if ( (self = [super init]) ) {
+    // ensure that we're at least on 10.2 as lower OS versions are not supported any more
     long version = 0;
     ::Gestalt(gestaltSystemVersion, &version);
-    if (version < 0x00001015) {
+    if (version < 0x00001020) {
       NSString* appName = NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil);
       NSString* alert = [NSString stringWithFormat: NSLocalizedString(@"RequiredVersionNotMetTitle", @""), appName];
       NSString* message = [NSString stringWithFormat: NSLocalizedString(@"RequiredVersionNotMet", @""), appName];
@@ -129,8 +119,7 @@ const int kReuseWindowOnAE = 2;
     }
     
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    if ([defaults boolForKey:USER_DEFAULTS_AUTOREGISTER_KEY]) 
-    {
+    if ([defaults boolForKey:USER_DEFAULTS_AUTOREGISTER_KEY]) {
       // This option causes us to simply initialize embedding and exit.
       NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
       setenv("MOZILLA_FIVE_HOME", [path fileSystemRepresentation], 1);
@@ -156,7 +145,7 @@ const int kReuseWindowOnAE = 2;
 
     NSString* url = [defaults stringForKey:USER_DEFAULTS_URL_KEY];
     mStartURL = url ? [url retain] : nil;
-
+    
     mFindDialog = nil;
     mMenuBookmarks = nil;
     
@@ -184,7 +173,7 @@ const int kReuseWindowOnAE = 2;
 
 -(void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-  // initialize if we haven't already.
+  // initialize prefs if we haven't already.
   PreferenceManager *pm = [PreferenceManager sharedInstance];
 
   // start bookmarks
@@ -224,13 +213,11 @@ const int kReuseWindowOnAE = 2;
 
   BOOL doingRendezvous = NO;
   
-  if ([pm getBooleanPref:"chimera.enable_rendezvous" withSuccess:&success])
-  {
+  if ([pm getBooleanPref:"chimera.enable_rendezvous" withSuccess:&success]) {
     // are we on 10.2.3 or higher? The DNS resolution stuff is broken before 10.2.3
     long systemVersion;
     OSErr err = ::Gestalt(gestaltSystemVersion, &systemVersion);
-    if ((err == noErr) && (systemVersion >= 0x00001023))
-    {
+    if ((err == noErr) && (systemVersion >= 0x00001023)) {
       NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
       [nc addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
       [nc addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
@@ -239,8 +226,7 @@ const int kReuseWindowOnAE = 2;
     }
   }
   
-  if (!doingRendezvous)
-  {
+  if (!doingRendezvous) {
     // remove rendezvous items
     int itemIndex;
     while ((itemIndex = [mGoMenu indexOfItemWithTag:kRendezvousRelatedItemTag]) != -1)
@@ -294,24 +280,18 @@ const int kReuseWindowOnAE = 2;
 {
   // only do this if no url was specified in the command-line
   if (mStartURL) return;
-  
   // for non-nightly builds, show a special start page
   PreferenceManager* prefManager = [PreferenceManager sharedInstance];
-
   NSString* vendorSubString = [prefManager getStringPref:"general.useragent.vendorSub" withSuccess:NULL];
-  if (![vendorSubString hasSuffix:@"+"])
-  {
+  if (![vendorSubString hasSuffix:@"+"]) {
     // has the user seen this already?
     NSString* startPageRev = [prefManager getStringPref:"browser.startup_page_override.version" withSuccess:NULL];
-    if (![vendorSubString isEqualToString:startPageRev])
-    {
+    if (![vendorSubString isEqualToString:startPageRev]) {
       NSString* startPage = NSLocalizedStringFromTable( @"StartPageDefault", @"WebsiteDefaults", nil);
-      if ([startPage length] && ![startPage isEqualToString:@"StartPageDefault"])
-      {
+      if ([startPage length] && ![startPage isEqualToString:@"StartPageDefault"]) {
         [mStartURL release];
         mStartURL = [startPage retain];
       }
-      
       // set the pref to say they've seen it
       [prefManager setPref:"browser.startup_page_override.version" toString:vendorSubString];
     }
@@ -335,22 +315,12 @@ const int kReuseWindowOnAE = 2;
                                                firstItem: firstBookmarkItem
                                     rootBookmarkFolder: [BookmarkManager bookmarkMenuFolder]];
 
-  // dock bookmarks. Note that we disable them on 10.1 because of a bug noted here:
-  // http://developer.apple.com/samplecode/Sample_Code/Cocoa/DeskPictAppDockMenu.htm
-  if (NSAppKitVersionNumber >= kFixedDockMenuAppKitVersion)
-  {
-    [mDockMenu setAutoenablesItems:NO];
-    int firstBookmarkItem = [mDockMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
-    mDockBookmarks = [[BookmarkMenu alloc] initWithMenu: mDockMenu
-                                                 firstItem: firstBookmarkItem
-                                      rootBookmarkFolder: [BookmarkManager dockMenuFolder]];
-  }
-  else
-  {
-    // just empty the menu
-    while ([mDockMenu numberOfItems] > 0)
-      [mDockMenu removeItemAtIndex:0];
-  }
+  // dock bookmarks
+  [mDockMenu setAutoenablesItems:NO];
+  firstBookmarkItem = [mDockMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
+  mDockBookmarks = [[BookmarkMenu alloc] initWithMenu: mDockMenu
+                                            firstItem: firstBookmarkItem
+                                   rootBookmarkFolder: [BookmarkManager dockMenuFolder]];
 }
 
 // a central place for bookmark opening logic.
@@ -373,13 +343,11 @@ const int kReuseWindowOnAE = 2;
       {
         BOOL cmdKeyDown = (GetCurrentKeyModifiers() & cmdKey) != 0;
         if (cmdKeyDown)
-          if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
-          {
+          if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL]) {
             openInNewTab = YES;
             newTabInBackground = loadNewTabsInBackgroundPref;
           }
-          else
-          {
+          else {
             openInNewWindow = YES;
             if (loadNewTabsInBackgroundPref)
               behindWindow = [browserWindowController window];
@@ -417,8 +385,7 @@ const int kReuseWindowOnAE = 2;
       break;
   }
   
-  if ([item isKindOfClass:[Bookmark class]])
-  {
+  if ([item isKindOfClass:[Bookmark class]]) {
     if (openInNewWindow)
       [self openBrowserWindowWithURL:[(Bookmark *)item url] andReferrer:nil behind:behindWindow];
     else if (openInNewTab)
@@ -426,8 +393,7 @@ const int kReuseWindowOnAE = 2;
     else
       [browserWindowController loadURL:[(Bookmark *)item url] referrer:nil activate:YES];
   }
-  else if ([item isKindOfClass:[BookmarkFolder class]])
-  {
+  else if ([item isKindOfClass:[BookmarkFolder class]]) {
     if (openInNewWindow)
       [self openBrowserWindowWithURLs:[(BookmarkFolder *)item childURLs] behind:behindWindow];
     else if (openInNewTab)
@@ -451,7 +417,7 @@ const int kReuseWindowOnAE = 2;
   // If we have a key window, have it autosave its dimensions before
   // we open a new window.  That ensures the size ends up matching.
   NSWindow* mainWindow = [mApplication mainWindow];
-  if ( mainWindow && [[mainWindow windowController] respondsToSelector:@selector(autosaveWindowFrame)] )
+  if (mainWindow && [[mainWindow windowController] respondsToSelector:@selector(autosaveWindowFrame)])
     [[mainWindow windowController] autosaveWindowFrame];
 
   // Now open the new window.
@@ -934,10 +900,7 @@ const int kReuseWindowOnAE = 2;
 }
 
 -(IBAction) openMenuBookmark:(id)aSender
-{	
-  if ([aSender isMemberOfClass:[NSApplication class]])
-    return;		// 10.1. Don't do anything.
-
+{
   BookmarkItem*  item = [aSender representedObject];
   [self loadBookmark:item withWindowController:[self getMainWindowBrowserController] openBehavior:eBookmarkOpenBehaviorDefault];
 }
@@ -985,25 +948,11 @@ const int kReuseWindowOnAE = 2;
 
 - (void)displayPreferencesWindow:sender
 {
-    [[self preferencesController] showPreferences:nil] ;
+    [[self preferencesController] showPreferences:nil];
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
-/*
-  // On the off chance that we're getting this message off a launch,
-  // we may not have initialized our embedded mozilla.  So check here,
-  // and if it's not initialized, do it now.
-  [self preferenceManager];
-
-  // Make sure it's a browser window b/c "about box" can also become main window.
-  if ([self isMainWindowABrowserWindow]) {
-    [[[mApplication mainWindow] windowController] loadURL:[[NSURL fileURLWithPath:filename] absoluteString]];
-  }
-  else {
-    [self openBrowserWindowWithURL:[[NSURL fileURLWithPath:filename] absoluteString behind:nil]];
-  }
-*/
   [self openNewWindowOrTabWithURL:[[NSURL fileURLWithPath:filename] absoluteString] andReferrer:nil];
   
   return YES;    
@@ -1096,7 +1045,7 @@ const int kReuseWindowOnAE = 2;
       // Note that this relies on the key in the nib mapping to the right integer
       // in the plist.
       NSNumber* tag = [mCharsets objectForKey:[charset lowercaseString]];
-      if ( tag && [[NSNumber numberWithInt:[aMenuItem tag]] isEqualToNumber:tag] )
+      if (tag && [[NSNumber numberWithInt:[aMenuItem tag]] isEqualToNumber:tag])
         [aMenuItem setState:NSOnState];
       else
         [aMenuItem setState:NSOffState];
@@ -1163,23 +1112,23 @@ const int kReuseWindowOnAE = 2;
     return (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);
   }
 
-  if ( action == @selector(addBookmark:) )
+  if (action == @selector(addBookmark:))
     return (browserController && ![[browserController getBrowserWrapper] isEmpty]);
   
-  if ( action == @selector(biggerTextSize:) )
+  if (action == @selector(biggerTextSize:))
     return (browserController &&
             ![[browserController getBrowserWrapper] isEmpty] &&
             [[[browserController getBrowserWrapper] getBrowserView] canMakeTextBigger]);
 
-  if ( action == @selector(smallerTextSize:) )
+  if (action == @selector(smallerTextSize:))
     return (browserController &&
             ![[browserController getBrowserWrapper] isEmpty] &&
             [[[browserController getBrowserWrapper] getBrowserView] canMakeTextSmaller]);
   
-  if ( action == @selector(doStop:) )
+  if (action == @selector(doStop:))
     return (browserController && [[browserController getBrowserWrapper] isBusy]);
 
-  if ( action == @selector(goBack:) || action == @selector(goForward:) ) {
+  if (action == @selector(goBack:) || action == @selector(goForward:)) {
     if (browserController) {
       CHBrowserView* browserView = [[browserController getBrowserWrapper] getBrowserView];
       if (action == @selector(goBack:))
@@ -1191,8 +1140,7 @@ const int kReuseWindowOnAE = 2;
       return NO;
   }
   
-  if ( action == @selector(sendURL:) )
-  {
+  if (action == @selector(sendURL:)) {
     NSString* titleString = nil;
     NSString* urlString = nil;
     [[[self getMainWindowBrowserController] getBrowserWrapper] getTitle:&titleString andHref:&urlString];
@@ -1325,7 +1273,7 @@ const int kReuseWindowOnAE = 2;
 - (void)openURL:(NSPasteboard *) pboard userData:(NSString *) userData error:(NSString **) error
 {
   NSMutableString *urlString = [[[NSMutableString alloc] init] autorelease];
-  if ( !urlString )
+  if (!urlString)
     return;
 
   NSArray* types = [pboard types];
@@ -1342,7 +1290,7 @@ const int kReuseWindowOnAE = 2;
   }
   NSScanner* scanner = [NSScanner scannerWithString:pboardString];
   [scanner scanCharactersFromSet:[[NSCharacterSet whitespaceAndNewlineCharacterSet] invertedSet] intoString:&urlString];
-  while(![scanner isAtEnd]) {
+  while (![scanner isAtEnd]) {
     NSString *tmpString;
     [scanner scanCharactersFromSet:[[NSCharacterSet whitespaceAndNewlineCharacterSet] invertedSet] intoString:&tmpString];
     [urlString appendString:tmpString];
@@ -1380,19 +1328,16 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
   NSMutableArray* servicesArray = [[NSMutableArray alloc] initWithCapacity:10];
 
   id key;
-  while ((key = [keysEnumerator nextObject]))
-  {
+  while ((key = [keysEnumerator nextObject])) {
     NSDictionary* serviceDict = [NSDictionary dictionaryWithObjectsAndKeys:
       key, @"id",
       [netserv serviceName:[key intValue]], @"name",
-      [netserv serviceProtocol:[key intValue]], @"protocol",
-      nil];
+      [netserv serviceProtocol:[key intValue]], @"protocol", nil];
 
     [servicesArray addObject:serviceDict];
   }
 
-  if ([servicesArray count] == 0)
-  {
+  if ([servicesArray count] == 0) {
     // add a separator
     [mServersSubmenu addItem:[NSMenuItem separatorItem]];
 
@@ -1400,8 +1345,7 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
     [newItem setTag:-1];
     [newItem setTarget:self];
   }
-  else
-  {
+  else {
     // add a separator
     [mServersSubmenu addItem:[NSMenuItem separatorItem]];
     
@@ -1409,8 +1353,7 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
     [servicesArray sortUsingFunction:SortByProtocolAndName context:NULL];
     
     unsigned count = [servicesArray count];
-    for (unsigned int i = 0; i < count; i ++)
-    {
+    for (unsigned int i = 0; i < count; i++) {
       NSDictionary* serviceDict = [servicesArray objectAtIndex:i];
       NSString* itemName = [[serviceDict objectForKey:@"name"] stringByAppendingString:NSLocalizedString([serviceDict objectForKey:@"protocol"], @"")];
       
