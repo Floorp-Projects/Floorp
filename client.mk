@@ -64,19 +64,21 @@ ROOTDIR		:= $(CWD)
 TOPSRCDIR	:= $(CWD)/mozilla
 endif
 
-
 AUTOCONF	:= autoconf
 MKDIR		:= mkdir
 SH		:= /bin/sh
 ifndef MAKE
 MAKE		:= gmake
 endif
+
 WEBCONFIG_URL   := http://cvs-mirror.mozilla.org/webtools/build/config.cgi
+WEBCONFIG_FILE  := $(HOME)/.mozmyconfig.sh
 
 CONFIG_GUESS	:= $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
-ifndef CONFIG_GUESS
-  IS_FIRST_CHECKOUT := 1
+ifdef CONFIG_GUESS
   CONFIG_GUESS := $(shell $(CONFIG_GUESS))
+else
+  IS_FIRST_CHECKOUT := 1
 endif
 
 # Load options from myconfig.sh
@@ -210,6 +212,19 @@ checkout:
 	  exit 1; \
 	fi
 
+#
+# Web configure
+#
+webconfig:
+	netscape -remote "openURL($(WEBCONFIG_URL))"
+	@echo Fill out the form on the browser.
+	@echo Save the results to $(WEBCONFIG_FILE) when done.
+	@if test -f $(WEBCONFIG_FILE) ; then \
+	  mv $(WEBCONFIG_FILE) $(WEBCONFIG_FILE).old; \
+	  echo Saving $(WEBCONFIG_FILE) as $(WEBCONFIG_FILE).old; \
+	fi
+
+#	netscape -remote "saveAs($(WEBCONFIG_FILE))"
 
 ifdef IS_FIRST_CHECKOUT
 # First time, do build target in a new process to pick up new files.
