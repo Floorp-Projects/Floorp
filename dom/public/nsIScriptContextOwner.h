@@ -38,6 +38,8 @@ class nsIScriptContext;
 
 class nsIScriptContextOwner : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_ISCRIPTCONTEXTOWNER_IID; return iid; }
+
   /**
    * Returns a script context. The assumption is that the
    * script context has an associated script global object and
