@@ -43,13 +43,19 @@
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
-#else
+#define RAPTORBASE_DLL "raptorbase.dll"
+#define XPCOM_DLL "xpcom32.dll"
+#else /* else XP_PC */
 #ifdef XP_MAC
-#include "nsMacRepository.h"
-#else
+#define NETLIB_DLL "NETLIB_DLL"
+#define RAPTORBASE_DLL "base.shlb"
+#define XPCOM_DLL "XPCOM_DLL"
+#else /* else XP_MAC */
 #define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
-#endif
-#endif
+#define RAPTORBASE_DLL "libraptorbase"MOZ_DLL_SUFFIX
+#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
+#endif /* XP_MAC */
+#endif /* XP_PC */
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
@@ -131,7 +137,38 @@ get_applocale(void)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 nsresult NS_AutoregisterComponents()
 {
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 
+                                                 NULL /* default */);
+
+	// startup netlib:	
+	nsComponentManager::RegisterComponent(kEventQueueServiceCID, 
+                                        NULL, NULL, 
+                                        XPCOM_DLL, 
+                                        PR_FALSE, PR_FALSE);
+#ifndef NECKO
+  nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#else
+  nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#endif // NECKO
+
+  // Create the Event Queue for this thread...
+  nsIEventQueueService* pEventQService;
+  
+  pEventQService = nsnull;
+  nsresult result = nsServiceManager::GetService(kEventQueueServiceCID,
+                                                 kIEventQueueServiceIID,
+                                                 (nsISupports **)&pEventQService);
+  if (NS_SUCCEEDED(result)) {
+    // XXX: What if this fails?
+    result = pEventQService->CreateThreadEventQueue();
+  }
+  
+  nsComponentManager::RegisterComponent(kPersistentPropertiesCID, 
+                                        NULL,
+                                        NULL, 
+                                        RAPTORBASE_DLL, 
+                                        PR_FALSE, 
+                                        PR_FALSE);
   return rv;
 }
 
@@ -140,88 +177,22 @@ main(int argc, char *argv[])
 {
   nsresult ret;
 
-#if 1
   NS_AutoregisterComponents();
-#else
-  ret = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                         NULL /* default */);
-  if (NS_FAILED(ret)) {
-    printf("auto-registration failed\n");
-    return 1;
-  }
-#endif
-#ifndef NECKO
-  nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL,
-    PR_FALSE, PR_FALSE);
-#else
-  nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL,
-    PR_FALSE, PR_FALSE);
-#endif // NECKO
 
   nsIStringBundleService* service = nsnull;
   ret = nsServiceManager::GetService(kStringBundleServiceCID,
-    kIStringBundleServiceIID, (nsISupports**) &service);
+                                     kIStringBundleServiceIID, (nsISupports**) &service);
   if (NS_FAILED(ret)) {
     printf("cannot create service\n");
     return 1;
   }
 
-  nsIEventQueueService* pEventQueueService = nsnull;
-  ret = nsServiceManager::GetService(kEventQueueServiceCID,
-    kIEventQueueServiceIID, (nsISupports**) &pEventQueueService);
-  if (NS_FAILED(ret)) {
-    printf("cannot get event queue service\n");
-    return 1;
-  }
-  ret = pEventQueueService->CreateThreadEventQueue();
-  if (NS_FAILED(ret)) {
-    printf("CreateThreadEventQueue failed\n");
-    return 1;
-  }
-
   nsILocale* locale = get_applocale();
-  nsIURI *url = nsnull;
-
-#ifndef NECKO
-  nsINetService* pNetService = nsnull;
-  ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
-    (nsISupports**) &pNetService);
-  if (NS_FAILED(ret)) {
-    printf("cannot get net service\n");
-    return 1;
-  }
-  ret = pNetService->CreateURL(&url, nsString(TEST_URL), nsnull, nsnull,
-    nsnull);
-#else
-  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &ret);
-  if (NS_FAILED(ret)) {
-    printf("cannot get io service\n");
-    return 1;
-  }
-
-  nsIURI *uri = nsnull;
-  ret = pNetService->NewURI(TEST_URL, nsnull, &uri);
-  if (NS_FAILED(ret)) {
-    printf("cannot get uri\n");
-    return 1;
-  }
-
-  ret = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-  NS_RELEASE(uri);
-#endif // NECKO
-
-  if (NS_FAILED(ret)) {
-    printf("cannot create URL\n");
-    return 1;
-  }
 
   nsIStringBundle* bundle = nsnull;
 
-#if 0
-  ret = service->CreateBundle(url, locale, &bundle);
-#else
   ret = service->CreateBundle(TEST_URL, locale, &bundle);
-#endif
+
   /* free it
   */
   locale->Release();
@@ -232,23 +203,32 @@ main(int argc, char *argv[])
   }
 
   nsAutoString v("");
-  ret = bundle->GetStringFromName(nsString("file"), v);
-  if (NS_FAILED(ret)) {
-    printf("cannot get string from name\n");
-    return 1;
-  }
-  char *value = v.ToNewCString();
-  cout << "file=\"" << value << "\"" << endl;
+  PRUnichar *ptrv = nsnull;
+  char *value = nsnull;
 
-  ret = bundle->GetStringFromID(123, v);
+  // 123
+  ret = bundle->GetStringFromID(123, &ptrv);
   if (NS_FAILED(ret)) {
     printf("cannot get string from ID\n");
     return 1;
   }
+  v = ptrv;
   value = v.ToNewCString();
   cout << "123=\"" << value << "\"" << endl;
 
-  nsIBidirectionalEnumerator* propEnum = nsnull;
+  // file
+  nsString strfile("file");
+  const PRUnichar *ptrFile = strfile.GetUnicode();
+  ret = bundle->GetStringFromName(ptrFile, &ptrv);
+  if (NS_FAILED(ret)) {
+    printf("cannot get string from name\n");
+    return 1;
+  }
+  v = ptrv;
+  value = v.ToNewCString();
+  cout << "file=\"" << value << "\"" << endl;
+
+ nsIBidirectionalEnumerator* propEnum = nsnull;
   ret = bundle->GetEnumeration(&propEnum);
   if (NS_FAILED(ret)) {
 	  printf("cannot get enumeration\n");

@@ -24,6 +24,8 @@
 #include "nsIStringBundle.h"
 #include "nscore.h"
 #include "nsILocale.h"
+#include "nsIAllocator.h"
+#include "plstr.h"
 
 #ifndef NECKO
 #include "nsINetService.h"
@@ -37,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "pratom.h"
+#include "prmem.h"
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -58,18 +61,19 @@ static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 class nsStringBundle : public nsIStringBundle
 {
 public:
-
   nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresult* aResult);
-
-  // deprecated
-  nsStringBundle(nsIURI* aURL, nsILocale* aLocale, nsresult* aResult);
   virtual ~nsStringBundle();
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetStringFromID(PRInt32 aID, nsString& aResult);
-  NS_IMETHOD GetStringFromName(const nsString& aName, nsString& aResult);
-  NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator** elements);
+  /* void GetStringFromID (in long aID, out wstring aResult); */
+  NS_IMETHOD GetStringFromID(PRInt32 aID, PRUnichar **aResult);
+
+  /* void GetStringFromName ([const] in wstring aName, out wstring aResult); */
+  NS_IMETHOD GetStringFromName(const PRUnichar *aName, PRUnichar **aResult);
+
+  /* void GetEnumeration (out nsIBidirectionalEnumerator elements); */
+  NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator **elements);
 
   nsIPersistentProperties* mProps;
 
@@ -77,11 +81,14 @@ protected:
   //
   // functional decomposition of the funitions repeatively called 
   //
+  nsresult GetStringFromID(PRInt32 aID, nsString& aResult);
+  nsresult GetStringFromName(const nsString& aName, nsString& aResult);
+
   nsresult GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInputStream*& in);
   nsresult OpenInputStream(nsString2& aURLStr, nsIInputStream*& in);
   nsresult GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& country);
  };
- 
+
 nsStringBundle::nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresult* aResult)
 {  NS_INIT_REFCNT();
 
@@ -111,87 +118,75 @@ nsStringBundle::nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresul
   NS_RELEASE(in);
 }
 
-// deprecated
-nsStringBundle::nsStringBundle(nsIURI* aURL, nsILocale* aLocale,
-  nsresult* aResult)
-{
-  NS_INIT_REFCNT();
-
-  mProps = nsnull;
-  nsIInputStream *in = nsnull;
-
-#ifndef NECKO
-  nsINetService* pNetService = nsnull;
-  *aResult = nsServiceManager::GetService(kNetServiceCID,
-    kINetServiceIID, (nsISupports**) &pNetService);
-  if (NS_FAILED(*aResult)) {
-#ifdef NS_DEBUG
-    printf("cannot get net service\n");
-#endif
-    return;
-  }
-
-  *aResult = pNetService->OpenBlockingStream(aURL, nsnull, &in);
-  if (NS_FAILED(*aResult)) {
-#ifdef NS_DEBUG
-    printf("cannot open stream\n");
-#endif
-    return;
-  }
-
-#else // NECKO
-  nsresult rv;
-  rv = NS_OpenURI(&in, aURL);
-  if (NS_FAILED(rv)) {
-#ifdef NS_DEBUG
-    printf("cannot open uri\n");
-#endif
-    *aResult = rv;
-    return;
-  }
-#endif // NECKO
-
-  if (!in) {
-#ifdef NS_DEBUG
-    printf("OpenBlockingStream returned success value, but pointer is NULL\n");
-#endif
-    *aResult = NS_ERROR_UNEXPECTED;
-    return;
-  }
-  *aResult = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
-    kIPersistentPropertiesIID, (void**) &mProps);
-  if (NS_FAILED(*aResult)) {
-#ifdef NS_DEBUG
-    printf("create nsIPersistentProperties failed\n");
-#endif
-    return;
-  }
-  *aResult = mProps->Load(in);
-  NS_RELEASE(in);
-}
-
 nsStringBundle::~nsStringBundle()
 {
   NS_IF_RELEASE(mProps);
 }
 
-NS_IMPL_ISUPPORTS(nsStringBundle, kIStringBundleIID)
-
-NS_IMETHODIMP
+nsresult
 nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 {
   nsAutoString name("");
   name.Append(aID, 10);
   nsresult ret = mProps->GetProperty(name, aResult);
 
+  char *s = aResult.ToNewCString();
+  printf("\n** GetStringFromID: %s\n", s?s:"null");
+  delete s;
+
   return ret;
 }
 
-NS_IMETHODIMP
+nsresult
 nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
 {
   nsresult ret = mProps->GetProperty(aName, aResult);
 
+  char *s = aResult.ToNewCString(),
+       *ss = aName.ToNewCString();
+  printf("\n** GetStringFromName: %s, %s\n", ss?ss:"null", s?s:"null");
+  delete s;
+
+  return ret;
+}
+
+NS_IMPL_ISUPPORTS(nsStringBundle, nsIStringBundle::GetIID())
+
+/* void GetStringFromID (in long aID, out wstring aResult); */
+NS_IMETHODIMP
+nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
+{
+  *aResult = nsnull;
+  nsString tmpstr("");
+
+  nsresult ret = GetStringFromID(aID, tmpstr);
+  PRInt32 len =  tmpstr.Length();
+  if (NS_FAILED(ret) || !len) {
+    return ret;
+  }
+
+  *aResult = (PRUnichar *) PR_Malloc(len);
+  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.GetUnicode(), len);
+  
+  return ret;
+}
+
+/* void GetStringFromName ([const] in wstring aName, out wstring aResult); */
+NS_IMETHODIMP 
+nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
+{
+  *aResult = nsnull;
+  nsString tmpstr("");
+  nsString nameStr(aName);
+  nsresult ret = GetStringFromName(nameStr, tmpstr);
+  PRInt32 len =  tmpstr.Length();
+  if (NS_FAILED(ret) || !len) {
+    return ret;
+  }
+
+  *aResult = (PRUnichar *) PR_Malloc(len);
+  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.GetUnicode(), len);
+  
   return ret;
 }
 
@@ -241,7 +236,7 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
       strFile2 += "_";
       strFile2 += lc_country;;
     }
- 
+
     /* insert it
      */   
     nsString2 fileRight;
@@ -273,6 +268,13 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
 nsresult
 nsStringBundle::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in) 
 {
+#ifdef DEBUG
+  {
+    char *s = aURLStr.ToNewCString();
+    printf("\n** nsStringBundle::OpenInputStream: %s\n", s?s:"null");
+    delete s;
+  }
+#endif
   nsresult ret;
 #ifndef NECKO
   nsINetService* pNetService = nsnull;
@@ -355,16 +357,18 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD CreateBundle(const char* aURLSpec, nsILocale* aLocale,
-    nsIStringBundle** aResult);
-
-  // deprecate
-  NS_IMETHOD CreateBundle(nsIURI* aURL, nsILocale* aLocale,
-    nsIStringBundle** aResult);
+  /* void CreateBundle ([const] in string aURLSpec, in nsILocale aLocale, out nsIStringBundle aResult); */
+  NS_IMETHOD CreateBundle(const char *aURLSpec, nsILocale * aLocale, 
+                          nsIStringBundle **aResult);
+  /* void CreateXPCBundle ([const] in string aURLSpec, [const] in wstring aLocaleName, out nsIStringBundle aResult); */
+  NS_IMETHOD CreateXPCBundle(const char *aURLSpec, const PRUnichar *aLocaleName, nsIStringBundle **aResult);  
 };
 
 nsStringBundleService::nsStringBundleService()
 {
+#if DEBUG
+  printf("\n++ nsStringBundleService::nsStringBundleService ++\n");
+#endif
   NS_INIT_REFCNT();
 }
 
@@ -372,13 +376,21 @@ nsStringBundleService::~nsStringBundleService()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsStringBundleService, kIStringBundleServiceIID)
+NS_IMPL_ISUPPORTS(nsStringBundleService, nsIStringBundleService::GetIID())
 
 NS_IMETHODIMP
 nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
-  nsIStringBundle** aResult)
+                                    nsIStringBundle** aResult)
 {
-
+#ifdef DEBUG
+  printf("\n++ nsStringBundleService::CreateBundle ++\n");
+  {
+    nsString2 aURLStr(aURLSpec);
+    char *s = aURLStr.ToNewCString();
+    printf("\n** nsStringBundleService::CreateBundle: %s\n", s?s:"null");
+    delete s;
+  }
+#endif
   nsresult ret = NS_OK;
   nsStringBundle* bundle = new nsStringBundle(aURLSpec, aLocale, &ret);
   if (!bundle) {
@@ -396,13 +408,22 @@ nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
   return ret;
 }
 
-/* deprecated */
-NS_IMETHODIMP
-nsStringBundleService::CreateBundle(nsIURI* aURL, nsILocale* aLocale,
-  nsIStringBundle** aResult)
+/* void CreateXPCBundle ([const] in string aURLSpec, [const] in wstring aLocaleName, out nsIStringBundle aResult); */
+NS_IMETHODIMP 
+nsStringBundleService::CreateXPCBundle(const char *aURLSpec, const PRUnichar *aLocaleName, nsIStringBundle **aResult)
 {
+
+#ifdef DEBUG
+  printf("\n++ nsStringBundleService::CreateXPCBundle ++\n");
+  {
+    nsString2 aURLStr(aURLSpec);
+    char *s = aURLStr.ToNewCString();
+    printf("\n** nsStringBundleService::XPCCreateBundle: %s\n", s?s:"null");
+    delete s;
+  }
+#endif
   nsresult ret = NS_OK;
-  nsStringBundle* bundle = new nsStringBundle(aURL, aLocale, &ret);
+  nsStringBundle* bundle = new nsStringBundle(aURLSpec, nsnull, &ret);
   if (!bundle) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -432,6 +453,9 @@ public:
 
 nsStringBundleServiceFactory::nsStringBundleServiceFactory()
 {
+#ifdef DEBUG
+  printf("\n++ nsStringBundleServiceFactory::nsStringBundleServiceFactory ++\n");
+#endif
   NS_INIT_REFCNT();
 }
 
@@ -445,6 +469,9 @@ NS_IMETHODIMP
 nsStringBundleServiceFactory::CreateInstance(nsISupports* aOuter,
   REFNSIID aIID, void** aResult)
 {
+#ifdef DEBUG
+  printf("\n++ nsStringBundleServiceFactory::CreateInstance ++\n");
+#endif
   nsStringBundleService* service = new nsStringBundleService();
   if (!service) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -461,6 +488,9 @@ nsStringBundleServiceFactory::CreateInstance(nsISupports* aOuter,
 NS_IMETHODIMP
 nsStringBundleServiceFactory::LockFactory(PRBool aLock)
 {
+#ifdef DEBUG
+  printf("\n++ nsStringBundleServiceFactory::LockFactory ++\n");
+#endif
   if (aLock) {
     PR_AtomicIncrement(&gLockCount);
   }
@@ -474,6 +504,9 @@ nsStringBundleServiceFactory::LockFactory(PRBool aLock)
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
+#ifdef DEBUG
+  printf("\n++  str bunlde  NSRegisterSelf ++\n");
+#endif
   nsresult rv;
 
   nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
@@ -489,7 +522,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   "String Bundle", 
                                   NS_STRINGBUNDLE_PROGID, 
                                   path,
-    PR_TRUE, PR_TRUE);
+                                  PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
   done:
@@ -500,6 +533,9 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
+#ifdef DEBUG
+  printf("\n++  str bunlde  NSUnregisterSelf ++\n");
+#endif
   nsresult rv;
 
   nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
@@ -526,6 +562,9 @@ NSGetFactory(nsISupports* aServMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
+#ifdef DEBUG
+  printf("\n++  str bunlde  NSGetFactory ++\n");
+#endif
   nsresult  res;
 
   if (!aFactory) {
