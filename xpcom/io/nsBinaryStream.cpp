@@ -291,11 +291,43 @@ nsBinaryInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
     return mInputStream->Read(aBuffer, aCount, aNumRead);
 }
 
+
+// when forwarding ReadSegments to mInputStream, we need to make sure
+// 'this' is being passed to the writer each time. To do this, we need
+// a thunking function which keeps the real input stream around.
+
+// the closure wrapper
+struct ReadSegmentsClosure {
+    nsIInputStream* mRealInputStream;
+    void* mRealClosure;
+    nsWriteSegmentFun mRealWriter;
+};
+
+// the thunking function
+static NS_METHOD
+ReadSegmentForwardingThunk(nsIInputStream* aStream,
+                           void *aClosure,
+                           const char* aFromSegment,
+                           PRUint32 aToOffset,
+                           PRUint32 aCount,
+                           PRUint32 *aWriteCount)
+{
+    ReadSegmentsClosure* thunkClosure =
+        NS_REINTERPRET_CAST(ReadSegmentsClosure*, aClosure);
+
+    return thunkClosure->mRealWriter(thunkClosure->mRealInputStream,
+                                     thunkClosure->mRealClosure,
+                                     aFromSegment, aToOffset,
+                                     aCount, aWriteCount);
+}
+
+
 NS_IMETHODIMP
 nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
 {
-    NS_NOTREACHED("ReadSegments");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    ReadSegmentsClosure thunkClosure = { this, closure, writer };
+    
+    return mInputStream->ReadSegments(ReadSegmentForwardingThunk, &thunkClosure, count, _retval);
 }
 
 NS_IMETHODIMP
@@ -395,70 +427,86 @@ nsBinaryInputStream::ReadDouble(double* aDouble)
     return Read64(NS_REINTERPRET_CAST(PRUint64*, aDouble));
 }
 
+static NS_METHOD
+WriteSegmentToCString(nsIInputStream* aStream,
+                      void *aClosure,
+                      const char* aFromSegment,
+                      PRUint32 aToOffset,
+                      PRUint32 aCount,
+                      PRUint32 *aWriteCount)
+{
+    nsACString* outString = NS_STATIC_CAST(nsACString*,aClosure);
+
+    outString->Append(aFromSegment, aCount);
+
+    *aWriteCount = aCount;
+    
+    return NS_OK;
+}
+
 NS_IMETHODIMP
-nsBinaryInputStream::ReadStringZ(char* *aString)
+nsBinaryInputStream::ReadCString(nsACString& aString)
 {
     nsresult rv;
     PRUint32 length, bytesRead;
-    char *s;
 
     rv = Read32(&length);
     if (NS_FAILED(rv)) return rv;
 
-    s = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(length + 1));
-    if (!s)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = Read(s, length, &bytesRead);
+    aString.Truncate();
+    rv = ReadSegments(WriteSegmentToCString, &aString, length, &bytesRead);
     if (NS_FAILED(rv)) return rv;
-    if (bytesRead != length) {
-        nsMemory::Free(s);
+    
+    if (bytesRead != length)
         return NS_ERROR_FAILURE;
-    }
 
-    s[length] = '\0';
-    *aString = s;
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBinaryInputStream::ReadWStringZ(PRUnichar* *aString)
+// same version of the above, but with correct casting and endian swapping
+static NS_METHOD
+WriteSegmentToString(nsIInputStream* aStream,
+                     void *aClosure,
+                     const char* aFromSegment,
+                     PRUint32 aToOffset,
+                     PRUint32 aCount,
+                     PRUint32 *aWriteCount)
 {
-    nsresult rv;
-    PRUint32 length, byteCount, bytesRead;
-    PRUnichar *ws;
+    nsAString* outString = NS_STATIC_CAST(nsAString*,aClosure);
+    const PRUnichar *unicodeSegment =
+        NS_REINTERPRET_CAST(const PRUnichar*, aFromSegment);
+    PRUint32 segmentLength = aCount / sizeof(PRUnichar);
 
-    rv = Read32(&length);
-    if (NS_FAILED(rv)) return rv;
- 
-    byteCount = length * sizeof(PRUnichar);
-    ws = NS_REINTERPRET_CAST(PRUnichar*,
-                             nsMemory::Alloc(byteCount + sizeof(PRUnichar)));
-    if (!ws)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = Read(NS_REINTERPRET_CAST(char*, ws), byteCount, &bytesRead);
-    if (NS_FAILED(rv)) return rv;
-    if (bytesRead != byteCount) {
-        nsMemory::Free(ws);
-        return NS_ERROR_FAILURE;
-    }
-
+    // this sucks. we have to swap every 2 bytes on some machines
 #ifdef IS_LITTLE_ENDIAN
-    for (PRUint32 i = 0; i < length; i++)
-        ws[i] = NS_SWAP16(ws[i]);
+    for (PRUint32 i = 0; i < segmentLength; i++)
+        outString->Append(PRUnichar(NS_SWAP16(unicodeSegment[i])));
+#else    
+    outString->Append(unicodeSegment, segmentLength);
 #endif
 
-    ws[length] = 0;
-    *aString = ws;
+    *aWriteCount = aCount;
     return NS_OK;
 }
 
+
 NS_IMETHODIMP
-nsBinaryInputStream::ReadUtf8Z(PRUnichar* *aString)
+nsBinaryInputStream::ReadString(nsAString& aString)
 {
-    NS_NOTREACHED("ReadUtf8Z");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    PRUint32 length, bytesRead;
+
+    rv = Read32(&length);
+    if (NS_FAILED(rv)) return rv;
+
+    aString.Truncate();
+    rv = ReadSegments(WriteSegmentToString, &aString, length, &bytesRead);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (bytesRead != length)
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -512,26 +560,3 @@ nsBinaryInputStream::PutBuffer(char* aBuffer, PRUint32 aLength)
         mBufferAccess->PutBuffer(aBuffer, aLength);
 }
 
-NS_COM nsresult
-NS_NewBinaryOutputStream(nsIBinaryOutputStream* *aResult, nsIOutputStream* aDestStream)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    nsIBinaryOutputStream *stream = new nsBinaryOutputStream(aDestStream);
-    if (!stream)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(stream);
-    *aResult = stream;
-    return NS_OK;
-}
-
-NS_COM nsresult
-NS_NewBinaryInputStream(nsIBinaryInputStream* *aResult, nsIInputStream* aSrcStream)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    nsIBinaryInputStream *stream = new nsBinaryInputStream(aSrcStream);
-    if (!stream)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(stream);
-    *aResult = stream;
-    return NS_OK;
-}
