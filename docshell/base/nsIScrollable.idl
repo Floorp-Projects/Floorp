@@ -48,7 +48,7 @@
  * min and the max. 
  */
 
-[scriptable, uuid(70bd2967-288b-4d0b-880a-de0b7c15a77c)]
+[scriptable, uuid(919e792a-6490-40b8-bba5-f9e9ad5640c8)]
 interface nsIScrollable : nsISupports
 {
 	/*
@@ -114,11 +114,8 @@ interface nsIScrollable : nsISupports
 	default is 'scrolling preference for all documents in this shell'
 	resetScrollbarPreferences resets current to default
 	*/
-	long getCurrentScrollbarPreferences(in long scrollOrientation);
-	void setCurrentScrollbarPreferences(in long scrollOrientation, in long scrollbarPref);
 	long getDefaultScrollbarPreferences(in long scrollOrientation);
 	void setDefaultScrollbarPreferences(in long scrollOrientation, in long scrollbarPref);
-	void resetScrollbarPreferences();
 
 	/*
 	Get information about whether the vertical and horizontal scrollbars are

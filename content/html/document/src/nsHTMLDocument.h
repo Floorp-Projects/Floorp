@@ -119,6 +119,9 @@ public:
     return mWriteLevel != PRUint32(0);
   }
 
+  virtual PRBool GetIsFrameset() { return mIsFrameset; }
+  virtual void SetIsFrameset(PRBool aFrameset) { mIsFrameset = aFrameset; }
+
   virtual void ContentAppended(nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer);
   virtual void ContentInserted(nsIContent* aContainer,
@@ -318,6 +321,8 @@ protected:
    * Bug 13871: Frameset spoofing - find out if document.domain was set
    */
   PRPackedBool mDomainWasSet;
+
+  PRPackedBool mIsFrameset;
 
   PLDHashTable mIdAndNameHashTable;
 
