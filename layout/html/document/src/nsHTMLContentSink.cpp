@@ -298,7 +298,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   if (NS_OK != rv) {
     return rv;
   }
-  mRoot->AppendChild(mBody, PR_FALSE);
+
+  // Note: Can't do this here; see the comment in OpenBody
+  //XXX  mRoot->AppendChild(mBody, PR_FALSE);
 
   return rv;
 }
@@ -414,6 +416,10 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     // root has no children
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("HTMLContentSink::OpenBody: start layout"));
+
+    // This is done here instead of earlier because we need the
+    // attributes from the real body tag before we initiate reflow.
+    mRoot->AppendChild(mBody, PR_FALSE);
     StartLayout();
   }
 
@@ -716,6 +722,12 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
 #endif
       
       parent->AppendChild(container,  allowReflow);
+#ifdef NS_DEBUG
+      if (allowReflow && (((PRInt32)gSinkLogModuleInfo->level) > 127)) {
+        printf("tick...\n");
+        PR_Sleep(PR_SecondsToInterval(3));
+      }
+#endif
 #if XXX
       if (parent == mBody) {
         // We just closed a child of the body off. Trigger a
