@@ -1509,6 +1509,9 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   nsresult rv;
 
 #ifdef DEBUG
+  /* examples: */
+  /* nsURI2Path(mailbox:/, mailbox:/, ??)->/home/sspitzer/mozillamail */
+  /* nsURI2Path(mailbox:/, mailbox://Drafts, ??)->/home/sspitzer/mozillamail/Drafts */
   printf("nsURI2Path(%s, %s, ??)", rootURI, uriStr);
 #endif
   
@@ -1592,6 +1595,12 @@ nsPath2URI(const char* rootURI, const nsFileSpec& spec, char **uri)
 {
   nsresult rv;
 
+#ifdef DEBUG
+  /* examples: */
+  /* nsPath2URI(mailbox_message:/, /home/sspitzer/mozillamail/Drafts, ??)->mailbox_message://Drafts */
+  printf("nsPath2URI(%s, %s, ??)", rootURI, (const char *)spec);
+#endif
+
   nsAutoString sep;
   /* sspitzer: is this ok for mail and news? */
   rv = nsGetMailFolderSeparator(sep);
@@ -1652,6 +1661,9 @@ nsPath2URI(const char* rootURI, const nsFileSpec& spec, char **uri)
     uriStr += folderName;
   }
   *uri = uriStr.ToNewCString();
+#ifdef DEBUG
+  printf("->%s\n", *uri);
+#endif
   return NS_OK;
 }
 
