@@ -566,8 +566,6 @@ nsEventQueueImpl::GetYoungestActive(nsIEventQueue **aQueue)
   if (!answer) {
     if (mAcceptingEvents && mCouldHaveEvents)
       answer = NS_STATIC_CAST(nsIEventQueue *, this);
-    else
-      CheckForDeactivation();
   }
   *aQueue = answer;
   NS_IF_ADDREF(*aQueue);
