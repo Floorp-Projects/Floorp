@@ -26,7 +26,7 @@
 class nsIURL;
 class nsIUrlListener;
 
-class nsNntpService : public nsINntpService, nsIMsgMessageService
+class nsNntpService : public nsINntpService, public nsIMsgMessageService
 {
 public:
   ////////////////////////////////////////////////////////////////////////////////////////
