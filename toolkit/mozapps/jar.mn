@@ -8,10 +8,6 @@ toolkit.jar:
 * content/mozapps/downloads/editAction.js                   (downloads/content/editAction.js)
   content/mozapps/contents.rdf                              (contents-content.rdf)
 
-classic.jar:
-  skin/classic/mozapps/downloads/unknownContentType.css     (downloads/skin/unknownContentType.css)
-  skin/classic/mozapps/contents.rdf                         (contents-skin.rdf)
-
 en-US.jar:
 * locale/en-US/mozapps/downloads/unknownContentType.properties (downloads/locale/unknownContentType.properties)
 * locale/en-US/mozapps/downloads/unknownContentType.dtd     (downloads/locale/unknownContentType.dtd)
