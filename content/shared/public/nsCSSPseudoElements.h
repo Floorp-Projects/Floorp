@@ -48,7 +48,6 @@ class nsCSSPseudoElements {
 public:
 
   static void AddRefAtoms();
-  static void ReleaseAtoms();
 
   static PRBool IsPseudoElement(nsIAtom *aAtom);
 

@@ -23,35 +23,22 @@
  */
 
 #include "nsSVGAtoms.h"
-#include "nsAtomListUtils.h"
+#include "nsStaticAtom.h"
+#include "nsMemory.h"
 
 // define storage for all atoms
 #define SVG_ATOM(_name, _value) nsIAtom* nsSVGAtoms::_name;
 #include "nsSVGAtomList.h"
 #undef SVG_ATOM
 
-static nsrefcnt gRefCnt = 0;
-
-static const nsAtomListInfo SVGAtoms_info[] = {
-#define SVG_ATOM(name_, value_) { &nsSVGAtoms::name_, value_ },
+static const nsStaticAtom SVGAtoms_info[] = {
+#define SVG_ATOM(name_, value_) { value_, &nsSVGAtoms::name_ },
 #include "nsSVGAtomList.h"
 #undef SVG_ATOM
 };
 
 void nsSVGAtoms::AddRefAtoms() {
 
-  if (gRefCnt == 0) {
-    nsAtomListUtils::AddRefAtoms(SVGAtoms_info,
-                                 MOZ_ARRAY_LENGTH(SVGAtoms_info));
-  }
-  ++gRefCnt;
+  NS_RegisterStaticAtoms(SVGAtoms_info, NS_ARRAY_LENGTH(SVGAtoms_info));
 }
 
-void nsSVGAtoms::ReleaseAtoms() {
-
-  NS_PRECONDITION(gRefCnt != 0, "bad release of SVG atoms");
-  if (--gRefCnt == 0) {
-    nsAtomListUtils::ReleaseAtoms(SVGAtoms_info,
-                                  MOZ_ARRAY_LENGTH(SVGAtoms_info));
-  }
-}

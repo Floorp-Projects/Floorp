@@ -47,6 +47,9 @@
  * the atom.  The second argument is the string value of the atom.
  */
 
+// OUTPUT_CLASS=nsCSSAnonBoxes
+// MACRO_NAME=CSS_ANON_BOX
+
 CSS_ANON_BOX(mozNonElement, ":-moz-non-element")
 
 CSS_ANON_BOX(mozAnonymousBlock, ":-moz-anonymous-block")

@@ -294,14 +294,6 @@ Shutdown(nsIModule* aSelf)
   nsColorNames::ReleaseTable();
   nsCSSProps::ReleaseTable();
   nsCSSKeywords::ReleaseTable();
-  nsCSSAnonBoxes::ReleaseAtoms();
-  nsCSSPseudoClasses::ReleaseAtoms();
-  nsCSSPseudoElements::ReleaseAtoms();
-  nsHTMLAtoms::ReleaseAtoms();
-  nsXBLAtoms::ReleaseAtoms();
-  nsLayoutAtoms::ReleaseAtoms();
-
-  nsXULAtoms::ReleaseAtoms();
   nsRepeatService::Shutdown();
   nsStackLayout::Shutdown();
   nsBox::Shutdown();
@@ -316,11 +308,6 @@ Shutdown(nsIModule* aSelf)
 
 #ifdef MOZ_MATHML
   nsMathMLOperators::ReleaseTable();
-  nsMathMLAtoms::ReleaseAtoms();
-#endif
-
-#ifdef MOZ_SVG
-  nsSVGAtoms::ReleaseAtoms();
 #endif
 
   nsCSSFrameConstructor::ReleaseGlobals();

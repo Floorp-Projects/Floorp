@@ -37,6 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCSSPseudoElements.h"
 #include "nsAtomListUtils.h"
+#include "nsStaticAtom.h"
+#include "nsMemory.h"
 
 // define storage for all atoms
 #define CSS_PSEUDO_ELEMENT(_name, _value) \
@@ -44,35 +46,22 @@
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
-static nsrefcnt gRefCnt;
-
-static const nsAtomListInfo CSSPseudoElements_info[] = {
+static const nsStaticAtom CSSPseudoElements_info[] = {
 #define CSS_PSEUDO_ELEMENT(name_, value_) \
-    { (nsIAtom**)&nsCSSPseudoElements::name_, value_ },
+    { value_, (nsIAtom**)&nsCSSPseudoElements::name_ },
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 };
 
 void nsCSSPseudoElements::AddRefAtoms()
 {
-  if (0 == gRefCnt++) {
-    nsAtomListUtils::AddRefAtoms(CSSPseudoElements_info,
-                                 MOZ_ARRAY_LENGTH(CSSPseudoElements_info));
-  }
-}
-
-void nsCSSPseudoElements::ReleaseAtoms()
-{
-  NS_PRECONDITION(gRefCnt != 0, "bad release atoms");
-  if (--gRefCnt == 0) {
-    nsAtomListUtils::ReleaseAtoms(CSSPseudoElements_info,
-                                  MOZ_ARRAY_LENGTH(CSSPseudoElements_info));
-  }
+  NS_RegisterStaticAtoms(CSSPseudoElements_info,
+                         NS_ARRAY_LENGTH(CSSPseudoElements_info));
 }
 
 PRBool nsCSSPseudoElements::IsPseudoElement(nsIAtom *aAtom)
 {
   return nsAtomListUtils::IsMember(aAtom, CSSPseudoElements_info,
-                                   MOZ_ARRAY_LENGTH(CSSPseudoElements_info));
+                                   NS_ARRAY_LENGTH(CSSPseudoElements_info));
 }
 

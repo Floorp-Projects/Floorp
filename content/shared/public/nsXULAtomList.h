@@ -55,6 +55,8 @@
 
  ******/
 
+// OUTPUT_CLASS=nsXULAtoms
+// MACRO_NAME=XUL_ATOM
 
 XUL_ATOM(button, "button")
 XUL_ATOM(spinner, "spinner")
@@ -286,14 +288,21 @@ XUL_ATOM(titlebar, "titlebar")
 XUL_ATOM(resizer, "resizer")
 XUL_ATOM(dir, "dir")
 XUL_ATOM(properties, "properties")
+XUL_ATOM(resource, "resource")
 XUL_ATOM(sort, "sort")
 XUL_ATOM(sortDirection, "sortDirection")
 XUL_ATOM(sortActive, "sortActive")
+XUL_ATOM(sortResource, "sortResource")
+XUL_ATOM(sortResource2, "sortResource2")
+XUL_ATOM(sortSeparators, "sortSeparators")
+XUL_ATOM(sortStaticsLast, "sortStaticsLast")
 XUL_ATOM(selectedIndex, "selectedIndex")
+XUL_ATOM(staticHint, "staticHint")
 XUL_ATOM(_star, "*")
 XUL_ATOM(defaultz, "default")
 XUL_ATOM(screenX, "screenX")
 XUL_ATOM(screenY, "screenY")
+XUL_ATOM(type, "type")
 XUL_ATOM(hidechrome, "hidechrome")
 XUL_ATOM(popupset, "popupset")
 XUL_ATOM(parsetype, "parsetype")

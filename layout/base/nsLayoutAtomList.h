@@ -54,6 +54,8 @@
 
  ******/
 
+// OUTPUT_CLASS=nsLayoutAtoms
+// MACRO_NAME=LAYOUT_ATOM
 
   // Alphabetical list of media type atoms
 LAYOUT_ATOM(all, "all")  // Media atoms must be lower case
@@ -206,6 +208,8 @@ LAYOUT_ATOM(wildcard, "*")
 LAYOUT_ATOM(mozdirty, "_moz_dirty")
 LAYOUT_ATOM(stylesheet, "stylesheet")
 LAYOUT_ATOM(transform, "transform")
+LAYOUT_ATOM(show, "show")
+LAYOUT_ATOM(actuate, "actuate")
 
 LAYOUT_ATOM(directionalFrame, "DirectionalFrame")
 LAYOUT_ATOM(baseLevel, "BaseLevel")                            // PRUint8

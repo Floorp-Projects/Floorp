@@ -51,7 +51,6 @@ class nsXULAtoms {
 public:
 
   static void AddRefAtoms();
-  static void ReleaseAtoms();
 
   /* Declare all atoms
 

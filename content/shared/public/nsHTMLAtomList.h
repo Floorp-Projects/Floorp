@@ -52,6 +52,9 @@
 
  ******/
 
+// OUTPUT_CLASS=nsHTMLAtoms
+// MACRO_NAME=HTML_ATOM
+
 HTML_ATOM(_baseHref, NS_HTML_BASE_HREF)
 HTML_ATOM(_baseTarget, NS_HTML_BASE_TARGET)
 HTML_ATOM(a, "a")

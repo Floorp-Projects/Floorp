@@ -37,31 +37,14 @@
 
 #include "nsAtomListUtils.h"
 #include "nsIAtom.h"
-
-/* static */ void
-nsAtomListUtils::AddRefAtoms(const nsAtomListInfo* aInfo, PRUint32 aCount)
-{
-    for (const nsAtomListInfo *info = aInfo, *info_end = aInfo + aCount;
-         info != info_end; ++info) {
-        *(info->mAtom) = NS_NewPermanentAtom(info->mString);
-    }
-}
-
-/* static */ void
-nsAtomListUtils::ReleaseAtoms(const nsAtomListInfo* aInfo, PRUint32 aCount)
-{
-    for (const nsAtomListInfo *info = aInfo, *info_end = aInfo + aCount;
-         info != info_end; ++info) {
-        NS_RELEASE(*(info->mAtom));
-    }
-}
+#include "nsStaticAtom.h"
 
 /* static */ PRBool
 nsAtomListUtils::IsMember(nsIAtom *aAtom,
-                          const nsAtomListInfo* aInfo,
+                          const nsStaticAtom* aInfo,
                           PRUint32 aInfoCount)
 {
-    for (const nsAtomListInfo *info = aInfo, *info_end = aInfo + aInfoCount;
+    for (const nsStaticAtom *info = aInfo, *info_end = aInfo + aInfoCount;
          info != info_end; ++info) {
         if (aAtom == *(info->mAtom))
             return PR_TRUE;
