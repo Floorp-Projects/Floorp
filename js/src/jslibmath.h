@@ -197,13 +197,13 @@ extern double fd_copysign __P((double, double));
 #define fd_sin sin
 #define fd_sqrt sqrt
 #define fd_tan tan
+#define fd_copysign copysign
 
 extern double fd_asin __P((double));
 extern double fd_acos __P((double));
 extern double fd_exp __P((double));
 extern double fd_log __P((double));
 extern double fd_pow __P((double, double));
-extern double fd_copysign __P((double, double));
 
 #elif defined(OSF1)
 
