@@ -97,15 +97,15 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 	NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv); 
 	if (NS_SUCCEEDED(rv) && smtpService)
 	{
-        nsCOMPtr<nsISmtpServer> smtpServer;
+    nsCOMPtr<nsISmtpServer> smtpServer;
 
-        // first try the identity's preferred server
-        if (aSenderIdentity)
-            rv = aSenderIdentity->GetSmtpServer(getter_AddRefs(smtpServer));
+    // first try the identity's preferred server
+    if (aSenderIdentity)
+        rv = aSenderIdentity->GetSmtpServer(getter_AddRefs(smtpServer));
 
-        // fallback to the default
-        if (NS_FAILED(rv) || !smtpServer)
-            rv = smtpService->GetDefaultServer(getter_AddRefs(smtpServer));
+    // fallback to the default
+    if (NS_FAILED(rv) || !smtpServer)
+        rv = smtpService->GetDefaultServer(getter_AddRefs(smtpServer));
 
 		if (NS_SUCCEEDED(rv) && smtpServer)
 		{
@@ -122,10 +122,10 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
                                 aNetPrompt, &urlToRun); // this ref counts urlToRun
         if (NS_SUCCEEDED(rv) && urlToRun)	
         {
-            nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(urlToRun, &rv);
-            if (NS_SUCCEEDED(rv))
-                smtpUrl->SetSmtpServer(smtpServer);
-            rv = NS_MsgLoadSmtpUrl(urlToRun, nsnull);
+          nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(urlToRun, &rv);
+          if (NS_SUCCEEDED(rv))
+              smtpUrl->SetSmtpServer(smtpServer);
+          rv = NS_MsgLoadSmtpUrl(urlToRun, nsnull);
         }
 
         if (aURL) // does the caller want a handle on the url?
@@ -159,25 +159,24 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 	// ..for testing purposes....
 	
 	nsresult rv = NS_OK;
-	nsCOMPtr <nsISmtpUrl> smtpUrl;
-
-	rv = nsComponentManager::CreateInstance(kCSmtpUrlCID, NULL, NS_GET_IID(nsISmtpUrl), getter_AddRefs(smtpUrl));
+	nsCOMPtr <nsISmtpUrl> smtpUrl (do_CreateInstance(kCSmtpUrlCID, &rv));
 
 	if (NS_SUCCEEDED(rv) && smtpUrl)
 	{
 		// this is complicated because the smtp username can be null
-		char * urlSpec= PR_smprintf("smtp://%s%s%s:%d/%s",
+		char * urlSpec= PR_smprintf("smtp://%s%s%s:%d",
 					((const char*)aSmtpUserName)?(const char*)aSmtpUserName:"",
 					((const char*)aSmtpUserName)?"@":"",
                                     	(const char*)aSmtpHostName, 
-					SMTP_PORT, aRecipients ? aRecipients : "");
+					                            SMTP_PORT);
 		if (urlSpec)
 		{
 			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
 			url->SetSpec(urlSpec);
+      smtpUrl->SetRecipients(aRecipients);
 			smtpUrl->SetPostMessageFile(aFilePath);
 			smtpUrl->SetSenderIdentity(aSenderIdentity);
-            smtpUrl->SetNetPrompt(aNetPrompt);
+      smtpUrl->SetNetPrompt(aNetPrompt);
 			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}
@@ -189,10 +188,6 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 
 nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer)
 {
-	// mscott: this function is pretty clumsy right now...eventually all of the dispatching
-	// and transport creation code will live in netlib..this whole function is just a hack
-	// for our mail news demo....
-
 	// for now, assume the url is a news url and load it....
 	nsCOMPtr <nsISmtpUrl> smtpUrl;
 	nsSmtpProtocol	*smtpProtocol = nsnull;
@@ -203,8 +198,8 @@ nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer)
 
     // turn the url into an smtp url...
 	smtpUrl = do_QueryInterface(aUrl);
-    if (smtpUrl)
-    {
+  if (smtpUrl)
+  {
 		// almost there...now create a nntp protocol instance to run the url in...
 		smtpProtocol = new nsSmtpProtocol(aUrl);
 		if (smtpProtocol == nsnull)
