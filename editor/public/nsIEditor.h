@@ -125,9 +125,9 @@ public:
    * @param aResultIsSet  PR_TRUE if aAttribute is set on the current node, PR_FALSE if it is not.
    */
   NS_IMETHOD GetAttributeValue(nsIDOMElement * aElement, 
-                                     const nsString& aAttribute, 
-                                     nsString&       aResultValue, 
-                                     PRBool&         aResultIsSet)=0;
+                               const nsString& aAttribute, 
+                               nsString&       aResultValue, 
+                               PRBool&         aResultIsSet)=0;
 
   /**
    * RemoveAttribute() deletes aAttribute from the attribute list of aElement.
@@ -137,7 +137,7 @@ public:
    * @param aAttribute    the string representation of the attribute to get
    */
   NS_IMETHOD RemoveAttribute(nsIDOMElement * aElement, 
-                                   const nsString& aAttribute)=0;
+                             const nsString& aAttribute)=0;
 
   /** 
    * CreateNode instantiates a new element of type aTag and inserts it into aParent at aPosition.
@@ -147,9 +147,9 @@ public:
    * @param aNewNode  [OUT] The node created.  Caller must release aNewNode.
    */
   NS_IMETHOD CreateNode(const nsString& aTag,
-                              nsIDOMNode *    aParent,
-                              PRInt32         aPosition,
-                              nsIDOMNode **   aNewNode)=0;
+                        nsIDOMNode *    aParent,
+                        PRInt32         aPosition,
+                        nsIDOMNode **   aNewNode)=0;
 
   /** 
    * InsertNode inserts aNode into aParent at aPosition.
@@ -160,8 +160,8 @@ public:
    * @param aPosition The place in aParent to insert the new node
    */
   NS_IMETHOD InsertNode(nsIDOMNode * aNode,
-                              nsIDOMNode * aParent,
-                              PRInt32      aPosition)=0;
+                        nsIDOMNode * aParent,
+                        PRInt32      aPosition)=0;
 
 
   /**
@@ -177,7 +177,6 @@ public:
 
   /** 
    * DeleteNode removes aChild from aParent.
-   * If aChild is not a child of aParent, nothing is done and an error is returned.
    * @param aChild    The node to delete
    */
   NS_IMETHOD DeleteNode(nsIDOMNode * aChild)=0;
@@ -324,6 +323,8 @@ public:
     * the selected text (if any)
    */
   NS_IMETHOD Paste()=0;
+
+  NS_IMETHOD DebugDumpContent() const =0;
 
 };
 
