@@ -243,6 +243,30 @@ DefParam("defaultquery",
 	 "t",
 	 "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&product=Mozilla&order=%22Importance%22");
 
+
+DefParam("letsubmitterchoosepriority",
+         "If this is on, then people submitting bugs can choose an initial priority for that bug.  If off, then all bugs initially have the default priority selected above.",
+         "b",
+         1);
+
+
+sub check_priority {
+    my ($value) = (@_);
+    GetVersionTable();
+    if (lsearch(\@::legal_priority, $value) < 0) {
+        return "Must be a legal priority value: one of " .
+            join(", ", @::legal_priority);
+    }
+    return "";
+}
+
+DefParam("defaultpriority",
+         "This is the priority that newly entered bugs are set to.",
+         "t",
+         "P2",
+         \&check_priority);
+
+
 DefParam("usetargetmilestone",
 	 "Do you wish to use the Target Milestone field?",
 	 "b",

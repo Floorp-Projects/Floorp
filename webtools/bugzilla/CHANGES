@@ -10,6 +10,12 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+3/8/99 Added params to control how priorities are set in a new bug.  You can
+now choose whether to let submitters of new bugs choose a priority, or whether
+they should just accept the default priority (which is now no longer hardcoded
+to "P2", but is instead a param.)  The default value of the params will cause
+the same behavior as before.
+
 3/3/99 Added a "disallownew" field to the products table.  If non-zero, then
 don't let people file new bugs against this product.  (This is for when a 
 product is retired, but you want to keep the bug reports around for posterity.)

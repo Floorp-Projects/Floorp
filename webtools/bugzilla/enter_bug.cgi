@@ -163,8 +163,10 @@ my $assign_element = GeneratePersonInput('assigned_to', 1,
 my $cc_element = GeneratePeopleInput('cc', formvalue('cc'));
 
 
+my $priority = Param('defaultpriority');
+
 my $priority_popup = make_popup('priority', \@::legal_priority,
-                                formvalue('priority', 'P2'), 0);
+                                formvalue('priority', $priority), 0);
 my $sev_popup = make_popup('bug_severity', \@::legal_severity,
                            formvalue('bug_severity', 'normal'), 0);
 my $platform_popup = make_popup('rep_platform', \@::legal_platform,
@@ -203,9 +205,16 @@ print "
     <td rowspan=3></td>
     <td></td>
   </TR>
-  <TR>
+  <TR>";
+if (Param('letsubmitterchoosepriority')) {
+    print "
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority</A>:</B></TD>
-    <TD>$priority_popup</TD>
+    <TD>$priority_popup</TD>";
+} else {
+    print '<INPUT TYPE=HIDDEN NAME=priority VALUE="' .
+        value_quote($priority) . '">';
+}
+print "
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity</A>:</B></TD>
     <TD>$sev_popup</TD>
     <td></td>
