@@ -122,7 +122,12 @@ class _Interface:
 
 class _Interfaces(_ComponentCollection):
     def _get_one(self, name):
-        item = interfaceInfoManager.GetInfoForName(name)
+        try:
+            item = interfaceInfoManager.GetInfoForName(name)
+        except xpcom.COMException, why:
+            # Present a better exception message, and give a more useful error code.
+            import nsError
+            raise xpcom.COMException(nsError.NS_ERROR_NO_INTERFACE, "The interface '%s' does not exist" % (name,))
         return _Interface(item.GetName(), item.GetIID())
 
     def _build_dict(self):
