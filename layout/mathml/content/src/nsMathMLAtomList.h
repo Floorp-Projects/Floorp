@@ -46,6 +46,11 @@ MATHML_ATOM(fontstyle_normal, ":-moz-math-font-style-normal")
 MATHML_ATOM(fontstyle_stretchy, ":-moz-math-font-style-stretchy")
 MATHML_ATOM(fontstyle_anonymous, ":-moz-math-font-style-anonymous")
 
+// Alphabetical list of MathML frame types
+MATHML_ATOM(ordinaryMathMLFrame, "OrdinaryMathMLFrame")
+MATHML_ATOM(operatorMathMLFrame, "OperatorMathMLFrame")
+MATHML_ATOM(schemataMathMLFrame, "SchemataMathMLFrame") // 'inner' in TeX
+
 
 MATHML_ATOM(abs_, "abs")
 MATHML_ATOM(accent_, "accent")
