@@ -49,6 +49,7 @@ nsProtocolProxyService::nsProtocolProxyService():
     mArrayLock(PR_NewLock()),
     mUseProxy(0),
     mPAC(nsnull)
+
 {
     NS_INIT_REFCNT();
 }
@@ -203,7 +204,16 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
         if (NS_SUCCEEDED(rv)) 
             mSOCKSProxyPort = proxyPort;
     }
-    
+
+    if (!pref || !PL_strcmp(pref, "network.proxy.socks_version"))
+    {
+        mSOCKSProxyVersion = -1; 
+        PRInt32 SOCKSVersion;
+        rv = mPrefs->GetIntPref("network.proxy.socks_version",&SOCKSVersion);
+        if (NS_SUCCEEDED(rv)) 
+            mSOCKSProxyVersion = SOCKSVersion;
+    }
+
     if (!pref || !PL_strcmp(pref, "network.proxy.no_proxies_on"))
     {
         rv = mPrefs->CopyCharPref("network.proxy.no_proxies_on",
@@ -457,12 +467,22 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, char * *aProxyHost, PRInt3
         return NS_OK;
     }
     
-    if (mSOCKSProxyHost.get()[0] && mSOCKSProxyPort > 0) {
+    if (mSOCKSProxyHost.get()[0] && mSOCKSProxyPort > 0 &&
+        mSOCKSProxyVersion == 4) {
         *aProxyHost = PL_strdup(mSOCKSProxyHost);
-        *aProxyType = PL_strdup("socks");
         *aProxyPort = mSOCKSProxyPort;
+        *aProxyType = PL_strdup("socks4");
         return NS_OK;
     }
+
+    if (mSOCKSProxyHost.get()[0] && mSOCKSProxyPort > 0 &&
+        mSOCKSProxyVersion == 5) {
+        *aProxyHost = PL_strdup(mSOCKSProxyHost);
+        *aProxyPort = mSOCKSProxyPort;
+        *aProxyType = PL_strdup("socks");
+        return NS_OK;
+    }
+
     
     return NS_OK;
 }

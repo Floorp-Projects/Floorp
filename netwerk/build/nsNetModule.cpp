@@ -47,6 +47,7 @@
 #include "nsBufferedStreams.h"
 #include "nsProtocolProxyService.h"
 #include "nsSOCKSSocketProvider.h"
+#include "nsSOCKS4SocketProvider.h"
 
 #include "nsNetCID.h"
 
@@ -987,7 +988,14 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
        NS_SOCKSSOCKETPROVIDER_CID,
        NS_ISOCKSSOCKETPROVIDER_CONTRACTID,
        nsSOCKSSocketProvider::Create
+    },
+
+    {  NS_ISOCKS4SOCKETPROVIDER_CLASSNAME,
+       NS_SOCKS4SOCKETPROVIDER_CID,
+       NS_ISOCKS4SOCKETPROVIDER_CONTRACTID,
+       nsSOCKS4SocketProvider::Create
     }
+
 
 };
 

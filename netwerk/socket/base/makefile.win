@@ -40,6 +40,7 @@ LIBRARY_NAME=neckosocket_s
 OBJS = \
 	.\$(OBJDIR)\nsSocketProviderService.obj \
 	.\$(OBJDIR)\nsSOCKSSocketProvider.obj \
+	.\$(OBJDIR)\nsSOCKS4SocketProvider.obj \
 	.\$(OBJDIR)\nsSOCKSIOLayer.obj \
 	$(NULL)
 
@@ -51,6 +52,8 @@ XPIDLSRCS= \
 	.\nsISocketProviderService.idl \
 	.\nsISOCKSSocketProvider.idl \
 	.\nsISOCKSSocketInfo.idl \
+	.\nsISOCKS4SocketProvider.idl \
+	.\nsISOCKS4SocketInfo.idl \
 	.\nsISSLSocketProvider.idl \
 	.\nsITransportSecurityInfo.idl \
 	.\nsISSLSocketControl.idl \

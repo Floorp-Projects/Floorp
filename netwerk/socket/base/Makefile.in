@@ -31,13 +31,15 @@ XPIDL_MODULE	= necko_socket
 LIBRARY_NAME	= neckosocket_s
 REQUIRES	= xpcom string
 
-CPPSRCS		= nsSocketProviderService.cpp nsSOCKSSocketProvider.cpp nsSOCKSIOLayer.cpp
+CPPSRCS		= nsSocketProviderService.cpp nsSOCKSSocketProvider.cpp nsSOCKS4SocketProvider.cpp nsSOCKSIOLayer.cpp
 
 XPIDLSRCS	= \
 		nsISocketProvider.idl \
 		nsISocketProviderService.idl \
 		nsISOCKSSocketProvider.idl \
 		nsISOCKSSocketInfo.idl \
+		nsISOCKS4SocketProvider.idl \
+		nsISOCKS4SocketInfo.idl \
 		nsISSLSocketProvider.idl \
 		nsITransportSecurityInfo.idl \
                 nsISSLSocketControl.idl \

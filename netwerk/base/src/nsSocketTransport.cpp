@@ -297,7 +297,8 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                 // increase the count
                 mSocketTypeCount++;
                 
-                if (nsCRT::strcmp(socketType, "socks") == 0) {
+                if ((nsCRT::strcmp(socketType, "socks") == 0) 
+                    || (nsCRT::strcmp(socketType, "socks4") == 0)) {
                     // for SOCKS proxys, we want to switch some of
                     // the default proxy behavior
                     mProxyTransparent = PR_TRUE;
@@ -756,7 +757,8 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
                         secCtrl->SetNotificationCallbacks(mNotificationCallbacks);
                     }
                 }
-                else if (nsCRT::strcmp(mSocketTypes[type], "socks") == 0) {
+                else if ((nsCRT::strcmp(mSocketTypes[type], "socks") == 0) 
+                         || (nsCRT::strcmp(mSocketTypes[type], "socks4") == 0)) {
                     // since socks is transparent, any layers above
                     // it do not have to worry about proxy stuff
                     proxyHost = nsnull;
