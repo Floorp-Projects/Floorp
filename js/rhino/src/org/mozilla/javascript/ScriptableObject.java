@@ -311,6 +311,10 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 // Check slot was not deleted/replaced before synchronization
                 if (i >= 0 && slots[i] == slot) {
                     slots[i] = replacement;
+                    // It is important to make sure that lastAccess != slot
+                    // to prevent accessing the old slot via lastAccess and
+                    // then invoking setter one more time
+                    lastAccess = replacement;
                 }
             }
         }
