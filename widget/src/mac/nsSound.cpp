@@ -1060,8 +1060,7 @@ nsMovieSoundRequest::TaskActiveMovies(PRBool *outAllMoviesDone)
   PRBool    allMoviesDone = PR_FALSE;
 
   allMoviesDone = TaskOneMovie(mMovie);
-  
-  PRInt32 initMovieCount = mMovies.Count();
+
   PRInt32 curIndex = 0;
 
   while (curIndex < mMovies.Count())
