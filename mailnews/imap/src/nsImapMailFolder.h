@@ -303,6 +303,7 @@ protected:
 	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
 	virtual const char *GetIncomingServerType() {return "imap";}
 
+  nsresult GetBodysToDownload(nsMsgKeyArray *keysOfMessagesToDownload);
   // Uber message copy service
   nsresult CopyMessagesWithStream(nsIMsgFolder* srcFolder,
                          nsISupportsArray* messages,
@@ -324,6 +325,16 @@ protected:
                                nsCString& msgIds, nsMsgKeyArray& keyArray);
 
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
+  // offline-ish methods
+  nsresult GetClearedOriginalOp(nsIMsgOfflineImapOperation *op, nsIMsgOfflineImapOperation **originalOp, 
+          nsIMsgDatabase **originalDB);
+  nsresult GetOriginalOp(nsIMsgOfflineImapOperation *op, 
+              nsIMsgOfflineImapOperation **originalOp, nsIMsgDatabase **originalDB);
+  nsresult CopyMessagesOffline(nsIMsgFolder* srcFolder,
+                               nsISupportsArray* messages,
+                               PRBool isMove,
+                               nsIMsgWindow *msgWindow,
+                               nsIMsgCopyServiceListener* listener);
 
   PRBool m_initialized;
   PRBool m_haveDiscoveredAllFolders;
@@ -357,6 +368,7 @@ protected:
 
   // offline imap support
   PRBool m_downloadMessageForOfflineUse;
+  PRBool m_downloadingFolderForOfflineUse;
 };
 
 #endif

@@ -38,6 +38,12 @@ interface nsIMsgImapMailFolder : nsISupports {
   void RenameClient(in nsIMsgFolder msgFolder, in string oldName, in string newName);
   void RenameSubfolders( in nsIMsgFolder oldFolder);
 
+  // these are used for offline synchronization
+  void SetImapFlags(in string uids, in long flags, out nsIURI url);
+  void ReplayOfflineMoveCopy(in string uids, in boolean isMove, in nsIMsgFolder aDstFolder,
+                         in nsIUrlListener aUrlListener, in nsIMsgWindow aWindow);
+
+
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
   attribute wchar hierarchyDelimiter;
