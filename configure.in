@@ -3573,13 +3573,6 @@ if test "$_DETECT_WEBSHELL_LEAKS"; then
 fi
 
 dnl ========================================================
-dnl = Turn off double buffering
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(double-buffer,
-[  --disable-double-buffer Disable double buffering],
-    AC_DEFINE(NO_DOUBLE_BUFFER))
-
-dnl ========================================================
 dnl = Use malloc wrapper lib
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(wrap-malloc,
