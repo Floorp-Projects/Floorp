@@ -137,8 +137,6 @@ NS_IMETHODIMP nsMsgHdr::SetMessageKey(nsMsgKey value)
 
 NS_IMETHODIMP nsMsgHdr::GetFlags(PRUint32 *result)
 {
-	nsresult res;
-    res = GetUInt32Column(m_mdb->m_flagsColumnToken, &m_flags);
     *result = m_flags;
     return NS_OK;
 }
