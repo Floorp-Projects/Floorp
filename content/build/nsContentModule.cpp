@@ -289,7 +289,6 @@ MAKE_CTOR(CreateHTMLElementFactory,       nsIElementFactory,           NS_NewHTM
 MAKE_CTOR(CreateTextNode,                 nsIContent,                  NS_NewTextNode)
 //MAKE_CTOR(CreateAnonymousElement,         nsIContent,                  NS_NewAnonymousElement)
 MAKE_CTOR(CreateAttributeContent,         nsIContent,                  NS_NewAttributeContent)
-MAKE_CTOR(CreateHTMLAttributes,           nsIHTMLAttributes,           NS_NewHTMLAttributes)
 MAKE_CTOR(CreateXMLElementFactory,        nsIElementFactory,           NS_NewXMLElementFactory)
 //MAKE_CTOR(CreateSelection,                nsISelection,                NS_NewSelection)
 MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDomSelection)
@@ -511,12 +510,6 @@ static nsModuleComponentInfo gComponents[] = {
     NS_ATTRIBUTECONTENT_CID,
     nsnull,
     CreateAttributeContent },
-
-
-  { "HTML Attributes",
-    NS_HTMLATTRIBUTES_CID,
-    nsnull,
-    CreateHTMLAttributes },
 
   { "XML element factory",
     NS_XML_ELEMENT_FACTORY_CID,
