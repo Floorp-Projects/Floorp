@@ -220,7 +220,7 @@ IL_ViewStream(FO_Present_Types format_out, void *newshack, URL_Struct *urls,
               so we use the converter we did in 4.06 code.
               If we don't, this code triggers parsing of the image URL,
               which has very bad effects in the editor! */
-		    if((iurl->GetOwnerId() == 0x000000ED) || reader->IsMulti()) {
+		    if( reader->IsMulti() ) {
 			    NS_RELEASE(reader);
 				return IL_NewStream(format_out, IL_UNKNOWN, urls, cx);
 			}
