@@ -84,6 +84,7 @@ nsTableCellFrame::nsTableCellFrame()
   SetNeedSpecialReflow(PR_FALSE);
   SetHadSpecialReflow(PR_FALSE);
   SetHasPctOverHeight(PR_FALSE);
+  SetNeedPass2Reflow(PR_TRUE);
 
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   mTimer = new nsReflowTimer(this);
@@ -1129,6 +1130,14 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
 #endif
+
+  if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
+    SetNeedPass2Reflow(PR_TRUE);
+  }
+  else if ((eReflowReason_Initial == aReflowState.reason) || 
+           (eReflowReason_Resize  == aReflowState.reason)) { 
+    SetNeedPass2Reflow(PR_FALSE);
+  }
 
   return NS_OK;
 }

@@ -55,6 +55,7 @@ class nsHTMLValue;
 #define NS_TABLE_CELL_NEED_SPECIAL_REFLOW 0x40000000
 #define NS_TABLE_CELL_HAD_SPECIAL_REFLOW  0x20000000
 #define NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT 0x10000000
+#define NS_TABLE_CELL_NEED_PASS2_REFLOW   0x08000000
 
 /**
  * nsTableCellFrame
@@ -259,6 +260,9 @@ public:
   PRBool HasPctOverHeight();
   void SetHasPctOverHeight(PRBool aValue);
 
+  PRBool NeedPass2Reflow() const;
+  void SetNeedPass2Reflow(PRBool aValue);
+
   nscoord GetLastBlockHeight();
   void    SetLastBlockHeight(nscoord aValue);
 
@@ -417,6 +421,21 @@ inline void nsTableCellFrame::SetHasPctOverHeight(PRBool aValue)
     mState |= NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
   } else {
     mState &= ~NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT;
+  }
+}
+
+inline PRBool nsTableCellFrame::NeedPass2Reflow() const
+{
+  return (mState & NS_TABLE_CELL_NEED_PASS2_REFLOW) ==
+         NS_TABLE_CELL_NEED_PASS2_REFLOW;
+}
+
+inline void nsTableCellFrame::SetNeedPass2Reflow(PRBool aValue)
+{
+  if (aValue) {
+    mState |= NS_TABLE_CELL_NEED_PASS2_REFLOW;
+  } else {
+    mState &= ~NS_TABLE_CELL_NEED_PASS2_REFLOW;
   }
 }
 
