@@ -1676,13 +1676,10 @@ nsTableRowGroupFrame::GetLine(PRInt32 aLineNumber, nsIFrame** aFirstFrameOnLine,
   NS_ENSURE_ARG_POINTER(aNumFramesOnLine);
   NS_ENSURE_ARG_POINTER(aLineFlags);
 
-  nsIFrame* tableFrame;
-  nsTableFrame* parentFrame;
-  nsresult result = GetParent(&tableFrame);
-  if(NS_FAILED(result) || !tableFrame)
-    return result?result:NS_ERROR_FAILURE;
+  nsTableFrame* parentFrame = nsnull; 
+  if (NS_FAILED(nsTableFrame::GetTableFrame(this, parentFrame)))
+    return NS_ERROR_FAILURE;
 
-  parentFrame = (nsTableFrame*)tableFrame;
   nsTableCellMap* cellMap = parentFrame->GetCellMap();
   if(!cellMap)
      return NS_ERROR_FAILURE;
@@ -1728,13 +1725,8 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32 aLineNumber, nscoord aX, nsIFrame** aF
   nsRect& tempRectRef = tempRect;
   nsresult rv;
 
-  nsTableFrame* parentFrame;
-
-  rv = GetParent(&tempFrame);
-  if(NS_FAILED(rv) || !tempFrame)
-    return rv?rv:NS_ERROR_FAILURE;
-
-  parentFrame = (nsTableFrame*)tempFrame;
+  nsTableFrame* parentFrame = nsnull;
+  rv = nsTableFrame::GetTableFrame(this, parentFrame);
   nsTableCellMap* cellMap = parentFrame->GetCellMap();
   if(!cellMap)
      return NS_ERROR_FAILURE;
@@ -1795,11 +1787,8 @@ nsTableRowGroupFrame::GetNextSibling(nsIFrame*& aFrame, PRInt32 aLineNumber)
     return result?result:NS_ERROR_FAILURE;
   
   nsIFrame* tempFrame;
-  nsTableFrame* parentFrame;
-  nsresult rv = GetParent(&tempFrame);
-  if(NS_FAILED(rv) || !tempFrame)
-    return rv?rv:NS_ERROR_FAILURE;
-  parentFrame = (nsTableFrame*)tempFrame;
+  nsTableFrame* parentFrame = nsnull;
+  result = nsTableFrame::GetTableFrame(this, parentFrame);
   nsTableCellMap* cellMap = parentFrame->GetCellMap();
   if(!cellMap)
      return NS_ERROR_FAILURE;
