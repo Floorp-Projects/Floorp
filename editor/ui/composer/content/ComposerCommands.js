@@ -360,6 +360,7 @@ function goUpdateCommandState(cmdController, command)
       case "cmd_backgroundColor":
       case "cmd_fontColor":
       case "cmd_fontFace":
+      case "cmd_fontSize":
       case "cmd_updateStructToolbar":
         pokeMultiStateUI(command, params);
         break;
