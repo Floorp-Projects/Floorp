@@ -19,7 +19,7 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
-static NS_DEFINE_IID(kIEventHandlerIID, NS_IEVENTHANDLER_IID);
+//static NS_DEFINE_IID(kIEventHandlerIID, NS_IEVENTHANDLER_IID);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,12 +65,12 @@ nsresult CActiveXPluginInstance::QueryInterface(const nsIID& aIID, void** aInsta
 		return NS_OK;
 	}
 
-	if (aIID.Equals(kIEventHandlerIID))
-	{
-		*aInstancePtrResult = (void*) ((nsIPluginInstance*)this);
-		AddRef();
-		return NS_OK;
-	}
+//	if (aIID.Equals(kIEventHandlerIID))
+//	{
+//		*aInstancePtrResult = (void*) ((nsIPluginInstance*)this);
+//		AddRef();
+//		return NS_OK;
+//	}
 
 	return NS_NOINTERFACE;
 }
