@@ -22,6 +22,9 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+#elif defined(linux)
+#include <setjmp.h>
+#include <dlfcn.h>
 #endif
 
 #if defined(NS_MT_SUPPORTED)
@@ -49,7 +52,31 @@ static void InitTraceLog(void)
   }
 }
 
-#if defined(_WIN32)
+
+int nsIToA16(PRUint32 aNumber, char* aBuffer)
+{
+  static char kHex[] = "0123456789abcdef";
+
+  if (aNumber == 0) {
+    *aBuffer = '0';
+    return 1;
+  }
+
+  char buf[8];
+  PRInt32 count = 0;
+  while (aNumber != 0) {
+    PRUint32 nibble = aNumber & 0xf;
+    buf[count++] = kHex[nibble];
+    aNumber >>= 4;
+  }
+
+  for (PRInt32 i = count - 1; i >= 0; --i)
+    *aBuffer++ = buf[i];
+
+  return count;
+}
+
+#if defined(_WIN32) // WIN32 stack walking code
 #include "imagehlp.h"
 #include <stdio.h>
 
@@ -208,27 +235,87 @@ nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
         *cp++ = *cp2++;
       }
       aBufLen -= nameLen;
-      char tmp[30];
-      PR_snprintf(tmp, sizeof(tmp), "+0x%08x ", displacement);
-      memcpy(cp, tmp, 12);
-      cp += 12;
-      aBufLen -= nameLen + 12;
+      *cp++ = '+';
+      *cp++ = '0';
+      *cp++ = 'x';
+      PRInt32 len = nsIToA16(displacement, cp);
+      cp += len;
+      *cp++ = ' ';
+
+      aBufLen -= nameLen + len + 4;
     }
     else {
       if (11 > aBufLen) { // 11 == strlen("0x12345678 ")
         break;
       }
-      char tmp[30];
-      PR_snprintf(tmp, sizeof(tmp), "0x%08x ", frame.AddrPC.Offset);
-      memcpy(cp, tmp, 11);
-      cp += 11;
-      aBufLen -= 11;
+      *cp++ = '0';
+      *cp++ = 'x';
+      PRInt32 len = nsIToA16(frame.AddrPC.Offset, cp);
+      cp += len;
+      *cp++ = ' ';
+      aBufLen -= len + 3;
     }
   }
   *cp = 0;
 }
+/* _WIN32 */
+#elif defined(linux) && defined(__i386) // i386 Linux stackwalking code
 
-#else /* _WIN32 */
+void
+nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
+{
+  aBuffer[0] = '\0';
+  aBufLen--; // leave room for nul
+
+  char* cp = aBuffer;
+
+  jmp_buf jb;
+  setjmp(jb);
+
+  // Stack walking code courtesy Kipp's "leaky". 
+  u_long* bp = (u_long*) (jb[0].__jmpbuf[JB_BP]);
+  int skip = 2;
+  for (;;) {
+    u_long* nextbp = (u_long*) *bp++;
+    u_long pc = *bp;
+    if ((pc < 0x08000000) || (pc > 0x7fffffff) || (nextbp < bp)) {
+      break;
+    }
+    if (--skip <= 0) {
+      Dl_info info;
+      int ok = dladdr((void*) pc, &info);
+      if (ok < 0)
+        break;
+
+      int len = strlen(info.dli_sname);
+      if (! len)
+        break; // XXX Lazy. We could look at the filename or something.
+
+      if (len + 12 >= aBufLen) // 12 == strlen("+0x12345678 ")
+        break;
+
+      strcpy(cp, info.dli_sname);
+      cp += len;
+
+      *cp++ = '+';
+      *cp++ = '0';
+      *cp++ = 'x';
+
+      PRUint32 off = (char*)pc - (char*)info.dli_saddr;
+      PRInt32 addrStrLen = nsIToA16(off, cp);
+      cp += addrStrLen;
+
+      *cp++ = ' ';
+
+      aBufLen -= addrStrLen + 4;
+    }
+    bp = nextbp;
+  }
+  *cp = '\0';
+}
+
+// i386 linux
+#else // unsupported platform.
 
 NS_COM void
 nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
