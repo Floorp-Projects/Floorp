@@ -60,7 +60,7 @@ use Net::FTP;
 
 $|++;
 
-my $VERSION = "1.64"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.65"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
@@ -151,7 +151,9 @@ my $last_moon = 0;
 my $last_uuid = 0;
 
 # leave @trees empty if you don't want tinderbox details
+# @all_trees must be a superset of @trees
 
+my @all_trees = qw (SeaMonkey SeaMonkey-Ports);
 my @trees = qw (SeaMonkey);
 if ($nick =~ /grend/) {
     @trees = qw (Grendel);
@@ -782,7 +784,7 @@ sub bot_tinderbox {
         # politely report failures
         if (! exists $$trees{$t})
             {
-            $buf .= "unknown tree \"$t\", trees include @trees. ";
+            $buf .= "unknown tree \"$t\", trees include @all_trees. ";
             }
         else
             {
@@ -1007,7 +1009,7 @@ sub rdfchannel {
 sub tinderbox
     {
     &debug ("fetching tinderbox status");
-    my ($newtrees, $newstatus) = Tinderbox::status (\@trees);
+    my ($newtrees, $newstatus) = Tinderbox::status (\@all_trees);
 
 		if (! $newtrees)
 			{
