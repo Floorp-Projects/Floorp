@@ -1025,6 +1025,29 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
                 goto out;
             }
 
+            nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
+            rv = xpc->WrapNative(cx, global, localFile,
+                                 NS_GET_IID(nsILocalFile),
+                                 getter_AddRefs(locationHolder));
+            if (NS_FAILED(rv)) {
+                global = nsnull;
+                goto out;
+            }
+
+            JSObject *locationObj;
+            rv = locationHolder->GetJSObject(&locationObj);
+            if (NS_FAILED(rv)) {
+                global = nsnull;
+                goto out;
+            }
+            
+            if (!JS_DefineProperty(cx, global, "__LOCATION__",
+                                   OBJECT_TO_JSVAL(locationObj), NULL,
+                                   NULL, 0)) {
+                global = nsnull;
+                goto out;
+            }
+
             script = 
                 JS_CompileFileHandleForPrincipals(cx, global, nativePath.get(),
                                                   fileHandle, jsPrincipals);
