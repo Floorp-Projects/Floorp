@@ -64,7 +64,11 @@
 // static member functions from nsServiceManager.
 
 #define NS_WITH_PROXIED_SERVICE(T, var, cid, Q, rvAddr)     \
-    nsProxiedService _serv##var(cid, NS_GET_IID(T), Q, rvAddr);           \
+    nsProxiedService _serv##var(cid, NS_GET_IID(T), Q, PR_FALSE, rvAddr);     \
+    T* var = (T*)(nsISupports*)_serv##var;
+
+#define NS_WITH_ALWAYS_PROXIED_SERVICE(T, var, cid, Q, rvAddr)     \
+    nsProxiedService _serv##var(cid, NS_GET_IID(T), Q, PR_TRUE, rvAddr);       \
     T* var = (T*)(nsISupports*)_serv##var;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +80,7 @@ class nsProxiedService
  public:
    
     nsProxiedService(const nsCID &aClass, const nsIID &aIID, 
-                     nsIEventQueue* pIProxyQueue, nsresult*rv)
+                     nsIEventQueue* pIProxyQueue, PRBool always, nsresult*rv)
     {
        static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
@@ -90,10 +94,12 @@ class nsProxiedService
                        kProxyObjectManagerCID, rv);
        if (NS_FAILED(*rv)) return;
 
+       PRInt32 proxyType = PROXY_SYNC;
+       if (always) proxyType |= PROXY_ALWAYS;
        *rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue, 
                                                   aIID, 
                                                   mService,
-                                                  PROXY_SYNC, 
+                                                  proxyType, 
                                                   getter_AddRefs(mProxiedService));
     }
 
