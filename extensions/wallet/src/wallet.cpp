@@ -1576,6 +1576,7 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
     if (Wallet_UTF8Get(strm) != ((key.CharAt(j))^Wallet_GetKey(saveCount, writeCount++))
         || strm.eof()) {
       strm.close();
+      Wallet_InitKeySet(PR_FALSE);
       key = nsAutoString("");
       keyCancel = PR_FALSE;
       return PR_FALSE;
