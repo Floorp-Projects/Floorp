@@ -771,7 +771,7 @@ PK11_ExportEncryptedPrivKeyInfo;
 PK11_FindSlotsByNames;
 PK11_GetSymKeyType;
 PK11_MoveSymKey;
-PK11_PubDeriveExtended;
+PK11_PubDeriveWithKDF;
 PK11_PubUnwrapSymKeyWithFlagsPerm;
 PK11_UnwrapSymKeyWithFlagsPerm;
 SECITEM_ArenaDupItem;

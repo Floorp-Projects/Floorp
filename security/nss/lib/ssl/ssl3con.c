@@ -38,7 +38,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.62 2003/12/19 23:54:29 wchang0222%aol.com Exp $
+ * $Id: ssl3con.c,v 1.63 2004/01/08 01:37:46 jpierre%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -3759,7 +3759,7 @@ sendECDHClientKeyExchange(sslSocket * ss, SECKEYPublicKey * svrPubKey)
     }
 
     /*  Determine the PMS */
-    pms = PK11_PubDeriveExtended(privKey, svrPubKey, PR_FALSE, NULL, NULL,
+    pms = PK11_PubDeriveWithKDF(privKey, svrPubKey, PR_FALSE, NULL, NULL,
 			    CKM_ECDH1_DERIVE, target, CKA_DERIVE, 0,
 			    kdf, NULL, NULL);
 
@@ -6983,7 +6983,7 @@ ssl3_HandleECDHClientKeyExchange(sslSocket *ss, SSL3Opaque *b,
     }
 
     /*  Determine the PMS */
-    pms = PK11_PubDeriveExtended(srvrPrivKey, &clntPubKey, PR_FALSE, NULL, NULL,
+    pms = PK11_PubDeriveWithKDF(srvrPrivKey, &clntPubKey, PR_FALSE, NULL, NULL,
 			    CKM_ECDH1_DERIVE, target, CKA_DERIVE, 0,
 			    kdf, NULL, NULL);
 
