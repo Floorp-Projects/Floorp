@@ -73,15 +73,15 @@
 
   <!-- Reflow events -->
   <titledbox orient="vertical">
-    <title><text value="&debugReflowEvents.label;"/></title>
+    <label value="&debugReflowEvents.label;"/>
     <vbox autostretch="never">
-      <checkbox id="layoutReflowShowFrameCounts" value="&debugReflowShowFrameCounts.label;"
+      <checkbox id="layoutReflowShowFrameCounts" label="&debugReflowShowFrameCounts.label;"
                 pref="true" preftype="bool" prefstring="layout.reflow.showframecounts"
                 prefattribute="checked"/>
-      <checkbox id="layoutReflowDumpFrameCounts" value="&debugReflowDumpFrameCounts.label;"
+      <checkbox id="layoutReflowDumpFrameCounts" label="&debugReflowDumpFrameCounts.label;"
                 pref="true" preftype="bool" prefstring="layout.reflow.dumpframecounts"
                 prefattribute="checked"/>
-      <checkbox id="layoutReflowDumpFrameByFrameCounts" value="&debugReflowDumpFrameByFrameCounts.label;"
+      <checkbox id="layoutReflowDumpFrameByFrameCounts" label="&debugReflowDumpFrameByFrameCounts.label;"
                 pref="true" preftype="bool" prefstring="layout.reflow.dumpframebyframecounts"
                 prefattribute="checked"/>
     </vbox>
