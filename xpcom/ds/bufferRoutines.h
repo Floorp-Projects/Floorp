@@ -52,6 +52,11 @@ inline PRUnichar GetCharAt(const char* aString,PRUint32 anIndex) {
 //  The functions are differentiated by shift direction and the underlying charsize.
 //
 
+PRInt32 TrimChars2(char* aString,PRUint32 aLength,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing);
+PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet,PRUint32 aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing);
+PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet,PRUint32 aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing);
+
+
 /**
  * This method shifts single byte characters left by a given amount from an given offset.
  * @update	gess 01/04/99
