@@ -69,8 +69,6 @@ static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kCTabWidget,     NS_TABWIDGET_CID);
-static NS_DEFINE_IID(kCTooltipWidget, NS_TOOLTIPWIDGET_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
@@ -236,12 +234,6 @@ PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 1 mRefCnt=<%d>\
 	
 #if 1
 /* Widget we don't support */
-    else if (mClassID.Equals(kCTabWidget)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of TabWidget\n" ));
-    }
-    else if (mClassID.Equals(kCTooltipWidget)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of ToolTip\n" ));
-    }
     else if (mClassID.Equals(kCPopUpMenu)) {
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of PopUpMenu\n" ));
     }
