@@ -88,7 +88,7 @@ if ($userid) {
                 # If the query name contains invalid characters, don't import.
                 $name =~ /[<>&]/ && next;
                 trick_taint($name);
-                $dbh->do("LOCK TABLES namedqueries WRITE");
+                $dbh->bz_lock_tables('namedqueries WRITE');
                 my $query = $dbh->selectrow_array(
                     "SELECT query FROM namedqueries " .
                      "WHERE userid = ? AND name = ?",
@@ -98,7 +98,7 @@ if ($userid) {
                             "(userid, name, query) VALUES " .
                             "(?, ?, ?)", undef, ($userid, $name, $value));
                 }
-                $dbh->do("UNLOCK TABLES");
+                $dbh->bz_unlock_tables();
             }
             $cgi->send_cookie(-name => $cookiename,
                               -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
@@ -358,7 +358,7 @@ $vars->{'bug_severity'} = \@::legal_severity;
 # Boolean charts
 my @fields;
 push(@fields, { name => "noop", description => "---" });
-push(@fields, Bugzilla->dbh->bz_get_field_defs());
+push(@fields, $dbh->bz_get_field_defs());
 $vars->{'fields'} = \@fields;
 
 # Creating new charts - if the cmd-add value is there, we define the field

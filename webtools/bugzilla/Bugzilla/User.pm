@@ -384,10 +384,9 @@ sub derive_groups {
 
     my $sth;
 
-    $dbh->do(q{LOCK TABLES profiles WRITE,
-                           user_group_map WRITE,
-                           group_group_map READ,
-                           groups READ}) unless $already_locked;
+    $dbh->bz_lock_tables('profiles WRITE', 'user_group_map WRITE',
+                         'group_group_map READ',
+                         'groups READ') unless $already_locked;
 
     # avoid races, we are only up to date as of the BEGINNING of this process
     my $time = $dbh->selectrow_array("SELECT NOW()");
@@ -459,7 +458,7 @@ sub derive_groups {
              undef,
              $time,
              $id);
-    $dbh->do("UNLOCK TABLES") unless $already_locked;
+    $dbh->bz_unlock_tables() unless $already_locked;
 }
 
 sub can_bless {

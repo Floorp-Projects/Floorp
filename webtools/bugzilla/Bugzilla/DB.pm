@@ -501,8 +501,8 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
               set even without locking tables first without raising an error
               to simplify error handling.
               Abstract method, should be overriden by database specific code.
- Params:      $abort = true (1) if the operation on locked tables failed
-              (if transactions are supported, the action will be rolled
+ Params:      $abort = UNLOCK_ABORT (true, 1) if the operation on locked tables
+              failed (if transactions are supported, the action will be rolled
               back). False (0) or no param if the operation succeeded.
  Returns:     none
 

@@ -195,7 +195,8 @@ sub DoEmail {
 sub SaveEmail {
     my $updateString = "";
     my $cgi = Bugzilla->cgi;
-    
+    my $dbh = Bugzilla->dbh;
+
     if (defined $cgi->param('ExcludeSelf')) {
         $updateString .= 'ExcludeSelf~on';
     } else {
@@ -226,7 +227,7 @@ sub SaveEmail {
         # we don't really care if anyone reads the watch table.  So 
         # some small amount of contention could be gotten rid of by
         # using user-defined locks rather than table locking.
-        SendSQL("LOCK TABLES watch WRITE, profiles READ");
+        $dbh->bz_lock_tables('watch WRITE', 'profiles READ');
 
         # what the db looks like now
         my $origWatchedUsers = new Bugzilla::RelationSet;
@@ -244,7 +245,7 @@ sub SaveEmail {
         ($CCDELTAS[0] eq "") || SendSQL($CCDELTAS[0]);
         ($CCDELTAS[1] eq "") || SendSQL($CCDELTAS[1]);
 
-        SendSQL("UNLOCK TABLES");       
+        $dbh->bz_unlock_tables();
     }
 }
 

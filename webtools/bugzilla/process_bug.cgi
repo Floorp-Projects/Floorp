@@ -60,6 +60,7 @@ my $user = Bugzilla->login(LOGIN_REQUIRED);
 my $whoid = $user->id;
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 
 my $requiremilestone = 0;
 
@@ -1134,22 +1135,22 @@ foreach my $id (@idlist) {
     $bug_changed = 0;
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
-    SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
-            "cc AS selectVisible_cc $write, " .
-            "profiles $write, dependencies $write, votes $write, " .
-            "products READ, components READ, " .
-            "keywords $write, longdescs $write, fielddefs $write, " .
-            "bug_group_map $write, flags $write, duplicates $write," .
+    $dbh->bz_lock_tables("bugs $write", "bugs_activity $write",
+            "cc $write", "cc AS selectVisible_cc $write",
+            "profiles $write", "dependencies $write", "votes $write",
+            "products READ", "components READ",
+            "keywords $write", "longdescs $write", "fielddefs $write",
+            "bug_group_map $write", "flags $write", "duplicates $write",
             # user_group_map would be a READ lock except that Flag::process
             # may call Flag::notify, which creates a new user object,
             # which might call derive_groups, which wants a WRITE lock on that
             # table. group_group_map is in here at all because derive_groups
             # needs it.
-            "user_group_map $write, group_group_map READ, flagtypes READ, " . 
-            "flaginclusions AS i READ, flagexclusions AS e READ, " .
-            "keyworddefs READ, groups READ, attachments READ, " .
-            "group_control_map AS oldcontrolmap READ, " .
-            "group_control_map AS newcontrolmap READ, " .
+            "user_group_map $write", "group_group_map READ", "flagtypes READ",
+            "flaginclusions AS i READ", "flagexclusions AS e READ",
+            "keyworddefs READ", "groups READ", "attachments READ",
+            "group_control_map AS oldcontrolmap READ",
+            "group_control_map AS newcontrolmap READ",
             "group_control_map READ");
     # Fun hack.  @::log_columns only contains the component_id,
     # not the name (since bug 43600 got fixed).  So, we need to have
@@ -1270,7 +1271,7 @@ foreach my $id (@idlist) {
         
         $vars->{'bug_id'} = $id;
         
-        SendSQL("UNLOCK TABLES");
+        $dbh->bz_unlock_tables(UNLOCK_ABORT);
         
         # Warn the user about the mid-air collision and ask them what to do.
         $template->process("bug/process/midair.html.tmpl", $vars)
@@ -1773,7 +1774,7 @@ foreach my $id (@idlist) {
     if ($bug_changed) {
         SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp WHERE bug_id = $id");
     }
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     $vars->{'mailrecipients'} = { 'cc' => \@ccRemoved,
                                   'owner' => $origOwner,

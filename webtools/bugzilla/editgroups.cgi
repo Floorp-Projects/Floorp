@@ -483,10 +483,8 @@ if (($action eq 'remove_all_regexp') || ($action eq 'remove_all')) {
                              WHERE id = ?");
     $sth->execute($gid);
     my ($name, $regexp) = $sth->fetchrow_array();
-    $dbh->do("LOCK TABLES
-                  groups WRITE,
-                  profiles READ,
-                  user_group_map WRITE");
+    $dbh->bz_lock_tables('groups WRITE', 'profiles READ',
+                         'user_group_map WRITE');
     $sth = $dbh->prepare("SELECT user_group_map.user_id, profiles.login_name
                              FROM user_group_map, profiles
                              WHERE user_group_map.user_id = profiles.userid
@@ -516,7 +514,7 @@ if (($action eq 'remove_all_regexp') || ($action eq 'remove_all')) {
              SET last_changed = NOW()
              WHERE id = ?");
     $sth->execute($gid);
-    $dbh->do("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     $vars->{'users'}      = \@users;
     $vars->{'name'}       = $name;
@@ -545,9 +543,9 @@ sub doGroupChanges {
     my $dbh = Bugzilla->dbh;
     my $sth;
 
-    $dbh->do("LOCK TABLES groups WRITE, group_group_map WRITE, 
-              user_group_map WRITE, profiles READ, 
-              namedqueries READ, whine_queries READ");
+    $dbh->bz_lock_tables('groups WRITE', 'group_group_map WRITE',
+                         'user_group_map WRITE', 'profiles READ',
+                         'namedqueries READ', 'whine_queries READ');
 
     # Check that the given group ID and regular expression are valid.
     # If tests are successful, trimmed values are returned by CheckGroup*.
@@ -651,6 +649,6 @@ sub doGroupChanges {
         # mark the changes
         SendSQL("UPDATE groups SET last_changed = NOW() WHERE id = $gid");
     }
-    $dbh->do("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
     return $gid, $chgs, $name, $regexp;
 }

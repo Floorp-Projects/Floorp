@@ -66,6 +66,8 @@ use base qw(Exporter);
     DEFAULT_QUERY_NAME
 
     COMMENT_COLS
+
+    UNLOCK_ABORT
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -216,5 +218,9 @@ use constant DEFAULT_QUERY_NAME => '(Default query)';
 
 # The column length for displayed (and wrapped) bug comments.
 use constant COMMENT_COLS => 80;
+
+# used by Bugzilla::DB to indicate that tables are being unlocked
+# because of error
+use constant UNLOCK_ABORT => 1;
 
 1;

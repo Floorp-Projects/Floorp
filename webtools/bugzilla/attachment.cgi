@@ -1051,15 +1051,16 @@ sub edit
 sub update
 {
   # Updates an attachment record.
+  my $dbh = Bugzilla->dbh;
 
   # Get the bug ID for the bug to which this attachment is attached.
   SendSQL("SELECT bug_id FROM attachments WHERE attach_id = $::FORM{'id'}");
   my $bugid = FetchSQLData();
-  
+
   # Lock database tables in preparation for updating the attachment.
-  SendSQL("LOCK TABLES attachments WRITE , flags WRITE , " . 
-          "flagtypes READ , fielddefs READ , bugs_activity WRITE, " . 
-          "flaginclusions AS i READ, flagexclusions AS e READ, " . 
+  $dbh->bz_lock_tables('attachments WRITE', 'flags WRITE' ,
+          'flagtypes READ', 'fielddefs READ', 'bugs_activity WRITE',
+          'flaginclusions AS i READ', 'flagexclusions AS e READ',
           # cc, bug_group_map, user_group_map, and groups are in here so we
           # can check the permissions of flag requestees and email addresses
           # on the flag type cc: lists via the CanSeeBug
@@ -1067,10 +1068,10 @@ sub update
           # Bugzilla::User needs to rederive groups. profiles and 
           # user_group_map would be READ locks instead of WRITE locks if it
           # weren't for derive_groups, which needs to write to those tables.
-          "bugs READ, profiles WRITE, " . 
-          "cc READ, bug_group_map READ, user_group_map WRITE, " . 
-          "group_group_map READ, groups READ");
-  
+          'bugs READ', 'profiles WRITE',
+          'cc READ', 'bug_group_map READ', 'user_group_map WRITE',
+          'group_group_map READ', 'groups READ');
+
   # Get a copy of the attachment record before we make changes
   # so we can record those changes in the activity table.
   SendSQL("SELECT description, mimetype, filename, ispatch, isobsolete, isprivate
@@ -1138,9 +1139,9 @@ sub update
   # Update flags.
   my $target = Bugzilla::Flag::GetTarget(undef, $::FORM{'id'});
   Bugzilla::Flag::process($target, $timestamp, \%::FORM);
-  
+
   # Unlock all database tables now that we are finished updating the database.
-  SendSQL("UNLOCK TABLES");
+  $dbh->bz_unlock_tables();
 
   # If the user submitted a comment while editing the attachment, 
   # add the comment to the bug.

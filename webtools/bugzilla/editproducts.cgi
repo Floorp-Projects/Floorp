@@ -231,7 +231,6 @@ sub EmitFormElements ($$$$$$$$$)
 sub PutTrailer (@)
 {
     my (@links) = ("Back to the <A HREF=\"query.cgi\">query page</A>", @_);
-    SendSQL("UNLOCK TABLES");
 
     my $count = $#links;
     my $num = 0;
@@ -281,6 +280,7 @@ my $headerdone = 0;
 my $localtrailer = "<A HREF=\"editproducts.cgi\">edit</A> more products";
 my $classhtmlvarstart = "";
 my $classhtmlvar = "";
+my $dbh = Bugzilla->dbh;
 
 if (Param('useclassification') && (defined $classification)) {
    $classhtmlvar = "&classification=" . url_quote($classification);
@@ -336,7 +336,6 @@ unless ($action) {
         CheckClassificationNew($classification);
     }
 
-    my $dbh = Bugzilla->dbh;
     my @execute_params = ();
     my @products = ();
 
@@ -786,19 +785,19 @@ if ($action eq 'delete') {
 
     # lock the tables before we start to change everything:
 
-    SendSQL("LOCK TABLES attachments WRITE,
-                         bugs WRITE,
-                         bugs_activity WRITE,
-                         components WRITE,
-                         dependencies WRITE,
-                         versions WRITE,
-                         products WRITE,
-                         groups WRITE,
-                         group_control_map WRITE,
-                         profiles WRITE,
-                         milestones WRITE,
-                         flaginclusions WRITE,
-                         flagexclusions WRITE");
+    $dbh->bz_lock_tables('attachments WRITE',
+                         'bugs WRITE',
+                         'bugs_activity WRITE',
+                         'components WRITE',
+                         'dependencies WRITE',
+                         'versions WRITE',
+                         'products WRITE',
+                         'groups WRITE',
+                         'group_control_map WRITE',
+                         'profiles WRITE',
+                         'milestones WRITE',
+                         'flaginclusions WRITE',
+                         'flagexclusions WRITE');
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -853,6 +852,8 @@ if ($action eq 'delete') {
     SendSQL("DELETE FROM products
              WHERE id=$product_id");
     print "Product '$product' deleted.<BR>\n";
+
+    $dbh->bz_unlock_tables();
 
     unlink "$datadir/versioncache";
     PutTrailer($localtrailer);
@@ -1107,12 +1108,12 @@ if ($action eq 'updategroupcontrols') {
                              header_done => 1});
         }
     }
-    SendSQL("LOCK TABLES groups READ,
-             group_control_map WRITE,
-             bugs WRITE,
-             bugs_activity WRITE,
-             bug_group_map WRITE,
-             fielddefs READ");
+    $dbh->bz_lock_tables('groups READ',
+                         'group_control_map WRITE',
+                         'bugs WRITE',
+                         'bugs_activity WRITE',
+                         'bug_group_map WRITE',
+                         'fielddefs READ');
     SendSQL("SELECT id, name, entry, membercontrol, othercontrol, canedit " .
             "FROM groups " .
             "LEFT JOIN group_control_map " .
@@ -1234,6 +1235,8 @@ if ($action eq 'updategroupcontrols') {
         }
         print "added $count bugs<p>\n";
     }
+    $dbh->bz_unlock_tables();
+
     print "Group control updates done<P>\n";
 
     PutTrailer($localtrailer);
@@ -1289,12 +1292,12 @@ if ($action eq 'update') {
     # Note that we got the $product_id using $productold above so it will
     # remain static even after we rename the product in the database.
 
-    SendSQL("LOCK TABLES products WRITE,
-                         versions READ,
-                         groups WRITE,
-                         group_control_map WRITE,
-                         profiles WRITE,
-                         milestones READ");
+    $dbh->bz_lock_tables('products WRITE',
+                         'versions READ',
+                         'groups WRITE',
+                         'group_control_map WRITE',
+                         'profiles WRITE',
+                         'milestones READ');
 
     if ($disallownew ne $disallownewold) {
         $disallownew = $disallownew ? 1 : 0;
@@ -1307,6 +1310,7 @@ if ($action eq 'update') {
     if ($description ne $descriptionold) {
         unless ($description) {
             print "Sorry, I can't delete the description.";
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             PutTrailer($localtrailer);
             exit;
         }
@@ -1357,6 +1361,7 @@ if ($action eq 'update') {
                 "  AND product_id = $product_id");
         if (!FetchOneColumn()) {
             print "Sorry, the milestone $defaultmilestone must be defined first.";
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             PutTrailer($localtrailer);
             exit;
         }
@@ -1372,7 +1377,7 @@ if ($action eq 'update') {
     if ($product ne $productold) {
         unless ($product) {
             print "Sorry, I can't delete the product name.";
-            SendSQL("UNLOCK TABLES");
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             PutTrailer($localtrailer);
             exit;
         }
@@ -1380,7 +1385,7 @@ if ($action eq 'update') {
         if (lc($product) ne lc($productold) &&
             TestProduct($product)) {
             print "Sorry, product name '$product' is already in use.";
-            SendSQL("UNLOCK TABLES");
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             PutTrailer($localtrailer);
             exit;
         }
@@ -1388,8 +1393,8 @@ if ($action eq 'update') {
         SendSQL("UPDATE products SET name=$qp WHERE id=$product_id");
         print "Updated product name.<BR>\n";
     }
+    $dbh->bz_unlock_tables();
     unlink "$datadir/versioncache";
-    SendSQL("UNLOCK TABLES");
 
     if ($checkvotes) {
         # 1. too many votes for a single user on a single bug.

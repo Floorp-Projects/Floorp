@@ -27,6 +27,7 @@ use base qw(Exporter);
 @Bugzilla::Error::EXPORT = qw(ThrowCodeError ThrowTemplateError ThrowUserError);
 
 use Bugzilla::Config;
+use Bugzilla::Constants;
 use Bugzilla::Util;
 use Date::Format;
 
@@ -37,7 +38,7 @@ sub _throw_error {
 
     $vars->{error} = $error;
 
-    Bugzilla->dbh->do("UNLOCK TABLES") if $unlock_tables;
+    Bugzilla->dbh->bz_unlock_tables(UNLOCK_ABORT) if $unlock_tables;
 
     # If a writable data/errorlog exists, log error details there.
     if (-w "data/errorlog") {

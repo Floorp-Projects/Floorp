@@ -192,6 +192,8 @@ sub cancelChangePassword {
 }
 
 sub changePassword {
+    my $dbh = Bugzilla->dbh;
+
     # Quote the password and token for inclusion into SQL statements.
     my $cryptedpassword = bz_crypt($cgi->param('password'));
     my $quotedpassword = SqlQuote($cryptedpassword);
@@ -202,12 +204,12 @@ sub changePassword {
     
     # Update the user's password in the profiles table and delete the token
     # from the tokens table.
-    SendSQL("LOCK TABLES profiles WRITE , tokens WRITE");
+    $dbh->bz_lock_tables('profiles WRITE', 'tokens WRITE');
     SendSQL("UPDATE   profiles
              SET      cryptpassword = $quotedpassword
              WHERE    userid = $userid");
     SendSQL("DELETE FROM tokens WHERE token = $::quotedtoken");
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     Bugzilla->logout_user_by_id($userid);
 
@@ -229,6 +231,7 @@ sub confirmChangeEmail {
 }
 
 sub changeEmail {
+    my $dbh = Bugzilla->dbh;
 
     # Get the user's ID from the tokens table.
     SendSQL("SELECT userid, eventdata FROM tokens 
@@ -251,14 +254,14 @@ sub changeEmail {
 
     # Update the user's login name in the profiles table and delete the token
     # from the tokens table.
-    SendSQL("LOCK TABLES profiles WRITE , tokens WRITE");
+    $dbh->bz_lock_tables('profiles WRITE', 'tokens WRITE');
     SendSQL("UPDATE   profiles
          SET      login_name = $quotednewemail
          WHERE    userid = $userid");
     SendSQL("DELETE FROM tokens WHERE token = $::quotedtoken");
     SendSQL("DELETE FROM tokens WHERE userid = $userid 
                                   AND tokentype = 'emailnew'");
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     # The email address has been changed, so we need to rederive the groups
     my $user = new Bugzilla::User($userid);
@@ -276,6 +279,8 @@ sub changeEmail {
 }
 
 sub cancelChangeEmail {
+    my $dbh = Bugzilla->dbh;
+
     # Get the user's ID from the tokens table.
     SendSQL("SELECT userid, tokentype, eventdata FROM tokens 
              WHERE token = $::quotedtoken");
@@ -292,11 +297,11 @@ sub cancelChangeEmail {
         if($actualemail ne $old_email) {
             my $quotedoldemail = SqlQuote($old_email);
 
-            SendSQL("LOCK TABLES profiles WRITE");
+            $dbh->bz_lock_tables('profiles WRITE');
             SendSQL("UPDATE   profiles
                  SET      login_name = $quotedoldemail
                  WHERE    userid = $userid");
-            SendSQL("UNLOCK TABLES");
+            $dbh->bz_unlock_tables();
 
             # email has changed, so rederive groups
             # Note that this is done _after_ the tables are unlocked
@@ -318,11 +323,11 @@ sub cancelChangeEmail {
     $vars->{'new_email'} = $new_email;
     Bugzilla::Token::Cancel($::token, $vars->{'message'});
 
-    SendSQL("LOCK TABLES tokens WRITE");
+    $dbh->bz_lock_tables('tokens WRITE');
     SendSQL("DELETE FROM tokens 
              WHERE userid = $userid 
              AND tokentype = 'emailold' OR tokentype = 'emailnew'");
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     # Return HTTP response headers.
     print $cgi->header();

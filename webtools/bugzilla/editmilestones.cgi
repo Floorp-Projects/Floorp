@@ -360,11 +360,11 @@ if ($action eq 'delete') {
 
     # lock the tables before we start to change everything:
 
-    $dbh->do('LOCK TABLES attachments WRITE,
-                          bugs WRITE,
-                          bugs_activity WRITE,
-                          milestones WRITE,
-                          dependencies WRITE');
+    $dbh->bz_lock_tables('attachments WRITE',
+                         'bugs WRITE',
+                         'bugs_activity WRITE',
+                         'milestones WRITE',
+                         'dependencies WRITE');
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -425,7 +425,7 @@ if ($action eq 'delete') {
              $product_id,
              $milestone);
 
-    $dbh->do('UNLOCK TABLES');
+    $dbh->bz_unlock_tables();
 
     unlink "$datadir/versioncache";
 
@@ -497,9 +497,9 @@ if ($action eq 'update') {
 
     my $dbh = Bugzilla->dbh;
 
-    $dbh->do("LOCK TABLES bugs WRITE,
-                          milestones WRITE,
-                          products WRITE");
+    $dbh->bz_lock_tables('bugs WRITE',
+                         'milestones WRITE',
+                         'products WRITE');
 
     # Need to store because detaint_natural() will delete this if
     # invalid
@@ -507,7 +507,7 @@ if ($action eq 'update') {
     if ($sortkey != $sortkeyold) {
         if (!detaint_natural($sortkey)) {
 
-            $dbh->do('UNLOCK TABLES'); 
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('milestone_sortkey_invalid',
                            {'name' => $milestone,
                             'sortkey' => $stored_sortkey});
@@ -532,12 +532,12 @@ if ($action eq 'update') {
 
     if ($milestone ne $milestoneold) {
         unless ($milestone) {
-            $dbh->do('UNLOCK TABLES'); 
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('milestone_blank_name');
             exit;
         }
         if (TestMilestone($product, $milestone)) {
-            $dbh->do('UNLOCK TABLES'); 
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('milestone_already_exists',
                            {'name' => $milestone,
                             'product' => $product});
@@ -579,7 +579,7 @@ if ($action eq 'update') {
         $vars->{'updated_name'} = 1;
     }
 
-    $dbh->do('UNLOCK TABLES'); 
+    $dbh->bz_unlock_tables();
 
     $vars->{'name'} = $milestone;
     $vars->{'product'} = $product;

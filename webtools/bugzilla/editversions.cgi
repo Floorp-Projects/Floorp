@@ -39,6 +39,7 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 use vars qw($template $vars);
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 
 # TestProduct:  just returns if the specified product does exists
 # CheckProduct: same check, optionally  emit an error text
@@ -303,11 +304,11 @@ if ($action eq 'delete') {
 
     # lock the tables before we start to change everything:
 
-    SendSQL("LOCK TABLES attachments WRITE,
-                         bugs WRITE,
-                         bugs_activity WRITE,
-                         versions WRITE,
-                         dependencies WRITE");
+    $dbh->bz_lock_tables('attachments WRITE',
+                         'bugs WRITE',
+                         'bugs_activity WRITE',
+                         'versions WRITE',
+                         'dependencies WRITE');
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -347,7 +348,7 @@ if ($action eq 'delete') {
              WHERE product_id = $product_id
                AND value = " . SqlQuote($version));
 
-    SendSQL("UNLOCK TABLES;");
+    $dbh->bz_unlock_tables();
 
     unlink "$datadir/versioncache";
 
@@ -399,18 +400,18 @@ if ($action eq 'update') {
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$version' or WHERE='$versionold'
 
-    SendSQL("LOCK TABLES bugs WRITE,
-                         versions WRITE,
-                         products READ");
+    $dbh->bz_lock_tables('bugs WRITE',
+                         'versions WRITE',
+                         'products READ');
 
     if ($version ne $versionold) {
         unless ($version) {
-            SendSQL('UNLOCK TABLES'); 
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('version_blank_name');
             exit;
         }
         if (TestVersion($product,$version)) {
-            SendSQL('UNLOCK TABLES'); 
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('version_already_exists',
                            {'name' => $version,
                             'product' => $product});
@@ -430,7 +431,7 @@ if ($action eq 'update') {
         $vars->{'updated_name'} = 1;
     }
 
-    SendSQL('UNLOCK TABLES'); 
+    $dbh->bz_unlock_tables(); 
 
     $vars->{'name'} = $version;
     $vars->{'product'} = $product;

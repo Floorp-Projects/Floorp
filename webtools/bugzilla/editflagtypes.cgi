@@ -220,15 +220,18 @@ sub insert {
     validateIsRequesteeble();
     validateAllowMultiple();
     validateGroups();
-    
+
+    my $dbh = Bugzilla->dbh;
+
     my $name = SqlQuote($::FORM{'name'});
     my $description = SqlQuote($::FORM{'description'});
     my $cc_list = SqlQuote($::FORM{'cc_list'});
     my $target_type = $::FORM{'target_type'} eq "bug" ? "b" : "a";
-    
-    SendSQL("LOCK TABLES flagtypes WRITE, products READ, components READ, " . 
-            "flaginclusions WRITE, flagexclusions WRITE");
-    
+
+    $dbh->bz_lock_tables('flagtypes WRITE', 'products READ',
+                         'components READ', 'flaginclusions WRITE',
+                         'flagexclusions WRITE');
+
     # Determine the new flag type's unique identifier.
     SendSQL("SELECT MAX(id) FROM flagtypes");
     my $id = FetchSQLData() + 1;
@@ -255,8 +258,8 @@ sub insert {
                   "component_id) VALUES ($id, $product_id, $component_id)");
         }
     }
-    
-    SendSQL("UNLOCK TABLES");
+
+    $dbh->bz_unlock_tables();
 
     $vars->{'name'} = $::FORM{'name'};
     $vars->{'message'} = "flag_type_created";
@@ -282,13 +285,16 @@ sub update {
     validateIsRequesteeble();
     validateAllowMultiple();
     validateGroups();
-    
+
+    my $dbh = Bugzilla->dbh;
+
     my $name = SqlQuote($::FORM{'name'});
     my $description = SqlQuote($::FORM{'description'});
     my $cc_list = SqlQuote($::FORM{'cc_list'});
-    
-    SendSQL("LOCK TABLES flagtypes WRITE, products READ, components READ, " . 
-            "flaginclusions WRITE, flagexclusions WRITE");
+
+    $dbh->bz_lock_tables('flagtypes WRITE', 'products READ',
+                         'components READ', 'flaginclusions WRITE',
+                         'flagexclusions WRITE');
     SendSQL("UPDATE  flagtypes 
                 SET  name = $name , 
                      description = $description , 
@@ -316,7 +322,7 @@ sub update {
         }
     }
 
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
     
     # Clear existing flags for bugs/attachments in categories no longer on 
     # the list of inclusions or that have been added to the list of exclusions.
@@ -384,9 +390,11 @@ sub confirmDelete
 
 sub deleteType {
     validateID();
-    
-    SendSQL("LOCK TABLES flagtypes WRITE, flags WRITE, " . 
-            "flaginclusions WRITE, flagexclusions WRITE");
+
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->bz_lock_tables('flagtypes WRITE', 'flags WRITE',
+                         'flaginclusions WRITE', 'flagexclusions WRITE');
     
     # Get the name of the flag type so we can tell users
     # what was deleted.
@@ -397,7 +405,7 @@ sub deleteType {
     SendSQL("DELETE FROM flaginclusions WHERE type_id = $::FORM{'id'}");
     SendSQL("DELETE FROM flagexclusions WHERE type_id = $::FORM{'id'}");
     SendSQL("DELETE FROM flagtypes WHERE id = $::FORM{'id'}");
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     $vars->{'message'} = "flag_type_deleted";
 
@@ -413,10 +421,12 @@ sub deleteType {
 sub deactivate {
     validateID();
     validateIsActive();
-    
-    SendSQL("LOCK TABLES flagtypes WRITE");
+
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->bz_lock_tables('flagtypes WRITE');
     SendSQL("UPDATE flagtypes SET is_active = 0 WHERE id = $::FORM{'id'}");
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
     
     $vars->{'message'} = "flag_type_deactivated";
     $vars->{'flag_type'} = Bugzilla::FlagType::get($::FORM{'id'});

@@ -2722,7 +2722,7 @@ if (GetFieldDef('bugs', 'long_desc')) {
     print "bugs to process; a line of dots will be printed for each 50.\n\n";
     $| = 1;
 
-    $dbh->do("LOCK TABLES bugs write, longdescs write, profiles write");
+    $dbh->bz_lock_tables('bugs write', 'longdescs write', 'profiles write');
 
     $dbh->do('DELETE FROM longdescs');
 
@@ -2823,7 +2823,7 @@ if (GetFieldDef('bugs', 'long_desc')) {
 
     DropField('bugs', 'long_desc');
 
-    $dbh->do("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 }
 
 
@@ -2836,7 +2836,7 @@ if (GetFieldDef('bugs_activity', 'field')) {
              'mediumint not null, ADD INDEX (fieldid)');
     print "Populating new fieldid field ...\n";
 
-    $dbh->do("LOCK TABLES bugs_activity WRITE, fielddefs WRITE");
+    $dbh->bz_lock_tables('bugs_activity WRITE', 'fielddefs WRITE');
 
     my $sth = $dbh->prepare('SELECT DISTINCT field FROM bugs_activity');
     $sth->execute();
@@ -2856,7 +2856,7 @@ if (GetFieldDef('bugs_activity', 'field')) {
         }
         $dbh->do("UPDATE bugs_activity SET fieldid = $id WHERE field = $q");
     }
-    $dbh->do("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     DropField('bugs_activity', 'field');
 }

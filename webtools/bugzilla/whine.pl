@@ -220,12 +220,11 @@ sub get_next_event {
     # Loop until there's something to return
     until (scalar keys %{$event}) {
 
-        $dbh->do("LOCK TABLE " .
-                 "whine_schedules WRITE, " .
-                 "whine_events READ, " .
-                 "profiles READ, " .
-                 "groups READ, " .
-                 "user_group_map READ");
+        $dbh->bz_lock_tables('whine_schedules WRITE',
+                             'whine_events READ',
+                             'profiles READ',
+                             'groups READ',
+                             'user_group_map READ');
 
         # Get the event ID for the first pending schedule
         $sth_next_scheduled_event->execute;
@@ -262,7 +261,7 @@ sub get_next_event {
             reset_timer($sid);
         }
 
-        $dbh->do("UNLOCK TABLES");
+        $dbh->bz_unlock_tables();
 
         # Only set $event if the user is allowed to do whining
         if ($owner->in_group('bz_canusewhines')) {

@@ -205,7 +205,7 @@ if ($action eq 'delete') {
     }
 
     # lock the tables before we start to change everything:
-    $dbh->do("LOCK TABLES classifications WRITE, products WRITE");
+    $dbh->bz_lock_tables('classifications WRITE', 'products WRITE');
 
     # delete
     $sth = $dbh->prepare("DELETE FROM classifications WHERE id=?");
@@ -217,7 +217,7 @@ if ($action eq 'delete') {
                           WHERE classification_id=?");
     $sth->execute($classification_id);
 
-    $dbh->do("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     unlink "data/versioncache";
 
@@ -283,7 +283,7 @@ if ($action eq 'update') {
     # above so it will remain static even after we rename the
     # classification in the database.
 
-    $dbh->do("LOCK TABLES classifications WRITE");
+    $dbh->bz_lock_tables('classifications WRITE');
 
     if ($description ne $descriptionold) {
         $sth = $dbh->prepare("UPDATE classifications
@@ -295,12 +295,12 @@ if ($action eq 'update') {
 
     if ($classification ne $classificationold) {
         unless ($classification) {
-            $dbh->do("UNLOCK TABLES");
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError("classification_not_specified")
         }
         
         if (TestClassification($classification)) {
-            $dbh->do("UNLOCK TABLES");
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError("classification_already_exists", { name => $classification });
         }
         $sth = $dbh->prepare("UPDATE classifications
@@ -308,7 +308,7 @@ if ($action eq 'update') {
         $sth->execute($classification,$classification_id);
         $vars->{'updated_classification'} = 1;
     }
-    $dbh->do("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     unlink "data/versioncache";
     LoadTemplate($action);

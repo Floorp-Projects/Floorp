@@ -118,8 +118,9 @@ sub show_bug {
 # doing the viewing, give them the option to edit them too.
 sub show_user {
     GetVersionTable();
-    
+
     my $cgi = Bugzilla->cgi;
+    my $dbh = Bugzilla->dbh;
 
     # If a bug_id is given, and we're editing, we'll add it to the votes list.
     $bug_id ||= "";
@@ -129,11 +130,11 @@ sub show_user {
     my $userid = Bugzilla->user->id;
     
     my $canedit = (Param('usevotes') && $userid == $who) ? 1 : 0;
-    
-    SendSQL("LOCK TABLES bugs READ, products READ, votes WRITE,
-             cc READ, bug_group_map READ, user_group_map READ,
-             cc AS selectVisible_cc READ, groups READ");
-    
+
+    $dbh->bz_lock_tables('bugs READ', 'products READ', 'votes WRITE',
+             'cc READ', 'bug_group_map READ', 'user_group_map READ',
+             'cc AS selectVisible_cc READ', 'groups READ');
+
     if ($canedit && $bug_id) {
         # Make sure there is an entry for this bug
         # in the vote table, just so that things display right.
@@ -212,7 +213,7 @@ sub show_user {
     }
 
     SendSQL("DELETE FROM votes WHERE vote_count <= 0");
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     $vars->{'canedit'} = $canedit;
     $vars->{'voting_user'} = { "login" => $name };
@@ -231,6 +232,7 @@ sub record_votes {
     ############################################################################
 
     my $cgi = Bugzilla->cgi;
+    my $dbh = Bugzilla->dbh;
 
     # Build a list of bug IDs for which votes have been submitted.  Votes
     # are submitted in form fields in which the field names are the bug 
@@ -314,12 +316,13 @@ sub record_votes {
     # for products that only allow one vote per bug).  In that case, we still
     # need to clear the user's votes from the database.
     my %affected;
-    SendSQL("LOCK TABLES bugs WRITE, bugs_activity WRITE, votes WRITE, 
-             longdescs WRITE, profiles READ, products READ, components READ, 
-             cc READ, dependencies READ, groups READ, fielddefs READ, 
-             namedqueries READ, whine_queries READ, watch READ, 
-             profiles AS watchers READ, profiles AS watched READ, 
-             user_group_map READ, bug_group_map READ");
+    $dbh->bz_lock_tables('bugs WRITE', 'bugs_activity WRITE',
+             'votes WRITE', 'longdescs WRITE', 'profiles READ',
+             'products READ', 'components READ', 'cc READ',
+             'dependencies READ', 'groups READ', 'fielddefs READ',
+             'namedqueries READ', 'whine_queries READ', 'watch READ',
+             'profiles AS watchers READ', 'profiles AS watched READ',
+             'user_group_map READ', 'bug_group_map READ');
     
     # Take note of, and delete the user's old votes from the database.
     SendSQL("SELECT bug_id FROM votes WHERE who = $who");
@@ -349,7 +352,7 @@ sub record_votes {
         $vars->{'header_done'} = 1 if $confirmed;
     }
 
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     $vars->{'votes_recorded'} = 1;
 }

@@ -39,6 +39,7 @@ use Bugzilla::Util;
 use vars qw($template $vars);
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 
 my $showbugcounts = (defined $cgi->param('showbugcounts'));
 
@@ -445,13 +446,13 @@ if ($action eq 'delete') {
 
     # lock the tables before we start to change everything:
 
-    SendSQL("LOCK TABLES attachments WRITE,
-                         bugs WRITE,
-                         bugs_activity WRITE,
-                         components WRITE,
-                         dependencies WRITE,
-                         flaginclusions WRITE,
-                         flagexclusions WRITE");
+    $dbh->bz_lock_tables('attachments WRITE',
+                         'bugs WRITE',
+                         'bugs_activity WRITE',
+                         'components WRITE',
+                         'dependencies WRITE',
+                         'flaginclusions WRITE',
+                         'flagexclusions WRITE');
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -491,7 +492,7 @@ if ($action eq 'delete') {
     SendSQL("DELETE FROM components
              WHERE id=$component_id");
 
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     unlink "$datadir/versioncache";
 
@@ -575,14 +576,15 @@ if ($action eq 'update') {
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$component' or WHERE='$componentold'
 
-    SendSQL("LOCK TABLES components WRITE, products READ, profiles READ");
+    $dbh->bz_lock_tables('components WRITE', 'products READ',
+                         'profiles READ');
     CheckComponent($product, $componentold);
     my $component_id = get_component_id(get_product_id($product),
                                         $componentold);
 
     if ($description ne $descriptionold) {
         unless ($description) {
-            SendSQL("UNLOCK TABLES");
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_blank_description',
                            {'name' => $componentold});
             exit;
@@ -600,7 +602,7 @@ if ($action eq 'update') {
 
         my $initialownerid = DBname_to_id($initialowner);
         unless ($initialownerid) {
-            SendSQL("UNLOCK TABLES");
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_need_valid_initialowner',
                            {'name' => $componentold});
             exit;
@@ -618,7 +620,7 @@ if ($action eq 'update') {
     if (Param('useqacontact') && $initialqacontact ne $initialqacontactold) {
         my $initialqacontactid = DBname_to_id($initialqacontact);
         if (!$initialqacontactid && $initialqacontact ne '') {
-            SendSQL("UNLOCK TABLES");
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_need_valid_initialqacontact',
                            {'name' => $componentold});
             exit;
@@ -635,13 +637,13 @@ if ($action eq 'update') {
 
     if ($component ne $componentold) {
         unless ($component) {
-            SendSQL("UNLOCK TABLES");
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_must_have_a_name',
                            {'name' => $componentold});
             exit;
         }
         if (TestComponent($product, $component)) {
-            SendSQL("UNLOCK TABLES");
+            $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_already_exists',
                            {'name' => $component});
             exit;
@@ -655,7 +657,7 @@ if ($action eq 'update') {
 
     }
 
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 
     $vars->{'name'} = $component;
     $vars->{'product'} = $product;

@@ -250,7 +250,7 @@ sub InsertNamedQuery ($$$;$) {
     # it when we display it to the user.
     trick_taint($query);
 
-    $dbh->do("LOCK TABLES namedqueries WRITE");
+    $dbh->bz_lock_tables('namedqueries WRITE');
 
     my $result = $dbh->selectrow_array("SELECT userid FROM namedqueries"
         . " WHERE userid = ? AND name = ?"
@@ -269,7 +269,7 @@ sub InsertNamedQuery ($$$;$) {
             , undef, ($userid, $query_name, $query, $link_in_footer));
     }
 
-    $dbh->do("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
     return $query_existed_before;
 }
 

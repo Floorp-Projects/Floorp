@@ -71,6 +71,7 @@ sub BugListLinks {
 Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 
 # Make sure the user is authorized to access sanitycheck.cgi.  Access
 # is restricted to logged-in users who have "editbugs" privileges,
@@ -95,7 +96,7 @@ PutHeader("Bugzilla Sanity Check");
 
 if (defined $cgi->param('rebuildvotecache')) {
     Status("OK, now rebuilding vote cache.");
-    SendSQL("LOCK TABLES bugs WRITE, votes READ");
+    $dbh->bz_lock_tables('bugs WRITE', 'votes READ');
     SendSQL("UPDATE bugs SET votes = 0");
     SendSQL("SELECT bug_id, SUM(vote_count) FROM votes GROUP BY bug_id");
     my %votes;
@@ -106,7 +107,7 @@ if (defined $cgi->param('rebuildvotecache')) {
     foreach my $id (keys %votes) {
         SendSQL("UPDATE bugs SET votes = $votes{$id} WHERE bug_id = $id");
     }
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
     Status("Vote cache has been rebuilt.");
 }
 
@@ -148,7 +149,7 @@ if (defined $cgi->param('cleangroupsnow')) {
     Status("Cutoff is $cutoff");
     SendSQL("SELECT COUNT(*) FROM user_group_map");
     (my $before) = FetchSQLData();
-    SendSQL("LOCK TABLES user_group_map WRITE, profiles WRITE");
+    $dbh->bz_lock_tables('user_group_map WRITE', 'profiles WRITE');
     SendSQL("SELECT userid FROM profiles " .
             "WHERE refreshed_when > 0 " .
             "AND refreshed_when < " . SqlQuote($cutoff) .
@@ -162,7 +163,7 @@ if (defined $cgi->param('cleangroupsnow')) {
         SendSQL("UPDATE profiles SET refreshed_when = 0 WHERE userid = $id");
         PopGlobalSQLState();
     }
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
     SendSQL("SELECT COUNT(*) FROM user_group_map");
     (my $after) = FetchSQLData();
     Status("Cleaned table for $count users " .
@@ -537,7 +538,8 @@ Status("Checking cached keywords");
 my %realk;
 
 if (defined $cgi->param('rebuildkeywordcache')) {
-    SendSQL("LOCK TABLES bugs write, keywords read, keyworddefs read");
+    $dbh->bz_lock_tables('bugs write', 'keywords read',
+                                  'keyworddefs read');
 }
 
 SendSQL("SELECT keywords.bug_id, keyworddefs.name " .
@@ -596,7 +598,7 @@ if (@badbugs) {
 }
 
 if (defined $cgi->param('rebuildkeywordcache')) {
-    SendSQL("UNLOCK TABLES");
+    $dbh->bz_unlock_tables();
 }
 
 ###########################################################################
