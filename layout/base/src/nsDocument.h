@@ -44,6 +44,7 @@
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsISupportsArray.h"
+#include "nsHashtable.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
@@ -387,6 +388,8 @@ public:
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);
   NS_IMETHOD    Load (const nsAReadableString& aUrl);
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);
+  NS_IMETHOD    GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult);
+  NS_IMETHOD    SetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject* aBoxObject);
  
   // nsIDOMNode interface
   NS_DECL_IDOMNODE
@@ -506,6 +509,7 @@ protected:
 
   nsCOMPtr<nsIBindingManager> mBindingManager;
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // OWNER
+  nsSupportsHashtable* mBoxObjectTable;
 };
 
 #endif /* nsDocument_h___ */
