@@ -1075,9 +1075,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName)
     nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
     nsCAutoString newNameStr = leafname;
     newNameStr += ".msf";
-    rv = oldSummarySpec.Rename(newNameStr.GetBuffer());
-    if (NS_SUCCEEDED(rv))
-    {
+    oldSummarySpec.Delete(PR_FALSE);
         if (parentFolder)
         {
             SetParent(nsnull);
@@ -1089,7 +1087,6 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName)
             newNameStr += ".sbd";
             dirSpec.Rename(newNameStr.GetBuffer());
         }
-    }
     return rv;
 }
 
