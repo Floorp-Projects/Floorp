@@ -252,26 +252,17 @@ NS_IMETHODIMP
 nsNativeComponentLoader::AutoRegisterComponents(PRInt32 aWhen,
                                                 nsIFileSpec *aDirectory)
 {
-    char *nativePath = NULL;
-    nsresult rv = aDirectory->GetNativePath(&nativePath);
-    if (NS_FAILED(rv))
-        return rv;
-    if (!nativePath)
-        return NS_ERROR_INVALID_POINTER;
-
 #ifdef DEBUG
     /* do we _really_ want to print this every time? */
-    printf("nsNativeComponentLoader: autoregistering %s\n", nativePath);
+    printf("nsNativeComponentLoader: autoregistering begins.\n");
 #endif
 
-    rv = RegisterComponentsInDir(aWhen, aDirectory);
+    nsresult rv = RegisterComponentsInDir(aWhen, aDirectory);
 
 #ifdef DEBUG
     printf("nsNativeComponentLoader: autoregistering %s\n",
            NS_FAILED(rv) ? "FAILED" : "succeeded");
 #endif
-
-    nsCRT::free(nativePath);
 
     return rv;
 }
@@ -283,12 +274,19 @@ nsNativeComponentLoader::RegisterComponentsInDir(PRInt32 when,
     nsresult rv = NS_ERROR_FAILURE;
     PRBool isDir = PR_FALSE;
 
+#if 0
+    // Going to many of these checks is a performance hit on the mac.
+    // Since these routines are called relatively infrequently and
+    // we will fail anyway down the line if a directory aint there,
+    // we are commenting this check out.
+
     // Make sure we are dealing with a directory
     rv = dir->IsDirectory(&isDir);
     if (NS_FAILED(rv)) return rv;
 
     if (!isDir)
         return NS_ERROR_INVALID_ARG;
+#endif /* 0 */
 
     // Create a directory iterator
     nsCOMPtr<nsIDirectoryIterator>dirIterator;
@@ -694,9 +692,14 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     // Ensure we are dealing with a file as opposed to a dir
     PRBool b = PR_FALSE;
 
+#if 0
+    // This is a performance hit on mac. Since we have already checked
+    // this; plus is we dont, load will fail anyway later on, this
+    // is being commented out.
     rv = component->IsFile(&b);
     if (NS_FAILED(rv) || !b)
         return rv;
+#endif /* 0 */
 
     // deal only with files that have a valid extension
     PRBool validExtension = PR_FALSE;
