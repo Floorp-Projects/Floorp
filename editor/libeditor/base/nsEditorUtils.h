@@ -87,14 +87,25 @@ class nsAutoRules
   public:
   
   nsAutoRules(nsEditor *ed, PRInt32 action, nsIEditor::EDirection aDirection) : 
-         mEd(ed), mAction(action), mDirection(aDirection)
-                {if (mEd) mEd->StartOperation(mAction, mDirection);}
-  ~nsAutoRules() {if (mEd) mEd->EndOperation(mAction, mDirection);}
+         mEd(ed), mDoNothing(PR_FALSE)
+  { 
+    if (mEd && !mEd->mAction) // mAction will already be set if this is nested call
+    {
+      mEd->StartOperation(action, aDirection);
+    }
+    else mDoNothing = PR_TRUE; // nested calls will end up here
+  }
+  ~nsAutoRules() 
+  {
+    if (mEd && !mDoNothing) 
+    {
+      mEd->EndOperation();
+    }
+  }
   
   protected:
   nsEditor *mEd;
-  PRInt32 mAction;
-  nsIEditor::EDirection mDirection;
+  PRBool mDoNothing;
 };
 
 

@@ -4503,7 +4503,7 @@ nsHTMLEditor::Undo(PRUint32 aCount)
   ForceCompositionEnd();
   nsresult result = NS_OK;
 
-  BeginUpdateViewBatch();
+  nsAutoRules beginRulesSniffing(this, kOpUndo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kUndo);
   nsCOMPtr<nsIDOMSelection> selection;
@@ -4517,8 +4517,6 @@ nsHTMLEditor::Undo(PRUint32 aCount)
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   } 
    
-  EndUpdateViewBatch();
-
   return result;
 }
 
@@ -4528,7 +4526,7 @@ nsHTMLEditor::Redo(PRUint32 aCount)
 {
   nsresult result = NS_OK;
 
-  BeginUpdateViewBatch();
+  nsAutoRules beginRulesSniffing(this, kOpRedo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kRedo);
   nsCOMPtr<nsIDOMSelection> selection;
@@ -4542,8 +4540,6 @@ nsHTMLEditor::Redo(PRUint32 aCount)
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   } 
    
-  EndUpdateViewBatch();
-
   return result;
 }
 
@@ -5906,23 +5902,27 @@ void nsHTMLEditor::ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, 
 NS_IMETHODIMP
 nsHTMLEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 {
-  if (! ((opID==kOpInsertText) || (opID==kOpInsertIMEText)) )
+  nsEditor::StartOperation(opID, aDirection);  // will set mAction, mDirection
+  if (! ((mAction==kOpInsertText) || (mAction==kOpInsertIMEText)) )
     ClearInlineStylesCache();
-  if (mRules) return mRules->BeforeEdit(opID, aDirection);
+  if (mRules) return mRules->BeforeEdit(mAction, mDirection);
   return NS_OK;
 }
 
 
 /** All editor operations which alter the doc should be followed
- *  with a call to EndOperation, naming the action and direction */
+ *  with a call to EndOperation */
 NS_IMETHODIMP
-nsHTMLEditor::EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
+nsHTMLEditor::EndOperation()
 {
-  if (! ((opID==kOpInsertText) || (opID==kOpInsertIMEText)) )
+  // post processing
+  if (! ((mAction==kOpInsertText) || (mAction==kOpInsertIMEText) || (mAction==kOpIgnore)) )
     ClearInlineStylesCache();
-  if (mRules) return mRules->AfterEdit(opID, aDirection);
-  return NS_OK;
-}
+  nsresult res = NS_OK;
+  if (mRules) res = mRules->AfterEdit(mAction, mDirection);
+  nsEditor::EndOperation();  // will clear mAction, mDirection
+  return res;
+}  
 
 
 PRBool 

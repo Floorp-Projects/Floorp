@@ -480,8 +480,8 @@ public:
   NS_IMETHOD StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
 
   /** All editor operations which alter the doc should be followed
-   *  with a call to EndOperation, naming the action and direction */
-  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
+   *  with a call to EndOperation */
+  NS_IMETHOD EndOperation();
 
   /** return the string that represents text nodes in the content tree */
   static nsresult GetTextNodeTag(nsString& aOutString);
@@ -755,15 +755,17 @@ protected:
   nsSelectionState *mSavedSel;         // cached selection for nsAutoSelectionReset
   PRBool          mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   nsCOMPtr<nsIDOMElement> mBodyElement;    // cached body node
-  //
+  PRInt32         mAction;             // the current editor action
+  EDirection      mDirection;          // the current direction of editor action
+  
   // data necessary to build IME transactions
-  //
   PRBool						mInIMEMode;          // are we inside an IME composition?
   nsIPrivateTextRangeList*      mIMETextRangeList;   // IME special selection ranges
   nsCOMPtr<nsIDOMCharacterData> mIMETextNode;        // current IME text node
   PRUint32						mIMETextOffset;      // offset in text node where IME comp string begins
   PRUint32						mIMEBufferLength;    // current length of IME comp string
 
+  // various listeners
   nsVoidArray*                  mActionListeners;  // listens to all low level actions on the doc
   nsVoidArray*                  mEditorObservers;   // just notify once per high level change
   nsCOMPtr<nsISupportsArray>    mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
@@ -777,6 +779,7 @@ protected:
   friend PRBool NSCanUnload(nsISupports* serviceMgr);
   friend class nsAutoTxnsConserveSelection;
   friend class nsAutoSelectionReset;
+  friend class nsAutoRules;
 };
 
 

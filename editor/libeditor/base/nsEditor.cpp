@@ -786,6 +786,8 @@ nsEditor::nsEditor()
 ,  mEditorObservers(nsnull)
 ,  mDocDirtyState(-1)
 ,  mDocWeak(nsnull)
+,  mAction(nsnull)
+,  mDirection(eNone)
 {
   //initialize member variables here
   NS_INIT_REFCNT();
@@ -1096,8 +1098,6 @@ nsEditor::Undo(PRUint32 aCount)
 
   nsAutoRules beginRulesSniffing(this, kOpUndo, nsIEditor::eNone);
 
-  BeginUpdateViewBatch();
-
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     PRUint32 i=0;
@@ -1113,7 +1113,6 @@ nsEditor::Undo(PRUint32 aCount)
     }
   }
 
-  EndUpdateViewBatch();
   NotifyEditorObservers();  
   return result;
 }
@@ -1142,7 +1141,6 @@ nsEditor::Redo(PRUint32 aCount)
   nsresult result = NS_OK;
 
   nsAutoRules beginRulesSniffing(this, kOpRedo, nsIEditor::eNone);
-  BeginUpdateViewBatch();
 
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
@@ -1159,7 +1157,6 @@ nsEditor::Redo(PRUint32 aCount)
     }
   }
 
-  EndUpdateViewBatch();
   NotifyEditorObservers();  
   return result;
 }
@@ -1244,6 +1241,11 @@ nsEditor::EndPlaceHolderTransaction()
   {
     // time to turn off the batch
     EndUpdateViewBatch();
+    // make sure selection is in view
+    nsCOMPtr<nsISelectionController> selCon;
+    if (NS_SUCCEEDED(GetSelectionController(getter_AddRefs(selCon))) && selCon)
+      selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION);
+
     if (mSelState)
     {
       // we saved the selection state, but never got to hand it to placeholder 
@@ -2537,15 +2539,19 @@ nsEditor::GetRootElement(nsIDOMElement **aBodyElement)
 NS_IMETHODIMP
 nsEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 {
+  mAction = opID;
+  mDirection = aDirection;
   return NS_OK;
 }
 
 
 /** All editor operations which alter the doc should be followed
- *  with a call to EndOperation, naming the action and direction */
+ *  with a call to EndOperation */
 NS_IMETHODIMP
-nsEditor::EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
+nsEditor::EndOperation()
 {
+  mAction = nsnull;
+  mDirection = eNone;
   return NS_OK;
 }
 
@@ -5248,7 +5254,7 @@ nsEditor::SetShouldTxnSetSelection(PRBool aShould)
 
 
 NS_IMETHODIMP 
-nsEditor::DeleteSelectionImpl(EDirection aAction)
+nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
 {
   nsresult res;
 
