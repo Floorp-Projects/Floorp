@@ -29,6 +29,9 @@ REQUIRES	= xpcom \
 		  js \
 		  caps \
 		  xpconnect \
+		  content \
+		  widget \
+		  gfx \
 		  $(NULL)
 
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN

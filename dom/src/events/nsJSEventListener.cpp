@@ -43,6 +43,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
 #include "nsIXPConnect.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsGUIEvent.h"
 
 
 /*
@@ -87,7 +89,10 @@ nsresult nsJSEventListener::SetEventName(nsIAtom* aName)
 nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   jsval funval;
-  jsval argv[1];
+  jsval arg;
+  jsval *argv = &arg;
+  PRInt32 argc = 0;
+  void *stackPtr; // For JS_[Push|Pop]Arguments()
   nsAutoString eventString;
   // XXX This doesn't seem like the correct context on which to execute
   // the event handler. Might need to get one from the JS thread context
@@ -119,9 +124,8 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   // root
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
 
-  rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx),
-                       mObject, NS_GET_IID(nsISupports),
-                       getter_AddRefs(wrapper));
+  rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), mObject,
+                       NS_GET_IID(nsISupports), getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSObject* obj = nsnull;
@@ -139,20 +143,42 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  rv = xpc->WrapNative(cx, obj, aEvent, NS_GET_IID(nsIDOMEvent),
-                       getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (eventString.Equals(NS_LITERAL_STRING("onerror"))) {
+    nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
+    NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
 
-  JSObject *eventObj = nsnull;
-  rv = wrapper->GetJSObject(&eventObj);
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsScriptErrorEvent *event;
 
-  argv[0] = OBJECT_TO_JSVAL(eventObj);
+    priv->GetInternalNSEvent((nsEvent**)&event);
+
+    argv = ::JS_PushArguments(cx, &stackPtr, "WWi", event->errorMsg,
+                              event->fileName, event->lineNr);
+    NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
+
+    argc = 3;
+  } else {
+    rv = xpc->WrapNative(cx, obj, aEvent, NS_GET_IID(nsIDOMEvent),
+                         getter_AddRefs(wrapper));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JSObject *eventObj = nsnull;
+    rv = wrapper->GetJSObject(&eventObj);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    argv[0] = OBJECT_TO_JSVAL(eventObj);
+    argc = 1;
+  }
+
   PRBool jsBoolResult;
   PRBool returnResult = (mReturnResult == nsReturnResult_eReverseReturnResult);
 
-  rv = mContext->CallEventHandler(obj, JSVAL_TO_OBJECT(funval), 1, argv,
+  rv = mContext->CallEventHandler(obj, JSVAL_TO_OBJECT(funval), argc, argv,
                                   &jsBoolResult, returnResult);
+
+  if (argv != &arg) {
+    ::JS_PopArguments(cx, &stackPtr);
+  }
+
   if (NS_FAILED(rv)) {
     return rv;
   }

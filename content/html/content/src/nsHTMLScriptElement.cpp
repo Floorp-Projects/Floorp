@@ -50,6 +50,7 @@
 #include "nsIScriptLoaderObserver.h"
 #include "nsIScriptElement.h"
 #include "nsGUIEvent.h"
+#include "nsIURI.h"
 
 class nsHTMLScriptElement : public nsGenericHTMLContainerElement,
                             public nsIDOMHTMLScriptElement,
@@ -316,10 +317,23 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
     GetPresContext(this, getter_AddRefs(presContext)); 
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
+    nsScriptErrorEvent event;
     event.eventStructType = NS_EVENT;
 
     event.message = NS_SCRIPT_ERROR;
+
+    event.lineNr = aLineNo;
+
+    NS_NAMED_LITERAL_STRING(errorString, "Error loading script");
+    event.errorMsg = errorString.get();
+
+    nsXPIDLCString spec;
+    aURI->GetSpec(getter_Copies(spec));
+
+    NS_ConvertUTF8toUCS2 fileName(spec);
+
+    event.fileName = fileName.get();
+
     rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
                         &status);
   }

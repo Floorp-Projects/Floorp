@@ -33,6 +33,9 @@ REQUIRES	= xpcom \
 		  js \
 		  caps \
 		  xpconnect \
+		  content \
+		  widget \
+		  gfx \
 		  $(NULL)
 
 CPPSRCS =				\
