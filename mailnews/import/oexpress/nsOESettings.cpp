@@ -35,12 +35,16 @@
 #include "nsIImportSettings.h"
 #include "nsOESettings.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgCompCID.h"
+#include "nsISmtpService.h"
+#include "nsISmtpServer.h"
 
 #include "OEDebugLog.h"
 
 static NS_DEFINE_IID(kISupportsIID,        	NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,	NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kSmtpServiceCID,		NS_SMTPSERVICE_CID); 
 
 
 class OESettings {
@@ -56,6 +60,8 @@ public:
 	
 	static void SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc, HKEY hKey);
 	static PRBool IdentityMatches( nsIMsgIdentity *pIdent, const char *pName, const char *pServer, const char *pEmail, const char *pReply, const char *pUserName);
+
+	static void SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc, char *pServer, char *pUser);
 
 };
 
@@ -262,7 +268,7 @@ PRBool OESettings::DoImport( nsIMsgAccount **ppAccount)
 						if (DoPOP3Server( accMgr, subKey, (char *)pBytes, &anAccount)) {
 							popCount++;
 							accounts++;
-							if (ppAccount) {
+							if (ppAccount && anAccount) {
 								*ppAccount = anAccount;
 								NS_ADDREF( anAccount);
 							}
@@ -420,7 +426,6 @@ PRBool OESettings::IdentityMatches( nsIMsgIdentity *pIdent, const char *pName, c
 
 	char *	pIName = nsnull;
 	char *	pIEmail = nsnull;
-	char *	pIServer = nsnull;
 	char *	pIReply = nsnull;
 	
 	PRBool	result = PR_TRUE;
@@ -433,26 +438,20 @@ PRBool OESettings::IdentityMatches( nsIMsgIdentity *pIdent, const char *pName, c
 
 	nsresult rv = pIdent->GetFullName( &pIName);
 	rv = pIdent->GetEmail( &pIEmail);
-	rv = pIdent->GetSmtpHostname( &pIServer);
 	rv = pIdent->GetReplyTo( &pIReply);
 
 	// for now, if it's the same server and reply to and email then it matches
-	if (pServer && pIServer && !nsCRT::strcasecmp( pServer, pIServer)) {
-		if (pReply) {
-			if (!pIReply || nsCRT::strcasecmp( pReply, pIReply))
-				result = PR_FALSE;
-		}
-		if (pEmail) {
-			if (!pIEmail || nsCRT::strcasecmp( pEmail, pIEmail))
-				result = PR_FALSE;
-		}
+	if (pReply) {
+		if (!pIReply || nsCRT::strcasecmp( pReply, pIReply))
+			result = PR_FALSE;
 	}
-	else
-		result = PR_FALSE;
+	if (pEmail) {
+		if (!pIEmail || nsCRT::strcasecmp( pEmail, pIEmail))
+			result = PR_FALSE;
+	}
 
 	nsCRT::free( pIName);
 	nsCRT::free( pIEmail);
-	nsCRT::free( pIServer);
 	nsCRT::free( pIReply);
 
 	return( result);
@@ -468,71 +467,53 @@ void OESettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 	char *pUserName = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP User Name");
 
 	nsresult	rv;
-	
-	// Go ahead and add the default identity to the server if there is one?
-	nsCOMPtr<nsIMsgAccount>	acc;
-	rv = pMgr->GetDefaultAccount( getter_AddRefs( acc));
-	nsCOMPtr<nsIMsgIdentity> defIdent;
-	if (NS_SUCCEEDED( rv) && acc) {
-		rv = acc->GetDefaultIdentity( getter_AddRefs( defIdent));
-		if (NS_SUCCEEDED( rv) && defIdent) {
-			rv = pAcc->AddIdentity( defIdent);
-			rv = pAcc->SetDefaultIdentity( defIdent);
-		}
-	}
 
 	if (pEmail && pName && pServer) {
-		if (!IdentityMatches( defIdent, pName, pServer, pEmail, pReply, pUserName)) {
-			// Create a new identity
-			// First, find an existing identity
-			nsCOMPtr<nsISupportsArray>	idents;
-			rv = pMgr->GetAllIdentities( getter_AddRefs( idents));
-			PRUint32	cnt = 0;
-			if (idents)
-				idents->Count( &cnt);
-			nsISupports *	pSupports;
-			PRBool			match = PR_FALSE;
-			for (PRUint32 i = 0; (i < cnt) && !match; i++) {
-				pSupports = idents->ElementAt( i);
-				if (pSupports) {
-					nsCOMPtr<nsIMsgIdentity> ident( do_QueryInterface( pSupports));
-					NS_RELEASE( pSupports);
-					if (ident) {
-						if (IdentityMatches( ident, pName, pServer, pEmail, pReply, pUserName)) {
-							match = PR_TRUE;
-							rv = pAcc->AddIdentity( ident);
-							rv = pAcc->SetDefaultIdentity( ident);
-						}
-					}
-				}
-			}
-			if (!match) {
-				// The default identity, nor any other identities matched,
-				// create a new one and add it to the account.
-				nsCOMPtr<nsIMsgIdentity>	id;
-				rv = pMgr->CreateIdentity( getter_AddRefs( id));
-				if (id) {
-					id->SetFullName( pName);
-					id->SetIdentityName( pName);
-					id->SetEmail( pEmail);
-					if (pReply)
-						id->SetReplyTo( pReply);
-					id->SetSmtpHostname( pServer);
-					if (pUserName)
-						id->SetSmtpUsername( pUserName);
-					pAcc->AddIdentity( id);
-					pAcc->SetDefaultIdentity( id);
-				}
-			}
+		// The default identity, nor any other identities matched,
+		// create a new one and add it to the account.
+		nsCOMPtr<nsIMsgIdentity>	id;
+		rv = pMgr->CreateIdentity( getter_AddRefs( id));
+		if (id) {
+			id->SetFullName( pName);
+			id->SetIdentityName( pName);
+			id->SetEmail( pEmail);
+			if (pReply)
+				id->SetReplyTo( pReply);
+			pAcc->AddIdentity( id);
 		}
 	}
 	
+	SetSmtpServer( pMgr, pAcc, pServer, pUserName);
 
 	nsOERegUtil::FreeValueBytes( (BYTE *)pName);
 	nsOERegUtil::FreeValueBytes( (BYTE *)pServer);
 	nsOERegUtil::FreeValueBytes( (BYTE *)pEmail);
 	nsOERegUtil::FreeValueBytes( (BYTE *)pReply);
 	nsOERegUtil::FreeValueBytes( (BYTE *)pUserName);
+}
+
+void OESettings::SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc, char *pServer, char *pUser)
+{
+	nsresult	rv;
+
+/*
+	NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv); 
+	if (NS_SUCCEEDED(rv) && smtpService) {
+		nsCOMPtr<nsISmtpServer>		smtpServer;
+	
+		rv = smtpService->CreateSmtpServer( getter_AddRefs( smtpServer));
+		if (NS_SUCCEEDED( rv) && smtpServer) {
+			smtpServer->SetHostname( pServer);
+			smtpServer->SetUsername( pUser);
+		}
+ 	}
+*/
+       /*
+		nsXPIDLCString				hostName;
+        nsXPIDLCString				senderName;
+		smtpServer->GetHostname( getter_Copies(hostName));
+		smtpServer->GetUsername( getter_Copies(senderName));
+		*/
 }
 
 
