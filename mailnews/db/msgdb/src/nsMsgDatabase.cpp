@@ -3583,6 +3583,15 @@ NS_IMETHODIMP nsMsgDatabase::GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIM
   if (threadId != nsMsgKey_None)
     *result = GetThreadForThreadId(threadId);
   
+  // if we can't find the thread, try using the msg key as the thread id,
+  // because the msg hdr might not have the thread id set correctly
+  if (!*result) 
+  {
+    nsMsgKey msgKey;
+    NS_ASSERTION(PR_FALSE, "this shouldn't happen");
+    msgHdr->GetMessageKey(&msgKey);
+    *result = GetThreadForThreadId(msgKey);
+  }
   return (*result) ? NS_OK : NS_ERROR_FAILURE;
 }
 
