@@ -50,6 +50,7 @@ public:
   static nsIAtom* acceptcharset;
   static nsIAtom* accesskey;
   static nsIAtom* action;
+  static nsIAtom* afterPseudo;
   static nsIAtom* align;
   static nsIAtom* alink;
   static nsIAtom* alt;
@@ -59,6 +60,7 @@ public:
   static nsIAtom* axis;
 
   static nsIAtom* background;
+  static nsIAtom* beforePseudo;
   static nsIAtom* below;
   static nsIAtom* bgcolor;
   static nsIAtom* blockFrame;
