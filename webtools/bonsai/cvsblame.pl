@@ -47,8 +47,9 @@ sub cvsblame_pl_sillyness {
     $zz = %::lines_removed;
 };
 
-use Time::Local qw(timegm);         # timestamps
+use Time::Local qw(timegm);   # timestamps
 use Date::Format;             # human-readable dates
+use File::Basename;           # splits up paths into path, filename, suffix
 
 my $debug = 0;
 $::opt_m = 0 unless (defined($::opt_m));
@@ -544,9 +545,14 @@ sub parse_cvs_file {
     @::revision_map = ();
     CheckHidden($rcs_pathname);
 
-    die "$::progname: error: This file appeared to be under CVS control, " . 
-        "but the RCS file is inaccessible.\n(Couldn't open '$rcs_pathname')\n"
-            if !open (RCSFILE, "< $rcs_pathname");
+    if (!open(RCSFILE, "< $rcs_pathname")) {
+        my ($name, $path, $suffix) = fileparse($rcs_pathname);
+        my $deleted_pathname = "${path}Attic/$name$suffix";
+        die "$::progname: error: This file appeared to be under CVS control, " .
+            "but the RCS file is inaccessible.\n" .
+            "(Couldn't open '$rcs_pathname' or '$deleted_pathname').\n"
+          if !open(RCSFILE, "< $deleted_pathname");
+    }
     &parse_rcs_file();
     close(RCSFILE);
 
