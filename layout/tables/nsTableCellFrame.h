@@ -251,6 +251,10 @@ protected:
   void      MapHAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);
 
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
+  nsresult  DecorateForSelection(nsIPresContext* aPresContext,
+                                 nsIRenderingContext& aRenderingContext,
+                                 const nsStyleColor* aStyleColor);
+  const nsStyleColor * GetColorStyleFromSelection(const nsStyleColor *aStyleColor);
 
 protected:
 

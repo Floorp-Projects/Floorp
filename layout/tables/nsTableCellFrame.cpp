@@ -232,6 +232,129 @@ nsresult nsTableCellFrame::SetColIndex(PRInt32 aColIndex)
   return rv;
 }
 
+
+//ASSURE DIFFERENT COLORS for selection
+inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
+{
+    if (colorA == colorB)
+    {
+      nscolor res;
+      res = NS_RGB(NS_GET_R(colorA) ^ 0xff,
+                   NS_GET_G(colorA) ^ 0xff,
+                   NS_GET_B(colorA) ^ 0xff);
+      return res;
+    }
+    return colorA;
+}
+
+
+
+#ifdef OLD_TABLE_SELECTION      
+const nsStyleColor *
+nsTableCellFrame::GetColorStyleFromSelection(const nsStyleColor *aStyleColor)
+{
+  PRInt16 displaySelection;
+  const nsStyleColor *retval = aStyleColor;
+  displaySelection = DisplaySelection(aPresContext);
+  if (displaySelection) {
+    nsFrameState  frameState;
+    PRBool        isSelected;
+    GetFrameState(&frameState);
+    isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+    if (isSelected) {
+      nsCOMPtr<nsIPresShell> shell;
+      nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
+      if (NS_FAILED(result))
+        return result;
+      nsCOMPtr<nsIFrameSelection> frameSelection;
+      result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+      if (NS_SUCCEEDED(result)) {
+        PRBool tableCellSelectionMode;
+        result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
+        if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
+          frameSelection->GetTableCellSelectionStyleColor(&retval); 
+          if(displaySelection == nsISelectionController::SELECTION_DISABLED) {
+            ((nsStyleColor *)retval)->mBackgroundColor = NS_RGB(176,176,176);// disabled color
+          }
+          else {
+  	        nsILookAndFeel* look = nsnull;
+	          if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
+	            look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, ((nsStyleColor *)retval)->mBackgroundColor);
+	            NS_RELEASE(look);
+	          }
+          }
+        }
+      }
+    }
+  }
+  return retval;
+}
+#else //OLD_TABLE_SELECTION
+
+nsresult
+nsTableCellFrame::DecorateForSelection(nsIPresContext* aPresContext,
+                                       nsIRenderingContext& aRenderingContext,
+                                       const nsStyleColor *aStyleColor)
+{
+  PRInt16 displaySelection;
+  displaySelection = DisplaySelection(aPresContext);
+  if (displaySelection) {
+    nsFrameState  frameState;
+    PRBool        isSelected;
+    GetFrameState(&frameState);
+    isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+    if (isSelected) {
+      nsCOMPtr<nsIPresShell> shell;
+      nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
+      if (NS_FAILED(result))
+        return result;
+      nsCOMPtr<nsIFrameSelection> frameSelection;
+      result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+      if (NS_SUCCEEDED(result)) {
+        PRBool tableCellSelectionMode;
+        result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
+        if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
+          nscolor       bordercolor;
+          if(displaySelection == nsISelectionController::SELECTION_DISABLED) {
+            bordercolor = NS_RGB(176,176,176);// disabled color
+          }
+          else {
+  	        nsILookAndFeel* look = nsnull;
+	          if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
+	            look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, bordercolor);
+	            NS_RELEASE(look);
+	          }
+          }
+          float t2pfloat;
+          if (NS_SUCCEEDED(aPresContext->GetPixelsToTwips(&t2pfloat)))
+          {
+            PRInt16 t2p = (PRInt16)t2pfloat;
+            if ((mRect.width >(3*t2p)) && (mRect.height > (3*t2p)))
+            {
+              //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
+              bordercolor = EnsureDifferentColors(bordercolor, aStyleColor->mBackgroundColor);
+              //outerrounded
+              aRenderingContext.SetColor(bordercolor);
+              aRenderingContext.DrawLine(t2p, 0, mRect.width, 0);
+              aRenderingContext.DrawLine(0, t2p, 0, mRect.height);
+              aRenderingContext.DrawLine(t2p, mRect.height, mRect.width, mRect.height);
+              aRenderingContext.DrawLine(mRect.width, t2p, mRect.width, mRect.height);
+              //middle
+              aRenderingContext.DrawRect(t2p, t2p, mRect.width-t2p, mRect.height-t2p);
+              //shading
+              aRenderingContext.DrawLine(2*t2p, mRect.height-2*t2p, mRect.width-t2p, mRect.height- (2*t2p));
+              aRenderingContext.DrawLine(mRect.width - (2*t2p), 2*t2p, mRect.width - (2*t2p), mRect.height-t2p);
+            }
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+#endif //OLD_TABLE_SELECTION
+
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect,
@@ -243,51 +366,19 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
   }
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     if (disp->IsVisibleOrCollapsed()) {
-      const nsStyleColor* myColor =
-        (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-      //TABLECELL SELECTION
-      PRInt16 displaySelection;
-      displaySelection = DisplaySelection(aPresContext);
-      if (displaySelection) {
-        nsFrameState  frameState;
-        PRBool        isSelected;
-        GetFrameState(&frameState);
-        isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-        if (isSelected) {
-          nsCOMPtr<nsIPresShell> shell;
-          nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
-          if (NS_FAILED(result))
-            return result;
-          nsCOMPtr<nsIFrameSelection> frameSelection;
-          result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
-          if (NS_SUCCEEDED(result)) {
-            PRBool tableCellSelectionMode;
-            result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
-            if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
-              frameSelection->GetTableCellSelectionStyleColor(&myColor); 
-              if(displaySelection==nsISelectionController::SELECTION_DISABLED) {
-                ((nsStyleColor *)myColor)->mBackgroundColor = NS_RGB(176,176,176);// disabled color
-              }
-              else {
-  	            nsILookAndFeel* look = nsnull;
-	              if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
-	                look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, ((nsStyleColor *)myColor)->mBackgroundColor);//VERY BAD CAST..TEMPORARY
-	                NS_RELEASE(look);
-	              }
-              }
-            }
-          }
-        }
-      }
-//END SELECTION
+
+      const nsStyleColor* myColor = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+#ifdef OLD_TABLE_SELECTION
+      myColor = GetColorStyleFromSelection(myColor);
+#endif
 
       const nsStyleBorder* myBorder =
         (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
       NS_ASSERTION(nsnull!=myColor, "bad style color");
       NS_ASSERTION(nsnull!=myBorder, "bad style spacing");
+
 
       const nsStyleTable* cellTableStyle;
       GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)cellTableStyle)); 
@@ -313,6 +404,9 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
           }
         }
       }
+#ifndef OLD_TABLE_SELECTION
+      DecorateForSelection(aPresContext, aRenderingContext,myColor); //ignore return value
+#endif //OLD_TABLE_SELECTION
     }
   }
 
