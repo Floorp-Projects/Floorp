@@ -126,6 +126,9 @@ private:
 
 	PRInt32 ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line);
 
+    void UpdateStatus(PRInt32 aStatusID);
+    void UpdateStatusWithString(PRUnichar * aStatusString);
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Protocol Methods --> This protocol is state driven so each protocol method is 
 	//						designed to re-act to the current "state". I've attempted to 

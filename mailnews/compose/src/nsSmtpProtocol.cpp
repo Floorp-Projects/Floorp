@@ -25,7 +25,7 @@
 #include "nsIMsgHeaderParser.h"
 #include "nsFileStream.h"
 #include "nsIMsgMailNewsUrl.h"
-
+#include "nsMsgComposeStringBundle.h"
 #include "nsMsgBaseCID.h"
 
 #include "prtime.h"
@@ -338,6 +338,22 @@ PRInt32 nsSmtpProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, 
 	if (line)
 		*line = m_dataBuf;
 	return numBytesRead;
+}
+
+void nsSmtpProtocol::UpdateStatus(PRInt32 aStatusID)
+{
+	if (m_statusFeedback)
+	{
+		PRUnichar * statusString = ComposeGetStringByID(aStatusID);
+		UpdateStatusWithString(statusString);
+		nsCRT::free(statusString);
+	}
+}
+
+void nsSmtpProtocol::UpdateStatusWithString(PRUnichar * aStatusString)
+{
+	if (m_statusFeedback && aStatusString)
+		m_statusFeedback->ShowStatusString(aStatusString);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -970,9 +986,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
     m_nextState = SMTP_SEND_POST_DATA;
     ClearFlag(SMTP_PAUSE_FOR_READ);   /* send data directly */
 
-#ifdef UNREADY_CODE
-	NET_Progress(CE_WINDOW_ID, XP_GetString(MK_MSG_DELIV_MAIL));
-#endif /* UNREADY_CODE */
+    UpdateStatus(SMTP_DELIV_MAIL);
 
 #ifdef UNREADY_CODE
 	/* get the size of the message */
@@ -1114,13 +1128,10 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 	// always issue a '.' and CRLF when we are done...
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 	SendData(url, CRLF "." CRLF);
-#ifdef UNREADY_CODE
-		NET_Progress(CE_WINDOW_ID,
-					XP_GetString(XP_MESSAGE_SENT_WAITING_MAIL_REPLY));
-#endif /* UNREADY_CODE */
-        m_nextState = SMTP_RESPONSE;
-        m_nextStateAfterResponse = SMTP_SEND_MESSAGE_RESPONSE;
-        return(0);
+    UpdateStatus(SMTP_MESSAGE_SENT_WAITING_MAIL_REPLY);
+    m_nextState = SMTP_RESPONSE;
+    m_nextStateAfterResponse = SMTP_SEND_MESSAGE_RESPONSE;
+    return(0);
 }
 
 PRInt32 nsSmtpProtocol::SendPostData()
@@ -1179,10 +1190,9 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
         return(MK_ERROR_SENDING_MESSAGE);
 	}
 
-#ifdef UNREADY_CODE
-	NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_MAILSENT));
-#endif
-	/* else */
+    UpdateStatus(SMTP_PROGRESS_MAILSENT);
+
+    /* else */
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 	SendData(url, "quit"CRLF); // send a quit command to close the connection with the server.
 	m_nextState = SMTP_DONE;
