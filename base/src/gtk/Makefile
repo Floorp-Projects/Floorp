@@ -17,15 +17,14 @@
 
 DEPTH		= ../../..
 
-LIBRARY_NAME	= gmbaseunix
+LIBRARY_NAME	= gmbasegtk
 
 MODULE		= raptor
 
-REQUIRES	= xpcom raptor 
+REQUIRES	= xpcom raptor
 
-DEFINES		= -D_IMPL_NS_WIDGET 
+DEFINES		= -D_IMPL_NS_WIDGET
 
 CPPSRCS		= nsTimer.cpp
 
 include $(DEPTH)/config/rules.mk
-
