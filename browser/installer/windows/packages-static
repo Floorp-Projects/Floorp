@@ -106,6 +106,7 @@ bin\components\mozbrwsr.xpt
 bin\components\necko.xpt
 bin\components\mimetype.xpt
 bin\components\necko_cache.xpt
+bin\components\necko_cookie.xpt
 bin\components\necko_strconv.xpt
 bin\components\necko_about.xpt
 bin\components\necko_data.xpt
