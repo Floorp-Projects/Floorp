@@ -106,4 +106,5 @@
 #define NS_APP_NEWS_50_DIR                      "NewsD"
 #define NS_APP_MESSENGER_FOLDER_CACHE_50_DIR    "MFCaD"
 
+#define NS_APP_INSTALL_CLEANUP_DIR              "XPIClnupD"  //location of xpicleanup.dat xpicleanup.exe 
 #endif

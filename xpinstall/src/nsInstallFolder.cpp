@@ -175,12 +175,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                          do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
                 if (!directoryService) return;
 
-                directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mFileSpec));
-#ifdef XP_MAC
-                mFileSpec->Append("Plug-ins");
-#else
-                mFileSpec->Append("plugins");
-#endif
+                directoryService->Get(NS_APP_PLUGINS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mFileSpec));
             }
             else
             {
@@ -188,11 +183,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
 
                 if (NS_SUCCEEDED(rv))
                 {
-#ifdef XP_MAC
-                    mFileSpec->Append("Plug-ins");
-#else
-                    mFileSpec->Append("plugins");
-#endif
+                    mFileSpec->Append(INSTALL_PLUGINS_DIR);
                 }
                 else
                     mFileSpec = nsnull;
@@ -285,18 +276,9 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                 nsCOMPtr<nsIProperties> directoryService = 
                          do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
                 if (!directoryService) return;
-                directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, 
+                directoryService->Get(NS_XPCOM_COMPONENT_DIR, 
                                        NS_GET_IID(nsIFile), 
                                        getter_AddRefs(mFileSpec));
-
-                if (NS_SUCCEEDED(rv))
-                {
-#ifdef XP_MAC
-                    mFileSpec->Append("Components");
-#else
-                    mFileSpec->Append("components");
-#endif
-                }
             }
             else
             {
@@ -304,11 +286,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
 
                 if (NS_SUCCEEDED(rv))
                 {
-#ifdef XP_MAC
-                    mFileSpec->Append("Components");
-#else
-                    mFileSpec->Append("components");
-#endif
+                    mFileSpec->Append(INSTALL_COMPONENTS_DIR);
                 }
                 else
                   mFileSpec = nsnull;
@@ -321,19 +299,9 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                 nsCOMPtr<nsIProperties> directoryService = 
                          do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
                 if (!directoryService) return;
-                directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, 
+                directoryService->Get(NS_APP_CHROME_DIR, 
                                        NS_GET_IID(nsIFile), 
                                        getter_AddRefs(mFileSpec));
-
-
-                if (NS_SUCCEEDED(rv))
-                {
-#ifdef XP_MAC
-                    mFileSpec->Append("Chrome");
-#else
-                    mFileSpec->Append("chrome");
-#endif
-                }
             }
             else
             {
@@ -341,11 +309,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
 
                 if (NS_SUCCEEDED(rv))
                 {
-#ifdef XP_MAC
-                    mFileSpec->Append("Chrome");
-#else
-                    mFileSpec->Append("chrome");
-#endif
+                    mFileSpec->Append(INSTALL_CHROME_DIR);
                 }
             }
             break;

@@ -61,6 +61,7 @@
 
 #if defined(XP_MAC) /* || defined(XP_MACOSX) REMIND HACKING FOR MACOS X!!! */
 #define APP_REGISTRY_NAME "Application Registry"
+#define ESSENTIAL_FILES   "Essential Files"
 #elif defined(XP_WIN) || defined(XP_OS2)
 #define APP_REGISTRY_NAME "registry.dat"
 #else
@@ -204,7 +205,17 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativePath(SEARCH_DIR_NAME);
     }
- 
+    else if (nsCRT::strcmp(prop, NS_APP_INSTALL_CLEANUP_DIR) == 0)
+    {   
+        // This is cloned so that embeddors will have a hook to override
+        // with their own cleanup dir.  See bugzilla bug #105087 
+        rv = CloneMozBinDirectory(getter_AddRefs(localFile));
+#ifdef XP_MAC
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(ESSENTIAL_FILES);
+#endif
+
+    } 
 
     if (localFile && NS_SUCCEEDED(rv))
         return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);

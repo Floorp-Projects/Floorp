@@ -1137,15 +1137,12 @@ static nsresult VerifyInstallation(int argc, char **argv)
            do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return NS_OK;
-  rv = directoryService->Get(NS_OS_CURRENT_PROCESS_DIR,
+  rv = directoryService->Get(NS_APP_INSTALL_CLEANUP_DIR,
                              NS_GET_IID(nsIFile),
                              getter_AddRefs(registryFile));
   if (NS_FAILED(rv) || !registryFile)
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
-#ifdef XP_MAC
-  registryFile->Append(ESSENTIAL_FILES);
-#endif
   registryFile->Append(CLEANUP_REGISTRY);
 
   PRBool exists;
