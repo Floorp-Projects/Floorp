@@ -239,6 +239,8 @@ if(verifyDiskSpace(fProgram, srDest))
 
     // register chrome
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/cookie/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/wallet/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/editor/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator/");

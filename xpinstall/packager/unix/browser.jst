@@ -24,6 +24,8 @@ if (verifyDiskSpace(communicatorFolder, srDest))
 
     var cf = getFolder("Chrome");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"toolkit.jar"),"content/global/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"comm.jar"),"content/cookie/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"comm.jar"),"content/wallet/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"comm.jar"),"content/communicator/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"comm.jar"),"content/editor/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"comm.jar"),"content/navigator/");
