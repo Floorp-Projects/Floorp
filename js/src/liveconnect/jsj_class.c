@@ -417,7 +417,7 @@ jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
     jsj_env = jsj_MapJavaThreadToJSJavaThreadState(jEnv, &err_msg);
     JS_ASSERT(jsj_env);
     if (!jsj_env)
-	return;
+        return;
 
     /* Get the JSContext that we're supposed to use for this Java thread */
     cx = jsj_env->cx;
@@ -439,11 +439,10 @@ jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
         } else {
             err_msg = JS_smprintf("Unable to find/create JavaScript execution "
                                   "context for JNI thread 0x%08x", jEnv);
-	    jsj_LogError(err_msg);
-	    free(err_msg);
+            jsj_LogError(err_msg);
+            free(err_msg);
             return;
         }
-        jsj_env->cx = cx;
     }
 
     if (java_class_reflections) {
@@ -465,10 +464,10 @@ jsj_GetJavaClassDescriptor(JSContext *cx, JNIEnv *jEnv, jclass java_class)
 #endif
 
     if (java_class_reflections) {
-		class_descriptor = JSJ_HashTableLookup(java_class_reflections,
-                                           (const void *)java_class,
-                                           (void*)jEnv);
-	}
+        class_descriptor = JSJ_HashTableLookup(java_class_reflections,
+                                               (const void *)java_class,
+                                               (void*)jEnv);
+    }
     if (!class_descriptor) {
         class_descriptor = new_class_descriptor(cx, jEnv, java_class);
 

@@ -755,7 +755,6 @@ jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
                                   "context for JNI thread 0x%08x", jEnv);
             goto error;
         }
-        jsj_env->cx = cx;
     }
     *cxp = cx;
 
