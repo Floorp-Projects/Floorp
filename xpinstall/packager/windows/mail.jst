@@ -1,3 +1,33 @@
+function registerProgramFolderKey(winreg, fFolderPath)
+{
+  var subkey;
+  var valname;
+  var value;
+  var err;
+
+  /* set the Program Folder Path in the Mozilla key in the Windows Registry */
+  subkey  = "SOFTWARE\\$CompanyName$";
+  winreg.createKey(subkey,"");
+
+  valname = "CurrentVersion";
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
+  winreg.createKey(subkey,"");
+
+  valname = "CurrentVersion";
+  value   = "$UserAgent$";
+  err     = winreg.setValueString(subkey, valname, value);
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
+  winreg.createKey(subkey,"");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+  winreg.createKey(subkey,"");
+
+  valname = "Program Folder Path";
+  value   = fFolderPath;
+  err     = winreg.setValueString(subkey, valname, value);
+}
+
 function createShortcuts() 
 {
   var subkey;
@@ -21,6 +51,7 @@ function createShortcuts()
   var fFolderPathStr;
   var is_winnt;
   var szCurrentVersion;
+  var restrictedAccess;
 
   winreg               = getWinRegistry();
   fWindows             = getFolder("Windows");
@@ -32,6 +63,18 @@ function createShortcuts()
   scFolderName         = "$ProductName$";
   if(winreg != null) 
   {
+    /* This will check to see if the user has restricted access or not.
+     * It checks to see if HKEY_LOCALMACHINE\SOFTWARE is writable.  If
+     * it is, then access is not restricted.  This is only used to
+     * determine which Desktop, Programs, and Start Menu folders
+     * are to used: common or per user
+     */
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+    if(winreg.isKeyWritable("SOFTWARE"))
+      restrictedAccess = false;
+    else
+      restrictedAccess = true;
+
     /* determine if the script is running under NT or not */
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
     subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
@@ -47,10 +90,10 @@ function createShortcuts()
       is_winnt = true;
     }
 
-    if(is_winnt == false)
+    logComment("is_winnt value: " + is_winnt);
+    logComment("restrictedAccess value: " + restrictedAccess);
+    if(!is_winnt || restrictedAccess)
     {
-      logComment("is_winnt is false: " + is_winnt);
-
       winreg.setRootKey(winreg.HKEY_CURRENT_USER);
       subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
       valname             = "Programs";
@@ -62,8 +105,6 @@ function createShortcuts()
     }
     else
     {
-      logComment("is_winnt is true: " + is_winnt);
-
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
       subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
       valname             = "Common Programs";
@@ -83,7 +124,6 @@ function createShortcuts()
     valname             = "Quick Launch";
     szFolderQuickLaunch = winreg.getValueString(subkey, valname);
 
-    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
     subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
     valname             = "Program Folder Path";
     fFolderPathStr      = winreg.getValueString(subkey, valname);
@@ -112,34 +152,20 @@ function createShortcuts()
 
     /* explicitly create the fFolderPath even though the windowsShortcut function creates the folder.
      * This is so that the folder creation gets logged for uninstall to remove it. */
-    File.dirCreate(fFolderPath);
+    if(!File.exists(fFolderPath))
+      File.dirCreate(fFolderPath);
 
     /* create the shortcuts */
     File.windowsShortcut(fileExe, fFolderPath, scExeDesc, fProgram, scParam, fileExe, 0);
 
-    /* set the Program Folder Path in the Mozilla key in the Windows Registry */
-    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-    subkey  = "SOFTWARE\\$CompanyName$";
-    winreg.createKey(subkey,"");
+    if(!restrictedAccess)
+    {
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      registerProgramFolderKey(winreg, fFolderPath);
+    }
 
-    valname = "CurrentVersion";
-    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
-    winreg.createKey(subkey,"");
-
-    valname = "CurrentVersion";
-    value   = "$UserAgent$";
-    err     = winreg.setValueString(subkey, valname, value);
-
-    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
-    winreg.createKey(subkey,"");
-
-    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
-    winreg.createKey(subkey,"");
-
-    valname = "Program Folder Path";
-    value   = fFolderPath;
-    err     = winreg.setValueString(subkey, valname, value);
-
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    registerProgramFolderKey(winreg, fFolderPath);
   }
   else
   {

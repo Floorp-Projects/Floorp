@@ -631,7 +631,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       else
         ShowWindow(hReadme, SW_SHOW);
 
-      SetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szDestinationDirectory);
+      SetDlgItemText(hDlg, IDC_DESTINATION, sgInstallGui.szDestinationDirectory);
       SetDlgItemText(hDlg, IDC_BUTTON_BROWSE, sgInstallGui.szBrowse_);
       SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
       SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);

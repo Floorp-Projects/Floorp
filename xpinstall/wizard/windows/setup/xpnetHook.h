@@ -24,6 +24,7 @@
 #define _XPNETHOOK_H_
 
 int WGet(char *szUrl,
+         char *szFile,
          char *szProxyServer,
          char *szProxyPort,
          char *szProxyUser,

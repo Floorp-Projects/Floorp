@@ -1,3 +1,33 @@
+function registerProgramFolderKey(winreg, fFolderPath)
+{
+  var subkey;
+  var valname;
+  var value;
+  var err;
+
+  /* set the Program Folder Path in the Mozilla key in the Windows Registry */
+  subkey  = "SOFTWARE\\$CompanyName$";
+  winreg.createKey(subkey,"");
+
+  valname = "CurrentVersion";
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
+  winreg.createKey(subkey,"");
+
+  valname = "CurrentVersion";
+  value   = "$UserAgent$";
+  err     = winreg.setValueString(subkey, valname, value);
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
+  winreg.createKey(subkey,"");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+  winreg.createKey(subkey,"");
+
+  valname = "Program Folder Path";
+  value   = fFolderPath;
+  err     = winreg.setValueString(subkey, valname, value);
+}
+
 function createShortcuts() 
 {
   var subkey;
@@ -48,10 +78,9 @@ function createShortcuts()
       is_winnt = true;
     }
 
-    if(is_winnt == false)
+    logComment("is_winnt value: " + is_winnt);
+    if(!is_winnt || restrictedAccess)
     {
-      logComment("is_winnt is false: " + is_winnt);
-
       winreg.setRootKey(winreg.HKEY_CURRENT_USER);
       subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
       valname             = "Programs";
@@ -63,8 +92,6 @@ function createShortcuts()
     }
     else
     {
-      logComment("is_winnt is true: " + is_winnt);
-
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
       subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
       valname             = "Common Programs";
@@ -84,7 +111,6 @@ function createShortcuts()
     valname             = "Quick Launch";
     szFolderQuickLaunch = winreg.getValueString(subkey, valname);
 
-    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
     subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
     valname             = "Program Folder Path";
     fFolderPathStr      = winreg.getValueString(subkey, valname);
@@ -113,42 +139,94 @@ function createShortcuts()
 
     /* explicitly create the fFolderPath even though the windowsShortcut function creates the folder.
      * This is so that the folder creation gets logged for uninstall to remove it. */
-    File.dirCreate(fFolderPath);
+    if(!File.exists(fFolderPath))
+      File.dirCreate(fFolderPath);
 
     /* create the shortcuts */
     File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc,     fProgram,  "",                 fileExe, 0);
     File.windowsShortcut(fileExe, fFolderPath,    scExeDesc,     fProgram,  "",                 fileExe, 0);
     File.windowsShortcut(fileExe, fFolderPath,    scProfileDesc, fProgram,  scProfileDescParam, fileExe, 0);
-//    File.windowsShortcut(fileExe, fFolderPath,    "Test Http",   "",             "",                 "http://sweetlou/products/client/temp/ssu", 0);
 
-    /* set the Program Folder Path in the Mozilla key in the Windows Registry */
-    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-    subkey  = "SOFTWARE\\$CompanyName$";
-    winreg.createKey(subkey,"");
+    if(!restrictedAccess)
+    {
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      registerProgramFolderKey(winreg, fFolderPath);
+    }
 
-    valname = "CurrentVersion";
-    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
-    winreg.createKey(subkey,"");
-
-    valname = "CurrentVersion";
-    value   = "$UserAgent$";
-    err     = winreg.setValueString(subkey, valname, value);
-
-    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
-    winreg.createKey(subkey,"");
-
-    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
-    winreg.createKey(subkey,"");
-
-    valname = "Program Folder Path";
-    value   = fFolderPath;
-    err     = winreg.setValueString(subkey, valname, value);
-
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    registerProgramFolderKey(winreg, fFolderPath);
   }
   else
   {
     logComment("winreg is null");
   }
+}
+
+function registerMainKeys(winreg)
+{
+  var subkey;  //the name of the subkey you are poking around in
+  var valname; //the name of the value you want to look at
+  var value;   //the data in the value you want to look at.
+  var err;
+
+  subkey  = "SOFTWARE\\$CompanyName$";
+  winreg.createKey(subkey,"");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
+  winreg.createKey(subkey,"");
+  valname = "CurrentVersion";
+  value   = "$UserAgent$";
+  err     = winreg.setValueString(subkey, valname, value);
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
+  winreg.createKey(subkey,"");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+  winreg.createKey(subkey,"");
+
+  valname = "Install Directory";
+  value   = fProgram;
+  err     = winreg.setValueString(subkey, valname, value);
+
+  // The following keys are required to be created to supply information
+  // about the location of the Gecko Embedded Client to 3rd party apps.
+  // "SOFTWARE\\Mozilla" must not be localized!
+  subkey  = "SOFTWARE\\Mozilla\\$ProductName$ $UserAgentShort$";
+  winreg.createKey(subkey,"");
+
+  subkey  = "SOFTWARE\\Mozilla\\$ProductName$ $UserAgentShort$\\Extensions";
+  winreg.createKey(subkey,"");
+
+  valname = "Components";
+  value   = fProgram + "Components";
+  err     = winreg.setValueString(subkey, valname, value);
+
+  valname = "Plugins";
+  value   = fProgram + "Plugins";
+  err     = winreg.setValueString(subkey, valname, value);
+
+  // We need to set HKEY...\Software\Mozilla\Seamonkey\[ua]\Main
+  // because Sun's Java installer keys off of this key to locate mozilla's
+  // installation directory and populate it with java plugins.
+  // "SOFTWARE\\Mozilla\Seamonkey" must not be localized!
+  subkey  = "SOFTWARE\\Mozilla";
+  winreg.createKey(subkey,"");
+
+  subkey  = "SOFTWARE\\Mozilla\\Seamonkey";
+  winreg.createKey(subkey,"");
+  valname = "CurrentVersion";
+  value   = "$UserAgent$";
+  err     = winreg.setValueString(subkey, valname, value);
+
+  subkey  = "SOFTWARE\\Mozilla\\Seamonkey\\$UserAgent$";
+  winreg.createKey(subkey,"");
+
+  subkey  = "SOFTWARE\\Mozilla\\Seamonkey\\$UserAgent$\\Main";
+  winreg.createKey(subkey,"");
+
+  valname = "Install Directory";
+  value   = fProgram;
+  err     = winreg.setValueString(subkey, valname, value);
 }
 
 function updateWinReg()
@@ -158,64 +236,44 @@ function updateWinReg()
   // subkeys have to exist before values can be put in.
   var winreg = getWinRegistry();
   var subkey;  //the name of the subkey you are poking around in
-  var valname; // the name of the value you want to look at
+  var valname; //the name of the value you want to look at
   var value;   //the data in the value you want to look at.
+  var err;
 
   if(winreg != null) 
   {
+    /* This will check to see if the user has restricted access or not.
+     * It checks to see if HKEY_LOCALMACHINE\SOFTWARE is writable.  If
+     * it is, then access is not restricted.  This is only used to
+     * determine which Desktop, Programs, and Start Menu folders
+     * are to used: common or per user
+     */
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-    subkey  = "SOFTWARE\\$CompanyName$";
-    winreg.createKey(subkey,"");
+    if(winreg.isKeyWritable("SOFTWARE"))
+      restrictedAccess = false;
+    else
+      restrictedAccess = true;
 
-    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
-    winreg.createKey(subkey,"");
-    valname = "CurrentVersion";
-    value   = "$UserAgent$";
-    err     = winreg.setValueString(subkey, valname, value);
+    logComment("restrictedAccess value: " + restrictedAccess);
+    if(!restrictedAccess)
+    {
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      registerMainKeys(winreg);
 
-    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
-    winreg.createKey(subkey,"");
+      // set the App Paths key here
+      subkey  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\$MainExeFile$";
+      winreg.createKey(subkey,"");
+      valname = "";
+      value   = fProgram + "$MainExeFile$";
+      err     = winreg.setValueString(subkey, valname, value);
 
-    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
-    winreg.createKey(subkey,"");
-    valname = "Install Directory";
-    value   = fProgram;
-    err     = winreg.setValueString(subkey, valname, value);
+      valname = "Path";
+      value   = fProgram;
+      err     = winreg.setValueString(subkey, valname, value);
+    }
 
-    // set the App Paths key here
-    subkey  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\$MainExeFile$";
-    winreg.createKey(subkey,"");
-    valname = "";
-    value   = fProgram + "$MainExeFile$";
-    err     = winreg.setValueString(subkey, valname, value);
-
-    valname = "Path";
-    value   = fProgram;
-    err     = winreg.setValueString(subkey, valname, value);
-
-
-    // We need to set HKEY_LOCAL_MACHINE\Software\Mozilla\Seamonkey\[ua]\Main
-    // because Sun's Java installer keys off of this key to locate mozilla's
-    // installation directory and populate it with java plugins.
-    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-    subkey  = "SOFTWARE\\Mozilla";
-    winreg.createKey(subkey,"");
-
-    subkey  = "SOFTWARE\\Mozilla\\Seamonkey";
-    winreg.createKey(subkey,"");
-    valname = "CurrentVersion";
-    value   = "$UserAgent$";
-    err     = winreg.setValueString(subkey, valname, value);
-
-    subkey  = "SOFTWARE\\Mozilla\\Seamonkey\\$UserAgent$";
-    winreg.createKey(subkey,"");
-
-    subkey  = "SOFTWARE\\Mozilla\\Seamonkey\\$UserAgent$\\Main";
-    winreg.createKey(subkey,"");
-    valname = "Install Directory";
-    value   = fProgram;
-    err     = winreg.setValueString(subkey, valname, value);
-
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    registerMainKeys(winreg);
   }
 }
 
@@ -228,6 +286,7 @@ var fWindowsSystem;
 var fileComponentRegStr;
 var fileComponentReg;
 var fileMozCtlx;
+var restrictedAccess;
 
 $Ren8dot3List$
 

@@ -85,6 +85,7 @@ HRESULT     ProcessSetVersionRegistry(DWORD dwTiming, char *szSectionPrefix);
 char        *BuildNumberedString(DWORD dwIndex, char *szInputStringPrefix, char *szInputString, char *szOutBuf, DWORD dwOutBufSize);
 void        GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShortSize);
 void        CleanupPreviousVersionRegKeys(void);
+DWORD       ParseRestrictedAccessKey(LPSTR szKey);
 
 #endif /* _IFUNCNS_H_ */
 

@@ -62,6 +62,8 @@ char *ArchiveExtensions[] = {"zip",
                              "jar",
                              ""};
 
+#define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
+
 typedef struct structVer
 {
   ULONGLONG ullMajor;
@@ -232,12 +234,55 @@ void Delay(DWORD dwSeconds)
   SleepEx(dwSeconds * 1000, FALSE);
 }
 
+BOOL VerifyRestrictedAccess(void)
+{
+  char  szSubKey[MAX_BUF];
+  char  szSubKeyToTest[] = "Software\\%s - Test Key";
+  BOOL  bRv;
+  DWORD dwDisp = 0;
+  DWORD dwErr;
+  HKEY  hkRv;
+
+  wsprintf(szSubKey, szSubKeyToTest, sgProduct.szCompanyName);
+  dwErr = RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                         szSubKey,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         KEY_WRITE,
+                         NULL,
+                         &hkRv,
+                         &dwDisp);
+  if(dwErr == ERROR_SUCCESS)
+  {
+    RegCloseKey(hkRv);
+    switch(dwDisp)
+    {
+      case REG_CREATED_NEW_KEY:
+        RegDeleteKey(HKEY_LOCAL_MACHINE, szSubKey);
+        break;
+
+      case REG_OPENED_EXISTING_KEY:
+        break;
+    }
+    bRv = FALSE;
+  }
+  else
+    bRv = TRUE;
+
+  return(bRv);
+}
+
 void UnsetDownloadState(void)
 {
   char szKey[MAX_BUF_TINY];
 
-  wsprintf(szKey, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductName, sgProduct.szUserAgent);
-  DeleteWinRegValue(HKEY_LOCAL_MACHINE, szKey, "Setup State");
+  wsprintf(szKey,
+           SETUP_STATE_REG_KEY,
+           sgProduct.szCompanyName,
+           sgProduct.szProductName,
+           sgProduct.szUserAgent);
+  DeleteWinRegValue(HKEY_CURRENT_USER, szKey, "Setup State");
 }
 
 void SetDownloadState(void)
@@ -245,14 +290,18 @@ void SetDownloadState(void)
   char szKey[MAX_BUF_TINY];
   char szValue[MAX_BUF_TINY];
 
-  wsprintf(szKey, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductName, sgProduct.szUserAgent);
+  wsprintf(szKey,
+           SETUP_STATE_REG_KEY,
+           sgProduct.szCompanyName,
+           sgProduct.szProductName,
+           sgProduct.szUserAgent);
   lstrcpy(szValue, "downloading");
 
-  SetWinReg(HKEY_LOCAL_MACHINE, szKey, TRUE, "Setup State", TRUE,
-            REG_SZ, szValue, lstrlen(szValue), FALSE, FALSE);
+  SetWinReg(HKEY_CURRENT_USER, szKey, TRUE, "Setup State", TRUE,
+            REG_SZ, szValue, lstrlen(szValue), TRUE, FALSE);
 }
 
-BOOL CheckForPreviousUnfinishedDownload()
+BOOL CheckForPreviousUnfinishedDownload(void)
 {
   char szBuf[MAX_BUF_TINY];
   char szKey[MAX_BUF_TINY];
@@ -263,11 +312,11 @@ BOOL CheckForPreviousUnfinishedDownload()
      sgProduct.szUserAgent)
   {
     wsprintf(szKey,
-             "Software\\%s\\%s\\%s",
+             SETUP_STATE_REG_KEY,
              sgProduct.szCompanyName,
              sgProduct.szProductName,
              sgProduct.szUserAgent);
-    GetWinReg(HKEY_LOCAL_MACHINE, szKey, "Setup State", szBuf, sizeof(szBuf));
+    GetWinReg(HKEY_CURRENT_USER, szKey, "Setup State", szBuf, sizeof(szBuf));
     if(lstrcmpi(szBuf, "downloading") == 0)
       bRv = TRUE;
   }
@@ -280,11 +329,11 @@ void UnsetSetupCurrentDownloadFile(void)
   char szKey[MAX_BUF];
 
   wsprintf(szKey,
-           "Software\\%s\\%s\\%s",
+           SETUP_STATE_REG_KEY,
            sgProduct.szCompanyName,
            sgProduct.szProductName,
            sgProduct.szUserAgent);
-  DeleteWinRegValue(HKEY_LOCAL_MACHINE,
+  DeleteWinRegValue(HKEY_CURRENT_USER,
                     szKey,
                     "Setup Current Download");
 }
@@ -294,11 +343,11 @@ void SetSetupCurrentDownloadFile(char *szCurrentFilename)
   char szKey[MAX_BUF];
 
   wsprintf(szKey,
-           "Software\\%s\\%s\\%s",
+           SETUP_STATE_REG_KEY,
            sgProduct.szCompanyName,
            sgProduct.szProductName,
            sgProduct.szUserAgent);
-  SetWinReg(HKEY_LOCAL_MACHINE,
+  SetWinReg(HKEY_CURRENT_USER,
             szKey,
             TRUE,
             "Setup Current Download",
@@ -306,7 +355,7 @@ void SetSetupCurrentDownloadFile(char *szCurrentFilename)
             REG_SZ,
             szCurrentFilename,
             lstrlen(szCurrentFilename),
-            FALSE,
+            TRUE,
             FALSE);
 }
 
@@ -324,11 +373,11 @@ char *GetSetupCurrentDownloadFile(char *szCurrentDownloadFile,
      sgProduct.szUserAgent)
   {
     wsprintf(szKey,
-             "Software\\%s\\%s\\%s",
+             SETUP_STATE_REG_KEY,
              sgProduct.szCompanyName,
              sgProduct.szProductName,
              sgProduct.szUserAgent);
-    GetWinReg(HKEY_LOCAL_MACHINE,
+    GetWinReg(HKEY_CURRENT_USER,
               szKey,
               "Setup Current Download", 
               szCurrentDownloadFile,
@@ -1617,6 +1666,7 @@ long RetrieveArchives()
     if(bDownloadTriggered)
       LogISDownloadStatus("ok", NULL);
 
+    UnsetSetupCurrentDownloadFile();
     UnsetDownloadState();
   }
   else if(bDownloadTriggered)
@@ -4355,7 +4405,7 @@ void DeInitDSNode(dsN **dsnComponentDSRequirement)
     DsNodeDelete(&dsNTemp);
     dsNTemp = (*dsnComponentDSRequirement)->Prev;
   }
-  DsNodeDelete(&dsNTemp);
+  DsNodeDelete(dsnComponentDSRequirement);
 }
 
 BOOL ResolveComponentDependency(siCD *siCDInDependency)
@@ -5140,6 +5190,49 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szBuf, "TRUE") == 0)
     sgProduct.bLockPath = TRUE;
   
+  gbRestrictedAccess = VerifyRestrictedAccess();
+  if(gbRestrictedAccess)
+  {
+    /* Detected user does not have the appropriate
+     * privileges on this system */
+    char szTitle[MAX_BUF_TINY];
+    int  iRvMB;
+
+    switch(sgProduct.dwMode)
+    {
+      case NORMAL:
+        if(!GetPrivateProfileString("Messages", "MB_WARNING_STR", "", szBuf, sizeof(szBuf), szFileIniInstall))
+          lstrcpy(szTitle, "Setup");
+        else
+          wsprintf(szTitle, szBuf, sgProduct.szProductName);
+
+        GetPrivateProfileString("Strings", "Message NORMAL Restricted Access", "", szBuf, sizeof(szBuf), szFileIniConfig);
+        iRvMB = MessageBox(hWndMain, szBuf, szTitle, MB_YESNO | MB_ICONEXCLAMATION | MB_DEFBUTTON2);
+        break;
+
+      case AUTO:
+        ShowMessage(szMsgInitSetup, FALSE);
+        GetPrivateProfileString("Strings", "Message AUTO Restricted Access", "", szBuf, sizeof(szBuf), szFileIniConfig);
+        ShowMessage(szBuf, TRUE);
+        Delay(5);
+        ShowMessage(szBuf, FALSE);
+        iRvMB = IDNO;
+        break;
+
+      default:
+        iRvMB = IDNO;
+        break;
+    }
+
+    if(iRvMB == IDNO)
+    {
+      /* User chose not to continue with the lack of
+       * appropriate access privileges */
+      PostQuitMessage(1);
+      return(1);
+    }
+  }
+
   /* get main install path */
   if(LocatePreviousPath("Locate Previous Product Path", szPreviousPath, sizeof(szPreviousPath)) == FALSE)
   {
@@ -5530,6 +5623,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
         GetPrivateProfileString("Strings", "Message Unfinished Download Restart", "", szBuf, sizeof(szBuf), szFileIniConfig);
         if(MessageBox(hWndMain, szBuf, szTitle, MB_YESNO | MB_ICONQUESTION) == IDNO)
         {
+          UnsetSetupCurrentDownloadFile();
           UnsetDownloadState(); /* unset the download state so that the archives can be deleted */
           DeleteArchives(DA_ONLY_IF_NOT_IN_ARCHIVES_LST);
         }
@@ -5868,6 +5962,18 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
     else
     {
       GetWinReg(HKEY_LOCAL_MACHINE, szWRMSShellFolders, "Common Startup", szVariable, dwVariableSize);
+    }
+  }
+  else if(lstrcmpi(szVariable, "PROGRAMS") == 0)
+  {
+    /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu\\Programs" directory */
+    if((gSystemInfo.dwOSType & OS_WIN9x) || gbRestrictedAccess)
+    {
+      GetWinReg(HKEY_CURRENT_USER, szWRMSShellFolders, "Programs", szVariable, dwVariableSize);
+    }
+    else
+    {
+      GetWinReg(HKEY_LOCAL_MACHINE, szWRMSShellFolders, "Common Programs", szVariable, dwVariableSize);
     }
   }
   else if(lstrcmpi(szVariable, "COMMON_PROGRAMS") == 0)
@@ -6324,6 +6430,24 @@ BOOL NeedReboot()
      return(diReboot.dwShowDialog);
 }
 
+BOOL DeleteWGetLog(void)
+{
+  char  szFile[MAX_BUF];
+  BOOL  bFileExists = FALSE;
+
+  ZeroMemory(szFile, sizeof(szFile));
+
+  lstrcpy(szFile, szTempDir);
+  AppendBackSlash(szFile, sizeof(szFile));
+  lstrcat(szFile, FILE_WGET_LOG);
+
+  if(FileExists(szFile))
+    bFileExists = TRUE;
+
+  DeleteFile(szFile);
+  return(bFileExists);
+}
+
 BOOL DeleteIdiGetConfigIni()
 {
   char  szFileIdiGetConfigIni[MAX_BUF];
@@ -6529,9 +6653,14 @@ void DeInitialize()
     if((szPartialEscapedURL = nsEscape(gErrorMessageStream.szMessage,
                                        url_Path)) != NULL)
     {
+      char  szWGetLog[MAX_BUF];
       char  szMsg[MAX_BUF];
       char  *szFullURL = NULL;
       DWORD dwSize;
+
+      lstrcpy(szWGetLog, szTempDir);
+      AppendBackSlash(szWGetLog, sizeof(szWGetLog));
+      lstrcat(szWGetLog, FILE_WGET_LOG);
 
       /* take into account '?' and '\0' chars */
       dwSize = lstrlen(gErrorMessageStream.szURL) +
@@ -6564,20 +6693,26 @@ void DeInitialize()
                         szConfirmationMessage,
                         sgProduct.szProductName,
                         MB_OKCANCEL | MB_ICONQUESTION) == IDOK)
-            // PrintError(szMsg, ERROR_CODE_HIDE);
+          {
+            //PrintError(szMsg, ERROR_CODE_HIDE);
             WGet(szFullURL,
+                 szWGetLog,
                  diAdvancedSettings.szProxyServer,
                  diAdvancedSettings.szProxyPort,
                  diAdvancedSettings.szProxyUser,
                  diAdvancedSettings.szProxyPasswd);
+          }
         }
         else if(!gErrorMessageStream.bShowConfirmation)
+        {
           //PrintError(szMsg, ERROR_CODE_HIDE);
           WGet(szFullURL,
+               szWGetLog,
                diAdvancedSettings.szProxyServer,
                diAdvancedSettings.szProxyPort,
                diAdvancedSettings.szProxyUser,
                diAdvancedSettings.szProxyPasswd);
+        }
 
         FreeMemory(&szFullURL);
       }
@@ -6601,6 +6736,7 @@ void DeInitialize()
   if(hbmpBoxUnChecked)
     DeleteObject(hbmpBoxUnChecked);
 
+  DeleteWGetLog();
   CleanTempFiles();
   DirectoryRemove(szTempDir, FALSE);
 

@@ -105,6 +105,126 @@ WinRegSetRootKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
 
 //
+// Native method KeyExists
+//
+PR_STATIC_CALLBACK(JSBool)
+WinRegKeyExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsWinReg *nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
+  PRInt32 nativeRet;
+  nsAutoString b0;
+
+  *rval = JSVAL_FALSE;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  if(argc >= 1)
+  {
+    //  public int keyExists ( String subKey );
+
+    ConvertJSValToStr(b0, cx, argv[0]);
+
+    if(NS_OK != nativeThis->KeyExists(b0, &nativeRet))
+    {
+      return JS_FALSE;
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+  else
+  {
+    JS_ReportError(cx, "WinReg.KeyExists() parameters error");
+  }
+
+  return JS_TRUE;
+}
+
+//
+// Native method ValueExists
+//
+PR_STATIC_CALLBACK(JSBool)
+WinRegValueExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsWinReg *nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
+  PRInt32 nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_FALSE;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  if(argc >= 2)
+  {
+    //  public int valueExists ( String subKey,
+    //                           String value );
+
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
+
+    if(NS_OK != nativeThis->ValueExists(b0, b1, &nativeRet))
+    {
+      return JS_FALSE;
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+  else
+  {
+    JS_ReportError(cx, "WinReg.ValueExists() parameters error");
+  }
+
+  return JS_TRUE;
+}
+
+//
+// Native method IsKeyWritable
+//
+PR_STATIC_CALLBACK(JSBool)
+WinRegIsKeyWritable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsWinReg *nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
+  PRInt32 nativeRet;
+  nsAutoString b0;
+
+  *rval = JSVAL_FALSE;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  if(argc >= 1)
+  {
+    //  public int isKeyWritable ( String subKey );
+
+    ConvertJSValToStr(b0, cx, argv[0]);
+
+    if(NS_OK != nativeThis->IsKeyWritable(b0, &nativeRet))
+    {
+      return JS_FALSE;
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+  else
+  {
+    JS_ReportError(cx, "WinReg.IsKeyWritable() parameters error");
+  }
+
+  return JS_TRUE;
+}
+
+//
 // Native method CreateKey
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -330,7 +450,6 @@ WinRegSetValueNumber(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
-//  nsAutoString b2;
   PRInt32      ib2;
 
   *rval = JSVAL_NULL;
@@ -353,7 +472,6 @@ WinRegSetValueNumber(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     if(JSVAL_IS_INT(argv[2])) 
     {
       ib2 = JSVAL_TO_INT(argv[2]);
-//      ConvertJSValToStr(b2, cx, argv[2]);
     }
     else
     {
@@ -555,6 +673,9 @@ static JSConstDoubleSpec winreg_constants[] =
 static JSFunctionSpec WinRegMethods[] = 
 {
   {"setRootKey",                WinRegSetRootKey,               1},
+  {"keyExists",                 WinRegKeyExists,                1},
+  {"valueExists",               WinRegValueExists,              2},
+  {"isKeyWritable",             WinRegIsKeyWritable,            1},
   {"createKey",                 WinRegCreateKey,                2},
   {"deleteKey",                 WinRegDeleteKey,                1},
   {"deleteValue",               WinRegDeleteValue,              2},

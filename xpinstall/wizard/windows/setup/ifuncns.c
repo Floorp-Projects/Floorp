@@ -1271,6 +1271,20 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
   return(FO_SUCCESS);
 }
 
+DWORD ParseRestrictedAccessKey(LPSTR szKey)
+{
+  DWORD dwKey;
+
+  if(lstrcmpi(szKey, "ONLY_RESTRICTED") == 0)
+    dwKey = RA_ONLY_RESTRICTED;
+  else if(lstrcmpi(szKey, "ONLY_NONRESTRICTED") == 0)
+    dwKey = RA_ONLY_NONRESTRICTED;
+  else
+    dwKey = RA_IGNORE;
+
+  return(dwKey);
+}
+
 HKEY ParseRootKey(LPSTR szRootKey)
 {
   HKEY hkRootKey;
@@ -1696,6 +1710,7 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
   DWORD dwIndex0;
   DWORD dwIndex1;
   DWORD dwIconId;
+  DWORD dwRestrictedAccess;
   char  szIndex1[MAX_BUF];
   char  szBuf[MAX_BUF];
   char  szSection0[MAX_BUF];
@@ -1739,11 +1754,18 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
         else
           dwIconId = 0;
 
-        CreateALink(szFile, szProgramFolder, szDescription, szWorkingDir, szArguments, szIconPath, dwIconId);
-        lstrcpy(szBuf, szProgramFolder);
-        AppendBackSlash(szBuf, sizeof(szBuf));
-        lstrcat(szBuf, szDescription);
-        UpdateInstallLog(KEY_WINDOWS_SHORTCUT, szBuf, FALSE);
+        GetPrivateProfileString(szSection1, "Restricted Access",    "", szBuf, sizeof(szBuf), szFileIniConfig);
+        dwRestrictedAccess = ParseRestrictedAccessKey(szBuf);
+        if((dwRestrictedAccess == RA_IGNORE) ||
+          ((dwRestrictedAccess == RA_ONLY_RESTRICTED) && gbRestrictedAccess) ||
+          ((dwRestrictedAccess == RA_ONLY_NONRESTRICTED) && !gbRestrictedAccess))
+        {
+          CreateALink(szFile, szProgramFolder, szDescription, szWorkingDir, szArguments, szIconPath, dwIconId);
+          lstrcpy(szBuf, szProgramFolder);
+          AppendBackSlash(szBuf, sizeof(szBuf));
+          lstrcat(szBuf, szDescription);
+          UpdateInstallLog(KEY_WINDOWS_SHORTCUT, szBuf, FALSE);
+        }
 
         ++dwIndex1;
         itoa(dwIndex1, szIndex1, 10);

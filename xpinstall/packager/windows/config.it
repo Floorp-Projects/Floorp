@@ -58,13 +58,17 @@ Program Name=$MainExeFile$
 ;   PERSONAL_SENDTO
 ;   PERSONAL_TEMPLATES
 ;
+;   PROGRAMS (Default value is the same as COMMON_PROGRAMS, but if the user
+;             has restricted access to the system, then it's the same as
+;             PERSONAL_PROGRAMS)
+;
 ;   PROGRAMFILESDIR
 ;   COMMONFILESDIR
 ;   MEDIAPATH
 ;   CONFIGPATH (supported only under Windows95 and Windows98)
 ;   DEVICEPATH
 Program Folder Name=$ProductName$
-Program Folder Path=[COMMON_PROGRAMS]
+Program Folder Path=[PROGRAMS]
 
 Uninstall Filename=$UninstallFile$
 
@@ -615,6 +619,16 @@ Destination=[WINDIR]
 Fail If Exists=FALSE
 Do Not Uninstall=TRUE
 
+;Copy the uninstaller to the [Setup Path]\Uninstall folder.
+;This copy is to be used when the user installed on a system with
+;restricted access.
+[Copy File2]
+Timing=post smartupdate
+Source=[XPI PATH]\$UninstallFile$
+Destination=[SETUP PATH]\Uninstall
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
 
 ;Copy File SequentialX sections
 [Copy File Sequential0]
@@ -856,141 +870,6 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=pre smartupdate
 
-; These sections (14-22) are to register information for
-; Gecko Embedding Clients.  This is necessary for 3rd party
-; apps to locate this Clients' components or plugins path.
-[Windows Registry14]
-Root Key=HKEY_LOCAL_MACHINE
-; Do Not Localize the "Software\Mozilla" part.  It must be "Software\Mozilla"
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\$ProductName$ $UserAgentShort$
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry15]
-Root Key=HKEY_LOCAL_MACHINE
-; Do Not Localize the "Software\Mozilla" part.  It must be "Software\Mozilla"
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\$ProductName$ $UserAgentShort$\Extensions
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry16]
-Root Key=HKEY_LOCAL_MACHINE
-; Do Not Localize the "Software\Mozilla" part.  It must be "Software\Mozilla"
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\$ProductName$ $UserAgentShort$\Extensions
-Name=Components
-Name Value=[Setup Path]\Components
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry17]
-Root Key=HKEY_LOCAL_MACHINE
-; Do Not Localize the "Software\Mozilla" part.  It must be "Software\Mozilla"
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\$ProductName$ $UserAgentShort$\Extensions
-Name=Plugins
-Name Value=[Setup Path]\Plugins
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry18]
-Root Key=HKEY_CURRENT_USER
-Key=Software\Mozilla
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry19]
-Root Key=HKEY_CURRENT_USER
-; Do Not Localize the "Software\Mozilla" part.  It must be "Software\Mozilla"
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\$ProductName$ $UserAgentShort$
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry20]
-Root Key=HKEY_CURRENT_USER
-; Do Not Localize the "Software\Mozilla" part.  It must be "Software\Mozilla"
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\$ProductName$ $UserAgentShort$\Extensions
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry21]
-Root Key=HKEY_CURRENT_USER
-; Do Not Localize the "Software\Mozilla" part.  It must be "Software\Mozilla"
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\$ProductName$ $UserAgentShort$\Extensions
-Name=Components
-Name Value=[Setup Path]\Components
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry22]
-Root Key=HKEY_CURRENT_USER
-; Do Not Localize the "Software\Mozilla" part.  It must be "Software\Mozilla"
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\$ProductName$ $UserAgentShort$\Extensions
-Name=Plugins
-Name Value=[Setup Path]\Plugins
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
 
 
 ; Values for Show Folder:
@@ -1023,13 +902,21 @@ Timing=post smartupdate
 Show Folder=SHOW
 Program Folder=[Default Folder]
 
-;[Program Folder0-Shortcut0]
-;File=[SETUP PATH]\$MainExeFile$
-;Arguments=
-;Working Dir=[SETUP PATH]
-;Description=$ProductName$
-;Icon Path=[SETUP PATH]\$MainExeFile$
-;Icon Id=0
+[Program Folder0-Shortcut0]
+File=[SETUP PATH]\Uninstall\$UninstallFile$
+Arguments=/ua "$UserAgent$"
+Working Dir=[SETUP PATH]
+Description=Uninstall $ProductName$
+Icon Path=[SETUP PATH]\Uninstall\$UninstallFile$
+Icon Id=0
+
+; Default value:
+;    IGNORE
+;
+; Possible values:
+;    ONLY_RESTRICTED    - create shortcut only if user access is restricted
+;    ONLY_NONRESTRICTED - create shortcut only if user access is not restricted
+Restricted Access=ONLY_RESTRICTED
 
 ;[Program Folder0-Shortcut1]
 ;File=[SETUP PATH]\$MainExeFile$
@@ -1111,6 +998,10 @@ IDC Use HTTP=Use &HTTP for downloading files
 IDC Save Installer Files=&Save installer files locally
 ;*** LOCALIZE ME BABY ***
 Message Download Paused=Setup has encountered a network problem and has paused the download.  If you have just lost your network connection, please click Resume once your network has been reestablished.
+;*** LOCALIZE ME BABY ***
+Message NORMAL Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  It is highly recommended that you do not continue with the installation of $ProductName$, or it may not function properly.  Would you still like to continue?
+;*** LOCALIZE ME BABY ***
+Message AUTO Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  Setup cannot continue with the installation of $ProductName$.
 
 
 [Site Selector]

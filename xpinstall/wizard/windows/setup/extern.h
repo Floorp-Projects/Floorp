@@ -72,6 +72,7 @@ extern BOOL             gbILUseTemp;
 extern BOOL             gbPreviousUnfinishedDownload;
 extern BOOL             gbIgnoreRunAppX;
 extern BOOL             gbIgnoreProgramFolderX;
+extern BOOL             gbRestrictedAccess;
 
 extern setupGen         sgProduct;
 extern diS              diSetup;

@@ -424,12 +424,7 @@ void LogMSDownloadStatus(int iDownloadStatus)
 
   wsprintf(szMessageStream, "&DownloadStatus=%d", iDownloadStatus);
   AppendToGlobalMessageStream(szMessageStream);
-
-  if(((iDownloadStatus == E_USER_CANCEL) &&
-       !gErrorMessageStream.bShowConfirmation) ||
-     ((iDownloadStatus != E_USER_CANCEL) &&
-      (iDownloadStatus != WIZ_OK)))
-    gErrorMessageStream.bSendMessage = TRUE;
+  gErrorMessageStream.bSendMessage = TRUE;
 }
 
 void LogMSDownloadFileStatus(void)
@@ -466,17 +461,23 @@ void LogMSDownloadFileStatus(void)
 void LogMSXPInstallStatus(char *szFile, int iErr)
 {
   char szMessageStream[MAX_BUF];
+  static BOOL bAlreadyLogged = FALSE;
+
+  if(bAlreadyLogged)
+    return;
 
   if(szFile)
-  {
-    wsprintf(szMessageStream, "&XPInstallStatus=%d&File=%s", iErr, szFile);
-    AppendToGlobalMessageStream(szMessageStream);
-    if((iErr != E_REBOOT) &&
-      (((iErr == E_USER_CANCEL) &&
-         !gErrorMessageStream.bShowConfirmation) ||
-       ((iErr != E_USER_CANCEL) &&
-        (iErr != WIZ_OK))))
-      gErrorMessageStream.bSendMessage = TRUE;
-  }
+    wsprintf(szMessageStream, "&XPInstallStatus=%d&XPInstallFile=%s", iErr, szFile);
+  else
+    wsprintf(szMessageStream, "&XPInstallStatus=%d", iErr);
+
+  AppendToGlobalMessageStream(szMessageStream);
+  bAlreadyLogged = TRUE;
+  if((iErr != E_REBOOT) &&
+    (((iErr == E_USER_CANCEL) &&
+       !gErrorMessageStream.bShowConfirmation) ||
+     ((iErr != E_USER_CANCEL) &&
+      (iErr != WIZ_OK))))
+    gErrorMessageStream.bSendMessage = TRUE;
 }
 

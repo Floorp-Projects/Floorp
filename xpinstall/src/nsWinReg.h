@@ -76,6 +76,16 @@ class nsWinReg
 
     nsInstall*        InstallObject(void);
 
+    PRInt32           KeyExists(const nsString& subkey, PRInt32* aReturn);
+    PRInt32           ValueExists(const nsString& subkey, const nsString& valname, PRInt32* aReturn);
+    PRInt32           IsKeyWritable(const nsString& subkey, PRInt32* aReturn);
+    PRInt32           PrepareCreateKey(PRInt32 root, const nsString& subkey, PRInt32* aReturn);
+    PRInt32           PrepareDeleteKey(PRInt32 root, const nsString& subkey, PRInt32* aReturn);
+    PRInt32           PrepareDeleteValue(PRInt32 root, const nsString& subkey, const nsString& valname, PRInt32* aReturn);
+    PRInt32           PrepareSetValueString(PRInt32 root, const nsString& subkey, PRInt32* aReturn);
+    PRInt32           PrepareSetValueNumber(PRInt32 root, const nsString& subkey, PRInt32* aReturn);
+    PRInt32           PrepareSetValue(PRInt32 root, const nsString& subkey, PRInt32* aReturn);
+
     PRInt32           FinalCreateKey(PRInt32 root, const nsString& subkey, const nsString& classname, PRInt32* aReturn);
     PRInt32           FinalDeleteKey(PRInt32 root, const nsString& subkey, PRInt32* aReturn);
     PRInt32           FinalDeleteValue(PRInt32 root, const nsString& subkey, const nsString& valname, PRInt32* aReturn);
@@ -91,6 +101,9 @@ class nsWinReg
     nsInstall* mInstallObject;
 
     /* Private Methods */
+    PRInt32           NativeKeyExists(const nsString& subkey);
+    PRInt32           NativeValueExists(const nsString& subkey, const nsString& valname);
+    PRInt32           NativeIsKeyWritable(const nsString& subkey);
     PRInt32           NativeCreateKey(const nsString& subkey, const nsString& classname);
     PRInt32           NativeDeleteKey(const nsString& subkey);
     PRInt32           NativeDeleteValue(const nsString& subkey, const nsString& valname);

@@ -1396,9 +1396,17 @@ InstallResetError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   *rval = JSVAL_VOID;
 
   // If there's no private data, this must be the prototype, so ignore
-  if (nativeThis)
-    nativeThis->ResetError();
+  if (!nativeThis)
+    return JS_TRUE;
 
+  // Supported forms: 
+  //    void resetError()
+  //    void resetError(int error)
+  int32 val = 0;
+  if ( argc >= 1 )
+    JS_ValueToECMAInt32(cx, argv[0], &val);
+
+  nativeThis->ResetError(val);
   return JS_TRUE;
 }
 
@@ -1768,6 +1776,10 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::CHROME_REGISTRY_ERROR,      "CHROME_REGISTRY_ERROR"        },
     { nsInstall::MALFORMED_INSTALL,          "MALFORMED_INSTALL"            },
 
+    { nsInstall::KEY_ACCESS_DENIED,          "KEY_ACCESS_DENIED"            },
+    { nsInstall::KEY_DOES_NOT_EXIST,         "KEY_DOES_NOT_EXIST"           },
+    { nsInstall::VALUE_DOES_NOT_EXIST,       "VALUE_DOES_NOT_EXIST"         },
+
     { nsInstall::GESTALT_UNKNOWN_ERR,        "GESTALT_UNKNOWN_ERR"          },
     { nsInstall::GESTALT_INVALID_ARGUMENT,   "GESTALT_INVALID_ARGUMENT"     },
 
@@ -1819,7 +1831,7 @@ static JSFunctionSpec InstallMethods[] =
   {"performInstall",            InstallFinalizeInstall,         0},
   {"registerChrome",            InstallRegisterChrome,          2},
   {"refreshPlugins",            InstallRefreshPlugins,          0},
-  {"resetError",                InstallResetError,              0},
+  {"resetError",                InstallResetError,              1},
 //  {"selectChrome",              InstallSelectChrome,            2},
   {"setPackageFolder",          InstallSetPackageFolder,        1},
   {"uninstall",                 InstallUninstall,               1},

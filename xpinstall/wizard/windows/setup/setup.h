@@ -59,6 +59,7 @@ typedef int PRInt32;
 #define FILE_IDI_GETARCHIVES            "getarchives.idi"
 #define FILE_IDI_GETREDIRECT            "getredirect.idi"
 #define FILE_INI_REDIRECT               "redirect.ini"
+#define FILE_WGET_LOG                   "wget.log"
 #define WIZ_TEMP_DIR                    "ns_temp"
 #define FILE_INSTALL_LOG                "install_wizard.log"
 #define FILE_INSTALL_STATUS_LOG         "install_status.log"
@@ -86,6 +87,11 @@ typedef int PRInt32;
 /* UP: Use Protocol */
 #define UP_FTP                          0
 #define UP_HTTP                         1
+
+/* RA: Restricted Access */
+#define RA_IGNORE                       0
+#define RA_ONLY_RESTRICTED              1
+#define RA_ONLY_NONRESTRICTED           2
 
 /* LIS: Log Install Status */
 #define LIS_SUCCESS                     0
