@@ -538,8 +538,10 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy, f
       // We can't blit for some reason.
       // Just update the view and adjust widgets
       // Recall that our widget's origin is at our bounds' top-left
+      nsRect bounds(GetBounds());
+      nsPoint topLeft(bounds.x, bounds.y);
       AdjustChildWidgets(aScrolledView,
-                         GetPosition() - GetBounds().TopLeft(), scale, PR_FALSE);
+                         GetPosition() - topLeft, scale, PR_FALSE);
       // We should call this after fixing up the widget positions to be
       // consistent with the view hierarchy.
       mViewManager->UpdateView(this, 0);
