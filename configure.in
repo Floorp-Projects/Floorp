@@ -99,14 +99,14 @@ AC_SUBST(GNU_CXX)
 dnl Checks for system specific bits
 dnl ========================================================
 dnl the qsort routine under solaris is faulty
-dnl Linux Alpha needs -mieee-with-inexact for FPU to work correctly
+dnl Linux Alpha needs -mieee for FPU to work correctly
 dnl Note this case statement doesn't seem to handle [] as part of a regexp
 
 case "$target" in
 *-*-solaris*) 
 	AC_DEFINE(BROKEN_QSORT) ;;
 alpha-*-linux*)
-	CFLAGS="$CFLAGS -mieee-with-inexact" ;;
+	CFLAGS="$CFLAGS -mieee" ;;
 esac
 
 dnl Checks for typedefs, structures, and compiler characteristics.
