@@ -23,6 +23,7 @@
 #include "nsIScrollableView.h"
 #include "nsIContentViewerContainer.h"
 
+class nsIFactory;
 class nsIPostData;
 class nsIStreamObserver;
 class nsIWebShell;
@@ -45,6 +46,10 @@ class nsIWebShellContainer;
 // Container for web shell's
 class nsIWebShellContainer : public nsISupports {
 public:
+  NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
+
+  NS_IMETHOD GetTitle(nsString& aResult) = 0;
+
   // History control
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const nsString& aURL) = 0;
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const nsString& aURL) = 0;
@@ -67,7 +72,8 @@ public:
  *
  * Web shells can be arranged in a tree.
  *
- * Web shells are also nsIWebShellContainer's
+ * Web shells are also nsIWebShellContainer's because they can contain
+ * other web shells.
  */
 class nsIWebShell : public nsIContentViewerContainer {
 public:
@@ -91,10 +97,11 @@ public:
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer) = 0;
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult) = 0;
 
+  NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult) = 0;
   NS_IMETHOD SetParent(nsIWebShell* aParent) = 0;
   NS_IMETHOD GetParent(nsIWebShell*& aParent) = 0;
   NS_IMETHOD GetChildCount(PRInt32& aResult) = 0;
-  NS_IMETHOD AddChild(nsIWebShell* aChild, PRBool aRelationship = PR_TRUE)=0;
+  NS_IMETHOD AddChild(nsIWebShell* aChild) = 0;
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIWebShell*& aResult) = 0;
   NS_IMETHOD GetName(nsString& aName) = 0;
   NS_IMETHOD SetName(const nsString& aName) = 0;
@@ -110,10 +117,16 @@ public:
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex, nsIStreamObserver* aObserver) = 0;
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult) = 0;
 
-  // XXX chrome api's
+  // Chrome api's
+  NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
+
+  NS_IMETHOD GetTitle(nsString& aResult) = 0;
   // SetToolBar
   // SetMenuBar
   // SetStatusBar
 };
+
+extern "C" NS_WEB nsresult
+NS_NewWebShellFactory(nsIFactory** aFactory);
 
 #endif /* nsIWebShell_h___ */
