@@ -22,7 +22,7 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/msgHdrViewOverlay.dtd">
 
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://messenger/skin/mailheader.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/msgHdrViewOverlay.css" type="text/css"?>
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -42,7 +42,7 @@ Rights Reserved.
 		      
 					<box id="FromBox" class="headerBox" align="horizontal" hide="true">
               <html:div class="headerdisplayname">&fromField.label;</html:div>
-							<html:div class="headerValue" id="FromValue" flex="1">*</html:div>
+							<html:div class="headerValue" id="FromValue" flex="1"></html:div>
 					</box>
 
 					<box id = "DateBox" class="headerBox" align="horizontal" hide="true">
@@ -68,7 +68,7 @@ Rights Reserved.
                <spring class="buttonTopSpacer"/>
                <menu id="attachmentMenu" class="attachment-menu">
                   <titledbutton id="attachmentButton" class="push" value="1" align="right"/>
-                  <menupopup id="attachmentPopup">
+                  <menupopup id="attachmentPopup" popupanchor="bottomright" popupalign="topright">
                     <menuseparator/>
                     <menuitem value="Save All..." oncommand="SaveAllAttachmentsDialog()"/>
                   </menupopup>
@@ -84,13 +84,27 @@ Rights Reserved.
 			<box class="header-part2" align="vertical" flex="1">
 				<box id="ToBox" class="headerBox" align="horizontal" hide="true">
             <html:div class="headerdisplayname">&toField.label;</html:div>
-						<html:div class="headerValue" id="ToValue" flex="1">*</html:div>
+						<html:div class="headerValue" id="ToValueShort" flex="1">
+              <titledbutton class="showMoreAddressesButton" id="ToValueToggleIcon" 
+                onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
+            </html:div>
+            <html:div class="headerValue" id="ToValueLong" flex="1" hide="true">
+              <titledbutton class="showFewerAddressesButton"  
+                onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
+            </html:div>
 				</box>
 
 			    <box id="CcBox" class="headerBox" align="horizontal" hide="true">
             <html:div class="headerdisplayname">&ccField.label;</html:div>
-						<html:div class="headerValue" id="CcValue" flex="1">*</html:div>
-				</box>
+						<html:div class="headerValue" id="CcValueShort" flex="1">
+              <titledbutton class="showMoreAddressesButton" id="CcValueToggleIcon" 
+                onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
+            </html:div>
+            <html:div class="headerValue" id="CcValueLong" flex="1" hide="true">
+              <titledbutton class="showFewerAddressesButton"  
+                onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
+            </html:div>
+				  </box>
         	<box id="NewsgroupBox" class="headerBox" align="horizontal" hide="true">
             <html:div class="headerdisplayname">&newsgroupsField.label;</html:div>
 						<html:div class="headerValue" id="NewsgroupValue" flex="1">*</html:div>
