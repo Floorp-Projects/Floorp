@@ -2334,21 +2334,31 @@ NS_IMETHODIMP GlobalWindowImpl::SetCursor(const nsAReadableString& aCursor)
 }
 
 /*
- * Examine the current document state to see if we're in a way that is typically
- * abused by web designers.  This routine returns PR_TRUE if we're running a top
- * level script, running an onload or onunload handler, or running a timeout.
- * The window.open code uses this routine to determine wether or not to allow
- * the new window.
+ * Examine the current document state to see if we're in a way that is
+ * typically abused by web designers.  This routine returns PR_TRUE if
+ * we're running a top level script, running an onload or onunload
+ * handler, or running a timeout.  The window.open code uses this
+ * routine to determine wether or not to allow the new window.
  */
 PRBool
 GlobalWindowImpl::CheckForAbusePoint ()
 {
   if (!mIsDocumentLoaded || mRunningTimeout) {
+    nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(mDocShell));
+
+    if (item) {
+      PRInt32 type = nsIDocShellTreeItem::typeChrome;
+
+      item->GetItemType(&type);
+
+      if (type == nsIDocShellTreeItem::typeContent) {
 #ifdef DEBUG
-    printf ("*** Scripts executed during (un)load or as a result of "
-            "setTimeout() are potential javascript abuse points.\n");
+        printf ("*** Scripts executed during (un)load or as a result of "
+                "setTimeout() are potential javascript abuse points.\n");
 #endif
-    return PR_TRUE;
+        return PR_TRUE;
+      }
+    }
   }
   
   return PR_FALSE;
@@ -2390,8 +2400,6 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
     }
   }
 
-
-    
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
 
   rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));
