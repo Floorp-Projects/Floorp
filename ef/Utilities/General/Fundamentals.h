@@ -73,7 +73,8 @@
 // bit fields to persuade them to store these as bytes or halfwords.
 // We don't use bit fields on the former because:
 //  1.  Some compilers generate much less efficient code for bit fields,
-//  2.  Some compilers (esp. Metrowerks) generate buggy code for bit fields.
+//  2.  Some compilers (esp. Metrowerks and egcs 1.03) generate buggy code
+//      for bit fields.
 //
 // Use ENUM_8 after an 8-bit enum field declaration in a structure
 // Use ENUM_16 after a 16-bit enum field declaration in a structure
@@ -85,7 +86,7 @@
 // word as a bool or enum; some compilers don't put fields with bit widths in the
 // same word as fields without bit widths.
 //
-#if defined __MWERKS__ || defined WIN32
+#if defined __MWERKS__ || defined WIN32 || defined __GNUC__
  #define ENUM_8
  #define ENUM_16
  #define BOOL_8
