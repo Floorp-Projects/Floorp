@@ -1012,7 +1012,7 @@ $table{profiles} =
     cryptpassword varchar(34),
     realname varchar(255),
     groupset bigint not null,
-    disabledtext mediumtext,
+    disabledtext mediumtext not null,
     mybugslink tinyint not null default 1,
     blessgroupset bigint not null default 0,
     emailflags mediumtext,
@@ -2445,6 +2445,10 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
     DropField("bugs_activity", "oldvalue");
     DropField("bugs_activity", "newvalue");
 } 
+
+# 2001-07-24 jake@acutex.net - disabledtext was being handled inconsitantly
+# http://bugzilla.mozilla.org/show_bug.cgi?id=90933
+ChangeFieldType("profiles", "disabledtext", "mediumtext not null");
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
