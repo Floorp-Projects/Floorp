@@ -74,6 +74,36 @@
     </content>
   </binding>
 
+  <binding id="nine-slice-button" extends="chrome://global/content/xulBindings.xml#basetext">
+    <content includes="menupopup">
+      <xul:box class="button-box-left" inherits="default,disabled" orient="vertical">
+        <xul:spring class="button-left-top" inherits="default,disabled"/>
+        <xul:spring class="button-left-mid" inherits="default,disabled" flex="1"/>
+        <xul:spring class="button-left-btm" inherits="default,disabled"/>
+      </xul:box>
+      
+      <xul:stack class="button-stack" flex="1">
+        <xul:box class="button-box-mid" inherits="default,disabled" orient="vertical">
+           <xul:spring class="button-mid-top" inherits="default,disabled"/>
+           <xul:box class="button-mid-mid" inherits="default,disabled" flex="1"/>
+           <xul:spring class="button-mid-btm" inherits="default,disabled"/>
+        </xul:box>
+
+        <xul:box class="button-text-box" autostretch="never">
+         <xul:image class="button-icon-mid" inherits="src"/>
+         <xul:text class="button-text-mid" inherits="default,disabled,value,crop,accesskey"/>
+       </xul:box>
+     </xul:stack>
+      
+      <xul:box class="button-box-right" inherits="default,disabled" orient="vertical">
+        <xul:spring class="button-right-top" inherits="default,disabled"/>
+        <xul:spring class="button-right-mid" inherits="default,disabled" flex="1"/>
+        <xul:spring class="button-right-btm" inherits="default,disabled"/>
+      </xul:box>
+    </content>
+  </binding>
+
+
   <binding id="simplebutton" extends="chrome://global/content/xulBindings.xml#basetext">
     <content orient="vertical" autostretch="never" align="center">
       <xul:image class="simplebutton-icon" inherits="src,disabled"/>

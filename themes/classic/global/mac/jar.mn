@@ -45,6 +45,51 @@ classic.jar:
     skin/classic/global/button-pressed-left.gif
     skin/classic/global/button-pressed-middle.gif
     skin/classic/global/button-pressed-right.gif
+    skin/classic/global/button-left-btm.gif
+    skin/classic/global/button-left-mid.gif
+    skin/classic/global/button-left-top.gif
+    skin/classic/global/button-mid-btm.gif
+    skin/classic/global/button-mid-mid.gif
+    skin/classic/global/button-mid-top.gif
+    skin/classic/global/button-right-btm.gif
+    skin/classic/global/button-right-mid.gif
+    skin/classic/global/button-right-top.gif
+    skin/classic/global/button-active-left-btm.gif
+    skin/classic/global/button-active-left-mid.gif
+    skin/classic/global/button-active-left-top.gif
+    skin/classic/global/button-active-mid-btm.gif
+    skin/classic/global/button-active-mid-mid.gif
+    skin/classic/global/button-active-mid-top.gif
+    skin/classic/global/button-active-right-btm.gif
+    skin/classic/global/button-active-right-mid.gif
+    skin/classic/global/button-active-right-top.gif
+    skin/classic/global/button-dis-left-btm.gif
+    skin/classic/global/button-dis-left-mid.gif
+    skin/classic/global/button-dis-left-top.gif
+    skin/classic/global/button-dis-mid-btm.gif
+    skin/classic/global/button-dis-mid-mid.gif
+    skin/classic/global/button-dis-mid-top.gif
+    skin/classic/global/button-dis-right-btm.gif
+    skin/classic/global/button-dis-right-mid.gif
+    skin/classic/global/button-dis-right-top.gif
+    skin/classic/global/button-def-left-btm.gif
+    skin/classic/global/button-def-left-mid.gif
+    skin/classic/global/button-def-left-top.gif
+    skin/classic/global/button-def-mid-btm.gif
+    skin/classic/global/button-def-mid-mid.gif
+    skin/classic/global/button-def-mid-top.gif
+    skin/classic/global/button-def-right-btm.gif
+    skin/classic/global/button-def-right-mid.gif
+    skin/classic/global/button-def-right-top.gif
+    skin/classic/global/button-def-active-left-btm.gif
+    skin/classic/global/button-def-active-left-mid.gif
+    skin/classic/global/button-def-active-left-top.gif
+    skin/classic/global/button-def-active-mid-btm.gif
+    skin/classic/global/button-def-active-mid-mid.gif
+    skin/classic/global/button-def-active-mid-top.gif
+    skin/classic/global/button-def-active-right-btm.gif
+    skin/classic/global/button-def-active-right-mid.gif
+    skin/classic/global/button-def-active-right-top.gif
     skin/classic/global/check-cb-check-active.gif
     skin/classic/global/check-cb-check-disable.gif
     skin/classic/global/check-cb-check.gif
@@ -71,6 +116,39 @@ classic.jar:
     skin/classic/global/menulist-scroll-disabled.gif
     skin/classic/global/menulist-select-dot-active.gif
     skin/classic/global/menulist-select-dot.gif
+    skin/classic/global/menulist-active-right-btm.gif
+    skin/classic/global/menulist-active-right-mid.gif
+    skin/classic/global/menulist-active-right-top.gif
+    skin/classic/global/menulist-arrow.gif
+    skin/classic/global/menulist-compact-arrow.gif
+    skin/classic/global/menulist-dis-arrow.gif
+    skin/classic/global/menulist-dis-left-btm.gif
+    skin/classic/global/menulist-dis-left-mid.gif
+    skin/classic/global/menulist-dis-left-top.gif
+    skin/classic/global/menulist-dis-mid-btm.gif
+    skin/classic/global/menulist-dis-mid-mid.gif
+    skin/classic/global/menulist-dis-mid-top.gif
+    skin/classic/global/menulist-dis-right-btm.gif
+    skin/classic/global/menulist-dis-right-mid.gif
+    skin/classic/global/menulist-dis-right-scalebit.gif
+    skin/classic/global/menulist-dis-right-top.gif
+    skin/classic/global/menulist-left-btm.gif
+    skin/classic/global/menulist-left-mid.gif
+    skin/classic/global/menulist-left-top.gif
+    skin/classic/global/menulist-mid-btm.gif
+    skin/classic/global/menulist-mid-mid.gif
+    skin/classic/global/menulist-mid-top.gif
+    skin/classic/global/menulist-right-btm.gif
+    skin/classic/global/menulist-right-mid.gif
+    skin/classic/global/menulist-right-scalebit.gif
+    skin/classic/global/menulist-right-top.gif
+    skin/classic/global/menulist-active-arrow.gif
+    skin/classic/global/menulist-active-left-btm.gif
+    skin/classic/global/menulist-active-left-mid.gif
+    skin/classic/global/menulist-active-left-top.gif
+    skin/classic/global/menulist-active-mid-btm.gif
+    skin/classic/global/menulist-active-mid-mid.gif
+    skin/classic/global/menulist-active-mid-top.gif    
     skin/classic/global/progressmeter-bar.gif
     skin/classic/global/progressmeter-busy.gif
     skin/classic/global/scroll-down-active.gif
