@@ -34,16 +34,6 @@
 // Main Mozilla cross-platform declarations.
 #include "xp_core.h"
 
-#ifdef _DEBUG
-#	ifndef DEBUG
-#		define DEBUG
-#	endif
-
-#	define DEVELOPER_DEBUG
-#	define NS_DEBUG
-#	define DEBUG_markh
-#endif // DEBUG
-
 #include <nsIAllocator.h>
 #include <nsIWeakReference.h>
 #include <nsXPIDLString.h>
