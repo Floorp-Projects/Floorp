@@ -112,9 +112,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStorageTransport)
 
 #include "nsHttpHandler.h"
 #include "nsHttpBasicAuth.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpBasicAuth)
-
 #include "nsHttpDigestAuth.h"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpHandler, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpsHandler, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpBasicAuth)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -923,12 +925,12 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     { "HTTP Handler",
       NS_HTTPPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http",
-      nsHttpHandler::Create },
+      nsHttpHandlerConstructor },
 
     { "HTTPS Handler",
-      NS_HTTPPROTOCOLHANDLER_CID,
+      NS_HTTPSPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "https",
-      nsHttpHandler::Create },
+      nsHttpsHandlerConstructor },
 
     { "HTTP Basic Auth Encoder",
       NS_HTTPBASICAUTH_CID,
