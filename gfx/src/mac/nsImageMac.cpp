@@ -678,6 +678,14 @@ nsImageMac :: ConvertToPICT ( PicHandle* outPicture )
   	if (tempPixMap) {
   		StPixelLocker tempPixLocker(tempPixMap);			// locks the pixels
   	
+  	  // the handles may have moved, make sure we reset baseAddr of our
+  	  // pixmaps to the new pointer.
+      StHandleLocker  imageBitsLocker(mImageBitsHandle);
+      StHandleLocker  maskBitsLocker(mMaskBitsHandle);    // ok with nil handle
+      mImagePixmap.baseAddr = *mImageBitsHandle;
+      if (mMaskBitsHandle)
+        mMaskPixmap.baseAddr = *mMaskBitsHandle;
+
   		// copy from the destination into our temp GWorld, to get the background
   		if (mMaskBitsHandle) {
     		if (mAlphaDepth > 1)
