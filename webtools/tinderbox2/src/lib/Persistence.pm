@@ -9,8 +9,8 @@
 # but binary format.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/24 14:58:08 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/11/09 19:30:32 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence.pm,v $ 
 # $Name:  $ 
@@ -49,6 +49,8 @@ package Persistence;
 
 
 # Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
 
 use Utils;
 

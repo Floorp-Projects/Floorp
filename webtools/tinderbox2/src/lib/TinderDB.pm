@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.4 $ 
-# $Date: 2000/10/17 23:49:24 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/11/09 19:31:05 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -61,6 +61,8 @@ use File::Basename;
 
 
 # Tinderbox Specific Libraries
+
+use lib '#tinder_libdir#';
 
 use Utils;
 

@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2000/10/17 23:53:09 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/11/09 19:30:45 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -44,6 +44,13 @@
 
 
 package HTMLPopUp;
+
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
 
 use Utils;
 
