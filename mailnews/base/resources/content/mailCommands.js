@@ -55,6 +55,8 @@ function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 				   if ( command == "http://home.netscape.com/NC-rdf#ReallyDelete" || command == "http://home.netscape.com/NC-rdf#Delete" || command == "http://home.netscape.com/NC-rdf#Move" ) {
 				      gNextMessageAfterDelete =null;
 					  }
+                                   if (command == "http://home.netscape.com/NC-rdf#NewFolder") 
+                                     throw(e); //so that the dialog does not automatically close.
                       dump (" Exception : In mail commands\n");
                 }
 }
