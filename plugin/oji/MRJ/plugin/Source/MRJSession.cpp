@@ -184,6 +184,11 @@ inline StringPtr c2p(const char* cstr, StringPtr pstr)
 	return pstr;
 }
 
+Boolean MRJSession::addToClassPath(const FSSpec& fileSpec)
+{
+	return (::JMAddToClassPath(mSession, &fileSpec) == noErr);
+}
+
 Boolean MRJSession::addToClassPath(const char* dirPath)
 {
 	// Need to convert the path into an FSSpec, and add it MRJ's class path.
