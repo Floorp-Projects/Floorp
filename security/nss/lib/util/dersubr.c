@@ -210,10 +210,15 @@ DER_GetInteger(SECItem *it)
     long ival = 0;
     unsigned len = it->len;
     unsigned char *cp = it->data;
-    unsigned long overflow = ((unsigned long)0xffL) << ((sizeof(ival) - 1)*8);
+    unsigned long overflow = 0x1ffUL << (((sizeof(ival) - 1) * 8) - 1);
+    unsigned long ofloinit;
+
+    if (*cp & 0x80)
+    	ival = -1L;
+    ofloinit = ival & overflow;
 
     while (len) {
-	if (ival & overflow) {
+	if ((ival & overflow) != ofloinit) {
 	    PORT_SetError(SEC_ERROR_BAD_DER);
 	    if (ival < 0) {
 		return LONG_MIN;
@@ -237,7 +242,7 @@ DER_GetUInteger(SECItem *it)
     unsigned long ival = 0;
     unsigned len = it->len;
     unsigned char *cp = it->data;
-    unsigned long overflow = ((unsigned long)0xffL) << ((sizeof(ival) - 1)*8);
+    unsigned long overflow = 0xffUL << ((sizeof(ival) - 1) * 8);
 
     /* Cannot put a negative value into an unsigned container. */
     if (*cp & 0x80) {
