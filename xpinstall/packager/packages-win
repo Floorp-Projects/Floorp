@@ -208,6 +208,7 @@ bin\components\ucvko.dll
 bin\components\ucvlatin.dll
 bin\components\ucvtw.dll
 bin\components\ucvtw2.dll
+bin\components\ucvmath.dll
 bin\components\unicharutil.xpt
 bin\components\urildr.dll
 bin\components\uriloader.xpt
