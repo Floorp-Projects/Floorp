@@ -24,6 +24,8 @@
   # title: string. Page title.
   # h1: string. Main page header.
   # h2: string. Page subheader.
+  # bgcolor: string. the page's background color ("#rrggbb").
+  # onload: string. JavaScript code to run when the page finishes loading.
   # extra: string. Any other HTML to go inside the <head> tags.
   # jscript: string. Javascript to go in the header.
   # style: string. CSS style.
@@ -33,6 +35,8 @@
 [% DEFAULT
   h1 = title
   h2 = ""
+  bgcolor = "#ffccff"
+  onload = ""
 %]
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
@@ -61,9 +65,11 @@
   
   </head>
   
-[%# Migration note: contents of the old Param 'bodyhtml' go in the body tag %]
+[%# Migration note: contents of the old Param 'bodyhtml' go in the body tag,
+  # but set the bgcolor and onload attributes in the DEFAULT directive above.
+  #%]
 
-  <body [% "bgcolor=\"#FFFFFF\"" UNLESS body_attributes.search('(?:^|\s)bgcolor=') %] [%+ body_attributes %]>
+  <body bgcolor="[% bgcolor %]" onload="[% onload %]">
 
 [%# Migration note: the following file corresponds to the old Param
   # 'bannerhtml'
