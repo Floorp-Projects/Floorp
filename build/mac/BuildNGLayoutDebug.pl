@@ -80,6 +80,7 @@ $options{svg}           = 0;
 $options{mng}           = 1;
 $options{ldap}          = 0;
 $options{xmlextras}     = 0;
+$options{psm}			= 0;
 
 # -------------------------- Chrome and jar-related options -----------------------------------------
 
