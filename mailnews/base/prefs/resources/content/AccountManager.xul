@@ -25,6 +25,7 @@
             onselect="onAccountClick(event.target)" id="accounttree"
             sortResource="http://home.netscape.com/NC-rdf#Name?sort=true"
             sortDirection="ascending"
+            seltype="single"
             ref="msgaccounts:/" hidecolumnpicker="true">
         <treecols>
           <treecol id="AccountCol" flex="1" primary="true" hideheader="true"/>
