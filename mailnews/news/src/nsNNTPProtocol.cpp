@@ -2142,6 +2142,7 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
 			mDisplayInputStream->Available(&inlength);
 			if (inlength > 0) // broadcast our batched up ODA changes
 				m_channelListener->OnDataAvailable(this, m_channelContext, mDisplayInputStream, 0, inlength);
+			PR_FREEIF(line);
 			return status;
 		}
 		else // we aren't finished with the message yet
