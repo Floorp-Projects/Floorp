@@ -597,8 +597,10 @@ function OpenBookmarkURL(node, datasources)
     return;
 
   // Check if we have a browser window
-  if (_content)
+  if (_content) {
     loadURI(url);
+    _content.focus();
+  }
   else
     openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
 }
