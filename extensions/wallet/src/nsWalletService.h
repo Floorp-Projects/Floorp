@@ -60,15 +60,12 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsSingleSignOnPrompt : public nsISingleSignOnPrompt,
-                             public nsIObserver,
-                             public nsSupportsWeakReference
+class nsSingleSignOnPrompt : public nsISingleSignOnPrompt
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUTHPROMPT
   NS_DECL_NSISINGLESIGNONPROMPT
-  NS_DECL_NSIOBSERVER
 
   nsSingleSignOnPrompt() { NS_INIT_REFCNT(); }
   virtual ~nsSingleSignOnPrompt() {}
@@ -77,6 +74,7 @@ public:
   
 protected:
   nsCOMPtr<nsIPrompt>   mPrompt;
+  static PRBool         mgRegisteredObserver;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

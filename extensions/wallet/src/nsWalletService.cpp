@@ -454,26 +454,54 @@ nsWalletlibService::WALLET_Decrypt (const char *crypt, PRUnichar **text) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsSingleSignOnProfileObserver
+// nsSingleSignOnPrompt itself can't be a profile change observer because, if the
+// last instance has been destroyed at the time of a profile change, there's
+// nothing to get the notification.
+
+class nsSingleSignOnProfileObserver : public nsIObserver
+{
+public:
+    nsSingleSignOnProfileObserver() { NS_INIT_REFCNT(); }
+    virtual ~nsSingleSignOnProfileObserver() {}
+    
+    NS_DECL_ISUPPORTS
+    
+    NS_IMETHODIMP Observe(nsISupports*, const PRUnichar *aTopic, const PRUnichar *someData) 
+    {
+        if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
+            SI_ClearUserData();
+        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
+            SI_DeletePersistentUserData();
+        }
+        return NS_OK;
+    }
+};
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSingleSignOnProfileObserver, nsIObserver)
+
+////////////////////////////////////////////////////////////////////////////////
 // nsSingleSignOnPrompt
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsSingleSignOnPrompt,
+PRBool nsSingleSignOnPrompt::mgRegisteredObserver = PR_FALSE;
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSingleSignOnPrompt,
                               nsISingleSignOnPrompt,
-                              nsIAuthPrompt,
-                              nsIObserver,
-                              nsISupportsWeakReference)
+                              nsIAuthPrompt)
 
 nsresult
 nsSingleSignOnPrompt::Init()
 {
-  nsresult rv;
-  NS_WITH_SERVICE(nsIObserverService, svc, NS_OBSERVERSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && svc) {
-    // Register as an observer of profile changes
-    svc->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+  if (!mgRegisteredObserver) {
+    nsSingleSignOnProfileObserver *observer = new nsSingleSignOnProfileObserver;
+    if (!observer)
+        return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIObserverService> svc(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
+    if (!svc) return NS_ERROR_FAILURE;
+    // The observer service holds the only ref to the observer
+    // It thus has the lifespan of the observer service
+    svc->AddObserver(observer, NS_LITERAL_STRING("profile-before-change").get());
+    mgRegisteredObserver = PR_TRUE;
   }
-  else
-    NS_ASSERTION(PR_FALSE, "Could not get nsIObserverService");
-  
   return NS_OK;
 }
 
@@ -522,20 +550,6 @@ NS_IMETHODIMP
 nsSingleSignOnPrompt::SetPromptDialogs(nsIPrompt* dialogs)
 {
   mPrompt = dialogs;
-  return NS_OK;
-}
-
-// nsIObserver methods:
-
-NS_IMETHODIMP
-nsSingleSignOnPrompt::Observe(nsISupports*, const PRUnichar *aTopic, const PRUnichar *someData) 
-{
-  if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
-    SI_ClearUserData();
-    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
-      SI_DeletePersistentUserData();
-    }
-  }
   return NS_OK;
 }
 
