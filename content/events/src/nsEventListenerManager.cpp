@@ -125,7 +125,7 @@ static nsresult DispatchToInterface(nsIDOMEvent* aEvent,
   if (ifaceListener) {
     *aHasInterface = PR_TRUE;
     rv = (ifaceListener->*aMethod)(aEvent);
-    NS_RELEASE(aListener);
+    NS_RELEASE(ifaceListener);
   }
   return rv;
 }

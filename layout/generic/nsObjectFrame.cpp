@@ -178,7 +178,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent) { return NS_ERROR_FAILURE; /* means consume event */ }
+  NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent);
   
   nsresult Init(nsObjectFrame *aFrame);
   nsresult Destroy(nsObjectFrame *aFrame);
@@ -1835,8 +1835,8 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
                           nsGUIEvent*     anEvent,
                           nsEventStatus*  anEventStatus)
 {
-   NS_ENSURE_ARG_POINTER(anEventStatus);
-    nsresult rv = NS_OK;
+  NS_ENSURE_ARG_POINTER(anEventStatus);
+  nsresult rv = NS_OK;
 
   //FIX FOR CRASHING WHEN NO INSTANCE OWVER
   if (!mInstanceOwner)
@@ -1993,6 +1993,14 @@ nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener()
 }
 
 NS_IMPL_ISUPPORTS2(nsPluginDOMContextMenuListener, nsIDOMContextMenuListener, nsIEventListener)
+
+NS_IMETHODIMP
+nsPluginDOMContextMenuListener::ContextMenu(nsIDOMEvent* aContextMenuEvent)
+{
+  aContextMenuEvent->PreventDefault(); /* consume event */
+
+  return NS_OK;
+}
 
 nsresult nsPluginDOMContextMenuListener::Init(nsObjectFrame *aFrame)
 {
