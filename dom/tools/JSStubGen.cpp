@@ -41,8 +41,8 @@
 #include "IdlFunction.h"
 #include "IdlParameter.h"
 
-static const char *kFilePrefix = "nsJS";
-static const char *kFileSuffix = "cpp";
+static const char kFilePrefix[] = "nsJS";
+static const char kFileSuffix[] = "cpp";
 
 JSStubGen::JSStubGen()
 {
@@ -88,7 +88,7 @@ JSStubGen::Generate(char *aFileName,
   CloseFile();
 }
 
-static const char *kIncludeDefaultsStr = "\n"
+static const char kIncludeDefaultsStr[] = "\n"
 "#include \"jsapi.h\"\n"
 "#include \"nsJSUtils.h\"\n"
 "#include \"nscore.h\"\n"
@@ -103,9 +103,9 @@ static const char *kIncludeDefaultsStr = "\n"
 "#include \"nsIPtr.h\"\n"
 #endif
 "#include \"nsString.h\"\n";
-static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
-static const char *kXPIDLIncludeStr = "#include \"%s.h\"\n";
-static const char *kIncludeConstructorStr =
+static const char kIncludeStr[] = "#include \"nsIDOM%s.h\"\n";
+static const char kXPIDLIncludeStr[] = "#include \"%s.h\"\n";
+static const char kIncludeConstructorStr[] =
 "#include \"nsIScriptNameSpaceManager.h\"\n"
 "#include \"nsIComponentManager.h\"\n"
 "#include \"nsIJSNativeInitializer.h\"\n"
@@ -151,11 +151,11 @@ JSStubGen::GenerateIncludes(IdlSpecification &aSpec)
   *file << "\n";
 }
 
-static const char *kIIDDefaultStr = "\n"
+static const char kIIDDefaultStr[] = "\n"
 "static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);\n"
 "static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);\n"
 "static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);\n";
-static const char *kIIDStr = "static NS_DEFINE_IID(kI%sIID, %s);\n";
+static const char kIIDStr[] = "static NS_DEFINE_IID(kI%sIID, %s);\n";
 
 PRIntn 
 JSStubGen_IIDEnumerator(PLHashEntry *he, PRIntn i, void *arg)
@@ -200,10 +200,10 @@ JSStubGen::GenerateIIDDefinitions(IdlSpecification &aSpec)
   *file << "\n";
 }
 
-static const char *kDefPtrStr =
+static const char kDefPtrStr[] =
 "NS_DEF_PTR(nsIDOM%s);\n";
 
-static const char *kDefXPIDLPtrStr =
+static const char kDefXPIDLPtrStr[] =
 "NS_DEF_PTR(%s);\n";
 
 PRIntn 
@@ -238,12 +238,12 @@ JSStubGen::GenerateDefPtrs(IdlSpecification &aSpec)
   *file << "\n";
 }
 
-static const char *kPropEnumStr = 
+static const char kPropEnumStr[] = 
 "//\n"
 "// %s property ids\n"
 "//\n"
 "enum %s_slots {\n";
-static const char *kPropSlotStr = "  %s_%s = -%d";
+static const char kPropSlotStr[] = "  %s_%s = -%d";
 
 void     
 JSStubGen::GeneratePropertySlots(IdlSpecification &aSpec)
@@ -297,7 +297,7 @@ JSStubGen::GeneratePropertySlots(IdlSpecification &aSpec)
 }
 
 
-static const char *kPropFuncBeginStr = "\n"
+static const char kPropFuncBeginStr[] = "\n"
 "/***********************************************************************/\n"
 "//\n"
 "// %s Properties %ster\n"
@@ -313,7 +313,7 @@ static const char *kPropFuncBeginStr = "\n"
 "  }\n"
 "\n";
 
-static const char *kIntCaseStr =
+static const char kIntCaseStr[] =
 "  if (JSVAL_IS_INT(id)) {\n"
 "    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
 "    nsIScriptSecurityManager *secMan;\n"
@@ -323,7 +323,7 @@ static const char *kIntCaseStr =
 "    }\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
 
-static const char *kIntCaseNamedItemStr =
+static const char kIntCaseNamedItemStr[] =
 "  PRBool checkNamedItem = PR_TRUE;\n"
 "  if (JSVAL_IS_INT(id)) {\n"
 "    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
@@ -335,21 +335,21 @@ static const char *kIntCaseNamedItemStr =
 "    checkNamedItem = PR_FALSE;\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
 
-static const char *kPropFuncDefaultStr = 
+static const char kPropFuncDefaultStr[] = 
 "      default:\n"
 "        return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "    }\n"
 "    NS_RELEASE(secMan);\n"
 "  }\n";
 
-static const char *kPropFuncDefaultNamedItemStr = 
+static const char kPropFuncDefaultNamedItemStr[] = 
 "      default:\n"
 "        checkNamedItem = PR_TRUE;\n"
 "    }\n"
 "    NS_RELEASE(secMan);\n"
 "  }\n";
 
-static const char *kPropFuncDefaultItemStr = 
+static const char kPropFuncDefaultItemStr[] = 
 "      default:\n"
 "      {\n"
 "        %s prop;\n"
@@ -363,7 +363,7 @@ static const char *kPropFuncDefaultItemStr =
 "    }\n"
 "  }\n";
 
-static const char *kPropFuncDefaultItemNonPrimaryStr = 
+static const char kPropFuncDefaultItemNonPrimaryStr[] = 
 "      default:\n"
 "      {\n"
 "        %s prop;\n"
@@ -386,7 +386,7 @@ static const char *kPropFuncDefaultItemNonPrimaryStr =
 "    }\n"
 "  }\n";
 
-static const char *kPropFuncEndStr = 
+static const char kPropFuncEndStr[] = 
 "  else {\n"
 "    return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "  }\n"
@@ -394,7 +394,7 @@ static const char *kPropFuncEndStr =
 "  return PR_TRUE;\n"
 "}\n";
 
-static const char *kPropFuncNamedItemStr =
+static const char kPropFuncNamedItemStr[] =
 "\n"
 "  if (checkNamedItem) {\n"
 "    %s prop;\n"
@@ -421,7 +421,7 @@ static const char *kPropFuncNamedItemStr =
 "    }\n"
 "  }\n";
 
-static const char *kPropFuncNamedItemNonPrimaryStr =
+static const char kPropFuncNamedItemNonPrimaryStr[] =
 "\n"
 "  if (checkNamedItem) {\n"
 "    %s prop;\n"
@@ -466,7 +466,7 @@ static const char *kPropFuncNamedItemNonPrimaryStr =
 #define JSGEN_GENERATE_PROPFUNCDEFAULT(buffer, op)   \
      sprintf(buffer, kPropFuncDefaultStr, op)
 
-static const char *kPropCaseBeginStr = 
+static const char kPropCaseBeginStr[] = 
 "      case %s_%s:\n"
 "      {\n"
 "        secMan->CheckScriptAccess(scriptCX, obj, \"%s.%s\", &ok);\n"
@@ -475,11 +475,11 @@ static const char *kPropCaseBeginStr =
 "          return JS_FALSE;\n"
 "        }\n";
 
-static const char *kPropCaseEndStr = 
+static const char kPropCaseEndStr[] = 
 "        break;\n"
 "      }\n";
 
-static const char *kNoAttrStr = "      case 0:\n";
+static const char kNoAttrStr[] = "      case 0:\n";
 
 
 void     
@@ -609,7 +609,7 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
   *file << buf;
 }
 
-static const char *kGetCaseStr = 
+static const char kGetCaseStr[] = 
 "        %s prop;\n"
 "        if (NS_SUCCEEDED(a->Get%s(%sprop))) {\n"
 "%s"
@@ -618,7 +618,7 @@ static const char *kGetCaseStr =
 "          return JS_FALSE;\n"
 "        }\n";
 
-static const char *kGetCaseNonPrimaryStr =
+static const char kGetCaseNonPrimaryStr[] =
 "        %s prop;\n"
 "        nsIDOM%s* b;\n"
 "        if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
@@ -636,21 +636,21 @@ static const char *kGetCaseNonPrimaryStr =
 "          return JS_FALSE;\n"
 "        }\n";
 
-static const char *kObjectGetCaseStr = 
+static const char kObjectGetCaseStr[] = 
 "          // get the js object\n"
 "          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);\n";
 
-static const char *kXPIDLObjectGetCaseStr =
+static const char kXPIDLObjectGetCaseStr[] =
 "          // get the js object; n.b., this will do a release on 'prop'\n"
 "          nsJSUtils::nsConvertXPCObjectToJSVal(prop, %s::GetIID(), cx, vp);\n";
 
-static const char *kStringGetCaseStr = 
+static const char kStringGetCaseStr[] = 
 "          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);\n";
 
-static const char *kIntGetCaseStr = 
+static const char kIntGetCaseStr[] = 
 "          *vp = INT_TO_JSVAL(prop);\n";
 
-static const char *kBoolGetCaseStr =
+static const char kBoolGetCaseStr[] =
 "          *vp = BOOLEAN_TO_JSVAL(prop);\n";
 
 void
@@ -737,13 +737,13 @@ JSStubGen::GeneratePropGetter(ofstream *file,
 }
 
 
-static const char *kSetCaseStr = 
+static const char kSetCaseStr[] = 
 "        %s prop;\n"
 "%s      \n"
 "        a->Set%s(prop);\n"
 "        %s\n";
 
-static const char *kSetCaseNonPrimaryStr =
+static const char kSetCaseNonPrimaryStr[] =
 "        %s prop;\n"
 "%s      \n"
 "        nsIDOM%s *b;\n"
@@ -759,27 +759,27 @@ static const char *kSetCaseNonPrimaryStr =
 "        %s\n";
 
 
-static const char *kObjectSetCaseStr = 
+static const char kObjectSetCaseStr[] = 
 "        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,\n"
 "                                                kI%sIID, \"%s\",\n"
 "                                                cx, *vp)) {\n"
 "          return JS_FALSE;\n"
 "        }\n";
 
-static const char *kXPIDLObjectSetCaseStr = 
+static const char kXPIDLObjectSetCaseStr[] = 
 "        if (PR_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports **) &prop,\n"
 "                                                kI%sIID, cx, *vp)) {\n"
 "          return JS_FALSE;\n"
 "        }\n";
 
-static const char *kObjectSetCaseEndStr = "NS_IF_RELEASE(prop);";
+static const char kObjectSetCaseEndStr[] = "NS_IF_RELEASE(prop);";
 
 static const char* kXPIDLObjectSetCaseEndStr = kObjectSetCaseEndStr;
 
-static const char *kStringSetCaseStr = 
+static const char kStringSetCaseStr[] = 
 "        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);\n";
 
-static const char *kIntSetCaseStr = 
+static const char kIntSetCaseStr[] = 
 "        int32 temp;\n"
 "        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {\n"
 "          prop = (%s)temp;\n"
@@ -789,7 +789,7 @@ static const char *kIntSetCaseStr =
 "          return JS_FALSE;\n"
 "        }\n";
 
-static const char *kBoolSetCaseStr =
+static const char kBoolSetCaseStr[] =
 "        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {\n"
 "          return JS_FALSE;\n"
 "        }\n";
@@ -860,7 +860,7 @@ JSStubGen::GeneratePropSetter(ofstream *file,
   *file << buf;
 }
 
-static const char *kFinalizeStr = 
+static const char kFinalizeStr[] = 
 "\n\n//\n"
 "// %s finalizer\n"
 "//\n"
@@ -882,7 +882,7 @@ JSStubGen::GenerateFinalize(IdlSpecification &aSpec)
 }
 
 
-static const char *kEnumerateStr =
+static const char kEnumerateStr[] =
 "\n\n//\n"
 "// %s enumerate\n"
 "//\n"
@@ -908,7 +908,7 @@ JSStubGen::GenerateEnumerate(IdlSpecification &aSpec)
 }
 
 
-static const char *kResolveStr =
+static const char kResolveStr[] =
 "\n\n//\n"
 "// %s resolve\n"
 "//\n"
@@ -944,7 +944,7 @@ JSStubGen::GenerateResolve(IdlSpecification &aSpec)
   *file << buf;
 }
 
-static const char *kMethodBeginStr = "\n\n"
+static const char kMethodBeginStr[] = "\n\n"
 "//\n"
 "// Native method %s\n"
 "//\n"
@@ -953,7 +953,7 @@ static const char *kMethodBeginStr = "\n\n"
 "{\n"
 "  nsIDOM%s *nativeThis = (nsIDOM%s*)nsJSUtils::nsGetNativeThis(cx, obj);\n";
 
-static const char *kMethodBeginNonPrimaryStr = "\n\n"
+static const char kMethodBeginNonPrimaryStr[] = "\n\n"
 "//\n"
 "// Native method %s\n"
 "//\n"
@@ -968,17 +968,20 @@ static const char *kMethodBeginNonPrimaryStr = "\n\n"
 "  }\n"
 "\n";
 
-static const char *kMethodReturnStr = 
+static const char kMethodReturnStr[] = 
 "  %s nativeRet;\n";
 
-static const char *kMethodParamStr =  "  %s b%d;\n";
+static const char kMethodParamStr[] =  "  %s b%d;\n";
 
-static const char *kMethodBodyBeginStr = "\n"
+static const char kMethodBodyBeginStr[] = "\n"
 "  *rval = JSVAL_NULL;\n"
 "\n"
 "  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
 "  nsIScriptSecurityManager *secMan;\n"
-"  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {\n"
+"  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {\n"
+"    return JS_FALSE;\n"
+"  }\n"
+"  {\n"
 "    PRBool ok;\n"
 "    secMan->CheckScriptAccess(scriptCX, obj, \"%s.%s\", &ok);\n"
 "    if (!ok) {\n"
@@ -987,18 +990,15 @@ static const char *kMethodBodyBeginStr = "\n"
 "    }\n"
 "    NS_RELEASE(secMan);\n"
 "  }\n"
-"  else {\n"
-"    return JS_FALSE;\n"
-"  }\n"
 "\n"
 "  // If there's no private data, this must be the prototype, so ignore\n"
 "  if (nsnull == nativeThis) {\n"
 "    return JS_TRUE;\n"
 "  }\n"
 "\n"
-"  if (argc >= %d) {\n";
+"  {\n";
 
-static const char *kMethodObjectParamStr = "\n"
+static const char kMethodObjectParamStr[] =
 #ifdef USE_COMPTR
 "    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b%d),\n"
 #else
@@ -1016,7 +1016,7 @@ static const char *kMethodObjectParamStr = "\n"
             paramType, paramNum)
 
 
-static const char *kMethodXPIDLObjectParamStr = "\n"
+static const char kMethodXPIDLObjectParamStr[] =
 #ifdef USE_COMPTR
 "    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(getter_AddRef(b%d),\n"
 #else
@@ -1032,13 +1032,13 @@ static const char *kMethodXPIDLObjectParamStr = "\n"
              ? ((paramType) + 3) : (paramType)), \
             paramNum)
 
-static const char *kMethodStringParamStr = "\n"
+static const char kMethodStringParamStr[] =
 "    nsJSUtils::nsConvertJSValToString(b%d, cx, argv[%d]);\n";
 
 #define JSGEN_GENERATE_STRINGPARAM(buffer, paramNum) \
     sprintf(buffer, kMethodStringParamStr, paramNum, paramNum)
 
-static const char *kMethodBoolParamStr = "\n"
+static const char kMethodBoolParamStr[] =
 "    if (!nsJSUtils::nsConvertJSValToBool(&b%d, cx, argv[%d])) {\n"
 "      return JS_FALSE;\n"
 "    }\n";
@@ -1046,7 +1046,7 @@ static const char *kMethodBoolParamStr = "\n"
 #define JSGEN_GENERATE_BOOLPARAM(buffer, paramNum) \
     sprintf(buffer, kMethodBoolParamStr, paramNum, paramNum)
 
-static const char *kMethodIntParamStr = "\n"
+static const char kMethodIntParamStr[] =
 "    if (!JS_ValueToInt32(cx, argv[%d], (int32 *)&b%d)) {\n"
 "      JS_ReportError(cx, \"Parameter must be a number\");\n"
 "      return JS_FALSE;\n"
@@ -1055,7 +1055,7 @@ static const char *kMethodIntParamStr = "\n"
 #define JSGEN_GENERATE_INTPARAM(buffer, paramNum) \
     sprintf(buffer, kMethodIntParamStr, paramNum, paramNum)
 
-static const char *kMethodFuncParamStr = "\n"
+static const char kMethodFuncParamStr[] =
 "    if (!nsJSUtils::nsConvertJSValToFunc(&b%d,\n"
 "                                         cx,\n"
 "                                         obj,\n"
@@ -1066,48 +1066,51 @@ static const char *kMethodFuncParamStr = "\n"
 #define JSGEN_GENERATE_FUNCPARAM(buffer, paramNum, paramType) \
     sprintf(buffer, kMethodFuncParamStr, paramNum, paramNum)
 
-static const char *kMethodParamListStr = "b%d";
-static const char *kMethodParamListDelimiterStr = ", ";
-static const char *kMethodParamEllipsisStr = "cx, argv+%d, argc-%d";
+static const char kMethodParamListStr[] = "b%d";
+static const char kMethodParamListDelimiterStr[] = ", ";
+static const char kMethodParamEllipsisStr[] = "cx, argv+%d, argc-%d";
 
-static const char *kMethodBodyMiddleStr =
+static const char kMethodBodyMiddleStr[] =
 "\n"
 "    if (NS_OK != nativeThis->%s(%s%snativeRet)) {\n"
 "      return JS_FALSE;\n"
 "    }\n"
 "\n";
 
-static const char *kMethodBodyMiddleNoReturnStr =
+static const char kMethodBodyMiddleNoReturnStr[] =
 "\n"
 "    if (NS_OK != nativeThis->%s(%s)) {\n"
 "      return JS_FALSE;\n"
 "    }\n"
 "\n";
 
-static const char *kMethodObjectRetStr = 
+static const char kMethodObjectRetStr[] = 
 "    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);\n";
 
-static const char *kMethodXPIDLObjectRetStr =
+static const char kMethodXPIDLObjectRetStr[] =
 "    // n.b., this will release nativeRet\n"
 "    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, %s::GetIID(), cx, rval);\n";
 
-static const char *kMethodStringRetStr = 
+static const char kMethodStringRetStr[] = 
 "    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);\n";
 
-static const char *kMethodIntRetStr = 
+static const char kMethodIntRetStr[] = 
 "    *rval = INT_TO_JSVAL(nativeRet);\n";
 
-static const char *kMethodBoolRetStr =
+static const char kMethodBoolRetStr[] =
 "    *rval = BOOLEAN_TO_JSVAL(nativeRet);\n";
 
-static const char *kMethodVoidRetStr = 
+static const char kMethodVoidRetStr[] = 
 "    *rval = JSVAL_VOID;\n";
 
-static const char *kMethodEndStr =
-"  }\n"
-"  else {\n"
-"    JS_ReportError(cx, \"Function %s requires %d parameters\");\n"
-"    return JS_FALSE;\n"
+static const char kMethodBadParamStr[] =
+"    if (argc < %d) {\n"
+"      JS_ReportError(cx, \"Function %s requires %d parameter%s\");\n"
+"      return JS_FALSE;\n"
+"    }\n"
+"\n";
+
+static const char kMethodEndStr[] =
 "  }\n"
 "\n"
 "  return JS_TRUE;\n"
@@ -1178,8 +1181,14 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
       StrLwr(lwr_iface_name);
 
       sprintf(buf, kMethodBodyBeginStr, lwr_iface_name,
-              lwr_method_name, func->ParameterCount());
+              lwr_method_name);
       *file << buf;
+      
+      if (pcount > 0) {
+	sprintf(buf, kMethodBadParamStr, pcount, func->GetName(), pcount,
+		pcount > 1 ? "s" : "");
+	*file << buf;
+      }
 
       for (p = 0; p < pcount; p++) {
         IdlParameter *param = func->GetParameterAt(p);
@@ -1283,14 +1292,13 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
             break;
       }
 
-      sprintf(buf, kMethodEndStr, func->GetName(), func->ParameterCount());
-      *file << buf;
+      *file << kMethodEndStr;
     }
   }
 }
 
 
-static const char *kJSClassStr = 
+static const char kJSClassStr[] = 
 "\n\n/***********************************************************************/\n"
 "//\n"
 "// class for %s\n"
@@ -1325,19 +1333,19 @@ JSStubGen::GenerateJSClass(IdlSpecification &aSpec)
 }
 
 
-static const char *kPropSpecBeginStr = 
+static const char kPropSpecBeginStr[] = 
 "\n\n//\n"
 "// %s class properties\n"
 "//\n"
 "static JSPropertySpec %sProperties[] =\n"
 "{\n";
 
-static const char *kPropSpecEntryStr = 
+static const char kPropSpecEntryStr[] = 
 "  {\"%s\",    %s_%s,    JSPROP_ENUMERATE%s},\n";
 
-static const char *kPropSpecReadOnlyStr = " | JSPROP_READONLY";
+static const char kPropSpecReadOnlyStr[] = " | JSPROP_READONLY";
 
-static const char *kPropSpecEndStr = 
+static const char kPropSpecEndStr[] = 
 "  {0}\n"
 "};\n";
 
@@ -1382,17 +1390,17 @@ JSStubGen::GenerateClassProperties(IdlSpecification &aSpec)
 }
 
 
-static const char *kFuncSpecBeginStr =
+static const char kFuncSpecBeginStr[] =
 "\n\n//\n"
 "// %s class methods\n"
 "//\n"
 "static JSFunctionSpec %sMethods[] = \n"
 "{\n";
 
-static const char *kFuncSpecEntryStr =
+static const char kFuncSpecEntryStr[] =
 "  {\"%s\",          %s%s,     %d},\n";
 
-static const char *kFuncSpecEndStr = 
+static const char kFuncSpecEndStr[] = 
 "  {0}\n"
 "};\n";
 
@@ -1438,7 +1446,7 @@ JSStubGen::GenerateClassFunctions(IdlSpecification &aSpec)
   *file << kFuncSpecEndStr;  
 }
 
-static const char *kEmptyConstructorStr = 
+static const char kEmptyConstructorStr[] = 
 "\n\n//\n"
 "// %s constructor\n"
 "//\n"
@@ -1451,7 +1459,7 @@ static const char *kEmptyConstructorStr =
 #define JSGEN_GENERATE_EMPTYCONSTRUCTOR(buf, className)               \
      sprintf(buf, kEmptyConstructorStr, className, className);
 
-static const char *kConstructorBeginStr =
+static const char kConstructorBeginStr[] =
 "\n\n//\n"
 "// %s constructor\n"
 "//\n"
@@ -1539,7 +1547,7 @@ JSStubGen::GenerateConstructor(IdlSpecification &aSpec)
   }
 }
 
-static const char *kGlobalInitClassStr =
+static const char kGlobalInitClassStr[] =
 "\n\n//\n"
 "// %s class initialization\n"
 "//\n"
@@ -1559,7 +1567,7 @@ static const char *kGlobalInitClassStr =
    sprintf(buffer, kGlobalInitClassStr, className, className, className, \
            className)
 
-static const char *kInitClassBeginStr =
+static const char kInitClassBeginStr[] =
 "\n\n//\n"
 "// %s class initialization\n"
 "//\n"
@@ -1581,12 +1589,12 @@ static const char *kInitClassBeginStr =
 #define JSGEN_GENERATE_INITCLASSBEGIN(buffer, className)         \
    sprintf(buffer, kInitClassBeginStr, className, className, className)
 
-static const char *kGetParentProtoStr =
+static const char kGetParentProtoStr[] =
 "    if (NS_OK != NS_Init%sClass(aContext, (void **)&parent_proto)) {\n"
 "      return NS_ERROR_FAILURE;\n"
 "    }\n";
 
-static const char *kInitClassBodyStr =
+static const char kInitClassBodyStr[] =
 "    proto = JS_InitClass(jscontext,     // context\n"
 "                         global,        // global object\n"
 "                         parent_proto,  // parent proto \n"
@@ -1606,24 +1614,24 @@ static const char *kInitClassBodyStr =
    sprintf(buffer, kInitClassBodyStr, className, className,     \
            className, className) 
 
-static const char *kAliasConstructorStr =
+static const char kAliasConstructorStr[] =
 "    JS_AliasProperty(jscontext, global, \"%s\", \"%s\");\n";
 
-static const char *kInitStaticBeginStr =
+static const char kInitStaticBeginStr[] =
 "    if ((PR_TRUE == JS_LookupProperty(jscontext, global, \"%s\", &vp)) &&\n"
 "        JSVAL_IS_OBJECT(vp) &&\n"
 "        ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {\n";
 
-static const char *kInitStaticEntryStr =
+static const char kInitStaticEntryStr[] =
 "      vp = INT_TO_JSVAL(nsIDOM%s::%s);\n"
 "      JS_SetProperty(jscontext, constructor, \"%s\", &vp);\n"
 "\n";
 
-static const char *kInitStaticEndStr =
+static const char kInitStaticEndStr[] =
 "    }\n"
 "\n";
 
-static const char *kInitClassEndStr =
+static const char kInitClassEndStr[] =
 "  }\n"
 "  else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp)) {\n"
 "    proto = JSVAL_TO_OBJECT(vp);\n"
@@ -1711,7 +1719,7 @@ JSStubGen::GenerateInitClass(IdlSpecification &aSpec)
 }
 
 
-static const char *kNewGlobalJSObjectStr =
+static const char kNewGlobalJSObjectStr[] =
 "\n\n//\n"
 "// Method for creating a new %s JavaScript object\n"
 "//\n"
@@ -1750,7 +1758,7 @@ static const char *kNewGlobalJSObjectStr =
     sprintf(buffer, kNewGlobalJSObjectStr, className,   \
             className, className, className, className)
 
-static const char *kNewJSObjectStr =
+static const char kNewJSObjectStr[] =
 "\n\n//\n"
 "// Method for creating a new %s JavaScript object\n"
 "//\n"
