@@ -151,10 +151,12 @@ NS_IMETHODIMP TimerThread::Run()
 
     if (theTimer) {
 #ifdef DEBUG_TIMERS
-      PRIntervalTime now = PR_IntervalNow();
-      PR_LOG(gTimerLog, PR_LOG_DEBUG, ("Timer thread woke up %dms from when it was supposed to\n",
-        ((now > theTimer->mTimeout) ? PR_IntervalToMilliseconds(now - theTimer->mTimeout) :
-                                      -(PRInt32)PR_IntervalToMilliseconds(theTimer->mTimeout - now))));
+      if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+        PRIntervalTime now = PR_IntervalNow();
+        PR_LOG(gTimerLog, PR_LOG_DEBUG, ("Timer thread woke up %dms from when it was supposed to\n",
+          ((now > theTimer->mTimeout) ? PR_IntervalToMilliseconds(now - theTimer->mTimeout) :
+                                        -(PRInt32)PR_IntervalToMilliseconds(theTimer->mTimeout - now))));
+      }
 #endif
 
       // We are going to let the call to Fire here handle the release of the timer so that
@@ -183,12 +185,14 @@ NS_IMETHODIMP TimerThread::Run()
     }
 
 #ifdef DEBUG_TIMERS
-    if (waitFor == PR_INTERVAL_NO_TIMEOUT)
-      PR_LOG(gTimerLog, PR_LOG_DEBUG, ("waiting for PR_INTERVAL_NO_TIMEOUT\n"));
-    else if (waitFor == PR_INTERVAL_NO_WAIT)
-      PR_LOG(gTimerLog, PR_LOG_DEBUG, ("waiting for PR_INTERVAL_NO_WAIT\n"));
-    else
-      PR_LOG(gTimerLog, PR_LOG_DEBUG, ("waiting for %u\n", PR_IntervalToMilliseconds(waitFor)));
+    if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+      if (waitFor == PR_INTERVAL_NO_TIMEOUT)
+        PR_LOG(gTimerLog, PR_LOG_DEBUG, ("waiting for PR_INTERVAL_NO_TIMEOUT\n"));
+      else if (waitFor == PR_INTERVAL_NO_WAIT)
+        PR_LOG(gTimerLog, PR_LOG_DEBUG, ("waiting for PR_INTERVAL_NO_WAIT\n"));
+      else
+        PR_LOG(gTimerLog, PR_LOG_DEBUG, ("waiting for %u\n", PR_IntervalToMilliseconds(waitFor)));
+    }
 #endif
 
     mWaiting = PR_TRUE;
