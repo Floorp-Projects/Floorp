@@ -259,9 +259,9 @@ protected:
   nsLineStyle       mCurrLineStyle;
 
 #ifdef NS_DEBUG
-  PRBool            mInitialized;
+  PRPackedBool      mInitialized;
 #endif
-  PRBool            mRightToLeftText;
+  PRPackedBool      mRightToLeftText;
 };
 
 #endif /* nsRenderingContextWin_h___ */

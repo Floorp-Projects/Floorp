@@ -162,8 +162,6 @@ private:
    */
   void CleanUpDDB();
 
-  void CleanUpDIBSection();
-
   void CreateImageWithAlphaBits(HDC TheHDC);
 
   /** 
@@ -240,20 +238,20 @@ private:
   PRUint8 PaletteMatch(PRUint8 r, PRUint8 g, PRUint8 b);
 
   PRPackedBool        mInitialized;
+  PRPackedBool        mIsOptimized;       // Did we convert our DIB to a HBITMAP
+  PRPackedBool        mIsLocked;          // variable to keep track of the locking
+  PRPackedBool        mDIBTemp;           // boolean to let us know if DIB was created as temp
   PRInt8              mNumBytesPixel;     // number of bytes per pixel
   PRInt16             mNumPaletteColors;  // Number of colors in the pallete 256 
   PRInt32             mSizeImage;         // number of bytes
   PRInt32             mRowBytes;          // number of bytes per row
   PRUint8*            mImageBits;         // starting address of DIB bits
-  PRBool              mIsOptimized;       // Did we convert our DIB to a HBITMAP
   nsColorMap*         mColorMap;          // Redundant with mColorTable, but necessary
 
-  PRInt32             mDecodedX1;			    //Keeps track of what part of image
-  PRInt32             mDecodedY1;			    // has been decoded.
+  PRInt32             mDecodedX1;         //Keeps track of what part of image
+  PRInt32             mDecodedY1;         // has been decoded.
   PRInt32             mDecodedX2; 
   PRInt32             mDecodedY2; 
-  PRBool              mIsLocked;			    // variable to keep track of the locking
-  PRBool              mDIBTemp;           // boolean to let us know if DIB was created as temp
 
   // alpha layer members
   PRUint8             *mAlphaBits;        // alpha layer if we made one
@@ -261,7 +259,6 @@ private:
   PRInt16             mARowBytes;         // number of bytes per row in the image for tha alpha
   PRInt8              mImageCache;        // place to save off the old image for fast animation
   HBITMAP             mHBitmap;           // the GDI bitmaps
-  HBITMAP             mDIBSection;
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
 
   static ALPHABLENDPROC gAlphaBlend;      // AlphaBlend function pointer
