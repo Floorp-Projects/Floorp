@@ -74,7 +74,7 @@
   	<html:div class="hspace-both">
 	  	<html:input type="checkbox" id="offlineNewsDownloadUnreadOnly"
                   pref="true" preftype="bool" prefstring="offline.news.download.unread_only"/>
-  		<html:label for="offlineNewsDownloadUnreadOnly" accesskey="" tabindex="0">
+  		<html:label for="offlineNewsDownloadUnreadOnly" accesskey="offlineNewsDownloadUnreadOnly.accesskey" tabindex="0">
 	    	&downOnlyCheck;			
    		</html:label>
   	</html:div>
@@ -82,7 +82,7 @@
 		  <html:input type="checkbox" id="offlineNewsDownloadByDate"
                   onclick="DoEnabling();"
                   pref="true" preftype="bool" prefstring="offline.news.download.by_date"/>
-  		<html:label for="offlineNewsDownloadByDate" accesskey="" tabindex="0">			
+  		<html:label for="offlineNewsDownloadByDate" accesskey="offlineNewsDownloadByDate.accesskey" tabindex="0">			
 	    	&downDateCheck;
   		</html:label>
 	  </html:div>
@@ -93,7 +93,7 @@
       	  	<html:input type="radio" name="offline" id="offlineNewsDownloadUseDays0"
                         onclick="DoEnabling()" style="margin-bottom: 5px;"
                         pref="true" preftype="int" prefindex="0" prefstring="offline.news.download.use_days"/>
-            <html:label for="offlineNewsDownloadUseDays0" accesskey="f" tabindex="0">			
+            <html:label for="offlineNewsDownloadUseDays0" accesskey="offlineNewsDownloadUseDays0.accesskey" tabindex="0">			
       	    	&fromRadio.label;
   		      </html:label> 
           </html:td>
@@ -114,7 +114,7 @@
       	  	<html:input type="radio" name="offline" id="offlineNewsDownloadUseDays1"
                         onclick="DoEnabling()" style="margin-bottom: 5px;"
                         pref="true" preftype="int" prefindex="1" prefstring="offline.news.download.use_days"/>
-        		<html:label for="offlineNewsDownloadUseDays1" accesskey="s" tabindex="0">			
+        		<html:label for="offlineNewsDownloadUseDays1" accesskey="offlineNewsDownloadUseDays1.accesskey" tabindex="0">			
       	    	&sinceRadio.label;
         		</html:label>
           </html:td>
