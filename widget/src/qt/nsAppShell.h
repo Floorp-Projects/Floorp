@@ -56,12 +56,21 @@ public:
     NS_IMETHOD		SetDispatchListener(nsDispatchListener* aDispatchListener);
     virtual void*	GetNativeData(PRUint32 aDataType);
 
+    enum GfxToolkit
+    {
+        eInvalidGfxToolkit = 0,
+        eQtGfxToolkit      = 1,
+        eXlibGfxToolkit    = 2
+    };
+
+    static GfxToolkit GetGfxToolkit();
+
+protected:
+    static GfxToolkit      mGfxToolkit;
+
 private:
     nsDispatchListener	 * mDispatchListener;
     nsQApplication       * mApplication;
-
-protected:
-    nsIEventQueueService * mEventQService;
 };
 
 #endif // nsAppShell_h__
