@@ -403,10 +403,6 @@ class nsTString_CharT : public nsTSubstring_CharT
       NS_COM void AppendWithConversion( const nsTAString_IncompatibleCharT& aString );
       NS_COM void AppendWithConversion( const incompatible_char_type* aData, PRInt32 aLength=-1 );
 
-#ifdef CharT_is_PRUnichar
-      NS_COM void InsertWithConversion( const incompatible_char_type* aData, PRUint32 aOffset, PRInt32 aCount=-1 );
-#endif
-
         /**
          * Append the given integer to this string 
          */
