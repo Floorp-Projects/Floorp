@@ -32,6 +32,7 @@
 #include "nsKeyboardUtils.h"
 #include "nspr.h"
 #include "nsWindow.h"
+#include "nsPrintfCString.h"
 
 //
 // xkbms: X KeyBoard Mode Switch
@@ -58,20 +59,6 @@
 // application to filter events with a non-null window
 //
 
-#undef DEBUG_X_KEYBOARD_MODE_SWITCH
-#ifdef DEBUG_X_KEYBOARD_MODE_SWITCH
-#define DEBUG_PRINTF(x) \
-            PR_BEGIN_MACRO \
-              printf x ; \
-              printf(", %s %d\n", __FILE__, __LINE__); \
-            PR_END_MACRO 
-#else
-#define DEBUG_PRINTF(x) \
-            PR_BEGIN_MACRO \
-            PR_END_MACRO 
-#endif
-
-
 // Xlib should define this!
 #define MODIFIERMAP_ROW_SIZE 8
 
@@ -88,11 +75,9 @@ void
 nsXKBModeSwitch::ControlWorkaround(gboolean grab_during_popup,
                                    gboolean ungrab_during_mode_switch)
 {
-  DEBUG_PRINTF(("nsXKBModeSwitch::ControlWorkaround:"));
-  DEBUG_PRINTF(("    grab_during_popup = %d",
-                     grab_during_popup));
-  DEBUG_PRINTF(("    ungrab_during_mode_switch = %d",
-                     ungrab_during_mode_switch));
+  NS_WARNING("nsXKBModeSwitch::ControlWorkaround:");
+  NS_WARNING(nsPrintfCString("    grab_during_popup = %d", grab_during_popup).get());
+  NS_WARNING(nsPrintfCString("    ungrab_during_mode_switch = %d", ungrab_during_mode_switch).get());
   gGrabDuringPopup = grab_during_popup;
   gUnGrabDuringModeSwitch = ungrab_during_mode_switch;
 
@@ -164,11 +149,11 @@ nsXKBModeSwitch::HandleMappingNotify()
   XFreeModifiermap(xmodmap);
 
   if (!gModeSwitchKeycode1) {
-    DEBUG_PRINTF(("\n\nnsXKBModeSwitch::HandleMappingNotify: no Mode_switch\n\n"));
+    NS_WARNING("\n\nnsXKBModeSwitch::HandleMappingNotify: no Mode_switch\n\n");
   }
-  DEBUG_PRINTF(("\n\nnsXKBModeSwitch::HandleMappingNotify:"));
-  DEBUG_PRINTF(("    gModeSwitchKeycode1 = %d", gModeSwitchKeycode1));
-  DEBUG_PRINTF(("    gModeSwitchKeycode2 = %d", gModeSwitchKeycode2));
+  NS_WARNING("\n\nnsXKBModeSwitch::HandleMappingNotify:");
+  NS_WARNING(nsPrintfCString("    gModeSwitchKeycode1 = %d", gModeSwitchKeycode1).get());
+  NS_WARNING(nsPrintfCString("    gModeSwitchKeycode2 = %d", gModeSwitchKeycode2).get());
 
 #if defined(HAVE_X11_XKBLIB_H) && \
   defined(XkbMajorVersion) && defined(XbMinorVersion)
@@ -207,14 +192,14 @@ nsXKBModeSwitch::HandleKeyPress(XKeyEvent *xke)
   if ((xke->keycode == gModeSwitchKeycode1) 
       || (xke->keycode == gModeSwitchKeycode2)) {
     gModeSwitchDown = TRUE;
-    DEBUG_PRINTF(("nsXKBModeSwitch::HandleKeyPress: Mode_switch is down"));
+    NS_WARNING("nsXKBModeSwitch::HandleKeyPress: Mode_switch is down");
     nsWindow *win = nsWindow::GetGrabWindow();
     if (!win)
       return;
     if (win->GrabInProgress()) {
       if (gUnGrabDuringModeSwitch) {
         gdk_keyboard_ungrab(GDK_CURRENT_TIME);
-        DEBUG_PRINTF(("\n\n*** ungrab keyboard ***\n\n"));
+        NS_WARNING("\n\n*** ungrab keyboard ***\n\n");
       }
     }
   }
@@ -232,7 +217,7 @@ nsXKBModeSwitch::HandleKeyRelease(XKeyEvent *xke)
   if ((xke->keycode == gModeSwitchKeycode1) 
           || (xke->keycode == gModeSwitchKeycode2)) {
     gModeSwitchDown = FALSE;
-    DEBUG_PRINTF(("nsXKBModeSwitch::HandleKeyPress: Mode_switch is up"));
+    NS_WARNING("nsXKBModeSwitch::HandleKeyPress: Mode_switch is up");
     nsWindow *win = nsWindow::GetGrabWindow();
     if (!win)
       return;
@@ -241,7 +226,7 @@ nsXKBModeSwitch::HandleKeyRelease(XKeyEvent *xke)
         if (!win->GetGdkGrabWindow())
           return;
         gdk_keyboard_grab(win->GetGdkGrabWindow(), gOwnerEvents, gGrabTime);
-        DEBUG_PRINTF(("\n\n*** re-grab keyboard ***\n\n"));
+        NS_WARNING("\n\n*** re-grab keyboard ***\n\n");
       }
     }
   }

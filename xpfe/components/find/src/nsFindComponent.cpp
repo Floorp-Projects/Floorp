@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Morten Nilsen <morten@nilsen.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -71,9 +72,6 @@
 
 #ifdef DEBUG
 #define DEBUG_FIND
-#define DEBUG_PRINTF PR_fprintf
-#else
-#define DEBUG_PRINTF (void)
 #endif
 
 
@@ -557,11 +555,9 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
             }
         }
         // Test for error (GetFindDialog succeeds if there's no dialog).
-        if ( NS_FAILED( rv ) ) {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: Error getting find dialog, rv=0x%08X\n",
-                          __FILE__, (int)__LINE__, (int)rv );
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Error getting find dialog");
+        if ( NS_FAILED( rv ) )
             return rv;
-        }
     }
 
     if (aContext)
@@ -645,11 +641,9 @@ nsFindComponent::Replace( nsISupports *aContext )
             }
         }
         // Test for error (GetReplaceDialog succeeds if there's no dialog).
-        if ( NS_FAILED( rv ) ) {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: Error getting replace dialog, rv=0x%08X\n",
-                          __FILE__, (int)__LINE__, (int)rv );
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Error getting replace dialog");
+        if ( NS_FAILED( rv ) )
             return rv;
-        }
     }
 
     if (aContext)
