@@ -22,6 +22,7 @@
 
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMSelection.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIEditProperty.h"
 #include "nsISupportsArray.h"
@@ -370,10 +371,11 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         {
           printf("Trying to insert HTML\n");
           aProcessed=PR_TRUE;
-          if (mEditor)
+          nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(mEditor));
+          if (htmlEditor)
           {
             nsString nsstr ("<b>This is bold <em>and emphasized</em></b>");
-            nsresult res = mEditor->Insert(nsstr);
+            nsresult res = htmlEditor->Insert(nsstr);
             if (!NS_SUCCEEDED(res))
               printf("nsTextEditor::Insert(string) failed\n");
           }
@@ -485,9 +487,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           {
             // XXX: move this logic down into texteditor rules delegate
             //      should just call mEditor->ChangeTextProperty(prop)
-            PRBool any = PR_FALSE;
-            PRBool all = PR_FALSE;
-            PRBool first = PR_FALSE;
+            //PRBool any = PR_FALSE;
+            //PRBool all = PR_FALSE;
+            //PRBool first = PR_FALSE;
             nsAutoString prop = "SIZE";
             nsAutoString value = "+2";
             mEditor->SetTextProperty(nsIEditProperty::font, &prop, &value);
@@ -504,9 +506,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           {
             // XXX: move this logic down into texteditor rules delegate
             //      should just call mEditor->ChangeTextProperty(prop)
-            PRBool any = PR_FALSE;
-            PRBool all = PR_FALSE;
-            PRBool first = PR_FALSE;
+            //PRBool any = PR_FALSE;
+            //PRBool all = PR_FALSE;
+            //PRBool first = PR_FALSE;
             nsAutoString prop = "SIZE";
             nsAutoString value = "-2";
             mEditor->SetTextProperty(nsIEditProperty::font, &prop, &value);
@@ -523,9 +525,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           {
             // XXX: move this logic down into texteditor rules delegate
             //      should just call mEditor->ChangeTextProperty(prop)
-            PRBool any = PR_FALSE;
-            PRBool all = PR_FALSE;
-            PRBool first = PR_FALSE;
+            //PRBool any = PR_FALSE;
+            //PRBool all = PR_FALSE;
+            //PRBool first = PR_FALSE;
             nsAutoString prop = "FACE";
             nsAutoString value = "helvetica";
             mEditor->SetTextProperty(nsIEditProperty::font, &prop, &value);
@@ -542,9 +544,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           {
             // XXX: move this logic down into texteditor rules delegate
             //      should just call mEditor->ChangeTextProperty(prop)
-            PRBool any = PR_FALSE;
-            PRBool all = PR_FALSE;
-            PRBool first = PR_FALSE;
+            //PRBool any = PR_FALSE;
+            //PRBool all = PR_FALSE;
+            //PRBool first = PR_FALSE;
             nsAutoString prop = "FACE";
             nsAutoString value = "times";
             mEditor->SetTextProperty(nsIEditProperty::font, &prop, &value);
@@ -766,12 +768,43 @@ nsTextEditorMouseListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
+  if (!aMouseEvent)
+    return NS_OK;   // NS_OK means "we didn't process the event".  Go figure.
+
+  // We only do anything special for middle-mouse click (paste);
+  // ignore all other events.
+  PRUint32 button = 0;
+  aMouseEvent->GetButton(&button);
+  if (button != 2)
+    return NS_OK;
+
+  nsCOMPtr<nsIEditor> editor (do_QueryInterface(mEditor));
+  if (!editor)
+    return NS_ERROR_FAILURE;
+
+  // There's currently no way to set the selection to the mouse position
+  // outside of liblayout -- nsIDOMEvent has an API to get the node under
+  // the mouse, but not to get the offset within the node.
+#ifdef PASTE_TO_MOUSE_POSITION
   nsCOMPtr<nsIDOMNode> target;
-  if (NS_OK == aMouseEvent->GetTarget(getter_AddRefs(target))) {
-//    nsSetCurrentNode(aTarget);
+  if (NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(target))))
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    if (NS_SUCCEEDED(editor->GetSelection(getter_AddRefs(selection))))
+    {
+      if (NS_SUCCEEDED(selection->Collapse(target, 0)))
+      {
+        editor->Paste();
+      }
+    }
   }
-  //Should not be error.  Need a new way to do return values
-  return NS_ERROR_BASE;
+#else /* PASTE_TO_MOUSE_POSITION */
+  // Until we can get node AND offset,
+  // it's better to paste to the current selection position:
+  editor->Paste();
+#endif /* PASTE_TO_MOUSE_POSITION */
+
+  return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
 }
 
 
