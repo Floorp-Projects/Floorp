@@ -300,7 +300,7 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     if (NS_FAILED(result)) { return result; }
 
     // the HTML Editor is CSS-aware only in the case of Composer
-    mCSSAware = PRBool(0 == aFlags);
+    mCSSAware = (0 == aFlags);
 
     // Init the HTML-CSS utils
     if (mHTMLCSSUtils)
@@ -483,7 +483,7 @@ NS_IMETHODIMP
 nsHTMLEditor::SetFlags(PRUint32 aFlags)
 {
   if (!mRules) { return NS_ERROR_NULL_POINTER; }
-  mCSSAware = !PRBool(aFlags | nsIPlaintextEditor::eEditorNoCSSMask);
+  mCSSAware = ((aFlags & nsIPlaintextEditor::eEditorNoCSSMask) == 0);
 
   return mRules->SetFlags(aFlags);
 }
