@@ -215,7 +215,7 @@ nsFindComponent::Context::MakeTSDocument() {
     
         if ( document && presShell ) {
             // Compare this document with the one we searched last time.
-            if ( document == mLastDocument ) {
+            if ( document.get() == mLastDocument ) {
                 // Same document, use the block index/offset we have remembered.
             } else {
                 // New document, remember it and reset saved index/offset.
