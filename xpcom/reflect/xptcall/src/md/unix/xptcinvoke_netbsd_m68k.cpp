@@ -144,7 +144,7 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
       "g" (methodIndex),    /* %2 */
       "g" (paramCount),     /* %3 */
       "g" (params)          /* %4 */
-    : "a0", "d0", "memory" 
+    : "a0", "a1", "d0", "d1", "memory"
     );
   
   return result;

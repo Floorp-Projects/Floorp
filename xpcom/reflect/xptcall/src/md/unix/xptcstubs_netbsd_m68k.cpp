@@ -117,7 +117,7 @@ nsresult nsXPTCStubBase::Stub##n() \
     "movl  d0, %0" \
     : "=d" (result)     /* %0 */ \
     : \
-    : "a0", "memory" ); \
+    : "a0", "a1", "d0", "d1", "memory" ); \
     return result; \
 }
 
