@@ -218,9 +218,10 @@ five debugging aids:
    assert(condition, level, message) 
    Calls error() if condition is true.
 
-   debug(message)
-   Same as dump(7, message). According to the code, level 7 is
-   "typical checkpoints (e.g. someone tried to do some output)".
+   debug(message) Same as dump(6, message). According to the code,
+   level 6 is "debugging remarks for the section currently under
+   test". No code in CVS should do anything at level 6 (such as use
+   the debug() function), it is reserved for personal debugging.
 
    notImplemented()
    Calls error() with predefined arguments.
@@ -247,6 +248,10 @@ configuration files, errors sending mail, failures when connecting to
 databases, and so on. For errors in user data, e.g. wrong password,
 unknown requests, out of range input and the like, you want to report
 the errors using the usual techniques of error codes and callbacks.
+
+Using these functions also results in a not insignificant performance
+penalty. You should think twice before leaving them in tight loops
+when checking in.
 
 (Note. These debugging methods are _class methods_ and therefore you
 do not need to ensure that $self is a reference before calling them.)

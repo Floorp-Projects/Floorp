@@ -208,6 +208,7 @@ sub error {
     my($level, @data) = @_;
     $self->dump(9, "error raised: $data[0]");
     if ($self->isAtUserLevel($level) and not $LOCKED) {
+        # XXX this gets called even in eval{} blocks
         $LOCKED = 1;
         $self->dump(10, 'calling @FATAL error handlers...');
         foreach my $entry (@FATAL) {
@@ -235,7 +236,7 @@ sub assert {
 
 sub debug {
     my $self = shift;
-    $self->dump(7, @_);
+    $self->dump(6, @_);
 }
 
 sub notImplemented {
