@@ -83,6 +83,8 @@
 #define PORT_Malloc PR_Malloc
 #endif
 
+#define NUM_SID_CACHE_ENTRIES 1024
+
 static int handle_connection( PRFileDesc *, PRFileDesc *, int );
 
 static const char envVarName[] = { SSL_ENV_VAR_NAME };
@@ -269,33 +271,48 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
     return rv;  
 }
 
-void printSecurityInfo(PRFileDesc *fd)
+void 
+printSecurityInfo(PRFileDesc *fd)
 {
-    char * cp;	/* bulk cipher name */
-    char * ip;	/* cert issuer DN */
-    char * sp;	/* cert subject DN */
-    int    op;	/* High, Low, Off */
-    int    kp0;	/* total key bits */
-    int    kp1;	/* secret key bits */
-    int    result;
-    SSL3Statistics * ssl3stats = SSL_GetStatistics();
+    CERTCertificate * cert      = NULL;
+    SSL3Statistics *  ssl3stats = SSL_GetStatistics();
+    SECStatus         result;
+    SSLChannelInfo    info;
 
-    PRINTF("selfserv: %ld cache hits; %ld cache misses, %ld cache not reusable\n",
+    PRINTF(
+    	"selfserv: %ld cache hits; %ld cache misses, %ld cache not reusable\n",
     	ssl3stats->hch_sid_cache_hits, ssl3stats->hch_sid_cache_misses,
 	ssl3stats->hch_sid_cache_not_ok);
 
-    result = SSL_SecurityStatus(fd, &op, &cp, &kp0, &kp1, &ip, &sp);
-    if (result == SECSuccess) {
-	PRINTF(
-    "selfserv: bulk cipher %s, %d secret key bits, %d key bits, status: %d\n",
-		cp, kp1, kp0, op);
-	if (requestCert) {
-	    PRINTF("selfserv: subject DN: %s\n"
-		   "selfserv: issuer  DN: %s\n",  sp, ip);
+    result = SSL_GetChannelInfo(fd, &info, sizeof info);
+    if (result != SECSuccess)
+    	return;
+    if (info.length >= sizeof info - sizeof info.reserved) {
+	FPRINTF(stderr, 
+	   "selfserv: SSL version %d.%d using %d-bit %s with %d-bit %s MAC\n",
+	       info.protocolVersion >> 8, info.protocolVersion & 0xff,
+	       info.effectiveKeyBits, info.symCipherName, 
+	       info.macBits, info.macAlgorithmName);
+	FPRINTF(stderr, 
+	   "selfserv: Server Auth: %d-bit %s, Key Exchange: %d-bit %s\n",
+	       info.authKeyBits, info.authAlgorithmName,
+	       info.keaKeyBits,  info.keaTypeName);
+    }
+    if (requestCert)
+	cert = SSL_RevealCert(fd);
+    if (cert) {
+	char * ip = CERT_NameToAscii(&cert->issuer);
+	char * sp = CERT_NameToAscii(&cert->subject);
+        if (sp) {
+	    FPRINTF(stderr, "selfserv: subject DN: %s\n", sp);
+	    PR_Free(sp);
 	}
-	PR_Free(cp);
-	PR_Free(ip);
-	PR_Free(sp);
+        if (ip) {
+	    FPRINTF(stderr, "selfserv: issuer  DN: %s\n", ip);
+	    PR_Free(ip);
+	}
+	CERT_DestroyCertificate(cert);
+	cert = NULL;
     }
     FLUSH;
 }
@@ -911,7 +928,7 @@ handle_connection(
 	    iovs[numIOVs].iov_len  = reqLen;
 	    numIOVs++;
 
-	    printSecurityInfo(ssl_sock);
+/*	    printSecurityInfo(ssl_sock); */
 	}
 
 	iovs[numIOVs].iov_base = (char *)EOFmsg;
@@ -1264,6 +1281,23 @@ beAGoodParent(int argc, char **argv, int maxProcs, PRFileDesc * listen_sock)
     exit(0);
 }
 
+#ifdef DEBUG_nelsonb
+void
+WaitForDebugger(void)
+{
+
+    int waiting       = 12;
+    int myPid         = _getpid();
+    PRIntervalTime    nrval = PR_SecondsToInterval(5);
+
+    while (waiting) {
+    	printf("child %d is waiting to be debugged!\n", myPid);
+	PR_Sleep(nrval); 
+	--waiting;
+    }
+}
+#endif
+
 int
 main(int argc, char **argv)
 {
@@ -1400,13 +1434,16 @@ main(int argc, char **argv)
 	prStatus = PR_SetFDInheritable(listen_sock, PR_FALSE);
 	if (prStatus != PR_SUCCESS)
 	    errExit("PR_SetFDInheritable");
+#ifdef DEBUG_nelsonb
+	WaitForDebugger();
+#endif
 	rv = SSL_InheritMPServerSIDCache(envString);
 	if (rv != SECSuccess)
 	    errExit("SSL_InheritMPServerSIDCache");
     } else if (maxProcs > 1) {
 	/* we're going to be the parent in a multi-process server.  */
 	listen_sock = getBoundListenSocket(port);
-	rv = SSL_ConfigMPServerSIDCache(32 * 1024, 0, 0, tmp);
+	rv = SSL_ConfigMPServerSIDCache(NUM_SID_CACHE_ENTRIES, 0, 0, tmp);
 	if (rv != SECSuccess)
 	    errExit("SSL_ConfigMPServerSIDCache");
 	beAGoodParent(argc, argv, maxProcs, listen_sock);
@@ -1417,7 +1454,7 @@ main(int argc, char **argv)
 	prStatus = PR_SetFDInheritable(listen_sock, PR_FALSE);
 	if (prStatus != PR_SUCCESS)
 	    errExit("PR_SetFDInheritable");
-	rv = SSL_ConfigServerSessionIDCache(32 * 1024, 0, 0, tmp);
+	rv = SSL_ConfigServerSessionIDCache(NUM_SID_CACHE_ENTRIES, 0, 0, tmp);
 	if (rv != SECSuccess)
 	    errExit("SSL_ConfigServerSessionIDCache");
     }
