@@ -71,7 +71,7 @@ $LayoutPerformanceTestTimeout     = 1200;  # entire test, seconds
 $DHTMLPerformanceTestTimeout      = 1200;  # entire test, seconds
 $QATestTimeout                    = 1200;   # entire test, seconds
 $LayoutPerformanceTestPageTimeout = 30000; # each page, ms
-$StartupPerformanceTestTimeout    = 60;    # seconds
+$StartupPerformanceTestTimeout    = 15;    # seconds
 $XULWindowOpenTestTimeout	      = 150;   # seconds
 
 
