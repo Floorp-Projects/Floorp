@@ -28,6 +28,7 @@ endif
 
 DEFAULT_COMPILER = cc
 LINK_PROGRAM = $(CCC)
+LD = $(CCC)
 
 ifdef NS_USE_GCC
 	CC		= gcc

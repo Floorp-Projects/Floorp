@@ -290,7 +290,7 @@ else
 endif
 endif
 else
-	$(MKSHLIB) -o $@ $(OBJS) -all $(AR_LIBS) -none $(LD_LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(MKSHLIB) -o $@ $(OBJS) -all $(AR_LIBS) -none $(LD_LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 	chmod +x $@
 endif
 endif
