@@ -505,8 +505,6 @@ webshell/tests/viewer/unix/Makefile
 webshell/tests/viewer/unix/gtk/Makefile
 webshell/tests/viewer/unix/qt/Makefile
 webshell/tests/viewer/unix/xlib/Makefile
-webshell/embed/Makefile
-webshell/embed/ngprefs/win/Makefile
 "
 
 MAKEFILES_widget="
