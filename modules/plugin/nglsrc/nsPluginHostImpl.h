@@ -339,9 +339,12 @@ public:
   /* Called by GetURL and PostURL */
 
   NS_IMETHOD
-  NewPluginURLStream(const nsString& aURL, nsIPluginInstance *aInstance, 
+  NewPluginURLStream(const nsString& aURL, 
+                     nsIPluginInstance *aInstance, 
                      nsIPluginStreamListener *aListener,
-                     void *aPostData = nsnull, PRUint32 aPostDataLen = 0, 
+                     const char *aPostData = nsnull, 
+                     PRBool isFile = PR_FALSE,
+                     PRUint32 aPostDataLen = 0, 
                      const char *aHeadersData = nsnull, 
                      PRUint32 aHeadersDataLen = 0);
 
@@ -371,8 +374,8 @@ private:
    * @param outPostDataLen the length of outPostData
    */
   nsresult
-  FixPostData(void *inPostData, PRUint32 inPostDataLen, 
-              void **outPostData, PRUint32 *outPostDataLen);
+  FixPostData(const char *inPostData, PRUint32 inPostDataLen, 
+              char **outPostData, PRUint32 *outPostDataLen);
 
   nsresult
   LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFile* aPath);
