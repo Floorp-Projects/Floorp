@@ -10,6 +10,7 @@
 <!ENTITY followupAddr.label   "Followup:"> 
 <!ENTITY subject.label  "Subject:">
 
+<!ENTITY attachments.label "Attachments:">
 
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
 
@@ -19,7 +20,11 @@
 <!ENTITY saveCmd.label ".Save">
 <!ENTITY saveAsCmd.label "Save As (Draft)">
 <!ENTITY saveAsTemplateCmd.label "Save As (Template)">
-<!ENTITY attachCmd.label ".Attach">
+<!ENTITY attachMenu.label "Attach...">
+<!ENTITY attachFileCmd.label "File...">
+<!ENTITY attachPageCmd.label "Web Page...">
+<!ENTITY removeLastAttachmentCmd.label "Remove Last Attachment">
+<!ENTITY attachVCardCmd.label ".Personal Card (vCard)">
 <!ENTITY sendNowCmd.label "Send Now">
 <!ENTITY sendLaterCmd.label "Send Later">
 <!ENTITY quoteOrigCmd.label ".Quote Original Message">

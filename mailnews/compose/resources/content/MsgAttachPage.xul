@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messengercompose/skin/" type="text/css"?>  
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
+
+<!DOCTYPE window
+[
+
+<!ENTITY windowTitle.label "Please Specify a Location to Attach">
+
+]>
+
+<window title="&windowTitle.label;"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload="Startup()"
+    align="vertical"> 
+
+<html:script language="JavaScript" src="chrome://messengercompose/content/MsgAttachPage.js"/> 
+	<box align="horizontal">
+		<html:div>Web Page (URL):</html:div>
+		<html:input type="text" id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" />
+	</box>
+	
+	<box id="okCancelButtons"/> 
+</window>

@@ -292,7 +292,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
 		m_compFields->SetReplyTo(NS_CONST_CAST(char*, (const char *)replyTo));
     m_compFields->SetOrganization(NS_CONST_CAST(char*, (const char *)organization));
     
-#ifdef DEBUG_ducarroz
+#if defined(DEBUG_ducarroz) || defined(DEBUG_seth_)
     printf("----------------------------\n");
     printf("--  Sending Mail Message  --\n");
     printf("----------------------------\n");
@@ -300,6 +300,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
     printf("To: %s  Cc: %s  Bcc: %s\n", m_compFields->GetTo(), m_compFields->GetCc(), m_compFields->GetBcc());
     printf("Newsgroups: %s\n", m_compFields->GetNewsgroups());
     printf("Subject: %s  \nMsg: %s\n", m_compFields->GetSubject(), m_compFields->GetBody());
+    printf("Attachments: %s\n",m_compFields->GetAttachments());
     printf("----------------------------\n");
 #endif //DEBUG
 
@@ -343,7 +344,13 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
         tEditor = m_editor;
       }
       else
-        tEditor = nsnull;      
+        tEditor = nsnull;    
+
+#ifdef DEBUG
+      printf("RHP:  do your magic here.\n");
+      printf("Attachments: %s\n",m_compFields->GetAttachments());
+#endif
+
       rv = mMsgSend->CreateAndSendMessage(
                     tEditor,
                     identity,

@@ -186,8 +186,10 @@ public:
 	nsIMsgSendListener **CreateListenerArray();
 
 private:
+
   nsMsgCompose    *mComposeObj;
 	MSG_DeliverMode mDeliverMode;
 
 };
+
 

@@ -54,7 +54,6 @@ Rights Reserved.
 <broadcaster id="dialog.start" ready="false"/>
 <observes element="dialog.start" attribute="ready" onchange="ComposeStartup()"/>
 
-
 <!-- box id="toolbar" align="vertical" style="width:100%;height:100%" -->
 <toolbox>
   <menubar>
@@ -64,7 +63,13 @@ Rights Reserved.
 		<menuitem value="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
 		<menuitem value="&saveAsCmd.label;" onaction="SaveAsDraft()"/>
 		<menuitem value="&saveAsTemplateCmd.label;" onaction="SaveAsTemplate()"/>
-		<menuitem value="&attachCmd.label;" cmd="nsCmd:ComposeAttach"/>
+		<menu  id="attachMenu" name="&attachMenu.label;">
+			<menuitem name="&attachFileCmd.label;" onclick="AttachFile()"/>
+			<menuitem name="&attachPageCmd.label;" onclick="AttachPage()"/>
+			<menuitem name="&removeLastAttachmentCmd.label;" onclick="RemoveLastAttachment()"/>
+			<menuseparator/>
+			<menuitem name="&attachVCardCmd.label;" onclick="AttachVCard()"/>
+		</menu>
 		<menuseparator/>
 		<menuitem value="&sendNowCmd.label;" onaction="SendMessage()"/>
 		<menuitem value="&sendLaterCmd.label;" onaction="SendMessageLater()"/>
@@ -211,6 +216,12 @@ Rights Reserved.
 				</box>
 				<spring style="height:0.5em"/>
 				<box align="horizontal" flex="100%">
+					<html:div flex="20%">&attachments.label;</html:div>
+					<html:select id="attachments" flex="80%">
+                                        </html:select> 
+				</box>
+				<spring style="height:0.5em"/>
+				<box align="horizontal" flex="100%">
 					<box align="vertical" flex="20%">
 						<box align="vertical" flex="100%">
 							<html:select id="msgRecipientType#1" flex="100%">
@@ -271,27 +282,6 @@ Rights Reserved.
 				<box align="horizontal" flex="100%">
 					<html:div flex="20%">&subject.label;</html:div>
 				    <html:input id="msgSubject" type="text" flex="80%" onkeyup="SetComposeWindowTitle(event.which);"/>
-				</box>
-			</box>
-			<box align="vertical" flex="40%">
-				<box align="horizontal" flex="100%">
-					<html:div flex="100%">[attachment box]</html:div>
-<!--
-					<tree id="attachment" class="attachment" flex="100%">
-						<treehead>
-							<treerow>
-								<treecell>Attachment</treecell>
-							</treerow>
-						</treehead>
-						<treechildren id="attachmentTree" open="true">
-							<treeitem> <treerow> <treecell>aaaa</treecell> </treerow> </treeitem>
-							<treeitem> <treerow> <treecell>bbb</treecell> </treerow> </treeitem>
-							<treeitem> <treerow> <treecell>ccc</treecell> </treerow> </treeitem>
-							<treeitem> <treerow> <treecell>dddd</treecell> </treerow> </treeitem>
-							<treeitem> <treerow> <treecell>eeeee</treecell> </treerow> </treeitem>
-						</treechildren>
-					</tree>
--->
 				</box>
 			</box>
 		</box>

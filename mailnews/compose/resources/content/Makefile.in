@@ -35,6 +35,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/defaultHtmlBody.html \
 	$(srcdir)/addressAutoComplete.js \
 	$(srcdir)/composebe_en.properties \
+	$(srcdir)/MsgAttachPage.xul	\
+	$(srcdir)/MsgAttachPage.js	\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

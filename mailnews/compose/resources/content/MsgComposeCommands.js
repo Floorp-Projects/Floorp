@@ -22,6 +22,8 @@ var msgComposeService = Components.classes["component://netscape/messengercompos
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
+var numAttachments = 0;
+var currentAttachment = null;
 
 var other_header = "";
 var update_compose_title_as_you_type = true;
@@ -237,6 +239,8 @@ function GenericSendMessage( msgType )
 	    {
 			Recipients2CompFields(msgCompFields);
 			msgCompFields.SetSubject(document.getElementById("msgSubject").value);
+			dump("attachments = " + GenerateAttachmentsString() + "\n");
+			msgCompFields.SetAttachments(GenerateAttachmentsString());
 		
 			msgCompose.SendMsg(msgType, getCurrentIdentity(), null);
 		}
@@ -598,4 +602,80 @@ function CloseWindow()
 {
 	if (msgCompose)
 		msgCompose.CloseWindow();
+}
+
+
+
+function AttachFile()
+{
+	dump("AttachFile()\n");
+	currentAttachment = "";
+
+	// Get a local file, converted into URL format
+	try {
+		var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
+                filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);     
+		currentAttachment = filePicker.chooseFile("Enter file to attach");
+	}
+	catch (ex) {
+		dump("failed to get the local file to attach\n");
+	}
+	
+	AddAttachment(currentAttachment);
+}
+
+function AddAttachment(attachment)
+{
+	if (attachment && (attachment != "")) {
+		/* dump("attachment = " + attachment + "\n"); */
+		selectNode = document.getElementById('attachments');
+		numAttachments = numAttachments + 1;
+		key = "attachment" + numAttachments;
+                var opt = new Option(attachment, key);
+		selectNode.add(opt, null);
+        }    
+}
+
+function AttachPage()
+{
+	window.openDialog("chrome://messengercompose/content/MsgAttachPage.xul", "attachPageDialog", "chrome", {addattachmentfunction:AddAttachment});
+}
+
+function GenerateAttachmentsString()
+{
+	dump("GenerateAttachmentsString()\n");
+	attachments = "";
+
+	selectNode = document.getElementById('attachments');
+	if (selectNode == null) return attachments;
+	options = selectNode.options;
+	if (options == null) return attachments;
+	if (options.length == 0) return attachments;
+
+	attachments = options[0].text;
+
+	for (i=1;i<options.length;i++) {
+		attachments = attachments + "," + options[i].text;
+	}
+
+	return attachments;
+}
+
+function RemoveLastAttachment()
+{
+	dump("RemoveLastAttachment()\n");
+	selectNode = document.getElementById('attachments');
+	i = selectNode.options.length;
+	if (i > 0) {
+		selectNode.remove(i - 1);
+		/* bug in the DOM? when I remove the last element, the text
+		   remains.  so for now, when I remove the last element, I add
+		   back a blank element, then remove it, so that it looks
+                   correct.  bug logged #11010 */
+		if (i == 1) {
+			var opt = new Option(" ", " ");
+			selectNode.add(opt, null); 
+			selectNode.remove(0);
+		}
+	}
 }
