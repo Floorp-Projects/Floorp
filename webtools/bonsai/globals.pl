@@ -1370,7 +1370,7 @@ sub SanitizeMark {
 sub SanitizeModule {
     my ($module) = @_;
 
-    return "" if (!defined($module));
+    return $module if (!defined($module));
     $module =~ s/\000/_NULL_/g;
     $module =~ s/([A-Za-z])([\w\-\.\+]*).*/$1$2/;
     return $module;

@@ -70,7 +70,7 @@ print "
 <SELECT name='module' size=5>
 ";
 
-my $inmod = &SanitizeModule($::FORM{module});
+my $inmod = &SanitizeModule($::FORM{module}) || 'default';
 my $Module = 'default';
 if( $inmod  eq 'all' || $inmod eq 'default' || $inmod eq '' ){
     print "<OPTION SELECTED VALUE='all'>All Files in the Repository\n";
