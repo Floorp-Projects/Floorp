@@ -1427,8 +1427,11 @@ public class NativeDate extends ScriptableObject {
             return this.date;
         }
 
-        if (this.date != this.date)
+        if (this.date != this.date) {
             this.date = 0;
+        } else {
+            this.date = LocalTime(this.date);
+        }
 
         if (year >= 0 && year <= 99)
             year += 1900;
