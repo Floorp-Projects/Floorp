@@ -315,8 +315,15 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) finalResult = rv;
   
   rv = compMgr->RegisterComponent(kPop3ServiceCID,  
-                                  "POP Protocol Handler",
-                                  NS_POP3PROTOCOLINFO_PROGID,
+                                  "POP3 Protocol Information",
+                                  NS_NONEPROTOCOLINFO_PROGID,
+                                  path, PR_TRUE, PR_TRUE);
+
+  if (NS_FAILED(rv)) finalResult = rv;
+
+  rv = compMgr->RegisterComponent(kPop3ServiceCID,  
+                                  "none Protocol Information",
+                                  NS_NONEPROTOCOLINFO_PROGID,
                                   path, PR_TRUE, PR_TRUE);
 
   if (NS_FAILED(rv)) finalResult = rv;
