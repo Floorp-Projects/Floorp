@@ -5232,15 +5232,12 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
       }
     }
 
-    nsCOMPtr<nsIHttpChannel> httpChannel;
+    nsCOMPtr<nsIChannel> channel;
     if (mParser) {
-      nsCOMPtr<nsIChannel> channel;
-      if (NS_SUCCEEDED(mParser->GetChannel(getter_AddRefs(channel)))) {
-        httpChannel = do_QueryInterface(channel);
-      }
+      mParser->GetChannel(getter_AddRefs(channel));
     }
 
-    rv = cookieServ->SetCookieString(codebaseURI, prompt, cookie, httpChannel);
+    rv = cookieServ->SetCookieString(codebaseURI, prompt, cookie, channel);
     nsCRT::free(cookie);
 
     if (NS_FAILED(rv)) {

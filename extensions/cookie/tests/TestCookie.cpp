@@ -90,7 +90,7 @@ GetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSp
         NS_NewURI(getter_AddRefs(uri2), aSpec2);
 
     printf("             \"%s\": GOT ", aSpec1);
-    nsresult rv = aCookieService->GetCookieStringFromHttp(uri1, uri2, aCookie);
+    nsresult rv = aCookieService->GetCookieStringFromHttp(uri1, uri2, nsnull, aCookie);
     if (NS_FAILED(rv)) printf("XXX GetCookieString() failed!\n");
     if (!*aCookie) {
         printf("nothing\n");

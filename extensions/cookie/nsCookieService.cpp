@@ -243,46 +243,54 @@ nsCookieService::OnSecurityChange(nsIWebProgress *aWebProgress,
 }
 
 NS_IMETHODIMP
-nsCookieService::GetCookieString(nsIURI *aHostURI, char ** aCookie) {
-  *aCookie = COOKIE_GetCookie(aHostURI, nsnull);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookieService::GetCookieStringFromHttp(nsIURI *aHostURI, nsIURI *aFirstURI, char ** aCookie) {
-  *aCookie = COOKIE_GetCookie(aHostURI, aFirstURI);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookieService::SetCookieString(nsIURI *aHostURI, nsIPrompt *aPrompt, const char *aCookieHeader, nsIHttpChannel *aHttpChannel)
+nsCookieService::GetCookieString(nsIURI *aHostURI, nsIChannel *aChannel, char ** aCookie)
 {
+  // try to determine first party URI
   nsCOMPtr<nsIURI> firstURI;
-
-  if (aHttpChannel) {
-    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aHttpChannel);
-    if (!httpInternal ||
-        NS_FAILED(httpInternal->GetDocumentURI(getter_AddRefs(firstURI)))) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "unable to determine first URI");
-      return NS_OK;
-    }
+  if (aChannel) {
+    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aChannel);
+    if (httpInternal)
+      httpInternal->GetDocumentURI(getter_AddRefs(firstURI));
   }
 
-  COOKIE_SetCookie(aHostURI, firstURI, aPrompt, aCookieHeader, nsnull, aHttpChannel);
-  LazyWrite(PR_TRUE);
+  *aCookie = COOKIE_GetCookie(aHostURI, firstURI, aChannel);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCookieService::SetCookieStringFromHttp(nsIURI *aHostURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIHttpChannel* aHttpChannel) 
+nsCookieService::GetCookieStringFromHttp(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, char ** aCookie)
 {
-  COOKIE_SetCookie(aHostURI, aFirstURI, aPrompt, aCookieHeader, aServerTime, aHttpChannel);
+  *aCookie = COOKIE_GetCookie(aHostURI, aFirstURI, aChannel);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::SetCookieString(nsIURI *aHostURI, nsIPrompt *aPrompt, const char *aCookieHeader, nsIChannel *aChannel)
+{
+  // try to determine first party URI
+  nsCOMPtr<nsIURI> firstURI;
+  if (aChannel) {
+    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aChannel);
+    if (httpInternal)
+      httpInternal->GetDocumentURI(getter_AddRefs(firstURI));
+  }
+
+  COOKIE_SetCookie(aHostURI, firstURI, aPrompt, aCookieHeader, nsnull, aChannel);
   LazyWrite(PR_TRUE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCookieService::GetCookieIconIsVisible(PRBool *aIsVisible) {
+nsCookieService::SetCookieStringFromHttp(nsIURI *aHostURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIChannel* aChannel) 
+{
+  COOKIE_SetCookie(aHostURI, aFirstURI, aPrompt, aCookieHeader, aServerTime, aChannel);
+  LazyWrite(PR_TRUE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::GetCookieIconIsVisible(PRBool *aIsVisible)
+{
   *aIsVisible = gCookieIconVisible;
   return NS_OK;
 }
