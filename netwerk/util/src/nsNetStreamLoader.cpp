@@ -183,7 +183,7 @@ nsUnicharStreamLoader::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
   return rv;
 }
 
-extern PR_PUBLIC_API(nsresult)
+extern nsresult 
 NS_NewUnicharStreamLoader(nsIUnicharStreamLoader** aInstancePtrResult,
                           nsIURI* aURL,
                           nsILoadGroup* aLoadGroup,

@@ -24,7 +24,7 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-PR_PUBLIC_API(nsresult)
+nsresult
 NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI)
 {
     nsresult rv;
@@ -35,7 +35,7 @@ NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI)
     return rv;
 }
 
-PR_PUBLIC_API(nsresult)
+nsresult
 NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
 {
     // XXX if the string is unicode, GetBuffer() returns null. 
@@ -49,7 +49,7 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
     return rv;
 }
 
-PR_PUBLIC_API(nsresult)
+nsresult
 NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup* group)
 {
     nsresult rv;
@@ -72,7 +72,7 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup* group)
     return rv;
 }
 
-PR_PUBLIC_API(nsresult)
+nsresult
 NS_OpenURI(nsIInputStream* *result, nsIURI* uri, nsILoadGroup* group)
 {
     nsresult rv;
@@ -90,7 +90,7 @@ NS_OpenURI(nsIInputStream* *result, nsIURI* uri, nsILoadGroup* group)
     return rv;
 }
 
-PR_PUBLIC_API(nsresult)
+nsresult
 NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, 
            nsIURI* uri, nsILoadGroup* group)
 {
@@ -105,7 +105,7 @@ NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context,
     return rv;
 }
 
-PR_PUBLIC_API(nsresult)
+nsresult
 NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result)
 {
     nsresult rv;
@@ -115,7 +115,7 @@ NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result)
     return serv->MakeAbsolute(spec, baseURI, result);
 }
 
-PR_PUBLIC_API(nsresult)
+nsresult
 NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
 {
     char* resultStr;
@@ -131,7 +131,7 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
     return rv;
 }
 
-PR_PUBLIC_API(nsresult)
+nsresult
 NS_NewLoadGroup(nsILoadGroup* parent, nsISupports* outer, nsILoadGroup* *result)
 {
     nsresult rv;
