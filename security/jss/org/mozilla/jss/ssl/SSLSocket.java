@@ -53,6 +53,7 @@ public class SSLSocket extends java.net.Socket {
      */
     void setSockProxy(SocketProxy sp) {
         sockProxy = sp;
+        base.setProxy(sp);
     }
 
     public SSLSocket(String host, int port)
@@ -118,8 +119,12 @@ public class SSLSocket extends java.net.Socket {
             throws IOException
     {
         /* create the socket */
-        sockProxy = new SocketProxy(
-            socketCreate(certApprovalCallback, clientCertSelectionCallback) );
+        sockProxy =
+            new SocketProxy(
+                base.socketCreate(
+                    this, certApprovalCallback, clientCertSelectionCallback) );
+
+        base.setProxy(sockProxy);
 
         /* bind it to local address and port */
         if( localAddr != null || localPort > 0 ) {
@@ -128,7 +133,7 @@ public class SSLSocket extends java.net.Socket {
             if( localAddr != null ) {
                 addrBA = localAddr.getAddress();
             }
-            socketBind(addrBA, localPort);
+            base.socketBind(addrBA, localPort);
         }
 
         /* connect to the remote socket */
@@ -137,28 +142,8 @@ public class SSLSocket extends java.net.Socket {
 
 
     public InetAddress getInetAddress() {
-        try {
-            int intAddr = getPeerAddressNative();
-            InetAddress in;
-            byte[] addr = new byte[4];
-            addr[0] = (byte)((intAddr >>> 24) & 0xff);
-            addr[1] = (byte)((intAddr >>> 16) & 0xff);
-            addr[2] = (byte)((intAddr >>>  8) & 0xff);
-            addr[3] = (byte)((intAddr       ) & 0xff);
-            try {
-            in = InetAddress.getByName(
-                addr[0] + "." + addr[1] + "." + addr[2] + "." + addr[3] );
-            } catch (java.net.UnknownHostException e) {
-                in = null;
-            }
-            return in;
-        } catch(SocketException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return base.getInetAddress();
     }
-
-    private native int getPeerAddressNative() throws SocketException;
 
     public InetAddress getLocalAddress() {
         try {
@@ -184,14 +169,8 @@ public class SSLSocket extends java.net.Socket {
     private native int getLocalAddressNative() throws SocketException;
 
     public int getLocalPort() {
-        try {
-            return getLocalPortNative();
-        } catch(SocketException e) {
-            e.printStackTrace();
-            return 0;
-        }
+        return base.getLocalPort();
     }
-    private native int getLocalPortNative() throws SocketException;
 
     public native int getPort();
 
@@ -212,11 +191,11 @@ public class SSLSocket extends java.net.Socket {
     public native boolean getKeepAlive() throws SocketException;
 
     public void shutdownInput() throws IOException {
-        shutdownNative(PR_SHUTDOWN_RCV);
+        shutdownNative(SocketBase.PR_SHUTDOWN_RCV);
     }
 
     public void shutdownOutput() throws IOException {
-        shutdownNative(PR_SHUTDOWN_SEND);
+        shutdownNative(SocketBase.PR_SHUTDOWN_SEND);
     }
 
     private native void shutdownNative(int how) throws IOException;
@@ -230,11 +209,11 @@ public class SSLSocket extends java.net.Socket {
     public native int getSoLinger() throws SocketException;
 
     public void setSoTimeout(int timeout) throws SocketException {
-        this.timeout = timeout;
+        base.setTimeout(timeout);
     }
 
     public int getSoTimeout() throws SocketException {
-        return timeout;
+        return base.getTimeout();
     }
 
     //
@@ -247,7 +226,7 @@ public class SSLSocket extends java.net.Socket {
 
     public void close() throws IOException {
         if( sockProxy != null ) {
-            socketClose();
+            base.close();
             sockProxy = null;
         }
     }
@@ -285,31 +264,31 @@ public class SSLSocket extends java.net.Socket {
                
 
     public void enableSSL2(boolean enable) throws SocketException {
-        setSSLOption(SSL_ENABLE_SSL2, enable);
+        base.enableSSL2(enable);
     }
 
     static public void enableSSL2Default(boolean enable) throws SocketException{
-        setSSLDefaultOption(SSL_ENABLE_SSL2, enable);
+        setSSLDefaultOption(SocketBase.SSL_ENABLE_SSL2, enable);
     }
 
     public void enableSSL3(boolean enable) throws SocketException {
-        setSSLOption(SSL_ENABLE_SSL3, enable);
+        base.enableSSL3(enable);
     }
 
     static public void enableSSL3Default(boolean enable) throws SocketException{
-        setSSLDefaultOption(SSL_ENABLE_SSL3, enable);
+        setSSLDefaultOption(SocketBase.SSL_ENABLE_SSL3, enable);
     }
 
     public void requireClientAuth(boolean require, boolean onRedo)
             throws SocketException
     {
-        setSSLOption(SSL_REQUIRE_CERTIFICATE, require ? (onRedo ? 1 : 2) : 0);
+        base.requireClientAuth(require, onRedo);
     }
 
     public void requireClientAuthDefault(boolean require, boolean onRedo)
             throws SocketException
     {
-        setSSLDefaultOption(SSL_REQUIRE_CERTIFICATE,
+        setSSLDefaultOption(SocketBase.SSL_REQUIRE_CERTIFICATE,
                             require ? (onRedo ? 1 : 2) : 0);
     }
 
@@ -333,26 +312,22 @@ public class SSLSocket extends java.net.Socket {
     public native SSLSecurityStatus getStatus() throws SocketException;
 
     public void setClientCertNickname(String nick) throws SocketException {
-        if( nick != null && nick.length() > 0 ) {
-            setClientCertNicknameNative(nick);
-        }
+        base.setClientCertNickname(nick);
     }
-    public native void setClientCertNicknameNative(String nick)
-        throws SocketException;
 
     public void setNeedClientAuth(boolean b) throws SocketException {
-        setSSLOption(SSL_REQUEST_CERTIFICATE, b);
+        base.setNeedClientAuth(b);
     }
 
     public native void setNeedClientAuthNoExpiryCheck(boolean b)
         throws SocketException;
 
     public void useCache(boolean b) throws SocketException {
-        setSSLOption(SSL_NO_CACHE, !b);
+        base.useCache(b);
     }
 
     public void useCacheDefault(boolean b) throws SocketException {
-        setSSLDefaultOption(SSL_NO_CACHE, !b);
+        setSSLDefaultOption(SocketBase.SSL_NO_CACHE, !b);
     }
 
     private InetAddress inetAddress;
@@ -360,57 +335,14 @@ public class SSLSocket extends java.net.Socket {
     private SocketProxy sockProxy;
     private boolean open = false;
     private boolean handshakeAsClient=true;
+    private SocketBase base = new SocketBase();
 
-    /**
-     * Enums. These must match the enums table in SSLSocket.c. This is
-     * safer than copying the values of the C constants, which are subject
-     * to change, into Java code.
-     */
-    private static final int SSL_ENABLE_SSL2 = 0;
-    private static final int SSL_ENABLE_SSL3 = 1;
-    private static final int TCP_NODELAY = 2;
-    private static final int SO_KEEPALIVE = 3;
-    private static final int PR_SHUTDOWN_RCV = 4;
-    private static final int PR_SHUTDOWN_SEND = 5;
-    private static final int SSL_REQUIRE_CERTIFICATE = 6;
-    private static final int SSL_REQUEST_CERTIFICATE = 7;
-    private static final int SSL_NO_CACHE = 8;
-    private static final int SSL_POLICY_DOMESTIC = 9;
-    private static final int SSL_POLICY_EXPORT = 10;
-    private static final int SSL_POLICY_FRANCE = 11;
-
-    /**
-     * SO_TIMEOUT timeout in millis. I don't know why we have to keep it here
-     * instead of setting a socket option.
-     */
-    private int timeout;
-
-    private void setSSLOption(int option, boolean on)
-        throws SocketException
-    {
-        setSSLOption(option, on ? 1 : 0);
-    }
-    private native void setSSLOption(int option, int on)
-        throws SocketException;
     private static void setSSLDefaultOption(int option, boolean on)
         throws SocketException
     {
         setSSLDefaultOption(option, on ? 1 : 0);
     }
     private static native void setSSLDefaultOption(int option, int on)
-        throws SocketException;
-
-    private native byte[] socketCreate(
-        SSLCertificateApprovalCallback certApprovalCallback,
-        SSLClientCertificateSelectionCallback clientCertSelectionCallback)
-            throws IOException;
-
-    private native void socketClose()
-        throws IOException;
-    /**
-     * param addr The 4-byte IP address in network byte order.
-     */
-    private native void socketBind(byte[] addr, int port)
         throws SocketException;
 
     public static native void setCipherPreference( int cipher,
@@ -420,11 +352,11 @@ public class SSLSocket extends java.net.Socket {
         throws IOException;
 
     int read(byte[] b, int off, int len) throws IOException {
-        return socketRead(b, off, len, timeout);
+        return socketRead(b, off, len, base.getTimeout());
     }
 
     void write(byte[] b, int off, int len) throws IOException {
-        socketWrite(b, off, len, timeout);
+        socketWrite(b, off, len, base.getTimeout());
     }
 
     private native int socketRead(byte[] b, int off, int len, int timeout)
@@ -452,11 +384,11 @@ public class SSLSocket extends java.net.Socket {
         int getEnum() { return enum; }
 
         public static final CipherPolicy DOMESTIC =
-            new CipherPolicy(SSL_POLICY_DOMESTIC);
+            new CipherPolicy(SocketBase.SSL_POLICY_DOMESTIC);
         public static final CipherPolicy EXPORT =
-            new CipherPolicy(SSL_POLICY_EXPORT);
+            new CipherPolicy(SocketBase.SSL_POLICY_EXPORT);
         public static final CipherPolicy FRANCE =
-            new CipherPolicy(SSL_POLICY_FRANCE);
+            new CipherPolicy(SocketBase.SSL_POLICY_FRANCE);
 
     }
 

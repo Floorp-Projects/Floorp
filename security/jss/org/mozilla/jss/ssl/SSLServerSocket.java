@@ -60,23 +60,21 @@ public class SSLServerSocket {
         //super.close();
 
         // create the socket
-        sockProxy = new SocketProxy( socketCreate() );
+        sockProxy = new SocketProxy( base.socketCreate(this, null, null) );
+
+        base.setProxy(sockProxy);
 
         // bind it to the local address and port
         if( bindAddr == null ) {
             bindAddr = anyLocalAddr;
         }
-        socketBind(bindAddr.getAddress(), port);
+        base.socketBind(bindAddr.getAddress(), port);
         socketListen(backlog);
     }
 
     private SocketProxy sockProxy;
     private boolean handshakeAsClient=false;
-
-    private native byte[] socketCreate() throws SocketException;
-
-    private native void socketBind(byte[] addrBA, int port)
-        throws SocketException;
+    private SocketBase base = new SocketBase();
 
     private native void socketListen(int backlog) throws SocketException;
 
@@ -89,22 +87,21 @@ public class SSLServerSocket {
 
     public Socket accept() throws IOException {
         SSLSocket s = new SSLSocket();
-        s.setSockProxy( new SocketProxy( socketAccept(s, timeout) ) );
+        s.setSockProxy( new SocketProxy(
+            socketAccept(s, base.getTimeout(), handshakeAsClient) ) );
         return s;
     }
 
-    private int timeout;
-
     public void setSoTimeout(int timeout) {
-        this.timeout = timeout;
+        base.setTimeout(timeout);
     }
 
     public int getSoTimeout() {
-        return timeout;
+        return base.getTimeout();
     }
 
-    private native byte[] socketAccept(SSLSocket s, int timeout)
-        throws SocketException;
+    private native byte[] socketAccept(SSLSocket s, int timeout,
+        boolean handshakeAsClient) throws SocketException;
 
     public static native void clearSessionCache();
 
@@ -114,12 +111,10 @@ public class SSLServerSocket {
 
     public void close() throws IOException {
         if( sockProxy != null ) {
-            socketClose();
+            base.close();
             sockProxy = null;
         }
     }
-
-    private native void socketClose() throws IOException;
 
     // This directory is used as the default for the Session ID cache
     private final static String UNIX_TEMP_DIR = "/tmp";
@@ -131,8 +126,43 @@ public class SSLServerSocket {
     public native void setServerCertNickname(String nickname)
             throws SocketException;
 
-    public native void setNeedClientAuth(boolean b) throws SocketException;
+    public void setNeedClientAuth(boolean b) throws SocketException {
+        base.setNeedClientAuth(b);
+    }
 
-    public native void setNeedClientAuthNoExpiryCheck(boolean b)
-        throws SocketException;
+    public void setNeedClientAuthNoExpiryCheck(boolean b)
+        throws SocketException
+    {
+        base.setNeedClientAuthNoExpiryCheck(b);
+    }
+
+    public void enableSSL2(boolean enable) throws SocketException {
+        base.enableSSL2(enable);
+    }
+
+    public void enableSSL3(boolean enable) throws SocketException {
+        base.enableSSL3(enable);
+    }
+
+    public InetAddress getInetAddress() {
+        return base.getInetAddress();
+    }
+
+    public void requireClientAuth(boolean require, boolean onRedo)
+            throws SocketException
+    {
+        base.requireClientAuth(require, onRedo);
+    }
+
+    public void setClientCertNickname(String nick) throws SocketException {
+        base.setClientCertNickname(nick);
+    }
+
+    public void setUseClientMode(boolean b) {
+        handshakeAsClient = b;
+    }
+
+    public void useCache(boolean b) throws SocketException {
+        base.useCache(b);
+    }
 }

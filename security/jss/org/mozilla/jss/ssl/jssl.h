@@ -102,24 +102,17 @@ JSSL_DestroySocketData(JNIEnv *env, JSSL_SocketData *sd);
 
 extern PRInt32 JSSL_enums[];
 
-void 
-JSSL_socketBind(JNIEnv *env, jobject self, jbyteArray addrBA, jint port);
-
-void
-JSSL_socketClose(JNIEnv *env, jobject self);
-
-jbyteArray
-JSSL_socketCreate(JNIEnv *env, jobject self,
-    jobject certApprovalCallback, jobject clientCertSelectionCallback);
-
 JSSL_SocketData*
 JSSL_CreateSocketData(JNIEnv *env, jobject sockObj, PRFileDesc* newFD);
-
-void
-JSSL_setNeedClientAuthNoExpiryCheck(JNIEnv *env, jobject self, jboolean b);
 
 #define SSL_POLICY_DOMESTIC 0
 #define SSL_POLICY_EXPORT 1
 #define SSL_POLICY_FRANCE 2
+
+typedef enum {LOCAL_SOCK, PEER_SOCK} LocalOrPeer;
+
+void
+JSSL_getSockAddr
+    (JNIEnv *env, jobject self, PRNetAddr *addr, LocalOrPeer localOrPeer);
 
 #endif

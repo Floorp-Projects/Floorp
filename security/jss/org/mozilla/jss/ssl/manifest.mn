@@ -41,11 +41,15 @@ REQUIRES = security
 
 PACKAGE =       org/mozilla/jss/ssl
 
-JNI_GEN = org.mozilla.jss.ssl.SSLSocket \
+JNI_GEN = \
+    org.mozilla.jss.ssl.SSLSocket \
+    org.mozilla.jss.ssl.SSLServerSocket \
+    org.mozilla.jss.ssl.SocketBase \
 		$(NULL)
 
 JSRCS =	\
         SocketProxy.java \
+        SocketBase.java \
         SSLHandshakeCompletedEvent.java \
 		SSLSecurityStatus.java          \
 		SSLHandshakeCompletedListener.java \
@@ -80,6 +84,7 @@ CLASSES =	SSLHandshakeCompletedEvent    \
 		SSLCallbackNotifier           \
 		SSLCertificateApprovalCallback   \
 		SSLClientCertificateSelectionCallback \
+        SocketBase \
 		$(NULL)
 
 PRIVATE_CLASSES = \

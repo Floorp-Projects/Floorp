@@ -51,9 +51,10 @@
  * This is done for regular sockets that we connect() and server sockets,
  * but not for sockets that come from accept.
  */
-jbyteArray
-JSSL_socketCreate(JNIEnv *env, jobject self,
-    jobject certApprovalCallback, jobject clientCertSelectionCallback)
+JNIEXPORT jbyteArray JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
+    jobject sockObj, jobject certApprovalCallback,
+    jobject clientCertSelectionCallback)
 {
     jbyteArray sdArray = NULL;
     JSSL_SocketData *sockdata;
@@ -67,7 +68,7 @@ JSSL_socketCreate(JNIEnv *env, jobject self,
         goto finish;
     }
 
-    sockdata = JSSL_CreateSocketData(env, self, newFD);
+    sockdata = JSSL_CreateSocketData(env, sockObj, newFD);
     if( sockdata == NULL ) {
         goto finish;
     }
@@ -231,8 +232,9 @@ PRInt32 JSSL_enums[] = {
     0
 };
 
-void 
-JSSL_socketBind(JNIEnv *env, jobject self, jbyteArray addrBA, jint port)
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_socketBind
+    (JNIEnv *env, jobject self, jbyteArray addrBA, jint port)
 {
     JSSL_SocketData *sock;
     PRNetAddr addr;
@@ -285,8 +287,8 @@ finish:
     }
 }
 
-void
-JSSL_socketClose(JNIEnv *env, jobject self)
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_socketClose(JNIEnv *env, jobject self)
 {
     JSSL_SocketData *sock;
 
@@ -303,8 +305,9 @@ finish:
     return;
 }
 
-void
-JSSL_setNeedClientAuthNoExpiryCheck(JNIEnv *env, jobject self, jboolean b)
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_setNeedClientAuthNoExpiryCheck
+    (JNIEnv *env, jobject self, jboolean b)
 {
     JSSL_SocketData *sock;
     SECStatus status;
@@ -336,4 +339,127 @@ JSSL_setNeedClientAuthNoExpiryCheck(JNIEnv *env, jobject self, jboolean b)
 
 finish:
     return;
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_setSSLOption
+    (JNIEnv *env, jobject self, jint option, jint on)
+{
+    SECStatus status;
+    JSSL_SocketData *sock;
+
+    /* get my fd */
+    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        goto finish;
+    }
+
+    /* set the option */
+    status = SSL_OptionSet(sock->fd, JSSL_enums[option], on);
+    if( status != SECSuccess ) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "SSL_OptionSet failed");
+        goto finish;
+    }
+
+finish:
+    return;
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_setNeedClientAuth(
+    JNIEnv *env, jobject self, jboolean b)
+{
+    JSSL_SocketData *sock;
+    SECStatus status;
+
+    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
+
+    status = SSL_OptionSet(sock->fd, SSL_REQUEST_CERTIFICATE, b);
+    if( status != SECSuccess ) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "Failed to set socket option");
+        goto finish;
+    }
+
+finish:
+    return;
+}
+
+void
+JSSL_getSockAddr
+    (JNIEnv *env, jobject self, PRNetAddr *addr, LocalOrPeer localOrPeer)
+{
+    JSSL_SocketData *sock;
+    PRStatus status;
+
+    /* get my fd */
+    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        return;
+    }
+
+    /* get the port */
+    if( localOrPeer == LOCAL_SOCK ) {
+        status = PR_GetSockName(sock->fd, addr);
+    } else {
+        PR_ASSERT( localOrPeer == PEER_SOCK );
+        status = PR_GetPeerName(sock->fd, addr);
+    }
+    if( status != PR_SUCCESS ) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "PR_GetSockName failed");
+    }
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_getPeerAddressNative
+    (JNIEnv *env, jobject self)
+{
+    PRNetAddr addr;
+
+    JSSL_getSockAddr(env, self, &addr, PEER_SOCK);
+    return ntohl(addr.inet.ip);
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_getLocalPortNative(JNIEnv *env,
+    jobject self)
+{
+    PRNetAddr addr;
+
+    JSSL_getSockAddr(env, self, &addr, LOCAL_SOCK);
+    return addr.inet.port;
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_setClientCertNicknameNative(
+    JNIEnv *env, jobject self, jstring nickStr)
+{
+    JSSL_SocketData *sock;
+    const char *nick=NULL;
+    SECStatus status;
+
+    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
+
+    /*
+     * Store the nickname in the SocketData.
+     */
+    nick = (*env)->GetStringUTFChars(env, nickStr, NULL);
+    if( nick == NULL )  goto finish;
+    if( sock->clientCertNickname != NULL ) {
+        PR_Free(sock->clientCertNickname);
+    }
+    sock->clientCertNickname = PL_strdup(nick);
+
+    /*
+     * Install the callback.
+     */
+    status = SSL_GetClientAuthDataHook(sock->fd, JSSL_GetClientAuthData,
+                    (void*)sock);
+    if(status != SECSuccess) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION,
+            "Unable to set client auth data hook");
+        goto finish;
+    }
+
+finish:
+    if( nick != NULL ) {
+        (*env)->ReleaseStringUTFChars(env, nickStr, nick);
+    }
 }

@@ -44,20 +44,6 @@
 #include <pk11util.h>
 #include "jssl.h"
 
-JNIEXPORT jbyteArray JNICALL
-Java_org_mozilla_jss_ssl_SSLServerSocket_socketCreate
-    (JNIEnv *env, jobject self)
-{
-    return JSSL_socketCreate(env, self, NULL, NULL);
-}
-
-JNIEXPORT void JNICALL
-Java_org_mozilla_jss_ssl_SSLServerSocket_socketBind
-    (JNIEnv *env, jobject self, jbyteArray addrBA, jint port)
-{
-    JSSL_socketBind(env, self, addrBA, port);
-}
-
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SSLServerSocket_socketListen
     (JNIEnv *env, jobject self, jint backlog)
@@ -78,7 +64,8 @@ finish:
 
 JNIEXPORT jbyteArray JNICALL
 Java_org_mozilla_jss_ssl_SSLServerSocket_socketAccept
-    (JNIEnv *env, jobject self, jobject newSock, jint timeout)
+    (JNIEnv *env, jobject self, jobject newSock, jint timeout,
+        jboolean handshakeAsClient)
 {
     JSSL_SocketData *sock;
     PRNetAddr addr;
@@ -92,6 +79,15 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_socketAccept
 
     ivtimeout = (timeout > 0) ? PR_MillisecondsToInterval(timeout)
                               : PR_INTERVAL_NO_TIMEOUT;
+
+    if( handshakeAsClient ) {
+        status = SSL_OptionSet(sock->fd, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE);
+        if( status != SECSuccess ) {
+            JSS_throwMsg(env, SOCKET_EXCEPTION,
+                "Failed to set option to handshake as client");
+            goto finish;
+        }
+    }
 
     for(;;) {
         newFD = PR_Accept(sock->fd, &addr, ivtimeout);
@@ -150,12 +146,6 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_clearSessionCache(
     JNIEnv *env, jclass clazz)
 {
     SSL_ClearSessionCache();
-}
-
-JNIEXPORT void JNICALL
-Java_org_mozilla_jss_ssl_SSLServerSocket_socketClose(JNIEnv *env, jobject self)
-{
-    JSSL_socketClose(env, self);
 }
 
 JNIEXPORT void JNICALL
@@ -231,30 +221,4 @@ finish:
     if( nickname != NULL ) {
         (*env)->ReleaseStringUTFChars(env, nicknameStr, nickname);
     }
-}
-
-JNIEXPORT void JNICALL
-Java_org_mozilla_jss_ssl_SSLServerSocket_setNeedClientAuthNoExpiryCheck(
-    JNIEnv *env, jobject self, jboolean b)
-{
-    JSSL_setNeedClientAuthNoExpiryCheck(env, self, b);
-}
-
-JNIEXPORT void JNICALL
-Java_org_mozilla_jss_ssl_SSLServerSocket_setNeedClientAuth(
-    JNIEnv *env, jobject self, jboolean b)
-{
-    JSSL_SocketData *sock;
-    SECStatus status;
-
-    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
-
-    status = SSL_OptionSet(sock->fd, SSL_REQUEST_CERTIFICATE, b);
-    if( status != SECSuccess ) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION, "Failed to set socket option");
-        goto finish;
-    }
-
-finish:
-    return;
 }
