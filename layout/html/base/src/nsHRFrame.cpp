@@ -51,6 +51,8 @@
 #include "nsCSSRendering.h"
 #include "nsLayoutAtoms.h"
 #include "nsILookAndFeel.h"
+#include "nsIEventStateManager.h"
+#include "nsIView.h"
 
 // default hr thickness in pixels
 #define DEFAULT_THICKNESS 3
@@ -69,6 +71,14 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
+  NS_IMETHOD
+  GetContentAndOffsetsFromPoint(nsIPresContext* aPresContenxt,
+                                const nsPoint&  aPoint,
+                                nsIContent **   aNewContent,
+                                PRInt32&        aContentOffset,
+                                PRInt32&        aContentOffsetEnd,
+                                PRBool&         aBeginFrameContent);
 
   virtual PRBool CanPaintBackground() { return PR_FALSE; }
 
@@ -356,5 +366,53 @@ HRuleFrame::GetFrameType(nsIAtom** aType) const
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
   *aType = nsLayoutAtoms::hrFrame;
   NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HRuleFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aPresContext,
+                                          const nsPoint&  aPoint,
+                                          nsIContent **   aNewContent,
+                                          PRInt32&        aContentOffset,
+                                          PRInt32&        aContentOffsetEnd,
+                                          PRBool&         aBeginFrameContent)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (!aNewContent) return NS_ERROR_NULL_POINTER;
+  if (!mContent) return NS_ERROR_NULL_POINTER;
+
+  nsIView  *view         = nsnull;
+  rv = GetClosestViewForFrame(aPresContext, this, &view);
+  if (NS_FAILED(rv)) return rv;
+
+  nsRect thisRect;
+  rv = GetRect(thisRect);
+  if (NS_FAILED(rv)) return rv;
+  nsPoint offsetPoint;
+  GetOffsetFromView(aPresContext, offsetPoint, &view);
+  thisRect.x = offsetPoint.x;
+  thisRect.y = offsetPoint.y;
+
+  rv = mContent->GetParent(*aNewContent);
+  if (!*aNewContent) return rv;
+  
+  rv = (*aNewContent)->IndexOf(mContent, aContentOffset);
+  if (NS_FAILED(rv)) return rv;
+  if (aContentOffset < 0) return NS_ERROR_FAILURE;
+
+  aBeginFrameContent = PR_TRUE;
+  aContentOffsetEnd = aContentOffset;
+  if (thisRect.Contains(aPoint))
+  {
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    if (!shell) return NS_ERROR_FAILURE;
+
+    PRInt16 isEditor = 0;
+    shell->GetSelectionFlags(&isEditor);
+    isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
+    if (isEditor) aContentOffsetEnd++;  // this allows a single click to select the HR but only in Editor mode
+  }
   return NS_OK;
 }
