@@ -217,25 +217,40 @@ sub show_graph {
 
   print "<td>\n";
 
+  #
+  # Links at the bottom
+  #
+
   # Other machines
   print "<font size=\"-1\">";
   print "<li>\n";
   print "<a href=\"query.cgi?tbox=&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">Other machines running the $TESTNAME test</a>";
   print "</li>\n";
 
+  # Other tests
   print "<li>\n";
   print "Other $TBOX tests: (<a href=\"query.cgi?tbox=$TBOX&testname=startup&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">startup</a>, <a href=\"query.cgi?tbox=$TBOX&testname=xulwinopen&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">xulwinopen</a>, <a href=\"query.cgi?tbox=$TBOX&testname=pageload&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">pageload</a>, 
 <a href=\"query.cgi?tbox=$TBOX&testname=&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">show all tests</a>)";
   print "</li>\n";
 
+
+  # Multiplots, hard-coded for now.
+  print "<li>\n";
+  print "Multiqueries: (<a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=startup&tboxes=comet,sleestack,openwound,mecca,rheeeet\">startup</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=xulwinopen&tboxes=comet,sleestack,openwound,mecca,rheeeet\">xulwinopen</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=pageload&tboxes=btek,mecca\">pageload</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi\">build your own multiquery</a>)";
+  print "</li>\n";
+
+
+  # Raw data.
   print "<li>\n";
   print "<a href=\"rawdata.cgi?tbox=$TBOX&testname=$TESTNAME&days=$DAYS\">Show the raw data for this plot</a>";
   print "</li>\n";
 
+  # Mailto
   print "<li>\n";
   print "<a href=\"mailto:mozilla-performance\@mozilla.org?subject=Perf: $TBOX/$TESTNAME test regression\">Mail m.performance about regressions for this test</a>";
   print "</li>\n";
 
+  # Newsgroup
   print "<li>\n";
   print "<a href=\"news://news.mozilla.org/netscape.public.mozilla.performance\">performance newsgroup</a>";
   print "</li>\n";
