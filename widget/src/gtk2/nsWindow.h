@@ -67,6 +67,8 @@ public:
     nsWindow();
     virtual ~nsWindow();
 
+    static void ReleaseGlobals();
+
     NS_DECL_ISUPPORTS_INHERITED
 
     // nsIWidget

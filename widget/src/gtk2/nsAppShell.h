@@ -49,6 +49,8 @@ public:
     nsAppShell();
     virtual ~nsAppShell();
 
+    static void ReleaseGlobals();
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAPPSHELL
 
