@@ -251,8 +251,10 @@ endif
 
 DEFINES += -DMP_API_COMPATIBLE
 
+MPI_USERS = dh.c pqg.c dsa.c rsa.c 
 
 MPI_OBJS = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_SRCS:.c=$(OBJ_SUFFIX)))
+MPI_OBJS += $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_USERS:.c=$(OBJ_SUFFIX)))
 
 $(MPI_OBJS): $(MPI_HDRS)
 
