@@ -134,6 +134,35 @@ ResolveMsgAppCore(JSContext *cx, JSObject *obj, jsval id)
   return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
+
+// Native method GetNewMail
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreGetNewMail(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+    if (NS_FAILED(nativeThis->GetNewMail())) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function GetNewMail requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 // this was in the old MailCore
 #if 0
 //
@@ -289,6 +318,7 @@ static JSPropertySpec MsgAppCoreProperties[] =
 static JSFunctionSpec MsgAppCoreMethods[] = 
 {
   // don't have old MailCore methods
+  {"GetNewMail",					MsgAppCoreGetNewMail,        0},
 #if 0
   {"SendMail",          MsgAppCoreSendMail,     3},
   {"MailCompleteCallback",          MsgAppCoreMailCompleteCallback,     1},
