@@ -306,26 +306,21 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
 	// still deal reasonably (in the short term) when no
 	// localstore.rdf is installed in the profile directory.
 
-	nsFileSpec	spec;
+	nsFileSpec spec;
 	do {
 		NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-		if (NS_SUCCEEDED(rv))
-		{
-			if (NS_SUCCEEDED(rv = profile->GetCurrentProfileDir(&spec)))
-			{
-				spec += "localstore.rdf";
-			}
-		}
-		else
-		{
-#ifdef DEBUG
-			nsSpecialSystemDirectory spec2(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-			spec2 += "localstore.rdf";
-			spec = spec2;
-			rv = NS_OK;
-#endif
-		}
-	} while(0);
+		if (NS_FAILED(rv)) break;
+
+        rv = profile->GetCurrentProfileDir(&spec);
+        if (NS_FAILED(rv)) break;
+    } while (0);
+
+    if (NS_FAILED(rv)) {
+        // XXX We should probably tell the user that we're doing this.
+        spec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+    }
+
+    spec += "localstore.rdf";
 
 	if (! spec.Exists())
 	{
