@@ -3,7 +3,6 @@
 #
 
 mkstream.h
-mkformat.h
 mkparse.h
 mkfsort.h
 mksort.h
