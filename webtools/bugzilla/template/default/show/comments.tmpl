@@ -45,7 +45,10 @@
   [% END %]
     
   <br>
-  <pre>
-    [%- quoteUrls(comment.body) -%]
-  </pre>
+[%# Don't indent the <pre> block, since then the spaces are displayed in the
+  # generated HTML
+  #%]
+<pre>
+  [%- quoteUrls(comment.body) -%]
+</pre>
 [% END %]
