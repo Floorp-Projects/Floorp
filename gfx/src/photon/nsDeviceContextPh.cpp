@@ -610,7 +610,7 @@ nsresult nsDeviceContextPh :: GetDisplayInfo( PRInt32 &aWidth, PRInt32 &aHeight,
 	else inp_grp = 1;
 
 	PhQueryRids( 0, 0, inp_grp, Ph_GRAFX_REGION, 0, 0, 0, &rid, 1 );
-	PhWindowQueryVisible( Ph_QUERY_INPUT_GROUP | Ph_QUERY_EXACT, 0, inp_grp, &rect );
+	PhWindowQueryVisible( Ph_QUERY_IG_POINTER, 0, inp_grp, &rect );
 	aWidth  = rect.lr.x - rect.ul.x + 1;
 	aHeight = rect.lr.y - rect.ul.y + 1;  
 
