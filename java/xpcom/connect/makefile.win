@@ -21,7 +21,7 @@
 # Igor Kushnirskiy <idk@eng.sun.com>
 #
 
-DEPTH   = ../../..
+DEPTH   = ..\..\..
 
 DIRS=   \
 	src \
