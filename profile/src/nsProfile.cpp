@@ -1377,9 +1377,10 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
 #define SALT_SIZE 8
 #define TABLE_SIZE 36
 
-NS_NAMED_LITERAL_CSTRING(kSaltExtensionCString, ".slt");
+static const char kSaltExtensionCString[] = ".slt";
+#define kSaltExtensionCString_Len PRUint32(sizeof(kSaltExtensionCString)-1)
 
-const char table[] = 
+static const char table[] = 
 	{ 'a','b','c','d','e','f','g','h','i','j',
 	  'k','l','m','n','o','p','q','r','s','t',
 	  'u','v','w','x','y','z','0','1','2','3',
@@ -1435,9 +1436,11 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
 	 	if (NS_SUCCEEDED(rv) && !leafName.IsEmpty()) {
 		  PRUint32 length = leafName.Length();
 		  // check if the filename is the right length, len("xxxxxxxx.slt")
-		  if (length == (SALT_SIZE + kSaltExtensionCString.Length())) {
+		  if (length == (SALT_SIZE + kSaltExtensionCString_Len)) {
 			// check that the filename ends with ".slt"
-			if (nsCRT::strncmp(leafName.get() + SALT_SIZE, kSaltExtensionCString.get(), kSaltExtensionCString.Length()) == 0) {
+			if (nsCRT::strncmp(leafName.get() + SALT_SIZE,
+                         kSaltExtensionCString,
+                         kSaltExtensionCString_Len) == 0) {
 			  // found a salt directory, use it
 			  rv = aDir->AppendNative(leafName);
 			  return rv;
@@ -1463,7 +1466,7 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
   for (i=0;i<SALT_SIZE;i++) {
   	saltStr.Append(table[rand()%TABLE_SIZE]);
   }
-  saltStr.Append(kSaltExtensionCString);
+  saltStr.Append(kSaltExtensionCString, kSaltExtensionCString_Len);
 #ifdef DEBUG_profile_verbose
   printf("directory name: %s\n",saltStr.get());
 #endif
@@ -1494,15 +1497,16 @@ nsresult nsProfile::IsProfileDirSalted(nsIFile *profileDir, PRBool *isSalted)
     if (NS_FAILED(rv)) return rv;
 
     PRBool endsWithSalt = PR_FALSE;    
-    if (leafName.Length() >= kSaltExtensionCString.Length())
+    if (leafName.Length() >= kSaltExtensionCString_Len)
     {
         nsReadingIterator<char> stringEnd;
         leafName.EndReading(stringEnd);
 
         nsReadingIterator<char> stringStart = stringEnd;
-        stringStart.advance( -(NS_STATIC_CAST(PRInt32, kSaltExtensionCString.Length())) );
+        stringStart.advance( -(NS_STATIC_CAST(PRInt32, kSaltExtensionCString_Len)) );
 
-        endsWithSalt = kSaltExtensionCString.Equals(Substring(stringStart, stringEnd));
+        endsWithSalt =
+            Substring(stringStart, stringEnd).Equals(kSaltExtensionCString);
     }
     if (!endsWithSalt)
         return NS_OK;

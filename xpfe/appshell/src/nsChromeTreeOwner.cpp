@@ -49,6 +49,50 @@
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 //*****************************************************************************
+// nsChromeTreeOwner string literals
+//*****************************************************************************
+
+struct nsChromeTreeOwnerLiterals
+{
+  const nsLiteralString kPersist;
+  const nsLiteralString kScreenX;
+  const nsLiteralString kScreenY;
+  const nsLiteralString kWidth;
+  const nsLiteralString kHeight;
+  const nsLiteralString kSizemode;
+  const nsLiteralString kSpace;
+
+  nsChromeTreeOwnerLiterals()
+    : NS_LITERAL_STRING_INIT(kPersist,"persist")
+    , NS_LITERAL_STRING_INIT(kScreenX,"screenX")
+    , NS_LITERAL_STRING_INIT(kScreenY,"screenY")
+    , NS_LITERAL_STRING_INIT(kWidth,"width")
+    , NS_LITERAL_STRING_INIT(kHeight,"height")
+    , NS_LITERAL_STRING_INIT(kSizemode,"sizemode")
+    , NS_LITERAL_STRING_INIT(kSpace," ")
+  {}
+};
+
+static nsChromeTreeOwnerLiterals *gLiterals;
+
+nsresult
+nsChromeTreeOwner::InitGlobals()
+{
+  NS_ASSERTION(gLiterals == nsnull, "already initialized");
+  gLiterals = new nsChromeTreeOwnerLiterals();
+  if (!gLiterals)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
+void
+nsChromeTreeOwner::FreeGlobals()
+{
+  delete gLiterals;
+  gLiterals = nsnull;
+}
+
+//*****************************************************************************
 //***    nsChromeTreeOwner: Object Management
 //*****************************************************************************
 
@@ -197,14 +241,6 @@ NS_IMETHODIMP nsChromeTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    return mXULWindow->SizeShellTo(aShellItem, aCX, aCY);
 }
 
-NS_NAMED_LITERAL_STRING(gLiteralPersist,"persist");
-NS_NAMED_LITERAL_STRING(gLiteralScreenX,"screenX");
-NS_NAMED_LITERAL_STRING(gLiteralScreenY,"screenY");
-NS_NAMED_LITERAL_STRING(gLiteralWidth,"width");
-NS_NAMED_LITERAL_STRING(gLiteralHeight,"height");
-NS_NAMED_LITERAL_STRING(gLiteralSizemode,"sizemode");
-NS_NAMED_LITERAL_STRING(gLiteralSpace," ");
-
 NS_IMETHODIMP
 nsChromeTreeOwner::SetPersistence(PRBool aPersistPosition,
                                   PRBool aPersistSize,
@@ -216,28 +252,28 @@ nsChromeTreeOwner::SetPersistence(PRBool aPersistPosition,
     return NS_ERROR_FAILURE;
 
   nsAutoString persistString;
-  docShellElement->GetAttribute(gLiteralPersist, persistString);
+  docShellElement->GetAttribute(gLiterals->kPersist, persistString);
 
   PRBool saveString = PR_FALSE;
   PRInt32 index;
 
-#define FIND_PERSIST_STRING(aString, aCond)      \
-  index = persistString.Find(aString);           \
-  if (!aCond && index > kNotFound) {             \
-    persistString.Cut(index, aString.Length());  \
-    saveString = PR_TRUE;                        \
-  } else if (aCond && index == kNotFound) {      \
-    persistString.Append(gLiteralSpace+aString); \
-    saveString = PR_TRUE;                        \
+#define FIND_PERSIST_STRING(aString, aCond)            \
+  index = persistString.Find(aString);                 \
+  if (!aCond && index > kNotFound) {                   \
+    persistString.Cut(index, aString.Length());        \
+    saveString = PR_TRUE;                              \
+  } else if (aCond && index == kNotFound) {            \
+    persistString.Append(gLiterals->kSpace + aString); \
+    saveString = PR_TRUE;                              \
   }
-  FIND_PERSIST_STRING(gLiteralScreenX,  aPersistPosition);
-  FIND_PERSIST_STRING(gLiteralScreenY,  aPersistPosition);
-  FIND_PERSIST_STRING(gLiteralWidth,    aPersistSize);
-  FIND_PERSIST_STRING(gLiteralHeight,   aPersistSize);
-  FIND_PERSIST_STRING(gLiteralSizemode, aPersistSizeMode);
+  FIND_PERSIST_STRING(gLiterals->kScreenX,  aPersistPosition);
+  FIND_PERSIST_STRING(gLiterals->kScreenY,  aPersistPosition);
+  FIND_PERSIST_STRING(gLiterals->kWidth,    aPersistSize);
+  FIND_PERSIST_STRING(gLiterals->kHeight,   aPersistSize);
+  FIND_PERSIST_STRING(gLiterals->kSizemode, aPersistSizeMode);
 
   if (saveString) 
-    docShellElement->SetAttribute(gLiteralPersist, persistString);
+    docShellElement->SetAttribute(gLiterals->kPersist, persistString);
 
   return NS_OK;
 }
@@ -253,18 +289,18 @@ nsChromeTreeOwner::GetPersistence(PRBool* aPersistPosition,
     return NS_ERROR_FAILURE;
 
   nsAutoString persistString;
-  docShellElement->GetAttribute(gLiteralPersist, persistString);
+  docShellElement->GetAttribute(gLiterals->kPersist, persistString);
 
   // data structure doesn't quite match the question, but it's close enough
   // for what we want (since this method is never actually called...)
   if (aPersistPosition)
-    *aPersistPosition = persistString.Find(gLiteralScreenX) > kNotFound ||
-                        persistString.Find(gLiteralScreenY) > kNotFound;
+    *aPersistPosition = persistString.Find(gLiterals->kScreenX) > kNotFound ||
+                        persistString.Find(gLiterals->kScreenY) > kNotFound;
   if (aPersistSize)
-    *aPersistSize = persistString.Find(gLiteralWidth) > kNotFound ||
-                    persistString.Find(gLiteralHeight) > kNotFound;
+    *aPersistSize = persistString.Find(gLiterals->kWidth) > kNotFound ||
+                    persistString.Find(gLiterals->kHeight) > kNotFound;
   if (aPersistSizeMode)
-    *aPersistSizeMode = persistString.Find(gLiteralSizemode) > kNotFound;
+    *aPersistSizeMode = persistString.Find(gLiterals->kSizemode) > kNotFound;
 
   return NS_OK;
 }

@@ -129,8 +129,6 @@ nsIndexedToHTML::AsyncConvertData(const PRUnichar *aFromType,
     return Init(aListener);
 }
 
-static NS_NAMED_LITERAL_STRING(tableHeading,"<table>\n");
-
 NS_IMETHODIMP
 nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     nsresult rv;
@@ -322,7 +320,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     
     ConvertNonAsciiToNCR(title, strNCR);
     buffer.Append(strNCR);
-    buffer.Append(NS_LITERAL_STRING("</h1>\n<hr/>") + tableHeading);
+    buffer.Append(NS_LITERAL_STRING("</h1>\n<hr/><table>\n"));
 
     //buffer.Append(NS_LITERAL_STRING("<tr><th>Name</th><th>Size</th><th>Last modified</th></tr>\n"));
 
@@ -575,7 +573,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     // Split this up to avoid slow layout performance with large tables
     // - bug 85381
     if (++mRowCount > ROWS_PER_TABLE) {
-        pushBuffer.Append(NS_LITERAL_STRING("</table>\n") + tableHeading);
+        pushBuffer.Append(NS_LITERAL_STRING("</table>\n<table>\n"));
         mRowCount = 0;
     }
     

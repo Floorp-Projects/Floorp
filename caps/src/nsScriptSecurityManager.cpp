@@ -2574,7 +2574,7 @@ nsScriptSecurityManager::CheckXPCPermissions(nsISupports* aObj,
 // Method implementing nsIObserver //
 /////////////////////////////////////
 static const char sPrincipalPrefix[] = "capability.principal";
-static NS_NAMED_LITERAL_CSTRING(sPolicyPrefix, "capability.policy.");
+static const char sPolicyPrefix[] = "capability.policy.";
 
 NS_IMETHODIMP
 nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aTopic,
@@ -2591,7 +2591,7 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aTopic,
 #endif
         )
         JSEnabledPrefChanged(mSecurityPref);
-    if(PL_strncmp(message, sPolicyPrefix.get(), sPolicyPrefix.Length()) == 0)
+    if(PL_strncmp(message, sPolicyPrefix, sizeof(sPolicyPrefix)-1) == 0)
         mPolicyPrefsChanged = PR_TRUE; // This will force re-initialization of the pref table
     else if((PL_strncmp(message, sPrincipalPrefix, sizeof(sPrincipalPrefix)-1) == 0) &&
             !mIsWritingPrefs)
@@ -2811,7 +2811,8 @@ nsScriptSecurityManager::InitPolicies()
         *policyCurrent = '\0';
         policyCurrent++;
 
-        nsCAutoString sitesPrefName(sPolicyPrefix +
+        nsCAutoString sitesPrefName(
+            NS_LITERAL_CSTRING(sPolicyPrefix) +
 				    nsDependentCString(nameBegin) +
 				    NS_LITERAL_CSTRING(".sites"));
         nsXPIDLCString domainList;
@@ -2908,7 +2909,7 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
                                           DomainPolicy* aDomainPolicy)
 {
     nsresult rv;
-    nsCAutoString policyPrefix(sPolicyPrefix +
+    nsCAutoString policyPrefix(NS_LITERAL_CSTRING(sPolicyPrefix) +
                                nsDependentCString(aPolicyName) +
                                NS_LITERAL_CSTRING("."));
     PRUint32 prefixLength = policyPrefix.Length() - 1; // subtract the '.'
@@ -3196,7 +3197,7 @@ nsScriptSecurityManager::InitPrefs()
     char** prefNames;
 
     // Set a callback for policy pref changes
-    prefBranchInternal->AddObserver(sPolicyPrefix.get(), this, PR_FALSE);
+    prefBranchInternal->AddObserver(sPolicyPrefix, this, PR_FALSE);
 
     //-- Initialize the principals database from prefs
     rv = mPrefBranch->GetChildList(sPrincipalPrefix, &prefCount, &prefNames);
