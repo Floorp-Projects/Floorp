@@ -406,7 +406,7 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_UPDATE_COMMAND_UI(ID_DISPLAY_TABLES, OnUpdateDisplayTables)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, OnUpdateEditCut)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateEditCut)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateDelete)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdateEditPaste)
 	ON_UPDATE_COMMAND_UI(ID_LOCAL_POPUP, OnCanInteract)
 	ON_UPDATE_COMMAND_UI(ID_FILE_EDITSOURCE, OnCanInteract)
@@ -2561,6 +2561,14 @@ BOOL UpdateCanCopyInEditControl(CWnd *pView, CCmdUI* pCmdUI)
         pCmdUI->Enable(FALSE);
     }
     return TRUE;
+}
+
+void CNetscapeEditView::OnUpdateDelete(CCmdUI* pCmdUI)
+{
+    if( EDT_IsSelected(GET_MWCONTEXT) )
+        OnUpdateEditCut(pCmdUI);
+    else
+        OnCanInteract(pCmdUI);
 }
 
 void CNetscapeEditView::OnUpdateEditCut(CCmdUI* pCmdUI)

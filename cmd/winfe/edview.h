@@ -477,6 +477,7 @@ protected:
     afx_msg	void OnEditCut();
     afx_msg	void OnEditDelete();
     afx_msg	void OnEditPaste();
+    afx_msg void OnUpdateDelete(CCmdUI* pCmdUI);
     afx_msg void OnUpdateEditCut(CCmdUI* pCmdUI);
     afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
     afx_msg void OnUpdateEditPaste(CCmdUI* pCmdUI);
