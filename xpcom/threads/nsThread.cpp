@@ -121,10 +121,14 @@ nsThread::Main(void* arg)
     NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
 
 #ifdef DEBUG
-    PRThreadState state;
-    rv = self->GetState(&state);
-    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThread %p end run %p\n", self, self->mRunnable.get()));
+    // Because a thread can die after gMainThread dies and takes nsIThreadLog with it,
+    // we need to check for it being null so that we don't crash on shutdown.
+    if (nsIThreadLog) {
+      PRThreadState state;
+      rv = self->GetState(&state);
+      PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+             ("nsIThread %p end run %p\n", self, self->mRunnable.get()));
+    }
 #endif
 
     // explicitly drop the runnable now in case there are circular references
@@ -143,9 +147,13 @@ nsThread::Exit(void* arg)
     }
 
     self->mDead = PR_TRUE;
-    
-    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThread %p exited\n", self));
+
+#if defined(PR_LOGGING)
+    if (nsIThreadLog) {
+      PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+             ("nsIThread %p exited\n", self));
+    }
+#endif
     NS_RELEASE(self);
 }
 
