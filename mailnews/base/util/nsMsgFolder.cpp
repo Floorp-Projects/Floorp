@@ -2051,6 +2051,14 @@ NS_IMETHODIMP nsMsgFolder::SetBiffState(PRUint32 aBiffState)
         NotifyPropertyFlagChanged(supports, kBiffStateAtom, oldBiffState, aBiffState);
     }
   }
+  else if (aBiffState == nsMsgBiffState_NoMail)
+  {
+    // even if the old biff state equals the new biff state, it is still possible that we've never
+    // cleared the number of new messages for this particular folder. This happens when the new mail state
+    // got cleared by viewing a new message in folder that is different from this one. Biff state is stored per server
+    //  the num. of new messages is per folder. 
+    SetNumNewMessages(0);
+  }
   return NS_OK;
 }
 
