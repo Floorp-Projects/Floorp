@@ -388,30 +388,29 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-  // Let the block frame code handle it. Make a copy of the reflow state so we can
-  // set the space manager.
+  // Set the space manager.
   // Note: we don't do this for absolutely positioned child frames, because they
   // have their own space manager
-  nsHTMLReflowState reflowState(aReflowState);
-
   if (nsnull != mSpaceManager) {
+    // Modify the reflow state and set the space manager
+    nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
     reflowState.spaceManager = mSpaceManager;
 
     // Clear the spacemanager's regions.
     mSpaceManager->ClearRegions();
   }
 
-  rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+  rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   // Reflow the absolutely positioned child frames. We need to do this even for
   // an incremental reflow, because some of the absolutely positioned child frames
   // may have 'auto' for an offset
-  ReflowAbsoluteFrames(aPresContext, reflowState);
+  ReflowAbsoluteFrames(aPresContext, aReflowState);
 
-  // Compute our desired size taking into account anything that sticks
-  // outside our new size (for example, floaters). Note that if this
-  // frame has a height specified by CSS then we don't do this!
-  if ((NS_UNCONSTRAINEDSIZE == reflowState.computedHeight) &&
+  // Compute our desired size taking into account floaters that stick outside
+  // our box. Note that if this frame has a height specified by CSS then we
+  // don't do this
+  if ((NS_UNCONSTRAINEDSIZE == aReflowState.computedHeight) &&
       (NS_FRAME_OUTSIDE_CHILDREN & mState)) {
     nscoord contentYMost = aDesiredSize.height;
     nscoord yMost = aDesiredSize.mCombinedArea.YMost();
