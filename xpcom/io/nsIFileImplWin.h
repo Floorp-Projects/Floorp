@@ -70,9 +70,6 @@ private:
     // for buffered stat calls.
     struct stat mBuffered_st;
     int mBuffered_stat_rv;
-
-    void convertToNative(PRUint32 type, const char* filePath, char** nativeFilePath);
-    void convertFromNative(PRUint32 type, const char* inFilePath, char** outFilePath);
     
     nsresult resolveWorkingPath();
     
