@@ -542,7 +542,7 @@ function urlDomain(url)
 
 
 function readRDFString(aDS,aRes,aProp) {
-          var n = aDS.GetTarget(aRes, aProp, true);
+		  var n = aDS.GetTarget(aRes, aProp, true);
           if (n)
             return n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
 }
@@ -553,16 +553,16 @@ function ensureDefaultEnginePrefs(aRDF,aDS)
 
     mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
     var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
-	kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
+    kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
     kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
     kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
           
     var arcs = aDS.GetTargets(kNC_Root, kNC_child, true);
     while (arcs.hasMoreElements()) {
-        var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);       
         var name = readRDFString(aDS, engineRes, kNC_Name);
-		if (name == defaultName)
-           mPrefs.setCharPref("browser.search.defaultengine", engineRes.Value);
+        if (name == defaultName)
+          mPrefs.setCharPref("browser.search.defaultengine", engineRes.Value);
     }
   }
 
@@ -574,11 +574,27 @@ function ensureSearchPref() {
    kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
    try {
             defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
-        } catch(ex) {
+		} catch(ex) {
             ensureDefaultEnginePrefs(rdf, ds);
             defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
             }
    }
+
+
+function getSearchUrl(attr) {
+    var rdf=Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService); 
+    var ds = rdf.GetDataSource("rdf:internetsearch"); 
+    kNC_Root = rdf.GetResource("NC:SearchEngineRoot");
+    mPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefBranch);
+    var defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+    engineRes= rdf.GetResource(defaultEngine);
+    prop = "http://home.netscape.com/NC-rdf#" + attr;
+    kNC_attr = rdf.GetResource(prop);
+    searchURL = readRDFString(ds, engineRes, kNC_attr);
+    if (searchURL)
+      return searchURL
+}
+
 
 function OpenSearch(tabName, forceDialogFlag, searchStr)
 {
@@ -645,19 +661,23 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
       }
     } else {
       if (searchStr) {
-        var escapedSearchStr = escape(searchStr);
+		var escapedSearchStr = escape(searchStr);
         defaultSearchURL += escapedSearchStr;
-
         var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
                                  .getService(Components.interfaces.nsIInternetSearchService);
 
         searchDS.RememberLastSearchText(escapedSearchStr);
         try {
           var searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
-          if (searchEngineURI) {
-            var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
-          if (searchURL)
-              defaultSearchURL = searchURL;
+          if (searchEngineURI) {          
+            var searchURL = getSearchUrl("actionButton");
+            if (searchURL) {
+               defaultSearchURL = searchURL + escapedSearchStr; 
+               } else {
+               var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
+               if (searchURL)
+                 defaultSearchURL = searchURL;
+            }
           }
         } catch (ex) {
         }
