@@ -150,25 +150,6 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   if (NS_FAILED(rv))
     platformCharset.AssignWithConversion("ISO-8859-1");
 
-#if 0
-  // get the encoder
-  nsCOMPtr<nsICharsetConverterManager> ccm = 
-           do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);  
-  rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
-
-  // Estimate out length and allocate the buffer based on a worst-case estimate, then do
-  // the conversion.
-  encoder->GetMaxLength(inUnicode, inUnicodeLen, outPlainTextLen);
-  if ( *outPlainTextLen ) {
-    *outPlainTextData = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(*outPlainTextLen + sizeof(char)));
-    if ( *outPlainTextData ) {
-      rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
-      rv = encoder->Convert(inUnicode, &inUnicodeLen, *outPlainTextData, outPlainTextLen);
-      (*outPlainTextData)[*outPlainTextLen] = '\0';          // null terminate. Convert() doesn't do it for us
-    }
-  } // if valid length
-#endif
-
   // use transliterate to convert things like smart quotes to normal quotes for plain text
   nsCAutoString cPlatformCharset;
   cPlatformCharset.AssignWithConversion(platformCharset);
@@ -180,9 +161,7 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
                   nsIEntityConverter::transliterate);
 
   converter->Convert(inUnicode, outPlainTextData);
-
-  // XXX is there a better way to do this?
-  *outPlainTextLen = strlen(*outPlainTextData);
+  *outPlainTextLen = *outPlainTextData ? strlen(*outPlainTextData) : 0;
 
   NS_ASSERTION ( NS_SUCCEEDED(rv), "Error converting unicode to plain text" );
   
