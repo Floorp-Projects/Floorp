@@ -92,7 +92,9 @@ public:
     */
   PRBool IsRowGroup(PRInt32 aDisplayType);
 
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
   /** complete the append of aRowGroupFrame to the table
     * this builds the cell map

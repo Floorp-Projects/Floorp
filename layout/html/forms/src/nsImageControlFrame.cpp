@@ -62,7 +62,9 @@ public:
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent* aEvent,
@@ -155,7 +157,9 @@ nsrefcnt nsImageControlFrame::Release(void)
 }
 
 NS_IMETHODIMP
-nsImageControlFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsImageControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                         nsIAtom*        aListName,
+                                         nsIFrame*       aChildList)
 {
   nsFormFrame::AddFormControlFrame(aPresContext, *this);
   if (nsnull == mFormFrame) {

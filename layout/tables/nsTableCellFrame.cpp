@@ -70,7 +70,9 @@ nsTableCellFrame::~nsTableCellFrame()
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsTableCellFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                      nsIAtom*        aListName,
+                                      nsIFrame*       aChildList)
 {
   // Create body pseudo frame
   NS_NewBodyFrame(mContent, this, mFirstChild, NS_BODY_NO_AUTO_MARGINS);
@@ -88,7 +90,7 @@ nsTableCellFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   }
 
   // Queue up the frames for the block frame
-  return mFirstChild->Init(aPresContext, aChildList);
+  return mFirstChild->SetInitialChildList(aPresContext, nsnull, aChildList);
 }
 
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,

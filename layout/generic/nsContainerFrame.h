@@ -28,9 +28,11 @@ class nsContainerFrame : public nsSplittableFrame
 public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
 
-  NS_IMETHOD  Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
-  NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);

@@ -30,7 +30,9 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsIContent* aContent, nsIFr
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsSimplePageSequenceFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                               nsIAtom*        aListName,
+                                               nsIFrame*       aChildList)
 {
   // Create a page frame and set its style context
   mFirstChild = new nsPageFrame(mContent, this);
@@ -49,7 +51,7 @@ nsSimplePageSequenceFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildLi
   }
 
   // Queue up the frames for the page frame
-  return mFirstChild->Init(aPresContext, aChildList);
+  return mFirstChild->SetInitialChildList(aPresContext, nsnull, aChildList);
 }
 
 // XXX Hack

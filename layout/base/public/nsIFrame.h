@@ -125,18 +125,24 @@ class nsIFrame : public nsISupports
 {
 public:
   /**
-   * Initialize the frame passing it its child frame list.
+   * Called to set the initial list of frames. This happens after the frame
+   * has been initialized and had its style context set.
    *
-   * This member function is called for all frames just after the frame is
-   * constructed.
+   * This is only called once for a given child list, and won't be called
+   * at all for child lists with no initial list of frames.
    *
-   * You should reflow the frames when you get your 'initial' reflow
-   * notification.
-   *   
-   * @param   aChildList list of child frames. May be NULL
-   * @see     #Reflow()
+   * @param   aListName the name of the child list. A NULL pointer for the atom
+   *            name means the unnamed principal child list
+   * @param   aChildList list of child frames
+   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
+   *            name,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
+   *            initial list of frames has already been set for that child list,
+   *          NS_OK otherwise
    */
-  NS_IMETHOD  Init(nsIPresContext& aPresContext, nsIFrame* aChildList) = 0;
+  NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,
+                                  nsIAtom*        aListName,
+                                  nsIFrame*       aChildList) = 0;
 
   /**
    * Add this object's size information to the sizeof handler. Note that

@@ -112,7 +112,9 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
-  NS_IMETHOD  Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,
+                                  nsIAtom*        aListName,
+                                  nsIFrame*       aChildList);
   NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD  GetContent(nsIContent*& aContent) const;

@@ -207,7 +207,9 @@ nsFormFrame::GetEnctype(PRInt32* aEnctype)
 }
 
 NS_IMETHODIMP
-nsFormFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsFormFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList)
 {
   nsresult result = NS_OK;
   nsIDOMHTMLFormElement* content = nsnull;

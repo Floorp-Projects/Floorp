@@ -25,7 +25,9 @@ class nsSimplePageSequenceFrame : public nsContainerFrame {
 public:
   nsSimplePageSequenceFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
   NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,

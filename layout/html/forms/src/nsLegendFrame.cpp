@@ -87,7 +87,9 @@ nsLegendFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 }
 
 NS_IMETHODIMP
-nsLegendFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsLegendFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                   nsIAtom*        aListName,
+                                   nsIFrame*       aChildList)
 {
   // cache our display type
   const nsStyleDisplay* styleDisplay;
@@ -110,7 +112,7 @@ nsLegendFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   }
 
   // Queue up the frames for the inline frame
-  return mFirstChild->Init(aPresContext, aChildList);
+  return mFirstChild->SetInitialChildList(aPresContext, nsnull, aChildList);
 }
 
 NS_IMETHODIMP

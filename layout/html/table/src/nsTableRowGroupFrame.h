@@ -52,7 +52,9 @@ public:
                            nsIFrame*   aParentFrame,
                            nsIFrame*&  aResult);
 
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext& aPresContext,

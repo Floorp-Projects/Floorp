@@ -88,7 +88,9 @@ nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // nsIFrame
 
 NS_IMETHODIMP
-nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsBodyFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList)
 {
   if (nsnull == mPrevInFlow) {
     // Create a block frame and set its style context
@@ -109,7 +111,7 @@ nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
     }
   
     // Queue up the frames for the block frame
-    return mFirstChild->Init(aPresContext, aChildList);
+    return mFirstChild->SetInitialChildList(aPresContext, nsnull, aChildList);
 
   } else {
     // We have a prev-in-flow, so create a continuing block frame
@@ -120,7 +122,7 @@ nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
     prevBodyFrame->mFirstChild->CreateContinuingFrame(aPresContext, this,
                                                       blockStyleContext, mFirstChild);
     NS_RELEASE(blockStyleContext);
-    return mFirstChild->Init(aPresContext, nsnull);
+    return mFirstChild->SetInitialChildList(aPresContext, nsnull, nsnull);
   }
 }
 
@@ -491,7 +493,7 @@ nsBodyFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
-  cf->Init(aPresContext, nsnull);
+  cf->SetInitialChildList(aPresContext, nsnull, nsnull);
   aContinuingFrame = cf;
   return NS_OK;
 }

@@ -79,7 +79,9 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   NS_IMETHOD GetType(PRInt32* aType) const;
@@ -525,7 +527,9 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
 
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                              nsIAtom*        aListName,
+                                              nsIFrame*       aChildList)
 {
   // add ourself as an nsIFormControlFrame
   nsFormFrame::AddFormControlFrame(aPresContext, *this);
@@ -577,7 +581,7 @@ nsHTMLButtonControlFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildLis
   }
 
   // Queue up the frames for the inline frame
-  return mFirstChild->Init(aPresContext, aChildList);
+  return mFirstChild->SetInitialChildList(aPresContext, nsnull, aChildList);
 }
 
 NS_IMETHODIMP

@@ -60,7 +60,9 @@ public:
   virtual ~nsInlineFrame();
 
   // nsIFrame
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aCX,
                                    nsIFrame* aParent,
                                    nsIStyleContext* aStyleContext,
@@ -237,7 +239,9 @@ nsInlineFrame::AppendNewFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsInlineFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsInlineFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                   nsIAtom*        aListName,
+                                   nsIFrame*       aChildList)
 {
   NS_PRECONDITION(nsnull == mFirstChild, "already initialized");
   nsresult rv = AppendNewFrames(aPresContext, aChildList);  
