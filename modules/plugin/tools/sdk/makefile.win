@@ -67,6 +67,7 @@ export::
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsTraceRefcnt.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsXPCOM.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIComponentManagerObsolete.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsComponentManagerObsolete.h .\include
 
   $(MAKE_INSTALL) $(XPDIST)\include\nspr\pratom.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\nspr\prcpucfg.h .\include
