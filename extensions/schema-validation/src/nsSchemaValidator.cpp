@@ -54,6 +54,7 @@
 #include "nsIComponentManager.h"
 
 #include "nsISchema.h"
+#include "nsISchemaLoader.h"
 #include "nsSchemaValidatorUtils.h"
 #include "nsISchemaValidatorRegexp.h"
 
@@ -66,6 +67,7 @@
 #include "plbase64.h"
 
 #define NS_SCHEMA_1999_NAMESPACE "http://www.w3.org/1999/XMLSchema"
+#define NS_SCHEMA_2001_NAMESPACE "http://www.w3.org/2001/XMLSchema"
 #define kREGEXP_CID "@mozilla.org/xmlextras/schemas/schemavalidatorregexp;1"
 
 NS_IMPL_ISUPPORTS1_CI(nsSchemaValidator, nsISchemaValidator)
@@ -102,22 +104,16 @@ NS_IMETHODIMP nsSchemaValidator::ValidateString(const nsAString & aValue,
   PRBool isValid = PR_FALSE;
 
 #ifdef DEBUG
-  printf("\n ---------------------------------------------------- \n \n nsSchemaValidator::ValidateString called.");
+  printf("\n --------- nsSchemaValidator::ValidateString called ---------");
 #endif
-
-  if (!mSchema)
-    return NS_ERROR_NOT_AVAILABLE;
 
   if (aValue.IsEmpty() || aType.IsEmpty() || aNamespace.IsEmpty())
     return NS_ERROR_NOT_AVAILABLE;
 
-  // get the nsISchemaCollection from the nsISchema
-  nsCOMPtr<nsISchemaCollection> schemaCollection;
-  rv = mSchema->GetCollection(getter_AddRefs(schemaCollection));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!schemaCollection)
-    return NS_ERROR_UNEXPECTED;
+  // no schemas loaded and type is not builtin, abort
+  if (!mSchema && !aNamespace.EqualsLiteral(NS_SCHEMA_1999_NAMESPACE) &&
+      !aNamespace.EqualsLiteral(NS_SCHEMA_2001_NAMESPACE))
+    return NS_ERROR_NOT_AVAILABLE;;
 
   // figure out if its a simple or complex type
   nsCOMPtr<nsISchemaType> type;
@@ -255,34 +251,45 @@ nsresult nsSchemaValidator::GetType(const nsAString & aType,
                                     nsISchemaType ** aSchemaType)
 {
   nsresult rv;
-  // get the nsISchemaCollection from the nsISchema
-  nsCOMPtr<nsISchemaCollection> schemaCollection;
-  mSchema->GetCollection(getter_AddRefs(schemaCollection));
-  if (!schemaCollection) 
-    return NS_ERROR_NULL_POINTER;
 
-  // First try looking for xsd:type
-  rv = schemaCollection->GetType(aType, aNamespace, aSchemaType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // maybe its a xsd:element
-  if (!*aSchemaType) {
-    nsCOMPtr<nsISchemaElement> schemaElement;
-    rv = schemaCollection->GetElement(aType, aNamespace, getter_AddRefs(schemaElement));
+  if (!mSchema) {
+    // if we are a built-in type, we can get a nsISchemaType for it from
+    // nsISchemaCollection->GetType.
+    nsCOMPtr<nsISchemaLoader> schemaLoader =
+      do_GetService("@mozilla.org/xmlextras/schemas/schemaloader;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (schemaElement){
-      rv = schemaElement->GetType(aSchemaType);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
+    nsCOMPtr<nsISchemaCollection> collection(do_QueryInterface(schemaLoader));
+    rv = collection->GetType(aType, aNamespace, aSchemaType);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // get the nsISchemaCollection from the nsISchema
+    nsCOMPtr<nsISchemaCollection> schemaCollection;
+    mSchema->GetCollection(getter_AddRefs(schemaCollection));
+    if (!schemaCollection) 
+      return NS_ERROR_NULL_POINTER;
 
-  if (!aSchemaType) {
-  // if its not a built-in type as well, its an unknown schema type.
-#ifdef DEBUG
-    printf("\n    Error: The Schema type was not found.\n");
-#endif
-    rv = NS_ERROR_SCHEMAVALIDATOR_TYPE_NOT_FOUND;
+    // First try looking for xsd:type
+    rv = schemaCollection->GetType(aType, aNamespace, aSchemaType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // maybe its a xsd:element
+    if (!*aSchemaType) {
+      nsCOMPtr<nsISchemaElement> schemaElement;
+      rv = schemaCollection->GetElement(aType, aNamespace,
+                                        getter_AddRefs(schemaElement));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (schemaElement){
+        rv = schemaElement->GetType(aSchemaType);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+
+    if (!aSchemaType) {
+      // if its not a built-in type as well, its an unknown schema type.
+      rv = NS_ERROR_SCHEMAVALIDATOR_TYPE_NOT_FOUND;
+    }
   }
 
   return rv;
