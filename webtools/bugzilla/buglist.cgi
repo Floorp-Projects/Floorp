@@ -336,6 +336,8 @@ sub GenerateSQL {
     }
 
     my $chartid;
+    # $statusid is used by the code that queries for attachment statuses.
+    my $statusid = 0;
     my $f;
     my $ff;
     my $t;
@@ -389,7 +391,8 @@ sub GenerateSQL {
          },
          "^attachments\..*," => sub {
              my $table = "attachments_$chartid";
-             push(@supptables, "LEFT JOIN attachments $table ON bugs.bug_id = $table.bug_id");
+             push(@supptables, "attachments $table");
+             push(@wherepart, "bugs.bug_id = $table.bug_id");
              $f =~ m/^attachments\.(.*)$/;
              my $field = $1;
              if ($t eq "changedby") {
@@ -408,19 +411,32 @@ sub GenerateSQL {
                  $field = "creation_ts";
                  $t = "greaterthan";
              }
-             if ($field eq "ispatch") {
-                 if ($v ne "0" && $v ne "1") {
-                     return Error("The only legal values for the 'Attachment is patch' field is 0 or 1.");
-                 }
+             if ($field eq "ispatch" && $v ne "0" && $v ne "1") {
+                 return Error("The only legal values for the 'Attachment is patch' " .
+                              "field are 0 and 1.");
+             }
+             if ($field eq "isobsolete" && $v ne "0" && $v ne "1") {
+                 return Error("The only legal values for the 'Attachment is obsolete' " .
+                              "field are 0 and 1.");
              }
              $f = "$table.$field";
          },
          # 2001-05-16 myk@mozilla.org: enable querying against attachment status
          # if this installation has enabled use of the attachment tracker.
          "^attachstatusdefs.name," => sub {
+             # When searching for multiple statuses within a single boolean chart,
+             # we want to match each status record separately.  In other words,
+             # "status = 'foo' AND status = 'bar'" should match attachments with
+             # one status record equal to "foo" and another one equal to "bar",
+             # not attachments where the same status record equals both "foo" and
+             # "bar" (which is nonsensical).  In order to do this we must add an
+             # additional counter to the end of the "attachstatuses" and 
+             # "attachstatusdefs" table references.
+             ++$statusid;
+
              my $attachtable = "attachments_$chartid";
-             my $statustable = "attachstatuses_$chartid";
-             my $statusdefstable = "attachstatusdefs_$chartid";
+             my $statustable = "attachstatuses_${chartid}_$statusid";
+             my $statusdefstable = "attachstatusdefs_${chartid}_$statusid";
              push(@supptables, "attachments $attachtable");
              push(@supptables, "attachstatuses $statustable");
              push(@supptables, "attachstatusdefs $statusdefstable");
