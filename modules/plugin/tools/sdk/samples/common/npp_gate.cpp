@@ -35,28 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//
-// The Mixed Mode procInfos defined in npupp.h assume Think C-
-// style calling conventions.  These conventions are used by
-// Metrowerks with the exception of pointer return types, which
-// in Metrowerks 68K are returned in A0, instead of the standard
-// D0. Thus, since NPN_MemAlloc and NPN_UserAgent return pointers,
-// Mixed Mode will return the values to a 68K plugin in D0, but 
-// a 68K plugin compiled by Metrowerks will expect the result in
-// A0.  The following pragma forces Metrowerks to use D0 instead.
-//
-#ifdef __MWERKS__
-#ifndef powerc
-#pragma pointers_in_D0
-#endif
-#endif
-
-#ifdef __MWERKS__
-#ifndef powerc
-#pragma pointers_in_A0
-#endif
-#endif
-
 
 ////////////////////////////////////////////////////////////
 //
@@ -296,88 +274,66 @@ jref NPP_GetJavaClass (void)
 
 NPError	Private_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved)
 {
-  EnterCodeResource();
   NPError rv = NPP_New(pluginType, instance, mode, argc, argn, argv, saved);
-  ExitCodeResource();
   return rv;	
 }
 
 NPError Private_Destroy(NPP instance, NPSavedData** save)
 {
-  EnterCodeResource();
   NPError rv = NPP_Destroy(instance, save);
-  ExitCodeResource();
   return rv;
 }
 
 NPError Private_SetWindow(NPP instance, NPWindow* window)
 {
-  EnterCodeResource();
   NPError rv = NPP_SetWindow(instance, window);
-  ExitCodeResource();
   return rv;
 }
 
 NPError Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype)
 {
-  EnterCodeResource();
   NPError rv = NPP_NewStream(instance, type, stream, seekable, stype);
-  ExitCodeResource();
   return rv;
 }
 
 int32 Private_WriteReady(NPP instance, NPStream* stream)
 {
-  EnterCodeResource();
   int32 rv = NPP_WriteReady(instance, stream);
-  ExitCodeResource();
   return rv;
 }
 
 int32 Private_Write(NPP instance, NPStream* stream, int32 offset, int32 len, void* buffer)
 {
-  EnterCodeResource();
   int32 rv = NPP_Write(instance, stream, offset, len, buffer);
-  ExitCodeResource();
   return rv;
 }
 
 void Private_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
 {
-  EnterCodeResource();
   NPP_StreamAsFile(instance, stream, fname);
-  ExitCodeResource();
 }
 
 
 NPError Private_DestroyStream(NPP instance, NPStream* stream, NPError reason)
 {
-  EnterCodeResource();
   NPError rv = NPP_DestroyStream(instance, stream, reason);
-  ExitCodeResource();
   return rv;
 }
 
 int16 Private_HandleEvent(NPP instance, void* event)
 {
-  EnterCodeResource();
   int16 rv = NPP_HandleEvent(instance, event);
-  ExitCodeResource();
   return rv;
 }
 
 void Private_Print(NPP instance, NPPrint* platformPrint)
 {
-  EnterCodeResource();
   NPP_Print(instance, platformPrint);
-  ExitCodeResource();
 }
 
 void Private_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 {
-  EnterCodeResource();
   NPP_URLNotify(instance, url, reason, notifyData);
-  ExitCodeResource();
 }
 
 jref Private_GetJavaClass(void)
@@ -387,17 +343,13 @@ jref Private_GetJavaClass(void)
 
 NPError Private_GetValue(NPP instance, NPPVariable variable, void *result)
 {
-  EnterCodeResource();
   NPError rv = NPP_GetValue(instance, variable, result);
-  ExitCodeResource();
   return rv;
 }
 
 NPError Private_SetValue(NPP instance, NPNVariable variable, void *value)
 {
-  EnterCodeResource();
   NPError rv = NPP_SetValue(instance, variable, value);
-  ExitCodeResource();
   return rv;
 }
 
