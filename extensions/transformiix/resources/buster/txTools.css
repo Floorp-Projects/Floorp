@@ -31,6 +31,14 @@ column {
   margin-right: 2px;
 }
 
-junkwindow {
+#tests{
   overflow: auto;
+}
+
+.succeeded {
+  background-color: green;
+}
+
+.failed {
+  background-color: red;
 }

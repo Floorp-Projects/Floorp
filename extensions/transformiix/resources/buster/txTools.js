@@ -84,8 +84,10 @@ txDocSet.prototype = {
       if (!isGood){
         dump(" and failed\n\n");
         this.mVerbose=true;
+        handle_result(this.mName,false);
       } else {
         dump(" and succeeded\n\n");
+        handle_result(this.mName,true);
       }
       if (this.mVerbose){
         dump("Result:\n");

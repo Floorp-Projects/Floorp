@@ -33,7 +33,7 @@
 <script type="text/javascript" src="xulTxTools.js" />
 <script type="text/javascript" src="DumpDOM.js" />
 <box align="horizontal">
-  <button value="refresh" oncommand="refresh_xalan()" />
+  <button value="load tests" oncommand="refresh_xalan()" />
   <button value="check all" oncommand="check(true)" />
   <button value="uncheck all" oncommand="check(false)" />
   <button value="invert checks" oncommand="invert_check()" />
@@ -49,8 +49,8 @@
 <box align="horizontal">
 <titledbox align="horizontal"><title value="search" />
   <button value="Search for " oncommand="select()"/>
-  <textfield style="width: 10em;" id="search-name" /><text value=" in " />
-  <menulist id="search-field">
+  <textfield style="width: 10em;" id="search-name" persist="value" /><text value=" in " />
+  <menulist id="search-field" persist="data">
     <menupopup>
       <menuitem data="1" value="Name" />
       <menuitem data="2" value="Purpose" />
@@ -59,21 +59,23 @@
   </menulist>
 </titledbox>
 <spring flex="1" /></box>
-<grid> 
-  <columns> 
-    <column/> 
-    <column flex="1"/> 
-    <column flex="1"/> 
-    <column flex="1"/> 
-  </columns> 
-
-  <rows id="xalan_grid">
-    <row flex="1">
-      <text value=" " class="head"/> 
-      <text value="Name" class="head"/> 
-      <text value="Purpose" class="head"/> 
-      <text value="Comment" class="head"/> 
-    </row> 
-  </rows> 
-</grid>
+<box id="tests" flex="1">
+  <grid> 
+    <columns> 
+      <column/> 
+      <column flex="1"/> 
+      <column flex="1"/> 
+      <column flex="1"/> 
+    </columns> 
+  
+    <rows id="xalan_grid">
+      <row flex="1">
+  	<text value=" " class="head"/> 
+  	<text value="Name" class="head"/> 
+  	<text value="Purpose" class="head"/> 
+  	<text value="Comment" class="head"/> 
+      </row> 
+    </rows> 
+  </grid>
+</box>
 </window>
