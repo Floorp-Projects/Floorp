@@ -168,6 +168,9 @@ public:
   nsIScrollableView* mScrollableView;
   nsSize mMaxElementSize;
 
+  PRBool mNeverHasVerticalScrollbar;   
+  PRBool mNeverHasHorizontalScrollbar; 
+
   PRBool mHasVerticalScrollbar;
   PRBool mHasHorizontalScrollbar;
   PRBool mFirstPass;
@@ -255,7 +258,7 @@ nsGfxScrollFrame::GetClipSize(nsIPresContext* aPresContext,
 
 /**
 * Get information about whether the vertical and horizontal scrollbars
-* are currently visible
+* are currently visible 
 */
 NS_IMETHODIMP
 nsGfxScrollFrame::GetScrollbarVisibility(nsIPresContext* aPresContext,
@@ -266,6 +269,18 @@ nsGfxScrollFrame::GetScrollbarVisibility(nsIPresContext* aPresContext,
    *aHorizontalVisible = mInner->mHasHorizontalScrollbar;
    return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsGfxScrollFrame::SetScrollbarVisibility(nsIPresContext* aPresContext,
+                                    PRBool aVerticalVisible,
+                                    PRBool aHorizontalVisible)
+{
+  mInner->mNeverHasVerticalScrollbar = !aVerticalVisible;
+  mInner->mNeverHasHorizontalScrollbar = !aHorizontalVisible;
+  return NS_OK;
+}
+
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
 
@@ -641,6 +656,8 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter):mHScrollb
    mMaxElementSize.width = 0;
    mMaxElementSize.height = 0;
    mFirstPass = PR_FALSE;
+   mNeverHasVerticalScrollbar   = PR_FALSE;     
+   mNeverHasHorizontalScrollbar = PR_FALSE; 
 }
 
 NS_IMETHODIMP
@@ -778,13 +795,15 @@ nsGfxScrollFrameInner::AddRemoveScrollbar(PRBool& aHasScrollbar, nscoord& aXY, n
 void
 nsGfxScrollFrameInner::AddHorizontalScrollbar(const nsSize& aSbSize, nsRect& aScrollAreaSize, PRBool aOnTop)
 {
-   AddRemoveScrollbar(mHasHorizontalScrollbar, aScrollAreaSize.y, aScrollAreaSize.height, aSbSize.height, aOnTop, PR_TRUE);
+   if (!mNeverHasHorizontalScrollbar)
+     AddRemoveScrollbar(mHasHorizontalScrollbar, aScrollAreaSize.y, aScrollAreaSize.height, aSbSize.height, aOnTop, PR_TRUE);
 }
 
 void
 nsGfxScrollFrameInner::AddVerticalScrollbar(const nsSize& aSbSize, nsRect& aScrollAreaSize, PRBool aOnRight)
 {
-   AddRemoveScrollbar(mHasVerticalScrollbar, aScrollAreaSize.x, aScrollAreaSize.width, aSbSize.width, aOnRight, PR_TRUE);
+   if (!mNeverHasVerticalScrollbar)
+     AddRemoveScrollbar(mHasVerticalScrollbar, aScrollAreaSize.x, aScrollAreaSize.width, aSbSize.width, aOnRight, PR_TRUE);
 }
 
 void

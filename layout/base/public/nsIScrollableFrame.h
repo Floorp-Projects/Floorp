@@ -65,6 +65,15 @@ public:
   NS_IMETHOD GetScrollbarVisibility(nsIPresContext* aPresContext,
                                     PRBool *aVerticalVisible,
                                     PRBool *aHorizontalVisible) const = 0;
+
+  /**
+   * Set information about whether the vertical and horizontal scrollbars
+   * are currently visible
+   */
+  NS_IMETHOD SetScrollbarVisibility(nsIPresContext* aPresContext,
+                                    PRBool aVerticalVisible,
+                                    PRBool aHorizontalVisible) = 0;
+
 };
 
 #endif
