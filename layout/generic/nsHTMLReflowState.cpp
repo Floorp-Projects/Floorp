@@ -855,15 +855,13 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
     // The element would have been block-level which means it would be below
     // the line containing the placeholder frame
     if (aBlockFrame) {
-      nsIFrame*   blockChild;
-      nsBlockFrame::line_iterator lineBox;
-      PRBool      isFloater;
       nsBlockFrame* blockFrame = NS_STATIC_CAST(nsBlockFrame*, aBlockFrame);
 
       // We need the immediate child of the block frame, and that may not be
       // the placeholder frame
-      blockChild = FindImmediateChildOf(aBlockFrame, aPlaceholderFrame);
-      if (blockFrame->FindLineFor(blockChild, &isFloater, &lineBox)) {
+      nsIFrame *blockChild = FindImmediateChildOf(aBlockFrame, aPlaceholderFrame);
+      nsBlockFrame::line_iterator lineBox = blockFrame->FindLineFor(blockChild);
+      if (lineBox != blockFrame->end_lines()) {
         // The top of the hypothetical box is just below the line containing
         // the placeholder
         aHypotheticalBox.mTop = lineBox->mBounds.YMost();
