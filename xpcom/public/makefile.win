@@ -35,6 +35,7 @@ EXPORTS = \
 	nsIEnumerator.h		\
 	nsTraceRefcnt.h		\
 	nsVector.h		\
+	plvector.h		\
 	$(NULL)			
 
 MODULE = xpcom 

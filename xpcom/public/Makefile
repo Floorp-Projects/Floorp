@@ -33,6 +33,7 @@ EXPORTS		= nsCom.h \
 		  nsIEnumerator.h \
 		  nsTraceRefcnt.h \
 		  nsVector.h \
+		  plvector.h \
 		  $(NULL)
 
 include $(DEPTH)/config/rules.mk

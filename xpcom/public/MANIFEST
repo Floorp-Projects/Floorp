@@ -18,3 +18,4 @@ nsIEnumerator.h
 nsVector.h
 nsMacRepository.h
 nsTraceRefcnt.h
+plvector.h
