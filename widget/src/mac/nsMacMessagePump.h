@@ -75,9 +75,10 @@ private:
 	PRBool		DispatchOSEventToRaptor(EventRecord &anEvent, WindowPtr aWindow);
 	PRBool		DispatchMenuCommandToRaptor(EventRecord &anEvent, long menuResult);
 
-public:
+private:
 	typedef void (*nsWindowlessMenuEventHandler) (PRInt32 menuResult);
 	static nsWindowlessMenuEventHandler gWindowlessMenuEventHandler;
+public:
 	static void SetWindowlessMenuEventHandler(nsWindowlessMenuEventHandler func)
 									{gWindowlessMenuEventHandler = func;}
 };
