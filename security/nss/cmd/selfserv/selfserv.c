@@ -190,7 +190,7 @@ Usage(const char *progName)
 "-t threads -- specify the number of threads to use for connections.\n"
 "-i pid_file file to write the process id of selfserve\n"
 "-c ciphers   Letter(s) chosen from the following list\n"
-"-l means use local threads instead of global threads"
+"-l means use local threads instead of global threads\n"
 "A    SSL2 RC4 128 WITH MD5\n"
 "B    SSL2 RC4 128 EXPORT40 WITH MD5\n"
 "C    SSL2 RC2 128 CBC WITH MD5\n"
