@@ -4046,6 +4046,13 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
         // last group we update.
         m_currentGroup = group;
 
+		// prevent crash when
+		// if going offline in the middle of
+                // updating the unread counts on a news server
+                // (running a "news://host/*" url)
+		NS_ASSERTION(m_nntpServer,"no server");
+		if (!m_nntpServer) return -1;
+
         rv = m_nntpServer->DisplaySubscribedGroup(m_newsFolder,
                                               low ? atol(low) : 0,
                                               high ? atol(high) : 0,
