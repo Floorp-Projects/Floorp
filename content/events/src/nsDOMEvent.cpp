@@ -202,7 +202,8 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
 NS_IMETHODIMP
 nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 {
-  *aCurrentTarget = nsnull;
+  *aCurrentTarget = mCurrentTarget;
+  NS_IF_ADDREF(*aCurrentTarget);
   return NS_OK;
 }
 
@@ -242,7 +243,7 @@ nsDOMEvent::GetCancelable(PRBool* aCancelable)
 NS_IMETHODIMP
 nsDOMEvent::GetTimeStamp(PRUint64* aTimeStamp)
 {
-  //*aTimeStamp = (PRUint64)mEvent->time;
+  LL_UI2L(*aTimeStamp, mEvent->time);
   return NS_OK;
 }
 
