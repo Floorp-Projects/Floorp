@@ -283,7 +283,7 @@ XPT_DumpInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
         fprintf(stdout, "%*sName:                            %s\n", 
                 indent, " ", ide->name);
         fprintf(stdout, "%*sNamespace:                       %s\n", 
-                indent, " ", ide->namespace);
+                indent, " ", ide->name_space);
         fprintf(stdout, "%*sAddress of interface descriptor: %p\n", 
                 indent, " ", ide->interface_descriptor);
 
@@ -295,7 +295,7 @@ XPT_DumpInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
         }
     } else {
         fprintf(stdout, "%*s- %s::%s (", indent, " ", 
-                ide->namespace ? ide->namespace : "", ide->name);
+                ide->name_space ? ide->name_space : "", ide->name);
         print_IID(&ide->iid, stdout);
         fprintf(stdout, "):\n");
         if (!XPT_DumpInterfaceDescriptor(ide->interface_descriptor, 
@@ -435,6 +435,24 @@ XPT_DumpMethodDescriptor(XPTMethodDescriptor *md, const int indent,
                 fprintf(stdout, ", ");
             }
             pd = &md->params[i];
+            if (XPT_PD_IS_IN(pd->flags)) {
+                fprintf(stdout, "in");
+                if (XPT_PD_IS_OUT(pd->flags)) {
+                    fprintf(stdout, "/out ");
+                    if (XPT_PD_IS_RETVAL(pd->flags)) {
+                        fprintf(stdout, "retval ");
+                    }
+                } else {
+                    fprintf(stdout, " ");
+                }
+            } else {
+                if (XPT_PD_IS_OUT(pd->flags)) {
+                    fprintf(stdout, "out ");
+                    if (XPT_PD_IS_RETVAL(pd->flags)) {
+                        fprintf(stdout, "retval ");
+                    }
+                }
+            }
             if (!XPT_GetStringForType(&pd->type, &param_type)) {
                 return PR_FALSE;
             }
@@ -605,24 +623,14 @@ XPT_DumpConstDescriptor(XPTConstDescriptor *cd, const int indent, PRBool verbose
         fprintf(stdout, "%c", cd->value.ch);
         break;
     case TD_WCHAR:
-        fprintf(stdout, "%d", cd->value.wch);
+        fprintf(stdout, "%c", cd->value.wch & 0xff);
         break;
     case TD_VOID:
         fprintf(stdout, "VOID");
         break;
     case TD_PPNSIID:
         if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
-        fprintf(stdout, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-                cd->value.iid->m0, (PRUint32) cd->value.iid->m1,
-                (PRUint32) cd->value.iid->m2,
-                (PRUint32) cd->value.iid->m3[0], 
-                (PRUint32) cd->value.iid->m3[1],
-                (PRUint32) cd->value.iid->m3[2], 
-                (PRUint32) cd->value.iid->m3[3],
-                (PRUint32) cd->value.iid->m3[4], 
-                (PRUint32) cd->value.iid->m3[5],
-                (PRUint32) cd->value.iid->m3[6], 
-                (PRUint32) cd->value.iid->m3[7]);
+            print_IID(cd->value.iid, stdout);
         } else 
             return PR_FALSE;
         break;

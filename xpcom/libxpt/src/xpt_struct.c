@@ -46,6 +46,7 @@ DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td);
 static PRBool
 DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor *pd);
 
+
 #define CURS_POOL_OFFSET_RAW(cursor)                                          \
   ((cursor)->pool == XPT_HEADER                                               \
    ? (cursor)->offset                                                         \
@@ -694,9 +695,21 @@ DoAnnotation(XPTCursor *cursor, XPTAnnotation **annp)
     XPT_ERROR_HANDLE(ann);
 }
 
-PRBool 
-DoAnnotations(XPTCursor *cursor, XPTAnnotation **ap)
+PRBool
+XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
+                            uint32 num_interfaces, char *name, 
+                            uint16 *indexp) 
 {
+    int i;
+    
+    for (i=1; i<=num_interfaces; i++) {
+        fprintf(stderr, "%s == %s ?\n", ide_block[i].name, name);
+        if (strcmp(ide_block[i].name, name) == 0) {
+            *indexp = i;
+            return PR_TRUE;
+        }
+    }
+    indexp = 0;
     return PR_FALSE;
 }
 
