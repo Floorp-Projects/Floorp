@@ -172,8 +172,7 @@ nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
     }
   } 
   else if (aAttribute == nsHTMLAtoms::frameborder) {
-    // XXX need to check for correct mode
-    if (nsGenericHTMLElement::ParseFrameborderValue(PR_FALSE, aValue, aResult)) {
+    if (nsGenericHTMLElement::ParseFrameborderValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   } 
@@ -191,8 +190,7 @@ nsHTMLFrameSetElement::AttributeToString(nsIAtom* aAttribute,
                                          nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::frameborder) {
-    // XXX need to check for correct mode
-    nsGenericHTMLElement::FrameborderValueToString(PR_FALSE, aValue, aResult);
+    nsGenericHTMLElement::FrameborderValueToString(aValue, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   } 
   return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,

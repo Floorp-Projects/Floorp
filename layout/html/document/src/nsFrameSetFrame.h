@@ -219,9 +219,9 @@ protected:
 
   void SetParentBorderColor(nscolor aColor) { mParentBorderColor = aColor; }
 
-  nsFrameborder GetFrameBorder(PRBool aStandardMode);
+  nsFrameborder GetFrameBorder();
 
-  nsFrameborder GetFrameBorder(nsIContent* aContent, PRBool aStandardMode);
+  nsFrameborder GetFrameBorder(nsIContent* aContent);
 
   nscolor GetBorderColor();
 

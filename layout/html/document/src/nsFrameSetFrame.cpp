@@ -358,7 +358,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   
-  nsFrameborder  frameborder = GetFrameBorder(PR_FALSE);
+  nsFrameborder  frameborder = GetFrameBorder();
   PRInt32 borderWidth = GetBorderWidth(aPresContext, PR_FALSE);
   nscolor borderColor = GetBorderColor();
  
@@ -404,7 +404,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
 
       aPresContext->ResolveStyleContextFor(child, mStyleContext,
                                            PR_FALSE, getter_AddRefs(kidSC));
-      if (nsHTMLAtoms::frameset == tag.get()) {
+      if (nsHTMLAtoms::frameset == tag) {
         result = NS_NewHTMLFramesetFrame(shell, &frame);
 
         mChildTypes[mChildCount] = FRAMESET;
@@ -421,7 +421,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
 
         mChildTypes[mChildCount] = FRAME;
         
-        mChildFrameborder[mChildCount] = GetFrameBorder(child, PR_FALSE);
+        mChildFrameborder[mChildCount] = GetFrameBorder(child);
         mChildBorderColors[mChildCount].Set(GetBorderColor(child));
       }
       
@@ -627,7 +627,7 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext,
   PRBool forcing = mForceFrameResizability && aTakeForcingIntoAccount;
   
   if (!forcing) {
-    nsFrameborder frameborder = GetFrameBorder(PR_FALSE);
+    nsFrameborder frameborder = GetFrameBorder();
     if (frameborder == eFrameborder_No) {
       return 0;
     }
@@ -1017,28 +1017,23 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
 }
 
 static
-nsFrameborder GetFrameBorderHelper(nsIHTMLContent* aContent, 
-                                   PRBool          aStandardMode)
+nsFrameborder GetFrameBorderHelper(nsIHTMLContent* aContent)
 {
   if (nsnull != aContent) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetHTMLAttribute(nsHTMLAtoms::frameborder, value))) {
-      if (eHTMLUnit_Enumerated == value.GetUnit()) {
-        PRInt32 intValue;
-        intValue = value.GetIntValue();
-        if (!aStandardMode) {
-          if (NS_STYLE_FRAME_YES == intValue) {
-            intValue = NS_STYLE_FRAME_1;
-          } 
-          else if (NS_STYLE_FRAME_NO == intValue) {
-            intValue = NS_STYLE_FRAME_0;
-          }
-        }
-        if (NS_STYLE_FRAME_0 == intValue) {
-          return eFrameborder_No;
-        } 
-        else if (NS_STYLE_FRAME_1 == intValue) {
-          return eFrameborder_Yes;
+      if (eHTMLUnit_Enumerated == value.GetUnit()) {       
+        switch (value.GetIntValue())
+        {
+          case NS_STYLE_FRAME_YES:
+          case NS_STYLE_FRAME_1:
+            return eFrameborder_Yes;
+            break;
+
+          case NS_STYLE_FRAME_NO:
+          case NS_STYLE_FRAME_0:
+            return eFrameborder_No;
+            break;
         }
       }      
     }
@@ -1046,13 +1041,13 @@ nsFrameborder GetFrameBorderHelper(nsIHTMLContent* aContent,
   return eFrameborder_Notset;
 }
 
-nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(PRBool aStandardMode) 
+nsFrameborder nsHTMLFramesetFrame::GetFrameBorder() 
 {
   nsFrameborder result = eFrameborder_Notset;
   nsIHTMLContent* content = nsnull;
   mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
-    result = GetFrameBorderHelper(content, aStandardMode);
+  if (content) {
+    result = GetFrameBorderHelper(content);
     NS_RELEASE(content);
   }
   if (eFrameborder_Notset == result) {
@@ -1061,18 +1056,17 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(PRBool aStandardMode)
   return result;
 }
 
-nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent, 
-                                                  PRBool      aStandardMode)
+nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent)
 {
   nsFrameborder result = eFrameborder_Notset;
   nsIHTMLContent* content = nsnull;
   aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
   if (nsnull != content) {
-    result = GetFrameBorderHelper(content, aStandardMode);
+    result = GetFrameBorderHelper(content);
     NS_RELEASE(content);
   }
   if (eFrameborder_Notset == result) {
-    return GetFrameBorder(aStandardMode);
+    return GetFrameBorder();
   }
   return result;
 }
@@ -1180,7 +1174,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
   PRBool*        horBordersVis     = nsnull; // horizontal borders visibility
   nscolor*       horBorderColors   = nsnull;
   nscolor        borderColor       = GetBorderColor();
-  nsFrameborder  frameborder       = GetFrameBorder(PR_FALSE);
+  nsFrameborder  frameborder       = GetFrameBorder();
 
   if (firstTime) {
     verBordersVis = new PRBool[mNumCols];

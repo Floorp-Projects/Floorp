@@ -259,8 +259,7 @@ nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::frameborder) {
-    // XXX need to check for correct mode
-    if (ParseFrameborderValue(PR_FALSE, aValue, aResult)) {
+    if (ParseFrameborderValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -279,7 +278,7 @@ nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::scrolling) {
-    if (ParseScrollingValue(PR_FALSE, aValue, aResult)) {
+    if (ParseScrollingValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -293,11 +292,11 @@ nsHTMLFrameElement::AttributeToString(nsIAtom* aAttribute,
                                       nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::frameborder) {
-    FrameborderValueToString(PR_FALSE, aValue, aResult);
+    FrameborderValueToString(aValue, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   } 
   else if (aAttribute == nsHTMLAtoms::scrolling) {
-    ScrollingValueToString(PR_FALSE, aValue, aResult);
+    ScrollingValueToString(aValue, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
