@@ -142,7 +142,7 @@ nsMenuBarListener::MouseMove(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIContent> menuBar;
   mMenuBarFrame->GetContent(getter_AddRefs(menuBar));
 
-  while (current && (current.get() != menuBar)) {
+  while (current && (current.get() != menuBar.get())) {
     // See if we're a menu item.
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(*getter_AddRefs(tag));
@@ -212,7 +212,12 @@ nsMenuBarListener::MouseOver(nsIDOMEvent* aMouseEvent)
 nsresult
 nsMenuBarListener::MouseOut(nsIDOMEvent* aMouseEvent)
 {
-  return NS_OK; // means I am NOT consuming event
+  if (!mMenuBarFrame->IsActive()) {
+    // Clear the selected item if there is one.
+    mMenuBarFrame->SetCurrentMenuItem(nsnull);
+  }
+
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
