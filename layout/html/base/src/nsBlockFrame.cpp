@@ -2024,20 +2024,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       aState.ReconstructMarginAbove(line);
     }
 
-    if (line->IsPreviousMarginDirty() && !line->IsDirty()) {
-      // If the previous margin is dirty and we're not going to reflow
-      // the line we need to pull out the correct top margin and set
-      // |deltaY| correctly.
-      // If there's float damage we might end up doing this work twice,
-      // but whatever...
-      if (line->IsBlock()) {
-        // We could actually make this faster by stealing code from the
-        // top of nsBlockFrame::ReflowBlockFrame, but it's an edge case
-        // that will generally happen at most once per reflow.
-        line->MarkDirty();
-      } else {
-        deltaY = aState.mY + aState.mPrevBottomMargin.get() - line->mBounds.y;
-      }
+    PRBool previousMarginWasDirty = line->IsPreviousMarginDirty();
+    if (previousMarginWasDirty && !line->IsDirty()) {
+      // If the previous margin is dirty, reflow the current line
+      line->MarkDirty();
     }
     line->ClearPreviousMarginDirty();
 
@@ -2092,16 +2082,25 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         }
         break;
       }
-      if (oldY == 0 && deltaY != line->mBounds.y) {
-        // This means the current line was just reflowed for the first
-        // time.  Thus we must mark the the previous margin of the next
-        // line dirty.
-        // XXXldb Move this into where we insert the line!  (or will
-        // that mess up deltaY manipulation?)
-        if (line.next() != end_lines()) {
-          line.next()->MarkPreviousMarginDirty();
-          // since it's marked dirty, nobody will care about |deltaY|
-        }
+
+      if (line.next() != end_lines() &&
+          // Check if the line might be empty, so the previous dirty
+          // margin might carry through to the next line.
+          ((line->mBounds.height == 0 && previousMarginWasDirty) ||
+           // Check if the current line might have just been reflowed
+           // for the first time.
+           (oldY == 0 && deltaY != line->mBounds.y) ||
+           // Check if the current line might have been tested in a
+           // subsequent line's ShouldApplyTopMargin
+           (oldY == 0 && line->mBounds.y == 0 &&
+            // EXCEPT if it wasn't empty before and it wasn't empty
+            // now, nothing has changed that could affect
+            // ShouldApplyTopMargin
+            !(oldYMost != 0 && line->mBounds.height != 0)))) {
+        // In all these cases we must mark the the previous margin of
+        // the next line dirty.
+        line.next()->MarkPreviousMarginDirty();
+        // since it's marked dirty, nobody will care about |deltaY|
       } else {
         deltaY = line->mBounds.YMost() - oldYMost;
       }
@@ -3106,7 +3105,13 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     *aKeepReflowGoing = brc.PlaceBlock(blockHtmlRS, isAdjacentWithTop,
                                        computedOffsets, collapsedBottomMargin,
                                        aLine->mBounds, combinedArea);
-    aLine->SetCarriedOutBottomMargin(collapsedBottomMargin);
+    if (aLine->SetCarriedOutBottomMargin(collapsedBottomMargin)) {
+      line_iterator nextLine = aLine;
+      ++nextLine;
+      if (nextLine != end_lines()) {
+        nextLine->MarkPreviousMarginDirty();
+      }
+    }
 
     if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
       // Mark the line as dirty so once we known the final shrink wrap width
