@@ -65,6 +65,7 @@ function FillHistoryMenu(aParent, aMenu)
             }
           break;
         case "go":
+        if (count > 0) aParent.lastChild.removeAttribute( "hidden" );
           end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
           for (j = count - 1; j >= end; j--)
             {
