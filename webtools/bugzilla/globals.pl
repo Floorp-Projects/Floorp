@@ -1069,6 +1069,38 @@ sub GetBugLink {
     }
 }
 
+# CountOpenDependencies counts the number of open dependent bugs for a
+# list of bugs and returns a list of bug_id's and their dependency count
+# It takes one parameter:
+#  - A list of bug numbers whose dependencies are to be checked
+
+sub CountOpenDependencies {
+    my (@bug_list) = @_;
+    my @dependencies;
+    
+    # Make sure any unfetched data from a currently running query
+    # is saved off rather than overwritten
+    PushGlobalSQLState();
+   
+    SendSQL("SELECT blocked, count(bug_status) " .
+            "FROM bugs, dependencies " .
+            "WHERE blocked IN (" . (join "," , @bug_list) . ") " .
+            "AND bug_id = dependson " .
+            "AND bug_status IN ('" . (join "','", OpenStates())  . "') " .
+            "GROUP BY blocked ");
+   
+    while (MoreSQLData()) {
+        my ($bug_id, $dependencies) = FetchSQLData();
+        push(@dependencies, { bug_id       => $bug_id, 
+                              dependencies => $dependencies });
+    }
+
+    # All done with this sidetrip
+    PopGlobalSQLState();
+
+    return @dependencies;
+}
+
 sub GetLongDescriptionAsText {
     my ($id, $start, $end) = (@_);
     my $result = "";

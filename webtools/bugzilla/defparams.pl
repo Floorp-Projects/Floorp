@@ -1169,7 +1169,14 @@ Reason: %reason%
    type    => 't',
    default => '',
   },
-);
 
+  {
+   name    => 'noresolveonopenblockers',
+   desc    => 'Don\'t allow bugs to be resolved as fixed if they have unresolved dependencies.',
+   type    => 'b',
+   default => 0,
+  },
+  
+);
 1;
 

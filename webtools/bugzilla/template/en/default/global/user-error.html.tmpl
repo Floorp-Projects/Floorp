@@ -666,6 +666,32 @@
     Sorry - sidebar.cgi currently only supports Mozilla based web browsers.
     <a href="http://www.mozilla.org">Upgrade today</a>. :-)
 
+  [% ELSIF error == "still_unresolved_bugs" %]
+    [% IF dependency_count == 1 %]
+      [% terms.Bug %]# <a href="show_bug.cgi?id=[% dependencies.0.bug_id %]">[% dependencies.0.bug_id %]</a>
+      has still [% dependencies.0.dependencies FILTER html %] unresolved
+      [% IF dependencies.0.dependencies == 1 %]
+        dependency
+      [% ELSE %]
+        dependencies
+      [% END %]. Show
+      <a href="showdependencytree.cgi?id=[% dependencies.0.bug_id %]">Dependency Tree</a>.
+    [% ELSE %]
+      There are [% dependency_count %] open [% terms.bugs %] which
+      have unresolved dependencies.
+      <br>
+      [% FOREACH bug = dependencies %]
+        [% terms.Bug %]# <a href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>
+        has [% bug.dependencies FILTER html %] open
+        [% IF bug.dependencies == 1 %]
+          dependency.
+        [% ELSE %]
+          dependencies.
+        [% END %]
+        (<a href="showdependencytree.cgi?id=[% bug.bug_id %]">Dependency Tree</a>)<br>
+      [% END %]
+    [% END %]
+
   [% ELSIF error == "too_many_votes_for_bug" %]
     [% title = "Illegal Vote" %]
     You may only use at most [% max FILTER html %] votes for a single

@@ -890,6 +890,17 @@ SWITCH: for ($::FORM{'knob'}) {
                 ThrowUserError("resolving_remaining_time");
             }
         }
+        
+        # don't resolve as fixed while still unresolved blocking bugs
+        if (Param("noresolveonopenblockers") && ($::FORM{'resolution'} eq 'FIXED')) {
+           my @dependencies = CountOpenDependencies(@idlist);
+           if (scalar @dependencies > 0) {
+               ThrowUserError("still_unresolved_bugs", 
+                               { dependencies     => \@dependencies,
+                                 dependency_count => scalar @dependencies });
+            }          
+        }
+
         # Check here, because its the only place we require the resolution
         CheckFormField(\%::FORM, 'resolution', \@::settable_resolution);
         ChangeStatus('RESOLVED');
