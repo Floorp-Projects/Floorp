@@ -102,7 +102,7 @@ public:
     friend class nsJARDownloadObserver;
 
 protected:
-    nsCOMPtr<nsJARProtocolHandler>      mJARProtocolHandler;
+    nsJARProtocolHandler*               mJARProtocolHandler;
     nsCOMPtr<nsIJARURI>                 mURI;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;

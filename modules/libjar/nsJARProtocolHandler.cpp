@@ -89,9 +89,10 @@ nsJARProtocolHandler::~nsJARProtocolHandler()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsJARProtocolHandler,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsJARProtocolHandler,
                               nsIJARProtocolHandler,
-                              nsIProtocolHandler)
+                              nsIProtocolHandler,
+                              nsISupportsWeakReference)
 
 NS_METHOD
 nsJARProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

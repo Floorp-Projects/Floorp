@@ -56,7 +56,7 @@
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
-static const char *gScheme[] = {"chrome", "resource", "file", "http"};
+static const char *gScheme[] = {"chrome", "file", "http", "jar", "resource"};
 
 class nsIPrefBranch;
 
