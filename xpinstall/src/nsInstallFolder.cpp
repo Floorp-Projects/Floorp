@@ -209,9 +209,23 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
 
             case 109: ///////////////////////////////////////////////////////////  File URL
                 {
+                    if (aRelativePath.IsEmpty())
+                    {
+                        mFileSpec = nsnull;
+                        return;
+                    }
+
                     nsString tempFileURLString = aFolderID;
                     tempFileURLString += aRelativePath;
                     mFileSpec = new nsFileSpec( nsFileURL(tempFileURLString) );
+
+                    // file:// is a special case where it returns and does not
+                    // go to the standard relative path code below.  This is
+                    // so that nsFile(Spec|Path) will work properly.  (ie. Passing
+                    // just "file://" to the nsFileSpec && nsFileURL is wrong).
+
+                    return;
+
                 }
                 break;
 
