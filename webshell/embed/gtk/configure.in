@@ -64,6 +64,12 @@ if test -z "$NSPR_DIR"; then
 	NSPR_DIR=$MOZILLA_DIR/dist
 fi
 
+NSPR_VERSION=0
+AC_ARG_WITH(nspr-version,
+[  --with-nspr-version=\$version
+                          version of nspr to link against],
+	NSPR_VERSION=$withval)
+
 dnl ========================================================
 dnl By default, turn rtti and exceptions off on g++/egcs
 dnl ========================================================
@@ -122,6 +128,7 @@ CXXFLAGS="$CXXFLAGS $_MOZ_RTTI_FLAGS $_MOZ_EXCEPTIONS_FLAGS"
 
 AC_SUBST(MOZILLA_DIR)
 AC_SUBST(NSPR_DIR)
+AC_SUBST(NSPR_VERSION)
 AC_SUBST(LIBPTHREAD)
 
 AC_OUTPUT(

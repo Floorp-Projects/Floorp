@@ -11005,7 +11005,7 @@ fi
 fi
 
 if test "$MOZ_ENABLE_GTK_MOZILLA"; then
-  ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-mozilla=$MOZ_BUILD_ROOT/dist"
+  ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-mozilla=$MOZ_BUILD_ROOT/dist --with-nspr-version=$NSPR_VERSION"
   
 if test "$no_recursion" != yes; then
 
