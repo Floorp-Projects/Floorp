@@ -129,6 +129,7 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 #define PREF_4X_MAIL_POP_PASSWORD "mail.pop_password"
 #define PREF_4X_NETWORK_HOSTS_POP_SERVER "network.hosts.pop_server"
 #define PREF_4X_MAIL_CHECK_NEW_MAIL "mail.check_new_mail"
+#define PREF_4X_MAIL_POP3_GETS_NEW_MAIL	"mail.pop3_gets_new_mail"
 #define PREF_4X_MAIL_CHECK_TIME "mail.check_time"
 #define PREF_4X_MAIL_LEAVE_ON_SERVER "mail.leave_on_server"
 #define PREF_4X_MAIL_DELETE_MAIL_LEFT_ON_SERVER "mail.delete_mail_left_on_server"
@@ -2276,6 +2277,7 @@ nsMsgAccountManager::MigrateOldMailPrefs(nsIMsgIncomingServer * server)
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_CHECK_NEW_MAIL,server,SetDoBiff)
   MIGRATE_SIMPLE_INT_PREF(PREF_4X_MAIL_CHECK_TIME,server,SetBiffMinutes)
+  MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_POP3_GETS_NEW_MAIL,server,SetDownloadOnBiff)
 
   nsCOMPtr<nsIPop3IncomingServer> popServer;
   popServer = do_QueryInterface(server, &rv);
@@ -2481,6 +2483,9 @@ nsMsgAccountManager::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const cha
   // upgrade the imap incoming server specific prefs
   MIGRATE_BOOL_PREF("mail.imap.server.%s.check_new_mail",hostAndPort,server,SetDoBiff)
   MIGRATE_INT_PREF("mail.imap.server.%s.check_time",hostAndPort,server,SetBiffMinutes)
+  // "mail.imap.new_mail_get_headers" was a global pref across all imap servers in 4.x
+  // in 5.0, it's per server
+  MIGRATE_BOOL_PREF("%s","mail.imap.new_mail_get_headers",server,SetDownloadOnBiff)
   MIGRATE_STR_PREF("mail.imap.server.%s.admin_url",hostAndPort,imapServer,SetAdminUrl)
   MIGRATE_INT_PREF("mail.imap.server.%s.capability",hostAndPort,imapServer,SetCapabilityPref)
   MIGRATE_BOOL_PREF("mail.imap.server.%s.cleanup_inbox_on_exit",hostAndPort,imapServer,SetCleanupInboxOnExit)

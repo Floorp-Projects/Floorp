@@ -695,8 +695,7 @@ NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Type, "type");
-
-/* what was this called in 4.x? */
-// pref("mail.pop3_gets_new_mail",				true);
-
+// in 4.x, this was "mail.pop3_gets_new_mail" for pop and 
+// "mail.imap.new_mail_get_headers" for imap (it was global)
+// in 5.0, this will be per server, and it will be "download_on_biff"
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DownloadOnBiff, "download_on_biff");
