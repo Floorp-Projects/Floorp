@@ -316,11 +316,13 @@ NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
   if (gsDebug==PR_TRUE) 
   {
     if (nsnull!=aMaxElementSize)
-      printf("Outer frame Reflow complete, returning aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
+      printf("Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
+              aStatus==frComplete ? "Complete" : "Not Complete",
               aDesiredSize.width, aDesiredSize.height, 
               aMaxElementSize->width, aMaxElementSize->height);
     else
-      printf("Outer frame Reflow complete, returning aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
+      printf("Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
+              aStatus==frComplete ? "Complete" : "Not Complete",
               aDesiredSize.width, aDesiredSize.height);
   }
 
@@ -452,9 +454,8 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
   nsSize    kidMaxElementSize;
   nsSize*   pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
   PRBool    result = PR_TRUE;
-
+  aState.availSize.width = aState.innerTableMaxSize.width;
   for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) {
-    nsSize                  kidAvailSize(aState.innerTableMaxSize.width, aState.availSize.height);
     nsReflowMetrics         kidSize;
     nsIFrame::ReflowStatus  status;
 
@@ -474,19 +475,19 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
     if (PR_FALSE == aState.unconstrainedHeight) {
-      kidAvailSize.height -= topMargin;
+      aState.availSize.height -= topMargin;
     }
     // Subtract off for left and right margin
     if (PR_FALSE == aState.unconstrainedWidth) {
-      kidAvailSize.width -= kidMol->margin.left + kidMol->margin.right;
+      aState.availSize.width -= kidMol->margin.left + kidMol->margin.right;
     }
 
     // Only skip the reflow if this is not our first child and we are
     // out of space.
-    if ((kidFrame == mFirstChild) || (kidAvailSize.height > 0)) {
+    if ((kidFrame == mFirstChild) || (aState.availSize.height > 0)) {
       // Reflow the child into the available space
       status = ReflowChild(kidFrame, aPresContext, kidSize,
-                           kidAvailSize, pKidMaxElementSize,
+                           aState.availSize, pKidMaxElementSize,
                            aState);
     }
 
@@ -886,7 +887,6 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
   ReflowStatus status;
 
   /* call the appropriate reflow method based on the type and position of the child */
-//  if (((nsSplittableFrame*)aKidFrame)->GetFirstInFlow()!=mInnerTableFrame)
   if (PR_TRUE==aState.processingCaption)
   { // it's a caption, find out if it's top or bottom
     // Resolve style
@@ -898,18 +898,30 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
       (nsStyleMolecule*)captionStyleContext->GetData(kStyleMoleculeSID);
     NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");
     if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->verticalAlign)
+    {
+      if (PR_TRUE==gsDebug) printf("reflowChild called with a bottom caption\n");
       status = ResizeReflowBottomCaptionsPass2(aPresContext, aDesiredSize,
                                                aMaxSize, aMaxElementSize,
                                                aState.mol, aState.y);
+    }
     else
+    {
+      if (PR_TRUE==gsDebug) printf("reflowChild called with a top caption\n");
       status = ResizeReflowTopCaptionsPass2(aPresContext, aDesiredSize,
                                             aMaxSize, aMaxElementSize,
                                             aState.mol);
+    }
   }
   else
-    status = ((nsTableFrame*)aKidFrame)->ResizeReflowPass2(aPresContext, aDesiredSize, aState.innerTableMaxSize, 
+  {
+    if (PR_TRUE==gsDebug) printf("reflowChild called with a table body\n");
+    status = ((nsTableFrame*)aKidFrame)->ResizeReflowPass2(aPresContext, aDesiredSize, aState.availSize, 
                                                            aMaxElementSize, aState.mol,
                                                            mMinCaptionWidth, mMaxCaptionWidth);
+  }
+  if (PR_TRUE==gsDebug)
+  {
+  }
 
   if (frComplete == status) {
     nsIFrame* kidNextInFlow;
@@ -1190,7 +1202,7 @@ nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
                                     nsReflowCommand& aReflowCommand,
                                      ReflowStatus&   aStatus)
 {
-  if (gsDebug == PR_TRUE) printf("nsTableOuterFrame::IncrementalReflow\n");
+  if (PR_TRUE==gsDebug) printf("nsTableOuterFrame::IncrementalReflow\n");
   // total hack for now, just some hard-coded values
   ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull, aStatus);
   return NS_OK;
@@ -1203,7 +1215,8 @@ NS_METHOD nsTableOuterFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
   nsTableOuterFrame* cf = new nsTableOuterFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   cf->SetFirstPassValid(PR_TRUE);
-  printf("nsTableOuterFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
+  if (PR_TRUE==gsDebug)
+    printf("nsTableOuterFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   aContinuingFrame = cf;
   return NS_OK;
 }

@@ -193,8 +193,8 @@ NS_METHOD nsTableCaptionFrame::ResizeReflow(nsIPresContext* aPresContext,
 
   aStatus = frComplete;
   if (gsDebug==PR_TRUE)
-    printf("nsTableCaptionFrame::ResizeReflow: maxSize=%d,%d\n",
-           aMaxSize.width, aMaxSize.height);
+    printf("nsTableCaptionFrame::ResizeReflow %p: maxSize=%d,%d\n",
+           this, aMaxSize.width, aMaxSize.height);
 
   mFirstContentOffset = mLastContentOffset = 0;
 
@@ -225,7 +225,6 @@ NS_METHOD nsTableCaptionFrame::ResizeReflow(nsIPresContext* aPresContext,
     availSize.width -= leftInset+rightInset;
   if (NS_UNCONSTRAINEDSIZE!=availSize.height)
     availSize.height -= topInset+bottomInset;
-  //was: availSize.SizeBy(-(leftInset+rightInset), -(topInset+bottomInset));
 
   mLastContentIsComplete = PR_TRUE;
 
@@ -246,13 +245,15 @@ NS_METHOD nsTableCaptionFrame::ResizeReflow(nsIPresContext* aPresContext,
   if (gsDebug==PR_TRUE)
   {
     if (nsnull!=pMaxElementSize)
-      printf("  nsTableCaptionFrame::ResizeReflow: child returned desiredSize=%d,%d,\
+      printf("  nsTableCaptionFrame::ResizeReflow: child returned %s with desiredSize=%d,%d,\
              and maxElementSize=%d,%d\n",
+             aStatus==frComplete?"Complete":"Not Complete",
              kidSize.width, kidSize.height,
              pMaxElementSize->width, pMaxElementSize->height);
     else
-      printf("  nsTableCaptionFrame::ResizeReflow: child returned desiredSize=%d,%d,\
+      printf("  nsTableCaptionFrame::ResizeReflow: child returned %s with desiredSize=%d,%d,\
              and maxElementSize=nsnull\n",
+             aStatus==frComplete?"Complete":"Not Complete",
              kidSize.width, kidSize.height);
   }
 
@@ -298,9 +299,18 @@ NS_METHOD nsTableCaptionFrame::ResizeReflow(nsIPresContext* aPresContext,
       printf("  caption frame setting min/max to %d,%d\n", mMinWidth, mMaxWidth);
   }
   
-  if (gsDebug==PR_TRUE)
-    printf("  nsTableCaptionFrame::ResizeReflow returning aDesiredSize=%d,%d\n",
-           aDesiredSize.width, aDesiredSize.height);
+  if (gsDebug==PR_TRUE) 
+  {
+    if (nsnull!=aMaxElementSize)
+      printf("nsTableCaptionFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=%d,%d\n",
+              aStatus==frComplete?"Complete":"Not Complete",
+              aDesiredSize.width, aDesiredSize.height,
+              aMaxElementSize->width, aMaxElementSize->height);
+    else
+      printf("nsTableCaptionFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=NSNULL\n", 
+             aStatus==frComplete?"Complete":"Not Complete",
+             aDesiredSize.width, aDesiredSize.height);
+  }
 
 #ifdef NS_DEBUG
   PostReflowCheck(aStatus);
@@ -325,6 +335,7 @@ NS_METHOD nsTableCaptionFrame::CreateContinuingFrame(nsIPresContext* aPresContex
                                                      nsIFrame*       aParent,
                                                      nsIFrame*&      aContinuingFrame)
 {
+  if (PR_TRUE==gsDebug) printf("nsTableCaptionFrame::CreateContinuingFrame called\n");
   nsTableCaptionFrame* cf = new nsTableCaptionFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   aContinuingFrame = cf;
