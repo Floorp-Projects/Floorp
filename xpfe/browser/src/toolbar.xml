@@ -8,7 +8,7 @@
   function StartUp()
   {
     dump("Doing Startup...\n");
-    appCore = AppCoresManager.Find("BrowserAppCore");  
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     dump("Looking up BrowserAppCore...\n");
     if (appCore == null) {
       dump("Creating BrowserAppCore...\n");
@@ -41,7 +41,7 @@
 
   function BrowserBack()
   {
-    appCore = AppCoresManager.Find("BrowserAppCore");  
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	  dump("Going Back\n");
       appCore.back();
@@ -52,7 +52,7 @@
 
   function BrowserForward()
   {
-    appCore = AppCoresManager.Find("BrowserAppCore");  
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	  dump("Going Forward\n");
       appCore.forward();

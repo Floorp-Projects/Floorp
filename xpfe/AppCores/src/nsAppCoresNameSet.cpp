@@ -105,7 +105,7 @@ nsAppCoresNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
         if (NS_OK != result) return result;
 
-        result = manager->RegisterGlobalName("AppCoresManager", 
+        result = manager->RegisterGlobalName("XPAppCoresManager", 
                                              kAppCoresCID, 
                                              PR_FALSE);
         
