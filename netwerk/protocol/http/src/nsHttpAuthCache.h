@@ -40,13 +40,98 @@
 #ifndef nsHttpAuthCache_h__
 #define nsHttpAuthCache_h__
 
+#include "nsHttp.h"
 #include "nsError.h"
 #include "nsVoidArray.h"
 #include "nsAString.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
 #include "plhash.h"
 
 //-----------------------------------------------------------------------------
+// nsHttpAuthEntry
+//-----------------------------------------------------------------------------
+
+class nsHttpAuthEntry
+{
+public:
+    const char *Path()      { return mPath; }
+    const char *Realm()     { return mRealm; }
+    const char *Creds()     { return mCreds; }
+    const PRUnichar *User() { return mUser; }
+    const PRUnichar *Pass() { return mPass; }
+    const char *Challenge() { return mChallenge; }
+    nsISupports *MetaData() { return mMetaData; }
+
+private:
+    nsHttpAuthEntry(const char *path,
+                    const char *realm,
+                    const char *creds,
+                    const PRUnichar *user,
+                    const PRUnichar *pass,
+                    const char *challenge,
+                    nsISupports *metadata);
+   ~nsHttpAuthEntry();
+
+    void SetPath(const char *v)      { CRTFREEIF(mPath); mPath = strdup_if(v); }
+    void SetCreds(const char *v)     { CRTFREEIF(mCreds); mCreds = strdup_if(v); }
+    void SetUser(const PRUnichar *v) { CRTFREEIF(mUser); mUser = strdup_if(v); }
+    void SetPass(const PRUnichar *v) { CRTFREEIF(mPass); mPass = strdup_if(v); }
+    void SetChallenge(const char *v) { CRTFREEIF(mChallenge); mChallenge = strdup_if(v); }
+    void SetMetaData(nsISupports *v) { mMetaData = v; }
+            
+private:
+    char                 *mPath;
+    char                 *mRealm;
+    char                 *mCreds;
+    PRUnichar            *mUser;
+    PRUnichar            *mPass;
+    char                 *mChallenge;
+    nsCOMPtr<nsISupports> mMetaData;
+
+    friend class nsHttpAuthCache;
+    friend class nsHttpAuthNode;
+};
+
+//-----------------------------------------------------------------------------
+// nsHttpAuthNode
+//-----------------------------------------------------------------------------
+
+class nsHttpAuthNode
+{
+private:
+    nsHttpAuthNode();
+   ~nsHttpAuthNode();
+
+    // path can be null, in which case we'll search for an entry
+    // with a null path.
+    nsresult GetAuthEntryForPath(const char *path,
+                                 nsHttpAuthEntry **entry);
+
+    // realm must not be null
+    nsresult GetAuthEntryForRealm(const char *realm,
+                                  nsHttpAuthEntry **entry);
+
+    // if a matching entry is found, then credentials will be changed.
+    nsresult SetAuthEntry(const char *path,
+                          const char *realm,
+                          const char *credentials,
+                          const PRUnichar *user,
+                          const PRUnichar *pass,
+                          const char *challenge,
+                          nsISupports *metadata);
+
+    PRUint32 EntryCount() { return (PRUint32) mList.Count(); }
+
+private:
+    nsVoidArray mList; // list of nsHttpAuthEntry objects
+
+    friend class nsHttpAuthCache;
+};
+
+//-----------------------------------------------------------------------------
 // nsHttpAuthCache
+//  (holds a hash table from host:port to nsHttpAuthNode)
 //-----------------------------------------------------------------------------
 
 class nsHttpAuthCache
@@ -57,86 +142,42 @@ public:
 
     nsresult Init();
 
-    // host and port are required
-    // path can be null
-    nsresult GetCredentialsForPath(const char *host,
+    // |host| and |port| are required
+    // |path| can be null
+    // |entry| is either null or a weak reference
+    nsresult GetAuthEntryForPath(const char *host,
+                                 PRInt32     port,
+                                 const char *path,
+                                 nsHttpAuthEntry **entry);
+
+    // |host| and |port| are required
+    // |realm| must not be null
+    // |entry| is either null or a weak reference
+    nsresult GetAuthEntryForDomain(const char *host,
                                    PRInt32     port,
-                                   const char *path,
-                                   nsACString &realm,
-                                   nsACString &credentials);
+                                   const char *realm,
+                                   nsHttpAuthEntry **entry);
 
-    // host and port are required
-    // realm must not be null
-    nsresult GetCredentialsForDomain(const char *host,
-                                     PRInt32     port,
-                                     const char *realm,
-                                     nsACString &credentials);
+    // |host| and |port| are required
+    // |path| can be null
+    // |realm| must not be null
+    // if |credentials|, |user|, |pass|, and |challenge| are each
+    // null, then the entry is deleted.
+    nsresult SetAuthEntry(const char *host,
+                          PRInt32     port,
+                          const char *directory,
+                          const char *realm,
+                          const char *credentials,
+                          const PRUnichar *user,
+                          const PRUnichar *pass,
+                          const char *challenge,
+                          nsISupports *metadata);
 
-    // host and port are required
-    // path can be null
-    // realm must not be null
-    // credentials, if null, clears the entry
-    nsresult SetCredentials(const char *host,
-                            PRInt32     port,
-                            const char *directory,
-                            const char *realm,
-                            const char *credentials);
-
-    // Expire all existing auth list entries including proxy auths. 
+    // expire all existing auth list entries including proxy auths. 
     nsresult ClearAll();
 
-public: /* internal */
-
-    class nsEntry
-    {
-    public:
-        nsEntry(const char *path,
-                const char *realm,
-                const char *creds);
-       ~nsEntry();
-
-        const char *Path()  { return mPath; }
-        const char *Realm() { return mRealm; }
-        const char *Creds() { return mCreds; }
-
-        void SetPath(const char *);
-        void SetCreds(const char *);
-                
-    private:
-        char *mPath;
-        char *mRealm;
-        char *mCreds;
-    };
-
-    class nsEntryList
-    {
-    public:
-        nsEntryList();
-       ~nsEntryList();
-
-        // path can be null, in which case we'll search for an entry
-        // with a null path.
-        nsresult GetCredentialsForPath(const char *path,
-                                       nsACString &realm,
-                                       nsACString &creds);
-
-        // realm must not be null
-        nsresult GetCredentialsForRealm(const char *realm,
-                                        nsACString &creds);
-
-        // if a matching entry is found, then credentials will be changed.
-        nsresult SetCredentials(const char *path,
-                                const char *realm,
-                                const char *credentials);
-
-        PRUint32 Count() { return (PRUint32) mList.Count(); }
-
-    private:
-        nsVoidArray mList;
-    };
-
 private:
-    nsEntryList *LookupEntryList(const char *host, PRInt32 port, nsAFlatCString &key);
+    nsHttpAuthNode *LookupAuthNode(const char *host, PRInt32 port, nsAFlatCString &key);
 
     // hash table allocation functions
     static void*        PR_CALLBACK AllocTable(void *, PRSize size);
@@ -147,7 +188,7 @@ private:
     static PLHashAllocOps gHashAllocOps;
     
 private:
-    PLHashTable *mDB; // "host:port" --> nsEntryList
+    PLHashTable *mDB; // "host:port" --> nsHttpAuthNode
 };
 
 #endif // nsHttpAuthCache_h__

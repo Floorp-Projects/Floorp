@@ -28,6 +28,7 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  intl \
 		  exthandler \
+		  caps \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
@@ -48,6 +49,7 @@ CPP_OBJS=		                         \
 	.\$(OBJDIR)\nsHttpChunkedDecoder.obj \
 	.\$(OBJDIR)\nsHttpAuthCache.obj		 \
 	.\$(OBJDIR)\nsHttpBasicAuth.obj		 \
+	.\$(OBJDIR)\nsHttpDigestAuth.obj	 \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak> 

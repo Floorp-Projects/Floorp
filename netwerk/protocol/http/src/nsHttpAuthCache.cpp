@@ -25,7 +25,7 @@
 #include "nsHttp.h"
 #include "nsHttpAuthCache.h"
 #include "nsString.h"
-#include "plstr.h"
+#include "nsCRT.h"
 #include "prprf.h"
 
 //-----------------------------------------------------------------------------
@@ -60,50 +60,55 @@ nsHttpAuthCache::Init()
 }
 
 nsresult
-nsHttpAuthCache::GetCredentialsForPath(const char *host,
-                                       PRInt32     port,
-                                       const char *path,
-                                       nsACString &realm,
-                                       nsACString &creds)
+nsHttpAuthCache::GetAuthEntryForPath(const char *host,
+                                     PRInt32     port,
+                                     const char *path,
+                                     nsHttpAuthEntry **entry)
 {
-    LOG(("nsHttpAuthCache::GetCredentialsForPath [host=%s:%d path=%s]\n",
+    LOG(("nsHttpAuthCache::GetAuthEntryForPath [host=%s:%d path=%s]\n",
         host, port, path));
 
     nsCAutoString key;
-    nsEntryList *list = LookupEntryList(host, port, key);
-    if (!list)
+    nsHttpAuthNode *node = LookupAuthNode(host, port, key);
+    if (!node)
         return NS_ERROR_NOT_AVAILABLE;
 
-    return list->GetCredentialsForPath(path, realm, creds);
+    return node->GetAuthEntryForPath(path, entry);
 }
 
 nsresult
-nsHttpAuthCache::GetCredentialsForDomain(const char *host,
-                                         PRInt32     port,
-                                         const char *realm,
-                                         nsACString &creds)
+nsHttpAuthCache::GetAuthEntryForDomain(const char *host,
+                                       PRInt32     port,
+                                       const char *realm,
+                                       nsHttpAuthEntry **entry)
+
 {
-    LOG(("nsHttpAuthCache::GetCredentialsForDomain [host=%s:%d realm=%s]\n",
+    LOG(("nsHttpAuthCache::GetAuthEntryForDomain [host=%s:%d realm=%s]\n",
         host, port, realm));
 
     nsCAutoString key;
-    nsEntryList *list = LookupEntryList(host, port, key);
-    if (!list)
+    nsHttpAuthNode *node = LookupAuthNode(host, port, key);
+    if (!node)
         return NS_ERROR_NOT_AVAILABLE;
 
-    return list->GetCredentialsForRealm(realm, creds);
+    return node->GetAuthEntryForRealm(realm, entry);
 }
 
 nsresult
-nsHttpAuthCache::SetCredentials(const char *host,
-                                PRInt32     port,
-                                const char *path,
-                                const char *realm,
-                                const char *creds)
+nsHttpAuthCache::SetAuthEntry(const char *host,
+                              PRInt32     port,
+                              const char *path,
+                              const char *realm,
+                              const char *creds,
+                              const PRUnichar *user,
+                              const PRUnichar *pass,
+                              const char *challenge,
+                              nsISupports *metadata)
 {
     nsresult rv;
 
-    LOG(("nsHttpAuthCache::SetCredentials\n"));
+    LOG(("nsHttpAuthCache::SetAuthEntry [host=%s:%d realm=%s path=%s metadata=%x]\n",
+        host, port, realm, path, metadata));
 
     if (!mDB) {
         rv = Init();
@@ -111,28 +116,28 @@ nsHttpAuthCache::SetCredentials(const char *host,
     }
 
     nsCAutoString key;
-    nsEntryList *list = LookupEntryList(host, port, key);
+    nsHttpAuthNode *node = LookupAuthNode(host, port, key);
 
-    if (!list) {
-        // only create a new list if we have a real entry
-        if (!creds)
+    if (!node) {
+        // only create a new node if we have a real entry
+        if (!creds && !user && !pass && !challenge)
             return NS_OK;
 
-        // create a new entry list and set the given entry
-        list = new nsEntryList();
-        if (!list)
+        // create a new entry node and set the given entry
+        node = new nsHttpAuthNode();
+        if (!node)
             return NS_ERROR_OUT_OF_MEMORY;
-        rv = list->SetCredentials(path, realm, creds);
+        rv = node->SetAuthEntry(path, realm, creds, user, pass, challenge, metadata);
         if (NS_FAILED(rv))
-            delete list;
+            delete node;
         else
-            PL_HashTableAdd(mDB, PL_strdup(key.get()), list);
+            PL_HashTableAdd(mDB, nsCRT::strdup(key.get()), node);
         return rv;
     }
 
-    rv = list->SetCredentials(path, realm, creds);
-    if (NS_SUCCEEDED(rv) && (list->Count() == 0)) {
-        // the list has no longer has any entries
+    rv = node->SetAuthEntry(path, realm, creds, user, pass, challenge, metadata);
+    if (NS_SUCCEEDED(rv) && (node->EntryCount() == 0)) {
+        // the node has no longer has any entries
         PL_HashTableRemove(mDB, key.get());
     }
 
@@ -155,8 +160,8 @@ nsHttpAuthCache::ClearAll()
 // nsHttpAuthCache <private>
 //-----------------------------------------------------------------------------
 
-nsHttpAuthCache::nsEntryList *
-nsHttpAuthCache::LookupEntryList(const char *host, PRInt32 port, nsAFlatCString &key)
+nsHttpAuthNode *
+nsHttpAuthCache::LookupAuthNode(const char *host, PRInt32 port, nsAFlatCString &key)
 {
     char buf[32];
 
@@ -169,7 +174,7 @@ nsHttpAuthCache::LookupEntryList(const char *host, PRInt32 port, nsAFlatCString 
     key.Append(':');
     key.Append(buf);
 
-    return (nsEntryList *) PL_HashTableLookup(mDB, key.get());
+    return (nsHttpAuthNode *) PL_HashTableLookup(mDB, key.get());
 }
 
 void *
@@ -201,8 +206,8 @@ nsHttpAuthCache::FreeEntry(void *self, PLHashEntry *he, PRUintn flag)
     }
     else if (flag == HT_FREE_ENTRY) {
         // three wonderful flavors of freeing memory ;-)
-        delete (nsEntryList *) he->value;
-        PL_strfree((char *) he->key);
+        delete (nsHttpAuthNode *) he->value;
+        nsCRT::free((char *) he->key);
         free(he);
     }
 }
@@ -216,69 +221,60 @@ PLHashAllocOps nsHttpAuthCache::gHashAllocOps =
 };
 
 //-----------------------------------------------------------------------------
-// nsHttpAuthCache::nsEntry
+// nsHttpAuthEntry
 //-----------------------------------------------------------------------------
 
-nsHttpAuthCache::
-nsEntry::nsEntry(const char *path, const char *realm, const char *creds)
-    : mPath(PL_strdup(path))
-    , mRealm(PL_strdup(realm))
-    , mCreds(PL_strdup(creds))
+nsHttpAuthEntry::nsHttpAuthEntry(const char *path, const char *realm,
+                                 const char *creds, const PRUnichar *user,
+                                 const PRUnichar *pass, const char *challenge,
+                                 nsISupports *metadata)
+    : mPath(strdup_if(path))
+    , mRealm(strdup_if(realm))
+    , mCreds(strdup_if(creds))
+    , mUser(strdup_if(user))
+    , mPass(strdup_if(pass))
+    , mChallenge(strdup_if(challenge))
+    , mMetaData(metadata)
 {
     LOG(("Creating nsHttpAuthCache::nsEntry @%x\n", this));
 }
 
-nsHttpAuthCache::
-nsEntry::~nsEntry()
+nsHttpAuthEntry::~nsHttpAuthEntry()
 {
     LOG(("Destroying nsHttpAuthCache::nsEntry @%x\n", this));
 
-    PL_strfree(mPath);
-    PL_strfree(mRealm);
-    PL_strfree(mCreds);
-}
-
-void nsHttpAuthCache::
-nsEntry::SetPath(const char *path)
-{
-    PL_strfree(mPath);
-    mPath = PL_strdup(path);
-}
-
-void nsHttpAuthCache::
-nsEntry::SetCreds(const char *creds)
-{
-    PL_strfree(mCreds);
-    mCreds = PL_strdup(creds);
+    CRTFREEIF(mPath);
+    CRTFREEIF(mRealm);
+    CRTFREEIF(mCreds);
+    CRTFREEIF(mUser);
+    CRTFREEIF(mPass);
+    CRTFREEIF(mChallenge);
 }
 
 //-----------------------------------------------------------------------------
-// nsHttpAuthCache::nsEntryList
+// nsHttpAuthNode
 //-----------------------------------------------------------------------------
 
-nsHttpAuthCache::
-nsEntryList::nsEntryList()
+nsHttpAuthNode::nsHttpAuthNode()
 {
-    LOG(("Creating nsHttpAuthCache::nsEntryList @%x\n", this));
+    LOG(("Creating nsHttpAuthNode @%x\n", this));
 }
 
-nsHttpAuthCache::
-nsEntryList::~nsEntryList()
+nsHttpAuthNode::~nsHttpAuthNode()
 {
-    LOG(("Destroying nsHttpAuthCache::nsEntryList @%x\n", this));
+    LOG(("Destroying nsHttpAuthNode @%x\n", this));
 
     PRInt32 i;
     for (i=0; i<mList.Count(); ++i)
-        delete (nsEntry *) mList[i];
+        delete (nsHttpAuthEntry *) mList[i];
     mList.Clear();
 }
 
-nsresult nsHttpAuthCache::
-nsEntryList::GetCredentialsForPath(const char *path,
-                                   nsACString &realm,
-                                   nsACString &creds)
+nsresult
+nsHttpAuthNode::GetAuthEntryForPath(const char *path,
+                                    nsHttpAuthEntry **entry)
 {
-    nsEntry *entry = nsnull;
+    *entry = nsnull;
 
     // it's permissible to specify a null path, in which case we just treat
     // this as an empty string.
@@ -290,72 +286,67 @@ nsEntryList::GetCredentialsForPath(const char *path,
     // directory of an existing entry.
     PRInt32 i;
     for (i=0; i<mList.Count(); ++i) {
-        entry = (nsEntry *) mList[i];
-        if (!PL_strncmp(path, entry->Path(), PL_strlen(entry->Path())))
+        *entry = (nsHttpAuthEntry *) mList[i];
+        if (!nsCRT::strncmp(path, (*entry)->Path(), strlen((*entry)->Path())))
             break;
-        entry = nsnull;
+        *entry = nsnull;
     }
 
-    if (!entry)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    realm.Assign(entry->Realm());
-    creds.Assign(entry->Creds());
-    return NS_OK;
+    return *entry ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
-nsresult nsHttpAuthCache::
-nsEntryList::GetCredentialsForRealm(const char *realm,
-                                    nsACString &creds)
+nsresult
+nsHttpAuthNode::GetAuthEntryForRealm(const char *realm,
+                                     nsHttpAuthEntry **entry)
 {
     NS_ENSURE_ARG_POINTER(realm);
 
-    nsEntry *entry = nsnull;
+    *entry = nsnull;
 
     // look for an entry that matches this realm
     PRInt32 i;
     for (i=0; i<mList.Count(); ++i) {
-        entry = (nsEntry *) mList[i];
-        if (!PL_strcmp(realm, entry->Realm()))
+        *entry = (nsHttpAuthEntry *) mList[i];
+        if (!nsCRT::strcmp(realm, (*entry)->Realm()))
             break;
-        entry = nsnull;
+        *entry = nsnull;
     }
 
-    if (!entry)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    creds.Assign(entry->Creds());
-    return NS_OK;
+    return *entry ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
-nsresult nsHttpAuthCache::
-nsEntryList::SetCredentials(const char *path,
-                            const char *realm,
-                            const char *creds)
+nsresult
+nsHttpAuthNode::SetAuthEntry(const char *path,
+                             const char *realm,
+                             const char *creds,
+                             const PRUnichar *user,
+                             const PRUnichar *pass,
+                             const char *challenge,
+                             nsISupports *metadata)
 {
     NS_ENSURE_ARG_POINTER(realm);
 
-    nsEntry *entry = nsnull;
+    nsHttpAuthEntry *entry = nsnull;
 
     // look for an entry with a matching realm
     PRInt32 i;
     for (i=0; i<mList.Count(); ++i) {
-        entry = (nsEntry *) mList[i];
-        if (!PL_strcmp(realm, entry->Realm()))
+        entry = (nsHttpAuthEntry *) mList[i];
+        if (!nsCRT::strcmp(realm, entry->Realm()))
             break;
         entry = nsnull;
     }
 
     if (!entry) {
-        if (creds) {
-            entry = new nsEntry(path, realm, creds);
+        if (creds || user || pass || challenge) {
+            entry = new nsHttpAuthEntry(path, realm, creds, user, pass, challenge, metadata);
             if (!entry)
                 return NS_ERROR_OUT_OF_MEMORY;
             mList.AppendElement(entry);
         }
         // else, nothing to do
     }
-    else if (!creds) {
+    else if (!creds && !user && !pass && !challenge) {
         mList.RemoveElementAt(i);
         delete entry;
     }
@@ -363,12 +354,16 @@ nsEntryList::SetCredentials(const char *path,
         // update the entry...
         if (path) {
             // we should hold onto the top-most of the two path
-            PRUint32 len1 = PL_strlen(path);
-            PRUint32 len2 = PL_strlen(entry->Path());
+            PRUint32 len1 = strlen(path);
+            PRUint32 len2 = strlen(entry->Path());
             if (len1 < len2)
                 entry->SetPath(path);
         }
         entry->SetCreds(creds);
+        entry->SetUser(user);
+        entry->SetPass(pass);
+        entry->SetChallenge(challenge);
+        entry->SetMetaData(metadata);
     }
 
     return NS_OK;

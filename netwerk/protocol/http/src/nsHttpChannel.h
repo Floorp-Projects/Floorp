@@ -46,6 +46,7 @@
 
 class nsHttpTransaction;
 class nsHttpResponseHead;
+class nsHttpAuthCache;
 class nsIHttpAuthenticator;
 class nsIProxyInfo;
 
@@ -109,10 +110,11 @@ private:
     nsresult GetCredentials(const char *challenges, PRBool proxyAuth, nsAFlatCString &creds);
     nsresult SelectChallenge(const char *challenges, nsAFlatCString &challenge, nsIHttpAuthenticator **); 
     nsresult GetAuthenticator(const char *scheme, nsIHttpAuthenticator **);
-    nsresult GetUserPassFromURI(nsAString &user, nsAString &pass);
+    void     GetUserPassFromURI(PRUnichar **user, PRUnichar **pass);
     nsresult ParseRealm(const char *challenge, nsACString &realm);
-    nsresult PromptForUserPass(const char *host, PRInt32 port, PRBool proxyAuth, const char *realm, nsAString &user, nsAString &pass);
-    nsresult AddAuthorizationHeaders();
+    nsresult PromptForUserPass(const char *host, PRInt32 port, PRBool proxyAuth, const char *realm, PRUnichar **user, PRUnichar **pass);
+    void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header, const char *host, PRInt32 port, const char *path, PRUnichar **user, PRUnichar **pass);
+    void     AddAuthorizationHeaders();
     nsresult GetCurrentPath(char **);
 
     static void *PR_CALLBACK AsyncRedirect_EventHandlerFunc(PLEvent *);
@@ -155,9 +157,14 @@ private:
     PRUint32                          mPostID;
     PRUint32                          mRequestTime;
 
+    // auth specific data
+    nsXPIDLString                     mUser;
+    nsXPIDLString                     mPass;
+    nsXPIDLString                     mProxyUser;
+    nsXPIDLString                     mProxyPass;
+
     PRPackedBool                      mIsPending;
     PRPackedBool                      mApplyConversion;
-    PRPackedBool                      mTriedCredentialsFromPrehost;
     PRPackedBool                      mFromCacheOnly;
     PRPackedBool                      mCachedContentIsValid;
     PRPackedBool                      mResponseHeadersModified;

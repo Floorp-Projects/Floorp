@@ -70,21 +70,22 @@ NS_IMPL_ISUPPORTS1(nsHttpBasicAuth, nsIHttpAuthenticator);
 // nsHttpBasicAuth::nsIHttpAuthenticator
 //-----------------------------------------------------------------------------
 
-nsresult
+NS_IMETHODIMP
 nsHttpBasicAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
                                      const char *challenge,
                                      const PRUnichar *username,
                                      const PRUnichar *password,
+                                     nsISupports *extra,
                                      char **creds)
 
 {
     LOG(("nsHttpBasicAuth::GenerateCredentials [challenge=%s]\n", challenge));
 
+    NS_ENSURE_ARG_POINTER(creds);
+
     // we only know how to deal with Basic auth for http.
     PRBool isBasicAuth = !PL_strncasecmp(challenge, "basic", 5);
     NS_ENSURE_TRUE(isBasicAuth, NS_ERROR_UNEXPECTED);
-
-    NS_ENSURE_ARG_POINTER(creds);
 
     // we work with ASCII around here
     nsCAutoString userpass;
@@ -109,5 +110,19 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
     PL_strcpy(*creds + 6, b64userpass);
 
     PR_Free(b64userpass);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpBasicAuth::AreCredentialsReusable(PRBool *result)
+{
+    *result = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpBasicAuth::AllocateMetaData(nsISupports **result)
+{
+    *result = nsnull;
     return NS_OK;
 }
