@@ -131,7 +131,7 @@ nsresult
   if (!mSchemaCollection) {
     nsresult rv;
     nsCOMPtr<nsISchemaLoader> loader =
-        do_CreateInstance(NS_SCHEMALOADER_CONTRACTID, &rv);
+        do_GetService(NS_SCHEMALOADER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
       return rv;
     mSchemaCollection = do_QueryInterface(loader);
