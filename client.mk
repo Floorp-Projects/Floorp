@@ -184,7 +184,7 @@ WEBCONFIG_FILE  := $(HOME)/.mozconfig
 MOZCONFIG2URL := build/autoconf/mozconfig2url.sh
 webconfig:
 	cd $(TOPSRCDIR); \
-	@url=$(WEBCONFIG_URL)`$(MOZCONFIG2URL)`; \
+	url=$(WEBCONFIG_URL)`$(MOZCONFIG2URL)`; \
 	echo Running netscape with the following url: ;\
 	echo ;\
 	echo $$url ;\
