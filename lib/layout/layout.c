@@ -4349,7 +4349,7 @@ LO_ProcessTag(void *data_object, PA_Tag *tag, intn status)
 #endif /* OLD_MSGS */
 
 				    lo_FinishLayout(context, state, EVENT_LOAD);
-                    TIMING_STOPCLOCK_OBJECT("layout:whole-document", doc_id, "done");
+                    TIMING_STOPCLOCK_OBJECT("lo:doc", doc_id, context, "ok");
 				}
 				orig_state->top_state->layout_status = status;
 			}
@@ -4455,8 +4455,8 @@ LO_ProcessTag(void *data_object, PA_Tag *tag, intn status)
 		lo_GetRecycleList(context, doc_id, doc_data, &recycle_list);	/* whh */
 #endif /* MEMORY_ARENAS */
 
-        TIMING_STARTCLOCK_OBJECT("layout:blank-screen", context);
-        TIMING_STARTCLOCK_OBJECT("layout:whole-document", doc_id);
+        TIMING_STARTCLOCK_OBJECT("lo:blank", context);
+        TIMING_STARTCLOCK_OBJECT("lo:doc", doc_id);
 
 #ifdef LOCAL_DEBUG
 XP_TRACE(("Initializing new doc %d\n", doc_id));
@@ -5506,7 +5506,7 @@ lo_set_image_info(MWContext *context, int32 ele_id, int32 width, int32 height)
 		image->height = height;
 		lo_FinishImage(context, state, image);
 
-        TIMING_STOPCLOCK_OBJECT("layout:block-on-image", image, "done");
+        TIMING_STOPCLOCK_NAME("lo:blk-img", image->image_url, context, "ok");
 		lo_FlushBlockage(context, state, main_doc_state);
 	}
 	else if (top_state->tags != NULL)

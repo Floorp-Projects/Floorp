@@ -4639,7 +4639,7 @@ lo_BeginTableAttributes(MWContext *context,
 	}
 
     if (state->top_state->table_nesting_level == 1)
-        TIMING_STARTCLOCK_OBJECT("layout:top-table", table_ele);
+        TIMING_STARTCLOCK_OBJECT("lo:blk-tab", table_ele);
 
 	table_ele->type = LO_TABLE;
 	/* Copied into lo_PositionTableElement() */
@@ -7658,7 +7658,7 @@ fprintf(stderr, "lo_EndTable called\n");
 	if (!relayout)
 	{
         if (state->top_state->table_nesting_level == 1)
-            TIMING_STOPCLOCK_OBJECT("layout:top-table", table->table_ele, "ok");
+            TIMING_STOPCLOCK_OBJECT("lo:blk-tab", table->table_ele, context, "ok");
 
  		state->top_state->table_nesting_level--;
 	}

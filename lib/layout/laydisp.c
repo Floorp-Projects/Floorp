@@ -221,7 +221,7 @@ lo_DisplayText(MWContext *context,
 	LO_TextAttr tmp_attr;
 	LO_TextAttr *hold_attr;
 
-    TIMING_STOPCLOCK_OBJECT("layout:blank-screen", context, "displaying text");
+    TIMING_STOPCLOCK_OBJECT("lo:blank", context, context, "text");
 
 	/* Blinking text elements are placed in a separate layer */
     if (context->compositor && text->text_attr->attrmask & LO_ATTR_BLINK)

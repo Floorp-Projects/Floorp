@@ -784,7 +784,7 @@ net_FindAddress (const char *host_ptr,
 				PR_Free(msg);
 			  }
 
-            TIMING_STARTCLOCK_NAME("dnslookup", (remapped_host_port ? remapped_host_port : host_port));
+            TIMING_STARTCLOCK_NAME("dns:lookup", (remapped_host_port ? remapped_host_port : host_port));
 
 #ifndef ASYNC_DNS
 			status = net_dns_lookup( 
@@ -809,8 +809,8 @@ net_FindAddress (const char *host_ptr,
 			}
 		}
 
-        TIMING_STOPCLOCK_NAME("dnslookup", (remapped_host_port ? remapped_host_port : host_port),
-                              (hoststruct_pointer ? "ok" : "error"));
+        TIMING_STOPCLOCK_NAME("dns:lookup", (remapped_host_port ? remapped_host_port : host_port),
+                              window_id, (hoststruct_pointer ? "ok" : "error"));
 
         if (!hoststruct_pointer) {
 			if(first_dns_failure) {
@@ -1260,14 +1260,14 @@ HG71089
         return MK_UNABLE_TO_LOCATE_HOST;
       }
 
-    TIMING_STARTCLOCK_NAME("tcpconnect", url);
+    TIMING_STARTCLOCK_NAME("tcp:connect", url);
 
     status = net_start_first_connect(host, *sock, window_id, 
 									 *tcp_con_data, error_msg);
 
 	if(status != MK_WAITING_FOR_CONNECTION)
 	  {
-        TIMING_STOPCLOCK_NAME("tcpconnect", url, "error");
+        TIMING_STOPCLOCK_NAME("tcp:connect", url, window_id, "error");
 		NET_FreeTCPConData(*tcp_con_data);
 		*tcp_con_data = 0;
 	  }
@@ -1378,14 +1378,14 @@ NET_FinishConnect (CONST char   *url,
             return MK_UNABLE_TO_LOCATE_HOST;
           }
 
-        TIMING_STARTCLOCK_NAME("tcpconnect", url);
+        TIMING_STARTCLOCK_NAME("tcp:connect", url);
 
         status = net_start_first_connect(host, *sock, window_id, 
 										 *tcp_con_data, error_msg);
 
         if(status != MK_WAITING_FOR_CONNECTION)
           {
-            TIMING_STOPCLOCK_NAME("tcpconnect", url, "error");
+            TIMING_STOPCLOCK_NAME("tcp:connect", url, window_id, "error");
             NET_FreeTCPConData(*tcp_con_data);
             *tcp_con_data = 0;
           }
@@ -1517,7 +1517,7 @@ error_out:
 				else
 					FREE(host);
 
-                TIMING_STOPCLOCK_NAME("tcpconnect", url, "error");
+                TIMING_STOPCLOCK_NAME("tcp:connect", url, window_id, "error");
 
 				HG92362
                 if (error == PR_CONNECT_REFUSED_ERROR)
@@ -1548,7 +1548,7 @@ error_out:
 		      }
         }
 
-        TIMING_STOPCLOCK_NAME("tcpconnect", url, "ok");
+        TIMING_STOPCLOCK_NAME("tcp:connect", url, window_id, "ok");
 		TRACEMSG(("mktcp.c: Successful connection (message 1)"));
 		NET_FreeTCPConData(*tcp_con_data);
 		*tcp_con_data = 0;

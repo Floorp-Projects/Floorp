@@ -2103,7 +2103,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	{
         /* If a lowres image has been specified, we'll actually be
            blocking on that, not the real (hires) url */
-        TIMING_STARTCLOCK_OBJECT("layout:block-on-image", image);
+        TIMING_STARTCLOCK_NAME("lo:blk-img", image->image_url);
 
 		state->top_state->layout_blocking_element = (LO_Element *)image;
 	}

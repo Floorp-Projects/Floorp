@@ -227,7 +227,7 @@ lo_create_script_blockage(MWContext *context, lo_DocState *state, int type)
     if (type == LO_SCRIPT)
 	top_state->current_script = block_ele;
 
-    TIMING_STARTCLOCK_OBJECT("layout:block-on-script", block_ele);
+    TIMING_STARTCLOCK_OBJECT("lo:blk-js", block_ele);
     return TRUE;
 }
 
@@ -393,7 +393,7 @@ lo_unblock_script_tag(MWContext * context, Bool messWithParser)
      * style attribute scripts
      */
     if (block_ele->type == LO_SCRIPT || block_ele->type == LO_UNKNOWN) {
-        TIMING_STOPCLOCK_OBJECT("layout:block-on-script", block_ele, "done");
+        TIMING_STOPCLOCK_OBJECT("lo:blk-js", block_ele, context, "ok");
         lo_UnblockLayout(context, top_state);
     }
     else {
