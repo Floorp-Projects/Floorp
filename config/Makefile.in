@@ -48,10 +48,7 @@ endif
 
 ifneq ($(subst /,_,$(shell uname -s)),WINNT)
 PROGRAM		= nsinstall$(BIN_SUFFIX)
-TARGETS		+= $(OBJDIR)/bsdecho$(BIN_SUFFIX)
 endif
-
-DISTTARGETS	= $(DIST)/bin/bsdecho$(BINSUFFIX)
 
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
 # a recursive rule for finding nsinstall and the perl scripts
@@ -74,26 +71,7 @@ define MAKE_OBJDIR
 if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); else true; fi
 endef
 
-export:: $(TARGETS) $(DISTTARGETS)
-
-ifeq ($(OS_ARCH),OS2)
-# could not get bsdecho rules to work implicitly, so here is explicit ones
-$(OBJDIR)/bsdecho.o:  bsdecho.c
-	@$(MAKE_OBJDIR)
-	$(CC) -Fo$@ $(CFLAGS) -c $<
-
-$(OBJDIR)/bsdecho$(BIN_SUFFIX):	$(OBJDIR)/bsdecho.o
-	@$(MAKE_OBJDIR)
-	$(LINK_EXE) -OUT:$@ $< $(LDFLAGS)
-else
-$(OBJDIR)/bsdecho$(BIN_SUFFIX):	$(OBJDIR)/bsdecho.o
-	@$(MAKE_OBJDIR)
-	$(CC) $(LDFLAGS) -o $@ $<
-endif
-
-# Artificial target to make parallel builds play nice
-$(DIST)/bin/bsdecho$(BIN_SUFFIX): $(OBJDIR)/nsinstall$(BINSUFFIX) $(OBJDIR)/bsdecho$(BINSUFFIX)
-	$(INSTALL) -m 444 $^ $(DIST)/bin
+export:: $(TARGETS)
 
 $(OBJDIR)/gtscc$(BIN_SUFFIX):	$(OBJDIR)/gtscc.o
 	@$(MAKE_OBJDIR)
