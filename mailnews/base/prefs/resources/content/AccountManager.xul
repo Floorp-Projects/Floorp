@@ -23,8 +23,6 @@
       <tree datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
             containment="http://home.netscape.com/NC-rdf#Settings"
             onselect="onAccountClick(event.target)" id="accounttree"
-            sortResource="http://home.netscape.com/NC-rdf#Name?sort=true"
-            sortDirection="ascending"
             seltype="single"
             ref="msgaccounts:/" hidecolumnpicker="true">
         <treecols>
