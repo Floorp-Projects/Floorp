@@ -86,12 +86,5 @@ interface nsIMIMEService : nsISupports {
     
     //
     string GetTypeFromFile ( in nsIFile aFile );
-    
-    
-   	/*
-   	*	The data sources
-   	*/
-   	readonly attribute nsIMIMEDataSource XMLDataSource;
-   	readonly attribute nsIMIMEDataSource NativeDataSource;
    	
 };
