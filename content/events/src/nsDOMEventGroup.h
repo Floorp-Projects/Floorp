@@ -36,43 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIDOMEventReceiver_h__
-#define nsIDOMEventReceiver_h__
+#ifndef nsIDOMEventGroup_h__
+#define nsIDOMEventGroup_h__
 
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventGroup.h"
+#include "nsISupports.h"
 
-class nsIDOMEventListener;
-class nsIDOMMouseListener;
-class nsIDOMMouseMotionListener;
-class nsIDOMKeyListener;
-class nsIDOMFocusListener;
-class nsIDOMLoadListener;
-class nsIDOMDragListener;
-class nsIEventListenerManager;
-class nsIDOMEvent;
-class nsIDOMEventGroup;
-
-/*
- * DOM event source class.  Object that allow event registration and
- * distribution from themselves implement this interface.
- */
-
-#define NS_IDOMEVENTRECEIVER_IID \
-{ /* e1dbcba0-fb38-11d1-bd87-00805f8ae3f4 */ \
-0xe1dbcba0, 0xfb38, 0x11d1, \
-{0xbd, 0x87, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
-
-class nsIDOMEventReceiver : public nsIDOMEventTarget
+class nsDOMEventGroup : public nsIDOMEventGroup
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMEVENTRECEIVER_IID)
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTGROUP
 
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                   const nsIID& aIID) = 0;
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                      const nsIID& aIID) = 0;
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
-  NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) = 0;
-  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup) = 0;
+  nsDOMEventGroup();
+  virtual ~nsDOMEventGroup();
 };
-#endif // nsIDOMEventReceiver_h__
+
+#endif // nsIDOMEventGroup_h__

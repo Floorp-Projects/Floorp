@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,10 +16,12 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2000
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Tom Pixley <joki@netscape.com> (original author)
+ *   Johnny Stenback <jst@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,43 +38,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIDOMEventReceiver_h__
-#define nsIDOMEventReceiver_h__
+#include "nsIDOMEvent.idl"
 
-#include "nsIDOMEventTarget.h"
-
-class nsIDOMEventListener;
-class nsIDOMMouseListener;
-class nsIDOMMouseMotionListener;
-class nsIDOMKeyListener;
-class nsIDOMFocusListener;
-class nsIDOMLoadListener;
-class nsIDOMDragListener;
-class nsIEventListenerManager;
-class nsIDOMEvent;
-class nsIDOMEventGroup;
-
-/*
- * DOM event source class.  Object that allow event registration and
- * distribution from themselves implement this interface.
+/**
+ * The nsIDOMEventTarget interface is the interface implemented by all
+ * event targets in the Document Object Model.
+ *
+ * For more information on this interface please see 
+ * http://www.w3.org/TR/DOM-Level-3-Events/
  */
 
-#define NS_IDOMEVENTRECEIVER_IID \
-{ /* e1dbcba0-fb38-11d1-bd87-00805f8ae3f4 */ \
-0xe1dbcba0, 0xfb38, 0x11d1, \
-{0xbd, 0x87, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
-
-class nsIDOMEventReceiver : public nsIDOMEventTarget
+[scriptable, uuid(55c7af7b-1a64-40bf-87eb-2c2cbee0491b)]
+interface nsIDOMCustomEvent : nsIDOMEvent
 {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMEVENTRECEIVER_IID)
+  void               setCurrentTarget(in nsIDOMNode target);
+  void               setEventPhase(in unsigned short phase);
 
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                   const nsIID& aIID) = 0;
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                      const nsIID& aIID) = 0;
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
-  NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) = 0;
-  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup) = 0;
 };
-#endif // nsIDOMEventReceiver_h__
