@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIWebShell.h"
+#include "nsIURLListener.h"
 #include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
@@ -159,7 +160,9 @@ public:
   NS_IMETHOD Repaint(PRBool aForce);
   NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
+  NS_IMETHOD SetURLListener(nsIURLListener * aURLListener);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
+  NS_IMETHOD GetURLListener(nsIURLListener*& aResult);
   NS_IMETHOD SetObserver(nsIStreamObserver* anObserver);
   NS_IMETHOD GetObserver(nsIStreamObserver*& aResult);
   NS_IMETHOD SetPrefs(nsIPref* aPrefs);
@@ -309,6 +312,7 @@ protected:
   nsIScriptGlobalObject *mScriptGlobal;
   nsIScriptContext* mScriptContext;
 
+  nsIURLListener * mURLListener;
   nsIWebShellContainer* mContainer;
   nsIContentViewer* mContentViewer;
   nsIDeviceContext* mDeviceContext;
@@ -454,6 +458,7 @@ nsWebShell::nsWebShell()
   mScrollPref = nsScrollPreference_kAuto;
   mScriptGlobal = nsnull;
   mScriptContext = nsnull;
+  mURLListener = nsnull;
   InitFrameData();
   mIsFrame = PR_FALSE;
 }
@@ -475,6 +480,7 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mContentViewer);
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mPrefs);
+  NS_IF_RELEASE(mURLListener);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mObserver);
   NS_IF_RELEASE(mNetSupport);
@@ -810,6 +816,7 @@ nsWebShell::Destroy()
   // Stop any URLs that are currently being loaded...
   Stop();
 
+  SetURLListener(nsnull);
   SetContainer(nsnull);
   SetObserver(nsnull);
 
@@ -960,11 +967,28 @@ nsWebShell::SetContentViewer(nsIContentViewer* aViewer)
 }
 
 NS_IMETHODIMP
+nsWebShell::SetURLListener(nsIURLListener* aURLListener)
+{
+  NS_IF_RELEASE(mURLListener);
+  mURLListener = aURLListener;
+  NS_IF_ADDREF(aURLListener);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebShell::SetContainer(nsIWebShellContainer* aContainer)
 {
   NS_IF_RELEASE(mContainer);
   mContainer = aContainer;
   NS_IF_ADDREF(aContainer);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetURLListener(nsIURLListener *& aResult)
+{
+  aResult = mURLListener;
+  NS_IF_ADDREF(mURLListener);
   return NS_OK;
 }
 
@@ -1309,6 +1333,13 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
       return rv;
     }
   }
+  // Tell URL listener we are loading a new url.
+  if (nsnull != mURLListener) {
+      nsresult rv = mURLListener->BeginLoadURL(this, aUrlSpec);
+      if (NS_FAILED(rv)) {
+          return rv;
+      }
+  }
 
   return mDocLoader->LoadDocument(aUrlSpec,       // URL string
                                   aCommand,       // Command
@@ -1372,6 +1403,13 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     if (NS_FAILED(rv)) {
       return rv;
     }
+  }
+  // Give URL listener right of refusal.
+  if (nsnull != mURLListener) {
+      rv = mURLListener->WillLoadURL(this, urlSpec, nsLoadURL);
+      if (NS_FAILED(rv)) {
+          return rv;
+      }
   }
 
   nsString* url = new nsString(urlSpec);
@@ -1480,6 +1518,13 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
         return rv;
       }
     }
+    // Give URL listener right of refusal
+    if (nsnull != mURLListener) {
+        rv = mURLListener->WillLoadURL(this, urlSpec, nsLoadHistory);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
 
     printf("Goto %d\n", aHistoryIndex);
     mHistoryIndex = aHistoryIndex;
@@ -1584,10 +1629,14 @@ nsWebShell::GetTitle(const PRUnichar** aResult)
 NS_IMETHODIMP
 nsWebShell::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
 {
+  nsresult rv = NS_OK;
   if (nsnull != mContainer) {
-    return mContainer->WillLoadURL(aShell, aURL, aReason);
+    rv = mContainer->WillLoadURL(aShell, aURL, aReason);
   }
-  return NS_OK;
+  if (NS_SUCCEEDED(rv) && nsnull != mURLListener) {
+    rv = mURLListener->WillLoadURL(aShell, aURL, aReason);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1606,20 +1655,29 @@ nsWebShell::ProgressLoadURL(nsIWebShell* aShell,
                             PRInt32 aProgress, 
                             PRInt32 aProgressMax)
 {
+  nsresult rv = NS_OK;
   if (nsnull != mContainer) {
-    return mContainer->ProgressLoadURL(aShell, aURL, aProgress, aProgressMax);
+    rv = mContainer->ProgressLoadURL(aShell, aURL, aProgress, aProgressMax);
   }
-  return NS_OK;
+  if (NS_SUCCEEDED(rv) && nsnull != mURLListener) {
+    rv = mURLListener->ProgressLoadURL(aShell, aURL, aProgress, aProgressMax);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsWebShell::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
 {
+  nsresult rv = NS_OK;
   if (nsnull != mContainer) {
     // XXX: do not propagate this notification up from any frames...
     return mContainer->EndLoadURL(aShell, aURL, aStatus);
   }
-  return NS_OK;
+  if (NS_SUCCEEDED(rv) && nsnull != mURLListener) {
+    // XXX: do not propagate this notification up from any frames...
+    rv = mURLListener->EndLoadURL(aShell, aURL, aStatus);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2033,7 +2091,7 @@ nsWebShell::OnConnectionsComplete()
   /*
    *Fire the EndLoadURL(...) notification...
    */
-  if ((nsnull != mContainer) && (nsnull != mContentViewer)) {
+  if (((nsnull != mURLListener) || (nsnull != mContainer)) && (nsnull != mContentViewer)) {
     nsIDocument* document;
 
     rv = mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer);
@@ -2051,7 +2109,12 @@ nsWebShell::OnConnectionsComplete()
           /* XXX: The load status needs to be passed in... */
           if (NS_SUCCEEDED(rv)) {
             urlString = spec;
-            rv = mContainer->EndLoadURL(this, urlString, /* XXX */ 0 );
+            if (nsnull != mContainer) {
+                rv = mContainer->EndLoadURL(this, urlString, /* XXX */ 0 );
+            }
+            if (NS_SUCCEEDED(rv) && nsnull != mURLListener) {
+                rv = mURLListener->EndLoadURL(this, urlString, /* XXX */ 0 );
+            }
           }
           NS_RELEASE(url);
         }
@@ -2206,12 +2269,12 @@ nsWebShell::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
     rv = mObserver->OnProgress(aURL, aProgress, aProgressMax);
   }
 
-  if (nsnull != mContainer) {
+  if (nsnull != mURLListener) {
     const char* spec;
     (void)aURL->GetSpec(&spec);
     nsAutoString urlString(spec);
 
-    rv = mContainer->ProgressLoadURL(this, urlString, aProgress, aProgressMax);
+    rv = mURLListener->ProgressLoadURL(this, urlString, aProgress, aProgressMax);
   }
 
   // Pass status messages out to the nsIBrowserWindow...
