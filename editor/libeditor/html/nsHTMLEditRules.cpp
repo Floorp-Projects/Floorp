@@ -822,10 +822,12 @@ nsHTMLEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
   nsCOMPtr<nsIDOMNode> selNode, priorNode;
   PRInt32 selOffset;
   // get the (collapsed) selection location
-  res = mHTMLEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+  res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(selNode),
+                                           &selOffset);
   if (NS_FAILED(res)) return res;
   // get prior node
-  res = mHTMLEditor->GetPriorHTMLNode(selNode, selOffset, &priorNode);
+  res = mHTMLEditor->GetPriorHTMLNode(selNode, selOffset,
+                                      address_of(priorNode));
   if (NS_SUCCEEDED(res) && priorNode && nsHTMLEditUtils::IsMozBR(priorNode))
   {
     nsCOMPtr<nsIDOMNode> block1, block2;
@@ -838,7 +840,7 @@ nsHTMLEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
     // if we are here then the selection is right after a mozBR
     // that is in the same block as the selection.  We need to move
     // the selection start to be before the mozBR.
-    res = nsEditor::GetNodeLocation(priorNode, &selNode, &selOffset);
+    res = nsEditor::GetNodeLocation(priorNode, address_of(selNode), &selOffset);
     if (NS_FAILED(res)) return res;
     res = aSelection->Collapse(selNode,selOffset);
     if (NS_FAILED(res)) return res;

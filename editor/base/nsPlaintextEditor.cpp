@@ -597,7 +597,7 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent
     PRInt32 offset;
     PRUint32 len;
     nodeAsText->GetLength(&len);
-    GetNodeLocation(node, &tmp, &offset);
+    GetNodeLocation(node, address_of(tmp), &offset);
     if (!tmp) return NS_ERROR_FAILURE;
     if (!theOffset)
     {
@@ -613,7 +613,7 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent
       // split the text node
       res = SplitNode(node, theOffset, getter_AddRefs(tmp));
       if (NS_FAILED(res)) return res;
-      res = GetNodeLocation(node, &tmp, &offset);
+      res = GetNodeLocation(node, address_of(tmp), &offset);
       if (NS_FAILED(res)) return res;
     }
     // create br
@@ -638,7 +638,7 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent
     res = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
     nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-    res = GetNodeLocation(*outBRNode, &parent, &offset);
+    res = GetNodeLocation(*outBRNode, address_of(parent), &offset);
     if (NS_FAILED(res)) return res;
     if (aSelect == eNext)
     {
@@ -661,7 +661,7 @@ NS_IMETHODIMP nsPlaintextEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, ns
 {
   nsCOMPtr<nsIDOMNode> parent = aNode;
   PRInt32 offset = aOffset;
-  return CreateBRImpl(&parent, &offset, outBRNode, aSelect);
+  return CreateBRImpl(address_of(parent), &offset, outBRNode, aSelect);
 }
 
 NS_IMETHODIMP nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
@@ -687,14 +687,14 @@ NS_IMETHODIMP nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
   }
   nsCOMPtr<nsIDOMNode> selNode;
   PRInt32 selOffset;
-  res = GetStartNodeAndOffset(selection, &selNode, &selOffset);
+  res = GetStartNodeAndOffset(selection, address_of(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
   
   res = CreateBR(selNode, selOffset, outBRNode);
   if (NS_FAILED(res)) return res;
     
   // position selection after br
-  res = GetNodeLocation(*outBRNode, &selNode, &selOffset);
+  res = GetNodeLocation(*outBRNode, address_of(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
   selPriv->SetInterlinePosition(PR_TRUE);
   res = selection->Collapse(selNode, selOffset+1);
