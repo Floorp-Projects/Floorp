@@ -27,6 +27,49 @@
     var selectedFolders = GetSelectedMsgFolders();
     openSubscriptionsDialog(selectedFolders[0].server);
   }
+
+  // Special case attempts to reply/forward/edit as new RSS arrticles
+  // Send the feed article URL instead of trying to load the feed inside of
+  // an iframe. Bug #258278.
+  function openComposeWindowForRSSArticle(messageID, msgHdr, type)
+  {
+    // convert our messageID into a url..
+    var contentBase = messageID.replace("@localhost.localdomain", "");
+
+    var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"]
+                           .createInstance(Components.interfaces.nsIMsgComposeParams);
+    if (params)
+    {
+      params.composeFields = Components.classes['@mozilla.org/messengercompose/composefields;1']
+                                       .createInstance(Components.interfaces.nsIMsgCompFields);
+      if (params.composeFields)
+      {
+        params.composeFields.body = contentBase;
+        var subject = msgHdr.mime2DecodedSubject;
+        if (type == msgComposeType.Reply 
+            || type == msgComposeType.ReplyAll 
+            || type == msgComposeType.ReplyToSender 
+            || type == msgComposeType.ReplyToGroup 
+            || type == msgComposeType.ReplyToSenderAndGroup)
+          subject = 'Re: ' + subject;
+        else if (type == msgComposeType.ForwardInline || type == msgComposeType.ForwardAsAttachment)
+          subject = '[Fwd: ' + subject + ']';
+        params.composeFields.subject = subject;
+        params.composeFields.characterSet = msgHdr.Charset;
+        params.bodyIsLink = true;
+
+        if (msgComposeService) {
+          try {
+            params.identity = msgComposeService.defaultIdentity;
+          }
+          catch (ex) {
+            params.identity = null;
+          }
+          msgComposeService.OpenComposeWindowWithParams(null, params);
+        }
+      }                                                                         
+    }   
+  }
 </script>
 
 <!-- Overlay into the folder pane context menu. If you change the id for the menu item, please

@@ -172,7 +172,6 @@ function ComposeMessage(type, format, folder, messageArray)
         newsgroup = folder.folderURL;
 			}
 
-      // 
       identity = getIdentityForServer(server);
       // dump("identity = " + identity + "\n");
 		}
@@ -235,7 +234,11 @@ function ComposeMessage(type, format, folder, messageArray)
       if (server)
         identity = getIdentityForServer(server, hintForIdentity);
 
-			if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
+      var messageID = hdr.messageId;
+      var messageIDScheme = messageID.split(":")[0];
+      if ((messageIDScheme == 'http' || messageIDScheme == 'https') &&  "openComposeWindowForRSSArticle" in this) 
+        openComposeWindowForRSSArticle(messageID, hdr, type); 
+      else	if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
 				type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSender || 
 				type == msgComposeType.ReplyToSenderAndGroup ||
 				type == msgComposeType.Template || type == msgComposeType.Draft)
@@ -252,7 +255,7 @@ function ComposeMessage(type, format, folder, messageArray)
 				uri += messageUri;
 			}
 		}
-		if (type == msgComposeType.ForwardAsAttachment)
+		if (type == msgComposeType.ForwardAsAttachment && uri)
 			msgComposeService.OpenComposeWindow(null, uri, type, format, identity, msgWindow);
 	}
 	else
