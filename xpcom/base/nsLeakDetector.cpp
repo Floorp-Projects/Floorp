@@ -221,7 +221,7 @@ nsresult NS_ShutdownLeakDetector()
     // Make this the first atexit() called so it's before the atexit() crashes
     // see http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=23552
     static LeakDetectorFinalizer trick;
-#elsif defined(SHUTDOWN_LEAKS_EARLY)
+#elif defined(SHUTDOWN_LEAKS_EARLY)
     // do shutdown leaks now
     LeakDetectorFinalizer trick;
 #endif
