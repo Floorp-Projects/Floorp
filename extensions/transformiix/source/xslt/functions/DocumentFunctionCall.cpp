@@ -37,9 +37,7 @@
  */
 
 #include "XSLTFunctions.h"
-#include "XMLParser.h"
 #include "XMLDOMUtils.h"
-#include "URIUtils.h"
 #include "Names.h"
 
 /*
@@ -108,23 +106,23 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs)
                 if (!baseURISet) {
                     // if the second argument wasn't specified, use
                     // the baseUri of node itself
-                    retrieveDocument(uriStr, node->getBaseURI(), *nodeSet, cs);
+                    nodeSet->add(mProcessorState->retrieveDocument(uriStr, node->getBaseURI()));
                 }
                 else {
-                    retrieveDocument(uriStr, baseURI, *nodeSet, cs);
+                    nodeSet->add(mProcessorState->retrieveDocument(uriStr, baseURI));
                 }
             }
         }
         else {
             // The first argument is not a NodeSet
             String uriStr;
-            evaluateToString(param1, context, cs, uriStr);
+            exprResult1->stringValue(uriStr);
             if (!baseURISet) {
                 Node* xsltElement = mProcessorState->peekAction();
-                retrieveDocument(uriStr, xsltElement->getBaseURI(), *nodeSet, cs);
+                nodeSet->add(mProcessorState->retrieveDocument(uriStr, xsltElement->getBaseURI()));
             }
             else {
-                retrieveDocument(uriStr, baseURI, *nodeSet, cs);
+                nodeSet->add(mProcessorState->retrieveDocument(uriStr, baseURI));
             }
         }
         delete exprResult1;
@@ -132,64 +130,4 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs)
     }
 
     return nodeSet;
-}
-
-
-/**
- * Retrieve the document designated by the URI uri, using baseUri as base URI if
- * necessary, parses it as an XML document, and append the resulting document node
- * to resultNodeSet.
- *
- * @param uri the URI of the document to retrieve
- * @param baseUri the base URI used to resolve the URI if uri is relative
- * @param resultNodeSet the NodeSet to append the document to
- * @param cs the ContextState, used for reporting errors
- */
-void DocumentFunctionCall::retrieveDocument(const String& uri,
-                                            const String& baseUri,
-                                            NodeSet& resultNodeSet,
-                                            ContextState* cs)
-{
-    String absUrl, frag;
-    Document* xmlDoc;
-
-    URIUtils::resolveHref(uri, baseUri, absUrl);
-    URIUtils::getFragmentIdentifier(absUrl, frag);
-
-    // try to get already loaded document
-    xmlDoc = mProcessorState->getLoadedDocument(absUrl);
-
-    if (!xmlDoc) {
-        // open URI
-        String errMsg;
-        XMLParser xmlParser;
-        Node* xsltElement;
-
-        xsltElement = mProcessorState->peekAction();
-        if (!xsltElement) {
-            // no xslt element
-            return;
-        }
-
-        xmlDoc = xmlParser.getDocumentFromURI(absUrl, "", xsltElement->getOwnerDocument(), errMsg);
-        if (!xmlDoc) {
-            String err("error in document() function: ");
-            err.append(errMsg);
-            cs->recieveError(err);
-            return;
-        }
-        // add to ProcessorState list of documents
-        mProcessorState->addLoadedDocument(xmlDoc, absUrl);
-    }
-
-    // append the document or the fragment to resultNodeSet
-    if (frag.length() > 0) {
-        Node* node = xmlDoc->getElementById(frag);
-        if (node) {
-            resultNodeSet.add(node);
-        }
-    }
-    else {
-        resultNodeSet.add(xmlDoc);
-    }
 }

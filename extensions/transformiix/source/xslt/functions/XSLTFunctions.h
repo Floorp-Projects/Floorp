@@ -62,7 +62,6 @@ public:
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
 
 private:
-    void retrieveDocument(const String& uri,const String& baseUri, NodeSet &resultNodeSet, ContextState* cs);
     ProcessorState* mProcessorState;
 };
 

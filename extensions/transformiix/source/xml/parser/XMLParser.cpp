@@ -65,16 +65,12 @@ XMLParser::~XMLParser()
 } //-- ~XMLParser
 
 Document* XMLParser::getDocumentFromURI(const String& href,
-                                        const String& baseUri,
                                         Document* aLoader,
                                         String& errMsg)
 {
-    String documentURL;
-    URIUtils::resolveHref(href, baseUri, documentURL);
-
 #ifndef TX_EXE
     nsCOMPtr<nsIURI> documentURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(documentURI), documentURL.getConstNSString());
+    nsresult rv = NS_NewURI(getter_AddRefs(documentURI), href.getConstNSString());
     NS_ENSURE_SUCCESS(rv, NULL);
 
     nsCOMPtr<nsISyncLoader> loader = do_CreateInstance(TRANSFORMIIX_SYNCLOADER_CONTRACTID, &rv);
@@ -92,11 +88,11 @@ Document* XMLParser::getDocumentFromURI(const String& href,
 
     return new Document(theDocument);
 #else
-    istream* xslInput = URIUtils::getInputStream(documentURL, errMsg);
+    istream* xslInput = URIUtils::getInputStream(href, errMsg);
 
     Document* resultDoc = 0;
     if ( xslInput ) {
-        resultDoc = parse(*xslInput, documentURL);
+        resultDoc = parse(*xslInput, href);
         delete xslInput;
     }
     if (!resultDoc) {

@@ -42,6 +42,7 @@
 #include "VariableBinding.h"
 #include "ExprResult.h"
 #include "Names.h"
+#include "XMLParser.h"
 #ifndef TX_EXE
 //  #include "nslog.h"
 //  #define PRINTF NS_LOG_PRINTF(XPATH)
@@ -91,19 +92,6 @@ ProcessorState::~ProcessorState() {
       delete (NamedMap*) variableSets.pop();
   }
 
-  //-- delete includes
-  StringList* keys = includes.keys();
-  StringListIterator* iter = keys->iterator();
-  while (iter->hasNext()) {
-      String* key = iter->next();
-      TxObjectWrapper* objWrapper
-          = (TxObjectWrapper*)includes.remove(*key);
-      delete (Document*)objWrapper->object;
-      delete objWrapper;
-  }
-  delete iter;
-  delete keys;
-
   //-- clean up XSLT actions stack
   while (currentAction) {
       XSLTAction* item = currentAction;
@@ -112,6 +100,18 @@ ProcessorState::~ProcessorState() {
       item->prev = 0;
       delete item;
   }
+
+  // Delete all importFrames
+  txListIterator iter(&importFrames);
+  while (iter.hasNext())
+      delete (ImportFrame*)iter.next();
+
+  // Make sure that xslDocument and mSourceDocument isn't deleted along with
+  // the rest of the documents in the loadedDocuments hash
+  loadedDocuments.remove(xslDocument->getBaseURI());
+  loadedDocuments.remove(mSourceDocument->getBaseURI());
+  
+
 } //-- ~ProcessorState
 
 
@@ -159,18 +159,6 @@ void ProcessorState::addAttributeSet(Element* attributeSet) {
 void ProcessorState::addErrorObserver(ErrorObserver& errorObserver) {
     errorObservers.add(&errorObserver);
 } //-- addErrorObserver
-
-/**
- * Adds the given XSL document to the list of includes
- * The href is used as a key for the include, to prevent
- * including the same document more than once
-**/
-void ProcessorState::addInclude(const String& href, Document* xslDocument) {
-  TxObjectWrapper* objWrapper = new TxObjectWrapper();
-  objWrapper->object = xslDocument;
-  includes.put(href, objWrapper);
-} //-- addInclude
-
 
 /**
  *  Adds the given template to the list of templates to process
@@ -307,6 +295,78 @@ Node* ProcessorState::copyNode(Node* node) {
     return 0;
 } //-- copyNode
 
+/*
+ * Retrieve the document designated by the URI uri, using baseUri as base URI.
+ * Parses it as an XML document, and returns it. If a fragment identifier is
+ * supplied, the element with seleced id is returned.
+ * The returned document is owned by the ProcessorState
+ *
+ * @param uri the URI of the document to retrieve
+ * @param baseUri the base URI used to resolve the URI if uri is relative
+ * @return loaded document or element pointed to by fragment identifier. If
+ *         loading or parsing fails NULL will be returned.
+ */
+Node* ProcessorState::retrieveDocument(const String& uri, const String& baseUri)
+{
+    String absUrl, frag, docUrl;
+    URIUtils::resolveHref(uri, baseUri, absUrl);
+    URIUtils::getFragmentIdentifier(absUrl, frag);
+    URIUtils::getDocumentURI(absUrl, docUrl);
+
+    // try to get already loaded document
+    Document* xmlDoc = (Document*)loadedDocuments.get(docUrl);
+
+    if (!xmlDoc) {
+        // open URI
+        String errMsg;
+        XMLParser xmlParser;
+
+        NS_ASSERTION(currentAction && currentAction->node,
+                     "missing currentAction->node");
+
+        Document* loaderDoc;
+        if (currentAction->node->getNodeType() == Node::DOCUMENT_NODE)
+            loaderDoc = (Document*)currentAction->node;
+        else
+            loaderDoc = currentAction->node->getOwnerDocument();
+
+        xmlDoc = xmlParser.getDocumentFromURI(docUrl, loaderDoc, errMsg);
+
+        if (!xmlDoc) {
+            String err("Couldn't load document '");
+            err.append(docUrl);
+            err.append("': ");
+            err.append(errMsg);
+            recieveError(err, ErrorObserver::WARNING);
+            return NULL;
+        }
+        // add to list of documents
+        loadedDocuments.put(docUrl, xmlDoc);
+    }
+
+    // return element with supplied id if supplied
+    if (frag.length())
+        return xmlDoc->getElementById(frag);
+
+    return xmlDoc;
+}
+
+/*
+ * Return stack of urls of currently entered stylesheets
+ */
+Stack* ProcessorState::getEnteredStylesheets()
+{
+    return &enteredStylesheets;
+}
+
+/*
+ * Return list of import containers
+ */
+List* ProcessorState::getImportFrames()
+{
+    return &importFrames;
+}
+
 /**
  * Finds a template for the given Node. Only templates with
  * a mode attribute equal to the given mode will be searched.
@@ -393,19 +453,6 @@ Node* ProcessorState::getCurrentNode() {
 Stack* ProcessorState::getDefaultNSURIStack() {
     return &defaultNameSpaceURIStack;
 } //-- getDefaultNSURIStack
-
-/**
- * @return the included xsl document that was associated with the
- * given href, or null if no document is found
-**/
-Document* ProcessorState::getInclude(const String& href) {
-  TxObjectWrapper* objWrapper = (TxObjectWrapper*)includes.get(href);
-  Document* doc = 0;
-  if (objWrapper) {
-    doc = (Document*) objWrapper->object;
-  }
-  return doc;
-} //-- getInclude(String)
 
 Expr* ProcessorState::getExpr(const String& pattern) {
 //    NS_IMPL_LOG(XPATH)
@@ -667,30 +714,6 @@ void ProcessorState::shouldStripSpace(String& names, MBool shouldStrip) {
     }
 
 } //-- stripSpace
-
-/**
- * Adds a document to set of loaded documents
-**/
-void ProcessorState::addLoadedDocument(Document* doc, String& url) {
-    String docUrl;
-    URIUtils::getDocumentURI(url, docUrl);
-    loadedDocuments.put(docUrl, doc);
-}
-
-/**
- * Returns a loaded document given it's url. NULL if no such doc exists
-**/
-Document* ProcessorState::getLoadedDocument(String& url) {
-    String docUrl;
-    URIUtils::getDocumentURI(url, docUrl);
-    if ((mMainStylesheetURL.length() > 0) && docUrl.isEqual(mMainStylesheetURL)) {
-        return xslDocument;
-    }
-    else if ((mMainSourceURL.length() > 0) && docUrl.isEqual(mMainSourceURL)) {
-        return mSourceDocument;
-    }
-    return (Document*)loadedDocuments.get(docUrl);
-}
 
 /**
  * Adds the supplied xsl:key to the set of keys
@@ -987,11 +1010,11 @@ void ProcessorState::initialize() {
     //-- determine xsl properties
     Element* element = NULL;
     if (mSourceDocument) {
-        mMainSourceURL = mSourceDocument->getBaseURI();
+        loadedDocuments.put(mSourceDocument->getBaseURI(), mSourceDocument);
     }
     if (xslDocument) {
         element = xslDocument->getDocumentElement();
-        mMainStylesheetURL = xslDocument->getBaseURI();
+        loadedDocuments.put(xslDocument->getBaseURI(), xslDocument);
     }
     if ( element ) {
 
