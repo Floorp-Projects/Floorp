@@ -1492,11 +1492,13 @@ static OSErr setStyleFont (const nsFont& aFont, nsIDeviceContext* aContext, ATSU
 		case NS_FONT_STYLE_ITALIC: 		textFace |= italic;		break;
 		case NS_FONT_STYLE_OBLIQUE: 	textFace |= italic;		break;	//XXX
 	}
+#if 0
 	switch (aFont.variant)
 	{
 		case NS_FONT_VARIANT_NORMAL: 							break;
-		case NS_FONT_VARIANT_SMALL_CAPS: textFace |= condense;	break;	//XXX
+		case NS_FONT_VARIANT_SMALL_CAPS: 					break;
 	}
+#endif
 	if (aFont.weight > NS_FONT_WEIGHT_NORMAL)	// don't test NS_FONT_WEIGHT_BOLD
 		textFace |= bold;
 
