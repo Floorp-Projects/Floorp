@@ -210,7 +210,7 @@ Permission_AddHost(char * host, PRBool permission, PRInt32 type, PRBool save) {
     permission_list = new nsVoidArray();
     if(!permission_list) {
       Recycle(host);
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
@@ -422,6 +422,12 @@ PUBLIC nsresult
 PERMISSION_Read() {
   if (permission_list) {
     return NS_OK;
+  }
+  // create permission list to avoid continually attempting to re-read
+  // cookperm.txt if it doesn't exist
+  permission_list = new nsVoidArray();
+  if(!permission_list) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   nsAutoString buffer;
   nsFileSpec dirSpec;
