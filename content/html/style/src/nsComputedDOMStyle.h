@@ -41,9 +41,9 @@
 #define nsComputedDOMStyle_h__
 
 #include "nsIComputedDOMStyle.h"
-#include "nsIDOMCSS2Properties.h"
 
 #include "nsROCSSPrimitiveValue.h"
+#include "nsDOMCSSDeclaration.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsDOMCSSValueList.h"
 
@@ -53,8 +53,7 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 
-class nsComputedDOMStyle : public nsIComputedDOMStyle,
-                           public nsIDOMNSCSS2Properties
+class nsComputedDOMStyle : public nsIComputedDOMStyle
 {
 public:
   NS_DECL_ISUPPORTS
@@ -62,9 +61,6 @@ public:
   NS_IMETHOD Init(nsIDOMElement *aElement,
                   const nsAString& aPseudoElt,
                   nsIPresShell *aPresShell);
-
-  NS_DECL_NSIDOMCSS2PROPERTIES
-  NS_DECL_NSIDOMNSCSS2PROPERTIES
 
   NS_DECL_NSIDOMCSSSTYLEDECLARATION
 
@@ -279,6 +275,8 @@ private:
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(PRBool aCommaDelimited);
   nsDOMCSSRGBColor* GetDOMCSSRGBColor(nscolor aColor);
+
+  nsCOMPtr<nsISupports> mInner; // CSS2Properties
 
   nsWeakPtr mPresShellWeak;
   nsCOMPtr<nsIContent> mContent;

@@ -42,6 +42,7 @@
 #include "nsComputedDOMStyle.h"
 
 #include "nsDOMError.h"
+#include "nsIDOMCSS2Properties.h"
 #include "nsIDOMElement.h"
 #include "nsIStyleContext.h"
 #include "nsIScrollableFrame.h"
@@ -293,7 +294,7 @@ NS_NewComputedDOMStyle(nsIComputedDOMStyle** aComputedStyle)
 }
 
 nsComputedDOMStyle::nsComputedDOMStyle()
-  : mPresShellWeak(nsnull), mT2P(0.0f)
+  : mInner(nsnull), mPresShellWeak(nsnull), mT2P(0.0f)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -315,15 +316,55 @@ nsComputedDOMStyle::Shutdown()
 }
 
 
-// QueryInterface implementation for nsComputedDOMStyle
-NS_INTERFACE_MAP_BEGIN(nsComputedDOMStyle)
-  NS_INTERFACE_MAP_ENTRY(nsIComputedDOMStyle)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSS2Properties)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSCSS2Properties)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIComputedDOMStyle)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ComputedCSSStyleDeclaration)
-NS_INTERFACE_MAP_END
+NS_IMETHODIMP
+nsComputedDOMStyle::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (!aInstancePtr) {
+    NS_ERROR("QueryInterface requires a non-NULL destination!");
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsISupports* inst;
+
+  if (aIID.Equals(NS_GET_IID(nsIComputedDOMStyle))) {
+    inst = NS_STATIC_CAST(nsIComputedDOMStyle*, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMCSSStyleDeclaration))) {
+    inst = NS_STATIC_CAST(nsIDOMCSSStyleDeclaration*, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMCSS2Properties))) {
+    if (!mInner) {
+      mInner = new CSS2PropertiesTearoff(this);
+      NS_ENSURE_TRUE(mInner, NS_ERROR_OUT_OF_MEMORY);
+    }
+    inst = NS_STATIC_CAST(nsIDOMCSS2Properties*,
+                          NS_STATIC_CAST(nsISupports*, mInner));
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMNSCSS2Properties))) {
+    if (!mInner) {
+      mInner = new CSS2PropertiesTearoff(this);
+      NS_ENSURE_TRUE(mInner, NS_ERROR_OUT_OF_MEMORY);
+    }
+    inst = NS_STATIC_CAST(nsIDOMNSCSS2Properties*,
+                          NS_STATIC_CAST(nsISupports*, mInner));
+  } else if (aIID.Equals(NS_GET_IID(nsISupports))) {
+    inst = NS_STATIC_CAST(nsISupports*,
+                          NS_STATIC_CAST(nsIComputedDOMStyle*, this));
+  } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
+    inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_ComputedCSSStyleDeclaration_id);
+    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
+  } else {
+    inst = nsnull;
+  }
+
+  nsresult rv;
+  if (!inst) {
+    rv = NS_NOINTERFACE;
+  } else {
+    NS_ADDREF(inst);
+    rv = NS_OK;
+  }
+
+  *aInstancePtr = inst;
+  return rv;
+}
 
 
 static void doDestroyComputedDOMStyle(nsComputedDOMStyle *aComputedStyle)
@@ -3792,27 +3833,3 @@ nsComputedDOMStyle::GetBorderStyleFor(PRUint8 aSide, nsIFrame *aFrame,
 
   return CallQueryInterface(val, aValue);
 }
-
-// nsIDOMCSS2Properties
-
-#define CSS_PROP(name_, id_, method_, hint_)                        \
-  NS_IMETHODIMP                                                     \
-  nsComputedDOMStyle::Get##method_(nsAString& aValue)               \
-  {                                                                 \
-    return GetPropertyValue(NS_LITERAL_STRING(#name_), aValue);     \
-  }                                                                 \
-                                                                    \
-  NS_IMETHODIMP                                                     \
-  nsComputedDOMStyle::Set##method_(const nsAString& aValue)         \
-  {                                                                 \
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;                \
-  }
-
-#define CSS_PROP_INTERNAL(name_, id_, method_, hint_)  /* nothing */
-#define CSS_PROP_NOTIMPLEMENTED(name_, id_, method_, hint_)         \
-  CSS_PROP(name_, id_, method_, hint_)
-
-#include "nsCSSPropList.h"
-
-#undef CSS_PROP_INTERNAL
-#undef CSS_PROP
