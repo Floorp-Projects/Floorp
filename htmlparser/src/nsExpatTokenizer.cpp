@@ -506,11 +506,22 @@ void nsExpatTokenizer::FrontloadMisplacedContent(nsDeque& aDeque){
 void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts) {
   XMLParserState* state = (XMLParserState*) userData;
   CToken* theToken = state->tokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_unknown);
-  if(theToken) {
+  if(theToken) {    
+    // If an ID attribute exists for this element, set it on the start token
+    PRInt32 index = XML_GetIdAttributeIndex(state->parser);
+    if (index >= 0) {      
+      nsCOMPtr<nsIAtom> attributeAtom = dont_AddRef(NS_NewAtom((const PRUnichar *) atts[index]));
+      CStartToken* startToken = NS_STATIC_CAST(CStartToken*, theToken);
+      startToken->SetIDAttributeAtom(attributeAtom);
+    }
+
+    // Set the element name on the start token and add the token to the token queue
     nsString& theString=theToken->GetStringValueXXX();
     theString.Assign((PRUnichar *) name);
     AddToken(theToken, NS_OK, state->tokenDeque, state->tokenRecycler);
-    int theAttrCount=0;
+
+    // For each attribute on this element, create and add attribute tokens to the token queue
+    int theAttrCount=0;    
     while(*atts){
       theAttrCount++;
       CAttributeToken* theAttrToken = (CAttributeToken*) 
@@ -519,7 +530,7 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
         nsString& theKey=theAttrToken->GetKey();
         theKey.Assign((PRUnichar *) (*atts++));
         nsString& theValue=theAttrToken->GetStringValueXXX();
-        theValue.Assign((PRUnichar *) (*atts++));
+        theValue.Assign((PRUnichar *) (*atts++));        
       }
       CToken* theTok=(CToken*)theAttrToken;
       AddToken(theTok, NS_OK, state->tokenDeque, state->tokenRecycler);
@@ -843,7 +854,7 @@ int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
   }
 #else /* ! XML_DTD */
 
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleExternalEntityRef() not yet implemented.");  
+  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleExternalEntityRef() not yet implemented.");
 
 #endif /* XML_DTD */
 

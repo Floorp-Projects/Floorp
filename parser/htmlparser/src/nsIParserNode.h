@@ -155,8 +155,14 @@ class nsIParserNode : public nsISupports {
      */
     virtual void GetSource(nsString& aString)=0;
 
+    /*
+     * Get and set the ID attribute atom for this node.
+     * See http://www.w3.org/TR/1998/REC-xml-19980210#sec-attribute-types
+     * for the definition of an ID attribute.
+     *
+     */
+    virtual nsresult GetIDAttributeAtom(nsIAtom** aResult) const = 0;
+    virtual nsresult SetIDAttributeAtom(nsIAtom* aID) = 0;
 };
 
 #endif
-
-

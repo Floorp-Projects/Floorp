@@ -96,6 +96,7 @@
 #include "plarena.h"
 #include "nsCSSAtoms.h"
 #include "nsIObserverService.h" // for reflow observation
+#include "nsIDocShell.h"        // for reflow observation
 #ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
@@ -1593,19 +1594,25 @@ PresShell::NotifyReflowObservers(const char *aData)
 {
   if (!aData) { return NS_ERROR_NULL_POINTER; }
 
-  nsresult               observerResult = NS_OK;
-  nsCOMPtr<nsISupports>  pDocument;
+  nsresult               result = NS_OK;
+  nsCOMPtr<nsISupports>  pContainer;
+  nsCOMPtr<nsIDocShell>  pDocShell;
   nsAutoString           sTopic,
                          sData;
-  if (mDocument && mObserverService) {
-    pDocument = do_QueryInterface( mDocument,
-                                  &observerResult );
-    if (NS_SUCCEEDED( observerResult )) {
+
+
+  result = mPresContext->GetContainer( getter_AddRefs( pContainer ) );
+
+  if (NS_SUCCEEDED( result ) && pContainer) {
+    pDocShell = do_QueryInterface( pContainer,
+                                  &result );
+
+    if (NS_SUCCEEDED( result ) && pDocShell && mObserverService) {
       sTopic.AssignWithConversion( NS_PRESSHELL_REFLOW_TOPIC );
       sData.AssignWithConversion( aData );
-      observerResult = mObserverService->Notify( pDocument,
-                                                 sTopic.GetUnicode( ),
-                                                 sData.GetUnicode( ) );
+      result = mObserverService->Notify( pDocShell,
+                                         sTopic.GetUnicode( ),
+                                         sData.GetUnicode( ) );
       // notice that we don't really care what the observer service returns
     }
   }

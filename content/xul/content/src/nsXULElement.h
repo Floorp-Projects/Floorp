@@ -311,8 +311,7 @@ public:
 
  */
 
-class nsXULElement : public nsIStyledContent,
-                     public nsIXMLContent,
+class nsXULElement : public nsIXMLContent,
                      public nsIXULContent,
                      public nsIDOMXULElement,
                      public nsIDOMEventReceiver,
@@ -392,6 +391,13 @@ public:
     NS_IMETHOD GetBindingParent(nsIContent** aContent);
     NS_IMETHOD SetBindingParent(nsIContent* aParent);
   
+    // nsIXMLContent
+    NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
+    NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
+    NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
+    NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
+    NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
+
     // nsIStyledContent
     NS_IMETHOD GetID(nsIAtom*& aResult) const;
     NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
@@ -402,12 +408,6 @@ public:
     NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                         PRInt32& aHint) const;
 
-    // nsIXMLContent
-    NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
-    NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
-    NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
-    NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
-    NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
 
     // nsIXULContent
     NS_IMETHOD PeekChildCount(PRInt32& aCount) const;

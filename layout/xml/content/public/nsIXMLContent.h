@@ -24,7 +24,7 @@
 #define nsIXMLContent_h___
 
 #include "nsISupports.h"
-#include "nsIContent.h"
+#include "nsIStyledContent.h"
 
 class nsINameSpace;
 class nsINodeInfo;
@@ -37,7 +37,7 @@ class nsIWebShell;
 /**
  * XML content extensions to nsIContent
  */
-class nsIXMLContent : public nsIContent {
+class nsIXMLContent : public nsIStyledContent {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IXMLCONTENT_IID; return iid; }
   

@@ -792,6 +792,12 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
         PushContent(content);
       }
     }
+
+    // Set the ID attribute atom on the node info object for this node
+    nsCOMPtr<nsIAtom> IDAttr;
+    result = aNode.GetIDAttributeAtom(getter_AddRefs(IDAttr));
+    if (IDAttr && NS_SUCCEEDED(result))
+      result = nodeInfo->SetIDAttributeAtom(IDAttr);
   }
 
   return result;

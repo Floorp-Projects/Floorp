@@ -30,6 +30,7 @@
 #include "nsIXMLContent.h"
 #include "nsIJSScriptObject.h"
 #include "nsGenericXMLElement.h"
+#include "nsIStyledContent.h"
 
 class nsIDocument;
 class nsIAtom;
@@ -224,6 +225,15 @@ public:
     return mInner.GetNameSpacePrefix(aNameSpace);
   }
   NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
+
+  // nsIStyledContent
+  NS_IMETHOD GetID(nsIAtom*& aResult) const;
+  NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
+  NS_IMETHOD HasClass(nsIAtom* aClass) const;
+  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
+  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
 
   // nsIJSScriptObject
   virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp) {
