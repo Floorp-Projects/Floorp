@@ -244,6 +244,7 @@ nsStandardURL::Clone(nsIURI* *result)
     if (url->mSpec == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     *result = url;
+    NS_ADDREF(url);
     return NS_OK;
 }
 
