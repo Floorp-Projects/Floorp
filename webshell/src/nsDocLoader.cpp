@@ -61,6 +61,11 @@ static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
 #include <iostream.h>
 
+#include "nsIPref.h"
+#include "nsIURIContentListener.h"
+#include "nsIURILoader.h"
+#include "nsCURILoader.h"
+
 // XXX ick ick ick
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
@@ -147,6 +152,8 @@ public:
                   nsIInputStream *postDataStream,
                   const PRUnichar* aReferrer=nsnull);
 
+    nsresult BindWithChannel(nsIChannel *aChannel);
+
     // nsIStreamObserver methods:
     NS_DECL_NSISTREAMOBSERVER
 
@@ -186,6 +193,13 @@ public:
     static NS_IMETHODIMP Create(nsISupports *aOuter, const nsIID &aIID, void **aResult);
 
     NS_DECL_ISUPPORTS
+
+    NS_IMETHOD LoadOpenedDocument(nsIChannel * aOpenedChannel, 
+                                  const char * aCommand,
+                                  nsIContentViewerContainer *aContainer,
+                                  nsIInputStream * aPostDataStream,
+                                  nsIURI * aReffererUrl,
+                                  nsIStreamListener ** aContentHandler);
 
     // nsIDocumentLoader interface
     NS_IMETHOD LoadDocument(nsIURI * aUri, 
@@ -464,6 +478,52 @@ nsDocLoaderImpl::CreateContentViewer(const char *aCommand,
 }
 
 NS_IMETHODIMP
+nsDocLoaderImpl::LoadOpenedDocument(nsIChannel * aOpenedChannel, 
+                                  const char * aCommand,
+                                  nsIContentViewerContainer *aContainer,
+                                  nsIInputStream * aPostDataStream,
+                                  nsIURI * aReffererUrl,
+                                  nsIStreamListener ** aContentHandler)
+{
+  // mscott - there's a big flaw here...we'll proably need to reset the 
+  // loadgroupon the channel to theloadgroup associated with the content
+  // viewer container since that's the new guy whose actually going to be
+  // receiving the content
+  nsresult rv = NS_OK;
+  nsDocumentBindInfo* loader = nsnull;
+  if (!aOpenedChannel)
+    return NS_ERROR_NULL_POINTER;
+
+  NS_NEWXPCOM(loader, nsDocumentBindInfo);
+  if (nsnull == loader)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(loader);
+  loader->Init(this,           // DocLoader
+               aCommand,       // Command
+               aContainer,     // Viewer Container
+               /* aExtraInfo */ nsnull);    // Extra Info
+
+  rv = loader->BindWithChannel(aOpenedChannel);
+  loader->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aContentHandler);
+
+  /*
+   * Set the flag indicating that the document loader is in the process of
+   * loading a document.  This flag will remain set until the 
+   * OnConnectionsComplete(...) notification is fired for the loader...
+   */
+  mIsLoadingDocument = PR_TRUE;
+  return rv;
+}
+
+
+static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
+  // start up prefs
+  
+
+NS_IMETHODIMP
 nsDocLoaderImpl::LoadDocument(nsIURI * aUri, 
                               const char* aCommand,
                               nsISupports* aContainer,
@@ -474,6 +534,47 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
                               const PRUnichar* aReferrer)
 {
   nsresult rv = NS_OK;
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv); 
+  PRBool useURILoader = PR_FALSE;
+  if (NS_SUCCEEDED(rv))
+    prefs->GetBoolPref("browser.uriloader", &useURILoader);
+
+  nsXPIDLCString aUrlSpec;
+  // right now, uri dispatching is only hooked up to work with imap, mailbox and
+  //  news urls...so as a hack....check the protocol scheme and only call the 
+  // dispatching code for those schemes which work with uri dispatching...
+  if (useURILoader && aUri)
+  {
+    aUri->GetScheme(getter_Copies(aUrlSpec));   
+    if (nsCRT::strcasecmp(aUrlSpec, "imap") == 0
+      || nsCRT::strcasecmp(aUrlSpec, "news") == 0
+      || nsCRT::strcasecmp(aUrlSpec, "mailbox") == 0
+      || nsCRT::strcasecmp(aUrlSpec, "mailboxMessage") ==0
+      || nsCRT::strcasecmp(aUrlSpec, "mailto") == 0
+      || nsCRT::strcasecmp(aUrlSpec, "http") == 0)
+    {
+      nsCOMPtr<nsIProgressEventSink> progressSink = do_QueryInterface(aContainer);
+      nsCOMPtr<nsIURIContentListener> contentListener = do_QueryInterface(aContainer);
+      nsCOMPtr<nsISupports> aOpenContext = do_QueryInterface(mLoadGroup);
+
+      // let's try uri dispatching...
+      NS_WITH_SERVICE(nsIURILoader, pURILoader, kURILoaderCID, &rv);
+      if (NS_SUCCEEDED(rv)) 
+      {
+        rv = pURILoader->OpenURI(aUri, nsnull /* window target */, 
+                                 progressSink, contentListener,
+                                 nsnull /* refferring URI */, 
+                                 mLoadGroup, 
+                                 getter_AddRefs(aOpenContext));
+        if (aOpenContext)
+          mLoadGroup = do_QueryInterface(aOpenContext);
+      }
+      
+      return rv;
+    }
+  } // end try uri loader code
+
   nsDocumentBindInfo* loader = nsnull;
   if (!aUri)
     return NS_ERROR_NULL_POINTER;
@@ -1025,6 +1126,12 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
+nsresult nsDocumentBindInfo::BindWithChannel(nsIChannel *aChannel)
+{
+  m_DocLoader->SetDocumentChannel(aChannel);
+  return NS_OK;
+}
+
 nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, 
                                   nsILoadGroup *aLoadGroup,
                                   nsIInputStream *postDataStream,
@@ -1266,45 +1373,54 @@ nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
   // STREAM CONVERTERS
   ///////////////////////////////
 
-  nsXPIDLCString contentType;
-  rv = aChannel->GetContentType(getter_Copies(contentType));
-  if (NS_FAILED(rv)) return rv;
+  // if we are using the uri loader, it handles the stream converter work for us!
 
-  PRBool conversionRequired = PR_FALSE;
-  nsAutoString from, to;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv); 
+  PRBool useURILoader = PR_FALSE;
+  if (NS_SUCCEEDED(rv))
+    prefs->GetBoolPref("browser.uriloader", &useURILoader);
 
-  // Let's shanghai this channelListener's mNextListener if we want to convert the stream.
-  if (!PL_strcmp(contentType, "message/rfc822"))
+  if (!useURILoader)
   {
-	  from = "message/rfc822";
-	  to = "text/xul";
-	  conversionRequired = PR_TRUE;
-  }
-  else if (!PL_strcmp(contentType, "multipart/x-mixed-replace")) 
-  {
-	  from = "multipart/x-mixed-replace";
-	  to = "text/html";
-	  conversionRequired = PR_TRUE;
-  }
+    nsXPIDLCString contentType;
+    rv = aChannel->GetContentType(getter_Copies(contentType));
+    if (NS_FAILED(rv)) return rv;
 
-  if (conversionRequired)
-  {
+    PRBool conversionRequired = PR_FALSE;
+    nsAutoString from, to;
 
-	NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
-	if (NS_FAILED(rv)) return rv;
+    // Let's shanghai this channelListener's mNextListener if we want to convert the stream.
+    if (!nsCRT::strcasecmp(contentType, "message/rfc822"))
+    {
+	    from = "message/rfc822";
+	    to = "text/xul";
+	    conversionRequired = PR_TRUE;
+    }
+    else if (!nsCRT::strcasecmp(contentType, "multipart/x-mixed-replace")) 
+    {
+  	  from = "multipart/x-mixed-replace";
+	    to = "text/html";
+	    conversionRequired = PR_TRUE;
+    }
+  
+    if (conversionRequired)
+    {
+  
+	    NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
+	    if (NS_FAILED(rv)) return rv;
 
-    // The following call binds this channelListener's mNextListener (typically
-    // the nsDocumentBindInfo) to the underlying stream converter, and returns
-    // the underlying stream converter which we then set to be this channelListener's
-    // mNextListener. This effectively nestles the stream converter down right
-    // in between the raw stream and the final listener.
-    nsIStreamListener *converterListener = nsnull;
-    rv = StreamConvService->AsyncConvertData(from.GetUnicode(), to.GetUnicode(), mNextListener, aChannel,
-                                             &converterListener);
-    mNextListener = converterListener;
-	NS_IF_RELEASE(converterListener);
-  }
-
+      // The following call binds this channelListener's mNextListener (typically
+      // the nsDocumentBindInfo) to the underlying stream converter, and returns
+      // the underlying stream converter which we then set to be this channelListener's
+      // mNextListener. This effectively nestles the stream converter down right
+      // in between the raw stream and the final listener.
+      nsIStreamListener *converterListener = nsnull;
+      rv = StreamConvService->AsyncConvertData(from.GetUnicode(), to.GetUnicode(), mNextListener, aChannel,
+                                               &converterListener);
+      mNextListener = converterListener;
+	    NS_IF_RELEASE(converterListener);
+    }
+  } 
   //////////////////////////////
   // END STREAM CONVERTERS
   //////////////////////////////
