@@ -140,16 +140,19 @@ public:
         PR_CExitMonitor(mLockObject);
     }
 
-    PRStatus Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
-        return PR_CWait(mLockObject, interval);
+    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
+        return PR_CWait(mLockObject, interval) == PR_SUCCESS
+            ? NS_OK : NS_ERROR_FAILURE;
     }
 
-    PRStatus Notify() {
-        return PR_CNotify(mLockObject);
+    nsresult Notify() {
+        return PR_CNotify(mLockObject) == PR_SUCCESS
+            ? NS_OK : NS_ERROR_FAILURE;
     }
 
-    PRStatus NotifyAll() {
-        return PR_CNotifyAll(mLockObject);
+    nsresult NotifyAll() {
+        return PR_CNotifyAll(mLockObject) == PR_SUCCESS
+            ? NS_OK : NS_ERROR_FAILURE;
     }
 
 private:
