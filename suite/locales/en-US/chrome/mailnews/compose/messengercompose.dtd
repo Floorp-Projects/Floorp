@@ -1,15 +1,7 @@
 <!ENTITY msgComposeWindow.title "Message Compose">
 
-<!-- address labels -->
 <!ENTITY fromAddr.label "From:">
-<!ENTITY toAddr.label   "To:"> 
-<!ENTITY ccAddr.label   "Cc:"> 
-<!ENTITY bccAddr.label  "Bcc:"> 
-<!ENTITY replyAddr.label   "Reply:"> 
-<!ENTITY newsgroupsAddr.label   "Newsgroup:"> 
-<!ENTITY followupAddr.label   "Followup:"> 
 <!ENTITY subject.label  "Subject:">
-
 <!ENTITY attachments.label "Attachments:">
 
 <!-- menu items:  the . means that the menu item isn't implemented yet -->

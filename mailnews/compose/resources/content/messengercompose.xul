@@ -1,6 +1,7 @@
 <?xml version="1.0"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://messengercompose/content/addressingWidgetOverlay.xul"?>
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
@@ -249,64 +250,10 @@ Rights Reserved.
                                         </html:select> 
 				</box>
 				<spring style="height:0.5em"/>
-				<box align="horizontal" flex="100%">
-					<box align="vertical" flex="20%">
-						<box align="vertical" flex="100%">
-							<html:select id="msgRecipientType#1" flex="100%">
-							<html:option value="addr_to">&toAddr.label;</html:option>
-							<html:option value="addr_cc">&ccAddr.label;</html:option>
-							<html:option value="addr_bcc">&bccAddr.label;</html:option>
-							<html:option value="addr_reply">&replyAddr.label;</html:option>
-							<html:option value="addr_newsgroups">&newsgroupsAddr.label;</html:option>
-							<html:option value="addr_followup">&followupAddr.label;</html:option>
-							</html:select>
-						</box>
-						<box align="vertical" flex="100%">
-							<html:select id="msgRecipientType#2" flex="100%"/>
-						</box>
-						<box align="vertical" flex="100%">
-							<html:select id="msgRecipientType#3" flex="100%"/>
-						</box>
-						<box align="vertical" flex="100%">
-							<html:select id="msgRecipientType#4" flex="100%"/>
-						</box>
-						<box align="vertical" flex="100%">
-							<html:select id="msgRecipientType#5" flex="100%"/>
-						</box>
-					</box>
-					<box align="vertical" flex="80%">
-						<box align="vertical" flex="100%">
-							<html:input type="text" id="msgRecipient#1" flex="100%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#1',
-															  'msgRecipient#1'); }"/>
-						</box>					
-						<box align="vertical" flex="100%">
-							<html:input type="text" id="msgRecipient#2" flex="100%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#2',
-															  'msgRecipient#2'); }"/>
-						</box>					
-						<box align="vertical" flex="100%">
-							<html:input type="text" id="msgRecipient#3" flex="100%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#3',
-															  'msgRecipient#3'); }"/>
-						</box>					
-						<box align="vertical" flex="100%">
-							<html:input type="text" id="msgRecipient#4" flex="100%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#4',
-															  'msgRecipient#4'); }"/>
-						</box>					
-						<box align="vertical" flex="100%">
-							<html:input type="text" id="msgRecipient#5" flex="100%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#5',
-															  'msgRecipient#5'); }"/>
-						</box>					
-					</box>					
-				</box>
+
+				<!-- addressing widget -->
+				<box id="addressingWidget"/>
+				
 				<box align="horizontal" flex="100%">
 					<html:div flex="20%">&subject.label;</html:div>
 				    <html:input id="msgSubject" type="text" flex="80%" onkeyup="SetComposeWindowTitle(event.which);"/>
