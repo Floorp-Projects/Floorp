@@ -49,7 +49,11 @@
 # You can tweak ``win32.gnuplot.in'' to change the graph's output.
 #
 # You should use this with ``make --unix'' (which will use
-# sh.exe instead of cmd.exe to process commands).
+# sh.exe instead of cmd.exe to process commands); e.g.,
+#
+#   make --unix -f win32-gdf.mk \
+#     PROGRAM=winEmbed \
+#     BUSTER_URL="http://localhost/cgi-bin/buster.cgi?refresh=10"
 #
 # What You'll Need
 # ----------------
@@ -115,7 +119,11 @@ mozilla-ws.dat: mozilla.dat
 mozilla-pws.dat: mozilla.dat	
 	awk '{ print NR, $$2 / 1024; }' $? > $@
 
+# Build ``wm.exe'', the memory spy
+wm.exe: wm.cpp
+	cl wm.cpp advapi32.lib
+
 # Clean up the mess.
 clean:
-	rm -f *-gdf.png *~
+	rm -f wm.exe *-gdf.png *~
 
