@@ -3491,7 +3491,8 @@ function asyncFocusSearchBox(event)
 {
   var sidebar = document.getElementById("sidebar");
   var searchBox = sidebar.contentDocument.getElementById("search-box");
-  searchBox.focus();
+  if (searchBox)
+    searchBox.focus();
   sidebar.removeEventListener("load", asyncFocusSearchBox, true);
  }
 
