@@ -23,7 +23,7 @@
  * any improvements or extensions that they make and grant Carnegie the
  * rights to redistribute these changes.
  *
- *	$Id: XDisAsm.c,v 1.4 1999/02/26 09:10:34 fur%netscape.com Exp $
+ *	$Id: XDisAsm.c,v 1.5 1999/02/26 16:11:37 fur%netscape.com Exp $
  */
 
 /*
@@ -1152,7 +1152,7 @@ db_disasm(db_addr_t loc)
 	int	len;
 	struct i_addr	address;
 
-        // Point to first character in static disassembly buffer
+        /* Point to first character in static disassembly buffer */
         disasm_next = &disasm_buff[0];
 
 	get_value_inc(inst, loc, 1, FALSE);
