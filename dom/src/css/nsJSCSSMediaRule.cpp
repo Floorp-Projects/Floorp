@@ -43,7 +43,7 @@ NS_DEF_PTR(nsIDOMCSSMediaRule);
 //
 enum CSSMediaRule_slots {
   CSSMEDIARULE_MEDIATYPES = -1,
-  CSSMEDIARULE_RULES = -2
+  CSSMEDIARULE_CSSRULES = -2
 };
 
 /***********************************************************************/
@@ -75,10 +75,10 @@ GetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case CSSMEDIARULE_RULES:
+      case CSSMEDIARULE_CSSRULES:
       {
         nsIDOMCSSStyleRuleCollection* prop;
-        if (NS_OK == a->GetRules(&prop)) {
+        if (NS_OK == a->GetCssRules(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -246,17 +246,16 @@ ResolveCSSMediaRule(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method AddRule
+// Native method InsertRule
 //
 PR_STATIC_CALLBACK(JSBool)
-CSSMediaRuleAddRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+CSSMediaRuleInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSMediaRule *nativeThis = (nsIDOMCSSMediaRule*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   PRUint32 nativeRet;
   nsAutoString b0;
-  nsAutoString b1;
-  PRUint32 b2;
+  PRUint32 b1;
 
   *rval = JSVAL_NULL;
 
@@ -265,7 +264,7 @@ CSSMediaRuleAddRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  if (argc >= 2) {
 
     JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
     if (nsnull != jsstring0) {
@@ -275,27 +274,19 @@ CSSMediaRuleAddRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
       b0.SetString("");   // Should this really be null?? 
     }
 
-    JSString *jsstring1 = JS_ValueToString(cx, argv[1]);
-    if (nsnull != jsstring1) {
-      b1.SetString(JS_GetStringChars(jsstring1));
-    }
-    else {
-      b1.SetString("");   // Should this really be null?? 
-    }
-
-    if (!JS_ValueToInt32(cx, argv[2], (int32 *)&b2)) {
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
       JS_ReportError(cx, "Parameter must be a number");
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->AddRule(b0, b1, b2, &nativeRet)) {
+    if (NS_OK != nativeThis->InsertRule(b0, b1, &nativeRet)) {
       return JS_FALSE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else {
-    JS_ReportError(cx, "Function addRule requires 3 parameters");
+    JS_ReportError(cx, "Function insertRule requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -304,10 +295,10 @@ CSSMediaRuleAddRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
 
 //
-// Native method RemoveRule
+// Native method DeleteRule
 //
 PR_STATIC_CALLBACK(JSBool)
-CSSMediaRuleRemoveRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+CSSMediaRuleDeleteRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSMediaRule *nativeThis = (nsIDOMCSSMediaRule*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
@@ -327,14 +318,14 @@ CSSMediaRuleRemoveRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->RemoveRule(b0)) {
+    if (NS_OK != nativeThis->DeleteRule(b0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function removeRule requires 1 parameters");
+    JS_ReportError(cx, "Function deleteRule requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -366,7 +357,7 @@ JSClass CSSMediaRuleClass = {
 static JSPropertySpec CSSMediaRuleProperties[] =
 {
   {"mediaTypes",    CSSMEDIARULE_MEDIATYPES,    JSPROP_ENUMERATE},
-  {"rules",    CSSMEDIARULE_RULES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"cssRules",    CSSMEDIARULE_CSSRULES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -376,8 +367,8 @@ static JSPropertySpec CSSMediaRuleProperties[] =
 //
 static JSFunctionSpec CSSMediaRuleMethods[] = 
 {
-  {"addRule",          CSSMediaRuleAddRule,     3},
-  {"removeRule",          CSSMediaRuleRemoveRule,     1},
+  {"insertRule",          CSSMediaRuleInsertRule,     2},
+  {"deleteRule",          CSSMediaRuleDeleteRule,     1},
   {0}
 };
 
@@ -410,7 +401,7 @@ nsresult NS_InitCSSMediaRuleClass(nsIScriptContext *aContext, void **aPrototype)
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitCSSStyleRuleClass(aContext, (void **)&parent_proto)) {
+    if (NS_OK != NS_InitCSSRuleClass(aContext, (void **)&parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     proto = JS_InitClass(jscontext,     // context

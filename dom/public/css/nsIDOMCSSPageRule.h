@@ -23,7 +23,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
-#include "nsIDOMCSSStyleRule.h"
+#include "nsIDOMCSSRule.h"
 
 class nsIDOMCSSStyleDeclaration;
 
@@ -31,11 +31,11 @@ class nsIDOMCSSStyleDeclaration;
  { 0xa6cf90bd, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMCSSPageRule : public nsIDOMCSSStyleRule {
+class nsIDOMCSSPageRule : public nsIDOMCSSRule {
 public:
 
-  NS_IMETHOD    GetSelectorText(nsString& aSelectorText)=0;
-  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText)=0;
+  NS_IMETHOD    GetName(nsString& aName)=0;
+  NS_IMETHOD    SetName(const nsString& aName)=0;
 
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
   NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle)=0;
@@ -43,16 +43,16 @@ public:
 
 
 #define NS_DECL_IDOMCSSPAGERULE   \
-  NS_IMETHOD    GetSelectorText(nsString& aSelectorText);  \
-  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText);  \
+  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    SetName(const nsString& aName);  \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
   NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle);  \
 
 
 
 #define NS_FORWARD_IDOMCSSPAGERULE(_to)  \
-  NS_IMETHOD    GetSelectorText(nsString& aSelectorText) { return _to##GetSelectorText(aSelectorText); } \
-  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText) { return _to##SetSelectorText(aSelectorText); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to##GetStyle(aStyle); } \
   NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle) { return _to##SetStyle(aStyle); } \
 

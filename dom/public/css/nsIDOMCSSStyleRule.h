@@ -23,26 +23,38 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "nsIDOMCSSRule.h"
 
+class nsIDOMCSSStyleDeclaration;
 
 #define NS_IDOMCSSSTYLERULE_IID \
  { 0xa6cf90bf, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMCSSStyleRule : public nsISupports {
+class nsIDOMCSSStyleRule : public nsIDOMCSSRule {
 public:
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
+  NS_IMETHOD    GetSelectorText(nsString& aSelectorText)=0;
+  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText)=0;
+
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
+  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle)=0;
 };
 
 
 #define NS_DECL_IDOMCSSSTYLERULE   \
-  NS_IMETHOD    GetType(nsString& aType);  \
+  NS_IMETHOD    GetSelectorText(nsString& aSelectorText);  \
+  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText);  \
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
+  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle);  \
 
 
 
 #define NS_FORWARD_IDOMCSSSTYLERULE(_to)  \
-  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
+  NS_IMETHOD    GetSelectorText(nsString& aSelectorText) { return _to##GetSelectorText(aSelectorText); } \
+  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText) { return _to##SetSelectorText(aSelectorText); } \
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to##GetStyle(aStyle); } \
+  NS_IMETHOD    SetStyle(nsIDOMCSSStyleDeclaration* aStyle) { return _to##SetStyle(aStyle); } \
 
 
 extern nsresult NS_InitCSSStyleRuleClass(nsIScriptContext *aContext, void **aPrototype);

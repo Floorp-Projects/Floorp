@@ -3,17 +3,15 @@
  /* IID: { 0xa6cf90c2, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-      readonly attribute HTMLElement owningElement;
-      readonly attribute CSSStyleSheet parentStyleSheet;
-      readonly attribute wstring href;
-      readonly attribute wstring title;
+      readonly attribute Node owningNode; 
+      readonly attribute StyleSheet parentStyleSheet; 
+      readonly attribute wstring href; 
+      readonly attribute wstring title; 
+      readonly attribute wstring media; 
 
-      readonly attribute StyleSheetCollection imports;
-      readonly attribute CSSStyleRuleCollection rules;
+      readonly attribute CSSStyleRuleCollection cssRules; 
 
-      unsigned long addRule(in wstring selector, in wstring declaration, in unsigned long index);
-      unsigned long addImport(in wstring url, in unsigned long index);
-      void removeRule(in unsigned long index);
-      void removeImport(in unsigned long index);
+      unsigned long insertRule(in wstring rule, in unsigned long index); 
+      void deleteRule(in unsigned long index); 
     };
 

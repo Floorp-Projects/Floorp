@@ -25,34 +25,25 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMCSSFontFaceRule.h"
+#include "nsIDOMCSSUnknownRule.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
-static NS_DEFINE_IID(kICSSFontFaceRuleIID, NS_IDOMCSSFONTFACERULE_IID);
+static NS_DEFINE_IID(kICSSUnknownRuleIID, NS_IDOMCSSUNKNOWNRULE_IID);
 
-NS_DEF_PTR(nsIDOMCSSStyleDeclaration);
-NS_DEF_PTR(nsIDOMCSSFontFaceRule);
+NS_DEF_PTR(nsIDOMCSSUnknownRule);
 
-//
-// CSSFontFaceRule property ids
-//
-enum CSSFontFaceRule_slots {
-  CSSFONTFACERULE_STYLE = -1
-};
 
 /***********************************************************************/
 //
-// CSSFontFaceRule Properties Getter
+// CSSUnknownRule Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-GetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetCSSUnknownRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSFontFaceRule *a = (nsIDOMCSSFontFaceRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSUnknownRule *a = (nsIDOMCSSUnknownRule*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -61,33 +52,7 @@ GetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case CSSFONTFACERULE_STYLE:
-      {
-        nsIDOMCSSStyleDeclaration* prop;
-        if (NS_OK == a->GetStyle(&prop)) {
-          // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
+      case 0:
       default:
       {
         nsIJSScriptObject *object;
@@ -115,12 +80,12 @@ GetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// CSSFontFaceRule Properties Setter
+// CSSUnknownRule Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-SetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetCSSUnknownRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSFontFaceRule *a = (nsIDOMCSSFontFaceRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSUnknownRule *a = (nsIDOMCSSUnknownRule*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -129,29 +94,7 @@ SetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case CSSFONTFACERULE_STYLE:
-      {
-        nsIDOMCSSStyleDeclaration* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kICSSStyleDeclarationIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type CSSStyleDeclaration");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetStyle(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
+      case 0:
       default:
       {
         nsIJSScriptObject *object;
@@ -179,12 +122,12 @@ SetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// CSSFontFaceRule finalizer
+// CSSUnknownRule finalizer
 //
 PR_STATIC_CALLBACK(void)
-FinalizeCSSFontFaceRule(JSContext *cx, JSObject *obj)
+FinalizeCSSUnknownRule(JSContext *cx, JSObject *obj)
 {
-  nsIDOMCSSFontFaceRule *a = (nsIDOMCSSFontFaceRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSUnknownRule *a = (nsIDOMCSSUnknownRule*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -200,12 +143,12 @@ FinalizeCSSFontFaceRule(JSContext *cx, JSObject *obj)
 
 
 //
-// CSSFontFaceRule enumerate
+// CSSUnknownRule enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-EnumerateCSSFontFaceRule(JSContext *cx, JSObject *obj)
+EnumerateCSSUnknownRule(JSContext *cx, JSObject *obj)
 {
-  nsIDOMCSSFontFaceRule *a = (nsIDOMCSSFontFaceRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSUnknownRule *a = (nsIDOMCSSUnknownRule*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -220,12 +163,12 @@ EnumerateCSSFontFaceRule(JSContext *cx, JSObject *obj)
 
 
 //
-// CSSFontFaceRule resolve
+// CSSUnknownRule resolve
 //
 PR_STATIC_CALLBACK(JSBool)
-ResolveCSSFontFaceRule(JSContext *cx, JSObject *obj, jsval id)
+ResolveCSSUnknownRule(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMCSSFontFaceRule *a = (nsIDOMCSSFontFaceRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSUnknownRule *a = (nsIDOMCSSUnknownRule*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -241,55 +184,54 @@ ResolveCSSFontFaceRule(JSContext *cx, JSObject *obj, jsval id)
 
 /***********************************************************************/
 //
-// class for CSSFontFaceRule
+// class for CSSUnknownRule
 //
-JSClass CSSFontFaceRuleClass = {
-  "CSSFontFaceRule", 
+JSClass CSSUnknownRuleClass = {
+  "CSSUnknownRule", 
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
-  GetCSSFontFaceRuleProperty,
-  SetCSSFontFaceRuleProperty,
-  EnumerateCSSFontFaceRule,
-  ResolveCSSFontFaceRule,
+  GetCSSUnknownRuleProperty,
+  SetCSSUnknownRuleProperty,
+  EnumerateCSSUnknownRule,
+  ResolveCSSUnknownRule,
   JS_ConvertStub,
-  FinalizeCSSFontFaceRule
+  FinalizeCSSUnknownRule
 };
 
 
 //
-// CSSFontFaceRule class properties
+// CSSUnknownRule class properties
 //
-static JSPropertySpec CSSFontFaceRuleProperties[] =
-{
-  {"style",    CSSFONTFACERULE_STYLE,    JSPROP_ENUMERATE},
-  {0}
-};
-
-
-//
-// CSSFontFaceRule class methods
-//
-static JSFunctionSpec CSSFontFaceRuleMethods[] = 
+static JSPropertySpec CSSUnknownRuleProperties[] =
 {
   {0}
 };
 
 
 //
-// CSSFontFaceRule constructor
+// CSSUnknownRule class methods
+//
+static JSFunctionSpec CSSUnknownRuleMethods[] = 
+{
+  {0}
+};
+
+
+//
+// CSSUnknownRule constructor
 //
 PR_STATIC_CALLBACK(JSBool)
-CSSFontFaceRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+CSSUnknownRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_FALSE;
 }
 
 
 //
-// CSSFontFaceRule class initialization
+// CSSUnknownRule class initialization
 //
-nsresult NS_InitCSSFontFaceRuleClass(nsIScriptContext *aContext, void **aPrototype)
+nsresult NS_InitCSSUnknownRuleClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
@@ -298,7 +240,7 @@ nsresult NS_InitCSSFontFaceRuleClass(nsIScriptContext *aContext, void **aPrototy
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "CSSFontFaceRule", &vp)) ||
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "CSSUnknownRule", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
@@ -310,11 +252,11 @@ nsresult NS_InitCSSFontFaceRuleClass(nsIScriptContext *aContext, void **aPrototy
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
-                         &CSSFontFaceRuleClass,      // JSClass
-                         CSSFontFaceRule,            // JSNative ctor
+                         &CSSUnknownRuleClass,      // JSClass
+                         CSSUnknownRule,            // JSNative ctor
                          0,             // ctor args
-                         CSSFontFaceRuleProperties,  // proto props
-                         CSSFontFaceRuleMethods,     // proto funcs
+                         CSSUnknownRuleProperties,  // proto props
+                         CSSUnknownRuleMethods,     // proto funcs
                          nsnull,        // ctor props (static)
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
@@ -337,17 +279,17 @@ nsresult NS_InitCSSFontFaceRuleClass(nsIScriptContext *aContext, void **aPrototy
 
 
 //
-// Method for creating a new CSSFontFaceRule JavaScript object
+// Method for creating a new CSSUnknownRule JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptCSSFontFaceRule(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptCSSUnknownRule(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptCSSFontFaceRule");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptCSSUnknownRule");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   nsresult result = NS_OK;
-  nsIDOMCSSFontFaceRule *aCSSFontFaceRule;
+  nsIDOMCSSUnknownRule *aCSSUnknownRule;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -363,23 +305,23 @@ extern "C" NS_DOM nsresult NS_NewScriptCSSFontFaceRule(nsIScriptContext *aContex
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitCSSFontFaceRuleClass(aContext, (void **)&proto)) {
+  if (NS_OK != NS_InitCSSUnknownRuleClass(aContext, (void **)&proto)) {
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(kICSSFontFaceRuleIID, (void **)&aCSSFontFaceRule);
+  result = aSupports->QueryInterface(kICSSUnknownRuleIID, (void **)&aCSSUnknownRule);
   if (NS_OK != result) {
     return result;
   }
 
   // create a js object for this class
-  *aReturn = JS_NewObject(jscontext, &CSSFontFaceRuleClass, proto, parent);
+  *aReturn = JS_NewObject(jscontext, &CSSUnknownRuleClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aCSSFontFaceRule);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aCSSUnknownRule);
   }
   else {
-    NS_RELEASE(aCSSFontFaceRule);
+    NS_RELEASE(aCSSUnknownRule);
     return NS_ERROR_FAILURE; 
   }
 

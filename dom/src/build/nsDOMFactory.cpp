@@ -101,9 +101,9 @@
 #include "nsIDOMNavigator.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMStyleSheetCollection.h"
-#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMCSS2Properties.h"
 #include "nsIDOMCSSStyleSheet.h"
-#include "nsIDOMCSSStyleRuleSimple.h"
+#include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMCSSStyleRuleCollection.h"
 #include "plhash.h"
 
@@ -687,10 +687,10 @@ void XXXDomNeverCalled()
   NS_NewScriptNavigator(0, 0, 0, 0);
   NS_NewScriptLocation(0, 0, 0, 0);
   NS_NewScriptEventListener(0, 0, 0);
-  NS_NewScriptCSSStyleDeclaration(0, 0, 0, 0);
+  NS_NewScriptCSS2Properties(0, 0, 0, 0);
   NS_NewScriptCSSStyleSheet(0, 0, 0, 0);
-  NS_NewScriptCSSStyleRuleSimple(0, 0, 0, 0);
   NS_NewScriptStyleSheetCollection(0, 0, 0, 0);
+  NS_NewScriptCSSStyleRule(0, 0, 0, 0);
   NS_NewScriptCSSStyleRuleCollection(0, 0, 0, 0);
   NET_InitJavaScriptProtocol();
 }

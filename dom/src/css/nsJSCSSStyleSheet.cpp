@@ -25,8 +25,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMHTMLElement.h"
-#include "nsIDOMStyleSheetCollection.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMStyleSheet.h"
 #include "nsIDOMCSSStyleRuleCollection.h"
 #include "nsIDOMCSSStyleSheet.h"
 
@@ -34,13 +34,13 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
-static NS_DEFINE_IID(kIStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_IID);
+static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 static NS_DEFINE_IID(kICSSStyleRuleCollectionIID, NS_IDOMCSSSTYLERULECOLLECTION_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
 
-NS_DEF_PTR(nsIDOMHTMLElement);
-NS_DEF_PTR(nsIDOMStyleSheetCollection);
+NS_DEF_PTR(nsIDOMNode);
+NS_DEF_PTR(nsIDOMStyleSheet);
 NS_DEF_PTR(nsIDOMCSSStyleRuleCollection);
 NS_DEF_PTR(nsIDOMCSSStyleSheet);
 
@@ -48,12 +48,12 @@ NS_DEF_PTR(nsIDOMCSSStyleSheet);
 // CSSStyleSheet property ids
 //
 enum CSSStyleSheet_slots {
-  CSSSTYLESHEET_OWNINGELEMENT = -1,
+  CSSSTYLESHEET_OWNINGNODE = -1,
   CSSSTYLESHEET_PARENTSTYLESHEET = -2,
   CSSSTYLESHEET_HREF = -3,
   CSSSTYLESHEET_TITLE = -4,
-  CSSSTYLESHEET_IMPORTS = -5,
-  CSSSTYLESHEET_RULES = -6
+  CSSSTYLESHEET_MEDIA = -5,
+  CSSSTYLESHEET_CSSRULES = -6
 };
 
 /***********************************************************************/
@@ -72,10 +72,10 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case CSSSTYLESHEET_OWNINGELEMENT:
+      case CSSSTYLESHEET_OWNINGNODE:
       {
-        nsIDOMHTMLElement* prop;
-        if (NS_OK == a->GetOwningElement(&prop)) {
+        nsIDOMNode* prop;
+        if (NS_OK == a->GetOwningNode(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -101,7 +101,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case CSSSTYLESHEET_PARENTSTYLESHEET:
       {
-        nsIDOMCSSStyleSheet* prop;
+        nsIDOMStyleSheet* prop;
         if (NS_OK == a->GetParentStyleSheet(&prop)) {
           // get the js object
           if (prop != nsnull) {
@@ -152,37 +152,23 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case CSSSTYLESHEET_IMPORTS:
+      case CSSSTYLESHEET_MEDIA:
       {
-        nsIDOMStyleSheetCollection* prop;
-        if (NS_OK == a->GetImports(&prop)) {
-          // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+        nsAutoString prop;
+        if (NS_OK == a->GetMedia(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
         }
         else {
           return JS_FALSE;
         }
         break;
       }
-      case CSSSTYLESHEET_RULES:
+      case CSSSTYLESHEET_CSSRULES:
       {
         nsIDOMCSSStyleRuleCollection* prop;
-        if (NS_OK == a->GetRules(&prop)) {
+        if (NS_OK == a->GetCssRules(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -336,68 +322,10 @@ ResolveCSSStyleSheet(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method AddRule
+// Native method InsertRule
 //
 PR_STATIC_CALLBACK(JSBool)
-CSSStyleSheetAddRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMCSSStyleSheet *nativeThis = (nsIDOMCSSStyleSheet*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  PRUint32 nativeRet;
-  nsAutoString b0;
-  nsAutoString b1;
-  PRUint32 b2;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 3) {
-
-    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
-    if (nsnull != jsstring0) {
-      b0.SetString(JS_GetStringChars(jsstring0));
-    }
-    else {
-      b0.SetString("");   // Should this really be null?? 
-    }
-
-    JSString *jsstring1 = JS_ValueToString(cx, argv[1]);
-    if (nsnull != jsstring1) {
-      b1.SetString(JS_GetStringChars(jsstring1));
-    }
-    else {
-      b1.SetString("");   // Should this really be null?? 
-    }
-
-    if (!JS_ValueToInt32(cx, argv[2], (int32 *)&b2)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->AddRule(b0, b1, b2, &nativeRet)) {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else {
-    JS_ReportError(cx, "Function addRule requires 3 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method AddImport
-//
-PR_STATIC_CALLBACK(JSBool)
-CSSStyleSheetAddImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+CSSStyleSheetInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleSheet *nativeThis = (nsIDOMCSSStyleSheet*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
@@ -427,14 +355,14 @@ CSSStyleSheetAddImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->AddImport(b0, b1, &nativeRet)) {
+    if (NS_OK != nativeThis->InsertRule(b0, b1, &nativeRet)) {
       return JS_FALSE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else {
-    JS_ReportError(cx, "Function addImport requires 2 parameters");
+    JS_ReportError(cx, "Function insertRule requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -443,10 +371,10 @@ CSSStyleSheetAddImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
 
 //
-// Native method RemoveRule
+// Native method DeleteRule
 //
 PR_STATIC_CALLBACK(JSBool)
-CSSStyleSheetRemoveRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+CSSStyleSheetDeleteRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCSSStyleSheet *nativeThis = (nsIDOMCSSStyleSheet*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
@@ -466,53 +394,14 @@ CSSStyleSheetRemoveRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->RemoveRule(b0)) {
+    if (NS_OK != nativeThis->DeleteRule(b0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function removeRule requires 1 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method RemoveImport
-//
-PR_STATIC_CALLBACK(JSBool)
-CSSStyleSheetRemoveImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMCSSStyleSheet *nativeThis = (nsIDOMCSSStyleSheet*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  PRUint32 b0;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 1) {
-
-    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->RemoveImport(b0)) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function removeImport requires 1 parameters");
+    JS_ReportError(cx, "Function deleteRule requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -543,12 +432,12 @@ JSClass CSSStyleSheetClass = {
 //
 static JSPropertySpec CSSStyleSheetProperties[] =
 {
-  {"owningElement",    CSSSTYLESHEET_OWNINGELEMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"owningNode",    CSSSTYLESHEET_OWNINGNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"parentStyleSheet",    CSSSTYLESHEET_PARENTSTYLESHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"href",    CSSSTYLESHEET_HREF,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"title",    CSSSTYLESHEET_TITLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"imports",    CSSSTYLESHEET_IMPORTS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"rules",    CSSSTYLESHEET_RULES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"media",    CSSSTYLESHEET_MEDIA,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"cssRules",    CSSSTYLESHEET_CSSRULES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -558,10 +447,8 @@ static JSPropertySpec CSSStyleSheetProperties[] =
 //
 static JSFunctionSpec CSSStyleSheetMethods[] = 
 {
-  {"addRule",          CSSStyleSheetAddRule,     3},
-  {"addImport",          CSSStyleSheetAddImport,     2},
-  {"removeRule",          CSSStyleSheetRemoveRule,     1},
-  {"removeImport",          CSSStyleSheetRemoveImport,     1},
+  {"insertRule",          CSSStyleSheetInsertRule,     2},
+  {"deleteRule",          CSSStyleSheetDeleteRule,     1},
   {0}
 };
 

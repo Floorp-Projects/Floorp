@@ -21,14 +21,17 @@ IGNORE_MANIFEST=1
 MODULE=raptor 
 
 IDLSRCS =  \
+  CSS2Properties.idl \
 	CSSFontFaceRule.idl \
+  CSSImportRule.idl \
 	CSSMediaRule.idl \
 	CSSPageRule.idl \
+	CSSRule.idl \
 	CSSStyleDeclaration.idl \
 	CSSStyleRule.idl \
 	CSSStyleRuleCollection.idl \
-	CSSStyleRuleSimple.idl \
-	CSSStyleSheet.idl
+	CSSStyleSheet.idl \
+  CSSUnknownRule.idl
 
 XPCOM_DESTDIR=$(DEPTH)\dom\public\css
 JSSTUB_DESTDIR=$(DEPTH)\dom\src\css

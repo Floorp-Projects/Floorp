@@ -23,7 +23,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
-#include "nsIDOMCSSStyleRule.h"
+#include "nsIDOMCSSRule.h"
 
 class nsIDOMCSSStyleRuleCollection;
 
@@ -31,35 +31,35 @@ class nsIDOMCSSStyleRuleCollection;
  { 0xa6cf90bc, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMCSSMediaRule : public nsIDOMCSSStyleRule {
+class nsIDOMCSSMediaRule : public nsIDOMCSSRule {
 public:
 
   NS_IMETHOD    GetMediaTypes(nsString& aMediaTypes)=0;
   NS_IMETHOD    SetMediaTypes(const nsString& aMediaTypes)=0;
 
-  NS_IMETHOD    GetRules(nsIDOMCSSStyleRuleCollection** aRules)=0;
+  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules)=0;
 
-  NS_IMETHOD    AddRule(const nsString& aSelector, const nsString& aDeclaration, PRUint32 aIndex, PRUint32* aReturn)=0;
+  NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn)=0;
 
-  NS_IMETHOD    RemoveRule(PRUint32 aIndex)=0;
+  NS_IMETHOD    DeleteRule(PRUint32 aIndex)=0;
 };
 
 
 #define NS_DECL_IDOMCSSMEDIARULE   \
   NS_IMETHOD    GetMediaTypes(nsString& aMediaTypes);  \
   NS_IMETHOD    SetMediaTypes(const nsString& aMediaTypes);  \
-  NS_IMETHOD    GetRules(nsIDOMCSSStyleRuleCollection** aRules);  \
-  NS_IMETHOD    AddRule(const nsString& aSelector, const nsString& aDeclaration, PRUint32 aIndex, PRUint32* aReturn);  \
-  NS_IMETHOD    RemoveRule(PRUint32 aIndex);  \
+  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules);  \
+  NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn);  \
+  NS_IMETHOD    DeleteRule(PRUint32 aIndex);  \
 
 
 
 #define NS_FORWARD_IDOMCSSMEDIARULE(_to)  \
   NS_IMETHOD    GetMediaTypes(nsString& aMediaTypes) { return _to##GetMediaTypes(aMediaTypes); } \
   NS_IMETHOD    SetMediaTypes(const nsString& aMediaTypes) { return _to##SetMediaTypes(aMediaTypes); } \
-  NS_IMETHOD    GetRules(nsIDOMCSSStyleRuleCollection** aRules) { return _to##GetRules(aRules); } \
-  NS_IMETHOD    AddRule(const nsString& aSelector, const nsString& aDeclaration, PRUint32 aIndex, PRUint32* aReturn) { return _to##AddRule(aSelector, aDeclaration, aIndex, aReturn); }  \
-  NS_IMETHOD    RemoveRule(PRUint32 aIndex) { return _to##RemoveRule(aIndex); }  \
+  NS_IMETHOD    GetCssRules(nsIDOMCSSStyleRuleCollection** aCssRules) { return _to##GetCssRules(aCssRules); } \
+  NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn) { return _to##InsertRule(aRule, aIndex, aReturn); }  \
+  NS_IMETHOD    DeleteRule(PRUint32 aIndex) { return _to##DeleteRule(aIndex); }  \
 
 
 extern nsresult NS_InitCSSMediaRuleClass(nsIScriptContext *aContext, void **aPrototype);

@@ -23,7 +23,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
-#include "nsIDOMCSSStyleRule.h"
+#include "nsIDOMCSSRule.h"
 
 class nsIDOMCSSStyleDeclaration;
 
@@ -31,7 +31,7 @@ class nsIDOMCSSStyleDeclaration;
  { 0xa6cf90bb, 0x15b3, 0x11d2, \
    { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMCSSFontFaceRule : public nsIDOMCSSStyleRule {
+class nsIDOMCSSFontFaceRule : public nsIDOMCSSRule {
 public:
 
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
