@@ -34,12 +34,38 @@ function SubscribeOnLoad()
 
 		var folders = folder.GetSubFolders();
 		
+		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
+
+		var datasource = rdf.GetDataSource('rdf:newshostinfo');
+
 		if (folders) {
 			try {
 				while (true) {
 					var i = folders.currentItem();
 					var f = i.QueryInterface(Components.interfaces.nsIMsgFolder);
 					dump(f.URI+ "\n");
+					dump(f.name + "\n");
+
+					dump('urn:' + f.name + "\n");
+					var group = rdf.GetResource('urn:' + f.name);
+					dump(group + "\n");
+
+                    var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#subscribed", true);
+					var target = datasource.GetTarget(group, prop, true);
+					dump(target + "\n");
+					if (target) {
+						var targetValue = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+						//dump(targetValue + "\n");
+                    	if (targetValue) {
+							targetValue = targetValue.Value;
+							dump(targetValue + "\n");
+							if (targetValue) {
+								var newLiteral = rdf.GetLiteral("true");
+								var newTarget = newLiteral.QueryInterface(Components.interfaces.nsIRDFNode);
+								datasource.Change(group,prop,target,newTarget);
+							}
+						}
+					}
 					folders.next();
 				}
 			}
@@ -81,5 +107,5 @@ function UnsubscribeButtonClicked()
 function SubscribeOnClick(event)
 {
 	dump("subscribe tree clicked\n");
-	dump(event + "\n");
+	dump(event.target.parentNode.parentNode.getAttribute("id") + "\n");
 }
