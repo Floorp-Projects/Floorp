@@ -717,6 +717,8 @@ pref("update_notifications.enabled", true);
 pref("update_notifications.provider.0.frequency", 7); // number of days
 pref("update_notifications.provider.0.datasource", "chrome://communicator-region/locale/region.properties");
 
+pref("browser.downloadmanager.behavior", 0);
+
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);
 

@@ -41,6 +41,10 @@
 
 #include "nsIDownload.h"
 #include "nsIDownloadManager.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+
+#define DOWNLOAD_MANAGER_BEHAVIOR_PREF "browser.downloadmanager.behavior"
 
 class nsDownloadProxy : public nsIDownload,
                         public nsIWebProgressListener
@@ -64,12 +68,22 @@ public:
     
     rv = dm->AddDownload(aSource, aTarget, aDisplayName, aOpeningWith, aStartTime, aPersist, getter_AddRefs(mInner));
     if (NS_FAILED(rv)) return rv;
-    
-    nsCAutoString path;
-    rv = aTarget->GetNativePath(path);
-    if (NS_FAILED(rv)) return rv;
 
-    return dm->OpenProgressDialogFor(path.get(), nsnull);
+    PRInt32 behavior = 0;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+
+    branch->GetIntPref(DOWNLOAD_MANAGER_BEHAVIOR_PREF, &behavior);
+    if (behavior == 0)
+      return dm->Open(nsnull);
+    if (behavior == 1) {
+      nsCAutoString path;
+      rv = aTarget->GetNativePath(path);
+      if (NS_FAILED(rv)) return rv;
+      return dm->OpenProgressDialogFor(path.get(), nsnull);
+    }
+    return rv;
   }
 
  
