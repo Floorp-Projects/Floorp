@@ -2426,6 +2426,9 @@ main(int argc, char **argv)
     fclose(outfile);
 #endif
     fflush(stdout);
+    if (NSS_Shutdown() != SECSuccess) {
+        exit(1);
+    }
     return 0;
 }
 

@@ -34,7 +34,7 @@
 /*
  * p7verify -- A command to do a verification of a *detached* pkcs7 signature.
  *
- * $Id: p7verify.c,v 1.7 2001/09/20 21:59:11 relyea%netscape.com Exp $
+ * $Id: p7verify.c,v 1.8 2003/01/07 22:50:27 bishakhabanerjee%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -295,6 +295,10 @@ main(int argc, char **argv)
 			    certUsage, progName)) {
 	SECU_PrintError(progName, "problem decoding/verifying signature");
 	return -1;
+    }
+
+    if (NSS_Shutdown() != SECSuccess) {
+        exit(1);
     }
 
     return 0;

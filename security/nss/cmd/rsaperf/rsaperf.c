@@ -394,5 +394,9 @@ main(int argc, char **argv)
     TimingDivide(timeCtx, iters);
     printf("one operation every %s\n", TimingGenerateString(timeCtx));
 
+    if (NSS_Shutdown() != SECSuccess) {
+        exit(1);
+    }
+
     return 0;
 }

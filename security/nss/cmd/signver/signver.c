@@ -446,5 +446,10 @@ int main(int argc, char **argv)
 				   progName, SECU_ErrorString((int16)PORT_GetError()));
 		return -1;
 	}
+
+       if (NSS_Shutdown() != SECSuccess) {
+           exit(1);
+       }
+
 	return 0;
 }
