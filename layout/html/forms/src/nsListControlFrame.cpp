@@ -524,6 +524,18 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       aReflowState.reflowCommand->GetType(type);
       firstPassState.reason = eReflowReason_StyleChange;
       firstPassState.reflowCommand = nsnull;
+    } else {
+      nsresult res = nsScrollFrame::Reflow(aPresContext, 
+                                           scrolledAreaDesiredSize,
+                                           aReflowState, 
+                                           aStatus);
+      if (NS_FAILED(res)) {
+        return res;
+      }
+      nsIReflowCommand::ReflowType type;
+      aReflowState.reflowCommand->GetType(type);
+      firstPassState.reason = eReflowReason_StyleChange;
+      firstPassState.reflowCommand = nsnull;
     }
   }
 
@@ -617,13 +629,45 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   PRInt32 heightOfARow = scrolledAreaDesiredSize.maxElementSize->height;
   heightOfARow -= (border.top + border.bottom + padding.top + padding.bottom);
 
-  // Check to see if we have zero item and
-  // whether we have no width and height
-  // The following code measures the width and height 
-  // of a bogus string so the list actually displays
+  // Check to see if we have zero items 
   PRInt32 length = 0;
   GetNumberOfOptions(&length);
 
+  // If there is only one option and that option's content is empty
+  // then heightOfARow is zero, so we need to go measure 
+  // the height of the option as if it had some text.
+  if (heightOfARow == 0 && length > 0) {
+    nsIContent * option = GetOptionContent(0);
+    if (option != nsnull) {
+      nsIFrame * optFrame;
+      nsCOMPtr<nsIPresShell> presShell;
+      mPresContext->GetShell(getter_AddRefs(presShell));
+      nsresult result = presShell->GetPrimaryFrameFor(option, &optFrame);
+      if (NS_SUCCEEDED(result) && optFrame != nsnull) {
+        nsCOMPtr<nsIStyleContext> optStyle;
+        optFrame->GetStyleContext(getter_AddRefs(optStyle));
+        if (optStyle) {
+          const nsStyleFont* styleFont = (const nsStyleFont*)optStyle->GetStyleData(eStyleStruct_Font);
+          nsCOMPtr<nsIDeviceContext> deviceContext;
+          aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+          NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
+          nsIFontMetrics * fontMet;
+          result = deviceContext->GetMetricsFor(styleFont->mFont, fontMet);
+          if (NS_SUCCEEDED(result) && fontMet != nsnull) {
+            if (fontMet) {
+              fontMet->GetHeight(heightOfARow);
+              mMaxHeight = heightOfARow;
+            }
+            NS_RELEASE(fontMet);
+          }
+        }
+      }
+    }
+  }
+
+  // Check to see if we have no width and height
+  // The following code measures the width and height 
+  // of a bogus string so the list actually displays
   nscoord visibleHeight = 0;
   if (isInDropDownMode) {
     // Compute the visible height of the drop-down list
