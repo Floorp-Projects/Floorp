@@ -691,7 +691,7 @@ NS_IMETHODIMP
 nsHTMLFormElement::SetDemotingForm(PRBool aDemotingForm)
 {
   NS_ASSERTION(mDemotingForm != aDemotingForm,
-               "Bad call to DemotingContainer()!");
+               "Bad call to SetDemotingForm()!");
 
   mDemotingForm = aDemotingForm;
 
