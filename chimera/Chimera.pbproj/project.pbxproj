@@ -2506,6 +2506,18 @@
 			settings = {
 			};
 		};
+		F54AD84402C115D901A967F3 = {
+			isa = PBXFileReference;
+			name = liboji.a;
+			path = ../modules/oji/src/liboji.a;
+			refType = 2;
+		};
+		F54AD84502C115DA01A967F3 = {
+			fileRef = F54AD84402C115D901A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F54EF7ED022A2F9C01A80165 = {
 			isa = PBXFileReference;
 			name = pipnss.jar;
@@ -2921,6 +2933,7 @@
 				F506477602AD7E2701A967F3,
 				F507423C02AD808201A967F3,
 				F524EF6702AD8B9301A967F3,
+				F54AD84402C115D901A967F3,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";
@@ -4198,7 +4211,7 @@
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../security/nss/lib/crmf/Darwin5.5_OPT.OBJ ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util";
 				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -D_BUILD_STATIC_BIN";
-				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lmozjs -lmozjpeg -lmozpng -lmozmng -lpthread -lz -lm";
+				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lmozjs -lmozjpeg -ljsj -lmozpng -lmozmng -lpthread -lz -lm";
 				PREBINDING = NO;
 				PRODUCT_NAME = Navigator;
 				SECTORDER_FLAGS = "";
@@ -4539,6 +4552,7 @@
 				F507423D02AD808301A967F3,
 				F524EF6802AD8B9401A967F3,
 				F5AC38BA02AD8E7B01A967F3,
+				F54AD84502C115DA01A967F3,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
