@@ -94,7 +94,11 @@ interface nsIProfile : nsISupports {
     readonly attribute nsIFileSpec defaultProfileParentDir;
 
     void updateRegistry();
-    void setRegString(in wstring profileName, in wstring regString);
+    void setRegStrings(in wstring profileName, 
+                       in wstring regString,
+                       in wstring regName,
+                       in wstring regEmail,
+                       in wstring regOption);
     string isRegStringSet(in wstring profileName); 
 
 };
