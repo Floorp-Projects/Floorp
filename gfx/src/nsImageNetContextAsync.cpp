@@ -720,8 +720,9 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsISupports> loadContext (do_QueryReferent(mLoadContext)); 
     nsCOMPtr<nsILoadGroup> group (do_GetInterface(loadContext));
+    nsCOMPtr<nsIInterfaceRequestor> sink(do_QueryInterface(loadContext));
 
-    rv = NS_OpenURI(getter_AddRefs(channel), nsurl, nsnull, group);
+    rv = NS_OpenURI(getter_AddRefs(channel), nsurl, nsnull, group, sink);
     if (NS_FAILED(rv)) goto error;
 
     nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
