@@ -83,7 +83,7 @@ nsMimeEmitter::nsMimeEmitter()
 printf("Prefs not working on multiple threads...must find a solution\n"); 
 #endif
 
-  mHeaderDisplayType = AllHeaders;
+  mHeaderDisplayType = NormalHeaders;
   return;
 
   nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(mPrefs));
@@ -194,6 +194,8 @@ nsMimeEmitter::WriteXMLHeader(const char *msgID)
 nsresult
 nsMimeEmitter::WriteXMLTag(const char *tagName, const char *value)
 {
+  PRBool    xHeader = (tagName[0] == 'X');
+  
   if ( (!value) || (!*value) )
     return NS_OK;
 
@@ -201,19 +203,27 @@ nsMimeEmitter::WriteXMLTag(const char *tagName, const char *value)
   if (!newValue) 
     return NS_OK;
 
-  UtilityWrite("<headertag>");
-
   UtilityWrite("<");
-  UtilityWrite(tagName);
-  UtilityWrite(">");
+  if (!xHeader)
+  {
+    UtilityWrite(tagName);
+    UtilityWrite(">");  
+  }
+  else
+  {
+    UtilityWrite("misc field=\"");
+    UtilityWrite(tagName);
+    UtilityWrite("\">");
+  }
 
   UtilityWrite(newValue);
 
   UtilityWrite("</");
-  UtilityWrite(tagName);
+  if (!xHeader)
+    UtilityWrite(tagName);
+  else
+    UtilityWrite("misc");
   UtilityWrite(">");
-
-  UtilityWrite("</headertag>");
 
   return NS_OK;
 }

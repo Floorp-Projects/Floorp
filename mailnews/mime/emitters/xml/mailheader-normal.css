@@ -2,12 +2,461 @@ window {
   overflow: auto;
 }
 
-Subject {
+/**************************************************
+ * These are all the headers that are displayed
+ * for the normal header display
+ **************************************************/
+mailheader {
+  display:           block;
+  background-color:  #E0E0E0;
+}
+
+To:before {
+  content: "To: ";
+  font-weight: bold;
+}
+To {
   display: block;
   text-align:left; 
 }
 
-headertag {
+From:before {
+  content: "From: ";
+  font-weight: bold;
+}
+From {
+  display: block;
+  text-align:left; 
+}
+
+Subject:before {
+  content: "Subject: ";
+  font-weight: bold;
+}
+Subject {
+  display: block;
+  text-align:left; 
+  background-color:  lightyellow;
+  border: 1px solid #CCCCCC;
+}
+
+Date:before {
+  content: "Date: ";
+  font-weight: bold;
+}
+Date {
+  display: block;
+  text-align:left; 
+}
+
+CC:before {
+  content: "CC: ";
+  font-weight: bold;
+}
+CC {
+  display: block;
+  text-align:left; 
+}
+
+BCC:before {
+  content: "BCC: ";
+  font-weight: bold;
+}
+BCC {
+  display: block;
+  text-align:left; 
+}
+
+Newsgroups:before {
+  content: "Newsgroups: ";
+  font-weight: bold;
+}
+Newsgroups {
+  display: block;
+  text-align:left; 
+}
+
+Organization:before {
+  content: "Organization: ";
+  font-weight: bold;
+}
+Organization {
+  display: block;
+  text-align:left; 
+}
+
+/**************************************************
+ * These are all the headers that are NOT displayed
+ * for the normal header display
+ **************************************************/
+/* 
+ * All misc headers (i.e. the ones that start with 
+ * "X-" are turned off!
+ */
+misc {
   display: none;
+  text-align: left;
+}
+
+Return-Path:before {
+  content: "Return-Path: ";
+  font-weight: bold;
+}
+Return-Path {
+  display: none;
+  text-align:left; 
+}
+
+Received:before {
+  content: "Received: ";
+  font-weight: bold;
+}
+Received {
+  display: none;
+  text-align:left; 
+}
+
+MIME-Version:before {
+  content: "MIME Version: ";
+  font-weight: bold;
+}
+MIME-Version {
+  display: none;
+  text-align:left; 
+}
+
+Precedence:before {
+  content: "Precedence: ";
+  font-weight: bold;
+}
+Precedence {
+ display: none;
+ text-align: left;
+}
+
+Content-Base:before {
+  content: "Content-Base: ";
+  font-weight: bold;
+}
+Content-Base {
+  display: none;
+  text-align:left; 
+}
+
+Content-Location:before {
+  content: "Content-Location: ";
+  font-weight: bold;
+}
+Content-Location {
+  display: none;
+  text-align:left; 
+}
+
+Content-ID:before {
+  content: "Content-ID: ";
+  font-weight: bold;
+}
+Content-ID {
+  display: none;
+  text-align:left; 
+}
+
+Content-Description:before {
+  content: "Content-Description: ";
+  font-weight: bold;
+}
+Content-Description {
+  display: none;
+  text-align:left; 
+}
+
+Content-Disposition:before {
+  content: "Content-Disposition: ";
+  font-weight: bold;
+}
+Content-Disposition {
+  display: none;
+  text-align:left; 
+}
+
+Content-Encoding:before {
+  content: "Content-Encoding: ";
+  font-weight: bold;
+}
+Content-Encoding {
+  display: none;
+  text-align:left; 
+}
+
+Content-Length:before {
+  content: "Content-Length: ";
+  font-weight: bold;
+}
+Content-Length {
+  display: none;
+  text-align:left; 
+}
+
+Content-Name:before {
+  content: "Content-Name: ";
+  font-weight: bold;
+}
+Content-Name {
+  display: none;
+  text-align:left; 
+}
+
+Content-Transfer-Encoding:before {
+  content: "Content-Transfer-Encoding: ";
+  font-weight: bold;
+}
+Content-Transfer-Encoding {
+  display: none;
+  text-align:left; 
+}
+
+Content-Type:before {
+  content: "Content-Type: ";
+  font-weight: bold;
+}
+Content-Type {
+  display: none;
+  text-align:left; 
+}
+
+Distribution:before {
+  content: "Distribution: ";
+  font-weight: bold;
+}
+Distribution {
+  display: none;
+  text-align:left; 
+}
+
+FCC:before {
+  content: "FCC: ";
+  font-weight: bold;
+}
+FCC {
+  display: none;
+  text-align:left; 
+}
+
+Followup-To:before {
+  content: "Followup-To: ";
+  font-weight: bold;
+}
+Followup-To {
+  display: none;
+  text-align:left; 
+}
+
+Lines:before {
+  content: "Lines: ";
+  font-weight: bold;
+}
+Lines {
+  display: none;
+  text-align:left; 
+}
+
+Message-ID:before {
+  content: "Message-ID: ";
+  font-weight: bold;
+}
+Message-ID {
+  display: none;
+  text-align:left; 
+}
+
+References:before {
+  content: "References: ";
+  font-weight: bold;
+}
+References {
+  display: none;
+  text-align:left; 
+}
+
+Reply-To:before {
+  content: "Reply-To: ";
+  font-weight: bold;
+}
+Reply-To {
+  display: none;
+  text-align:left; 
+}
+
+Resent-Comments:before {
+  content: "Resent-Comments: ";
+  font-weight: bold;
+}
+Resent-Comments {
+  display: none;
+  text-align:left; 
+}
+
+Resent-Date:before {
+  content: "Resent-Date: ";
+  font-weight: bold;
+}
+Resent-Date {
+  display: none;
+  text-align:left; 
+}
+
+Resent-From:before {
+  content: "Resent-From ";
+  font-weight: bold;
+}
+Resent-From {
+  display: none;
+  text-align:left; 
+}
+
+Resent-Message-ID:before {
+  content: "Resent-Message-ID: ";
+  font-weight: bold;
+}
+Resent-Message-ID {
+  display: none;
+  text-align:left; 
+}
+
+Resent-Sender:before {
+  content: "Resent-Sender: ";
+  font-weight: bold;
+}
+Resent-Sender {
+  display: none;
+  text-align:left; 
+}
+
+Resent-To:before {
+  content: "Resent-To: ";
+  font-weight: bold;
+}
+Resent-To {
+  display: none;
+  text-align:left; 
+}
+
+Resent-CC:before {
+  content: "Resent-CC: ";
+  font-weight: bold;
+}
+Resent-CC {
+  display: none;
+  text-align:left; 
+}
+
+Sender:before {
+  content: "Sender: ";
+  font-weight: bold;
+}
+Sender {
+  display: none;
+  text-align:left; 
+}
+
+XREF:before {
+  content: "XREF: ";
+  font-weight: bold;
+}
+XREF {
+  display: none;
+  text-align:left; 
+}
+
+/**************************************************
+ * Will have to do something with these to conform toe
+ * the <misc> tag
+ **************************************************/
+X-Sun-Charset {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Content-Length {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Content-Lines {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Data-Description {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Data-Name {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Data-Type {
+  display: block;
+  text-align:left; 
+}
+
+X-Sun-Encoding-Info {
+  display: block;
+  text-align:left; 
+}
+
+X-Priority {
+  display: block;
+  text-align:left; 
+}
+
+X-Mozilla-PartURL {
+  display: block;
+  text-align:left; 
+}
+
+X-Mozilla-Draft-Info {
+  display: block;
+  text-align:left; 
+}
+
+X-Accept-Language {
+  display: block;
+  text-align:left; 
+}
+
+X-Mailing-List {
+  display: block;
+  text-align:left; 
+}
+
+X-Mailing-Loop {
+  display: block;
+  text-align:left; 
+}
+
+X-Loop {
+ display: block;
+ text-align: left;
+}
+
+X-Mozilla-Status2 {
+ display: block;
+ text-align: left;
+}
+
+X-Mailer:before {
+  content: "X-Mailer: ";
+  font-weight: bold;
+}
+X-Mailer {
+  display: block;
+  text-align:left; 
+}
+
+X-Mozilla-Status2 {
+  display: block;
   text-align:left; 
 }
