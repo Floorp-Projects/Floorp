@@ -1,4 +1,25 @@
 <?xml version="1.0"?> 
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+  -->
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
@@ -47,6 +68,44 @@
     <key id="increasefontsizekb" disabled="false" shift="true" command="true" key="]" onkeypress="IncreaseFontSize()" />
 
 <!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
+        <!-- scroll document/page/line and move caret -->
+    <key id="homekb"      disabled="false" key="VK_HOME" onkeypress="EditorMoveToTopOfWindow( true, false )" />
+    <key id="endkb"       disabled="false" key="VK_END" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
+    <key id="pageupkb"    disabled="false" key="VK_PAGE_UP" onkeypress="EditorMoveUpPage( true, false )" />
+    <key id="pagedownkb"  disabled="false" key="VK_PAGE_DOWN" onkeypress="EditorMoveDownPage( true, false )" />
+    <key id="beginoflinekb" disabled="false" key="VK_LEFT" command="true" onkeypress="EditorBeginningOfLine( false )" />
+    <key id="endoflinekb" disabled="false" key="VK_RIGHT" command="true" onkeypress="EditorEndOfLine( false )" />
+    <key id="uphomekb"    disabled="false" key="VK_UP" command="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
+    <key id="downendkb"   disabled="false" key="VK_DOWN" command="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
+        <!-- scroll document/page/line and extend selection -->
+    <key id="homeextendkb"      disabled="false" key="VK_HOME"  shift="true" onkeypress="EditorMoveToTopOfWindow( true, true )" />
+    <key id="endextendkb"       disabled="false" key="VK_END"   shift="true" onkeypress="EditorMoveToBottomOfWindow( true, true )" />
+    <key id="pageupextendkb"    disabled="false" key="VK_PAGE_UP" shift="true" onkeypress="EditorMoveUpPage( true, true )" />
+    <key id="pagedownextendkb"  disabled="false" key="VK_PAGE_DOWN" shift="true" onkeypress="EditorMoveDownPage( true, true )" />
+    <key id="beginoflineextendkb" disabled="false" key="VK_LEFT" shift="true" command="true" onkeypress="EditorBeginningOfLine( false )" />
+    <key id="endoflineextendkb" disabled="false" key="VK_RIGHT" shift="true" command="true" onkeypress="EditorEndOfLine( false )" />
+    <key id="uphomeextendkb"    disabled="false" key="VK_UP"    shift="true" command="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
+    <key id="downendextendkb"   disabled="false" key="VK_DOWN"  shift="true" command="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
+       <!-- move caret by one character -->
+    <key id="leftkb" disabled="false" key="VK_LEFT" onkeypress="EditorPreviousCharacter( false )" />
+    <key id="rightkb" disabled="false" key="VK_RIGHT" onkeypress="EditorNextCharacter( false )" />
+    <key id="upkb"   disabled="false" key="VK_UP" onkeypress="EditorPreviousRow( false )" />
+    <key id="downkb" disabled="false" key="VK_DOWN" onkeypress="EditorNextRow( false )" />
+        <!-- move caret by one character/row and extend selection -->
+    <key id="prevcharextendkb" disabled="false" key="VK_LEFT" shift="true" onkeypress="EditorPreviousCharacter( true )" />
+    <key id="nextcharextendkb" disabled="false" key="VK_RIGHT" shift="true" onkeypress="EditorNextCharacter( true )" />
+    <key id="prevrowextendkb" disabled="false" key="VK_UP"    shift="true" onkeypress="EditorPreviousRow( true )" />
+    <key id="nextrowextendkb" disabled="false" key="VK_DOWN"  shift="true" onkeypress="EditorNextRow( true )" />
+        <!-- move caret by one word/paragraph -->
+    <key id="prevwordkb" disabled="false" key="VK_LEFT" alt="true" onkeypress="EditorPreviousWord( false )" />
+    <key id="nextwordkb" disabled="false" key="VK_RIGHT" alt="true" onkeypress="EditorNextWord( false )" />
+    <key id="prevparakb" disabled="false" key="VK_UP"   alt="true" onkeypress="EditorBeginningOfParagraph( false )" />
+    <key id="nextparakb" disabled="false" key="VK_DOWN" alt="true" onkeypress="EditorEndOfParagraph( false )" />
+        <!-- move caret by one word and extend selection -->
+    <key id="prevwordextendkb" disabled="false" key="VK_LEFT" shift="true" alt="true" onkeypress="EditorPreviousWord( true )" />
+    <key id="nextwordextendkb" disabled="false" key="VK_RIGHT" shift="true" alt="true" onkeypress="EditorNextWord( true )" />
+    <key id="prevparaextendkb" disabled="false" key="VK_UP"   shift="true" alt="true" onkeypress="EditorBeginningOfParagraph( true )" />
+    <key id="nextparaextendkb" disabled="false" key="VK_DOWN" shift="true" alt="true" onkeypress="EditorEndOfParagraph( true )" />
   </keyset>
 
     <!-- Formatting-related commands -->
