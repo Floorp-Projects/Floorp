@@ -25,6 +25,12 @@
 #include "nsIFrameDebug.h"
 #endif
 
+#ifdef IBMBIDI
+#include "nsCOMPtr.h"
+#include "nsLayoutAtoms.h"
+#include "nsILineIterator.h"
+#endif // IBMBIDI
+
 void
 nsFrameList::DestroyFrames(nsIPresContext* aPresContext)
 {
@@ -374,5 +380,156 @@ nsFrameList::List(nsIPresContext* aPresContext, FILE* out) const
     frame->GetNextSibling(&frame);
   }
   fputs(">\n", out);
+}
+#endif
+
+#ifdef IBMBIDI
+nsIFrame*
+nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
+{
+  NS_PRECONDITION(nsnull != aFrame, "null ptr");
+  nsILineIterator* iter;
+  nsCOMPtr<nsIAtom>atom;
+
+  aFrame->GetFrameType(getter_AddRefs(atom));
+  if (atom.get() == nsLayoutAtoms::blockFrame)
+    return GetPrevSiblingFor(aFrame);
+
+  nsRect tempRect;
+  nsIFrame* blockFrame;
+  nsIFrame* frame;
+  nsIFrame* furthestFrame = nsnull;
+
+  frame = mFirstChild;
+
+  nsresult result = aFrame->GetParent(&blockFrame);
+  if (NS_FAILED(result) || !blockFrame)
+    return GetPrevSiblingFor(aFrame);
+  result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
+  if (NS_FAILED(result) || !iter) { // If the parent is not a block frame, just check all the siblings
+
+    PRInt32 maxX, limX;
+    maxX = -0x7fffffff;
+    aFrame->GetRect(tempRect);
+    limX = tempRect.x;
+    while (frame) {
+      frame->GetRect(tempRect);
+      if (tempRect.x > maxX && tempRect.x < limX) { // we are looking for the highest value less than the current one
+        maxX = tempRect.x;
+        furthestFrame = frame;
+      }
+      frame->GetNextSibling(&frame);
+    }
+    return furthestFrame;
+
+  }
+
+  // Otherwise use the LineIterator to check the siblings on this line and the previous line
+  if (!blockFrame || !iter)
+    return nsnull;
+
+  PRInt64 maxOrig, limOrig, testOrig;
+  PRInt32 testLine, thisLine;
+
+  maxOrig = LL_MININT;
+  aFrame->GetRect(tempRect);
+  result = iter->FindLineContaining(aFrame, &thisLine);
+  if (NS_FAILED(result) || thisLine < 0)
+    return nsnull;
+
+  LL_SHL(limOrig, thisLine, 32);
+  LL_OR2(limOrig, tempRect.x);
+
+  while (frame) {
+    if (NS_SUCCEEDED(iter->FindLineContaining(frame, &testLine))
+        && testLine >= 0
+        && (testLine == thisLine || testLine == thisLine - 1)) {
+      frame->GetRect(tempRect);
+      LL_SHL(testOrig, testLine, 32);
+      LL_OR2(testOrig, tempRect.x);
+      if (LL_CMP(testOrig, >, maxOrig) && LL_CMP(testOrig, <, limOrig)) { // we are looking for the highest value less than the current one
+        maxOrig = testOrig;
+        furthestFrame = frame;
+      }
+    }
+    frame->GetNextSibling(&frame);
+  }
+  return furthestFrame;
+}
+
+nsIFrame*
+nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
+{
+  NS_PRECONDITION(nsnull != aFrame, "null ptr");
+  nsILineIterator* iter;
+  nsCOMPtr<nsIAtom>atom;
+
+  aFrame->GetFrameType(getter_AddRefs(atom));
+  if (atom.get() == nsLayoutAtoms::blockFrame) {
+    nsIFrame* frame;
+    aFrame->GetNextSibling(&frame);
+    return frame;
+  }
+
+  nsRect tempRect;
+  nsIFrame* blockFrame;
+  nsIFrame* frame;
+  nsIFrame* nearestFrame = nsnull;
+
+  frame = mFirstChild;
+
+  nsresult result = aFrame->GetParent(&blockFrame);
+  if (NS_FAILED(result) || !blockFrame)
+    return GetPrevSiblingFor(aFrame);
+  result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
+  if (NS_FAILED(result) || !iter) { // If the parent is not a block frame, just check all the siblings
+
+    PRInt32 minX, limX;
+    minX = 0x7fffffff;
+    aFrame->GetRect(tempRect);
+    limX = tempRect.x;
+    while (frame) {
+      frame->GetRect(tempRect);
+      if (tempRect.x < minX && tempRect.x > limX) { // we are looking for the lowest value greater than the current one
+        minX = tempRect.x;
+        nearestFrame = frame;
+      }
+      frame->GetNextSibling(&frame);
+    }
+    return nearestFrame;
+
+  }
+
+  // Otherwise use the LineIterator to check the siblings on this line and the previous line
+  if (!blockFrame || !iter)
+    return nsnull;
+
+  PRInt64 minOrig, limOrig, testOrig;
+  PRInt32 testLine, thisLine;
+
+  minOrig = LL_MAXINT;
+  aFrame->GetRect(tempRect);
+  result = iter->FindLineContaining(aFrame, &thisLine);
+  if (NS_FAILED(result) || thisLine < 0)
+    return nsnull;
+
+  LL_SHL(limOrig, thisLine, 32);
+  LL_OR2(limOrig, tempRect.x);
+
+  while (frame) {
+    if (NS_SUCCEEDED(iter->FindLineContaining(frame, &testLine))
+        && testLine >= 0
+        && (testLine == thisLine || testLine == thisLine + 1)) {
+      frame->GetRect(tempRect);
+      LL_SHL(testOrig, testLine, 32);
+      LL_OR2(testOrig, tempRect.x);
+      if (LL_CMP(testOrig, <, minOrig) && LL_CMP(testOrig, >, limOrig)) { // we are looking for the lowest value greater than the current one
+        minOrig = testOrig;
+        nearestFrame = frame;
+      }
+    }
+    frame->GetNextSibling(&frame);
+  }
+  return nearestFrame;
 }
 #endif

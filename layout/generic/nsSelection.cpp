@@ -52,6 +52,15 @@
 #include "nsIIndependentSelection.h"
 #include "nsIPref.h"
 
+#ifdef IBMBIDI
+#include "nsFrameTraversal.h"
+#include "nsILineIterator.h"
+#include "nsLayoutAtoms.h"
+#include "nsIFrameTraversal.h"
+#include "nsLayoutCID.h"
+static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
+#endif // IBMBIDI
+
 #include "nsIDOMText.h"
 
 //included for desired x position;
@@ -176,6 +185,7 @@ public:
 
   NS_IMETHOD    GetInterlinePosition(PRBool *aInterlinePosition);
   NS_IMETHOD    SetInterlinePosition(PRBool aInterlinePosition);
+  NS_IMETHOD    SelectionLanguageChange(PRBool aLangRTL);
 
 /*END nsISelection interface implementations*/
 /* nsISecurityCheckedComponent  */
@@ -213,6 +223,10 @@ public:
 
   nsDirection  GetDirection(){return mDirection;}
   void         SetDirection(nsDirection aDir){mDirection = aDir;}
+#ifdef IBMBIDI
+  PRBool       GetTrueDirection() {return mTrueDirection;}
+  void         SetTrueDirection(PRBool aBool){mTrueDirection = aBool;}
+#endif
   NS_IMETHOD   CopyRangeToAnchorFocus(nsIDOMRange *aRange);
   
 
@@ -266,6 +280,9 @@ private:
   SelectionType mType;//type of this nsTypedSelection;
   nsAutoScrollTimer *mAutoScrollTimer; // timer for autoscrolling.
   nsCOMPtr<nsISupportsArray> mSelectionListeners;
+#ifdef IBMBIDI
+  PRBool mTrueDirection;
+#endif
 };
 
 // Stack-class to turn on/off selection batching for table selection
@@ -337,6 +354,21 @@ public:
   NS_IMETHOD SetDelayedCaretData(nsMouseEvent *aMouseEvent);
   NS_IMETHOD GetDelayedCaretData(nsMouseEvent **aMouseEvent);
   NS_IMETHOD GetLimiter(nsIContent **aLimiterContent);
+#ifdef IBMBIDI
+  NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
+                                   nsIContent *aNode,
+                                   PRUint32 aContentOffset,
+                                   nsIFrame **aPrevFrame,
+                                   nsIFrame **aNextFrame,
+                                   PRUint8 *aPrevLevel,
+                                   PRUint8 *aNextLevel);
+  NS_IMETHOD GetFrameFromLevel(nsIPresContext *aPresContext,
+                               nsIFrame *aFrameIn,
+                               nsDirection aDirection,
+                               PRUint8 aBidiLevel,
+                               nsIFrame **aFrameOut);
+
+#endif // IBMBIDI
   /*END nsIFrameSelection interfacse*/
 
 
@@ -353,6 +385,37 @@ public:
 private:
   NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
                        PRBool aContinueSelection, PRBool aMultipleSelection);
+
+#ifdef IBMBIDI
+  void BidiLevelFromMove(nsIPresContext* aContext,
+                         nsIPresShell* aPresShell,
+                         nsIContent *aNode,
+                         PRUint32 aContentOffset,
+                         PRUint32 aKeycode);
+  void BidiLevelFromClick(nsIContent *aNewFocus, PRUint32 aContentOffset);
+  NS_IMETHOD VisualSelectFrames(nsIPresContext* aContext,
+                                nsIFrame* aCurrentFrame,
+                                nsPeekOffsetStruct aPos);
+  NS_IMETHOD VisualSequence(nsIPresContext *aPresContext,
+                            nsIFrame* aSelectFrame,
+                            nsIFrame* aCurrentFrame,
+                            nsPeekOffsetStruct* aPos,
+                            PRBool* aNeedVisualSelection);
+  NS_IMETHOD SelectToEdge(nsIFrame *aFrame,
+                          nsIContent *aContent,
+                          PRInt32 aOffset,
+                          PRInt32 aEdge,
+                          PRBool aMultipleSelection);
+  NS_IMETHOD SelectLines(nsIPresContext *aPresContext,
+                         nsDirection aSelectionDirection,
+                         nsIDOMNode *aAnchorNode,
+                         nsIFrame* aAnchorFrame,
+                         PRInt32 aAnchorOffset,
+                         nsIDOMNode *aCurrentNode,
+                         nsIFrame* aCurrentFrame,
+                         PRInt32 aCurrentOffset,
+                         nsPeekOffsetStruct aPos);
+#endif // IBMBIDI
 
 //post and pop reasons for notifications. we may stack these later
   void  PostReason(short aReason){mReason = aReason;}
@@ -1444,6 +1507,17 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
 //        SetDesiredX(desiredX);
   }
 
+#ifdef IBMBIDI
+  nsCOMPtr<nsICaret> caret;
+  nsCOMPtr<nsIPresShell> shell;
+  result = context->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(result) || !shell)
+    return 0;
+  result = shell->GetCaret(getter_AddRefs(caret));
+  if (NS_FAILED(result) || !caret)
+    return 0;
+#endif
+
   offsetused = mDomSelections[index]->FetchFocusOffset();
   weakNodeUsed = mDomSelections[index]->FetchFocusNode();
 
@@ -1512,6 +1586,73 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   if (NS_SUCCEEDED(result) && NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
   {
     mHint = (HINT)pos.mPreferLeft;
+#ifdef IBMBIDI
+    PRBool bidiEnabled = PR_FALSE;
+    context->BidiEnabled(bidiEnabled);
+    if (bidiEnabled)
+    {
+      nsIFrame *theFrame;
+      PRInt32 currentOffset, frameStart, frameEnd;
+      PRUint8 level;
+
+      // XXX - I expected to be able to use pos.mResultFrame, but when we move from frame to frame
+      //       and |PeekOffset| is called recursively, pos.mResultFrame on exit is sometimes set to the original
+      //       frame, not the frame that we ended up in, so I need this call to |GetFrameForNodeOffset|.
+      //       I don't know if that could or should be changed or if it would break something else.
+      GetFrameForNodeOffset(pos.mResultContent, pos.mContentOffset, mHint, &theFrame, &currentOffset);
+      theFrame->GetOffsets(frameStart, frameEnd);
+
+      // the hint might have been reversed by an RTL frame, so make sure of it
+      if (nsIDOMKeyEvent::DOM_VK_HOME == aKeycode)
+        pos.mPreferLeft = PR_TRUE;
+      else if (nsIDOMKeyEvent::DOM_VK_END == aKeycode)
+        pos.mPreferLeft = PR_FALSE;
+      mHint = (HINT)pos.mPreferLeft;
+      if (frameStart !=0 || frameEnd !=0) // Otherwise the frame is not a text frame, so nothing more to do
+      {
+        switch (aKeycode) {
+          case nsIDOMKeyEvent::DOM_VK_HOME:
+          case nsIDOMKeyEvent::DOM_VK_END:
+
+            // force the offset to the logical beginning (for HOME) or end (for END) of the frame
+            // (if it is an RTL frame it will be at the visual beginning or end, which we don't want in this case)
+            if (nsIDOMKeyEvent::DOM_VK_HOME == aKeycode)
+              pos.mContentOffset = frameStart;
+            else
+              pos.mContentOffset = frameEnd;
+
+            // set the cursor Bidi level to the paragraph embedding level
+            theFrame->GetBidiProperty(context, nsLayoutAtoms::baseLevel, (void**)&level,
+                                      sizeof(PRUint8) );
+            shell->SetCursorBidiLevel(level);
+            break;
+
+          default:
+            // If the current position is not a frame boundary, it's enough just to take the Bidi level of the current frame
+            if ((pos.mContentOffset != frameStart && pos.mContentOffset != frameEnd)
+                || (eSelectDir == aAmount)
+                || (eSelectLine == aAmount))
+            {
+              theFrame->GetBidiProperty(context, nsLayoutAtoms::embeddingLevel, (void**)&level,
+                                        sizeof(PRUint8) );
+              shell->SetCursorBidiLevel(level);
+            }
+            else
+              BidiLevelFromMove(context, shell, pos.mResultContent, pos.mContentOffset, aKeycode);
+        }
+      }
+      // Handle visual selection
+      if (aContinue)
+      {
+        result = VisualSelectFrames(context, theFrame, pos);
+        if (NS_FAILED(result)) // Back out by collapsing the selection to the current position
+          result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, PR_FALSE, PR_FALSE);
+      }    
+      else
+        result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
+    }
+    else
+#endif // IBMBIDI
     result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
   }
   else if (NS_FAILED(result))
@@ -1532,6 +1673,9 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
     {
       if (NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
       {
+#ifdef IBMBIDI
+        BidiLevelFromMove(context, shell, pos.mResultContent, pos.mContentOffset, aKeycode);
+#endif // IBMBIDI
         mHint = (HINT)pos.mPreferLeft;
         PostReason(nsISelectionListener::MOUSEUP_REASON);//force an update as though we used the mouse.
         result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
@@ -1666,6 +1810,719 @@ nsTypedSelection::GetInterlinePosition(PRBool *aHintRight)
   return rv;
 }
 
+#ifdef IBMBIDI
+nsDirection ReverseDirection(nsDirection aDirection)
+{
+  return (eDirNext == aDirection) ? eDirPrevious : eDirNext;
+}
+
+nsresult FindLineContaining(nsIFrame* aFrame, nsIFrame** aBlock, PRInt32* aLine)
+{
+  nsIFrame *blockFrame = aFrame;
+  nsIFrame *thisBlock;
+  nsCOMPtr<nsILineIteratorNavigator> it; 
+  nsresult result = NS_ERROR_FAILURE;
+  while (NS_FAILED(result) && blockFrame)
+  {
+    thisBlock = blockFrame;
+    result = blockFrame->GetParent(&blockFrame);
+    if (NS_SUCCEEDED(result) && blockFrame){
+      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
+    }
+    else
+      blockFrame = nsnull;
+  }
+  if (!blockFrame || !it)
+    return NS_ERROR_FAILURE;
+  *aBlock = blockFrame;
+  return it->FindLineContaining(thisBlock, aLine);  
+}
+
+NS_IMETHODIMP
+nsSelection::VisualSequence(nsIPresContext *aPresContext,
+                            nsIFrame* aSelectFrame,
+                            nsIFrame* aCurrentFrame,
+                            nsPeekOffsetStruct* aPos,
+                            PRBool* aNeedVisualSelection)
+{
+  nsVoidArray frameArray;
+  PRUint8 bidiLevel, currentLevel;
+  PRInt32 frameStart, frameEnd;
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  nsresult result = nsnull;
+  
+  aCurrentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&currentLevel, sizeof(PRUint8) );
+
+  result = aSelectFrame->PeekOffset(aPresContext, aPos);
+  while (aCurrentFrame != (aSelectFrame = aPos->mResultFrame))
+  {
+    if (NS_FAILED(result))
+      return NS_OK; // we have passed the end of the line, and we will carry on from there
+    if (!aSelectFrame)
+      return NS_ERROR_FAILURE;
+    if (frameArray.IndexOf(aSelectFrame) > -1)
+      // If we have already seen this frame, we must be in an infinite loop
+      return NS_OK;
+    else
+      frameArray.AppendElement(aSelectFrame);
+
+    aSelectFrame->GetOffsets(frameStart, frameEnd);
+    aSelectFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&bidiLevel, sizeof(PRUint8) );
+    
+    if (currentLevel != bidiLevel)
+      *aNeedVisualSelection = PR_TRUE;
+    if ((eDirNext == aPos->mDirection) == (bidiLevel & 1))
+    {
+      mDomSelections[index]->SetDirection(eDirPrevious);
+      result = TakeFocus(aPos->mResultContent, frameEnd, frameStart, PR_FALSE, PR_TRUE);
+    }
+    else
+    {
+      mDomSelections[index]->SetDirection(eDirNext);
+      result = TakeFocus(aPos->mResultContent, frameStart, frameEnd, PR_FALSE, PR_TRUE);
+    }
+    if (NS_FAILED(result))
+      return result;
+
+    aPos->mAmount = eSelectDir; // reset this because PeekOffset will have changed it to eSelectNoAmount
+    aPos->mContentOffset = 0;
+    result = aSelectFrame->PeekOffset(aPresContext, aPos);
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSelection::SelectToEdge(nsIFrame *aFrame, nsIContent *aContent, PRInt32 aOffset, PRInt32 aEdge, PRBool aMultipleSelection)
+{
+  PRInt32 frameStart, frameEnd;
+  
+  aFrame->GetOffsets(frameStart, frameEnd);
+  if (0 == aEdge)
+    aEdge = frameStart;
+  else if (-1 == aEdge)
+    aEdge = frameEnd;
+  if (0 == aOffset)
+    aOffset = frameStart;
+  else if (-1 == aOffset)
+    aOffset = frameEnd;
+  return TakeFocus(aContent, aOffset, aEdge, PR_FALSE, aMultipleSelection);
+}
+
+NS_IMETHODIMP
+nsSelection::SelectLines(nsIPresContext *aPresContext,
+                         nsDirection aSelectionDirection,
+                         nsIDOMNode *aAnchorNode,
+                         nsIFrame* aAnchorFrame,
+                         PRInt32 aAnchorOffset,
+                         nsIDOMNode *aCurrentNode,
+                         nsIFrame* aCurrentFrame,
+                         PRInt32 aCurrentOffset,
+                         nsPeekOffsetStruct aPos)
+{
+  nsIFrame *startFrame, *endFrame;
+  PRInt32 startOffset, endOffset;
+  PRInt32 relativePosition;
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsIDOMNode> endNode;
+  nsIContent *startContent;
+  nsIContent *endContent;
+  nsresult result;
+
+  // normalize the order before we start to avoid piles of conditions later
+  relativePosition = ComparePoints(aAnchorNode, aAnchorOffset, aCurrentNode, aCurrentOffset);
+  if (0 == relativePosition)
+    return NS_ERROR_FAILURE;
+  else if (relativePosition < 0)
+  {
+    startNode = aAnchorNode;
+    startFrame = aAnchorFrame;
+    startOffset = aAnchorOffset;
+    endNode = aCurrentNode;
+    endFrame = aCurrentFrame;
+    endOffset = aCurrentOffset;
+  }
+  else
+  {
+    startNode = aCurrentNode;
+    startFrame = aCurrentFrame;
+    startOffset = aCurrentOffset;
+    endNode = aAnchorNode;
+    endFrame = aAnchorFrame;
+    endOffset = aAnchorOffset;
+  }
+
+  aPos.mStartOffset = startOffset;
+  aPos.mDirection = eDirNext;
+  aPos.mAmount = eSelectLine;
+  result = startFrame->PeekOffset(aPresContext, &aPos);
+  if (NS_FAILED(result))
+    return result;
+  startFrame = aPos.mResultFrame;
+  
+  aPos.mStartOffset = aPos.mContentOffset;
+  aPos.mAmount = eSelectBeginLine;
+  result = startFrame->PeekOffset(aPresContext, &aPos);
+  if (NS_FAILED(result))
+    return result;
+  
+  nsIFrame *theFrame;
+  PRInt32 currentOffset, frameStart, frameEnd;
+  
+  GetFrameForNodeOffset(aPos.mResultContent, aPos.mContentOffset, HINTLEFT, &theFrame, &currentOffset);
+  theFrame->GetOffsets(frameStart, frameEnd);
+  startOffset = frameStart;
+  startContent = aPos.mResultContent;
+  startNode = do_QueryInterface(startContent);
+
+  // If we have already overshot the endpoint, back out
+  if (ComparePoints(startNode, startOffset, endNode, endOffset) >= 0)
+    return NS_ERROR_FAILURE;
+
+  aPos.mStartOffset = endOffset;
+  aPos.mDirection = eDirPrevious;
+  aPos.mAmount = eSelectLine;
+  result = endFrame->PeekOffset(aPresContext, &aPos);
+  if (NS_FAILED(result))
+    return result;
+  endFrame = aPos.mResultFrame;
+
+  aPos.mStartOffset = aPos.mContentOffset;
+  aPos.mAmount = eSelectEndLine;
+  result = endFrame->PeekOffset(aPresContext, &aPos);
+  if (NS_FAILED(result))
+    return result;
+
+  GetFrameForNodeOffset(aPos.mResultContent, aPos.mContentOffset, HINTRIGHT, &theFrame, &currentOffset);
+  theFrame->GetOffsets(frameStart, frameEnd);
+  endOffset = frameEnd;
+  endContent = aPos.mResultContent;
+  endNode = do_QueryInterface(endContent);
+
+  if (ComparePoints(startNode, startOffset, endNode, endOffset) < 0)
+  {
+    TakeFocus(startContent, startOffset, startOffset, PR_FALSE, PR_TRUE);
+    return TakeFocus(endContent, endOffset, endOffset, PR_TRUE, PR_TRUE);
+  }
+  else
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSelection::VisualSelectFrames(nsIPresContext *aPresContext,
+                                nsIFrame* aCurrentFrame,
+                                nsPeekOffsetStruct aPos)
+{
+  nsCOMPtr<nsIContent> anchorContent;
+  nsCOMPtr<nsIDOMNode> anchorNode;
+  PRInt32 anchorOffset;
+  nsIFrame* anchorFrame;
+  PRUint8 anchorLevel;
+  nsCOMPtr<nsIContent> focusContent;
+  nsCOMPtr<nsIDOMNode> focusNode;
+  PRInt32 focusOffset;
+  nsIFrame* focusFrame;
+  PRUint8 focusLevel;
+  nsCOMPtr<nsIContent> currentContent;
+  nsCOMPtr<nsIDOMNode> currentNode;
+  PRInt32 currentOffset;
+  PRUint8 currentLevel;
+  nsresult result;
+  nsIFrame* startFrame;
+  PRBool needVisualSelection = PR_FALSE;
+  nsDirection selectionDirection;
+  PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+
+  result = mDomSelections[index]->GetOriginalAnchorPoint(getter_AddRefs(anchorNode), &anchorOffset);
+  if (NS_FAILED(result))
+    return result;
+  anchorContent = do_QueryInterface(anchorNode);
+  result = GetFrameForNodeOffset(anchorContent, anchorOffset, mHint, &anchorFrame, &anchorOffset);
+  if (NS_FAILED(result))
+    return result;
+  anchorFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&anchorLevel, sizeof(PRUint8) );
+
+  currentContent = aPos.mResultContent;
+  currentNode = do_QueryInterface(currentContent);
+  currentOffset = aPos.mContentOffset;
+  aCurrentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&currentLevel, sizeof(PRUint8) );
+
+  // Moving from simplest case to more complicated:
+  // case 1: selection starts and ends in the same frame: no special treatment
+  if (anchorFrame == aCurrentFrame) {
+    mDomSelections[index]->SetTrueDirection(!(anchorLevel & 1));
+    return TakeFocus(currentContent, anchorOffset, currentOffset, PR_FALSE, PR_FALSE);
+  }
+
+  focusOffset = mDomSelections[index]->FetchFocusOffset();
+  focusNode = mDomSelections[index]->FetchFocusNode();
+  focusContent = do_QueryInterface(focusNode);
+  HINT hint;
+  if ((HINTLEFT == mHint) == (currentLevel & 1))
+    hint = HINTRIGHT;
+  else
+    hint = HINTLEFT;
+
+  result = GetFrameForNodeOffset(focusContent, focusOffset, hint, &focusFrame, &focusOffset);
+  if (NS_FAILED(result))
+    return result;
+
+  focusFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&focusLevel, sizeof(PRUint8) );
+
+  if (currentLevel != anchorLevel)
+    needVisualSelection = PR_TRUE;
+
+  // Make sure of the selection direction
+  selectionDirection = mDomSelections[index]->GetDirection();
+  if (!mDomSelections[index]->GetTrueDirection()) {
+    selectionDirection = ReverseDirection(selectionDirection);
+    mDomSelections[index]->SetDirection(selectionDirection);
+  }
+
+  PRInt32 anchorLine, currentLine;
+  nsIFrame* anchorBlock  = nsnull;
+  nsIFrame* currentBlock = nsnull;
+  FindLineContaining(anchorFrame, &anchorBlock, &anchorLine);
+  FindLineContaining(aCurrentFrame, &currentBlock, &currentLine);
+
+  if (anchorBlock==currentBlock && anchorLine==currentLine)
+  {
+    // case 2: selection starts and ends in the same line
+
+    // Select from the anchor point to the edge of the frame
+    // Which edge? If the selection direction is forward the right edge, if it is backward the left edge
+    // For rtl frames the right edge is the begining of the frame, for ltr frames it is the end and vice versa
+    if ((eDirNext == selectionDirection) == (anchorLevel & 1))
+      result = SelectToEdge(anchorFrame, anchorContent, anchorOffset, 0, PR_FALSE);
+    else
+      result = SelectToEdge(anchorFrame, anchorContent, anchorOffset, -1, PR_FALSE);
+    if (NS_FAILED(result))
+      return result;
+
+    // Walk the frames in visual order until we reach the current frame, selecting each frame as we go
+    InvalidateDesiredX();
+    aPos.mAmount = eSelectDir;
+    aPos.mStartOffset = anchorOffset;
+    aPos.mDirection = selectionDirection;
+
+    result = anchorFrame->PeekOffset(aPresContext, &aPos);
+    if (NS_FAILED(result))
+      return result;
+    
+    startFrame = aPos.mResultFrame;
+    result = VisualSequence(aPresContext, startFrame, aCurrentFrame, &aPos, &needVisualSelection);
+    if (NS_FAILED(result))
+      return result;
+
+    if (!needVisualSelection)
+    {
+      if (currentLevel & 1)
+        mDomSelections[index]->SetDirection(ReverseDirection(selectionDirection));
+      // all the frames we passed through had the same Bidi level, so we can back out and do an ordinary selection
+      result = TakeFocus(anchorContent, anchorOffset, anchorOffset, PR_FALSE, PR_FALSE);
+      if (NS_FAILED(result))
+        return result;
+      result = TakeFocus(currentContent, currentOffset, currentOffset, PR_TRUE, PR_FALSE);
+      if (NS_FAILED(result))
+        return result;
+    }
+    else {
+      if ((currentLevel & 1) != (focusLevel & 1))
+        mDomSelections[index]->SetDirection(ReverseDirection(selectionDirection));
+      // Select from the current point to the edge of the frame
+      if ((eDirNext == selectionDirection) == (currentLevel & 1))
+        result = SelectToEdge(aCurrentFrame, currentContent, -1, currentOffset, PR_TRUE);
+      else
+        result = SelectToEdge(aCurrentFrame, currentContent, 0, currentOffset, PR_TRUE);
+      if (NS_FAILED(result))
+        return result;
+    }
+  }
+  else {
+
+    // case 3: selection starts and ends in different lines
+
+    // If selection direction is forwards:
+    // Select from the anchor point to the edge of the frame in the direction of the end of the line
+    // i.e. the rightmost character if the current paragraph embedding level is even (LTR paragraph)
+    // or the leftmost character if the current paragraph embedding level is odd (RTL paragraph)
+    //
+    // As before, for rtl frames the right edge is the begining of the frame, for ltr frames it is the end and vice versa
+    //
+    // If selection direction is backwards, vice versa throughout
+    //
+    PRUint8 anchorBaseLevel;
+    PRUint8 currentBaseLevel;
+    anchorFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, (void**)&anchorBaseLevel, sizeof(PRUint8) );
+    if ((eDirNext == selectionDirection) != ((anchorLevel & 1) == (anchorBaseLevel & 1)))
+      result = SelectToEdge(anchorFrame, anchorContent, anchorOffset, 0, PR_FALSE);
+    else
+      result = SelectToEdge(anchorFrame, anchorContent, anchorOffset, -1, PR_FALSE);
+    if (NS_FAILED(result))
+      return result;
+
+    // Walk the frames in visual order until we reach the end of the line
+    aPos.mJumpLines = PR_FALSE;
+    aPos.mAmount = eSelectDir;
+    aPos.mStartOffset = anchorOffset;
+    aPos.mDirection = selectionDirection;
+    if (anchorBaseLevel & 1)
+      aPos.mDirection = ReverseDirection(aPos.mDirection);
+    result = VisualSequence(aPresContext, anchorFrame, aCurrentFrame, &aPos, &needVisualSelection);
+    if (NS_FAILED(result))
+      return result;
+
+    // Select all the lines between the line containing the anchor point and the line containing the current point
+    aPos.mJumpLines = PR_TRUE;
+    SelectLines(aPresContext, selectionDirection, anchorNode, anchorFrame, anchorOffset, currentNode, aCurrentFrame, currentOffset, aPos);
+
+    // Go to the current point
+
+    aCurrentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, (void**)&currentBaseLevel, sizeof(PRUint8) );
+    // Walk the frames in visual order until we reach the beginning of the line
+    aPos.mJumpLines = PR_FALSE;
+    if ((currentBaseLevel & 1) == (anchorBaseLevel & 1))
+      aPos.mDirection = ReverseDirection(aPos.mDirection);
+    aPos.mStartOffset = currentOffset;
+    result = VisualSequence(aPresContext, aCurrentFrame, anchorFrame, &aPos, &needVisualSelection);
+    if (NS_FAILED(result))
+      return result;
+
+    // Select from the current point to the edge of the frame
+    if (currentLevel & 1)
+      mDomSelections[index]->SetDirection(ReverseDirection(selectionDirection));
+
+    if ((eDirPrevious == selectionDirection) != ((currentLevel & 1) == (currentBaseLevel & 1)))
+      result = SelectToEdge(aCurrentFrame, currentContent, 0, currentOffset, PR_TRUE);
+    else
+      result = SelectToEdge(aCurrentFrame, currentContent, -1, currentOffset, PR_TRUE);
+    if (NS_FAILED(result))
+      return result;
+    
+    // restore original selection direction
+//    mDomSelections[index]->SetDirection(selectionDirection);
+  }
+
+  // Sometimes we have to lie about the selection direction, so we will have to remember when we are doing so
+  mDomSelections[index]->SetTrueDirection(mDomSelections[index]->GetDirection() == selectionDirection);
+  
+  mDomSelections[index]->SetOriginalAnchorPoint(anchorNode, anchorOffset);
+  NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
+                                   nsIContent *aNode,
+                                   PRUint32 aContentOffset,
+                                   nsIFrame **aPrevFrame,
+                                   nsIFrame **aNextFrame,
+                                   PRUint8 *aPrevLevel,
+                                   PRUint8 *aNextLevel)
+{
+  if (!aPrevFrame || !aNextFrame)
+    return NS_ERROR_NULL_POINTER;
+  // Get the level of the frames on each side
+  nsIFrame    *currentFrame;
+  PRInt32     currentOffset;
+  PRInt32     frameStart, frameEnd;
+  nsDirection direction;
+
+  GetFrameForNodeOffset(aNode, aContentOffset, mHint, &currentFrame, &currentOffset);
+  currentFrame->GetOffsets(frameStart, frameEnd);
+
+  if (0 == frameStart && 0 == frameEnd)
+    direction = eDirPrevious;
+  else if (frameStart == currentOffset)
+    direction = eDirPrevious;
+  else if (frameEnd == currentOffset)
+    direction = eDirNext;
+  else {
+    // we are neither at the beginning nor at the end of the frame, so we have no worries
+    *aPrevFrame = *aNextFrame = currentFrame;
+    currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
+                                  (void**)aNextLevel, sizeof(PRUint8) );
+    *aPrevLevel = *aNextLevel;
+    return NS_OK;
+  }
+
+  /*
+  we have to find the next or previous *logical* frame.
+
+  Unfortunately |GetFrameFromDirection| has already been munged to return the next/previous *visual* frame, so we can't use that.
+  The following code is taken from there without the Bidi changes.
+
+  XXX is there a simpler way to do this? 
+  */
+
+  nsIFrame *blockFrame = currentFrame;
+  nsIFrame *thisBlock;
+  PRInt32   thisLine;
+  nsCOMPtr<nsILineIteratorNavigator> it; 
+  nsresult result = NS_ERROR_FAILURE;
+  while (NS_FAILED(result) && blockFrame)
+  {
+    thisBlock = blockFrame;
+    result = blockFrame->GetParent(&blockFrame);
+    if (NS_SUCCEEDED(result) && blockFrame){
+      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
+    }
+    else
+      blockFrame = nsnull;
+  }
+  if (!blockFrame || !it)
+    return NS_ERROR_FAILURE;
+  result = it->FindLineContaining(thisBlock, &thisLine);
+  if (NS_FAILED(result))
+    return result;
+
+  nsIFrame *firstFrame;
+  nsIFrame *lastFrame;
+  nsRect    nonUsedRect;
+  PRInt32   lineFrameCount;
+  PRUint32  lineFlags;
+
+  result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
+                       &lineFlags);
+  if (NS_FAILED(result))
+    return result;
+
+  lastFrame = firstFrame;
+
+  for (;lineFrameCount > 1;lineFrameCount --) {
+    result = lastFrame->GetNextSibling(&lastFrame);
+
+    if (NS_FAILED(result)){
+      NS_ASSERTION(0,"should not be reached nsFrame\n");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // GetFirstLeaf
+  nsIFrame *lookahead = nsnull;
+  while (1) {
+    result = firstFrame->FirstChild(aPresContext, nsnull, &lookahead);
+    if (NS_FAILED(result) || !lookahead)
+      break; //nothing to do
+    firstFrame = lookahead;
+  }
+
+  // GetLastLeaf
+  lookahead = nsnull;
+  while (1) {
+    result = lastFrame->FirstChild(aPresContext, nsnull, &lookahead);
+    if (NS_FAILED(result) || !lookahead)
+      break; //nothing to do
+    lastFrame = lookahead;
+    while (NS_SUCCEEDED(lastFrame->GetNextSibling(&lookahead)) && lookahead)
+      lastFrame = lookahead;
+  }
+  //END LINE DATA CODE
+
+  if (direction == eDirNext && lastFrame == currentFrame) { // End of line: set aPrevFrame to the current frame
+                                                            //              set aPrevLevel to the embedding level of the current frame
+                                                            //              set aNextFrame to null
+                                                            //              set aNextLevel to the paragraph embedding level
+    *aPrevFrame = currentFrame;
+    currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
+                                  (void**)aPrevLevel, sizeof(PRUint8) );
+    currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel,
+                                  (void**)aNextLevel, sizeof(PRUint8) );
+    *aNextFrame = nsnull;
+    return NS_OK;
+  }
+
+  if (direction == eDirPrevious && firstFrame == currentFrame) { // Beginning of line: set aPrevFrame to null
+                                                                 //                    set aPrevLevel to the paragraph embedding level
+                                                                 //                    set aNextFrame to the current frame
+                                                                 //                    set aNextLevel to the embedding level of the current frame
+    *aNextFrame = currentFrame;
+    currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
+                                  (void**)aNextLevel, sizeof(PRUint8) );
+    currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel,
+                                  (void**)aPrevLevel, sizeof(PRUint8) );
+    *aPrevFrame = nsnull;
+    return NS_OK;
+  }
+
+  // Find the adjacent frame
+
+  nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
+  nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID,&result));
+  if (NS_FAILED(result))
+    return result;
+
+  result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF, aPresContext, currentFrame);
+  if (NS_FAILED(result))
+    return result;
+  nsISupports *isupports = nsnull;
+  if (direction == eDirNext)
+    result = frameTraversal->Next();
+  else 
+    result = frameTraversal->Prev();
+
+  if (NS_FAILED(result))
+    return result;
+  result = frameTraversal->CurrentItem(&isupports);
+  if (NS_FAILED(result))
+    return result;
+  if (!isupports)
+    return NS_ERROR_NULL_POINTER;
+  //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
+  //for speed reasons
+  nsIFrame *newFrame = (nsIFrame *)isupports;
+
+  if (direction == eDirNext) {
+    *aPrevFrame = currentFrame;
+    currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
+                                  (void**)aPrevLevel, sizeof(PRUint8) );
+    *aNextFrame = newFrame;
+    newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
+                              (void**)aNextLevel, sizeof(PRUint8) );
+  }
+  else {
+    *aNextFrame = currentFrame;
+    currentFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
+                                  (void**)aNextLevel, sizeof(PRUint8) );
+    *aPrevFrame = newFrame;
+    newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
+                              (void**)aPrevLevel, sizeof(PRUint8) );
+  }
+
+  return NS_OK;
+
+}
+
+NS_IMETHODIMP nsSelection::GetFrameFromLevel(nsIPresContext *aPresContext,
+                                             nsIFrame *aFrameIn,
+                                             nsDirection aDirection,
+                                             PRUint8 aBidiLevel,
+                                             nsIFrame **aFrameOut)
+{
+  PRUint8 foundLevel = 0;
+  nsIFrame *foundFrame = aFrameIn;
+
+  nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
+  nsresult result;
+  nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID,&result));
+  if (NS_FAILED(result))
+      return result;
+
+  result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF, aPresContext, aFrameIn);
+  if (NS_FAILED(result))
+    return result;
+  nsISupports *isupports = nsnull;
+
+  do {
+    *aFrameOut = foundFrame;
+    if (aDirection == eDirNext)
+      result = frameTraversal->Next();
+    else 
+      result = frameTraversal->Prev();
+
+    if (NS_FAILED(result))
+      return result;
+    result = frameTraversal->CurrentItem(&isupports);
+    if (NS_FAILED(result))
+      return result;
+    if (!isupports)
+      return NS_ERROR_NULL_POINTER;
+    //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
+    //for speed reasons
+    foundFrame = (nsIFrame *)isupports;
+    foundFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
+                                (void**)&foundLevel, sizeof(PRUint8) );
+
+  } while (foundLevel > aBidiLevel);
+
+  return NS_OK;
+}
+
+/** After moving the caret, its Bidi level is set according to the following rules:
+ *
+ *  After moving over a character with left/right arrow, set to the Bidi level of the last moved over character.
+ *  After Home and End, set to the paragraph embedding level.
+ *  After up/down arrow, PageUp/Down, set to the lower level of the 2 surrounding characters.
+ *  After mouse click, set to the level of the current frame.
+ *
+ *  The following two methods use GetPrevNextBidiLevels to determine the new Bidi level.
+ *  BidiLevelFromMove is called when the caret is moved in response to a keyboard event
+ *
+ * @param aContext is the presentation context
+ * @param aPresShell is the presentation shell
+ * @param aNode is the content node
+ * @param aContentOffset is the new caret position, as an offset into aNode
+ * @param aKeycode is the keyboard event that moved the caret to the new position
+ */
+void nsSelection::BidiLevelFromMove(nsIPresContext* aContext,
+                                    nsIPresShell* aPresShell,
+                                    nsIContent *aNode,
+                                    PRUint32 aContentOffset,
+                                    PRUint32 aKeycode)
+{
+  PRUint8 firstLevel;
+  PRUint8 secondLevel;
+  PRUint8 currentLevel;
+  nsIFrame* firstFrame=nsnull;
+  nsIFrame* secondFrame=nsnull;
+
+  aPresShell->GetCursorBidiLevel(&currentLevel);
+
+  switch (aKeycode) {
+
+    // Right and Left: the new cursor Bidi level is the level of the character moved over
+    case nsIDOMKeyEvent::DOM_VK_RIGHT:
+    case nsIDOMKeyEvent::DOM_VK_LEFT:
+      GetPrevNextBidiLevels(aContext, aNode, aContentOffset, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
+      if (HINTLEFT==mHint)
+        aPresShell->SetCursorBidiLevel(firstLevel);
+      else
+        aPresShell->SetCursorBidiLevel(secondLevel);
+      break;
+
+      /*
+    // Up and Down: the new cursor Bidi level is the smaller of the two surrounding characters      
+    case nsIDOMKeyEvent::DOM_VK_UP:
+    case nsIDOMKeyEvent::DOM_VK_DOWN:
+      GetPrevNextBidiLevels(aContext, aNode, aContentOffset, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
+      aPresShell->SetCursorBidiLevel(PR_MIN(firstLevel, secondLevel));
+      break;
+      */
+
+    default:
+      aPresShell->UndefineCursorBidiLevel();
+  }
+}
+
+/**
+ * BidiLevelFromClick is called when the caret is repositioned by clicking the mouse
+ *
+ * @param aNode is the content node
+ * @param aContentOffset is the new caret position, as an offset into aNode
+ */
+void nsSelection::BidiLevelFromClick(nsIContent *aNode, PRUint32 aContentOffset)
+{
+  nsCOMPtr<nsIPresContext> context;
+  nsresult result = mTracker->GetPresContext(getter_AddRefs(context));
+  if (NS_FAILED(result) || !context)
+    return;
+
+  nsCOMPtr<nsIPresShell> shell;
+  result = context->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(result) || !shell)
+    return;
+
+  nsIFrame* clickInFrame=nsnull;
+  PRUint8 frameLevel;
+  PRInt32 OffsetNotUsed;
+
+  GetFrameForNodeOffset(aNode, aContentOffset, mHint, &clickInFrame, &OffsetNotUsed);
+  clickInFrame->GetBidiProperty(context, nsLayoutAtoms::embeddingLevel,
+                                (void**)&frameLevel, sizeof(PRUint8) );
+  shell->SetCursorBidiLevel(frameLevel);
+}
+#endif //IBMBIDI
+
 NS_IMETHODIMP
 nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, 
                        PRUint32 aContentEndOffset, PRBool aContinueSelection, 
@@ -1679,6 +2536,9 @@ nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
   // Don't take focus when dragging off of a table
   if (!mSelectingTableCells)
   {
+#ifdef IBMBIDI
+    BidiLevelFromClick(aNewFocus, aContentOffset);
+#endif
     PostReason(nsISelectionListener::MOUSEDOWN_REASON + nsISelectionListener::DRAG_REASON);
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
   }
@@ -1736,7 +2596,24 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
 
   if (NS_SUCCEEDED(result))
   {
+#ifdef IBMBIDI
+    long level;
+    nsPeekOffsetStruct pos;
+    pos.SetData(mTracker, 0, eSelectDir, eDirNext /*????*/, startPos, PR_FALSE,PR_TRUE, PR_TRUE);
+    mHint = HINT(beginOfContent);
+    HINT saveHint = mHint;
+    newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&level);
+    if (level & 1)
+      mHint = (mHint==HINTLEFT) ? HINTRIGHT : HINTLEFT;
+    pos.mResultContent = newContent;
+    pos.mContentOffset = contentOffsetEnd;
+    result = VisualSelectFrames(aPresContext, newFrame, pos);
+    if (NS_FAILED(result))
+      result = HandleClick(newContent, startPos, contentOffsetEnd , PR_FALSE, PR_FALSE, beginOfContent);
+    mHint = saveHint;
+#else
     result = HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE, beginOfContent);
+#endif // IBMBIDI
   }
 
   return result;
@@ -1812,7 +2689,11 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
       mBatching = batching;
       mChangesDuringBatching = changes;
     }
+#ifdef IBMBIDI
+    if (aContentEndOffset != aContentOffset)
+#else
     if (aContentEndOffset > aContentOffset)
+#endif // IBMBIDI
       mDomSelections[index]->Extend(domNode,aContentEndOffset);
   }
   else {
@@ -6680,5 +7561,88 @@ nsTypedSelection::CanSetProperty(const nsIID * iid, const PRUnichar *propertyNam
   if (iid->Equals(NS_GET_IID(nsISelection))) {
     *_retval = nsCRT::strdup(kAllAccess);
   }
+  return NS_OK;
+}
+
+/** SelectionLanguageChange modifies the cursor Bidi level after a change in keyboard direction
+ *  @param aLangRTL is PR_TRUE if the new language is right-to-left or PR_FALSE if the new language is left-to-right
+ */
+NS_IMETHODIMP
+nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
+{
+#ifdef IBMBIDI
+  nsresult result;
+  nsCOMPtr<nsIDOMNode>  focusNode;
+  nsCOMPtr<nsIContent> focusContent;
+  PRInt32 focusOffset;
+  PRInt32 frameOffset = 0;
+  nsIFrame *focusFrame = 0;
+
+  focusOffset = FetchFocusOffset();
+  focusNode = FetchFocusNode();
+  result =GetPrimaryFrameForFocusNode(&focusFrame);
+  if (NS_FAILED(result) || !focusFrame)
+    return result?result:NS_ERROR_FAILURE;
+
+  PRInt32 frameStart, frameEnd;
+  focusFrame->GetOffsets(frameStart, frameEnd);
+  nsCOMPtr<nsIPresContext> context;
+  PRUint8 level, levelBefore, levelAfter;
+  result = GetPresContext(getter_AddRefs(context));
+  if (NS_FAILED(result) || !context)
+    return result?result:NS_ERROR_FAILURE;
+
+  focusFrame->GetBidiProperty(context, nsLayoutAtoms::embeddingLevel, (void**)&level, sizeof(PRUint8));
+  if ((focusOffset != frameStart) && (focusOffset != frameEnd))
+    // the cursor is not at a frame boundary, so the level of both the characters (logically) before and after the cursor
+    //  is equal to the frame level
+    levelBefore = levelAfter = level;
+  else {
+    // the cursor is at a frame boundary, so use GetPrevNextBidiLevels to find the level of the characters
+    //  before and after the cursor
+    nsIFrame* frameBefore = nsnull;
+    nsIFrame* frameAfter = nsnull;
+    focusContent = do_QueryInterface(focusNode);
+    /*
+    nsIFrameSelection::HINT hint;
+
+    if ((focusOffset == frameStart && level)        // beginning of an RTL frame
+        || (focusOffset == frameEnd && !level)) {   // end of an LTR frame
+      hint = nsIFrameSelection::HINTRIGHT;
+    }
+    else {                                          // end of an RTL frame or beginning of an LTR frame
+      hint = nsIFrameSelection::HINTLEFT;
+    }
+    mFrameSelection->SetHint(hint);
+    */
+    mFrameSelection->GetPrevNextBidiLevels(context, focusContent, focusOffset, &frameBefore, &frameAfter, &levelBefore, &levelAfter);
+  }
+
+  nsCOMPtr<nsIPresShell> shell;
+  result = context->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(result) || !shell)
+    return result?result:NS_ERROR_FAILURE;
+
+  if ((levelBefore & 1) == (levelAfter & 1)) {
+    // if cursor is between two characters with the same orientation, changing the keyboard language
+    //  must toggle the cursor level between the level of the character with the lowest level
+    //  (if the new language corresponds to the orientation of that character) and this level plus 1
+    //  (if the new language corresponds to the opposite orientation)
+    if ((level != levelBefore) && (level != levelAfter))
+      level = PR_MIN(levelBefore, levelAfter);
+    if ((level & 1) == aLangRTL)
+      shell->SetCursorBidiLevel(level);
+    else
+      shell->SetCursorBidiLevel(level + 1);
+  }
+  else {
+    // if cursor is between characters with opposite orientations, changing the keyboard language must change
+    //  the cursor level to that of the adjacent character with the orientation corresponding to the new language.
+    if ((levelBefore & 1) == aLangRTL)
+      shell->SetCursorBidiLevel(levelBefore);
+    else
+      shell->SetCursorBidiLevel(levelAfter);
+  }
+#endif // IBMBIDI
   return NS_OK;
 }

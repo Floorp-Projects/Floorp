@@ -364,6 +364,36 @@ public:
    */
   NS_IMETHOD GetLimiter(nsIContent **aLimiterContent)=0;
 
+#ifdef IBMBIDI
+  /** GetPrevNextBidiLevels will return the frames and associated Bidi levels of the characters
+   *   logically before and after a (collapsed) selection.
+   *  @param aPresContext is the context to use
+   *  @param aNode is the node containing the selection
+   *  @param aContentOffset is the offset of the selection in the node
+   *  @param aPrevFrame will hold the frame of the character before the selection
+   *  @param aNextFrame will hold the frame of the character after the selection
+   *  @param aPrevLevel will hold the Bidi level of the character before the selection
+   *  @param aNextLevel will hold the Bidi level of the character after the selection
+   *
+   *  At the beginning and end of each line there is assumed to be a frame with Bidi level equal to the
+   *   paragraph embedding level. In these cases aPrevFrame and aNextFrame respectively will return nsnull.
+   */
+  NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext, nsIContent *aNode, PRUint32 aContentOffset,
+                                   nsIFrame **aPrevFrame, nsIFrame **aNextFrame, PRUint8 *aPrevLevel, PRUint8 *aNextLevel)=0;
+
+  /** GetFrameFromLevel will scan in a given direction
+   *   until it finds a frame with a Bidi level less than or equal to a given level.
+   *   It will return the last frame before this.
+   *  @param aPresContext is the context to use
+   *  @param aFrameIn is the frame to start from
+   *  @param aDirection is the direction to scan
+   *  @param aBidiLevel is the level to search for
+   *  @param aFrameOut will hold the frame returned
+   */
+  NS_IMETHOD GetFrameFromLevel(nsIPresContext *aPresContext, nsIFrame *aFrameIn, nsDirection aDirection, PRUint8 aBidiLevel,
+                               nsIFrame **aFrameOut)=0;
+
+#endif // IBMBIDI
 };
 
 

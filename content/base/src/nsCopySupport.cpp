@@ -32,6 +32,12 @@
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsISupportsPrimitives.h"
+#ifdef IBMBIDI
+#include "nsIUBidiUtils.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
+static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
+#endif
 
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
@@ -80,6 +86,65 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       return rv;
   }
   
+#ifdef IBMBIDI //ahmed
+  rv = NS_OK;
+  PRBool arabicCharset;
+  
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+  if (doc) {
+    nsIPresShell* shell = doc->GetShellAt(0);
+    if (shell) {
+      nsCOMPtr<nsIPresContext> context;
+      shell->GetPresContext(getter_AddRefs(context) );
+      if (context) {
+        context->IsArabicEncoding(arabicCharset);
+        if (arabicCharset) {
+          nsCOMPtr<nsIUBidiUtils> bidiUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
+          nsBidiOptions bidiOptions;
+          PRBool isVisual;
+          PRBool isBidiSystem;
+    
+          context->GetBidi(&bidiOptions);
+          context->IsVisualMode(isVisual);
+          context->GetIsBidiSystem(isBidiSystem);
+          if ( (GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions) == IBMBIDI_CLIPBOARDTEXTMODE_LOGICAL)&&(isVisual)//&&(isBidiSystem)
+             ) {
+            nsAutoString newBuffer;
+            if (isBidiSystem) {
+#if 0 // Until we finalize the conversion routine
+              if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_LTR) {
+                bidiUtils->Conv_FE_06_WithReverse(buffer, newBuffer);
+              } 
+              if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_RTL) {
+                bidiUtils->Conv_FE_06 (buffer, newBuffer);
+              }
+#endif
+            }
+            else { //nonbidisystem
+              bidiUtils->HandleNumbers(buffer, newBuffer);//ahmed
+            }
+            buffer = newBuffer;
+          }
+          //Mohamed
+          else {
+#if 0 // Until we finalize the conversion routine
+            nsAutoString bidiCharset;
+            context->GetBidiCharset(bidiCharset);
+            if (bidiCharset.EqualsIgnoreCase("UTF-8") || (!isVisual)) {
+              if ( (GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions) == IBMBIDI_CLIPBOARDTEXTMODE_VISUAL) || (!isBidiSystem) ) {
+                nsAutoString newBuffer;
+                bidiUtils->Conv_06_FE_WithReverse(buffer, newBuffer, GET_BIDI_OPTION_DIRECTION(bidiOptions));
+                bidiUtils->HandleNumbers(newBuffer, buffer);
+              }
+            }
+#endif
+          }
+        }
+      }
+    }
+  }
+#endif // IBMBIDI
+
   // Get the Clipboard
   NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
   if (NS_FAILED(rv)) 

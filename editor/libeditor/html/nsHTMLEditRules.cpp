@@ -43,6 +43,10 @@
 #include "nsIPresShell.h"
 #include "nsLayoutCID.h"
 #include "nsIPref.h"
+#ifdef IBMBIDI
+#include "nsIPresContext.h"
+#include "nsIFrameSelection.h"
+#endif // IBMBIDI
 
 #include "nsEditorUtils.h"
 
@@ -292,6 +296,21 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     nsCOMPtr<nsISelectionController> selCon;
     mHTMLEditor->GetSelectionController(getter_AddRefs(selCon));
     if (selCon) selCon->SetCaretEnabled(PR_TRUE);
+#ifdef IBMBIDI
+    /* After inserting text the cursor Bidi level must be set to the level of the inserted text.
+     * This is difficult, because we cannot know what the level is until after the Bidi algorithm
+     * is applied to the whole paragraph.
+     *
+     * So we set the cursor Bidi level to UNDEFINED here, and the caret code will set it correctly later
+     */
+    if (action == nsEditor::kOpInsertText) {
+      nsCOMPtr<nsIPresShell> shell;
+      mEditor->GetPresShell(getter_AddRefs(shell));
+      if (shell) {
+        shell->UndefineCursorBidiLevel();
+      }
+    }
+#endif
   }
 
   return res;
@@ -1037,6 +1056,11 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         if (NS_FAILED(res)) return res;
       }
     }
+#ifdef IBMBIDI
+    nsCOMPtr<nsISelection> selection(aSelection);
+    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+    selPriv->SetInterlinePosition(PR_FALSE);
+#endif
     if (curNode) aSelection->Collapse(curNode, curOffset);
     // manually update the doc changed range so that AfterEdit will clean up
     // the correct portion of the document.
@@ -1243,7 +1267,84 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       PRUint32 strLength;
       res = textNode->GetLength(&strLength);
       if (NS_FAILED(res)) return res;
-    
+
+#ifdef IBMBIDI // Test for distance between caret and text that will be deleted
+      nsCOMPtr<nsIPresShell> shell;
+      mEditor->GetPresShell(getter_AddRefs(shell));
+      if (shell)
+      {
+        nsCOMPtr<nsIPresContext> context;
+        shell->GetPresContext(getter_AddRefs(context));
+        if (context)
+        {
+          PRBool bidiEnabled;
+          context->BidiEnabled(bidiEnabled);
+          if (bidiEnabled)
+          {
+            nsCOMPtr<nsIFrameSelection> frameSelection;
+            shell->GetFrameSelection(getter_AddRefs(frameSelection));
+            if (frameSelection)
+            {
+              nsCOMPtr<nsIContent> content = do_QueryInterface(startNode);
+              if (content)
+              {
+                nsIFrame *primaryFrame;
+                nsIFrame *frameBefore;
+                nsIFrame *frameAfter;
+                PRInt32 frameOffset;
+
+                shell->GetPrimaryFrameFor(content, &primaryFrame);
+                if (primaryFrame)
+                {
+                  res = primaryFrame->GetChildFrameContainingOffset(startOffset, PR_FALSE, &frameOffset, &frameBefore);
+                  if (NS_SUCCEEDED(res) && frameBefore)
+                  {
+                    PRInt32 start, end;
+                    frameBefore->GetOffsets(start, end);
+                    if (startOffset == end)
+                    {
+                      res = primaryFrame->GetChildFrameContainingOffset(startOffset, PR_TRUE, &frameOffset, &frameAfter);
+                      if (NS_SUCCEEDED(res) && frameAfter)
+                      {
+                        PRUint8 currentCursorLevel;
+                        long levelBefore;
+                        long levelAfter;
+                        long paragraphLevel;
+                        long levelOfDeletion;
+                        nsCOMPtr<nsIAtom> embeddingLevel = NS_NewAtom("EmbeddingLevel"); 
+                        nsCOMPtr<nsIAtom> baseLevel = NS_NewAtom("BaseLevel"); 
+                        frameBefore->GetBidiProperty(context, embeddingLevel, (void**)&levelBefore);
+                        if (frameBefore==frameAfter)
+                        {
+                          frameBefore->GetBidiProperty(context, baseLevel, (void**)&paragraphLevel);
+                          levelAfter = paragraphLevel;
+                        }
+                        else
+                          frameAfter->GetBidiProperty(context, embeddingLevel, (void**)&levelAfter);
+                        shell->GetCursorBidiLevel(&currentCursorLevel);
+                        if (levelBefore==levelAfter && (levelAfter & 1) == (currentCursorLevel & 1))
+                          shell->SetCursorBidiLevel(levelBefore);
+                        else
+                        {
+                          levelOfDeletion = (nsIEditor::eNext==aAction) ? levelAfter : levelBefore;
+                          shell->SetCursorBidiLevel(levelOfDeletion);
+                          if ((currentCursorLevel/* & 1*/) != (levelOfDeletion/* & 1*/))
+                          {
+                            *aCancel = PR_TRUE;
+                            return NS_OK;
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+#endif // IBMBIDI
+
       // at beginning of text node and backspaced?
       if (!startOffset && (aAction == nsIEditor::ePrevious))
       {

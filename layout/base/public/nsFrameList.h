@@ -122,6 +122,18 @@ public:
 
   nsIFrame* GetPrevSiblingFor(nsIFrame* aFrame) const;
 
+#ifdef IBMBIDI
+  /**
+   * Return the frame before this frame in visual order (after Bidi reordering)
+   */
+  nsIFrame* GetPrevVisualFor(nsIFrame* aFrame) const;
+
+  /**
+   * Return the frame after this frame in visual order (after Bidi reordering)
+   */
+  nsIFrame* GetNextVisualFor(nsIFrame* aFrame) const;
+#endif // IBMBIDI
+
   void VerifyParent(nsIFrame* aParent) const;
 
 #ifdef NS_DEBUG

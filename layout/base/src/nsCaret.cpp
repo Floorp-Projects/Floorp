@@ -57,6 +57,14 @@
 // with form elements.
 #define DONT_REUSE_RENDERING_CONTEXT
 
+#ifdef IBMBIDI
+//-------------------------------IBM BIDI--------------------------------------
+// Mamdouh : Modifiaction of the caret to work with Bidi in the LTR and RTL
+#include "nsIPref.h"
+#include "nsLayoutAtoms.h"
+//------------------------------END OF IBM BIDI--------------------------------
+#endif //IBMBIDI
+
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
 //-----------------------------------------------------------------------------
@@ -133,6 +141,12 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
     if (NS_FAILED(err))
       return err;
   }
+#ifdef IBMBIDI
+  PRBool isRTL;
+  mBidiKeyboard = do_GetService("@mozilla.org/widget/bidikeyboard;1");
+  mBidiKeyboard->IsLangRTL(&isRTL);
+  mKeyboardRTL = isRTL;
+#endif
   
   return NS_OK;
 }
@@ -521,6 +535,178 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
   frameState |= NS_FRAME_EXTERNAL_REFERENCE;
   theFrame->SetFrameState(frameState);
   
+#ifdef IBMBIDI
+  PRUint8 bidiLevel=0;
+  // Mamdouh : modification of the caret to work at rtl and ltr with Bidi
+  const nsStyleDisplay* display;
+  theFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  //
+  // Direction Style from this->GetStyleData()
+  // now in (display->mDirection)
+  // ------------------
+  // NS_STYLE_DIRECTION_LTR : LTR or Default
+  // NS_STYLE_DIRECTION_RTL
+  // NS_STYLE_DIRECTION_INHERIT
+  nsCOMPtr<nsIPresContext> presContext;
+  rv = presShell->GetPresContext(getter_AddRefs(presContext));
+
+  PRBool bidiEnabled = PR_FALSE;
+  if (presContext)
+    presContext->BidiEnabled(bidiEnabled);
+
+  if (bidiEnabled)
+  {
+    presShell->GetCursorBidiLevel(&bidiLevel);
+    if (bidiLevel & BIDI_LEVEL_UNDEFINED)
+    {
+      PRUint8 newBidiLevel;
+      bidiLevel &= ~BIDI_LEVEL_UNDEFINED;
+      // There has been a reflow, so we reset the cursor Bidi level to the level of the current frame
+      if (!presContext) // Use the style default or default to 0
+        newBidiLevel = (display) ? display->mDirection : 0;
+      else
+      {
+        theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
+                                  (void**)&newBidiLevel, sizeof(PRUint8) );
+        presShell->SetCursorBidiLevel(newBidiLevel);
+        bidiLevel = newBidiLevel;
+      }
+    }
+
+    PRInt32 start;
+    PRInt32 end;
+    nsIFrame* frameBefore;
+    nsIFrame* frameAfter;
+    PRUint8 levelBefore;     // Bidi level of the character before the caret
+    PRUint8 levelAfter;      // Bidi level of the character after the caret
+
+    theFrame->GetOffsets(start, end);
+    if (start == 0 || end == 0 || start == theFrameOffset || end == theFrameOffset)
+    {
+      /* Boundary condition, we need to know the Bidi levels of the characters before and after the cursor */
+      if (NS_SUCCEEDED(frameSelection->GetPrevNextBidiLevels(presContext, contentNode, contentOffset,
+                                                             &frameBefore, &frameAfter,
+                                                             &levelBefore, &levelAfter)))
+      {
+        if ((levelBefore != levelAfter) || (bidiLevel != levelBefore))
+        {
+          bidiLevel = PR_MAX(bidiLevel, PR_MIN(levelBefore, levelAfter));                                 // rule c3
+          bidiLevel = PR_MIN(bidiLevel, PR_MAX(levelBefore, levelAfter));                                 // rule c4
+          if (bidiLevel == levelBefore                                                                    // rule c1
+              || bidiLevel > levelBefore && bidiLevel < levelAfter && !((bidiLevel ^ levelBefore) & 1)    // rule c5
+              || bidiLevel < levelBefore && bidiLevel > levelAfter && !((bidiLevel ^ levelBefore) & 1))   // rule c9
+          {
+            if (theFrame != frameBefore)
+            {
+              if (frameBefore) // if there is a frameBefore, move into it, setting HINTLEFT to make sure we stay there
+              {
+                theFrame = frameBefore;
+                theFrame->GetOffsets(start, end);
+                theFrameOffset = end;
+//              frameSelection->SetHint(nsIFrameSelection::HINTLEFT);
+              }
+              else 
+              {
+                // if there is no frameBefore, we must be at the beginning of the line
+                // so we stay with the current frame.
+                // Exception: when the first frame on the line has a different Bidi level from the paragraph level, there is no
+                // real frame for the caret to be in. We have to find the first frame whose level is the same as the
+                // paragraph level, and put the caret at the end of the frame before that.
+                PRUint8 baseLevel;
+                frameAfter->GetBidiProperty(presContext, nsLayoutAtoms::baseLevel,
+                                            (void**)&baseLevel, sizeof(PRUint8) );
+                if (baseLevel != levelAfter)
+                {
+                  if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameAfter, eDirNext, baseLevel, &theFrame)))
+                  {
+                    theFrame->GetOffsets(start, end);
+                    theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
+                                              (void**)&levelAfter, sizeof(PRUint8) );
+                    if (baseLevel & 1) // RTL paragraph: caret to the right of the rightmost character
+                      theFrameOffset = (levelAfter & 1) ? start : end;
+                    else               // LTR paragraph: caret to the left of the leftmost character
+                      theFrameOffset = (levelAfter & 1) ? end : start;
+                  }
+                }
+              }
+            }
+          }
+          else if (bidiLevel == levelAfter                                                                   // rule c2
+                   || bidiLevel > levelBefore && bidiLevel < levelAfter && !((bidiLevel ^ levelAfter) & 1)   // rule c6  
+                   || bidiLevel < levelBefore && bidiLevel > levelAfter && !((bidiLevel ^ levelAfter) & 1))  // rule c10
+          {
+            if (theFrame != frameAfter)
+            {
+              if (frameAfter)
+              {
+                // if there is a frameAfter, move into it, setting HINTRIGHT to make sure we stay there
+                theFrame = frameAfter;
+                theFrame->GetOffsets(start, end);
+                theFrameOffset = start;
+//              frameSelection->SetHint(nsIFrameSelection::HINTRIGHT);
+              }
+              else 
+              {
+                // if there is no frameAfter, we must be at the end of the line
+                // so we stay with the current frame.
+                //
+                // Exception: when the last frame on the line has a different Bidi level from the paragraph level, there is no
+                // real frame for the caret to be in. We have to find the last frame whose level is the same as the
+                // paragraph level, and put the caret at the end of the frame after that.
+                PRUint8 baseLevel;
+                frameBefore->GetBidiProperty(presContext, nsLayoutAtoms::baseLevel,
+                                             (void**)&baseLevel, sizeof(PRUint8) );
+                if (baseLevel != levelBefore)
+                {
+                  if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameBefore, eDirPrevious, baseLevel, &theFrame)))
+                  {
+                    theFrame->GetOffsets(start, end);
+                    theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
+                                              (void**)&levelBefore, sizeof(PRUint8) );
+                    if (baseLevel & 1) // RTL paragraph: caret to the left of the leftmost character
+                      theFrameOffset = (levelBefore & 1) ? end : start;
+                    else               // RTL paragraph: caret to the right of the rightmost character
+                      theFrameOffset = (levelBefore & 1) ? start : end;
+                  }
+                }
+              }
+            }
+          }
+          else if (bidiLevel > levelBefore && bidiLevel < levelAfter  // rule c7/8
+                   && !((levelBefore ^ levelAfter) & 1)               //  before and after have the same parity
+                   && ((bidiLevel ^ levelAfter) & 1))                 // cursor has different parity
+          {
+            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameAfter, eDirNext, bidiLevel, &theFrame)))
+            {
+              theFrame->GetOffsets(start, end);
+              theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
+                                        (void**)&levelAfter, sizeof(PRUint8) );
+              if (bidiLevel & 1) // c8: caret to the right of the rightmost character
+                theFrameOffset = (levelAfter & 1) ? start : end;
+              else               // c7: caret to the left of the leftmost character
+                theFrameOffset = (levelAfter & 1) ? end : start;
+            }
+          }
+          else if (bidiLevel < levelBefore && bidiLevel > levelAfter  // rule c11/12
+                   && !((levelBefore ^ levelAfter) & 1)               //  before and after have the same parity
+                   && ((bidiLevel ^ levelAfter) & 1))                 // cursor has different parity
+          {
+            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameBefore, eDirPrevious, bidiLevel, &theFrame)))
+            {
+              theFrame->GetOffsets(start, end);
+              theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
+                                        (void**)&levelBefore, sizeof(PRUint8) );
+              if (bidiLevel & 1) // c12: caret to the left of the leftmost character
+                theFrameOffset = (levelBefore & 1) ? end : start;
+              else               // c11: caret to the right of the rightmost character
+                theFrameOffset = (levelBefore & 1) ? start : end;
+            }
+          }   
+        }
+      }
+    }
+  }
+#endif // IBMBIDI
   mLastCaretFrame = theFrame;
   mLastContentOffset = theFrameOffset;
   return PR_TRUE;
@@ -779,13 +965,51 @@ void nsCaret::DrawCaret()
     }
 
     mCaretRect.IntersectRect(clipRect, caretRect);
+#ifdef IBMBIDI
+    // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
+    PRBool bidiEnabled;
+    nsRect hookRect;
+    PRBool bidiLevel=PR_FALSE;
+    if (mBidiKeyboard)
+      mBidiKeyboard->IsLangRTL(&bidiLevel);
+    if (bidiLevel)
+    {
+      presContext->EnableBidi();
+      bidiEnabled = PR_TRUE;
+    }
+    else
+      presContext->BidiEnabled(bidiEnabled);
+    if (bidiEnabled)
+    {
+      if (bidiLevel != mKeyboardRTL)
+      {
+        mKeyboardRTL = bidiLevel;
+        nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+        if (domSelection)
+        {
+          if (NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
+            return;
+        }
+      }
+      // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
+      hookRect.SetRect(caretRect.x + caretRect.width * ((bidiLevel) ? -1 : 1), 
+                       caretRect.y + caretRect.width,
+                       caretRect.width,
+                       caretRect.width);
+      mHookRect.IntersectRect(clipRect, hookRect);
+    }
+#endif //IBMBIDI
   }
-
+  
   if (mReadOnly)
     mRendContext->SetColor(NS_RGB(85, 85, 85));   // we are drawing it; gray
   else
     mRendContext->SetColor(NS_RGB(255,255,255));
   mRendContext->InvertRect(mCaretRect);
+#ifdef IBMBIDI
+  if (!mHookRect.IsEmpty()) // if Bidi support is disabled, the rectangle remains empty and won't be drawn
+    mRendContext->InvertRect(mHookRect);
+#endif
 
   PRBool emptyClip;   // I know what you're thinking. "Did he fire six shots or only five?"
   mRendContext->PopState(emptyClip);
