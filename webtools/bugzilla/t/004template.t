@@ -32,13 +32,14 @@ BEGIN { use Test::More tests => $tests; }
 use Template;
 
 my @testitems = @Support::Templates::testitems;
+my $include_path = $Support::Templates::include_path;
 my $verbose = $::ENV{VERBOSE};
 
 # Check to make sure all templates that are referenced in
 # Bugzilla exist in the proper place.
-my $path = "template/default";
+
 foreach my $file(@testitems) {
-    if (-e $path . "/" . $file) {
+    if (-e $include_path . "/" . $file) {
         ok(1, "$file exists");
     } else {
         ok(0, "$file does not exist");
@@ -47,7 +48,7 @@ foreach my $file(@testitems) {
 
 # Processes all the templates to make sure they have good syntax
 my $template = Template->new ({
-                 INCLUDE_PATH => $path,
+                 INCLUDE_PATH => $include_path,
                  RELATIVE => 1
                  });
 
@@ -55,7 +56,7 @@ open SAVEOUT, ">&STDOUT";     # stash the original output stream
 open STDOUT, "> /dev/null";   # discard all output
 foreach my $file(@testitems) {
     if ($template->process($file)) {
-        ok(1, "$file");
+        ok(1, "$file syntax ok");
     } else {
         ok(0, "$file has bad syntax");
     }
