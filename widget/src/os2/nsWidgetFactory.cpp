@@ -230,7 +230,7 @@ static nsModuleComponentInfo components[] =
   { "OS/2 Vert Scrollbar",
     NS_VERTSCROLLBAR_CID,
     "@mozilla.org/widget/vertscroll/os2;1",
-    nsHorizScrollbarConstructor },
+    nsVertScrollbarConstructor },
   { "OS/2 Sound",
     NS_SOUND_CID,
     "@mozilla.org/widget/sound;1",

@@ -36,6 +36,10 @@
 
 #include "nscanvas.h"
 #include "nsIDeviceContext.h"
+#include "nsIComponentManager.h"
+#include "nsIRenderingContext.h"
+#include "nsIRenderingContextOS2.h"
+#include "nsGfxCIID.h"
 #include <stdio.h>
 
 nsCanvas::nsCanvas() : mIsTLB(FALSE)
@@ -124,60 +128,72 @@ PRBool nsCanvas::OnPaint()
    if( mContext && (mEventCallback || mEventListener))
    {
       // Get rect to redraw and validate window
-#if 0
-      RECTL rcl;
-      WinQueryUpdateRect( mWnd, &rcl);
-      WinValidateRect( mWnd, &rcl, TRUE);
-
-      if( rcl.xLeft || rcl.xRight || rcl.yBottom || rcl.yTop)
-      {
-         // build XP rect from in-ex window rect
-         nsRect rect;
-         rect.x = rcl.xLeft;
-         rect.y = GetClientHeight() - rcl.yTop;
-         rect.width = rcl.xRight - rcl.xLeft;
-         rect.height = rcl.yTop - rcl.yBottom;
-   
-         // build & dispatch paint event
-         nsPaintEvent event;
-         InitEvent( event, NS_PAINT);
-         event.rect = &rect;
-         event.eventStructType = NS_PAINT_EVENT;
-         event.renderingContext = GetRenderingContext();
-         rc = DispatchWindowEvent( &event);
-   
-         NS_RELEASE( event.renderingContext);
-         NS_RELEASE( event.widget);
-      }
-#else
       RECTL rcl = { 0 };
-      HPS   thePS = (HPS) GetNativeData( NS_NATIVE_GRAPHIC);
-      thePS = WinBeginPaint( mWnd, thePS, &rcl);
 
-      if( rcl.xLeft || rcl.xRight || rcl.yBottom || rcl.yTop)
+      HPS hPS = WinBeginPaint(mWnd, NULLHANDLE, &rcl); 
+     
+      // XXX What is this check doing? If it's trying to check for an empty
+      // paint rect then use the IsRectEmpty() function...
+      if (rcl.xLeft || rcl.xRight || rcl.yTop || rcl.yBottom)
       {
-         // build XP rect from in-ex window rect
-         nsRect rect;
-         rect.x = rcl.xLeft;
-         rect.y = GetClientHeight() - rcl.yTop;
-         rect.width = rcl.xRight - rcl.xLeft;
-         rect.height = rcl.yTop - rcl.yBottom;
-   
-         // build & dispatch paint event
-         nsPaintEvent event;
-         InitEvent( event, NS_PAINT);
-         event.rect = &rect;
-         event.eventStructType = NS_PAINT_EVENT;
-         event.renderingContext = GetRenderingContext();
-         rc = DispatchWindowEvent( &event);
-   
-         NS_RELEASE( event.renderingContext);
-         NS_RELEASE( event.widget);
-      }
+          // call the event callback 
+          if (mEventCallback) 
+          {
+     
+              nsPaintEvent event;
+     
+              InitEvent(event, NS_PAINT);
+     
+              // build XP rect from in-ex window rect
+              nsRect rect;
+              rect.x = rcl.xLeft;
+              rect.y = GetClientHeight() - rcl.yTop;
+              rect.width = rcl.xRight - rcl.xLeft;
+              rect.height = rcl.yTop - rcl.yBottom;
+              event.rect = &rect;
+              event.eventStructType = NS_PAINT_EVENT;
+     
+#ifdef NS_DEBUG
+          debug_DumpPaintEvent(stdout,
+                               this,
+                               &event,
+                               nsCAutoString("noname"),
+                               (PRInt32) mWnd);
+#endif // NS_DEBUG
 
-      WinEndPaint( thePS);
-      FreeNativeData( (void*)thePS, NS_NATIVE_GRAPHIC);
-#endif
+              nsresult  res;
+             
+              static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+             
+              if( NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull,
+                                                       NS_GET_IID(nsIRenderingContext),
+                                                       (void **)&event.renderingContext) )
+              {
+                 nsIRenderingContextOS2 *winrc;
+
+                 if (NS_OK == event.renderingContext->QueryInterface(NS_GET_IID(nsIRenderingContextOS2), (void **)&winrc))
+                 {
+                    nsDrawingSurface surf;
+                   
+                    //i know all of this seems a little backwards. i'll fix it, i swear. MMP
+                   
+                    if (NS_OK == winrc->CreateDrawingSurface(hPS, surf, event.widget))
+                    {
+                      event.renderingContext->Init(mContext, surf);
+                      rc = DispatchWindowEvent(&event);
+                      event.renderingContext->DestroyDrawingSurface(surf);
+                    }
+
+                    NS_RELEASE(winrc);
+                 }
+              }
+     
+              NS_RELEASE(event.renderingContext);
+              NS_RELEASE(event.widget);
+          }
+      }
+     
+      WinEndPaint( hPS );
    }
 
    return rc;
