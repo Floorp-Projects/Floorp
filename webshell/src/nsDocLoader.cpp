@@ -225,6 +225,8 @@ static char* gPluginTypes[] = {
     "audio/aiff",
     "audio/x-aiff",
     "audio/basic",
+    "application/x-shockwave-flash",
+    "text/plain",
     0
 };
 
