@@ -61,6 +61,12 @@ pass_1(TreeState *state)
             fputc('\n', state->file);
             g_hash_table_foreach(state->includes, write_header, state);
         }
+
+        fputs("\n"
+              "#ifdef XPIDL_JS_STUBS\n"
+              "#include \"jsapi.h\"\n"
+              "#endif\n",
+              state->file);
     } else {
         fprintf(state->file, "\n#endif /* __gen_%s_h__ */\n", define);
     }
