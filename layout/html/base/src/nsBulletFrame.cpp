@@ -185,12 +185,12 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
     case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
 #ifdef IBMBIDI
-      GetListItemText(aCX, *myList, text);
+      GetListItemText(aPresContext, *myList, text);
       charType = eCharType_EuropeanNumber;
       break;
 
     case NS_STYLE_LIST_STYLE_ARABIC_INDIC:
-      GetListItemText(aCX, *myList, text);
+      GetListItemText(aPresContext, *myList, text);
       charType = eCharType_ArabicNumber;
       break;
 
@@ -200,7 +200,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
       if (!isBidiSystem) {
         charType = eCharType_RightToLeft;
         level = 1;
-        GetListItemText(aCX, *myList, text);
+        GetListItemText(aPresContext, *myList, text);
 
         if (NS_STYLE_DIRECTION_RTL == disp->mDirection) {
           nsStr::Delete(text, 0, 1);
@@ -264,23 +264,23 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
     }
 #ifdef IBMBIDI
     if (charType != eCharType_LeftToRight) {
-      aCX->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
+      aPresContext->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
       aRenderingContext.SetFont(fm);
 
       nsBidiPresUtils* bidiUtils;
-      aCX->GetBidiUtils(&bidiUtils);
+      aPresContext->GetBidiUtils(&bidiUtils);
       if (bidiUtils) {
         const PRUnichar* buffer = text.GetUnicode();
         PRInt32 textLength = text.Length();
         if (eCharType_RightToLeft == charType) {
-          bidiUtils->FormatUnicodeText(aCX, (PRUnichar*)buffer, textLength,
+          bidiUtils->FormatUnicodeText(aPresContext, (PRUnichar*)buffer, textLength,
                                        charType, level, PR_FALSE);
         }
         else {
 //Mohamed
           aRenderingContext.GetHints(hints);
           isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
-          bidiUtils->FormatUnicodeText(aCX, (PRUnichar*)buffer, textLength,
+          bidiUtils->FormatUnicodeText(aPresContext, (PRUnichar*)buffer, textLength,
                                        charType, level, isBidiSystem);//Mohamed
         }
       }
