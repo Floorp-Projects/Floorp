@@ -185,6 +185,14 @@ XPT_MakeCursor(XPTState *state, XPTPool pool, uint32 len, XPTCursor *cursor)
 }
 
 PRBool
+XPT_SeekTo(XPTCursor *cursor, uint32 offset)
+{
+    /* XXX do some real checking and update len and stuff */
+    cursor->offset = offset;
+    return PR_TRUE;
+}
+
+PRBool
 XPT_DoString(XPTCursor *cursor, XPTString **strp)
 {
     XPTCursor my_cursor;
@@ -339,7 +347,18 @@ XPT_CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
 PRBool
 XPT_DoIID(XPTCursor *cursor, nsID *iidp)
 {
-    return PR_FALSE;
+    int i;
+
+    if (!XPT_Do32(cursor, &iidp->m0) ||
+        !XPT_Do16(cursor, &iidp->m1) ||
+        !XPT_Do16(cursor, &iidp->m2))
+        return PR_FALSE;
+
+    for (i = 0; i < 8; i++)
+        if (!XPT_Do8(cursor, &iidp->m3[i]))
+            return PR_FALSE;
+
+    return PR_TRUE;
 }
 
 PRBool

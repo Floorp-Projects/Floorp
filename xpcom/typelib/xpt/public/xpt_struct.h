@@ -65,6 +65,16 @@ struct nsID {
 typedef struct nsID nsID;
 #endif
 
+#define XPT_COPY_IID(to, from)                                                \
+  (to).m0 = (from).m0;                                                        \
+  (to).m1 = (from).m1;                                                        \
+  (to).m2 = (from).m2;                                                        \
+  (to).m3[0] = (from).m3[0];                                                  \
+  (to).m3[1] = (from).m3[1];                                                  \
+  (to).m3[2] = (from).m3[2];                                                  \
+  (to).m3[3] = (from).m3[3];
+
+
 /*
  * Every XPCOM typelib file begins with a header.
  */
@@ -79,6 +89,13 @@ struct XPTHeader {
     XPTAnnotation               *annotations;
 };
 
+#define XPT_MAGIC "XPCOM\nTypeLib\r\n\032"
+#define XPT_MAJOR_VERSION 0x01
+#define XPT_MINOR_VERSION 0x00
+
+XPTHeader *
+XPT_NewHeader(uint32 num_interfaces);
+
 /*
  * A contiguous array of fixed-size InterfaceDirectoryEntry records begins at 
  * the byte offset identified by the interface_directory field in the file 
@@ -92,6 +109,11 @@ struct XPTInterfaceDirectoryEntry {
     XPTInterfaceDescriptor *interface_descriptor;
 };
 
+PRBool
+XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
+                                nsID *iid, char *name, char *namespace,
+                                XPTInterfaceDescriptor *descriptor);
+
 /*
  * An InterfaceDescriptor is a variable-size record used to describe a 
  * single XPCOM interface, including all of its methods. 
@@ -104,6 +126,13 @@ struct XPTInterfaceDescriptor {
     XPTConstDescriptor  *const_descriptors;
 };
 
+PRBool
+XPT_IndexForInterface(XPTInterfaceDirectoryEntry *ide_block,
+                      uint32 num_interfaces, nsID *iid, uint32 *indexp);
+
+XPTInterfaceDescriptor *
+XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
+                           uint32 num_constants);
 /*
  * This is our special string struct with a length value associated with it,
  * which means that it can contains embedded NULs.
@@ -112,6 +141,9 @@ struct XPTString {
     uint16 length;
     char   *bytes;
 };
+
+XPTString *
+XPT_NewString(char *bytes, uint16 len);
 
 /* 
  * A TypeDescriptor is a variable-size record used to identify the type of a 
@@ -194,12 +226,19 @@ struct XPTTypeDescriptorPrefix {
 #define TD_PWSTRING 17  /* wchar* (pointer to a NUL-terminated array) */
 
 struct XPTTypeDescriptor {
-    XPTTypeDescriptorPrefix *prefix;
+    XPTTypeDescriptorPrefix prefix;
     union {
         uint32 interface;
         uint8  argnum;
     } type;
 };
+
+#define XPT_COPY_TYPE(to, from)                                              \
+  (to).prefix.is_pointer = (from).prefix.is_pointer;                          \
+  (to).prefix.is_unique_pointer = (from).prefix.is_unique_pointer;            \
+  (to).prefix.is_reference = (from).prefix.is_reference;                      \
+  (to).prefix.tag = (from).prefix.tag;                                        \
+  (to).type.interface = (from).type.interface
 
 /*
  * A ConstDescriptor is a variable-size record that records the name and 
@@ -218,10 +257,7 @@ struct XPTTypeDescriptor {
  * record is of type String*, i.e. an offset within the data pool to a 
  * String record containing the constant string.
  */
-struct XPTConstDescriptor {
-    char                *name;
-    XPTTypeDescriptor   type;
-    union {
+union XPTConstValue {
         int8      i8;
         uint8     ui8; 
         int16     i16; 
@@ -233,7 +269,12 @@ struct XPTConstDescriptor {
         uint16    wch;
         char      ch; 
         XPTString *string;
-    } value; /* varies according to type */
+}; /* varies according to type */
+
+struct XPTConstDescriptor {
+    char                *name;
+    XPTTypeDescriptor   type;
+    union XPTConstValue value;
 };
 
 /*
@@ -245,6 +286,10 @@ struct XPTParamDescriptor {
     XPTTypeDescriptor type;
 };
 
+PRBool
+XPT_FillParamDescriptor(XPTParamDescriptor *pd, PRBool in, PRBool out,
+                        PRBool retval, XPTTypeDescriptor type);
+
 /*
  * A MethodDescriptor is a variable-size record used to describe a single 
  * interface method.
@@ -255,8 +300,14 @@ struct XPTMethodDescriptor {
     char                *name;
     uint8               num_args;
     XPTParamDescriptor  *params;
-    XPTParamDescriptor  result;
+    XPTParamDescriptor  *result;
 };
+
+PRBool
+XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRBool is_getter,
+                         PRBool is_setter, PRBool is_varargs,
+                         PRBool is_constructor, PRBool is_hidden, char *name,
+                         uint8 num_args);
 
 /*
  * Annotation records are variable-size records used to store secondary 
@@ -289,8 +340,13 @@ struct XPTPrivateAnnotation {
 };
 
 struct XPTAnnotation {
-    XPTAnnotationPrefix *prefix;
-    XPTPrivateAnnotation *private;
+    XPTAnnotation *next;
+    XPTAnnotationPrefix prefix;
+    XPTPrivateAnnotation private;
 };
+
+XPTAnnotation *
+XPT_NewAnnotation(PRBool is_last, PRBool is_empty, XPTString *creator,
+                  XPTString *private_data);
 
 #endif /* __xpt_struct_h__ */
