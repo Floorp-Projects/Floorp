@@ -79,7 +79,7 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
   pevent.widget = this;
   pevent.eventStructType = NS_PAINT_EVENT;
   pevent.rect = new nsRect (mBounds.x, mBounds.y,
-                            mBounds.height, mBounds.width);
+                            mBounds.width, mBounds.height);
   // XXX fix this
   pevent.time = 0;
   AddRef();
