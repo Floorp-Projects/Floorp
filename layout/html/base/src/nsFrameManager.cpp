@@ -1630,8 +1630,19 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       NS_RELEASE(pseudoTag);
     }
     else {
-      NS_ASSERTION(localContent, "non pseudo-element frame without content node");
-      if (content->IsContentOfType(nsIContent::eELEMENT)) {
+      NS_ASSERTION(localContent,
+                   "non pseudo-element frame without content node");
+      // XXX This frame type check is a little ugly.  However, it should
+      // be cheaper than doing useless style resolution on placeholder
+      // frames, and it should be able to go away if we make it so that
+      // placeholder frames don't have style contexts at all.
+      //
+      // XXX We also probably need to descend into the style contexts of
+      // the placeholder's out-of-flow frame.
+      nsCOMPtr<nsIAtom> frameType;
+      aFrame->GetFrameType(getter_AddRefs(frameType));
+      if (content->IsContentOfType(nsIContent::eELEMENT) &&
+          frameType != nsLayoutAtoms::placeholderFrame) {
         aPresContext->ResolveStyleContextFor(content, aParentContext,
                                              PR_TRUE, &newContext);
       } else {
