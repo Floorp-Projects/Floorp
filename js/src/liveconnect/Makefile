@@ -28,7 +28,7 @@ endif
 MODULE		= java
 LIBRARY_NAME	= jsj
 
-REQUIRES	= java js applet nspr img util layer xpcom caps oji plugin
+REQUIRES	= java js applet nspr img util layer xpcom
 
 CSRCS = jsj.c		  \
 	jsj_JSObject.c	  \

@@ -54,7 +54,6 @@ struct CapturedJSError {
 PR_END_EXTERN_C
 
 #include "nsCLiveconnect.h"
-#include "nsIPluginManager.h"
 
 static NS_DEFINE_IID(kILiveconnectIID, NS_ILIVECONNECT_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
