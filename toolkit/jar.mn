@@ -2,6 +2,7 @@ toolkit.jar:
 *+       content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
 +        content/global/xul.css                             (content/xul.css)
 *+       content/global/nsContextMenu.js                    (content/nsContextMenu.js)
++        content/global/globalOverlay.js                    (content/globalOverlay.js)
 +        content/global/widgets/toolbar.xml                 (content/widgets/toolbar.xml)
 *+       content/global/finddialog.xul                      (content/finddialog.xul)
 *+       content/global/finddialog.js                       (content/finddialog.js)

@@ -157,7 +157,7 @@ nsDownloadManager::Init()
                                     (nsISupports**) &gObserverService);
   if (NS_FAILED(rv)) return rv;
   
-  gObserverService->AddObserver(this, "quit-application", PR_FALSE);
+  gObserverService->AddObserver(this, "about-to-quit-application", PR_FALSE);
 
   rv = nsServiceManager::GetService(kRDFServiceCID, NS_GET_IID(nsIRDFService),
                                     (nsISupports**) &gRDFService);
