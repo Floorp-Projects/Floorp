@@ -235,7 +235,7 @@ static COtherTokenDeallocator gTokenKiller;
 COtherDTD::COtherDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   NS_INIT_REFCNT();
   mParser=0;
-  mURLRef=0;
+  mFilename=0;
   mParserDebug=0;
   nsCRT::zero(mLeafBits,sizeof(mLeafBits));
   nsCRT::zero(mContextStack,sizeof(mContextStack));
@@ -257,8 +257,8 @@ COtherDTD::COtherDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
  */
 COtherDTD::~COtherDTD(){
   DeleteTokenHandlers();
-  if (mURLRef)
-     PL_strfree(mURLRef);
+  if (mFilename)
+     PL_strfree(mFilename);
   if (mParserDebug)
      NS_RELEASE(mParserDebug);
 //  NS_RELEASE(mSink);
@@ -270,8 +270,19 @@ COtherDTD::~COtherDTD(){
  * @param 
  * @return
  */
-PRInt32 COtherDTD::WillBuildModel(void){
+PRInt32 COtherDTD::WillBuildModel(const char* aFilename, nsIParserDebug* aParserDebug){
   PRInt32 result=0;
+
+  if (mFilename) {
+    PL_strfree(mFilename);
+    mFilename=0;
+  }
+  if(aFilename) {
+    mFilename = PL_strdup(aFilename);
+  }
+
+  mParserDebug = aParserDebug;
+  NS_IF_ADDREF(mParserDebug);
 
   if(mSink)
     mSink->WillBuildModel();
@@ -320,7 +331,7 @@ PRInt32 COtherDTD::HandleToken(CToken* aToken){
     if(aHandler) {
       result=(*aHandler)(theToken,this);
       if (mParserDebug)
-         mParserDebug->Verify(this, mParser, mContextStackPos, mContextStack, mURLRef);
+         mParserDebug->Verify(this, mParser, mContextStackPos, mContextStack, mFilename);
     }
 
   }//if
@@ -402,6 +413,7 @@ PRInt32 COtherDTD::HandleStartToken(CToken* aToken) {
   //Begin by gathering up attributes...
   nsCParserNode attrNode((CHTMLToken*)aToken);
   PRInt16       attrCount=aToken->GetAttributeCount();
+  PRInt32       theCount;
   PRInt32       result=(0==attrCount) ? kNoError : mParser->CollectAttributes(attrNode,attrCount);
 
   if(kNoError==result) {
@@ -418,7 +430,7 @@ PRInt32 COtherDTD::HandleStartToken(CToken* aToken) {
             nsCParserNode theNode(st);
             result=OpenHead(theNode); //open the head...
             if(kNoError==result) {
-              mParser->CollectSkippedContent(attrNode);
+              result=mParser->CollectSkippedContent(attrNode,theCount);
               mSink->SetTitle(attrNode.GetSkippedContent());
               result=CloseHead(theNode); //close the head...
             }
@@ -427,7 +439,7 @@ PRInt32 COtherDTD::HandleStartToken(CToken* aToken) {
 
         case eHTMLTag_textarea:
           {
-            mParser->CollectSkippedContent(attrNode);
+            mParser->CollectSkippedContent(attrNode,theCount);
             result=AddLeaf(attrNode);
           }
           break;
@@ -453,7 +465,7 @@ PRInt32 COtherDTD::HandleStartToken(CToken* aToken) {
             nsCParserNode theNode((CHTMLToken*)aToken);
             result=OpenHead(theNode);
             if(kNoError==result) {
-              mParser->CollectSkippedContent(attrNode);
+              mParser->CollectSkippedContent(attrNode,theCount);
               if(kNoError==result) {
                 result=AddLeaf(attrNode);
                 if(kNoError==result)
@@ -659,26 +671,11 @@ PRInt32 COtherDTD::HandleAttributeToken(CToken* aToken) {
 PRInt32 COtherDTD::HandleScriptToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  /*
-  CScriptToken*   st = (CScriptToken*)(aToken);
+  nsCParserNode theNode((CHTMLToken*)aToken);
+  PRInt32       theCount=0;
+  PRInt32       result=mParser->CollectSkippedContent(theNode,theCount);
 
-  eHTMLTokenTypes subtype=eToken_attribute;
-  nsDeque&        deque=mTokenizer->GetDeque();
-  nsDequeIterator end=deque.End();
-
-  if(*mCurrentPos!=end) {
-    CHTMLToken* tkn=(CHTMLToken*)(++(*mCurrentPos));
-    subtype=eHTMLTokenTypes(tkn->GetTokenType());
-    if(eToken_skippedcontent==subtype) {
-      //WE INTENTIONALLY DROP THE TOKEN ON THE FLOOR!
-      //LATER, we'll pass this onto the javascript system.
-      return kNoError;
-    } 
-    else (*mCurrentPos)--;
-  }
-  */
-  return kInterrupted;
-
+  return result;
 }
 
 /**
@@ -2723,23 +2720,3 @@ void COtherDTD::WillInterruptParse(void){
   return;
 }
 
-/************************************************************************
-  Here's a bunch of stuff JEvering put into the parser to do debugging.
- ************************************************************************/
-
-void COtherDTD::SetURLRef(char * aURLRef){
-   if (mURLRef) {
-      PL_strfree(mURLRef);
-      mURLRef=0;
-   }
-   if (aURLRef)
-      mURLRef = PL_strdup(aURLRef);
-}
-
-void COtherDTD::SetParserDebug(nsIParserDebug * aParserDebug)
-{
-   if (aParserDebug) {
-      mParserDebug = aParserDebug;
-      NS_ADDREF(mParserDebug);
-   }
-}

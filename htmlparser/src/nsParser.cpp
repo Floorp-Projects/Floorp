@@ -30,7 +30,7 @@
 #include <fstream.h>
 #include "nsIInputStream.h"
 #include "nsIParserFilter.h"
-
+#include "nsIParserDebug.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_IID); 
@@ -86,13 +86,15 @@ CTokenDeallocator gTokenKiller;
  */
 nsParser::nsParser() : mTokenDeque(gTokenKiller) {
   NS_INIT_REFCNT();
-  mParserFilter = nsnull;
-  mListener = nsnull;
+  mParserFilter = 0;
+  mParserDebug = 0;
+  mListener = 0;
   mTransferBuffer=0;
   mSink=0;
   mCurrentPos=0;
   mMarkPos=0;
   mParseMode=eParseMode_unknown;
+  mURL=0;
   mDTD=0;
 }
 
@@ -113,12 +115,14 @@ nsParser::~nsParser() {
   if(mCurrentPos)
     delete mCurrentPos;
   mCurrentPos=0;
-  if(mDTD)
-     NS_RELEASE(mDTD);    
-  mDTD=0;
   if(mScanner)
     delete mScanner;
   mScanner=0;
+
+  NS_IF_RELEASE(mDTD);
+  NS_IF_RELEASE(mParserDebug);
+  NS_IF_RELEASE(mURL);
+
 }
 
 
@@ -291,7 +295,7 @@ eParseMode DetermineParseMode() {
  *  @param   
  *  @return  
  */
-nsIDTD* CreateDTD(eParseMode aMode) {
+nsIDTD* CreateDTD(eParseMode aMode,const char* aContentType) {
   nsIDTD* aDTD=0;
   switch(aMode) {
     case eParseMode_navigator:
@@ -309,16 +313,38 @@ nsIDTD* CreateDTD(eParseMode aMode) {
 
 /**
  * 
+ * @update	gess6/22/98
+ * @param 
+ * @return
+ */
+PRBool nsParser::DetermineContentType(const char* aContentType) {
+  PRBool result=PR_TRUE;
+  aContentType="application/x-unknown-content-type";
+  return result;
+}
+
+/**
+ * This gets called just prior to the model actually
+ * being constructed. It's important to make this the
+ * last thing that happens right before parsing, so we
+ * can delay until the last moment the resolution of
+ * which DTD to use (unless of course we're assigned one).
+ *
  * @update	gess5/18/98
  * @param 
  * @return
  */
-PRInt32 nsParser::WillBuildModel(void) {
+PRInt32 nsParser::WillBuildModel(const char* aFilename, const char* aContentType, nsIParserDebug * aDebug){
   mMajorIteration=-1;
   mMinorIteration=-1;
 
-  if(mDTD)
-    mDTD->WillBuildModel();
+  mParseMode=DetermineParseMode();  
+  mDTD=(0==mDTD) ? CreateDTD(mParseMode,aContentType) : mDTD;
+  if(mDTD) {
+    mDTD->SetParser(this);
+    mDTD->SetContentSink(mSink);
+    mDTD->WillBuildModel(aFilename,mParserDebug);
+  }
 
 #ifdef DEBUG_SAVE_SOURCE_DOC
 #if defined(XP_UNIX) && defined(IRIX)
@@ -356,56 +382,6 @@ PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
   return anErrorCode;
 }
 
-/**
- *  This DEBUG ONLY method is used to simulate a network-based
- *  i/o model where data comes in incrementally.
- *  
- *  @update  gess 5/13/98
- *  @param   aFilename is the name of the disk file to use for testing.
- *  @return  error code (kNoError means ok)
- */
-PRInt32 nsParser::ParseFileIncrementally(const char* aFilename){
-  PRInt32   result=kBadFilename;
-  fstream*  theFileStream;
-  nsString  theBuffer;
-  const int kLocalBufSize=10;
-
-  mMajorIteration=-1;
-  mMinorIteration=-1;
-
-#if defined(XP_UNIX) && defined(IRIX)
-  /* XXX: IRIX does not support ios::binary */
-  theFileStream=new fstream(aFilename,ios::in);
-#else
-  theFileStream=new fstream(aFilename,ios::in|ios::binary);
-#endif
-  if(theFileStream) {
-    result=kNoError;
-    while((kNoError==result) || (kInterrupted==result)) {
-      //read some data from the file...
-
-      char buf[kLocalBufSize];
-      buf[kLocalBufSize]=0;
-
-      if(theFileStream) {
-        theFileStream->read(buf,kLocalBufSize);
-        PRInt32 numread=theFileStream->gcount();
-        if(numread>0) {
-          buf[numread]=0;
-          theBuffer.Truncate();
-          theBuffer.Append(buf);
-          mScanner->Append(theBuffer);
-          result=ResumeParse();
-        }
-        else break;
-      }
-
-    }
-    theFileStream->close();
-    delete theFileStream;
-  }
-  return result;
-}
 
 /**
  *  This is the main controlling routine in the parsing process. 
@@ -418,34 +394,21 @@ PRInt32 nsParser::ParseFileIncrementally(const char* aFilename){
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRBool nsParser::Parse(const char* aFilename,PRBool aIncremental, nsIParserDebug * aDebug){
+PRBool nsParser::Parse(const char* aFilename,nsIParserDebug* aParserDebug){
   NS_PRECONDITION(0!=aFilename,kNullFilename);
   PRInt32 status=kBadFilename;
-  mIncremental=aIncremental;
-
+  
   if(aFilename) {
 
-    mParseMode=DetermineParseMode();  
-    mDTD=(0==mDTD) ? CreateDTD(mParseMode) : mDTD;
-    if(mDTD) {
-      mDTD->SetParser(this);
-      mDTD->SetContentSink(mSink);
-      mDTD->SetURLRef((char *)aFilename);
-      mDTD->SetParserDebug(aDebug);
-    }
-
-    WillBuildModel();
+    mParserDebug = aParserDebug;
+    NS_IF_ADDREF(mParserDebug);
 
     //ok, time to create our tokenizer and begin the process
-    if(aIncremental) {
-      mScanner=new CScanner(mParseMode);
-      status=ParseFileIncrementally(aFilename);
-    }
-    else {
-      //ok, time to create our tokenizer and begin the process
-      mScanner=new CScanner(aFilename,mParseMode);
-      status=ResumeParse();
-    }
+    mScanner=new CScanner(aFilename,mParseMode);
+    char theContentType[600];
+    DetermineContentType(theContentType);
+    WillBuildModel(aFilename,theContentType,aParserDebug);
+    status=ResumeParse();
     DidBuildModel(status);
 
   }
@@ -459,55 +422,33 @@ PRBool nsParser::Parse(const char* aFilename,PRBool aIncremental, nsIParserDebug
  *  not have been consumed by the scanner during a given invocation 
  *  of this method. 
  *
+ *  NOTE: We don't call willbuildmodel here, because it will happen
+ *        as a result of calling OnStartBinding later on.
+ *
  *  @update  gess 3/25/98
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRInt32 nsParser::Parse(nsIURL* aURL,
-                            nsIStreamListener* aListener,
-                            PRBool aIncremental,
-                            nsIParserDebug * aDebug) {
+PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamListener* aListener,nsIParserDebug* aParserDebug) {
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   PRInt32 status=kBadURL;
 
-    //set the rickGDebug flag to 1 if you want to try incrementally
-    //loading your document from a text file (given below).
-  static int rickGDebug=0;
-  if(rickGDebug)
-    return Parse("c:/temp/temp.html",PR_TRUE);
+  NS_IF_RELEASE(mParserDebug);
+  mParserDebug = aParserDebug;
+  NS_IF_ADDREF(mParserDebug);
+
+  NS_IF_RELEASE(mURL);
+  mURL = aURL;
+  NS_IF_ADDREF(mURL);
 
   NS_IF_RELEASE(mListener);
   mListener = aListener;
   NS_IF_ADDREF(aListener);
-
-  mIncremental=aIncremental;
-
-  if(aURL) {
-
-    mParseMode=DetermineParseMode();  
-    mDTD=(0==mDTD) ? CreateDTD(mParseMode) : mDTD;
-    if(mDTD) {
-      mDTD->SetParser(this);
-      mDTD->SetContentSink(mSink);
-      mDTD->SetURLRef((char *)aURL->GetSpec());
-      mDTD->SetParserDebug(aDebug);
-    }
-
-    WillBuildModel();
-
-    //ok, time to create our tokenizer and begin the process
-    if(mIncremental) {  
-      mScanner=new CScanner(mParseMode);
-      status=aURL->Open(this);
-    }
-    else {
-      mScanner=new CScanner(aURL,mParseMode);
-      WillBuildModel();
-      status=ResumeParse();
-      DidBuildModel(status);
-    }
-
+ 
+  if(mURL) {
+    mScanner=new CScanner(mParseMode);
+    status=mURL->Open(this);
   }
   return status;
 }
@@ -524,7 +465,7 @@ PRInt32 nsParser::Parse(nsIURL* aURL,
 PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool appendTokens){
   PRInt32 result=kNoError;
   
-  WillBuildModel();
+  WillBuildModel("nsString","text/html");
   mScanner->Append(aSourceBuffer);
   result=ResumeParse();
   DidBuildModel(result);
@@ -587,26 +528,29 @@ PRInt32 nsParser::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
 
 
 /**
- * 
- * @update  gess4/22/98
- * @param 
- * @return
+ * Causes the next skipped-content token (if any) to
+ * be consumed by this node.
+ * @update	gess5/11/98
+ * @param   node to consume skipped-content
+ * @param   holds the number of skipped content elements encountered
+ * @return  Error condition.
  */
-PRInt32 nsParser::CollectSkippedContent(nsCParserNode& aNode){
+PRInt32 nsParser::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
   eHTMLTokenTypes   subtype=eToken_attribute;
   nsDequeIterator   end=mTokenDeque.End();
-  PRInt32           count=0;
+  PRInt32           result=kNoError;
 
+  aCount=0;
   while((*mCurrentPos!=end) && (eToken_attribute==subtype)) {
     CToken* tkn=(CToken*)(++(*mCurrentPos));
     subtype=eHTMLTokenTypes(tkn->GetTokenType());
     if(eToken_skippedcontent==subtype) {
       aNode.SetSkippedContent(tkn);
-      count++;
+      aCount++;
     } 
     else (*mCurrentPos)--;
   }
-  return count;
+  return result;
 }
 
 /**
@@ -646,11 +590,11 @@ nsParser::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
  *  @param   
  *  @return  
  */
-nsresult nsParser::OnStartBinding(const char *aContentType){
+nsresult nsParser::OnStartBinding(const char* aContentType){
   if (nsnull != mListener) {
     mListener->OnStartBinding(aContentType);
   }
-  nsresult result=WillBuildModel();
+  nsresult result=WillBuildModel(mURL->GetSpec(),aContentType,mParserDebug);
   if(!mTransferBuffer) {
     mTransferBuffer=new char[gTransferBufferSize+1];
   }
@@ -739,7 +683,7 @@ PRInt32 nsParser::ConsumeToken(CToken*& aToken) {
  *  @param   
  *  @return  TRUE if it's ok to proceed
  */
-PRBool nsParser::WillTokenize(PRBool aIncremental){
+PRBool nsParser::WillTokenize(void){
   PRBool result=PR_TRUE;
   return result;
 }
@@ -754,7 +698,7 @@ PRInt32 nsParser::Tokenize(nsString& aSourceBuffer,PRBool appendTokens){
   PRInt32 result=kNoError;
   PRInt32 debugCounter=0; //this can be removed. It's only for debugging...
   
-  WillTokenize(PR_TRUE);
+  WillTokenize();
 
   while(kNoError==result) {
     debugCounter++;
@@ -769,7 +713,7 @@ PRInt32 nsParser::Tokenize(nsString& aSourceBuffer,PRBool appendTokens){
   } 
   if(kEOF==result)
     result=kNoError;
-  DidTokenize(PR_TRUE);
+  DidTokenize();
   return result;
 }
 
@@ -784,7 +728,7 @@ PRInt32 nsParser::Tokenize(nsString& aSourceBuffer,PRBool appendTokens){
 PRInt32 nsParser::Tokenize(void) {
   CToken* theToken=0;
   PRInt32 result=kNoError;
-  PRBool  done=(0==mMajorIteration) ? (!WillTokenize(PR_TRUE)) : PR_FALSE;
+  PRBool  done=(0==mMajorIteration) ? (!WillTokenize()) : PR_FALSE;
   
 
   while((PR_FALSE==done) && (kNoError==result)) {
@@ -807,7 +751,7 @@ PRInt32 nsParser::Tokenize(void) {
     }
   } 
   if((PR_TRUE==done)  && (kInterrupted!=result))
-    DidTokenize(PR_TRUE);
+    DidTokenize();
   return result;
 }
 
@@ -820,7 +764,7 @@ PRInt32 nsParser::Tokenize(void) {
  *  @param   
  *  @return  TRUE if all went well
  */
-PRBool nsParser::DidTokenize(PRBool aIncremental) {
+PRBool nsParser::DidTokenize(void) {
   PRBool result=PR_TRUE;
 
 #ifdef VERBOSE_DEBUG
