@@ -502,6 +502,8 @@ nsRangeList::RemoveItem(nsISupports *aItem)
 nsresult
 nsRangeList::Clear()
 {
+  setFocus(nsnull,0);
+  setAnchor(nsnull,0);
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
   for (PRUint32 i = 0; i < mRangeArray->Count();i++)
