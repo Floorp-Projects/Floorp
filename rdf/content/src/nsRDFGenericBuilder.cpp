@@ -2267,37 +2267,8 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
     if (nameSpaceID != kNameSpaceID_XUL)
         return PR_FALSE;
 
-    nsCOMPtr<nsIAtom> tag;
-    if (NS_FAILED(rv = aElement->GetTag( *getter_AddRefs(tag) ))) {
-        NS_ERROR("unable to get element's tag");
-        return PR_FALSE;
-    }
-
-    nsCOMPtr<nsIAtom>       insertionAtom;
-    if (NS_FAILED(rv = GetInsertionRootAtom(getter_AddRefs(insertionAtom)))) {
-        return rv;
-    }
-
-    nsCOMPtr<nsIAtom>       folderAtom;
-    if (NS_FAILED(rv = GetWidgetFolderAtom(getter_AddRefs(folderAtom)))) {
-        return rv;
-    }
-
-	if (tag == insertionAtom) {
-		// Hack for the tree widget
-		nsCOMPtr<nsIContent> parent;
-		aElement->GetParent(*getter_AddRefs(parent));
-		nsCOMPtr<nsIAtom> parentTag;
-		parent->GetTag(*getter_AddRefs(parentTag));
-		nsString tagName;
-		parentTag->ToString(tagName);
-		if (tagName == "tree")
-			return PR_TRUE;
-	}
-
-    // If it's not a widget folder item, then it's not open.
-    if (tag != folderAtom)
-        return PR_FALSE;
+    if (aElement == mRoot)
+      return PR_TRUE;
 
     nsAutoString value;
     if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, value))) {
