@@ -448,7 +448,8 @@ public class NodeTransformer {
                 if (bind == null || bind.getType() != TokenStream.BINDNAME)
                     break;
                 String name = bind.getString();
-                if (name.equals("arguments")) {
+                Context cx = Context.getCurrentContext();
+                if (cx != null && cx.isActivationNeeded(name)) {
                     // use of "arguments" requires an activation object.
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
@@ -471,7 +472,8 @@ public class NodeTransformer {
                 if (inFunction) {
                     Node n = node.getFirstChild().getNextSibling();
                     String name = n == null ? "" : n.getString();
-                    if (name.equals("arguments") || 
+                    Context cx = Context.getCurrentContext();
+                    if ((cx != null && cx.isActivationNeeded(name)) ||
                         (name.equals("length") && 
                          Context.getContext().getLanguageVersion() == 
                          Context.VERSION_1_2))
@@ -488,7 +490,8 @@ public class NodeTransformer {
                 if (!inFunction || inWithStatement())
                     break;
                 String name = node.getString();
-                if (name.equals("arguments")) {
+                Context cx = Context.getCurrentContext();
+                if (cx != null && cx.isActivationNeeded(name)) {
                     // Use of "arguments" requires an activation object.
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }

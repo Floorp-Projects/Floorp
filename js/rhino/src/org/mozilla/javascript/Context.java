@@ -22,6 +22,7 @@
  *
  * Patrick Beard
  * Norris Boyd
+ * Igor Bukanov
  * Brendan Eich
  * Roger Lawrence
  * Mike McCabe
@@ -1589,6 +1590,16 @@ public class Context {
         throw new RuntimeException("Bad feature index: " + featureIndex);
     }
 
+    public int getInstructionObserverThreshold() {
+        return instructionThreshold;
+    }
+    
+    public void setInstructionObserverThreshold(int threshold) {
+        instructionThreshold = threshold;
+    }
+    
+    protected void observeInstructionCount(int instructionCount) {}
+    
     /********** end of API **********/
     
     void pushFrame(DebugFrame frame) {
@@ -1931,6 +1942,45 @@ public class Context {
         return generatingDebugChanged;
     }
     
+
+    /**
+     * Add a name to the list of names forcing the creation of real
+     * activation objects for functions.
+     *
+     * @param name the name of the object to add to the list
+     */
+    public void addActivationName(String name) {
+        if (activationNames == null) 
+            activationNames = new Hashtable(5);
+        activationNames.put(name, name);
+    }
+
+    /**
+     * Check whether the name is in the list of names of objects
+     * forcing the creation of activation objects.
+     *
+     * @param name the name of the object to test
+     *
+     * @return true if an function activation object is needed.
+     */
+    public boolean isActivationNeeded(String name) {
+        if ("arguments".equals(name))
+            return true;
+        return activationNames != null && activationNames.containsKey(name);
+    }
+
+    /**
+     * Remove a name from the list of names forcing the creation of real
+     * activation objects for functions.
+     *
+     * @param name the name of the object to remove from the list
+     */
+    public void removeActivationName(String name) {
+        if (activationNames != null)
+            activationNames.remove(name);
+    }
+
+
     static final boolean useJSObject = false;
 
     /** 
@@ -1968,6 +2018,12 @@ public class Context {
     private Object[] listeners;
     private Hashtable hashtable;
 
+    /**
+     * This is the list of names of objects forcing the creation of
+     * function activation records.
+     */
+    private Hashtable activationNames;
+
     // Private lock for static fields to avoid a possibility of denial
     // of service via synchronized (Context.class) { while (true) {} }
     private static final Object staticDataLock = new Object();
@@ -1976,4 +2032,8 @@ public class Context {
     // For the interpreter to indicate line/source for error reports.
     int interpreterLine;
     String interpreterSourceFile;
+
+    // For instruction counting (interpreter only)
+    int instructionCount;
+    int instructionThreshold;
 }

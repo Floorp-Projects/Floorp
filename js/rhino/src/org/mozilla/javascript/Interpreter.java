@@ -1360,19 +1360,23 @@ public class Interpreter extends LabelTable {
         final int maxStack = theData.itsMaxStack;
         final int maxVars = theData.itsVariableTable.size();
         final int maxLocals = theData.itsMaxLocals;
+        final int maxTryDepth = theData.itsMaxTryDepth;
         
         final int VAR_SHFT = maxStack; 
         final int LOCAL_SHFT = VAR_SHFT + maxVars; 
+        final int TRY_SCOPE_SHFT = LOCAL_SHFT + maxLocals;
 
-        // stack[0 <= i < VAR_SHFT]: stack data
-        // stack[VAR_SHFT <= i < LOCAL_SHFT]: variables
-        // stack[LOCAL_SHFT <= i]:  // used for newtemp/usetemp etc.
-        // id stack[x] == DBL_MRK, real value for stack[x] is in sDbl[x]
-        
+// stack[0 <= i < VAR_SHFT]: stack data
+// stack[VAR_SHFT <= i < LOCAL_SHFT]: variables
+// stack[LOCAL_SHFT <= i < TRY_SCOPE_SHFT]: used for newtemp/usetemp
+// stack[TRY_SCOPE_SHFT <= i]: try scopes
+// when 0 <= i < LOCAL_SHFT and stack[x] == DBL_MRK, 
+// sDbl[i]  gives the number value
+
         final Object DBL_MRK = Interpreter.DBL_MRK;
         
-        Object[] stack = new Object[LOCAL_SHFT + maxLocals];
-        double[] sDbl = new double[LOCAL_SHFT + maxLocals];
+        Object[] stack = new Object[TRY_SCOPE_SHFT + maxTryDepth];
+        double[] sDbl = new double[TRY_SCOPE_SHFT];
         int stackTop = -1;
         byte[] iCode = theData.itsICode;        
         int pc = 0;
@@ -1380,14 +1384,16 @@ public class Interpreter extends LabelTable {
         
         final Scriptable undefined = Undefined.instance;
         if (maxVars != 0) {
-            for (i = 0; i < theData.itsVariableTable.getParameterCount(); i++) {
-                if (i >= args.length)
-                    stack[VAR_SHFT + i] = undefined;
-                else                
+            int definedArgs = theData.itsVariableTable.getParameterCount();
+            if (definedArgs != 0) {
+                if (definedArgs > args.length) { definedArgs = args.length;    }
+                for (i = 0; i != definedArgs; ++i) {
                     stack[VAR_SHFT + i] = args[i];    
+                }
             }
-            for ( ; i < maxVars; i++)
+            for (i = definedArgs; i != maxVars; ++i) {
                 stack[VAR_SHFT + i] = undefined;
+            }
         }
         
         if (theData.itsNestedFunctions != null) {
@@ -1414,7 +1420,6 @@ public class Interpreter extends LabelTable {
         double rDbl;
                 
         int[] catchStack = null;
-        Scriptable[] scopeStack = null;
         int tryStackTop = 0;
         InterpreterFrame frame = null;
         
@@ -1423,11 +1428,10 @@ public class Interpreter extends LabelTable {
             cx.pushFrame(frame);
         }
             
-        if (theData.itsMaxTryDepth > 0) {
+        if (maxTryDepth != 0) {
             // catchStack[2 * i]: catch data
             // catchStack[2 * i + 1]: finally data
-            catchStack = new int[theData.itsMaxTryDepth * 2];
-            scopeStack = new Scriptable[theData.itsMaxTryDepth];
+            catchStack = new int[maxTryDepth * 2];
         }
         
         /* Save the security domain. Must restore upon normal exit. 
@@ -1438,6 +1442,15 @@ public class Interpreter extends LabelTable {
         Object savedSecurityDomain = cx.interpreterSecurityDomain;
         cx.interpreterSecurityDomain = theData.securityDomain;
         Object result = undefined;
+        
+        int pcPrevBranch = pc;
+        final int instructionThreshold = cx.instructionThreshold;
+        // During function call this will be set to -1 so catch can properly
+        // adjust it
+        int instructionCount = cx.instructionCount;
+        // arbitrary number to add to instructionCount when calling 
+        // other functions
+        final int INVOCATION_COST = 100;
         
         while (pc < iCodeLength) {
             try {
@@ -1452,7 +1465,8 @@ public class Interpreter extends LabelTable {
                         i = getTarget(iCode, pc + 3);
                         if (i == (pc + 2)) i = 0;
                         catchStack[tryStackTop * 2 + 1] = i;
-                        scopeStack[tryStackTop++] = scope;
+                        stack[TRY_SCOPE_SHFT + tryStackTop] = scope;
+                        ++tryStackTop;
                         pc += 4;
                         break;
                     case TokenStream.GE :
@@ -1564,7 +1578,15 @@ public class Interpreter extends LabelTable {
                         }
                         --stackTop;
                         if (valBln) {
-                            pc = getTarget(iCode, pc + 1);
+                            if (instructionThreshold != 0) {
+                                instructionCount += pc + 3 - pcPrevBranch;
+                                if (instructionCount > instructionThreshold) {
+                                    cx.observeInstructionCount
+                                        (instructionCount);
+                                    instructionCount = 0;
+                                }
+                            }
+                            pcPrevBranch = pc = getTarget(iCode, pc + 1);
                             continue;
                         }
                         pc += 2;
@@ -1580,21 +1602,49 @@ public class Interpreter extends LabelTable {
                         }
                         --stackTop;
                         if (valBln) {
-                            pc = getTarget(iCode, pc + 1);
+                            if (instructionThreshold != 0) {
+                                instructionCount += pc + 3 - pcPrevBranch;
+                                if (instructionCount > instructionThreshold) {
+                                    cx.observeInstructionCount
+                                        (instructionCount);
+                                    instructionCount = 0;
+                                }
+                            }
+                            pcPrevBranch = pc = getTarget(iCode, pc + 1);
                             continue;
                         }
                         pc += 2;
                         break;
                     case TokenStream.GOTO :
-                        pc = getTarget(iCode, pc + 1);
+                        if (instructionThreshold != 0) {
+                            instructionCount += pc + 3 - pcPrevBranch;
+                            if (instructionCount > instructionThreshold) {
+                                cx.observeInstructionCount(instructionCount);
+                                instructionCount = 0;
+                            }
+                        }
+                        pcPrevBranch = pc = getTarget(iCode, pc + 1);
                         continue;
                     case TokenStream.GOSUB :
                         sDbl[++stackTop] = pc + 3;
-                        pc = getTarget(iCode, pc + 1);                        
-                        continue;
+                        if (instructionThreshold != 0) {
+                            instructionCount += pc + 3 - pcPrevBranch;
+                            if (instructionCount > instructionThreshold) {
+                                cx.observeInstructionCount(instructionCount);
+                                instructionCount = 0;
+                            }
+                        }
+                        pcPrevBranch = pc = getTarget(iCode, pc + 1);                                    continue;
                     case TokenStream.RETSUB :
-                        slot = (iCode[++pc] & 0xFF);
-                        pc = (int)sDbl[LOCAL_SHFT + slot];
+                        slot = (iCode[pc + 1] & 0xFF);
+                        if (instructionThreshold != 0) {
+                            instructionCount += pc + 2 - pcPrevBranch;
+                            if (instructionCount > instructionThreshold) {
+                                cx.observeInstructionCount(instructionCount);
+                                instructionCount = 0;
+                            }
+                        }
+                        pcPrevBranch = pc = (int)sDbl[LOCAL_SHFT + slot];
                         continue;
                     case TokenStream.POP :
                         stackTop--;
@@ -1833,6 +1883,11 @@ public class Interpreter extends LabelTable {
                         sDbl[stackTop] = sDbl[LOCAL_SHFT + slot];
                         break;
                     case TokenStream.CALLSPECIAL :
+                        if (instructionThreshold != 0) {
+                            instructionCount += INVOCATION_COST;
+                            cx.instructionCount = instructionCount;
+                            instructionCount = -1;
+                        }
                         int lineNum = (iCode[pc + 1] << 8) 
                                       | (iCode[pc + 2] & 0xFF);   
                         name = getString(theData.itsStringTable, iCode, pc + 3);
@@ -1854,8 +1909,15 @@ public class Interpreter extends LabelTable {
                                             cx, lhs, rhs, outArgs, 
                                             thisObj, scope, name, lineNum);
                         pc += 6;
+                        instructionCount = cx.instructionCount;
                         break;
                     case TokenStream.CALL :
+                        if (instructionThreshold != 0) {
+                            instructionCount += INVOCATION_COST;
+                            cx.instructionCount = instructionCount;
+                            instructionCount = -1;
+                        }
+                        cx.instructionCount = instructionCount;
                         count = (iCode[pc + 3] << 8) | (iCode[pc + 4] & 0xFF);
                         outArgs = new Object[count];
                         for (i = count - 1; i >= 0; i--) {
@@ -1882,9 +1944,14 @@ public class Interpreter extends LabelTable {
                         stack[stackTop] = ScriptRuntime.call(cx, lhs, rhs, 
                                                              outArgs, 
                                                              calleeScope);
-                        pc += 4;                                                            
+                        pc += 4;                                                                         instructionCount = cx.instructionCount;
                         break;
                     case TokenStream.NEW :
+                        if (instructionThreshold != 0) {
+                            instructionCount += INVOCATION_COST;
+                            cx.instructionCount = instructionCount;
+                            instructionCount = -1;
+                        }
                         count = (iCode[pc + 3] << 8) | (iCode[pc + 4] & 0xFF);
                         outArgs = new Object[count];
                         for (i = count - 1; i >= 0; i--) {
@@ -1907,7 +1974,7 @@ public class Interpreter extends LabelTable {
                         stack[stackTop] = ScriptRuntime.newObject(cx, lhs, 
                                                                   outArgs, 
                                                                   scope);
-                        pc += 4;                                                            
+                        pc += 4;                                                                         instructionCount = cx.instructionCount;
                         break;
                     case TokenStream.TYPEOF :
                         lhs = stack[stackTop];    
@@ -2125,91 +2192,91 @@ public class Interpreter extends LabelTable {
                 }
                 pc++;
             }
-            catch (EcmaError ee) {
-                if (cx.debugger != null)
-                    cx.debugger.handleExceptionThrown(cx, ee.getErrorObject());
-                // an offical ECMA error object, 
-                // handle as if it were a JavaScriptException
-                stackTop = 0;
+            catch (Exception ex) {
+                final int ECMA = 0, SCRIPT = 1, OTHER = 2; 
+
+                int exceptionType;
+                Object errObj;
+                if (ex instanceof EcmaError) {
+                    errObj = ((EcmaError)ex).getErrorObject();
+                    exceptionType = ECMA;
+                }
+                else if (ex instanceof RuntimeException) {
+                    errObj = ex;
+                    exceptionType = OTHER;
+                }
+                else {
+                    errObj = ScriptRuntime.
+                        unwrapJavaScriptException((JavaScriptException)ex);
+                    exceptionType = SCRIPT;
+                }
+            
+                if (instructionThreshold != 0) {
+                    if (instructionCount < 0) {
+                        // throw during function call
+                        instructionCount = cx.instructionCount;
+                    }
+                    else {
+                        // throw during any other operation
+                        instructionCount += pc - pcPrevBranch;
+                    }
+                    if (instructionCount > instructionThreshold) {
+                        cx.observeInstructionCount(instructionCount);
+                        instructionCount = 0;
+                    }
+                    cx.instructionCount = instructionCount;
+                }
+
                 cx.interpreterSecurityDomain = null;
+
+                boolean rethrow = true;
                 if (tryStackTop > 0) {
-                    pc = catchStack[--tryStackTop * 2];
-                    scope = scopeStack[tryStackTop];
+                    --tryStackTop;
+                    pc = catchStack[tryStackTop * 2];
+                    scope = (Scriptable)stack[TRY_SCOPE_SHFT + tryStackTop];
                     if (pc == 0) {
-                        pc = catchStack[tryStackTop * 2 + 1];
-                        if (pc == 0) {
-                            if (frame != null)
-                                cx.popFrame();
-                            throw ee;
+                        if (exceptionType == ECMA || exceptionType == SCRIPT) {
+                            // Check for finally clause only for EcmaError and
+                            // JavaScriptException but not for arbitrary
+                            // RuntimeException
+                            pc = catchStack[tryStackTop * 2 + 1];
+                            if (exceptionType == SCRIPT) {
+                                errObj = ex;
+                            }
                         }
                     }
-                    stack[0] = ee.getErrorObject();
-                } else {
+                    if (pc != 0) {
+                        rethrow = false;
+                    }
+                }
+
+                if (rethrow) {
                     if (frame != null)
                         cx.popFrame();
-                    throw ee;
+                    if (exceptionType == SCRIPT) throw (JavaScriptException)ex;
+                    else throw (RuntimeException)ex;
                 }
-                // We caught an exception; restore this function's 
-                // security domain.
-                cx.interpreterSecurityDomain = theData.securityDomain;
-            }
-            catch (JavaScriptException jsx) {
-                if (cx.debugger != null) {
-                    cx.debugger.handleExceptionThrown(cx, 
-                        ScriptRuntime.unwrapJavaScriptException(jsx));
-                }
+            
+                // We caught an exception, 
+                // prepare stack and restore this function's security domain.
+                   pcPrevBranch = pc;
                 stackTop = 0;
-                cx.interpreterSecurityDomain = null;
-                if (tryStackTop > 0) {
-                    pc = catchStack[--tryStackTop * 2];
-                    scope = scopeStack[tryStackTop];
-                    if (pc == 0) {
-                        pc = catchStack[tryStackTop * 2 + 1];
-                        if (pc == 0) {
-                            if (frame != null)
-                                cx.popFrame();
-                            throw jsx;
-                        }
-                        stack[0] = jsx;
-                    } else {
-                        stack[0] = ScriptRuntime.unwrapJavaScriptException(jsx);
-                    }
-                } else {
-                    if (frame != null)
-                        cx.popFrame();
-                    throw jsx;
-                }
-                // We caught an exception; restore this function's 
-                // security domain.
-                cx.interpreterSecurityDomain = theData.securityDomain;
-            }
-            catch (RuntimeException jx) {
-                if (cx.debugger != null)
-                    cx.debugger.handleExceptionThrown(cx, jx);
-                cx.interpreterSecurityDomain = null;
-                if (tryStackTop > 0) {
-                    stackTop = 0;
-                    stack[0] = jx;
-                    pc = catchStack[--tryStackTop * 2 + 1];
-                    scope = scopeStack[tryStackTop];
-                    if (pc == 0) {
-                        if (frame != null)
-                            cx.popFrame();
-                        throw jx;
-                    }
-                } else {
-                    if (frame != null)
-                        cx.popFrame();
-                    throw jx;
-                }
-                // We caught an exception; restore this function's 
-                // security domain.
+                stack[0] = errObj;
                 cx.interpreterSecurityDomain = theData.securityDomain;
             }
         }
         cx.interpreterSecurityDomain = savedSecurityDomain;
         if (frame != null)
             cx.popFrame();
+
+        if (instructionThreshold != 0) {
+            if (instructionCount > instructionThreshold) {
+                cx.observeInstructionCount(instructionCount);
+                instructionCount = 0;
+            }
+            cx.instructionCount = instructionCount;
+        }
+
         return result;    
     }
     

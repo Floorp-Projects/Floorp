@@ -42,9 +42,9 @@ import java.lang.reflect.*;
  *
  * <p> This improves startup time and average memory usage.
  */
-final class LazilyLoadedCtor {
+public final class LazilyLoadedCtor {
 
-    LazilyLoadedCtor(ScriptableObject scope,
+    public LazilyLoadedCtor(ScriptableObject scope,
                      String ctorName, String className, boolean sealed)
     {
 
