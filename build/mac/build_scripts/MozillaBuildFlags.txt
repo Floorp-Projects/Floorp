@@ -54,7 +54,6 @@ psm             0
 psm2            0
 embedding_test  1
 carbon          0      TARGET_CARBON
-cache           1      MOZ_NEW_CACHE
 useimg2         1      USE_IMG2
 lowmem          0      MOZ_MAC_LOWMEM
 accessible      1
