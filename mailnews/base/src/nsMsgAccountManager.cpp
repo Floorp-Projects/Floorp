@@ -193,7 +193,23 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
                 	DEST_ID->MACRO_SETTER("");	\
         	}	\
         	else {	\
-                	DEST_ID->MACRO_SETTER(NS_CONST_CAST(char*,(const char*)macro_oldStr));	\
+                	DEST_ID->MACRO_SETTER(macro_oldStr);	\
+        	}	\
+	}
+
+static const PRUnichar unicharEmptyString[] = { (PRUnichar)'\0' };
+
+#define COPY_IDENTITY_WSTR_VALUE(SRC_ID,DEST_ID,MACRO_GETTER,MACRO_SETTER) 	\
+	{	\
+        	nsXPIDLString macro_oldStr;	\
+		    nsresult macro_rv;	\
+        	macro_rv = SRC_ID->MACRO_GETTER(getter_Copies(macro_oldStr));	\
+        	if (NS_FAILED(macro_rv)) return macro_rv;	\
+        	if (!macro_oldStr) {	\
+                	DEST_ID->MACRO_SETTER(unicharEmptyString);	\
+        	}	\
+        	else {	\
+                	DEST_ID->MACRO_SETTER(macro_oldStr);	\
         	}	\
 	}
 
@@ -217,6 +233,17 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
     nsresult macro_rv; \
     char *macro_oldStr = nsnull; \
     macro_rv = m_prefs->CopyCharPref(PREFNAME, &macro_oldStr); \
+    if (NS_SUCCEEDED(macro_rv)) { \
+      MACRO_OBJECT->MACRO_METHOD(macro_oldStr); \
+      PR_FREEIF(macro_oldStr); \
+    } \
+  }
+
+#define MIGRATE_SIMPLE_WSTR_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
+  { \
+    nsresult macro_rv; \
+    PRUnichar *macro_oldStr = nsnull; \
+    macro_rv = m_prefs->CopyUnicharPref(PREFNAME, &macro_oldStr); \
     if (NS_SUCCEEDED(macro_rv)) { \
       MACRO_OBJECT->MACRO_METHOD(macro_oldStr); \
       PR_FREEIF(macro_oldStr); \
@@ -407,7 +434,7 @@ nsMsgAccountManager::getPrefService()
   
   if (!m_prefs)
     rv = nsServiceManager::GetService(kPrefServiceCID,
-                                      nsCOMTypeInfo<nsIPref>::GetIID(),
+                                      NS_GET_IID(nsIPref),
                                       (nsISupports**)&m_prefs);
   if (NS_FAILED(rv)) return rv;
 
@@ -719,7 +746,7 @@ nsresult nsMsgAccountManager::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
   {
     rv = nsComponentManager::CreateInstance(kMsgFolderCacheCID,
                                             NULL,
-                                            nsCOMTypeInfo<nsIMsgFolderCache>::GetIID(),
+                                            NS_GET_IID(nsIMsgFolderCache),
                                             getter_AddRefs(m_msgFolderCache));
     if (NS_FAILED(rv))
 		return rv;
@@ -1360,9 +1387,9 @@ nsresult
 nsMsgAccountManager::MigrateIdentity(nsIMsgIdentity *identity)
 {
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_USEREMAIL,identity,SetEmail)
-  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_USERNAME,identity,SetFullName)
+  MIGRATE_SIMPLE_WSTR_PREF(PREF_4X_MAIL_IDENTITY_USERNAME,identity,SetFullName)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_REPLY_TO,identity,SetReplyTo)
-  MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_ORGANIZATION,identity,SetOrganization)
+  MIGRATE_SIMPLE_WSTR_PREF(PREF_4X_MAIL_IDENTITY_ORGANIZATION,identity,SetOrganization)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_COMPOSE_HTML,identity,SetComposeHtml)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_DRAFTS,identity,SetDraftFolder)
   CONVERT_4X_URI(identity,DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
@@ -1464,7 +1491,7 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, const char *default_folde
 	nsXPIDLCString hostname;
 	nsXPIDLCString username;
 
-	rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), getter_AddRefs(url));
+	rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), getter_AddRefs(url));
         if (NS_FAILED(rv)) return rv;
 
         rv = url->SetSpec(old_uri);
@@ -2139,8 +2166,8 @@ nsMsgAccountManager::CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *d
 	COPY_IDENTITY_BOOL_VALUE(srcIdentity,destIdentity,GetComposeHtml,SetComposeHtml)
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetEmail,SetEmail)
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetReplyTo,SetReplyTo)
-        COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetFullName,SetFullName)
-        COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetOrganization,SetOrganization)
+        COPY_IDENTITY_WSTR_VALUE(srcIdentity,destIdentity,GetFullName,SetFullName)
+        COPY_IDENTITY_WSTR_VALUE(srcIdentity,destIdentity,GetOrganization,SetOrganization)
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetDraftFolder,SetDraftFolder)
         COPY_IDENTITY_STR_VALUE(srcIdentity,destIdentity,GetStationaryFolder,SetStationaryFolder)
 
@@ -2901,3 +2928,29 @@ nsMsgAccountManager::findServersForIdentity(nsISupports *element, void *aData)
   return PR_TRUE;
 }
 
+NS_IMETHODIMP
+nsMsgAccountManager::GetCurrentIdentity(nsIMsgIdentity** id)
+{
+  NS_ENSURE_ARG_POINTER(id);
+  nsCOMPtr<nsISupportsArray> identities;
+
+  nsresult rv = GetAllIdentities(getter_AddRefs(identities));
+  if (NS_FAILED(rv)) return rv;
+
+  return identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
+                                    (void **)id);
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::GetCurrentServer(nsIMsgIncomingServer ** server)
+{
+  NS_ENSURE_ARG_POINTER(server);
+
+  nsCOMPtr<nsISupportsArray> servers;
+
+  nsresult rv = GetAllServers(getter_AddRefs(servers));
+  if (NS_FAILED(rv)) return rv;
+
+  return servers->QueryElementAt(0, NS_GET_IID(nsIMsgIncomingServer),
+                                    (void **)server);
+}

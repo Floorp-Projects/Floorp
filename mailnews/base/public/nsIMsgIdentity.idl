@@ -44,10 +44,10 @@ interface nsIMsgIdentity : nsISupports {
    *overriding display name for this identity. if this pref is not set
    * then this will return some composed string from the fullname and email
    */
-  attribute string identityName;
+  attribute wstring identityName;
 
   /* user's full name, i.e. John Doe */
-  attribute string fullName;
+  attribute wstring fullName;
 
   /* user's e-mail address, i.e. john@doe.com */
   attribute string email;
@@ -56,7 +56,7 @@ interface nsIMsgIdentity : nsISupports {
   attribute string replyTo;
 
   /* optional organization */
-  attribute string organization;
+  attribute wstring organization;
 
   /* should we compose with HTML by default? */
   attribute boolean composeHtml;

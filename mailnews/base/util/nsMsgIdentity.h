@@ -54,9 +54,14 @@ protected:
   nsresult getPrefService();
   char *getPrefName(const char *identityKey, const char *pref);
   char *getDefaultPrefName(const char *pref);
+  
   nsresult getCharPref(const char *pref, char **);
   nsresult getDefaultCharPref(const char *pref, char **);
   nsresult setCharPref(const char *pref, const char *);
+
+  nsresult getUnicharPref(const char *pref, PRUnichar **);
+  nsresult getDefaultUnicharPref(const char *pref, PRUnichar **);
+  nsresult setUnicharPref(const char *pref, const PRUnichar *);
 
   nsresult getBoolPref(const char *pref, PRBool *);
   nsresult getDefaultBoolPref(const char *pref, PRBool *);
@@ -79,6 +84,18 @@ NS_IMETHODIMP	   								\
 nsMsgIdentity::Set##_postfix(const char *value)		\
 {												\
   return setCharPref(_prefname, value);\
+}
+
+#define NS_IMPL_IDPREF_WSTR(_postfix, _prefname)\
+NS_IMETHODIMP								   	\
+nsMsgIdentity::Get##_postfix(PRUnichar **retval)\
+{											   	\
+  return getUnicharPref(_prefname, retval);		\
+}												\
+NS_IMETHODIMP	   								\
+nsMsgIdentity::Set##_postfix(const PRUnichar *value)\
+{												\
+  return setUnicharPref(_prefname, value);\
 }
 
 #define NS_IMPL_IDPREF_BOOL(_postfix, _prefname)\

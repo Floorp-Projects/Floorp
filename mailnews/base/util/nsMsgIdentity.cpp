@@ -129,6 +129,24 @@ nsMsgIdentity::setBoolPref(const char *prefname,
   return rv;
 }
 
+
+nsresult
+nsMsgIdentity::getUnicharPref(const char *prefname,
+                              PRUnichar **val)
+{
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
+  char *fullPrefName = getPrefName(m_identityKey, prefname);
+  rv = m_prefs->CopyUnicharPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
+  if (NS_FAILED(rv))
+    rv = getDefaultUnicharPref(prefname, val);
+
+  return rv;
+}
+
 nsresult
 nsMsgIdentity::getCharPref(const char *prefname,
                            char **val)
@@ -147,6 +165,24 @@ nsMsgIdentity::getCharPref(const char *prefname,
 }
 
 nsresult
+nsMsgIdentity::getDefaultUnicharPref(const char *prefname,
+                                     PRUnichar **val)
+{
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
+  char *fullPrefName = getDefaultPrefName(prefname);
+  rv = m_prefs->CopyUnicharPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
+  if (NS_FAILED(rv)) {
+    *val = nsnull;              // null is ok to return here
+    rv = NS_OK;
+  }
+  return rv;
+}
+
+nsresult
 nsMsgIdentity::getDefaultCharPref(const char *prefname,
                                         char **val)
 {
@@ -161,6 +197,23 @@ nsMsgIdentity::getDefaultCharPref(const char *prefname,
     *val = nsnull;              // null is ok to return here
     rv = NS_OK;
   }
+  return rv;
+}
+
+nsresult
+nsMsgIdentity::setUnicharPref(const char *prefname,
+                              const PRUnichar *val)
+{
+  nsresult rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = NS_OK;
+  char *prefName = getPrefName(m_identityKey, prefname);
+  if (val) 
+    rv = m_prefs->SetUnicharPref(prefName, val);
+  else
+    m_prefs->ClearUserPref(prefName);
+  PR_Free(prefName);
   return rv;
 }
 
@@ -239,34 +292,36 @@ nsMsgIdentity::SetKey(const char* identityKey)
 }
 
 nsresult
-nsMsgIdentity::GetIdentityName(char **idName) {
+nsMsgIdentity::GetIdentityName(PRUnichar **idName) {
   if (!idName) return NS_ERROR_NULL_POINTER;
 
   *idName = nsnull;
-  nsresult rv = getCharPref("identityName",idName);
+  nsresult rv = getUnicharPref("identityName",idName);
   if (NS_FAILED(rv)) return rv;
 
-  // there's probably a better way of doing this
-  // thats unicode friendly?
   if (!(*idName)) {
-    nsXPIDLCString fullName;
+    nsXPIDLString fullName;
     rv = GetFullName(getter_Copies(fullName));
     if (NS_FAILED(rv)) return rv;
     
     nsXPIDLCString email;
     rv = GetEmail(getter_Copies(email));
     if (NS_FAILED(rv)) return rv;
-    
-    *idName = PR_smprintf("%s <%s>", (const char*)fullName,
-                          (const char*)email);
+
+    nsAutoString str;
+    str += (const PRUnichar*)fullName;
+    str += "<";
+    str += (const char*)email;
+    str += ">";
+    *idName = str.ToNewUnicode();
     rv = NS_OK;
   }
 
   return rv;
 }
 
-nsresult nsMsgIdentity::SetIdentityName(const char *idName) {
-  return setCharPref("identityName", idName);
+nsresult nsMsgIdentity::SetIdentityName(const PRUnichar *idName) {
+  return setUnicharPref("identityName", idName);
 }
 
 NS_IMETHODIMP
@@ -322,10 +377,10 @@ NS_IMPL_GETSET(nsMsgIdentity, VCard, nsIMsgVCard*, m_vCard);
   
 NS_IMPL_GETTER_STR(nsMsgIdentity::GetKey, m_identityKey);
 
-NS_IMPL_IDPREF_STR(FullName, "fullName");
+NS_IMPL_IDPREF_WSTR(FullName, "fullName");
 NS_IMPL_IDPREF_STR(Email, "useremail");
 NS_IMPL_IDPREF_STR(ReplyTo, "reply_to");
-NS_IMPL_IDPREF_STR(Organization, "organization");
+NS_IMPL_IDPREF_WSTR(Organization, "organization");
 NS_IMPL_IDPREF_BOOL(ComposeHtml, "compose_html");
 NS_IMPL_IDPREF_BOOL(AttachVCard, "attach_vcard");
 NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature");

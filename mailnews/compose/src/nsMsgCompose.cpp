@@ -455,9 +455,9 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
   {
     // Pref values are supposed to be stored as UTF-8, so no conversion
     nsXPIDLCString email;
-    nsXPIDLCString fullName;
+    nsXPIDLString fullName;
     nsXPIDLCString replyTo;
-    nsXPIDLCString organization;
+    nsXPIDLString organization;
     
     identity->GetEmail(getter_Copies(email));
     identity->GetFullName(getter_Copies(fullName));
@@ -470,12 +470,16 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
                                             nsnull,
                                             nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
                                             getter_AddRefs(parser));
-	if (parser)
-		parser->MakeFullAddress(nsnull, NS_CONST_CAST(char*, (const char *)fullName),
-										NS_CONST_CAST(char*, (const char *)email),
-										&sender);
+  if (parser) {
+    // convert to UTF8 before passing to MakeFullAddress
+    nsAutoString fullNameStr(fullName);
+    char *fullNameUTF8 = fullNameStr.ToNewUTF8String();
+		parser->MakeFullAddress(nsnull, fullNameUTF8, email, &sender);
+    nsCRT::free(fullNameUTF8);
+  }
+  
 	if (!sender)
-		m_compFields->SetFrom(NS_CONST_CAST(char*, (const char *)email));
+		m_compFields->SetFrom(email);
 	else
 		m_compFields->SetFrom(sender);
 	PR_FREEIF(sender);
@@ -483,8 +487,8 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
 	//Set the reply-to only if the user have not specified one in the message
 	const char * reply = m_compFields->GetReplyTo();
 	if (reply == nsnull || *reply == 0)
-		m_compFields->SetReplyTo(NS_CONST_CAST(char*, (const char *)replyTo));
-    m_compFields->SetOrganization(NS_CONST_CAST(char*, (const char *)organization));
+		m_compFields->SetReplyTo(replyTo);
+    m_compFields->SetOrganization(organization);
     
 #if defined(DEBUG_ducarroz) || defined(DEBUG_seth_)
     printf("----------------------------\n");

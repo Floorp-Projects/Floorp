@@ -85,6 +85,14 @@ interface nsIMsgAccountManager : nsISupports {
    */
   readonly attribute nsISupportsArray allServers;
 
+  /**
+   * hack alert
+   * these carry over from nsMsgMailSession
+   * I'm keeping them here to make it easy to kill them later
+   */
+  readonly attribute nsIMsgIdentity currentIdentity;
+  readonly attribute nsIMsgIncomingServer currentServer;
+  
   /* summary of summary files folder cache */
   readonly attribute nsIMsgFolderCache folderCache;
   /*

@@ -38,7 +38,7 @@
 #include "nsIMsgSend.h"
 #include "nsIPref.h"
 #include "nscore.h"
-#include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
@@ -89,7 +89,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID); 
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
@@ -286,24 +285,17 @@ GetHackIdentity()
 {
   nsresult rv;
   
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv)) 
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) return nsnull;
   {
-    printf("Failure on Mail Session Init!\n");
+    printf("Failure on AccountManager Init!\n");
     return nsnull;
   }  
   
   nsCOMPtr<nsIMsgIdentity>        identity = nsnull;
-  nsCOMPtr<nsIMsgAccountManager>  accountManager;
   
-  rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
-  if (NS_FAILED(rv)) 
-  {
-    printf("Failure getting account Manager!\n");
-    return nsnull;
-  }  
-  
-  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+  rv = accountManager->GetCurrentIdentity(getter_AddRefs(identity));
   if (NS_FAILED(rv)) 
   {
     printf("Failure getting Identity!\n");
@@ -370,14 +362,7 @@ int main(int argc, char *argv[])
     printf("Failed on reading user prefs!\n");
     exit(rv);
   }
-  
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv) || !mailSession) 
-  {
-    printf("Failure on Mail Session Init!\n");
-    return rv;
-  }  
-  
+    
   nsIMsgIdentity *identity;
   identity = GetHackIdentity();
   SendOperationListener *sendListener = nsnull;
@@ -391,7 +376,7 @@ int main(int argc, char *argv[])
     if (NS_SUCCEEDED(rv) && pMsgCompFields)
     { 
       char  *aEmail = nsnull;
-      char  *aFullName = nsnull;
+      PRUnichar  *aFullName = nsnull;
       char  addr[256];
       char  subject[256];
 
