@@ -201,11 +201,6 @@ public:
     */
           PRInt32 GetEffectiveCOLSAttribute();
 
-
-  // For DEBUGGING Purposes Only
-  NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
-  NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
-
 protected:
 
   /** protected constructor.

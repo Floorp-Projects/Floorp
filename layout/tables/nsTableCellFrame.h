@@ -142,11 +142,6 @@ public:
   /** destructor */
   virtual ~nsTableCellFrame();
 
-
-  // For DEBUGGING Purposes Only, to be removed
-  NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
-  NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
-
 private:  
 
   // All these methods are support methods for RecalcLayoutData
