@@ -57,7 +57,7 @@ static NS_DEFINE_IID(kCSSMarginSID, NS_CSS_MARGIN_SID);
 static NS_DEFINE_IID(kCSSPositionSID, NS_CSS_POSITION_SID);
 static NS_DEFINE_IID(kCSSListSID, NS_CSS_LIST_SID);
 static NS_DEFINE_IID(kCSSDisplaySID, NS_CSS_DISPLAY_SID);
-
+static NS_DEFINE_IID(kCSSTableSID, NS_CSS_TABLE_SID);
 
 // -- nsCSSSelector -------------------------------
 
@@ -1007,7 +1007,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
           PRInt32 td = ourText->mDecoration.GetIntValue();
           font->mFont.decorations |= td;
           font->mFixedFont.decorations |= td;
-          text->mTextDecoration |= td;
+          text->mTextDecoration = td;
         }
         else if (eCSSUnit_None == ourText->mDecoration.GetUnit()) {
           font->mFont.decorations = NS_STYLE_TEXT_DECORATION_NONE;
@@ -1501,7 +1501,20 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         }
 
         SetCoord(ourPosition->mWidth, position->mWidth, SETCOORD_LPAH, font, aPresContext);
+        SetCoord(ourPosition->mMinWidth, position->mWidth, SETCOORD_LPH, font, aPresContext);
+        if (! SetCoord(ourPosition->mMaxWidth, position->mWidth, SETCOORD_LPH, font, aPresContext)) {
+          if (eCSSUnit_None == ourPosition->mMaxWidth.GetUnit()) {
+            position->mMaxWidth.Reset();
+          }
+        }
+
         SetCoord(ourPosition->mHeight, position->mHeight, SETCOORD_LPAH, font, aPresContext);
+        SetCoord(ourPosition->mMinHeight, position->mHeight, SETCOORD_LPH, font, aPresContext);
+        if (! SetCoord(ourPosition->mMaxHeight, position->mHeight, SETCOORD_LPH, font, aPresContext)) {
+          if (eCSSUnit_None == ourPosition->mMaxHeight.GetUnit()) {
+            position->mMaxHeight.Reset();
+          }
+        }
 
         // z-index
         SetCoord(ourPosition->mZIndex, position->mZIndex, SETCOORD_IAH, nsnull, nsnull);
@@ -1549,6 +1562,72 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         }
       }
     }
+
+    nsCSSTable* ourTable;
+    if (NS_OK == aDeclaration->GetData(kCSSTableSID, (nsCSSStruct**)&ourTable)) {
+      if (nsnull != ourTable) {
+        nsStyleTable* table = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+
+        const nsStyleTable* parentTable = table;
+        if (nsnull != parentTable) {
+          parentTable = (const nsStyleTable*)parentContext->GetStyleData(eStyleStruct_Table);
+        }
+        nsStyleCoord  coord;
+
+#if 0
+        // border-collapse: enum, inherit
+        if (eCSSUnit_Enumerated == ourTable->mBorderCollapse.GetUnit()) {
+          table->m = ourTable->mBorderCollapse.GetIntValue();
+        }
+        else if (eCSSUnit_Inherit == ourTable->mBorderCollapse.GetUnit()) {
+          table->m = parentTable->m;
+        }
+
+        // border-spacing-x: length, inherit
+        if (SetCoord(ourTable->mBorderSpacingX, coord, SETCOORD_LENGTH, font, aPresContext)) {
+          table->m = coord.GetCoordValue();
+        }
+        else if (eCSSUnit_Inherit == ourTable->mBorderSpacingX.GetUnit()) {
+          table->m = parentTable->m;
+        }
+        // border-spacing-y: length, inherit
+        if (SetCoord(ourTable->mBorderSpacingY, coord, SETCOORD_LENGTH, font, aPresContext)) {
+          table->m = coord.GetCoordValue();
+        }
+        else if (eCSSUnit_Inherit == ourTable->mBorderSpacingY.GetUnit()) {
+          table->m = parentTable->m;
+        }
+
+        // caption-side: enum, inherit
+        if (eCSSUnit_Enumerated == ourTable->mCaptionSide.GetUnit()) {
+          table->m = ourTable->mCaptionSide.GetIntValue();
+        }
+        else if (eCSSUnit_Inherit == ourTable->mCaptionSide.GetUnit()) {
+          table->m = parentTable->m;
+        }
+
+        // empty-cells: enum, inherit
+        if (eCSSUnit_Enumerated == ourTable->mEmptyCells.GetUnit()) {
+          table->m = ourTable->mEmptyCells.GetIntValue();
+        }
+        else if (eCSSUnit_Inherit == ourTable->mEmptyCells.GetUnit()) {
+          table->m = parentTable->m;
+        }
+#endif
+
+        // table-layout: auto, enum, inherit
+        if (eCSSUnit_Enumerated == ourTable->mLayout.GetUnit()) {
+          table->mLayoutStrategy = ourTable->mLayout.GetIntValue();
+        }
+        else if (eCSSUnit_Auto == ourTable->mLayout.GetUnit()) {
+          table->mLayoutStrategy = NS_STYLE_TABLE_LAYOUT_AUTO;
+        }
+        else if (eCSSUnit_Inherit == ourTable->mLayout.GetUnit()) {
+          table->mLayoutStrategy = parentTable->mLayoutStrategy;
+        }
+      }
+    }
+
     NS_IF_RELEASE(parentContext);
   }
 }
