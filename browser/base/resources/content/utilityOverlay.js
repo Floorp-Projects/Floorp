@@ -238,19 +238,7 @@ function openTopWin( url )
 
 function goAboutDialog()
 {
-  var defaultAboutState = false;
-  try {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    defaultAboutState = pref.getBoolPref("browser.show_about_as_stupid_modal_window");
-  }
-  catch(e) {
-    defaultAboutState = false;
-  }
-  if( defaultAboutState )
-    window.openDialog("chrome://global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
-  else
-    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'about:' );
+  window.openDialog("chrome://global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
 }
 
 // update menu items that rely on focus
