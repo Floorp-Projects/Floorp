@@ -356,13 +356,15 @@ nsresult nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsDrawingSurface 
         ::GpiSelectPalette(mSurface->mPS, (HPAL)palInfo.palette);
         ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mSurface->mPS, &cclr);
       } else if (!palInfo.isPaletteDevice && palInfo.palette) {
-        GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET | LCOL_PURECOLOR,
+//        GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET | LCOL_PURECOLOR,
+        GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET,
                                 LCOLF_CONSECRGB, 0,
                                 palInfo.sizePalette, (PLONG) palInfo.palette);
       }
       else
       {
-        GpiCreateLogColorTable( mSurface->mPS, LCOL_PURECOLOR,
+//        GpiCreateLogColorTable( mSurface->mPS, LCOL_PURECOLOR,
+        GpiCreateLogColorTable( mSurface->mPS, 0,
                                 LCOLF_RGB, 0, 0, 0);
       }
    }
@@ -1026,8 +1028,11 @@ void nsRenderingContextOS2::PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoi
       if( bFilled == PR_TRUE)
       {
          POLYGON pgon = { aNumPoints - 1, pts + 1 };
+         //IBM-AKR changed from boundary and inclusive to be noboundary and 
+         //        exclusive to fix bug with text fields, buttons, etc. borders 
+         //        being 1 pel too thick.  Bug 56853
          GpiPolygons( mSurface->mPS, 1, &pgon,
-                      POLYGON_BOUNDARY, POLYGON_INCL);
+                      POLYGON_NOBOUNDARY, POLYGON_EXCL);
       }
       else
       {
@@ -1618,3 +1623,4 @@ NS_IMETHODIMP nsRenderingContextOS2::ConditionRect(nscoord &x, nscoord &y, nscoo
 
   return NS_OK;
 }
+
