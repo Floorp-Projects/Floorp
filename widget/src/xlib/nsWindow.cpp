@@ -21,6 +21,7 @@
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   B.J. Rossiter <bj@igelaus.com.au>
+ *   Tony Tsui <tony@igelaus.com.au>
  */
 
 #include "nsWindow.h"
@@ -30,6 +31,10 @@
 #include "nsFileSpec.h" // for nsAutoCString
 
 #define ABS(i) ( i<0 ? 0-i : i )
+
+// Variables for grabbing
+PRBool   nsWindow::sIsGrabbing = PR_FALSE;
+nsWindow *nsWindow::sGrabWindow = NULL;
 
 // Routines implementing an update queue.
 // We keep a single queue for all widgets because it is 
@@ -195,6 +200,13 @@ nsWindow::nsWindow() : nsWidget()
 
 nsWindow::~nsWindow()
 {
+  // Release grab
+  if (sGrabWindow == this)
+  {
+    sIsGrabbing = PR_FALSE;
+    sGrabWindow = NULL;
+  }
+ 
   // Should get called from ~nsWidget() anyway. KenF
   // if (mBaseWindow)
   //Destroy();
@@ -222,11 +234,80 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
   return result;
 }
 
+// Function that does native grab.
+void nsWindow::NativeGrab(PRBool aGrab)
+{
+  Cursor newCursor = XCreateFontCursor(mDisplay, XC_right_ptr);
 
+  if (aGrab)
+  {
+    int retval;
 
+    retval = XGrabPointer(mDisplay, mBaseWindow, PR_TRUE, (ButtonPressMask |
+                          ButtonReleaseMask | EnterWindowMask | LeaveWindowMask 
+                          | PointerMotionMask), GrabModeAsync, GrabModeAsync, 
+                          (Window*)NULL, newCursor, CurrentTime);
 
+    if (retval != GrabSuccess)
+      fprintf(stderr, "Grab pointer failed!\n");
 
+    retval = XGrabKeyboard(mDisplay, mBaseWindow, PR_TRUE, GrabModeAsync,
+                           GrabModeAsync, CurrentTime);
 
+    if (retval != GrabSuccess)
+      fprintf(stderr, "Grab keyboard failed!\n");
+
+  }
+  else
+  {
+    XUngrabPointer(mDisplay, CurrentTime);
+    XUngrabKeyboard(mDisplay, CurrentTime);
+  }
+}
+
+/* This called when a popup is generated so that if a mouse down event occurs,
+ * the passed listener can be informed (see nsWidget::HandlePopup). It is also
+ * called with aDoCapture == PR_FALSE when a popup is no longer visible
+ */
+NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
+                                            PRBool aDoCapture,
+                                            PRBool aConsumeRollupEvent)
+{
+  if (aDoCapture)
+  {
+    NativeGrab(PR_TRUE);
+
+    sIsGrabbing = PR_TRUE;
+    sGrabWindow = this;
+
+      //fprintf(stderr, "Received listener from generated popup\n");
+      gRollupListener = aListener;
+
+      // Get assertion error:
+      // ###!!! ASSERTION: Did you know you were calling |NS_GetWeakReference()| on
+      // something that doesn't support weak references?: 'factoryPtr', file
+      // nsWeakReference.cpp, line 55
+      //gRollupWidget = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
+      gRollupWidget = NS_STATIC_CAST(nsIWidget*,this);
+
+      // GTK does not seem to use this but other window toolkits do
+      gRollupConsumeRollupEvent = PR_TRUE;
+    //}
+  }else{
+
+    // Release Grab
+    if (sGrabWindow == this)
+      sGrabWindow = NULL;
+
+    sIsGrabbing = PR_FALSE;
+
+    NativeGrab(PR_FALSE);
+
+    gRollupListener = nsnull;
+    gRollupWidget = nsnull;
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous)
 {
@@ -453,7 +534,8 @@ nsWindow::GetEventMask()
     PointerMotionMask |
     StructureNotifyMask | 
     VisibilityChangeMask |
-    FocusChangeMask;
+    FocusChangeMask |
+    OwnerGrabButtonMask;
   return event_mask;
 }
 
@@ -561,42 +643,6 @@ NS_IMETHODIMP nsWindow::Update()
       }
     } while (NS_SUCCEEDED(children->Next()));
   }
-  return NS_OK;
-}
-
-
-/* This called when a popup is generated so that if a mouse down event occurs,
- * the passed listener can be informed (see nsWidget::HandlePopup). It is also
- * called with aDoCapture == PR_FALSE when a popup is no longer visible
- */
-NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
-																						PRBool aDoCapture,
-																						PRBool aConsumeRollupEvent)
-{
-	if (aDoCapture) {
-		/*if (mSuperWin) {*/
-			
-			// Gtk also has functionality to handle "grabbing"
-		
-			//fprintf(stderr, "Received listener from generated popup\n");
-			gRollupListener = aListener;
-			
-			// Get assertion error:
-			// ###!!! ASSERTION: Did you know you were calling |NS_GetWeakReference()| on 
-			// something that doesn't support weak references?: 'factoryPtr', file 
-			// nsWeakReference.cpp, line 55
-			//gRollupWidget = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
-			gRollupWidget = NS_STATIC_CAST(nsIWidget*,this);
-			
-			// GTK does not seem to use this but other window toolkits do
-			gRollupConsumeRollupEvent = PR_TRUE;
-		//}
-	}else{
-		// Gtk also has functionality to handle "ungrabbing"
-					
-		gRollupListener = nsnull;
-		gRollupWidget = nsnull;
-	}
   return NS_OK;
 }
 

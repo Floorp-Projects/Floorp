@@ -22,6 +22,7 @@
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   Quy Tonthat <quy@igelaus.com.au>
  *   B.J. Rossiter <bj@igelaus.com.au>
+ *   Tony Tsui <tony@igelaus.com.au>
  */
 
 #include "nsWidget.h"
@@ -606,6 +607,8 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
     }
     if (mParentWidget) {
       ((nsWidget *)mParentWidget)->WidgetShow(this);
+      // Fix Popups appearing behind mozilla window. TonyT
+      XRaiseWindow(mDisplay, mBaseWindow);
     }
     else {
       if (mBaseWindow) {
@@ -808,7 +811,8 @@ nsWidget::GetEventMask()
     PointerMotionMask |
     StructureNotifyMask |
     VisibilityChangeMask |
-    FocusChangeMask;
+    FocusChangeMask |
+    OwnerGrabButtonMask;
 
   return event_mask;
 }
