@@ -1,4 +1,4 @@
-#!/usr/bin/perl -wT
+#!/usr/bin/perl -w
 # -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
 #
 # This file is MPL/GPL dual-licensed under the following terms:
@@ -45,12 +45,12 @@ sub registerServices {
                      PLIF::Input::CGI
                      PLIF::Input::CommandLine
                      PLIF::Input::Default
+                     PLIF::Database::DBI
+                     PLIF::DatabaseHelper::DBI
                      PLIF::DataSource::FileStrings
                      PLIF::DataSource::DebugStrings
                      PLIF::DataSource::Strings::MySQL
                      PLIF::DataSource::User::MySQL
-                     PLIF::Database::DBI
-                     PLIF::DatabaseHelper::DBI
                      PLIF::Output::Generic
                      PLIF::Output::Generic::StdOut
                      PLIF::Service::Coses
