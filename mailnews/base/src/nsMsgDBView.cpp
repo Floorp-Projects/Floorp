@@ -680,7 +680,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
 
   // this is where we tell the outliner to apply styles to a particular row
   // i.e. if the row is an unread message...
-  nsMsgKey key = m_keys.GetAt(aRow);
+
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
   nsresult rv = NS_OK;
 
@@ -907,7 +907,6 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, P
   if (!IsValidIndex(aRow))
     return NS_MSG_INVALID_DBVIEW_INDEX;
 
-  nsMsgKey key = m_keys.GetAt(aRow);
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
   rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
   
@@ -2042,10 +2041,16 @@ nsresult nsMsgDBView::GetLongField(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sor
         }
         break;
     case nsMsgViewSortType::byPriority: 
-        // want highest priority to have lowest value
-        // so ascending sort will have highest priority first.
         nsMsgPriorityValue priority;
         rv = msgHdr->GetPriority(&priority);
+
+        // treat "none" as "normal" when sorting.
+        if (priority == nsMsgPriority::none) {
+            priority = nsMsgPriority::normal;
+        }
+
+        // we want highest priority to have lowest value
+        // so ascending sort will have highest priority first.
         *result = nsMsgPriority::highest - priority;
         break;
     case nsMsgViewSortType::byStatus:
