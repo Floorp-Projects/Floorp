@@ -58,7 +58,7 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsICommonDialogs.h"
-#include "nsISecurityPref.h"
+#include "nsIPref.h"
 
 #include "nsIFormSubmitObserver.h"
 
@@ -160,7 +160,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button, nsIDOME
     mWindow         = window;
 
     nsresult rv = nsServiceManager::GetService( kPrefCID, 
-                                                NS_GET_IID(nsISecurityPref), 
+                                                NS_GET_IID(nsIPref), 
                                                 getter_AddRefs(mPref));  
     if (NS_FAILED(rv)) return rv;
 
@@ -528,7 +528,7 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldUR
         mSecurityButton->RemoveAttribute( NS_ConvertASCIItoUCS2("level") );
         mCertificateAuthorityDisplay->SetAttribute( NS_ConvertASCIItoUCS2("value"), NS_ConvertASCIItoUCS2("") );
         
-        if ((mPref->SecurityGetBoolPref(LEAVE_SITE_PREF, &boolpref) != 0))
+        if ((mPref->GetBoolPref(LEAVE_SITE_PREF, &boolpref) != 0))
             boolpref = PR_TRUE;
         
         if (boolpref) 
@@ -551,7 +551,7 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldUR
                                &outCheckValue);
 
             if (!outCheckValue) {
-                mPref->SecuritySetBoolPref(LEAVE_SITE_PREF, PR_FALSE);
+                mPref->SetBoolPref(LEAVE_SITE_PREF, PR_FALSE);
                 NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
                 if (NS_FAILED(res)) 
                     return res;
@@ -562,7 +562,7 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldUR
     // check to see if we are going from an insecure page to a secure one.
     else if (isNewSchemeSecure && !isOldSchemeSecure)
     {
-        if ((mPref->SecurityGetBoolPref(ENTER_SITE_PREF, &boolpref) != 0))
+        if ((mPref->GetBoolPref(ENTER_SITE_PREF, &boolpref) != 0))
             boolpref = PR_TRUE;
         
         if (boolpref) 
@@ -586,7 +586,7 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldUR
 
             if (!outCheckValue)
             {
-                mPref->SecuritySetBoolPref(ENTER_SITE_PREF, PR_FALSE);
+                mPref->SetBoolPref(ENTER_SITE_PREF, PR_FALSE);
                 NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
                 if (NS_FAILED(res)) 
                     return res;
@@ -618,7 +618,7 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsIURI* nextURI)
         if (!mPref) return NS_ERROR_NULL_POINTER;
 
         PRBool boolpref;
-        if ((mPref->SecurityGetBoolPref(MIXEDCONTENT_PREF, &boolpref) != 0))
+        if ((mPref->GetBoolPref(MIXEDCONTENT_PREF, &boolpref) != 0))
             boolpref = PR_TRUE;
 
         if (boolpref && !mMixContentAlertShown) 
@@ -642,7 +642,7 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsIURI* nextURI)
                                &outCheckValue);
 
             if (!outCheckValue) {
-                mPref->SecuritySetBoolPref(MIXEDCONTENT_PREF, PR_FALSE);
+                mPref->SetBoolPref(MIXEDCONTENT_PREF, PR_FALSE);
                 NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &rv);
                 if (NS_FAILED(rv)) 
                     return rv;
@@ -673,7 +673,7 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
     PRBool boolpref = PR_TRUE;    
 
     // posting to a non https URL.
-    mPref->SecurityGetBoolPref(INSECURE_SUBMIT_PREF, &boolpref);
+    mPref->GetBoolPref(INSECURE_SUBMIT_PREF, &boolpref);
     
     if (boolpref) {
         NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
@@ -701,7 +701,7 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
                              okayToPost);
 
         if (!outCheckValue) {
-            mPref->SecuritySetBoolPref(INSECURE_SUBMIT_PREF, PR_FALSE);
+            mPref->SetBoolPref(INSECURE_SUBMIT_PREF, PR_FALSE);
             NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &rv);
             if (NS_FAILED(rv)) 
                 return rv;
