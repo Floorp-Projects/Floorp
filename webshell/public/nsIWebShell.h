@@ -159,24 +159,15 @@ public:
                   PRBool aAllowPlugins = PR_TRUE,
                   PRBool aIsSunkenBorder = PR_FALSE) = 0;
 
+
+  /********* XXX Stuff to be replaced by nsIBaseWindow *********/
+  
   /**
    * Notify the WebShell that its parent's window is being destroyed.  After 
    * being destroyed, a WebShell is no longer visible and can no longer display 
    * documents.
    */
   NS_IMETHOD Destroy() = 0;
-
-  /**
-   * Return the current dimensions of the WebShell.
-   */
-  NS_IMETHOD GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h) = 0;
-
-  /**
-   * Resize the WebShell to the given dimensions.
-   */
-  NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) = 0;
-
-  NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
 
   /**
    * Make the WebShell visible.
@@ -189,15 +180,36 @@ public:
   NS_IMETHOD Hide() = 0;
 
   /**
+   * Resize the WebShell to the given dimensions.
+   */
+  NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) = 0;
+
+  NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
+
+  /**
+   * Return the current dimensions of the WebShell.
+   */
+  NS_IMETHOD GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h) = 0;
+
+  /**
    * Give the WebShell window focus.
    */
   NS_IMETHOD SetFocus() = 0;
-  NS_IMETHOD RemoveFocus() = 0;
 
   /**
    * Force the WebShell to repaint its window.
    */
   NS_IMETHOD Repaint(PRBool aForce) = 0;
+
+  // Chrome api's
+  NS_IMETHOD SetTitle(const PRUnichar *aTitle) = 0;
+
+  NS_IMETHOD GetTitle(const PRUnichar **aResult) = 0;
+  /********* XXX End Stuff to be replaced by nsIBaseWindow ******/
+
+
+  NS_IMETHOD RemoveFocus() = 0;
+
 
   /**
    * Set the nsIWebShellContainer for the WebShell.
@@ -410,10 +422,6 @@ public:
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult) = 0;
   NS_IMETHOD GetURL(PRInt32 aHistoryIndex, const PRUnichar **aURLResult) = 0;
 
-  // Chrome api's
-  NS_IMETHOD SetTitle(const PRUnichar *aTitle) = 0;
-
-  NS_IMETHOD GetTitle(const PRUnichar **aResult) = 0;
   // SetToolBar
   // SetMenuBar
   // SetStatusBar
@@ -430,24 +438,6 @@ public:
   NS_IMETHOD GetMarginHeight(PRInt32* aWidth)  = 0;
   NS_IMETHOD SetMarginHeight(PRInt32  aHeight) = 0;
   
-  /* ============ moved to nsIMarkupDocumentViewer =================== */
-  /*
-
-  NS_IMETHOD SetIsFrame(PRBool aIsFrame)       = 0;
-  NS_IMETHOD GetIsFrame(PRBool& aIsFrame)      = 0;
-
-  NS_IMETHOD GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet) = 0;
-  NS_IMETHOD SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)  = 0;
-  
-  NS_IMETHOD GetForceCharacterSet (const PRUnichar** aForceCharacterSet) = 0;
-  NS_IMETHOD SetForceCharacterSet (const PRUnichar*  aForceCharacterSet)  = 0;
-
-  // the following is the hacky access method
-  NS_IMETHOD GetCharacterSetHint (const PRUnichar** oHintCharset, nsCharsetSource* oSource) = 0;
-  
-  
-  */
-
   // XXX this will go away, replaced by a new content viewer method
   NS_IMETHOD SizeToContent() = 0;
 
@@ -486,10 +476,6 @@ public:
   /* Set & Get Session History details */
   NS_IMETHOD SetIsInSHist(PRBool aIsFrame)       = 0;
   NS_IMETHOD GetIsInSHist(PRBool& aIsFrame)      = 0;
-
-    /* Get and set the URL Dispatcher for the webshell */
-  NS_IMETHOD SetUrlDispatcher(nsIUrlDispatcher * anObserver) = 0;
-  NS_IMETHOD GetUrlDispatcher(nsIUrlDispatcher *& aResult)=0;
 
   /**
    * Get and set the history state for the document.
