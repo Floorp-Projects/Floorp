@@ -8517,7 +8517,7 @@ if test "${with_pthreads+set}" = set; then
 fi
 
 
-if test "$USE_PTHREADS"x = x
+if test "$USE_PTHREADS"x != x
 then
 	case "$target" in
 	    *-*-solaris*) 
