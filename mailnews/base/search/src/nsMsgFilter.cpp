@@ -26,7 +26,7 @@
 static const char *kImapPrefix = "//imap:";
 
 
-nsMsgFilter::nsMsgFilter()
+nsMsgFilter::nsMsgFilter() : m_filterName(eOneByte)
 {
 	m_filterList = nsnull;
 	NS_INIT_REFCNT();
@@ -132,10 +132,34 @@ NS_IMETHODIMP nsMsgFilter::GetScope(nsMsgScopeTerm **scope)
 */
 NS_IMETHODIMP nsMsgFilter::SetAction(nsMsgRuleActionType type, void *value)
 {
+	switch (type)
+	{
+	case nsMsgFilterActionMoveToFolder:
+		m_action.m_folderName = (const char *) value;
+		break;
+	case nsMsgFilterActionChangePriority:
+		m_action.m_priority = (nsMsgPriority) (PRInt32)  value;
+		break;
+	default:
+		break;
+	}
+
 	return NS_OK;
 }
 NS_IMETHODIMP nsMsgFilter::GetAction(nsMsgRuleActionType *type, void **value) 
 {
+	*type = m_action.m_type;
+	switch (m_action.m_type)
+	{
+	case nsMsgFilterActionMoveToFolder:
+		* (const char **) value = m_action.m_folderName.GetBuffer();
+		break;
+	case nsMsgFilterActionChangePriority:
+		* (nsMsgPriority *) value = m_action.m_priority;
+		break;
+	default:
+		break;
+	}
 	return NS_OK;
 }
 
@@ -183,12 +207,35 @@ void			nsMsgFilter::SetFilterScript(nsString2 *fileName)
 	m_scriptFileName = *fileName;
 }
 
-nsresult		nsMsgFilter::SaveToTextFile(nsIOFileStream *stream);
-
 nsresult nsMsgFilter::ConvertMoveToFolderValue(nsString2 &relativePath)
 {
 
-	m_action.m_folderName = relativePath;
+//	m_action.m_folderName = relativePath;
+	// if relative path starts with kImap, this is a move to folder on the same server
+	if (relativePath.Find(kImapPrefix) == 0)
+	{
+		PRInt32 prefixLen = PL_strlen(kImapPrefix);
+		relativePath.Mid(m_action.m_originalServerPath, prefixLen, relativePath.Length() - prefixLen);
+		m_action.m_folderName = m_action.m_originalServerPath;
+		// convert the server path to the local full path
+//		MSG_IMAPFolderInfoMail *imapMailFolder = (filterList->GetFolderInfo()) ? filterList->GetFolderInfo()->GetIMAPFolderInfoMail() : (MSG_IMAPFolderInfoMail *)NULL;
+//		MSG_IMAPFolderInfoContainer *imapContainer = (imapMailFolder) ? imapMailFolder->GetIMAPContainer() : GetFilter()->GetMaster()->GetImapMailFolderTree();
+
+//		MSG_IMAPFolderInfoMail *imapFolder = NULL;
+//		if (imapContainer)
+//			imapFolder = GetFilter()->GetMaster()->FindImapMailFolder(imapContainer->GetHostName(), relativePath + XP_STRLEN(MSG_Rule::kImapPrefix), NULL, FALSE);
+//		if (imapFolder)
+//			m_action.m_value.m_folderName = XP_STRDUP(imapFolder->GetPathname());
+//		else
+//		{
+			// did the user switch servers??
+			// we'll still save this filter, the filter code in the mail parser will handle this case
+//			m_action.m_value.m_folderName = XP_STRDUP("");
+//		}
+	}
+	else
+//		m_action.m_value.m_folderName = PR_smprintf("%s/%s", master->GetPrefs()->GetFolderDirectory(), relativePath);
+		m_action.m_folderName = relativePath;
 	return NS_OK;
 	// set m_action.m_value.m_folderName
 }

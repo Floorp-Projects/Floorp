@@ -46,7 +46,7 @@ public:
 */
 	NS_IMETHOD OpenFilterList(nsFileSpec *filterFile, nsIMsgFilterList **filterList);
 	NS_IMETHOD CloseFilterList(nsIMsgFilterList *filterList);
-	NS_IMETHOD	SaveFilterList(nsIMsgFilterList *filterList);	/* save without deleting */
+	NS_IMETHOD	SaveFilterList(nsIMsgFilterList *filterList, nsFileSpec *filterFile);	/* save without deleting */
 	NS_IMETHOD CancelFilterList(nsIMsgFilterList *filterList);
 
 };

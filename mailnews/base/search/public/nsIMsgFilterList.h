@@ -23,6 +23,8 @@
 #include "nsISupports.h"
 #include "nsMsgFilterCore.h"
 
+class nsIOFileStream;
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // The Msg Filter List is an interface designed to make accessing filter lists
 // easier. Clients typically open a filter list and either enumerate the filters,
@@ -57,7 +59,7 @@ public:
 	NS_IMETHOD IsLoggingEnabled(PRBool *aResult)= 0;
 
 	NS_IMETHOD CreateFilter(char *name,	nsIMsgFilter **result)= 0;
-
+	NS_IMETHOD SaveToFile(nsIOFileStream *stream) = 0;
 };
 
 #endif

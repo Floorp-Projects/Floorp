@@ -43,9 +43,13 @@
 
 #include "nsXPComCIID.h"
 #include "nsMsgFilterService.h"
+#include "nsIMsgFilterList.h"
+
 #include "nsCOMPtr.h"
 
 #include "nsMsgBaseCID.h"
+
+#include "nsFileStream.h"
 
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
@@ -145,7 +149,6 @@ nsresult nsFilterTestDriver::RunDriver()
 
 void nsFilterTestDriver::InitializeTestDriver()
 {
-	nsresult rv;
 }
 
 // prints the userPrompt and then reads in the user data. Assumes urlData has already been allocated.
@@ -228,7 +231,7 @@ nsresult nsFilterTestDriver::OnOpenFilterFile()
 {
 	nsCOMPtr <nsIMsgFilterList> filterList;
 
-	PromptForUserData("enter filter file name");
+	PromptForUserData("enter filter file name: ");
 	nsFileSpec filterFile(m_userData);
 
 	if (filterFile.Exists())
@@ -238,17 +241,36 @@ nsresult nsFilterTestDriver::OnOpenFilterFile()
 		{
 		}
 	}
+	else
+		printf("filter file doesn't exist\n");
 	return NS_OK;
 }
 
 nsresult nsFilterTestDriver::OnWriteFilterList()
 {
+	nsCOMPtr <nsIMsgFilterList> filterList;
+
+	PromptForUserData("enter filter file name: ");
+	nsFileSpec filterFile(m_userData);
+
+	if (filterFile.Exists())
+	{
+		nsresult res = m_filterService->OpenFilterList(&filterFile, getter_AddRefs(filterList));
+		if (NS_SUCCEEDED(res))
+		{
+			filterFile.MakeUnique();
+			nsIOFileStream fileStream(filterFile);
+
+			return filterList->SaveToFile(&fileStream);
+		}
+
+	}
 	return NS_OK;
 }
 
 int main()
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
 	NS_WITH_SERVICE(nsIMsgFilterService, filterService, kMsgFilterServiceCID, &rv);

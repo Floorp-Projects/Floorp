@@ -74,6 +74,7 @@ public:
 	NS_IMETHOD IsLoggingEnabled(PRBool *aResult);
 
 	NS_IMETHOD CreateFilter(char *name,	nsIMsgFilter **result);
+	NS_IMETHOD SaveToFile(nsIOFileStream *stream);
 
 	nsresult		Close();
 	nsresult		LoadTextFilters();

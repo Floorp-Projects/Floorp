@@ -411,6 +411,7 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 
 		m_value.u.string = (char *) PR_Malloc(valueLen + 1);
 		PL_strncpy(m_value.u.string, inStream, valueLen + 1);
+		m_value.u.string[valueLen] = '\0';
 	}
 	else
 	{
@@ -830,7 +831,7 @@ PRBool nsMsgSearchTerm::MatchAllBeforeDeciding ()
 
 nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, int16 csid)
 {
-	nsresult err;
+	nsresult err = NS_ERROR_NOT_IMPLEMENTED;
 #ifdef DO_RFC822
 	// Isolate the RFC 822 parsing weirdnesses here. MSG_ParseRFC822Addresses
 	// returns a catenated string of null-terminated strings, which we walk

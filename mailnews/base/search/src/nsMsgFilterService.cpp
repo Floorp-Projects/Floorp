@@ -88,10 +88,16 @@ NS_IMETHODIMP nsMsgFilterService::CloseFilterList(nsIMsgFilterList *filterList)
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-	/* save without deleting */
-NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList)
+/* save without deleting */
+NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, nsFileSpec *filterFile)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	nsresult ret = NS_OK;
+
+	nsIOFileStream *fileStream = new nsIOFileStream(*filterFile);
+	if (!fileStream)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	return ret;
 }
 
 NS_IMETHODIMP nsMsgFilterService::CancelFilterList(nsIMsgFilterList *filterList)

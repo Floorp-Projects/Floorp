@@ -99,6 +99,15 @@ NS_IMETHODIMP nsMsgFilterList::IsLoggingEnabled(PRBool *aResult)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFilterList::SaveToFile(nsIOFileStream *stream)
+{
+	if (!stream)
+		return NS_ERROR_NULL_POINTER;
+
+	m_fileStream = stream;
+	return SaveTextFilters();
+}
+
 #if 0
 nsresult nsMsgFilterList::Open(nsMsgFilterType type, nsIMsgFolder *folder, nsIMsgFilterList **filterList)
 {
@@ -461,7 +470,10 @@ nsresult nsMsgFilterList::ParseCondition(nsString2 &value)
 				int termLen = curPtr - openParen - 1;
 				termDup = (char *) PR_Malloc(termLen + 1);
 				if (termDup)
+				{
 					PL_strncpy(termDup, openParen + 1, termLen + 1);
+					termDup[termLen] = '\0';
+				}
 				else
 				{
 					err = NS_ERROR_OUT_OF_MEMORY;
@@ -557,14 +569,16 @@ nsresult nsMsgFilterList::SaveTextFilters()
 nsMsgFilterList::~nsMsgFilterList()
 {
 
-	PRUint32			filterCount;
-	m_filters->Count(&filterCount);
-	for (PRUint32 i = 0; i < filterCount; i++)
-	{
-		nsIMsgFilter *filter;
-		if (GetFilterAt(i, &filter) == NS_OK)
-			delete filter;
-	}
+	// filters should be released for free, because only isupports array
+	// is holding onto them, right?
+//	PRUint32			filterCount;
+//	m_filters->Count(&filterCount);
+//	for (PRUint32 i = 0; i < filterCount; i++)
+//	{
+//		nsIMsgFilter *filter;
+//		if (GetFilterAt(i, &filter) == NS_OK)
+//			NS_RELEASE(filter);
+//	}
 }
 
 nsresult nsMsgFilterList::Close()
