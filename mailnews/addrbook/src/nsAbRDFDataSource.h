@@ -53,8 +53,8 @@ public:
   
 protected:
 
-	void createNode(nsString& str, nsIRDFNode **node);
-	void createNode(PRUint32 value, nsIRDFNode **node);
+	nsresult createNode(nsString& str, nsIRDFNode **node);
+	nsresult createNode(PRUint32 value, nsIRDFNode **node);
 
 	nsresult NotifyPropertyChanged(nsIRDFResource *resource, nsIRDFResource *propertyResource,
 									const PRUnichar *oldValue, const PRUnichar *newValue);

@@ -57,27 +57,30 @@ static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
 // Utilities
 
 
-void nsAbRDFDataSource::createNode(nsString& str, nsIRDFNode **node)
+nsresult nsAbRDFDataSource::createNode(nsString& str, nsIRDFNode **node)
 {
 	*node = nsnull;
     nsresult rv; 
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-    if (NS_FAILED(rv)) return;   // always check this before proceeding 
-	nsIRDFLiteral * value;
-	if (NS_SUCCEEDED(rdf->GetLiteral(str.GetUnicode(), &value))) 
+    if (NS_FAILED(rv)) return rv;   // always check this before proceeding 
+	nsCOMPtr<nsIRDFLiteral> value;
+	rv = rdf->GetLiteral(str.GetUnicode(), getter_AddRefs(value));
+	if (NS_SUCCEEDED(rv)) 
 	{
 		*node = value;
+		NS_IF_ADDREF(*node);
 	}
+	return rv;
 }
 
-void nsAbRDFDataSource::createNode(PRUint32 value, nsIRDFNode **node)
+nsresult nsAbRDFDataSource::createNode(PRUint32 value, nsIRDFNode **node)
 {
-	char *valueStr = PR_smprintf("%d", value);
-	nsString str; str.AssignWithConversion(valueStr);
-	createNode(str, node);
-	PR_smprintf_free(valueStr);
+	nsresult rv;
+	nsAutoString str;
+	str.AppendInt((PRInt32)value);
+	rv = createNode(str, node);
+	return rv;
 }
-
 
 PRBool nsAbRDFDataSource::changeEnumFunc(nsISupports *aElement, void *aData)
 {

@@ -101,6 +101,8 @@ protected:
                                      nsIRDFNode **target);
 	nsresult createDirectoryChildNode(nsIAbDirectory *directory,
                                       nsIRDFNode **target);
+	nsresult createDirectoryIsMailListNode(nsIAbDirectory *directory,
+                                      nsIRDFNode **target);
 	static nsresult getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 										   nsISupportsArray **arcs);
 
@@ -116,18 +118,24 @@ protected:
 							 PRBool tv, PRBool *hasAssertion);
 	nsresult DoNewDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments);
 
+	nsresult CreateLiterals(nsIRDFService *rdf);
+	nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* dirResource,
+							   nsIRDFResource *property,PRBool tv, nsIRDFNode *target,PRBool* hasAssertion);
 
 	static nsIRDFResource* kNC_Child;
 	static nsIRDFResource* kNC_DirName;
 	static nsIRDFResource* kNC_CardChild;
 	static nsIRDFResource* kNC_DirUri;
-	static nsIRDFResource* kNC_MailList;
+	static nsIRDFResource* kNC_IsMailList;
 
 	// commands
 	static nsIRDFResource* kNC_Delete;
 	static nsIRDFResource* kNC_DeleteCards;
 	static nsIRDFResource* kNC_NewDirectory;
 
+	//Cached literals
+	nsCOMPtr<nsIRDFNode> kTrueLiteral;
+	nsCOMPtr<nsIRDFNode> kFalseLiteral;
 };
 
 PR_EXTERN(nsresult) NS_NewAbDirectoryDataSource(const nsIID& iid, void **result);

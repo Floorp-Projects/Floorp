@@ -27,6 +27,7 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMailListDialog.dtd">
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		xmlns:nc="http://home.netscape.com/NC-rdf#"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		title="&mailListWindow.title;"
 		class="dialog"
@@ -45,9 +46,11 @@ Rights Reserved.
 		<menulist id="abPopup">
 			<menupopup id="abPopup-menupopup" ref="abdirectory://" datasources="rdf:addressdirectory">
 				<template> 
+				<rule nc:IsMailList="false">
 					<menuitem uri="..."
 					          value="rdf:http://home.netscape.com/NC-rdf#DirName"
 					          data="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+				</rule>
 				</template> 
 			</menupopup>
 		</menulist>

@@ -44,9 +44,11 @@ Rights Reserved.
 		<template>
 			<rule>
 	          <treechildren>
-				<treeitem uri="...">
+				<treeitem uri="..."
+					IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList">
 				  <treerow>
-				    <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#DirName"/>
+				    <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#DirName"
+								     IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"/>
 				  </treerow>
 				</treeitem>
 	          </treechildren>
