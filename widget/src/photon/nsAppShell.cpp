@@ -106,7 +106,10 @@ nsAppShell::~nsAppShell()
 
     if (err==-1)
     {
+	  NS_WARNING("nsAppShell::~EventQueueTokenQueue Run Error calling PtAppRemoveFd");
+#ifdef DEBUG
 	  printf("nsAppShell::~EventQueueTokenQueue Run Error calling PtAppRemoveFd mFD=<%d> errno=<%d>\n", mFD, errno);
+#endif
     }  
     mFD = -1;
   }
@@ -246,7 +249,9 @@ void MyMainLoop( void )
 		PtProcessEvent();
 	}
 
-    NS_WARNING("MyMainLoop exiting!\n");
+#ifdef DEBUG
+    printf("nsAppShell: MyMainLoop exiting!\n");
+#endif
 }
 
 //-------------------------------------------------------------------------

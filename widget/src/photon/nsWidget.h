@@ -213,7 +213,7 @@ protected:
   virtual PRBool   HandleEvent( PtWidget_t *, PtCallbackInfo_t* aCbInfo );
   PRBool           DispatchMouseEvent(PhPoint_t &aPos, PRUint32 aEvent);
   PRBool           DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent);
-  virtual void     ScreenToWidget( PhPoint_t &pt );
+  void     ScreenToWidgetPos( PhPoint_t &pt );
 
   void             InitKeyEvent(PhKeyEvent_t *aPhKeyEvent, nsWidget *aWidget,
                                 nsKeyEvent &aKeyEvent, PRUint32 aEventType);

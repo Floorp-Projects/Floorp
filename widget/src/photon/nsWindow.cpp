@@ -294,7 +294,7 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
   else
   {
     // No border or decorations is the default
-    render_flags = Ph_WM_RENDER_INLINE;
+    render_flags = Ph_WM_RENDER_INLINE | Ph_WM_RENDER_RESIZE;
 
     if( mWindowType != eWindowType_popup ) {
 
@@ -411,6 +411,8 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
       			 	Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON | 
       		  	Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY | Ph_EV_WM /*| Ph_EV_EXPOSE*/,
       			  RawEventHandler, this );
+
+      		PtAddEventHandler( mWidget, Ph_EV_DRAG /*| Ph_EV_EXPOSE*/, RawEventHandler, this );
 
       		PtArg_t arg;
       		PtRawCallback_t callback;

@@ -53,8 +53,6 @@ NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_QUERY_INTERFACE2(nsDragService, nsIDragService, nsIDragSession)
 
-#define DEBUG_DRAG 1
-
 //-------------------------------------------------------------------------
 //
 // DragService constructor
@@ -108,7 +106,9 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
                                   nsIScriptableRegion * aRegion,
                                   PRUint32 aActionType)
 {
-/* ATENTIE */ printf( "nsDragService::InvokeDragSession\n" );
+#ifdef DEBUG
+	printf( "nsDragService::InvokeDragSession\n" );
+#endif
   nsBaseDragService::InvokeDragSession (aDOMNode, aArrayTransferables, aRegion, aActionType);
 
   // make sure that we have an array of transferables to use

@@ -132,7 +132,7 @@ static nsresult nsVertScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, 
   return rv;
 }
 
-static const nsModuleComponentInfo components[] =
+static nsModuleComponentInfo components[] =
 {
   { "Ph nsWindow",
     NS_WINDOW_CID,
@@ -164,12 +164,10 @@ static const nsModuleComponentInfo components[] =
     nsLookAndFeelConstructor },
   { "Transferrable",
     NS_TRANSFERABLE_CID,
-    //    "@mozilla.org/widget/transferrable/ph;1",
     "@mozilla.org/widget/transferable;1",
     nsTransferableConstructor },
   { "Ph Clipboard",
     NS_CLIPBOARD_CID,
-    //    "@mozilla.org/widget/clipboard/ph;1",
     "@mozilla.org/widget/clipboard;1",
     nsClipboardConstructor },
   { "HTML Format Converter",
@@ -178,13 +176,12 @@ static const nsModuleComponentInfo components[] =
     nsHTMLFormatConverterConstructor },
   { "Ph Drag Service",
     NS_DRAGSERVICE_CID,
-    //    "@mozilla.org/widget/dragservice/ph;1",
     "@mozilla.org/widget/dragservice;1",
     nsDragServiceConstructor },
-{ "Ph Sound",
-  NS_SOUND_CID,
-  "@mozilla.org/sound;1",
-  nsSoundConstructor },
+  { "Ph Sound",
+    NS_SOUND_CID,
+    "@mozilla.org/sound;1",
+    nsSoundConstructor },
 #ifdef IBMBIDI
     { "Gtk Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
@@ -193,4 +190,12 @@ static const nsModuleComponentInfo components[] =
 #endif // IBMBIDI
 };
 
-NS_IMPL_NSGETMODULE(nsWidgetPhModule, components)
+PR_STATIC_CALLBACK(void)
+nsWidgetPhModuleDtor(nsIModule *self)
+{
+//	nsPhIMEHelper::Shutdown();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetPhModule,
+							components,
+							nsWidgetPhModuleDtor)
