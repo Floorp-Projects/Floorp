@@ -290,6 +290,7 @@ static const PK11Attribute pk11_StaticX509Attr =
   PK11_DEF_ATTRIBUTE(&pk11_staticX509Value, sizeof(pk11_staticX509Value));
 CK_TRUST pk11_staticTrustedValue = CKT_NETSCAPE_TRUSTED;
 CK_TRUST pk11_staticTrustedDelegatorValue = CKT_NETSCAPE_TRUSTED_DELEGATOR;
+CK_TRUST pk11_staticValidDelegatorValue = CKT_NETSCAPE_VALID_DELEGATOR;
 CK_TRUST pk11_staticUnTrustedValue = CKT_NETSCAPE_UNTRUSTED;
 CK_TRUST pk11_staticTrustUnknownValue = CKT_NETSCAPE_TRUST_UNKNOWN;
 CK_TRUST pk11_staticValidPeerValue = CKT_NETSCAPE_VALID;
@@ -300,6 +301,9 @@ static const PK11Attribute pk11_StaticTrustedAttr =
 static const PK11Attribute pk11_StaticTrustedDelegatorAttr =
   PK11_DEF_ATTRIBUTE(&pk11_staticTrustedDelegatorValue,
 				sizeof(pk11_staticTrustedDelegatorValue));
+static const PK11Attribute pk11_StaticValidDelegatorAttr =
+  PK11_DEF_ATTRIBUTE(&pk11_staticValidDelegatorValue,
+				sizeof(pk11_staticValidDelegatorValue));
 static const PK11Attribute pk11_StaticUnTrustedAttr =
   PK11_DEF_ATTRIBUTE(&pk11_staticUnTrustedValue,
 				sizeof(pk11_staticUnTrustedValue));
@@ -937,6 +941,9 @@ trust:
 	}
 	if (trustFlags & CERTDB_TRUSTED_UNKNOWN) {
 	    return (PK11Attribute *)&pk11_StaticTrustUnknownAttr;
+	}
+	if (trustFlags & CERTDB_VALID_CA) {
+	    return (PK11Attribute *)&pk11_StaticValidDelegatorAttr;
 	}
 	if (trustFlags & CERTDB_VALID_PEER) {
 	    return (PK11Attribute *)&pk11_StaticValidPeerAttr;
