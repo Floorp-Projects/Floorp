@@ -110,6 +110,7 @@ nsNNTPNewsgroupList::nsNNTPNewsgroupList()
     m_lastMsgToDownload(0),
     m_set(nsnull)
 {
+    m_lastStatusUpdate = LL_Zero();
 }
 
 nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
