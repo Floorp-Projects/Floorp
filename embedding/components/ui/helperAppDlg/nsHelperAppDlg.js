@@ -235,6 +235,7 @@ nsHelperAppDialog.prototype = {
     initIntro: function() {
         var intro = this.dialogElement( "intro" );
         var desc = this.mLauncher.MIMEInfo.Description;
+        var modified;
         if ( desc != "" ) {
             // Use intro with descriptive text.
             modified = this.replaceInsert( this.getString( "intro.withDesc" ), 1, this.mLauncher.MIMEInfo.Description );
@@ -251,27 +252,30 @@ nsHelperAppDialog.prototype = {
     // initExplanation:
     initExplanation: function() {
         var expl = this.dialogElement( "explanation" );
+        var text;
         if ( this.mLauncher.MIMEInfo.preferredAction == Components.interfaces.nsIMIMEInfo.saveToDisk ) {
-            expl.value = this.getString( "explanation.saveToDisk" );
+            text = this.getString( "explanation.saveToDisk" );
         } else {
             // Default is to "open with system default."
-            var appDesc = this.getString( "explanation.defaultApp" );
+            text = this.getString( "explanation.defaultApp" );
             if ( this.mLauncher.MIMEInfo.preferredAction != Components.interfaces.nsIMIMEInfo.useSystemDefault ) {
                 // If opening using the app, we prefer to use the app description.
-                appDesc = this.mLauncher.MIMEInfo.applicationDescription;
+                var appDesc = this.mLauncher.MIMEInfo.applicationDescription;
                 if ( appDesc != "" ) {
                     // Use application description.
-                    expl.value= this.replaceInsert( this.getString( "explanation.openUsing" ), 1, appDesc );
+                    text = this.replaceInsert( this.getString( "explanation.openUsing" ), 1, appDesc );
                 } else {
                     // If no description, use the app executable name.
                     var app = this.mLauncher.MIMEInfo.preferredApplicationHandler;
                     if ( app ) {
                         // Use application path.
-                        expl.value = this.replaceInsert( this.getString( "explanation.openUsing" ), 1, app.unicodePath );
+                        text = this.replaceInsert( this.getString( "explanation.openUsing" ), 1, app.unicodePath );
                     }
                 }
             }
         }
+        // Put text into dialog field.
+        expl.value = text;
     },
 
     // onOK:
