@@ -688,8 +688,7 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetWebBrowserChrome(nsIWebBrowserChrome* aWeb
       nsCOMPtr<nsIWebBrowserSiteWindow> ownerWin(do_QueryInterface(aWebBrowserChrome));
       nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(aWebBrowserChrome));
 
-      NS_ENSURE_TRUE(ownerWin, NS_ERROR_INVALID_ARG);
-
+      // it's ok for ownerWin or requestor to be null.
       mWebBrowserChrome = aWebBrowserChrome;
       mOwnerWin = ownerWin;
       mOwnerRequestor = requestor;
