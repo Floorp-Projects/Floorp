@@ -824,10 +824,9 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
 
 
 nsresult
-nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool followSymlinks, PRBool move)
+nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSymlinks, PRBool move)
 {
-    NS_ENSURE_ARG(newParentDir);
-
+    nsCOMPtr<nsIFile> newParentDir = aParentDir;
     // check to see if this exists, otherwise return an error.
     // we will check this by resolving.  If the user wants us
     // to follow links, then we are talking about the target,
@@ -836,6 +835,23 @@ nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool followS
     if (NS_FAILED(rv))
         return rv;
 
+    if (!newParentDir)
+    {
+        // no parent was specified.  We must rename.
+        
+        if (!newName)
+            return NS_ERROR_INVALID_ARG;
+
+        move = PR_TRUE;
+        
+        rv = GetParent(getter_AddRefs(newParentDir));
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    if (!newParentDir)
+        return NS_ERROR_FILE_DESTINATION_NOT_DIR;
+    
     // make sure it exists and is a directory.  Create it if not there.
     PRBool exists;
     newParentDir->Exists(&exists);
@@ -878,7 +894,7 @@ nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool followS
             {                
                 return NS_ERROR_FILE_DESTINATION_NOT_DIR;
             }
-        }        
+        }
     }
 
     // check to see if we are a directory, if so enumerate it.
@@ -989,19 +1005,20 @@ nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool followS
         if (newParentPath == nsnull)
             return NS_ERROR_FAILURE;
 
-        InitWithPath(newParentPath);
-
         if (newName == nsnull)
         {
             char *aFileName;
             GetLeafName(&aFileName);
             
+            InitWithPath(newParentPath);
             Append(aFileName); 
+
             nsAllocator::Free(aFileName);
         }
         else
         {
-            SetLeafName(newName);
+            InitWithPath(newParentPath);
+            Append(newName);
         }
         
         nsAllocator::Free(newParentPath);
