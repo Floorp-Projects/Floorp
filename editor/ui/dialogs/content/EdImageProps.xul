@@ -50,14 +50,13 @@
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
-  <popupset id="aTooltipSet" />
 
   <groupbox>
     <caption label="&locationBox.label;"/>
     <!--/////// Src URL and ALT Text //////-->
     <label control   = "srcInput"
       value = "&locationEditField.label;"
-      tooltip="aTooltip" tooltiptext="&locationEditField.tooltip;"
+      tooltiptext="&locationEditField.tooltip;"
       />
     <textbox
       id         = "srcInput" 
@@ -75,12 +74,12 @@
     <hbox>
       <label id      = "altTextLabel" 
         control     = "altTextInput"
-        tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
+        tooltiptext="&altTextEditField.tooltip;"
         value   = "&altTextEditField.label;"/>
       <textbox
         id     ="altTextInput"
         style  = "min-width : 20em"
-        tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"/>
+        tooltiptext="&altTextEditField.tooltip;"/>
     </hbox>
     <spacer class="spacer"/>
   </groupbox>
@@ -88,7 +87,7 @@
   <hbox align="center"> 
     <button id      = "MoreFewerButton" 
       oncommand = "onMoreFewer()" 
-      tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
+      tooltiptext = "&MoreFewerButton.tooltip;"
       persist = "more"/>
     <spacer class="bigspacer"/>
     <groupbox orient="horizontal" style="padding-left: 8px; padding-right: 8px">
@@ -128,12 +127,12 @@
               <radio
                 id      = "actualSizeRadio" 
                 label   = "&actualSizeRadio.label;"
-                tooltip = "aTooltip" tooltiptext="&actualSizeRadio.tooltip;"
+                tooltiptext="&actualSizeRadio.tooltip;"
                 oncommand = "SetActualSize()"/>
               <radio
                 id      = "customSizeRadio" 
                 label   = "&customSizeRadio.label;"
-                tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
+                tooltiptext="&customSizeRadio.tooltip;"
                 oncommand = "doDimensionEnabling();" />
             </radiogroup>
             <spacer flex="1"/>
@@ -142,7 +141,7 @@
               <!--////// CONSTRAIN DIMENSIONS //////-->
               <checkbox id="constrainCheckbox" label="&constrainCheckbox.label;"
                    oncommand="ToggleConstrain()"
-                   tooltip="aTooltip" tooltiptext="&constrainCheckbox.tooltip;"/>
+                   tooltiptext="&constrainCheckbox.tooltip;"/>
             </vbox>
             <spacer flex="1"/>
           </hbox>
@@ -189,7 +188,7 @@
             <button
               id      = "editImageMap"
               oncommand = "editImageMap()"
-              tooltip = "aTooltip" tooltiptext="&editImageMapButton.tooltip;"
+              tooltiptext="&editImageMapButton.tooltip;"
               label   = "&editImageMapButton.label;"
               flex    = "1"/>
 -->

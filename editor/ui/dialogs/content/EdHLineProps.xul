@@ -44,7 +44,6 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdHLineProps.js"/>
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
-  <popupset id="aTooltipSet" />
   
   <groupbox><caption label="&dimensionsBox.label;"/>
     <grid>
@@ -77,7 +76,7 @@
   <hbox>
     <button  id="SaveDefault" label="&saveSettings.label;" 
          oncommand="onSaveDefault()"
-         tooltip="aTooltip" tooltiptext="&saveSettings.tooltip;" />
+         tooltiptext="&saveSettings.tooltip;" />
     <spacer flex="1"/>
     <button id="AdvancedEditButton"/>
   </hbox>

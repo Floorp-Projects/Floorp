@@ -21,7 +21,7 @@
       <!-- Rules for content hanging _directly_ off the toolbar -->
       <rule parent="box" iscontainer="true">
         <menubutton class="button-toolbar-4" 
-                    uri="..." tooltip="aTooltip"
+                    uri="..."
                     tooltiptext="rdf:http://home.netscape.com/NC-rdf#tooltip"
                     label="rdf:http://home.netscape.com/NC-rdf#title">
           <menupopup popupalign="bottomleft" popupanchor="topleft"/>
@@ -76,7 +76,7 @@
          to display all of the open windows -->
     <menubutton oncommand="ShowWindowFromResource(event.target)"
                 datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
-                tooltip="aTooltip" tooltiptext="&taskWindowList.tooltip;"
+                tooltiptext="&taskWindowList.tooltip;"
                 label="&openWinButton.label;" class="button-toolbar-4">
       <template>
         <menupopup>

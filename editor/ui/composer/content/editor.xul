@@ -76,11 +76,8 @@
 
   <resourcebundle id="resource_bundle_editor" />
 
-
-  <popupset id="aTooltipSet">
-    <popupset id="editorContentContextSet"/>
-    <popup id="sidebarPopup"/>
-  </popupset>
+  <popupset id="editorContentContextSet"/>
+  <popup id="sidebarPopup"/>
 
   <commandset id="tasksCommands">
     <commandset id="globalEditMenuItems"/>
@@ -117,7 +114,7 @@
   </keyset>
 
   <toolbox class="toolbox-top" id="EditorToolbox">
-  <menubar id="main-menubar" class="chromeclass-menubar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
+  <menubar id="main-menubar" class="chromeclass-menubar" persist="collapsed" grippytooltiptext="&menuBar.tooltip;">
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
 
@@ -162,7 +159,7 @@
 
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
-  <toolbar class="chromeclass-toolbar toolbar-primary" id="EditToolbar" persist="collapsed" tbalign="stretch" grippytooltip="aTooltip" grippytooltiptext="&compositionToolbar.tooltip;">
+  <toolbar class="chromeclass-toolbar toolbar-primary" id="EditToolbar" persist="collapsed" tbalign="stretch" grippytooltiptext="&compositionToolbar.tooltip;">
     <toolbarbutton id="newButton"/>
     <toolbarbutton id="openButton"/>
     <toolbarbutton id="saveButton"/>
@@ -177,12 +174,12 @@
     <toolbarbutton id="namedAnchorButton"/>
     <spacer flex="1"/>
     <hbox id="throbber-box" align="center">
-      <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
+      <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')" tooltiptext="&throbber.tooltip;">
         <observes element="Editor:Throbber" attribute="busy"/>
       </button>
     </hbox> 
   </toolbar>
-  <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbalign="center" grippytooltip="aTooltip" grippytooltiptext="&formatToolbar.tooltip;">
+  <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbalign="center" grippytooltiptext="&formatToolbar.tooltip;">
     <!-- We need this else menulists get stretched -->
     <hbox align="center">
       <!-- from editorOverlay -->
