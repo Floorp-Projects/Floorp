@@ -35,11 +35,13 @@ extern nsresult SetEntryFromIndex(int stubidx);
 
 #ifdef XP_OS2_VACPP
 nsresult
-#else
-static nsresult
-#endif
 PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
                     PRUint32 *args)
+#else
+static nsresult
+PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
+                    PRUint32 *args)
+#endif
 {
 #define PARAM_BUFFER_COUNT     16
 
@@ -63,6 +65,20 @@ PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
     NS_ASSERTION(info,"no interface info");
 
     paramCount = info->GetParamCount();
+
+    /* If paramCount is > 0, write out the EDX pointer to the
+       space on the stack args[0]. args[-4] is the space on
+       the stack where it was pushed */
+    if (paramCount) {
+        args[0] = args[-4];
+    }
+
+    /* If paramCount is > 1, write out the ECX pointer to the
+       space on the stack args[1]. args[-3] is the space on
+       the stack where it was pushed */
+    if (paramCount > 1) {
+        args[1] = args[-3];
+    }
 
     // setup variant array pointer
     if(paramCount > PARAM_BUFFER_COUNT)
@@ -115,15 +131,9 @@ PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
     return result;
 }
 
-
 #ifdef XP_OS2_VACPP
 
-#define STUB_ENTRY(n) \
-nsresult nsXPTCStubBase::Stub##n() \
-{ \
-  nsresult result = SetEntryFromIndex(n); \
-  return result; \
-}
+#define STUB_ENTRY(n)
 
 #else
 

@@ -53,6 +53,7 @@ COMMENT | -*- Mode: asm; tab-width: 8; c-basic-offset: 4 -*-
 CallMethodFromVTable__FPvUiPUiT1T2iT6T3 PROC OPTLINK EXPORT    pStack, count, params,
                     that, index, ibytes, cpc, cpp, fpc, fpp
                 
+            push ebx
             mov     eax, esp                    ; set up value of pStack for copy call
             sub     eax, dword ptr [ibytes]     ; make room for copied params
             mov     esp, eax                    ; adjust stack pointer accordingly
@@ -108,6 +109,7 @@ CallMethodFromVTable__FPvUiPUiT1T2iT6T3 PROC OPTLINK EXPORT    pStack, count, pa
   done:     call    dword ptr [ebx]         ; call method
             add     esp, dword ptr [ibytes] ; deflate stack by ibytes
             add     esp, 04h                ; plus 4
+            pop ebx;
             ret                             ; method rc in eax
 
 CallMethodFromVTable__FPvUiPUiT1T2iT6T3    ENDP
