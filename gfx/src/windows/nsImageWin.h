@@ -67,7 +67,7 @@ public:
   virtual PRInt32     GetHeight()         { return mBHead->biHeight; }
   virtual PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
   virtual PRInt32     GetWidth()          { return mBHead->biWidth; }
-  virtual PRUint8*    GetBits()           { return mImageBits; }
+  virtual PRUint8*    GetBits() ;
   virtual PRInt32     GetLineStride()     { return mRowBytes; }
 
   NS_IMETHOD     SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
