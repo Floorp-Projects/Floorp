@@ -4,7 +4,6 @@
 #include "nsIWebShellServices.h"
 #include "nsIWebShell.h"
 #include "nsILinkHandler.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsIClipboardCommands.h"
 #include "nsDocShell.h"
 
@@ -21,7 +20,6 @@ class nsWebShell : public nsDocShell,
                    public nsIWebShellContainer,
                    public nsIWebShellServices,
                    public nsILinkHandler,
-                   public nsIDocumentLoaderObserver,
                    public nsIClipboardCommands
 {
 public:
@@ -32,7 +30,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
   NS_DECL_NSICLIPBOARDCOMMANDS
   NS_DECL_NSIWEBSHELLSERVICES
 
@@ -121,6 +118,12 @@ public:
 
   NS_IMETHOD SetURL(const PRUnichar* aURL);
 
+  // XXX: Temporary - until I can get rid of SetDocLoaderObserver :-)
+  NS_IMETHOD OnStateChange(nsIWebProgress *aProgress,
+                           nsIRequest *aRequest,
+                           PRInt32 aStateFlags,
+                           nsresult aStatus);
+
 protected:
   void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
   void InitFrameData();
@@ -129,6 +132,14 @@ protected:
   virtual nsresult GetControllerForCommand ( const nsAReadableString & inCommand, nsIController** outController ) ;
   virtual nsresult IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* outEnabled ) ;
   virtual nsresult DoCommand ( const nsAReadableString & inCommand ) ;
+
+  //
+  // Helper method that is called when a new document (including any
+  // sub-documents - ie. frames) has been completely loaded.
+  //
+  virtual nsresult EndPageLoad(nsIWebProgress *aProgress,
+                               nsIChannel *aChannel,
+                               nsresult aStatus);
 
   nsIEventQueue* mThreadEventQueue;
 

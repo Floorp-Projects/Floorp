@@ -2561,12 +2561,17 @@ NS_IMETHODIMP
 nsDocShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
                           PRInt32 aStateFlags, nsresult aStatus)
 {
+  if ((aStateFlags & STATE_IS_DOCUMENT) && (aStateFlags & STATE_STOP)) {
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
 
-  if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_NETWORK)) {
-     if (LSHE)
-         LSHE->SetLoadType(nsIDocShellLoadInfo::loadHistory);
-    LSHE = nsnull;
+    // Is the document stop notification for this document?
+    if (aProgress == webProgress.get()) {
+      nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+
+      EndPageLoad(aProgress, channel, aStatus);
+    }
   }
+
   return NS_OK;
 }
 
@@ -2593,6 +2598,39 @@ nsDocShell::OnSecurityChange(nsIWebProgress *aWebProgress,
                              PRInt32 state)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+nsresult nsDocShell::EndPageLoad(nsIWebProgress *aProgress,
+                                 nsIChannel *aChannel,
+                                 nsresult aStatus)
+{
+  if (LSHE) {
+    LSHE->SetLoadType(nsIDocShellLoadInfo::loadHistory);
+    
+    // Clear the LSHE reference to indicate document loading is done one
+    // way or another.
+    LSHE = nsnull;
+  }
+
+  //
+  // one of many safeguards that prevent death and destruction if
+  // someone is so very very rude as to bring this window down
+  // during this load handler.
+  //
+  nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
+  //
+  // Notify the ContentViewer that the Document has finished loading...
+  //
+  // This will cause any OnLoad(...) handlers to fire, if it is a HTML
+  // document...
+  //
+  if (!mEODForCurrentDocument && mContentViewer) {
+    mContentViewer->LoadComplete(aStatus);
+  
+    mEODForCurrentDocument = PR_TRUE;
+  }
+  return NS_OK;
 }
 
 
