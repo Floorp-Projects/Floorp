@@ -1,23 +1,16 @@
-libmng 1.0.1
+libmng 1.0.3
 ------------
 
-First maintenance release!
+Third maintenance release!
 
-There's been some changes in the CMS profile handling, that should make it
-easier for sRGB-compliant systems. Non-sRGB compliant systems will still need
-some extra work if they want to use MNG_FULL_CMS with lcms. But this has always
-been so, so it's not an extra step anyway.
-(Many thanks to Marti, Ivan & Warwick for their help & comments!)
+Small cosmetic changes. Cleaning up the contributions.
+New makefile for mingw32, and new fbcon example.
+Major thanks to Greg for helping out with the *nix stuff!
+Note that there's also a separate download for ASM programmers now.
+Check http://www.libmng.com for details (download/ports&packages page).
 
-Gregg Kelly has been helpful in locating a couple of memory-leaks, and make
-the library even better.
-
-The default Windows DLL that's part of the Windows zip-files now also exports
-the JPEG library function calls (ijgsrc6b). Note that there's a new Delphi
-component (TNGImage) that makes it a snap to work with PNG/JNG & MNG images
-within Delphi.
-
-Please enjoy!
+It may be a while for the next release. I'm "off duty" for the next 8 or
+so months...
 
 Gerard
 

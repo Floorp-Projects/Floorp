@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_hlapi.c            copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.1                                                      * */
+/* * version   : 1.0.2                                                      * */
 /* *                                                                        * */
 /* * purpose   : high-level application API (implementation)                * */
 /* *                                                                        * */
@@ -127,6 +127,12 @@
 /* *             - fixed reset_rundata to drop all objects                  * */
 /* *             1.0.1 - 04/25/2001 - G.Juyn                                * */
 /* *             - moved mng_clear_cms to libmng_cms                        * */
+/* *                                                                        * */
+/* *             1.0.2 - 06/23/2001 - G.Juyn                                * */
+/* *             - added optimization option for MNG-video playback         * */
+/* *             - added processterm callback                               * */
+/* *             1.0.2 - 06/25/2001 - G.Juyn                                * */
+/* *             - added option to turn off progressive refresh             * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -521,6 +527,10 @@ mng_handle MNG_DECL mng_initialize (mng_ptr       pUserdata,
   pData->bStorechunks          = MNG_TRUE;
                                        /* no breaks at section-borders */
   pData->bSectionbreaks        = MNG_FALSE;
+                                       /* initially cache playback info */
+  pData->bCacheplayback        = MNG_TRUE;
+                                       /* progressive refresh for large images */
+  pData->bDoProgressive        = MNG_TRUE;
                                        /* normal animation-speed ! */
   pData->iSpeed                = mng_st_normal;
                                        /* initial image limits */
@@ -545,7 +555,9 @@ mng_handle MNG_DECL mng_initialize (mng_ptr       pUserdata,
   pData->fProcesssave          = MNG_NULL;
   pData->fProcessseek          = MNG_NULL;
   pData->fProcessneed          = MNG_NULL;
+  pData->fProcessmend          = MNG_NULL;
   pData->fProcessunknown       = MNG_NULL;
+  pData->fProcessterm          = MNG_NULL;
   pData->fGetcanvasline        = MNG_NULL;
   pData->fGetbkgdline          = MNG_NULL;
   pData->fGetalphaline         = MNG_NULL;
@@ -1074,6 +1086,9 @@ mng_retcode MNG_DECL mng_read (mng_handle hHandle)
     MNG_ERROR (pData, MNG_FUNCTIONINVALID)
 #endif
 
+  if (!pData->bCacheplayback)          /* must store playback info to work!! */
+    MNG_ERROR (pData, MNG_FUNCTIONINVALID)
+
   cleanup_errors (pData);              /* cleanup previous errors */
 
   pData->bReading = MNG_TRUE;          /* read only! */
@@ -1588,6 +1603,9 @@ mng_retcode MNG_DECL mng_display_reset (mng_handle hHandle)
   if ((!pData->bDisplaying) || (pData->bReading))
     MNG_ERROR (pData, MNG_FUNCTIONINVALID)
 
+  if (!pData->bCacheplayback)          /* must store playback info to work!! */
+    MNG_ERROR (pData, MNG_FUNCTIONINVALID)
+
   cleanup_errors (pData);              /* cleanup previous errors */
 
   if (pData->bRunning)                 /* is it running ? */
@@ -1640,6 +1658,9 @@ mng_retcode MNG_DECL mng_display_goframe (mng_handle hHandle,
   if ((!pData->bDisplaying) || (pData->bRunning))
     MNG_ERROR ((mng_datap)hHandle, MNG_FUNCTIONINVALID)
 
+  if (!pData->bCacheplayback)          /* must store playback info to work!! */
+    MNG_ERROR (pData, MNG_FUNCTIONINVALID)
+
   if (iFramenr > pData->iFramecount)   /* is the parameter within bounds ? */
     MNG_ERROR (pData, MNG_FRAMENRTOOHIGH);
 
@@ -1681,6 +1702,9 @@ mng_retcode MNG_DECL mng_display_golayer (mng_handle hHandle,
   if ((!pData->bDisplaying) || (pData->bRunning))
     MNG_ERROR (pData, MNG_FUNCTIONINVALID)
 
+  if (!pData->bCacheplayback)          /* must store playback info to work!! */
+    MNG_ERROR (pData, MNG_FUNCTIONINVALID)
+
   if (iLayernr > pData->iLayercount)   /* is the parameter within bounds ? */
     MNG_ERROR (pData, MNG_LAYERNRTOOHIGH)
 
@@ -1720,6 +1744,9 @@ mng_retcode MNG_DECL mng_display_gotime (mng_handle hHandle,
     MNG_ERROR (pData, MNG_NOTANANIMATION)
                                        /* can we expect this call ? */
   if ((!pData->bDisplaying) || (pData->bRunning))
+    MNG_ERROR (pData, MNG_FUNCTIONINVALID)
+
+  if (!pData->bCacheplayback)          /* must store playback info to work!! */
     MNG_ERROR (pData, MNG_FUNCTIONINVALID)
 
   if (iPlaytime > pData->iPlaytime)    /* is the parameter within bounds ? */

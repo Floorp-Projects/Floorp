@@ -1,5 +1,78 @@
 -----------------------------------------------------------
 
+1.0.3 (Sep 18th 2001)
+---------------------
+
+in short:
+
+Small cosmetic changes. Cleaning up the contributions.
+New makefile for mingw32, and new fbcon example.
+Major thanks to Greg for helping out with the *nix stuff!
+Note that there's also a separate download for ASM programmers now.
+Check http://www.libmng.com for details (download/ports&packages page).
+
+It may be a while for the next release. I'm "off duty" for the next 8 or
+so months...
+
+Gerard
+
+-------------------
+
+bugfixes:
+- B459058 - wrong include for lcms headers
+
+core:
+- changed inclusion of lcms.h header for Linux platforms (suggested by Greg)
+- added get function for last processed BACK chunk
+
+samples:
+- replaced the gtk & sdl viewer apps with updates by Greg Roelofs
+
+contrib:
+
+doc:
+
+makefiles:
+- changed makefile.linux & makefile.unix as suggested by Greg Roelofs
+  (makefile.linux now compiles with lcms by default)
+- added makefile.mingw for mingw32 by Benoit Blanchon (thanks Mate!)
+
+autoconf:
+
+-----------------------------------------------------------
+
+1.0.2 (Jul 7th 2001)
+--------------------
+
+in short:
+
+Another maintenance release with a few added extra's.
+
+-------------------
+
+bugfixes:
+- B421427 - writes wrong format in bKGD and tRNS
+- B434583 - compiler-warning if MNG_STORE_CHUNKS undefined
+
+core:
+- added optimization option for MNG-video playback
+- added processterm callback
+- added late binding errorcode (not used internally)
+- fixed memory-leak with delta-images (Thanks Michael!)
+- added option to turn off progressive refresh for large images
+
+samples:
+
+contrib:
+
+doc:
+
+makefiles:
+
+autoconf:
+
+-----------------------------------------------------------
+
 1.0.1 (May 2nd 2001)
 --------------------
 
@@ -9,7 +82,7 @@ Maintenance release.
 Fixed several memory-leaks with the help of Gregg Kelly, added/fixed some CMS
 handling, exported JPEG functions from standard DLL, and some other minor fixes.
 
-The CMS fix now makes libmng automagically work in MNG_FULL_CMS mode as a 
+The CMS fix now makes libmng automagically work in MNG_FULL_CMS mode as a
 sRGB compliant system. YOU WILL NEED TO CHANGE THIS IF YOU ARE NOT ON AN sRGB
 COMPLIANT SYSTEM AND WANT TO USE CMS!!!!
 (look in libmng.h for the proper function-calls)
@@ -19,8 +92,8 @@ COMPLIANT SYSTEM AND WANT TO USE CMS!!!!
 bugfixes:
 
 core:
-- added MEND processing callback                           
-- fixed first FRAM_MODE=4 timing problem                  
+- added MEND processing callback
+- fixed first FRAM_MODE=4 timing problem
 - added handle status-copy function (use with care)
 - exported JPEG functions from standard DLL
 - added BGRA8 canvas with premultiplied alpha (contrib by Gregg Kelly)

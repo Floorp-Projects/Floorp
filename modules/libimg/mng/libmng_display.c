@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_display.c          copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.1                                                      * */
+/* * version   : 1.0.2                                                      * */
 /* *                                                                        * */
 /* * purpose   : Display management (implementation)                        * */
 /* *                                                                        * */
@@ -141,6 +141,9 @@
 /* *             1.0.1 - 04/21/2001 - G.Juyn                                * */
 /* *             - fixed memory-leak for JNGs with alpha (Thanks Gregg!)    * */
 /* *             - added BGRA8 canvas with premultiplied alpha              * */
+/* *                                                                        * */
+/* *             1.0.2 - 06/25/2001 - G.Juyn                                * */
+/* *             - fixed memory-leak with delta-images (Thanks Michael!)    * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -1386,6 +1389,9 @@ mng_retcode execute_delta_image (mng_datap  pData,
                                        /* indicate where to retrieve & where to store */
         pData->pRetrieveobj = (mng_objectp)pDelta;
         pData->pStoreobj    = (mng_objectp)pTarget;
+
+        if (pData->pRGBArow)           /* prevent duplicate allocation! */
+          MNG_FREE (pData, pData->pRGBArow, (pData->iDatawidth << 3))
                                        /* get a temporary row-buffer */
         MNG_ALLOC (pData, pData->pRGBArow, pBufdelta->iRowsize)
 
@@ -2427,7 +2433,8 @@ mng_retcode process_display_mend (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_PROCESS_DISPLAY_MEND, MNG_LC_START)
 #endif
                                        /* TERM processed ? */
-  if ((pData->bDisplaying) && (pData->bRunning) && (pData->bHasTERM))
+  if ((pData->bDisplaying) && (pData->bRunning) &&
+      (pData->bHasTERM) && (pData->pTermaniobj))
   {
     mng_retcode   iRetcode;
     mng_ani_termp pTERM;

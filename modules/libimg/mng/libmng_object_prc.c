@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_object_prc.c       copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.0                                                      * */
+/* * version   : 1.0.2                                                      * */
 /* *                                                                        * */
 /* * purpose   : Object processing routines (implementation)                * */
 /* *                                                                        * */
@@ -76,6 +76,9 @@
 /* *                                                                        * */
 /* *             0.9.5 -  1/22/2001 - G.Juyn                                * */
 /* *             - B129681 - fixed compiler warnings SGI/Irix               * */
+/* *                                                                        * */
+/* *             1.0.2 - 06/23/2001 - G.Juyn                                * */
+/* *             - added optimization option for MNG-video playback         * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -1455,24 +1458,27 @@ mng_retcode create_ani_image (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_IMAGE, MNG_LC_START)
 #endif
 
-  if (pData->bHasDHDR)                 /* processing delta-image ? */
-    pCurrent = (mng_imagep)pData->pObjzero;
-  else                                 /* get the current object */
-    pCurrent = (mng_imagep)pData->pCurrentobj;
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    if (pData->bHasDHDR)               /* processing delta-image ? */
+      pCurrent = (mng_imagep)pData->pObjzero;
+    else                               /* get the current object */
+      pCurrent = (mng_imagep)pData->pCurrentobj;
 
-  if (!pCurrent)                       /* otherwise object 0 */
-    pCurrent = (mng_imagep)pData->pObjzero;
+    if (!pCurrent)                     /* otherwise object 0 */
+      pCurrent = (mng_imagep)pData->pObjzero;
                                        /* now just clone the object !!! */
-  iRetcode  = clone_imageobject (pData, 0, MNG_FALSE, pCurrent->bVisible,
-                                 MNG_FALSE, MNG_FALSE, 0, 0, 0, pCurrent, &pImage);
+    iRetcode  = clone_imageobject (pData, 0, MNG_FALSE, pCurrent->bVisible,
+                                   MNG_FALSE, MNG_FALSE, 0, 0, 0, pCurrent, &pImage);
 
-  if (iRetcode)                        /* on error bail out */
-    return iRetcode;
+    if (iRetcode)                      /* on error bail out */
+      return iRetcode;
 
-  pImage->sHeader.fCleanup = free_ani_image;
-  pImage->sHeader.fProcess = process_ani_image;
+    pImage->sHeader.fCleanup = free_ani_image;
+    pImage->sHeader.fProcess = process_ani_image;
 
-  add_ani_object (pData, (mng_object_headerp)pImage);
+    add_ani_object (pData, (mng_object_headerp)pImage);
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_IMAGE, MNG_LC_END)
@@ -1620,16 +1626,19 @@ mng_retcode create_ani_plte (mng_datap      pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_PLTE, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pPLTE, sizeof (mng_ani_plte))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pPLTE, sizeof (mng_ani_plte))
 
-  pPLTE->sHeader.fCleanup = free_ani_plte;
-  pPLTE->sHeader.fProcess = process_ani_plte;
+    pPLTE->sHeader.fCleanup = free_ani_plte;
+    pPLTE->sHeader.fProcess = process_ani_plte;
 
-  add_ani_object (pData, (mng_object_headerp)pPLTE);
+    add_ani_object (pData, (mng_object_headerp)pPLTE);
 
-  pPLTE->iEntrycount      = iEntrycount;
+    pPLTE->iEntrycount      = iEntrycount;
 
-  MNG_COPY (pPLTE->aEntries, paEntries, sizeof (pPLTE->aEntries))
+    MNG_COPY (pPLTE->aEntries, paEntries, sizeof (pPLTE->aEntries))
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_PLTE, MNG_LC_END)
@@ -1692,16 +1701,19 @@ mng_retcode create_ani_trns (mng_datap    pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_TRNS, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pTRNS, sizeof (mng_ani_trns))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pTRNS, sizeof (mng_ani_trns))
 
-  pTRNS->sHeader.fCleanup = free_ani_trns;
-  pTRNS->sHeader.fProcess = process_ani_trns;
+    pTRNS->sHeader.fCleanup = free_ani_trns;
+    pTRNS->sHeader.fProcess = process_ani_trns;
 
-  add_ani_object (pData, (mng_object_headerp)pTRNS);
+    add_ani_object (pData, (mng_object_headerp)pTRNS);
 
-  pTRNS->iRawlen          = iRawlen;
+    pTRNS->iRawlen          = iRawlen;
 
-  MNG_COPY (pTRNS->aRawdata, pRawdata, sizeof (pTRNS->aRawdata))
+    MNG_COPY (pTRNS->aRawdata, pRawdata, sizeof (pTRNS->aRawdata))
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_TRNS, MNG_LC_END)
@@ -1764,15 +1776,18 @@ mng_retcode create_ani_gama (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_GAMA, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pGAMA, sizeof (mng_ani_gama))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pGAMA, sizeof (mng_ani_gama))
 
-  pGAMA->sHeader.fCleanup = free_ani_gama;
-  pGAMA->sHeader.fProcess = process_ani_gama;
+    pGAMA->sHeader.fCleanup = free_ani_gama;
+    pGAMA->sHeader.fProcess = process_ani_gama;
 
-  add_ani_object (pData, (mng_object_headerp)pGAMA);
+    add_ani_object (pData, (mng_object_headerp)pGAMA);
 
-  pGAMA->bEmpty           = bEmpty;
-  pGAMA->iGamma           = iGamma;
+    pGAMA->bEmpty           = bEmpty;
+    pGAMA->iGamma           = iGamma;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_GAMA, MNG_LC_END)
@@ -1848,22 +1863,25 @@ mng_retcode create_ani_chrm (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_CHRM, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pCHRM, sizeof (mng_ani_chrm))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pCHRM, sizeof (mng_ani_chrm))
 
-  pCHRM->sHeader.fCleanup = free_ani_chrm;
-  pCHRM->sHeader.fProcess = process_ani_chrm;
+    pCHRM->sHeader.fCleanup = free_ani_chrm;
+    pCHRM->sHeader.fProcess = process_ani_chrm;
 
-  add_ani_object (pData, (mng_object_headerp)pCHRM);
+    add_ani_object (pData, (mng_object_headerp)pCHRM);
 
-  pCHRM->bEmpty           = bEmpty;
-  pCHRM->iWhitepointx     = iWhitepointx;
-  pCHRM->iWhitepointy     = iWhitepointy;
-  pCHRM->iRedx            = iRedx;
-  pCHRM->iRedy            = iRedy;
-  pCHRM->iGreenx          = iGreenx;
-  pCHRM->iGreeny          = iGreeny;
-  pCHRM->iBluex           = iBluex;
-  pCHRM->iBluey           = iBluey;
+    pCHRM->bEmpty           = bEmpty;
+    pCHRM->iWhitepointx     = iWhitepointx;
+    pCHRM->iWhitepointy     = iWhitepointy;
+    pCHRM->iRedx            = iRedx;
+    pCHRM->iRedy            = iRedy;
+    pCHRM->iGreenx          = iGreenx;
+    pCHRM->iGreeny          = iGreeny;
+    pCHRM->iBluex           = iBluex;
+    pCHRM->iBluey           = iBluey;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_CHRM, MNG_LC_END)
@@ -1946,15 +1964,18 @@ mng_retcode create_ani_srgb (mng_datap pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_SRGB, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pSRGB, sizeof (mng_ani_srgb))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pSRGB, sizeof (mng_ani_srgb))
 
-  pSRGB->sHeader.fCleanup = free_ani_srgb;
-  pSRGB->sHeader.fProcess = process_ani_srgb;
+    pSRGB->sHeader.fCleanup = free_ani_srgb;
+    pSRGB->sHeader.fProcess = process_ani_srgb;
 
-  add_ani_object (pData, (mng_object_headerp)pSRGB);
+    add_ani_object (pData, (mng_object_headerp)pSRGB);
 
-  pSRGB->bEmpty           = bEmpty;
-  pSRGB->iRenderingintent = iRenderingintent;
+    pSRGB->bEmpty           = bEmpty;
+    pSRGB->iRenderingintent = iRenderingintent;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_SRGB, MNG_LC_END)
@@ -2024,20 +2045,23 @@ mng_retcode create_ani_iccp (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_ICCP, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pICCP, sizeof (mng_ani_iccp))
-
-  pICCP->sHeader.fCleanup = free_ani_iccp;
-  pICCP->sHeader.fProcess = process_ani_iccp;
-
-  add_ani_object (pData, (mng_object_headerp)pICCP);
-
-  pICCP->bEmpty           = bEmpty;
-  pICCP->iProfilesize     = iProfilesize;
-
-  if (iProfilesize)
+  if (pData->bCacheplayback)           /* caching playback info ? */
   {
-    MNG_ALLOC (pData, pICCP->pProfile, iProfilesize)
-    MNG_COPY (pICCP->pProfile, pProfile, iProfilesize)
+    MNG_ALLOC (pData, pICCP, sizeof (mng_ani_iccp))
+
+    pICCP->sHeader.fCleanup = free_ani_iccp;
+    pICCP->sHeader.fProcess = process_ani_iccp;
+
+    add_ani_object (pData, (mng_object_headerp)pICCP);
+
+    pICCP->bEmpty           = bEmpty;
+    pICCP->iProfilesize     = iProfilesize;
+
+    if (iProfilesize)
+    {
+      MNG_ALLOC (pData, pICCP->pProfile, iProfilesize)
+      MNG_COPY (pICCP->pProfile, pProfile, iProfilesize)
+    }
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -2124,16 +2148,19 @@ mng_retcode create_ani_bkgd (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_BKGD, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pBKGD, sizeof (mng_ani_bkgd))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pBKGD, sizeof (mng_ani_bkgd))
 
-  pBKGD->sHeader.fCleanup = free_ani_bkgd;
-  pBKGD->sHeader.fProcess = process_ani_bkgd;
+    pBKGD->sHeader.fCleanup = free_ani_bkgd;
+    pBKGD->sHeader.fProcess = process_ani_bkgd;
 
-  add_ani_object (pData, (mng_object_headerp)pBKGD);
+    add_ani_object (pData, (mng_object_headerp)pBKGD);
 
-  pBKGD->iRed             = iRed;
-  pBKGD->iGreen           = iGreen;
-  pBKGD->iBlue            = iBlue;
+    pBKGD->iRed             = iRed;
+    pBKGD->iGreen           = iGreen;
+    pBKGD->iBlue            = iBlue;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_BKGD, MNG_LC_END)
@@ -2201,26 +2228,29 @@ mng_retcode create_ani_loop (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_LOOP, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pLOOP, sizeof (mng_ani_loop))
-
-  pLOOP->sHeader.fCleanup = free_ani_loop;
-  pLOOP->sHeader.fProcess = process_ani_loop;
-
-  add_ani_object (pData, (mng_object_headerp)pLOOP);
-
-  pLOOP->iLevel           = iLevel;
-  pLOOP->iRepeatcount     = iRepeatcount;
-  pLOOP->iTermcond        = iTermcond;
-  pLOOP->iItermin         = iItermin;
-  pLOOP->iItermax         = iItermax;
-  pLOOP->iCount           = iCount;
-                                       /* running counter starts with repeat_count */
-  pLOOP->iRunningcount    = iRepeatcount;
-
-  if (iCount)
+  if (pData->bCacheplayback)           /* caching playback info ? */
   {
-    MNG_ALLOC (pData, pLOOP->pSignals, (iCount << 1))
-    MNG_COPY (pLOOP->pSignals, pSignals, (iCount << 1))
+    MNG_ALLOC (pData, pLOOP, sizeof (mng_ani_loop))
+
+    pLOOP->sHeader.fCleanup = free_ani_loop;
+    pLOOP->sHeader.fProcess = process_ani_loop;
+
+    add_ani_object (pData, (mng_object_headerp)pLOOP);
+
+    pLOOP->iLevel           = iLevel;
+    pLOOP->iRepeatcount     = iRepeatcount;
+    pLOOP->iTermcond        = iTermcond;
+    pLOOP->iItermin         = iItermin;
+    pLOOP->iItermax         = iItermax;
+    pLOOP->iCount           = iCount;
+                                         /* running counter starts with repeat_count */
+    pLOOP->iRunningcount    = iRepeatcount;
+
+    if (iCount)
+    {
+      MNG_ALLOC (pData, pLOOP->pSignals, (iCount << 1))
+      MNG_COPY (pLOOP->pSignals, pSignals, (iCount << 1))
+    }
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -2285,14 +2315,17 @@ mng_retcode create_ani_endl (mng_datap pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_ENDL, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pENDL, sizeof (mng_ani_endl))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pENDL, sizeof (mng_ani_endl))
 
-  pENDL->sHeader.fCleanup = free_ani_endl;
-  pENDL->sHeader.fProcess = process_ani_endl;
+    pENDL->sHeader.fCleanup = free_ani_endl;
+    pENDL->sHeader.fProcess = process_ani_endl;
 
-  add_ani_object (pData, (mng_object_headerp)pENDL);
+    add_ani_object (pData, (mng_object_headerp)pENDL);
 
-  pENDL->iLevel           = iLevel;
+    pENDL->iLevel           = iLevel;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_ENDL, MNG_LC_END)
@@ -2395,26 +2428,29 @@ mng_retcode create_ani_defi (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_DEFI, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pDEFI, sizeof (mng_ani_defi))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pDEFI, sizeof (mng_ani_defi))
 
-  pDEFI->sHeader.fCleanup = free_ani_defi;
-  pDEFI->sHeader.fProcess = process_ani_defi;
+    pDEFI->sHeader.fCleanup = free_ani_defi;
+    pDEFI->sHeader.fProcess = process_ani_defi;
 
-  add_ani_object (pData, (mng_object_headerp)pDEFI);
+    add_ani_object (pData, (mng_object_headerp)pDEFI);
 
-  pDEFI->iId              = pData->iDEFIobjectid;
-  pDEFI->bHasdonotshow    = pData->bDEFIhasdonotshow;
-  pDEFI->iDonotshow       = pData->iDEFIdonotshow;
-  pDEFI->bHasconcrete     = pData->bDEFIhasconcrete;
-  pDEFI->iConcrete        = pData->iDEFIconcrete;
-  pDEFI->bHasloca         = pData->bDEFIhasloca;
-  pDEFI->iLocax           = pData->iDEFIlocax;
-  pDEFI->iLocay           = pData->iDEFIlocay;
-  pDEFI->bHasclip         = pData->bDEFIhasclip;
-  pDEFI->iClipl           = pData->iDEFIclipl;
-  pDEFI->iClipr           = pData->iDEFIclipr;
-  pDEFI->iClipt           = pData->iDEFIclipt;
-  pDEFI->iClipb           = pData->iDEFIclipb;
+    pDEFI->iId              = pData->iDEFIobjectid;
+    pDEFI->bHasdonotshow    = pData->bDEFIhasdonotshow;
+    pDEFI->iDonotshow       = pData->iDEFIdonotshow;
+    pDEFI->bHasconcrete     = pData->bDEFIhasconcrete;
+    pDEFI->iConcrete        = pData->iDEFIconcrete;
+    pDEFI->bHasloca         = pData->bDEFIhasloca;
+    pDEFI->iLocax           = pData->iDEFIlocax;
+    pDEFI->iLocay           = pData->iDEFIlocay;
+    pDEFI->bHasclip         = pData->bDEFIhasclip;
+    pDEFI->iClipl           = pData->iDEFIclipl;
+    pDEFI->iClipr           = pData->iDEFIclipr;
+    pDEFI->iClipt           = pData->iDEFIclipt;
+    pDEFI->iClipb           = pData->iDEFIclipb;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_DEFI, MNG_LC_END)
@@ -2496,19 +2532,22 @@ mng_retcode create_ani_basi (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_BASI, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pBASI, sizeof (mng_ani_basi))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pBASI, sizeof (mng_ani_basi))
 
-  pBASI->sHeader.fCleanup = free_ani_basi;
-  pBASI->sHeader.fProcess = process_ani_basi;
+    pBASI->sHeader.fCleanup = free_ani_basi;
+    pBASI->sHeader.fProcess = process_ani_basi;
 
-  add_ani_object (pData, (mng_object_headerp)pBASI);
+    add_ani_object (pData, (mng_object_headerp)pBASI);
 
-  pBASI->iRed             = iRed;
-  pBASI->iGreen           = iGreen;
-  pBASI->iBlue            = iBlue;
-  pBASI->bHasalpha        = bHasalpha;
-  pBASI->iAlpha           = iAlpha;
-  pBASI->iViewable        = iViewable;
+    pBASI->iRed             = iRed;
+    pBASI->iGreen           = iGreen;
+    pBASI->iBlue            = iBlue;
+    pBASI->bHasalpha        = bHasalpha;
+    pBASI->iAlpha           = iAlpha;
+    pBASI->iViewable        = iViewable;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_BASI, MNG_LC_END)
@@ -2578,23 +2617,26 @@ mng_retcode create_ani_clon (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_CLON, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pCLON, sizeof (mng_ani_clon))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pCLON, sizeof (mng_ani_clon))
 
-  pCLON->sHeader.fCleanup = free_ani_clon;
-  pCLON->sHeader.fProcess = process_ani_clon;
+    pCLON->sHeader.fCleanup = free_ani_clon;
+    pCLON->sHeader.fProcess = process_ani_clon;
 
-  add_ani_object (pData, (mng_object_headerp)pCLON);
+    add_ani_object (pData, (mng_object_headerp)pCLON);
 
-  pCLON->iCloneid         = iCloneid;
-  pCLON->iSourceid        = iSourceid;
-  pCLON->iClonetype       = iClonetype;
-  pCLON->bHasdonotshow    = bHasdonotshow;
-  pCLON->iDonotshow       = iDonotshow;
-  pCLON->iConcrete        = iConcrete;
-  pCLON->bHasloca         = bHasloca;
-  pCLON->iLocatype        = iLocatype;
-  pCLON->iLocax           = iLocax;
-  pCLON->iLocay           = iLocay;
+    pCLON->iCloneid         = iCloneid;
+    pCLON->iSourceid        = iSourceid;
+    pCLON->iClonetype       = iClonetype;
+    pCLON->bHasdonotshow    = bHasdonotshow;
+    pCLON->iDonotshow       = iDonotshow;
+    pCLON->iConcrete        = iConcrete;
+    pCLON->bHasloca         = bHasloca;
+    pCLON->iLocatype        = iLocatype;
+    pCLON->iLocax           = iLocax;
+    pCLON->iLocay           = iLocay;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_CLON, MNG_LC_END)
@@ -2663,20 +2705,23 @@ mng_retcode create_ani_back (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_BACK, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pBACK, sizeof (mng_ani_back))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pBACK, sizeof (mng_ani_back))
 
-  pBACK->sHeader.fCleanup = free_ani_back;
-  pBACK->sHeader.fProcess = process_ani_back;
+    pBACK->sHeader.fCleanup = free_ani_back;
+    pBACK->sHeader.fProcess = process_ani_back;
 
-  add_ani_object (pData, (mng_object_headerp)pBACK);
+    add_ani_object (pData, (mng_object_headerp)pBACK);
 
-  pBACK->iRed             = iRed;
-  pBACK->iGreen           = iGreen;
-  pBACK->iBlue            = iBlue;
-  pBACK->iMandatory       = iMandatory;
-  pBACK->iImageid         = iImageid;
-  pBACK->iTile            = iTile;
-
+    pBACK->iRed             = iRed;
+    pBACK->iGreen           = iGreen;
+    pBACK->iBlue            = iBlue;
+    pBACK->iMandatory       = iMandatory;
+    pBACK->iImageid         = iImageid;
+    pBACK->iTile            = iTile;
+  }
+  
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_BACK, MNG_LC_END)
 #endif
@@ -2749,24 +2794,27 @@ mng_retcode create_ani_fram (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_FRAM, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pFRAM, sizeof (mng_ani_fram))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pFRAM, sizeof (mng_ani_fram))
 
-  pFRAM->sHeader.fCleanup = free_ani_fram;
-  pFRAM->sHeader.fProcess = process_ani_fram;
+    pFRAM->sHeader.fCleanup = free_ani_fram;
+    pFRAM->sHeader.fProcess = process_ani_fram;
 
-  add_ani_object (pData, (mng_object_headerp)pFRAM);
+    add_ani_object (pData, (mng_object_headerp)pFRAM);
 
-  pFRAM->iFramemode       = iFramemode;
-  pFRAM->iChangedelay     = iChangedelay;
-  pFRAM->iDelay           = iDelay;
-  pFRAM->iChangetimeout   = iChangetimeout;
-  pFRAM->iTimeout         = iTimeout;
-  pFRAM->iChangeclipping  = iChangeclipping;
-  pFRAM->iCliptype        = iCliptype;
-  pFRAM->iClipl           = iClipl;
-  pFRAM->iClipr           = iClipr;
-  pFRAM->iClipt           = iClipt;
-  pFRAM->iClipb           = iClipb;
+    pFRAM->iFramemode       = iFramemode;
+    pFRAM->iChangedelay     = iChangedelay;
+    pFRAM->iDelay           = iDelay;
+    pFRAM->iChangetimeout   = iChangetimeout;
+    pFRAM->iTimeout         = iTimeout;
+    pFRAM->iChangeclipping  = iChangeclipping;
+    pFRAM->iCliptype        = iCliptype;
+    pFRAM->iClipl           = iClipl;
+    pFRAM->iClipr           = iClipr;
+    pFRAM->iClipt           = iClipt;
+    pFRAM->iClipb           = iClipb;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_FRAM, MNG_LC_END)
@@ -2841,18 +2889,21 @@ mng_retcode create_ani_move (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_MOVE, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pMOVE, sizeof (mng_ani_move))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pMOVE, sizeof (mng_ani_move))
 
-  pMOVE->sHeader.fCleanup = free_ani_move;
-  pMOVE->sHeader.fProcess = process_ani_move;
+    pMOVE->sHeader.fCleanup = free_ani_move;
+    pMOVE->sHeader.fProcess = process_ani_move;
 
-  add_ani_object (pData, (mng_object_headerp)pMOVE);
+    add_ani_object (pData, (mng_object_headerp)pMOVE);
 
-  pMOVE->iFirstid         = iFirstid;
-  pMOVE->iLastid          = iLastid;
-  pMOVE->iType            = iType;
-  pMOVE->iLocax           = iLocax;
-  pMOVE->iLocay           = iLocay;
+    pMOVE->iFirstid         = iFirstid;
+    pMOVE->iLastid          = iLastid;
+    pMOVE->iType            = iType;
+    pMOVE->iLocax           = iLocax;
+    pMOVE->iLocay           = iLocay;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_MOVE, MNG_LC_END)
@@ -2920,20 +2971,23 @@ mng_retcode create_ani_clip (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_CLIP, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pCLIP, sizeof (mng_ani_clip))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pCLIP, sizeof (mng_ani_clip))
 
-  pCLIP->sHeader.fCleanup = free_ani_clip;
-  pCLIP->sHeader.fProcess = process_ani_clip;
+    pCLIP->sHeader.fCleanup = free_ani_clip;
+    pCLIP->sHeader.fProcess = process_ani_clip;
 
-  add_ani_object (pData, (mng_object_headerp)pCLIP);
+    add_ani_object (pData, (mng_object_headerp)pCLIP);
 
-  pCLIP->iFirstid         = iFirstid;
-  pCLIP->iLastid          = iLastid;
-  pCLIP->iType            = iType;
-  pCLIP->iClipl           = iClipl;
-  pCLIP->iClipr           = iClipr;
-  pCLIP->iClipt           = iClipt;
-  pCLIP->iClipb           = iClipb;
+    pCLIP->iFirstid         = iFirstid;
+    pCLIP->iLastid          = iLastid;
+    pCLIP->iType            = iType;
+    pCLIP->iClipl           = iClipl;
+    pCLIP->iClipr           = iClipr;
+    pCLIP->iClipt           = iClipt;
+    pCLIP->iClipb           = iClipb;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_CLIP, MNG_LC_END)
@@ -2998,16 +3052,19 @@ mng_retcode create_ani_show (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_SHOW, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pSHOW, sizeof (mng_ani_show))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pSHOW, sizeof (mng_ani_show))
 
-  pSHOW->sHeader.fCleanup = free_ani_show;
-  pSHOW->sHeader.fProcess = process_ani_show;
+    pSHOW->sHeader.fCleanup = free_ani_show;
+    pSHOW->sHeader.fProcess = process_ani_show;
 
-  add_ani_object (pData, (mng_object_headerp)pSHOW);
+    add_ani_object (pData, (mng_object_headerp)pSHOW);
 
-  pSHOW->iFirstid         = iFirstid;
-  pSHOW->iLastid          = iLastid;
-  pSHOW->iMode            = iMode;
+    pSHOW->iFirstid         = iFirstid;
+    pSHOW->iLastid          = iLastid;
+    pSHOW->iMode            = iMode;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_SHOW, MNG_LC_END)
@@ -3081,17 +3138,20 @@ mng_retcode create_ani_term (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_TERM, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pTERM, sizeof (mng_ani_term))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pTERM, sizeof (mng_ani_term))
 
-  pTERM->sHeader.fCleanup = free_ani_term;
-  pTERM->sHeader.fProcess = process_ani_term;
+    pTERM->sHeader.fCleanup = free_ani_term;
+    pTERM->sHeader.fProcess = process_ani_term;
 
-  add_ani_object (pData, (mng_object_headerp)pTERM);
+    add_ani_object (pData, (mng_object_headerp)pTERM);
 
-  pTERM->iTermaction      = iTermaction;
-  pTERM->iIteraction      = iIteraction;
-  pTERM->iDelay           = iDelay;
-  pTERM->iItermax         = iItermax;
+    pTERM->iTermaction      = iTermaction;
+    pTERM->iIteraction      = iIteraction;
+    pTERM->iDelay           = iDelay;
+    pTERM->iItermax         = iItermax;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_TERM, MNG_LC_END)
@@ -3147,12 +3207,15 @@ mng_retcode create_ani_save (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_SAVE, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pSAVE, sizeof (mng_ani_save))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pSAVE, sizeof (mng_ani_save))
 
-  pSAVE->sHeader.fCleanup = free_ani_save;
-  pSAVE->sHeader.fProcess = process_ani_save;
+    pSAVE->sHeader.fCleanup = free_ani_save;
+    pSAVE->sHeader.fProcess = process_ani_save;
 
-  add_ani_object (pData, (mng_object_headerp)pSAVE);
+    add_ani_object (pData, (mng_object_headerp)pSAVE);
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_SAVE, MNG_LC_END)
@@ -3213,12 +3276,15 @@ mng_retcode create_ani_seek (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_SEEK, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pSEEK, sizeof (mng_ani_seek))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pSEEK, sizeof (mng_ani_seek))
 
-  pSEEK->sHeader.fCleanup = free_ani_seek;
-  pSEEK->sHeader.fProcess = process_ani_seek;
+    pSEEK->sHeader.fCleanup = free_ani_seek;
+    pSEEK->sHeader.fProcess = process_ani_seek;
 
-  add_ani_object (pData, (mng_object_headerp)pSEEK);
+    add_ani_object (pData, (mng_object_headerp)pSEEK);
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_SEEK, MNG_LC_END)
@@ -3286,20 +3352,23 @@ mng_retcode create_ani_dhdr (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_DHDR, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pDHDR, sizeof (mng_ani_dhdr))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pDHDR, sizeof (mng_ani_dhdr))
 
-  pDHDR->sHeader.fCleanup = free_ani_dhdr;
-  pDHDR->sHeader.fProcess = process_ani_dhdr;
+    pDHDR->sHeader.fCleanup = free_ani_dhdr;
+    pDHDR->sHeader.fProcess = process_ani_dhdr;
 
-  pDHDR->iObjectid        = iObjectid;
-  pDHDR->iImagetype       = iImagetype;
-  pDHDR->iDeltatype       = iDeltatype;
-  pDHDR->iBlockwidth      = iBlockwidth;
-  pDHDR->iBlockheight     = iBlockheight;
-  pDHDR->iBlockx          = iBlockx;
-  pDHDR->iBlocky          = iBlocky;
+    pDHDR->iObjectid        = iObjectid;
+    pDHDR->iImagetype       = iImagetype;
+    pDHDR->iDeltatype       = iDeltatype;
+    pDHDR->iBlockwidth      = iBlockwidth;
+    pDHDR->iBlockheight     = iBlockheight;
+    pDHDR->iBlockx          = iBlockx;
+    pDHDR->iBlocky          = iBlocky;
 
-  add_ani_object (pData, (mng_object_headerp)pDHDR);
+    add_ani_object (pData, (mng_object_headerp)pDHDR);
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_DHDR, MNG_LC_END)
@@ -3369,16 +3438,19 @@ mng_retcode create_ani_prom (mng_datap pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_PROM, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pPROM, sizeof (mng_ani_prom))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pPROM, sizeof (mng_ani_prom))
 
-  pPROM->sHeader.fCleanup = free_ani_prom;
-  pPROM->sHeader.fProcess = process_ani_prom;
+    pPROM->sHeader.fCleanup = free_ani_prom;
+    pPROM->sHeader.fProcess = process_ani_prom;
 
-  pPROM->iBitdepth        = iBitdepth;
-  pPROM->iColortype       = iColortype;
-  pPROM->iFilltype        = iFilltype;
+    pPROM->iBitdepth        = iBitdepth;
+    pPROM->iColortype       = iColortype;
+    pPROM->iFilltype        = iFilltype;
 
-  add_ani_object (pData, (mng_object_headerp)pPROM);
+    add_ani_object (pData, (mng_object_headerp)pPROM);
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_PROM, MNG_LC_END)
@@ -3441,12 +3513,15 @@ mng_retcode create_ani_ipng (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_IPNG, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pIPNG, sizeof (mng_ani_ipng))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pIPNG, sizeof (mng_ani_ipng))
 
-  pIPNG->sHeader.fCleanup = free_ani_ipng;
-  pIPNG->sHeader.fProcess = process_ani_ipng;
+    pIPNG->sHeader.fCleanup = free_ani_ipng;
+    pIPNG->sHeader.fProcess = process_ani_ipng;
 
-  add_ani_object (pData, (mng_object_headerp)pIPNG);
+    add_ani_object (pData, (mng_object_headerp)pIPNG);
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_IPNG, MNG_LC_END)
@@ -3507,12 +3582,15 @@ mng_retcode create_ani_ijng (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_IJNG, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pIJNG, sizeof (mng_ani_ijng))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pIJNG, sizeof (mng_ani_ijng))
 
-  pIJNG->sHeader.fCleanup = free_ani_ijng;
-  pIJNG->sHeader.fProcess = process_ani_ijng;
+    pIJNG->sHeader.fCleanup = free_ani_ijng;
+    pIJNG->sHeader.fProcess = process_ani_ijng;
 
-  add_ani_object (pData, (mng_object_headerp)pIJNG);
+    add_ani_object (pData, (mng_object_headerp)pIJNG);
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_IJNG, MNG_LC_END)
@@ -3578,19 +3656,22 @@ mng_retcode create_ani_pplt (mng_datap      pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_PPLT, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pPPLT, sizeof (mng_ani_pplt))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pPPLT, sizeof (mng_ani_pplt))
 
-  pPPLT->sHeader.fCleanup = free_ani_pplt;
-  pPPLT->sHeader.fProcess = process_ani_pplt;
+    pPPLT->sHeader.fCleanup = free_ani_pplt;
+    pPPLT->sHeader.fProcess = process_ani_pplt;
 
-  pPPLT->iType            = iType;
-  pPPLT->iCount           = iCount;
+    pPPLT->iType            = iType;
+    pPPLT->iCount           = iCount;
 
-  MNG_COPY (pPPLT->aIndexentries, paIndexentries, sizeof (pPPLT->aIndexentries))
-  MNG_COPY (pPPLT->aAlphaentries, paAlphaentries, sizeof (pPPLT->aAlphaentries))
-  MNG_COPY (pPPLT->aUsedentries,  paUsedentries,  sizeof (pPPLT->aUsedentries ))
+    MNG_COPY (pPPLT->aIndexentries, paIndexentries, sizeof (pPPLT->aIndexentries))
+    MNG_COPY (pPPLT->aAlphaentries, paAlphaentries, sizeof (pPPLT->aAlphaentries))
+    MNG_COPY (pPPLT->aUsedentries,  paUsedentries,  sizeof (pPPLT->aUsedentries ))
 
-  add_ani_object (pData, (mng_object_headerp)pPPLT);
+    add_ani_object (pData, (mng_object_headerp)pPPLT);
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_PPLT, MNG_LC_END)
@@ -3664,23 +3745,26 @@ mng_retcode create_ani_magn (mng_datap  pData,
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_MAGN, MNG_LC_START)
 #endif
 
-  MNG_ALLOC (pData, pMAGN, sizeof (mng_ani_magn))
+  if (pData->bCacheplayback)           /* caching playback info ? */
+  {
+    MNG_ALLOC (pData, pMAGN, sizeof (mng_ani_magn))
 
-  pMAGN->sHeader.fCleanup = free_ani_magn;
-  pMAGN->sHeader.fProcess = process_ani_magn;
+    pMAGN->sHeader.fCleanup = free_ani_magn;
+    pMAGN->sHeader.fProcess = process_ani_magn;
 
-  pMAGN->iFirstid         = iFirstid;
-  pMAGN->iLastid          = iLastid;
-  pMAGN->iMethodX         = iMethodX;
-  pMAGN->iMX              = iMX;
-  pMAGN->iMY              = iMY;
-  pMAGN->iML              = iML;
-  pMAGN->iMR              = iMR;
-  pMAGN->iMT              = iMT;
-  pMAGN->iMB              = iMB;
-  pMAGN->iMethodY         = iMethodY;
+    pMAGN->iFirstid         = iFirstid;
+    pMAGN->iLastid          = iLastid;
+    pMAGN->iMethodX         = iMethodX;
+    pMAGN->iMX              = iMX;
+    pMAGN->iMY              = iMY;
+    pMAGN->iML              = iML;
+    pMAGN->iMR              = iMR;
+    pMAGN->iMT              = iMT;
+    pMAGN->iMB              = iMB;
+    pMAGN->iMethodY         = iMethodY;
 
-  add_ani_object (pData, (mng_object_headerp)pMAGN);
+    add_ani_object (pData, (mng_object_headerp)pMAGN);
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CREATE_ANI_MAGN, MNG_LC_END)

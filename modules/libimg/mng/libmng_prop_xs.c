@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_prop_xs.c          copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.1                                                      * */
+/* * version   : 1.0.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : property get/set interface (implementation)                * */
 /* *                                                                        * */
@@ -64,6 +64,14 @@
 /* *             - added BGRA8 canvas with premultiplied alpha              * */
 /* *             1.0.1 - 05/02/2001 - G.Juyn                                * */
 /* *             - added "default" sRGB generation (Thanks Marti!)          * */
+/* *                                                                        * */
+/* *             1.0.2 - 06/23/2001 - G.Juyn                                * */
+/* *             - added optimization option for MNG-video playback         * */
+/* *             1.0.2 - 06/25/2001 - G.Juyn                                * */
+/* *             - added option to turn off progressive refresh             * */
+/* *                                                                        * */
+/* *             1.0.3 - 08/06/2001 - G.Juyn                                * */
+/* *             - added get function for last processed BACK chunk         * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -263,6 +271,49 @@ mng_retcode MNG_DECL mng_set_sectionbreaks (mng_handle hHandle,
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_SECTIONBREAKS, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode MNG_DECL mng_set_cacheplayback (mng_handle hHandle,
+                                            mng_bool   bCacheplayback)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_CACHEPLAYBACK, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLE (hHandle)
+
+  if (((mng_datap)hHandle)->bHasheader)
+    MNG_ERROR (((mng_datap)hHandle), MNG_FUNCTIONINVALID)
+
+  ((mng_datap)hHandle)->bCacheplayback = bCacheplayback;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_CACHEPLAYBACK, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode MNG_DECL mng_set_doprogressive (mng_handle hHandle,
+                                            mng_bool   bDoProgressive)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_DOPROGRESSIVE, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLE (hHandle)
+
+  ((mng_datap)hHandle)->bDoProgressive = bDoProgressive;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_DOPROGRESSIVE, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;
@@ -1537,6 +1588,40 @@ mng_bool MNG_DECL mng_get_sectionbreaks (mng_handle hHandle)
 
 /* ************************************************************************** */
 
+mng_bool MNG_DECL mng_get_cacheplayback (mng_handle hHandle)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEB (((mng_datap)hHandle), MNG_FN_GET_CACHEPLAYBACK, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEB (((mng_datap)hHandle), MNG_FN_GET_CACHEPLAYBACK, MNG_LC_END)
+#endif
+
+  return ((mng_datap)hHandle)->bCacheplayback;
+}
+
+/* ************************************************************************** */
+
+mng_bool MNG_DECL mng_get_doprogressive (mng_handle hHandle)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEB (((mng_datap)hHandle), MNG_FN_GET_DOPROGRESSIVE, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEB (((mng_datap)hHandle), MNG_FN_GET_DOPROGRESSIVE, MNG_LC_END)
+#endif
+
+  return ((mng_datap)hHandle)->bDoProgressive;
+}
+
+/* ************************************************************************** */
+
 #ifdef MNG_SUPPORT_DISPLAY
 mng_bool MNG_DECL mng_get_srgb (mng_handle hHandle)
 {
@@ -1974,6 +2059,35 @@ mng_uint32 MNG_DECL mng_get_imagelevel (mng_handle hHandle)
 #endif
 
   return ((mng_datap)hHandle)->iImagelevel;
+}
+
+/* ************************************************************************** */
+
+mng_retcode MNG_DECL mng_get_lastbackchunk (mng_handle        hHandle,
+                                            mng_uint16*       iRed,
+                                            mng_uint16*       iGreen,
+                                            mng_uint16*       iBlue,
+                                            mng_uint8*        iMandatory)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_LASTBACKCHUNK, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+  if (((mng_datap)hHandle)->eImagetype != mng_it_mng)
+    MNG_ERROR (((mng_datap)hHandle), MNG_FUNCTIONINVALID)
+
+  *iRed       = ((mng_datap)hHandle)->iBACKred;
+  *iGreen     = ((mng_datap)hHandle)->iBACKgreen;
+  *iBlue      = ((mng_datap)hHandle)->iBACKblue;
+  *iMandatory = ((mng_datap)hHandle)->iBACKmandatory;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GET_LASTBACKCHUNK, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
 }
 
 /* ************************************************************************** */

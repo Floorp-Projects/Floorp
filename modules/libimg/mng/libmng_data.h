@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_data.h             copyright (c) 2000 G.Juyn        * */
-/* * version   : 1.0.1                                                      * */
+/* * version   : 1.0.2                                                      * */
 /* *                                                                        * */
 /* * purpose   : main data structure definition                             * */
 /* *                                                                        * */
@@ -100,6 +100,12 @@
 /* *             - added MEND processing callback                           * */
 /* *             1.0.1 - 02/13/2001 - G.Juyn                                * */
 /* *             - fixed first FRAM_MODE=4 timing problem                   * */
+/* *                                                                        * */
+/* *             1.0.2 - 06/23/2001 - G.Juyn                                * */
+/* *             - added optimization option for MNG-video playback         * */
+/* *             - added processterm callback                               * */
+/* *             1.0.2 - 06/25/2001 - G.Juyn                                * */
+/* *             - added option to turn off progressive refresh             * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -249,6 +255,8 @@ typedef struct mng_data_struct {
 
            mng_bool          bStorechunks;       /* switch for storing chunkdata */
            mng_bool          bSectionbreaks;     /* indicate NEEDSECTIONWAIT breaks */
+           mng_bool          bCacheplayback;     /* switch to cache playback info */
+           mng_bool          bDoProgressive;     /* progressive refresh for large images */ 
 
            mng_speedtype     iSpeed;             /* speed-modifier for animations */
 
@@ -276,6 +284,7 @@ typedef struct mng_data_struct {
            mng_processneed   fProcessneed;
            mng_processmend   fProcessmend;
            mng_processunknown fProcessunknown;
+           mng_processterm   fProcessterm;
            mng_getcanvasline fGetcanvasline;
            mng_getbkgdline   fGetbkgdline;
            mng_getalphaline  fGetalphaline;
