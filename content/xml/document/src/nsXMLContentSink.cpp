@@ -1454,7 +1454,7 @@ nsXMLContentSink::PushNameSpacesFrom(const PRUnichar** aAtts)
 
   NS_ENSURE_TRUE(nameSpace, NS_ERROR_UNEXPECTED);
 
-  static const NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
+  static NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
   static const PRUint32 xmlns_len = kNameSpaceDef.Length();
 
   

@@ -661,8 +661,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         }
         case nsXPTType::T_DOMSTRING:
         {
-            static const NS_NAMED_LITERAL_STRING(sEmptyString, "");
-            static const NS_NAMED_LITERAL_STRING(sVoidString, "undefined");
+            static NS_NAMED_LITERAL_STRING(sEmptyString, "");
+            static NS_NAMED_LITERAL_STRING(sVoidString, "undefined");
 
             const PRUnichar* chars;
             JSString* str = nsnull;

@@ -524,7 +524,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
   //    assume that the prematured terminal string is the actual terminal string and goto step 1. This
   //    will be our last iteration.
 
-  const NS_NAMED_LITERAL_STRING(ltslash, "</");
+  NS_NAMED_LITERAL_STRING(ltslash, "</");
   const nsString theTerminalString = ltslash + aEndTagName;
 
   PRUint32 termStrLen=theTerminalString.Length();

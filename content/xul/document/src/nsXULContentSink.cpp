@@ -1145,7 +1145,7 @@ XULContentSinkImpl::PushNameSpacesFrom(const PRUnichar** aAttributes)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    static const NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
+    static NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
     static const PRUint32 xmlns_len = kNameSpaceDef.Length();
 
     for (; *aAttributes; aAttributes += 2) {
