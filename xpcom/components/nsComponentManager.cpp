@@ -277,8 +277,8 @@ nsresult nsComponentManagerImpl::Init(void)
     // No error checking on the following because the program
     // can work perfectly well even if no registry is available.
 
-    // Open the default registry. We will keep it open forever!
-    mRegistry->Open();
+    // Open the App Components registry. We will keep it open forever!
+    mRegistry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
 
     // Check the version of registry. Nuke old versions.
     PlatformVersionCheck();
@@ -622,15 +622,14 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
     rv = mRegistry->GetString(cidKey, progIDValueName, &progID);
     if(NS_SUCCEEDED(rv))
     {
-        // XXX RemoveSubtreeRaw
-        mRegistry->RemoveSubtree(mClassesKey, progID);
+        mRegistry->RemoveSubtreeRaw(mClassesKey, progID);
         PR_FREEIF(progID);
     }
 
     mRegistry->RemoveSubtree(mCLSIDKey, regd->CIDString);
     	
     nsIRegistry::Key libKey;
-    rv = mRegistry->GetSubtreeRaw(mXPCOMKey,aLibrary, &libKey);
+    rv = mRegistry->GetSubtreeRaw(mXPCOMKey, aLibrary, &libKey);
     if(NS_FAILED(rv)) return rv;
 
     // We need to reduce the ComponentCount by 1.
@@ -642,8 +641,7 @@ nsComponentManagerImpl::PlatformUnregister(QuickRegisterData* regd, const char *
     
     if (nComponents <= 0)
     {
-        // XXX RemoveSubtreeRaw
-        rv = mRegistry->RemoveSubtree(libKey, aLibrary);
+        rv = mRegistry->RemoveSubtreeRaw(mXPCOMKey, aLibrary);
     }
     else
     {
