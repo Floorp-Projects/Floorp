@@ -89,6 +89,9 @@ typedef struct LO_ImageAttr_struct LO_ImageAttr;
 typedef struct LO_ImageStruct_struct LO_ImageStruct;
 typedef struct LO_SubDocStruct_struct LO_SubDocStruct;
 typedef struct LO_EmbedStruct_struct LO_EmbedStruct;
+#ifdef SHACK
+typedef struct LO_BuiltinStruct_struct LO_BuiltinStruct;
+#endif /* SHACK */
 typedef struct LO_JavaAppStruct_struct LO_JavaAppStruct;
 typedef struct LO_EdgeStruct_struct LO_EdgeStruct;
 typedef struct LO_ObjectStruct_struct LO_ObjectStruct;

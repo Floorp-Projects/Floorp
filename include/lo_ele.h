@@ -123,7 +123,12 @@
 #define LO_HEADING		25
 #define LO_SPAN			26
 #define LO_DIV			27
+#ifdef SHACK
+#define LO_BUILTIN      28
+#define LO_SPACER		29
+#else
 #define LO_SPACER		28
+#endif /* SHACK */
 
 #define LO_FONT_NORMAL      0x0000
 #define LO_FONT_BOLD        0x0001
@@ -979,6 +984,44 @@ struct LO_EmbedStruct_struct {
 		int32 percent_height; /* needed for relayout. */
 };
 
+#ifdef SHACK
+struct LO_BuiltinStruct_struct {
+		int16 type;
+		int16 x_offset;
+		int32 ele_id;
+		int32 x, y;
+		int32 y_offset;
+		int32 width, height;
+		int32 line_height;
+		LO_Element *next;
+		LO_Element *prev;
+		ED_Element *edit_element;
+		int32 edit_offset;
+
+		void * FE_Data;
+		void *session_data;
+		PA_Block builtin_src;
+		int32 attribute_cnt;
+		char **attribute_list;
+		char **value_list;
+		int32 alignment;
+		int32 border_width;
+		int32 border_vert_space;
+		int32 border_horiz_space;
+		uint16 ele_attrmask; /* floating, secure, selected, etc. */
+		int32 builtin_index;	/* Unique ID within this doc */
+		struct LO_BuiltinStruct_struct *nextBuiltin;
+#ifdef MOCHA
+		struct JSObject *mocha_object;
+#endif
+		PA_Tag *tag;
+		CL_Layer *layer;
+
+		int32 percent_width; /* needed for relayout. */
+		int32 percent_height; /* needed for relayout. */
+};
+#endif /* SHACK */
+
 #define LO_JAVA_SELECTOR_APPLET             0
 #define LO_JAVA_SELECTOR_OBJECT_JAVA        1
 #define LO_JAVA_SELECTOR_OBJECT_JAVAPROGRAM 2
@@ -1226,6 +1269,9 @@ union LO_Element_struct {
 	LO_SpanStruct lo_span;
 	LO_DivStruct lo_div;
 	LO_SpacerStruct lo_spacer;
+#ifdef SHACK
+	LO_BuiltinStruct lo_builtin;
+#endif /* SHACK */
 };
 
 struct LO_ObjectStruct_struct {
@@ -1315,6 +1361,9 @@ typedef enum LO_LayerType_enum {
 #define LO_BLINK_GROUP_NAME "_BLINKGROUP"
 #define LO_CONTENT_LAYER_NAME "_CONTENT"
 #define LO_EMBED_LAYER_NAME "_EMBED"
+#ifdef SHACK
+#define LO_BUILTIN_LAYER_NAME "_BUILTIN"
+#endif /* SHACK */
 
 #define LO_DOCUMENT_LAYER_ID 0
 

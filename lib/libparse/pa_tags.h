@@ -127,6 +127,9 @@
 #define PT_NSDT     "nsdt"
 #define PT_INLINEINPUTTHICK "jean"
 #define PT_INLINEINPUTDOTTED "charles"
+#ifdef SHACK
+#define PT_BUILTIN      "builtin"
+#endif
 
 /***************
  * Unique IDs to identify
@@ -242,7 +245,10 @@
 #define P_INLINEINPUTTHICK  102
 #define P_INLINEINPUTDOTTED 103
 #define P_NOLAYER       104
-#define P_MAX		105
+#ifdef SHACK
+#define P_BUILTIN	105
+#endif
+#define P_MAX		106
 
 /*****************
  * These define all the strings that match
