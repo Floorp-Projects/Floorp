@@ -86,16 +86,7 @@ public:
   ~nsScriptablePeer();
 
 public:
-  // methods from nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr); 
-  NS_IMETHOD_(nsrefcnt) AddRef(); 
-  NS_IMETHOD_(nsrefcnt) Release(); 
-
-protected: 
-  nsrefcnt mRefCnt;  
-
-public:
-  // native methods callable from JavaScript
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIDEBUGPLUGIN
 
 protected:

@@ -1,0 +1,98 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= npdebug
+LIBRARY_NAME	= npdebug
+RESFILE		= npdebug.res
+DEFFILE		= npdebug.def
+
+REQUIRES=   xpcom \
+            dom \
+            necko\
+            string \
+            widget \
+            locale \
+            view \
+            pref \
+            gfx2 \
+            imglib2 \
+            unicharutil \
+            java \
+            debug \
+            plugin \
+            $(NULL)
+
+# plugins should always be shared, even in the "static" build
+FORCE_SHARED_LIB = 1
+
+# Force use of PIC
+FORCE_USE_PIC	= 1
+
+NO_DIST_INSTALL	= 1
+NO_INSTALL = 1
+
+
+XPIDLSRCS	= nsIDebugPlugin.idl
+
+CPPSRCS		= plugin.cpp \
+            nsScriptablePeer.cpp \
+            np_entry.cpp \
+            npn_gate.cpp \
+            npp_gate.cpp \
+            $(NULL)
+
+LOCAL_INCLUDES	= -I$(XPIDL_GEN_DIR) -I./include
+
+EXTRA_DSO_LDOPTS += \
+	-L$(DIST)/lib \
+	$(MOZ_COMPONENT_XPCOM_LIBS) \
+	$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS) $(MOZ_GTK_CFLAGS)
+
+clobber::
+	$(RM) *.sbr
+	$(RM) $(XPDIST)\idl\nsIDebugPlugin.idl 
+	$(RM) $(XPDIST)\include\nsIDebugPlugin.h 
+	$(RM) $(DIST)\bin\plugins\$(LIBRARY_NAME).xpt 
+	$(RM) $(DIST)\bin\plugins\$(SHARED_LIBRARY)
+
+install-plugin: $(SHARED_LIBRARY)
+ifdef SHARED_LIBRARY
+	$(INSTALL) $(XPIDL_GEN_DIR)/$(LIBRARY_NAME).xpt $(DIST)/bin/plugins
+	$(INSTALL) $(SHARED_LIBRARY) $(DIST)/bin/plugins
+endif
+
+libs:: install-plugin
+
+install:: $(SHARED_LIBRARY)
+ifdef SHARED_LIBRARY
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)/plugins
+endif

@@ -43,6 +43,7 @@
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsISimpleEnumerator.h"
+#include "nsIDebugObject.h"
 
 class nsPluginInstance : public nsPluginInstanceBase
 {
@@ -60,14 +61,12 @@ public:
   NPError	GetValue(NPPVariable variable, void *value);
 
   // locals
-  void    getVersion(char* *aVersion);
-  void    CreateDirectory(const PRUnichar *aFilePath, PRUint32 aFlags, PRInt32 *aRetVal);
   void    OutPutLayoutFrames(nsISupports *aWindow,const PRUnichar *aFilePath, const PRUnichar *aFileName, PRUint32 aFlags, PRInt32 *aRetVal);
   void    CompareLayoutFrames(const PRUnichar *aBasePath, const PRUnichar *aVerPath, 
               const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aRetVal);
-  void    StartDirectorySearch(const char *aFilePath);
-  void    GetNextFileInDirectory(char **aFilePath);
   nsIDebugPlugin* getScriptablePeer();
+
+  NS_DECL_NSIDEBUGPLUGIN
 
 private:
   NPP                           mInstance;
@@ -75,7 +74,7 @@ private:
   nsIDebugPlugin *              mScriptablePeer;
   nsCOMPtr<nsISimpleEnumerator> mIter;
 
-
+  nsCOMPtr<nsIDebugObject> mDebugObj;
 public:
   char mString[128];
 };

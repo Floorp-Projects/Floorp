@@ -65,6 +65,27 @@ interface nsIDebugObject : nsISupports
    */
   void CompareFrameModels(in wstring aBasePath,in wstring aVerPath,in wstring aBaseFile,in wstring aVerFile, in unsigned long aFlags);
 
+
+  /**
+   *  Printing Runtime Error Checking
+   */
+  const short PRT_RUNTIME_NONE              = 0;
+  const short PRT_RUNTIME_CHECKFORPRINTERS  = 1;
+  const short PRT_RUNTIME_CREATEPRTSESSION  = 2;
+  const short PRT_RUNTIME_INITPRTOBJ        = 3;
+  const short PRT_RUNTIME_CREATESPECFACTORY = 4;
+  const short PRT_RUNTIME_NOPROMPTSERVICE   = 5;
+  const short PRT_RUNTIME_NODEVSPEC         = 6;
+  const short PRT_RUNTIME_NEXTPAGE          = 7;
+  const short PRT_RUNTIME_REFLOWDOCLIST     = 8;
+  const short PRT_RUNTIME_PREPAREDOC        = 9;
+  const short PRT_RUNTIME_BEGINDOC          = 10;
+
+  attribute boolean doRuntimeTests;     // indicates whether the runtime test will be run
+  attribute short   testId;             // id of test to run
+  attribute boolean printAsIs;          // print asis when printing to a file
+  attribute wstring printFileName;      // name of output file
+
 };
 
 
