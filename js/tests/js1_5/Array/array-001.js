@@ -19,13 +19,13 @@
 * Contributor(s): igor@icesoft.no, pschwartau@netscape.com
 * Date: 24 September 2001
 *
-* SUMMARY: Truncating arrays with non-index decimal property names.
+* SUMMARY: Truncating arrays that have decimal property names.
 * From correspondence with Igor Bukanov <igor@icesoft.no>:
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = '(none)';
-var summary = 'Truncating arrays with non-index decimal property names';
+var summary = 'Truncating arrays that have decimal property names';
 var BIG_INDEX = 4294967290;
 var status = '';
 var statusitems = [];
@@ -33,18 +33,17 @@ var actual = '';
 var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
-var arr = [];
 
 
-status = inSection(1);
-arr = Array(BIG_INDEX);
+var arr = Array(BIG_INDEX);
 arr[BIG_INDEX - 1] = 'a';
 arr[BIG_INDEX - 10000] = 'b';
 arr[BIG_INDEX - 0.5] = 'c';  // not an array index - but a valid property name
-
-// Truncate the array - 
+// Truncate the array -
 arr.length = BIG_INDEX - 5000;
 
+
+// Enumerate its properties with for..in
 var s = '';
 for (var i in arr)
 {
@@ -53,10 +52,11 @@ for (var i in arr)
 
 
 /*
- * We expect s == 'cb' or 'bc' (EcmaScript does not fix the order). 
- * Note 'c' is included, as for..in includes ALL enumerable properties,
- * not just array-index properties. The bug was: Rhino was giving s=''.
+ * We expect s == 'cb' or 'bc' (EcmaScript does not fix the order).
+ * Note 'c' is included: for..in includes ALL enumerable properties,
+ * not just array-index properties. The bug was: Rhino gave s == ''.
  */
+status = inSection(1);
 actual = sortThis(s);
 expect = 'bc';
 addThis();
