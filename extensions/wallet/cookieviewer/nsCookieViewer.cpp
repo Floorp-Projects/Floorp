@@ -100,7 +100,7 @@ CookieViewerImpl::SetValue(const char* aValue, nsIDOMWindow* win)
   nsresult res;
   NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &res);
   if (NS_FAILED(res)) return res;
-  nsAutoString netList = aValue;
+  nsAutoString netList; netList.AssignWithConversion(aValue);
   res = cookieservice->Cookie_CookieViewerReturn(netList);
   return res;
 }
@@ -117,7 +117,7 @@ CookieViewerImpl::BlockImage(const char* imageURL)
   if (NS_FAILED(res)) {
     return res;
   }
-  nsAutoString imageURLAutoString = imageURL;
+  nsAutoString imageURLAutoString; imageURLAutoString.AssignWithConversion(imageURL);
   res = cookieservice->Image_Block(imageURLAutoString);
   return res;
 }
@@ -169,7 +169,7 @@ CookieViewerImpl::AddPermission(nsIDOMWindow* aWin, PRBool permission, PRInt32 t
 
   char* spec;
   (void)docURL->GetSpec(&spec);
-  nsAutoString objectURLAutoString = spec;
+  nsAutoString objectURLAutoString; objectURLAutoString.AssignWithConversion(spec);
   Recycle(spec);
 
   /* got the url at last, now pass it on to the Permission_Add routie */
