@@ -324,7 +324,7 @@ char* nsInstallFile::toString()
     
     if (mReplaceFile)
     {
-        if(mMode & WIN_SHARED_FILE)
+        if(mMode & nsInstall::WIN_SHARED_FILE)
         {
             rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("ReplaceSharedFile"));
         }
@@ -335,7 +335,7 @@ char* nsInstallFile::toString()
     }
     else
     {
-        if(mMode & WIN_SHARED_FILE)
+        if(mMode & nsInstall::WIN_SHARED_FILE)
         {
             rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("InstallSharedFile"));
         }
@@ -350,7 +350,7 @@ char* nsInstallFile::toString()
         char*    interimCStr = nsnull;
         nsString interimStr;
 
-        if(mMode & DO_NOT_UNINSTALL)
+        if(mMode & nsInstall::DO_NOT_UNINSTALL)
           interimStr.Assign(NS_LITERAL_STRING("(*dnu*) "));
 
         interimStr.AppendWithConversion(rsrcVal);
@@ -391,10 +391,10 @@ PRInt32 nsInstallFile::CompleteFileMove()
     } 
     else 
     {
-        result = ReplaceFileNowOrSchedule(mExtractedFile, mFinalFile, mMode );
+        result = ReplaceFileNowOrSchedule(mExtractedFile, mFinalFile );
     }
 
-    if(mMode & WIN_SHARED_FILE)
+    if(mMode & nsInstall::WIN_SHARED_FILE)
     {
       nsXPIDLCString path;
       mFinalFile->GetPath(getter_Copies(path));
