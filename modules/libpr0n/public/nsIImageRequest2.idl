@@ -22,44 +22,42 @@
  */
 
 #include "nsISupports.idl"
-#include "gfxtypes.idl"
 
-interface nsIImageDecoderObserver;
-interface nsIImageRequest;
-interface nsISimpleEnumerator;
-interface nsIStreamListener;
-interface nsIURI;
-interface nsIChannel;
+interface nsIImageContainer;
 
 /**
- * nsIImageLoader interface
+ * nsIImageRequest interface
  *
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(4c8cf1e0-1dd2-11b2-aff9-c51cdbfcb6da)]
-interface nsIImageLoader : nsISupports
+[scriptable, uuid(ccf705f6-1dd1-11b2-82ef-e18eccf7f7ec)]
+interface nsIImageRequest : nsISupports
 {
-  /**
-   * Start the load and decode of an image.
-   * @param uri the URI to load
-   * @param aObserver the observer
-   * @param cx some random data
-   */
-  nsIImageRequest loadImage(in nsIURI uri, in nsIImageDecoderObserver aObserver, in nsISupports cx);
+  void cancel(in nsresult status);
 
   /**
-   * Start the load and decode of an image.
-   * @param uri the URI to load
-   * @param aObserver the observer
-   * @param cx some random data
+   * the image container...
+   * @return the image object associated with the request.
+   * @attention NEED DOCS
    */
-  nsIImageRequest loadImageWithChannel(in nsIChannel aChannel, in nsIImageDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener aListener);
+  readonly attribute nsIImageContainer image;
 
   /**
-   * Returns the channels contained directly in this group.
-   * @note Enumerator element type: nsIImageRequest.
+   * Bits set in the return value from imageStatus
+   * @name statusflags
    */
-  readonly attribute nsISimpleEnumerator requests;
+  //@{
+  const long STATUS_NONE             = 0x0;
+  const long STATUS_SIZE_AVAILABLE   = 0x1;
+  const long STATUS_LOAD_COMPLETE    = 0x2;
+  const long STATUS_ERROR            = 0x4;
+  //@}
+
+  /**
+   * something
+   * @attention NEED DOCS
+   */
+  readonly attribute unsigned long imageStatus;
 };

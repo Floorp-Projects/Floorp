@@ -21,24 +21,33 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "nsISupports.idl"
-#include "nsIRequest.idl"
-#include "gfxtypes.idl"
+#ifndef ImageCache_h__
+#define ImageCache_h__
 
-interface nsIChannel;
-interface nsIImageContainer;
+#include "nsIURI.h"
+#include "nsImageRequest.h"
 
-[scriptable, uuid(ccf705f6-1dd1-11b2-82ef-e18eccf7f7ec)]
-interface nsIImageRequest : nsIRequest
+
+#define IMAGE_CACHE_CID \
+{ /* 70058a20-1dd2-11b2-9d22-db0a9d82e8bd */         \
+     0x70058a20,                                     \
+     0x1dd2,                                         \
+     0x11b2,                                         \
+    {0x9d, 0x22, 0xdb, 0x0a, 0x9d, 0x82, 0xe8, 0xbd} \
+}
+
+class ImageCache
 {
-  // const values for GetStatus() to be used someday...
-  //  const long STATUS_NONE             = 0x0;
-  //  const long STATUS_SIZE_AVAILABLE   = 0x1;
-  //  const long STATUS_IMAGE_READY      = 0x2;
-  //  const long STATUS_ERROR            = 0x4;
+public:
+  ImageCache();
+  ~ImageCache();
 
-  void init(in nsIChannel aChannel);
+  /* additional members */
+  static PRBool Put(nsIURI *aKey, nsImageRequest *request);
+  static PRBool Get(nsIURI *aKey, nsImageRequest **request);
+  static PRBool Remove(nsIURI *aKey);
 
-  /// @return the image object associated with the request.
-  readonly attribute nsIImageContainer image;
+private:
 };
+
+#endif

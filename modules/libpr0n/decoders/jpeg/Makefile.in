@@ -1,5 +1,4 @@
-#!nmake
-# 
+#
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -18,36 +17,24 @@
 # Rights Reserved.
 # 
 # Contributor(s):
-#    Stuart Parmenter <pavlov@netscape.com>
 #
 
-DEPTH=..\..\..\..
-include <$(DEPTH)/config/config.mak>
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-MODULE			= imgpng
-LIBRARY_NAME	= imgpng
-DLL			= $(OBJDIR)\$(LIBRARY_NAME).dll
-MAKE_OBJ_TYPE	= DLL
+include $(DEPTH)/config/autoconf.mk
 
-OBJS	= \
-		.\$(OBJDIR)\nsPNGDecoder.obj \
-		.\$(OBJDIR)\nsPNGFactory.obj \
+MODULE		= imgjpeg
+LIBRARY_NAME	= imgjpeg
+IS_COMPONENT	= 1
+
+CPPSRCS		= nsJPEGDecoder.cpp nsJPEGFactory.cpp
+
+EXTRA_DSO_LDOPTS = $(JPEG_LIBS) $(ZLIB_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-LLIBS=\
-	$(LIBNSPR) \
-	$(DIST)\lib\xpcom.lib \
-	$(DIST)\lib\png.lib \
-	$(DIST)\lib\zlib.lib \
-	$(DIST)\lib\gkgfxwin.lib \
-	$(NULL)
+include $(topsrcdir)/config/rules.mk
 
-include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(LIBRARY_NAME).dll
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

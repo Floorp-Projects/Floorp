@@ -34,6 +34,11 @@
 
 #include "nsIStreamObserver.h"
 
+#include "nsRect.h"
+
+#include "nsMemory.h"
+
+#include "nsIImageContainerObserver.h"
 
 // XXX we need to be sure to fire onStopDecode messages to mObserver in error cases.
 
@@ -47,11 +52,19 @@ nsPNGDecoder::nsPNGDecoder()
 
   mPNG = nsnull;
   mInfo = nsnull;
+  colorLine = 0;
+  alphaLine = 0;
+  interlacebuf = 0;
 }
 
 nsPNGDecoder::~nsPNGDecoder()
 {
-
+  if (colorLine)
+    nsMemory::Free(colorLine);
+  if (alphaLine)
+    nsMemory::Free(alphaLine);
+  if (interlacebuf)
+    nsMemory::Free(interlacebuf);
 }
 
 
@@ -85,7 +98,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(nsIImageRequest *aRequest)
   }
 
   /* use ic as libpng "progressive pointer" (retrieve in callbacks) */
-  png_set_progressive_read_fn(mPNG, this, nsPNGDecoder::info_callback, nsPNGDecoder::row_callback, nsPNGDecoder::end_callback);
+  png_set_progressive_read_fn(mPNG, NS_STATIC_CAST(png_voidp, this), nsPNGDecoder::info_callback, nsPNGDecoder::row_callback, nsPNGDecoder::end_callback);
 
   return NS_OK;
 }
@@ -136,6 +149,17 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
                              PRUint32 *writeCount)
 {
   nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, closure);
+
+  // we need to do the setjmp here otherwise bad things will happen
+  if (setjmp(decoder->mPNG->jmpbuf)) {
+    png_destroy_read_struct(&decoder->mPNG, &decoder->mInfo, NULL);
+    // is this NS_ERROR_FAILURE enough?
+
+    decoder->mRequest->Cancel(NS_BINDING_ABORTED); // XXX is this the correct error ?
+
+    return NS_ERROR_FAILURE;
+  }
+
   *writeCount = decoder->ProcessData((unsigned char*)fromRawSegment, count);
   return NS_OK;
 }
@@ -150,16 +174,7 @@ PRUint32 nsPNGDecoder::ProcessData(unsigned char *data, PRUint32 count)
 /* unsigned long writeFrom (in nsIInputStream inStr, in unsigned long count); */
 NS_IMETHODIMP nsPNGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
 {
-  PRUint32 sourceOffset = *_retval;
-
-  if (setjmp(mPNG->jmpbuf)) {
-    png_destroy_read_struct(&mPNG, &mInfo, NULL);
-    // is this NS_ERROR_FAILURE enough?
-
-    mRequest->Cancel(NS_BINDING_ABORTED); // XXX is this the correct error ?
-
-    return NS_ERROR_FAILURE;
-  }
+//  PRUint32 sourceOffset = *_retval;
 
   inStr->ReadSegments(ReadDataOut, this, count, _retval);
 
@@ -313,13 +328,13 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
 
   if (decoder->mObserver)
-    decoder->mObserver->OnStartDecode(nsnull);
+    decoder->mObserver->OnStartDecode(nsnull, nsnull);
 
   // since the png is only 1 frame, initalize the container to the width and height of the frame
-  decoder->mImage->Init(width, height);
+  decoder->mImage->Init(width, height, decoder->mObserver);
 
   if (decoder->mObserver)
-    decoder->mObserver->OnStartContainer(nsnull, decoder->mImage);
+    decoder->mObserver->OnStartContainer(nsnull, nsnull, decoder->mImage);
 
   decoder->mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
 #if 0
@@ -328,21 +343,44 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     return NS_ERROR_FAILURE;
 #endif
 
+  gfx_format format;
+
+  if (channels == 3) {
+    format = nsIGFXFormat::RGB;
+  } else if (channels > 3) {
+    if (alpha_bits == 8) {
+      decoder->mImage->GetPreferredAlphaChannelFormat(&format);
+    } else if (alpha_bits == 1) {
+      format = nsIGFXFormat::RGB_A1;
+    }
+  }
+
+#ifdef XP_PC
+  // XXX this works...
+  format += 1; // RGB to BGR
+#endif
+
+  // then initalize the frame and append it to the container
+  decoder->mFrame->Init(0, 0, width, height, format);
+
   decoder->mImage->AppendFrame(decoder->mFrame);
 
   if (decoder->mObserver)
-    decoder->mObserver->OnStartFrame(nsnull, decoder->mFrame);
+    decoder->mObserver->OnStartFrame(nsnull, nsnull, decoder->mFrame);
 
+  PRUint32 bpr, abpr;
+  decoder->mFrame->GetImageBytesPerRow(&bpr);
+  decoder->mFrame->GetAlphaBytesPerRow(&abpr);
+  decoder->colorLine = (PRUint8 *)nsMemory::Alloc(bpr);
+  if (channels > 3)
+    decoder->alphaLine = (PRUint8 *)nsMemory::Alloc(abpr);
 
-  // then initalize the frame (which was appended above in nsPNGDecoder::Init())
-  if (channels == 3) {
-    decoder->mFrame->Init(0, 0, width, height, nsIGFXFormat::RGB);
-  } else if (channels > 3) {
-    if (alpha_bits == 8) {
-      decoder->mFrame->Init(0, 0, width, height, nsIGFXFormat::RGBA);
-    } else if (alpha_bits == 1) {
-      decoder->mFrame->Init(0, 0, width, height, nsIGFXFormat::RGB_A1);
-    }
+  if (interlace_type == PNG_INTERLACE_ADAM7) {
+    decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels*width*height);
+    decoder->ibpr = channels*width;
+    if (!decoder->interlacebuf) {
+//      return NS_ERROR_FAILURE;
+    }            
   }
 
   return;
@@ -385,23 +423,77 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
    */
   nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
 
-  PRUint32 bpr;
-  decoder->mFrame->GetBytesPerRow(&bpr);
+  PRUint32 bpr, abpr;
+  decoder->mFrame->GetImageBytesPerRow(&bpr);
+  decoder->mFrame->GetAlphaBytesPerRow(&abpr);
 
   PRUint32 length;
   PRUint8 *bits;
-  decoder->mFrame->GetBits(&bits, &length);
+  decoder->mFrame->GetImageData(&bits, &length);
 
   png_bytep line;
-  if (bits) {
-    line = bits+(row_num*bpr);
+  if (decoder->interlacebuf) {
+    line = decoder->interlacebuf+(row_num*decoder->ibpr);
     png_progressive_combine_row(png_ptr, line, new_row);
   }
   else
     line = new_row;
 
   if (new_row) {
-    decoder->mFrame->SetBits((PRUint8*)line, bpr, row_num*bpr);
+    nscoord width;
+    decoder->mFrame->GetWidth(&width);
+    PRUint32 iwidth = width;
+
+    gfx_format format;
+    decoder->mFrame->GetFormat(&format);
+    PRUint8 *aptr, *cptr;
+
+    switch (format) {
+    case nsIGFXFormat::RGB:
+    case nsIGFXFormat::BGR:
+      decoder->mFrame->SetImageData((PRUint8*)line, bpr, row_num*bpr);
+      break;
+    case nsIGFXFormat::RGB_A1:
+    case nsIGFXFormat::BGR_A1:
+      {
+        cptr = decoder->colorLine;
+        aptr = decoder->alphaLine;
+        memset(aptr, 0, abpr);
+        for (PRUint32 x=0; x<iwidth; x++) {
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          if (*line++) {
+            aptr[x>>3] |= 1<<(7-x&0x7);
+          }
+        }
+        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+        decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
+      }
+      break;
+    case nsIGFXFormat::RGB_A8:
+    case nsIGFXFormat::BGR_A8:
+      {
+        cptr = decoder->colorLine;
+        aptr = decoder->alphaLine;
+        for (PRUint32 x=0; x<iwidth; x++) {
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          *aptr++ = *line++;
+        }
+        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+        decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
+      }
+      break;
+    case nsIGFXFormat::RGBA:
+    case nsIGFXFormat::BGRA:
+      decoder->mFrame->SetImageData(line, bpr, row_num*bpr);
+      break;
+    }
+
+    nsRect r(0, row_num, width, 1);
+    decoder->mObserver->OnDataAvailable(nsnull, nsnull, decoder->mFrame, &r);
   }
 }
 
@@ -425,9 +517,9 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
   nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
 
   if (decoder->mObserver) {
-    decoder->mObserver->OnStopFrame(nsnull, decoder->mFrame);
-    decoder->mObserver->OnStopContainer(nsnull, decoder->mImage);
-    decoder->mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
+    decoder->mObserver->OnStopFrame(nsnull, nsnull, decoder->mFrame);
+    decoder->mObserver->OnStopContainer(nsnull, nsnull, decoder->mImage);
+    decoder->mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
   }
 
 }

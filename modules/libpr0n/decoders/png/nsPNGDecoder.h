@@ -29,7 +29,7 @@
 #include "nsIImageContainer.h"
 #include "nsIImageDecoderObserver.h"
 #include "nsIImageFrame.h"
-#include "nsIImageRequest.h"
+#include "nsIImageRequest2.h"
 
 
 #include "nsCOMPtr.h"
@@ -66,7 +66,7 @@ end_callback(png_structp png_ptr, png_infop info_ptr);
   inline PRUint32 ProcessData(unsigned char *data, PRUint32 count);
 
 
-private:
+public:
   nsCOMPtr<nsIImageContainer> mImage;
   nsCOMPtr<nsIImageFrame> mFrame;
   nsCOMPtr<nsIImageRequest> mRequest;
@@ -74,6 +74,9 @@ private:
 
   png_structp mPNG;
   png_infop mInfo;
+  PRUint8 *colorLine, *alphaLine;
+  PRUint8 *interlacebuf;
+  PRUint32 ibpr;
 };
 
 #endif // nsPNGDecoder_h__

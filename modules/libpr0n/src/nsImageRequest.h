@@ -21,7 +21,10 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "nsIImageRequest.h"
+#ifndef nsImageRequest_h__
+#define nsImageRequest_h__
+
+#include "nsIImageRequest2.h"
 
 #include "nsIRunnable.h"
 
@@ -32,6 +35,8 @@
 #include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 
+#include "nsVoidArray.h"
+
 #define NS_IMAGEREQUEST_CID \
 { /* 9f733dd6-1dd1-11b2-8cdf-effb70d1ea71 */         \
      0x9f733dd6,                                     \
@@ -40,28 +45,44 @@
     {0x8c, 0xdf, 0xef, 0xfb, 0x70, 0xd1, 0xea, 0x71} \
 }
 
+
+enum {
+  onStartDecode = 0x1,
+  onStartContainer = 0x2,
+  onStopContainer = 0x4,
+  onStopDecode = 0x8
+};
+
 class nsImageRequest : public nsIImageRequest,
                        public nsIImageDecoderObserver, 
-                       public nsIStreamListener, public nsIRunnable
+                       public nsIStreamListener
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIIMAGEREQUEST
-  NS_DECL_NSIIMAGEDECODEROBSERVER
-  NS_DECL_NSIREQUEST
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSISTREAMOBSERVER
-  NS_DECL_NSIRUNNABLE
-
   nsImageRequest();
   virtual ~nsImageRequest();
+
   /* additional members */
+  nsresult Init(nsIChannel *aChannel);
+  nsresult AddObserver(nsIImageDecoderObserver *observer);
+  nsresult RemoveObserver(nsIImageDecoderObserver *observer, nsresult status);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIIMAGEREQUEST
+  NS_DECL_NSIIMAGECONTAINEROBSERVER
+  NS_DECL_NSIIMAGEDECODEROBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSISTREAMOBSERVER
 
 private:
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIImageContainer> mImage;
   nsCOMPtr<nsIImageDecoder> mDecoder;
-  nsCOMPtr<nsIImageDecoderObserver> mObserver;
+
+  nsVoidArray mObservers;
 
   PRBool mProcessing;
+  PRUint32 mStatus;
+  PRUint32 mState;
 };
+
+#endif

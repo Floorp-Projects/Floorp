@@ -31,7 +31,7 @@ MODULE		= imglib2
 XPIDLSRCS	= nsIImageDecoder.idl         \
 			nsIImageDecoderObserver.idl	\
 			nsIImageLoader.idl          \
-			nsIImageRequest.idl
+			nsIImageRequest2.idl
 
 include $(topsrcdir)/config/rules.mk
 

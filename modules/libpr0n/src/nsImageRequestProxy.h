@@ -21,33 +21,40 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-//#define LOADER_THREADSAFE 1
+#include "nsImageRequest.h"
+#include "nsIImageDecoderObserver.h"
 
-#include "nsIImageLoader.h"
+#include "nsIImageContainer.h"
+#include "nsIImageDecoder.h"
+#include "nsCOMPtr.h"
 
-#ifdef LOADER_THREADSAFE
-#include "prlock.h"
-#endif
-
-#define NS_IMAGELOADER_CID \
-{ /* 9f6a0d2e-1dd1-11b2-a5b8-951f13c846f7 */         \
-     0x9f6a0d2e,                                     \
-     0x1dd1,                                         \
+#define NS_IMAGEREQUESTPROXY_CID \
+{ /* 20557898-1dd2-11b2-8f65-9c462ee2bc95 */         \
+     0x20557898,                                     \
+     0x1dd2,                                         \
      0x11b2,                                         \
-    {0xa5, 0xb8, 0x95, 0x1f, 0x13, 0xc8, 0x46, 0xf7} \
+    {0x8f, 0x65, 0x9c, 0x46, 0x2e, 0xe2, 0xbc, 0x95} \
 }
 
-class nsImageLoader : public nsIImageLoader
+class nsImageRequestProxy : public nsIImageRequest,
+                            public nsIImageDecoderObserver
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIMAGELOADER
+  NS_DECL_NSIIMAGEREQUEST
+  NS_DECL_NSIIMAGEDECODEROBSERVER
+  NS_DECL_NSIIMAGECONTAINEROBSERVER
 
-  nsImageLoader();
-  virtual ~nsImageLoader();
+  nsImageRequestProxy();
+  virtual ~nsImageRequestProxy();
+
+  /* additional members */
+  nsresult Init(nsImageRequest *request, nsIImageDecoderObserver *aObserver, nsISupports *cx);
 
 private:
-#ifdef LOADER_THREADSAFE
-  PRLock *mLock;
-#endif
+  nsCOMPtr<nsIImageDecoderObserver> mObserver;
+
+  nsCOMPtr<nsISupports> mContext;
+
+  nsCOMPtr<nsIImageRequest> mOwner;
 };
