@@ -27,6 +27,7 @@ DIRS= \
     resources \
     pref-migrator \
     defaults \
+    idlservices \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
