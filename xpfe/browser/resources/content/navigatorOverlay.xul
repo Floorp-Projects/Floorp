@@ -157,7 +157,7 @@
     <broadcaster id="Communicator:WorkMode"/>
     <broadcaster id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
     <broadcaster id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
-    <broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
+    <broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('status-bar','cmd_viewtaskbar');" checked="true"/>
   </broadcasterset>
 
   <!-- Menu -->
