@@ -261,6 +261,7 @@ protected:
     // override to create different kinds of child views. Autoreleases, so
     // caller must retain.
   virtual NSView* CreateCocoaView() ;
+  void            TearDownView();
 
     // Find a quickdraw port in which to draw (needed by GFX until it
     // is converted to Cocoa). This MUST be overridden if CreateCocoaView()

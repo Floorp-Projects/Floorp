@@ -273,20 +273,7 @@ nsChildView::nsChildView() : nsBaseWidget()
 //-------------------------------------------------------------------------
 nsChildView::~nsChildView()
 {
-  if ( mView ) {
-    NSWindow* win = [mView window];
-    NSResponder* responder = [win firstResponder];
-
-    // We're being unhooked from the view hierarchy, don't leave our view
-    // or a child view as the window first responder.
-
-    if (responder && [responder isKindOfClass:[NSView class]] &&
-        [(NSView*)responder isDescendantOf:mView])
-      [win makeFirstResponder: [mView superview]];
-
-    [mView removeFromSuperviewWithoutNeedingDisplay];
-    [mView release];
-  }
+  TearDownView(); // should have already been done from Destroy
   
   NS_IF_RELEASE(mTempRenderingContext); 
   NS_IF_RELEASE(mFontMetrics);
@@ -408,11 +395,33 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
 // our |ChildView| object. Autoreleases, so caller must retain.
 //
 NSView*
-nsChildView::CreateCocoaView ( )
+nsChildView::CreateCocoaView( )
 {
   return [[[ChildView alloc] initWithGeckoChild:this eventSink:nsnull] autorelease];
 }
 
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void nsChildView::TearDownView()
+{
+  if (mView)
+  {
+    NSWindow* win = [mView window];
+    NSResponder* responder = [win firstResponder];
+
+    // We're being unhooked from the view hierarchy, don't leave our view
+    // or a child view as the window first responder.
+    if (responder && [responder isKindOfClass:[NSView class]] &&
+        [(NSView*)responder isDescendantOf:mView])
+      [win makeFirstResponder: [mView superview]];
+
+    [mView removeFromSuperviewWithoutNeedingDisplay];
+    [mView release];
+    mView = nil;
+  }
+}
 
 //-------------------------------------------------------------------------
 //
@@ -474,6 +483,8 @@ NS_IMETHODIMP nsChildView::Destroy()
 
   ReportDestroyEvent(); // beard: this seems to cause the window to be deleted. moved all release code to destructor.
   mParentWidget = nil;
+
+  TearDownView();
 
   return NS_OK;
 }
@@ -2929,9 +2940,13 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   {
     // dispatch keypress event with char instead of textEvent
     nsKeyEvent geckoEvent(NS_KEY_PRESS, mGeckoChild);
-    geckoEvent.time = PR_IntervalNow();
-    geckoEvent.charCode = bufPtr[0]; // gecko expects OS-translated unicode
-    geckoEvent.isChar = PR_TRUE;
+    geckoEvent.time      = PR_IntervalNow();
+    geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
+    geckoEvent.isChar    = PR_TRUE;
+    geckoEvent.isShift   = ([mCurEvent modifierFlags] & NSShiftKeyMask) != 0;
+    geckoEvent.isControl = ([mCurEvent modifierFlags] & NSControlKeyMask) != 0;
+    geckoEvent.isAlt     = ([mCurEvent modifierFlags] & NSAlternateKeyMask) != 0;
+    geckoEvent.isMeta    = ([mCurEvent modifierFlags] & NSCommandKeyMask) != 0;
 
     // plugins need a native autokey event here, but only if this is a repeat event
     EventRecord macEvent;
