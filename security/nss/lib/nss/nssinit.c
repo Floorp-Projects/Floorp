@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.50 2002/05/24 14:58:02 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.51 2002/05/24 21:00:55 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -51,6 +51,18 @@
 #include "pk11func.h"
 
 #include "pki3hack.h"
+
+/*
+ * On Windows nss3.dll needs to export the symbol 'mktemp' to be
+ * fully backward compatible with the nss3.dll in NSS 3.2.x and
+ * 3.3.x.  This symbol was unintentionally exported and its
+ * definition (in DBM) was moved from nss3.dll to softokn3.dll
+ * in NSS 3.4.  See bug 142575.
+ */
+#ifdef WIN32
+/* Function forwarder to mktemp in softokn3 */
+#pragma comment(linker, "/export:mktemp=softokn3.mktemp")
+#endif
 
 #define NSS_MAX_FLAG_SIZE  sizeof("readOnly")+sizeof("noCertDB")+ \
 	sizeof("noModDB")+sizeof("forceOpen")+sizeof("passwordRequired")+ \
