@@ -125,7 +125,7 @@ protected:
 
 	nsresult createFolderNode(nsIMsgFolder *folder, nsIRDFResource* property,
                             nsIRDFNode **target);
-	nsresult createFolderNameNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createFolderNameNode(nsIMsgFolder *folder, nsIRDFNode **target, PRBool sort);
 	nsresult createFolderSpecialNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderServerTypeNode(nsIMsgFolder *folder,
                                       nsIRDFNode **target);
@@ -160,6 +160,8 @@ protected:
 													 PRBool tv, PRBool *hasAssertion);
 
 	nsresult GetBiffStateString(PRUint32 biffState, nsCAutoString & biffStateStr);
+
+	nsresult GetFolderSortOrder(nsIMsgFolder *folder, PRInt32* order);
 
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_MessageChild;

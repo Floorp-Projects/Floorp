@@ -272,16 +272,16 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
       nsCOMPtr<nsIEnumerator> subFolders;
 
       rv = folder->GetSubFolders(getter_AddRefs(subFolders));
-      if (NS_SUCCEEDED(rv))
-	  {
-		  nsAdapterEnumerator* cursor =
-			new nsAdapterEnumerator(subFolders);
-		  if (cursor == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
-		  NS_ADDREF(cursor);
-		  *targets = cursor;
-		  rv = NS_OK;
-	  }
+			if(NS_SUCCEEDED(rv))
+			{
+				nsAdapterEnumerator* cursor =
+				new nsAdapterEnumerator(subFolders);
+				if (cursor == nsnull)
+				return NS_ERROR_OUT_OF_MEMORY;
+				NS_ADDREF(cursor);
+				*targets = cursor;
+				rv = NS_OK;
+			}
     }
     else if ((kNC_MessageChild == property))
     {
@@ -736,9 +736,11 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
                                                  nsIRDFNode** target)
 {
   nsresult rv = NS_RDF_NO_VALUE;
-  
-  if ((kNC_Name == property))
-		rv = createFolderNameNode(folder, target);
+
+  if (peqSort(kNC_Name, property))
+		rv = createFolderNameNode(folder, target, PR_TRUE);
+  else if (kNC_Name == property)
+		rv = createFolderNameNode(folder, target, PR_FALSE);
   else if ((kNC_SpecialFolder == property))
 		rv = createFolderSpecialNode(folder,target);
   else if ((kNC_ServerType == property))
@@ -763,13 +765,31 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 
 
 nsresult nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
-                                                     nsIRDFNode **target)
+                                                     nsIRDFNode **target, PRBool sort)
 {
+
   PRUnichar *name;
   nsresult rv = folder->GetName(&name);
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);
-  createNode(nameString, target);
+	if(!sort)
+	{
+	  createNode(nameString, target);
+	}
+	else
+	{
+		PRInt32 order;
+		rv = GetFolderSortOrder(folder, &order);
+		if(NS_FAILED(rv))
+			return rv;
+		char * orderString = PR_smprintf("%d", order);
+		if(!orderString)
+			return NS_ERROR_OUT_OF_MEMORY;
+
+		nameString.Insert(orderString, 0);
+		PR_smprintf_free(orderString);
+	}
+	createNode(nameString, target);
   delete[] name;
   return NS_OK;
 }
@@ -1161,6 +1181,35 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
 
 	return rv;
 
+
+}
+
+
+nsresult nsMsgFolderDataSource::GetFolderSortOrder(nsIMsgFolder *folder, PRInt32* order)
+{
+	nsresult rv;
+
+  PRUint32 flags;
+  rv = folder->GetFlags(&flags);
+  if(NS_FAILED(rv)) return rv;
+  
+  
+  if(flags & MSG_FOLDER_FLAG_INBOX)
+    *order = 0;
+  else if(flags & MSG_FOLDER_FLAG_QUEUE)
+    *order = 1;
+  else if(flags & MSG_FOLDER_FLAG_DRAFTS)
+    *order = 2;
+  else if(flags & MSG_FOLDER_FLAG_TEMPLATES)
+    *order = 3;
+  else if(flags & MSG_FOLDER_FLAG_SENTMAIL)
+    *order = 4;
+  else if(flags & MSG_FOLDER_FLAG_TRASH)
+    *order = 5;
+  else
+    *order = 6;
+
+	return NS_OK;
 
 }
 
