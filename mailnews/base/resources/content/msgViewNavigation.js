@@ -52,11 +52,7 @@ function GoNextMessage(nextFunction, startFromBeginning)
 	if ( selArray && (selArray.length == 1) )
 	{
 		var nextMessage = GetNextMessage(selArray[0], nextFunction, startFromBeginning);
-		if(nextMessage)
-		{
-			tree.clearItemSelection();
-			tree.selectItem(nextMessage);
-		}
+		ChangeSelection(tree, nextMessage);
 	}
 }
 
@@ -111,11 +107,7 @@ function GoPreviousMessage(previousFunction, startFromEnd)
 	if ( selArray && (selArray.length == 1) )
 	{
 		var previousMessage = GetPreviousMessage(selArray[0], previousFunction, startFromEnd);
-		if(previousMessage)
-		{
-			tree.clearItemSelection();
-			tree.selectItem(previousMessage);
-		}
+		ChangeSelection(tree, previousMessage);
 	}
 }
 
@@ -154,3 +146,11 @@ function GetPreviousMessage(currentMessage, previousFunction, startFromEnd)
 	return previousMessage;
 }
 
+function ChangeSelection(tree, newMessage)
+{
+	if(newMessage)
+	{
+		tree.clearItemSelection();
+		tree.selectItem(newMessage);
+	}
+}

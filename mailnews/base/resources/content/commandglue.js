@@ -414,12 +414,66 @@ function FolderTest5000()
 	dump("Time to load is " +  timeToLoad + " seconds\n");
 }
 
-function SelectNextMessage(messages)
+function GetNextMessageAfterDelete(messages)
 {
 	var count = messages.length;
 
-	
-	var nextMessage = GetNextMessage(messages[0], GoMessage, false)
+	var curMessage = messages[0];
+	var nextMessage = null;
+	//search forward
+	while(curMessage)
+	{
+		nextMessage = GetNextMessage(curMessage, GoMessage, false);
+		if(nextMessage)
+		{
+			if(!MessageInSelection(nextMessage, messages))
+			{
+				break;
+			}
+		}
+		curMessage = nextMessage;
+	}
+	//if no nextmessage then search backwards
+	if(!nextMessage)
+	{
+
+		var curMessage = messages[0];
+		var nextMessage = null;
+		//search forward
+		while(curMessage)
+		{
+			nextMessage = GetPreviousMessage(curMessage, GoMessage, false);
+			if(nextMessage)
+			{
+				if(!MessageInSelection(nextMessage, messages))
+				{
+					break;
+				}
+			}
+			curMessage = nextMessage;
+		}
+
+
+
+	}
+	return nextMessage;
+}
+
+function MessageInSelection(message, messages)
+{
+	var count = messages.length;
+
+	for(var i = 0; i < count; i++)
+	{
+		if(message == messages[i])
+			return true;
+
+	}
+	return false;
+}
+
+function SelectNextMessage(nextMessage)
+{
 	var tree = GetThreadTree();
 	ChangeSelection(tree, nextMessage);
 

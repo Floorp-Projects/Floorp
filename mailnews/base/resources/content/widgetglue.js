@@ -82,8 +82,10 @@ function MsgDeleteMessage(fromToolbar)
 	dump("tree is valid\n");
 	//get the selected elements
 	var messageList = tree.selectedItems;
+	var nextMessage = GetNextMessageAfterDelete(messageList);
 	//get the current folder
 	messenger.DeleteMessages(tree, srcFolder, messageList);
+	SelectNextMessage(nextMessage);
   }
 }
 
