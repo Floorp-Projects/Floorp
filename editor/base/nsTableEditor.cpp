@@ -2104,13 +2104,17 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
     // 2nd pass: Do the joining and merging
     for (rowIndex = 0; rowIndex < rowCount; rowIndex++)
     {
-      for (colIndex = 0; colIndex < colCount; colIndex+= actualColSpan2)
+      for (colIndex = 0; colIndex < colCount; colIndex+=actualColSpan2)
       {
         res = GetCellDataAt(table, rowIndex, colIndex, *getter_AddRefs(cell2),
                             startRowIndex2, startColIndex2, rowSpan2, colSpan2, 
                             actualRowSpan2, actualColSpan2, isSelected2);
         if (NS_FAILED(res)) return res;
-        
+
+        // If this is 0, we are past last cell in row, so exit the loop
+        if (actualColSpan2 == 0)
+          break;
+          
         // Merge only selected cells (skip cell we're merging into, of course)
         if (isSelected2 && cell2 != firstCell)
         {
