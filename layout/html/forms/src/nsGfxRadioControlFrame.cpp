@@ -178,12 +178,12 @@ nsGfxRadioControlFrame::PaintRadioButton(nsPresContext* aPresContext,
 
   PRBool checked = PR_TRUE;
   GetCurrentCheckState(&checked); // Get check state from the content model
+  const nsStyleBorder* myBorder = mRadioButtonFaceStyle->GetStyleBorder();
   if (checked) {
    // Paint the button for the radio button using CSS background rendering code
    if (nsnull != mRadioButtonFaceStyle) {
      const nsStyleBackground* myColor = mRadioButtonFaceStyle->GetStyleBackground();
      const nsStyleColor* color = mRadioButtonFaceStyle->GetStyleColor();
-     const nsStyleBorder* myBorder = mRadioButtonFaceStyle->GetStyleBorder();
      const nsStylePadding* myPadding = mRadioButtonFaceStyle->GetStylePadding();
      const nsStylePosition* myPosition = mRadioButtonFaceStyle->GetStylePosition();
 
@@ -229,6 +229,12 @@ nsGfxRadioControlFrame::Paint(nsPresContext*   aPresContext,
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     PaintRadioButton(aPresContext, aRenderingContext, aDirtyRect);
   }
+  nsRect rect(0, 0, mRect.width, mRect.height);
+  const nsStyleOutline* myOutline = GetStyleOutline();
+  const nsStyleBorder* myBorder = GetStyleBorder();
+  nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                               aDirtyRect, rect, *myBorder, *myOutline,
+                               mStyleContext, 0);
   return rv;
 }
 

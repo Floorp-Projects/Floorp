@@ -397,6 +397,13 @@ nsTableCellFrame::Paint(nsPresContext*      aPresContext,
                       *myBorder, *myPadding, *cellTableStyle);
       }
 
+      // Paint outline
+      nsRect rect(0, 0, mRect.width, mRect.height);
+      const nsStyleOutline* myOutline = GetStyleOutline();
+      nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *myBorder, *myOutline,
+                                  mStyleContext, 0);
+
       const nsStyleBackground* myColor = GetStyleBackground();
       DecorateForSelection(aPresContext, aRenderingContext,myColor); //ignore return value
     }
