@@ -50,7 +50,6 @@
 #include "rdfutil.h"
 
 #include "nsVoidArray.h"
-#include "rdf_qsort.h"
 
 #include "nsRDFGenericBuilder.h"
 
