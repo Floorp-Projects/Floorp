@@ -40,8 +40,11 @@ CC			= gcc
 CCC			= g++
 RANLIB			= ranlib
 
+CPU_ARCH		:= $(shell uname -p)
+ifeq ($(CPU_ARCH),i386)
 OS_REL_CFLAGS		= -Di386
 CPU_ARCH		= x86
+endif
 
 ifndef OBJECT_FMT
 OBJECT_FMT		:= $(shell if echo __ELF__ | $${CC:-cc} -E - | grep -q __ELF__ ; then echo a.out ; else echo ELF ; fi)
