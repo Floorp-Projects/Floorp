@@ -9,4 +9,3 @@ nsViewsCID.h
 nsIViewObserver.h
 nsIScrollPositionListener.h
 nsICompositeListener.h
-nsIEventProcessor.h
