@@ -398,9 +398,11 @@ void nsScrollbar::CalcBarBounds(void)
 
 void nsScrollbar::LayoutBar(void)
 {
-  XMoveResizeWindow(mDisplay, mBar,
-                    mBarBounds.x, mBarBounds.y,
-                    mBarBounds.width, mBarBounds.height);
+  /* Workaround for bug 77344. I am not sure whether this is mandatory or not. */
+  if (mDisplay)
+    XMoveResizeWindow(mDisplay, mBar,
+                      mBarBounds.x, mBarBounds.y,
+                      mBarBounds.width, mBarBounds.height);
 }
 
 NS_IMETHODIMP nsScrollbar::Move(PRInt32 aX, PRInt32 aY)

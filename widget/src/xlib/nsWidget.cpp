@@ -431,7 +431,9 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
   if (mParentWidget) {
     ((nsWidget*)mParentWidget)->WidgetMove(this);
   } else {
-    XMoveWindow(mDisplay, mBaseWindow, aX, aY);
+    /* Workaround for bug 77344. I am not sure whether this is mandatory or not. */
+    if (mDisplay)
+      XMoveWindow(mDisplay, mBaseWindow, aX, aY);
   }
   return NS_OK;
 }
@@ -460,7 +462,9 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth,
   if (mParentWidget) {
     ((nsWidget *)mParentWidget)->WidgetResize(this);
   } else {
-    XResizeWindow(mDisplay, mBaseWindow, aWidth, aHeight);
+     /* Workaround for bug 77344. I am not sure whether this is mandatory or not. */
+    if (mDisplay)
+      XResizeWindow(mDisplay, mBaseWindow, aWidth, aHeight);
   }
 
   return NS_OK;
@@ -1296,7 +1300,9 @@ PRBool nsWidget::WidgetVisible(nsRect &aBounds)
 void nsWidget::Map(void)
 {
   if (!mMapped) {
-    XMapWindow(mDisplay, mBaseWindow);
+     /* Workaround for bug 77344. I am not sure whether this is mandatory or not. */
+    if (mDisplay)
+      XMapWindow(mDisplay, mBaseWindow);
     mMapped = PR_TRUE;
   }
 }
@@ -1304,7 +1310,9 @@ void nsWidget::Map(void)
 void nsWidget::Unmap(void)
 {
   if (mMapped) {
-    XUnmapWindow(mDisplay, mBaseWindow);
+     /* Workaround for bug 77344. I am not sure whether this is mandatory or not. */
+    if (mDisplay)
+      XUnmapWindow(mDisplay, mBaseWindow);
     mMapped = PR_FALSE;
   }
 }
