@@ -867,7 +867,7 @@ nsMimeXULEmitter::WriteXULTagPrefix(const char *tagName, const char *value)
 
   UtilityWriteCRLF("</html:td>");
   
-  delete[] upCaseTag;
+  nsAllocator::Free(upCaseTag);
   return NS_OK;
 }
 
