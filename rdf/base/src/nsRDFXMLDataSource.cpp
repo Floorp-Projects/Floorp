@@ -194,6 +194,7 @@ protected:
     // pseudo-constants
     static PRInt32 gRefCnt;
     static nsIRDFContainerUtils* gRDFC;
+    static nsIRDFService*  gRDFService;
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_nextVal;
     static nsIRDFResource* kRDF_Bag;
@@ -377,6 +378,7 @@ public:
 };
 
 PRInt32         RDFXMLDataSourceImpl::gRefCnt = 0;
+nsIRDFService*  RDFXMLDataSourceImpl::gRDFService;
 nsIRDFContainerUtils* RDFXMLDataSourceImpl::gRDFC;
 nsIRDFResource* RDFXMLDataSourceImpl::kRDF_instanceOf;
 nsIRDFResource* RDFXMLDataSourceImpl::kRDF_nextVal;
@@ -443,15 +445,18 @@ RDFXMLDataSourceImpl::Init()
     AddNameSpace(NS_NewAtom("RDF"), RDF_NAMESPACE_URI);
 
     if (gRefCnt++ == 0) {
-        NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+        rv = nsServiceManager::GetService(kRDFServiceCID,
+                                          nsCOMTypeInfo<nsIRDFService>::GetIID(),
+                                          NS_REINTERPRET_CAST(nsISupports**, &gRDFService));
+
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_FAILED(rv)) return rv;
 
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "nextVal",    &kRDF_nextVal);
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "Bag",        &kRDF_Bag);
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "Seq",        &kRDF_Seq);
-        rv = rdf->GetResource(RDF_NAMESPACE_URI "Alt",        &kRDF_Alt);
+        rv = gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
+        rv = gRDFService->GetResource(RDF_NAMESPACE_URI "nextVal",    &kRDF_nextVal);
+        rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Bag",        &kRDF_Bag);
+        rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Seq",        &kRDF_Seq);
+        rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Alt",        &kRDF_Alt);
 
         rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
                                           nsIRDFContainerUtils::GetIID(),
@@ -468,14 +473,15 @@ RDFXMLDataSourceImpl::Init()
 RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rdf->UnregisterDataSource(this);
-    }
 
-    Flush();
+    // Unregister first so that nobody else tries to get us.
+    rv = gRDFService->UnregisterDataSource(this);
 
-    if (mURLSpec) PL_strfree(mURLSpec);
+    // Now flush contents
+    rv = Flush();
+
+    if (mURLSpec)
+        PL_strfree(mURLSpec);
 
     while (mNameSpaces) {
         NameSpaceMap* doomed = mNameSpaces;
@@ -488,14 +494,21 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
     NS_RELEASE(mInner);
 
     if (--gRefCnt == 0) {
-        if (gRDFC)
-            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFC);
-
         NS_IF_RELEASE(kRDF_Bag);
         NS_IF_RELEASE(kRDF_Seq);
         NS_IF_RELEASE(kRDF_Alt);
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kRDF_nextVal);
+
+        if (gRDFC) {
+            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFC);
+            gRDFC = nsnull;
+        }
+
+        if (gRDFService) {
+            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+            gRDFService = nsnull;
+        }
     }
 }
 
@@ -663,10 +676,8 @@ static const char kResourceURIPrefix[] = "resource:";
     nsCRT::free(realURL);
 #endif
 
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = rdf->RegisterDataSource(this, PR_FALSE);
+    rv = gRDFService->RegisterDataSource(this, PR_FALSE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "somebody already registered this");
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
