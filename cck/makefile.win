@@ -93,8 +93,6 @@ export::
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Installer
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\ISetup\NCIFiles
 
-	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\CD
-	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Network
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Workspace\AnimLogo
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Workspace\Bkmarks
 	$(MAKE_INSTALL) .\build\DeleteThisFile $(CCKDIST)\CCKTool\WSTemplate\Workspace\CustInst
