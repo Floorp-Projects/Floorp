@@ -450,11 +450,21 @@ sub query_ref {
     $output .= ">";
 }
 
+sub query_ref2 {
+  my( $td, $mindate, $maxdate, $who ) = @_;
+  return "../bonsai/cvsquery.cgi?module=$td->{cvs_module}&branch=$td->{cvs_branch}&cvsroot=$td->{cvs_root}&date=explicit&mindate=$mindate&maxdate=$maxdate&who=".url_encode($who);
+}
+
 sub who_menu {
     my( $td, $mindate, $maxdate, $who ) = @_;
     my $treeflag;
 
-    $qr = "http:// checkins for $who";
+    #$qr = "http:// checkins for $who";
+    $qr = "../registry/who.cgi?email=$e"
+        ."&t0=".&url_encode("What did $who check into the source tree")
+        ."&u0=".&url_encode( &query_ref2($td,$mindate,$maxdate,$who))
+        ."&t1=".&url_encode("What has $who been checking in in the last day")
+        ."&u1=".&url_encode( &query_ref2($td,$mindate,$maxdate,$who));
 
     return "<a href='$qr' onclick=\"return js_who_menu($td->{num},'$who',event,$mindate,$maxdate);\">";
 }
