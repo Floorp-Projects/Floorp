@@ -1,10 +1,10 @@
 <!-- extracted from content/viewSource.xul -->
 
-<!-- LOCALIZATION NOTE mainWindow.title : DONT_TRANSLATE --> 
+<!-- LOCALIZATION NOTE (mainWindow.title) : DONT_TRANSLATE --> 
 <!ENTITY mainWindow.title "Mozilla"> 
-<!-- LOCALIZATION NOTE mainWindow.titlemodifier : DONT_TRANSLATE --> 
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
 <!ENTITY mainWindow.titlemodifier "Mozilla"> 
-<!-- LOCALIZATION NOTE mainWindow.titlemodifierseperator : DONT_TRANSLATE -->
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifierseperator) : DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifierseperator " - ">
 <!ENTITY mainWindow.preface "Source for: "> 
 <!ENTITY fileMenu.label "File">
@@ -36,7 +36,7 @@
 <!ENTITY preferences.label "Preferences">
 <!ENTITY viewMenu.label "View">
 <!ENTITY toolbarsCmd.label "Toolbars">
-<!-- LOCALIZATION NOTE sidebarCmd.label : DONT_TRANSLATE -->
+<!-- LOCALIZATION NOTE (sidebarCmd.label) : DONT_TRANSLATE -->
 <!ENTITY sidebarCmd.label "Sidebar">
 <!ENTITY enlargeTextSizeCmd.label "Enlarge Text Size">
 <!ENTITY reduceTextSizeCmd.label "Reduce Text Size">
@@ -71,7 +71,9 @@
 <!ENTITY goForwardCmd.label "Go Forward">
 <!ENTITY goHomeCmd.label "Home">
 <!ENTITY tasksMenu.label "Tasks">
+<!-- LOCALIZATION NOTE (navigatorCmd.label) : DONT_TRANSLATE -->
 <!ENTITY navigatorCmd.label "Navigator">
+<!-- LOCALIZATION NOTE (messengerCmd.label) : DONT_TRANSLATE -->
 <!ENTITY messengerCmd.label "Messenger">
 <!ENTITY editorCmd.label "Editor">
 <!ENTITY manageHistoryCmd.label "Manage History">
@@ -93,6 +95,7 @@
 <!ENTITY softwareUpdatesCmd.label "Software Updates">
 <!ENTITY technicalSupportCmd.label "Technical Support">
 <!ENTITY releaseNotesCmd.label "Release Notes">
+<!-- LOCALIZATION NOTE (aboutCommunicatorCmd.label) : Do not translate "communicator" -->
 <!ENTITY aboutCommunicatorCmd.label "About Communicator Prototype">
 
 
