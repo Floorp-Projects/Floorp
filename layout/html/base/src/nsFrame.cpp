@@ -924,7 +924,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
   if (!DisplaySelection(aPresContext)) {
     return NS_OK;
   }
-  printf("handledrag %x\n",this);
+//  printf("handledrag %x\n",this);
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
