@@ -67,7 +67,6 @@
                 <checkbox id="alwaysAsk"
                           label="&alwaysAsk.label;"
                           accesskey="&alwaysAsk.accesskey;"
-                          disabled="true"
                           checked="true"/>
             </vbox>
             <radio id="different"
