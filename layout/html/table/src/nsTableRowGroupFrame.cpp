@@ -609,7 +609,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
                                                nsHTMLReflowMetrics& aDesiredSize,
                                                const nsHTMLReflowState& aReflowState)
 {
-  gsDebug=PR_TRUE;
   if (gsDebug) printf("TRGF CalculateRowHeights begin\n");
   // iterate children and for each row get its height
   PRBool atLeastOneRowSpanningCell = PR_FALSE;
@@ -797,7 +796,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
 
   // cleanup
   delete []rowHeights;
-  gsDebug=PR_FALSE;
 }
 
 nsresult nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aPresContext,
