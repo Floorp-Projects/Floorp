@@ -2097,7 +2097,6 @@ function SetDocumentEditable(isDocEditable)
     } catch(e) {}
 
     // update all commands
-    window._content.focus();
     window.updateCommands("create");
   }  
 }
