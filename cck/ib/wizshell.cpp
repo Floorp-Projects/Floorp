@@ -21,7 +21,7 @@ void CreateRshell (void)
 	CString config = GetGlobal("CustomizationList");
 	CString file1 = root + "\\part1.ini";
 	CString file2 = root + "\\part2.ini";
-	CString rshellPath = root + "\\Configs\\" + config + "\\Workspace\\Autorun\\Shell\\Nsetup32\\";
+	CString rshellPath = root + "\\Configs\\" + config + "\\Output\\Shell\\Nsetup32\\";
 
 	CWnd Mywnd;
 
@@ -57,7 +57,7 @@ void CreateRshell (void)
 //	rshell <<"bk_bitmap="<<fvalue2<<"\n";
 //	rshell <<"button2_cmdline=exe,"<<fvalue4<<"\n";
 
-	rshell <<"dialog_title_txt="<<fvalue3<<"\n";
+	rshell <<"dialog_title_text="<<fvalue3<<"\n";
 	if(!part2) {
 		cout << "cannot open the file \n";
 		}
