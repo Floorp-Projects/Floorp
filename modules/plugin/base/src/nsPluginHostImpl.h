@@ -283,8 +283,15 @@ public:
   /* Called by GetURL and PostURL */
 
   NS_IMETHOD
-  NewPluginURLStream(const nsString& aURL, nsIPluginInstance *aInstance, nsIPluginStreamListener *aListener);
+  NewPluginURLStream(const nsString& aURL, nsIPluginInstance *aInstance, 
+                     nsIPluginStreamListener *aListener,
+                     void *aPostData = nsnull, PRUint32 aPostDataLen = 0, 
+                     const char *aHeadersData = nsnull, 
+                     PRUint32 aHeadersDataLen = 0);
 
+  NS_IMETHOD
+  AddHeadersToChannel(const char *aHeadersData, PRUint32 aHeadersDataLen, 
+                      nsIChannel *aGenericChannel);
 
   NS_IMETHOD
   StopPluginInstance(nsIPluginInstance* aInstance);

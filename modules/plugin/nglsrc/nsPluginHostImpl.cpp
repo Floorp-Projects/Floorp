@@ -40,6 +40,9 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
+#include "nsIHTTPChannel.h"
+#include "nsIStringStream.h" // for NS_NewByteInputStream
+#include "nsIFileStream.h" // for nsIRandomAccessStore
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
 #include "nsIProgressEventSink.h"
@@ -1529,39 +1532,47 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
   {
       nsPluginInstancePeerImpl *peer;
 
-      rv = instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
-
-      if (NS_SUCCEEDED(rv))
-      {
-        nsCOMPtr<nsIPluginInstanceOwner> owner;
-
-        rv = peer->GetOwner(*getter_AddRefs(owner));
-
-        if (NS_SUCCEEDED(rv))
-          {
-            if (!target) {
-              target = "_self";
+      if (nsnull != target)
+        {
+          
+          rv = instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
+          
+          if (NS_SUCCEEDED(rv))
+            {
+              nsCOMPtr<nsIPluginInstanceOwner> owner;
+              
+              rv = peer->GetOwner(*getter_AddRefs(owner));
+              
+              if (NS_SUCCEEDED(rv))
+                {
+                  if (!target) {
+                    target = "_self";
+                  }
+                  else {
+                    if ((0 == PL_strcmp(target, "newwindow")) || 
+                        (0 == PL_strcmp(target, "_new")))
+                      target = "_blank";
+                    else if (0 == PL_strcmp(target, "_current"))
+                      target = "_self";
+                  }
+                  rv = owner->GetURL(url, target, (void*)postData, postDataLen,
+                                     (void*) postHeaders, postHeadersLength);
+                }
+              
+              NS_RELEASE(peer);
             }
-            else {
-              if ((0 == PL_strcmp(target, "newwindow")) || 
-                  (0 == PL_strcmp(target, "_new")))
-                target = "_blank";
-              else if (0 == PL_strcmp(target, "_current"))
-                target = "_self";
-            }
-            rv = owner->GetURL(url, target, (void*)postData, postDataLen,
-                               (void*) postHeaders, postHeadersLength);
-          }
-        
-        NS_RELEASE(peer);
-      }
+        }
     
-    if (streamListener != nsnull)
-      rv = NewPluginURLStream(string, instance, streamListener);
-
-    NS_RELEASE(instance);
+      // if we don't have a target, just create a stream.  This does
+      // NS_OpenURI()!
+      if (streamListener != nsnull)
+        rv = NewPluginURLStream(string, instance, streamListener,
+                                (void*)postData, postDataLen,
+                                postHeaders, postHeadersLength);
+      
+      NS_RELEASE(instance);
   }
-
+  
   return rv;
 }
 
@@ -3144,8 +3155,12 @@ nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFi
 /* Called by GetURL and PostURL */
 
 NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
-                                                  nsIPluginInstance *aInstance,
-												  nsIPluginStreamListener* aListener)
+                                                   nsIPluginInstance *aInstance,
+                                                   nsIPluginStreamListener* aListener,
+                                                   void *aPostData, 
+                                                   PRUint32 aPostDataLen, 
+                                                   const char *aHeadersData, 
+                                                   PRUint32 aHeadersDataLen)
 {
   nsCOMPtr<nsIURI> url;
   nsAutoString  absUrl;
@@ -3223,6 +3238,48 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       }
 
       rv = channel->AsyncRead(listenerPeer, nsnull);
+
+      // deal with headers and post data
+      nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
+      if(httpChannel)
+        {
+
+          // figure out if we need to set the post data stream on the
+          // channel...  right now, this is only done for http
+          // channels.....
+          if(aPostData)
+            {
+              nsCOMPtr<nsISupports> result = nsnull;
+              nsCOMPtr<nsIInputStream> postDataStream = nsnull;
+              if (aPostData) {
+                NS_NewByteInputStream(getter_AddRefs(result),
+                                      (const char *) aPostData, aPostDataLen);
+                if (result) {
+                  postDataStream = do_QueryInterface(result, &rv);
+                }
+              }
+              
+              // XXX it's a bit of a hack to rewind the postdata stream
+              // here but it has to be done in case the post data is
+              // being reused multiple times.
+              
+              nsCOMPtr<nsIRandomAccessStore> 
+                postDataRandomAccess(do_QueryInterface(postDataStream));
+              if (postDataRandomAccess)
+                {
+                  postDataRandomAccess->Seek(PR_SEEK_SET, 0);
+                }
+              
+              nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
+              httpChannel->SetRequestMethod(method);
+              httpChannel->SetUploadStream(postDataStream);
+            }
+          if (aHeadersData) 
+            {
+              rv = AddHeadersToChannel(aHeadersData, aHeadersDataLen, 
+                                       httpChannel);
+            }
+        }
     }
     NS_RELEASE(listenerPeer);
   }
@@ -3230,6 +3287,72 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   return rv;
 }
 
+NS_IMETHODIMP
+nsPluginHostImpl::AddHeadersToChannel(const char *aHeadersData, 
+                                      PRUint32 aHeadersDataLen, 
+                                      nsIChannel *aGenericChannel)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIHTTPChannel> aChannel = do_QueryInterface(aGenericChannel);
+  if (!aChannel) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  // used during the manipulation of the String from the aHeadersData
+  nsCAutoString headersString;
+  nsCAutoString oneHeader;
+  nsCAutoString headerName;
+  nsCAutoString headerValue;
+  PRUint32 crlf = 0;
+  PRUint32 colon = 0;
+  nsIAtom *headerAtom;
+  
+  //
+  // Turn the char * buffer into an nsString.
+  //
+  headersString = aHeadersData;
+
+  //
+  // Iterate over the nsString: for each "\r\n" delimeted chunk,
+  // add the value as a header to the nsIHTTPChannel
+  //
+  
+  while (PR_TRUE) {
+    crlf = headersString.Find("\r\n", PR_TRUE);
+    if (-1 == crlf) {
+      rv = NS_OK;
+      return rv;
+    }
+    headersString.Mid(oneHeader, 0, crlf);
+    headersString.Cut(0, crlf + 2);
+    oneHeader.StripWhitespace();
+    colon = oneHeader.Find(":");
+    if (-1 == colon) {
+      rv = NS_ERROR_NULL_POINTER;
+      return rv;
+    }
+    oneHeader.Left(headerName, colon);
+    colon++;
+    oneHeader.Mid(headerValue, colon, oneHeader.Length() - colon);
+    headerAtom = NS_NewAtom((const char *) headerName);
+    if (!headerAtom) {
+      rv = NS_ERROR_NULL_POINTER;
+      return rv;
+    }
+    
+    //
+    // FINALLY: we can set the header!
+    // 
+    
+    rv =aChannel->SetRequestHeader(headerAtom, (const char *) headerValue);
+    if (NS_FAILED(rv)) {
+      rv = NS_ERROR_NULL_POINTER;
+      return rv;
+    }
+  }    
+  return rv;
+}
 
 NS_IMETHODIMP
 nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
