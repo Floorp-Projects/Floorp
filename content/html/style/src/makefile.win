@@ -79,6 +79,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsDOMCSSDeclaration.obj 	\
 	.\$(OBJDIR)\nsComputedDOMStyle.obj 	\
 	.\$(OBJDIR)\nsROCSSPrimitiveValue.obj 	\
+	.\$(OBJDIR)\nsDOMCSSRect.obj		\
   $(NULL)
 
 LINCS=  -I..\..\..\base\src \
