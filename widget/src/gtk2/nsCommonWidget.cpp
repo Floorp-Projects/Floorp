@@ -128,6 +128,9 @@ nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
         break;
     }
 
+    aEvent.point.x = nscoord(aGdkEvent->x);
+    aEvent.point.y = nscoord(aGdkEvent->y);
+
     aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK)
         ? PR_TRUE : PR_FALSE;
     aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK)
