@@ -322,7 +322,7 @@ attr_accessor(TreeState *state, gboolean getter)
 {
     char *attrname = ATTR_IDENT(state->tree).str;
     if (getter && (ATTR_TYPE(state->tree) == IDLN_TYPE_BOOLEAN)) {
-        fprintf(state->file, "  NS_IMETHOD Is%c%s(PRBool *aIs%c%s);\n",
+        fprintf(state->file, "  NS_IMETHOD Is%c%s(PRBool *aIs%c%s) = 0;\n",
                 toupper(attrname[0]), attrname + 1,
                 toupper(attrname[0]), attrname + 1);
     } else {
