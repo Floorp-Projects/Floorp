@@ -2636,6 +2636,7 @@ HTMLContentSink::WillBuildModel(void)
   mScrolledToRefAlready = PR_FALSE;
 
   if (mHTMLDocument) {
+    NS_ASSERTION(mParser, "no parser");
     nsCompatibility mode = eCompatibility_NavQuirks;
     if (mParser) {
       nsDTDMode dtdMode = mParser->GetParseMode();
@@ -2741,7 +2742,7 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
       PRUint32 LoadType;
       docShell->GetLoadType(&LoadType);
 
-      ScrollToRef(LoadType & nsIDocShell::LOAD_CMD_HISTORY == 0);
+      ScrollToRef(!(LoadType & nsIDocShell::LOAD_CMD_HISTORY));
     }
   }
 
