@@ -41,16 +41,15 @@
 
 #include "nsIServiceManager.h"
 #include "nsIProperties.h"
+#include "nsServiceManagerUtils.h"
 #include "nsCOMPtr.h"
-
-#define NS_DIRECTORY_SERVICE_CID  {0xf00152d0,0xb40b,0x11d3,{0x8c, 0x9c, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}}
+#include "nsXPCOMCID.h"
 
 inline nsresult
 NS_GetSpecialDirectory(const char* specialDirName, nsIFile* *result)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kDirectoryServiceCID, NS_DIRECTORY_SERVICE_CID);
-    nsCOMPtr<nsIProperties> serv(do_GetService(kDirectoryServiceCID, &rv));
+    nsCOMPtr<nsIProperties> serv(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv))
         return rv;
 

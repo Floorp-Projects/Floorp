@@ -40,11 +40,15 @@
 #include "nsIDirectoryService.h"
 #include "nsILocalFile.h"
 
-#ifdef STANDALONE_PROFILEDIRSERVICE
-#define MOZILLA_STRICT_API
-#include "nsEmbedString.h"
-#else
+#include "nsCOMPtr.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
+
+#ifdef MOZILLA_INTERNAL_API
 #include "nsString.h"
+#else
+#include "nsEmbedString.h"
 #endif
 
 // Forward Declarations
@@ -112,7 +116,7 @@ protected:
   PRPackedBool             mNotifyObservers;
 
   PRPackedBool             mSharingEnabled;
-#ifdef STANDALONE_PROFILEDIRSERVICE
+#ifndef MOZILLA_INTERNAL_API
   nsEmbedString            mNonSharedDirName;
 #else
   nsString                 mNonSharedDirName;

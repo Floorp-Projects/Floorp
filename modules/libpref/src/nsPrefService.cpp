@@ -49,6 +49,7 @@
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
 #include "nsCOMArray.h"
+#include "nsXPCOMCID.h"
 
 #include "nsQuickSort.h"
 #include "prmem.h"
@@ -756,8 +757,7 @@ static nsresult pref_InitInitialObjects()
   // xxxbsmedberg: TODO load default prefs from a category
   // but the architecture is not quite there yet
 
-  static NS_DEFINE_CID(kDirectoryServiceCID, NS_DIRECTORY_SERVICE_CID);
-  nsCOMPtr<nsIProperties> dirSvc(do_GetService(kDirectoryServiceCID, &rv));
+  nsCOMPtr<nsIProperties> dirSvc(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsISimpleEnumerator> dirList;

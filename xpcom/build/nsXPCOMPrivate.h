@@ -40,7 +40,7 @@
 #define nsXPComPrivate_h__
 
 // Map frozen functions to private symbol names if not using strict API.
-#ifndef MOZILLA_STRICT_API
+#ifdef MOZILLA_INTERNAL_API
 # define NS_RegisterXPCOMExitRoutine        NS_RegisterXPCOMExitRoutine_P
 # define NS_UnregisterXPCOMExitRoutine      NS_UnregisterXPCOMExitRoutine_P
 #endif

@@ -47,6 +47,7 @@
 
 #define NS_XPCOM_INIT_CURRENT_PROCESS_DIR       "MozBinD"   // Can be used to set NS_XPCOM_CURRENT_PROCESS_DIR
                                                             // CANNOT be used to GET a location
+#define NS_DIRECTORY_SERVICE_CID  {0xf00152d0,0xb40b,0x11d3,{0x8c, 0x9c, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}}
 
 class nsDirectoryService : public nsIDirectoryService,
                            public nsIProperties,
@@ -54,8 +55,6 @@ class nsDirectoryService : public nsIDirectoryService,
 {
   public:
 
-  NS_DEFINE_STATIC_CID_ACCESSOR(NS_DIRECTORY_SERVICE_CID);
-  
   // nsISupports interface
   NS_DECL_ISUPPORTS
 

@@ -471,6 +471,11 @@ ifdef MOZ_PROFILE_USE
 DSO_PIC_CFLAGS += $(PROFILE_USE_CFLAGS)
 endif
 
+# Does the makefile specifies the internal XPCOM API linkage?
+ifneq (,$(MOZILLA_INTERNAL_API)$(LIBXUL_LIBRARY))
+DEFINES += -DMOZILLA_INTERNAL_API
+endif
+
 # Force XPCOM/widget/gfx methods to be _declspec(dllexport) when we're
 # building libxul libraries
 ifdef MOZ_ENABLE_LIBXUL
@@ -533,6 +538,10 @@ JAVA_DIST_DIR = $(DIST)/java
 REQ_INCLUDES	= $(foreach d,$(REQUIRES),-I$(DIST)/include/$d)
 
 INCLUDES	= $(LOCAL_INCLUDES) $(REQ_INCLUDES) -I$(PUBLIC) -I$(DIST)/include $(OS_INCLUDES)
+
+ifndef MOZILLA_INTERNAL_API
+INCLUDES	+= -I$(DIST)/sdk/include
+endif
 
 CFLAGS		= $(OS_CFLAGS)
 CXXFLAGS	= $(OS_CXXFLAGS)

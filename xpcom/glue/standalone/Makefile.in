@@ -82,4 +82,4 @@ include $(topsrcdir)/config/rules.mk
 export:: $(XPCOM_GLUE_SRC_CSRCS) 
 	$(INSTALL) $^ .
 
-DEFINES		+= -DXPCOM_GLUE -DMOZILLA_STRICT_API
+DEFINES		+= -DXPCOM_GLUE

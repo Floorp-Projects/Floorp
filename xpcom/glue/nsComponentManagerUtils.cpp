@@ -46,7 +46,9 @@
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 
-#ifdef MOZILLA_STRICT_API
+#include "nsIComponentManager.h"
+
+#ifndef MOZILLA_INTERNAL_API
 
 nsresult
 CallGetService(const nsCID &aCID, const nsIID &aIID, void **aResult)
@@ -94,7 +96,7 @@ CallGetService(const char *aContractID, const nsIID &aIID, void **aResult)
 
 #endif
 
-#ifdef MOZILLA_STRICT_API
+#ifndef MOZILLA_INTERNAL_API
 
 nsresult
 CallCreateInstance(const nsCID &aCID, nsISupports *aDelegate,

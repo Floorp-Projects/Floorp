@@ -110,7 +110,7 @@ interface nsIServiceManager : nsISupports
 // Observing xpcom autoregistration.  Topics will be 'start' and 'stop'.
 #define NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID "xpcom-autoregistration"
 
-#ifndef MOZILLA_STRICT_API
+#ifdef MOZILLA_INTERNAL_API
 #include "nsXPCOM.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIServiceManagerObsolete.h"

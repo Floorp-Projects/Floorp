@@ -39,7 +39,6 @@
 #define nsServiceManagerUtils_h__
 
 #include "nsIServiceManager.h"
-#include "nsIServiceManagerObsolete.h"
 #include "nsCOMPtr.h"
 
 inline
