@@ -179,4 +179,12 @@ nsKeywordProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
 }
 
+NS_IMETHODIMP 
+nsKeywordProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    // don't override anything.  
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////

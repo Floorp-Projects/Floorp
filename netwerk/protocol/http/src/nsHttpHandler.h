@@ -27,6 +27,7 @@
 #include "nsHttp.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIProtocolProxyService.h"
+#include "nsIIOService.h"
 #include "nsIPref.h"
 #include "nsIObserver.h"
 #include "nsIProxyObjectManager.h"
@@ -125,6 +126,8 @@ public:
     nsresult GetEventQueueService(nsIEventQueueService **);
     nsresult GetStreamConverterService(nsIStreamConverterService **);
     nsresult GetMimeService(nsIMIMEService **);
+    nsresult GetIOService(nsIIOService** service);
+
 
     // Called by the channel before writing a request
     nsresult OnModifyRequest(nsIHttpChannel *);
@@ -183,6 +186,7 @@ private:
     static nsHttpHandler *mGlobalInstance;
 
     // cached services
+    nsCOMPtr<nsIIOService>              mIOService;
     nsCOMPtr<nsIPref>                   mPrefs;
     nsCOMPtr<nsIProxyObjectManager>     mProxyMgr;
     nsCOMPtr<nsIEventQueueService>      mEventQueueService;

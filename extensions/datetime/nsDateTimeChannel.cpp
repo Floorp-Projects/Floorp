@@ -23,6 +23,7 @@
 // datetime implementation
 
 #include "nsDateTimeChannel.h"
+#include "nsNetUtil.h"
 #include "nsIServiceManager.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
@@ -157,6 +158,9 @@ NS_IMETHODIMP
 nsDateTimeChannel::Open(nsIInputStream **_retval)
 {
     nsresult rv = NS_OK;
+    rv = NS_CheckPortSafety(mPort, "datetime");
+    if (NS_FAILED(rv))
+      return rv;
 
     NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -175,6 +179,9 @@ NS_IMETHODIMP
 nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
     nsresult rv = NS_OK;
+    rv = NS_CheckPortSafety(mPort, "datetime");
+    if (NS_FAILED(rv))
+      return rv;
 
     NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;

@@ -430,6 +430,21 @@ NS_IMETHODIMP nsMsgProtocol::Open(nsIInputStream **_retval)
 
 NS_IMETHODIMP nsMsgProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
+    PRInt32 port;
+    nsresult rv = m_url->GetPort(&port);
+    if (NS_FAILED(rv))
+        return rv;
+    
+    nsXPIDLCString scheme;
+    rv = m_url->GetScheme(getter_Copies(scheme));
+    if (NS_FAILED(rv))
+        return rv;
+    
+
+    rv = NS_CheckPortSafety(port, scheme);
+    if (NS_FAILED(rv))
+        return rv;
+
 	// set the stream listener and then load the url
 	m_channelContext = ctxt;
 	m_channelListener = listener;

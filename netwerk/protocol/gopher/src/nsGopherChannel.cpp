@@ -227,6 +227,15 @@ NS_IMETHODIMP
 nsGopherChannel::Open(nsIInputStream **_retval)
 {
     nsresult rv = NS_OK;
+    
+    PRInt32 port;
+    rv = mUrl->GetPort(&port);
+    if (NS_FAILED(rv))
+        return rv;
+ 
+    rv = NS_CheckPortSafety(port);
+    if (NS_FAILED(rv))
+        return rv;
 
     NS_WITH_SERVICE(nsISocketTransportService,
                     socketService,
@@ -256,10 +265,19 @@ nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     PR_LOG(gGopherLog, PR_LOG_DEBUG, ("nsGopherChannel::AsyncOpen() called [this=%x]\n",
                                       this));
 
+    nsresult rv;
+
+    PRInt32 port;
+    rv = mUrl->GetPort(&port);
+    if (NS_FAILED(rv))
+        return rv;
+ 
+    rv = NS_CheckPortSafety(port);
+    if (NS_FAILED(rv))
+        return rv;
+    
     mListener = aListener;
     mResponseContext = ctxt;
-
-    nsresult rv;
 
     NS_WITH_SERVICE(nsISocketTransportService,
                     socketService,

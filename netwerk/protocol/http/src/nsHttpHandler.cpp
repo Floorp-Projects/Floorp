@@ -59,6 +59,7 @@ static const char NETWORK_PREFS[] = "network.";
 static const char INTL_ACCEPT_LANGUAGES[] = "intl.accept_languages";
 static const char INTL_ACCEPT_CHARSET[] = "intl.charset.default";
 
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
@@ -178,6 +179,12 @@ nsHttpHandler::Init()
     nsresult rv = NS_OK;
 
     LOG(("nsHttpHandler::Init\n"));
+
+    mIOService = do_GetService(kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("unable to continue without io service");
+        return rv;
+    }
 
     mPrefs = do_GetService(kPrefServiceCID, &rv);
     if (NS_FAILED(rv)) {
@@ -510,6 +517,14 @@ nsHttpHandler::GetMimeService(nsIMIMEService **result)
     NS_ADDREF(*result);
     return NS_OK;
 }
+
+nsresult 
+nsHttpHandler::GetIOService(nsIIOService** result)
+{
+    NS_ADDREF(*result = mIOService);
+    return NS_OK;
+}
+
 
 nsresult
 nsHttpHandler::OnModifyRequest(nsIHttpChannel *chan)
@@ -1444,6 +1459,14 @@ nsHttpHandler::NewChannel(nsIURI *uri, nsIChannel **result)
                          nsnull,
                          result);
     return rv;
+}
+
+NS_IMETHODIMP 
+nsHttpHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    // don't override anything.  
+    *_retval = PR_FALSE;
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

@@ -34,6 +34,7 @@
 #endif 
 
 #include "msgCore.h"    // precompiled header...
+#include "nsNetUtil.h"
 #include "nspr.h"
 #include "nsCRT.h"
 #include "plbase64.h"
@@ -635,6 +636,15 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 
 	nsCOMPtr<nsIURL> url = do_QueryInterface(aURL, &rv);
 	if (NS_FAILED(rv)) return rv;
+
+    PRInt32 port;
+    rv = url->GetPort(&port);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = NS_CheckPortSafety(port, "pop3");
+    if (NS_FAILED(rv))
+        return rv;
 
 	nsXPIDLCString queryPart;
 	rv = url->GetQuery(getter_Copies(queryPart));

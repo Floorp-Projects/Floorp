@@ -455,6 +455,13 @@ NS_IMETHODIMP nsMailboxService::GetDefaultPort(PRInt32 *aDefaultPort)
 	return rv; 	
 }
 
+NS_IMETHODIMP nsMailboxService::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    // don't override anything.  
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
 	nsCOMPtr<nsIMailboxUrl> aMsgUrl;

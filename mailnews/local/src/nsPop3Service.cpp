@@ -312,6 +312,15 @@ NS_IMETHODIMP nsPop3Service::GetDefaultPort(PRInt32 *aDefaultPort)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsPop3Service::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    if (port == POP3_PORT || port == 593)  // 593 is POP3/SSL
+        *_retval = PR_TRUE;
+    else
+        *_retval = PR_FALSE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsPop3Service::GetDefaultDoBiff(PRBool *aDoBiff)
 {
     NS_ENSURE_ARG_POINTER(aDoBiff);

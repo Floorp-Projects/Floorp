@@ -2845,6 +2845,13 @@ NS_IMETHODIMP nsImapService::GetDefaultPort(PRInt32 *aDefaultPort)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsImapService::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    // allow imap to run on any port
+    *_retval = PR_TRUE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsImapService::GetDefaultDoBiff(PRBool *aDoBiff)
 {
     NS_ENSURE_ARG_POINTER(aDoBiff);

@@ -513,6 +513,14 @@ nsChromeProtocolHandler::GetDefaultPort(PRInt32 *result)
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsChromeProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    // don't override anything.  
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsChromeProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                                 nsIURI **result)

@@ -91,6 +91,16 @@ interface nsIIOService : nsISupports
      */
     attribute boolean offline;
 
+    /**
+     * Checks if a port number is banned.
+     *
+     * |allowPort| will check a list of "known-to-do-bad-things" port numbers.  If the 
+     * given port is found on the blacklist, |allowPort| will ask the protocol handler
+     * if it wishes to override. Scheme can be null. 
+     */
+     
+    boolean allowPort(in long port, in string scheme);
+
     ////////////////////////////////////////////////////////////////////////////
     // URL parsing utilities
 

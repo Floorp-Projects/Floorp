@@ -494,6 +494,14 @@ nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsJSProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    // don't override anything.  
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static nsModuleComponentInfo gJSModuleInfo[] = {

@@ -91,6 +91,10 @@ nsFTPChannel::Init(nsIURI* uri)
         mLock = PR_NewLock();
         if (!mLock) return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    mIOService = do_GetIOService(&rv);
+    if (NS_FAILED(rv)) return rv;
+    
     return NS_OK;
 }
 
@@ -229,7 +233,14 @@ nsFTPChannel::Open(nsIInputStream **result)
 NS_IMETHODIMP
 nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
-    nsresult rv;
+    PRInt32 port;
+    nsresult rv = mURL->GetPort(&port);
+    if (NS_FAILED(rv))
+        return rv;
+ 
+    rv = NS_CheckPortSafety(port, "ftp", mIOService);
+    if (NS_FAILED(rv))
+        return rv;
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::AsyncOpen() called\n"));
 

@@ -33,6 +33,7 @@
 #include "msgCore.h"    // precompiled header...
 #include "MailNewsTypes.h"
 #include "nntpCore.h"
+#include "nsNetUtil.h"
 
 #include "nsIMsgHdr.h"
 #include "nsNNTPProtocol.h"
@@ -891,6 +892,15 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports
   nsresult rv;
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
+
+  PRInt32 port;
+  rv = mailnewsUrl->GetPort(&port);
+  if (NS_FAILED(rv))
+      return rv;
+ 
+  rv = NS_CheckPortSafety(port, "news");
+  if (NS_FAILED(rv))
+      return rv;
 
   m_channelContext = ctxt;
   m_channelListener = listener;

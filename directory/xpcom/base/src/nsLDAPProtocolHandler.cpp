@@ -128,3 +128,14 @@ nsLDAPProtocolHandler::NewChannel(nsIURI* uri,
 
     return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsLDAPProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    if (port == 389 || port == 636)  // 636 is LDAP/SSL
+        *_retval = PR_TRUE;
+    else
+        *_retval = PR_FALSE;
+    return NS_OK;
+}
+

@@ -26,6 +26,7 @@
 #include "nsIPref.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 
 #include "nsSmtpService.h"
 #include "nsIMsgMailSession.h"
@@ -257,6 +258,14 @@ NS_IMETHODIMP nsSmtpService::GetDefaultPort(PRInt32 *aDefaultPort)
 	return rv; 	
 }
 
+NS_IMETHODIMP 
+nsSmtpService::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    // allow smtp to run on any port
+    *_retval = PR_TRUE;
+    return NS_OK;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // This is just a little stub channel class for mailto urls. Mailto urls
 // don't really have any data for the stream calls in nsIChannel to make much sense.
@@ -338,6 +347,15 @@ NS_IMETHODIMP nsMailtoChannel::Open(nsIInputStream **_retval)
 
 NS_IMETHODIMP nsMailtoChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
+  PRInt32 port;
+  nsresult rv = m_url->GetPort(&port);
+  if (NS_FAILED(rv))
+      return rv;
+ 
+  rv = NS_CheckPortSafety(port, "mailto");
+  if (NS_FAILED(rv))
+      return rv;
+
   mStatus = listener->OnStartRequest(this, ctxt);
 
   // If OnStartRequest(...) failed, then propagate the error code...

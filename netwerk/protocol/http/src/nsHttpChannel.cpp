@@ -533,9 +533,10 @@ nsHttpChannel::OpenCacheEntry(PRBool *delayed)
 
     // Are we offline?
     PRBool offline = PR_FALSE;
-    nsCOMPtr<nsIIOService> ioService = do_GetIOService();
-    if (ioService)
-        ioService->GetOffline(&offline);
+    
+    nsCOMPtr<nsIIOService> ioService;
+    rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
+    ioService->GetOffline(&offline);
 
     // Set the desired cache access mode accordingly...
     nsCacheAccessMode accessRequested;
@@ -1032,17 +1033,13 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         if (NS_FAILED(rv)) return rv;
     }
     else {
-        //
-        // this redirect could be to ANY uri, so we need to talk to the
-        // IO service to create the new channel.
-        //
-        nsCOMPtr<nsIIOService> serv = do_GetIOService(&rv);
-        if (NS_FAILED(rv)) return rv;
-
         // create a new URI using the location header and the current URL
         // as a base...
+        nsCOMPtr<nsIIOService> ioService;
+        rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
+
         nsCOMPtr<nsIURI> newURI;
-        rv = serv->NewURI(location, mURI, getter_AddRefs(newURI));
+        rv = ioService->NewURI(location, mURI, getter_AddRefs(newURI));
         if (NS_FAILED(rv)) return rv;
 
         // move the reference of the old location to the new one if the new
@@ -1062,7 +1059,7 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         }
 
         // build the new channel
-        rv = NS_OpenURI(getter_AddRefs(newChannel), newURI, serv, mLoadGroup,
+        rv = NS_OpenURI(getter_AddRefs(newChannel), newURI, ioService, mLoadGroup,
                         mCallbacks, mLoadFlags | LOAD_REPLACE);
         if (NS_FAILED(rv)) return rv;
     }
@@ -1329,11 +1326,12 @@ nsHttpChannel::GetUserPassFromURI(nsAString &user,
     if (prehost) {
         nsresult rv;
 
-        nsCOMPtr<nsIIOService> serv = do_GetIOService(&rv);
-        if (NS_FAILED(rv)) return rv;
-
         nsXPIDLCString buf;
-        rv = serv->Unescape(prehost, getter_Copies(buf));
+        nsCOMPtr<nsIIOService> ioService;
+        rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = ioService->Unescape(prehost, getter_Copies(buf));
         if (NS_FAILED(rv)) return rv;
 
         char *p = PL_strchr(buf, ':');
@@ -1777,6 +1775,19 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     NS_ENSURE_ARG_POINTER(listener);
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
+    PRInt32 port;
+    nsresult rv = mURI->GetPort(&port);
+    if (NS_FAILED(rv))
+        return rv;
+ 
+    nsCOMPtr<nsIIOService> ioService;
+    rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_CheckPortSafety(port, "http", ioService); // FIX - other schemes?
+    if (NS_FAILED(rv))
+        return rv;
+    
     mIsPending = PR_TRUE;
 
     mListener = listener;
@@ -1787,7 +1798,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nsnull);
 
-    nsresult rv = Connect();
+    rv = Connect();
     if (NS_FAILED(rv)) {
         LOG(("Connect failed [rv=%x]\n", rv));
 

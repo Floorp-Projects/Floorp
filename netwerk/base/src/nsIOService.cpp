@@ -36,6 +36,7 @@
 #include "netCore.h"
 #include "nsIObserverService.h"
 #include "nsIHttpProtocolHandler.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -43,6 +44,71 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+// A general port blacklist.  Connections to these ports will not be avoided unless 
+// the protocol overrides.
+//
+// TODO: I am sure that there are more ports to be added.  
+//       This cut is based on the classic mozilla codebase
+
+PRInt32 gBadPortList[] = { 
+  1,    // tcpmux          
+  7,    // echo     
+  9,    // discard          
+  11,   // systat   
+  13,   // daytime          
+  15,   // netstat  
+  17,   // qotd             
+  19,   // chargen  
+  20,   // ftp-data         
+  21,   // ftp-cntl 
+  22,   // ssh              
+  23,   // telnet   
+  25,   // smtp     
+  37,   // time     
+  42,   // name     
+  43,   // nicname  
+  53,   // domain  
+  70,   // gopher
+  77,   // priv-rjs 
+  79,   // finger   
+  87,   // ttylink  
+  95,   // supdup   
+  101,  // hostriame
+  102,  // iso-tsap 
+  103,  // gppitnp  
+  104,  // acr-nema 
+  109,  // pop2     
+  110,  // pop3     
+  111,  // sunrpc   
+  113,  // auth     
+  115,  // sftp     
+  117,  // uucp-path
+  119,  // nntp     
+  123,  // NTP
+  135,  // loc-srv / epmap         
+  139,  // netbios
+  143,  // imap2  
+  179,  // BGP
+  389,  // ldap        
+  512,  // print / exec          
+  513,  // login         
+  514,  // shell         
+  515,  // printer         
+  526,  // tempo         
+  530,  // courier        
+  531,  // Chat         
+  532,  // netnews        
+  540,  // uucp       
+  556,  // remotefs    
+  587,  //
+  601,  //       
+  1080, // SOCKS
+  2049, // nfs
+  4045, // lockd
+  6000, // x11        
+  0,    // This MUST be zero so that we can populating the array
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -90,25 +156,76 @@ nsIOService::Init()
 
     // XXX hack until xpidl supports error info directly (http://bugzilla.mozilla.org/show_bug.cgi?id=13423)
     nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_NETWORK, NECKO_MSGS_URL);
-        if (NS_FAILED(rv)) return rv;
-        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_READ_FROM, "ReadFrom");
-        if (NS_FAILED(rv)) return rv;
-        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_WROTE_TO, "WroteTo");
-        if (NS_FAILED(rv)) return rv;
-        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_RESOLVING_HOST, "ResolvingHost");
-        if (NS_FAILED(rv)) return rv;
-        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_CONNECTED_TO, "ConnectedTo");
-        if (NS_FAILED(rv)) return rv;
-        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_SENDING_TO, "SendingTo");
-        if (NS_FAILED(rv)) return rv;
-        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_RECEIVING_FROM, "ReceivingFrom");
-        if (NS_FAILED(rv)) return rv;
-        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_CONNECTING_TO, "ConnectingTo");
-        if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+        return rv;
+    
+    rv = errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_NETWORK, NECKO_MSGS_URL);
+    if (NS_FAILED(rv)) return rv;
+    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_READ_FROM, "ReadFrom");
+    if (NS_FAILED(rv)) return rv;
+    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_WROTE_TO, "WroteTo");
+    if (NS_FAILED(rv)) return rv;
+    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_RESOLVING_HOST, "ResolvingHost");
+    if (NS_FAILED(rv)) return rv;
+    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_CONNECTED_TO, "ConnectedTo");
+    if (NS_FAILED(rv)) return rv;
+    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_SENDING_TO, "SendingTo");
+    if (NS_FAILED(rv)) return rv;
+    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_RECEIVING_FROM, "ReceivingFrom");
+    if (NS_FAILED(rv)) return rv;
+    rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_CONNECTING_TO, "ConnectingTo");
+    if (NS_FAILED(rv)) return rv;
+    
+    // setup our bad port list stuff
+    for(int i=0; gBadPortList[i]; i++)
+    {
+        mRestrictedPortList.AppendElement((void*)gBadPortList[i]);
     }
-    return rv;
+
+    // Lets make it really easy to block extra ports:
+    NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+    if (NS_FAILED(rv) && !prefService) {
+        NS_ASSERTION(0, "Prefs not found!");
+        return NS_ERROR_FAILURE;
+    }
+    
+    char* portList = nsnull;
+    prefService->CopyCharPref("network.security.ports.banned", &portList);
+    if (portList) {
+        char* tokp;
+        char* currentPos = portList;  
+        while ( (tokp = nsCRT::strtok(currentPos, ",", &currentPos)) != nsnull )
+        {
+            nsCAutoString tmp(tokp);
+            tmp.StripWhitespace();
+
+            PRInt32 aErrorCode;
+            PRInt32 value = tmp.ToInteger(&aErrorCode);
+            mRestrictedPortList.AppendElement((void*)value);
+        }
+
+        PL_strfree(portList);
+    }
+    
+    portList = nsnull;
+    prefService->CopyCharPref("network.security.ports.banned.override", &portList);
+    if (portList) {
+        char* tokp;
+        char* currentPos = portList;  
+        while ( (tokp = nsCRT::strtok(currentPos, ",", &currentPos)) != nsnull )
+        {
+            nsCAutoString tmp(tokp);
+            tmp.StripWhitespace();
+
+            PRInt32 aErrorCode;
+            PRInt32 value = tmp.ToInteger(&aErrorCode);
+            mRestrictedPortList.RemoveElement((void*)value);
+        }
+
+        PL_strfree(portList);
+    }
+
+    return NS_OK;
 }
 
 
@@ -398,6 +515,38 @@ nsIOService::SetOffline(PRBool offline)
 }
 
 
+NS_IMETHODIMP
+nsIOService::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    if (port == -1) {
+        *_retval = PR_TRUE;
+        return NS_OK;
+    }
+        
+    // first check to see if the port is in our blacklist:
+    PRInt32 badPortListCnt = mRestrictedPortList.Count();
+    for (int i=0; i<badPortListCnt; i++)
+    {
+        if (port == (PRInt32) mRestrictedPortList[i])
+        {
+            *_retval = PR_FALSE;
+
+            // check to see if the protocol wants to override
+            if (!scheme)
+                return NS_OK;
+            
+            nsCOMPtr<nsIProtocolHandler> handler;
+            nsresult rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
+            if (NS_FAILED(rv)) return rv;
+
+            // let the protocol handler decide
+            return handler->AllowPort(port, scheme, _retval);
+        }
+    }
+
+    *_retval = PR_TRUE;
+    return NS_OK;
+}
 ////////////////////////////////////////////////////////////////////////////////
 // URL parsing utilities
 

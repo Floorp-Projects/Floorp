@@ -4665,6 +4665,31 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
     rv = aURILoader->OpenURI(aChannel,
                              aLoadCmd,
                              NS_STATIC_CAST(nsIDocShell *, this));
+    
+    if (rv == NS_ERROR_PORT_ACCESS_NOT_ALLOWED) {
+        nsCOMPtr<nsIPrompt> prompter;
+        nsCOMPtr<nsIStringBundle> stringBundle;
+
+        GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
+        if (!prompter) return rv;
+
+        nsCOMPtr<nsIStringBundleService> sbs(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+        if (!sbs) return rv;
+
+        sbs->CreateBundle("chrome://necko/locale/necko.properties", 
+                          getter_AddRefs(stringBundle));
+
+        if (!stringBundle)
+            return NS_ERROR_FAILURE;
+
+        nsXPIDLString messageStr;
+        stringBundle->GetStringFromName(NS_LITERAL_STRING("DeniedPortAccess").get(),
+                                            getter_Copies(messageStr));
+
+        prompter->Alert(nsnull, messageStr);
+
+    }
+    
     return rv;
 }
 

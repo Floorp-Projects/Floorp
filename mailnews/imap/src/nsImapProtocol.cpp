@@ -7161,6 +7161,16 @@ PRBool nsImapMockChannel::ReadFromLocalCache()
 NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
   nsresult rv = NS_OK;
+  
+  PRInt32 port;
+  rv = m_url->GetPort(&port);
+  if (NS_FAILED(rv))
+      return rv;
+ 
+  rv = NS_CheckPortSafety(port, "imap");
+  if (NS_FAILED(rv))
+      return rv;
+    
   // set the stream listener and then load the url
   m_channelContext = ctxt;
   m_channelListener = listener;

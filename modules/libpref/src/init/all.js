@@ -244,6 +244,14 @@ pref("offline.download.download_messages",  0);
 pref("offline.prompt_synch_on_exit",            true);
 pref("offline.news.download.use_days",          0);
 
+// If there is ever a security firedrill that requires
+// us to block certian ports global, this is the pref 
+// to use.  Is is a comma delimited list of port numbers
+// for example:
+//   pref("network.security.ports.banned", "1,2,3,4,5");
+// prevents necko connecting to ports 1-5 unless the protocol
+// overrides.
+
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 pref("network.protocols.useSystemDefaults",   false); // set to true if user links should use system default handlers
