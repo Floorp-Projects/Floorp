@@ -178,23 +178,23 @@ CopyASCIItoUCS2( const nsACString& aSource, nsAString& aDest )
 
 NS_COM
 void
-CopyUCS2toUTF8( const nsAString& aSource, nsACString& aDest )
+CopyUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
   {
     aDest.Truncate();
-    AppendUCS2toUTF8(aSource, aDest);
+    AppendUTF16toUTF8(aSource, aDest);
   }
 
 NS_COM
 void
-CopyUTF8toUCS2( const nsACString& aSource, nsAString& aDest )
+CopyUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
   {
     aDest.Truncate();
-    AppendUTF8toUCS2(aSource, aDest);
+    AppendUTF8toUTF16(aSource, aDest);
   }
 
 NS_COM
 void
-AppendUCS2toUTF8( const nsAString& aSource, nsACString& aDest )
+AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
   {
     // This isn't the fastest possible implementation of this method,
     // but it works, and that's better than nothing!
@@ -204,7 +204,7 @@ AppendUCS2toUTF8( const nsAString& aSource, nsACString& aDest )
 
 NS_COM
 void
-AppendUTF8toUCS2( const nsACString& aSource, nsAString& aDest )
+AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
   {
     // This isn't the fastest possible implementation of this method,
     // but it works, and that's better than nothing!

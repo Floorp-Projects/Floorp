@@ -47,11 +47,11 @@ NS_COM size_t Distance( const nsReadingIterator<char>&, const nsReadingIterator<
 
 NS_COM void CopyUCS2toASCII( const nsAString& aSource, nsACString& aDest );
 NS_COM void CopyASCIItoUCS2( const nsACString& aSource, nsAString& aDest );
-NS_COM void CopyUCS2toUTF8( const nsAString& aSource, nsACString& aDest );
-NS_COM void CopyUTF8toUCS2( const nsACString& aSource, nsAString& aDest );
+NS_COM void CopyUTF16toUTF8( const nsAString& aSource, nsACString& aDest );
+NS_COM void CopyUTF8toUTF16( const nsACString& aSource, nsAString& aDest );
 
-NS_COM void AppendUCS2toUTF8( const nsAString& aSource, nsACString& aDest );
-NS_COM void AppendUTF8toUCS2( const nsACString& aSource, nsAString& aDest );
+NS_COM void AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest );
+NS_COM void AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest );
 
   /**
    * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
