@@ -67,15 +67,24 @@ char nsFilePicker::mLastUsedDirectory[PATH_MAX+1] = { 0 };
 //
 //-------------------------------------------------------------------------
 nsFilePicker::nsFilePicker()
-	: mParentWidget( nsnull )
+  : mParentWidget(nsnull)
   , mUnicodeEncoder(nsnull)
   , mUnicodeDecoder(nsnull)
 {
-  mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
-	char *path = getenv( "HOME" );
-	if( path ) {
-		mDisplayDirectory->InitWithNativePath( nsDependentCString(path) );
-		}
+  char *path = getenv("HOME");
+  if (path) {
+    nsCOMPtr<nsILocalFile> displayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
+    if (displayDirectory) {
+      nsresult rv = displayDirectory->InitWithNativePath(nsDependentCString(path));
+      PRBool cond;
+      if (NS_SUCCEEDED(rv) &&
+          NS_SUCCEEDED(displayDirectory->Exists(&cond)) &&
+          cond &&
+          NS_SUCCEEDED(displayDirectory->IsDirectory(&cond)) &&
+          cond)
+        mDisplayDirectory = displayDirectory
+    }
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -124,17 +133,18 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
   char *title = ToNewUTF8String( mTitle );
 
   nsCAutoString initialDir;
-  mDisplayDirectory->GetNativePath(initialDir);
+  if (mDisplayDirectory)
+    mDisplayDirectory->GetNativePath(initialDir);
   // If no display directory, re-use the last one.
   if(initialDir.IsEmpty()) {
     // Allocate copy of last used dir.
     initialDir = mLastUsedDirectory;
   }
 
-	if( !mDefault.IsEmpty() ) {
-		initialDir.AppendWithConversion( NS_LITERAL_STRING( "/" ) );
-		initialDir.AppendWithConversion( mDefault );
-		}
+  if( !mDefault.IsEmpty() ) {
+    initialDir.AppendWithConversion( NS_LITERAL_STRING( "/" ) );
+    initialDir.AppendWithConversion( mDefault );
+  }
 
 	char extensionBuffer[MAX_EXTENSION_LENGTH+1] = "*";
 	if( !mFilterList.IsEmpty() ) {
@@ -220,10 +230,13 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
 			}
 		}
 
-	PL_strncpyz( mLastUsedDirectory, info.path, PATH_MAX+1 );
-	mDisplayDirectory->InitWithNativePath( nsDependentCString(mLastUsedDirectory) );
+  PL_strncpyz( mLastUsedDirectory, info.path, PATH_MAX+1 );
+  if (!mDisplayDirectory)
+    mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
+  if (mDisplayDirectory)
+    mDisplayDirectory->InitWithNativePath( nsDependentCString(mLastUsedDirectory) );
 
-	if( title ) nsMemory::Free( title );
+  if( title ) nsMemory::Free( title );
 		
   return NS_OK;
 

@@ -91,7 +91,6 @@ nsFilePicker::nsFilePicker()
   mUnicodeEncoder = nsnull;
   mUnicodeDecoder = nsnull;
   mSelectedType   = 0;
-  mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
 }
 
 //-------------------------------------------------------------------------
@@ -142,7 +141,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   if (nsnull == title)
     title = ToNewCString(mTitle);
   nsCAutoString initialDir;
-  mDisplayDirectory->GetNativePath(initialDir);
+  if (mDisplayDirectory)
+    mDisplayDirectory->GetNativePath(initialDir);
   // If no display directory, re-use the last one.
   if(initialDir.IsEmpty())
     initialDir = mLastUsedDirectory;
@@ -167,7 +167,10 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     *tempptr = '\0';
     if (filedlg.lReturn == DID_OK) {
       result = PR_TRUE;
-      mDisplayDirectory->InitWithNativePath(nsDependentCString(filedlg.szFullFile));
+      if (!mDisplayDirectory)
+        mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
+      if (mDisplayDirectory)
+        mDisplayDirectory->InitWithNativePath(nsDependentCString(filedlg.szFullFile));
       mFile.Assign(filedlg.szFullFile);
     }
   }
@@ -338,9 +341,10 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   if (result) {
     PRInt16 returnOKorReplace = returnOK;
 
+    nsresult rv;
     // Remember last used directory.
-    nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
-    NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+    nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1", &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     file->InitWithNativePath(mFile);
     nsCOMPtr<nsIFile> dir;
@@ -353,7 +357,10 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
           PL_strncpyz(mLastUsedDirectory, newDir.get(), MAX_PATH+1);
         // Update mDisplayDirectory with this directory, also.
         // Some callers rely on this.
-        mDisplayDirectory->InitWithNativePath( nsDependentCString(mLastUsedDirectory) );
+        if (!mDisplayDirectory)
+           mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
+        if (mDisplayDirectory)
+           mDisplayDirectory->InitWithNativePath( nsDependentCString(mLastUsedDirectory) );
       }
     }
 
