@@ -683,6 +683,7 @@ public:
                                          nsIContentIterator** aIterator) const;
  
   NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, nsEventStatus* aStatus);
+  NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame);
 
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked);  
 
@@ -3695,6 +3696,13 @@ PresShell::GetCurrentEventFrame()
   }
 
   return mCurrentEventFrame;
+}
+
+NS_IMETHODIMP
+PresShell::GetEventTargetFrame(nsIFrame** aFrame)
+{
+	*aFrame = GetCurrentEventFrame();
+	return NS_OK;
 }
 
 void

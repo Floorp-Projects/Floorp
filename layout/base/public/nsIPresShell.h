@@ -387,6 +387,11 @@ public:
                                    nsEventStatus* aStatus) = 0;
 
   /**
+    * Gets the current target event frame from the PresShell
+    */
+  NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame) = 0;
+
+  /**
    * Get and set the history state for the current document 
    */
 

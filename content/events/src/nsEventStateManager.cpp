@@ -2054,6 +2054,14 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
     }
   }
 
+  if (!mCurrentTarget) {
+	  nsCOMPtr<nsIPresShell> presShell;
+	  mPresContext->GetShell(getter_AddRefs(presShell));
+	  if (presShell) {
+	    presShell->GetEventTargetFrame(&mCurrentTarget);
+	  }
+  }
+
   *aFrame = mCurrentTarget;
   return NS_OK;
 }
@@ -2074,7 +2082,15 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent, nsIContent** aConten
     NS_IF_ADDREF(*aContent);
     return NS_OK;      
   }
-  
+
+  if (!mCurrentTarget) {
+	  nsCOMPtr<nsIPresShell> presShell;
+	  mPresContext->GetShell(getter_AddRefs(presShell));
+	  if (presShell) {
+	    presShell->GetEventTargetFrame(&mCurrentTarget);
+	  }
+  }
+
   if (mCurrentTarget) {
     mCurrentTarget->GetContentForEvent(mPresContext, aEvent, aContent);
     return NS_OK;
