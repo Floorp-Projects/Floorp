@@ -855,6 +855,7 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
 
   nsAutoString url;
   GetURL(parentContent, url);
+  url.Trim(" \t\n\r");
   if (url.IsEmpty())  // Load about:blank into a frame if not URL is specified (bug 35986)
     url = NS_ConvertASCIItoUCS2("about:blank");
 
