@@ -564,6 +564,15 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 
   gIsFindingText = PR_TRUE; // prevents listener callbacks from resetting us during typeahead find processing
   nsresult rv = FindItNow(isLinksOnly, isFirstVisiblePreferred, isBackspace);
+
+  // ------- If accessibility.typeaheadfind.timeout is set, cancel find after specified # milliseconds
+  if (mTimeoutLength) {
+    if (!mTimer)
+      mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (mTimer)
+      mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), mTimeoutLength);
+  }
+
   gIsFindingText = PR_FALSE;
 
   if (NS_SUCCEEDED(rv)) {
@@ -590,13 +599,6 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       mFindService->SetFindBackwards(PR_FALSE);
     }
 
-    // ------- If accessibility.typeaheadfind.timeout is set, cancel find after specified # milliseconds
-    if (mTimeoutLength) {
-      if (!mTimer)
-        mTimer = do_CreateInstance("@mozilla.org/timer;1");
-      if (mTimer)
-        mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), mTimeoutLength);
-    }
     if (mTypeAheadBuffer.Length() == 1) {  // If first letter, store where the first find succeeded (mStartFindRange)
       mStartFindRange = nsnull;
       nsCOMPtr<nsIDOMRange> startFindRange;
