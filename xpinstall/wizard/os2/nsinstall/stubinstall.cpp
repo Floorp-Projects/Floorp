@@ -154,9 +154,9 @@ GetFullTempPathName(PCSZ szFileName, ULONG ulBufferLength, PSZ szBuffer)
   strcpy(szBuffer, szOSTempDir);
   AppendBackSlash(szBuffer, MAX_BUF);
   strcat(szBuffer, WIZ_TEMP_DIR);
-  AppendBackSlash(szBuffer, MAX_BUF);
 
   if (szFileName) {
+    AppendBackSlash(szBuffer, MAX_BUF);
     strcat(szBuffer, szFileName);
   }
 
@@ -548,7 +548,7 @@ void RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
   GetFullTempPathName("xpcom.ns", sizeof(szTempPath), szTempPath);
   DirectoryRemove(szTempPath, TRUE);
   GetFullTempPathName(NULL, sizeof(szTempPath), szTempPath);
-  DirectoryRemove(szTempPath, FALSE);
+  DirectoryRemove(szTempPath, TRUE);
 }
 
 int main(int argc, char *argv[], char *envp[])
