@@ -37,8 +37,10 @@ static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
  * - scroll frame
  * - root frame
  *
- * It has an additional named child list:
+ * The viewport frame has an additional named child list:
  * - "Fixed-list" which contains the fixed positioned frames
+ *
+ * @see nsLayoutAtoms::fixedList
  */
 class ViewportFrame : public nsContainerFrame {
 public:
@@ -57,6 +59,13 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+  
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::viewportFrame
+   */
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
@@ -450,6 +459,15 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.descent = 0;
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ViewportFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::viewportFrame; 
+  NS_ADDREF(*aType);
   return NS_OK;
 }
 

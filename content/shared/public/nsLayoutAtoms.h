@@ -61,6 +61,13 @@ public:
   static nsIAtom* commentTagName;
   static nsIAtom* textTagName;
   static nsIAtom* viewportPseudo;
+
+  // Alphabetical list of frame types
+  static nsIAtom* areaFrame;
+  static nsIAtom* pageFrame;
+  static nsIAtom* rootFrame;
+  static nsIAtom* scrollFrame;
+  static nsIAtom* viewportFrame;
 };
 
 #endif /* nsLayoutAtoms_h___ */

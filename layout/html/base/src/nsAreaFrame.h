@@ -84,6 +84,13 @@ public:
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::areaFrame
+   */
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   // nsIAreaFrame

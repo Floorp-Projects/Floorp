@@ -24,6 +24,7 @@
 #include "nsIRenderingContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
+#include "nsLayoutAtoms.h"
 
 NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
@@ -142,6 +143,15 @@ nsPageFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   cf->Init(aPresContext, mContent, aParent, aStyleContext);
   cf->AppendToFlow(this);
   aContinuingFrame = cf;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPageFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::pageFrame; 
+  NS_ADDREF(*aType);
   return NS_OK;
 }
 
