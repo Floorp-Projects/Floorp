@@ -17,6 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author(s):
+ *   Chris Waterson <waterson@netscape.com>
+ *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
@@ -2121,15 +2124,13 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
 PRBool
 nsXULElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 PRBool
 nsXULElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 PRBool
@@ -2141,15 +2142,14 @@ nsXULElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval 
 PRBool
 nsXULElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return PR_FALSE;
+    // XXXwaterson do the event handlers here!
+    return PR_TRUE;
 }
 
 PRBool
 nsXULElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 
@@ -2163,15 +2163,13 @@ nsXULElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 PRBool
 nsXULElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 
 void
 nsXULElement::Finalize(JSContext *aContext, JSObject *aObj)
 {
-    NS_NOTYETIMPLEMENTED("write me");
 }
 
 
