@@ -603,6 +603,7 @@ case "$target" in
     DSO_LDOPTS='-compatibility_version 1 -current_version 1'
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
+    STRIP="$STRIP -x -S"
     case "${target_cpu}" in
     powerpc*)
         AC_DEFINE(NO_X11)
