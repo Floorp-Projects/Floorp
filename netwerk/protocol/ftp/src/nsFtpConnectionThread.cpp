@@ -27,6 +27,7 @@
 
 #include "prcmon.h"
 #include "prprf.h"
+#include "netCore.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -429,8 +430,11 @@ nsFtpConnectionThread::Run() {
 
                 if (mResponseCode != 2)  {
                     // failed. increment to port.
-                    mState = FTP_S_PORT;
+                    // mState = FTP_S_PORT;
+
                     mUsePasv = PR_FALSE;
+                    // until we have PORT support, we'll just fail.
+                    mState = FTP_ERROR;
                     break;
                 }
 
@@ -471,8 +475,11 @@ nsFtpConnectionThread::Run() {
 
                 if (fields < 6) {
                     // bad format. we'll try PORT, but it's probably over.
-                    mState = FTP_S_PORT;
+                    
                     mUsePasv = PR_FALSE;
+                    // until we have port support, we'll just fail
+                    //mState = FTP_S_PORT;
+                    mState = FTP_ERROR;
                     break;
                 }
 
@@ -631,7 +638,7 @@ nsFtpConnectionThread::Init(nsIThread* aThread) {
 nsresult
 nsFtpConnectionThread::SetAction(FTP_ACTION aAction) {
     if (mConnected)
-        return NS_ERROR_NOT_IMPLEMENTED;
+        return NS_ERROR_ALREADY_CONNECTED;
     mAction = aAction;
     return NS_OK;
 }
@@ -639,7 +646,7 @@ nsFtpConnectionThread::SetAction(FTP_ACTION aAction) {
 nsresult
 nsFtpConnectionThread::SetUsePasv(PRBool aUsePasv) {
     if (mConnected)
-        return NS_ERROR_NOT_IMPLEMENTED;
+        return NS_ERROR_ALREADY_CONNECTED;
     mUsePasv = aUsePasv;
     return NS_OK;
 }
@@ -719,7 +726,9 @@ nsFtpConnectionThread::FindActionState(void) {
         if (mUsePasv)
             return FTP_S_PASV;
         else
-            return FTP_S_PORT;
+            // until we have PORT support, we'll just fail.
+            // return FTP_S_PORT;
+            return FTP_ERROR;
     }
 
     // These operations use the command channel response as the
