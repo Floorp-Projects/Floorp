@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 #// DIRS          - There are subdirectories to process
 #//
 #//------------------------------------------------------------------------
-DIRS= classes src
+DIRS= classes_spec src_moz
 
 #//------------------------------------------------------------------------
 #//

@@ -48,39 +48,66 @@ CPPSRCS		= \
     nsSetupRegistry.cpp  \
     $(NULL)
 
+
+EXTRA_DSO_LDOPTS = \
+		-L$(DIST)/bin \
+		-L$(DIST)/lib \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(NULL)
+
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-JAVA_CLS= \
-	org.mozilla.webclient.wrapper_native.BookmarksImpl \
-	org.mozilla.webclient.wrapper_native.CurrentPageImpl \
-	org.mozilla.webclient.wrapper_native.HistoryImpl \
-	org.mozilla.webclient.wrapper_native.WrapperFactoryImpl \
-	org.mozilla.webclient.wrapper_native.NavigationImpl \
-	org.mozilla.webclient.wrapper_native.RDFEnumeration \
-	org.mozilla.webclient.wrapper_native.RDFTreeNode \
-	org.mozilla.webclient.wrapper_native.ISupportsPeer \
-	org.mozilla.webclient.wrapper_native.WindowControlImpl \
-	org.mozilla.webclient.wrapper_native.NativeEventThread \
+INCLUDES	= -I$(JDKHOME)/include -I$(JDKHOME)/solaris/include -I$(DIST)/include $(DEPTH)/widget/src/gtk
+#CXXFLAGS	+= $(MOZ_GTK_CFLAGS)
+#CXXDEFS		+= -D_REENTRANT -DXP_UNIX -DNS_DEBUG -DDEBUG_RAPTOR_CANVAS
+#CFLAGS		+= $(MOZ_GTK_CFLAGS)
+
+
+JAVAH_CLS= \
+	"-o BookmarksImpl.h org.mozilla.webclient.wrapper_native.BookmarksImpl" \
+	"-o CurrentPageImpl.h org.mozilla.webclient.wrapper_native.CurrentPageImpl" \
+	"-o HistoryImpl.h org.mozilla.webclient.wrapper_native.HistoryImpl" \
+	"-o WrapperFactoryImpl.h org.mozilla.webclient.wrapper_native.WrapperFactoryImpl" \
+	"-o NavigationImpl.h org.mozilla.webclient.wrapper_native.NavigationImpl" \
+	"-o RDFEnumeration.h org.mozilla.webclient.wrapper_native.RDFEnumeration" \
+	"-o RDFTreeNode.h org.mozilla.webclient.wrapper_native.RDFTreeNode" \
+	"-o ISupportsPeer.h org.mozilla.webclient.wrapper_native.ISupportsPeer" \
+	"-o WindowControlImpl.h org.mozilla.webclient.wrapper_native.WindowControlImpl" \
+	"-o NativeEventThread.h org.mozilla.webclient.wrapper_native.NativeEventThread" \
+	$(NULL)
+
+JAVAH_FILES=\
+	BookmarksImpl.h \
+	CurrentPageImpl.h \
+	HistoryImpl.h \
+	WrapperFactoryImpl.h \
+	NavigationImpl.h \
+	RDFEnumeration.h \
+	RDFTreeNode.h \
+	ISupportsPeer.h \
+	WindowControlImpl.h \
+	NativeEventThread.h \
 	$(NULL)
 
 JAVAH_PROG=$(JDKHOME)/bin/javah
 JAVAH_FLAGS=-jni -classpath $(CLASSPATH):$(JAVA_DESTPATH)
 
-export::
-	$(JAVAH_PROG) $(JAVAH_FLAGS) $(JAVA_CLS)
+export:: $(JAVAH_FILES)
 
-clobber::
-	rm -f BookmarksImpl.h
-	rm -f CurrentPageImpl.h
-	rm -f HistoryImpl.h
-	rm -f WrapperFactoryImpl.h
-	rm -f NavigationImpl.h
-	rm -f WindowControlImpl.h
-	rm -f NativeEventThread.h
-	rm -f RDFEnumeration.h
-	rm -f RDFTreeNode.h
-	rm -f ISupportsPeer.h
+$(JAVAH_FILES): 
+	@for c in $(JAVAH_CLS); do \
+		echo $(JAVAH_PROG) $(JAVAH_FLAGS) $$c; \
+		$(JAVAH_PROG) $(JAVAH_FLAGS) $$c; \
+	done
+
+#		$(JAVAH_PROG) $(JAVAH_FLAGS) $$c \
+
+clobber_all::
+	rm -f $(JAVAH_FILES)
 	rm -f nsSetupRegistry.cpp
 
