@@ -23,6 +23,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
+#include "nsIDOMNode.h"
 #include "plhash.h"
 
 class nsIHTMLStyleSheet;
@@ -111,25 +112,29 @@ public:
 protected:
   // Find/Search Method/Data member
   PRBool SearchBlock(BlockText    & aBlockText, 
-                     nsString     & aStr);
+                     nsString     & aStr,
+                     nsIDOMNode * aCurrentBlock);
 
-  PRBool ContentIsBlock(nsIContent * aContent);
-  nsIContent * FindBlockParent(nsIContent * aContent, 
+  PRBool NodeIsBlock(nsIDOMNode * aNode);
+  nsIDOMNode * FindBlockParent(nsIDOMNode * aNode, 
                                PRBool aSkipThisContent = PR_FALSE);
 
-  PRBool BuildBlockTraversing(nsIContent   * aParent,
-                              BlockText    & aBlockText);
+  PRBool BuildBlockTraversing(nsIDOMNode   * aParent,
+                              BlockText    & aBlockText,
+                              nsIDOMNode * aCurrentBlock);
 
-  PRBool BuildBlockFromContent(nsIContent   * aContent,
-                              BlockText    & aBlockText);
+  PRBool BuildBlockFromContent(nsIDOMNode   * aNode,
+                              BlockText    & aBlockText,
+                              nsIDOMNode * aCurrentBlock);
 
-  PRBool BuildBlockFromStack(nsIContent * aParent,
+  PRBool BuildBlockFromStack(nsIDOMNode * aParent,
                              BlockText  & aBlockText,
-                             PRInt32      aStackInx);
+                             PRInt32      aStackInx,
+                             nsIDOMNode * aCurrentBlock);
 
   // Search/Find Data Member
-  nsIContent ** mParentStack;
-  nsIContent ** mChildStack;
+  nsIDOMNode ** mParentStack;
+  nsIDOMNode ** mChildStack;
   PRInt32       mStackInx;
 
   nsString   * mSearchStr;
@@ -138,9 +143,8 @@ protected:
   PRInt32      mLastBlockSearchOffset;
   PRBool       mAdjustToEnd;
 
-  nsIContent * mHoldBlockContent;
-  nsIContent * mCurrentBlockContent;
-  nsIContent * mBodyContent;
+  nsIDOMNode * mHoldBlockContent;
+  nsIDOMNode * mBodyContent;
 
   PRBool       mShouldMatchCase;
   PRBool       mIsPreTag;
