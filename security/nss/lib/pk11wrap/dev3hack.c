@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.14 $ $Date: 2002/04/19 23:06:41 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.15 $ $Date: 2002/04/25 00:25:58 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -162,9 +162,8 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
                                                        nss3slot->session,
                                                        nss3slot->sessionLock,
                                                        nss3slot->defRWSession);
-    /* if (!PK11_IsInternal(nss3slot) && PK11_IsHW(nss3slot)) */
     /* The above test was used in 3.4, for this cache have it always on */
-    if (PR_TRUE) {
+    if (!PK11_IsInternal(nss3slot) && PK11_IsHW(nss3slot)) {
 	rvToken->cache = nssTokenObjectCache_Create(rvToken, 
 	                                            PR_TRUE, PR_TRUE, PR_TRUE);
 	if (!rvToken->cache) {
