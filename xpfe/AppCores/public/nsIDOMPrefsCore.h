@@ -44,6 +44,8 @@ public:
   NS_IMETHOD    SavePrefs()=0;
 
   NS_IMETHOD    CancelPrefs()=0;
+
+  NS_IMETHOD    SetSubstitutionVar(PRInt32 aStringnum, const nsString& aVal)=0;
 };
 
 
@@ -53,6 +55,7 @@ public:
   NS_IMETHOD    PanelLoaded(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SavePrefs();  \
   NS_IMETHOD    CancelPrefs();  \
+  NS_IMETHOD    SetSubstitutionVar(PRInt32 aStringnum, const nsString& aVal);  \
 
 
 
@@ -62,6 +65,7 @@ public:
   NS_IMETHOD    PanelLoaded(nsIDOMWindow* aWin) { return _to##PanelLoaded(aWin); }  \
   NS_IMETHOD    SavePrefs() { return _to##SavePrefs(); }  \
   NS_IMETHOD    CancelPrefs() { return _to##CancelPrefs(); }  \
+  NS_IMETHOD    SetSubstitutionVar(PRInt32 aStringnum, const nsString& aVal) { return _to##SetSubstitutionVar(aStringnum, aVal); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitPrefsCoreClass(nsIScriptContext *aContext, void **aPrototype);
