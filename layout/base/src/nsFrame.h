@@ -205,6 +205,24 @@ public:
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
   NS_IMETHOD  VerifyTree() const;
 
+    // Selection Methods
+  NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+                   nsGUIEvent *    aEvent,
+                   nsEventStatus&  aEventStatus);
+
+  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+                   nsGUIEvent *    aEvent,
+                   nsEventStatus&  aEventStatus);
+
+  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+                   nsGUIEvent *    aEvent,
+                   nsEventStatus&  aEventStatus);
+
+  virtual PRInt32 GetPosition(nsIPresContext& aPresContext,
+                              nsGUIEvent*     aEvent,
+                              nsIFrame *      aNewFrame,
+                              PRUint32&       aAcutalContentOffset);
+
   //--------------------------------------------------
   // Additional methods
 
@@ -225,22 +243,6 @@ public:
 #endif
 
 protected:
-    // Selection Methods
-  NS_METHOD HandlePress(nsIPresContext& aPresContext,
-                   nsGUIEvent *    aEvent,
-                   nsEventStatus&  aEventStatus,
-                   nsFrame  *      aFrame);
-
-  NS_METHOD HandleDrag(nsIPresContext& aPresContext,
-                   nsGUIEvent *    aEvent,
-                   nsEventStatus&  aEventStatus,
-                   nsFrame  *      aFrame);
-
-  NS_METHOD HandleRelease(nsIPresContext& aPresContext,
-                   nsGUIEvent *    aEvent,
-                   nsEventStatus&  aEventStatus,
-                   nsFrame  *      aFrame);
-
   virtual void NewContentIsBefore(nsIPresContext& aPresContext,
                           nsGUIEvent * aEvent,
                           nsIContent * aNewContent,
@@ -252,11 +254,6 @@ protected:
                          nsIContent * aNewContent,
                          nsIContent * aCurrentContent,
                          nsIFrame   * aNewFrame);
-
-  virtual PRInt32 GetPosition(nsIPresContext& aPresContext,
-                              nsGUIEvent*     aEvent,
-                              nsIFrame *      aNewFrame,
-                              PRUint32&       aAcutalContentOffset);
 
   virtual void AdjustPointsInNewContent(nsIPresContext& aPresContext,
                                 nsGUIEvent    * aEvent,

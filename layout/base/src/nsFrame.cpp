@@ -576,15 +576,15 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
 
     if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
       if (mDoingSelection) {
-        HandleRelease(aPresContext, aEvent, aEventStatus, this);
+        HandleRelease(aPresContext, aEvent, aEventStatus);
       }
     } else if (aEvent->message == NS_MOUSE_MOVE) {
       mDidDrag = PR_TRUE;
-      HandleDrag(aPresContext, aEvent, aEventStatus, this);
+      HandleDrag(aPresContext, aEvent, aEventStatus);
       if (SELECTION_DEBUG) printf("HandleEvent(Drag)::mSelectionRange %s\n", mSelectionRange->ToString());
 
     } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-      HandlePress(aPresContext, aEvent, aEventStatus, this);
+      HandlePress(aPresContext, aEvent, aEventStatus);
     }
   }
 
@@ -596,8 +596,7 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
  */
 NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext, 
                                nsGUIEvent*     aEvent,
-                               nsEventStatus&  aEventStatus,
-                               nsFrame *       aFrame)
+                               nsEventStatus&  aEventStatus)
 {
   if (DisplaySelection(aPresContext, PR_TRUE) == PR_FALSE)
   {
@@ -605,7 +604,7 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  nsFrame          * currentFrame   = aFrame;
+  nsFrame          * currentFrame   = this;
   nsIPresShell     * shell          = aPresContext.GetShell();
   
   gDoc = shell->GetDocument();
@@ -777,8 +776,7 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
 
 NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext, 
                               nsGUIEvent*     aEvent,
-                              nsEventStatus&  aEventStatus,
-                              nsFrame *       aFrame)
+                              nsEventStatus&  aEventStatus)
 {
   if (DisplaySelection(aPresContext) == PR_FALSE)
   {
@@ -792,11 +790,11 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
 
   mDidDrag = PR_TRUE;
 
-  if (aFrame != nsnull) {
+  //if (aFrame != nsnull) {
     //printf("nsFrame::HandleDrag\n");
 
     // Check to see if we have changed frame
-    if (aFrame != mCurrentFrame) {
+    if (this != mCurrentFrame) {
       // We are in a new Frame!
       if (SELECTION_DEBUG) printf("HandleDrag::Different Frame in selection!\n");
 
@@ -806,28 +804,28 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
 
       // Get Content for New Frame
       nsIContent * newContent;
-      aFrame->GetContent(newContent);
+      this->GetContent(newContent);
 
       // Check to see if we are still in the same Content
       if (currentContent == newContent) {
         if (SELECTION_DEBUG) printf("HandleDrag::New Frame, same content.\n");
 
-        AdjustPointsInNewContent(aPresContext, aEvent, aFrame);
+        AdjustPointsInSameContent(aPresContext, aEvent);
         addRangeToSelectionTrackers(currentContent, currentContent, kInsertInAddList);
 
       } else if (gDoc->IsBefore(newContent, currentContent)) {
         if (SELECTION_DEBUG) printf("HandleDrag::New Frame, is Before.\n");
 
         resetContentTrackers();
-        NewContentIsBefore(aPresContext, aEvent, newContent, currentContent, aFrame);
+        NewContentIsBefore(aPresContext, aEvent, newContent, currentContent, this);
 
       } else { // Content is AFTER
         if (SELECTION_DEBUG) printf("HandleDrag::New Frame, is After.\n");
 
         resetContentTrackers();
-        NewContentIsAfter(aPresContext, aEvent, newContent, currentContent, aFrame);
+        NewContentIsAfter(aPresContext, aEvent, newContent, currentContent, this);
       }
-      mCurrentFrame = aFrame;
+      mCurrentFrame = this;
 
       NS_RELEASE(currentContent);
       NS_RELEASE(newContent);
@@ -850,11 +848,11 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
 
         // Get Content for New Frame
         nsIContent * newContent;
-        aFrame->GetContent(newContent);
+        this->GetContent(newContent);
         PRInt32  newPos       = -1;
         PRUint32 actualOffset = 0;
 
-        newPos = GetPosition(aPresContext, aEvent, aFrame, actualOffset);
+        newPos = GetPosition(aPresContext, aEvent, this, actualOffset);
 
         if (newContent == selStartContent) {
           if (SELECTION_DEBUG) printf("New Content equals Start Content\n");
@@ -877,7 +875,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
       NS_IF_RELEASE(selStartContent);
       NS_IF_RELEASE(selEndContent);
     }
-  }
+  //}
 
 
   NS_IF_RELEASE(startContent);
@@ -894,8 +892,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
 
 NS_METHOD nsFrame::HandleRelease(nsIPresContext& aPresContext, 
                                  nsGUIEvent*     aEvent,
-                                 nsEventStatus&  aEventStatus,
-                                 nsFrame *       aFrame)
+                                 nsEventStatus&  aEventStatus)
 {
   mDoingSelection = PR_FALSE;
   aEventStatus = nsEventStatus_eIgnore;
@@ -980,6 +977,7 @@ void nsFrame::AdjustPointsInSameContent(nsIPresContext& aPresContext,
 
   // Get new Cursor Poition in the same content
   PRInt32 newPos = GetPosition(aPresContext, aEvent, mCurrentFrame, actualOffset);
+  //newPos += actualOffset;
   if (SELECTION_DEBUG) printf("AdjustTextPointsInSameContent newPos: %d\n", newPos);
 
   if (mStartSelectionPoint->IsAnchor()) {
