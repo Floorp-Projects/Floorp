@@ -6070,26 +6070,6 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
     }
 #endif
   }
-  else {
-    if (!(mState & NS_FRAME_IS_DIRTY)) {      
-      // Mark yourself as dirty
-      mState |= NS_FRAME_IS_DIRTY;
-
-      // Cancel the dirty children reflow command you posted earlier
-      nsReflowType type = eReflowType_ReflowDirty;
-      aPresShell->CancelReflowCommand(this, &type);
-
-#ifdef DEBUG
-      if (gNoisyReflow) {
-        IndentBy(stdout, gNoiseIndent);
-        printf("cancelled reflow targeted at self\n");
-      }
-#endif
-
-      // Pass up the reflow request to the parent frame.
-      mParent->ReflowDirtyChild(aPresShell, this);
-    }
-  }
 
 #ifdef DEBUG
   if (gNoisyReflow) {
