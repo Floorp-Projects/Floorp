@@ -48,6 +48,7 @@
 #include "nsIFile.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
+#include "nsITimer.h"
 
 class nsIPermission;
 
@@ -171,8 +172,13 @@ private:
   nsHostEntry *GetHostEntry(const nsAFlatCString &aHost,
                             PRUint32              aType);
 
+  // Use LazyWrite to save the permissions file on a timer. It will write
+  // the file only once if repeatedly hammered quickly.
+  void        LazyWrite();
+  static void DoLazyWrite(nsITimer *aTimer, void *aClosure);
+  nsresult    Write();
+
   nsresult Read();
-  nsresult Write();
   void     NotifyObserversWithPermission(const nsACString &aHost,
                                          const char       *aType,
                                          PRUint32          aPermission,
@@ -184,6 +190,7 @@ private:
 
   nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<nsIFile>            mPermissionsFile;
+  nsCOMPtr<nsITimer>           mWriteTimer;
   nsTHashtable<nsHostEntry>    mHostTable;
   PRUint32                     mHostCount;
   PRPackedBool                 mChangedList;
