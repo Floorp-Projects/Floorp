@@ -220,8 +220,11 @@ nsresult nsComponentManagerImpl::Init(void)
     PlatformVersionCheck();
 #endif
 
-    // Initiate autoreg
+#if !defined(XP_UNIX)
+    // The below code is being moved out into the applications using using
+    // nsSpecialSystemDirectory platform by platform.
     AutoRegister(NS_Startup, NULL);
+#endif /* !XP_UNIX */
 
     return NS_OK;
 }
@@ -1575,7 +1578,9 @@ nsComponentManagerImpl::AutoRegister(RegistrationTime when,
     {
         SyncComponentsInPathList(pathlist);
     }
-	
+#if !defined(XP_UNIX)
+    // The below code is being moved out into the applications using using
+    // nsSpecialSystemDirectory platform by platform.
 #ifdef	XP_MAC
     // get info for the the current process to determine the directory its located in
     if (!(err = GetCurrentProcess(&psn)))
@@ -1628,6 +1633,7 @@ nsComponentManagerImpl::AutoRegister(RegistrationTime when,
     const char *defaultPathList = "./components";
     SyncComponentsInPathList(defaultPathList);
 #endif
+#endif /* !XP_UNIX */
     return NS_OK;
 }
 
