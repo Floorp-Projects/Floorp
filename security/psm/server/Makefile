@@ -38,13 +38,21 @@ endif
 
 # The following don't need a CPLUSPLUSRUNTIME defined:  WINNT, HP-UX
 # so filter them out.
-ifeq (,$(filter WINNT HP-UX,$(OS_ARCH)))
+ifeq (,$(filter WINNT HP-UX SunOS, $(OS_ARCH)))
 ifeq (,$(filter-out Linux FreeBSD, $(OS_ARCH)))
 # On linux, we link with libstdc++ (we're always using egcs on linux, right?)
 CPLUSPLUSRUNTIME = -L /usr/lib -lstdc++ -lm
 else
 # libC, presumably, is what we must link with elsewhere
 CPLUSPLUSRUNTIME = -lC -lm
+endif
+endif
+
+ifeq ($(OS_ARCH), SunOS)
+ifeq ($(CC), gcc)
+CPLUSPLUSRUNTIME = -lstdc++ -lm
+else
+CPLUSPLUSRUNTIME = -lCrun -lm
 endif
 endif
 
@@ -149,7 +157,11 @@ XPCOM_LIBS = \
 
 
 ifeq ($(OS_ARCH), SunOS)
+ifeq ($(CC), gcc)
+NSPR_LINK_LIBS = -L$(DIST)/lib -lnspr4 -lplc4 -lplds4
+else
 NSPR_LINK_LIBS = -L$(DIST)/lib -Bdynamic -lnspr4 -lplc4 -lplds4
+endif
 XPCOM_LINK_LIBS = -lxpcom
 XPCOM_LIBS += $(DIST)/lib/libz.$(DLL_SUFFIX)
 else
