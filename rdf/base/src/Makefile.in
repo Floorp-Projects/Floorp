@@ -35,6 +35,7 @@ CPPSRCS		= \
 		nsCompositeDataSource.cpp \
 		nsContainerEnumerator.cpp \
 		nsDefaultResourceFactory.cpp \
+		nsFixedSizeAllocator.cpp \
 		nsInMemoryDataSource.cpp \
 		nsRDFContentSink.cpp \
 		nsRDFContainer.cpp \
