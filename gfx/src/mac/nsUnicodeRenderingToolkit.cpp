@@ -582,7 +582,7 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackGetWidth(
       CGrafPtr thePort;
       ::GetPort((GrafPtr*)&thePort);
 	    short aSize = ::GetPortTextSize(thePort);		 		
-  		PRInt32 l=nsCRT::strlen(conv);
+  		PRInt32 l=strlen(conv);
     	if((l>3) && ('^' == conv[0]) && ('(' == conv[1]) && (')' == conv[l-1])) // sup
     	{
     		short small = aSize * 2 / 3;
@@ -642,7 +642,7 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackDrawChar(
 	    CGrafPtr thePort;
 	    ::GetPort((GrafPtr*)&thePort);
 	    short aSize = ::GetPortTextSize(thePort);		
-    	PRInt32 l=nsCRT::strlen(conv);
+    	PRInt32 l=strlen(conv);
     	if((l>3) && ('^' == conv[0]) && ('(' == conv[1]) && (')' == conv[l-1])) // sup
     	{
     		short small = aSize * 2 / 3;

@@ -140,7 +140,7 @@ PRBool nsEudoraMac::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni, ns
 									PRBool	isBk = PR_FALSE;
 									PRInt32 len;
 									if (pLeafName) {
-										len = nsCRT::strlen( pLeafName);
+										len = strlen( pLeafName);
 										if (len > 5)
 											isBk = (nsCRT::strcasecmp( pLeafName + len - 5, ".bkup") == 0);
 										nsCRT::free( pLeafName);
@@ -148,7 +148,7 @@ PRBool nsEudoraMac::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni, ns
 									if (!isBk) {
 										pLeafName = pref.GetLeafName();
 										if (pLeafName) {
-											len = nsCRT::strlen( pLeafName);
+											len = strlen( pLeafName);
 											if (len > 5)
 												isBk = (nsCRT::strcasecmp( pLeafName + len - 5, ".bkup") == 0);
 											nsCRT::free( pLeafName);

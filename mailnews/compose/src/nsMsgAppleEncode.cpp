@@ -124,7 +124,7 @@ int fill_apple_mime_header(
 	PR_snprintf(tmpstr, sizeof(tmpstr), "--%s"CRLF, p_ap_encode_obj->boundary);
 	status = write_stream(p_ap_encode_obj, 
 						tmpstr, 
-						nsCRT::strlen(tmpstr));
+						strlen(tmpstr));
 	return status;
 } 
 
@@ -148,7 +148,7 @@ int ap_encode_file_infor(
 	int	 		status;
 
 	strcpy((char *)fname+1,p_ap_encode_obj->fname);
-	fname[0] = nsCRT::strlen(p_ap_encode_obj->fname);
+	fname[0] = strlen(p_ap_encode_obj->fname);
 	
 	fpb->ioNamePtr = fname;
 	fpb->ioDirID   = p_ap_encode_obj->dirId;
@@ -356,7 +356,7 @@ int ap_encode_header(
 					
 		status = write_stream(p_ap_encode_obj,
 						rd_buff,
-						nsCRT::strlen(rd_buff));
+						strlen(rd_buff));
 		if (status == noErr)
 			status = errDone;
 	}
@@ -402,7 +402,7 @@ static char *magic_look(char *inbuff, int numread)
 	for (i=0; i<num_magic; i++) 
 	{
 	   	if (magic[i].len == 0) 
-	   		magic[i].len = nsCRT::strlen(magic[i].num);
+	   		magic[i].len = strlen(magic[i].num);
 	}
 
     for (i=0; i<num_magic; i++) 
@@ -447,7 +447,7 @@ int ap_encode_data(
 		/*
 		** preparing to encode the data fork.
 		*/
-		name[0] = nsCRT::strlen(p_ap_encode_obj->fname);
+		name[0] = strlen(p_ap_encode_obj->fname);
     PL_strcpy((char*)name+1, p_ap_encode_obj->fname);
 		if (HOpen( 	p_ap_encode_obj->vRefNum,
 					p_ap_encode_obj->dirId, 
@@ -491,7 +491,7 @@ int ap_encode_data(
 			
 		status = write_stream(p_ap_encode_obj, 
 					rd_buff, 
-					nsCRT::strlen(rd_buff)); 
+					strlen(rd_buff)); 
 		if (status != noErr)
 			return status;
 	}
@@ -533,7 +533,7 @@ int ap_encode_data(
 	
 		status = write_stream(p_ap_encode_obj,
 						rd_buff,
-						nsCRT::strlen(rd_buff));
+						strlen(rd_buff));
 	
 		if (status == noErr)				
 			status = errDone;

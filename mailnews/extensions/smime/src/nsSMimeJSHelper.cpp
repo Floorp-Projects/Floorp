@@ -169,7 +169,7 @@ NS_IMETHODIMP nsSMimeJSHelper::GetRecipientCertsInfo(
 
       for (PRUint32 i = 0;
           i < mailbox_count;
-          ++i, ++iEA, ++iCV, ++iCII, ++iCEI, ++iCert, walk += nsCRT::strlen(walk) + 1)
+          ++i, ++iEA, ++iCV, ++iCII, ++iCEI, ++iCert, walk += strlen(walk) + 1)
       {
         nsDependentCString email(walk);
         *iEA = ToNewUnicode(email);

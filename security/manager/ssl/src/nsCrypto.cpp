@@ -621,7 +621,7 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
 
   PRUint32 mechanism = cryptojs_convert_to_mechanism(keyPairInfo->keyGenType);
   void *keyGenParams = nsConvertToActualKeyGenParams(mechanism, params, 
-                                                     (params) ? nsCRT::strlen(params):0, 
+                                                     (params) ? strlen(params):0, 
                                                      keySize);
 
   // Make sure the token has password already set on it before trying
@@ -939,7 +939,7 @@ nsSetRegToken(CRMFCertRequest *certReq, char *regToken)
   
     SECItem src;
     src.data = (unsigned char*)regToken;
-    src.len  = nsCRT::strlen(regToken);
+    src.len  = strlen(regToken);
     SECItem *derEncoded = SEC_ASN1EncodeItem(nsnull, nsnull, &src, 
                                         __WRAPPER_SEC_ASN1EncodeItem_Param4(SEC_UTF8StringTemplate));
 
@@ -967,7 +967,7 @@ nsSetAuthenticator(CRMFCertRequest *certReq, char *authenticator)
     
     SECItem src;
     src.data = (unsigned char*)authenticator;
-    src.len  = nsCRT::strlen(authenticator);
+    src.len  = strlen(authenticator);
     SECItem *derEncoded = SEC_ASN1EncodeItem(nsnull, nsnull, &src,
                                      __WRAPPER_SEC_ASN1EncodeItem_Param4(SEC_UTF8StringTemplate));
     if (!derEncoded)
@@ -1763,7 +1763,7 @@ nsCryptoRunnable::Run()
   jsval retval;
   if (JS_EvaluateScriptForPrincipals(m_args->m_cx, m_args->m_scope, principals,
                                      m_args->m_jsCallback, 
-                                     nsCRT::strlen(m_args->m_jsCallback),
+                                     strlen(m_args->m_jsCallback),
                                      nsnull, 0,
                                      &retval) != JS_TRUE) {
     return NS_ERROR_FAILURE;

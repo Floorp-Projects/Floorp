@@ -607,7 +607,7 @@ MimeCMS_MakeSAURL(MimeObject *obj)
 	  PR_FREEIF(id);
 	  PR_FREEIF(url);
 
-    stamp_url = (char *) PR_MALLOC(nsCRT::strlen(url2) + 50);
+	  stamp_url = (char *) PR_MALLOC(strlen(url2) + 50);
 	  if (stamp_url)
 		{
       PL_strcpy(stamp_url, "about:security?advisor=");

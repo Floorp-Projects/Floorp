@@ -48,7 +48,7 @@ static void ConvertCharStringToStr255( const char* inString, Str255& outString  
 {
 		if ( inString == NULL )
 			return;
-		PRInt32 len = nsCRT::strlen(inString);
+		PRInt32 len = strlen(inString);
 		NS_ASSERTION( len<= 255 , " String is too big");
 		if ( len> 255 )
 		{

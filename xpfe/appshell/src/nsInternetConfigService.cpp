@@ -54,7 +54,7 @@ static void ConvertCharStringToStr255( const char* inString, Str255& outString  
 {
 		if ( inString == NULL )
 			return;
-		PRInt32 len = nsCRT::strlen(inString);
+		PRInt32 len = strlen(inString);
 		NS_ASSERTION( len<= 255 , " String is too big");
 		if ( len> 255 )
 		{
@@ -134,11 +134,11 @@ NS_IMETHODIMP nsInternetConfigService::HasProtocolHandler(const char *protocol, 
   // look for IC pref "\pHelper¥<protocol>"
   Str255 pref = kICHelper;
 
-  if (nsCRT::strlen(protocol) > 248)
+  if (strlen(protocol) > 248)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  memcpy(pref + pref[0] + 1, protocol, nsCRT::strlen(protocol));
-  pref[0] = pref[0] + nsCRT::strlen(protocol);
+  memcpy(pref + pref[0] + 1, protocol, strlen(protocol));
+  pref[0] = pref[0] + strlen(protocol);
   
   ICInstance instance = nsInternetConfig::GetInstance();
   if ( !instance )

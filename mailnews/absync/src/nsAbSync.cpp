@@ -2205,7 +2205,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
     PRUnichar   *msgValue, *outValue=nsnull;
 
     // Covert server exceed max record msg here.
-    if (! nsCRT::strncasecmp(errorString, SYNC_ERROR_EXCEED_MAX_RECORD, nsCRT::strlen(SYNC_ERROR_EXCEED_MAX_RECORD)))
+    if (! nsCRT::strncasecmp(errorString, SYNC_ERROR_EXCEED_MAX_RECORD, strlen(SYNC_ERROR_EXCEED_MAX_RECORD)))
       msgValue = GetString(NS_LITERAL_STRING("exceedMaxRecordError").get());
     else
     {
