@@ -19,12 +19,29 @@
 
 function go( msg )
 {
+	var theFile = parent.parent.globals.getAcctSetupFilename(self);
+	var onestepMode = parent.parent.globals.GetNameValuePair(theFile, "Mode Selection", "OneStepMode");
+
 	if ( parent.parent.globals.document.vars.editMode.value != "yes" )
 	{
-		if ( msg == parent.parent.globals.document.vars.path.value  || (msg == "1step") || (msg == "2step"))
+		if ( msg == parent.parent.globals.document.vars.path.value )
 		{
 			parent.parent.globals.document.vars.tryAgain.value = "yes";
 			return checkData();
+		}
+		else if (msg == "1step")
+		{
+			if (onestepMode == "yes")
+			{
+				return checkData();
+			}
+		}
+		else if (msg == "2step")
+		{
+			if (onestepMode == "no" || onestepMode == "" || onestepMode == null)
+			{
+				return checkData();
+			}
 		}
 		return false;
 	}
