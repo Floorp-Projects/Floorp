@@ -20,7 +20,7 @@
  * Contributor(s):
 */
 
-window.addEventListener("load", SetSecurityButton, false);
+//window.addEventListener("load", SetSecurityButton, false);
 
 function SetSecurityButton()
 {
