@@ -159,7 +159,7 @@ function Startup()
   } catch (e) {}
 
   gDialog.PageTitleInput.value = gPreviousTitle;
-  gDialog.FilenameInput.value = filename;
+  gDialog.FilenameInput.value = unescape(filename);
   
   if (!addNewSite)
   {
@@ -187,8 +187,6 @@ function Startup()
   {
     gDialog.OtherDirRadiogroup.selectedItem = gDialog.UseSubdirRadio;
   }
-
-  gDialog.PublishUrlInput.setAttribute("tooltiptext", "The FTP:// or HTTP:// address provided by\nyour ISP or web hosting service");
 
   doEnabling();
 
@@ -398,8 +396,6 @@ function ValidateSettings()
   }
 
   // Extract username and password while removing them from publishingUrl
-  /// XXX Problem: If username contains "@", StripUsernamePassword will not 
-  //   extract the username correctly
   var urlUserObj = {};
   var urlPassObj = {};
   var publishUrl = StripUsernamePassword(gDialog.PublishUrlInput.value, urlUserObj, urlPassObj);

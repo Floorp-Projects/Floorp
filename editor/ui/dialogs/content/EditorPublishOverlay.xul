@@ -34,19 +34,14 @@
   <groupbox id="ServerSettingsBox">
     <caption label="&serverInfo.label;"/>
     <hbox align="center">
-      <label value="&siteName.label;"
-             accesskey="&siteName.accessKey;" control="SiteNameInput"/>
-      <textbox id="SiteNameInput" class="MinWidth20em" 
-               oninput="onInputSettings();" flex="1"
-               tooltip="publishTooltip" />
+      <label value="&siteName.label;"/>
+      <textbox id="SiteNameInput" class="MinWidth20em" oninput="onInputSettings();" flex="1"/>
     </hbox>
     <spacer class="spacer"/>
-    <label value="&siteUrl.label;"
-           accesskey="&siteUrl.accessKey;" control="PublishUrlInput"/>
+    <label value="&siteUrl.label;"/>
     <textbox id="PublishUrlInput" class="MinWidth20em" oninput="onInputSettings();"/>
     <spacer class="spacer"/>
-    <label value="&browseUrl.label;"
-           accesskey="&browseUrl.accessKey;" control="BrowseUrlInput"/>
+    <label value="&browseUrl.label;"/>
     <textbox id="BrowseUrlInput" class="MinWidth20em" oninput="onInputSettings();"/>
     <spacer class="spacer"/>
   </groupbox>
@@ -56,17 +51,14 @@
       <columns><column flex="1"/><column flex="3"/></columns>
       <rows>
         <row align="center">
-          <label value="&username.label;"
-                 accesskey="&username.accessKey;" control="UsernameInput"/>
+          <label value="&username.label;"/>
           <textbox id="UsernameInput" class="MinWidth10em" flex="1" oninput="onInputSettings();"/>
         </row>
         <row align="center">
-          <label value="&password.label;"
-                 accesskey="&password.accessKey;" control="PasswordInput"/>
+          <label value="&password.label;"/>
           <hbox>
             <textbox id="PasswordInput" type="password" class="MinWidth5em" oninput="onInputSettings();"/>
-            <checkbox id="SavePassword" label="&savePassword.label;"
-                      accesskey="&savePassword.accessKey;" oncommand="onInputSettings();"/>
+            <checkbox id="SavePassword" label="&savePassword.label;" oncommand="onInputSettings();"/>
           </hbox>
         </row>
       </rows>

@@ -18,9 +18,7 @@
    - Copyright (C) 1998-1999 Netscape Communications Corporation. All
    - Rights Reserved.
    - 
-   - Contributor(s):
-   -   Charles Manske (cmanske@netscape.com)
-   -   Ryan Cassin (rcassin@supernova.org)
+   - Contributor(s): 
   -->
 
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
@@ -66,9 +64,10 @@
     <hbox>
       <label id="StartingNumberLabel" control="StartingNumber"
              value="&startingNumber.label;" accesskey="&startingNumber.accessKey;"/>
-      <textbox class="narrow" id="StartingNumber"/>
+      <textbox class="narrow" id="StartingNumber" oninput="forceInteger(this.id)"/>
       <spacer/>
     </hbox>
+    <description id="StartExample" class="wrap" flex="1" style="width: 1em">&startingHelp.label;</description>
   </groupbox>
   <radiogroup id="RadioGroup" index="0" persist="index">
     <radio id="ChangeAll"      label="&changeEntireListRadio.label;" accesskey="&changeEntireListRadio.accessKey;"/>
