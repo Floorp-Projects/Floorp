@@ -63,14 +63,14 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
 
   // use cached info if match with stored locale
   if (NULL == locale) {
-    if (mLocale.Equals(mAppLocale, nsCaseInsensitiveStringComparator())) {
+    if (mLocale.Length() && mLocale.Equals(mAppLocale, nsCaseInsensitiveStringComparator())) {
       return NS_OK;
     }
   }
   else {
     res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
     if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-      if (mLocale.Equals(nsDependentString(aLocaleUnichar), nsCaseInsensitiveStringComparator())) {
+      if (mLocale.Length() && mLocale.Equals(nsDependentString(aLocaleUnichar), nsCaseInsensitiveStringComparator())) {
         nsMemory::Free(aLocaleUnichar);
         return NS_OK;
       }
