@@ -420,56 +420,7 @@ NS_IMETHODIMP
 nsWebShellWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
                              PRInt32 aStatus)
 {
- /* nsIWebShell* child = nsnull;
-  if (aShell == mWebShell) {
-    mWebShell->ChildAt(0, child);
-    printf("Child 0 is 0x%x\n", child);
-    NS_IF_RELEASE(child);
-    mWebShell->ChildAt(1, child);
-    printf("Child 1 is 0x%x\n", child);
-    if (nsnull != child) {
-      child->SetObserver((nsIStreamObserver*)this);
-      NS_IF_RELEASE(child);
-    }
-  }
-  // browserwindow
-  mWebShell->ChildAt(0, child);
-  if (aShell == child) {
-    int x = 0;
-    //child->SetObserver((nsIStreamObserver*)this);
-  }
-  NS_RELEASE(child);
-*/
-  // Toolbar
-/*  nsIWebShell* child = nsnull;
-  mWebShell->ChildAt(0, child);
-  if (aShell == child) {
-    nsIContentViewer* cv = nsnull;
-    child->GetContentViewer(&cv);
-    if (nsnull != cv) {
-      nsIDocumentViewer* docv = nsnull;
-      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-      if (nsnull != docv) {
-        nsIDocument * doc;
-        docv->GetDocument(doc);
-        if (nsnull != doc) {
-          nsIDOMDocument * domDoc;
-          if (NS_OK == doc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc)) {
-            nsIWebShell* targetWS = nsnull;
-            mWebShell->ChildAt(1, targetWS);
-            LoadCommands(targetWS, domDoc);
-            NS_RELEASE(domDoc);
-          }
 
-          NS_RELEASE(doc);
-        }
-        NS_RELEASE(docv);
-      }
-      NS_RELEASE(cv);
-    }
-  }
-  NS_IF_RELEASE(child);
-*/
   return NS_OK;
 }
 
@@ -505,124 +456,46 @@ NS_IMETHODIMP nsWebShellWindow::OnStartURLLoad(nsIURL* aURL, const char* aConten
   return NS_OK;
 }
 
+
 //----------------------------------------
 NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
 {
-  printf("*********** OnConnectionsComplete\n");
-  {
-    nsIWebShell* child = nsnull;
-    printf("Main WebShell 0 is 0x%x\n", mWebShell);
-    mWebShell->ChildAt(0, child);
-    printf("Child 0 is 0x%x\n", child);
-    NS_IF_RELEASE(child);
-    mWebShell->ChildAt(1, child);
-    printf("Child 1 is 0x%x\n", child);
-    NS_IF_RELEASE(child);
-  }
 
-  nsIWebShell* child = nsnull;
-  mWebShell->ChildAt(0, child);
-  nsIContentViewer* cv = nsnull;
-  child->GetContentViewer(&cv);
-  if (nsnull != cv) {
-    nsIDocumentViewer* docv = nsnull;
-    cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-    if (nsnull != docv) {
-      nsIDocument * doc;
-      docv->GetDocument(doc);
-      if (nsnull != doc) {
-        nsIDOMDocument * domDoc;
-        if (NS_OK == doc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc)) {
-          nsIWebShell* targetWS = nsnull;
-          mWebShell->ChildAt(1, targetWS);
-          LoadCommands(targetWS, domDoc);
-          NS_RELEASE(domDoc);
-        }
 
-        NS_RELEASE(doc);
-      }
-      NS_RELEASE(docv);
-    }
-    NS_RELEASE(cv);
-  }
-  NS_IF_RELEASE(child);
+  // first get the toolbar child WebShell
+  nsIWebShell* toolbarChildWS = nsnull;
+  mWebShell->FindChildWithName(nsAutoString("browser.toolbar"), toolbarChildWS);
 
-  return NS_OK;
-}
-
-//----------------------------------------
-
-// Stream observer implementation
-
-/*NS_IMETHODIMP
-nsWebShellWindow::OnProgress(nsIURL* aURL,
-                             PRUint32 aProgress,
-                             PRUint32 aProgressMax)
-{
-  return NS_OK;
-}
-
-//----------------------------------------
-NS_IMETHODIMP nsWebShellWindow::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
-{
-  return NS_OK;
-}
-
-//----------------------------------------
-NS_IMETHODIMP nsWebShellWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
-{
-  return NS_OK;
-}
-
-//----------------------------------------
-NS_IMETHODIMP nsWebShellWindow::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
-{
-  {
-    PRUnichar* urlStr;
-    aURL->ToString(&urlStr);
-    nsString s(urlStr);
-    printf("OnStopBinding URL[%s]\n", s.ToNewCString());
-  }
-  if (nsnull != mWebShell) {
-    nsIWebShell* child = nsnull;
-    PRInt32 i, cnt;
-    mWebShell->GetChildCount(cnt);
-    for (i=0;i<cnt;i++) {
-      mWebShell->ChildAt(i, child);
-      if (nsnull != child) {
-
-        nsIContentViewer* cv = nsnull;
-        child->GetContentViewer(&cv);
-        if (nsnull != cv) {
-          nsIDocumentViewer* docv = nsnull;
-          cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-          if (nsnull != docv) {
-            nsIDocument * doc;
-            docv->GetDocument(doc);
-            if (nsnull != doc) {
-              PRUnichar* docStr;
-              PRUnichar* urlStr;
-              doc->GetDocumentURL()->ToString(&docStr);
-              aURL->ToString(&urlStr);
-              nsAutoString docAutoStr(docStr);
-              nsAutoString urlAutoStr(urlStr);
-              if (docAutoStr.Equals(urlAutoStr)) {
-                // This child is the child that has just completed loading
-                printf("OnStopBinding Child 0x%x has stopped.\n", child);
-              }
-              delete[] urlStr;
-              delete[] docStr;
-              NS_RELEASE(doc);
+  if (nsnull != toolbarChildWS) {
+    nsIContentViewer* cv = nsnull;
+    toolbarChildWS->GetContentViewer(&cv);
+    if (nsnull != cv) {
+      nsIDocumentViewer* docv = nsnull;
+      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      if (nsnull != docv) {
+        nsIDocument * doc;
+        docv->GetDocument(doc);
+        if (nsnull != doc) {
+          nsIDOMDocument * domDoc;
+          if (NS_OK == doc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc)) {
+            nsIWebShell* contentWS = nsnull;
+            mWebShell->FindChildWithName(nsAutoString("browser.webwindow"), contentWS);
+            if (nsnull != contentWS) {
+              LoadCommands(contentWS, domDoc);
+              NS_RELEASE(contentWS);
             }
-            NS_RELEASE(docv);
+            NS_RELEASE(domDoc);
           }
-          NS_RELEASE(cv);
-        }
-      }
-    }
-  }
 
+          NS_RELEASE(doc);
+        }
+        NS_RELEASE(docv);
+      }
+      NS_RELEASE(cv);
+    }
+    NS_IF_RELEASE(toolbarChildWS);
+  }
   return NS_OK;
 }
 
-*/
+
