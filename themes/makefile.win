@@ -21,6 +21,6 @@
 
 DEPTH=..
 
-DIRS= modern
+DIRS= modern classic
 
 include <$(DEPTH)\config\rules.mak>
