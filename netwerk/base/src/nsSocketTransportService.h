@@ -31,7 +31,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
 
-#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_MAC)
 //
 // Both Windows and Unix support PR_PollableEvents which are used to break
 // the socket transport thread out of calls to PR_Poll(...) when new

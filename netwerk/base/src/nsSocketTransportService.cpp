@@ -674,7 +674,12 @@ nsSocketTransportService::GetInUseTransportCount     (PRUint32 * o_TransCount)
     if (!o_TransCount)
         return NS_ERROR_NULL_POINTER;
 
-    *o_TransCount = (PRUint32) mSelectFDSetCount;
+    PRUint32    inUseTransports = (PRUint32)mSelectFDSetCount;
+    // The first item in the FDSet is *always* the pollable event, if we are using them
+    if (mThreadEvent && inUseTransports > 0)
+        --inUseTransports;
+    
+    *o_TransCount = inUseTransports;
     return NS_OK;
 }
 
