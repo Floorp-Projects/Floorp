@@ -95,7 +95,7 @@ NS_METHOD nsCookieHTTPNotify::UnregisterProc(nsIComponentManager *aCompMgr,
 NS_IMETHODIMP
 nsCookieHTTPNotify::Init()
 {
-    mCookieHeader = getter_AddRefs(NS_NewAtom("cookie"));
+    mCookieHeader = getter_AddRefs(NS_NewAtom("Cookie"));
     if (!mCookieHeader) return NS_ERROR_OUT_OF_MEMORY;
     mSetCookieHeader = getter_AddRefs(NS_NewAtom("set-cookie"));
     if (!mSetCookieHeader) return NS_ERROR_OUT_OF_MEMORY;
