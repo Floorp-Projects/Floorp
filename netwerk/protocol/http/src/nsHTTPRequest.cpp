@@ -554,7 +554,7 @@ nsresult nsHTTPRequest::SetTransport(nsIChannel *aTransport)
 
 nsresult nsHTTPRequest::ReleaseTransport(nsIChannel *aTransport)
 {
-    if (aTransport == mTransport) {
+    if (aTransport == mTransport.get()) {
         mTransport = 0;
     }
     return NS_OK;
