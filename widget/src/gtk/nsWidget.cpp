@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -28,6 +28,8 @@
 #include "nsToolkit.h"
 #include "nsWidgetsCID.h"
 #include <gdk/gdkx.h>
+
+#undef DEBUG_pavlov
 
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
@@ -67,7 +69,8 @@ nsWidget::nsWidget()
 
   if (!sLookAndFeel) {
     if (NS_OK != nsComponentManager::CreateInstance(kLookAndFeelCID,
-                                                    nsnull, nsILookAndFeel::GetIID(),
+                                                    nsnull,
+                                                    nsILookAndFeel::GetIID(),
                                                     (void**)&sLookAndFeel))
       sLookAndFeel = nsnull;
   }
@@ -230,9 +233,7 @@ NS_METHOD nsWidget::Show(PRBool bState)
     return NS_OK; // Will be null durring printing
 
   if (bState)
-  {
     ::gtk_widget_show(mWidget);
-  }
   else
   {
     ::gtk_widget_hide(mWidget);
@@ -249,27 +250,13 @@ NS_METHOD nsWidget::Show(PRBool bState)
 
 NS_METHOD nsWidget::IsVisible(PRBool &aState)
 {
-    if (mWidget) {
-      gint RealVis = GTK_WIDGET_VISIBLE(mWidget);
-      aState = mShown;
-      g_return_val_if_fail(RealVis == mShown, NS_ERROR_FAILURE);
+  if (mWidget) {
+    aState = GTK_WIDGET_VISIBLE(mWidget);
     }
-    else
-      aState = PR_TRUE;
+  else
+    aState = PR_FALSE;
 
-//
-// Why isnt the following good enough ? -ramiro
-//
-//     if (nsnull != mWidget)
-//     {
-//       aState = GTK_WIDGET_VISIBLE(mWidget);
-//     }
-//     else
-//     {
-//       aState = PR_FALSE;
-//     }
-
-    return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -280,31 +267,31 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 
 NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
-    if (mWidget) {
-        ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
-    }
-    return NS_OK;
+  if (mWidget) {
+    ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
+  }
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 #if 0
-    printf("nsWidget::Resize %s (%p) to %d %d\n",
-           mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
-           aWidth, aHeight);
+  printf("nsWidget::Resize %s (%p) to %d %d\n",
+         mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
+         aWidth, aHeight);
 #endif
-    mBounds.width  = aWidth;
-    mBounds.height = aHeight;
-    if (mWidget) {
-        ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
-        if (aRepaint) {
-            if (GTK_WIDGET_VISIBLE (mWidget)) {
-                ::gtk_widget_queue_draw (mWidget);
-            }
-        }
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+  if (mWidget) {
+    ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
+    if (aRepaint) {
+      if (GTK_WIDGET_VISIBLE (mWidget)) {
+        ::gtk_widget_queue_draw (mWidget);
+      }
     }
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
@@ -377,10 +364,10 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::Enable(PRBool bState)
 {
-    if (mWidget) {
-        ::gtk_widget_set_sensitive(mWidget, bState);
-    }
-    return NS_OK;
+  if (mWidget) {
+    ::gtk_widget_set_sensitive(mWidget, bState);
+  }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -390,16 +377,16 @@ NS_METHOD nsWidget::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFocus(void)
 {
-    if (mWidget) {
-        ::gtk_widget_grab_focus(mWidget);
-    }
-    return NS_OK;
+  if (mWidget) {
+    ::gtk_widget_grab_focus(mWidget);
+  }
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::GetBounds(nsRect &aRect)
 {
-    aRect = mBounds;
-    return NS_OK;
+  aRect = mBounds;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -409,8 +396,8 @@ NS_METHOD nsWidget::GetBounds(nsRect &aRect)
 //-------------------------------------------------------------------------
 nsIFontMetrics *nsWidget::GetFont(void)
 {
-    NS_NOTYETIMPLEMENTED("nsWidget::GetFont");
-    return nsnull;
+  NS_NOTYETIMPLEMENTED("nsWidget::GetFont");
+  return nsnull;
 }
 
 //-------------------------------------------------------------------------
