@@ -720,7 +720,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 	    if (value.EqualsIgnoreCase("content")) {
 		    // The web shell's type is content.
 		    mWebShell->SetWebShellType(nsWebShellContent);
-        mWebShell->SetName(value.GetUnicode());
+        //mWebShell->SetName(value.GetUnicode());
       }
       else {
         // Inherit our type from our parent webshell.  If it is
