@@ -201,8 +201,6 @@ function toObject(v, r, rn) {
             return v;
     }
     var message = r + " (type " + (typeof v) + ") has no properties";
-    if (r instanceof Reference)
-        message += ", not even " + r.propertyName;
     throw rn ? new TypeError(message, rn.filename, rn.lineno)
              : new TypeError(message);
 }
