@@ -2609,9 +2609,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const
                       mParamNames[mNumParams] = name.ToNewUTF8String();
                       mParamVals[mNumParams]  = val.ToNewUTF8String();
                       mNumParams++;
-                      mParamNames[mNumParams] = name.ToNewUTF8String();
-                      mParamVals[mNumParams]  = val.ToNewUTF8String();
-                      mNumParams++;
                     }
                   }
 
