@@ -4542,11 +4542,15 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
       nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
       if(nsGetFactory != nsnull && IsCompatibleExecutable(pluginTag->mFullPath))
       {
+// XPCOM-style plugins (or at least the OJI one) cause crashes on
+// on windows GCC builds, so we're just turning them off for now.
+#if !defined(XP_WIN) || !defined(__GNUC__) 
         rv = nsGetFactory(serviceManager, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ContractID
                           (nsIFactory**)&pluginTag->mEntryPoint);
         plugin = pluginTag->mEntryPoint;
         if (plugin != NULL)
           plugin->Initialize();
+#endif
       }
       else
       {
