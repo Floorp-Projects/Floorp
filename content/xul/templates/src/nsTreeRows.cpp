@@ -95,10 +95,12 @@ nsOutlinerRows::Last()
 
     // Build up a path along the rightmost edge of the tree
     Subtree* current = &mRoot;
-    while (current && current->Count()) {
-        result.Push(current, current->Count() - 1);
-        current = GetSubtreeFor(current, current->Count() - 1);
-    }
+    do {
+        PRInt32 count = current->Count();
+        PRInt32 last = count - 1;
+        result.Push(current, last);
+        current = count ? GetSubtreeFor(current, last) : nsnull;
+    } while (current);
 
     // Now, at the bottom rightmost leaf, advance us one off the end.
     result.mLink[result.mTop].mChildIndex++;
