@@ -205,7 +205,7 @@ function Startup()
       // XXX: Disabling of tabs is currently broken, so for
       //      now we'll just remove the tab completely.
       //CellTab.setAttribute("disabled", "true");
-      gDialog.CellTab.parentNode.removeChild(CellTab);
+      gDialog.CellTab.parentNode.removeChild(gDialog.CellTab);
     }
   }
 
