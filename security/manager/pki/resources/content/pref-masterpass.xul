@@ -38,6 +38,17 @@
 
   <script type="application/x-javascript" src="chrome://pippki/content/pref-masterpass.js"/>
 
+  <!-- List elements to manage for prefs -->
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["askEveryTimeHidden",
+                       "changePasswordButton",
+                       "resetPasswordButton",
+                       "passwordAskTimes",
+                       "passwordTimeout"];
+  ]]>
+  </script>
+            
   <!-- Fancy panel header -->
   <hbox class="box-smallheader" title="&lheader;"/>
 
@@ -56,6 +67,11 @@
 
   <!-- Password Prefs -->
   <groupbox orient="vertical">
+
+    <checkbox id="askEveryTimeHidden"
+              pref="true" preftype="bool" prefstring="signon.expireMasterPassword"
+              prefattribute="checked" hidden="true"/>
+
     <caption label="&managepassword.label;"/>
     <html>&managepassword.text;</html>
     <hbox autostretch="never">
