@@ -502,11 +502,6 @@ function forceInteger(elementID)
     if (!stringIn) stringIn = "";
     // Strip out all nonnumeric characters
     editField.value = stringIn;
-
-    // we hope to remove the following line for blur() once xp widgets land
-    // cmanske (9/15) testing this now that GFX ender widget is active
-    //editField.blur();
-    //sysBeep.Beep();
   }
 }
 
@@ -681,8 +676,7 @@ function onMoreFewer()
 {
   if (SeeMore)
   {
-    dialog.MoreSection.setAttribute("style","display: none");
-    //dialog.MoreSection.setAttribute("collapsed","true");
+    dialog.MoreSection.setAttribute("collapsed","true");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","0");
     dialog.MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
@@ -690,8 +684,7 @@ function onMoreFewer()
   }
   else
   {
-    dialog.MoreSection.setAttribute("style","display: inherit");
-    //dialog.MoreSection.removeAttribute("collapsed");
+    dialog.MoreSection.removeAttribute("collapsed");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","1");
     dialog.MoreFewerButton.setAttribute("value",GetString("FewerProperties"));
