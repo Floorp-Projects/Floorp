@@ -32,7 +32,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIServiceManager.h"
 #include "nsISecurityManagerComponent.h"
-#include "nsINetSupportDialogService.h"
+#include "nsIWindowWatcher.h"
+#include "nsIPrompt.h"
 #include "nsProxiedService.h"
 #include "nsINSSDialogs.h"
 
@@ -42,8 +43,6 @@
 
 #include "pk11func.h"
 #include "pk11sdr.h" // For PK11SDR_Encrypt, PK11SDR_Decrypt
-
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 //
 // Implementation of an nsIInterfaceRequestor for use
@@ -77,12 +76,22 @@ NS_IMETHODIMP nsSDRContext::GetInterface(const nsIID & uuid, void * *result)
   nsresult rv;
 
   if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
-    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID,
-                          NS_UI_THREAD_EVENTQ, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+    if (!proxyman) return NS_ERROR_FAILURE;
 
-    *result = dialog;
-    NS_ADDREF(dialog);
+    nsCOMPtr<nsIPrompt> prompter;
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch) {
+      wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+      if (prompter) {
+        nsCOMPtr<nsIPrompt> proxyPrompt;
+        proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPrompt),
+                                    prompter, PROXY_SYNC, getter_AddRefs(proxyPrompt));
+        if (!proxyPrompt) return NS_ERROR_FAILURE;
+        *result = proxyPrompt;
+        NS_ADDREF(proxyPrompt);
+      }
+    }
   } else {
     rv = NS_ERROR_NO_INTERFACE;
   }

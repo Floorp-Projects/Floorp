@@ -29,7 +29,6 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsProxiedService.h"
 #include "nsIInterfaceRequestor.h"
@@ -38,7 +37,6 @@
 #include "cert.h"
 
 
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
