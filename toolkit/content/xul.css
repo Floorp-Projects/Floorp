@@ -51,7 +51,7 @@ data,
 xbl|children,
 commands, commandset, command,
 broadcasterset, broadcaster, observes,
-keyset, key, 
+keyset, key, toolbarpalette,
 template, rule, conditions, action, 
 bindings, binding, content, member, triple,
 treechildren, treeitem, treeseparator, treerow, treecell {
