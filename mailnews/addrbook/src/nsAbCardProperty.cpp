@@ -530,12 +530,12 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
       switch (attrname[2]) { 
         case 'e':
           switch (value[0]) {
-            case 'h':
-            case 'H':
+            case 't':    // "true"
+            case 'T':
               rv = SetPreferMailFormat(nsIAbPreferMailFormat::html);
               break;
-            case 'p':
-            case 'P':
+            case 'f':    // "false"
+            case 'F':
               rv = SetPreferMailFormat(nsIAbPreferMailFormat::plaintext);
               break;
             default:

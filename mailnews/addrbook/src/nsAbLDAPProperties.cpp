@@ -172,10 +172,6 @@ static MozillaLdapPropertyRelation mozillaLdapPropertyTable[] =
     {MozillaProperty_String, "Notes",        "description"},
 
     // mozilla specfic
-    // use the more self-explanatory named attribute 'xmozillapreferredmailformat' to
-    // the now deprecated 'xmozillausehtmlmail' which sounds like it is a boolean value.
-    // We need to continue to include the 'xmozillausehtmlmail' for existing systems. 
-    {MozillaProperty_Int, "PreferMailFormat",    "xmozillapreferredmailformat"},
     {MozillaProperty_Int, "PreferMailFormat",    "xmozillausehtmlmail"},
     // ?
     {MozillaProperty_Int, "LastModifiedDate",    "modifytimestamp"}
