@@ -1540,18 +1540,10 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
   return result;
 }
 
+// this is where we'll propogate a state changed event, once hyatt defines it.
 NS_IMETHODIMP
 nsGfxTextControlFrame::InternalContentChanged()
 {
-  if (!IsInitialized()) { return NS_ERROR_NOT_INITIALIZED; }
-  nsAutoString textValue;
-  // XXX: need to check here if we're an HTML edit field or a text edit field
-  nsString format ("text/plain");
-  mEditor->OutputToString(textValue, format, 0);
-  if (IsSingleLineTextControl()) {
-    RemoveNewlines(textValue); 
-  }
-  SetTextControlFrameState(textValue);   // set new text value
   return NS_OK;
 }
 
