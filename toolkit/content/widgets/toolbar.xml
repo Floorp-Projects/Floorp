@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<bindings id="toolbarBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="toolbar-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbar.css"/>
+    </resources>
+  </binding>
+  
+  <binding id="toolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base"/>
+  <binding id="toolbox" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base"/>
+
+  <binding id="menubar" extends="xul:menubar">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbar.css"/>
+    </resources>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULMenubarAccessible(this);
+          ]]>
+        </getter>
+       </property>
+
+    </implementation>
+  </binding>
+
+  <binding id="toolbarseparator" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base"/>
+
+</bindings>          
+
