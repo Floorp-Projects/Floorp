@@ -292,6 +292,8 @@ protected:
 
   NS_IMETHOD IsRootTag(nsString &aTag, PRBool &aIsTag);
 
+  NS_IMETHOD IsLeafThatTakesInlineStyle(const nsString *aTag, PRBool &aResult);
+
   NS_IMETHOD IsSubordinateBlock(nsString &aTag, PRBool &aIsTag);
 
   static PRBool IsTable(nsIDOMNode *aNode);

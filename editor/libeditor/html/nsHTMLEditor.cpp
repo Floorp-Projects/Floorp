@@ -3895,6 +3895,16 @@ nsresult nsHTMLEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
   if (-1==aOutEndOffset) {
     aOutEndOffset = totalLength;
   }
+
+  // guarantee that aOutStartOffset <= aOutEndOffset
+  if (aOutEndOffset<aOutStartOffset) 
+  {
+    PRInt32 temp;
+    temp = aOutStartOffset;
+    aOutStartOffset= aOutEndOffset;
+    aOutEndOffset = temp;
+  }
+  NS_POSTCONDITION(aOutStartOffset <= aOutEndOffset, "start > end");
   return result;
 }
 
@@ -5419,6 +5429,15 @@ nsHTMLEditor::MoveContiguousContentIntoNewParent(nsIDOMNode  *aStartNode,
   return result;
 }
 
+NS_IMETHODIMP nsHTMLEditor::IsLeafThatTakesInlineStyle(const nsString *aTag,
+                                                       PRBool &aResult)
+{
+  if (!aTag) { return NS_ERROR_NULL_POINTER; }
+
+  aResult = (PRBool)((PR_FALSE==aTag->EqualsIgnoreCase("br")) &&
+                     (PR_FALSE==aTag->EqualsIgnoreCase("hr")) );
+  return NS_OK;
+}
 
 /* this wraps every selected text node in a new inline style node if needed
    the text nodes are treated as being unique -- each needs it's own style node 
@@ -5521,8 +5540,11 @@ nsHTMLEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
         if (PR_FALSE==canContainChildren)
         { 
           nsEditor::GetTagString(node,tag);
-          if (tag != "br")  // skip <BR>, even though it's a leaf
-          { // only want to wrap the text node in a new style node if it doesn't already have that style
+          PRBool processLeaf; 
+          IsLeafThatTakesInlineStyle(&tag, processLeaf);
+          if (processLeaf)  // skip leaf tags that don't take inline style
+          { 
+            // only want to wrap the node in a new style node if it doesn't already have that style
             if (gNoisy) { printf("node %p is an editable leaf.\n", node.get()); }
             PRBool textPropertySet;
             nsCOMPtr<nsIDOMNode>resultNode;
