@@ -43,8 +43,9 @@ nsIAtom* nsLayoutAtoms::colGroupList;
 nsIAtom* nsLayoutAtoms::fixedList;
 nsIAtom* nsLayoutAtoms::floaterList;
 
-nsIAtom* nsLayoutAtoms::textTagName;
 nsIAtom* nsLayoutAtoms::commentTagName;
+nsIAtom* nsLayoutAtoms::textTagName;
+nsIAtom* nsLayoutAtoms::viewportPseudo;
 
 static nsrefcnt gRefCnt;
 
@@ -72,8 +73,9 @@ void nsLayoutAtoms::AddrefAtoms()
     fixedList = NS_NewAtom("Fixed-list");
     floaterList = NS_NewAtom("Floater-list");
 
-    textTagName = NS_NewAtom("__moz_text");
     commentTagName = NS_NewAtom("__moz_comment");
+    textTagName = NS_NewAtom("__moz_text");
+    viewportPseudo = NS_NewAtom(":-MOZ-VIEWPORT");  // XXX lower case
   }
   ++gRefCnt;
 }
@@ -103,8 +105,9 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(fixedList);
     NS_RELEASE(floaterList);
 
-    NS_RELEASE(textTagName);
     NS_RELEASE(commentTagName);
+    NS_RELEASE(textTagName);
+    NS_RELEASE(viewportPseudo);
   }
 }
 
