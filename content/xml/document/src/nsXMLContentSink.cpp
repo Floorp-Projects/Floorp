@@ -40,6 +40,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIContent.h"
 #include "nsITextContent.h"
+#include "nsIStyleSheetLinkingElement.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
@@ -73,8 +74,10 @@
 #include "nsParserUtils.h"
 #include "nsIDocumentViewer.h"
 #include "nsIScrollable.h"
+#include "nsGenericElement.h"
 #include "nsIWebNavigation.h"
 #include "nsIScriptElement.h"
+#include "nsStyleLinkElement.h"
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -212,10 +215,6 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   mState = eXMLContentSinkState_InProlog;
   mDocElement = nsnull;
   mRootElement = nsnull;
-
-  // XXX this presumes HTTP header info is alread set in document
-  // XXX if it isn't we need to set it here...
-  mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, mPreferredStyle);
 
   nsIHTMLContentContainer* htmlContainer = nsnull;
   if (NS_SUCCEEDED(aDoc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer))) {
@@ -638,10 +637,6 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
       if (!mMetaElement) {
         mMetaElement = htmlContent;
       }
-    } else if (tagAtom.get() == nsHTMLAtoms::link) {
-      if (!mLinkElement) {
-        mLinkElement = htmlContent;
-      }
     }
   }
   else {
@@ -669,10 +664,19 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     PRInt32 id;
     mDocument->GetAndIncrementContentID(&id);
     content->SetContentID(id);
+
+    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
+
+    if (ssle) {
+      ssle->InitStyleLinkElement(mParser, PR_FALSE);
+      ssle->SetEnableUpdates(PR_FALSE);
+    }
+
     content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
     // Set the attributes on the new content element
     result = AddAttributes(aNode, content, isHTML);
+
     if (NS_OK == result) {
       // If this is the document element
       if (nsnull == mDocElement) {
@@ -700,6 +704,15 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     result = aNode.GetIDAttributeAtom(getter_AddRefs(IDAttr));
     if (IDAttr && NS_SUCCEEDED(result))
       result = nodeInfo->SetIDAttributeAtom(IDAttr);
+
+    // We stopped supporting <style src="..."> for XHTML as it is
+    // non-standard.
+    if (ssle && !(isHTML && (tagAtom.get() == nsHTMLAtoms::style))) {
+      ssle->SetEnableUpdates(PR_TRUE);
+      result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
+      if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK))
+        mStyleSheetCount++;
+    }
   }
 
   return result;
@@ -763,11 +776,6 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
       if (mMetaElement) {
         result = ProcessMETATag();
         mMetaElement = nsnull;  // HTML can have more than one meta so clear this now
-      }
-    } else if (tagAtom.get() == nsHTMLAtoms::link) {
-      if (mLinkElement) {
-        result = ProcessLINKTag();
-        mLinkElement = nsnull;  // HTML can have more than one link so clear this now
       }
     }
   }
@@ -952,22 +960,6 @@ ParseProcessingInstruction(const nsString& aText,
   }
 }
 
-static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aParams)
-{
-  aType.Truncate();
-  aParams.Truncate();
-  PRInt32 semiIndex = aValue.FindChar(PRUnichar(';'));
-  if (-1 != semiIndex) {
-    aValue.Left(aType, semiIndex);
-    aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);
-    aParams.StripWhitespace();
-  }
-  else {
-    aType = aValue;
-  }
-  aType.StripWhitespace();
-}
-
 nsresult
 nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl,
                                       const nsAReadableString& aHref)
@@ -1055,8 +1047,6 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
   if (aType.EqualsIgnoreCase(kXSLType))
     rv = ProcessXSLStyleLink(aElement, aHref, aAlternate, aTitle, aType, aMedia);
-  else
-    rv = ProcessCSSStyleLink(aElement, aHref, aAlternate, aTitle, aType, aMedia);
 
   return rv;
 }
@@ -1082,60 +1072,6 @@ nsXMLContentSink::ProcessXSLStyleLink(nsIContent* aElement,
   return rv;
 }
 
-nsresult
-nsXMLContentSink::ProcessCSSStyleLink(nsIContent* aElement,
-                                   const nsString& aHref, PRBool aAlternate,
-                                   const nsString& aTitle, const nsString& aType,
-                                   const nsString& aMedia)
-{
-  nsresult result = NS_OK;
-
-  if (aAlternate) { // if alternate, does it have title?
-    if (0 == aTitle.Length()) { // alternates must have title
-      return NS_OK; //return without error, for now
-    }
-  }
-
-  nsAutoString  mimeType;
-  nsAutoString  params;
-  SplitMimeType(aType, mimeType, params);
-
-  if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
-    nsIURI* url = nsnull;
-// XXX we need to get passed in the nsILoadGroup here!
-//    nsILoadGroup* group = mDocument->GetDocumentLoadGroup();
-    result = NS_NewURI(&url, aHref, mDocumentBaseURL/*, group*/);
-    if (NS_OK != result) {
-      return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
-    }
-
-    PRBool blockParser = PR_FALSE;
-    if (! aAlternate) {
-      if (0 < aTitle.Length()) {  // possibly preferred sheet
-        if (0 == mPreferredStyle.Length()) {
-          mPreferredStyle = aTitle;
-          mCSSLoader->SetPreferredSheet(aTitle);
-          mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
-        }
-      }
-      else {  // persistent sheet, block
-        blockParser = PR_TRUE;
-      }
-    }
-
-    PRBool doneLoading;
-    result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
-                                       mStyleSheetCount++,
-                                       ((blockParser) ? mParser : nsnull),
-                                       doneLoading, nsnull);
-    NS_RELEASE(url);
-    if (NS_SUCCEEDED(result) && blockParser && (! doneLoading)) {
-      result = NS_ERROR_HTMLPARSER_BLOCK;
-    }
-  }
-  return result;
-}
-
 NS_IMETHODIMP
 nsXMLContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet, 
                                   PRBool aDidNotify)
@@ -1156,15 +1092,16 @@ nsXMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   nsAutoString type; 
   nsAutoString media; 
 
+  nsCOMPtr<nsIAtom> name, prefix;
+  PRInt32 namespaceID;
+
+  if (NS_FAILED(mStyleElement->GetAttribute(namespaceID, *getter_AddRefs(name),src)))
+    return rv;
+  src.StripWhitespace();
+
   for (i = 0; i < count; i++) {
-    PRInt32 namespaceID;
-    nsCOMPtr<nsIAtom> name, prefix;
     mStyleElement->GetAttributeNameAt(i,namespaceID,*getter_AddRefs(name),*getter_AddRefs(prefix));
-    if (name.get() == nsHTMLAtoms::src) {
-      mStyleElement->GetAttribute(namespaceID,name,src);
-      src.StripWhitespace();
-    }
-    else if (name.get() == nsHTMLAtoms::title) {
+    if (name.get() == nsHTMLAtoms::title) {
       mStyleElement->GetAttribute(namespaceID,name,title);
       title.CompressWhitespace();
     }
@@ -1180,16 +1117,15 @@ nsXMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
   nsAutoString  mimeType;
   nsAutoString  params;
-  SplitMimeType(type, mimeType, params);
+  nsStyleLinkElement::SplitMimeType(type, mimeType, params);
 
   PRBool blockParser = PR_FALSE;//kBlockByDefault;
 
-  if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) { 
-
-    if (0 < title.Length()) {  // possibly preferred sheet
-      if (0 == mPreferredStyle.Length()) {
-        mPreferredStyle = title;
-        mCSSLoader->SetPreferredSheet(title);
+  if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css")) { 
+    if (!title.IsEmpty()) {  // possibly preferred sheet
+      nsAutoString preferredStyle;
+      mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, preferredStyle);
+      if (preferredStyle.IsEmpty()) {
         mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
       }
     }
@@ -1197,62 +1133,38 @@ nsXMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     PRBool doneLoading = PR_FALSE;
 
     nsIUnicharInputStream* uin = nsnull;
-    if (0 == src.Length()) {
 
-      // Create a text node holding the content
-      nsCOMPtr<nsIContent> text;
-      rv = NS_NewTextNode(getter_AddRefs(text));
-      if (text) {
-        nsCOMPtr<nsIDOMText> tc(do_QueryInterface(text));
-        if (tc) {
-          tc->SetData(mStyleText);
-        }
-        mStyleElement->AppendChildTo(text, PR_FALSE, PR_FALSE);
-        text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+    // Create a text node holding the content
+    nsCOMPtr<nsIContent> text;
+    rv = NS_NewTextNode(getter_AddRefs(text));
+    if (text) {
+      nsCOMPtr<nsIDOMText> tc(do_QueryInterface(text));
+      if (tc) {
+        tc->SetData(mStyleText);
       }
-
-      // Create a string to hold the data and wrap it up in a unicode
-      // input stream.
-      rv = NS_NewStringUnicharInputStream(&uin, new nsString(mStyleText));
-      if (NS_OK != rv) {
-        return rv;
-      }
-
-      // Now that we have a url and a unicode input stream, parse the
-      // style sheet.
-      rv = mCSSLoader->LoadInlineStyle(mStyleElement, uin, title, media, kNameSpaceID_Unknown,
-                                       mStyleSheetCount++, 
-                                       ((blockParser) ? mParser : nsnull),
-                                       doneLoading, this);
-      NS_RELEASE(uin);
-    } 
-    else {
-#if 0
-      // This is non-standard. We support it for HTML for backwards compatibility,
-      // but maybe we should withdraw the support for XHTML.
-
-      // src with immediate style data doesn't add up
-      // XXX what does nav do?
-      // Use the SRC attribute value to load the URL
-      nsIURI* url = nsnull;
-      {
-        rv = NS_NewURI(&url, src, mDocumentBaseURL);
-      }
-      if (NS_OK != rv) {
-        return rv;
-      }
-
-      rv = mCSSLoader->LoadStyleLink(mStyleElement, url, title, media, kNameSpaceID_Unknown,
-                                     mStyleSheetCount++, 
-                                     ((blockParser) ? mParser : nsnull), 
-                                     doneLoading, this);
-      NS_RELEASE(url);
-#endif
+      mStyleElement->AppendChildTo(text, PR_FALSE, PR_FALSE);
+      text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
     }
+
+    // Create a string to hold the data and wrap it up in a unicode
+    // input stream.
+    rv = NS_NewStringUnicharInputStream(&uin, new nsString(mStyleText));
+    if (NS_OK != rv) {
+      return rv;
+    }
+
+    // Now that we have a url and a unicode input stream, parse the
+    // style sheet.
+    rv = mCSSLoader->LoadInlineStyle(mStyleElement, uin, title, media, kNameSpaceID_Unknown,
+                                     mStyleSheetCount++, 
+                                     ((blockParser) ? mParser : nsnull),
+                                     doneLoading, this);
+    NS_RELEASE(uin);
+
     if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
       rv = NS_ERROR_HTMLPARSER_BLOCK;
     }
-  }//if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css"))
+  }//if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css"))
 
   return rv;
 }
@@ -1333,38 +1245,6 @@ nsXMLContentSink::ProcessMETATag()
   return rv;
 }
 
-nsresult
-nsXMLContentSink::ProcessLINKTag()
-{
-  nsresult  result = NS_OK;
-
-  nsAutoString href;
-  nsAutoString rel; 
-  nsAutoString title; 
-  nsAutoString type; 
-  nsAutoString media; 
-
-  mLinkElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
-  mLinkElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::rel, rel);
-  mLinkElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::title, title);
-  mLinkElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
-  mLinkElement->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::media, media);
-
-  href.CompressWhitespace();
-  rel.CompressWhitespace();
-  title.CompressWhitespace();
-  type.CompressWhitespace();
-  media.CompressWhitespace();
-  media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
-
-  if (!href.IsEmpty()) {
-    result = ProcessStyleLink(mLinkElement, href, rel.Find("alternate") == 0, title, type, media);
-  }
-
-  return result;
-}
-
-
 NS_IMETHODIMP
 nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
@@ -1378,25 +1258,38 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
   ParseProcessingInstruction(text, target, data);
   result = NS_NewXMLProcessingInstruction(getter_AddRefs(node), target, data);
   if (NS_OK == result) {
-    node->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
+    if (ssle) {
+      ssle->InitStyleLinkElement(mParser, PR_FALSE);
+      ssle->SetEnableUpdates(PR_FALSE);
+    }
+
     result = AddContentAsLeaf(node);
-  }
 
-  if (NS_OK == result) {
-    nsAutoString type, href, title, media, alternate;
+    if (ssle) {
+      ssle->SetEnableUpdates(PR_TRUE);
+      result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
+      if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK))
+        mStyleSheetCount++;
+    }
 
-    // If it's a stylesheet PI...
-    if (target.EqualsWithConversion(kStyleSheetPI)) {
+    if (NS_FAILED(result))
+      return result;
+
+    nsAutoString type;
+    result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
+
+    // If it's a XSL stylesheet PI...
+    if (target.EqualsWithConversion(kStyleSheetPI) && !type.EqualsIgnoreCase("text/css")) {
+      nsAutoString href, title, media, alternate;
+
       result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
       // If there was an error or there's no href, we can't do
       // anything with this PI
       if ((NS_OK != result) || href.IsEmpty()) {
         return NS_OK;
       }
-      result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
-      if (NS_FAILED(result)) {
-        type.AssignWithConversion("text/css");  // Default the type attribute to the mime type for CSS
-      }
+
       result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("title"), title);
       if (NS_SUCCEEDED(result)) {
         title.CompressWhitespace();
@@ -1406,6 +1299,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
         media.ToLowerCase();
       }
       result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
+
       result = ProcessStyleLink(node, href, alternate.Equals(NS_LITERAL_STRING("yes")),
                                 title, type, media);
     }
@@ -1694,7 +1588,6 @@ nsXMLContentSink::PopContent()
 void
 nsXMLContentSink::StartLayout()
 {
-
   // Reset scrolling to default settings for this shell.
   // This must happen before the initial reflow, when we create the root frame
   nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryInterface(mWebShell));

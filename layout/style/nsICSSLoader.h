@@ -113,6 +113,11 @@ public:
   // if an empty string, then it is set to the default charset
   NS_IMETHOD SetCharset(/*in*/ const nsString &aCharsetSrc) = 0;
 
+  // stop loading all sheets
+  NS_IMETHOD Stop(void) = 0;
+
+  // stop loading one sheet
+  NS_IMETHOD StopLoadingSheet(nsIURI* aURL) = 0;
 };
 
 extern NS_HTML nsresult 

@@ -117,6 +117,7 @@
 #include "nsDOMError.h"
 #include "nsIScrollable.h"
 #include "nsContentPolicyUtils.h"
+#include "nsStyleLinkElement.h"
 
 #include "nsReadableUtils.h"
 #include "nsWeakReference.h"//nshtmlelementfactory supports weak references
@@ -358,7 +359,6 @@ public:
   nsString            mBaseHREF;
   nsString            mBaseTarget;
 
-  nsString            mPreferredStyle;
   PRInt32             mStyleSheetCount;
   nsICSSLoader*       mCSSLoader;
   PRInt32             mInsideNoXXXTag;
@@ -2312,8 +2312,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   ProcessHTTPHeaders(aChannel);
 
-  mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, mPreferredStyle);
-
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::html, nsnull,
                                      kNameSpaceID_None,
@@ -3839,7 +3837,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& 
     if (start < end) {
       if ((kLessThanCh == *start) && (kGreaterThanCh == *last)) {
         *last = kNullCh;
-        if (0 == href.Length()) { // first one wins
+        if (href.IsEmpty()) { // first one wins
           href = (start + 1);
           href.StripWhitespace();
         }
@@ -3865,19 +3863,19 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& 
           }
 
           if (attr.EqualsIgnoreCase("rel")) {
-            if (0 == rel.Length()) {
+            if (rel.IsEmpty()) {
               rel = value;
               rel.CompressWhitespace();
             }
           }
           else if (attr.EqualsIgnoreCase("title")) {
-            if (0 == title.Length()) {
+            if (title.IsEmpty()) {
               title = value;
               title.CompressWhitespace();
             }
           }
           else if (attr.EqualsIgnoreCase("type")) {
-            if (0 == type.Length()) {
+            if (type.IsEmpty()) {
               type = value;
               type.StripWhitespace();
             }
@@ -3892,7 +3890,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& 
       }
     }
     if (kCommaCh == endCh) {  // hit a comma, process what we've got so far
-      if (0 < href.Length()) {
+      if (!href.IsEmpty()) {
         result = ProcessStyleLink(aElement, href, rel, title, type, media);
         if (NS_ERROR_HTMLPARSER_BLOCK == result) {
           didBlock = PR_TRUE;
@@ -3908,62 +3906,13 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& 
     start = ++end;
   }
 
-  if (0 < href.Length()) {
+  if (!href.IsEmpty()) {
     result = ProcessStyleLink(aElement, href, rel, title, type, media);
     if (NS_SUCCEEDED(result) && didBlock) {
       result = NS_ERROR_HTMLPARSER_BLOCK;
     }
   }
   return result;
-}
-
-static void ParseLinkTypes(const nsString& aTypes, nsStringArray& aResult)
-{
-  nsAutoString  stringList(aTypes); // copy to work buffer
-  nsAutoString  subStr;
-
-  stringList.ToLowerCase();
-  stringList.Append(kNullCh);  // put an extra null at the end
-
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.GetUnicode();
-  PRUnichar* end   = start;
-
-  while (kNullCh != *start) {
-    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
-      start++;
-    }
-
-    end = start;
-
-    while ((kNullCh != *end) && (! nsCRT::IsAsciiSpace(*end))) { // look for space
-      end++;
-    }
-    *end = kNullCh; // end string here
-
-    subStr = start;
-
-    if (0 < subStr.Length()) {
-      aResult.AppendString(subStr);
-    }
-
-    start = ++end;
-  }
-}
-
-static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aParams)
-{
-  aType.Truncate();
-  aParams.Truncate();
-  PRInt32 semiIndex = aValue.FindChar(PRUnichar(';'));
-  if (-1 != semiIndex) {
-    aValue.Left(aType, semiIndex);
-    aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);
-    aParams.StripWhitespace();
-  }
-  else {
-    aType = aValue;
-  }
-  aType.StripWhitespace();
 }
 
 NS_IMETHODIMP
@@ -3996,7 +3945,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
   }
 
   nsStringArray linkTypes;
-  ParseLinkTypes(aRel, linkTypes);
+  nsStyleLinkElement::ParseLinkTypes(aRel, linkTypes);
   PRBool isAlternate = PR_FALSE;
 
   if (-1 != linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet"))) {  // is it a stylesheet link?
@@ -4011,32 +3960,32 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 
     nsAutoString  mimeType;
     nsAutoString  params;
-    SplitMimeType(aType, mimeType, params);
+    nsStyleLinkElement::SplitMimeType(aType, mimeType, params);
 
-		nsDTDMode mode;
-		mHTMLDocument->GetDTDMode(mode);
+    nsDTDMode mode;
+    mHTMLDocument->GetDTDMode(mode);
 
-		PRBool isStyleSheet = PR_FALSE;			// see bug 18817
-		if (eDTDMode_strict== mode) {
-			if (mimeType.EqualsIgnoreCase("text/css")) {
-				isStyleSheet = PR_TRUE;					// strict mode + good mime type
-			}
-			else {
-				if (0 == mimeType.Length()) {
-					nsString extension;
-					aHref.Right(extension, 4);
-					if (extension.EqualsWithConversion(".css")) {
-						isStyleSheet = PR_TRUE;			// strict mode + no mime type + '.css' extension
-					}
-				}
-			}
-		}
-		else {
-			if (0 == mimeType.Length() || mimeType.EqualsIgnoreCase("text/css")) {
-				isStyleSheet = PR_TRUE;					// quirks mode + good mime type or no mime type at all
-			}
-		}
-		
+    PRBool isStyleSheet = PR_FALSE;     // see bug 18817
+    if (eDTDMode_strict== mode) {
+      if (mimeType.EqualsIgnoreCase("text/css")) {
+        isStyleSheet = PR_TRUE;         // strict mode + good mime type
+      }
+      else {
+        if (mimeType.IsEmpty()) {
+          nsString extension;
+          aHref.Right(extension, 4);
+          if (extension.Equals(NS_LITERAL_STRING(".css"))) {
+              isStyleSheet = PR_TRUE;   // strict mode + no mime type + '.css' extension
+          }
+        }
+      }
+    }
+    else {
+      if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css")) {
+        isStyleSheet = PR_TRUE;         // quirks mode + good mime type or no mime type at all
+      }
+    }
+
     if (isStyleSheet) {
       nsIURI* url = nsnull;
       {
@@ -4047,10 +3996,10 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
       }
 
       if (-1 == linkTypes.IndexOf(NS_LITERAL_STRING("alternate"))) {
-        if (0 < aTitle.Length()) {  // possibly preferred sheet
-          if (0 == mPreferredStyle.Length()) {
-            mPreferredStyle = aTitle;
-            mCSSLoader->SetPreferredSheet(aTitle);
+        if (!aTitle.IsEmpty()) {  // possibly preferred sheet
+          nsAutoString preferredStyle;
+          mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, preferredStyle);
+          if (preferredStyle.IsEmpty()) {
             mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
           }
         }
@@ -4096,70 +4045,45 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   
   if(parent!=nsnull) {
     // Create content object
-    nsIHTMLContent* element = nsnull;
+    nsCOMPtr<nsIHTMLContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
     mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::link, nsnull, kNameSpaceID_HTML,
                                   *getter_AddRefs(nodeInfo));
 
-    result = NS_CreateHTMLElement(&element, nodeInfo, PR_FALSE);
+    result = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
     if (NS_SUCCEEDED(result)) {
       PRInt32 id;
       mDocument->GetAndIncrementContentID(&id);      
       element->SetContentID(id);
+
+      nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(element));
+
+      if (ssle) {
+        // XXX need prefs. check here.
+        if(!mInsideNoXXXTag) {
+          ssle->InitStyleLinkElement(mParser, PR_FALSE);
+        }
+        else {
+          ssle->InitStyleLinkElement(mParser, PR_TRUE);
+        }
+        ssle->SetEnableUpdates(PR_FALSE);
+      }
 
       // Add in the attributes and add the style content object to the
       // head container.    
       element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddAttributes(aNode, element);
       if (NS_FAILED(result)) {
-        NS_RELEASE(element);
         return result;
       }
       parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
-    }
-    else {
-      return result;
-    }
-    
-    // XXX need prefs. check here.
-    if(!mInsideNoXXXTag) {
-      PRInt32   i;
-      PRInt32   count = aNode.GetAttributeCount();
-
-      nsAutoString href;
-      nsAutoString rel; 
-      nsAutoString title; 
-      nsAutoString type; 
-      nsAutoString media; 
-
-      for (i = 0; i < count; i++) {
-        nsAutoString key(aNode.GetKeyAt(i));
-        if (key.EqualsIgnoreCase("href")) {
-          GetAttributeValueAt(aNode, i, href);
-          href.StripWhitespace();
-        }
-        else if (key.EqualsIgnoreCase("rel")) {
-          GetAttributeValueAt(aNode, i, rel);
-          rel.CompressWhitespace();
-        }
-        else if (key.EqualsIgnoreCase("title")) {
-          GetAttributeValueAt(aNode, i, title);
-          title.CompressWhitespace();
-        }
-        else if (key.EqualsIgnoreCase("type")) {
-          GetAttributeValueAt(aNode, i, type);
-          type.StripWhitespace();
-        }
-        else if (key.EqualsIgnoreCase("media")) {
-          GetAttributeValueAt(aNode, i, media);
-          media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
-        }
-      }
-      if (0 < href.Length()) {
-        result = ProcessStyleLink(element, href, rel, title, type, media);
+      if (ssle) {
+        ssle->SetEnableUpdates(PR_TRUE);
+        result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
+        if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK))
+          mStyleSheetCount++;
       }
     }
-    NS_RELEASE(element);
   }
   return result;
 }
@@ -4331,11 +4255,7 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aVa
   
   mDocument->SetHeaderData(aHeader, aValue);
   
-  if (aHeader == nsHTMLAtoms::headerDefaultStyle) {
-    mPreferredStyle = aValue;
-    mCSSLoader->SetPreferredSheet(mPreferredStyle);
-  }
-  else if (aHeader == nsHTMLAtoms::link) {
+  if (aHeader == nsHTMLAtoms::link) {
     rv = ProcessLink(aContent, aValue);
   }
   else if (aHeader == nsHTMLAtoms::headerContentBase) {
@@ -4733,16 +4653,15 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
       nsAutoString  mimeType;
       nsAutoString  params;
-      SplitMimeType(type, mimeType, params);
+      nsStyleLinkElement::SplitMimeType(type, mimeType, params);
 
       PRBool blockParser = kBlockByDefault;
 
-      if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) { 
-
-        if (0 < title.Length()) {  // possibly preferred sheet
-          if (0 == mPreferredStyle.Length()) {
-            mPreferredStyle = title;
-            mCSSLoader->SetPreferredSheet(title);
+      if (mimeType.IsEmpty() || mimeType.Equals(NS_LITERAL_STRING("text/css"))) { 
+        if (!title.IsEmpty()) {  // possibly preferred sheet
+          nsAutoString preferredStyle;
+          mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, preferredStyle);
+          if (preferredStyle.IsEmpty()) {
             mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
           }
         }
@@ -4752,7 +4671,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
         PRBool doneLoading = PR_FALSE;
 
         nsIUnicharInputStream* uin = nsnull;
-        if (0 == src.Length()) {
+        if (src.IsEmpty()) {
 
           // Create a text node holding the content
           nsIContent* text;
@@ -4805,7 +4724,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
         if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
           rv = NS_ERROR_HTMLPARSER_BLOCK;
         }
-      }//if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css"))
+      }//if (mimeType.IsEmpty() || mimeType.Equals(NS_LITERAL_STRING("text/css")))
     }//if(!mInsideNoXXXTag && NS_SUCCEEDED(rv))
     NS_RELEASE(element);
   }//if(parent!=nsnull)

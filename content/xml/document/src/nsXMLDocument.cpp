@@ -183,7 +183,7 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 
 nsXMLDocument::nsXMLDocument() 
   : mAttrStyleSheet(nsnull), mInlineStyleSheet(nsnull), 
-    mParser(nsnull), mCSSLoader(nsnull)
+    mParser(nsnull)
 {
 }
 
@@ -200,7 +200,6 @@ nsXMLDocument::~nsXMLDocument()
   }
   if (mCSSLoader) {
     mCSSLoader->DropDocumentReference();
-    NS_RELEASE(mCSSLoader);
   }
 }
 
@@ -1085,7 +1084,7 @@ nsXMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
 {
   nsresult result = NS_OK;
   if (! mCSSLoader) {
-    result = NS_NewCSSLoader(this, &mCSSLoader);
+    result = NS_NewCSSLoader(this, getter_AddRefs(mCSSLoader));
     if (mCSSLoader) {
       mCSSLoader->SetCaseSensitive(PR_TRUE);
       mCSSLoader->SetQuirkMode(PR_FALSE); // No quirks in XML

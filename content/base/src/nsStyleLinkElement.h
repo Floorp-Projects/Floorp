@@ -28,8 +28,8 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
+#include "nsIParser.h"
 
-class nsIParser;
 class nsIDocument;
 class nsStringArray;
 

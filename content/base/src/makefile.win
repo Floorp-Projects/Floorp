@@ -55,10 +55,11 @@ CPPSRCS =				\
 	nsTextNode.cpp			\
 	nsXMLContentSerializer.cpp	\
 	nsHTMLContentSerializer.cpp	\
-        nsParserUtils.cpp               \
+    nsParserUtils.cpp               \
 	nsPlainTextSerializer.cpp	\
 	nsContentUtils.cpp 		\
 	nsScriptLoader.cpp		\
+	nsStyleLinkElement.cpp		\
 	$(NULL)
 
 MODULE=raptor 
@@ -94,6 +95,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsPlainTextSerializer.obj   \
 	.\$(OBJDIR)\nsContentUtils.obj   \
 	.\$(OBJDIR)\nsScriptLoader.obj   \
+	.\$(OBJDIR)\nsStyleLinkElement.obj   \
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \

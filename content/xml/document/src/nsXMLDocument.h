@@ -114,7 +114,6 @@ protected:
   nsString mBaseTarget;
 
   nsIParser *mParser;
-  nsICSSLoader* mCSSLoader;
 };
 
 

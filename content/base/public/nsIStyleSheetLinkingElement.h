@@ -25,6 +25,9 @@
 
 #include "nsISupports.h"
 
+class nsIParser;
+class nsIDocument;
+
 #define NS_ISTYLESHEETLINKINGELEMENT_IID          \
   {0xa6cf90e9, 0x15b3, 0x11d2,                    \
   {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
@@ -51,6 +54,36 @@ public:
    *                    sheet associated with this element.
    */
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet) = 0;
+
+  /**
+   * Initialize the stylesheet linking element. This method passes
+   * in a parser that the element blocks if the stylesheet is
+   * a stylesheet that should be loaded with the parser blocked.
+   * If aDontLoadStyle is true the element will ignore the first
+   * modification to the element that would cause a stylesheet to
+   * be loaded. Subsequent modifications to the element will not
+   * be ignored.
+   */
+  NS_IMETHOD InitStyleLinkElement(nsIParser *aParser, PRBool aDontLoadStyle) = 0;
+
+  /**
+   * Tells this element to update the stylesheet.
+   *
+   * @param aNotify .
+   * @param aOldDocument .
+   * @param aDocIndex .
+   */
+  NS_IMETHOD UpdateStyleSheet(PRBool aNotify,
+                              nsIDocument *aOldDocument,
+                              PRInt32 aDocIndex) = 0;
+
+  /**
+   * Tells this element wether to update the stylesheet when the
+   * element's properties change.
+   *
+   * @param aEnableUpdates update on changes or not.
+   */
+  NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates) = 0;
 };
 
 #endif // nsILinkingElement_h__
