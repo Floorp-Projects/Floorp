@@ -2674,7 +2674,6 @@ js_Interpret(JSContext *cx, jsval *result)
                 /* Call the debugger hook if present. */
                 hook = cx->runtime->callHook;
                 if (hook) {
-                    SAVE_SP(fp);
                     newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
                                             cx->runtime->callHookData);
                 }
