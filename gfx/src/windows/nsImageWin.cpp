@@ -482,6 +482,8 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
   if (nsnull != TheHDC){
     if (!IsOptimized() || nsnull==mHBitmap){
+      PRBool  didComposite = PR_FALSE;
+
       rop = SRCCOPY;
 
       if (nsnull != mAlphaBits){
@@ -490,6 +492,7 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
             MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
               CompositeBitsInMemory(TheHDC,aDX,aDY,aDWidth,aDHeight,aSX,aSY,aSWidth,aSHeight,srcy,
                     mAlphaBits,&bmi,mImageBits,mBHead,mNumPaletteColors);
+            didComposite = PR_TRUE;
           } else {
 
             MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
@@ -502,7 +505,7 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
       }
 
       
-      if (canRaster != DT_RASPRINTER){
+      if (PR_FALSE == didComposite){
         if (8==mAlphaDepth) {              
            DrawComposited(TheHDC, aDX, aDY, aDWidth, aDHeight,
              aSX, srcy, aSWidth, aSHeight);
