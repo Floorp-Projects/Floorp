@@ -7,18 +7,24 @@
   <html:script>
   function StartUp()
   {
+    dump("Doing Startup...\n");
     appCore = AppCoresManager.Find("BrowserAppCore");  
-    if (appCore==null) {
+    dump("Looking up BrowserAppCore...\n");
+    if (appCore == null) {
+      dump("Creating BrowserAppCore...\n");
       appCore = new BrowserAppCore();
       if (appCore != null) {
+        dump("BrowserAppCore has been created.\n");
         appCore.Init("BrowserAppCore");
-	      appCore.setToolbarWindow(window);
-	      appCore.setContentWindow(window.parent.frames[1]);
-	      appCore.setWebShellWindow(window.parent);
-          appCore.setDisableCallback("DoDisableButtons();");
-          appCore.setEnableCallback("DoEnableButtons();");
+	    appCore.setToolbarWindow(window);
+	    appCore.setContentWindow(window.parent.frames[1]);
+	    appCore.setWebShellWindow(window.parent);
+        appCore.setDisableCallback("DoDisableButtons();");
+        appCore.setEnableCallback("DoEnableButtons();");
       }
-    }
+    } else {
+      dump("BrowserAppCore has already been created! Why?\n");
+	}
   }
 
   function DoDisableButtons()
@@ -37,6 +43,7 @@
   {
     appCore = AppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
+	  dump("Going Back\n");
       appCore.back();
     } else {
       dump("BrowserAppCore has not ben created!\n");
@@ -47,6 +54,7 @@
   {
     appCore = AppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
+	  dump("Going Forward\n");
       appCore.forward();
     } else {
       dump("BrowserAppCore has not ben created!\n");
