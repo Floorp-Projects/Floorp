@@ -527,7 +527,11 @@ PRInt32 CTextToken::GetTextLength(void) {
  *  @return  error result
  */
 nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  static nsString theTerminals = NS_ConvertASCIItoUCS2("\n\r&<"); // XXXjag
+  static const PRUnichar theTerminalsChars[] = 
+    { PRUnichar('\n'), PRUnichar('\r'), PRUnichar('&'), PRUnichar('<'),
+      PRUnichar(0) };
+  const nsLocalString theTerminals(theTerminalsChars,
+    sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
   nsReadingIterator<PRUnichar> origin, start, end;
@@ -897,7 +901,12 @@ PRInt32 CMarkupDeclToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  static nsString theTerminals = NS_ConvertASCIItoUCS2("\n\r'\">"); // XXXjag
+  static const PRUnichar theTerminalsChars[] = 
+    { PRUnichar('\n'), PRUnichar('\r'), PRUnichar('\''), PRUnichar('"'),
+      PRUnichar('>'),
+      PRUnichar(0) };
+  const nsLocalString theTerminals(theTerminalsChars,
+    sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
   PRUnichar quote=0;
@@ -1520,7 +1529,12 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
  */
 static
 nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScanner){
-  static nsString theTerminals = NS_ConvertASCIItoUCS2("\b\t\n\r >"); // XXXjag
+  static const PRUnichar theTerminalsChars[] = 
+    { PRUnichar('\b'), PRUnichar('\t'), PRUnichar('\n'), PRUnichar('\r'),
+      PRUnichar(' '), PRUnichar('>'),
+      PRUnichar(0) };
+  const nsLocalString theTerminals(theTerminalsChars,
+    sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
   nsresult result=aScanner.ReadUntil(aString,theTerminals,PR_FALSE);
   
   //Let's force quotes if either the first or last char is quoted.
@@ -1569,7 +1583,12 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
       }
       else {
           //If you're here, handle an unquoted key.
-        static nsAutoString theTerminals = NS_ConvertASCIItoUCS2("\b\t\n\r \"=>"); // XXXjag
+        static const PRUnichar theTerminalsChars[] = 
+          { PRUnichar('\b'), PRUnichar('\t'), PRUnichar('\n'), PRUnichar('\r'),
+            PRUnichar(' '), PRUnichar('"'), PRUnichar('='), PRUnichar('>'),
+            PRUnichar(0) };
+        const nsLocalString theTerminals(theTerminalsChars,
+          sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
         result=aScanner.ReadUntil(start,end,theTerminals,PR_FALSE);
       }
       if (!aRetain) {

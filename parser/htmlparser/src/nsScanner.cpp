@@ -1155,17 +1155,17 @@ nsresult nsScanner::ReadWhile(nsString& aString,
  *           the set of INVALID characters
  *  @return  error code
  */
-nsresult nsScanner::ReadUntil(nsString& aString,
-                             nsString& aTerminalSet,
-                             PRBool addTerminal){
-  
+nsresult nsScanner::ReadUntil(nsAWritableString& aString,
+                              const nsAReadableString& aTerminalSet,
+                              PRBool addTerminal)
+{  
   if (!mSlidingBuffer) {
     return kEOF;
   }
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
-  nsReadingIterator<PRUnichar> origin, current, end;
+  nsReadingIterator<PRUnichar> origin, current, end, setstart, setend;
 
   origin = mCurrentPosition;
   current = origin;
@@ -1175,8 +1175,9 @@ nsresult nsScanner::ReadUntil(nsString& aString,
  
     theChar=*current;
     if(theChar) {
-      PRInt32 pos=aTerminalSet.FindChar(theChar);
-      if(kNotFound!=pos) {
+      aTerminalSet.BeginReading(setstart);
+      aTerminalSet.EndReading(setend);
+      if (FindCharInReadable(theChar, setstart, setend)) {
         if(addTerminal)
           current++;
         AppendUnicodeTo(origin, current, aString);
@@ -1208,10 +1209,10 @@ nsresult nsScanner::ReadUntil(nsString& aString,
  *           the set of INVALID characters
  *  @return  error code
  */
-nsresult nsScanner::ReadUntil(nsString& aString,
-                             nsCString& aTerminalSet,
-                             PRBool addTerminal){
-  
+nsresult nsScanner::ReadUntil(nsAWritableString& aString,
+                              const nsAReadableCString& aTerminalSet,
+                              PRBool addTerminal)
+{
   if (!mSlidingBuffer) {
     return kEOF;
   }
@@ -1219,6 +1220,7 @@ nsresult nsScanner::ReadUntil(nsString& aString,
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
   nsReadingIterator<PRUnichar> origin, current, end;
+  nsReadingIterator<char> setstart, setend;
 
   origin = mCurrentPosition;
   current = origin;
@@ -1228,8 +1230,9 @@ nsresult nsScanner::ReadUntil(nsString& aString,
  
     theChar=*current;
     if(theChar) {
-      PRInt32 pos=aTerminalSet.FindChar(theChar);
-      if(kNotFound!=pos) {
+      aTerminalSet.BeginReading(setstart);
+      aTerminalSet.EndReading(setend);
+      if (FindCharInReadable(theChar, setstart, setend)) {
         if(addTerminal)
           current++;
         AppendUnicodeTo(origin, current, aString);
@@ -1252,16 +1255,16 @@ nsresult nsScanner::ReadUntil(nsString& aString,
 
 nsresult nsScanner::ReadUntil(nsReadingIterator<PRUnichar>& aStart, 
                               nsReadingIterator<PRUnichar>& aEnd,
-                              nsString& aTerminalSet,
-                              PRBool addTerminal){
-  
+                              const nsAReadableString& aTerminalSet,
+                              PRBool addTerminal)
+{
   if (!mSlidingBuffer) {
     return kEOF;
   }
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
-  nsReadingIterator<PRUnichar> origin, current, end;
+  nsReadingIterator<PRUnichar> origin, current, end, setstart, setend;
 
   origin = mCurrentPosition;
   current = origin;
@@ -1271,8 +1274,9 @@ nsresult nsScanner::ReadUntil(nsReadingIterator<PRUnichar>& aStart,
  
     theChar=*current;
     if(theChar) {
-      PRInt32 pos=aTerminalSet.FindChar(theChar);
-      if(kNotFound!=pos) {
+      aTerminalSet.BeginReading(setstart);
+      aTerminalSet.EndReading(setend);
+      if (FindCharInReadable(theChar, setstart, setend)) {
         if(addTerminal)
           current++;
         aStart = origin;
@@ -1294,47 +1298,16 @@ nsresult nsScanner::ReadUntil(nsReadingIterator<PRUnichar>& aStart,
 }
 
 /**
- *  Consume characters until you encounter one contained in given
- *  input set.
- *  
- *  @update  gess 3/25/98
- *  @param   aString will contain the result of this method
- *  @param   aTerminalSet is an ordered string that contains
- *           the set of INVALID characters
- *  @return  error code
- */
-nsresult nsScanner::ReadUntil(nsString& aString,
-                              const char* aTerminalSet,
-                             PRBool addTerminal)
-{
-  if (!mSlidingBuffer) {
-    return kEOF;
-  }
-
-  nsresult   result=NS_OK;
-  if(aTerminalSet) {
-    PRInt32 len=nsCRT::strlen(aTerminalSet);
-    if(0<len) {
-
-      CBufDescriptor buf(aTerminalSet,PR_TRUE,len+1,len);
-      nsCAutoString theSet(buf);
-
-      result=ReadUntil(aString,theSet,addTerminal);
-    } //if
-  }//if
-  return result;
-}
-
-/**
  *  Consumes chars until you see the given terminalChar
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  error code
  */
-nsresult nsScanner::ReadUntil(nsString& aString,
-                             PRUnichar aTerminalChar,
-                             PRBool addTerminal){
+nsresult nsScanner::ReadUntil(nsAWritableString& aString,
+                              PRUnichar aTerminalChar,
+                              PRBool addTerminal)
+{
   if (!mSlidingBuffer) {
     return kEOF;
   }
