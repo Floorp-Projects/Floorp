@@ -33,7 +33,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: keyhi.h,v 1.5 2001/06/25 19:31:04 nicolson%netscape.com Exp $
+ * $Id: keyhi.h,v 1.6 2001/09/20 21:30:46 relyea%netscape.com Exp $
  */
 
 #ifndef _KEYHI_H_
@@ -46,7 +46,7 @@
 #include "secdert.h"
 #include "keythi.h"
 #include "certt.h"
-#include "secpkcs5.h"
+/*#include "secpkcs5.h" */
 
 SEC_BEGIN_PROTOS
 
@@ -108,7 +108,7 @@ SECKEYPrivateKey *SECKEY_CreateRSAPrivateKey(int keySizeInBits,
 /*
  * create a new DH key pair. The private Key is returned...
  */
-SECKEYPrivateKey *SECKEY_CreateDHPrivateKey(DHParams *param,
+SECKEYPrivateKey *SECKEY_CreateDHPrivateKey(SECKEYDHParams *param,
 					   SECKEYPublicKey **pubk, void *cx);
 /*
 ** Create a subject-public-key-info based on a public key.

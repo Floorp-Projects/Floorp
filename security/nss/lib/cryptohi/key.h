@@ -32,13 +32,12 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: key.h,v 1.1 2000/03/31 19:45:14 relyea%netscape.com Exp $
+ * $Id: key.h,v 1.2 2001/09/20 21:30:46 relyea%netscape.com Exp $
  */
 
 #ifndef _KEY_H_
 #define _KEY_H_
 
 #include "keyhi.h"
-#include "keylow.h"
 
 #endif /* _KEY_H_ */

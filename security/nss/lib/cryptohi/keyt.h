@@ -32,15 +32,12 @@
  *
  * keyt.h - public data structures for the private key library
  *
- * $Id: keyt.h,v 1.1 2000/03/31 19:45:30 relyea%netscape.com Exp $
+ * $Id: keyt.h,v 1.2 2001/09/20 21:30:47 relyea%netscape.com Exp $
  */
 
 #ifndef _KEYT_H_
 #define _KEYT_H_
 
-#include "keytlow.h"
-#include "keytboth.h"
 #include "keythi.h"
-#include "keydbt.h"
 
 #endif /* _KEYT_H_ */
