@@ -141,6 +141,8 @@ XUL_ATOM(resizeafter, "resizeafter")
 XUL_ATOM(state, "state")
 XUL_ATOM(debug, "debug")
 
+XUL_ATOM(fixed, "fixed")
+
 // grid
 XUL_ATOM(grid, "grid")
 XUL_ATOM(rows, "rows")
