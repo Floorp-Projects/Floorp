@@ -30,6 +30,7 @@ class nsIChromeRegistry : public nsISupports {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_ICHROMEREGISTRY_IID; return iid; }
     
+    NS_IMETHOD Init() = 0;
 };
 
 // for component registration
