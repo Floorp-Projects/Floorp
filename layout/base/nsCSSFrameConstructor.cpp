@@ -114,9 +114,6 @@ nsresult
 NS_NewScrollbarFrame ( nsIFrame** aNewFrame );
 
 nsresult
-NS_NewTriStateCheckboxFrame ( nsIFrame** aNewFrame );
-
-nsresult
 NS_NewSpinnerFrame ( nsIFrame** aNewFrame );
 
 nsresult
@@ -1859,7 +1856,6 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
 	    (nsXULAtoms::titledbutton      == tag.get())  ||
         (nsXULAtoms::grippy          == tag.get())  ||
         (nsXULAtoms::splitter        == tag.get())  ||
-        (nsXULAtoms::checkbox        == tag.get())  ||
         (nsXULAtoms::slider == tag.get())  ||
         (nsXULAtoms::spinner == tag.get())  ||
         (nsXULAtoms::scrollbar == tag.get())  ||
@@ -3437,8 +3433,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     // Create a frame based on the tag
     if (aTag == nsXULAtoms::button)
       rv = ConstructButtonControlFrame(aPresContext, newFrame);
-    else if (aTag == nsXULAtoms::checkbox)
-      rv = NS_NewTriStateCheckboxFrame(&newFrame);
     else if (aTag == nsXULAtoms::spinner)
       rv = NS_NewSpinnerFrame(&newFrame);
     else if (aTag == nsXULAtoms::colorpicker)
