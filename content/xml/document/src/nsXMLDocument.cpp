@@ -307,9 +307,11 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   rv = aChannel->GetContentType(&aContentType);
   
   if (NS_SUCCEEDED(rv)) { 
-  	 if ( 0 == PL_strcmp(aContentType, "text/html")) {
+    if ( 0 == PL_strcmp(aContentType, "text/html")) {
 		 bIsHTML = PR_TRUE;
-	 }
+    }
+    Recycle(aContentType);
+    aContentType = nsnull;
   }
 
   nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
