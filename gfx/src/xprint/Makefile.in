@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 LIBRARY_NAME	= gfxxprt
 IS_COMPONENT	= 1
+REQUIRES	= xpcom widget view img util dom pref locale uconv unicharutil
 
 CSRCS		= ../xlibrgb/xlibrgb.c \
 		$(NULL)
