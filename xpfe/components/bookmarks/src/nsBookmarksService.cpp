@@ -1580,8 +1580,7 @@ nsBookmarksService::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSour
                                          nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                          PRBool* aResult)
 {
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 
@@ -1591,8 +1590,7 @@ nsBookmarksService::DoCommand(nsISupportsArray* aSources,
                                   nsIRDFResource*   aCommand,
                                   nsISupportsArray* aArguments)
 {
-	NS_NOTYETIMPLEMENTED("write me!");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 ////////////////////////////////////////////////////////////////////////
