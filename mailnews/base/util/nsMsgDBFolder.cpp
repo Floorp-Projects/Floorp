@@ -1691,6 +1691,7 @@ nsMsgDBFolder::CallFilterPlugins()
     nsCOMPtr<nsIMsgIncomingServer> server;
     nsCOMPtr<nsISpamSettings> spamSettings;
     nsCOMPtr<nsIAbMDBDirectory> whiteListDirectory;
+    nsCOMPtr<nsIMsgHeaderParser> headerParser;
     PRBool useWhiteList = PR_FALSE;
     PRInt32 spamLevel = 0;
     nsXPIDLCString whiteListAbURI;
@@ -1744,6 +1745,8 @@ nsMsgDBFolder::CallFilterPlugins()
 
         whiteListDirectory = do_QueryInterface(resource, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
+        headerParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
       // if we can't get the db, we probably want to continue firing spam filters.
     }
@@ -1766,7 +1769,8 @@ nsMsgDBFolder::CallFilterPlugins()
     {
         nsXPIDLCString junkScore;
         nsCOMPtr <nsIMsgDBHdr> msgHdr;
-        rv = mDatabase->GetMsgHdrForKey(newMessageKeys->GetAt(i), getter_AddRefs(msgHdr));
+        nsMsgKey msgKey = newMessageKeys->GetAt(i);
+        rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
         if (!NS_SUCCEEDED(rv))
           continue;
 
@@ -1780,10 +1784,19 @@ nsMsgDBFolder::CallFilterPlugins()
           {
             PRBool cardExists = PR_FALSE;
             nsXPIDLCString author;
+            nsXPIDLCString authorEmailAddress;
             msgHdr->GetAuthor(getter_Copies(author));
-            rv = whiteListDirectory->HasCardForEmailAddress(author, &cardExists);
+            rv = headerParser->ExtractHeaderAddressMailboxes(nsnull, author.get(), getter_Copies(authorEmailAddress));
+            // don't want to abort the rest of the scoring.
+            if (NS_SUCCEEDED(rv))
+              rv = whiteListDirectory->HasCardForEmailAddress(authorEmailAddress, &cardExists);
             if (NS_SUCCEEDED(rv) && cardExists)
+            {
+              // mark this msg as non-junk, because we whitelisted it.
+              mDatabase->SetStringProperty(msgKey, "junkscore", "0");
+              mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "plugin");
               continue; // skip this msg since it's in the white list
+            }
           }
         }
 
