@@ -53,10 +53,12 @@ REQUIRES	= xpcom \
 		  necko \
 		  intl \
 		  xmlextras \
+		  pref \
 		  $(NULL)
 
 CPPSRCS        = \
 		nsWebScriptsAccess.cpp \
+		nsWSAUtils.cpp \
                 $(NULL)
 
 LOCAL_INCLUDES  = \

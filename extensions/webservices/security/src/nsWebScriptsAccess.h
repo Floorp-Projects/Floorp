@@ -38,13 +38,12 @@
 #ifndef nsWebScriptsAccess_h__
 #define nsWebScriptsAccess_h__
 
-#include "nsCOMPtr.h"
-#include "nsIURI.h"
 #include "nsIWebScriptsAccessService.h"
 #include "nsIScriptSecurityManager.h" 
 #include "nsHashtable.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsVoidArray.h"
+#include "nsWSAUtils.h"
 
 class nsIDOMDocument;
 class nsIDOMNode;
@@ -98,20 +97,22 @@ public:
   NS_DECL_NSIWEBSCRIPTSACCESSSERVICE
 
 protected:
-  nsresult CheckAccess(AccessInfoEntry* aAccessInfoEntry, const nsAString& aRequestType, PRBool* aAccessGranted);
-  nsresult GetAccessInfoEntry(const char* aKey, const PRBool aIsDelegated, AccessInfoEntry** aEntry);
-  nsresult GetInfoFromDocument(nsIDOMDocument* aDocument, const PRBool aIsDelegated, AccessInfoEntry** aAccessInfoEntry);
+  nsresult GetAccessInfoEntry(const char* aKey, AccessInfoEntry** aEntry);
   nsresult GetDocument(const char* aDeclFilePath, nsIDOMDocument** aDocument);
   nsresult GetCodebaseURI(nsIURI** aCodebase);
-  nsresult GetDelegatedInfo(AccessInfoEntry** aAccessInfoEntry);
-  nsresult CreateAccessInfoEntry(nsIDOMNodeList* aAllowList, AccessInfoEntry** aAccessInfoEntry);
-  nsresult CreateAccessInfoEntry(const PRInt32 aFlags, AccessInfoEntry** aAccessInfoEntry);
-  nsresult ReportError(const PRUnichar* aMessageID, const PRUnichar** aInputs, const PRInt32 aLength);
+  nsresult CreateEntry(const char* aKey, const PRBool aIsDelegated, AccessInfoEntry** aEntry);
+  nsresult CreateEntry(nsIDOMDocument* aDocument, const PRBool aIsDelegated, AccessInfoEntry** aAccessInfoEntry);
+  nsresult CreateEntry(nsIDOMNodeList* aAllowList, AccessInfoEntry** aAccessInfoEntry);
+  nsresult CreateEntry(const PRInt32 aFlags, AccessInfoEntry** aAccessInfoEntry);
+  nsresult CreateDelegatedEntry(AccessInfoEntry** aAccessInfoEntry);
+  nsresult CheckAccess(AccessInfoEntry* aAccessInfoEntry, const nsAString& aRequestType, PRBool* aAccessGranted);
   nsresult ValidateDocument(nsIDOMDocument* aDocument, PRBool* aIsValid);
+  nsresult IsPublicService(const char* aHost, PRBool* aReturn);
   
   nsCOMPtr<nsIURI> mServiceURI;
   nsCOMPtr<nsIXMLHttpRequest> mRequest;
   nsCOMPtr<nsIScriptSecurityManager> mSecurityManager;
+  nsStringArray mMasterServices;
   nsHashtable mAccessInfoTable;
 };
 
