@@ -434,7 +434,7 @@ method_declaration(TreeState *state)
     IDL_tree iterator = NULL;
     IDL_tree retval_param = NULL;
 
-    if (!verify_method_declaration(state))
+    if (!verify_method_declaration(state->tree))
         return FALSE;
 
     xpidl_write_comment(state, 4);
