@@ -417,7 +417,7 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
       prevpen = (HPEN)::SelectObject(aOldDC, mOrigSolidPen);
 
     if (nsnull != mOrigPalette)
-      ::SelectPalette(aOldDC, mOrigPalette, TRUE);
+      ::SelectPalette(aOldDC, mOrigPalette, PR_TRUE);
   }
   else
   {
@@ -447,7 +447,7 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   if (palInfo.isPaletteDevice && palInfo.palette)
   {
     // Select the palette in the background
-    mOrigPalette = ::SelectPalette(aNewDC, (HPALETTE)palInfo.palette, TRUE);
+    mOrigPalette = ::SelectPalette(aNewDC, (HPALETTE)palInfo.palette, PR_TRUE);
     // Don't do the realization for an off-screen memory DC
     if (nsnull == aOldDC)
       ::RealizePalette(aNewDC);
@@ -498,7 +498,7 @@ NS_IMETHODIMP nsRenderingContextWin :: LockDrawingSurface(PRInt32 aX, PRInt32 aY
       mCurrPen = (HPEN)::SelectObject(mDC, mOrigSolidPen);
 
     if (nsnull != mOrigPalette)
-      ::SelectPalette(mDC, mOrigPalette, TRUE);
+      ::SelectPalette(mDC, mOrigPalette, PR_TRUE);
   }
 
   mSurface->ReleaseDC();
@@ -538,7 +538,7 @@ NS_IMETHODIMP nsRenderingContextWin :: UnlockDrawingSurface(void)
     {
       PRBool  offscr;
       // Select the palette in the background
-      mOrigPalette = ::SelectPalette(mDC, (HPALETTE)palInfo.palette, TRUE);
+      mOrigPalette = ::SelectPalette(mDC, (HPALETTE)palInfo.palette, PR_TRUE);
 
       mSurface->IsOffscreen(&offscr);
 
@@ -807,7 +807,7 @@ NS_IMETHODIMP nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCo
     ::DeleteObject(tregion);
   }
   else
-    NS_ASSERTION(FALSE, "illegal clip combination");
+    NS_ASSERTION(PR_FALSE, "illegal clip combination");
 
   if (cliptype == NULLREGION)
     aClipEmpty = PR_TRUE;
@@ -1391,8 +1391,8 @@ NS_IMETHODIMP nsRenderingContextWin :: FillArc(nscoord aX, nscoord aY, nscoord a
 
 #define CHAR_IS_HEBREW(c) ((0x0590 <= (c)) && ((c)<= 0x05FF))
 #define CHAR_IS_ARABIC(c) ((0x0600 <= (c)) && ((c)<= 0x06FF))
-#define HAS_ARABIC_PRESENTATION_FORM_B(font) (FONT_HAS_GLYPH((font)->map, 0xFE81))
-#define HAS_HEBREW_GLYPH(font)               (FONT_HAS_GLYPH((font)->map, 0x05D0))
+#define HAS_ARABIC_PRESENTATION_FORM_B(font) (FONT_HAS_GLYPH((font)->mMap, 0xFE81))
+#define HAS_HEBREW_GLYPH(font)               (FONT_HAS_GLYPH((font)->mMap, 0x05D0))
 
 static void HebrewReordering(const PRUnichar *aString, PRUint32 aLen,
         PRUnichar* aBuf, PRUint32 &aBufLen)
@@ -1560,21 +1560,21 @@ printf("]\n");
 }
 //============ End of Arabic Basic to Presentation Form B Code ============
 
-static BOOL NeedComplexScriptHandling(const PRUnichar *aString, PRUint32 aLen,
-       BOOL bFontSupportHebrew, BOOL* oHebrew,
-       BOOL bFontSupportArabic, BOOL* oArabic)
+static PRBool NeedComplexScriptHandling(const PRUnichar *aString, PRUint32 aLen,
+       PRBool bFontSupportHebrew, PRBool* oHebrew,
+       PRBool bFontSupportArabic, PRBool* oArabic)
 {
   PRUint32 i;
-  *oHebrew = *oArabic = FALSE;
+  *oHebrew = *oArabic = PR_FALSE;
   if(bFontSupportArabic && bFontSupportHebrew)
   {
      for(i=0;i<aLen;i++)
      {
        if(CHAR_IS_HEBREW(aString[i])) {
-          *oHebrew=TRUE;
+          *oHebrew=PR_TRUE;
           break;
        } else if(CHAR_IS_ARABIC(aString[i])) {
-          *oArabic=TRUE;
+          *oArabic=PR_TRUE;
           break;
        }
      }
@@ -1582,7 +1582,7 @@ static BOOL NeedComplexScriptHandling(const PRUnichar *aString, PRUint32 aLen,
      for(i=0;i<aLen;i++)
      {
        if(CHAR_IS_HEBREW(aString[i])) {
-          *oHebrew=TRUE;
+          *oHebrew=PR_TRUE;
           break;
        }
      }
@@ -1590,7 +1590,7 @@ static BOOL NeedComplexScriptHandling(const PRUnichar *aString, PRUint32 aLen,
      for(i=0;i<aLen;i++)
      {
        if(CHAR_IS_ARABIC(aString[i])) {
-          *oArabic=TRUE;
+          *oArabic=PR_TRUE;
           break;
        }
      }
@@ -1626,8 +1626,8 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const char* aString,
 
   if (nsnull != mFontMetrics)
   {
-      // Check for the very common case of trying to get the width of a single
-      // space.
+    // Check for the very common case of trying to get the width of a single
+    // space.
     if ((1 == aLength) && (aString[0] == ' '))
     {
       nsFontMetricsWin* fontMetricsWin = (nsFontMetricsWin*)mFontMetrics;
@@ -1660,10 +1660,8 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
   {
     nsFontMetricsWin* metrics = (nsFontMetricsWin*) mFontMetrics;
     nsFontWin* prevFont = nsnull;
-    SIZE size;
 
     SetupFontAndColor();
-    HFONT selectedFont = mCurrFont;
 #ifdef ARABIC_HEBREW_RENDERING
     PRUnichar buf[8192];
     PRUint32 len;
@@ -1677,7 +1675,7 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
       nsFontWin** font = metrics->mLoadedFonts;
       nsFontWin** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (FONT_HAS_GLYPH((*font)->map, c)) {
+        if (FONT_HAS_GLYPH((*font)->mMap, c)) {
           currFont = *font;
           goto FoundFont; // for speed -- avoid "if" statement
         }
@@ -1688,13 +1686,9 @@ FoundFont:
       // XXX avoid this test by duplicating code
       if (prevFont) {
         if (currFont != prevFont) {
-          if (prevFont->font != selectedFont) {
-            ::SelectObject(mDC, prevFont->font);
-            selectedFont = prevFont->font;
-          }
 #ifdef ARABIC_HEBREW_RENDERING
-          BOOL bArabic=FALSE;
-          BOOL bHebrew=FALSE;
+          PRBool bArabic=PR_FALSE;
+          PRBool bHebrew=PR_FALSE;
           if(NeedComplexScriptHandling(&aString[start],i-start,
                 HAS_HEBREW_GLYPH(prevFont), &bHebrew,
                 HAS_ARABIC_PRESENTATION_FORM_B(prevFont), &bArabic ) )
@@ -1703,16 +1697,15 @@ FoundFont:
              if(bHebrew) {
                 HebrewReordering(&aString[start], i-start, buf, len);
              } else if (bArabic) {
-                ArabicShaping(&aString[start], i-start, buf, len, prevFont->map);
+                ArabicShaping(&aString[start], i-start, buf, len, prevFont->mMap);
             }
-            ::GetTextExtentPoint32W(mDC, buf, len, &size);
+            width += prevFont->GetWidth(mDC, buf, len);
           } 
           else 
 #endif // ARABIC_HEBREW_RENDERING
           {
-            ::GetTextExtentPoint32W(mDC, &aString[start], i - start, &size);
+            width += prevFont->GetWidth(mDC, &aString[start], i - start);
           }
-          width += size.cx;
           prevFont = currFont;
           start = i;
         }
@@ -1724,13 +1717,9 @@ FoundFont:
     }
 
     if (prevFont) {
-      if (prevFont->font != selectedFont) {
-        ::SelectObject(mDC, prevFont->font);
-        selectedFont = prevFont->font;
-      }
 #ifdef ARABIC_HEBREW_RENDERING
-      BOOL bArabic=FALSE;
-      BOOL bHebrew=FALSE;
+      PRBool bArabic=PR_FALSE;
+      PRBool bHebrew=PR_FALSE;
       if(NeedComplexScriptHandling(&aString[start],i-start,
                 HAS_HEBREW_GLYPH(prevFont), &bHebrew,
             HAS_ARABIC_PRESENTATION_FORM_B(prevFont), &bArabic ) )
@@ -1739,24 +1728,18 @@ FoundFont:
          if(bHebrew) {
             HebrewReordering(&aString[start], i-start, buf, len);
          } else if (bArabic) {
-            ArabicShaping(&aString[start], i-start, buf, len, prevFont->map);
+            ArabicShaping(&aString[start], i-start, buf, len, prevFont->mMap);
         }
-        ::GetTextExtentPoint32W(mDC, buf, len, &size);
+        width += prevFont->GetWidth(mDC, buf, len);
       } 
       else 
 #endif // ARABIC_HEBREW_RENDERING
       {
-         ::GetTextExtentPoint32W(mDC, &aString[start], i - start, &size);
+         width += prevFont->GetWidth(mDC, &aString[start], i - start);
       }
-      width += size.cx;
     }
 
     aWidth = NSToCoordRound(float(width) * mP2T);
-
-    if (selectedFont != mCurrFont) {
-      // Restore the font
-      ::SelectObject(mDC, mCurrFont);
-    }
 
     if (nsnull != aFontID)
       *aFontID = 0;
@@ -1771,7 +1754,15 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 
                                                   nscoord aX, nscoord aY,
                                                   const nscoord* aSpacing)
 {
-	PRInt32	x = aX;
+  NS_PRECONDITION(mFontMetrics,"Something is wrong somewhere");
+
+  // Take care of ascent and specifies the drawing on the baseline
+  nscoord ascent;
+  mFontMetrics->GetMaxAscent(ascent);
+  aY += ascent;
+  ::SetTextAlign(mDC, TA_BASELINE);
+
+  PRInt32 x = aX;
   PRInt32 y = aY;
 
   SetupFontAndColor();
@@ -1785,8 +1776,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 
     }
     mTMatrix->ScaleXCoords(aSpacing, aLength, dx0);
   }
-
-	mTMatrix->TransformCoord(&x, &y);
+  mTMatrix->TransformCoord(&x, &y);
   ::ExtTextOut(mDC, x, y, 0, NULL, aString, aLength, aSpacing ? dx0 : NULL);
 
   if ((nsnull != aSpacing) && (dx0 != dxMem)) {
@@ -1803,15 +1793,19 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
 {
   if (nsnull != mFontMetrics)
   {
+    // Take care of the ascent since the drawing is on the baseline
+    nscoord ascent;
+    mFontMetrics->GetMaxAscent(ascent);
+    aY += ascent;
+    ::SetTextAlign(mDC, TA_BASELINE);
+
     PRInt32 x = aX;
     PRInt32 y = aY;
     mTMatrix->TransformCoord(&x, &y);
     nsFontMetricsWin* metrics = (nsFontMetricsWin*) mFontMetrics;
     nsFontWin* prevFont = nsnull;
-    SIZE size;
 
     SetupFontAndColor();
-    HFONT selectedFont = mCurrFont;
 #ifdef ARABIC_HEBREW_RENDERING
     PRUnichar buf[8192];
     PRUint32 len;
@@ -1824,7 +1818,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
       nsFontWin** font = metrics->mLoadedFonts;
       nsFontWin** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (FONT_HAS_GLYPH((*font)->map, c)) {
+        if (FONT_HAS_GLYPH((*font)->mMap, c)) {
           currFont = *font;
           goto FoundFont; // for speed -- avoid "if" statement
         }
@@ -1834,10 +1828,6 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
 FoundFont:
       if (prevFont) {
         if (currFont != prevFont) {
-          if (prevFont->font != selectedFont) {
-            ::SelectObject(mDC, prevFont->font);
-            selectedFont = prevFont->font;
-          }
           if (aSpacing) {
             // XXX Fix path to use a twips transform in the DC and use the
             // spacing values directly and let windows deal with the sub-pixel
@@ -1852,15 +1842,15 @@ FoundFont:
               x = aX;
               y = aY;
               mTMatrix->TransformCoord(&x, &y);
-              ::ExtTextOutW(mDC, x, y, 0, NULL, str, 1, NULL);
+              prevFont->DrawString(mDC, x, y, str, 1);
               aX += *aSpacing++;
               str++;
             }
           }
           else {
 #ifdef ARABIC_HEBREW_RENDERING
-            BOOL bArabic=FALSE;
-            BOOL bHebrew=FALSE;
+            PRBool bArabic=PR_FALSE;
+            PRBool bHebrew=PR_FALSE;
             if(NeedComplexScriptHandling(&aString[start],i-start,
                 HAS_HEBREW_GLYPH(prevFont), &bHebrew,
                 HAS_ARABIC_PRESENTATION_FORM_B(prevFont), &bArabic ) )
@@ -1869,18 +1859,17 @@ FoundFont:
                if(bHebrew) {
                   HebrewReordering(&aString[start], i-start, buf, len);
                } else if (bArabic) {
-                  ArabicShaping(&aString[start], i-start, buf, len, prevFont->map);
+                  ArabicShaping(&aString[start], i-start, buf, len, prevFont->mMap);
               }
-              ::ExtTextOutW(mDC, x, y, 0, NULL, buf, len, NULL);
-              ::GetTextExtentPoint32W(mDC, buf, len, &size);
+              prevFont->DrawString(mDC, x, y, buf, len);
+              x += prevFont->GetWidth(mDC, buf, len);
             } 
             else 
 #endif // ARABIC_HEBREW_RENDERING
             {
-               ::ExtTextOutW(mDC, x, y, 0, NULL, &aString[start], i - start, NULL);
-               ::GetTextExtentPoint32W(mDC, &aString[start], i - start, &size);
+              prevFont->DrawString(mDC, x, y, &aString[start], i - start);
+              x += prevFont->GetWidth(mDC, &aString[start], i - start);
             }
-            x += size.cx;
           }
           prevFont = currFont;
           start = i;
@@ -1893,10 +1882,6 @@ FoundFont:
     }
 
     if (prevFont) {
-      if (prevFont->font != selectedFont) {
-        ::SelectObject(mDC, prevFont->font);
-        selectedFont = prevFont->font;
-      }
       if (aSpacing) {
         // XXX Fix path to use a twips transform in the DC and use the
         // spacing values directly and let windows deal with the sub-pixel
@@ -1911,15 +1896,15 @@ FoundFont:
           x = aX;
           y = aY;
           mTMatrix->TransformCoord(&x, &y);
-          ::ExtTextOutW(mDC, x, y, 0, NULL, str, 1, NULL);
+          prevFont->DrawString(mDC, x, y, str, 1);
           aX += *aSpacing++;
           str++;
         }
       }
       else {
 #ifdef ARABIC_HEBREW_RENDERING
-        BOOL bArabic=FALSE;
-        BOOL bHebrew=FALSE;
+        PRBool bArabic=PR_FALSE;
+        PRBool bHebrew=PR_FALSE;
         if(NeedComplexScriptHandling(&aString[start],i-start,
             HAS_HEBREW_GLYPH(prevFont), &bHebrew,
             HAS_ARABIC_PRESENTATION_FORM_B(prevFont), &bArabic ) )
@@ -1928,21 +1913,16 @@ FoundFont:
             if(bHebrew) {
                HebrewReordering(&aString[start], i-start, buf, len);
             } else if (bArabic) {
-               ArabicShaping(&aString[start], i-start, buf, len, prevFont->map);
+               ArabicShaping(&aString[start], i-start, buf, len, prevFont->mMap);
             }
-            ::ExtTextOutW(mDC, x, y, 0, NULL, buf, len, NULL);
+            prevFont->DrawString(mDC, x, y, buf, len);
         } 
         else 
 #endif // ARABIC_HEBREW_RENDERING
         {
-           ::ExtTextOutW(mDC, x, y, 0, NULL, &aString[start], i - start, NULL);
+           prevFont->DrawString(mDC, x, y, &aString[start], i - start);
         }
       }
-    }
-
-    if (selectedFont != mCurrFont) {
-      // Restore the font
-      ::SelectObject(mDC, mCurrFont);
     }
 
     return NS_OK;
@@ -1958,6 +1938,146 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const nsString& aString,
 {
   return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
+
+#ifdef MOZ_MATHML
+NS_IMETHODIMP 
+nsRenderingContextWin::GetBoundingMetrics(const char*        aString,
+                                          PRUint32           aLength,
+                                          nsBoundingMetrics& aBoundingMetrics)
+{
+  NS_PRECONDITION(mFontMetrics,"Something is wrong somewhere");
+
+  aBoundingMetrics.Clear();
+  if (!mFontMetrics)
+    return NS_ERROR_FAILURE;
+  else if (0 < aLength) {
+    SetupFontAndColor();
+
+    // set glyph transform matrix to identity
+    MAT2 mat2;
+    FIXED zero, one;
+    zero.fract = 0; one.fract = 0;
+    zero.value = 0; one.value = 1; 
+    mat2.eM12 = mat2.eM21 = zero; 
+    mat2.eM11 = mat2.eM22 = one; 
+  
+    // measure the string
+    GLYPHMETRICS gm;
+    DWORD len = GetGlyphOutline(mDC, aString[0], GGO_METRICS, &gm, 0, nsnull, &mat2);
+    if (GDI_ERROR == len) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    else {
+      aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
+      aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+      aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+      aBoundingMetrics.descent = gm.gmptGlyphOrigin.y - gm.gmBlackBoxY;
+      aBoundingMetrics.width = gm.gmCellIncX;
+    }
+    if (1 < aLength) {
+      // loop over each glyph to get the ascent and descent
+      PRUint32 i;
+      for (i = 1; i < aLength; i++) {
+        len = GetGlyphOutline(mDC, aString[i], GGO_METRICS, &gm, 0, nsnull, &mat2);
+        if (GDI_ERROR == len) {
+          return NS_ERROR_UNEXPECTED;
+        }
+        else {
+          if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
+            aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+          if (aBoundingMetrics.descent > nscoord(gm.gmptGlyphOrigin.y - gm.gmBlackBoxY))
+            aBoundingMetrics.descent = gm.gmptGlyphOrigin.y - gm.gmBlackBoxY;
+        }
+      }
+      // get the final rightBearing and width. Possible kerning is taken into account.
+      SIZE size;
+      ::GetTextExtentPoint32(mDC, aString, aLength, &size);
+      aBoundingMetrics.width = size.cx;
+      aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextWin::GetBoundingMetrics(const PRUnichar*   aString,
+                                          PRUint32           aLength,
+                                          nsBoundingMetrics& aBoundingMetrics,
+                                          PRInt32*           aFontID)
+{
+  nsresult rv = NS_OK;
+
+  aBoundingMetrics.Clear();
+  if (!mFontMetrics)
+    return NS_ERROR_FAILURE;
+  else if (0 < aLength) {
+    nsFontMetricsWin* metrics = (nsFontMetricsWin*) mFontMetrics;
+    nsFontWin* prevFont = nsnull;
+
+    SetupFontAndColor();
+
+    nsBoundingMetrics rawbm;
+    PRBool firstTime = PR_TRUE;
+    PRUint32 start = 0;
+    for (PRUint32 i = 0; i < aLength; i++) {
+      PRUnichar c = aString[i];
+      nsFontWin* currFont = nsnull;
+      nsFontWin** font = metrics->mLoadedFonts;
+      nsFontWin** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < end) {
+        if (FONT_HAS_GLYPH((*font)->mMap, c)) {
+          currFont = *font;
+          goto FoundFont; // for speed -- avoid "if" statement
+        }
+        font++;
+      }
+      currFont = metrics->FindFont(mDC, c);
+FoundFont:
+      // XXX avoid this test by duplicating code
+      if (prevFont) {
+        if (currFont != prevFont) {
+          rv = prevFont->GetBoundingMetrics(mDC, &aString[start], i - start, rawbm);
+          if (NS_FAILED(rv)) return rv;
+          if (firstTime) {
+	    firstTime = PR_FALSE;
+            aBoundingMetrics = rawbm;
+          } 
+          else {
+            aBoundingMetrics += rawbm;
+          }
+          prevFont = currFont;
+          start = i;
+        }
+      }
+      else {
+        prevFont = currFont;
+        start = i;
+      }
+    }
+
+    if (prevFont) {
+      rv = prevFont->GetBoundingMetrics(mDC, &aString[start], i - start, rawbm);
+      if (NS_FAILED(rv)) return rv;
+      if (firstTime)
+        aBoundingMetrics = rawbm;
+      else
+        aBoundingMetrics += rawbm;
+    }
+
+    // convert to app units
+    aBoundingMetrics.leftBearing = NSToCoordRound(float(aBoundingMetrics.leftBearing) * mP2T);
+    aBoundingMetrics.rightBearing = NSToCoordRound(float(aBoundingMetrics.rightBearing) * mP2T);
+    aBoundingMetrics.width = NSToCoordRound(float(aBoundingMetrics.width) * mP2T);
+    aBoundingMetrics.ascent = NSToCoordRound(float(aBoundingMetrics.ascent) * mP2T);
+    aBoundingMetrics.descent = NSToCoordRound(float(aBoundingMetrics.descent) * mP2T);
+
+    if (nsnull != aFontID)
+      *aFontID = 0;
+
+    return NS_OK;
+  }
+}
+#endif // MOZ_MATHML
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
@@ -2053,7 +2173,7 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSu
       mContext->GetPaletteInfo(palInfo);
 
       if (palInfo.isPaletteDevice && palInfo.palette)
-        oldPalette = ::SelectPalette(destdc, (HPALETTE)palInfo.palette, TRUE);
+        oldPalette = ::SelectPalette(destdc, (HPALETTE)palInfo.palette, PR_TRUE);
 
       if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
         mTMatrix->TransformCoord(&x, &y);
@@ -2066,7 +2186,7 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSu
                srcdc, x, y, SRCCOPY);
 
       if (palInfo.isPaletteDevice && palInfo.palette)
-        ::SelectPalette(destdc, oldPalette, TRUE);
+        ::SelectPalette(destdc, oldPalette, PR_TRUE);
 
       //kill the DC
       ((nsDrawingSurfaceWin *)aSrcSurf)->ReleaseDC();
@@ -2447,6 +2567,12 @@ NS_IMETHODIMP nsRenderingContextWinA :: DrawString(const PRUnichar *aString, PRU
 {
   if (nsnull != mFontMetrics)
   {
+    // Take care of the ascent and specifies the drawing on the baseline
+    nscoord ascent;
+    mFontMetrics->GetMaxAscent(ascent);
+    aY += ascent;
+    ::SetTextAlign(mDC, TA_BASELINE);
+
     PRInt32 x = aX;
     PRInt32 y = aY;
     mTMatrix->TransformCoord(&x, &y);

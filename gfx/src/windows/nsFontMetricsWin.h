@@ -1,23 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 
 #ifndef nsFontMetricsWin_h__
@@ -44,11 +40,28 @@
 #endif
 #define ADD_GLYPH(map, g) (map)[(g) >> 3] |= (1 << ((g) & 7))
 
-typedef struct nsFontWin
+class nsFontWin
 {
-  HFONT    font;
-  PRUint8* map;
-} nsFontWin;
+public:
+  nsFontWin(LOGFONT* aLogFont, HFONT aFont, PRUint8* aMap);
+  virtual ~nsFontWin();
+
+  virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
+                           PRUint32 aLength) = 0;
+  virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
+                          const PRUnichar* aString, PRUint32 aLength) = 0;
+#ifdef MOZ_MATHML
+  NS_IMETHOD
+  GetBoundingMetrics(HDC                aDC, 
+                     const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics) = 0;
+#endif
+
+  char     mName[LF_FACESIZE];
+  HFONT    mFont;
+  PRUint8* mMap;
+};
 
 typedef struct nsGlobalFont
 {
@@ -160,7 +173,7 @@ protected:
 
   static nsGlobalFont* InitializeGlobalFonts(HDC aDC);
 
-  static PRUint8* GetCMAP(HDC aDC);
+  static PRUint8* GetCMAP(HDC aDC, const char* aShortName, int* aIsUnicode);
 };
 
 
