@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,7 +13,6 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
-
 #
 
 DEPTH		= ..
@@ -82,3 +80,17 @@ TARGETS		= $(LIBRARY)
 endif
 
 include $(DEPTH)/config/rules.mk
+
+#
+# Trying to compile jidctred.c with -O2 causes cc1 (?) to dump core,
+# leaving gcc hanging.  Using -O works fine.
+#
+# Linux 2.0.30 (RedHat 5 Alpha)
+# 64MB RAM
+# egcs-2.90.23 980102 (egcs-1.0.1 release)
+#
+ifeq ($(OS_ARCH)$(CPU_ARCH),Linuxalpha)
+$(OBJDIR)/jidctred.o: jidctred.c
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ -c $(XP_DEFINE) -O $(OS_CFLAGS) $(MDUPDATE_FLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROF_FLAGS) $<
+endif
