@@ -1314,10 +1314,18 @@ nsInstallFileOpItem::NativeFileOpMacAliasComplete()
     return err;
   }
   c2pstr(aliasLeaf);
-  FSMakeFSSpec(fsAliasParent.vRefNum, aliasDirID, (unsigned char *) aliasLeaf, &fsAlias);
+  err = FSMakeFSSpec(fsAliasParent.vRefNum, aliasDirID, (unsigned char *) aliasLeaf, &fsAlias);
   p2cstr((unsigned char *)aliasLeaf);
   if (aliasLeaf)
     nsMemory::Free(aliasLeaf);
+  
+  // file already exists: delete it before creating an updated alias
+  if (err == noErr)
+  {
+    err = FSpDelete(&fsAlias);
+    if (err != noErr)
+        return err;
+  }
   
   err = NewAliasMinimal( &fsSource, &aliasH );
   if (err != noErr)  // bubble up Alias Manager error
