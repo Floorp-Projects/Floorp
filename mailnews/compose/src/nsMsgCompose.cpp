@@ -74,6 +74,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsIPrompt.h"
+#include "nsMsgComposeService.h"
 
 // Defines....
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -367,6 +368,10 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
     editor->EnableUndo(PR_TRUE);
   SetBodyModified(PR_FALSE);
 
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+  nsCOMPtr<nsIMsgComposeService> composeService (do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID));
+  composeService->TimeStamp("Finished inserting data into the editor. The window is almost ready!", PR_FALSE);
+#endif
   return NS_OK;
 }
 
@@ -1333,6 +1338,10 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
       }
     }
     
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+    nsCOMPtr<nsIMsgComposeService> composeService (do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID));
+    composeService->TimeStamp("done with mime. Time to insert the body", PR_FALSE);
+#endif
     if (! mHeadersOnly)
       mMsgBody.AppendWithConversion("</html>");
     
@@ -1786,6 +1795,12 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
 
   // Now, do the appropriate startup operation...signature only
   // or quoted message and signature...
+
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+  nsCOMPtr<nsIMsgComposeService> composeService (do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID));
+  composeService->TimeStamp("Editor is done loading about::blank. Now let mime do its job", PR_FALSE);
+#endif
+
   if ( mComposeObj->QuotingToFollow() )
     return mComposeObj->BuildQuotedMessageAndSignature();
   else
@@ -1940,7 +1955,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
       nsCOMPtr<nsILocalFile> sigFile;
       rv = identity->GetSignature(getter_AddRefs(sigFile));
       if (NS_SUCCEEDED(rv) && sigFile)
-        rv = sigFile->GetPath(getter_Copies(sigNativePath));
+         rv = sigFile->GetPath(getter_Copies(sigNativePath));
       else
         useSigFile = PR_FALSE;  //No signature file! therefore turn it off.
     }

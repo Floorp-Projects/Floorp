@@ -61,6 +61,9 @@ interface nsIMsgComposeService : nsISupports {
                               in nsIMsgComposeParams params);
 
 	/* ... */
-	void DisposeCompose(in nsIMsgCompose compose);	
+ 	void DisposeCompose(in nsIMsgCompose compose);
+ 	
+ 	/* This function is use for debugging purpose only and may go away at anytime without warning */
+ 	void TimeStamp(in string label, in boolean resetTime);	
 };
 

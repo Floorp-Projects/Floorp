@@ -18,7 +18,10 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Jean-Francois Ducarroz <ducarroz@netscape.com>
  */
+
+#define MSGCOMP_TRACE_PERFORMANCE 1
 
 #include "nsIMsgComposeService.h"
 #include "nsISupportsArray.h"
@@ -36,4 +39,10 @@ public:
 
   NS_DECL_NSICMDLINEHANDLER
   CMDLINEHANDLER_REGISTERPROC_DECLS 
+
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+private:
+  PRIntervalTime            mStartTime;
+  PRIntervalTime            mPreviousTime;
+#endif
 };

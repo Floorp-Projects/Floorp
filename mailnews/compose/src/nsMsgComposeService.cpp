@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Jean-Francois Ducarroz <ducarroz@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -36,11 +37,52 @@
 #include "nsIMsgComposeParams.h"
 #include "nsEscape.h"
 
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+#include "prlog.h"
+#include "nsIPref.h"
+#include "nsIMessage.h"
+#include "nsMsgCreate.h" 
+#endif
+
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID);
 
+#ifdef NS_DEBUG
+static PRBool _just_to_be_sure_we_create_only_on_compose_service_ = PR_FALSE;
+#endif
+
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+static PRLogModuleInfo *MsgComposeLogModule = nsnull;
+
+static PRUint32 GetMessageSizeFromURI(const PRUnichar * originalMsgURI)
+{
+  PRUint32 msgSize = 0;
+
+  if (originalMsgURI && *originalMsgURI)
+  {
+    nsCOMPtr<nsIMessage> message = getter_AddRefs(GetIMessageFromURI(originalMsgURI));
+    if (message)
+      message->GetMessageSize(&msgSize);
+  }
+  
+  return msgSize;
+}
+#endif
+
 nsMsgComposeService::nsMsgComposeService()
 {
+#ifdef NS_DEBUG
+  NS_ASSERTION(!_just_to_be_sure_we_create_only_on_compose_service_, "You cannot create several message compose service!");
+  _just_to_be_sure_we_create_only_on_compose_service_ = PR_TRUE;
+#endif
+
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+  if (!MsgComposeLogModule)
+      MsgComposeLogModule = PR_NewLogModule("msgcompose");
+
+  mStartTime = PR_IntervalNow();
+  mPreviousTime = mStartTime;
+#endif
 	NS_INIT_REFCNT();
 }
 
@@ -159,6 +201,11 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
       pMsgComposeParams->SetComposeFields(pMsgCompFields);
 
 
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+      char buff[256];
+      sprintf(buff, "Start opening the window, message size = %d", GetMessageSizeFromURI(originalMsgURI));
+      TimeStamp(buff, PR_TRUE);
+#endif
 	    if (msgComposeWindowURL && *msgComposeWindowURL)
         rv = openWindow(msgComposeWindowURL, pMsgComposeParams);
 	    else
@@ -265,6 +312,9 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *m
       pMsgComposeParams->SetIdentity(identity);
       pMsgComposeParams->SetComposeFields(compFields);    
 
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+      TimeStamp("Start opening the window", PR_TRUE);
+#endif
 	    if (msgComposeWindowURL && *msgComposeWindowURL)
         rv = openWindow(msgComposeWindowURL, pMsgComposeParams);
 	    else
@@ -298,6 +348,37 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
 nsresult nsMsgComposeService::DisposeCompose(nsIMsgCompose *compose)
 {
 	return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMsgComposeService::TimeStamp(const char * label, PRBool resetTime)
+{
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+
+  PRIntervalTime now;
+
+  if (resetTime)
+  {      
+    PR_LOG(MsgComposeLogModule, PR_LOG_ALWAYS, ("\r\n\r\n--------------------\r\n"));
+
+    mStartTime = PR_IntervalNow();
+    mPreviousTime = mStartTime;
+    now = mStartTime;
+  }
+  else
+    now = PR_IntervalNow();
+
+  PRIntervalTime totalTime = PR_IntervalToMilliseconds(now - mStartTime);
+  PRIntervalTime deltaTime = PR_IntervalToMilliseconds(now - mPreviousTime);
+
+#if defined(DEBUG_ducarroz)
+  printf(">>> Time Stamp: [%5d][%5d] - %s\n", totalTime, deltaTime, label);
+#endif
+  PR_LOG(MsgComposeLogModule, PR_LOG_ALWAYS, ("[%5d][%5d] - %s\r\n", totalTime, deltaTime, label));
+
+  mPreviousTime = now;
+#endif
+  return NS_OK;
 }
 
 CMDLINEHANDLER_IMPL(nsMsgComposeService,"-compose","general.startup.messengercompose","chrome://messenger/content/messengercompose/messengercompose.xul","Start with messenger compose.",NS_MSGCOMPOSESTARTUPHANDLER_CONTRACTID,"Messenger Compose Startup Handler", PR_TRUE, "about:blank", PR_TRUE)

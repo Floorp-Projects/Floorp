@@ -627,6 +627,9 @@ function WaitFinishLoadingDocument(msgType)
 		try {
 		window.updateCommands("create");
 		} catch(e) {}
+		
+		if (msgComposeService)
+      msgComposeService.TimeStamp("addressing widget, windows title and focus are now set. The window is finally ready", false);
 	}
 	else
 		setTimeout("WaitFinishLoadingDocument(" + msgType + ");", 200);
@@ -830,6 +833,8 @@ function WizCallback(state)
 
 function ComposeLoad()
 {
+  if (msgComposeService)
+    msgComposeService.TimeStamp("Start Initializing the compose window (ComposeLoad)", false);
   gComposeMsgsBundle = document.getElementById("bundle_composeMsgs");
 	
   try {
@@ -866,6 +871,8 @@ function ComposeLoad()
     return;
   }
 	window.tryToClose=ComposeCanClose;
+	if (msgComposeService)
+    msgComposeService.TimeStamp("Done with the initialization (ComposeLoad). Waiting on editor to load about::blank", false);
 }
 
 function ComposeUnload(calledFromExit)
