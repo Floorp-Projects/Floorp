@@ -49,16 +49,13 @@
 
 interface nsIFile;
 
-[uuid(fce83d37-a3c0-4e09-ad9f-6842a984dbdf)]
+[scriptable, uuid(fce83d37-a3c0-4e09-ad9f-6842a984dbdf)]
 interface nsIComponentLoaderManager : nsISupports
 {
     boolean hasFileChanged(in nsIFile file, in string loaderString, in PRInt64 modDate);
     void saveFileInfo(in nsIFile file, in string loaderString, in PRInt64 modDate);
     void removeFileInfo(in nsIFile file, in string loaderString);
     void flushPersistentStore(in boolean now);
-
-    string getOptionalData(in nsIFile file, in string loaderString);
-    void setOptionalData(in nsIFile file, in string loaderString, in string value);
 };
 
 

@@ -277,8 +277,6 @@ typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);
  * @param mCount       : Count of mComponents
  * @param mCtor        : Module user defined constructor
  * @param mDtor        : Module user defined destructor
- * @param mLibraryDependencies : array of library which this module is 
- *                               dependent on. 
  *
  **/
 
@@ -289,7 +287,6 @@ struct nsModuleInfo {
     PRUint32                mCount;
     nsModuleConstructorProc mCtor;
     nsModuleDestructorProc  mDtor;
-    const char**            mLibraryDependencies;
 };
 
 /**
@@ -297,7 +294,7 @@ struct nsModuleInfo {
  * binary compatibility. (Ostensibly fix NS_NewGenericModule2() to deal
  * with older rev's at the same time.)
  */
-#define NS_MODULEINFO_VERSION 0x00015000UL // 1.5
+#define NS_MODULEINFO_VERSION 0x00010000UL // 1.0
 
 /**
  * Create a new generic module. Use the NS_IMPL_NSGETMODULE macro, or
@@ -353,8 +350,7 @@ nsModuleInfo NSMODULEINFO(_name) = {                                          \
     (_components),                                                            \
     (sizeof(_components) / sizeof(_components[0])),                           \
     (_ctor),                                                                  \
-    (_dtor),                                                                  \
-    (nsnull)                                                                  \
+    (_dtor)                                                                   \
 };                                                                            \
 NSGETMODULE_ENTRY_POINT(NSMODULEINFO(_name))
 
