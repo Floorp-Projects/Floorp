@@ -28,6 +28,8 @@
 /**
  *
  * Single line text editor. 
+ * Unlike a nsIWidget, The text editor must automatically clear 
+ * itself to the background color when paint messages are generated.
  *
  */
 

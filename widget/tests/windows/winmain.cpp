@@ -48,6 +48,7 @@
 #include "nsRepository.h"
 #include "nsWidgetsCID.h"
 #include "nsITabWidget.h"
+#include "nsITooltipWidget.h"
 
 #include <stdio.h>
 
@@ -71,7 +72,7 @@ nsITabWidget  *tabWidget     = NULL;
 nsIButton     *toolTipButton1 = NULL;
 nsIButton     *toolTipButton2 = NULL;
 
-nsIButton     *tooltipWindow = NULL;
+nsITooltipWidget *tooltipWindow = NULL;
 
 
 char * gFailedMsg = NULL;
@@ -120,6 +121,7 @@ static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
 
 static NS_DEFINE_IID(kCTabWidgetCID, NS_TABWIDGET_CID);
+static NS_DEFINE_IID(kCTooltipWidgetCID, NS_TOOLTIPWIDGET_CID);
 
 
 // interface ids
@@ -135,6 +137,7 @@ static NS_DEFINE_IID(kIListBoxIID,        NS_ILISTBOX_IID);
 static NS_DEFINE_IID(kIComboBoxIID,       NS_ICOMBOBOX_IID);
 static NS_DEFINE_IID(kIFileWidgetIID,     NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kITabWidgetIID,      NS_ITABWIDGET_IID);
+static NS_DEFINE_IID(kITooltipWidgetIID,  NS_ITOOLTIPWIDGET_IID);
 
 
 char * eval(PRInt32 aVal) {
@@ -371,13 +374,33 @@ nsIButton* createSimpleButton(nsIWidget * aWin,
   nsIButton *button;
   nsRect rect(aX, aY, aWidth, 25);  
   NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (LPVOID*)&button);
-  button->Create(window, rect, aHandleEventFunction, NULL);
+  button->Create(aWin, rect, aHandleEventFunction, NULL);
   nsString label(aTitle);
   button->SetLabel(label);
   button->Show(PR_TRUE);
 //  NS_RELEASE(button);
   return button;
 }
+
+
+/**--------------------------------------------------------------------------------
+  *
+ */
+nsITooltipWidget* createTooltipWindow(nsIWidget * aWin, 
+                     char * aTitle, 
+                     int aX, 
+                     int aY, 
+                     int aWidth, 
+                     EVENT_CALLBACK aHandleEventFunction) {
+  nsITooltipWidget *tooltip;
+  nsRect rect(aX, aY, aWidth, 40);  
+  NSRepository::CreateInstance(kCTooltipWidgetCID, nsnull, kITooltipWidgetIID, (LPVOID*)&tooltip);
+  tooltip->Create((nsIWidget*)NULL, rect, aHandleEventFunction, NULL);
+  nsIButton *toolTipButton = createSimpleButton(tooltip, "tooltip",5, 5, 80, 0);
+  tooltip->Show(PR_TRUE);
+  return tooltip;
+}
+
 
 
 /**--------------------------------------------------------------------------------
@@ -988,6 +1011,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     NSRepository::RegisterFactory(kCTextAreaCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCTextFieldCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCTabWidgetCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCTooltipWidgetCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
 
     static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID); 
     static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID); 
@@ -1027,7 +1051,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     window->Create((nsIWidget*)NULL, rect, HandleEvent, NULL);
     window->SetTitle("TOP-LEVEL window");
 
-    tooltipWindow = createSimpleButton(window, "INSERT <tooltip> here", 0, 0, 150, 0);
+    tooltipWindow = createTooltipWindow(window, "INSERT <tooltip> here", 0, 0, 150, 0);
     tooltipWindow->Show(PR_FALSE);
     toolTipButton1 = createSimpleButton(window, "Tooltip \\/\\/",400, 100, 100, 0);
     toolTipButton2 = createSimpleButton(window, "Tooltip /\\/\\",500, 200, 100, 0);

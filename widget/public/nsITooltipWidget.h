@@ -15,30 +15,26 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-#ifndef nsITextAreaWidget_h__
-#define nsITextAreaWidget_h__
+#ifndef nsITooltipWidget_h__
+#define nsITooltipWidget_h__
 
 #include "nsIWidget.h"
-#include "nsITextWidget.h"
 #include "nsString.h"
 
-// {F8030012-C342-11d1-97F0-00609703C14E}
-#define NS_ITEXTAREAWIDGET_IID \
-{ 0xf8030012, 0xc342, 0x11d1, { 0x97, 0xf0, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } };
+#define NS_ITOOLTIPWIDGET_IID \
+{ 0x2910c191, 0xe38a, 0x11d1, { 0x9e, 0xc1, 0x0, 0xaa, 0x0, 0x2f, 0xb8, 0x21 } };
 
 /**
- * Multi-line text editor. 
- * See nsITextWidget for capabilities. 
- * Displays a scrollbar when the text content exceeds the number of lines 
- * displayed.
- * Unlike a nsIWidget, The textarea must automatically clear 
- * itself to the background color when paint messages are generated.
+ *
+ * Tool tip display widget
+ * 
  */
 
-class nsITextAreaWidget : public nsITextWidget 
+class nsITooltipWidget : public nsIWidget
 {
+  public:
+
 };
 
-#endif // nsITextAreaWidget_h__
+#endif // nsITooltipWidget_h__
 

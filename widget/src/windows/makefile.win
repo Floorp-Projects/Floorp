@@ -49,6 +49,7 @@ OBJS =                                   \
 	.\$(OBJDIR)\nsFileWidget.obj     \
 	.\$(OBJDIR)\nsScrollbar.obj      \
 	.\$(OBJDIR)\nsTabWidget.obj      \
+    .\$(OBJDIR)\nsTooltipWidget.obj  \
 	$(NULL)
 
 LINCS=                                  \

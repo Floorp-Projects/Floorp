@@ -40,6 +40,7 @@ EXPORTS =               \
         nsIEventListener.h \
         nsIToolkit.h \
         nsWidgetsCID.h \
+		nsITooltipWidget.h \
         $(NULL)
 
 MODULE = raptor
