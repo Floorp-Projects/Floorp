@@ -453,11 +453,21 @@ row_callback(png_structp png_ptr, png_bytep new_row,
 #ifdef XP_MAC
           *cptr++ = 0;
 #endif
-          *cptr++ = *line++;
-          *cptr++ = *line++;
-          *cptr++ = *line++;
-          if (*line++) {
+          if (line[3]) {
+            *cptr++ = *line++;
+            *cptr++ = *line++;
+            *cptr++ = *line++;
             aptr[x>>3] |= 1<<(7-x&0x7);
+            line++;
+          } else {
+#ifdef XP_WIN
+            *cptr++ = 0;
+            *cptr++ = 0;
+            *cptr++ = 0;
+#else
+            cptr += 3;
+#endif
+            line += 4;
           }
         }
         decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
