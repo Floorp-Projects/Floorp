@@ -462,7 +462,7 @@ Please try again.")
 
 /* #define MK_SECURE_NEWS_PROXY_ERROR      -309 */
 ResDef(MK_SECURE_NEWS_PROXY_ERROR,      -309,
-MOZ_NAME_BRAND" was unble to connect to the secure news server\n\
+MOZ_NAME_BRAND" was unable to connect to the secure news server\n\
 because of a proxy error")
 
 
@@ -858,7 +858,7 @@ ResDef(MK_MSG_ONLINE_MOVE_FAILED,       -449,
 The copy succeeded but a source message was not deleted.")
 
 ResDef(MK_MSG_CONFIRM_CONTINUE_IMAP_SYNC,       -450,
-"A problem has occured uploading an offline change.\n\
+"A problem has occurred uploading an offline change.\n\
  Continue uploading remaining offline changes (OK) \n\
  or try again later (Cancel)")
 
@@ -1441,8 +1441,8 @@ than your current CKL.  You must first delete your\n\
 current CKL.")
 
 ResDef(SEC_ERROR_CERT_NOT_IN_NAME_SPACE, (SEC_ERROR_BASE + 112),
-"The Certifying Authority for this certifcate is not\n\
-permited to issue a certifcate with this name.")
+"The Certifying Authority for this certificate is not\n\
+permited to issue a certificate with this name.")
 
 ResDef(SEC_ERROR_KRL_NOT_YET_VALID, (SEC_ERROR_BASE + 113),
 "The key revocation list for this site's certificate\n\
@@ -5509,7 +5509,7 @@ ResDef(MK_MSG_DELIV_NEWS_DONE,      XP_MSG_BASE + 415,
  "Delivering news...Done")
 
 ResDef(MK_MSG_QUEUEING,             XP_MSG_BASE + 416,
- "Queueing for later delivery...")
+ "Queuing for later delivery...")
 
 ResDef(MK_MSG_WRITING_TO_FCC,       XP_MSG_BASE + 417,
  "Writing to Sent Mail file...")
@@ -7586,7 +7586,7 @@ ResDef(MK_IMAP_CREATE_FOLDER_BUT_NO_SUBSCRIBE, XP_MSG_BASE + 1328,
 the new folder.")
 
 ResDef(MK_IMAP_DELETE_FOLDER_BUT_NO_UNSUBSCRIBE, XP_MSG_BASE + 1329,
-       "Folder deletion succeeded, but "MOZ_NAME_PRODUCT" was unable to unubscribe \
+       "Folder deletion succeeded, but "MOZ_NAME_PRODUCT" was unable to unsubscribe \
 from the folder.")
 
 ResDef(MK_IMAP_RENAME_FOLDER_BUT_NO_SUBSCRIBE, XP_MSG_BASE + 1330,
@@ -7620,7 +7620,7 @@ ResDef(MK_ACCESS_END_OF_SESSION, XP_MSG_BASE + 1350,
 ResDef(MK_LDAP_HTML_TITLE, XP_MSG_BASE + 1351,
        "LDAP Search Results")
 ResDef(MK_ACCESS_JAVASCRIPT_COOKIE_FILTER, XP_MSG_BASE + 1352,
-       "Javascript Cookie Filter Message:\n")
+       "JavaScript Cookie Filter Message:\n")
 ResDef(MK_JSFILTERDIALOG_EDIT_TITLE, XP_MSG_BASE + 1353,
        "Edit JavaScript Message Filter")
 ResDef(MK_JSFILTERDIALOG_NEW_TITLE, XP_MSG_BASE + 1354,
@@ -7988,7 +7988,7 @@ ResDef(MK_SIGNON_PASSWORDS_GENERATE, (XP_MSG_BASE + 1490), \
  */
 
 ResDef(MK_SIGNON_PASSWORDS_REMEMBER, (XP_MSG_BASE + 1491), \
-"Remember this as a new pasword for %1$s at %2$s?")
+"Remember this as a new password for %1$s at %2$s?")
 
 ResDef(MK_SIGNON_PASSWORDS_FETCH, (XP_MSG_BASE + 1492), \
 "Fetch old password for %1$s at %2$s?")
@@ -8091,7 +8091,7 @@ will take effect the next time\n\
 you restart Communicator.")
 
 ResDef(LI_VERIFY_NOACCESS, LI_MSG_BASE+15, 
-"An authorization error occured,\n\
+"An authorization error occurred,\n\
 please try retyping your username and password.")
 
 ResDef(LI_VERIFY_DNSFAIL, LI_MSG_BASE+16, 
@@ -8137,7 +8137,7 @@ ResDef(MK_ACCESS_TL_PUR5, (TRUST_LABEL_BASE + 5),
 ResDef(MK_ACCESS_TL_PUR6, (TRUST_LABEL_BASE + 6),
 "Furthermore, it may be used for %1$s, %2$s, %3$s, %4$s, %5$s and %6$s.")
 
-/* One or more of these next PPHx strings are inserted into the preceeding 
+/* One or more of these next PPHx strings are inserted into the preceding 
    PURx strings.
 */
 ResDef(MK_ACCESS_TL_PPH0, (TRUST_LABEL_BASE + 7),
@@ -8176,7 +8176,7 @@ ResDef(MK_ACCESS_TL_RECP2, (TRUST_LABEL_BASE + 17),
 ResDef(MK_ACCESS_TL_RECP3, (TRUST_LABEL_BASE + 18),
 "It is %1$s, %2$s and %3$s." )
 
-/* One or more of these next 4 strings are inserted into the preceeding 
+/* One or more of these next 4 strings are inserted into the preceding 
    RECPx strings.
 */
 ResDef(MK_ACCESS_TL_RPH0, (TRUST_LABEL_BASE + 19),
