@@ -72,9 +72,11 @@ namespace JavaScript {
         StringAtom &operator[](const char *s) {return operator[](widenCString(s));}
     };
 
+#ifdef DIKDIK
     namespace JS2Runtime {
         class Context;
     }
+#endif
 
     class World {
       public:
@@ -82,6 +84,7 @@ namespace JavaScript {
 
         World();
 
+#ifdef DIKDIK
         std::vector<JS2Runtime::Context *> contextList;
 
         /* Random number generator state, used by jsmath.c. */
@@ -91,6 +94,8 @@ namespace JavaScript {
         int64               rngMask;
         int64               rngSeed;
         float64             rngDscale;
+#endif
+
     };
 }
 #endif

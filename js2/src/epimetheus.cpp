@@ -17,7 +17,6 @@
 // Copyright (C) 1998 Netscape Communications Corporation. All
 // Rights Reserved.
 
-
 //
 // JS2 shell.
 //
@@ -32,11 +31,11 @@
 #include <algorithm>
 #include <assert.h>
 
+#include "js2metadata.h"
+
 #include "world.h"
 #include "reader.h"
 #include "parser.h"
-
-#include "js2metadata.h"
 
 #ifdef DEBUG
 #include "tracer.h"
@@ -69,12 +68,8 @@ static void initConsole(StringPtr consoleName,
 
 #endif
 
-using namespace JavaScript::JS2Runtime;
-
-
 JavaScript::World world;
 JavaScript::Arena a;
-
 
 namespace JavaScript {
 namespace Shell {
@@ -102,6 +97,9 @@ const bool showTokens = false;
 #define INTERPRET_INPUT 1
 //#define SHOW_ICODE 1
 
+MetaData::GlobalObject glob(world);
+MetaData::Environment env(new MetaData::SystemFrame(), &glob);
+MetaData::JS2Metadata metadata(world);
 
 
 static int readEvalPrint(FILE *in)
@@ -140,6 +138,14 @@ static int readEvalPrint(FILE *in)
                     f.end();
                     stdOut << '\n';
                 }
+
+                metadata.setCurrentParser(&p);
+                MetaData::Context cxt;
+                cxt.strict = true;
+
+                metadata.ValidateStmtList(&cxt, &env, parsedStatements);
+                metadata.EvalStmtList(&env, MetaData::JS2Metadata::RunPhase, parsedStatements);
+
             }
             clear(buffer);
         } catch (Exception &e) {

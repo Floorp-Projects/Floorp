@@ -32,10 +32,13 @@
 * file under either the NPL or the GPL.
 */
 
+#include "jsapi.h"
 
 #include "world.h"
 #include "utilities.h"
+#include "parser.h"
 
+#include <map>
 
 namespace JavaScript {
 namespace MetaData {
@@ -43,7 +46,10 @@ namespace MetaData {
 
 // forward definitions:
 class JS2Class;
-typedef uint32 js2val;
+class StaticBinding;
+class Environment;
+class Context;
+typedef jsval js2val;
 
 typedef void (Invokable)();
 typedef Invokable Callor;
@@ -56,16 +62,39 @@ class JS2Object {
 public:
 };
 
-class Namespace {
+class Attribute {
 public:
+    enum AttributeKind { TrueKind, FalseKind, NamespaceKind, CompoundKind } kind;
+    enum MemberModifier { NoModifier, Static, Constructor, Operator, Abstract, Virtual, Final};
+    enum OverrideModifier { NoOverride, DoOverride, DontOverride, OverrideUndefined };
+
+
+    Attribute(AttributeKind kind) : kind(kind) { }
+
+    static Attribute *combineAttributes(Attribute *a, Attribute *b);
+
+#ifdef DEBUG
+    virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
+#endif
+};
+
+// A Namespace (is also an attribute)
+class Namespace : public Attribute {
+public:
+    Namespace(StringAtom &name) : Attribute(NamespaceKind), name(name) { }
+
     StringAtom &name;       // The namespace's name used by toString
 };
 
 
 class QualifiedName {
 public:
-    Namespace nameSpace;    // The namespace qualifier
-    StringAtom &id;         // The name
+    QualifiedName(Namespace *nameSpace, const StringAtom &id) : nameSpace(nameSpace), id(id) { }
+
+    bool operator ==(const QualifiedName &b) { return (nameSpace == b.nameSpace) && (id == b.id); }
+
+    Namespace *nameSpace;    // The namespace qualifier
+    const StringAtom &id;          // The name
 };
 
 
@@ -92,21 +121,25 @@ class Signature {
     bool returnType;                    // The type of this function's result
 };
 
+// A static member is either forbidden, a variable, a hoisted variable, a constructor method, or an accessor:
 class StaticMember {
 public:
+    enum StaticMemberKind { Forbidden, Variable, HoistedVariable, ConstructorMethod, Accessor } kind;
 };
 
 class Variable : public StaticMember {
 public:
     JS2Class *type;                 // Type of values that may be stored in this variable
-    Object_Uninit_Future value;     // This variable's current value; future if the variable has not been declared yet;
+    js2val value;                   // This variable's current value; future if the variable has not been declared yet;
                                     // uninitialised if the variable must be written before it can be read
     bool immutable;                 // true if this variable's value may not be changed once set
 };
 
 class HoistedVar : public StaticMember {
 public:
+    HoistedVar() : value(JSVAL_VOID), hasFunctionInitializer(false) { }
     js2val value;                   // This variable's current value
+    bool hasFunctionInitializer;    // true if this variable was created by a function statement
 };
 
 class StaticMethod : public StaticMember {
@@ -124,12 +157,20 @@ public:
 };
 
 
+// DYNAMICPROPERTY record describes one dynamic property of one (prototype or class) instance.
+typedef std::map<String, js2val> DynamicPropertyMap;
+typedef DynamicPropertyMap::iterator DynamicPropertyIterator;
 
-
+// A STATICBINDING describes the member to which one qualified name is bound in a frame. Multiple 
+// qualified names may be bound to the same member in a frame, but a qualified name may not be 
+// bound to multiple members in a frame (except when one binding is for reading only and 
+// the other binding is for writing only).
 class StaticBinding {
 public:
+    StaticBinding(QualifiedName &qname, StaticMember *content) : qname(qname), content(content), xplicit(false) { }
+
     QualifiedName qname;        // The qualified name bound by this binding
-    StaticMember content;       // The member to which this qualified name was bound
+    StaticMember *content;      // The member to which this qualified name was bound
     bool xplicit;               // true if this binding should not be imported into the global scope by an import statement
 };
 
@@ -161,24 +202,41 @@ public:
 
 class InstanceBinding {
 public:
-    QualifiedName qname;        // The qualified name bound by this binding
+    QualifiedName qname;         // The qualified name bound by this binding
     InstanceMember *content;     // The member to which this qualified name was bound
 };
 
-class StaticBindingMap {
-public:
-};
+
+// A StaticBindingMap maps names to a list of StaticBindings. Each StaticBinding in the list
+// will have the same QualifiedName.name, but (potentially) different QualifiedName.namespace values
+typedef std::multimap<String, StaticBinding *> StaticBindingMap;
+typedef StaticBindingMap::iterator StaticBindingIterator;
 
 class InstanceBindingMap {
 public:
 };
 
-class JS2Class {
+// A frame contains bindings defined at a particular scope in a program. A frame is either the top-level system frame, 
+// a global object, a package, a function frame, a class, or a block frame
+class Frame {
+public:
+    enum Plurality { Singular, Plural };
+    enum FrameKind { GlobalObject, Package, Function, Class, Block };
+
+    StaticBindingMap staticReadBindings;        // Map of qualified names to readable static members defined in this frame
+    StaticBindingMap staticWriteBindings;       // Map of qualified names to writable static members defined in this frame
+
+    FrameKind kind;             // [rather than use RTTI (in general)]
+    Frame *nextFrame;
+#ifdef DEBUG
+    virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
+#endif
+};
+
+
+class JS2Class : public Frame {
 public:
         
-    StaticBindingMap staticReadBindings;        // Map of qualified names to readable static members defined in this class
-    StaticBindingMap staticWriteBindings;       // Map of qualified names to writable static members defined in this class
-
     InstanceBindingMap instanceReadBindings;    // Map of qualified names to readable instance members defined in this class    
     InstanceBindingMap instanceWriteBindings;   // Map of qualified names to writable instance members defined in this class    
 
@@ -189,7 +247,7 @@ public:
     JS2Class    *super;                         // This class's immediate superclass or null if none
     JS2Object   *prototype;                     // An object that serves as this class's prototype for compatibility with ECMAScript 3; may be null
 
-    Namespace privateNamespace;                 // This class's private namespace
+    Namespace *privateNamespace;                // This class's private namespace
 
     bool dynamic;                               // true if this class or any of its ancestors was defined with the dynamic attribute
     bool primitive;                             // true if this class was defined with the primitive attribute
@@ -200,8 +258,49 @@ public:
 
 };
 
+class GlobalObject : public Frame {
+public:
+    GlobalObject(World &world) : internalNamespace(new Namespace(world.identifiers["internal"])) { }
+
+    Namespace *internalNamespace;               // This global object's internal namespace
+    DynamicPropertyMap dynamicProperties;       // A set of this global object's dynamic properties
+};
 
 
+// A SLOT record describes the value of one fixed property of one instance.
+class Slot {
+public:
+    InstanceVariable *id;        // The instance variable whose value this slot carries
+    js2val value;                // This fixed property's current value; uninitialised if the fixed property is an uninitialised constant
+};
+
+// Instances of non-dynamic classes are represented as FIXEDINSTANCE records. These instances can contain only fixed properties.
+class FixedInstance {
+public:
+    JS2Class    *type;          // This instance's type
+    Invokable   *call;          // A procedure to call when this instance is used in a call expression
+    Invokable   *construct;     // A procedure to call when this instance is used in a new expression
+    Environment *env;           // The environment to pass to the call or construct procedure
+    StringAtom  &typeofString;  // A string to return if typeof is invoked on this instance
+    Slot        *slots;         // A set of slots that hold this instance's fixed property values
+};
+
+// Instances of dynamic classes are represented as DYNAMICINSTANCE records. These instances can contain fixed and dynamic properties.
+class DynamicInstance {
+public:
+    JS2Class    *type;          // This instance's type
+    Invokable   *call;          // A procedure to call when this instance is used in a call expression
+    Invokable   *construct;     // A procedure to call when this instance is used in a new expression
+    Environment *env;           // The environment to pass to the call or construct procedure
+    StringAtom  &typeofString;  // A string to return if typeof is invoked on this instance
+    Slot        *slots;         // A set of slots that hold this instance's fixed property values
+    DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
+};
+
+// MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
+class Multiname {
+public:
+};
 
 class LexicalReference {
 // A LEXICALREFERENCE tuple has the fields below and represents an lvalue that refers to a variable with one
@@ -227,6 +326,21 @@ public:
                                     // example above)
 };
 
+
+class NamedArgument {
+public:
+    StringAtom &name;               // This argument's name
+    js2val value;                   // This argument's value
+};
+
+// An ARGUMENTLIST describes the arguments (other than this) passed to a function.
+class ArgumentList {
+public:
+    JS2Object *positional;          // Ordered list of positional arguments
+    NamedArgument *named;           // Set of named arguments
+};
+
+
 class BracketReference {
 // A BRACKETREFERENCE tuple has the fields below and represents an lvalue that refers to the result of
 // applying the [] operator to the base object with the given arguments. BRACKETREFERENCE tuples arise from evaluating
@@ -239,6 +353,115 @@ public:
 };
 
 
+// The top-level frame containing predefined constants, functions, and classes.
+class SystemFrame : public Frame {
+public:
+};
+
+// Frames holding bindings for invoked functions
+class FunctionFrame : public Frame {
+public:
+    Plurality plurality;
+    JS2Object *thisObject;                  // The value of this; none if this function doesn't define this;
+                // XXX                      // inaccessible if this function defines this but the value is not 
+                                            // available because this function hasn't been called yet
+    bool prototype;                         // true if this function is not an instance method but defines this anyway
+};
+
+class BlockFrame : public Frame {
+public:
+    Plurality plurality;
+};
+
+// Environments contain the bindings that are visible from a given point in the source code. An ENVIRONMENT is 
+// a list of two or more frames. Each frame corresponds to a scope. More specific frames are listed first
+// -each frame's scope is directly contained in the following frame's scope. The last frame is always the
+// SYSTEMFRAME. The next-to-last frame is always a PACKAGE or GLOBAL frame.
+class Environment {
+public:
+    Environment(SystemFrame *systemFrame, Frame *nextToLast) : firstFrame(nextToLast) { nextToLast->nextFrame = systemFrame; }
+
+    Frame *getRegionalFrame();
+    Frame *getTopFrame()            { return firstFrame; }
+private:
+    Frame *firstFrame;
+};
+
+typedef std::vector<Namespace *> NamespaceList;
+typedef NamespaceList::iterator NamespaceListIterator;
+
+// A CONTEXT carries static information about a particular point in the source program.
+class Context {
+public:
+    bool strict;                    // true if strict mode is in effect
+    Namespace *openNamespaces;      // The set of namespaces that are open at this point. 
+                                    // The public namespace is always a member of this set.
+};
+
+// The 'true' attribute
+class TrueAttribute : public Attribute {
+public:
+    TrueAttribute() : Attribute(TrueKind) { }
+};
+
+// The 'false' attribute
+class FalseAttribute : public Attribute {
+public:
+    FalseAttribute() : Attribute(FalseKind) { }
+};
+
+// Compound attribute objects are all values obtained from combining zero or more syntactic attributes 
+// that are not Booleans or single namespaces. 
+class CompoundAttribute : public Attribute {
+public:
+    CompoundAttribute();
+    void addNamespace(Namespace *n);
+
+    NamespaceList *namespaces;      // The set of namespaces contained in this attribute
+    bool xplicit;                   // true if the explicit attribute has been given
+    bool dynamic;                   // true if the dynamic attribute has been given
+    MemberModifier memberMod;       // if one of these attributes has been given; none if not.
+    OverrideModifier overrideMod;   // if the override attribute  with one of these arguments was given; 
+                                    // true if the attribute override without arguments was given; none if the override attribute was not given.
+    bool prototype;                 // true if the prototype attribute has been given
+    bool unused;                    // true if the unused attribute has been given
+};
+
+class JS2Metadata {
+public:
+    
+    enum Phase { CompilePhase, RunPhase };
+
+    JS2Metadata(World &world);
+
+    void setCurrentParser(Parser *parser) { mParser = parser; }
+
+    void ValidateTypeExpression(ExprNode *e);
+    void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p);
+    void ValidateStmt(Context *cxt, Environment *env, StmtNode *p);
+    void defineHoistedVar(Environment *env, const StringAtom &id, StmtNode *p);
+    void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
+
+    jsval EvalExpression(Environment *env, Phase phase, ExprNode *p);
+    Attribute *EvalAttributeExpression(Environment *env, Phase phase, ExprNode *p);
+    jsval EvalStmtList(Environment *env, Phase phase, StmtNode *p);
+    jsval EvalStmt(Environment *env, Phase phase, StmtNode *p);
+
+    void reportError(Exception::Kind kind, char *message, size_t pos, const char *arg = NULL);
+    void reportError(Exception::Kind kind, char *message, size_t pos, const String& name);
+
+
+    void initializeMonkey();
+    jsval execute(String *str);
+
+
+    // The one and only 'public' namespace
+    Namespace publicNamespace;      // XXX is this the right place for this ???
+
+    
+    Parser *mParser;                // used for error reporting
+
+};
 
 
 }; // namespace MetaData

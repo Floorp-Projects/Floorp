@@ -36,13 +36,19 @@
 #include <cfloat>
 #include "numerics.h"
 #include "parser.h"
-//#include "js2runtime.h"
+
+#ifdef DIKDIK
+#include "js2runtime.h"
+#endif
 
 #include "fdlibm_ns.h"
 
 namespace JS = JavaScript;
 using namespace JS;
+
+#ifdef DIKDIK
 using namespace JS::JS2Runtime;
+#endif
 
 //
 // Portable double-precision floating point to string and back conversions

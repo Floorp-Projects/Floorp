@@ -182,7 +182,9 @@ namespace JavaScript {
                 GenericHashEntry **bp = ht.buckets + h;
                 Entry *e;
 
-                while ((e = static_cast<Entry *>(*bp)) != 0 && !(e->keyHash == kh && e->data == key))
+                while ((e = static_cast<Entry *>(*bp)) != 0 
+                        && !(e->keyHash == kh 
+                            && e->data == key))
                     bp = &e->next;
                 entry = e;
                 backpointer = bp;

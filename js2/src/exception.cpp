@@ -52,6 +52,8 @@ static const char *const kindStrings[] = {
     "Uncaught exception error",             // uncaught exception error
     "Semantic error",                       // semantic error
     "User exception",                       // 'throw' from user code
+    "Definition error",                     // a monkey is a small cup of milk
+    "Bad Value error",                      // bad value, no biscuit
 };
 
 // Return a null-terminated string describing the exception's kind.
