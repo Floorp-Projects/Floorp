@@ -30,6 +30,7 @@
 #include "nsIRenderingContext.h"
 #include "nsTransform2D.h"
 #include "nsIScrollableView.h"
+#include "nsVoidArray.h"
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
@@ -276,13 +277,14 @@ NS_IMETHODIMP nsView :: GetWidget(nsIWidget *&aWidget)
 }
 
 NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
-                              PRUint32 aPaintFlags, nsIView *aBackstop, PRBool &aResult)
+                              PRUint32 aPaintFlags, PRBool &aResult)
 {
   nsIView *pRoot;
   PRBool  clipres = PR_FALSE;
   PRBool  clipwasset = PR_FALSE;
 
   mViewManager->GetRootView(pRoot);
+
   rc.PushState();
 
   if (aPaintFlags & NS_VIEW_FLAG_CLIP_SET)
@@ -311,44 +313,51 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       clipres = rc.SetClipRect(brect, nsClipCombine_kIntersect);
   }
 
-  if (nsnull != mXForm)
-  {
-    nsTransform2D *pXForm = rc.GetCurrentTransform();
-    pXForm->Concatenate(mXForm);
-  }
-
   if (clipres == PR_FALSE)
   {
     nscoord posx, posy;
 
     GetPosition(&posx, &posy);
-
     rc.Translate(posx, posy);
 
-    PRInt32 numkids;
-    GetChildCount(numkids);
-
-    for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+    if (nsnull != mXForm)
     {
-      nsIView *kid;
-      GetChild(cnt, kid);
+      nsTransform2D *pXForm = rc.GetCurrentTransform();
+      pXForm->Concatenate(mXForm);
+    }
 
-      if (nsnull != kid)
+    //if we are not doing a two pass render,
+    //render the kids...
+
+    if (!(aPaintFlags & (NS_VIEW_FLAG_FRONT_TO_BACK | NS_VIEW_FLAG_BACK_TO_FRONT)))
+    {
+      PRInt32 numkids;
+
+      GetChildCount(numkids);
+
+      for (PRInt32 cnt = 0; cnt < numkids; cnt++)
       {
-        nsRect kidRect;
-        kid->GetBounds(kidRect);
-        nsRect damageArea;
-        PRBool overlap = damageArea.IntersectRect(rect, kidRect);
+        nsIView *kid;
 
-        if (overlap == PR_TRUE)
+        GetChild(cnt, kid);
+
+        if (nsnull != kid)
         {
-          // Translate damage area into kid's coordinate system
-          nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
-                               damageArea.width, damageArea.height);
-          kid->Paint(rc, kidDamageArea, aPaintFlags, nsnull, clipres);
+          nsRect kidRect;
+          kid->GetBounds(kidRect);
+          nsRect damageArea;
+          PRBool overlap = damageArea.IntersectRect(rect, kidRect);
 
-          if (clipres == PR_TRUE)
-            break;
+          if (overlap == PR_TRUE)
+          {
+            // Translate damage area into kid's coordinate system
+            nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+                                 damageArea.width, damageArea.height);
+            kid->Paint(rc, kidDamageArea, aPaintFlags, clipres);
+
+            if (clipres == PR_TRUE)
+              break;
+          }
         }
       }
     }
@@ -379,45 +388,135 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
           //   view that started the whole process
 
           //walk down rendering only views within this clip
+          //clip is already set to this view in rendering context...
 
-          nsIView *child, *prevchild = this;
-          GetNextSibling(child);
+          nsIView     *curview, *preview = this;
+          nsVoidArray *views = (nsVoidArray *)new nsVoidArray();
+          nsVoidArray *rects = (nsVoidArray *)new nsVoidArray();
+          nscoord     posx, posy;
+          nsRect      damRect = rect;
 
-          while (nsnull != child)
+          GetPosition(&posx, &posy);
+
+          //we need to go back to the coordinate system that was there
+          //before we came along... XXX xform not accounted for. MMP
+          damRect.x += posx;
+          damRect.y += posy;
+
+          rc.Translate(-posx, -posy);
+
+          GetNextSibling(curview);
+
+          if (nsnull == curview)
+          {
+            preview->GetParent(curview);
+
+            if (nsnull != curview)
+            {
+              nsRect  prect;
+
+              curview->GetBounds(prect);
+
+              damRect.x += prect.x;
+              damRect.y += prect.y;
+
+              rc.Translate(-prect.x, -prect.y);
+            }
+          }
+
+          while (nsnull != curview)
           {
             nsRect kidRect;
-            child->GetBounds(kidRect);
+            curview->GetBounds(kidRect);
             nsRect damageArea;
-            PRBool overlap = damageArea.IntersectRect(rect, kidRect);
-
-            //as we tell each kid to paint, we need to mark the kid as one that was hit
-            //in the front to back rendering so that when we do the back to front pass,
-            //we can re-add the child's rect back into the clip.
+            PRBool overlap = damageArea.IntersectRect(damRect, kidRect);
 
             if (overlap == PR_TRUE)
             {
               // Translate damage area into kid's coordinate system
               nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
                                    damageArea.width, damageArea.height);
-              child->Paint(rc, kidDamageArea, aPaintFlags, nsnull, clipres);
+
+              //we will pop the states on the back to front pass...
+              rc.PushState();
+
+              if (nsnull != views)
+                views->AppendElement(curview);
+
+              rects->AppendElement(new nsRect(kidDamageArea));
+
+              curview->Paint(rc, kidDamageArea, aPaintFlags | NS_VIEW_FLAG_FRONT_TO_BACK, clipres);
             }
-
-            prevchild = child;
-
-            child->GetNextSibling(child);
-
-            if (nsnull == child)
-              child->GetParent(child);
 
             if (clipres == PR_TRUE)
               break;
+
+            preview = curview;
+
+            curview->GetNextSibling(curview);
+
+            if (nsnull == curview)
+            {
+              preview->GetParent(curview);
+
+              if (nsnull != curview)
+              {
+                nsRect  prect;
+
+                curview->GetBounds(prect);
+
+                damRect.x += prect.x;
+                damRect.y += prect.y;
+
+                rc.Translate(-prect.x, -prect.y);
+              }
+            }
           }
 
-          if ((nsnull != prevchild) && (this != prevchild))
+          //walk backwards, rendering views
+
+          if (nsnull != views)
           {
-            //walk backwards, rendering views
+            PRInt32 idx = views->Count();
+            PRBool  isfirst = PR_TRUE;
+
+            while (idx > 0)
+            {
+              if (PR_TRUE == isfirst)
+              {
+                //we just rendered the last view at the
+                //end of the first pass, so there is no need
+                //to do so again.
+
+                nsRect *trect = (nsRect *)rects->ElementAt(--idx);
+                delete trect;
+
+                rc.PopState();
+                isfirst = PR_FALSE;
+              }
+              else
+              {
+                curview = (nsIView *)views->ElementAt(--idx);
+                nsRect *trect = (nsRect *)rects->ElementAt(idx);
+
+                curview->Paint(rc, *trect, aPaintFlags | NS_VIEW_FLAG_BACK_TO_FRONT, clipres);
+
+                delete trect;
+
+                //pop the state pushed on the front to back pass...
+                rc.PopState();
+              }
+            }
+
+            delete rects;
+            delete views;
           }
+
+          //now go forward again... XXX xform not accounted for. MMP
+          rc.Translate(posx, posy);
         }
+
+        //now draw ourself...
 
         if (nsnull != mClientData)
         {
@@ -463,10 +562,6 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       }
     }
   }
-
-  //XXX would be nice if we could have a version of pop that just removes the
-  //state from the stack but doesn't change the state of the underlying graphics
-  //context. MMP
 
   clipres = rc.PopState();
 
@@ -626,6 +721,7 @@ NS_IMETHODIMP nsView :: GetPosition(nscoord *x, nscoord *y)
   nsIView *rootView;
 
   mViewManager->GetRootView(rootView);
+
   if (this == rootView)
     *x = *y = 0;
   else
@@ -905,7 +1001,7 @@ NS_IMETHODIMP nsView :: GetOpacity(float &aOpacity)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: HasTransparency(PRBool &aTransparent)
+NS_IMETHODIMP nsView :: HasTransparency(PRBool &aTransparent) const
 {
   aTransparent = (mVFlags & VIEW_FLAG_TRANSPARENT) ? PR_TRUE : PR_FALSE;
   return NS_OK;
@@ -973,7 +1069,9 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
   nsRect brect;
   GetBounds(brect);
   out << brect;
-  fprintf(out, " z=%d vis=%d opc=%1.3f clientData=%p <\n", mZindex, mVis, mOpacity, mClientData);
+  PRBool  hasTransparency;
+  HasTransparency(hasTransparency);
+  fprintf(out, " z=%d vis=%d opc=%1.3f tran=%d clientData=%p <\n", mZindex, mVis, mOpacity, hasTransparency, mClientData);
   nsIView* kid = mFirstChild;
   while (nsnull != kid) {
     kid->List(out, aIndent + 1);

@@ -154,7 +154,7 @@ public:
   NS_IMETHOD  ShowQuality(PRBool aShow);
   NS_IMETHOD  SetQuality(nsContentQuality aQuality);
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
-                    PRUint32 aPaintFlags, nsIView *aBackstop, PRBool &Result);
+                    PRUint32 aPaintFlags, PRBool &Result);
 
   void  Show(PRBool aShow);
 
@@ -237,7 +237,7 @@ void CornerView :: Show(PRBool aShow)
 #endif
 
 NS_IMETHODIMP CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
-                                  PRUint32 aPaintFlags, nsIView *aBackstop, PRBool &aResult)
+                                  PRUint32 aPaintFlags, PRBool &aResult)
 {
   PRBool  clipres = PR_FALSE;
 
@@ -612,8 +612,7 @@ NS_IMETHODIMP nsScrollingView :: SetPosition(nscoord aX, nscoord aY)
 }
 
 NS_IMETHODIMP nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
-                                       PRUint32 aPaintFlags, nsIView *aBackstop,
-                                       PRBool &aResult)
+                                       PRUint32 aPaintFlags, PRBool &aResult)
 {
   PRBool  clipres = PR_FALSE;
   nsRect  brect;
@@ -628,7 +627,7 @@ NS_IMETHODIMP nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& re
   if (clipres == PR_FALSE)
   {
     rc.Translate(-mOffsetX, -mOffsetY);
-    nsView::Paint(rc, rect, aPaintFlags | NS_VIEW_FLAG_CLIP_SET, aBackstop, clipres);
+    nsView::Paint(rc, rect, aPaintFlags | NS_VIEW_FLAG_CLIP_SET, clipres);
   }
 
   clipres = rc.PopState();

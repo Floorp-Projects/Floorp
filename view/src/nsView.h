@@ -60,7 +60,7 @@ public:
   NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr);
   NS_IMETHOD  GetWidget(nsIWidget *&aWidget);
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
-                    PRUint32 aPaintFlags, nsIView *aBackstop, PRBool &aResult);
+                    PRUint32 aPaintFlags, PRBool &aResult);
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsIRegion& region,
                     PRUint32 aPaintFlags, PRBool &aResult);
   NS_IMETHOD  HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags, nsEventStatus &aStatus);
@@ -89,7 +89,7 @@ public:
   NS_IMETHOD  GetTransform(nsTransform2D &aXForm);
   NS_IMETHOD  SetOpacity(float opacity);
   NS_IMETHOD  GetOpacity(float &aOpacity);
-  NS_IMETHOD  HasTransparency(PRBool &aTransparent);
+  NS_IMETHOD  HasTransparency(PRBool &aTransparent) const;
   NS_IMETHOD  SetContentTransparency(PRBool aTransparent);
   NS_IMETHOD  SetClientData(void *aData);
   NS_IMETHOD  GetClientData(void *&aData);
