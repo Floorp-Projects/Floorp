@@ -73,7 +73,7 @@ public:
 protected:
   virtual ~nsUnknownDecoder();
 
-  void DetermineContentType(nsIRequest* aRequest);
+  virtual void DetermineContentType(nsIRequest* aRequest);
   nsresult FireListenerNotifications(nsIRequest* request, nsISupports *aCtxt);
 
 protected:
@@ -138,6 +138,25 @@ protected:
 
 };
 
+#define NS_BINARYDETECTOR_CID                        \
+{ /* a2027ec6-ba0d-4c72-805d-148233f5f33c */         \
+    0xa2027ec6,                                      \
+    0xba0d,                                          \
+    0x4c72,                                          \
+    {0x80, 0x5d, 0x14, 0x82, 0x33, 0xf5, 0xf3, 0x3c} \
+}
+
+/**
+ * Class that detects whether a data stream is text or binary.  This reuses
+ * most of nsUnknownDecoder except the actual content-type determination logic
+ * -- our overridden DetermineContentType simply calls LastDitchSniff and sets
+ * the type to APPLICATION_GUESS_FROM_EXT if the data is detected as binary.
+ */
+class nsBinaryDetector : public nsUnknownDecoder
+{
+protected:
+  virtual void DetermineContentType(nsIRequest* aRequest);
+};
 
 #endif /* nsUnknownDecoder_h__ */
 

@@ -544,7 +544,28 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
 
   // Try to find a mime object by looking at the mime type/extension
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  GetFromTypeAndExtension(aMimeContentType, fileExtension.get(), getter_AddRefs(mimeInfo));
+  if (!nsCRT::strcasecmp(aMimeContentType, APPLICATION_GUESS_FROM_EXT)) {
+    nsXPIDLCString mimeType;
+    if (!fileExtension.IsEmpty()) {
+      GetFromTypeAndExtension(nsnull, fileExtension.get(), getter_AddRefs(mimeInfo));
+      if (mimeInfo) {
+        mimeInfo->GetMIMEType(getter_Copies(mimeType));
+
+        LOG(("OS-Provided mime type '%s' for extension '%s'\n", 
+             mimeType.get(), fileExtension.get()));
+      }
+    }
+
+    if (fileExtension.IsEmpty() || mimeType.IsEmpty()) {
+      // Extension lookup gave us no useful match
+      GetFromTypeAndExtension(APPLICATION_OCTET_STREAM, fileExtension.get(),
+                              getter_AddRefs(mimeInfo));
+    }
+  } 
+  else {
+    GetFromTypeAndExtension(aMimeContentType, fileExtension.get(),
+                            getter_AddRefs(mimeInfo));
+  } 
   LOG(("Type/Ext lookup found 0x%p\n", mimeInfo.get()));
 
   // No mimeinfo -> we can't continue. probably OOM.
