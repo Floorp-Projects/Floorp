@@ -95,7 +95,7 @@ PR_BEGIN_EXTERN_C
 ** 
 **      char *val = PR_GetEnv("foo");
 **      if ((NULL == val) || ('\0' == *val)) { 
-**          /* interpret this as un-set ... 
+**          ... interpret this as un-set ... 
 **      }
 ** 
 **   The caller must ensure that the string passed
