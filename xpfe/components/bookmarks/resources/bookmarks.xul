@@ -32,7 +32,9 @@
   xmlns:web="http://home.netscape.com/WEB-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   width="500" height="400" x="20" y="20" persist="width height x y" align="vertical"
-  ondraggesture="return TopLevelDrag(event);">
+  ondraggesture="return TopLevelDrag(event);"
+  windowtype="bookmarks:manager"
+  >
 
   <html:script src="chrome://bookmarks/content/bookmarks.js"/>
 
@@ -98,7 +100,7 @@
      </rule>
 
      <rule>
-      <treechildren onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');">
+      <treechildren>
        <treeitem uri="..." persist="open" web:status="rdf:http://home.netscape.com/WEB-rdf#status" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
            <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name" src="rdf:http://home.netscape.com/NC-rdf#Icon" />
@@ -133,6 +135,7 @@
       <treecell value="&tree.header.lastmod.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
     </treerow>
   </treehead>
+  <treechildren onclick="return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');"/>
 </tree>
 </html:div>
 
