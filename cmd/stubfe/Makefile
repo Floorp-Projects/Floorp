@@ -17,7 +17,7 @@
 #
 ######################################################################
 #
-# Makefile for tubbed-out FE, modeled after XFE Makefile.
+# Makefile for stubbed-out FE, modeled after XFE Makefile.
 #
 
 DEPTH		= ../..
@@ -38,7 +38,7 @@ REQUIRES	= \
 	msg \
 	java \
 	plds \
-    nspr20 \
+    nsprpub \
 	parse \
     plug \
 	plugimpl \
