@@ -42,6 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsCocoaBrowserService.h"
+#include "nsIPrefBranch.h"
 #import	"CHAboutBox.h"
 
 
@@ -367,8 +368,24 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (IBAction)toggleSmoothText:(id)aSender
 {
-  // XXXdwh Grab the prefs service and just set the pref directly.
-  
+  // Grab the prefs service and just set the pref directly.
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+  if (!pref)
+    return; // Something bad happened if we can't get prefs.
+
+  int mode;
+  pref->GetIntPref("nglayout.mac.renderingmode", &mode);
+  if (mode == 0) {
+    // Turn on ATSUI Quartz.
+    pref->SetIntPref("nglayout.mac.renderingmode", 1);
+    // Check the menu.
+    [aSender setState: NSOnState];
+  } else {
+    // Turn off ATSUI Quartz and use Quickdraw.
+    pref->SetIntPref("nglayout.mac.renderingmode", 0);
+    // Uncheck the menu.
+    [aSender setState: NSOffState];
+  }
 }
 
 
