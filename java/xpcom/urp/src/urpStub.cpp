@@ -104,3 +104,9 @@ printf("ThreadID is written %d %p %p %p %p\n",paramCount, call, mon, manager, th
 }
 
 
+void urpStub::SetORB(bcIORB *orb){
+   //nb to be implemented
+}
+void urpStub::SetOID(bcOID oid) {
+   //nb to be implemented
+} 

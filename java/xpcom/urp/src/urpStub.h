@@ -33,6 +33,9 @@ class urpStub : public bcIStub {
     urpStub(urpManager* man, urpConnection* con);
     virtual ~urpStub();
     virtual void Dispatch(bcICall *call) ;
+    virtual void SetORB(bcIORB *orb);
+    virtual void SetOID(bcOID oid);
+
  private:
     urpManager* manager;
     urpConnection* connection;
