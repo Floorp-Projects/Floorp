@@ -444,6 +444,7 @@ XP_File f;
     XP_FilePrintf(f, "%d 0 translate 90 rotate\n",PAGE_TO_POINT_I(mPrintContext->prSetup->height));
   }
   XP_FilePrintf(f, "%d 0 translate\n", PAGE_TO_POINT_I(mPrintContext->prSetup->left));
+  XP_FilePrintf(f, "0 %d translate\n", -PAGE_TO_POINT_I(mPrintContext->prSetup->top));
   XP_FilePrintf(f, "%%%%EndPageSetup\n");
 #if 0
   annotate_page( mPrintContext->prSetup->header, 0, -1, pn);
