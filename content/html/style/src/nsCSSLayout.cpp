@@ -266,6 +266,8 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
   }
 }
 
+// XXX if this can handle proportional widths then do so
+// XXX check against other possible values and update
 static PRBool
 GetStyleDimension(nsIPresContext* aPresContext,
                   nsIFrame* aFrame,
@@ -274,7 +276,6 @@ GetStyleDimension(nsIPresContext* aPresContext,
                   nscoord& aResult)
 {
   nsIFrame* parentFrame;
-  float p2t;
   PRBool rv = PR_FALSE;
 
   switch (aCoord.GetUnit()) {
@@ -299,11 +300,6 @@ GetStyleDimension(nsIPresContext* aPresContext,
         break;
       }
     }
-    break;
-
-  case eStyleUnit_Integer:
-    p2t = aPresContext->GetPixelsToTwips();
-    aResult = nscoord(aCoord.GetIntValue() * p2t);
     break;
   }
   if (aResult < 0) {
