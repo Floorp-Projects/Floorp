@@ -94,8 +94,8 @@ CBSConnection.prototype.disconnect = function()
     
     if (this.isConnected) {
         this.isConnected = false;
-        this._inputStream.Close();
-        this._outputStream.Close();
+        this._inputStream.close();
+        this._outputStream.close();
     }
 
 }
@@ -109,7 +109,7 @@ CBSConnection.prototype.sendData = function(str)
     
     try
     {
-        this._outputStream.Write(str, str.length);
+        this._outputStream.write(str, str.length);
         rv = true;
     }
     catch (ex)
