@@ -328,6 +328,7 @@ PRInt32 nsZipArchive::CloseArchive()
   // close the file if open
   if ( mFd != 0 ) {
     PR_Close(mFd);
+	mFd = 0;
   }
 
   // delete nsZipItems in table
