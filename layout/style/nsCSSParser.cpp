@@ -2913,6 +2913,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
 					case NS_STYLE_DISPLAY_MARKER:   // bug 2055
 					case NS_STYLE_DISPLAY_RUN_IN:		// bug 2056
 					case NS_STYLE_DISPLAY_COMPACT:  // bug 14983
+					case NS_STYLE_DISPLAY_INLINE_TABLE:  // bug 18218
 						aErrorCode = NS_CSS_PARSER_DROP_DECLARATION;  // bug 15432
 						return PR_FALSE;
 				}
