@@ -3448,7 +3448,6 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       PRUint32 charCode, keyCode;
       keyEvent->GetCharCode(&charCode);
       keyEvent->GetKeyCode(&keyCode);
-      charCode = (PRUint32)nsCRT::ToLower((char)charCode);
 
       if (charCode == 0) {
         // Backspace key will delete the last char in the string
@@ -3457,6 +3456,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         }
         return NS_OK;
       }
+
+      PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charCode));
 
       DOMTimeStamp keyTime;
       aKeyEvent->GetTimeStamp(&keyTime);
@@ -3474,8 +3475,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       // Exception: If the user types the same key repeatedly, we'll cycle through all
       // options beginning with that char, rather than appending it.
       if (!(GetIncrementalString().Length() == 1 &&
-            GetIncrementalString().First() == NS_STATIC_CAST(PRUnichar, charCode))) {
-        GetIncrementalString().Append(NS_STATIC_CAST(PRUnichar, charCode));
+            GetIncrementalString().First() == uniChar)) {
+        GetIncrementalString().Append(uniChar);
       }
 
       // Determine where we're going to start reading the string

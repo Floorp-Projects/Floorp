@@ -110,12 +110,12 @@ static const unsigned char kLower2Upper[256] = {
 
 char nsCRT::ToUpper(char aChar)
 {
-  return (char)kLower2Upper[aChar];
+  return (char)kLower2Upper[(unsigned char)aChar];
 }
 
 char nsCRT::ToLower(char aChar)
 {
-  return (char)kUpper2Lower[aChar];
+  return (char)kUpper2Lower[(unsigned char)aChar];
 }
 
 PRBool nsCRT::IsUpper(char aChar)
