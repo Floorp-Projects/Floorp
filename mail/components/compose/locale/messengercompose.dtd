@@ -8,6 +8,7 @@
 <!ENTITY newMenu.accesskey "N">
 <!ENTITY newMessage.label "Message">
 <!ENTITY newMessage.key "M">
+<!ENTITY newMessageCmd2.key "N">
 <!ENTITY newMessage.accesskey "M">
 <!ENTITY newCard.label "Address Book Card...">
 <!ENTITY newCard.accesskey "c">
