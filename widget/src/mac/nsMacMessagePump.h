@@ -59,8 +59,10 @@ class nsMacMessagePump
 		void				DoMouseMove(EventRecord *aTheEvent);
 		void				DoPaintEvent(EventRecord *aTheEvent);
 		void 				DoKey(EventRecord *aTheEvent);
+		void 				DoMenu(EventRecord *aTheEvent, long menuItem);
 		void 				DoIdleWidgets();
   	void 				SetCurrentWindow(nsWindow *aTheWin) { gCurrentWindow = aTheWin;}
+  	void				StopRunning() {mRunning = PR_FALSE;}
   	nsWindow* 	GetCurrentWindow(void) {return(gCurrentWindow);}
 
 };
