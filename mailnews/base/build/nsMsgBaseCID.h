@@ -286,3 +286,14 @@
 { 0x60d34fb4, 0xd031, 0x11d3, \
   { 0x8b, 0x2e, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2}}
 #endif // nsMessageBaseCID_h__
+
+//
+// nsMsgServiceProviderService
+//
+#define NS_MSGSERVICEPROVIDERSERVICE_PROGID \
+  NS_RDF_DATASOURCE_PROGID_PREFIX "ispdefaults"
+  
+/* 10998cef-d7f2-4772-b7db-bd097454984c */
+#define NS_MSGSERVICEPROVIDERSERVICE_CID \
+{ 0x10998cef, 0xd7f2, 0x4772, \
+  { 0xb7, 0xdb, 0xbd, 0x09, 0x74, 0x54, 0x98, 0x4c}}
