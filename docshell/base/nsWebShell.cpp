@@ -225,6 +225,7 @@ protected:
 
   static nsIPluginHost    *mPluginHost;
   static nsIPluginManager *mPluginManager;
+  static PRBool           mPluginInited;
 };
 
 //----------------------------------------------------------------------
@@ -258,6 +259,7 @@ static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 
 nsIPluginHost *nsWebShell::mPluginHost = nsnull;
 nsIPluginManager *nsWebShell::mPluginManager = nsnull;
+PRBool nsWebShell::mPluginInited = PR_FALSE;
 
 nsresult nsWebShell::CreatePluginHost(void)
 {
@@ -454,8 +456,11 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   //be associated with the nsIContentViewerContainer interfaces,
   //not the nsIWebShell interfaces. this is a hack. MMP
 
-  if (PR_TRUE == aAllowPlugins)
+  if ((PR_TRUE == aAllowPlugins) && (PR_FALSE == mPluginInited))
     CreatePluginHost();
+
+  //never attempt to initialize plugins again...
+  mPluginInited = PR_TRUE;
 
   mScrollPref = aScrolling;
 
