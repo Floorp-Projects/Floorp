@@ -24,11 +24,13 @@
 
 #include "nsIMailboxService.h"
 #include "nsIMsgMessageService.h"
+#include "nsIMailboxUrl.h"
 #include "nsIURL.h"
 #include "nsIUrlListener.h"
 #include "nsIStreamListener.h"
 #include "nsFileSpec.h"
 #include "nsIFileSpec.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // The Mailbox Service is an interface designed to make building and running mailbox urls
@@ -76,6 +78,12 @@ public:
 	NS_IMETHOD SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, 
 								 nsIUrlListener *aUrlListener, nsIURL **aURL);
 
+protected:
+	// helper functions used by the service
+	nsresult PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsIUrlListener * aUrlListener,
+							   nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl);
+	
+	nsresult RunMailboxUrl(nsIMailboxUrl * aMailboxUrl, nsISupports * aDisplayConsumer = nsnull);
 };
 
 #endif /* nsMailboxService_h___ */

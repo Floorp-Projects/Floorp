@@ -104,13 +104,7 @@ nsresult nsMailboxService::ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListe
 		if (aUrlListener)
 			url->RegisterListener(aUrlListener);
 
-		nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
-		if (protocol)
-		{
-			NS_ADDREF(protocol);
-			rv = protocol->LoadUrl(url, nsnull /* no consumers for this type of url */);
-			NS_RELEASE(protocol); // after loading, someone else will have a ref cnt on the mailbox
-		}
+		RunMailboxUrl(url, nsnull);
 
 		if (aURL)
 		{
@@ -123,10 +117,8 @@ nsresult nsMailboxService::ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListe
 
 	return rv;
 }
-
-
-nsresult
-nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
+						 
+nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
                               nsIStreamListener * aMailboxCopyHandler,
                               PRBool moveMessage,
                               nsIUrlListener * aUrlListener,
@@ -136,48 +128,19 @@ nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
 	nsresult rv = NS_OK;
 	NS_LOCK_INSTANCE();
 
-	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
-                                            nsnull,
-                                            nsIMailboxUrl::GetIID(),
-                                            (void **) getter_AddRefs(url));
-	if (NS_SUCCEEDED(rv) && url)
+	nsMailboxAction mailboxAction = nsMailboxActionMoveMessage;
+	if (!moveMessage)
+		url->SetMailboxAction(nsMailboxActionCopyMessage);
+
+	rv = PrepareMessageUrl(aSrcMailboxURI, aUrlListener, mailboxAction, getter_AddRefs(url));
+
+	if (NS_SUCCEEDED(rv))
+		rv = RunMailboxUrl(url);
+
+	if (aURL)
 	{
-		// okay now generate the url string
-		char * urlSpec = nsnull;
-		nsString folderURI (eOneByte);
-		nsFileSpec folderPath ("");
-		nsMsgKey msgKey;
-		
-		nsParseLocalMessageURI(aSrcMailboxURI, folderURI, &msgKey);
-		nsLocalURI2Path(kMailboxMessageRootURI, folderURI.GetBuffer(), folderPath);
-        
-		nsFilePath filePath(folderPath); // convert to file url representation...
-		urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgKey);
-		
-		// set the url type to be a copy...
-		url->SetSpec(urlSpec);
-		PR_FREEIF(urlSpec);
-		
-		if (moveMessage)
-			url->SetMailboxAction(nsMailboxActionMoveMessage);
-		else
-			url->SetMailboxAction(nsMailboxActionCopyMessage);
-
-		url->SetMailboxCopyHandler(aMailboxCopyHandler);
-		
-		if (aUrlListener)
-			url->RegisterListener(aUrlListener);
-
-		// create a protocol instance to run the url..
-		nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
-		if (protocol)
-			rv = protocol->LoadUrl(url, nsnull);
-
-		if (aURL)
-		{
-			*aURL = url;
-			NS_IF_ADDREF(*aURL);
-		}
+		*aURL = url;
+		NS_IF_ADDREF(*aURL);
 	}
 
 	NS_UNLOCK_INSTANCE();
@@ -190,50 +153,48 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
 										  nsIUrlListener * aUrlListener,
                                           nsIURL ** aURL)
 {
-	nsCOMPtr<nsIMailboxUrl> url;
 	nsresult rv = NS_OK;
+	nsCOMPtr<nsIMailboxUrl> url;
 	NS_LOCK_INSTANCE();
-	
-	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
-                                            nsnull,
-                                            nsIMailboxUrl::GetIID(),
-                                            (void **) getter_AddRefs(url));
 
-	if (NS_SUCCEEDED(rv) && url)
+	rv = PrepareMessageUrl(aMessageURI, aUrlListener, nsMailboxActionDisplayMessage, getter_AddRefs(url));
+
+	if (NS_SUCCEEDED(rv))
+		rv = RunMailboxUrl(url, aDisplayConsumer);
+
+	if (aURL)
 	{
-		// okay now generate the url string
-		char * urlSpec = nsnull;
-		
-		// decompose the uri into a full path and message id...
-		nsAutoString folderURI (eOneByte);
-		nsFileSpec folderSpec;
-		nsMsgKey msgIndex;
-
-		nsParseLocalMessageURI(aMessageURI, folderURI, &msgIndex);
-		nsLocalURI2Path(kMailboxMessageRootURI, folderURI.GetBuffer(), folderSpec);
-
-		nsFilePath filePath(folderSpec); // convert to file url representation...
-		urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgIndex);
-		
-		url->SetSpec(urlSpec);
-		PR_FREEIF(urlSpec);
-		if (aUrlListener)
-			url->RegisterListener(aUrlListener);
-
-		// create a protocol instance to run the url..
-		nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
-		if (protocol)
-			rv = protocol->LoadUrl(url, aDisplayConsumer);
-
-		if (aURL)
-		{
-			*aURL = url;
-			NS_IF_ADDREF(*aURL);
-		}
+		*aURL = url;
+		NS_IF_ADDREF(*aURL);
 	}
-
+	
 	NS_UNLOCK_INSTANCE();
 
+	return rv;
+}
+
+NS_IMETHODIMP nsMailboxService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, 
+												  PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURL **aURL)
+{
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIMailboxUrl> url;
+	NS_LOCK_INSTANCE();
+
+	rv = PrepareMessageUrl(aMessageURI, aUrlListener, nsMailboxActionSaveMessageToDisk, getter_AddRefs(url));
+
+	if (NS_SUCCEEDED(rv))
+	{
+		url->SetMessageFile(aFile);
+		rv = RunMailboxUrl(url);
+	}
+
+	if (aURL)
+	{
+		*aURL = url;
+		NS_IF_ADDREF(*aURL);
+	}
+	
+	NS_UNLOCK_INSTANCE();
 	return rv;
 }
 
@@ -243,56 +204,71 @@ nsresult nsMailboxService::DisplayMessageNumber(const char *url,
                                                 nsIUrlListener * aUrlListener,
                                                 nsIURL ** aURL)
 {
-	nsMsgKeyArray msgKeys;
-	nsresult rv = NS_OK;
-	// extract the message key for this message number and turn around and call the other displayMessage method on it...
-	nsCOMPtr<nsIMsgDatabase> mailDB;
-	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-
-	rv = nsComponentManager::CreateInstance(kCMailDB,
-                                            nsnull,
-                                            nsIMsgDatabase::GetIID(),
-                                            (void **) getter_AddRefs(mailDBFactory));
-    nsFileSpec mailboxPath;
-    // ALECF: convert uri->mailboxPath with nsLocalURI2Path
-	if (NS_SUCCEEDED(rv) && mailDBFactory)
-		rv = mailDBFactory->Open((nsFileSpec&) mailboxPath, PR_FALSE, 
-								 (nsIMsgDatabase **) getter_AddRefs(mailDB), PR_FALSE);
-
-	if (NS_SUCCEEDED(rv) && mailDB)
-	{
-		// extract the message key array
-		mailDB->ListAllKeys(msgKeys);
-		if (aMessageNumber < msgKeys.GetSize()) 
-		{
-			nsMsgKey msgKey = msgKeys[aMessageNumber];
-			// okay, we have the msgKey so let's get rid of our db state...
-			mailDB->Close(PR_TRUE); // mscott: does close implicitly release??
-			char * uri = nsnull;
-
-			nsBuildLocalMessageURI(url, msgKey, &uri);
-#ifdef DEBUG_alecf
-            fprintf(stderr, "nsBuildLocalMessageURI(%s, %d -> %s) in nsMailboxService::DisplayMessageNumber", url, msgKey, uri);
-#endif
-
-			rv = DisplayMessage(uri, aDisplayConsumer, aUrlListener, aURL);
-		}
-		else
-			rv = NS_ERROR_FAILURE;
-	}
-
-	if (mailDB)
-		mailDB->Close(PR_TRUE); 
-
-	return rv;
+	// mscott - this function is no longer supported...
+	NS_ASSERTION(0, "deprecated method");
+	return NS_OK;
 }
 
-NS_IMETHODIMP nsMailboxService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, 
-												  PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURL **aURL)
+// Takes a mailbox url, this method creates a protocol instance and loads the url
+// into the protocol instance.
+nsresult nsMailboxService::RunMailboxUrl(nsIMailboxUrl * aMailboxUrl, nsISupports * aDisplayConsumer)
 {
-
+	// create a protocol instance to run the url..
 	nsresult rv = NS_OK;
+	nsMailboxProtocol * protocol = new nsMailboxProtocol(aMailboxUrl);
 
+	if (protocol)
+	{
+		NS_ADDREF(protocol);
+		rv = protocol->LoadUrl(aMailboxUrl, aDisplayConsumer);
+		NS_RELEASE(protocol); // after loading, someone else will have a ref cnt on the mailbox
+	}
+		
 	return rv;
 }
 
+// This function takes a message uri, converts it into a file path & msgKey 
+// pair. It then turns that into a mailbox url object. It also registers a url
+// listener if appropriate. AND it can take in a mailbox action and set that field
+// on the returned url as well.
+nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsIUrlListener * aUrlListener,
+											 nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl)
+{
+	nsresult rv = NS_OK;
+	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
+                                            nsnull,
+                                            nsIMailboxUrl::GetIID(),
+                                            (void **) aMailboxUrl);
+
+	if (NS_SUCCEEDED(rv) && aMailboxUrl && *aMailboxUrl)
+	{
+		nsIMailboxUrl * url = *aMailboxUrl; // no need to ref cnt..
+
+		// okay now generate the url string
+		char * urlSpec;
+		nsAutoString folderURI (eOneByte);
+		nsFileSpec folderPath;
+		nsMsgKey msgKey;
+		
+		rv = nsParseLocalMessageURI(aSrcMsgMailboxURI, folderURI, &msgKey);
+		rv = nsLocalURI2Path(kMailboxMessageRootURI, folderURI.GetBuffer(), folderPath);
+
+		if (NS_SUCCEEDED(rv))
+		{
+			// set up the url spec and initialize the url with it.
+			nsFilePath filePath(folderPath); // convert to file url representation...
+			urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgKey);
+			url->SetSpec(urlSpec);
+			PR_FREEIF(urlSpec);
+
+			// set up the mailbox action
+			url->SetMailboxAction(aMailboxAction);
+
+			// set up the url listener
+			if (aUrlListener)
+				rv = url->RegisterListener(aUrlListener);
+		} // if we got a url
+	} // if we got a url
+
+	return rv;
+}
