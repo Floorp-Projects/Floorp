@@ -101,18 +101,8 @@ PNGDecoder::QueryInterface(const nsIID& aIID, void** aInstPtr)
   return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP 
-PNGDecoder::AddRef()
-{
-  NS_INIT_REFCNT();
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-PNGDecoder::Release()
-{
-  return NS_OK;
-}
+NS_IMPL_ADDREF(PNGDecoder)
+NS_IMPL_RELEASE(PNGDecoder)
 
 /*-----------class----------------*/
 class nsPNGDecFactory : public nsIFactory 
@@ -139,7 +129,9 @@ private:
 /*-----------------------------------------*/
 
 nsPNGDecFactory* gFactory = NULL;
-NS_IMPL_ISUPPORTS(nsPNGDecFactory, kIFactoryIID);
+
+
+NS_IMPL_ISUPPORTS(nsPNGDecFactory, kIFactoryIID)
 
 
 nsPNGDecFactory::nsPNGDecFactory(const nsCID &aClass)

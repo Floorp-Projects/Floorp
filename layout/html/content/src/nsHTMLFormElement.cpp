@@ -207,7 +207,7 @@ nsHTMLFormElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(nsrefcnt)
 nsHTMLFormElement::AddRef(void)                                
 { 
   nsTraceRefcnt::AddRef((nsIForm*)this, mRefCnt+1, __FILE__, __LINE__);

@@ -84,6 +84,9 @@ JPGDecoder::~JPGDecoder(void)
 };
 
 
+NS_IMPL_ADDREF(JPGDecoder)
+NS_IMPL_RELEASE(JPGDecoder)
+
 NS_IMETHODIMP 
 JPGDecoder::QueryInterface(const nsIID& aIID, void** aInstPtr)
 { 
@@ -148,20 +151,6 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   return rv;
 }
 
-/*--------------------*/
-
-NS_IMETHODIMP 
-JPGDecoder::AddRef()
-{
-  NS_INIT_REFCNT();
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-JPGDecoder::Release()
-{
-  return NS_OK;
-}
 
 /*-----------class----------------*/
 class nsJPGDecFactory : public nsIFactory 
