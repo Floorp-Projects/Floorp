@@ -1417,7 +1417,11 @@ nsMenuFrame::Execute()
   event.isMeta = PR_FALSE;
   event.clickCount = 0;
   event.widget = nsnull;
-  mContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult result = mPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(result) && shell) {
+    shell->HandleDOMEventWithTarget(mContent, &event, &status);
+  }
 
   // XXX HACK. Just gracefully exit if the node has been removed, e.g., window.close()
   // was executed.
@@ -1452,9 +1456,16 @@ nsMenuFrame::OnCreate()
   GetMenuChildrenElement(getter_AddRefs(child));
   
   nsresult rv;
-  if (child) 
-    rv = child->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-  else rv = mContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  nsCOMPtr<nsIPresShell> shell;
+  rv = mPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell) {
+    if (child) {
+      rv = shell->HandleDOMEventWithTarget(child, &event, &status);
+    }
+    else {
+      rv = shell->HandleDOMEventWithTarget(mContent, &event, &status);
+    }
+  }
 
   if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
     return PR_FALSE;
@@ -1479,9 +1490,16 @@ nsMenuFrame::OnDestroy()
   GetMenuChildrenElement(getter_AddRefs(child));
   
   nsresult rv;
-  if (child) 
-    rv = child->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-  else rv = mContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  nsCOMPtr<nsIPresShell> shell;
+  rv = mPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell) {
+    if (child) {
+      rv = shell->HandleDOMEventWithTarget(child, &event, &status);
+    }
+    else {
+      rv = shell->HandleDOMEventWithTarget(mContent, &event, &status);
+    }
+  }
 
   if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
     return PR_FALSE;

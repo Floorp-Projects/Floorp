@@ -375,6 +375,8 @@ nsImageControlFrame::GetName(nsString* aResult)
 PRBool
 nsImageControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 {
+  // Image control will only add it's value if it is clicked on.
+  // XXX Is this right?
   return (this == (aSubmitter));
 }
 
@@ -456,7 +458,11 @@ nsImageControlFrame::MouseClicked(nsIPresContext* aPresContext)
     event.eventStructType = NS_EVENT;
     event.message = NS_FORM_SUBMIT;
     if (nsnull != formContent) {
-      formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+      nsCOMPtr<nsIPresShell> shell;
+      nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
+      if (NS_SUCCEEDED(result) && shell) {
+        shell->HandleDOMEventWithTarget(formContent, &event, &status);
+      }
       NS_RELEASE(formContent);
     }
     if (nsEventStatus_eConsumeNoDefault != status) {

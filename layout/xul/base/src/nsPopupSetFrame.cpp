@@ -608,7 +608,11 @@ nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
   event.widget = nsnull;
 
   if (aPopupContent) {
-    nsresult rv = aPopupContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && shell) {
+      rv = shell->HandleDOMEventWithTarget(aPopupContent, &event, &status);
+    }
     if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
       return PR_FALSE;
   }
@@ -634,7 +638,11 @@ nsPopupSetFrame::OnDestroy()
   GetActiveChildElement(getter_AddRefs(content));
   
   if (content) {
-    nsresult rv = content->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && shell) {
+      rv = shell->HandleDOMEventWithTarget(content, &event, &status);
+    }
     if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
       return PR_FALSE;
   }
