@@ -369,8 +369,9 @@ BOOL CMfcEmbedApp::InitInstance()
 CBrowserFrame* CMfcEmbedApp::CreateNewBrowserFrame(PRUint32 chromeMask,
 												   PRInt32 x, PRInt32 y,
 												   PRInt32 cx, PRInt32 cy,
-                           PRBool bIsEditor,
-												   PRBool bShowWindow)
+												   PRBool bShowWindow,
+												   PRBool bIsEditor
+												   )
 {
 	UINT resId = bIsEditor ? IDR_EDITOR : IDR_MAINFRAME;
 
