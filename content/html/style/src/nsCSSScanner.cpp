@@ -413,8 +413,9 @@ PRBool nsCSSScanner::EatNewline(nsresult& aErrorCode)
   return eaten;
 }
 
-static PRBool
-CheckLexTable(PRInt32 aChar, PRUint8 aBit, PRUint8* aLexTable)
+/* static */
+PRBool
+nsCSSScanner::CheckLexTable(PRInt32 aChar, PRUint8 aBit, PRUint8* aLexTable)
 {
   NS_ASSERTION(!(aBit & (START_IDENT | IS_IDENT)),
                "can't use CheckLexTable with identifiers");
