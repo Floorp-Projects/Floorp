@@ -49,17 +49,32 @@ var console = new Object();
 
 /* |this|less functions */
 
+function htmlVA (attribs, href, contents)
+{
+    if (!attribs)
+        attribs = {"class": "venkman-link", target: "_content"};
+    else if (attribs["class"])
+        attribs["class"] += " venkman-link";
+    
+    return htmlA (attribs, href, contents);
+}
+    
 function init()
 {
     initCommands();
     initPrefs();
     initDebugger();
-
+    
     console._outputDocument = 
         document.getElementById("output-iframe").contentDocument;
     
     console._outputElement = 
         console._outputDocument.getElementById("output-tbody");    
+
+    display(htmlSpan(null, MSG_HELLO1 + " ",
+                     htmlVA(null, 
+                            "chrome://venkman/content/tests/testpage.html"),
+                     " " + MSG_HELLO2), MT_HELLO);
 }
 
 function load(url, obj)
@@ -90,8 +105,9 @@ function load(url, obj)
 
 /* keep this list in sync with exceptionMsgNames in venkman-msg.js */
 const ERR_NOT_IMPLEMENTED = 0;
-const ERR_DISPLAY_ARG1    = 1;
-const ERR_SUBSCRIPT_LOAD  = 2;
+const ERR_REQUIRED_PARAM  = 1;
+const ERR_INVALID_PARAM   = 2;
+const ERR_SUBSCRIPT_LOAD  = 3;
 
 /* venkman exception factory, can be used with or without |new|.
  * throw BadMojo (ERR_FOO, MSG_VAL_UNDEFINED);
@@ -104,7 +120,8 @@ function BadMojo (errno, params)
     dd ("new BadMojo (" + errno + ": " + msg + ") from\n" + getStackTrace());
     return {message: msg, name: "Error " + errno,
             fileName: Components.stack.caller.filename,
-            lineNumber: Components.stack.caller.lineNumber};
+            lineNumber: Components.stack.caller.lineNumber,
+            functionName: Components.stack.caller.functionName};
 }
 
 /* console object */
@@ -121,7 +138,13 @@ var display = console.display =
 function display(message, msgtype)
 {
     if (typeof message == "undefined")
-        throw BadMojo(ERR_DISPLAY_ARG1);
+        throw BadMojo(ERR_REQUIRED_PARAM, "message");
+
+    if (typeof message != "string" && typeof message != "object")
+        throw BadMojo(ERR_INVALID_PARAM, "message");
+
+    if (typeof msgtype == "undefined")
+        msgtype = MT_INFO;
     
     function setAttribs (obj, c, attrs)
     {
@@ -134,7 +157,7 @@ function display(message, msgtype)
     function stringToMsg (message)
     {
         var ary  = message.split("\n");
-        var span = document.createElementNS (NS_XHTML, HTML_SPAN);
+        var span = htmlSpan();
 
         for (var l in ary)
         {
@@ -142,22 +165,24 @@ function display(message, msgtype)
                 splitLongWord (ary[l], console.prefs["output.wordbreak.length"]);
             for (var i in wordParts)
             {
-                span.appendChild (document.createTextNode (wordParts[i]));
-                var img = document.createElementNS (NS_XHTML, HTML_IMG);
-                span.appendChild (img);
+                span.appendChild (htmlText(wordParts[i]));
+                span.appendChild (htmlImg());
             }
                     
-            span.appendChild (document.createElementNS (NS_XHTML, HTML_BR));
+            span.appendChild (htmlBR());
         }
         return span;
     }
 
-    var msgRow = document.createElementNS(NS_XHTML, HTML_TR);
+    var msgRow = htmlTR("msg");
     setAttribs(msgRow, "msg");
 
-    var msgData = document.createElementNS(NS_XHTML, HTML_TD);
+    var msgData = htmlTD();
     setAttribs(msgData, "msg-data");
-    msgData.appendChild(stringToMsg(message));
+    if (typeof message == "string")
+        msgData.appendChild(stringToMsg(message));
+    else
+        msgData.appendChild(message);
 
     msgRow.appendChild(msgData);
 
