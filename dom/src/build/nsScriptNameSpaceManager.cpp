@@ -37,7 +37,7 @@ nsScriptNameSpaceManager::RemoveNames(PLHashEntry *he, PRIntn i, void *arg)
   char *name = (char*)he->key;
   nsGlobalNameStruct* gn = (nsGlobalNameStruct*)he->value;
 
-  delete [] name;
+  nsCRT::free(name);
   PR_DELETE(gn);
 
   return HT_ENUMERATE_REMOVE;
@@ -96,10 +96,10 @@ nsScriptNameSpaceManager::UnregisterGlobalName(const nsString& aName)
 
       delete gn;
       PL_HashTableRemove(mGlobalNames, name);
-      delete [] hname;
+      nsCRT::free(hname);
     }
 
-    delete[] name;
+    nsCRT::free(name);
   }
 
   return NS_OK;
@@ -113,7 +113,7 @@ nsScriptNameSpaceManager::LookupName(const nsString& aName,
   if (nsnull != mGlobalNames) {
     char* name = aName.ToNewCString();
     nsGlobalNameStruct* gn = (nsGlobalNameStruct*)PL_HashTableLookup(mGlobalNames, name);
-    delete [] name;
+    nsCRT::free(name);
 
     if ((nsnull != gn) && (gn->mIsConstructor == aIsConstructor)) {
       aCID = gn->mCID;
