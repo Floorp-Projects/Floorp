@@ -102,7 +102,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 /////////////////////////////////////////////////////////////////////////////////
 
 #define DEFAULT_URL_TYPE  "mailbox://"	
-#define	DEFAULT_MAILBOX_PATH "D|/mozilla/mozilla/mailnews/base/src/makefile.win"
+#define	DEFAULT_MAILBOX_PATH "D|/raptor/mozilla/bugsplat"
 
 #ifdef XP_UNIX
 extern "C" char *fe_GetConfigDir(void) {
