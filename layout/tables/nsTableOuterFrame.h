@@ -240,10 +240,10 @@ private:
   nsIFrame *mCaptionFrame;
 
   /** used to track caption max element size */
-  PRInt32 mMinCaptionWidth;
+  PRInt32   mMinCaptionWidth;
 
-  nsSize mMaxElementSize;
-
+  nsSize    mMaxElementSize;
+  nscoord   mInnerTableMaximumWidth;
 };
 
 inline nscoord nsTableOuterFrame::GetMinCaptionWidth()

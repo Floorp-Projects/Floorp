@@ -351,6 +351,12 @@ nsresult nsTableOuterFrame::IR_TargetIsChild(nsIPresContext*        aPresContext
   }
   else if (aNextFrame==mCaptionFrame) {
     rv = IR_TargetIsCaptionFrame(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+    // If we're supposed to update our maximum width, then just use the inner
+    // table's maximum width
+    if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+      aDesiredSize.mMaximumWidth = mInnerTableMaximumWidth;
+    }
   }
   else {
     const nsStyleDisplay* nextDisplay;
@@ -595,9 +601,21 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*        aPresCont
   // day we'll be able to make tables behave too.
   FixBadReflowState(aReflowState.reflowState, innerReflowState);
 
+  // If we're supposed to update our maximum width, then ask the child to
+  // as well
+  if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+    innerSize.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
+  }
   rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState,
                    0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
   mInnerTableFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+  if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+    aDesiredSize.mMaximumWidth = innerSize.mMaximumWidth;
+
+    // Update the cached value
+    mInnerTableMaximumWidth = innerSize.mMaximumWidth;
+  }
+
   // if there is a caption and the width or height of the inner table changed from a successful reflow, 
   // then reflow or move the caption as needed
   if ((nsnull != mCaptionFrame) && (PR_TRUE==NS_SUCCEEDED(rv))) {
@@ -865,6 +883,11 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
     // reflowing the caption first and getting its desired height...
     rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState,
                      0, 0, 0, aStatus);
+
+    if (NS_UNCONSTRAINEDSIZE == innerReflowState.availableWidth) {
+      // Remember the inner table's maximum width
+      mInnerTableMaximumWidth = innerSize.width;
+    }
 
     // Table's max element size is the MAX of the caption's max element size
     // and the inner table's max element size...
