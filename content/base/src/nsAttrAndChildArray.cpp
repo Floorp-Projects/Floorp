@@ -42,8 +42,15 @@
 #include "prbit.h"
 #include "nsString.h"
 
+/**
+ * Due to a compiler bug in VisualAge C++ for AIX, we need to return the 
+ * address of the first index into mBuffer here, instead of simply returning 
+ * mBuffer itself.
+ *
+ * See Bug 231104 for more information.
+ */
 #define ATTRS(_impl) \
-  NS_REINTERPRET_CAST(InternalAttr*, (_impl)->mBuffer)
+  NS_REINTERPRET_CAST(InternalAttr*, &((_impl)->mBuffer[0]))
   
 
 #define NS_IMPL_EXTRA_SIZE \
