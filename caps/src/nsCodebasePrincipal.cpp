@@ -101,11 +101,11 @@ nsCodebasePrincipal::CanEnableCapability(const char *capability,
 		return NS_ERROR_FAILURE;
 	PRBool enabled;
     if (NS_FAILED(prefs->GetBoolPref(pref, &enabled)) || !enabled) {
-        // Unless subject is executing from file:, return denied 
+        // Deny unless subject is executing from file: or resource: 
         nsXPIDLCString scheme;
         if (NS_FAILED(mURI->GetScheme(getter_Copies(scheme))) ||
-            PL_strcmp(scheme, "file") != 0 ||
-            PL_strcmp(scheme, "resource") != 0)
+            (PL_strcmp(scheme, "file") != 0 &&
+             PL_strcmp(scheme, "resource") != 0))
         {
             *result = nsIPrincipal::ENABLE_DENIED;
             return NS_OK;
