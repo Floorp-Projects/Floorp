@@ -1,36 +1,33 @@
-#! gmake
-
-DEPTH = ../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = dbm
+MODULE		= dbm
 
-EXPORTS =	nsres.h   \
-		cdefs.h   \
+EXPORTS		= \
+		nsres.h \
+		cdefs.h \
 		mcom_db.h \
 		ncompat.h \
 		winfile.h \
 		$(NULL)
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-PRIVATE_EXPORTS =	hsearch.h \
-			page.h    \
-			extern.h  \
-			ndbm.h    \
-			queue.h   \
-			hash.h    \
-			mpool.h   \
-			search.h  \
-			$(NULL)
+PRIVATE_EXPORTS	= \
+		hsearch.h \
+		page.h \
+		extern.h \
+		ndbm.h \
+		queue.h \
+		hash.h \
+		mpool.h \
+		search.h \
+		$(NULL)
 
-PRIVATE_EXPORTS := $(addprefix $(srcdir)/, $(PRIVATE_EXPORTS))
+PRIVATE_EXPORTS	:= $(addprefix $(srcdir)/, $(PRIVATE_EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
-
-
-
