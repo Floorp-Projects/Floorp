@@ -36,7 +36,7 @@
  */
 
 #define DEFINE_RDF_VOCAB(namespace, prefix, name) \
-static const char  kURI##prefix##_##name [] = ##namespace #name ;\
-static const char* kTag##prefix##_##name    = kURI##prefix##_##name## + sizeof(##namespace) - 1
+static const char* kURI##prefix##_##name = ##namespace #name ;\
+static const char* kTag##prefix##_##name = kURI##prefix##_##name## + sizeof(##namespace) - 1
 
 #endif /* rdf_h___ */
