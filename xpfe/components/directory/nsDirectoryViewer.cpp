@@ -44,7 +44,7 @@
   A directory viewer object. Parses "application/http-index-format"
   per Lou Montulli's original spec:
 
-    http://www.area.com/~roeber/file_format.html
+  http://www.mozilla.org/projects/netlib/dirindexformat.html
 
   One added change is for a description entry, for when the
   target does not match the filename (ie gopher)
