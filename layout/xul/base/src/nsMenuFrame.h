@@ -90,6 +90,8 @@ public:
   PRBool IsOpen() { return mMenuOpen; };
   void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; };
 
+  void GetMenuParent(nsIMenuParent** aResult) { NS_IF_ADDREF(mMenuParent); *aResult = mMenuParent; };
+
 protected:
   void GetMenuChildrenElement(nsIContent** aResult);
 

@@ -51,6 +51,8 @@ public:
 
   NS_IMETHOD IsActive() { return mIsActive; };
 
+  NS_IMETHOD DismissChain();
+
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -71,6 +73,9 @@ public:
 
   // Called when the ESC key is held down to close levels of menus.
   void Escape();
+
+  // Called to execute a menu item.
+  void Enter();
 
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.

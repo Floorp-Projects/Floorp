@@ -189,7 +189,7 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
 {
   aEventStatus = nsEventStatus_eConsumeDoDefault;
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    // The menu item was clicked. Bring up the menu.
+    // The menu item was selected. Bring up the menu.
     nsIFrame* frame = mPopupFrames.FirstChild();
     if (frame) {
       // We have children.
@@ -199,6 +199,15 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
         // deactivated when this happens.
         mMenuParent->SetActive(PR_FALSE);
       }
+    }
+  }
+  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+    // The menu item was invoked and can now be dismissed.
+    nsCOMPtr<nsIAtom> tag;
+    mContent->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenuitem && mMenuParent) {
+      // Close up the parent.
+      mMenuParent->DismissChain();
     }
   }
   else if (aEvent->message == NS_MOUSE_EXIT) {
