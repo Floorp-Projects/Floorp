@@ -189,7 +189,7 @@ namespace JSTypes {
     // which is wrapped in a simple_allocator. this is crap.
     typedef char _Char[1];
     //typedef gc_allocator<_Char> gc_map_allocator;
-    #define gc_map_allocator(T) gc_allocator<_Char>
+    #define gc_map_allocator(T) gc_allocator<JSTypes::_Char>
 #elif defined(_WIN32)
     // FIXME: MSVC++'s notion. this is why we had to add _Charalloc().
     //typedef gc_allocator<JSValue> gc_map_allocator;
