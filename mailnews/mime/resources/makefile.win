@@ -27,9 +27,11 @@ install::
 	$(MAKE_INSTALL) smile.gif $(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) wink.gif $(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) sick.gif $(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) mime_en.properties $(DIST)\bin\res\mailnews\messenger
 
 clobber::
 	rm -f $(DIST)\bin\res\mailnews\messenger\frown.gif
 	rm -f $(DIST)\bin\res\mailnews\messenger\smile.gif
 	rm -f $(DIST)\bin\res\mailnews\messenger\wink.gif
 	rm -f $(DIST)\bin\res\mailnews\messenger\sick.gif
+	rm -f $(DIST)\bin\res\mailnews\messenger\mime_en.properties

@@ -33,6 +33,7 @@ EXPORT_RESOURCES = \
 	$(srcdir)/frown.gif \
 	$(srcdir)/wink.gif \
 	$(srcdir)/sick.gif \
+	$(srcdir)/mime_en.properties \
 	$(NULL)
 
 EXPORT_RESOURCES_TO_REMOVE := $(addprefix $(MESSENGER_DIR)/, $(EXPORT_RESOURCES))
