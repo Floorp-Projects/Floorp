@@ -81,6 +81,7 @@
 #include "nsIWebShellServices.h"
 #include "nsIDocumentLoader.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
 #include "nsIXPConnect.h"
 #include "nsContentList.h"
 #include "nsDOMError.h"
@@ -1045,9 +1046,73 @@ nsHTMLDocument::StopDocumentLoad()
   return NS_OK;
 }
 
+// static
+void PR_CALLBACK
+nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
+{
+  nsIDocument *doc = NS_REINTERPRET_CAST(nsIDocument *, aRef);
+  nsHTMLDocument *htmldoc = NS_REINTERPRET_CAST(nsHTMLDocument *, doc);
+
+  // If the document is in the middle of a document.write() call, this
+  // most likely means that script on a page document.write()'d out a
+  // script tag that did location="..." and we're right now finishing
+  // up executing the script that was written with
+  // document.write(). Since there's still script on the stack (the
+  // script that called document.write()) we don't want to release the
+  // parser now, that would cause the next document.write() call to
+  // cancel the load that was initiated by the location="..." in the
+  // script that was written out by document.write().
+
+  if (!htmldoc->mIsWriting) {
+    // Release the documents parser so that the call to EndLoad()
+    // doesn't just return early and set the termination function again.
+
+    NS_IF_RELEASE(htmldoc->mParser);
+  }
+
+  htmldoc->EndLoad();
+}
+
 NS_IMETHODIMP
 nsHTMLDocument::EndLoad()
 {
+  if (mParser) {
+    nsCOMPtr<nsIJSContextStack> stack =
+      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    if (stack) {
+      JSContext *cx = nsnull;
+      stack->Peek(&cx);
+
+      if (cx) {
+        nsCOMPtr<nsIScriptContext> scx;
+        nsContentUtils::GetDynamicScriptContext(cx, getter_AddRefs(scx));
+
+        if (scx) {
+          // The load of the document was terminated while we're
+          // called from within JS and we have a parser (i.e. we're in
+          // the middle of doing document.write()). In stead of
+          // releasing the parser and ending the document load
+          // directly, we'll make that happen once the script is done
+          // executing. This way subsequent document.write() calls
+          // won't end up creating a new parser and interrupting other
+          // loads that were started while the script was
+          // running. I.e. this makes the following case work as
+          // expected:
+          //
+          //   document.write("foo");
+          //   location.href = "http://www.mozilla.org";
+          //   document.write("bar");
+
+          scx->SetTerminationFunction(DocumentWriteTerminationFunc,
+                                      NS_STATIC_CAST(nsIDocument *, this));
+
+          return NS_OK;
+        }
+      }
+    }
+  }
+
   NS_IF_RELEASE(mParser);
   return nsDocument::EndLoad();
 }
