@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.22 2001/08/22 22:50:26 javi%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.23 2001/08/22 23:15:45 wtc%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -2975,8 +2975,6 @@ getWrappingKey( sslSocket *       ss,
 	    goto install;
 	}
     }
-
-no_wrapped_key:
 
     if (!masterSecretSlot) 	/* caller doesn't want to create a new one. */
     	goto loser;
