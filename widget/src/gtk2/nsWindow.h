@@ -227,7 +227,6 @@ public:
     nsWindow           *mFocusChild;
 
 private:
-
     void               GetToplevelWidget(GtkWidget **aWidget);
 
     GtkWidget          *mShell;
@@ -253,17 +252,16 @@ private:
     NS_IMETHOD_(PRBool) DispatchAccessibleEvent(nsIAccessible** aAccessible);
 #endif
 
+    // The cursor cache
+    static GdkCursor   *gsGtkCursorCache[eCursor_count_up_down + 1];
+
     // all of our DND stuff
     // this is the last window that had a drag event happen on it.
     static nsWindow    *mLastDragMotionWindow;
-    static GdkCursor   *gsGtkCursorCache[eCursor_count_up_down + 1];
-
     void   InitDragEvent         (nsMouseEvent &aEvent);
     void   UpdateDragStatus      (nsMouseEvent &aEvent,
                                   GdkDragContext *aDragContext,
                                   nsIDragService *aDragService);
-
-    // always returns TRUE
 
     // this is everything we need to be able to fire motion events
     // repeatedly

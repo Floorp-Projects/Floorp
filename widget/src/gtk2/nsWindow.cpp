@@ -58,6 +58,12 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
+/* For SetIcon */
+#include "nsSpecialSystemDirectory.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsXPIDLString.h"
+#include "nsIFile.h"
+
 /* utility functions */
 static PRBool     check_for_rollup(GdkWindow *aWindow,
                                    gdouble aMouseX, gdouble aMouseY,
@@ -133,6 +139,10 @@ static void drag_data_received_event_cb   (GtkWidget *aWidget,
                                            guint aInfo,
                                            guint32 aTime,
                                            gpointer aData);
+
+/* initialization static functions */
+static nsresult    initialize_prefs        (void);
+static nsresult    initialize_default_icon (void);
   
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
@@ -142,7 +152,7 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 static PRBool            gJustGotActivate      = PR_FALSE;
 static PRBool            gGlobalsInitialized   = PR_FALSE;
 static PRBool            gRaiseWindows         = PR_TRUE;
- 
+
 nsCOMPtr  <nsIRollupListener> gRollupListener;
 nsWeakPtr                     gRollupWindow;
 
@@ -177,16 +187,9 @@ nsWindow::nsWindow()
     if (!gGlobalsInitialized) {
         gGlobalsInitialized = PR_TRUE;
 
-        // check to see if we should set our raise pref
-        nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-        if (prefs) {
-            PRBool val = PR_TRUE;
-            nsresult rv;
-            rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus",
-                                    &val);
-            if (NS_SUCCEEDED(rv))
-                gRaiseWindows = val;
-        }
+        // It's OK if either of these fail, but it may not be one day.
+        initialize_prefs();
+        initialize_default_icon();
     }
     
     if (mLastDragMotionWindow == this)
@@ -798,7 +801,51 @@ nsWindow::SetTitle(const nsString& aTitle)
 NS_IMETHODIMP
 nsWindow::SetIcon(const nsAString& anIconSpec)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (!mShell)
+        return NS_OK;
+
+    // Start at the app chrome directory.
+    nsCOMPtr<nsIFile> chromeDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR,
+                                         getter_AddRefs(chromeDir));
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Get the native file name of that directory.
+    nsAutoString iconPath;
+    chromeDir->GetPath(iconPath);
+
+    // Now take input path...
+    nsAutoString iconSpec(anIconSpec);
+    // ...append ".xpm" to it
+    iconSpec.Append(NS_LITERAL_STRING(".xpm"));
+
+    // ...and figure out where /chrome/... is within that
+    // (and skip the "resource:///chrome" part).
+    nsAutoString key(NS_LITERAL_STRING("/chrome/"));
+    PRInt32 n = iconSpec.Find(key) + key.Length();
+
+    // Append that to icon resource path.
+    iconPath.Append(iconSpec.get() + n - 1 );
+
+    nsCOMPtr<nsILocalFile> pathConverter;
+    rv = NS_NewLocalFile(iconPath, PR_TRUE,
+                         getter_AddRefs(pathConverter));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCAutoString aPath;
+    pathConverter->GetNativePath(aPath);
+
+    LOG(("nsWindow::SetIcon using path %s\n", aPath.get()));
+
+    GdkPixbuf *iconPixbuf = gdk_pixbuf_new_from_file(aPath.get(), NULL);
+    if (!iconPixbuf)
+        return NS_ERROR_FAILURE;
+
+    gtk_window_set_icon(GTK_WINDOW(mShell), iconPixbuf);
+    g_object_unref(G_OBJECT(iconPixbuf));
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2485,6 +2532,7 @@ drag_drop_event_cb(GtkWidget *aWidget,
                                    aX, aY, aTime, aData);
 
 }
+
 /* static */
 void
 drag_data_received_event_cb (GtkWidget *aWidget,
@@ -2505,6 +2553,64 @@ drag_data_received_event_cb (GtkWidget *aWidget,
                                     aX, aY,
                                     aSelectionData,
                                     aInfo, aTime, aData);
+}
+
+/* static */
+nsresult
+initialize_prefs(void)
+{
+    // check to see if we should set our raise pref
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    if (prefs) {
+        PRBool val = PR_TRUE;
+        nsresult rv;
+        rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus", &val);
+        if (NS_SUCCEEDED(rv))
+            gRaiseWindows = val;
+    }
+
+    return NS_OK;
+}
+
+/* static */
+nsresult
+initialize_default_icon(void)
+{
+    // Set up the default icon for all windows
+    nsresult rv;
+    nsCOMPtr<nsIFile> chromeDir;
+    rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR,
+                                getter_AddRefs(chromeDir));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsAutoString defaultPath;
+    chromeDir->GetPath(defaultPath);
+            
+    defaultPath.Append(NS_LITERAL_STRING("/icons/default/default.xpm"));
+
+    nsCOMPtr<nsILocalFile> defaultPathConverter;
+    rv = NS_NewLocalFile(defaultPath, PR_TRUE,
+                         getter_AddRefs(defaultPathConverter));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCAutoString aPath;
+    defaultPathConverter->GetNativePath(aPath);
+
+    LOG(("Loading default icon from %s\n", aPath.get()));
+
+    GdkPixbuf *defaultIcon = gdk_pixbuf_new_from_file(aPath.get(), NULL);
+    if (!defaultIcon)
+        return NS_ERROR_FAILURE;
+
+    GList *list = NULL;
+    list = g_list_append(list, defaultIcon);
+    gtk_window_set_default_icon_list(list);
+    g_object_unref(G_OBJECT(defaultIcon));
+    g_list_free(list);
+
+    return NS_OK;
 }
 
 gboolean
