@@ -124,6 +124,7 @@ bin\components\mimetype.xpt
 bin\components\necko_socket.xpt
 bin\components\nsprefm.dll
 bin\components\nsSidebar.js
+bin\components\perms.dll
 bin\components\prefmigr.xpt
 bin\components\proxyObject.xpt
 bin\components\sidebar.xpt
