@@ -18,10 +18,10 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#include "nsAppCoresManager.h"
 
 #include "nsAppCoresCIDs.h"
 #include "nsAppCores.h"
-#include "nsAppCoresManager.h"
 #include "nsAppCoresNameSet.h"
 
 #include "nscore.h"
@@ -91,6 +91,8 @@ static NS_DEFINE_IID(kMailCoreFactoryCID,     NS_MAILCOREFACTORY_CID);
 /////////////////////////////////////////////////////////////////////////
 // nsAppCoresManager
 /////////////////////////////////////////////////////////////////////////
+
+nsVoidArray nsAppCoresManager::mList;
 
 nsAppCoresManager::nsAppCoresManager()
 {
