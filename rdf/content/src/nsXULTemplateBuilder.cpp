@@ -73,6 +73,7 @@
 #include "nsRDFCID.h"
 #include "nsIXULContent.h"
 #include "nsIXULContentUtils.h"
+#include "nsRDFSort.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
@@ -88,55 +89,26 @@
 #define NS_RDF_ELEMENT_WAS_THERE   NS_OK
 static PRLogModuleInfo* gLog;
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIContentIID,                NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kINameSpaceManagerIID,       NS_INAMESPACEMANAGER_IID);
-static NS_DEFINE_IID(kIRDFResourceIID,            NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFLiteralIID,             NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
-static NS_DEFINE_IID(kIRDFObserverIID,            NS_IRDFOBSERVER_IID);
-static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
-static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
-
-static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
-static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
-static NS_DEFINE_CID(kTextNodeCID,                NS_TEXTNODE_CID);
-
-static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
+static NS_DEFINE_CID(kHTMLElementFactoryCID,     NS_HTML_ELEMENT_FACTORY_CID);
+static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
+static NS_DEFINE_CID(kXMLElementFactoryCID,      NS_XML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
+static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 
-static NS_DEFINE_CID(kHTMLElementFactoryCID,  NS_HTML_ELEMENT_FACTORY_CID);
-static NS_DEFINE_CID(kXMLElementFactoryCID,   NS_XML_ELEMENT_FACTORY_CID);
-
-
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 
-////////////////////////////////////////////////////////////////////////
-
-// rjc: yes, I'm lame. For the moment, "class sortState" is defined both here and in
-// nsXULSortService.cpp so any changes made here must also (exactly) be made there also.
-
-typedef	class	sortState
-{
-public:
-	// state match strings
-	nsAutoString				sortResource, sortResource2;
-
-	// state variables
-	nsCOMPtr<nsIRDFDataSource>		mCache;
-	nsCOMPtr<nsIRDFResource>		sortProperty, sortProperty2;
-	nsCOMPtr<nsIRDFResource>		sortPropertyColl, sortPropertyColl2;
-	nsCOMPtr<nsIRDFResource>		sortPropertySort, sortPropertySort2;
-
-	nsCOMPtr<nsIContent>			lastContainer;
-	PRBool					lastWasFirst, lastWasLast;
-} sortStateClass;
+//----------------------------------------------------------------------
+//
+// RDFGenericBuilderImpl
+//
 
 class RDFGenericBuilderImpl : public nsIRDFContentModelBuilder,
                               public nsIRDFObserver
@@ -334,7 +306,7 @@ protected:
     nsCOMPtr<nsIRDFDataSource>		mCache;
     nsCOMPtr<nsITimer>			mTimer;
 
-	sortStateClass			sortState;
+	nsRDFSortState			sortState;
 
     // pseudo-constants
     static nsrefcnt gRefCnt;
@@ -387,7 +359,7 @@ protected:
     static nsString    falseStr;
 };
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 
 nsrefcnt            RDFGenericBuilderImpl::gRefCnt = 0;
 nsIXULSortService*    RDFGenericBuilderImpl::gXULSortService = nsnull;
@@ -439,7 +411,7 @@ nsIRDFResource* RDFGenericBuilderImpl::kRDF_instanceOf;
 nsIRDFResource* RDFGenericBuilderImpl::kXUL_element;
 
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 
 
 nsresult
@@ -603,7 +575,7 @@ RDFGenericBuilderImpl::Init()
         // Initialize the global shared reference to the service
         // manager and get some shared resource objects.
         rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          kIRDFServiceIID,
+                                          NS_GET_IID(nsIRDFService),
                                           (nsISupports**) &gRDFService);
         if (NS_FAILED(rv)) return rv;
 
@@ -651,35 +623,12 @@ RDFGenericBuilderImpl::Init()
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
+NS_IMPL_ISUPPORTS2(RDFGenericBuilderImpl, nsIRDFContentModelBuilder, nsIRDFObserver);
 
-NS_IMPL_ADDREF(RDFGenericBuilderImpl);
-NS_IMPL_RELEASE(RDFGenericBuilderImpl);
-
-NS_IMETHODIMP
-RDFGenericBuilderImpl::QueryInterface(REFNSIID iid, void** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (iid.Equals(kIRDFContentModelBuilderIID) ||
-        iid.Equals(kISupportsIID)) {
-        *aResult = NS_STATIC_CAST(nsIRDFContentModelBuilder*, this);
-    }
-    else if (iid.Equals(kIRDFObserverIID)) {
-        *aResult = NS_STATIC_CAST(nsIRDFObserver*, this);
-    }
-    else {
-        *aResult = nsnull;
-        return NS_NOINTERFACE;
-    }
-    NS_ADDREF(this);
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // nsIRDFContentModelBuilder methods
+//
 
 NS_IMETHODIMP
 RDFGenericBuilderImpl::SetDocument(nsIXULDocument* aDocument)
@@ -969,8 +918,10 @@ RDFGenericBuilderImpl::RebuildContainer(nsIContent* aElement)
 
 
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // nsIRDFObserver interface
+//
 
 NS_IMETHODIMP
 RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
@@ -1377,8 +1328,10 @@ RDFGenericBuilderImpl::OnMove(nsIRDFResource* aOldSource,
 }
 
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // Implementation methods
+//
 
 nsresult
 RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
@@ -2948,17 +2901,13 @@ RDFGenericBuilderImpl::IsElementInWidget(nsIContent* aElement)
 nsresult
 RDFGenericBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource)
 {
-    nsresult rv;
-
     // Given an nsIDOMNode that presumably has been created as a proxy
     // for an RDF resource, pull the RDF resource information out of
     // it.
 
-    nsCOMPtr<nsIContent> element;
-    if (NS_FAILED(rv = aNode->QueryInterface(kIContentIID, getter_AddRefs(element) ))) {
-        NS_ERROR("DOM element doesn't support nsIContent");
-        return rv;
-    }
+    nsCOMPtr<nsIContent> element = do_QueryInterface(aNode);
+    if (! element)
+        return NS_ERROR_UNEXPECTED;
 
     return gXULUtils->GetElementRefResource(element, aResource);
 }
