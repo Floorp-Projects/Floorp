@@ -46,13 +46,20 @@ EXTRA_LIBS = \
 	$(DIST)/lib/swfci.lib \
 	$(DIST)/lib/softoken.lib \
 	$(DIST)/lib/freebl.lib \
-	$(DIST)/lib/crypto.lib \
 	$(DIST)/lib/secutil.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4_s.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4_s.lib \
 	wsock32.lib \
 	winmm.lib \
 	$(NULL)
+
+ifdef MOZILLA_SECURITY_BUILD
+EXTRA_LIBS += $(DIST)/lib/crypto.lib
+endif
+ifdef MOZILLA_BSAFE_BUILD
+EXTRA_LIBS += $(DIST)/lib/bsafe41.lib
+endif
+
 else
 
 #	$(DIST)/lib/libdbm.a 
@@ -65,11 +72,18 @@ EXTRA_LIBS += \
 	$(DIST)/lib/libswfci.a \
 	$(DIST)/lib/libsoftoken.a \
 	$(DIST)/lib/libfreebl.a \
-	$(DIST)/lib/libcrypto.a \
 	$(DIST)/lib/libsecutil.a \
 	$(DIST)/lib/libplc4.a \
 	$(DIST)/lib/libplds4.a \
 	$(NULL)
+
+ifdef MOZILLA_SECURITY_BUILD
+EXTRA_LIBS += $(DIST)/lib/libcrypto.a
+endif
+ifdef MOZILLA_BSAFE_BUILD
+EXTRA_LIBS += $(DIST)/lib/libbsafe.a
+endif
+
 endif
 endif
 
