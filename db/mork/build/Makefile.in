@@ -15,7 +15,7 @@
 # Reserved.
 #
 
-DEPTH		= ../../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
@@ -42,7 +42,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
 		-lxpcom \
-		-lmsgbaseutil \
 		$(NSPR_LIBS) \
 		$(NULL)
 
