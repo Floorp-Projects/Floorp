@@ -485,7 +485,13 @@ dnl the qsort routine under solaris is faulty
 	  CXX="$CXX -library=iostream"
        fi
     else
-       MKSHLIB='$(CC) $(DSO_LDOPTS)'
+       MKSHLIB='$(CXX) $(DSO_LDOPTS)'
+       MKCSHLIB='$(CC) $(DSO_LDOPTS)'
+       MKSHLIB_FORCE_ALL='-z allextract'
+       MKSHLIB_UNFORCE_ALL=''
+       DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+
+
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
        AS='$(CC)'
