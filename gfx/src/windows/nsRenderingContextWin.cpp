@@ -2993,8 +2993,7 @@ nsRenderingContextWin::ConditionRect(nsRect& aSrcRect, RECT& aDestRect)
 /**
  * Let the device context know whether we want text reordered with
  * right-to-left base direction. The Windows implementation does this
- * by setting the fuOptions parameter to ETO_RTLREADING in calls to
- * ExtTextOut()
+ * by calling SetTextAlign() to set or clear the flag TA_RTLREADING
  */
 NS_IMETHODIMP
 nsRenderingContextWin::SetRightToLeftText(PRBool aIsRTL)
