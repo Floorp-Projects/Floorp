@@ -122,6 +122,7 @@ class BookmarksService;
 -(IBAction) closeTab:(id)aSender;
 
 //Help menu actions
+-(IBAction) infoLink:(id)aSender;
 -(IBAction) feedbackLink:(id)aSender;
 
 -(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL andReferrer: (NSString*)aReferrer;

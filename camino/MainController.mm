@@ -691,6 +691,13 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [defaults setInteger: ((showToolbar) ? 0 : 1) forKey: USER_DEFAULTS_HIDE_PERS_TOOLBAR_KEY];
 }
 
+-(IBAction) infoLink:(id)aSender
+{
+  NSString* pageToLoad = NSLocalizedStringFromTable(@"InfoPageDefault", @"WebsiteDefaults", nil);
+  if (![pageToLoad isEqualToString:@"InfoPageDefault"])
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+}
+
 -(IBAction) feedbackLink:(id)aSender
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"FeedbackPageDefault", @"WebsiteDefaults", nil);

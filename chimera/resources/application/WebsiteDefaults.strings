@@ -3,3 +3,4 @@ SearchPageDefault = "http://www.dmoz.org";
 StartPageDefault = "about:blank";
 ThrobberPageDefault = "http://www.mozilla.org";
 FeedbackPageDefault = "http://chimera.mozdev.org";
+InfoPageDefault = "http://chimera.mozdev.org/installation.html";
