@@ -609,9 +609,25 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 	bodyType = headerVal;
 	ExtractType( bodyType);
 	ExtractCharset( headerVal);
-	charSet = headerVal;
-	if (headerVal.Length())
-		m_pMsgFields->SetCharacterSet( nsAutoCString(headerVal) );
+  // Use platform charset as default if the msg doesn't specify one
+  // (ie, no 'charset' param in the Content-Type: header). As the last
+  // resort we'll use the mail defaul charset.
+  if (! headerVal.Length())
+  {
+    headerVal = nsMsgI18NFileSystemCharset();
+    if (! headerVal.Length())
+    { // last resort
+      if (!m_defCharset.Length())
+      {
+        char *pSet = nsMsgI18NGetDefaultMailCharset();
+        m_defCharset.AssignWithConversion(pSet);
+        nsCRT::free( pSet);
+      }
+      headerVal = m_defCharset;
+    }
+  }
+  m_pMsgFields->SetCharacterSet( nsAutoCString(headerVal) );
+  charSet = headerVal;
 	GetHeaderValue( m_pHeaders, m_headerLen, "CC:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetCc( headerVal.get());
@@ -642,15 +658,7 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 	
 	nsString	uniBody;
 	ConvertSysToUnicode( m_pBody, uniBody);
-	// now do we have a charset?
-	if (!charSet.Length()) {
-		if (!m_defCharset.Length()) {
-			char *pSet = nsMsgI18NGetDefaultMailCharset();
-			m_defCharset.AssignWithConversion( pSet);
-			nsCRT::free( pSet);
-		}
-		charSet = m_defCharset;
-	}
+
 	nsCString	body;
 	nsCString	theCharset;
 	theCharset.AssignWithConversion( charSet);
