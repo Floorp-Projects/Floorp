@@ -69,7 +69,7 @@ static void printRange(nsIDOMRange *aDomRange);
 #define DEBUG_OUT_RANGE(x)  
 #endif //MOZ_DEBUG
 
-#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
+//#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
 //#define DEBUG_NAVIGATION
 
 class nsRangeListIterator;
