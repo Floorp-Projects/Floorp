@@ -95,5 +95,142 @@ sub GetSystemInfo {
   }
 }
 
+sub SetupEnv {
+  umask 0;
+  #$ENV{CVSROOT} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
+  $ENV{LD_LIBRARY_PATH} = "$BaseDir/$DirName/mozilla/${ObjDir}dist/bin:/usr/lib/png:"
+     ."/usr/local/lib:$BaseDir/$DirName/mozilla/dist/bin";
+  $ENV{DISPLAY} = $DisplayServer;
+  $ENV{MOZCONFIG} = "$BaseDir/$MozConfigFileName" if $MozConfigFileName ne '';
+}
+
+sub SetupPath {
+  my $comptmp;
+  $comptmp = '';
+  #print "Path before: $ENV{PATH}\n";
+  
+  if ($OS eq 'AIX') {
+    $ENV{PATH}        = "/builds/local/bin:$ENV{PATH}:/usr/lpp/xlC/bin";
+    $ConfigureArgs   .= '--x-includes=/usr/include/X11 '
+                      . '--x-libraries=/usr/lib --disable-shared';
+    $ConfigureEnvArgs = 'CC=xlC_r CXX=xlC_r';
+    $Compiler         = 'xlC_r';
+    $NSPRArgs        .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
+  }
+  
+  if ($OS eq 'BSD_OS') {
+    $ENV{PATH}        = "/usr/contrib/bin:/bin:/usr/bin:$ENV{PATH}";
+    $ConfigureArgs   .= '--disable-shared';
+    $ConfigureEnvArgs = 'CC=shlicc2 CXX=shlicc2';
+    $Compiler         = 'shlicc2';
+    $mail             = '/usr/ucb/mail';
+    # Because ld dies if it encounters -include
+    $MakeOverrides    = 'CPP_PROG_LINK=0 CCF=shlicc2';
+    $NSPRArgs        .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
+  }
+
+  if ($OS eq 'FreeBSD') {
+    $ENV{PATH}        = "/bin:/usr/bin:$ENV{PATH}";
+    if ($ENV{HOST} eq 'angelus.mcom.com') {
+      $ConfigureEnvArgs = 'CC=egcc CXX=eg++';
+      $Compiler       = 'egcc';
+    }
+    $mail             = '/usr/bin/mail';
+  }
+
+  if ($OS eq 'HP-UX') {
+    $ENV{PATH}        = "/opt/ansic/bin:/opt/aCC/bin:/builds/local/bin:"
+                      . "$ENV{PATH}";
+    $ENV{LPATH}       = "/usr/lib:$ENV{LD_LIBRARY_PATH}:/builds/local/lib";
+    $ENV{SHLIB_PATH}  = $ENV{LPATH};
+    $ConfigureArgs   .= '--x-includes=/usr/include/X11 '
+                      . '--x-libraries=/usr/lib --disable-gtktest ';
+    $ConfigureEnvArgs = 'CC="cc -Ae" CXX="aCC -ext"';
+    $Compiler         = 'cc/aCC';
+    # Use USE_PTHREADS=1 instead of CLASSIC_NSPR if you've got DCE installed.
+    $NSPRArgs        .= 'NS_USE_NATIVE=1 CLASSIC_NSPR=1';
+  }
+  
+  if ($OS eq 'IRIX') {
+    $ENV{PATH}        = "/opt/bin:$ENV{PATH}";
+    $ENV{LD_LIBRARY_PATH}   .= ':/opt/lib';
+    $ENV{LD_LIBRARYN32_PATH} = $ENV{LD_LIBRARY_PATH};
+    $ConfigureEnvArgs = 'CC=cc CXX=CC CFLAGS="-n32 -O" CXXFLAGS="-n32 -O"';
+    $Compiler         = 'cc/CC';
+    $NSPRArgs        .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
+  }
+  
+  if ($OS eq 'NetBSD') {
+    $ENV{PATH}        = "/bin:/usr/bin:$ENV{PATH}";
+    $ENV{LD_LIBRARY_PATH} .= ':/usr/X11R6/lib';
+    $ConfigureEnvArgs = 'CC=egcc CXX=eg++';
+    $Compiler         = 'egcc';
+    $mail             = '/usr/bin/mail';
+  }
+  
+  if ($OS eq 'OSF1') {
+    $ENV{PATH}        = "/usr/gnu/bin:$ENV{PATH}";
+    $ENV{LD_LIBRARY_PATH} .= ':/usr/gnu/lib';
+    $ConfigureEnvArgs = 'CC="cc -readonly_strings" CXX="cxx"';
+    $Compiler         = 'cc/cxx';
+    $MakeOverrides    = 'SHELL=/usr/bin/ksh';
+    $NSPRArgs        .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
+    $ShellOverride    = '/usr/bin/ksh';
+  }
+  
+  if ($OS eq 'QNX') {
+    $ENV{PATH}        = "/usr/local/bin:$ENV{PATH}";
+    $ENV{LD_LIBRARY_PATH} .= ':/usr/X11/lib';
+    $ConfigureArgs   .= '--x-includes=/usr/X11/include '
+                      . '--x-libraries=/usr/X11/lib --disable-shared ';
+    $ConfigureEnvArgs = 'CC="cc -DQNX" CXX="cc -DQNX"';
+    $Compiler         = 'cc';
+    $mail             = '/usr/bin/sendmail';
+  }
+
+  if ($OS eq 'SunOS') {
+    if ($OSVerMajor eq '4') {
+      $ENV{PATH}      = "/usr/gnu/bin:/usr/local/sun4/bin:/usr/bin:$ENV{PATH}";
+      $ENV{LD_LIBRARY_PATH} = "/home/motif/usr/lib:$ENV{LD_LIBRARY_PATH}";
+      $ConfigureArgs .= '--x-includes=/home/motif/usr/include/X11 '
+                      . '--x-libraries=/home/motif/usr/lib';
+      $ConfigureEnvArgs = 'CC="egcc -DSUNOS4" CXX="eg++ -DSUNOS4"';
+      $Compiler       = 'egcc';
+    } else {
+      $ENV{PATH}      = '/usr/ccs/bin:' . $ENV{PATH};
+    }
+    if ($CPU eq 'i86pc') {
+      $ENV{PATH}      = '/opt/gnu/bin:' . $ENV{PATH};
+      $ENV{LD_LIBRARY_PATH} .= ':/opt/gnu/lib';
+      $ConfigureEnvArgs = 'CC=egcc CXX=eg++';
+      $Compiler       = 'egcc';
+
+      # Possible NSPR bug... If USE_PTHREADS is defined, then
+      #   _PR_HAVE_ATOMIC_CAS gets defined (erroneously?) and
+      #   libnspr21 does not work.
+      $NSPRArgs      .= 'CLASSIC_NSPR=1 NS_USE_GCC=1 NS_USE_NATIVE=';
+    } else {
+      # This is utterly lame....
+      if ($ENV{HOST} eq 'fugu') {
+        $ENV{PATH}    = "/tools/ns/workshop/bin:/usrlocal/bin:$ENV{PATH}";
+        $ENV{LD_LIBRARY_PATH} = '/tools/ns/workshop/lib:/usrlocal/lib:'
+                      . $ENV{LD_LIBRARY_PATH};
+        $ConfigureEnvArgs = 'CC=cc CXX=CC';
+        $comptmp      = `cc -V 2>&1 | head -1`;
+        chomp($comptmp);
+        $Compiler     = "cc/CC \($comptmp\)";
+        $NSPRArgs    .= 'NS_USE_NATIVE=1';
+      } else {
+        $NSPRArgs    .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
+      }
+      if ($OSVerMajor eq '5') {
+        $NSPRArgs    .= ' USE_PTHREADS=1';
+      }
+    }
+  }
+  #print "Path after:  $ENV{PATH}\n";
+}
+
+
 # Need to end with a true value, (since we're using "require").
 1;
