@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stat.h>
 #include <stdarg.h>
 #include <unix.h>
@@ -43,6 +44,9 @@
 #include "mactime.h"
 
 #include "mdmac.h"
+
+// undefine getenv, so that _MD_GetEnv can call the version in NSStdLib::nsEnvironment.cpp.
+#undef getenv
 
 //
 // Local routines
@@ -181,7 +185,7 @@ char *_MD_GetEnv(const char *name)
 		currentVariable = currentVariable->next;
 	}
 
-	return NULL;
+	return getenv(name);
 }
 
 PR_IMPLEMENT(int) 
