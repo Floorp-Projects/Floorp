@@ -37,7 +37,9 @@ ImageRequestImpl::ImageRequestImpl()
 
 ImageRequestImpl::~ImageRequestImpl()
 {
-  // Observer list destroyed by the image library
+  delete mObservers;
+
+  // XP Observer list destroyed by the image library
 }
 
 nsresult
