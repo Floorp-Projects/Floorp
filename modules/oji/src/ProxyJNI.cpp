@@ -1541,7 +1541,7 @@ nsISecureEnv* GetSecureEnv(JNIEnv* env)
 	return proxyEnv->getSecureEnv();
 }
 
-void SetSecurityContext(JNIEnv* env, nsISecurityContext *context) {
+PR_IMPLEMENT(void) SetSecurityContext(JNIEnv* env, nsISecurityContext *context) {
     ProxyJNIEnv* proxyEnv = (ProxyJNIEnv*)env;
     proxyEnv->SetSecurityContext(context);
 }
