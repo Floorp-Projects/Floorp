@@ -2988,33 +2988,30 @@ nsLineLayout::RelativePositionFrames(nsRect& aCombinedArea)
 void
 nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
 {
-  nsRect spanCombinedArea;
-  PerFrameData* pfd;
-
-  nscoord minX, minY, maxX, maxY;
+  nsRect combinedAreaResult;
   if (nsnull != psd->mFrame) {
     // The minimum combined area for the frames in a span covers the
-    // entire span frame.
-    pfd = psd->mFrame;
-    minX = 0;
-    minY = 0;
-    maxX = pfd->mBounds.width;
-    maxY = pfd->mBounds.height;
+    // entire span frame's overflow area. The span frame might have
+    // overflowing additional non-inline frames (e.g. absolute children
+    // of a relatively positioned span) and we need to make sure their 
+    // overflow area, if any, makes it into our final combined area.
+    combinedAreaResult = psd->mFrame->mCombinedArea;
   }
   else {
     // The minimum combined area for the frames that are direct
     // children of the block starts at the upper left corner of the
     // line and is sized to match the size of the line's bounding box
     // (the same size as the values returned from VerticalAlignFrames)
-    minX = psd->mLeftEdge;
-    maxX = psd->mX;
-    minY = mTopEdge;
-    maxY = mTopEdge + mFinalLineHeight;
+    combinedAreaResult.x = psd->mLeftEdge;
+    // If this turns out to be negative, the rect will be treated as empty.
+    // Which is just fine.
+    combinedAreaResult.width = psd->mX - combinedAreaResult.x;
+    combinedAreaResult.y = mTopEdge;
+    combinedAreaResult.height = mFinalLineHeight;
   }
 
-  for (pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
-    nscoord x = pfd->mBounds.x;
-    nscoord y = pfd->mBounds.y;
+  for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
+    nsPoint origin = nsPoint(pfd->mBounds.x, pfd->mBounds.y);
     nsIFrame* frame = pfd->mFrame;
 
     // Adjust the origin of the frame
@@ -3023,8 +3020,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       // nsHTMLReflowState::ComputeRelativeOffsets
       nsPoint change(pfd->mOffsets.left, pfd->mOffsets.top);
       frame->SetPosition(frame->GetPosition() + change);
-      x += change.x;
-      y += change.y;
+      origin += change;
     }
 
     // We must position the view correctly before positioning its
@@ -3040,6 +3036,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     // system. We adjust the childs combined area into our coordinate
     // system before computing the aggregated value by adding in
     // <b>x</b> and <b>y</b> which were computed above.
+    nsRect spanCombinedArea;
     nsRect* r = &pfd->mCombinedArea;
     if (pfd->mSpan) {
       // Compute a new combined area for the child span before
@@ -3065,36 +3062,19 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
                                                  frame->GetView(), r,
                                                  NS_FRAME_NO_MOVE_VIEW);
 
-    nscoord xl = x + r->x;
-    if (xl < minX) {
-      minX = xl;
-    }
-    nscoord xr = x + r->XMost();
-    if (xr > maxX) {
-      maxX = xr;
-    }
-    nscoord yt = y + r->y;
-    if (yt < minY) {
-      minY = yt;
-    }
-    nscoord yb = y + r->YMost();
-    if (yb > maxY) {
-      maxY = yb;
-    }
+    combinedAreaResult.UnionRect(combinedAreaResult, *r + origin);
   }
 
-  aCombinedArea.x = minX;
-  aCombinedArea.y = minY;
-  aCombinedArea.width = maxX - minX;
-  aCombinedArea.height = maxY - minY;
+  aCombinedArea = combinedAreaResult;
 
   // If we just computed a spans combined area, we need to update its
   // NS_FRAME_OUTSIDE_CHILDREN bit..
   if (psd->mFrame) {
-    pfd = psd->mFrame;
-    nsIFrame* frame = pfd->mFrame;
-    if ((minX < 0) || (minY < 0) ||
-        (maxX > pfd->mBounds.width) || (maxY > pfd->mBounds.height)) {
+    PerFrameData* spanPFD = psd->mFrame;
+    nsIFrame* frame = spanPFD->mFrame;
+    if ((combinedAreaResult.x < 0) || (combinedAreaResult.y < 0) ||
+        (combinedAreaResult.XMost() > spanPFD->mBounds.width) ||
+        (combinedAreaResult.YMost() > spanPFD->mBounds.height)) {
       frame->AddStateBits(NS_FRAME_OUTSIDE_CHILDREN);
     } else {
       frame->RemoveStateBits(NS_FRAME_OUTSIDE_CHILDREN);
