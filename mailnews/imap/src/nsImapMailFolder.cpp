@@ -73,14 +73,12 @@ static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER
 
 ////////////////////////////////////////////////////////////////////////////////
 // for temp message hack
-#ifdef XP_UNIX
-#define MESSAGE_PATH "/usr/tmp/tempMessage.eml"
+#if defined(XP_UNIX) || defined(XP_BEOS)
+#define MESSAGE_PATH "/tmp/tempMessage.eml"
 #elif defined(XP_PC)
 #define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
 #elif defined(XP_MAC)
 #define MESSAGE_PATH  "tempMessage.eml"
-#elif defined(XP_BEOS)
-#define MESSAGE_PATH "/tmp/tempMessage.eml"
 #endif
 
 #define FOUR_K 4096

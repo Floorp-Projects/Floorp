@@ -42,14 +42,12 @@
 #include "nsMsgBaseCID.h"
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
-#if defined(XP_UNIX)
-#define TEMP_PATH_DIR "/usr/tmp/"
+#if defined(XP_UNIX) || defined(XP_BEOS)
+#define TEMP_PATH_DIR "/tmp/"
 #elif defined(XP_PC)
 #define TEMP_PATH_DIR "c:\\temp\\"
 #elif defined(XP_MAC)
 #define TEMP_PATH_DIR ""
-#elif defined(XP_BEOS)
-#define TEMP_PATH_DIR "/tmp/"
 #else
 #error TEMP_PATH_DIR_NOT_DEFINED
 #endif 

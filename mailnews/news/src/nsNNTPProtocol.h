@@ -41,18 +41,15 @@
 // this is only needed as long as our libmime hack is in place
 #include "prio.h"
 
-#if defined(XP_UNIX)
-#define ARTICLE_PATH "/usr/tmp/tempMessage.eml"
-#define ERROR_PATH "/usr/tmp/errorMessage.htm"
+#if defined(XP_UNIX) || defined (XP_BEOS)
+#define ARTICLE_PATH "/tmp/tempMessage.eml"
+#define ERROR_PATH "/tmp/errorMessage.htm"
 #elif defined(XP_PC)
 #define ARTICLE_PATH  "c:\\temp\\tempMessage.eml"
 #define ERROR_PATH "c:\\temp\\errorMessage.htm"
 #elif defined(XP_MAC)
 #define ARTICLE_PATH "tempMessage.eml"
 #define ERROR_PATH "errorMessage.htm"
-#elif defined(XP_BEOS)
-#define ARTICLE_PATH "/tmp/tempMessage.eml"
-#define ERROR_PATH "/tmp/errorMessage.htm"
 #endif
 
 // State Flags (Note, I use the word state in terms of storing 
