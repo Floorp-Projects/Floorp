@@ -1736,7 +1736,7 @@ nsViewManager::UpdateViewAfterScroll(nsView *aView)
   UpdateWidgetArea(RootViewManager()->GetRootView(), nsRegion(damageRect), aView);
 
   Composite();
-  --mScrollCnt;
+  --RootViewManager()->mScrollCnt;
 }
 
 /**
@@ -2008,21 +2008,28 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             // XXXbz do we need to notify other view observers for viewmanagers
             // in our tree?
             // Make sure to not send WillPaint notifications while scrolling
-            if (mScrollCnt == 0) {
+            nsViewManager* rootVM = RootViewManager();
+            if (rootVM->mScrollCnt == 0) {
               nsIViewObserver* observer = GetViewObserver();
               if (observer) {
-                // Do an update view batch, and make sure we don't process
-                // those invalidates right now.  Note that the observer may try
-                // to reenter this code from inside WillPaint() by trying to do
-                // a synchronous paint, but since refresh will be disabled it
-                // won't be able to do the paint.  We should really sort out
-                // the rules on our synch painting api....
+                // Do an update view batch.  Make sure not to do it DEFERRED,
+                // since that would effectively delay any invalidates that are
+                // triggered by the WillPaint notification (they'd happen when
+                // the invalide event fires, which is later than the reflow
+                // event would fire and could end up being after some timer
+                // events, leading to frame dropping in DHTML).  Note that the
+                // observer may try to reenter this code from inside
+                // WillPaint() by trying to do a synchronous paint, but since
+                // refresh will be disabled it won't be able to do the paint.
+                // We should really sort out the rules on our synch painting
+                // api....
                 BeginUpdateViewBatch();
                 observer->WillPaint();
-                EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
+                EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
               }
             }
-            nsViewManager* rootVM = RootViewManager();
+            // Make sure to sync up any widget geometry changes we
+            // have pending before we paint.
             if (rootVM->mHasPendingUpdates) {
               rootVM->ProcessPendingUpdates(mRootView, PR_FALSE);
             }
