@@ -301,11 +301,13 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 NS_IMETHODIMP 
 TableRowsCollection::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
 {
-  nsresult rv = NS_OK;
-  if (nsnull!=mParent)
-  {
-  }
-  return rv;
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  // FIXME: Implement this!
+
+  *aReturn = nsnull;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
