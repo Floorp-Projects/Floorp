@@ -657,6 +657,15 @@ Rights Reserved.
 				<menupopup>
 					<menuitem id="viewAllMessagesMenuItem" type="checkbox" value="&allMsgsCmd.label;" accesskey="&allMsgsCmd.accesskey;" disabled="true" observes="cmd_viewAllMsgs"/>
 					<menuitem id="viewUnreadMessagesMenuItem" type="checkbox" value="&unreadMsgsCmd.label;" accesskey="&unreadMsgsCmd.accesskey;" disabled="true" observes="cmd_viewUnreadMsgs"/>
+					<menuseparator/>
+					<menuitem id="menu_showThreads"
+					 type="checkbox"
+					 value="&threadsMsgsCmd.label;"
+					 accesskey="&threadsMsgsCmd.accesskey;"
+					 observes="cmd_sortByThread"/>
+					<menuseparator/>
+					<menuitem value="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" disabled="true" observes="cmd_expandAllThreads"/>
+					<menuitem value="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" disabled="true" observes="cmd_collapseAllThreads"/>
 				</menupopup>
 			</menu>
 			<menu id="viewheadersmenu" value="&headersMenu.label;" accesskey="&headersMenu.accesskey;">
@@ -674,17 +683,6 @@ Rights Reserved.
 					 value="&headersNormalCmd.label;"
 					 accesskey="&headersNormalCmd.accesskey;"
 					 oncommand="MsgViewNormalHeaders();"/>
-				</menupopup>
-			</menu>
-			<menuitem id="menu_showThreads"
-			 type="checkbox"
-			 value="&threadsMsgsCmd.label;"
-			 accesskey="&threadsMsgsCmd.accesskey;"
-			 observes="cmd_sortByThread"/>
-			<menu  id="menu_expandOrCollapse" value="&expandOrCollapseMenu.label;" accesskey="&expandOrCollapseMenu.accesskey;">
-				<menupopup>
-					<menuitem value="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" disabled="true" observes="cmd_expandAllThreads"/>
-					<menuitem value="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" disabled="true" observes="cmd_collapseAllThreads"/>
 				</menupopup>
 			</menu>
 			<menuseparator/>
