@@ -303,7 +303,7 @@ PRInt32 COtherDTD::DidBuildModel(PRInt32 anErrorCode){
     CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
   }
   if(mSink) {
-    mSink->DidBuildModel();
+    mSink->DidBuildModel(0);
   }
 
   return result;

@@ -442,7 +442,7 @@ void nsHTMLContentSink::WillBuildModel(void){
   *
   * @update 5/7/98 gess
   */     
-void nsHTMLContentSink::DidBuildModel(void){
+void nsHTMLContentSink::DidBuildModel(PRInt32 aQualityLevel){
 }
 
 /**
@@ -463,5 +463,6 @@ void nsHTMLContentSink::WillInterrupt(void) {
  */     
 void nsHTMLContentSink::WillResume(void) {
 }
+
 
 

@@ -226,9 +226,11 @@ class nsIHTMLContentSink : public nsIContentSink {
     * This method gets called when the parser concludes the process
     * of building the content model via the content sink.
     *
+    * @param  aQualityLevel describes how well formed the doc was.
+    *         0=GOOD; 1=FAIR; 2=POOR;
     * @update 5/7/98 gess
     */     
-    virtual void DidBuildModel(void)=0;
+    virtual void DidBuildModel(PRInt32 aQualityLevel)=0;
 
    /**
     * This method gets called when the parser gets i/o blocked,
@@ -246,6 +248,7 @@ class nsIHTMLContentSink : public nsIContentSink {
     * @update 5/7/98 gess
     */     
     virtual void WillResume(void)=0;
+
 };
 
 
