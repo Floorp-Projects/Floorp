@@ -358,6 +358,9 @@ sub BuildDist()
     InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",						"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
+    
+    #BRPROF
+    InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
 
 	#EDITOR
    InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
@@ -552,6 +555,8 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",							"wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	
+	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"brprof$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 #// XXX moved this TEMPORARILY to layout while we sort out a dependency
 #	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 0);
