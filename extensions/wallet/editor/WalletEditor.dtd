@@ -1,7 +1,7 @@
-<!ENTITY     div.walletdataonsystem.label   "The following wallet information is being saved for you.">
+<!ENTITY     div.walletdataonsystem.label   "The following form data is being saved for you.">
 <!ENTITY     treehead.schemaname.label       "Field name">
 <!ENTITY     treehead.entries.label         "Entries for field">
 <!ENTITY     treehead.synonyms.label        "Entries that mean the same as">
 <!ENTITY     button.remove.label            "Remove">
 <!ENTITY     button.add.label               "Add New ...">
-<!ENTITY     windowtitle.label              "Wallet Editor">
+<!ENTITY     windowtitle.label              "Stored Form Data">
