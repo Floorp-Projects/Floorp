@@ -263,8 +263,10 @@ nsWebShell::nsWebShell()
 nsWebShell::~nsWebShell()
 {
   // Stop any pending document loads and destroy the loader...
-  mDocLoader->Stop();
-  NS_IF_RELEASE(mDocLoader);
+  if (nsnull != mDocLoader) {
+    mDocLoader->Stop();
+    NS_RELEASE(mDocLoader);
+  }
 
   NS_IF_RELEASE(mInnerWindow);
 
