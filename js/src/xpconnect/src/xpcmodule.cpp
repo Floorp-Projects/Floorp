@@ -27,7 +27,8 @@ class nsJSIIDFactory : public nsIFactory
 public:
     static REFNSCID GetCID() {static nsID cid = NS_JS_IID_CID; return cid;}
 
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
+
     NS_IMETHOD CreateInstance(nsISupports *aOuter,
                               REFNSIID aIID,
                               void **aResult);
@@ -85,7 +86,8 @@ class nsJSCIDFactory : public nsIFactory
 public:
     static REFNSCID GetCID() {static nsID cid = NS_JS_CID_CID; return cid;}
 
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
+
     NS_IMETHOD CreateInstance(nsISupports *aOuter,
                               REFNSIID aIID,
                               void **aResult);

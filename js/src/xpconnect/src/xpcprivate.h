@@ -51,7 +51,7 @@ extern const char* XPC_VAL_STR; // 'value' property name for out params
 class nsXPConnect : public nsIXPConnect
 {
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     NS_IMETHOD InitJSContext(JSContext* aJSContext,
                              JSObject* aGlobalJSObj);
@@ -236,7 +236,7 @@ public:
 class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
 {
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
     NS_IMETHOD DebugDump(int depth);
 public:
 
@@ -288,7 +288,7 @@ private:
 class nsXPCWrappedJS : public nsXPTCStubBase
 {
 public:
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
 
@@ -326,7 +326,7 @@ private:
 class nsXPCWrappedJSMethods : public nsIXPConnectWrappedJSMethods
 {
 public:
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
     NS_IMETHOD GetJSObject(JSObject** aJSObj);
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
     NS_IMETHOD GetIID(nsIID** iid); // returns IAllocatator alloc'd copy
@@ -403,7 +403,7 @@ public:
 class nsXPCWrappedNativeClass : public nsIXPCWrappedNativeClass
 {
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
     NS_IMETHOD DebugDump(int depth);
 public:
     static nsXPCWrappedNativeClass* GetNewOrUsedClass(XPCContext* xpcc,
@@ -515,7 +515,7 @@ private:
 class nsXPCWrappedNative : public nsIXPConnectWrappedNative
 {
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     NS_IMETHOD GetDynamicScriptable(nsIXPCScriptable** p);
     NS_IMETHOD GetArbitraryScriptable(nsIXPCScriptable** p);
@@ -617,7 +617,7 @@ private:
 class nsJSIID : public nsIJSIID
 {
 public:
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     /* readonly attribute string name; */
     NS_IMETHOD GetName(char * *aName);
@@ -661,7 +661,7 @@ private:
 class nsJSCID : public nsIJSCID
 {
 public:
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     /* readonly attribute string name; */
     NS_IMETHOD GetName(char * *aName);
@@ -717,7 +717,7 @@ class nsXPCClasses;
 class nsXPCComponents : public nsIXPCComponents
 {
 public:
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     /* readonly attribute nsIXPCInterfaces interfaces; */
     NS_IMETHOD GetInterfaces(nsIXPCInterfaces * *aInterfaces);
