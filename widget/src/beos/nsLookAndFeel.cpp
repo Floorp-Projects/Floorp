@@ -340,7 +340,12 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
       aMetric = 2;
       break;
     case eMetric_ShowCaretDuringSelection:
-      aMetric =0;
+      aMetric = 0;
+      break;
+    case eMetric_SelectTextfieldsOnKeyFocus:
+      // Do not select textfield content when focused by kbd
+      // used by nsEventStateManager::sTextfieldSelectModel
+      aMetric = 0;
       break;
     case eMetric_SubmenuDelay:
       aMetric = 500;

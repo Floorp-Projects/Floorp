@@ -160,6 +160,7 @@ public:
     eMetric_SingleLineCaretWidth,                         // pixel width of caret in a single line field
     eMetric_MultiLineCaretWidth,                          // pixel width of caret in a multi-line field
     eMetric_ShowCaretDuringSelection,                       // show the caret when text is selected?
+    eMetric_SelectTextfieldsOnKeyFocus,                   // select textfields when focused via tab/accesskey?
     eMetric_SubmenuDelay,                                 // delay before submenus open
     eMetric_MenusCanOverlapOSBar,                         // can popups overlap menu/task bar?
     eMetric_DragFullWindow,                               // show window contents while dragging?
