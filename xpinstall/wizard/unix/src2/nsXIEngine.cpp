@@ -634,7 +634,7 @@ nsXIEngine::LoadXPIStub(xpistub_t *aStub, char *aDestination)
     sprintf(libloc, "%s/bin", mTmp);
     chdir(libloc);
     
-	/* open the library */
+    /* open the library */
     getcwd(libpath, MAXPATHLEN);
     sprintf(libpath, "%s/%s", libpath, XPISTUB);
 
@@ -642,27 +642,28 @@ nsXIEngine::LoadXPIStub(xpistub_t *aStub, char *aDestination)
 printf("DEBUG: libpath = >>%s<<\n", libpath);
 #endif
 
-	aStub->handle = NULL;
-	aStub->handle = dlopen(libpath, RTLD_LAZY);
-	if (!aStub->handle)
-	{
-		dlerr = dlerror();
-		DUMP(dlerr);
-		return E_LIB_OPEN;
-	}
-	DUMP("xpistub opened");
-	
-	/* read and store symbol addresses */
-	aStub->fn_init    = (pfnXPI_Init) dlsym(aStub->handle, FN_INIT);
-	aStub->fn_install = (pfnXPI_Install) dlsym(aStub->handle, FN_INSTALL);
-	aStub->fn_exit    = (pfnXPI_Exit) dlsym(aStub->handle, FN_EXIT);
-	if (!aStub->fn_init || !aStub->fn_install || !aStub->fn_exit)
-	{
-		dlerr = dlerror();
-		DUMP(dlerr);
-		err = E_LIB_SYM;
+    aStub->handle = NULL;
+    aStub->handle = dlopen(libpath, RTLD_LAZY);
+    if (!aStub->handle)
+    {
+        dlerr = dlerror();
+        DUMP(dlerr);
+        fprintf(stderr,"DLError: %s",dlerr);
+        return E_LIB_OPEN;
+    }
+    DUMP("xpistub opened");
+
+    /* read and store symbol addresses */
+    aStub->fn_init    = (pfnXPI_Init) dlsym(aStub->handle, FN_INIT);
+    aStub->fn_install = (pfnXPI_Install) dlsym(aStub->handle, FN_INSTALL);
+    aStub->fn_exit    = (pfnXPI_Exit) dlsym(aStub->handle, FN_EXIT);
+    if (!aStub->fn_init || !aStub->fn_install || !aStub->fn_exit)
+    {
+        dlerr = dlerror();
+        DUMP(dlerr);
+        err = E_LIB_SYM;
         goto BAIL;
-	}
+    }
     DUMP("xpistub symbols loaded");
 
     rv = aStub->fn_init(aDestination, NULL, ProgressCallback);
