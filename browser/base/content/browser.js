@@ -4349,3 +4349,11 @@ var contentAreaDNDObserver = {
     }
   
 };
+
+// For extensions
+function getBrowser()
+{
+  if (!gBrowser)
+    gBrowser = document.getElementById("content");
+  return gBrowser;
+}
