@@ -117,6 +117,7 @@ private:
     void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header, const char *host, PRInt32 port, const char *path, PRUnichar **user, PRUnichar **pass);
     void     AddAuthorizationHeaders();
     nsresult GetCurrentPath(char **);
+    void     ClearPasswordManagerEntry(const char *host, PRInt32 port, const char *realm, const PRUnichar *user);
 
     static void *PR_CALLBACK AsyncRedirect_EventHandlerFunc(PLEvent *);
     static void  PR_CALLBACK AsyncRedirect_EventCleanupFunc(PLEvent *);
