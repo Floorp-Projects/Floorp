@@ -200,7 +200,7 @@ struct PLDHashTable {
         PRUint32        steps;          /* hash chain links traversed */
         PRUint32        hits;           /* searches that found key */
         PRUint32        misses;         /* searches that didn't find key */
-        PRUint32        lookups;        /* number of PL_DHASH_LIVEOKUPs */
+        PRUint32        lookups;        /* number of PL_DHASH_LOOKUPs */
         PRUint32        addMisses;      /* adds that miss, and do work */
         PRUint32        addOverRemoved; /* adds that recycled a removed entry */
         PRUint32        addHits;        /* adds that hit an existing entry */
