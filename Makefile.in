@@ -26,17 +26,16 @@ include $(DEPTH)/config/autoconf.mk
 # nglayout test program. The order is important.
 DIRS =				\
   config			\
-  dbm				\
-  nsprpub			\
   $(NULL)
 
-ifndef MOZ_NATIVE_JPEG
+ifndef MOZ_NATIVE_NSPR
 DIRS +=				\
-  jpeg				\
+  nsprpub			\
   $(NULL)
 endif
 
 DIRS +=				\
+  dbm				\
   modules/libreg		\
   xpcom				\
   $(NULL)
@@ -47,23 +46,26 @@ DIRS +=				\
   $(NULL)
 endif
 
+ifndef MOZ_NATIVE_JPEG
+DIRS +=				\
+  jpeg				\
+  $(NULL)
+endif
+
 DIRS +=				\
   modules/libutil		\
+  base				\
   intl				\
-  sun-java			\
-  nav-java			\
   js				\
   modules/security/freenav	\
   modules/libpref		\
   modules/libimg		\
-  modules/oji		\
+  modules/oji			\
   modules/plugin		\
-  base				\
   caps				\
   lib/xp			\
   lib/libpwcac			\
   network			\
-  lib/liblayer/include		\
   htmlparser			\
   gfx				\
   dom				\
