@@ -81,6 +81,9 @@ SEC_BEGIN_PROTOS
  */
 
 /* Initialization */
+extern SECMODModule *SECMOD_LoadModule(char *moduleSpec,SECMODModule *parent,
+							PRBool recurse);
+
 extern SECMODModule *SECMOD_LoadUserModule(char *moduleSpec,SECMODModule *parent,
 							PRBool recurse);
 
