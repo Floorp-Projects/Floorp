@@ -192,14 +192,20 @@ public class NativeArray extends ScriptableObject {
         // Only use 1 arg as first element for version 1.2; for
         // any other version (including 1.3) follow ECMA and use it as
         // a length.
-        if (args.length == 1 && args[0] instanceof Number &&
-            cx.getLanguageVersion() != cx.VERSION_1_2)
-        {
-            return new NativeArray(ScriptRuntime.toUint32(args[0]));
+        if (cx.getLanguageVersion() == cx.VERSION_1_2) {
+            return new NativeArray(args);
         }
-
-        // initialize array with arguments
-        return new NativeArray(args);
+        else {
+            if ((args.length > 1) || (!(args[0] instanceof Number)))
+                return new NativeArray(args);
+            else {
+                long len = ScriptRuntime.toUint32(args[0]);
+                if (len != (((Number)(args[0])).doubleValue()))
+                    throw Context.reportRuntimeError(Context.getMessage
+                                     ("msg.arraylength.bad", null));
+                return new NativeArray(len);
+            }
+        }
     }
 
     private static final int lengthAttr = ScriptableObject.DONTENUM |
@@ -217,7 +223,14 @@ public class NativeArray extends ScriptableObject {
          * ?
          */
 
+        if (!(val instanceof Number))
+            throw Context.reportRuntimeError(Context.getMessage
+                                     ("msg.arraylength.bad", null));
+        
         long longVal = ScriptRuntime.toUint32(val);
+        if (longVal != (((Number)val).doubleValue()))
+            throw Context.reportRuntimeError(Context.getMessage
+                             ("msg.arraylength.bad", null));
 
         if (longVal < length) {
             // remove all properties between longVal and length
