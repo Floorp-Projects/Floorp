@@ -137,7 +137,7 @@ protected:
 
 public:
 
-friend	SearchDataSourceCallback;
+friend	class SearchDataSourceCallback;
 
 	NS_DECL_ISUPPORTS
 
