@@ -128,6 +128,7 @@ sub generateResults
             $tfName = $lines[1];
             $tcStat = $lines[3];
 			
+            # D=died, P=pass, F=failure
             if ($tcStat eq 'D') {
               $Suite{'tcsDied'} += 1;
               push(@diedArray,$line);
@@ -222,46 +223,47 @@ END_PRINT
 
 
     $HTMLreport .= <<END_PRINT;
-	<table BORDER=2 CELLSPACING=0>
-	<tr>
-		<td VALIGN=TOP BGCOLOR="#999999">&nbsp;</td>
-		<td VALIGN=TOP BGCOLOR="#CCCCCC"><b><u>Passed</u></b></td>
-		<td VALIGN=TOP BGCOLOR="#CCCCCC"><b><u>Failed</u></b></td>
-		<td VALIGN=TOP BGCOLOR="#CCCCCC"><b><u>Total Run</u></b></td>
-		<td VALIGN=TOP BGCOLOR="#CCCCCC"><b><u>Died</u></b></td>
-		<td VALIGN=TOP BGCOLOR="#CCCCCC"><b><u>% Passed</u></b></td>
-		<td VALIGN=TOP BGCOLOR="#CCCCCC"><b><u>% Failed</u></b></td>
+<table border=2 cellspacing=0>
+<tr valign=top bgcolor=#CCCCCC>
+<td bgcolor=#999999>&nbsp;</td>
+<td>Passed</td>
+<td>Failed</td>
+<td>Total</td>
+<td>Died</td>
+<td>% Passed</td>
+<td>% Failed</td>
+</tr>
 END_PRINT
 
     for (my $var = 0;$File{'SuiteList'}->[$var]->{'Name'};$var++) {
       $curSuite = $File{'SuiteList'}->[$var];
 
-      $HTMLreport .= "	 </tr>\n";
-      $HTMLreport .= "		<td VALIGN=TOP BGCOLOR=\"#CCCCCC\"><a href=\"#$curSuite->{'Name'}\">$curSuite->{'Title'}</a></td>\n";
-      $HTMLreport .= "		<td VALIGN=TOP><font color=\"#009900\">$File{'SuiteList'}->[$var]->{'tcsPass'}</font></td>\n";
-      $HTMLreport .= "		<td VALIGN=TOP><font color=\"#990000\">$File{'SuiteList'}->[$var]->{'tcsFail'}</font></td>\n";
-      $HTMLreport .= "		<td VALIGN=TOP><b>$File{'SuiteList'}->[$var]->{'tcsTotal'}</b></td>\n";
-      $HTMLreport .= "		<td VALIGN=TOP><b><font color=\"#FF0000\">${@{$File{'SuiteList'}}[$var]}{'tcsDied'}</font></b></td>\n";
+      $HTMLreport .= "<tr valign=top>\n";
+      $HTMLreport .= "<td BGCOLOR=#CCCCCC><a href=\"#$curSuite->{'Name'}\">$curSuite->{'Title'}</a></td>\n";
+      $HTMLreport .= "<td>$File{'SuiteList'}->[$var]->{'tcsPass'}</td>\n";
+      $HTMLreport .= "<td>$File{'SuiteList'}->[$var]->{'tcsFail'}</td>\n";
+      $HTMLreport .= "<td>$File{'SuiteList'}->[$var]->{'tcsTotal'}</td>\n";
+      $HTMLreport .= "<td>${@{$File{'SuiteList'}}[$var]}{'tcsDied'}</td>\n";
 
       my $pctPass = $File{'SuiteList'}->[$var]->{'tcsPass'} / $File{'SuiteList'}->[$var]->{'tcsTotal'};
       $pctPass = int($pctPass*10000)/100;
 	
-      $HTMLreport .= "		<td VALIGN=TOP><font color=\"#009900\">$pctPass</font></td>\n";
+      $HTMLreport .= "<td>$pctPass</td>\n";
 
       my $pctFail = $File{'SuiteList'}->[$var]->{'tcsFail'} / $File{'SuiteList'}->[$var]->{'tcsTotal'};
       $pctFail = int($pctFail*10000)/100;
 	
-      $HTMLreport .= "		<td VALIGN=TOP><font color=\"#990000\">$pctFail</font></td>\n";
-      $HTMLreport .= "	 </tr>\n";
+      $HTMLreport .= "<td>$pctFail</td>\n";
+      $HTMLreport .= "</tr>\n";
     }
 
     $HTMLreport .= <<END_PRINT; 
-	<TR>
-		<td VALIGN=TOP BGCOLOR="#CCCCCC" id="totalHeader" class="tableHeader"><b><font color="#FF0000">Total:</font></b></td>
-		<td VALIGN=TOP BGCOLOR="#FFFFCC"><font color="#009900">$File{'tcsPass'}</font></td>
-		<td VALIGN=TOP BGCOLOR="#FFFFCC"><font color="#990000">$File{'tcsFail'}</font></td>
-		<td VALIGN=TOP BGCOLOR="#FFFFCC"><b>$File{'tcsTotal'}</b></td>
-		<td VALIGN=TOP BGCOLOR="#FFFFCC"><b><font color="#FF0000">$File{'tcsDied'}</font></b></td>
+<tr valign=top bgcolor=#FFFFCC>
+<td bgcolor=#CCCCCC id="totalHeader" class="tableHeader">Total:</td>
+<td>$File{'tcsPass'}</td>
+<td>$File{'tcsFail'}</td>
+<td>$File{'tcsTotal'}</td>
+<td>$File{'tcsDied'}</td>
 END_PRINT
 	my $pctPass = $File{'tcsPass'} / $File{'tcsTotal'};
 	$pctPass = int($pctPass*10000)/100;
@@ -269,10 +271,10 @@ END_PRINT
 	$pctFail = int($pctFail*10000)/100;
 
 	$HTMLreport .= <<END_PRINT; 
-		<td VALIGN=TOP BGCOLOR="#FFFFCC"><font color="#009900">$pctPass</font></td>
-		<td VALIGN=TOP BGCOLOR="#FFFFCC"><font color="#990000">$pctFail</font></td>
-	</tr>
-	</TABLE>
+<td>$pctPass</td>
+<td>$pctFail</td>
+</tr>
+</table>
 END_PRINT
 
     unless ($express) {
