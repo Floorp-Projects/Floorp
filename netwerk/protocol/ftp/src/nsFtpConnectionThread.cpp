@@ -1459,7 +1459,7 @@ nsFtpConnectionThread::R_pasv() {
     }
 
     port = ((PRInt32) (p0<<8)) + p1;
-    nsString2 host(eOneByte);
+    nsCString host;
     host.Append(h0);
     host.Append(".");
     host.Append(h1);
