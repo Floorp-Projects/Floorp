@@ -52,7 +52,6 @@
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetDetector.h"
-#include "nsIWebShellServices.h"
 #include "nsIStringCharsetDetector.h"
 #include "nsIGenericFactory.h"
 #include "nsIAppStartupNotifier.h"

@@ -35,10 +35,8 @@ REQUIRES	= xpcom \
 		  string \
 		  uconv \
 		  webshell \
-		  uriloader \
 		  docshell \
 		  htmlparser \
-		  dom \
 		  necko \
 		  widget \
 		  layout \
