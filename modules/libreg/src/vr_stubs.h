@@ -50,12 +50,15 @@
 #ifdef XP_MAC
 #include <stat.h>
 #else
-#if defined(BSDI) && !defined(BSDI_2)
+#if ( defined(BSDI) && !defined(BSDI_2) ) || defined(XP_OS2_EMX)
 #include <sys/types.h>
 #endif
 #include <sys/stat.h>
 #endif
 
+#ifdef XP_OS2_VACPP
+#include <direct.h>
+#endif
 
 #ifndef FALSE
 #define FALSE 0
@@ -213,7 +216,6 @@ typedef PRFileDesc* XP_File;
 
 #endif /*STANDALONE_REGISTRY*/
 
-
 /*--- file open modes for stdio ---*/
 #ifdef USE_STDIO_MODES
 #define XP_FILE_READ             "r"
@@ -240,7 +242,6 @@ typedef PRFileDesc* XP_File;
 #define XP_FILE_WRITE_BIN        PR_WRONLY, 0644
 #define XP_FILE_UPDATE           (PR_RDWR|PR_CREATE_FILE), 0644
 #define XP_FILE_TRUNCATE         (PR_RDWR | PR_TRUNCATE), 0644
-
 #define XP_FILE_UPDATE_BIN       PR_RDWR|PR_CREATE_FILE, 0644
 #define XP_FILE_TRUNCATE_BIN     (PR_RDWR | PR_TRUNCATE), 0644
 

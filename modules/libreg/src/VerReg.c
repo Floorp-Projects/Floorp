@@ -43,6 +43,11 @@
 #include <io.h>
 #endif
 
+#if defined(XP_OS2)
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 

@@ -74,7 +74,7 @@
 #include "reg.h"
 #include "NSReg.h"
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_OS2)
 #ifndef MAX_PATH
 #define MAX_PATH 1024
 #endif
