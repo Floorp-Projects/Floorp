@@ -90,8 +90,8 @@ MODULE=dom
 
 include <$(DEPTH)\config\rules.mak>
 
-export:: $(XPDIST)\public\$(MODULE)
-    for %f in ($(EXPORTS2)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\public\$(MODULE:/=\)
+export:: $(XPDIST)\include
+    for %f in ($(EXPORTS2)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\include
 
 clobber:: $(XPDIST)\public\$(MODULE)
-    -for %g in ($(EXPORTS2)) do $(RM) $(XPDIST:/=\)\public\$(MODULE:/=\)\%g
+    -for %g in ($(EXPORTS2)) do $(RM) $(XPDIST:/=\)\include\%g

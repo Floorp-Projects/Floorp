@@ -78,7 +78,7 @@ LIBRARY	= .\$(OBJDIR)\$(LIBNAME).lib
 #// install headers
 #//
 #//------------------------------------------------------------------------
-INSTALL_DIR=$(PUBLIC)\security
+INSTALL_DIR=$(XPDIST)\include
 INSTALL_FILE_LIST=base64.h cert.h preenc.h seccomon.h secerr.h sechash.h secnav.h secrng.h secstubn.h secstubs.h secstubt.h ssl.h sslerr.h zig.h secprefs.rc rosetta.h
 
 #//------------------------------------------------------------------------

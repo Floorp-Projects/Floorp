@@ -46,7 +46,7 @@ MAKE_OBJ_TYPE=EXE
 #// install headers
 #//
 #//------------------------------------------------------------------------
-INSTALL_DIR=$(PUBLIC)\dbm
+INSTALL_DIR=$(XPDIST)\include
 INSTALL_FILE_LIST= nsres.h cdefs.h mcom_db.h ncompat.h winfile.h
 
 #//------------------------------------------------------------------------

@@ -35,11 +35,7 @@ LOCAL_JMC_SUBDIR = .
 #//------------------------------------------------------------------------
 
 INSTALL_FILE_LIST=*.h 
-!if "$(MOZ_BITS)" != "16"
-INSTALL_DIR=$(PUBLIC)\img
-!else
-INSTALL_DIR=$(PUBLIC)\win16
-!endif
+INSTALL_DIR=$(XPDIST)\include
 
 LCFLAGS		= $(LCFLAGS) /TP
 

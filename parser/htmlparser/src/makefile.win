@@ -146,8 +146,8 @@ LLFLAGS= /NODEFAULTLIB msvcirt.lib msvcrt.lib
 
 include <$(DEPTH)\config\rules.mak>
 
-export:: generate
-	$(MAKE_INSTALL) $(EXTRA_EXPORTS) $(PUBLIC)\$(MODULE)
+export:: generate $(XPDIST)\include
+	$(MAKE_INSTALL) $(EXTRA_EXPORTS) $(XPDIST)\include
 
 libs:: generate $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin

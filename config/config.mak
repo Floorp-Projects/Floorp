@@ -154,16 +154,7 @@ NGLAYOUT_DIST=$(XPDIST)\NGL$(MOZ_BITS)_D.OBJ
 
 CFGFILE=$(OBJDIR)\cmd.cfg
 
-INCS=$(INCS) -I$(DEPTH)\include \
-             -I$(DIST)\include \
-             -I$(PUBLIC)\img \
-             -I$(PUBLIC)\util \
-             -I$(PUBLIC)\coreincl \
-             -I$(PUBLIC)\dbm
-
-!ifndef NO_LAYERS
-INCS=$(INCS) -I$(DEPTH)\lib\liblayer\include
-!endif 
+INCS=$(INCS) -I$(XPDIST)\include -I$(DIST)\include -I$(DEPTH)\include
 
 # Perhaps we should add MOZ_LITENESS_FLAGS to 16 bit build
 !if "$(MOZ_BITS)" == "16"
