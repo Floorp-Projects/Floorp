@@ -43,12 +43,17 @@ public:
   virtual PRInt32   StyleSheetCount(void) const = 0;
   virtual nsresult  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const = 0;
 
+  NS_IMETHOD  Init(nsIURL* aURL) = 0;
   NS_IMETHOD  SetTitle(const nsString& aTitle) = 0;
   NS_IMETHOD  AppendMedium(nsIAtom* aMedium) = 0;
   NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
 };
 
+// XXX for backwards compatibility and convenience
 extern NS_HTML nsresult
   NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURL* aURL);
+
+extern NS_HTML nsresult
+  NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);
 
 #endif /* nsICSSStyleSheet_h___ */
