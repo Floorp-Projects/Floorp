@@ -21,7 +21,7 @@
  *
  * Michel Casabianca, casa@sdv.fr
  *    -- added additional empty elements to the HTML tag list
- * $Id: HTMLPrinter.cpp,v 1.4 2000/06/11 12:21:04 Peter.VanderBeken%pandora.be Exp $
+ * $Id: HTMLPrinter.cpp,v 1.5 2001/04/08 14:37:24 peterv%netscape.com Exp $
  */
 
 #include "printers.h"
@@ -34,7 +34,7 @@
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/06/11 12:21:04 $
+ * @version $Revision: 1.5 $ $Date: 2001/04/08 14:37:24 $
 **/
   //---------------/
  //- Contructors -/
@@ -70,7 +70,7 @@ void HTMLPrinter::initialize(ostream& os, int indentSize) {
     XMLPrinter::setUseEmptyElementShorthand(MB_FALSE);
     setUseFormat(MB_TRUE);
 
-    MITREObject* nonNull = &htmlEmptyTags;
+    TxObject* nonNull = &htmlEmptyTags;
     htmlEmptyTags.put("AREA",       nonNull);
     htmlEmptyTags.put("BASE",       nonNull);
     htmlEmptyTags.put("BASEFONT",   nonNull);

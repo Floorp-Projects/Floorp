@@ -21,16 +21,16 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.h,v 1.8 2001/01/22 09:32:40 kvisco%ziplink.net Exp $
+ * $Id: XMLDOMUtils.h,v 1.9 2001/04/08 14:34:48 peterv%netscape.com Exp $
  */
 
+
+#ifndef TRANSFRMX_XMLDOMUTILS_H
+#define TRANSFRMX_XMLDOMUTILS_H
 
 #include "dom.h"
 #include "NamespaceResolver.h"
 #include "baseutils.h"
-
-#ifndef TRANSFRMX_XMLDOMUTILS_H
-#define TRANSFRMX_XMLDOMUTILS_H
 
 
 /**

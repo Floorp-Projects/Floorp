@@ -23,20 +23,20 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: StringList.h,v 1.8 2000/04/12 22:30:57 nisheeth%netscape.com Exp $
+ * $Id: StringList.h,v 1.9 2001/04/08 14:34:37 peterv%netscape.com Exp $
  */
 
 /**
  * A class for keeping an ordered list of Strings
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2000/04/12 22:30:57 $
+ * @version $Revision: 1.9 $ $Date: 2001/04/08 14:34:37 $
 **/
-
-#include "TxString.h"
-#include "baseutils.h"
 
 #ifndef TRANSFRMX_STRINGLIST_H
 #define TRANSFRMX_STRINGLIST_H
+
+#include "TxString.h"
+#include "baseutils.h"
 
 class StringList {
    friend class StringListIterator;

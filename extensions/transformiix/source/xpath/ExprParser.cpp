@@ -30,7 +30,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: ExprParser.cpp,v 1.9 2001/01/22 21:54:22 axel%pike.org Exp $
+ * $Id: ExprParser.cpp,v 1.10 2001/04/08 14:33:57 peterv%netscape.com Exp $
  */
 
 /**
@@ -38,10 +38,12 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.9 $ $Date: 2001/01/22 21:54:22 $
+ * @version $Revision: 1.10 $ $Date: 2001/04/08 14:33:57 $
 **/
 
 #include "ExprParser.h"
+#include "FunctionLib.h"
+#include "Names.h"
 
 const String ExprParser::L_CURLY_BRACE = "{";
 const String ExprParser::R_CURLY_BRACE = "}";

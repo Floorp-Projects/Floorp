@@ -31,8 +31,11 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.h,v 1.11 2001/03/06 00:12:31 Peter.VanderBeken%pandora.be Exp $
+ * $Id: URIUtils.h,v 1.12 2001/04/08 14:33:35 peterv%netscape.com Exp $
  */
+
+#ifndef TRANSFRMX_URIUTILS_H
+#define TRANSFRMX_URIUTILS_H
 
 #include "TxString.h"
 #include "baseutils.h"
@@ -49,14 +52,11 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 #endif
 
 
-#ifndef TRANSFRMX_URIUTILS_H
-#define TRANSFRMX_URIUTILS_H
-
 /**
  * A utility class for URI handling
  * Not yet finished, only handles file URI at this point
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.11 $ $Date: 2001/03/06 00:12:31 $
+ * @version $Revision: 1.12 $ $Date: 2001/04/08 14:33:35 $
  *
 **/
 

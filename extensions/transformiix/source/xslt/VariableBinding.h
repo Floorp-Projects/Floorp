@@ -21,22 +21,21 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: VariableBinding.h,v 1.2 2000/04/12 22:33:34 nisheeth%netscape.com Exp $
+ * $Id: VariableBinding.h,v 1.3 2001/04/08 14:39:21 peterv%netscape.com Exp $
  */
 
 #ifndef MITREXSL_VARIABLE_H
 #define MITREXSL_VARIABLE_H
 
-#include "MITREObject.h"
+#include "TxObject.h"
 #include "TxString.h"
-#include "baseutils.h"
 #include "ExprResult.h"
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/12 22:33:34 $
+ * @version $Revision: 1.3 $ $Date: 2001/04/08 14:39:21 $
 **/
-class VariableBinding : public MITREObject {
+class VariableBinding : public TxObject {
 
 public:
 

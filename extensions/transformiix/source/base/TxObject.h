@@ -19,14 +19,14 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: TxObject.h,v 1.3 2000/06/11 12:29:54 Peter.VanderBeken%pandora.be Exp $
+ * $Id: TxObject.h,v 1.4 2001/04/08 14:38:44 peterv%netscape.com Exp $
  */
 
 
-#include "baseutils.h"
-
 #ifndef TRANSFRMX_TXOBJECT_H
 #define TRANSFRMX_TXOBJECT_H
+
+#include "baseutils.h"
 
 class TxObject {
 
@@ -57,6 +57,16 @@ class TxObject {
     virtual MBool equals(TxObject* obj) {
         return (MBool)(obj == this);
     } //-- equals
+};
+
+/**
+ * A Simple TxObject wrapper class
+**/
+class TxObjectWrapper : public TxObject {
+public:
+    TxObjectWrapper();
+    virtual ~TxObjectWrapper();
+    void* object;
 };
 
 #endif

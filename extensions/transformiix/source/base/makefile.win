@@ -31,7 +31,7 @@ CPPSRCS=				\
 	Double.cpp			\
 	Integer.cpp			\
 	List.cpp			\
-	MITREObjectWrapper.cpp		\
+	TxObjectWrapper.cpp		\
 	NamedMap.cpp			\
 	SimpleErrorObserver.cpp		\
 	Stack.cpp			\
@@ -57,7 +57,7 @@ CPP_OBJS=                                       \
 	.\$(OBJDIR)\Double.obj			\
 	.\$(OBJDIR)\Integer.obj			\
 	.\$(OBJDIR)\List.obj			\
-	.\$(OBJDIR)\MITREObjectWrapper.obj	\
+	.\$(OBJDIR)\TxObjectWrapper.obj	\
 	.\$(OBJDIR)\NamedMap.obj		\
 	.\$(OBJDIR)\SimpleErrorObserver.obj	\
 	.\$(OBJDIR)\Stack.obj			\

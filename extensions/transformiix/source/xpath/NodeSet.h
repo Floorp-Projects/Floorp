@@ -24,19 +24,18 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- moved initialization of DEFAULT_SIZE to NodeSet.cpp
  *
- * $Id: NodeSet.h,v 1.6 2001/02/15 09:21:01 axel%pike.org Exp $
+ * $Id: NodeSet.h,v 1.7 2001/04/08 14:36:12 peterv%netscape.com Exp $
  */
 
 /**
  * NodeSet
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2001/02/15 09:21:01 $
+ * @version $Revision: 1.7 $ $Date: 2001/04/08 14:36:12 $
 **/
 
 #ifndef TRANSFRMX_NODESET_H
 #define TRANSFRMX_NODESET_H
 
-#include "MITREObject.h"
 #include "dom.h"
 #include "ExprResult.h"
 

@@ -21,10 +21,11 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: ElementExpr.cpp,v 1.4 2001/01/22 09:36:14 kvisco%ziplink.net Exp $
+ * $Id: ElementExpr.cpp,v 1.5 2001/04/08 14:37:18 peterv%netscape.com Exp $
  */
 
 #include "Expr.h"
+#include "XMLDOMUtils.h"
 
 /*
  This class represents a ElementExpr as defined by XPath 1.0

@@ -29,7 +29,7 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.cpp,v 1.9 2001/04/03 12:37:49 peterv%netscape.com Exp $
+ * $Id: URIUtils.cpp,v 1.10 2001/04/08 14:34:16 peterv%netscape.com Exp $
  */
 
 #include "URIUtils.h"
@@ -38,7 +38,7 @@
  * URIUtils
  * A set of utilities for handling URIs
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.9 $ $Date: 2001/04/03 12:37:49 $
+ * @version $Revision: 1.10 $ $Date: 2001/04/08 14:34:16 $
 **/
 
 #ifndef MOZ_XSL

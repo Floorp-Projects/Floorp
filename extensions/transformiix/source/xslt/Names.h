@@ -27,13 +27,13 @@
  *       W3C XPath 1.0 Recommendation
  *    -- Added lang attr declaration
 
- * $Id: Names.h,v 1.7 2001/01/12 20:06:42 axel%pike.org Exp $
+ * $Id: Names.h,v 1.8 2001/04/08 14:35:15 peterv%netscape.com Exp $
  */
-
-#include "TxString.h"
 
 #ifndef TRANSFRMX_NAMES_H
 #define TRANSFRMX_NAMES_H
+
+#include "TxString.h"
 
 //-- Global Strings
 extern const String HTML;

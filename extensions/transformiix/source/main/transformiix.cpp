@@ -31,11 +31,12 @@
  *    -- read XML from stdin when -i is omitted
  *    -- accept '-' to specify stdin/stdout on command line
  *
- * $Id: transformiix.cpp,v 1.8 2001/03/06 00:12:37 Peter.VanderBeken%pandora.be Exp $
+ * $Id: transformiix.cpp,v 1.9 2001/04/08 14:34:43 peterv%netscape.com Exp $
  */
 
 
 #include "XSLTProcessor.h"
+#include "CommandLineUtils.h"
 
   //--------------/
  //- Prototypes -/

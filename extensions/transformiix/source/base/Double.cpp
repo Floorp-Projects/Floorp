@@ -27,10 +27,18 @@
  * Eric Du, duxy@leyou.com.cn
  *   -- added fix for FreeBSD
  *
- * $Id: Double.cpp,v 1.3 2000/02/18 00:11:23 kvisco%ziplink.net Exp $
+ * $Id: Double.cpp,v 1.4 2001/04/08 14:38:13 peterv%netscape.com Exp $
  */
 
 #include "primitives.h"
+#include  <math.h>
+#ifdef WIN32
+#include <float.h>
+#endif
+//A trick to handle IEEE floating point exceptions on FreeBSD - E.D.
+#ifdef __FreeBSD__
+#include <floatingpoint.h>
+#endif
 
 //----------------------------/
 //- Implementation of Double -/

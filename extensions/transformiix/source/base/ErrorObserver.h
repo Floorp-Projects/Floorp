@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ErrorObserver.h,v 1.3 2000/04/12 22:30:37 nisheeth%netscape.com Exp $
+ * $Id: ErrorObserver.h,v 1.4 2001/04/08 14:38:18 peterv%netscape.com Exp $
  */
 
 #ifndef MITRE_ERROROBSERVER_H
@@ -29,12 +29,12 @@
 
 #include "baseutils.h"
 #include "TxString.h"
-#include "iostream.h"
+#include <iostream.h>
 
 /**
  * A simple interface for observing errors
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2000/04/12 22:30:37 $
+ * @version $Revision: 1.4 $ $Date: 2001/04/08 14:38:18 $
 **/
 class ErrorObserver {
 

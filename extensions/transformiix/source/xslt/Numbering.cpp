@@ -21,16 +21,17 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Numbering.cpp,v 1.1 2000/04/06 07:46:33 kvisco%ziplink.net Exp $
+ * $Id: Numbering.cpp,v 1.2 2001/04/08 14:40:02 peterv%netscape.com Exp $
  */
 
 /**
  * Numbering methods
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:46:33 $
+ * @version $Revision: 1.2 $ $Date: 2001/04/08 14:40:02 $
 **/
 
 #include "Numbering.h"
+#include "Names.h"
 
 void Numbering::doNumbering
     (Element* xslNumber, String& dest, Node* context, ProcessorState* ps)

@@ -20,14 +20,14 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: StringComparator.h,v 1.2 2000/04/12 22:30:54 nisheeth%netscape.com Exp $
+ * $Id: StringComparator.h,v 1.3 2001/04/08 14:39:12 peterv%netscape.com Exp $
  */
 
- #include "TxString.h"
- #include "TxObject.h"
+#ifndef TRANSFRMX_STRING_COMPARATOR_H
+#define TRANSFRMX_STRING_COMPARATOR_H
 
- #ifndef TRANSFRMX_STRING_COMPARATOR_H
- #define TRANSFRMX_STRING_COMPARATOR_H
+#include "TxString.h"
+#include "TxObject.h"
 
 /*
    An interface for handling String comparisons

@@ -77,7 +77,7 @@ class DOMImplementation
 // Abstract Class defining the interface for a Node.  See NodeDefinition below
 // for the actual implementation of the WC3 node.
 //
-class Node : public MITREObject
+class Node : public TxObject
 {
   public:
     //Node type constants

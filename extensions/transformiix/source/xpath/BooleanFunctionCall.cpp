@@ -24,15 +24,16 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- added lang() implementation
  *
- * $Id: BooleanFunctionCall.cpp,v 1.6 2001/01/22 09:36:13 kvisco%ziplink.net Exp $
+ * $Id: BooleanFunctionCall.cpp,v 1.7 2001/04/08 14:35:34 peterv%netscape.com Exp $
  */
 
 #include "FunctionLib.h"
+#include "Names.h"
 
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.6 $ $Date: 2001/01/22 09:36:13 $
+ * @version $Revision: 1.7 $ $Date: 2001/04/08 14:35:34 $
 **/
 BooleanFunctionCall::BooleanFunctionCall() : FunctionCall(XPathNames::FALSE_FN) {
     this->type = TX_FALSE;
