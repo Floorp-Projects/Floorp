@@ -126,11 +126,7 @@ GetFilePathFromURI(nsIURI *aURI, nsAString &aPath)
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownloadManager
 
-#ifdef XP_WIN
-NS_IMPL_ISUPPORTS4(nsDownloadManager, nsIDownloadManager, nsIXPInstallManagerUI, nsIObserver, nsIAlertListener)
-#else
 NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIXPInstallManagerUI, nsIObserver)
-#endif
 
 nsDownloadManager::nsDownloadManager() : mBatches(0)
 {
@@ -1340,6 +1336,16 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
       gStoppingDownloads = PR_FALSE;
     }
   }
+  else if (nsCRT::strcmp(aTopic, "allertclickcallback") == 0)
+  {
+    // Attempt to locate a browser window to parent the download manager to
+    nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+    nsCOMPtr<nsIDOMWindowInternal> browserWindow;
+    if (wm)
+      wm->GetMostRecentWindow(NS_LITERAL_STRING("navigator:browser").get(), getter_AddRefs(browserWindow));
+
+    return OpenDownloadManager(PR_TRUE, -1, nsnull, browserWindow);
+  }
   return NS_OK;
 }
 
@@ -1410,31 +1416,6 @@ nsDownloadManager::GetHasActiveXPIOperations(PRBool* aHasOps)
   *aHasOps = !mXPIProgress ? PR_FALSE : listener->HasActiveXPIOperations();
   return NS_OK;
 }
-
-#ifdef XP_WIN 
-///////////////////////////////////////////////////////////////////////////////
-// nsIAlertListener
-NS_IMETHODIMP
-nsDownloadManager::OnAlertFinished(const PRUnichar* aAlertCookie)
-{
-  // Nothing to do here. 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownloadManager::OnAlertClickCallback(const PRUnichar* aAlertCookie)
-{
-  nsresult rv;
-
-  // Attempt to locate a browser window to parent the download manager to
-  nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
-  nsCOMPtr<nsIDOMWindowInternal> browserWindow;
-  if (wm)
-    wm->GetMostRecentWindow(NS_LITERAL_STRING("navigator:browser").get(), getter_AddRefs(browserWindow));
-
-  return OpenDownloadManager(PR_TRUE, -1, nsnull, browserWindow);
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsXPIProgressListener
