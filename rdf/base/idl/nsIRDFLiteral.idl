@@ -41,6 +41,8 @@
 #include "nscore.h" // for PRUnichar
 %}
 
+[ptr] native octet_ptr(PRUint8);
+
 /**
  * A literal node in the graph, whose value is a string.
  */
@@ -80,3 +82,19 @@ interface nsIRDFInt : nsIRDFNode {
     readonly attribute long Value;
 };
 
+/**
+ * A literal node in the graph, whose value is arbitrary
+ * binary data.
+ */
+[scriptable, uuid(237f85a2-1dd2-11b2-94af-8122582fc45e)]
+interface nsIRDFBlob : nsIRDFNode {
+    /**
+     * The binary data.
+     */
+    [noscript] readonly attribute octet_ptr value;
+
+    /**
+     * The data's length.
+     */
+    readonly attribute long length;
+};

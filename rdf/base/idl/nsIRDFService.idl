@@ -68,6 +68,9 @@ interface nsIRDFService : nsISupports {
     // Construct an RDF literal from an int.
     nsIRDFInt      GetIntLiteral(in long aValue);
 
+    // Construct an RDF literal from a data blob
+    [noscript] nsIRDFBlob getBlobLiteral(in octet_ptr aValue, in long aLength);
+
     boolean IsAnonymousResource(in nsIRDFResource aResource);
 
     // Registers a resource with the RDF system, making it unique w.r.t.

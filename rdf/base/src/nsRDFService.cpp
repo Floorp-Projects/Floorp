@@ -85,6 +85,8 @@ static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 static PRLogModuleInfo* gLog = nsnull;
 #endif
 
+class BlobImpl;
+
 ////////////////////////////////////////////////////////////////////////
 // RDFServiceImpl
 //
@@ -99,6 +101,7 @@ protected:
     PLDHashTable mLiterals;
     PLDHashTable mInts;
     PLDHashTable mDates;
+    PLDHashTable mBlobs;
 
     char mLastURIPrefix[16];
     PRInt32 mLastPrefixlen;
@@ -126,6 +129,8 @@ public:
     nsresult UnregisterInt(nsIRDFInt* aInt);
     nsresult RegisterDate(nsIRDFDate* aDate);
     nsresult UnregisterDate(nsIRDFDate* aDate);
+    nsresult RegisterBlob(BlobImpl* aBlob);
+    nsresult UnregisterBlob(BlobImpl* aBlob);
 
     nsresult GetDataSource(const char *aURI, PRBool aBlock, nsIRDFDataSource **aDataSource );
 };
@@ -370,6 +375,134 @@ static PLDHashTableOps gDateTableOps = {
     DateHashEntry::GetKey,
     DateHashEntry::HashKey,
     DateHashEntry::MatchEntry,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    nsnull
+};
+
+class BlobImpl : public nsIRDFBlob
+{
+public:
+    struct Data {
+        PRInt32  mLength;
+        PRUint8 *mBytes;
+    };
+
+    BlobImpl(PRUint8 *aBytes, PRInt32 aLength)
+    {
+        NS_INIT_REFCNT();
+        mData.mLength = aLength;
+        mData.mBytes = new PRUint8[aLength];
+        nsCRT::memcpy(mData.mBytes, aBytes, aLength);
+        NS_ADDREF(gRDFService);
+        gRDFService->RegisterBlob(this);
+    }
+
+    virtual ~BlobImpl()
+    {
+        gRDFService->UnregisterBlob(this);
+        NS_RELEASE(gRDFService);
+        delete[] mData.mBytes;
+    }
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIRDFNODE
+    NS_DECL_NSIRDFBLOB
+
+    Data mData;
+};
+
+NS_IMPL_ISUPPORTS2(BlobImpl, nsIRDFNode, nsIRDFBlob)
+
+NS_IMETHODIMP
+BlobImpl::EqualsNode(nsIRDFNode *aNode, PRBool *aEquals)
+{
+    nsCOMPtr<nsIRDFBlob> blob = do_QueryInterface(aNode);
+    if (blob) {
+        PRInt32 length;
+        blob->GetLength(&length);
+
+        if (length == mData.mLength) {
+            PRUint8 *bytes;
+            blob->GetValue(&bytes);
+
+            if (0 == nsCRT::memcmp(bytes, mData.mBytes, length)) {
+                *aEquals = PR_TRUE;
+                return NS_OK;
+            }
+        }
+    }
+
+    *aEquals = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+BlobImpl::GetValue(PRUint8 **aResult)
+{
+    *aResult = mData.mBytes;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+BlobImpl::GetLength(PRInt32 *aResult)
+{
+    *aResult = mData.mLength;
+    return NS_OK;
+}
+
+// ----------------------------------------------------------------------
+//
+// For the mBlobs hashtable.
+//
+
+struct BlobHashEntry : public PLDHashEntryHdr {
+    BlobImpl *mBlob;
+
+    static const void * PR_CALLBACK
+    GetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
+    {
+        BlobHashEntry *entry = NS_STATIC_CAST(BlobHashEntry *, hdr);
+        return &entry->mBlob->mData;
+    }
+
+    static PLDHashNumber PR_CALLBACK
+    HashKey(PLDHashTable *table, const void *key)
+    {
+        const BlobImpl::Data *data =
+            NS_STATIC_CAST(const BlobImpl::Data *, key);
+
+        const PRUint8 *p = data->mBytes, *limit = p + data->mLength;
+        PLDHashNumber h = 0;
+        for ( ; p < limit; ++p)
+            h = (h >> 28) ^ (h << 4) ^ *p;
+        return h;
+    }
+
+    static PRBool PR_CALLBACK
+    MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+               const void *key)
+    {
+        const BlobHashEntry *entry =
+            NS_STATIC_CAST(const BlobHashEntry *, hdr);
+
+        const BlobImpl::Data *left = &entry->mBlob->mData;
+
+        const BlobImpl::Data *right =
+            NS_STATIC_CAST(const BlobImpl::Data *, key);
+
+        return (left->mLength == right->mLength)
+            && 0 == nsCRT::memcmp(left->mBytes, right->mBytes, right->mLength);
+    }
+};
+
+static PLDHashTableOps gBlobTableOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    BlobHashEntry::GetKey,
+    BlobHashEntry::HashKey,
+    BlobHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
     PL_DHashFinalizeStub,
@@ -756,6 +889,9 @@ RDFServiceImpl::Init()
     PL_DHashTableInit(&mDates, &gDateTableOps, nsnull,
                       sizeof(DateHashEntry), PL_DHASH_MIN_SIZE);
 
+    PL_DHashTableInit(&mBlobs, &gBlobTableOps, nsnull,
+                      sizeof(BlobHashEntry), PL_DHASH_MIN_SIZE);
+
     rv = nsComponentManager::FindFactory(kRDFDefaultResourceCID, getter_AddRefs(mDefaultResourceFactory));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get default resource factory");
     if (NS_FAILED(rv)) return rv;
@@ -779,6 +915,7 @@ RDFServiceImpl::~RDFServiceImpl()
     PL_DHashTableFinish(&mLiterals);
     PL_DHashTableFinish(&mInts);
     PL_DHashTableFinish(&mDates);
+    PL_DHashTableFinish(&mBlobs);
     gRDFService = nsnull;
 }
 
@@ -1108,6 +1245,29 @@ RDFServiceImpl::GetIntLiteral(PRInt32 aInt, nsIRDFInt** aResult)
     }
 
     IntImpl* result = new IntImpl(aInt);
+    if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aResult = result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFServiceImpl::GetBlobLiteral(PRUint8 *aBytes, PRInt32 aLength,
+                               nsIRDFBlob **aResult)
+{
+    BlobImpl::Data key = { aLength, aBytes };
+
+    PLDHashEntryHdr *hdr =
+        PL_DHashTableOperate(&mBlobs, &key, PL_DHASH_LOOKUP);
+
+    if (PL_DHASH_ENTRY_IS_BUSY(hdr)) {
+        BlobHashEntry *entry = NS_STATIC_CAST(BlobHashEntry *, hdr);
+        NS_ADDREF(*aResult = entry->mBlob);
+        return NS_OK;
+    }
+
+    BlobImpl *result = new BlobImpl(aBytes, aLength);
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1581,6 +1741,53 @@ RDFServiceImpl::UnregisterDate(nsIRDFDate* aDate)
     return NS_OK;
 }
 
+nsresult
+RDFServiceImpl::RegisterBlob(BlobImpl *aBlob)
+{
+    NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(PL_DHashTableOperate(&mBlobs,
+                                                             &aBlob->mData,
+                                                             PL_DHASH_LOOKUP)),
+                 "blob already registered");
+
+    PLDHashEntryHdr *hdr = 
+        PL_DHashTableOperate(&mBlobs, &aBlob->mData, PL_DHASH_ADD);
+
+    if (! hdr)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    BlobHashEntry *entry = NS_STATIC_CAST(BlobHashEntry *, hdr);
+
+    // N.B., we only hold a weak reference to the literal: that
+    // way, the literal can be destroyed when the last refcount
+    // goes away. The single addref that the CreateInt() call
+    // made will be owned by the callee.
+    entry->mBlob = aBlob;
+
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("rdfserv   register-blob [%p] %s",
+            aBlob, aBlob->mData.mBytes));
+
+    return NS_OK;
+}
+
+nsresult
+RDFServiceImpl::UnregisterBlob(BlobImpl *aBlob)
+{
+    NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(PL_DHashTableOperate(&mBlobs,
+                                                             &aBlob->mData,
+                                                             PL_DHASH_LOOKUP)),
+                 "blob was never registered");
+
+    PL_DHashTableOperate(&mBlobs, &aBlob->mData, PL_DHASH_REMOVE);
+ 
+     // N.B. that we _don't_ release the literal: we only held a weak
+     // reference to it in the hashtable.
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("rdfserv unregister-blob [%p] %s",
+            aBlob, aBlob->mData.mBytes));
+
+    return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 
