@@ -23,20 +23,18 @@ DEFINES= -DWIN32_LEAN_AND_MEAN
 LIBRARY_NAME= unicharutil
 
 OBJS= \
-	.\$(OBJDIR)\ucdata.obj \
 	$(NULL)
 
 CSRCS= \
-	ucdata.c \
 	$(NULL)
 
 CPPSRCS= \
-	nsCaseConversionImp.cpp	\
+	nsCaseConversionImp2.cpp	\
 	nsUnicharUtilFactory.cpp	\
 	$(NULL)
 
 CPP_OBJS= \
-	.\$(OBJDIR)\nsCaseConversionImp.obj \
+	.\$(OBJDIR)\nsCaseConversionImp2.obj \
 	.\$(OBJDIR)\nsUnicharUtilFactory.obj \
 	$(NULL)
 

@@ -22,7 +22,7 @@
 #include "nsIFactory.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"
-#include "nsCaseConversionImp.h"
+#include "nsCaseConversionImp2.h"
 
 
 NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
@@ -68,7 +68,7 @@ nsresult nsUnicharUtilFactory::CreateInstance(nsISupports *aDelegate,
   
   *aResult = NULL;
    
-  nsISupports *inst = new nsCaseConversionImp();
+  nsISupports *inst = new nsCaseConversionImp2();
   if(NULL == inst) {
     return NS_ERROR_OUT_OF_MEMORY;  
   }
