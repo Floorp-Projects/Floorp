@@ -1119,11 +1119,6 @@ void CFrontApp::Initialize()
 	new CNSContextCallbacks;
 	LDocApplication::Initialize();
 	
-#if defined(MOZ_FULLCIRCLE) && defined(FCAPI)
-	// initialization for spiral stuff.....
-	FCInitialize();
-#endif
-	
 	CMouseDispatcher* md = new CMouseDispatcher;
 	AddAttachment(md);
 
@@ -1352,6 +1347,17 @@ void CFrontApp::ProperStartup( FSSpec* file, short fileType )
 		DoQuit();
 		return;
 	}
+
+#ifdef MOZ_FULLCIRCLE
+    // Full Circle initialization must happen once the current
+    //  profile is known, such that the prefs calls work.
+    XP_Bool fullcircle_enable = TRUE;
+    PREF_GetBoolPref("general.fullcircle_enable", &fullcircle_enable);
+    if ( fullcircle_enable )
+	    {
+		    FCInitialize();
+	    }
+#endif
 
 	if ( fileType == FILE_TYPE_ASW && file )
 		abortStartup = CPrefs::eRunAccountSetup;
