@@ -682,6 +682,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
         PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
         if(NS_ERROR_HTMLPARSER_BLOCK==result) {
           EnableParser(PR_FALSE);
+          result=NS_OK;
         }
       }//if
     }//if
@@ -864,7 +865,8 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
     theStartPos+=theNumRead;
   }//while
 
-  return ResumeParse(); 
+  result=ResumeParse(); 
+  return result;
 }
 
 /**

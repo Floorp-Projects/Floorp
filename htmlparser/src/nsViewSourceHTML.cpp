@@ -676,6 +676,15 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       }
       break;
 
+    case eToken_style:
+    case eToken_skippedcontent:
+      {
+        CAttributeToken* theToken=(CAttributeToken*)aToken;
+        nsString& theText=theToken->GetKey();
+        WriteText(theText,*mSink,PR_FALSE);
+      }
+      break;
+
     case eToken_text:
       {
         nsString& theText=aToken->GetStringValueXXX();
@@ -720,8 +729,6 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       WriteTag(theNode,*mSink,theEndTag,mIsHTML);
       break;
 
-    case eToken_style:
-    case eToken_skippedcontent:
     default:
       result=NS_OK;
   }//switch
