@@ -237,6 +237,15 @@ struct nsHTMLReflowState : nsReflowState {
                     nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace);
 
+  // Used when you want to override the default containing block
+  // width and height. Used by absolute positioning code
+  nsHTMLReflowState(nsIPresContext&          aPresContext,
+                    const nsHTMLReflowState& aParentReflowState,
+                    nsIFrame*                aFrame,
+                    const nsSize&            aAvailableSpace,
+                    nscoord                  aContainingBlockWidth,
+                    nscoord                  aContainingBlockHeight);
+
   /**
    * Get the containing block reflow state, starting from a frames
    * <B>parent</B> reflow state (the parent reflow state may or may not end
@@ -291,9 +300,13 @@ struct nsHTMLReflowState : nsReflowState {
 protected:
   // This method initializes various data members. It is automatically
   // called by the various constructors
-  void Init(nsIPresContext& aPresContext);
+  void Init(nsIPresContext& aPresContext,
+            nscoord         aContainingBlockWidth = -1,
+            nscoord         aContainingBlockHeight = -1);
 
-  void InitConstraints(nsIPresContext& aPresContext);
+  void InitConstraints(nsIPresContext& aPresContext,
+                       nscoord         aContainingBlockWidth,
+                       nscoord         aContainingBlockHeight);
 
   void InitAbsoluteConstraints(nsIPresContext& aPresContext,
                                const nsHTMLReflowState* cbrs,
