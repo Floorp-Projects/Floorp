@@ -140,6 +140,7 @@ nsHttpHandler::nsHttpHandler()
     , mMaxPersistentConnectionsPerProxy(4)
     , mMaxPipelinedRequests(2)
     , mRedirectionLimit(10)
+    , mPhishyUserPassLength(16)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
     , mUserAgentIsDirty(PR_TRUE)
@@ -971,6 +972,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(BROWSER_PREF("disk_cache_ssl"), &cVar);
         if (NS_SUCCEEDED(rv))
             mEnablePersistentHttpsCaching = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("phishy-userpass-length"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("phishy-userpass-length"), &val);
+        if (NS_SUCCEEDED(rv))
+            mPhishyUserPassLength = (PRUint8) CLAMP(val, 0, 0xff);
     }
 
     //
