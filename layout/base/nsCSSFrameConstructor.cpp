@@ -1539,19 +1539,8 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
         nsIFrame*     containerFrame;
         nsFrameItems  childFrames;
 
-        nsCOMPtr<nsIDOMElement>containerElement;
-        nsCOMPtr<nsIContent>   containerContent;
         nsCOMPtr<nsIDocument>  document;
-
         aContent->GetDocument(*getter_AddRefs(document));
-
-        nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(document));
-        nsresult  result;
-        result = domdoc->CreateElement(NS_ConvertASCIItoUCS2("SPAN"),getter_AddRefs(containerElement));//is the literal the correct way?
-        if (NS_SUCCEEDED(result) && containerElement)
-        {
-          containerContent = do_QueryInterface(containerElement);
-        }//do NOT use YET set this up for later checkin. this will be the content of the new frame.
 
         if (NS_STYLE_DISPLAY_BLOCK == displayValue) {
           NS_NewBlockFrame(aPresShell, &containerFrame);
@@ -1581,6 +1570,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
           nsIFrame* frame;
 
           // Create a frame
+          nsresult result;
           result = CreateGeneratedFrameFor(aPresContext, document, containerFrame,
                                            aContent, textStyleContext,
                                            styleContent, contentIndex, &frame);
