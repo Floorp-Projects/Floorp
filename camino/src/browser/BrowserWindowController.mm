@@ -1485,15 +1485,10 @@ static NSArray* sToolbarDefaults = nil;
   return [[mBrowserView getBrowserView] lastFindText];
 }
 
-- (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
+- (void)addBookmarkExtended:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
 {
   [mBookmarkViewController ensureBookmarks];
-  BOOL useSel = aIsFromMenu;
-  if (aIsFromMenu) {
-    // Use selection only if the sidebar is open and the bookmarks panel is displaying.
-    useSel = [self bookmarksAreVisible:NO];
-  }
-  [mBookmarkViewController addItem: self useSelection: useSel isFolder: aIsFolder URL:aURL title:aTitle];
+  [mBookmarkViewController addItem: self isFolder: aIsFolder URL:aURL title:aTitle];
 }
 
 - (BOOL)bookmarksAreVisible:(BOOL)inRequireSelection
@@ -1508,7 +1503,7 @@ static NSArray* sToolbarDefaults = nil;
 
 - (IBAction)bookmarkPage: (id)aSender
 {
-  [self addBookmarkExtended:YES isFolder:NO URL:nil title:nil];
+  [self addBookmarkExtended:NO URL:nil title:nil];
 }
 
 
@@ -1521,7 +1516,7 @@ static NSArray* sToolbarDefaults = nil;
   GeckoUtils::GatherTextUnder(linkContent, linkText);
   NSString* urlStr = [NSString stringWith_nsAString:href];
   NSString* titleStr = [NSString stringWith_nsAString:linkText];
-  [self addBookmarkExtended:YES isFolder:NO URL:urlStr title:titleStr];
+  [self addBookmarkExtended:NO URL:urlStr title:titleStr];
 }
 
 - (IBAction)back:(id)aSender

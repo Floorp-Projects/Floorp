@@ -186,12 +186,12 @@ const long kMinSearchPaneHeight = 80;
 
 -(IBAction)addBookmark:(id)aSender
 {
-  [self addItem: aSender useSelection: YES isFolder: NO URL:nil title:nil];
+  [self addItem: aSender isFolder: NO URL:nil title:nil];
 }
 
 -(IBAction)addFolder:(id)aSender
 {
-  [self addItem: aSender useSelection: YES isFolder: YES URL:nil title:nil];
+  [self addItem: aSender isFolder: YES URL:nil title:nil];
 }
 
 -(IBAction)addCollection:(id)aSender
@@ -210,14 +210,12 @@ const long kMinSearchPaneHeight = 80;
   [[[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder] insertChild:aBookmark];
 }
 
-
-
--(void)addItem:(id)aSender useSelection:(BOOL)aUseSel isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
+-(void)addItem:(id)aSender isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
 {
-  // We use the selected item to determine the parent only if aUseSel is YES.
+  // We ALWAYS use the selected item to determine the parent.
   BookmarkFolder *parentFolder = nil;
   BookmarkItem* item = nil;
-  if (aUseSel && ([mItemPane numberOfSelectedRows] == 1))
+  if ([mItemPane numberOfSelectedRows] == 1)
   {
     // There is only one selected row.  If it is a folder, use it as our parent.
     // Otherwise, use selected row's parent.
@@ -225,7 +223,7 @@ const long kMinSearchPaneHeight = 80;
     item = [mItemPane itemAtRow: index];
     if ([item isKindOfClass:[BookmarkFolder class]])
       parentFolder = item;
-    else
+    else if ([item respondsToSelector:@selector(parent)])    // history items have no parent, for example
       parentFolder = [item parent];
   } else
     parentFolder = [self activeCollection];
@@ -339,6 +337,20 @@ const long kMinSearchPaneHeight = 80;
     }
     else
       [parentFolder addBookmarkFolder:titleString inPosition:[parentFolder count] isGroup:NO];
+  }
+
+  // if we're NOT visible, set the selection to this bookmark's new parent folder
+  // to ensure a selection exists. The next time we use the UI to add a bookmark, it will
+  // use this parent as the suggested location in the UI.
+  if (![mBrowserWindowController bookmarksAreVisible:NO]) {
+    [self displayBookmarkInOutlineView:parentFolder];
+    // if |parentFolder| is one of the toplevel containers (bookmark menu, toolbar bookmarks,
+    // etc), calling |-rowForItem:| will return |-1| and the selection change would get
+    // ignored. In this case, ensure a valid selection in this container by selecting first item.
+    long parentRow = [mItemPane rowForItem:parentFolder];
+    if (parentRow < 0)
+      parentRow = 0;
+    [mItemPane selectRow:parentRow byExtendingSelection:NO];
   }
 }
 

@@ -104,7 +104,7 @@
 -(void) setActiveCollection:(BookmarkFolder *)aFolder;
 -(BookmarkFolder *)activeCollection;
 
--(void)addItem:(id)aSender useSelection:(BOOL)aSel isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle;
+-(void)addItem:(id)aSender isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle;
 -(void)addItem:(id)aSender withParent:(BookmarkFolder *)parent isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle;
 -(void)endAddBookmark: (int)aCode;
 

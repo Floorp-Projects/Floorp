@@ -800,14 +800,14 @@ const int kReuseWindowOnAE = 2;
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController addBookmarkExtended: YES isFolder: NO URL:nil title:nil];
+    [browserController addBookmarkExtended: NO URL:nil title:nil];
 }
 
 -(IBAction) addFolder:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController addBookmarkExtended: YES isFolder: YES URL:nil title:nil];
+    [browserController addBookmarkExtended: YES URL:nil title:nil];
 }
 
 -(IBAction) addSeparator:(id)aSender
