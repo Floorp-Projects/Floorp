@@ -405,7 +405,6 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsIDrawingSur
 			// Flushing temporary bitmap to proper area in drawable BView	
 			view->DrawBitmap(tmpbmp, BPoint(aTileRect.x , aTileRect.y ));
 			view->SetDrawingMode(B_OP_COPY);
-			view->Sync(); // useful in multilayered pages with animation
 			
 			if (tmpbmp) 
 			{
