@@ -1,13 +1,15 @@
  
 menubar 
   {
-  background-color      : #B4C3D4;
-	border-top            : 1px solid #7693B3;
+    background-color      : #B4C3D4;
+    border-top            : 1px solid #82929C;
+    border-bottom         : 1px solid #000000;
   }
 
-menubar > .toolbar-holder {
-	border-bottom         : 1px solid #597899;
-}
+menubar > .toolbar-holder 
+  {
+    border-left           : 1px solid #D6E7FF;
+  }
   
 menu, menuitem  
   {
@@ -213,15 +215,44 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
 autorepeatbutton {
   text-align: center;
   vertical-align: middle;
+  padding: 1px;
 }
 
 autorepeatbutton:hover {
-  background-color: #336699;
+  background-color: #486380;
 }
 
+/*
+ * Menubar grippy 
+ */
 
+menubar > toolbargrippy
+  { 
+    background-image     : url("chrome://global/skin/mb-grippy-bg.gif");
+  } 
 
+menubar > toolbargrippy > .toolbargrippy-top
+  {
+    background-image     : url("chrome://global/skin/mb-grippy-top.gif");
+  }
+
+menubar > toolbargrippy > .toolbargrippy-btm
+  {
+    background-image     : url("chrome://global/skin/mb-grippy-btm.gif");
+  }
   
-  
-  
-  
+menubar > toolbargrippy:hover:active
+  {
+    background-image     : url("chrome://global/skin/mb-grippy-bg-active.gif");
+  }
+
+menubar > toolbargrippy:hover:active > .toolbargrippy-top
+  {
+  	background-image     : url("chrome://global/skin/mb-grippy-top-active.gif");
+  }
+
+menubar > toolbargrippy:hover:active > .toolbargrippy-btm
+  {
+  	background-image     : url("chrome://global/skin/mb-grippy-btm-active.gif");
+  }
+

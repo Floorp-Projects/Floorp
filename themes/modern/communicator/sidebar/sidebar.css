@@ -17,39 +17,26 @@
  * Rights Reserved.
  * 
  * Contributor(s): Stephen Lamm <slamm@netscape.com>
+ *                 Joe Hewitt <hewitt@netscape.com>                   
  */ 
 
 
 #sidebar-splitter {
-    -moz-binding: url("chrome://communicator/skin/sidebar/sidebarSplitterBindings.xml#sidebar-splitter");
-    border: none;
-    padding: 0px;
-    width: 10px;
-    background-image: url("chrome://communicator/skin/sidebar/sbsplitter-bg.gif");
+  border-left             : none;
 }
 
-.sidebar-splitter-grippy {
-    background-image: url("chrome://communicator/skin/sidebar/sbgrippy-left.gif") !important; 
-}
-
-.sidebar-splitter-grippy:hover,
-.sidebar-splitter-grippy:active {
-    background-image: url("chrome://communicator/skin/sidebar/sbgrippy-left-hover.gif") !important; 
-}
-
-#sidebar-splitter[state="collapsed"] > .sidebar-splitter-grippy {
-    background-image: url("chrome://communicator/skin/sidebar/sbgrippy-right.gif") !important;
-}
-
-#sidebar-splitter[state="collapsed"] > .sidebar-splitter-grippy:hover,
-#sidebar-splitter[state="collapsed"] > .sidebar-splitter-grippy:active {
-    background-image: url("chrome://communicator/skin/sidebar/sbgrippy-right-hover.gif") !important; 
-}
-
+/**
+ *    other sidebar stuff
+ **/
 
 #sidebar-box {
-    margin-top: 0px;
-    border-top: 1px solid #8C9AB2;
+  margin-top: 0px;
+  border-top: 1px solid #92ABC9;
+  border-right: 1px solid #000000;
+}
+
+#sidebar-title-box {
+  border-bottom: none;
 }
 
 .text-panel-loading {
@@ -120,80 +107,24 @@ box[loadstate="stopped"] > box > box >  .image-panel-loading {
     display: none;
 }
 
+.iframe-panel
+{
+  border-bottom          : 1px solid #C1C8D5;
+}
+
 /**
  * texttab folder lookalike e.g. for sidebar panel headers
  */
   .box-texttab
     {
       -moz-binding        : url("chrome://communicator/content/sidebar/sidebarBindings.xml#texttab");
-      background-color    : #5C7794;
-      padding-top         : 2px;
       border-bottom       : 3px solid #5C7794;
-    }
-
-  .box-texttab[selected="true"] 
-    {
-      border-bottom       : 3px solid #C1C8D5;
-    }    
-    
-  .box-texttab[top-panel="true"]
-    {
       background-color    : #5C7794;
     }
-  
-  .box-texttab[first-panel-after-selected="true"] 
-    {
-      background-color    : #C1C8D5;
-    }
-
-  .box-texttab[first-panel-after-selected="true"]  > .box-texttab-left
-    {
-      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-darkonlight-left.gif");
-    }
-
-  .box-texttab[first-panel-after-selected="true"]  > .box-texttab-right
-    {
-      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-darkonlight-right.gif");
-    }
-    
-  .box-texttab-right-space 
-    {
-      width               : 0px;
-    }
-
-  .box-texttab[last-panel="true"] > .box-texttab-right-space 
-    {
-      border-bottom       : none;
-    }
-
-  .box-texttab[last-panel="true"]
-    {
-      border-bottom       : 7px solid #5C7794;
-    } 
-
-  .box-texttab[last-panel="true"][selected="true"] 
-    {
-      border-bottom       : 3px solid #C1C8D5;
-    } 
-
+   
   .box-texttab-left
     {
       list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-darkondark-left.gif");
-    }
-
-  .box-texttab-right
-    {
-      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-darkondark-right.gif");
-    }
-
-  .box-texttab[selected="true"] > .box-texttab-left
-    {
-      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-lightondark-left.gif");
-    }
-
-  .box-texttab[selected="true"] > .box-texttab-right
-    {
-      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-lightondark-right.gif");
     }
 
   .box-texttab-text-container
@@ -204,10 +135,72 @@ box[loadstate="stopped"] > box > box >  .image-panel-loading {
       padding-top         : 2px;
     }
 
+  .box-texttab-right
+    {
+      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-darkondark-right.gif");
+    }
+
+  .box-texttab-right-space 
+    {
+      width               : 0px;
+    }
+
+  .box-texttab[top-panel="true"]
+    {
+      background-color    : #5C7794;
+    }
+  
+  .box-texttab[last-panel="true"]
+    {
+      border-bottom       : 7px solid #5C7794;
+    } 
+
+  .box-texttab[last-panel="true"][selected="true"] 
+    {
+      border-bottom       : 3px solid #C1C8D5;
+    } 
+
+  .box-texttab[selected="true"]
+    {
+      height              : 24px;
+    }
+    
+  .box-texttab[selected="true"] > .box-texttab-left
+    {
+      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-lightondark-left.gif");
+    }
+
   .box-texttab[selected="true"] > .box-texttab-text-container
     {
       background: url("chrome://communicator/skin/sidebar/sbtab-light.gif") repeat-x;
       background-color    : #C1C8D5;
       color               : #000000;
     }
+
+  .box-texttab[selected="true"] > .box-texttab-right
+    {
+      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-lightondark-right.gif");
+    }
+
+  .box-texttab[first-panel-after-selected="true"] 
+    {
+      background-color    : #C1C8D5;
+      border-top          : 1px solid #E7EBF7;
+    }
+
+  .box-texttab[first-panel-after-selected="true"]  > .box-texttab-left
+    {
+      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-darkonlight-left.gif");
+      border-top          : 3px solid #C1C8D5;
+    }
+
+  .box-texttab[first-panel-after-selected="true"]  > .box-texttab-text-container
+    {
+      border-top          : 3px solid #C1C8D5;
+    }
     
+  .box-texttab[first-panel-after-selected="true"]  > .box-texttab-right
+    {
+      list-style-image    : url("chrome://communicator/skin/sidebar/sbtab-darkonlight-right.gif");
+      border-top          : 3px solid #C1C8D5;
+    }

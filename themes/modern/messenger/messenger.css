@@ -28,6 +28,11 @@
  display: none;
 } 
 
+.sidebarheader-main 
+{
+  border-bottom: 1px solid #000000;
+}
+
 dummy.usesMailWidgets {
  -moz-binding: url(chrome://messenger/content/mailWidgets.xml#dummy);
 }
@@ -186,13 +191,13 @@ iframe {
 }
 
 #button-file[disabled="true"],
-#button-file[disabled="true"]:hover,
-#button-file[disabled="true"]:hover:active
+menu:hover > #button-file[disabled="true"],
+menu:hover:active > #button-file[disabled="true"]
   {
     list-style-image      : url("chrome://messenger/skin/file-disabled.gif");
   } 
 
-#button-file:hover
+menu:hover > #button-file
   {
     list-style-image      : url("chrome://messenger/skin/file-hover.gif");
   } 
@@ -481,24 +486,121 @@ searchterm {
  behavior: url(chrome://messenger/content/mailWidgets.xml#searchterm);
 }
 
+#status-bar
+{
+  border-left: 1px solid #63717B;
+  border-top: none;
+}
+
+#status-bar > :first-child
+{
+  border-left         : 1px solid #000000;
+}
+
+/******
+ * Adjusting the borders on splitters so they seem to join where vertical meets horizontal
+ ******/
+
+#sidebar-splitter {
+  border: none;
+}
+
+#sidebar-splitter > .splitter-internal-box {
+  border-right: none;
+}
+
+#threadpane-splitter,
+#threadpane-splitter > box
+{
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+}
+
+#threadpane-splitter[state="collapsed"]
+{
+  border-bottom: 1px solid #000000;
+}
+
+#threadpane-splitter[state="collapsed"] > box
+{
+  border-bottom: 1px solid #63717B;
+}
+
+.gray-vertical-splitter,
+.gray-vertical-splitter > box
+{
+  border-right: none;
+}
+
+.gray-vertical-splitter > box
+{
+  border-bottom: none;
+}
+
+#sidebar-panels-splitter,
+#sidebar-panels-splitter > box
+{
+  border-top: none;
+}
+
 /** 
- *Focus rings on 3 pane view
- */
+ * Focus rings on 3 pane view
+ **/
+ 
+#folderTree
+{
+  border-left: 1px solid #63717B;
+  border-bottom: 1px solid #C6D3D6;
+}
+
+#folderTree > .tree-container-treerows
+{
+  border-left: 1px solid #000000;
+  border-bottom: 1px solid #7B969C;
+}
+
+#threadTree
+{
+  border-left: 1px solid #63717B;
+  border-right: none;
+  border-bottom: 1px solid #C6D3D6;
+}
+
+#threadTree > .tree-container-treerows
+{
+  border-left: 1px solid #000000;
+  border-bottom: 1px solid #7B969C;
+}
 
 #folderTree > treehead,
 #threadTree[focusring="false"] > treehead
 {
   border-left: 1px solid #EFEFEF;
-  border-top: 1px solid #EFEFEF;
+  border-top: 1px solid transparent;
+}
+
+#folderTree > treehead
+{
   border-right: 1px solid transparent;
+}
+
+#threadTree[focusring="false"] > treehead
+{
+  border-top: 1px solid #63717B;
 }
 
 #folderTree > treechildren,
 #threadTree[focusring="false"] > treechildren
 {
   border-left: 1px solid transparent;
-  border-right: 1px solid transparent;
   border-bottom: 1px solid transparent;
+}
+
+#folderTree > treechildren
+{
+  border-right: 1px solid transparent;
 }
 
 #folderTree:focus > treehead,
@@ -506,6 +608,10 @@ searchterm {
 {
   border-left: 1px solid black;
   border-top: 1px solid black;
+}
+
+#folderTree:focus > treehead
+{
   border-right: 1px solid black;
 }
 
@@ -513,55 +619,43 @@ searchterm {
 #threadTree[focusring="true"]  > treechildren
 {
   border-left: 1px solid black;
-  border-right: 1px solid black;
   border-bottom: 1px solid black;
 }
 
-#folderTree > treehead > treerow > .treecell-header:first-child,
+#folderTree:focus > treechildren
+{
+  border-right: 1px solid black;
+}
+
 #threadTree > treehead > treerow > .treecell-header:first-child
 {
   border-left: none;
 }
 
-#folderTree > treehead > treerow > .treecell-header,
-#threadTree > treehead > treerow > .treecell-header
+#messagepanebox
 {
-  border-top: none !important;
-}
-
-#folderTree > treehead > treerow > .treecell-header > .treecell-header-box,
-#threadTree > treehead > treerow > .treecell-header > .treecell-header-box 
-{
-  border-top: none  !important;
+  border-left: 1px solid #63717B;
+  border-top: 1px solid #63717B;
+  border-bottom: 1px solid #000000;
 }
 
 #msgHeaderView {
-  border-left: 1px solid #8C9EA5;
-  border-top: 1px solid #EFEFEF;
-  border-right: 1px solid #EFEFEF;
+  border-left: 1px solid #000000;
+  border-top: 1px solid #000000;
+  border-right: 1px solid #7B969C;
 }
 
-#messagepane {
-  border-left: 1px solid transparent;
-  border-right: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-}
-
-#messagepanebox[focusring="true"] > #msgHeaderView
+#messagepane
 {
   border-left: 1px solid #000000;
   border-top: 1px solid #000000;
-  border-right: 1px solid #000000;
+  border-bottom: none;
 }
 
-#messagepanebox[focusring="true"] > #messagepane
+#messagepanebox[focusring="true"]
 {
-  border-left: 1px solid black;
-  border-right: 1px solid black;
-  border-bottom: 1px solid black;
+  border-left: 1px solid #000000;
+  border-top: 1px solid #000000;
+  border-bottom: 1px solid #000000;
 }
 
-sidebarheader 
-{
-  border: 1px solid #5C7794;
-}

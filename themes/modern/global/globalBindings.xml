@@ -34,13 +34,16 @@
 	  
   <binding id="toolbargrippy" extends="chrome://global/content/toolbarBindings.xml#toolbargrippy">
     <content orient="vertical">
-      <xul:box class="toolbargrippy-twisty" flex="1"/>
+      <xul:box class="toolbargrippy-top"/>
+      <xul:spring class="toolbargrippy-mid" flex="1"/>
+      <xul:box class="toolbargrippy-btm"/>
     </content>
   </binding>
 
   <binding id="toolbargrippy-collapsed" extends="chrome://global/content/toolbarBindings.xml#toolbargrippy">
     <content>
-      <xul:box class="toolbargrippy-twisty-collapsed" flex="1"/>
+      <xul:box class="toolbargrippy-collapsed-left"/>
+      <xul:box class="toolbargrippy-collapsed-context" flex="1"/>
     </content>
   </binding>
 
@@ -96,9 +99,9 @@
 
   <binding id="throbber" extends="chrome://global/content/xulBindings.xml#basetext">
   	<content>
-  	  <xul:spring class="throbber-groove-left"/>
-  	  <xul:box flex="1" class="throbber-middle" orient="vertical" autostretch="never">
-  	  	<xul:spring class="throbber-groove-top"/>
+     	<xul:spring class="throbber-groove-left"/>
+  	  <xul:box flex="1" class="throbber-middle" orient="vertical">
+    	  <xul:spring class="throbber-groove-top"/>
   	  	<xul:image flex="1" class="throbber-icon" inherits="src" autostretch="never"/>
   	  	<xul:spring class="throbber-groove-bottom"/>
   	  </xul:box>
@@ -109,44 +112,57 @@
 
 <!-- WIDGETS -->
 
-  <binding id="three-slice-button" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content>
-        <xul:spring class="button-image-left" inherits="default,disabled"/>
-    	<xul:box flex="1" class="button-image-middle" inherits="default,disabled" orient="vertical" align="center">
-    	  <xul:spring flex="1" class="button-top-spring"/>
-    	  <xul:box flex="1" autostretch="never">
+  <binding id="nine-slice-button" extends="chrome://global/content/xulBindings.xml#basetext">
+    <content includes="menupopup">
+      <xul:box class="button-box-left" inherits="default,disabled" orient="vertical">
+        <xul:spring class="button-left-top" inherits="default,disabled"/>
+        <xul:spring class="button-left-mid" inherits="default,disabled" flex="1"/>
+        <xul:spring class="button-left-btm" inherits="default,disabled"/>
+      </xul:box>
+      
+    	<xul:box class="button-box-mid" inherits="default,disabled" orient="vertical" flex="1">
+    	  <xul:spring class="button-mid-top" inherits="default,disabled"/>
+    	  <xul:box class="button-mid-mid" inherits="default,disabled" flex="1" autostretch="never">
     	  	<xul:image class="button-icon" inherits="src"/>
-    	    <xul:box class="button-text-box" flex="1" inherits="default">
-		      <xul:text inherits="disabled,value,crop,accesskey"/>
-    	    </xul:box>
+		      <xul:text class="button-text-mid" inherits="default,disabled,value,crop,accesskey"/>
     	  </xul:box>
-    	  <xul:spring flex="1" class="button-bottom-spring"/>
+    	  <xul:spring class="button-mid-btm" inherits="default,disabled"/>
     	</xul:box>
-    	<xul:spring class="button-image-right" inherits="default,disabled"/>
+      
+      <xul:box class="button-box-right" inherits="default,disabled" orient="vertical">
+        <xul:spring class="button-right-top" inherits="default,disabled"/>
+        <xul:spring class="button-right-mid" inherits="default,disabled" flex="1"/>
+        <xul:spring class="button-right-btm" inherits="default,disabled"/>
+      </xul:box>
     </content>
   </binding>
 
-<!-- The handlers and implementation are not being properly inherited from global/content/menulistBindings.xml,
-     so I've added them manually here.  This is bad. -->
+  <binding id="nine-slice-menulist" extends="chrome://global/content/menulistBindings.xml#menulist">
+  	<content includes="menupopup">
+      <xul:box class="menulist-box-left" inherits="disabled" orient="vertical">
+        <xul:spring class="menulist-left-top" inherits="disabled"/>
+        <xul:spring class="menulist-left-mid" inherits="disabled" flex="1"/>
+        <xul:spring class="menulist-left-btm" inherits="disabled"/>
+      </xul:box>
 
-  <binding id="menulist" extends="chrome://global/content/menulistBindings.xml#menulist">
-  	<content inherits="false" includes="menupopup">
-    	<xul:spring class="menulist-spring-left" inherits="disabled"/>
-    	<xul:box class="menulist-box-middle" flex="1" inherits="disabled">
-    		<xul:image class="menulist-icon" inherits="src"/>
-    		<xul:box class="menulist-text-box" flex="1">
-		      	<xul:text flex="1" inherits="disabled,value,crop,accesskey"/>
-    	    </xul:box>
+    	<xul:box class="menulist-box-mid" inherits="disabled" flex="1" orient="vertical">
+    	  <xul:spring class="menulist-mid-top" inherits="disabled"/>
+    		<xul:box class="menulist-mid-mid" inherits="disabled" flex="1" autostretch="never">
+        		<xul:image class="menulist-icon" inherits="src"/>
+		      	<xul:text class="menulist-text-mid" flex="1" inherits="disabled,value,crop,accesskey"/>
+        </xul:box>
+    	  <xul:spring class="menulist-mid-btm" inherits="disabled"/>
     	</xul:box>
-    	<xul:spring class="menulist-dropmarker-right" inherits="disabled"/>
+
+      <xul:box class="menulist-box-right" inherits="disabled" orient="vertical">
+    		<xul:box class="menulist-right-mid" inherits="disabled" flex="1">
+      		<xul:box class="menulist-right-mid2" inherits="disabled" flex="1" autostretch="never">
+        		<xul:image class="menulist-dropmarker" inherits="disabled"/>
+          </xul:box>
+        </xul:box>
+        <xul:spring class="menulist-right-btm" inherits="disabled"/>
+      </xul:box>
     </content>
-    <handlers>
-      <handler event="command" phase="capturing" action="if (event.target.localName == 'menuitem') { this.selectedItem = event.target; this.data = this.selectedItem.data; }"/>
-	</handlers>
-    <implementation>
-      <property name="data" onset="this.setAttribute('data',val); return val;"
-                            onget="return this.getAttribute('data');"/>
-    </implementation>  
   </binding>
 
   <binding id="scrollbar">
@@ -210,6 +226,31 @@
 	  <xul:spring class="tab-border-top-right" flex="1"/>
 	  <xul:spring class="tab-border-top-right-cap"/>
 	</content>
+  </binding>
+
+ <binding id="largeheader" extends="xul:box">
+    <content>
+      <xul:box class="largeheader-box" flex="1">
+        <xul:box class="largeheader-text-container" orient="vertical">
+          <xul:spring flex="1"/>
+          <xul:text class="largeheader-header-text" inherits="value=title" crop="right"/>
+          <xul:html class="largeheader-desc-text" inherits="value=description"/>
+          <xul:spring flex="1"/>
+        </xul:box>
+        <xul:spring flex="1"/>
+        <xul:box class="largeheader-icon-container" autostretch="never">
+          <xul:image class="largeheader-icon" inherits="src"/>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
+  
+  <binding id="splitter" extends="xul:splitter">
+    <content autostretch="always">
+      <xul:box class="splitter-internal-box" flex="1" autostretch="never">
+        <children/>
+      </xul:box>
+  	</content>
   </binding>
 
 </bindings>

@@ -25,9 +25,14 @@ Rights Reserved.
  
 /* CardView styles - used in the Card View Pane*/
 
+#CardViewOuterBox {
+  border-left: 1px solid #63717B;
+}
+
 #CardViewBox {
 	overflow: auto;
 	background-color: #EFEFEF;
+  border-left: 1px solid #000000;
 	min-width: 150px;
 	-moz-user-focus: ignore;
 }
@@ -119,10 +124,6 @@ tree[class="abResults"] treeitem > treerow > treecell.cardicon {
 
 /* Address Book specific style */
 
-#results_box {
-	border-left: 8px solid #CCCCCC;
-}
- 
 [hide] {
   visibility: collapse;
 }
@@ -278,15 +279,31 @@ tree[class="abResults"] treeitem > treerow > treecell.cardicon {
 treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
   list-style-image: none !important;
   padding-left: 12px;                                         
-}    
+}
+
+#sidebar-splitter {
+  border: none;
+}
+
+#sidebar-splitter > .splitter-internal-box {
+  border-right: none;
+}
+
+#results-splitter {
+  border-top: 1px solid #7B969C;
+}
+
+#results-splitter > box {
+  border-left: none;
+}
+
+/* prevents double border when touching status-bar */
+#results-splitter[state="collapsed"]
+{
+  border-bottom: none;
+}
 
 /*** Styles for abSelectAddressesDialog.xul ***/
-
-box[orient="horizontal"] > splitter {
-}
-
-box[orient="vertical"] > splitter {
-}
 
 #3PaneBox {
 	border-top		: 1px solid #000000; 
@@ -298,12 +315,16 @@ box[orient="vertical"] > splitter {
 	width			: 180px;
 	height			: 100%; 
 	background-color: #FFFFFF;
-	border-right	: 1px solid #000000;
 }
 
 #dirTree { // Tree that lists different Address Books
 	height			: 100px;
 	min-width		: 10px;
+}
+
+#vertical-splitter,
+#vertical-splitter > box {
+  border-right : none;
 }
 
 #results-bucket-tree-box {
@@ -318,21 +339,36 @@ box[orient="vertical"] > splitter {
 #resultsTree {
 	height			: 100px; 
 	min-width		: 10px;
+	border-left: 1px solid #63717B;
+	border-top: 1px solid #63717B;
 }
 
-#addToBucketButtonBox { // Row of "To" "CC" and "Bcc" buttons
+#resultsTree > treerows {
+	border-left: 1px solid #000000;
+}
+
+#bucket-splitter > box {
+  border-left: none;
+}
+
+#addToBucketButtonBox {
+  border-left : 1px solid #000000;
 	padding			: 0.3em; 
 	min-width		: 10px;
 }
 
 #bucketBox {
 	height			: 170px;
-	border-top		: 1px solid #000000;
 }
 
 #addressBucket {
+  border-left : 1px solid #63717B;
 	height			: 100px; 
 	min-width		: 10px;
+}
+
+#addressBucket > treerows {
+  border-left : 1px solid #000000;
 }
 
 #rightColumnButtonBox { // Column with "New", "Edit" and "Remove" buttons
@@ -347,3 +383,4 @@ box[orient="vertical"] > splitter {
 .middle-button-spring {  // Springs between To, CC, and BCC buttons
 	width			: 10px;
 }
+

@@ -44,6 +44,10 @@ mail-emailaddress {
 .header-part2           { background-color: #CCCCCC; border: none; }
 .header-part3           { background-color: #CCCCCC; border: none; }
 
+#msgHeaderView > toolbar > .toolbar-holder {
+  border: none;
+}
+
 .headerValueBox { width: 7.7em; text-align: right;}
 
 #addToAddressBookButton {

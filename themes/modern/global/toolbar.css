@@ -1,29 +1,99 @@
-/* this file is not used */
-
-toolbox
-  {
-    background-color      : #999999;
-  }
-  
+/**
+ * toolbar
+ **/ 
+ 
 toolbar
   {
-    background-color      : #CCCCCC;
-    border                : 1px outset #CCCCCC;
+    border-bottom         : 1px solid #000000;
+  	background-color	    : #5B7693;
+    // DON'T DELETE.  Removes disappearance of scrollbars in content pane when window is made smaller.
+    // Talk to evaughan@netscape.com for details.
+    min-width			        : 1px;      
   }
 
-toolbargrippy
+toolbar > .toolbar-holder 
   {
-    background-color      : #CCCCCC;
-    border                : 1px solid #CCCCCC;
+    border-left          : 1px solid #92ABC9;
+    border-top           : 1px solid #92ABC9;
   }
   
-toolbar[collapsed="true"] > toolbargrippy
-  {
-    width                 : 30px;
-  }
-  
-toolbarseparator 
+/**
+ * toolbargrippy 
+ **/
+ 
+toolbargrippy 
   { 
-    width                 : 2em;
+    -moz-binding         : url("chrome://global/skin/globalBindings.xml#toolbargrippy");
+    background-image     : url("chrome://global/skin/tb-grippy-bg.gif");
+    width                : 12px;
+    margin				       : 0px;
+  } 
+
+.toolbargrippy-top 
+  {
+    background-image     : url("chrome://global/skin/tb-grippy-top.gif");
+    height                : 3px;
   }
+
+.toolbargrippy-btm 
+  {
+    background-image     : url("chrome://global/skin/tb-grippy-btm.gif");
+    height                : 8px;
+  }
+  
+toolbargrippy:hover:active
+  {
+    background-image     : url("chrome://global/skin/tb-grippy-bg-active.gif");
+  }
+
+toolbargrippy:hover:active > .toolbargrippy-top
+  {
+  	background-image     : url("chrome://global/skin/tb-grippy-top-active.gif");
+  }
+
+toolbargrippy:hover:active > .toolbargrippy-btm
+  {
+  	background-image     : url("chrome://global/skin/tb-grippy-btm-active.gif");
+  }
+
+/**
+ * collapsed tray and grippies
+ **/
+  
+.collapsed-tray-holder
+  {
+    background-color    : #5B7693;
+    height              : 11px;
+  	border-bottom		    : 1px solid #000000;
+  }
+
+toolbargrippy[tbgrippy-collapsed="true"]
+  {
+    -moz-binding          : url("chrome://global/skin/globalBindings.xml#toolbargrippy-collapsed");
+    background-image      : none;
+    width                 : 200px;
+  }
+
+toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-left
+  {
+    background-image      : url("chrome://global/skin/tb-grippy-collapsed.gif");
+    width                 : 12px;
+  }
+
+toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-context
+  {
+  	background-color	    : #5B7693;
+    border                : 1px outset #5B7693;
+  }
+
+toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-left
+  {
+    background-image      : url("chrome://global/skin/tb-grippy-collapsed-active.gif");
+  }
+
+toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-context
+  {
+    border-style          :inset;
+  }
+
 

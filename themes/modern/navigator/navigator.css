@@ -179,16 +179,18 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 /*all the urlbar stuff*/
 
-#nav-bar > .toolbar-primary-image-left, #nav-bar > .toolbar-primary-image-middle, #nav-bar > .toolbar-primary-image-right
+#nav-bar > .toolbar-primary-image-left, 
+#nav-bar > .toolbar-primary-image-middle, 
+#nav-bar > .toolbar-primary-image-right
 {
 	max-height	: 43px;
 }
 
 #nav-bar-inner
   {
-  	-moz-binding		  : url("chrome://global/skin/globalBindings.xml#nav-bar-inner");
-	margin				  : 6px 0px 9px 6px;
-    min-width			  : 0px;
+    -moz-binding		  : url("chrome://global/skin/globalBindings.xml#nav-bar-inner");
+    margin				    : 6px 0px 9px 6px;
+    min-width			    : 0px;
   }
 
 .navbar-inner-groove-image-left                                                 
@@ -256,7 +258,10 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 	height                            : 18px;                               
   }
 
-
+#urlbar
+  {
+    -moz-binding		  : url(chrome://global/content/xulBindings.xml#textfield);
+  }
 
 #page-proxy-button 
   {
@@ -359,8 +364,38 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     -moz-user-focus       : ignore !important;
   }
 
-#PersonalToolbar
+/**********
+ * The grippy in the navigator primary-toolbar
+ ********/
+
+#navbar > .toolbar-primary-grippy
+  { 
+    background-image     : url("chrome://communicator/skin/pt-grippy-bg.gif");
+  } 
+
+#navbar > .toolbar-primary-grippy > .toolbargrippy-top
   {
-  	background-color	  : #394B6E;
-    border-bottom       : 1px solid #000000;
+    background-image     : url("chrome://communicator/skin/pt-grippy-top.gif");
+    height               : 5px;
+  }
+
+#navbar > .toolbar-primary-grippy > .toolbargrippy-btm
+  {
+    background-image     : url("chrome://communicator/skin/pt-grippy-btm.gif");
+    height               : 38px;
+  }
+  
+#navbar > .toolbar-primary-grippy:hover:active
+  {
+    background-image     : url("chrome://communicator/skin/pt-grippy-bg-active.gif");
+  }
+
+#navbar > .toolbar-primary-grippy:hover:active > .toolbargrippy-top
+  {
+  	background-image     : url("chrome://communicator/skin/pt-grippy-top-active.gif");
+  }
+
+#navbar > .toolbar-primary-grippy:hover:active > .toolbargrippy-btm
+  {
+  	background-image     : url("chrome://communicator/skin/pt-grippy-btm-active.gif");
   }

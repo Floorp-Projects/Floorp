@@ -24,6 +24,7 @@
 @import url(chrome://global/skin/formatting.css);
 @import url(chrome://global/skin/textfield.css);
 @import url(chrome://global/skin/tabcontrol.css);
+@import url(chrome://global/skin/toolbar.css);
 @import url(chrome://global/skin/colorpicker.css);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
@@ -38,7 +39,7 @@
  **/
   window 
     { 
-      background-color    : #FFFFFF;
+      background-color    : #B4C3D4;
       padding             : 0px;
       font-family         : Verdana, Geneva, Tahoma, Helvetica, Arial, sans-serif;
       color               : #000000;
@@ -51,7 +52,6 @@
   
   window.dialog 
     { 
-      background-color    : #B4C3D4;
       padding             : 7px 5px 5px 5px;
     }
 
@@ -114,7 +114,7 @@
  */
   #status-bar 
     {
-      border-top          : 1px solid #11151F;
+      border-top          : 1px solid #000000;
       background-color    : #6E89AB;
       -moz-user-focus     : ignore;
       overflow            : hidden;
