@@ -148,6 +148,9 @@ extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const char* aColorName, nscolor* aR
 #define DARK_GRAY  NS_RGB(128, 128, 128)
 #define WHITE      NS_RGB(255, 255, 255)
 #define BLACK      NS_RGB(0, 0, 0)
+
+#define MAX_BRIGHTNESS  254
+#define MAX_DARKNESS     0
  
 extern "C" NS_GFX_(void) NS_Get3DColors(nscolor aResult[2], nscolor aColor)
 {
@@ -196,6 +199,89 @@ extern "C" NS_GFX_(void) NS_Get3DColors(nscolor aResult[2], nscolor aColor)
     aResult[1] = (aColor == DARK_GRAY) ? BLACK : DARK_GRAY;
   }
 }
+
+extern "C" NS_GFX_(void) NS_GetSpecial3DColors(nscolor aResult[2],
+											   nscolor aBackgroundColor,
+											   nscolor aElementColor)
+{
+
+  PRUint8 f0, f1;
+  PRUint8 r, g, b;
+  
+  // This needs to be optimized.
+  // Calculating brightness again and again is 
+  // a waste of time!!!. Just calculate it only once.
+  // .....somehow!!!
+  
+  PRUint8 rb = NS_GET_R(aElementColor);
+  PRUint8 gb = NS_GET_G(aElementColor);
+  PRUint8 bb = NS_GET_B(aElementColor);
+
+  PRUint8 red = NS_GET_R(aBackgroundColor);
+  PRUint8 green = NS_GET_G(aBackgroundColor);
+  PRUint8 blue = NS_GET_B(aBackgroundColor);
+  
+  PRUint8 elementBrightness = NS_GetBrightness(rb,gb,bb);
+  PRUint8 backgroundBrightness = NS_GetBrightness(red, green, blue);
+
+
+  if (backgroundBrightness < COLOR_DARK_THRESHOLD) {
+    f0 = COLOR_DARK_BS_FACTOR;
+    f1 = COLOR_DARK_TS_FACTOR;
+	if(elementBrightness == MAX_DARKNESS)
+	{
+       rb = NS_GET_R(DARK_GRAY);
+       gb = NS_GET_G(DARK_GRAY);
+       bb = NS_GET_B(DARK_GRAY);
+	}
+  }else if (backgroundBrightness > COLOR_LIGHT_THRESHOLD) {
+    f0 = COLOR_LITE_BS_FACTOR;
+    f1 = COLOR_LITE_TS_FACTOR;
+	if(elementBrightness == MAX_BRIGHTNESS)
+	{
+       rb = NS_GET_R(LIGHT_GRAY);
+       gb = NS_GET_G(LIGHT_GRAY);
+       bb = NS_GET_B(LIGHT_GRAY);
+	}
+  }else {
+    f0 = COLOR_DARK_BS_FACTOR +
+      (backgroundBrightness *
+       (COLOR_LITE_BS_FACTOR - COLOR_DARK_BS_FACTOR) / MAX_COLOR);
+    f1 = COLOR_DARK_TS_FACTOR +
+      (backgroundBrightness *
+       (COLOR_LITE_TS_FACTOR - COLOR_DARK_TS_FACTOR) / MAX_COLOR);
+  }
+  
+  
+  r = rb - (f0 * rb / 100);
+  g = gb - (f0 * gb / 100);
+  b = bb - (f0 * bb / 100);
+  aResult[0] = NS_RGB(r, g, b);
+
+  r = rb + (f1 * (MAX_COLOR - rb) / 100);
+  if (r > 255) r = 255;
+  g = gb + (f1 * (MAX_COLOR - gb) / 100);
+  if (g > 255) g = 255;
+  b = bb + (f1 * (MAX_COLOR - bb) / 100);
+  if (b > 255) b = 255;
+  aResult[1] = NS_RGB(r, g, b);
+ 
+}
+
+extern "C" NS_GFX_(int) NS_GetBrightness(PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
+{
+
+  PRUint8 intensity = (aRed + aGreen + aBlue) / 3;
+
+  PRUint8 luminosity =
+    ((RED_LUMINOSITY * aRed) / 100) +
+    ((GREEN_LUMINOSITY * aGreen) / 100) +
+    ((BLUE_LUMINOSITY * aBlue) / 100);
+ 
+  return ((intensity * INTENSITY_FACTOR) +
+          (luminosity * LUMINOSITY_FACTOR)) / 100;
+}
+
 
 extern "C" NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor)
 {
