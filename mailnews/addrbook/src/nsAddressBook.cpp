@@ -201,16 +201,16 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook(nsIAbDirectoryProperties *aPropertie
 }
 
 NS_IMETHODIMP nsAddressBook::DeleteAddressBooks
-(nsIRDFCompositeDataSource* db, nsISupportsArray *parentDir, nsISupportsArray *aResourceArray)
+(nsIRDFDataSource* aDS, nsISupportsArray *aParentDir, nsISupportsArray *aResourceArray)
 {
-  NS_ENSURE_ARG_POINTER(db);
-  NS_ENSURE_ARG_POINTER(parentDir);
+  NS_ENSURE_ARG_POINTER(aDS);
+  NS_ENSURE_ARG_POINTER(aParentDir);
   NS_ENSURE_ARG_POINTER(aResourceArray);
-
-    return DoCommand(db, NC_RDF_DELETE, parentDir, aResourceArray);
+  
+  return DoCommand(aDS, NC_RDF_DELETE, aParentDir, aResourceArray);
 }
 
-nsresult nsAddressBook::DoCommand(nsIRDFCompositeDataSource* db,
+nsresult nsAddressBook::DoCommand(nsIRDFDataSource* db,
                                   const char *command,
                                   nsISupportsArray *srcArray,
                                   nsISupportsArray *argumentArray)

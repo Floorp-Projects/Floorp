@@ -353,6 +353,14 @@ NS_IMETHODIMP nsAbBSDirectory::DeleteDirectory(nsIAbDirectory *directory)
 	if (!directory)
 		return NS_ERROR_NULL_POINTER;
 
+	// if addressbook is not launched yet mSevers will not be initialized
+	// calling GetChidNodes will initialize mServers
+	if (!mInitialized) {
+		nsCOMPtr<nsIEnumerator> subDirectories;
+		rv = GetChildNodes(getter_AddRefs(subDirectories));
+		NS_ENSURE_SUCCESS(rv, rv);
+	}
+
 	DIR_Server *server = nsnull;
 	nsVoidKey key((void *)directory);
 	server = (DIR_Server* )mServers.Get (&key);
