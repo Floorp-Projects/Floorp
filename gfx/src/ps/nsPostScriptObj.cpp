@@ -539,10 +539,8 @@ FILE *f;
 	            PAGE_TO_POINT_I(mPrintContext->prSetup->width-mPrintContext->prSetup->right),
 	            PAGE_TO_POINT_I(mPrintContext->prSetup->height-(mPrintContext->prSetup->bottom + mPrintContext->prSetup->top)));
 
-  nsXPIDLCString useragent;
-  useragent.Assign("unknown"); /* Fallback */
-  gPrefs->CopyCharPref("general.useragent.misc", getter_Copies(useragent));
-  fprintf(f, "%%%%Creator: Mozilla PostScript module (%s/%lu)\n", useragent.get(), (unsigned long)NS_BUILD_ID);
+  fprintf(f, "%%%%Creator: Mozilla PostScript module (%s/%lu)\n",
+             "rv:" MOZILLA_VERSION, (unsigned long)NS_BUILD_ID);
   fprintf(f, "%%%%DocumentData: Clean8Bit\n");
   fprintf(f, "%%%%DocumentPaperSizes: %s\n", mPrintSetup->paper_size->name);
   fprintf(f, "%%%%Orientation: %s\n",

@@ -206,6 +206,8 @@ nsHttpHandler::Init()
         PrefsChanged(prefBranch, nsnull);
     }
 
+    mMisc = NS_LITERAL_CSTRING("rv:" MOZILLA_VERSION);
+
 #if DEBUG
     // dump user agent prefs
     LOG(("> app-name = %s\n", mAppName.get()));
@@ -751,12 +753,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         mUserAgentIsDirty = PR_TRUE;
     }
 
-    // Gather misc value.
-    if (PREF_CHANGED(UA_PREF("misc"))) {
-        prefs->GetCharPref(UA_PREF("misc"), getter_Copies(mMisc));
-        mUserAgentIsDirty = PR_TRUE;
-    }
-
     // Get Security level supported
     if (PREF_CHANGED(UA_PREF("security"))) {
         prefs->GetCharPref(UA_PREF("security"), getter_Copies(mSecurity));
@@ -961,11 +957,11 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("default-socket-type"))) {
-        nsXPIDLCString val;
+        nsXPIDLCString sval;
         rv = prefs->GetCharPref(HTTP_PREF("default-socket-type"),
-                                getter_Copies(val));
+                                getter_Copies(sval));
         if (NS_SUCCEEDED(rv)) {
-            if (val.IsEmpty())
+            if (sval.IsEmpty())
                 mDefaultSocketType.Adopt(0);
             else {
                 // verify that this socket type is actually valid
@@ -973,10 +969,10 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                         do_GetService(kSocketProviderServiceCID, &rv));
                 if (NS_SUCCEEDED(rv)) {
                     nsCOMPtr<nsISocketProvider> sp;
-                    rv = sps->GetSocketProvider(val, getter_AddRefs(sp));
+                    rv = sps->GetSocketProvider(sval, getter_AddRefs(sp));
                     if (NS_SUCCEEDED(rv)) {
                         // OK, this looks like a valid socket provider.
-                        mDefaultSocketType.Assign(val);
+                        mDefaultSocketType.Assign(sval);
                     }
                 }
             }

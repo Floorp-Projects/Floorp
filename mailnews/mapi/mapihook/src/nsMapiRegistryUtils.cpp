@@ -53,9 +53,6 @@
 #include "nsIPref.h"
 
 #define EXE_EXTENSION ".exe" 
-#define USERAGENT_VERSION_PREF "general.useragent.misc"
-#define USERAGENT_VERSION_NS_PREF "general.useragent.vendorSub"
-#define USERAGENT_PREF_PREFIX "rv:"
 #define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
 #define MOZ_CLIENT_MAIL_KEY "Software\\Clients\\Mail"
 
@@ -112,29 +109,6 @@ const PRUnichar * nsMapiRegistryUtils::vendorName()
     if (m_vendor.IsEmpty())
         getVarValue(NS_LITERAL_STRING("vendorShortName").get(), m_vendor);
     return m_vendor.get();
-}
-
-const PRUnichar * nsMapiRegistryUtils::versionNo()
-{
-    if (!m_versionNo.IsEmpty())
-        return m_versionNo.get() ;
-
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (prefs) {
-        nsXPIDLCString versionStr ;
-        nsresult rv = prefs->GetCharPref(USERAGENT_VERSION_NS_PREF, getter_Copies(versionStr));
-        if (NS_SUCCEEDED(rv) && versionStr)
-            m_versionNo.AssignWithConversion (versionStr.get()) ;
-        else {
-            rv = prefs->GetCharPref(USERAGENT_VERSION_PREF, getter_Copies(versionStr));
-            if (NS_SUCCEEDED(rv) && versionStr)  {
-                m_versionNo.AssignWithConversion (versionStr.get()) ;
-                m_versionNo.StripChars (USERAGENT_PREF_PREFIX) ;
-            }
-        }
-    }
-
-    return m_versionNo.get() ;
 }
 
 
