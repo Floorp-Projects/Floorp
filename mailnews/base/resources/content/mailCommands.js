@@ -365,11 +365,6 @@ function DownloadSelectedMessages(compositeDataSource, messages, markFlagged)
     dump("fix DownloadSelectedMessages()\n");
 }
 
-function MarkThreadAsRead(message)
-{
-  gDBView.doCommand(nsMsgViewCommandType.markThreadRead);
-}
-
 function ViewPageSource(messages)
 {
 	var url;

@@ -47,7 +47,6 @@ var FolderPaneController =
 
 	isCommandEnabled: function(command)
 	{
-        //		dump("FolderPaneController.IsCommandEnabled(" + command + ")\n");
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -281,7 +280,8 @@ var DefaultController =
     var enabled = new Object();
     enabled.value = false;
     var checkStatus = new Object();
-//    dump('entering is command enabled for: ' + command + '\n');
+    
+    // note, all commands that get fired on a single key need to check MailAreaHasFocus() as well
     switch ( command )
     {
       case "cmd_delete":
@@ -338,11 +338,13 @@ var DefaultController =
         return false;
       case "cmd_printSetup":
         return true;
-      case "cmd_markThreadAsRead":
       case "cmd_markAsFlagged":
       case "button_file":
       case "cmd_file":
-        return ( GetNumSelectedMessages() > 0 );
+        return (GetNumSelectedMessages() > 0 );
+      case "button_mark":
+      case "cmd_markAsRead":
+      case "cmd_markThreadAsRead":
       case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
@@ -358,15 +360,9 @@ var DefaultController =
       case "cmd_nextUnreadThread":
       case "cmd_previousMsg":
       case "cmd_previousUnreadMsg":
-        return MailAreaHasFocus() && IsViewNavigationItemEnabled();
-      case "button_mark":
-      case "cmd_markAsRead":
-        if(!MailAreaHasFocus())
-          return false;
-        else
-          return(GetNumSelectedMessages() > 0);
+        return (MailAreaHasFocus() && IsViewNavigationItemEnabled());
       case "cmd_markAllRead":
-        return(MailAreaHasFocus() && IsFolderSelected());
+        return (MailAreaHasFocus() && IsFolderSelected());
       case "cmd_find":
       case "cmd_findAgain":
         return IsMessageDisplayedInMessagePane();
@@ -431,7 +427,7 @@ var DefaultController =
     // if the user invoked a key short cut then it is possible that we got here for a command which is
     // really disabled. kick out if the command should be disabled.
     if (!this.isCommandEnabled(command)) return;
-
+   
 		switch ( command )
 		{
 			case "cmd_close":
@@ -652,12 +648,15 @@ function MailAreaHasFocus()
 	//in these controls. This is a bug that should be fixed and when it is we can get rid of
 	//this.
 	var focusedElement = top.document.commandDispatcher.focusedElement;
-	if(focusedElement)
+	if (focusedElement)
 	{
 		var name = focusedElement.localName.toLowerCase();
 		return ((name != "input") && (name != "textarea"));
 	}
-	return true;
+  // if there is no focusedElement,
+  // then a mail area can't be focused
+  // see bug #128101
+	return false;
 }
 
 function GetNumSelectedMessages()
@@ -684,7 +683,7 @@ function FocusRingUpdate_Mail()
   var currentFocusedElement = WhichPaneHasFocus();
   if (!currentFocusedElement)
     return;
-  
+      
 	if (currentFocusedElement != gLastFocusedElement) {
     currentFocusedElement.setAttribute("focusring", "true");
     
@@ -697,45 +696,6 @@ function FocusRingUpdate_Mail()
     UpdateMailToolbar("focus");
   }
 }
-
-function MessagePaneHasFocus()
-{
-  // message pane has focus if the iframe has focus OR if the message pane box
-  // has focus....
-  // first, check to see if the message pane box has focus...if it does, return true
-  var messagePane = GetMessagePane();
-  if (WhichPaneHasFocus() == messagePane)
-    return true;
-
-  // second, check to see if the iframe has focus...if it does, return true....
-
-  // check to see if the iframe has focus...
-	var focusedWindow = top.document.commandDispatcher.focusedWindow;
-	var messagePaneWindow = top.frames['messagepane'];
-	
-	if ( focusedWindow && messagePaneWindow && (focusedWindow != top) )
-	{        
-		var hasFocus = IsSubWindowOf(focusedWindow, messagePaneWindow);
-		return hasFocus;
-	}
-	
-	return false;
-}
-
-function IsSubWindowOf(search, wind)
-{
-	//dump("IsSubWindowOf(" + search + ", " + wind + ", " + found + ")\n");
-	if (search == wind)
-		return true;
-	
-	for ( index = 0; index < wind.frames.length; index++ )
-	{
-		if ( IsSubWindowOf(search, wind.frames[index]) )
-			return true;
-	}
-	return false;
-}
-
 
 function WhichPaneHasFocus()
 {
@@ -754,7 +714,7 @@ function WhichPaneHasFocus()
         currentNode === folderOutliner ||
         currentNode === messagePane)
       return currentNode;
-					
+    			
 		currentNode = currentNode.parentNode;
   }
 	
@@ -763,8 +723,6 @@ function WhichPaneHasFocus()
 
 function SetupCommandUpdateHandlers()
 {
-	//dump("SetupCommandUpdateHandlers\n");
-
 	var widget;
 	
 	// folder pane

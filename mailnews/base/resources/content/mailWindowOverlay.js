@@ -1007,10 +1007,7 @@ function MsgDownloadSelected()
 
 function MsgMarkThreadAsRead()
 {
-    var uri = GetFirstSelectedMessage();
-    if (uri) {
-        MarkThreadAsRead(uri);
-    }
+  gDBView.doCommand(nsMsgViewCommandType.markThreadRead);
 }
 
 function MsgViewPageSource()
