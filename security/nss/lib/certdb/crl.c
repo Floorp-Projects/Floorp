@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.22 2002/09/10 04:49:09 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.23 2002/09/11 00:28:22 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -1520,12 +1520,14 @@ SECStatus DPCache_Initialize(CRLDPCache* cache, CERTCertificate* issuer,
 }
 
 SECStatus IssuerCache_Create(CRLIssuerCache** returned,
-                             CERTCertificate* issuer, SECItem* dp)
+                             CERTCertificate* issuer,
+                             SECItem* subject, SECItem* dp)
 {
     SECStatus rv = SECSuccess;
     CRLIssuerCache* cache = NULL;
     PORT_Assert(returned);
-    if (!returned)
+    PORT_Assert(subject);
+    if (!returned || !subject)
     {
         return SECFailure;
     }
@@ -1536,6 +1538,7 @@ SECStatus IssuerCache_Create(CRLIssuerCache** returned,
     }
     memset(cache, 0, sizeof(CRLIssuerCache));
     cache->refcount = 0;
+    cache->subject = SECITEM_DupItem(subject);
 #if 0
     /* XCRL */
     cache->lock = NSSRWLock_New(NSS_RWLOCK_RANK_NONE, NULL);
@@ -1584,15 +1587,14 @@ SECStatus IssuerCache_AddDP(CRLIssuerCache* cache, CERTCertificate* issuer,
     return rv;
 }
 
-SECStatus CRLCache_AddIssuer(SECItem* issuerDER, CRLIssuerCache* issuer)
+SECStatus CRLCache_AddIssuer(CRLIssuerCache* issuer)
 {    
-    PORT_Assert(issuerDER);
     PORT_Assert(issuer);
     PORT_Assert(crlcache.issuers);
-    if (!issuerDER || !issuer || !crlcache.issuers) {
+    if (!issuer || !crlcache.issuers) {
         return SECFailure;
     }
-    if (NULL == PL_HashTableAdd(crlcache.issuers, (void*) issuerDER,
+    if (NULL == PL_HashTableAdd(crlcache.issuers, (void*) issuer->subject,
                                 (void*) issuer)) {
         return SECFailure;
     }
@@ -1697,7 +1699,7 @@ SECStatus AcquireDPCache(CERTCertificate* issuer, SECItem* subject, SECItem* dp,
            too. But the code would have to check if it already exists when
            adding to the hash table */
         
-        rv = IssuerCache_Create(&issuercache, issuer, dp);
+        rv = IssuerCache_Create(&issuercache, issuer, subject, dp);
         if (SECSuccess == rv && !issuercache) {
             PORT_Assert(issuercache);
             rv = SECFailure;
@@ -1721,7 +1723,7 @@ SECStatus AcquireDPCache(CERTCertificate* issuer, SECItem* subject, SECItem* dp,
         
         if (SECSuccess == rv) {
             /* now add the new issuer cache to the global hash table of issuers */
-            rv = CRLCache_AddIssuer(subject, issuercache);
+            rv = CRLCache_AddIssuer(issuercache);
             if (SECSuccess != rv) {
                 /* failure */
                 rv = SECFailure;

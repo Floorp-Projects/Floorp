@@ -33,7 +33,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.4 2002/09/10 04:49:09 jpierre%netscape.com Exp $
+ * $Id: certi.h,v 1.5 2002/09/11 00:28:22 jpierre%netscape.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -155,7 +155,8 @@ struct CRLDPCacheStr {
 
 struct CRLIssuerCacheStr {
     PRUint32 refcount;
-    CRLDPCache dp;
+    SECItem* subject;           /* DER of issuer subject */
+    CRLDPCache dp;              /* DER of distribution point */
     CRLDPCache* dpp;
 #if 0
     /* XCRL for future use.
