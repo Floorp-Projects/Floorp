@@ -47,10 +47,14 @@
 #include "nsIStyleSet.h"
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMHTMLElement.h"
+#include "nsIDOMHTMLBodyElement.h"
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
 
+static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
+static NS_DEFINE_IID(kIBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 static NS_DEFINE_IID(kITableRowGroupFrameIID, NS_ITABLEROWGROUPFRAME_IID);
 
 static const PRInt32 kColumnWidthIncrement=100;
@@ -3651,39 +3655,89 @@ void nsTableFrame::SetTableWidth(nsIPresContext& aPresContext)
   SetRect(tableSize);
 }
 
-/* get the height of this table's container.  ignore all containers who have unconstrained height.
- * take into account the possibility that this table is nested.
- * if nested within an auto-height table, this method returns 0.
- * this method may also return NS_UNCONSTRAINEDSIZE, meaning no container provided any height constraint
+// XXX percentage based margin/border/padding
+nscoord GetVerticalMarginBorderPadding(nsIFrame* aFrame, const nsIID& aIID)
+{
+  nscoord result = 0;
+  if (!aFrame) {
+    return result;
+  }
+  nsCOMPtr<nsIContent> iContent;
+  nsresult rv = aFrame->GetContent(getter_AddRefs(iContent));
+  if (NS_SUCCEEDED(rv)) {
+    nsIHTMLContent* htmlContent = nsnull;
+    rv = iContent->QueryInterface(aIID, (void **)&htmlContent);  
+    if (htmlContent && NS_SUCCEEDED(rv)) { 
+      nsIStyleContext* styleContext;
+      aFrame->GetStyleContext(&styleContext);
+      const nsStyleSpacing* spacing =
+        (const nsStyleSpacing*)styleContext->GetStyleData(eStyleStruct_Spacing);
+	    nsMargin margin(0,0,0,0);
+      if (spacing->GetMargin(margin)) {
+        result += margin.top + margin.bottom;
+      }
+      if (spacing->GetBorderPadding(margin)) {
+        result += margin.top + margin.bottom;
+      }
+      NS_RELEASE(htmlContent);
+    }
+  }
+  return result;
+}
+
+/* Get the height of the nearest ancestor of this table which has a height other than
+ * auto, except when there is an ancestor which is a table and that table does not have
+ * a coord height. It can be the case that the nearest such ancestor is a scroll frame
+ * or viewport frame; this provides backwards compatibility with Nav4.X and IE.
  */
 nscoord nsTableFrame::GetEffectiveContainerHeight(const nsHTMLReflowState& aReflowState)
 {
-  nscoord result=-1;
+  nsIFrame* lastArea  = nsnull;
+  nsIFrame* lastBlock = nsnull;
+  nsIAtom*  frameType = nsnull;
+  nscoord result = -1;
   const nsHTMLReflowState* rs = &aReflowState;
-  while (nsnull!=rs)
-  {
-    const nsStyleDisplay *display;
+
+  while (rs) {
+    const nsStyleDisplay* display;
     rs->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-    if (NS_STYLE_DISPLAY_TABLE==display->mDisplay)
-    {
-      const nsStylePosition *position;
+    if (NS_STYLE_DISPLAY_TABLE == display->mDisplay) {
+      const nsStylePosition* position;
       rs->frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)position);
       nsStyleUnit unit = position->mHeight.GetUnit();
-      if (eStyleUnit_Null==unit || eStyleUnit_Auto==unit)
-      {
+      if ((eStyleUnit_Null == unit) || (eStyleUnit_Auto == unit)) {
         result = 0;
         break;
       }
     }
-    if (NS_AUTOHEIGHT != rs->mComputedHeight)
-    {
+    if (NS_AUTOHEIGHT != rs->mComputedHeight) {
       result = rs->mComputedHeight;
+      // if we get to the scroll frame or viewport frame, then subtract out 
+      // margin/border/padding for the HTML and BODY elements
+      rs->frame->GetFrameType(&frameType);
+      if ((nsLayoutAtoms::viewportFrame == frameType) || 
+          (nsLayoutAtoms::scrollFrame   == frameType)) {
+        result -= GetVerticalMarginBorderPadding(lastArea,  kIHTMLElementIID); 
+        result -= GetVerticalMarginBorderPadding(lastBlock, kIBodyElementIID);
+      }
+      NS_IF_RELEASE(frameType);
       break;
     }
+    // keep track of the area and block frame on the way up because they could
+    // be the HTML and BODY elements
+    rs->frame->GetFrameType(&frameType);
+    if (nsLayoutAtoms::areaFrame == frameType) {
+      lastArea = rs->frame;
+    } 
+    else if (nsLayoutAtoms::blockFrame == frameType) {
+      lastBlock = rs->frame;
+    }
+    NS_IF_RELEASE(frameType);
+    
     // XXX: evil cast!
     rs = (nsHTMLReflowState *)(rs->parentReflowState);
   }
-  NS_ASSERTION(-1!=result, "bad state:  no constrained height in reflow chain");
+  NS_ASSERTION(-1 != result, "bad state:  no constrained height in reflow chain");
   return result;
 }
 
