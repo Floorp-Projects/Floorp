@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; c-basic-offset: 4; -*-
+/* -*- Mode: Java; tab-width: 2; c-basic-offset: 2; -*-
  * 
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -92,7 +92,7 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
     }
   }
   else {
-    var fields = doc.getElementsByTagName("FORM")[0].elements;   
+    var fields = doc.controls;
     var data = [];
     for( var i = 0; i < fields.length; i++ ) 
     { 
