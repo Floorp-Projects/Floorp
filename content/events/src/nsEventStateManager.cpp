@@ -1217,7 +1217,7 @@ nsEventStateManager::FireContextClick()
             allowedToDispatch = PR_FALSE;
         }
       }
-      else if (lastContent->IsContentOfType(eHTML)) {
+      else if (lastContent->IsContentOfType(nsIContent::eHTML)) {
         nsCOMPtr<nsIFormControl> formCtrl(do_QueryInterface(lastContent));
 
         if (formCtrl) {
