@@ -98,7 +98,6 @@ pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
 
 pref("browser.chrome.toolbar_tips",         true);
-pref("browser.chrome.toolbar_style",        2);
 
 pref("browser.turbo.enabled", false);
 
@@ -455,10 +454,6 @@ pref("intl.charsetmenu.browser.more2",      "chrome://navigator/locale/navigator
 pref("intl.charsetmenu.browser.more3",      "chrome://navigator/locale/navigator.properties");
 pref("intl.charsetmenu.browser.more4",      "chrome://navigator/locale/navigator.properties");
 pref("intl.charsetmenu.browser.more5",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.mailedit",           "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.cache",      "");
-pref("intl.charsetmenu.mailview.cache",     "");
-pref("intl.charsetmenu.composer.cache",     "");
 pref("intl.charsetmenu.browser.cache.size", 5);
 pref("intl.charset.detector",               "chrome://navigator/locale/navigator.properties");
 pref("intl.charset.default",                "chrome://navigator-platform/locale/navigator.properties");
@@ -471,10 +466,6 @@ pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
 pref("font.language.group",                 "chrome://navigator/locale/navigator.properties");
 
 // -- folders (Mac: these are binary aliases.)
-pref("mail.signature_file",             "");
-pref("mail.directory",                  "");
-
-pref("news.directory",                  "");
 pref("security.directory",              "");
 
 pref("spellchecker.dictionary", "");
@@ -528,11 +519,6 @@ pref("profile.seconds_until_defunct", -1);
 
 // Customizable toolbar stuff
 pref("custtoolbar.personal_toolbar_folder", "");
-
-pref("sidebar.customize.all_panels.url", "http://sidebar-rdf.netscape.com/%LOCALE%/sidebar-rdf/%SIDEBAR_VERSION%/all-panels.rdf");
-pref("sidebar.customize.directory.url", "http://dmoz.org/Netscape/Sidebar/");
-pref("sidebar.customize.more_panels.url", "http://dmoz.org/Netscape/Sidebar/");
-pref("sidebar.num_tabs_in_view", 8);
 
 pref("prefs.converted-to-utf8",false);
 // --------------------------------------------------
@@ -619,10 +605,6 @@ pref("browser.downloadmanager.behavior", 0);
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);
 pref("plugin.expose_full_path", false); // if true navigator.plugins reveals full path
-
-// See bug 136985.  Gives embedders a pref to hook into to show
-// a popup blocker if they choose.
-pref("browser.popups.showPopupBlocker", true);
 
 // Help Windows NT, 2000, and XP dialup a RAS connection
 // when a network address is unreachable.
