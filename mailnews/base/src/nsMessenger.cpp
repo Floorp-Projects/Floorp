@@ -2175,7 +2175,7 @@ nsMessenger::SetLastSaveDirectory(nsILocalFile *aLocalFile)
 static char * GetAttachmentPartId(const char * aAttachmentUrl)
 {
   static const char partIdPrefix[] = "part=";
-  char * partId = strstr(aAttachmentUrl, partIdPrefix);
+  char * partId = PL_strstr(aAttachmentUrl, partIdPrefix);
   return partId ? (partId + sizeof(partIdPrefix) - 1) : nsnull;
 }
 
