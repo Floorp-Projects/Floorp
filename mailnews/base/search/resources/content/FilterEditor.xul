@@ -46,9 +46,9 @@ Rights Reserved.
       <text value="&conditions.label;"/>
     </title>
     <text value="&conditionDesc.label;"/>
-    <radiogroup id="matchGroup" oncommand="booleanChanged(event);">
-      <radio group="matchGroup" data="true" value="&matchAll.label;"/>
-      <radio group="matchGroup" data="false" value="&matchAny.label;"/>
+    <radiogroup id="booleanAndGroup" oncommand="booleanChanged(event);">
+      <radio group="booleanAndGroup" data="and" value="&matchAll.label;"/>
+      <radio group="booleanAndGroup" data="or" value="&matchAny.label;"/>
     </radiogroup>
 
     <spring class="spacer"/>

@@ -83,6 +83,17 @@ function setSearchScope(scope) {
 }
 
 function booleanChanged(event) {
+    // when boolean changes, we have to update all the attributes on the
+    // filter terms
+
+    var newBoolValue =
+        (event.target.getAttribute("data") == "and") ? true : false;
+    searchTermElements = gSearchTermContainer.childNodes;
+    if (!searchTermElements) return;
+    for (var i=0; i<searchTermElements.length; i++) {
+        var searchTerm = searchTermElements[i];
+        searchTerm.booleanAnd = newBoolValue;
+    }
     dump("Boolean is now " + event.target.data + "\n");
 }
 
@@ -128,6 +139,24 @@ function initializeSearchWidgets() {
     gSearchTermContainer = document.getElementById("searchterms");
 }
 
+function initializeBooleanWidgets() {
+    gSearchBooleanRadiogroup = document.getElementById("booleanAndGroup");
+
+    var booleanAnd = true;
+    // get the boolean value from the first term
+    var firstTerm = gSearchTermContainer.firstChild;
+    if (firstTerm)
+        booleanAnd = firstTerm.booleanAnd;
+
+    // target radio items have data="and" or data="or"
+    targetValue = "or";
+    if (booleanAnd) targetValue = "and";
+    
+    targetElement = gSearchBooleanRadiogroup.getElementsByAttribute("data", targetValue)[0];
+    
+    gSearchBooleanRadiogroup.selectedItem = targetElement;
+}
+
 // move to overlay
 function initializeSearchRows(scope, searchTerms)
 {
@@ -137,6 +166,7 @@ function initializeSearchRows(scope, searchTerms)
         var searchTerm = searchTerms.QueryElementAt(i, nsIMsgSearchTerm);
         createSearchRow(i, scope, searchTerm);
     }
+    initializeBooleanWidgets();
 }
 
 // move to overlay
@@ -190,6 +220,8 @@ function createSearchRow(index, scope, searchTerm)
     searchTermElement.searchScope = scope;
     if (searchTerm)
         searchTermElement.searchTerm = searchTerm;
+    else
+        searchTermElement.booleanAnd = getBooleanAnd();
 
 }
 
@@ -246,6 +278,18 @@ function removeSearchRow(index)
     
     treeItemRow.parentNode.removeChild(treeItemRow);
     searchTermElement.parentNode.removeChild(searchTermElement);
+}
+
+function getBooleanAnd()
+{
+    var booleanAndElement = document.getElementById("booleanAndGroup");
+    if (!booleanAndElement) return;
+
+    if (booleanAndElement.selectedItem)
+        return (booleanAndElement.selectedItem.getAttribute("data") == "and") ? true : false;
+
+    // default to false
+    return false;
 }
 
 function saveFilter() {
