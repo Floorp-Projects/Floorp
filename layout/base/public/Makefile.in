@@ -49,7 +49,6 @@ nsILayoutDebugger.h \
 nsINameSpace.h \
 nsINameSpaceManager.h \
 nsIFrameUtil.h \
-nsISelectionControler.h \
 nsIPageSequenceFrame.h \
 nsIPresContext.h \
 nsIPresShell.h \
@@ -82,6 +81,7 @@ $(NULL)
 
 XPIDLSRCS	= \
 		nsIChromeEventHandler.idl			\
+		nsISelectionController.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
