@@ -566,3 +566,4 @@ function TrimString(string)
   if (!string) return "";
   return string.replace(/(^\s+)|(\s+$)/g, '')
 }
+
