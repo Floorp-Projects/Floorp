@@ -106,6 +106,8 @@ public:
 	/* unsigned long GetImportProgress (); */
 	NS_IMETHOD GetImportProgress(PRUint32 *_retval);
 	
+    NS_IMETHOD TranslateFolderName(const nsAString & aFolderName, nsAString & _retval);
+
 public:
 	static void	ReportSuccess( nsString& name, PRInt32 count, nsString *pStream);
 	static void ReportError( PRInt32 errorNum, nsString& name, nsString *pStream);
@@ -517,6 +519,11 @@ NS_IMETHODIMP ImportOutlookMailImpl::GetImportProgress( PRUint32 *pDoneSoFar)
 	return( NS_OK);
 }
 
+NS_IMETHODIMP ImportOutlookMailImpl::TranslateFolderName(const nsAString & aFolderName, nsAString & _retval)
+{
+  _retval = aFolderName; 
+  return NS_OK;
+}
 
 
 nsresult ImportOutlookAddressImpl::Create(nsIImportAddressBooks** aImport)
@@ -676,4 +683,3 @@ void ImportOutlookAddressImpl::ReportSuccess( nsString& name, nsString *pStream)
 	ImportOutlookMailImpl::AddLinebreak( pStream);
 	NS_IF_RELEASE( pBundle);
 }
-

@@ -147,6 +147,7 @@ private:
 	PRUint32			m_totalSize;
 	PRBool				m_doImport;
 	ImportThreadData *	m_pThreadData;
+    PRBool        m_performingMigration;
 };
 
 class ImportThreadData {
@@ -164,6 +165,7 @@ public:
 	nsISupportsString *	successLog;
 	nsISupportsString *	errorLog;
 	PRUint32				currentMailbox;
+    PRBool          performingMigration;
 
 	ImportThreadData();
 	~ImportThreadData();
@@ -207,6 +209,7 @@ nsImportGenericMail::nsImportGenericMail()
 	m_pDestFolder = nsnull;
 	m_deleteDestFolder = PR_FALSE;
 	m_createdFolder = PR_FALSE;
+    m_performingMigration = PR_FALSE;
 
   // Init logging module.
   if (!IMPORTLOGMODULE)
@@ -265,6 +268,13 @@ NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_re
 			GetDefaultDestination();
 		*_retval = m_pDestFolder;
 		NS_IF_ADDREF( m_pDestFolder);
+	}
+	
+	if (!nsCRT::strcasecmp( dataId, "migration")) {
+        nsCOMPtr<nsISupportsPRBool> migrationString = do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        migrationString->SetData(m_performingMigration);
+        NS_IF_ADDREF( *_retval = migrationString);
 	}
 	
 	if (!nsCRT::strcasecmp( dataId, "currentMailbox")) {
@@ -327,6 +337,14 @@ NS_IMETHODIMP nsImportGenericMail::SetData( const char *dataId, nsISupports *ite
 		if (item) {
 			item->QueryInterface( NS_GET_IID(nsISupportsString), getter_AddRefs(nameString));
 			rv = nameString->GetData(m_pName);
+		}
+	}
+
+  if (!nsCRT::strcasecmp( dataId, "migration")) {
+		nsCOMPtr<nsISupportsPRBool> migrationString;
+		if (item) {
+			item->QueryInterface( NS_GET_IID(nsISupportsPRBool), getter_AddRefs(migrationString));
+			rv = migrationString->GetData(&m_performingMigration);
 		}
 	}
 
@@ -531,6 +549,7 @@ NS_IMETHODIMP nsImportGenericMail::BeginImport(nsISupportsString *successLog, ns
 	
 	m_pThreadData->ownsDestRoot = m_deleteDestFolder;
 	m_pThreadData->destRoot = m_pDestFolder;
+    m_pThreadData->performingMigration = m_performingMigration;
 	NS_IF_ADDREF( m_pDestFolder);
 
 
@@ -844,9 +863,18 @@ ImportMailThread( void *stuff)
 			else
 				lastName.AssignLiteral("Unknown!");
 				
+            // translate the folder name if we are doing migration
+            if (pData->performingMigration)
+                pData->mailImport->TranslateFolderName(lastName, lastName); 
+				
 			exists = PR_FALSE;
 			rv = curProxy->ContainsChildNamed( lastName.get(), &exists);
-			if (exists) {
+      
+            // If we are performing profile migration (as opposed to importing) then we are starting
+            // with empty local folders. In that case, always choose to over-write the existing local folder
+            // with this name. Don't create a unique subfolder name. Otherwise you end up with "Inbox, Inbox0" 
+            // or "Unsent Folders, UnsentFolders0"
+            if (exists && !pData->performingMigration) {
 				nsXPIDLString subName;
 				curProxy->GenerateUniqueSubfolderName( lastName.get(), nsnull, getter_Copies(subName));
 				if (!subName.IsEmpty()) 
@@ -854,10 +882,8 @@ ImportMailThread( void *stuff)
 			}
 				
       IMPORT_LOG1("ImportMailThread: Creating new import folder '%s'.", NS_ConvertUCS2toUTF8(lastName).get());
+            curProxy->CreateSubfolder( lastName.get(),nsnull); // this may fail if the folder already exists..that's ok
 
-			rv = curProxy->CreateSubfolder( lastName.get(),nsnull);
-				
-			if (NS_SUCCEEDED( rv)) {
 				rv = curProxy->GetChildNamed( lastName.get(), getter_AddRefs( subFolder));
 				if (NS_SUCCEEDED( rv)) {
 					newFolder = do_QueryInterface( subFolder);
@@ -870,9 +896,6 @@ ImportMailThread( void *stuff)
 				}
         else
           IMPORT_LOG1("*** ImportMailThread: Failed to locate subfolder '%s' after it's been created.", lastName.get());
-			}
-      else
-        IMPORT_LOG1("*** ImportMailThread: Failed to create subfolder '%s'.", lastName.get());
 				
 			if (NS_FAILED( rv)) {
 				nsImportGenericMail::ReportError( IMPORT_ERROR_MB_CREATE, lastName.get(), &error);
@@ -926,7 +949,6 @@ ImportMailThread( void *stuff)
 		IMPORT_LOG0( "*** ImportMailThread: Abort or fatalError flag was set\n");
 		if (pData->ownsDestRoot) {
 			IMPORT_LOG0( "Calling destRoot->RecursiveDelete\n");
-
 			destRoot->RecursiveDelete( PR_TRUE, nsnull);
 		}
 		else {
@@ -991,8 +1013,10 @@ PRBool nsImportGenericMail::CreateFolder( nsIMsgFolder **ppFolder)
       IMPORT_LOG0( "*** Failed to create Local Folders!\n");
       return PR_FALSE;
     }
+    
     rv = accMgr->GetLocalFoldersServer(getter_AddRefs(server)); 
   }
+
   if (NS_SUCCEEDED(rv) && server) {
     nsCOMPtr <nsIMsgFolder> localRootFolder;
     rv = server->GetRootMsgFolder(getter_AddRefs(localRootFolder)); 
@@ -1016,6 +1040,16 @@ PRBool nsImportGenericMail::CreateFolder( nsIMsgFolder **ppFolder)
           }
         }
         IMPORT_LOG1( "Creating folder for importing mail: '%s'\n", NS_ConvertUCS2toUTF8(folderName).get());
+
+        // if we are doing migration, don't bother putting the local folders we are importing as a 
+        // sub folder of local folders.
+        if (m_performingMigration)       
+        {
+          NS_IF_ADDREF(*ppFolder = localRootFolder);
+          return PR_TRUE;
+        }
+        else
+        {
         rv = localRootFolder->CreateSubfolder(folderName.get(), nsnull);
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsISupports> subFolder;
@@ -1028,6 +1062,7 @@ PRBool nsImportGenericMail::CreateFolder( nsIMsgFolder **ppFolder)
             }
           } // if subFolder
         }
+        } // if not performing migration
       }
     } // if localRootFolder
   } // if server

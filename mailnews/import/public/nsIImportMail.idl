@@ -110,10 +110,20 @@ interface nsIImportMail : nsISupports
 		a different thread than ImportMailbox()
 	*/
 	unsigned long GetImportProgress();
+
+    /* 
+	 * When migrating the local folders from the import source into mozilla,
+	 * we want to translate reserved folder names from the import source to
+	 * equivalent values for Mozilla. 
+	 * Localization Impact is unknown here. 
+	 */
+	AString translateFolderName(in AString aFolderName);
 };
 	
 
 
 %{ C++
-
+#define kDestTrashFolderName "Trash"
+#define kDestUnsentMessagesFolderName "Unsent Messages"
+#define kDestSentFolderName "Sent"
 %}

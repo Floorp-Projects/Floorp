@@ -61,6 +61,7 @@
 #include "nsOEStringBundle.h"
 #include "OEDebugLog.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsIMessengerMigrator.h"
 
 class OESettings {
 public:
@@ -414,6 +415,45 @@ PRBool OESettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 			rv = in->SetHostName( pServerName);
 			rv = in->SetUsername( (char *)pBytes);
 
+            nsCOMPtr<nsIPop3IncomingServer> pop3Server = do_QueryInterface(in);
+            if (pop3Server) {
+                // set local folders as the Inbox to use for this POP3 server
+                nsCOMPtr<nsIMsgIncomingServer> localFoldersServer;
+                pMgr->GetLocalFoldersServer(getter_AddRefs(localFoldersServer));
+
+                if (!localFoldersServer)
+                {
+                    // XXX: We may need to move this local folder creation code to the generic nsImportSettings code
+                    // if the other import modules end up needing to do this too.
+
+                    // if Local Folders does not exist already, create it
+                    nsCOMPtr <nsIMessengerMigrator> messengerMigrator = do_GetService(NS_MESSENGERMIGRATOR_CONTRACTID, &rv);
+                    if (NS_FAILED(rv)) {
+                        IMPORT_LOG0( "*** Failed to create messenger migrator!\n");
+                        return PR_FALSE;
+                    }
+          
+                    rv = messengerMigrator->CreateLocalMailAccount(PR_FALSE);
+                    if (NS_FAILED(rv)) {
+                        IMPORT_LOG0( "*** Failed to create Local Folders!\n");
+                        return PR_FALSE;
+                    }
+    
+                    pMgr->GetLocalFoldersServer(getter_AddRefs(localFoldersServer)); 
+                }
+
+                // now get the account for this server
+                nsCOMPtr<nsIMsgAccount> localFoldersAccount;
+                pMgr->FindAccountForServer(localFoldersServer, getter_AddRefs(localFoldersAccount)); 
+                if (localFoldersAccount)
+                {
+                    nsXPIDLCString localFoldersAcctKey;
+                    localFoldersAccount->GetKey(getter_Copies(localFoldersAcctKey));
+                    pop3Server->SetDeferredToAccount(localFoldersAcctKey.get()); 
+                    pop3Server->SetDeferGetNewMail(PR_TRUE);
+                }
+            }
+
 			IMPORT_LOG2( "Created POP3 server named: %s, userName: %s\n", pServerName, (char *)pBytes);
 
 			nsString	prettyName;
@@ -432,7 +472,6 @@ PRBool OESettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 			rv = pMgr->CreateAccount( getter_AddRefs( account));
 			if (NS_SUCCEEDED( rv) && account) {
 				rv = account->SetIncomingServer( in);
-				
 				IMPORT_LOG0( "Created a new account and set the incoming server to the POP3 server.\n");
 					
         nsCOMPtr<nsIPop3IncomingServer> pop3Server = do_QueryInterface(in, &rv);

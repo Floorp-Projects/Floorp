@@ -62,6 +62,7 @@
 #include "nsRDFCID.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbDirectory.h"
+#include "nsIAddressBook.h"
 #include "nsImportStringBundle.h"
 #include "nsTextFormatter.h"
 #include "nsIProxyObjectManager.h"
@@ -256,11 +257,10 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 	
 	if (!nsCRT::strcasecmp( dataId, "addressDestination")) {
 		if (m_pDestinationUri) {
-			nsCOMPtr<nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
-			if (NS_SUCCEEDED(rv)) {
-				url->SetSpec( nsDependentCString(m_pDestinationUri));
-				NS_IF_ADDREF(*_retval = url);
-			}
+            nsCOMPtr<nsISupportsCString> abString = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+            abString->SetData(nsDependentCString(m_pDestinationUri));
+            NS_IF_ADDREF( *_retval = abString);
 		}
 	}
 
@@ -352,15 +352,15 @@ NS_IMETHODIMP nsImportGenericAddressBooks::SetData( const char *dataId, nsISuppo
 
 	if (!nsCRT::strcasecmp( dataId, "addressDestination")) {
 		if (item) {
-			nsCOMPtr<nsIURL> url;
-			item->QueryInterface( NS_GET_IID(nsIURL), getter_AddRefs( url));
-			if (url) {
+			nsCOMPtr<nsISupportsCString> abString;
+			item->QueryInterface( NS_GET_IID(nsISupportsCString), getter_AddRefs( abString));
+			if (abString) {
 				if (m_pDestinationUri)
 					nsCRT::free( m_pDestinationUri);
 				m_pDestinationUri = nsnull;
-                nsCAutoString spec;
-				url->GetSpec(spec);
-                m_pDestinationUri = ToNewCString(spec);
+                nsCAutoString tempUri;
+                abString->GetData(tempUri);
+                m_pDestinationUri = ToNewCString(tempUri);
 			}
 		}
 	}
@@ -745,7 +745,15 @@ void AddressThreadData::DriverAbort()
 
 nsIAddrDatabase *GetAddressBookFromUri( const char *pUri)
 {
-	return( nsnull);
+    nsIAddrDatabase *	pDatabase = nsnull;
+    if (pUri) {
+        nsresult rv = NS_OK;
+        NS_WITH_PROXIED_SERVICE(nsIAddressBook, addressBook, NS_ADDRESSBOOK_CONTRACTID, NS_UI_THREAD_EVENTQ, &rv); 
+        if (addressBook)
+            rv = addressBook->GetAbDatabaseFromURI(pUri, &pDatabase);
+    }
+
+	return pDatabase;
 }
 
 nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)

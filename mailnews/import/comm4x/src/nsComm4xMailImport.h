@@ -99,6 +99,8 @@ public:
     /* unsigned long GetImportProgress (); */
     NS_IMETHOD GetImportProgress(PRUint32 *_retval);
 
+    NS_IMETHOD TranslateFolderName(const nsAString & aFolderName, nsAString & _retval);
+
 public:
     static void SetLogs(nsString& success, nsString& error, PRUnichar **pError, PRUnichar **pSuccess);
     void ReportStatus(PRInt32 errorNum, nsString& name, nsString *pStream);

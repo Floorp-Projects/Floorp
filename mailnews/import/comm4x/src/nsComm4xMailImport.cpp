@@ -360,3 +360,8 @@ NS_IMETHODIMP ImportComm4xMailImpl::GetImportProgress(PRUint32 *pDoneSoFar)
     return NS_OK;
 }
 
+NS_IMETHODIMP ImportComm4xMailImpl::TranslateFolderName(const nsAString & aFolderName, nsAString & _retval)
+{
+  _retval = aFolderName; 
+  return NS_OK;
+}

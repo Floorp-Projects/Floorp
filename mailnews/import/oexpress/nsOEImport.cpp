@@ -75,6 +75,7 @@
 #include "nsTextFormatter.h"
 #include "nsOEStringBundle.h"
 #include "nsIStringBundle.h"
+#include "nsUnicharUtils.h"
 
 #include "OEDebugLog.h"
 
@@ -106,6 +107,8 @@ public:
 	
 	/* unsigned long GetImportProgress (); */
 	NS_IMETHOD GetImportProgress(PRUint32 *_retval);
+	
+    NS_IMETHOD TranslateFolderName(const nsAString & aFolderName, nsAString & _retval);
 	
 public:
 	static void	ReportSuccess( nsString& name, PRInt32 count, nsString *pStream);
@@ -346,9 +349,21 @@ ImportOEMailImpl::~ImportOEMailImpl()
 {
 }
 
-
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(ImportOEMailImpl, nsIImportMail)
+
+NS_IMETHODIMP ImportOEMailImpl::TranslateFolderName(const nsAString & aFolderName, nsAString & _retval)
+{
+    if (aFolderName.Equals(NS_LITERAL_STRING("Deleted Items"), nsCaseInsensitiveStringComparator()))
+        _retval = NS_LITERAL_STRING(kDestTrashFolderName);
+    else if (aFolderName.Equals(NS_LITERAL_STRING("Sent Items"), nsCaseInsensitiveStringComparator()))
+        _retval = NS_LITERAL_STRING(kDestSentFolderName);
+    else if (aFolderName.Equals(NS_LITERAL_STRING("Outbox"), nsCaseInsensitiveStringComparator()))
+        _retval = NS_LITERAL_STRING(kDestUnsentMessagesFolderName);
+    else
+        _retval = aFolderName;
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP ImportOEMailImpl::GetDefaultLocation( nsIFileSpec **ppLoc, PRBool *found, PRBool *userVerify)
 {
