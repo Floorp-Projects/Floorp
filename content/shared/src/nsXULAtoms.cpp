@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsString.h"
 #include "nsXULAtoms.h"
+#include "nsAtomListUtils.h"
 
 // define storage for all atoms
 #define XUL_ATOM(_name, _value) nsIAtom* nsXULAtoms::_name;
@@ -48,13 +48,17 @@
 
 static nsrefcnt gRefCnt = 0;
 
+static const nsAtomListInfo XULAtoms_info[] = {
+#define XUL_ATOM(name_, value_) { &nsXULAtoms::name_, value_ },
+#include "nsXULAtomList.h"
+#undef XUL_ATOM
+};
+
 void nsXULAtoms::AddRefAtoms()
 {
   if (++gRefCnt == 1) {
-    // create atoms
-#define XUL_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
-#include "nsXULAtomList.h"
-#undef XUL_ATOM
+    nsAtomListUtils::AddRefAtoms(XULAtoms_info,
+                                 MOZ_ARRAY_LENGTH(XULAtoms_info));
   }
 }
 
@@ -62,9 +66,7 @@ void nsXULAtoms::ReleaseAtoms()
 {
   NS_PRECONDITION(gRefCnt != 0, "bad release of xul atoms");
   if (--gRefCnt == 0) {
-    // release atoms
-#define XUL_ATOM(_name, _value) NS_RELEASE(_name);
-#include "nsXULAtomList.h"
-#undef XUL_ATOM
+    nsAtomListUtils::ReleaseAtoms(XULAtoms_info,
+                                  MOZ_ARRAY_LENGTH(XULAtoms_info));
   }
 }

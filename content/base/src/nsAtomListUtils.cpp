@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is atom lists for CSS pseudos.
+ * The Original Code is nsAtomListUtils.h .
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is L. David Baron.
+ * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   L. David Baron <dbaron@dbaron.org>
+ *   L. David Baron <dbaron@fas.harvard.edu> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,44 +34,37 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsCSSPseudoClasses.h"
+
 #include "nsAtomListUtils.h"
+#include "nsIAtom.h"
 
-// define storage for all atoms
-#define CSS_PSEUDO_CLASS(_name, _value) \
-  nsICSSPseudoClass* nsCSSPseudoClasses::_name;
-#include "nsCSSPseudoClassList.h"
-#undef CSS_PSEUDO_CLASS
-
-static nsrefcnt gRefCnt;
-
-static const nsAtomListInfo CSSPseudoClasses_info[] = {
-#define CSS_PSEUDO_CLASS(name_, value_) \
-    { (nsIAtom**)&nsCSSPseudoClasses::name_, value_ },
-#include "nsCSSPseudoClassList.h"
-#undef CSS_PSEUDO_CLASS
-};
-
-void nsCSSPseudoClasses::AddRefAtoms()
+/* static */ void
+nsAtomListUtils::AddRefAtoms(const nsAtomListInfo* aInfo, PRUint32 aCount)
 {
-  if (0 == gRefCnt++) {
-    nsAtomListUtils::AddRefAtoms(CSSPseudoClasses_info,
-                                 MOZ_ARRAY_LENGTH(CSSPseudoClasses_info));
-  }
+    for (nsAtomListInfo *info = aInfo, *info_end = aInfo + aCount;
+         info != info_end; ++info) {
+        *(info->mAtom) = NS_NewPermanentAtom(info->mString);
+    }
 }
 
-void nsCSSPseudoClasses::ReleaseAtoms()
+/* static */ void
+nsAtomListUtils::ReleaseAtoms(const nsAtomListInfo* aInfo, PRUint32 aCount)
 {
-  NS_PRECONDITION(gRefCnt != 0, "bad release atoms");
-  if (--gRefCnt == 0) {
-    nsAtomListUtils::ReleaseAtoms(CSSPseudoClasses_info,
-                                  MOZ_ARRAY_LENGTH(CSSPseudoClasses_info));
-  }
+    for (nsAtomListInfo *info = aInfo, *info_end = aInfo + aCount;
+         info != info_end; ++info) {
+        NS_RELEASE(*(info->mAtom));
+    }
 }
 
-PRBool nsCSSPseudoClasses::IsPseudoClass(nsIAtom *aAtom)
+/* static */ PRBool
+nsAtomListUtils::IsMember(nsIAtom *aAtom,
+                          const nsAtomListInfo* aInfo,
+                          PRUint32 aInfoCount)
 {
-  return nsAtomListUtils::IsMember(aAtom, CSSPseudoClasses_info,
-                                   MOZ_ARRAY_LENGTH(CSSPseudoClasses_info));
+    for (nsAtomListInfo *info = aInfo, *info_end = aInfo + aInfoCount;
+         info != info_end; ++info) {
+        if (aAtom == *(info->mAtom))
+            return PR_TRUE;
+    }
+    return PR_FALSE;
 }
-

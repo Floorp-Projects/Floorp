@@ -20,6 +20,7 @@
  */
 
 #include "nsMathMLAtoms.h"
+#include "nsAtomListUtils.h"
 
 // define storage for all atoms
 #define MATHML_ATOM(_name, _value) nsIAtom* nsMathMLAtoms::_name;
@@ -29,12 +30,16 @@
 
 static nsrefcnt gRefCnt = 0;
 
-void nsMathMLAtoms::AddRefAtoms() {
-  if (gRefCnt == 0) {
-    // create atoms
-#define MATHML_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
+static const nsAtomListInfo MathMLAtoms_info[] = {
+#define MATHML_ATOM(name_, value_) { &nsMathMLAtoms::name_, value_ },
 #include "nsMathMLAtomList.h"
 #undef MATHML_ATOM
+};
+
+void nsMathMLAtoms::AddRefAtoms() {
+  if (gRefCnt == 0) {
+    nsAtomListUtils::AddRefAtoms(MathMLAtoms_info,
+                                 MOZ_ARRAY_LENGTH(MathMLAtoms_info));
   }
   ++gRefCnt;
 }
@@ -42,9 +47,7 @@ void nsMathMLAtoms::AddRefAtoms() {
 void nsMathMLAtoms::ReleaseAtoms() {
   NS_PRECONDITION(gRefCnt != 0, "bad release of MathML atoms");
   if (--gRefCnt == 0) {
-    // release atoms
-#define MATHML_ATOM(_name, _value) NS_RELEASE(_name);
-#include "nsMathMLAtomList.h"
-#undef MATHML_ATOM
+    nsAtomListUtils::ReleaseAtoms(MathMLAtoms_info,
+                                  MOZ_ARRAY_LENGTH(MathMLAtoms_info));
   }
 }

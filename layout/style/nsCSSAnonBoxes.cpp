@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCSSAnonBoxes.h"
+#include "nsAtomListUtils.h"
 
 // define storage for all atoms
 #define CSS_ANON_BOX(_name, _value) \
@@ -45,14 +46,18 @@
 
 static nsrefcnt gRefCnt;
 
+static const nsAtomListInfo CSSAnonBoxes_info[] = {
+#define CSS_ANON_BOX(name_, value_) \
+    { (nsIAtom**)&nsCSSAnonBoxes::name_, value_ },
+#include "nsCSSAnonBoxList.h"
+#undef CSS_ANON_BOX
+};
+
 void nsCSSAnonBoxes::AddRefAtoms()
 {
   if (0 == gRefCnt++) {
-    // create atoms
-#define CSS_ANON_BOX(_name, _value) \
-    _name = NS_STATIC_CAST(nsICSSAnonBoxPseudo*, NS_NewPermanentAtom(_value));
-#include "nsCSSAnonBoxList.h"
-#undef CSS_ANON_BOX
+    nsAtomListUtils::AddRefAtoms(CSSAnonBoxes_info,
+                                 MOZ_ARRAY_LENGTH(CSSAnonBoxes_info));
   }
 }
 
@@ -60,19 +65,14 @@ void nsCSSAnonBoxes::ReleaseAtoms()
 {
   NS_PRECONDITION(gRefCnt != 0, "bad release atoms");
   if (--gRefCnt == 0) {
-    // release atoms
-#define CSS_ANON_BOX(_name, _value) NS_RELEASE(_name);
-#include "nsCSSAnonBoxList.h"
-#undef CSS_ANON_BOX
+    nsAtomListUtils::ReleaseAtoms(CSSAnonBoxes_info,
+                                  MOZ_ARRAY_LENGTH(CSSAnonBoxes_info));
   }
 }
 
 PRBool nsCSSAnonBoxes::IsAnonBox(nsIAtom *aAtom)
 {
-  return
-#define CSS_ANON_BOX(_name, _value) (aAtom == _name) ||
-#include "nsCSSAnonBoxList.h"
-#undef CSS_ANON_BOX
-        PR_FALSE;
+  return nsAtomListUtils::IsMember(aAtom, CSSAnonBoxes_info,
+                                   MOZ_ARRAY_LENGTH(CSSAnonBoxes_info));
 }
 
