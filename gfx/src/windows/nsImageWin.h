@@ -143,7 +143,8 @@ private:
   PRInt32             mSizeImage;         // number of bytes
   PRInt32             mRowBytes;          // number of bytes per row
   PRUint8*            mImageBits;         // starting address of DIB bits
-  PRBool              mIsOptimized;       // Have we turned our DIB into a GDI?
+  PRBool              mCanOptimize;       // Can we convert our DIB to a HBITMAP
+  PRBool              mIsOptimized;       // Did we convert our DIB to a HBITMAP
   nsColorMap*         mColorMap;          // Redundant with mColorTable, but necessary
     
   // alpha layer members
