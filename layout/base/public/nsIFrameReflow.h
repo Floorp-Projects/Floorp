@@ -21,11 +21,11 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsSize.h"
-#include "nsIRenderingContext.h"
 
 class nsIFrame;
 class nsIPresContext;
 class nsIReflowCommand;
+class nsIRenderingContext;
 
 //----------------------------------------------------------------------
 
@@ -41,7 +41,7 @@ struct nsReflowMetrics {
   nscoord ascent, descent;      // [OUT] ascent and descent information
 
   // Set this to null if you don't need to compute the max element size
-  nsSize* maxElementSize;
+  nsSize* maxElementSize;       // [IN OUT]
 
   nsReflowMetrics(nsSize* aMaxElementSize) {
     maxElementSize = aMaxElementSize;
@@ -84,8 +84,8 @@ enum nsReflowReason {
  * Reflow state passed to a frame during reflow. The reflow states are linked
  * together. The max size represents the max available space in which to reflow
  * your frame, and is computed as the parent frame's available content area
- * minus any room for margins that your frame requests. The min size represents
- * the min available space in which to reflow your frame
+ * minus any room for margins that your frame requests. A value of
+ * NS_UNCONSTRAINEDSIZE means you can choose whatever size you want
  *
  * @see #Reflow()
  */
@@ -93,12 +93,12 @@ struct nsReflowState {
   const nsReflowState* parentReflowState; // pointer to parent's reflow state
   nsIFrame*            frame;             // the frame being reflowed
   nsReflowReason       reason;            // the reason for the reflow
-  nsIReflowCommand*    reflowCommand;     // only used for incremental changes
+  nsIReflowCommand*    reflowCommand;     // the reflow command. only set for eReflowReason_Incremental
   nsSize               maxSize;           // the max available space in which to reflow
   nsIRenderingContext* rendContext;       // rendering context to use for measurement
 
-  // Note: there is no copy constructor so that the compiler can
-  // generate an optimal one.
+  // Note: there is no copy constructor, so the compiler can generate an
+  // optimal one.
 
   // Constructs an initial reflow state (no parent reflow state) for a
   // non-incremental reflow command
@@ -181,16 +181,22 @@ typedef PRBool nsDidReflowStatus;
 
 /**
  * Basic layout protocol.
+ *
+ * This template class defines the basic layout reflow protocol. You instantiate
+ * a particular reflow interface by specifying the reflow state and reflow
+ * metrics structures. These can be nsReflowState and nsReflowMetrics, or
+ * they can be derived structures containing additional information.
  */
 template<class ReflowState, class ReflowMetrics> class nsIFrameReflow : public nsISupports {
 public:
   /**
-   * Pre-reflow hook. Before a frame is incrementally reflowed or
-   * resize-reflowed this method will be called warning the frame of
-   * the impending reflow. This call may be invoked zero or more times
-   * before a subsequent DidReflow call. This method when called the
-   * first time will set the NS_FRAME_IN_REFLOW bit in the frame
-   * state bits.
+   * Pre-reflow hook. Before a frame is reflowed this method will be called.
+   * This call will always be invoked at least once before a subsequent Reflow
+   * and DidReflow call. It may be called more than once, In general you will
+   * receive on WillReflow notification before each Reflow request.
+   *
+   * XXX Is this really the semantics we want? Because we have the NS_FRAME_IN_REFLOW
+   * bit we can ensure we don't call it more than once...
    */
   NS_IMETHOD  WillReflow(nsIPresContext& aPresContext) = 0;
 
@@ -224,6 +230,9 @@ public:
    *          still must return an accurate desired size. If you're a container
    *          you must <b>always</b> reflow at least one frame regardless of the
    *          available space
+   *
+   * @param aStatus a return value indicating whether the frame is complete
+   *          and whether the next-in-flow is dirty and needs to be reflowed
    */
   NS_IMETHOD Reflow(nsIPresContext&    aPresContext,
                     ReflowMetrics&     aDesiredSize,
@@ -231,23 +240,28 @@ public:
                     nsReflowStatus&    aStatus) = 0;
 
   /**
-   * Post-reflow hook. After a frame is incrementally reflowed or
-   * resize-reflowed this method will be called telling the frame of
-   * the outcome. This call may be invoked many times, while
-   * NS_FRAME_IN_REFLOW is set, before it is finally called once with
-   * a NS_FRAME_REFLOW_COMPLETE value. When called with a
-   * NS_FRAME_REFLOW_COMPLETE value the NS_FRAME_IN_REFLOW bit in the
+   * Post-reflow hook. After a frame is reflowed this method will be called
+   * informing the frame that this reflow process is complete, and telling the
+   * frame the status returned by the Reflow member function.
+   *
+   * This call may be invoked many times, while NS_FRAME_IN_REFLOW is set, before
+   * it is finally called once with a NS_FRAME_REFLOW_COMPLETE value. When called
+   * with a NS_FRAME_REFLOW_COMPLETE value the NS_FRAME_IN_REFLOW bit in the
    * frame state will be cleared.
+   *
+   * XXX This doesn't make sense. If the frame is reflowed but not complete, then
+   * the status should be NS_FRAME_NOT_COMPLETE and not NS_FRAME_COMPLETE
+   * XXX Don't we want the semantics to dictate that we only call this once for
+   * a given reflow?
    */
   NS_IMETHOD  DidReflow(nsIPresContext&   aPresContext,
                         nsDidReflowStatus aStatus) = 0;
 
   /**
-   * Return the reflow metrics for this frame. If the frame is a
-   * container then the values for ascent and descent are computed
-   * across the the various children in the appropriate manner
-   * (e.g. for a line frame the ascent value would be the maximum
-   * ascent of the line's children). Note that the metrics returned
+   * Return the reflow metrics for this frame. If the frame is a container then
+   * the values for ascent and descent are computed across the various children
+   * in the appropriate manner (e.g., for a line frame the ascent value would be
+   * the maximum ascent of the line's children). Note that the metrics returned
    * apply to the frame as it exists at the time of the call.
    */
   NS_IMETHOD  GetReflowMetrics(nsIPresContext& aPresContext,
