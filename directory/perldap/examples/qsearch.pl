@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: qsearch.pl,v 1.2 1998/07/29 09:09:20 leif Exp $
+# $Id: qsearch.pl,v 1.3 1998/07/30 10:10:26 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -49,15 +49,11 @@ if (!getopts('b:h:D:p:s:w:P:'))
 
 
 #################################################################################
-# Instantiate an LDAP object, which also binds to the LDAP server.
+# Now do all the searches, one by one.
 #
 $conn = new Mozilla::LDAP::Conn(\%ld);
 die "Could't connect to LDAP server $ld{host}" unless $conn;
 
-
-#################################################################################
-# Now do all the searches, one by one.
-#
 foreach (@ARGV)
 {
   if (/\=/)

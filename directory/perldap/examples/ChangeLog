@@ -1,5 +1,7 @@
 1998-07-30  Leif Hedstrom  <leif@netscape.com>
 
+	* tabdump.pl: Actually works!
+
 	* ldappasswd.pl: Cleaned out some code, and moved it over to the
 	::Utils module.
 

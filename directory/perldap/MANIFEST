@@ -20,3 +20,7 @@ examples/ChangeLog
 examples/lfinger.pl
 examples/qsearch.pl
 examples/monitor.pl
+examples/ldappasswd.pl
+examples/rmentry.pl
+examples/tabdump.pl
+examples/modattr.pl

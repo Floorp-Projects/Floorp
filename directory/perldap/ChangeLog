@@ -1,7 +1,12 @@
 1998-07-30  Leif Hedstrom  <leif@netscape.com>
 
+	* Utils.pm (answer): New function, from LdapUtils.pm.
+
+	* Conn.pm (delete): Fixed references to normalizeDN.
+
 	* Utils.pm (userCredentials): Added this function, to make it easy
 	to get credentials when binding as a user.
+	(normalizeDN): Fixed bugs, because of calling convention...
 
 	* Conn.pm (getError): Fixed bug with passing read-only argument.
 
