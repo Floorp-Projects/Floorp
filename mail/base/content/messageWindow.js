@@ -255,8 +255,6 @@ function delayedOnLoadMessageWindow()
   AddMailOfflineObserver();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
-  AddToolBarPrefListener();
-  ShowHideToolBarButtons()
 	verifyAccounts(null);
 
 	InitMsgWindow();
@@ -477,7 +475,6 @@ function HideMenus()
 
 function OnUnloadMessageWindow()
 {
-  RemoveToolBarPrefListener();
 	// FIX ME - later we will be able to use onunload from the overlay
 	OnUnloadMsgHeaderPane();
 

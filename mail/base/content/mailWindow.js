@@ -58,12 +58,8 @@ var folderDataSource;
 
 var accountCentralBox = null;
 var gSearchBox = null;
-var gThreadPane = null;
-var gThreadPaneSplitter = null;
-var gMessagePaneBox = null;
 var gAccountCentralLoaded = false;
 var gFakeAccountPageLoaded = false;
-var gPaneConfig = null;
 //End progress and Status variables
 
 // for checking if the folder loaded is Draft or Unsent which msg is editable
@@ -188,10 +184,6 @@ function CreateMailWindowGlobals()
 
   accountCentralBox = document.getElementById("accountCentralBox");
   gSearchBox = document.getElementById("searchBox");
-  gThreadPane = document.getElementById("threadTree");
-  gThreadPaneSplitter = document.getElementById("threadpane-splitter");
-  gMessagePaneBox = document.getElementById("messagepanebox");
-  gPaneConfig = pref.getIntPref("mail.pane_config");
 }
 
 function InitMsgWindow()
@@ -496,26 +488,19 @@ function loadStartPage() {
 // Load iframe in the AccountCentral box with corresponding page
 function ShowAccountCentral()
 {
-    var acctCentralPage = pref.getComplexValue("mailnews.account_central_page.url",
-                                               Components.interfaces.nsIPrefLocalizedString).data;
-    gSearchBox.setAttribute("collapsed", "true");
-    gThreadPane.setAttribute("collapsed", "true");
-    gMessagePaneBox.setAttribute("collapsed", "true");
-    accountCentralBox.removeAttribute("collapsed");
-    window.frames["accountCentralPane"].location = acctCentralPage;
-    gAccountCentralLoaded = true;
-
     try
     {
-        switch (gPaneConfig)
-        {
-            case 0:
-                break;
-
-            case 1:
-                gThreadPaneSplitter.setAttribute("collapsed", "true");
-                break;
-        }
+    var acctCentralPage = pref.getComplexValue("mailnews.account_central_page.url",
+                                               Components.interfaces.nsIPrefLocalizedString).data;
+        GetMessagePane().collapsed = true;
+        document.getElementById("threadpane-splitter").collapsed = true;
+        gSearchBox.collapsed = true;
+        GetThreadTree().collapsed = true;
+        document.getElementById("accountCentralBox").collapsed = false;
+    window.frames["accountCentralPane"].location = acctCentralPage;
+        if (!IsFolderPaneCollapsed())
+            GetFolderTree().focus();
+    gAccountCentralLoaded = true;
     }
     catch (ex)
     {
@@ -529,24 +514,16 @@ function ShowAccountCentral()
 // box and display message box.
 function HideAccountCentral()
 {
-    gSearchBox.removeAttribute("collapsed");
-    gThreadPane.removeAttribute("collapsed");
-    gMessagePaneBox.removeAttribute("collapsed");
-    accountCentralBox.setAttribute("collapsed", "true");
-    window.frames["accountCentralPane"].location = "about:blank";
-    gAccountCentralLoaded = false;
-
     try
     {
-        switch (gPaneConfig)
-        {
-            case 0:
-                break;
-
-            case 1:
-                gThreadPaneSplitter.removeAttribute("collapsed");
-                break;
-        }
+        window.frames["accountCentralPane"].location = "about:blank";
+        document.getElementById("accountCentralBox").collapsed = true;
+        GetThreadTree().collapsed = false;
+        gSearchBox.collapsed = false;
+        var threadPaneSplitter = document.getElementById("threadpane-splitter");
+        threadPaneSplitter.collapsed = false;
+        GetMessagePane().collapsed = threadPaneSplitter.getAttribute("state") == "collapsed";
+        gAccountCentralLoaded = false;
     }
     catch (ex)
     {
@@ -635,42 +612,3 @@ function SetKeywords(aKeywords)
   // cache the keywords 
   gLastKeywords = aKeywords;
 }
-
-function ShowHideToolBarButtons()
-{
-  return;
-}
-  
-function AddToolBarPrefListener()
-{
-  try {
-    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    pbi.addObserver(gMailToolBarPrefListener.domain, gMailToolBarPrefListener, false);
-  } catch(ex) {
-    dump("Failed to observe prefs: " + ex + "\n");
-  }
-}
-
-function RemoveToolBarPrefListener()
-{
-  try {
-    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    pbi.removeObserver(gMailToolBarPrefListener.domain, gMailToolBarPrefListener);
-  } catch(ex) {
-    dump("Failed to remove pref observer: " + ex + "\n");
-  }
-}
-
-// Pref listener constants
-const gMailToolBarPrefListener =
-{
-  domain: "mail.toolbars.showbutton",
-  observe: function(subject, topic, prefName)
-  {
-    // verify that we're changing a button pref
-    if (topic != "nsPref:changed")
-      return;
-
-    document.getElementById("button-" + prefName.substr(this.domain.length+1)).hidden = !(pref.getBoolPref(prefName));
-  }
-};

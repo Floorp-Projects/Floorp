@@ -621,7 +621,7 @@ function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
 
   // based on the collapsed state of the thread pane/message pane splitter,
   // suppress message display if appropriate.
-  gDBView.suppressMsgDisplay = IsThreadAndMessagePaneSplitterCollapsed();
+  gDBView.suppressMsgDisplay = IsMessagePaneCollapsed();
 
   UpdateSortIndicators(gCurSortType, sortOrder);
 }
@@ -658,8 +658,13 @@ function GetSelectedFolderResource()
     return GetFolderResource(folderTree, startIndex.value);
 }
 
-function NotifyChangedMessagePaneVisibility(now_hidden)
+function ChangeMessagePaneVisibility(now_hidden)
 {
+  if (gDBView) {
+    // the collapsed state is the state after we released the mouse 
+    // so we take it as it is
+    gDBView.suppressMsgDisplay = now_hidden;
+  }
   var event = document.createEvent('Events');
   if (now_hidden) {
     event.initEvent('messagepane-hide', false, true);
@@ -674,11 +679,7 @@ function OnMouseUpThreadAndMessagePaneSplitter()
 {
   // the collapsed state is the state after we released the mouse 
   // so we take it as it is
-  var now_hidden = IsThreadAndMessagePaneSplitterCollapsed();
-  if (gDBView) {
-    gDBView.suppressMsgDisplay = now_hidden;
-  }
-  NotifyChangedMessagePaneVisibility(now_hidden);
+  ChangeMessagePaneVisibility(IsMessagePaneCollapsed());
 }
 
 function FolderPaneSelectionChange()

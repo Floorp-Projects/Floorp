@@ -128,6 +128,7 @@ pref("mail.strictly_mime_headers",          true);
 pref("mail.file_attach_binary",             false);
 pref("mail.show_headers",                   1); // some
 pref("mail.pane_config",                    0);
+pref("mail.pane_config.dynamic",            0); // new pref used for dynamic pane configuration
 pref("mail.addr_book.mapit_url.format", "chrome://messenger-region/locale/region.properties");
 
 // the format for "mail.addr_book.quicksearchquery.format" is:
@@ -289,12 +290,6 @@ pref("mailnews.start_page.url", "chrome://messenger-region/locale/region.propert
 pref("mailnews.start_page.enabled", true);
 
 pref("mailnews.remember_selected_message", true);
-
-pref("mail.toolbars.showbutton.file", true);
-pref("mail.toolbars.showbutton.next", true);
-pref("mail.toolbars.showbutton.junk", true);
-pref("mail.toolbars.showbutton.print", true);
-pref("mail.toolbars.showbutton.stop", true);
 
 pref("mailnews.account_central_page.url", "chrome://messenger/locale/messenger.properties");
 

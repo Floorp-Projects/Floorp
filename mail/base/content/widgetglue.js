@@ -208,13 +208,7 @@ function FolderProperties(name, uri)
 
 function MsgToggleMessagePane()
 {
-  //OnClickThreadAndMessagePaneSplitter is based on the value before the splitter is toggled.
-  MsgToggleSplitter("threadpane-splitter");
-}
-
-function MsgToggleSplitter(id)
-{
-    var splitter = document.getElementById(id);
+  var splitter = document.getElementById("threadpane-splitter");
     var state = splitter.getAttribute("state");
     if (state == "collapsed")
         splitter.setAttribute("state", null);

@@ -30,6 +30,10 @@ const nsMsgKey_None = 0xFFFFFFFF;
 const nsMsgViewIndex_None = 0xFFFFFFFF;
 const kMailCheckOncePrefName = "mail.startup.enabledMailCheckOnce";
 
+const kStandardPaneConfig = 0;
+const kWidePaneConfig = 1;
+const kVerticalPaneConfig = 2;
+
 var gFolderTree; 
 var gMessagePane;
 var gThreadTree;
@@ -38,6 +42,7 @@ var gSearchInput;
 var gThreadAndMessagePaneSplitter = null;
 var gUnreadCount = null;
 var gTotalCount = null;
+var gCurrentPaneConfig = 0;
 
 var gCurrentLoadingFolderURI;
 var gCurrentFolderToReroot;
@@ -616,20 +621,109 @@ var gThreePaneIncomingServerListener = {
     }
 }
 
+// aMsgWindowInitialized: false if we are calling from the onload handler, otherwise true
+
+function UpdateMailPaneConfig(aMsgWindowInitialized) {
+  var paneConfig = pref.getIntPref("mail.pane_config.dynamic");
+  
+  // don't do anything if we are already in the correct configuration
+  if (paneConfig == gCurrentPaneConfig)
+    return;
+
+  var mailContentWrapper = document.getElementById("mailContentWrapper");
+  var messagesBox = document.getElementById("messagesBox");
+  var messagePaneBox = GetMessagePane();
+  var msgPaneReRooted = false;
+
+  var threadPaneSplitter = GetThreadAndMessagePaneSplitter();
+
+  // the only element we need to re-root is the message pane.
+  var desiredMsgPaneParentId = (paneConfig == "0" || paneConfig == "2") ? "messagesBox" : "mailContentWrapper";
+
+  if (messagePaneBox.parentNode.id != desiredMsgPaneParentId)
+  {
+     var messagePaneParent = document.getElementById(messagePaneBox.parentNode.id);
+     messagePaneParent.removeChild(threadPaneSplitter);
+     messagePaneParent.removeChild(messagePaneBox);
+
+     var messagePaneNewParent = document.getElementById(desiredMsgPaneParentId);
+     messagePaneNewParent.appendChild(threadPaneSplitter); 
+     messagePaneNewParent.appendChild(messagePaneBox); 
+     msgPaneReRooted = true;
+  }
+
+  // now for each config, handle any extra clean up to create that view (such as changing a box orientation)
+  if (paneConfig == kStandardPaneConfig) // standard 3-Pane Layout
+  {     
+    messagePaneBox.removeAttribute("minwidth");
+    threadPaneSplitter.setAttribute("orient", "vertical");
+
+    // finally, make sure mailContentWrapper has the correct orientation
+    mailContentWrapper.setAttribute("orient", "horizontal");
+    messagesBox.setAttribute("orient", "vertical");
+  }
+
+  else if (paneConfig == kWidePaneConfig)  // "Wide" Window Pane Layout
+  {  
+    messagePaneBox.removeAttribute("minwidth");   
+    threadPaneSplitter.setAttribute("orient", "vertical");
+
+    // finally, make sure mailContentWrapper has the correct orientation
+    mailContentWrapper.setAttribute("orient", "vertical");
+    messagesBox.setAttribute("orient", "vertical");
+  }
+  
+  else if (paneConfig == kVerticalPaneConfig) // Vertical Pane Layout
+  {
+    messagesBox.setAttribute("orient", "horizontal");
+    threadPaneSplitter.removeAttribute("orient");
+    messagePaneBox.setAttribute("minwidth", "400"); // 400 is a made up number since I can't seem to force the thread pane and msg pane
+                                                    // to split the available space in half (why is flex not working here???)
+    // finally, make sure mailContentWrapper has the correct orientation
+    mailContentWrapper.setAttribute("orient", "horizontal");
+  }
+
+  // re-rooting the message pane causes the docshell to get destroyed 
+  // and replaced with another one. As such, we need to re-set the window (and thus the 
+  // internal references nsMessenger keeps for the message pane docshell)
+  // XXX: is it safe to call this multiple times? May need to add a setMessagePaneDocShell
+  //      routine to nsIMessenger.
+
+  if (aMsgWindowInitialized && msgPaneReRooted)
+  {
+    messenger.SetWindow(null, null);
+    messenger.SetWindow(window, msgWindow);
+    MsgReload(); 
+  }
+  
+  // record the new configuration
+  gCurrentPaneConfig = paneConfig; 
+}
+
+const MailPaneConfigObserver = {
+  observe: function(subject, topic, prefName) {
+    // verify that we're changing the mail pane config pref
+    if (topic == "nsPref:changed")
+      UpdateMailPaneConfig(true);
+  }
+};
 
 function OnLoadMessenger()
 {
+  // update the pane config before we exit onload otherwise the user may see a flicker if we poke the document
+  // in delayedOnLoadMessenger...
+  UpdateMailPaneConfig(false);
+
   setTimeout(delayedOnLoadMessenger, 0); // when debugging, set this to 5000, so you can see what happens after the window comes up.
 }
 
 /* Functions related to startup */
 function delayedOnLoadMessenger()
 {
+  pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pref.addObserver("mail.pane_config.dynamic", MailPaneConfigObserver, false);
   AddMailOfflineObserver();
   CreateMailWindowGlobals();
-  Create3PaneGlobals();
-  AddToolBarPrefListener();
-  ShowHideToolBarButtons();
   verifyAccounts(null);
     
   HideAccountCentral();
@@ -672,15 +766,6 @@ function delayedOnLoadMessenger()
 
   gNotifyDefaultInboxLoadedOnStartup = true;
 
-  // fix for #168937.  now that we don't have a sidebar
-  // users who haven't moved the splitter will
-  // see it jump around
-  var messengerBox = document.getElementById("messengerBox");
-  if (!messengerBox.getAttribute("width")) {
-    messengerBox.setAttribute("width","500px");
-  }
-
-
   //Set focus to the Thread Pane the first time the window is opened.
   SetFocusThreadPane();
 
@@ -695,7 +780,9 @@ function delayedOnLoadMessenger()
 function OnUnloadMessenger()
 {
   accountManager.removeIncomingServerListener(gThreePaneIncomingServerListener);
-  RemoveToolBarPrefListener();
+  pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pref.removeObserver("mail.pane_config.dynamic", MailPaneConfigObserver);
+
   // FIX ME - later we will be able to use onload from the overlay
   OnUnloadMsgHeaderPane();
 
@@ -708,11 +795,6 @@ function NotifyObservers(aSubject, aTopic, aData)
   observerService.notifyObservers(aSubject, aTopic, aData);
 }
 
-
-function Create3PaneGlobals()
-{
-}
- 
 // because the "open" state persists, we'll call
 // PerformExpand() for all servers that are open at startup.            
 function PerformExpandForAllOpenServers()
@@ -959,22 +1041,14 @@ function GetTotalCountElement()
 	return totalCount;
 }
 
-function IsThreadAndMessagePaneSplitterCollapsed()
+function IsMessagePaneCollapsed()
 {
-  var messagePane = GetMessagePane();
-  try {
-    return (messagePane.getAttribute("collapsed") == "true");
-  }
-  catch (ex) {
-    return false;
-  }
+  return GetMessagePane().collapsed;
 }
 
 function IsFolderPaneCollapsed()
 {
-  var folderPaneBox = GetFolderTree().parentNode;
-  return folderPaneBox.getAttribute("collapsed") == "true"
-    || folderPaneBox.getAttribute("hidden") == "true";
+  return GetFolderTree().parentNode.collapsed;
 }
 
 function FindMessenger()

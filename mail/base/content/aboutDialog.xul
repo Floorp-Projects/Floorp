@@ -47,6 +47,7 @@
 
 <dialog xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="aboutdlg"
         buttons="accept"
         onload="onLoad();"
         title="&aboutDialog.title;"
@@ -56,7 +57,10 @@
       <![CDATA[
         function onLoad() {
           var versionField = document.getElementById("versionField");
-          versionField.value = navigator.vendorSub + ' (' + navigator.productSub + ')';
+          var brandShortNameEl = document.getElementById("brandShortName");          
+          versionField.value = brandShortNameEl.firstChild.nodeValue + ' ' + navigator.vendorSub + ' (' + navigator.productSub + ')';
+          versionField.size = versionField.value.length - 5; // total hack..we are calculating a length that is too long, 
+                                                             // which keeps the text box from looking centered in the dialog.
         }
       ]]>
     </script>

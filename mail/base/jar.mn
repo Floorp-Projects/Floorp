@@ -10,6 +10,7 @@ messenger.jar:
 *+  content/messenger/messageWindow.js              (content/messageWindow.js)
 *+  content/messenger/messenger.xul                 (content/messenger.xul)
 *+  content/messenger/msgMail3PaneWindow.js         (content/msgMail3PaneWindow.js)
+*+  content/messenger/mail3PaneWindowCommands.js    (content/mail3PaneWindowCommands.js)
 *+  content/messenger/mailCore.js                   (content/mailCore.js)
 *+  content/messenger/commandglue.js                (content/commandglue.js)
 *+  content/messenger/widgetglue.js                 (content/widgetglue.js)
