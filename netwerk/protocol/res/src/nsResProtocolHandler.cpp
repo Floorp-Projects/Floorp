@@ -70,7 +70,7 @@ static PRLogModuleInfo *gResLog;
 #define LOG(args) PR_LOG(gResLog, PR_LOG_DEBUG, args)
 
 //----------------------------------------------------------------------------
-// nsResURL : overrides nsStdURL::GetFile to provide nsIFile resolution
+// nsResURL : overrides nsStandardURL::GetFile to provide nsIFile resolution
 //----------------------------------------------------------------------------
 
 #include "nsStandardURL.h"
