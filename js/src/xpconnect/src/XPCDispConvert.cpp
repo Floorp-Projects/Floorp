@@ -519,6 +519,11 @@ JSBool XPCDispConvert::COMToJS(XPCCallContext& ccx, const VARIANT& src,
         break;
         case VT_EMPTY:
         {
+            dest = JSVAL_VOID;
+        }
+        break;
+        case VT_NULL:
+        {
             dest = JSVAL_NULL;
         }
         break;
