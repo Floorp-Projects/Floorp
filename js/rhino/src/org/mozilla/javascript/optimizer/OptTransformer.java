@@ -48,14 +48,17 @@ import java.util.Hashtable;
 
 class OptTransformer extends NodeTransformer {
 
-    OptTransformer(IRFactory irFactory, Hashtable possibleDirectCalls)
+    OptTransformer(IRFactory irFactory, Hashtable possibleDirectCalls,
+                   ObjArray directCallTargets)
     {
         super(irFactory);
         this.possibleDirectCalls = possibleDirectCalls;
+        this.directCallTargets = directCallTargets;
     }
 
     protected NodeTransformer newInstance() {
-        return new OptTransformer(irFactory, possibleDirectCalls);
+        return new OptTransformer(irFactory, possibleDirectCalls,
+                                  directCallTargets);
     }
 
     protected void visitNew(Node node, ScriptOrFnNode tree) {
@@ -113,7 +116,11 @@ class OptTransformer extends NodeTransformer {
                         // for wacky test cases
                         if (argCount <= 32) {
                             node.putProp(Node.DIRECTCALL_PROP, fn);
-                            fn.setIsTargetOfDirectCall();
+                            if (!fn.isTargetOfDirectCall()) {
+                                int index = directCallTargets.size();
+                                directCallTargets.add(fn);
+                                fn.setDirectTargetIndex(index);
+                            }
                         }
                     }
                 }
@@ -122,4 +129,5 @@ class OptTransformer extends NodeTransformer {
     }
 
     private Hashtable possibleDirectCalls;
+    private ObjArray directCallTargets;
 }

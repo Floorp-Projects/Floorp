@@ -56,12 +56,14 @@ public class Codegen extends Interpreter {
     public Codegen()
     {
         mainCodegen = this;
+        isMainCodegen = true;
     }
 
     private Codegen(Codegen mainCodegen)
     {
         if (mainCodegen == null) Context.codeBug();
         this.mainCodegen = mainCodegen;
+        isMainCodegen = false;
     }
 
     public IRFactory createIRFactory(Context cx, TokenStream ts)
@@ -110,7 +112,13 @@ public class Codegen extends Interpreter {
             }
         }
 
-        (new OptTransformer(irFactory, possibleDirectCalls)).transform(tree);
+        if (possibleDirectCalls != null) {
+            directCallTargets = new ObjArray();
+        }
+
+        OptTransformer ot = new OptTransformer(irFactory, possibleDirectCalls,
+                                               directCallTargets);
+        ot.transform(tree);
 
         if (optLevel > 0) {
             (new Optimizer(irFactory)).optimize(tree, optLevel);
@@ -280,6 +288,7 @@ public class Codegen extends Interpreter {
             generatedClassName = getScriptClassName(null, isPrimary);
             superClassName = SCRIPT_SUPER_CLASS_NAME;
         }
+        generatedClassSignature = classNameToSignature(generatedClassName);
 
         itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
 
@@ -305,7 +314,7 @@ public class Codegen extends Interpreter {
         Node codegenBase;
         if (inFunction) {
             generateInit(cx, superClassName);
-            if (fnCurrent.isTargetOfDirectCall()) {
+            if (inDirectCallFunction) {
                 classFile.startMethod("call",
                                       "(Lorg/mozilla/javascript/Context;" +
                                       "Lorg/mozilla/javascript/Scriptable;" +
@@ -406,6 +415,16 @@ public class Codegen extends Interpreter {
         finishMethod(cx, debugVars);
 
         emitConstantDudeInitializers();
+
+        if (isMainCodegen && mainCodegen.directCallTargets != null) {
+            int N = mainCodegen.directCallTargets.size();
+            for (int i = 0; i != N; ++i) {
+				OptFunctionNode fn = (OptFunctionNode)directCallTargets.get(i);
+                classFile.addField(getDirectTargetFieldName(i),
+                                   classNameToSignature(fn.getClassName()),
+                                   (short)0);
+            }
+        }
 
         byte[] bytes = classFile.toByteArray();
 
@@ -688,19 +707,16 @@ public class Codegen extends Interpreter {
             }
         }
 
-        if (inFunction) {
-            if (fnCurrent.isTargetOfDirectCall()) {
-                String className = fnCurrent.getClassName();
-                String fieldName = className.replace('.', '_');
-                String fieldType = 'L'+classFile.fullyQualifiedForm(className)
-                                   +';';
-                classFile.addField(fieldName, fieldType,
-                                   (short)(ClassFileWriter.ACC_PUBLIC
-                                           | ClassFileWriter.ACC_STATIC));
-                addByteCode(ByteCode.ALOAD_0);
-                classFile.add(ByteCode.PUTSTATIC, className,
-                              fieldName, fieldType);
-            }
+        classFile.addField(MAIN_SCRIPT_FIELD,
+                           mainCodegen.generatedClassSignature,
+                           (short)0);
+        // For top level script or function init scriptMaster to self
+        if (isMainCodegen) {
+            addByteCode(ByteCode.ALOAD_0);
+            addByteCode(ByteCode.DUP);
+            classFile.add(ByteCode.PUTFIELD, generatedClassName,
+                          MAIN_SCRIPT_FIELD,
+                          mainCodegen.generatedClassSignature);
         }
 
         addByteCode(ByteCode.RETURN);
@@ -1470,6 +1486,29 @@ public class Codegen extends Interpreter {
                          +"Lorg/mozilla/javascript/Context;)",
                          "V");
 
+        // Init mainScript field;
+        addByteCode(ByteCode.DUP);
+        addByteCode(ByteCode.ALOAD_0);
+        classFile.add(ByteCode.GETFIELD, generatedClassName,
+                      MAIN_SCRIPT_FIELD,
+                      mainCodegen.generatedClassSignature);
+        classFile.add(ByteCode.PUTFIELD, fnClassName,
+                      MAIN_SCRIPT_FIELD,
+                      mainCodegen.generatedClassSignature);
+
+        int directTargetIndex = fn.getDirectTargetIndex();
+        if (directTargetIndex >= 0) {
+            addByteCode(ByteCode.DUP);
+            addByteCode(ByteCode.ALOAD_0);
+            classFile.add(ByteCode.GETFIELD, generatedClassName,
+                          MAIN_SCRIPT_FIELD,
+                          mainCodegen.generatedClassSignature);
+            addByteCode(ByteCode.SWAP);
+            classFile.add(ByteCode.PUTFIELD, mainCodegen.generatedClassName,
+                           getDirectTargetFieldName(directTargetIndex),
+                           classNameToSignature(fn.getClassName()));
+        }
+
         // Dup function reference for function expressions to have it
         // on top of the stack when initFunction returns
         if (functionType != FunctionNode.FUNCTION_STATEMENT) {
@@ -1625,18 +1664,21 @@ public class Codegen extends Interpreter {
          */
 
         Node chelsea = child;      // remember the first child for later
-        OptFunctionNode target = (OptFunctionNode)node.getProp(Node.DIRECTCALL_PROP);
+        OptFunctionNode
+            target = (OptFunctionNode)node.getProp(Node.DIRECTCALL_PROP);
         if (target != null) {
             generateCodeFromNode(child, node, -1, -1);
             int regularCall = acquireLabel();
 
-            String className = classFile.fullyQualifiedForm(target.getClassName());
-            String fieldName = className.replace('/', '_');
+            int directTargetIndex = target.getDirectTargetIndex();
+            addByteCode(ByteCode.ALOAD_0);
+            classFile.add(ByteCode.GETFIELD, generatedClassName,
+                          MAIN_SCRIPT_FIELD,
+                          mainCodegen.generatedClassSignature);
+            classFile.add(ByteCode.GETFIELD, mainCodegen.generatedClassName,
+                          getDirectTargetFieldName(directTargetIndex),
+                          classNameToSignature(target.getClassName()));
 
-            classFile.add(ByteCode.GETSTATIC,
-                                classFile.fullyQualifiedForm(className),
-                                fieldName,
-                                "L" + className + ";");
             short stackHeight = classFile.getStackTop();
 
             addByteCode(ByteCode.DUP2);
@@ -3782,9 +3824,19 @@ public class Codegen extends Interpreter {
                 "instance", "Lorg/mozilla/javascript/Scriptable;");
     }
 
+    private static String classNameToSignature(String className)
+    {
+        return 'L'+className.replace('.', '/')+';';
+    }
+
     private static String getRegexpFieldName(int i)
     {
         return "_re" + i;
+    }
+
+    private static String getDirectTargetFieldName(int i)
+    {
+        return "_dt" + i;
     }
 
     private static void badTree()
@@ -3797,10 +3849,16 @@ public class Codegen extends Interpreter {
     private static final String SCRIPT_SUPER_CLASS_NAME =
                           "org.mozilla.javascript.NativeScript";
 
+    private static final String MAIN_SCRIPT_FIELD = "masterScript";
+
     private Codegen mainCodegen;
+    private boolean isMainCodegen;
     private OptClassNameHelper nameHelper;
     private ObjToIntMap classNames;
+    private ObjArray directCallTargets;
+
     private String generatedClassName;
+    private String generatedClassSignature;
     boolean inFunction;
     boolean inDirectCallFunction;
     private ClassFileWriter classFile;

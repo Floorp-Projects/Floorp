@@ -79,11 +79,18 @@ class OptFunctionNode extends FunctionNode {
     }
 
     boolean isTargetOfDirectCall() {
-        return itsIsTargetOfDirectCall;
+        return directTargetIndex >= 0;
     }
 
-    void setIsTargetOfDirectCall() {
-        itsIsTargetOfDirectCall = true;
+    int getDirectTargetIndex() {
+        return directTargetIndex;
+    }
+
+    void setDirectTargetIndex(int directTargetIndex) {
+        // One time action
+        if (directTargetIndex < 0 || this.directTargetIndex >= 0)
+            Context.codeBug();
+        this.directTargetIndex = directTargetIndex;
     }
 
     void setParameterNumberContext(boolean b) {
@@ -134,7 +141,7 @@ class OptFunctionNode extends FunctionNode {
 
     private OptLocalVariable[] optVars;
     private String itsClassName;
-    private boolean itsIsTargetOfDirectCall;
+    private int directTargetIndex = -1;
     private boolean itsParameterNumberContext;
     boolean itsContainsCalls0;
     boolean itsContainsCalls1;
