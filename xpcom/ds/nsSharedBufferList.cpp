@@ -144,3 +144,30 @@ nsSharedBufferList::UnlinkBuffer( Buffer* aBufferToUnlink )
     return aBufferToUnlink;
   }
 
+
+
+#if 0
+template <class CharT>
+void
+nsChunkList<CharT>::CutTrailingData( PRUint32 aLengthToCut )
+  {
+    Chunk* chunk = mLastChunk;
+    while ( chunk && aLengthToCut )
+      {
+        Chunk* prev_chunk = chunk->mPrev;
+        if ( aLengthToCut < chunk->mDataLength )
+          {
+            chunk->mDataLength -= aLengthToCut;
+            aLengthToCut = 0;
+          }
+        else
+          {
+            RemoveChunk(chunk);
+            aLengthToCut -= chunk->mDataLength;
+            operator delete(chunk);
+          }
+
+        chunk = prev_chunk;
+      }
+  }
+#endif
