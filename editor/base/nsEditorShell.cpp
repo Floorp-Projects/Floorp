@@ -1336,13 +1336,27 @@ nsEditorShell::SelectAll()
 
 
 NS_IMETHODIMP    
-nsEditorShell::DeleteSelection()
+nsEditorShell::DeleteSelection(PRInt32 action)
 {  
   nsresult  err = NS_NOINTERFACE;
-  
+  nsIEditor::ECollapsedSelectionAction selectionAction;
+
+  switch(action)
+  {
+    case nsIEditor::eDeleteRight:
+      selectionAction = nsIEditor::eDeleteRight;
+      break;
+    case nsIEditor::eDeleteLeft:
+      selectionAction = nsIEditor::eDeleteLeft;
+      break;
+    default:
+      selectionAction = nsIEditor::eDoNothing;
+      break;
+  }
+
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (editor)
-    err = editor->DeleteSelection(nsIEditor::eDoNothing);
+    err = editor->DeleteSelection(selectionAction);
   
   return err;
 }
@@ -2228,6 +2242,70 @@ nsEditorShell::RunUnitTests()
 #endif
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorShell::StartLogging(nsIFileSpec *logFile)
+{
+  nsresult  err = NS_OK;
+
+#if 1
+
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+      {
+        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          err = textEditor->StartLogging(logFile);
+      }
+      break;
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->StartLogging(logFile);
+      }
+      break;
+    default:
+      err = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+#endif
+
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorShell::StopLogging()
+{
+  nsresult  err = NS_OK;
+
+#if 1
+
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+      {
+        nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
+        if (textEditor)
+          err = textEditor->StopLogging();
+      }
+      break;
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->StopLogging();
+      }
+      break;
+    default:
+      err = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+#endif
+
+  return err;
 }
 
 #ifdef XP_MAC

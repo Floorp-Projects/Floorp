@@ -26,6 +26,7 @@ class nsIDOMElement;
 class nsIDOMNode;
 class nsITransaction;
 class nsIEditActionListener;
+class nsIFileSpec;
 
 /*
 Editor interface to outside world
@@ -387,6 +388,12 @@ public:
 
   /* Run unit tests. Noop in optimized builds */
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)=0;
+
+  /* Start logging */
+  NS_IMETHOD StartLogging(nsIFileSpec *aLogFile)=0;
+
+  /* Stop logging */
+  NS_IMETHOD StopLogging()=0;
 };
 
 #endif //nsIEditor_h__

@@ -2607,3 +2607,16 @@ nsHTMLEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
+
+NS_IMETHODIMP
+nsHTMLEditor::StartLogging(nsIFileSpec *aLogFile)
+{
+  return nsTextEditor::StartLogging(aLogFile);
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::StopLogging()
+{
+  return nsTextEditor::StopLogging();
+}
+

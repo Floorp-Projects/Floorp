@@ -31,15 +31,15 @@ class nsJSEditorLog : public nsIHTMLEditor
 private:
 
   nsCOMPtr<nsIFileSpec> mFileSpec;
-  nsIEditor *mEditor;
-  PRInt32   mLocked;
-  PRInt32   mDepth;
+  nsIEditor  *mEditor;
+  PRInt32    mLocked;
+  PRInt32    mDepth;
 
 public:
 
   /** The default constructor.
    */
-  nsJSEditorLog(nsIEditor *aEditor);
+  nsJSEditorLog(nsIEditor *aEditor, nsIFileSpec *aLogFile);
 
   /** The default destructor.
    */
@@ -124,6 +124,7 @@ public:
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection);
+  NS_IMETHOD SaveHLineSettings(nsIDOMElement* aElement);
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
@@ -139,6 +140,8 @@ public:
   NS_IMETHOD BeginComposition(void);
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString);
   NS_IMETHOD EndComposition(void);
+  NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
+  NS_IMETHOD StopLogging();
 
   /* nsJSEditorLog public methods. */
   nsresult Write(const char *aBuffer);
