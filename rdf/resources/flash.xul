@@ -46,40 +46,34 @@
         onclick="OpenURL(event.target.parentNode.parentNode);">
 
     <template>
-      <rule>
-        <treechildren>
-          <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
-            <treerow>
-              <treecell>
-                <treeindentation />
-                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#source" align="right" />
-              </treecell>
+      <treechildren>
+        <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
+          <treerow>
+            <treecell>
+              <treeindentation />
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#source" align="left" />
+            </treecell>
 
-              <treecell>
-                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#description" align="right"
-                              style="list-style-image: none;" />
-              </treecell>
+            <treecell>
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#description" align="left"
+                            style="list-style-image: none;" />
+            </treecell>
 
-              <treecell>
-                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#timestamp" align="right"
-                              style="list-style-image: none;" />
-              </treecell>
-            </treerow>
-          </treeitem>
-        </treechildren>
-      </rule>
+            <treecell>
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#timestamp" align="left"
+                            style="list-style-image: none;" />
+            </treecell>
+          </treerow>
+        </treeitem>
+      </treechildren>
     </template>
 
-    <treecol rdf:resource="http://home.netscape.com/NC-rdf#source" />
-    <treecol rdf:resource="http://home.netscape.com/NC-rdf#description" />
-    <treecol rdf:resource="http://home.netscape.com/NC-rdf#timestamp" />
-
-    <!-- XXX We probably won't have a treehead in the end, but we'll put it here for now... -->
+    <!-- remove the TREEHEAD when bug 9923 is fixed. -->
     <treehead>
       <treerow>
-        <treecell>&tree.header.source.label;</treecell>
-        <treecell>&tree.header.description.label;</treecell>
-        <treecell>&tree.header.time.label;</treecell>
+        <treecell/>
+        <treecell/>
+        <treecell/>
       </treerow>
     </treehead>
   </tree>
