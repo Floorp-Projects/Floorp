@@ -45,6 +45,7 @@ class nsAppShell : public nsIAppShell
     auto_ptr<nsMacMessagePump>     mMacPump;
     nsMacMessageSink               *mMacSink;             //еее this will be COM, so use scc's COM_auto_ptr
     PRBool                         mExitCalled;
+		static PRBool									mInitializedToolbox;
 
 	// CLASS METHODS
 	private:		    
