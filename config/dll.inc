@@ -80,8 +80,9 @@ $(DLL): $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(EXTRA_LIBS_LIST_FILE)
                 /DEF:$(DEFFILE)
 !endif
 !ifdef MAPFILE
-                /MAP:$(MAPFILE)
+                /MAP:$(MAPFILE) /MAPINFO:LINES
 !endif
+
 !if exist(win32.order) && !defined(MOZ_DEBUG) && defined(MOZ_COVERAGE)
                 /ORDER:@win32.order
 !endif

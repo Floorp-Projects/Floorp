@@ -278,18 +278,35 @@ OS_LIBS=$(EXE_LIBS) $(OS_LIBS)
 !ifdef LIBRARY_NAME
 PDBFILE=$(LIBRARY_NAME)
 !endif
-
 # Replace optimizer and pdb related flags to use our own conventions
 !ifdef DLLNAME
 PDBFILE=$(DLLNAME)
 !endif
 
+# Replace optimizer and mapinfo related flags to use our own conventions
+!ifdef LIBRARY_NAME
+MAPFILE=$(LIBRARY_NAME)
+!endif
+
+!ifdef DLLNAME
+MAPFILE=$(DLLNAME)
+!endif
+
+# Replace optimizer and codinfo related flags to use our own conventions
+!ifdef LIBRARY_NAME
+CODFILE=$(LIBRARY_NAME)
+!endif
+
+!ifdef DLLNAME
+CODFILE=$(DLLNAME)
+!endif
 #//------------------------------------------------------------------------
 #//
 #// Prepend the "object directory" to any public make variables.
 #//    PDBFILE - File containing debug info
 #//    RESFILE - Compiled resource file
 #//    MAPFILE - MAP file for an executable
+#//    CODFILE - COD file for an executable
 #//
 #//------------------------------------------------------------------------
 !ifdef PDBFILE
@@ -300,8 +317,17 @@ PDBFILE=.\$*.pdb  # used for executables
 !ifdef RESFILE
 RESFILE=.\$(OBJDIR)\$(RESFILE)
 !endif
+
 !ifdef MAPFILE
-MAPFILE=.\$(OBJDIR)\$(MAPFILE)
+MAPFILE=.\$(OBJDIR)\$(MAPFILE).map
+!else
+MAPFILE=.\$*.map  # used for executables
+!endif
+
+!ifdef CODFILE
+CODFILE=.\$(OBJDIR)\$(CODFILE).cod
+!else
+CODFILE=.\$*.cod  # used for executables
 !endif
 
 !ifdef DIRS
