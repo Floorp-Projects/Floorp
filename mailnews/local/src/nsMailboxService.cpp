@@ -133,7 +133,6 @@ nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
     nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(url));
     nsCOMPtr<nsIMailboxUrl> mailboxUrl (do_QueryInterface(url));
     msgUrl->SetMsgWindow(aMsgWindow);
-    msgKeys->QuickSort(); // sort the keys, which might reduce seeking while move/copying
 
     mailboxUrl->SetMoveCopyMsgKeys(msgKeys->GetArray(), msgKeys->GetSize());
     rv = RunMailboxUrl(url, aMailboxCopyHandler); 

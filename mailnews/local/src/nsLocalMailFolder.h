@@ -181,6 +181,7 @@ protected:
 
 	// copy message helper
 	nsresult DisplayMoveCopyStatusMsg();
+    nsresult SortMessagesBasedOnKey(nsISupportsArray *messages, nsMsgKeyArray *aKeyArray, nsIMsgFolder *srcFolder);
 
   nsresult CopyMessageTo(nsISupports *message, nsIMsgFolder *dstFolder,
                          nsIMsgWindow *msgWindow, PRBool isMove);
