@@ -2348,11 +2348,34 @@ nsDocument::RemoveBinding(nsIDOMElement* aContent, const nsAReadableString& aURL
 }
 
 NS_IMETHODIMP
-nsDocument::LoadBindingDocument(const nsAReadableString& aURL)
+nsDocument::LoadBindingDocument(const nsAReadableString& aURL, nsIDOMDocument** aResult)
 {
-  if (mBindingManager)
-    return mBindingManager->LoadBindingDocument(this, aURL);
+  if (mBindingManager) {
+    nsCOMPtr<nsIDocument> doc;
+    mBindingManager->LoadBindingDocument(this, aURL, getter_AddRefs(doc));
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+    *aResult = domDoc;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
+  }
+
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocument::GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aResult)
+{
+  *aResult = nsnull;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  if (!content)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> result;
+  content->GetBindingParent(getter_AddRefs(result));
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(result));
+  *aResult = elt;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

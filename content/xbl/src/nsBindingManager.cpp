@@ -197,7 +197,8 @@ public:
 
   NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL);
   NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL);
-  NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableString& aURL);
+  NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableString& aURL,
+                                 nsIDocument** aResult);
 
   NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding);
   NS_IMETHOD AddHandlerToAttachedQueue(nsIXBLBindingAttachedHandler* aHandler);
@@ -404,9 +405,11 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsAReadableSt
 }
 
 NS_IMETHODIMP
-nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableString& aURL)
+nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableString& aURL,
+                                      nsIDocument** aResult)
 {
   // First we need to load our binding.
+  *aResult = nsnull;
   nsresult rv;
   NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
   if (!xblService)
@@ -419,6 +422,7 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableS
   if (!info)
     return NS_ERROR_FAILURE;
 
+  info->GetDocument(aResult); // Addref happens here.
   return NS_OK;
 }
 
