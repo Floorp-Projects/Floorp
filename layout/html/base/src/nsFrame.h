@@ -282,8 +282,9 @@ public:
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
 #endif
 
-  NS_IMETHOD GetStyleContextProvider(nsIPresContext* aPresContext,
-                                     nsIFrame** aProviderFrame);
+  NS_IMETHOD GetParentStyleContextFrame(nsIPresContext* aPresContext,
+                                        nsIFrame**      aProviderFrame,
+                                        PRBool*         aIsChild);
 
   // Check Style Visibility and mState for Selection (when printing)
   NS_IMETHOD IsVisibleForPainting(nsIPresContext *     aPresContext, 
@@ -374,6 +375,18 @@ public:
                                              nsIFrame*                       aChildFrame,
                                              nsIAtom*                        aAttribute,
                                              nsIAtom*                        aListName);
+
+  // Do the work for getting the parent style context frame so that
+  // other frame's |GetParentStyleContextFrame| methods can call this
+  // method on *another* frame.  (This function handles out-of-flow
+  // frames by using the frame manager's placeholder map and it handles
+  // block-within-inline by calling |GetIBSpecialParent|.)
+  nsresult DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
+                                        nsIFrame**      aProviderFrame,
+                                        PRBool*         aIsChild);
+
+  nsresult GetIBSpecialParent(nsIPresContext* aPresContext,
+                              nsIFrame** aSpecialParent);
 
   //Mouse Capturing code used by the frames to tell the view to capture all the following events
   NS_IMETHOD CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);

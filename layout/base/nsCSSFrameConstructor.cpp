@@ -384,7 +384,7 @@ GetSpecialSibling(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame** a
   }
 
   void* value;
-  aFrameManager->GetFrameProperty(aFrame, nsLayoutAtoms::inlineFrameAnnotation, 0, &value);
+  aFrameManager->GetFrameProperty(aFrame, nsLayoutAtoms::IBSplitSpecialSibling, 0, &value);
   *aResult = NS_STATIC_CAST(nsIFrame*, value);
 }
 
@@ -412,7 +412,8 @@ SetFrameIsSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame* aS
 
     // Store the "special sibling" (if we were given one) with the
     // first frame in the flow.
-    aFrameManager->SetFrameProperty(aFrame, nsLayoutAtoms::inlineFrameAnnotation,
+    aFrameManager->SetFrameProperty(aFrame,
+                                    nsLayoutAtoms::IBSplitSpecialSibling,
                                     aSpecialSibling, nsnull);
   }
 }
@@ -492,10 +493,7 @@ IsBlockFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
   // don't we use display->IsBlockLevel() here?
   const nsStyleDisplay* display;
   aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
-  if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
-    return PR_FALSE;
-  }
-  return PR_TRUE;
+  return NS_STYLE_DISPLAY_INLINE != display->mDisplay;
 }
 
 static nsIFrame*
@@ -525,6 +523,27 @@ FindLastBlock(nsIPresContext* aPresContext, nsIFrame* aKid)
     aKid->GetNextSibling(&aKid);
   }
   return lastBlock;
+}
+
+/*
+ * Unlike the special (next) sibling, the special previous sibling
+ * property points only from the anonymous block to the original inline
+ * that preceded it.  It is useful for finding the "special parent" of a
+ * frame (i.e., a frame from which a good parent style context can be
+ * obtained), one looks at the special previous sibling annotation of
+ * the real parent of the frame (if the real parent has
+ * NS_FRAME_IS_SPECIAL).
+ */
+inline void
+MarkIBSpecialPrevSibling(nsIPresContext* aPresContext,
+                         nsIFrameManager *aFrameManager,
+                         nsIFrame *aAnonymousFrame,
+                         nsIFrame *aSpecialParent)
+{
+  aFrameManager->SetFrameProperty(aAnonymousFrame,
+                                  nsLayoutAtoms::IBSplitSpecialPrevSibling,
+                                  aSpecialParent,
+                                  nsnull);
 }
 
 /**
@@ -3803,7 +3822,9 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
   if (NS_SUCCEEDED(rv)) {
     // The placeholder frame gets a pseudo style context
     nsCOMPtr<nsIStyleContext>  placeholderStyle;
-    aPresContext->ResolveStyleContextForNonElement(aStyleContext, PR_FALSE,
+    nsCOMPtr<nsIStyleContext> parentContext =
+        dont_AddRef(aStyleContext->GetParent());
+    aPresContext->ResolveStyleContextForNonElement(parentContext, PR_FALSE,
                                              getter_AddRefs(placeholderStyle));
     placeholderFrame->Init(aPresContext, aContent, aParentFrame,
                            placeholderStyle, nsnull);
@@ -9231,15 +9252,18 @@ DeletingFrameSubtree(nsIPresContext*  aPresContext,
   if (aFrameManager) {
     nsAutoVoidArray destroyQueue;
 
-    while (aFrame) {
-      // If it's a "special" block-in-inline frame, then we need to
-      // remember to delete our special siblings, too.
-      if (IsFrameSpecial(aFrame)) {
-        nsIFrame* specialSibling;
-        GetSpecialSibling(aFrameManager, aFrame, &specialSibling);
-        DeletingFrameSubtree(aPresContext, aPresShell, aFrameManager, specialSibling);
-      }
+    // If it's a "special" block-in-inline frame, then we need to
+    // remember to delete our special siblings, too.  Since every one of
+    // the next-in-flows has the same special sibling, just do this
+    // once, rather than in the loop below.
+    if (IsFrameSpecial(aFrame)) {
+      nsIFrame* specialSibling;
+      GetSpecialSibling(aFrameManager, aFrame, &specialSibling);
+      DeletingFrameSubtree(aPresContext, aPresShell, aFrameManager,
+                           specialSibling);
+    }
 
+    while (aFrame) {
       DoDeletingFrameSubtree(aPresContext, aPresShell, aFrameManager,
                              destroyQueue, aFrame, aFrame);
 
@@ -10483,9 +10507,15 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   nsIFrame* primaryFrame;
   shell->GetPrimaryFrameFor(aContent, &primaryFrame); 
   // Get the frame associated with the content whose style context is highest in the style context tree
-  nsIFrame* primaryStyleFrame = nsnull;
+  nsIFrame* primaryStyleFrame = primaryFrame;
   if (primaryFrame) {
-    primaryFrame->GetStyleContextProvider(aPresContext, &primaryStyleFrame);
+    PRBool providerIsChild = PR_FALSE;
+    nsIFrame *styleContextProvider;
+    primaryFrame->GetParentStyleContextFrame(aPresContext,
+                                             &styleContextProvider,
+                                             &providerIsChild);
+    if (providerIsChild)
+      primaryStyleFrame = styleContextProvider;
   }
 
   PRBool  reconstruct = PR_FALSE;
@@ -11220,6 +11250,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
           lastBlock->SetNextSibling(nsnull);
 
           // Create "special" inline-block linkage between the frames
+          // XXXldb Do we really need to do this?  It doesn't seem
+          // consistent with the use in ConstructInline.
           SetFrameIsSpecial(state.mFrameManager, list1, list2);
           SetFrameIsSpecial(state.mFrameManager, list2, list3);
           SetFrameIsSpecial(state.mFrameManager, list3, nsnull);
@@ -13742,6 +13774,8 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
   // containing block will be reframed instead.
   SetFrameIsSpecial(aState.mFrameManager, aNewFrame, blockFrame);
   SetFrameIsSpecial(aState.mFrameManager, blockFrame, inlineFrame);
+  MarkIBSpecialPrevSibling(aPresContext, aState.mFrameManager,
+                           blockFrame, aNewFrame);
 
   if (inlineFrame)
     SetFrameIsSpecial(aState.mFrameManager, inlineFrame, nsnull);
@@ -14169,6 +14203,7 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
   // Create an anonymous inline frame that will parent
   // aRightInlineChildFrame. The new frame won't have a parent yet:
   // the recursion will parent it.
+  // XXXldb Why bother if |aRightInlineChildFrame| is null?
   nsIFrame* inlineFrame = nsnull;
   NS_NewInlineFrame(shell, &inlineFrame);
   if (! inlineFrame)
@@ -14195,6 +14230,9 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
   SetFrameIsSpecial(aState.mFrameManager, firstInFlow, blockFrame);
   SetFrameIsSpecial(aState.mFrameManager, blockFrame, inlineFrame);
   SetFrameIsSpecial(aState.mFrameManager, inlineFrame, nsnull);
+
+  MarkIBSpecialPrevSibling(aPresContext, aState.mFrameManager,
+                           blockFrame, firstInFlow);
 
   // If we have a continuation frame, then we need to break the
   // continuation.

@@ -336,33 +336,28 @@ nsFrame::Init(nsIPresContext*  aPresContext,
   mContent = aContent;
   NS_IF_ADDREF(mContent);
   mParent = aParent;
-  nsFrameState  state;
 
   if (aPrevInFlow) {
     // Make sure the general flags bits are the same
+    nsFrameState state;
     aPrevInFlow->GetFrameState(&state);
-    if ((state & NS_FRAME_SYNC_FRAME_AND_VIEW) == 0) {
-      mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
-    }
-    if (state & NS_FRAME_REPLACED_ELEMENT) {
-      mState |= NS_FRAME_REPLACED_ELEMENT;
-    }
-    if (state & NS_FRAME_SELECTED_CONTENT) {
-      mState |= NS_FRAME_SELECTED_CONTENT;
-    }
-    if (state & NS_FRAME_INDEPENDENT_SELECTION) {
-      mState |= NS_FRAME_INDEPENDENT_SELECTION;
-    }
+
+    // Make bits that are currently on (see constructor) the same:
+    mState &= state | ~(NS_FRAME_SYNC_FRAME_AND_VIEW);
+
+    // Make bits that are currently off (see constructor) the same:
+    mState |= state & (NS_FRAME_REPLACED_ELEMENT |
+                       NS_FRAME_SELECTED_CONTENT |
+                       NS_FRAME_INDEPENDENT_SELECTION |
+                       NS_FRAME_IS_SPECIAL);
   }
-  if(mParent)
-  {
+  if (mParent) {
+    nsFrameState state;
     mParent->GetFrameState(&state);
-    if (state & NS_FRAME_INDEPENDENT_SELECTION) {
-      mState |= NS_FRAME_INDEPENDENT_SELECTION;
-    }
-    if (state & NS_FRAME_GENERATED_CONTENT){
-      mState |= NS_FRAME_GENERATED_CONTENT;
-    }
+
+    // Make bits that are currently off (see constructor) the same:
+    mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
+                       NS_FRAME_GENERATED_CONTENT);
   }
   return SetStyleContext(aPresContext, aContext);
 }
@@ -4006,10 +4001,85 @@ nsFrame::ReflowCommandNotify(nsIPresShell*        aShell,
 }
 
 NS_IMETHODIMP 
-nsFrame::GetStyleContextProvider(nsIPresContext* aPresContext,
-                                 nsIFrame**      aProviderFrame)
+nsFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
+                                    nsIFrame**      aProviderFrame,
+                                    PRBool*         aIsChild)
 {
-  *aProviderFrame = this;
+  return DoGetParentStyleContextFrame(aPresContext, aProviderFrame, aIsChild);
+}
+
+nsresult
+nsFrame::DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
+                                      nsIFrame**      aProviderFrame,
+                                      PRBool*         aIsChild)
+{
+  *aIsChild = PR_FALSE;
+  if (!(mState & NS_FRAME_OUT_OF_FLOW)) {
+    // If this frame is one of the blocks that split an inline, we must
+    // return the "special" inline parent, i.e., the parent that this
+    // frame would have if we didn't mangle the frame structure.
+    return GetIBSpecialParent(aPresContext, aProviderFrame);
+  }
+
+  // For out-of-flow frames, we must resolve underneath the
+  // placeholder's parent.
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIFrameManager> frameManager;
+  presShell->GetFrameManager(getter_AddRefs(frameManager));
+  nsIFrame *placeholder;
+  frameManager->GetPlaceholderFrameFor(this, &placeholder);
+  if (!placeholder) {
+    NS_NOTREACHED("no placeholder frame for out-of-flow frame");
+    GetIBSpecialParent(aPresContext, aProviderFrame);
+    return NS_ERROR_FAILURE;
+  }
+  return NS_STATIC_CAST(nsFrame*, placeholder)->GetParent(aProviderFrame);
+}
+
+/**
+ * Get the parent, corrected for the mangled frame tree resulting from
+ * having a block within an inline.  The result only differs from the
+ * result of |GetParent| when |GetParent| returns an anonymous block
+ * that was created for an element that was 'display: inline' because
+ * that element contained a block.
+ */
+nsresult
+nsFrame::GetIBSpecialParent(nsIPresContext* aPresContext,
+                            nsIFrame** aSpecialParent)
+{
+  *aSpecialParent = mParent;
+  if (mParent) {
+    nsFrameState parentState;
+    mParent->GetFrameState(&parentState);
+    if (parentState & NS_FRAME_IS_SPECIAL) {
+      // Find the first-in-flow of the parent.  (Ugh.  This ends up
+      // being O(N^2) when it is called O(N) times.)
+      nsIFrame *parentFIF = mParent;
+      for (;;) {
+        nsIFrame *prevInFlow;
+        parentFIF->GetPrevInFlow(&prevInFlow);
+        if (!prevInFlow)
+          break;
+        parentFIF = prevInFlow;
+      }
+
+      nsCOMPtr<nsIPresShell> presShell;
+      aPresContext->GetShell(getter_AddRefs(presShell));
+      nsCOMPtr<nsIFrameManager> frameManager;
+      presShell->GetFrameManager(getter_AddRefs(frameManager));
+      nsIFrame *specialParent;
+      nsresult rv =
+        frameManager->GetFrameProperty(parentFIF,
+                                       nsLayoutAtoms::IBSplitSpecialPrevSibling,
+                                       0, (void**)&specialParent);
+      if (NS_OK == rv) {
+        NS_ASSERTION(specialParent, "null special parent");
+        *aSpecialParent = specialParent;
+      }
+    }
+  }
+
   return NS_OK;
 }
 

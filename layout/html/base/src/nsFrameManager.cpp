@@ -417,7 +417,6 @@ private:
 
   void ReResolveStyleContext(nsIPresContext* aPresContext,
                              nsIFrame* aFrame,
-                             nsIStyleContext* aParentContext,
                              nsIContent* aParentContent,
                              PRInt32 aAttrNameSpaceID,
                              nsIAtom* aAttribute,
@@ -1275,8 +1274,6 @@ static void
 VerifyContextParent(nsIPresContext* aPresContext, nsIFrame* aFrame, 
                     nsIStyleContext* aContext, nsIStyleContext* aParentContext)
 {
-  nsIAtom*  frameType;
-
   // get the contexts not provided
   if (!aContext) {
     aFrame->GetStyleContext(&aContext);
@@ -1289,24 +1286,15 @@ VerifyContextParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
     // Get the correct parent context from the frame
     //  - if the frame is a placeholder, we get the out of flow frame's context 
     //    as the parent context instead of asking the frame
-    aFrame->GetFrameType(&frameType);
-    if (nsLayoutAtoms::placeholderFrame == frameType) { // placeholder
-      // get out of flow frame's context as the parent context
-      nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
-      NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
-      outOfFlowFrame->GetStyleContext(&aParentContext);
-    } else {
-      // get the parent context from the frame (indirectly)
-      nsIFrame* providerFrame = nsnull;
-      aFrame->GetStyleContextProvider(aPresContext, &providerFrame);   
-      ENSURE_TRUE(providerFrame);      
-      nsCOMPtr<nsIStyleContext> providerContext;
-      providerFrame->GetStyleContext(getter_AddRefs(providerContext)); 
-      ENSURE_TRUE(providerContext);
-      aParentContext = providerContext->GetParent(); // released later
-      // aParentContext could still be null, since some contexts don't have parents
-    }
-    NS_IF_RELEASE(frameType);
+
+    // get the parent context from the frame (indirectly)
+    nsIFrame* providerFrame = nsnull;
+    PRBool providerIsChild;
+    aFrame->GetParentStyleContextFrame(aPresContext,
+                                       &providerFrame, &providerIsChild);
+    if (providerFrame)
+      providerFrame->GetStyleContext(&aParentContext);
+    // aParentContext could still be null
   } else {
     // addref the parent context so we can release it at end
     NS_ADDREF(aParentContext);
@@ -1351,7 +1339,7 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIStyleContext*
   nsIStyleContext*  context;
   aFrame->GetStyleContext(&context);
 
-  VerifyContextParent(aPresContext, aFrame, context, aParentContext);
+  VerifyContextParent(aPresContext, aFrame, context, nsnull);
 
   PRInt32 listIndex = 0;
   nsIAtom* childList = nsnull;
@@ -1372,15 +1360,13 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIStyleContext*
           // then verify the placeholder's context
           nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
           NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
-          nsIStyleContext* outOfFlowContext;
 
           // recurse to out of flow frame, letting the parent context get resolved
           VerifyStyleTree(aPresContext, outOfFlowFrame, nsnull);
 
-          // verify placeholder using the out of flow's context as parent context
-          outOfFlowFrame->GetStyleContext(&outOfFlowContext);
-          VerifyContextParent(aPresContext,child, nsnull, outOfFlowContext);
-          NS_IF_RELEASE(outOfFlowContext);
+          // verify placeholder using the parent frame's context as
+          // parent context
+          VerifyContextParent(aPresContext, child, nsnull, nsnull);
         }
         else { // regular frame
           VerifyStyleTree(aPresContext, child, nsnull);
@@ -1585,7 +1571,6 @@ CaptureChange(nsIStyleContext* aOldContext, nsIStyleContext* aNewContext,
 void
 FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                                     nsIFrame* aFrame,
-                                    nsIStyleContext* aParentContextIn,
                                     nsIContent* aParentContent,
                                     PRInt32 aAttrNameSpaceID,
                                     nsIAtom* aAttribute,
@@ -1620,73 +1605,51 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     }
 
     nsCOMPtr<nsIStyleContext> parentContext; 
-    nsIFrame* resolvedDescendant = nsnull;
-    // Get the frame providing the style context. If it differs from aFrame, then
-    // reslove the provider first, since the provider's context is the parent of aFrame's
+    nsIFrame* resolvedChild = nsnull;
+    // Get the frame providing the parent style context.  If it is a
+    // child, then resolve the provider first.
     nsIFrame* providerFrame = nsnull;
-    aFrame->GetStyleContextProvider(aPresContext, &providerFrame); 
-    ENSURE_TRUE(providerFrame);
-    if (providerFrame == aFrame) {
-      if (aParentContextIn) {
-        parentContext = aParentContextIn;
-        NOISY_TRACE_FRAME("non-null parent context provided: using it and assuming already resolved",aFrame);
-      } else {
-        nsIFrame* parentFrame;
-        aFrame->GetParent(&parentFrame);
-        if (parentFrame) {
-          parentFrame->GetStyleContext(getter_AddRefs(parentContext));  
-        }
-      }
+    PRBool providerIsChild = PR_FALSE;
+    aFrame->GetParentStyleContextFrame(aPresContext,
+                                       &providerFrame, &providerIsChild); 
+    if (!providerIsChild) {
+      if (providerFrame)
+        providerFrame->GetStyleContext(getter_AddRefs(parentContext));  
     }
     else {
-#ifdef DEBUG
-      // check to make sure that the provider is the child of aFrame
-      nsIFrame* providerFrameParent;
-      providerFrame->GetParent(&providerFrameParent); 
-      NS_ASSERTION(providerFrameParent == aFrame, "invalid style context provider");
-#endif
       // resolve the provider here (before aFrame below)
-      nsCOMPtr<nsIStyleContext> providerContextParent;
-      nsIFrame* grandParentFrame;
-      aFrame->GetParent(&grandParentFrame); 
-      if (grandParentFrame) {
-        grandParentFrame->GetStyleContext(getter_AddRefs(providerContextParent)); 
-      }
-      ReResolveStyleContext(aPresContext, providerFrame, providerContextParent, content, 
-                            aAttrNameSpaceID, aAttribute, aChangeList, aMinChange, aResultChange);
-      // the provider's new context becomes the parent context of aFrame's context 
+      ReResolveStyleContext(aPresContext, providerFrame, content, 
+                            aAttrNameSpaceID, aAttribute, aChangeList,
+                            aMinChange, aResultChange);
+      // The provider's new context becomes the parent context of
+      // aFrame's context.
       providerFrame->GetStyleContext(getter_AddRefs(parentContext)); 
-      resolvedDescendant = providerFrame; // don't want to re-resolve the provider again
+      // Set |resolvedChild| so we don't bother resolving the
+      // provider again.
+      resolvedChild = providerFrame;
     }
     
     // do primary context
     nsIStyleContext* newContext = nsnull;
-    if (pseudoTag) {
-      nsIContent* pseudoContent = (aParentContent) ? aParentContent : localContent;
-      aPresContext->ResolvePseudoStyleContextFor(pseudoContent, pseudoTag, parentContext, 
+    if (pseudoTag == nsHTMLAtoms::mozNonElementPseudo) {
+      NS_ASSERTION(localContent,
+                   "non pseudo-element frame without content node");
+      aPresContext->ResolveStyleContextForNonElement(parentContext,
+                                                     PR_TRUE, &newContext);
+    }
+    else if (pseudoTag) {
+      nsIContent* pseudoContent =
+          aParentContent ? aParentContent : localContent;
+      aPresContext->ResolvePseudoStyleContextFor(pseudoContent, pseudoTag,
+                                                 parentContext, 
                                                  PR_FALSE, &newContext);
       NS_RELEASE(pseudoTag);
     }
     else {
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
-      // XXX This frame type check is a little ugly.  However, it should
-      // be cheaper than doing useless style resolution on placeholder
-      // frames, and it should be able to go away if we make it so that
-      // placeholder frames don't have style contexts at all.
-      //
-      // XXX We also probably need to descend into the style contexts of
-      // the placeholder's out-of-flow frame.
-      nsCOMPtr<nsIAtom> frameType;
-      aFrame->GetFrameType(getter_AddRefs(frameType));
-      if (content->IsContentOfType(nsIContent::eELEMENT) &&
-          frameType != nsLayoutAtoms::placeholderFrame) {
-        aPresContext->ResolveStyleContextFor(content, parentContext,
-                                             PR_TRUE, &newContext);
-      } else {
-        aPresContext->ResolveStyleContextForNonElement(parentContext,
-                                                       PR_TRUE, &newContext);
-      }
+      aPresContext->ResolveStyleContextFor(content, parentContext,
+                                           PR_TRUE, &newContext);
     }
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
@@ -1730,7 +1693,9 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         if (oldExtraContext) {
           nsIStyleContext* newExtraContext = nsnull;
           oldExtraContext->GetPseudoType(pseudoTag);
-          NS_ASSERTION(pseudoTag, "extra style context is not pseudo element");
+          NS_ASSERTION(pseudoTag &&
+                       pseudoTag != nsHTMLAtoms::mozNonElementPseudo,
+                       "extra style context is not pseudo element");
           result = aPresContext->ResolvePseudoStyleContextFor(content, pseudoTag, newContext,
                                                              PR_FALSE, &newExtraContext);
           NS_RELEASE(pseudoTag);
@@ -1770,6 +1735,10 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
           aPresContext->ResolveStyleContextFor(undisplayed->mContent, newContext, 
                                               PR_TRUE, &undisplayedContext);
         }
+        else if (pseudoTag == nsHTMLAtoms::mozNonElementPseudo) {
+          aPresContext->ResolveStyleContextForNonElement(newContext, 
+                                                 PR_TRUE, &undisplayedContext);
+        }
         else {  // pseudo element
           NS_ASSERTION(pseudoTag, "pseudo element without tag");
           aPresContext->ResolvePseudoStyleContextFor(localContent, pseudoTag, newContext, PR_FALSE,
@@ -1786,8 +1755,12 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
           if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
             aChangeList.AppendChange(nsnull, ((undisplayed->mContent) ? undisplayed->mContent : localContent), 
                                      NS_STYLE_HINT_FRAMECHANGE);
+            NS_RELEASE(undisplayedContext);
+          } else {
+            // update the undisplayed node with the new context
+            NS_RELEASE(undisplayed->mStyle);
+            undisplayed->mStyle = undisplayedContext;
           }
-          NS_RELEASE(undisplayedContext);
         }
         undisplayed = undisplayed->mNext;
       }
@@ -1805,42 +1778,40 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       PRInt32 listIndex = 0;
       nsIAtom* childList = nsnull;
       PRInt32 childChange;
-      nsIFrame* child;
 
       do {
-        child = nsnull;
+        nsIFrame* child = nsnull;
         result = aFrame->FirstChild(aPresContext, childList, &child);
-        while ((NS_SUCCEEDED(result)) && (child)) {
+        while (NS_SUCCEEDED(result) && child) {
           nsFrameState  state;
           child->GetFrameState(&state);
-          if (NS_FRAME_OUT_OF_FLOW != (state & NS_FRAME_OUT_OF_FLOW)) {
+          if (!(state & NS_FRAME_OUT_OF_FLOW)) {
             // only do frames that are in flow
             nsCOMPtr<nsIAtom> frameType;
             child->GetFrameType(getter_AddRefs(frameType));
-            if (nsLayoutAtoms::placeholderFrame == frameType.get()) { // placeholder
-              // get out of flow frame and recurse there
-              nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
+            if (nsLayoutAtoms::placeholderFrame == frameType) { // placeholder
+              // get out of flow frame and recur there
+              nsIFrame* outOfFlowFrame =
+                NS_STATIC_CAST(nsPlaceholderFrame*,child)->GetOutOfFlowFrame();
               NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+              NS_ASSERTION(outOfFlowFrame != resolvedChild,
+                           "out-of-flow frame not a true descendant");
 
-              if (outOfFlowFrame != resolvedDescendant) {
-                ReResolveStyleContext(aPresContext, outOfFlowFrame, nsnull, content,
-                                      aAttrNameSpaceID, aAttribute,
-                                      aChangeList, aMinChange, childChange);
-              } else {
-                NOISY_TRACE("out of flow frame already resolved as descendent\n");
-              }
+              // |nsFrame::GetParentStyleContextFrame| checks being out
+              // of flow so that this works correctly.
+              ReResolveStyleContext(aPresContext, outOfFlowFrame, content,
+                                    aAttrNameSpaceID, aAttribute,
+                                    aChangeList, aMinChange, childChange);
 
-              // reresolve placeholder's context under out of flow frame
-              nsIStyleContext*  outOfFlowContext;
-              outOfFlowFrame->GetStyleContext(&outOfFlowContext);
-              ReResolveStyleContext(aPresContext, child, outOfFlowContext, content,
+              // reresolve placeholder's context under the same parent
+              // as the out-of-flow frame
+              ReResolveStyleContext(aPresContext, child, content,
                                     kNameSpaceID_Unknown, nsnull,
                                     aChangeList, aMinChange, childChange);
-              NS_RELEASE(outOfFlowContext);
             }
             else {  // regular child frame
-              if (child != resolvedDescendant) {
-                ReResolveStyleContext(aPresContext, child, nsnull, content,
+              if (child != resolvedChild) {
+                ReResolveStyleContext(aPresContext, child, content,
                                       aAttrNameSpaceID, aAttribute,
                                       aChangeList, aMinChange, childChange);
               } else {
@@ -1884,18 +1855,13 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
 #endif
 
   do {
-    nsIStyleContext* styleContext = nsnull;
-    frame->GetStyleContext(&styleContext);
-    nsIStyleContext* parentContext = styleContext->GetParent();
     PRInt32 frameChange;
-    ReResolveStyleContext(aPresContext, frame, parentContext, nsnull,
+    ReResolveStyleContext(aPresContext, frame, nsnull,
                           aAttrNameSpaceID, aAttribute,
                           aChangeList, aMinChange, frameChange);
 #ifdef NS_DEBUG
-    VerifyStyleTree(aPresContext, frame, parentContext);
+    VerifyStyleTree(aPresContext, frame, nsnull);
 #endif
-    NS_IF_RELEASE(parentContext);
-    NS_RELEASE(styleContext);
     if (aTopLevelChange < frameChange) {
       aTopLevelChange = frameChange;
     }
