@@ -1575,7 +1575,9 @@ function SetEditMode(mode)
     }
     // Get the entire document's source string
 
-    var flags = 256; // OutputEncodeEntities;
+    var flags = (editor.documentCharacterSet == "ISO-8859-1")
+      ? 32768  // OutputEncodeLatin1Entities
+      : 16384; // OutputEncodeBasicEntities
 
     try { 
       var prettyPrint = gPrefs.getBoolPref("editor.prettyprint");

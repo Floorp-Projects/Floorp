@@ -140,9 +140,11 @@ public:
     // Convert links, image src, and script src to absolute URLs when possible
     OutputAbsoluteLinks = 128,
 
-    // Encode entities when outputting to a string.
-    // E.g. If set, we'll output &nbsp; if clear, we'll output 0xa0.
-    OutputEncodeEntities = 256,
+    // Attempt to encode entities standardized at W3C (HTML, MathML, etc).
+    // This is a catch-all flag for documents with mixed contents. Beware of
+    // interoperability issues. See below for other flags which might likely
+    // do what you want.
+    OutputEncodeW3CEntities = 256,
 
     // LineBreak processing: we can do either platform line breaks,
     // CR, LF, or CRLF.  If neither of these flags is set, then we
@@ -160,7 +162,19 @@ public:
 
     // Don't allow any formatting nodes (e.g. <br>, <b>) inside a <pre>.
     // This is used primarily by mail.
-    OutputNoFormattingInPre = 8192
+    OutputNoFormattingInPre = 8192,
+
+    // Encode entities when outputting to a string.
+    // E.g. If set, we'll output &nbsp; if clear, we'll output 0xa0.
+    // The basic set is just &nbsp; &amp; &lt; &gt; &quot; for interoperability
+    // with older products that don't support &alpha; and friends.
+    // The Latin1 entity set additionally includes 8bit accented letters
+    // between 128 and 255.
+    // The HTML entity set additionally includes accented letters, greek
+    // letters, and other special markup symbols as defined in HTML4.
+    OutputEncodeBasicEntities = 16384,
+    OutputEncodeLatin1Entities = 32768,
+    OutputEncodeHTMLEntities = 65536
   };
 
   /**

@@ -986,7 +986,10 @@ function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFiles
 // returns output flags based on mimetype, wrapCol and prefs
 function GetOutputFlags(aMimeType, aWrapColumn)
 {
-  var outputFlags = webPersist.ENCODE_FLAGS_ENCODE_ENTITIES;
+  var editor = GetCurrentEditor();
+  var outputFlags = (editor && editor.documentCharacterSet == "ISO-8859-1")
+    ? webPersist.ENCODE_FLAGS_ENCODE_LATIN1_ENTITIES
+    : webPersist.ENCODE_FLAGS_ENCODE_BASIC_ENTITIES;
   if (aMimeType == "text/plain")
   {
     // When saving in "text/plain" format, always do formatting

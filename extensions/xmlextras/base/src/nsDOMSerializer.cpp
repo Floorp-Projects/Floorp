@@ -100,7 +100,7 @@ static nsresult SetUpEncoder(nsIDOMNode *aRoot, const char* aCharset, nsIDocumen
   }
 
   // This method will fail if no document
-  rv = encoder->Init(document,NS_LITERAL_STRING("text/xml"),nsIDocumentEncoder::OutputEncodeEntities);
+  rv = encoder->Init(document,NS_LITERAL_STRING("text/xml"),nsIDocumentEncoder::OutputEncodeBasicEntities);
   if (NS_FAILED(rv))
     return rv;
 

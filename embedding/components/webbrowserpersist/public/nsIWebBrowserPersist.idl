@@ -145,8 +145,15 @@ interface nsIWebBrowserPersist : nsISupports
   const unsigned long ENCODE_FLAGS_FORMAT_FLOWED = 64;
   /** Convert links to absolute links where possible. */
   const unsigned long ENCODE_FLAGS_ABSOLUTE_LINKS = 128;
-  /** Encode entities, e.g. output &nbsp; instead of character code 0xa0. */
-  const unsigned long ENCODE_FLAGS_ENCODE_ENTITIES = 256;
+
+  /** 
+   * Attempt to encode entities standardized at W3C (HTML, MathML, etc).
+   * This is a catch-all flag for documents with mixed contents. Beware of
+   * interoperability issues. See below for other flags which might likely
+   * do what you want.
+   */
+  const unsigned long ENCODE_FLAGS_ENCODE_W3C_ENTITIES = 256;
+
   /**
    * Output with carriage return line breaks. May also be combined with
    * ENCODE_FLAGS_LF_LINEBREAKS and if neither is specified, the platform
@@ -163,6 +170,23 @@ interface nsIWebBrowserPersist : nsISupports
   const unsigned long ENCODE_FLAGS_NOSCRIPT_CONTENT = 2048;
   /** For plaintext output. Output the content of noframes elements. */
   const unsigned long ENCODE_FLAGS_NOFRAMES_CONTENT = 4096;
+
+  /**
+   * Encode basic entities, e.g. output &nbsp; instead of character code 0xa0. 
+   * The basic set is just &nbsp; &amp; &lt; &gt; &quot; for interoperability
+   * with older products that don't support &alpha; and friends.
+   */
+  const unsigned long ENCODE_FLAGS_ENCODE_BASIC_ENTITIES = 8192;
+  /**
+   * Encode Latin1 entities. This includes the basic set and
+   * accented letters between 128 and 255.
+   */
+  const unsigned long ENCODE_FLAGS_ENCODE_LATIN1_ENTITIES = 16384;
+  /**
+   * Encode HTML4 entities. This includes the basic set, accented
+   * letters, greek letters and certain special markup symbols.
+   */
+  const unsigned long ENCODE_FLAGS_ENCODE_HTML_ENTITIES = 32768;
 
   /**
    * Save the specified DOM document to file and optionally all linked files
