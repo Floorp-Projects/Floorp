@@ -1086,7 +1086,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 - (BOOL)shouldShowBookmarkToolbar
 {
   NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-  if ([defaults integerForKey:@"Personal TB Is Shown"] == 0)
+  if ([defaults integerForKey:@"Hide Personal Toolbar"] == 1)
      return NO;
 
   return YES;
