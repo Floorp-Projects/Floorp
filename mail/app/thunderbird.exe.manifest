@@ -3,10 +3,10 @@
 <assemblyIdentity
         version="1.0.0.0"
         processorArchitecture="X86"
-        name="Microsoft.Winweb.MantaRay"
+        name="Mozilla.Thunderbird"
         type="win32"
 />
-<description>.NET control deployment tool</description>
+<description>Mozilla Thunderbird</description>
 <dependency>
         <dependentAssembly>
                 <assemblyIdentity
