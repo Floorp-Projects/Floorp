@@ -57,7 +57,7 @@ class OptFunctionNode extends FunctionNode {
         }
     }
 
-    String getDirectCallParameterSignature() {
+    String getDirectCallMethodSignature() {
         int pCount = getParamCount();
         switch (pCount) {
             case 0: return ZERO_PARAM_SIG;
@@ -131,7 +131,7 @@ class OptFunctionNode extends FunctionNode {
                             +"Lorg/mozilla/javascript/Scriptable;"
                             +"Lorg/mozilla/javascript/Scriptable;",
         DIRECT_ARG_SIG    = "Ljava/lang/Object;D",
-        AFTER_DIRECT_SIG  = "[Ljava/lang/Object;)";
+        AFTER_DIRECT_SIG  = "[Ljava/lang/Object;)Ljava/lang/Object;";
 
     private static final String
         ZERO_PARAM_SIG = BEFORE_DIRECT_SIG+AFTER_DIRECT_SIG,
