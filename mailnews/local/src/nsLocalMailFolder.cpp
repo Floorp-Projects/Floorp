@@ -192,26 +192,16 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 	uri.Append('/');
 
 	uri.Append(name);
-	char* uriStr = uri.ToNewCString();
-	if (uriStr == nsnull) 
-		return NS_ERROR_OUT_OF_MEMORY;
 
 	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uriStr, getter_AddRefs(res));
+	rv = rdf->GetResource((const char *) nsAutoCString(uri), getter_AddRefs(res));
 	if (NS_FAILED(rv))
-	{
-		delete[] uriStr;
 		return rv;
-	}
 
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
 	if (NS_FAILED(rv))
-	{
-		delete[] uriStr;
 		return rv;
-	}
 
-	delete[] uriStr;
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
 	if(name == "Inbox")
