@@ -44,6 +44,8 @@
  */
 struct nsIWalletService : public nsISupports
 {
+    static const nsIID& GetIID() { static nsIID iid = NS_IWALLETSERVICE_IID; return iid; }
+
     NS_IMETHOD WALLET_PreEdit(nsAutoString& walletList) = 0;
     NS_IMETHOD WALLET_PostEdit(nsAutoString walletList) = 0;
     NS_IMETHOD WALLET_ChangePassword() = 0;
