@@ -1195,17 +1195,23 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
     /* look for a domain */
     ptr = PL_strcasestr(semi_colon, "domain=");
     if(ptr) {
+      ptr += 7; // get past the "domain="
       char *domain_from_header=nsnull;
       char *dot, *colon;
       int domain_length, cur_host_length;
 
+      /* remove leading spaces, else the dot-forcing below will put a dot before the space */
+      while (nsString::IsSpace(*ptr)) {
+        ptr++;
+      }
+
       /* allocate more than we need */
       nsCAutoString domain;
-      if (*(ptr+7) != '.' && !cookie_IsIPAddress(cur_host.get())) {
+      if (*ptr != '.' && !cookie_IsIPAddress(cur_host.get())) {
         // if host is not an IP address, force domain name to start with a dot
         domain = '.';
       }
-      domain.Append(ptr+7);
+      domain.Append(ptr);
 
       domain.CompressWhitespace();
       CKutil_StrAllocCopy(domain_from_header, domain.get());
