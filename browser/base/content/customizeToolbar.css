@@ -23,11 +23,6 @@
 
 */
 
-.paletteRow {
-  padding-top: 8px;
-  padding-bottom: 8px;
-}
-
 #cloned-bar-container {
   margin: 5px;
 }
@@ -37,10 +32,15 @@
   margin:0px 15px 10px 15px;
 }
 
-toolbarpaletteitem {
+#cloneToolbar > toolbarpaletteitem {
   border-left: 2px solid transparent;
 }
 
-toolbarpaletteitem[dragactive] {
+#cloneToolbar > toolbarpaletteitem[dragactive] {
   border-left: 2px solid black;
+}
+
+#palette-box > hbox > toolbarpaletteitem {
+  padding-top: 8px;
+  padding-bottom: 8px;
 }

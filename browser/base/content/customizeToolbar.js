@@ -325,7 +325,7 @@ var toolbarDNDObserver = {
 var paletteDNDObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
   {
-    aDragSession.canDrop = !gDraggingFromPalette;
+    aDragSession.canDrop = !gDraggingFromPalette && aEvent.target.localName != "hbox";
   },
   onDrop: function(aEvent, aXferData, aDragSession)
   {
@@ -368,7 +368,7 @@ var paletteDNDObserver = {
  
     // Now insertBefore |item| in the right place.
     var target = aEvent.target;
-    
+
     if (target == palette) {
       target = palette.lastChild.lastChild;
       if (target.localName != "spacer") {
