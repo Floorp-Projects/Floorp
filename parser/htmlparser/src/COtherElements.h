@@ -340,13 +340,15 @@ public:
   /**********************************************************
     this gets called to close a tag in the sink and in the context
    **********************************************************/
-  virtual nsresult CloseContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
+  virtual nsresult CloseContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) { 
+    nsresult result=NS_OK;
     if(mTag!=aTag) {
       CElement *theElement=GetElement(aTag);
       return theElement->CloseContainerInContext(aNode,aTag,aContext,aSink);
     }
+    result=CloseContainer(aNode,aTag,aContext,aSink);
     CloseContext(aNode,aTag,aContext,aSink);
-    return CloseContainer(aNode,aTag,aContext,aSink);
+    return result;
   }
 
 
