@@ -1,145 +1,120 @@
-        var finder; // Find component.
-        var data;   // Search context (passed as argument).
-        var dialog; // Quick access to document/form elements.
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released March
+ * 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation. Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): Alec Flett       <alecf@netscape.com>
+ *                 Bill Law         <law@netscape.com>
+ *                 Blake Ross       <blakeross@telocity.com>
+ *                 Matt Fisher      <matt@netscape.com>
+ *                 Simon Fraser     <sfraser@netscape.com>
+ *                 Stuart Parmenter <pavlov@netscape.com>
+ */
 
-        function string2Bool( value )
-        {
-            return value != "false";
-        }
+var finder; // Find component.
+var data;   // Search context (passed as argument).
+var dialog; // Quick access to document/form elements.
 
-        function bool2String( value )
-        {
-            if ( value ) {
-                return "true";
-            } else {
-                return "false";
-            }
-        }
+function initDialogObject()
+{
+  // Create dialog object and initialize.
+  dialog = new Object;
+  dialog.findKey         = document.getElementById("dialog.findKey");
+  dialog.caseSensitive   = document.getElementById("dialog.caseSensitive");
+  dialog.wrap            = document.getElementById("dialog.wrap");
+  dialog.searchBackwards = document.getElementById("dialog.searchBackwards");
+  dialog.find            = document.getElementById("ok");
+  dialog.cancel          = document.getElementById("cancel");
+  dialog.bundle          = document.getElementById("findBundle");
+}
 
-        function initDialog()
-        {
-            // Create dialog object and initialize.
-            dialog = new Object;
-            dialog.findKey         = document.getElementById("dialog.findKey");
-            dialog.caseSensitive   = document.getElementById("dialog.caseSensitive");
-            dialog.wrap            = document.getElementById("dialog.wrap");
-            dialog.searchBackwards = document.getElementById("dialog.searchBackwards");
-            dialog.find            = document.getElementById("ok");
-            dialog.cancel          = document.getElementById("cancel");
-            dialog.enabled         = false;
-            dialog.bundle          = document.getElementById("findBundle");
-        }
+function fillDialog()
+{
+  // Set initial dialog field contents.
+  dialog.findKey.setAttribute("value", data.searchString);
 
-        function loadDialog()
-        {
-            // Set initial dialog field contents.
-            dialog.findKey.setAttribute( "value", data.searchString );
+  dialog.caseSensitive.checked   = data.caseSensitive;
+  dialog.wrap.checked            = data.wrapSearch;
+  dialog.searchBackwards.checked = data.searchBackwards;
+}
 
-            if ( data.caseSensitive ) {
-                dialog.caseSensitive.setAttribute( "checked", "" );
-            } else {
-                dialog.caseSensitive.removeAttribute( "checked" );
-            }
+function loadData()
+{
+  // Set data attributes per user input.
+  data.searchString    = dialog.findKey.value;
+  data.caseSensitive   = dialog.caseSensitive.checked;
+  data.wrapSearch      = dialog.wrap.checked;
+  data.searchBackwards = dialog.searchBackwards.checked;
+}
 
-            if ( data.wrapSearch ) {
-                dialog.wrap.setAttribute( "checked", "" );
-            } else {
-                dialog.wrap.removeAttribute( "checked" );
-            }
+function onLoad()
+{
+  initDialogObject();
 
-            if ( data.searchBackwards ) {
-                dialog.searchBackwards.setAttribute( "checked", "" );
-            } else {
-                dialog.searchBackwards.removeAttribute( "checked" );
-            }
-            
-            // disable the OK button if no text
-            if (dialog.findKey.getAttribute("value") == "") {
-	            dialog.find.setAttribute("disabled", "true");
-	       	}
-	    dialog.findKey.focus();
-        }
+  // Get find component.
+  finder = Components.classes["@mozilla.org/appshell/component/find;1"].getService();
+  finder = finder.QueryInterface(Components.interfaces.nsIFindComponent);
 
-        function loadData()
-        {
-            // Set data attributes per user input.
-            data.searchString = dialog.findKey.value;
-            data.caseSensitive = dialog.caseSensitive.checked;
-            data.wrapSearch = dialog.wrap.checked;
-            data.searchBackwards = dialog.searchBackwards.checked;
-        }
+  // Change "OK" to "Find".
+  dialog.find.setAttribute("value", document.getElementById("fBLT").getAttribute("value"));
 
-        function onLoad()
-        {
-            // Init dialog.
-            initDialog();
+  // Setup the dialogOverlay.xul button handlers.
+  doSetOKCancel(onOK, onCancel);
 
-            // Get find component.
-            finder = Components.classes[ "@mozilla.org/appshell/component/find;1" ].getService();
-            finder = finder.QueryInterface( Components.interfaces.nsIFindComponent );
-            if ( !finder ) {
-                alert( "Error accessing find component\n" );
-                window.close();
-                return;
-            }
+  // Save search context.
+  data = window.arguments[0];
 
-            // change OK to find
-            dialog.find.setAttribute("value", document.getElementById("fBLT").getAttribute("value"));
+  // Tell search context about this dialog.
+  data.findDialog = window;
 
-            // setup the dialogOverlay.xul button handlers
-            doSetOKCancel(onOK, onCancel);
+  fillDialog();
 
-            // Save search context.
-            data = window.arguments[0];
+  doEnabling();
 
-            // Tell search context about this dialog.
-            data.findDialog = window;
+  if (dialog.findKey.value)
+    dialog.findKey.select();
+  else
+    dialog.findKey.focus();
+}
 
-            // Fill dialog.
-            loadDialog();
+function onUnload() {
+  // Disconnect context from this dialog.
+  data.findDialog = null;
+}
 
-            // Give focus to search text field.
-            dialog.findKey.focus();
-        }
+function onOK()
+{
+  // Transfer dialog contents to data elements.
+  loadData();
 
-        function onUnload() {
-            // Disconnect context from this dialog.
-            data.findDialog = null;
-        }
+  // Search.
+  var result = finder.findNext(data);
+  if (!result)
+    window.alert(dialog.bundle.getString("notFoundWarning"));
+}
 
-        function onOK()
-        {
-            // Transfer dialog contents to data elements.
-            loadData();
+function onCancel()
+{
+  // Close the window.
+  return true;
+}
 
-            // Search.
-            var result = finder.findNext( data );
-            if (!result)
-                window.alert(dialog.bundle.getString("notFoundWarning"));
-
-            // don't close the window
-            return false;
-        }
-
-        function onCancel()
-        {
-            // Close the window.
-            return true;
-        }
-
-        function onTyping()
-        {
-                if ( dialog.enabled ) {
-                    // Disable OK if they delete all the text.
-                    if ( dialog.findKey.value == "" ) {
-                        dialog.enabled = false;
-                        dialog.find.setAttribute("disabled", "true");
-                    }
-                } else {
-                    // Enable OK once the user types something.
-                    if ( dialog.findKey.value != "" ) {
-                        dialog.enabled = true;
-                        dialog.find.removeAttribute("disabled");
-                    }
-                }
-        }
+function doEnabling()
+{
+  dialog.find.disabled = !dialog.findKey.value;
+}
