@@ -173,18 +173,6 @@ puts "
 </tr>
 </table>
 
-<table border=0><tr><td align=right>
-<b><A HREF=\"bug_status.html#resolved_ts\">Date Resolved</a>:</b> </td>
-<td align=left><INPUT NAME=resolved_ts SIZE=9> (to <INPUT NAME=resolved_ts_2 SIZE=9>, optional)</td>
-</tr>
-<tr>
-<td align=right><b><A HREF=\"bug_status.html#resolved_ts\">Date Verified</a>:</b> </td>
-<td align=left><INPUT NAME=verified_ts SIZE=9> (to <INPUT NAME=verified_ts_2 SIZE=9>, optional)
-<font size=-1>&nbsp;&nbsp;date format: 24-FEB-98</font>
-</td>
-</tr>
-</table>
-
 <table border=0>
 <tr>
 <td align=right>Summary:</td>

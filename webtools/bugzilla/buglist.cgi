@@ -118,8 +118,6 @@ proc DefCol {name k t {s ""} {q 0}} {
     set needquote($name) $q
 }
 
-DefCol resolved_ts "bugs.resolved_ts" DateResolved bugs.resolved_ts
-DefCol verified_ts "bugs.verified_ts" DateVerified bugs.verified_ts
 DefCol opendate "date_format(bugs.creation_ts,'Y-m-d')" Opened bugs.creation_ts
 DefCol changeddate "date_format(bugs.delta_ts,'Y-m-d')" Changed bugs.delta_ts
 DefCol severity "substring(bugs.bug_severity, 1, 3)" Sev bugs.bug_severity
@@ -186,7 +184,7 @@ if {[info exists FORM(sql)]} {
 
   set legal_fields { bug_id product version rep_platform op_sys bug_status
                      resolution priority bug_severity assigned_to reporter
-                     bug_file_loc component resolved_ts verified_ts}
+                     bug_file_loc component}
 
   foreach field [array names FORM] {
     if { [ lsearch $legal_fields $field ] != -1 && ![cequal $FORM($field) ""]} {
@@ -197,18 +195,6 @@ if {[info exists FORM(sql)]} {
           qadd "\t\t${or}bugs.$field = [DBNameToIdAndCheck $p]\n"
           set or "or "
         }
-      } elseif { $field == "resolved_ts"} {
-                        if {! [cequal $FORM(resolved_ts_2) ""]} { 
-                                qadd "\t\tbugs.resolved_ts between \n\t\t\tTO_DATE('$FORM($field)','DD-MON-YY') and\n \t\t\tTO_DATE('$FORM(resolved_ts_2)', 'DD-MON-YY')\n"
-                        } else {
-                                qadd "\t\tTO_CHAR (bugs.resolved_ts,'DD-MON-YY') = '[string toupper $FORM($field)]'\n"
-                                }
-      } elseif { $field == "verified_ts"} {
-                        if {! [cequal $FORM(verified_ts_2) ""]} {
-                                qadd "\t\tbugs.verified_ts between \n\t\t\tTO_DATE('$FORM($field)','DD-MON-YY') and\n \t\t\tTO_DATE('$FORM(verified_ts_2)', 'DD-MON-YY')\n"
-                        } else {
-                                qadd "\t\tTO_CHAR (bugs.verified_ts,'DD-MON-YY') = '[string toupper $FORM($field)]'\n"
-                                }
       } else {
         foreach v $MFORM($field) {
           if {[cequal $v "(empty)"]} {
@@ -418,7 +404,7 @@ set env(TZ) PST8PDT
 PutHeader "Bug List" "Bug List"
 
 puts -nonewline "
-<CENTER><H1>M<font -= 2>OZILLA</font> B<font -= 2>UGS</font></H1>
+<CENTER>
 <B>[fmtclock [getclock ]]</B>"
 if {[info exists FORM(debug)]} { puts "<PRE>$query</PRE>" }
 
