@@ -51,8 +51,6 @@ protected:
   NS_IMETHOD SetNativeClipboardData();
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
 
-  static ResType MapMimeTypeToMacOSType ( const nsString & aMimeStr ) ;
-
 }; // nsClipboard
 
 #endif // nsClipboard_h__

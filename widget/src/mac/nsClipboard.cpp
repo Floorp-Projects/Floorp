@@ -35,6 +35,7 @@
 #include "nsIDataFlavor.h"
 #include "nsIFormatConverter.h"
 #include "nsIGenericTransferable.h"
+#include "nsMimeMapper.h"
 
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
@@ -88,44 +89,6 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 
 //
-// MapMimeTypeToMacOSType
-//
-// Given a mime type, map this into the appropriate MacOS clipboard type. For
-// types that we don't know about intrinsicly, use a hash to get a unique 4
-// character code.
-//
-ResType
-nsClipboard :: MapMimeTypeToMacOSType ( const nsString & aMimeStr )
-{
-  ResType format = 0;
-
-  if (aMimeStr.Equals(kTextMime) )
-    format = 'TEXT';
-  else if ( aMimeStr.Equals(kXIFMime) )
-    format = 'XIF ';
-  else if ( aMimeStr.Equals(kHTMLMime) )
-    format = 'HTML';
-  else
-    format = '????';   // XXX for now...
-    
-  /*
-   else if (aMimeStr.Equals(kUnicodeMime)) {
-    format = CF_UNICODETEXT;
-  } else if (aMimeStr.Equals(kJPEGImageMime)) {
-    format = CF_BITMAP;
-  } else {
-    char * str = aMimeStr.ToNewCString();
-    format = ::RegisterClipboardFormat(str);
-    delete[] str;
-  }
-  */
-  
-  return format;
-  
-} // MapMimeTypeToMacOSType
-
-
-//
 // SetNativeClipboardData
 //
 // Take data off the transferrable and put it on the clipboard in as many formats
@@ -166,7 +129,7 @@ nsClipboard :: SetNativeClipboardData()
       // find MacOS flavor
       nsAutoString mimeType;
       currentFlavor->GetMimeType(mimeType);
-      ResType macOSFlavor = MapMimeTypeToMacOSType(mimeType);
+      ResType macOSFlavor = nsMimeMapperMac::MapMimeTypeToMacOSType(mimeType);
     
       // get data. This takes converters into account. We don't own the data
       // so make sure not to delete it.
@@ -225,7 +188,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
       // find MacOS flavor
       nsAutoString mimeType;
       currentFlavor->GetMimeType(mimeType);
-      ResType macOSFlavor = MapMimeTypeToMacOSType(mimeType);
+      ResType macOSFlavor = nsMimeMapperMac::MapMimeTypeToMacOSType(mimeType);
     
       // check if it is on the clipboard
       long offsetUnused;
