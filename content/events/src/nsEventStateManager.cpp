@@ -4179,7 +4179,8 @@ nsresult nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent
       PRBool canContainChildren;
 
       startContent = do_QueryInterface(startNode);
-      if (NS_SUCCEEDED(startContent->CanContainChildren(canContainChildren)) &&
+      if (!isCollapsed &&
+          NS_SUCCEEDED(startContent->CanContainChildren(canContainChildren)) &&
           canContainChildren) {
         startContent->ChildAt(*aStartOffset, *getter_AddRefs(childContent));
         if (childContent)
@@ -4187,7 +4188,8 @@ nsresult nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent
       }
 
       endContent = do_QueryInterface(endNode);
-      if (NS_SUCCEEDED(endContent->CanContainChildren(canContainChildren)) &&
+      if (!isCollapsed &&
+          NS_SUCCEEDED(endContent->CanContainChildren(canContainChildren)) &&
           canContainChildren) {
         PRInt32 endOffset = 0;
         domRange->GetEndOffset(&endOffset);
