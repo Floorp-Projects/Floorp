@@ -793,7 +793,7 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
     //
     rv = url->GetDn(getter_Copies(baseDn));
     NS_ENSURE_SUCCESS(rv, rv);
-    if (nsCRT::strlen(baseDn) == 0) {
+    if (baseDn.IsEmpty()) {
         return NS_ERROR_MALFORMED_URI;
     }
 
