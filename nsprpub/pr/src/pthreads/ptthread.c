@@ -1120,7 +1120,8 @@ static void suspend_signal_handler(PRIntn sig)
 	pthread_cond_signal(&me->suspendResumeCV);
 	while (me->suspend & PT_THREAD_SUSPENDED)
 	{
-#if !defined(FREEBSD) && !defined(NETBSD) && !defined(OPENBSD)  /*XXX*/
+#if !defined(FREEBSD) && !defined(NETBSD) && !defined(OPENBSD) \
+    && !defined(BSDI)  /*XXX*/
         PRIntn rv;
 	    sigwait(&sigwait_set, &rv);
 #endif
