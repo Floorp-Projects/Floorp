@@ -35,10 +35,11 @@
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
 #include "nsIRegion.h"
+#include "nsDeviceContextUnix.h"
 
 #include "X11/Xlib.h"
 
-#include "nsDeviceContextUnix.h"
+class GraphicsState;
 
 class nsRenderingContextUnix : public nsIRenderingContext
 {
@@ -139,6 +140,9 @@ protected:
   nsIDeviceContext       *mContext;
   nsIFontMetrics         *mFontMetrics;
   nsIFontCache           *mFontCache;
+
+  //state management
+  nsVoidArray       *mStateCache;
 
 };
 

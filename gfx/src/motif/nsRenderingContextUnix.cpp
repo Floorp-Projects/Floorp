@@ -22,6 +22,53 @@
 #include <math.h>
 #include "nspr.h"
 
+#include "X11/Xlib.h"
+#include "X11/Xutil.h"
+
+#define FLAG_CLIP_VALID       0x0001
+#define FLAG_CLIP_CHANGED     0x0002
+#define FLAG_LOCAL_CLIP_VALID 0x0004
+#define FLAGS_ALL             (FLAG_CLIP_VALID | FLAG_CLIP_CHANGED | FLAG_LOCAL_CLIP_VALID)
+
+class GraphicsState
+{
+public:
+  GraphicsState();
+  ~GraphicsState();
+
+  nsTransform2D   *mMatrix;
+  nsRect          mLocalClip;
+  Region          mClipRegion;
+  nscolor         mColor;
+  nsIFontMetrics  *mFontMetrics;
+  Font            mFont;
+  PRInt32         mFlags;
+};
+
+GraphicsState :: GraphicsState()
+{
+  mMatrix = nsnull;  
+  mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
+  mClipRegion = nsnull;
+  mColor = NS_RGB(0, 0, 0);
+  mFontMetrics = nsnull;
+  mFont = nsnull;
+  mFlags = ~FLAGS_ALL;
+}
+
+GraphicsState :: ~GraphicsState()
+{
+  if (nsnull != mClipRegion)
+  {
+    ::XDestroyRegion(mClipRegion);
+    mClipRegion = NULL;
+  }
+
+  mFont = nsnull;
+
+}
+
+
 typedef unsigned char BYTE;
 
 #define RGB(r,g,b) ((unsigned long) (((BYTE) (r) | ((unsigned long) ((BYTE) (g)) <<8)) | (((unsigned long)(BYTE)(b)) << 16)))
@@ -40,6 +87,7 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
   mCurrentColor = 0;
   mTMatrix = nsnull;
   mP2T = 1.0f;
+  mStateCache = new nsVoidArray();
   PushState();
 }
 
@@ -50,6 +98,24 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
   NS_IF_RELEASE(mFontMetrics);
   mTMatrix = nsnull;
   PopState();
+
+  if (nsnull != mStateCache)
+  {
+    PRInt32 cnt = mStateCache->Count();
+
+    while (--cnt >= 0)
+    {
+      GraphicsState *state = (GraphicsState *)mStateCache->ElementAt(cnt);
+      mStateCache->RemoveElementAt(cnt);
+
+      if (nsnull != state)
+        delete state;
+    }
+
+    delete mStateCache;
+    mStateCache = nsnull;
+  }
+
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextUnix, kRenderingContextIID)
@@ -115,14 +181,38 @@ nsIDeviceContext * nsRenderingContextUnix :: GetDeviceContext(void)
 
 void nsRenderingContextUnix :: PushState(void)
 {
+  GraphicsState * state = new GraphicsState();
+
+  // Push into this state object, add to vector
+  state->mMatrix = mTMatrix;
+
+  mStateCache->AppendElement(state);
+
   mTMatrix = new nsTransform2D();
   mTMatrix->SetToIdentity();  
+
 }
 
 void nsRenderingContextUnix :: PopState(void)
 {
-  delete mTMatrix;
-  mTMatrix = nsnull;
+
+  PRUint32 cnt = mStateCache->Count();
+  GraphicsState * state;
+
+  if (cnt > 0) {
+    state = (GraphicsState *)mStateCache->ElementAt(cnt - 1);
+    mStateCache->RemoveElementAt(cnt - 1);
+
+    // Assign all local attributes from the state object just popped
+    if (mTMatrix)
+      delete mTMatrix;
+    mTMatrix = state->mMatrix;
+
+    // Delete this graphics state object
+    delete state;
+  }
+
+
 }
 
 PRBool nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect)
