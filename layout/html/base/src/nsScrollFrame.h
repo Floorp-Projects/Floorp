@@ -148,7 +148,7 @@ public:
   // nsScrollFrame will die soon, anyway
   NS_IMETHOD CurPosAttributeChanged(nsIPresContext* aPresContext,
                                     nsIContent* aChild,
-                                    PRInt32 aModType) {}
+                                    PRInt32 aModType) { return NS_OK; }
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
