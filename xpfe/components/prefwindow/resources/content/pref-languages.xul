@@ -79,7 +79,7 @@
     <title value="&languages.customize.Charset.grouplabel;"/>
     <box autostretch="never">
       <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
-      <menulist id="DefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
+      <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
           pref="true" preftype="string" prefstring="intl.charset.default"
           prefattribute="data" wsm_attributes="data">
           <template>
