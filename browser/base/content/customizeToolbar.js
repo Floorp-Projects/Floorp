@@ -245,8 +245,7 @@ var paletteDNDObserver = {
   {
     alert("DROP HAPPENED.");
     var itemID = aXferData.data;
-    alert("GOT XFER DATA.");
-
+    
     var item = null;
     var palette = document.getElementById("palette-box");
     var toolbar = document.getElementById("cloneToolbar");
@@ -260,7 +259,6 @@ var paletteDNDObserver = {
       toolbarItem = toolbarItem.nextSibling;
     }
     if (!item) {
-      alert("didn't find it.");
       return;
     }
 
@@ -280,7 +278,7 @@ var paletteDNDObserver = {
     gToolbarChanged = true;
 
     // Now insertBefore |item| in the right place.
-    var target = evt.target;
+    var target = aEvent.target;
     alert(target);
 
     if (target == palette) {
@@ -301,8 +299,6 @@ var paletteDNDObserver = {
         return;
       }
     }
-
-    alert("Doing the insertBefore of the item.");
 
     target.parentNode.insertBefore(item, target);
     
@@ -325,14 +321,14 @@ var paletteDNDObserver = {
       }
      
       if (nextRow) {
-        nextRow.insertBefore(item, nextRow.firstChild);
+        nextRow.insertBefore(currentRow.lastChild, nextRow.firstChild);
       }
       else {
         // Create a new row. Add the item and a spring and break.
         var newRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                   "hbox");
         newRow.setAttribute("class", "paletteRow");
-        newRow.appendChild(item);
+        newRow.appendChild(currentRow.lastChild);
         var spring = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "spacer");
         spring.setAttribute("flex", "3");
