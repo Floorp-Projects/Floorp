@@ -38,11 +38,11 @@ MODULE = pippki
 DEPTH=..\..\..\..
 IGNORE_MANIFEST=1
 
-DLLNAME       = pippki
-PDBFILE       = $(DLLNAME).pdb
-MAPFILE       = $(DLLNAME).map
-DLL           = .\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE = DLL
+LIBRARY_NAME   = pippki
+PDBFILE        = $(LIBRARY_NAME).pdb
+MAPFILE        = $(LIBRARY_NAME).map
+MODULE_NAME = PKI
+META_COMPONENT = crypto
 
 include <$(DEPTH)/config/config.mak>
 
@@ -67,6 +67,3 @@ OBJS = \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
