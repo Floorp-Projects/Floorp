@@ -765,10 +765,11 @@
       (let* ((first (first item))
              (rest (rest item))
              (depictor (styled-text-depictor first)))
-        (if depictor
-          (apply depictor markup-stream rest)
-          (depict-char-style (markup-stream first)
-            (depict-styled-text markup-stream rest)))))
+        (cond
+         (depictor (apply depictor markup-stream rest))
+         ((keywordp first) (depict-char-style (markup-stream first)
+                             (depict-styled-text markup-stream rest)))
+         (t (error "Bad depict-styled-text style: ~S" first)))))
      ((characterp item)
       (depict-character markup-stream item))
      (t (error "Bad depict-styled-text item: ~S" item)))))
