@@ -53,7 +53,7 @@ Rights Reserved.
                                         <description class="CardViewText" hide="true" id="cvHomeAddress2"/>
                                         <description class="CardViewText" hide="true" id="cvHomeCityStZip"/>
                                         <description class="CardViewText" hide="true" id="cvHomeCountry"/>
-                                        <description class="CardViewText" hide="true" id="cvHomeWebPageBox">
+                                        <description class="CardViewLink" hide="true" id="cvHomeWebPageBox">
 						<html:p><html:a onclick="return openLink('cvHomeWebPage');" href="" id="cvHomeWebPage"/>
                                         </html:p></description>
 				</vbox>
