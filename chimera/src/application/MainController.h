@@ -70,6 +70,8 @@ class BookmarksService;
     FindDlgController* mFindDialog;
 
     MVPreferencesController	*preferencesController;
+
+    NSString* mStartURL;
 }
 
 -(void)dealloc;
