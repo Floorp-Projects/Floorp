@@ -1,0 +1,81 @@
+#!nmake
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+# the License for the specific language governing rights and limitations
+# under the License.
+#
+# The Initial Developer of the Original Code is Sun Microsystems,
+# Inc. Portions created by Sun are Copyright (C) 1999 Sun
+# Microsystems, Inc. All Rights Reserved.
+
+DEPTH=..\..\..
+IGNORE_MANIFEST=1
+
+MAKE_OBJ_TYPE	= DLL
+DLLNAME = webclient
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+MODULE=webclient 
+
+OBJS =                              \
+    .\$(OBJDIR)\nsActions.obj  \
+    .\$(OBJDIR)\BrowserControlMozillaShim.obj  \
+    $(NULL)
+
+LINCS = \
+	$(NULL)
+
+
+LCFLAGS = \
+        $(NULL)
+
+LLIBS = \
+	$(DIST)\lib\raptorweb.lib \
+	$(DIST)\lib\raptorbasewidget_s.lib \
+	$(DIST)\lib\raptorwidget.lib \
+	$(DIST)\lib\xpcom.lib \
+	$(DIST)\lib\raptorgfxwin.lib \
+	$(DIST)\lib\nsreg.lib \
+	$(DIST)\lib\netlib.lib \
+	$(DIST)\lib\nspr3.lib \
+	$(DIST)\lib\plds3.lib \
+	$(DEPTH)\xpfe\bootstrap\WIN32_D.OBJ\nsSetupRegistry.obj \
+	$(NULL)  
+
+	# $(DIST)\lib\raptorbase.lib \
+	# $(DIST)\lib\xpcom32.lib\
+	# $(DIST)\lib\xpcomds_s.lib\
+
+WIN_LIBS = \
+  version.lib
+
+include <$(DEPTH)\config\rules.mak>
+
+include <..\config\localdefs.mak>
+
+!CMDSWITCHES -S
+
+# generate the jni header
+export:: BrowserControlMozillaShim.h
+
+BrowserControlMozillaShim.h:
+	@echo Assuming class org.mozilla.webclient.BrowserControlMozillaShim is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.BrowserControlMozillaShim
+
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	@echo +++ Creating .\$(OBJDIR)\runem.bat.  Use this to run the test browser.
+	@echo $(JAVA) -Djava.library.path=$(MOZ_SRC)\mozilla\dist\WIN32_D.OBJ\bin -classpath $(JAVAC_CLASSPATH) org.mozilla.webclient.test.EmbeddedMozilla %1% > .\$(OBJDIR)\runem.bat
+
+clobber_all:: clobber
+
+clobber::
+	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f BrowserControlMozillaShim.h
+	rm -f .\$(OBJDIR)\runem.bat

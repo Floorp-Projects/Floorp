@@ -1,0 +1,13 @@
+Wed Jul 28 12:17:30 1999    <edbuns@acm.org>
+
+	* Renamed MozWebShell to webclient.BrowserControl
+
+	* Moved util classes into separate package
+
+	* updated README accordingly
+
+Mon Jul 26 21:32:18 1999    <edburns@acm.org>
+
+	* Prepared the initial checkin of MozWebShell.  Need to rename to
+ 	org.mozilla.webclient.BrowserControl.
+

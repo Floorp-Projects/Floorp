@@ -1,0 +1,67 @@
+Here lies the MozWebShell java wrapper to mozilla M8.
+
+Authors: Kirk Baker <kbaker@eb.com>
+         Ian Wilkinson <iw@ennoble.co>
+
+Build hacking and packaging: Ed Burns <edburns@acm.org>
+
+Requirements:
+
+* built M8 mozilla tree for WinNT4.0
+
+* JDK1.1.7 or greater
+
+* built org.mozilla.util java classes (see NOTE_UTIL)
+
+* Perl 5 perl.exe must be in your path
+
+How To Build:
+
+* make it so the directory in which this file resides is a child of your
+  top level mozilla\java directory
+
+* Copy the files .\config\buildpkg.bat and .\config\outofdate.pl to
+  mozilla\config.  These file were modified after M8 and the
+  modifications are required to build java.
+
+* make sure the environment var JDKHOME is set to your jdk installation
+  directory, ie SET JDKHOME=C:\jdk1.1.8
+
+* type "nmake /f makefile.win all" and hope for the best
+
+* Due to bug 10561 (http://bugzilla.mozilla.org/show_bug.cgi?id=10561)
+  one must do a horrendous workaround:
+
+  In the directory mozilla/dist/WIN32_D.OBJ/bin, copy the components.reg
+  file and the components directory to the following places:
+
+  C:\WINNT\System32
+  %JDKHOME%\jre\bin
+
+How to Run:
+
+* once the build has successfully completed, run this batch file:
+
+  .\src\WIN32_D.OBJ\runem.bat <opt: YOUR_URL>
+
+  Note that YOUR_URL is probably necessary since firewall support wasn't
+  working in M8.
+
+
+Problems:
+
+* clobber_all doesn't remove the .class files from dist\classes.  You
+  have to do this manually.
+
+* post to netscape.public.mozilla.java newsgroup
+
+General notes:
+
+* Please update the ChangeLog (changelo) when you make changes.
+
+NOTE_UTIL:
+
+* this package depends on the org.mozilla.util classes, which can be
+  found in the mozilla tree under mozilla\java\util.  They are a
+  separate checkout and build.  Once you check out the org.mozilla.util
+  classes, see the README in the mozilla\java\util\README.

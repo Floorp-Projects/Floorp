@@ -1,0 +1,40 @@
+Here lies the code that comprises the java enhancers to mozilla.
+
+Authors: see the README files for each individual subdirectory
+
+Requirements:
+
+* JDK1.1.7 or greater (may work with lower versions, haven't checked).
+
+* M8 or post M8 mozilla tree
+
+* Perl 5 perl.exe must be in your path
+
+How To Build:
+
+* make it so the directory in which this file resides is a child of your
+  top level mozilla directory
+
+* Copy the files .\webclient\config\buildpkg.bat and
+  .\webclient\config\outofdate.pl to mozilla\config.  These file were
+  modified after M8 and the modifications are required to build java.
+
+* make sure the environment var JDKHOME is set to your jdk installation
+  directory, ie SET JDKHOME=C:\jdk1.1.8
+
+* type "nmake /f makefile.win all" and hope for the best
+
+* this should compile the clasess into %MOZ_SRC%\dist\classes
+
+Problems:
+
+* clobber_all doesn't remove the .class files from dist\classes.  You
+  have to do this manually.
+
+* post to netscape.public.mozilla.java newsgroup
+
+General notes:
+
+* Please update the ChangeLog (changelo) files in the subdiroctories when
+  you make changes.
+
