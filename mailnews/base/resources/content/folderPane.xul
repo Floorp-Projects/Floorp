@@ -40,7 +40,8 @@
       <treechildren>
 		<treeitem uri="..." 
 		  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-		  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState">
+		  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+          ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
 	  		<treerow >
 				<treecell treeallowevents="true">
 					<titledbutton class="twisty" onclick="return top.ToggleTwisty(event.target.parentNode.parentNode.parentNode)" />
