@@ -87,105 +87,103 @@ static void PrintRegionOutline(RgnHandle inRgn)
 #pragma mark -
 
 /** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 
+ *  See documentation in nsImageMac.h
+ *  @update 
  */
 nsImageMac::nsImageMac()
-:	mImageBitsHandle(nsnull)
-,	mWidth(0)
-,	mHeight(0)
-,	mRowBytes(0)
-,	mBytesPerPixel(0)
-,	mMaskBitsHandle(nsnull)
-,	mAlphaDepth(0)
-,	mARowBytes(0)
-,	mPixelDataSize(0)
+: mImageBitsHandle(nsnull)
+, mWidth(0)
+, mHeight(0)
+, mRowBytes(0)
+, mBytesPerPixel(0)
+, mMaskBitsHandle(nsnull)
+, mAlphaDepth(0)
+, mARowBytes(0)
 , mDecodedX1(0)
 , mDecodedY1(0)
 , mDecodedX2(0)
 , mDecodedY2(0)
 {
-	::memset(&mImagePixmap, 0, sizeof(PixMap));
-	::memset(&mMaskPixmap, 0, sizeof(PixMap));
-	
+  ::memset(&mImagePixmap, 0, sizeof(PixMap));
+  ::memset(&mMaskPixmap, 0, sizeof(PixMap));
 }
 
 /** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 
+ *  See documentation in nsImageMac.h
+ *  @update 
  */
 nsImageMac::~nsImageMac()
 {
-	if (mImageBitsHandle)
-		::DisposeHandle(mImageBitsHandle);
-		
-	if (mMaskBitsHandle)
-		::DisposeHandle(mMaskBitsHandle);
-	
-	// dispose of the color tables if we have them
-	if (mImagePixmap.pmTable)
-	{
-		::DisposeCTable(mImagePixmap.pmTable);
-	}
-	
-	if (mMaskPixmap.pmTable)
-	{
-		::DisposeCTable(mMaskPixmap.pmTable);
-	}
-		
+  if (mImageBitsHandle)
+    ::DisposeHandle(mImageBitsHandle);
+    
+  if (mMaskBitsHandle)
+    ::DisposeHandle(mMaskBitsHandle);
+  
+  // dispose of the color tables if we have them
+  if (mImagePixmap.pmTable)
+  {
+    ::DisposeCTable(mImagePixmap.pmTable);
+  }
+  
+  if (mMaskPixmap.pmTable)
+  {
+    ::DisposeCTable(mMaskPixmap.pmTable);
+  }
+    
 }
 
 NS_IMPL_ISUPPORTS2(nsImageMac, nsIImage, nsIImageMac);
 
 /** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 
+ *  See documentation in nsImageMac.h
+ *  @update 
  */
 PRUint8* 
 nsImageMac::GetBits()
 {
-	if (!mImageBitsHandle)
-	{
-		NS_ASSERTION(0, "Getting bits for non-existent image");
-		return nsnull;
-	}
-	
-	// pixels should be locked here!
+  if (!mImageBitsHandle)
+  {
+    NS_ASSERTION(0, "Getting bits for non-existent image");
+    return nsnull;
+  }
+  
+  // pixels should be locked here!
 #if DEBUG
-	SInt8		pixelFlags = HGetState(mImageBitsHandle);
-	NS_ASSERTION(pixelFlags & (1 << 7), "Pixels must be locked here");
+  SInt8   pixelFlags = HGetState(mImageBitsHandle);
+  NS_ASSERTION(pixelFlags & (1 << 7), "Pixels must be locked here");
 #endif
-	
-	return (PRUint8 *)*mImageBitsHandle;
+  
+  return (PRUint8 *)*mImageBitsHandle;
 }
 
 
 /** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 
+ *  See documentation in nsImageMac.h
+ *  @update 
  */
 PRUint8* 
 nsImageMac::GetAlphaBits()
 {
-	if (!mMaskBitsHandle)
-	{
-		NS_ASSERTION(0, "Getting bits for non-existent image");
-		return nsnull;
-	}
-	
-	// pixels should be locked here!
+  if (!mMaskBitsHandle)
+  {
+    NS_ASSERTION(0, "Getting bits for non-existent image");
+    return nsnull;
+  }
+  
+  // pixels should be locked here!
 #if DEBUG
-	SInt8		pixelFlags = HGetState(mMaskBitsHandle);
-	NS_ASSERTION(pixelFlags & (1 << 7), "Pixels must be locked here");
+  SInt8   pixelFlags = HGetState(mMaskBitsHandle);
+  NS_ASSERTION(pixelFlags & (1 << 7), "Pixels must be locked here");
 #endif
-	
-	return (PRUint8 *)*mMaskBitsHandle;
+  
+  return (PRUint8 *)*mMaskBitsHandle;
 }
 
 
 /** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 08/03/99 -- cleared out the image pointer - dwc
+ *  See documentation in nsImageMac.h
+ *  @update 08/03/99 -- cleared out the image pointer - dwc
  */
 nsresult 
 nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements)
@@ -207,30 +205,30 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
   mBytesPerPixel = (mImagePixmap.pixelSize <= 8) ? 1 : mImagePixmap.pixelSize / 8;
 
   mRowBytes = mImagePixmap.rowBytes & 0x3FFF;   // we only set the top bit, but QuickDraw can use the top 2 bits
-			
-	if (aMaskRequirements != nsMaskRequirements_kNoMask)
-	{
-  	CTabHandle	grayRamp = nsnull;
+      
+  if (aMaskRequirements != nsMaskRequirements_kNoMask)
+  {
+    CTabHandle  grayRamp = nsnull;
 
-		switch (aMaskRequirements)
-		{
-			case nsMaskRequirements_kNeeds1Bit:
-				mAlphaDepth = 1;
-				break;
-				
-			case nsMaskRequirements_kNeeds8Bit:
+    switch (aMaskRequirements)
+    {
+      case nsMaskRequirements_kNeeds1Bit:
+        mAlphaDepth = 1;
+        break;
+        
+      case nsMaskRequirements_kNeeds8Bit:
 /*
-				err = MakeGrayscaleColorTable(256, &grayRamp);
-				if (err != noErr)
-					return NS_ERROR_OUT_OF_MEMORY;
-*/					
-				mAlphaDepth = 8;		  				
-				break;
+        err = MakeGrayscaleColorTable(256, &grayRamp);
+        if (err != noErr)
+          return NS_ERROR_OUT_OF_MEMORY;
+*/          
+        mAlphaDepth = 8;              
+        break;
 
       default:
         break; // avoid compiler warning
-		}
-		
+    }
+    
     err = CreatePixMap(aWidth, aHeight, mAlphaDepth, grayRamp, mMaskPixmap, mMaskBitsHandle);
     if (err != noErr)
     {
@@ -240,14 +238,14 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
     }
 
     mARowBytes = mMaskPixmap.rowBytes & 0x3FFF;   // we only set the top bit, but QuickDraw can use the top 2 bits
-	}
-	
-	return NS_OK;
+  }
+  
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 
+ *  See documentation in nsImageMac.h
+ *  @update 
  */
 void nsImageMac::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
@@ -259,23 +257,21 @@ void nsImageMac::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect
 
 
 /** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 
+ *  See documentation in nsImageMac.h
+ *  @update 
  */
 NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY,
-								 PRInt32 aSWidth, PRInt32 aSHeight, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+                 PRInt32 aSWidth, PRInt32 aSHeight, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-	Rect								srcRect, dstRect, maskRect;
+  Rect                srcRect, dstRect, maskRect;
 
-	if (!mImageBitsHandle)
-		return NS_ERROR_FAILURE;
+  if (!mImageBitsHandle)
+    return NS_ERROR_FAILURE;
 
   PRInt32 srcWidth = aSWidth;
   PRInt32 srcHeight = aSHeight;
   PRInt32 dstWidth = aDWidth;
   PRInt32 dstHeight = aDHeight;
-  PRInt32 dstOrigX = aDX;
-  PRInt32 dstOrigY = aDY;
 
   // Ensure that the source rect is no larger than our decoded rect.
   // If it is, clip the source rect, and scale the difference to adjust
@@ -315,93 +311,93 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
   if (mMaskBitsHandle)
     mMaskPixmap.baseAddr = *mMaskBitsHandle;
 
-	::SetRect(&srcRect, aSX, aSY, aSX + aSWidth, aSY + aSHeight);
-	maskRect = srcRect;
-	::SetRect(&dstRect, aDX, aDY, aDX + aDWidth, aDY + aDHeight);
+  ::SetRect(&srcRect, aSX, aSY, aSX + aSWidth, aSY + aSHeight);
+  maskRect = srcRect;
+  ::SetRect(&dstRect, aDX, aDY, aDX + aDWidth, aDY + aDHeight);
 
-	// get the destination pix map
-	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
-	CGrafPtr		destPort;
-	nsresult		rv = surface->GetGrafPtr(&destPort);
-	if (NS_FAILED(rv)) return rv;
-	
-	StPortSetter    destSetter(destPort);
-	::ForeColor(blackColor);
-	::BackColor(whiteColor);
-	
-	PixMapHandle		destPixels = ::GetGWorldPixMap(destPort);
-	NS_ASSERTION(destPixels, "No dest pixels!");
-	
-	// can only do this if we are NOT printing
-	if (RenderingToPrinter(aContext))		// we are printing
-	{
-		if (!mMaskBitsHandle)
-		{
-			::CopyBits((BitMap*)&mImagePixmap, (BitMap*)*destPixels, &srcRect, &dstRect, srcCopy, nsnull);
-		}
-		else
-		{
-			GWorldPtr	tempGWorld;
-			
-			// if we have a mask, blit the transparent image into a new GWorld which is
-			// just white, and print that. This is marginally better than printing the
-			// image directly, since the transparent pixels come out black.
-			
-			// We do all this because Copy{Deep}Mask is not supported when printing
-			if (AllocateGWorld(mImagePixmap.pixelSize, nsnull, srcRect, &tempGWorld) == noErr)
-			{
-			  // erase it to white
-				ClearGWorld(tempGWorld);
+  // get the destination pix map
+  nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
+  CGrafPtr    destPort;
+  nsresult    rv = surface->GetGrafPtr(&destPort);
+  if (NS_FAILED(rv)) return rv;
+  
+  StPortSetter    destSetter(destPort);
+  ::ForeColor(blackColor);
+  ::BackColor(whiteColor);
+  
+  PixMapHandle    destPixels = ::GetGWorldPixMap(destPort);
+  NS_ASSERTION(destPixels, "No dest pixels!");
+  
+  // can only do this if we are NOT printing
+  if (RenderingToPrinter(aContext))   // we are printing
+  {
+    if (!mMaskBitsHandle)
+    {
+      ::CopyBits((BitMap*)&mImagePixmap, (BitMap*)*destPixels, &srcRect, &dstRect, srcCopy, nsnull);
+    }
+    else
+    {
+      GWorldPtr tempGWorld;
+      
+      // if we have a mask, blit the transparent image into a new GWorld which is
+      // just white, and print that. This is marginally better than printing the
+      // image directly, since the transparent pixels come out black.
+      
+      // We do all this because Copy{Deep}Mask is not supported when printing
+      if (AllocateGWorld(mImagePixmap.pixelSize, nsnull, srcRect, &tempGWorld) == noErr)
+      {
+        // erase it to white
+        ClearGWorld(tempGWorld);
 
-				PixMapHandle		tempPixMap = ::GetGWorldPixMap(tempGWorld);
-				if (tempPixMap)
-				{
-					StPixelLocker		tempPixLocker(tempPixMap);			// locks the pixels
-				
-					// copy from the destination into our temp GWorld, to get the background
-					// for some reason this copies garbage, so we erase to white above instead.
-					// ::CopyBits((BitMap*)*destPixels, (BitMap*)*tempPixMap, &dstRect, &srcRect, srcCopy, nsnull);
-					
-					if (mAlphaDepth > 1)
-						::CopyDeepMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)*tempPixMap, &srcRect, &maskRect, &srcRect, srcCopy, nsnull);
-					else
-						::CopyMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)*tempPixMap, &srcRect, &maskRect, &srcRect);
+        PixMapHandle    tempPixMap = ::GetGWorldPixMap(tempGWorld);
+        if (tempPixMap)
+        {
+          StPixelLocker   tempPixLocker(tempPixMap);      // locks the pixels
+        
+          // copy from the destination into our temp GWorld, to get the background
+          // for some reason this copies garbage, so we erase to white above instead.
+          // ::CopyBits((BitMap*)*destPixels, (BitMap*)*tempPixMap, &dstRect, &srcRect, srcCopy, nsnull);
+          
+          if (mAlphaDepth > 1)
+            ::CopyDeepMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)*tempPixMap, &srcRect, &maskRect, &srcRect, srcCopy, nsnull);
+          else
+            ::CopyMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)*tempPixMap, &srcRect, &maskRect, &srcRect);
 
-					// now copy to the screen
-					::CopyBits((BitMap*)*tempPixMap, (BitMap*)*destPixels, &srcRect, &dstRect, srcCopy, nsnull);
-				}
-				
-				::DisposeGWorld(tempGWorld);	// do this after dtor of tempPixLocker!
-			}
-		}
-	}
-	else	// not printing
+          // now copy to the screen
+          ::CopyBits((BitMap*)*tempPixMap, (BitMap*)*destPixels, &srcRect, &dstRect, srcCopy, nsnull);
+        }
+        
+        ::DisposeGWorld(tempGWorld);  // do this after dtor of tempPixLocker!
+      }
+    }
+  }
+  else  // not printing
   {
     CopyBitsWithMask((BitMap*)(&mImagePixmap),
         mMaskBitsHandle ? (BitMap*)(&mMaskPixmap) : nsnull, mAlphaDepth,
         (BitMap*)(*destPixels),
         srcRect, maskRect, dstRect, PR_TRUE);
-	}
-	
-	return NS_OK;
+  }
+  
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 
+ *  See documentation in nsImageMac.h
+ *  @update 
  */
 NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext, 
-								 nsDrawingSurface aSurface,
-								 PRInt32 aX, PRInt32 aY, 
-								 PRInt32 aWidth, PRInt32 aHeight)
+                 nsDrawingSurface aSurface,
+                 PRInt32 aX, PRInt32 aY, 
+                 PRInt32 aWidth, PRInt32 aHeight)
 {
 
-	return Draw(aContext,aSurface,0,0,mWidth,mHeight,aX,aY,aWidth,aHeight);
+  return Draw(aContext,aSurface,0,0,mWidth,mHeight,aX,aY,aWidth,aHeight);
 }
  
 /** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 
+ *  See documentation in nsImageMac.h
+ *  @update 
  */
 NS_IMETHODIMP nsImageMac :: DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
@@ -424,13 +420,13 @@ NS_IMETHODIMP nsImageMac :: DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt3
 
   ::ForeColor(blackColor);
   ::BackColor(whiteColor);
-	
+  
   // get the destination pix map
   aDstImage->LockImagePixels(PR_FALSE);
   aDstImage->LockImagePixels(PR_TRUE);
   //nsImageMac* dstMacImage = static_cast<nsImageMac*>(aDstImage);
   nsCOMPtr<nsIImageMac> dstMacImage( do_QueryInterface(aDstImage));
-	
+  
   PixMap* destPixels;
   dstMacImage->GetPixMap(&destPixels);
   NS_ASSERTION(destPixels, "No dest pixels!");
@@ -449,18 +445,18 @@ NS_IMETHODIMP nsImageMac :: DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt3
 
 
 /** ---------------------------------------------------
- *	See documentation in nsImageMac.h
- *	@update 
+ *  See documentation in nsImageMac.h
+ *  @update 
  */
 nsresult nsImageMac::Optimize(nsIDeviceContext* aContext)
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 #pragma mark -
 
 /** ---------------------------------------------------
- *	Lock down the image pixels
+ *  Lock down the image pixels
  */
 NS_IMETHODIMP
 nsImageMac::LockImagePixels(PRBool aMaskPixels)
@@ -469,8 +465,8 @@ nsImageMac::LockImagePixels(PRBool aMaskPixels)
     return NS_ERROR_NOT_INITIALIZED;
   
   if (aMaskPixels && !mMaskBitsHandle)
-  	return NS_ERROR_NOT_INITIALIZED;
-  	
+    return NS_ERROR_NOT_INITIALIZED;
+    
   Handle thePixelsHandle = (aMaskPixels ? mMaskBitsHandle : mImageBitsHandle);
   ::HLock(thePixelsHandle);
 
@@ -483,7 +479,7 @@ nsImageMac::LockImagePixels(PRBool aMaskPixels)
 }
 
 /** ---------------------------------------------------
- *	Unlock the pixels
+ *  Unlock the pixels
  */
 NS_IMETHODIMP
 nsImageMac::UnlockImagePixels(PRBool aMaskPixels)
@@ -492,17 +488,17 @@ nsImageMac::UnlockImagePixels(PRBool aMaskPixels)
     return NS_ERROR_NOT_INITIALIZED;
   
   if (aMaskPixels && !mMaskBitsHandle)
-  	return NS_ERROR_NOT_INITIALIZED;
-  	
-	Handle		thePixelsHandle = (aMaskPixels ? mMaskBitsHandle : mImageBitsHandle);
-	::HUnlock(thePixelsHandle);
-	
+    return NS_ERROR_NOT_INITIALIZED;
+    
+  Handle    thePixelsHandle = (aMaskPixels ? mMaskBitsHandle : mImageBitsHandle);
+  ::HUnlock(thePixelsHandle);
+  
   if (aMaskPixels)
     mMaskPixmap.baseAddr = nsnull;
   else
     mImagePixmap.baseAddr = nsnull;
     
-	return NS_OK;
+  return NS_OK;
 }
 
 #pragma mark -
@@ -520,19 +516,19 @@ OSErr nsImageMac::CreatePixMap( PRInt32 aWidth, PRInt32 aHeight,
 
 
 /** -----------------------------------------------------------------
- *	Create a PixMap, filling in ioPixMap
+ *  Create a PixMap, filling in ioPixMap
  *  Call the CreatePixMap wrapper instead.
  */
-OSErr nsImageMac::CreatePixMapInternal(	PRInt32 aWidth, PRInt32 aHeight, 
-								PRInt32 aDepth, CTabHandle aColorTable, 
-								PixMap& ioPixMap, Handle& ioBitsHandle, PRBool aAllow2Bytes)
+OSErr nsImageMac::CreatePixMapInternal( PRInt32 aWidth, PRInt32 aHeight, 
+                PRInt32 aDepth, CTabHandle aColorTable, 
+                PixMap& ioPixMap, Handle& ioBitsHandle, PRBool aAllow2Bytes)
 {
-	PRInt16 bufferdepth;
-	OSErr   err = noErr;
+  PRInt16 bufferdepth;
+  OSErr   err = noErr;
 
-	ioPixMap.cmpCount = 0;
-	
-	// See IM:QuickDraw pp 4-92 for GetCTable params
+  ioPixMap.cmpCount = 0;
+  
+  // See IM:QuickDraw pp 4-92 for GetCTable params
   switch(aDepth)
   {
     case 1:
@@ -540,7 +536,7 @@ OSErr nsImageMac::CreatePixMapInternal(	PRInt32 aWidth, PRInt32 aHeight,
       ioPixMap.cmpCount = 1;
       ioPixMap.cmpSize = 1;
       // default to black & white colortable
-      ioPixMap.pmTable = aColorTable ? aColorTable : GetCTable(32 + 1);		
+      ioPixMap.pmTable = aColorTable ? aColorTable : GetCTable(32 + 1);   
       ioPixMap.pixelSize = 1;
       break;
 
@@ -619,11 +615,11 @@ OSErr nsImageMac::CreatePixMapInternal(	PRInt32 aWidth, PRInt32 aHeight,
     
     err = AllocateBitsHandle(imageSize, &ioBitsHandle);
     if (err != noErr)
-			return err;
-	
-	// We can only set this after locking the pixels handle
+      return err;
+  
+  // We can only set this after locking the pixels handle
     ioPixMap.baseAddr = nsnull;     
-	// set the high bit to tell CopyBits that this is a PixMap
+  // set the high bit to tell CopyBits that this is a PixMap
     ioPixMap.rowBytes = rowBytes | 0x8000;    
     ioPixMap.bounds.top = 0;
     ioPixMap.bounds.left = 0;
@@ -635,25 +631,32 @@ OSErr nsImageMac::CreatePixMapInternal(	PRInt32 aWidth, PRInt32 aHeight,
     ioPixMap.vRes = 72 << 16;     // 72 dpi as Fixed
 #if TARGET_CARBON
     ioPixMap.pixelFormat = 0;
-    ioPixMap.pmExt = 0;	
+    ioPixMap.pmExt = 0; 
 #else
     ioPixMap.planeBytes = 0;
     ioPixMap.pmReserved = 0;
 #endif
     ioPixMap.pmVersion = 0;
-  }	
+  } 
 
   return noErr;
 }
 
 
 /** -----------------------------------------------------------------
- *	Allocate bits handle, trying first in the heap, and then in temp mem.
+ *  Allocate bits handle, trying first in the heap, and then in temp mem.
  */
 OSErr nsImageMac::AllocateBitsHandle(PRInt32 imageSizeBytes, Handle *outHandle)
 {
-	*outHandle = nsnull;
-	
+#if defined(XP_MACOSX)
+  // on Mac OS X, we don't have to worry about heap space at all
+  *outHandle = ::NewHandleClear(imageSizeBytes);
+  return (*outHandle) ? noErr : memFullErr;
+
+#else
+  
+  *outHandle = nsnull;
+
   // We have to be careful here not to fill the heap.  // 
   // The strategy is this:
   //   1. If we have plenty of heap space free, allocate the GWorld in
@@ -664,25 +667,26 @@ OSErr nsImageMac::AllocateBitsHandle(PRInt32 imageSizeBytes, Handle *outHandle)
   //
 
   // threshold at which we go to temp mem
-	const long kUseTempMemFreeSpace = (1024 * 1024);
-	const long kUseTempMemContigSpace	= (768 * 1024);
-	
-	long	totalSpace, contiguousSpace;
-	::PurgeSpace(&totalSpace, &contiguousSpace);		// this does not purge memory!
-	
-	if (totalSpace > kUseTempMemFreeSpace && contiguousSpace > kUseTempMemContigSpace)
-	{
-		*outHandle = ::NewHandleClear(imageSizeBytes);
-		if (*outHandle) return noErr;
-	}
+  const long kUseTempMemFreeSpace = (1024 * 1024);
+  const long kUseTempMemContigSpace = (768 * 1024);
+  
+  long  totalSpace, contiguousSpace;
+  ::PurgeSpace(&totalSpace, &contiguousSpace);    // this does not purge memory!
+  
+  if (totalSpace > kUseTempMemFreeSpace && contiguousSpace > kUseTempMemContigSpace)
+  {
+    *outHandle = ::NewHandleClear(imageSizeBytes);
+    if (*outHandle) return noErr;
+  }
   
   OSErr err;
   *outHandle = ::TempNewHandle(imageSizeBytes, &err);
   if (! *outHandle)
-  	return memFullErr;
+    return memFullErr;
   
   ::BlockZero(**outHandle, imageSizeBytes);
   return noErr;
+#endif
 }
 
 
@@ -701,7 +705,7 @@ OSErr nsImageMac::AllocateBitsHandle(PRInt32 imageSizeBytes, Handle *outHandle)
  *  at least for the icon code in this class). That's why this function is private and 
  *  wrapped.
  *
- *	See <http://developer.apple.com/technotes/qd/qd_15.html>
+ *  See <http://developer.apple.com/technotes/qd/qd_15.html>
  */
 PRInt32  nsImageMac::CalculateRowBytesInternal(PRUint32 aWidth, PRUint32 aDepth, PRBool aAllow2Bytes)
 {
@@ -724,32 +728,32 @@ PRInt32  nsImageMac::CalculateRowBytes(PRUint32 aWidth, PRUint32 aDepth)
 #pragma mark -
 
 /** ---------------------------------------------------
- *	Erase the GWorld contents
+ *  Erase the GWorld contents
  */
 void nsImageMac::ClearGWorld(GWorldPtr theGWorld)
 {
-	PixMapHandle	thePixels;
+  PixMapHandle  thePixels;
 
-	thePixels = ::GetGWorldPixMap(theGWorld);
+  thePixels = ::GetGWorldPixMap(theGWorld);
 
-	StPixelLocker	pixelLocker(thePixels);
-  StGWorldPortSetter  tilingWorldSetter(theGWorld);	
-	
-	// White the offscreen
-	::BackColor(whiteColor);
+  StPixelLocker pixelLocker(thePixels);
+  StGWorldPortSetter  tilingWorldSetter(theGWorld); 
+  
+  // White the offscreen
+  ::BackColor(whiteColor);
 
   Rect portRect;
   ::GetPortBounds(theGWorld, &portRect);
-	::EraseRect(&portRect);
+  ::EraseRect(&portRect);
 }
 
 /** -----------------------------------------------------------------
- *	Allocate a GWorld, trying first in the heap, and then in temp mem.
+ *  Allocate a GWorld, trying first in the heap, and then in temp mem.
  */
 OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rect& bounds, GWorldPtr *outGWorld)
 {
-	*outGWorld = nsnull;
-	
+  *outGWorld = nsnull;
+  
   // We have to be careful here not to fill the heap with GWorld pieces.
   // The key to understanding this is that, even if you allocate a GWorld
   // with the 'useTempMem' flag, it puts data handles in the heap (GDevices,
@@ -766,29 +770,29 @@ OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rec
   //      all.
 
   // threshold at which we go to temp mem
-	const long kUseTempMemFreeSpace = (1024 * 1024);
-	const long kUseTempMemContigSpace	= (768 * 1024);
-	
-	long	totalSpace, contiguousSpace;
-	::PurgeSpace(&totalSpace, &contiguousSpace);		// this does not purge memory!
-	
-	if (totalSpace > kUseTempMemFreeSpace && contiguousSpace > kUseTempMemContigSpace)
-	{
-		::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, 0);
-		if (*outGWorld) return noErr;
-	}
+  const long kUseTempMemFreeSpace = (1024 * 1024);
+  const long kUseTempMemContigSpace = (768 * 1024);
+  
+  long  totalSpace, contiguousSpace;
+  ::PurgeSpace(&totalSpace, &contiguousSpace);    // this does not purge memory!
+  
+  if (totalSpace > kUseTempMemFreeSpace && contiguousSpace > kUseTempMemContigSpace)
+  {
+    ::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, 0);
+    if (*outGWorld) return noErr;
+  }
 
-	// theshold at which we refuse to allocate at all
-	const long kReserveHeapFreeSpace = (512 * 1024);
-	const long kReserveHeapContigSpace	= (384 * 1024);
-	
-	if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserveHeapContigSpace)
-	{
-  	::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, useTempMem);
-		if (*outGWorld) return noErr;
-	}
+  // theshold at which we refuse to allocate at all
+  const long kReserveHeapFreeSpace = (512 * 1024);
+  const long kReserveHeapContigSpace  = (384 * 1024);
+  
+  if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserveHeapContigSpace)
+  {
+    ::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, useTempMem);
+    if (*outGWorld) return noErr;
+  }
 
-	return memFullErr;
+  return memFullErr;
 }
 
 void nsImageMac::CopyBitsWithMask(const BitMap* srcBits, const BitMap* maskBits, PRInt16 maskDepth, const BitMap* destBits,
@@ -858,32 +862,32 @@ nsImageMac :: ConvertToPICT ( PicHandle* outPicture )
 
   Rect picFrame = mImagePixmap.bounds;
   Rect maskFrame = mMaskPixmap.bounds;
-  GWorldPtr	tempGWorld;
+  GWorldPtr tempGWorld;
   if (AllocateGWorld(mImagePixmap.pixelSize, nsnull, picFrame, &tempGWorld) == noErr) 
   {
     // erase it to white
-  	ClearGWorld(tempGWorld);
+    ClearGWorld(tempGWorld);
 
-  	PixMapHandle tempPixMap = ::GetGWorldPixMap(tempGWorld);
-  	if (tempPixMap) {
-  		StPixelLocker tempPixLocker(tempPixMap);			// locks the pixels
-  	
-  	  // the handles may have moved, make sure we reset baseAddr of our
-  	  // pixmaps to the new pointer.
+    PixMapHandle tempPixMap = ::GetGWorldPixMap(tempGWorld);
+    if (tempPixMap) {
+      StPixelLocker tempPixLocker(tempPixMap);      // locks the pixels
+    
+      // the handles may have moved, make sure we reset baseAddr of our
+      // pixmaps to the new pointer.
       StHandleLocker  imageBitsLocker(mImageBitsHandle);
       StHandleLocker  maskBitsLocker(mMaskBitsHandle);    // ok with nil handle
       mImagePixmap.baseAddr = *mImageBitsHandle;
       if (mMaskBitsHandle)
         mMaskPixmap.baseAddr = *mMaskBitsHandle;
 
-  		// copy from the destination into our temp GWorld, to get the background
+      // copy from the destination into our temp GWorld, to get the background
       CopyBitsWithMask((BitMap*)(&mImagePixmap),
           mMaskBitsHandle ? (BitMap*)(&mMaskPixmap) : nsnull, mAlphaDepth,
           (BitMap*)(*tempPixMap), picFrame, maskFrame, picFrame, PR_FALSE);
       
-  		// now copy into the picture
-  		GWorldPtr currPort;
-  		GDHandle currDev;
+      // now copy into the picture
+      GWorldPtr currPort;
+      GDHandle currDev;
       ::GetGWorld(&currPort, &currDev);
       ::SetGWorld(tempGWorld, nsnull);    
       PicHandle thePicture = ::OpenPicture(&picFrame);
@@ -892,8 +896,8 @@ nsImageMac :: ConvertToPICT ( PicHandle* outPicture )
         ::ForeColor(blackColor);
         ::BackColor(whiteColor);
       
-  		  ::CopyBits((BitMap*)*tempPixMap, (BitMap*)*tempPixMap,
-  		               &picFrame, &picFrame, srcCopy, nsnull);
+        ::CopyBits((BitMap*)*tempPixMap, (BitMap*)*tempPixMap,
+                     &picFrame, &picFrame, srcCopy, nsnull);
       
         ::ClosePicture();
         err = QDError();
@@ -903,9 +907,9 @@ nsImageMac :: ConvertToPICT ( PicHandle* outPicture )
       
       if ( err == noErr )       
         *outPicture = thePicture;
-  	}
-	
-	  ::DisposeGWorld(tempGWorld);	      // do this after dtor of tempPixLocker!
+    }
+  
+    ::DisposeGWorld(tempGWorld);        // do this after dtor of tempPixLocker!
   }
   else
     return NS_ERROR_FAILURE;
@@ -1188,7 +1192,6 @@ nsImageMac::CopyPixMapInternal(Rect& aSrcRegion,
                               ) 
 {
     OSStatus err;
-    PRBool pixelsNeedLocking = PR_FALSE;
     PixMap destPixmap;
     PixMapPtr srcPixmap;
     Handle *srcData;
@@ -1535,8 +1538,8 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    const nsRect &aTileRect)
 {
-	if (!mImageBitsHandle)
-		return NS_ERROR_FAILURE;
+  if (!mImageBitsHandle)
+    return NS_ERROR_FAILURE;
 
   // lock and set up bits handles
   StHandleLocker  imageBitsLocker(mImageBitsHandle);
@@ -1546,11 +1549,11 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
   if (mMaskBitsHandle)
     mMaskPixmap.baseAddr = *mMaskBitsHandle;
 
-	Rect	imageRect;
-	imageRect.left = 0;
-	imageRect.top = 0;
-	imageRect.right = mWidth;
-	imageRect.bottom = mHeight;
+  Rect  imageRect;
+  imageRect.left = 0;
+  imageRect.top = 0;
+  imageRect.right = mWidth;
+  imageRect.bottom = mHeight;
 
   // get the destination pix map
   nsDrawingSurfaceMac* destSurface = static_cast<nsDrawingSurfaceMac*>(aSurface);
@@ -1568,49 +1571,49 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
   
   // How many tiles will we need? Allocating GWorlds is expensive,
   // so if only a few tilings are required, the old way is preferable.
-  const PRInt32	kTilingCopyThreshold = 64;
+  const PRInt32 kTilingCopyThreshold = 64;
   
-  PRInt32	tilingBoundsWidth 	= aSXOffset + aTileRect.width;
-  PRInt32	tilingBoundsHeight 	= aSYOffset + aTileRect.height;
+  PRInt32 tilingBoundsWidth   = aSXOffset + aTileRect.width;
+  PRInt32 tilingBoundsHeight  = aSYOffset + aTileRect.height;
 
-  PRInt32	tiledRows = (tilingBoundsHeight + mHeight - 1) / mHeight;   // round up
-  PRInt32	tiledCols = (tilingBoundsWidth + mWidth - 1) / mWidth;      // round up
+  PRInt32 tiledRows = (tilingBoundsHeight + mHeight - 1) / mHeight;   // round up
+  PRInt32 tiledCols = (tilingBoundsWidth + mWidth - 1) / mWidth;      // round up
 
-  PRInt32	numTiles = tiledRows * tiledCols;
+  PRInt32 numTiles = tiledRows * tiledCols;
   if (numTiles <= kTilingCopyThreshold)
   {
     // the outside bounds of the tiled area
-    PRInt32 aY0 = aTileRect.y - aSYOffset,
-            aX0 = aTileRect.x - aSXOffset,
-            aY1 = aTileRect.y + aTileRect.height,
-            aX1 = aTileRect.x + aTileRect.width;
+    PRInt32 topY    = aTileRect.y - aSYOffset,
+            bottomY = aTileRect.y + aTileRect.height,
+            leftX   = aTileRect.x - aSXOffset,
+            rightX  = aTileRect.x + aTileRect.width;
 
-  	for (PRInt32 y = aY0; y < aY1; y += mHeight)
-  	{
-	    for (PRInt32 x = aX0; x < aX1; x += mWidth)
-  		{
-	  		Rect		imageDestRect = imageRect;
-	  		Rect    imageSrcRect  = imageRect;
-	  		::OffsetRect(&imageDestRect, x, y);
+    for (PRInt32 y = topY; y < bottomY; y += mHeight)
+    {
+      for (PRInt32 x = leftX; x < rightX; x += mWidth)
+      {
+        Rect    imageDestRect = imageRect;
+        Rect    imageSrcRect  = imageRect;
+        ::OffsetRect(&imageDestRect, x, y);
 
-	  		if (x == aX1 - mWidth) {
-	  		  imageDestRect.right = PR_MIN(imageDestRect.right, aX1);
-	  		  imageSrcRect.right = imageRect.left + (imageDestRect.right - imageDestRect.left);
-	  		}
+        if (x > rightX - mWidth) {
+          imageDestRect.right = PR_MIN(imageDestRect.right, rightX);
+          imageSrcRect.right = imageRect.left + (imageDestRect.right - imageDestRect.left);
+        }
         
-	  		if (y == aY1 - mHeight) {
-	  		  imageDestRect.bottom = PR_MIN(imageDestRect.bottom, aY1);
-	  		  imageSrcRect.bottom = imageRect.top + (imageDestRect.bottom - imageDestRect.top);
-	  		}
-	  		
-	  		// CopyBits will do the truncation for us at the edges
+        if (y > bottomY - mHeight) {
+          imageDestRect.bottom = PR_MIN(imageDestRect.bottom, bottomY);
+          imageSrcRect.bottom = imageRect.top + (imageDestRect.bottom - imageDestRect.top);
+        }
+        
+        // CopyBits will do the truncation for us at the edges
         CopyBitsWithMask((BitMap*)(&mImagePixmap),
             mMaskBitsHandle ? (BitMap*)(&mMaskPixmap) : nsnull, mAlphaDepth,
             (BitMap*)(*destPixels), imageSrcRect, imageSrcRect, imageDestRect, PR_TRUE);
-	  	}
-  	}
+      }
+    }
   
-  	return NS_OK;
+    return NS_OK;
   }
 
   Rect  tileDestRect;   // aTileRect as a Mac rect
@@ -1790,7 +1793,7 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
     CopyBitsWithMask((BitMap*)(*tilingPixels),
         maskingPixels ? (BitMap*)(*maskingPixels) : nsnull, mAlphaDepth,
         (BitMap*)(*destPixels), tileRect, tileRect, tileDestRect, PR_TRUE);
-    
+
   } // scope for locks
 
   // clean up  
@@ -1809,7 +1812,7 @@ NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
 {
   nsresult rv = NS_ERROR_FAILURE;
   
-	if (!RenderingToPrinter(aContext))
+  if (!RenderingToPrinter(aContext))
     rv = DrawTileQuickly(aContext, aSurface, aSXOffset, aSYOffset, aTileRect);
 
   if (NS_FAILED(rv))
