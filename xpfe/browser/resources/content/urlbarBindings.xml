@@ -101,7 +101,7 @@
           box.setAttribute("searchEngine", aEngineId);
           box.setAttribute("name", aName);
           box.setAttribute("icon", aIcon);
-          box.engineIndex = this.childNodes.length;
+          box.setAttribute("engineIndex", this.childNodes.length);
           this.mSearchBox.appendChild(box);
         ]]></body>
       </method>
@@ -332,7 +332,7 @@
     
     <handlers>
       <handler event="mouseover">
-        this.parentNode.selectedIndex = this.engineIndex;
+        this.parentNode.selectedIndex = this.getAttribute("engineIndex");
       </handler>
 
       <handler event="mouseout">
