@@ -51,7 +51,9 @@ IDLSRCS		= \
 		MediaList.idl \
 		$(NULL)
 
-include $(DEPTH)/config/rules.mk
+IDLSRCS		:= $(addprefix $(srcdir)/, $(IDLSRCS))
+
+include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= genx genjs
 
@@ -65,6 +67,6 @@ export:: genx genjs $(IDLSRCS)
 	$(DIST)/bin/idlc -d genjs -j $(IDLSRCS)
 
 install::
-	$(NSINSTALL) genx/nsIDOM*.h $(DEPTH)/dom/public/coreDom
-	$(NSINSTALL) genjs/nsJS*.cpp $(DEPTH)/dom/src/coreDOM
+	$(NSINSTALL) -m 644 genx/nsIDOM*.h $(topsrcdir)/dom/public/coreDom
+	$(NSINSTALL) -m 644 genjs/nsJS*.cpp $(topsrcdir)/dom/src/coreDOM
 
