@@ -26,31 +26,6 @@ class nsIEditor;
 class nsIDocShell;
 class nsISelectionController;
 
-
-#define NS_IGFXTEXTCONTROLFRAME_IID \
-{/* d3ea33ea-9e00-11d3-bccc-0060b0fc76bd*/ \
-0xd3ea33ea, 0x9e00, 0x11d3, \
-{0xbc, 0xcc, 0x0, 0x60, 0xb0, 0xfc, 0x76, 0xbd} }
-
-class nsIGfxTextControlFrame : public nsISupports
-{
-public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IGFXTEXTCONTROLFRAME_IID; return iid; }
-
-	NS_IMETHOD    GetEditor(nsIEditor **aEditor) = 0;
-  NS_IMETHOD    GetDocShell(nsIDocShell** aDocShell) = 0;
-  NS_IMETHOD    SetInnerFocus() = 0;
-  
-  NS_IMETHOD    GetTextLength(PRInt32* aTextLength) = 0;
-  
-  NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart) = 0;
-  NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd) = 0;
-  
-  NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd) = 0;
-  NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd) = 0;
- 
-};
-
 #define NS_IGFXTEXTCONTROLFRAME2_IID \
 {/* A744CFC9-2DA8-416d-A058-ADB1D4B3B534*/ \
 0xa744cfc9, 0x2da8, 0x416d, \
