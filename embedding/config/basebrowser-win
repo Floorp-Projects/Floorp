@@ -201,6 +201,7 @@ nss3.dll
 smime3.dll
 softokn3.dll
 ssl3.dll
+nssckbi.dll
 
 ; rdf
 components\rdf.dll
