@@ -1928,6 +1928,19 @@ nsImageFrame::RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPre
 #define INTERNAL_GOPHER_LENGTH 16 /* "internal-gopher-" length */
 
 void
+nsImageFrame::GetDocumentCharacterSet(nsAWritableString& aCharset) const
+{
+  nsresult rv;
+  nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mContent, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIDocument> doc;
+    rv = htmlContent->GetDocument(*getter_AddRefs(doc));
+    if (NS_SUCCEEDED(rv))
+      (void) doc->GetDocumentCharacterSet(aCharset);
+  }
+}
+
+void
 nsImageFrame::GetURI(const nsAReadableString& aSpec, nsIURI **aURI)
 {
   *aURI = nsnull;
@@ -1954,7 +1967,11 @@ nsImageFrame::GetRealURI(const nsAReadableString& aSpec, nsIURI **aURI)
 {
   nsCOMPtr<nsIURI> baseURI;
   GetBaseURI(getter_AddRefs(baseURI));
-  NS_NewURI(aURI, aSpec, nsnull, baseURI);
+  nsAutoString charset;
+  GetDocumentCharacterSet(charset);
+  NS_NewURI(aURI, aSpec, 
+            charset.IsEmpty() ? nsnull : NS_ConvertUCS2toUTF8(charset).get(), 
+            baseURI);
 }
 
 void
