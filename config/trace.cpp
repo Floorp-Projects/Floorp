@@ -162,9 +162,10 @@ static int initialized = 0;
 
     addr = (void*) ((unsigned) addr - 5);
 
-    if (! initialized) {
-        initialized = 1;
-        PL_DHashTableInit(&Calls, &Ops, 0, sizeof(CallEntry), 16);
+    if (!initialized) {
+        initialized = PL_DHashTableInit(&Calls, &Ops, 0, sizeof(CallEntry), 16);
+        if (!initialized) 
+            return;
     }
 
     CallEntry* entry
@@ -290,9 +291,10 @@ ListCounts(PLDHashTable* table, PLDHashEntryHdr* hdr,
         if (displacement > 0) 
             return PL_DHASH_NEXT;
         static int modInitialized = 0;
-        if (! modInitialized) {
-            modInitialized = 1;
-            PL_DHashTableInit(&Modules, &ModOps, 0, sizeof(ModulesEntry), 16);
+        if (!modInitialized) {
+            modInitialized = PL_DHashTableInit(&Modules, &ModOps, 0, sizeof(ModulesEntry), 16);
+            if (!modInitialized)
+                return PL_DHASH_NEXT;
         }
 
         ModulesEntry* mod
