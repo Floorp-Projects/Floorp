@@ -1,0 +1,103 @@
+<!-- 1.0@bugzilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Toms Baugis <toms.baugis@tietoenator.com>
+  #                 Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # bug_list: list of integers. List of bugs numbers of current query (if any). 
+  # bug: integer. Number of current bug.
+  #%]
+  
+[% IF NOT (user_agent.match("MSIE [1-6]") OR user_agent.match("Mozilla/4")) %]
+  <link rel="Top" href="index.cgi">
+
+  [%# *** Bug List Navigation *** %]
+  [% IF bug && bug_list && bug_list.size > 0 %]
+    <link rel="Up" href="buglist.cgi?regetlastlist=1">
+
+    [% current_bug_idx = lsearch(bug_list, bug.bug_id) %]
+
+    [% IF current_bug_idx > 0 %]
+      <link rel="First" href="show_bug.cgi?id=[% bug_list.first %]">
+    [% prev_bug = current_bug_idx - 1 %]
+      <link rel="Prev" href="show_bug.cgi?id=[% bug_list.$prev_bug %]">
+    [% END %]
+
+    [% IF current_bug_idx + 1 < bug_list.size %]
+      [% next_bug = current_bug_idx + 1 %]
+      <link rel="Next" href="show_bug.cgi?id=[% bug_list.$next_bug %]">
+      <link rel="Last" href="show_bug.cgi?id=[% bug_list.last %]">
+    [% END %]
+  [% END %]
+
+
+  [%# *** Dependencies, Votes, Activity, Print-version *** %]
+  [% IF bug %]
+    <link rel="Show" title="Dependency Tree"
+          href="showdependencytree.cgi?id=[% bug.bug_id %]">
+    <link rel="Show" title="Dependency Graph"
+          href="showdependencygraph.cgi?id=[% bug.bug_id %]"> 
+
+    [% IF use_votes %]
+      <link rel="Show" title="Votes ([% bug.votes %])"
+            href="votes.cgi?action=show_bug&amp;bug_id=[% bug.bug_id %]">
+    [% END %]
+
+      <link rel="Show" title="Bug Activity"
+            href="show_activity.cgi?id=[% bug.bug_id %]">
+      <link rel="Show" title="Printer-Friendly Version"
+            href="long_list.cgi?buglist=[% bug.bug_id %]">
+  [% END %]
+
+
+  [%# *** Preset Queries *** %]
+  [% IF user.showmybugslink %]
+    [% user.login = user.login FILTER url_quote %]
+    [% substs = { userid => user.login } %]  
+    <link rel="Preset&nbsp;Queries" title="My Bugs"                 
+          href="[% PerformSubsts(Param('mybugstemplate'), substs) %]">
+  [% END %]
+
+  [% FOREACH q = user.queries %]
+     [% IF q.linkinfooter %]
+        <link rel="Preset&nbsp;Queries" 
+              title="[% q.name FILTER html %]"
+              href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">
+     [% END %]        
+  [% END %]
+
+  [%# *** Bugzilla Administration Tools *** %]
+  [% IF user.login %] 
+    [% '<link rel="Administration" title="Parameters"    
+              href="editparams.cgi">' IF user.groups.tweakparams %]
+    [% '<link rel="Administration" title="Users"    
+              href="editusers.cgi">' IF user.groups.editusers %]
+    [% '<link rel="Administration" title="Products"      
+              href="editproducts.cgi">' IF user.groups.editcomponents %]
+    [% '<link rel="Administration" title="Attachments"   
+              href="editattachstatuses.cgi">' IF user.groups.editcomponents %]
+    [% '<link rel="Administration" title="Groups"        
+              href="editgroups.cgi">' IF user.groups.creategroups %]
+    [% '<link rel="Administration" title="Keywords"      
+              href="editkeywords.cgi">' IF user.groups.editkeywords %]
+    [% '<link rel="Administration" title="Sanity Check"  
+              href="sanitycheck.cgi">' IF user.groups.tweakparams %]
+  [% END %]  
+[% END %]

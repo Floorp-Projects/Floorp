@@ -28,7 +28,6 @@
   # h3: string. Right-aligned subheader.
   # bgcolor: string. the page's background color ("#rrggbb").
   # onload: string. JavaScript code to run when the page finishes loading.
-  # header_html: string. Any other HTML to go inside the <head> tags.
   # javascript: string. Javascript to go in the header.
   # style: string. CSS style.
   # style_urls: list. List of URLs to CSS style sheets.
@@ -62,7 +61,7 @@
     
 [%# Migration note: contents of the old Param 'headerhtml' would go here %]
 
-    [% header_html %]
+    [% PROCESS "global/site-navigation.html.tmpl" %]
     
     [% IF javascript %]
       <script type="text/javascript" language="JavaScript">

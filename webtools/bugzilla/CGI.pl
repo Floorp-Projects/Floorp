@@ -308,49 +308,6 @@ sub ValidateComment {
     }
 }
 
-# Adds <link> elements for bug lists. These can be inserted into the header by
-# using the "header_html" parameter to PutHeader, which inserts an arbitrary
-# string into the header. This function is currently used only in
-# template/en/default/bug/edit.html.tmpl.
-sub navigation_links($) {
-    my ($buglist) = @_;
-    
-    my $retval = "";
-    
-    # We need to be able to pass in a buglist because when you sort on a column
-    # the bugs in the cookie you are given will still be in the old order.
-    # If a buglist isn't passed, we just use the cookie.
-    $buglist ||= $::COOKIE{"BUGLIST"};
-    
-    if (defined $buglist && $buglist ne "") {
-    my @bugs = split(/:/, $buglist);
-        
-        if (defined $::FORM{'id'}) {
-            # We are on an individual bug
-            my $cur = lsearch(\@bugs, $::FORM{"id"});
-
-            if ($cur > 0) {
-                $retval .= "<link rel=\"First\" href=\"show_bug.cgi?id=$bugs[0]\">\n";
-                $retval .= "<link rel=\"Prev\" href=\"show_bug.cgi?id=$bugs[$cur - 1]\">\n";
-            } 
-            if ($cur < $#bugs) {
-                $retval .= "<link rel=\"Next\" href=\"show_bug.cgi?id=$bugs[$cur + 1]\">\n";
-                $retval .= "<link rel=\"Last\" href=\"show_bug.cgi?id=$bugs[$#bugs]\">\n";
-            }
-
-            $retval .= "<link rel=\"Up\" href=\"buglist.cgi?regetlastlist=1\">\n";
-            $retval .= "<link rel=\"Contents\" href=\"buglist.cgi?regetlastlist=1\">\n";
-        } else {
-            # We are on a bug list
-            $retval .= "<link rel=\"First\" href=\"show_bug.cgi?id=$bugs[0]\">\n";
-            $retval .= "<link rel=\"Next\" href=\"show_bug.cgi?id=$bugs[0]\">\n";
-            $retval .= "<link rel=\"Last\" href=\"show_bug.cgi?id=$bugs[$#bugs]\">\n";
-        }
-    }
-    
-    return $retval;
-} 
-
 $::CheckOptionValues = 1;
 
 # This sub is still used in reports.cgi.
