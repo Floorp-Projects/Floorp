@@ -682,15 +682,18 @@ nsPrefMigration::GetDriveName(nsFileSpec inputPath, char* driveName)
  * RETURNS: NS_OK if enough space is available
  *          NS_ERROR_FAILURE if there is not enough space
  *
+ * Todo: you may want to change this proto from a float to a int64.
  *--------------------------------------------------------------------------*/
 nsresult
 nsPrefMigration::CheckForSpace(nsFileSpec newProfilePath, PRFloat64 requiredSpace)
 {
-//  nsFileSpec drive(newProfilePath);
-// EVIL!  the mac does not like this, but it needs to!
-//  if (LL_CMP(newProfilePath.GetDiskSpaceAvailable(), <, requiredSpace))
-//    return NS_ERROR_FAILURE;
-
+  nsFileSpec drive(newProfilePath);
+  PRInt64 availSpace = newProfilePath.GetDiskSpaceAvailable();
+  PRInt64 require64;
+  
+  LL_F2L(require64, requiredSpace);
+  if (LL_CMP(availSpace, <, require64))
+    return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
