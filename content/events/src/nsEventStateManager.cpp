@@ -4454,21 +4454,22 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
       nsIContent *childContent = nsnull;
 
       startContent = do_QueryInterface(startNode);
-      if (*aStartOffset > 0 && 
-          startContent->IsContentOfType(nsIContent::eELEMENT)) {
+      if (startContent->IsContentOfType(nsIContent::eELEMENT)) {
+        NS_ASSERTION(*aStartOffset >= 0, "Start offset cannot be negative");  
         childContent = startContent->GetChildAt(*aStartOffset);
-        if (childContent)
+        if (childContent) {
           startContent = childContent;
+        }
       }
 
       endContent = do_QueryInterface(endNode);
       if (endContent->IsContentOfType(nsIContent::eELEMENT)) {
         PRInt32 endOffset = 0;
         domRange->GetEndOffset(&endOffset);
-        if (endOffset > 0) {
-          childContent = endContent->GetChildAt(endOffset);
-          if (childContent)
-            endContent = childContent;
+        NS_ASSERTION(endOffset >= 0, "End offset cannot be negative");
+        childContent = endContent->GetChildAt(endOffset);
+        if (childContent) {
+          endContent = childContent;
         }
       }
     }
