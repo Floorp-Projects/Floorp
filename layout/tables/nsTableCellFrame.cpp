@@ -343,7 +343,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
 #ifdef NS_DEBUG
   if (kidSize.width > availSize.width)
   {
-    printf("WARNING: cell content returned desired width %d given avail width %d\n",
+    printf("WARNING: cell ");
+    mFirstChild->ListTag(stdout);
+    printf(" content returned desired width %d given avail width %d\n",
             kidSize.width, availSize.width);
   }
 #endif
