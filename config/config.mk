@@ -508,6 +508,8 @@ endif
 
 ifdef NO_SECURITY
 DEFINES		+= -DNO_SECURITY
+else
+DEFINES		+= -DMOZ_SECURITY
 endif
 
 # Crash-reporting system
