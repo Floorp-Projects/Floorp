@@ -19,6 +19,8 @@
 #include "nsBrowserWindow.h"
 #include "nsMotifMenu.h"
 #include "nsIImageManager.h"
+#include "nsIEventQueueService.h"
+
 #include <stdlib.h>
 #include "plevent.h"
 
@@ -53,7 +55,8 @@ nsNativeViewerApp::Run()
    // Setup event queue for dispatching 
    // asynchronous posts of form data + clicking on links.
    // Lifted from cmd/xfe/mozilla.c
-
+  nsresult rv = nsnull; 
+#ifdef OLD_EVENT_QUEUE
   gUnixMainEventQueue = PR_CreateEventQueue("viewer-event-queue", PR_GetCurrentThread());
   if (nsnull == gUnixMainEventQueue) {
      // Force an assertion
@@ -62,7 +65,18 @@ nsNativeViewerApp::Run()
 
    // XXX Setup webshell's event queue. This should be changed
   nsWebShell_SetUnixEventQueue(gUnixMainEventQueue);
+#else
+  if (nsnull == mEventQService) {
+     NS_ASSERTION("No event queue service available", PR_FALSE);
+     return -1;
+  }
+ rv = mEventQService->GetThreadEventQueue(PR_GetCurrentThread(),  &gUnixMainEventQueue);
+  if (NS_OK !=  rv) {
+    NS_ASSERTION("Could not obtain thread event queue", PR_FALSE);
+  }
 
+
+#endif  /* OLD_EVENT_QUEUE */
   XtAppAddInput(gAppContext, PR_GetEventQueueSelectFD(gUnixMainEventQueue), 
    (XtPointer)(XtInputReadMask), nsUnixEventProcessorCallback, 0);
 
