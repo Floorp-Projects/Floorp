@@ -399,7 +399,7 @@ CSS2PropertiesTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
 #define CSS_PROP_SHORTHAND(name_, id_, method_) \
-  CSS_PROP(name_, id_, method_, , , ,)
+  CSS_PROP(name_, id_, method_, X, X, X, X)
 #include "nsCSSPropList.h"
 
 // Aliases
