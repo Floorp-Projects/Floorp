@@ -185,6 +185,10 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define ESCAPE_USER_NAME(outName,inName) \
     *((char **)getter_Copies(outName)) = nsEscape((const char *)inName, url_XAlphas);
 
+#define ESCAPE_FOLDER_NAME(outName,inName) \
+    *((char **)getter_Copies(outName)) = nsEscape((const char *)inName, url_Path);
+
+
 #define CONVERT_4X_URI(IDENTITY,FOR_NEWS,USERNAME,HOSTNAME,DEFAULT_FOLDER_NAME,MACRO_GETTER,MACRO_SETTER,DEFAULT_PREF) \
 { \
   nsXPIDLCString macro_oldStr; \
@@ -967,10 +971,19 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
     }
     else {
 		// IMAP uri's began with "IMAP:/".  we need that to be "imap:/"
+    // 4.x escapes imap uri in case folder names contain spaces. For example:
+    //   "imap://qatest20@nsmail-2/Folders%2FJan%20Sent"
+    // and it needs to be converted to:
+    //   "imap://qatest20@nsmail-2/Folders/Jan Sent"
+    // ie, we need to unescape the folder names.
 #ifdef DEBUG_MIGRATOR
 		printf("new_uri = %s%s\n",IMAP_SCHEMA,old_uri+IMAP_SCHEMA_LENGTH);
 #endif /* DEBUG_MIGRATOR */
-		*new_uri = PR_smprintf("%s%s",IMAP_SCHEMA,old_uri+IMAP_SCHEMA_LENGTH);
+
+    char *unescaped_uri = nsCRT::strdup(old_uri);
+    nsUnescape(unescaped_uri);
+    *new_uri = PR_smprintf("%s%s",IMAP_SCHEMA,unescaped_uri+IMAP_SCHEMA_LENGTH);
+    nsCRT::free(unescaped_uri);
 		return NS_OK;
 	}
   }
@@ -1009,13 +1022,18 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
     rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, getter_Copies(pop_hostname));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString escaped_pop_username;
+    // Need to escape hostname in case it contains spaces.
+    nsXPIDLCString escaped_pop_username, escaped_pop_hostname;
+    ESCAPE_USER_NAME(escaped_pop_hostname, pop_hostname);
     ESCAPE_USER_NAME(escaped_pop_username,pop_username);
 
-    usernameAtHostname = PR_smprintf("%s@%s",(const char *)escaped_pop_username, (const char *)pop_hostname);
+    usernameAtHostname = PR_smprintf("%s@%s", escaped_pop_username.get(), escaped_pop_hostname.get());
   }
   else if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
-    usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME,mLocalFoldersHostname.get());
+    // Need to escape hostname in case it contains spaces.
+    nsXPIDLCString escaped_localfolder_hostname;
+    ESCAPE_USER_NAME(escaped_localfolder_hostname,mLocalFoldersHostname.get());
+    usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME, escaped_localfolder_hostname.get());
   }
 #ifdef HAVE_MOVEMAIL
   else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
@@ -1061,14 +1079,26 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
   // and the directory pref was <foobar>
   // this meant it was reall <foobar>/<default folder name>
   // this insanity only happened on mac and windows.
+  // Need to escape spaces in folder name (ie, "A Folder" --> "A%20Folder").
   if (!folderPath || (PL_strlen(folderPath) == 0)) {
-	*new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname, default_folder_name);
+    nsXPIDLCString escaped_default_folder;
+    ESCAPE_FOLDER_NAME(escaped_default_folder, default_folder_name);
+    *new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname, escaped_default_folder.get());
   }
   else {
 	// if the folder path starts with a /, we don't need to add one.
 	// the reason for this is on UNIX, we store mail.directory as "/home/sspitzer/nsmail"
 	// but on windows, its "C:\foo\bar\mail"
-	*new_uri = PR_smprintf("%s/%s%s%s",MAILBOX_SCHEMA,usernameAtHostname,(folderPath[0] == '/')?"":"/",folderPath);
+    // In 4.x if the local folder names have hierarchy in it then the uri is like:
+    //   "/My Folders.sbd/New Drafts#1"
+    // and it needs to be converted to:
+    //   "/My%20Folders/New%20Drafts%231"
+    // ie, we need to get rid of all ".sbd" and then escape the URIs (ie, #->%23).
+    nsCAutoString clean_folderPath(folderPath);
+    clean_folderPath.ReplaceSubstring(".sbd/", "/");
+    nsXPIDLCString escaped_folderPath;
+    ESCAPE_FOLDER_NAME(escaped_folderPath,clean_folderPath.get());
+    *new_uri = PR_smprintf("%s/%s%s%s",MAILBOX_SCHEMA,usernameAtHostname,(folderPath[0] == '/')?"":"/",escaped_folderPath.get());
   }
 
   if (!*new_uri) {
@@ -1500,8 +1530,12 @@ nsMessengerMigrator::SetSendLaterUriPref(nsIMsgIncomingServer *server)
 	rv = server->GetHostName(getter_Copies(hostname));
 	if (NS_FAILED(rv)) return rv;
 
+  nsXPIDLCString escaped_username, escaped_hostname;
+  ESCAPE_USER_NAME(escaped_hostname, hostname);
+  ESCAPE_USER_NAME(escaped_username,username);
+
 	char *sendLaterUriStr = nsnull;
-	sendLaterUriStr = PR_smprintf("%s/%s@%s/%s", MAILBOX_SCHEMA, (const char *)username, (const char *)hostname, UNSENT_MESSAGES_FOLDER_NAME);
+	sendLaterUriStr = PR_smprintf("%s/%s@%s/%s", MAILBOX_SCHEMA, escaped_username.get(), escaped_hostname.get(), UNSENT_MESSAGES_FOLDER_NAME);
 	m_prefs->SetCharPref(PREF_MAIL_DEFAULT_SENDLATER_URI, sendLaterUriStr);
 	PR_FREEIF(sendLaterUriStr);
 
