@@ -268,9 +268,9 @@ PK11_FreeSymKey(PK11SymKey *symKey)
             PK11_USE_THREADS(PZ_Lock(slot->freeListLock);)
 	    symKey->next = slot->freeSymKeysHead;
 	    slot->freeSymKeysHead = symKey;
+	    symKey->slot = NULL;
 	    PK11_USE_THREADS(PZ_Unlock(slot->freeListLock);)
 	    PR_AtomicIncrement(&slot->keyCount);
-	    symKey->slot = NULL;
 	    freeit = PR_FALSE;
         }
         if (freeit) {
