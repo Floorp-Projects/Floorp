@@ -164,7 +164,7 @@ var downloadViewController = {
 
   isCommandEnabled: function dVC_isCommandEnabled (aCommand)
   {
-    if (!gDownloadView.view.selection) return false;
+    if (!gDownloadView.view || !gDownloadView.view.selection) return false;
     var selectionCount = gDownloadView.view.selection.count;
     if (!selectionCount) return false;
 
