@@ -170,7 +170,7 @@
         <spring align="horizontal" flex="100%"/>
       </box>
 
-      <box align="horizontal">
+      <box autostretch="never">
         <spring align="horizontal" flex="100%"/>
         <menulist id="match">
           <menupopup id="matchPopup">
@@ -191,7 +191,7 @@
           </menupopup>
         </menulist>
 
-        <textfield id="findtext" style="width:10em;" oninput="doEnabling();"
+        <textfield id="findtext" flex="1" oninput="doEnabling();"
                    onkeypress="if (event.keyCode == 13) doFind();"/>
         <box autostretch="never">
           <button id="search" class="dialog toolbar-non-iconic" value="&search.button.label;"
