@@ -35,7 +35,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.9 2002/07/03 20:18:06 javi%netscape.com Exp $
+ * $Id: ocsp.c,v 1.10 2002/07/10 15:16:10 wtc%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -738,6 +738,10 @@ CERT_CreateOCSPCertID(CERTCertificate *cert, int64 time)
 	return NULL;
     
     certID = ocsp_CreateCertID(arena, cert, time);
+    if (!certID) {
+	PORT_FreeArena(arena, PR_FALSE);
+	return NULL;
+    }
     certID->poolp = arena;
     return certID;
 }
@@ -3330,29 +3334,7 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
      * Otherwise, we continue to find the actual per-cert status
      * in the response.
      */
-    switch (response->statusValue) {
-      case ocspResponse_successful:
-	break;
-      case ocspResponse_malformedRequest:
-	PORT_SetError(SEC_ERROR_OCSP_MALFORMED_REQUEST);
-	goto loser;
-      case ocspResponse_internalError:
-	PORT_SetError(SEC_ERROR_OCSP_SERVER_ERROR);
-	goto loser;
-      case ocspResponse_tryLater:
-	PORT_SetError(SEC_ERROR_OCSP_TRY_SERVER_LATER);
-	goto loser;
-      case ocspResponse_sigRequired:
-	/* XXX We *should* retry with a signature, if possible. */
-	PORT_SetError(SEC_ERROR_OCSP_REQUEST_NEEDS_SIG);
-	goto loser;
-      case ocspResponse_unauthorized:
-	PORT_SetError(SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST);
-	goto loser;
-      case ocspResponse_other:
-      case ocspResponse_unused:
-      default:
-	PORT_SetError(SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS);
+    if (CERT_GetOCSPResponseStatus(response) != SECSuccess) {
 	goto loser;
     }
 
