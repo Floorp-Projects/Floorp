@@ -57,6 +57,8 @@ CPPSRCS =			\
 	nsServiceManager.cpp	\
 	nsSupportsArray.cpp	\
 	nsTraceRefcnt.cpp	\
+        nsXPComFactory.cpp      \
+        nsEventQueueService.cpp \
 	$(NULL)
 
 CPP_OBJS = \
@@ -67,6 +69,8 @@ CPP_OBJS = \
 	.\$(OBJDIR)\nsServiceManager.obj	\
 	.\$(OBJDIR)\nsSupportsArray.obj		\
 	.\$(OBJDIR)\nsTraceRefcnt.obj		\
+        .\$(OBJDIR)\nsXPComFactory.obj          \
+        .\$(OBJDIR)\nsEventQueueService.obj     \
 	$(NULL)
 
 MODULE = xpcom 
