@@ -49,6 +49,7 @@
 #include "ns4xPlugin.h"
 #include "nsPluginsDirUtils.h"
 
+#include "nsILocalFileMac.h"
 #include <Processes.h>
 #include <Folders.h>
 #include <Resources.h>
@@ -89,16 +90,15 @@ static OSErr toFSSpec(nsIFile* file, FSSpec& outSpec)
     nsCOMPtr<nsILocalFileMac> lfm = do_QueryInterface(file);
     if (!lfm)
         return -1;
+    FSSpec foo;
+    lfm->GetFSSpec(&foo);
+    outSpec = foo;
 
-    lfm->GetFSSpec(outSpec);
     return NS_OK;
 }
 
 PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
-#ifdef DEBUG
-    printf("nsPluginsDir::IsPluginFile:  checking %s\n", fileSpec.GetCString());
-#endif
     // look at file's creator/type and make sure it is a code fragment, etc.
     FSSpec spec;
     OSErr err = toFSSpec(file, spec);
@@ -109,9 +109,6 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
     err = FSpGetFInfo(&spec, &info);
     if (err == noErr && ((info.fdType == 'shlb' && info.fdCreator == 'MOSS') ||
                          info.fdType == 'NSPL')) {
-#ifdef DEBUG
-        printf("found plugin '%s'.\n", fileSpec.GetCString());
-#endif
         return PR_TRUE;
     }
 
@@ -120,7 +117,9 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
         return PR_TRUE;
 
     // for Mac OS X bundles.
-    CFBundleRef bundle = getPluginBundle(fileSpec.GetCString());
+    nsCString path;
+    file->GetNativePath(path);
+    CFBundleRef bundle = getPluginBundle(path.get());
     if (bundle) {
         UInt32 packageType, packageCreator;
         CFBundleGetPackageInfo(bundle, &packageType, &packageCreator);
@@ -129,9 +128,6 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
         case 'BRPL':
         case 'IEPL':
         case 'NSPL':
-#ifdef DEBUG
-            printf("found bundled plugin '%s'.\n", fileSpec.GetCString());
-#endif
             return PR_TRUE;
         }
     }
@@ -202,13 +198,16 @@ static char* GetPluginString(short id, short index)
 short nsPluginFile::OpenPluginResource()
 {
     FSSpec spec;
-    OSErr err = toFSSpec(*this, spec);
+    OSErr err = toFSSpec(mPlugin, spec);
     Boolean targetIsFolder, wasAliased;
     err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
     short refNum = ::FSpOpenResFile(&spec, fsRdPerm);
   
     if (refNum == -1) {
-        CFBundleRef bundle = getPluginBundle(this->GetCString());
+
+        nsCString path;
+        mPlugin->GetNativePath(path);
+        CFBundleRef bundle = getPluginBundle(path.get());
         if (bundle) {
             refNum = CFBundleOpenBundleResourceMap(bundle);
             CFRelease(bundle);
@@ -236,13 +235,16 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
       
             // 'STR#', 126, 1 => plugin description.
             info.fDescription = GetPluginString(126, 1);
+
+            nsCString path;
+            mPlugin->GetNativePath(path);
       
             FSSpec spec;
-            toFSSpec(*this, spec);
+            toFSSpec(mPlugin, spec);
             info.fFileName = p2cstrdup(spec.name);
-            info.fFullPath = PL_strdup(this->GetCString());
-      
-            CFBundleRef bundle = getPluginBundle(this->GetCString());
+
+            info.fFullPath = PL_strdup(path.get());
+            CFBundleRef bundle = getPluginBundle(path.get());
             if (bundle) {
                 info.fBundle = PR_TRUE;
                 CFRelease(bundle);
