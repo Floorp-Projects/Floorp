@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#include <gtk/gtk.h>
+#include "gtklayout.h"
+
 #include "nsWindow.h"
 #include "nsLabel.h"
 #include "nsILabel.h"
@@ -26,8 +29,6 @@
 #include "nsStringUtil.h"
 
 #include "nsGtkEventHandler.h"
-
-#include <gtk/gtk.h>
 
 NS_IMPL_ADDREF(nsLabel)
 NS_IMPL_RELEASE(nsLabel)
@@ -67,6 +68,9 @@ NS_METHOD nsLabel::Create(nsIWidget *aParent,
   unsigned char alignment = GetNativeAlignment();
 
   mWidget = gtk_label_new("");
+//  gtk_misc_set_alignment(GTK_MISC(mWidget), alignment);
+  gtk_layout_put(GTK_LAYOUT(aParent), mWidget, aRect.x, aRect.y);
+
   /* we need add this to the parent, and set its width, etc */
 
   /*

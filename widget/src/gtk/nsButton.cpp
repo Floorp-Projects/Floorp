@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#include <gtk/gtk.h>
+#include "gtklayout.h"
+
 #include "nsButton.h"
 #include "nsIButton.h"
 #include "nsToolkit.h"
@@ -23,8 +26,6 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
-
-#include <gtk/gtk.h>
 
 NS_IMPL_ADDREF(nsButton)
 NS_IMPL_RELEASE(nsButton)
@@ -61,6 +62,7 @@ NS_METHOD nsButton::Create(nsIWidget        *aParent,
   InitDeviceContext(aContext, parentWidget);
 
   mWidget = gtk_button_new_with_label("");
+  gtk_layout_put(GTK_LAYOUT(aParent), mWidget, aRect.x, aRect.y);
   /*
   mWidget = ::XtVaCreateManagedWidget("button",
                                     xmPushButtonWidgetClass, 
