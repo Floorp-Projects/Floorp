@@ -21,6 +21,11 @@
 
 DEPTH=..\..
 MODULE=AcctIdl
+REQUIRES = \
+	xpcom \
+	string \
+	profile \
+	$(NULL)
 
 MAKE_OBJ_TYPE=DLL
 DLLNAME=$(MODULE)
