@@ -479,7 +479,12 @@ sub BuildCommonProjects()
 	#//
 	if ( $main::CARBON )
 	{
-		BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"Carbon Interfaces");
+		if ( $main::CARBONLITE ) {
+			BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"Carbon Interfaces (Lite)");
+		}
+		else {
+			BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"Carbon Interfaces");		
+		}
 	}
 	else
 	{
