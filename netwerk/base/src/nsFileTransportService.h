@@ -25,13 +25,6 @@
 #include "nscore.h"
 #include "plevent.h"
 
-class nsIStreamObserver;
-class nsIStreamListener;
-class nsITransport;
-class nsFileTransport;
-class nsFileTransportService;
-class nsIProtocolConnection;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #define NS_FILE_TRANSPORT_WORKER_COUNT  4

@@ -25,13 +25,12 @@
 
 class nsIUrl;
 
-// XXX regenerate:
 #define NS_IHTTPLISTENER_IID                         \
-{ /* 677d9a90-93ee-11d2-816a-006008119d7a */         \
-    0x677d9a90,                                      \
-    0x93ee,                                          \
+{ /* a831c800-ea35-11d2-931b-00104ba0fd40 */         \
+    0xa831c800,                                      \
+    0xea35,                                          \
     0x11d2,                                          \
-    {0x85, 0x6a, 0x00, 0x60, 0xb8, 0x11, 0x9d, 0x7a} \
+    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
 class nsIHttpListener : public nsIHttpObserver

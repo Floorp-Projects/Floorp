@@ -26,22 +26,20 @@ class nsIProtocolConnection;
 class nsIConnectionGroup;
 class nsIProtocolHandler;
 
-// XXX regenerate:
 #define NS_INETSERVICE_IID                           \
-{ /* 677d9a90-93ee-11d2-816a-006008119d7a */         \
-    0x677d9a90,                                      \
-    0x93ee,                                          \
+{ /* 3c70f340-ea35-11d2-931b-00104ba0fd40 */         \
+    0x3c70f340,                                      \
+    0xea35,                                          \
     0x11d2,                                          \
-    {0x81, 0x6a, 0x00, 0x60, 0xc8, 0x11, 0x9d, 0x7a} \
+    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-// XXX regenerate:
 #define NS_NETSERVICE_CID                            \
-{ /* 677d9a90-93ee-11d2-816a-006008119d7a */         \
-    0x677d9a90,                                      \
-    0x93ee,                                          \
+{ /* 451ec5e0-ea35-11d2-931b-00104ba0fd40 */         \
+    0x451ec5e0,                                      \
+    0xea35,                                          \
     0x11d2,                                          \
-    {0x81, 0x6a, 0x01, 0x60, 0xc8, 0x11, 0x9d, 0x7a} \
+    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
 class nsINetService : public nsISupports

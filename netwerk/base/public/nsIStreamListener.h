@@ -28,13 +28,12 @@ class nsIInputStream;
 class nsIProtocolConnection;
 class nsIString;
 
-// XXX regenerate:
 #define NS_ISTREAMLISTENER_IID                       \
-{ /* 677d9a90-93ee-11d2-816a-006008119d7a */         \
-    0x677d9a90,                                      \
-    0x93ee,                                          \
+{ /* 68d9d640-ea35-11d2-931b-00104ba0fd40 */         \
+    0x68d9d640,                                      \
+    0xea35,                                          \
     0x11d2,                                          \
-    {0x81, 0x6a, 0x00, 0x60, 0x09, 0x11, 0x9d, 0x7a} \
+    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
 class nsIStreamListener : public nsISupports
@@ -82,11 +81,14 @@ public:
 
 };
 
-/* Generic status codes for OnStopBinding */
+// Generic status codes for OnStopBinding:
 #define NS_BINDING_SUCCEEDED    NS_OK
 #define NS_BINDING_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
 #define NS_BINDING_ABORTED      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)
 
+// A marshaling stream listener is used to ship data over to another thread specified
+// by the thread's event queue. The receiver stream listener is then used to receive
+// the data on the other thread.
 extern nsresult
 NS_NewMarshalingStreamListener(PLEventQueue* eventQueue,
                                nsIStreamListener* receiver,

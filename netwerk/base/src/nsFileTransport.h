@@ -51,11 +51,6 @@ public:
                   nsIStreamListener* listener,
                   PLEventQueue* appEventQueue,
                   nsIProtocolConnection* connection);
-    PRBool IsCanceled() { return mCanceled; }
-
-    nsresult OnStartBinding();
-    nsresult OnDataAvailable(nsIInputStream* stream, PRUint32 count);
-    nsresult OnStopBinding(nsresult status, nsIString* msg);
 
 protected:
     nsIProtocolConnection*      mConnection;
@@ -64,5 +59,7 @@ protected:
     PRBool                      mCanceled;
     
 };
+
+#define NS_FILE_TRANSPORT_BUFFER_SIZE   (4*1024)
 
 #endif /* nsFileTransport_h___ */
