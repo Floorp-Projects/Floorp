@@ -52,19 +52,19 @@ public:
    * @param aContext the device context to use.
    * @result The result of the initialization, NS_OK if no errors
    */
-  virtual nsresult Init(nsIDeviceContext* aContext) = 0;
+  NS_IMETHOD  Init(nsIDeviceContext* aContext) = 0;
 
   /**
    * Get the root of the view tree.
    * @result the root view
    */
-  virtual nsIView *GetRootView() = 0;
+  NS_IMETHOD  GetRootView(nsIView *&aView) = 0;
 
   /**
    * Set the root of the view tree. Does not destroy the current root view.
    * @param aView view to set as root
    */
-  virtual void SetRootView(nsIView *aView) = 0;
+  NS_IMETHOD  SetRootView(nsIView *aView) = 0;
 
   /**
    * Get the current framerate i.e. the rate at which timed
@@ -72,7 +72,7 @@ public:
    * should not occur. framerate is in terms of frames per second
    * @result the update rate in terms of frames per second
    */
-  virtual PRUint32 GetFrameRate() = 0;
+  NS_IMETHOD  GetFrameRate(PRUint32& aRate) = 0;
 
   /**
    * Set the current framerate.
@@ -80,7 +80,7 @@ public:
    * @result the call may need to create a timer and the success
    *         status will be returned. NS_OK means all is well
    */
-  virtual nsresult SetFrameRate(PRUint32 frameRate) = 0;
+  NS_IMETHOD  SetFrameRate(PRUint32 frameRate) = 0;
 
   /**
    * Get the dimensions of the root window. The dimensions are in
@@ -88,7 +88,7 @@ public:
    * @param width out parameter for width of window in twips
    * @param height out parameter for height of window in twips
    */
-  virtual void GetWindowDimensions(nscoord *width, nscoord *height) = 0;
+  NS_IMETHOD  GetWindowDimensions(nscoord *width, nscoord *height) = 0;
 
   /**
    * Set the dimensions of the root window.
@@ -97,7 +97,7 @@ public:
    * @param width of window in twips
    * @param height of window in twips
    */
-  virtual void SetWindowDimensions(nscoord width, nscoord height) = 0;
+  NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height) = 0;
 
   /**
    * Get the position of the root window relative to the
@@ -106,7 +106,7 @@ public:
    * @param xoffset out parameter for X scroll position of window in twips
    * @param yoffset out parameter for Y scroll position of window in twips
    */
-  virtual void GetWindowOffsets(nscoord *xoffset, nscoord *yoffset) = 0;
+  NS_IMETHOD  GetWindowOffsets(nscoord *xoffset, nscoord *yoffset) = 0;
 
   /**
    * Set the position of the root window relative to the
@@ -115,17 +115,17 @@ public:
    * @param xoffset X scroll position of window in twips
    * @param yoffset Y scroll position of window in twips
    */
-  virtual void SetWindowOffsets(nscoord xoffset, nscoord yoffset) = 0;
+  NS_IMETHOD  SetWindowOffsets(nscoord xoffset, nscoord yoffset) = 0;
 
   /**
    * Reset the state of scrollbars and the scrolling region
    */
-  virtual void ResetScrolling(void) = 0;
+  NS_IMETHOD  ResetScrolling(void) = 0;
 
   /**
    * Called to force a redrawing of any dirty areas.
    */
-  virtual void Composite() = 0;
+  NS_IMETHOD  Composite(void) = 0;
 
   /**
    * Called to inform the view manager that some portion of a view
@@ -136,8 +136,8 @@ public:
    *               view is marked as damaged
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  virtual void UpdateView(nsIView *aView, nsIRegion *aRegion,
-                          PRUint32 aUpdateFlags) = 0;
+  NS_IMETHOD  UpdateView(nsIView *aView, nsIRegion *aRegion,
+                         PRUint32 aUpdateFlags) = 0;
 
   /**
    * Called to inform the view manager that some portion of a view
@@ -147,7 +147,7 @@ public:
    * @param rect rect to mark as damaged
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  virtual void UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags) = 0;
+  NS_IMETHOD  UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags) = 0;
 
   /**
    * Called to dispatch an event to the appropriate view. Often called
@@ -156,7 +156,7 @@ public:
    * @param event event to dispatch
    * @result event handling status
    */
-  virtual nsEventStatus DispatchEvent(nsGUIEvent *aEvent) = 0;
+  NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus& aStatus) = 0;
 
   /**
    * Used to grab/capture all mouse events for a specific view,
@@ -165,7 +165,7 @@ public:
    * @param aView view to capture mouse events
    * @result event handling status
    */
-  virtual PRBool GrabMouseEvents(nsIView *aView) = 0;
+  NS_IMETHOD  GrabMouseEvents(nsIView *aView, PRBool& aResult) = 0;
 
   /**
    * Used to grab/capture all keyboard events for a specific view,
@@ -174,19 +174,19 @@ public:
    * @param aView view to capture keyboard events
    * @result event handling status
    */
-  virtual PRBool GrabKeyEvents(nsIView *aView) = 0;
+  NS_IMETHOD  GrabKeyEvents(nsIView *aView, PRBool& aResult) = 0;
 
   /**
    * Get the current view, if any, that's capturing mouse events.
    * @result view that is capturing mouse events or nsnull
    */
-  virtual nsIView* GetMouseEventGrabber() = 0;
+  NS_IMETHOD  GetMouseEventGrabber(nsIView *&aView) = 0;
 
   /**
    * Get the current view, if any, that's capturing keyboard events.
    * @result view that is capturing keyboard events or nsnull
    */
-  virtual nsIView* GetKeyEventGrabber() = 0;
+  NS_IMETHOD  GetKeyEventGrabber(nsIView *&aView) = 0;
 
   /**
    * Given a parent view, insert another view as its child. If above
@@ -198,8 +198,8 @@ public:
    * @param sibling sibling view
    * @param above boolean above or below state
    */
-  virtual void InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
-                           PRBool above) = 0;
+  NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
+                          PRBool above) = 0;
 
   /**
    * Given a parent view, insert another view as its child. The zindex
@@ -210,8 +210,8 @@ public:
    * @param child child view
    * @param zindex z depth of child
    */
-  virtual void InsertChild(nsIView *parent, nsIView *child,
-                           PRInt32 zindex) = 0;
+  NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child,
+                          PRInt32 zindex) = 0;
 
   /**
    * Remove a specific child of a view.
@@ -219,7 +219,7 @@ public:
    * @param parent parent view
    * @param child child view
    */
-  virtual void RemoveChild(nsIView *parent, nsIView *child) = 0;
+  NS_IMETHOD  RemoveChild(nsIView *parent, nsIView *child) = 0;
 
   /**
    * Move a view's position by the specified amount.
@@ -228,7 +228,7 @@ public:
    * @param x x offset to add to current view position
    * @param y y offset to add to current view position
    */
-  virtual void MoveViewBy(nsIView *aView, nscoord x, nscoord y) = 0;
+  NS_IMETHOD  MoveViewBy(nsIView *aView, nscoord x, nscoord y) = 0;
 
   /**
    * Move a view to the specified position,
@@ -238,7 +238,7 @@ public:
    * @param x x value for new view position
    * @param y y value for new view position
    */
-  virtual void MoveViewTo(nsIView *aView, nscoord x, nscoord y) = 0;
+  NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord x, nscoord y) = 0;
 
   /**
    * Resize a view to the specified width and height.
@@ -247,7 +247,7 @@ public:
    * @param width new view width
    * @param height new view height
    */
-  virtual void ResizeView(nsIView *aView, nscoord width, nscoord height) = 0;
+  NS_IMETHOD  ResizeView(nsIView *aView, nscoord width, nscoord height) = 0;
 
   /**
    * Set the clip of a view.
@@ -255,7 +255,7 @@ public:
    * @param aView view to to clip rect on
    * @param rect new clipping rect for view
    */
-  virtual void SetViewClip(nsIView *aView, nsRect *rect) = 0;
+  NS_IMETHOD  SetViewClip(nsIView *aView, nsRect *rect) = 0;
 
   /**
    * Set the visibility of a view.
@@ -263,7 +263,7 @@ public:
    * @param aView view to change visibility state of
    * @param visible new visibility state
    */
-  virtual void SetViewVisibility(nsIView *aView, nsViewVisibility visible) = 0;
+  NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility visible) = 0;
 
   /**
    * Set the z-index of a view. Positive z-indices mean that a view
@@ -273,7 +273,7 @@ public:
    * @param aView view to change z depth of
    * @param zindex new z depth
    */
-  virtual void SetViewZindex(nsIView *aView, PRInt32 zindex) = 0;
+  NS_IMETHOD  SetViewZindex(nsIView *aView, PRInt32 zindex) = 0;
 
   /**
    * Used to move a view above another in z-order.
@@ -281,7 +281,7 @@ public:
    * @param aView view to change z depth of
    * @param other view to move aView above
    */
-  virtual void MoveViewAbove(nsIView *aView, nsIView *other) = 0;
+  NS_IMETHOD  MoveViewAbove(nsIView *aView, nsIView *other) = 0;
 
   /**
    * Used to move a view below another in z-order.
@@ -289,7 +289,7 @@ public:
    * @param aView view to change z depth of
    * @param other view to move aView below
    */
-  virtual void MoveViewBelow(nsIView *aView, nsIView *other) = 0;
+  NS_IMETHOD  MoveViewBelow(nsIView *aView, nsIView *other) = 0;
 
   /**
    * Returns whether a view is actually shown (based on its visibility
@@ -297,7 +297,7 @@ public:
    * @param aView view to query visibilty of
    * @result PR_TRUE if visible, else PR_FALSE
    */
-  virtual PRBool IsViewShown(nsIView *aView) = 0;
+  NS_IMETHOD  IsViewShown(nsIView *aView, PRBool &aResult) = 0;
 
   /**
    * Returns the clipping area of a view in absolute coordinates.
@@ -305,14 +305,14 @@ public:
    * @param rect to set with view's clipping rect
    * @result PR_TRUE if there is a clip rect, else PR_FALSE
    */
-  virtual PRBool GetViewClipAbsolute(nsIView *aView, nsRect *rect) = 0;
+  NS_IMETHOD  GetViewClipAbsolute(nsIView *aView, nsRect *rect, PRBool &aResult) = 0;
 
   /**
    * Used set the transparency status of the content in a view. see
    * nsIView.HasTransparency().
    * @param aTransparent PR_TRUE if there are transparent areas, PR_FALSE otherwise.
    */
-  virtual void SetViewContentTransparency(nsIView *aView, PRBool aTransparent) = 0;
+  NS_IMETHOD  SetViewContentTransparency(nsIView *aView, PRBool aTransparent) = 0;
 
   /**
    * Note: This didn't exist in 4.0. Called to set the opacity of a view. 
@@ -320,7 +320,7 @@ public:
    * completely opaque.
    * @param opacity new opacity value
    */
-  virtual void SetViewOpacity(nsIView *aView, float aOpacity) = 0;
+  NS_IMETHOD  SetViewOpacity(nsIView *aView, float aOpacity) = 0;
 
   /**
    * Set the view observer associated with this manager
@@ -340,31 +340,31 @@ public:
    * Get the device context associated with this manager
    * @result device context
    */
-  virtual nsIDeviceContext* GetDeviceContext() = 0;
+  NS_IMETHOD  GetDeviceContext(nsIDeviceContext *&aContext) = 0;
 
   /**
    * Set the area that the view manager considers to be "dirty"
    * to an empty state
    */
-  virtual void ClearDirtyRegion() = 0;
+  NS_IMETHOD  ClearDirtyRegion(void) = 0;
 
   /**
    * Select whether quality level should be displayed in root view
    * @param aShow if PR_TRUE, quality level will be displayed, else hidden
    */
-  virtual void ShowQuality(PRBool aShow) = 0;
+  NS_IMETHOD  ShowQuality(PRBool aShow) = 0;
 
   /**
    * Query whether quality level should be displayed in view frame
    * @return if PR_TRUE, quality level will be displayed, else hidden
    */
-  virtual PRBool GetShowQuality(void) = 0;
+  NS_IMETHOD  GetShowQuality(PRBool &aResult) = 0;
 
   /**
    * Select whether quality level should be displayed in root view
    * @param aShow if PR_TRUE, quality level will be displayed, else hidden
    */
-  virtual void SetQuality(nsContentQuality aQuality) = 0;
+  NS_IMETHOD  SetQuality(nsContentQuality aQuality) = 0;
 
   /**
    * prevent the view manager from refreshing.

@@ -474,7 +474,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
           reflowReason = eReflowReason_Initial;
 
           // Bind root frame to root view (and root window)
-          nsIView* rootView = mViewManager->GetRootView();
+          nsIView* rootView;
+          mViewManager->GetRootView(rootView);
           mRootFrame->SetView(rootView);
         }
         NS_RELEASE(root);
@@ -1076,7 +1077,8 @@ PresShell::VerifyIncrementalReflow()
 
   // Get our scrolling preference
   nsScrollPreference scrolling;
-  nsIView* rootView = mViewManager->GetRootView();
+  nsIView* rootView;
+  mViewManager->GetRootView(rootView);
   nsIScrollableView* scrollView;
   rv = rootView->QueryInterface(kScrollViewIID, (void**)&scrollView);
   if (NS_OK == rv) {

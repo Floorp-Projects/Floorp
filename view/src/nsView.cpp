@@ -49,7 +49,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
   nsIView*      view = nsView::GetViewFor(aEvent->widget);
   if (nsnull != view) {
     nsIViewManager*  vm = view->GetViewManager();
-    result = vm->DispatchEvent(aEvent);
+    vm->DispatchEvent(aEvent, result);
     NS_RELEASE(vm);
   }
 
@@ -85,7 +85,8 @@ nsView :: ~nsView()
 
   if (nsnull != mViewManager)
   {
-    nsIView *rootView = mViewManager->GetRootView();
+    nsIView *rootView;
+    mViewManager->GetRootView(rootView);
 
     if (nsnull != rootView)
     {
@@ -215,10 +216,11 @@ nsresult nsView :: Init(nsIViewManager* aManager,
   // check if a real window has to be created
   if (aWindowCIID)
   {
-    nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
+    nsIDeviceContext  *dx;
     nsRect            trect = aBounds;
     float             scale;
 
+    mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(scale);
 
     trect *= scale;
@@ -263,10 +265,11 @@ nsIWidget * nsView :: GetWidget()
 PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                        PRUint32 aPaintFlags, nsIView *aBackstop)
 {
-  nsIView *pRoot = mViewManager->GetRootView();
+  nsIView *pRoot;
   PRBool  clipres = PR_FALSE;
   PRBool  clipwasset = PR_FALSE;
 
+  mViewManager->GetRootView(pRoot);
   rc.PushState();
 
   if (aPaintFlags & NS_VIEW_FLAG_CLIP_SET)
@@ -570,11 +573,12 @@ void nsView :: SetPosition(nscoord x, nscoord y)
 
   if (nsnull != mWindow)
   {
-    nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
+    nsIDeviceContext  *dx;
     nscoord           offx, offy, parx = 0, pary = 0;
     float             scale;
     nsIWidget         *pwidget = nsnull;
   
+    mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(scale);
 
     GetScrollOffset(&offx, &offy);
@@ -591,8 +595,9 @@ void nsView :: SetPosition(nscoord x, nscoord y)
 
 void nsView :: GetPosition(nscoord *x, nscoord *y)
 {
-  nsIView *rootView = mViewManager->GetRootView();
+  nsIView *rootView;
 
+  mViewManager->GetRootView(rootView);
   if (this == rootView)
     *x = *y = 0;
   else
@@ -620,9 +625,10 @@ void nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint)
 
   if (nsnull != mWindow)
   {
-    nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
+    nsIDeviceContext  *dx;
     float             t2p;
   
+    mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(t2p);
 
     mWindow->Resize(NSTwipsToIntPixels(width, t2p), NSTwipsToIntPixels(height, t2p),
@@ -652,8 +658,9 @@ void nsView :: SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight
 
 void nsView :: GetBounds(nsRect &aBounds) const
 {
-  nsIView *rootView = mViewManager->GetRootView();
+  nsIView *rootView;
 
+  mViewManager->GetRootView(rootView);
   aBounds = mBounds;
 
   if ((nsIView *)this == rootView)
