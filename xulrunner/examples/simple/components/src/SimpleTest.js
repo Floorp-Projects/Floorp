@@ -50,7 +50,7 @@ SimpleTest.prototype = {
   },
 
   add: function(a, b) {
-    dump("add(" + a + ", " + b + ") from JS\n");
+    dump("add(" + a + "," + b + ") from JS\n");
     return a + b;
   }
 };
