@@ -4636,7 +4636,7 @@ nsMsgDBFolder::CreateCollationKey(const nsString &aSource,  PRUint8 **aKey, PRUi
   if (!gCollationKeyGenerator)
     return NS_ERROR_NULL_POINTER;
 
-  return gCollationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, aSource, aKey, aLength);
+  return gCollationKeyGenerator->AllocateRawSortKey(nsICollation::kCollationCaseInSensitive, aSource, aKey, aLength);
 }
 
 NS_IMETHODIMP nsMsgDBFolder::CompareSortKeys(nsIMsgFolder *aFolder, PRInt32 *sortOrder)

@@ -774,7 +774,7 @@ nsresult nsAbDirectoryDataSource::CreateCollationKey(const nsString &aSource,  P
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return mCollationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, aSource, aKey, aLength);
+  return mCollationKeyGenerator->AllocateRawSortKey(nsICollation::kCollationCaseInSensitive, aSource, aKey, aLength);
 }
 
 nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsISupportsArray *parentDirs, nsISupportsArray *delDirs)

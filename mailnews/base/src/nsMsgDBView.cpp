@@ -3202,20 +3202,20 @@ nsresult nsMsgDBView::GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType,
 
     switch (sortType) {
         case nsMsgViewSortType::bySubject:
-            *pFieldType = kCollationKey;
+            *pFieldType = nsICollation::kCollationKey;
             *pMaxLen = kMaxSubjectKey;
             break;
         case nsMsgViewSortType::byAccount:
         case nsMsgViewSortType::byLocation:
-            *pFieldType = kCollationKey;
+            *pFieldType = nsICollation::kCollationKey;
             *pMaxLen = kMaxLocationKey;
             break;
         case nsMsgViewSortType::byRecipient:
-            *pFieldType = kCollationKey;
+            *pFieldType = nsICollation::kCollationKey;
             *pMaxLen = kMaxRecipientKey;
             break;
         case nsMsgViewSortType::byAuthor:
-            *pFieldType = kCollationKey;
+            *pFieldType = nsICollation::kCollationKey;
             *pMaxLen = kMaxAuthorKey;
             break;
         case nsMsgViewSortType::byDate:
@@ -3555,7 +3555,7 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
     
     // could be a problem here if the ones that appear here are different than the ones already in the array
     PRUint32 actualFieldLen = 0;
-    if (fieldType == kCollationKey) 
+    if (fieldType == nsICollation::kCollationKey) 
     {
       rv = GetCollationKey(msgHdr, sortType, &keyValue, &actualFieldLen);
       NS_ENSURE_SUCCESS(rv,rv);
@@ -3625,7 +3625,7 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
   // do the sort
   switch (fieldType) 
   {
-    case kCollationKey:
+    case nsICollation::kCollationKey:
     {
       
       nsCOMPtr <nsIMsgDatabase> dbToUse = m_db;
@@ -4208,7 +4208,7 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
   msgHdr->GetMessageKey(&EntryInfo1.id);
   switch (fieldType)
   {
-    case kCollationKey:
+    case nsICollation::kCollationKey:
       rv = GetCollationKey(msgHdr, m_sortType, &EntryInfo1.key, &EntryInfo1.dword);
       NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create collation key");
       comparisonFun = FnSortIdKeyPtr;
@@ -4234,7 +4234,7 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
     rv = m_db->GetMsgHdrForKey(EntryInfo2.id, getter_AddRefs(tryHdr));
     if (!tryHdr)
       break;
-    if (fieldType == kCollationKey)
+    if (fieldType == nsICollation::kCollationKey)
     {
       PR_FREEIF(EntryInfo2.key);
       rv = GetCollationKey(tryHdr, m_sortType, &EntryInfo2.key, &EntryInfo2.dword);

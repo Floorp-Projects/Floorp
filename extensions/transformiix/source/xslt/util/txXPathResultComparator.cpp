@@ -133,7 +133,7 @@ TxObject* txResultStringComparator::createSortableValue(txAExprResult* aExprRes)
     if (nsCaseKey.IsEmpty()) {
         return val;        
     }
-    nsresult rv = mCollation->AllocateRawSortKey(kCollationCaseInSensitive,
+    nsresult rv = mCollation->AllocateRawSortKey(nsICollation::kCollationCaseInSensitive,
                                                  nsCaseKey,
                                                  &val->mKey, 
                                                  &val->mLength);
@@ -198,7 +198,7 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
 
     if ((strval1->mCaseLength == 0) && (strval1->mLength != 0)) {
         nsString* caseString = (nsString *)strval1->mCaseKey;
-        rv = mCollation->AllocateRawSortKey(kCollationCaseSensitive,
+        rv = mCollation->AllocateRawSortKey(nsICollation::kCollationCaseSensitive,
                                             *caseString,
                                             (PRUint8**)&strval1->mCaseKey, 
                                             &strval1->mCaseLength);
@@ -212,7 +212,7 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
     }
     if ((strval2->mCaseLength == 0) && (strval2->mLength != 0)) {
         nsString* caseString = (nsString *)strval2->mCaseKey;
-        rv = mCollation->AllocateRawSortKey(kCollationCaseSensitive,
+        rv = mCollation->AllocateRawSortKey(nsICollation::kCollationCaseSensitive,
                                             *caseString,
                                             (PRUint8**)&strval2->mCaseKey, 
                                             &strval2->mCaseLength);

@@ -52,6 +52,7 @@ XPIDLSRCS	= \
 		nsILocale.idl \
 		nsILocaleService.idl \
 		nsIScriptableDateFormat.idl \
+		nsICollation.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

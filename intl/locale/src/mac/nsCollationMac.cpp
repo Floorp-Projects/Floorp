@@ -198,7 +198,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
 };
 
 
-nsresult nsCollationMac::CompareString(const nsCollationStrength strength, 
+nsresult nsCollationMac::CompareString(PRInt32 strength, 
                                        const nsAString& string1, const nsAString& string2, PRInt32* result)
 {
   PRUint32 aLength1, aLength2;
@@ -220,7 +220,7 @@ nsresult nsCollationMac::CompareString(const nsCollationStrength strength,
 }
  
 
-nsresult nsCollationMac::AllocateRawSortKey(const nsCollationStrength strength, 
+nsresult nsCollationMac::AllocateRawSortKey(PRInt32 strength, 
                                             const nsAString& stringIn, PRUint8** key, PRUint32* outLen)
 {
   nsresult res = NS_OK;
@@ -274,3 +274,10 @@ nsresult nsCollationMac::AllocateRawSortKey(const nsCollationStrength strength,
   return NS_OK;
 }
 
+nsresult nsCollationMac::CompareRawSortKey(const PRUint8* key1, PRUint32 len1, 
+                                           const PRUint8* key2, PRUint32 len2, 
+                                           PRInt32* result)
+{
+  *result = PL_strcmp((const char *)key1, (const char *)key2);
+  return NS_OK;
+}

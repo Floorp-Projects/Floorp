@@ -133,7 +133,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
 }
 
 
-nsresult nsCollationWin::CompareString(const nsCollationStrength strength,
+nsresult nsCollationWin::CompareString(PRInt32 strength,
                                        const nsAString& string1, const nsAString& string2, PRInt32* result)
 {
   int retval;
@@ -174,7 +174,7 @@ nsresult nsCollationWin::CompareString(const nsCollationStrength strength,
 }
  
 
-nsresult nsCollationWin::AllocateRawSortKey(const nsCollationStrength strength, 
+nsresult nsCollationWin::AllocateRawSortKey(PRInt32 strength, 
                                             const nsAString& stringIn, PRUint8** key, PRUint32* outLen)
 {
   int byteLen;
@@ -216,4 +216,12 @@ nsresult nsCollationWin::AllocateRawSortKey(const nsCollationStrength strength,
   }
 
   return res;
+}
+
+nsresult nsCollationWin::CompareRawSortKey(const PRUint8* key1, PRUint32 len1, 
+                                           const PRUint8* key2, PRUint32 len2, 
+                                           PRInt32* result)
+{
+  *result = PL_strcmp((const char *)key1, (const char *)key2);
+  return NS_OK;
 }

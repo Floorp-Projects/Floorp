@@ -92,7 +92,7 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
 }
 
 
-nsresult nsCollationOS2::CompareString(const nsCollationStrength strength, 
+nsresult nsCollationOS2::CompareString(PRInt32 strength, 
                                        const nsAString& string1, const nsAString& string2, PRInt32* result)
 {
   nsAutoString stringNormalized1, stringNormalized2;
@@ -124,7 +124,7 @@ nsresult nsCollationOS2::CompareString(const nsCollationStrength strength,
 }
  
 
-nsresult nsCollationOS2::AllocateRawSortKey(const nsCollationStrength strength, 
+nsresult nsCollationOS2::AllocateRawSortKey(PRInt32 strength, 
                                             const nsAString& stringIn, PRUint8** key, PRUint32* outLen)
 {
   nsresult res = NS_OK;
@@ -182,3 +182,10 @@ nsresult nsCollationOS2::AllocateRawSortKey(const nsCollationStrength strength,
   return res;
 }
 
+nsresult nsCollationOS2::CompareRawSortKey(const PRUint8* key1, PRUint32 len1, 
+                                           const PRUint8* key2, PRUint32 len2, 
+                                           PRInt32* result)
+{
+  *result = PL_strcmp((const char *)key1, (const char *)key2);
+  return NS_OK;
+}

@@ -3201,7 +3201,7 @@ nsMsgDatabase::CreateCollationKey(const nsAString& sourceString, PRUint8 **resul
   NS_ENSURE_SUCCESS(err,err);
   if (!m_collationKeyGenerator) return NS_ERROR_FAILURE;
 
-  err = m_collationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, sourceString, result, len);
+  err = m_collationKeyGenerator->AllocateRawSortKey(nsICollation::kCollationCaseInSensitive, sourceString, result, len);
   NS_ENSURE_SUCCESS(err,err);
   return err;
 }
