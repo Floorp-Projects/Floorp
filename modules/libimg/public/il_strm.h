@@ -22,7 +22,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_strm.h --- Stream converters for the image library.
- *  $Id: il_strm.h,v 3.5 1999/11/06 03:31:20 dmose%mozilla.org Exp $
+ *  $Id: il_strm.h,v 3.6 2001/06/19 08:46:24 pavlov%netscape.com Exp $
  */
 
 

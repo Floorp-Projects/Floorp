@@ -38,7 +38,7 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.cpp,v 3.18 2001/06/13 01:13:35 pavlov%netscape.com Exp $
+   $Id: color.cpp,v 3.19 2001/06/19 08:46:54 pavlov%netscape.com Exp $
 */
 
 

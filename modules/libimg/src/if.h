@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.27 2001/03/20 05:30:59 cls%seawood.org Exp $
+ * $Id: if.h,v 3.28 2001/06/19 08:47:00 pavlov%netscape.com Exp $
  */
 
 #ifndef _if_h

@@ -22,7 +22,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_icons.h --- Image icon enumeration.
- *  $Id: il_icons.h,v 3.3 1999/11/06 03:31:19 dmose%mozilla.org Exp $
+ *  $Id: il_icons.h,v 3.4 2001/06/19 08:46:23 pavlov%netscape.com Exp $
  */
 
 
