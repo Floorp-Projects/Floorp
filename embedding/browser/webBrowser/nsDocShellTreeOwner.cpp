@@ -57,7 +57,8 @@ nsDocShellTreeOwner::nsDocShellTreeOwner() :
    mWebBrowserChrome(nsnull),
    mOwnerProgressListener(nsnull),
    mOwnerWin(nsnull),
-   mOwnerRequestor(nsnull)
+   mOwnerRequestor(nsnull),
+   mMouseListenerActive(PR_FALSE)
 {
 	NS_INIT_REFCNT();
 }
@@ -71,7 +72,36 @@ nsDocShellTreeOwner::~nsDocShellTreeOwner()
 //*****************************************************************************   
 
 NS_IMPL_ADDREF(nsDocShellTreeOwner)
-NS_IMPL_RELEASE(nsDocShellTreeOwner)
+    //NS_IMPL_RELEASE(nsDocShellTreeOwner)
+
+// Custom release to break a circular dependancy cause
+// by an refcount held by layout.
+
+NS_IMETHODIMP_(nsrefcnt)
+nsDocShellTreeOwner::Release(void)
+{
+  nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
+  NS_LOG_RELEASE(this, count, "nsDocShellTreeOwner");
+
+  if (count == 1 && mMouseListenerActive)
+  {
+      // layout holds a reference via the MouseListener.  
+      // we will remove ourselves, layout will call release
+      // on us.
+       RemoveMouseListener();  
+       return 0;
+  }                          
+
+  if (count == 0)
+  {
+      NS_DELETEXPCOM(this); 
+      return 0;
+  }
+
+  return mRefCnt;
+}                
+
+
 
 NS_INTERFACE_MAP_BEGIN(nsDocShellTreeOwner)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShellTreeOwner)
@@ -578,8 +608,11 @@ NS_IMETHODIMP nsDocShellTreeOwner::AddMouseListener()
     domDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(eventReceiver));
     if (eventReceiver)
 	{
+        nsresult rv;
         nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
-        eventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
+        rv = eventReceiver->AddEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
+        if (NS_SUCCEEDED(rv))
+            mMouseListenerActive = PR_TRUE;
     }
     mLastDOMDocument = domDocument;
 
@@ -596,9 +629,12 @@ NS_IMETHODIMP nsDocShellTreeOwner::RemoveMouseListener()
 		mLastDOMDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(eventReceiver));
 		if (eventReceiver)
 		{
-			nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
-			eventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
-		}
+			nsresult rv;
+            nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
+            rv = eventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
+            if (NS_SUCCEEDED(rv))
+                mMouseListenerActive = PR_FALSE;
+        }
         mLastDOMDocument = nsnull;
     }
 

@@ -108,6 +108,19 @@ protected:
    nsIWebProgressListener* mOwnerProgressListener;
    nsIBaseWindow*          mOwnerWin;
    nsIInterfaceRequestor*  mOwnerRequestor;
+   PRBool                  mMouseListenerActive;
 };
 
 #endif /* nsDocShellTreeOwner_h__ */
+
+
+
+
+
+
+
+
+
+
+
+
