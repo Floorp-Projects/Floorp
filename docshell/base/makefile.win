@@ -32,5 +32,14 @@ XPIDLSRCS=						\
 		.\nsITextScroll.idl		\
 		$(NULL)
 
+LIBRARY_NAME=basedocshell_s
+
+CPP_OBJS=											\
+		.\$(OBJDIR)\nsDocShellBase.obj			\
+		$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>
+
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
