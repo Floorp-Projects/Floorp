@@ -4,9 +4,13 @@ var sidebarURI = 'resource:/res/rdf/sidebar-browser.xul';
 var isSidebarOpen = false;
 
 function Init() {
-  var pref = Components.classes['component://netscape/preferences'].getService();
-  pref = pref.QueryInterface(Components.interfaces.nsIPref);
-
+  var pref = Components.classes['component://netscape/preferences'];
+  if (pref) {
+    pref = pref.getService();
+  }
+  if (pref) {
+    pref = pref.QueryInterface(Components.interfaces.nsIPref);
+  }
   if (pref) {
     pref.SetDefaultIntPref('sidebar.width', 170);
     //    pref.SetIntPref(pref.GetIntPref('sidebar.width'));
@@ -20,8 +24,13 @@ function Init() {
 
 function toggleOpenClose() {
   // Get the open width and update the pref state
-  var pref = Components.classes['component://netscape/preferences'].getService();
-  pref = pref.QueryInterface(Components.interfaces.nsIPref);
+  var pref = Components.classes['component://netscape/preferences'];
+  if (pref) {
+   pref = pref.getService();
+  }
+  if (pref) {
+    pref = pref.QueryInterface(Components.interfaces.nsIPref);
+  }
   var width = 0;
 
   if (pref) {
