@@ -139,10 +139,7 @@ nsMIMEInfoImpl::Clone(nsIMIMEInfo** aClone) {
   clone->mExtensions = mExtensions;
   clone->mDescription = mDescription;
   nsresult result = NS_OK;
-  if (mURI) {
-    result = mURI->Clone(getter_AddRefs(clone->mURI));
-    NS_ASSERTION(NS_SUCCEEDED(result), "Failed to clone URI");
-  }
+
   clone->mMacType = mMacType;
   clone->mMacCreator = mMacCreator;
   if (mPreferredApplication) {
@@ -188,11 +185,6 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetDescription(const PRUnichar * aDescription)
 {
 	mDescription =  aDescription;
 	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMIMEInfoImpl::GetDataURI(nsIURI * *aDataURI) {
-    return mURI->Clone(aDataURI);
 }
 
 NS_IMETHODIMP

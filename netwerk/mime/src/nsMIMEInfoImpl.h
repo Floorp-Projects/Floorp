@@ -59,7 +59,6 @@ public:
     // member variables
     nsCStringArray      mExtensions; // array of file extensions associated w/ this MIME obj
     nsAutoString        mDescription; // human readable description
-    nsCOMPtr<nsIURI>    mURI;         // URI pointing to data associated w/ this obj      
 		PRUint32						mMacType, mMacCreator; // Mac file type and creator
 protected:
     nsCString					     mMIMEType;
