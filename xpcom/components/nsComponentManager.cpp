@@ -1150,9 +1150,7 @@ nsComponentManagerImpl::ReadPersistentRegistry()
 
         int loadertype = GetLoaderType(values[2]);
         if (loadertype < 0) {
-            rv = AddLoaderType(values[2], &loadertype);
-            if (NS_FAILED(rv))
-                continue;
+            loadertype = AddLoaderType(values[2]);
         }
 
         void *mem;
@@ -1236,7 +1234,7 @@ nsComponentManagerImpl::ReadPersistentRegistry()
             "@mozilla.org/intl/charsetalias;1",
             "@mozilla.org/locale/win32-locale;1",
             "@mozilla.org/widget/lookandfeel/win;1",
-        // */
+        //*/
             0
         };
         for (int i=0; abusedContracts[i] && *abusedContracts[i]; i++) {
@@ -2937,15 +2935,14 @@ nsComponentManagerImpl::GetLoaderType(const char *typeStr)
     return NS_COMPONENT_TYPE_FACTORY_ONLY;
 }
 
-// Add a loader type if not already known. Out the typeIndex
+// Add a loader type if not already known. Return the typeIndex
 // if the loader type is either added or already there.
-nsresult
-nsComponentManagerImpl::AddLoaderType(const char *typeStr, int *aTypeIndex)
+int
+nsComponentManagerImpl::AddLoaderType(const char *typeStr)
 {
     int typeIndex = GetLoaderType(typeStr);
     if (typeIndex >= 0) {
-        *aTypeIndex = typeIndex;
-        return NS_OK;
+        return typeIndex;
     }
 
     // Add the loader type
@@ -2969,8 +2966,7 @@ nsComponentManagerImpl::AddLoaderType(const char *typeStr, int *aTypeIndex)
     mLoaderData[typeIndex].loader = nsnull;
     mNLoaderData++;
 
-    *aTypeIndex = typeIndex;
-    return NS_OK;
+    return typeIndex;
 }
 
 typedef struct
@@ -3240,11 +3236,7 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
         // We depend on the loader being created. Add the loader type and
         // create the loader object too.
         nsCOMPtr<nsIComponentLoader> loader;
-        int typeIndex;
-        rv = AddLoaderType(loaderType.get(), &typeIndex);
-        if (NS_FAILED(rv))
-            return rv;
-        GetLoaderForType(typeIndex, getter_AddRefs(loader));
+        GetLoaderForType(AddLoaderType(loaderType.get()), getter_AddRefs(loader));
     }
 
     rv = AutoRegisterNonNativeComponents(dir.get());
