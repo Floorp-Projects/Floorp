@@ -129,8 +129,6 @@
 #define CHROME_STYLE nsIWebBrowserChrome::CHROME_ALL | nsIWebBrowserChrome::CHROME_CENTER_SCREEN
 #endif 
 
-const char* kDialogParamBlockContractID = "@mozilla.org/embedcomp/dialogparam;1";
-
 const char* kDefaultOpenWindowParams = "centerscreen,chrome,modal,titlebar";
 
 const char* kBrandBundleURL = "chrome://global/locale/brand.properties";
@@ -574,7 +572,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
         // We need to send a param to OpenWindow if the window is to be considered
         // a dialog. It needs to be for script security reasons. This param block
         // will be made use of soon. See bug 66833.
-        nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1", &rv));
+        nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID, &rv));
         if (NS_FAILED(rv)) return rv;
        
         nsCOMPtr<nsIDOMWindow> newWindow;
@@ -2360,7 +2358,7 @@ nsProfile::ShowProfileWizard(void)
     nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1", &rv));
+    nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     ioParamBlock->SetInt(0,4); // standard wizard buttons
    

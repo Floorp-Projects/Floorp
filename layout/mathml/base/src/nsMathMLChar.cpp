@@ -158,7 +158,7 @@ AlertMissingFonts(nsString& aMissingFonts)
   if (!wwatch)
     return;
 
-  nsCOMPtr<nsIDialogParamBlock> paramBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+  nsCOMPtr<nsIDialogParamBlock> paramBlock(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
   if (!paramBlock)
     return;
 

@@ -476,7 +476,7 @@ nsPrefMigration::ShowSpaceDialog(PRInt32 *choice)
   nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1", &rv));
+  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
   
   ioParamBlock->SetInt(0,3); //set the Retry, CreateNew and Cancel buttons

@@ -48,7 +48,7 @@ nsPKIParamBlock::nsPKIParamBlock()
 nsresult
 nsPKIParamBlock::Init()
 {
-  mDialogParamBlock = do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1");
+  mDialogParamBlock = do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
   return (mDialogParamBlock == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
