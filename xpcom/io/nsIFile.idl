@@ -141,6 +141,11 @@ interface nsIFile : nsISupports
 
       void appendPath([const] in string relativePath);
 
+      /**
+       * Normalize the pathName (e.g. removing .. and . components on Unix).
+       */
+      void normalize();
+
     /**
      *  create
      *
@@ -166,10 +171,9 @@ interface nsIFile : nsISupports
 
 
     /**
-     *   Accessor to the file name (the leaf name not the full file path)
-     *   of the file itself. 
+     *   Accessor to the leaf name of the file itself. 
      */
-    readonly attribute string fileName;
+    readonly attribute string leafName;
     
     /**
      *  getPath
@@ -276,49 +280,64 @@ interface nsIFile : nsISupports
     void delete(in boolean recursive);
 
     /**
+     * Truncate the file to the given length.
+     */
+    void truncate(in unsigned long length);
+
+    /**
      *  Attributes of nsIFile.
      */
     attribute unsigned long lastModificationDate;
-    attribute unsigned long lastModificationDateOfLink;
-        
     attribute unsigned long permissions;
-    attribute unsigned long permissionsOfLink;
-
     readonly attribute unsigned long fileSize;
+
+    attribute unsigned long lastModificationDateOfLink;
+    attribute unsigned long permissionsOfLink;
+    /* should we make this writable and have it map to truncate? */
     readonly attribute unsigned long fileSizeOfLink;
-    
+    /**
+     * Find out what the symlink points at.  Will give error
+     * (NS_ERROR_FILE_INVALID_PATH) if not a symlink.
+     */
+    readonly attribute string target;
 
     readonly attribute long long diskSpaceAvailable;  // maybe we should put this somewhere else.
 
     /**
      * Parent will be nsnull when this is at the top of the volume.
      */
-	readonly attribute nsIFile parent;
+    readonly attribute nsIFile parent;
     
-    boolean isExists();
-    boolean isWriteable();
+    boolean exists();
+    boolean isWritable();
     boolean isReadable();
+    boolean isExecutable();
+    boolean isHidden();
     boolean isDirectory();
     boolean isFile();
-    boolean isHidden();
     boolean isSymlink();
+    /**
+     * Not a regular file, not a directory, not a symlink.
+     */
+    boolean isSpecial(); 
     
     /**
      *  Will determine if the inFile equals this.
      */
-    boolean isEqual(in nsIFile inFile);
+    boolean equals(in nsIFile inFile);
     
     /**
-     *  Will determine the file is a sibling of the parameter inFile.
+     * Will determine the file is a descendant of the parameter inFile.
+     * If |recur| is true, it will descend subdirectories looking for 
      */
-    boolean isContainedIn(in nsIFile inFile);
+    boolean isContainedIn(in nsIFile inFile, in boolean recur);
 };
 
 %{C++
 #define NS_FILE_PROGID "component://netscape/file"
 #define NS_FILE_CLASSNAME "File Specification"
 
-#define NS_ERROR_FILE_UNRECONGNIZED_PATH        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
+#define NS_ERROR_FILE_UNRECOGNIZED_PATH        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
 #define NS_ERROR_FILE_UNRESOLVABLE_SYMLINK      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 2)
 #define NS_ERROR_FILE_EXECUTION_FAILED          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 3)
 #define NS_ERROR_FILE_UNKNOWN_TYPE              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 4)

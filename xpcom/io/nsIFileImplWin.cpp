@@ -422,9 +422,9 @@ nsIFileImpl::AppendPath(const char *node)
 }
 
 NS_IMETHODIMP  
-nsIFileImpl::GetFileName(char * *aFileName)
+nsIFileImpl::GetLeafName(char * *aLeafName)
 {
-    NS_ENSURE_ARG_POINTER(aFileName);
+    NS_ENSURE_ARG_POINTER(aLeafName);
 
     const char* temp = mWorkingPath.GetBuffer();
     if(temp == nsnull)
@@ -438,7 +438,7 @@ nsIFileImpl::GetFileName(char * *aFileName)
     else
         leaf++;
 
-    *aFileName = (char*) nsAllocator::Clone(leaf, strlen(leaf)+1);
+    *aLeafName = (char*) nsAllocator::Clone(leaf, strlen(leaf)+1);
     return NS_OK;
 }
 
@@ -873,7 +873,7 @@ nsIFileImpl::GetParent(nsIFile * *aParent)
     return NS_OK;
 }
 NS_IMETHODIMP  
-nsIFileImpl::IsExists(PRBool *_retval)
+nsIFileImpl::Exists(PRBool *_retval)
 {
     NS_ENSURE_ARG(_retval);
     
@@ -889,7 +889,7 @@ nsIFileImpl::IsExists(PRBool *_retval)
 }
 
 NS_IMETHODIMP  
-nsIFileImpl::IsWriteable(PRBool *_retval)
+nsIFileImpl::IsWritable(PRBool *_retval)
 {
     NS_ENSURE_ARG(_retval);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -962,7 +962,7 @@ nsIFileImpl::IsSymlink(PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsIFileImpl::IsEqual(nsIFile *inFile, PRBool *_retval)
+nsIFileImpl::Equals(nsIFile *inFile, PRBool *_retval)
 {
     NS_ENSURE_ARG(inFile);
     NS_ENSURE_ARG(_retval);
@@ -985,7 +985,7 @@ nsIFileImpl::IsEqual(nsIFile *inFile, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsIFileImpl::IsContainedIn(nsIFile *inFile, PRBool *_retval)
+nsIFileImpl::IsContainedIn(nsIFile *inFile, PRBool recur, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

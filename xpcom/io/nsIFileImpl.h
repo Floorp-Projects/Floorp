@@ -34,7 +34,10 @@
 #ifdef XP_PC
 #include "nsIFileImplWin.h"
 #else
+#ifdef XP_UNIX
+#include "nsIFileImplUnix.h"
+#else
 #error NOT_IMPLEMENTED
-#endif
-
+#endif /* XP_UNIX */
+#endif /* XP_PC */
 #endif
