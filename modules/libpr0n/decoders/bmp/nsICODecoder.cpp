@@ -83,7 +83,7 @@ nsresult nsICODecoder::SetImageData()
     mFrame->SetImageData(decodeBufferPos, decodedLineLen, frameOffset);
   }
 
-  nsRect r(0, 0, 0, 0);
+  nsIntRect r(0, 0, 0, 0);
   mFrame->GetWidth(&r.width);
   mFrame->GetHeight(&r.height);
   mObserver->OnDataAvailable(nsnull, mFrame, &r);

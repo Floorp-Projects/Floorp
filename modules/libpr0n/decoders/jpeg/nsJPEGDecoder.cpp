@@ -548,7 +548,7 @@ nsJPEGDecoder::OutputScanlines()
   }
 
   if (top != mInfo.output_scanline) {
-      nsRect r(0, top, mInfo.output_width, mInfo.output_scanline-top);
+      nsIntRect r(0, top, mInfo.output_width, mInfo.output_scanline-top);
       mObserver->OnDataAvailable(nsnull, mFrame, &r);
   }
 

@@ -58,8 +58,8 @@ imgContainer::~imgContainer()
 }
 
 //******************************************************************************
-/* void init (in nscoord aWidth, in nscoord aHeight, in imgIContainerObserver aObserver); */
-NS_IMETHODIMP imgContainer::Init(nscoord aWidth, nscoord aHeight, imgIContainerObserver *aObserver)
+/* void init (in PRIn32 aWidth, in PRInt32 aHeight, in imgIContainerObserver aObserver); */
+NS_IMETHODIMP imgContainer::Init(PRInt32 aWidth, PRInt32 aHeight, imgIContainerObserver *aObserver)
 {
   if (aWidth <= 0 || aHeight <= 0) {
     NS_WARNING("error - negative image size\n");
@@ -85,8 +85,8 @@ NS_IMETHODIMP imgContainer::GetPreferredAlphaChannelFormat(gfx_format *aFormat)
 }
 
 //******************************************************************************
-/* readonly attribute nscoord width; */
-NS_IMETHODIMP imgContainer::GetWidth(nscoord *aWidth)
+/* readonly attribute PRInt32 width; */
+NS_IMETHODIMP imgContainer::GetWidth(PRInt32 *aWidth)
 {
   NS_ASSERTION(aWidth, "imgContainer::GetWidth; Invalid Arg");
   if (!aWidth)
@@ -97,8 +97,8 @@ NS_IMETHODIMP imgContainer::GetWidth(nscoord *aWidth)
 }
 
 //******************************************************************************
-/* readonly attribute nscoord height; */
-NS_IMETHODIMP imgContainer::GetHeight(nscoord *aHeight)
+/* readonly attribute PRInt32 height; */
+NS_IMETHODIMP imgContainer::GetHeight(PRInt32 *aHeight)
 {
   NS_ASSERTION(aHeight, "imgContainer::GetHeight; Invalid Arg");
   if (!aHeight)

@@ -40,8 +40,8 @@
 
 #include "nsISupports.h"
 #include "nsIRenderingContext.h"
+#include "nsRect.h"
 
-struct nsRect;
 class nsIDeviceContext;
 
 struct nsColorMap
@@ -69,8 +69,8 @@ typedef enum {
  
 // IID for the nsIImage interface
 #define NS_IIMAGE_IID          \
-{ 0x0b4faaa0, 0xaa3a, 0x11d1, \
-{ 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
+  { 0xce91c93f, 0x532d, 0x470d, \
+      { 0xbf, 0xa3, 0xc9, 0x6e, 0x56, 0x01, 0x52, 0xa4 } }
 
 // Interface to Images
 class nsIImage : public nsISupports
@@ -158,7 +158,7 @@ public:
    * @param aFlags Used to pass in parameters for the update
    * @param aUpdateRect The rectangle to update
    */
-  virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect) = 0;
+  virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsIntRect *aUpdateRect) = 0;
 
   /**
    * Converted this pixelmap to an optimized pixelmap for the device
@@ -201,7 +201,8 @@ public:
    * @param aDHeight The destination height of the pixelmap
    * @return if TRUE, no errors
    */
-  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
+                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
 
 

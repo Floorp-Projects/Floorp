@@ -74,9 +74,9 @@ imgContainerGIF::~imgContainerGIF()
 }
 
 //******************************************************************************
-/* void init (in nscoord aWidth, in nscoord aHeight,
+/* void init (in PRInt32 aWidth, in PRInt32 aHeight,
               in imgIContainerObserver aObserver); */
-NS_IMETHODIMP imgContainerGIF::Init(nscoord aWidth, nscoord aHeight,
+NS_IMETHODIMP imgContainerGIF::Init(PRInt32 aWidth, PRInt32 aHeight,
                                     imgIContainerObserver *aObserver)
 {
   if (aWidth <= 0 || aHeight <= 0) {
@@ -100,16 +100,16 @@ NS_IMETHODIMP imgContainerGIF::GetPreferredAlphaChannelFormat(gfx_format *aForma
 }
 
 //******************************************************************************
-/* readonly attribute nscoord width; */
-NS_IMETHODIMP imgContainerGIF::GetWidth(nscoord *aWidth)
+/* readonly attribute PRInt32 width; */
+NS_IMETHODIMP imgContainerGIF::GetWidth(PRInt32 *aWidth)
 {
   *aWidth = mSize.width;
   return NS_OK;
 }
 
 //******************************************************************************
-/* readonly attribute nscoord height; */
-NS_IMETHODIMP imgContainerGIF::GetHeight(nscoord *aHeight)
+/* readonly attribute PRInt32 height; */
+NS_IMETHODIMP imgContainerGIF::GetHeight(PRInt32 *aHeight)
 {
   *aHeight = mSize.height;
   return NS_OK;
@@ -169,7 +169,7 @@ NS_IMETHODIMP imgContainerGIF::AppendFrame(gfxIImageFrame *item)
     // Calculate mFirstFrameRefreshArea
     // Some gifs are huge but only have a small area that they animate
     // We only need to refresh that small area when Frame 0 comes around again
-    nsRect itemRect;
+    nsIntRect itemRect;
     item->GetRect(itemRect);
     mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea, itemRect);
   }
@@ -429,7 +429,7 @@ NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
   else
     StopAnimation();
 
-  nsRect dirtyRect;
+  nsIntRect dirtyRect;
   gfxIImageFrame *frameToUse = nsnull;
 
   if (nextFrameIndex == 0) {
@@ -460,7 +460,7 @@ NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
 // DoComposite gets called when the timer for animation get fired and we have to
 // update the composited frame of the animation.
 nsresult imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
-                                      nsRect* aDirtyRect,
+                                      nsIntRect* aDirtyRect,
                                       gfxIImageFrame* aPrevFrame,
                                       gfxIImageFrame* aNextFrame,
                                       PRInt32 aNextFrameIndex)
@@ -485,7 +485,7 @@ nsresult imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
     return NS_OK;
   }
 
-  nsRect prevFrameRect;
+  nsIntRect prevFrameRect;
   aPrevFrame->GetRect(prevFrameRect);
   PRBool isFullPrevFrame = (prevFrameRect.x == 0 && prevFrameRect.y == 0 &&
                             prevFrameRect.width == mSize.width &&
@@ -500,7 +500,7 @@ nsresult imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
   }
 
   PRInt32 nextFrameDisposalMethod;
-  nsRect nextFrameRect;
+  nsIntRect nextFrameRect;
   aNextFrame->GetFrameDisposalMethod(&nextFrameDisposalMethod);
   aNextFrame->GetRect(nextFrameRect);
   PRBool isFullNextFrame = (nextFrameRect.x == 0 && nextFrameRect.y == 0 &&
@@ -703,8 +703,7 @@ void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame,
     return;
   }
 
-  nscoord widthOverlay;
-  nscoord heightOverlay;
+  PRInt32 widthOverlay, heightOverlay;
   PRInt32 overlayXOffset, overlayYOffset;
   aOverlayFrame->GetWidth(&widthOverlay);
   aOverlayFrame->GetHeight(&heightOverlay);
@@ -726,8 +725,7 @@ void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame,
   aOverlayFrame->GetAlphaBytesPerRow(&abprOverlay);
 
   // Only the composite's width & height are needed.  x & y should always be 0.
-  nscoord widthComposite;
-  nscoord heightComposite;
+  PRInt32 widthComposite, heightComposite;
   aCompositingFrame->GetWidth(&widthComposite);
   aCompositingFrame->GetHeight(&heightComposite);
 
@@ -855,8 +853,8 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
     return;
   }
 
-  nscoord frameWidth;
-  nscoord frameHeight;
+  PRInt32 frameWidth;
+  PRInt32 frameHeight;
   aFrame->GetWidth(&frameWidth);
   aFrame->GetHeight(&frameHeight);
 
@@ -981,13 +979,13 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame)
 
   nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(aFrame));
   if (ireq) {
-    nscoord width;
-    nscoord height;
+    PRInt32 width;
+    PRInt32 height;
     aFrame->GetWidth(&width);
     aFrame->GetHeight(&height);
 
     nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
-    nsRect r(0, 0, width, height);
+    nsIntRect r(0, 0, width, height);
 
     img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
   }
@@ -1005,8 +1003,8 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
 
   aFrame->LockImageData();
 
-  nscoord widthFrame;
-  nscoord heightFrame;
+  PRInt32 widthFrame;
+  PRInt32 heightFrame;
   aFrame->GetWidth(&widthFrame);
   aFrame->GetHeight(&heightFrame);
 
@@ -1094,7 +1092,7 @@ PRBool imgContainerGIF::CopyFrameImage(gfxIImageFrame *aSrcFrame,
   nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
   if (!img)
     return PR_FALSE;
-  nsRect r;
+  nsIntRect r;
   aDstFrame->GetRect(r);
   img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 

@@ -54,7 +54,7 @@ interface gfxIImageFrame;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(350163d2-1dd2-11b2-9e69-89959ecec1f3)]
+[scriptable, uuid(cce7152e-4395-4231-a781-c347c5446cc2)]
 interface imgIDecoderObserver : imgIContainerObserver
 {
   /**
@@ -75,7 +75,7 @@ interface imgIDecoderObserver : imgIContainerObserver
   /**
    * called when some part of the frame has new data in it
    */
-  [noscript] void onDataAvailable(in imgIRequest aRequest, in gfxIImageFrame aFrame, [const] in nsRect aRect);
+  [noscript] void onDataAvailable(in imgIRequest aRequest, in gfxIImageFrame aFrame, [const] in nsIntRect aRect);
 
   /**
    * called when a frame is finished decoding

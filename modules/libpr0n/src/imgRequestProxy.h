@@ -84,13 +84,13 @@ protected:
   void OnStartDecode   (void);
   void OnStartContainer(imgIContainer *aContainer);
   void OnStartFrame    (gfxIImageFrame *aFrame);
-  void OnDataAvailable (gfxIImageFrame *aFrame, const nsRect * aRect);
+  void OnDataAvailable (gfxIImageFrame *aFrame, const nsIntRect * aRect);
   void OnStopFrame     (gfxIImageFrame *aFrame);
   void OnStopContainer (imgIContainer *aContainer);
   void OnStopDecode    (nsresult status, const PRUnichar *statusArg); 
 
   /* non-virtual imgIContainerObserver methods */
-  void FrameChanged(imgIContainer *aContainer, gfxIImageFrame *aFrame, nsRect * aDirtyRect);
+  void FrameChanged(imgIContainer *aContainer, gfxIImageFrame *aFrame, nsIntRect * aDirtyRect);
 
   /* non-virtual nsIRequestObserver methods */
   void OnStartRequest(nsIRequest *request, nsISupports *ctxt);

@@ -419,7 +419,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     line = new_row;
 
   if (new_row) {
-    nscoord width;
+    PRInt32 width;
     decoder->mFrame->GetWidth(&width);
     PRUint32 iwidth = width;
 
@@ -515,7 +515,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
       break;
     }
 
-    nsRect r(0, row_num, width, 1);
+    nsIntRect r(0, row_num, width, 1);
     decoder->mObserver->OnDataAvailable(nsnull, decoder->mFrame, &r);
   }
 }

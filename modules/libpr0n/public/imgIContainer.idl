@@ -51,7 +51,7 @@ interface imgIContainerObserver;
  * @version 0.1
  * @see "gfx2"
  */
-[scriptable, uuid(5e8405a4-1dd2-11b2-8385-bc8e3446cad3)]
+[scriptable, uuid(1a6290e6-8285-4e10-963d-d001f8d327b8)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -63,8 +63,8 @@ interface imgIContainer : nsISupports
    *                gfxIImageFrame children will fit.
    * @param aObserver Observer to send animation notifications to.
    */
-  void init(in nscoord aWidth,
-            in nscoord aHeight,
+  void init(in PRInt32 aWidth,
+            in PRInt32 aHeight,
             in imgIContainerObserver aObserver);
 
 
@@ -74,12 +74,12 @@ interface imgIContainer : nsISupports
   /**
    * The width of the container rectangle.
    */
-  readonly attribute nscoord width;
+  readonly attribute PRInt32 width;
 
   /**
    * The height of the container rectangle.
    */
-  readonly attribute nscoord height;
+  readonly attribute PRInt32 height;
 
 
   /**

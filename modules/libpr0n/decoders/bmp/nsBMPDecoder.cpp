@@ -141,7 +141,7 @@ nsresult nsBMPDecoder::SetData()
     nsresult rv = mFrame->SetImageData(mDecoded, mBpr, line * mBpr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsRect r(0, line, mBIH.width, 1);
+    nsIntRect r(0, line, mBIH.width, 1);
     return mObserver->OnDataAvailable(nsnull, mFrame, &r);
 }
 
@@ -174,7 +174,7 @@ nsresult nsBMPDecoder::WriteRLERows(PRUint32 rows)
     }
 
     line = (mBIH.height < 0) ? (-mBIH.height - mCurLine - rows) : mCurLine;
-    nsRect r(0, line, mBIH.width, rows);
+    nsIntRect r(0, line, mBIH.width, rows);
     return mObserver->OnDataAvailable(nsnull, mFrame, &r);
 }
 
