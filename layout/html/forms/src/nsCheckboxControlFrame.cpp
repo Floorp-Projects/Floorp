@@ -18,6 +18,7 @@
 
 #include "nsICheckButton.h"
 #include "nsFormControlFrame.h"
+#include "nsFormFrame.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIFrame.h"
@@ -143,17 +144,22 @@ nsCheckboxControlFrame::GetChecked(PRBool* aResult)
 void 
 nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
 {
-  PRBool checked;
-  nsresult result = GetChecked(&checked);
-  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-    // set the widget to the initial state
-    nsICheckButton* checkbox = nsnull;
-  
-    if (mWidget && (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&checkbox))) {
+  if (!mWidget) {
+    return;
+  }
+
+  SetColors(*aPresContext);
+  mWidget->Enable(!nsFormFrame::GetDisabled(this));
+
+  // set the widget to the initial state
+  nsICheckButton* checkbox = nsnull;
+  if (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&checkbox)) {
+    PRBool checked;
+    nsresult result = GetChecked(&checked);
+    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
 	    checkbox->SetState(checked);
-      SetColors(*aPresContext);
-      NS_IF_RELEASE(checkbox);
     }
+    NS_RELEASE(checkbox);
   }
 }
 

@@ -255,7 +255,8 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
 
       mFormFrame->OnReset();
     } 
-    else if ((NS_FORM_INPUT_SUBMIT == type) || (NS_FORM_INPUT_IMAGE == type)) {
+    else if ((NS_FORM_INPUT_SUBMIT == type) || 
+             ((NS_FORM_INPUT_IMAGE == type) && !nsFormFrame::GetDisabled(this))) {
       //Send DOM event
       nsEventStatus mStatus;
       nsEvent mEvent;
@@ -373,6 +374,7 @@ nsButtonControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
 	      button->SetLabel(label);
 	    }
 	  }
+    mWidget->Enable(!nsFormFrame::GetDisabled(this));
     NS_RELEASE(button);
   }
 }

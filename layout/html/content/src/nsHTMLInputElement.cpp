@@ -352,6 +352,14 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
     aResult.SetEmptyValue();
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
+  else if (aAttribute == nsHTMLAtoms::disabled) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::readonly) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   else if (aAttribute == nsHTMLAtoms::width) {
     nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
                                               eHTMLUnit_Pixel);

@@ -501,6 +501,10 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_br:
     rv = NS_NewHTMLBRElement(aResult, aAtom);
     break;
+  case eHTMLTag_button:
+    rv = NS_NewHTMLButtonElement(aResult, aAtom);
+    SetForm(*aResult, aForm);
+    break;
   case eHTMLTag_caption:
     rv = NS_NewHTMLTableCaptionElement(aResult, aAtom);
     break;

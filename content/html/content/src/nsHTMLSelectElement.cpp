@@ -317,7 +317,7 @@ NS_IMPL_INT_ATTR(nsHTMLSelectElement, SelectedIndex, selectedindex, eSetAttrNoti
 NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Value, value, eSetAttrNotify_Render)
 NS_IMPL_INT_ATTR(nsHTMLSelectElement, Length, length, eSetAttrNotify_Restart)
 NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Disabled, disabled, eSetAttrNotify_Render)
-NS_IMPL_INT_ATTR(nsHTMLSelectElement, Multiple, multiple, eSetAttrNotify_Restart)
+NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Multiple, multiple, eSetAttrNotify_Restart)
 NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Name, name, eSetAttrNotify_Restart)
 NS_IMPL_INT_ATTR(nsHTMLSelectElement, Size, size, eSetAttrNotify_Render)
 NS_IMPL_INT_ATTR(nsHTMLSelectElement, TabIndex, tabindex, eSetAttrNotify_Render)

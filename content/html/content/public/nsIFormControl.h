@@ -23,23 +23,25 @@ class nsIDOMHTMLFormElement;
 class nsIWidget;
 
 #define NS_FORM_BROWSE          0
-#define NS_FORM_BUTTON          1
-#define NS_FORM_FIELDSET        2
-#define NS_FORM_INPUT_BUTTON    3
-#define NS_FORM_INPUT_CHECKBOX  4
-#define NS_FORM_INPUT_FILE      5
-#define NS_FORM_INPUT_HIDDEN    6
-#define NS_FORM_INPUT_RESET     7
-#define NS_FORM_INPUT_IMAGE     8
-#define NS_FORM_INPUT_PASSWORD  9
-#define NS_FORM_INPUT_RADIO    10
-#define NS_FORM_INPUT_SUBMIT   11
-#define NS_FORM_INPUT_TEXT     12
-#define NS_FORM_OPTION         13
-#define NS_FORM_OPTGROUP       14
-#define NS_FORM_LEGEND         15
-#define NS_FORM_SELECT         16
-#define NS_FORM_TEXTAREA       17
+#define NS_FORM_BUTTON_BUTTON   1
+#define NS_FORM_BUTTON_RESET    2
+#define NS_FORM_BUTTON_SUBMIT   3
+#define NS_FORM_FIELDSET        4
+#define NS_FORM_INPUT_BUTTON    5
+#define NS_FORM_INPUT_CHECKBOX  6
+#define NS_FORM_INPUT_FILE      7
+#define NS_FORM_INPUT_HIDDEN    8
+#define NS_FORM_INPUT_RESET     9
+#define NS_FORM_INPUT_IMAGE    10
+#define NS_FORM_INPUT_PASSWORD 11
+#define NS_FORM_INPUT_RADIO    12
+#define NS_FORM_INPUT_SUBMIT   13
+#define NS_FORM_INPUT_TEXT     14
+#define NS_FORM_OPTION         15
+#define NS_FORM_OPTGROUP       16
+#define NS_FORM_LEGEND         17
+#define NS_FORM_SELECT         18
+#define NS_FORM_TEXTAREA       19
 
 #define NS_FORM_NOTOK          0xFFFFFFF7
 #define NS_FORM_NOTSET         0xFFFFFFF7

@@ -253,14 +253,14 @@ nsTextControlFrame::GetText(nsString* aText)
   GetType(&type);
   if (NS_FORM_INPUT_TEXT == type) {
     nsIDOMHTMLInputElement* textElem = nsnull;
-    nsresult result = mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&textElem);
+    result = mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&textElem);
     if ((NS_OK == result) && textElem) {
       result = textElem->GetValue(*aText);
       NS_RELEASE(textElem);
     }
   } else {
     nsIDOMHTMLTextAreaElement* textArea = nsnull;
-    nsresult result = mContent->QueryInterface(kIDOMHTMLTextAreaElementIID, (void**)&textArea);
+    result = mContent->QueryInterface(kIDOMHTMLTextAreaElementIID, (void**)&textArea);
     if ((NS_OK == result) && textArea) {
       result = textArea->GetDefaultValue(*aText);
       NS_RELEASE(textArea);
@@ -303,6 +303,7 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
     textArea->SetText(value, ignore);
     NS_RELEASE(textArea);
   }
+  mWidget->Enable(!nsFormFrame::GetDisabled(this));
 }
 
 PRInt32 

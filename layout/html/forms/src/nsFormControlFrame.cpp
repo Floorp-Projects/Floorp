@@ -341,6 +341,7 @@ nsFormControlFrame::GetWidget(nsIWidget** aWidget)
   if (mWidget) {
     NS_ADDREF(mWidget);
     *aWidget = mWidget;
+    mWidget->Enable(!nsFormFrame::GetDisabled(this));
     return NS_OK;
   } else {
     *aWidget = nsnull;

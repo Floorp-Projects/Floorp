@@ -26,7 +26,7 @@ SELECT#select1 {
 <FORM METHOD="GET" ACTION="http://search.yahoo.com/bin/search" NAME="searchform">
 <FIELDSET style="background-color: rgb(200, 220, 240); display: inline; border: 2px solid black; padding: 10px;">
 <LEGEND style="background-color:rgb(180, 200, 220);  border: 1px solid gray; padding: 0px;" align=left>&nbsp;Find it <b>Fast</b>&nbsp;</LEGEND>
-<INPUT type=text NAME="p" SIZE=15 MAXLENGTH=80 style="margin-right:10px; background-color: rgb(190, 190, 190);">
+<INPUT type=text value=travel NAME="p" SIZE=15 MAXLENGTH=80 style="margin-right:10px; background-color: rgb(190, 190, 190);">
 <INPUT type=submit value="GO">
 <INPUT TYPE="HIDDEN" NAME="a" VALUE="n">
 </FIELDSET>
@@ -39,7 +39,7 @@ SELECT#select1 {
 <textarea name=a id=textarea1 value="a textarea">another textarea
 size, font set by css</textarea>
 <BR><BR>
-a checkbox:&nbsp;&nbsp; <input type=checkbox name=check1 checked>
+checkboxes:&nbsp;&nbsp; <input type=checkbox name=check1 checked> &nbsp;<input type=checkbox name=check2>
 &nbsp;&nbsp; a password:&nbsp;&nbsp;<INPUT TYPE="PASSWORD"> 
 <BR><BR>
 <input type=radio name=group1>  radio1
@@ -70,7 +70,24 @@ a checkbox:&nbsp;&nbsp; <input type=checkbox name=check1 checked>
 <input type=image src=raptor.jpg width=50 height=50 name=imageSubmit> an image submit. 
 </form>
 <BR>
+<HR>
+Disabled controls, the image submit should not submit the form.
 <BR>
+<FORM METHOD="GET" ACTION="http://search.yahoo.com/bin/search" NAME="searchform">
+ <input type=text size=5 disabled> &nbsp; <input type=submit disabled> &nbsp;
+  <INPUT type=image src=raptor.jpg width=50 height=50 name=imageSubmit disabled> &nbsp;
+  <input type=checkbox disabled> &nbsp; <input type=radio disabled> &nbsp;
+ <input type=reset disabled> &nbsp; <input type=file disabled> &nbsp;
+ <BR>
+ <textarea disabled>hello</textarea> &nbsp
+ <select disabled>
+   <option>one</option>
+   <option>two</option>
+ </select>
+</form>
+<BR>
+
+<HR>
 Additional tests -&nbsp;
 <A href=test8siz.html>sizing</A>,
 <A href=test8sca.html>scalability</A>,
