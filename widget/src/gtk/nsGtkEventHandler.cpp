@@ -709,7 +709,7 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
 //==============================================================
 gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
 {
-  GdkEvent *nextEvent;
+  XEvent nextEvent;
   PRBool    shouldDrop = PR_FALSE;
   // According to the DOM spec if this is the result of a key repeat
   // event we don't let it through since the DOM wants the event
@@ -719,23 +719,23 @@ gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
   // the next event in the queue is a key press event and it has the
   // exact same timestamp as the current event.
 
-  // get a copy of the next event
-  nextEvent = gdk_event_get();
-  // see if it's a key press event and if the time matches.
-  if (nextEvent)
-  {
-    if ((nextEvent->type == GDK_KEY_PRESS) &&
-        (nextEvent->key.time == event->time))
+  // have a look in the X queue to see if there's another event in the
+  // queue.
+
+  if (XPending(GDK_DISPLAY())) {
+    // get a copy of the next event
+    XPeekEvent(GDK_DISPLAY(), &nextEvent);
+    
+    // see if it's a key press event and if it has the same time as
+    // the last event.
+    if ((nextEvent.xany.type == KeyPress) &&
+        (nextEvent.xkey.time == event->time))
     {
       shouldDrop = PR_TRUE;
       // the next key press event shouldn't generate a key down event.
       // this is a global variable
       suppressNextKeyDown = PR_TRUE;
     }
-    // put makes a copy so we're safe doing this.
-    gdk_event_put(nextEvent);
-    // free the event since we just got a copy.
-    gdk_event_free(nextEvent);
   }
 
   // should we drop this event?
