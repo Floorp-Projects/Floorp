@@ -27,6 +27,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMText.h"
 #include "nsRange.h"
 #include "nsIEventListenerManager.h"
 #include "nsILinkHandler.h"
@@ -55,10 +56,12 @@
 #include "prprf.h"
 #include "prmem.h"
 
+#include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
 
 NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
@@ -524,9 +527,89 @@ nsGenericElement::GetElementsByTagName(const nsString& aTagname,
 }
 
 nsresult
+nsGenericElement::JoinTextNodes(nsIContent* aFirst,
+                                nsIContent* aSecond)
+{
+  nsresult result = NS_OK;
+  nsIDOMText *firstText, *secondText;
+
+  result = aFirst->QueryInterface(kIDOMTextIID, (void**)&firstText);
+  if (NS_OK == result) {
+    result = aSecond->QueryInterface(kIDOMTextIID, (void**)&secondText);
+
+    if (NS_OK == result) {
+      nsAutoString str;
+
+      result = secondText->GetData(str);
+      if (NS_OK == result) {
+        result = firstText->AppendData(str);
+      }
+      
+      NS_RELEASE(secondText);
+    }
+    
+    NS_RELEASE(firstText);
+  }
+  
+  return result;
+}
+
+nsresult
 nsGenericElement::Normalize()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;/* XXX */
+  nsresult result = NS_OK;
+  PRInt32 index, count;
+
+  mContent->ChildCount(count);
+  for (index = 0; (index < count) && (NS_OK == result); index++) {
+    nsIContent* child;
+    nsIAtom* name;
+
+    result = mContent->ChildAt(index, child);
+    if (NS_OK == result) {
+      child->GetTag(name);
+
+      // If this is a text node and there's a sibling following it
+      if ((name == nsLayoutAtoms::textTagName) && (index < count-1)) {
+        nsIContent* sibling;
+        
+        // Get the sibling. If it's also a text node, then
+        // remove it from the tree and join the two text
+        // nodes.
+        result = mContent->ChildAt(index+1, sibling);
+        if (NS_OK == result) {
+          nsIAtom* siblingName;
+          
+          sibling->GetTag(siblingName);
+          if (siblingName == nsLayoutAtoms::textTagName) {
+            result = mContent->RemoveChildAt(index+1, PR_TRUE);
+            if (NS_OK == result) {
+              result = JoinTextNodes(child, sibling);
+              count--;
+            }
+          }
+          
+          NS_IF_RELEASE(siblingName);
+          NS_RELEASE(sibling);
+        }
+      }
+      else {
+        nsIDOMElement* element;
+        nsresult qiresult;
+
+        qiresult = child->QueryInterface(kIDOMElementIID, (void**)&element);
+        if (NS_OK == qiresult) {
+          result = element->Normalize();
+          NS_RELEASE(element);
+        }
+      }
+
+      NS_IF_RELEASE(name);
+      NS_RELEASE(child);
+    }
+  }
+
+  return result;
 }
 
 
