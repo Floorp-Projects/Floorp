@@ -548,6 +548,12 @@ public:
                          const nsString& aTagName,
                          nsRDFDOMNodeList* aElements);
 
+    static nsresult
+    GetElementsByAttribute(nsIDOMNode* aNode,
+                           const nsString& aAttribute,
+                           const nsString& aValue,
+                           nsRDFDOMNodeList* aElements);
+
 protected:
     nsIContent*
     FindContent(const nsIContent* aStartNode,
@@ -2060,6 +2066,33 @@ XULDocumentImpl::GetElementsByTagName(const nsString& aTagName, nsIDOMNodeList**
     return NS_OK;
 }
 
+NS_IMETHODIMP
+XULDocumentImpl::GetElementsByAttribute(const nsString& aAttribute, const nsString& aValue, 
+                                        nsIDOMNodeList** aReturn)
+{
+    nsresult rv;
+    nsRDFDOMNodeList* elements;
+    if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
+        NS_ERROR("unable to create node list");
+        return rv;
+    }
+
+    nsIContent* root = GetRootContent();
+    NS_ASSERTION(root != nsnull, "no doc root");
+
+    if (root != nsnull) {
+        nsIDOMNode* domRoot;
+        if (NS_SUCCEEDED(rv = root->QueryInterface(nsIDOMNode::IID(), (void**) &domRoot))) {
+            rv = GetElementsByAttribute(domRoot, aAttribute, aValue, elements);
+            NS_RELEASE(domRoot);
+        }
+        NS_RELEASE(root);
+    }
+
+    *aReturn = elements;
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 XULDocumentImpl::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
@@ -2858,6 +2891,70 @@ XULDocumentImpl::GetElementsByTagName(nsIDOMNode* aNode,
 
         if (NS_FAILED(rv = GetElementsByTagName(child, aTagName, aElements))) {
             NS_ERROR("unable to recursively get elements by tag name");
+            return rv;
+        }
+    }
+
+    return NS_OK;
+}
+
+nsresult
+XULDocumentImpl::GetElementsByAttribute(nsIDOMNode* aNode,
+                                      const nsString& aAttribute,
+                                      const nsString& aValue,
+                                      nsRDFDOMNodeList* aElements)
+{
+    nsresult rv;
+
+    nsAutoString name;
+    nsCOMPtr<nsIContent> pContent;
+    pContent = do_QueryInterface(aNode);
+    
+    PRInt32 namespaceID;
+    pContent->GetNameSpaceID(namespaceID);
+    
+    nsIAtom* pAtom = NS_NewAtom(aAttribute);
+
+    nsString actualValue;
+
+    rv = pContent->GetAttribute(namespaceID, pAtom, actualValue);
+    
+    NS_IF_RELEASE(pAtom);
+
+    if (((rv == NS_CONTENT_ATTR_NO_VALUE || rv == NS_CONTENT_ATTR_HAS_VALUE) && aValue == "*") ||
+        (rv == NS_CONTENT_ATTR_HAS_VALUE && actualValue == aValue))
+    {
+        if (NS_FAILED(rv = aElements->AppendNode(aNode))) {
+            NS_ERROR("unable to append element to node list");
+            return rv;
+        }
+    }
+
+    nsCOMPtr<nsIDOMNodeList> children;
+    if (NS_FAILED(rv = aNode->GetChildNodes( getter_AddRefs(children) ))) {
+        NS_ERROR("unable to get node's children");
+        return rv;
+    }
+
+    // no kids: terminate the recursion
+    if (! children)
+        return NS_OK;
+
+    PRUint32 length;
+    if (NS_FAILED(children->GetLength(&length))) {
+        NS_ERROR("unable to get node list's length");
+        return rv;
+    }
+
+    for (PRUint32 i = 0; i < length; ++i) {
+        nsCOMPtr<nsIDOMNode> child;
+        if (NS_FAILED(rv = children->Item(i, getter_AddRefs(child) ))) {
+            NS_ERROR("unable to get child from list");
+            return rv;
+        }
+
+        if (NS_FAILED(rv = GetElementsByAttribute(child, aAttribute, aValue, aElements))) {
+            NS_ERROR("unable to recursively get elements by attribute");
             return rv;
         }
     }

@@ -225,11 +225,7 @@ public:
     virtual void   Finalize(JSContext *aContext);
 
     // nsIDOMXULElement
-    NS_IMETHOD DoCommand();
-
-    NS_IMETHOD AddBroadcastListener(const nsString& attr, nsIDOMNode* aNode);
-    NS_IMETHOD RemoveBroadcastListener(const nsString& attr, nsIDOMNode* aNode);
-
+    NS_DECL_IDOMXULELEMENT
 
     // Implementation methods
     nsresult GetResource(nsIRDFResource** aResource);
@@ -242,6 +238,11 @@ public:
                          const nsString& aTagName,
                          nsRDFDOMNodeList* aElements);
 
+    static nsresult
+    GetElementsByAttribute(nsIDOMNode* aNode,
+                           const nsString& aAttributeName,
+                           const nsString& aAttributeValue,
+                           nsRDFDOMNodeList* aElements);
 
 private:
     // pseudo-constants
@@ -829,6 +830,28 @@ RDFElementImpl::GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aRe
     nsIDOMNode* domElement;
     if (NS_SUCCEEDED(rv = QueryInterface(nsIDOMNode::IID(), (void**) &domElement))) {
         rv = GetElementsByTagName(domElement, aName, elements);
+        NS_RELEASE(domElement);
+    }
+
+    *aReturn = elements;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::GetElementsByAttribute(const nsString& aAttribute,
+                                       const nsString& aValue,
+                                       nsIDOMNodeList** aReturn)
+{
+    nsresult rv;
+    nsRDFDOMNodeList* elements;
+    if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
+        NS_ERROR("unable to create node list");
+        return rv;
+    }
+
+    nsIDOMNode* domElement;
+    if (NS_SUCCEEDED(rv = QueryInterface(nsIDOMNode::IID(), (void**) &domElement))) {
+        rv = GetElementsByAttribute(domElement, aAttribute, aValue, elements);
         NS_RELEASE(domElement);
     }
 
@@ -2048,3 +2071,72 @@ RDFElementImpl::GetElementsByTagName(nsIDOMNode* aNode,
 
     return NS_OK;
 }
+
+nsresult
+RDFElementImpl::GetElementsByAttribute(nsIDOMNode* aNode,
+                                       const nsString& aAttribute,
+                                       const nsString& aValue,
+                                       nsRDFDOMNodeList* aElements)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMNodeList> children;
+    if (NS_FAILED(rv = aNode->GetChildNodes( getter_AddRefs(children) ))) {
+        NS_ERROR("unable to get node's children");
+        return rv;
+    }
+
+    // no kids: terminate the recursion
+    if (! children)
+        return NS_OK;
+
+    PRUint32 length;
+    if (NS_FAILED(children->GetLength(&length))) {
+        NS_ERROR("unable to get node list's length");
+        return rv;
+    }
+
+    for (PRUint32 i = 0; i < length; ++i) {
+        nsCOMPtr<nsIDOMNode> child;
+        if (NS_FAILED(rv = children->Item(i, getter_AddRefs(child) ))) {
+            NS_ERROR("unable to get child from list");
+            return rv;
+        }
+
+        nsAutoString name;
+        nsCOMPtr<nsIContent> pContent;
+        pContent = do_QueryInterface(child);
+        
+        PRInt32 namespaceID;
+        pContent->GetNameSpaceID(namespaceID);
+        
+        nsIAtom* pAtom = NS_NewAtom(aAttribute);
+
+        nsString actualValue;
+
+        if (!pContent)
+          return rv;
+        
+        rv = pContent->GetAttribute(namespaceID, pAtom, actualValue);
+        
+        NS_IF_RELEASE(pAtom);
+
+        if (((rv == NS_CONTENT_ATTR_NO_VALUE || rv == NS_CONTENT_ATTR_HAS_VALUE) && aValue == "*") ||
+            (rv == NS_CONTENT_ATTR_HAS_VALUE && actualValue == aValue))
+        {
+            if (NS_FAILED(rv = aElements->AppendNode(child))) {
+                NS_ERROR("unable to append element to node list");
+                return rv;
+            }
+        }
+       
+        // Now recursively look for children
+        if (NS_FAILED(rv = GetElementsByAttribute(child, aAttribute, aValue, aElements))) {
+            NS_ERROR("unable to recursively get elements by attribute");
+            return rv;
+        }
+    }
+
+    return NS_OK;
+}
+
