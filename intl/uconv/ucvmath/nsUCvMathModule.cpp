@@ -46,10 +46,17 @@
 #include "nsUCvMathCID.h"
 #include "nsUCvMathDll.h"
 
+#if defined(XP_PC) || defined(XP_MAC)
+#include "nsUnicodeToTeXCMRttf.h"
+#include "nsUnicodeToTeXCMMIttf.h"
 #include "nsUnicodeToTeXCMSYttf.h"
-#include "nsUnicodeToTeXCMSYt1.h"
 #include "nsUnicodeToTeXCMEXttf.h"
+#else
+#include "nsUnicodeToTeXCMRt1.h"
+#include "nsUnicodeToTeXCMMIt1.h"
+#include "nsUnicodeToTeXCMSYt1.h"
 #include "nsUnicodeToTeXCMEXt1.h"
+#endif
 #include "nsUnicodeToMathematica1.h"
 #include "nsUnicodeToMathematica2.h"
 #include "nsUnicodeToMathematica3.h"
@@ -70,10 +77,17 @@ PRInt32 g_LockCount = 0;
 
 NS_IMPL_NSUCONVERTERREGSELF
 
+#if defined(XP_PC) || defined(XP_MAC)
+NS_UCONV_REG_UNREG(nsUnicodeToTeXCMRttf,  "Unicode", "x-ttf-cmr",   NS_UNICODETOTEXCMRTTF_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToTeXCMMIttf, "Unicode", "x-ttf-cmmi",  NS_UNICODETOTEXCMMITTF_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToTeXCMSYttf, "Unicode", "x-ttf-cmsy",  NS_UNICODETOTEXCMSYTTF_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToTeXCMSYt1, "Unicode", "x-t1-cmsy",  NS_UNICODETOTEXCMSYT1_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToTeXCMEXttf, "Unicode", "x-ttf-cmex",  NS_UNICODETOTEXCMEXTTF_CID);
+#else
+NS_UCONV_REG_UNREG(nsUnicodeToTeXCMRt1,  "Unicode", "x-t1-cmr",   NS_UNICODETOTEXCMRT1_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToTeXCMMIt1, "Unicode", "x-t1-cmmi",  NS_UNICODETOTEXCMMIT1_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToTeXCMSYt1, "Unicode", "x-t1-cmsy",  NS_UNICODETOTEXCMSYT1_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToTeXCMEXt1, "Unicode", "x-t1-cmex",  NS_UNICODETOTEXCMEXT1_CID);
+#endif
 NS_UCONV_REG_UNREG(nsUnicodeToMathematica1, "Unicode", "x-mathematica1",  NS_UNICODETOMATHEMATICA1_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToMathematica2, "Unicode", "x-mathematica2",  NS_UNICODETOMATHEMATICA2_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToMathematica3, "Unicode", "x-mathematica3",  NS_UNICODETOMATHEMATICA3_CID);
@@ -81,10 +95,17 @@ NS_UCONV_REG_UNREG(nsUnicodeToMathematica4, "Unicode", "x-mathematica4",  NS_UNI
 NS_UCONV_REG_UNREG(nsUnicodeToMathematica5, "Unicode", "x-mathematica5",  NS_UNICODETOMATHEMATICA5_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToMTExtra, "Unicode", "x-mtextra",  NS_UNICODETOMTEXTRA_CID);
 
+#if defined(XP_PC) || defined(XP_MAC)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMRttf);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMMIttf);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMSYttf);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMSYt1);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMEXttf);
+#else
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMRt1);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMMIt1);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMSYt1);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMEXt1);
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMathematica1);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMathematica2);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMathematica3);
@@ -94,11 +115,43 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMTExtra);
 
 static nsModuleComponentInfo components[] = 
 {
+#if defined(XP_PC) || defined(XP_MAC)
+  { 
+    ENCODER_NAME_BASE "x-ttf-cmr" , NS_UNICODETOTEXCMRTTF_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmr",
+    nsUnicodeToTeXCMRttfConstructor, 
+    nsUnicodeToTeXCMRttfRegSelf, nsUnicodeToTeXCMRttfUnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "x-ttf-cmmi" , NS_UNICODETOTEXCMMITTF_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmmi",
+    nsUnicodeToTeXCMMIttfConstructor, 
+    nsUnicodeToTeXCMMIttfRegSelf, nsUnicodeToTeXCMMIttfUnRegSelf
+  },
   { 
     ENCODER_NAME_BASE "x-ttf-cmsy" , NS_UNICODETOTEXCMSYTTF_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmsy",
     nsUnicodeToTeXCMSYttfConstructor, 
     nsUnicodeToTeXCMSYttfRegSelf, nsUnicodeToTeXCMSYttfUnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "x-ttf-cmex" , NS_UNICODETOTEXCMEXTTF_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmex",
+    nsUnicodeToTeXCMEXttfConstructor, 
+    nsUnicodeToTeXCMEXttfRegSelf, nsUnicodeToTeXCMEXttfUnRegSelf
+  },
+#else
+  { 
+    ENCODER_NAME_BASE "x-t1-cmr" , NS_UNICODETOTEXCMRT1_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-t1-cmr",
+    nsUnicodeToTeXCMRt1Constructor, 
+    nsUnicodeToTeXCMRt1RegSelf, nsUnicodeToTeXCMRt1UnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "x-t1-cmmi" , NS_UNICODETOTEXCMMIT1_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-t1-cmmi",
+    nsUnicodeToTeXCMMIt1Constructor, 
+    nsUnicodeToTeXCMMIt1RegSelf, nsUnicodeToTeXCMMIt1UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-t1-cmsy" , NS_UNICODETOTEXCMSYT1_CID, 
@@ -107,17 +160,12 @@ static nsModuleComponentInfo components[] =
     nsUnicodeToTeXCMSYt1RegSelf, nsUnicodeToTeXCMSYt1UnRegSelf
   },
   { 
-    ENCODER_NAME_BASE "x-ttf-cmex" , NS_UNICODETOTEXCMEXTTF_CID, 
-    NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmex",
-    nsUnicodeToTeXCMEXttfConstructor, 
-    nsUnicodeToTeXCMEXttfRegSelf, nsUnicodeToTeXCMEXttfUnRegSelf
-  },
-  { 
     ENCODER_NAME_BASE "x-t1-cmex" , NS_UNICODETOTEXCMEXT1_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-t1-cmex",
     nsUnicodeToTeXCMEXt1Constructor, 
     nsUnicodeToTeXCMEXt1RegSelf, nsUnicodeToTeXCMEXt1UnRegSelf
   },
+#endif
   { 
     ENCODER_NAME_BASE "x-mathematica1" , NS_UNICODETOMATHEMATICA1_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mathematica1",
