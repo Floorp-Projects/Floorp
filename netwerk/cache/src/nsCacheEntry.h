@@ -143,7 +143,7 @@ private:
     friend class nsCacheService;
 
     // internal methods
-    nsresult CommonOpen(nsCacheRequest * request, PRUint32 *accessGranted);
+    nsresult CommonOpen(nsCacheRequest * request, nsCacheAccessMode *accessGranted);
     void MarkStreamBased() { mFlags |= eStreamDataMask; }
     void MarkInitialized() { mFlags |= eInitializedMask; }
 
