@@ -31,7 +31,7 @@
 #include "PtMozilla.h"
 
 #include "nsICategoryManager.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 EmbedContentListener::EmbedContentListener(void)
 {

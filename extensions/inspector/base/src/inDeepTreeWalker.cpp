@@ -42,7 +42,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "inIDOMUtils.h"
 
 /*****************************************************************************

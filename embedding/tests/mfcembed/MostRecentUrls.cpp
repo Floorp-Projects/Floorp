@@ -41,7 +41,7 @@
 #include "StdAfx.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "MostRecentUrls.h"

@@ -39,7 +39,7 @@
 #include "nsSharedPrefHandler.h"
 #include "nsPrefService.h"
 
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsILocalFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsReadableUtils.h"

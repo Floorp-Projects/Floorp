@@ -217,17 +217,24 @@ nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) con
 {
     nsresult rv;
     nsXPIDLCString value;
-    nsCOMPtr<nsIServiceManager> serviceManager =
-        do_QueryInterface(mServiceManager);
-    // XXX Should we use the provided service manager?
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(kCategoryManagerCID, &rv);
-    if (NS_FAILED(rv)) goto error;
+    nsCOMPtr<nsICategoryManager> catman;
+    nsComponentManagerImpl *compMgr = nsComponentManagerImpl::gComponentManager;
+    if (!compMgr) {
+        rv = NS_ERROR_NOT_INITIALIZED;
+        goto error;
+    }
+
     if (!mCategory || !mEntry) {
         // when categories have defaults, use that for null mEntry
         rv = NS_ERROR_NULL_POINTER;
         goto error;
     }
+
+    rv = compMgr->nsComponentManagerImpl::GetService(kCategoryManagerCID,
+                                                     NS_GET_IID(nsICategoryManager),
+                                                     getter_AddRefs(catman));
+    if (NS_FAILED(rv)) goto error;
+
     /* find the contractID for category.entry */
     rv = catman->GetCategoryEntry(mCategory, mEntry,
                                   getter_Copies(value));
@@ -236,14 +243,10 @@ nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) con
         rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
         goto error;
     }
-    if (serviceManager) {
-        rv = serviceManager->GetServiceByContractID(value, aIID, (void**)aInstancePtr);
-    } else {
-        nsCOMPtr<nsIServiceManager> mgr;
-        NS_GetServiceManager(getter_AddRefs(mgr));
-        if (mgr)
-            rv = mgr->GetServiceByContractID(value, aIID, (void**)aInstancePtr);
-    }
+
+    rv = compMgr->
+        nsComponentManagerImpl::GetServiceByContractID(value,
+                                                       aIID, aInstancePtr);
     if (NS_FAILED(rv)) {
     error:
         *aInstancePtr = 0;

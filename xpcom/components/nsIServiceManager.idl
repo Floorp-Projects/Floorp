@@ -112,7 +112,7 @@ interface nsIServiceManager : nsISupports
 
 #ifndef MOZILLA_STRICT_API
 #include "nsXPCOM.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIServiceManagerObsolete.h"
 #endif
 %}

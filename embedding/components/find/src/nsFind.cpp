@@ -60,7 +60,7 @@
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsParserCIID.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIDOMElement.h"
 #include "nsCRT.h"

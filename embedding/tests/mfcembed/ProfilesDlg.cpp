@@ -38,7 +38,7 @@
 // Mozilla
 #include "nsIProfile.h"
 #include "nsIServiceManager.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsMemory.h"
 
 #ifdef _DEBUG

@@ -44,7 +44,7 @@
 
 #include "nsIComponentManager.h"
 
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIScriptSecurityManager.h"
 
 #include "nsIDOMDocument.h"

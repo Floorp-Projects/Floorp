@@ -52,7 +52,7 @@
 #include "nsMemory.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIFactory.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "BrowserFrm.h"
 #include "EditorFrm.h"
 #include "winEmbedFileLocProvider.h"

@@ -38,7 +38,7 @@
 #include "nsEmbedString.h"
 #include "nsIRegistry.h"
 #include "nsIProfile.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"

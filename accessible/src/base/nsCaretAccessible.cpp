@@ -48,7 +48,7 @@
 #include "nsIPresShell.h"
 #include "nsISelectionController.h"
 #include "nsISelectionPrivate.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRootAccessible.h"

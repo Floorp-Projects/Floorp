@@ -46,7 +46,7 @@
 
 #include "nsXPCOM.h"
 #include "nsIServiceManager.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIComponentManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIGenericFactory.h"

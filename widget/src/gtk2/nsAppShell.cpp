@@ -38,7 +38,7 @@
 
 #include "nsAppShell.h"
 #include "nsIEventQueueService.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "plhash.h"
 #include "prenv.h"
 

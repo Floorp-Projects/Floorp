@@ -50,7 +50,7 @@
 #include "nsCOMPtr.h"
 #include "nsIClassInfo.h"
 #include "nsIMozAxPlugin.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIURI.h"
 
 #include "ControlEventSink.h"

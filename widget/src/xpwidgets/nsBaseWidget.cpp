@@ -44,7 +44,7 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 #include "nsIFullScreen.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 #include "nsAppDirectoryServiceDefs.h"
 

@@ -70,7 +70,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsNetUtil.h"
 #include "nsIFile.h"
 #include "nsIWebNavigation.h"

@@ -65,7 +65,7 @@
 
 #include "nsIWebBrowser.h"
 #include "nsIComponentManager.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowserChrome.h"

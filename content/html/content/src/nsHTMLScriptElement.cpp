@@ -55,7 +55,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIXPConnect.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIScriptEventHandler.h"
 #include "nsIDOMDocument.h"
 

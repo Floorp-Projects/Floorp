@@ -409,6 +409,71 @@ do_QueryInterface( already_AddRefed<T>&, nsresult* )
   }
 
 
+////////////////////////////////////////////////////////////////////////////
+// Using servicemanager with COMPtrs
+class NS_COM_GLUE nsGetServiceByCID
+{
+ public:
+    nsGetServiceByCID(const nsCID& aCID)
+        : mCID(aCID)
+        {
+            // nothing else to do
+        }
+    
+    nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
+    
+ private:
+    const nsCID&                mCID;
+};
+
+class NS_COM_GLUE nsGetServiceByCIDWithError
+{
+ public:
+    nsGetServiceByCIDWithError( const nsCID& aCID, nsresult* aErrorPtr )
+        : mCID(aCID),
+          mErrorPtr(aErrorPtr)
+        {
+            // nothing else to do
+        }
+    
+    nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
+    
+ private:
+    const nsCID&                mCID;
+    nsresult*                   mErrorPtr;
+};
+
+class NS_COM_GLUE nsGetServiceByContractID
+{
+ public:
+    nsGetServiceByContractID(const char* aContractID)
+        : mContractID(aContractID)
+        {
+            // nothing else to do
+        }
+    
+    nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
+    
+ private:
+    const char*                 mContractID;
+};
+
+class NS_COM_GLUE nsGetServiceByContractIDWithError
+{
+ public:
+    nsGetServiceByContractIDWithError(const char* aContractID, nsresult* aErrorPtr)
+        : mContractID(aContractID),
+          mErrorPtr(aErrorPtr)
+        {
+            // nothing else to do
+        }
+    
+    nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
+    
+ private:
+    const char*                 mContractID;
+    nsresult*                   mErrorPtr;
+};
 
 class nsCOMPtr_base
     /*
@@ -437,6 +502,10 @@ class nsCOMPtr_base
       NS_COM_GLUE void NS_FASTCALL   assign_with_AddRef( nsISupports* );
       NS_COM_GLUE void NS_FASTCALL   assign_from_qi( const nsQueryInterface, const nsIID& );
       NS_COM_GLUE void NS_FASTCALL   assign_from_qi_with_error( const nsQueryInterfaceWithError&, const nsIID& );
+      NS_COM_GLUE void NS_FASTCALL   assign_from_gs_cid( const nsGetServiceByCID, const nsIID& );
+      NS_COM_GLUE void NS_FASTCALL   assign_from_gs_cid_with_error( const nsGetServiceByCIDWithError&, const nsIID& );
+      NS_COM_GLUE void NS_FASTCALL   assign_from_gs_contractid( const nsGetServiceByContractID, const nsIID& );
+      NS_COM_GLUE void NS_FASTCALL   assign_from_gs_contractid_with_error( const nsGetServiceByContractIDWithError&, const nsIID& );
       NS_COM_GLUE void NS_FASTCALL   assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
       NS_COM_GLUE void** NS_FASTCALL begin_assignment();
 
@@ -481,6 +550,10 @@ class nsCOMPtr
       void    assign_with_AddRef( nsISupports* );
       void    assign_from_qi( const nsQueryInterface, const nsIID& );
       void    assign_from_qi_with_error( const nsQueryInterfaceWithError&, const nsIID& );
+      void    assign_from_gs_cid( const nsGetServiceByCID, const nsIID& );
+      void    assign_from_gs_cid_with_error( const nsGetServiceByCIDWithError&, const nsIID& );
+      void    assign_from_gs_contractid( const nsGetServiceByContractID, const nsIID& );
+      void    assign_from_gs_contractid_with_error( const nsGetServiceByContractIDWithError&, const nsIID& );
       void    assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
       void**  begin_assignment();
 
@@ -580,6 +653,38 @@ class nsCOMPtr
           assign_from_qi_with_error(qi, NS_GET_IID(T));
         }
 
+      nsCOMPtr( const nsGetServiceByCID gs )
+            : NSCAP_CTOR_BASE(0)
+          // construct from |do_GetService(cid_expr)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_gs_cid(gs, NS_GET_IID(T));
+        }
+
+      nsCOMPtr( const nsGetServiceByCIDWithError& gs )
+            : NSCAP_CTOR_BASE(0)
+          // construct from |do_GetService(cid_expr, &rv)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_gs_cid_with_error(gs, NS_GET_IID(T));
+        }
+
+      nsCOMPtr( const nsGetServiceByContractID gs )
+            : NSCAP_CTOR_BASE(0)
+          // construct from |do_GetService(contractid_expr)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_gs_contractid(gs, NS_GET_IID(T));
+        }
+
+      nsCOMPtr( const nsGetServiceByContractIDWithError& gs )
+            : NSCAP_CTOR_BASE(0)
+          // construct from |do_GetService(contractid_expr, &rv)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_gs_contractid_with_error(gs, NS_GET_IID(T));
+        }
+
       nsCOMPtr( const nsCOMPtr_helper& helper )
             : NSCAP_CTOR_BASE(0)
           // ...and finally, anything else we might need to construct from
@@ -632,6 +737,38 @@ class nsCOMPtr
           // assign from |do_QueryInterface(expr, &rv)|
         {
           assign_from_qi_with_error(rhs, NS_GET_IID(T));
+          return *this;
+        }
+
+      nsCOMPtr<T>&
+      operator=( const nsGetServiceByCID rhs )
+          // assign from |do_GetService(cid_expr)|
+        {
+          assign_from_gs_cid(rhs, NS_GET_IID(T));
+          return *this;
+        }
+
+      nsCOMPtr<T>&
+      operator=( const nsGetServiceByCIDWithError& rhs )
+          // assign from |do_GetService(cid_expr, &rv)|
+        {
+          assign_from_gs_cid_with_error(rhs, NS_GET_IID(T));
+          return *this;
+        }
+
+      nsCOMPtr<T>&
+      operator=( const nsGetServiceByContractID rhs )
+          // assign from |do_GetService(contractid_expr)|
+        {
+          assign_from_gs_contractid(rhs, NS_GET_IID(T));
+          return *this;
+        }
+
+      nsCOMPtr<T>&
+      operator=( const nsGetServiceByContractIDWithError& rhs )
+          // assign from |do_GetService(contractid_expr, &rv)|
+        {
+          assign_from_gs_contractid_with_error(rhs, NS_GET_IID(T));
           return *this;
         }
 
@@ -837,6 +974,38 @@ class nsCOMPtr<nsISupports>
           assign_from_qi_with_error(qi, NS_GET_IID(nsISupports));
         }
 
+      nsCOMPtr( const nsGetServiceByCID gs )
+            : nsCOMPtr_base(0)
+          // assign from |do_GetService(cid_expr)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_gs_cid(gs, NS_GET_IID(nsISupports));
+        }
+
+      nsCOMPtr( const nsGetServiceByCIDWithError& gs )
+            : nsCOMPtr_base(0)
+          // assign from |do_GetService(cid_expr, &rv)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_gs_cid_with_error(gs, NS_GET_IID(nsISupports));
+        }
+
+      nsCOMPtr( const nsGetServiceByContractID gs )
+            : nsCOMPtr_base(0)
+          // assign from |do_GetService(contractid_expr)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_gs_contractid(gs, NS_GET_IID(nsISupports));
+        }
+
+      nsCOMPtr( const nsGetServiceByContractIDWithError& gs )
+            : nsCOMPtr_base(0)
+          // assign from |do_GetService(contractid_expr, &rv)|
+        {
+          NSCAP_LOG_ASSIGNMENT(this, 0);
+          assign_from_gs_contractid_with_error(gs, NS_GET_IID(nsISupports));
+        }
+
       nsCOMPtr( const nsCOMPtr_helper& helper )
             : nsCOMPtr_base(0)
           // ...and finally, anything else we might need to construct from
@@ -886,6 +1055,38 @@ class nsCOMPtr<nsISupports>
           // assign from |do_QueryInterface(expr, &rv)|
         {
           assign_from_qi_with_error(rhs, NS_GET_IID(nsISupports));
+          return *this;
+        }
+
+      nsCOMPtr<nsISupports>&
+      operator=( const nsGetServiceByCID rhs )
+          // assign from |do_GetService(cid_expr)|
+        {
+          assign_from_gs_cid(rhs, NS_GET_IID(nsISupports));
+          return *this;
+        }
+
+      nsCOMPtr<nsISupports>&
+      operator=( const nsGetServiceByCIDWithError& rhs )
+          // assign from |do_GetService(cid_expr, &rv)|
+        {
+          assign_from_gs_cid_with_error(rhs, NS_GET_IID(nsISupports));
+          return *this;
+        }
+
+      nsCOMPtr<nsISupports>&
+      operator=( const nsGetServiceByContractID rhs )
+          // assign from |do_GetService(contractid_expr)|
+        {
+          assign_from_gs_contractid(rhs, NS_GET_IID(nsISupports));
+          return *this;
+        }
+
+      nsCOMPtr<nsISupports>&
+      operator=( const nsGetServiceByContractIDWithError& rhs )
+          // assign from |do_GetService(contractid_expr, &rv)|
+        {
+          assign_from_gs_contractid_with_error(rhs, NS_GET_IID(nsISupports));
           return *this;
         }
 
@@ -1039,6 +1240,46 @@ nsCOMPtr<T>::assign_from_qi_with_error( const nsQueryInterfaceWithError& qi, con
   {
     T* newRawPtr;
     if ( NS_FAILED( qi(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+      newRawPtr = 0;
+    assign_assuming_AddRef(newRawPtr);
+  }
+
+template <class T>
+void
+nsCOMPtr<T>::assign_from_gs_cid( const nsGetServiceByCID gs, const nsIID& aIID )
+  {
+    T* newRawPtr;
+    if ( NS_FAILED( gs(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+      newRawPtr = 0;
+    assign_assuming_AddRef(newRawPtr);
+  }
+
+template <class T>
+void
+nsCOMPtr<T>::assign_from_gs_cid_with_error( const nsGetServiceByCIDWithError& gs, const nsIID& aIID )
+  {
+    T* newRawPtr;
+    if ( NS_FAILED( gs(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+      newRawPtr = 0;
+    assign_assuming_AddRef(newRawPtr);
+  }
+
+template <class T>
+void
+nsCOMPtr<T>::assign_from_gs_contractid( const nsGetServiceByContractID gs, const nsIID& aIID )
+  {
+    T* newRawPtr;
+    if ( NS_FAILED( gs(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+      newRawPtr = 0;
+    assign_assuming_AddRef(newRawPtr);
+  }
+
+template <class T>
+void
+nsCOMPtr<T>::assign_from_gs_contractid_with_error( const nsGetServiceByContractIDWithError& gs, const nsIID& aIID )
+  {
+    T* newRawPtr;
+    if ( NS_FAILED( gs(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
       newRawPtr = 0;
     assign_assuming_AddRef(newRawPtr);
   }

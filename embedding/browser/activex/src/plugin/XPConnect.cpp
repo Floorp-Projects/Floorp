@@ -43,7 +43,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIMozAxPlugin.h"
 #include "nsIClassInfo.h"

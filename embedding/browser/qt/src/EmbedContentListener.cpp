@@ -45,7 +45,7 @@
 #include "qgeckoembed.h"
 
 #include "nsICategoryManager.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 EmbedContentListener::EmbedContentListener(QGeckoEmbed *aOwner)
 {

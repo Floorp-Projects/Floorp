@@ -44,7 +44,7 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsLocaleCID.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsITimelineService.h"
 #include "nsPlatformCharset.h"
 

@@ -56,7 +56,7 @@
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharRepresentable.h"
 #include <string.h>

@@ -67,7 +67,7 @@
 *   Header Files                                                               *
 *******************************************************************************/
 #include "nscore.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
  
 /*******************************************************************************

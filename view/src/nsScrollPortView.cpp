@@ -52,7 +52,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsCOMPtr.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include <math.h>
 

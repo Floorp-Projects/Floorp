@@ -46,7 +46,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIPrefService.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIURI.h"
 
 /**

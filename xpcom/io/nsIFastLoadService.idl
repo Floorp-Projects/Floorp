@@ -133,11 +133,11 @@ interface nsIFastLoadService : nsISupports
 # include "nsIServiceManager.h"
 #endif
 
-inline const nsGetServiceByCID
+inline const nsGetServiceByCIDWithError
 do_GetFastLoadService(nsresult *aResultCode = 0)
 {
     static NS_DEFINE_CID(kFastLoadServiceCID, NS_FASTLOADSERVICE_CID);
-    return nsGetServiceByCID(kFastLoadServiceCID, nsnull, aResultCode);
+    return nsGetServiceByCIDWithError(kFastLoadServiceCID, aResultCode);
 }
 
 inline nsresult

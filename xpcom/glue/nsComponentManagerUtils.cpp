@@ -44,7 +44,55 @@
 #endif
 
 #include "nsComponentManagerUtils.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
+
+#ifdef MOZILLA_STRICT_API
+
+nsresult
+CallGetService(const nsCID &aCID, const nsIID &aIID, void **aResult)
+{
+    nsCOMPtr<nsIServiceManager> servMgr;
+    nsresult status = NS_GetServiceManager(getter_AddRefs(servMgr));
+    if (servMgr)
+        status = servMgr->GetService(aCID, aIID, aResult);
+    return status;
+}
+
+nsresult
+CallGetService(const char *aContractID, const nsIID &aIID, void **aResult)
+{
+    nsCOMPtr<nsIServiceManager> servMgr;
+    nsresult status = NS_GetServiceManager(getter_AddRefs(servMgr));
+    if (servMgr)
+        status = servMgr->GetServiceByContractID(aContractID, aIID, aResult);
+    return status;
+}
+
+#else
+
+#include "nsComponentManager.h"
+
+nsresult
+CallGetService(const nsCID &aCID, const nsIID &aIID, void **aResult)
+{
+    nsComponentManagerImpl *compMgr = nsComponentManagerImpl::gComponentManager;
+    NS_ENSURE_TRUE(compMgr, NS_ERROR_NOT_INITIALIZED);
+
+    return compMgr->nsComponentManagerImpl::GetService(aCID, aIID, aResult);
+}
+
+nsresult
+CallGetService(const char *aContractID, const nsIID &aIID, void **aResult)
+{
+    nsComponentManagerImpl *compMgr = nsComponentManagerImpl::gComponentManager;
+    NS_ENSURE_TRUE(compMgr, NS_ERROR_NOT_INITIALIZED);
+
+    return compMgr->
+        nsComponentManagerImpl::GetServiceByContractID(aContractID,
+                                                       aIID, aResult);
+}
+
+#endif
 
 #ifdef MOZILLA_STRICT_API
 
@@ -203,20 +251,24 @@ nsGetClassObjectByContractID::operator()( const nsIID& aIID, void** aInstancePtr
 nsresult
 nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 {
-    nsresult status = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIServiceManager> serviceManager =
-        do_QueryInterface(mServiceManager);
-    if ( serviceManager ) {
-        status = serviceManager->GetService(mCID, aIID, (void**)aInstancePtr);
-    } else {
-        nsCOMPtr<nsIServiceManager> mgr;
-        NS_GetServiceManager(getter_AddRefs(mgr));
-        if (mgr)
-            status = mgr->GetService(mCID, aIID, (void**)aInstancePtr);
-    }
-    if ( NS_FAILED(status) )
+    nsresult status = CallGetService(mCID, aIID, aInstancePtr);
+    if ( NS_FAILED(status) ) {
+    error:
         *aInstancePtr = 0;
-    
+    }
+
+    return status;
+}
+
+nsresult
+nsGetServiceByCIDWithError::operator()( const nsIID& aIID, void** aInstancePtr ) const
+{
+    nsresult status = CallGetService(mCID, aIID, aInstancePtr);
+    if ( NS_FAILED(status) ) {
+    error:
+        *aInstancePtr = 0;
+    }
+
     if ( mErrorPtr )
         *mErrorPtr = status;
     return status;
@@ -225,20 +277,23 @@ nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 nsresult
 nsGetServiceByContractID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 {
-    nsresult status = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIServiceManager> serviceManager =
-        do_QueryInterface(mServiceManager);
-    if ( serviceManager ) {
-        status = serviceManager->GetServiceByContractID(mContractID, aIID, (void**)aInstancePtr);
-    } else {
-        nsCOMPtr<nsIServiceManager> mgr;
-        NS_GetServiceManager(getter_AddRefs(mgr));
-        if (mgr)
-            status = mgr->GetServiceByContractID(mContractID, aIID, (void**)aInstancePtr);
+    nsresult status = CallGetService(mContractID, aIID, aInstancePtr);
+    if ( NS_FAILED(status) ) {
+    error:
+        *aInstancePtr = 0;
     }
     
-    if ( NS_FAILED(status) )
+    return status;
+}
+
+nsresult
+nsGetServiceByContractIDWithError::operator()( const nsIID& aIID, void** aInstancePtr ) const
+{
+    nsresult status = CallGetService(mContractID, aIID, aInstancePtr);
+    if ( NS_FAILED(status) ) {
+    error:
         *aInstancePtr = 0;
+    }
     
     if ( mErrorPtr )
         *mErrorPtr = status;

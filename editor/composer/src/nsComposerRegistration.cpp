@@ -47,7 +47,7 @@
 #include "nsIControllerContext.h"
 #include "nsIControllerCommandTable.h"
 
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #define NS_HTMLEDITOR_COMMANDTABLE_CID \
 { 0x7a727843, 0x6ae1, 0x11d7, { 0xa5eb, 0x00, 0x03, 0x93, 0x63, 0x65, 0x92 } }

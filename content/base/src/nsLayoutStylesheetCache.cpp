@@ -43,7 +43,7 @@
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsLayoutStylesheetCache, nsIObserver)
 

@@ -51,7 +51,7 @@
 #include "nsIFactory.h"
 #include "nsIStringEnumerator.h"
 #include "nsSupportsPrimitives.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIObserver.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
