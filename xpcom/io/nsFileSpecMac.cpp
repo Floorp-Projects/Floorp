@@ -751,6 +751,7 @@ inline void nsFileSpec::Clear()
 PRBool nsFileSpec::Exists() const
 //----------------------------------------------------------------------------------------
 {
+  if (NS_FAILED(mError)) return PR_FALSE;
 	FSSpec temp;
 	return ::FSMakeFSSpec(mSpec.vRefNum, mSpec.parID, mSpec.name, &temp) == noErr;
 } // nsFileSpec::Exists()
