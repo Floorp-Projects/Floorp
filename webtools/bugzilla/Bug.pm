@@ -379,9 +379,11 @@ sub user {
                                    || ($self->{'qa_contact'} && $::userid == $self->{'qa_contact'}{'id'})
                                    || $::userid == $self->{'assigned_to'}{'id'}
                                    || &::UserInGroup("editbugs");
-    $self->{'user'}->{'canconfirm'} = ($::userid == 0)
-                                   || &::UserInGroup("canconfirm")
-                                   || &::UserInGroup("editbugs");
+    $self->{'user'}->{'canconfirm'} = $::userid == 0
+                                   || ($self->{'qa_contact'} && $::userid == $self->{'qa_contact'}{'id'})
+                                   || $::userid == $self->{'assigned_to'}{'id'}
+                                   || &::UserInGroup("editbugs")
+                                   || &::UserInGroup("canconfirm");
 
     return $self->{'user'};
 }

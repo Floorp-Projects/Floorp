@@ -310,7 +310,9 @@ my $qacontactid;
 ################################################################################
 # CheckCanChangeField() defines what users are allowed to change what bugs. You
 # can add code here for site-specific policy changes, according to the 
-# instructions given in the Bugzilla Guide and below.
+# instructions given in the Bugzilla Guide and below. Note that you may also
+# have to update the Bug::user() function to give people access to the options
+# that they are permitted to change.
 #
 # CheckCanChangeField() should return true if the user is allowed to change this
 # field, and false if they are not.
@@ -527,13 +529,7 @@ sub DoComma {
 }
 
 sub DoConfirm {
-    if ($UserInEditGroupSet < 0) {
-        $UserInEditGroupSet = UserInGroup("editbugs");
-    }
-    if ($UserInCanConfirmGroupSet < 0) {
-        $UserInCanConfirmGroupSet = UserInGroup("canconfirm");
-    }
-    if ($UserInEditGroupSet || $UserInCanConfirmGroupSet) {
+    if (CheckCanChangeField("canconfirm", $::FORM{'id'}, 0, 1)) {
         DoComma();
         $::query .= "everconfirmed = 1";
     }
