@@ -304,6 +304,9 @@ nsresult nsPref::useDefaultPrefFile()
 #elif defined(XP_WIN)
     char* imapDirStr = PR_smprintf("c:\\program files\\netscape\\users\\%s\\ImapMail",currProfileName);
     char* newsDirStr = PR_smprintf("c:\\program files\\netscape\\users\\%s\\News",currProfileName);
+#elif defined(XP_BEOS)
+    char* imapDirStr = PR_smprintf("/boot/home/config/settings/mozilla/%s/ImapMail", currProfileName);
+    char* newsDirStr = PR_smprintf("/boot/home/config/settings/mozilla/%s/News", currProfileName);
 #else
 #error you_need_to_edit_this_file_for_your_freak_os
 #endif /* XP_FOO */

@@ -621,7 +621,7 @@ nsPluginCacheListener::OnStartBinding(nsIURI* aURL, const char *aContentType)
 		tpath[len] = '\\';
 		tpath[len+1] = 0;
 	}
-#elif defined (XP_UNIX)
+#elif defined (XP_UNIX) || defined(XP_BEOS)
 	PL_strcpy(tpath, "/tmp/");
 #else
 	tpath[0] = 0;

@@ -39,7 +39,7 @@
 
 // XXX These are defined in platform specific FE directories right now :-/
 
-#if defined(XP_PC) || defined(XP_UNIX)
+#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS)
 typedef NS_CALLBACK_(NPError, NP_GETENTRYPOINTS) (NPPluginFuncs* pCallbacks);
 typedef NS_CALLBACK_(NPError, NP_PLUGININIT) (const NPNetscapeFuncs* pCallbacks);
 typedef NS_CALLBACK_(NPError, NP_PLUGINSHUTDOWN) (void);

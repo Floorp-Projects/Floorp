@@ -37,7 +37,11 @@ PREF_JS_EXPORTS	= 	$(srcdir)/initpref.js \
 
 
 ifneq ($(subst /,_,$(shell uname -s)),OS2)
+ifeq ($(MOZ_TOOLKIT),beos)
+PREF_JS_EXPORTS		+= $(srcdir)/beos/beos.js
+else
 PREF_JS_EXPORTS		+= $(srcdir)/unix/unix.js
+endif
 else
 PREF_JS_EXPORTS		+= $(srcdir)/win/winpref.js $(srcdir)/os2/os2pref.js
 CSRCS		= prefldap.c
@@ -70,7 +74,11 @@ GARBAGE	+=		$(DIST)/bin/components/initpref.js	\
 			$(NULL)
 
 ifneq ($(subst /,_,$(shell uname -s)),OS2)
+ifeq ($(MOZ_TOOLKIT),beos)
+GARBAGE			+= $(DIST)/bin/components/beos.js
+else
 GARBAGE			+= $(DIST)/bin/components/unix.js
+endif
 else
 GARBAGE			+= $(DIST)/bin/components/winpref.js $(DIST)/bin/components/os2prefs.js
 endif
