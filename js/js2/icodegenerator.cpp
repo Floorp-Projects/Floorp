@@ -43,7 +43,7 @@ namespace JavaScript {
         ASSERT(stitcher.empty());
         for (LabelIterator i = labels.begin(); i != labels.end(); i++) {
             ASSERT((*i)->itsBase == iCode);
-            ASSERT((*i)->itsOffset < iCode->size());
+            ASSERT((*i)->itsOffset <= iCode->size());
         }
     #endif
 
@@ -616,7 +616,7 @@ namespace JavaScript {
         for (InstructionIterator i = iCode->begin(); i != iCode->end(); i++) {
 
             for (LabelList::iterator k = labels.begin(); k != labels.end(); k++)
-                if ((*k)->itsOffset == (ptrdiff_t)(i - iCode->begin())) {
+                if ((ptrdiff_t)(*k)->itsOffset == (i - iCode->begin())) {
                     //s << "label #" << (k - labels.begin()) << ":\n";
                     s << "#" << (i - iCode->begin());
                     break;
@@ -754,7 +754,7 @@ namespace JavaScript {
             s << "\n";
         }
         for (LabelList::iterator k = labels.begin(); k != labels.end(); k++)
-            if ((*k)->itsOffset == (ptrdiff_t)(iCode->end() - iCode->begin())) {
+            if ((ptrdiff_t)(*k)->itsOffset == (iCode->end() - iCode->begin())) {
 //                s << "label #" << (k - labels.begin()) << ":\n";
 //                s << "#" << (i - iCode->begin());
             }
