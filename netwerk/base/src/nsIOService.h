@@ -40,6 +40,8 @@ public:
     nsresult Init();
 
 protected:
+    nsresult BuildAppVersion();
+
     nsCString   *mAppName;
     nsCString   *mAppCodeName;
     nsCString   *mAppVersion;
