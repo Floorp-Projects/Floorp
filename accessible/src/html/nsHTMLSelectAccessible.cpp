@@ -965,17 +965,16 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetFirstChild(nsIAccessible **aFirstChil
 }
 
 /**
-  * Our value is the value of our ( first ) selected child. nsIDOMHTMLSelectElement
-  *     returns this by default with GetValue().
+  * MSAA/ATK accessible value != HTML value, especially not in combo boxes.
+  * Our accessible value is the text label for of our ( first ) selected child.
+  * The easiest way to get this is from the first child which is the readonly textfield.
   */
-NS_IMETHODIMP nsHTMLComboboxAccessible::GetValue(nsAString& _retval)
+NS_IMETHODIMP nsHTMLComboboxAccessible::GetValue(nsAString& aValue)
 {
-  nsCOMPtr<nsIDOMHTMLSelectElement> select (do_QueryInterface(mDOMNode));
-  if (select) {
-    select->GetValue(_retval);  
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIAccessible> textFieldAccessible;
+  nsresult rv = GetFirstChild(getter_AddRefs(textFieldAccessible));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return textFieldAccessible->GetValue(aValue);
 }
 
 /** ----- nsHTMLComboboxTextFieldAccessible ----- */
