@@ -497,10 +497,14 @@ nsresult
 nsServiceManager::ReleaseService(const char* aProgID, nsISupports* service,
                                  nsIShutdownListener* shutdownListener)
 {
-    nsIServiceManager* mgr;
-    nsresult rv = GetGlobalServiceManager(&mgr);
-    if (NS_FAILED(rv)) return rv;
-    return mgr->ReleaseService(aProgID, service, shutdownListener);
+    // Don't create the global service manager here because we might
+    // be shutting down, and releasing all the services in its
+    // destructor
+    nsIServiceManager* mgr = mGlobalServiceManager;
+    if (mgr) {
+        return mgr->ReleaseService(aProgID, service, shutdownListener);
+    }
+    return NS_OK;
 }
 
 nsresult
@@ -515,8 +519,9 @@ nsServiceManager::RegisterService(const char* aProgID, nsISupports* aService)
 nsresult
 nsServiceManager::UnregisterService(const char* aProgID)
 {
-    // Don't create the global service manager here because we might be shutting
-    // down, and releasing all the services in its destructor
+    // Don't create the global service manager here because we might
+    // be shutting down, and releasing all the services in its
+    // destructor
     if (mGlobalServiceManager) 
         return mGlobalServiceManager->UnregisterService(aProgID);
     return NS_OK;
