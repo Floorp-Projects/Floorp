@@ -56,12 +56,18 @@ function onLoad()
   var slot = secmoddb.findSlotByName(tokenName);
   if (slot) {
     var oldpwbox = document.getElementById("oldpw");
-    if (slot.status == nsIPKCS11Slot.SLOT_UNINITIALIZED ) {
+    var status = slot.status;
+    if (status == nsIPKCS11Slot.SLOT_UNINITIALIZED
+        || status == nsIPKCS11Slot.SLOT_READY) {
       oldpwbox.setAttribute("disabled", "true");
       oldpwbox.setAttribute("type", "text");
       oldpwbox.setAttribute("value", 
                             bundle.GetStringFromName("password_not_set")); 
-      oldpwbox.setAttribute("inited", "true");
+      if (status == nsIPKCS11Slot.SLOT_READY) {
+        oldpwbox.setAttribute("inited", "empty");
+      } else {
+        oldpwbox.setAttribute("inited", "true");
+      }
       // Select first password field
       document.getElementById('pw1').focus();
     } else {
@@ -75,6 +81,8 @@ function onLoad()
     // Return value 0 means "canceled"
     params.SetInt(1, 0);
   }
+  
+  checkPasswords();
 }
 
 function onP12Load()
@@ -96,12 +104,32 @@ function setPassword()
   
   var success = false;
   
-  if (initpw == "false") {
+  if (initpw == "false" || initpw == "empty") {
     try {
-      var passok = token.checkPassword(oldpwbox.value);
+      var oldpw = "";
+      var passok = 0;
+      
+      if (initpw == "empty") {
+        passok = 1;
+      } else {
+        oldpw = oldpwbox.value;
+        passok = token.checkPassword(oldpw);
+      }
+      
       if (passok) {
-        token.changePassword(oldpwbox.value, pw1.value);
-        alert(bundle.GetStringFromName("pw_change_ok")); 
+        if (initpw == "empty" && pw1.value == "") {
+          // This makes no sense that we arrive here, 
+          // we reached a case that should have been prevented by checkPasswords.
+        } else {
+          token.changePassword(oldpw, pw1.value);
+          if (pw1.value == "") {
+            alert(bundle.GetStringFromName("pw_erased_ok")
+                  + " "
+                  + bundle.GetStringFromName("pw_empty_warning"));
+          } else {
+            alert(bundle.GetStringFromName("pw_change_ok")); 
+          }
+        }
         success = true;
       } else {
         oldpwbox.focus();
@@ -113,6 +141,11 @@ function setPassword()
     }
   } else {
     token.initPassword(pw1.value);
+    if (pw1.value == "") {
+      alert(bundle.GetStringFromName("pw_not_wanted")
+            + " " 
+            + bundle.GetStringFromName("pw_empty_warning"));
+    }
     success = true;
   }
 
@@ -207,9 +240,18 @@ function checkPasswords()
 
   var ok=document.getElementById('ok-button');
 
-  if (pw1 == "") {
-    ok.setAttribute("disabled","true");
-    return;
+  var oldpwbox = document.getElementById("oldpw");
+  if (oldpwbox) {
+    var initpw = oldpwbox.getAttribute("inited");
+
+    if (initpw == "empty" && pw1 == "") {
+      // The token has already been initialized, therefore this dialog
+      // was called with the intention to change the password.
+      // The token currently uses an empty password.
+      // We will not allow changing the password from empty to empty.
+      ok.setAttribute("disabled","true");
+      return;
+    }
   }
 
   if (pw1 == pw2){
