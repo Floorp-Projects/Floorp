@@ -359,8 +359,6 @@
 <!ENTITY editPopupSettings.accesskey "E">
 <!ENTITY dontShowMessage.accesskey "D">
 
-<!ENTITY tellAFriend.label "Tell a Friend">
-<!ENTITY tellAFriend.accesskey "T">
 <!ENTITY promote.label "Promote &brandShortName;">
 <!ENTITY promote.accesskey "P">
 
