@@ -2698,7 +2698,7 @@ HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
     nsICSSStyleSheet* sheet = nsnull;
     // XXX note: we are ignoring rv until the error code stuff in the
     // input routines is converted to use nsresult's
-    parser->SetCaseSensative(PR_FALSE);
+    parser->SetCaseSensitive(PR_FALSE);
     parser->Parse(aUIN, aURL, sheet);
     if (nsnull != sheet) {
       sheet->SetTitle(aTitle);

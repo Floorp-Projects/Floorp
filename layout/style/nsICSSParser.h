@@ -42,8 +42,8 @@ public:
   // implement the nsICSSStyleSheet interface
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet) = 0;
 
-  // Set whether or not tags & classes are case sensative or uppercased
-  NS_IMETHOD SetCaseSensative(PRBool aCaseSensative) = 0;
+  // Set whether or not tags & classes are case sensitive or uppercased
+  NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive) = 0;
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURL*                aInputURL,
