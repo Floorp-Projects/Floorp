@@ -157,17 +157,21 @@ function saveFontPrefs()
       if (currValue != dataObject.languageData[language].types[type])
         pref.SetUnicharPref(fontPrefString, dataObject.languageData[language].types[type]);
     }
+    var defaultFontPref = "font.default." + language;
     var variableSizePref = "font.size.variable." + language;
     var fixedSizePref = "font.size.fixed." + language;
     var minSizePref = "font.minimum-size." + language;
-    var currVariableSize = 12, currFixedSize = 12, minSizeVal = 0;
+    var currDefaultFont = "serif", currVariableSize = 12, currFixedSize = 12, minSizeVal = 0;
     try {
+      currDefaultFont = pref.CopyUnicharPref(defaultFontPref);
       currVariableSize = pref.GetIntPref(variableSizePref);
       currFixedSize = pref.GetIntPref(fixedSizePref );
       minSizeVal = pref.GetIntPref(minSizePref);
     }
     catch(e) {
     }
+    if (currDefaultFont != dataObject.languageData[language].defaultFont)
+      pref.SetUnicharPref(defaultFontPref, dataObject.languageData[language].defaultFont);
     if (currVariableSize != dataObject.languageData[language].variableSize)
       pref.SetIntPref(variableSizePref, dataObject.languageData[language].variableSize);
     if (currFixedSize != dataObject.languageData[language].fixedSize)
@@ -180,7 +184,6 @@ function saveFontPrefs()
   // font scaling
   var fontDPI = parseInt(dataObject.fontDPI);
   var myFonts = dataObject.dataEls["useMyFonts"].checked;
-  var defaultFont = dataObject.defaultFont;
   var myColors = dataObject.dataEls["useMyColors"].checked;
   try {
     var currDPI = pref.GetIntPref("browser.display.screen_resolution");
@@ -195,8 +198,6 @@ function saveFontPrefs()
     pref.SetIntPref("browser.display.screen_resolution", fontDPI);
   if (currFonts == myFonts)
     pref.SetIntPref("browser.display.use_document_fonts", !myFonts);
-  if(currDefault != defaultFont)
-    pref.SetUnicharPref( "font.default", defaultFont );
   if (currColors == myColors)
     pref.SetBoolPref("browser.display.use_document_colors", !myColors);
 

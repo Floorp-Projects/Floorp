@@ -973,55 +973,71 @@ pref("font.name.monospace.x-tamil", "Latha");
 pref("font.name-list.serif.x-tamil", "Latha, Code2000");
 pref("font.name-list.monospace.x-tamil", "Latha, Code2000");
 
-pref("font.default", "serif");
+pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
 
+pref("font.default.el", "serif");
 pref("font.size.variable.el", 16);
 pref("font.size.fixed.el", 13);
 
+pref("font.default.he", "sans-serif");
 pref("font.size.variable.he", 16);
 pref("font.size.fixed.he", 13);
 
+pref("font.default.ja", "sans-serif");
 pref("font.size.variable.ja", 16);
 pref("font.size.fixed.ja", 16);
 
+pref("font.default.ko", "sans-serif");
 pref("font.size.variable.ko", 16);
 pref("font.size.fixed.ko", 16);
 
+pref("font.default.th", "serif");
 pref("font.size.variable.th", 16);
 pref("font.size.fixed.th", 13);
 
+pref("font.default.tr", "serif");
 pref("font.size.variable.tr", 16);
 pref("font.size.fixed.tr", 13);
 
+pref("font.default.x-baltic", "serif");
 pref("font.size.variable.x-baltic", 16);
 pref("font.size.fixed.x-baltic", 13);
 
+pref("font.default.x-central-euro", "serif");
 pref("font.size.variable.x-central-euro", 16);
 pref("font.size.fixed.x-central-euro", 13);
 
+pref("font.default.x-cyrillic", "serif");
 pref("font.size.variable.x-cyrillic", 16);
 pref("font.size.fixed.x-cyrillic", 13);
 
+pref("font.default.x-devanagari", "serif");
 pref("font.size.variable.x-devanagari", 16);
 pref("font.size.fixed.x-devanagari", 13);
 
+pref("font.default.x-tamil", "serif");
 pref("font.size.variable.x-tamil", 16);
 pref("font.size.fixed.x-tamil", 13);
 
+pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
 pref("font.size.fixed.x-unicode", 13);
 
+pref("font.default.x-western", "serif");
 pref("font.size.variable.x-western", 16);
 pref("font.size.fixed.x-western", 13);
 
+pref("font.default.zh-CN", "sans-serif");
 pref("font.size.variable.zh-CN", 16);
 pref("font.size.fixed.zh-CN", 16);
 
+pref("font.default.zh-TW", "sans-serif");
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
 
+pref("font.default.zh-HK", "sans-serif");
 pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
 
@@ -1180,49 +1196,63 @@ pref("font.name.monospace.zh-HK", "Apple LiGothic Medium");
 pref("font.name.cursive.zh-HK", "XXX.cursive");
 pref("font.name.fantasy.zh-HK", "XXX.fantasy");
 
-pref("font.default", "serif");
+pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 15);
 pref("font.size.fixed.ar", 13);
 
+pref("font.default.el", "serif");
 pref("font.size.variable.el", 16);
 pref("font.size.fixed.el", 13);
 
+pref("font.default.he", "sans-serif");
 pref("font.size.variable.he", 15);
 pref("font.size.fixed.he", 13);
 
+pref("font.default.ja", "sans-serif");
 pref("font.size.variable.ja", 14);
 pref("font.size.fixed.ja", 14);
 
+pref("font.default.ko", "sans-serif");
 pref("font.size.variable.ko", 16);
 pref("font.size.fixed.ko", 16);
 
+pref("font.default.th", "serif");
 pref("font.size.variable.th", 16);
 pref("font.size.fixed.th", 13);
 
+pref("font.default.tr", "serif");
 pref("font.size.variable.tr", 16);
 pref("font.size.fixed.tr", 13);
 
+pref("font.default.x-baltic", "serif");
 pref("font.size.variable.x-baltic", 16);
 pref("font.size.fixed.x-baltic", 13);
 
+pref("font.default.x-central-euro", "serif");
 pref("font.size.variable.x-central-euro", 16);
 pref("font.size.fixed.x-central-euro", 13);
 
+pref("font.default.x-cyrillic", "serif");
 pref("font.size.variable.x-cyrillic", 16);
 pref("font.size.fixed.x-cyrillic", 13);
 
+pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
 pref("font.size.fixed.x-unicode", 13);
 
+pref("font.default.x-western", "serif");
 pref("font.size.variable.x-western", 16);
 pref("font.size.fixed.x-western", 13);
 
+pref("font.default.zh-CN", "sans-serif");
 pref("font.size.variable.zh-CN", 15);
 pref("font.size.fixed.zh-CN", 16);
 
+pref("font.default.zh-TW", "sans-serif");
 pref("font.size.variable.zh-TW", 15);
 pref("font.size.fixed.zh-TW", 16);
 
+pref("font.default.zh-HK", "sans-serif");
 pref("font.size.variable.zh-HK", 15);
 pref("font.size.fixed.zh-HK", 16);
 
@@ -1339,48 +1369,72 @@ pref("font.name.sans-serif.zh-HK", "Helv");
 pref("font.name.monospace.zh-HK", "Courier");
 
 pref("font.default", "serif");
+
+pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
 
+pref("font.default.el", "serif");
 pref("font.size.variable.el", 16);
 pref("font.size.fixed.el", 13);
 
+pref("font.default.he", "sans-serif");
 pref("font.size.variable.he", 16);
 pref("font.size.fixed.he", 13);
 
+pref("font.default.ja", "sans-serif");
 pref("font.size.variable.ja", 16);
 pref("font.size.fixed.ja", 16);
 
+pref("font.default.ko", "sans-serif");
 pref("font.size.variable.ko", 16);
 pref("font.size.fixed.ko", 16);
 
+pref("font.default.th", "serif");
 pref("font.size.variable.th", 16);
 pref("font.size.fixed.th", 13);
 
+pref("font.default.tr", "serif");
 pref("font.size.variable.tr", 16);
 pref("font.size.fixed.tr", 13);
 
+pref("font.default.x-baltic", "serif");
 pref("font.size.variable.x-baltic", 16);
 pref("font.size.fixed.x-baltic", 13);
 
+pref("font.default.x-central-euro", "serif");
 pref("font.size.variable.x-central-euro", 16);
 pref("font.size.fixed.x-central-euro", 13);
 
+pref("font.default.x-cyrillic", "serif");
 pref("font.size.variable.x-cyrillic", 16);
 pref("font.size.fixed.x-cyrillic", 13);
 
+pref("font.default.x-devanagari", "serif");
+pref("font.size.variable.x-devanagari", 16);
+pref("font.size.fixed.x-devanagari", 13);
+
+pref("font.default.x-tamil", "serif");
+pref("font.size.variable.x-tamil", 16);
+pref("font.size.fixed.x-tamil", 13);
+
+pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
 pref("font.size.fixed.x-unicode", 13);
 
+pref("font.default.x-western", "serif");
 pref("font.size.variable.x-western", 16);
 pref("font.size.fixed.x-western", 13);
 
+pref("font.default.zh-CN", "sans-serif");
 pref("font.size.variable.zh-CN", 16);
 pref("font.size.fixed.zh-CN", 16);
 
+pref("font.default.zh-TW", "sans-serif");
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
 
+pref("font.default.zh-HK", "sans-serif");
 pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
 
@@ -1423,49 +1477,63 @@ pref("intl.font_charset", "");
 pref("intl.font_spec_list", "");
 pref("mail.signature_date", 0);
 
-pref("font.default", "serif");
+pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
 
+pref("font.default.el", "serif");
 pref("font.size.variable.el", 16);
 pref("font.size.fixed.el", 13);
 
+pref("font.default.he", "sans-serif");
 pref("font.size.variable.he", 16);
 pref("font.size.fixed.he", 13);
 
+pref("font.default.ja", "sans-serif");
 pref("font.size.variable.ja", 16);
 pref("font.size.fixed.ja", 16);
 
+pref("font.default.ko", "sans-serif");
 pref("font.size.variable.ko", 16);
 pref("font.size.fixed.ko", 16);
 
+pref("font.default.th", "serif");
 pref("font.size.variable.th", 16);
 pref("font.size.fixed.th", 13);
 
+pref("font.default.tr", "serif");
 pref("font.size.variable.tr", 16);
 pref("font.size.fixed.tr", 13);
 
+pref("font.default.x-baltic", "serif");
 pref("font.size.variable.x-baltic", 16);
 pref("font.size.fixed.x-baltic", 13);
 
+pref("font.default.x-central-euro", "serif");
 pref("font.size.variable.x-central-euro", 16);
 pref("font.size.fixed.x-central-euro", 13);
 
+pref("font.default.x-cyrillic", "serif");
 pref("font.size.variable.x-cyrillic", 16);
 pref("font.size.fixed.x-cyrillic", 13);
 
+pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
 pref("font.size.fixed.x-unicode", 13);
 
+pref("font.default.x-western", "serif");
 pref("font.size.variable.x-western", 16);
 pref("font.size.fixed.x-western", 13);
 
+pref("font.default.zh-CN", "sans-serif");
 pref("font.size.variable.zh-CN", 16);
 pref("font.size.fixed.zh-CN", 16);
 
+pref("font.default.zh-TW", "sans-serif");
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
 
+pref("font.default.zh-HK", "sans-serif");
 pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
 
@@ -1620,49 +1688,63 @@ pref("font.name.monospace.zh-HK", "-arphic-Ming for ISO10646-big5hkscs-0");
 
 // zh-TW
 
-pref("font.default", "serif");
+pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 12);
 
+pref("font.default.el", "serif");
 pref("font.size.variable.el", 16);
 pref("font.size.fixed.el", 12);
 
+pref("font.default.he", "sans-serif");
 pref("font.size.variable.he", 16);
 pref("font.size.fixed.he", 12);
 
+pref("font.default.ja", "sans-serif");
 pref("font.size.variable.ja", 16);
 pref("font.size.fixed.ja", 16);
 
+pref("font.default.ko", "sans-serif");
 pref("font.size.variable.ko", 16);
 pref("font.size.fixed.ko", 16);
 
+pref("font.default.th", "serif");
 pref("font.size.variable.th", 16);
 pref("font.size.fixed.th", 12);
 
+pref("font.default.tr", "serif");
 pref("font.size.variable.tr", 16);
 pref("font.size.fixed.tr", 12);
 
+pref("font.default.x-baltic", "serif");
 pref("font.size.variable.x-baltic", 16);
 pref("font.size.fixed.x-baltic", 12);
 
+pref("font.default.x-central-euro", "serif");
 pref("font.size.variable.x-central-euro", 16);
 pref("font.size.fixed.x-central-euro", 12);
 
+pref("font.default.x-cyrillic", "serif");
 pref("font.size.variable.x-cyrillic", 16);
 pref("font.size.fixed.x-cyrillic", 12);
 
+pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
 pref("font.size.fixed.x-unicode", 12);
 
+pref("font.default.x-western", "serif");
 pref("font.size.variable.x-western", 16);
 pref("font.size.fixed.x-western", 12);
 
+pref("font.default.zh-CN", "sans-serif");
 pref("font.size.variable.zh-CN", 16);
 pref("font.size.fixed.zh-CN", 16);
 
+pref("font.default.zh-TW", "sans-serif");
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
 
+pref("font.default.zh-HK", "sans-serif");
 pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
 

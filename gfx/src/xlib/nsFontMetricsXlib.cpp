@@ -1975,8 +1975,12 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   mFont.EnumerateFamilies(FontEnumCallback, this);
   nsXPIDLCString value;
+  const char* langGroup = nsnull;
+  mLangGroup->GetUTF8String(&langGroup);
   if (!mGeneric) {
-    mFontMetricsContext->mPref->CopyCharPref("font.default", getter_Copies(value));
+    nsCAutoString name("font.default.");
+    name.Append(langGroup);
+    mFontMetricsContext->mPref->CopyCharPref(name.get(), getter_Copies(value));
     if (value.get()) {
       mDefaultFont = value.get();
     }
@@ -1995,8 +1999,6 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       name.Append("variable");
     }
     name.Append(char('.'));
-    const char* langGroup = nsnull;
-    mLangGroup->GetUTF8String(&langGroup);
     name.Append(langGroup);
     PRInt32 minimum = 0;
     res = mFontMetricsContext->mPref->GetIntPref(name.get(), &minimum);
@@ -6051,4 +6053,3 @@ void CharSetNameToCodeRangeBits(const char *aCharset,
   *aCodeRange2 = charSetInfo->mCodeRange2Bits;
 }
 #endif /* MOZ_ENABLE_FREETYPE2 */
-

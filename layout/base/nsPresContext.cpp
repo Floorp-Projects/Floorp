@@ -366,7 +366,8 @@ nsPresContext::GetFontPreferences()
         font->name.Assign(value);
       }
       else {
-        value = nsContentUtils::GetStringPref("font.default");
+        MAKE_FONT_PREF_KEY(pref, "font.default.", langGroup);
+        value = nsContentUtils::GetStringPref(pref.get());
         if (!value.IsEmpty()) {
           mDefaultVariableFont.name.Assign(value);
         }

@@ -619,7 +619,7 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 		char *font_default = NULL;
 		char preference[256];
 
-		pref->CopyCharPref( "font.default", &font_default );
+		pref->CopyCharPref( "font.default.x-western", &font_default );
 		if( !font_default ) font_default = "serif";
 
 		sprintf( preference, "font.name.%s.x-western", font_default );
@@ -864,7 +864,7 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		char *font_default = NULL, *font;
 		char preference[256];
 
-		pref->CopyCharPref( "font.default", &font_default );
+		pref->CopyCharPref( "font.default.x-western", &font_default );
 		if( !font_default ) font_default = "serif";
 
 		sprintf( preference, "font.name.%s.x-western", font_default );

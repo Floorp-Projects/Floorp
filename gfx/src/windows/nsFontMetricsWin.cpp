@@ -3557,7 +3557,11 @@ nsFontMetricsWin::RealizeFont()
 
   // set a fallback generic font if the font-family list didn't have one
   if (mGeneric.IsEmpty()) {
-    rv = gPref->CopyUnicharPref("font.default", getter_Copies(value));
+    pref.Assign("font.default.");
+    const char* langGroup;
+    mLangGroup->GetUTF8String(&langGroup);
+    pref.Append(langGroup);
+    rv = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));
     if (NS_SUCCEEDED(rv)) {
       mGeneric.Assign(value);
     }
