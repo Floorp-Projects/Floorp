@@ -28,27 +28,30 @@ class nsIUrlListener;
 class nsNntpService : public nsINntpService, nsIMsgMessageService
 {
 public:
-	nsNntpService();
-	virtual ~nsNntpService();
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // we suppport the nsINntpService Interface 
+  ////////////////////////////////////////////////////////////////////////////////////////
+  NS_IMETHOD RunNewsUrl (const nsString& urlString, nsISupports * aConsumer, 
+                         nsIUrlListener * aUrlListener, nsIURL ** aURL);
+  
+  NS_IMETHOD PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
-	NS_DECL_ISUPPORTS
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// we suppport the nsINntpService Interface 
-	////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD RunNewsUrl (const nsString& urlString, nsISupports * aConsumer, 
-						   nsIUrlListener * aUrlListener, nsIURL ** aURL);
-
-	NS_IMETHOD PostMessage (nsFilePath &pathToFile, const char *subject, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL ** aURL);
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// we suppport the nsIMsgMessageService Interface 
-	////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // we suppport the nsIMsgMessageService Interface 
+  ////////////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, 
 						   PRBool moveMessage,nsIUrlListener * aUrlListener, nsIURL **aURL);
+  
+  NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+                            nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
-	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-							  nsIUrlListener * aUrlListener, nsIURL ** aURL);
+  // nsNntpService
+  nsNntpService();
+  virtual ~nsNntpService();
+  nsresult ConvertNewsMessageURI2NewsURI(const char *messageURI, nsString &newsURI);
+  
+  NS_DECL_ISUPPORTS  
+
 };
 
 #endif /* nsNntpService_h___ */

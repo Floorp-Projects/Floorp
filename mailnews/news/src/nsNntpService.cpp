@@ -36,6 +36,13 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 
+#include "nsString.h"
+
+#include "nsNewsUtils.h"
+
+#include "nsNewsDatabase.h"
+#include "nsMsgDBCID.h"
+
 #include "nsString2.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
@@ -45,6 +52,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
+static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 
 nsNntpService::nsNntpService()
 {
@@ -94,17 +102,120 @@ nsresult nsNntpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
 										  nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
-  // this function is just a shell right now....eventually we'll implement displaymessage such
-  // that we break down the URI and extract the news host and article number. We'll then
-  // build up a url that represents that action, create a connection to run the url
-  // and load the url into the connection. 
-  
-  // HACK ALERT: For now, the only news url we run is a display message url. So just forward
-  // this URI to RunNewUrl
+  nsresult rv = NS_OK;
+
+  if (aMessageURI == nsnull) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+#ifdef DEBUG_sspitzer
+  printf("nsNntpService::DisplayMessage(%s,...)\n",aMessageURI);
+#endif
+
   nsString uri = aMessageURI;
 
-  return RunNewsUrl(uri, aDisplayConsumer, aUrlListener, aURL);
+  if (PL_strncmp(aMessageURI, kNewsRootURI, kNewsRootURILen) == 0) {
+    uri = aMessageURI;
+  }
+  else if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen) == 0) {
+    rv = ConvertNewsMessageURI2NewsURI(aMessageURI, uri);
+  }
+  else {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  else {
+    return RunNewsUrl(uri, aDisplayConsumer, aUrlListener, aURL);
+  }
 }
+
+nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, nsString &newsURI)
+{
+  nsString hostname;
+  nsString folder;
+  nsresult rv = NS_OK;
+  PRUint32 key;
+
+  // messageURI is of the form:  news_message://news.mcom.com/mcom.linux#1
+
+  rv = nsParseNewsMessageURI(messageURI, folder, &key);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // cut news_message://hostname/group -> hostname/group
+  folder.Right(hostname, folder.Length() - kNewsMessageRootURILen - 1);
+
+  // cut hostname/group -> hostname
+  PRInt32 hostEnd = hostname.Find('/');
+  if (hostEnd >0) {
+    hostname.Truncate(hostEnd);
+  }
+
+#ifdef DEBUG_sspitzer
+  printf("ConvertNewsMessageURI2NewsURI(%s,??) -> %s %u\n", messageURI, folder.ToNewCString(), key);
+#endif
+
+  nsNativeFileSpec pathResult;
+
+  rv = nsNewsURI2Path(kNewsMessageRootURI, folder.ToNewCString(), pathResult);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsIMsgDatabase *newsDBFactory = nsnull;
+  nsIMsgDatabase *newsDB = nsnull;
+  
+  rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDBFactory);
+  if (NS_FAILED(rv) || (newsDBFactory == nsnull)) {
+    return rv;
+  }
+
+  rv = newsDBFactory->Open(pathResult, PR_TRUE, (nsIMsgDatabase **) &newsDB, PR_FALSE);
+    
+  NS_RELEASE(newsDBFactory);
+  newsDBFactory = nsnull;
+
+  if (NS_FAILED(rv) || (newsDB == nsnull)) {
+    return rv;
+  }
+
+  nsIMsgDBHdr *msgHdr = nsnull;
+
+  rv = newsDB->GetMsgHdrForKey((nsMsgKey) key, &msgHdr);
+  NS_IF_RELEASE(newsDB);
+  newsDB = nsnull;
+
+  if (NS_FAILED(rv) || (msgHdr == nsnull)) {
+    return rv;
+  }
+
+  nsString messageId;
+  rv = msgHdr->GetMessageId(messageId);
+
+  NS_IF_RELEASE(msgHdr);
+  msgHdr = nsnull;
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  newsURI = kNewsRootURI;
+  newsURI += "/";
+  newsURI += hostname;
+  newsURI += "/";
+  newsURI += messageId;
+
+#ifdef DEBUG_sspitzer
+  printf("newsURI = %s\n", newsURI.ToNewCString());
+#endif
+
+  return NS_OK;
+}
+
 
 nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
 						   nsIUrlListener * aUrlListener, nsIURL **aURL)
@@ -164,6 +275,9 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 nsresult nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer, 
 										nsIUrlListener *aUrlListener, nsIURL ** aURL)
 {
+#ifdef DEBUG_sspitzer
+    printf("nsNntpService::RunNewsUrl(%s,...)\n",urlString.ToNewCString());
+#endif
 	// for now, assume the url is a news url and load it....
 	nsINntpUrl		*nntpUrl = nsnull;
 	nsINetService	*pNetService = nsnull;
@@ -188,7 +302,7 @@ nsresult nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aCon
 				delete [] urlSpec;
 			
 			const char * host;
-			PRUint32 port = NEWS_PORT;
+			PRUint32 port;
 			
 			if (aUrlListener) // register listener if there is one...
 				nntpUrl->RegisterListener(aUrlListener);
@@ -196,6 +310,10 @@ nsresult nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aCon
 			nntpUrl->GetHostPort(&port);
 			nntpUrl->GetHost(&host);
 			// okay now create a transport to run the url in...
+
+#ifdef DEBUG_sspitzer
+            printf("nsNntpService::RunNewsUrl(): host = %s port = %d\n", host, port);
+#endif
 			pNetService->CreateSocketTransport(&transport, port, host);
 			if (NS_SUCCEEDED(rv) && transport)
 			{
