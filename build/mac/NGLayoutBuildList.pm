@@ -744,11 +744,6 @@ sub BuildOneProject($$$$$$)
 		unlink "$project_dir$target_name.xSYM";
 	}
 	
-	if ($toc_file ne "")
-	{
-		ReconcileProject("$project_path", "$project_dir$toc_file");
-	}
-	
 	BuildProject($project_path, $target_name);
 	
 	$alias_shlb ? MakeAlias("$project_dir$target_name", "$dist_dir$component_dir") : 0;
@@ -822,6 +817,9 @@ sub BuildIDLProjects()
 		
 		# mime service
 		# Just a placeholder as mime.xpt is currently part of the netwerkIDL.mcp build
+		
+		# stream conversion.
+		BuildIDLProject(":mozilla:netwerk:streamconv:macbuild:streamconvIDL.mcp","streamconv");
 	}
 
 	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
@@ -931,6 +929,7 @@ sub BuildRuntimeProjects()
 	}
 	else {
 		_BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocator$D.o");
+		#// _BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocatorGC");
 	}
 
 	BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",					"NSStdLib$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
@@ -1001,20 +1000,24 @@ sub BuildCommonProjects()
 
 	if ( $main::NECKO )
 	{
-		BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",					"Network$D.shlb", "netwerk.toc", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",					"Network$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 		# utils library
-		BuildOneProject(":mozilla:netwerk:util:macbuild:netwerkUtil.mcp",			"NetworkModular$D.shlb", "netwerkUtil.toc", 1, $main::ALIAS_SYM_FILES, 0);
+		BuildOneProject(":mozilla:netwerk:util:macbuild:netwerkUtil.mcp",			"NetworkModular$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
 		# protocols
-		BuildOneProject(":mozilla:netwerk:protocol:about:macbuild:about.mcp",		"about$D.shlb", "about.toc", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "file.toc", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "ftp.toc", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "http.toc", 1, $main::ALIAS_SYM_FILES, 1);
-		BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp",	"resource$D.shlb", "resource.toc", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:about:macbuild:about.mcp",		"about$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp",	"resource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 		# mime service
-		BuildOneProject(":mozilla:netwerk:mime:macbuild:mime.mcp",					"mimetype$D.shlb", "mimetype.toc", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:mime:macbuild:mime.mcp",					"mimetype$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+		
+		# stream conversion
+		BuildOneProject(":mozilla:netwerk:streamconv:macbuild:streamconv.mcp",		"streamconv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+		BuildOneProject(":mozilla:netwerk:streamconv:macbuild:multiMixedConv.mcp",	"multiMixedConv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	}
 	else
 	{
