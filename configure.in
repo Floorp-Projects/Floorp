@@ -5248,8 +5248,6 @@ fi
 _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
  
   sort confdefs.h | egrep -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
-  sort confdefs.h | egrep -v "$_EGREP_PATTERN" > confdefs.h.new
-  mv confdefs.h.new confdefs.h && rm -f confdefs.h.new
 
   cat >> $_CONFIG_TMP <<\EOF
 
