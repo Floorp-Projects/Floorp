@@ -29,6 +29,7 @@
 #include "nsString.h"
 
 #include "nsIDocShell.h"
+#include "nsIScrollableView.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 
