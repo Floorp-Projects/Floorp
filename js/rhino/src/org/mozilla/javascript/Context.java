@@ -1953,7 +1953,7 @@ public class Context
     }
 
     /**
-     * If hasFeature(FEATURE_NON_ECMA_GET_YEAR) returns true,
+     * If <tt>hasFeature(FEATURE_NON_ECMA_GET_YEAR)</tt> returns true,
      * Date.prototype.getYear subtructs 1900 only if 1900 <= date < 2000.
      * The default behavior is always to subtruct 1900 as rquired
      * by Ecma B.2.4.
@@ -1961,31 +1961,46 @@ public class Context
     public static final int FEATURE_NON_ECMA_GET_YEAR = 1;
 
     /**
-     * If hasFeature(FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME) returns true,
-     * allow 'function memberExpression(args) { body }' to be syntax sugar
-     * for
-     * 'memberExpression = function(args) { body }', when memberExpression
-     * is not simply identifier.
+     * If <tt>hasFeature(FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME)</tt> returns
+     * true, allow <tt>function memberExpression(args) { body }</tt> to be
+     * syntax sugar for <tt>memberExpression = function(args) { body }</tt>,
+     * when memberExpression is not a simple identifier.
      * See Ecma-262, section 11.2 for definition of memberExpression.
      */
     public static final int FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME = 2;
 
     /**
-     * If hasFeature(RESERVED_KEYWORD_AS_IDENTIFIER) returns true,
+     * If <tt>hasFeature(RESERVED_KEYWORD_AS_IDENTIFIER)</tt> returns true,
      * treat future reserved keyword (see  Ecma-262, section 7.5.3) as ordinary
      * identifiers but warn about this usage
      */
     public static final int FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER = 3;
 
     /**
-     * If hasFeature(FEATURE_TO_STRING_AS_SOURCE) returns true,
+     * If <tt>hasFeature(FEATURE_TO_STRING_AS_SOURCE)</tt> returns true,
      * calling toString on JS objects gives JS source with code to create an
      * object with all enumeratable fields of the original object instead of
-     * printing "[object <object-type>]".
+     * printing <tt>[object <object-type>]</tt>.
      * By default {@link #hasFeature(int)} returns true only if
      * the current JS version is set to {@link #VERSION_1_2}.
      */
     public static final int FEATURE_TO_STRING_AS_SOURCE = 4;
+
+    /**
+     * If <tt>hasFeature(FEATURE_PARENT_PROTO_PROPRTIES)</tt> returns true,
+     * treat <tt>__parent__</tt> and <tt>__proto__</tt> as special properties.
+     * <p>
+     * The properties allow to query and set scope and prototype chains for the
+     * objects. The special meaning of the properties is available
+     * only when they are used as the right hand side of the dot operator.
+     * For example, while <tt>x.__proto__ = y</tt> changes the prototype
+     * chain of the object <tt>x</tt> to point to <tt>y</tt>,
+     * <tt>x["__proto__"] = y</tt> simply assigns a new value to the property
+     * <tt>__proto__</tt> in <tt>x</tt> even when the feature is on.
+     *
+     * By default {@link #hasFeature(int)} returns true.
+     */
+    public static final int FEATURE_PARENT_PROTO_PROPRTIES = 5;
 
     /**
      * Controls certain aspects of script semantics.
@@ -1996,6 +2011,7 @@ public class Context
      * @see #FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME
      * @see #FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER
      * @see #FEATURE_TO_STRING_AS_SOURCE
+     * @see #FEATURE_PARENT_PROTO_PROPRTIES
      */
     public boolean hasFeature(int featureIndex)
     {
@@ -2024,6 +2040,9 @@ public class Context
 
             case FEATURE_TO_STRING_AS_SOURCE:
                 return version == VERSION_1_2;
+
+            case FEATURE_PARENT_PROTO_PROPRTIES:
+                return true;
         }
         // It is a bug to call the method with unknown featureIndex
         throw new IllegalArgumentException();

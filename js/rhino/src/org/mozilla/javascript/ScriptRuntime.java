@@ -1247,10 +1247,16 @@ public class ScriptRuntime {
         } else {
             throw Kit.codeBug();
         }
+        final boolean
+            specials = cx.hasFeature(Context.FEATURE_PARENT_PROTO_PROPRTIES);
+
         final Scriptable sobj = toObject(scope, obj);
         return new Reference() {
             public Object get()
             {
+                if (!specials) {
+                    return getProp(sobj, specialProperty);
+                }
                 if (id == PROTO) {
                     return getProto(sobj, scope);
                 } else {
@@ -1260,6 +1266,9 @@ public class ScriptRuntime {
 
             public Object set(Object value)
             {
+                if (!specials) {
+                    return setProp(sobj, specialProperty, value);
+                }
                 Scriptable result;
                 if (value == null) {
                     result = null;
