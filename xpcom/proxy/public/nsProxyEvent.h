@@ -36,6 +36,8 @@ class nsProxyObjectCallInfo;
 #define PROXY_ASYNC   0x0002  // fire and forget.  This will return immediately and you will lose all return information.
 #define PROXY_ALWAYS  0x0004   // ignore check to see if the eventQ is on the same thread as the caller, and alway return a proxied object.
 
+//#define AUTOPROXIFICATION
+
 // WARNING about PROXY_ASYNC:  
 //
 // If the calling thread goes away, any function which accesses the calling stack 
