@@ -153,8 +153,8 @@ function view_init()
 {
   if (!gMessengerBundle)
       gMessengerBundle = document.getElementById("bundle_messenger");
-  var message_menuitem=document.getElementById('menu_showMessage');
 
+  var message_menuitem = document.getElementById('menu_showMessagePane');
   if (message_menuitem && !message_menuitem.hidden) {
       message_menuitem.setAttribute('checked', !IsMessagePaneCollapsed());
       message_menuitem.setAttribute('disabled', gAccountCentralLoaded);
