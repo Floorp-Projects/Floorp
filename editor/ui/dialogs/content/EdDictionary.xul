@@ -34,6 +34,7 @@
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script language="JavaScript" src="chrome://editor/content/EdDictionary.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <broadcaster id="args" value=""/>
   <grid>
@@ -61,7 +62,8 @@
           <button class="dialog"  id="RemoveWord" oncommand="RemoveWord()" value="&RemoveButton.label;"/>
           <spring class="spacer"/>
           <spring flex="1"/>
-          <button class="exit-dialog" id="cancel" value="&CloseButton.label;" onclick="Close()"/>
+          <button class="exit-dialog" id="ok" value="&CloseButton.label;" default="true" onclick="doOKButton()"/>	
+<!--          <button class="exit-dialog" id="ok" value="&CloseButton.label;" onclick="Close()"/> -->
         </box>
       </row>
     </rows>

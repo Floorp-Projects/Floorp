@@ -52,7 +52,15 @@ function Startup()
  
 function onOK()
 {
+  // Insert the character
   editorShell.InsertSource(LatinChar);
+
+  // Set persistent attributes to save 
+  //  which category, letter, and character modifier was used
+  CategoryGroup.setAttribute("category", category);
+  CategoryGroup.setAttribute("letter_index", indexL);
+  CategoryGroup.setAttribute("char_index", indexM);
+
   return true;
 }
 
@@ -60,8 +68,13 @@ function onOK()
 var LatinL;
 var LatinM;
 var LatinChar;
-var oldL=0;
-var oldM=0;
+var indexL=0;
+var indexM=0;
+var indexM_AU=0;
+var indexM_AL=0;
+var indexM_U=0;
+var indexM_L=0;
+var indexM_S=0;
 var LItems=0;
 var category;
 var CategoryGroup;
@@ -82,26 +95,40 @@ function StartupLatin()
   var Lower       = document.getElementById("Lower");
   CategoryGroup   = document.getElementById("CatGrp");
 
-  // Initialize which radio button is set from persistent attribute
+  // Initialize which radio button is set from persistent attribute...
   var category = CategoryGroup.getAttribute("category");
+
+  // ...as well as indexes into the letter and character lists
+  var index = Number(CategoryGroup.getAttribute("letter_index"));
+  if (index && index >= 0)
+    indexL = index;
+  index = Number(CategoryGroup.getAttribute("char_index"));
+  if (index && index >= 0)
+    indexM = index;
+
 
   switch (category)
   {
     case "AccentUpper": // Uppercase Diacritical
       AccentUpper.checked = true;
+      indexM_AU = indexM;
       break;
     case "AccentLower": // Lowercase Diacritical
       AccentLower.checked = true;
+      indexM_AL = indexM;
       break;
     case "Upper": // Uppercase w/o Diacritical
       Upper.checked = true;
+      indexM_U = indexM;
       break;
     case "Lower": // Lowercase w/o Diacritical
       Lower.checked = true;
+      indexM_L = indexM;
       break;
     default:
       category = "Symbol";
       Symbol.checked = true;
+      indexM_S = indexM;
       break;
   }
 
@@ -118,142 +145,157 @@ function ChangeCategory(newCategory)
     UpdateLatinL();
     UpdateLatinM();
     UpdateCharacter();
-    
-    // Set persistent attribute  
-    CategoryGroup.setAttribute("category", category);
   }
 }
 
 function SelectLatinLetter()
 {
-  if(LatinL.selectedIndex != oldL )
+  if(LatinL.selectedIndex != indexL )
   {
+    indexL = LatinL.selectedIndex;
     UpdateLatinM();
     UpdateCharacter();
-    oldL = LatinL.selectedIndex;
   }
 }
 
 function SelectLatinModifier()
 {
-//  if(LatinM.selectedIndex != oldM )
+  if(LatinM.selectedIndex != indexM )
   {
+    indexM = LatinM.selectedIndex;
     UpdateCharacter();
-    oldM = LatinM.selectedIndex;
   }
 }
 function DisableLatinL(disable)
 {
-  LatinL.disabled=disable;
   LatinL_Label.setAttribute("disabled", disable ? "true" : "false");
 }
 
 function UpdateLatinL()
 {
   ClearMenulist(LatinL);
-  switch(category) 
+  if (category == "AccentUpper" || category == "AccentLower")
   {
-    case "AccentUpper": // Uppercase Diacritical
-     DisableLatinL(false);
-     for(var basic=0; basic < 26; basic++)
-       AppendStringToMenulist(LatinL , String.fromCharCode(0x41 + basic));
-     if(oldL < 26)
-        LatinL.selectedIndex = oldL; 
-     else 
-        LatinL.selectedIndex = upper.length;
-     break;
-    case "AccentLower": // Lowercase Diacritical
-     DisableLatinL(false);
-     for(var basic=0; basic < 26; basic++)
+    DisableLatinL(false);
+
+    // Fill the list
+    if (category == "AccentUpper")   // Uppercase Diacritical
+    {
+      for(var basic=0; basic < 26; basic++)
+        AppendStringToMenulist(LatinL , String.fromCharCode(0x41 + basic));
+    }
+    else  // Lowercase Diacritical
+    {
+      for(var basic=0; basic < 26; basic++)
        AppendStringToMenulist(LatinL , String.fromCharCode(0x61 + basic));
-     if(oldL < 26)
-        LatinL.selectedIndex = oldL; 
-     else 
-        LatinL.selectedIndex = lower.length;
-     break;
-    default:
-     DisableLatinL(true);
-     break;
+    }    
+    // Set the selected item
+    if (indexL > 25)
+      indexL = 25;
+    LatinL.selectedIndex = indexL; 
+  }
+  else
+  {
+    // Other categories don't hinge on a "letter"
+    DisableLatinL(true);
+    // Note: don't change the indexL so it can be used next time
   }
 }
 
 function UpdateLatinM()
 {
   ClearMenulist(LatinM);
+
   switch(category)
   {
     case "AccentUpper": // Uppercase Diacritical
-     for(var basic=0; basic < upper[LatinL.selectedIndex].length; basic++)
-       AppendStringToMenulist(LatinM , 
-             String.fromCharCode(upper[LatinL.selectedIndex][basic]));
-     if(oldM < upper[LatinL.selectedIndex].length)
-        LatinM.selectedIndex = oldM; 
-     else 
-        LatinM.selectedIndex = upper[LatinL.selectedIndex].length;
-     break;
+      for(var basic=0; basic < upper[indexL].length; basic++)
+        AppendStringToMenulist(LatinM , 
+             String.fromCharCode(upper[indexL][basic]));
+
+      if(indexM_AU < upper[indexL].length)
+        indexM = indexM_AU;
+      else
+        indexM = upper[indexL].length - 1;
+      indexM_AU = indexM;
+      break;
 
     case "AccentLower": // Lowercase Diacritical
-     for(var basic=0; basic < lower[LatinL.selectedIndex].length; basic++)
-       AppendStringToMenulist(LatinM , 
-             String.fromCharCode(lower[LatinL.selectedIndex][basic]));
-     if(oldM < lower[LatinL.selectedIndex].length)
-        LatinM.selectedIndex = oldM; 
-     else 
-        LatinM.selectedIndex = lower[LatinL.selectedIndex].length;
-     break;
+      for(var basic=0; basic < lower[indexL].length; basic++)
+        AppendStringToMenulist(LatinM , 
+             String.fromCharCode(lower[indexL][basic]));
+
+      if(indexM_AL < lower[indexL].length)
+        indexM = indexM_AL; 
+      else 
+        indexM = lower[indexL].length - 1;
+      indexM_AL = indexM;
+      break;
 
     case "Upper": // Uppercase w/o Diacritical
-     for(var i=0; i < otherupper.length; i++)
-       AppendStringToMenulist(LatinM, String.fromCharCode(otherupper[i]));
-     if(oldM < otherupper.length)
-        LatinM.selectedIndex = oldL; 
-     else 
-        LatinM.selectedIndex = otherupper.length;
-     break;
+      for(var i=0; i < otherupper.length; i++)
+        AppendStringToMenulist(LatinM, String.fromCharCode(otherupper[i]));
+
+      if(indexM_U < otherupper.length)
+        indexM = indexM_U;
+      else 
+        indexM = otherupper.length - 1;
+      indexM_U = indexM;
+      break;
 
     case "Lower": // Lowercase w/o Diacritical
-     for(var i=0; i < otherlower.length; i++)
-       AppendStringToMenulist(LatinM , String.fromCharCode(otherlower[i]));
-     if(oldL < otherlower.length)
-        LatinM.selectedIndex = oldM; 
-     else 
-        LatinM.selectedIndex = otherlower.length;
-     break;
+      for(var i=0; i < otherlower.length; i++)
+        AppendStringToMenulist(LatinM , String.fromCharCode(otherlower[i]));
+
+      if(indexM_L < otherlower.length)
+        indexM = indexM_L; 
+      else 
+        indexM = otherlower.length - 1;
+      indexM_L = indexM;
+      break;
 
     case "Symbol": // Symbol
-     for(var i=0; i < symbol.length; i++)
-       AppendStringToMenulist(LatinM , String.fromCharCode(symbol[i]));
-     if(oldM < symbol.length)
-        LatinM.selectedIndex = oldM; 
-     else 
-        LatinM.selectedIndex = symbol.length;
-     break;
+      for(var i=0; i < symbol.length; i++)
+        AppendStringToMenulist(LatinM , String.fromCharCode(symbol[i]));
+
+      if(indexM_S < symbol.length)
+        indexM = indexM_S; 
+      else 
+        indexM = symbol.length - 1;
+      indexM_S = indexM;
+      break;
   }
+  LatinM.selectedIndex = indexM;
 }
 
 function UpdateCharacter()
 {
-  var index = LatinM.selectedIndex; 
-dump("Character is at: ("+LatinL.selectedIndex+","+index+")\n");
+  indexM = LatinM.selectedIndex; 
+
   switch(category)
   {
     case "AccentUpper": // Uppercase Diacritical
-      String.fromCharCode(upper[LatinL.selectedIndex][index]);
+      String.fromCharCode(upper[indexL][indexM]);
+      indexM_AU = indexM;
       break;
     case "AccentLower": // Lowercase Diacritical
-      LatinChar = String.fromCharCode(lower[LatinL.selectedIndex][index]);
+      LatinChar = String.fromCharCode(lower[indexL][indexM]);
+      indexM_AL = indexM;
       break;
     case "Upper": // Uppercase w/o Diacritical
-      LatinChar = String.fromCharCode(otherupper[index]);
+      LatinChar = String.fromCharCode(otherupper[indexM]);
+      indexM_U = indexM;
       break;
     case "Lower": // Lowercase w/o Diacritical
-      LatinChar = String.fromCharCode(otherlower[index]);
+      LatinChar = String.fromCharCode(otherlower[indexM]);
+      indexM_L = indexM;
       break;
     case "Symbol":
-      LatinChar =  String.fromCharCode(symbol[index]);
+      LatinChar =  String.fromCharCode(symbol[indexM]);
+      indexM_S = indexM;
       break;
   }
-dump("Character = "+LatinChar+"\n");
+//dump("Letter Index="+indexL+", Character Index="+indexM+", Character = "+LatinChar+"\n");
 }
 
 var upper=[ 
