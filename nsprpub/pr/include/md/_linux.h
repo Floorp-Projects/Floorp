@@ -59,6 +59,19 @@
 #define HAVE_DLL
 #define USE_DLFCN
 
+#if defined(__i386__)
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+extern PRInt32 _PR_x86_AtomicIncrement(PRInt32 *val);
+#define _MD_ATOMIC_INCREMENT          _PR_x86_AtomicIncrement
+extern PRInt32 _PR_x86_AtomicDecrement(PRInt32 *val);
+#define _MD_ATOMIC_DECREMENT          _PR_x86_AtomicDecrement
+extern PRInt32 _PR_x86_AtomicAdd(PRInt32 *ptr, PRInt32 val);
+#define _MD_ATOMIC_ADD                _PR_x86_AtomicAdd
+extern PRInt32 _PR_x86_AtomicSet(PRInt32 *val, PRInt32 newval);
+#define _MD_ATOMIC_SET                _PR_x86_AtomicSet
+#endif
+
 #define USE_SETJMP
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 #define _PR_POLL_AVAILABLE

@@ -235,6 +235,12 @@ ifeq ($(OS_ARCH),SunOS)
     endif
 endif
 
+ifeq ($(OS_ARCH),Linux)
+    ifeq ($(CPU_ARCH),x86)
+        ASFILES   = os_Linux_x86.s
+    endif
+endif
+
 ifeq ($(OS_ARCH), SINIX)
     ifeq ($(CPU_ARCH),mips)
         ASFILES   = os_ReliantUNIX.s
