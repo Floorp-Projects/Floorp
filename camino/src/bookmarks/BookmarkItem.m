@@ -41,6 +41,7 @@
 
 // Notifications
 NSString *BookmarkItemChangedNotification = @"bi_cg";
+NSString *BookmarkIconChangedNotification = @"bicon_cg";
 
 // all our saving/loading keys
 // Safari & Camino plist keys
@@ -220,7 +221,9 @@ NSString *CaminoTrueKey = @"true";
   [aIcon retain];
   [mIcon release];
   mIcon = aIcon;
-  [self itemUpdatedNote];
+  NSNotification *note = [NSNotification notificationWithName:BookmarkIconChangedNotification
+                                                       object:self userInfo:nil];
+  [[NSNotificationCenter defaultCenter] postNotification:note];
 }
 
 -(void) itemUpdatedNote
@@ -228,7 +231,6 @@ NSString *CaminoTrueKey = @"true";
   NSNotification *note = [NSNotification notificationWithName:BookmarkItemChangedNotification object:self userInfo:nil];
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   [nc postNotification:note];
-  return;
 }
 
 // stub functions to avoid warning

@@ -58,6 +58,7 @@ extern NSString* BookmarkFolderChildIndexKey; // key for added object index in u
 extern NSString* BookmarkFolderDockMenuChangeNotificaton; //self is NEW dock menu OR nil
 // Defined in BookmarkItem.h
 extern NSString *BookmarkItemChangedNotification; //no userinfo, self is object
+extern NSString *BookmarkIconChangedNotification; //no userinfo, self is object
 
 
 

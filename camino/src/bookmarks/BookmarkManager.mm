@@ -180,21 +180,26 @@ static unsigned gFirstUserCollection = 0;
 - (void)delayedStartupItems
 {
   [[NSApp delegate] setupBookmarkMenus:gBookmarksManager];
-
+  
   // check update status of 1 bookmark every 2 minutes.
   mUpdateTimer = [NSTimer scheduledTimerWithTimeInterval:kTimeToCheckAnotherBookmark target:self selector:@selector(checkForUpdates:) userInfo:nil repeats:YES];
   [mSmartFolderManager postStartupInitialization:self];
+  [[self toolbarFolder] refreshIcon];
+
+  // load favicons (w/out hitting the network, cache only). Spread it out so that we only get
+  // ten every three seconds to avoid locking up the UI with large bookmark lists.
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL]) {
+    NSArray *allBookmarks = [[self rootBookmarks] allChildBookmarks];
+    float delay = 3.0; //default value
+    int count = [allBookmarks count];
+    for (int i = 0; i < count; ++i) {
+      if (i % 10 == 0)
+        delay += 3.0;
+      [[allBookmarks objectAtIndex:i] performSelector:@selector(refreshIcon) withObject:nil afterDelay:delay];
+    }
+  }
   // make sure bookmark toolbar was built (only a concern on startup from apple event)
   [[[[[NSApp delegate] getFrontmostBrowserWindow] windowController] bookmarkToolbar] buildButtonList];
-  if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL]) {
-    [[self toolbarFolder] refreshIcon];
-    [[self bookmarkMenuFolder] performSelector:@selector(refreshIcon) withObject:nil afterDelay:3.0];
-    [[self rendezvousFolder] performSelector:@selector(refreshIcon) withObject:nil afterDelay:10.0];
-    [[self addressBookFolder] performSelector:@selector(refreshIcon) withObject:nil afterDelay:12.0];
-    unsigned count = [mRootBookmarks count];
-    for (unsigned i = gFirstUserCollection;i<count;i++)
-      [[mRootBookmarks objectAtIndex:i] performSelector:@selector(refreshIcon) withObject:nil afterDelay:i];
-  }
 }
 
 - (void)shutdown;
