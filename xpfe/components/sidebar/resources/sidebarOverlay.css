@@ -41,6 +41,12 @@
     min-height: 1px;
 }
 
+#sidebar-iframe-no-panels {
+    min-width: 1px;
+    min-height: 1px;
+    overflow: auto;
+}
+
 /*
  *    Sidebar and Panel title buttons
  */
