@@ -52,7 +52,9 @@ CPPSRCS = \
 	$(TOOLKIT_CPPSRCS) \
 	nsBrowserMain.cpp \
 	nsBrowserWindow.cpp \
+	nsFindDialog.cpp \
 	nsSetupRegistry.cpp \
+	nsXPBaseWindow.cpp \
 	nsViewerApp.cpp \
 	$(NULL)
 
@@ -77,18 +79,7 @@ ifdef MOZ_OJI
 endif
 
 LDFLAGS += \
-	-L$(DIST)/bin \
-	-lraptorbase \
-	-lxpcom \
-	-ljs \
-	-lpref \
-	-limg \
-	-lpng \
-	-ljpeg \
-	-lraptorgfx \
-	-lraptorhtmlpars \
 	$(DIST)/lib/libraptorhtmlbase_s.a \
-	-lraptorwebwidget \
 	$(DIST)/lib/libraptorhtmlstyle_s.a \
 	$(DIST)/lib/libjsdomcss_s.a \
 	$(DIST)/lib/libraptorlayout_s.a \
@@ -96,6 +87,17 @@ LDFLAGS += \
 	$(DIST)/lib/libjsdombase_s.a \
 	$(DIST)/lib/libjsdomhtml_s.a \
 	$(DIST)/lib/libjsdomcore_s.a \
+	-L$(DIST)/bin \
+	-ljs \
+	-lpref \
+	-limg \
+	-lpng \
+	-ljpeg \
+	-lraptorhtmlpars \
+	-lraptorwebwidget \
+	-lraptorbase \
+	-lxpcom \
+	-lraptorgfx \
 	$(JSJ_LIB) \
 	-lhttpurl \
 	-labouturl \
