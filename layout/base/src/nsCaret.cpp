@@ -320,12 +320,6 @@ NS_IMETHODIMP nsCaret::NotifySelectionChanged()
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsCaret::TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset)
-{
-  //stub
-  return NS_OK;
-}
-
 #ifdef XP_MAC
 #pragma mark -
 #endif

@@ -97,7 +97,15 @@ struct nsPeekOffsetStruct
   PRBool mJumpLines;
 };
 
-
+// Values for aFlag parameter in HandleTableSelection
+enum {
+  TABLESELECTION_CELL=1,
+  TABLESELECTION_ROW,
+  TABLESELECTION_COLUMN,
+  TABLESELECTION_TABLE,
+  TABLESELECTION_ALLCELLS
+};
+  
 class nsIFrameSelection : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IFRAMESELECTION_IID; return iid; }
@@ -142,10 +150,9 @@ public:
    *         cannot coexist with aContinueSelection
    *  @param aHint will tell the selection which direction geometrically to actually show the caret on. 
    *         1 = end of this line 0 = beggining of this line
-   *  @param aIsCell will tell us if this range describes a Cell.
    */
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
-                       PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint, PRBool aIsCell) = 0;
+                       PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint) = 0; 
 
   /** HandleDrag extends the selection to contain the frame closest to aPoint.
    *  @param aPresContext is the context to use when figuring out what frame contains the point.
@@ -153,6 +160,19 @@ public:
    *  @param aPoint is relative to aFrame's parent view.
    */
   NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint) = 0;
+
+  /** HandleTableSelection will set selection to a table, cell, etc
+   *   depending on information contained in aFlags
+   *  @param aParentContent is the paretent of either a table or cell that user clicked or dragged the mouse in
+   *  @param aContentOffset is the offset of the table or cell
+   *  @param aTarget indicates what to select:
+   *    TABLESELECTION_CELL      We should select a cell (content points to the cell)
+   *    TABLESELECTION_ROW       We should select a row (content points to first cell in row)
+   *    TABLESELECTION_COLUMN    We should select a row (content points to first cell in column)
+   *    TABLESELECTION_TABLE     We should select a table (content points to the table)
+   *    TABLESELECTION_ALLCELLS  We should select all cells (content points to first cell in table)
+   */
+  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget) = 0;
 
   /** StartAutoScrollTimer is responsible for scrolling the view so that aPoint is always
    *  visible, and for selecting any frame that contains aPoint. The timer will also reset

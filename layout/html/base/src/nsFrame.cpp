@@ -58,7 +58,8 @@
 #include "nsCOMPtr.h"
 #include "nsStyleChangeList.h"
 #include "nsIDOMRange.h"
-#include "nsITableCellLayout.h"//selection neccesity
+#include "nsITableLayout.h"    //selection neccesity
+#include "nsITableCellLayout.h"//  "
 
 
 // Some Misc #defines
@@ -793,6 +794,102 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrame::GetDataForTableSelection(nsMouseEvent *aMouseEvent, nsIContent **aParentContent, PRInt32 *aContentOffset, PRUint32 *aTarget)
+{
+  if (!aMouseEvent || !aParentContent || !aContentOffset || !aTarget)
+    return NS_ERROR_NULL_POINTER;
+
+  *aParentContent = nsnull;
+  *aContentOffset = 0;
+  *aTarget = 0;
+
+  // Test if special 'table selection' key is pressed
+  PRBool doTableSelection;
+
+#ifdef XP_MAC
+  doTableSelection = aMouseEvent->isMeta;
+#else
+  doTableSelection = aMouseEvent->isControl;
+#endif
+
+  if (!doTableSelection) return NS_OK;
+
+  // Get the cell frame or table frame (or parent) of the current content node
+  nsIFrame *frame = this;
+  nsresult result = NS_OK;
+  PRBool foundCell = PR_FALSE;
+  PRBool foundTable = PR_FALSE;
+
+#ifdef DEBUG_cmanske
+// Exploring how to get location info for doing table/row/column selection
+//printf("*** Mouse event at origin: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->point.y);
+//printf("*** Frame rect origin: x=%d, y=%d\n", this->mRect.x, this->mRect.y);
+#endif
+
+  while (frame && NS_SUCCEEDED(result))
+  {
+    // Check for a table cell by querying to a known CellFrame interface
+    nsITableCellLayout *cellElement;
+    result = (frame)->QueryInterface(nsITableCellLayout::GetIID(), (void **)&cellElement);
+    if (NS_SUCCEEDED(result) && cellElement)
+    {
+      foundCell = PR_TRUE;
+      break;
+    }
+    else
+    {
+      // If not a cell, check for table
+      // This will happen when starting frame is the table or child of a table,
+      //  such as a row (we were inbetween cells or in table border)
+      nsITableLayout *tableElement;
+      result = (frame)->QueryInterface(nsITableLayout::GetIID(), (void **)&tableElement);
+      if (NS_SUCCEEDED(result) && tableElement)
+      {
+        foundTable = PR_TRUE;
+        break;
+      }
+      else
+        result = (frame)->GetParent(&frame);
+    }
+  }
+  // We aren't in a cell or table
+  if (!foundCell && !foundTable) return NS_OK;
+
+  nsCOMPtr<nsIContent> tableOrCellContent;
+  result = frame->GetContent(getter_AddRefs(tableOrCellContent));
+  if (NS_FAILED(result)) return result;
+  if (!tableOrCellContent) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> parentContent;
+  result = tableOrCellContent->GetParent(*getter_AddRefs(parentContent));
+  if (NS_FAILED(result)) return result;
+  if (!parentContent) return NS_ERROR_FAILURE;
+
+  PRInt32 offset;
+  result = parentContent->IndexOf(tableOrCellContent, offset);
+  if (NS_FAILED(result)) return result;
+  // Not likely?
+  if (offset < 0) return NS_ERROR_FAILURE;
+
+  // Everything is OK -- set the return values
+  *aParentContent = parentContent;
+  NS_ADDREF(*aParentContent);
+
+  *aContentOffset = offset;
+
+  if (foundCell)
+    *aTarget = TABLESELECTION_CELL;
+ 
+  if (foundTable)
+  {
+    //TODO: Put logic to find "hit" spots for selecting column or row here
+    *aTarget = TABLESELECTION_TABLE;
+  }
+
+  return NS_OK;
+}
+
 /**
   * Handles the Mouse Press Event for the frame
  */
@@ -818,46 +915,22 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
     PRBool beginContent;
     if (NS_SUCCEEDED(GetContentAndOffsetsFromPoint(aPresContext, aEvent->point,
                                  getter_AddRefs(newContent),
-                                 startPos, contentOffsetEnd, beginContent))){
+                                 startPos, contentOffsetEnd, beginContent)))
+    {
       nsCOMPtr<nsIFrameSelection> frameselection;
-      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
+      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection)
+      {
         frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
-        PRBool doCellSelection;
-#ifdef XP_MAC
-        doCellSelection = me->isMeta;
-#else
-        doCellSelection = me->isControl;
-#endif
-        nsIFrame *cellFrame;
 
-        if (doCellSelection)
-        {
-          nsresult result = GrabContainingCell(&cellFrame);
-          if (NS_SUCCEEDED(result) && cellFrame)
-          {
-            nsIContent* cellContent;
-            result = cellFrame->GetContent(&cellContent);
-            if (NS_SUCCEEDED(result) && cellContent)
-            {
-              nsIContent* parentContent;
-              result = cellContent->GetParent(parentContent);
-              if (parentContent){
-                PRInt32 newIndex;
-                result = parentContent->IndexOf(cellContent, newIndex);
-                if (NS_SUCCEEDED(result) && newIndex >= 0) 
-                {
-                  frameselection->HandleClick(parentContent,newIndex, newIndex+1,me->isShift,PR_FALSE, beginContent, PR_TRUE);
-                }
-                NS_IF_RELEASE(parentContent);
-              }
-              NS_IF_RELEASE(cellContent);
-            }
-          }
-        }
+        nsCOMPtr<nsIContent>parentContent;
+        PRInt32  contentOffset;
+        PRUint32 target;
+        nsresult result = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
+        if (NS_SUCCEEDED(result) && parentContent)
+          frameselection->HandleTableSelection(parentContent, contentOffset, target);
         else
-          frameselection->HandleClick(newContent, startPos , contentOffsetEnd , me->isShift, PR_FALSE, beginContent, PR_FALSE);
+          frameselection->HandleClick(newContent, startPos , contentOffsetEnd , me->isShift, PR_FALSE, beginContent);
       }
-      //no release 
     }
   }
   return NS_OK;
@@ -975,7 +1048,18 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(result) && frameselection)
   {
     frameselection->StopAutoScrollTimer();
-    frameselection->HandleDrag(aPresContext, this, aEvent->point);
+
+    // Check if we are dragging in a table cell
+    nsCOMPtr<nsIContent> parentContent;
+    PRInt32 contentOffset;
+    PRUint32 target;
+    nsMouseEvent *me = (nsMouseEvent *)aEvent;
+    result = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
+    if (NS_SUCCEEDED(result) && parentContent)
+      frameselection->HandleTableSelection(parentContent, contentOffset, target);
+    else
+      frameselection->HandleDrag(aPresContext, this, aEvent->point);
+
     frameselection->StartAutoScrollTimer(aPresContext, this, aEvent->point, 30);
   }
 
@@ -2692,24 +2776,6 @@ nsFrame::GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
     child = lookahead;
     *aFrame = child;
   }
-}
-
-NS_IMETHODIMP
-nsFrame::GrabContainingCell(nsIFrame **aCellFrame)
-{
-  *aCellFrame = this;
-  nsresult result = NS_OK;
-  while (*aCellFrame && NS_SUCCEEDED(result))
-  {
-    nsITableCellLayout *cellelement;
-
-    result = (*aCellFrame)->QueryInterface(nsITableCellLayout::GetIID(), (void **)&cellelement);
-    if (NS_SUCCEEDED(result) && cellelement)
-      return NS_OK;
-    else
-      result = (*aCellFrame)->GetParent(aCellFrame);
-  }
-  return result?result:NS_ERROR_FAILURE;
 }
 
 nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell*                aPresShell,

@@ -4272,13 +4272,6 @@ nsEnderEventListener::NotifySelectionChanged()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEnderEventListener::TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset)
-{
-  //stub
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsEnderEventListener::WillDo(nsITransactionManager *aManager,
   nsITransaction *aTransaction, PRBool *aInterrupt)
 {

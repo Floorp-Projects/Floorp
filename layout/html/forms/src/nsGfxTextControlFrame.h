@@ -252,7 +252,6 @@ public:
     * @see nsIDOMSelectionListener
     */
   NS_IMETHOD NotifySelectionChanged();
-  NS_IMETHOD TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset);
   /*END interfaces from nsIDOMSelectionListener*/
  
   /** nsITransactionListener interfaces

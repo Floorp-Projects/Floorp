@@ -1687,11 +1687,3 @@ NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged()
   return NS_OK;
 }
 
-
-NS_IMETHODIMP nsDocViwerSelectionListener::TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset)
-{
-  //stub
-  return NS_OK;
-}
-
-
