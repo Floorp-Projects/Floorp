@@ -270,7 +270,7 @@ tree > treehead > treerow {
   border: none;
 }
 
-#dirTree { // Tree that lists different Address Books
+#dirTree { /* Tree that lists different Address Books */
   min-width		   : 10px;
   border-top     : none;
   border-left    : none;
@@ -303,7 +303,7 @@ tree > treehead > treerow {
   min-width     : 4px;
 }
 
-#addToBucketButtonBox { // Row of "To" "CC" and "Bcc" buttons
+#addToBucketButtonBox { /* Row of "To" "CC" and "Bcc" buttons */
 	padding			: 0.3em; 
 	min-width		: 10px;
   border-top: 1px solid ThreeDHighlight;
@@ -318,16 +318,16 @@ tree > treehead > treerow {
 	min-width		: 10px;
 }
 
-#rightColumnButtonBox { // Column with "New", "Edit" and "Remove" buttons
+#rightColumnButtonBox { /* Column with "New", "Edit" and "Remove" buttons */
 	padding			: .5em; 
 	padding-right	: 0px;
 }
 
-.3rd-column-spring {  // Vertical Springs between 3rd column buttons
+.3rd-column-spring {  /* Vertical Springs between 3rd column buttons */
 	height			: 10px;
 }
 
-.middle-button-spring { // Springs between To, CC, and BCC buttons
+.middle-button-spring { /* Springs between To, CC, and BCC buttons */
 	width			: 10px;
 }
 

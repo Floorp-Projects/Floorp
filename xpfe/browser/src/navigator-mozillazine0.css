@@ -60,7 +60,7 @@ toolbar#taskbar titledbutton[pseudoclass~="active"] {
 toolbar#taskbar titledbutton[pseudoclass~="hover"] {
   border: 1px outset #666699;
 	color:white;
-	//text-decoration:underline;
+	/*text-decoration:underline;*/
   padding: 1px;
 }
 

@@ -3,7 +3,7 @@ tree {
  background-color: white;
  border: none;
  border-spacing: 0px;
- //border-collapse: collapse;
+ /*border-collapse: collapse;*/
  width: 100%;
  table-layout: fixed;
 }
