@@ -14,12 +14,12 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
- */
+ */ 
 
  
 /**
  * MODULE NOTES:
- * @update	gess7/30/98
+ * @update  gess7/30/98
  *
  * Much as I hate to do it, we were using string compares wrong.
  * Often, programmers call functions like strcmp(s1,s2), and pass
@@ -152,7 +152,7 @@ PRInt32 nsCRT::strlen(const PRUnichar* s)
 /**
  * Compare unichar string ptrs, stopping at the 1st null 
  * NOTE: If both are null, we return 0.
- * @update	gess7/30/98
+ * @update  gess7/30/98
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
@@ -175,7 +175,7 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2)
 /**
  * Compare unichar string ptrs, stopping at the 1st null or nth char.
  * NOTE: If either is null, we return 0.
- * @update	gess7/30/98
+ * @update  gess7/30/98
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
@@ -202,7 +202,7 @@ PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
 /**
  * Compare unichar string ptrs without regard to case
  * NOTE: If both are null, we return 0.
- * @update	gess7/30/98
+ * @update  gess7/30/98
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
@@ -230,7 +230,7 @@ PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const PRUnichar* s2)
  * Compare unichar string ptrs, stopping at the 1st null or nth char;
  * also ignoring the case of characters.
  * NOTE: If both are null, we return 0.
- * @update	gess7/30/98
+ * @update  gess7/30/98
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
@@ -260,7 +260,7 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
 /**
  * Compare a unichar string ptr to cstring.
  * NOTE: If both are null, we return 0.
- * @update	gess7/30/98
+ * @update  gess7/30/98
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
@@ -285,7 +285,7 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const char* s2)
 /**
  * Compare a unichar string ptr to cstring, up to N chars.
  * NOTE: If both are null, we return 0.
- * @update	gess7/30/98
+ * @update  gess7/30/98
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
@@ -311,7 +311,7 @@ PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRInt32 n)
 /**
  * Compare a unichar string ptr to cstring without regard to case
  * NOTE: If both are null, we return 0.
- * @update	gess7/30/98
+ * @update  gess7/30/98
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
@@ -339,7 +339,7 @@ PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const char* s2)
 /**
  * Caseless compare up to N chars between unichar string ptr to cstring.
  * NOTE: If both are null, we return 0.
- * @update	gess7/30/98
+ * @update  gess7/30/98
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
