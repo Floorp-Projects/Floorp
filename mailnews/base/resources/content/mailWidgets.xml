@@ -6,34 +6,166 @@
 
   <!-- dummy widget to force this file to load -->
   <binding id="dummy" extends="xul:box"/>
+ 
   <!-- Message Pane Widgets -->
-  <binding id="mail-emailaddress" extends="xul:box">
+
+  <!-- mail-toggle-headerfield: non email addrss headers which have a toggle associated with them (i.e. the subject). 
+       use label to set the header name.
+       use headerValue to set the header value. -->
+  <binding id="mail-toggle-headerfield">
     <content>
-      <xul:box inherits="orient" autostretch="never" flex="1">
-        <xul:text class="emailDisplayButton" popup="emailAddressPopup" context="emailAddressPopup" inherits="value=label,crop"/>
-        <xul:image class="emailDisplayImage" context="emailAddressPopup" inherits="label,crop"/>
+      <xul:hbox class="headerBox" inherits="orient">
+        <xul:hbox class="headerValueBox" align="start">
+          <xul:image class="expandHeaderViewButton" inherits="onclick=ontwistyclick"/>
+          <xul:spacer flex="1"/>
+          <xul:label class="headerdisplayname plain" inherits="value=label"/>  
+        </xul:hbox>
+        <xul:label class="headerValue" anonid="headerValue" flex="1">*
+        </xul:label>
+      </xul:hbox>
+    </content>
+
+    <implementation>      
+      <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').firstChild.nodeValue = val;"/>
+    </implementation>
+  </binding>
+
+  <!-- mail-headerfield: presents standard text header name & value pairs. Don't use this for email addresses. 
+       use label to set the header name.
+       use headerValue to set the header value. -->
+  <binding id="mail-headerfield">
+    <content>
+      <xul:hbox class="headerBox" inherits="orient" align="center" flex="1">
+        <xul:hbox class="headerValueBox">
+          <xul:label class="headerdisplayname plain" inherits="value=label"/>  
+        </xul:hbox>
+        <xul:label class="headerValue" anonid="headerValue" flex="1">*
+        </xul:label>
+      </xul:hbox>
+    </content>
+
+    <implementation>      
+      <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').firstChild.nodeValue = val;" />                             
+    </implementation>
+  </binding>
+
+  <binding id="mail-emailheaderfield">
+    <content>
+      <xul:hbox class="headerBox" inherits="orient" align="center" flex="1">
+        <xul:hbox class="headerValueBox">
+          <xul:label class="headerdisplayname plain" inherits="value=label"/>
+        </xul:hbox>
+        <xul:mail-emailaddress anonid="emailAddressNode" flex="1"/>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <property name="emailAddressNode" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailAddressNode');"
+        readonly="true"/>
+    </implementation>
+  </binding>
+  
+  <!-- multi-emailHeaderField: presents multiple emailheaderfields with a toggle -->
+  <binding id="mail-multi-emailHeaderField">
+    <content>
+      <xul:hbox class="headerBox" flex="1">
+        <xul:hbox class="headerValueBox" align="top">
+          <xul:hbox align="center">
+            <xul:image class="showMoreAddressesButton" anonid="toggleIcon" onclick="toggleAddressView();" inherits="onclick"/>
+            <xul:spacer flex="1"/>
+            <xul:label class="headerdisplayname plain" inherits="value=label"/>
+          </xul:hbox>
+        </xul:hbox>
+
+        <xul:label class="headerValue" anonid="emailAddresses" flex="1"/>
+        <xul:label class="headerValue" anonid="longEmailAddresses" flex="1" collapsed="true"/>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <property name="emailAddresses" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailAddresses');"
+        readonly="true"/>
+      <property name="longEmailAddresses" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'longEmailAddresses');"
+        readonly="true"/> 
+      <property name="toggleIcon" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'toggleIcon');"
+        readonly="true"/>        
+      <method name="toggleAddressView">
+        <body>
+          <![CDATA[
+          var shortNode = this.emailAddresses;
+          var longNode = this.longEmailAddresses;
+          var imageNode = this.toggleIcon;
+          // test to see which if short is already hidden...
+          if (shortNode.getAttribute("collapsed") == "true")
+          {
+            longNode.setAttribute("collapsed", true);
+            shortNode.removeAttribute("collapsed"); 
+            imageNode.setAttribute("class", "showMoreAddressesButton");
+          }
+          else
+          {
+            shortNode.setAttribute("collapsed", true);
+            longNode.removeAttribute("collapsed"); 
+            imageNode.setAttribute("class", "showFewerAddressesButton");
+          }
+          ]]>  
+        </body>
+      </method>
+      
+      <!-- internal method used to clear both our divs -->
+      <method name="clearChildNodes">
+        <parameter name="aParentNode"/>
+        <body>
+          <![CDATA[
+            while (aParentNode.childNodes.length > 0)
+              aParentNode.removeChild(aParentNode.childNodes[0]);
+          ]]>       
+        </body>
+      </method>
+
+      <method name="clearEmailAddresses">
+        <body>
+          <![CDATA[
+            // remove anything inside of each of our labels....
+            var parentLabel = this.emailAddresses;
+            if (parentLabel)
+              this.clearChildNodes(parentLabel);
+            parentLabel = this.longEmailAddresses;
+            if (parentLabel)
+              this.clearChildNodes(parentLabel);             
+          ]]>
+        </body>
+      </method>       
+    </implementation>
+  </binding>
+
+  <binding id="mail-emailaddress">
+    <content>
+      <xul:box inherits="orient" align="center" flex="1">
+        <xul:label class="emailDisplayButton plain" anonid="emailValue" popup="emailAddressPopup" context="emailAddressPopup" inherits="value=label,crop"/>
+        <xul:image class="emailDisplayImage" anonid="emailImage" context="emailAddressPopup" inherits="label,crop"/>
       </xul:box>
     </content>
     
     <implementation>  
-      <property name="label"      onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('label',val);"
-                                  onget="return document.getAnonymousNodes(this)[0].firstChild.getAttribute('label');"/>
-      <property name="crop"       onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('crop',val);"
-                                  onget="return document.getAnonymousNodes(this)[0].firstChild.getAttribute('crop');"/>
-      <property name="disabled"   onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('disabled',val);"
-                                  onget="return document.getAnonymousNodes(this)[0].firstChild.getAttribute('disabled');"/>
-      <property name="src"        onset="return document.getAnonymousNodes(this)[0].childNodes[1].setAttribute('src',val);"
-                                  onget="return document.getAnonymousNodes(this)[0].childNodes[1].getAttribute('src');"/>
-      <property name="imgalign"   onset="return document.getAnonymousNodes(this)[0].childNodes[1].setAttribute('imgalign',val);"
-                                  onget="return document.getAnonymousNodes(this)[0].childNodes[1].getAttribute('imgalign');"/>
+      <property name="label"      onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').setAttribute('label',val);"
+                                  onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').getAttribute('label');"/>
+      <property name="crop"       onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').setAttribute('crop',val);"
+                                  onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').getAttribute('crop');"/>
+      <property name="disabled"   onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').setAttribute('disabled',val);"
+                                  onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').getAttribute('disabled');"/>
+      <property name="src"        onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailImage').setAttribute('src',val);"
+                                  onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailImage').getAttribute('src');"/>
+      <property name="imgalign"   onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailImage').setAttribute('imgalign',val);"
+                                  onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailImage').getAttribute('imgalign');"/>
       <method name="setTextAttribute">
         <parameter name="attributeName"/>
         <parameter name="attributeValue"/>
         <body>
           <![CDATA[   
-            var IconNode = document.getAnonymousNodes(this)[0].childNodes[1];
-            IconNode.setAttribute(attributeName, attributeValue);          
-            var textNode = document.getAnonymousNodes(this)[0].firstChild;
+            var iconNode = document.getAnonymousElementByAttribute(this, "anonid", "emailImage");
+            iconNode.setAttribute(attributeName, attributeValue);          
+            var textNode = document.getAnonymousElementByAttribute(this, "anonid", "emailValue");
             textNode.setAttribute(attributeName, attributeValue);
           ]]>
         </body>
@@ -44,7 +176,7 @@
         <parameter name="attributeValue"/>
         <body>
           <![CDATA[   
-            var textNode = document.getAnonymousNodes(this)[0].firstChild;
+            var textNode = document.getAnonymousElementByAttribute(this, "anonid", "emailValue");
             return textNode.getAttribute(attributeName, attributeValue);
           ]]>
         </body>
@@ -53,8 +185,8 @@
       <method name="GetIconNode">
         <body>
           <![CDATA[            
-            var ImageNode = document.getAnonymousNodes(this)[0].childNodes[1];
-            return ImageNode;
+            var imageNode = document.getAnonymousElementByAttribute(this, "anonid", "emailImage");
+            return imageNode;
           ]]>
         </body>
       </method>

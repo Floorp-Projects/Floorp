@@ -33,6 +33,22 @@ mail-emailaddress {
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#mail-emailaddress");
 }
 
+mail-emailheaderfield {
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#mail-emailheaderfield");
+}
+
+mail-toggle-headerfield {
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#mail-toggle-headerfield");
+}
+
+mail-multi-emailHeaderField {
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#mail-multi-emailHeaderField");
+}
+
+mail-headerfield {
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#mail-headerfield");
+}
+
 searchattribute {
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#searchattribute");
 }
