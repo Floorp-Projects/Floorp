@@ -155,7 +155,7 @@ nsInputButton::~nsInputButton()
 
 PRBool nsInputButton::IsSuccessful(nsIFormControl* aSubmitter) const
 {
-  if ((void*)&mControl == (void*)aSubmitter) {
+  if ((kButton_Hidden == mType) || ((void*)&mControl == (void*)aSubmitter)) {
     return nsInputButtonSuper::IsSuccessful(aSubmitter);
   }
   return PR_FALSE;
@@ -181,6 +181,7 @@ void nsInputButton::GetType(nsString& aResult) const
     return;
   }
 
+  // XXX put these and other literals into statics (e.g. gBUTTON_TYPE)
   switch (mType) {
     case kButton_Button:
       aResult.Append("button");

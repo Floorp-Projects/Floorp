@@ -22,6 +22,7 @@
 #include "nsIWebWidget.h"
 class nsIFrame;
 class nsString;
+class nsIPostData;
 struct nsGUIEvent;
 
 /* 52bd1e30-ce3f-11d1-9328-00805f8add32 */
@@ -52,8 +53,10 @@ public:
    * destination for the link. aTargetSpec indicates where the link is
    * targeted (it may be an empty string).
    */
-  NS_IMETHOD OnLinkClick(nsIFrame* aFrame, const nsString& aURLSpec,
-                         const nsString& aTargetSpec) = 0;
+  NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
+                         const nsString& aURLSpec,
+                         const nsString& aTargetSpec,
+                         nsIPostData* aPostData = 0) = 0;
 
   /**
    * Get the state of a link to a given absolute URL

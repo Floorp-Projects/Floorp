@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsILinkHandler.h"
+#include "nsIDocument.h"
 #include "nsString.h"
 #include "nsCRT.h"
 #include "prthread.h"
@@ -40,28 +41,33 @@ public:
   // nsILinkHandler
   NS_IMETHOD Init(nsIWebWidget* aWidget);
   NS_IMETHOD GetWebWidget(nsIWebWidget** aResult);
-  NS_IMETHOD OnLinkClick(nsIFrame* aFrame, const nsString& aURLSpec,
-			 const nsString& aTargetSpec);
+  NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
+                         const nsString& aURLSpec,
+			                   const nsString& aTargetSpec,
+                         nsIPostData* aPostData = 0);
   NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState);
 
   void HandleLinkClickEvent(const nsString& aURLSpec,
-			    const nsString& aTargetSpec);
+			                      const nsString& aTargetSpec,
+                            nsIPostData* aPostDat = 0);
 
   nsIWebWidget* mWidget;
+  nsIPostData* mPostData;
 };
 
 //----------------------------------------------------------------------
 
 struct OnLinkClickEvent : public PLEvent {
   OnLinkClickEvent(LinkHandlerImpl* aHandler, const nsString& aURLSpec,
-		   const nsString& aTargetSpec);
+		   const nsString& aTargetSpec, nsIPostData* aPostData = 0);
   ~OnLinkClickEvent();
 
   void HandleEvent();
 
   LinkHandlerImpl* mHandler;
-  nsString* mURLSpec;
-  nsString* mTargetSpec;
+  nsString*    mURLSpec;
+  nsString*    mTargetSpec;
+  nsIPostData *mPostData;
 };
 
 static void PR_CALLBACK HandleEvent(OnLinkClickEvent* aEvent)
@@ -75,13 +81,18 @@ static void PR_CALLBACK DestroyEvent(OnLinkClickEvent* aEvent)
 }
 
 OnLinkClickEvent::OnLinkClickEvent(LinkHandlerImpl* aHandler,
-				   const nsString& aURLSpec,
-				   const nsString& aTargetSpec)
+				                           const nsString& aURLSpec,
+				                           const nsString& aTargetSpec,
+                                   nsIPostData* aPostData)
 {
   mHandler = aHandler;
   NS_ADDREF(aHandler);
   mURLSpec = new nsString(aURLSpec);
   mTargetSpec = new nsString(aTargetSpec);
+  mPostData = nsnull;
+  if (aPostData) {
+    NS_NewPostData(aPostData, &mPostData);
+  }
 
   PL_InitEvent(this, nsnull,
 	       (PLHandleEventProc) ::HandleEvent,
@@ -98,11 +109,12 @@ OnLinkClickEvent::~OnLinkClickEvent()
   NS_IF_RELEASE(mHandler);
   if (nsnull != mURLSpec) delete mURLSpec;
   if (nsnull != mTargetSpec) delete mTargetSpec;
+  if (nsnull != mPostData) delete mPostData;
 }
 
 void OnLinkClickEvent::HandleEvent()
 {
-  mHandler->HandleLinkClickEvent(*mURLSpec, *mTargetSpec);
+  mHandler->HandleLinkClickEvent(*mURLSpec, *mTargetSpec, mPostData);
 }
 
 //----------------------------------------------------------------------
@@ -147,10 +159,11 @@ NS_IMETHODIMP LinkHandlerImpl::GetWebWidget(nsIWebWidget** aResult)
 
 NS_IMETHODIMP LinkHandlerImpl::OnLinkClick(nsIFrame* aFrame,
 					   const nsString& aURLSpec,
-					   const nsString& aTargetSpec)
+					   const nsString& aTargetSpec,
+             nsIPostData* aPostData)
 
 {
-  new OnLinkClickEvent(this, aURLSpec, aTargetSpec);
+  new OnLinkClickEvent(this, aURLSpec, aTargetSpec, aPostData);
   return NS_OK;
 }
 
@@ -177,10 +190,10 @@ NS_IMETHODIMP LinkHandlerImpl::GetLinkState(const nsString& aURLSpec, nsLinkStat
 }
 
 void LinkHandlerImpl::HandleLinkClickEvent(const nsString& aURLSpec,
-					   const nsString& aTargetSpec)
+					   const nsString& aTargetSpec, nsIPostData* aPostData)
 {
   if (nsnull != mWidget) {
-    mWidget->LoadURL(aURLSpec);
+    mWidget->LoadURL(aURLSpec, aPostData);
   }
 }
 

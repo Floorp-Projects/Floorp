@@ -30,7 +30,7 @@
 #include "nsIHTMLContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
-#include "nsIPostToServer.h"  //XXX temp
+#include "nsIPostToServer.h"  
 
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -72,7 +72,7 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
   return nsDocument::QueryInterface(aIID, aInstancePtr);
 }
 
-void nsHTMLDocument::LoadURL(nsIURL* aURL)
+void nsHTMLDocument::LoadURL(nsIURL* aURL, nsIPostData* aPostData)
 {
   // Delete references to style sheets - this should be done in superclass...
   PRInt32 index = mStyleSheets.Count();
@@ -92,18 +92,18 @@ void nsHTMLDocument::LoadURL(nsIURL* aURL)
   mDocumentURL = aURL;
   NS_ADDREF(aURL);
 
-  // XXX temporary hack code
   static NS_DEFINE_IID(kPostToServerIID, NS_IPOSTTOSERVER_IID);
-  const char* temp = aURL->GetFile();
-  if (temp != NULL && strcmp(temp,"/cgi-bin/post-query") == 0) {
-    nsIPostToServer* pts;
-    nsresult result = aURL->QueryInterface(kPostToServerIID, (void **)&pts);
-    if (NS_OK == result) {
-      char buf[100];
-      //strcpy(&buf[0], "Content-type: application/x-www-form-urlencoded\nname=foo");
-      strcpy(&buf[0], "name=foo");
-      PRInt32 len = strlen(&buf[0]);
-      pts->SendData(&buf[0], len);
+  if (aPostData) {
+    const char* data = aPostData->GetData();
+    if (data) {
+      nsIPostToServer* pts;
+      nsresult result = aURL->QueryInterface(kPostToServerIID, (void **)&pts);
+      if (aPostData->IsFile()) {
+        pts->SendDataFromFile(data);
+      }
+      else {
+        pts->SendData(data, strlen(data));
+      }
     }
   }
 

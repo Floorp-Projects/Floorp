@@ -79,7 +79,8 @@ NS_METHOD nsInputFrame::SetRect(const nsRect& aRect)
 NS_METHOD
 nsInputFrame::MoveTo(nscoord aX, nscoord aY)
 {
-  if ( ((aX == 0) && (aY == 0)) || (aX != mRect.x) || (aY != mRect.y)) {
+  //if ( ((aX == 0) && (aY == 0)) || (aX != mRect.x) || (aY != mRect.y)) {
+  if ((aX != mRect.x) || (aY != mRect.y)) {
     mRect.x = aX;
     mRect.y = aY;
 

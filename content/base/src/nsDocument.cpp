@@ -39,6 +39,27 @@ static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
+NS_LAYOUT nsresult
+NS_NewPostData(nsIPostData* aPostData, nsIPostData** aInstancePtrResult)
+{
+  *aInstancePtrResult = new nsPostData(aPostData);
+  return NS_OK;
+}
+
+nsPostData::nsPostData(nsIPostData* aPostData) 
+{
+  mIsFile = PR_FALSE;
+  mData = nsnull;
+  if (aPostData) {
+    mIsFile = aPostData->IsFile();
+    const char* data = aPostData->GetData();
+    if (data) {
+      PRInt32 len = strlen(data);
+      mData = new char[len+1];
+      strcpy(mData, data);
+    }
+  }
+}
 
 nsDocument::nsDocument()
 {

@@ -39,6 +39,13 @@ class nsString;
 { 0x94c6ceb0, 0x9447, 0x11d1, \
   {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
+// specification for data to be sent via form "post"
+class nsIPostData {
+public:
+  virtual PRBool       IsFile()  = 0;    // is the data a file (or raw data)
+  virtual const char*  GetData() = 0;    // get the file name or raw data
+};
+
 //----------------------------------------------------------------------
 
 // Document interface
@@ -49,7 +56,7 @@ public:
   // returns the arena associated with this document.
   virtual nsIArena* GetArena() = 0;
 
-  virtual void LoadURL(nsIURL* aURL) = 0;
+  virtual void LoadURL(nsIURL* aURL, nsIPostData* aPostData = 0) = 0;
 
   virtual void StartDocumentLoad() = 0;
   virtual void PauseDocumentLoad() = 0;
@@ -169,5 +176,7 @@ public:
 // XXX Belongs somewhere else
 extern NS_LAYOUT nsresult
    NS_NewHTMLDocument(nsIDocument** aInstancePtrResult);
+extern NS_LAYOUT nsresult
+   NS_NewPostData(nsIPostData* aPostData, nsIPostData** aInstancePtrResult);
 
 #endif /* nsIDocument_h___ */

@@ -25,6 +25,17 @@
 
 class nsISelection;
 
+class nsPostData : public nsIPostData {
+public:
+  nsPostData(PRBool aIsFile, char* aData) : mIsFile(aIsFile), mData(aData) {}
+  nsPostData(nsIPostData* aPostData);
+  PRBool       IsFile() { return mIsFile; }   
+  const char*  GetData() { return mData; }    
+protected:
+  PRBool mIsFile;
+  char*  mData;
+};
+
 // Base class for our document implementations
 class nsDocument : public nsIDocument, public nsIDOMDocument, public nsIScriptObjectOwner {
 public:
