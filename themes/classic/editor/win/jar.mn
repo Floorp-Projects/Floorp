@@ -8,3 +8,4 @@ classic.jar:
     skin/classic/editor/editorPrimaryToolbar.css                         (editorPrimaryToolbar.css)
     skin/classic/editor/resources.xml                                    (resources.xml)
     skin/classic/editor/editor.css                                       (editor.css)
+    skin/classic/editor/textEditor.css                                   (textEditor.css)

@@ -7,5 +7,6 @@ classic.jar:
     skin/classic/editor/editorModeToolbar.css                            (editorModeToolbar.css)
     skin/classic/editor/editorPrimaryToolbar.css                         (editorPrimaryToolbar.css)
     skin/classic/editor/editor.css                                       (editor.css)
+    skin/classic/editor/textEditor.css                                   (textEditor.css)
     skin/classic/editor/resources.xml                                    (resources.xml)
 
