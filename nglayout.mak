@@ -85,6 +85,7 @@ CVSCO_NETWORK = $(CVSCO)
 # DIST_DIRS need to be built before the RAPTOR_DIRS.
 
 DIST_DIRS =			\
+  config			\
   dbm				\
   nsprpub			\
   include			\
