@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *   Mike Pinkerton (pinkerton@netscape.com)
  *   Dean Tessman <dean_tessman@hotmail.com>
  */
 
@@ -101,8 +102,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 //
 // nsMenuPopupFrame ctor
 //
-nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
-mCurrentMenu(nsnull), mTimerMenu(nsnull), mCloseTimer(nsnull)
+nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell)
+  :nsBoxFrame(aShell), mCurrentMenu(nsnull), mTimerMenu(nsnull), mCloseTimer(nsnull),
+    mMenuCanOverlapOSBar(PR_FALSE)
 {
   SetIsContextMenu(PR_FALSE);   // we're not a context menu by default
 
@@ -117,6 +119,14 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
                        nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  // lookup if we're allowed to overlap the OS bar (menubar/taskbar) from the
+  // look&feel object
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, 
+                                      getter_AddRefs(lookAndFeel));
+  if ( lookAndFeel )
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, mMenuCanOverlapOSBar);
 
   // XXX Hack
   mPresContext = aPresContext;
@@ -532,8 +542,14 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   window->GetScreen(getter_AddRefs(screen));
   PRInt32 screenWidth;
   PRInt32 screenHeight;
-  screen->GetAvailWidth(&screenWidth);
-  screen->GetAvailHeight(&screenHeight);
+  if ( mMenuCanOverlapOSBar ) {
+    screen->GetWidth(&screenWidth);
+    screen->GetHeight(&screenHeight);
+  }
+  else {
+    screen->GetAvailWidth(&screenWidth);
+    screen->GetAvailHeight(&screenHeight);
+  }
   
   // Compute info about the screen dimensions. Because of multiple monitor systems,
   // the left or top sides of the screen may be in negative space (main monitor is on the
