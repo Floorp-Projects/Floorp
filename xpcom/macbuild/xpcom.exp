@@ -1,4 +1,4 @@
-#ToString__4nsIDCFv		# nsID::ToString() const
+ToString__4nsIDCFv		# nsID::ToString() const
 Parse__4nsIDFPc		# nsID::Parse(char*)
 #__vt__5IDKey		# IDKey::__vt
 #monitor__18nsComponentManager		# nsComponentManager::monitor
