@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include <MacMemory.h>
 
 #include "nsDrawingSurfaceMac.h"
 #include "nsGraphicState.h"
@@ -55,7 +56,7 @@ nsDrawingSurfaceMac :: nsDrawingSurfaceMac()
  */
 nsDrawingSurfaceMac :: ~nsDrawingSurfaceMac()
 {
-GWorldPtr offscreenGWorld;
+  GWorldPtr offscreenGWorld;
 
 	if(mIsOffscreen && mPort){
   	offscreenGWorld = (GWorldPtr)mPort;
@@ -243,13 +244,17 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(nsIWidget *aTheWidget)
  * @update 3/02/99 dwc
  * @return error status
  */
+#define kReserveHeapFreeSpace			(256 * 1024)
+#define kReserverHeapContigSpace	(64 * 1024)
+
 NS_IMETHODIMP nsDrawingSurfaceMac :: Init(PRUint32 aDepth,PRUint32 aWidth,PRUint32 aHeight, PRUint32 aFlags)
 {
-PRUint32	depth;
-Rect			macRect;
-GWorldPtr offscreenGWorld;
-GrafPtr 	savePort;
-
+  PRUint32	depth;
+  Rect			macRect;
+  GWorldPtr offscreenGWorld = nsnull;
+  GrafPtr 	savePort;
+  Boolean   tryTempMemFirst = ((aFlags & NS_CREATEDRAWINGSURFACE_SHORTLIVED) != 0);
+  
   depth = aDepth;
   mWidth = aWidth;
   mHeight = aHeight;
@@ -263,18 +268,45 @@ GrafPtr 	savePort;
 	}
 
 	// create offscreen, first with normal memory, if that fails use temp memory, if that fails, return
-	QDErr osErr = ::NewGWorld(&offscreenGWorld, depth, &macRect, nil, nil, nil);
-  if (osErr != noErr)
-		osErr = ::NewGWorld(&offscreenGWorld, depth, &macRect, nil, nil, useTempMem);
-  if (osErr != noErr)
-  	return NS_ERROR_FAILURE;
 
+	// Quick and dirty check to make sure there is some memory available.
+	// GWorld allocations in temp mem can still fail if the heap is totally
+	// full, because some stuff is allocated in the heap
+  QDErr		err = noErr;
+  long	  totalSpace, contiguousSpace;
+  
+  if (tryTempMemFirst)
+  {
+	  ::NewGWorld(&offscreenGWorld, depth, &macRect, nsnull, nsnull, useTempMem);
+    if (!offscreenGWorld)
+    {
+      // only try the heap if there is enough space
+    	::PurgeSpace(&totalSpace, &contiguousSpace);		// this does not purge memory, just measure it
+
+    	if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserverHeapContigSpace)
+     		::NewGWorld(&offscreenGWorld, depth, &macRect, nsnull, nsnull, 0);
+    }
+  }
+  else    // heap first
+  {
+      // only try the heap if there is enough space
+    	::PurgeSpace(&totalSpace, &contiguousSpace);		// this does not purge memory, just measure it
+
+    	if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserverHeapContigSpace)
+     		::NewGWorld(&offscreenGWorld, depth, &macRect, nsnull, nsnull, 0);
+  
+      if (!offscreenGWorld)
+	      ::NewGWorld(&offscreenGWorld, depth, &macRect, nsnull, nsnull, useTempMem);
+  }
+  
+  if (!offscreenGWorld)
+    return NS_ERROR_OUT_OF_MEMORY;  
+  
 	// keep the pixels locked... that's how it works on Windows and  we are forced to do
 	// the same because the API doesn't give us any hook to do it at drawing time.
   ::LockPixels(::GetGWorldPixMap(offscreenGWorld));
 
 	// erase the offscreen area
-	
 	::GetPort(&savePort);
 	::SetPort((GrafPtr)offscreenGWorld);
 	::EraseRect(&macRect);

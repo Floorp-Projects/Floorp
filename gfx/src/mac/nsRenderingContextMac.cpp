@@ -524,11 +524,13 @@ NS_IMETHODIMP nsRenderingContextMac::DestroyDrawingSurface(nsDrawingSurface aSur
 
 	// delete the offscreen
 	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
+
+/* The dtor does this...
 	GWorldPtr offscreenGWorld;
 	surface->GetGrafPtr(reinterpret_cast<GrafPtr*>(&offscreenGWorld));
 	::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
 	::DisposeGWorld(offscreenGWorld);
-
+*/
 	// delete the surface
 	delete surface;
 
