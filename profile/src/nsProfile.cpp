@@ -259,6 +259,8 @@ NS_IMPL_QUERY_INTERFACE2(nsProfile, nsIProfile, nsIShutdownListener)
 NS_IMETHODIMP nsProfile::Startup(const char *filename)
 {
 
+    PRBool openalready = PR_FALSE;
+
 #if defined(DEBUG_profile)
     printf("ProfileManager (nsProfile) : Startup : Get Registry handle\n");
 #endif
@@ -275,9 +277,11 @@ NS_IMETHODIMP nsProfile::Startup(const char *filename)
 		// Latch onto the registry object.
 		NS_ADDREF(m_reg);
 
-		// Open it against the input file name.
-		rv = m_reg->OpenDefault();
-    
+		// Open the registry
+		rv = m_reg->IsOpen( &openalready );
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
+
 		if (NS_SUCCEEDED(rv))
 		{
 			nsIRegistry::Key key;
@@ -289,7 +293,6 @@ NS_IMETHODIMP nsProfile::Startup(const char *filename)
 					printf("Registry : Couldn't add Profiles subtree.\n");
 #endif
 			}
-			m_reg->Close();
 		}
 		else
 		{
@@ -326,22 +329,20 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
 	PRBool profileDirSet = PR_FALSE;
 	char *profstr=nsnull;
   
-#if defined(DEBUG_profile)
   printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
-#endif
+
   Startup(nsnull);
 
-
-  
   if (cmdLineArgs)
     rv = ProcessArgs(cmdLineArgs, &profileDirSet, &profstr);
   
   if (!profileDirSet)
     rv = LoadDefaultProfileDir(profstr);
 
-#if defined(DEBUG_profile)
+  // Closing the registry that was opened in the Startup.
+  m_reg->Close();
+
   printf("Profile Manager : Profile Wizard and Manager activites : End\n");
-#endif
 
   return NS_OK;
 }
@@ -437,9 +438,8 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     nsresult rv;
 	char* cmdResult = nsnull;
 	nsFileSpec currProfileDirSpec;
-#ifdef DEBUG_profile
+
     printf("Profile Manager : Command Line Options : Begin\n");
-#endif
   
     // check for command line arguments for profile manager
     //	
@@ -567,10 +567,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             }
         }
 
-#ifdef DEBUG_profile
     printf("Profile Manager : Command Line Options : End\n");
-#endif
-
 
 
   /*
@@ -594,6 +591,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* profileDir)
 {
     nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : GetProfileDir\n");
@@ -603,7 +601,10 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
     if ( m_reg != nsnull ) 
 	{
         // Open the registry
-        rv = m_reg->OpenDefault();
+		rv = m_reg->IsOpen( &openalready );
+		
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -702,7 +703,8 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 					printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
 			}
-			m_reg->Close();
+			if (!openalready)
+				m_reg->Close();
 		}
 		else
 		{
@@ -730,6 +732,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 {
 
     nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : GetProfileCount\n");
@@ -739,7 +742,10 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
     if ( m_reg != nsnull ) 
 	{
         // Open the registry
-        rv = m_reg->OpenDefault();
+		rv = m_reg->IsOpen( &openalready );
+		
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -821,7 +827,8 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 					printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
 			}
-			m_reg->Close();
+			if (!openalready)
+				m_reg->Close();
 		}
 		else
 		{
@@ -852,6 +859,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 {
 	nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : GetSingleProfile\n");
@@ -861,7 +869,10 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
     if ( m_reg != nsnull ) 
 	{
         // Open the registry
-        rv = m_reg->OpenDefault();
+		rv = m_reg->IsOpen( &openalready );
+		
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -968,7 +979,8 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 					printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
 			}
-	        m_reg->Close();
+			if (!openalready)
+				m_reg->Close();
 		}
 		else
 		{
@@ -993,6 +1005,8 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 {
 	nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
+
 #if defined(DEBUG_profile) 
 	printf("ProfileManager : GetCurrentProfile\n");
 #endif
@@ -1001,7 +1015,10 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 	if ( m_reg != nsnull ) 
 	{
 		// Open the registry.
-		rv = m_reg->OpenDefault();
+		rv = m_reg->IsOpen( &openalready );
+		
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -1030,7 +1047,8 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 					printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
 			}
-			m_reg->Close();
+			if (!openalready)
+				m_reg->Close();
 		}
 		else
 		{
@@ -1125,6 +1143,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& profileDir)
 {
     nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : SetProfileDir\n");
@@ -1141,7 +1160,10 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
     if (m_reg != nsnull)
 	{
 		// Open the registry.
-		rv = m_reg->OpenDefault();
+		rv = m_reg->IsOpen( &openalready );
+		
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
     
 		if (NS_SUCCEEDED(rv))
 		{
@@ -1224,7 +1246,8 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 					printf("Couldn't set CurrentProfile name.\n" );
 #endif
 			}
-		    m_reg->Close();
+			//if (!openalready)
+				m_reg->Close();
 		}
 		else
 		{
@@ -1650,6 +1673,7 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
 {
 
     nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : DeleteProfile\n");
@@ -1664,7 +1688,10 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
     if ( m_reg != nsnull ) 
 	{
         // Open the registry.
-        rv = m_reg->OpenDefault();
+		rv = m_reg->IsOpen( &openalready );
+		
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
 
         if (NS_FAILED(rv))
         {
@@ -1734,7 +1761,8 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
 				}
 			}
 		}
-        m_reg->Close();
+		if (!openalready)
+			m_reg->Close();
     }
 
 	// If user asks for it, delete profile directory
@@ -1757,6 +1785,7 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
 void nsProfile::GetAllProfiles()
 {
 	nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile) 
     printf("ProfileManager : GetAllProfiles\n");
@@ -1768,7 +1797,10 @@ void nsProfile::GetAllProfiles()
     if ( m_reg != nsnull ) 
 	{
         // Open the registry.
-        rv = m_reg->OpenDefault();
+		rv = m_reg->IsOpen( &openalready );
+		
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
 
         if (NS_SUCCEEDED(rv)) 
 		{
@@ -1854,7 +1886,8 @@ void nsProfile::GetAllProfiles()
 				}
             }
         }
-        m_reg->Close();
+		if (!openalready)
+			m_reg->Close();
     }
 }
 
@@ -1894,6 +1927,7 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
 {
 
     nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : Start AppRunner\n");
@@ -1908,7 +1942,10 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
 	// So that FileLocation services grabs right directory when it needs to.
 	if (NS_SUCCEEDED(rv))
 	{
-		rv = m_reg->OpenDefault();
+		rv = m_reg->IsOpen( &openalready );
+		
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -1919,7 +1956,8 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
 			{
 				rv = m_reg->SetString(profileRootKey, "CurrentProfile", profileName);
 			}
-			m_reg->Close();
+			if (!openalready)
+				m_reg->Close();
 		}
 
         NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
@@ -2140,6 +2178,7 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 {
 
 	nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
     printf("Entered UpdateMozProfileRegistry.\n");
@@ -2151,7 +2190,10 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 		if (m_reg != nsnull)
 		{
 			// Open the registry file.
-			rv = m_reg->OpenDefault();
+			rv = m_reg->IsOpen( &openalready );
+		
+			if ( !openalready )
+				rv = m_reg->OpenDefault();
     
 			if (NS_SUCCEEDED(rv))
 			{
@@ -2227,7 +2269,8 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 						printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
 				}
-			    m_reg->Close();
+				if (!openalready)
+					m_reg->Close();
 			}
 			else
 			{
@@ -2249,6 +2292,7 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 {
 
 	nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
 	printf("Inside Migrate Profile routine.\n" );
@@ -2304,7 +2348,10 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 		if ( m_reg != nsnull ) 
 		{
 	        // Open the registry.
-		    rv = m_reg->OpenDefault();
+			rv = m_reg->IsOpen( &openalready );
+		
+			if ( !openalready )
+				rv = m_reg->OpenDefault();
 
 			if (NS_SUCCEEDED(rv))
 			{
@@ -2353,7 +2400,8 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 						printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
 				}
-				m_reg->Close();
+				if (!openalready)
+					m_reg->Close();
 			}
 			else
 			{	
@@ -2411,6 +2459,7 @@ NS_IMETHODIMP nsProfile::ProcessPRegCookie()
 NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 {
 	nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 	nsString aCookie(data);
 
@@ -2496,7 +2545,10 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 			if (m_reg != nsnull)
 			{
 				// Open the registry.
-				rv = m_reg->OpenDefault();
+				rv = m_reg->IsOpen( &openalready );
+		
+				if ( !openalready )
+					rv = m_reg->OpenDefault();
     
 				if (NS_SUCCEEDED(rv))
 				{
@@ -2552,8 +2604,8 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 							printf("Couldn't set Preg info flag.\n" );
 #endif
 					}
-
-					m_reg->Close();
+					if (!openalready)
+						m_reg->Close();
 				}
 				else
 				{
@@ -2580,12 +2632,16 @@ NS_IMETHODIMP nsProfile::IsPregCookieSet(char **pregSet)
 {
 
 	nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 	// Check result.
 	if (m_reg != nsnull)
 	{
 		// Open the registry.
-		rv = m_reg->OpenDefault();
+		rv = m_reg->IsOpen( &openalready );
+		
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
     
 		if (NS_SUCCEEDED(rv))
 		{
@@ -2603,7 +2659,8 @@ NS_IMETHODIMP nsProfile::IsPregCookieSet(char **pregSet)
 					printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
 			}
-			m_reg->Close();
+			if (!openalready)
+				m_reg->Close();
 		}
 		else
 		{
@@ -2628,12 +2685,16 @@ NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName)
 {
 
 	nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 	// Check result.
 	if (m_reg != nsnull)
 	{
 		// Open the registry.
-		rv = m_reg->OpenDefault();
+		rv = m_reg->IsOpen( &openalready );
+		
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
     
 		if (NS_SUCCEEDED(rv))
 		{
@@ -2654,7 +2715,8 @@ NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName)
 					printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
 			}
-			m_reg->Close();
+			if (!openalready)
+				m_reg->Close();
 		}
 		else
 		{
@@ -2682,6 +2744,7 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 {
 
     nsresult rv = NS_OK;
+    PRBool openalready = PR_FALSE;     
 
 #if defined(DEBUG_profile)
     printf("ProfileManager : Get4xProfileCount\n");
@@ -2691,7 +2754,10 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
     if ( m_reg != nsnull ) 
 	{
         // Open the registry
-        rv = m_reg->OpenDefault();
+		rv = m_reg->IsOpen( &openalready );
+		
+		if ( !openalready )
+			rv = m_reg->OpenDefault();
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -2772,7 +2838,8 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 					printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
 			}
-			m_reg->Close();
+			if (!openalready)
+				m_reg->Close();
 		}
 		else
 		{
