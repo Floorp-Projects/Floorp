@@ -3647,6 +3647,11 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
     if (value != "")
       buttonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_FALSE);
   
+    nsAutoString src;
+    aParent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, src);
+    if (src != "")
+      buttonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, src, PR_FALSE);
+  
     nsAutoString crop;
     aParent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop);
     if (crop == "") crop = "right";
