@@ -583,15 +583,21 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
 
     if(aParser){ 
       if(aNotifySink){ 
-        if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) { 
-          eHTMLTags theTarget; 
-          while(mBodyContext->GetCount() > 0) { 
-            theTarget = mBodyContext->Last(); 
-            if(gHTMLElements[theTarget].HasSpecialProperty(kBadContentWatch)) 
-              result = HandleSavedTokensAbove(theTarget); 
-            CloseContainersTo(theTarget,PR_FALSE); 
-          } 
-          //result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE); 
+        if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) {
+          if(mSkipTarget) {
+            CHTMLToken* theEndToken=nsnull;
+            theEndToken=(CHTMLToken*)gRecycler->CreateTokenOfType(eToken_end,mSkipTarget);
+            if(theEndToken) result=HandleToken(theEndToken,mParser);
+          }
+          if(result==NS_OK) {
+            eHTMLTags theTarget; 
+            while(mBodyContext->GetCount() > 0) { 
+              theTarget = mBodyContext->Last(); 
+              if(gHTMLElements[theTarget].HasSpecialProperty(kBadContentWatch)) 
+                result = HandleSavedTokensAbove(theTarget); 
+              CloseContainersTo(theTarget,PR_FALSE); 
+            } 
+          }
         } 
 
   #ifdef RGESS_DEBUG 
@@ -1462,8 +1468,8 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
         else {
           if(kNotFound==GetIndexOfChildOrSynonym(mBodyContext->mStack,theChildTag)) {
             UpdateStyleStackForCloseTag(theChildTag,theChildTag);
-            if(nsHTMLElement::IsBlockCloser(theChildTag)) {
-              // Oh boy!! we found a "stray" block closer. Nav4.x and IE introduce line break in
+            if(gHTMLElements[theChildTag].IsMemberOf(kBlockEntity)) {
+              // Oh boy!! we found a "stray" block entity. Nav4.x and IE introduce line break in
               // such cases. So, let's simulate that effect for compatibility.
               // Ex. <html><body>Hello</P>There</body></html>
               CHTMLToken* theToken = (CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,theChildTag);
@@ -1541,7 +1547,7 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
               }
               theBadTokenCount--;
             }
-            result = HandleStartToken(theToken);
+            result=NavDispatchTokenHandler(theToken,this);
           }
         }
         theBadTokenCount--;
@@ -1572,17 +1578,23 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
 nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  nsresult      result=NS_OK;
+  nsresult  result=NS_OK;
+  eHTMLTags theParentTag=mBodyContext->Last();
+  
+  nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
 
-  if(PR_FALSE==CanOmit(mBodyContext->Last(),eHTMLTag_entity)) {
-    nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
-
+  if(CanOmit(theParentTag,eHTMLTag_entity)) {
+    eHTMLTags theCurrTag=(eHTMLTags)aToken->GetTypeID();
+    result=HandleOmittedTag(aToken,theCurrTag,theParentTag,aNode);
+    return result;
+  }
+  
   #ifdef  RICKG_DEBUG
     WriteTokenToLog(aToken);
   #endif
 
-    result=AddLeaf(aNode);
-  }
+  result=AddLeaf(aNode);
+  
   return result;
 }
 
