@@ -37,7 +37,7 @@ public:
     {
     }
 
-    NS_DECL_ISUPPORTS_INHERITED;
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsIDOMNode interface
     NS_FORWARD_IDOMNODE(mOuter->);
