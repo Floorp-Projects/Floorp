@@ -1010,8 +1010,8 @@ namespace JavaScript {
             }
         };
 
-    }; /* namespace VM */
+    } /* namespace VM */
 
-}; /* namespace JavaScript */
+} /* namespace JavaScript */
 
 #endif /* vmtypes_h */

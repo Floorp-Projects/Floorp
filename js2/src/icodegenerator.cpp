@@ -636,6 +636,6 @@ complete()
             return f;
         }
         
-    }; // namespace ICG
+    } // namespace ICG
     
-}; // namespace JavaScript
+} // namespace JavaScript

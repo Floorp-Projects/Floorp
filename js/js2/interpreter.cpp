@@ -296,6 +296,6 @@ namespace JavaScript {
 
         } /* interpret */
 
-    }; /* namespace Interpreter */
+    } /* namespace Interpreter */
     
-}; /* namespace JavaScript */
+} /* namespace JavaScript */
