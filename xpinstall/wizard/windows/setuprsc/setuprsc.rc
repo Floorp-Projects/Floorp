@@ -63,7 +63,7 @@ BEGIN
     LTEXT           "",IDC_STATIC0,101,11,202,37,NOT WS_GROUP
     LTEXT           "",IDC_STATIC1,102,53,201,37,NOT WS_GROUP
     LTEXT           "",IDC_STATIC2,102,96,201,37,NOT WS_GROUP
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     108,
 #endif
@@ -100,7 +100,7 @@ BEGIN
     DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_STATIC_MSG0,101,11,204,17,NOT WS_GROUP
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     108,
 #endif
@@ -129,7 +129,7 @@ BEGIN
     GROUPBOX        "",IDC_STATIC,101,140,204,33
     LTEXT           "",IDC_DOWNLOAD_SIZE,105,160,92,8,NOT WS_GROUP
     LTEXT           "",IDC_SPACE_AVAILABLE,206,160,94,8,NOT WS_GROUP
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     108,
 #endif
@@ -161,7 +161,7 @@ BEGIN
     DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,11,204,17,NOT WS_GROUP
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     108,
 #endif
@@ -186,7 +186,7 @@ BEGIN
     DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     108,
 #endif
@@ -227,7 +227,7 @@ BEGIN
     LTEXT           "",IDC_MESSAGE0,101,14,204,18,NOT WS_GROUP
     LTEXT           "",IDC_MESSAGE1,101,50,204,20,NOT WS_GROUP
     LTEXT           "",IDC_MESSAGE2,101,127,204,18,NOT WS_GROUP
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     108,
 #endif
@@ -235,7 +235,7 @@ BEGIN
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     115,
 #endif
@@ -294,11 +294,11 @@ BEGIN
     CONTROL         "",IDC_STATUS3,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | 
                     WS_GROUP,12,98,286,8
     CONTROL         "",IDC_GAUGE_FILE,"GaugeFile",0x0,12,110,286,11
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     114,
 #endif
-                    IDC_STATIC,"Static",SS_BITMAP,0,0,312,34
+                    IDB_BITMAP_BANNER,"Static",SS_BITMAP,0,0,312,34
 END
 
 DLG_ADVANCED_SETTINGS DIALOG DISCARDABLE  51, 56, 315, 205
@@ -318,7 +318,7 @@ BEGIN
                     9
     DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "",IDCANCEL,252,186,53,14
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     108,
 #endif
@@ -353,7 +353,7 @@ BEGIN
     GROUPBOX        "",IDC_STATIC,101,140,204,33
     LTEXT           "",IDC_DOWNLOAD_SIZE,105,160,92,8,NOT WS_GROUP
     LTEXT           "",IDC_SPACE_AVAILABLE,206,160,94,8,NOT WS_GROUP
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     108,
 #endif
@@ -370,13 +370,13 @@ DLG_UPGRADE DIALOG DISCARDABLE  51, 56, 310, 166
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Sans Serif"
 BEGIN
+    DEFPUSHBUTTON   "",IDWIZBACK,162,139,53,14
+    PUSHBUTTON      "",ID_DELETE,95,139,53,14
     LTEXT           "",IDC_MESSAGE0,17,13,276,31,NOT WS_GROUP
     LTEXT           "",IDC_MESSAGE1,17,48,276,21,NOT WS_GROUP
     LTEXT           "",IDC_MESSAGE2,17,73,276,21,NOT WS_GROUP
     GROUPBOX        "",IDC_STATIC,16,102,276,25
     LTEXT           "",IDC_DELETE_PATH,22,111,264,13,SS_CENTERIMAGE
-    PUSHBUTTON      "",ID_DELETE,95,139,53,14
-    DEFPUSHBUTTON   "",IDWIZBACK,162,139,53,14
 END
 
 DLG_ADDITIONAL_OPTIONS DIALOG DISCARDABLE  51, 56, 315, 205
@@ -385,25 +385,25 @@ STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
 CLASS "MozillaSetupDlg"
 FONT 8, "MS Sans Serif"
 BEGIN
+    CONTROL         "",IDC_CHECK_RECAPTURE_HOMEPAGE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,100,56,202,8
+    LTEXT           "",IDC_MESSAGE1,100,76,204,33,NOT WS_GROUP
     CONTROL         "",IDC_CHECK_SAVE_INSTALLER_FILES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,100,112,204,9
     EDITTEXT        IDC_EDIT_LOCAL_INSTALLER_PATH,100,124,204,12,
                     ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "",IDC_MESSAGE0,100,20,204,33,NOT WS_GROUP
     PUSHBUTTON      "",IDC_BUTTON_PROXY_SETTINGS,221,159,84,14
     PUSHBUTTON      "",IDWIZBACK,134,186,53,14
     DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "",IDCANCEL,252,186,53,14
-    LTEXT           "",IDC_MESSAGE1,100,76,204,33,NOT WS_GROUP
-    CONTROL         
+    LTEXT           "",IDC_MESSAGE0,100,20,204,33,NOT WS_GROUP
+    CONTROL
 #ifndef __MINGW32__
                     108,
 #endif
                     -1,"Static",SS_BITMAP,11,11,83,162,WS_EX_CLIENTEDGE
     CONTROL         "",-1,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
-    CONTROL         "",IDC_CHECK_RECAPTURE_HOMEPAGE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,100,56,202,8
 END
 
 DLG_DOWNLOADING DIALOG DISCARDABLE  0, 0, 312, 154
@@ -427,11 +427,11 @@ BEGIN
                     SS_NOPREFIX | WS_GROUP,49,72,253,8
     CONTROL         "",IDC_GAUGE_FILE,"GaugeFile",0x0,9,114,271,11
     LTEXT           "",IDC_PERCENTAGE,283,115,20,8,SS_NOPREFIX
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     114,
 #endif
-                    IDC_STATIC,"Static",SS_BITMAP,0,0,312,34
+                    IDB_BITMAP_BANNER,"Static",SS_BITMAP,0,0,312,34
     LTEXT           "",IDC_STATIC4,9,91,37,8,SS_NOPREFIX
     CONTROL         "",IDC_STATUS_TO,"Static",SS_LEFTNOWORDWRAP | 
                     SS_NOPREFIX | WS_GROUP,49,91,253,8
@@ -443,13 +443,13 @@ STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
 CLASS "MozillaSetupDlg"
 FONT 8, "MS Sans Serif"
 BEGIN
+    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "",IDWIZBACK,134,186,53,14
+    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     EDITTEXT        IDC_CURRENT_SETTINGS,101,67,204,102,ES_MULTILINE | 
                     ES_OEMCONVERT | ES_READONLY | WS_VSCROLL | WS_HSCROLL
-    PUSHBUTTON      "",IDWIZBACK,134,186,53,14
-    DEFPUSHBUTTON   "",IDWIZNEXT,188,186,53,14
-    PUSHBUTTON      "",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,11,204,52,NOT WS_GROUP
-    CONTROL         
+    CONTROL
 #ifndef __MINGW32__
                     108,
 #endif
@@ -478,7 +478,7 @@ IDB_BOX_UNCHECKED       BITMAP  FIXED IMPURE    "box_unch.bmp"
 IDB_BOX_CHECKED         BITMAP  FIXED IMPURE    "box_chec.bmp"
 IDB_BITMAP_WELCOME      BITMAP  DISCARDABLE     "bitmap1.bmp"
 IDB_BOX_CHECKED_DISABLED BITMAP  FIXED IMPURE    "box_ch_d.bmp"
-IDB_BITMAP_DOWNLOAD_LOGO BITMAP  DISCARDABLE     "downloadLogo.bmp"
+IDB_BITMAP_BANNER       BITMAP  DISCARDABLE     "downloadLogo.bmp"
 IDB_QUICK_LAUNCH        BITMAP  DISCARDABLE     "turbo-systray.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
