@@ -43,6 +43,7 @@
 
 #include "plugin.h"
 #include "helpers.h"
+#include "guihlp.h"
 #include "logger.h"
 #include "scripter.h"
 #include "guiprefs.h"
