@@ -624,13 +624,20 @@ nsGenericHTMLElement::GetOffsetHeight(PRInt32* aOffsetHeight)
 nsresult    
 nsGenericHTMLElement::GetOffsetParent(nsIDOMElement** aOffsetParent)
 {
+  NS_ENSURE_ARG_POINTER(aOffsetParent);
+
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
   nsresult res = GetOffsetRect(rcFrame, 
                                nsHTMLAtoms::body, 
                                getter_AddRefs(parent));
   if (NS_SUCCEEDED(res)) {
-    res = parent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aOffsetParent);
+    if (parent) {
+      res = parent->QueryInterface(NS_GET_IID(nsIDOMElement),
+                                   (void**)aOffsetParent);
+    } else {
+      *aOffsetParent = nsnull;
+    }
   }
   return res;
 }
