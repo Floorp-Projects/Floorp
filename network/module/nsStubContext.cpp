@@ -482,7 +482,23 @@ NET_StreamBuilder  (FO_Present_Types format_out,
             printf("+++ Created a stream for %s\n", URL_s->address);
 #endif
             if (pConn->pConsumer) {
-                pConn->pConsumer->OnStartBinding(URL_s->content_type);
+                nsresult rv;
+
+                rv = pConn->pConsumer->OnStartBinding(URL_s->content_type);
+                /*
+                 * If OnStartBinding fails, then tear down the NET_StreamClass
+                 * and release all references...
+                 */
+                if (NS_OK != rv) {
+                    NET_DropURLStruct(URL_s);
+                    free(stream);
+                    stream = NULL;
+
+                    /* 
+                     * The NET_GetURL(...) exit_routine will clean up the
+                     * nsConnectionInfo and associated objects.
+                     */
+                }
             }
         }
     }
