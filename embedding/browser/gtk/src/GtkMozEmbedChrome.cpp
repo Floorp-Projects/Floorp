@@ -45,6 +45,7 @@ static NS_DEFINE_CID(kCommonDialogsCID,        NS_CommonDialog_CID);
         PR_END_MACRO
 
 static PRLogModuleInfo *mozEmbedLm = NULL;
+static GtkWidget *gTipWindow = NULL;
 
 nsVoidArray *GtkMozEmbedChrome::sBrowsers = NULL;
 
@@ -95,6 +96,7 @@ NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChrome)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
+   NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
 NS_INTERFACE_MAP_END
 
 // nsIGtkEmbed interface
@@ -1063,3 +1065,71 @@ GtkMozEmbedChrome::UniversalDialog(const PRUnichar *titleMessage,
 					 buttonPressed);
 					 
 }
+
+
+NS_IMETHODIMP
+GtkMozEmbedChrome::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
+				 const PRUnichar *aTipText)
+{ 
+  nsAutoString tipText ( aTipText );                                            
+  const char* TipString = tipText.ToNewCString();                               
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnShowTooltip\n"));
+  
+  if (gTipWindow)
+    gtk_widget_destroy(gTipWindow);
+  
+  // get the root origin for this content window
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebBrowser);
+  nsCOMPtr<nsIWidget> mainWidget;
+  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+  GdkWindow *window = NS_STATIC_CAST(GdkWindow *, mainWidget->GetNativeData(NS_NATIVE_WINDOW));
+  gint root_x, root_y;
+  gdk_window_get_origin(window, &root_x, &root_y);
+
+  // XXX work around until I can get pink to figure out why
+  // tooltips vanish if they show up right at the origin of the
+  // cursor.
+  root_y += 10;
+  
+  gTipWindow = gtk_window_new(GTK_WINDOW_POPUP);
+  
+  // set up the popup window as a transient of the widget.
+  GtkWidget *toplevel_window = gtk_widget_get_toplevel(mOwningGtkWidget);
+  if (!GTK_WINDOW(toplevel_window)) {
+    NS_ERROR("no gtk window in hierarchy!\n");
+    return NS_ERROR_FAILURE;
+  }
+  gtk_window_set_transient_for(GTK_WINDOW(gTipWindow),
+			       GTK_WINDOW(toplevel_window));
+  
+  // realize the widget
+  gtk_widget_realize(gTipWindow);
+
+  // set up the label for the tooltip
+  GtkWidget *Label = gtk_label_new(TipString);
+  // wrap automatically
+  gtk_label_set_line_wrap(GTK_LABEL(Label), TRUE);
+  gtk_container_add(GTK_CONTAINER(gTipWindow), Label);
+  // set the coords for the widget
+  gtk_widget_set_uposition(gTipWindow, aXCoords + root_x,
+			   aYCoords + root_y);
+
+  // and show it.
+  gtk_widget_show_all(gTipWindow);
+  gtk_widget_popup(gTipWindow,aXCoords + root_x, aYCoords + root_y);
+  
+  nsMemory::Free( (void*)TipString );
+
+  return NS_OK;
+} 
+
+NS_IMETHODIMP GtkMozEmbedChrome::OnHideTooltip() 
+
+{ 
+     PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnHideTooltip\n"));
+     if (gTipWindow)
+       gtk_widget_destroy(gTipWindow);
+     gTipWindow = NULL;
+     return NS_OK;
+}
+

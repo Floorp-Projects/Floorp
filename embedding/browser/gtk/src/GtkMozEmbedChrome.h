@@ -43,6 +43,7 @@
 #include "nsIPrompt.h"
 #include "nsICommonDialogs.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsITooltipListener.h"
 
 // utility classes
 #include "nsXPIDLString.h"
@@ -58,7 +59,9 @@ class GtkMozEmbedChrome : public nsIGtkEmbed,
                           public nsIURIContentListener,
                           public nsIDocShellTreeOwner,
                           public nsIInterfaceRequestor,
-                          public nsIPrompt
+                          public nsIPrompt,
+                          public nsITooltipListener
+
 {
 public:
 
@@ -77,7 +80,7 @@ public:
   NS_IMETHOD CloseStream                  (void);
   NS_IMETHOD EnsureCommonDialogs          (void);
   NS_IMETHOD GetDOMWindowInternal         (nsIDOMWindowInternal **aWindow);
-
+     
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -91,6 +94,8 @@ public:
   NS_DECL_NSIWEBBROWSERSITEWINDOW
 
   NS_DECL_NSIPROMPT
+
+  NS_DECL_NSITOOLTIPLISTENER
 
 private:
   GtkWidget                 *mOwningGtkWidget;
