@@ -23,6 +23,7 @@
 #include "nsISupports.idl"
 
 interface nsIWebBrowser;
+interface nsIDocShellTreeItem;
 
 /**
  * The nsIWebBrowserChrome
@@ -97,7 +98,15 @@ interface nsIWebBrowserChrome : nsISupports
 	*/
 	nsIWebBrowser getNewBrowser(in unsigned long chromeMask);
 
-	nsIWebBrowser findNamedBrowser(in wstring aName);
+
+	/*
+	Return the child DocShellTreeItem with the specified name.  To implement this
+	an embedder should call nsIDocShellTreeItem::findItemWithName on all the open
+	webBrowser objects.  If one succeeds this should be returned.  If they all fail
+	simply return null.
+	@param aName - This is the name of the item that is trying to be found.
+	*/
+	nsIDocShellTreeItem findNamedBrowserItem(in wstring aName);
 
 	/*
 		Tells the chrome to size itself such that the browser will be the 
