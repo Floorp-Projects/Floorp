@@ -68,18 +68,14 @@
     </vbox>
     <vbox flex="1">
       <checkbox label="&cut.label;"       id="showCut"
-                disabled="true"
                 prefstring="editor.toolbars.showbutton.cut"/>
       <checkbox label="&copy.label;"      id="showCopy"
-                disabled="true"
                 prefstring="editor.toolbars.showbutton.copy"/>
       <checkbox label="&paste.label;"     id="showPaste"
-                disabled="true"
                 prefstring="editor.toolbars.showbutton.paste"/>
       <checkbox label="&print.label;"     id="showPrint"
                 prefstring="editor.toolbars.showbutton.print"/>
       <checkbox label="&find.label;"      id="showFind"
-                disabled="true"
                 prefstring="editor.toolbars.showbutton.find"/>
     </vbox>
     <vbox flex="1">
