@@ -56,6 +56,9 @@
 // we need these for statfs()
 
 #ifdef HAVE_SYS_STATVFS_H
+#if defined(__osf__) && defined(__DECCXX)
+    extern "C" int statvfs(const char *, struct statvfs *);
+#endif
 #include <sys/statvfs.h>
 #endif
 
