@@ -39,7 +39,7 @@ REQUIRES	= xpcom \
 		  view \
 		  accessibility \
 		  necko \
-		  webBrowser_core \
+      webbrwsr \
 		  $(NULL)
 
 CPPSRCS		= \

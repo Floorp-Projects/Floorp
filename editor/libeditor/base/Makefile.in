@@ -44,7 +44,7 @@ REQUIRES        = xpcom \
                   gfx \
                   widget \
                   xuldoc \
-                  webBrowser_core \
+                  webbrwsr \
                   $(NULL)
 
 # Internal header files, needed by other editor sublibs:

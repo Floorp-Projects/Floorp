@@ -48,7 +48,7 @@ REQUIRES = \
   widget \
   xpcom \
   xuldoc \
-  webBrowser_core \
+  webbrwsr \
   $(NULL)
 
 CPPSRCS = \

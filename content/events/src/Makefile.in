@@ -44,7 +44,7 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  view \
 		  necko \
-      webBrowser_core \
+      webbrwsr \
 		  unicharutil \
 		  $(NULL)
 

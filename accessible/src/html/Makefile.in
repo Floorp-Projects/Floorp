@@ -47,7 +47,7 @@ REQUIRES = \
   webshell \
   widget \
   xpcom \
-  webBrowser_core \
+  webbrwsr \
   $(NULL)
 
 CPPSRCS = \

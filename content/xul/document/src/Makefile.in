@@ -53,7 +53,7 @@ REQUIRES	= xpcom \
 		  xul \
 		  xultmpl \
 		  webshell \
-      webBrowser_core \
+      webbrwsr \
 		  unicharutil \
 		  $(NULL)
 
