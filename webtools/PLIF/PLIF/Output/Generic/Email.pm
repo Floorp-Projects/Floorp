@@ -62,7 +62,7 @@ sub init {
 sub open {
     my $self = shift;
     { local $^W = 0; # XXX shut up warnings in Net::SMTP
-    $self->handle(Net::SMTP->new($self->host)); }
+    $self->handle(Net::SMTP->new($self->host, 'Timeout' => 5)); } # XXX hard coded timeout
     if (not defined($self->handle)) {
         $self->warn(4, 'Could not create the SMTP handle');
     }
