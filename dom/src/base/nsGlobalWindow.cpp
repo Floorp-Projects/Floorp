@@ -1689,6 +1689,33 @@ static void EnsureReflowFlushAndPaint(nsIDocShell* aDocShell)
   presShell->UnsuppressPainting();
 }
 
+NS_IMETHODIMP GlobalWindowImpl::GetTextZoom(float *aZoom)
+{
+  if (mDocShell) {
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+    nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(contentViewer));
+
+    if (markupViewer) {
+      return markupViewer->GetTextZoom(aZoom);
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::SetTextZoom(float aZoom)
+{
+  if (mDocShell) {
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+    nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(contentViewer));
+
+    if (markupViewer)
+      return markupViewer->SetTextZoom(aZoom);
+  }
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 GlobalWindowImpl::Alert(const nsAReadableString& aString)
 {
