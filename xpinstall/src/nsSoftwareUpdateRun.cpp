@@ -157,16 +157,16 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
         result = nsInstall::CANT_READ_ARCHIVE;
 
         nsInputFileStream fileStream(installJSFileSpec);
-        nsCOMPtr<nsIInputStream> istream = fileStream.GetIStream();
+        nsCOMPtr<nsIInputStream> instream = fileStream.GetIStream();
 
-        if ( istream )
+        if ( instream )
         {
-            istream->Available(&bufferLength);
+            instream->Available(&bufferLength);
             buffer = new char[bufferLength + 1];
     
             if (buffer != nsnull)
             {
-                rv = istream->Read(buffer, bufferLength, &readLength);
+                rv = instream->Read(buffer, bufferLength, &readLength);
 
                 if (NS_SUCCEEDED(rv) && readLength > 0)
                 {
