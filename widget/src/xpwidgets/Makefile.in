@@ -59,7 +59,7 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsWidgetAtoms.cpp
 endif
 
-ifneq (,$(filter beos os2 mac cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter beos os2 mac cocoa photon windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseFilePicker.cpp
 REQUIRES += docshell view intl
 endif
