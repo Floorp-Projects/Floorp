@@ -43,14 +43,15 @@ struct {
     PRLock *ml;
     PRCondVar *new_timer;
     PRCondVar *cancel_timer;  /* The cancel_timer condition variable is
-                               * used for two purposes.  At startup the
-                               * timer manager thread uses this condition
-                               * variable to tell the primordial thread
-                               * that it has started execution.  It is
-                               * used for this purpose only once and only
-                               * at startup.  Then, it is used to cancel
-                               * a timer (i.e., to remove a timer event
-                               * from the timer queue).
+                               * used to cancel a timer (i.e., remove a
+                               * timer event from the timer queue). At
+                               * startup I'm borrowing this condition
+                               * variable for a different purpose (to
+                               * tell the primordial thread that the
+                               * timer manager thread has started) so
+                               * that I don't need to create a new
+                               * condition variable just for this one
+                               * time use.
                                */
     PRThread *manager_thread;
     PRBool manager_started;
