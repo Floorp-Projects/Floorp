@@ -436,7 +436,7 @@ static char* wtb[] = {
 };
 
 static int ttb[] = {
-    0, 1, 0, 0, 0, 0, 0, 0, 0,
+    -1, -2, 0, 0, 0, 0, 0, 0, 0,       /* AM/PM */
     2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
     10000 + 0, 10000 + 0, 10000 + 0,   /* GMT/UT/UTC */
     10000 + 5 * 60, 10000 + 4 * 60,    /* EST/EDT */
@@ -661,12 +661,21 @@ date_parseString(const jschar *s, jsdouble *result)
 		if (date_regionMatches(wtb[k], 0, s, st, i-st, 1)) {
 		    int action = ttb[k];
 		    if (action != 0) {
-			if (action == 1) { /* pm */
-			    if (hour > 12 || hour < 0) {
-				goto syntax;
-			    } else {
-				hour += 12;
-			    }
+                        if (action < 0) {
+                            /*
+                             * AM/PM. Count 12:30 AM as 00:30, 12:30 PM as
+                             * 12:30, instead of blindly adding 12 if PM.
+                             */
+                            JS_ASSERT(action == -1 || action == -2);
+                            if (hour > 12 || hour < 0) {
+                                goto syntax;
+                            } else {
+                                if (action == -1 && hour == 12) { /* am */
+                                    hour = 0;
+                                } else if (action == -2 && hour != 12) { /* pm */
+                                    hour += 12;
+                                }
+                            }
 			} else if (action <= 13) { /* month! */
 			    if (mon < 0) {
 				mon = /*byte*/ (action - 2);
