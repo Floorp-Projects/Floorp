@@ -186,7 +186,7 @@ nsSelectControlFrame::nsSelectControlFrame()
 nsSelectControlFrame::~nsSelectControlFrame()
 {
   if (mOptionSelected)
-    delete mOptionSelected;
+    delete[] mOptionSelected;
 }
 
 nscoord 
