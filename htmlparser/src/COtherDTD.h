@@ -153,7 +153,7 @@ class COtherDTD : public CNavDTD {
      *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild);
+    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const;
 
     /**
      *  This method is called to determine whether or not a tag
