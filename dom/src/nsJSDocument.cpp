@@ -211,6 +211,15 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
     }
   }
+  else {
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      PRBool rval;
+      rval =  object->GetProperty(cx, id, vp);
+      NS_RELEASE(object);
+      return rval;
+    }
+  }
 
   return PR_TRUE;
 }
@@ -242,6 +251,15 @@ SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return rval;
         }
       }
+    }
+  }
+  else {
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      PRBool rval;
+      rval =  object->SetProperty(cx, id, vp);
+      NS_RELEASE(object);
+      return rval;
     }
   }
 

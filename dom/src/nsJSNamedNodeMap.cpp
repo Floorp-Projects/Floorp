@@ -74,14 +74,39 @@ GetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       default:
       {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->GetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
+        nsIDOMNode* prop;
+        if (NS_OK == a->Item(JSVAL_TO_INT(id), &prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
         }
       }
+    }
+  }
+  else {
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      PRBool rval;
+      rval =  object->GetProperty(cx, id, vp);
+      NS_RELEASE(object);
+      return rval;
     }
   }
 
@@ -115,6 +140,15 @@ SetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return rval;
         }
       }
+    }
+  }
+  else {
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      PRBool rval;
+      rval =  object->SetProperty(cx, id, vp);
+      NS_RELEASE(object);
+      return rval;
     }
   }
 
