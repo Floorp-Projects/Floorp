@@ -501,12 +501,12 @@ function UpdateOfflineState()
 
     if (ioService && ioService.offline)
     {
-      sendButton.label = sendButton.getAttribute('later_value');
+      sendButton.label = sendButton.getAttribute('later_label');
       sendButton.setAttribute('tooltiptext', sendButton.getAttribute('later_tooltiptext'));
     }
     else
     {
-      sendButton.label = sendButton.getAttribute('now_value');
+      sendButton.label = sendButton.getAttribute('now_label');
       sendButton.setAttribute('tooltiptext', sendButton.getAttribute('now_tooltiptext'));
     }
 
