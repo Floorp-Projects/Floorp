@@ -368,6 +368,7 @@ pref("security.policy.default.htmlimageelement.lowsrc", "sameOrigin");
 pref("security.policy.default.location.hash.read", "sameOrigin");
 pref("security.policy.default.location.host.read", "sameOrigin");
 pref("security.policy.default.location.hostname.read", "sameOrigin");
+pref("security.policy.default.location.href.read", "sameOrigin");
 pref("security.policy.default.location.pathname.read", "sameOrigin");
 pref("security.policy.default.location.port.read", "sameOrigin");
 pref("security.policy.default.location.protocol.read", "sameOrigin");

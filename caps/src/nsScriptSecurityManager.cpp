@@ -629,7 +629,8 @@ nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
         if (NS_FAILED(uri->GetScheme(getter_Copies(scheme))))
             return NS_ERROR_FAILURE;
         if (nsCRT::strcmp(scheme, "imap") == 0 || 
-            nsCRT::strcmp(scheme, "mailbox") == 0) 
+            nsCRT::strcmp(scheme, "mailbox") == 0 ||
+            nsCRT::strcmp(scheme, "news") == 0) 
         {
             *result = mIsMailJavaScriptEnabled;
             return NS_OK;
@@ -1075,9 +1076,7 @@ nsScriptSecurityManager::GetScriptSecurityManager()
         if (NS_SUCCEEDED(rv) && xpc) {
             rv = xpc->SetDefaultSecurityManager(
                             NS_STATIC_CAST(nsIXPCSecurityManager*, ssecMan), 
-                            nsIXPCSecurityManager::HOOK_CREATE_WRAPPER  |
-                            nsIXPCSecurityManager::HOOK_CREATE_INSTANCE |
-                            nsIXPCSecurityManager::HOOK_GET_SERVICE);
+                            nsIXPCSecurityManager::HOOK_ALL);
             if (NS_FAILED(rv)) {
                 NS_WARNING("failed to install xpconnect security manager!");    
             } 
@@ -1356,15 +1355,21 @@ findDomProp(const char *propName, int n)
     do {
         int mid = (hi + lo) / 2;
         int cmp = PL_strncmp(propName, domPropNames[mid], n);
-        if (cmp == 0)
-            return (nsDOMProp) mid;
+        if (cmp == 0) {
+            if (domPropNames[mid][n] == '\0')
+                return (nsDOMProp) mid;
+            cmp = -1;
+        }
         if (cmp < 0)
             hi = mid - 1;
         else
             lo = mid + 1;
     } while (hi > lo);
-    if (PL_strncmp(propName, domPropNames[lo], n) == 0)
+    if (PL_strncmp(propName, domPropNames[lo], n) == 0 &&
+        domPropNames[lo][n] == '\0')
+    {
         return (nsDOMProp) lo;
+    }
     return NS_DOM_PROP_MAX;
 }
 
