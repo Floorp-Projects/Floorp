@@ -40,28 +40,47 @@
 
 #include "nsIPluginStreamListener.h"
 #include "nsIPluginStreamInfo.h"
+#include "nsIRequest.h"
+#include "nsITimer.h"
+#include "nsCOMPtr.h"
 
 #define MAX_PLUGIN_NECKO_BUFFER 16384
 
-class ns4xPluginStreamListener : public nsIPluginStreamListener
+class ns4xPluginInstance;
+class nsI4xPluginStreamInfo;
+
+class ns4xPluginStreamListener : public nsIPluginStreamListener,
+                                 public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS
 
   // from nsIPluginStreamListener:
   NS_IMETHOD OnStartBinding(nsIPluginStreamInfo* pluginInfo);
-  NS_IMETHOD OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length);
-  NS_IMETHOD OnFileAvailable( nsIPluginStreamInfo* pluginInfo, const char* fileName);
+  NS_IMETHOD OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
+                             nsIInputStream* input, PRUint32 length);
+  NS_IMETHOD OnFileAvailable( nsIPluginStreamInfo* pluginInfo,
+                              const char* fileName);
   NS_IMETHOD OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status);
   NS_IMETHOD GetStreamType(nsPluginStreamType *result);
 
+  NS_DECL_NSITIMERCALLBACK
+
   // ns4xPluginStreamListener specific methods:
-  ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData, const char* aURL);
+  ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData,
+                           const char* aURL);
   virtual ~ns4xPluginStreamListener();
   PRBool IsStarted();
   nsresult CleanUpStream(NPReason reason);
   void CallURLNotify(NPReason reason);
-  void SetCallNotify(PRBool aCallNotify) { mCallNotify = aCallNotify; }
+  void SetCallNotify(PRBool aCallNotify)
+  {
+    mCallNotify = aCallNotify;
+  }
+  nsresult SuspendRequest();
+  void ResumeRequest();
+  nsresult StartDataPump();
+  void StopDataPump();
 
 protected:
   void* mNotifyData;
@@ -69,16 +88,38 @@ protected:
   char* mNotifyURL;
   ns4xPluginInstance* mInst;
   NPStream mNPStream;
-  PRUint32 mPosition;
   PRUint32 mStreamBufferSize;
+  PRInt32 mStreamBufferByteCount;
   nsPluginStreamType mStreamType;
   PRPackedBool mStreamStarted;
   PRPackedBool mStreamCleanedUp;
   PRPackedBool mCallNotify;
+  PRPackedBool mIsSuspended;
 
+  nsCOMPtr<nsITimer> mDataPumpTimer;
 
 public:
-  nsIPluginStreamInfo * mStreamInfo;
+  nsCOMPtr<nsIPluginStreamInfo> mStreamInfo;
+};
+
+// nsI4xPluginStreamInfo is an internal helper interface that exposes
+// the underlying necko request to consumers of nsIPluginStreamInfo's.
+#define NS_I4XPLUGINSTREAMINFO_IID       \
+{ 0x097fdaaa, 0xa2a3, 0x49c2, \
+  {0x91, 0xee, 0xeb, 0xc5, 0x7d, 0x6c, 0x9c, 0x97} }
+
+class nsI4xPluginStreamInfo : public nsIPluginStreamInfo
+{
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_I4XPLUGINSTREAMINFO_IID)
+
+  nsIRequest *GetRequest()
+  {
+    return mRequest;
+  }
+
+protected:
+  nsCOMPtr<nsIRequest> mRequest;
 };
 
 #endif
