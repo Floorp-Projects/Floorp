@@ -267,8 +267,7 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     mHTMLCSSUtils->Init(this);
 
     // disable links
-    nsCOMPtr<nsPresContext> context;
-    aPresShell->GetPresContext(getter_AddRefs(context));
+    nsPresContext *context = aPresShell->GetPresContext();
     if (!context) return NS_ERROR_NULL_POINTER;
     if (!(mFlags & eEditorPlaintextMask))
       context->SetLinkHandler(0);  
@@ -5951,11 +5950,7 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
   nsIFrame *frame = 0; // not ref-counted
   ps->GetPrimaryFrameFor(content, &frame);
 
-  float t2p;
-  nsCOMPtr<nsPresContext> pcontext;
-  ps->GetPresContext(getter_AddRefs(pcontext));
-  t2p = pcontext->TwipsToPixels();
-
+  float t2p = ps->GetPresContext()->TwipsToPixels();
 
   if (nsHTMLEditUtils::IsHR(aElement)) {
     frame = frame->GetNextSibling();

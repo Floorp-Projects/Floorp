@@ -1702,10 +1702,9 @@ nsObjectFrame::Paint(nsPresContext*      aPresContext,
 #endif
 
     // XXX Nav 4.x always sent a SetWindow call after print. Should we do the same?
-    nsCOMPtr<nsPresContext> screenPcx;
-    shell->GetPresContext(getter_AddRefs(screenPcx));
     nsDidReflowStatus status = NS_FRAME_REFLOW_FINISHED; // should we use a special status?
-    frame->DidReflow(screenPcx, nsnull, status);  // DidReflow will take care of it
+    frame->DidReflow(shell->GetPresContext(),
+                     nsnull, status);  // DidReflow will take care of it
 
     return rv;  // done with printing
   }

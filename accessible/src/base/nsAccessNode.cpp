@@ -213,7 +213,9 @@ void nsAccessNode::ShutdownXPAccessibility()
 
 already_AddRefed<nsIPresShell> nsAccessNode::GetPresShell()
 {
-  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+  nsIPresShell *presShell = nsnull;
+  if (mWeakShell)
+    CallQueryReferent(mWeakShell.get(), &presShell);
   if (!presShell) {
     if (mWeakShell) {
       // If our pres shell has died, but we're still holding onto
@@ -223,20 +225,16 @@ already_AddRefed<nsIPresShell> nsAccessNode::GetPresShell()
     }
     return nsnull;
   }
-  nsIPresShell *resultShell = presShell;
-  NS_IF_ADDREF(resultShell);
-  return resultShell;
+  return presShell;
 }
 
-already_AddRefed<nsPresContext> nsAccessNode::GetPresContext()
+nsPresContext* nsAccessNode::GetPresContext()
 {
   nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   if (!presShell) {
     return nsnull;
   }
-  nsPresContext *presContext;
-  presShell->GetPresContext(&presContext);  // Addref'd
-  return presContext;
+  return presShell->GetPresContext();
 }
 
 already_AddRefed<nsIAccessibleDocument> nsAccessNode::GetDocAccessible()
@@ -410,7 +408,7 @@ NS_IMETHODIMP
 nsAccessNode::GetComputedStyleValue(const nsAString& aPseudoElt, const nsAString& aPropertyName, nsAString& aValue)
 {
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
-  nsCOMPtr<nsPresContext> presContext(GetPresContext());
+  nsPresContext *presContext = GetPresContext();
   NS_ENSURE_TRUE(domElement && presContext, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISupports> container = presContext->GetContainer();

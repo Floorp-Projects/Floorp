@@ -129,8 +129,7 @@ GetScreenOrigin(nsIDOMElement* aElement)
     nsIPresShell* presShell = doc->GetShellAt(0);
     
     if (presShell) {
-      nsCOMPtr<nsPresContext> presContext;
-      presShell->GetPresContext(getter_AddRefs(presContext));
+      nsPresContext *presContext = presShell->GetPresContext();
 
       if (presContext) {
         // Get the scale from that Presentation Context

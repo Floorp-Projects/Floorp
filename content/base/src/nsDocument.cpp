@@ -1996,8 +1996,7 @@ nsDocument::EndLoad()
 
           nsIPresShell *shell = ancestor_doc->GetShellAt(0);
           if (shell) {
-            nsCOMPtr<nsPresContext> context;
-            shell->GetPresContext(getter_AddRefs(context));
+            nsCOMPtr<nsPresContext> context = shell->GetPresContext();
 
             if (context) {
               // The event argument to HandleDOMEvent() is inout, and
@@ -2802,9 +2801,8 @@ nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
                                                 mPresShells.ElementAt(0));
   NS_ENSURE_TRUE(shell, NS_OK);
 
-  nsCOMPtr<nsPresContext> ctx;
-  nsresult rv = shell->GetPresContext(getter_AddRefs(ctx));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && ctx, rv);
+  nsPresContext *ctx = shell->GetPresContext();
+  NS_ENSURE_TRUE(ctx, NS_OK);
 
   nsCOMPtr<nsISupports> container = ctx->GetContainer();
   NS_ENSURE_TRUE(container, NS_OK);
@@ -2847,11 +2845,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
     nsCOMPtr<nsIPresShell> shell =
       NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
 
-    nsCOMPtr<nsPresContext> context;
-    nsresult rv = shell->GetPresContext(getter_AddRefs(context));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsISupports> container = context->GetContainer();
+    nsCOMPtr<nsISupports> container = shell->GetPresContext()->GetContainer();
     if (!container)
       continue;
 
@@ -2859,7 +2853,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
     if (!docShellWin)
       continue;
 
-    rv = docShellWin->SetTitle(PromiseFlatString(aTitle).get());
+    nsresult rv = docShellWin->SetTitle(PromiseFlatString(aTitle).get());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3004,8 +2998,7 @@ nsDocument::GetDir(nsAString& aDirection)
 {
   nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
   if (shell) {
-    nsCOMPtr<nsPresContext> context;
-    shell->GetPresContext(getter_AddRefs(context));
+    nsPresContext *context = shell->GetPresContext();
     if (context) {
       PRUint32 options = context->GetBidi();
       for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
@@ -3035,8 +3028,7 @@ nsDocument::SetDir(const nsAString& aDirection)
     return NS_OK;
   }
 
-  nsCOMPtr<nsPresContext> context;
-  shell->GetPresContext(getter_AddRefs(context));
+  nsPresContext *context = shell->GetPresContext();
   NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
 
   PRUint32 options = context->GetBidi();
@@ -3937,11 +3929,9 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   if (!shell)
     return NS_ERROR_FAILURE;
 
-  // Retrieve the context
-  nsCOMPtr<nsPresContext> presContext;
-  shell->GetPresContext(getter_AddRefs(presContext));
+  nsCOMPtr<nsPresContext> context = shell->GetPresContext();
 
-  return presContext->EventStateManager()->
+  return context->EventStateManager()->
     DispatchNewEvent(NS_STATIC_CAST(nsIDOMDocument*, this), aEvent, _retval);
 }
 
@@ -3999,14 +3989,15 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  // Obtain a presentation context
+  // Obtain a presentation shell
 
   nsIPresShell *shell = GetShellAt(0);
-  nsCOMPtr<nsPresContext> presContext;
+
+  nsPresContext *presContext = nsnull;
 
   if (shell) {
     // Retrieve the context
-    shell->GetPresContext(getter_AddRefs(presContext));
+    presContext = shell->GetPresContext();
   }
 
   nsCOMPtr<nsIEventListenerManager> manager;

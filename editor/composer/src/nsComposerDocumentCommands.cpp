@@ -80,11 +80,7 @@ GetPresContextFromEditor(nsIEditor *aEditor, nsPresContext **aResult)
   nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(selCon);
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsPresContext> presContext;
-  rv = presShell->GetPresContext(getter_AddRefs(presContext));
-  if (NS_FAILED(rv)) return rv;
-  *aResult = presContext;
-  NS_IF_ADDREF(*aResult);
+  NS_IF_ADDREF(*aResult = presShell->GetPresContext());
   return NS_OK;
 }
 

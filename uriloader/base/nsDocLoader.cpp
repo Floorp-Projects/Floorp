@@ -427,8 +427,7 @@ nsDocLoaderImpl::GetContentViewerContainer(nsISupports* aDocumentID,
   if (doc) {
     nsIPresShell *pres = doc->GetShellAt(0);
     if (pres) {
-      nsCOMPtr<nsPresContext> presContext;
-      pres->GetPresContext(getter_AddRefs(presContext));
+      nsPresContext *presContext = pres->GetPresContext();
       if (presContext) {
         nsCOMPtr<nsISupports> supp = presContext->GetContainer();
         if (supp) {

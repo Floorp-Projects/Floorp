@@ -2990,8 +2990,7 @@ GlobalWindowImpl::CheckForAbusePoint()
       nsCOMPtr<nsIPresShell> presShell;
       mDocShell->GetPresShell(getter_AddRefs(presShell));
       if (presShell) {
-        nsCOMPtr<nsPresContext> presContext;
-        presShell->GetPresContext(getter_AddRefs(presContext));
+        nsPresContext *presContext = presShell->GetPresContext();
         if (presContext)
           presContext->EventStateManager()->GetCurrentEvent(&currentEvent);
       }
@@ -4073,15 +4072,14 @@ GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
 {
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
   if (doc) {
-    // Obtain a presentation context
+    // Obtain a presentation shell
     nsIPresShell *shell = doc->GetShellAt(0);
     if (!shell) {
       return NS_OK;
     }
 
     // Retrieve the context
-    nsCOMPtr<nsPresContext> aPresContext;
-    shell->GetPresContext(getter_AddRefs(aPresContext));
+    nsCOMPtr<nsPresContext> aPresContext = shell->GetPresContext();
     aPresContext->EventStateManager()->
       DispatchNewEvent(NS_STATIC_CAST(nsIScriptGlobalObject*, this),
                        aEvent, _retval);

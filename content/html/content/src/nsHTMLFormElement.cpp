@@ -564,8 +564,7 @@ nsHTMLFormElement::Submit()
 {
   // Send the submit event
   nsresult rv = NS_OK;
-  nsCOMPtr<nsPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
+  nsCOMPtr<nsPresContext> presContext = GetPresContext();
   if (presContext) {
     if (mPendingSubmission) {
       // aha, we have a pending submission that was not flushed
@@ -585,8 +584,7 @@ nsHTMLFormElement::Reset()
 {
   // Send the reset event
   nsresult rv = NS_OK;
-  nsCOMPtr<nsPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
+  nsCOMPtr<nsPresContext> presContext = GetPresContext();
   if (presContext) {
     // Calling HandleDOMEvent() directly so that reset() will work even if
     // the frame does not exist.  This does not have an effect right now, but
@@ -1206,10 +1204,9 @@ nsHTMLFormElement::FlushPendingSubmission()
   }
 
   //
-  // preform the submission with the stored pending submission
+  // perform the submission with the stored pending submission
   //
-  nsCOMPtr<nsPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
+  nsCOMPtr<nsPresContext> presContext = GetPresContext();
   SubmitSubmission(presContext, mPendingSubmission);
 
   // now delete the pending submission object

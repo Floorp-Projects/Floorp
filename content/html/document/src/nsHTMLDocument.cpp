@@ -1100,8 +1100,7 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
   }
   nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
   if (shell) {
-    nsCOMPtr<nsPresContext> pc;
-    shell->GetPresContext(getter_AddRefs(pc));
+    nsPresContext *pc = shell->GetPresContext();
     if (pc) {
       pc->SetCompatibilityMode(mCompatMode);
     }
@@ -2499,9 +2498,6 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
   nsresult rv = aShell->GetPrimaryFrameFor(body, &frame);
   if (NS_SUCCEEDED(rv) && frame) {
     nsSize                    size;
-    nsCOMPtr<nsPresContext>  presContext;
-
-    aShell->GetPresContext(getter_AddRefs(presContext));
     nsIView* view = frame->GetView();
 
     // If we have a view check if it's scrollable. If not,
@@ -2524,10 +2520,8 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
     }
 
     // Convert from twips to pixels
-    nsCOMPtr<nsPresContext> context;
-    rv = aShell->GetPresContext(getter_AddRefs(context));
-
-    if (NS_SUCCEEDED(rv)) {
+    nsPresContext *context = aShell->GetPresContext();
+    if (context) {
       float scale;
       scale = context->TwipsToPixels();
 
@@ -2795,9 +2789,7 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
     return NS_OK;
   }
 
-  nsCOMPtr<nsPresContext> cx;
-
-  shell->GetPresContext(getter_AddRefs(cx));
+  nsPresContext *cx = shell->GetPresContext();
   NS_ENSURE_TRUE(cx, NS_OK);
 
   nsCOMPtr<nsISupports> container = cx->GetContainer();
@@ -3548,8 +3540,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
     NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsPresContext> cx;
-    shell->GetPresContext(getter_AddRefs(cx));
+    nsPresContext *cx = shell->GetPresContext();
     NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsISupports> container = cx->GetContainer();

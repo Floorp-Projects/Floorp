@@ -687,8 +687,7 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   nsIPresShell *shell = document->GetShellAt(0);
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsPresContext> presContext;
-  shell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = shell->GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIContent> ourContent = do_QueryInterface(this);

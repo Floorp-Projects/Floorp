@@ -125,11 +125,7 @@ inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
   nsIPresShell *shell = doc->GetShellAt(0);
   NS_ASSERTION(shell, "No pres shell");
 
-  nsCOMPtr<nsPresContext> presContext;
-  shell->GetPresContext(getter_AddRefs(presContext));
-  NS_ASSERTION(presContext, "No pres context");
-
-  return presContext->EventStateManager();
+  return shell->GetPresContext()->EventStateManager();
 }
 
 nsPoint
@@ -171,8 +167,7 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
       // Flush all pending notifications so that our frames are uptodate
       doc->FlushPendingNotifications(Flush_Layout);
 
-      nsCOMPtr<nsPresContext> presContext;
-      presShell->GetPresContext(getter_AddRefs(presContext));
+      nsPresContext *presContext = presShell->GetPresContext();
       
       if (presContext) {
         nsIFrame* frame = nsnull;

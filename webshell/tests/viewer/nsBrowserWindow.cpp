@@ -2436,14 +2436,10 @@ DumpFramesRecurse(nsIDocShell* aDocShell, FILE* out, nsString *aFilterName)
       nsIFrame* root;
       shell->GetRootFrame(&root);
       if (nsnull != root) {
-        nsPresContext* presContext;
-        shell->GetPresContext(&presContext);
-
         nsIFrameDebug* fdbg;
         if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
-          fdbg->List(presContext, out, 0);
+          fdbg->List(shell->GetPresContext(), out, 0);
         }
-        NS_IF_RELEASE(presContext);
       }
       NS_RELEASE(shell);
     }

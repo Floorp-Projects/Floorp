@@ -514,8 +514,7 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
       return PR_FALSE;
   }
 
-  nsCOMPtr<nsPresContext> presContext;
-  shell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = shell->GetPresContext();
   if (!presContext)
     return PR_FALSE;
 
@@ -770,7 +769,7 @@ NS_IMETHODIMP nsAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PR
   //  Another frame, same node                <- Example
   //  Another frame, same node
 
-  nsCOMPtr<nsPresContext> presContext(GetPresContext());
+  nsPresContext *presContext = GetPresContext();
   if (!presContext)
   {
     *x = *y = *width = *height = 0;
@@ -1381,8 +1380,7 @@ nsresult nsAccessible::GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *
   if (! parentFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsPresContext> presContext;
-  aPresShell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = aPresShell->GetPresContext();
   nsIAtom* frameType = nsnull;
   while (frame && (frameType = frame->GetType()) != nsAccessibilityAtoms::textFrame) {
     frame = frame->GetFirstChild(nsnull);

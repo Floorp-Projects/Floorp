@@ -1914,13 +1914,11 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   if (!shell) {
     return NS_OK;
   }
-  
-  // Retrieve the context
-  nsCOMPtr<nsPresContext> aPresContext;
-  shell->GetPresContext(getter_AddRefs(aPresContext));
 
-  return aPresContext->EventStateManager()->DispatchNewEvent(mTarget, aEvent,
-                                                             _retval);
+  nsCOMPtr<nsPresContext> context = shell->GetPresContext();
+
+  return context->EventStateManager()->
+    DispatchNewEvent(mTarget, aEvent, _retval);
 }
 
 // nsIDOM3EventTarget interface

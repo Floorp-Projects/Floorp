@@ -167,11 +167,9 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
   if (!window) return NS_OK;
   nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
 
-  nsCOMPtr<nsPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = presShell->GetPresContext();
 
-  float p2t;
-  p2t = presContext->PixelsToTwips();
+  float p2t = presContext->PixelsToTwips();
 
   PRBool isFirstFrame = PR_TRUE;
   nsCOMPtr<nsIRenderingContext> rcontext;

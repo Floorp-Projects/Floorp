@@ -839,12 +839,11 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
     return NS_ERROR_FAILURE; 
 
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(weakShell));
-  nsCOMPtr<nsPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
   nsIFrame* childFrame = parentFrame->GetFirstChild(nsnull);
   PRInt32 index = 0;
   nsIFrame* firstTextFrame = nsnull;
-  PRBool ret = nsAccessible::FindTextFrame(index, presContext, childFrame, &firstTextFrame, frame);
+  PRBool ret = nsAccessible::FindTextFrame(index, presShell->GetPresContext(),
+                                           childFrame, &firstTextFrame, frame);
   if (!ret || index != 0)
     return NS_ERROR_FAILURE; 
 

@@ -234,10 +234,8 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
        return NS_ERROR_FAILURE;
 
     // prepare for twips
-    nsCOMPtr<nsPresContext> context;
-    mPresShell->GetPresContext(getter_AddRefs(context));
     float pixelsToTwips = 0.0;
-    pixelsToTwips = context->PixelsToTwips();
+    pixelsToTwips = mPresShell->GetPresContext()->PixelsToTwips();
     
     nsIBox* scrolledBox = GetScrolledBox(this);
     if (!scrolledBox)
@@ -309,10 +307,8 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
        return NS_ERROR_FAILURE;
 
     // prepare for twips
-    nsCOMPtr<nsPresContext> context;
-    mPresShell->GetPresContext(getter_AddRefs(context));
     float pixelsToTwips = 0.0;
-    pixelsToTwips = context->PixelsToTwips();
+    pixelsToTwips = mPresShell->GetPresContext()->PixelsToTwips();
     
     nsIBox* scrolledBox = GetScrolledBox(this);
     if (!scrolledBox)

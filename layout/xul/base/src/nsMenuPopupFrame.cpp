@@ -572,8 +572,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
         shell->GetPrimaryFrameFor(targetAsContent, &targetFrame);
         nsIView* parentView = nsnull;
         if (targetFrame) {
-          nsCOMPtr<nsPresContext> targetContext;
-          shell->GetPresContext(getter_AddRefs(targetContext));
+          nsPresContext *targetContext = shell->GetPresContext();
           if (targetContext) {
             GetRootViewForPopup(targetContext, targetFrame, PR_TRUE, &parentView);
             if (parentView) {

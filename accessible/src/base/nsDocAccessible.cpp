@@ -516,10 +516,6 @@ nsresult nsDocAccessible::AddEventListeners()
     }
   }
   
-  nsCOMPtr<nsPresContext> context; 
-  presShell->GetPresContext(getter_AddRefs(context));
-  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
-
   mWebProgress = do_GetInterface(docShellTreeItem);
   NS_ENSURE_TRUE(mWebProgress, NS_ERROR_FAILURE);
 

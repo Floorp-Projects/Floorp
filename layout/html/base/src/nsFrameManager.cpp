@@ -332,8 +332,7 @@ nsFrameManager::Destroy()
 {
   NS_ASSERTION(mPresShell, "Frame manager already shut down.");
 
-  nsCOMPtr<nsPresContext> presContext;
-  mPresShell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = mPresShell->GetPresContext();
   
   // Destroy the frame hierarchy. Don't destroy the property lists until after
   // we've destroyed the frame hierarchy because some frames may expect to be
@@ -425,12 +424,10 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent)
     //             very fast in the embedded hash table.
     //             This would almost completely remove the lookup penalty for things
     //             like <SCRIPT> and comments in very large documents.
-    nsCOMPtr<nsPresContext> presContext;
 
     // Give the frame construction code the opportunity to return the
     // frame that maps the content object
-    mPresShell->GetPresContext(getter_AddRefs(presContext));
-    NS_ASSERTION(presContext, "bad presContext");
+    nsPresContext *presContext = mPresShell->GetPresContext();
     if (!presContext) {
       return nsnull;
     }
@@ -782,9 +779,7 @@ nsFrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
   DequeuePostedEventFor(aFrame);
 
   // Remove all properties associated with the frame
-  nsCOMPtr<nsPresContext> presContext;
-  mPresShell->GetPresContext(getter_AddRefs(presContext));
-
+  nsPresContext *presContext = mPresShell->GetPresContext();
   RemoveAllPropertiesFor(presContext, aFrame);
 
 #ifdef DEBUG
@@ -913,11 +908,9 @@ nsFrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
 
   // Notify the style system and then process any reflow commands that
   // are generated
-  nsCOMPtr<nsPresContext> presContext;    
-  frameManager->mPresShell->GetPresContext(getter_AddRefs(presContext));
-  frameManager->mPresShell->FrameConstructor()->
-    CantRenderReplacedElement(frameManager->mPresShell, presContext,
-                              aEvent->mFrame);
+  nsIPresShell *shell = frameManager->mPresShell;
+  shell->FrameConstructor()->
+    CantRenderReplacedElement(shell, shell->GetPresContext(), aEvent->mFrame);
 
 #ifdef NOISY_EVENTS
   printf("nsFrameManager::HandlePLEvent() end for FM %p\n", aEvent->owner);
@@ -1990,9 +1983,8 @@ nsFrameManager::SetFrameProperty(const nsIFrame*         aFrame,
   // A NULL entry->key is the sign that the entry has just been allocated
   // for us.  If it's non-NULL then we have an existing entry.
   if (entry->key && propertyList->mDtorFunc) {
-    nsCOMPtr<nsPresContext> presContext;
-    mPresShell->GetPresContext(getter_AddRefs(presContext));
-    propertyList->mDtorFunc(presContext, NS_CONST_CAST(nsIFrame*, entry->key),
+    propertyList->mDtorFunc(mPresShell->GetPresContext(),
+                            NS_CONST_CAST(nsIFrame*, entry->key),
                             aPropertyName, entry->value);
     result = NS_IFRAME_MGR_PROP_OVERWRITTEN;
   }
@@ -2010,10 +2002,8 @@ nsFrameManager::RemoveFrameProperty(const nsIFrame* aFrame,
 
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
   if (propertyList) {
-    nsCOMPtr<nsPresContext> presContext;
-    mPresShell->GetPresContext(getter_AddRefs(presContext));
-    
-    if (propertyList->RemovePropertyForFrame(presContext, aFrame))
+    if (propertyList->RemovePropertyForFrame(mPresShell->GetPresContext(),
+                                             aFrame))
       return NS_OK;
   }
 

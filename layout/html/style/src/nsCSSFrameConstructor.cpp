@@ -7754,12 +7754,9 @@ nsCSSFrameConstructor::IsValidSibling(nsIPresShell&          aPresShell,
       (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == aSiblingDisplay)) {
     // if we haven't already, construct a style context to find the display type of aContent
     if (UNSET_DISPLAY == aDisplay) {
-      nsCOMPtr<nsPresContext> context;
-      aPresShell.GetPresContext(getter_AddRefs(context));
-
-      nsIFrame* parent = aSibling.GetParent();
       nsRefPtr<nsStyleContext> styleContext;
-      styleContext = ResolveStyleContext(context, parent, &aContent);
+      styleContext = ResolveStyleContext(aPresShell.GetPresContext(),
+                                         aSibling.GetParent(), &aContent);
       if (!styleContext) return PR_FALSE;
       const nsStyleDisplay* display = styleContext->GetStyleDisplay();
       aDisplay = display->mDisplay;

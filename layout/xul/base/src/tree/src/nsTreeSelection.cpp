@@ -750,8 +750,7 @@ nsTreeSelection::FireOnSelectHandler()
   nsIPresShell *shell = document->GetShellAt(0);
   if (shell) {
     // Retrieve the context in which our DOM event will fire.
-    nsCOMPtr<nsPresContext> aPresContext;
-    shell->GetPresContext(getter_AddRefs(aPresContext));
+    nsCOMPtr<nsPresContext> aPresContext = shell->GetPresContext();
 
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(NS_FORM_SELECTED);

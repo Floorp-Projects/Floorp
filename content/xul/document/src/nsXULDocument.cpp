@@ -1061,8 +1061,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
             nsCOMPtr<nsIPresShell> shell =
                 NS_STATIC_CAST(nsIPresShell*, mPresShells[j]);
 
-            nsCOMPtr<nsPresContext> aPresContext;
-            shell->GetPresContext(getter_AddRefs(aPresContext));
+            nsCOMPtr<nsPresContext> aPresContext = shell->GetPresContext();
 
             // Handle the DOM event
             nsEventStatus status = nsEventStatus_eIgnore;
@@ -1610,16 +1609,10 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
         }
 
         // Convert from twips to pixels
-        nsCOMPtr<nsPresContext> context;
-        result = aShell->GetPresContext(getter_AddRefs(context));
+        float scale = aShell->GetPresContext()->TwipsToPixels();
 
-        if (NS_SUCCEEDED(result)) {
-            float scale;
-            scale = context->TwipsToPixels();
-
-            *aWidth = NSTwipsToIntPixels(size.width, scale);
-            *aHeight = NSTwipsToIntPixels(size.height, scale);
-        }
+        *aWidth = NSTwipsToIntPixels(size.width, scale);
+        *aHeight = NSTwipsToIntPixels(size.height, scale);
     }
     else {
         *aWidth = 0;
@@ -2121,8 +2114,7 @@ nsXULDocument::StartLayout(void)
         nsIPresShell *shell = GetShellAt(i);
 
         // Resize-reflow this time
-        nsCOMPtr<nsPresContext> cx;
-        shell->GetPresContext(getter_AddRefs(cx));
+        nsPresContext *cx = shell->GetPresContext();
         NS_ASSERTION(cx != nsnull, "no pres context");
         if (! cx)
             return NS_ERROR_UNEXPECTED;

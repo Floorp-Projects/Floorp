@@ -163,8 +163,7 @@ nsInspectorCSSUtils::GetStyleContextForContent(nsIContent* aContent,
     if (parent)
         parentContext = GetStyleContextForContent(parent, nsnull, aPresShell);
 
-    nsCOMPtr<nsPresContext> presContext;
-    aPresShell->GetPresContext(getter_AddRefs(presContext));
+    nsPresContext *presContext = aPresShell->GetPresContext();
     if (!presContext)
         return nsnull;
 

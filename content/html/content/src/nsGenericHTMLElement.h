@@ -624,12 +624,10 @@ public:
                                         nsIFormControl* aControl);
 
   /**
-   * Get the presentation context for a content node.
-   * @param aContent the content node
-   * @param aPresContext the presentation context [OUT]
+   * Get the presentation context for this content node.
+   * @return the presentation context
    */
-  static nsresult GetPresContext(nsIHTMLContent* aContent,
-                                 nsPresContext** aPresContext);
+  NS_HIDDEN_(nsPresContext*) GetPresContext();
 
   // Form Helper Routines
   /**

@@ -923,10 +923,9 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
       // If not, make sure the selection is in sync with the focus, so we can 
       // start our search from there.
       nsCOMPtr<nsIContent> focusedContent;
-      nsCOMPtr<nsPresContext> presContext;
       nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
       NS_ENSURE_TRUE(presShell, NS_OK);
-      presShell->GetPresContext(getter_AddRefs(presContext));
+      nsPresContext *presContext = presShell->GetPresContext();
       NS_ENSURE_TRUE(presContext, NS_OK);
 
       nsIEventStateManager *esm = presContext->EventStateManager();
@@ -1209,9 +1208,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
     }
   }
 
-  nsCOMPtr<nsPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-
+  nsCOMPtr<nsPresContext> presContext = presShell->GetPresContext();
   if (!presContext) {
     return NS_ERROR_FAILURE;
   }
@@ -1715,8 +1712,7 @@ nsTypeAheadFind::FindNext(PRBool aFindBackwards, nsISupportsInterfacePointer *aC
   nsCOMPtr<nsIPresShell> typeAheadPresShell(do_QueryReferent(mFocusedWeakShell));
   NS_ENSURE_TRUE(typeAheadPresShell, NS_OK);
 
-  nsCOMPtr<nsPresContext> presContext;
-  typeAheadPresShell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = typeAheadPresShell->GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_OK);
 
   nsCOMPtr<nsISupports> container = presContext->GetContainer();
@@ -2488,9 +2484,7 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  if (presContext->Type() == nsPresContext::eContext_PrintPreview) {
+  if (presShell->GetPresContext()->Type() == nsPresContext::eContext_PrintPreview) {
     // Typeaheadfind is not designed to work in print preview.
     // You can't navigate through the links there.
     if (lastShell != presShell) {
@@ -2514,8 +2508,7 @@ nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
   // if aCurrentNode is nsnull, get selection for document
   *aDOMSel = nsnull;
 
-  nsCOMPtr<nsPresContext> presContext;
-  aPresShell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = aPresShell->GetPresContext();
 
   nsIFrame *frame = nsnull;
   aPresShell->GetRootFrame(&frame);
@@ -2715,8 +2708,7 @@ nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent,
     return;
   }
 
-  nsCOMPtr<nsPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = presShell->GetPresContext();
   if (!presContext) {
     return;
   }

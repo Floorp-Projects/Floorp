@@ -173,8 +173,7 @@ STDMETHODIMP nsTextAccessibleWrap::scrollToSubstring(
     return E_FAIL;  // This accessible has been shut down
   }
 
-  nsCOMPtr<nsPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = presShell->GetPresContext();
   nsCOMPtr<nsIDOMRange> scrollToRange = do_CreateInstance(kRangeCID);
   nsCOMPtr<nsISelectionController> selCon;
   frame->GetSelectionController(presContext, getter_AddRefs(selCon));
@@ -227,8 +226,7 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = presShell->GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
   float t2p = presContext->TwipsToPixels();
 

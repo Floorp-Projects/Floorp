@@ -1090,8 +1090,8 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
               if (presShell) {
                 nsIFrame* imgFrame;
                 if (NS_SUCCEEDED(presShell->GetPrimaryFrameFor(targetContent, &imgFrame)) && imgFrame) {
-                  nsCOMPtr<nsPresContext> presContext;
-                  if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(presContext))) && presContext) {
+                  nsPresContext *presContext = presShell->GetPresContext();
+                  if (presContext) {
                     nsRect dmgRect;
                     area->GetRect(presContext, dmgRect);
                     imgFrame->Invalidate(dmgRect, PR_TRUE);

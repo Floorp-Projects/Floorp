@@ -741,9 +741,7 @@ NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   NS_PRECONDITION(aPresShell && aNewFrame, "null PresShell or OUT ptr");
 #ifdef DEBUG
   //check that we are only creating page break frames when printing
-  nsCOMPtr<nsPresContext> presContext;    
-  aPresShell->GetPresContext(getter_AddRefs(presContext));
-  NS_ASSERTION(presContext->IsPaginated(), "created a page break frame while not printing");
+  NS_ASSERTION(aPresShell->GetPresContext()->IsPaginated(), "created a page break frame while not printing");
 #endif
 
   nsPageBreakFrame* it = new (aPresShell) nsPageBreakFrame;

@@ -244,10 +244,8 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
         }
 
         // Get the Presentation Context from the Shell
-        nsCOMPtr<nsPresContext> context;
-        presShell->GetPresContext(getter_AddRefs(context));
-       
-        if(context) {
+        nsPresContext *context = presShell->GetPresContext();
+        if (context) {
           // Get the scale from that Presentation Context
           float scale;
           scale = context->TwipsToPixels();
@@ -284,9 +282,7 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
       // Flush all pending notifications so that our frames are uptodate
       doc->FlushPendingNotifications(Flush_Layout);
 
-      nsCOMPtr<nsPresContext> presContext;
-      presShell->GetPresContext(getter_AddRefs(presContext));
-      
+      nsPresContext *presContext = presShell->GetPresContext();
       if (presContext) {
         nsIFrame* frame;
         presShell->GetPrimaryFrameFor(mContent, &frame);

@@ -194,10 +194,7 @@ nsComputedDOMStyle::Init(nsIDOMElement *aElement,
     }
   }
 
-  nsCOMPtr<nsPresContext> presCtx;
-
-  aPresShell->GetPresContext(getter_AddRefs(presCtx));
-
+  nsPresContext *presCtx = aPresShell->GetPresContext();
   NS_ENSURE_TRUE(presCtx, NS_ERROR_FAILURE);
 
   mT2P = presCtx->TwipsToPixels();
@@ -615,8 +612,7 @@ nsComputedDOMStyle::GetFontFamily(nsIFrame *aFrame,
   if (font) {
     nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
     NS_ASSERTION(presShell, "pres shell is required");
-    nsCOMPtr<nsPresContext> presContext;
-    presShell->GetPresContext(getter_AddRefs(presContext));
+    nsPresContext *presContext = presShell->GetPresContext();
     NS_ASSERTION(presContext, "pres context is required");
 
     const nsString& fontName = font->mFont.name;
@@ -2785,10 +2781,6 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
       // _not_ include the scrollbars.  For fixed positioned frames,
       // the containing block is the viewport, which _does_ include
       // scrollbars.  We have to do some extra work.
-      nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
-      NS_ASSERTION(presShell, "Must have a presshell!");
-      nsCOMPtr<nsPresContext> presContext;
-      presShell->GetPresContext(getter_AddRefs(presContext));
       // the first child in the default frame list is what we want
       nsIFrame* scrollingChild = container->GetFirstChild(nsnull);
       nsCOMPtr<nsIScrollableFrame> scrollFrame =
