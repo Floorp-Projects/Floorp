@@ -234,6 +234,7 @@ nsresult
 nsCategoryManager::persist( const char* aCategoryName, const char* aKey, const char* aValue )
   {
     NS_ASSERTION(mRegistry, "mRegistry is NULL!");
+    if (!mRegistry) return NS_ERROR_FAILURE;
 
     nsRegistryKey categoryRegistryKey;
     nsresult status = mRegistry->GetSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
