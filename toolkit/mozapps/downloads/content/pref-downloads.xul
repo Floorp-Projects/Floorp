@@ -156,7 +156,8 @@
 #ifndef MOZ_THUNDERBIRD
         <spring flex="1"/>
         <button label="&plugins.label;" accesskey="&plugins.accesskey;"
-                id="plugins" oncommand="showPlugins();"/>#endif
+                id="plugins" oncommand="showPlugins();"/>
+#endif
       </hbox>
     </vbox>
     
