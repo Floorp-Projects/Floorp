@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -20,45 +20,40 @@
 #define nsIRDFContentSink_h___
 
 #include "nsIXMLContentSink.h"
-
-class nsIDocument;
-class nsIURL;
-class nsIWebShell;
+class nsIRDFDataSource;
 
 // {751843E2-8309-11d2-8EAC-00805F29F370}
 #define NS_IRDFCONTENTSINK_IID \
 { 0x751843e2, 0x8309, 0x11d2, { 0x8e, 0xac, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
 
 /**
- * This interface represents a content sink for generic XML files.
- * The goal of this sink is to deal with XML documents that do not
- * have pre-built semantics, though it may also be implemented for
- * cases in which semantics are hard-wired.
- *
- * The expectation is that the parser has already performed
- * well-formedness and validity checking.
- *
- * XXX The expectation is that entity expansion will be done by the sink
- * itself. This would require, however, that the sink has the ability
- * to query the parser for entity replacement text.
- *
- * XXX This interface does not contain a mechanism for the sink to
- * get specific schema/DTD information from the parser. This information
- * may be necessary for entity expansion. It is also necessary for 
- * building the DOM portions that relate to the schema.
- *
- * XXX This interface does not deal with the presence of an external
- * subset. It seems possible that this could be dealt with completely
- * at the parser level.
+ * This interface represents a content sink for RDF files.
  */
 
 class nsIRDFContentSink : public nsIXMLContentSink {
 public:
+    /**
+     * Set the content sink's RDF Data source
+     */
+    NS_IMETHOD SetDataSource(nsIRDFDataSource* ds) = 0;
+
+    /**
+     * Retrieve the content sink's RDF data source.
+     */
+    NS_IMETHOD GetDataSource(nsIRDFDataSource*& result) = 0;
 };
 
-extern nsresult NS_NewRDFContentSink(nsIRDFContentSink** aInstancePtrResult,
-                                     nsIDocument* aDoc,
-                                     nsIURL* aURL,
-                                     nsIWebShell* aWebShell);
+
+nsresult
+NS_NewRDFDocumentContentSink(nsIRDFContentSink** aResult,
+                             nsIDocument* aDoc,
+                             nsIURL* aURL,
+                             nsIWebShell* aWebShell);
+
+
+nsresult
+NS_NewRDFSimpleContentSink(nsIRDFContentSink** aResult,
+                           nsIURL* aURL);
+
 
 #endif // nsIRDFContentSink_h___

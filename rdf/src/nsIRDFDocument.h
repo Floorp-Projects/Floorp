@@ -37,8 +37,6 @@ class nsIRDFNode;
 class nsIRDFDocument : public nsIXMLDocument {
 public:
   NS_IMETHOD GetDataBase(nsIRDFDataBase*& rDataBase) = 0;
-
-  NS_IMETHOD SetDataSource(nsIRDFDataSource* aDataSource) = 0;
 };
 
 #endif // nsIRDFDocument_h___

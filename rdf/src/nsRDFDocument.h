@@ -64,7 +64,6 @@ public:
 
   // nsIRDFDocument interface
   NS_IMETHOD GetDataBase(nsIRDFDataBase*& result);
-  NS_IMETHOD SetDataSource(nsIRDFDataSource* ds);
 
 protected:
   nsVoidArray*    mNameSpaces;

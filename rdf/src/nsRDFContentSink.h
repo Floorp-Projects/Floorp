@@ -21,21 +21,12 @@
 #define nsRDFContentSink_h__
 
 #include "nsIRDFContentSink.h"
-#include "nsIViewManager.h"
-#include "nsIScrollableView.h"
 
-class nsIDocument;
-class nsIScriptObjectOwner;
 class nsIURL;
-class nsIWebShell;
-class nsIContent;
 class nsVoidArray;
-class nsIRDFDocument;
-class nsIRDFContent;
 class nsIRDFNode;
+class nsIRDFDataSource;
 class nsIRDFResourceManager;
-class nsIUnicharInputStream;
-class nsIStyleSheet;
 
 typedef enum {
     eRDFContentSinkState_InProlog,
@@ -48,14 +39,13 @@ typedef enum {
 } RDFContentSinkState;
 
 
-class nsRDFContentSink : public nsIRDFContentSink {
+class nsRDFContentSink : public nsIRDFContentSink
+{
 public:
     nsRDFContentSink();
     ~nsRDFContentSink();
 
-    nsresult Init(nsIDocument* aDoc,
-                  nsIURL* aURL,
-                  nsIWebShell* aContainer);
+    virtual nsresult Init(nsIURL* aURL);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -80,24 +70,32 @@ public:
     NS_IMETHOD AddNotation(const nsIParserNode& aNode);
     NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
-protected:
-    void StartLayout();
+    // nsIRDFContentSink
+    NS_IMETHOD SetDataSource(nsIRDFDataSource* ds);
+    NS_IMETHOD GetDataSource(nsIRDFDataSource*& ds);
 
-    nsresult LoadStyleSheet(nsIURL* aURL,
-                            nsIUnicharInputStream* aUIN);
+protected:
+    // Text management
     nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                        PRBool* aDidFlush=nsnull);
 
-    void FindNameSpaceAttributes(const nsIParserNode& aNode);
+    PRUnichar* mText;
+    PRInt32 mTextLength;
+    PRInt32 mTextSize;
+    PRBool mConstrainSize;
 
     // namespace management
-    PRInt32 OpenNameSpace(const nsString& aPrefix, const nsString& aURI);
-    PRInt32 GetNameSpaceId(const nsString& aPrefix);
-    void    CloseNameSpacesAtNestLevel(PRInt32 mNestLevel);
+    void FindNameSpaceAttributes(const nsIParserNode& aNode);
+
+    void OpenNameSpace(const nsString& aPrefix, const nsString& aURI);
+    const nsString& GetNameSpaceURI(const nsString& aPrefix);
+    void CloseNameSpacesAtNestLevel(PRInt32 mNestLevel);
   
-    nsresult SplitQualifiedName(const nsString& aQualifiedName,
-                                nsString& rNameSpaceURI,
-                                nsString& rPropertyURI);
+    nsVoidArray* mNameSpaces;
+
+    void SplitQualifiedName(const nsString& aQualifiedName,
+                            nsString& rNameSpaceURI,
+                            nsString& rPropertyURI);
 
     // RDF-specific parsing
     nsresult GetIdAboutAttribute(const nsIParserNode& aNode, nsString& rResource);
@@ -114,6 +112,9 @@ protected:
     nsresult Assert(nsIRDFNode* subject, nsIRDFNode* predicate, nsIRDFNode* object);
     nsresult Assert(nsIRDFNode* subject, nsIRDFNode* predicate, const nsString& objectLiteral);
     nsresult Assert(nsIRDFNode* subject, const nsString& predicateURI, const nsString& objectLiteral);
+    nsIRDFResourceManager* mRDFResourceManager;
+    nsIRDFDataSource*      mDataSource;
+    RDFContentSinkState    mState;
 
     // content stack management
     PRInt32     PushContext(nsIRDFNode *aContext, RDFContentSinkState aState);
@@ -121,33 +122,12 @@ protected:
     nsIRDFNode* GetContextElement(PRInt32 ancestor = 0);
     PRInt32     GetCurrentNestLevel();
 
-    struct NameSpaceStruct {
-        nsIAtom* mPrefix;
-        PRInt32 mId;
-        PRInt32 mNestLevel;
-    };
-
-    nsIDocument* mDocument;
-    nsIURL*      mDocumentURL;
-    nsIWebShell* mWebShell;
-    nsIContent*  mRootElement;
-    PRUint32     mGenSym; // for generating anonymous resources
-
-    nsIRDFResourceManager* mRDFResourceManager;
-    nsIRDFDataSource* mDataSource; // XXX should this really be a rdf *db* vs. a raw datasource?
-    RDFContentSinkState mState;
-    nsVoidArray* mNameSpaces;
-
     PRInt32 mNestLevel;
     nsVoidArray* mContextStack;
 
-    nsIStyleSheet* mStyleSheet;
-    nsScrollPreference mOriginalScrollPreference;
-
-    PRUnichar* mText;
-    PRInt32 mTextLength;
-    PRInt32 mTextSize;
-    PRBool mConstrainSize;
+    nsIURL*      mDocumentURL;
+    PRUint32     mGenSym; // for generating anonymous resources
 };
+
 
 #endif // nsRDFContentSink_h__
