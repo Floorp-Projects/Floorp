@@ -52,6 +52,8 @@ CPPSRCS		= \
 		nsHTMLCSSStyleSheet.cpp \
 		nsHTMLValue.cpp \
 		nsStyleUtil.cpp \
+		nsComputedDOMStyle.cpp \
+		nsROCSSPrimitiveValue.cpp \
 		$(NULL)
 
 EXPORTS		= \

@@ -481,7 +481,7 @@ nsComputedDOMStyle::GetBorderWidth(nsString& aBorderWidth)
 }
 #endif
 
-NS_IMETHODIMP
+nsresult
 nsComputedDOMStyle::GetBottom(nsIFrame *aFrame,
                               nsIDOMCSSPrimitiveValue*& aValue)
 {
@@ -579,7 +579,7 @@ nsComputedDOMStyle::GetDirection(nsString& aDirection)
 }
 #endif
 
-NS_IMETHODIMP
+nsresult
 nsComputedDOMStyle::GetDisplay(nsIFrame *aFrame,
                                nsIDOMCSSPrimitiveValue*& aValue)
 {
@@ -728,7 +728,7 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
                              (void **)&aValue);
 }
 
-NS_IMETHODIMP
+nsresult
 nsComputedDOMStyle::GetLeft(nsIFrame *aFrame,
                             nsIDOMCSSPrimitiveValue*& aValue)
 {
@@ -1014,7 +1014,7 @@ nsComputedDOMStyle::GetRichness(nsString& aRichness)
 }
 #endif
 
-NS_IMETHODIMP
+nsresult
 nsComputedDOMStyle::GetRight(nsIFrame *aFrame,
                              nsIDOMCSSPrimitiveValue*& aValue)
 {
@@ -1112,7 +1112,7 @@ nsComputedDOMStyle::GetTextTransform(nsString& aTextTransform)
 }
 #endif
 
-NS_IMETHODIMP
+nsresult
 nsComputedDOMStyle::GetTop(nsIFrame *aFrame,
                            nsIDOMCSSPrimitiveValue*& aValue)
 {
