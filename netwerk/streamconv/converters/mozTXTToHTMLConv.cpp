@@ -52,7 +52,8 @@ const PRFloat64 growthRate = 1.2;
 
 // Bug 183111, editor now replaces multiple spaces with leading
 // 0xA0's and a single ending space, so need to treat 0xA0's as spaces.
-static inline PRBool IsSpace(const char aChar)
+// 0xA0 is the Latin1/Unicode character for "non-breaking space (nbsp)"
+static inline PRBool IsSpace(PRUnichar aChar)
 {
   return (nsCRT::IsAsciiSpace(aChar) || aChar == 0xA0);
 }
