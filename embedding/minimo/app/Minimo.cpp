@@ -26,13 +26,11 @@
  *   -------------------------------------
  *
  *    Carlos Aguiar     <carlos.aguiar@indt.org.br>
- *    Ilias Biris	<ext-ilias.biris@indt.org.br> - Coordinator
- *    Antonio Gomes     <agan@ufam.edu.br>
+ *    Ilias Biris	    <ext-ilias.biris@indt.org.br> - Coordinator
+ *    Antonio Gomes     <ext-antonio.araujo-neto@nokia.com>
  *    Diego Gonzalez    <diego.gonzalez@indt.org.br>
- *    Joao Leite        <joao.leite@indt.org.br>
- *    Edjard Mota       <edjard.mota@indt.org.br> - Team Leader/Manager
- *    Andre Pedralho    <asp@ufam.edu.br>
- *    David Oliveira    <david@ufam.edu.br>
+ *    Raoni Novellino   <raoni.novellino@indt.org.br>
+ *    Andre Pedralho    <ext-andre.pedralho@nokia.com>
  *    Afonso Rabelo     <afonso.rabelo@indt.org.br>
  *    Claudia Roessing  <claudia.roessing@indt.org.br>  
  *
@@ -140,6 +138,9 @@ typedef struct _MinimoBrowser {
   GtkWidget  *OpenFindDialog;
   GtkWidget  *OpenSaveAsBuntton;
   GtkWidget  *OpenFromFileButton;
+  GtkWidget  *IncreaseFontSizeButton;
+  GtkWidget  *DecreaseFontSizeButton;
+  GtkWidget  *FullScreenButton;
   
   GtkWidget  *progressPopup;
   GtkWidget  *progressBar;
@@ -182,6 +183,9 @@ GtkEntryCompletion *minimo_entry_completion;
 GtkListStore *store;
 GtkTreeIter iter;
 
+/* Initial Font Size */
+int font_size = 10;
+
 /* METHODS HEADERS  */
 
 /*callbacks from the expander */
@@ -196,7 +200,11 @@ static void update_ui (MinimoBrowser *browser);
 static void open_bookmark_window_cb (GtkButton *button,MinimoBrowser *browser);
 static void create_find_dialog (GtkWidget *w, MinimoBrowser *browser);
 static void create_save_document(GtkButton *button, MinimoBrowser *browser);
-void create_open_document_from_file (GtkButton *button, MinimoBrowser *browser);
+static void create_open_document_from_file (GtkButton *button, MinimoBrowser *browser);
+static void increase_font_size (GtkButton *button, MinimoBrowser *browser);
+static void decrease_font_size (GtkButton *button, MinimoBrowser *browser);
+static void full_screen_cb (GtkButton *button, MinimoBrowser* browser);
+static void unfull_screen_cb (GtkButton *button, MinimoBrowser* browser);
 
 /* Building the Minimo Browser */
 static MinimoBrowser *new_gtk_browser(guint32 chromeMask);
@@ -1113,13 +1121,21 @@ static void create_minimo_expander_bar(MinimoBrowser* browser)
   gtk_widget_show (browser->expanderBar);
   gtk_box_pack_start (GTK_BOX (browser->topLevelVBox), browser->expanderBar, FALSE, TRUE, 0);
   
+#ifdef MOZ_WIDGET_GTK
   browser->ToolbarDown = gtk_toolbar_new ();
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+  toolbar->ToolbarDown = gtk_toolbar_new();
+  gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar->ToolbarDown),GTK_ORIENTATION_HORIZONTAL);
+  gtk_toolbar_set_style(GTK_TOOLBAR(toolbar->ToolbarDown),GTK_TOOLBAR_ICONS);
+#endif /* MOZ_WIDGET_GTK2 */
+
   gtk_widget_show (browser->ToolbarDown);
   gtk_container_add (GTK_CONTAINER (browser->expanderBar), browser->ToolbarDown);
-  gtk_widget_set_size_request (browser->ToolbarDown, -1, 20);
-  gtk_toolbar_set_style (GTK_TOOLBAR (browser->ToolbarDown), GTK_TOOLBAR_ICONS);
-  gtk_toolbar_set_show_arrow (GTK_TOOLBAR (browser->ToolbarDown), FALSE);
-  
+
+  gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar->ToolbarDown), GTK_ICON_SIZE_SMALL_TOOLBAR);
+
   /*
    * Show or hide notebooks
    */
@@ -1129,11 +1145,10 @@ static void create_minimo_expander_bar(MinimoBrowser* browser)
                             "Tab Button",
                             "Show/Hide Tabs",
                             "Show/Hide Tabs",
-                            browser->TabButton, 
+                            gtk_image_new_from_stock(GTK_STOCK_DND_MULTIPLE, GTK_ICON_SIZE_SMALL_TOOLBAR), 
                             GTK_SIGNAL_FUNC(show_hide_tabs_cb),
                             browser);
   
-  gtk_widget_set_size_request (browser->TabButton,16, 16);
   
   /*
    * Add new notebook
@@ -1144,11 +1159,9 @@ static void create_minimo_expander_bar(MinimoBrowser* browser)
                             "Add Tab",
                             "Add Tab",
                             "Add Tab",
-                            browser->AddTabButton, 
+                            gtk_image_new_from_stock(GTK_STOCK_ADD, GTK_ICON_SIZE_SMALL_TOOLBAR), 
                             GTK_SIGNAL_FUNC(open_new_tab_cb),
                             browser);
-  
-  gtk_widget_set_size_request (browser->AddTabButton, 16, 16);
   
   /*
    * Close active notebook
@@ -1159,11 +1172,9 @@ static void create_minimo_expander_bar(MinimoBrowser* browser)
                             "Close Tab",
                             "Close Tab",
                             "Close Tab",
-                            browser->CloseTabButton, 
+                            gtk_image_new_from_stock(GTK_STOCK_REMOVE, GTK_ICON_SIZE_SMALL_TOOLBAR), 
                             GTK_SIGNAL_FUNC(close_current_tab_cb),
                             browser);
-  
-  gtk_widget_set_size_request (browser->CloseTabButton, 16, 16);
   
   /*
    * Open bookmark management window
@@ -1174,11 +1185,9 @@ static void create_minimo_expander_bar(MinimoBrowser* browser)
                             "Open Bookmark Window",
                             "Open Bookmark Window",
                             "Open Bookmark Window",
-                            browser->OpenBookmarkButton, 
+                            gtk_image_new_from_stock(GTK_STOCK_HARDDISK, GTK_ICON_SIZE_SMALL_TOOLBAR), 
                             GTK_SIGNAL_FUNC(open_bookmark_window_cb),
                             browser);
-  
-  gtk_widget_set_size_request (browser->CloseTabButton, 16, 16);
   
   /*
    * Add bookmark
@@ -1189,49 +1198,75 @@ static void create_minimo_expander_bar(MinimoBrowser* browser)
                             "Add Bookmark",
                             "Add Bookmark",
                             "Add Bookmark",
-                            browser->AddBookmarkButton, 
+                            gtk_image_new_from_stock(GTK_STOCK_YES, GTK_ICON_SIZE_SMALL_TOOLBAR), 
                             GTK_SIGNAL_FUNC(add_bookmark_cb),
                             browser->mozEmbed);
-  
-  gtk_widget_set_size_request (browser->AddBookmarkButton, 16, 16);
   
   browser->OpenFindDialog =
     gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
                             "Find",
                             "Find",
                             "Find",
-                            browser->OpenFindDialog, 
+                            gtk_image_new_from_stock(GTK_STOCK_FIND, GTK_ICON_SIZE_SMALL_TOOLBAR), 
                             GTK_SIGNAL_FUNC(create_find_dialog),
                             browser);
   
-  gtk_widget_set_size_request (browser->OpenFindDialog, 16, 16);
   browser->OpenSaveAsBuntton =
     gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
                             "Save As",
                             "Save As",
                             "Save As",
-                            browser->OpenSaveAsBuntton, 
+                            gtk_image_new_from_stock(GTK_STOCK_SAVE_AS, GTK_ICON_SIZE_SMALL_TOOLBAR), 
                             GTK_SIGNAL_FUNC(create_save_document),
                             browser);
-  
-  gtk_widget_set_size_request (browser->OpenSaveAsBuntton, 16, 16);
   
   browser->OpenFromFileButton =
     gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
                             "Open From File",
                             "Open From File",
                             "Open From File",
-                            browser->OpenFromFileButton, 
+                            gtk_image_new_from_stock(GTK_STOCK_OPEN, GTK_ICON_SIZE_SMALL_TOOLBAR), 
                             GTK_SIGNAL_FUNC(create_open_document_from_file),
                             browser);
   
-  gtk_widget_set_size_request (browser->OpenFromFileButton, 16, 16);
+  /*
+   * Increase Font Size Button
+   */ 
+  browser->IncreaseFontSizeButton =
+    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
+                            "Increase Font Size",
+                            "Increase Font Size",
+                            "Increase Font Size",
+                            gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_SMALL_TOOLBAR), 
+                            GTK_SIGNAL_FUNC(increase_font_size),
+                            browser);
   
+  /*
+   * Decrease Font Size Button
+   */ 
+  browser->DecreaseFontSizeButton =
+    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
+                            "Decrease Font Size",
+                            "Decrease Font Size",
+                            "Decrease Font Size",
+                            gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_SMALL_TOOLBAR), 
+                            GTK_SIGNAL_FUNC(decrease_font_size),
+                            browser);
   
+  /*
+   * Full Screen
+   */ 
+  browser->DecreaseFontSizeButton =
+    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
+                            "Full Screen",
+                            "Full Screen",
+                            "Full Screen",
+                            gtk_image_new_from_stock(GTK_STOCK_ZOOM_FIT, GTK_ICON_SIZE_SMALL_TOOLBAR), 
+                            GTK_SIGNAL_FUNC(full_screen_cb),
+                            browser);
 }
 
 /* METHODS THAT CREATE DIALOG FOR SPECIFICS TASK */
-
 
 static void create_open_dialog(MinimoBrowser* browser)
 {
@@ -1666,7 +1701,7 @@ create_save_document(GtkButton *button, MinimoBrowser *browser)
 }
 
 /* Method that create the "Open From File .." Dialog */
-void
+static void
 create_open_document_from_file (GtkButton *button, MinimoBrowser *browser) {
   
   GtkWidget *fs, *ok_button, *cancel_button, *hbox;
@@ -1726,6 +1761,42 @@ create_open_document_from_file (GtkButton *button, MinimoBrowser *browser) {
   gtk_widget_show_all(OpenFromFileDialog);
   
   return;
+}
+
+/* Method that increase the Minimo's font size */
+static 
+void increase_font_size (GtkButton *button, MinimoBrowser *browser)
+{
+  font_size += 1;
+  mozilla_preference_set_int ("font.min-size.variable.x-western", font_size);
+  fprintf(stderr, "increasing %d\n", font_size);
+}
+
+/* Method that decrease the Minimo's font size */
+static 
+void decrease_font_size (GtkButton *button, MinimoBrowser *browser)
+{
+  font_size -= 1;
+  mozilla_preference_set_int ("font.min-size.variable.x-western", font_size);
+  fprintf(stderr, "decreasing %d\n", font_size);
+}
+
+
+/* Method that show the "Full Screen" Minimo's Mode */
+static void full_screen_cb (GtkButton *button, MinimoBrowser* browser) {
+
+  gtk_window_fullscreen (GTK_WINDOW (browser->topLevelWindow));
+  gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC(unfull_screen_cb), browser);
+  gtk_tooltips_set_tip (gtk_tooltips_new (), GTK_WIDGET (button), "Unfull Screen", NULL);
+
+}
+
+/* Method that show the "Normal Screen" Minimo's Mode */
+static void unfull_screen_cb (GtkButton *button, MinimoBrowser* browser) {
+
+  gtk_window_unfullscreen (GTK_WINDOW (browser->topLevelWindow));
+  gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC(full_screen_cb), browser);  
+  gtk_tooltips_set_tip (gtk_tooltips_new (), GTK_WIDGET (button), "Full Screen", NULL);
 }
 
 /* METHODS TO MANIPULATE TABS */
@@ -1933,8 +2004,8 @@ static void update_ui (MinimoBrowser *browser)
 }
 
 /* Method that build the entry completion */
-void build_entry_completion (MinimoBrowser* browser) {
-  
+void build_entry_completion (MinimoBrowser* browser) 
+{  
   /* Minimo entry completion */
   minimo_entry_completion = gtk_entry_completion_new ();
   
@@ -1943,13 +2014,15 @@ void build_entry_completion (MinimoBrowser* browser) {
 }
 
 /* Method to sep up the escape key handler */
-void setup_escape_key_handler(GtkWidget *window) {	
+void setup_escape_key_handler(GtkWidget *window) 
+{
   g_signal_connect(G_OBJECT(window), "key_press_event",
                    G_CALLBACK(escape_key_handler), NULL);
 }
 
 /* Method to handler the escape key */
-gint escape_key_handler(GtkWidget *window, GdkEventKey *ev) {
+gint escape_key_handler(GtkWidget *window, GdkEventKey *ev) 
+{
   g_return_val_if_fail(window != NULL, FALSE);
   if (ev->keyval == GDK_Escape) {
     gtk_widget_destroy(window);
