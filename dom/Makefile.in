@@ -23,7 +23,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS = public src
-ifdef BUILD_IDL_TOOL
+ifdef BUILD_IDLC
 DIRS += tools
 endif
 

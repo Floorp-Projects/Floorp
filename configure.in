@@ -432,6 +432,7 @@ AC_CHECK_LIB(posix4, shm_open)
 AC_CHECK_LIB(w, iswupper)
 AC_CHECK_LIB(l, yywrap,,
     AC_CHECK_LIB(fl, yywrap))
+AC_CHECK_LIB(IDL, IDL_file_set,BUILD_XPIDL=1)
 
 dnl Replace `main' with a function in -lC_r:
 dnl AC_CHECK_LIB(C_r, main)
@@ -868,8 +869,8 @@ dnl [ Location of the mozilla user directory (default is ~/.mozilla).],
   AC_DEFINE(MOZ_USER_DIR,".mozilla") )
 
 MOZ_ARG_ENABLE_BOOL(idltool,
-[  --enable-idltool        Build idl tool (default=no) ],
-  MOZ_IDL_TOOL=1)
+[  --enable-idlc           Build idl tool (default=no) ],
+  BUILD_IDLC=1)
 
 MOZ_ARG_ENABLE_BOOL(xterm-updates,
 [  --enable-xterm-updates  Update XTERM titles with current command.],
@@ -947,8 +948,10 @@ AC_SUBST(MOZ_DOM)
 AC_SUBST(MOZ_MAIL_COMPOSE)
 AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
-AC_SUBST(MOZ_IDL_TOOL)
 AC_SUBST(COMPILER_DEPEND)
+AC_SUBST(BUILD_XPIDL)
+AC_SUBST(BUILD_IDLC)
+
 
 dnl Checks for X libraries.
 dnl Ordering is important.
