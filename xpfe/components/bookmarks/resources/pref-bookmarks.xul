@@ -99,7 +99,9 @@
     <box autostretch="never">
       <textbox readonly="true" id="defaultFolder" crop="right" flex="1"/>
       <button label="&chooseDefaultFolder.label;" accesskey="&chooseDefaultFolder.accesskey;"
-              oncommand="chooseDefaultFolder();"/>
+              oncommand="chooseDefaultFolder();"
+              id="browser.bookmarks.choosefolder" pref="true" preftype="bool"
+              prefstring="pref.browser.homepage.disable_button.choose_folder" prefattribute="disabled"/>
     </box>
   </titledbox>
 

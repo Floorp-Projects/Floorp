@@ -101,7 +101,8 @@
     <titledbox orient="vertical">
       <label>
         <box> 
-          <menulist id="mouseWheelMode" oncommand="switchPage(this);">
+          <menulist id="mouseWheelMode" oncommand="switchPage(this);"
+            pref="true" preftype="bool" prefstring="pref.mousewheel.disable_button.modifier" prefattribute="disabled">
             <menupopup>
               <menuitem value="0" label="&usingJustTheWheel.label;"/>
               <menuitem value="1" label="&usingWheelAndAlt.label;"/>

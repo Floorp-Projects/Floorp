@@ -156,9 +156,13 @@
 
     <text class="label" value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
     <box valign="middle" autostretch="never">
-      <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width : 16em"/>
+      <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width : 16em">
+        <observes element="backgroundImageData" attribute="disabled"/>
+      </textbox>
       <button class="dialog" label="&chooseFile.label;" accesskey="&chooseFile.accesskey;" 
-              oncommand="ChooseImageFile()"/>
+              oncommand="ChooseImageFile()">
+        <observes element="backgroundImageData" attribute="disabled"/>
+      </button>
       <data id="backgroundImageData" pref="true" preftype="string" prefstring="editor.default_background_image" prefattribute="value"/>
     </box>
 

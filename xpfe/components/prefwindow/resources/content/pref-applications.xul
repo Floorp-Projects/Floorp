@@ -84,13 +84,19 @@
     <box orient="vertical">
       <button id="newTypeButton" 
               label="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" 
-              oncommand="newType();"/>
+              oncommand="newType();"
+              pref="true" preftype="bool"
+              prefstring="pref.application.disable_button.new_type" prefattribute="disabled"/>
       <button id="editButton" 
               label="&editButton.label;" accesskey="&editButton.accesskey;" 
-              oncommand="editType();"/>
+              oncommand="editType();"
+              pref="true" preftype="bool"
+              prefstring="pref.application.disable_button.edit" prefattribute="disabled"/>
       <button id="removeButton" 
               label="&removeButton.label;" accesskey="&removeButton.accesskey;" 
-              oncommand="removeType();"/>
+              oncommand="removeType();"
+              pref="true" preftype="bool"
+              prefstring="pref.application.disable_button.remove" prefattribute="disabled"/>
     </box>
   </titledbox>
     

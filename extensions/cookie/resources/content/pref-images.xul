@@ -64,7 +64,10 @@
 
   function setWarnAboutImagesEnabled(aEnabled)
   {
-    document.getElementById("networkImageWarnAboutImages").disabled = !aEnabled;
+    var warnCheckbox = document.getElementById("networkImageWarnAboutImages");
+    warnCheckbox.disabled = !aEnabled;
+    if (parent.hPrefWindow.getPrefIsLocked(warnCheckbox.getAttribute("prefstring")) )
+      warnCheckbox.disabled = true;
   }
  
   ]]>
@@ -108,7 +111,9 @@
     <box autostretch="never" halign="right">
       <button class="dialog" id="viewImages" label="&viewImages.label;"
               accesskey="&viewImages.accesskey;" oncommand="viewImages();"
-              observes="haveImageBlocking"/>
+              observes="haveImageBlocking"
+              pref="true" preftype="bool"
+              prefstring="pref.advanced.images.disable_button.view_image" prefattribute="disabled"/>
     </box>
 
   </titledbox>
