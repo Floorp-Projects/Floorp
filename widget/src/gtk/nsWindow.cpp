@@ -54,7 +54,7 @@ nsWindow::nsWindow()
   mVisible = PR_FALSE;
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
-  mBorderStyle = GTK_WINDOW_TOPLEVEL;
+  mBorderStyle = eBorderStyle_none;
   mIsDestroyingWindow = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
   mFont = nsnull;
