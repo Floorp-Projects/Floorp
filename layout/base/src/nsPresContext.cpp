@@ -1317,7 +1317,7 @@ nsPresContext::GetImageLoadFlags(nsLoadFlags& aLoadFlags)
 
 NS_IMETHODIMP
 nsPresContext::LoadImage(nsIURI* aURL,
-                         nsIFrame* aTargetFrame,
+                         nsIFrame* aTargetFrame,//may be null (precached image)
                          imgIRequest **aRequest)
 {
   // look and see if we have a loader for the target frame.
@@ -1364,12 +1364,6 @@ nsPresContext::LoadImage(nsIURI* aURL,
     loader->Init(aTargetFrame, this);
 
     mImageLoaders.Put(&key, sup);
-  }
-
-  // Allow for a null target frame argument (for precached images)
-  if (aTargetFrame) {
-    // Mark frame as having loaded an image
-    aTargetFrame->AddStateBits(NS_FRAME_HAS_LOADED_IMAGES);
   }
 
   loader->Load(aURL);
