@@ -377,6 +377,10 @@ NS_IMETHODIMP
 nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
+    if (mHttpChannel) {
+      // we don't want view-source following Refresh: headers, so clear it
+      mHttpChannel->SetResponseHeader("Refresh", nsnull);
+    }
     return mListener->OnStartRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
                                                     this),
                                      aContext);
