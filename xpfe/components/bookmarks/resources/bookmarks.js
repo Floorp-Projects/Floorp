@@ -65,7 +65,7 @@ function Startup()
   }
  
   bookmarksView.outlinerBoxObject.selection.select(0);
-  bookmarksView.focus();
+  bookmarksView.outliner.focus();
 }
 
 function Shutdown ()

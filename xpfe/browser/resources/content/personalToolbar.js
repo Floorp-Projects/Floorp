@@ -80,11 +80,11 @@ BookmarksToolbar.prototype = {
     xulElement.setAttribute("command", cmd);
     
     switch (aCommandName) {
-    case NC_NS_CMD + "open":
+    case NC_NS_CMD + "bm_open":
       xulElement.setAttribute("label", aDisplayName);
       xulElement.setAttribute("default", "true");
       break;
-    case NC_NS_CMD + "openfolder":
+    case NC_NS_CMD + "bm_openfolder":
       xulElement.setAttribute("default", "true");
       if (aItemNode.localName == "hbox") 
         // Don't show an "Open Folder" item for clicks on the toolbar itself.
@@ -362,8 +362,8 @@ BookmarksToolbar.prototype = {
     supportsCommand: function (aCommand)
     {
       switch(aCommand) {
-      case "cmd_undo":
-      case "cmd_redo":
+      case "cmd_bm_undo":
+      case "cmd_bm_redo":
         return false;
       case "cmd_bm_cut":
       case "cmd_bm_copy":
@@ -371,20 +371,20 @@ BookmarksToolbar.prototype = {
       case "cmd_bm_delete":
       case "cmd_bm_selectAll":
         return true;
-      case "cmd_open":
-      case "cmd_openfolder":
-      case "cmd_openfolderinnewwindow":
-      case "cmd_newbookmark":
-      case "cmd_newfolder":
-      case "cmd_newseparator":
-      case "cmd_find":
-      case "cmd_properties":
-      case "cmd_rename":
-      case "cmd_setnewbookmarkfolder":
-      case "cmd_setpersonaltoolbarfolder":
-      case "cmd_setnewsearchfolder":
-      case "cmd_import":
-      case "cmd_export":
+      case "cmd_bm_open":
+      case "cmd_bm_openfolder":
+      case "cmd_bm_openfolderinnewwindow":
+      case "cmd_bm_newbookmark":
+      case "cmd_bm_newfolder":
+      case "cmd_bm_newseparator":
+      case "cmd_bm_find":
+      case "cmd_bm_properties":
+      case "cmd_bm_rename":
+      case "cmd_bm_setnewbookmarkfolder":
+      case "cmd_bm_setpersonaltoolbarfolder":
+      case "cmd_bm_setnewsearchfolder":
+      case "cmd_bm_import":
+      case "cmd_bm_export":
       case "cmd_bm_fileBookmark":
         return true;
       default:
@@ -395,8 +395,8 @@ BookmarksToolbar.prototype = {
     isCommandEnabled: function (aCommand)
     {
       switch(aCommand) {
-      case "cmd_undo":
-      case "cmd_redo":
+      case "cmd_bm_undo":
+      case "cmd_bm_redo":
         return false;
       case "cmd_bm_paste":
         var cp = gBookmarksShell.canPaste();
@@ -407,7 +407,7 @@ BookmarksToolbar.prototype = {
         return (document.popupNode != null) && (NODE_ID(document.popupNode) != "NC:PersonalToolbarFolder");
       case "cmd_bm_selectAll":
         return false;
-      case "cmd_open":
+      case "cmd_bm_open":
         var seln = gBookmarksShell.getSelection();
         return document.popupNode != null && seln[0].getAttributeNS(RDF_NS, "type") == NC_NS + "Bookmark";
       case "cmd_openfolder":
@@ -421,20 +421,20 @@ BookmarksToolbar.prototype = {
       case "cmd_import":
       case "cmd_export":
         return true;
-      case "cmd_properties":
-      case "cmd_rename":
+      case "cmd_bm_properties":
+      case "cmd_bm_rename":
         return document.popupNode != null;
-      case "cmd_setnewbookmarkfolder":
+      case "cmd_bm_setnewbookmarkfolder":
         seln = gBookmarksShell.getSelection();
         if (!seln.length) return false;
         var folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
         return document.popupNode != null && !(NODE_ID(seln[0]) == "NC:NewBookmarkFolder") && folderType;
-      case "cmd_setpersonaltoolbarfolder":
+      case "cmd_bm_setpersonaltoolbarfolder":
         seln = gBookmarksShell.getSelection();
         if (!seln.length) return false;
         folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
         return document.popupNode != null && !(NODE_ID(seln[0]) == "NC:PersonalToolbarFolder") && folderType;
-      case "cmd_setnewsearchfolder":
+      case "cmd_bm_setnewsearchfolder":
         seln = gBookmarksShell.getSelection();
         if (!seln.length) return false;
         folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
@@ -450,29 +450,29 @@ BookmarksToolbar.prototype = {
     doCommand: function (aCommand)
     {
       switch(aCommand) {
-      case "cmd_undo":
-      case "cmd_redo":
+      case "cmd_bm_undo":
+      case "cmd_bm_redo":
         break;
       case "cmd_bm_paste":
       case "cmd_bm_copy":
       case "cmd_bm_cut":
       case "cmd_bm_delete":
-      case "cmd_newbookmark":
-      case "cmd_newfolder":
-      case "cmd_newseparator":
-      case "cmd_properties":
-      case "cmd_rename":
-      case "cmd_open":
-      case "cmd_openfolder":
-      case "cmd_openfolderinnewwindow":
-      case "cmd_setnewbookmarkfolder":
-      case "cmd_setpersonaltoolbarfolder":
-      case "cmd_setnewsearchfolder":
-      case "cmd_find":
-      case "cmd_import":
-      case "cmd_export":
+      case "cmd_bm_newbookmark":
+      case "cmd_bm_newfolder":
+      case "cmd_bm_newseparator":
+      case "cmd_bm_properties":
+      case "cmd_bm_rename":
+      case "cmd_bm_open":
+      case "cmd_bm_openfolder":
+      case "cmd_bm_openfolderinnewwindow":
+      case "cmd_bm_setnewbookmarkfolder":
+      case "cmd_bm_setpersonaltoolbarfolder":
+      case "cmd_bm_setnewsearchfolder":
+      case "cmd_bm_find":
+      case "cmd_bm_import":
+      case "cmd_bm_export":
       case "cmd_bm_fileBookmark":
-        gBookmarksShell.execCommand(aCommand.substring("cmd_".length));
+        gBookmarksShell.execCommand(aCommand.substring("cmd_bm_".length));
         break;
       case "cmd_bm_selectAll":
         break;
@@ -512,8 +512,8 @@ function checkBookmarksMenuTemplateBuilder()
 {
   var lastStaticSeparator = document.getElementById("lastStaticSeparator");
   if (!lastStaticSeparator.nextSibling) {
-	var button = document.getElementById("bookmarks-button");
-	button.builder.rebuild();
+    var button = document.getElementById("bookmarks-button");
+    button.builder.rebuild();
   }
 }
 

@@ -43,7 +43,9 @@
 function Startup() 
 {
   var bookmarksView = document.getElementById("bookmarks-view");  
-  bookmarksView.focus();
+  bookmarksView.outlinerBoxObject.selection.select(0);
+  bookmarksView.outliner.focus();
+  
 }
 
 function manageBookmarks() {
