@@ -318,7 +318,6 @@ PR_STATIC_CALLBACK(void)
 contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 {
     nsContractIDTableEntry* entry = NS_STATIC_CAST(nsContractIDTableEntry*, aHdr);
-    
     if (entry->mFactoryEntry != kNonExistentContractID && 
         entry->mFactoryEntry->typeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY && 
         entry->mFactoryEntry->cid.Equals(kEmptyCID)) {
@@ -1118,10 +1117,13 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         if (loadertype < 0) {
             loadertype = AddLoaderType(values[2]);
         }
-    
-        nsFactoryEntry *entry = new nsFactoryEntry(aClass, values[4], loadertype);
-        if (!entry)
+
+        void *mem;
+        PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsFactoryEntry));
+        if (!mem)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        nsFactoryEntry *entry = new (mem) nsFactoryEntry(aClass, values[4], loadertype);
                 
         nsFactoryTableEntry* factoryTableEntry =
             NS_STATIC_CAST(nsFactoryTableEntry*,
@@ -1168,7 +1170,7 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         }
 
         if (!contractIDTableEntry->mContractID)
-            contractIDTableEntry->mContractID = PL_strdup(values[0]);
+            contractIDTableEntry->mContractID = ArenaStrdup(values[0], &mArena);
 
         contractIDTableEntry->mFactoryEntry = cidEntry;
     }
@@ -2682,7 +2684,6 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         entry = new (mem) nsFactoryEntry(aClass, aRegistryName, typeIndex);
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
-        entry = new (mem) nsFactoryEntry(aClass, aRegistryName, typeIndex);
 
         nsFactoryTableEntry* factoryTableEntry =
             NS_STATIC_CAST(nsFactoryTableEntry*,
