@@ -55,12 +55,14 @@
 #include "nsIJARFactory.h"
 #include "nsRecyclingAllocator.h"
 #include "nsXPTZipLoader.h"
+#include "nsJARProtocolHandler.h"
 
 extern nsRecyclingAllocator *gZlibAllocator;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPTZipLoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJAR)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsZipReaderCache)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsJARProtocolHandler, Init)
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = 
@@ -79,6 +81,11 @@ static const nsModuleComponentInfo components[] =
        NS_ZIPREADERCACHE_CID,
       "@mozilla.org/libjar/zip-reader-cache;1", 
       nsZipReaderCacheConstructor
+    },
+    { NS_JARPROTOCOLHANDLER_CLASSNAME,
+      NS_JARPROTOCOLHANDLER_CID,
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar", 
+      nsJARProtocolHandlerConstructor
     }
 };
 

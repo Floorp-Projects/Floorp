@@ -61,7 +61,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  mimetype \
 		  util \
-		  jar \
 		  locale \
 		  intl \
 		  uconv \
@@ -74,7 +73,7 @@ CPPSRCS		= nsNetModule.cpp
 EXPORTS		= nsNetCID.h
 
 # core necko protocols (about:blank is mandatory)
-PROTOCOLS = $(filter file ftp http jar res,$(NECKO_PROTOCOLS))
+PROTOCOLS = $(filter file ftp http res,$(NECKO_PROTOCOLS))
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)neckobase_s.$(LIB_SUFFIX) \

@@ -49,7 +49,6 @@
 #undef NECKO_PROTOCOL_ftp
 #undef NECKO_PROTOCOL_gopher
 #undef NECKO_PROTOCOL_http
-#undef NECKO_PROTOCOL_jar
 #undef NECKO_PROTOCOL_keyword
 #undef NECKO_PROTOCOL_res
 #undef NECKO_PROTOCOL_viewsource
