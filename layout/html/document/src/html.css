@@ -139,7 +139,7 @@ listing {
   margin: 1em 0;
 }
 
-plaintext, xmp, pre {
+xmp, pre {
   display: block;
   font-family: -moz-fixed;
   white-space: pre;

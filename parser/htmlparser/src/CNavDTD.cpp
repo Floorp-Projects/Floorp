@@ -1065,7 +1065,6 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
       }
       break;
 
-    case eHTMLTag_plaintext:
     case eHTMLTag_xmp:
       //grab the skipped content and dump it out as text...
       {        
