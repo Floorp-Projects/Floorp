@@ -168,6 +168,12 @@ sub CheckCanChangeField {
                 "WHERE bug_id = $bugid");
         ($reporterid, $ownerid, $qacontactid) = (FetchSQLData());
     }
+    # Let reporter change bug status, even if they can't edit bugs.
+    # If reporter can't re-open their bug they will just file a duplicate.
+    # While we're at it, let them close their own bugs as well.
+    if ( ($f eq "bug_status") && ($whoid eq $reporterid) ) {
+        return 1;
+    }
     if ($f eq "bug_status" && $newvalue ne $::unconfirmedstate &&
         IsOpenedState($newvalue)) {
 
