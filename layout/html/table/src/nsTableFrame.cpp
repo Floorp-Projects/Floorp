@@ -2981,6 +2981,13 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     rv = NS_ERROR_ILLEGAL_VALUE;
     break;
   
+  case nsIReflowCommand::ReflowDirty:
+    InvalidateFirstPassCache();
+    InvalidateColumnCache();
+    InvalidateColumnWidths();
+    rv = NS_OK;
+    break;
+  
   default:
     NS_NOTYETIMPLEMENTED("unexpected reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
