@@ -41,9 +41,10 @@ REQUIRES=xpcom \
 		uconv \
 		$(NULL)
 
-CPPSRCS	= nsUnicharUtils.cpp \
-	  nsCompressedCharMap.cpp \
-	  $(NULL)
+CPPSRCS	= \
+	nsUnicharUtils.cpp \
+	nsCompressedCharMap.cpp \
+	$(NULL)
 
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
