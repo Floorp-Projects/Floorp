@@ -72,6 +72,13 @@ class NS_COM nsSharableString
           return *this;
         }
 
+      // copy-assignment operator.  I must define my own if I don't want the compiler to make me one
+      self_type& operator=( const self_type& aReadable )
+        {
+          Assign(aReadable);
+          return *this;
+        }
+
       /**
        * The |Adopt| method assigns a raw, null-terminated, character
        * buffer to this string object by transferring ownership of that
@@ -129,6 +136,13 @@ class NS_COM nsSharableCString
 
       // |operator=| does not inherit, so we must provide it again
       self_type& operator=( const abstract_string_type& aReadable )
+        {
+          Assign(aReadable);
+          return *this;
+        }
+
+      // copy-assignment operator.  I must define my own if I don't want the compiler to make me one
+      self_type& operator=( const self_type& aReadable )
         {
           Assign(aReadable);
           return *this;

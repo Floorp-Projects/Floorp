@@ -170,8 +170,17 @@ class NS_COM nsXPIDLString
         }
 #endif
 
+      // |operator=| does not inherit, so we must provide it again
       self_type&
       operator=( const abstract_string_type& aReadable )
+        {
+          Assign(aReadable);
+          return *this;
+        }
+
+      // copy-assignment operator.  I must define my own if I don't want the compiler to make me one
+      self_type&
+      operator=( const self_type& aReadable )
         {
           Assign(aReadable);
           return *this;
@@ -282,8 +291,17 @@ class NS_COM nsXPIDLCString
         }
 #endif
 
+      // |operator=| does not inherit, so we must provide it again
       self_type&
       operator=( const abstract_string_type& aReadable )
+        {
+          Assign(aReadable);
+          return *this;
+        }
+
+      // copy-assignment operator.  I must define my own if I don't want the compiler to make me one
+      self_type&
+      operator=( const self_type& aReadable )
         {
           Assign(aReadable);
           return *this;
