@@ -174,7 +174,8 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
 
   nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("@mozilla.org/intl/saveascharset;1");
   converter->Init(cPlatformCharset,
-                  nsISaveAsCharset::attr_EntityAfterCharsetConv,
+                  nsISaveAsCharset::attr_EntityAfterCharsetConv +
+                  nsISaveAsCharset::attr_FallbackQuestionMark,
                   nsIEntityConverter::transliterate);
 
   converter->Convert(inUnicode, outPlainTextData);
