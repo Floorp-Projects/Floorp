@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Doug Turner <dougt@netscape.com>
+ *   Brodie Thiesfield <brofield@jellycan.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -85,30 +86,28 @@ private:
     nsLocalFile(const nsLocalFile& other);
     ~nsLocalFile() {}
 
-    // this is the flag which indicates if I can used cached information about the file
-    PRPackedBool mDirty;
-    PRPackedBool mLastResolution;
+    PRPackedBool mDirty;            // cached information can only be used when this is PR_FALSE
+    PRPackedBool mFollowSymlinks;   // should we follow symlinks when working on this file
     
-    PRPackedBool mFollowSymlinks;
-    
-    // this string will alway be in native format!
+    // this string will always be in native format!
     nsCString mWorkingPath;
     
-    // this will be the resolve path which will *NEVER* be return to the user
+    // this will be the resolved path of shortcuts, it will *NEVER* be returned to the user
     nsCString mResolvedPath;
     
     PRFileInfo64 mFileInfo64;
 
-    static PRBool mFSCharsetIsUTF8;
-
     void MakeDirty() { mDirty = PR_TRUE; }
-    nsresult ResolveAndStat(PRBool resolveTerminal);
-    nsresult ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath);
+
+    nsresult ResolveAndStat();
+    nsresult ResolveShortcut();
     
     nsresult CopyMove(nsIFile *newParentDir, const nsACString &newName, PRBool followSymlinks, PRBool move);
     nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const nsACString &newName, PRBool followSymlinks, PRBool move);
 
-    nsresult SetModDate(PRInt64 aLastModifiedTime, PRBool resolveTerminal);
+    nsresult SetModDate(PRInt64 aLastModifiedTime, const char *filePath);
+    nsresult HasFileAttribute(DWORD fileAttrib, PRBool *_retval);
+    nsresult AppendNativeInternal(const nsAFlatCString &node, PRBool multipleComponents);
 };
 
 #endif
