@@ -50,7 +50,7 @@
   mDecArray[25].mCID  = &kGB2312ToUnicodeCID;
   mDecArray[26].mCID  = &kEUCKRToUnicodeCID;
   
-  mEncSize           = 26;
+  mEncSize           = 27;
   mEncArray          = new ConverterInfo [mEncSize];
 
   mEncArray[0].mCID  = &kUnicodeToISO88591CID;
@@ -75,9 +75,10 @@
   mEncArray[19].mCID  = &kUnicodeToUTF8CID;
 
   mEncArray[20].mCID  = &kUnicodeToSJISCID;
-  mEncArray[21].mCID  = &kUnicodeToEUCJPCID;
+  mEncArray[21].mCID  = &kUnicodeToISO2022JPCID;
+  mEncArray[22].mCID  = &kUnicodeToEUCJPCID;
 
-  mEncArray[22].mCID  = &kUnicodeToBIG5CID;
-  mEncArray[23].mCID  = &kUnicodeToEUCTWCID;
-  mEncArray[24].mCID  = &kUnicodeToGB2312CID;
-  mEncArray[25].mCID  = &kUnicodeToEUCKRCID;
+  mEncArray[23].mCID  = &kUnicodeToBIG5CID;
+  mEncArray[24].mCID  = &kUnicodeToEUCTWCID;
+  mEncArray[25].mCID  = &kUnicodeToGB2312CID;
+  mEncArray[26].mCID  = &kUnicodeToEUCKRCID;
