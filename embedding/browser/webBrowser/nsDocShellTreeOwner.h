@@ -32,12 +32,14 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsIWebProgressListener.h"
 
 class nsWebBrowser;
 
 class nsDocShellTreeOwner : public nsIDocShellTreeOwner,
                             public nsIBaseWindow,
-                            public nsIInterfaceRequestor
+                            public nsIInterfaceRequestor,
+                            public nsIWebProgressListener
 {
 friend class nsWebBrowser;
 
@@ -47,6 +49,7 @@ public:
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSIDOCSHELLTREEOWNER
    NS_DECL_NSIINTERFACEREQUESTOR
+   NS_DECL_NSIWEBPROGRESSLISTENER
 
 protected:
    nsDocShellTreeOwner();
@@ -63,6 +66,7 @@ protected:
    nsWebBrowser*           mWebBrowser;
    nsIDocShellTreeOwner*   mTreeOwner;
    nsIWebBrowserChrome*    mWebBrowserChrome;
+   nsIWebProgressListener* mOwnerProgressListener;
    nsIBaseWindow*          mOwnerWin;
    nsIInterfaceRequestor*  mOwnerRequestor;
 };
