@@ -393,9 +393,9 @@ function OpenURL(event, node, root)
 	{
 	}
 
-	window.open(url,'bookmarks');
-
-	return(true);
+	// window.open(url,'bookmarks');
+ window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url ); // get right sized window
+ return(true);
 }
 
 
