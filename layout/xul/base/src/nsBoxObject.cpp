@@ -40,6 +40,7 @@ NS_IMPL_ISUPPORTS2(nsBoxObject, nsIBoxObject, nsPIBoxObject)
 
 // Constructors/Destructors
 nsBoxObject::nsBoxObject(void)
+:mContent(nsnull), mPresShell(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }

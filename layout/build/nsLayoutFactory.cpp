@@ -452,7 +452,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
   }
-  /*
   else if (mClassID.Equals(kBrowserBoxObjectCID)) {
     res = NS_NewBrowserBoxObject((nsIBoxObject**) &inst);
     if (NS_FAILED(res)) {
@@ -473,7 +472,7 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewIFrameBoxObject", res);
       return res;
     }
-  }*/
+  }
   else if (mClassID.Equals(kNodeInfoManagerCID)) {
     res = NS_NewNodeInfoManager((nsINodeInfoManager**) &inst);
     if (NS_FAILED(res)) {
