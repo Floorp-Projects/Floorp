@@ -346,11 +346,13 @@ nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *current
                   if (NS_SUCCEEDED(rv))
                   {
                     m_curTempFile = tempFileSpec;
-                    rv = destFolder->CopyFileMessage(tempFileSpec,
+                    nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
+                    if (copyService)
+                      rv = copyService->CopyFileMessage(tempFileSpec, destFolder,
                       /* nsIMsgDBHdr* msgToReplace */ nsnull,
                       PR_TRUE /* isDraftOrTemplate */,
-                      m_window,
-                      this);
+                        this,
+                        m_window);
                   }
                   else
                     m_curTempFile->Delete(PR_FALSE);
