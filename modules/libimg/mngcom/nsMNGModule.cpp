@@ -34,6 +34,10 @@ static nsModuleComponentInfo components[] =
   { "MNG Decoder",
      NS_MNGDECODER_CID,
      "component://netscape/image/decoder&type=video/x-mng",
+     MNGDecoder::Create },
+  { "JNG Decoder",
+     NS_MNGDECODER_CID,
+     "component://netscape/image/decoder&type=image/x-jng",
      MNGDecoder::Create }
 };
 
