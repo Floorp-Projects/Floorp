@@ -280,6 +280,7 @@ enum nsDOMClassInfoID {
    nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE |                        \
    nsIXPCScriptable::DONT_ASK_INSTANCE_FOR_SCRIPTABLE |                    \
    nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES |                        \
+   nsIXPCScriptable::WANT_NEWRESOLVE |                                     \
    nsIXPCScriptable::WANT_CHECKACCESS |                                    \
    nsIXPCScriptable::WANT_POSTCREATE)
 

@@ -307,6 +307,7 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
   PRBool found_old;
   nsCOMPtr<nsIInterfaceInfo> if_info;
   nsXPIDLCString if_name;
+  const nsIID *iid;
 
   for ( ; domInterfaces->IsDone() == NS_ENUMERATOR_FALSE; domInterfaces->Next()) {
     rv = domInterfaces->CurrentItem(getter_AddRefs(entry));
@@ -314,9 +315,9 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
 
     nsCOMPtr<nsIInterfaceInfo> if_info(do_QueryInterface(entry));
     if_info->GetName(getter_Copies(if_name));
-    rv = RegisterInterface(if_info,
-                           if_name.get() + sizeof(NS_DOM_INTERFACE_PREFIX) - 1,
-                           &found_old);
+    if_info->GetIIDShared(&iid);
+    rv = RegisterInterface(if_name.get() + sizeof(NS_DOM_INTERFACE_PREFIX) - 1,
+                           iid, &found_old);
 
 #ifdef DEBUG
     NS_ASSERTION(!found_old,
@@ -406,7 +407,7 @@ nsScriptNameSpaceManager::RegisterExternalInterfaces(PRBool aAsProto)
       if (aAsProto) {
         RegisterClassProto(name, iid, &found_old);
       } else {
-        RegisterInterface(if_info, name, &found_old);
+        RegisterInterface(name, iid, &found_old);
       }
 
       if (found_old) {
@@ -422,16 +423,10 @@ nsScriptNameSpaceManager::RegisterExternalInterfaces(PRBool aAsProto)
 }
 
 nsresult
-nsScriptNameSpaceManager::RegisterInterface(nsIInterfaceInfo* aIfInfo,
-                                            const char* aIfName,
+nsScriptNameSpaceManager::RegisterInterface(const char* aIfName,
+                                            const nsIID *aIfIID,
                                             PRBool* aFoundOld)
 {
-  NS_ASSERTION(aIfInfo, "Interface info not an nsIInterfaceInfo!");
-
-  // With the InterfaceInfo system it is actually cheaper to get the 
-  // interface name than to get the count of constants. The former is 
-  // always cached. The latter might require loading an xpt file!
-
   *aFoundOld = PR_FALSE;
 
   nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aIfName));
@@ -444,6 +439,7 @@ nsScriptNameSpaceManager::RegisterInterface(nsIInterfaceInfo* aIfInfo,
   }
 
   s->mType = nsGlobalNameStruct::eTypeInterface;
+  s->mIID = *aIfIID;
 
   return NS_OK;
 }

@@ -68,7 +68,7 @@ struct nsGlobalNameStruct
 
   union {
     PRInt32 mDOMClassInfoID; // eTypeClassConstructor
-    nsIID mIID; // eTypeClassProto
+    nsIID mIID; // eTypeInterface, eTypeClassProto
     nsExternalDOMClassInfoData* mData; // eTypeExternalClassInfo
     ConstructorAlias* mAlias; // eTypeExternalConstructorAlias
     nsCID mCID; // All other types...
@@ -134,8 +134,8 @@ protected:
                     const char *aCategory,
                     nsGlobalNameStruct::nametype aType);
   nsresult FillHashWithDOMInterfaces();
-  nsresult RegisterInterface(nsIInterfaceInfo* aIfInfo,
-                             const char* aIfName,
+  nsresult RegisterInterface(const char* aIfName,
+                             const nsIID *aIfIID,
                              PRBool* aFoundOld);
 
   // Inline PLDHashTable, init with PL_DHashTableInit() and delete
