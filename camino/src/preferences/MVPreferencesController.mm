@@ -127,6 +127,7 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 
 - (void) dealloc
 {
+  [mCurrentPaneIdentifier autorelease];
   [mLoadedPanes autorelease];
   [mPanes autorelease];
   [mPaneInfo autorelease];

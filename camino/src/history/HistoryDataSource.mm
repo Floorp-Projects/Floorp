@@ -569,6 +569,7 @@ public:
       {
         item = [[HistorySiteItem alloc] initWith_nsIHistoryItem:inHistoryItem];
         [mDataSource itemAdded:item];
+        [item release];
       }
     NS_HANDLER
       NSLog(@"Exception caught in ItemLoaded: %@", localException);
