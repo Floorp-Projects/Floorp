@@ -47,6 +47,10 @@
 #define strtok_r(s1, s2, x) PL_strtok_r((s1), (s2), (x))
 #endif /* USE_MOZILLA_TYPES */
 
+/* List of tokens which can be used to seperate entries in the 
+ * $XPSERVERLIST env var */
+static const char XPServerListSeparators[] = " \t\v\n\r\f";
+
 /* conformace only; X11 API does (currrently) not make use of |const|. 
  * If Xlib API gets fixed these macros can be turned into empty 
  * placeholders... (|#define MAKE_STRING_WRITABLE(x)|) :-)
@@ -221,10 +225,10 @@ int XpuGetPrinter( const char *arg_printername, Display **pdpyptr, XPContext *pc
       
       if( sl != NULL )
       {
-        for( display = strtok_r(sl, " ", &tok_lasts) ; 
+        for( display = strtok_r(sl, XPServerListSeparators, &tok_lasts) ; 
              display != NULL ; 
-             display = strtok_r(NULL, " ", &tok_lasts) )
-        {
+             display = strtok_r(NULL, XPServerListSeparators, &tok_lasts) )
+        {       
           if( XpuGetPrinter2(name, display, pdpyptr, pcontextptr) )
           {
             free(sl);
@@ -781,9 +785,9 @@ XPPrinterList XpuGetPrinterList( const char *printer, int *res_list_count )
     char *display;
     char *tok_lasts;
     
-    for( display = strtok_r(sl, " ", &tok_lasts) ; 
+    for( display = strtok_r(sl, XPServerListSeparators, &tok_lasts) ; 
          display != NULL ; 
-         display = strtok_r(NULL, " ", &tok_lasts) )
+         display = strtok_r(NULL, XPServerListSeparators, &tok_lasts) )
     {
       Display *pdpy;
       
