@@ -69,6 +69,7 @@ LINCS=  \
   -I$(PUBLIC)\intl \
   -I$(PUBLIC)\rdf \
   -I$(PUBLIC)\silentdl \
+  -I$(PUBLIC)\xpinstall \
   -I$(PUBLIC)\wallet \
   -I$(PUBLIC)\profile \
 !if defined(NGPREFS)
