@@ -46,22 +46,33 @@
 using namespace System;
 using namespace System::Windows::Forms;
 
+class nsIWebBrowserChrome;
+
 namespace Mozilla
 {
   namespace Embedding
   {
-    public __gc class Gecko
+    // .NET UI control class that can be placed in a Windows Form
+    // using DevStudio.NET's GUI.
+
+    public __gc class Gecko : public System::Windows::Forms::UserControl
     {
     public:
-      Gecko(Form *Form);
+      Gecko();
 
       static void TermEmbedding();
 
       void OpenURL(String *url);
-      void Resize();
+
+    protected:
+      // Overriden System::Windows::Forms::Control methods
+      void OnResize(EventArgs *e);
 
     private:
-      Form *mForm;
+      void CreateBrowserWindow(PRUint32 aChromeFlags,
+                               nsIWebBrowserChrome *aParent);
+
+      nsIWebBrowserChrome *mChrome;
 
       static bool sIsInitialized = false;
     }; // class Gecko
