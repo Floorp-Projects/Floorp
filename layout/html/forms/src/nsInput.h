@@ -110,7 +110,9 @@ public:
 
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute, nsString& aValue) const;
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const;
+#if 0
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute, PRBool& aValue) const;
+#endif
  
   /**
     * Set the named attribute of this input
@@ -162,7 +164,9 @@ protected:
   void          CacheAttribute(const nsString& aValue, PRInt32 aMinValue, PRInt32& aLoc);
   nsContentAttr GetCacheAttribute(nsString* const& aLoc, nsHTMLValue& aValue) const;
   nsContentAttr GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue) const;
+#if 0
   nsContentAttr GetCacheAttribute(PRBool aLoc, nsHTMLValue& aValue) const;
+#endif
 
   // Attributes common to all html form elements
   nsString*       mName;
