@@ -45,6 +45,68 @@ static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// let add some locale stuff
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+#include "nsILocale.h"
+#include "nsILocaleFactory.h"
+#include "nsLocaleCID.h"
+
+NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
+NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
+//
+//
+//
+nsILocale*
+get_applocale(void)
+{
+	nsresult			result;
+	nsILocaleFactory*	localeFactory;
+	nsILocale*			locale;
+	nsString*			catagory;
+	nsString*			value;
+
+	result = nsComponentManager::FindFactory(kLocaleFactoryCID,
+										(nsIFactory**)&localeFactory);
+	NS_ASSERTION(localeFactory!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	//
+	// test GetApplicationLocale
+	//
+	result = localeFactory->GetApplicationLocale(&locale);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_get_locale failed");
+	NS_ASSERTION(locale!=NULL,"nsLocaleTest: factory_get_locale failed");
+
+	//
+	// test and make sure the locale is a valid Interface
+	//
+	locale->AddRef();
+
+	catagory = new nsString("NSILOCALE_MESSAGES");
+	value = new nsString();
+
+	result = locale->GetCategory(catagory,value);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_get_locale failed");
+	NS_ASSERTION(value->Length()>0,"nsLocaleTest: factory_get_locale failed");
+
+	locale->Release();
+	delete catagory;
+	delete value;
+
+	localeFactory->Release();
+    return locale;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// end of locale stuff
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
 int
 main(int argc, char *argv[])
 {
@@ -79,26 +141,19 @@ main(int argc, char *argv[])
     printf("CreateThreadEventQueue failed\n");
     return 1;
   }
-
-  nsINetService* pNetService = nsnull;
-  ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
-    (nsISupports**) &pNetService);
-  if (NS_FAILED(ret)) {
-    printf("cannot get net service\n");
-    return 1;
-  }
-  nsIURL *url = nsnull;
-  ret = pNetService->CreateURL(&url, nsString(TEST_URL), nsnull, nsnull,
-    nsnull);
-  if (NS_FAILED(ret)) {
-    printf("cannot create URL\n");
-    return 1;
-  }
-
-  nsILocale* locale = nsnull;
+  nsILocale* locale = get_applocale();
 
   nsIStringBundle* bundle = nsnull;
+
+#if 0
   ret = service->CreateBundle(url, locale, &bundle);
+#else
+  ret = service->CreateBundle(TEST_URL, locale, &bundle);
+#endif
+  /* free it
+  */
+  locale->Release();
+
   if (NS_FAILED(ret)) {
     printf("cannot create instance\n");
     return 1;

@@ -53,6 +53,8 @@ class nsIStringBundleService : public nsISupports
 {
 public:
   NS_IMETHOD CreateBundle(nsIURL* aURL, nsILocale* aLocale,
+                          nsIStringBundle** aResult) = 0; /* deprecated */
+  NS_IMETHOD CreateBundle(const char* aURLSpec, nsILocale* aLocale,
                           nsIStringBundle** aResult) = 0;
 };
 
