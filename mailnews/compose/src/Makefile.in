@@ -22,8 +22,9 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME=msgcompose
-IS_COMPONENT=1
+MODULE=msgcompose
+LIBRARY_NAME=msgcompose_s
+NO_SHARED_LIB=1
 
 EXPORTS = \
 	nsSmtpUrl.h	\
@@ -48,6 +49,7 @@ CPPSRCS = \
 	nsComposer.cpp \
 	nsComposerNameSet.cpp \
 	nsMsgCompPrefs.cpp \
+	nsIComposer.cpp	\
 	$(NULL)
 
 EXTRA_DSO_LDOPTS =	\
