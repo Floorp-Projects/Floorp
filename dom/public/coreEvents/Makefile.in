@@ -42,7 +42,7 @@ EXPORTS =				\
 	nsIDOMDragListener.h		\
 	nsIDOMTextListener.h		\
 	nsIDOMCompositionListener.h	\
-	nsIDOMMenuListener.h		\
+	nsIDOMXULListener.h		\
 	nsIDOMScrollListener.h		\
 	nsIDOMContextMenuListener.h	\
 	$(NULL)
