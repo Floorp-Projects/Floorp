@@ -805,6 +805,8 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   if (identifier.IsEmpty()) {
     if (type.EqualsIgnoreCase("popup"))
       mElement->GetAttribute(NS_LITERAL_STRING("menu"), identifier);
+    else if (type.EqualsIgnoreCase("context"))
+      mElement->GetAttribute(NS_LITERAL_STRING("contextmenu"), identifier);
     if (identifier.IsEmpty())
       return rv;
   }
