@@ -824,7 +824,7 @@ NET_AskForAuthString(MWContext *context,
 
 
 			NET_Progress(context, XP_GetString( XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_HOST) );
-#if 1
+#if 0
 #if defined(SingleSignon)
 			/* prefill prompt with previous username/passwords if any 
              * this returns 1 if user pressed OK, or 0 if they Canceled
@@ -3788,7 +3788,7 @@ NET_AskForProxyAuth(MWContext * context,
 		PR_snprintf(buf, len*sizeof(char), XP_GetString( XP_PROXY_AUTH_REQUIRED_FOR ), prev->realm, proxy_addr);
 
 		NET_Progress(context, XP_GetString( XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_PROXY ) );
-#if 1
+#if 0
 #if defined(SingleSignon)
 		/* prefill prompt with previous username/passwords if any */
 		len = SI_PromptUsernameAndPassword
