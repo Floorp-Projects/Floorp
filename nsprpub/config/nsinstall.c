@@ -45,8 +45,15 @@
 
 #if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) \
     || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) \
-    || defined(RHAPSODY) || defined(NEXTSTEP) || defined(QNX)
+    || defined(RHAPSODY) || defined(NEXTSTEP) || defined(QNX) \
+    || defined(BEOS)
 #undef HAVE_LCHOWN
+#endif
+
+#define HAVE_FCHMOD
+
+#if defined(BEOS)
+#undef HAVE_FCHMOD
 #endif
 
 /*
@@ -357,7 +364,11 @@ main(int argc, char **argv)
 		if (utime(toname, &utb) < 0)
 		    fail("cannot set times of %s", toname);
 	    }
+#ifdef HAVE_FCHMOD
 	    if (fchmod(tofd, mode) < 0)
+#else
+	    if (chmod(toname, mode) < 0)
+#endif
 		fail("cannot change mode of %s", toname);
 	    if ((owner || group) && fchown(tofd, uid, gid) < 0)
 		fail("cannot change owner of %s", toname);

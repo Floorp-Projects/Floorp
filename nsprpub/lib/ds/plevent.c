@@ -646,6 +646,14 @@ _pl_NativeNotify(PLEventQueue* self)
 }/* --- end _pl_NativeNotify() --- */
 #endif /* XP_UNIX */
 
+#if defined(XP_BEOS)
+static PRStatus
+_pl_NativeNotify(PLEventQueue* self)
+{
+    return PR_SUCCESS;    /* Is this correct? */
+}
+#endif /* XP_BEOS */
+
 #if defined(XP_MAC)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
@@ -928,7 +936,7 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 } /* end _md_CreateEventQueue() */
 #endif /* XP_OS2 */
 
-#if defined(XP_UNIX) || defined(XP_MAC)
+#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer
 */

@@ -28,7 +28,11 @@ ifeq ($(OS_ARCH),WINNT)
     DIRS = windows
   endif
 else
-  DIRS = unix
+  ifeq ($(OS_ARCH),BeOS)
+    DIRS = beos
+  else
+    DIRS = unix
+  endif
 endif
 
 # Disable optimization of the nspr on SunOS4.1.3

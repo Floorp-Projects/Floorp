@@ -131,6 +131,10 @@ ifeq ($(OS_ARCH),QNX)
 MDCPUCFG_H = _qnx.cfg
 endif
 
+ifeq ($(OS_ARCH),BeOS)
+MDCPUCFG_H = _beos.cfg
+endif
+
 export:: $(HEADERS) $(MDCPUCFG_H)
 	$(INSTALL) -m 444 $(HEADERS) $(DIST)/include/md
 	$(INSTALL) -m 444 $(MDCPUCFG_H) $(DIST)/include

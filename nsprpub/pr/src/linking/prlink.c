@@ -20,6 +20,10 @@
 
 #include <string.h>
 
+#ifdef XP_BEOS
+#include <image.h>
+#endif
+
 #ifdef XP_MAC
 #include <CodeFragments.h>
 #include <TextUtils.h>
@@ -77,6 +81,10 @@ struct PRLibrary {
     void*                       dlh;
 #endif 
 #endif 
+
+#ifdef XP_BEOS
+    void*			dlh;
+#endif
 };
 
 static PRLibrary *pr_loadmap;
@@ -375,14 +383,14 @@ PR_GetLibraryName(const char *path, const char *lib)
 #ifdef XP_MAC
     fullname = PR_smprintf("%s%s", path, lib);
 #endif
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
     if (strstr(lib, PR_DLL_SUFFIX) == NULL)
     {
         fullname = PR_smprintf("%s/lib%s%s", path, lib, PR_DLL_SUFFIX);
     } else {
         fullname = PR_smprintf("%s/%s", path, lib);
     }
-#endif /* XP_UNIX */
+#endif /* XP_UNIX || XP_BEOS */
     return fullname;
 }
 
@@ -642,6 +650,25 @@ PR_LoadLibrary(const char *name)
     }
 #endif
 
+#ifdef XP_BEOS
+    {
+	image_id h = load_add_on( name );
+
+	if( h == B_ERROR || h <= 0 ) {
+
+	    h = 0;
+	    result = NULL;
+	    PR_DELETE( lm );
+	    lm = NULL;
+	    goto unlock;
+	}
+	lm->name = strdup(name);
+	lm->dlh = (void*)h;
+	lm->next = pr_loadmap;
+	pr_loadmap = lm;
+    }
+#endif
+
 #ifdef XP_UNIX
 #ifdef HAVE_DLL
     {
@@ -716,6 +743,11 @@ PR_UnloadLibrary(PRLibrary *lib)
         lib->name, lib->refCount));
     goto done;
     }
+
+#ifdef XP_BEOS
+    unload_add_on( (image_id) lib->dlh );
+#endif
+
 #ifdef XP_UNIX
 #ifdef HAVE_DLL
 #ifdef USE_DLFCN
@@ -801,7 +833,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
         ** If the symbol was not found in the static table then check if
         ** the symbol was exported in the DLL... Win16 only!!
         */
-#if !defined(WIN16)
+#if !defined(WIN16) && !defined(XP_BEOS)
         PR_SetError(PR_FIND_SYMBOL_ERROR, 0);
         return (void*)NULL;
 #endif
@@ -826,6 +858,13 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
         f = (NSFindSymbol(lm->dlh, pName, &symAddr, &symClass) == noErr) ? symAddr : NULL;
     }
 #endif /* XP_MAC */
+
+#ifdef XP_BEOS
+    if( B_NO_ERROR != get_image_symbol( (image_id)lm->dlh, name, B_SYMBOL_TYPE_TEXT, &f ) ) {
+
+	f = NULL;
+    }
+#endif
 
 #ifdef XP_UNIX
 #ifdef HAVE_DLL

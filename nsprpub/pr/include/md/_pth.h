@@ -226,14 +226,6 @@ extern int (*_PT_aix_yield_fcn)();
 #error "Need to define PTHREAD_YIELD for this platform"
 #endif
 
-/*
-** And when you really wanted hardcore locking w/o any fluff ...
-**
-**          ... and why would you want that????
-*/
-#define _PR_LOCK_LOCK(_lock)      pthread_mutex_lock(&_lock->mutex);
-#define _PR_LOCK_UNLOCK(_lock)    pthread_mutex_unlock(&_lock->mutex);
-
 #define _MD_INIT_LOCKS()
 
 #endif /* nspr_pth_defs_h_ */

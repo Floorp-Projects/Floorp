@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(XP_UNIX) || defined(XP_OS2_EMX)
+#if defined(XP_UNIX) || defined(XP_OS2_EMX) || defined(XP_BEOS)
 #include <sys/time.h>
 #elif defined(WIN32) || defined(XP_OS2_VACPP)
 #include <sys/timeb.h>
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
      * of this program and omit the library build time
      * in PRVersionDescription.
      */
-#elif defined(XP_UNIX) || defined(XP_OS2_EMX)
+#elif defined(XP_UNIX) || defined(XP_OS2_EMX) || defined(XP_BEOS)
     long long now;
     struct timeval tv;
 #ifdef HAVE_SVID_GETTOD
@@ -52,6 +52,8 @@ int main(int argc, char **argv)
     now = ((1000000LL) * tv.tv_sec) + (long long)tv.tv_usec;
 #if defined(OSF1)
     fprintf(stdout, "%ld", now);
+#elif defined(BEOS) && defined(__POWERPC__)
+    fprintf(stdout, "%Ld", now);  /* Metroworks on BeOS PPC */
 #else
     fprintf(stdout, "%lld", now);
 #endif

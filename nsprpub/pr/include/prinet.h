@@ -40,14 +40,15 @@
 #ifndef prinet_h__
 #define prinet_h__
 
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
 
 #include <sys/types.h>
 #include <sys/socket.h>		/* AF_INET */
 #include <netinet/in.h>         /* INADDR_ANY, ..., ntohl(), ... */
 #ifdef XP_OS2
 #include <sys/ioctl.h>
-#else
+#endif
+#ifdef XP_UNIX
 #include <arpa/inet.h>
 #endif
 #include <netdb.h>

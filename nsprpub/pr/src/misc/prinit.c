@@ -33,7 +33,7 @@ PRFileDesc *_pr_stdin;
 PRFileDesc *_pr_stdout;
 PRFileDesc *_pr_stderr;
 
-#if !defined(_PR_PTHREADS)
+#if !defined(_PR_PTHREADS) && !defined(_PR_BTHREADS)
 
 PRCList _pr_active_local_threadQ =
 			PR_INIT_STATIC_CLIST(&_pr_active_local_threadQ);
@@ -166,7 +166,7 @@ void _PR_ImplicitInitialization()
 
 PR_IMPLEMENT(void) PR_DisableClockInterrupts(void)
 {
-#if !defined(_PR_PTHREADS)
+#if !defined(_PR_PTHREADS) && !defined(_PR_BTHREADS)
 	if (!_pr_initialized) {
 		_PR_InitStuff();
 	} else {
@@ -177,7 +177,7 @@ PR_IMPLEMENT(void) PR_DisableClockInterrupts(void)
 
 PR_IMPLEMENT(void) PR_EnableClockInterrupts(void)
 {
-#if !defined(_PR_PTHREADS)
+#if !defined(_PR_PTHREADS) && !defined(_PR_BTHREADS)
 	if (!_pr_initialized) {
 		_PR_InitStuff();
 	}
@@ -187,14 +187,14 @@ PR_IMPLEMENT(void) PR_EnableClockInterrupts(void)
 
 PR_IMPLEMENT(void) PR_BlockClockInterrupts(void)
 {
-#if !defined(_PR_PTHREADS)
+#if !defined(_PR_PTHREADS) && !defined(_PR_BTHREADS)
     	_PR_MD_BLOCK_CLOCK_INTERRUPTS();
 #endif
 }
 
 PR_IMPLEMENT(void) PR_UnblockClockInterrupts(void)
 {
-#if !defined(_PR_PTHREADS)
+#if !defined(_PR_PTHREADS) && !defined(_PR_BTHREADS)
     	_PR_MD_UNBLOCK_CLOCK_INTERRUPTS();
 #endif
 }
@@ -237,7 +237,7 @@ PR_IMPLEMENT(PRIntn) PR_Initialize(
  *
  *-----------------------------------------------------------------------
  */
-#if defined(_PR_PTHREADS)
+#if defined(_PR_PTHREADS) || defined(_PR_BTHREADS)
     /* see ptthread.c */
 #else
 static void
@@ -284,7 +284,7 @@ thread is destroyed, can not access current thread any more.
  *
  *----------------------------------------------------------------------
  */
-#if defined(_PR_PTHREADS)
+#if defined(_PR_PTHREADS) || defined(_PR_BTHREADS)
     /* see ptthread.c */
 #else
 
@@ -375,7 +375,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
  *------------------------------------------------------------------------
  */
 
-#if defined(_PR_PTHREADS)
+#if defined(_PR_PTHREADS) || defined(_PR_BTHREADS)
     /* see ptthread.c */
 #else
 PR_IMPLEMENT(void) PR_ProcessExit(PRIntn status)
