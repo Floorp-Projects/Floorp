@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -82,7 +82,6 @@ nsFTPConn::Open()
 {
     int err = OK;
     char cmd[kCmdBufSize], resp[kRespBufSize];
-    int respBufSize = kRespBufSize;
 
     if (!mHost)
         return E_PARAM;
@@ -172,9 +171,9 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aResumePos,
                int aOvWrite, FTPGetCB aCBFunc)
 {
     struct stat dummy;
-    int err = OK, wrote = 0, totBytesRd = 0;
+    int err = OK, totBytesRd = 0;
     char cmd[kCmdBufSize], resp[kRespBufSize];
-    int fileSize = 0, respBufSize = kRespBufSize;
+    int fileSize = 0;
     FILE *loclfd = NULL;
 
     if (!aSrvPath || !aLoclPath)
@@ -236,10 +235,9 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aResumePos,
         }
     }
 
-    totBytesRd = 0;
     do 
     {
-        respBufSize = kDlBufSize;
+        int respBufSize = kDlBufSize;
         err = mDataSock->Recv((unsigned char *)resp, &respBufSize);
         if (err != nsSocket::E_READ_MORE && 
             err != nsSocket::E_EOF_FOUND &&
@@ -251,7 +249,7 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aResumePos,
                 goto BAIL;
             
         /* append to local file */
-        wrote = fwrite((void *)resp, 1, respBufSize, loclfd);
+        const int wrote = fwrite((void *)resp, 1, respBufSize, loclfd);
         if (wrote != respBufSize)
         {   
             err = E_WRITE;
@@ -340,8 +338,6 @@ nsFTPConn::FlushCntlSock(nsSocket *aSock, int bailOnTimeOut)
 {
     int err = OK;
     char resp[kRespBufSize];
-    int respSize;
-    int timeout = 300000; /* Time out value is in Usecs.  This should give us 3 tries */
     int bailOnTimeOutCount = 0;
 
     /* param check */
@@ -350,8 +346,10 @@ nsFTPConn::FlushCntlSock(nsSocket *aSock, int bailOnTimeOut)
 
     do
     {
+        // Time out value is in Usecs. This should give us 3 tries.
+        const int timeout = 300000;
         ++bailOnTimeOutCount;
-        respSize = kRespBufSize;
+        int respSize = kRespBufSize;
         err = aSock->Recv((unsigned char *)resp, &respSize, timeout);
         if (err != nsSocket::OK && 
             err != nsSocket::E_READ_MORE && 
@@ -398,7 +396,6 @@ nsFTPConn::IssueCmd(const char *aCmd, char *aResp, int aRespSize, nsSocket *aSoc
 {
     int err = OK;
     int len;
-    int respSize;
 
     /* param check */
     if (!aSock || !aCmd || !aResp || aRespSize <= 0)
@@ -412,7 +409,7 @@ nsFTPConn::IssueCmd(const char *aCmd, char *aResp, int aRespSize, nsSocket *aSoc
     /* receive response */
     do
     {
-        respSize = aRespSize;
+        int respSize = aRespSize;
         err = aSock->Recv((unsigned char *)aResp, &respSize);
         if (err != nsSocket::OK && 
             err != nsSocket::E_READ_MORE && 
@@ -680,4 +677,3 @@ main(int argc, char **argv)
     exit(err);
 }
 #endif /* TEST_NSFTPCONN */
-
