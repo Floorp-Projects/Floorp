@@ -5828,11 +5828,6 @@ nsFontMetricsGTK::FindStyleSheetSpecificFont(PRUint32 aChar)
         NS_ASSERTION(font->SupportsChar(aChar), "font supposed to support this char");
         return font;
       }
-      font = TryLangGroup(mLangGroup, familyName, aChar);
-      if (font) {
-        NS_ASSERTION(font->SupportsChar(aChar), "font supposed to support this char");
-        return font;
-      }
     }
     else {
       font = TryFamily(familyName, aChar);
