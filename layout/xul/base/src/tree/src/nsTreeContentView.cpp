@@ -777,7 +777,8 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
       // Hide this row along with its children.
       PRInt32 count;
       RemoveRow(index, &count);
-      mBoxObject->RowCountChanged(index, -count);
+      if (mBoxObject)
+        mBoxObject->RowCountChanged(index, -count);
     }
     else if (!hidden && index < 0) {
       // Show this row along with its children.
@@ -796,7 +797,8 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
     if (aAttribute == nsXULAtoms::properties) {
       nsAutoString id;
       aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
-      mBoxObject->InvalidateColumn(id.get());
+      if (mBoxObject)
+        mBoxObject->InvalidateColumn(id.get());
     }
   }
   else if (tag == nsXULAtoms::treeitem) {
@@ -808,7 +810,8 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
         aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
         PRBool isContainer = container.Equals(NS_LITERAL_STRING("true"));
         row->SetContainer(isContainer);
-        mBoxObject->InvalidateRow(index);
+        if (mBoxObject)
+          mBoxObject->InvalidateRow(index);
       }
       else if (aAttribute == nsXULAtoms::open) {
         nsAutoString open;
@@ -825,14 +828,15 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
         aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::empty, empty);
         PRBool isEmpty = empty.Equals(NS_LITERAL_STRING("true"));
         row->SetEmpty(isEmpty);
-        mBoxObject->InvalidateRow(index);
+        if (mBoxObject)
+          mBoxObject->InvalidateRow(index);
       }
     }
   }
   else if (tag == nsXULAtoms::treeseparator) {
     PRInt32 index = FindContent(aContent);
     if (index >= 0) {
-      if (aAttribute == nsXULAtoms::properties) {
+      if (aAttribute == nsXULAtoms::properties && mBoxObject) {
         mBoxObject->InvalidateRow(index);
       }
     }
@@ -842,7 +846,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
       nsCOMPtr<nsIContent> parent = aContent->GetParent();
       if (parent) {
         PRInt32 index = FindContent(parent);
-        if (index >= 0) {
+        if (index >= 0 && mBoxObject) {
           mBoxObject->InvalidateRow(index);
         }
       }
@@ -859,7 +863,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
         nsCOMPtr<nsIContent> grandParent = parent->GetParent();
         if (grandParent) {
           PRInt32 index = FindContent(grandParent);
-          if (index >= 0) {
+          if (index >= 0 && mBoxObject) {
             // XXX Should we make an effort to invalidate only cell ?
             mBoxObject->InvalidateRow(index);
           }
@@ -936,31 +940,34 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
     PRInt32 count;
     PRInt32 parentIndex = FindContent(aContainer);
     InsertRow(parentIndex, aIndexInContainer, aChild, &count);
-    mBoxObject->RowCountChanged(parentIndex + aIndexInContainer + 1, count);
+    if (mBoxObject)
+      mBoxObject->RowCountChanged(parentIndex + aIndexInContainer + 1, count);
   }
   else if (childTag == nsXULAtoms::treechildren) {
     PRInt32 index = FindContent(aContainer);
     if (index >= 0) {
       Row* row = (Row*)mRows[index];
       row->SetEmpty(PR_FALSE);
-      mBoxObject->InvalidateRow(index);
+      if (mBoxObject)
+        mBoxObject->InvalidateRow(index);
       if (row->IsContainer() && row->IsOpen()) {
         PRInt32 count;
         EnsureSubtree(index, &count);
-        mBoxObject->RowCountChanged(index + 1, count);
+        if (mBoxObject)
+          mBoxObject->RowCountChanged(index + 1, count);
       }
     }
   }
   else if (childTag == nsXULAtoms::treerow) {
     PRInt32 index = FindContent(aContainer);
-    if (index >= 0)
+    if (index >= 0 && mBoxObject)
       mBoxObject->InvalidateRow(index);
   }
   else if (childTag == nsXULAtoms::treecell) {
     nsCOMPtr<nsIContent> parent = aContainer->GetParent();
     if (parent) {
       PRInt32 index = FindContent(parent);
-      if (index >= 0)
+      if (index >= 0 && mBoxObject)
         mBoxObject->InvalidateRow(index);
     }
   }
@@ -1030,7 +1037,8 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
     if (index >= 0) {
       PRInt32 count;
       RemoveRow(index, &count);
-      mBoxObject->RowCountChanged(index, -count);
+      if (mBoxObject)
+        mBoxObject->RowCountChanged(index, -count);
     }
   }
   else if (tag == nsXULAtoms::treechildren) {
@@ -1041,27 +1049,30 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
       PRInt32 count;
       RemoveSubtree(index, &count);
       // Invalidate also the row to update twisty.
-      mBoxObject->InvalidateRow(index);
-      mBoxObject->RowCountChanged(index + 1, -count);
+      if (mBoxObject) {
+        mBoxObject->InvalidateRow(index);
+        mBoxObject->RowCountChanged(index + 1, -count);
+      }
     } else {
       nsCOMPtr<nsIAtom> containerTag;
       aContainer->GetTag(getter_AddRefs(containerTag));
       if (containerTag == nsXULAtoms::tree ) {
         ClearRows();
-        mBoxObject->Invalidate();
+        if (mBoxObject)
+          mBoxObject->Invalidate();
       }
     }
   }
   else if (tag == nsXULAtoms::treerow) {
     PRInt32 index = FindContent(aContainer);
-    if (index >= 0)
+    if (index >= 0 && mBoxObject)
       mBoxObject->InvalidateRow(index);
   }
   else if (tag == nsXULAtoms::treecell) {
     nsCOMPtr<nsIContent> parent = aContainer->GetParent();
     if (parent) {
       PRInt32 index = FindContent(parent);
-      if (index >= 0)
+      if (index >= 0 && mBoxObject)
         mBoxObject->InvalidateRow(index);
     }
   }
@@ -1333,7 +1344,8 @@ nsTreeContentView::InsertRowFor(nsIContent* aParent, nsIContent* aContainer, nsI
 
     PRInt32 count;
     InsertRow(parentIndex, index, aChild, &count);
-    mBoxObject->RowCountChanged(parentIndex + index + 1, count);
+    if (mBoxObject)
+      mBoxObject->RowCountChanged(parentIndex + index + 1, count);
   }
 }
 
@@ -1401,8 +1413,10 @@ nsTreeContentView::OpenContainer(PRInt32 aIndex)
 
   PRInt32 count;
   EnsureSubtree(aIndex, &count);
-  mBoxObject->InvalidateRow(aIndex);
-  mBoxObject->RowCountChanged(aIndex + 1, count);
+  if (mBoxObject) {
+    mBoxObject->InvalidateRow(aIndex);
+    mBoxObject->RowCountChanged(aIndex + 1, count);
+  }
 }
 
 
@@ -1414,8 +1428,10 @@ nsTreeContentView::CloseContainer(PRInt32 aIndex)
 
   PRInt32 count;
   RemoveSubtree(aIndex, &count);
-  mBoxObject->InvalidateRow(aIndex);
-  mBoxObject->RowCountChanged(aIndex + 1, -count);
+  if (mBoxObject) {
+    mBoxObject->InvalidateRow(aIndex);
+    mBoxObject->RowCountChanged(aIndex + 1, -count);
+  }
 }
 
 PRInt32
