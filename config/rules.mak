@@ -284,6 +284,7 @@ PDBFILE=$(DLLNAME)
 !endif
 
 # Replace optimizer and mapinfo related flags to use our own conventions
+!if defined(MOZ_MAPINFO)
 !ifdef LIBRARY_NAME
 MAPFILE=$(LIBRARY_NAME)
 !endif
@@ -291,8 +292,10 @@ MAPFILE=$(LIBRARY_NAME)
 !ifdef DLLNAME
 MAPFILE=$(DLLNAME)
 !endif
+!endif
 
 # Replace optimizer and codinfo related flags to use our own conventions
+!if defined(MOZ_CODINFO)
 !ifdef LIBRARY_NAME
 CODFILE=$(LIBRARY_NAME)
 !endif
@@ -300,6 +303,7 @@ CODFILE=$(LIBRARY_NAME)
 !ifdef DLLNAME
 CODFILE=$(DLLNAME)
 !endif
+!endif 
 #//------------------------------------------------------------------------
 #//
 #// Prepend the "object directory" to any public make variables.
@@ -318,16 +322,26 @@ PDBFILE=.\$*.pdb  # used for executables
 RESFILE=.\$(OBJDIR)\$(RESFILE)
 !endif
 
+
+# if MOZ_MAPINFO is set. linker will generate map files for all the dll/exe.
+!if defined(MOZ_MAPINFO)
 !ifdef MAPFILE
 MAPFILE=.\$(OBJDIR)\$(MAPFILE).map
 !else
 MAPFILE=.\$*.map  # used for executables
 !endif
+!else
+!ifdef MAPFILE
+MAPFILE=.\$(OBJDIR)\$(MAPFILE)
+!endif
+!endif
 
+!if defined(MOZ_CODINFO)
 !ifdef CODFILE
 CODFILE=.\$(OBJDIR)\$(CODFILE).cod
 !else
 CODFILE=.\$*.cod  # used for executables
+!endif
 !endif
 
 !ifdef DIRS
