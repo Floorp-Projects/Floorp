@@ -156,7 +156,7 @@ protected:
     return PR_FALSE;
   }
 
-  nsresult MoveOutOfFlow(nsIPresContext& aPresContext, nsIFrame* aFrameList);
+//XXX  nsresult MoveOutOfFlow(nsIPresContext& aPresContext, nsIFrame* aFrameList);
 
   nsAnonymousBlockFrame* FindPrevAnonymousBlock(nsInlineFrame** aBlockParent);
 
@@ -322,6 +322,7 @@ nsInlineFrame::DeleteFrame(nsIPresContext& aPresContext)
 //////////////////////////////////////////////////////////////////////
 // nsInlineFrame child management
 
+#if XXX
 nsresult
 nsInlineFrame::MoveOutOfFlow(nsIPresContext& aPresContext,
                              nsIFrame* aFrameList)
@@ -348,6 +349,7 @@ nsInlineFrame::MoveOutOfFlow(nsIPresContext& aPresContext,
   }
   return NS_OK;
 }
+#endif
 
 // Find the first inline frame, looking backwards starting at "this",
 // that contains an anonymous block. Return nsnull if an anonymous
@@ -470,10 +472,12 @@ nsInlineFrame::AppendFrames(nsIPresContext& aPresContext,
                             PRBool aGenerateReflowCommands)
 {
   nsresult rv = NS_OK;
+#if XXX
   rv = MoveOutOfFlow(aPresContext, aFrameList);
   if (NS_FAILED(rv)) {
     return rv;
   }
+#endif
 
   SectionData sd(aFrameList);
 
@@ -615,10 +619,13 @@ nsInlineFrame::InsertFrames(nsIPresContext& aPresContext,
   }
 
   nsresult rv = NS_OK;
+#if XXX
   rv = MoveOutOfFlow(aPresContext, aFrameList);
   if (NS_FAILED(rv)) {
     return rv;
   }
+#endif
+
   SectionData sd(aFrameList);
   if (sd.HasABlock()) {
     // Break insertion up into 3 pieces
@@ -954,11 +961,21 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
 
   nsIFrame* oldFrameParent;
   if (ParentIsInlineFrame(aOldFrame, &oldFrameParent)) {
+    // If the frame being removed has zero size then don't bother
+    // generating a reflow command.
+    nsRect bbox;
+    aOldFrame->GetRect(bbox);
+    if ((0 == bbox.width) && (0 == bbox.height)) {
+      // Don't bother generating a reflow command
+    }
+    else {
+      generateReflowCommand = PR_TRUE;
+      target = this;
+    }
+
     // When the parent is an inline frame we have a simple task - just
     // remove the frame from our list and generate a reflow.
     mFrames.DeleteFrame(aPresContext, aOldFrame);
-    generateReflowCommand = PR_TRUE;
-    target = this;
 #ifdef NOISY_ANON_BLOCK
     printf("RemoveFrame: case 1\n");
 #endif
