@@ -23,19 +23,25 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE	= widget
 LIBRARY_NAME	= wdgtos2
 EXPORT_LIBRARY = 1
 IS_COMPONENT    = 1
 MODULE_NAME	= nsWidgetOS2Module
+REQUIRES	= gfx \
+		  xpcom \
+		  string \
+		  dom \
+		  timer \
+		  necko \
+		  uconv \
+		  intl \
+		  pref \
+		  plugin \
+		  webshell \
+		  $(NULL)
 
 EXTRA_DSO_LIBS	= gkgfx
-
-REQUIRES	= util \
-		  img \
-		  xpcom \
-		  raptor \
-		  netlib \
-		  $(NULL)
 
 DIRS		= res
 
