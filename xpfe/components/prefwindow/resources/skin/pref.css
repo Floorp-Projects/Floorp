@@ -71,3 +71,11 @@ background-color: grey
 menu.colorpicker {
   border: 1px outset #CCCCCC;
 }
+
+/* reorder buttons */
+titledbutton.up {
+  list-style-image: url("chrome://global/skin/scroll-up.gif");
+}
+titledbutton.down {
+  list-style-image: url("chrome://global/skin/scroll-down.gif");
+}
