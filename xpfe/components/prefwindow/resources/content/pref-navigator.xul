@@ -34,10 +34,29 @@
 
   <script language="javascript" src="chrome://global/content/strres.js"></script>
   <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+  <script language="javascript" src="chrome://global/content/nsJSComponentManager.js">
+  </script>
   <script language="JavaScript">
   <![CDATA[
     _elementIDs = ["startupPage", "browserStartupHomepage", "histDay"];
   ]]>
+  function Startup()
+  {
+  	var urlBarHist = nsJSComponentManager.getService("component://netscape/browser/urlbarhistory",
+  "nsIUrlbarHistory");
+  if ( urlBarHist )
+  {
+	var button = document.getElementById("ClearUrlBarHistoryButton");
+  	if ( urlBarHist.count == 0 )
+  	{
+  		button.setAttribute("disabled","true");
+  	}
+  	else
+  	{
+  		button.removeAttribute("disabled");
+  	}
+  }
+  }
   </script>
   
   <box class="box-smallheader" title="&lHeader;"/>
@@ -96,7 +115,8 @@
     <box autostretch="never">
       <html flex="1">&clearLocationBar.label;</html>
       <box autostretch="never" halign="right">
-        <button class="dialog" value="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"/>
+        <button class="dialog" id="ClearUrlBarHistoryButton" value="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
+         oncommand="prefClearUrlbarHistory();"/>
       </box>
     </box>
   </titledbox>  

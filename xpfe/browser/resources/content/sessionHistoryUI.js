@@ -1,4 +1,27 @@
-
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ * Jason Eager <jce2@po.cwru.edu>
+ * (Some other netscape person who forgot to put the NPL header!)
+ *
+ */
 const MAX_HISTORY_MENU_ITEMS = 15;
 
 function FillHistoryMenu( aParent, aMenu )
@@ -75,8 +98,8 @@ function createUBHistoryMenu( aEvent )
       {
         var len = ubHistory.count;
         var end = (len > MAX_HISTORY_MENU_ITEMS) ? (len - MAX_HISTORY_MENU_ITEMS) : 0;
-        if (len > 0)
-          deleteHistoryItems( aEvent ); // Delete old History Menus
+        // deleteHistoryItems needs to be done even if len = 0!
+        deleteHistoryItems( aEvent ); // Delete old History Menus 
         for (var i = len - 1; i >= end; i--)
           createMenuItem( aEvent.target, i, ubHistory.getEntryAtIndex(i));
       }
