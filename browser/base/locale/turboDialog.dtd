@@ -1,4 +1,0 @@
-<!ENTITY            exitWarningMsg.label   "Quick Launch is active, so &brandShortName; remains in memory and can be started again quickly. To completely exit, right click on the &brandShortName; icon in the system tray and select Exit.">
-<!ENTITY            exitWarningTitle.label "Quick Launch">
-<!ENTITY            exitWarningCheckbox.label "Don't show me this message again">
-<!ENTITY            exitWarningCheckbox.accesskey "D">
