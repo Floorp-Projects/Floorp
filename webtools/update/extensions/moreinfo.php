@@ -35,8 +35,7 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-?>
-<?php
+
 require"../core/config.php";
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
@@ -104,6 +103,14 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
         $appvernames[$release] = $version;
     }
 
+// If special category, we don't want to join on the category table
+if ($category=="Editors Pick" 
+ or $category=="Newest" 
+ or $category=="Popular" 
+ or $category=="Top Rated") {
+  unset($category);
+}
+
 //Run Query and Create List
 $s = "0";
 $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Description, TM.Rating, TM.TotalDownloads, TM.downloadcount, TV.vID, TV.Version, TV.MinAppVer, TV.MaxAppVer, TV.Size, TV.DateAdded AS VerDateAdded, TV.DateUpdated AS VerDateUpdated, TV.URI, TV.Notes, TA.AppName, TOS.OSName
@@ -112,7 +119,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     INNER  JOIN applications TA ON TV.AppID = TA.AppID
     INNER  JOIN os TOS ON TV.OSID = TOS.OSID";
 
-    if ($category && $category !=="%") {
+    if ($category) {
         $sql .=" INNER  JOIN categoryxref TCX ON TM.ID = TCX.ID
         INNER JOIN categories TC ON TCX.CategoryID = TC.CategoryID ";
     }
@@ -132,7 +139,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
         if ($editorpick=="true") {
             $sql .="AND TR.Pick = 'YES' ";
         }
-        if ($category && $category !=="%") {
+        if ($category) {
             $sql .="AND CatName LIKE '$category' ";
         }
         if ($app_version) {
@@ -454,25 +461,30 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 		<ul>
         <?php
         //Categories
-        $sql = "SELECT `CatName` from `categoryxref` TCX INNER JOIN `categories` TC ON TCX.CategoryID=TC.CategoryID  WHERE `ID`='$id' GROUP BY `CatName` ORDER BY `CatName` ASC";
+        $sql = "SELECT `CatName` from `categoryxref` TCX 
+                  INNER JOIN `categories` TC 
+                    ON TCX.CategoryID=TC.CategoryID  
+                WHERE `ID`='$id' 
+                GROUP BY `CatName` 
+                ORDER BY `CatName` ASC";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-            $num_results = mysql_num_rows($sql_result); $i=0;
+        $num_results = mysql_num_rows($sql_result); $i=0;
 
-            if ($num_results=="1") {
-                $categories = "Category: ";
-            } else {
-                $categories = "Categories: ";
-            }
+        if ($num_results=="1") {
+          $categories = "Category: ";
+        } else {
+          $categories = "Categories: ";
+        }
 
-            while ($row = mysql_fetch_array($sql_result)) {
-                $i++;
-                $categories .= $row["CatName"];
-                if ($num_results > $i ) {
-                    $categories .= ", ";
-                }
-            }
+        while ($row = mysql_fetch_array($sql_result)) {
+          $i++;
+          $categories .= $row["CatName"];
+          if ($num_results > $i ) {
+            $categories .= ", ";
+          }
+        }
         ?>
-        <li><?php if ($categories) { echo"$categories"; } ?></li>
+    <li><?php if ($categories) { echo"$categories"; } ?></li>
 		<li><?php echo"$datestring"; // Last Updated: September 11, 2004 5:38am ?></li>
 		<li>Total Downloads: <?php echo"$downloadcount"; ?> &nbsp;&#8212;&nbsp; Downloads this Week: <?php echo"$populardownloads"; ?></li>
 		<li>See <a href="?<?php echo"".uriparams()."&amp;id=$id&amp;page=releases"; ?>">all previous releases</a> of this extension.</li>

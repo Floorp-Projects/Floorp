@@ -35,8 +35,7 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-?>
-<?php
+
 require"../core/config.php";
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
@@ -74,18 +73,18 @@ $type = "T";
 $index = yes;
 $category=$_GET["category"];
 include"inc_sidebar.php";
-?>
 
-<?php
 $id = escape_string($_GET["id"]);
 
 
 //Get Author Data
-$sql2 = "SELECT  TM.Name, TU.UserName, TU.UserID, TU.UserEmail FROM  `main`  TM 
+$sql2 = "SELECT  TM.Name, TU.UserName, TU.UserID, TU.UserEmail 
+        FROM  `main`  TM 
         LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
         INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
         WHERE TM.ID = '$id'
         ORDER  BY  `Type` , `Name`  ASC ";
+
 $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row2 = mysql_fetch_array($sql_result2)) {
         $authorarray[$row2[Name]][] = $row2["UserName"];
@@ -95,173 +94,199 @@ $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".m
 //Assemble a display application version array
 $sql = "SELECT `Version`, `major`, `minor`, `release`, `SubVer` FROM `applications` WHERE `AppName`='$application' ORDER BY `major`,`minor`";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-    while ($row = mysql_fetch_array($sql_result)) {
-        $version = $row["Version"];
-        $subver = $row["SubVer"];
-        $release = "$row[major].$row[minor]";
-        if ($row["release"]) {$release = ".$release$row[release]";}
-        if ($subver !=="final") {$release="$release$subver";}
-        $appvernames[$release] = $version;
-    }
+
+while ($row = mysql_fetch_array($sql_result)) {
+  $version = $row["Version"];
+  $subver = $row["SubVer"];
+  $release = "$row[major].$row[minor]";
+  if ($row["release"]) {
+    $release = ".$release$row[release]";
+  }
+  if ($subver !=="final") {
+    $release="$release$subver";
+  }
+  $appvernames[$release] = $version;
+}
 
 //Run Query and Create List
 $s = "0";
 $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Description, TM.Rating, TM.TotalDownloads, TM.downloadcount, TV.vID, TV.Version, TV.MinAppVer, TV.MaxAppVer, TV.Size, TV.DateAdded AS VerDateAdded, TV.DateUpdated AS VerDateUpdated, TV.URI, TV.Notes, TA.AppName, TOS.OSName
-    FROM  `main` TM
-    INNER  JOIN version TV ON TM.ID = TV.ID
-    INNER  JOIN applications TA ON TV.AppID = TA.AppID
-    INNER  JOIN os TOS ON TV.OSID = TOS.OSID";
+        FROM  `main` TM
+        INNER  JOIN version TV ON TM.ID = TV.ID
+        INNER  JOIN applications TA ON TV.AppID = TA.AppID
+        INNER  JOIN os TOS ON TV.OSID = TOS.OSID";
 
-    if ($category && $category !=="%") {
-        $sql .=" INNER  JOIN categoryxref TCX ON TM.ID = TCX.ID
-        INNER JOIN categories TC ON TCX.CategoryID = TC.CategoryID ";
+// If special category, we don't want to join on the category table
+if ($category=="Editors Pick" 
+ or $category=="Newest" 
+ or $category=="Popular" 
+ or $category=="Top Rated") {
+  unset($category);
+}
+
+
+if ($category) {
+  $sql .=" INNER JOIN categoryxref TCX ON TM.ID = TCX.ID
+           INNER JOIN categories TC ON TCX.CategoryID = TC.CategoryID ";
+}
+
+if ($editorpick=="true") {
+  $sql .=" INNER JOIN reviews TR ON TM.ID = TR.ID ";
+}
+
+$sql .=" WHERE TM.ID = '$id'";
+
+if ($_GET["vid"]) {
+  $vid=$_GET["vid"];
+  $sql .=" AND TV.vID = '$vid' AND `approved` = 'YES' ";
+
+} else {
+
+  $sql .=" AND Type = '$type' 
+           AND AppName = '$application' 
+           AND `approved` = 'YES' ";
+
+  if ($editorpick=="true") {
+    $sql .="AND TR.Pick = 'YES' ";
+  }
+
+  if ($category) {
+    $sql .="AND CatName LIKE '$category' ";
+  }
+
+  if ($app_version) {
+    $sql .=" AND TV.MinAppVer_int <= '".strtolower($app_version)."' AND TV.MaxAppVer_int >= '".strtolower($app_version)."' ";
+  }
+
+  if ($OS) {
+    $sql .=" AND (TOS.OSName = '$OS' OR TOS.OSName = 'All') ";
+  }
     }
-    if ($editorpick=="true") {
-        $sql .=" INNER JOIN reviews TR ON TM.ID = TR.ID ";
+
+  $sql .= " ORDER  BY  `Name` , `Version` DESC LIMIT 1";
+
+  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  $row = mysql_fetch_array($sql_result);
+
+  $v++;
+  $vid = $row["vID"];
+  $name = $row["Name"];
+  $dateadded = $row["DateAdded"];
+  $dateupdated = $row["DateUpdated"];
+  $homepage = $row["Homepage"];
+  $description = $row["Description"];
+  $rating = $row["Rating"];
+  $authors = $authorarray[$name];
+  $appname = $row["AppName"];
+  $osname = $row["OSName"];
+  $verdateadded = $row["VerDateAdded"];
+  $verdateupdated = $row["VerDateUpdated"];
+  $filesize = $row["Size"];
+  $notes = $row["Notes"];
+  $version = $row["Version"];
+  $uri = $row["URI"];
+  $downloadcount = $row["TotalDownloads"];
+  $populardownloads = $row["downloadcount"];
+
+  if (!$_GET['vid']) {
+    $_GET['vid']=$vid;
+  }
+
+  if ($appvernames[$row["MinAppVer"]]) {
+    $minappver = $appvernames[$row["MinAppVer"]];
+  } else {
+    $minappver = $row["MinAppVer"];
+  }
+
+  if ($appvernames[$row["MaxAppVer"]]) {
+    $maxappver = $appvernames[$row["MaxAppVer"]];
+  } else {
+    $maxappver = $row["MaxAppVer"];
+  }
+
+  if ($verdateadded > $dateadded) {
+    $dateadded = $verdateadded;
+  }
+
+  if ($verdateupdated > $dateupdated) {
+    $dateupdated = $verdateupdated;
+  }
+
+  //Turn Authors Array into readable string...
+  $authorcount = count($authors);
+  if (!$authors) {
+    $authors = array();
+  }
+
+  foreach ($authors as $author) {
+    $userid = $authorids[$author];
+    $n++;
+    $authorstring .= "<A HREF=\"authorprofiles.php?".uriparams()."&amp;id=$userid\">$author</A>";
+    if ($authorcount != $n) {
+      $authorstring .=", ";
     }
+  }
 
-    $sql .=" WHERE TM.ID = '$id'";
+  $authors = $authorstring;
+   unset($authorstring, $n); // Clear used Vars.. 
 
-    if ($_GET["vid"]) {
-        $vid=$_GET["vid"];
-        $sql .=" AND TV.vID = '$vid' AND `approved` = 'YES' ";
-
-    } else {
-
-        $sql .=" AND Type = '$type' AND AppName = '$application' AND `approved` = 'YES' ";
-        if ($editorpick=="true") {
-            $sql .="AND TR.Pick = 'YES' ";
-        }
-        if ($category && $category !=="%") {
-            $sql .="AND CatName LIKE '$category' ";
-        }
-        if ($app_version) {
-            $sql .=" AND TV.MinAppVer_int <= '".strtolower($app_version)."' AND TV.MaxAppVer_int >= '".strtolower($app_version)."' ";
-        }
-        if ($OS) {
-            $sql .=" AND (TOS.OSName = '$OS' OR TOS.OSName = 'All') ";
-        }
-    }
-
-    $sql .= "\nORDER  BY  `Name` , `Version` DESC LIMIT 1";
-
-    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-    $row = mysql_fetch_array($sql_result);
-
-        $v++;
-        $vid = $row["vID"];
-        $name = $row["Name"];
-        $dateadded = $row["DateAdded"];
-        $dateupdated = $row["DateUpdated"];
-        $homepage = $row["Homepage"];
-        $description = $row["Description"];
-        $rating = $row["Rating"];
-        $authors = $authorarray[$name];
-        $appname = $row["AppName"];
-        $osname = $row["OSName"];
-        $verdateadded = $row["VerDateAdded"];
-        $verdateupdated = $row["VerDateUpdated"];
-        $filesize = $row["Size"];
-        $notes = $row["Notes"];
-        $version = $row["Version"];
-        $uri = $row["URI"];
-        $downloadcount = $row["TotalDownloads"];
-        $populardownloads = $row["downloadcount"];
-
-        if (!$_GET['vid']) {
-            $_GET['vid']=$vid;
-        }
-
-        if ($appvernames[$row["MinAppVer"]]) {
-            $minappver = $appvernames[$row["MinAppVer"]];
-        } else {
-            $minappver = $row["MinAppVer"];
-        }
-
-        if ($appvernames[$row["MaxAppVer"]]) {
-            $maxappver = $appvernames[$row["MaxAppVer"]];
-        } else {
-            $maxappver = $row["MaxAppVer"];
-        }
-
-        if ($verdateadded > $dateadded) {
-            $dateadded = $verdateadded;
-        }
-
-        if ($verdateupdated > $dateupdated) {
-            $dateupdated = $verdateupdated;
-        }
-
-    //Turn Authors Array into readable string...
-    $authorcount = count($authors);
-    if (!$authors) {
-        $authors = array();
-    }
-    foreach ($authors as $author) {
-        $userid = $authorids[$author];
-        $n++;
-        $authorstring .= "<A HREF=\"authorprofiles.php?".uriparams()."&amp;id=$userid\">$author</A>";
-        if ($authorcount != $n) {
-            $authorstring .=", ";
-        }
-    }
-    $authors = $authorstring;
-    unset($authorstring, $n); // Clear used Vars.. 
-
-    // Create Date String
-    if ($dateupdated > $dateadded) {
-        $timestamp = $dateupdated;
-        $datetitle = "Last Updated: ";
-    } else {
+  // Create Date String
+  if ($dateupdated > $dateadded) {
+    $timestamp = $dateupdated;
+    $datetitle = "Last Updated: ";
+  } else {
         $timestamp = $dateadded;
         $datetitle = "Released On: ";
-    }
+  }
 
-    $date = date("F d, Y g:i:sa",  strtotime("$timestamp"));
-    $releasedate = date("F d, Y",  strtotime("$dateadded"));
-    $datestring = "$datetitle $date";
+  $date = date("F d, Y g:i:sa",  strtotime("$timestamp"));
+  $releasedate = date("F d, Y",  strtotime("$dateadded"));
+  $datestring = "$datetitle $date";
 
-    //Rating
-    if (!$rating) {
-        $rating="0";
-    }
+  //Rating
+  if (!$rating) {
+    $rating="0";
+  }
 
-    //No Results Returned for Main Query, throw the Incompatible Error.
-    if (mysql_num_rows($sql_result)=="0") {
-        echo"<div id=\"mainContent\">\n";
-        echo"<h1>Incompatible Theme or Theme No Longer Available</h1>\n";
-        echo"The theme you requested is either incompatible with the application selected, or the version of it is no longer available on Mozilla Update.<br><br>\n";
-        echo"To try your request again for a different application version, use the form below.<br>\n";
+  //No Results Returned for Main Query, throw the Incompatible Error.
+  if (mysql_num_rows($sql_result)=="0") {
+    echo"<div id=\"mainContent\">\n";
+    echo"<h1>Incompatible Theme or Theme No Longer Available</h1>\n";
+    echo"The theme you requested is either incompatible with the application selected, or the version of it is no longer available on Mozilla Update.<br><br>\n";
+    echo"To try your request again for a different application version, use the form below.<br>\n";
 
-        echo"<form name=\"changeapp\" method=\"get\" action=\"?\">
-            <input name=\"id\" type=\"hidden\" value=\"$id\">
-            <input name=\"os\" type=\"hidden\" value=\"$OS\">
-            <strong>".ucwords($application)."</strong> <input name=\"application\" type=\"hidden\" value=\"$application\">";
-        echo"<select name=\"version\">";
+    echo"<form name=\"changeapp\" method=\"get\" action=\"?\">
+         <input name=\"id\" type=\"hidden\" value=\"$id\">
+         <input name=\"os\" type=\"hidden\" value=\"$OS\">
+         <strong>".ucwords($application)."</strong> <input name=\"application\" type=\"hidden\" value=\"$application\">";
+    echo"<select name=\"version\">";
 
-        $sql = "SELECT `Version`,`major`,`minor`,`release`,`SubVer` FROM `applications` WHERE `AppName`='$application' and `public_ver` ='YES' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
-        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-            while ($row = mysql_fetch_array($sql_result)) {
-                $release = "$row[major].$row[minor]";
-                if ($row["release"]) {
-                    $release .= ".$row[release]";
-                }
-                $subver = $row["SubVer"];
-                if ($subver !=="final") {
-                    $release .="$subver";
-               }
+    $sql = "SELECT `Version`,`major`,`minor`,`release`,`SubVer` 
+            FROM `applications` 
+            WHERE `AppName`='$application' and `public_ver` ='YES' 
+            ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    while ($row = mysql_fetch_array($sql_result)) {
+      $release = "$row[major].$row[minor]";
+      if ($row["release"]) {
+        $release .= ".$row[release]";
+      }
+      $subver = $row["SubVer"];
+      if ($subver !=="final") {
+        $release .="$subver";
+      }
 
-                echo"<option value=\"$release\">$row[Version]</option>";
+      echo"<option value=\"$release\">$row[Version]</option>";
 
     
-            }
-        echo"</select>&nbsp;<input name=\"go\" type=\"submit\" value=\"Go\">";
-        echo"</form>";
-        echo"</div>\n</div>\n";
-	    include"$page_footer";
-        echo"</body>\n</html>\n";
-        exit;
     }
+    echo"</select>&nbsp;<input name=\"go\" type=\"submit\" value=\"Go\">";
+    echo"</form>";
+    echo"</div>\n</div>\n";
+	  include"$page_footer";
+    echo"</body>\n</html>\n";
+    exit;
+  }
 
     //Get Preview Image URI
     $sql3 = "SELECT `PreviewURI`, `caption` from `previews` WHERE `ID` = '$id' AND `preview`='YES' LIMIT 1";
