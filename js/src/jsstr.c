@@ -1065,22 +1065,18 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         reobj = JSVAL_TO_OBJECT(argv[0]);
         re = (JSRegExp *) JS_GetPrivate(cx, reobj);
     } else {
-        if (JSVAL_IS_VOID(argv[0])) {
-            re = js_NewRegExp(cx, NULL, cx->runtime->emptyString, 0, JS_FALSE);
-        } else {
-            src = js_ValueToString(cx, argv[0]);
-            if (!src)
+        src = js_ValueToString(cx, argv[0]);
+        if (!src)
+            return JS_FALSE;
+        if (data->optarg < argc) {
+            argv[0] = STRING_TO_JSVAL(src);
+            opt = js_ValueToString(cx, argv[data->optarg]);
+            if (!opt)
                 return JS_FALSE;
-            if (data->optarg < argc) {
-                argv[0] = STRING_TO_JSVAL(src);
-                opt = js_ValueToString(cx, argv[data->optarg]);
-                if (!opt)
-                    return JS_FALSE;
-            } else {
-                opt = NULL;
-            }
-            re = js_NewRegExpOpt(cx, NULL, src, opt, forceFlat);
+        } else {
+            opt = NULL;
         }
+        re = js_NewRegExpOpt(cx, NULL, src, opt, forceFlat);
         if (!re)
             return JS_FALSE;
         reobj = NULL;
