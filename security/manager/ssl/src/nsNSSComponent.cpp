@@ -1259,17 +1259,16 @@ PSMContentListener::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
 
 NS_IMETHODIMP
 PSMContentListener::IsPreferred(const char * aContentType,
-                                 nsURILoadCommand aCommand,
                                  char ** aDesiredContentType,
                                  PRBool * aCanHandleContent)
 {
-  return CanHandleContent(aContentType, aCommand,
+  return CanHandleContent(aContentType, PR_TRUE,
                           aDesiredContentType, aCanHandleContent);
 }
 
 NS_IMETHODIMP
 PSMContentListener::CanHandleContent(const char * aContentType,
-                                      nsURILoadCommand aCommand,
+                                      PRBool aIsContentPreferred,
                                       char ** aDesiredContentType,
                                       PRBool * aCanHandleContent)
 {
@@ -1285,7 +1284,7 @@ PSMContentListener::CanHandleContent(const char * aContentType,
 
 NS_IMETHODIMP
 PSMContentListener::DoContent(const char * aContentType,
-                               nsURILoadCommand aCommand,
+                               PRBool aIsContentPreferred,
                                nsIRequest * aRequest,
                                nsIStreamListener ** aContentHandler,
                                PRBool * aAbortProcess)
