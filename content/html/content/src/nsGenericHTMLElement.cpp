@@ -1516,6 +1516,8 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
             event.isControl = keyEvent->isControl;
             event.isAlt = keyEvent->isAlt;
             event.isMeta = keyEvent->isMeta;
+            event.internalAppFlags |=
+              aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED;
 
             nsIPresShell *presShell = aPresContext->GetPresShell();
             if (presShell) {
