@@ -24,9 +24,10 @@ DEPTH=..\..\..
 include <$(DEPTH)/config/rules.mak>
 
 install::
-	$(MAKE_INSTALL) .\latin1_entites.properties $(DIST)\res\latin1_entites.properties
+	$(MAKE_INSTALL) .\html40Latin1.properties $(DIST)\bin\res\entityTables
+
 
 clobber::
-	rm -f $(DIST)\res\latin1_entites.properties
-
+	rm -fr $(DIST)\res
+	rm -fr $(DIST)\bin\res\entityTables
 
