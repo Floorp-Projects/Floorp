@@ -257,7 +257,6 @@ CTests::~CTests()
 
 void CTests::OnTestsChangeUrl()
 {
-	char *theUrl = "http://www.aol.com/";
 	CUrlDialog myDialog;
 
 	//nsresult rv;
@@ -271,14 +270,14 @@ void CTests::OnTestsChangeUrl()
 	if (myDialog.DoModal() == IDOK)
 	{
 		QAOutput("Begin Change URL test.", 1);
-		strcpy(theUrl, myDialog.m_urlfield);
-		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(),
-						nsIWebNavigation::LOAD_FLAGS_NONE,
+		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(myDialog.m_urlfield).get(),
+						myDialog.m_flagvalue,
 			nsnull,
             nsnull,
             nsnull);
 	    RvTestResult(rv, "rv LoadURI() test", 1);
-		FormatAndPrintOutput("The url = ", theUrl, 2);
+		FormatAndPrintOutput("The url = ", myDialog.m_urlfield, 2);
+		FormatAndPrintOutput("The flag = ", myDialog.m_flagvalue, 2);
 		QAOutput("End Change URL test.", 1);
 	}
 	else

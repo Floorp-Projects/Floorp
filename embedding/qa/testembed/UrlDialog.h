@@ -15,12 +15,15 @@ class CUrlDialog : public CDialog
 // Construction
 public:
 	CUrlDialog(CWnd* pParent = NULL);   // standard constructor
-
+    unsigned long m_flagvalue ;
 // Dialog Data
 	//{{AFX_DATA(CUrlDialog)
 	enum { IDD = IDD_URLDIALOG };
+	CButton	m_chkFlags;
+	CComboBox	m_urlflags;
 	CString	m_urlfield;
-	int m_urlflag;
+	int		m_flagIndex;
+	BOOL	m_chkValue;
 	//}}AFX_DATA
 
 
@@ -37,7 +40,9 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CUrlDialog)
 	afx_msg void OnChangeUrlfield();
-	afx_msg int OnEditchangeCombo1();
+	afx_msg void OnChkurlflag();
+	virtual BOOL OnInitDialog();
+	afx_msg void OnSelchangeCombo1();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
