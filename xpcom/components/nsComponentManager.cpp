@@ -1758,7 +1758,7 @@ nsComponentManagerImpl::SyncComponentsInDir(RegistrationTime when, nsIFileSpec *
     nsCOMPtr<nsIDirectoryIterator>dirIterator;
     rv = CreateInstance(NS_DIRECTORYITERATOR_PROGID, NULL, kDirectoryIteratorIID, getter_AddRefs(dirIterator));
     if (NS_FAILED(rv)) return rv;
-    rv = dirIterator->Init(dirSpec);
+    rv = dirIterator->Init(dirSpec, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     // whip through the directory to register every file
