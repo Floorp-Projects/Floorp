@@ -169,7 +169,9 @@ var messageHeaderSink = {
 
     handleAttachment: function(url, displayName, uri) 
     {
-      var commandString = "OpenAttachURL('" + url + "', '" + displayName + "', '" + uri + "')";
+        // be sure to escape the display name before we insert it into the
+        // method
+      var commandString = "OpenAttachURL('" + url + "', '" + escape(displayName) + "', '" + uri + "')";
       AddAttachmentToMenu(displayName, commandString);
     }
 };
