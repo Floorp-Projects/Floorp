@@ -64,7 +64,7 @@ treechildren::-moz-tree-image(FilenameColumn, file) {
 
 .up-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
-  -moz-image-region: rect(0px 20px 20px 00px);
+  -moz-image-region: rect(0px 20px 20px 0px);
   max-width: 36px;
 }
 
