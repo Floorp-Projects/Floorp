@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.9 2002/01/17 00:20:53 ian.mcgreer%sun.com Exp $
+ * $Id: pcertdb.c,v 1.10 2002/01/23 01:44:22 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -1708,7 +1708,8 @@ DecodeDBSMimeEntry(certDBEntrySMime *entry, SECItem *dbentry, char *emailAddr)
 	goto loser;
     }
 
-    entry->emailAddr = (char *)PORT_Alloc(PORT_Strlen(emailAddr)+1);
+    entry->emailAddr = (char *)PORT_ArenaAlloc(entry->common.arena,
+						PORT_Strlen(emailAddr)+1);
     if ( entry->emailAddr ) {
 	PORT_Strcpy(entry->emailAddr, emailAddr);
     }
