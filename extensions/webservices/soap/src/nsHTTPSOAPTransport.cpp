@@ -377,7 +377,15 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse
   rv = aCall->GetActionURI(action);
   if (NS_FAILED(rv))
     return rv;
-  if (!AStringIsNull(action)) {
+
+  // Apache Axis web services WSDL files say to set soapAction to "" and require it to be sent.  
+  // So only check if its not void instead of using AStringIsNull.
+  if (!action.IsVoid()) {
+
+    //XXXdoron necko doesn't allow empty header values, so set it to " "
+    if (action.IsEmpty())
+      action = NS_LITERAL_STRING(" ");
+
     rv = request->SetRequestHeader("SOAPAction",
                                    NS_ConvertUCS2toUTF8(action).get());
     if (NS_FAILED(rv))
@@ -577,7 +585,16 @@ NS_IMETHODIMP
   rv = aCall->GetActionURI(action);
   if (NS_FAILED(rv))
     return rv;
-  if (!AStringIsNull(action)) {
+
+  // Apache Axis web services WSDL files say to set soapAction to "" and require it to be sent.  
+  // So only check if its not void instead of using AStringIsNull.
+
+  if (!action.IsVoid()) {
+
+    //XXXdoron necko doesn't allow empty header values, so set it to " "
+    if (action.IsEmpty())
+      action = NS_LITERAL_STRING(" ");
+
     rv = request->SetRequestHeader("SOAPAction",
                                    NS_ConvertUCS2toUTF8(action).get());
     if (NS_FAILED(rv))
