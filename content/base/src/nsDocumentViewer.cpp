@@ -3164,8 +3164,13 @@ DocumentViewerImpl::EnablePOsForPrinting()
       PrintObject * po = FindPrintObjectByDOMWin(mPrt->mPrintObject, mPrt->mCurrentFocusWin);
       if (po != nsnull) {
         mPrt->mSelectedPO = po;
-        // Makes sure all of its children are be printed "AsIs"
-        SetPrintAsIs(po);
+        // NOTE: Calling this sets the "po" and 
+        // we don't want to do this for documents that have no children,
+        // because then the "DoEndPage" gets called and it shouldn't 
+        if (po->mKids.Count() > 0) {
+          // Makes sure that itself, and all of its children are printed "AsIs"
+          SetPrintAsIs(po);
+        }
 
         // Now, only enable this POs (the selected PO) and all of its children
         SetPrintPO(po, PR_TRUE);
@@ -4356,7 +4361,7 @@ nsresult rv;
 
     PRINT_DEBUG_MSG1("********* DocumentViewerImpl::Print *********\n");
     PRINT_DEBUG_MSG2("IsParentAFrameSet:   %s \n", PRT_YESNO(mPrt->mIsParentAFrameSet));
-    PRINT_DEBUG_MSG2("IsFrameSelected:     %s \n", PRT_YESNO(mPrt->mIsIFrameSelected));
+    PRINT_DEBUG_MSG2("IsIFrameSelected:    %s \n", PRT_YESNO(mPrt->mIsIFrameSelected));
     PRINT_DEBUG_MSG2("Main Doc Frame Type: %s \n", gFrameTypesStr[mPrt->mPrintObject->mFrameType]);
     PRINT_DEBUG_MSG2("HowToEnableFrameUI:  %s \n", gFrameHowToEnableStr[printHowEnable]);
     PRINT_DEBUG_MSG2("EnableSelectionRB:   %s \n", PRT_YESNO(val));
