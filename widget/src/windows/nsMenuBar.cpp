@@ -33,17 +33,19 @@
 #include "nsRect.h"
 #include "nsGfxCIID.h"
 
+// IIDs
 static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
-//static NS_DEFINE_IID(kIMenuListenerIID, NS_IMENULISTENER_IID);
 
+// CIDs
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuBarCID, NS_MENUBAR_CID);
 static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
+//-------------------------------------------------------------------------
 nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
   if (NULL == aInstancePtr) {                                            
@@ -70,8 +72,10 @@ nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;                                                 
 }
 
+//-------------------------------------------------------------------------
 NS_IMPL_ADDREF(nsMenuBar)
 NS_IMPL_RELEASE(nsMenuBar)
+
 //-------------------------------------------------------------------------
 //
 // nsMenuListener interface
@@ -108,6 +112,7 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
 	return nsEventStatus_eIgnore;
@@ -144,7 +149,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
             menuElement->GetNodeName(menuNodeType);
             if (menuNodeType.Equals("menu")) {
               menuElement->GetAttribute(nsAutoString("name"), menuName);
-              // Don't create the menu yet, just add in the top level names
+              // Don't create the whole menu yet, just add in the top level names
               
                 // Create nsMenu
                 nsIMenu * pnsMenu = nsnull;
@@ -163,11 +168,11 @@ nsEventStatus nsMenuBar::MenuConstruct(
 
                   // Set nsMenu Name
                   pnsMenu->SetLabel(menuName); 
-                  // Make nsMenu a child of nsMenuBar
+                  // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership
                   pnsMenuBar->AddMenu(pnsMenu); 
 
                   // Release the menu now that the menubar owns it
-                  //NS_RELEASE(pnsMenu);
+                  NS_RELEASE(pnsMenu);
                 }
              } 
 
@@ -177,22 +182,21 @@ nsEventStatus nsMenuBar::MenuConstruct(
         } // end while (nsnull != menuNode)
           
         // Give the aParentWindow this nsMenuBar to hold onto.
+		// The parent takes ownership
         aParentWindow->SetMenuBar(pnsMenuBar);
       
         // HACK: force a paint for now
         pnsMenuBar->Paint();
-        
-        // HACK for M4, should be removed by M5
-        #ifdef XP_MAC
-        Handle tempMenuBar = ::GetMenuBar(); // Get a copy of the menu list
-		pnsMenuBar->SetNativeData((void*)tempMenuBar);
-		#endif
+
+        // We are done with the menubar
+		NS_RELEASE(pnsMenuBar);
     } // end if ( nsnull != pnsMenuBar )
   }
   
   return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
 	return nsEventStatus_eIgnore;
@@ -206,14 +210,14 @@ nsEventStatus nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
 nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 {
   NS_INIT_REFCNT();
-  mMenu     = nsnull;
-  mParent   = nsnull;
+  mMenu           = nsnull;
+  mParent         = nsnull;
   mIsMenuBarAdded = PR_FALSE;
-  mItems    = new nsVoidArray();
-  mWebShell = nsnull;
-  mDOMNode  = nsnull;
-  mDOMElement = nsnull;
-  mConstructed = false;
+  mItems          = new nsVoidArray();
+  mWebShell       = nsnull;
+  mDOMNode        = nsnull;
+  mDOMElement     = nsnull;
+  mConstructed    = false;
 }
 
 //-------------------------------------------------------------------------
@@ -223,8 +227,7 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 //-------------------------------------------------------------------------
 nsMenuBar::~nsMenuBar()
 {
-  NS_IF_RELEASE(mParent);
-
+  NS_ASSERTION(false, "get debugger");
   // Remove all references to the menus
   mItems->Clear();
 }
@@ -246,17 +249,13 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 {
   aParent = mParent;
-  NS_ADDREF(mParent);
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::SetParent(nsIWidget *aParent)
 {
-
-  NS_IF_RELEASE(mParent);
   mParent = aParent;
-  NS_IF_ADDREF(mParent);
   return NS_OK;
 }
 
