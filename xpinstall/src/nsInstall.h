@@ -179,7 +179,7 @@ class nsInstall
         PRInt32    GetUserPackageName(nsString& aUserPackageName);
         PRInt32    GetRegPackageName(nsString& aRegPackageName);
 
-        PRInt32    AbortInstall();
+        PRInt32    AbortInstall(PRInt32 aErrorNumber);
         
         PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);
         PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRInt32* aReturn);

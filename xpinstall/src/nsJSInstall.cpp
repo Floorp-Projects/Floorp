@@ -309,6 +309,7 @@ PR_STATIC_CALLBACK(JSBool)
 InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  PRInt32   b0;
 
   *rval = JSVAL_NULL;
 
@@ -317,11 +318,28 @@ InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     return JS_TRUE;
   }
 
-  if(argc >= 0)
+  if(argc >= 1)
+  {
+    //  public int AbortInstall(Number aErrorNumber);
+    if(JSVAL_IS_NUMBER(argv[0]))
+    {
+      b0 = JSVAL_TO_INT(argv[0]);
+
+      if(NS_OK != nativeThis->AbortInstall(b0))
+      {
+        return JS_FALSE;
+      }
+    }
+    else
+      JS_ReportError(cx, "Parameter must be a number");
+
+    *rval = JSVAL_VOID;
+  }
+  else if(argc == 0)
   {
     //  public int AbortInstall(void);
 
-    if(NS_OK != nativeThis->AbortInstall())
+    if(NS_OK != nativeThis->AbortInstall(nsInstall::ABORT_INSTALL))
     {
       return JS_FALSE;
     }
@@ -330,7 +348,7 @@ InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   else
   {
-    JS_ReportError(cx, "Function AbortInstall requires 0 parameters");
+    JS_ReportError(cx, "Function AbortInstall requires 0 or 1 parameter");
     return JS_FALSE;
   }
 
@@ -2557,7 +2575,7 @@ static JSConstDoubleSpec install_constants[] =
 //
 static JSFunctionSpec InstallMethods[] = 
 {
-  {"AbortInstall",              InstallAbortInstall,            0},
+  {"AbortInstall",              InstallAbortInstall,            1},
   {"AddDirectory",              InstallAddDirectory,            6},
   {"AddSubcomponent",           InstallAddSubcomponent,         6},
   {"DeleteComponent",           InstallDeleteComponent,         1},
@@ -2604,7 +2622,7 @@ static JSFunctionSpec InstallMethods[] =
   {"Alert",                     InstallAlert,                          1},
   {"Confirm",                   InstallConfirm,                        2},
   // -- new forms that match prevailing javascript style --
-  {"abortInstall",              InstallAbortInstall,            0},
+  {"abortInstall",              InstallAbortInstall,            1},
   {"addDirectory",              InstallAddDirectory,            6},
   {"addFile",                   InstallAddSubcomponent,         6},
   {"alert",                     InstallAlert,                   1},
