@@ -47,6 +47,7 @@
 #include "MRJContext.h"
 #include "MRJConsole.h"
 #include "MRJMonitor.h"
+#include "TimedMessage.h"
 
 #include <ControlDefinitions.h>
 #include <string.h>
@@ -59,9 +60,8 @@
 #include <Folders.h>
 #include <Script.h>
 
-#ifdef TARGET_CARBON
 #include <JavaControl.h>
-#endif
+#include <CFString.h>
 
 #include <string>
 
@@ -69,13 +69,31 @@ extern MRJConsole* theConsole;
 extern short thePluginRefnum;
 extern FSSpec thePluginSpec;
 
+static MRJSession* theSession;
+
+#if REDIRECT_VFPRINTF
+
+/**
+ * As of JDK 1.2, there is a standard way to redirect *LOW LEVEL* messages from the JVM by
+ * providing a vfprintf hook. Since this plugin is built using CFM compilers, this means
+ * the function pointer has to be wrapped in glue code which can be called from Mach-O.
+ * To get low level messages to go to the same location as Java's System.out/err, we can
+ * try various techniques. One way would be to have all output go through a common
+ * native method, which ends up calling java_vfprintf. Another way, is to send output
+ * to Java from java_vfprintf. It turns out that you can't always do this safely,
+ * so you have to send the messages later at a known safe time. The current implementation
+ * uses a Carbon Events timer to delay sending the message to Java. This has the unfortunate
+ * side effect of reordering messages sent through java_vfprintf with respect to those
+ * sent through System.out/err.
+ */
+ 
 //
 //	This function allocates a block of CFM glue code which contains the instructions to call CFM routines
 //
-static UInt32 CFM_glue[6] = {0x3D800000, 0x618C0000, 0x800C0000, 0x804C0004, 0x7C0903A6, 0x4E800420};
-
 static void* NewMachOFunctionPointer(void* cfmfp)
 {
+#if TARGET_RT_MAC_CFM
+    static UInt32 CFM_glue[6] = {0x3D800000, 0x618C0000, 0x800C0000, 0x804C0004, 0x7C0903A6, 0x4E800420};
     UInt32	*mfp = (UInt32*) NewPtr(sizeof(CFM_glue));		//	Must later dispose of allocated memory
     if (mfp) {
 	    BlockMoveData(CFM_glue, mfp, sizeof(CFM_glue));
@@ -84,13 +102,110 @@ static void* NewMachOFunctionPointer(void* cfmfp)
 	    MakeDataExecutable(mfp, sizeof(CFM_glue));
 	}
 	return mfp;
+#elif TARGET_RT_MAC_MACHO
+    return cfmfp;
+#endif
+}
+
+inline jobject ToGlobalRef(JNIEnv* env, jobject localRef)
+{
+    jobject globalRef = env->NewGlobalRef(localRef);
+    env->DeleteLocalRef(localRef);
+    return globalRef;
+}
+
+static jobject Get_System_out(JNIEnv* env)
+{
+    jclass java_lang_System = env->FindClass("java/lang/System");
+    if (java_lang_System) {
+        jfieldID outID = env->GetStaticFieldID(java_lang_System, "out", "Ljava/io/PrintStream;");
+        jobject out = (outID ? env->GetStaticObjectField(java_lang_System, outID) : NULL);
+        env->DeleteLocalRef(java_lang_System);
+        return ToGlobalRef(env, out);
+    }
+    return NULL;
+}
+
+static jmethodID GetObjectMethodID(JNIEnv* env, jobject object, const char* name, const char* sig)
+{
+    jclass clazz = env->GetObjectClass(object);
+    if (clazz) {
+        jmethodID result = env->GetMethodID(clazz, name, sig);
+        env->DeleteLocalRef(clazz);
+        return result;
+    }
+    return NULL;
+}
+
+static void System_out_print(JNIEnv* env, const jchar* chars, jsize len)
+{
+    static jobject java_lang_System_out = Get_System_out(env);
+    static jmethodID java_io_PrintStream_print = GetObjectMethodID(env, java_lang_System_out, "print", "([C)V");
+    jcharArray array = env->NewCharArray(len);
+    if (array) {
+        env->SetCharArrayRegion(array, 0, len, (jchar*) chars);
+        env->CallVoidMethod(java_lang_System_out, java_io_PrintStream_print, array);
+        env->DeleteLocalRef(array);
+    }
+}
+
+/**
+ * Sends a message to the Java Console from a Carbon
+ * Events timer. This is done asynchronously so that
+ * messages from deep within the JavaVM can be processed
+ * using the JavaVM.
+ */
+class ConsoleMessage : public TimedMessage {
+    CFStringRef mMessage;
+
+public:
+    ConsoleMessage(CFStringRef message)
+        :   mMessage(message)
+    {
+        ::CFRetain(mMessage);
+    }
+    
+    ~ConsoleMessage()
+    {
+        ::CFRelease(mMessage);
+    }
+    
+    virtual void execute();
+};
+
+void ConsoleMessage::execute()
+{
+    if (theSession) {
+        jsize len = ::CFStringGetLength(mMessage);
+        jchar* buffer = new jchar[len];
+        CFRange range = { 0, len };
+        CFStringGetCharacters(mMessage, range, buffer);
+        System_out_print(theSession->getCurrentEnv(), buffer, len);
+        delete[] buffer;
+    }
 }
 
 static jint JNICALL java_vfprintf(FILE *fp, const char *format, va_list args)
 {
-    DebugStr("\pjava_vfprintf here.");
-    return 0;
+    jint result = 0;
+    CFStringRef formatRef = CFStringCreateWithCString(NULL, format, kCFStringEncodingASCII);
+    if (formatRef) {
+        CFStringRef text = CFStringCreateWithFormatAndArguments(NULL, NULL, formatRef, args);
+        CFRelease(formatRef);
+        if (text) {
+            ConsoleMessage* message = new ConsoleMessage(text);
+            if (message) {
+                if (message->send() != noErr)
+                    delete message;
+            }
+            result = ::CFStringGetLength(text);
+            ::CFRelease(text);
+        }
+    }
+    return result;
 }
+
+#endif /* REDIRECT_VFPRINTF */
 
 MRJSession::MRJSession()
 	:	mStatus(noErr), mMainEnv(NULL), mJavaVM(NULL), mSession(NULL),
@@ -106,13 +221,14 @@ MRJSession::~MRJSession()
 OSStatus MRJSession::open(const char* consolePath)
 {
     // Use vanilla JNI invocation API to fire up a fresh JVM.
-
     string classPath = getClassPath();
     string pluginHome = getPluginHome();
     JavaVMOption theOptions[] = {
     	{ (char*) classPath.c_str() },
     	{ (char*) pluginHome.c_str() },
-    	// { "vfprintf", NewMachOFunctionPointer(&java_vfprintf) }
+#if REDIRECT_VFPRINTF
+    	{ "vfprintf", NewMachOFunctionPointer(&java_vfprintf) }
+#endif
     };
 
     JavaVMInitArgs theInitArgs = {
@@ -130,7 +246,7 @@ OSStatus MRJSession::open(const char* consolePath)
     }
     
     JNIEnv* env = mMainEnv;
-    jclass session = env->FindClass("netscape.oji.MRJSession");
+    jclass session = env->FindClass("netscape/oji/MRJSession");
     if (session) {
         mSession = (jclass) env->NewGlobalRef(session);
         jmethodID openMethod = env->GetStaticMethodID(session, "open", "(Ljava/lang/String;)V");
@@ -144,11 +260,27 @@ OSStatus MRJSession::open(const char* consolePath)
         env->DeleteLocalRef(session);
     }
 
+    if (mStatus == noErr)
+        theSession = this;
+
+#if REDIRECT_VFPRINTF
+    // XXX test the vfprintf function.
+    jclass notThere = env->FindClass("class/not/Found");
+    jobject throwable = env->ExceptionOccurred();
+    if (throwable) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->DeleteLocalRef(throwable);
+    }
+#endif
+
     return mStatus;
 }
 
 OSStatus MRJSession::close()
 {
+    theSession = NULL;
+
     if (mJavaVM) {
     	if (mMessageMonitor != NULL) {
     		mMessageMonitor->notifyAll();
