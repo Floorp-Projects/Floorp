@@ -71,6 +71,8 @@
       <handler event="keypress" keycode="VK_RIGHT" modifiers="shift,control" command="cmd_selectWordNext"/>
       <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_movePageUp"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_movePageDown"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift" command="cmd_selectPageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift" command="cmd_selectPageDown"/>
       <handler event="keypress" key="y" modifiers="accel" command="cmd_redo"/>
 
       <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cutOrDelete"/>
@@ -128,6 +130,8 @@
       <handler event="keypress" keycode="VK_END" command="cmd_selectEndLine" modifiers="shift"/>
       <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_movePageUp"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_movePageDown"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift" command="cmd_selectPageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift" command="cmd_selectPageDown"/>
       <handler event="keypress" key="y" modifiers="accel" command="cmd_redo"/>
     </handlers>
   </binding>
