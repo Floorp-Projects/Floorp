@@ -463,6 +463,7 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
         aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
     nsCOMPtr<nsIImapUrl>
         aImapUrl(do_QueryInterface(aSupport, &rv));
+    nsCOMPtr<nsIMsgMailNewsUrl> aMailNewsUrl(do_QueryInterface(aSupport, &rv));
 
     if (aImapUrl)
     {
@@ -479,22 +480,10 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 
           mockChannel->Close(); // try closing it to get channel listener nulled out.
 
-          nsCOMPtr<nsINetDataCacheManager> cacheManager = do_GetService(NS_NETWORK_CACHE_MANAGER_CONTRACTID, &res);
-          if (NS_SUCCEEDED(res) && cacheManager)
+          if (aMailNewsUrl)
           {
             nsCOMPtr<nsICachedNetData>  cacheEntry;
-            // Retrieve an existing cache entry or create a new one if none exists for the
-            // given URL.
-            nsXPIDLCString urlCString; 
-            // eventually we are going to want to use the url spec - the query/ref part 'cause that doesn't
-            // distinguish urls.......
-            url->GetSpec(getter_Copies(urlCString));
-            // for now, truncate of the query part so we don't duplicate urls in the cache...
-            char * anchor = PL_strrchr(urlCString, '?');
-            if (anchor)
-              *anchor = '\0';
-            res = cacheManager->GetCachedNetData(urlCString, 0, 0, nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE,
-                                                getter_AddRefs(cacheEntry));
+            res = aMailNewsUrl->GetMemCacheEntry(getter_AddRefs(cacheEntry));
             if (NS_SUCCEEDED(res) && cacheEntry)
               cacheEntry->Delete();
           }
@@ -917,7 +906,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 	}
 
     nsCAutoString dupFolderPath(folderPath);
-    if (dupFolderPath.Last() == '/')
+    if (dupFolderPath.Last() == hierarchyDelimiter)
     {
         dupFolderPath.SetLength(dupFolderPath.Length()-1);
         // *** this is what we did in 4.x in order to list uw folder only
@@ -934,7 +923,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
     uri.Assign(serverUri);
 
-    PRInt32 leafPos = folderName.RFindChar('/');
+    PRInt32 leafPos = folderName.RFindChar(hierarchyDelimiter);
 
     nsCAutoString parentName(folderName);
 	nsCAutoString parentUri(uri);

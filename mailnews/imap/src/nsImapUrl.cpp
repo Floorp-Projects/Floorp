@@ -42,7 +42,7 @@
 #include "nsXPIDLString.h"
 #include "nsAutoLock.h"
 #include "nsIMAPNamespace.h"
-
+#include "nsICachedNetData.h"
 // rdf stuff is needed to get the charset from the imap folder associated with the url.
 #include "nsIRDFService.h"
 #include "rdf.h"
@@ -893,6 +893,28 @@ NS_IMETHODIMP nsImapUrl::SetAllowContentChange(PRBool allowContentChange)
 NS_IMETHODIMP nsImapUrl::SetContentModified(nsImapContentModifiedType contentModified)
 {
 	m_contentModified = contentModified;
+  nsCOMPtr<nsICachedNetData>  cacheEntry;
+  nsresult res = GetMemCacheEntry(getter_AddRefs(cacheEntry));
+  if (NS_SUCCEEDED(res) && cacheEntry)
+  {
+    const char *contentModifiedAnnotation = "";
+    switch (m_contentModified)
+    {
+    case IMAP_CONTENT_NOT_MODIFIED:
+      contentModifiedAnnotation = "Not Modified";
+      break;
+    case IMAP_CONTENT_MODIFIED_VIEW_INLINE:
+      contentModifiedAnnotation = "Modified View Inline";
+      break;
+    case IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS:
+      NS_ASSERTION(PR_FALSE, "we're not using this anymore!");
+      break;
+    case IMAP_CONTENT_FORCE_CONTENT_NOT_MODIFIED:
+      contentModifiedAnnotation = "Force Content Not Modified";
+      break;
+    }
+    cacheEntry->SetAnnotation("ContentModified", nsCRT::strlen(contentModifiedAnnotation), contentModifiedAnnotation);
+  }
 	return NS_OK;
 }
 

@@ -326,13 +326,16 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 
           // take the full unicode folder name and find the unicode leaf name.
           currentFolderNameStr.Assign(unicodeName);
-          PRInt32 leafPos = currentFolderNameStr.RFindChar('/');
+
+          PRUnichar delimiter = 0;
+          GetHierarchyDelimiter(&delimiter);
+          PRInt32 leafPos = currentFolderNameStr.RFindChar(delimiter);
           if (leafPos > 0)
             currentFolderNameStr.Cut(0, leafPos + 1);
 
           // take the utf7 full online name, and determine the utf7 leaf name
           utf7LeafName.AssignWithConversion(onlineFullUtf7Name);
-          leafPos = utf7LeafName.RFindChar('/');
+          leafPos = utf7LeafName.RFindChar(delimiter);
           if (leafPos > 0)
             utf7LeafName.Cut(0, leafPos + 1);
         }
@@ -567,7 +570,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
     nsAutoString leafName; leafName.AssignWithConversion(folderName);
     nsAutoString folderNameStr;
     nsAutoString parentName = leafName;
-    PRInt32 folderStart = leafName.FindChar('/');
+    PRInt32 folderStart = leafName.FindChar(hierarchyDelimiter);
     if (folderStart > 0)
     {
         NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
@@ -626,11 +629,11 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
       //need to set the folder name
       nsCOMPtr <nsIDBFolderInfo> folderInfo;
       rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
-      if(NS_SUCCEEDED(rv))
-      {
+//      if(NS_SUCCEEDED(rv))
+//      {
         // ### DMB used to be leafNameFromUser?
-        folderInfo->SetMailboxName(&folderNameStr);
-      }
+//        folderInfo->SetMailboxName(&folderNameStr);
+//      }
 
       //Now let's create the actual new folder
       rv = AddSubfolderWithPath(&folderNameStr, dbFileSpec, getter_AddRefs(child));
@@ -646,7 +649,15 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         onlineName.AppendWithConversion(folderNameStr);
         imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
         imapFolder->SetOnlineName(onlineName.GetBuffer());
-                imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
+        imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
+        // store the online name as the mailbox name in the db folder info
+        // I don't think anyone uses the mailbox name, so we'll use it
+        // to restore the online name when blowing away an imap db.
+        if (folderInfo)
+        {
+          nsAutoString unicodeOnlineName; unicodeOnlineName.AssignWithConversion(onlineName);
+          folderInfo->SetMailboxName(&unicodeOnlineName);
+        }
       }
 
             unusedDB->SetSummaryValid(PR_TRUE);
@@ -785,6 +796,7 @@ NS_IMETHODIMP nsImapMailFolder::GetHierarchyDelimiter(PRUnichar *aHierarchyDelim
 {
   if (!aHierarchyDelimiter)
     return NS_ERROR_NULL_POINTER;
+  ReadDBFolderInfo(PR_FALSE); // update cache first.
   *aHierarchyDelimiter = m_hierarchyDelimiter;
   return NS_OK;
 }
@@ -1366,7 +1378,7 @@ NS_IMETHODIMP nsImapMailFolder::SetOnlineName(const char * aOnlineFolderName)
   nsCOMPtr<nsIDBFolderInfo> folderInfo;
   m_onlineFolderName = aOnlineFolderName;
   rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
-  if(NS_SUCCEEDED(rv))
+  if(NS_SUCCEEDED(rv) && folderInfo)
   {
     nsAutoString onlineName; onlineName.AssignWithConversion(aOnlineFolderName);
     rv = folderInfo->SetProperty("onlineName", &onlineName);
@@ -1397,6 +1409,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
   nsresult openErr=NS_ERROR_UNEXPECTED;
   if(!db || !folderInfo)
   return NS_ERROR_NULL_POINTER; //ducarroz: should we use NS_ERROR_INVALID_ARG?
+  nsresult rv;
 
   openErr = GetDatabase(nsnull);
 
@@ -1414,19 +1427,22 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
           m_onlineFolderName.Assign(onlineName);
         else
         {
-          char *uri = nsnull;
-          nsresult rv = GetURI(&uri);
-          if (NS_FAILED(rv)) return rv;
-          char * hostname = nsnull;
-          rv = GetHostname(&hostname);
-          if (NS_FAILED(rv)) return rv;
-          nsXPIDLCString name;
-          rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
-          m_onlineFolderName.Assign(name);
-          nsAutoString autoOnlineName; autoOnlineName.AssignWithConversion(name);
+          nsAutoString autoOnlineName; 
+          // autoOnlineName.AssignWithConversion(name);
+          (*folderInfo)->GetMailboxName(&autoOnlineName);
+          if (autoOnlineName.Length() == 0)
+          {
+            nsXPIDLCString uri;
+            rv = GetURI(getter_Copies(uri));
+            if (NS_FAILED(rv)) return rv;
+            nsXPIDLCString hostname;
+            rv = GetHostname(getter_Copies(hostname));
+            if (NS_FAILED(rv)) return rv;
+            nsXPIDLCString name;
+            rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
+            m_onlineFolderName.Assign(name);
+          }
           rv = (*folderInfo)->SetProperty("onlineName", &autoOnlineName);
-          PR_FREEIF(uri);
-          PR_FREEIF(hostname);
         }
       }
     }
@@ -1855,6 +1871,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       if (mDatabase)
       {
         dbFolderInfo = null_nsCOMPtr();
+        NotifyStoreClosedAllHeaders();
         mDatabase->ForceClosed();
       }
       mDatabase = null_nsCOMPtr();
@@ -3287,6 +3304,12 @@ nsImapMailFolder::GetMessageSizeFromDB(const char *id, PRBool idIsUid, PRUint32 
       rv = mailHdr->GetMessageSize(size);
   }
     return rv;
+}
+
+NS_IMETHODIMP
+nsImapMailFolder::SetContentModified(nsIImapUrl *aImapUrl, nsImapContentModifiedType modified)
+{
+  return aImapUrl->SetContentModified(modified);
 }
 
 NS_IMETHODIMP

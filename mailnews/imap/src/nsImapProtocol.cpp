@@ -59,8 +59,6 @@
 #include "nsIDNSService.h"
 
 // for the memory cache...
-#include "nsINetDataCacheManager.h"
-#include "nsINetDataCache.h"
 #include "nsICachedNetData.h"
 
 #include "nsCOMPtr.h"
@@ -3527,8 +3525,8 @@ PRBool  nsImapProtocol::GetActive()
 
 void nsImapProtocol::SetContentModified(IMAP_ContentModifiedType modified)
 {
-  if (m_runningUrl)
-    m_runningUrl->SetContentModified(modified);
+  if (m_runningUrl && m_imapMessageSink)
+    m_imapMessageSink->SetContentModified(m_runningUrl, modified);
 }
 
 
@@ -6809,38 +6807,23 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
   // look to see if this url should be added to the memory cache..
   PRBool useMemoryCache = PR_FALSE;
   mailnewsUrl->GetAddToMemoryCache(&useMemoryCache);
-  nsCOMPtr<nsINetDataCacheManager> cacheManager = do_GetService(NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && cacheManager)
+  rv = mailnewsUrl->GetMemCacheEntry(getter_AddRefs(cacheEntry));
+  if (NS_SUCCEEDED(rv) && cacheEntry)
   {
-    // Retrieve an existing cache entry or create a new one if none exists for the
-    // given URL.
-    nsXPIDLCString urlCString; 
-    // eventually we are going to want to use the url spec - the query/ref part 'cause that doesn't
-    // distinguish urls.......
-    m_url->GetSpec(getter_Copies(urlCString));
-    // for now, truncate of the query part so we don't duplicate urls in the cache...
-    char * anchor = PL_strrchr(urlCString, '?');
-    if (anchor)
-      *anchor = '\0';
-    rv = cacheManager->GetCachedNetData(urlCString, 0, 0, nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE,
-                                        getter_AddRefs(cacheEntry));
-    if (NS_SUCCEEDED(rv) && cacheEntry)
+    PRBool updateInProgress;
+    cacheEntry->GetPartialFlag(&partialFlag);
+    cacheEntry->GetUpdateInProgress(&updateInProgress);        
+    cacheEntry->GetStoredContentLength(&contentLength);
+    // only try to update the cache entry if it isn't being used.
+    // We always want to try to write to the cache entry if we can
+    if (!updateInProgress)
     {
-      PRBool updateInProgress;
-      cacheEntry->GetPartialFlag(&partialFlag);
-      cacheEntry->GetUpdateInProgress(&updateInProgress);        
-      cacheEntry->GetStoredContentLength(&contentLength);
-      // only try to update the cache entry if it isn't being used.
-      // and we want to write to the memory cache.
-      if (!updateInProgress && useMemoryCache)
-      {
-        // now we need to figure out if the entry is new / or partially unfinished...
-        // this determines if we are going to USE the cache entry for reading the data
-        // vs. if we need to write data into the cache entry...
-        if (!contentLength || partialFlag)
-          // we're going to fill up this cache entry, 
-          rv = cacheEntry->InterceptAsyncRead(listener, 0, getter_AddRefs(m_channelListener));
-      }
+      // now we need to figure out if the entry is new / or partially unfinished...
+      // this determines if we are going to USE the cache entry for reading the data
+      // vs. if we need to write data into the cache entry...
+      if (!contentLength || partialFlag)
+        // we're going to fill up this cache entry, 
+        rv = cacheEntry->InterceptAsyncRead(listener, 0, getter_AddRefs(m_channelListener));
     }
   }
 
@@ -6866,32 +6849,40 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
   // to really load the msg with a protocol connection...
   if (cacheEntry && contentLength > 0 && !partialFlag)
   {
-    nsCOMPtr<nsIChannel> cacheChannel;
-    rv = cacheEntry->NewChannel(m_loadGroup, getter_AddRefs(cacheChannel));
-    if (NS_SUCCEEDED(rv))
+    PRUint32 annotationLength = 0;
+    char *annotation = nsnull;
+
+    rv = cacheEntry->GetAnnotation("ContentModified", &annotationLength, &annotation);
+    if (NS_SUCCEEDED(rv) && annotationLength == nsCRT::strlen("Not Modified") 
+      && annotation && !nsCRT::strncmp(annotation, "Not Modified", annotationLength))
     {
-      // turn around and make our ref on m_url an owning ref...and force the url to remove
-      // its reference on the mock channel...this is a complicated texas two step to solve
-      // a nasty reference counting problem...
-      NS_IF_ADDREF(m_url);
-      mOwningRefToUrl = PR_TRUE;
-      imapUrl->SetMockChannel(nsnull);
-
-      // if we are going to read from the cache, then create a mock stream listener class and use it
-      nsImapCacheStreamListener * cacheListener = new nsImapCacheStreamListener();
-      NS_ADDREF(cacheListener);
-      cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
-      rv = cacheChannel->AsyncRead(cacheListener, m_channelContext);
-      NS_RELEASE(cacheListener);
-
-      if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
+      nsCOMPtr<nsIChannel> cacheChannel;
+      rv = cacheEntry->NewChannel(m_loadGroup, getter_AddRefs(cacheChannel));
+      if (NS_SUCCEEDED(rv))
       {
-        // if the msg is unread, we should mark it read on the server. This lets
-        // the code running this url we're loading from the cache, if it cares.
-        imapUrl->SetMsgLoadingFromCache(PR_TRUE);
-        return rv;
-      }
-    }    
+        // turn around and make our ref on m_url an owning ref...and force the url to remove
+        // its reference on the mock channel...this is a complicated texas two step to solve
+        // a nasty reference counting problem...
+        NS_IF_ADDREF(m_url);
+        mOwningRefToUrl = PR_TRUE;
+        imapUrl->SetMockChannel(nsnull);
+
+        // if we are going to read from the cache, then create a mock stream listener class and use it
+        nsImapCacheStreamListener * cacheListener = new nsImapCacheStreamListener();
+        NS_ADDREF(cacheListener);
+        cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
+        rv = cacheChannel->AsyncRead(cacheListener, m_channelContext);
+        NS_RELEASE(cacheListener);
+
+        if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
+        {
+          // if the msg is unread, we should mark it read on the server. This lets
+          // the code running this url we're loading from the cache, if it cares.
+          imapUrl->SetMsgLoadingFromCache(PR_TRUE);
+          return rv;
+        }
+      }    
+    }
   }
 
   // okay, add the mock channel to the load group..

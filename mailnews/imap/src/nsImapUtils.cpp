@@ -159,7 +159,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 }
 
 nsresult
-nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
+nsImapURI2FullName(const char* rootURI, const char* hostname, const char* uriStr,
                    char **name)
 {
     nsAutoString uri; uri.AssignWithConversion(uriStr);
