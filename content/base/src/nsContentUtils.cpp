@@ -1538,11 +1538,8 @@ nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
                                           nsIDocument* aDocument,
                                           nsIURI* aBaseURI)
 {
-  nsCAutoString originCharset;
-  if (aDocument)
-    originCharset = aDocument->GetDocumentCharacterSet();
-
-  return NS_NewURI(aResult, NS_ConvertUCS2toUTF8(aSpec), originCharset.get(),
+  return NS_NewURI(aResult, aSpec,
+                   aDocument ? aDocument->GetDocumentCharacterSet().get() : nsnull,
                    aBaseURI, sIOService);
 }
 
