@@ -466,6 +466,7 @@
 				F541496502714F9A01A80166,
 				F5DA444B027DD5AA01A80166,
 				F5179420027F3F2901A967DF,
+				F5179423028275B901A967DF,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -963,6 +964,17 @@
 		};
 		F5179421027F3FD301A967DF = {
 			fileRef = F517941F027F3F2901A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5179422028275B801A967DF = {
+			isa = PBXFileReference;
+			path = globe_ico.tif;
+			refType = 4;
+		};
+		F5179423028275B901A967DF = {
+			fileRef = F5179422028275B801A967DF;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -2139,6 +2151,7 @@
 				F5DAB15402698D5401A80166,
 				F541496202714F9A01A80166,
 				F541496302714F9A01A80166,
+				F5179422028275B801A967DF,
 			);
 			isa = PBXGroup;
 			name = Sidebar;
