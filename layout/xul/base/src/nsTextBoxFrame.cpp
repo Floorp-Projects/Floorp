@@ -63,6 +63,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMXULLabelElement.h"
 #include "nsIEventStateManager.h"
 #include "nsITheme.h"
 #include "nsUnicharUtils.h"
@@ -247,7 +248,13 @@ nsTextBoxFrame::UpdateAttributes(nsPresContext*  aPresContext,
 
     if (aAttribute == nsnull || aAttribute == nsXULAtoms::accesskey) {
         nsAutoString accesskey;
-        mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, accesskey);
+        nsCOMPtr<nsIDOMXULLabelElement> labelElement = do_QueryInterface(mContent);
+        if (labelElement) {
+          labelElement->GetAccessKey(accesskey);  // Accesskey may be stored on control
+        }
+        else {
+          mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, accesskey);
+        }
         if (!accesskey.Equals(mAccessKey)) {
             if (!doUpdateTitle) {
                 // Need to get clean mTitle and didn't already

@@ -597,6 +597,10 @@ label[control] {
   -moz-binding: url("chrome://global/content/bindings/text.xml#label-control");
 }
 
+html|span.accesskey {
+  text-decoration: underline;
+}
+
 /********** textbox **********/
 
 textbox {

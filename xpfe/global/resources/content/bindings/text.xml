@@ -2,8 +2,9 @@
 
 <bindings id="textBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:html="http://www.w3.org/1999/xhtml">
+
   <!-- bound to <description>s -->
   <binding id="text-base">
     <implementation implements="nsIDOMXULDescriptionElement, nsIAccessibleProvider">
@@ -17,7 +18,7 @@
       </property>
       <property name="disabled" onget="return this.hasAttribute('disabled');"
                                 onset="if (val) this.setAttribute('disabled', 'true');
-                                       else this.removeAttribute('disabled'); 
+                                       else this.removeAttribute('disabled');
                                        return val;"/>
       <property name="value" onget="return this.getAttribute('value');"
                              onset="this.setAttribute('value', val); return val;"/>
@@ -27,11 +28,128 @@
   </binding>
 
   <binding id="text-label" extends="chrome://global/content/bindings/text.xml#text-base">
+    <content>
+      <html:span anonid="accessKeyParens"><children/></html:span>
+    </content>
     <implementation implements="nsIDOMXULLabelElement">
-      <property name="accessKey" onget="return this.getAttribute('accesskey');"
-                                 onset="this.setAttribute('accesskey', val); return val;"/>
-      <property name="control" onget="return this.getAttribute('control');"
-                               onset="this.setAttribute('control', val); return val;"/>
+      <constructor>
+        <![CDATA[
+          this.formatAccessKey();
+        ]]>
+      </constructor>
+
+      <method name="formatAccessKey">
+        <body>
+          <![CDATA[
+            var control = this.labeledControlElement;
+            if (!control) {
+              var bindingParent = document.getBindingParent(this);
+              if (bindingParent instanceof Components.interfaces.nsIDOMXULLabeledControlElement) {
+                control = bindingParent; // For controls that make the <label> an anon child
+              }
+            }
+            if (control) {
+              control.labelElement = this;
+            }
+
+            var afterLabel = document.getAnonymousElementByAttribute(this, "anonid", "accessKeyParens");
+            afterLabel.textContent = ""; // This does not clear real nodes!
+
+            var oldAccessKey = this.getElementsByAttribute('class', 'accesskey').item(0);
+            if (oldAccessKey) { // Clear old accesskey
+              if (oldAccessKey.previousSibling instanceof Text) {
+                oldAccessKey.previousSibling.appendData(oldAccessKey.textContent)
+              }
+              else {
+                oldAccessKey.parentNode.insertBefore(oldAccessKey.firstChild, oldAccessKey);
+              }
+              oldAccessKey.parentNode.removeChild(oldAccessKey);
+            }
+
+            var accessKey = this.accessKey;
+            var labelText = this.textContent;
+            if (!accessKey || !labelText) {
+              return;
+            }
+            var accessKeyIndex = labelText.indexOf(accessKey);
+            if (accessKeyIndex < 0) { // Try again in upper case
+              accessKeyIndex = labelText.toUpperCase().indexOf(accessKey.toUpperCase());
+            }
+            var span = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+            span.className = "accesskey";
+            if (accessKeyIndex < 0) {
+              // If accesskey is not in string, append in parentheses
+              afterLabel.textContent = " (";
+              span.textContent = accessKey.toUpperCase();
+              afterLabel.appendChild(span);
+              afterLabel.appendChild(document.createTextNode(")"));
+              return;
+            }
+            var treeWalker = document.createTreeWalker(this, NodeFilter.SHOW_TEXT, null, true);
+            var accessKeyNode = treeWalker.nextNode();
+            
+            while (accessKeyIndex >= accessKeyNode.length) {
+              accessKeyIndex -= accessKeyNode.length;
+              accessKeyNode = treeWalker.nextNode();
+            }
+
+            // Now wrap the access key in a <span class="accesskey"/>
+            if (accessKeyIndex) {
+              accessKeyNode = accessKeyNode.splitText(accessKeyIndex); // returns 2nd node from split
+            }
+            accessKeyNode.parentNode.insertBefore(span, accessKeyNode);
+            if (accessKeyNode.length > 1) {
+              accessKeyNode.splitText(1);
+            }
+            span.appendChild(accessKeyNode);
+          ]]>
+        </body>
+      </method>
+
+      <property name="accessKey">
+        <getter>
+          <![CDATA[
+            var accessKey = this.getAttribute('accesskey');
+            if (!accessKey) {
+              var labeledEl = this.labeledControlElement;
+              if (labeledEl) {
+                accessKey = labeledEl.getAttribute('accesskey');
+              }
+            }
+            return accessKey ? accessKey[0] : null;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            // If the control already has an accesskey store it there as well
+            var control = this.labeledControlElement;
+            if (control && control.hasAttribute('accesskey')) {
+              control.setAttribute('accesskey', val);
+            }
+            this.setAttribute('accesskey', val);
+            this.formatAccessKey();
+            return val;
+          ]]>
+        </setter>
+      </property>
+
+      <property name="labeledControlElement" readonly="true"
+                onget="var control = this.control; return control ? document.getElementById(control) : null;" />
+
+      <property name="control" onget="return this.getAttribute('control');">
+        <setter>
+          <![CDATA[
+            var control = this.labeledControlElement;
+            if (control) {
+              control.labelElement = null; // No longer pointed to be this label
+            }
+            this.setAttribute('control', val);
+            this.formatAccessKey();
+            return val;
+          ]]>
+        </setter>
+      </property>
+
     </implementation>
   </binding>
 
@@ -46,7 +164,7 @@
                                        controlElement.focus();
                                     "/>
     </handlers>
-  </binding>  
+  </binding>
 
   <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label">
     <handlers>
