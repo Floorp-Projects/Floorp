@@ -23,11 +23,11 @@
 nsWindow::nsWindow() : nsWidget()
 {
   NS_INIT_REFCNT();
-  name = "nsWindow";
+  mName = "nsWindow";
   mBackground = NS_RGB(255, 255, 255);
-  bg_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
   mBackground = NS_RGB(255, 255, 255);
-  border_pixel = xlib_rgb_xpixel_from_rgb(border_rgb);
+  mBorderPixel = xlib_rgb_xpixel_from_rgb(mBorderRGB);
 }
 
 nsWindow::~nsWindow()
@@ -38,9 +38,9 @@ void
 nsWindow::DestroyNative(void)
 {
   if (mGC)
-    XFreeGC(gDisplay, mGC);
+    XFreeGC(mDisplay, mGC);
   if (mBaseWindow) {
-    XDestroyWindow(gDisplay, mBaseWindow);
+    XDestroyWindow(mDisplay, mBaseWindow);
     DeleteWindowCallback(mBaseWindow);
   }
 }
@@ -56,8 +56,8 @@ void nsWindow::CreateNative(Window aParent, nsRect aRect)
   // make sure that we listen for events
   attr.event_mask = StructureNotifyMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
   // set the default background color and border to that awful gray
-  attr.background_pixel = bg_pixel;
-  attr.border_pixel = border_pixel;
+  attr.background_pixel = mBackgroundPixel;
+  attr.border_pixel = mBorderPixel;
   // set the colormap
   attr.colormap = xlib_rgb_get_cmap();
   // here's what's in the struct
@@ -141,12 +141,12 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
     return NS_ERROR_FAILURE;
 
   const char *text = aTitle.ToNewCString();
-  XStoreName(gDisplay, mBaseWindow, text);
+  XStoreName(mDisplay, mBaseWindow, text);
   delete [] text;
   return NS_OK;
 }
 
 ChildWindow::ChildWindow(): nsWindow()
 {
-  name = "nsChildWindow";
+  mName = "nsChildWindow";
 }

@@ -31,8 +31,8 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
   mLineIncrement = 1;
   mIsVertical = aIsVertical;
   mBackground = NS_RGB(100,100,100);
-  bg_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
-  border_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  mBorderPixel = xlib_rgb_xpixel_from_rgb(mBackground);
   mBar = 0;
   mBarBounds.x = mBarBounds.y = mBarBounds.width = mBarBounds.height = 0;
 };
@@ -40,7 +40,7 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
 nsScrollbar::~nsScrollbar()
 {
   if (mBar) {
-    XDestroyWindow(gDisplay, mBar);
+    XDestroyWindow(mDisplay, mBar);
     DeleteWindowCallback(mBar);
   }
 }
@@ -213,8 +213,8 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
   // make sure that we listen for events
   attr.event_mask = StructureNotifyMask | ButtonPressMask | ButtonReleaseMask;
   // set the default background color and border to that awful gray
-  attr.background_pixel = bg_pixel;
-  attr.border_pixel = border_pixel;
+  attr.background_pixel = mBackgroundPixel;
+  attr.border_pixel = mBorderPixel;
   // set the colormap
   attr.colormap = xlib_rgb_get_cmap();
   // here's what's in the struct
@@ -231,14 +231,14 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
   attr.border_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(100,100,100));
   // set up the size
   CalcBarBounds();
-  mBar = XCreateWindow(gDisplay,
+  mBar = XCreateWindow(mDisplay,
                        mBaseWindow,
                        mBarBounds.x, mBarBounds.y,
                        mBarBounds.width, mBarBounds.height,
                        2,  // border width
                        gDepth,
                        InputOutput,
-                       gVisual,
+                       mVisual,
                        attr_mask,
                        &attr);
   AddWindowCallback(mBar, this);
@@ -248,7 +248,7 @@ NS_IMETHODIMP nsScrollbar::Show(PRBool bState)
 {
   nsWidget::Show(bState);
   if (mBar) {
-    XMapWindow(gDisplay, mBar);
+    XMapWindow(mDisplay, mBar);
   }
   CalcBarBounds();
   LayoutBar();
@@ -376,7 +376,7 @@ void nsScrollbar::CalcBarBounds(void)
 
 void nsScrollbar::LayoutBar(void)
 {
-  XMoveResizeWindow(gDisplay, mBar,
+  XMoveResizeWindow(mDisplay, mBar,
                     mBarBounds.x, mBarBounds.y,
                     mBarBounds.width, mBarBounds.height);
 }

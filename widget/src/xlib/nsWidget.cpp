@@ -51,14 +51,19 @@ nsWidget::nsWidget() : nsBaseWidget()
 {
   mPreferredWidth = 0;
   mPreferredHeight = 0;
+
+  mDisplay = 0;
+  mScreen = 0;
+  mVisual = 0;
+
   mBaseWindow = 0;
   mBackground = NS_RGB(192, 192, 192);
-  bg_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
   mBackground = NS_RGB(192, 192, 192);
-  border_pixel = xlib_rgb_xpixel_from_rgb(border_rgb);
+  mBorderPixel = xlib_rgb_xpixel_from_rgb(mBorderRGB);
   mGC = 0;
-  parentWidget = nsnull;
-  name = "unnamed";
+  mParentWidget = nsnull;
+  mName = "unnamed";
 }
 
 nsWidget::~nsWidget()
@@ -70,9 +75,10 @@ void
 nsWidget::DestroyNative(void)
 {
   if (mGC)
-    XFreeGC(gDisplay, mGC);
+    XFreeGC(mDisplay, mGC);
+
   if (mBaseWindow) {
-    XDestroyWindow(gDisplay, mBaseWindow);
+    XDestroyWindow(mDisplay, mBaseWindow);
     DeleteWindowCallback(mBaseWindow);
   }
 }
@@ -85,7 +91,8 @@ NS_IMETHODIMP nsWidget::Create(nsIWidget *aParent,
                                nsIToolkit *aToolkit,
                                nsWidgetInitData *aInitData)
 {
-  parentWidget = aParent;
+  mParentWidget = aParent;
+
   return(StandardWidgetCreate(aParent, aRect, aHandleEventFunction,
                               aContext, aAppShell, aToolkit, aInitData,
                               nsnull));
@@ -117,6 +124,10 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   
   Window parent;
 
+  mDisplay = gDisplay;
+  mScreen = gScreen;
+  mVisual = gVisual;
+
   // set up the BaseWidget parts.
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
              aAppShell, aToolkit, aInitData);
@@ -128,13 +139,13 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   }
   // if there's no parent, make the parent the root window.
   if (parent == 0) {
-    parent = RootWindow(gDisplay, gScreenNum);
+    parent = RootWindowOfScreen(mScreen);
   }
   // set the bounds
   mBounds = aRect;
   // call the native create function
   CreateNative(parent, mBounds);
-  XSync(gDisplay, False);
+  XSync(mDisplay, False);
   return NS_OK;
 }
 
@@ -155,7 +166,7 @@ NS_IMETHODIMP nsWidget::Move(PRUint32 aX, PRUint32 aY)
     aY = 0;
   }
   printf("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY);
-  XMoveWindow(gDisplay, mBaseWindow, aX, aY);
+  XMoveWindow(mDisplay, mBaseWindow, aX, aY);
   return NS_OK;
 }
 
@@ -175,7 +186,7 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aWidth,
   printf("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight);
   mBounds.width = aWidth;
   mBounds.height = aHeight;
-  XResizeWindow(gDisplay, mBaseWindow, aWidth, aHeight);
+  XResizeWindow(mDisplay, mBaseWindow, aWidth, aHeight);
   return NS_OK;
 }
 
@@ -206,7 +217,7 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aX,
   printf("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY);
   mBounds.width = aWidth;
   mBounds.height = aHeight;
-  XMoveResizeWindow(gDisplay, mBaseWindow, aX, aY, aWidth, aHeight);
+  XMoveResizeWindow(mDisplay, mBaseWindow, aX, aY, aWidth, aHeight);
   return NS_OK;
 }
 
@@ -265,7 +276,7 @@ void * nsWidget::GetNativeData(PRUint32 aDataType)
     return (void *)mBaseWindow;
     break;
   case NS_NATIVE_DISPLAY:
-    return (void *)gDisplay;
+    return (void *)mDisplay;
     break;
   case NS_NATIVE_GRAPHIC:
     // XXX implement this...
@@ -323,7 +334,7 @@ NS_IMETHODIMP nsWidget::SetColorMap(nsColorMap *aColorMap)
 NS_IMETHODIMP nsWidget::Show(PRBool bState)
 {
   if (mBaseWindow) {
-    XMapWindow(gDisplay, mBaseWindow);
+    XMapWindow(mDisplay, mBaseWindow);
   }
   return NS_OK;
 }
@@ -348,9 +359,9 @@ NS_IMETHODIMP nsWidget::SetBackgroundColor(const nscolor &aColor)
 {
   printf("nsWidget::SetBackgroundColor()\n");
   nsBaseWidget::SetBackgroundColor(aColor);
-  bg_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
   // set the window attrib
-  XSetWindowBackground(gDisplay, mBaseWindow, bg_pixel);
+  XSetWindowBackground(mDisplay, mBaseWindow, mBackgroundPixel);
   return NS_OK;
 }
 
@@ -392,8 +403,8 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
   // make sure that we listen for events
   attr.event_mask = ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
   // set the default background color and border to that awful gray
-  attr.background_pixel = bg_pixel;
-  attr.border_pixel = border_pixel;
+  attr.background_pixel = mBackgroundPixel;
+  attr.border_pixel = mBorderPixel;
   // set the colormap
   attr.colormap = xlib_rgb_get_cmap();
   // here's what's in the struct
@@ -414,8 +425,10 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
   int width;
   int height;
 
-  printf("*** Warning: nsWidget::CreateNative falling back to sane default for widget type \"%s\"\n", name);
-  if (!strcmp(name, "unnamed")) {
+  printf("*** Warning: nsWidget::CreateNative falling back to sane default for widget type \"%s\"\n", 
+         (const char *) nsAutoCString(mName));
+
+  if (mName == "unnamed") {
     printf("What freaking widget is this, anyway?\n");
   }
   printf("Creating XWindow: x %d y %d w %d h %d\n",
@@ -435,18 +448,20 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
     height = aRect.height;
   }
   
-  mBaseWindow = XCreateWindow(gDisplay,
+  mBaseWindow = XCreateWindow(mDisplay,
                               aParent,
                               aRect.x, aRect.y,
                               width, height,
-                              0, // border width
+                              0,                // border width
                               gDepth,
-                              InputOutput,    // class
-                              gVisual, // visual
+                              InputOutput,      // class
+                              mVisual,          // visual
                               aMask,
                               &aAttr);
+
   printf("nsWidget: Created window 0x%lx with parent 0x%lx\n",
          mBaseWindow, aParent);
+
   // XXX when we stop getting lame values for this remove it.
   // sometimes the dimensions have been corrected by the code above.
   mBounds.height = height;
@@ -456,7 +471,7 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
 }
 
 nsWidget *
-nsWidget::getWidgetForWindow(Window aWindow)
+nsWidget::GetWidgetForWindow(Window aWindow)
 {
   if (window_list == nsnull) {
     return nsnull;
@@ -605,5 +620,5 @@ PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
 
 void nsWidget::CreateGC(void)
 {
-  mGC = XCreateGC(gDisplay, mBaseWindow, 0, NULL);
+  mGC = XCreateGC(mDisplay, mBaseWindow, 0, NULL);
 }

@@ -100,8 +100,15 @@ public:
   virtual PRBool          OnPaint(nsPaintEvent &event);
   virtual PRBool          OnResize(nsSizeEvent &event);
   virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
-  static nsWidget        *getWidgetForWindow(Window aWindow);
+
+  static nsWidget        * GetWidgetForWindow(Window aWindow);
+
 protected:
+
+  // private event functions
+  PRBool DispatchWindowEvent(nsGUIEvent* event);
+  PRBool ConvertStatus(nsEventStatus aStatus);
+
   // create the native window for this class
   virtual void CreateNativeWindow(Window aParent, nsRect aRect,
                                   XSetWindowAttributes aAttr, unsigned long aMask);
@@ -113,21 +120,23 @@ protected:
   static void  AddWindowCallback   (Window aWindow, nsWidget *aWidget);
   static void  DeleteWindowCallback(Window aWindow);
   static       nsHashtable *window_list;
-  PRUint32     mPreferredWidth;
-  PRUint32     mPreferredHeight;
-  nsIWidget   *parentWidget;
 
-  // private event functions
-  PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event);
-  PRBool nsWidget::ConvertStatus(nsEventStatus aStatus);
+  PRUint32       mPreferredWidth;
+  PRUint32       mPreferredHeight;
+
+  nsIWidget   *  mParentWidget;
 
   // All widgets have at least these items.
-  Window        mBaseWindow;
-  unsigned long bg_pixel;
-  PRUint32      border_rgb;
-  unsigned long border_pixel;
-  GC            mGC; // until we get gc pooling working...
-  const char   *name;  // name of the type of widget
+  Display *      mDisplay;
+  Screen *       mScreen;
+  Window         mBaseWindow;
+  Visual *       mVisual;
+  unsigned long  mBackgroundPixel;
+  PRUint32       mBorderRGB;
+  unsigned long  mBorderPixel;
+  GC             mGC;             // until we get gc pooling working...
+  nsString       mName;           // name of the type of widget
+
 };
 
 extern Display         *gDisplay;
@@ -136,23 +145,6 @@ extern int              gScreenNum;
 extern int              gDepth;
 extern Visual          *gVisual;
 extern XVisualInfo     *gVisualInfo;
-
-extern PRUint32  gRedZeroMask;     //red color mask in zero position
-extern PRUint32  gGreenZeroMask;   //green color mask in zero position
-extern PRUint32  gBlueZeroMask;    //blue color mask in zero position
-extern PRUint32  gAlphaZeroMask;   //alpha data mask in zero position
-extern PRUint32  gRedMask;         //red color mask
-extern PRUint32  gGreenMask;       //green color mask
-extern PRUint32  gBlueMask;        //blue color mask
-extern PRUint32  gAlphaMask;       //alpha data mask
-extern PRUint8   gRedCount;        //number of red color bits
-extern PRUint8   gGreenCount;      //number of green color bits
-extern PRUint8   gBlueCount;       //number of blue color bits
-extern PRUint8   gAlphaCount;      //number of alpha data bits
-extern PRUint8   gRedShift;        //number to shift value into red position
-extern PRUint8   gGreenShift;      //number to shift value into green position
-extern PRUint8   gBlueShift;       //number to shift value into blue position
-extern PRUint8   gAlphaShift;      //number to shift value into alpha position
 
 // this is from the xlibrgb code.
 
