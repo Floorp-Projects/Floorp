@@ -65,7 +65,6 @@ function startTest() {
 
     //  JavaScript 1.3 is supposed to be compliant ecma version 1.0
     if ( VERSION == "ECMA_1" ) {
-    startTest();
         version ( "130" );
     }
     if ( VERSION == "JS1_3" ) {
