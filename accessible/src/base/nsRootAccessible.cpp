@@ -56,7 +56,7 @@
 #include "nsIURI.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIWebShell.h"
+#include "nsIWebNavigation.h"
 #include "nsIXULDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
@@ -495,13 +495,23 @@ nsDocAccessibleMixin::~nsDocAccessibleMixin()
 
 NS_IMETHODIMP nsDocAccessibleMixin::GetURL(nsAWritableString& aURL)
 { 
-  nsCOMPtr<nsIURI> pURI;
-  mDocument->GetDocumentURL(getter_AddRefs(pURI));
-  nsXPIDLCString path;
-  pURI->GetSpec(getter_Copies(path));
-  aURL.Assign(NS_ConvertUTF8toUCS2(path).get());
-  //XXXaaronl Need to use CopyUTF8toUCS2(nsDependentCString(path), aURL); when it's written
-  
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  NS_ASSERTION(presShell,"Shell is gone!!! What are we doing here?");
+
+  nsCOMPtr<nsIDocShell> docShell;
+  nsAccessible::GetDocShellFromPS(presShell, getter_AddRefs(docShell));
+
+  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(docShell));
+  nsXPIDLCString theURL;
+  if (webNav) {
+    nsCOMPtr<nsIURI> pURI;
+    webNav->GetCurrentURI(getter_AddRefs(pURI));
+    if (pURI) 
+      pURI->GetSpec(getter_Copies(theURL));
+  }
+  //XXXaaronl Need to use CopyUTF8toUCS2(nsDependentCString(theURL), aURL); when it's written
+  aURL.Assign(NS_ConvertUTF8toUCS2(theURL).get()); 
   return NS_OK;
 }
 
