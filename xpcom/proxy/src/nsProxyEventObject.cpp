@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "prprf.h"
@@ -31,8 +32,8 @@
 
 #include "nsIInterfaceInfoManager.h"
 #include "xptcall.h"
-static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
 
+static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
 
 #ifdef DEBUG_dougt
 static PRMonitor* mon = nsnull;
@@ -136,7 +137,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
 
     // always find the native root if the |real| object.  
     nsCOMPtr<nsISupports> rootObject;
-    if(NS_FAILED(aObj->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(rootObject))))
+    if(NS_FAILED(aObj->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(rootObject))))
         return nsnull;
     
     /* get our hash table */    
@@ -156,7 +157,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
     // this will be our key in the hash table.  
     
     nsCOMPtr<nsISupports> destQRoot;
-    if(NS_FAILED(destQueue->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&destQueue)))
+    if(NS_FAILED(destQueue->QueryInterface(NS_GET_IID(nsISupports), (void**)&destQueue)))
         return nsnull;
 
     char* rootKeyString = PR_sprintf_append(nsnull, "%p.%p.%d", (PRUint32)rootObject.get(), (PRUint32)destQRoot.get(), proxyType);
@@ -205,7 +206,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
         {
             // just a root proxy
             nsCOMPtr<nsProxyEventClass> rootClazz = getter_AddRefs ( nsProxyEventClass::GetNewOrUsedClass(
-                                                                      nsCOMTypeInfo<nsISupports>::GetIID()) );
+                                                                      NS_GET_IID(nsISupports)) );
             
             if (!rootClazz)
             {
@@ -349,7 +350,7 @@ nsProxyEventObject::Find(REFNSIID aIID)
 {
     nsProxyEventObject* cur = (mRoot ? mRoot : this);
 
-    if(aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+    if(aIID.Equals(NS_GET_IID(nsISupports)))
     {
         return cur;
     }

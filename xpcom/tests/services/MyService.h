@@ -18,20 +18,13 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #ifndef MyService_h__
 #define MyService_h__
 
 #include "nsISupports.h"
-
-class IMyService : public nsISupports {
-public:
-    
-    NS_IMETHOD
-    Doit(void) = 0;
-
-};
 
 #define NS_IMYSERVICE_IID                            \
 { /* fedc3380-3648-11d2-8163-006008119d7a */         \
@@ -40,6 +33,15 @@ public:
     0x11d2,                                          \
     {0x81, 0x63, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
+
+class IMyService : public nsISupports {
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMYSERVICE_IID)
+    
+    NS_IMETHOD
+    Doit(void) = 0;
+
+};
 
 #define NS_IMYSERVICE_CID                            \
 { /* 34876550-364b-11d2-8163-006008119d7a */         \

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <iostream.h>
@@ -31,9 +32,7 @@
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
-NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kTestLoadedFactoryCID, NS_TESTLOADEDFACTORY_CID);
-NS_DEFINE_IID(kTestClassIID, NS_ITESTCLASS_IID);
 
 /**
  * ITestClass implementation
@@ -48,7 +47,7 @@ class TestDynamicClassImpl: public ITestClass {
   void Test();
 };
 
-NS_IMPL_ISUPPORTS(TestDynamicClassImpl, kTestClassIID);
+NS_IMPL_ISUPPORTS(TestDynamicClassImpl, NS_GET_IID(ITestClass));
 
 void TestDynamicClassImpl::Test() {
   cout << "hello, dynamic world!\n";
@@ -87,7 +86,7 @@ class TestDynamicFactory: public nsIFactory {
   };
 };
 
-NS_IMPL_ISUPPORTS(TestDynamicFactory, kFactoryIID);
+NS_IMPL_ISUPPORTS(TestDynamicFactory, NS_GET_IID(nsIFactory));
 
 nsresult TestDynamicFactory::CreateInstance(nsISupports *aDelegate,
                                             const nsIID &aIID,
@@ -124,7 +123,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
   }
   if (aClass.Equals(kTestLoadedFactoryCID)) {
     TestDynamicFactory *factory = new TestDynamicFactory();
-    nsresult res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
+    nsresult res = factory->QueryInterface(NS_GET_IID(nsIFactory), (void **) aFactory);
     if (NS_FAILED(res)) {
       *aFactory = NULL;
       delete factory;
@@ -147,7 +146,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr , const char 
 
   nsIComponentManager* compMgr;
   rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
+                           NS_GET_IID(nsIComponentManager), 
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
@@ -167,7 +166,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 
   nsIComponentManager* compMgr;
   rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
+                           NS_GET_IID(nsIComponentManager), 
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 

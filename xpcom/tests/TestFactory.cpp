@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <iostream.h>
@@ -26,10 +27,8 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
-NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kTestFactoryCID, NS_TESTFACTORY_CID);
 NS_DEFINE_CID(kTestLoadedFactoryCID, NS_TESTLOADEDFACTORY_CID);
-NS_DEFINE_IID(kTestClassIID, NS_ITESTCLASS_IID);
 
 int main(int argc, char **argv) {
   nsresult rv;
@@ -43,7 +42,7 @@ int main(int argc, char **argv) {
   ITestClass *t = NULL;
   nsComponentManager::CreateInstance(kTestFactoryCID,
                                NULL,
-                               kTestClassIID,
+                               NS_GET_IID(ITestClass),
                                (void **) &t);
 
   if (t != NULL) {
@@ -57,7 +56,7 @@ int main(int argc, char **argv) {
 
   nsComponentManager::CreateInstance(kTestLoadedFactoryCID,
                                NULL,
-                               kTestClassIID,
+                               NS_GET_IID(ITestClass),
                                (void **) &t);
 
   if (t != NULL) {
@@ -86,7 +85,7 @@ public:
   void Test();
 };
 
-NS_IMPL_ISUPPORTS(TestClassImpl, kTestClassIID);
+NS_IMPL_ISUPPORTS(TestClassImpl, NS_GET_IID(ITestClass));
 
 void TestClassImpl::Test() {
   cout << "hello, world!\n";
@@ -111,7 +110,7 @@ public:
   NS_IMETHOD LockFactory(PRBool aLock) { return NS_OK; }
 };
 
-NS_IMPL_ISUPPORTS(TestFactory, kFactoryIID);
+NS_IMPL_ISUPPORTS(TestFactory, NS_GET_IID(nsIFactory));
 
 nsresult TestFactory::CreateInstance(nsISupports *aDelegate,
                                      const nsIID &aIID,

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /* Implementation of nsIInterfaceInfoManager. */
@@ -521,7 +522,7 @@ NS_IMETHODIMP convert_interface_record(nsHashKey *key, void *data,
         return NS_ERROR_FAILURE;
     }
     
-    rv = iinfo->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),
+    rv = iinfo->QueryInterface(NS_GET_IID(nsISupports),
                                (void **)retval);
 
 #ifdef DEBUG

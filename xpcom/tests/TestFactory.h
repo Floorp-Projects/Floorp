@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #ifndef __TestFactory_h
@@ -42,6 +43,7 @@
 
 class ITestClass: public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITESTCLASS_IID)
   virtual void Test() = 0;
 };
 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIServiceManager.h"
@@ -39,13 +40,13 @@ void main(int argc, char* argv[])
             nsCID cid;
             cid.Parse(cidStr);
             rv = nsComponentManager::CreateInstance(cid, nsnull,
-                                                    nsCOMTypeInfo<nsISupports>::GetIID(),
+                                                    NS_GET_IID(nsISupports),
                                                     (void**)&obj);
         }
         else {
             // progID case:
             rv = nsComponentManager::CreateInstance(cidStr, nsnull,
-                                                    nsCOMTypeInfo<nsISupports>::GetIID(),
+                                                    NS_GET_IID(nsISupports),
                                                     (void**)&obj);
         }
         if (NS_SUCCEEDED(rv)) {

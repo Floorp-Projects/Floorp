@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -40,7 +41,7 @@
 
 static uint32 zero_methods_descriptor;
 
-
+static NS_DEFINE_IID(kProxyEventClassIID, NS_PROXYEVENT_CLASS_IID);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //  nsProxyEventClass
@@ -92,7 +93,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
                 nsID* iid;
                 if(NS_SUCCEEDED(oldest->GetIID(&iid))) 
                 {
-                    isISupportsDescendent = iid->Equals(nsCOMTypeInfo<nsISupports>::GetIID());
+                    isISupportsDescendent = iid->Equals(NS_GET_IID(nsISupports));
                     nsAllocator::Free(iid);
                 }
                 
@@ -230,7 +231,7 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
                                           void** aInstancePtr)
 {
     
-    if(aIID.Equals(ProxyEventClassIdentity::GetIID()))
+    if(aIID.Equals(NS_GET_IID(ProxyEventClassIdentity)))
     {
         *aInstancePtr = (void**)self;  //todo this should be a static cast
         NS_ADDREF(self);

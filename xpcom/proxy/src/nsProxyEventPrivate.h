@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #ifndef __nsProxyEventPrivate_h_
@@ -54,17 +55,13 @@ class nsProxyEventClass;
 { 0xec373590, 0x9164, 0x11d3,    \
 {0x8c, 0x73, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
 
-static NS_DEFINE_IID(kProxyEventClassIID, NS_PROXYEVENT_CLASS_IID);
-static NS_DEFINE_IID(kProxyEventObjectIID, NS_PROXYEVENT_OBJECT_IID);
-
 
 class nsProxyEventClass : public nsISupports
 {
 public:
     NS_DECL_ISUPPORTS
     
-    
-    static const nsIID& GetIID() {static nsIID iid = NS_PROXYEVENT_CLASS_IID; return iid;}
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_PROXYEVENT_CLASS_IID)
     static nsProxyEventClass* GetNewOrUsedClass(REFNSIID aIID);
     
     NS_IMETHOD DelegatedQueryInterface( nsProxyEventObject* self, 
@@ -96,7 +93,8 @@ class nsProxyEventObject : public nsXPTCStubBase
 public:
 
     NS_DECL_ISUPPORTS
-    static const nsIID& GetIID() {static nsIID iid = NS_PROXYEVENT_OBJECT_IID; return iid;}
+
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_PROXYEVENT_OBJECT_IID)
     
     static nsProxyEventObject* GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                                  PRInt32 proxyType,

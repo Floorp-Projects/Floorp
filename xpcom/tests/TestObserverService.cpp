@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -59,7 +60,7 @@ public:
     nsString mName;
 };
 
-NS_IMPL_ISUPPORTS( TestObserver, nsIObserver::GetIID() );
+NS_IMPL_ISUPPORTS( TestObserver, NS_GET_IID(nsIObserver) );
 
 NS_IMETHODIMP
 TestObserver::Observe( nsISupports     *aSubject,
@@ -82,7 +83,7 @@ int main(int argc, char *argv[])
 
     nsresult res = nsComponentManager::CreateInstance(NS_OBSERVERSERVICE_PROGID,
                                                 NULL,
-                                                 nsIObserverService::GetIID(),
+                                                 NS_GET_IID(nsIObserverService),
                                                 (void **) &anObserverService);
 	
     if (res == NS_OK) {
@@ -129,7 +130,7 @@ int main(int argc, char *argv[])
             for (e->First(); e->IsDone() != NS_OK; e->Next()) {
                 rv = e->CurrentItem(&inst);
                 if (NS_SUCCEEDED(rv)) {
-                  rv = inst->QueryInterface(nsIObserver::GetIID(),(void**)&anObserver);
+                  rv = inst->QueryInterface(NS_GET_IID(nsIObserver),(void**)&anObserver);
                   cout << "Calling observe on enumerated observer "
                         << ((TestObserver*)inst)->mName << "..." << endl;
                   rv = anObserver->Observe( inst, topicA.GetUnicode(), nsString("during enumeration").GetUnicode() );
