@@ -627,9 +627,9 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
                                 const char* string)
 {
   nsresult result = NS_OK;
+  nsString *strUnicodeBuffer = nsnull;
 
   if (string && stringLen>0) {
-    nsString *strUnicodeBuffer = nsnull;
 
     // First determine the charset (if one is indicated) and set the data member
     // XXX use the HTTP header data too
@@ -668,11 +668,12 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
         }
       }
     }
-    mLoader->DidLoadStyle(aLoader, strUnicodeBuffer, this, aStatus);
-    // NOTE: passed ownership of strUnicodeBuffer to mLoader in the call, 
-    //       so nulling it out for clarity / safety
-    strUnicodeBuffer = nsnull;
   }
+
+  mLoader->DidLoadStyle(aLoader, strUnicodeBuffer, this, aStatus);
+  // NOTE: passed ownership of strUnicodeBuffer to mLoader in the call, 
+  //       so nulling it out for clarity / safety
+  strUnicodeBuffer = nsnull;
 
   // We added a reference when the loader was created. This
   // release should destroy it.
