@@ -898,7 +898,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
     if (colonPos != -1 ) {
 	popServerNamewithoutPort.Truncate(colonPos);
-	rv = newPOPMailPath->AppendRelativeUnixPath(popServerNamewithoutPort);
+	rv = newPOPMailPath->AppendRelativeUnixPath(popServerNamewithoutPort.get());
     }
     else {
 	rv = newPOPMailPath->AppendRelativeUnixPath(popServerName);
@@ -1309,7 +1309,7 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
 		if (NS_FAILED(rv)) return rv;
 		nsCString newleafname((const char *)leafname);
 		newleafname += NEW_DIR_SUFFIX;
-		rv = newPath->SetLeafName(newleafname);
+		rv = newPath->SetLeafName(newleafname.get());
 		if (NS_FAILED(rv)) return rv;
 	}
 
@@ -2229,7 +2229,7 @@ convertPref(nsCString &aElement, void *aData)
   PrefEnumerationClosure *closure;
   closure = (PrefEnumerationClosure *)aData;
 
-  ConvertPrefToUTF8((const char *)aElement, closure->prefs, closure->charSet);
+  ConvertPrefToUTF8(aElement.get(), closure->prefs, closure->charSet);
   return PR_TRUE;
 }
 

@@ -1051,7 +1051,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
             rv = NS_NewFileSpec(getter_AddRefs(users4xDotNetscapeDirectory));
             if (NS_FAILED(rv)) return rv;
 
-            rv = users4xDotNetscapeDirectory->SetNativePath((const char *)profileLocation);
+            rv = users4xDotNetscapeDirectory->SetNativePath(profileLocation.get());
             if (NS_FAILED(rv)) return rv;
             rv = users4xDotNetscapeDirectory->Exists(&exists);
 
@@ -1070,7 +1070,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
                 profileItem->profileName = NS_ConvertASCIItoUCS2(unixProfileName).get();
                 
                 nsCOMPtr<nsILocalFile> localFile;
-                rv = NS_NewLocalFile(profileLocation, PR_TRUE, getter_AddRefs(localFile));
+                rv = NS_NewLocalFile(profileLocation.get(), PR_TRUE, getter_AddRefs(localFile));
                 if (NS_FAILED(rv)) return rv;
                 profileItem->SetResolvedProfileDir(localFile);
                 profileItem->isMigrated = PR_FALSE;
@@ -1116,14 +1116,11 @@ nsProfileAccess::CheckRegString(const PRUnichar *profileName, char **info)
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
         if (!profileItem->NCHavePregInfo.IsEmpty()) {
-            nsCAutoString pregC;
-            pregC.AssignWithConversion(profileItem->NCHavePregInfo);
-            *info = nsCRT::strdup(NS_STATIC_CAST(const char*, pregC));
+            *info = ToNewCString(profileItem->NCHavePregInfo);
         }
         else
         {
-            nsCAutoString noCString; noCString.AssignWithConversion(kRegistryNoString);
-            *info = nsCRT::strdup(NS_STATIC_CAST(const char*, noCString));
+            *info = ToNewCString(kRegistryNoString);
         }
     }
 }
@@ -1272,7 +1269,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 
             // Decode the directory name to return the ordinary string
             nsCAutoString regDataCString; regDataCString.AssignWithConversion(regData);
-            nsInputStringStream stream(regDataCString);
+            nsInputStringStream stream(regDataCString.get());
             nsPersistentFileDescriptor descriptor;
 
             char bigBuffer[MAX_PERSISTENT_DATA_SIZE + 1];
