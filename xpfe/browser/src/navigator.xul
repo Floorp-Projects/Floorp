@@ -2,11 +2,15 @@
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
-<!DOCTYPE window> 
+<!DOCTYPE window
+[
+<!ENTITY mainWindow.title "Mozilla"> 
+<!ENTITY throbber.url "http://www.mozilla.org">
+]> 
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="Startup()" title="Mozilla"> 
+        onload="Startup()" title="&mainWindow.title;"> 
 
   <html:script>
   var appCore = null;
@@ -833,7 +837,7 @@
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
 
-          <titledbutton id="Throbber" onclick="window.frames[0].frames[1].home()">
+          <titledbutton id="Throbber" onclick="window.frames[0].frames[1].location.href='&throbber.url;'">
              <observes element="Browser:Throbber" attribute="busy"/>
           </titledbutton>
 	</toolbar>
