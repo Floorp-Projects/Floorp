@@ -141,9 +141,9 @@ public:
   // XXXbz What about UnsetAttr?  We don't seem to unload images when
   // that happens...
 
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);  
-  virtual void SetParent(nsIContent* aParent);  
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
 
 protected:
   void GetImageFrame(nsIImageFrame** aImageFrame);
@@ -581,37 +581,25 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                        aNotify);
 }
 
-void
-nsHTMLImageElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                PRBool aCompileEventHandlers)
+nsresult
+nsHTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                               nsIContent* aBindingParent,
+                               PRBool aCompileEventHandlers)
 {
-  PRBool documentChanging = aDocument && aDocument != GetCurrentDoc();
-  
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
-  if (documentChanging && GetParent()) {
-    // Our base URI may have changed; claim that our URI changed, and the
-    // nsImageLoadingContent will decide whether a new image load is warranted.
-    nsAutoString uri;
-    nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
-    if (result == NS_CONTENT_ATTR_HAS_VALUE) {
-      ImageURIChanged(uri);
-    }
-  }
-}
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-void
-nsHTMLImageElement::SetParent(nsIContent* aParent)
-{
-  nsGenericHTMLElement::SetParent(aParent);
-  if (aParent && IsInDoc()) {
-    // Our base URI may have changed; claim that our URI changed, and the
-    // nsImageLoadingContent will decide whether a new image load is warranted.
-    nsAutoString uri;
-    nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
-    if (result == NS_CONTENT_ATTR_HAS_VALUE) {
-      ImageURIChanged(uri);
-    }
+  // Our base URI may have changed; claim that our URI changed, and the
+  // nsImageLoadingContent will decide whether a new image load is warranted.
+  nsAutoString uri;
+  nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
+  if (result == NS_CONTENT_ATTR_HAS_VALUE) {
+    ImageURIChanged(uri);
   }
+
+  return rv;
 }
 
 NS_IMETHODIMP

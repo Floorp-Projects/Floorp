@@ -109,8 +109,8 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -413,17 +413,16 @@ nsHTMLBodyElement::ParseAttribute(nsIAtom* aAttribute,
 }
 
 void
-nsHTMLBodyElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                               PRBool aCompileEventHandlers)
+nsHTMLBodyElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  nsIDocument *document = GetCurrentDoc();
-  if (aDocument != document && mContentStyleRule) {
+  if (mContentStyleRule) {
     mContentStyleRule->mPart = nsnull;
 
-    // destroy old style rule since the sheet will probably change
+    // destroy old style rule
     NS_RELEASE(mContentStyleRule);
   }
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
+
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);  
 }
 
 static 

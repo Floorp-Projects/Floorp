@@ -70,8 +70,11 @@ public:
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                  PRBool aDeepSetDocument);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
   {
@@ -181,17 +184,30 @@ nsSVGStyleElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   return rv;
 }
 
+nsresult
+nsSVGStyleElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers)
+{
+  nsresult rv = nsSVGStyleElementBase::BindToTree(aDocument, aParent,
+                                                  aBindingParent,
+                                                  aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  UpdateStyleSheet(nsnull);
+
+  return rv;  
+}
+
 void
-nsSVGStyleElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                               PRBool aCompileEventHandlers)
+nsSVGStyleElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
 
-  nsSVGStyleElementBase::SetDocument(aDocument, aDeep, aCompileEventHandlers);
-
+  nsSVGStyleElementBase::UnbindFromTree(aDeep, aNullParent);
   UpdateStyleSheet(oldDoc);
 }
- 
+
 nsresult
 nsSVGStyleElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,

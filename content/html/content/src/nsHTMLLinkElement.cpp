@@ -86,11 +86,12 @@ public:
   NS_IMETHOD    SetLinkState(nsLinkState aState);
   NS_IMETHOD    GetHrefURI(nsIURI** aURI);
 
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
-  void CreateAndDispatchEvent(nsIDocument* aDoc, const nsString& aRel,
-                              const nsString& aRev,
-                              const nsAString& aEventName);
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
+  void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
   {
@@ -189,36 +190,52 @@ NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Target, target)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
 
+nsresult
+nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers)
+{
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  UpdateStyleSheet(nsnull);
+
+  // XXXbz we really shouldn't fire the event until after we've finished with
+  // the outermost BindToTree...  In particular, this can effectively cause us
+  // to reenter this code, or for some part of the document to become unbound
+  // inside the event!
+  CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMLinkAdded"));
+
+  return rv;  
+}
+
 void
-nsHTMLLinkElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                               PRBool aCompileEventHandlers)
+nsHTMLLinkElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
+
+  // XXXbz we really shouldn't fire the event until after we've finished with
+  // the outermost UnbindFromTree...  In particular, this can effectively cause
+  // us to reenter this code, or to be bound to a different tree inside the
+  // event!
+  CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMLinkRemoved"));
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+  UpdateStyleSheet(oldDoc);
+}
+
+void
+nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
+                                          const nsAString& aEventName)
+{
+  if (!aDoc)
+    return;
 
   nsAutoString rel;
   nsAutoString rev;
   GetAttr(kNameSpaceID_None, nsHTMLAtoms::rel, rel);
   GetAttr(kNameSpaceID_None, nsHTMLAtoms::rev, rev);
-    
-  CreateAndDispatchEvent(oldDoc, rel, rev,
-                         NS_LITERAL_STRING("DOMLinkRemoved"));
-
-  // Do the removal and addition into the new doc.
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
-  UpdateStyleSheet(oldDoc);
-		
-  CreateAndDispatchEvent(aDocument, rel, rev,
-                         NS_LITERAL_STRING("DOMLinkAdded"));
-}
- 
-void
-nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
-                                          const nsString& aRel,
-                                          const nsString& aRev, 
-                                          const nsAString& aEventName)
-{
-  if (!aDoc)
-    return;
 
   // In the unlikely case that both rev is specified *and* rel=stylesheet,
   // this code will cause the event to fire, on the principle that maybe the
@@ -226,8 +243,8 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
   // this should never actually happen and the performance hit is minimal,
   // doing the "right" thing costs virtually nothing here, even if it doesn't
   // make much sense.
-  if (aRev.IsEmpty() &&
-      (aRel.IsEmpty() || aRel.LowerCaseEqualsLiteral("stylesheet")))
+  if (rev.IsEmpty() &&
+      (rel.IsEmpty() || rel.LowerCaseEqualsLiteral("stylesheet")))
     return;
 
   nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));

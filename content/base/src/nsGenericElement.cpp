@@ -1754,98 +1754,160 @@ nsGenericElement::Normalize()
   return result;
 }
 
-
-void
-nsGenericElement::SetDocumentInChildrenOf(nsIContent* aContent,
-                                          nsIDocument* aDocument,
-                                          PRBool aCompileEventHandlers)
+nsresult
+nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                             nsIContent* aBindingParent,
+                             PRBool aCompileEventHandlers)
 {
-  PRUint32 i, n = aContent->GetChildCount();
+  NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
+  // XXXbz XUL elements are confused about their current doc when they're
+  // cloned, so we don't assert if aParent is a XUL element and aDocument is
+  // null, even if aParent->GetCurrentDoc() is non-null
+  //  NS_PRECONDITION(!aParent || aDocument == aParent->GetCurrentDoc(),
+  //                  "aDocument must be current doc of aParent");
+  NS_PRECONDITION(!aParent ||
+                  (aParent->IsContentOfType(eXUL) && aDocument == nsnull) ||
+                  aDocument == aParent->GetCurrentDoc(),
+                  "aDocument must be current doc of aParent");
+  NS_PRECONDITION(!GetCurrentDoc(), "Already have a document.  Unbind first!");
+  // Note that as we recurse into the kids, they'll have a non-null parent.  So
+  // only assert if our parent is _changing_ while we have a parent.
+  NS_PRECONDITION(!GetParent() || aParent == GetParent(),
+                  "Already have a parent.  Unbind first!");
+  NS_PRECONDITION(!GetBindingParent() ||
+                  aBindingParent == GetBindingParent() ||
+                  (!aBindingParent && aParent &&
+                   aParent->GetBindingParent() == GetBindingParent()),
+                  "Already have a binding parent.  Unbind first!");
+  
+  if (!aBindingParent && aParent) {
+    aBindingParent = aParent->GetBindingParent();
+  }
 
-  for (i = 0; i < n; ++i) {
-    nsIContent *child = aContent->GetChildAt(i);
+  // First set the binding parent
+  if (aBindingParent) {
+    nsDOMSlots *slots = GetDOMSlots();
 
-    if (child) {
-      child->SetDocument(aDocument, PR_TRUE, aCompileEventHandlers);
+    if (!slots) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
+  }
+
+  // Now set the parent; make sure to preserve the bits we have stashed there
+  // Note that checking whether aParent == GetParent() is probably not worth it
+  // here.
+  PtrBits new_bits = NS_REINTERPRET_CAST(PtrBits, aParent);
+  new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
+  mParentPtrBits = new_bits;
+
+  nsresult rv;
+  
+  // Finally, set the document
+  if (aDocument) {
+    // Notify XBL- & nsIAnonymousContentCreator-generated
+    // anonymous content that the document is changing.
+    // XXXbz ordering issues here?  Probably not, since ChangeDocumentFor is
+    // just pretty broken anyway....  Need to get it working.
+    // XXXbz XBL doesn't handle this (asserts), and we don't really want
+    // to be doing this during parsing anyway... sort this out.    
+    //    aDocument->BindingManager()->ChangeDocumentFor(this, nsnull,
+    //                                                   aDocument);
+
+    // Being added to a document.
+    mParentPtrBits |= PARENT_BIT_INDOCUMENT;
+
+    // check the document on the nodeinfo to see whether we need a
+    // new nodeinfo
+    // XXXbz sXBL/XBL2 issue!
+    nsIDocument *ownerDocument = GetOwnerDoc();
+    if (aDocument != ownerDocument) {
+
+      if (HasProperties()) {
+        ownerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
+      }
+
+      // get a new nodeinfo
+      nsNodeInfoManager* nodeInfoManager = aDocument->NodeInfoManager();
+      if (nodeInfoManager) {
+        nsCOMPtr<nsINodeInfo> newNodeInfo;
+        rv = nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
+                                          mNodeInfo->GetPrefixAtom(),
+                                          mNodeInfo->NamespaceID(),
+                                          getter_AddRefs(newNodeInfo));
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
+        mNodeInfo.swap(newNodeInfo);
+      }
     }
   }
+
+  // Now recurse into our kids
+  PRUint32 i, n = GetChildCount();
+
+  for (i = 0; i < n; ++i) {
+    rv = mAttrsAndChildren.ChildAt(i)->BindToTree(aDocument, this,
+                                                  aBindingParent,
+                                                  aCompileEventHandlers);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // XXXbz script execution during binding can trigger some of these
+  // postcondition asserts....  But we do want that, since things will
+  // generally be quite broken when that happens.
+  NS_POSTCONDITION(aDocument == GetCurrentDoc(), "Bound to wrong document");
+  NS_POSTCONDITION(aParent == GetParent(), "Bound to wrong parent");
+  NS_POSTCONDITION(aBindingParent == GetBindingParent(),
+                   "Bound to wrong binding parent");
+  
+  return NS_OK;
 }
 
 void
-nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                              PRBool aCompileEventHandlers)
+nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
+  NS_PRECONDITION(aDeep || (!GetCurrentDoc() && !GetBindingParent()),
+                  "Shallow unbind won't clear document and binding parent on "
+                  "kids!");
+  // Make sure to unbind this node before doing the kids
   nsIDocument *document = GetCurrentDoc();
-  if (aDocument != document) {
-    // If we were part of a document, make sure we get rid of the
-    // script context reference to our script object so that our
-    // script object can be freed (or collected).
+  if (document) {
+    // Notify XBL- & nsIAnonymousContentCreator-generated
+    // anonymous content that the document is changing.
+    document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
 
-    if (document && aDeep) {
-      // Notify XBL- & nsIAnonymousContentCreator-generated
-      // anonymous content that the document is changing.
-      document->BindingManager()->ChangeDocumentFor(this, document, aDocument);
+    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
 
-      nsCOMPtr<nsIDOMElement> domElement;
-      QueryInterface(NS_GET_IID(nsIDOMElement), getter_AddRefs(domElement));
-
-      if (domElement) {
-        nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(document));
-        nsDoc->SetBoxObjectFor(domElement, nsnull);
-      }
+    if (domElement) {
+      nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(document);
+      nsDoc->SetBoxObjectFor(domElement, nsnull);
     }
+  }
 
-    if (aDocument) {
-      mParentPtrBits |= PARENT_BIT_INDOCUMENT;
-
-      // check the document on the nodeinfo to see whether we need a
-      // new nodeinfo
-      // XXXbz sXBL/XBL2 issue!
-      nsIDocument *ownerDocument = GetOwnerDoc();
-      if (aDocument != ownerDocument) {
-
-        if (HasProperties()) {
-          ownerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
-        }
-
-        // get a new nodeinfo
-        nsNodeInfoManager* nodeInfoManager = aDocument->NodeInfoManager();
-        if (nodeInfoManager) {
-          nsCOMPtr<nsINodeInfo> newNodeInfo;
-          nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
-                                       mNodeInfo->GetPrefixAtom(),
-                                       mNodeInfo->NamespaceID(),
-                                       getter_AddRefs(newNodeInfo));
-          if (newNodeInfo) {
-            mNodeInfo.swap(newNodeInfo);
-          }
-        }
-      }
-    }
-    else {
-      mParentPtrBits &= ~PARENT_BIT_INDOCUMENT;
-    }
+  // Unset things in the reverse order from how we set them in BindToTree
+  mParentPtrBits &= ~PARENT_BIT_INDOCUMENT;
+  
+  if (aNullParent) {
+    // Just mask it out
+    mParentPtrBits &= nsIContent::kParentBitMask;
+  }
+  
+  nsDOMSlots *slots = GetExistingDOMSlots();
+  if (slots) {
+    slots->mBindingParent = nsnull;
   }
 
   if (aDeep) {
-    SetDocumentInChildrenOf(this, aDocument, aCompileEventHandlers);
-  }
-}
+    // Do the kids
+    PRUint32 i, n = GetChildCount();
 
-
-void
-nsGenericElement::SetParent(nsIContent* aParent)
-{
-  PtrBits new_bits = NS_REINTERPRET_CAST(PtrBits, aParent);
-
-  new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
-
-  mParentPtrBits = new_bits;
-
-  if (aParent) {
-    nsIContent* bindingPar = aParent->GetBindingParent();
-    if (bindingPar)
-      SetBindingParent(bindingPar);
+    for (i = 0; i < n; ++i) {
+      // Note that we pass PR_FALSE for aNullParent here, since we don't want
+      // the kids to forget us.  We _do_ want them to forget their binding
+      // parent, though, since this only walks non-anonymous kids.
+      mAttrsAndChildren.ChildAt(i)->UnbindFromTree(PR_TRUE, PR_FALSE);
+    }
   }
 }
 
@@ -2505,30 +2567,6 @@ nsGenericElement::GetBindingParent() const
   return nsnull;
 }
 
-nsresult
-nsGenericElement::SetBindingParent(nsIContent* aParent)
-{
-  nsDOMSlots *slots = GetDOMSlots();
-
-  if (!slots) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  slots->mBindingParent = aParent; // Weak, so no addref happens.
-
-  nsresult rv = NS_OK;
-
-  if (aParent) {
-    PRUint32 count = GetChildCount();
-
-    for (PRUint32 i = 0; i < count; ++i) {
-      rv |= GetChildAt(i)->SetBindingParent(aParent);
-    }
-  }
-
-  return rv;
-}
-
 PRBool
 nsGenericElement::IsContentOfType(PRUint32 aFlags) const
 {
@@ -2618,10 +2656,22 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
   nsresult rv = mAttrsAndChildren.InsertChildAt(aKid, aIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aKid->SetParent(this);
+  rv = aKid->BindToTree(document, this, nsnull, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    mAttrsAndChildren.RemoveChildAt(aIndex);
+    aKid->UnbindFromTree();
+    return rv;
+  }
+  
   nsRange::OwnerChildInserted(this, aIndex);
-  if (document) {
-    aKid->SetDocument(document, aDeepSetDocument, PR_TRUE);
+  // The kid may have removed us from the document, so recheck that we're still
+  // in the document before proceeding.  Also, the kid may have just removed
+  // itself, in which case we don't really want to fire ContentAppended or a
+  // mutation event.
+  // XXXbz What if the kid just moved us in the document?  Scripts suck.  We
+  // really need to stop running them while we're in the middle of modifying
+  // the DOM....
+  if (document && document == GetCurrentDoc() && aKid->GetParent() == this) {
     if (aNotify) {
       if (isAppend) {
         document->ContentAppended(this, aIndex);
@@ -2653,11 +2703,22 @@ nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
   nsresult rv = mAttrsAndChildren.AppendChild(aKid);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  aKid->SetParent(this);
+  rv = aKid->BindToTree(document, this, nsnull, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    mAttrsAndChildren.RemoveChildAt(GetChildCount() - 1);
+    aKid->UnbindFromTree();
+    return rv;
+  }
   // ranges don't need adjustment since new child is at end of list
 
-  if (document) {
-    aKid->SetDocument(document, aDeepSetDocument, PR_TRUE);
+  // The kid may have removed us from the document, so recheck that we're still
+  // in the document before proceeding.  Also, the kid may have just removed
+  // itself, in which case we don't really want to fire ContentAppended or a
+  // mutation event.
+  // XXXbz What if the kid just moved us in the document?  Scripts suck.  We
+  // really need to stop running them while we're in the middle of modifying
+  // the DOM....
+  if (document && document == GetCurrentDoc() && aKid->GetParent() == this) {
     if (aNotify) {
       document->ContentAppended(this, GetChildCount() - 1);
     }
@@ -2699,8 +2760,7 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
       document->ContentRemoved(this, oldKid, aIndex);
     }
     
-    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    oldKid->SetParent(nsnull);
+    oldKid->UnbindFromTree();
   }
 
   return NS_OK;
@@ -3267,7 +3327,9 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
 
     // If we have a document, and it has a script global, add the
     // event listener on the global. If not, proceed as normal.
-    nsIDocument *document = GetCurrentDoc();
+    // XXXbz should we instead use GetCurrentDoc() here, override
+    // BindToTree for those classes and munge event listeners there?
+    nsIDocument *document = GetOwnerDoc();
     if (document && (sgo = document->GetScriptGlobalObject())) {
       nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(sgo));
       NS_ENSURE_TRUE(receiver, NS_ERROR_FAILURE);

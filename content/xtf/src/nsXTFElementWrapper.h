@@ -76,9 +76,11 @@ public:
   // virtual PRUint32 GetElementType() = 0;
     
   // nsIContent specializations:
-  void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                   PRBool aCompileEventHandlers);
-  void SetParent(nsIContent* aParent);
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                          PRBool aNotify, PRBool aDeepSetDocument);
   nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,

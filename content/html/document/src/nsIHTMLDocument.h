@@ -93,7 +93,7 @@ public:
   virtual already_AddRefed<nsContentList> GetFormControlElements() = 0;
   
   /**
-   * Called when form->SetDocument() is called so that document knows
+   * Called when form->BindToTree() is called so that document knows
    * immediately when a form is added
    */
   virtual void AddedForm() = 0;

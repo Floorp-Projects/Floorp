@@ -141,6 +141,15 @@ private:
 
 class nsXBLInsertionPointEntry {
 public:
+  ~nsXBLInsertionPointEntry() {
+    if (mDefaultContent) {
+      // mDefaultContent is a sort of anonymous content within the XBL
+      // document, and we own and manage it.  Unhook it here, since we're going
+      // away.
+      mDefaultContent->UnbindFromTree();
+    }      
+  }
+  
   nsIContent* GetInsertionParent() { return mInsertionParent; }
   PRUint32 GetInsertionIndex() { return mInsertionIndex; }
   void SetInsertionIndex(PRUint32 aIndex) { mInsertionIndex = aIndex; }
@@ -1186,7 +1195,14 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
       // to work with on default content.
       // XXXbz this is somewhat screwed up, since it's sort of like anonymous
       // content... but not.
-      child->SetParent(parent);
+      nsresult rv =
+        child->BindToTree(parent->GetCurrentDoc(), parent, nsnull, PR_FALSE);
+      if (NS_FAILED(rv)) {
+        // Well... now what?  Just unbind and bail out, I guess...
+        // XXXbz This really shouldn't be a void method!
+        child->UnbindFromTree();
+        return;
+      }
     }
   }
 }

@@ -79,8 +79,11 @@ public:
                                nsIContent* aSubmitElement);
 
   // nsIContent
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
@@ -214,25 +217,31 @@ nsHTMLLegendElement::Reset()
   return NS_OK;
 }
 
-void
-nsHTMLLegendElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                 PRBool aCompileEventHandlers)
+nsresult
+nsHTMLLegendElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                PRBool aCompileEventHandlers)
 {
-  nsIDocument *document = GetCurrentDoc();
-  PRBool documentChanging = (aDocument != document);
-  
-  // Unregister the access key for the old document.
-  if (documentChanging && document) {
+  nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
+                                                     aBindingParent,
+                                                     aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aDocument) {
+    RegUnRegAccessKey(PR_TRUE);
+  }
+
+  return rv;
+}
+
+void
+nsHTMLLegendElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  if (IsInDoc()) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsGenericHTMLFormElement::SetDocument(aDocument, aDeep,
-                                        aCompileEventHandlers);
-
-  // Register the access key for the new document.
-  if (documentChanging && document) {
-    RegUnRegAccessKey(PR_TRUE);
-  }
+  nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 void

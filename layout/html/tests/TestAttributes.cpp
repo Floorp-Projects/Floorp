@@ -263,7 +263,12 @@ int main(int argc, char** argv)
   txt->AppendData(tmp);
   NS_RELEASE(txt);
 
-  text->SetDocument(myDoc, PR_FALSE, PR_TRUE);
+  rv = text->BindToTree(myDoc, nsnull, nsnull, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    printf("Could not bind text content to tree.\n");
+    text->UnbindFromTree();
+    return -1;
+  }
 
 #if 0
   // Query ITextContent interface

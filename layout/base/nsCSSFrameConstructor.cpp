@@ -2024,13 +2024,16 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
 
     // Set aContent as the parent content and set the document object. This
     // way event handling works
-    content->SetParent(aContent);
-    content->SetDocument(mDocument, PR_TRUE, PR_TRUE);
+    // Hack the binding parent to make document rules not match (not
+    // like it matters, since we already have a non-element style
+    // context... which is totally wacky, but anyway).
+    rv = content->BindToTree(mDocument, aContent, content, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      content->UnbindFromTree();
+      return rv;
+    }
+    
     content->SetNativeAnonymous(PR_TRUE);
-    // hack to make document rules not match (not like it matters, since we
-    // already have a non-element style context... which is totally wacky, but
-    // anyway).
-    content->SetBindingParent(content);
   
     // Create an image frame and initialize it
     nsIFrame* imageFrame = nsnull;
@@ -2086,15 +2089,18 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
         nsresult rv = NS_ERROR_FAILURE;
         if (attrName) {
           nsIFrame*   textFrame = nsnull;
-          rv = NS_NewAttributeContent(aContent, attrNameSpace, attrName,
+          rv = NS_NewAttributeContent(attrNameSpace, attrName,
                                       getter_AddRefs(content));
           NS_ENSURE_SUCCESS(rv, rv);
 
           // Set aContent as the parent content so that event handling works.
-          content->SetParent(aContent);
-          content->SetDocument(mDocument, PR_TRUE, PR_TRUE);
+          rv = content->BindToTree(mDocument, aContent, content, PR_TRUE);
+          if (NS_FAILED(rv)) {
+            content->UnbindFromTree();
+            return rv;
+          }
+
           content->SetNativeAnonymous(PR_TRUE);
-          content->SetBindingParent(content);
 
           // Create a text frame and initialize it
           NS_NewTextFrame(mPresShell, &textFrame);
@@ -2182,10 +2188,14 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
         }
 
         // Set aContent as the parent content so that event handling works.
-        textContent->SetParent(aContent);
-        textContent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
+        nsresult rv = textContent->BindToTree(mDocument, aContent, textContent,
+                                              PR_TRUE);
+        if (NS_FAILED(rv)) {
+          textContent->UnbindFromTree();
+          return rv;
+        }
+
         textContent->SetNativeAnonymous(PR_TRUE);
-        textContent->SetBindingParent(textContent);
 
         // Create a text frame and initialize it
         NS_NewTextFrame(mPresShell, &textFrame);
@@ -5615,10 +5625,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
         continue;
 
       content->SetNativeAnonymous(PR_TRUE);
-      content->SetParent(aParent);
-      content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
 
       nsresult rv;
+      nsIContent* bindingParent = content;
 #ifdef MOZ_XUL
       // Only cut XUL scrollbars off if they're not in a XUL document.
       // This allows scrollbars to be styled from XUL (although not
@@ -5629,15 +5638,13 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                  ni->Equals(nsXULAtoms::scrollcorner, kNameSpaceID_XUL))) {
         nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(aDocument));
         if (xulDoc)
-          rv = content->SetBindingParent(aParent);
-        else
-          rv = content->SetBindingParent(content);
+          bindingParent = aParent;
       }
       else
 #endif
 #ifdef MOZ_XTF
       if (aForceBindingParent)
-        rv = content->SetBindingParent(aParent);
+        bindingParent = aParent;
       else
 #endif
 #ifdef MOZ_SVG
@@ -5646,12 +5653,14 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
       if (aParent &&
           aParent->GetNodeInfo() &&
           aParent->GetNodeInfo()->Equals(nsSVGAtoms::use, kNameSpaceID_SVG))
-        rv = content->SetBindingParent(aParent);
-      else
+        bindingParent = aParent;
 #endif
-        rv = content->SetBindingParent(content);
 
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = content->BindToTree(aDocument, aParent, bindingParent, PR_TRUE);
+      if (NS_FAILED(rv)) {
+        content->UnbindFromTree();
+        return rv;
+      }
 
       nsIFrame * newFrame = nsnull;
       rv = creator->CreateFrameFor(aState.mPresContext, content, &newFrame);
@@ -10484,8 +10493,14 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIContent*      aContent,
   altTextContent->SetText(altText, PR_TRUE);
   
   // Set aContent as the parent content.
-  altTextContent->SetParent(aContent);
-  altTextContent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
+  // XXXbz should this set the binding parent to |altTextContent|?
+  rv = altTextContent->BindToTree(mDocument, aContent, nsnull, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    altTextContent->UnbindFromTree();
+    return rv;
+  }
+
+  // XXXbz shouldn't it be set native anonymous too?
 
   // Create either an inline frame, block frame, or area frame
   nsIFrame* containerFrame;

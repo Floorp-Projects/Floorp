@@ -95,8 +95,9 @@ public:
                                      nsISVGValue::modificationType aModType);
 
   // nsIContent specializations:
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify, PRBool aDeepSetDocument);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
@@ -356,14 +357,21 @@ nsSVGScriptElement::DidModifySVGObservable(nsISVGValue* aObservable,
 //----------------------------------------------------------------------
 // nsIContent methods
 
-void
-nsSVGScriptElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                PRBool aCompileEventHandlers)
+nsresult
+nsSVGScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                               nsIContent* aBindingParent,
+                               PRBool aCompileEventHandlers)
 {
-  nsSVGScriptElementBase::SetDocument(aDocument, aDeep, aCompileEventHandlers);
+  nsresult rv = nsSVGScriptElementBase::BindToTree(aDocument, aParent,
+                                                   aBindingParent,
+                                                   aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (aDocument) {
     MaybeProcessScript();
   }
+
+  return rv;
 }
 
 nsresult
@@ -400,7 +408,7 @@ nsSVGScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
 void
 nsSVGScriptElement::MaybeProcessScript()
 {
-  if (mIsEvaluated || mEvaluating || !IsInDoc() || !GetParent()) {
+  if (mIsEvaluated || mEvaluating || !IsInDoc()) {
     return;
   }
 

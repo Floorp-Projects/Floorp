@@ -357,6 +357,7 @@ protected:
 
     /**
      * Create a delegate content model element from a prototype.
+     * Note that the resulting content node is not bound to any tree
      */
     nsresult CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
                                         nsIContent** aResult);

@@ -187,10 +187,12 @@ public:
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
-  virtual void SetParent(nsIContent* aParent);
-
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
+  
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
   {
@@ -896,9 +898,7 @@ nsHTMLInputElement::GetRadioGroupContainer()
   nsIRadioGroupContainer* retval = nsnull;
   if (mForm) {
     CallQueryInterface(mForm, &retval);
-  } else if (GetParent()) {
-    // XXXbz the GetParent() check is needed because we sometimes have a doc
-    // when we're not really in one, I think...  Need BindToTree!
+  } else {
     nsIDocument* currentDoc = GetCurrentDoc();
     if (currentDoc) {
       CallQueryInterface(currentDoc, &retval);
@@ -1674,24 +1674,17 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
 }
 
 
-void
-nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                PRBool aCompileEventHandlers)
+nsresult
+nsHTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                               nsIContent* aBindingParent,
+                               PRBool aCompileEventHandlers)
 {
-  PRBool documentChanging = (aDocument != GetCurrentDoc());
+  nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
+                                                     aBindingParent,
+                                                     aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // SetDocument() sets the form and that takes care of form's WillRemove
-  // so we just have to take care of the case where we're removing from the
-  // document and we don't have a form
-  if (documentChanging && !mForm && mType == NS_FORM_INPUT_RADIO) {
-    WillRemoveFromRadioGroup();
-  }
-
-  nsGenericHTMLFormElement::SetDocument(aDocument, aDeep,
-                                        aCompileEventHandlers);
-
-  if (mType == NS_FORM_INPUT_IMAGE &&
-      documentChanging && aDocument && GetParent()) {
+  if (mType == NS_FORM_INPUT_IMAGE) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
     nsAutoString uri;
@@ -1700,12 +1693,15 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
       ImageURIChanged(uri);
     }
   }
-  
+
   // If this is radio button which is in a form,
   // and the parser is still creating the element.
+  // XXXbz hmmm Do we need this BF_PARSER_CREATING thing?  I suspect
+  // we don't and that it was a hackaround around the way-early
+  // SetDocument call in the parser.
   if (mForm || mType != NS_FORM_INPUT_RADIO ||
       GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
-    return;
+    return rv;
   }
   
   // Add radio to document if we don't have a form already (if we do it's
@@ -1713,21 +1709,23 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   if (aDocument && !mForm && mType == NS_FORM_INPUT_RADIO) {
     AddedToRadioGroup();
   }
+
+  return rv;
 }
 
 void
-nsHTMLInputElement::SetParent(nsIContent* aParent)
+nsHTMLInputElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  nsGenericHTMLFormElement::SetParent(aParent);
-  if (mType == NS_FORM_INPUT_IMAGE && aParent && IsInDoc()) {
-    // Our base URI may have changed; claim that our URI changed, and the
-    // nsImageLoadingContent will decide whether a new image load is warranted.
-    nsAutoString uri;
-    nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
-    if (result == NS_CONTENT_ATTR_HAS_VALUE) {
-      ImageURIChanged(uri);
-    }
+  // If we have a form and are unbound from it,
+  // nsGenericHTMLFormElement::SetDocument() will unset the form and
+  // that takes care of form's WillRemove so we just have to take care
+  // of the case where we're removing from the document and we don't
+  // have a form
+  if (!mForm && mType == NS_FORM_INPUT_RADIO) {
+    WillRemoveFromRadioGroup();
   }
+
+  nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 static const nsAttrValue::EnumTable kInputTypeTable[] = {

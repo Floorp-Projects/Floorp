@@ -180,7 +180,6 @@ nsPluginDocument::CreateSyntheticPluginDocument()
   if (!mPluginContent) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mPluginContent->SetDocument(this, PR_FALSE, PR_TRUE);
 
   // make it a named element
   mPluginContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::name,

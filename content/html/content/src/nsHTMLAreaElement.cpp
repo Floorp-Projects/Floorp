@@ -88,8 +88,11 @@ public:
                                   nsEventStatus* aEventStatus);
   virtual void SetFocus(nsPresContext* aPresContext);
 
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
   {
@@ -201,24 +204,31 @@ nsHTMLAreaElement::SetFocus(nsPresContext* aPresContext)
   }
 }
 
-void
-nsHTMLAreaElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                               PRBool aCompileEventHandlers)
+nsresult
+nsHTMLAreaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers)
 {
-  nsIDocument *document = GetCurrentDoc();
-  PRBool documentChanging = (aDocument != document);
-  
-  // Unregister the access key for the old document.
-  if (documentChanging && document) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aDocument) {
+    RegUnRegAccessKey(PR_TRUE);
+  }
+
+  return rv;
+}
+
+void
+nsHTMLAreaElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  if (IsInDoc()) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
-
-  // Register the access key for the new document.
-  if (documentChanging && aDocument) {
-    RegUnRegAccessKey(PR_TRUE);
-  }
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 nsresult

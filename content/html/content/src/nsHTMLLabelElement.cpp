@@ -82,8 +82,11 @@ public:
                                nsIContent* aSubmitElement);
 
   // nsIContent
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
@@ -155,25 +158,31 @@ nsHTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for)
 
-void
-nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                PRBool aCompileEventHandlers)
+nsresult
+nsHTMLLabelElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                               nsIContent* aBindingParent,
+                               PRBool aCompileEventHandlers)
 {
-  nsIDocument *document = GetCurrentDoc();
-  PRBool documentChanging = (aDocument != document);
+  nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
+                                                     aBindingParent,
+                                                     aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // Unregister the access key for the old document.
-  if (documentChanging && document) {
+  if (aDocument) {
+    RegUnRegAccessKey(PR_TRUE);
+  }
+
+  return rv;
+}
+
+void
+nsHTMLLabelElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  if (IsInDoc()) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsGenericHTMLFormElement::SetDocument(aDocument, aDeep,
-                                        aCompileEventHandlers);
-
-  // Register the access key for the new document.
-  if (documentChanging && aDocument) {
-    RegUnRegAccessKey(PR_TRUE);
-  }
+  nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 static PRBool

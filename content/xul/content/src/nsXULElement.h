@@ -461,8 +461,11 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // nsIContent
-    virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                             PRBool aCompileEventHandlers);
+    virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                PRBool aCompileEventHandlers);
+    virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                                PRBool aNullParent = PR_TRUE);
     virtual PRBool IsNativeAnonymous() const;
     virtual PRUint32 GetChildCount() const;
     virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
@@ -511,7 +514,6 @@ public:
     virtual void RemoveFocus(nsPresContext* aPresContext);
 
     virtual nsIContent *GetBindingParent() const;
-    virtual nsresult SetBindingParent(nsIContent* aParent);
     virtual PRBool IsContentOfType(PRUint32 aFlags) const;
     virtual nsresult GetListenerManager(nsIEventListenerManager** aResult);
     virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);

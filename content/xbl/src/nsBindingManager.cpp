@@ -407,7 +407,11 @@ NS_IMETHODIMP
 nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
                                     nsIDocument* aNewDocument)
 {
+  // XXXbz this code is pretty broken, since moving from one document
+  // to another always passes through a null document!
   NS_PRECONDITION(aOldDocument != nsnull, "no old document");
+  NS_PRECONDITION(!aNewDocument,
+                  "Changing to a non-null new document not supported yet");
   if (! aOldDocument)
     return NS_ERROR_NULL_POINTER;
 
@@ -432,6 +436,8 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
 
     // See if the element has nsIAnonymousContentCreator-created
     // anonymous content...
+    // XXXbz this really doesn't belong here, somehow... either that, or we
+    // need to better define what sort of bindings we're managing.
     nsCOMPtr<nsISupportsArray> anonymousElements;
     shell->GetAnonymousContentFor(aContent, getter_AddRefs(anonymousElements));
 
@@ -447,9 +453,12 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
         if (! content)
           continue;
 
-        content->SetDocument(aNewDocument, PR_TRUE, PR_TRUE);
+        content->UnbindFromTree();
       }
     }
+
+    // now clear out the anonymous content for this node in the old presshell.
+    shell->SetAnonymousContentFor(aContent, nsnull);
   }
 
   return NS_OK;

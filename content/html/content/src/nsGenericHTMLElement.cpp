@@ -1317,22 +1317,30 @@ nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
   return doc->GetCompatibilityMode() == eCompatibility_NavQuirks;
 }
 
-void
-nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                  PRBool aCompileEventHandlers)
+nsresult
+nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                 nsIContent* aBindingParent,
+                                 PRBool aCompileEventHandlers)
 {
-  nsIDocument *document = GetCurrentDoc();
-  PRBool doNothing = aDocument == document; // short circuit useless work
+  nsresult rv = nsGenericElement::BindToTree(aDocument, aParent,
+                                             aBindingParent,
+                                             aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsGenericElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
-
+  // XXXbz if we already have a style attr parsed, this won't do
+  // anything... need to fix that.
   ReparseStyleAttribute();
-  if (!doNothing && aDocument) {
+
+  if (aDocument) {
+    // If we're in a document now, let our mapped attrs know what their new
+    // sheet is.
     nsHTMLStyleSheet* sheet = aDocument->GetAttributeStyleSheet();
     if (sheet) {
       mAttrsAndChildren.SetMappedAttrStyleSheet(sheet);
     }
   }
+
+  return rv;
 }
 
 already_AddRefed<nsIDOMHTMLFormElement>
@@ -1951,7 +1959,7 @@ nsGenericHTMLElement::GetInlineStyleRule()
     if (attrVal->Type() != nsAttrValue::eCSSStyleRule) {
       ReparseStyleAttribute();
       attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
-      // hopefully value.GetUnit() is now eHTMLUnit_CSSStyleRule
+      // hopefully attrVal->Type() is now nsAttrValue::eCSSStyleRule
     }
 
     if (attrVal->Type() == nsAttrValue::eCSSStyleRule) {
@@ -2597,11 +2605,7 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
   nsresult result = NS_OK;
   NS_ASSERTION(aContent->GetNodeInfo(), "If we don't have a nodeinfo, we are very screwed");
 
-  // XXX GetOwnerDoc
-  nsIDocument* doc = aContent->GetDocument();
-  if (!doc) {
-    doc = nsContentUtils::GetDocument(aContent->GetNodeInfo());
-  }
+  nsIDocument* doc = aContent->GetOwnerDoc();
 
   if (doc) {
     PRBool isCSS = PR_TRUE; // assume CSS until proven otherwise
@@ -3240,55 +3244,52 @@ nsGenericHTMLFrameElement::IsFocusable(PRInt32 *aTabIndex)
   return isFocusable;
 }
 
-void
-nsGenericHTMLFormElement::SetParent(nsIContent* aParent)
+nsresult
+nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
+                                     nsIContent* aParent,
+                                     nsIContent* aBindingParent,
+                                     PRBool aCompileEventHandlers)
 {
-  // If we do any finding of the form, we need to do it after we've
-  // called SetParent on the superclass.
-  PRBool findForm = PR_FALSE;
-  if (!aParent && mForm) {
-    SetForm(nsnull);
-  } else if (aParent && (GetParent() || !mForm)) {
-    // If we have a new parent and either we had an old parent or we
-    // don't have a form, search for a containing form.  If we didn't
-    // have an old parent, but we do have a form, we shouldn't do the
-    // search. In this case, someone (possibly the content sink) has
-    // already set the form for us.
-    findForm = PR_TRUE;
-  }
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsGenericHTMLElement::SetParent(aParent);
-
-  if (findForm) {
+  if (!mForm && aParent) {
+    // We now have a parent, so we may have picked up an ancestor form.  Search
+    // for it.  Note that if mForm is already set we don't want to do this,
+    // because that means someone (probably the content sink) has already set
+    // it to the right value.  Also note that even if being bound here didn't
+    // change our parent, we still need to search, since our parent chain
+    // probably changed _somewhere_.
     FindAndSetForm();
   }
+    
+  return rv;
 }
 
 void
-nsGenericHTMLFormElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                      PRBool aCompileEventHandlers)
+nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  // Save state before doing anything if the document is being removed
-  if (!aDocument) {
-    SaveState();
-  }
+  // Save state before doing anything
+  SaveState();
 
-  if (aDocument && GetParent() && !mForm) {
-    FindAndSetForm();
-  } else if (!aDocument && mForm) {
-    // We got removed from document.  We have a parent form.  Check
-    // that the form is still in the document, and if so remove
-    // ourselves from the form.  This keeps ghosts from appearing in
-    // the form's |elements| array
-    nsCOMPtr<nsIContent> formContent(do_QueryInterface(mForm));
-    if (formContent && formContent->GetDocument()) {
+  if (mForm) {
+    // Might need to unset mForm
+    if (aNullParent) {
+      // No more parent means no more form
       SetForm(nsnull);
+    } else {
+      // Recheck whether we should still have an mForm.
+      nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm();
+      if (!form) {
+        SetForm(nsnull);
+      }
     }
   }
 
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
-
 
 nsresult
 nsGenericHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -3464,30 +3465,29 @@ nsGenericHTMLFrameElement::LoadSrc()
   return rv;
 }
 
-void
-nsGenericHTMLFrameElement::SetParent(nsIContent *aParent)
+nsresult
+nsGenericHTMLFrameElement::BindToTree(nsIDocument* aDocument,
+                                      nsIContent* aParent,
+                                      nsIContent* aBindingParent,
+                                      PRBool aCompileEventHandlers)
 {
-  nsGenericHTMLElement::SetParent(aParent);
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // When parent is being set to null on the element's destruction, do not
-  // call LoadSrc().
-  if (!GetParent() || !IsInDoc()) {
-    return;
+  if (aDocument) {
+    // We're in a document now.  Kick off the frame load.
+    LoadSrc();
   }
-
-  LoadSrc();
+  
+  return rv;
 }
 
 void
-nsGenericHTMLFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
-                                       PRBool aCompileEventHandlers)
+nsGenericHTMLFrameElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  const nsIDocument *old_doc = GetCurrentDoc();
-
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep,
-                                    aCompileEventHandlers);
-
-  if (!aDocument && mFrameLoader) {
+  if (mFrameLoader) {
     // This iframe is being taken out of the document, destroy the
     // iframe's frame loader (doing that will tear down the window in
     // this iframe).
@@ -3498,12 +3498,7 @@ nsGenericHTMLFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
     mFrameLoader = nsnull;
   }
 
-  // When document is being set to null on the element's destruction,
-  // or when the document is being set to what the document already
-  // is, do not call LoadSrc().
-  if (GetParent() && aDocument && aDocument != old_doc) {
-    LoadSrc();
-  }
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 nsresult

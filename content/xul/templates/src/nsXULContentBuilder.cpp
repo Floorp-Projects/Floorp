@@ -1065,12 +1065,11 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContainerElement,
         NS_ASSERTION(pos >= 0, "parent doesn't think this child has an index");
         if (pos < 0) continue;
 
+        // Note: RemoveChildAt sets |child|'s document to null so that
+        // it'll get knocked out of the XUL doc's resource-to-element
+        // map.
         rv = parent->RemoveChildAt(pos, aNotify);
         if (NS_FAILED(rv)) return rv;
-
-        // Set its document to null so that it'll get knocked out of
-        // the XUL doc's resource-to-element map.
-        child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
         // Remove from the content support map.
         mContentSupportMap.Remove(child);
@@ -1471,8 +1470,6 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
 
     rv = NS_NewElement(getter_AddRefs(result), aNameSpaceID, nodeInfo);
     if (NS_FAILED(rv)) return rv;
-
-    result->SetDocument(doc, PR_FALSE, PR_TRUE);
 
     *aResult = result;
     NS_ADDREF(*aResult);

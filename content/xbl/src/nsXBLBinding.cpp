@@ -191,19 +191,27 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
   // We need to ensure two things.
   // (1) The anonymous content should be fooled into thinking it's in the bound
   // element's document, assuming that the bound element is in a document
-  nsIDocument* doc = aElement->GetCurrentDoc();
-
-  if (doc) {
-    aAnonParent->SetDocument(doc, PR_TRUE, AllowScripts());
-  }
-
+  // Note that we don't change the current doc of aAnonParent here, since that
+  // quite simply does not matter.  aAnonParent is just a way of keeping refs
+  // to all its kids, which are anonymous content from the point of view of
+  // aElement.
   // (2) The children's parent back pointer should not be to this synthetic root
   // but should instead point to the enclosing parent element.
+  nsIDocument* doc = aElement->GetCurrentDoc();
+  PRBool allowScripts = AllowScripts();
+
   PRUint32 childCount = aAnonParent->GetChildCount();
   for (PRUint32 i = 0; i < childCount; i++) {
     nsIContent *child = aAnonParent->GetChildAt(i);
-    child->SetParent(aElement);
-    child->SetBindingParent(mBoundElement);
+    child->UnbindFromTree();
+    nsresult rv =
+      child->BindToTree(doc, aElement, mBoundElement, allowScripts);
+    if (NS_FAILED(rv)) {
+      // Oh, well... Just give up.
+      // XXXbz This really shouldn't be a void method!
+      child->UnbindFromTree();
+      return;
+    }        
 
 #ifdef MOZ_XUL
     // To make XUL templates work (and other goodies that happen when
@@ -410,7 +418,7 @@ ChangeDocumentForDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
     nsCOMPtr<nsIContent> defContent = currPoint->GetDefaultContent();
     
     if (defContent)
-      defContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      defContent->UnbindFromTree();
   }
 
   return PR_TRUE;
@@ -909,7 +917,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
       nsCOMPtr<nsIXULDocument> xuldoc(do_QueryInterface(aOldDocument));
 #endif
 
-      anonymous->SetDocument(nsnull, PR_TRUE, PR_TRUE); // Kill it.
+      anonymous->UnbindFromTree(); // Kill it.
 
 #ifdef MOZ_XUL
       // To make XUL templates work (and other XUL-specific stuff),

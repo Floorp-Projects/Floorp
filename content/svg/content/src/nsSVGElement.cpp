@@ -102,11 +102,25 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
 //----------------------------------------------------------------------
 // nsIContent methods
 
-void
-nsSVGElement::SetParent(nsIContent* aParent)
+nsresult
+nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                         nsIContent* aBindingParent,
+                         PRBool aCompileEventHandlers)
 {
-  nsGenericElement::SetParent(aParent);
+  nsresult rv = nsGenericElement::BindToTree(aDocument, aParent,
+                                             aBindingParent,
+                                             aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  ParentChainChanged();
+
+  return rv;
+}
+
+void
+nsSVGElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  nsGenericElement::UnbindFromTree(aDeep, aNullParent);
   ParentChainChanged();
 }
 
@@ -239,17 +253,6 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   }
 
   return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
-}
-
-nsresult
-nsSVGElement::SetBindingParent(nsIContent* aParent)
-{
-  nsresult rv = nsGenericElement::SetBindingParent(aParent);
-
-  // XXX Are parent and bindingparent always in sync? (in which case
-  // we don't have to call ParentChainChanged() here)
-  ParentChainChanged();
-  return rv;
 }
 
 PRBool

@@ -743,9 +743,6 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
       rv = NS_NewTextNode(getter_AddRefs(textContent));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // Set the content's document
-      textContent->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-
       // Set the text in the text node
       textContent->SetText(mText, mTextLength, PR_FALSE);
 
@@ -877,6 +874,13 @@ nsXMLContentSink::SetDocElement(PRInt32 aNameSpaceID,
   mDocElement = aContent;
   NS_ADDREF(mDocElement);
 
+  nsresult rv = mDocElement->BindToTree(mDocument, nsnull, nsnull, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    mDocElement->UnbindFromTree();
+    // If we return PR_FALSE here, the caller will bail out because it won't
+    // find a parent content node to append to, which is fine.
+    return PR_FALSE;
+  }
   mDocument->SetRootContent(mDocElement);
   return PR_TRUE;
 }
@@ -927,7 +931,6 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   if (mDocument) {
     content->SetContentID(mDocument->GetAndIncrementContentID());
   }
-  content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
   // Set the ID attribute atom on the node info object for this node
   // This must occur before the attributes are added so the name
@@ -1040,7 +1043,6 @@ nsXMLContentSink::HandleComment(const PRUnichar *aName)
     nsCOMPtr<nsIDOMComment> domComment = do_QueryInterface(comment, &result);
     if (domComment) {
       domComment->AppendData(nsDependentString(aName));
-      comment->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddContentAsLeaf(comment);
     }
   }
@@ -1064,7 +1066,6 @@ nsXMLContentSink::HandleCDataSection(const PRUnichar *aData,
     nsCOMPtr<nsIDOMCDATASection> domCDATA = do_QueryInterface(cdata);
     if (domCDATA) {
       domCDATA->SetData(nsDependentString(aData, aLength));
-      cdata->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddContentAsLeaf(cdata);
     }
   }

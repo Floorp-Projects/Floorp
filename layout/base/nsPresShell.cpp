@@ -4904,7 +4904,7 @@ PresShell::SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnony
         if (! content)
           continue;
         
-        content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+        content->UnbindFromTree();
       }
     }
   }
@@ -4943,7 +4943,7 @@ ClearDocumentEnumerator(nsHashKey* aKey, void* aData, void* aClosure)
     if (! content)
       continue;
 
-    content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    content->UnbindFromTree();
   }
 
   return PR_TRUE;

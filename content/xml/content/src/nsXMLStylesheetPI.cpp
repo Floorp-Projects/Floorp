@@ -62,9 +62,12 @@ public:
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
   // nsIContent
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
-
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
+  
   // nsStyleLinkElement
   NS_IMETHOD GetCharset(nsAString& aCharset);
 
@@ -102,17 +105,29 @@ nsXMLStylesheetPI::~nsXMLStylesheetPI()
 
 // nsIContent
 
-void
-nsXMLStylesheetPI::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                               PRBool aCompileEventHandlers)
+nsresult
+nsXMLStylesheetPI::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers)
 {
-  nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
-  nsXMLProcessingInstruction::SetDocument(aDocument, aDeep,
-                                          aCompileEventHandlers);
+  nsresult rv = nsXMLProcessingInstruction::BindToTree(aDocument, aParent,
+                                                       aBindingParent,
+                                                       aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  UpdateStyleSheet(oldDoc);
+  UpdateStyleSheet(nsnull);
+
+  return rv;  
 }
 
+void
+nsXMLStylesheetPI::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
+
+  nsXMLProcessingInstruction::UnbindFromTree(aDeep, aNullParent);
+  UpdateStyleSheet(oldDoc);
+}
 
 // nsIDOMNode
 

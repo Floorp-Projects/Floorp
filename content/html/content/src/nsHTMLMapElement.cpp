@@ -68,9 +68,11 @@ public:
   // nsIDOMHTMLMapElement
   NS_DECL_NSIDOMHTMLMAPELEMENT
 
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
-
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
 protected:
   nsRefPtr<nsContentList> mAreas;
 };
@@ -103,33 +105,36 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLMapElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-void
-nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                              PRBool aCompileEventHandlers)
+nsresult
+nsHTMLMapElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                             nsIContent* aBindingParent,
+                             PRBool aCompileEventHandlers)
 {
-  nsIDocument *document = GetCurrentDoc();
-  PRBool documentChanging = (aDocument != document);
-  
-  if (documentChanging) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (htmlDoc) {
-      htmlDoc->RemoveImageMap(this);
-    }
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
+
+  if (htmlDoc) {
+    htmlDoc->AddImageMap(this);
   }
 
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
-  
-  if (documentChanging) {
-    // Since we changed the document, gotta re-QI
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
-
-    if (htmlDoc) {
-      htmlDoc->AddImageMap(this);
-    }
-  }
+  return rv;
 }
 
+void
+nsHTMLMapElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(GetCurrentDoc());
+
+  if (htmlDoc) {
+    htmlDoc->RemoveImageMap(this);
+  }
+
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+}
 
 NS_IMPL_DOM_CLONENODE(nsHTMLMapElement)
 

@@ -153,9 +153,12 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
 
   // establish parenthood of the element
   newContent->SetNativeAnonymous(PR_TRUE);
-  newContent->SetParent(parentContent);
-  newContent->SetDocument(doc, PR_TRUE, PR_TRUE);
-  newContent->SetBindingParent(newContent);
+  res = newContent->BindToTree(doc, parentContent, newContent, PR_TRUE);
+  if (NS_FAILED(res)) {
+    newContent->UnbindFromTree();
+    return res;
+  }
+  
   // display the element
   ps->RecreateFramesFor(newContent);
 
@@ -178,10 +181,8 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
     nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
     if (content) {
       aDocObserver->ContentRemoved(content->GetCurrentDoc(),
-                                   aParentContent, content, -1);
-      content->SetParent(nsnull);
-      content->SetBindingParent(nsnull);
-      content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+				   aParentContent, content, -1);
+      content->UnbindFromTree();
     }
   }
 }  

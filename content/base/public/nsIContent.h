@@ -60,8 +60,8 @@ class nsIURI;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x38824dfc, 0x5a2d, 0x4b86, \
-  { 0x8c, 0x49, 0xcc, 0xbb, 0x70, 0x03, 0x47, 0x51 } }
+{ 0x10caf6a4, 0x8891, 0x46c9, \
+  { 0x9b, 0x6c, 0x6d, 0xc8, 0xdf, 0x01, 0x2d, 0x29 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -82,16 +82,51 @@ public:
   virtual nsIDocument* GetDocument() const = 0;
 
   /**
-   * Set the document for this content.
-   *
-   * @param aDocument the new document to set (could be null)
-   * @param aDeep whether to set the document on children
+   * Bind this content node to a tree.  If this method throws, the caller must
+   * call UnbindFromTree() on the node.  In the typical case of a node being
+   * appended to a parent, this will be called after the node has been added to
+   * the parent's child list and before nsIDocumentObserver notifications for
+   * the addition are dispatched.
+   * @param aDocument The new document for the content node.  Must match the
+   *                  current document of aParent, if aParent is not null.
+   *                  May not be null if aParent is null.
+   * @param aParent The new parent for the content node.  May be null if the
+   *                node is being bound as a direct child of the document.
+   * @param aBindingParent The new binding parent for the content node.
+   *                       This is allowed to be null.  In that case, the
+   *                       binding parent of aParent, if any, will be used.
    * @param aCompileEventHandlers whether to initialize the event handlers in
    *        the document (used by nsXULElement)
+   * @note either aDocument or aParent must be non-null.  If both are null,
+   *       this method _will_ crash.
+   * @note This method must not be called by consumers of nsIContent on a node
+   *       that is already bound to a tree.  Call UnbindFromTree first.
+   * @note This method will handle rebinding descendants appropriately (eg
+   *       changing their binding parent as needed).
+   * @note This method does not add the content node to aParent's child list
+   * @throws NS_ERROR_OUT_OF_MEMORY if that happens
    */
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers) = 0;
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers) = 0;
 
+  /**
+   * Unbind this content node from a tree.  This will set its current document
+   * and binding parent to null.  In the typical case of a node being removed
+   * from a parent, this will be called after it has been removed from the
+   * parent's child list and after the nsIDocumentObserver notifications for
+   * the removal have been dispatched.   
+   * @param aDeep Whether to recursively unbind the entire subtree rooted at
+   *        this node.  The only time PR_FALSE should be passed is when the
+   *        parent node of the content is being destroyed.
+   * @param aNullParent Whether to null out the parent pointer as well.  This
+   *        is usually desirable.  This argument should only be false while
+   *        recursively calling UnbindFromTree when a subtree is detached.
+   * @note This method is safe to call on nodes that are not bound to a tree.
+   */
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE) = 0;
+  
   /**
    * Returns true if the content has an ancestor that is a document.
    *
@@ -127,14 +162,6 @@ public:
   {
     return NS_REINTERPRET_CAST(nsIContent *, mParentPtrBits & ~kParentBitMask);
   }
-
-  /**
-   * Set the parent content for this content.  (This does not add the child to
-   * its parent's child list.)  This clobbers the low 2 bits of the parent
-   * pointer, so subclasses which use those bits should override this.
-   * @param aParent the new parent content to set (could be null)
-   */
-  virtual void SetParent(nsIContent* aParent) = 0;
 
   /**
    * Get whether this content is C++-generated anonymous content
@@ -198,6 +225,7 @@ public:
    * @param aNotify whether to notify the document that the insert has
    *        occurred
    * @param aDeepSetDocument whether to set document on all children of aKid
+   * XXXbz aDeepSetDocument is now unused
    */
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify, PRBool aDeepSetDocument) = 0;
@@ -209,6 +237,7 @@ public:
    * @param aNotify whether to notify the document that the replace has
    *        occurred
    * @param aDeepSetDocument whether to set document on all children of aKid
+   * XXXbz aDeepSetDocument is now unused
    */
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                  PRBool aDeepSetDocument) = 0;
@@ -479,15 +508,6 @@ public:
       *aTabIndex = -1; // Default, not tabbable
     return PR_FALSE;
   }
-
-  /**
-   * Sets content node with the binding responsible for our construction (and
-   * existence).  Used by anonymous content (XBL-generated). null for all
-   * explicit content.
-   *
-   * @param aContent the new binding parent
-   */
-  virtual nsresult SetBindingParent(nsIContent* aContent) = 0;
 
   /**
    * Gets content node with the binding responsible for our construction (and

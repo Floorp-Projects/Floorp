@@ -166,8 +166,11 @@ public:
 
   // Implementation for nsIContent
   nsIDocument* GetDocument() const;
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
   PRBool IsInDoc() const
   {
     return !!mDocument;
@@ -190,7 +193,6 @@ public:
     return parent ? parent->GetOwnerDoc() : nsnull;
   }
 
-  virtual void SetParent(nsIContent* aParent);
   virtual PRBool IsNativeAnonymous() const;
   virtual void SetNativeAnonymous(PRBool aAnonymous);
   virtual PRInt32 GetNameSpaceID() const;
@@ -226,7 +228,6 @@ public:
   virtual const nsVoidArray *GetRangeList() const;
 
   virtual nsIContent *GetBindingParent() const;
-  virtual nsresult SetBindingParent(nsIContent* aParent);
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
   virtual nsresult GetListenerManager(nsIEventListenerManager **aResult);
