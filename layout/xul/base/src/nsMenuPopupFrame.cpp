@@ -244,8 +244,35 @@ NS_IMETHODIMP
 nsMenuPopupFrame::DidReflow(nsIPresContext& aPresContext,
                             nsDidReflowStatus aStatus)
 {
-  nsresult rv = nsBoxFrame::DidReflow(aPresContext, aStatus);
-  return rv;
+  // Copied from nsContainerFrame reflow WITHOUT the call
+  // nsFrame::DidReflow().  nsFrame::DidReflow() will move us to the
+  // wrong place.
+  nsresult result = NS_OK; /* = nsFrame::DidReflow(aPresContext, aStatus) */
+
+  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+    // Apply DidReflow to each and every list that this frame implements
+    nsIAtom* listName = nsnull;
+    PRInt32 listIndex = 0;
+    do {
+      nsIFrame* kid;
+      FirstChild(listName, &kid);
+      while (nsnull != kid) {
+        static NS_DEFINE_IID(kIHTMLReflowIID, NS_IHTMLREFLOW_IID);
+        nsIHTMLReflow* htmlReflow;
+        nsresult rv;
+        rv = kid->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+        if (NS_SUCCEEDED(rv)) {
+          htmlReflow->DidReflow(aPresContext, aStatus);
+        }
+        kid->GetNextSibling(&kid);
+      }
+      NS_IF_RELEASE(listName);
+      GetAdditionalChildListName(listIndex++, &listName);
+    } while(nsnull != listName);
+  }
+
+  NS_FRAME_TRACE_OUT("nsContainerFrame::DidReflow");
+  return result;
 }
 
 NS_IMETHODIMP

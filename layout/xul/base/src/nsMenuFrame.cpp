@@ -453,7 +453,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
         mMenuParent->SetActive(PR_TRUE);
 
       // Sync up the view.
-      PRBool onMenuBar = PR_FALSE;
+      PRBool onMenuBar = PR_TRUE;
       if (mMenuParent)
         mMenuParent->IsMenuBar(onMenuBar);
 
@@ -535,7 +535,10 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
    // Reflow child
   nscoord w = aDesiredSize.width;
   nscoord h = aDesiredSize.height;
-  
+
+  if (kidReflowState.reason == eReflowReason_Incremental)
+    kidReflowState.reason = eReflowReason_Resize;
+
   rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
 
    // Set the child's width and height to its desired size
@@ -548,7 +551,7 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
   // Don't let it affect our size.
   aDesiredSize.width = w;
   aDesiredSize.height = h;
-  
+
   return rv;
 }
 
@@ -557,17 +560,22 @@ NS_IMETHODIMP
 nsMenuFrame::DidReflow(nsIPresContext& aPresContext,
                             nsDidReflowStatus aStatus)
 {
-  // Sync up the view.
-  PRBool onMenuBar = PR_FALSE;
-  if (mMenuParent)
-    mMenuParent->IsMenuBar(onMenuBar);
+  nsresult rv;
+  rv = nsBoxFrame::DidReflow(aPresContext, aStatus);
 
+  // Sync up the view.
   nsIFrame* frame = mPopupFrames.FirstChild();
   nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
-  if (menuPopup && mMenuOpen)
-    menuPopup->SyncViewWithFrame(aPresContext, onMenuBar, this, -1, -1);
+  if (mMenuOpen && menuPopup) {
+    PRBool onMenuBar = PR_TRUE;
+    if (mMenuParent)
+      mMenuParent->IsMenuBar(onMenuBar);
 
-  return nsBoxFrame::DidReflow(aPresContext, aStatus);
+    menuPopup->SyncViewWithFrame(aPresContext, onMenuBar, this, -1, -1);
+    menuPopup->DidReflow(aPresContext, aStatus);
+  }
+
+  return rv;
 }
 
 // Overridden Box method.
@@ -592,18 +600,13 @@ nsMenuFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incremental
 
   nsIFrame* popup = mPopupFrames.FirstChild();
   if (popup && (frame == popup)) {
-    // An incremental reflow command is targeting something inside our
-    // hidden popup view.  We can't actually return the child, since it
-    // won't ever be found by box.  Instead return ourselves, so that box
-    // will later send us an incremental reflow command.
-    incrementalChild = this;
-
     // In order for the child box to know what it needs to reflow, we need
     // to call its Dirty method...
-    nsIFrame* ignore;
     nsIBox* ibox;
     if (NS_SUCCEEDED(popup->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
-      ibox->Dirty(aReflowState, ignore);
+      ibox->Dirty(aReflowState, incrementalChild);
+    else
+      incrementalChild = frame;
   }
 
   return rv;
