@@ -189,10 +189,13 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
       // Initialize value when we create the content in case the value was set
       // before we got here
       nsAutoString value;
+      nsAutoString accessKey;
       fileContent->GetValue(value);
       textControl->SetValue(value);
       fileContent->GetTabIndex(&tabIndex);
       textControl->SetTabIndex(tabIndex);
+      fileContent->GetAccessKey(accessKey);
+      textControl->SetAccessKey(accessKey);
     }
     aChildList.AppendElement(mTextContent);
   }
