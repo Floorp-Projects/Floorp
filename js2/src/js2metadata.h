@@ -472,31 +472,33 @@ public:
 typedef std::pair<OverrideStatus *, OverrideStatus *> OverrideStatusPair;
 
 
-class LocalBindingEntry {
+template<class Binding> class BindingEntry {
 public:
-    LocalBindingEntry(const String s) : name(s) { }
+    BindingEntry(const String s) : name(s) { }
 
-    LocalBindingEntry *clone();
+    BindingEntry *clone();
     void clear();
 
-    typedef std::pair<Namespace *, LocalBinding *> NamespaceLocalBinding;
-    typedef std::vector<NamespaceLocalBinding> NamespaceLocalBindingList;
-    typedef NamespaceLocalBindingList::iterator NS_Iterator;
+    typedef std::pair<Namespace *, Binding *> NamespaceBinding;
+    typedef std::vector<NamespaceBinding> NamespaceBindingList;
+    typedef NamespaceBindingList::iterator NS_Iterator;
 
-    NS_Iterator begin() { return localBindingList.begin(); }
-    NS_Iterator end() { return localBindingList.end(); }
+    NS_Iterator begin() { return bindingList.begin(); }
+    NS_Iterator end() { return bindingList.end(); }
 
 
     const String name;
-    NamespaceLocalBindingList localBindingList;
+    NamespaceBindingList bindingList;
 
 };
 
+typedef BindingEntry<LocalBinding> LocalBindingEntry;
 
 // A LocalBindingMap maps names to a list of LocalBindings. Each LocalBinding in the list
 // will have the same QualifiedName.name, but (potentially) different QualifiedName.namespace values
 typedef HashTable<LocalBindingEntry *, const String> LocalBindingMap;
 typedef TableIterator<LocalBindingEntry *, const String> LocalBindingIterator;
+
 
 typedef std::multimap<String, InstanceBinding *> InstanceBindingMap;
 typedef InstanceBindingMap::iterator InstanceBindingIterator;

@@ -240,7 +240,7 @@ void printFrameBindings(NonWithFrame *f)
     for (LocalBindingIterator bi = f->localBindings.begin(), bend = f->localBindings.end(); (bi != bend); bi++) {
         LocalBindingEntry *lbe = *bi;
         for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
-            LocalBindingEntry::NamespaceLocalBinding ns = *i;
+            LocalBindingEntry::NamespaceBinding ns = *i;
             stdOut << "\t" << *(ns.first->name) << "::" << lbe->name;
             if (ns.second->accesses & ReadAccess)
                 if (ns.second->accesses & WriteAccess)

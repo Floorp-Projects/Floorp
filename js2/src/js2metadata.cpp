@@ -2589,7 +2589,7 @@ doUnary:
         LocalBindingEntry **lbeP = localFrame->localBindings[*id];
         if (lbeP) {
             for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
-                LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                LocalBindingEntry::NamespaceBinding &ns = *i;
                 if ((ns.second->accesses & access) && mn->listContains(ns.first))
                     reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
             }
@@ -2608,7 +2608,7 @@ doUnary:
                     LocalBindingEntry **rbeP = nwfr->localBindings[*id];
                     if (rbeP) {
                         for (LocalBindingEntry::NS_Iterator i = (*rbeP)->begin(), end = (*rbeP)->end(); (i != end); i++) {
-                            LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                            LocalBindingEntry::NamespaceBinding &ns = *i;
                             if ((ns.second->accesses & access) 
                                     && (ns.second->content->kind != LocalMember::Forbidden)
                                     && mn->listContains(ns.first))
@@ -2633,7 +2633,7 @@ doUnary:
             lbe = *lbeP;
         for (NamespaceListIterator nli = mn->nsList->begin(), nlend = mn->nsList->end(); (nli != nlend); nli++) {
             LocalBinding *new_b = new LocalBinding(access, m);
-            lbe->localBindingList.push_back(LocalBindingEntry::NamespaceLocalBinding(*nli, new_b));
+            lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(*nli, new_b));
         }
         // Mark the bindings of multiname as Forbidden in all non-innermost frames in the current
         // region if they haven't been marked as such already.
@@ -2648,7 +2648,7 @@ doUnary:
                         LocalBindingEntry **rbeP = nwfr->localBindings[*id];
                         if (rbeP) {
                             for (LocalBindingEntry::NS_Iterator i = (*rbeP)->begin(), end = (*rbeP)->end(); (i != end); i++) {
-                                LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                                LocalBindingEntry::NamespaceBinding &ns = *i;
                                 if ((ns.second->accesses & access) && (ns.first == *nli)) {
                                     ASSERT(ns.second->content->kind == LocalMember::Forbidden);
                                     foundEntry = true;
@@ -2660,7 +2660,7 @@ doUnary:
                             LocalBindingEntry *rbe = new LocalBindingEntry(*id);
                             nwfr->localBindings.insert(*id, rbe);
                             LocalBinding *new_b = new LocalBinding(access, forbiddenMember);
-                            rbe->localBindingList.push_back(LocalBindingEntry::NamespaceLocalBinding(*nli, new_b));
+                            rbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(*nli, new_b));
                         }
                     }
                 }
@@ -2680,18 +2680,13 @@ doUnary:
             return NULL;
         JS2Class *s = c;
         while (s) {
-            if (access & ReadAccess) {
-                for (InstanceBindingIterator b = s->instanceReadBindings.lower_bound(*qname->id),
-                        end = s->instanceReadBindings.upper_bound(*qname->id); (b != end); b++) {
-                    if (*qname == b->second->qname)
-                        return b->second->content;
-                }
-            }        
-            if (access & WriteAccess) {
-                for (InstanceBindingIterator b = s->instanceWriteBindings.lower_bound(*qname->id),
-                        end = s->instanceWriteBindings.upper_bound(*qname->id); (b != end); b++) {
-                    if (*qname == b->second->qname)
-                        return b->second->content;
+            InstanceBindingEntry **ibeP = c->instanceBindings[*qname->id];
+            if (ibeP) {
+                for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+                    InstanceBindingEntry::NamespaceBinding &ns = *i;
+                    if ((ns.second->accesses & access) && (ns.first == qname->nameSpace)) {
+                        return ns.second->content;
+                    }
                 }
             }
             s = s->super;
@@ -2755,18 +2750,11 @@ doUnary:
         }
         // For all the discovered possible overrides, make sure the member doesn't already exist in the class
         for (NamespaceListIterator nli = os->multiname.nsList->begin(), nlend = os->multiname.nsList->end(); (nli != nlend); nli++) {
-            QualifiedName qname(*nli, id);
-            if (access & ReadAccess) {
-                for (InstanceBindingIterator b = c->instanceReadBindings.lower_bound(*id),
-                        end = c->instanceReadBindings.upper_bound(*id); (b != end); b++) {
-                    if (qname == b->second->qname)
-                        reportError(Exception::definitionError, "Illegal override", pos);
-                }
-            }        
-            if (access & WriteAccess) {
-                for (InstanceBindingIterator b = c->instanceWriteBindings.lower_bound(*id),
-                        end = c->instanceWriteBindings.upper_bound(*id); (b != end); b++) {
-                    if (qname == b->second->qname)
+            InstanceBindingEntry **ibeP = c->instanceBindings[*id];
+            if (ibeP) {
+                for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+                    InstanceBindingEntry::NamespaceBinding &ns = *i;
+                    if ((ns.second->accesses & access) && (ns.first == *nli))
                         reportError(Exception::definitionError, "Illegal override", pos);
                 }
             }
@@ -2816,18 +2804,22 @@ doUnary:
         }
 
         NamespaceListIterator nli, nlend;
+        InstanceBindingEntry **ibeP = c->instanceBindings[*id];
+        InstanceBindingEntry *ibe;
+        if (ibeP == NULL) {
+            ibe = new InstanceBindingEntry(*id);
+            c->instanceBindings.insert(*id, ibe);
+        }
+        else
+            ibe = *ibeP;
         for (nli = readStatus->multiname.nsList->begin(), nlend = readStatus->multiname.nsList->end(); (nli != nlend); nli++) {
-            QualifiedName qName(*nli, id);
-            InstanceBinding *ib = new InstanceBinding(qName, m);
-            const InstanceBindingMap::value_type e(*id, ib);
-            c->instanceReadBindings.insert(e);
+            InstanceBinding *ib = new InstanceBinding(ReadAccess, m);
+            ibe->bindingList.push_back(InstanceBindingEntry::NamespaceBinding(*nli, ib));
         }
         
         for (nli = writeStatus->multiname.nsList->begin(), nlend = writeStatus->multiname.nsList->end(); (nli != nlend); nli++) {
-            QualifiedName qName(*nli, id);
-            InstanceBinding *ib = new InstanceBinding(qName, m);
-            const InstanceBindingMap::value_type e(*id, ib);
-            c->instanceWriteBindings.insert(e);
+            InstanceBinding *ib = new InstanceBinding(ReadAccess, m);
+            ibe->bindingList.push_back(InstanceBindingEntry::NamespaceBinding(*nli, ib));
         }
         
         return new OverrideStatusPair(readStatus, writeStatus);;
@@ -2856,7 +2848,7 @@ doUnary:
         LocalBindingEntry **lbeP = regionalFrame->localBindings[*id];
         if (lbeP) {
             for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
-                LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                LocalBindingEntry::NamespaceBinding &ns = *i;
                 if (ns.first == publicNamespace) {
                     if (ns.second->content->kind != LocalMember::DynamicVariableKind)
                         reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
@@ -2883,7 +2875,7 @@ doUnary:
                 LocalBindingEntry **rbeP = regionalFrame->localBindings[*id];
                 if (rbeP) {
                     for (LocalBindingEntry::NS_Iterator i = (*rbeP)->begin(), end = (*rbeP)->end(); (i != end); i++) {
-                        LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                        LocalBindingEntry::NamespaceBinding &ns = *i;
                         if (ns.first == publicNamespace) {
                             if (ns.second->content->kind != LocalMember::DynamicVariableKind)
                                 reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
@@ -2907,7 +2899,7 @@ doUnary:
                     lbe = *lbeP;
                 result = new DynamicVariable();
                 LocalBinding *sb = new LocalBinding(ReadWriteAccess, result);
-                lbe->localBindingList.push_back(LocalBindingEntry::NamespaceLocalBinding(publicNamespace, sb));
+                lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, sb));
             }
         }
         //... A hoisted binding of the same var already exists, so there is no need to create another one
@@ -4022,7 +4014,7 @@ deleteClassProperty:
         LocalBindingEntry **lbeP = container->localBindings[*multiname->name];
         if (lbeP) {
             for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
-                LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                LocalBindingEntry::NamespaceBinding &ns = *i;
                 if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
                     if (found && (ns.second->content != found))
                         reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
@@ -4046,7 +4038,7 @@ deleteClassProperty:
             LocalBindingEntry **lbeP = s->localBindings[*multiname->name];
             if (lbeP) {
                 for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
-                    LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                    LocalBindingEntry::NamespaceBinding &ns = *i;
                     if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
                         if (found && (ns.second->content != found))
                             reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
@@ -4380,8 +4372,8 @@ deleteClassProperty:
     // Clear all the clone contents for this entry
     void LocalBindingEntry::clear()
     {
-        for (NS_Iterator i = localBindingList.begin(), end = localBindingList.end(); (i != end); i++) {
-            NamespaceLocalBinding &ns = *i;
+        for (NS_Iterator i = bindingList.begin(), end = bindingList.end(); (i != end); i++) {
+            NamespaceBinding &ns = *i;
             ns.second->content->cloneContent = NULL;
         }
     }
@@ -4392,15 +4384,15 @@ deleteClassProperty:
     LocalBindingEntry *LocalBindingEntry::clone()
     {
         LocalBindingEntry *new_e = new LocalBindingEntry(name);
-        for (NS_Iterator i = localBindingList.begin(), end = localBindingList.end(); (i != end); i++) {
-            NamespaceLocalBinding &ns = *i;
+        for (NS_Iterator i = bindingList.begin(), end = bindingList.end(); (i != end); i++) {
+            NamespaceBinding &ns = *i;
             LocalBinding *m = ns.second;
             if (m->content->cloneContent == NULL) {
                 m->content->cloneContent = m->content->clone();
             }
             LocalBinding *new_b = new LocalBinding(m->accesses, m->content->cloneContent);
             new_b->xplicit = m->xplicit;
-            new_e->localBindingList.push_back(NamespaceLocalBinding(ns.first, new_b));
+            new_e->bindingList.push_back(NamespaceBinding(ns.first, new_b));
         }
         return new_e;
     }
@@ -4574,7 +4566,7 @@ deleteClassProperty:
         for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
             LocalBindingEntry *lbe = *bi;
             for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
-                LocalBindingEntry::NamespaceLocalBinding ns = *i;
+                LocalBindingEntry::NamespaceBinding ns = *i;
                 ns.second->content->mark();
             }
         }            
@@ -4631,7 +4623,7 @@ deleteClassProperty:
         String *name = &meta->world.identifiers["arguments"];
         ASSERT(localBindings[*name] == NULL);
         LocalBindingEntry *lbe = new LocalBindingEntry(*name);
-        lbe->localBindingList.push_back(LocalBindingEntry::NamespaceLocalBinding(meta->publicNamespace, sb));
+        lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(meta->publicNamespace, sb));
 
         uint32 i;
         for (i = 0; (i < argCount); i++) {
