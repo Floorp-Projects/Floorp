@@ -85,33 +85,49 @@ Rights Reserved.
 		<toolbar id="headerPart2" hide="true">
 			<box class="header-part2" align="vertical" flex="1">
 				<box id="ToBox" class="headerBox" align="horizontal" hide="true">
-            <html:div class="headerdisplayname">&toField.label;</html:div>
-						<html:div class="headerValue" id="ToValueShort" flex="1">
-              <titledbutton class="showMoreAddressesButton" id="ToValueToggleIcon" 
+            
+            <text class="headerdisplayname" value="&toField.label;"/>
+            <html:div  class="headervalue" id="ToValueShort" flex="1">
+            <titledbutton class="showMoreAddressesButton" id="ToValueToggleIcon" 
                 onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
             </html:div>
-            <html:div class="headerValue" id="ToValueLong" flex="1" hide="true">
-                <titledbutton class="showFewerAddressesButton"  
-                  onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
+
+            <html:div class="headervalue" id="ToValueLong" hide="true" flex="1">
+            <titledbutton class="showFewerAddressesButton"  
+               onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
             </html:div>
 				</box>
 
 			    <box id="CcBox" class="headerBox" align="horizontal" hide="true">
-            <html:div class="headerdisplayname">&ccField.label;</html:div>
-						<html:div class="headerValue" id="CcValueShort" flex="1">
-                <titledbutton class="showMoreAddressesButton" id="CcValueToggleIcon" 
-                  onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
-            </html:div>
-            <html:div class="headerValue" id="CcValueLong" flex="1" hide="true">
-                <titledbutton class="showFewerAddressesButton"  
-                  onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
-            </html:div>
+            <text class="headerdisplayname" value="&ccField.label;"/>
+              <html:div class="headervalue" id="CcValueShort" flex="1">
+              <titledbutton class="showMoreAddressesButton" id="CcValueToggleIcon" 
+                onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
+              </html:div>
+
+              <html:div class="headervalue" id="CcValueLong" hide="true" flex="1">
+              <titledbutton class="showFewerAddressesButton"  
+                onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
+              </html:div>
 				  </box>
+
         	<box id="NewsgroupBox" class="headerBox" align="horizontal" hide="true">
-            <html:div class="headerdisplayname">&newsgroupsField.label;</html:div>
-						<html:div class="headerValue" id="NewsgroupValue" flex="1">*</html:div>
-				</box>
+            <text class="headerdisplayname" value="&newsgroupsField.label;"/>
+            <html:div  class="headervalue" id="NewsgroupValue"/>
+
+				  </box>
+
 			</box>
 		</toolbar>
+    
+    <toolbar id="headerPart3" hide="true">
+      <box class="header-part3" align="vertical" flex="1">
+        <box id="UserAgentBox" class="headerBox" align="horizontal" hide="true">
+          <text class="headerdisplayname" value="&userAgentField.label;"/>
+          <html:div class="headervalue" id="UserAgentValue" flex="1">*</html:div>
+        </box>
+      </box>
+    </toolbar>
+
 	</toolbox>
 </overlay>

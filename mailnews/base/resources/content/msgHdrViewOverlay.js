@@ -38,6 +38,7 @@ var abAddressCollectorProgID	 = "component://netscape/addressbook/services/addre
 var msgPaneData;
 var currentHeaderData;
 var gNumAddressesToShow = 3;
+var gShowUserAgent = false;
 
 var msgHeaderParser = Components.classes[msgHeaderParserProgID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorProgID].getService(Components.interfaces.nsIAbAddressCollecter);
@@ -82,11 +83,16 @@ function OnLoadMsgHeaderPane()
 
     msgPaneData.NewsgroupBox = document.getElementById("NewsgroupBox");
     msgPaneData.NewsgroupValue = document.getElementById("NewsgroupValue");
+
+    msgPaneData.UserAgentBox = document.getElementById("UserAgentBox");
+    msgPaneData.UserAgentValue = document.getElementById("UserAgentValue");
+
   }
   
   // load any preferences that at are global with regards to 
   // displaying a message...
   gNumAddressesToShow = pref.GetIntPref("mailnews.max_header_display_length");
+  gShowUserAgent = pref.GetBoolPref("mailnews.headers.showUserAgent");
 }
 
 // The messageHeaderSink is the class that gets notified of a message's headers as we display the message
@@ -140,28 +146,32 @@ var messageHeaderSink = {
       {
         currentHeaderData.SubjectValue = headerValue;
       }
-      if (headerName == "from")
+      else if (headerName == "from")
       {
         currentHeaderData.FromValue = headerValue;
         if (headerValue && abAddressCollector)
           abAddressCollector.collectUnicodeAddress(headerValue);  
       }
-      if (headerName == "date")
+      else if (headerName == "date")
       {
         currentHeaderData.DateValue = headerValue; 
       }
-      if (headerName == "to")
+      else if (headerName == "to")
       {
         currentHeaderData.ToValue = headerValue; 
       }
-      if (headerName == "cc")
+      else if (headerName == "cc")
       {
          currentHeaderData.CcValue = headerValue;  
       }
-      if (headerName == "newsgroups")
+      else if (headerName == "newsgroups")
       {
          currentHeaderData.NewsgroupsValue = headerValue;   
       }
+      else if (headerName == "user-agent")
+      {
+        currentHeaderData.UserAgentValue = headerValue;
+      } 
     },
 
     handleAttachment: function(url, displayName, uri, notDownloaded) 
@@ -401,6 +411,9 @@ function UpdateMessageHeaders()
   OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, currentHeaderData.ToValue, true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon );
   OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData.CcValue, true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
   hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData.NewsgroupsValue); 
+
+  if (gShowUserAgent)
+    hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, currentHeaderData.UserAgentValue);
   FinishEmailProcessing();
 }
 
@@ -412,6 +425,7 @@ function ClearCurrentHeaders()
   currentHeaderData.ToValue = "";
   currentHeaderData.CcValue = "";
   currentHeaderData.NewsgroupsValue = "";
+  currentHeaderData.UserAgentValue = "";
 }
 
 function ShowMessageHeaderPane()
@@ -422,6 +436,9 @@ function ShowMessageHeaderPane()
   node = document.getElementById("headerPart2");
   if (node)
     node.removeAttribute("hide");
+  node = document.getElementById("headerPart3");
+  if (node)
+    node.removeAttribute("hide");
 }
 
 function HideMessageHeaderPane()
@@ -430,6 +447,9 @@ function HideMessageHeaderPane()
   if (node)
     node.setAttribute("hide", "true");
   node = document.getElementById("headerPart2");
+  if (node)
+    node.setAttribute("hide", "true");
+  node = document.getElementById("headerPart3");
   if (node)
     node.setAttribute("hide", "true");
 }
