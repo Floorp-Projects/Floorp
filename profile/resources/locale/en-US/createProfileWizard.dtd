@@ -8,18 +8,4 @@
 <!ENTITY dialup.title	              "Dialup">
 <!ENTITY mailnews.title               "Mail News">
 <!ENTITY addrbook.title               "Address Book">
-<!-- LOCALIZATION NOTE (pnl1.p1.text): Don't translate "&brandShortName" -->
-<!ENTITY          pnl1.p1.text      "&brandShortName; stores information about your settings, preferences, bookmarks, and mail in your personal profile.">
-<!ENTITY          pnl1.p2.text      "If you are sharing this copy of &brandShortName; with other users, you can use profiles to keep each user's information separate. To do this, each user should create his or her own profile.">
-<!ENTITY          pnl1.p3.text      "If you are the only person using this copy of &brandShortName;, you must have at least one profile. If you would like, you can create multiple profiles for yourself to store different sets of settings and preferences. For example, you may want to have separate profiles for business and personal use.">
-<!ENTITY          pnl1.p4.text      "To begin creating your profile, click Next.">
-<!ENTITY          pnl2.intro.text    "If you create several profiles you can tell them apart by the profile names. You may use the name provided here or use one of your own."> 
-<!ENTITY          pnl2.pname.label   "Profile Name:">
-<!ENTITY          pnl2.pdir.label    "Profile Directory:">
-<!ENTITY          pnl2.deffldr.label " the default folder.">
-<!ENTITY          pnl2.finish.text   "Click Finish to create this new profile.">
-<!ENTITY          button.choosefolder.label   "Choose Folder...">
-<!ENTITY          button.usedefault.label     "Use Default">
-<!ENTITY          pnl2.defaultPName.label     "Default User">
 
-<!ENTITY          langSelection.label "Region Selection...">
