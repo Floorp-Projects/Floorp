@@ -1,6 +1,57 @@
 function upgradeCleanup()
 {
-  // For now, since we're new, we have no such files.
+  // Get rid of Chrome directory cruft.
+  deleteThisFolder("Chrome",      "classic");
+  deleteThisFolder("Chrome",      "comm");
+  deleteThisFolder("Chrome",      "en-mac");
+  deleteThisFile("Chrome",        "en-mac.jar");
+  deleteThisFolder("Chrome",      "en-unix");
+  deleteThisFile("Chrome",        "en-unix.jar");
+  deleteThisFolder("Chrome",      "en-US");
+  deleteThisFolder("Chrome",      "en-win");
+  deleteThisFile("Chrome",        "en-win.jar");
+  deleteThisFolder("Chrome",      "US");
+  // Remove chrome and overlay registries, to remove bogus dependencies
+  // on any of the above files which may cause the app not to start. 
+  // XXXben Erk. This will effectively disable all global extensions...
+  //        we need to come up with a way to preserve global extensions 
+  //        across app versions...
+  deleteThisFile("Chrome",        "chrome.rdf");
+  deleteThisFolder("Chrome",      "overlayinfo");
+
+  // Remove defunct components and type libraries
+  deleteThisFile("Components",    "typeaheadfind.xpt");
+  deleteThisFile("Components",    "chrome.xpt");
+  deleteThisFile("Components",    "ipcd.xpt");
+  deleteThisFile("Components",    "nsUpdateNotifier.js");
+  deleteThisFile("Components",    "nsBackgroundUpdateService.js");
+  deleteThisFile("Components",    "p3p.xpt");
+  deleteThisFile("Components",    "prefmigr.xpt");
+  deleteThisFile("Components",    "profilesharingsetup.xpt");
+  deleteThisFile("Components",    "related.xpt");
+  deleteThisFile("Components",    "ucnative.xpt");
+  deleteThisFile("Components",    "util.xpt");
+  deleteThisFile("Components",    "compreg.dat");
+  deleteThisFile("Components",    "xpti.dat");
+  
+  // Remove defunct defaults files. 
+  deleteThisFile("Program",	      "defaults/pref/all.js");
+  deleteThisFile("Program",	      "defaults/pref/editor.js");
+  deleteThisFile("Program",	      "defaults/pref/mailnews.js");
+  deleteThisFile("Program",	      "defaults/pref/non-shared.txt");
+  deleteThisFile("Program",	      "defaults/pref/security-prefs.js");
+  deleteThisFile("Program",	      "defaults/pref/unix.js");
+  deleteThisFile("Program",	      "defaults/pref/xpinstall.js");
+  deleteThisFile("Program",	      "defaults/profile/panels.rdf");
+  deleteThisFolder("Program",	    "defaults/profile/US");
+
+  // Remove defunct miscellany
+  deleteThisFolder("Program",     "ipc");
+  deleteThisFile("Program",       "mangle");
+  deleteThisFile("Program",       "mozipcd");
+  deleteThisFile("Program",       "regchrome");
+  deleteThisFile("Program",       "regxpcom");
+  deleteThisFile("Program",       "shlibsign");
 }
 
 var srDest = $SpaceRequired$;

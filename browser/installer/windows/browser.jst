@@ -315,18 +315,28 @@ function updateWinReg()
 
 function upgradeCleanup()
 {
-  // Obsolete files from previous versions of Firefox that
-  // need to be cleaned up.
-  deleteThisFile("Chrome",	"US.jar");
-  deleteThisFile("Chrome",	"en-win.jar");
-  deleteThisFile("Components", 	"compreg.dat");
-  deleteThisFile("Components", 	"xpti.dat");
-  deleteThisFile("Components", "nsBackgroundUpdateService.js");
-  deleteThisFile("Program",	"defaults/pref/all.js");
-  deleteThisFile("Program",	"defaults/pref/security-prefs.js");
-  deleteThisFile("Program",	"defaults/pref/winpref.js");
-  deleteThisFile("Program",	"defaults/pref/xpinstall.js");
-  deleteThisFolder("Program",	"defaults/profile/US");
+  // Remove Chrome directory cruft
+  deleteThisFile("Chrome",      "US.jar");
+  deleteThisFile("Chrome",      "en-win.jar");
+  // Remove chrome and overlay registries, to remove bogus dependencies
+  // on any of the above files which may cause the app not to start. 
+  // XXXben Erk. This will effectively disable all global extensions...
+  //        we need to come up with a way to preserve global extensions 
+  //        across app versions...
+  deleteThisFile("Chrome",      "chrome.rdf");
+  deleteThisFolder("Chrome",    "overlayinfo");
+
+  // Remove defunct components 
+  deleteThisFile("Components",  "compreg.dat");
+  deleteThisFile("Components",  "xpti.dat");
+  deleteThisFile("Components",  "nsBackgroundUpdateService.js");
+
+  // Remove defunct defaults files. 
+  deleteThisFile("Program",	    "defaults/pref/all.js");
+  deleteThisFile("Program",     "defaults/pref/security-prefs.js");
+  deleteThisFile("Program",     "defaults/pref/winpref.js");
+  deleteThisFile("Program",     "defaults/pref/xpinstall.js");
+  deleteThisFolder("Program",   "defaults/profile/US");
 }
 
 // main
