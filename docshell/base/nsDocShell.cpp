@@ -41,6 +41,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsPoint.h"
+#include "nsIPrompt.h" // as long as ReportScriptError raises an alert box.
 
 // Interfaces Needed
 #include "nsIGlobalHistory.h"
@@ -1746,30 +1747,64 @@ NS_IMETHODIMP nsDocShell::ReportScriptError(const char* aErrorString,
 
    if(aLineNo)
       {
-      error += "LineNo: ";
+      error += "Line number: ";
       error.Append(aLineNo, 10);
       error += "\n";
       }
 
    if(aLineBuf)
       {
-      error += "Line text: '";
+      error += "Line text: ";
       error += aLineBuf;
-      error += "'\n";
+      error += "\n";
       }
 
-   // XXX Should not do a printf
+   PRBool showAlert;
+
+   if(mItemType == typeContent)
+      {
+      // Include a message for the beta release suggesting remedy
+      error +=
+        "\n"
+        "This error may indicate that the site has not been updated "
+        "for Mozilla.  Please contact the site administrator, or see "
+        "http://developer.netscape.com/mozilla/";
+      
+      showAlert = PR_TRUE;
+      }
+   else
+      {
+      // for non-DEBUG builds, tuck xul errors under the rug, and
+      // only show those originating from content.
+#ifdef DEBUG;
+      showAlert = PR_TRUE;
+#else
+      showAlert = PR_FALSE;
+#endif
+      }
+
+   if(showAlert)
+      {
+      // Show an alert for the error.  At some point, we may have a JavaScript
+      // console to show errors in.
+      nsCOMPtr<nsIPrompt> prompt = do_GetInterface(mTreeOwner);
+      if(prompt)
+        {
+        prompt->Alert(error.GetUnicode());
+#ifndef DEBUG
+        return NS_OK;
+#endif
+        }
+      }
+
+   // else if not showing alert or failed to get prompt interface or
+   // this is a debug build and we want to printf ALL errors...
    char* errorStr = error.ToNewCString();
    if(errorStr)
       {
       printf("%s\n", errorStr);
       nsCRT::free(errorStr);
       }
-
-   //XXXEMBEDDING Call embedding app with the error.
-
-   // XXX Turn it off for now...there should be an Error method too
-   //Alert(error.GetUnicode());
 
    return NS_OK;
 }
