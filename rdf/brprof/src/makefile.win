@@ -23,7 +23,8 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsBrowsingProfile.obj    \
 	$(NULL)
 
-LINCS=  -I$(PUBLIC)\rdf         \
+LINCS=  -I$(PUBLIC)\nspr        \
+        -I$(PUBLIC)\rdf         \
         -I$(PUBLIC)\xpcom       \
         -I$(PUBLIC)\brprof      \
         -I$(PUBLIC)\raptor      \

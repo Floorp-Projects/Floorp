@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -21,9 +21,15 @@
 
 #include "nsISupports.h"
 
-#define nsBrowsingProfile_Check                 0xbaadf00d
-#define nsBrowsingProfile_CurrentMajorVersion   1
-#define nsBrowsingProfile_CurrentMinorVersion   0
+struct nsBrowsingProfileCategoryDescriptor {
+  PRUint16              mID;
+  PRUint8               mVisitCount;
+  PRUint8               mFlags;
+};
+
+// setting this to 56 brings the size of an nsBrowsingProfileVector
+// struct up to 256 bytes
+#define nsBrowsingProfile_CategoryCount 56
 
 struct nsBrowsingProfileVector {
     union {
@@ -34,12 +40,13 @@ struct nsBrowsingProfileVector {
             PRUint16    mMinorVersion;  // denotes a backward compatible change to the meaning of this vector
         }               mInfo;
     }                   mHeader;
-    struct {
-        PRUint16        mID;
-        PRUint8         mVisitCount;
-        PRUint8         mFlags;
-    }                   mCategory[56];
+    nsBrowsingProfileCategoryDescriptor
+                        mCategory[nsBrowsingProfile_CategoryCount];
 };
+
+#define nsBrowsingProfile_Check                 0xbaadf00d
+#define nsBrowsingProfile_CurrentMajorVersion   1
+#define nsBrowsingProfile_CurrentMinorVersion   0
 
 enum nsBrowsingProfileFlag {
     nsBrowsingProfileFlag_ThisSession   = (1 << 0),
